@@ -140,7 +140,8 @@ int hcFFT( Container &c );
       Half the number \a N of data elements in the range \a firsthc, \a lasthc
       can be assigned a power in the range \a firstp, \a lastp,
       excess elements are set to zero.
-      The spectrum is normalized such that its sum equals the
+      If you want to compute the power from rFFT, you need to multiply the
+      result by \[$ 2/N^2 \f$ to normalize the power such that its sum equals the
       mean squared amplitudes of the signal.
       If the input data to rFFT() were spaced by \a Delta,
       then the power is computed for the frequencies i/(N Delta), i=0..N/2.
@@ -404,10 +405,11 @@ template < typename ForwardIterC >
 double coherenceInfo( ForwardIterC firstc, ForwardIterC lastc, double deltaf );
 template < typename ContainerC >
 double coherenceInfo( ContainerC &c, double deltaf );
-  /*! Compute cross spectrum (in range \a firstc, \a lastc)
+  /*! Compute the cross power spectrum (squared magnitude of cross spectrum,
+      in range \a firstc, \a lastc)
       of the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
       The input ranges are divided into chunks of \a N,
-      where \a N is the minimum power of two not less than 
+      where \a N is the smallest power of two greater than 
       the number of data points in the range \a firstc, \a lastc.
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
@@ -451,12 +453,11 @@ int spectra( const ContainerX &x, const ContainerY &y,
   /*! Compute gain (in range \a firstg, \a lastg),
       coherence (in range \a firstc, \a lastc), 
       auto- (in range \a firstxp, \a lastxp and \a firstyp, \a lastyp)
-      and cross power spectra (in range \a firstcp, \a lastcp)
+      and cross power spectra (magnitude squared of cross spectrum, in range \a firstcp, \a lastcp)
       between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterG, \a ForwardIterC,
       \a ForwardIterCP, \a ForwardIterXP, and \a ForwardIterYP
-      are a forward iterators that point to real numbers.
-      \bug The cros spectrum must be twice the size as the power spectra! */
+      are a forward iterators that point to real numbers. */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename ForwardIterG, typename ForwardIterC, typename ForwardIterCP,
   typename ForwardIterXP, typename ForwardIterYP >
@@ -475,6 +476,43 @@ int spectra( const ContainerX &x, const ContainerY &y,
 	     ContainerG &g, ContainerC &c,
 	     ContainerCP &cp, ContainerXP &xp, ContainerYP &yp,
 	     bool overlap=true, double (*window)( int j, int n )=bartlett );
+  /*! Compute power spectra of the ranges \a firstxp, \a lastxp and \a firstyp, \a lastyp,
+      and cross spectrum (in range \a firstcp, \a lastcp as a half-complex sequence)
+      between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
+      \a ForwardIterX, \a ForwardIterY, \a ForwardIterXP, and \a ForwardIterYP
+      are a forward iterators that point to real numbers.
+      \a BidirectIterCP is a bidirectional iterator that points to real numbers.
+      The size of the power spectra must be a power of two.
+      The size of the cross spectrum must be twice the size of the power spectra.
+      \sa coherence() */
+template < typename ForwardIterX, typename ForwardIterY, 
+  typename BidirectIterCP, typename ForwardIterXP, typename ForwardIterYP >
+int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
+		  ForwardIterY firsty, ForwardIterY lasty,
+		  BidirectIterCP firstcp, BidirectIterCP lastcp,
+		  ForwardIterXP firstxp, ForwardIterXP lastxp,
+		  ForwardIterYP firstyp, ForwardIterYP lastyp,
+		  bool overlap=true, double (*window)( int j, int n )=bartlett );
+template < typename ContainerX, typename ContainerY, 
+  typename ContainerCP, typename ContainerXP, typename ContainerYP >
+int crossSpectra( const ContainerX &x, const ContainerY &y,
+		  ContainerCP &cp, ContainerXP &xp, ContainerYP &yp,
+		  bool overlap=true, double (*window)( int j, int n )=bartlett );
+  /*! Return in the range \a firstc, \a lastc the coherence computed from
+      the cross spectrum, a half-complex sequence in the range \a firstcp, \a lastcp,
+      the power spectrum of the input in the range \a firstxp, \a lastxp, and
+      the power spectrum of the output in the range \a firstyp, \a lastyp.
+      \sa crossSpectra() */
+template < typename BidirectIterCP, typename ForwardIterXP,
+  typename ForwardIterYP, typename ForwardIterC >
+  void coherence( BidirectIterCP firstcp, BidirectIterCP lastcp,
+		ForwardIterXP firstxp, ForwardIterXP lastxp,
+		ForwardIterYP firstyp, ForwardIterYP lastyp,
+		ForwardIterC firstc, ForwardIterC lastc );
+template < typename ContainerCP, typename ContainerXP,
+  typename ContainerYP, typename ContainerC >
+void coherence( const ContainerCP &cp, const ContainerXP &xp,
+		const ContainerYP &yp, ContainerC &c );
 
 
 ///// implementation /////////////////////////////////////////////////////////
@@ -956,24 +994,20 @@ template < typename BidirectIterHC, typename ForwardIterP >
 void hcPower( BidirectIterHC firsthc, BidirectIterHC lasthc,
 	      ForwardIterP firstp, ForwardIterP lastp )
 {
-  typedef typename iterator_traits<ForwardIterP>::value_type ValueTypeP;
-
   if ( firsthc == lasthc || firstp == lastp )
     return;
-  ValueTypeP invn2 = 1.0/(lasthc - firsthc);
-  invn2 *= invn2;
-  *firstp = (*firsthc) * (*firsthc) * invn2;
+  *firstp = (*firsthc) * (*firsthc) * 0.5;
   ++firsthc;
   --lasthc;
   ++firstp;
   while ( firstp != lastp && firsthc != lasthc ) {
-    *firstp = 2.0 * ( (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc) ) * invn2;
+    *firstp = (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc);
     ++firsthc;
     --lasthc;
     ++firstp;
   }
   if ( firstp != lastp ) {
-    *firstp = (*firsthc) * (*firsthc) * invn2;
+    *firstp = (*firsthc) * (*firsthc) * 0.5;
     ++firstp;
   }
   while ( firstp != lastp ) {
@@ -1009,7 +1043,7 @@ void hcMagnitude( BidirectIterHC firsthc, BidirectIterHC lasthc,
     ++firstm;
   }
   if ( firstm != lastm ) {
-    *firstm = (*firsthc) * (*firsthc);
+    *firstm = ::sqrt( (*firsthc) * (*firsthc) );
     ++firstm;
   }
   while ( firstm != lastm ) {
@@ -2005,6 +2039,7 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
     cp[k] = 0.0;
 
   // normalization factor:
+  nw *= 2;
   ValueTypeC wwn = 0.0;
   for ( int k=0; k<nw; ++k ) {
     ValueTypeC w = window( k, nw );
@@ -2163,11 +2198,10 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   for ( int k=1; k<nw; k <<= 1 )
     logn++;
   nw = (1 << logn);
-  np = nw/2;
 
   // working buffer:
-  ValueTypeYP xp[np];
-  for ( int k=0; k<np; ++k )
+  ValueTypeYP xp[nw/2];
+  for ( int k=0; k<nw/2; ++k )
     xp[k] = 0.0;
 
   // normalization factor:
@@ -2299,8 +2333,10 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   }
 
   // last element:
-  if ( np == nw/2 )
-    *(firstyp+nw/2) *= 0.25;
+  if ( np == nw/2 ) {
+    firstyp--;
+    *firstyp *= 0.25;
+  }
 
   return 0;
 }
@@ -2360,6 +2396,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   // number of points for fft window:
   int np = lastg - firstg;
   if ( lastc - firstc != np ||
+       lastcp - firstcp != np ||
        lastxp - firstxp != np ||
        lastyp - firstyp != np  )
     return -3;
@@ -2373,10 +2410,6 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   for ( int k=1; k<nw; k <<= 1 )
     logn++;
   nw = (1 << logn);
-  np = nw/2;
-
-  if ( lastcp - firstcp < np )
-    return -4;
 
   // normalization factor:
   ValueTypeYP wwn = 0.0;
@@ -2532,6 +2565,249 @@ int spectra( const ContainerX &x, const ContainerY &y,
 		  xp.begin(), xp.end(),
 		  yp.begin(), yp.end(),
 		  overlap, window );
+}
+
+
+template < typename ForwardIterX, typename ForwardIterY, 
+  typename BidirectIterCP, typename ForwardIterXP, typename ForwardIterYP >
+int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
+		  ForwardIterY firsty, ForwardIterY lasty,
+		  BidirectIterCP firstcp, BidirectIterCP lastcp,
+		  ForwardIterXP firstxp, ForwardIterXP lastxp,
+		  ForwardIterYP firstyp, ForwardIterYP lastyp,
+		  bool overlap, double (*window)( int j, int n ) )
+{
+  typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
+  typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef typename iterator_traits<ForwardIterXP>::value_type ValueTypeXP;
+  typedef typename iterator_traits<ForwardIterYP>::value_type ValueTypeYP;
+  typedef typename iterator_traits<BidirectIterCP>::value_type ValueTypeCP;
+
+  // clear auto- and cross spectra:
+  for ( ForwardIterXP iterxp=firstxp; iterxp != lastxp; ++iterxp )
+    *iterxp = 0.0;
+  for ( ForwardIterYP iteryp=firstyp; iteryp != lastyp; ++iteryp )
+    *iteryp = 0.0;
+  for ( BidirectIterCP itercp=firstcp; itercp != lastcp; ++itercp )
+    *itercp = 0.0;
+
+  // check input ranges:
+  if ( lastx - firstx != lasty - firsty )
+    return -2;
+
+  // number of points for fft window:
+  int np = lastxp - firstxp;
+  if ( lastyp - firstyp != np  )
+    return -3;
+
+  int nw = np*2;  // window size
+  if ( nw <= 2 )
+    return -1;
+
+  // make sure that nw is a power of 2:
+  int logn = 0;
+  for ( int k=1; k<nw; k <<= 1 )
+    logn++;
+  nw = (1 << logn);
+  np = nw/2;
+
+  if ( lastxp - firstxp != np )
+    return -3;
+  if ( lastcp - firstcp != nw )
+    return -4;
+
+  // normalization factor:
+  ValueTypeYP wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeYP w = window( k, nw );
+    wwn += w*w;
+  }
+  ValueTypeYP norm = 2.0/wwn/nw;
+
+  // cycle through the data:
+  int c = 0;
+  ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
+  ForwardIterY itery = firsty;
+  while ( iterx != lastx && iterx2 != lastx ) {
+
+    // copy chunk of x data into buffer and apply window:
+    ValueTypeX bufferx[nw];
+    int k=0;
+    if ( overlap ) {
+      for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
+	bufferx[k] = *iterx * window( k, nw );
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+	bufferx[k] = *iterx2 * window( k, nw );
+    }
+    else {
+      for ( ; k<nw && iterx != lastx; ++k, ++iterx )
+	bufferx[k] = *iterx * window( k, nw );
+    }
+    if ( c >= 1 && k < 3*nw/4 )
+      break;
+    for ( ; k<nw; k++ )
+      bufferx[k] = 0.0;
+
+    // fourier transform x data:
+    rFFT( bufferx, bufferx+nw );
+
+    // copy chunk of y data into buffer and apply window:
+    ValueTypeY buffery[nw];
+    k=0;
+    if ( overlap ) {
+      for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
+	buffery[k] = *itery * window( k, nw );
+      ForwardIterY itery2 = itery;
+      for ( ; k<nw && itery2 != lasty; ++k, ++itery2 )
+	buffery[k] = *itery2 * window( k, nw );
+    }
+    else {
+      for ( ; k<nw && itery != lasty; ++k, ++itery )
+	buffery[k] = *itery * window( k, nw );
+    }
+    ValueTypeYP normfac = norm;
+    if ( k < nw ) {
+      ValueTypeYP wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffery[k] = 0.0;
+	ValueTypeYP w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac *= wwn / ( wwn - wwz );
+    }
+
+    // fourier transform y data:
+    rFFT( buffery, buffery+nw );
+
+    // compute auto- and cross spectra:
+    c++;
+    // first element xx:
+    ForwardIterXP iterxp = firstxp;
+    ValueTypeXP powerxp = bufferx[0] * bufferx[0];
+    *iterxp += ( 0.5*powerxp*normfac - *iterxp ) / c;
+    ++iterxp;
+    // first element yy:
+    ForwardIterYP iteryp = firstyp;
+    ValueTypeYP poweryp = buffery[0] * buffery[0];
+    *iteryp += ( 0.5*poweryp*normfac - *iteryp ) / c;
+    ++iteryp;
+    // first element Re xy:
+    BidirectIterCP itercpr = firstcp;
+    ValueTypeCP powercpr = bufferx[0] * buffery[0];
+    *itercpr += ( 0.5*powercpr*normfac - *itercpr ) / c;
+    ++itercpr;
+    // first element Im xy:
+    BidirectIterCP itercpi = lastcp;
+    ValueTypeCP powercpi = 0.0;
+    --itercpi;
+    // remaining elements:
+    for ( int k=1; iterxp != lastxp; ++k ) {
+      ValueTypeX xr = bufferx[k];
+      ValueTypeX xi = bufferx[nw-k];
+      ValueTypeY yr = buffery[k];
+      ValueTypeY yi = buffery[nw-k];
+      powerxp = xr*xr + xi*xi;
+      *iterxp += ( powerxp*normfac - *iterxp ) / c;
+      ++iterxp;
+      poweryp = yr*yr + yi*yi;
+      *iteryp += ( poweryp*normfac - *iteryp ) / c;
+      ++iteryp;
+      powercpr = xr*yr + xi*yi;
+      *itercpr += ( powercpr*normfac - *itercpr ) / c;
+      ++itercpr;
+      powercpi = - xr*yi + xi*yr;
+      *itercpi += ( powercpi*normfac - *itercpi ) / c;
+      --itercpi;
+    }
+
+  }
+
+  // last element:
+  *(firstxp+np) *= 0.25;
+  *(firstyp+np) *= 0.25;
+  *(firstcp+np) *= 0.25;
+
+  return 0;
+}
+
+
+template < typename ContainerX, typename ContainerY, 
+  typename ContainerCP, typename ContainerXP, typename ContainerYP >
+int crossSpectra( const ContainerX &x, const ContainerY &y,
+		  ContainerCP &cp, ContainerXP &xp, ContainerYP &yp,
+		  bool overlap, double (*window)( int j, int n ) )
+{
+  return crossSpectra( x.begin(), x.end(),
+		       y.begin(), y.end(),
+		       cp.begin(), cp.end(),
+		       xp.begin(), xp.end(),
+		       yp.begin(), yp.end(),
+		       overlap, window );
+}
+
+
+template < typename BidirectIterCP, typename ForwardIterXP,
+  typename ForwardIterYP, typename ForwardIterC >
+void coherence( BidirectIterCP firstcp, BidirectIterCP lastcp,
+		ForwardIterXP firstxp, ForwardIterXP lastxp,
+		ForwardIterYP firstyp, ForwardIterYP lastyp,
+		ForwardIterC firstc, ForwardIterC lastc )
+{
+  int n = lastxp - firstxp;
+  if ( n <= 0 )
+    return;
+  if ( lastyp - firstyp != n ||
+       lastcp - firstcp != 2*n )
+    return;
+  if ( firstc == lastc )
+    return;
+       
+  if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+    *firstc = 0.0;
+  else 
+    *firstc = (*firstcp) * (*firstcp) * 0.5 / *firstxp / *firstyp;
+  ++firstcp;
+  --lastcp;
+  ++firstxp;
+  ++firstyp;
+  ++firstc;
+  while ( firstc != lastc && firstcp != lastcp ) {
+    if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+      *firstc = 0.0;
+    else 
+      *firstc = ( (*firstcp) * (*firstcp) + (*lastcp) * (*lastcp) ) / *firstxp / *firstyp;
+    ++firstcp;
+    --lastcp;
+    ++firstxp;
+    ++firstyp;
+    ++firstc;
+  }
+  if ( firstc != lastc ) {
+    if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+      *firstc = 0.0;
+    else 
+      *firstc = (*firstcp) * (*firstcp) * 0.5 / *firstxp / *firstyp;
+    ++firstc;
+  }
+
+  // fill up:
+  while ( firstc != lastc ) {
+    *firstc = 0.0;
+    ++firstc;
+  }
+}
+
+
+template < typename ContainerCP, typename ContainerXP,
+  typename ContainerYP, typename ContainerC >
+void coherence( const ContainerCP &cp, const ContainerXP &xp,
+		const ContainerYP &yp, ContainerC &c )
+{
+  coherence( cp.begin(), cp.end(),
+	     xp.begin(), xp.end(),
+	     yp.begin(), yp.end(),
+	     c.begin(), c.end() );
 }
 
 

@@ -59,6 +59,7 @@ int main( int argc, char **argv )
   rFFT( datafft );
   SampleDataD powerfft( n );
   hcPower( datafft, powerfft );
+  powerfft *= 2.0/datafft.size()/datafft.size();
   cerr << "Power of powerfft (sum of power spectrum): " << sum( powerfft ) << '\n';
   cout << powerfft << "\n\n";
 

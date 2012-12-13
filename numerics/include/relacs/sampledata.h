@@ -1262,29 +1262,37 @@ class SampleData : public Array< T >
   template < typename RR >
   friend double coherenceInfo( const SampleData< RR > &c, 
 			       double f0, double f1 );
-    /*! Compute cross spectrum \a c of \a x and \a y.
+    /*! Compute cross power spectrum (squared magnitude of cross spectrum) \a cps of \a x and \a y.
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int rCSD( const SampleData<TT> &x, const SampleData<SS> &y,
-		   SampleData<RR> &c,
+		   SampleData<RR> &cps,
 		   bool overlap, double (*window)( int j, int n ) );
-    /*! Compute gain \a g, coherence \a c and powerspectrum \a ys
+    /*! Compute gain \a g, coherence \a c and powerspectrum \a yps
         between \a x and \a y.
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 		      SampleData<RR> &g, SampleData<RR> &c,
-		      SampleData<RR> &ys,
+		      SampleData<RR> &yps,
 		      bool overlap, double (*window)( int j, int n ) );
-    /*! Compute gain \a g, coherence \a c, auto- (\a xs and \a ys)
-        and cross spectra (\a cs) between \a x and \a y.
+    /*! Compute gain \a g, coherence \a c, auto- (\a xps and \a yps)
+        and cross power spectra (\a cps) between \a x and \a y.
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 		      SampleData<RR> &g, SampleData<RR> &c,
-		      SampleData<RR> &cs, 
-		      SampleData<RR> &xs, SampleData<RR> &ys,
+		      SampleData<RR> &cps, 
+		      SampleData<RR> &xps, SampleData<RR> &yps,
 		      bool overlap, double (*window)( int j, int n ) );
+    /*! Compute power spectra (\a xps and \a yps)
+        and cross spectrum (\a cs) between \a x and \a y.
+	\a TT, \a SS, and \a RR are real numbers. */
+  template < typename TT, typename SS, typename RR >
+  friend int crossSpectra( const SampleData<TT> &x, const SampleData<SS> &y,
+			   SampleData<RR> &cs, 
+			   SampleData<RR> &xps, SampleData<RR> &yps,
+			   bool overlap, double (*window)( int j, int n ) );
 
     /*! Returns in \a meantrace the average over \a traces
         at each position \a pos() of \a meantrace.
@@ -3886,6 +3894,21 @@ int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
   ys.setRange( 0.0, 0.5/x.stepsize()/n );
   return spectra( x.array(), y.array(), g.array(), c.array(), cs.array(),
 		  xs.array(), ys.array(), overlap, window );
+}
+
+
+template < typename TT, typename SS, typename RR >
+int crossSpectra( const SampleData<TT> &x, const SampleData<SS> &y,
+		  SampleData<RR> &cs, SampleData<RR> &xps, SampleData<RR> &yps,
+		  bool overlap, double (*window)( int j, int n ) )
+{
+  int n = 1;
+  for ( n = 1; n < cs.size(); n <<= 1 );
+  cs.setRange( 0.0, 1.0/x.stepsize()/n );
+  xps.setRange( 0.0, 0.5/x.stepsize()/n );
+  yps.setRange( 0.0, 0.5/x.stepsize()/n );
+  return spectra( x.array(), y.array(), cs.array(),
+		  xps.array(), yps.array(), overlap, window );
 }
 
 

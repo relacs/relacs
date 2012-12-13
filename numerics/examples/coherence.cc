@@ -32,8 +32,8 @@ int main ( void )
   int n = 100000;
 
   SampleDataD signal;
-  //  signal.whiteNoise( n, 0.001, 0.0, 400.0, rnd );
-  signal.ouNoise( n, 0.001, 0.001, rnd );
+  signal.whiteNoise( n, 0.001, 0.0, 400.0, rnd );
+  //  signal.ouNoise( n, 0.001, 0.001, rnd );
 
   SampleDataD response( signal );
 
@@ -60,26 +60,69 @@ int main ( void )
   response += noise;
   int nfft = 1024;
 
-  SampleDataD fgain( nfft );
-  SampleDataD cohere( nfft );
-  SampleDataD crossspec( nfft );
-  SampleDataD signalspec( nfft );
-  SampleDataD responsespec( nfft );
-  spectra( signal, response, fgain, cohere, crossspec, signalspec, responsespec, false );
-  //  gain( signal, response, fgain, false );
-  //  coherence( signal, response, cohere, false );
-  //  rCSD( signal, response, cohere, false );
-  //  SampleDataD trans( 2*nfft );
-  //  transfer( signal, response, trans, false );
-  //  hcMagnitude( trans, fgain );
+  SampleDataD fgain1( nfft );
+  SampleDataD cohere1( nfft );
+  SampleDataD crossspec1( nfft );
+  SampleDataD signalspec1( nfft );
+  SampleDataD responsespec1( nfft );
+  spectra( signal, response, fgain1, cohere1, crossspec1, signalspec1, responsespec1 );
 
-  for ( int k=0; k<fgain.size(); k++ )
-    cout << fgain.pos( k )
-	 << "  " << fgain[k]
-	 << "  " << cohere[k]
-	 << "  " << crossspec[k]
-	 << "  " << signalspec[k]
-	 << "  " << responsespec[k] << '\n';
+  SampleDataD signalspec2( nfft );
+  rPSD( signal, signalspec2 );
+
+  SampleDataD responsespec2( nfft );
+  rPSD( response, responsespec2 );
+
+  SampleDataD fgain2( nfft );
+  SampleDataD trans2( 2*nfft );
+  transfer( signal, response, trans2 );
+  hcMagnitude( trans2, fgain2 );
+
+  SampleDataD fgain3( nfft );
+  gain( signal, response, fgain3 );
+
+  SampleDataD cohere2( nfft );
+  coherence( signal, response, cohere2 );
+
+  SampleDataD crossspec2( nfft );
+  rCSD( signal, response, crossspec2 );
+
+  SampleDataD fgain4( nfft );
+  SampleDataD cohere4( nfft );
+  SampleDataD responsespec4( nfft );
+  spectra( signal, response, fgain4, cohere4, responsespec4 );
+
+  SampleDataD crossspec5( 2*nfft );
+  SampleDataD signalspec5( nfft );
+  SampleDataD responsespec5( nfft );
+  crossSpectra( signal, response, crossspec5, signalspec5, responsespec5 );
+  SampleDataD crossspec6( nfft );
+  hcPower( crossspec5, crossspec6 );
+  SampleDataD cohere6( nfft );
+  //  cohere6 = crossspec6/signalspec5/responsespec5;
+  coherence( crossspec5, signalspec5, responsespec5, cohere6 );
+
+  for ( int k=0; k<fgain1.size(); k++ )
+    cout << fgain1.pos( k )
+	 << "  " << fgain1[k]
+	 << "  " << cohere1[k]
+	 << "  " << crossspec1[k]
+	 << "  " << signalspec1[k]
+	 << "  " << responsespec1[k]
+	 << "  " << signalspec2[k]
+	 << "  " << responsespec2[k]
+	 << "  " << fgain2[k]
+	 << "  " << fgain3[k]
+	 << "  " << cohere2[k]
+	 << "  " << crossspec2[k]
+	 << "  " << fgain4[k]
+	 << "  " << cohere4[k]
+	 << "  " << responsespec4[k]
+	 << "  " << crossspec6[k]
+	 << "  " << signalspec5[k]
+	 << "  " << responsespec5[k]
+	 << "  " << cohere6[k]
+	 << '\n';
 
   return 0;
 }
