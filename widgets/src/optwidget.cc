@@ -523,6 +523,8 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
     string aname = Widgets[k]->param()->activationName();
     if ( aname.size() > 0 ) {
       for ( unsigned int i=0; i<Widgets.size(); i++ ) {
+	if ( Widgets[i]->param() == Opt->end() )
+	  continue;
 	if ( *Widgets[i]->param() == aname )
 	  Widgets[i]->addActivation( Widgets[k] );
       }
