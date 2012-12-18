@@ -3926,8 +3926,8 @@ int crossSpectra( const SampleData<TT> &x, const SampleData<SS> &y,
   cs.setRange( 0.0, 1.0/x.stepsize()/n );
   xps.setRange( 0.0, 0.5/x.stepsize()/n );
   yps.setRange( 0.0, 0.5/x.stepsize()/n );
-  return spectra( x.array(), y.array(), cs.array(),
-		  xps.array(), yps.array(), overlap, window );
+  return crossSpectra( x.array(), y.array(), cs.array(),
+		       xps.array(), yps.array(), overlap, window );
 }
 
 

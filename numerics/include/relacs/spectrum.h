@@ -29,6 +29,9 @@ using namespace std;
 
 namespace relacs {
 
+  /*! \return the smalles power of two that is equal or greater than \a n. */
+int nextPowerOfTwo( int n );
+
   /*! Compute an in-place radix-2 FFT on the range \a first, \a last
       of complex numbers.
       The size \a N = \a last - \a first of the range has to be a power of two,
@@ -1168,10 +1171,7 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  nw = (1 << logn);
+  nw = nextPowerOfTwo( nw );
 
   // clear psd:
   for ( ForwardIterP iterp=firstp; iterp != lastp; ++iterp )
@@ -1275,10 +1275,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
   int nw = lasth - firsth;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  if ( nw != (1 << logn) )
+  if ( nw != nextPowerOfTwo( nw ) )
     return -3;
 
   int np = nw/2;
@@ -1456,10 +1453,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
   int nw = lasth - firsth;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  if ( nw != (1 << logn) )
+  if ( nw != nextPowerOfTwo( nw ) )
     return -3;
 
   int np = nw/2;
@@ -1663,10 +1657,7 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  nw = (1 << logn);
+  nw = nextPowerOfTwo( nw );
   np = nw/2;
 
   // working buffers:
@@ -1829,10 +1820,7 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  nw = (1 << logn);
+  nw = nextPowerOfTwo( nw );
   np = nw/2;
 
   // working buffers:
@@ -2025,10 +2013,7 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
   int nw = lastc - firstc;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  if ( nw != (1 << logn) )
+  if ( nw != nextPowerOfTwo( nw ) )
     return -3;
   if ( nw <= 3 )
     return -1;
@@ -2194,10 +2179,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  nw = (1 << logn);
+  nw = nextPowerOfTwo( nw );
 
   // working buffer:
   ValueTypeYP xp[nw/2];
@@ -2406,10 +2388,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  nw = (1 << logn);
+  nw = nextPowerOfTwo( nw );
 
   // normalization factor:
   ValueTypeYP wwn = 0.0;
@@ -2605,10 +2584,7 @@ int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // make sure that nw is a power of 2:
-  int logn = 0;
-  for ( int k=1; k<nw; k <<= 1 )
-    logn++;
-  nw = (1 << logn);
+  nw = nextPowerOfTwo( nw );
   np = nw/2;
 
   if ( lastxp - firstxp != np )
