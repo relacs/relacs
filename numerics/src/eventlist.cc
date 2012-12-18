@@ -1856,12 +1856,11 @@ void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleData
 }
 
 
-void EventList::coherence( const SampleDataD &stimulus, SampleDataD &c,
-			   bool overlap, double (*window)( int j, int n ) ) const
+int EventList::coherence( const SampleDataD &stimulus, SampleDataD &c,
+			  bool overlap, double (*window)( int j, int n ) ) const
 {
   c = 0.0;
-  int nfft = 1;
-  for ( nfft=1; nfft<c.size(); nfft <<= 1 );
+  int nfft = nextPowerOfTwo( c.size() );
   SampleDataD crossspec( 2*nfft, 0.0 );
   SampleDataD signalspec( nfft, 0.0 );
   SampleDataD responsespec( nfft, 0.0 );
@@ -1873,7 +1872,9 @@ void EventList::coherence( const SampleDataD &stimulus, SampleDataD &c,
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    ::relacs::crossSpectra( stimulus, rr, cp, signalspec, rp, overlap, window );
+    int r = ::relacs::crossSpectra( stimulus, rr, cp, signalspec, rp, overlap, window );
+    if ( r != 0 )
+      return r;
     n++;
     for ( int k=0; k<cp.size(); k++ )
       crossspec[k] += ( cp[k] - crossspec[k] ) / n;
@@ -1881,12 +1882,13 @@ void EventList::coherence( const SampleDataD &stimulus, SampleDataD &c,
       responsespec[k] += ( rp[k] - responsespec[k] ) / n;
   }
   ::relacs::coherence( crossspec, signalspec, responsespec, c );
+  return 0;
 }
 
 
-void EventList::coherence( double tbegin, double tend, double step,
-			   SampleDataD &c,
-			   bool overlap, double (*window)( int j, int n ) ) const
+int EventList::coherence( double tbegin, double tend, double step,
+			  SampleDataD &c,
+			  bool overlap, double (*window)( int j, int n ) ) const
 {
   c = 0.0;
   // convolve events with kernel:
@@ -1895,8 +1897,7 @@ void EventList::coherence( double tbegin, double tend, double step,
   for ( const_iterator i = begin(); i != end(); ++i, ++k ) {
     (*i)->rate( rr[k] );
   }
-  int nfft = 1;
-  for ( nfft=1; nfft<c.size(); nfft <<= 1 );
+  int nfft = nextPowerOfTwo( c.size() );
   SampleDataD crossspec( 2*nfft, 0.0 );
   SampleDataD responsespec( nfft, 0.0 );
   SampleDataD cp( 2*nfft, 0.0 );
@@ -1908,7 +1909,9 @@ void EventList::coherence( double tbegin, double tend, double step,
   int nr=0;
   for ( unsigned int i=0; i<rr.size(); i++ ) {
     for ( unsigned int j=i+1; j<rr.size(); j++ ) {
-      ::relacs::crossSpectra( rr[i], rr[j], cp, rp, dp, overlap, window );
+      int r = ::relacs::crossSpectra( rr[i], rr[j], cp, rp, dp, overlap, window );
+      if ( r != 0 )
+	return r;
       n++;
       for ( int k=0; k<cp.size(); k++ )
 	crossspec[k] += ( cp[k] - crossspec[k] ) / n;
@@ -1920,6 +1923,7 @@ void EventList::coherence( double tbegin, double tend, double step,
   ::relacs::coherence( crossspec, responsespec, responsespec, c );
   for ( int k=0; k<c.size(); k++ )
     c = ::sqrt( c[k] );
+  return 0;
 }
 
 

@@ -24,6 +24,14 @@
 namespace relacs {
 
 
+int nextPowerOfTwo( int n )
+{
+  int n2 = 1;
+  for ( n2=1; n2<n; n2 <<= 1 );
+  return n2;
+}
+
+
 double bartlett( int j, int n )
 {
   double a = 2.0/(n-1);

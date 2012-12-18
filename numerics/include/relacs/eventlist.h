@@ -801,9 +801,10 @@ public:
 	and stimulus.rangeBack() ) are considered.
 	The sampling interval of the stimulus (stimulus.stepsize())
 	is used as the bin width for discretizing the events.
-        The frequency axis of the coherence \a c is set to the appropriate values. */
-  void coherence( const SampleDataD &stimulus, SampleDataD &c,
-		  bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
+        The frequency axis of the coherence \a c is set to the appropriate values.
+        \return The error code of the crossSpectra() function. */
+  int coherence( const SampleDataD &stimulus, SampleDataD &c,
+		 bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
     /*! Returns in \a c the square-root of the coherence between pairs of event trials
         averaged over all pairs	(the response-response (R-R) coherence \f$\gamma_{RR}\f$).
 	The size of \a c times \a step determines
@@ -812,10 +813,11 @@ public:
 	may overlap by half if \a overlap is set to \c true.
 	Only events during the \a tbegin and \a tend are considered.
 	The bin width for discretizing the events is set to \a step.
-        The frequency axis of the coherence \a c is set to the appropriate values. */
-  void coherence( double tbegin, double tend, double step,
-		  SampleDataD &c,
-		  bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
+        The frequency axis of the coherence \a c is set to the appropriate values.
+        \return The error code of the crossSpectra() function. */
+  int coherence( double tbegin, double tend, double step,
+		 SampleDataD &c,
+		 bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
 
     /*! The mean latenceny and standard deviation \a sd of the events
         following time \a time. */
