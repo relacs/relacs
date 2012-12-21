@@ -2961,22 +2961,30 @@ string Parameter::save( bool detailed, bool firstonly ) const
 {
   string str;
   // name:
-  str = name();
-  if ( detailed && name() != request() )
-    str += " (" + request() + "): ";
+  if ( name().find_first_of( ",{}[]:=" ) != string::npos )
+    str = '"' + name() + '"';
   else
-    str += ": ";
+    str = name();
+  if ( detailed && name() != request() ) {
+    if ( request().find_first_of( ",{}[]:=" ) != string::npos )
+      str += " (\"" + request() + "\")";
+    else
+      str += " (" + request() + ")";
+  }
+  str += ": ";
 
   // value:
   bool fulllist = ( size() > 1 &&
 		    ( (Style & ListAlways) || ! firstonly ) );
   if ( isNumber() || isInteger() ) {
     if ( fulllist )
-      str += "[";
+      str += "[ ";
     if ( error( 0 ) >= 0.0 )
       str += text( 0, "(" + format() + "+-" + format().up() + ")" );
     else
       str += text( 0 );
+    if ( outUnit() != "1" )
+      str += outUnit();
     if ( fulllist ) {
       for ( int k=1; k<(int)Value.size(); k++ ) {
 	str += ", ";
@@ -2984,27 +2992,27 @@ string Parameter::save( bool detailed, bool firstonly ) const
 	  str += text( k, "(" + format() + "+-" + format().up() + ")" );
 	else
 	  str += text( k );
+	if ( outUnit() != "1" )
+	  str += outUnit();
       }
-      str += "]";
+      str += " ]";
     }
-    if ( outUnit() != "1" )
-      str += outUnit();
   }
   else if ( isBoolean() ) {
     if ( fulllist )
-      str += "[";
+      str += "[ ";
     str += ( boolean( 0 ) ? "true" : "false" );
     if ( fulllist ) {
       for ( int k=1; k<(int)Value.size(); k++ ) {
 	str += ", ";
 	str += ( boolean( k ) ? "true" : "false" );
       }
-      str += "]";
+      str += " ]";
     }
   }
   else if ( isDate() || isTime() || isText() ) {
     if ( fulllist )
-      str += "[";
+      str += "[ ";
     string val = text( 0 );
     if ( val.empty() )
       str += '~';
@@ -3017,10 +3025,12 @@ string Parameter::save( bool detailed, bool firstonly ) const
 	val = text( k );
 	if ( val.empty() )
 	  str += ", ~";
+	else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
+	  str += '"' + val + '"';
 	else
 	  str += ", " + val;
       }
-      str += "]";
+      str += " ]";
     }
   }
 
@@ -3032,22 +3042,31 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
 			  bool firstonly ) const
 {
   // name:
-  string is = name();
-  if ( detailed && name() != request() )
-    is += " (" + request() + ")";
-  str << Str( is, -width );
-  str << ": ";
+  string is = "";
+  if ( name().find_first_of( ",{}[]:=" ) != string::npos )
+    is = '"' + name() + '"';
+  else
+    is = name();
+  if ( detailed && name() != request() ) {
+    if ( request().find_first_of( ",{}[]:=" ) != string::npos )
+      is += " (\"" + request() + "\")";
+    else
+      is += " (" + request() + ")";
+  }
+  str << Str( is, -width ) << ": ";
 
   // value:
   bool fulllist = ( size() > 1 &&
 		    ( (Style & ListAlways) || ! firstonly ) );
   if ( isNumber() || isInteger() ) {
     if ( fulllist )
-      str << "[";
+      str << "[ ";
     if ( error( 0 ) >= 0.0 )
       str << text( 0, "(" + format() + "+-" + format().up() + ")" );
     else
       str << text( 0 );
+    if ( outUnit() != "1" )
+      str << outUnit();
     if ( fulllist ) {
       for ( int k=1; k<(int)Value.size(); k++ ) {
 	str << ", ";
@@ -3055,26 +3074,26 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
 	  str << text( k, "(" + format() + "+-" + format().up() + ")" );
 	else
 	  str << text( k );
+	if ( outUnit() != "1" )
+	  str << outUnit();
       }
-      str << "]";
+      str << " ]";
     }
-    if ( outUnit() != "1" )
-      str << outUnit();
   }
   else if ( isBoolean() ) {
     if ( fulllist )
-      str << "[";
+      str << "[ ";
     str << ( boolean( 0 ) ? "true" : "false" );
     if ( fulllist ) {
       for ( int k=1; k<(int)Value.size(); k++ ) {
 	str << ", " << ( boolean( k ) ? "true" : "false" );
       }
-      str << "]";
+      str << " ]";
     }
   }
   else if ( isDate() || isTime() || isText() ) {
     if ( fulllist )
-      str << "[";
+      str << "[ ";
     string val = text( 0 );
     if ( val.empty() )
       str << '~';
@@ -3087,10 +3106,12 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
 	val = text( k );
 	if ( val.empty() )
 	  str << ", " << '~';
+	else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
+	  str << '"' << val << '"';
 	else
 	  str << ", " << val;
       }
-      str << "]";
+      str << " ]";
     }
   }
   else if ( isNotype() )
@@ -3180,7 +3201,7 @@ Parameter &Parameter::load( Str s, const string &assignment )
   // clear parameter:
   clear();
 
-  Str name = s.ident( 0, assignment );
+  Str name = s.ident( 0, assignment, Str::WhiteSpace + '"' );
   Str request = "";
   if ( name.empty() )
     Warning += "\"" + s.stripped() + "\": missing name! ";
@@ -3236,8 +3257,8 @@ Parameter &Parameter::loadNameValue( Str name, const string &value )
       if ( n >= 0 ) {
 	request = name.mid( n+1, name.size()-2 );
 	name.erase( n-1 );
-	name.strip();
-	request.strip();
+	name.strip( Str::WhiteSpace + '"' );
+	request.strip( Str::WhiteSpace + '"' );
       }
     }
     if ( value.empty() ) {

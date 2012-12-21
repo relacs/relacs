@@ -41,21 +41,23 @@ int main( int argc, char *argv[] )
   opt.addTime( "recordingtime", 16, 42, 13 );
   opt.insertNumber( "pause", "repeats", "Pause between Signals",
 		    0.1, 0.01, 1000.0, 0.01, "seconds", "ms", "%5.1f" );
-  opt.addSection( "Analysis", "analysis/basics" );
+  opt.newSection( "Analysis", "analysis/basics" );
   opt.addNumber( "win", "Length of analysis window",
 		 0.1, 0.01, 1000.0, 0.01, "seconds", "ms" );
+  opt.pushNumber( "win", 0.23 );
+  opt.pushNumber( "win", 15.0, "ms" );
   opt.addBoolean( "type", "Full analysis", true );
   opt.addText( "Nasty, a = |x|>1", "some special value" );
   opt.addText( "Nasty value", "a, b [c], {d}" );
-  opt.addSection( "Results" );
+  opt.newSection( "Results" );
   opt.addInteger( "numres", "Number of results reported", 7 );
-  opt.addSubSection( "Color", "color/rgb" );
+  opt.newSubSection( "Color", "color/rgb" );
   opt.addSelection( "background", "Background color", "red|green|blue" );
   opt.addText( "foreground", "Foreground color", "" );
-  opt.addSubSection( "Animal" );
+  opt.newSubSection( "Animal" );
   opt.addSelection( "mammal", "Mammal", "Monkey|~|Elephant" );
   opt.addSelection( "fish", "Fish", "Trout|Pike|Carp" );
-  opt.addSection( "Files", "analysis/files" );
+  opt.newSection( "Files", "analysis/files" );
   opt.addText( "master", "Master file", "main.dat" );
   opt.addText( "data", "Data file", "data.dat" );
 
@@ -75,6 +77,9 @@ int main( int argc, char *argv[] )
   cout << "Value of parameter 'type': " << opt.boolean( "Analysis>type" ) << '\n';
   cout << "Value of parameter 'Nasty, a = |x|<1': " << opt.text( "Nasty, a = |x|>1" ) << '\n';
   cout << "Value of parameter 'Analysis>numres': " << opt.integer( "Analysis>numres" ) << '\n';
+  cout << "Value of parameter 'Analysis>win, 0': " << opt.number( "Analysis>win", 0 ) << '\n';
+  cout << "Value of parameter 'Analysis>win, 1': " << opt.number( "Analysis>win", 1 ) << '\n';
+  cout << "Value of parameter 'Analysis>win, 2': " << opt.number( "Analysis>win", 2 ) << '\n';
   cout << "Value of parameter 'Results>numres': " << opt.integer( "Results>numres" ) << '\n';
   cout << "Value of parameter 'Results>Color>background': " << opt.text( "Results>Color>background" ) << '\n';
   cout << "Value of parameter 'Results>mammal 0': *" << opt.text( "Results>mammal", 0 ) << "*\n";
@@ -90,6 +95,8 @@ int main( int argc, char *argv[] )
   opt2.setBoolean( "type", false );
   opt2.setNumber( "duration", 0.31 );
   opt2.setNumber( "Analysis>win", 0.42 );
+  opt2.setText( "Nasty, a = |x|>1", "some other value" );
+  opt2.setText( "Nasty value", "d, [c] {b}, a" );
   opt2.setInteger( "Results>numres", 23 );
   opt2.selectText( "Animal>mammal", "Elephant" );
   opt2.setText( "Files>master", "maindata.dat" );
@@ -149,8 +156,6 @@ int main( int argc, char *argv[] )
   {
     ifstream sf( "tmp.dat" );
     string s;
-    //    getline( sf, s );
-    //    getline( sf, s );
     opt3.load( sf );
   }
   opt3.save( cout, "", 0, true );
@@ -162,8 +167,6 @@ int main( int argc, char *argv[] )
   {
     ifstream sf( "read.dat" );
     string s;
-    //    getline( sf, s );
-    //    getline( sf, s );
     opt4.load( sf );
   }
   opt4.save( cout, "", 0, true );

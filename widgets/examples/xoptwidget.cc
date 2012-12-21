@@ -34,26 +34,26 @@ MainWidget::MainWidget( void )
 {
   //int testflag = OptWidget::BackBlack | OptWidget::Blue;
   int testflag = 0;
-  Opt1.addSection( "Timing", 0, OptWidget::TabSection | testflag );
+  Opt1.newSection( "Timing", 0, OptWidget::TabSection | testflag );
   Opt1.addNumber( "duration", "Duration of Signal",
 		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setStyle( OptWidget::Huge | OptWidget::Italic | OptWidget::Green | testflag );
   Opt1.addNumber( "pause", "Pause between Signals",
 		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | OptWidget::ValueLCD | OptWidget::ValueHuge | testflag );
   Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setStyle( testflag );
   
-  Opt1.addSection( "Settings", 0,  OptWidget::Large |  OptWidget::Red | testflag );
+  Opt1.newSection( "Settings", 0,  OptWidget::Large |  OptWidget::Red | testflag );
   Opt1.addText( "fgcolor", "Foreground color", "red|green|blue" ).setStyle( OptWidget::SelectText | testflag );
   Opt1.addText( "bgcolor", "Background color", "red|green|blue" ).setStyle( testflag );
   Opt1.addText( "comment", "Comments", "no comment" ).setStyle( testflag );
   Opt1.addBoolean( "adjust", "Adjust input gain", true ).setStyle( testflag );
 
-  Opt1.addSection( "Analysis" ).setStyle( OptWidget::TabSection );
+  Opt1.newSection( "Analysis" ).setStyle( OptWidget::TabSection );
   Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.01, "seconds", "ms" );
   Opt1.addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", 0.001, 0.0, 1.0, 0.0001, "seconds", "ms" );
   Opt1.addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", 0.005, 0.0, 1.0, 0.001, "seconds", "ms" );
   Opt1.addNumber( "sigma3", "Standard deviation of rate smoothing kernel 3", 0.005, 0.0, 1.0, 0.001, "seconds", "ms" );
   Opt1.addBoolean( "adjust", "Adjust input gain", true );
-  Opt1.addSection( "Save stimuli" );
+  Opt1.newSection( "Save stimuli" );
   Opt1.addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
   Opt1.addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
   Opt1.addSelection( "storelevel", "Save", "all|generated|noise|none" ).setUnit( "stimuli" );

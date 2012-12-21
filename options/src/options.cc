@@ -4072,8 +4072,13 @@ int Options::nameWidth( int selectmask, bool detailed ) const
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
       unsigned int w = pp->name().size();
-      if ( detailed && pp->name() != pp->request() )
+      if ( pp->name().find_first_of( ",{}[]:=" ) != string::npos )
+	w += 2;
+      if ( detailed && pp->name() != pp->request() ) {
 	w += 3 + pp->request().size();
+	if ( pp->request().find_first_of( ",{}[]:=" ) != string::npos )
+	  w += 2;
+      }
       if ( w > width )
 	width = w;
     }
@@ -4094,9 +4099,17 @@ ostream &Options::save( ostream &str, const string &start,
 
   // write options to file:
   if ( ! name().empty() || ! type().empty() ) {
-    str << starts << ( name().empty() ? type() : name() );
-    if ( ! name().empty() && ! type().empty() && detailed )
-      str << " (" << type() << ")";
+    string ns = name().empty() ? type() : name();
+    if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
+      str << starts << '"' << ns << '"';
+    else
+      str << starts << ns;
+    if ( ! name().empty() && ! type().empty() && detailed ) {
+      if ( type().find_first_of( ",{}[]:=" ) != string::npos )
+	str << " (\"" << type() << "\")";
+      else
+	str << " (" << type() << ")";
+    }
     str << ":\n";
     starts += "    ";
   }
@@ -4163,9 +4176,17 @@ string Options::save( int selectmask, bool firstonly ) const
   // write options to string:
   string str;
   if ( ! name().empty() || ! type().empty() ) {
-    str += ( name().empty() ? type() : name() );
-    if ( ! name().empty() && ! type().empty() )
-      str += " (" + type() + ")";
+    string ns = name().empty() ? type() : name();
+    if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
+      str += '"' + ns + '"';
+    else
+      str += ns;
+    if ( ! name().empty() && ! type().empty() ) {
+      if ( type().find_first_of( ",{}[]:=" ) != string::npos )
+	str += " (\"" + type() + "\")";
+      else
+	str += " (" + type() + ")";
+    }
     str += ": { ";
   }
   int n=0;
@@ -4281,10 +4302,10 @@ Options &Options::read( const string &opttxt, int flag,
     // extract name:
     next = s.findSeparator( index, assignment, "\"" );
     Str name = s.mid( index, next-1 );
-    name.strip( Str::WhiteSpace + '-' );
+    name.strip( Str::WhiteSpace + "-\"" );
     if ( ! name.empty() && name[name.size()-1] == ')' ) {
       name.erase( name.find( '(' ) );  // erase request string/section type specifier
-      name.strip( Str::WhiteSpace + '-' );
+      name.strip( Str::WhiteSpace + "\"-" );
     }
     // go to value:
     if ( next >= 0 )
@@ -4685,7 +4706,7 @@ Options &Options::load( const Str &opttxt,
     // extract name:
     next = s.findSeparator( index, assignment, "\"" );
     Str name = s.mid( index, next-1 );
-    name.strip( Str::WhiteSpace );
+    name.strip();
     // go to value:
     if ( next >= 0 )
       index = s.findFirstNot( Str::WhiteSpace, next+1 );
@@ -4710,10 +4731,10 @@ Options &Options::load( const Str &opttxt,
 	  int ri = name.find( '(' );
 	  if ( name.size() > 2 && name[name.size()-1] == ')' && ri > 0 ) {
 	    type = name.mid( ri+1, name.size()-2 );
-	    type.strip();
+	    type.strip( Str::WhiteSpace + '"' );
 	    name.erase( ri );
-	    name.strip();
 	  }
+	  name.strip( Str::WhiteSpace + '"' );
 	  int style = 0;
 	  if ( name.size() > 2 &&
 	       name[0] == '-' &&
@@ -4790,10 +4811,10 @@ Options &Options::load( const Str &opttxt,
       int ri = name.find( '(' );
       if ( name.size() > 2 && name[name.size()-1] == ')' && ri > 0 ) {
 	type = name.mid( ri+1, name.size()-2 );
-	type.strip();
+	type.strip( Str::WhiteSpace + '"' );
 	name.erase( ri );
-	name.strip();
       }
+      name.strip( Str::WhiteSpace + '"' );
       int style = 0;
       if ( name.size() > 2 &&
 	   name[0] == '-' &&
@@ -4870,33 +4891,6 @@ Options &Options::load( const Str &opttxt,
   (*level)--;
 
   return *retopt;
-
-
-
-  /*
-  Warning = "";
-
-  string s = opttxt.stripped().preventLast( separator );
-  if ( s.empty() )
-    return *this;
-
-  // split up opttxt:
-  StrQueue sq( s, separator );
-
-  for ( StrQueue::const_iterator sp=sq.begin(); sp != sq.end(); ++sp ) {
-    Parameter np( *sp, assignment );
-    np.setParentSection( this );
-    Warning += np.warning();
-    Opt.push_back( np );
-  }
-
-#ifndef NDEBUG
-  if ( ! Warning.empty() )
-    cerr << "!warning in Options::load() -> " << Warning << '\n';
-#endif
-
-  return *this;
-  */
 }
 
 

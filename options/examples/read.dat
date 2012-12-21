@@ -8,10 +8,10 @@ sinewave     : true
 recordingdate: 2009-06-20
 recordingtime: 16:42:13
 Analysis
-win             : 420ms
+win             : [420ms, 0.5s]
 type            : false
-Nasty, a = |x|>1: some special value
-Nasty value     : "d, c [b], {a}"
+Nasty, a = |x|>1: some cool value
+Nasty value     : "d, X [b], {a}"
 Results
 numres: 23
 Color
