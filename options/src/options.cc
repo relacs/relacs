@@ -32,6 +32,7 @@ Options::Options( void )
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Include( "" ),
     Flag( 0 ),
     Style( 0 ),
     Opt(),
@@ -48,6 +49,7 @@ Options::Options( const Options &o )
   : ParentSection( o.ParentSection ),
     Name( o.Name ),
     Type( o.Type ),
+    Include( o.Include ),
     Flag( o.Flag ),
     Style( o.Style ),
     AddOpts( this ),
@@ -63,6 +65,7 @@ Options::Options( const Options &o, int flags )
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Include( "" ),
     Flag( 0 ),
     Style( 0 ),
     Opt(),
@@ -80,6 +83,7 @@ Options::Options( const string &name, const string &type, int flags, int style )
   : ParentSection( 0 ),
     Name( name ),
     Type( type ),
+    Include( "" ),
     Flag( flags ),
     Style( style ),
     Opt(),
@@ -97,6 +101,7 @@ Options::Options( const Str &opttxt, const string &assignment,
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Include( "" ),
     Flag( 0 ),
     Style( 0 ),
     Opt(),
@@ -114,6 +119,7 @@ Options::Options( const StrQueue &sq, const string &assignment )
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Include( "" ),
     Flag( 0 ),
     Style( 0 ),
     Opt(),
@@ -133,6 +139,7 @@ Options::Options( istream &str, const string &assignment,
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Include( "" ),
     Flag( 0 ),
     Style( 0 ),
     Opt(),
@@ -166,6 +173,7 @@ Options &Options::assign( const Options &o )
 
   Name = o.Name;
   Type = o.Type;
+  Include = o.Include;
   Flag = o.Flag;
   Style = o.Style;
   ParentSection = o.ParentSection;
@@ -244,6 +252,7 @@ Options &Options::assign( const Options &o, int flags )
 
   Name = o.Name;
   Type = o.Type;
+  Include = o.Include;
   Flag = o.Flag;
   Style = o.Style;
   ParentSection = o.ParentSection;
@@ -279,6 +288,7 @@ Options &Options::copy( Options &o, int flags )
 
   o.Name = Name;
   o.Type = Type;
+  o.Include = Include;
   o.Flag = Flag;
   o.Style = Style;
   o.ParentSection = ParentSection;
@@ -474,6 +484,13 @@ void Options::setName( const string &name )
 }
 
 
+void Options::setName( const string &name, const string &type )
+{
+  setName( name );
+  Type = type;
+}
+
+
 string Options::type( void ) const
 {
   return Type;
@@ -483,6 +500,18 @@ string Options::type( void ) const
 void Options::setType( const string &type )
 {
   Type = type;
+}
+
+
+string Options::include( void ) const
+{
+  return Include;
+}
+
+
+void Options::setInclude( const string &url, const string &name )
+{
+  Include = url + '#' + name;
 }
 
 
@@ -4236,6 +4265,8 @@ ostream &Options::saveXML( ostream &str, int selectmask, int level,
       str << indstr2 << "<type>" << type() << "</type>\n";
     if ( ! name().empty() )
       str << indstr2 << "<name>" << name() << "</name>\n";
+    if ( ! include().empty() )
+      str << indstr2 << "<include>" << include() << "</include>\n";
     level++;
   }
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {

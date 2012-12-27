@@ -478,26 +478,25 @@ void SaveFiles::saveStimulus( void )
     return;
 
   // extract intensity from stimulus description:
+  // XXX there should be a flag indicating, which quantities to extract!
   deque< Options > stimuliref( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    stimuliref[j] = Stimuli[j].description();
     Options::iterator pi = Stimuli[j].description().find( "Intensity" );
     if ( pi != Stimuli[j].description().end() ) {
-      stimuliref[j].add( *pi );   // XXX ??? XXX
+      stimuliref[j].add( *pi );
       Stimuli[j].description().erase( pi );
     }
     // XXX once OutData does not have idents any more, the following lines can be erased:
-    Options::iterator pd = Stimuli[j].description().find( "Description" );
-    if ( pd != Stimuli[j].description().end() ) {
-      stimuliref[j].add( *pd ); // XXXX
-      Stimuli[j].description().erase( pd );
+    if ( ! Stimuli[j].ident().empty() ) {
+      stimuliref[j].addText( "Description", Stimuli[j].ident() );
     }
   }
 
-  // generate names for stimuli:
+  // generate names for all stimulus traces:
+  // i.e reproname-type1-type2 ...
   deque< string > stimulinames( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    string sn = StimuliRePro;
+    string sn = StimuliRePro;  // (name of the RePro from which the stimulus was written)
     for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
 	  si != Stimuli[j].description().sectionsEnd();
 	  ++si ) {
@@ -508,20 +507,33 @@ void SaveFiles::saveStimulus( void )
       sn += '-' + tn;
     }
     stimulinames[j] = sn;
+    Stimuli[j].description().setName( stimulinames[j], "stimulus" );
+    Stimuli[j].description().addText( "Modality", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
+    Stimuli[j].description().addNumber( "SamplingRate", 0.001*Stimuli[j].sampleRate(), "kHz" );
+    stimuliref[j].setName( stimulinames[j], "stimulus" );
+    stimuliref[j].setInclude( "stimulus-metadata.xml", stimulinames[j] );
+    stimuliref[j].addText( "Modality", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
+    stimuliref[j].addNumber( "SamplingRate", 0.001*Stimuli[j].sampleRate(), "kHz" );
   }
 
-  // track stimuli:
+  // track stimulus traces:
   deque< bool > newstimuli( Stimuli.size(), false );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
+    // get all stimulus descriptions for the stimulusname reproname-type1-type2:
     map < Options, string > &rsd = ReProStimuli[ stimulinames[j] ];
+    // retrieve the corresponding unique identifier:
     string &rsds = rsd[ Stimuli[j].description() ];
     if ( rsds.empty() ) {
+      // this stimulus description is new:
       newstimuli[j] = true;
+      // append the number of stimuli in this category to make the name unique:
       stimulinames[j] += '-' + Str( rsd.size() );
       rsds = stimulinames[j];
     }
-    else
+    else {
+      // this stimulus already exists, get its unique identifier:
       stimulinames[j] = rsds;
+    }
   }
 
   // track stimulus name:
@@ -536,18 +548,7 @@ void SaveFiles::saveStimulus( void )
     if ( SDF != 0 ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	if ( newstimuli[j] ) {
-	  *SDF << "Stimulus: " << stimulinames[j] << '\n';
-	  *SDF << "Modality: " << RW->AQ->outTrace( Stimuli[j].trace() ).modality() << '\n';
-	  *SDF << "SamplingRate: " << 0.001*Stimuli[j].sampleRate() << "kHz\n";
-	  for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
-		si != Stimuli[j].description().sectionsEnd();
-		++si ) {
-	    string ts = (*si)->type();
-	    if ( ts.empty() )
-	      ts = (*si)->name();
-	    *SDF << "Type: " << ts << '\n';
-	    (*si)->save( *SDF, "  " );
-	  }
+	  Stimuli[j].description().save( *SDF, "  " );
 	  *SDF << '\n';
 	}
       }
@@ -596,8 +597,7 @@ void SaveFiles::saveStimulus( void )
 	    if ( ! att->frequencyName().empty() )
 	      StimulusKey.save( *SF, Stimuli[j].carrierFreq() );
 	  }
-	  // XXX once all RePro support descriptions, in the following line Ident should be replaced by stimulinames[]!
-	  StimulusKey.save( *SF, Stimuli[j].ident() );
+	  StimulusKey.save( *SF, stimulinames[j] );
 	  break;
 	}
       }
@@ -621,17 +621,8 @@ void SaveFiles::saveStimulus( void )
     // stimulus description:
     if ( XSF != 0 ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-	if ( newstimuli[j] ) {
-	  *XSF << "<section>\n";
-	  *XSF << "  <type>stimulus</type>\n";
-	  *XSF << "  <name>" << stimulinames[j] << "</name>\n";
-	  Parameter pm( "Modality", "", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
-	  pm.saveXML( *XSF, 1 );
-	  Parameter pr( "SamplingRate", "", 0.001*Stimuli[j].sampleRate(), "kHz" );
-	  pr.saveXML( *XSF, 1 );
+	if ( newstimuli[j] )
 	  Stimuli[j].description().saveXML( *XSF, 0, 2 );
-	  *XSF << "</section>\n";
-	}
       }
     }
 
@@ -639,8 +630,7 @@ void SaveFiles::saveStimulus( void )
     *XF << "    <section>\n";
     *XF << "      <type>stimulus</type>\n";
     *XF << "      <name>" << stimulirepro << "</name>\n";
-    for( int k=0; k<StimulusOptions.size(); k++ )
-      StimulusOptions[k].saveXML( *XF, 3 );
+    StimulusOptions.saveXML( *XF, 0, 3 );
     //    int col = StimulusKey.column( "stimulus>timing>time" );
     //    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
     // Stimulus:
@@ -650,24 +640,15 @@ void SaveFiles::saveStimulus( void )
 	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
 	if ( Stimuli[j].device() == RW->AQ->outTrace( k ).device() &&
 	     Stimuli[j].channel() == RW->AQ->outTrace( k ).channel() ) {
-	  *XF << "      <section>\n";
-	  *XF << "        <type>stimulus</type>\n";
-	  *XF << "        <name>" << stimulinames[j] << "</name>\n";
-	  *XF << "        <include>stimulus-metadata.xml#" << stimulinames[j] << "</include>\n";
-	  Parameter pc( "OutputChannel", "", RW->AQ->outTraceName( Stimuli[j].trace() ) );
-	  pc.saveXML( *XF, 4 );
+	  stimuliref[j].addText( "OutputChannel", RW->AQ->outTraceName( Stimuli[j].trace() ) );
 	  if ( att != 0 ) {
-	    Parameter pa( att->intensityName(), "", Stimuli[j].intensity(),
+	    stimuliref[j].addNumber( att->intensityName(), Stimuli[j].intensity(),
 			  att->intensityUnit(), att->intensityFormat() );
-	    pa.saveXML( *XF, 4 );
-	    if ( ! att->frequencyName().empty() ) {
-	      Parameter pf( att->frequencyName(), "", Stimuli[j].carrierFreq(),
-			    att->frequencyUnit(), att->frequencyFormat() );
-	      pf.saveXML( *XF, 4 );
-	    }
+	    if ( ! att->frequencyName().empty() )
+	      stimuliref[j].addNumber( att->frequencyName(), Stimuli[j].carrierFreq(),
+				       att->frequencyUnit(), att->frequencyFormat() );
 	  }
 	  stimuliref[j].saveXML( *XF, 0, 5 );
-	  *XF << "      </section>\n";
 	  break;
 	}
       }
@@ -1083,7 +1064,7 @@ void SaveFiles::createXMLFile( const InList &traces,
     *XF << "  </section>\n";
   }
 
-  // create xml file for all data:
+  // create xml file for stimulus metadata:
   XSF = openFile( "stimulus-metadata.xml", ios::out );
   if ( (*XSF) ) {
     *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";

@@ -188,11 +188,23 @@ public:
   string name( void ) const;
     /*! Set the name of this section of options to \a name. */
   virtual void setName( const string &name );
+    /*! Set the name of this section of options to \a name
+        and its type to \a type.
+        The default implementation uses setName() for setting the name. */
+  virtual void setName( const string &name, const string &type );
 
     /*! The type specifyier of this section of options. */
   string type( void ) const;
     /*! Set the type specifier of this section of options to \a type. */
   void setType( const string &type );
+
+    /*! The include path. \sa setInclude()  */
+  string include( void ) const;
+    /*! Tell this section of options that it inherits some of it
+        contents from a section with name \a name saved in a different
+        file at \a url. This information is written out by the
+        saveXML() function only. \sa include() */
+  void setInclude( const string &url, const string &name );
 
     /*! The flag for this secion of options. */
   int flag( void ) const;
@@ -1771,6 +1783,8 @@ private:
   string Name;
     /*! Type of this section of options. */
   string Type;
+    /*! An optional include path for this section of options. */
+  string Include;
     /*! Flag for this section. */
   int Flag;
     /*! Style flag for the section Name and Type. */

@@ -75,9 +75,6 @@ OutDataInfo::OutDataInfo( const OutData &signal )
   CarrierFreq = signal.carrierFreq();
   Ident = signal.ident();
   Description = signal.description();
-  // XXX once OutData does not have idents any more, the following lines can be erased:
-  //  if ( ! signal.ident().empty() )
-  //    Description.addText( "Description", signal.ident() );
 }
 
 

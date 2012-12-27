@@ -1,4 +1,4 @@
-Options:
+:
 - rework append(), add(), merge(), or whatever.
 - Add section( int ) function that returns the i-th section.
 - Add iterator that iterates through all sections and subsections ?
@@ -40,19 +40,16 @@ Acquire:
 - How to make sure the right Attenuate is used for a given RePro?
 
 Metadata support of OutData:
+- There should be a flag for Parameter in OutData::description()
+  indicating, which quantities to extract in SaveFiles
 - Unify TraceSpec and OutDataInfo?
 - Add constWave function to OutData
-- Add ramp functions to OutData that set also the descriptions
-- Add appendRamp function to OutData
+- Add ramp and appendRamp functions to OutData that set also the descriptions
 - Update odML terminologies accordingly.
 - Take metadata descriptions from stimulus files
 - Stimulus section needs a file (if available)!
-
-MetaData:
-- Implement in all RePros OutData::descriptions() by using appropriate OutData functions !
+- Implement in all RePros OutData::description() by using appropriate OutData functions !
 - SaveFiles: finish reorganization of saveStimuli(): check XXX comments
-- Parameter::label should get a level that is used to make sections in the XML file ?
-- Check out JSON libraries and compatibility with Options
 
 Locking:
 - DeviceList functions like updateData need to be locked!
