@@ -453,6 +453,9 @@ public:
   int saveColumn( void ) const { return PrevCol; };
     /*! Set the column number of the last output to \a col. */
   void setSaveColumn( int col );
+    /*! Reset the column number such that the next save() function
+        writes into the first column. */
+  void resetSaveColumn( void );
 
     /*! The string indicating a comment. */
   string comment( void ) const;

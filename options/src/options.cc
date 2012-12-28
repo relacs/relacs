@@ -37,6 +37,7 @@ Options::Options( void )
     Style( 0 ),
     Opt(),
     Secs(),
+    OwnSecs(),
     AddOpts( this ),
     Warning( "" ),
     Notified( false ),
@@ -70,6 +71,7 @@ Options::Options( const Options &o, int flags )
     Style( 0 ),
     Opt(),
     Secs(),
+    OwnSecs(),
     AddOpts( this ),
     Warning( "" ),
     Notified( false ),
@@ -88,6 +90,7 @@ Options::Options( const string &name, const string &type, int flags, int style )
     Style( style ),
     Opt(),
     Secs(),
+    OwnSecs(),
     AddOpts( this ),
     Warning( "" ),
     Notified( false ),
@@ -106,6 +109,7 @@ Options::Options( const Str &opttxt, const string &assignment,
     Style( 0 ),
     Opt(),
     Secs(),
+    OwnSecs(),
     AddOpts( this ),
     Warning( "" ),
     Notified( false ),
@@ -124,6 +128,7 @@ Options::Options( const StrQueue &sq, const string &assignment )
     Style( 0 ),
     Opt(),
     Secs(),
+    OwnSecs(),
     AddOpts( this ),
     Warning( "" ),
     Notified( false ),
@@ -144,6 +149,7 @@ Options::Options( istream &str, const string &assignment,
     Style( 0 ),
     Opt(),
     Secs(),
+    OwnSecs(),
     AddOpts( this ),
     Warning( "" ),
     Notified( false ),
@@ -186,6 +192,7 @@ Options &Options::assign( const Options &o )
     Options *o = new Options( **sp );
     o->setParentSection( this );
     Secs.push_back( o );
+    OwnSecs.push_back( true );
   }
   AddOpts = this;
   Notified = false;
@@ -202,6 +209,29 @@ Options &Options::append( const Options &o )
     return *this;
 
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
+    Opt.push_back( *pp );
+    Opt.back().setParentSection( AddOpts );
+  }
+  for ( const_section_iterator sp = o.sectionsBegin();
+	sp != o.sectionsEnd();
+	++sp ) {
+    Options *o = new Options( **sp );
+    o->setParentSection( this );
+    Secs.push_back( o );
+    OwnSecs.push_back( true );
+  }
+
+  return *this;
+}
+
+
+Options &Options::add( const Options &o )
+{
+  Warning = "";
+  if ( this == &o || AddOpts == &o ) 
+    return *this;
+
+  for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
     AddOpts->Opt.push_back( *pp );
     AddOpts->Opt.back().setParentSection( AddOpts );
   }
@@ -211,9 +241,10 @@ Options &Options::append( const Options &o )
     Options *o = new Options( **sp );
     o->setParentSection( AddOpts );
     AddOpts->Secs.push_back( o );
+    AddOpts->OwnSecs.push_back( true );
   }
 
-  return *this;
+  return *AddOpts;
 }
 
 
@@ -270,6 +301,7 @@ Options &Options::assign( const Options &o, int flags )
       Options *o = new Options( **sp, flags );
       o->setParentSection( this );
       Secs.push_back( o );
+      OwnSecs.push_back( true );
     }
   }
   AddOpts = this;
@@ -306,6 +338,7 @@ Options &Options::copy( Options &o, int flags )
       Options *oo = new Options( **sp, flags );
       oo->setParentSection( &o );
       o.Secs.push_back( oo );
+      o.OwnSecs.push_back( true );
     }
   }
   o.AddOpts = &o;
@@ -325,6 +358,36 @@ Options &Options::append( const Options &o, int flags )
   // add Parameter to current section:
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
     if ( pp->flags( flags ) ) {
+      Opt.push_back( *pp );
+      Opt.back().setParentSection( this );
+    }
+  }
+  // add Sections to current section:
+  for ( const_section_iterator sp = o.sectionsBegin();
+	sp != o.sectionsEnd();
+	++sp ) {
+    if ( (*sp)->flag( flags ) && (*sp)->size( flags ) > 0 ) {
+      // add empty section:
+      Options *o = new Options( *(*sp), flags );
+      o->setParentSection( this );
+      Secs.push_back( o );
+      OwnSecs.push_back( true );
+    }
+  }
+
+  return *this;
+}
+
+
+Options &Options::add( const Options &o, int flags )
+{
+  Warning = "";
+  if ( this == &o || AddOpts == &o ) 
+    return *this;
+
+  // add Parameter to current section:
+  for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
+    if ( pp->flags( flags ) ) {
       AddOpts->Opt.push_back( *pp );
       AddOpts->Opt.back().setParentSection( AddOpts );
     }
@@ -334,17 +397,14 @@ Options &Options::append( const Options &o, int flags )
 	sp != o.sectionsEnd();
 	++sp ) {
     if ( (*sp)->flag( flags ) && (*sp)->size( flags ) > 0 ) {
-      // add empty section:
-      Options *o = new Options( (*sp)->name(), (*sp)->type(),
-				(*sp)->flag(), (*sp)->style() );
+      Options *o = new Options( *(*sp), flags );
       o->setParentSection( AddOpts );
       AddOpts->Secs.push_back( o );
-      // add only appropriate Parameter and Sections:
-      AddOpts->Secs.back()->append( **sp, flags );
+      AddOpts->OwnSecs.push_back( true );
     }
   }
 
-  return *this;
+  return *AddOpts;
 }
 
 
@@ -421,6 +481,19 @@ bool operator==( const Options &o1, const Options &o2 )
     if ( (*p1).text() != (*p2).text() )
       return false;
   }
+  for ( Options::const_section_iterator sp1 = o1.sectionsBegin(),
+	  sp2 = o2.sectionsBegin();
+	sp1 != o1.sectionsEnd() && sp2 != o2.sectionsEnd();
+	++sp1, ++sp2 ) {
+    if ( (*sp1)->name() != (*sp2)->name() )
+      return false;
+    if ( ! (*sp1)->type().empty() && ! (*sp2)->type().empty() &&
+	 (*sp1)->type() != (*sp2)->type() )
+      return false;
+    bool r = ( **sp1 == **sp2 );
+    if ( ! r )
+      return false;
+  }
   return true; // all parameter are equal
 }
 
@@ -434,9 +507,11 @@ bool operator==( const Options &o, const string &name )
 
 bool operator<( const Options &o1, const Options &o2 )
 {
-  if ( o1.size() < o2.size() )
+  int s1 = o1.size();
+  int s2 = o2.size();
+  if ( s1 < s2 )
     return true;
-  if ( o1.size() > o2.size() )
+  if ( s1 > s2 )
     return false;
   for ( Options::const_iterator p1 = o1.begin(), p2 = o2.begin();
 	p1 != o1.end() && p2 != o2.end();
@@ -449,6 +524,24 @@ bool operator<( const Options &o1, const Options &o2 )
       return true;
     else if ( (*p1).text() > (*p2).text() )
       return false;
+  }
+  for ( Options::const_section_iterator sp1 = o1.sectionsBegin(),
+	  sp2 = o2.sectionsBegin();
+	sp1 != o1.sectionsEnd() && sp2 != o2.sectionsEnd();
+	++sp1, ++sp2 ) {
+    if ( (*sp1)->name() < (*sp2)->name() )
+      return true;
+    if ( (*sp1)->name() > (*sp2)->name() )
+      return false;
+    if ( ! (*sp1)->type().empty() && ! (*sp2)->type().empty() ) {
+      if ( (*sp1)->type() < (*sp2)->type() )
+	return true;
+      if ( (*sp1)->type() > (*sp2)->type() )
+	return false;
+    }
+    bool r = ( **sp1 < **sp2 );
+    if ( r )
+      return true;
   }
   return false; // all parameter are equal
 }
@@ -511,7 +604,10 @@ string Options::include( void ) const
 
 void Options::setInclude( const string &url, const string &name )
 {
-  Include = url + '#' + name;
+  if ( name.empty() )
+    Include = url;
+  else
+    Include = url + '#' + name;
 }
 
 
@@ -3272,6 +3368,7 @@ Options &Options::newSection( int level, const string &name, const string &type,
   o->setParentSection( so );
   o->unsetNotify();
   so->Secs.push_back( o );
+  so->OwnSecs.push_back( true );
   AddOpts = o;
 #ifndef NDEBUG
   if ( !Warning.empty() )
@@ -3320,6 +3417,7 @@ Options &Options::insertSection( const string &name, const string &atpattern,
   // insert at front:
   if ( atpattern.empty() ) {
     AddOpts->Secs.push_front( o );
+    AddOpts->OwnSecs.push_front( true );
     o->setParentSection( AddOpts );
   }
   else {
@@ -3329,12 +3427,14 @@ Options &Options::insertSection( const string &name, const string &atpattern,
       Options *ps = (*sp)->parentSection();
       if ( ps != 0 ) {
 	ps->Secs.insert( sp, o );
+	ps->OwnSecs.insert( ps->OwnSecs.begin() + ( sp - ps->Secs.begin() ), true );
 	o->setParentSection( ps );
       }
     }
     else {
       // not found, add to sections:
       AddOpts->Secs.push_back( o );
+      AddOpts->OwnSecs.push_back( true );
       o->setParentSection( AddOpts );
     }
   }
@@ -3344,8 +3444,8 @@ Options &Options::insertSection( const string &name, const string &atpattern,
 }
 
 
-Options &Options::newSection( int level, const Options &opt, const string &name, const string &type,
-			      int flags, int style )
+Options &Options::newSection( int level, const Options &opt, const string &name,
+			      const string &type, int flags, int style )
 {
   Options *so = this;
   for ( int l=0; l<level; l++ ) {
@@ -3365,6 +3465,7 @@ Options &Options::newSection( int level, const Options &opt, const string &name,
   o->setParentSection( so );
   o->unsetNotify();
   so->Secs.push_back( o );
+  so->OwnSecs.push_back( true );
   AddOpts = o;
 #ifndef NDEBUG
   if ( !Warning.empty() )
@@ -3374,29 +3475,29 @@ Options &Options::newSection( int level, const Options &opt, const string &name,
 }
 
 
-Options &Options::newSection( const Options &opt, const string &name, const string &type,
-			      int flags, int style )
+Options &Options::newSection( const Options &opt, const string &name,
+			      const string &type, int flags, int style )
 {
   return newSection( 0, opt, name, type, flags, style );
 }
 
 
-Options &Options::newSubSection( const Options &opt, const string &name, const string &type,
-				 int flags, int style )
+Options &Options::newSubSection( const Options &opt, const string &name,
+				 const string &type, int flags, int style )
 {
   return newSection( 1, opt, name, type, flags, style );
 }
 
 
-Options &Options::newSubSubSection( const Options &opt, const string &name, const string &type,
-				    int flags, int style )
+Options &Options::newSubSubSection( const Options &opt, const string &name,
+				    const string &type, int flags, int style )
 {
   return newSection( 2, opt, name, type, flags, style );
 }
 
 
-Options &Options::addSection( const Options &opt, const string &name, const string &type,
-			      int flags, int style )
+Options &Options::addSection( const Options &opt, const string &name,
+			      const string &type, int flags, int style )
 {
   Options *o = &AddOpts->newSection( 0, opt, name, type, flags, style );
   AddOpts->clearSections();
@@ -3405,7 +3506,8 @@ Options &Options::addSection( const Options &opt, const string &name, const stri
 }
 
 
-Options &Options::insertSection( const Options &opt, const string &name, const string &atpattern,
+Options &Options::insertSection( const Options &opt, const string &name,
+				 const string &atpattern,
 				 const string &type, int flag, int style )
 {
   Options *o = new Options( opt );
@@ -3419,6 +3521,7 @@ Options &Options::insertSection( const Options &opt, const string &name, const s
   // insert at front:
   if ( atpattern.empty() ) {
     AddOpts->Secs.push_front( o );
+    AddOpts->OwnSecs.push_front( true );
     o->setParentSection( AddOpts );
   }
   else {
@@ -3428,17 +3531,62 @@ Options &Options::insertSection( const Options &opt, const string &name, const s
       Options *ps = (*sp)->parentSection();
       if ( ps != 0 ) {
 	ps->Secs.insert( sp, o );
+	ps->OwnSecs.insert( ps->OwnSecs.begin() + ( sp - ps->Secs.begin() ), true );
 	o->setParentSection( ps );
       }
     }
     else {
       // not found, add to sections:
       AddOpts->Secs.push_back( o );
+      AddOpts->OwnSecs.push_back( true );
       o->setParentSection( AddOpts );
     }
   }
 
   AddOpts = o;
+  return *AddOpts;
+}
+
+
+Options &Options::newSection( Options *opt )
+{
+  Secs.push_back( opt );
+  OwnSecs.push_back( false );
+  return *this;
+}
+
+
+Options &Options::addSection( Options *opt )
+{
+  AddOpts->Secs.push_back( opt );
+  AddOpts->OwnSecs.push_back( false );
+  return *AddOpts;
+}
+
+
+Options &Options::insertSection( Options *opt, const string &atpattern )
+{
+  // insert at front:
+  if ( atpattern.empty() ) {
+    AddOpts->Secs.push_front( opt );
+    AddOpts->OwnSecs.push_front( false );
+  }
+  else {
+    // insert at atpattern:
+    section_iterator sp = findSection( atpattern );
+    if ( sp != sectionsEnd() ) {
+      Options *ps = (*sp)->parentSection();
+      if ( ps != 0 ) {
+	ps->Secs.insert( sp, opt );
+	ps->OwnSecs.insert( ps->OwnSecs.begin() + ( sp - ps->Secs.begin() ), false );
+      }
+    }
+    else {
+      // not found, add to sections:
+      AddOpts->Secs.push_back( opt );
+      AddOpts->OwnSecs.push_back( false );
+    }
+  }
   return *AddOpts;
 }
 
@@ -3682,8 +3830,11 @@ Options &Options::erase( Options::section_iterator s )
 {
   if ( s != sectionsEnd() ) {
     Options *po = (*s)->parentSection();
-    delete *s;
+    int inx = s - po->Secs.begin();
+    if ( po->OwnSecs[ inx ] )
+      delete *s;
     po->Secs.erase( s );
+    po->OwnSecs.erase( po->OwnSecs.begin() + inx );
   }
   return *this;
 }
@@ -3691,13 +3842,16 @@ Options &Options::erase( Options::section_iterator s )
 
 Options &Options::erase( Options *s )
 {
+  int inx = 0;
   for ( section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
-	++sp ) {
+	++sp, ++inx ) {
     if ( *sp == s ) {
       Options *po = (*sp)->parentSection();
-      delete *sp;
+      if ( po->OwnSecs[ inx ] )
+	delete *sp;
       po->Secs.erase( sp );
+      po->OwnSecs.erase( OwnSecs.begin() + inx );
       break;
     }
   }
@@ -3720,8 +3874,11 @@ Options &Options::erase( const string &pattern )
   section_iterator sp = sectionsEnd();
   while ( (sp = findSection( pattern )) != sectionsEnd() ) {
     Options *po = (*sp)->parentSection();
-    delete *sp;
+    int inx = sp - po->Secs.begin();
+    if ( po->OwnSecs[ inx ] )
+      delete *sp;
     po->Secs.erase( sp );
+    po->OwnSecs.erase( po->OwnSecs.begin() + inx );
     erased = true;
   }
 
@@ -3746,14 +3903,20 @@ Options &Options::erase( int selectflag )
 
   for ( section_iterator sp = sectionsBegin(); sp != sectionsEnd(); ) {
     if ( (*sp)->flag() != 0 && (*sp)->flag( selectflag ) ) {
-      delete *sp;
+      int inx = sp - Secs.begin();
+      if ( OwnSecs[ inx ] )
+	delete *sp;
       sp = Secs.erase( sp );
+      OwnSecs.erase( OwnSecs.begin() + inx );
     }
     else {
       (*sp)->erase( selectflag );
       if ( (*sp)->size() == 0 ) {
-	delete *sp;
+	int inx = sp - Secs.begin();
+	if ( OwnSecs[ inx ] )
+	  delete *sp;
 	sp = Secs.erase( sp );
+	OwnSecs.erase( OwnSecs.begin() + inx );
       }
       else
 	++sp;
@@ -3778,8 +3941,10 @@ Options &Options::popSection( void )
 {
   Warning = "";
   if ( ! AddOpts->Secs.empty() ) {
-    delete AddOpts->Secs.back();
+    if ( AddOpts->OwnSecs.back() )
+      delete AddOpts->Secs.back();
     AddOpts->Secs.pop_back();
+    AddOpts->OwnSecs.pop_back();
   }
 
   return *this;
@@ -3789,13 +3954,21 @@ Options &Options::popSection( void )
 Options &Options::clear( void )
 {
   Warning = "";
+  Name = "";
+  Type = "";
+  Include = "";
+  Flag = 0;
+  Style = 0;
   Opt.clear();
+  int inx = 0;
   for ( section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
-	++sp ) {
-    delete *sp;
+	++sp, ++inx ) {
+    if ( OwnSecs[inx] )
+      delete *sp;
   }
   Secs.clear();
+  OwnSecs.clear();
   AddOpts = this;
   return *this;
 }
@@ -4256,33 +4429,35 @@ ostream &Options::saveXML( ostream &str, int selectmask, int level,
 			   int indent ) const
 {
   string indstr1( level*indent, ' ' );
-  string indstr2( indstr1 );
-  indstr2 += string( indent, ' ' );
+  string indstr2( (level+1)*indent, ' ' );
 
   if ( ! name().empty() ) {
     str << indstr1 << "<section>\n";
+    str << indstr2 << "<name>" << name() << "</name>\n";
     if ( ! type().empty() )
       str << indstr2 << "<type>" << type() << "</type>\n";
-    if ( ! name().empty() )
-      str << indstr2 << "<name>" << name() << "</name>\n";
     if ( ! include().empty() )
       str << indstr2 << "<include>" << include() << "</include>\n";
     level++;
   }
+
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
       pp->saveXML( str, level, indent );
     }
   }
+
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
     if ( (*sp)->flag( selectmask ) )
       (*sp)->saveXML( str, selectmask, level, indent );
   }
+
   if ( ! name().empty() ) {
     str << indstr1 << "</section>\n";
   }
+
   return str;
 }
 
@@ -4787,6 +4962,7 @@ Options &Options::load( const Str &opttxt,
 	      o->setParentSection( this );
 	      o->unsetNotify();
 	      Secs.push_back( o );
+	      OwnSecs.push_back( true );
 	      Opt.clear();
 	      setName( "" );
 	      setType( "" );
@@ -4796,6 +4972,7 @@ Options &Options::load( const Str &opttxt,
 	    o->setParentSection( this );
 	    o->unsetNotify();
 	    Secs.push_back( o );
+	    OwnSecs.push_back( true );
 	    AddOpts = o;
 	    string error = Warning;
 	    o->load( secstr, assignment, separator, indent, indentspacing, level );
@@ -4868,6 +5045,7 @@ Options &Options::load( const Str &opttxt,
 	  o->setParentSection( this );
 	  o->unsetNotify();
 	  Secs.push_back( o );
+	  OwnSecs.push_back( true );
 	  Opt.clear();
 	  setName( "" );
 	  setType( "" );
@@ -4879,6 +5057,7 @@ Options &Options::load( const Str &opttxt,
 	  o->setParentSection( this );
 	  o->unsetNotify();
 	  Secs.push_back( o );
+	  OwnSecs.push_back( true );
 	  AddOpts = o;
 	  retopt = o;
 	}
@@ -4898,6 +5077,7 @@ Options &Options::load( const Str &opttxt,
 	  o->setParentSection( ps );
 	  o->unsetNotify();
 	  ps->Secs.push_back( o );
+	  ps->OwnSecs.push_back( true );
 	  AddOpts = o;
 	  retopt = o;
 	}

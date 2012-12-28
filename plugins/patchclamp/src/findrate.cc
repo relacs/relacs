@@ -105,11 +105,9 @@ int FindRate::main( void )
   double silentrate = 1.0/(duration-skipwin);
   double minamplitudestep = 0.001;
 
-  OutData orgdcsignal( orgdcamplitude );
+  OutData orgdcsignal( orgdcamplitude, IUnit );
   orgdcsignal.setTrace( CurrentOutput[0] );
   orgdcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
-  orgdcsignal.description().newSection( "", "stimulus/value" );
-  orgdcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
     
   // plot trace:
   tracePlotSignal( duration );
@@ -125,13 +123,6 @@ int FindRate::main( void )
   double meanrate = 0.0;
   MapD rates;
   rates.reserve( 20 );
-
-  // stimulus:
-  OutData signal( dcamplitude );
-  signal.setTrace( CurrentOutput[0] );
-  signal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-  signal.description().newSection( "", "stimulus/value" );
-  signal.description().addNumber( "Intensity", dcamplitude, IUnit );
     
   double minampl = dcamplitude;
   double maxampl = dcamplitude;
@@ -140,9 +131,10 @@ int FindRate::main( void )
   // search dc-curent amplitude:
   while ( true ) {
 
-    signal = dcamplitude;
+    // stimulus:
+    OutData signal( dcamplitude, IUnit );
+    signal.setTrace( CurrentOutput[0] );
     signal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-    signal.description().setNumber( "Intensity", dcamplitude, IUnit );
 	
     // message:
     Str s = "<b>Search</b> rate <b>" + Str( targetrate ) + " Hz</b>";

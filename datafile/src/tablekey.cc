@@ -1183,6 +1183,12 @@ void TableKey::setSaveColumn( int col )
 }
 
 
+void TableKey::resetSaveColumn( void )
+{
+  PrevCol = -1;
+}
+
+
 void TableKey::addParams( Options *o, deque < Options::section_iterator > &sections, int &level )
 {
   level++;

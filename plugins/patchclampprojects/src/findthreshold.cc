@@ -166,20 +166,13 @@ int FindThreshold::main( void )
   P.unlock();
 
   // signal:
-  OutData signal( duration, 1.0/samplerate );
+  OutData signal;
   signal.setTrace( CurrentOutput[0] );
-  signal.description().newSection( "", "stimulus/pulse" );
-  signal.description().addNumber( "Intensity", 0.0, IUnit );
-  if ( resetcurrent )
-    signal.description().addNumber( "IntensityOffs", 0.0, IUnit );
-  signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
 
   // dc signal:
-  OutData dcsignal( orgdcamplitude );
+  OutData dcsignal( orgdcamplitude, IUnit );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
-  dcsignal.description().newSection( "", "stimulus/value" );
-  dcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
 
   // write stimulus:
   sleep( pause );
@@ -201,11 +194,9 @@ int FindThreshold::main( void )
     message( s );
 
     // signal:
-    signal = amplitude;
+    signal.pulseWave( duration, 1.0/samplerate, amplitude,
+		      resetcurrent ? 0.0 : amplitude, IUnit );
     signal.setIdent( "I=" + Str( amplitude ) + IUnit );
-    signal.description().setNumber( "Intensity", amplitude, IUnit );
-    if ( resetcurrent )
-      signal.back() = 0.0;
     write( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );

@@ -497,23 +497,29 @@ void SaveFiles::saveStimulus( void )
   deque< string > stimulinames( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
     string sn = StimuliRePro;  // (name of the RePro from which the stimulus was written)
+    // add type of stimulus description:
+    Str tn = Stimuli[j].description().type();
+    if ( tn.empty() )
+      tn = Stimuli[j].description().name();
+    cerr << "STIMULUS TYPE A: *" << tn << "*\n";
+    tn.eraseFirst( "stimulus" );
+    cerr << "STIMULUS TYPE B: *" << tn << "*\n";
+    tn.preventFirst( '/' );
+    cerr << "STIMULUS TYPE C: *" << tn << "*\n";
+    if ( ! tn.empty() )
+      sn += '-' + tn;
     for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
 	  si != Stimuli[j].description().sectionsEnd();
 	  ++si ) {
-      Str tn = (*si)->type();
+      tn = (*si)->type();
       if ( tn.empty() )
 	tn = (*si)->name();
-      tn.eraseFirst( "stimulus/" );
-      sn += '-' + tn;
+      tn.eraseFirst( "stimulus" );
+      tn.preventFirst( '/' );
+      if ( ! tn.empty() )
+	sn += '-' + tn;
     }
     stimulinames[j] = sn;
-    Stimuli[j].description().setName( stimulinames[j], "stimulus" );
-    Stimuli[j].description().addText( "Modality", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
-    Stimuli[j].description().addNumber( "SamplingRate", 0.001*Stimuli[j].sampleRate(), "kHz" );
-    stimuliref[j].setName( stimulinames[j], "stimulus" );
-    stimuliref[j].setInclude( "stimulus-metadata.xml", stimulinames[j] );
-    stimuliref[j].addText( "Modality", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
-    stimuliref[j].addNumber( "SamplingRate", 0.001*Stimuli[j].sampleRate(), "kHz" );
   }
 
   // track stimulus traces:
@@ -526,6 +532,8 @@ void SaveFiles::saveStimulus( void )
     if ( rsds.empty() ) {
       // this stimulus description is new:
       newstimuli[j] = true;
+      if ( ! Stimuli[j].description().name().empty() )
+	stimulinames[j] = Stimuli[j].description().name();
       // append the number of stimuli in this category to make the name unique:
       stimulinames[j] += '-' + Str( rsd.size() );
       rsds = stimulinames[j];
@@ -534,6 +542,16 @@ void SaveFiles::saveStimulus( void )
       // this stimulus already exists, get its unique identifier:
       stimulinames[j] = rsds;
     }
+    // set name, type, and some additional information for each stimulus trace:
+    Stimuli[j].description().setName( stimulinames[j] );
+    stimuliref[j].setName( stimulinames[j] );
+    if ( Stimuli[j].description().type().empty() ) {
+      Stimuli[j].description().setType( "stimulus" );
+      stimuliref[j].setType( "stimulus" );
+    }
+    Stimuli[j].description().insertNumber( "SamplingRate", "", 0.001*Stimuli[j].sampleRate(), "kHz" );
+    Stimuli[j].description().insertText( "Modality", "", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
+    stimuliref[j].setInclude( "stimulus-metadata.xml", stimulinames[j] );
   }
 
   // track stimulus name:
@@ -554,7 +572,7 @@ void SaveFiles::saveStimulus( void )
       }
     }
 
-    StimulusKey.setSaveColumn( -1 );
+    StimulusKey.resetSaveColumn();
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 )
 	StimulusKey.save( *SF, TraceFiles[k].SignalOffset );
@@ -622,38 +640,39 @@ void SaveFiles::saveStimulus( void )
     if ( XSF != 0 ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	if ( newstimuli[j] )
-	  Stimuli[j].description().saveXML( *XSF, 0, 2 );
+	  Stimuli[j].description().saveXML( *XSF, 0, 0 );
       }
     }
 
     // stimulus reference:
-    *XF << "    <section>\n";
-    *XF << "      <type>stimulus</type>\n";
-    *XF << "      <name>" << stimulirepro << "</name>\n";
-    StimulusOptions.saveXML( *XF, 0, 3 );
-    //    int col = StimulusKey.column( "stimulus>timing>time" );
-    //    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
-    // Stimulus:
-    //    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].delay() ).saveXML( *XF, 3 );
+    Options sopt( stimulirepro, "stimulus", 0, 0 );
+    sopt.append( StimulusOptions );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
 	if ( Stimuli[j].device() == RW->AQ->outTrace( k ).device() &&
 	     Stimuli[j].channel() == RW->AQ->outTrace( k ).channel() ) {
-	  stimuliref[j].addText( "OutputChannel", RW->AQ->outTraceName( Stimuli[j].trace() ) );
 	  if ( att != 0 ) {
-	    stimuliref[j].addNumber( att->intensityName(), Stimuli[j].intensity(),
-			  att->intensityUnit(), att->intensityFormat() );
 	    if ( ! att->frequencyName().empty() )
-	      stimuliref[j].addNumber( att->frequencyName(), Stimuli[j].carrierFreq(),
-				       att->frequencyUnit(), att->frequencyFormat() );
+	      stimuliref[j].insertNumber( att->frequencyName(), "",
+					  Stimuli[j].carrierFreq(),
+					  att->frequencyUnit(),
+					  att->frequencyFormat() );
+	    stimuliref[j].insertNumber( att->intensityName(), "",
+					Stimuli[j].intensity(),
+					att->intensityUnit(),
+					att->intensityFormat() );
 	  }
-	  stimuliref[j].saveXML( *XF, 0, 5 );
+	  stimuliref[j].insertText( "OutputChannel", "",
+				    RW->AQ->outTraceName( Stimuli[j].trace() ) );
+	  stimuliref[j].insertNumber( "Delay", "", 1000.0*Stimuli[j].delay(), "ms" );
+	  stimuliref[j].insertNumber( "Time", "", TraceFiles[0].Trace->signalTime() - SessionTime, "s" );
+	  sopt.newSection( &stimuliref[j] );
 	  break;
 	}
       }
     }
-    *XF << "    </section>\n";
+    sopt.saveXML( *XF, 0, 1 );
   }
     
   StimulusData = false;
@@ -1070,7 +1089,7 @@ void SaveFiles::createXMLFile( const InList &traces,
     *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
     *XSF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
     *XSF << "<odML version=\"1\">\n";
-    *XSF << "  <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
+    *XSF << "<repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
   }
 }
 

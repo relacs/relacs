@@ -96,8 +96,11 @@ class OutData : public SampleData< float >, public DaqError
         \a stepsize for \a duration seconds. */
   OutData( double duration, double stepsize );
     /*! Create an OutData-object with a single data element
-        with value \a value. */
-  OutData( double value );
+        with value \a value.
+        The optional \a unit should be the unit of the output trace
+        and is used for the metadata description of this stimulus.
+        \sa constWave() */
+  OutData( double value, const string &unit="" );
    /*! Create an OutData-object with \a n data elements sampled with
        \a stepsize and initialzes them with the values given in \a a. */
   template < typename R >
@@ -707,6 +710,18 @@ class OutData : public SampleData< float >, public DaqError
       is set to "triangle wave". */
   void triangleWave( double duration, double stepsize, double period,
 		     double ampl=1.0, const string &ident="triangle wave" );
+  /*! Creates a constant stimulus consisting of a single data point
+      with value \a value.
+      The optional \a unit should be the unit of the output trace
+      and is used for the metadata description of this stimulus. */
+  void constWave( double value, const string &unit="" );
+  /*! Creates a pulse stimulus that assumes \a value for a duration
+      of \a duration seconds sampled with \a stepsize. A final
+      value after the pulse sets the amplitude of the signal back to \a base.
+      The optional \a unit should be the unit of the output trace
+      and is used for the metadata description of this stimulus. */
+  void pulseWave( double duration, double stepsize, double value, double base,
+		  const string &unit="" );
 
     /*! The index of the next element to be written to the data buffer.
         \sa incrDeviceIndex(), devieValue(), incrDeviceCount(), deviceReset() */

@@ -3451,12 +3451,8 @@ bool Str::eraseFirst( const string &s )
   if ( s.empty() )
     return false;
 
-  size_type ns = string::find_first_not_of( s ); 
-  if ( ns == npos )
-    return false;
-
-  if ( string::find( s ) == ns ) {
-    string::erase( ns, s.size() );
+  if ( string::find( s ) == 0 ) {
+    string::erase( 0, s.size() );
     return true;
   }
 
@@ -3469,13 +3465,9 @@ Str Str::erasedFirst( const string &s ) const
   if ( s.empty() )
     return *this;
 
-  size_type ns = string::find_first_not_of( s ); 
-  if ( ns == npos )
-    return *this;
-
-  if ( string::find( s ) == ns ) {
+  if ( string::find( s ) == 0 ) {
     string ss = *this;
-    ss.erase( ns, s.size() );
+    ss.erase( 0, s.size() );
     return ss;
   }
 

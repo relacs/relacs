@@ -313,19 +313,16 @@ int ThresholdLatencies::main( void )
   }
 
   // DC signal:
-  OutData dcsignal( dcamplitude );
+  OutData dcsignal( dcamplitude, IUnit );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-  dcsignal.description().newSection( "", "stimulus/value" );
-  dcsignal.description().addNumber( "Intensity", dcamplitude, IUnit );
 
   // measure resting potential:
   double restvoltage = metaData( "Cell" ).number( "vrest" );
   if ( prevc && preamplitudesrc == 4 ) {  // VC rest
     // zero DC current:
-    dcsignal = 0.0;
-    dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-    dcsignal.description().setNumber( "Intensity", dcamplitude, IUnit );
+    dcsignal.constWave( 0.0, IUnit );
+    dcsignal.setIdent( "DC=" + Str( 0.0 ) + IUnit );
     directWrite( dcsignal );
     sleep( 0.5 );
     if ( interrupt() )
@@ -339,9 +336,8 @@ int ThresholdLatencies::main( void )
 	     + Str( restvoltage ) + " mV" );
 
     // back to DC:
-    dcsignal = dcamplitude;
+    dcsignal.constWave( dcamplitude, IUnit );
     dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-    dcsignal.description().setNumber( "Intensity", dcamplitude, IUnit );
     directWrite( dcsignal );
   }
 
@@ -533,9 +529,8 @@ int ThresholdLatencies::main( void )
 	pre2amplitude = 0.0;
       if ( fabs( postamplitude ) < 1.0e-8 )
 	postamplitude = 0.0;
-      dcsignal = dcamplitude;
+      dcsignal.constWave( dcamplitude, IUnit );
       dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-      dcsignal.description().setNumber( "Intensity", dcamplitude, IUnit );
       directWrite( dcsignal );
     }
 
@@ -608,9 +603,8 @@ int ThresholdLatencies::main( void )
     save( usedc );
     lockAll();
   }
-  dcsignal = orgdcamplitude;
+  dcsignal.constWave( orgdcamplitude, IUnit );
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
-  dcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
   directWrite( dcsignal );
   if ( prevc ) {
     writeZero( "VCgain" );

@@ -195,17 +195,11 @@ int VICurve::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
-  signal.description().newSection( "", "stimulus/pulse" );
-  signal.description().addNumber( "Intensity", dccurrent, IUnit );
-  signal.description().addNumber( "IntensityOffset", dccurrent, IUnit );
-  signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
 
   // dc signal:
-  OutData dcsignal( dccurrent );
+  OutData dcsignal( dccurrent, IUnit );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
-  dcsignal.description().newSection( "", "stimulus/value" );
-  dcsignal.description().addNumber( "Intensity", dccurrent, IUnit );
 
   // write stimulus:
   sleep( pause );
@@ -235,10 +229,8 @@ int VICurve::main( void )
     message( s );
 
     timeStamp();
+    signal.pulseWave( duration, 1.0/samplerate, amplitude, dccurrent, IUnit );
     signal.setIdent( "I=" + Str( amplitude ) + IUnit );
-    signal = amplitude;
-    signal.back() = dccurrent;
-    signal.description().setNumber( "Intensity", amplitude, IUnit );
     write( signal );
     if ( signal.failed() ) {
       if ( signal.overflow() ) {

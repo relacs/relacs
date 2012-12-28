@@ -930,16 +930,14 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, SampleDataD
     signalL.resize( 3 );
     signalL[0] = OutData(g);
     signalL[0].setTraceName( "g" );
-    //signalL[0].addDescription( "stimulus/value" );
-    signalL[0].back() = 0;
+    signalL[0].back() = 0;   // XXX this sets the whole stimulus to zero!!!
     signalL[1] = OutData(E);
     signalL[1].setTraceName( "E" );
-    //signalL[1].addDescription( "stimulus/value" );
-    signalL[1].back() = 0;
+    signalL[1].back() = 0;   // XXX this sets the whole stimulus to zero!!!
     
     signalL[2] = OutData(bkg);
     signalL[2].setTraceName("Current-1");
-    signalL[2].back() = 0;
+    signalL[2].back() = 0;   // XXX this sets the whole stimulus to zero!!!
 
     sleep( number("pre_pause")); 
     

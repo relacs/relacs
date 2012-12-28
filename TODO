@@ -1,10 +1,4 @@
-:
-- rework append(), add(), merge(), or whatever.
-- Add section( int ) function that returns the i-th section.
-- Add iterator that iterates through all sections and subsections ?
-- OutData::append check it for the right use of appendSection, check all other Description
-- SaveFiles: check all stimulus related stuff!!!
-- ThresholdLatencies: check stimulus descriptions
+Options:
 - Reset parentSection pointers and create new Options in assign, append, etc!
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
 - change save() functions to take flags that specify what to put out
@@ -13,8 +7,15 @@
 - Options::load() should set TabStyle for section names
 - MetaData: remove LabelFlag
 - check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
-- OutData: rename Ident to name
+- OutData: rename Ident to name OR remove it?
 - are uniqueNames also used for relacsplugins.cfg ?
+
+- Add section( int ) function that returns the i-th section.
+- Add iterator that iterates through all sections and subsections ?
+
+patchclamp::SingleStimulus:
+- Add zero to noise stimuli (all stimuli?)
+- Check offset settings, are they relative to the previous last output value???
 
 auditory::Session plots do not work! Why???? It works on my laptop!
 
@@ -40,16 +41,18 @@ Acquire:
 - How to make sure the right Attenuate is used for a given RePro?
 
 Metadata support of OutData:
+- ThresholdLatencies: check stimulus descriptions
 - There should be a flag for Parameter in OutData::description()
   indicating, which quantities to extract in SaveFiles
 - Unify TraceSpec and OutDataInfo?
-- Add constWave function to OutData
+- OutData::append() needs to update timing information!
 - Add ramp and appendRamp functions to OutData that set also the descriptions
 - Update odML terminologies accordingly.
-- Take metadata descriptions from stimulus files
+- Take metadata descriptions from stimulus files in all OutData::load() and loadAM()
 - Stimulus section needs a file (if available)!
 - Implement in all RePros OutData::description() by using appropriate OutData functions !
 - SaveFiles: finish reorganization of saveStimuli(): check XXX comments
+- Remove OutData::ident()
 
 Locking:
 - DeviceList functions like updateData need to be locked!

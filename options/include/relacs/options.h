@@ -107,13 +107,24 @@ public:
     /*! Deconstructs an options list. */
   virtual ~Options( void );
 
-    /*! Copy Options \a o. */
+    /*! Copy Options \a o to this. */
   Options &operator=( const Options &o );
     /*! Copy Options \a o to this. */
   Options &assign( const Options &o );
-    /*! Append Options \a o to the currently active section of Options.
-        \sa assing(), endSection(), clearSections() */
+    /*! Append Options \a o to this.
+        That is, all Parameter of \a o are added to this Options' Parameter
+	and all sections of \a o are added to the list of this' sections.
+	\note If you want to add \a o as a complete section use
+	addSection(), newSection(), or insertSection().
+        \sa add(), assign() */
   Options &append( const Options &o );
+    /*! Append Options \a o to the currently active section of Options.
+        That is, all Parameter and Sections of \a o are added to the Parameter
+	and Sections of the currently active section of Options.
+	\note If you want to add \a o as a complete section use
+	addSection(), newSection(), or insertSection().
+        \sa append(), assign(), endSection(), clearSections() */
+  Options &add( const Options &o );
     /*! Insert Options \a o at the beginning of the options list
         (\a atname == "") or at the position of the option with
         name \a atname. If the option with name \a atname
@@ -138,7 +149,7 @@ public:
   Options &copy( Options &o, int flags );
     /*! Append all parameter and sections from \a o
         that have flags() & \a flags greater
-        than zero to the currently active section.
+        than zero to this.
         If \a flags equals zero, all Parameter and sections are appended.
 	If \a flags is negative, only Parameter and sections whose values differ
 	from the default value and have abs(\a flags) set in their flags()
@@ -146,6 +157,16 @@ public:
         If \a flags equals NonDefault, all Parameter whose values differ
 	from their default value are copied. */
   Options &append( const Options &o, int flags );
+    /*! Append all parameter and sections from \a o
+        that have flags() & \a flags greater
+        than zero to the currently active section.
+        If \a flags equals zero, all Parameter and sections are appended.
+	If \a flags is negative, only Parameter and sections whose values differ
+	from the default value and have abs(\a flags) set in their flags()
+	are copied.
+        If \a flags equals NonDefault, all Parameter whose values differ
+	from their default value are copied. */
+  Options &add( const Options &o, int flags );
     /*! Insert Options \a o that have flags() & \a flags greater than zero
         at the beginning of the options list
         (\a atname == "") or at the position of the option with
@@ -161,7 +182,8 @@ public:
 
     /*! Returns true if the two Options \a o1 and \a o2 are equal,
         i.e. they have the same number of Parameter with identical name
-	and value (as returned by Parameter::text()). */
+	and value (as returned by Parameter::text())
+	and the same sections with identical name and type. */
   friend bool operator==( const Options &o1, const Options &o2 );
     /*! Returns true if the name() of the Options \a o equals \a name. */
   friend bool operator==( const Options &o, const string &name );
@@ -1461,6 +1483,27 @@ public:
 			  int flag, int style=0 )
     { return insertSection( opt, name, atpattern, "", flag, style ); };
 
+    /*! Add \a opt as a section. Only a pointer of \a opt is stored,
+	the content of \a opt is not copied.
+        Subsequent calls to addText(), addNumber(), etc. still add new Parameter
+	to the currently active section. */
+  Options &newSection( Options *opt );
+    /*! Add \a opt as a section to the end of the currently active
+        Option's sections list. Only a pointer of \a opt is stored,
+	the content of \a opt is not copied.
+        Subsequent calls to addText(), addNumber(), etc. still add new Parameter
+	to the currently active section. */
+  Options &addSection( Options *opt );
+    /*! Insert \a opt as a section of Options before the section
+        specified by \a atpattern.  If \a atpattern is not found or if
+        \atpattern is empty, the new section is added to the beginning
+        or the end of the currently active Options' section list,
+        respectively. Only a pointer of \a opt is stored,
+	the content of \a opt is not copied.
+        Subsequent calls to addText(), addNumber(), etc. still add new Parameter
+	to the currently active section. */
+  Options &insertSection( Options *opt, const string &atpattern );
+
     /*! End the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to the parent section.
@@ -1793,6 +1836,9 @@ private:
   deque< Parameter > Opt;
     /*! Sections of options. */
   deque< Options* > Secs;
+    /*! True if the corresponding section in \a Secs is owned by this Options,
+        i.e. whether it should delete it. */
+  deque< bool > OwnSecs;
     /*! Pointer to the Options where addText(), addNumber(), etc. should be added. */
   Options *AddOpts;
     /*! A warning message. */
