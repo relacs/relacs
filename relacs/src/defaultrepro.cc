@@ -53,6 +53,8 @@ int DefaultRePro::main( void )
 
   while ( true )
     sleep( Duration );
+
+  return Completed;
 }
 
 

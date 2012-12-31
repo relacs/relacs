@@ -26,6 +26,7 @@ namespace relacs {
 
 
 Parameter Options::Dummy = Parameter();
+Options Options::SecDummy = Options();
 
 
 Options::Options( void )
@@ -602,6 +603,12 @@ string Options::include( void ) const
 }
 
 
+void Options::setInclude( const string &include )
+{
+  Include = include;
+}
+
+
 void Options::setInclude( const string &url, const string &name )
 {
   if ( name.empty() )
@@ -747,6 +754,38 @@ Parameter &Options::operator[]( const string &name )
     Dummy = Parameter();
     return Dummy;
   }
+}
+
+
+const Options &Options::section( int i ) const
+{
+  Warning = "";
+
+  if ( i >= 0 && i < (int)Secs.size() )
+    return *Secs[i];
+
+  Warning = "section with index " + Str( i ) + " does not exist!";
+#ifndef NDEBUG
+  cerr << "!warning in Options::section(" << i << ") -> " << Warning << '\n';
+#endif
+  SecDummy = Options();
+  return SecDummy;
+}
+
+
+Options &Options::section( int i )
+{
+  Warning = "";
+
+  if ( i >= 0 && i < (int)Secs.size() )
+    return *Secs[i];
+
+  Warning = "section with index " + Str( i ) + " does not exist!";
+#ifndef NDEBUG
+  cerr << "!warning in Options::section(" << i << ") -> " << Warning << '\n';
+#endif
+  SecDummy = Options();
+  return SecDummy;
 }
 
 
@@ -4009,6 +4048,42 @@ bool Options::empty( void ) const
 {
   Warning = "";
   return ( size() <= 0 );
+}
+
+
+int Options::parameterSize( void ) const
+{
+  return Opt.size();
+}
+
+
+int Options::parameterSize( int flags ) const
+{
+  int n=0;
+  for ( const_iterator pp = begin(); pp != end(); ++pp ) {
+    if ( pp->flags( flags ) )
+      n++;
+  }
+  return n;
+}
+
+
+int Options::sectionsSize( void ) const
+{
+  return Secs.size();
+}
+
+
+int Options::sectionsSize( int flags ) const
+{
+  int n=0;
+  for ( const_section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    if ( (*sp)->flag( flags ) )
+      n++;
+  }
+  return n;
 }
 
 

@@ -283,7 +283,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // data index:
   DI = new DataIndex;
   // data browser:
-  //  CW->addTab( new DataBrowser( DI, this ), "Data-Browser" );
+  CW->addTab( new DataBrowser( DI, this ), "Data-Browser" );
+  // load current directory:
+  QDir dir;
+  DI->loadDirectory( dir.currentPath().toStdString() );
 
   // model plugin:
   MD = 0;
@@ -968,36 +971,19 @@ class OutDataEvent : public QEvent
 
 public:
 
-  OutDataEvent( const OutData &signal, const Acquire *aq )
-    : QEvent( Type( User+5 ) ),
-      Signal( signal )
+  OutDataEvent( const OutData &signal )
+    : QEvent( Type( User+5 ) )
   {
-    int inx = -1;
-    if ( ! signal.traceName().empty() )
-      inx = aq->outTraceIndex( signal.traceName() );
-    else
-      inx = signal.trace();
-    if ( inx >= 0 )
-      Signal.setTraceName( aq->outTraceName( inx ) );
+    Description = signal.description();
   }
 
-  OutDataInfo Signal;
-};
-
-
-class OutListEvent : public QEvent
-{
-
-public:
-
-  OutListEvent( const OutList &signal )
-    : QEvent( Type( User+6 ) )
+  OutDataEvent( const OutList &signal )
+    : QEvent( Type( User+5 ) )
   {
-    for ( int k=0; k<signal.size(); k++ )
-      Signals.push_back( signal[k] );
+    Description = signal.description();
   }
 
-  deque< OutDataInfo > Signals;
+  Options Description;
 };
 
 
@@ -1041,7 +1027,7 @@ int RELACSWidget::write( OutData &signal )
     WriteLoop.start( signal.writeTime() );
     lockSignals();
     SF->save( signal );
-    QCoreApplication::postEvent( this, new OutDataEvent( signal, AQ ) );
+    QCoreApplication::postEvent( this, new OutDataEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1098,7 +1084,7 @@ int RELACSWidget::write( OutList &signal )
     WriteLoop.start( signal[0].writeTime() );
     lockSignals();
     SF->save( signal );
-    QCoreApplication::postEvent( this, new OutListEvent( signal ) );
+    QCoreApplication::postEvent( this, new OutDataEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1152,7 +1138,7 @@ int RELACSWidget::directWrite( OutData &signal )
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
-    QCoreApplication::postEvent( this, new OutDataEvent( signal, AQ ) );
+    QCoreApplication::postEvent( this, new OutDataEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1205,7 +1191,7 @@ int RELACSWidget::directWrite( OutList &signal )
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
-    QCoreApplication::postEvent( this, new OutListEvent( signal ) );
+    QCoreApplication::postEvent( this, new OutDataEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1409,13 +1395,7 @@ void RELACSWidget::customEvent( QEvent *qce )
 
   case 5: {
     OutDataEvent *ode = dynamic_cast<OutDataEvent*>( qce );
-    DI->addStimulus( ode->Signal );
-    break;
-  }
-
-  case 6: {
-    OutListEvent *ole = dynamic_cast<OutListEvent*>( qce );
-    DI->addStimulus( ole->Signals );
+    DI->addStimulus( ode->Description );
     break;
   }
 

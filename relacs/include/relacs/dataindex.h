@@ -34,7 +34,8 @@ namespace relacs {
 
 
   class RePro;
-  class DataTreeModel;
+  class DataOverviewModel;
+  class DataDescriptionModel;
 
 
 /*! 
@@ -80,8 +81,8 @@ public:
     string name( void ) const;
     const Options &data( void ) const;
     Options &data( void );
-    DataTreeModel *treeModel( void );
-    void setTreeModel( DataTreeModel *model );
+    DataOverviewModel *overviewModel( void );
+    void setOverviewModel( DataOverviewModel *model );
     void print( void );
 
 
@@ -92,7 +93,7 @@ public:
     Options Data;
     deque<DataItem> Children;
     DataItem *Parent;
-    DataTreeModel *TreeModel;
+    DataOverviewModel *OverviewModel;
   };
 
 
@@ -101,8 +102,7 @@ public:
 
   DataItem *cells( void ) { return &Cells; };
 
-  void addStimulus( const OutDataInfo &signal );
-  void addStimulus( const deque< OutDataInfo > &signal );
+  void addStimulus( const Options &signal );
   void addRepro( const RePro &repro );
   void addSession( const string &path, const Options &data );
   void endSession( bool saved );
@@ -114,8 +114,11 @@ public:
 
   void print( void );
 
-  DataTreeModel *treeModel( void );
-  void setTreeView( QTreeView *view );
+  DataOverviewModel *overviewModel( void );
+  void setOverviewView( QTreeView *view );
+
+  DataDescriptionModel *descriptionModel( void );
+  void setDescriptionView( QTreeView *view );
 
 
 private:
@@ -123,24 +126,25 @@ private:
   DataItem Cells;
   bool Session;
 
-  DataTreeModel *TreeModel;
+  DataOverviewModel *OverviewModel;
+  DataDescriptionModel *DescriptionModel;
 
 };
 
 
 /*! 
-\class DataTreeModel
-\brief The model for viewing the data of an DataIndex.
+\class DataOverviewModel
+\brief The model for viewing an overview of the data of an DataIndex.
 \author Jan Benda
 */
 
 
-class DataTreeModel : public QAbstractItemModel
+class DataOverviewModel : public QAbstractItemModel
 {
   Q_OBJECT
 
 public:
-  DataTreeModel( QObject *parent = 0 );
+  DataOverviewModel( QObject *parent = 0 );
 
   void setDataIndex( DataIndex *data );
   void setTreeView( QTreeView *view );
@@ -162,9 +166,52 @@ public:
   void beginPopChild( DataIndex::DataItem *parent );
   void endPopChild( DataIndex::DataItem *parent );
 
+
+public slots:
+
+  void setDescription( const QModelIndex &index );
+  void setDescription( const QModelIndex &currrent, const QModelIndex &previous );
+
+
 private:
 
   DataIndex *Data;
+  QTreeView *View;
+
+};
+
+
+/*! 
+\class DataDescriptionModel
+\brief The model for viewing a description of the currently displayed data of an DataIndex.
+\author Jan Benda
+*/
+
+
+class DataDescriptionModel : public QAbstractItemModel
+{
+  Q_OBJECT
+
+public:
+  DataDescriptionModel( QObject *parent = 0 );
+
+  void setOptions( Options *data );
+  void setTreeView( QTreeView *view );
+
+  QVariant data( const QModelIndex &index, int role ) const;
+  Qt::ItemFlags flags( const QModelIndex &index ) const;
+  QVariant headerData( int section, Qt::Orientation orientation,
+		       int role = Qt::DisplayRole ) const;
+  QModelIndex index( int row, int column,
+		     const QModelIndex &parent = QModelIndex() ) const;
+  QModelIndex parent( const QModelIndex &index ) const;
+  bool hasChildren( const QModelIndex &parent = QModelIndex() ) const;
+  int rowCount( const QModelIndex &parent = QModelIndex() ) const;
+  int columnCount( const QModelIndex &parent = QModelIndex() ) const;
+
+private:
+
+  Options *Data;
   QTreeView *View;
 
 };

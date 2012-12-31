@@ -501,11 +501,8 @@ void SaveFiles::saveStimulus( void )
     Str tn = Stimuli[j].description().type();
     if ( tn.empty() )
       tn = Stimuli[j].description().name();
-    cerr << "STIMULUS TYPE A: *" << tn << "*\n";
     tn.eraseFirst( "stimulus" );
-    cerr << "STIMULUS TYPE B: *" << tn << "*\n";
     tn.preventFirst( '/' );
-    cerr << "STIMULUS TYPE C: *" << tn << "*\n";
     if ( ! tn.empty() )
       sn += '-' + tn;
     for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();

@@ -28,35 +28,34 @@ namespace relacs {
 
 
 OutList::OutList( void )
-  : OL()
 {
+  Description.setType( "stimulus" );
 }
 
 
 OutList::OutList( OutData &signal )
-  : OL()
 {
+  Description.setType( "stimulus" );
   push( signal );
 }
 
 
 OutList::OutList( OutData *signal, bool own )
-  : OL()
 {
+  Description.setType( "stimulus" );
   add( signal, own );
 }
 
 
 OutList::OutList( const OutList &ol )
-  : OL()
 {
-  OL.resize( ol.OL.size() );
+  Description.setType( "stimulus" );
+  OL.clear();
   for ( unsigned int k=0; k<OL.size(); k++ ) {
-    OL[k].Own = ol.OL[k].Own;
-    if ( OL[k].Own )
-      OL[k].OD = new OutData( *(ol.OL[k].OD) );
-    else
-      OL[k].OD = ol.OL[k].OD;
+    OutData *od = ol.OL[k].OD;
+    if ( ol.OL[k].Own )
+      od = new OutData( *(ol.OL[k].OD) );
+    add( od, ol.OL[k].Own );
   }
 }
 
@@ -75,12 +74,17 @@ void OutList::resize( int n, int m, double step )
   }
 
   int os = OL.size();
-  OL.resize( n, OLE() );
-  if ( n > os ) {
-    for ( int k=os; k<n; k++ ) {
-      OL[k].OD = new OutData( m, step );
-      OL[k].Own = true;
+  if ( n <= os ) {
+    for ( unsigned int k=n; n<os; k++ ) {
+      if ( OL[k].Own )
+	delete OL[k].OD;
+      Description.erase( Description.sectionsBegin() + n );
     }
+    OL.resize( n, OLE() );
+  }
+  else {
+    for ( int k=os; k<n; k++ )
+      push( new OutData( m, step ) );
   }
 }
 
@@ -92,12 +96,8 @@ void OutList::clear( void )
       delete OL[k].OD;
   }
   OL.clear();
-}
-
-
-void OutList::reserve( int n )
-{
-  OL.reserve( n );
+  Description.clear();
+  Description.setType( "stimulus" );
 }
 
 
@@ -106,13 +106,16 @@ OutList &OutList::operator=( const OutList &ol )
   if ( &ol == this )
     return *this;
 
-  OL.resize( ol.OL.size(), OLE() );
+  OL.clear();
+  Description.clear();
+  Description.setName( ol.Description.name() );
+  Description.setType( ol.Description.type() );
+  Description.setInclude( ol.Description.include() );
   for ( unsigned int k=0; k<OL.size(); k++ ) {
-    OL[k].Own = ol.OL[k].Own;
-    if ( OL[k].Own )
-      OL[k].OD = new OutData( *(ol.OL[k].OD) );
-    else
-      OL[k].OD = ol.OL[k].OD;
+    OutData *od = ol.OL[k].OD;
+    if ( ol.OL[k].Own )
+      od = new OutData( *(ol.OL[k].OD) );
+    add( od, ol.OL[k].Own );
   }
 
   return *this;
@@ -143,26 +146,6 @@ OutData &OutList::back( void )
 }
 
 
-const OutData &OutList::operator[]( const string &ident ) const
-{
-  for ( unsigned int k=0; k<OL.size(); k++ ) {
-    if ( OL[k].OD->ident() == ident ) 
-      return *OL[k].OD;
-  }
-  return front();
-}
-
-
-OutData &OutList::operator[]( const string &ident )
-{
-  for ( unsigned int k=0; k<OL.size(); k++ ) {
-    if ( OL[k].OD->ident() == ident ) 
-      return *OL[k].OD;
-  }
-  return front();
-}
-
-
 int OutList::index( const string &ident ) const
 {
   for ( unsigned int k=0; k<OL.size(); k++ ) {
@@ -176,34 +159,39 @@ int OutList::index( const string &ident ) const
 void OutList::push( OutData &signal )
 {
   OL.push_back( OLE( new OutData( signal ), true ) );
+  Description.newSection( &OL.back().OD->description() );
 }
 
 
 void OutList::push( const OutList &sigs )
 {
-  OL.reserve( OL.size() + sigs.size() );
-  for ( int k=0; k<sigs.size(); k++ )
+  for ( int k=0; k<sigs.size(); k++ ) {
     OL.push_back( OLE( new OutData( sigs[k] ), true ) );
+    Description.newSection( &OL.back().OD->description() );
+  }
 }
 
 
 void OutList::add( OutData *signal, bool own )
 {
   OL.push_back( OLE( signal, own ) );
+  Description.newSection( &OL.back().OD->description() );
 }
 
 
 void OutList::add( const OutData *signal, bool own )
 {
   OL.push_back( OLE( const_cast<OutData*>(signal), own ) );
+  Description.newSection( &OL.back().OD->description() );
 }
 
 
 void OutList::add( const OutList &sigs, bool own )
 {
-  OL.reserve( OL.size() + sigs.size() );
-  for ( int k=0; k<sigs.size(); k++ )
+  for ( int k=0; k<sigs.size(); k++ ) {
     OL.push_back( OLE( const_cast<OutData*>(&sigs[k]), own ) );
+    Description.newSection( &OL.back().OD->description() );
+  }
 }
 
 
@@ -213,6 +201,7 @@ void OutList::erase( int index )
     if ( OL[index].Own )
       delete OL[index].OD;
     OL.erase( OL.begin() + index );
+    Description.erase( Description.sectionsBegin() + index );
   }
 }
 
@@ -226,6 +215,10 @@ bool lessChannelOLE( const OutList::OLE &a, const OutList::OLE &b )
 void OutList::sortByChannel( void )
 {
   sort( OL.begin(), OL.end(), lessChannelOLE );
+  Description.clear();
+  Description.setType( "stimulus" );
+  for ( unsigned int k=0; k<OL.size(); k++ )
+    Description.newSection( &OL[k].OD->description() );
 }
 
 
@@ -241,6 +234,22 @@ bool lessDeviceChannelOLE( const OutList::OLE &a, const OutList::OLE &b )
 void OutList::sortByDeviceChannel( void )
 {
   sort( OL.begin(), OL.end(), lessDeviceChannelOLE );
+  Description.clear();
+  Description.setType( "stimulus" );
+  for ( unsigned int k=0; k<OL.size(); k++ )
+    Description.newSection( &OL[k].OD->description() );
+}
+
+
+const Options &OutList::description( void ) const
+{
+  return Description;
+}
+
+
+Options &OutList::description( void )
+{
+  return Description;
 }
 
 

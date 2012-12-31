@@ -34,11 +34,15 @@ DataBrowser::DataBrowser( DataIndex *data, QWidget *parent )
   QHBoxLayout *layout = new QHBoxLayout;
   setLayout( layout );
 
-  TreeWidget = new QTreeView;
-  layout->addWidget( TreeWidget );
+  OverviewWidget = new QTreeView;
+  layout->addWidget( OverviewWidget );
+  OverviewWidget->setModel( data->overviewModel() );
+  data->setOverviewView( OverviewWidget );
 
-  TreeWidget->setModel( data->treeModel() );
-  data->setTreeView( TreeWidget );
+  DescriptionWidget = new QTreeView;
+  layout->addWidget( DescriptionWidget );
+  DescriptionWidget->setModel( data->descriptionModel() );
+  data->setDescriptionView( DescriptionWidget );
 }
 
 

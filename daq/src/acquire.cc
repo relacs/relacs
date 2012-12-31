@@ -1425,7 +1425,6 @@ int Acquire::testWrite( OutList &signal )
       di = dis.size();
       dis.push_back( signal[k].device() );
       dsignals.push_back( OutList() );
-      dsignals[di].reserve( signal.size() - k );
       dsignals[di].add( &signal[k] );
     }
   }

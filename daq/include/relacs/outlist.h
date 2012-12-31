@@ -23,7 +23,7 @@
 #define _RELACS_OUTLIST_H_ 1
 
 #include <string> 
-#include <vector> 
+#include <deque> 
 #include <relacs/outdata.h>
 using namespace std;
 
@@ -64,15 +64,10 @@ public:
 	If a larger size than the current size() is requested 
 	than empty OutData are appended, each of capacity \a m
 	and sampling interval \a step seconds.
-	\sa clear(), size(), empty(), reserve(), capacity() */
+	\sa clear(), size(), empty() */
   void resize( int n, int m=0, double step=1.0 );
     /*! Clear the OutList, i.e. remove all OutData signals the OutList owns. */
   void clear( void );
-
-    /*! Maximum number of OutData signals the OutList can hold. */
-  int capacity( void ) const { return OL.capacity(); }
-    /*! Increase the capacity() of the OutList to \a n.  */
-  void reserve( int n );
 
     /*! Assignment. */
   OutList &operator=( const OutList &ol );
@@ -90,19 +85,6 @@ public:
   const OutData &back( void ) const;
     /*! Returns a reference to the last OutData signal in the list. */
   OutData &back( void );
-
-    /*! Returns a const reference of the OutData signal with
-        identifier \a ident.
-        \warning No "range checking" is performed.
-        If there is no OutData signal with identifier \a ident
-        a reference to the first signal is returned. */
-  const OutData &operator[]( const string &ident ) const;
-    /*! Returns a reference of the OutData signal with
-        identifier \a ident.
-        \warning No "range checking" is performed.
-        If there is no OutData signal with identifier \a ident
-        a reference to the first signal is returned. */
-  OutData &operator[]( const string &ident );
 
     /*! Return the index of the output data trace with identifier \a ident.
         If there is no trace with this identifier -1 is returned. */
@@ -134,6 +116,11 @@ public:
     /*! Sort the output signals by increasing device and 
         by increasing channel number. */
   void sortByDeviceChannel( void );
+
+    /*! Returns the descriptions of the output signals. */
+  const Options &description( void ) const;
+    /*! Returns the descriptions of the output signals. */
+  Options &description( void );
 
     /*! Set the device id of all signals to \a device. */
   void setDevice( int device );
@@ -217,7 +204,8 @@ public:
     bool Own;
   };
 
-  vector< OLE > OL;
+  deque< OLE > OL;
+  Options Description;
 
   friend bool lessChannelOLE( const OLE &a, const OLE &b );
   friend bool lessDeviceChannelOLE( const OLE &a, const OLE &b );

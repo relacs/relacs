@@ -1,3 +1,5 @@
+Finish DataIndex::DescriptionModelView!
+
 Options:
 - Reset parentSection pointers and create new Options in assign, append, etc!
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
@@ -9,8 +11,6 @@ Options:
 - check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
 - OutData: rename Ident to name OR remove it?
 - are uniqueNames also used for relacsplugins.cfg ?
-
-- Add section( int ) function that returns the i-th section.
 - Add iterator that iterates through all sections and subsections ?
 
 patchclamp::SingleStimulus:
@@ -41,10 +41,13 @@ Acquire:
 - How to make sure the right Attenuate is used for a given RePro?
 
 Metadata support of OutData:
+- Can OutDataInfo, which is only used in SaveFiles, be replaced by Options or OutData/OutList with a copy function that only copies members butno data?
+- Check how OutList.description() can be used in SaveFiles
+- Check whether OutData/List.desription() can be filled up in SaveFiles
+  and then passed to DataIndex!
 - ThresholdLatencies: check stimulus descriptions
 - There should be a flag for Parameter in OutData::description()
   indicating, which quantities to extract in SaveFiles
-- Unify TraceSpec and OutDataInfo?
 - OutData::append() needs to update timing information!
 - Add ramp and appendRamp functions to OutData that set also the descriptions
 - Update odML terminologies accordingly.

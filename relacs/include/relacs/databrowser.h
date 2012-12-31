@@ -52,7 +52,8 @@ public:
 
 private:
 
-  QTreeView *TreeWidget;
+  QTreeView *OverviewWidget;
+  QTreeView *DescriptionWidget;
 
 };
 

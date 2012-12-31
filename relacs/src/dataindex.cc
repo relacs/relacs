@@ -34,7 +34,7 @@ namespace relacs {
 DataIndex::DataItem::DataItem( void )
   : Level( 0 ),
     Parent( 0 ),
-    TreeModel( 0 )
+    OverviewModel( 0 )
 {
   Data.clear();
   Children.clear();
@@ -47,7 +47,7 @@ DataIndex::DataItem::DataItem( const DataIndex::DataItem &data )
     Data( data.Data ),
     Children( data.Children ),
     Parent( data.Parent ),
-    TreeModel( data.TreeModel )
+    OverviewModel( data.OverviewModel )
 {
 }
 
@@ -56,7 +56,7 @@ DataIndex::DataItem::DataItem( const string &name )
   : Level( 0 ),
     Name( name ),
     Parent( 0 ),
-    TreeModel( 0 )
+    OverviewModel( 0 )
 {
   Data.clear();
   Children.clear();
@@ -68,7 +68,7 @@ DataIndex::DataItem::DataItem( const string &name, int level,
   : Level( level ),
     Name( name ),
     Parent( parent ),
-    TreeModel( parent->treeModel() )
+    OverviewModel( parent->overviewModel() )
 {
   Data.clear();
   Children.clear();
@@ -81,7 +81,7 @@ DataIndex::DataItem::DataItem( const string &name, const Options &data,
     Name( name ),
     Data( data ),
     Parent( parent ),
-    TreeModel( parent->treeModel() )
+    OverviewModel( parent->overviewModel() )
 {
   Children.clear();
 }
@@ -113,9 +113,9 @@ DataIndex::DataItem &DataIndex::DataItem::back( void )
 
 void DataIndex::DataItem::pop( void )
 {
-  TreeModel->beginPopChild( this );
+  OverviewModel->beginPopChild( this );
   Children.pop_back();
-  TreeModel->endPopChild( this );
+  OverviewModel->endPopChild( this );
 }
 
 
@@ -158,17 +158,17 @@ DataIndex::DataItem *DataIndex::DataItem::parent( void ) const
 
 void DataIndex::DataItem::addChild( const string &name )
 {
-  TreeModel->beginAddChild( this );
+  OverviewModel->beginAddChild( this );
   Children.push_back( DataItem( name, level()+1, this ) );
-  TreeModel->endAddChild( this );
+  OverviewModel->endAddChild( this );
 }
 
 
 void DataIndex::DataItem::addChild( const string &name, const Options &data )
 {
-  TreeModel->beginAddChild( this );
+  OverviewModel->beginAddChild( this );
   Children.push_back( DataItem( name, data, level()+1, this ) );
-  TreeModel->endAddChild( this );
+  OverviewModel->endAddChild( this );
 }
 
 
@@ -202,15 +202,15 @@ Options &DataIndex::DataItem::data( void )
 }
 
 
-DataTreeModel *DataIndex::DataItem::treeModel( void )
+DataOverviewModel *DataIndex::DataItem::overviewModel( void )
 {
-  return TreeModel;
+  return OverviewModel;
 }
 
 
-void DataIndex::DataItem::setTreeModel( DataTreeModel *model )
+void DataIndex::DataItem::setOverviewModel( DataOverviewModel *model )
 {
-  TreeModel = model;
+  OverviewModel = model;
 }
 
 
@@ -230,36 +230,28 @@ DataIndex::DataIndex( void )
   : Cells( "Data" ),
     Session ( false )
 {
-  TreeModel = new DataTreeModel( 0 );
-  TreeModel->setDataIndex( this );
-  Cells.setTreeModel( TreeModel );
+  OverviewModel = new DataOverviewModel( 0 );
+  OverviewModel->setDataIndex( this );
+  Cells.setOverviewModel( OverviewModel );
 
-  // load current directory:
-  QDir dir;
-  loadDirectory( dir.currentPath().toStdString() );
+  DescriptionModel = new DataDescriptionModel( 0 );
+  DescriptionModel->setOptions( 0 );
 }
 
 
 DataIndex::~DataIndex( void )
 {
   Cells.clear();
-  delete TreeModel;
+  delete OverviewModel;
+  delete DescriptionModel;
 }
 
 
-void DataIndex::addStimulus( const OutDataInfo &signal )
+void DataIndex::addStimulus( const Options &signal )
 {
   if ( ! Cells.empty() && ! Cells.back().empty() && Session ) {
-    Cells.back().back().addChild( "stimulus" );
-  }
-  print();
-}
-
-
-void DataIndex::addStimulus( const deque< OutDataInfo > &signal )
-{
-  if ( ! Cells.empty() && ! Cells.back().empty() && Session ) {
-    Cells.back().back().addChild( "stimulus" );
+    string s = signal.type();
+    Cells.back().back().addChild( s, signal );
   }
   print();
 }
@@ -283,8 +275,10 @@ void DataIndex::addSession( const string &path, const Options &data )
 
 void DataIndex::endSession( bool saved )
 {
-  if ( Session && ! saved )
+  if ( Session && ! saved ) {
+    descriptionModel()->setOptions( 0 );
     Cells.pop();
+  }
   Session = false;
   print();
 }
@@ -318,7 +312,7 @@ void DataIndex::loadDirectory( const string &path )
         DataFile sf( file );
         sf.read( 1 );
         Cells.addChild( file,
-      		  sf.metaDataOptions( sf.levels()>0 ? sf.levels()-1 : 0 ) );
+			sf.metaDataOptions( sf.levels()>0 ? sf.levels()-1 : 0 ) );
       }
 
     }
@@ -357,20 +351,34 @@ void DataIndex::print( void )
 }
 
 
-DataTreeModel *DataIndex::treeModel( void )
+DataOverviewModel *DataIndex::overviewModel( void )
 {
-  return TreeModel;
+  return OverviewModel;
 }
 
 
-void DataIndex::setTreeView( QTreeView *view )
+void DataIndex::setOverviewView( QTreeView *view )
 {
-  if ( TreeModel != 0 )
-    TreeModel->setTreeView( view );
+  if ( OverviewModel != 0 ) {
+    OverviewModel->setTreeView( view );
+  }
 }
 
 
-DataTreeModel::DataTreeModel( QObject *parent )
+DataDescriptionModel *DataIndex::descriptionModel( void )
+{
+  return DescriptionModel;
+}
+
+
+void DataIndex::setDescriptionView( QTreeView *view )
+{
+  if ( DescriptionModel != 0 )
+    DescriptionModel->setTreeView( view );
+}
+
+
+DataOverviewModel::DataOverviewModel( QObject *parent )
   : QAbstractItemModel( parent ),
     Data( 0 ),
     View( 0 )
@@ -378,25 +386,24 @@ DataTreeModel::DataTreeModel( QObject *parent )
 }
 
 
-void DataTreeModel::setDataIndex( DataIndex *data )
+void DataOverviewModel::setDataIndex( DataIndex *data )
 {
   Data = data;
 }
 
 
-void DataTreeModel::setTreeView( QTreeView *view )
+void DataOverviewModel::setTreeView( QTreeView *view )
 {
   View = view;
   if ( View != 0 ) {
-    QModelIndex item = createIndex( Data->cells()->size()-1, 0,
-				    Data->cells()->child( Data->cells()->size()-1 ) );
-    View->scrollTo( item );
-    View->setCurrentIndex( item );
+    connect( view->selectionModel(),
+	     SIGNAL( currentChanged( const QModelIndex&, const QModelIndex& ) ),
+	     this, SLOT( setDescription( const QModelIndex&, const QModelIndex& ) ) );
   }
 }
 
 
-QVariant DataTreeModel::data( const QModelIndex &index, int role ) const
+QVariant DataOverviewModel::data( const QModelIndex &index, int role ) const
 {
   if ( ! index.isValid() )
     return QVariant();
@@ -418,7 +425,7 @@ QVariant DataTreeModel::data( const QModelIndex &index, int role ) const
 }
 
 
-Qt::ItemFlags DataTreeModel::flags( const QModelIndex &index ) const
+Qt::ItemFlags DataOverviewModel::flags( const QModelIndex &index ) const
 { 
   if ( ! index.isValid() )
     return 0;
@@ -427,8 +434,8 @@ Qt::ItemFlags DataTreeModel::flags( const QModelIndex &index ) const
 }
 
 
-QVariant DataTreeModel::headerData( int section, Qt::Orientation orientation,
-				    int role ) const
+QVariant DataOverviewModel::headerData( int section, Qt::Orientation orientation,
+					int role ) const
 {
   if ( orientation == Qt::Horizontal && role == Qt::DisplayRole )
     return QVariant( QString( "Name" ) );
@@ -437,8 +444,8 @@ QVariant DataTreeModel::headerData( int section, Qt::Orientation orientation,
 }
 
 
-QModelIndex DataTreeModel::index( int row, int column,
-				  const QModelIndex &parent ) const
+QModelIndex DataOverviewModel::index( int row, int column,
+				      const QModelIndex &parent ) const
 {
   //  if ( !hasIndex( row, column, parent ) )
   //    return QModelIndex();
@@ -457,7 +464,7 @@ QModelIndex DataTreeModel::index( int row, int column,
 }
 
 
-QModelIndex DataTreeModel::parent( const QModelIndex &index ) const
+QModelIndex DataOverviewModel::parent( const QModelIndex &index ) const
 {
   if ( ! index.isValid() )
     return QModelIndex();
@@ -471,7 +478,7 @@ QModelIndex DataTreeModel::parent( const QModelIndex &index ) const
 }
 
 
-bool DataTreeModel::hasChildren( const QModelIndex & parent ) const
+bool DataOverviewModel::hasChildren( const QModelIndex &parent ) const
 {
   if ( ! parent.isValid() )
     return ! Data->cells()->empty();
@@ -488,7 +495,7 @@ bool DataTreeModel::hasChildren( const QModelIndex & parent ) const
 }
 
 
-int DataTreeModel::rowCount( const QModelIndex &parent ) const
+int DataOverviewModel::rowCount( const QModelIndex &parent ) const
 {
   if ( parent.column() > 0 )
     return 0;
@@ -508,24 +515,24 @@ int DataTreeModel::rowCount( const QModelIndex &parent ) const
 }
 
 
-int DataTreeModel::columnCount( const QModelIndex &parent ) const
+int DataOverviewModel::columnCount( const QModelIndex &parent ) const
 {
   return 1;
 }
 
 
-bool DataTreeModel::canFetchMore( const QModelIndex &parent ) const
+bool DataOverviewModel::canFetchMore( const QModelIndex &parent ) const
 {
   return false;
 }
 
 
-void DataTreeModel::fetchMore( const QModelIndex &parent )
+void DataOverviewModel::fetchMore( const QModelIndex &parent )
 {
 }
 
 
-void DataTreeModel::beginAddChild( DataIndex::DataItem *parent )
+void DataOverviewModel::beginAddChild( DataIndex::DataItem *parent )
 {
   DataIndex::DataItem *parentitem = parent->parent();
   if ( parentitem == 0 )
@@ -536,7 +543,7 @@ void DataTreeModel::beginAddChild( DataIndex::DataItem *parent )
 }
 
 
-void DataTreeModel::endAddChild( DataIndex::DataItem *parent )
+void DataOverviewModel::endAddChild( DataIndex::DataItem *parent )
 {
   endInsertRows();
   if ( View != 0 ) {
@@ -558,7 +565,7 @@ void DataTreeModel::endAddChild( DataIndex::DataItem *parent )
 }
 
 
-void DataTreeModel::beginPopChild( DataIndex::DataItem *parent )
+void DataOverviewModel::beginPopChild( DataIndex::DataItem *parent )
 {
   DataIndex::DataItem *parentitem = parent->parent();
   if ( parentitem == 0 )
@@ -569,7 +576,7 @@ void DataTreeModel::beginPopChild( DataIndex::DataItem *parent )
 }
 
 
-void DataTreeModel::endPopChild( DataIndex::DataItem *parent )
+void DataOverviewModel::endPopChild( DataIndex::DataItem *parent )
 {
   endRemoveRows();
   if ( View != 0 ) {
@@ -578,6 +585,195 @@ void DataTreeModel::endPopChild( DataIndex::DataItem *parent )
     View->scrollTo( item );
     View->setCurrentIndex( item );
   }
+}
+
+
+void DataOverviewModel::setDescription( const QModelIndex &index )
+{
+  if ( ! index.isValid() )
+    return;
+  
+  if ( index.column() > 0 )
+    return;
+  
+  DataIndex::DataItem *item =
+    static_cast<DataIndex::DataItem*>( index.internalPointer() );
+
+  if ( item == 0 )
+    return;
+
+  // inform descriptionModel about new selected data:
+  Data->descriptionModel()->setOptions( &item->data() );
+}
+
+
+void DataOverviewModel::setDescription( const QModelIndex &current,
+					const QModelIndex &previous )
+{
+  setDescription( current );
+}
+
+
+DataDescriptionModel::DataDescriptionModel( QObject *parent )
+  : QAbstractItemModel( parent ),
+    Data( 0 ),
+    View( 0 )
+{
+}
+
+
+void DataDescriptionModel::setOptions( Options *data )
+{
+  beginResetModel();
+  Data = data;
+  endResetModel();
+  if ( Data != 0 )
+    View->expandToDepth( 1 );
+}
+
+
+void DataDescriptionModel::setTreeView( QTreeView *view )
+{
+  View = view;
+}
+
+
+QVariant DataDescriptionModel::data( const QModelIndex &index, int role ) const
+{
+  if ( ! index.isValid() )
+    return QVariant();
+  
+  if ( role != Qt::DisplayRole )
+    return QVariant();
+  
+  if ( index.column() > 1 )
+    return QVariant();
+  
+  Options *item = static_cast<Options*>( index.internalPointer() );
+
+  string s = "";
+  int i = index.row();
+  if ( i < item->parameterSize() )
+    s = index.column() > 0 ? (*item)[i].text() : (*item)[i].name();
+  else {
+    i -= item->parameterSize();
+    if ( i < item->sectionsSize() )
+	 s = index.column() > 0 ? item->section( i ).type() : item->section( i ).name();
+  }
+
+  return QVariant( QString( s.c_str() ) );
+}
+
+
+Qt::ItemFlags DataDescriptionModel::flags( const QModelIndex &index ) const
+{ 
+  if ( ! index.isValid() )
+    return 0;
+
+  return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+}
+
+
+QVariant DataDescriptionModel::headerData( int section, Qt::Orientation orientation,
+					   int role ) const
+{
+  if ( orientation == Qt::Horizontal && role == Qt::DisplayRole )
+    return section > 0 ? QVariant( QString( "Value" ) ) : QVariant( QString( "Name" ) );
+  
+  return QVariant();
+}
+
+
+QModelIndex DataDescriptionModel::index( int row, int column,
+					 const QModelIndex &parent ) const
+{
+  //  if ( !hasIndex( row, column, parent ) )
+  //    return QModelIndex();
+
+  Options *parentitem = 0;
+  if ( ! parent.isValid() ) {
+    if ( Data != 0 )
+      return createIndex( row, column, Data );
+    else
+      return QModelIndex();
+  }
+
+  parentitem = static_cast<Options*>( parent.internalPointer() );
+  if ( parent.row() >= parentitem->parameterSize() ) {
+    int r = parent.row() - parentitem->parameterSize();
+    if ( r < parentitem->sectionsSize() ) {
+      Options *childitem = &parentitem->section( r );
+      return createIndex( row, column, childitem );
+    }
+  }
+
+  return QModelIndex();
+}
+
+
+QModelIndex DataDescriptionModel::parent( const QModelIndex &index ) const
+{
+  if ( ! index.isValid() )
+    return QModelIndex();
+
+  Options* childitem = static_cast<Options*>( index.internalPointer() );
+  Options* parentitem = childitem->parentSection();
+  if ( parentitem == 0 )
+    return QModelIndex();
+
+  for ( int r=0; r<parentitem->sectionsSize(); r++ ) {
+    if ( &parentitem->section( r ) == childitem ) {
+      r += parentitem->parameterSize();
+      return createIndex( r, 0, parentitem );
+    }
+  }
+  return QModelIndex();
+}
+
+
+bool DataDescriptionModel::hasChildren( const QModelIndex &parent ) const
+{
+  if ( parent.column() > 0 )
+    return false;
+
+  if ( parent.isValid() ) {
+    Options* parentitem = static_cast<Options*>( parent.internalPointer() );
+    int r = parent.row() -  parentitem->parameterSize();
+    if ( r >= 0 && r < parentitem->sectionsSize() ) {
+      Options* childitem = &parentitem->section( r );
+      return ( childitem->parameterSize() + childitem->sectionsSize() ) > 0;
+    }
+  }
+  else if ( Data != 0 )
+    return ( Data->parameterSize() + Data->sectionsSize() ) > 0;
+
+  return false;
+}
+
+
+int DataDescriptionModel::rowCount( const QModelIndex &parent ) const
+{
+  if ( parent.column() > 0 )
+    return 0;
+
+  if ( parent.isValid() ) {
+    Options* parentitem = static_cast<Options*>( parent.internalPointer() );
+    int r = parent.row() -  parentitem->parameterSize();
+    if ( r >= 0 && r < parentitem->sectionsSize() ) {
+      Options* childitem = &parentitem->section( r );
+      return childitem->parameterSize() + childitem->sectionsSize();
+    }
+  }
+  else if ( Data != 0 )
+    return Data->parameterSize() + Data->sectionsSize();
+
+  return 0;
+}
+
+
+int DataDescriptionModel::columnCount( const QModelIndex &parent ) const
+{
+  return 2;
 }
 
 

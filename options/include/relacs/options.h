@@ -223,6 +223,10 @@ public:
     /*! The include path. \sa setInclude()  */
   string include( void ) const;
     /*! Tell this section of options that it inherits some of it
+        contents from a section in a different file specified by \a include.
+	\sa include() */
+  void setInclude( const string &include );
+    /*! Tell this section of options that it inherits some of it
         contents from a section with name \a name saved in a different
         file at \a url. This information is written out by the
         saveXML() function only. \sa include() */
@@ -352,14 +356,19 @@ public:
         \note the name() of this Options is not found. */
   section_iterator rfindSection( const string &pattern, int level=-1 );
 
-    /*! Get \a i-th options. */
+    /*! Get \a i-th name-value pair. */
   const Parameter &operator[]( int i ) const;
-    /*! Get \a i-th options. */
+    /*! Get \a i-th name-value pair. */
   Parameter &operator[]( int i );
-    /*! Get the option with name \a name. */
+    /*! Get the name-value pair with name \a name. */
   const Parameter &operator[]( const string &name ) const;
-    /*! Get the option with name \a name. */
+    /*! Get the name-value pair with name \a name. */
   Parameter &operator[]( const string &name );
+
+    /*! Get \a i-th section. */
+  const Options &section( int i ) const;
+    /*! Get \a i-th section. */
+  Options &section( int i );
 
       /*! Returns the request string of the option with name \a name. */
   Str request( const string &name ) const;
@@ -1575,7 +1584,8 @@ public:
     /*! Remove all Parameter and sections of Options. */
   Options &clear( void );
 
-    /*! Total number of name-value pairs in this Options and all its sections. */
+    /*! Total number of name-value pairs in this Options and all its sections.
+        \sa parameterSize(), sectionSize() */
   int size( void ) const;
     /*! Total number of name-value pairs in this Options and all its sections
         that have \a selectflag set in their flags().
@@ -1589,6 +1599,21 @@ public:
     /*! True if there are no name-value pairs in this Options and all
         its sections. */
   bool empty( void ) const;
+    /*! \return the number of name-value pairs of this Options
+        without the ones in its sections.
+	\sa sectionsSize(), size() */
+  int parameterSize( void ) const;
+    /*! \return the number of name-value pairs of this Options
+        that have \a flag set in their flags() without the ones in its sections.
+	\sa sectionsSize(), size() */
+  int parameterSize( int flags ) const;
+    /*! \return the number of sections of this Options
+        that have \a flag set in their flags() without subsections.
+	\sa parameterSize(), size() */
+  int sectionsSize( void ) const;
+    /*! \return the number of sections of this Options without subsections.
+	\sa parameterSize(), size() */
+  int sectionsSize( int flags ) const;
     /*! True if a name-value pair with name \a name exist somewhere in
         the hierarchy of Options.
         \sa find(), existSection() */
@@ -1850,6 +1875,8 @@ private:
 
     /*! Dummy Parameter for index operator. */
   static Parameter Dummy;
+    /*! Dummy section for index function. */
+  static Options SecDummy;
 
 };
 
