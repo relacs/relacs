@@ -94,12 +94,6 @@ void InList::clear( void )
 }
 
 
-void InList::reserve( int n )
-{
-  IL.reserve( n );
-}
-
-
 InList &InList::operator=( const InList &il )
 {
   if ( &il == this )
@@ -180,7 +174,6 @@ void InList::push( InData &data )
 
 void InList::push( const InList &traces )
 {
-  IL.reserve( IL.size() + traces.size() );
   for ( int k=0; k<traces.size(); k++ )
     IL.push_back( ILE( new InData( traces[k] ), true ) );
 }
@@ -200,7 +193,6 @@ void InList::add( const InData *data, bool own )
 
 void InList::add( const InList &traces, bool own )
 {
-  IL.reserve( IL.size() + traces.size() );
   for ( int k=0; k<traces.size(); k++ )
     IL.push_back( ILE( const_cast<InData*>(&traces[k]), own ) );
 }

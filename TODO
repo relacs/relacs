@@ -1,5 +1,3 @@
-Finish DataIndex::DescriptionModelView!
-
 Options:
 - Reset parentSection pointers and create new Options in assign, append, etc!
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
@@ -21,7 +19,7 @@ auditory::Session plots do not work! Why???? It works on my laptop!
 
 OptWidget:
   updateValues called from notify from valueChanged does nothing, since DisableUpdate is set!
-  This is aproblem for all filters and detectors!
+  This is a problem for all filters and detectors!
 
 General:
 - relacshelp should know whether doxygen is there, or whether the files it is operating on, exist.
@@ -44,7 +42,7 @@ Metadata support of OutData:
 - Can OutDataInfo, which is only used in SaveFiles, be replaced by Options or OutData/OutList with a copy function that only copies members butno data?
 - Check how OutList.description() can be used in SaveFiles
 - Check whether OutData/List.desription() can be filled up in SaveFiles
-  and then passed to DataIndex!
+  and then passed to DataIndex - YES!
 - ThresholdLatencies: check stimulus descriptions
 - There should be a flag for Parameter in OutData::description()
   indicating, which quantities to extract in SaveFiles
@@ -53,6 +51,7 @@ Metadata support of OutData:
 - Update odML terminologies accordingly.
 - Take metadata descriptions from stimulus files in all OutData::load() and loadAM()
 - Stimulus section needs a file (if available)!
+- sineWave() can be stimulus or carrier with const AM. How to deal with that?
 - Implement in all RePros OutData::description() by using appropriate OutData functions !
 - SaveFiles: finish reorganization of saveStimuli(): check XXX comments
 - Remove OutData::ident()
@@ -140,7 +139,6 @@ Acquisition interface:
 
 Numerics:
 - EventList should not bee a vector!
-- Similar for InList and OutList.
 
 Plugins:
 - Add a dependency virtual function, that can be used to query all the plugins

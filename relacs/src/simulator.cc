@@ -209,10 +209,8 @@ int Simulator::read( InList &data )
   Sim->start();
   LastWrite = -1.0;
   Data.clear();
-  Data.reserve( data.size() );
-  for ( int k=0; k<data.size(); k++ ) {
+  for ( int k=0; k<data.size(); k++ )
     Data.add( &data[k] );
-  }  
   SyncMode = AISync;
 
   SoftReset = false;

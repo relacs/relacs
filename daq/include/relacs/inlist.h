@@ -22,7 +22,7 @@
 #ifndef _RELACS_INLIST_H_
 #define _RELACS_INLIST_H_ 1
 
-#include <vector> 
+#include <deque> 
 #include <relacs/indata.h>
 using namespace std;
 
@@ -64,15 +64,10 @@ public:
 	If a larger size than the current size() is requested 
 	than empty InData are appended, each of capacity \a m
 	and sampling interval \a step seconds.
-	\sa clear(), size(), empty(), reserve(), capacity() */
+	\sa clear(), size(), empty() */
   void resize( int n, int m=0, double step=1.0 );
     /*! Clear the InList, i.e. remove all InData the InList owns. */
   void clear( void );
-
-    /*! Maximum number of InData the InList can hold. */
-  int capacity( void ) const { return IL.capacity(); }
-    /*! Increase the capacity() of the InList to \a n.  */
-  void reserve( int n );
 
     /*! Assignment. */
   InList &operator=( const InList &il );
@@ -274,7 +269,7 @@ public:
     bool Own;
   };
 
-  vector< ILE > IL;
+  deque< ILE > IL;
 
   friend bool lessChannelILE( const ILE &a, const ILE &b );
   friend bool lessDeviceChannelILE( const ILE &a, const ILE &b );
