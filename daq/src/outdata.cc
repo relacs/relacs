@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iomanip>
 #include <relacs/random.h>
+#include <relacs/strqueue.h>
 #include <relacs/acquire.h>
 #include <relacs/outdata.h>
 using namespace std;
@@ -278,6 +279,13 @@ const OutData &OutData::append( const OutData &od )
   Description.newSection( od.Description );
   // XXX adjust timing information!
   return *this;
+}
+
+
+void OutData::clear( void )
+{
+  SampleDataF::clear();
+  Description.clear();
 }
 
 
@@ -865,13 +873,22 @@ void OutData::setBestSample( double carrierfreq )
 }
 
 
-istream &OutData::load( istream &str,
-			const string &ident,
-			double carrierfreq )
+void OutData::fixSample( void )
 {
-  free();
+  if ( fixedSampleRate() &&
+       ::fabs( minSampleInterval() - sampleInterval() )/minSampleInterval() > 0.001 ) {
+    SampleDataF sig( *this );
+    SampleDataF::interpolate( sig, 0.0, bestSampleInterval( -1.0 ) );
+  }
+}
+
+
+istream &OutData::load( istream &str, const string &filename )
+{
+  clear();
 
   // skip header and read key:
+  StrQueue sq;
   double tfac = 1.0;
   string s;
   while ( getline( str, s ) && 
@@ -886,6 +903,8 @@ istream &OutData::load( istream &str,
       }
       break;
     }
+    else
+      sq.add( s );
   }
 
   // load data:
@@ -894,27 +913,33 @@ istream &OutData::load( istream &str,
   if ( tfac != 0.0 )
     range() *= tfac;
 
-  setIdent( ident );
-  setCarrierFreq( carrierfreq );
+  // metadata:
+  sq.stripComments( "-#" );
+  Description.clear();
+  Description.load( sq );
+  Description.insertText( "File", "", filename );
+  if ( Description.type().empty() ) {
+    Description.setType( "stimulus/file" );
+  }
+
+  setIdent( filename );
   clearError();
 
   return str;
 }
 
 
-OutData &OutData::load( const string &filename, 
-			const string &ident,
-			double carrierfreq )
+OutData &OutData::load( const string &file, const string &filename )
 {
-  free();
+  clear();
 
   // open file:
-  ifstream str( filename.c_str() );
+  ifstream str( file.c_str() );
   if ( str.bad() )
     return *this;
 
   // load:
-  load( str, ident.empty() ? filename : ident, carrierfreq );
+  load( str, filename.empty() ? file : filename );
 
   return *this;
 }
@@ -928,50 +953,11 @@ double OutData::maximize( double max )
   return c;
 }
 
-void OutData::fill( const SampleDataD &am, double carrierfreq,
-		    const string &ident )
-{
-  free();
-
-  if ( carrierfreq <= 0.0 )
-    return;
-
-  setStepsize( bestSampleInterval( carrierfreq ) );
-  setRangeBack( am.length() );
-
-  if ( am.size() < 2 )
-    return;
-
-  // create lookup-table for one sine wave:
-  SampleDataF sinbuf;
-  sinbuf.sin( LinearRange( int( rint( 1.0 / ( carrierfreq * stepsize() ) ) ), 
-			   0.0, stepsize() ), carrierfreq );
-  
-  // fill am with carrier sine wave:
-  double slope = (am[1]-am[0])/am.stepsize();
-  for ( int i=0, j=0, k=1; i<size(); i++, j++ ) {
-    double t = pos( i );
-    while ( am.pos( k ) < t && k+1 < am.size() ) {
-      k++;
-      slope = (am[k]-am[k-1])/am.stepsize();
-    }
-    if ( j >= sinbuf.size() ) 
-      j=0;
-    operator[]( i ) = sinbuf[j] * ( am[k-1] + slope * ( t - am.pos(k-1) ) );
-  }
-  back() = 0.0;
-
-  setCarrierFreq( carrierfreq );
-  setIdent( ident );
-  clearError();
-}
-
-
 
 void OutData::fill( const OutData &am, double carrierfreq,
 		    const string &ident )
 {
-  free();
+  clear();
 
   if ( carrierfreq <= 0.0 )
     return;
@@ -1014,23 +1000,6 @@ void OutData::fill( const OutData &am, double carrierfreq,
   setCarrierFreq( carrierfreq );
   setIdent( ident );
   clearError();
-}
-
-
-void OutData::loadAM( const string &filename, double carrierfreq, 
-		      const string &ident, SampleDataD *stimulus )
-{
-  SampleDataD *am;
-  if ( stimulus != 0 )
-    am = stimulus;
-  else
-    am = new SampleDataD;
-
-  am->load( filename );
-
-  string s = ( ident == "" ? filename :  ident );
-
-  fill( *am, carrierfreq, s );
 }
 
 

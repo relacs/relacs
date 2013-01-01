@@ -826,18 +826,15 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 				    double &duration, bool stoream )
 {
   OutData wave;
+  wave.setTrace( Speaker[ Side ] );
+
   string wavename;
   bool store = false;
   Options header;
 
   if ( WaveForm == File ) {
     // load stimulus from file:
-    // open file:
-    ifstream str( file.c_str() );
-    if ( ! str.bad() ) {
-      // load data:
-      wave.load( str, file );
-    }
+    wave.load( file, file );
     if ( wave.empty() ) {
       warning( "Unable to load stimulus from file " + file );
       return -1;
@@ -866,14 +863,14 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     if ( WaveForm == Sine || WaveForm == Whitenoise || WaveForm == OUnoise ) {
       if ( WaveForm == Sine ) {
 	PeakAmplitudeFac = 1.0;
-	wave.sineWave( duration, 0.001, Frequency );
+	wave.sineWave( duration, -1.0, Frequency );
       }
       else {
 	unsigned long seed = Seed;
 	if ( WaveForm == Whitenoise )
-	  wave.noiseWave( duration, 0.001, Frequency, 1.0, &seed );
+	  wave.noiseWave( duration, -1.0, Frequency, 1.0, &seed );
 	else if ( WaveForm == OUnoise )
-	  wave.ouNoiseWave( duration, 0.001, 1.0/Frequency, 1.0, &seed );
+	  wave.ouNoiseWave( duration, -1.0, 1.0/Frequency, 1.0, &seed );
 	wave *= PeakAmplitudeFac;
 	int c = ::relacs::clip( -1.0, 1.0, wave );
 	double cp = 100.0*double(c)/wave.size();
@@ -887,15 +884,15 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     else {
       PeakAmplitudeFac = 1.0;
       if ( WaveForm == Rectangular ) {
-	wave.rectangleWave( duration, 0.001, 1.0/Frequency, DutyCycle/Frequency, Ramp );
+	wave.rectangleWave( duration, -1.0, 1.0/Frequency, DutyCycle/Frequency, Ramp );
 	header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
       }
       else if ( WaveForm == Triangular )
-	wave.triangleWave( duration, 0.001, 1.0/Frequency );
+	wave.triangleWave( duration, -1.0, 1.0/Frequency );
       else if ( WaveForm == Sawup )
-	wave.sawUpWave( duration, 0.001, 1.0/Frequency, Ramp );
+	wave.sawUpWave( duration, -1.0, 1.0/Frequency, Ramp );
       else if ( WaveForm == Sawdown )
-	wave.sawDownWave( duration, 0.001, 1.0/Frequency, Ramp );
+	wave.sawDownWave( duration, -1.0, 1.0/Frequency, Ramp );
       if ( WaveType != Envelope )
 	wave = 2.0*wave - 1.0;
     }
@@ -909,7 +906,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   else {
     // constant:
     WaveType = Envelope;
-    wave = SampleDataD( 0.0, duration, 0.001, 1.0 );
+    wave.pulseWave( duration, 0.001, 1.0, 0.0 );
     PeakAmplitudeFac = 1.0;
     header.addText( "waveform", "const" );
     if ( StoreLevel == AMGenerated || StoreLevel == Generated ) 
@@ -936,7 +933,6 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   if ( WaveType == AM ) {
     if ( StoreLevel == AMGenerated ) 
       store = true;
-    AMDB = OutData( wave );
     PeakAmplitude = Amplitude / PeakAmplitudeFac;
     AMDB = PeakAmplitude * ( wave - 1.0 );
     OutData am( AMDB );
@@ -959,7 +955,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 	of << "# t   x\n";
 	of << "# s   1\n";
 	am.save( of, 7, 5 );
-	printlog( "wrote " + StoreFile );;
+	printlog( "wrote " + StoreFile );
       }
     }
   }
@@ -971,7 +967,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     wave.ramp( Ramp );
     PeakAmplitude = -20.0 * ::log10( PeakAmplitudeFac );
     Amplitude = 0.0;
-    AMDB = OutData( wave );
+    AMDB = wave;
     for ( int k=0; k<AMDB.size(); k++ ) {
       AMDB[k] = 20.0 * ::log10( wave[k] );
       if ( AMDB[k] < -60.0 )
@@ -993,7 +989,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 	of << "# t   x\n";
 	of << "# s   1\n";
 	wave.save( of, 7, 5 );
-	printlog( "wrote " + StoreFile );;
+	printlog( "wrote " + StoreFile );
       }
     }
   }

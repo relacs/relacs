@@ -39,6 +39,23 @@ Acquire:
 - How to make sure the right Attenuate is used for a given RePro?
 
 Metadata support of OutData:
+- The following RePros still need to be updated for an appropriate OutData::description:
+  auditory: adaptedficurve, syslatency
+  auditoryprojects: spikeprecision
+  efield: jar
+  efish: chirps, ficurve, sam
+  patchclamp: simple
+  patchclampprojects: thresholdlatencies, feedforwardnetwork
+- Remove OutData::ident()
+- Check loading of metadata descriptions from stimulus files in OutData::load(),
+  check usage in auditory::singlestimulus, efield::jar, etc.
+- Implement oprators =, +, etc. for OutData such that they take descriptions into account!
+  (i.e. in isoresponse, spikeprecision, efish::filestimulus, patchclamp::singlestimulus, OutData::maximize())
+- Remove most of the OutData constructors that resize the data? You should use *Wave() instead!
+- How should setIntensity() interact with amplitudes and intensities in signal descriptions?
+- Where does setIntensity() get its unit from for descriptions?
+- Check usages of some "header" information in
+  auditory::singlestimulus, auditoryprojects::spikeprecision.cc, patchclamp::singlestimulus, etc.
 - Can OutDataInfo, which is only used in SaveFiles, be replaced by Options or OutData/OutList with a copy function that only copies members butno data?
 - Check how OutList.description() can be used in SaveFiles
 - Check whether OutData/List.desription() can be filled up in SaveFiles
@@ -49,12 +66,10 @@ Metadata support of OutData:
 - OutData::append() needs to update timing information!
 - Add ramp and appendRamp functions to OutData that set also the descriptions
 - Update odML terminologies accordingly.
-- Take metadata descriptions from stimulus files in all OutData::load() and loadAM()
 - Stimulus section needs a file (if available)!
 - sineWave() can be stimulus or carrier with const AM. How to deal with that?
-- Implement in all RePros OutData::description() by using appropriate OutData functions !
+  Even worse: what is that two-frequency stimulus in isoresponse?
 - SaveFiles: finish reorganization of saveStimuli(): check XXX comments
-- Remove OutData::ident()
 
 Locking:
 - DeviceList functions like updateData need to be locked!

@@ -174,22 +174,14 @@ namespace efish {
     signal.setTrace( AM ? GlobalAMEField : GlobalEField );
     unlockAll();
     setWaitMouseCursor();
-    {
-      OutData lsig;
-      lsig.load( file, filename );
-      if ( lsig.empty() ) {
-	warning( "Cannot load stimulus file <b>" + file + "</b>!" );
-	restoreMouseCursor();
-	lockAll();
-	return Failed;
-      }
-      if ( signal.fixedSampleRate() &&
-	   fabs( signal.maxSampleRate() - lsig.sampleRate() )/signal.maxSampleRate() > 0.005 ) {
-	signal.SampleDataF::interpolate( lsig, 0.0, signal.bestSampleInterval( -1.0 ) );
-      }
-      else
-	signal = lsig;
+    signal.load( file, filename );
+    if ( signal.empty() ) {
+      warning( "Cannot load stimulus file <b>" + file + "</b>!" );
+      restoreMouseCursor();
+      lockAll();
+      return Failed;
     }
+    signal.fixSample();
     int c = ::relacs::clip( -1.0, 1.0, signal );
     printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
     signal.setTrace( AM ? GlobalAMEField : GlobalEField );
@@ -335,61 +327,50 @@ namespace efish {
     }
     directWrite( sigs );
     sleep( 0.01 );
-
   
-    //central loop over Repeats!
+    // central loop over Repeats!
     for ( Count = 0;
 	  ( Repeats <= 0 || Count < Repeats ) && softStop() == 0;
 	  Count++ ) {
 
-      //create noise
-      OutData noisesig(signal);
-      SampleDataD noise;
-      if(addNoise){
-	if(NoiseType == "Gaussian"){
+      // create additive noise:
+      OutData noisesignal( signal );
+      if ( addNoise ) {
+	// noise intensity:
+	double noisestdev = SigStdev;
+	if ( UseContrast )
+	  noisestdev *= NoiseContrast/Contrast; 
+	else
+	  noisestdev *= NoiseAmpl/Amplitude;
+	// noise:
+	OutData noise;
+	noise.setTrace( AM ? GlobalAMEField : GlobalEField );
+	if ( NoiseType == "Gaussian" ) {
 	  double cu = UpperCutoff;
 	  double cl = LowerCutoff;
-	  if(cu > 2/signal.stepsize()){
+	  if ( cu > 2/signal.stepsize() ) {
 	   string s = "Output of stimulus failed!<br>Error is <b>Upper cutoff beyond Nyquist frequency!</b>";
 	   warning( s );
 	   stop();
 	   return Failed;  
 	  }
-	  noise = noise.whiteNoise(signal.size(),signal.stepsize(), cl, cu, rnd);
+	  noise.bandNoiseWave( signal.duration(), signal.stepsize(), cl, cu, noisestdev );
 	}
-	else{
-	  noise =  noise.ouNoise(signal.size(),signal.stepsize(), NoiseTau, rnd);
+	else {
+	  noise.ouNoiseWave( signal.duration(), signal.stepsize(), NoiseTau, noisestdev );
 	}
-	// noise intensity:
-	noise *= SigStdev; //scale to the same std as the stimulus
-	if ( UseContrast )
-	  noise *= NoiseContrast/Contrast; 
-	else
-	  noise *= NoiseAmpl/Amplitude;
+	noisesignal += noise;
+	//noisesignal = signal + noise;
       }
-      // put out the signal
-      if ( addNoise ) {
-	noisesig += noise;
-	//noisesig = signal + noise;
-	write( noisesig );
-	if ( !noisesig.success() ) {
-	  cerr << "error here!!!" << endl;
-	  string s = "Output of stimulus failed!<br>Error is <b>";
-	  s += noisesig.errorText() + "</b>";
+
+      // put out the signal:
+      write( noisesignal );
+      if ( !noisesignal.success() ) {
+	string s = "Output of stimulus failed!<br>Error is <b>";
+	  s += noisesignal.errorText() + "</b>";
 	  warning( s );
 	  stop();
 	  return Failed;
-	}
-      }
-      else {
-	write( signal );
-	if ( !signal.success() ) {
-	  string s = "Output of stimulus failed!<br>Error is <b>";
-	  s += signal.errorText() + "</b>";
-	  warning( s );
-	  stop();
-	  return Failed;
-	}
       }
 
       // message: 
@@ -401,89 +382,48 @@ namespace efish {
       s += "  Loop: <b>" + Str( Count+1 ) + "</b>";
       message( s );
     
-      sleep( signal.duration() + Pause );
+      sleep( noisesignal.duration() + Pause );
       if ( interrupt() ) {
 	save();
 	stop();
 	return Aborted;
       }
-      if( addNoise ){
-	testWrite(noisesig );
-	// signal failed?
-	if ( !noisesig.success() ) {
-	  if ( noisesig.busy() ) {
-	    warning( "Output still busy! <br> Probably missing trigger. <br> Output of this signal software-triggered.", 4.0 );
-	    signal.setStartSource( 0 );
-	    signal.setPriority();
-	    write( noisesig );
-	    sleep( noisesig.duration() + Pause );
-	    if ( interrupt() ) {
-	      save();
-	      stop();
-	      return Aborted;
-	    }
-	    // trigger:
-	    //	setupTrigger( events );
-	    continue;
-	  }
-	  else if ( noisesig.error() == noisesig.OverflowUnderrun ) {
-	    warning( "Analog Output Overrun Error! <br> Try again.", 4.0 );
-	    write( noisesig );
-	    sleep( noisesig.duration() + Pause );
-	    if ( interrupt() ) {
-	      save();
-	      stop();
-	      return Aborted;
-	    }
-	    continue;
-	  }
-	  else {
-	    string s = "Output of stimulus failed!<br>Error is <b>";
-	    s += noisesig.errorText() + "</b>";
-	    warning( s );
+      testWrite( noisesignal );
+      cerr << "signal.device: " << signal.device() << endl;
+      // signal failed?
+      if ( !noisesignal.success() ) {
+	if ( noisesignal.busy() ) {
+	  warning( "Output still busy! <br> Probably missing trigger. <br> Output of this signal software-triggered.", 4.0 );
+	  noisesignal.setStartSource( 0 );
+	  noisesignal.setPriority();
+	  write( noisesignal );
+	  sleep( noisesignal.duration() + Pause );
+	  if ( interrupt() ) {
+	    save();
 	    stop();
-	    return Failed;
+	    return Aborted;
 	  }
+	  // trigger:
+	  //	setupTrigger( events );
+	  continue;
 	}
-      }
-      else{
-	testWrite( signal );
-	cerr << "signal.device: " << signal.device() << endl;
-	// signal failed?
-	if ( !signal.success() ) {
-	  if ( signal.busy() ) {
-	    warning( "Output still busy! <br> Probably missing trigger. <br> Output of this signal software-triggered.", 4.0 );
-	    signal.setStartSource( 0 );
-	    signal.setPriority();
-	    write( signal );
-	    sleep( signal.duration() + Pause );
-	    if ( interrupt() ) {
-	      save();
-	      stop();
-	      return Aborted;
-	    }
-	    // trigger:
-	    //	setupTrigger( events );
-	    continue;
-	  }
-	  else if ( signal.error() == signal.OverflowUnderrun ) {
-	    warning( "Analog Output Overrun Error! <br> Try again.", 4.0 );
-	    write( signal );
-	    sleep( signal.duration() + Pause );
-	    if ( interrupt() ) {
-	      save();
-	      stop();
-	      return Aborted;
-	    }
-	    continue;
-	  }
-	  else {
-	    string s = "Output of stimulus failed!<br>Error is <b>";
-	    s += signal.errorText() + "</b>";
-	    warning( s );
+	else if ( noisesignal.error() == noisesignal.OverflowUnderrun ) {
+	  warning( "Analog Output Overrun Error! <br> Try again.", 4.0 );
+	  write( noisesignal );
+	  sleep( noisesignal.duration() + Pause );
+	  if ( interrupt() ) {
+	    save();
 	    stop();
-	    return Failed;
+	    return Aborted;
 	  }
+	  continue;
+	}
+	else {
+	  string s = "Output of stimulus failed!<br>Error is <b>";
+	  s += noisesignal.errorText() + "</b>";
+	  warning( s );
+	  stop();
+	  return Failed;
 	}
       }
 

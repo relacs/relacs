@@ -319,6 +319,8 @@ void SetDC::setValue( double value )
 {
   lock();
   DCAmplitude = value;
+  if ( ::fabs( DCAmplitude ) < 1e-8 )
+    DCAmplitude = 0.0;
   unlock();
   wake();
 }
@@ -329,6 +331,8 @@ void SetDC::setValue( void )
   lock();
   SetValue = true;
   DCAmplitude = EW->value();
+  if ( ::fabs( DCAmplitude ) < 1e-8 )
+    DCAmplitude = 0.0;
   Finished = true;
   unlock();
   wake();

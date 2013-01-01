@@ -250,7 +250,6 @@ int JAR::main( void )
     DeltaFRange.set( deltafrange );
   DeltaFRange.random();
   OutData signal;
-  signal.clear();
 
   // data:
   Response.clear();
@@ -386,27 +385,19 @@ int JAR::main( void )
 	    File.expandPath();
 	    unlockAll();
 	    setWaitMouseCursor();
-	    {
-	      OutData lsig;
-	      lsig.load( File, filename );
-	      if ( lsig.empty() ) {
-		warning( "Cannot load stimulus file <b>" + File + "</b>!" );
-		restoreMouseCursor();
-		lockAll();
-		return Failed;
-	      }
-	      if ( signal.fixedSampleRate() &&
-		   fabs( signal.maxSampleRate() - lsig.sampleRate() )/signal.maxSampleRate() > 0.005 ) {
-		signal.SampleDataF::interpolate( lsig, 0.0, signal.bestSampleInterval( -1.0 ) );
-	      }
-	      else
-		signal = lsig;
+	    signal.setTrace( GlobalEField );
+	    signal.load( File, filename );
+	    if ( signal.empty() ) {
+	      warning( "Cannot load stimulus file <b>" + File + "</b>!" );
+	      restoreMouseCursor();
+	      lockAll();
+	      return Failed;
 	    }
 	    if ( Duration > 0.0 && signal.length() > Duration )
 	      signal.resize( signal.indices( Duration ) );
+	    signal.fixSample();
 	    int c = ::relacs::clip( -1.0, 1.0, signal );
 	    printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
-	    signal.setTrace( GlobalEField );
 	    signal.setIdent( filename );
 	    IntensityGain = 1.0/sigstdev;
 	    restoreMouseCursor();

@@ -66,9 +66,9 @@ int EchoTest::main( void )
   int lastTraces = number( "lastTraces" );
 
   OutData signal;
-  signal = triangle(LinearRange(0.0, duration, 1.0/samplerate), duration);
-  signal.save( "signal.dat" );
   signal.setTrace( 0 );
+  signal.triangleWave( duration, 1.0/samplerate, duration );
+  //  signal.save( "signal.dat" );
 
   vector<SampleDataF> traceVector;
 

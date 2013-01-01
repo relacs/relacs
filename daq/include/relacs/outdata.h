@@ -44,7 +44,7 @@ namespace relacs {
 
 \bug noiseWave(), bandNoiseWave(): should set negative carrier frequency -> but: calibrate repro still does not calibrate white noise stimuli!
 
-Before doinganything with an OutData you should set the output trace by
+Before doing anything with an OutData you should set the output trace by
 setTrace() or setTraceName() first.
 
 The way the data values of the signal are interpreted by the hardware driver
@@ -198,6 +198,10 @@ class OutData : public SampleData< float >, public DaqError
         If the stepsize of \a od differs,
         then \a od is resampled with linear interpolation. */
   const OutData &append( const OutData &od );
+
+    /*! Clear the data and the description(), but not any additional
+        information like trace(), intenisty() ,etc. */
+  void clear( void );
 
     /*! Return string with an error message: 
         '"ident", channel # on device #: error message'.
@@ -599,41 +603,36 @@ class OutData : public SampleData< float >, public DaqError
 	bestSampleRate(), bestSampleInterval() */
   void setBestSample( double carrierfreq );
 
+    /*! In case of fixedSampleRate() and different sample interval
+        of the data and the required minSampleInterval(),
+	interpolates the data for minSampleInterval(). */
+  void fixSample( void );
+
     /*! Load stimulus from input stream \a str with description \a ident.
-        The carrier freqency is assumed to be \a carrierfreq Hz
-        (this is important for the attenuator!). 
 	The file has to contain at least two colums of ascii-numbers.
 	The first column is the time in seconds, 
 	if the unit is not specified as ms in the key. 
 	The second column is the stimulus amplitude.
-        The amplitudes of the stimulus have to range from -1 to 1. */
-  istream &load( istream &str, const string &ident, double carrierfreq=0.0 );
-    /*! Load stimulus from input stream \a str with description \a ident.
-        The carrier freqency is assumed to be \a carrierfreq Hz
-        (this is important for the attenuator!). 
+        All metadata in front of the data (marked with a '#')
+        is loaded as the description of the stimulus.
+        \a filename is added to the stimulus description. */
+  istream &load( istream &str, const string &filename );
+    /*! Load stimulus from file \a file.
 	The file has to contain at least two colums of ascii-numbers.
 	The first column is the time in seconds, 
 	if the unit is not specified as ms in the key. 
 	The second column is the stimulus amplitude.
-        The amplitudes of the stimulus have to range from -1 to 1. */
-  OutData &load( const string &filename, const string &ident="",
-		 double carrierfreq=0.0 );
+        All metadata in front of the data (marked with a '#')
+        is loaded as the description of the stimulus.
+        If \a filename is not empty, it is added to the stimulus description.
+        Otherwise, \a file is added. */
+  OutData &load( const string &file, const string &filename="" );
 
     /*! Multiplies each element of the signal
         with some factor such that the largest
         element takes the value \a max.
         Returns the used multiplication factor. */
   double maximize( double max=1.0 );
-
-    /*! Create a stimulus with description \a ident from the given amplitude 
-        modulation \a am (in seconds) filled with a sine wave carrier
-	with frequency \a carrierfreq Hz.
-	The sampling rate is set using bestSampleRate( \a carrierfreq ).
-	The carrier frequency of the signal is set to \a carrierfreq.
-        \a am must have values ranging from 0...1 and 
-	must contain at least 2 elements. */
-  void fill( const SampleDataD &am, double carrierfreq, 
-	     const string &ident = "" );
 
  /*! Create a stimulus with description \a ident from the given amplitude 
         modulation \a am (in seconds) filled with a sine wave carrier
@@ -644,15 +643,6 @@ class OutData : public SampleData< float >, public DaqError
 	must contain at least 2 elements. */
   void fill( const OutData &am, double carrierfreq, 
 	     const string &ident = "" );
-
-    /*! Load amplitude modulation from file \a filename
-        and fill with a carrier sine wave with frequency \a carrierfreq Hz.
-        The amplitudes of the amplitude modulation have to range from 0 to 1. 
-        The amplitude modulation is returned in \a stimulus
-	if stimulus is not 0. */
-  void loadAM( const string &filename, double carrierfreq, 
-	       const string &ident="", 
-	       SampleDataD *stimulus=0 );
 
     /*! Create a sine wave of constant amplitude \a ampl (1.0 = maximum amplitude)
         with freqency \a freq Hz, \a duration seconds, 
@@ -715,7 +705,7 @@ class OutData : public SampleData< float >, public DaqError
 	The actually used seed is returned in \a *seed.
         If \a ident is not specified, it is set to "ou noise wave". */
   void ouNoiseWave( double duration, double stepsize,
-		    double tau, double stdev=0.3, unsigned long *seed=0, double ramp=0.0, 
+		    double tau, double stdev=1.0, unsigned long *seed=0, double ramp=0.0, 
 		    const string &ident="ou noise wave" );
     /*! Creates a frequency sweep from \a startfreq f_1 to \a endfreq
         f_2 of constant amplitude \a ampl and with \a duration seconds. 

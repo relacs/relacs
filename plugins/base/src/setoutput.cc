@@ -156,7 +156,7 @@ int SetOutput::main( void )
 	for ( int k=0; k<sigs.size(); k++ ) {
 	  if ( k > 0 )
 	    msg += ",  ";
-	  msg += sigs[k].ident();
+	  msg += sigs[k].traceName() + '=' + Str( sigs[k][0] ) + sigs[k].unit();
 	}
 	message( msg );
 	directWrite( sigs );

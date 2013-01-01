@@ -942,7 +942,7 @@ int SpikePrecision::createStimulus( OutData &signal, SampleDataD &amdb,
     else
       amdb = Amplitude * ( sin( amdb.range(), frequency ) - 1.0 );
   }
-  SampleDataD am( amdb.range() );
+  OutData am( amdb );
   for ( int k=0; k<am.size(); k++ )
     am[k] = ::pow (10.0, amdb[k] / 20.0 );
   am.ramp( Ramp );

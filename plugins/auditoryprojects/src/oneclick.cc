@@ -108,17 +108,10 @@ int OneClick::main( void )
   P.unlock();
 
   // stimulus:
-  OutData signal( Duration, 0.00001 );
+  OutData signal;
   signal.setTrace( Speaker[ Side ] );
-  int hw = signal.size()/2;
-  int j=0;
-  for ( j=0; j<hw; j++ )
-    signal[j] = double(j) / hw;
-  for ( ; j<signal.size(); j++ )
-    signal[j] = 1.0 - double( j - hw  ) / hw;
+  signal.triangleWave( Duration, 0.00001, Duration );
   signal.back() = 0;
-  signal.setDelay( 0 );
-  //  signal.save( "signal.dat" );
 
   /*
     if ( signal.underflow() ) {

@@ -162,16 +162,27 @@ IsoResponse::~IsoResponse( void )
 
 void IsoResponse::createSignal( OutData &signal, double a1, double a2 )
 {
-  signal.resize( 0.0, Duration, 1.0/2.0e5, 0 );
+  OutData sin1;
+  sin1.setTrace( Speaker[ Side ] );
+  double n1 = a1/(a1+a2);
+  sin1.sineWave( Duration, 1.0/2.0e5, Frequency1, n1 );
+  OutData sin2;
+  double n2 = a2/(a1+a2);
+  sin2.setTrace( Speaker[ Side ] );
+  sin2.sineWave( Duration, 1.0/2.0e5, Frequency2, n2 );
+
   signal.setTrace( Speaker[ Side ] );
-  double n1=a1/(a1+a2);
-  double n2=a2/(a1+a2);
+  signal = sin1 + sin2;
+
+  /* old version:
+  signal.resize( 0.0, Duration, 1.0/2.0e5, 0 );
   double o1=2.0*pi*Frequency1;
   double o2=2.0*pi*Frequency2;
   for( int k=0; k<signal.size(); k++ ) {
     double t = signal.pos( k );
     signal[k] = n1*sin(o1*t) + n2*sin(o2*t);
   }
+  */
   signal.ramp( 0.002 );
   signal.setIdent( "n1=" + Str( n1, 0, 3, 'f' ) + 
 		    ",n2=" + Str( n2, 0, 3, 'f' ) + 
@@ -689,7 +700,7 @@ void IsoResponse::plotIsoSets(  )
 	{    
 	  double pressrate = -1.0;
 	  double preint = -1.0;
-	  int pk = -1;
+	  //	  int pk = -1;
 	  for ( unsigned int k=0; 
 		k<Results.size(); 
 		k++ )
@@ -721,7 +732,7 @@ void IsoResponse::plotIsoSets(  )
 		    }
 		  pressrate = currssrate;
 		  preint = currint;
-		  pk = k;
+		  //		  pk = k;
 		}
 	    }
 	}
@@ -754,7 +765,7 @@ void IsoResponse::plotIsoSets(  )
     {    
       double pressrate = -1.0;
       double preint = -1.0;
-      int pk = -1;
+      //      int pk = -1;
       for ( unsigned int k=0; 
 	    k<Results.size(); 
 	    k++ )
@@ -786,7 +797,7 @@ void IsoResponse::plotIsoSets(  )
 	      }
 	    pressrate = currssrate;
 	    preint = currint;
-	    pk = k;
+	    //	    pk = k;
 	    }
 	}
     }
@@ -997,7 +1008,7 @@ void IsoResponse::findScaling(  )
     {
       double pressrate = -1.0;
       double preint = -1.0;
-      int pk = -1;
+      //      int pk = -1;
       for ( unsigned int k=0; 
 	    k<IsoResults[0].FinalResults.size(); 
 	    k++ )
@@ -1015,12 +1026,12 @@ void IsoResponse::findScaling(  )
 	    }
 	    pressrate = currssrate;
 	    preint = currint;
-	    pk = k;
+	    //	    pk = k;
 	  }
 	}
       pressrate = -1.0;
       preint = -1.0;
-      pk = -1;
+      //      pk = -1;
       for ( unsigned int k=0; 
 	    k<IsoResults.back().FinalResults.size(); 
 	    k++ )
@@ -1038,7 +1049,7 @@ void IsoResponse::findScaling(  )
 	     }
 	    pressrate = currssrate;
 	    preint = currint;
-	    pk = k;
+	    //	    pk = k;
 	  }
 	}
       Scaling += ::pow( 10.0, (i2[l]-i1[l])/20.0 )/3.0;

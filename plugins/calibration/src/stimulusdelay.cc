@@ -79,10 +79,9 @@ int StimulusDelay::main( void )
   P.setXRange( -500.0*pause, 1000.0*duration+500.0*pause );
   P.unlock();
 
-  OutData signal( duration, 1.0/samplerate );
-  signal = 1.0;
-  signal.back() = 0;
+  OutData signal;
   signal.setTrace( outtrace );
+  signal.pulseWave( duration, 1.0/samplerate, 1.0, 0.0 );
   //  signal.mute();
   signal.setIdent( "one" );
 

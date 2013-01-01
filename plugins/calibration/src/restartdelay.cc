@@ -74,10 +74,9 @@ int RestartDelay::main( void )
   P.setXRange( -1000.0*duration, 1000.0*duration );
   P.unlock();
 
-  OutData signal( 2, 1.0/samplerate );
-  signal = 0.0;
-  signal.setDevice( trace( intrace ).device() );
-  signal.setChannel( 0 );
+  OutData signal;
+  signal.setTrace( 0 );
+  signal.constWave( 0.0 );
   signal.setRestart();
   signal.mute();
   signal.setIdent( "zero" );

@@ -237,11 +237,8 @@ int Search::main( void )
     if ( NewSignal ) {
       signal.clear();
       signal.setTrace( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0]  );
-      if ( Mute ) {
-	signal.setSampleInterval( 0.0001 );
-	signal.resize( 10 );
-	signal = 0.0;
-      }
+      if ( Mute )
+	signal.constWave( 0.0 );
       else {
 	if ( Waveform == 1 ) {
 	  signal.bandNoiseWave( Duration, -1.0, MinFrequency, Frequency, 0.3, 0, ramp );
@@ -255,7 +252,6 @@ int Search::main( void )
 	}
       }
       signal.setIntensity( Intensity > 0 && ! Mute ? Intensity + meanintensity : OutData::MuteIntensity );
-      //      convert( signal );
       NewSignal = false;
     }
     else {
