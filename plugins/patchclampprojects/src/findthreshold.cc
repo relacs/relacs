@@ -170,8 +170,9 @@ int FindThreshold::main( void )
   signal.setTrace( CurrentOutput[0] );
 
   // dc signal:
-  OutData dcsignal( orgdcamplitude, IUnit );
+  OutData dcsignal;
   dcsignal.setTrace( CurrentOutput[0] );
+  dcsignal.constWave( orgdcamplitude );
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
 
   // write stimulus:
@@ -195,7 +196,7 @@ int FindThreshold::main( void )
 
     // signal:
     signal.pulseWave( duration, 1.0/samplerate, amplitude,
-		      resetcurrent ? 0.0 : amplitude, IUnit );
+		      resetcurrent ? 0.0 : amplitude );
     signal.setIdent( "I=" + Str( amplitude ) + IUnit );
     write( signal );
     if ( signal.failed() ) {

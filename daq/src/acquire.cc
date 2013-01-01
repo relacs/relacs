@@ -52,6 +52,7 @@ Acquire::Acquire( void )
   LastWrite = -1.0;
   LastDuration = 0.0;
   LastDelay = 0.0;
+  OutData::setAcquire( this );
 
   SyncMode = NoSync;
 
@@ -64,6 +65,7 @@ Acquire::Acquire( void )
 
 Acquire::~Acquire()
 {
+  OutData::setAcquire( 0 );
   clear();
 }
 
@@ -322,20 +324,20 @@ const TraceSpec &Acquire::outTrace( const string &name ) const
 int Acquire::applyOutTrace( OutData &signal ) const
 {
   if ( signal.trace() < 0 && signal.traceName().empty() )
-    return 0;
+    return -1;
 
   int inx = -1;
   if ( ! signal.traceName().empty() )
     inx = outTraceIndex( signal.traceName() );
   else
     inx = signal.trace();
-  if ( inx < 0 ) {
+  if ( inx < 0 || inx >= (int)OutTraces.size() ) {
     signal.addError( DaqError::InvalidTrace );
-    return -1;
+    return -2;
   }
 
-  signal.setTrace( inx );
-  return OutTraces[inx].apply( signal );  
+  signal.setTrace( inx, "" );
+  return OutTraces[inx].apply( signal ) * 3;  
 }
 
 
@@ -2393,8 +2395,9 @@ string Acquire::writeReset( bool channels, bool params )
       if ( OutTraces[k].device() == (int)i &&
 	   ( ( channels && OutTraces[k].channel() < 1000 ) ||
 	     ( params &&  OutTraces[k].channel() >= 1000 ) ) ) {
-	OutData sig( 0.0 );
+	OutData sig;
 	sig.setTrace( OutTraces[k].trace() );
+	sig.constWave( 0.0 );
 	if ( OutTraces[k].apply( sig ) < 0 )
 	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
 	sig.setIdent( "init" );

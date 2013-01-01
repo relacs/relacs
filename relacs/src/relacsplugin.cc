@@ -500,22 +500,6 @@ const TraceSpec &RELACSPlugin::outTrace( const string &name ) const
 }
 
 
-int RELACSPlugin::applyOutTrace( OutData &signal ) const
-{
-  if ( RW->AQ == 0 )
-    return 0;
-  return RW->AQ->applyOutTrace( signal );
-}
-
-
-int RELACSPlugin::applyOutTrace( OutList &signal ) const
-{
-  if ( RW->AQ == 0 )
-    return 0;
-  return RW->AQ->applyOutTrace( signal );
-}
-
-
 bool RELACSPlugin::acquisition( void ) const
 {
   return RW->acquisition();

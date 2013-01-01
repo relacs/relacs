@@ -72,11 +72,9 @@ int BridgeTest::main( void )
 
   // signal:
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
-  OutData signal( duration, 1.0/samplerate );
-  signal = amplitude;
-  signal.setIdent( "const" );
-  signal.back() = 0.0;
+  OutData signal;
   signal.setTrace( CurrentOutput[0] );
+  signal.pulseWave( duration, 1.0/samplerate, amplitude, 0.0 );
 
   // write stimulus:
   while ( true ) {

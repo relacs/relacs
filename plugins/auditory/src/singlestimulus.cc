@@ -933,7 +933,6 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 
   signal.clear();
   signal.setTrace( Speaker[ Side ] );
-  applyOutTrace( signal );
   if ( WaveType == AM ) {
     if ( StoreLevel == AMGenerated ) 
       store = true;

@@ -112,8 +112,9 @@ int PhaseResettingCurve::main( void )
   P.unlock();
 
   // original dc stimulus:
-  OutData orgdcsignal( orgdcamplitude, IUnit );
+  OutData orgdcsignal;
   orgdcsignal.setTrace( CurrentOutput[0] );
+  orgdcsignal.constWave( orgdcamplitude );
   orgdcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
 
   // measure firing rate:
@@ -141,9 +142,9 @@ int PhaseResettingCurve::main( void )
 
   // stimulus:
   OutData signal;
-  signal.pulseWave( duration, trace( SpikeTrace[0] ).stepsize(),
-		    dcamplitude + amplitude, dcamplitude, IUnit );
   signal.setTrace( CurrentOutput[0] );
+  signal.pulseWave( duration, trace( SpikeTrace[0] ).stepsize(),
+		    dcamplitude + amplitude, dcamplitude );
   signal.setIdent( "I=" + Str( dcamplitude + amplitude ) + IUnit );
 
   // data:

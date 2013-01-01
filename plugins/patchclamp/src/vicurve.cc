@@ -197,8 +197,9 @@ int VICurve::main( void )
   signal.setDelay( delay );
 
   // dc signal:
-  OutData dcsignal( dccurrent, IUnit );
+  OutData dcsignal;
   dcsignal.setTrace( CurrentOutput[0] );
+  dcsignal.constWave( dccurrent );
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
 
   // write stimulus:
@@ -229,7 +230,7 @@ int VICurve::main( void )
     message( s );
 
     timeStamp();
-    signal.pulseWave( duration, 1.0/samplerate, amplitude, dccurrent, IUnit );
+    signal.pulseWave( duration, 1.0/samplerate, amplitude, dccurrent );
     signal.setIdent( "I=" + Str( amplitude ) + IUnit );
     write( signal );
     if ( signal.failed() ) {

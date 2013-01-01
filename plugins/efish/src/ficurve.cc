@@ -236,7 +236,6 @@ int FICurve::main( void )
   // create signal:
   OutData signal;
   signal.setTrace( am ? GlobalAMEField : GlobalEField );
-  applyOutTrace( signal );
   double si = 0.001;
   if ( signal.fixedSampleRate() )
     si = signal.minSampleInterval();

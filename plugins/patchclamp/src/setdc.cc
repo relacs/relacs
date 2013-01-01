@@ -231,8 +231,9 @@ int SetDC::main( void )
 						       currentTime() );
       QCoreApplication::postEvent( this, new SetDCEvent( meanrate, 16 ) );
     }
-    OutData dcsignal( DCAmplitude, IUnit );
+    OutData dcsignal;
     dcsignal.setTrace( OutCurrent );
+    dcsignal.constWave( DCAmplitude );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );
     if ( dcsignal.overflow() ) {
@@ -244,7 +245,7 @@ int SetDC::main( void )
       DCAmplitude = dcsignal.minValue();
     }
     if ( dcsignal.failed() ) {
-      dcsignal = DCAmplitude;
+      dcsignal.constWave( DCAmplitude );
       dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
       directWrite( dcsignal );
     }
@@ -279,7 +280,7 @@ int SetDC::main( void )
       if ( ! Finished || ! SetValue ) {
 	if ( Finished )
 	  DCAmplitude = OrgDCAmplitude;
-	dcsignal.constWave( DCAmplitude, IUnit );
+	dcsignal.constWave( DCAmplitude );
 	dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
 	directWrite( dcsignal );
 	message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );
@@ -295,13 +296,14 @@ int SetDC::main( void )
 
   if ( SetValue ) {
     // DC signal:
-    OutData dcsignal( DCAmplitude, IUnit );
+    OutData dcsignal;
     dcsignal.setTrace( OutCurrent );
+    dcsignal.constWave( DCAmplitude );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );
     if ( dcsignal.failed() ) {
       DCAmplitude = OrgDCAmplitude;
-      dcsignal.constWave( DCAmplitude, IUnit );
+      dcsignal.constWave( DCAmplitude );
       dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
       directWrite( dcsignal );
     }

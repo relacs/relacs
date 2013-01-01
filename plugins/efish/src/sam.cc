@@ -130,7 +130,6 @@ int SAM::createSignal( const InData &data, const EventData &events )
 
   Signal = new OutData;
   Signal->setTrace( AM ? GlobalAMEField : GlobalEField );
-  applyOutTrace( *Signal );
   string ident = "";
 
   if ( AM ) {

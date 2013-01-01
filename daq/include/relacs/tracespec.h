@@ -145,13 +145,17 @@ class TraceSpec
         \sa modality() */
   void setModality( const string &modality );
 
-    /*! Apply the values of TraceSpec to \a signal
-        if signal.traceName() matches traceName()
-	or signal.trace() matches trace().
-	Otherwise the DaqError::InvalidTrace error flag is set.
-        \return
-        -  0: success
-        - -1: signal.traceName() or signal.trace() do not match the TraceSpec. */
+    /*! If \a signal has an output trace specified (via
+        OutData::setTrace() or OutData::setTraceName()) then the
+        corresponding settings (channel, device, ...)  are applied to
+        \a signal.
+	If either OutData::traceName() or OutData::trace() do not
+	match this TraceSpec, the DaqError::InvalidTrace error flag of
+	\a signal is set.
+	\return 
+	-  0: success
+	- -1: invalid match
+    */
   int apply( OutData &signal ) const;
 
     /*! Returns true if \a trace and \a signal use

@@ -105,8 +105,9 @@ int FindRate::main( void )
   double silentrate = 1.0/(duration-skipwin);
   double minamplitudestep = 0.001;
 
-  OutData orgdcsignal( orgdcamplitude, IUnit );
+  OutData orgdcsignal;
   orgdcsignal.setTrace( CurrentOutput[0] );
+  orgdcsignal.constWave( orgdcamplitude );
   orgdcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
     
   // plot trace:
@@ -132,8 +133,9 @@ int FindRate::main( void )
   while ( true ) {
 
     // stimulus:
-    OutData signal( dcamplitude, IUnit );
+    OutData signal;
     signal.setTrace( CurrentOutput[0] );
+    signal.constWave( dcamplitude );
     signal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
 	
     // message:

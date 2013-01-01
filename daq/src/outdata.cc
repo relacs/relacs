@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iomanip>
 #include <relacs/random.h>
+#include <relacs/acquire.h>
 #include <relacs/outdata.h>
 using namespace std;
 
@@ -32,6 +33,7 @@ namespace relacs {
 
 
 double OutData::DefaultMinSampleInterval = 0.001;
+const Acquire *OutData::A = 0;
 
 
 OutData::OutData( void ) 
@@ -52,13 +54,6 @@ OutData::OutData( double duration, double stepsize )
   : SampleDataF( 0.0, duration, stepsize, 0.0 )
 {
   construct();
-}
-
-
-OutData::OutData( double value, const string &unit ) 
-{
-  construct();
-  constWave( value, unit );
 }
 
 
@@ -422,12 +417,16 @@ int OutData::trace( void ) const
 }
 
 
-void OutData::setTrace( int index )
+int OutData::setTrace( int index )
 {
   Trace = index;
   TraceName = "";
   Device = -1;
   Channel = -1;
+  if ( A != 0 )
+    return A->applyOutTrace( *this );
+  else
+    return 0;
 }
 
 
@@ -437,12 +436,29 @@ string OutData::traceName( void ) const
 }
 
 
-void OutData::setTraceName( const string &name )
+int OutData::setTraceName( const string &name )
 {
   Trace = -1;
   TraceName = name;
   Device = -1;
   Channel = -1;
+  if ( A != 0 )
+    return A->applyOutTrace( *this );
+  else
+    return 0;
+}
+
+
+void OutData::setTrace( int index, const string &name )
+{
+  Trace = index;
+  TraceName = name;
+}
+
+
+void OutData::setAcquire( const Acquire *a )
+{
+  A = a;
 }
 
 
@@ -1021,7 +1037,9 @@ void OutData::loadAM( const string &filename, double carrierfreq,
 void OutData::sineWave( double duration, double stepsize,
 			double freq, double ampl, double r, const string &ident )
 {
-  if ( stepsize <= 0.0  )
+  if ( fixedSampleRate() )
+    stepsize = minSampleInterval();
+  else if ( stepsize <= 0.0  )
     stepsize = bestSampleInterval( freq );
   sin( 0.0, duration, stepsize, freq );
   if ( ampl != 1.0 )
@@ -1048,7 +1066,9 @@ void OutData::noiseWave( double duration, double stepsize,
 			 double cutofffreq, double stdev,
 			 unsigned long *seed, double r, const string &ident )
 {
-  if ( stepsize <= 0.0  )
+  if ( fixedSampleRate() )
+    stepsize = minSampleInterval();
+  else if ( stepsize <= 0.0  )
     stepsize = bestSampleInterval( cutofffreq );
   Random rand;
   if ( seed != 0 )
@@ -1079,7 +1099,9 @@ void OutData::bandNoiseWave( double duration, double stepsize,
 			     double cutofffreqlow, double cutofffreqhigh, double stdev, 
 			     unsigned long *seed, double r, const string &ident )
 {
-  if ( stepsize <= 0.0  )
+  if ( fixedSampleRate() )
+    stepsize = minSampleInterval();
+  else if ( stepsize <= 0.0  )
     stepsize = bestSampleInterval( cutofffreqhigh );
   Random rand;
   if ( seed != 0 )
@@ -1111,7 +1133,7 @@ void OutData::ouNoiseWave( double duration, double stepsize,
 			   double tau, double stdev, unsigned long *seed,
 			   double r, const string &ident )
 {
-  if ( stepsize <= 0.0  )
+  if ( stepsize <= 0.0 || fixedSampleRate() )
     stepsize = minSampleInterval();
   Random rand;
   if ( seed != 0 )
@@ -1142,7 +1164,7 @@ void OutData::sweepWave( double duration, double stepsize,
 			 double ampl, double r, 
 			 const string &ident )
 {
-  if ( stepsize <= 0.0  )
+  if ( stepsize <= 0.0 || fixedSampleRate() )
     stepsize = minSampleInterval();
   sweep( 0.0, duration, stepsize, startfreq, endfreq );
   if ( ampl != 1.0 )
@@ -1169,7 +1191,9 @@ void OutData::rectangleWave( double duration, double stepsize,
 			     double period, double width, double ramp, double ampl,
 			     const string &ident)
 {
-  rectangle(0.0, duration, stepsize, period, width, ramp);
+  if ( stepsize <= 0.0 || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  rectangle( 0.0, duration, stepsize, period, width, ramp );
   if ( ampl != 1.0 )
     array() *= ampl;
   back() = 0.0;
@@ -1192,7 +1216,9 @@ void OutData::rectangleWave( double duration, double stepsize,
 void OutData::sawUpWave( double duration, double stepsize, 
 			 double period, double ramp, double ampl, const string &ident)
 {
-  sawUp(0.0, duration, stepsize, period, ramp);
+  if ( stepsize <= 0.0 || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  sawUp( 0.0, duration, stepsize, period, ramp );
   if ( ampl != 1.0 )
     array() *= ampl;
   back() = 0.0;
@@ -1216,7 +1242,9 @@ void OutData::sawDownWave( double duration, double stepsize,
 			   double period, double ramp, double ampl,
 			   const string &ident)
 {
-  sawDown(0.0, duration, stepsize, period, ramp);
+  if ( stepsize <= 0.0 || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  sawDown( 0.0, duration, stepsize, period, ramp );
   if ( ampl != 1.0 )
     array() *= ampl;
   back() = 0.0;
@@ -1239,7 +1267,9 @@ void OutData::sawDownWave( double duration, double stepsize,
 void OutData::triangleWave( double duration, double stepsize, 
 			    double period, double ampl, const string &ident )
 {
-  triangle(0.0, duration, stepsize, period);
+  if ( stepsize <= 0.0 || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  triangle( 0.0, duration, stepsize, period );
   if ( ampl != 1.0 )
     array() *= ampl;
   back() = 0.0;
@@ -1258,29 +1288,30 @@ void OutData::triangleWave( double duration, double stepsize,
 }
 
 
-void OutData::constWave( double value, const string &unit )
+void OutData::constWave( double value )
 {
-  SampleDataF::resize( 1, 0.0, 0.01 );
+  SampleDataF::resize( 1, 0.0, minSampleInterval() );
   *this = value;
   Description.clear();
   Description.setType( "stimulus/value" );
-  Description.addNumber( "Intensity", value, unit );
+  Description.addNumber( "Intensity", value, unit() );
   clearError();
 }
 
 
 void OutData::pulseWave( double duration, double stepsize,
-			 double value, double base,
-			 const string &unit )
+			 double value, double base )
 {
+  if ( stepsize <= 0.0 || fixedSampleRate() )
+    stepsize = minSampleInterval();
   SampleDataF::resize( 0.0, duration, stepsize );
   *this = value;
   Description.clear();
   Description.setType( "stimulus/pulse" );
-  Description.addNumber( "Intensity", value, unit );
+  Description.addNumber( "Intensity", value, unit() );
   if ( fabs( value - base ) > 1e-8 ) {
     back() = base;
-    Description.addNumber( "IntensityOffset", base, unit );
+    Description.addNumber( "IntensityOffset", base, unit() );
   }
   Description.addNumber( "Duration", 1000.0*duration, "ms" );
   clearError();

@@ -313,15 +313,16 @@ int ThresholdLatencies::main( void )
   }
 
   // DC signal:
-  OutData dcsignal( dcamplitude, IUnit );
+  OutData dcsignal;
   dcsignal.setTrace( CurrentOutput[0] );
+  dcsignal.constWave( dcamplitude );
   dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
 
   // measure resting potential:
   double restvoltage = metaData( "Cell" ).number( "vrest" );
   if ( prevc && preamplitudesrc == 4 ) {  // VC rest
     // zero DC current:
-    dcsignal.constWave( 0.0, IUnit );
+    dcsignal.constWave( 0.0 );
     dcsignal.setIdent( "DC=" + Str( 0.0 ) + IUnit );
     directWrite( dcsignal );
     sleep( 0.5 );
@@ -336,7 +337,7 @@ int ThresholdLatencies::main( void )
 	     + Str( restvoltage ) + " mV" );
 
     // back to DC:
-    dcsignal.constWave( dcamplitude, IUnit );
+    dcsignal.constWave( dcamplitude );
     dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
     directWrite( dcsignal );
   }
@@ -529,7 +530,7 @@ int ThresholdLatencies::main( void )
 	pre2amplitude = 0.0;
       if ( fabs( postamplitude ) < 1.0e-8 )
 	postamplitude = 0.0;
-      dcsignal.constWave( dcamplitude, IUnit );
+      dcsignal.constWave( dcamplitude );
       dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
       directWrite( dcsignal );
     }
@@ -603,7 +604,7 @@ int ThresholdLatencies::main( void )
     save( usedc );
     lockAll();
   }
-  dcsignal.constWave( orgdcamplitude, IUnit );
+  dcsignal.constWave( orgdcamplitude );
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
   directWrite( dcsignal );
   if ( prevc ) {

@@ -230,6 +230,7 @@ int TraceSpec::apply( OutData &signal ) const
 {
   if ( ( ! signal.traceName().empty() && signal.traceName() == TraceName ) ||
        ( signal.trace() >= 0 && signal.trace() == Trace ) ) {
+    signal.setTrace( Trace, TraceName );
     signal.setDevice( Device );
     signal.setChannel( Channel );
     signal.setScale( Scale );

@@ -295,15 +295,15 @@ public:
         \sa addOutTrace(), outTracesSize(), outTraceIndex(),
 	outTraceName(), applyOutTrace(), clearOutTraces() */
   const TraceSpec &outTrace( const string &name ) const;
-    /*! If \a signal has an output trace specified (via OutData::setTrace())
-        then the corresponding settings (channel, device, ...)
+    /*! If \a signal has an output trace specified (via
+        OutData::setTrace() or OutData::setTraceName()) then the
+        corresponding settings of this trace (channel, device, ...)
         are applied to \a signal.
-	If the trace is not known, the DaqError::InvalidTrace
-	error flag of \a signal is set.
 	\return 
-	-  0: success (or empty trace name)
-	- -1: invalid trace name
-	- -2: invalid match
+	-  0: success
+	- -1: traceName() is empty or trace() < 0
+	- -2: trace does not exist
+	- -3: invalid match
         \sa addOutTrace(), outTracesSize(), outTraceIndex(),
 	outTraceName(), outTrace(), clearOutTraces() */
   int applyOutTrace( OutData &signal ) const;

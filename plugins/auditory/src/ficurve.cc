@@ -320,7 +320,6 @@ int FICurve::main( void )
 
   // stimulus:
   Signal.setTrace( Speaker[ Side ] );
-  applyOutTrace( Signal );  // to get maximum sampling rate!
   if ( Waveform == 1 ) {
     Signal.bandNoiseWave( Duration, -1.0, MinCarrierFrequency, CarrierFrequency, 0.3, 0, Ramp );
     MeanIntensity = 6.0206; // stdev=0.5

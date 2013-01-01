@@ -161,7 +161,6 @@ int SysLatency::main( void )
   // create stimulus and adjust trigger:
   OutData signal;
   signal.setTrace( Speaker[ side ] );
-  applyOutTrace( signal );
   signal.setBestSample( carrierfrequency );
   signal.reserve( signal.indices( duration ) );
   signal.clearError();

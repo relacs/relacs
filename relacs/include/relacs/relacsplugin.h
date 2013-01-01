@@ -476,18 +476,6 @@ protected:
   const TraceSpec &outTrace( int index ) const;
     /*! Return the output trace with name \a name. */
   const TraceSpec &outTrace( const string &name ) const;
-    /*! If \a signal has an output trace specified (via OutData::setTrace())
-        then the corresponding settings (channel, device, ...)
-        are applied to \a signal.
-	\return 
-	-  0: success (or empty trace name)
-	- -1: invalid trace name */
-  int applyOutTrace( OutData &signal ) const;
-    /*! Applies the trace settings to each of the OutData in \a signals.
-	\return
-        -  0: success (or empty trace name)
-	- -1: invalid trace name in at least one of the signals. */
-  int applyOutTrace( OutList &signal ) const;
 
     /*! True if the current working mode is to
         acquiring real data from a data acquisition board.

@@ -164,7 +164,6 @@ void IsoResponse::createSignal( OutData &signal, double a1, double a2 )
 {
   signal.resize( 0.0, Duration, 1.0/2.0e5, 0 );
   signal.setTrace( Speaker[ Side ] );
-  applyOutTrace( signal );
   double n1=a1/(a1+a2);
   double n2=a2/(a1+a2);
   double o1=2.0*pi*Frequency1;

@@ -145,8 +145,9 @@ int SetOutput::main( void )
       for ( int k=0; k<OutOpts.size(); k++ ) {
 	if ( OutOpts[k].changed() ) {
 	  double value = OutOpts[k].number();
-	  OutData sig( value, OutOpts[k].unit() );
+	  OutData sig;
 	  sig.setTraceName( OutOpts[k].name() );
+	  sig.constWave( value );
 	  sigs.push( sig );
 	}
       }
@@ -174,8 +175,9 @@ int SetOutput::main( void )
   }
   else {
     // set the single requested value:
-    OutData signal( value, outTrace( outtrace ).unit() );
+    OutData signal;
     signal.setTrace( outtrace );
+    signal.constWave( value );
     directWrite( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );

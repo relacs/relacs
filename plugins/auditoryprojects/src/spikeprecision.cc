@@ -969,7 +969,6 @@ int SpikePrecision::createStimulus( OutData &signal, SampleDataD &amdb,
   }
   signal.free();
   signal.setTrace( Speaker[ Side ] );
-  applyOutTrace( signal );
   signal.fill( am, CarrierFrequency );
   signal.setIdent( "amplitude=" + Str( Amplitude ) + "dB, frequency=" + Str( frequency ) + "Hz" );
   amdb += Intensity + PeakAmplitude;

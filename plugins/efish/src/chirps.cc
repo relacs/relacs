@@ -175,7 +175,6 @@ void Chirps::createEOD( OutData &signal )
   // create base waveform:
   OutData waveform;
   waveform.setTrace( GlobalEField );
-  applyOutTrace( waveform );
   if ( SineWave ) {
     // create sine wave:
     StimulusRate = FishRate + DeltaF;
@@ -400,7 +399,6 @@ int Chirps::createAM( OutData &signal )
   }
   signal.clear(); 
   signal.setTrace( GlobalAMEField );
-  applyOutTrace( signal );
   double sr = fabs( DeltaF ) + ChirpSize;
   signal.setSampleRate( floor( signal.maxSampleRate()/sr ) * sr );
   signal.setIntensity( 0.2 * FishAmplitude );

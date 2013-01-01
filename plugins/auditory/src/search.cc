@@ -237,7 +237,6 @@ int Search::main( void )
     if ( NewSignal ) {
       signal.clear();
       signal.setTrace( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0]  );
-      applyOutTrace( signal );  // needed for maximum sampling rate!
       if ( Mute ) {
 	signal.setSampleInterval( 0.0001 );
 	signal.resize( 10 );

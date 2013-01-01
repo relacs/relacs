@@ -246,12 +246,12 @@ int SetLeak::main( void )
   message( "set g=" + Str( g ) + "nS and E=" + Str( E ) + "mV" );
   OutList signal;
   signal.resize( 2 );
-  signal[0] = OutData( g, "nS" );
-  signal[0].setIdent( "g=" + Str( g ) + "nS" );
   signal[0].setTraceName( "g" );
-  signal[1] = OutData( E, "mV" );
-  signal[1].setIdent( "E=" + Str( E ) + "mV" );
+  signal[0].constWave( g );
+  signal[0].setIdent( "g=" + Str( g ) + "nS" );
   signal[1].setTraceName( "E" );
+  signal[1].constWave( E );
+  signal[1].setIdent( "E=" + Str( E ) + "mV" );
   directWrite( signal );
   if ( signal.failed() ) {
     warning( "Failed to write new values: " + signal.errorText() );

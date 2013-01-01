@@ -953,8 +953,9 @@ string Simulator::writeReset( bool channels, bool params )
       if ( OutTraces[k].device() == (int)i &&
 	   ( ( channels && OutTraces[k].channel() < 1000 ) ||
 	     ( params &&  OutTraces[k].channel() >= 1000 ) ) ) {
-	OutData sig( 0.0 );
+	OutData sig;
 	sig.setTrace( OutTraces[k].trace() );
+	sig.constWave( 0.0 );
 	if ( OutTraces[k].apply( sig ) < 0 )
 	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
 	sig.setIdent( "init" );

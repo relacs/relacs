@@ -344,7 +344,6 @@ int JAR::main( void )
 	
 	// create signal:
 	signal.setTrace( GlobalEField );
-	applyOutTrace( signal );
 	if ( GenerateStimulus ) {
 	  signal.clear();
 	  if ( SineWave ) {

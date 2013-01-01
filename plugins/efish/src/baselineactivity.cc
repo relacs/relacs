@@ -255,8 +255,9 @@ int BaselineActivity::main( void )
   // reset all outputs:
   OutList sigs;
   for ( int k=0; k<EFields; k++ ) {
-    OutData sig( 0.0 );
+    OutData sig;
     sig.setTrace( EField[k] );
+    sig.constWave( 0.0 );
     sig.setIdent( "init" );
     sig.mute();
     sigs.push( sig );

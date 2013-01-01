@@ -34,12 +34,18 @@ using namespace std;
 namespace relacs {
 
 
+  class Acquire;
+
+
 /*! 
 \class OutData
 \brief An output signal for a data acquisition board.
 \author Marco Hackenberg, Jan Benda
 
 \bug noiseWave(), bandNoiseWave(): should set negative carrier frequency -> but: calibrate repro still does not calibrate white noise stimuli!
+
+Before doinganything with an OutData you should set the output trace by
+setTrace() or setTraceName() first.
 
 The way the data values of the signal are interpreted by the hardware driver
 interface class depends on whether an attenuator is connected to the
@@ -95,12 +101,6 @@ class OutData : public SampleData< float >, public DaqError
     /*! Create an OutData-object for data elements sampled with
         \a stepsize for \a duration seconds. */
   OutData( double duration, double stepsize );
-    /*! Create an OutData-object with a single data element
-        with value \a value.
-        The optional \a unit should be the unit of the output trace
-        and is used for the metadata description of this stimulus.
-        \sa constWave() */
-  OutData( double value, const string &unit="" );
    /*! Create an OutData-object with \a n data elements sampled with
        \a stepsize and initialzes them with the values given in \a a. */
   template < typename R >
@@ -206,7 +206,7 @@ class OutData : public SampleData< float >, public DaqError
 
     /*! The sampling rate of the signal in Hertz */
   double sampleRate( void ) const;
-    /*! Set the sampling rate of the signal to \a rate Hertz */
+    /*! Set the sampling rate of the signal to \a rate Hertz. */
   void setSampleRate( double rate );
     /*! The sampling interval of the signal in seconds */
   double sampleInterval( void ) const;
@@ -247,7 +247,10 @@ class OutData : public SampleData< float >, public DaqError
     /*! Set the device id to \a device.
         You only need to specify an output device if more than one
         output devices are available and the data should be sent
-        to an output device other than the default one. 
+        to an output device other than the default one.
+	Alternatively, you can set an output trace by setTrace() or
+	setTraceName() (recommended). Then the Acquire class fills in
+	the device and channel information.
         \sa device(), setChannel(), setTrace(), setTraceName() */
   void setDevice( int device );
     /*! The number of the channel on the specified device
@@ -261,31 +264,54 @@ class OutData : public SampleData< float >, public DaqError
   void setChannel( int channel );
     /*! Set the number of the channel to \a channel
         and the device to \a device. 
+	Alternatively, you can set an output trace by setTrace() or
+	setTraceName() (recommended). Then the Acquire class fills in
+	the device and channel information.
         \sa channel(), setDevice(), setTrace(), setTraceName() */
   void setChannel( int channel, int device );
-    /*! The index of the output trace
-        that is used later to identify and set the device(), channel(),
-        etc.
+
+    /*! The index of the output trace.
         \sa setTrace(), channel(), device(), traceName() */
   int trace( void ) const;
     /*! Set the output trace by specifying its index \a index.
-        Channel number, device, reglitch mode, maximum sampling rate, etc.
-	are then later set according to the trace index.
-	Clears the channel() and device() numbers, as well as the traceName().
+        If an Acquire class was specified by setAcquire(),
+	then channel number, device, reglitch mode, maximum sampling rate, etc.
+	are set according to the trace \a index.
+	Otherwise clears the channel(), device(), and the trace() index
+	so that they are set later by one of the Acquire::write() functions.
+	\return 
+	-  0: success
+	- -1: index < 0
+	- -2: trace does not exist
+	- -3: invalid match
         \sa trace(), setChannel(), setDevice(), setTraceName(),
 	setReglitch(), setMaxSampleRate(), setFixedSampleRate() */
-  void setTrace( int index );
-    /*! The name that is used later to identify and set the device(), channel(),
-        etc.
+  int setTrace( int index );
+    /*! The name of the output trace.
         \sa setTrace(), channel(), device(), traceName() */
   string traceName( void ) const;
     /*! Set the output trace by specifying its name \a name.
-        Channel number, device, reglitch mode, maximum sampling rate, etc.
-	are then later set according to the trace name.
-	Clears the channel(), device(), and the trace() index.
+        If an Acquire class was specified by setAcquire(),
+	then channel number, device, reglitch mode, maximum sampling rate, etc.
+	are set according to the trace \a name.
+	Otherwise clears the channel(), device(), and the trace() index
+	so that they are set later by one of the Acquire::write() functions.
+	\return 
+	-  0: success
+	- -1: index < 0
+	- -2: trace does not exist
+	- -3: invalid match
         \sa trace(), setChannel(), setDevice(), setTraceName(),
 	setReglitch(), setMaxSampleRate(), setFixedSampleRate() */
-  void setTraceName( const string &name );
+  int setTraceName( const string &name );
+    /*! Set the index and the name of the output trace to \a index
+        and \a name, respectively, without resetting or updating other information. */
+  void setTrace( int index, const string &name );
+    /*! Tell OutData the Acquire class \a a that manages all output traces.
+        Used by setTrace() and setTraceName() to fill in further information
+	about the output trace (scale(), unit(), reglitch(),
+	maxSampleRate(), fixedSampleRate(). */
+  static void setAcquire( const Acquire *a );
 
     /*! The signal delay in seconds,
 	i.e. the time the signal needs from its emission from the daq board to
@@ -545,24 +571,30 @@ class OutData : public SampleData< float >, public DaqError
         The returned sampling rate is always smaller or equal to maxSampleRate().
 	If a fixed sampling rate has to be used, maxSampleRate() is returned.
         If \a carrierfreq <= 0, then maxSampleRate() is returned.
+        \note specify an output trace using setTrace() or setTraceName()
+	before calling bestSampleInterval()!        
         \sa bestSampleInterval(), setBestSample(), fixedRate()  */
   double bestSampleRate( double carrierfreq );
     /*! Returns the optimal sampling interval (in seconds) that should be used 
         for a signal with carrier frequency \a carrierfreq Hz.
 	The optimal sampling interval is the smallest possible interval 
-	that multiplied by four results in the period of the carrier frequency.
+	that, multiplied by four, results in the period of the carrier frequency.
 	This ensures that a sine wave with frequency \a carrierfreq is sampled
 	exactly at the zero crossings, minima, and maxima,
 	which is important for a stable output of the amplitude of the sine wave.
         The returned sampling interval is always larger or equal to minSampleInterval().
 	If a fixed sampling interval has to be used, minSampleInterval() is returned.
         If \a carrierfreq <= 0, then minSampleInterval() is returned.
-        \sa bestSampleRate(), setBestSample()  */
+        \note specify an output trace using setTrace() or setTraceName()
+	before calling bestSampleInterval()!        
+	\sa bestSampleRate(), setBestSample()  */
   double bestSampleInterval( double carrierfreq );
     /*! Set the sampling rate to be the optimal one that should be used 
         for a signal with carrier frequency \a carrierfreq Hz.
 	See bestSampleRate() for details. 
         The carrier frequency is set to \a carrierfreq.
+        \note specify an output trace using setTrace() or setTraceName()
+	before calling bestSampleInterval()!        
         \sa setSampleRate(), setSampleInterval(), setCarrierFreq(), 
 	bestSampleRate(), bestSampleInterval() */
   void setBestSample( double carrierfreq );
@@ -625,9 +657,12 @@ class OutData : public SampleData< float >, public DaqError
     /*! Create a sine wave of constant amplitude \a ampl (1.0 = maximum amplitude)
         with freqency \a freq Hz, \a duration seconds, 
 	ramps of \a ramp seconds length, and description \a ident.
+	If fixedSampleRate() the \a stepsize is set to minSampleInterval().
 	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a freq ).
 	The carrier frequency of the signal is set to \a freq.
-        If \a ident is not specified, it is set to "sine wave". */
+        If \a ident is not specified, it is set to "sine wave".
+        \note specify an output trace using setTrace() or setTraceName()
+	before calling sineWave()! */
   void sineWave( double duration, double stepsize,
 		 double freq, double ampl=1.0, double ramp=0.0, 
 		 const string &ident="sine wave" );
@@ -636,12 +671,15 @@ class OutData : public SampleData< float >, public DaqError
 	ramps of \a ramp seconds length, and description \a ident.
 	The noise signal has zero mean and standard deviation \a stdev.
 	The carrier frequency of the signal is set to \a cutofffreq.
+	If fixedSampleRate() the \a stepsize is set to minSampleInterval().
 	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a cutofffreq ).
 	If \a seed is not 0 the value it is pointing to is used as the seed for initializing a random number generator.
 	If \a *seed is 0, then the system time is used to generate a seed
         to imitate real randomness.
 	The actually used seed is returned in \a *seed.
-        If \a ident is not specified, it is set to "white noise wave". */
+        If \a ident is not specified, it is set to "white noise wave".
+        \note specify an output trace using setTrace() or setTraceName()
+	before calling sineWave()! */
   void noiseWave( double duration, double stepsize, double cutofffreq,
 		  double stdev=1.0, unsigned long *seed=0, double ramp=0.0, 
 		  const string &ident="white noise wave" );
@@ -650,13 +688,16 @@ class OutData : public SampleData< float >, public DaqError
         \a duration seconds, 
 	ramps of \a ramp seconds length, and description \a ident.
 	The noise signal has zero mean and standard deviation \a stdev.
+	If fixedSampleRate() the \a stepsize is set to minSampleInterval().
 	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a cutofffreqhigh ).
 	The carrier frequency of the signal is set to \a cutofffreqhigh.
 	If \a seed is not 0 the value it is pointing to is used as the seed for initializing a random number generator.
 	If \a *seed is 0, then the system time is used to generate a seed
         to imitate real randomness.
 	The actually used seed is returned in \a *seed.
-        If \a ident is not specified, it is set to "band noise wave". */
+        If \a ident is not specified, it is set to "band noise wave".
+        \note specify an output trace using setTrace() or setTraceName()
+	before calling sineWave()! */
   void bandNoiseWave( double duration, double stepsize,
 		      double cutofffreqlow, double cutofffreqhigh,
 		      double stdev=1.0, unsigned long *seed=0, double ramp=0.0,
@@ -666,7 +707,8 @@ class OutData : public SampleData< float >, public DaqError
 	ramps of \a ramp seconds length, and description \a ident.
 	The noise signal has zero mean and standard deviation \a stdev.
 	The carrier frequency of the signal is set to 1/\a tau.
-	If \a stepsize is negative, the sampling rate is set using minSmapleInterval().
+ 	If \a stepsize is negative or if fixedSampleRate(),
+	the sampling rate is set using minSampleInterval().
 	If \a seed is not 0 the value it is pointing to is used as the seed for initializing a random number generator.
 	If \a *seed is 0, then the system time is used to generate a seed
         to imitate real randomness.
@@ -675,53 +717,59 @@ class OutData : public SampleData< float >, public DaqError
   void ouNoiseWave( double duration, double stepsize,
 		    double tau, double stdev=0.3, unsigned long *seed=0, double ramp=0.0, 
 		    const string &ident="ou noise wave" );
-  /*! Creates a frequency sweep from \a startfreq f_1 to \a endfreq
-    f_2 of constant amplitude \a ampl and with \a duration seconds. 
-    If \a stepsize is negative, the sampling rate is set using minSmapleInterval().
-    If \a ident is not specified, it is set to "sweep wave". */
+    /*! Creates a frequency sweep from \a startfreq f_1 to \a endfreq
+        f_2 of constant amplitude \a ampl and with \a duration seconds. 
+	If \a stepsize is negative or if fixedSampleRate(),
+	the sampling rate is set using minSampleInterval().
+	If \a ident is not specified, it is set to "sweep wave". */
   void sweepWave( double duration, double stepsize,
 		  double startfreq, double endfreq,
 		  double ampl=1.0, double ramp=0.0, 
 		  const string &ident="sweep wave" );
-  /*! Creates a rectangle pulse pattern with period \a period,
-      duration of the rectangle \a width and constant amplitude \a
-      ampl. The up- and downstrokes have a width of \a ramp.
-      If \a ident is not specified, it is set to "rectangle wave". */
+    /*! Creates a rectangle pulse pattern with period \a period,
+        duration of the rectangle \a width and constant amplitude \a
+	ampl. The up- and downstrokes have a width of \a ramp.
+	If \a stepsize is negative or if fixedSampleRate(),
+	the sampling rate is set using minSampleInterval().
+	If \a ident is not specified, it is set to "rectangle wave". */
   void rectangleWave( double duration, double stepsize,
 		      double period, double width, double ramp, double ampl=1.0, 
 		      const string &ident="rectangle wave" );
-  /*! Creates a sawtooth with period \a period and constant amplitude
-      \a ampl with \a duration seconds. The downstroke has a width of
-      \a ramp. If \a ident is not specified, it is set to "saw up
-      wave". */
+    /*! Creates a sawtooth with period \a period and constant amplitude
+        \a ampl with \a duration seconds. The downstroke has a width of
+	\a ramp.
+	If \a stepsize is negative or if fixedSampleRate(),
+	the sampling rate is set using minSampleInterval().
+	If \a ident is not specified, it is set to "saw up wave". */
   void sawUpWave( double duration, double stepsize,
 		  double period, double ramp, double ampl=1.0,
 		  const string &ident="saw up wave" );
-  /*! Creates a sawtooth with period \a period and constant amplitude
-      \a ampl with \a duration seconds. The upstroke has a width of \a
-      ramp. If \a ident is not specified, it is set to "saw down
-      wave". */
+    /*! Creates a sawtooth with period \a period and constant amplitude
+        \a ampl with \a duration seconds. The upstroke has a width of \a
+	ramp.
+	If \a stepsize is negative or if fixedSampleRate(),
+	the sampling rate is set using minSampleInterval().
+	If \a ident is not specified, it is set to "saw down wave". */
   void sawDownWave( double duration, double stepsize,
 		    double period, double ramp, double ampl=1.0,
 		    const string &ident="saw down wave" );
-  /*! Creates a triangle with period \a period and constant amplitude
-      \a ampl with \a duration seconds. The upstroke and downstroke
-      have a width of \a 0.5*period. If \a ident is not specified, it
-      is set to "triangle wave". */
+    /*! Creates a triangle with period \a period and constant amplitude
+        \a ampl with \a duration seconds. The upstroke and downstroke
+	have a width of \a 0.5*period.
+	If \a stepsize is negative or if fixedSampleRate(),
+	the sampling rate is set using minSampleInterval().
+	If \a ident is not specified, it is set to "triangle wave". */
   void triangleWave( double duration, double stepsize, double period,
 		     double ampl=1.0, const string &ident="triangle wave" );
   /*! Creates a constant stimulus consisting of a single data point
-      with value \a value.
-      The optional \a unit should be the unit of the output trace
-      and is used for the metadata description of this stimulus. */
-  void constWave( double value, const string &unit="" );
+      with value \a value. */
+  void constWave( double value );
   /*! Creates a pulse stimulus that assumes \a value for a duration
       of \a duration seconds sampled with \a stepsize. A final
       value after the pulse sets the amplitude of the signal back to \a base.
-      The optional \a unit should be the unit of the output trace
-      and is used for the metadata description of this stimulus. */
-  void pulseWave( double duration, double stepsize, double value, double base,
-		  const string &unit="" );
+      If \a stepsize is negative or if fixedSampleRate(),
+      the sampling rate is set using minSampleInterval(). */
+  void pulseWave( double duration, double stepsize, double value, double base );
 
     /*! The index of the next element to be written to the data buffer.
         \sa incrDeviceIndex(), devieValue(), incrDeviceCount(), deviceReset() */
@@ -825,6 +873,9 @@ class OutData : public SampleData< float >, public DaqError
 
     /*! Default minimum possible sampling interval in seconds. */
   static double DefaultMinSampleInterval;
+
+    /*! Pointer to the Acquire class managing all output traces. */
+  static const Acquire *A;
 
 };
 
