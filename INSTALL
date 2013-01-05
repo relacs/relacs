@@ -125,7 +125,17 @@ related options during the configure step No. 3. See ./configure
 --help and the instructions below for details.
 
 
-8. Run RELACS
+8. Integrate RELACS into your desktop
+
+If RELACS does not use the same widget style as all your other applications
+you need to run
+
+> qtconfig
+
+and select the appropriate GUI style. Then File->Save.
+
+
+9. Run RELACS
 
 > relacs
 

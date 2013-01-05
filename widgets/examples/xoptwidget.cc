@@ -23,6 +23,8 @@
 #include <QApplication>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QComboBox>
+#include <QSpinBox>
 #include <QLabel>
 #include <relacs/optdialog.h>
 #include "mainwidget.h"
@@ -32,20 +34,28 @@ using namespace relacs;
 MainWidget::MainWidget( void )
   : QWidget()
 {
-  //int testflag = OptWidget::BackBlack | OptWidget::Blue;
+  //  int teststyle = OptWidget::BackBlack | OptWidget::Red;
+  int teststyle = OptWidget::ValueBackBlack | OptWidget::ValueGreen;
   int testflag = 0;
-  Opt1.newSection( "Timing", 0, OptWidget::TabSection | testflag );
+  Opt1.newSection( "Timing", 0, OptWidget::TabSection | teststyle );
   Opt1.addNumber( "duration", "Duration of Signal",
-		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setStyle( OptWidget::Huge | OptWidget::Italic | OptWidget::Green | testflag );
+		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setFlags( testflag ).setStyle( teststyle );
+  // setStyle( OptWidget::Huge | OptWidget::Italic | OptWidget::Green | teststyle );
   Opt1.addNumber( "pause", "Pause between Signals",
-		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | OptWidget::ValueLCD | OptWidget::ValueHuge | testflag );
-  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setStyle( testflag );
+		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( teststyle | OptWidget::ValueLCD );
+  // .setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | OptWidget::ValueLCD | OptWidget::ValueHuge | teststyle );
+  Opt1.addNumber( "delay", "Pause before signal",
+		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", testflag ).setStyle( teststyle );
+  // .setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | teststyle );
+  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setFlags( testflag ).setStyle( teststyle );
   
-  Opt1.newSection( "Settings", 0,  OptWidget::Large |  OptWidget::Red | testflag );
-  Opt1.addText( "fgcolor", "Foreground color", "red|green|blue" ).setStyle( OptWidget::SelectText | testflag );
-  Opt1.addText( "bgcolor", "Background color", "red|green|blue" ).setStyle( testflag );
-  Opt1.addText( "comment", "Comments", "no comment" ).setStyle( testflag );
-  Opt1.addBoolean( "adjust", "Adjust input gain", true ).setStyle( testflag );
+  Opt1.addDate( "date", "Date", 2009, 6, 20, testflag ).setStyle( teststyle );
+  Opt1.newSection( "Settings", 0,  teststyle );
+  //  Opt1.newSection( "Settings", 0,  OptWidget::Large |  OptWidget::Red | teststyle );
+  Opt1.addText( "fgcolor", "Foreground color", "red|green|blue", testflag ).setStyle( OptWidget::SelectText | teststyle );
+  Opt1.addText( "bgcolor", "Background color", "red|green|blue", testflag ).setStyle( teststyle );
+  Opt1.addText( "comment", "Comments", "no comment", testflag ).setStyle( teststyle );
+  Opt1.addBoolean( "adjust", "Adjust input gain", true, testflag ).setStyle( teststyle );
 
   Opt1.newSection( "Analysis" ).setStyle( OptWidget::TabSection );
   Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.01, "seconds", "ms" );
@@ -70,9 +80,17 @@ MainWidget::MainWidget( void )
   connect( quitButton, SIGNAL( clicked() ),
            qApp, SLOT( quit() ) );
 
+  QComboBox *qcb = new QComboBox();
+  qcb->addItem( "red" );
+  qcb->addItem( "green" );
+
+  QSpinBox *qsb = new QSpinBox();
+
   QVBoxLayout *l = new QVBoxLayout;
   l->addWidget( dialogButton );
   l->addWidget( quitButton );
+  l->addWidget( qcb );
+  l->addWidget( qsb );
   setLayout( l );
 }
 
@@ -99,7 +117,7 @@ void MainWidget::dialog( void )
   int r = d.exec();
   cerr << "dialog exec() returned " << r << '\n';
   cerr << "the values of the options are:\n";
-  cerr << Opt1 << Opt2 << '\n';
+  //  cerr << Opt1 << Opt2 << '\n';
 }
 
 

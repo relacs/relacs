@@ -86,6 +86,7 @@ Macros:
    e.g. RePro call, for the Macros
 
 Numerics:
+- Problems with the pow function (in containerfuncs.h): bug in xarray.cc
 - LinearRange: check overflow in NSize due to too small stepsize in
    constructors and resize, etc. and throw a warning (this happens
    in EventData when working with microseconds spikes and the default
@@ -201,8 +202,6 @@ Documentation:
 - RTAI include path: --with-rtai=/usr/src/rtai-3.6/base/include
 
 Libraries:
-- Weired problem in src/ while linking relacsgui:
-  trouble finding librelacsnumericsand libgsl.
 - Add relacs library tests to the libraries!
 - AM_INIT_AUTOMAKE( gnits )
 - autoreconf:
@@ -243,10 +242,6 @@ Distribution details:
   help: svn-*
 
 
-Bug in xarray.cc: Problems with the pow function (in containerfuncs.h)
-
-
-new RePro name: ExPro, Protocol, ...
 
 ---------------------------------
 

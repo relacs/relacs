@@ -42,7 +42,6 @@ class RELACSWidget;
 \class MetaDataSection
 \brief A section of MetaData
 \author Jan Benda
-\version 1.0
 */
 
 class MetaDataSection : public ConfigClass
@@ -113,9 +112,8 @@ private:
 \class MetaDataRecordingSection
 \brief The general Recording section of MetaData
 \author Jan Benda
-\version 1.0
 
-A couple of predifined properties are defined set in the Recording section:
+A couple of predifined properties are defined in the Recording section:
 - File: the base path for all the files saved by the recording session
 - Date: the date of the recording session
 - Time: the time when the recording session ended
@@ -175,17 +173,18 @@ private:
 \class MetaData
 \brief Manages sections of meta data describing a recording session
 \author Jan Benda
-\version 1.0
 
 Usually, meta data sections are defined in the \c relacs.cfg file and are
 typically loaded from the \c relacsplugins.cfg file
 (after Control::initialize() and before Control::initDevices() is called).
 
 Never add options to a MetaDataSection within a Control constructor,
-since these get cleared right before the meta data are loaded from the configuration file!
+since these get cleared right before the meta data are loaded from the
+configuration file!
 
-With the dialogFlag() and the presetDialogFlag() meta data
-can be selected that are displayed in the dialog() or presetDialog(), respectively.
+With the dialogFlag() and the presetDialogFlag() meta data can be
+selected that are displayed in the dialog() or presetDialog(),
+respectively.
 
 The "Recording" section (MetaDataRecordingSection)
 is always used and contains a few standard properties.

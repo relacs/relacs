@@ -477,6 +477,19 @@ private:
   friend class OptWidgetDate;
   friend class OptWidgetTime;
   friend class OptWidgetSection;
+  
+  enum RoleType { 
+      /*! Change Window and WindowText. */
+    Window,
+      /*! Change Base and Text. */
+    Text,
+      /*! Change Button and ButtonText. */
+    Button,
+      /*! Change Button and Text as used by ComboBoxes. */
+    Combo,
+      /*! Change Base and Text by creating a completly new palette with all shades. */
+    TextShade,
+  };
 
   void assignOptions( Options *o, bool tabs, int style,
 		      int &row, int &level,
@@ -484,10 +497,10 @@ private:
   void addWidget( OptWidgetBase *owb );
   void disableUpdate( void );
   void enableUpdate( void );
-  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
+  static void setLabelStyle( QWidget *w, long style, RoleType rt=Window );
+  static void setValueStyle( QWidget *w, long style, RoleType rt=Text );
   static void setLabelFontStyle( QWidget *w, long style );
-  static void setLabelColorStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
+  static void setLabelColorStyle( QWidget *w, long style, RoleType rt=Window );
   static QLabel* unitLabel( const Parameter &p, QWidget *parent=0 );
 
   Options *Opt;

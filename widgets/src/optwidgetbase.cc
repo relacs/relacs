@@ -181,7 +181,7 @@ OptWidgetText::OptWidgetText( Options::iterator param, QWidget *label,
 {
   if ( Editable ) {
     W = EW = new QLineEdit( Param->text( "%s" ).c_str(), parent );
-    OptWidget::setValueStyle( W, Param->style(), false, true );
+    OptWidget::setValueStyle( W, Param->style(), OptWidget::Text );
     Value = EW->text().toStdString();
     connect( EW, SIGNAL( textChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
@@ -194,8 +194,7 @@ OptWidgetText::OptWidgetText( Options::iterator param, QWidget *label,
   }
   else {
     LW = new QLabel( Param->text( "%s" ).c_str(), parent );
-    OptWidget::setValueStyle( LW, Param->style() );
-    //    LW->setBackgroundMode( QWidget::PaletteMid );
+    OptWidget::setValueStyle( LW, Param->style(), OptWidget::Window );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     LW->setLineWidth( 2 );
     W = LW;
@@ -443,9 +442,9 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
     W = EW = new QComboBox( parent );
     EW->setEditable( (Param->style() & OptWidget::SelectText) == 0 );
     if ( (Param->style() & OptWidget::SelectText) > 0 )
-      OptWidget::setValueStyle( W, Param->style(), false, true, true );
+      OptWidget::setValueStyle( W, Param->style(), OptWidget::Combo );
     else
-      OptWidget::setValueStyle( W, Param->style(), false, true );
+      OptWidget::setValueStyle( W, Param->style(), OptWidget::Text );
     EW->setInsertPolicy( QComboBox::InsertAtTop );
     EW->setDuplicatesEnabled( false );
     if ( ( Param->style() & OptWidget::ComboAutoCompletion ) == 0 )
@@ -461,8 +460,7 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
   }
   else {
     LW = new QLabel( Param->text().c_str(), parent );
-    OptWidget::setValueStyle( LW, Param->style() );
-    //    LW->setBackgroundMode( QWidget::PaletteMid );
+    OptWidget::setValueStyle( LW, Param->style(), OptWidget::Window );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     LW->setLineWidth( 2 );
     W = LW;
@@ -705,7 +703,7 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
     else
       EW->setFormat( "%.0f" );
     EW->setValue( val );
-    OptWidget::setValueStyle( W, Param->style(), false, true );
+    OptWidget::setValueStyle( W, Param->style(), OptWidget::Text );
     Value = EW->value();
     EW->setKeyboardTracking( false );
     connect( EW, SIGNAL( valueChanged( double ) ),
@@ -717,7 +715,7 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
       LCDW->setSegmentStyle( QLCDNumber::Filled );
       LCDW->setSmallDecimalPoint( true );
       LCDW->display( Param->text().c_str() );	
-      OptWidget::setValueStyle( LCDW, Param->style(), true );
+      OptWidget::setValueStyle( LCDW, Param->style(), OptWidget::TextShade );
       // size:
       if ( ( Param->style() & OptWidget::ValueHuge ) == OptWidget::ValueHuge )
 	LCDW->setFixedHeight( 16 * LCDW->sizeHint().height() / 10 );
@@ -729,11 +727,10 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
     }
     else {
       LW = new QLabel( Param->text().c_str(), parent );
-      //    LW->setBackgroundMode( QWidget::PaletteMid );
       LW->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
       LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
       LW->setLineWidth( 2 );
-      OptWidget::setValueStyle( LW, Param->style() );
+      OptWidget::setValueStyle( LW, Param->style(), OptWidget::Window );
       LW->setFixedHeight( LW->sizeHint().height() );
       W = LW;
     }
@@ -920,7 +917,7 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator param, Options *oo,
   W->setLayout( hb );
   EW = new QCheckBox;
   hb->addWidget( EW );
-  OptWidget::setValueStyle( EW, Param->style(), false, true );
+  OptWidget::setValueStyle( EW, Param->style(), OptWidget::Text );
   QLabel *label = new QLabel( request.c_str() );
   OptWidget::setLabelStyle( label, Param->style() );
   hb->addWidget( label );
@@ -1064,7 +1061,7 @@ OptWidgetDate::OptWidgetDate( Options::iterator param, QWidget *label,
     Month = Param->month( 0 );
     Day = Param->day( 0 );
     W = DE = new QDateEdit( QDate( Year, Month, Day ), parent );
-    OptWidget::setValueStyle( W, Param->style(), false, true );
+    OptWidget::setValueStyle( W, Param->style(), OptWidget::Text );
     DE->setDisplayFormat( "yyyy-MM-dd" );
     Year = DE->date().year();
     Month = DE->date().month();
@@ -1074,8 +1071,7 @@ OptWidgetDate::OptWidgetDate( Options::iterator param, QWidget *label,
   }
   else {
     LW = new QLabel( Param->text().c_str(), parent );
-    OptWidget::setValueStyle( LW, Param->style() );
-    //    LW->setBackgroundMode( QWidget::PaletteMid );
+    OptWidget::setValueStyle( LW, Param->style(), OptWidget::Window );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     LW->setLineWidth( 2 );
     W = LW;
@@ -1229,7 +1225,7 @@ OptWidgetTime::OptWidgetTime( Options::iterator param, QWidget *label,
     Minutes = Param->minutes( 0 );
     Seconds = Param->seconds( 0 );
     W = TE = new QTimeEdit( QTime( Hour, Minutes, Seconds ), parent );
-    OptWidget::setValueStyle( W, Param->style(), false, true );
+    OptWidget::setValueStyle( W, Param->style(), OptWidget::Text );
     TE->setDisplayFormat( "hh:mm:ss" );
     Hour = TE->time().hour();
     Minutes = TE->time().minute();
@@ -1239,8 +1235,7 @@ OptWidgetTime::OptWidgetTime( Options::iterator param, QWidget *label,
   }
   else {
     LW = new QLabel( Param->text().c_str(), parent );
-    OptWidget::setValueStyle( LW, Param->style() );
-    //    LW->setBackgroundMode( QWidget::PaletteMid );
+    OptWidget::setValueStyle( LW, Param->style(), OptWidget::Window );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     LW->setLineWidth( 2 );
     W = LW;
