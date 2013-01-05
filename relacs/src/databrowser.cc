@@ -35,12 +35,14 @@ DataBrowser::DataBrowser( DataIndex *data, QWidget *parent )
   setLayout( layout );
 
   OverviewWidget = new QTreeView;
-  layout->addWidget( OverviewWidget );
+  layout->addWidget( OverviewWidget, 2 );
+  OverviewWidget->setMinimumWidth( fontMetrics().width( "xxxxxxxxxxxxxxxxxxxx" ) );
   OverviewWidget->setModel( data->overviewModel() );
   data->setOverviewView( OverviewWidget );
 
   DescriptionWidget = new QTreeView;
-  layout->addWidget( DescriptionWidget );
+  layout->addWidget( DescriptionWidget, 3 );
+  DescriptionWidget->setMinimumWidth( fontMetrics().width( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" ) );
   DescriptionWidget->setModel( data->descriptionModel() );
   data->setDescriptionView( DescriptionWidget );
 }
@@ -49,6 +51,7 @@ DataBrowser::DataBrowser( DataIndex *data, QWidget *parent )
 DataBrowser::~DataBrowser( void )
 {
 }
+
 
   /*
 void DataBrowser::list( QTreeWidgetItem * item, int col )

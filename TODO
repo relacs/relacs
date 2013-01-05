@@ -92,6 +92,7 @@ Numerics:
    in EventData when working with microseconds spikes and the default
    stepsize)
 - Check EventData, how we could avoid this problem
+- EventList should not bee a vector!
 
 Plugin documentation:
 - Each publication should get a file indicating the RePros it used:
@@ -153,9 +154,6 @@ Acquisition interface:
 - add function for blocked write() and corresponding error checking
    (buffer underrun)
 
-Numerics:
-- EventList should not bee a vector!
-
 Plugins:
 - Add a dependency virtual function, that can be used to query all the plugins
   (and traces?) this plugin depends on. 
@@ -167,9 +165,7 @@ Relacs:
 - Check and clean up RELACSPlugin and RePro public/protected/private functions.
 - Parameter/Options/OptWidget: generalize selectText() and index() to all types
 - Fix command line arg names from path to dir in relacsmain and RELACSWidget.
-- The right name for dlopen can be found in the dlname field of the *.la file!
-  Use this approach for loading the plugins?
-  No, use QLibrary instead
+- Use QLibrary instead of dlopen for loading plugins.
 - Reading config from PWD and LD_LIBRARY_PATH containing PWD
   -> On/off by user?
 - Log files written to relacs exec dir, not /var/log?
@@ -194,11 +190,7 @@ Documentation:
   needs to be changed.
 - For developing: make sure LD_LIBRARY_PATH does not contain pathes to any relacs libraries,
   best is to set LD_LIBRARY_PATH=""
-- Links:
-  CRCNS - Collaborative Research in Computational Neuroscience - Data sharing activity
-  http://www.crcns.org/
 - Add brief documentation to the examples! (a README file)
-- update documentation of OutData, TraceSpec
 - RTAI include path: --with-rtai=/usr/src/rtai-3.6/base/include
 
 Libraries:
