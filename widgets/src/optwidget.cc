@@ -359,7 +359,10 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
   for ( Options::section_iterator sp = o->sectionsBegin();
 	sp != o->sectionsEnd();
 	++sp ) {
+    if ( (*sp)->size( SelectMask ) <= 0 )
+      continue;
     if ( tabs && level == 0 &&
+	 (*sp)->flag( SelectMask ) &&
 	 ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) ) ) {
       // finish parameter:
       if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
@@ -385,7 +388,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 					   RightMargin, BottomMargin );
       parent->setLayout( Layout.back() );
     }
-    else {
+    else if ( (*sp)->flag( SelectMask ) ) {
       // this section is set as a label:
       OptWidgetSection *s = new OptWidgetSection( sp, Opt, this, OMutex );
       int sstyle = 0;

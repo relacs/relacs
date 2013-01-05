@@ -735,6 +735,8 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
       W = LW;
     }
   }
+  if ( W->minimumWidth() < W->minimumSizeHint().width() )
+    W->setMinimumWidth( W->minimumSizeHint().width() );
 }
 
 
@@ -757,15 +759,16 @@ void OptWidgetNumber::get( void )
 void OptWidgetNumber::reset( void )
 {
   InternChanged = true;
-  if ( Editable ) {
+  if ( Editable )
     EW->setValue( Param->number( Param->outUnit() ) );
-  }
   else {
     if ( Param->style() & OptWidget::ValueLCD )
       LCDW->display( Param->text( "", Param->outUnit() ).c_str() );
     else
       LW->setText( Param->text( "", Param->outUnit() ).c_str() );
   }
+  if ( W->minimumWidth() < W->minimumSizeHint().width() )
+    W->setMinimumWidth( W->minimumSizeHint().width() );
   InternChanged = false;
 }
 
@@ -775,6 +778,8 @@ void OptWidgetNumber::resetDefault( void )
   if ( Editable ) {
     InternChanged = true;
     EW->setValue( Param->defaultNumber( Param->outUnit() ) );
+    if ( EW->minimumWidth() < EW->minimumSizeHint().width() )
+      EW->setMinimumWidth( EW->minimumSizeHint().width() );
     InternChanged = false;
   }
 }
@@ -798,6 +803,8 @@ void OptWidgetNumber::update( void )
       EW->setFormat( "%.0f" );
     InternRead = true;
     EW->setValue( val );
+    if ( EW->minimumWidth() < EW->minimumSizeHint().width() )
+      EW->setMinimumWidth( EW->minimumSizeHint().width() );
     InternRead = false;
   }
   InternChanged = false;
@@ -821,6 +828,9 @@ void OptWidgetNumber::valueChanged( double v )
     else
       doValueChanged( v );
   }
+
+  if ( W->minimumWidth() < W->minimumSizeHint().width() )
+    W->setMinimumWidth( W->minimumSizeHint().width() );
 
   double tol = 0.2;
   if ( Param->isNumber() )
