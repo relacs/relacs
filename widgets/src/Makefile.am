@@ -38,7 +38,8 @@ $(librelacswidgets_la_OBJECTS) : \
     moc_optwidgetbase.cc \
     moc_doublespinbox.cc \
     moc_lcdrange.cc \
-    moc_messagebox.cc
+    moc_messagebox.cc \
+    moc_scaledimage.cc
 
 pkgincludedir = $(includedir)/relacs
 
@@ -48,7 +49,8 @@ pkginclude_HEADERS = \
     ../include/relacs/optwidget.h \
     ../include/relacs/doublespinbox.h \
     ../include/relacs/lcdrange.h \
-    ../include/relacs/messagebox.h
+    ../include/relacs/messagebox.h \
+    ../include/relacs/scaledimage.h
 
 librelacswidgets_la_SOURCES = \
     configdialog.cc \
@@ -60,7 +62,8 @@ librelacswidgets_la_SOURCES = \
     optdialogbutton.cc \
     doublespinbox.cc \
     lcdrange.cc \
-    messagebox.cc
+    messagebox.cc \
+    scaledimage.cc
 
 
 check_PROGRAMS = linktest_librelacswidgets_la

@@ -33,7 +33,6 @@ namespace relacs {
 /*! 
 \class DoubleSpinBox
 \author Jan Benda
-\version 1.0
 \brief A spin-box for editing floating point numbers.
 */
 
@@ -43,7 +42,7 @@ class DoubleSpinBox : public QDoubleSpinBox
 
 public:
 
-    /*! Constructs and empty DoubleSpinBox. */
+    /*! Constructs an empty DoubleSpinBox. */
   DoubleSpinBox( QWidget *parent=0 );
 
     /*! Returns the format type (g, f, or e).

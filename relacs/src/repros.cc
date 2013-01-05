@@ -24,6 +24,7 @@
 #include <QToolTip>
 #include <QApplication>
 #include <relacs/messagebox.h>
+#include <relacs/scaledimage.h>
 #include <relacs/optdialog.h>
 #include <relacs/relacswidget.h>
 #include <relacs/repro.h>
@@ -74,10 +75,8 @@ RePros::RePros( RELACSWidget *rw, QWidget *parent )
       rp->setRELACSWidget( RW );
       if ( rp->widget() == 0 ) {
 	QImage image( rp->headerImageFile().c_str() );
-	QLabel *label = new QLabel;
-	label->setPixmap( QPixmap::fromImage( image.scaled( 200, 200, Qt::KeepAspectRatio ) ) );
-	label->setAutoFillBackground( true );
-	rp->setWidget( label );
+	ScaledImage *si = new ScaledImage( image );
+	rp->setWidget( si );
       }
       rp->disable();
       addTab( rp->widget(), rp->name().c_str() );
@@ -99,10 +98,8 @@ RePros::RePros( RELACSWidget *rw, QWidget *parent )
     rp->setRELACSWidget( RW );
     if ( rp->widget() == 0 ) {
       QImage image( rp->headerImageFile().c_str() );
-      QLabel *label = new QLabel;
-      label->setPixmap( QPixmap::fromImage( image.scaled( 200, 200, Qt::KeepAspectRatio ) ) );
-      label->setAutoFillBackground( true );
-      rp->setWidget( label );
+      ScaledImage *si = new ScaledImage( image );
+      rp->setWidget( si );
     }
     rp->disable();
     addTab( rp->widget(), rp->name().c_str() );
@@ -590,10 +587,8 @@ void ReProData::reload( void )
     RP->setRELACSWidget( RW );
     if ( RP->widget() == 0 ) {
       QImage image( RP->headerImageFile().c_str() );
-      QLabel *label = new QLabel;
-      label->setPixmap( QPixmap::fromImage( image.scaled( 200, 200, Qt::KeepAspectRatio ) ) );
-      label->setAutoFillBackground( true );
-      RP->setWidget( label );
+      ScaledImage *si = new ScaledImage( image );
+      RP->setWidget( si );
     }
     RP->disable();
     RPs->insertTab( index, RP->widget(), RP->uniqueName().c_str() );
