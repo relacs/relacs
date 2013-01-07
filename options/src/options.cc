@@ -789,6 +789,40 @@ Options &Options::section( int i )
 }
 
 
+const Options &Options::section( const string &name ) const
+{
+  Warning = "";
+
+  const_section_iterator sp = findSection( name );
+  if ( sp != sectionsEnd() )
+    return *(*sp);
+
+  Warning = "section with name '" + name + "' does not exist!";
+#ifndef NDEBUG
+  cerr << "!warning in Options::section(" << name << ") -> " << Warning << '\n';
+#endif
+  SecDummy = Options();
+  return SecDummy;
+}
+
+
+Options &Options::section( const string &name )
+{
+  Warning = "";
+
+  section_iterator sp = findSection( name );
+  if ( sp != sectionsEnd() )
+    return *(*sp);
+
+  Warning = "section with name '" + name + "' does not exist!";
+#ifndef NDEBUG
+  cerr << "!warning in Options::section(" << name << ") -> " << Warning << '\n';
+#endif
+  SecDummy = Options();
+  return SecDummy;
+}
+
+
 Options::const_iterator Options::find( const string &pattern, int level ) const
 {
   Warning = "";

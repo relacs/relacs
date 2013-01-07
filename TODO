@@ -1,4 +1,15 @@
+MetaData:
+- check usage and working of notifyMetaData()!
+- check dialogs!
+- check saving in files!
+- check return value of RELACSPlugin::metaData()
+
 Options:
+- Check multiple text values with colons! In auditory:relacsplugins.cfg.
+- Notify: Should be called from Parameter::setXXX() via parentSection() from the root section!
+  In any case should the root section notify() be called - this is difficult with
+  not-owned sections!
+- ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
 - Reset parentSection pointers and create new Options in assign, append, etc!
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
 - change save() functions to take flags that specify what to put out
@@ -9,6 +20,8 @@ Options:
 - check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
 - OutData: rename Ident to name OR remove it?
 - are uniqueNames also used for relacsplugins.cfg ?
+- DeviceList and FilterDetectors (and others?) should use plugin name (ident) as section name.
+- Device menu should be hierarchically using section structure of device infos.
 - Add iterator that iterates through all sections and subsections ?
 
 patchclamp::SingleStimulus:

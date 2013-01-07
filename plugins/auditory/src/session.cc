@@ -105,10 +105,9 @@ void Session::initialize( void )
 void Session::config( void )
 {
   // additional meta data properties:
-  if ( ! metaData().exist( "Cell" ) )
-    metaData().add( "Cell", "Cell" );
-
   lockMetaData();
+  if ( ! metaData().existSection( "Cell" ) )
+    metaData().newSection( "Cell", "Cell" );
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
   mo.newSection( "Cell properties", MetaDataSave+MetaDataDisplay );
@@ -153,7 +152,7 @@ void Session::config( void )
   mo.addStyles( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
 
   metaData().delSaveFlags( MetaData::dialogFlag() + MetaData::presetDialogFlag() );
-  metaData().addSaveFlags( MetaData::configFlag() + MetaDataRecordingSection::standardFlag() + MetaDataSave );
+  metaData().addSaveFlags( MetaData::configFlag() + MetaData::standardFlag() + MetaDataSave );
   
   if ( simulation() ) {
     mo.setNumber( "left frequency", 6000.0 );

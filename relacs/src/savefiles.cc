@@ -808,7 +808,7 @@ ofstream *SaveFiles::openFile( const string &filename, int type )
       opt.pushText( "File", filename );
     else {
       opt.insertText( "File", "Date", filename,
-		      MetaDataRecordingSection::standardFlag(), Parameter::ListAlways );
+		      MetaData::standardFlag(), Parameter::ListAlways );
     }
   }
   return f;

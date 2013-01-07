@@ -185,8 +185,8 @@ void Session::config( void )
   lockMetaData();
 
   // additional meta data properties:
-  if ( ! metaData().exist( "Cell" ) )
-    metaData().add( "Cell", "Cell" );
+  if ( ! metaData().existSection( "Cell" ) )
+    metaData().newSection( "Cell", "Cell" );
 
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();

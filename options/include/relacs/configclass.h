@@ -203,7 +203,7 @@ public:
         to be saved to a configuration file.
 	saveConfig() is only called from the ConfigureClasses::save()
 	functions if configSize() returns a number greater than zero.
-        The default implementation returns Options::size( configSelectMaks() ). */
+        The default implementation returns Options::size( configSelectMask() ). */
   virtual int configSize( void ) const;
     /*! This function can be reimplemented to do some post-configuration.
         It is called by ConfigureClasses::configure() after all configuration

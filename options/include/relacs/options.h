@@ -369,6 +369,10 @@ public:
   const Options &section( int i ) const;
     /*! Get \a i-th section. */
   Options &section( int i );
+    /*! Get section with name \a name. */
+  const Options &section( const string &name ) const;
+    /*! Get section with name \a name. */
+  Options &section( const string &name );
 
       /*! Returns the request string of the option with name \a name. */
   Str request( const string &name ) const;
