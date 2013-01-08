@@ -22,4 +22,4 @@ mammal: Elephant
 fish  : Trout
 Files
 master: maindata.dat
-data  : data.dat
+data  : [ "file: 1", file2, file 3, "fourth: file" ]

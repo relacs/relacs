@@ -1,11 +1,12 @@
 MetaData:
 - check usage and working of notifyMetaData()!
 - check dialogs!
+- figure out how to treat names and types for metadata sections. saved types should be displayed names!
+  Add a style to OptWidget that uses types as names!
 - check saving in files!
 - check return value of RELACSPlugin::metaData()
 
 Options:
-- Check multiple text values with colons! In auditory:relacsplugins.cfg.
 - Notify: Should be called from Parameter::setXXX() via parentSection() from the root section!
   In any case should the root section notify() be called - this is difficult with
   not-owned sections!

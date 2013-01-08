@@ -1043,7 +1043,6 @@ Parameter &Parameter::addText( const string &strg, bool clear )
     for ( int k=0; k<sq.size(); k++ )
       addNumber( String[ String.size() - sq.size() + k ], "" );
   }
-
   return *this;
 }
 
@@ -3022,13 +3021,14 @@ string Parameter::save( bool detailed, bool firstonly ) const
       str += val;
     if ( fulllist ) {
       for ( int k=1; k<(int)String.size(); k++ ) {
+	str += ", ";
 	val = text( k );
 	if ( val.empty() )
-	  str += ", ~";
+	  str += "~";
 	else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
 	  str += '"' + val + '"';
 	else
-	  str += ", " + val;
+	  str += val;
       }
       str += " ]";
     }
@@ -3103,13 +3103,14 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
       str << val;
     if ( fulllist ) {
       for ( int k=1; k<(int)String.size(); k++ ) {
+	str << ", ";
 	val = text( k );
 	if ( val.empty() )
-	  str << ", " << '~';
+	  str << '~';
 	else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
 	  str << '"' << val << '"';
 	else
-	  str << ", " << val;
+	  str << val;
       }
       str << " ]";
     }
