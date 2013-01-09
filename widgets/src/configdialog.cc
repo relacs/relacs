@@ -538,17 +538,6 @@ QMutex *ConfigDialog::mutex( void )
 }
 
 
-ostream &ConfigDialog::saveXML( ostream &str, int selectmask, int level, int indent ) const
-{
-  string indstr1( level*indent, ' ' );
-  str << indstr1 << "<section>\n";
-  str << indstr1 << "  <type>" << name() << "</type>\n";
-  Options::saveXML( str, selectmask, level+1, indent );
-  str << indstr1 << "</section>\n";
-  return str;
-}
-
-
 }; /* namespace relacs */
 
 #include "moc_configdialog.cc"

@@ -637,7 +637,7 @@ void SaveFiles::saveStimulus( void )
     if ( XSF != 0 ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	if ( newstimuli[j] )
-	  Stimuli[j].description().saveXML( *XSF, 0, 0 );
+	  Stimuli[j].description().saveXML( *XSF, 0, 0, 0 );
       }
     }
 
@@ -669,7 +669,7 @@ void SaveFiles::saveStimulus( void )
 	}
       }
     }
-    sopt.saveXML( *XF, 0, 1 );
+    sopt.saveXML( *XF, 0, 0, 1 );
   }
     
   StimulusData = false;
@@ -738,12 +738,12 @@ void SaveFiles::saveRePro( void )
       *XF << "  <section>\n";
       *XF << "    <type>dataset</type>\n";
       *XF << "    <name>dataset-" << dataset << "</name>\n";
-      ReProInfo.saveXML( *XF, 0, 2 );
+      ReProInfo.saveXML( *XF, 0, 0, 2 );
       if ( ! ReProSettings.empty() ) {
 	*XF << "    <section>\n";
 	*XF << "      <type>settings</type>\n";
 	*XF << "      <name>dataset-settings-" << dataset << "</name>\n";
-	ReProSettings.saveXML( *XF, 1, 3 );
+	ReProSettings.saveXML( *XF, 1, 0, 3 );
 	*XF << "    </section>\n";
       }
       StimuliReProCount[ StimuliRePro ] = 0;
@@ -1074,7 +1074,7 @@ void SaveFiles::createXMLFile( const InList &traces,
       *XF << "    <section>\n";
       *XF << "      <type>" << dts << "</type>\n";
       *XF << "      <name>hardware-" << dts << "-" << name << "</name>\n";
-      opts.saveXML( *XF, 0, 3 ); 
+      opts.saveXML( *XF, 0, 0, 3 ); 
       *XF << "    </section>\n";
     }
     *XF << "  </section>\n";
@@ -1251,7 +1251,7 @@ void SaveFiles::closeFiles( void )
       DatasetOpen = false;
     }
     string name = Str( path() ).preventedSlash().name();
-    RW->MTDT.saveXML( *XF, 1, 2, name );
+    RW->MTDT.saveXML( *XF, 1, name );
     *XF << "</odML>\n";
     delete XF;
   }

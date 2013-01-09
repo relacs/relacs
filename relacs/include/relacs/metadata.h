@@ -147,11 +147,9 @@ public:
         in XML format to output stream.
         \param[in] str the output stream
         \param[in] level the level of indentation
-        \param[in] indent the indentation depth, 
-                   i.e. number of white space characters per level
         \param[in] name the name prefix for the name tag of the section.
         \return the output stream \a str */
-  ostream &saveXML( ostream &str, int level=0, int indent=2, const string &name="" );
+  ostream &saveXML( ostream &str, int level=0, const string &name="" );
     /*! Clear the meta data. */
   void clear( void );
 
@@ -220,7 +218,7 @@ protected slots:
 protected:
 
   virtual void customEvent( QEvent *qe );
-
+  void setSectionName( Options *opt, const string &name );
 
 private:
 

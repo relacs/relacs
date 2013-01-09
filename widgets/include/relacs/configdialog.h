@@ -266,16 +266,6 @@ public:
         \sa lock(), unlock() */
   QMutex *mutex( void );
 
-    /*! Write name() and options in XML format to output stream.
-        \param[in] str the output stream
-        \param[in] selectmask selects options that have \a selectmask set in their flags().
-                   See Parameter::flags(int) for details.
-        \param[in] level the level of indentation
-        \param[in] indent the indentation depth, 
-                   i.e. number of white space characters per level
-        \return the output stream \a str */
-  ostream &saveXML( ostream &str, int selectmask=0, int level=0, int indent=2 ) const;
-
 
 public slots:
 

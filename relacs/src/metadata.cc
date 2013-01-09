@@ -70,6 +70,7 @@ void MetaDataGroup::readConfig( StrQueue &sq )
 void MetaDataGroup::saveConfig( ofstream &str )
 {
   MD->lock();
+  // XXX should only save sections names without types!
   save( str, "  ", MD->configFlag(), true, false );
   MD->unlock();
 }
@@ -174,19 +175,23 @@ void MetaData::save( const string &title, const Options &opts )
 }
 
 
-ostream &MetaData::saveXML( ostream &str, int level, int indent,
-			    const string &name )
+ostream &MetaData::saveXML( ostream &str, int level,
+			    const string &names )
 {
   lock();
-
-  if ( ! type().empty() )
-    setName( name );
-  for ( section_iterator sp = sectionsBegin(); sp != sectionsEnd(); ++sp )
-    (*sp)->setName( (*sp)->name() + '-' + name );
-  Options::saveXML( str, 0, level );
-
+  setSectionName( this, names );
+  Options::saveXML( str, 0, Options::SwitchNameType, level );
   unlock();
   return str;
+}
+
+
+void MetaData::setSectionName( Options *opt, const string &names )
+{
+  if ( ! opt->name().empty() )
+    opt->setType( opt->name() + '-' + names );
+  for ( section_iterator sp = opt->sectionsBegin(); sp != opt->sectionsEnd(); ++sp )
+    setSectionName( *sp, names );
 }
 
 
@@ -206,8 +211,14 @@ void MetaData::add( ConfigClass *opt )
   if ( opt->configGroup() == RELACSPlugin::Core )
     Options::clear();
   else {
-    newSection( &PluginData );
-    newSection( &CoreData );
+    if ( ! PluginData.name().empty() || PluginData.sectionsSize() == 0 )
+      newSection( &PluginData );
+    else
+      newSections( &PluginData );
+    if ( ! CoreData.name().empty() || CoreData.sectionsSize() == 0 )
+      newSection( &CoreData );
+    else
+      newSections( &CoreData );
   }
 }
 
@@ -327,6 +338,8 @@ void MetaData::presetDialog( void )
 {
   if ( Dialog )
     return;
+
+  cerr << "METADATA:\n" << *this << endl;
 
   // we do not want to block the event queue:
   if ( ! MetaDataLock.tryLock( 5 ) ) {

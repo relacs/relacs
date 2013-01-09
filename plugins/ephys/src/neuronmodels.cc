@@ -171,8 +171,9 @@ Options NeuronModels::metaData( void )
   Options opts( *this );
   opts.setName( configIdent() );
   if ( NM != 0 ) {
-    opts.newSection( NM->configIdent() );
-    opts.append( *NM );
+    opts.newSection( "Model" );
+    opts.addText( "Name", NM->name() );
+    opts.add( *NM );
   }
   return opts;
 }

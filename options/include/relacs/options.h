@@ -82,6 +82,16 @@ public:
 
   static const int NonDefault = Parameter::NonDefault;
 
+    /*! Indicates for the save() functions not to save the name of a section. */
+  static const int NoName = 1;
+    /*! Indicates for the save() functions not to save the type of a section. */
+  static const int NoType = 2;
+    /*! Indicates for the save() functions not to save the include file of a section. */
+  static const int NoInclude = 4;
+    /*! Indicates for the save() functions to switch name and type, i.e.
+        the sections name is saved as its type, and its type is saved as its name. */
+  static const int SwitchNameType = 8;
+
     /*! Constructs an empty options list. */
   Options( void );
     /*! Copy constructor. */
@@ -1517,6 +1527,12 @@ public:
 	to the currently active section. */
   Options &insertSection( Options *opt, const string &atpattern );
 
+    /*! Add all sections of \a opt as a section. Only a pointer of the sections is stored,
+	their content is not copied.
+        Subsequent calls to addText(), addNumber(), etc. still add new Parameter
+	to the currently active section. */
+  Options &newSections( Options *opt );
+
     /*! End the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to the parent section.
@@ -1529,6 +1545,21 @@ public:
         \sa endSection(), newSection(), newSubSection(), newSubSubSection(),
 	insertSection() */
   void clearSections( void );
+
+    /*! Move this Options with its name-value pairs and sections
+        one level up in the hierachy to its parentSection(). 
+        \return 
+	- 0 successfully moved the Options up
+        - -1 failed because this Options does not have a valid parentSection()
+        - +2 moved Options up but deleted existing name-value pairs of the parentSection() 
+        - +4 moved Options up but deleted further sections of the parentSection() */
+  int up( void );
+    /*! Make this Options with its name-value pairs and sections
+        a section of this, i.e. move it down the hierarchy. 
+        \return 
+	- 0 successfully moved the Options down
+        - -1 failed because this Options does not have a name or type */
+  int down( void );
 
     /*! Set value of option with name \a name
         to its default. */
@@ -1736,11 +1767,12 @@ public:
         \param[in] str the output stream
         \param[in] selectmask selects options that have \a selectmask set in their flags().
                    See Parameter::flags(int) for details.
+        \param[in] flags some details on how the data should be saved.
         \param[in] level the level of indentation
         \param[in] indent the indentation depth, 
                    i.e. number of white space characters per level
         \return the output stream \a str */
-  ostream &saveXML( ostream &str, int selectmask=0, int level=0,
+  ostream &saveXML( ostream &str, int selectmask=0, int flags=0, int level=0,
 		    int indent=4 ) const;
 
     /*! Read options from string \a opttxt of the form 

@@ -3664,6 +3664,16 @@ Options &Options::insertSection( Options *opt, const string &atpattern )
 }
 
 
+Options &Options::newSections( Options *opt )
+{
+  for ( unsigned int k=0; k<opt->Secs.size(); k++ ) {
+    Secs.push_back( opt->Secs[k] );
+    OwnSecs.push_back( false );
+  }
+  return *this;
+}
+
+
 void Options::endSection( void )
 {
   Options *newaddopts = AddOpts->parentSection();
@@ -3675,6 +3685,60 @@ void Options::endSection( void )
 void Options::clearSections( void )
 {
   AddOpts = this;
+}
+
+
+int Options::up( void )
+{
+  if ( parentSection() == 0 )
+    return -1;
+
+  int r = 0;
+  if ( parentSection()->Opt.size() > 0 )
+    r |= 2;
+  if ( parentSection()->Secs.size() > 1 )
+    r |= 4;
+
+  parentSection()->Name = Name;
+  parentSection()->Type = Type;
+  parentSection()->Include = Include;
+  parentSection()->Flag = Flag;
+  parentSection()->Style = Style;
+  parentSection()->Opt = Opt;
+  for ( iterator pp = parentSection()->begin();
+	pp != parentSection()->end();
+	++pp )
+    pp->setParentSection( parentSection() );
+  parentSection()->Secs.clear();
+  for ( unsigned int k=0; k<Secs.size(); k++ ) {
+    Secs[k]->setParentSection( parentSection() );
+    parentSection()->Secs.push_back( Secs[k] );
+    parentSection()->OwnSecs.push_back( OwnSecs[k] );
+  }
+  parentSection()->AddOpts = parentSection();
+  return r;
+}
+
+
+int Options::down( void )
+{
+  if ( name().empty() && type().empty() )
+    return -1;
+
+  Options *o = new Options( *this );
+  o->setParentSection( this );
+  o->unsetNotify();
+  Secs.clear();
+  Secs.push_back( o );
+  OwnSecs.clear();
+  OwnSecs.push_back( true );
+  Opt.clear();
+  setName( "" );
+  setType( "" );
+  setInclude( "" );
+  setStyle( 0 );
+
+  return 0;
 }
 
 
@@ -4534,18 +4598,28 @@ ostream &operator<< ( ostream &str, const Options &o )
 }
 
 
-ostream &Options::saveXML( ostream &str, int selectmask, int level,
+ostream &Options::saveXML( ostream &str, int selectmask, int flags, int level,
 			   int indent ) const
 {
   string indstr1( level*indent, ' ' );
   string indstr2( (level+1)*indent, ' ' );
 
-  if ( ! name().empty() ) {
+  string ns = name();
+  string ts = type();
+  if ( ( flags & SwitchNameType ) > 0 ) {
+    ns = type();
+    ts = name();
+  }
+  bool printname = ( ( ! ns.empty() ) && ( ( flags & NoName ) == 0 ) );
+  bool printtype = ( ( ! ts.empty() ) && ( ( flags & NoType ) == 0 ) );
+  bool printsection = ( printname || printtype );
+  if ( printsection ) {
     str << indstr1 << "<section>\n";
-    str << indstr2 << "<name>" << name() << "</name>\n";
-    if ( ! type().empty() )
-      str << indstr2 << "<type>" << type() << "</type>\n";
-    if ( ! include().empty() )
+    if ( printname )
+      str << indstr2 << "<name>" << ns << "</name>\n";
+    if ( printtype )
+      str << indstr2 << "<type>" << ts << "</type>\n";
+    if ( ! include().empty() && ( flags & NoInclude ) == 0 )
       str << indstr2 << "<include>" << include() << "</include>\n";
     level++;
   }
@@ -4560,12 +4634,11 @@ ostream &Options::saveXML( ostream &str, int selectmask, int level,
 	sp != sectionsEnd();
 	++sp ) {
     if ( (*sp)->flag( selectmask ) )
-      (*sp)->saveXML( str, selectmask, level, indent );
+      (*sp)->saveXML( str, selectmask, flags, level, indent );
   }
 
-  if ( ! name().empty() ) {
+  if ( printsection )
     str << indstr1 << "</section>\n";
-  }
 
   return str;
 }
@@ -5067,15 +5140,7 @@ Options &Options::load( const Str &opttxt,
 	    if ( *level == 0 && Secs.empty() &&
 		 parentSection() == 0 && ! Name.empty() ) {
 	      // downgrade current options:
-	      Options *o = new Options( *this );
-	      o->setParentSection( this );
-	      o->unsetNotify();
-	      Secs.push_back( o );
-	      OwnSecs.push_back( true );
-	      Opt.clear();
-	      setName( "" );
-	      setType( "" );
-	      setStyle( 0 );
+	      down();
 	    }
 	    Options *o = new Options( name, type, 0, style );
 	    o->setParentSection( this );
@@ -5150,15 +5215,7 @@ Options &Options::load( const Str &opttxt,
 	if ( changeindent == 0 && Secs.empty() &&
 	     parentSection() == 0 && ! Name.empty() ) {
 	  // downgrade current options:
-	  Options *o = new Options( *this );
-	  o->setParentSection( this );
-	  o->unsetNotify();
-	  Secs.push_back( o );
-	  OwnSecs.push_back( true );
-	  Opt.clear();
-	  setName( "" );
-	  setType( "" );
-	  setStyle( 0 );
+	  down();
 	  changeindent = 1;
 	}
 	if ( changeindent > 0 ) {

@@ -1,9 +1,7 @@
 MetaData:
 - check usage and working of notifyMetaData()!
 - check dialogs!
-- figure out how to treat names and types for metadata sections. saved types should be displayed names!
-  Add a style to OptWidget that uses types as names!
-- check saving in files!
+- saveConfig should only save type!
 - check return value of RELACSPlugin::metaData()
 
 Options:
@@ -24,6 +22,7 @@ Options:
 - DeviceList and FilterDetectors (and others?) should use plugin name (ident) as section name.
 - Device menu should be hierarchically using section structure of device infos.
 - Add iterator that iterates through all sections and subsections ?
+- Improve SaveFiles: no hand coded saving of sections, all should be done with saveXML()!
 
 patchclamp::SingleStimulus:
 - Add zero to noise stimuli (all stimuli?)
