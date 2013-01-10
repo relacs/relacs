@@ -356,14 +356,15 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
   }
 
   // sections:
+  bool firstsec = true;
   for ( Options::section_iterator sp = o->sectionsBegin();
 	sp != o->sectionsEnd();
 	++sp ) {
     if ( (*sp)->size( SelectMask ) <= 0 )
       continue;
     if ( tabs && level == 0 &&
-	 (*sp)->flag( SelectMask ) &&
-	 ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) ) ) {
+	 (*sp)->flag( SelectMask ) && (*sp)->size( SelectMask ) > 0 &&
+	 ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) || firstsec ) ) {
       // finish parameter:
       if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
 	Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum,
@@ -411,6 +412,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
       row++;
     }
     assignOptions( *sp, tabs, style, row, level, parent, tabwidget );
+    firstsec = false;
   }
 
   level--;
@@ -460,7 +462,8 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	++sp ) {
     if ( (*sp)->flag( SelectMask ) && (*sp)->size( SelectMask ) > 0 ) {
       tabs = ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) );
-      break;
+      if ( tabs )
+	break;
     }
   }
 

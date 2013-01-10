@@ -80,7 +80,11 @@ class Options
 
 public:
 
+    /*! Use this flag to select Parameter whose value differs
+        from their default value. */
   static const int NonDefault = Parameter::NonDefault;
+    /*! Section is a new tab. */
+  static const long TabSection = 0x04000000;
 
     /*! Indicates for the save() functions not to save the name of a section. */
   static const int NoName = 1;

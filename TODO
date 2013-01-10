@@ -1,8 +1,7 @@
 MetaData:
 - check usage and working of notifyMetaData()!
-- check dialogs!
-- saveConfig should only save type!
 - check return value of RELACSPlugin::metaData()
+- saveConfig should only save type!
 
 Options:
 - Notify: Should be called from Parameter::setXXX() via parentSection() from the root section!
@@ -14,8 +13,9 @@ Options:
 - change save() functions to take flags that specify what to put out
 - Check Parameter::load() functions and constructors: do we still need load( s, assignment ) ?
 - Check and refine Parameter::load() and read() functions
-- Options::load() should set TabStyle for section names
-- MetaData: remove LabelFlag
+- Rework selection by flags of sections: if size() > 0 use its contents,
+  if flag() show the section name (in Options and OptWidget)
+- Make all Options and optWidget style flags an enum
 - check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
 - OutData: rename Ident to name OR remove it?
 - are uniqueNames also used for relacsplugins.cfg ?

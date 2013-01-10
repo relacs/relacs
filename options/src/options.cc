@@ -4475,6 +4475,8 @@ ostream &Options::save( ostream &str, const string &start,
   // write options to file:
   if ( ! name().empty() || ! type().empty() ) {
     string ns = name().empty() ? type() : name();
+    if ( (style() & TabSection) > 0 )
+      ns = '-' + ns + '-';
     if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
       str << starts << '"' << ns << '"';
     else
@@ -4552,6 +4554,8 @@ string Options::save( int selectmask, bool firstonly ) const
   string str;
   if ( ! name().empty() || ! type().empty() ) {
     string ns = name().empty() ? type() : name();
+    if ( (style() & TabSection) > 0 )
+      ns = '-' + ns + '-';
     if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
       str += '"' + ns + '"';
     else
@@ -5127,7 +5131,7 @@ Options &Options::load( const Str &opttxt,
 	  if ( name.size() > 2 &&
 	       name[0] == '-' &&
 	       name[name.size()-1] == '-' ) {
-	    //	    style = XXX;
+	    style = TabSection;
 	    name.strip( Str::WhiteSpace + '-' );
 	  }
 	  if ( Name.empty() && Opt.empty() && Secs.empty() ) {
@@ -5201,7 +5205,7 @@ Options &Options::load( const Str &opttxt,
       if ( name.size() > 2 &&
 	   name[0] == '-' &&
 	   name[name.size()-1] == '-' ) {
-	//	    style = XXX;
+	style = TabSection;
 	name.strip( Str::WhiteSpace + '-' );
       }
       // this is a new section:
