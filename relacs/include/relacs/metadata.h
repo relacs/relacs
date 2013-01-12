@@ -38,7 +38,7 @@ class MetaData;
 class RELACSWidget;
 
 
-/*! 
+/*!
 \class MetaDataGroup
 \brief Loads meta data from a configuration file
 \author Jan Benda
@@ -48,7 +48,7 @@ class MetaDataGroup : public ConfigClass
 {
 
 public:
-  
+
   /*! Construct MetaDataGroup for loading setup specific meta data.
       \param[in] group identifies the group of configuration files from which
       the "Metadata" section is loaded.
@@ -66,11 +66,9 @@ public:
     /*! \return the number of items as selected by MetaData::configFlag()
         to be saved to a configuration file. */
   virtual int configSize( void ) const;
-    /*! React to changes of the meta data.
-        This function calls notifyMetaData() in all RELACSPlugins. */
-  virtual void notify( void );
 
-    /*! Clear all Options and create Recording section with standarad parameter. */
+    /*! Clear all Options and create Recording section with standarad
+        parameter. */
   void clear( void );
 
     /*! Add standard parameter to \a opt. */
@@ -84,16 +82,17 @@ protected:
 };
 
 
-/*! 
+/*!
 \class MetaData
-\brief Managesd meta data describing a recording session
+\brief Manages meta data describing a recording session
 \author Jan Benda
 
-Meta data are defined loaded from both the \c relacs.cfg and the \c
+Meta data are loaded from both the \c relacs.cfg and the \c
 relacsplugins.cfg file (after Control::initialize() and before
-Control::initDevices() is called).
+Control::initDevices() is called) via two instances of the
+MetaDataGroup class.
 
-Never add options to a MetaData within a Control constructor,
+Never add options to MetaData within a Control constructor,
 since these get cleared right before the meta data are loaded from the
 configuration files!
 
@@ -101,10 +100,8 @@ With the dialogFlag() and the presetDialogFlag() meta data can be
 selected that are displayed in the dialog() or presetDialog(),
 respectively.
 
-The "Recording" section is always used and contains a few standard
-properties (see MetaDataPlugins). 
-
-Also ensures the existance of a Recording section.
+The "Recording" section is always created by MetaData and contains a
+few standard properties.
 A couple of predifined properties are defined in the Recording section:
 - File: the base path for all the files saved by the recording session
 - Date: the date of the recording session
@@ -118,7 +115,7 @@ All these standard options have the MetaData::standardFlag() set.
 The values of the standard options are set appropriately in save()
 right before they are saved to the info file of the session.
 
-You can remove individual standard options in 
+If you really want you can remove individual standard options in
 Control::config() by doing something like
 \code
   metaData( "Recording" ).erase( "File" );
@@ -130,14 +127,13 @@ class MetaData : public QObject, public Options
   Q_OBJECT
 
 public:
-  
+
   MetaData( RELACSWidget *rw );
   ~MetaData( void );
 
     /*! React to changes in the meta data sections.
-        This function calls notifyMetaData() in all RELACSPlugins.
-        \param[in] section the name of the MetaData section in which the change occured. */
-  void notifyMetaData( const string &section );
+        This function calls notifyMetaData() in all RELACSPlugins. */
+  virtual void notify( void );
 
     /*! Saves the meta data of all sections into the info file of the session.
         Additionally appends the meta data \a opts with title \a title
@@ -211,14 +207,13 @@ protected slots:
 
     /*! Informs MetaData that the dialog window is closed. */
   void dialogClosed( int r );
-    /*! Apply changes made in the dialog to the MetaDataSections. */
-  void dialogChanged( void );
 
 
 protected:
 
   virtual void customEvent( QEvent *qe );
   void setSectionName( Options *opt, const string &name );
+
 
 private:
 
@@ -232,7 +227,7 @@ private:
   MetaDataGroup PluginData;
 
   bool Dialog;
-  
+
   mutable QMutex MetaDataLock;
 
   RELACSWidget *RW;

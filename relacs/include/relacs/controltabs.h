@@ -71,9 +71,8 @@ public:
   void modeChanged( void );
     /*! Inform each Control that some stimulus data have been changed. */
   void notifyStimulusData( void );
-    /*! Inform each Control that some meta data have been changed
-        in MetaDataSection \a section. */
-  void notifyMetaData( const string &section );
+    /*! Inform each Control that some meta data have been changed. */
+  void notifyMetaData( void );
     /*! Inform each Control that a new session is started. */
   void sessionStarted( void );
     /*! Inform each Control that the session is stopped. */

@@ -1,6 +1,6 @@
 /*
   relacswidget.cc
-  Coordinates RePros, session, input, output, plotting, and saving. 
+  Coordinates RePros, session, input, output, plotting, and saving.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -194,6 +194,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // load config:
   SF = 0;
   int r = CFG.read( RELACSPlugin::Core );
+
   if ( r == 0 ) {
     printlog(  "! error: No configuration files found. Exit now." );
     printlog(  "! error: Make sure to have a relacs.cfg and a relacsplugins.cfg file in the working directory." );
@@ -1232,15 +1233,15 @@ void RELACSWidget::notifyStimulusData( void )
 }
 
 
-void RELACSWidget::notifyMetaData( const string &section )
+void RELACSWidget::notifyMetaData( void )
 {
   if ( CW == 0 )
     return;
   if ( MD != 0 )
-    MD->notifyMetaData( section );
-  FD->notifyMetaData( section );
-  CW->notifyMetaData( section );
-  RP->notifyMetaData( section );
+    MD->notifyMetaData();
+  FD->notifyMetaData();
+  CW->notifyMetaData();
+  RP->notifyMetaData();
 }
 
 

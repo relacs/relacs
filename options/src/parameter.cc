@@ -610,7 +610,7 @@ bool Parameter::flags( int selectflag ) const
 	     ( selectflag > 0 || nonDefault() ) ) );
 }
 
-    
+
 Parameter &Parameter::setFlags( int flags )
 {
   Flags = flags;

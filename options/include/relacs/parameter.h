@@ -551,12 +551,10 @@ public:
 	then the changedFlag() is set. */
   Parameter &setInteger( const Parameter &p );
     /*! Add \a number and \a error to the integer values.
-        The warning message is set if \a number is invalid.
-        The ChangedFlag is not set, since the value is not changing. */
+        The warning message is set if \a number is invalid. */
   Parameter &addInteger( long number, long error, const string &unit="" );
     /*! Add \a number to the integer values.
-        The warning message is set if \a number is invalid.
-        The ChangedFlag is not set, since the value is not changing. */
+        The warning message is set if \a number is invalid. */
   inline Parameter &addInteger( long number, const string &unit="" )
     { return addInteger( number, -1, unit ); };
   

@@ -140,10 +140,10 @@ void ControlTabs::notifyStimulusData( void )
 }
 
 
-void ControlTabs::notifyMetaData( const string &section )
+void ControlTabs::notifyMetaData( void )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp )
-    (*cp)->notifyMetaData( section );
+    (*cp)->notifyMetaData();
 }
 
 

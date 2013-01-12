@@ -1,21 +1,19 @@
 MetaData:
-- check usage and working of notifyMetaData()!
-- check return value of RELACSPlugin::metaData()
+- check return value of RELACSPlugin::metaData() plus main docu, needs more than options!
 - saveConfig should only save type!
+- update all config files
 
 Options:
-- Notify: Should be called from Parameter::setXXX() via parentSection() from the root section!
-  In any case should the root section notify() be called - this is difficult with
-  not-owned sections!
+- operator[] and section() should only return Parameter/Options from this Options
+- load() and read(): make sure that callNotifies is only called once and not recursively!
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
 - Reset parentSection pointers and create new Options in assign, append, etc!
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
 - change save() functions to take flags that specify what to put out
 - Check Parameter::load() functions and constructors: do we still need load( s, assignment ) ?
 - Check and refine Parameter::load() and read() functions
-- Rework selection by flags of sections: if size() > 0 use its contents,
-  if flag() show the section name (in Options and OptWidget)
 - Make all Options and optWidget style flags an enum
+- OptWidget: add smar hotkey selection for tabs
 - check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
 - OutData: rename Ident to name OR remove it?
 - are uniqueNames also used for relacsplugins.cfg ?

@@ -9,12 +9,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -85,12 +85,6 @@ int MetaDataGroup::configSize( void ) const
 }
 
 
-void MetaDataGroup::notify( void )
-{
-  MD->notifyMetaData( "" );
-}
-
-
 void MetaDataGroup::clear( void )
 {
   Options::clear();
@@ -131,9 +125,9 @@ MetaData::~MetaData( void )
 }
 
 
-void MetaData::notifyMetaData( const string &section )
+void MetaData::notify( void )
 {
-  RW->notifyMetaData( section );
+  RW->notifyMetaData();
 }
 
 
@@ -212,13 +206,13 @@ void MetaData::add( ConfigClass *opt )
     Options::clear();
   else {
     if ( ! PluginData.name().empty() || PluginData.sectionsSize() == 0 )
-      newSection( &PluginData );
+      newSection( &PluginData, true );
     else
-      newSections( &PluginData );
+      newSections( &PluginData, true );
     if ( ! CoreData.name().empty() || CoreData.sectionsSize() == 0 )
-      newSection( &CoreData );
+      newSection( &CoreData, true );
     else
-      newSections( &CoreData );
+      newSections( &CoreData, true );
   }
 }
 
@@ -311,8 +305,6 @@ int MetaData::dialog( void )
   od->addButton( "&Discard", OptDialog::NoAction, 0 );
   od->addButton( "&Reset", OptDialog::Defaults );
   od->addButton( "&Cancel" );
-  connect( od, SIGNAL( valuesChanged() ),
-	   this, SLOT( dialogChanged() ) );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dialogClosed( int ) ) );
   return od->exec();
@@ -322,16 +314,6 @@ int MetaData::dialog( void )
 void MetaData::dialogClosed( int r )
 {
   Dialog = false;
-}
-
-
-void MetaData::dialogChanged( void )
-{
-  // XXX IS NOTIFY ALREADY CALLED DURING THE DIALOG?
-  lock();
-  if ( size( Parameter::changedFlag() ) > 0 )
-    notifyMetaData( "" );
-  unlock();
 }
 
 
@@ -358,8 +340,6 @@ void MetaData::presetDialog( void )
   od->addButton( "&Ok", OptDialog::Accept, 1 );
   od->addButton( "&Reset", OptDialog::Defaults );
   od->addButton( "&Cancel" );
-  connect( od, SIGNAL( valuesChanged() ),
-	   this, SLOT( dialogChanged() ) );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dialogClosed( int ) ) );
   od->exec();

@@ -460,11 +460,7 @@ Parameter *Options::assign( const string &name, const string &value )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return pp != end() ? &(*pp) : 0;
 }
@@ -563,6 +559,41 @@ const Options *Options::parentSection( void ) const
 void Options::setParentSection( Options *parentsection )
 {
   ParentSection = parentsection;
+}
+
+
+void Options::resetParents( void )
+{
+  for ( section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    (*sp)->setParentSection( this );
+    (*sp)->resetParents();
+  }
+}
+
+
+Options *Options::rootSection( void )
+{
+  if ( parentSection() == 0 )
+    return this;
+
+  Options *ps = parentSection();
+  while ( ps->parentSection() != 0 )
+    ps = ps->parentSection();
+  return ps;
+}
+
+
+const Options *Options::rootSection( void ) const
+{
+  if ( parentSection() == 0 )
+    return this;
+
+  const Options *ps = parentSection();
+  while ( ps->parentSection() != 0 )
+    ps = ps->parentSection();
+  return ps;
 }
 
 
@@ -935,7 +966,6 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
   return end();
-
 }
 
 
@@ -2026,11 +2056,7 @@ Parameter &Options::setText( const string &name, const string &strg )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2052,11 +2078,7 @@ Parameter &Options::pushText( const string &name, const string &strg )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2078,11 +2100,7 @@ Parameter &Options::setText( const string &name, const Parameter &p )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2158,11 +2176,7 @@ Parameter &Options::selectText( const string &name, const string &strg,
 #endif
 
     // notify the change:
-    if ( CallNotify && ! Notified ) {
-      Notified = true;
-      notify();
-      Notified = false;
-    }
+    callNotifies();
 
     return *pp;
   }
@@ -2301,11 +2315,7 @@ Parameter &Options::setNumber( const string &name, double number,
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2328,11 +2338,7 @@ Parameter &Options::pushNumber( const string &name, double number,
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2354,11 +2360,7 @@ Parameter &Options::setNumber( const string &name, const Parameter &p )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2654,11 +2656,7 @@ Parameter &Options::setInteger( const string &name, long number, long error,
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2681,11 +2679,7 @@ Parameter &Options::pushInteger( const string &name, long number, long error,
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2707,11 +2701,7 @@ Parameter &Options::setInteger( const string &name, const Parameter &p )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2839,11 +2829,7 @@ Parameter &Options::setBoolean( const string &name, bool b )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2865,11 +2851,7 @@ Parameter &Options::setBoolean( const string &name, const Parameter &p )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -2989,11 +2971,7 @@ Parameter &Options::setDate( const string &name,
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3015,11 +2993,7 @@ Parameter &Options::setDate( const string &name, const string &date )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3041,11 +3015,7 @@ Parameter &Options::setDate( const string &name, const struct tm &date )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3067,11 +3037,7 @@ Parameter &Options::setDate( const string &name, const time_t &time )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3093,11 +3059,7 @@ Parameter &Options::setCurrentDate( const string &name )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3119,11 +3081,7 @@ Parameter &Options::setDate( const string &name, const Parameter &p )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3247,11 +3205,7 @@ Parameter &Options::setTime( const string &name,
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3273,11 +3227,7 @@ Parameter &Options::setTime( const string &name, const string &time )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3299,11 +3249,7 @@ Parameter &Options::setTime( const string &name, const struct tm &time )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3325,11 +3271,7 @@ Parameter &Options::setTime( const string &name, const time_t &time )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3351,11 +3293,7 @@ Parameter &Options::setCurrentTime( const string &name )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3377,11 +3315,7 @@ Parameter &Options::setTime( const string &name, const Parameter &p )
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *pp;
 }
@@ -3439,7 +3373,6 @@ Options &Options::newSection( int level, const string &name, const string &type,
   }
   Options *o = new Options( name, type, flags, style );
   o->setParentSection( so );
-  o->unsetNotify();
   so->Secs.push_back( o );
   so->OwnSecs.push_back( true );
   AddOpts = o;
@@ -3536,7 +3469,6 @@ Options &Options::newSection( int level, const Options &opt, const string &name,
   o->addFlag( flags );
   o->addStyle( style );
   o->setParentSection( so );
-  o->unsetNotify();
   so->Secs.push_back( o );
   so->OwnSecs.push_back( true );
   AddOpts = o;
@@ -3621,28 +3553,35 @@ Options &Options::insertSection( const Options &opt, const string &name,
 }
 
 
-Options &Options::newSection( Options *opt )
+Options &Options::newSection( Options *opt, bool newparent )
 {
   Secs.push_back( opt );
   OwnSecs.push_back( false );
+  if ( Secs.back()->parentSection() == 0 || newparent )
+    Secs.back()->setParentSection( this );
   return *this;
 }
 
 
-Options &Options::addSection( Options *opt )
+Options &Options::addSection( Options *opt, bool newparent )
 {
   AddOpts->Secs.push_back( opt );
   AddOpts->OwnSecs.push_back( false );
+  if ( opt->parentSection() == 0 || newparent )
+    opt->setParentSection( AddOpts );
   return *AddOpts;
 }
 
 
-Options &Options::insertSection( Options *opt, const string &atpattern )
+Options &Options::insertSection( Options *opt, const string &atpattern,
+				 bool newparent )
 {
   // insert at front:
   if ( atpattern.empty() ) {
     AddOpts->Secs.push_front( opt );
     AddOpts->OwnSecs.push_front( false );
+    if ( opt->parentSection() == 0 || newparent )
+      opt->setParentSection( AddOpts );
   }
   else {
     // insert at atpattern:
@@ -3652,23 +3591,29 @@ Options &Options::insertSection( Options *opt, const string &atpattern )
       if ( ps != 0 ) {
 	ps->Secs.insert( sp, opt );
 	ps->OwnSecs.insert( ps->OwnSecs.begin() + ( sp - ps->Secs.begin() ), false );
+	if ( opt->parentSection() == 0 || newparent )
+	  opt->setParentSection( ps );
       }
     }
     else {
       // not found, add to sections:
       AddOpts->Secs.push_back( opt );
       AddOpts->OwnSecs.push_back( false );
+      if ( opt->parentSection() == 0 || newparent )
+	opt->setParentSection( AddOpts );
     }
   }
   return *AddOpts;
 }
 
 
-Options &Options::newSections( Options *opt )
+Options &Options::newSections( Options *opt, bool newparent )
 {
   for ( unsigned int k=0; k<opt->Secs.size(); k++ ) {
     Secs.push_back( opt->Secs[k] );
     OwnSecs.push_back( false );
+    if ( Secs.back()->parentSection() == 0 || newparent )
+      Secs.back()->setParentSection( this );
   }
   return *this;
 }
@@ -3685,6 +3630,12 @@ void Options::endSection( void )
 void Options::clearSections( void )
 {
   AddOpts = this;
+}
+
+
+void Options::setSection( Options &opt )
+{
+  AddOpts = &opt;
 }
 
 
@@ -3727,7 +3678,6 @@ int Options::down( void )
 
   Options *o = new Options( *this );
   o->setParentSection( this );
-  o->unsetNotify();
   Secs.clear();
   Secs.push_back( o );
   OwnSecs.clear();
@@ -3967,9 +3917,17 @@ Options &Options::erase( Options::section_iterator s )
 {
   if ( s != sectionsEnd() ) {
     Options *po = (*s)->parentSection();
+    if ( po == 0 ) {
+      cerr << "ERROR in OPTIONS::erase( sectio_iterator ): no parentSection()!\n";
+      return *this;
+    }
     int inx = s - po->Secs.begin();
     if ( po->OwnSecs[ inx ] )
       delete *s;
+    else {
+      if ( (*s)->parentSection() == po )
+	(*s)->setParentSection( 0 );
+    }
     po->Secs.erase( s );
     po->OwnSecs.erase( po->OwnSecs.begin() + inx );
   }
@@ -3984,11 +3942,14 @@ Options &Options::erase( Options *s )
 	sp != sectionsEnd();
 	++sp, ++inx ) {
     if ( *sp == s ) {
-      Options *po = (*sp)->parentSection();
-      if ( po->OwnSecs[ inx ] )
+      if ( OwnSecs[ inx ] )
 	delete *sp;
-      po->Secs.erase( sp );
-      po->OwnSecs.erase( OwnSecs.begin() + inx );
+      else {
+	if ( s->parentSection() == this )
+	  s->setParentSection( 0 );
+      }
+      Secs.erase( sp );
+      OwnSecs.erase( OwnSecs.begin() + inx );
       break;
     }
   }
@@ -4011,9 +3972,17 @@ Options &Options::erase( const string &pattern )
   section_iterator sp = sectionsEnd();
   while ( (sp = findSection( pattern )) != sectionsEnd() ) {
     Options *po = (*sp)->parentSection();
+    if ( po == 0 ) {
+      cerr << "ERROR in Options::erase( pattern ) : no parentSection()!\n";
+      continue;
+    }
     int inx = sp - po->Secs.begin();
     if ( po->OwnSecs[ inx ] )
       delete *sp;
+    else {
+      if ( (*sp)->parentSection() == po )
+	(*sp)->setParentSection( 0 );
+    }
     po->Secs.erase( sp );
     po->OwnSecs.erase( po->OwnSecs.begin() + inx );
     erased = true;
@@ -4043,6 +4012,10 @@ Options &Options::erase( int selectflag )
       int inx = sp - Secs.begin();
       if ( OwnSecs[ inx ] )
 	delete *sp;
+      else {
+	if ( (*sp)->parentSection() == this )
+	  (*sp)->setParentSection( 0 );
+      }
       sp = Secs.erase( sp );
       OwnSecs.erase( OwnSecs.begin() + inx );
     }
@@ -4052,6 +4025,10 @@ Options &Options::erase( int selectflag )
 	int inx = sp - Secs.begin();
 	if ( OwnSecs[ inx ] )
 	  delete *sp;
+	else {
+	  if ( (*sp)->parentSection() == this )
+	    (*sp)->setParentSection( 0 );
+	}
 	sp = Secs.erase( sp );
 	OwnSecs.erase( OwnSecs.begin() + inx );
       }
@@ -4080,6 +4057,10 @@ Options &Options::popSection( void )
   if ( ! AddOpts->Secs.empty() ) {
     if ( AddOpts->OwnSecs.back() )
       delete AddOpts->Secs.back();
+    else {
+      if ( AddOpts->Secs.back()->parentSection() == AddOpts )
+	AddOpts->Secs.back()->setParentSection( 0 );
+    }
     AddOpts->Secs.pop_back();
     AddOpts->OwnSecs.pop_back();
   }
@@ -4103,6 +4084,10 @@ Options &Options::clear( void )
 	++sp, ++inx ) {
     if ( OwnSecs[inx] )
       delete *sp;
+    else {
+      if ( (*sp)->parentSection() == this )
+	(*sp)->setParentSection( 0 );
+    }
   }
   Secs.clear();
   OwnSecs.clear();
@@ -4459,21 +4444,32 @@ int Options::nameWidth( int selectmask, bool detailed ) const
     }
   }
 
+  for ( const_section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    if ( (*sp)->size( selectmask ) > 0 &&
+	 ( ! flag( selectmask ) ||
+	   ( name().empty() && type().empty() ) ) ) {
+      unsigned int w = (*sp)->nameWidth( selectmask, detailed );
+      if ( w > width )
+	width = w;
+    }
+  }
   return width;
 }
 
 
 ostream &Options::save( ostream &str, const string &start,
-			int selectmask, bool detailed, bool firstonly ) const
+			int selectmask, bool detailed, bool firstonly,
+			int width ) const
 {
   Warning = "";
-
-  int width = nameWidth( selectmask, detailed );
 
   string starts = start;
 
   // write options to file:
-  if ( ! name().empty() || ! type().empty() ) {
+  if ( flag( selectmask ) &&
+       ( ! name().empty() || ! type().empty() ) ) {
     string ns = name().empty() ? type() : name();
     if ( (style() & TabSection) > 0 )
       ns = '-' + ns + '-';
@@ -4489,7 +4485,10 @@ ostream &Options::save( ostream &str, const string &start,
     }
     str << ":\n";
     starts += "    ";
+    width = nameWidth( selectmask, detailed );
   }
+  if ( width < 0 )
+    width = nameWidth( selectmask, detailed );
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
       str << starts;
@@ -4499,8 +4498,8 @@ ostream &Options::save( ostream &str, const string &start,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectmask ) )
-      (*sp)->save( str, starts, selectmask, detailed, firstonly );
+    if ( (*sp)->size( selectmask ) > 0 )
+      (*sp)->save( str, starts, selectmask, detailed, firstonly, width );
   }
 
   return str;
@@ -4552,7 +4551,8 @@ string Options::save( int selectmask, bool firstonly ) const
 
   // write options to string:
   string str;
-  if ( ! name().empty() || ! type().empty() ) {
+  if ( flag( selectmask ) &&
+       ( ! name().empty() || ! type().empty() ) ) {
     string ns = name().empty() ? type() : name();
     if ( (style() & TabSection) > 0 )
       ns = '-' + ns + '-';
@@ -4580,7 +4580,7 @@ string Options::save( int selectmask, bool firstonly ) const
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectmask ) ) {
+    if ( (*sp)->size( selectmask ) > 0 ) {
       if ( n > 0 )
 	str += ", ";
       str += (*sp)->save( selectmask, firstonly );
@@ -4616,7 +4616,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int flags, int level,
   }
   bool printname = ( ( ! ns.empty() ) && ( ( flags & NoName ) == 0 ) );
   bool printtype = ( ( ! ts.empty() ) && ( ( flags & NoType ) == 0 ) );
-  bool printsection = ( printname || printtype );
+  bool printsection = ( flag( selectmask ) && ( printname || printtype ) );
   if ( printsection ) {
     str << indstr1 << "<section>\n";
     if ( printname )
@@ -4667,11 +4667,13 @@ Options &Options::read( const string &opttxt, int flag,
     // end of section, keep searching the parent:
     *indent = newindent;
     Options *ps = parentSection();
-    if ( ps != 0 )
-      return ps->read( opttxt, flag, assignment, separator, indent );
-    // if there is no parent section, we keep reading the current section
-    // mainly  needed for compatibility with the old style config files.
-    //    return *retopt;
+    if ( ps != 0 ) {
+      retopt = &ps->read( opttxt, flag, assignment, separator, indent );
+      // notify the change:
+      CallNotify = cn;
+      callNotifies();
+      return *retopt;
+    }
   }
   if ( newindent >= 0 )
     *indent = newindent;
@@ -4683,8 +4685,12 @@ Options &Options::read( const string &opttxt, int flag,
     s.preventLast( '}' );
     s.strip();
   }
-  if ( s.empty() )
+  if ( s.empty() ) {
+    // notify the change:
+    CallNotify = cn;
+    callNotifies();
     return *retopt;
+  }
 
   // split up parameter list:
   int index = 0;
@@ -4788,11 +4794,7 @@ Options &Options::read( const string &opttxt, int flag,
 
   // notify the change:
   CallNotify = cn;
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *retopt;
 }
@@ -4852,11 +4854,7 @@ istream &Options::read( istream &str, int flag, const string &assignment,
 
   // notify the change:
   CallNotify = cn;
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return str;
 }
@@ -4879,11 +4877,7 @@ Options &Options::read( const StrQueue &sq, int flag,
 
   // notify the change:
   CallNotify = cn;
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *this;
 }
@@ -4895,11 +4889,7 @@ bool Options::read( const Parameter &p, int flag )
     if ( pp->read( p ) ) {
       pp->addFlags( flag );
       // notify the change:
-      if ( CallNotify && ! Notified ) {
-	Notified = true;
-	notify();
-	Notified = false;
-      }
+      callNotifies();
       return true;
     }
   }
@@ -4908,11 +4898,7 @@ bool Options::read( const Parameter &p, int flag )
 	++sp ) {
     if ( (*sp)->read( p, flag ) ) {
       // notify the change:
-      if ( CallNotify && ! Notified ) {
-	Notified = true;
-	notify();
-	Notified = false;
-      }
+      callNotifies();
       return true;
     }
   }
@@ -4953,11 +4939,8 @@ Options &Options::read( const Options &o, int flags, int flag )
   }
 
   // notify the change:
-  if ( changed && CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  if ( changed )
+    callNotifies();
 
   return *this;
 }
@@ -4974,11 +4957,7 @@ bool Options::readAppend( const Parameter &p )
   add( p );
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return false;
 }
@@ -5003,11 +4982,7 @@ Options &Options::readAppend( const Options &o, int flags )
   }
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *this;
 }
@@ -5047,11 +5022,7 @@ Options &Options::readAppend( const StrQueue &sq,
 #endif
 
   // notify the change:
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  callNotifies();
 
   return *this;
 }
@@ -5062,8 +5033,6 @@ Options &Options::load( const Str &opttxt,
 			int *indent, int *indentspacing, int *level )
 {
   Warning = "";
-  bool cn = CallNotify;
-  CallNotify = false;
 
   Options *retopt = this;
   Str s = opttxt;
@@ -5089,6 +5058,9 @@ Options &Options::load( const Str &opttxt,
   if ( level == 0 )
     level = &mylevel;
   (*level)++;
+
+  bool cn = CallNotify;
+  CallNotify = false;
 
   // split up parameter list:
   int index = 0;
@@ -5144,11 +5116,12 @@ Options &Options::load( const Str &opttxt,
 	    if ( *level == 0 && Secs.empty() &&
 		 parentSection() == 0 && ! Name.empty() ) {
 	      // downgrade current options:
+	      CallNotify = cn;
 	      down();
+	      CallNotify = false;
 	    }
 	    Options *o = new Options( name, type, 0, style );
 	    o->setParentSection( this );
-	    o->unsetNotify();
 	    Secs.push_back( o );
 	    OwnSecs.push_back( true );
 	    AddOpts = o;
@@ -5219,13 +5192,14 @@ Options &Options::load( const Str &opttxt,
 	if ( changeindent == 0 && Secs.empty() &&
 	     parentSection() == 0 && ! Name.empty() ) {
 	  // downgrade current options:
+	  CallNotify = cn;
 	  down();
+	  CallNotify = false;
 	  changeindent = 1;
 	}
 	if ( changeindent > 0 ) {
 	  Options *o = new Options( name, type, 0, style );
 	  o->setParentSection( this );
-	  o->unsetNotify();
 	  Secs.push_back( o );
 	  OwnSecs.push_back( true );
 	  AddOpts = o;
@@ -5245,7 +5219,6 @@ Options &Options::load( const Str &opttxt,
 	    ps = pps;
 	  Options *o = new Options( name, type, 0, style );
 	  o->setParentSection( ps );
-	  o->unsetNotify();
 	  ps->Secs.push_back( o );
 	  ps->OwnSecs.push_back( true );
 	  AddOpts = o;
@@ -5263,11 +5236,8 @@ Options &Options::load( const Str &opttxt,
 
   // notify the change:
   CallNotify = cn;
-  if ( CallNotify && ! Notified ) {
-    Notified = true;
-    notify();
-    Notified = false;
-  }
+  if ( *level == 0 )
+    callNotifies();
 
   (*level)--;
 
@@ -5276,7 +5246,7 @@ Options &Options::load( const Str &opttxt,
 
 
 istream &Options::load( istream &str, const string &assignment,
-			const string &comment, 
+			const string &comment,
 			const string &stop, string *line )
 {
   Warning = "";
@@ -5287,8 +5257,11 @@ istream &Options::load( istream &str, const string &assignment,
   Options *copt = this;
   bool stopempty = ( stop == StrQueue::StopEmpty );
 
+  bool cn = CallNotify;
+  CallNotify = false;
+
   // read first line:
-  if ( line != 0 && !line->empty() ) { 
+  if ( line != 0 && !line->empty() ) {
     s = line;
     // erase comments:
     s.stripComment( comment );
@@ -5296,7 +5269,7 @@ istream &Options::load( istream &str, const string &assignment,
     copt = &copt->load( s, assignment, ",;", &indent, &indentspacing, &level );
     Warning += copt->warning();
   }
- 
+
   // get line:
   while ( getline( str, s ) ) {
     // stop line reached:
@@ -5311,10 +5284,13 @@ istream &Options::load( istream &str, const string &assignment,
     copt = &copt->load( s, assignment, ",;", &indent, &indentspacing, &level );
     Warning += copt->warning();
   }
-  
+
   // store last read line:
   if ( line != 0 )
     *line = s;
+
+  CallNotify = cn;
+  callNotifies();
 
   return str;
 }
@@ -5327,17 +5303,26 @@ Options &Options::load( const StrQueue &sq, const string &assignment )
   int indentspacing = 0;
   int level = -1;
   Options *copt = this;
+
+  bool cn = CallNotify;
+  CallNotify = false;
+
   for ( StrQueue::const_iterator i = sq.begin(); i != sq.end(); ++i ) {
     // load string:
     copt = &copt->load( *i, assignment, ",;", &indent, &indentspacing, &level );
     Warning += copt->warning();
   }
+
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
     cerr << "!warning in Options::load( StrQueue ) -> " << Warning << '\n';
   }
 #endif
+
+  CallNotify = cn;
+  callNotifies();
+
   return *this;
 }
 
@@ -5351,6 +5336,22 @@ void Options::setNotify( bool notify )
 void Options::unsetNotify( void )
 {
   CallNotify = false;
+}
+
+
+void Options::callNotifies( void )
+{
+  bool tn = ! Notified;
+  bool rn = ! rootSection()->Notified;
+  Notified = true;
+  rootSection()->Notified = true;
+  if ( CallNotify && tn )
+    notify();
+  if ( rootSection() != this &&
+       CallNotify && rootSection()->CallNotify && rn )
+    rootSection()->notify();
+  rootSection()->Notified = false;
+  Notified = false;
 }
 
 

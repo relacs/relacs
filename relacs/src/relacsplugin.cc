@@ -636,18 +636,6 @@ void RELACSPlugin::notifyStimulusData( void )
 }
 
 
-Options &RELACSPlugin::metaData( const string &section )
-{
-  return RW->MTDT.section( section );
-}
-
-
-const Options &RELACSPlugin::metaData( const string &section ) const
-{
-  return RW->MTDT.section( section );
-}
-
-
 MetaData &RELACSPlugin::metaData( void )
 {
   return RW->MTDT;
@@ -678,7 +666,7 @@ QMutex *RELACSPlugin::metaDataMutex( void )
 }
 
 
-void RELACSPlugin::notifyMetaData( const string &section )
+void RELACSPlugin::notifyMetaData( void )
 {
 }
 

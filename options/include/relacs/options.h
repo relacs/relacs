@@ -211,14 +211,30 @@ public:
 
     /*! Returns a pointer to the Options where this Options belongs to
         as a section.
-        If this Options does not belong to an Options, NULL is returned. */
+        If this Options does not belong to an Options, NULL is returned.
+        \sa rootSection() */
   Options *parentSection( void );
     /*! Returns a const pointer to the Options where this Options belongs to
         as a section.
-        If this Options does not belong to an Options, NULL is returned. */
+        If this Options does not belong to an Options, NULL is returned.
+        \sa rootSection() */
   const Options *parentSection( void ) const;
-    /*! Set the parent Options of this Options to \a parent. */
+    /*! Set the parent Options of this Options to \a parent.
+        \sa parentSection() */
   void setParentSection( Options *parentsection );
+    /*! Reset the parentSection() of all sections and subsections
+        for this tree of Options.
+        \sa parentSection() */
+  void resetParents( void );
+
+    /*! Returns a pointer to the top most Options in the hierarchy.
+        If \a this Options does not have a parentSection() \a this is returned.
+        \sa parentSection() */
+  Options *rootSection( void );
+    /*! Returns a pointer to the top most Options in the hierarchy.
+        If \a this Options does not have a parentSection() \a this is returned.
+        \sa parentSection() */
+  const Options *rootSection( void ) const;
 
     /*! The name of this section of options. */
   string name( void ) const;
@@ -1512,43 +1528,58 @@ public:
 
     /*! Add \a opt as a section. Only a pointer of \a opt is stored,
 	the content of \a opt is not copied.
-        Subsequent calls to addText(), addNumber(), etc. still add new Parameter
-	to the currently active section. */
-  Options &newSection( Options *opt );
+	If \a opt does not have a parentSection() or \a newparent is \c true
+	then its parent section	is set to \a this.
+        Subsequent calls to addText(), addNumber(), etc. still add new
+	Parameter to the currently active section. */
+  Options &newSection( Options *opt, bool newparent=false );
     /*! Add \a opt as a section to the end of the currently active
         Option's sections list. Only a pointer of \a opt is stored,
 	the content of \a opt is not copied.
-        Subsequent calls to addText(), addNumber(), etc. still add new Parameter
-	to the currently active section. */
-  Options &addSection( Options *opt );
+	If \a opt does not have a parentSection() or \a newparent is \c true
+	then its parent section	is set to currently active section.
+        Subsequent calls to addText(), addNumber(), etc. still add new
+	Parameter to the currently active section. */
+  Options &addSection( Options *opt, bool newparent=false );
     /*! Insert \a opt as a section of Options before the section
         specified by \a atpattern.  If \a atpattern is not found or if
         \atpattern is empty, the new section is added to the beginning
         or the end of the currently active Options' section list,
         respectively. Only a pointer of \a opt is stored,
 	the content of \a opt is not copied.
-        Subsequent calls to addText(), addNumber(), etc. still add new Parameter
-	to the currently active section. */
-  Options &insertSection( Options *opt, const string &atpattern );
+	If \a opt does not have a parentSection() or \a newparent is \c true
+	then its parent section	is set to its parent in the new tree.
+        Subsequent calls to addText(), addNumber(), etc. still add new
+	Parameter to the currently active section. */
+  Options &insertSection( Options *opt, const string &atpattern,
+			  bool newparent=false );
 
-    /*! Add all sections of \a opt as a section. Only a pointer of the sections is stored,
-	their content is not copied.
-        Subsequent calls to addText(), addNumber(), etc. still add new Parameter
-	to the currently active section. */
-  Options &newSections( Options *opt );
+    /*! Add all sections of \a opt as a section. Only a pointer of the
+	sections is stored, their content is not copied.  If \a
+	newparent is \c true then the sections' parent section is set
+	to \a this.  Subsequent calls to addText(), addNumber(),
+	etc. still add new Parameter to the currently active
+	section. */
+  Options &newSections( Options *opt, bool newparent=false );
 
     /*! End the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to the parent section.
-        \sa clearSections(), newSection(), newSubSection(), newSubSubSection(),
+        \sa clearSections(), setSection(), newSection(), newSubSection(), newSubSubSection(),
 	insertSection() */
   void endSection( void );
     /*! Reset the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to this Options.
-        \sa endSection(), newSection(), newSubSection(), newSubSubSection(),
+        \sa endSection(), setSection(), newSection(), newSubSection(), newSubSubSection(),
 	insertSection() */
   void clearSections( void );
+    /*! Make \a opt the currently active section of \a this such that
+        subsequent calls to addText(), addNumber(), etc. add new
+        Parameter to \a opt.
+        \sa endSection(), setSection(), newSection(), newSubSection(), newSubSubSection(),
+	insertSection() */
+  void setSection( Options &opt );
 
     /*! Move this Options with its name-value pairs and sections
         one level up in the hierachy to its parentSection(). 
@@ -1753,7 +1784,7 @@ public:
 	from their default value are saved. */
   ostream &save( ostream &str, const string &start="",
 		 int selectmask=0, bool detailed=false,
-		 bool firstonly=false ) const;
+		 bool firstonly=false, int width=-1 ) const;
     /*! Write each name-value pair as a separate line to stream \a str
         and use \a textformat, \a numberformat, \a boolformat, \a
         dateformat, \a timeformat, and \a sectionformat for formatting
@@ -1874,6 +1905,10 @@ public:
         This function is called after each of the setNumber(), setText(), etc
         functions. */
   virtual void notify( void ) {};
+    /*! Calls the rootSections() and this Options notify() functions
+        if appropriate.
+        \sa notif(), setNotify() */
+  void callNotifies( void );
     /*! Enables the call of the notify() function if \a notify equals \c true. */
   void setNotify( bool notify=true );
     /*! Disables the call of the notify() function. */
@@ -1883,6 +1918,7 @@ public:
 
 
 private:
+
 
     /*! A pointer to the Options this Options belongs to. */
   Options *ParentSection;

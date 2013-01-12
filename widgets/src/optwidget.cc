@@ -341,7 +341,9 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
     // extra space:
     if ( (style & ExtraSpaceStyle) > 0 && added ) {
       row++;
-      Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 2 );
+      Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum,
+					       QSizePolicy::Expanding ),
+			      row, 2 );
     }
     row++;
     // max line count:
@@ -364,7 +366,9 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
       continue;
     if ( tabs && level == 0 &&
 	 (*sp)->flag( SelectMask ) && (*sp)->size( SelectMask ) > 0 &&
-	 ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) || firstsec ) ) {
+	 ( (style & TabSectionStyle ) ||
+	   ( (*sp)->style() & TabSection ) ||
+	   firstsec ) ) {
       // finish parameter:
       if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
 	Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum,
@@ -805,11 +809,7 @@ void OptWidget::accept( bool clearchanged )
 
   // notify:
   DisableUpdate = true;
-  bool cn = Opt->notifying();
-  Opt->unsetNotify();
-  if ( cn )
-    Opt->notify();
-  Opt->setNotify( cn );
+  Opt->callNotifies();
   DisableUpdate = false;
 
   // react to accept:
@@ -847,11 +847,7 @@ void OptWidget::acceptNotify( bool clearchanged )
 
   // notify:
   DisableUpdate = true;
-  bool cn = Opt->notifying();
-  Opt->unsetNotify();
-  if ( cn )
-    Opt->notify();
-  Opt->setNotify( cn );
+  Opt->callNotifies();
   DisableUpdate = false;
 
   // react to accept:

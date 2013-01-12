@@ -110,6 +110,15 @@ void Session::config( void )
     metaData().newSection( "Cell", "Cell" );
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
+  Options::iterator p = mo.find( "best rate" );
+  double rate =  100.0;
+  if ( p != mo.end() ) {
+    rate = p->number();
+    mo.erase( p );
+  }
+  Options::section_iterator sp = mo.findSection( "Cell properties" );
+  if ( sp != mo.sectionsEnd() )
+    mo.erase( sp );
   mo.newSection( "Cell properties", MetaDataSave+MetaDataDisplay );
 
   mo.addSelection( "best side", "Best side", "left|right", MetaDataReadOnly+MetaDataDisplay ).setUnit( "speaker" );
@@ -117,7 +126,8 @@ void Session::config( void )
   mo.addNumber( "best threshold", "Best threshold", -1.0, -1.0, 200.0, 1.0, "dB SPL", "dB SPL", "%.1f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "best slope", "Best slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
   mo.addNumber( "best intensity", "Best intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  mo.addNumber( "best rate", "Best rate", 100.0, "Hz", "%.1f", MetaData::presetDialogFlag() + MetaDataSave );
+  mo.addNumber( "best rate", "Best rate", rate, "Hz", "%.1f", MetaData::presetDialogFlag() + MetaData::configFlag() + MetaDataSave );
+
   mo.addNumber( "best saturation", "Best saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
   mo.addNumber( "best maxrate", "Best maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
@@ -166,11 +176,12 @@ void Session::config( void )
     mo.setNumber( "best threshold", 45.0 );
     mo.setNumber( "best slope", 25.0 );
     mo.setNumber( "best intensity", 49.0 );
-    mo.setNumber( "best rate", 100.0 );
+    mo.setNumber( "best rate", rate );
     mo.setNumber( "best saturation", 58.0 );
     mo.setNumber( "best maxrate", 325.0 );
   }
   mo.setNotify();
+
   unlockMetaData();
 }
 

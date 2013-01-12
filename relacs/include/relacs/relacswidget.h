@@ -173,7 +173,7 @@ public:
   void wakeAll( void );
 
     /*! Output of signal \a signal.
-        Passing infos to SaveFiles. */  
+        Passing infos to SaveFiles. */
   int write( OutData &signal );
   int write( OutList &signal );
 
@@ -191,8 +191,8 @@ public:
 
     /*! Inform all plugins about changes in the stimulus data. */
   void notifyStimulusData( void );
-    /*! Inform all plugins about changes in the meta data section \a section. */
-  void notifyMetaData( const string &section );
+    /*! Inform all plugins about changes in the meta data. */
+  void notifyMetaData( void );
 
     /*! Tells RELACSWidget that a new Session is started. Opens the files of
         SaveFiles and starts the initial macro if \a startmacro is true. */

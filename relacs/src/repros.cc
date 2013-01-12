@@ -274,10 +274,10 @@ void RePros::notifyStimulusData( void )
 }
 
 
-void RePros::notifyMetaData( const string &section )
+void RePros::notifyMetaData( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->repro()->notifyMetaData( section );
+    RPs[k]->repro()->notifyMetaData();
 }
 
 

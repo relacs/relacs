@@ -331,12 +331,13 @@ public:
 
 signals:
 
-    /*! This signal is emitted when a button with the Accept Action
-        is clicked, i.e. the values of the input fields are copied to
-	the corresponding Options.
+    /*! This signal is emitted when a button with the Accept Action is
+        clicked, i.e. right after the values of the input fields have
+        been copied to the corresponding Options.
         The notify() function of all Options are called
-        after the values the input fields are copied to the Options,
-	i.e. one can from each notify() function assume that
+        after the values of the input fields are copied to the Options
+	and before this signal is emitted,
+	i.e. one can in each Options' notify() function assume that
         other Options have already the new values. */
   void valuesChanged( void ); 
 

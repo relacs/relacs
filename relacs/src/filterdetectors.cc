@@ -1242,10 +1242,10 @@ void FilterDetectors::modeChanged( void )
 }
 
 
-void FilterDetectors::notifyMetaData( const string &section )
+void FilterDetectors::notifyMetaData( void )
 {
   for ( FilterList::iterator fp = FL.begin(); fp != FL.end(); ++fp )
-    (*fp).FilterDetector->notifyMetaData( section );
+    (*fp).FilterDetector->notifyMetaData();
 }
 
 

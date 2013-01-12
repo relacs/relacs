@@ -82,11 +82,11 @@ You can implement these virtual functions according to your needs.
 Other functions related to sessions are sessionData(), sessionTime(),
 sessionTimeStr(), sessionRunning(), reproCount().
 
-The meta data sections of the current recording can be accessed by metaData(const string&).
-Whenever some of the meta data are set to new values,
-the virtual function notifyMetaData() is called, that you can implement
-according to your needs.
-With metaData( void ) you get access to a few more functions for managing meta data.
+The meta data sections of the current recording can be accessed by
+metaData().  Whenever some of the meta data are set to new values, the
+virtual function notifyMetaData() is called, that you can implement
+according to your needs.  With metaData( void ) you get access to a
+few more functions for managing meta data.
 
 All other RELACS plugins can be accessed:
 devices(), device(), attenuator(), digitalIO(), trigger(), filter(), filterOpts(),
@@ -237,20 +237,20 @@ public:
 
     /*! Called whenever the mode is changed. */
   virtual void modeChanged( void );
-    /*! This function is called whenever some values of meta data
-        in MetaDataSection \a section have been changed.
-        Implement this function if the plugin needs to react to this.
-        The meta data mutex is already locked when this function is entered. */
-  virtual void notifyMetaData( const string &section );
-    /*! This function is called whenever some values of the stimulus data
-        have been changed.
-        Implement this function if the plugin needs to react to this.
-        The stimulus data mutex is already locked when this function is entered. */
+    /*! This function is called whenever some values of meta data have
+        been changed.  Implement this function if the plugin needs to
+        react to this.  The meta data mutex is already locked when
+        this function is entered. */
+  virtual void notifyMetaData( void );
+    /*! This function is called whenever some values of the stimulus
+        data have been changed.  Implement this function if the plugin
+        needs to react to this.  The stimulus data mutex is already
+        locked when this function is entered. */
   virtual void notifyStimulusData( void );
 
-    /*! Pass the %RELACSWidget \a rw to the RELACSPlugin. 
-        This is used for accessing Devices, 
-	AttInterfaces, Filters, Control, and RePros. */
+    /*! Pass the %RELACSWidget \a rw to the RELACSPlugin.  This is
+        used for accessing Devices, AttInterfaces, Filters, Control,
+        and RePros. */
   void setRELACSWidget( RELACSWidget *rw );
 
     /*! \return the name of the file to be displayed in the help dialog.
@@ -547,17 +547,15 @@ protected:
         \sa lockStimulusData(), stimulusData() */
   QMutex *stimulusDataMutex( void );
 
-    /*! Return the MetaData options from section \a section.
-        These options are stored in the info file of the session. */
-  Options &metaData( const string &section );
-    /*! Return the MetaData options from section \a section.
-        These options are stored in the info file of the session. */
-  const Options &metaData( const string &section ) const;
-    /*! Return a reference to the MetaData instance that manages all 
-        the meta data sections. */
+    /*! Return a reference to the MetaData instance that manages all
+        the meta data sections. MetaData is an Options, therefore, for
+        example, you can retireve values from the meta data using
+        something like \c metaData().number( "xyz" ); */
   MetaData &metaData( void );
     /*! Return a const reference to the MetaData instance that manages all 
-        the meta data sections. */
+        the meta data sections. MetaData is an Options, therefore, for
+        example, you can retireve values from the meta data using
+        something like \c metaData().number( "xyz" ); */
   const MetaData &metaData( void ) const;
     /*! Lock the meta data mutex. */
   void lockMetaData( void ) const;
