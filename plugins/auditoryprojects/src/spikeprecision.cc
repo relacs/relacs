@@ -231,10 +231,10 @@ int SpikePrecision::main( void )
     return Failed;
   }
   if ( Side > 1 )
-    Side = metaData( "Cell" ).index( "best side" );
+    Side = metaData().index( "Cell>best side" );
   string sidestr = Side > 0 ? "right" :  "left";
   if ( usebestfreq ) {
-    double cf = metaData( "Cell" ).number( sidestr + " frequency" );
+    double cf = metaData().number( "Cell>" + sidestr + " frequency" );
     if ( cf > 0.0 )
       CarrierFrequency = cf;
   }
@@ -270,8 +270,8 @@ int SpikePrecision::main( void )
       Intensity = intensity + intthresh;
     else if ( intensitybase == 2 )  // relative to target rate intensity
       Intensity = intensity
-	+ intthresh + metaData( "Cell" ).number( sidestr + " intensity" )
-	- metaData( "Cell" ).number( sidestr + " threshold" );
+	+ intthresh + metaData().number( "Cell>" + sidestr + " intensity" )
+	- metaData().number( "Cell>" + sidestr + " threshold" );
   }
   else if ( intensitybase == 3 )  // relative to previous intensity
     Intensity += 0.0;
@@ -396,7 +396,7 @@ int SpikePrecision::main( void )
 	  SP[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
-	  double threshold = metaData( "Cell" ).number( "best threshold" );
+	  double threshold = metaData().number( "Cell>best threshold" );
 	  double ymin = Intensity - PeakAmplitude;
 	  double ymax = Intensity + PeakAmplitude;
 	  if ( threshold > 0.0 ) {
@@ -600,14 +600,14 @@ void SpikePrecision::saveSpikes( const vector < EnvelopeFrequencyData > &results
 
   // write header and key:
   df << "#                 Intensity: " << Intensity << "dB SPL\n";
-  df << "# Intensity above threshold: " << Intensity - metaData( "Cell" ).number( "best threshold" ) << "dB\n";
+  df << "# Intensity above threshold: " << Intensity - metaData().number( "Cell>best threshold" ) << "dB\n";
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
   df << "# status:\n";
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  settings().save( df, "#   ", 16, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -640,14 +640,14 @@ void SpikePrecision::saveRates( const vector < EnvelopeFrequencyData > &results 
 
   // write header and key:
   df << "#                 Intensity: " << Intensity << "dB SPL\n";
-  df << "# Intensity above threshold: " << Intensity - metaData( "Cell" ).number( "best threshold" ) << "dB\n";
+  df << "# Intensity above threshold: " << Intensity - metaData().number( "Cell>best threshold" ) << "dB\n";
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
   df << "# status:\n";
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  settings().save( df, "#   ", 16, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%5.1f" );
@@ -716,7 +716,7 @@ void SpikePrecision::plot( const SampleDataD &amdb,
   P[0].plot( efd.Rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
   // stimulus:
-  double threshold = metaData( "Cell" ).number( "best threshold" );
+  double threshold = metaData().number( "Cell>best threshold" );
   double ymin = Intensity - PeakAmplitude;
   double ymax = Intensity + PeakAmplitude;
   if ( threshold > 0.0 ) {

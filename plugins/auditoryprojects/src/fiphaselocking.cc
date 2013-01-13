@@ -197,7 +197,7 @@ int FIPhaseLocking::main( void )
   
 
   if ( side > 1 )
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
 
   // plot trace:
   tracePlotSignal( duration );

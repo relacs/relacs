@@ -38,7 +38,7 @@ namespace relacs {
 SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 		      QWidget *parent )
   : QWidget( parent ),
-    Options(),
+    Options( "Status", "", 0 , 0 ),
     RW( rw )
 {
   Path = "";
@@ -469,7 +469,7 @@ void SaveFiles::save( const OutList &signal )
 void SaveFiles::saveStimulus( void )
 {
   //      cerr << "saveStimulus \n";
-  
+
   if ( ! StimulusData )
     return;
 
@@ -629,7 +629,7 @@ void SaveFiles::saveStimulus( void )
     }
     *SF << endl;
   }
-    
+
   // xml metadata file:
   if ( XF != 0 && saving() ) {
 
@@ -637,7 +637,7 @@ void SaveFiles::saveStimulus( void )
     if ( XSF != 0 ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	if ( newstimuli[j] )
-	  Stimuli[j].description().saveXML( *XSF, 0, 0, 0 );
+	  Stimuli[j].description().saveXML( *XSF, 0, Options::FirstOnly, 0 );
       }
     }
 
@@ -669,9 +669,9 @@ void SaveFiles::saveStimulus( void )
 	}
       }
     }
-    sopt.saveXML( *XF, 0, 0, 1 );
+    sopt.saveXML( *XF, 0, Options::FirstOnly, 1 );
   }
-    
+
   StimulusData = false;
   Stimuli.clear();
 }
@@ -706,29 +706,29 @@ void SaveFiles::saveRePro( void )
 
     ReProSettings.setFlags( 0 );
     ReProSettings.setValueTypeFlags( 1, -Parameter::Section );
-    
+
     // stimulus indices file:
     if ( SF != 0 && saving() ) {
       *SF << '\n';
-      ReProInfo.save( *SF, "# ", 0, false, true );
+      ReProInfo.save( *SF, "# ", 0, Options::FirstOnly );
       if ( ! ReProSettings.empty() ) {
-	ReProSettings.save( *SF, "# ", 1, false, true );
+	ReProSettings.save( *SF, "# ", 1, Options::FirstOnly );
       }
 
       // save StimulusKey:
       *SF << '\n';
       StimulusKey.saveKey( *SF );
     }
-    
+
     // xml metadata file:
     if ( XF != 0 && saving() ) {
       if ( DatasetOpen ) {
 	if ( ReProFiles.size() > 0 ) {
 	  string files = ReProFiles[0];
 	  for ( unsigned int k=1; k<ReProFiles.size(); k++ )
-	    files += '|' + ReProFiles[k];
+	    files += ", " + ReProFiles[k];
 	  Parameter p( "File", "", files );
-	  p.saveXML( *XF, 2, 2, false );
+	  p.saveXML( *XF, 2, 4 );
 	}
 	ReProFiles.clear();
 	*XF << "  </section>\n";
@@ -738,12 +738,12 @@ void SaveFiles::saveRePro( void )
       *XF << "  <section>\n";
       *XF << "    <type>dataset</type>\n";
       *XF << "    <name>dataset-" << dataset << "</name>\n";
-      ReProInfo.saveXML( *XF, 0, 0, 2 );
+      ReProInfo.saveXML( *XF, 0, Options::FirstOnly, 2 );
       if ( ! ReProSettings.empty() ) {
 	*XF << "    <section>\n";
 	*XF << "      <type>settings</type>\n";
 	*XF << "      <name>dataset-settings-" << dataset << "</name>\n";
-	ReProSettings.saveXML( *XF, 1, 0, 3 );
+	ReProSettings.saveXML( *XF, 1, Options::FirstOnly, 3 );
 	*XF << "    </section>\n";
       }
       StimuliReProCount[ StimuliRePro ] = 0;
@@ -1074,7 +1074,7 @@ void SaveFiles::createXMLFile( const InList &traces,
       *XF << "    <section>\n";
       *XF << "      <type>" << dts << "</type>\n";
       *XF << "      <name>hardware-" << dts << "-" << name << "</name>\n";
-      opts.saveXML( *XF, 0, 0, 3 ); 
+      opts.saveXML( *XF, 0, Options::FirstOnly, 3 );
       *XF << "    </section>\n";
     }
     *XF << "  </section>\n";
@@ -1242,9 +1242,9 @@ void SaveFiles::closeFiles( void )
       if ( ReProFiles.size() > 0 ) {
 	string files = ReProFiles[0];
 	for ( unsigned int k=1; k<ReProFiles.size(); k++ )
-	  files += '|' + ReProFiles[k];
+	  files += ", " + ReProFiles[k];
 	Parameter p( "File", "", files );
-	p.saveXML( *XF, 2, 2, false );
+	p.saveXML( *XF, 2, 4 );
       }
       ReProFiles.clear();
       *XF << "  </section>\n";

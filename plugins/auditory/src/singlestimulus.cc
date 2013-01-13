@@ -233,10 +233,10 @@ int SingleStimulus::main( void )
   StoreFile = "";
 
   if ( Side > 1 )
-    Side = metaData( "Cell" ).index( "best side" );
+    Side = metaData().index( "Cell>best side" );
   string sidestr = Side > 0 ? "right" :  "left";
   if ( usebestfreq ) {
-    double cf = metaData( "Cell" ).number( sidestr + " frequency" );
+    double cf = metaData().number( "Cell>" + sidestr + " frequency" );
     if ( cf > 0.0 )
       CarrierFreq += cf;
   }
@@ -274,8 +274,8 @@ int SingleStimulus::main( void )
       Intensity = intensity + intthresh;
     else if ( intensitybase == 2 )  // relative to target rate intensity
       Intensity = intensity
-	+ intthresh + metaData( "Cell" ).number( sidestr + " intensity" )
-	- metaData( "Cell" ).number( sidestr + " threshold" );
+	+ intthresh + metaData().number( "Cell>" + sidestr + " intensity" )
+	- metaData().number( "Cell>" + sidestr + " threshold" );
   }
   else if ( intensitybase == 3 )  // relative to previous intensity
     Intensity += 0.0;
@@ -397,7 +397,7 @@ int SingleStimulus::main( void )
 	  SP[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
-	  double threshold = metaData( "Cell" ).number( "best threshold" );
+	  double threshold = metaData().number( "Cell>best threshold" );
 	  double ymin = Intensity - PeakAmplitude;
 	  double ymax = Intensity + PeakAmplitude;
 	  if ( threshold > 0.0 ) {
@@ -685,7 +685,7 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
     return;
 
   // write header and key:
-  header.save( df, "# ", 16, false, true );
+  header.save( df, "# ", 16, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -707,7 +707,7 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate1,
     return;
 
   // write header and key:
-  header.save( df, "# ", 16, false, true );
+  header.save( df, "# ", 16, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -739,10 +739,8 @@ void SingleStimulus::save( const EventList &spikes, const SampleDataD &rate1,
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
   header.addText( "session time", sessionTimeStr() ); 
-  header.newSection( "status" );
-  header.append( stimulusData() );
-  header.newSection( "settings" );
-  header.append( settings() );
+  header.newSection( stimulusData() );
+  header.newSection( settings() );
 
   saveSpikes( header, spikes );
   saveRate( header, rate1, rate2 );
@@ -773,7 +771,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
   P[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
   // stimulus:
-  double threshold = metaData( "Cell" ).number( "best threshold" );
+  double threshold = metaData().number( "Cell>best threshold" );
   double ymin = Intensity - PeakAmplitude;
   double ymax = Intensity + PeakAmplitude;
   if ( WaveType == Envelope )

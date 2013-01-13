@@ -85,8 +85,7 @@ sessionTimeStr(), sessionRunning(), reproCount().
 The meta data sections of the current recording can be accessed by
 metaData().  Whenever some of the meta data are set to new values, the
 virtual function notifyMetaData() is called, that you can implement
-according to your needs.  With metaData( void ) you get access to a
-few more functions for managing meta data.
+according to your needs.
 
 All other RELACS plugins can be accessed:
 devices(), device(), attenuator(), digitalIO(), trigger(), filter(), filterOpts(),
@@ -225,11 +224,13 @@ public:
     /*! \return the plugin's options with the values at the time where
         the RELACSPlugin was started (a RePro whenever it was executed,
         all other plugins when an acquisition was started).
+	The settings name is set to "Settings", its type is empty.
 	\sa setSettings() */
   const Options &settings( void ) const;
     /*! \return the plugin's options with the values at the time where
         the RELACSPlugin was started (a RePro whenever it was executed,
         all other plugins when an acquisition was started).
+	The settings name is set to "Settings", its type is empty.
 	\sa setSettings() */
   Options &settings( void );
     /*! Copy the plugin's current Options to its settings(). */

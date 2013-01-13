@@ -162,6 +162,8 @@ FICurve::FICurve( void )
   Header.addInteger( "nfit" );
   Header.addNumber( "silent rate", "Hz", "%.1f" );
   Header.addText( "session time" );
+  Header.newSection( "Status" );
+  Header.newSection( "Settings" );
 }
 
 
@@ -221,10 +223,10 @@ int FICurve::main( void )
     Pause = PreWidth;
 
   if ( Side > 1 )
-    Side = metaData( "Cell" ).index( "best side" );
+    Side = metaData().index( "Cell>best side" );
   string sidestr = Side > 0 ? "right" :  "left";
   if ( UseBestFreq ) {
-    double cf = metaData( "Cell" ).number( sidestr + " frequency" );
+    double cf = metaData().number( "Cell>" + sidestr + " frequency" );
     if ( cf > 0.0 )
       CarrierFrequency += cf;
   }
@@ -261,7 +263,7 @@ int FICurve::main( void )
       ith = intthresh;
     double isat = ith;
     if ( UseSaturation )
-      isat = intthresh + metaData( "Cell" ).number( sidestr + " saturation" ) - metaData( "Cell" ).number( sidestr + " threshold" );
+      isat = intthresh + metaData().number( "Cell>" + sidestr + " saturation" ) - metaData().number( "Cell>" + sidestr + " threshold" );
     MinIntensity += ith;
     MaxIntensity += isat;
   }
@@ -460,7 +462,7 @@ void FICurve::saveSpikes( const string &file, const vector< FIData > &results )
     return;
 
   // write header and key:
-  Header.save( df, "# ", 0, false, true );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -491,7 +493,7 @@ void FICurve::saveRates( const string &file, const vector< FIData > &results )
     return;
 
   // write header and key:
-  Header.save( df, "# ", 0, false, true );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -534,7 +536,7 @@ void FICurve::saveFICurve( const string &file, const vector< FIData > &results )
     return;
 
   // write header and key:
-  Header.save( df, "# ", 0, false, true );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.newSection( "stimulus" );
@@ -726,7 +728,7 @@ void FICurve::analyzeFICurve( const vector< FIData > &results, double minrate )
 
       Threshold.Threshold += shift;
       // intensity at rate:
-      Threshold.RateIntensity = ( metaData( "Cell" ).number( "best rate" ) - b ) / s;
+      Threshold.RateIntensity = ( metaData().number( "Cell>best rate" ) - b ) / s;
       Threshold.RateIntensitySD = ( ub + fabs( Threshold.RateIntensity * us ) ) / as;
       Threshold.RateIntensity += shift;
       // saturation:
@@ -759,7 +761,7 @@ void FICurve::setHeader( void )
   Header.setNumber( "threshold", Threshold.Threshold, Threshold.ThresholdSD );
   Header.setNumber( "slope", Threshold.Slope, Threshold.SlopeSD );
   Header.setNumber( "intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
-  Header.setNumber( "rate", metaData( "Cell" ).number( "best rate" ) );
+  Header.setNumber( "rate", metaData().number( "Cell>best rate" ) );
   Header.setNumber( "saturation", Threshold.Saturation, Threshold.SaturationSD );
   Header.setNumber( "maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
   Header.setInteger( "nfit", Threshold.N );
@@ -772,8 +774,10 @@ void FICurve::updateSession( const vector< FIData > &results )
 {
   if ( SetBest ) {
     auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
-    Options &mo = metaData( "Cell" );
+    Options &mo = metaData().section( "Cell properties" );
     string ss = Side == 1 ? "right" : "left";
+
+    mo.unsetNotify();
 
     // f-I curve parameter:
     if ( Waveform == 1 ) {
@@ -813,8 +817,8 @@ void FICurve::updateSession( const vector< FIData > &results )
 
     // f-I curves:
     MapD om, sm, fm;
-    for ( unsigned int k=0; 
-	  k<results.size(); 
+    for ( unsigned int k=0;
+	  k<results.size();
 	  k=IntensityRange.next( ++k ) ) {
       om.push( IntensityRange.value( k ), results[k].OnRate );
       sm.push( IntensityRange.value( k ), results[k].SSRate );
@@ -827,6 +831,9 @@ void FICurve::updateSession( const vector< FIData > &results )
       as->addOnFICurve( om, Side, CarrierFrequency );
       as->addSSFICurve( sm, Side, CarrierFrequency );
     }
+
+    mo.unsetNotify();
+    mo.callNotifies();
   }
 }
 
@@ -836,12 +843,10 @@ void FICurve::save( const vector< FIData > &results )
   analyzeFICurve( results );
 
   setHeader();
-  Header.erase( "status" );
-  Header.newSection( "status" );
-  Header.append( stimulusData() );
-  Header.erase( "settings" );
-  Header.newSection( "settings" );
-  Header.append( settings(), 16 );
+  Header.erase( "Status" );
+  Header.newSection( stimulusData() );
+  Header.erase( "Settings" );
+  Header.newSection( settings(), 16 );
   updateSession( results );
 
   saveSpikes( "fispikes.dat", results );
@@ -971,7 +976,7 @@ void FICurve::silentActivity( void )
   }
 
   // update session:
-  metaData( "Cell" ).setNumber( "silent rate", SilentRate, SilentRateSD );
+  metaData().setNumber( "Cell>silent rate", SilentRate, SilentRateSD );
 }
 
 

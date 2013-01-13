@@ -247,13 +247,12 @@ void LoudSpeaker::saveCalibration( const string &file,
 
   // write header and key:
   Options header;
-  header.addNumber( "device", aoDevice() ); 
-  header.addNumber( "channel", aoChannel() ); 
+  header.addNumber( "device", aoDevice() );
+  header.addNumber( "channel", aoChannel() );
   if ( SamplingRate > 0.0 )
     header.addNumber( "sampling rate", 0.001*SamplingRate, "kHz" );
   header.addText( "date", date );
-  header.newSection( "settings" );
-  header.append( *this );
+  header.newSection( *this, "Settings" );
   header.save( df, "# " );
   df << '\n';
   TableKey key;

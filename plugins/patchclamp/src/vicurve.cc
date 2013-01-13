@@ -122,9 +122,9 @@ int VICurve::main( void )
     imax += dccurrent;
   }
   else if ( ibase == 2 ) {
-    double ithresh = metaData( "Cell" ).number( "ithreshon" );
+    double ithresh = metaData().number( "Cell>ithreshon" );
     if ( ithresh == 0.0 )
-      ithresh = metaData( "Cell" ).number( "ithreshss" );
+      ithresh = metaData().number( "Cell>ithreshss" );
     imin += ithresh;
     imax += ithresh;
   }
@@ -149,9 +149,9 @@ int VICurve::main( void )
     return Failed;
   }
   if ( userm ) {
-    double rm = metaData( "Cell" ).number( "rmss", "MOhm" );
+    double rm = metaData().number( "Cell>rmss", "MOhm" );
     if ( rm <= 0 )
-      rm = metaData( "Cell" ).number( "rm", "MOhm" );
+      rm = metaData().number( "Cell>rm", "MOhm" );
     if ( rm <= 0 )
       warning( "Membrane resistance was not measured yet!" );
     else {
@@ -371,15 +371,13 @@ void VICurve::save( void )
 	j=Range.next( ++j ) ) {
     double spikecount = min( Results[j].SpikeCount );
     if ( spikecount > 0.0 ) {
-      metaData( "Cell" ).setNumber( "ithreshon", Results[j].I );
+      metaData().setNumber( "Cell>ithreshon", Results[j].I );
       Header.addNumber( "Ithreshon", Results[j].I, IUnit );
       break;
     }
   }
-  Header.newSection( "status" );
-  Header.append( stimulusData() );
-  Header.newSection( "settings" );
-  Header.append( settings() );
+  Header.newSection( stimulusData() );
+  Header.newSection( settings() );
 
   saveData();
   saveTrace();

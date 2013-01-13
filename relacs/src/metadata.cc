@@ -70,8 +70,8 @@ void MetaDataGroup::readConfig( StrQueue &sq )
 void MetaDataGroup::saveConfig( ofstream &str )
 {
   MD->lock();
-  // XXX should only save sections names without types!
-  save( str, "  ", MD->configFlag(), true, false );
+  save( str, "  ", MD->configFlag(),
+	Options::NoType | Options::PrintRequest | Options::PrintStyle );
   MD->unlock();
 }
 
@@ -174,7 +174,7 @@ ostream &MetaData::saveXML( ostream &str, int level,
 {
   lock();
   setSectionName( this, names );
-  Options::saveXML( str, 0, Options::SwitchNameType, level );
+  Options::saveXML( str, 0, Options::SwitchNameType | Options::FirstOnly, level );
   unlock();
   return str;
 }

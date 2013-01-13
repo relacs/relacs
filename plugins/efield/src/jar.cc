@@ -536,8 +536,7 @@ void JAR::save( void )
     header.addNumber( "Trans. Amplitude", LocalFishAmplitude, LocalEODUnit, "%.2f" );
   header.addText( "RePro Time", reproTimeStr() );
   header.addText( "Session Time", sessionTimeStr() );
-  header.newSection( "settings" );
-  header.append( settings() );
+  header.newSection( settings() );
 
   saveJAR( header );
   saveMeanJAR( header );

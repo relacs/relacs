@@ -178,12 +178,13 @@ Options &Options::assign( const Options &o )
   if ( this == &o ) 
     return *this;
 
+  clear();
   Name = o.Name;
   Type = o.Type;
   Include = o.Include;
   Flag = o.Flag;
   Style = o.Style;
-  ParentSection = o.ParentSection;
+  ParentSection = 0;
   Opt = o.Opt;
   for ( iterator pp = begin(); pp != end(); ++pp )
     pp->setParentSection( this );
@@ -206,7 +207,7 @@ Options &Options::assign( const Options &o )
 Options &Options::append( const Options &o )
 {
   Warning = "";
-  if ( this == &o ) 
+  if ( this == &o )
     return *this;
 
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
@@ -229,7 +230,7 @@ Options &Options::append( const Options &o )
 Options &Options::add( const Options &o )
 {
   Warning = "";
-  if ( this == &o || AddOpts == &o ) 
+  if ( this == &o || AddOpts == &o )
     return *this;
 
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
@@ -272,6 +273,8 @@ Options &Options::insert( const Options &o, const string &atname )
       }
     }
   }
+  for ( iterator pp = begin(); pp != end(); ++pp )
+    pp->setParentSection( this );
   return *this;
 }
 
@@ -282,13 +285,13 @@ Options &Options::assign( const Options &o, int flags )
   if ( this == &o ) 
     return *this;
 
+  clear();
   Name = o.Name;
   Type = o.Type;
   Include = o.Include;
   Flag = o.Flag;
   Style = o.Style;
-  ParentSection = o.ParentSection;
-  Opt.clear();
+  ParentSection = 0;
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
     if ( pp->flags( flags ) ) {
       Opt.push_back( *pp );
@@ -319,13 +322,13 @@ Options &Options::copy( Options &o, int flags )
   if ( this == &o ) 
     return *this;
 
+  o.clear();
   o.Name = Name;
   o.Type = Type;
   o.Include = Include;
   o.Flag = Flag;
   o.Style = Style;
   o.ParentSection = ParentSection;
-  o.Opt.clear();
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( flags ) ) {
       o.Opt.push_back( *pp );
@@ -415,9 +418,13 @@ Options &Options::insert( const Options &o, int flags, const string &atname )
 
   if ( atname.empty() ) {
     // insert at beginning of list:
-    for ( deque< Parameter >::const_reverse_iterator op = o.Opt.rbegin(); op < o.Opt.rend(); ++op ) {
-      if ( (*op).flags( flags ) )
+    for ( deque< Parameter >::const_reverse_iterator op = o.Opt.rbegin();
+	  op < o.Opt.rend();
+	  ++op ) {
+      if ( op->flags( flags ) ) {
 	Opt.push_front( *op );
+	Opt.front().setParentSection( this );
+      }
     }
     return *this;
   }
@@ -427,16 +434,22 @@ Options &Options::insert( const Options &o, int flags, const string &atname )
     // search element:
     iterator pp = find( atname );
     if ( pp != end() ) {
-      for ( deque< Parameter >::const_reverse_iterator op = o.Opt.rbegin(); op < o.Opt.rend(); ++op ) {
-	if ( (*op).flags( flags ) )
+      for ( deque< Parameter >::const_reverse_iterator op = o.Opt.rbegin();
+	    op < o.Opt.rend();
+	    ++op ) {
+	if ( (*op).flags( flags ) ) {
 	  pp = Opt.insert( pp, *op );
+	  pp->setParentSection( this );
+	}
       }
     }
     else {
       // not found:
       for ( const_iterator op = o.begin(); op != o.end(); ++op ) {
-	if ( (*op).flags( flags ) )
+	if ( (*op).flags( flags ) ) {
 	  Opt.push_back( *op );
+	  Opt.back().setParentSection( this );
+	}
       }
     }
   }
@@ -1315,11 +1328,12 @@ Options::iterator Options::rfind( const string &pattern, int level )
 }
 
 
-Options::const_section_iterator Options::findSection( const string &pattern, int level ) const
+Options::const_section_iterator Options::findSection( const string &pattern,
+						      int level ) const
 {
   Warning = "";
 
-  if ( empty() )
+  if ( sectionsSize() <= 0 )
     return sectionsEnd();
 
   if ( pattern.empty() ) {
@@ -1384,11 +1398,12 @@ Options::const_section_iterator Options::findSection( const string &pattern, int
 }
 
 
-Options::section_iterator Options::findSection( const string &pattern, int level )
+Options::section_iterator Options::findSection( const string &pattern,
+						int level )
 {
   Warning = "";
 
-  if ( empty() )
+  if ( sectionsSize() <= 0 )
     return sectionsEnd();
 
   if ( pattern.empty() ) {
@@ -1453,11 +1468,12 @@ Options::section_iterator Options::findSection( const string &pattern, int level
 }
 
 
-Options::const_section_iterator Options::rfindSection( const string &pattern, int level ) const
+Options::const_section_iterator Options::rfindSection( const string &pattern,
+						       int level ) const
 {
   Warning = "";
 
-  if ( empty() )
+  if ( sectionsSize() <= 0 )
     return sectionsEnd();
 
   if ( pattern.empty() ) {
@@ -1525,11 +1541,12 @@ Options::const_section_iterator Options::rfindSection( const string &pattern, in
 }
 
 
-Options::section_iterator Options::rfindSection( const string &pattern, int level )
+Options::section_iterator Options::rfindSection( const string &pattern,
+						 int level )
 {
   Warning = "";
 
-  if ( empty() )
+  if ( sectionsSize() <= 0 )
     return sectionsEnd();
 
   if ( pattern.empty() ) {
@@ -1969,7 +1986,7 @@ Parameter &Options::insert( const Parameter &np, const string &atname )
 }
 
 
-Parameter &Options::addText( const string &name, const string &request,  
+Parameter &Options::addText( const string &name, const string &request,
 			     const string &dflt, int flags, int style )
 {
   // new parameter:
@@ -1986,7 +2003,7 @@ Parameter &Options::addText( const string &name, const string &request,
 }
 
 
-Parameter &Options::insertText( const string &name, const string &atname, 
+Parameter &Options::insertText( const string &name, const string &atname,
 				const string &request, const string &dflt,
 				int flags, int style )
 {
@@ -2143,7 +2160,7 @@ Parameter &Options::setDefaultText( const string &name, const string &dflt )
 
 
 Parameter &Options::addSelection( const string &name,
-				  const string &request,  
+				  const string &request,
 				  const string &selection,
 				  int flags, int style )
 {
@@ -2153,7 +2170,7 @@ Parameter &Options::addSelection( const string &name,
 
 
 Parameter &Options::insertSelection( const string &name,
-				     const string &atname, 
+				     const string &atname,
 				     const string &request,
 				     const string &selection,
 				     int flags, int style )
@@ -2221,14 +2238,14 @@ int Options::index( const string &name, const string &strg ) const
 }
 
 
-Parameter &Options::addNumber( const string &name, const string &request,  
+Parameter &Options::addNumber( const string &name, const string &request,
 			       double dflt, double minimum, double maximum,
 			       double step,
-			       const string &unit, const string &outputunit, 
+			       const string &unit, const string &outputunit,
 			       const string &format, int flags, int style )
 {
   // new parameter:
-  Parameter np( name, request, dflt, -1.0, minimum, maximum, 
+  Parameter np( name, request, dflt, -1.0, minimum, maximum,
 		step, unit, outputunit, format, flags, style, this );
   // add option:
   Parameter &pp = add( np );
@@ -2242,14 +2259,14 @@ Parameter &Options::addNumber( const string &name, const string &request,
 }
 
 
-Parameter &Options::insertNumber( const string &name, const string &atname, 
-				  const string &request, double dflt, 
+Parameter &Options::insertNumber( const string &name, const string &atname,
+				  const string &request, double dflt,
 				  double minimum, double maximum, double step,
-				  const string &unit, const string &outputunit, 
+				  const string &unit, const string &outputunit,
 				  const string &format, int flags, int style )
 {
   // new parameter:
-  Parameter np( name, request, dflt, -1.0, minimum, maximum, 
+  Parameter np( name, request, dflt, -1.0, minimum, maximum,
 		step, unit, outputunit, format, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atname );
@@ -3450,8 +3467,9 @@ Options &Options::insertSection( const string &name, const string &atpattern,
 }
 
 
-Options &Options::newSection( int level, const Options &opt, const string &name,
-			      const string &type, int flags, int style )
+Options &Options::newSection( int level, const Options &opt, int selectmask,
+			      const string &name, const string &type,
+			      int flags, int style )
 {
   Options *so = this;
   for ( int l=0; l<level; l++ ) {
@@ -3461,7 +3479,7 @@ Options &Options::newSection( int level, const Options &opt, const string &name,
     }
     so = so->Secs.back();
   }
-  Options *o = new Options( opt );
+  Options *o = new Options( opt, selectmask );
   if ( ! name.empty() )
     o->setName( name );
   if ( ! type.empty() )
@@ -3480,42 +3498,47 @@ Options &Options::newSection( int level, const Options &opt, const string &name,
 }
 
 
-Options &Options::newSection( const Options &opt, const string &name,
-			      const string &type, int flags, int style )
+Options &Options::newSection( const Options &opt, int selectmask,
+			      const string &name, const string &type,
+			      int flags, int style )
 {
-  return newSection( 0, opt, name, type, flags, style );
+  return newSection( 0, opt, selectmask, name, type, flags, style );
 }
 
 
-Options &Options::newSubSection( const Options &opt, const string &name,
-				 const string &type, int flags, int style )
+Options &Options::newSubSection( const Options &opt, int selectmask,
+				 const string &name, const string &type,
+				 int flags, int style )
 {
-  return newSection( 1, opt, name, type, flags, style );
+  return newSection( 1, opt, selectmask, name, type, flags, style );
 }
 
 
-Options &Options::newSubSubSection( const Options &opt, const string &name,
-				    const string &type, int flags, int style )
+Options &Options::newSubSubSection( const Options &opt, int selectmask,
+				    const string &name, const string &type,
+				    int flags, int style )
 {
-  return newSection( 2, opt, name, type, flags, style );
+  return newSection( 2, opt, selectmask, name, type, flags, style );
 }
 
 
-Options &Options::addSection( const Options &opt, const string &name,
-			      const string &type, int flags, int style )
+Options &Options::addSection( const Options &opt, int selectmask,
+			      const string &name, const string &type,
+			      int flags, int style )
 {
-  Options *o = &AddOpts->newSection( 0, opt, name, type, flags, style );
+  Options *o = &AddOpts->newSection( 0, opt, selectmask,
+				     name, type, flags, style );
   AddOpts->clearSections();
   AddOpts = o;
   return *o;
 }
 
 
-Options &Options::insertSection( const Options &opt, const string &name,
-				 const string &atpattern,
+Options &Options::insertSection( const Options &opt, int selectmask,
+				 const string &name, const string &atpattern,
 				 const string &type, int flag, int style )
 {
-  Options *o = new Options( opt );
+  Options *o = new Options( opt, selectmask );
   if ( ! name.empty() )
     o->setName( name );
   if ( ! type.empty() )
@@ -3702,7 +3725,6 @@ Parameter &Options::setDefault( const string &name )
   }
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
-    // error?
     cerr << "!warning in Options::setDefault( " << name << " ) -> " << Warning << '\n';
   }
 #endif
@@ -3761,143 +3783,6 @@ Options &Options::setToDefaults( int flags )
 	++sp ) {
     if ( (*sp)->flag( flags ) )
       (*sp)->setToDefaults( flags );
-  }
-  return *this;
-}
-
-
-Options &Options::takeFirst( const string &name )
-{
-  Warning = "";
-
-  if ( name.empty() ) {
-    for ( iterator ip = begin(); ip != end(); ++ip ) {
-      for ( iterator pp = ip+1; pp != end(); )
-	if ( *pp == *ip ) {
-	  // delete option:
-	  pp = Opt.erase( pp );
-	}
-	else
-	  ++pp;
-    }
-  }
-  else {
-    iterator pp = find( name );
-    if ( pp != end() ) {
-      for ( ++pp; pp != end(); )
-	if ( *pp == name ) {
-	  // delete option:
-	  pp = Opt.erase( pp );
-	}
-	else
-	  ++pp;
-    }
-  }
-  return *this;
-}
-
-
-Options &Options::takeLast( const string &name )
-{
-  Warning = "";
-
-  if ( size() < 2 )
-    return *this;
-
-  if ( name.empty() ) {
-    for ( iterator ip = end()-1; ip != begin(); --ip ) {
-      iterator pp = ip;
-      do {
-	--pp;
-	if ( *pp == *ip ) {
-	  // delete option:
-	  pp = Opt.erase( pp );
-	}
-      } while ( pp != begin() );
-    }
-  }
-  else {
-    iterator pp = rfind( name );
-    if ( pp != end() && pp != begin() ) {
-      do {
-	--pp;
-	if ( *pp == name ) {
-	  // delete option:
-	  pp = Opt.erase( pp );
-	}
-      } while ( pp != begin() );
-    }
-  }
-  return *this;
-}
-
-
-Options &Options::combineFirst( const string &name )
-{
-  Warning = "";
-
-  if ( name.empty() ) {
-    for ( iterator ip = begin(); ip != end(); ++ip ) {
-      for ( iterator pp = ip+1; pp != end(); )
-	if ( *pp == *ip ) {
-	  (*ip).addText( pp->text() );
-	  // delete option:
-	  pp = Opt.erase( pp );
-	}
-	else
-	  ++pp;
-    }
-  }
-  else {
-    iterator ip = find( name );
-    if ( ip != end() ) {
-      for ( iterator pp=ip+1; pp != end(); )
-	if ( *pp == name ) {
-	  (*ip).addText( pp->text() );
-	  // delete option:
-	  pp = Opt.erase( pp );
-	}
-	else
-	  ++pp;
-    }
-  }
-  return *this;
-}
-
-
-Options &Options::combineLast( const string &name )
-{
-  Warning = "";
-
-  if ( size() < 2 )
-    return *this;
-
-  if ( name.empty() ) {
-    for ( iterator ip = end()-1; ip != begin(); --ip ) {
-      iterator pp = ip;
-      do {
-	--pp;
-	if ( *pp == *ip ) {
-	  (*ip).addText( pp->text() );
-	  // delete option:
-	  pp = Opt.erase( pp );
-	}
-      } while ( pp != begin() );
-    }
-  }
-  else {
-    iterator ip = rfind( name );
-    if ( ip != end() && ip != begin() ) {
-      iterator pp = ip;
-      do {
-	--pp;
-	if ( *pp == name ) {
-	  (*ip).addText( pp->text() );
-	  // delete option:
-	  pp = Opt.erase( pp );
-	}
-      } while ( pp != begin() );
-    }
   }
   return *this;
 }
@@ -4119,10 +4004,8 @@ int Options::size( int flags ) const
   }
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
-	++sp ) {
-    if ( (*sp)->flag( flags ) )
-      n += (*sp)->size( flags );
-  }
+	++sp )
+    n += (*sp)->size( flags );
   return n;
 }
 
@@ -4163,7 +4046,7 @@ int Options::sectionsSize( int flags ) const
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( flags ) )
+    if ( (*sp)->size( flags ) > 0 )
       n++;
   }
   return n;
@@ -4460,46 +4343,54 @@ int Options::nameWidth( int selectmask, bool detailed ) const
 
 
 ostream &Options::save( ostream &str, const string &start,
-			int selectmask, bool detailed, bool firstonly,
-			int width ) const
+			int selectmask, int flags, int width ) const
 {
   Warning = "";
 
   string starts = start;
 
   // write options to file:
-  if ( flag( selectmask ) &&
-       ( ! name().empty() || ! type().empty() ) ) {
-    string ns = name().empty() ? type() : name();
-    if ( (style() & TabSection) > 0 )
-      ns = '-' + ns + '-';
-    if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
-      str << starts << '"' << ns << '"';
-    else
-      str << starts << ns;
-    if ( ! name().empty() && ! type().empty() && detailed ) {
-      if ( type().find_first_of( ",{}[]:=" ) != string::npos )
-	str << " (\"" << type() << "\")";
+  string ns = name();
+  string ts = type();
+  if ( ( flags & SwitchNameType ) > 0 ) {
+    ns = type();
+    ts = name();
+  }
+  bool printname = ( ( ! ns.empty() ) && ( ( flags & NoName ) == 0 ) );
+  bool printtype = ( ( ! ts.empty() ) && ( ( flags & NoType ) == 0 ) );
+  bool printsection = ( flag( selectmask ) && ( printname || printtype ) );
+  if ( printsection ) {
+    if ( printname ) {
+      if ( (flags & PrintStyle) && (style() & TabSection) > 0 )
+	ns = '-' + ns + '-';
+      if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
+	str << starts << '"' << ns << '"';
       else
-	str << " (" << type() << ")";
+	str << starts << ns;
+    }
+    if ( printtype ) {
+      if ( ts.find_first_of( ",{}[]:=" ) != string::npos )
+	str << " (\"" << ts << "\")";
+      else
+	str << " (" << ts << ")";
     }
     str << ":\n";
     starts += "    ";
-    width = nameWidth( selectmask, detailed );
+    width = nameWidth( selectmask, (flags & PrintRequest) );
   }
   if ( width < 0 )
-    width = nameWidth( selectmask, detailed );
+    width = nameWidth( selectmask, (flags & PrintRequest) );
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
       str << starts;
-      pp->save( str, width, detailed, firstonly ) << '\n';
+      pp->save( str, width, flags ) << '\n';
     }
   }
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
     if ( (*sp)->size( selectmask ) > 0 )
-      (*sp)->save( str, starts, selectmask, detailed, firstonly, width );
+      (*sp)->save( str, starts, selectmask, flags, width );
   }
 
   return str;
@@ -4529,7 +4420,7 @@ ostream &Options::save( ostream &str, const string &textformat,
     if ( pp->flags( selectmask ) ) {
       str << starts;
       pp->save( str, textformat, numberformat, boolformat,
-		  dateformat, timeformat );
+		dateformat, timeformat );
       str << '\n';
     }
   }
@@ -4538,42 +4429,55 @@ ostream &Options::save( ostream &str, const string &textformat,
 	++sp ) {
     if ( (*sp)->flag( selectmask ) )
       (*sp)->save( str, textformat, numberformat, boolformat,
-		dateformat, timeformat, sectionformat, selectmask, starts );
+		   dateformat, timeformat, sectionformat, selectmask, starts );
   }
 
   return str;
 }
 
 
-string Options::save( int selectmask, bool firstonly ) const
+string Options::save( int selectmask, int flags ) const
 {
   Warning = "";
 
   // write options to string:
   string str;
-  if ( flag( selectmask ) &&
-       ( ! name().empty() || ! type().empty() ) ) {
-    string ns = name().empty() ? type() : name();
-    if ( (style() & TabSection) > 0 )
-      ns = '-' + ns + '-';
-    if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
-      str += '"' + ns + '"';
-    else
-      str += ns;
-    if ( ! name().empty() && ! type().empty() ) {
-      if ( type().find_first_of( ",{}[]:=" ) != string::npos )
-	str += " (\"" + type() + "\")";
+
+  string ns = name();
+  string ts = type();
+  if ( ( flags & SwitchNameType ) > 0 ) {
+    ns = type();
+    ts = name();
+  }
+  bool printname = ( ( ! ns.empty() ) && ( ( flags & NoName ) == 0 ) );
+  bool printtype = ( ( ! ts.empty() ) && ( ( flags & NoType ) == 0 ) );
+  bool printsection = ( flag( selectmask ) && ( printname || printtype ) );
+  if ( printsection ) {
+    if ( printname ) {
+      if ( (flags & PrintStyle) && (style() & TabSection) > 0 )
+	ns = '-' + ns + '-';
+      if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
+	str += '"' + ns + '"';
       else
-	str += " (" + type() + ")";
+	str += ns;
+    }
+    if ( printtype ) {
+      if ( ts.find_first_of( ",{}[]:=" ) != string::npos )
+	str += " (\"" + ts + "\")";
+      else
+	str += " (" + ts + ")";
     }
     str += ": { ";
   }
+  else if ( flags & Embrace )
+    str += "{ ";
+
   int n=0;
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
       if ( n > 0 )
 	str += ", ";
-      str += pp->save( false, firstonly );
+      str += pp->save( flags );
       n++;
     }
   }
@@ -4583,11 +4487,11 @@ string Options::save( int selectmask, bool firstonly ) const
     if ( (*sp)->size( selectmask ) > 0 ) {
       if ( n > 0 )
 	str += ", ";
-      str += (*sp)->save( selectmask, firstonly );
+      str += (*sp)->save( selectmask, flags );
       ++n;
     }
   }
-  if ( ! name().empty() )
+  if ( printsection || (flags & Embrace) )
     str += " }";
 
   return str;
@@ -4630,7 +4534,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int flags, int level,
 
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
-      pp->saveXML( str, level, indent );
+      pp->saveXML( str, level, indent, flags );
     }
   }
 
@@ -4803,7 +4707,7 @@ Options &Options::read( const string &opttxt, int flag,
 istream &operator>> ( istream &str, Options &o )
 {
   Str s;
- 
+
   // get line:
   getline( str, s );
   o.read( s );
@@ -4812,7 +4716,7 @@ istream &operator>> ( istream &str, Options &o )
 }
 
 
-istream &Options::read( istream &str, int flag, const string &assignment, 
+istream &Options::read( istream &str, int flag, const string &assignment,
 			const string &comment, const string &stop, Str *line )
 {
   bool cn = CallNotify;
@@ -4831,7 +4735,7 @@ istream &Options::read( istream &str, int flag, const string &assignment,
     copt = &copt->read( *line, flag, assignment, "", &indent );
     Warning = error + Warning;
   }
- 
+
   // get line:
   while ( getline( str, s ) ) {
     // stop line reached:
@@ -5341,17 +5245,17 @@ void Options::unsetNotify( void )
 
 void Options::callNotifies( void )
 {
-  bool tn = ! Notified;
-  bool rn = ! rootSection()->Notified;
+  bool tn = Notified;
+  bool rn = rootSection()->Notified;
   Notified = true;
   rootSection()->Notified = true;
-  if ( CallNotify && tn )
+  if ( CallNotify && ! tn )
     notify();
   if ( rootSection() != this &&
-       CallNotify && rootSection()->CallNotify && rn )
+       CallNotify && rootSection()->CallNotify && ! rn )
     rootSection()->notify();
-  rootSection()->Notified = false;
-  Notified = false;
+  rootSection()->Notified = rn;
+  Notified = tn;
 }
 
 

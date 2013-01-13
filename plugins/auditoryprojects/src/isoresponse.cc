@@ -143,16 +143,6 @@ IsoResponse::IsoResponse( void )
   P.resize( 3, 3, true );
   P.unlock();
   setWidget( &P );
-
-  // header:
-  Header.addInteger( "run" );
-  Header.addInteger( "index" );
-  Header.addNumber( "alpha", "pi/2", "%.3f" );
-  Header.addNumber( "intcorr", "dB", "%.1f" );
-  Header.addNumber( "scaling" );
-  Header.addNumber( "best", "Hz", "%.1f" );
-  Header.addNumber( "freq1", "Hz", "%.1f" );
-  Header.addNumber( "freq2", "Hz", "%.1f" );
 }
 
 
@@ -342,7 +332,7 @@ int IsoResponse::findIsoFreq( void )
 
 int IsoResponse::main( void )
 {  
-  BestFreq = metaData( "Cell" ).number( "best frequency" );
+  BestFreq = metaData().number( "Cell>best frequency" );
   // get options:
   UseBestFrequency = index( "use_best_freq" );
   if( UseBestFrequency==0 ) {
@@ -398,7 +388,7 @@ int IsoResponse::main( void )
   FIso.resize( IrsNumber );
 
   if ( Side > 1 )
-    Side = metaData( "Cell" ).index( "best side" );
+    Side = metaData().index( "Cell>best side" );
 
   // Warnings
   if ( Switch_high && Switch_low && FRlow_fix>=FRhigh_fix ) {
@@ -535,22 +525,23 @@ int IsoResponse::main( void )
       }
 
     }
-
+    
     // save data of f-I curve:
-    Header.setInteger( "run", totalRuns() );
-    Header.setInteger( "index", AmplitudeRelation.loop() );
-    Header.setNumber( "alpha", AmplFraction );
-    Header.setNumber( "intcorr", IntCorrection );
-    Header.setNumber( "scaling", Scaling );
-    Header.setNumber( "best", BestFreq );
-    Header.setNumber( "freq1", Frequency1 );
-    Header.setNumber( "freq2", Frequency2 );
-    Header.newSection( "status" );
-    Header.append( stimulusData() );
-    Header.newSection( "settings" );
-    Header.append( settings() );
-    saveSpikes();
-    saveRates();
+    
+    // header:
+    Options header;
+    header.addInteger( "run", totalRuns() );
+    header.addInteger( "index", AmplitudeRelation.loop() );
+    header.addNumber( "alpha", AmplFraction, "pi/2", "%.3f" );
+    header.addNumber( "intcorr", IntCorrection, "dB", "%.1f" );
+    header.addNumber( "scaling", Scaling );
+    header.addNumber( "best", BestFreq, "Hz", "%.1f" );
+    header.addNumber( "freq1", Frequency1, "Hz", "%.1f" );
+    header.addNumber( "freq2", Frequency2, "Hz", "%.1f" );
+    header.newSection( stimulusData() );
+    header.newSection( settings() );
+    saveSpikes( header );
+    saveRates( header );
 
     IsoResults[AmplitudeRelation.pos()].FinalResults=Results;
     plotIsoSets();
@@ -569,7 +560,7 @@ int IsoResponse::main( void )
 }
 
 
-void IsoResponse::saveSpikes( void )
+void IsoResponse::saveSpikes( const Options &header )
 {
   // create file:
   ofstream df( addPath( "isoresponsespikes.dat" ).c_str(),
@@ -579,7 +570,7 @@ void IsoResponse::saveSpikes( void )
 
   // write header and key:
 
-  Header.save( df, "# ", 0, false, true );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -602,7 +593,7 @@ void IsoResponse::saveSpikes( void )
 }
 
 
-void IsoResponse::saveRates( void )
+void IsoResponse::saveRates( const Options &header )
 {
   // create file:
   ofstream df( addPath( "isoresponserates.dat" ).c_str(),
@@ -612,7 +603,7 @@ void IsoResponse::saveRates( void )
 
   // write header and key:
 
-  Header.save( df, "# ", 0, false, true );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "I"   , "dB SPL", "%5.1f" );

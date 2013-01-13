@@ -65,7 +65,7 @@ int main( int argc, char *argv[] )
   cout << '\n';
   opt.saveXML( cout );
   cout << '\n';
-  opt.save( cout, "", 0, true );
+  opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   cout << "Value of parameter 'comment': " << opt.text( "comment|repeats" ) << '\n';
@@ -106,29 +106,29 @@ int main( int argc, char *argv[] )
   string os = opt2.save();
   cout << os << '\n';
   opt.read( os, ":" );
-  opt.save( cout, "", 0, true );
+  opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   // set default:
   cout << "set default:\n";
   opt.setDefaults();
-  opt.save( cout, "", 0, true );
+  opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   // read in values from file:
   cout << "read in values from file:\n";
-  opt2.save( cout, "", 0, true );
+  opt2.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
   {
     ofstream ff( "tmp.dat" );
     ff << "# This is the current yaml style:\n";
-    opt2.save( ff, "", 0, false, true );
+    opt2.save( ff, "", 0, Options::FirstOnly );
   }
   {
     ifstream sf( "tmp.dat" );
     opt.read( sf, ":" );
   }
-  opt.save( cout, "", 0, true );
+  opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   cout << "read in values from file without indentation:\n";
@@ -137,7 +137,7 @@ int main( int argc, char *argv[] )
     ifstream sf( "read.dat" );
     opt.read( sf, ":" );
   }
-  opt.save( cout, "", 0, true );
+  opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   cout << "Value of parameter 'Nasty value': " << opt.text( "Nasty value" ) << '\n';
@@ -147,7 +147,7 @@ int main( int argc, char *argv[] )
   cout << "read in values from options:\n";
   opt.setDefaults();
   opt.read( opt2 );
-  opt.save( cout, "", 0, true );
+  opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   // load options from file:
@@ -158,7 +158,7 @@ int main( int argc, char *argv[] )
     string s;
     opt3.load( sf );
   }
-  opt3.save( cout, "", 0, true );
+  opt3.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   // load options from file without indentation:
@@ -169,14 +169,14 @@ int main( int argc, char *argv[] )
     string s;
     opt4.load( sf );
   }
-  opt4.save( cout, "", 0, true );
+  opt4.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   // load options from string:
   cout << "load options from string:\n";
   Options opt5;
   opt5.load( os );
-  opt5.save( cout, "", 0, true );
+  opt5.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   return 0;
@@ -184,7 +184,7 @@ int main( int argc, char *argv[] )
   cout << "enter some options (ident1=value1; ident2=value2; ...): ";
   getline( cin, s );
   opt.load( s );
-  opt.save( cout, "", -1, false );
+  opt.save( cout, "", -1 );
 
   while ( true ) {
     cout << '\n';

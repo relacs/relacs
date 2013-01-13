@@ -117,7 +117,7 @@ Chirps::Chirps( void )
   Header.addNumber( "lower trans. amplitude", "", "%.2f" );
   Header.addText( "repro time" );
   Header.addText( "session time" );
-  Header.newSection( "settings" );
+  Header.newSection( "Settings" );
 
   // tablekeys:
   ChirpKey.newSection( "chirp" );
@@ -667,9 +667,9 @@ int Chirps::main( void )
     return Failed;
   }
 
-  Header.erase( "settings" );
-  Header.newSection( "settings" );
-  Header.append( settings() );
+  Header.erase( "Settings" );
+  Header.newSection( settings() );
+  Header.erase( "FileChirp" );
 
   // trigger:
   //  setupTrigger( data, events );
@@ -724,8 +724,7 @@ int Chirps::main( void )
     times *= ChirpWidth/filechirpwidth;
     ChirpFreqs.assign( times, freqs );
     ChirpAmpls.assign( times, ampls );
-    Header.newSection( "FileChirp" );
-    Header.append( sf.metaDataOptions( 0 ) );
+    Header.newSection( sf.metaDataOptions( 0 ), "FileChirp" );
   }
 
   OutData signal;

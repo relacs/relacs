@@ -61,7 +61,7 @@ public:
   virtual void sessionStopped( bool saved );
 
     /*! Notify about changes in the meta data. */
-  virtual void notifyMetaData( const string &section );
+  virtual void notifyMetaData( void );
   virtual void notifyStimulusData( void );
 
     /*! Return the most recently measured threshold curve

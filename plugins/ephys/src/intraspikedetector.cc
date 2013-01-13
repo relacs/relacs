@@ -237,8 +237,7 @@ void IntraSpikeDetector::save( void )
   header.addText( "ident", ident() );
   header.addText( "detector", name() );
   header.addText( "session time", sessionTimeStr() );
-  header.newSection( "settings" );
-  header.append( *this );
+  header.newSection( *this, "Settings" );
   header.save( df, "# " );
   df << '\n';
   TableKey key;

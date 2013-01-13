@@ -85,7 +85,7 @@ FICurve::FICurve( void )
   Header.addNumber( "trans. amplitude", "", "%.2f" );
   Header.addText( "repro time" );
   Header.addText( "session time" );
-  Header.newSection( "settings" );
+  Header.newSection( "Settings" );
 
   // plot:
   setWidget( &P );
@@ -551,9 +551,8 @@ void FICurve::save( void )
   Header.setNumber( "trans. amplitude", FishAmplitude );
   Header.setText( "repro time", reproTimeStr() );
   Header.setText( "session time", sessionTimeStr() );
-  Header.erase( "settings" );
-  Header.newSection( "settings" );
-  Header.append( settings() );
+  Header.erase( "Settings" );
+  Header.newSection( settings() );
 
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {

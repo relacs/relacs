@@ -146,7 +146,7 @@ int BaselineActivity::main( void )
       P[2*n].setMinYTics( 1.0 );
       P[2*n].setYLabel( "" );
       P[2*n].setLMarg( 5.0 );
-      
+
       if ( SpikeTraces > 1 )
 	P[2*n+1].setOrigin( n*pdx, NerveTraces*pdy );
       else
@@ -234,7 +234,7 @@ int BaselineActivity::main( void )
 
   if ( autodetect > 0 && Repeats <= 0 ) {
     // setup Beat detector:
-    if ( LocalBeatPeakEvents[0] >= 0 && 
+    if ( LocalBeatPeakEvents[0] >= 0 &&
 	 ( totalRuns() <= 0 || autodetect > 1 ) ) {
       double beatthresh = BeatStep * trace( LocalEODTrace[0] ).maxValue();
       lockDetectorEvents( LocalBeatPeakEvents[0] );
@@ -263,12 +263,12 @@ int BaselineActivity::main( void )
     sigs.push( sig );
   }
   directWrite( sigs );
-    
+
   // trigger:
   // XXX  setupTrigger( traces(), events() );
 
   for ( int count=0;
-	( Repeats <= 0 || count < Repeats ) && softStop() == 0; 
+	( Repeats <= 0 || count < Repeats ) && softStop() == 0;
 	count++ ) {
 
     // message:
@@ -564,9 +564,8 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
       header.addNumber( "p-value"+ns, PValue[k], "", "%.3f" );
     }
   }
-  header.addText( "session time", sessionTimeStr() );  
-  header.newSection( "settings" );
-  header.append( settings() );
+  header.addText( "session time", sessionTimeStr() );
+  header.newSection( settings() );
 
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
@@ -584,12 +583,12 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
   if ( saveeodtrace )
     saveEODTrace( header, eodduration );
   if ( saveeodtimes )
-    saveEODTimes( header, eodtimes );  
+    saveEODTimes( header, eodtimes );
   lockAll();
 }
 
 
-void BaselineActivity::plot( const SampleDataD &eodcycle, 
+void BaselineActivity::plot( const SampleDataD &eodcycle,
 			     const vector< vector< ArrayD > > &eodspikes,
 			     const vector<SampleDataD> &isih,
 			     const vector<SampleDataD> &spikerate,
@@ -627,7 +626,7 @@ void BaselineActivity::plot( const SampleDataD &eodcycle,
 	P[2*n+1].plot( eodspikes[k][j], 1000.0, 1.0 - i*ss, Plot::Graph, 2, Plot::StrokeUp,
 		       ss, Plot::Graph, Plot::Red, Plot::Red );
       }
-      
+
       P[2*n+1].plot( spikerate[k], 1000.0, Plot::Yellow, 2, Plot::Solid );
 
       P[2*n+1].plot( eodcycle, 1000.0, Plot::Green, 2, Plot::Solid );
@@ -699,14 +698,14 @@ void BaselineActivity::analyzeSpikes( const EventData &se,
   controlOpts( "Session" ).setNumber( "pvalue"+ns, PValue[k] );
 
   if ( Repeats > 0 ) {
-    metaData( "Cell" ).setNumber( "Firing Rate"+ns, FRate[k] );
-    metaData( "Cell" ).setNumber( "P-Value"+ns, PValue[k] );
+    metaData().setNumber( "Cell>Firing Rate"+ns, FRate[k] );
+    metaData().setNumber( "Cell>P-Value"+ns, PValue[k] );
   }
 }
 
 
 void BaselineActivity::analyze( int autodetect,
-				SampleDataD &eodcycle, 
+				SampleDataD &eodcycle,
 				EventData &eodtimes,
 				vector< vector< ArrayD > > &eodspikes,
 				EventList &spikes,
@@ -723,16 +722,16 @@ void BaselineActivity::analyze( int autodetect,
   EODRate = localeod.frequency( FirstSignal, FirstSignal+SearchDuration );
   EODPeriod = 1.0/EODRate;
   if ( Repeats > 0 )
-    metaData( "Cell" ).setNumber( "EOD Frequency", EODRate );
+    metaData().setNumber( "Cell>EOD Frequency", EODRate );
   double eodampl = eodAmplitude( localeodtrace, LastSignal, FirstSignal+SearchDuration );
-  
+
   // EOD times
   if ( Repeats <= 0 ) {
     eodtimes.clear();
     LastEODInx = 0;
   }
   eodtimes.append( localeod, LastSignal, FirstSignal+SearchDuration, FirstSignal );
-  
+
   // EOD cycle:
   EOD2Unit = localeodtrace.unit();
   if ( !eodtimes.empty() )
@@ -768,10 +767,10 @@ void BaselineActivity::analyze( int autodetect,
 		  threshold, threshold, threshold, NerveAcceptEOD );
     // store amplitudes:
     for ( int k=0; k<peaktroughs[0].size(); k++ )
-      nerveamplp.push( peaktroughs[0][k] - FirstSignal, 
+      nerveamplp.push( peaktroughs[0][k] - FirstSignal,
 		       peaktroughs[0].eventSize( k ) );
     for ( int k=0; k<peaktroughs[1].size(); k++ )
-      nerveamplt.push( peaktroughs[1][k] - FirstSignal, 
+      nerveamplt.push( peaktroughs[1][k] - FirstSignal,
 		       peaktroughs[1].eventSize( k ) );
     // averaged amplitude:
     if ( peaktroughs[0].size() > 1 ) {
@@ -801,7 +800,7 @@ void BaselineActivity::analyze( int autodetect,
     else {
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
       beatthresh -= BeatStep * localeodtrace.maxValue();
-      if ( beatthresh >= 10.0*BeatStep * eodampl && 
+      if ( beatthresh >= 10.0*BeatStep * eodampl &&
 	   beatthresh >= detectorEventsOpts( LocalBeatPeakEvents[0] ).minimum( "minthresh" ) )
 	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
     }

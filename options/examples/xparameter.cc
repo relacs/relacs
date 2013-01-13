@@ -50,7 +50,7 @@ void print( const Parameter &p )
   cout << "p.valueType(): " << p.valueType() << '\n';
   cout << "p.text()     : " << p.text( "r='%r', i=%i, s=%s, n=%g, e=%G, u=%u, date=%Y-%m-%d, time=%H:%M:%S" ) << '\n';
   cout << "p            : ";
-  p.save( cout, 0, false );
+  p.save( cout, 0 );
   cout << '\n';
 }
 

@@ -127,7 +127,7 @@ int ThresholdLatencies::main( void )
   double postduration = number( "postduration" );
   int postamplitudesrc = index( "postamplitudesrc" );
   double postamplitude = number( "postamplitude" );
-  double membranetau = metaData( "Cell" ).number( "taum" );
+  double membranetau = metaData().number( "Cell>taum" );
   double pause = searchpause;
   if ( durationsel == 1 ) {
     if ( membranetau <= 0.0 ) {
@@ -141,9 +141,9 @@ int ThresholdLatencies::main( void )
   if ( startamplitudesrc == 1 ) // current dc
     amplitude = orgdcamplitude;
   else if ( startamplitudesrc == 2 ) {  // thresh
-    amplitude = metaData( "Cell" ).number( "ithreshss" );
+    amplitude = metaData().number( "Cell>ithreshss" );
     if ( amplitude == 0.0 )
-      amplitude = metaData( "Cell" ).number( "ithreshon" );
+      amplitude = metaData().number( "Cell>ithreshon" );
   }
   else if ( startamplitudesrc == 3 )  // prev
     amplitude = PrevMeanTestAmplitude;
@@ -152,9 +152,9 @@ int ThresholdLatencies::main( void )
   if ( preamplitudesrc == 1 ) // previous dc
     preamplitude = PrevMeanDCAmplitude;
   else if ( preamplitudesrc == 2 ) { // thresh
-    preamplitude = metaData( "Cell" ).number( "ithreshss" );
+    preamplitude = metaData().number( "Cell>ithreshss" );
     if ( preamplitude == 0.0 )
-      preamplitude = metaData( "Cell" ).number( "ithreshon" );
+      preamplitude = metaData().number( "Cell>ithreshon" );
   }
   else if ( preamplitudesrc >= 3 ) {  // VC + VC rest
     prevc = ( preduration > 0.0 );
@@ -164,17 +164,17 @@ int ThresholdLatencies::main( void )
   if ( pre2amplitudesrc == 1 ) // previous dc
     pre2amplitude = PrevMeanDCAmplitude;
   else if ( pre2amplitudesrc == 2 ) { // thresh
-    pre2amplitude = metaData( "Cell" ).number( "ithreshss" );
+    pre2amplitude = metaData().number( "Cell>ithreshss" );
     if ( pre2amplitude == 0.0 )
-      pre2amplitude = metaData( "Cell" ).number( "ithreshon" );
+      pre2amplitude = metaData().number( "Cell>ithreshon" );
   }
   // post-pulse amplitude:
   if ( postamplitudesrc == 1 ) // previous dc
     postamplitude = PrevMeanDCAmplitude;
   else if ( postamplitudesrc == 2 ) { // thresh
-    postamplitude = metaData( "Cell" ).number( "ithreshss" );
+    postamplitude = metaData().number( "Cell>ithreshss" );
     if ( postamplitude == 0.0 )
-      postamplitude = metaData( "Cell" ).number( "ithreshon" );
+      postamplitude = metaData().number( "Cell>ithreshon" );
   }
 
   if ( amplitudestep < finalamplitudestep ) {
@@ -319,7 +319,7 @@ int ThresholdLatencies::main( void )
   dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
 
   // measure resting potential:
-  double restvoltage = metaData( "Cell" ).number( "vrest" );
+  double restvoltage = metaData().number( "Cell>vrest" );
   if ( prevc && preamplitudesrc == 4 ) {  // VC rest
     // zero DC current:
     dcsignal.constWave( 0.0 );

@@ -101,6 +101,7 @@ SAM::SAM( void )
   Header.addNumber( "EOD rate", "Hz", "%.1f" );
   Header.addNumber( "trans. amplitude", "", "%.2f" );
   Header.addText( "session time" );
+  Header.newSection( "Settings" );
 
   // tablekeys:
   AmplKey.addNumber( "time", "ms", "%9.2f" );
@@ -255,9 +256,8 @@ int SAM::main( void )
     NerveMeanAmplM = SampleDataD( -0.5*Period, 0.5*Period, 0.0005 );
   }
 
-  Header.erase( "settings" );
-  Header.newSection( "settings" );
-  Header.append( settings() );
+  Header.erase( "Settings" );
+  Header.newSection( settings() );
 
   // plot trace:
   tracePlotSignal( Before+Duration+After, Before );

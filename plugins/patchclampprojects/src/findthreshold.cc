@@ -96,9 +96,9 @@ int FindThreshold::main( void )
   if ( amplitudesrc == 1 )
     amplitude = orgdcamplitude;
   else if ( amplitudesrc == 2 ) {
-    amplitude = metaData( "Cell" ).number( "ithreshss" );
+    amplitude = metaData().number( "Cell>ithreshss" );
     if ( amplitude == 0.0 )
-      amplitude = metaData( "Cell" ).number( "ithreshon" );
+      amplitude = metaData().number( "Cell>ithreshon" );
   }
 
   if ( amplitudestep < finalamplitudestep ) {
@@ -114,7 +114,7 @@ int FindThreshold::main( void )
     warning( "Invalid output current trace!" );
     return Failed;
   }
-  double membranetau = metaData( "Cell" ).number( "taum" );
+  double membranetau = metaData().number( "Cell>taum" );
   if ( durationsel == 1 ) {
     if ( membranetau <= 0.0 ) {
       warning( "Membrane time constant was not measured yet!" );
@@ -445,7 +445,7 @@ void FindThreshold::saveData( void )
 
   datakey.saveData( df );
 
-  metaData( "Cell" ).setNumber( "ithreshss", am );
+  metaData().setNumber( "Cell>ithreshss", am );
 }
 
 

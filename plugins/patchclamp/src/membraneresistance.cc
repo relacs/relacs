@@ -98,7 +98,7 @@ int MembraneResistance::main( void )
     return Failed;
   }
   if ( userm ) {
-    double rm = metaData( "Cell" ).number( "rm", 0.0, "MOhm" );
+    double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
     if ( rm > 1.0e-8 ) {
       double g = stimulusData().number( "g", 0.0, "ns" );
       double r = 1.0/(0.001*g + 1.0/rm);
@@ -386,10 +386,8 @@ void MembraneResistance::save( void )
   header.addNumber( "Tauoff", TauMOff, "ms", "%0.1f" );
   header.addNumber( "Vsag", fabs( VPeak-VSS ), VUnit, "%0.1f" );
   header.addNumber( "relVsag", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ), "%", "%0.1f" );
-  header.newSection( "status" );
-  header.append( stimulusData() );
-  header.newSection( "settings" );
-  header.append( settings() );
+  header.newSection( stimulusData() );
+  header.newSection( settings() );
 
   saveData();
   saveTrace( header );
@@ -409,12 +407,11 @@ void MembraneResistance::save( void )
   lockAll();
 
   if ( setdata ) {
-    Options &mo = metaData( "Cell" );
-    mo.setNumber( "vrest", 0.001*VRest, 0.001*VRestsd );
-    mo.setNumber( "rm", RMOn  );
-    mo.setNumber( "rmss", RMss  );
-    mo.setNumber( "cm", CMOn );
-    mo.setNumber( "taum", 0.001*TauMOn );
+    metaData().setNumber( "Cell>vrest", 0.001*VRest, 0.001*VRestsd );
+    metaData().setNumber( "Cell>rm", RMOn  );
+    metaData().setNumber( "Cell>rmss", RMss  );
+    metaData().setNumber( "Cell>cm", CMOn );
+    metaData().setNumber( "Cell>taum", 0.001*TauMOn );
   }
 }
 

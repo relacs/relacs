@@ -136,8 +136,7 @@ int Simple::main( void )
       Options header;
       header.addInteger( "index", totalRuns() );
       header.addText( "session time", sessionTimeStr() ); 
-      header.newSection( "settings" );
-      header.append( settings() );
+      header.newSection( settings() );
       header.save( df, "# " );
       df << '\n';
       key.addNumber( "t", "ms", "%7.2f" );

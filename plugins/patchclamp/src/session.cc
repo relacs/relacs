@@ -84,10 +84,11 @@ void Session::config( void )
 {
   // additional meta data properties:
   lockMetaData();
+  metaData().unsetNotify();
+
   if ( ! metaData().existSection( "Cell" ) )
-    metaData().newSection( "Cell", "Cell" );
-  Options &mo = metaData( "Cell" );
-  mo.unsetNotify();
+    metaData().newSection( "Cell" );
+  Options &mo = metaData().section( "Cell" );
   mo.newSection( "Cell properties", MetaDataSave+MetaDataDisplay );
 
   mo.addNumber( "vrest", "Resting potential V_rest", -1.0, -10.0, 10.0, 1.0, "V", "mV", "%.1f", MetaDataDisplay+MetaDataReset );
@@ -102,14 +103,14 @@ void Session::config( void )
   metaData().delSaveFlags( MetaData::dialogFlag() + MetaData::presetDialogFlag() );
   metaData().addSaveFlags( MetaData::configFlag() + MetaData::standardFlag() + MetaDataSave );
 
-  mo.setNotify();
+  metaData().setNotify();
   unlockMetaData();
 }
 
 
 void Session::initDevices( void )
 {
-  CW->assign( *metaData( "Cell" ).findSection( "Cell properties" ),
+  CW->assign( *metaData().section( "Cell" ).findSection( "Cell properties" ),
 	      MetaDataDisplay, MetaDataReadOnly, true, 
 	      0, metaDataMutex() );
 
@@ -147,8 +148,8 @@ void Session::sessionStarted( void )
 
   // reset values of metaData() options:
   lockMetaData();
-  metaData( "Cell" ).setDefaults( MetaDataReset );
-  metaData( "Cell" ).delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
+  metaData().section( "Cell" ).setDefaults( MetaDataReset );
+  metaData().section( "Cell" ).delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
   unlockMetaData();
 }
 
@@ -161,12 +162,10 @@ void Session::sessionStopped( bool saved )
 }
 
 
-void Session::notifyMetaData( const string &section )
+void Session::notifyMetaData( void )
 {
-  if ( section == "Cell" ) {
-    metaData( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
-    CW->updateValues( OptWidget::changedFlag() );
-  }
+  metaData().section( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
+  CW->updateValues( OptWidget::changedFlag() );
 }
 
 

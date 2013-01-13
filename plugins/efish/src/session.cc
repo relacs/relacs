@@ -183,13 +183,16 @@ void Session::initialize( void )
 void Session::config( void )
 {
   lockMetaData();
+  metaData().unsetNotify();
 
   // additional meta data properties:
   if ( ! metaData().existSection( "Cell" ) )
     metaData().newSection( "Cell", "Cell" );
 
-  Options &mo = metaData( "Cell" );
-  mo.unsetNotify();
+  Options &mo = metaData().section( "Cell" );
+  Options::section_iterator sp = mo.findSection( "Cell properties" );
+  if ( sp != mo.sectionsEnd() )
+    mo.erase( sp );
   mo.newSection( "Cell properties" );
   // following options are set by the BaselineActivity RePro
   mo.addNumber( "EOD Frequency", "EOD Frequency", 0.0, 0.0, 2000.0, 10.0, "Hz", "Hz", "%0.0f" );
@@ -200,8 +203,7 @@ void Session::config( void )
       mo.addNumber( "P-Value"+ns, "P-Value "+ns, 0.0, 0.0, 2.0, 0.1, "1", "1", "%0.2f" );
     }
   }
-  mo.setNotify();
-
+  metaData().setNotify();
   unlockMetaData();
 }
 
@@ -211,7 +213,8 @@ void Session::initDevices( void )
   TempDev = dynamic_cast< Temperature* >( device( "temp-1" ) );
   if ( TempDev != 0 ) {
     lockMetaData();
-    Options &mo = metaData( "Recording" );
+    Options &mo = metaData().section( "Recording" );
+    mo.clearSections();
     mo.unsetNotify();
     mo.erase( "temp-1" );
     mo.addNumber( "temp-1", "Temperature", 0.0, "°C", "%.1f", 0, 
@@ -430,7 +433,7 @@ void Session::main( void )
       if ( TempDev != 0 ) {
 	WaterTemp = TempDev->temperature();
 	WaterTemps.push( currentTime(), WaterTemp );
-	metaData( "Recording" ).setNumber( "temp-1", WaterTemp );
+	metaData().setNumber( "Recording>temp-1", WaterTemp );
 	stimulusData().setNumber( "temp-1", WaterTemp );
       }
 

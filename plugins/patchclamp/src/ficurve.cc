@@ -127,9 +127,9 @@ int FICurve::main( void )
     imax += dccurrent;
   }
   else if ( ibase == 2 ) {
-    double ithresh = metaData( "Cell" ).number( "ithreshon" );
+    double ithresh = metaData().number( "Cell>ithreshon" );
     if ( ithresh == 0.0 )
-      ithresh = metaData( "Cell" ).number( "ithreshss" );
+      ithresh = metaData().number( "Cell>ithreshss" );
     imin += ithresh;
     imax += ithresh;
   }
@@ -158,9 +158,9 @@ int FICurve::main( void )
     return Failed;
   }
   if ( userm ) {
-    double rm = metaData( "Cell" ).number( "rmss", "MOhm" );
+    double rm = metaData().number( "Cell>rmss", "MOhm" );
     if ( rm <= 0 )
-      rm = metaData( "Cell" ).number( "rm", "MOhm" );
+      rm = metaData().number( "Cell>rm", "MOhm" );
     if ( rm <= 0 )
       warning( "Membrane resistance was not measured yet!" );
     else {
@@ -420,10 +420,8 @@ void FICurve::save( void )
 {
   message( "<b>Saving ...</b>" );
   tracePlotContinuous();
-  Header.newSection( "status" );
-  Header.append( stimulusData() );
-  Header.newSection( "settings" );
-  Header.append( settings() );
+  Header.newSection( stimulusData() );
+  Header.newSection( settings() );
   unlockAll();
   saveData();
   saveRate();

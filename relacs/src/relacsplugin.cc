@@ -161,6 +161,7 @@ Options &RELACSPlugin::settings( void )
 void RELACSPlugin::setSettings( void )
 {
   Settings = *this;
+  Settings.setName( "Settings", "" );
 }
 
 

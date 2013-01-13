@@ -79,9 +79,9 @@ int FindRate::main( void )
   if ( startamplitudesrc == 1 ) // dc
     dcamplitude = orgdcamplitude;
   else if ( startamplitudesrc == 2 ) {  // thresh
-    dcamplitude = metaData( "Cell" ).number( "ithreshss" );
+    dcamplitude = metaData().number( "Cell>ithreshss" );
     if ( dcamplitude == 0.0 )
-      dcamplitude = metaData( "Cell" ).number( "ithreshon" );
+      dcamplitude = metaData().number( "Cell>ithreshon" );
   }
   else if ( startamplitudesrc == 3 )  // prev
     dcamplitude = PrevDCAmplitude;

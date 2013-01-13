@@ -177,10 +177,8 @@ int PhaseResettingCurve::main( void )
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
   header.addNumber( "firing rate", meanrate, "Hz", "%0.1f" );
   header.addNumber( "period", 1000.0*baseperiod, "ms", "%0.2f" );
-  header.newSection( "status" );
-  header.append( stimulusData() );
-  header.newSection( "settings" );
-  header.append( settings() );
+  header.newSection( stimulusData() );
+  header.newSection( settings() );
 
   for ( int n=1; (repeats == 0 || n<=repeats ) && softStop() <= 0; n++ ) {
 

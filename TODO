@@ -1,19 +1,12 @@
-MetaData:
-- check return value of RELACSPlugin::metaData() plus main docu, needs more than options!
-- saveConfig should only save type!
-- update all config files
-
 Options:
 - operator[] and section() should only return Parameter/Options from this Options
-- load() and read(): make sure that callNotifies is only called once and not recursively!
+  BUT: auditory::session::notifyMetaData!
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
-- Reset parentSection pointers and create new Options in assign, append, etc!
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
-- change save() functions to take flags that specify what to put out
 - Check Parameter::load() functions and constructors: do we still need load( s, assignment ) ?
 - Check and refine Parameter::load() and read() functions
 - Make all Options and optWidget style flags an enum
-- OptWidget: add smar hotkey selection for tabs
+- OptWidget: add smart hotkey selection for tabs
 - check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
 - OutData: rename Ident to name OR remove it?
 - are uniqueNames also used for relacsplugins.cfg ?
@@ -33,6 +26,7 @@ OptWidget:
   This is a problem for all filters and detectors!
 
 General:
+- comedi m4 file should check for routing function
 - relacshelp should know whether doxygen is there, or whether the files it is operating on, exist.
 - add a README file to share/relacs/configs/
 - make the config files more generic (lab address!)

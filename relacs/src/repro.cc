@@ -74,7 +74,7 @@ RePro::RePro( const string &name, const string &pluginset,
 
   // start timer:
   ReProTime.start();
-  
+
   PrintMessage = true;
 }
 

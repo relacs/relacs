@@ -99,7 +99,7 @@ Parameter &TableKey::addNumber( const string &name, const string &unit,
 }
 
 
-Parameter &TableKey::insertNumber( const string &name, const string &atname, 
+Parameter &TableKey::insertNumber( const string &name, const string &atname,
 				   const string &unit, const string &format,
 				   int flags )
 {
@@ -169,7 +169,7 @@ Parameter &TableKey::addText( const string &name, int width, const string &value
 }
 
 
-Parameter &TableKey::insertText( const string &name, const string &atname, 
+Parameter &TableKey::insertText( const string &name, const string &atname,
 				 const string &format, int flags )
 {
   Parameter &p = Opt.insertText( name, atname, name, "", flags );
@@ -219,7 +219,7 @@ Options &TableKey::newSubSubSection( const string &name, int flags )
 
 
 Options &TableKey::insertSection( const string &name, const string &atname,
-				int flags )
+				  int flags )
 {
   Options &o = Opt.insertSection( name, atname, "", flags );
   init();

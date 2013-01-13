@@ -102,8 +102,8 @@ namespace efish {
     Header.addText( "file" );
     Header.addNumber( "duration", "sec", "%.3f" );
     Header.addText( "session time" );
-    Header.newSection( "settings:" );
-     
+    Header.newSection( "Settings" );
+
     // tablekeys:
     AmplKey.addNumber( "time", "ms", "%9.2f", 3 );
     AmplKey.addNumber( "ampl", LocalEODUnit, "%5.3f", 3 );
@@ -218,9 +218,8 @@ namespace efish {
       NerveMeanAmplM = SampleDataD( -Before, Duration+After, 0.001 );
     }
 
-    Header.erase( "settings" );
-    Header.newSection( "settings" );
-    Header.append( settings() );
+    Header.erase( "Settings" );
+    Header.newSection( settings() );
 
     // trigger:
     //  setupTrigger( events );

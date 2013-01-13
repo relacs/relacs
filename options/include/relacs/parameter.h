@@ -258,7 +258,7 @@ public:
   Str name( void ) const;
     /*! Set identity string to \a name. */
   Parameter &setName( const string &name );
-  
+
     /*! Returns the request string. */
   Str request( void ) const;
     /*! Set request string to \a request. */
@@ -276,10 +276,10 @@ public:
 
     /*! The flags of the parameter. */
   int flags( void ) const;
-    /*! True if one of the bits specified by \a selectflag is set 
+    /*! True if one of the bits specified by \a selectflag is set
         in the parameter's flags, or \a selectflag equals zero,
 	or \a selectflag is negative and the parameter's value differs
-	from the default value and abs(\a selectflag) 
+	from the default value and abs(\a selectflag)
 	is set in the parameter's flags,
 	or \a selectflag equals NonDefault and the parameter's values differs
 	from the default value. */
@@ -888,20 +888,17 @@ public:
         \sa setActivation(), activationNumber(), activationComparison() */
   bool testActivation( double value, double tol=1e-8 );
 
-    /*! Return string in the format "name: value".
-        If \a detailed equals \c true the request string is written, too.
-        If \a firstonly is \c true and the ListAlways style bit is not set,
-        only the first value of the Parameter is written. */
-  string save( bool detailed=false, bool firstonly=false ) const;
+    /*! Return string in the format "name: value".  Use for \a flags
+        values from Options::SaveFlags to modify the way how the
+        Parameter is written to the string. */
+  string save( int flags=0 ) const;
     /*! Write parameter to stream \a str in the format "name: value".
-        If \a detailed equals \c true the request string is written, too.
-	If \a firstonly is \c true and the ListAlways styel bit is not set,
-        only the first value of the Parameter is written. */
-  ostream &save( ostream &str, int width=0, bool detailed=false,
-		 bool firstonly=false ) const;
+        Use for \a flags values from Options::SaveFlags to modify the
+        way how the Parameter is written to the string. */
+  ostream &save( ostream &str, int width=0, int flags=0 ) const;
     /*! Write parameter to stream \a str according to the formats
-        \a textformat, \a numberformat, \a boolformat, \a dateformat, 
-	and \a timeformat. 
+        \a textformat, \a numberformat, \a boolformat, \a dateformat,
+	and \a timeformat.
 	\note No newline is added to the stream. */
   ostream &save( ostream &str, const string &textformat,
 		 const string &numberformat, const string &boolformat,
@@ -912,13 +909,13 @@ public:
     /*! Write parameter in XML format to output stream.
         \param[in] str the output stream
         \param[in] level the level of indentation
-        \param[in] indent the indentation depth, 
+        \param[in] indent the indentation depth,
                    i.e. number of white space characters per level
-        \param[in] firstonly if \c true and the ListAlways style bit is not set,
-                   write out the first value only
+        \param[in] flags modify the way how the Parameter is written to the stream.
+	           See Options::SaveFlags for possible values
         \return the output stream \a str */
-  ostream &saveXML( ostream &str, int level=0, int indent=2,
-		    bool firstonly=true ) const;
+  ostream &saveXML( ostream &str, int level=0, int indent=4,
+		    int flags=0 ) const;
 
     /*! Load parameter from string \a s.
         The warning message is set if \a s is invalid.

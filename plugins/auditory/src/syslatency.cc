@@ -111,9 +111,9 @@ int SysLatency::main( void )
   bool adjustgain = boolean( "adjust" );
 
   if ( side > 1 )
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
   if ( usebestfreq ) {
-    double cf = metaData( "Cell" ).number( side > 0 ? "right frequency" :  "left frequency" );
+    double cf = metaData().number( "Cell>" + side > 0 ? "right frequency" :  "left frequency" );
     if ( cf > 0.0 )
       carrierfrequency += cf;
   }
@@ -310,7 +310,7 @@ void SysLatency::saveSpikes( Options &header, const EventList &spikes )
     return;
 
   // write header and key:
-  header.save( df, "# ", 0, false, true );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -331,7 +331,7 @@ void SysLatency::saveTrigger( Options &header, const ArrayD &trigger )
     return;
 
   // write header and key:
-  header.save( df, "# ", 0, false, true );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -356,7 +356,7 @@ void SysLatency::saveCoincidentSpikes( Options &header,
     return;
 
   // write header and key:
-  header.save( df, "# ", 0, false, true );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "lat", "ms", "%5.1f" );
@@ -382,7 +382,7 @@ void SysLatency::savePRC( Options &header, const MapD &prc )
     return;
 
   // write header and key:
-  header.save( df, "# ", 0, false, true );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "1", "%5.3f" );
@@ -407,10 +407,10 @@ void SysLatency::save( double carrierfrequency, int side, double pduration,
 		       int maxcoincidence, double coinclatency,
 		       double offset, double slope, double meanrate )
 {
-  if ( ! metaData( "Cell" ).exist( "system latency" ) )
-    metaData( "Cell" ).addNumber( "system latency", "System latency",
-				     -1.0, "s", "%.1f", 1+4 ).setUnit( "s", "ms" );
-  metaData( "Cell" ).setNumber( "system latency", coinclatency );
+  if ( ! metaData().exist( "Cell>system latency" ) )
+    metaData().section( "Cell" ).addNumber( "system latency", "System latency",
+					    -1.0, "s", "%.1f", 1+4 ).setUnit( "s", "ms" );
+  metaData().setNumber( "Cell>system latency", coinclatency );
 
   Options header;
   header.addInteger( "index1", totalRuns() );
@@ -427,10 +427,8 @@ void SysLatency::save( double carrierfrequency, int side, double pduration,
   header.addNumber( "prc slope", slope, "", "%.3f" );
   header.addNumber( "prc offset", offset, "", "%.3f" );
   header.addText( "session time", sessionTimeStr() );
-  header.newSection( "status:" );
-  header.append( stimulusData() );
-  header.newSection( "settings" );
-  header.append( settings(), 16 );
+  header.newSection( stimulusData() );
+  header.newSection( settings(), 16 );
 
   saveSpikes( header, spikes );
   saveTrigger( header, trigger );

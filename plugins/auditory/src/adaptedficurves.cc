@@ -83,16 +83,16 @@ int AdaptedFICurves::main( void )
   double sstime = number( "sstime" );
 
   if ( side > 1 )
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
   string sidestr = side > 0 ? "right" :  "left";
   if ( usebestfreq ) {
-    double cf = metaData( "Cell" ).number( sidestr + " frequency" );
+    double cf = metaData().number( "Cell>" + sidestr + " frequency" );
     if ( cf > 0.0 )
       carrierfrequency += cf;
   }
 
   // intensities:
-  double bt = metaData( "Cell" ).number( sidestr + " threshold" );
+  double bt = metaData().number( "Cell>" + sidestr + " threshold" );
   if ( adaptbase == 1 )
     adaptint += bt;
   if ( intbase == 1 ) {
@@ -296,10 +296,8 @@ int AdaptedFICurves::main( void )
 
   if ( state == Completed ) {
     unlockAll();
-    header.newSection( "status" );
-    header.append( stimulusData() );
-    header.newSection( "settings" );
-    header.append( settings() );
+    header.newSection( stimulusData() );
+    header.newSection( settings() );
     saveSpikes( header, spikes );
     saveRate( header, rate );
     saveData( header, times, onsetrates, onsetratessd, ssrates, ssratessd );
@@ -320,7 +318,7 @@ void AdaptedFICurves::saveSpikes( const Options &header, const EventList &spikes
     return;
 
   // write header and key:
-  header.save( df, "# ", false, true );
+  header.save( df, "# ", Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -341,7 +339,7 @@ void AdaptedFICurves::saveRate( const Options &header, const SampleDataD &rate )
     return;
 
   // write header and key:
-  header.save( df, "# ", false, true );
+  header.save( df, "# ", Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -369,7 +367,7 @@ void AdaptedFICurves::saveData( const Options &header, const MapD &times,
     return;
 
   // write header and key:
-  header.save( df, "# ", false, true );
+  header.save( df, "# ", Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "I", "dB SPL", "%5.1f" );

@@ -271,9 +271,9 @@ int SingleStimulus::main( void )
   else if ( offsetbase == 2 ) // current
     Offset = offset + stimulusData().number( outTraceName( outtrace ) );
   else if ( offsetbase == 3 ) { // threshold
-    Offset = offset + metaData( "Cell" ).number( "ithreshss" );
+    Offset = offset + metaData().number( "Cell>ithreshss" );
     if ( fabs( Offset - offset ) < 1.0e-8 )
-      Offset = offset + metaData( "Cell" ).number( "ithreshon" );
+      Offset = offset + metaData().number( "Cell>ithreshon" );
   }
   else if ( offsetbase == 4 )  // previous
     Offset += 0.0;
@@ -407,7 +407,7 @@ int SingleStimulus::main( void )
 	  SP[0].plot( ratepsth, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
-	  double threshold = metaData( "Cell" ).number( "best threshold" );
+	  double threshold = metaData().number( "Cell>best threshold" );
 	  double ymin = Offset - PeakAmplitude;
 	  double ymax = Offset + PeakAmplitude;
 	  if ( threshold > 0.0 ) {
@@ -629,10 +629,8 @@ int SingleStimulus::main( void )
   header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
-  header.newSection( "status" );
-  header.append( stimulusData() );
-  header.newSection( "settings" );
-  header.append( settings() );
+  header.newSection( stimulusData() );
+  header.newSection( settings() );
 
   // variables:
   EventList spikes;
@@ -850,7 +848,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
   }
 
   // stimulus:
-  double threshold = metaData( "Cell" ).number( "best threshold" );
+  double threshold = metaData().number( "Cell>best threshold" );
   double ymin = Offset - PeakAmplitude;
   double ymax = Offset + PeakAmplitude;
   if ( threshold > 0.0 ) {

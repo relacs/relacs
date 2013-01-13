@@ -2956,7 +2956,7 @@ bool Parameter::testActivation( double value, double tol )
 }
 
 
-string Parameter::save( bool detailed, bool firstonly ) const
+string Parameter::save( int flags ) const
 {
   string str;
   // name:
@@ -2964,7 +2964,7 @@ string Parameter::save( bool detailed, bool firstonly ) const
     str = '"' + name() + '"';
   else
     str = name();
-  if ( detailed && name() != request() ) {
+  if ( (flags & Options::PrintRequest) && name() != request() ) {
     if ( request().find_first_of( ",{}[]:=" ) != string::npos )
       str += " (\"" + request() + "\")";
     else
@@ -2974,7 +2974,8 @@ string Parameter::save( bool detailed, bool firstonly ) const
 
   // value:
   bool fulllist = ( size() > 1 &&
-		    ( (Style & ListAlways) || ! firstonly ) );
+		    ( (Style & ListAlways) ||
+		      (flags & Options::FirstOnly) == 0 ) );
   if ( isNumber() || isInteger() ) {
     if ( fulllist )
       str += "[ ";
@@ -3038,8 +3039,7 @@ string Parameter::save( bool detailed, bool firstonly ) const
 }
 
 
-ostream &Parameter::save( ostream &str, int width, bool detailed,
-			  bool firstonly ) const
+ostream &Parameter::save( ostream &str, int width, int flags ) const
 {
   // name:
   string is = "";
@@ -3047,7 +3047,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
     is = '"' + name() + '"';
   else
     is = name();
-  if ( detailed && name() != request() ) {
+  if ( (flags & Options::PrintRequest) && name() != request() ) {
     if ( request().find_first_of( ",{}[]:=" ) != string::npos )
       is += " (\"" + request() + "\")";
     else
@@ -3057,7 +3057,8 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
 
   // value:
   bool fulllist = ( size() > 1 &&
-		    ( (Style & ListAlways) || ! firstonly ) );
+		    ( (Style & ListAlways) ||
+		      (flags & Options::FirstOnly) == 0 ) );
   if ( isNumber() || isInteger() ) {
     if ( fulllist )
       str << "[ ";
@@ -3155,23 +3156,29 @@ ostream &operator<<( ostream &str, const Parameter &p )
 
 
 ostream &Parameter::saveXML( ostream &str, int level, int indent,
-			     bool firstonly ) const
+			     int flags ) const
 {
   string indstr1( level*indent, ' ' );
   string indstr2( indstr1 );
   indstr2 += string( indent, ' ' );
   int maxinx = size();
-  if ( (Style & ListAlways) == 0 && firstonly && maxinx >= 1 )
+  if ( (Style & ListAlways) == 0 &&
+       (flags & Options::FirstOnly) == 0 &&
+       maxinx >= 1 )
     maxinx = 1;
 
   str << indstr1 << "<property>\n";
   str << indstr2 << "<name>" << name() << "</name>\n";
+  if ( name() != request() && (flags & Options::PrintRequest) )
+    str << indstr2 << "<request>" << request() << "</request>\n";
   for ( int k=0; k<maxinx; k++ ) {
     if ( isNumber() || isInteger() ) {
       string vtype = "float";
       if ( isInteger() )
 	vtype = "integer";
-      str << indstr2 << "<value>" << Str( number( k ), format() ).strip() << "<type>" << vtype << "</type>";
+      str << indstr2 << "<value>" << Str( number( k ), format() ).strip();
+      if ( flags & Options::PrintType )
+	str << "<type>" << vtype << "</type>";
       if ( error( 0 ) >= 0.0 )
 	str << "<error>" << Str( error( k ), format() ).strip() << "</error>";
       if ( ! outUnit().empty() && outUnit() != "1" )
@@ -3179,16 +3186,24 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent,
       str << "</value>\n";
     }
     else if ( isBoolean() ) {
-      str << indstr2 << "<value>" << ( boolean( k ) ? "true" : "false" ) << "<type>boolean</type></value>\n";
+      str << indstr2 << "<value>" << ( boolean( k ) ? "true" : "false" );
+      if ( flags & Options::PrintType )
+	str << "<type>boolean</type></value>\n";
     }
     else if ( isDate() ) {
-      str << indstr2 << "<value>" << text( k, "%04Y-%02m-%02d" ) << "<type>date</type></value>\n";
+      str << indstr2 << "<value>" << text( k, "%04Y-%02m-%02d" );
+      if ( flags & Options::PrintType )
+	str << "<type>date</type></value>\n";
     }
     else if ( isTime() ) {
-      str << indstr2 << "<value>" << text( k, "%02H:%02M:%02S" ) << "<type>time</type></value>\n";
+      str << indstr2 << "<value>" << text( k, "%02H:%02M:%02S" );
+      if ( flags & Options::PrintType )
+	str << "<type>time</type></value>\n";
     }
     else if ( isText() ) {
-      str << indstr2 << "<value>" << text( k ).strip() << "<type>string</type></value>\n";
+      str << indstr2 << "<value>" << text( k ).strip();
+      if ( flags & Options::PrintType )
+	str << "<type>string</type></value>\n";
     }
   }
   str << indstr1 << "</property>\n";

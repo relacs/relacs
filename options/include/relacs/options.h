@@ -86,15 +86,30 @@ public:
     /*! Section is a new tab. */
   static const long TabSection = 0x04000000;
 
-    /*! Indicates for the save() functions not to save the name of a section. */
-  static const int NoName = 1;
-    /*! Indicates for the save() functions not to save the type of a section. */
-  static const int NoType = 2;
-    /*! Indicates for the save() functions not to save the include file of a section. */
-  static const int NoInclude = 4;
-    /*! Indicates for the save() functions to switch name and type, i.e.
-        the sections name is saved as its type, and its type is saved as its name. */
-  static const int SwitchNameType = 8;
+    /*! Flags for the customizing saving of Options. */
+  enum SaveFlags {
+      /*! Do not save the name of a section. */
+    NoName = 1,
+      /*! Do not save the type of a section. */
+    NoType = 2,
+      /*! Do not save the include file of a section. */
+    NoInclude = 4,
+      /*! Switch name and type, i.e.  the sections name is saved as its
+          type, and its type is saved as its name. */
+    SwitchNameType = 8,
+      /* Make sure that the saved string is embraced with curly braces
+         to get a valid YAML string. */
+    Embrace = 16,
+      /* Print the request string. */
+    PrintRequest = 32,
+      /* If the Parameter::ListAlways style bit is not set only print
+	 out the first value. */
+    FirstOnly = 64,
+      /* Specify the type of the value. */
+    PrintType = 128,
+      /* Indicate the style of a section or Parameter name. */
+    PrintStyle = 256
+  };
 
     /*! Constructs an empty options list. */
   Options( void );
@@ -139,10 +154,11 @@ public:
 	addSection(), newSection(), or insertSection().
         \sa append(), assign(), endSection(), clearSections() */
   Options &add( const Options &o );
-    /*! Insert Options \a o at the beginning of the options list
-        (\a atname == "") or at the position of the option with
-        name \a atname. If the option with name \a atname
-        does not exist, the options are appended to the end of the list. */
+    /*! Insert all name-value pairs of Options \a o at the beginning
+        of the options list (\a atname == "") or at the position of
+        the option with name \a atname. If the option with name \a
+        atname does not exist, the options are appended to the end of
+        the list. Sections of \a o are not considered for insertion. */
   Options &insert( const Options &o, const string &atname="" );
 
     /*! Copy Options \a o that have flags() & \a flags greater than zero
@@ -181,11 +197,12 @@ public:
         If \a flags equals NonDefault, all Parameter whose values differ
 	from their default value are copied. */
   Options &add( const Options &o, int flags );
-    /*! Insert Options \a o that have flags() & \a flags greater than zero
-        at the beginning of the options list
-        (\a atname == "") or at the position of the option with
-        name \a atname. If the option with name \a atname
-        does not exist, the options are appended to the end of the list. */
+    /*! Insert name-value pairs of \a o that have flags() & \a flags
+        greater than zero at the beginning of the options list (\a
+        atname == "") or at the position of the option with name \a
+        atname. If the option with name \a atname does not exist, the
+        options are appended to the end of the list.  Sections of \a o
+        are not considered for insertion. */
   Options &insert( const Options &o, int flags, const string &atname="" );
 
     /*! Set the value of an existing option 
@@ -1436,95 +1453,135 @@ public:
 			  int flag, int style=0 )
     { return insertSection( name, atpattern, "", flag, style ); };
 
-    /*! Add \a opt as a new subsection of level \a level.  If \a name
-        is not an empty string, the name of the new section is set to
-        \a name.  If \a type is not an empty string, the type of the
-        new section is set to \a type.  \a flag and \a style are added
-        to the new sections \a flag and \a style flag, respectively.
-        \a level = 0 is the upper level, i.e. a new section is added.
-        Higher \a levels add sections lower in the hierachy, i.e. \a
-        level = 1 adds a subsection, \a \a level = 2 a subsubsection,
-        etc.  Subsequent calls to addText(), addNumber(), etc. add new
-        Parameter to the added section.
-        \sa newSubSection(), newSubSubSection(), addSection(),
-	insertSection(), endSection(), clearSections() */
-  Options &newSection( int level, const Options &opt, const string &name="", const string &type="",
+    /*! Add \a opt as a new subsection of level \a level. Only
+        name-value pairs and sections as specified by \a selectmask
+        are taken from \a opt. If \a name is not an empty string, the
+        name of the new section is set to \a name.  If \a type is not
+        an empty string, the type of the new section is set to \a
+        type.  \a flag and \a style are added to the new sections \a
+        flag and \a style flag, respectively.  \a level = 0 is the
+        upper level, i.e. a new section is added.  Higher \a levels
+        add sections lower in the hierachy, i.e. \a level = 1 adds a
+        subsection, \a \a level = 2 a subsubsection, etc.  Subsequent
+        calls to addText(), addNumber(), etc. add new Parameter to the
+        added section.  \sa newSubSection(), newSubSubSection(),
+        addSection(), insertSection(), endSection(),
+        clearSections() */
+  Options &newSection( int level, const Options &opt, int selectmask,
+		       const string &name="", const string &type="",
 		       int flag=0, int style=0 );
-  Options &newSection( int level, const Options &opt, const string &name, int flag, int style=0 )
-    { return newSection( level, opt, name, "", flag, style ); };
+  Options &newSection( int level, const Options &opt,
+		       const string &name="", const string &type="",
+		       int flag=0, int style=0 )
+    { return newSection( level, opt, 0, name, type, flag, style ); };
+  Options &newSection( int level, const Options &opt, const string &name,
+		       int flag, int style=0 )
+    { return newSection( level, opt, 0, name, "", flag, style ); };
     /*! Add \a opt as a new section to the end of this Options section
-        list.  If \a name is not an empty string, the name of the new
-        section is set to \a name.  If \a type is not an empty string,
-        the type of the new section is set to \a type.  \a flag and \a
-        style are added to the new sections \a flag and \a style flag,
-        respectively.  Subsequent calls to addText(),
-        addNumber(), etc. add new Parameter to the added section.
-        \sa newSubSection(), newSubSubSection(), addSection(), insertSection(),
-	endSection(), clearSections() */
-  Options &newSection( const Options &opt, const string &name="", const string &type="",
-		       int flag=0, int style=0 );
-  Options &newSection( const Options &opt, const string &name, int flag, int style=0 )
-    { return newSection( opt, name, "", flag, style ); };
-    /*! Add \a opt as a new subsection to the last section.  If \a name
-        is not an empty string, the name of the new section is set to
-        \a name.  If \a type is not an empty string, the type of the
-        new section is set to \a type.  \a flag and \a style are added
-        to the new sections \a flag and \a style flag, respectively.
-	Subsequent calls to addText(), addNumber(), etc. add new
-        Parameter to the added section.
-	\note You can only add a subsection after having added a section!
-	\sa newSection(), newSubSubSection(), addSection(), insertSection(),
-        endSection(), clearSections() */
-  Options &newSubSection( const Options &opt, const string &name="", const string &type="",
-			  int flag=0, int style=0 );
-  Options &newSubSection( const Options &opt, const string &name, int flag, int style=0 )
-    { return newSubSection( opt, name, "", flag, style ); };
-    /*! Add \a opt as a new subsubsection to the last
-        subsection of the last section.  If \a name is not an empty
+        list. Only name-value pairs and sections as specified by \a
+        selectmask are taken from \a opt.  If \a name is not an empty
         string, the name of the new section is set to \a name.  If \a
         type is not an empty string, the type of the new section is
         set to \a type.  \a flag and \a style are added to the new
-        sections \a flag and \a style flag, respectively.
+        sections \a flag and \a style flag, respectively.  Subsequent
+        calls to addText(), addNumber(), etc. add new Parameter to the
+        added section.  \sa newSubSection(), newSubSubSection(),
+        addSection(), insertSection(), endSection(),
+        clearSections() */
+  Options &newSection( const Options &opt, int selectmask,
+		       const string &name="", const string &type="",
+		       int flag=0, int style=0 );
+  Options &newSection( const Options &opt,
+		       const string &name="", const string &type="",
+		       int flag=0, int style=0 )
+    { return newSection( opt, 0, name, type, flag, style ); };
+  Options &newSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return newSection( opt, 0, name, "", flag, style ); };
+    /*! Add \a opt as a new subsection to the last section. Only
+        name-value pairs and sections as specified by \a selectmask
+        are taken from \a opt.  If \a name is not an empty string, the
+        name of the new section is set to \a name.  If \a type is not
+        an empty string, the type of the new section is set to \a
+        type.  \a flag and \a style are added to the new sections \a
+        flag and \a style flag, respectively.  Subsequent calls to
+        addText(), addNumber(), etc. add new Parameter to the added
+        section.  \note You can only add a subsection after having
+        added a section!  \sa newSection(), newSubSubSection(),
+        addSection(), insertSection(), endSection(),
+        clearSections() */
+  Options &newSubSection( const Options &opt, int selectmask,
+			  const string &name="", const string &type="",
+			  int flag=0, int style=0 );
+  Options &newSubSection( const Options &opt,
+			  const string &name="", const string &type="",
+			  int flag=0, int style=0 )
+    { return newSubSection( opt, 0, name, type, flag, style ); };
+  Options &newSubSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return newSubSection( opt, 0, name, "", flag, style ); };
+    /*! Add \a opt as a new subsubsection to the last subsection of
+        the last section. Only name-value pairs and sections as
+        specified by \a selectmask are taken from \a opt.  If \a name
+        is not an empty string, the name of the new section is set to
+        \a name.  If \a type is not an empty string, the type of the
+        new section is set to \a type.  \a flag and \a style are added
+        to the new sections \a flag and \a style flag, respectively.
         Subsequent calls to addText(), addNumber(), etc. add new
-        Parameter to the added section.
-        \note You can only add a subsubsection after having added a subsection!
-        \sa newSection(), newSubSection(), addSection(), insertSection(),
-	endSection(), clearSections() */
-  Options &newSubSubSection( const Options &opt, const string &name="", const string &type="",
+        Parameter to the added section.  \note You can only add a
+        subsubsection after having added a subsection!  \sa
+        newSection(), newSubSection(), addSection(), insertSection(),
+        endSection(), clearSections() */
+  Options &newSubSubSection( const Options &opt, int selectmask,
+			     const string &name="", const string &type="",
 			     int flag=0, int style=0 );
+  Options &newSubSubSection( const Options &opt,
+			     const string &name="", const string &type="",
+			     int flag=0, int style=0 )
+    { return newSubSubSection( opt, 0, name, type, flag, style ); };
   Options &newSubSubSection( const Options &opt, const string &name, int flag, int style=0 )
-    { return newSubSubSection( opt, name, "", flag, style ); };
+    { return newSubSubSection( opt, 0, name, "", flag, style ); };
     /*! Add \a opt as a new section to the end of the currently active
-        Option's sections list.
-        The new section is named \a name, has the optional
-	type specifier \a type, some \a flag for selecting this section,
-	and is formatted according to the \a style flag.
-        Subsequent calls to addText(), addNumber(), etc. add new Parameter
-	to the added section.
+        Option's sections list. Only name-value pairs and sections as
+        specified by \a selectmask are taken from \a opt.  The new
+        section is named \a name, has the optional type specifier \a
+        type, some \a flag for selecting this section, and is
+        formatted according to the \a style flag.  Subsequent calls to
+        addText(), addNumber(), etc. add new Parameter to the added
+        section.
         \sa newSection(), newSubSection(), newSubSubSection(), insertSection(),
 	endSection(), clearSections() */
-  Options &addSection( const Options &opt, const string &name, const string &type="",
+  Options &addSection( const Options &opt, int selectmask,
+		       const string &name="", const string &type="",
 		       int flag=0, int style=0 );
+  Options &addSection( const Options &opt,
+		       const string &name="", const string &type="",
+		       int flag=0, int style=0 )
+    { return addSection( opt, 0, name, type, flag, style ); };
   Options &addSection( const Options &opt, const string &name, int flag, int style=0 )
-    { return addSection( opt, name, "", flag, style ); };
+    { return addSection( opt, 0, name, "", flag, style ); };
     /*! Insert \a opt as a new section of Options before the section
-        specified by \a atpattern.  If \a atpattern is not found or if
-        \atpattern is empty, the new section is added to the beginning
-        or the end of the currently active Options' section list,
-        respectively.  If \a name is not an empty string, the name of
-        the new section is set to \a name.  If \a type is not an empty
-        string, the type of the new section is set to \a type.  \a
-        flag and \a style are added to the new sections \a flag and \a
-        style flag, respectively.
-        Subsequent calls to addText(), addNumber(), etc. add new Parameter
-	to the inserted section.
-        \sa newSection(), newSubSection(), newSubSubSection(), addSection(),
-	endSection(), clearSections(), findSection()  */
-  Options &insertSection( const Options &opt, const string &name, const string &atpattern,
+        specified by \a atpattern. Only name-value pairs and sections
+        as specified by \a selectmask are taken from \a opt.  If \a
+        atpattern is not found or if \atpattern is empty, the new
+        section is added to the beginning or the end of the currently
+        active Options' section list, respectively.  If \a name is not
+        an empty string, the name of the new section is set to \a
+        name.  If \a type is not an empty string, the type of the new
+        section is set to \a type.  \a flag and \a style are added to
+        the new sections \a flag and \a style flag, respectively.
+        Subsequent calls to addText(), addNumber(), etc. add new
+        Parameter to the inserted section.  \sa newSection(),
+        newSubSection(), newSubSubSection(), addSection(),
+        endSection(), clearSections(), findSection()  */
+  Options &insertSection( const Options &opt, int selectmask,
+			  const string &name, const string &atpattern,
 			  const string &type="", int flag=0, int style=0 );
+  Options &insertSection( const Options &opt,
+			  const string &name, const string &atpattern,
+			  const string &type="", int flag=0, int style=0 )
+    { return insertSection( opt, 0, name, atpattern, type, flag, style ); };
   Options &insertSection( const Options &opt, const string &name, const string &atpattern,
 			  int flag, int style=0 )
-    { return insertSection( opt, name, atpattern, "", flag, style ); };
+    { return insertSection( opt, 0, name, atpattern, "", flag, style ); };
 
     /*! Add \a opt as a section. Only a pointer of \a opt is stored,
 	the content of \a opt is not copied.
@@ -1608,29 +1665,6 @@ public:
     /*! Set defaults of all options to their values. */
   Options &setToDefaults( int flags=0 );
 
-    /*! Remove all except of the first Parameter of Parameters with
-        identical name. 
-        If an name \a name is specified,
-        only options with this name are processed. */
-  Options &takeFirst( const string &name="" );
-    /*! Remove all except of the last Parameter of Parameters with
-        identical name. 
-        If an name \a name is specified,
-        only options with this name are processed. */
-  Options &takeLast( const string &name="" );
-    /*! Combine values of Text-Parameters with identical name
-        by adding the text values to the first one and
-	deleting the following.
-        If an name \a name is specified,
-        only options with this name are processed. */
-  Options &combineFirst( const string &name="" );
-    /*! Combine values of Text-Parameters with identical name
-        by adding the text values to the last one and
-	deleting the following.
-        If an name \a name is specified,
-        only options with this name are processed. */
-  Options &combineLast( const string &name="" );
-
     /*! Remove the Parameter where \a p points to.
         \a p can also be contained in a subsection of Options. */
   Options &erase( iterator p );
@@ -1664,7 +1698,8 @@ public:
 	from the default value and have abs(\a selectflag) set in their flags
 	are counted.
         If \a selectflag equals NonDefault, all options whose values differ
-	from their default value are counted. */
+	from their default value are counted.
+        The flag() of the sections is not used by this function. */
   int size( int selectflag ) const;
     /*! True if there are no name-value pairs in this Options and all
         its sections. */
@@ -1677,11 +1712,11 @@ public:
         that have \a flag set in their flags() without the ones in its sections.
 	\sa sectionsSize(), size() */
   int parameterSize( int flags ) const;
-    /*! \return the number of sections of this Options
-        that have \a flag set in their flags() without subsections.
+    /*! \return the number of sections of this Options without subsections.
 	\sa parameterSize(), size() */
   int sectionsSize( void ) const;
-    /*! \return the number of sections of this Options without subsections.
+    /*! \return the number of sections of this Options
+        that contain at least on name-value pair with \a flag set in its flags().
 	\sa parameterSize(), size() */
   int sectionsSize( int flags ) const;
     /*! True if a name-value pair with name \a name exist somewhere in
@@ -1762,16 +1797,16 @@ public:
 
     /*! Write names and their values to a string
         separated by ", ".
-        If you place the resulting string withing curly braces,
-	you get a valid YAML string (i.e. "{ " + save() + " }" ).
 	Saves only options that have \a selectmask set in their flags().
         If \a selectmask equals zero, all options are saved.
 	If \a selectmask is negative, only options whose values differ
 	from the default value and have abs(\a selectmask) set in their flags
 	are saved.
         If \a selectmask equals NonDefault, all options whose values differ
-	from their default value are saved. */
-  string save( int selectmask=0, bool firstonly=false ) const;
+	from their default value are saved.
+        Use for \a flags values from SaveFlags to modify the way
+	how the Options are written to the string. */
+  string save( int selectmask=0, int flags=0 ) const;
     /*! Write names and their values to stream \a str
         as a valid YAML document.
         Start each line with \a start.
@@ -1781,10 +1816,12 @@ public:
 	from the default value and have abs(\a selectmask) set in their flags
 	are saved.
         If \a selectmask equals NonDefault, all options whose values differ
-	from their default value are saved. */
+	from their default value are saved.
+        Use for \a flags values from SaveFlags to modify the way
+	how the Options are written to the string. */
   ostream &save( ostream &str, const string &start="",
-		 int selectmask=0, bool detailed=false,
-		 bool firstonly=false, int width=-1 ) const;
+		 int selectmask=0, int flags=0,
+		 int width=-1 ) const;
     /*! Write each name-value pair as a separate line to stream \a str
         and use \a textformat, \a numberformat, \a boolformat, \a
         dateformat, \a timeformat, and \a sectionformat for formatting

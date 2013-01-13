@@ -106,6 +106,8 @@ FIField::FIField( void )
   FIFieldHeader.addNumber( "best maximum rate", "Hz", "%.1f" );
   FIFieldHeader.addInteger( "best nfit" );
   FIFieldHeader.addText( "session time" ).setFlags( 1 );
+  FIFieldHeader.newSection( "Status" );
+  FIFieldHeader.newSection( "Settings" );
 }
 
 
@@ -168,7 +170,7 @@ int FIField::main( void )
   if ( PreWidth > Pause )
     Pause = PreWidth;
   if ( Side > 1 )
-    Side = metaData( "Cell" ).index( "best side" );
+    Side = metaData().index( "Cell>best side" );
   if ( SSWidth > Duration )
     SSWidth = Duration;
 
@@ -296,7 +298,7 @@ void FIField::saveHeader( const string &file )
     return;
 
   df << '\n';
-  FIFieldHeader.save( df, "# ", 1+32, false, true );
+  FIFieldHeader.save( df, "# ", 1+32, Options::FirstOnly );
   df << '\n';
 }
 
@@ -313,7 +315,7 @@ void FIField::saveThreshold( const string &file )
   FIFieldHeader.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", 32, false, true );
+  settings().save( df, "#   ", 32, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.newSection( "threshold" );
@@ -334,7 +336,7 @@ void FIField::saveThreshold( const string &file )
   key.saveKey( df, true, true );
 
   // write data:
-  double rate = metaData( "Cell" ).number( "best rate" );
+  double rate = metaData().number( "Cell>best rate" );
   for ( unsigned int k=0; k<FieldData.size(); k++ ) {
     if ( FieldData[k].Measured ) {
       key.save( df, 0.001*FieldData[k].Frequency, 0 );
@@ -362,19 +364,22 @@ void FIField::save( void )
     FieldData[FrequencyRange.pos()].Measured = false;
   }
 
-  Options &mo = metaData( "Cell" );
+  Options &mo = metaData().section( "Cell properties" );
 
   if ( SetBest && BestIndex >= 0 ) {
     auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
     string ss = Side == 1 ? "right" : "left";
 
     // f-I curve parameter:
+    mo.unsetNotify();
     mo.setNumber( ss + " frequency", FieldData[BestIndex].Frequency );
     mo.setNumber( ss + " threshold", FieldData[BestIndex].Threshold, FieldData[BestIndex].ThresholdSD );
     mo.setNumber( ss + " slope", FieldData[BestIndex].Slope, FieldData[BestIndex].SlopeSD );
     mo.setNumber( ss + " intensity", FieldData[BestIndex].RateIntensity, FieldData[BestIndex].RateIntensitySD );
     mo.setNumber( ss + " saturation", FieldData[BestIndex].Saturation, FieldData[BestIndex].SaturationSD );
     mo.setNumber( ss + " maxrate", FieldData[BestIndex].MaxRate, FieldData[BestIndex].MaxRateSD );
+    mo.setNotify();
+    mo.callNotifies();
 
     // best side:
     as->updateBestSide();    
@@ -492,7 +497,7 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
     if ( MaxRate < Threshold.MaxRate )
       MaxRate = Threshold.MaxRate;
   }
-  
+
   DoneState ds = FICurve::next( results, false );
 
   if ( ds == Failed || ds == Completed ) {
@@ -503,12 +508,10 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
 	FIFieldHeader.setInteger( "index2", totalRuns() );
 	FIFieldHeader.setInteger( "side", Side );
 	FIFieldHeader.setText( "session time", sessionTimeStr() );
-	FIFieldHeader.erase( "status" );
-	FIFieldHeader.newSection( "status" );
-	FIFieldHeader.append( stimulusData() );
-	FIFieldHeader.erase( "settings" );
-	FIFieldHeader.newSection( "settings" );
-	FIFieldHeader.append( settings(), 32 );
+	FIFieldHeader.erase( "Status" );
+	FIFieldHeader.newSection( stimulusData() );
+	FIFieldHeader.erase( "Settings" );
+	FIFieldHeader.newSection( settings(), 32 );
 	saveHeader( "fifieldspikes.dat" );
 	saveHeader( "fifieldrates.dat" );
 	saveHeader( "fifieldficurves.dat" );

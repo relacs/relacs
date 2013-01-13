@@ -106,10 +106,11 @@ void Session::config( void )
 {
   // additional meta data properties:
   lockMetaData();
+  metaData().unsetNotify();
+
   if ( ! metaData().existSection( "Cell" ) )
-    metaData().newSection( "Cell", "Cell" );
-  Options &mo = metaData( "Cell" );
-  mo.unsetNotify();
+    metaData().newSection( "Cell" );
+  Options &mo = metaData().section( "Cell" );
   Options::iterator p = mo.find( "best rate" );
   double rate =  100.0;
   if ( p != mo.end() ) {
@@ -180,8 +181,7 @@ void Session::config( void )
     mo.setNumber( "best saturation", 58.0 );
     mo.setNumber( "best maxrate", 325.0 );
   }
-  mo.setNotify();
-
+  metaData().setNotify();
   unlockMetaData();
 }
 
@@ -193,7 +193,7 @@ void Session::initDevices( void )
   //  Temp = dynamic_cast< Temperature* >( device( Temperature::Type, 0 ) );
   if ( Temp != 0 ) {
     lockMetaData();
-    Options &mo = metaData( "Recording" );
+    Options &mo = metaData().section( "Recording" );
     mo.unsetNotify();
     mo.erase( "temp-1" );
     mo.addNumber( "temp-1", "Temperature", 0.0, "°C", "%.1f", MetaDataReadOnly+MetaDataDisplay, 
@@ -205,7 +205,7 @@ void Session::initDevices( void )
     unlockStimulusData();
   }
 
-  ASW->assign( *metaData( "Cell" ).findSection( "Cell properties" ),
+  ASW->assign( *metaData().findSection( "Cell>Cell properties" ),
 	       MetaDataDisplay, MetaDataReadOnly, true, 
 	       OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	       metaDataMutex() );
@@ -223,15 +223,13 @@ void Session::sessionStarted( void )
   SessionButton->setText( "Cell lost" );
 
   double bf[2];
-  bf[0] = metaData( "Cell" ).number( "left frequency" );
-  bf[1] = metaData( "Cell" ).number( "right frequency" );
+  bf[0] = metaData().number( "Cell>left frequency" );
+  bf[1] = metaData().number( "Cell>right frequency" );
 
   // reset values of metaData() options:
   lockMetaData();
-  metaData( "Cell" ).setDefaults( MetaDataReset );
-  metaData( "Cell" ).delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
-  metaData( "Recording" ).setDefaults( MetaDataReset );
-  metaData( "Recording" ).delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
+  metaData().setDefaults( MetaDataReset );
+  metaData().delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
   unlockMetaData();
 
   lock();
@@ -275,46 +273,44 @@ void Session::main( void )
 
   while ( ! interrupt() ) {
     double temp = Temp->temperature();
-    metaData( "Recording" ).setNumber( "temp-1", temp );
+    metaData().setNumber( "Recording>temp-1", temp );
     stimulusData().setNumber( "temp-1", temp );
     sleep( 1.0 );
   }
 }
 
 
-void Session::notifyMetaData( const string &section )
+void Session::notifyMetaData( void )
 {
-  if ( section == "Cell" ) {
-    Options &mo = metaData( "Cell" );
-    if ( ! mo.existSection( "Cell properties" ) )
-      return;
+  if ( ! metaData().existSection( "Cell properties" ) )
+    return;
+  Options &mo = metaData().section( "Cell properties" );
 
-    string ss = mo.text( "best side" );
+  string ss = mo.text( "best side" );
 
-    if ( mo.changed( "best frequency" ) )
-      mo.setNumber( ss + " frequency", mo.number( "best frequency" ), mo.error( "best frequency" ) );
-    if ( mo.changed( "best threshold" ) )
-      mo.setNumber( ss + " threshold", mo.number( "best threshold" ), mo.error( "best threshold" ) );
-    if ( mo.changed( "best slope" ) )
-      mo.setNumber( ss + " slope", mo.number( "best slope" ), mo.error( "best slope" )  );
-    if ( mo.changed( "best intensity" ) )
-      mo.setNumber( ss + " intensity", mo.number( "best intensity" ), mo.error( "best intensity" )  );
-    if ( mo.changed( "best saturation" ) )
-      mo.setNumber( ss + " saturation", mo.number( "best saturation" ), mo.error( "best saturation" )  );
-    if ( mo.changed( "best maxrate" ) )
-      mo.setNumber( ss + " maxrate", mo.number( "best maxrate" ), mo.error( "best maxrate" )  );
+  if ( mo.changed( "best frequency" ) )
+    mo.setNumber( ss + " frequency", mo.number( "best frequency" ), mo.error( "best frequency" ) );
+  if ( mo.changed( "best threshold" ) )
+    mo.setNumber( ss + " threshold", mo.number( "best threshold" ), mo.error( "best threshold" ) );
+  if ( mo.changed( "best slope" ) )
+    mo.setNumber( ss + " slope", mo.number( "best slope" ), mo.error( "best slope" )  );
+  if ( mo.changed( "best intensity" ) )
+    mo.setNumber( ss + " intensity", mo.number( "best intensity" ), mo.error( "best intensity" )  );
+  if ( mo.changed( "best saturation" ) )
+    mo.setNumber( ss + " saturation", mo.number( "best saturation" ), mo.error( "best saturation" )  );
+  if ( mo.changed( "best maxrate" ) )
+    mo.setNumber( ss + " maxrate", mo.number( "best maxrate" ), mo.error( "best maxrate" )  );
 
-    if ( mo.changed( "best side" ) ) {
-      mo.setNumber( "best frequency", mo.number( ss + " frequency" ), mo.error( ss + " frequency" ) );
-      mo.setNumber( "best threshold", mo.number( ss + " threshold" ), mo.error( ss + " threshold" ) );
-      mo.setNumber( "best slope", mo.number( ss + " slope" ), mo.error( ss + " slope" )  );
-      mo.setNumber( "best intensity", mo.number( ss + " intensity" ), mo.error( ss + " intensity" )  );
-      mo.setNumber( "best saturation", mo.number( ss + " saturation" ), mo.error( ss + " saturation" )  );
-      mo.setNumber( "best maxrate", mo.number( ss + " maxrate" ), mo.error( ss + " maxrate" )  );
-    }
-    metaData( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
-    ASW->updateValues( MetaDataDisplay );
+  if ( mo.changed( "best side" ) ) {
+    mo.setNumber( "best frequency", mo.number( ss + " frequency" ), mo.error( ss + " frequency" ) );
+    mo.setNumber( "best threshold", mo.number( ss + " threshold" ), mo.error( ss + " threshold" ) );
+    mo.setNumber( "best slope", mo.number( ss + " slope" ), mo.error( ss + " slope" )  );
+    mo.setNumber( "best intensity", mo.number( ss + " intensity" ), mo.error( ss + " intensity" )  );
+    mo.setNumber( "best saturation", mo.number( ss + " saturation" ), mo.error( ss + " saturation" )  );
+    mo.setNumber( "best maxrate", mo.number( ss + " maxrate" ), mo.error( ss + " maxrate" )  );
   }
+  metaData().section( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
+  ASW->updateValues( MetaDataDisplay );
 }
 
 
@@ -329,7 +325,7 @@ MapD Session::threshCurve( int side ) const
   // default values:
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
     unlockMetaData();
   }
   // get threshold curve:
@@ -351,20 +347,19 @@ void Session::addThreshCurve( const MapD &thresh, int side )
 }
 
 
-  MapD Session::fICurve( int side, double carrierfreq, bool lockit ) const
+MapD Session::fICurve( int side, double carrierfreq, bool lockit ) const
 {
   // default values:
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
     unlockMetaData();
   }
   if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
     lockMetaData();
-    const Options &mo = metaData( "Cell" );
-    carrierfreq = mo.number( side > 0 ? "right frequency" : "left frequency" );
+    carrierfreq = metaData().number( "Cell>" + side > 0 ? "right frequency" : "left frequency" );
     if ( carrierfreq < 0.0 )
-      carrierfreq = mo.number( "best frequency" );
+      carrierfreq = metaData().number( "Cell>best frequency" );
     unlockMetaData();
   }
   // search f-I curve:
@@ -388,7 +383,7 @@ MapD Session::fICurve( int index, int side, double &carrierfreq ) const
   // default values:
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
     unlockMetaData();
   }
   // get f-I curve:
@@ -419,15 +414,14 @@ MapD Session::onFICurve( int side, double carrierfreq ) const
   // default values:
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
     unlockMetaData();
   }
   if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
     lockMetaData();
-    const Options &mo = metaData( "Cell" );
-    carrierfreq = mo.number( side > 0 ? "right frequency" : "left frequency" );
+    carrierfreq = metaData().number( "Cell>" + side > 0 ? "right frequency" : "left frequency" );
     if ( carrierfreq < 0.0 )
-      carrierfreq = mo.number( "best frequency" );
+      carrierfreq = metaData().number( "Cell>best frequency" );
     unlockMetaData();
   }
   // search f-I curve:
@@ -449,7 +443,7 @@ MapD Session::onFICurve( int index, int side, double &carrierfreq ) const
   // default values:
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
     unlockMetaData();
   }
   // get f-I curve:
@@ -480,15 +474,14 @@ MapD Session::ssFICurve( int side, double carrierfreq ) const
   // default values:
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
     unlockMetaData();
   }
   if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
     lockMetaData();
-    const Options &mo = metaData( "Cell" );
-    carrierfreq = mo.number( side > 0 ? "right frequency" : "left frequency" );
+    carrierfreq = metaData().number( "Cell>" + side > 0 ? "right frequency" : "left frequency" );
     if ( carrierfreq < 0.0 )
-      carrierfreq = mo.number( "best frequency" );
+      carrierfreq = metaData().number( "Cell>best frequency" );
     unlockMetaData();
   }
   // search f-I curve:
@@ -510,7 +503,7 @@ MapD Session::ssFICurve( int index, int side, double &carrierfreq ) const
   // default values:
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData( "Cell" ).index( "best side" );
+    side = metaData().index( "Cell>best side" );
     unlockMetaData();
   }
   // get f-I curve:
@@ -539,7 +532,7 @@ void Session::addSSFICurve( const MapD &ssficurve, int side, double carrierfreq 
 void Session::updateBestSide( void )
 {
   lockMetaData();
-  Options &mo = metaData( "Cell" );
+  Options &mo = metaData().section( "Cell>Cell properties" );
   int bestnoise = -1;
   double left = mo.number( "left noise threshold" );
   double right = mo.number( "right noise threshold" );
@@ -571,7 +564,7 @@ void Session::plot( void )
   lockMetaData();
   P.lock();
 
-  Options &mo = metaData( "Cell" );
+  Options &mo = metaData().section( "Cell>Cell properties" );
 
   // threshold curves:
   P[0].clear();

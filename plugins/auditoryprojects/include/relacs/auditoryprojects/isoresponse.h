@@ -159,8 +159,8 @@ public:
     /*! Read options, create stimulus and start output of stimuli. */
   virtual int main( void );
 
-  void saveSpikes( void );
-  void saveRates( void );
+  void saveSpikes( const Options &header );
+  void saveRates( const Options &header );
 
     /*! Plot data. */
   void plot( void );
@@ -237,8 +237,6 @@ protected:
   double AmplFraction;
   OutData Signal;                // Stimulus!
   double AmplRatio;
-
-  Options Header; 
 
   int MaxRatePos;
   double MaxRate;

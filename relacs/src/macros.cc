@@ -1344,7 +1344,7 @@ string Macro::menuStr( void ) const
       s += ": ";
       nc += 2;
     }
-    string vs = Variables[i].save( false, true );
+    string vs = Variables[i].save( Options::FirstOnly );
     s += vs;
     nc += vs.size();
   }
@@ -1362,7 +1362,7 @@ string Macro::menuStr( void ) const
 	s += ": ";
 	nc += 2;
       }
-      string vs = Project[i].save( false, true );
+      string vs = Project[i].save( Options::FirstOnly );
       s += vs;
       nc += vs.size();
     }

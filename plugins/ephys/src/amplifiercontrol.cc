@@ -61,7 +61,9 @@ void AmplifierControl::initDevices( void )
   Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
   if ( Ampl != 0 ) {
     lockMetaData();
-    Options &mo = metaData( "Electrode" );
+    if ( ! metaData().existSection( "Electrode" ) )
+      metaData().newSection( "Electrode", "Electrode" );
+    Options &mo = metaData().section( "Electrode" );
     mo.unsetNotify();
     if ( ! mo.exist( "Resistance" ) )
       mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" );
@@ -157,7 +159,7 @@ void AmplifierControl::measureResistance( void )
     r *= ResistanceScale;
     QCoreApplication::postEvent( this, new AmplifierEvent( Str( r, "%.0f" ) ) );
     lockMetaData();
-    metaData( "Electrode" ).setNumber( "Resistance", r );
+    metaData().setNumber( "Electrode>Resistance", r );
     unlockMetaData();
   }
 }
