@@ -4892,46 +4892,6 @@ Options &Options::readAppend( const Options &o, int flags )
 }
 
 
-Options &Options::readAppend( const StrQueue &sq,
-			      const string &assignment )
-{
-  Warning = "";
-  for ( StrQueue::const_iterator i = sq.begin(); i != sq.end(); ++i ) {
-    // create option:
-    Parameter np;
-    np.load( *i, assignment );
-    Warning += np.warning();
-
-    bool app = true;
-    if ( ! np.name().empty() ) {
-      for ( iterator pp = begin(); pp != end(); ++pp ) {
-	if ( pp->read( np ) ) {
-	  app = false;
-	  break;
-	}
-      }
-    }
-
-    if ( app ) {
-      Opt.push_back( np );
-    }
-
-  }
-
-#ifndef NDEBUG
-  if ( ! Warning.empty() ) {
-    // error?
-    cerr << "!warning in Options::readAppend( StrQueue ) -> " << Warning << '\n';
-  }
-#endif
-
-  // notify the change:
-  callNotifies();
-
-  return *this;
-}
-
-
 Options &Options::load( const Str &opttxt,
 			const string &assignment, const string &separator,
 			int *indent, int *indentspacing, int *level )
@@ -5047,8 +5007,7 @@ Options &Options::load( const Str &opttxt,
 	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1 );
 	string value = s.mid( index, r );
 	// load new parameter:
-	Parameter np;
-	np.loadNameValue( name, value );
+	Parameter np( name, value );
 	np.setParentSection( this );
 	Warning += np.warning();
 	Opt.push_back( np );

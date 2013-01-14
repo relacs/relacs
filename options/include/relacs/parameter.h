@@ -179,10 +179,9 @@ public:
 	     int yearhour, int monthminutes, int dayseconds,
 	     int flags=0, int style=0,
 	     Options *parentsection=0 );
-    /*! Load parameter from string \a s using load(). */
-  Parameter( const string &s, const string &assignment=":=" );
-    /*! Load option by reading a single line from \a str and using load(). */
-  Parameter( istream &str, const string &assignment=":=" );
+    /*! Create parameter with name \a name and value \a value.
+        The value type is set appropriately. \sa asign() */
+  Parameter( const string &name, const string &value );
     /*! Deconstruct Parameter. */
   ~Parameter( void );
 
@@ -917,30 +916,12 @@ public:
   ostream &saveXML( ostream &str, int level=0, int indent=4,
 		    int flags=0 ) const;
 
-    /*! Load parameter from string \a s.
-        The warning message is set if \a s is invalid.
-        The changedFlag() is set. */
-  Parameter &load( Str s, const string &assignment=":=" );
-    /*! Load parameter from string \a name and \a value.
-        The warning message is set if \a name or \a value are invalid.
-        The changedFlag() is set. */
-  Parameter &loadNameValue( Str name, const string &value );
-    /*! Load parameter from a line get from stream \a str using load(). */
-  friend istream &operator>> ( istream &str, Parameter &p );
-
     /*! Read parameter value from string \a s if it has the same name.
         Uses assign() to assign the value of the parameter.
         Returns true if a value was assigned.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   bool read( const Str &s, const string &assignment=":=" );
-    /*! Read parameter value from string \a value
-        if \a name equals the parameters name.
-        Uses assign() to assign the value of the parameter.
-        Returns true if a value was assigned.
-        If the value of the parameter is changing 
-	then the changedFlag() is set. */
-  bool read( const string &name, const string &value );
     /*! Read parameter value from \a p if it has the same name.
         Numbers and Errors are converted from \a p's unit to the
 	internal unit of the parameter.

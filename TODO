@@ -1,18 +1,18 @@
 Options:
-- operator[] and section() should only return Parameter/Options from this Options
-  BUT: auditory::session::notifyMetaData!
-- ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
-- Check Parameter::load() functions and constructors: do we still need load( s, assignment ) ?
-- Check and refine Parameter::load() and read() functions
+- Check readAppend() functions!
 - Make all Options and optWidget style flags an enum
 - OptWidget: add smart hotkey selection for tabs
-- check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
+- ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
 - OutData: rename Ident to name OR remove it?
-- are uniqueNames also used for relacsplugins.cfg ?
 - DeviceList and FilterDetectors (and others?) should use plugin name (ident) as section name.
-- Device menu should be hierarchically using section structure of device infos.
-- Add iterator that iterates through all sections and subsections ?
 - Improve SaveFiles: no hand coded saving of sections, all should be done with saveXML()!
+- check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
+- are uniqueNames also used for relacsplugins.cfg ?
+- Device menu should be hierarchically using section structure of device infos.
+- operator[] and section() should only return Parameter/Options from this Options
+  BUT: auditory::session::notifyMetaData!
+- Add iterator that iterates through all sections and subsections ?
+- make clean and make | grep warning!
 
 patchclamp::SingleStimulus:
 - Add zero to noise stimuli (all stimuli?)

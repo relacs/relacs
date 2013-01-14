@@ -1493,12 +1493,13 @@ ostream &Map<T>::save( ostream &str, int width, int prec,
   if ( ! str.good() )
     return str;
 
-  str.setf( ios::fixed, ios::floatfield );
+  str.unsetf( ios::floatfield );
+  str << setprecision( prec );
   for ( int k=0; k<size(); k++ ) {
     str << start 
-	<< setw( width ) << setprecision( prec ) << x(k)
+	<< setw( width ) << x(k)
         << separator
-	<< setw( width ) << setprecision( prec ) << y(k) << '\n';
+	<< setw( width ) << y(k) << '\n';
   }
   return str;
 }

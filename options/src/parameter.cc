@@ -238,17 +238,29 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
-Parameter::Parameter( const string &s, const string &assignment )
+Parameter::Parameter( const string &name, const string &value )
 {
-  load( s, assignment );
-}
+  Str names = name;
+  Str request = "";
+  if ( names.size() > 2 && names[names.size()-1] == ')' ) {
+    // request string:
+    int n = names.rfind( '(' );
+    if ( n >= 0 ) {
+      request = names.mid( n+1, names.size()-2 );
+      names.erase( n-1 );
+      names.strip( Str::WhiteSpace + '"' );
+      request.strip( Str::WhiteSpace + '"' );
+    }
+  }
+  // set parameter with value:
+  clear( names, request, NoType );
+  assign( value );
+  setToDefault();
 
+  if ( names.empty() )
+    Warning = "\"" + name + "\": missing name! ";
 
-Parameter::Parameter( istream &str, const string &assignment )
-{
-  string s;
-  getline( str, s );
-  load( s, assignment );
+  Flags |= ChangedFlag;
 }
 
 
@@ -3163,7 +3175,7 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent,
   indstr2 += string( indent, ' ' );
   int maxinx = size();
   if ( (Style & ListAlways) == 0 &&
-       (flags & Options::FirstOnly) == 0 &&
+       (flags & Options::FirstOnly) &&
        maxinx >= 1 )
     maxinx = 1;
 
@@ -3183,122 +3195,32 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent,
 	str << "<error>" << Str( error( k ), format() ).strip() << "</error>";
       if ( ! outUnit().empty() && outUnit() != "1" )
 	str << "<unit>" << unit() << "</unit>";
-      str << "</value>\n";
     }
     else if ( isBoolean() ) {
       str << indstr2 << "<value>" << ( boolean( k ) ? "true" : "false" );
       if ( flags & Options::PrintType )
-	str << "<type>boolean</type></value>\n";
+	str << "<type>boolean</type>";
     }
     else if ( isDate() ) {
       str << indstr2 << "<value>" << text( k, "%04Y-%02m-%02d" );
       if ( flags & Options::PrintType )
-	str << "<type>date</type></value>\n";
+	str << "<type>date</type>";
     }
     else if ( isTime() ) {
       str << indstr2 << "<value>" << text( k, "%02H:%02M:%02S" );
       if ( flags & Options::PrintType )
-	str << "<type>time</type></value>\n";
+	str << "<type>time</type>";
     }
     else if ( isText() ) {
       str << indstr2 << "<value>" << text( k ).strip();
       if ( flags & Options::PrintType )
-	str << "<type>string</type></value>\n";
+	str << "<type>string</type>";
     }
+    str << "</value>\n";
   }
   str << indstr1 << "</property>\n";
 
   return str;
-}
-
-
-Parameter &Parameter::load( Str s, const string &assignment )
-{
-  // clear parameter:
-  clear();
-
-  Str name = s.ident( 0, assignment, Str::WhiteSpace + '"' );
-  Str request = "";
-  if ( name.empty() )
-    Warning += "\"" + s.stripped() + "\": missing name! ";
-  else {
-    if ( name.size() > 2 && name[name.size()-1] == ')' ) {
-      // request string:
-      int n = name.rfind( '(' );
-      if ( n >= 0 ) {
-	request = name.mid( n+1, name.size()-2 );
-	name.erase( n-1 );
-	name.strip();
-	request.strip();
-      }
-    }
-    Str value = s.value( 0, assignment );
-    if ( value.empty() ) {
-      // no value: label
-      /* XXX
-      if ( name.size() > 2 && name[0] == '-' && name[name.size()-1] == '-' ) {
-	// label with tab style:
-	*this = Parameter( name.substr( 1, name.size()-2 ), true );
-      }
-      else
-	*this = Parameter( name, false );
-	*/
-    }
-    else {
-      // set parameter with value:
-      clear( name, request, NoType );
-      assign( value );
-      setToDefault();
-    }
-  }
-
-  Flags |= ChangedFlag;
-
-  return *this;
-}
-
-
-Parameter &Parameter::loadNameValue( Str name, const string &value )
-{
-  // clear parameter:
-  clear();
-
-  Str request = "";
-  if ( name.empty() )
-    Warning += "\"" + name.stripped() + "\": missing name! ";
-  else {
-    if ( name.size() > 2 && name[name.size()-1] == ')' ) {
-      // request string:
-      int n = name.rfind( '(' );
-      if ( n >= 0 ) {
-	request = name.mid( n+1, name.size()-2 );
-	name.erase( n-1 );
-	name.strip( Str::WhiteSpace + '"' );
-	request.strip( Str::WhiteSpace + '"' );
-      }
-    }
-    if ( value.empty() ) {
-      // no value: label
-      /* XXX
-      if ( name.size() > 2 && name[0] == '-' && name[name.size()-1] == '-' ) {
-	// label with tab style:
-	*this = Parameter( name.substr( 1, name.size()-2 ), true );
-      }
-      else
-	*this = Parameter( name, false );
-	*/
-    }
-    else {
-      // set parameter with value:
-      clear( name, request, NoType );
-      assign( value );
-      setToDefault();
-    }
-  }
-
-  Flags |= ChangedFlag;
-
-  return *this;
 }
 
 
@@ -3307,18 +3229,6 @@ bool Parameter::read( const Str &s, const string &assignment )
   Warning = "";
   if ( *this == s.ident( 0, assignment ) ) {
     assign( s.value( 0, assignment ) );
-    return true;
-  }
-  else
-    return false;
-}
-
-
-bool Parameter::read( const string &name, const string &value )
-{
-  Warning = "";
-  if ( *this == name ) {
-    assign( value );
     return true;
   }
   else
@@ -3378,18 +3288,6 @@ bool Parameter::read( const Parameter &p )
   }
   else
     return false;
-}
-
-
-istream &operator>>( istream &str, Parameter &p )
-{
-  string s;
-
-  // get line:
-  getline( str, s );
-  p.load( s );
-
-  return str;
 }
 
 }; /* namespace relacs */

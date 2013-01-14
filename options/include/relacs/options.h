@@ -1903,11 +1903,6 @@ public:
     /*! Read options from the options \a o.
         All options \a o that do not exist are appended.. */
   Options &readAppend( const Options &o, int flags=0 );
-    /*! Read options from the list of strings \a sq.
-        All options from \a sq that do not exist are appended. */
-  Options &readAppend( const StrQueue &sq,
-		       const string &assignment=":=" );
-
 
     /*! Load options from string \a opttxt of the form 
         "parameter1=x; parameter2=y; parameter3=z; ...".

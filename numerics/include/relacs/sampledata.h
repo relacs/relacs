@@ -1448,9 +1448,9 @@ class SampleData : public Array< T >
         The array element is formatted in a field of width \a width characters
         and \a precision decimals. 
         The range element is automatically formatted. */
-  ostream &save( ostream &str, int width=8, int prec=3,
+  ostream &save( ostream &str, int width=10, int prec=6,
 		 const string &start="", const string &separator=" " ) const;
-  void save( const string &file, int width=8, int prec=3,
+  void save( const string &file, int width=10, int prec=6,
 	     const string &start="", const string &separator=" " ) const;
   template < typename TT > 
   friend ostream &operator<<( ostream &str, const SampleData<TT> &a );
@@ -4183,12 +4183,13 @@ ostream &SampleData< T >::save( ostream &str,
   numberFormat( stepsize(), rangeBack(), timewidth, timeprec );
 
   // output:
-  str.setf( ios::fixed, ios::floatfield );
   for ( int k=0; k<size(); k++ ) {
-    str << start 
-	<< setw( timewidth ) << setprecision( timeprec ) << pos( k ) 
-	<< separator 
-	<< setw( width ) << setprecision( prec ) << (*this)[k] 
+    str << start;
+    str.setf( ios::fixed, ios::floatfield );
+    str << setw( timewidth ) << setprecision( timeprec ) << pos( k ) 
+	<< separator;
+    str.unsetf( ios::floatfield );
+    str << setw( width ) << setprecision( prec ) << (*this)[k] 
 	<< '\n';
   }
   return str;
