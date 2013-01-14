@@ -49,6 +49,7 @@ int main( int argc, char *argv[] )
   opt.addBoolean( "type", "Full analysis", true );
   opt.addText( "Nasty, a = |x|>1", "some special value" );
   opt.addText( "Nasty value", "a, b [c], {d}" );
+  opt.addText( "comment", "a comment on the analysis" );
   opt.newSection( "Results" );
   opt.addInteger( "numres", "Number of results reported", 7 );
   opt.newSubSection( "Color", "color/rgb" );
@@ -57,6 +58,7 @@ int main( int argc, char *argv[] )
   opt.newSubSection( "Animal" );
   opt.addSelection( "mammal", "Mammal", "Monkey|~|Elephant" );
   opt.addSelection( "fish", "Fish", "Trout|Pike|Carp" );
+  opt.addText( "comment", "a comment on the animal" );
   opt.newSection( "Files", "analysis/files" );
   opt.addText( "master", "Master file", "main.dat" );
   opt.addText( "data", "Data file", "data.dat" );
@@ -69,6 +71,9 @@ int main( int argc, char *argv[] )
   cout << '\n';
 
   cout << "Value of parameter 'comment': " << opt.text( "comment|repeats" ) << '\n';
+  cout << "Value of parameter 'Analysis>comment': " << opt.text( "Analysis>comment" ) << '\n';
+  cout << "Value of parameter 'Results>comment': " << opt.text( "Results>comment" ) << '\n';
+  cout << "Value of parameter 'Results>Animal>comment': " << opt.text( "Results>Animal>comment" ) << '\n';
   cout << "Value of parameter 'Pause|pause': " << opt.number( "Pause|pause" ) << '\n';
   cout << "Value of parameter 'Test>pause': " << opt.number( "Test>pause" ) << '\n';
   cout << "Value of parameter 'repeats': " << opt.integer( "repeats|" ) << '\n';
@@ -97,15 +102,18 @@ int main( int argc, char *argv[] )
   opt2.setNumber( "Analysis>win", 0.42 );
   opt2.setText( "Nasty, a = |x|>1", "some other value" );
   opt2.setText( "Nasty value", "d, [c] {b}, a" );
+  opt2.setText( "Analysis>comment", "no analysis comment" );
   opt2.setInteger( "Results>numres", 23 );
   opt2.selectText( "Animal>mammal", "Elephant" );
+  opt2.setText( "Results>comment", "no animal comment" );
   opt2.setText( "Files>master", "maindata.dat" );
 
   // read in values from string:
   cout << "read in values from string:\n";
   string os = opt2.save();
-  cout << os << '\n';
+  cout << "this is the string:\n" << os << '\n';
   opt.read( os, ":" );
+  cout << "this is the result:\n";
   opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
@@ -117,17 +125,19 @@ int main( int argc, char *argv[] )
 
   // read in values from file:
   cout << "read in values from file:\n";
-  opt2.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
   {
     ofstream ff( "tmp.dat" );
     ff << "# This is the current yaml style:\n";
     opt2.save( ff, "", 0, Options::FirstOnly );
+    cout << "this is the content of the file:\n";
+    opt2.save( cout, "", 0, Options::FirstOnly );
   }
   {
     ifstream sf( "tmp.dat" );
     opt.read( sf, ":" );
   }
+  cout << "this is the result:\n";
   opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
@@ -137,16 +147,19 @@ int main( int argc, char *argv[] )
     ifstream sf( "read.dat" );
     opt.read( sf, ":" );
   }
+  cout << "this is the result:\n";
   opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
   cout << "Value of parameter 'Nasty value': " << opt.text( "Nasty value" ) << '\n';
   cout << '\n';
 
+
   // read in values from options:
   cout << "read in values from options:\n";
   opt.setDefaults();
   opt.read( opt2 );
+  cout << "this is the result:\n";
   opt.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 

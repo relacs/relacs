@@ -2,7 +2,6 @@ Options:
 - operator[] and section() should only return Parameter/Options from this Options
   BUT: auditory::session::notifyMetaData!
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
-- Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
 - Check Parameter::load() functions and constructors: do we still need load( s, assignment ) ?
 - Check and refine Parameter::load() and read() functions
 - Make all Options and optWidget style flags an enum
