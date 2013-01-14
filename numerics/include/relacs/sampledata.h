@@ -1448,9 +1448,9 @@ class SampleData : public Array< T >
         The array element is formatted in a field of width \a width characters
         and \a precision decimals. 
         The range element is automatically formatted. */
-  ostream &save( ostream &str, int width=10, int prec=6,
+  ostream &save( ostream &str, int width=10, int prec=5,
 		 const string &start="", const string &separator=" " ) const;
-  void save( const string &file, int width=10, int prec=6,
+  void save( const string &file, int width=10, int prec=5,
 	     const string &start="", const string &separator=" " ) const;
   template < typename TT > 
   friend ostream &operator<<( ostream &str, const SampleData<TT> &a );

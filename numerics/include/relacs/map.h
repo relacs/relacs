@@ -564,7 +564,7 @@ class Map : public Array < T >
         and finally a newline.
         The array elements are formatted in a field of width \a width characters
         and \a precision decimals. */
-  ostream &save( ostream &str, int width=8, int prec=3,
+  ostream &save( ostream &str, int width=10, int prec=5,
 		 const string &start="", const string &separator=" " ) const;
   Map<T> &save( const string &file, int width=8, int prec=3 ) const;
   template < typename TT > 

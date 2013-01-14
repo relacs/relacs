@@ -698,8 +698,8 @@ class Array
         Each element is written in a line.
         The array element is formatted in a field of width \a width characters
         and \a precision decimals. */
-  ostream &save( ostream &str, int width=10, int prec=6 ) const;
-  void save( const string &file, int width=10, int prec=6 ) const;
+  ostream &save( ostream &str, int width=10, int prec=5 ) const;
+  void save( const string &file, int width=10, int prec=5 ) const;
   template < typename TT > 
   friend ostream &operator<<( ostream &str, const Array<TT> &a );
     /*! Read from stream \a str until end of file
