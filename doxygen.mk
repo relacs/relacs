@@ -196,6 +196,7 @@ $(DX_DOCDIR)/$(DX_PROJECT).tag: $(DX_CONFIG) $(pkginclude_HEADERS) $(DX_DEPENDS)
 	| tee $(abs_builddir)/tmp.dox | $(DX_DOXYGEN) -; \
 	rm -f $(abs_builddir)/$(DX_CONFIG).all; \
 	mv $(abs_builddir)/tmp.dox $(abs_builddir)/$(DX_CONFIG).all
+	rm -f help/helpstamp
 
 DX_INSTALL_FILES = \
     $(DX_INSTALL_CHI)

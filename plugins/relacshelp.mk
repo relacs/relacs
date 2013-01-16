@@ -1,4 +1,4 @@
-# relacshelp.mk, (c) 2008 Jan Benda
+# relacshelp.mk, (c) 2008-2013 Jan Benda
 # Makefile targets for integrating the generation of plugin help files
 
 help/helpstamp: 
@@ -6,7 +6,7 @@ help/helpstamp:
 	$(top_srcdir)/utils/relacshelp doc/html help $(PLUGINSET)
 	touch help/helpstamp
 
-help-run: help/helpstamp
+help-run: $(DX_DOCDIR)/$(DX_PROJECT).tag help/helpstamp 
 
 help-make: help-clean help-run
 

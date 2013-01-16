@@ -177,6 +177,9 @@ Relacs:
     use @...@ for this (prefix?)
 
 Documentation:
+- Update relacshelp and createweb for different versions of doxygen
+  (it works on my laptop but not on the PC - version 1.7.4)
+- check relacshelp.mk and the help line in doxygen.mk for abs_build_dir!
 - Update doxygen dot settings
 - Update Makefile instructions to autotools
 - You may want to use: ./configure --htmldir=DOCDIR/html
