@@ -25,22 +25,24 @@ see http://www.comedi.org
 \section comediintro Introduction
 
 If you only need normal ("streaming", asynchronous) data acquisition
-as it is implemented by the %ComediAnalogInput and %ComediAnalogOutput plugins,
+as it is implemented by the ComediAnalogInput and ComediAnalogOutput plugins,
 then follow the instructions in \ref installcomedi.
 
 If you want to use dynamic clamp, i.e. some realtime computation,
-as it is implemented by the %DynClampAnalogInput and %DynClampAnalogOutput plugins,
+as it is implemented by the DynClampAnalogInput and DynClampAnalogOutput plugins,
 then you need to install a real-time linux kernel first, as described in
 \ref installrtai.
 
 
 \section installcomedi Install comedi
 
-You should install the \c Comedi drivers and library prior to configuring RELACS,
-so that ./configure can detect the presence of the \c Comedi library.
-This usually requires to compile a kernel first, but see the note in
-section \ref installcomedidriver on the "in-tree" implementation of
-Comedi in recent kernels.
+You should install the \c Comedi drivers and library prior to
+configuring RELACS, so that ./configure can detect the presence of the
+\c Comedi library.  Un recent linux distributions comedi is available
+as a package (libcomedi-dev) and the kernel moduls are already in the
+kernel. However, these are not the most recent version of comedi and
+therefore you should reinstall the comedi drivers and the comedi
+library from scratch as described in the following sections
 
 
 \subsection installkernel Linux kernel
@@ -59,16 +61,33 @@ On Ubuntu/Debian you get the kernel source and header files
 matching your running kernel image by executing as root
 \code
 $ cd /usr/src
+$ apt-get install dpkg-dev
 $ apt-get source linux-image-`uname -r`
 $ apt-get install linux-headers-`uname -r`
 \endcode
-as root. cd into the kernel source directory
+If \c apt-get \c source tells you "E: You must put some 'source' URIs in your sources.list"
+then you need to enable the source repositories for the package manager. For this
+open with your favorite editor \c /etc/apt/sources.list and the \c *.list files in 
+\c /etc/apt/sources.list.d/. Remove the comments in front of the lines
+that start with \c "deb-src". Then run
 \code
-$ cd `uname -r`
+$ apt-get update
 \endcode
-Note, that sometimes the kernel source directory that you installed with \c apt-get
-has a different name than the name of the currently running kernel that \c `uname -r`
-returns.
+to resynchronize the package index files with the new repositories. Now 
+\c apt-get \c source should be able to download the kernel sources.
+After downloading the kernel source create a link to the kernel source:
+\code
+ln -s linux <kernel-source>
+\endcode
+where \c <kernel-source> is the kernel source installed by \c apt-get.
+Note that often the kernel source directory that you installed with \c apt-get
+has a different name than the name of the currently running kernel that \c uname -r
+returns. Use \c ls \c -rtl to list the directories in the \c /usr/src folder.
+The last one is the one that was added by \c apt-get \c source.
+Now you can \c cd into the kernel source directory
+\code
+$ cd linux
+\endcode
 -# Copy the kernel configuration file of your kernel image to the source:
 \code
 $ cp /boot/config-`uname -r` .config
@@ -76,7 +95,7 @@ $ cp /boot/config-`uname -r` .config
 -# Make sure the file \c Module.symvers is also in your source. 
 On Ubuntu/Debian you find it in the corresponding \c linux-headers directory:
 \code
-cp ../linux-headers-`uname -r`/Module.symvers .
+$ cp ../linux-headers-`uname -r`/Module.symvers .
 \endcode
 -# Run
 \code
@@ -201,7 +220,48 @@ $ dpkg -i linux-image-2.6.28.9_r1_amd64.deb
 Kernel versions 2.6.30 onwards have an experimental in-tree Comedi
 implementation in the driver "staging" area. You can check whether it
 works for you by following the instructions of point 11 below.  
-In case this works for you, continue with installing \ref installcomedilib.
+However, we recommend installing a current version of the comedi drivers.
+
+Here are all commands that you can throw into a shell to completely install comedi:
+\code
+# download comedi sources:
+cd /usr/local/src
+apt-get install git
+git clone git://comedi.org/git/comedi/comedi.git
+git clone git://comedi.org/git/comedi/comedilib.git
+git clone git://comedi.org/git/comedi/comedi_calibrate.git
+rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
+
+# comedi:
+cd /usr/local/src/comedi
+apt-get install autoconf libtool
+./autogen.sh
+./configure
+make && make install
+depmod -a
+cp include/linux/comedi.h /usr/include/linux/
+cp include/linux/comedilib.h /usr/include/linux/
+
+# comedilib:
+cd /usr/local/src/comedilib
+./autogen.sh
+./configure --prefix=/usr --sysconfdir=/etc
+make && make install
+
+# comedi_calibrate:
+cd /usr/local/src/comedi_calibrate
+apt-get install libgsl0-dev libboost-program-options-dev
+autoreconf -v -i
+./configure --prefix=/usr --sysconfdir=/etc
+make && make install
+
+# setup udev permissions:
+addgroup --system iocard
+echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
+udevadm trigger
+adduser $USER iocard
+\endcode
+In the following the necessary steps are described in detail:
 
 -# Download the current \c Comedi sources from the Git repository to \c /usr/local/src
 as root.
@@ -220,6 +280,9 @@ $ tar xzvf comedilib-HEAD-*.tar.gz
 $ tar xzvf comedi_calibrate-HEAD-*.tar.gz
 \endcode
 -# You may need to install the packages: \c autoconf, \c libtool.
+\code
+$ apt-get install autoconf libtool
+\endcode
 -# Make sure that you are really running the kernel
   for which you want to install \c Comedi!
   You can check with
@@ -307,6 +370,9 @@ $ man comedi_config
 
 \subsection installcomedilib Comedilib
 -# You may need to install the packages: \c autoconf, \c libtool, \c bison, \c flex.
+\code
+$ apt-get install bison flex
+\endcode
 -# Change to the \c comedilib directory as root:
 \code
 $ cd /usr/local/src/comedilib
@@ -332,6 +398,9 @@ $ make && make install
 \subsection installcomedicalib Comedi_calibrate
 -# You may need to install the packages:  \c autoconf, \c libtool, 
    \c libgsl0-dev, \c libboost-program-options-dev.
+\code
+$ apt-get install libgsl0-dev libboost-program-options-dev
+\endcode
 -# Change to the \c comedi_calibrate directory as root:
 \code
 $ cd /usr/local/src/comedi_calibrate

@@ -81,25 +81,24 @@ for DOXYFILE in $SRCDIR/class*.html; do
   CLASSNAME=${CLASSNAME##*_1}
   if test "$CLASSNAME" != "es" && test "$CLASSNAME" != "$LASTFILE"; then
     echo "create help file for ${PLUGINSET}${CLASSNAME}..."
-    PLUGINTYPE=$(sed -n  -e '/^\[.*\]/{s/^\[\(.*\)\].*/\1/; p;}' $DOXYFILE)
-    if test -z "$PLUGINTYPE"; then
-	# newer doxygen version (1.7.4):
-	PLUGINTYPE=$(sed -n  -e '/^<p>\[.*\]/{s/^<p>\[\(.*\)\].*/\1/; p;}' $DOXYFILE)
-	{ echo "<html><body>"
-	    echo "<h2>$CLASSNAME [$PLUGINTYPE]</h2>"
-	    sed -n -e '/^<p>\[.*\]/s/^<p>\[.*\]\s*//; /<hr.><a name="details"/,/<hr.>/p' $DOXYFILE | sed "1d; \$s/<hr.>.*//; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
-	    echo "</body></html>"; 
-	} > ${HELPDIR}/${PLUGINSET}${CLASSNAME}.html
-    else
-	{ echo "<html><body>"
-	    echo "<h2>$CLASSNAME [$PLUGINTYPE]</h2>"
-	    sed -n -e '/^\[.*\]/s/^\[.*\]\s*//; /<hr><a name="_details"/,/<hr>/p' $DOXYFILE | sed "1d; \$s/<hr>.*//; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
-	    echo "</body></html>"; 
-	} > ${HELPDIR}/${PLUGINSET}${CLASSNAME}.html
-    fi
+    PLUGINTYPE=$(sed -n  -e '/<p>\[.*\]/{s/^.*<p>\[\(.*\)\].*/\1/; p;}' $DOXYFILE)
+    {
+	echo "<html>"
+	echo "<head>"
+	echo "<link href=\"doxygen.css\" rel=\"stylesheet\" type=\"text/css\" />"
+	echo "</head>"
+	echo "<body>"
+	echo "<h2>$CLASSNAME [$PLUGINTYPE]</h2>"
+	sed -n -e '/<p>\[.*\]/s/\[.*\]\s*//; /<a name="details"/,/<h2>/p' $DOXYFILE | sed "1d; \$s/<h2>.*//; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
+	echo "</body></html>"; 
+    } > ${HELPDIR}/${PLUGINSET}${CLASSNAME}.html
     LASTFILE="$CLASSNAME"
   fi
 done
+
+# copy stylesheet:
+echo "copy stylesheet doxygen.css ..."
+cp $SRCDIR/doxygen.css  $HELPDIR/
 
 # copy image files:
 for IMAGE in $SRCDIR/*.jpg $SRCDIR/*.png; do

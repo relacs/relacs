@@ -33,7 +33,7 @@ namespace daqflex {
 /*! 
 \class DAQFlexAnalogOutput
 \author Jan Benda
-\brief [AnalogInput] Interface for accessing analog output of a DAQFlex board from Measurement Computing.
+\brief [AnalogOutput] Interface for accessing analog output of a DAQFlex board from Measurement Computing.
 */
 
 
