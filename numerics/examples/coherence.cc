@@ -30,6 +30,7 @@ using namespace relacs;
 int main ( void )
 {
   int n = 100000;
+  //  int n = 499999;
 
   SampleDataD signal;
   signal.whiteNoise( n, 0.001, 0.0, 400.0, rnd );
@@ -59,6 +60,7 @@ int main ( void )
   noise *= 0.5;
   response += noise;
   int nfft = 1024;
+  //  int nfft = nextPowerOfTwo( n );
 
   SampleDataD fgain1( nfft );
   SampleDataD cohere1( nfft );

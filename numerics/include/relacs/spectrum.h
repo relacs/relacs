@@ -23,6 +23,7 @@
 #define _RELACS_SPECTRUM_H_ 1
 
 #include <cmath>
+#include <iostream>
 #include <algorithm>
 
 using namespace std;
@@ -539,7 +540,7 @@ int cFFT( RandomAccessIter first, RandomAccessIter last, int sign )
   int logn = 0;
   for ( int k=1; k<n; k <<= 1 )
     logn++;
-  if ( n != (1 << logn) )       
+  if ( n != (1 << logn) )
     return -1 ; // n is not a power of 2!
 
   // Goldrader bit-reversal algorithm:
@@ -766,7 +767,7 @@ template < typename RandomAccessIter >
 int rFFT( RandomAccessIter first, RandomAccessIter last )
 {
   typedef typename iterator_traits<RandomAccessIter>::value_type ValueType;
-  
+
   // number of data elements:
   int n = last - first;
 
@@ -779,7 +780,7 @@ int rFFT( RandomAccessIter first, RandomAccessIter last )
   int logn = 0;
   for ( int k=1; k<n; k <<= 1 )
     logn++;
-  if ( n != (1 << logn) )       
+  if ( n != (1 << logn) )
     return -1 ; // n is not a power of 2!
 
   // Goldrader bit-reversal algorithm:
@@ -804,7 +805,7 @@ int rFFT( RandomAccessIter first, RandomAccessIter last )
     p_1 = p;
     p <<= 1;
     q >>= 1;
-    
+
     // a = 0:
     for ( int b=0; b<q; b++ ) {
       RandomAccessIter iter1 = first+(b*p);
@@ -813,45 +814,45 @@ int rFFT( RandomAccessIter first, RandomAccessIter last )
       *iter1 += *iter2;
       *iter2 = tmp - *iter2;
     }
-    
+
     // a = 1 ... p_{i-1}/2 - 1
     {
       ValueType w_real = 1.0;
       ValueType w_imag = 0.0;
-      
+
       const double theta = - 2.0 * M_PI / p;
       const ValueType s = ::sin( theta );
       const ValueType t = ::sin( theta / 2.0 );
       const ValueType s2 = 2.0 * t * t;
-      
+
       for ( int a=1; a<(p_1)/2; a++ ) {
-	// trignometric recurrence for w-> exp(i theta) w 
-	
+	// trignometric recurrence for w-> exp(i theta) w
+
 	{
 	  const ValueType tmp_real = w_real - s * w_imag - s2 * w_real;
 	  const ValueType tmp_imag = w_imag + s * w_real - s2 * w_imag;
 	  w_real = tmp_real;
 	  w_imag = tmp_imag;
 	}
-            
+
 	for ( int b=0; b<q; b++ ) {
 	  RandomAccessIter iter = first+(b*p);
 	  ValueType z0_real = *(iter + a);
 	  ValueType z0_imag = *(iter + (p_1 - a));
 	  ValueType z1_real = *(iter + (p_1 + a));
 	  ValueType z1_imag = *(iter + (p - a));
-	  
+
 	  // t0 = z0 + w * z1
 	  ValueType t0_real = z0_real + w_real * z1_real - w_imag * z1_imag;
 	  ValueType t0_imag = z0_imag + w_real * z1_imag + w_imag * z1_real;
-	  
+
 	  // t1 = z0 - w * z1
 	  ValueType t1_real = z0_real - w_real * z1_real + w_imag * z1_imag;
 	  ValueType t1_imag = z0_imag - w_real * z1_imag - w_imag * z1_real;
-	  
+
 	  *(iter + a) = t0_real;
 	  *(iter + (p - a)) = t0_imag;
-	  
+
 	  *(iter + (p_1 - a)) = t1_real;
 	  *(iter + (p_1 + a)) = -t1_imag;
 	}
@@ -893,12 +894,12 @@ int hcFFT( RandomAccessIter first, RandomAccessIter last )
   int logn = 0;
   for ( int k=1; k<n; k <<= 1 )
     logn++;
-  if ( n != (1 << logn) )       
+  if ( n != (1 << logn) )
     return -1 ; // n is not a power of 2!
 
   // apply fft recursion:
   int p = n;
-  int q = 1 ; 
+  int q = 1 ;
   int p_1 = n/2 ;
 
   for ( int i = 1; i <= logn; i++ ) {
@@ -911,17 +912,17 @@ int hcFFT( RandomAccessIter first, RandomAccessIter last )
       *iter1 += *iter2;
       *iter2 = tmp - *iter2;
     }
-    
+
     // a = 1 ... p_{i-1}/2 - 1:
     {
       ValueType w_real = 1.0;
       ValueType w_imag = 0.0;
-      
+
       const ValueType theta = 2.0 * M_PI / p;
       const ValueType s = ::sin( theta );
       const ValueType t = ::sin( theta / 2.0 );
       const ValueType s2 = 2.0 * t * t;
-      
+
       for ( int a = 1; a < (p_1)/2; a++ ) {
 	// trignometric recurrence for w-> exp(i theta) w:
 	{
@@ -930,31 +931,31 @@ int hcFFT( RandomAccessIter first, RandomAccessIter last )
 	  w_real = tmp_real;
 	  w_imag = tmp_imag;
 	}
-	
+
 	for ( int b = 0; b < q; b++ ) {
 	  RandomAccessIter iter = first+(b*p);
 	  ValueType z0_real = *(iter + a);
 	  ValueType z0_imag = *(iter + (p - a));
 	  ValueType z1_real = *(iter + (p_1 - a));
 	  ValueType z1_imag = -(*(iter + (p_1 + a)));
-	  
+
 	  // t0 = z0 + z1:
 	  ValueType t0_real = z0_real + z1_real;
 	  ValueType t0_imag = z0_imag + z1_imag;
-	  
+
 	  // t1 = (z0 - z1):
 	  ValueType t1_real = z0_real -  z1_real;
 	  ValueType t1_imag = z0_imag -  z1_imag;
 
 	  *(iter + a) = t0_real;
 	  *(iter + (p_1 - a)) = t0_imag;
-	  
+
 	  *(iter + (p_1 + a)) = (w_real * t1_real - w_imag * t1_imag);
 	  *(iter + (p - a)) = (w_real * t1_imag + w_imag * t1_real);
 	}
       }
     }
-    
+
     if ( p_1 >  1 ) {
       for ( int b = 0; b < q; b++ ) {
 	RandomAccessIter iter = first+(b*p);
@@ -1164,6 +1165,7 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterP>::value_type ValueTypeP;
+  typedef ValueTypeX* PointerX;
 
   int np = lastp - firstp;  // size of power spectrum
   int nw = np*2;  // window size
@@ -1189,10 +1191,12 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
   int c = 0;
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
+
+  PointerX buffer = new ValueTypeX[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of data into buffer and apply window:
-    ValueTypeX buffer[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -1235,9 +1239,11 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] buffer;
+
   // last element:
   if ( np == nw/2 )
-    *(firstp+nw/2) *= 0.25;
+    *(firstp+nw/2-1) *= 0.25;
 
   return 0;
 }
@@ -1261,7 +1267,10 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef ValueTypeX* PointerX;
+  typedef ValueTypeY* PointerY;
   typedef typename iterator_traits<BidirectIterH>::value_type ValueTypeH;
+  typedef ValueTypeH* PointerH;
 
   // clear transfer:
   for ( BidirectIterH iterh=firsth; iterh != lasth; ++iterh )
@@ -1283,8 +1292,8 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // working buffers:
-  ValueTypeH re[np];
-  ValueTypeH im[np];
+  PointerH re = new ValueTypeH[np];
+  PointerH im = new ValueTypeH[np];
   for ( int k=0; k<np; ++k ) {
     re[k] = 0.0;
     im[k] = 0.0;
@@ -1302,10 +1311,13 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
+
+  PointerX bufferx = new ValueTypeX[nw];
+  PointerY buffery = new ValueTypeY[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
-    ValueTypeX bufferx[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -1326,7 +1338,6 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     rFFT( bufferx, bufferx+nw );
 
     // copy chunk of y data into buffer and apply window:
-    ValueTypeY buffery[nw];
     k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
@@ -1389,6 +1400,9 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] buffery;
+  delete [] bufferx;
+
   // compute transfer function:
   BidirectIterH iterhre = firsth;
   BidirectIterH iterhim = lasth;
@@ -1408,6 +1422,9 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     ++iterre;
   }
   *iterhre = (*iterre) / (*iterhre);
+
+  delete [] im;
+  delete [] re;
 
   return 0;
 }
@@ -1434,7 +1451,10 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef ValueTypeX* PointerX;
+  typedef ValueTypeY* PointerY;
   typedef typename iterator_traits<BidirectIterH>::value_type ValueTypeH;
+  typedef ValueTypeH* PointerH;
   typedef typename iterator_traits<BidirectIterC>::value_type ValueTypeC;
 
   // clear transfer:
@@ -1465,8 +1485,8 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     return -3;
 
   // working buffers:
-  ValueTypeH re[np];
-  ValueTypeH im[np];
+  PointerH re = new ValueTypeH[np];
+  PointerH im = new ValueTypeH[np];
   for ( int k=0; k<np; ++k ) {
     re[k] = 0.0;
     im[k] = 0.0;
@@ -1484,10 +1504,13 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
+
+  PointerX bufferx = new ValueTypeX[nw];
+  PointerY buffery = new ValueTypeY[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
-    ValueTypeX bufferx[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -1508,7 +1531,6 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     rFFT( bufferx, bufferx+nw );
 
     // copy chunk of y data into buffer and apply window:
-    ValueTypeY buffery[nw];
     k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
@@ -1579,15 +1601,20 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] im;
+  delete [] re;
+  delete [] buffery;
+  delete [] bufferx;
+
   // compute transfer function and coherence:
   BidirectIterH iterhre = firsth;   // powerx
   BidirectIterH iterhim = lasth;    // nothing
   ValueTypeH* iterre = re;          // re crossspectrum xy
   ValueTypeH* iterim = im;          // im crossspectrum xy
   // first element coherence:
-  if ( *iterhre == 0.0 || *firstc == 0.0 ) 
+  if ( *iterhre == 0.0 || *firstc == 0.0 )
     *firstc = 0.0;
-  else 
+  else
     *firstc = ( (*iterre) * (*iterre) + (*iterim) * (*iterim) ) / ( (*iterhre) * (*firstc) );
   ++firstc;
   // first element transfer function:
@@ -1598,9 +1625,9 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
   ++iterre;
   for ( int k=1; k<np; ++k ) {
     // coherence:
-    if ( *iterhre == 0.0 || *firstc == 0.0 ) 
+    if ( *iterhre == 0.0 || *firstc == 0.0 )
       *firstc = 0.0;
-    else 
+    else
       *firstc = ( (*iterre) * (*iterre) + (*iterim) * (*iterim) ) / ( (*iterhre) * (*firstc) );
     ++firstc;
     // transfer function:
@@ -1631,7 +1658,7 @@ int transfer( const ContainerX &x, const ContainerY &y,
 }
 
 
-template < typename ForwardIterX, typename ForwardIterY, 
+template < typename ForwardIterX, typename ForwardIterY,
   typename ForwardIterG >
 int gain( ForwardIterX firstx, ForwardIterX lastx,
 	  ForwardIterY firsty, ForwardIterY lasty,
@@ -1640,7 +1667,10 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef ValueTypeX* PointerX;
+  typedef ValueTypeY* PointerY;
   typedef typename iterator_traits<ForwardIterG>::value_type ValueTypeG;
+  typedef ValueTypeG* PointerG;
 
   // clear gain:
   for ( ForwardIterG iterg=firstg; iterg != lastg; ++iterg )
@@ -1661,8 +1691,8 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
   np = nw/2;
 
   // working buffers:
-  ValueTypeG re[ np ];
-  ValueTypeG im[ np ];
+  PointerG re = new ValueTypeG[np];
+  PointerG im = new ValueTypeG[np];
   for ( int k=0; k<np; ++k ) {
     re[k] = 0.0;
     im[k] = 0.0;
@@ -1680,10 +1710,13 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
+
+  PointerX bufferx = new ValueTypeX[nw];
+  PointerY buffery = new ValueTypeY[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
-    ValueTypeX bufferx[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -1704,7 +1737,6 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
     rFFT( bufferx, bufferx+nw );
 
     // copy chunk of y data into buffer and apply window:
-    ValueTypeY buffery[nw];
     k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
@@ -1767,6 +1799,9 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] buffery;
+  delete [] bufferx;
+
   // compute gain:
   ValueTypeG* iterre = re;
   ValueTypeG* iterim = im;
@@ -1778,6 +1813,9 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
     ++iterre;
     ++iterim;
   }
+
+  delete [] im;
+  delete [] re;
 
   return 0;
 }
@@ -1803,7 +1841,10 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef ValueTypeX* PointerX;
+  typedef ValueTypeY* PointerY;
   typedef typename iterator_traits<ForwardIterC>::value_type ValueTypeC;
+  typedef ValueTypeC* PointerC;
 
   // clear coherence:
   for ( ForwardIterC iterc=firstc; iterc != lastc; ++iterc )
@@ -1824,9 +1865,9 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
   np = nw/2;
 
   // working buffers:
-  ValueTypeC xp[ np ];
-  ValueTypeC yp[ np ];
-  ValueTypeC cp[ np ];
+  PointerC xp = new ValueTypeC[np];
+  PointerC yp = new ValueTypeC[np];
+  PointerC cp = new ValueTypeC[np];
   for ( int k=0; k<np; ++k ) {
     xp[k] = 0.0;
     yp[k] = 0.0;
@@ -1845,10 +1886,13 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
+
+  PointerX bufferx = new ValueTypeX[nw];
+  PointerY buffery = new ValueTypeY[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
-    ValueTypeX bufferx[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -1869,7 +1913,6 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
     rFFT( bufferx, bufferx+nw );
 
     // copy chunk of y data into buffer and apply window:
-    ValueTypeY buffery[nw];
     k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
@@ -1940,21 +1983,28 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] buffery;
+  delete [] bufferx;
+
   // compute auto, cross spectra, and coherence:
   ValueTypeC* firstxp = xp;
   ValueTypeC* firstyp = yp;
   ValueTypeC* firstcp = cp;
   while ( firstc != lastc ) {
     *firstcp = (*firstc) * (*firstc) + (*firstcp) * (*firstcp);
-    if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+    if ( *firstxp == 0.0 || *firstyp == 0.0 )
       *firstc = 0.0;
-    else 
+    else
       *firstc = (*firstcp) / ( (*firstxp) * (*firstyp) );
     ++firstxp;
     ++firstyp;
     ++firstc;
     ++firstcp;
   }
+
+  delete [] cp;
+  delete [] yp;
+  delete [] xp;
 
   return 0;
 }
@@ -1999,7 +2049,10 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef ValueTypeX* PointerX;
+  typedef ValueTypeY* PointerY;
   typedef typename iterator_traits<ForwardIterC>::value_type ValueTypeC;
+  typedef ValueTypeC* PointerC;
 
   // clear cross spectrum:
   for ( ForwardIterC iterc=firstc; iterc != lastc; ++iterc )
@@ -2019,7 +2072,7 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // working buffer:
-  ValueTypeC cp[nw];
+  PointerC cp = new ValueTypeC[nw];
   for ( int k=0; k<nw; ++k )
     cp[k] = 0.0;
 
@@ -2037,10 +2090,13 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
+
+  PointerX bufferx = new ValueTypeX[nw];
+  PointerY buffery = new ValueTypeY[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
-    ValueTypeX bufferx[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -2061,7 +2117,6 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
     rFFT( bufferx, bufferx+nw );
 
     // copy chunk of y data into buffer and apply window:
-    ValueTypeY buffery[nw];
     k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
@@ -2116,6 +2171,9 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] buffery;
+  delete [] bufferx;
+
   // compute cross spectrum:
   ValueTypeC* firstcp = cp;
   while ( firstc != lastc ) {
@@ -2125,6 +2183,8 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
   }
   --firstc;
   *firstc *= 0.25;
+
+  delete [] cp;
 
   return 0;
 }
@@ -2141,7 +2201,7 @@ int rCSD( const ContainerX &x, const ContainerY &y, ContainerC &c,
 }
 
 
-template < typename ForwardIterX, typename ForwardIterY, 
+template < typename ForwardIterX, typename ForwardIterY,
   typename ForwardIterG, typename ForwardIterC, typename ForwardIterYP >
 int spectra( ForwardIterX firstx, ForwardIterX lastx,
 	     ForwardIterY firsty, ForwardIterY lasty,
@@ -2152,7 +2212,10 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef ValueTypeX* PointerX;
+  typedef ValueTypeY* PointerY;
   typedef typename iterator_traits<ForwardIterYP>::value_type ValueTypeYP;
+  typedef ValueTypeYP* PointerYP;
   typedef typename iterator_traits<ForwardIterG>::value_type ValueTypeG;
   typedef typename iterator_traits<ForwardIterC>::value_type ValueTypeC;
 
@@ -2182,7 +2245,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   nw = nextPowerOfTwo( nw );
 
   // working buffer:
-  ValueTypeYP xp[nw/2];
+  PointerYP xp = new ValueTypeYP[nw/2];
   for ( int k=0; k<nw/2; ++k )
     xp[k] = 0.0;
 
@@ -2199,10 +2262,13 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
+
+  PointerX bufferx = new ValueTypeX[nw];
+  PointerY buffery = new ValueTypeY[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
-    ValueTypeX bufferx[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -2223,7 +2289,6 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     rFFT( bufferx, bufferx+nw );
 
     // copy chunk of y data into buffer and apply window:
-    ValueTypeY buffery[nw];
     k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
@@ -2294,6 +2359,9 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] buffery;
+  delete [] bufferx;
+
   // compute auto spectra and coherence:
   ValueTypeYP* firstxp = xp;
   while ( firstc != lastc ) {
@@ -2302,9 +2370,9 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     ValueTypeG g = ::sqrt( gr*gr + gi*gi );
 
     ValueTypeC cp = (*firstc) * (*firstc) + (*firstg) * (*firstg);
-    if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+    if ( *firstxp == 0.0 || *firstyp == 0.0 )
       *firstc = 0.0;
-    else 
+    else
       *firstc = cp / ( (*firstxp) * (*firstyp) );
     *firstg = g;
 
@@ -2320,11 +2388,13 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     *firstyp *= 0.25;
   }
 
+  delete [] xp;
+
   return 0;
 }
 
 
-template < typename ContainerX, typename ContainerY, 
+template < typename ContainerX, typename ContainerY,
   typename ContainerG, typename ContainerC, typename ContainerYP >
 int spectra( const ContainerX &x, const ContainerY &y,
 	     ContainerG &g, ContainerC &c, ContainerYP &yp,
@@ -2353,6 +2423,8 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef ValueTypeX* PointerX;
+  typedef ValueTypeY* PointerY;
   typedef typename iterator_traits<ForwardIterXP>::value_type ValueTypeXP;
   typedef typename iterator_traits<ForwardIterYP>::value_type ValueTypeYP;
   typedef typename iterator_traits<ForwardIterG>::value_type ValueTypeG;
@@ -2403,10 +2475,13 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
+
+  PointerX bufferx = new ValueTypeX[nw];
+  PointerY buffery = new ValueTypeY[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
-    ValueTypeX bufferx[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -2427,7 +2502,6 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     rFFT( bufferx, bufferx+nw );
 
     // copy chunk of y data into buffer and apply window:
-    ValueTypeY buffery[nw];
     k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
@@ -2498,6 +2572,9 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] buffery;
+  delete [] bufferx;
+
   // compute auto, cross spectra and coherence:
   while ( firstc != lastc ) {
     ValueTypeG gr = (*firstc) / (*firstxp);
@@ -2505,9 +2582,9 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     *firstg = ::sqrt( gr*gr + gi*gi );
 
     *firstcp = (*firstc) * (*firstc) + (*firstcp) * (*firstcp);
-    if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+    if ( *firstxp == 0.0 || *firstyp == 0.0 )
       *firstc = 0.0;
-    else 
+    else
       *firstc = (*firstcp) / ( (*firstxp) * (*firstyp) );
 
     ++firstxp;
@@ -2519,16 +2596,19 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
 
   // last element:
   if ( np == nw/2 ) {
-    *(firstxp+nw/2) *= 0.25;
-    *(firstyp+nw/2) *= 0.25;
-    *(firstcp+nw/2) *= 0.25;
+    --firstxp;
+    *firstxp *= 0.25;
+    --firstyp;
+    *firstyp *= 0.25;
+    --firstcp;
+    *firstcp *= 0.25;
   }
 
   return 0;
 }
 
 
-template < typename ContainerX, typename ContainerY, 
+template < typename ContainerX, typename ContainerY,
   typename ContainerG, typename ContainerC, typename ContainerCP,
   typename ContainerXP, typename ContainerYP >
 int spectra( const ContainerX &x, const ContainerY &y,
@@ -2547,7 +2627,7 @@ int spectra( const ContainerX &x, const ContainerY &y,
 }
 
 
-template < typename ForwardIterX, typename ForwardIterY, 
+template < typename ForwardIterX, typename ForwardIterY,
   typename BidirectIterCP, typename ForwardIterXP, typename ForwardIterYP >
 int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
 		  ForwardIterY firsty, ForwardIterY lasty,
@@ -2558,6 +2638,8 @@ int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
 {
   typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
   typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef ValueTypeX* PointerX;
+  typedef ValueTypeY* PointerY;
   typedef typename iterator_traits<ForwardIterXP>::value_type ValueTypeXP;
   typedef typename iterator_traits<ForwardIterYP>::value_type ValueTypeYP;
   typedef typename iterator_traits<BidirectIterCP>::value_type ValueTypeCP;
@@ -2605,10 +2687,13 @@ int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
   ForwardIterX iterx = firstx;
   ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
+
+  PointerX bufferx = new ValueTypeX[nw];
+  PointerY buffery = new ValueTypeY[nw];
+
   while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
-    ValueTypeX bufferx[nw];
     int k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
@@ -2629,7 +2714,6 @@ int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
     rFFT( bufferx, bufferx+nw );
 
     // copy chunk of y data into buffer and apply window:
-    ValueTypeY buffery[nw];
     k=0;
     if ( overlap ) {
       for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
@@ -2699,16 +2783,19 @@ int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
+  delete [] buffery;
+  delete [] bufferx;
+
   // last element:
-  *(firstxp+np) *= 0.25;
-  *(firstyp+np) *= 0.25;
-  *(firstcp+np) *= 0.25;
+  *(firstxp+np-1) *= 0.25;
+  *(firstyp+np-1) *= 0.25;
+  *(firstcp+np-1) *= 0.25;
 
   return 0;
 }
 
 
-template < typename ContainerX, typename ContainerY, 
+template < typename ContainerX, typename ContainerY,
   typename ContainerCP, typename ContainerXP, typename ContainerYP >
 int crossSpectra( const ContainerX &x, const ContainerY &y,
 		  ContainerCP &cp, ContainerXP &xp, ContainerYP &yp,
@@ -2738,10 +2825,10 @@ void coherence( BidirectIterCP firstcp, BidirectIterCP lastcp,
     return;
   if ( firstc == lastc )
     return;
-       
-  if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+
+  if ( *firstxp == 0.0 || *firstyp == 0.0 )
     *firstc = 0.0;
-  else 
+  else
     *firstc = (*firstcp) * (*firstcp) * 0.5 / *firstxp / *firstyp;
   ++firstcp;
   --lastcp;
@@ -2749,9 +2836,9 @@ void coherence( BidirectIterCP firstcp, BidirectIterCP lastcp,
   ++firstyp;
   ++firstc;
   while ( firstc != lastc && firstcp != lastcp ) {
-    if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+    if ( *firstxp == 0.0 || *firstyp == 0.0 )
       *firstc = 0.0;
-    else 
+    else
       *firstc = ( (*firstcp) * (*firstcp) + (*lastcp) * (*lastcp) ) / *firstxp / *firstyp;
     ++firstcp;
     --lastcp;
@@ -2760,9 +2847,9 @@ void coherence( BidirectIterCP firstcp, BidirectIterCP lastcp,
     ++firstc;
   }
   if ( firstc != lastc ) {
-    if ( *firstxp == 0.0 || *firstyp == 0.0 ) 
+    if ( *firstxp == 0.0 || *firstyp == 0.0 )
       *firstc = 0.0;
-    else 
+    else
       *firstc = (*firstcp) * (*firstcp) * 0.5 / *firstxp / *firstyp;
     ++firstc;
   }
