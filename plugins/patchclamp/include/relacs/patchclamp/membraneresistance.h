@@ -64,7 +64,7 @@ class MembraneResistance : public RePro, public ephys::Traces
 public:
 
   MembraneResistance( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual int main( void );
   void analyzeOn( double duration, double sswidth, bool nossfit );
   void analyzeOff( double duration, double sswidth, bool nossfit );

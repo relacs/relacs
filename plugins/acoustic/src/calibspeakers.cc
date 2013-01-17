@@ -65,7 +65,7 @@ CalibSpeakers::~CalibSpeakers( void )
 }
 
 
-void CalibSpeakers::config( void )
+void CalibSpeakers::preConfig( void )
 {
   setText( "outtrace", loudspeakerTraceNames() );
   setToDefault( "outtrace" );

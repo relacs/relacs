@@ -66,10 +66,10 @@ void ScaledImage::resizeEvent( QResizeEvent *event )
 
   if ( (double)event->size().height()/(double)event->size().width() > 
        (double)Image.height()/(double)Image.width() ) {
-    setPixmap( Image.scaledToWidth( event->size().width()-2, Qt::SmoothTransformation ) );
+    setPixmap( Image.scaledToWidth( event->size().width()-4, Qt::SmoothTransformation ) );
   }
   else {
-    setPixmap( Image.scaledToHeight( event->size().height()-2, Qt::SmoothTransformation ) );
+    setPixmap( Image.scaledToHeight( event->size().height()-4, Qt::SmoothTransformation ) );
   }
 }
 

@@ -60,8 +60,10 @@ functions Options::read(), Options::save(), and Options::size()
 from the Options class.
 You may reimplement them according to your needs.
 
-The config() function can be reimplemented t do some post-configuration
-after all configuration file have been read in.
+The config() function can be reimplemented for some post-configuration
+after all configuration files have been read in.
+The preConfig() function is for some pre-configuration before the configuration
+files are read in.
 */
 
 class ConfigureClasses;
@@ -209,6 +211,10 @@ public:
         It is called by ConfigureClasses::configure() after all configuration
         files have been read in via readConfig( StrQueue& ). */
   virtual void config( void );
+    /*! This function can be reimplemented to do some pre-configuration.
+        It is called by ConfigureClasses::preConfigure() before the configuration
+        files are read in via readConfig( StrQueue& ). */
+  virtual void preConfig( void );
 
     /*! This function is called by the constructors of ConfigureClasses
         to make the ConfigureClasses instance \a cfg known to 

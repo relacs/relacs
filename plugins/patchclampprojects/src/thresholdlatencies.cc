@@ -79,7 +79,7 @@ ThresholdLatencies::ThresholdLatencies( void )
 }
 
 
-void ThresholdLatencies::config( void )
+void ThresholdLatencies::preConfig( void )
 {
   if ( SpikeTrace[0] >= 0 )
     VUnit = trace( SpikeTrace[0] ).unit();

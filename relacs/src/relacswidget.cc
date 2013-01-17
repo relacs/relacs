@@ -1785,8 +1785,7 @@ void RELACSWidget::startFirstAcquisition( void )
   PT->resize();
   PT->updateMenu();
 
-  CW->initialize();
-
+  CFG.preConfigure( RELACSPlugin::Plugins );
   // XXX before configuring, something like AQ->init would be nice
   // in order to set the IL gain factors.
   CFG.read( RELACSPlugin::Plugins );
@@ -1927,8 +1926,7 @@ void RELACSWidget::startFirstSimulation( void )
   SimLabel->setText( "" );
   SimLabel->show();
 
-  CW->initialize();
-
+  CFG.preConfigure( RELACSPlugin::Plugins );
   // XXX before configuring, something like AQ->init would be nice
   // in order to set the IL gain factors.
   CFG.read( RELACSPlugin::Plugins );
@@ -2019,7 +2017,7 @@ void RELACSWidget::startFirstSimulation( void )
 
 void RELACSWidget::startIdle( void )
 {
-  CW->initialize();
+  CFG.preConfigure( RELACSPlugin::Plugins );
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );
   CW->initDevices();

@@ -157,7 +157,7 @@ void MultiTraceSTA::plot( bool snippets )
 }
 
 
-void MultiTraceSTA::config( void )
+void MultiTraceSTA::preConfig( void )
 {
   setText( "inspikes", spikeEventNames() );
   setToDefault( "inspikes" );

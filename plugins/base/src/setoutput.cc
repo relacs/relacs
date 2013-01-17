@@ -76,7 +76,7 @@ SetOutput::SetOutput( void )
 }
 
 
-void SetOutput::config( void )
+void SetOutput::preConfig( void )
 {
   setText( "outtrace", outTraceNames() );
   setToDefault( "outtrace" );

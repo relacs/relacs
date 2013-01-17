@@ -54,8 +54,6 @@ public:
     /*! Add the menu for configuring Controls to \a menu. */
   void addMenu( QMenu *menu, bool doxydoc );
 
-    /*! Calls initialize() of each Control. */
-  void initialize( void );
     /*! Calls setSettings() and initDevices() of each Control. */
   void initDevices( void );
 

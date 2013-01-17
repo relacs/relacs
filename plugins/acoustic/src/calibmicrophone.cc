@@ -60,7 +60,7 @@ CalibMicrophone::~CalibMicrophone( void )
 }
 
 
-void CalibMicrophone::config( void )
+void CalibMicrophone::preConfig( void )
 {
   setText( "intrace", soundTraceNames() );
   setToDefault( "intrace" );

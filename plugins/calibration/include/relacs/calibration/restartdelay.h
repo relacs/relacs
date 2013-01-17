@@ -61,7 +61,7 @@ class RestartDelay : public RePro
 public:
 
   RestartDelay( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual int main( void );
   int analyze( const InData &data, double duration, int count, double &deltat );
 

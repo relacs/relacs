@@ -53,7 +53,7 @@ the last version() was written by author() on date().
 This information is set either by the constructor or by
 setName(), setAuthor(), setVersion(), and setDate().
 
-The Control is initialized by reimplementing initialize(), config(),
+The Control is initialized by reimplementing preConfig(), config(),
 and initDevices().
 
 For continuosly doing something use the Control thread by
@@ -125,10 +125,6 @@ public:
         "Control: \a name". */
   virtual void setName( const string &name );
 
-    /*! This function is called BEFORE
-        the configuration parameters are read in.
-        Implement this function to do some initialization. */
-  virtual void initialize( void );
     /*! This function is called AFTER the configuration parameters
         are read in and all the devices are initialized..
         Implement this function to check for devices. */

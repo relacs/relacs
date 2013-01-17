@@ -15,7 +15,8 @@ pluginlib_LTLIBRARIES = \
     libbasesimplemodel.la \
     libbasetransferfunction.la \
     libbasewait.la  \
-    libbaseenvelope.la
+    libbaseenvelope.la \
+    libbasesavetraces.la
 
 
 if RELACS_COND_TML
@@ -431,6 +432,41 @@ libbaseenvelope_la_include_HEADERS = $(HEADER_PATH)/envelope.h
 
 
 
+libbasesavetraces_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libbasesavetraces_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libbasesavetraces_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libbasesavetraces_la_OBJECTS) : moc_savetraces.cc
+
+libbasesavetraces_la_SOURCES = savetraces.cc
+
+libbasesavetraces_la_includedir = $(pkgincludedir)/base
+
+libbasesavetraces_la_include_HEADERS = $(HEADER_PATH)/savetraces.h
+
+
+
 check_PROGRAMS = \
     linktest_libbaselinearattenuate_la \
     linktest_libbasedecibelattenuate_la \
@@ -443,7 +479,8 @@ check_PROGRAMS = \
     linktest_libbasesimplemodel_la \
     linktest_libbasetransferfunction_la \
     linktest_libbasewait_la  \
-    linktest_libbaseenvelope_la
+    linktest_libbaseenvelope_la \
+    linktest_libbasesavetraces_la
 
 if RELACS_COND_TML
 check_PROGRAMS += \
@@ -490,5 +527,8 @@ linktest_libbasewait_la_LDADD = libbasewait.la
 
 linktest_libbaseenvelope_la_SOURCES = linktest.cc
 linktest_libbaseenvelope_la_LDADD = libbaseenvelope.la
+
+linktest_libbasesavetraces_la_SOURCES = linktest.cc
+linktest_libbasesavetraces_la_LDADD = libbasesavetraces.la
 
 TESTS = $(check_PROGRAMS)

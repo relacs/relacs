@@ -162,7 +162,7 @@ SingleStimulus::~SingleStimulus( void )
 }
 
 
-void SingleStimulus::config( void )
+void SingleStimulus::preConfig( void )
 {
   if ( SpikeTrace[0] >= 0 )
     VUnit = trace( SpikeTrace[0] ).unit();
@@ -174,7 +174,7 @@ void SingleStimulus::config( void )
   }
 }
 
-
+  /*
 void SingleStimulus::readConfig( StrQueue &sq )
 {
   for ( int k=0; k<sq.size(); k++ ) {
@@ -183,7 +183,7 @@ void SingleStimulus::readConfig( StrQueue &sq )
   }
   RePro::readConfig( sq );
 }
-
+  */
 
 void SingleStimulus::notify( void )
 {

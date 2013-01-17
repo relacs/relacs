@@ -57,10 +57,8 @@ public:
   SpectrumAnalyzer( void );
   virtual ~SpectrumAnalyzer( void );
 
-  virtual void config( void );
-
+  virtual void preConfig( void );
   virtual void notify( void );
-
   virtual void main( void );
 
 

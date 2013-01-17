@@ -94,7 +94,7 @@ public:
 
   ThresholdLatencies( void );
   virtual int main( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   void analyze( double dcamplitude, double preamplitude, double prevcamplitude,
 		double pre2amplitude, double amplitude,
 		double postamplitude, double delay, double preduration,

@@ -155,7 +155,7 @@ void MultiSTA::plot( bool snippets )
 }
 
 
-void MultiSTA::config( void )
+void MultiSTA::preConfig( void )
 {
   setText( "averagetrace", spikeTraceNames() );
   setToDefault( "averagetrace" );

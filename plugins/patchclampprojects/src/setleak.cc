@@ -105,7 +105,7 @@ SetLeak::SetLeak( void )
 }
 
 
-void SetLeak::config( void )
+void SetLeak::preConfig( void )
 {
   setText( "involtage", traceNames() );
   setToDefault( "involtage" );

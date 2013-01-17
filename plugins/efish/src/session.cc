@@ -132,7 +132,7 @@ Session::~Session( void )
 }
 
 
-void Session::initialize( void )
+void Session::preConfig( void )
 {
   // get trace indices:
   ephys::Traces::initialize( this, traces(), events() );

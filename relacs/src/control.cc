@@ -50,11 +50,6 @@ void Control::setName( const string &name )
 }
 
 
-void Control::initialize( void )
-{
-}
-
-
 void Control::initDevices( void )
 {
 }

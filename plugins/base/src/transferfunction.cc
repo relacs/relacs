@@ -75,7 +75,7 @@ TransferFunction::TransferFunction( void )
 }
 
 
-void TransferFunction::config( void )
+void TransferFunction::preConfig( void )
 {
   setText( "intrace", traceNames() );
   setToDefault( "intrace" );

@@ -66,7 +66,7 @@ VICurve::VICurve( void )
 }
 
 
-void VICurve::config( void )
+void VICurve::preConfig( void )
 {
   if ( SpikeTrace[0] >= 0 ) {
     VUnit = trace( SpikeTrace[0] ).unit();

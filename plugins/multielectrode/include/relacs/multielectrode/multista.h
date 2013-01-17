@@ -72,7 +72,7 @@ public:
   virtual int main( void );
 
     /*! Provide a list of existing input traces to select from. */
-  virtual void config( void );
+  virtual void preConfig( void );
 
     /*! Analyze the data. */
   void analyze( const InData &intrace, double interval );

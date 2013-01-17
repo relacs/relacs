@@ -53,7 +53,7 @@ FindRate::FindRate( void )
 }
 
 
-void FindRate::config( void )
+void FindRate::preConfig( void )
 {
   if ( CurrentOutput[0] >= 0 ) {
     IUnit = outTrace( CurrentOutput[0] ).unit();

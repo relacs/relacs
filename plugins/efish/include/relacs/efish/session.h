@@ -57,7 +57,7 @@ public:
   Session( void );
   ~Session( void );
 
-  virtual void initialize( void );
+  virtual void preConfig( void );
   virtual void config( void );
   virtual void initDevices( void );
 

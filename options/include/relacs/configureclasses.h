@@ -39,7 +39,10 @@ ConfigureClasses stores a pointer to each instance of a ConfigClass.
 The configuration of each ConfigClass instance can be read in from
 configuration files by the read() functions and saved by the save()
 functions. The configure() functions call the config() function
-of the ConfigClass instances for some post-configuration.
+of the ConfigClass instances for some post-configuration,
+and the preConfigure() functions call the preConfig() function
+of the ConfigClass instances for some pre-configuration before
+the configuration files are read in.
 
 ConfigClass instances are organized in configurations groups 
 via their ConfigClass::configGroup() flag.
@@ -259,6 +262,30 @@ public:
         \sa read( int ), save(), configure() */
   int read( ConfigClass &config );
 
+    /*! Pre-configure, i.e. call ConfigClass::preConfig() of the 
+        ConfigClass instance from the configuration group with index \a group
+        and identifier (ConfigClass::configIdent()) matching \a ident.
+	\note This function should be called before reading the
+	configuration files.
+        \param[in] group the configuration group index.
+        \param[in] ident the configuration identifier specifying
+	a ConfigClass instance.
+	\sa configure(), read(), save() */
+  void preConfigure( int group, const string &ident );
+    /*! Pre-configure, i.e. call ConfigClass::preConfig() of all the 
+        ConfigClass instances from the configuration group with index \a group. 
+	\note This function should be called before reading the
+	configuration files.
+        \param[in] group the configuration group index.
+	\sa configure(), read(), save() */
+  void preConfigure( int group );
+    /*! Pre-configure, i.e. call ConfigClass::preConfig() of all 
+        ConfigClass instances.
+	\note This function should be called before reading the
+	configuration files.
+	\sa configure(), read(), save() */
+  void preConfigure( void );
+
     /*! Configure, i.e. call ConfigClass::config() of the 
         ConfigClass instance from the configuration group with index \a group
         and identifier (ConfigClass::configIdent()) matching \a ident.
@@ -267,20 +294,20 @@ public:
         \param[in] group the configuration group index.
         \param[in] ident the configuration identifier specifying
 	a ConfigClass instance.
-	\sa read(), save() */
+	\sa preConfigure(), read(), save() */
   void configure( int group, const string &ident );
     /*! Configure, i.e. call ConfigClass::config() of all the 
         ConfigClass instances from the configuration group with index \a group. 
 	\note This function should be called only after
 	all configuration files have been read in.
         \param[in] group the configuration group index.
-	\sa read(), save() */
+	\sa preConfigure(), read(), save() */
   void configure( int group );
     /*! Configure, i.e. call ConfigClass::config() of all 
         ConfigClass instances.
 	\note This function should be called only after
 	all configuration files have been read in.
-	\sa read(), save() */
+	\sa preConfigure(), read(), save() */
   void configure( void );
 
     /*! Save the configuration of all ConfigClass instances of the 

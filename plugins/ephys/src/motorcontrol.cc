@@ -196,7 +196,7 @@ MotorControl::~MotorControl( void )
 }
 
 
-void MotorControl::initialize( void )
+void MotorControl::preConfigure( void )
 {
   SpikeEvents.push_back( events().index( "Spikes-1" ) );
   SpikeEvents.push_back( events().index( "Spikes-2" ) );

@@ -67,7 +67,7 @@ public:
 
   FindThreshold( void );
   virtual int main( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   void analyze( double amplitude, double duration,
 		double savetime, double skiptime );
   void plot( bool record, double duration );

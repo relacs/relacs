@@ -58,7 +58,7 @@ class PhaseResettingCurve : public RePro, public ephys::Traces
 public:
 
   PhaseResettingCurve( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual int main( void );
 
 

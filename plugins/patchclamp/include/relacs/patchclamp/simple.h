@@ -56,7 +56,7 @@ class Simple : public RePro, public ephys::Traces
 public:
 
   Simple( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual void notify( void );
   virtual int main( void );
 

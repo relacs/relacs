@@ -59,7 +59,7 @@ FindThreshold::FindThreshold( void )
 }
 
 
-void FindThreshold::config( void )
+void FindThreshold::preConfig( void )
 {
   if ( SpikeTrace[0] >= 0 )
     VUnit = trace( SpikeTrace[0] ).unit();

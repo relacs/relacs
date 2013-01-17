@@ -150,6 +150,11 @@ void ConfigClass::config( void )
 }
 
 
+void ConfigClass::preConfig( void )
+{
+}
+
+
 int ConfigClass::configSize( void ) const
 {
   return Options::size( ConfigSelect );

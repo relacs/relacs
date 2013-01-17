@@ -47,7 +47,7 @@ StimulusDelay::StimulusDelay( void )
 }
 
 
-void StimulusDelay::config( void )
+void StimulusDelay::preConfig( void )
 {
   setText( "intrace", traceNames() );
   setToDefault( "intrace" );

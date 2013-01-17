@@ -50,7 +50,7 @@ Simple::Simple( void )
 }
 
 
-void Simple::config( void )
+void Simple::preConfig( void )
 {
   setText( "intrace", spikeTraceNames() );
   setToDefault( "intrace" );

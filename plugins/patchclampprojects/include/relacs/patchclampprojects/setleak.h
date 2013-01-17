@@ -63,7 +63,7 @@ public:
 
   SetLeak( void );
   virtual int main( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual void notify( void );
 
 

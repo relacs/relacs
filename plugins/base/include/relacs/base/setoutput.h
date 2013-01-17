@@ -54,7 +54,7 @@ class SetOutput : public RePro
 public:
 
   SetOutput( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual void notify( void );
   virtual int main( void );
 

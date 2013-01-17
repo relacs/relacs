@@ -77,7 +77,7 @@ class FICurve : public RePro, public ephys::Traces
 public:
 
   FICurve( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual int main( void );
   void plot( double duration, int inx );
   void save( void );

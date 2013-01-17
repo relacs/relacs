@@ -89,13 +89,6 @@ void ControlTabs::addMenu( QMenu *menu, bool doxydoc )
 }
 
 
-void ControlTabs::initialize( void )
-{
-  for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp )
-    (*cp)->initialize();
-}
-
-
 void ControlTabs::initDevices( void )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {

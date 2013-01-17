@@ -56,7 +56,7 @@ class FindRate : public RePro, public ephys::Traces
 public:
 
   FindRate( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual int main( void );
 
 

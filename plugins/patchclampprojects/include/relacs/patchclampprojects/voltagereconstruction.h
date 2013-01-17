@@ -55,7 +55,7 @@ class VoltageReconstruction : public RePro, public ephys::Traces
 public:
 
   VoltageReconstruction( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual int main( void );
 
 

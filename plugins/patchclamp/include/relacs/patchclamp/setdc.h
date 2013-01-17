@@ -59,7 +59,7 @@ namespace patchclamp {
 public:
 
   SetDC( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual void notify( void );
   virtual int main( void );
 

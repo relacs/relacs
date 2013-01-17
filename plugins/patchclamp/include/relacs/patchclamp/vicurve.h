@@ -74,7 +74,7 @@ class VICurve : public RePro, public ephys::Traces
 public:
 
   VICurve( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual int main( void );
   void plot( double duration, int inx );
   void save( void );

@@ -145,7 +145,7 @@ SetDC::SetDC( void )
 }
 
 
-void SetDC::config( void )
+void SetDC::preConfig( void )
 {
   setText( "outcurrent", currentOutputNames() );
   setToDefault( "outcurrent" );

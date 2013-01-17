@@ -61,8 +61,7 @@ public:
     /*! Destructor. */
   virtual ~CalibMicrophone( void );
 
-  virtual void config( void );
-
+  virtual void preConfig( void );
   virtual int main( void );
   virtual void stop( void );
   void save( void );

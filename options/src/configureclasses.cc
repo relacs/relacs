@@ -306,6 +306,35 @@ int ConfigureClasses::read( ConfigClass &config )
 }
 
 
+void ConfigureClasses::preConfigure( int group, const string &ident )
+{
+  for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
+    if ( (*cp)->configGroup() == group &&
+	 (*cp)->configIdent() == ident ) {
+      (*cp)->preConfig();
+    }
+  }
+}
+
+
+void ConfigureClasses::preConfigure( int group )
+{
+  for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
+    if ( (*cp)->configGroup() == group ) {
+      (*cp)->preConfig();
+    }
+  }
+}
+
+
+void ConfigureClasses::preConfigure( void )
+{
+  for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
+    (*cp)->preConfig();
+  }
+}
+
+
 void ConfigureClasses::configure( int group, const string &ident )
 {
   for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {

@@ -46,7 +46,7 @@ RestartDelay::RestartDelay( void )
 }
 
 
-void RestartDelay::config( void )
+void RestartDelay::preConfig( void )
 {
   setText( "intrace", traceNames() );
   setToDefault( "intrace" );

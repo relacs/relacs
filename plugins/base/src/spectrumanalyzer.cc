@@ -84,7 +84,7 @@ SpectrumAnalyzer::~SpectrumAnalyzer( void )
 }
 
 
-void SpectrumAnalyzer::config( void )
+void SpectrumAnalyzer::preConfig( void )
 {
   setText( "trace", traceNames() );
   setToDefault( "trace" );

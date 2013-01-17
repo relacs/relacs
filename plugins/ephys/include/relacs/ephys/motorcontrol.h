@@ -109,7 +109,7 @@ public:
   MotorControl( void );
   ~MotorControl( void );
 
-  virtual void initialize( void );
+  virtual void preConfigure( void );
   virtual void initDevices( void );
   virtual void notify( void );
   virtual void keyPressEvent( QKeyEvent *e );

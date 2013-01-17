@@ -84,8 +84,7 @@ public:
     /*! Destructor. */
   virtual ~CalibSpeakers( void );
 
-  virtual void config( void );
-
+  virtual void preConfig( void );
   virtual int main( void );
 
     /*! Save data. */

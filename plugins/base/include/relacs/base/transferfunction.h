@@ -64,7 +64,7 @@ class TransferFunction : public RePro
 public:
 
   TransferFunction( void );
-  virtual void config( void );
+  virtual void preConfig( void );
   virtual void notify( void );
   virtual int main( void );
 
