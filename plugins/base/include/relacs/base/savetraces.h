@@ -44,7 +44,6 @@ public:
 
   SaveTraces( void );
   virtual int main( void );
-  virtual int ( void );
 
 };
 
