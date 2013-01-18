@@ -37,6 +37,7 @@ Robot:
 - Remove RELACS_COND_TML from plugins/base/src/Makefile.am once the necessary functionality has been moved back to Manipulator
 
 Acquire:
+- check write( OutList ) functions. They should throw an error if sigs.size() == 0!
 - directWrite(): for support of noAttenuator we need the maximum board voltage!
 - levels(), minLevel() and other Attenuate properties should all go
   into Attenuate in case of NoAttenuator!

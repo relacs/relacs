@@ -111,7 +111,7 @@ OutList &OutList::operator=( const OutList &ol )
   Description.setName( ol.Description.name() );
   Description.setType( ol.Description.type() );
   Description.setInclude( ol.Description.include() );
-  for ( unsigned int k=0; k<OL.size(); k++ ) {
+  for ( unsigned int k=0; k<ol.OL.size(); k++ ) {
     OutData *od = ol.OL[k].OD;
     if ( ol.OL[k].Own )
       od = new OutData( *(ol.OL[k].OD) );
