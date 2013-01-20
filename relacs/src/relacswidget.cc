@@ -479,7 +479,7 @@ RELACSWidget::~RELACSWidget( void )
   delete AID;
   delete AOD;
   delete KeyTime;
-  delete DI;
+  //  delete DI;
 }
 
 
