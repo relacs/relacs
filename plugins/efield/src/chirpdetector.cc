@@ -19,6 +19,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
 #include <relacs/efield/chirpdetector.h>
 using namespace relacs;
 
@@ -27,17 +30,18 @@ namespace efield {
 
 ChirpDetector::ChirpDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleEventDetector, 1,
-	    "ChirpDetector", "efield", 
-	    "Jan Benda", "1.2", "Jun 17, 2009" )
+	    "ChirpDetector", "efield",
+	    "Jan Benda", "1.3", "Jan 19, 2013" )
 {
   // parameter:
-  Threshold = 8.0;
+  Threshold = 10.0;
   MinThresh = 0.0;
   ChirpMinWidth = 0.003;
   ChirpMaxWidth = 0.05;
   ChirpCycles = 20;
   AverageCycles = 40;
   Other = 0;
+  Data = 0;
 
   // options:
   addNumber( "threshold", "Threshold", Threshold, 0.0, 10000.0, 2.0, "Hz", "Hz", "%.0f", 2+8+32 );
@@ -49,12 +53,32 @@ ChirpDetector::ChirpDetector( const string &ident, int mode )
   addNumber( "width", "Width", 0.0, 0.0, 100000.0, 0.1, "ms", "ms", "%.0f", 2+4 );
   addStyles( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
 
+  // main layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
+
   CDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   CDW.setVerticalSpacing( 4 );
   CDW.setMargins( 4 );
-  setWidget( &CDW );
+  vb->addWidget( &CDW, 0, Qt::AlignHCenter );
   connect( this, SIGNAL( dialogAccepted( void ) ),
 	   &CDW, SLOT( updateValues( void ) ) );
+
+  // buttons:
+  QHBoxLayout *hb = new QHBoxLayout;
+  vb->addLayout( hb );
+
+  // help:
+  QPushButton *pb = new QPushButton( "Help" );
+  hb->addWidget( pb );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
+
+  // auto configure:
+  pb = new QPushButton( "Auto" );
+  hb->addWidget( pb );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
@@ -70,6 +94,7 @@ ChirpDetector::~ChirpDetector( void )
 int ChirpDetector::init( const EventData &inevents, EventData &outevents,
 			 const EventList &other, const EventData &stimuli )
 {
+  Data = &inevents;
   outevents.setSizeScale( 1.0 );
   outevents.setSizeUnit( "Hz" );
   outevents.setSizeFormat( "%6.1f" );
@@ -99,6 +124,38 @@ void ChirpDetector::notify( void )
     setNumber( "threshold", Threshold );
   }
   CDW.updateValues( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() ); // XXX really needed?
+}
+
+
+void ChirpDetector::autoConfigure( void )
+{
+  autoConfigure( *Data, currentTime() - 0.2, currentTime() );
+}
+
+
+int ChirpDetector::autoConfigure( const EventData &data,
+				  double tbegin, double tend )
+{
+  /*
+  // get rough estimate for a threshold:
+  double ampl = eodAmplitude( data, tbegin, tend );
+  // set range:
+  double min = ceil10( 0.1*ampl );
+  double max = ceil10( ::floor( 10.0*ampl/min )*min );
+  // refine threshold:
+  Threshold = floor10( 2.0*AutoRatio*ampl, 0.1 );
+  if ( Threshold < MinThresh )
+    Threshold = MinThresh;
+  // update values:
+  unsetNotify();
+  setMinMax( "threshold", min, max, min );
+  setNumber( "threshold", Threshold );
+  setNotify();
+  EDW.updateSettings( "threshold" );
+  EDW.updateValue( "threshold" );
+  */
+  return 0;
 }
 
 
@@ -107,7 +164,7 @@ int ChirpDetector::detect( const EventData &inevents, EventData &outevents,
 {
   long lastsize = outevents.size();
 
-  D.peak( EventFrequencyIterator( inevents.minBegin() + 1 ), 
+  D.peak( EventFrequencyIterator( inevents.minBegin() + 1 ),
 	  EventFrequencyIterator( inevents.end() ),
 	  outevents, Threshold, MinThresh, 2.0*Threshold, *this );
 
@@ -124,15 +181,15 @@ int ChirpDetector::detect( const EventData &inevents, EventData &outevents,
 }
 
 
-int ChirpDetector::checkEvent( EventFrequencyIterator first, 
+int ChirpDetector::checkEvent( EventFrequencyIterator first,
 			       EventFrequencyIterator last,
-			       EventFrequencyIterator event, 
-			       EventIterator eventtime, 
+			       EventFrequencyIterator event,
+			       EventIterator eventtime,
 			       EventFrequencyIterator index,
 			       EventIterator indextime,
-			       EventFrequencyIterator prevevent, 
-			       EventIterator prevtime, 
-			       EventData &outevents, 
+			       EventFrequencyIterator prevevent,
+			       EventIterator prevtime,
+			       EventData &outevents,
 			       double &threshold,
 			       double &minthresh, double &maxthresh,
 			       double &time, double &size, double &width )
@@ -192,7 +249,7 @@ int ChirpDetector::checkEvent( EventFrequencyIterator first,
   for ( findex = index+1; !findex; ++findex, ++ftime ) {
     if ( *event < *findex )
       event = findex;
-    if ( fabs( *findex - rate ) < 0.5*threshold ) 
+    if ( fabs( *findex - rate ) < 0.5*threshold )
       n++;
     else {
       n = 0;

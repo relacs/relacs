@@ -65,25 +65,25 @@ QPixmap *MacroCommand::DisabledIcon = 0;
 Macros::Macros( RELACSWidget *rw, QWidget *parent )
   : QWidget( parent ),
     ConfigClass( "Macros", RELACSPlugin::Core ),
-    RW( rw ), 
-    RPs( 0 ), 
+    RW( rw ),
+    RPs( 0 ),
     MCs(),
-    CurrentMacro( -1 ), 
+    CurrentMacro( -1 ),
     CurrentCommand( 0 ),
-    Stack(), 
-    ResumePos(), 
+    Stack(),
+    ResumePos(),
     ResumeMacroOnly( false ),
-    ThisCommandOnly( false ), 
-    ThisMacroOnly( false ), 
-    Warnings( "" ), 
-    StartUpIndex( 0 ), 
-    ShutDownIndex( -1 ), 
-    FallBackIndex( 0 ), 
-    StartSessionIndex( 1 ), 
+    ThisCommandOnly( false ),
+    ThisMacroOnly( false ),
+    Warnings( "" ),
+    StartUpIndex( 0 ),
+    ShutDownIndex( -1 ),
+    FallBackIndex( 0 ),
+    StartSessionIndex( 1 ),
     StopSessionIndex( -1 ),
     MacroFile( "" ),
-    Menu( 0 ), 
-    SwitchMenu( 0 ), 
+    Menu( 0 ),
+    SwitchMenu( 0 ),
     ButtonLayout( 0 ),
     Fatal( false )
 {
@@ -194,7 +194,7 @@ void Macros::clear( bool keep )
       delete (*mp);
       mp = MCs.erase( mp );
     }
-    else 
+    else
       ++mp;
   }
 }
@@ -288,58 +288,53 @@ void Macros::load( const string &file, bool main )
 bool Macros::check( void )
 {
   Fatal = false;
-  const int maxpasses = 2;
 
-  for ( int pass = 0; pass < maxpasses; pass++ ) {
- 
-    // check all macros:
-    for ( MacrosType::iterator mp = MCs.begin();
-	  mp != MCs.end(); ) {
+  // check all macros:
+  for ( MacrosType::iterator mp = MCs.begin();
+	mp != MCs.end(); ) {
 
-      (*mp)->check( pass, Warnings );
-      
-      if ( (*mp)->size() == 0 ) {
-	Warnings += "Removed empty Macro \"<b>" + (*mp)->name() + "</b>\".\n";
-	mp = MCs.erase( mp );
-      }
-      else {
-	// check doublets of overwrite macro:
-	if ( (*mp)->overwrite() ) {
-	  MacrosType::iterator mpp = MCs.begin();
-	  while ( mpp != mp && mpp != MCs.end() ) {
-	    if ( (*mpp)->name() == (*mp)->name() ) {
-	      int mk = mp - MCs.begin();
-	      mpp = MCs.erase( mpp );
-	      mp = MCs.begin() + mk - 1;
-	    }
-	    ++mpp;
-	  }
-	}
+    (*mp)->check( Warnings );
 
-	// check doublets of keep macros:
+    if ( (*mp)->size() == 0 ) {
+      Warnings += "Removed empty Macro \"<b>" + (*mp)->name() + "</b>\".\n";
+      mp = MCs.erase( mp );
+    }
+    else {
+      // check doublets of overwrite macro:
+      if ( (*mp)->overwrite() ) {
 	MacrosType::iterator mpp = MCs.begin();
-	while ( mpp != mp && mpp != MCs.end() && (*mpp)->keep() ) {
-	  if ( (*mpp)->name() == (*mp)->name() &&
-	       (*mp)->keep() ) {
-	    mp = MCs.erase( mp );
-	    --mp;
-	    break;
+	while ( mpp != mp && mpp != MCs.end() ) {
+	  if ( (*mpp)->name() == (*mp)->name() ) {
+	    int mk = mp - MCs.begin();
+	    mpp = MCs.erase( mpp );
+	    mp = MCs.begin() + mk - 1;
 	  }
 	  ++mpp;
 	}
-	  
-	++mp;
       }
-      
-    }  // macros
-    
-  } // passes
+
+      // check doublets of keep macros:
+      MacrosType::iterator mpp = MCs.begin();
+      while ( mpp != mp && mpp != MCs.end() && (*mpp)->keep() ) {
+	if ( (*mpp)->name() == (*mp)->name() &&
+	     (*mp)->keep() ) {
+	  mp = MCs.erase( mp );
+	  --mp;
+	  break;
+	}
+	++mpp;
+      }
+
+      ++mp;
+    }
+
+  }  // macros
 
   // set macros indices:
   for ( MacrosType::iterator mp = MCs.begin();
 	mp != MCs.end(); ++mp )
     (*mp)->setMacroIndices();
-  
+
   // set RePros back to default values:
   for ( int k=0; k<RPs->size(); k++ )
     RPs->repro( k )->setDefaults();
@@ -403,29 +398,29 @@ bool Macros::check( void )
 
   // no fallback macro?
   for ( unsigned int k=0; k<MCs.size() && FallBackIndex < 0; k++ ) {
-    for ( Macro::iterator cp = MCs[k]->begin(); 
-	  cp != MCs[k]->end(); 
+    for ( Macro::iterator cp = MCs[k]->begin();
+	  cp != MCs[k]->end();
 	  ++cp ) {
       if ( (*cp)->repro() != 0 ) {
 	MCs[k]->setAction( Macro::FallBack );
 	FallBackIndex = k;
 	break;
-      } 
+      }
     }
   }
 
   // no RePro within fallback macro?
   if ( FallBackIndex >= 0 && (int)MCs.size() > FallBackIndex ) {
     RePro *lr = 0;
-    for ( Macro::iterator cp = MCs[FallBackIndex]->begin(); 
-	  cp != MCs[FallBackIndex]->end(); 
+    for ( Macro::iterator cp = MCs[FallBackIndex]->begin();
+	  cp != MCs[FallBackIndex]->end();
 	  ++cp ) {
       if ( (*cp)->repro() != 0 )
 	lr = (*cp)->repro();
     }
     if ( lr == 0 ) {
       if ( !Warnings.empty() )
-        Warnings += "\n";
+	Warnings += "\n";
       Warnings += "No RePro found in FallBack Macro!\n";
       MCs[FallBackIndex]->delAction( Macro::FallBack );
       FallBackIndex = -1;
@@ -445,6 +440,17 @@ bool Macros::check( void )
     MCs[m]->init( m );
 
   return Fatal;
+}
+
+
+void Macros::checkOptions( void )
+{
+  Warnings = "";
+  for ( MacrosType::iterator mp = MCs.begin();
+	mp != MCs.end();
+	++mp ) {
+      (*mp)->checkOptions( Warnings );
+  }
 }
 
 
@@ -487,7 +493,7 @@ void Macros::create( void )
     SwitchMenu = Menu->addMenu( "&Switch" );
     for ( int k=0; k<Options::size( "file" ); k++ )
       SwitchActions.push_back( SwitchMenu->addAction( text( "file", k ).c_str() ) );
-    connect( SwitchMenu, SIGNAL( triggered( QAction* ) ), 
+    connect( SwitchMenu, SIGNAL( triggered( QAction* ) ),
 	     this, SLOT( switchMacro( QAction* ) ) );
   }
   Menu->addAction( "&Skip RePro", this, SLOT( startNextRePro( void ) ),
@@ -508,7 +514,7 @@ void Macros::create( void )
   for ( unsigned int k=0; k<MCs.size(); k++ )
     if ( MCs[k]->button() )
       nb++;
-  
+
   // number of buttons in a row:
   int cols = nb;
   const int maxcols = 6;
@@ -516,7 +522,7 @@ void Macros::create( void )
     int r = (nb-1)/maxcols + 1;
     cols = (nb-1)/r + 1;
   }
-  
+
   // create buttons and menus:
   int fkc = 0;
   int mk = 0;
@@ -529,7 +535,7 @@ void Macros::create( void )
 
     // menu:
     MCs[k]->addMenu( Menu, mk );
-      
+
     // button:
     MCs[k]->addButton( keys );
     if ( MCs[k]->pushButton() != 0 ) {
@@ -699,7 +705,7 @@ void Macros::executeMacro( int newmacro, const Str &params )
   // put next command on the stack:
   if ( MCs[newmacro]->button() )
     setStackButton();
-  Stack.push_back( MacroPos( CurrentMacro, CurrentCommand + 1, 
+  Stack.push_back( MacroPos( CurrentMacro, CurrentCommand + 1,
 			     MCs[CurrentMacro]->variables(),
 			     MCs[CurrentMacro]->project() ) );
   // execute the requested macro:
@@ -758,6 +764,7 @@ void Macros::loadMacros( const string &file )
 {
   load( file );
   check();
+  checkOptions();
   warning();
   create();
 
@@ -1254,17 +1261,16 @@ MacroButton *Macro::pushButton( void ) const
 void Macro::addButton( const string &keys )
 {
   if ( Button ) {
-    MacroButton *button = new MacroButton( Name + keys, MCs );
-    button->show();
+    PushButton = new MacroButton( Name + keys, MCs );
+    PushButton->show();
     clearButton();
-    button->setMinimumSize( button->sizeHint() );
-    connect( button, SIGNAL( clicked() ), this, SLOT( launch() ) );
-    connect( button, SIGNAL( rightClicked() ), this, SLOT( popup() ) );
+    PushButton->setMinimumSize( PushButton->sizeHint() );
+    connect( PushButton, SIGNAL( clicked() ), this, SLOT( launch() ) );
+    connect( PushButton, SIGNAL( rightClicked() ), this, SLOT( popup() ) );
     if ( Key ) {
       MenuAction->setShortcut( Qt::SHIFT + KeyCode );
       connect( MenuAction, SIGNAL( triggered() ), this, SLOT( popup() ) );
     }
-    PushButton = button;
   }
   else
     PushButton = 0;
@@ -1551,16 +1557,15 @@ string Macro::load( ifstream &macrostream, string &line, int &linenum,
 }
 
 
-void Macro::check( int pass, string &warnings )
+void Macro::check( string &warnings )
 {
   // check the commands:
-  for ( iterator cp = Commands.begin(); 
+  for ( iterator cp = Commands.begin();
 	cp != Commands.end(); ) {
 
-    if ( (*cp)->check( pass, warnings ) ) {
+    if ( (*cp)->check( warnings ) ) {
 
-      if ( (*cp)->command() == MacroCommand::ReProCom &&
-	   pass == 0 ) {
+      if ( (*cp)->command() == MacroCommand::ReProCom ) {
 	// expand ranges:
 	Str ps = (*cp)->parameter();
 	vector <RangeLoop> rls;
@@ -1605,7 +1610,7 @@ void Macro::check( int pass, string &warnings )
 	      Commands.push_back( new MacroCommand( omc ) );
 	      cp = Commands.end();
 	    }
-		    
+
 	    // increment range looops:
 	    for ( int k = int(rls.size())-1; k >= 0; k-- ) {
 	      ++rls[k];
@@ -1627,9 +1632,20 @@ void Macro::check( int pass, string &warnings )
 }
 
 
+void Macro::checkOptions( string &warnings )
+{
+  // check the commands:
+  for ( iterator cp = Commands.begin();
+	cp != Commands.end();
+	++cp ) {
+    (*cp)->checkOptions( warnings );
+  }
+}
+
+
 void Macro::setMacroIndices( void )
 {
-  for ( iterator cp = Commands.begin(); 
+  for ( iterator cp = Commands.begin();
 	cp != Commands.end(); ++cp )
     if ( (*cp)->command() == MacroCommand::MacroCom )
       (*cp)->setMacroIndex( MCs->index( (*cp)->name() ) );
@@ -1640,7 +1656,7 @@ void Macro::init( int macronum )
 {
   MacroNum = macronum;
   int c = 0;
-  for ( iterator cp = Commands.begin(); 
+  for ( iterator cp = Commands.begin();
 	cp != Commands.end();
 	++cp ) {
     (*cp)->init( macronum, c );
@@ -1651,7 +1667,7 @@ void Macro::init( int macronum )
 
 void Macro::reloadRePro( RePro *repro )
 {
-  for ( iterator cp = Commands.begin(); 
+  for ( iterator cp = Commands.begin();
 	cp != Commands.end();
 	++cp )
     (*cp)->reloadRePro( repro );
@@ -2228,7 +2244,7 @@ void MacroCommand::addMenu( QMenu *menu )
 }
 
 
-bool MacroCommand::check( int pass, string &warnings )
+bool MacroCommand::check( string &warnings )
 {
   if ( Command == MacroCom ) {
     if ( MCs->index( name() ) < 0 ) {
@@ -2284,7 +2300,7 @@ bool MacroCommand::check( int pass, string &warnings )
   else if ( Command == ShellCom ) {
     return true;
   }
-	
+
   else if ( Command == MessageCom ) {
     if ( parameter().empty() ) {
       setParameter( name() );
@@ -2294,7 +2310,7 @@ bool MacroCommand::check( int pass, string &warnings )
       setName( "RELACS Message" );
     }
   }
-	
+
   else if ( Command == BrowseCom ) {
     if ( parameter().empty() ) {
       setParameter( name() );
@@ -2304,39 +2320,22 @@ bool MacroCommand::check( int pass, string &warnings )
       setName( "RELACS Info" );
     }
   }
-	
+
   else if ( Command == ReProCom ) {
-    if ( pass == 0 ) {
-      // find RePro:
-      RePro *repro = MCs->RPs->nameRepro( name() );
-      if ( repro == 0 ) {
-	warnings += "Removed unknown RePro \"<b>";
-	warnings += name();
-	warnings += "</b>\" in Macro \"<b>";
+    // find RePro:
+    RePro *repro = MCs->RPs->nameRepro( name() );
+    if ( repro == 0 ) {
+      warnings += "Removed unknown RePro \"<b>";
+      warnings += name();
+      warnings += "</b>\" in Macro \"<b>";
 	warnings += MC->name();
 	warnings += "</b>\".\n";
 	return false;
-      }
-      else {
-	RP = repro;
-	if ( repro != 0 )
-	  Name = repro->uniqueName();
-      }
     }
-    else if ( pass == 1 ) {
-      // check options:
-      Options prjopt;
-      string error = RP->checkOptions( MC->expandParameter( parameter(),
-							    prjopt ) );
-      if ( error.size() > 0 ) {
-	warnings += "Invalid options for RePro \"<b>";
-	warnings += RP->name();
-	warnings += "</b>\" from Macro \"<b>";
-	warnings += Name;
-	warnings += "</b>\":<br>";
-	warnings += error;
-	warnings += ".\n";
-      }
+    else {
+      RP = repro;
+      if ( repro != 0 )
+	Name = repro->uniqueName();
     }
 
   }
@@ -2351,6 +2350,26 @@ bool MacroCommand::check( int pass, string &warnings )
   }
 
   return true;
+}
+
+
+void MacroCommand::checkOptions( string &warnings )
+{
+  if ( Command == ReProCom ) {
+    // check options:
+    Options prjopt;
+    string error = RP->checkOptions( MC->expandParameter( parameter(),
+							  prjopt ) );
+    if ( error.size() > 0 ) {
+      warnings += "Invalid options for RePro \"<b>";
+      warnings += RP->name();
+      warnings += "</b>\" from Macro \"<b>";
+      warnings += Name;
+      warnings += "</b>\":<br>";
+      warnings += error;
+      warnings += ".\n";
+    }
+  }
 }
 
 
@@ -2370,7 +2389,7 @@ bool MacroCommand::execute( bool saving )
   // filter:
   else if ( Command == FilterCom ) {
     if ( FilterCommand == 2 && Name.empty() ) {
-      MCs->RW->printlog( "filter \"ALL\": auto-configure " + 
+      MCs->RW->printlog( "filter \"ALL\": auto-configure " +
 			 Str( AutoConfigureTime ) + "s" );
       MCs->RW->filterDetectors()->autoConfigure( AutoConfigureTime );
     }
@@ -2378,12 +2397,12 @@ bool MacroCommand::execute( bool saving )
       Filter *filter = MCs->RW->filterDetectors()->filter( Name );
       if ( filter != 0 ) {
 	if ( FilterCommand == 1 ) {
-	  MCs->RW->printlog( "filter \"" + filter->ident() + "\": save \"" + 
+	  MCs->RW->printlog( "filter \"" + filter->ident() + "\": save \"" +
 			     Params + "\"" );
 	  filter->save( Params );
 	}
 	else {
-	  MCs->RW->printlog( "filter \"" + filter->ident() + "\": auto-configure " + 
+	  MCs->RW->printlog( "filter \"" + filter->ident() + "\": auto-configure " +
 			     Str( AutoConfigureTime ) + "s" );
 	  MCs->RW->filterDetectors()->autoConfigure( filter, AutoConfigureTime );
 	}
@@ -2612,9 +2631,9 @@ void MacroCommand::dialog( void )
     RP->Options::read( CO, 0, RePro::CurrentFlag );
     RP->projectOptions().read( prjopt );
     RP->projectOptions().read( PO );
-    
+
     RP->dialog();
-    
+
     connect( (ConfigDialog*)RP, SIGNAL( dialogAccepted( void ) ),
 	     this, SLOT( acceptDialog( void ) ) );
     connect( (ConfigDialog*)RP, SIGNAL( dialogAction( int ) ),

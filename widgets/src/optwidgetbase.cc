@@ -309,7 +309,8 @@ void OptWidgetText::doTextChanged( const QString &s )
   Value = EW->text().toStdString();
   if ( cn )
     OO->notify();
-  Param->delFlags( OW->changedFlag() );
+  if ( ContUpdate )
+    Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -405,7 +406,8 @@ void OptWidgetText::doBrowse( Str filename )
   Value = EW->text().toStdString();
   if ( cn )
     OO->notify();
-  Param->delFlags( OW->changedFlag() );
+  if ( ContUpdate )
+    Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -597,7 +599,8 @@ void OptWidgetMultiText::doTextChanged( const QString &s )
   Value = EW->itemText( 0 ).toStdString();
   if ( cn )
     OO->notify();
-  Param->delFlags( OW->changedFlag() );
+  if ( ContUpdate )
+    Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -870,7 +873,8 @@ void OptWidgetNumber::doValueChanged( double v )
   Value = EW->value();
   if ( cn )
     OO->notify();
-  Param->delFlags( OW->changedFlag() );
+  if ( ContUpdate )
+    Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -1032,7 +1036,8 @@ void OptWidgetBoolean::doValueChanged( bool v )
   Value = EW->isChecked();
   if ( cn )
     OO->notify();
-  Param->delFlags( OW->changedFlag() );
+  if ( ContUpdate )
+    Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -1192,7 +1197,8 @@ void OptWidgetDate::doValueChanged( const QDate &date )
   Day = Param->day( 0 );
   if ( cn )
     OO->notify();
-  Param->delFlags( OW->changedFlag() );
+  if ( ContUpdate )
+    Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -1356,7 +1362,8 @@ void OptWidgetTime::doValueChanged( const QTime &time )
   Seconds = Param->seconds( 0 );
   if ( cn )
     OO->notify();
-  Param->delFlags( OW->changedFlag() );
+  if ( ContUpdate )
+    Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();

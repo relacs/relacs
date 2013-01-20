@@ -27,8 +27,8 @@
 #include <deque>
 #include <QObject>
 #include <QWidget>
-#include <QMenu> 
-#include <QAction> 
+#include <QMenu>
+#include <QAction>
 #include <QLayout>
 #include <QPushButton>
 #include <QPixmap>
@@ -48,7 +48,7 @@ class RePros;
 class RELACSWidget;
 
 
-/*! 
+/*!
 \class Macros
 \brief Container handling Macros
 \author Jan Benda
@@ -91,7 +91,7 @@ public:
   string options( void ) const;
     /*! Returns the project variables of macro \a macro. */
   Options &project( int macro );
-    /*! Return the value for the identifier \a ident from the 
+    /*! Return the value for the identifier \a ident from the
         last entry in the stack where it is defined. */
   string projectTextFromStack( const string &ident ) const;
 
@@ -111,6 +111,9 @@ public:
     /*! Check macros and initialize repros.
         Returns true, if no macro or no fallback RePro is specified. */
   bool check( void );
+    /*! Check repro Options.
+        Returns true, if no macro or no fallback RePro is valid. */
+  void checkOptions( void );
     /*! Returns true if check detected no macro or no fallback RePro. */
   bool fatal( void ) const;
     /*! Displays warning messages from load and check if there are any. */
@@ -128,14 +131,14 @@ public:
         \a enable overrides disbaled macro commands. */
   void startNextRePro( bool saving, bool enable=false );
 
-    /*! Initializes macro number \a macro for command number \a command 
+    /*! Initializes macro number \a macro for command number \a command
         and calls startNextRePro().
 	\param[in] macro the index of the macro
 	\param[in] command the index of the macro's command to be executed
 	\param[in] saving toggles whether saving to files via SaveFiles is enabled.
 	\param[in] enable if \c true also runs disabled commands
 	\param[in] newstack if not 0 set the current stack to \a newstack. */
-  void startMacro( int macro, int command=0, bool saving=true, 
+  void startMacro( int macro, int command=0, bool saving=true,
 		   bool enable=false, deque<MacroPos> *newstack=0 );
     /*! Starts the startup Macro (only in case there is one). */
   void startUp( void );
@@ -164,7 +167,7 @@ public:
   RELACSWidget *RW;
     /*! Pointer to all RePros. */
   RePros *RPs;
-  
+
     /*! Write information of the Macros to \a str. */
   friend ostream &operator<< ( ostream &str, const Macros &macros );
 
@@ -190,11 +193,11 @@ public slots:
   void reloadRePro( const string &name );
     /*! Memorizes the currently running repro and macro. */
   void store( void );
-    /*! Memorizes the currently running repro and macro and 
+    /*! Memorizes the currently running repro and macro and
         starts the fallback macro after the current repro is finished.
         The currently running repro gets a request to stop ( RePro::setSoftStop() ). */
   void softBreak( void );
-    /*! Memorizes the currently running repro and macro and 
+    /*! Memorizes the currently running repro and macro and
         starts the fallback macro immediately. */
   void hardBreak( void );
     /*! Starts the previously memorized macro at the memorized repro. */
@@ -224,7 +227,7 @@ private:
   int CurrentCommand;
 
     /*! \struct MacroPos
-        \brief Store a macro and a command index. 
+        \brief Store a macro and a command index.
     */
   struct MacroPos
   {
@@ -239,11 +242,11 @@ private:
     Options MacroVariables;
     Options MacroProject;
   };
-    /*! A stack of macro commands. */  
+    /*! A stack of macro commands. */
   deque< MacroPos > Stack;
     /*! Macro command for resume. */
   MacroPos ResumePos;
-    /*! The stack for resume. */  
+    /*! The stack for resume. */
   deque< MacroPos > ResumeStack;
     /*! Memorize the ThisMacroOnly variable. */
   bool ResumeMacroOnly;
@@ -381,9 +384,12 @@ public:
 	line. Warnings are appended tp \a warnings . */
   string load( ifstream &macrostream, string &line, int &linenum,
 	       string &warnings );
-    /*! Check and expand commands and initialize repros.
+    /*! Check and expand commands.
         Warnings are appended tp \a warnings .*/
-  void check( int pass, string &warnings );
+  void check( string &warnings );
+    /*! Check options for repros.
+        Warnings are appended tp \a warnings .*/
+  void checkOptions( string &warnings );
     /*! Set the indices of macro commands. */
   void setMacroIndices( void );
     /*! Initialize the number of this macro and the command numbers. */
@@ -435,9 +441,9 @@ private:
     /*! Macro project/experiment identifiers */
   Options Project;
 
-    /*! Defines whether this Macro requests to be the 
+    /*! Defines whether this Macro requests to be the
         startup, shutdown, fallback, startsession, or stopsession Macro.
-        This is a bitfield which is evaluated with the 
+        This is a bitfield which is evaluated with the
 	constants StartUp, ShutDown, FallBack, ExplicitFallBack,
 	StartSession, and StopSession . */
   int Action;
@@ -496,8 +502,8 @@ private:
 };
 
 
-/*! 
-\class MacroCommand. 
+/*!
+\class MacroCommand.
 \brief A single command of a macro.
 
 
@@ -529,7 +535,7 @@ public:
       /*! The command executes a shell command. */
     ShellCom,
       /*! The command opens a message box with some text. */
-    MessageCom, 
+    MessageCom,
       /*! The command opens a browser for looking at a text. */
     BrowseCom
   };
@@ -575,10 +581,14 @@ public:
     /*! Adds the submenu for this command to \a menu. */
   void addMenu( QMenu *menu );
 
-    /*! Check the command.
+    /*! Check the command except for validity of the Options.
         Returns \c true on success.
         Otherwise, a warning message is added, and \c false is returned. */
-  bool check( int pass, string &warning );
+  bool check( string &warning );
+    /*! Check the command options.
+        Returns \c true on success.
+        Otherwise, a warning message is added, and \c false is returned. */
+  void checkOptions( string &warning );
     /*! Execute the command. Returns \c true if a RePro was executed. */
   bool execute( bool saving );
     /*! Update the macro command for the reloaded repro \a repro. */
@@ -676,29 +686,29 @@ public slots:
 };
 
 
-/*! 
+/*!
   \class MacroButton
   \author Christian Machens, Jan Benda
   \brief Adds a rightClicked signal to a push button.
 */
-  
+
 class MacroButton : public QPushButton
 {
   Q_OBJECT
-    
+
 public:
-    
+
   MacroButton( const string &title, QWidget *parent = 0 );
-    
+
 signals:
-    
+
   void rightClicked( void );
-    
-    
+
+
 protected:
-    
-  void mouseReleaseEvent( QMouseEvent *qme );  
-    
+
+  void mouseReleaseEvent( QMouseEvent *qme );
+
 };
 
 

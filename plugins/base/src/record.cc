@@ -51,8 +51,8 @@ int Record::main( void )
   // plot trace:
   tracePlotContinuous( duration );
 
-  for ( int count=0; 
-	( repeats <= 0 || count < repeats ) && softStop() == 0; 
+  for ( int count=0;
+	( repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
     sleepWait( duration );
     if ( interrupt() )

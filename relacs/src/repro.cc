@@ -953,11 +953,11 @@ void RePro::getProjectOptions( void )
 
 
 string RePro::checkOptions( const string &opttxt )
-{ 
+{
   Options opt = *(Options*)(this);
   opt.erase( "project" );
   opt.erase( "experiment" );
-  opt.read( opttxt ); 
+  opt.read( opttxt );
   return opt.warning();
 }
 

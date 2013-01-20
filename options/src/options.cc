@@ -1645,7 +1645,12 @@ Parameter &Options::setRequest( const string &name, const string &request )
     cerr << "!warning in Options::setRequest( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1680,7 +1685,12 @@ Parameter &Options::setValueType( const string &name, Parameter::ValueType type 
     cerr << "!warning in Options::setValueType( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1701,6 +1711,23 @@ int Options::flags( const string &name ) const
 }
 
 
+bool Options::flags( const string &name, int flag ) const
+{
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    bool r = pp->flags( flag );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::flags( " << name << " ) -> " << Warning << '\n';
+#endif
+    return r;
+  }
+  else
+    return false;
+}
+
+
 Parameter &Options::setFlags( const string &name, int flags )
 {
   iterator pp = find( name );
@@ -1715,7 +1742,12 @@ Parameter &Options::setFlags( const string &name, int flags )
     cerr << "!warning in Options::setFlags( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1733,7 +1765,12 @@ Parameter &Options::addFlags( const string &name, int flags )
     cerr << "!warning in Options::addFlags( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1751,7 +1788,12 @@ Parameter &Options::delFlags( const string &name, int flags )
     cerr << "!warning in Options::delFlags( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1769,7 +1811,12 @@ Parameter &Options::clearFlags( const string &name )
     cerr << "!warning in Options::clearFlags( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1821,7 +1868,12 @@ Parameter &Options::setStyle( const string &name, int style )
     cerr << "!warning in Options::setStyle( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1839,7 +1891,12 @@ Parameter &Options::addStyle( const string &name, int style )
     cerr << "!warning in Options::addStyle( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1857,7 +1914,12 @@ Parameter &Options::delStyle( const string &name, int style )
     cerr << "!warning in Options::delStyle( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1909,7 +1971,12 @@ Parameter &Options::setFormat( const string &name, int width, int prec, char fmt
     cerr << "!warning in Options::setFormat( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -1927,7 +1994,12 @@ Parameter &Options::setFormat( const string &name, const string &format )
     cerr << "!warning in Options::setFormat( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2072,10 +2144,15 @@ Parameter &Options::setText( const string &name, const string &strg )
   }
 #endif
 
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2094,10 +2171,15 @@ Parameter &Options::pushText( const string &name, const string &strg )
   }
 #endif
 
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2116,10 +2198,15 @@ Parameter &Options::setText( const string &name, const Parameter &p )
   }
 #endif
 
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2155,7 +2242,12 @@ Parameter &Options::setDefaultText( const string &name, const string &dflt )
     cerr << "!warning in Options::setDefaultText( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2331,10 +2423,15 @@ Parameter &Options::setNumber( const string &name, double number,
   }
 #endif
 
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2354,10 +2451,15 @@ Parameter &Options::pushNumber( const string &name, double number,
   }
 #endif
 
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2376,10 +2478,15 @@ Parameter &Options::setNumber( const string &name, const Parameter &p )
   }
 #endif
 
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2415,7 +2522,13 @@ Parameter &Options::setDefaultNumber( const string &name, double dflt,
     cerr << "!warning in Options::setDefaultNumber( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2484,7 +2597,13 @@ Parameter &Options::setStep( const string &name, double step, const string &unit
     cerr << "!warning in Options::setStep( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2503,7 +2622,12 @@ Parameter &Options::setMinMax( const string &name, double minimum,
     cerr << "!warning in Options::setMinMax( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2556,11 +2680,16 @@ Parameter &Options::setUnit( const string &name, const string &internunit,
     cerr << "!warning in Options::setUnit( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
-Parameter &Options::setOutUnit( const string &name, 
+Parameter &Options::setOutUnit( const string &name,
 				const string &outputunit )
 {
   iterator pp = find( name );
@@ -2575,7 +2704,12 @@ Parameter &Options::setOutUnit( const string &name,
     cerr << "!warning in Options::setOutUnit( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2593,17 +2727,22 @@ Parameter &Options::changeUnit( const string &name, const string &internunit )
     cerr << "!warning in Options::changeUnit( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
-Parameter &Options::addInteger( const string &name, const string &request,  
+Parameter &Options::addInteger( const string &name, const string &request,
 				long dflt, long minimum, long maximum, long step,
-				const string &unit, const string &outputunit, 
+				const string &unit, const string &outputunit,
 				int width, int flags, int style )
 {
   // new parameter:
-  Parameter np( name, request, dflt, -1L, minimum, maximum, 
+  Parameter np( name, request, dflt, -1L, minimum, maximum,
 		step, unit, outputunit, width, flags, style, this );
   // add option:
   Parameter &pp = add( np );
@@ -2617,14 +2756,14 @@ Parameter &Options::addInteger( const string &name, const string &request,
 }
 
 
-Parameter &Options::insertInteger( const string &name, const string &atname, 
-				   const string &request, long dflt, 
+Parameter &Options::insertInteger( const string &name, const string &atname,
+				   const string &request, long dflt,
 				   long minimum, long maximum, long step,
-				   const string &unit, const string &outputunit, 
+				   const string &unit, const string &outputunit,
 				   int width, int flags, int style )
 {
   // new parameter:
-  Parameter np( name, request, dflt, -1L, minimum, maximum, 
+  Parameter np( name, request, dflt, -1L, minimum, maximum,
 		step, unit, outputunit, width, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atname );
@@ -2671,11 +2810,15 @@ Parameter &Options::setInteger( const string &name, long number, long error,
     cerr << "!warning in Options::setInteger( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2694,11 +2837,15 @@ Parameter &Options::pushInteger( const string &name, long number, long error,
     cerr << "!warning in Options::pushInteger( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2716,11 +2863,15 @@ Parameter &Options::setInteger( const string &name, const Parameter &p )
     cerr << "!warning in Options::setInteger( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2741,8 +2892,8 @@ long Options::defaultInteger( const string &name, const string &unit ) const
 }
 
 
-Parameter &Options::setDefaultInteger( const string &name, long dflt, 
-				 const string &unit )
+Parameter &Options::setDefaultInteger( const string &name, long dflt,
+				       const string &unit )
 {
   iterator pp = find( name );
   // set value:
@@ -2756,11 +2907,16 @@ Parameter &Options::setDefaultInteger( const string &name, long dflt,
     cerr << "!warning in Options::setDefaultInteger( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
-Parameter &Options::setMinMax( const string &name, long minimum, 
+Parameter &Options::setMinMax( const string &name, long minimum,
 			       long maximum, long step, const string &unit )
 {
   iterator pp = find( name );
@@ -2775,11 +2931,16 @@ Parameter &Options::setMinMax( const string &name, long minimum,
     cerr << "!warning in Options::setMinMax( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
-Parameter &Options::addBoolean( const string &name, const string &request,  
+Parameter &Options::addBoolean( const string &name, const string &request,
 				bool dflt, int flags, int style )
 {
   // new parameter:
@@ -2796,7 +2957,7 @@ Parameter &Options::addBoolean( const string &name, const string &request,
 }
 
 
-Parameter &Options::insertBoolean( const string &name, const string &atname, 
+Parameter &Options::insertBoolean( const string &name, const string &atname,
 				   const string &request, bool dflt, int flags, int style )
 {
   // new parameter:
@@ -2844,11 +3005,15 @@ Parameter &Options::setBoolean( const string &name, bool b )
     cerr << "!warning in Options::setBoolean( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2866,11 +3031,15 @@ Parameter &Options::setBoolean( const string &name, const Parameter &p )
     cerr << "!warning in Options::setBoolean( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -2905,11 +3074,16 @@ Parameter &Options::setDefaultBoolean( const string &name, bool dflt )
     cerr << "!warning in Options::setDefaultBoolean( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
-Parameter &Options::addDate( const string &name, const string &request,  
+Parameter &Options::addDate( const string &name, const string &request,
 			     int year, int month, int day,
 			     int flags, int style )
 {
@@ -2928,7 +3102,7 @@ Parameter &Options::addDate( const string &name, const string &request,
 }
 
 
-Parameter &Options::insertDate( const string &name, const string &atname, 
+Parameter &Options::insertDate( const string &name, const string &atname,
 				const string &request,
 				int year, int month, int day,
 				int flags, int style )
@@ -2986,11 +3160,15 @@ Parameter &Options::setDate( const string &name,
     cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3008,11 +3186,15 @@ Parameter &Options::setDate( const string &name, const string &date )
     cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3030,11 +3212,15 @@ Parameter &Options::setDate( const string &name, const struct tm &date )
     cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3052,11 +3238,15 @@ Parameter &Options::setDate( const string &name, const time_t &time )
     cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3074,11 +3264,15 @@ Parameter &Options::setCurrentDate( const string &name )
     cerr << "!warning in Options::setCurrentDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3096,11 +3290,15 @@ Parameter &Options::setDate( const string &name, const Parameter &p )
     cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3139,11 +3337,16 @@ Parameter &Options::setDefaultDate( const string &name,
     cerr << "!warning in Options::setDefaultDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
-Parameter &Options::addTime( const string &name, const string &request,  
+Parameter &Options::addTime( const string &name, const string &request,
 			     int hour, int minutes, int seconds,
 			     int flags, int style )
 {
@@ -3162,7 +3365,7 @@ Parameter &Options::addTime( const string &name, const string &request,
 }
 
 
-Parameter &Options::insertTime( const string &name, const string &atname, 
+Parameter &Options::insertTime( const string &name, const string &atname,
 				const string &request,
 				int hour, int minutes, int seconds,
 				int flags, int style )
@@ -3220,11 +3423,15 @@ Parameter &Options::setTime( const string &name,
     cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3242,11 +3449,15 @@ Parameter &Options::setTime( const string &name, const string &time )
     cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3264,11 +3475,15 @@ Parameter &Options::setTime( const string &name, const struct tm &time )
     cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3286,11 +3501,15 @@ Parameter &Options::setTime( const string &name, const time_t &time )
     cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3308,11 +3527,15 @@ Parameter &Options::setCurrentTime( const string &name )
     cerr << "!warning in Options::setCurrentTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3330,11 +3553,15 @@ Parameter &Options::setTime( const string &name, const Parameter &p )
     cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-
-  // notify the change:
-  callNotifies();
-
-  return *pp;
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3373,13 +3600,19 @@ Parameter &Options::setDefaultTime( const string &name,
     cerr << "!warning in Options::setDefaultTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
 Options &Options::newSection( int level, const string &name, const string &type,
 			      int flags, int style )
 {
+  Warning = "";
   Options *so = this;
   for ( int l=0; l<level; l++ ) {
     if ( so->Secs.empty() ) {
@@ -3425,6 +3658,7 @@ Options &Options::newSubSubSection( const string &name, const string &type,
 Options &Options::addSection( const string &name, const string &type,
 			      int flags, int style )
 {
+  Warning = "";
   Options *o = &AddOpts->newSection( 0, name, type, flags, style );
   AddOpts->clearSections();
   AddOpts = o;
@@ -3435,6 +3669,7 @@ Options &Options::addSection( const string &name, const string &type,
 Options &Options::insertSection( const string &name, const string &atpattern,
 				 const string &type, int flag, int style )
 {
+  Warning = "";
   Options *o = new Options( name, type, flag, style );
 
   // insert at front:
@@ -3471,6 +3706,7 @@ Options &Options::newSection( int level, const Options &opt, int selectmask,
 			      const string &name, const string &type,
 			      int flags, int style )
 {
+  Warning = "";
   Options *so = this;
   for ( int l=0; l<level; l++ ) {
     if ( so->Secs.empty() ) {
@@ -3526,6 +3762,7 @@ Options &Options::addSection( const Options &opt, int selectmask,
 			      const string &name, const string &type,
 			      int flags, int style )
 {
+  Warning = "";
   Options *o = &AddOpts->newSection( 0, opt, selectmask,
 				     name, type, flags, style );
   AddOpts->clearSections();
@@ -3538,6 +3775,7 @@ Options &Options::insertSection( const Options &opt, int selectmask,
 				 const string &name, const string &atpattern,
 				 const string &type, int flag, int style )
 {
+  Warning = "";
   Options *o = new Options( opt, selectmask );
   if ( ! name.empty() )
     o->setName( name );
@@ -3578,6 +3816,7 @@ Options &Options::insertSection( const Options &opt, int selectmask,
 
 Options &Options::newSection( Options *opt, bool newparent )
 {
+  Warning = "";
   Secs.push_back( opt );
   OwnSecs.push_back( false );
   if ( Secs.back()->parentSection() == 0 || newparent )
@@ -3588,6 +3827,7 @@ Options &Options::newSection( Options *opt, bool newparent )
 
 Options &Options::addSection( Options *opt, bool newparent )
 {
+  Warning = "";
   AddOpts->Secs.push_back( opt );
   AddOpts->OwnSecs.push_back( false );
   if ( opt->parentSection() == 0 || newparent )
@@ -3599,6 +3839,7 @@ Options &Options::addSection( Options *opt, bool newparent )
 Options &Options::insertSection( Options *opt, const string &atpattern,
 				 bool newparent )
 {
+  Warning = "";
   // insert at front:
   if ( atpattern.empty() ) {
     AddOpts->Secs.push_front( opt );
@@ -3632,6 +3873,7 @@ Options &Options::insertSection( Options *opt, const string &atpattern,
 
 Options &Options::newSections( Options *opt, bool newparent )
 {
+  Warning = "";
   for ( unsigned int k=0; k<opt->Secs.size(); k++ ) {
     Secs.push_back( opt->Secs[k] );
     OwnSecs.push_back( false );
@@ -3728,7 +3970,12 @@ Parameter &Options::setDefault( const string &name )
     cerr << "!warning in Options::setDefault( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -3765,7 +4012,12 @@ Parameter &Options::setToDefault( const string &name )
     cerr << "!warning in Options::setToDefault( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  return *pp;
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
 }
 
 
@@ -4770,6 +5022,7 @@ Options &Options::read( const StrQueue &sq, int flag,
   bool cn = CallNotify;
   CallNotify = false;
 
+  Warning = "";
   int indent = -1;
   Options *copt = this;
   for ( StrQueue::const_iterator i = sq.begin(); i != sq.end(); ++i ) {

@@ -57,12 +57,17 @@ The times of the EOD peaks and their amplitude.
 - \c threshold=0.1mV: Threshold (\c number)
 - \c adapt=false: Adapt threshold (\c boolean)
 - \c ratio=50%: Ratio (\c number)
+- \c autoratio=50%: Auto sets threshold relative to EOD peak-to-peak amplitude (\c number)
 - \c maxperiod=10ms: Maximum EOD period (\c number)
-- \c averagecycles=100: Number of EOD cycles to be averaged over for computing mean voltage (\c integer)
+- \c filtertau=100ms: Filter time constant (\c number)
+
+\par Auto Button
+Clicking on the "Auto" button sets the threshold to \c autoratio of the
+peak-to-peak amplitude.
 */
 
 
-  class EODDetector : public Filter, public EODTools
+class EODDetector : public Filter, public EODTools
 {
   Q_OBJECT
 
@@ -80,14 +85,14 @@ public:
   virtual int detect( const InData &data, EventData &outevents,
 		      const EventList &other, const EventData &stimuli );
 
-  int checkEvent( InData::const_iterator first, 
+  int checkEvent( InData::const_iterator first,
 		  InData::const_iterator last,
-		  InData::const_iterator event, 
-		  InData::const_range_iterator eventtime, 
+		  InData::const_iterator event,
+		  InData::const_range_iterator eventtime,
 		  InData::const_iterator index,
-		  InData::const_range_iterator indextime, 
-		  InData::const_iterator prevevent, 
-		  InData::const_range_iterator prevtime, 
+		  InData::const_range_iterator indextime,
+		  InData::const_iterator prevevent,
+		  InData::const_range_iterator prevtime,
 		  EventData &outevents,
 		  double &threshold,
 		  double &minthresh, double &maxthresh,

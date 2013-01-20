@@ -67,7 +67,7 @@ namespace efish {
     addNumber( "lowercutoff", "Lower cutoff frequency.", LowerCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","Gaussian");
     addNumber( "noisetau","Time constant of the Ornstein-Uhlenbeck process",NoiseTau,0.0,500.0,0.01,"seconds","ms" ).setActivation("noisetype","Ornstein-Uhlenbeck");
     addNumber( "noisecontrast", "Contrast of the added noise",NoiseContrast, 0.000, 1.00, 0.005, "", "%" ).setActivation("amplsel", "contrast");
-    addNumber( "noiseampl", "Amplitude of the additional noise.", NoiseAmpl, 0.01, 100.00, 0.05, "mV/cm" ).setActivation( "amplsel", "absolute");
+    addNumber( "noiseampl", "Amplitude of the additional noise.", NoiseAmpl, 0.0, 100.00, 0.05, "mV/cm" ).setActivation( "amplsel", "absolute");
     newSection( "Analysis" );
     addNumber( "binwidth", "Bin width", RateDeltaT, 0.0001, 1.0, 0.002, "seconds", "ms" );
     addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );

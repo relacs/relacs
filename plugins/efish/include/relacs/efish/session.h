@@ -1,6 +1,6 @@
 /*
   efish/session.h
-  Session for in vivo recordings in weakly electric fish.
+  Session for recording EODs of weakly electric fish.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -38,9 +38,15 @@ namespace efish {
 
 /*!
 \class Session
-\brief [Control] %Session for in vivo recordings in weakly electric fish.
+\brief [Control] %Session for recording EODs of weakly electric fish.
 \author Jan Benda
-\version 1.0 (Nov 27, 2009)
+\version 1.1 (Jan 19, 2013)
+\par Options
+- \c ephys=true: Electrophysiological recording (\c boolean)
+\par Plots
+- The amplitude (red) and
+- the frequency (green)
+of the global EOD measurement.
 */
 
 
@@ -104,6 +110,8 @@ private:
   QLCDNumber *FiringRateLCD[MaxSpikeTraces];
   QLCDNumber *PValueLCD[MaxSpikeTraces];
   QPushButton *SessionButton;
+
+  bool EPhys;
 
 };
 

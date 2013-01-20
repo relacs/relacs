@@ -33,13 +33,11 @@ using namespace std;
 namespace relacs {
 
 
-/*! 
+/*!
 \class Options
 \author Jan Benda
 \version 2.0
 \brief A hierarchical name-value list for configuration files and dialogs.
-\bug return values of type Parameter& are not defined if name is not found!
-\bug takeFirst, takeLast, combineFirst, combineLast should use find instead of ==
 
 An Options class contains a list of name-value pairs that are
 identified by a string \a name and have a default value \a dflt.  For
@@ -58,10 +56,10 @@ minimum and maximum value, unit and format of an already existing option.
 With erase() options can selectively be erased.
 
 The values of the options can be read out with number() or text().
-In addition the default values are accesible with defaultNumber() 
+In addition the default values are accesible with defaultNumber()
 and defaultText().
 Minimum and maximum values can be read with minimum() and maximum().
-The corresponding unit and formatting string can be read with unit() 
+The corresponding unit and formatting string can be read with unit()
 and format().
 
 In addition to the name-value pairs, an Options class contains further
@@ -131,7 +129,7 @@ public:
      /*! Create options from input stream \a str.
          See load( istream &str, const string &comment, const string &stop, string *line ) for details. */
   Options( istream &str, const string &assignment=":=",
-	   const string &comment="#", 
+	   const string &comment="#",
 	   const string &stop="", string *line=0 );
     /*! Deconstructs an options list. */
   virtual ~Options( void );
@@ -205,7 +203,7 @@ public:
         are not considered for insertion. */
   Options &insert( const Options &o, int flags, const string &atname="" );
 
-    /*! Set the value of an existing option 
+    /*! Set the value of an existing option
         with name \a name to \a value.
 	Set warning message, if the \a value is invalid.
         Used by read(). */
@@ -281,7 +279,7 @@ public:
 
     /*! The flag for this secion of options. */
   int flag( void ) const;
-    /*! True if one of the bits specified by \a abs(selectflag) is set 
+    /*! True if one of the bits specified by \a abs(selectflag) is set
         in the Option's flag(), or \a selectflag equals zero or NonDefault. */
   bool flag( int selectflag ) const;
     /*! Set the flag of this section of options to \a flag. */
@@ -317,7 +315,7 @@ public:
 	is not contained in abs( mask ). */
   bool checkType( int mask ) const;
 
-    /*! Returns the warning messages of the last called 
+    /*! Returns the warning messages of the last called
         Option member-function. */
   Str warning( void ) const { return Warning; };
 
@@ -354,11 +352,11 @@ public:
         Returns end() if no match for \a pattern is found. */
   iterator find( const string &pattern, int level=-1 );
     /*! Search for the last option that matches \a pattern.
-        Returns end() if \a name is not found. 
+        Returns end() if \a name is not found.
         See find() for details about valid patterns \a pattern. */
   const_iterator rfind( const string &pattern, int level=-1 ) const;
     /*! Search for the last option that matches \a pattern.
-        Returns end() if \a name is not found. 
+        Returns end() if \a name is not found.
         See find() for details about valid patterns \a pattern. */
   iterator rfind( const string &pattern, int level=-1 );
 
@@ -423,7 +421,7 @@ public:
 
       /*! Returns the request string of the option with name \a name. */
   Str request( const string &name ) const;
-    /*! Set request string of the option 
+    /*! Set request string of the option
         with name \a name to \a request. */
   Parameter &setRequest( const string &name, const string &request );
 
@@ -434,18 +432,21 @@ public:
 
     /*! The flags of the option with name \a name. */
   int flags( const string &name ) const;
+    /*! \return \c true if the flags of the option with name \a name
+        have \a flag set. \sa Parameter::flags( int ) */
+  bool flags( const string &name, int flag ) const;
     /*! Set the flags of the option with name \a name to \a flags. */
   Parameter &setFlags( const string &name, int flags );
-    /*! Add the bits specified by \a flags to the flags of the option 
+    /*! Add the bits specified by \a flags to the flags of the option
         with name \a name. */
   Parameter &addFlags( const string &name, int flags );
-    /*! Clear the bits specified by \a flags of the flags of the option 
+    /*! Clear the bits specified by \a flags of the flags of the option
         with name \a name. */
   Parameter &delFlags( const string &name, int flags );
-    /*! Clear all bits of the flags of the option 
+    /*! Clear all bits of the flags of the option
         with name \a name. */
   Parameter &clearFlags( const string &name );
-    /*! Return \a true if the changedFlag() of the option 
+    /*! Return \a true if the changedFlag() of the option
         with name \a name is set,
         i.e. whose value has been changed.. */
   bool changed( const string &name );
@@ -454,24 +455,24 @@ public:
   int style( const string &name ) const;
     /*! Set the style of the option with name \a name to \a style. */
   Parameter &setStyle( const string &name, int style );
-    /*! Add the bits specified by \a style to the style of the option 
+    /*! Add the bits specified by \a style to the style of the option
         with name \a name. */
   Parameter &addStyle( const string &name, int style );
-    /*! Clear the bits specified by \a style of the style of the option 
+    /*! Clear the bits specified by \a style of the style of the option
         with name \a name. */
   Parameter &delStyle( const string &name, int style );
 
-    /*! Return the format string of the option 
-        with name \a name. 
+    /*! Return the format string of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, an empty string is returned. */
   Str format( const string &name ) const;
-    /*! Set format string of an existing number option 
-        with name \a name to have a width of \a width, 
+    /*! Set format string of an existing number option
+        with name \a name to have a width of \a width,
 	precision of \a prec and type \a fmt. */
   Parameter &setFormat( const string &name, int width=0, int prec=-1,
 			char fmt='g' );
-    /*! Set the format of an existing number option 
+    /*! Set the format of an existing number option
         with name \a name to \a format. */
   Parameter &setFormat( const string &name, const string &format );
     /*! Returns the width specified by the format string of the option
@@ -494,17 +495,17 @@ public:
 	\sa add(), endSection(), clearSections() */
   Parameter &insert( const Parameter &np, const string &atname="" );
 
-    /*! Add a text option at the end of the options list. 
+    /*! Add a text option at the end of the options list.
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a default value \a dflt. */
-  Parameter &addText( const string &name, const string &request,  
+  Parameter &addText( const string &name, const string &request,
 		      const string &dflt, int flags=0, int style=0 );
-    /*! Add a text option at the end of the options list. 
-        Its name string and its request string for the options dialog 
+    /*! Add a text option at the end of the options list.
+        Its name string and its request string for the options dialog
 	are set to \a name.
         The option has a default value \a dflt. */
-  inline Parameter &addText( const string &name, const string &dflt="", 
+  inline Parameter &addText( const string &name, const string &dflt="",
 			     int flags=0, int style=0 )
     { return addText( name, name, dflt, flags, style ); };
     /*! Insert a new text option at the beginning of the options list
@@ -514,26 +515,26 @@ public:
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a default value \a dflt. */
-  Parameter &insertText( const string &name, const string &atname, 
+  Parameter &insertText( const string &name, const string &atname,
 			 const string &request, const string &dflt,
 			 int flags=0, int style=0 );
     /*! Insert a new text option at the beginning of the options list
         (\a atname == "") or at the position of the option with
         name \a atname. If the option with name \a atname
         does not exist, the option is appended to the end of the list.
-        Its name string and its request string for the options dialog 
+        Its name string and its request string for the options dialog
 	are set to \a name.
         The option has a default value \a dflt. */
-  inline Parameter &insertText( const string &name, const string &atname="", 
+  inline Parameter &insertText( const string &name, const string &atname="",
 				const string &dflt="", int flags=0, int style=0 )
     { return insertText( name, atname, name, dflt, flags, style ); };
-    /*! Return the \a index-th string of the text option 
-        with name \a name. 
+    /*! Return the \a index-th string of the text option
+        with name \a name.
         If there is no option with name \a name an empty string is returned. */
   Str text( const string &name, int index, const string &dflt="",
 	    const string &format="", const string &unit="" ) const;
-    /*! Return the first string of the text option 
-        with name \a name. 
+    /*! Return the first string of the text option
+        with name \a name.
         If there is no option with name \a name an empty string is returned. */
   inline Str text( const string &name, const string &dflt="",
 		   const string &format="", const string &unit="" ) const
@@ -545,41 +546,41 @@ public:
         See Parameter::text() for details. */
   Str allText( const string &name, const string &dflt="", const string &format="",
 	       const string &unit="", const string &separator=", " ) const;
-    /*! Set the value of an existing text option 
+    /*! Set the value of an existing text option
         with name \a name to \a strg. */
   Parameter &setText( const string &name, const string &strg );
-    /*! Set value of an existing text option 
+    /*! Set value of an existing text option
         with name \a name to the one of \a p,
         if both are of valueType() Text.
-	If the value of the parameter is changing 
+	If the value of the parameter is changing
 	then the changedFlag() is set. */
   Parameter &setText( const string &name, const Parameter &p );
-    /*! Add \a strg to the value of an existing text option 
+    /*! Add \a strg to the value of an existing text option
         with name \a name. */
   Parameter &pushText( const string &name, const string &strg );
-    /*! Return the default string of the text option 
-        with name \a name. 
+    /*! Return the default string of the text option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	not a text, an empty string is returned. */
   Str defaultText( const string &name,
 		   const string &format="", const string &unit="" ) const;
-    /*! Set the default string of an existing text option 
+    /*! Set the default string of an existing text option
         with name \a name to \a dflt. */
   Parameter &setDefaultText( const string &name, const string &dflt );
 
-    /*! Add a text-selection option at the end of the options list. 
+    /*! Add a text-selection option at the end of the options list.
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a list \a selection of strings (separated by ", ")
         that can be selected. */
-  Parameter &addSelection( const string &name, const string &request,  
+  Parameter &addSelection( const string &name, const string &request,
 			   const string &selection, int flags=0, int style=0 );
-    /*! Add a text option at the end of the options list. 
-        Its name string and its request string for the options dialog 
+    /*! Add a text option at the end of the options list.
+        Its name string and its request string for the options dialog
 	are set to \a name.
 	The option has a list \a selection of strings (separated by ", ")
         that can be selected. */
-  inline Parameter &addSelection( const string &name, const string &selection="", 
+  inline Parameter &addSelection( const string &name, const string &selection="",
 			     int flags=0, int style=0 )
     { return addSelection( name, name, selection, flags, style ); };
     /*! Insert a new text option at the beginning of the options list
@@ -590,18 +591,18 @@ public:
         its name string is set to \a name.
 	The option has a list \a selection of strings (separated by ", ")
         that can be selected. */
-  Parameter &insertSelection( const string &name, const string &atname, 
+  Parameter &insertSelection( const string &name, const string &atname,
 			      const string &request, const string &selection,
 			      int flags=0, int style=0 );
     /*! Insert a new text option at the beginning of the options list
         (\a atname == "") or at the position of the option with
         name \a atname. If the option with name \a atname
         does not exist, the option is appended to the end of the list.
-        Its name string and its request string for the options dialog 
+        Its name string and its request string for the options dialog
 	are set to \a name.
 	The option has a list \a selection of strings (separated by ", ")
         that can be selected. */
-  inline Parameter &insertSelection( const string &name, const string &atname="", 
+  inline Parameter &insertSelection( const string &name, const string &atname="",
 				     const string &selection="", int flags=0, int style=0 )
     { return insertSelection( name, atname, name, selection, flags, style ); };
     /*! If the text parameter has several values,
@@ -613,69 +614,69 @@ public:
 	in the Parameter's style is not set. */
   Parameter &selectText( const string &name, const string &strg,
 			 int add=0 );
-    /*! Returns the index of the selected value, i.e. 
+    /*! Returns the index of the selected value, i.e.
         the index minus one of the matching value with the first value. */
   int index( const string &name ) const;
     /*! Returns the index of the value that matches \a strg. */
   int index( const string &name, const string &strg ) const;
 
-    /*! Add a new number option at the end of the options list. 
+    /*! Add a new number option at the end of the options list.
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a default value \a dflt, minimum value \a minimum
         and maximum value \a maximum, as well as a unit \a unit
-	and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+	and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
-  Parameter &addNumber( const string &name, const string &request,  
+  Parameter &addNumber( const string &name, const string &request,
 			double dflt, double minimum,
 			double maximum=MAXDOUBLE, double step=1.0,
-			const string &unit="", const string &outputunit="", 
+			const string &unit="", const string &outputunit="",
 			const string &format="", int flags=0, int style=0 );
-    /*! Add a new number option at the end of the options list. 
+    /*! Add a new number option at the end of the options list.
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a default value \a dflt,
-        a unit \a unit and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+        a unit \a unit and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
   inline Parameter &addNumber( const string &name, const string &request,
-			       double dflt, const string &unit="", 
+			       double dflt, const string &unit="",
 			       const string &format="", int flags=0, int style=0 )
     { return addNumber( name, request, dflt, -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit, format, flags, style ); };
-    /*! Add a new number option at the end of the options list. 
+    /*! Add a new number option at the end of the options list.
         Its name string and request string is set to \a name.
         The option has a default value \a dflt,
-        a unit \a unit and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+        a unit \a unit and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
   inline Parameter &addNumber( const string &name, double dflt,
-                               const string &unit="", 
+			       const string &unit="",
 			       const string &format="", int flags=0, int style=0 )
     { return addNumber( name, name, dflt, -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit, format, flags, style ); };
-    /*! Add a new number option at the end of the options list. 
+    /*! Add a new number option at the end of the options list.
         Its name string and request string is set to \a name.
         The option has a default value \a dflt and
         a unit \a unit. */
   inline Parameter &addNumber( const string &name, double dflt,
-                               const string &unit, int flags, int style=0 )
+			       const string &unit, int flags, int style=0 )
     { return addNumber( name, name, dflt, -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit, "", flags, style ); };
-    /*! Add a new number option at the end of the options list. 
+    /*! Add a new number option at the end of the options list.
         Its name string and request string is set to \a name.
         The option has a default value \a dflt,
-	an error \a error, a unit \a unit and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+	an error \a error, a unit \a unit and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
   inline Parameter &addNumber( const string &name, double dflt,
-                               double error, const string &unit="", 
+			       double error, const string &unit="",
 			       const string &format="", int flags=0, int style=0 )
     { return addNumber( name, name, dflt, -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit, format, flags, style ).setNumber( dflt, error ); };
-    /*! Add a new number option at the end of the options list. 
+    /*! Add a new number option at the end of the options list.
         Its name string and request string is set to \a name.
-        The option has a unit \a unit and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+	The option has a unit \a unit and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
-  inline Parameter &addNumber( const string &name, const string &unit="", 
+  inline Parameter &addNumber( const string &name, const string &unit="",
 			       const string &format="", int flags=0, int style=0 )
     { return addNumber( name, name, 0.0, -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit, format, flags, style ); };
     /*! Insert a new number option at the beginning of the options list
@@ -686,14 +687,14 @@ public:
         its name string is set to \a name.
         The option has a default value \a dflt, minimum value \a minimum
         and maximum value \a maximum, as well as a unit \a unit
-	and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+	and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
-  Parameter &insertNumber( const string &name, const string &atname, 
-			   const string &request, double dflt, 
+  Parameter &insertNumber( const string &name, const string &atname,
+			   const string &request, double dflt,
 			   double minimum, double maximum=MAXDOUBLE,
 			   double step=1.0,
-			   const string &unit="", const string &outputunit="", 
+			   const string &unit="", const string &outputunit="",
 			   const string &format="", int flags=0, int style=0 );
     /*! Insert a new number option at the beginning of the options list
         (\a atname == "") or at the position of the option with
@@ -702,11 +703,11 @@ public:
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a default value \a dflt,
-        a unit \a unit and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+	a unit \a unit and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
   inline Parameter &insertNumber( const string &name, const string &atname,
-				  const string &request, double dflt, const string &unit="", 
+				  const string &request, double dflt, const string &unit="",
 				  const string &format="", int flags=0, int style=0 )
     { return insertNumber( name, atname, request, dflt,
 			   -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit,
@@ -717,11 +718,11 @@ public:
         does not exist, the option is appended to the end of the list.
         Its name string and request string is set to \a name.
         The option has a default value \a dflt,
-        a unit \a unit and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+	a unit \a unit and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
   inline Parameter &insertNumber( const string &name, const string &atname,
-				  double dflt, const string &unit="", 
+				  double dflt, const string &unit="",
 				  const string &format="", int flags=0, int style=0 )
     { return insertNumber( name, atname, name, dflt,
 			   -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit,
@@ -731,88 +732,88 @@ public:
         name \a atname. If the option with name \a atname
         does not exist, the option is appended to the end of the list.
         Its name string and request string is set to \a name.
-        The option has a unit \a unit and a format string \a format 
-	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+	The option has a unit \a unit and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
 	since the number is a double). */
   inline Parameter &insertNumber( const string &name, const string &atname,
-				  const string &unit="", 
+				  const string &unit="",
 				  const string &format="", int flags=0, int style=0 )
     { return insertNumber( name, atname, name, 0.0,
 			   -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit,
 			   format, flags, style ); };
-    /*! Return the \a index-th number of the option with name \a name. 
-        If there is no option with name \a name, or the option is 
+    /*! Return the \a index-th number of the option with name \a name.
+        If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double number( const string &name, double dflt=0.0, const string &unit="", int index=0 ) const;
   double number( const string &name, const string &unit, double dflt=0.0, int index=0 ) const
     { return number( name, dflt, unit, index ); };
-    /*! Return the \a index-th number of the option with name \a name. 
-        If there is no option with name \a name, or the option is 
-	neither a number nor an integer, zero is returned. */
+    /*! Return the \a index-th number of the option with name \a name.
+        If there is no option with name \a name, or the option is
+        neither a number nor an integer, zero is returned. */
   double number( const string &name, int index, double dflt=0.0, const string &unit="" ) const
     { return number( name, dflt, unit, index ); };
   double number( const string &name, int index, const string &unit, double dflt=0.0 ) const
     { return number( name, dflt, unit, index ); };
-    /*! Return the \a index-th standard deviation of the option 
-        with name \a name. 
+    /*! Return the \a index-th standard deviation of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double error( const string &name, const string &unit="", int index=0 ) const;
-    /*! Return the \a index-th standard deviation of the option 
-        with name \a name. 
+    /*! Return the \a index-th standard deviation of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double error( const string &name, int index, const string &unit="" ) const
     { return error( name, unit, index ); };
-    /*! Set the value of an existing number option 
+    /*! Set the value of an existing number option
         with name \a name to \a number. */
-  Parameter &setNumber( const string &name, double number, double error, 
+  Parameter &setNumber( const string &name, double number, double error,
 			const string &unit="" );
-    /*! Set the value of an existing number option 
+    /*! Set the value of an existing number option
         with name \a name to \a number. */
   inline Parameter &setNumber( const string &name, double number,
 			       const string &unit="" )
     { return setNumber( name, number, -1.0, unit ); };
-    /*! Add \a number to the value of an existing number option 
+    /*! Add \a number to the value of an existing number option
         with name \a name. */
-  Parameter &pushNumber( const string &name, double number, double error=-1.0, 
+  Parameter &pushNumber( const string &name, double number, double error=-1.0,
 			 const string &unit="" );
-    /*! Add \a number to the value of an existing number option 
+    /*! Add \a number to the value of an existing number option
         with name \a name. */
   inline Parameter &pushNumber( const string &name, double number,
 				const string &unit )
     { return pushNumber( name, number, -1.0, unit ); };
-    /*! Set value of an existing number option 
+    /*! Set value of an existing number option
         with name \a name to the one of \a p,
         if both are of valueType() Number.
-	If the value of the parameter is changing 
+	If the value of the parameter is changing
 	then the changedFlag() is set. */
   Parameter &setNumber( const string &name, const Parameter &p );
-    /*! Return the default number of the option 
-        with name \a name. 
+    /*! Return the default number of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double defaultNumber( const string &name, const string &unit="" ) const;
-    /*! Set the default number of an existing number option 
+    /*! Set the default number of an existing number option
         with name \a name to \a dflt. */
-  Parameter &setDefaultNumber( const string &name, double dflt, 
+  Parameter &setDefaultNumber( const string &name, double dflt,
 			       const string &unit="" );
-    /*! Return the minimum number of the option 
-        with name \a name. 
+    /*! Return the minimum number of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double minimum( const string &name, const string &unit="" ) const;
-    /*! Return the maximum number of the option 
-        with name \a name. 
+    /*! Return the maximum number of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double maximum( const string &name, const string &unit="" ) const;
-    /*! Return the step size of the option 
-        with name \a name. 
+    /*! Return the step size of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, unity is returned. */
   double step( const string &name, const string &unit="" ) const;
-    /* Set the step size of an existing number option 
+    /* Set the step size of an existing number option
        with name \a name to \a step of unit \a unit.
        If \a step is negative, the step size is set to \a maximum - \minimum
        devided by \a step.
@@ -820,9 +821,9 @@ public:
        \a maximum - \a minimum.
        If \a unit is empty, \a step is assumed to be given in the internal unit. */
   Parameter &setStep( const string &name, double step, const string &unit="" );
-    /*! Set the minimum and maximum of an existing number option 
+    /*! Set the minimum and maximum of an existing number option
         with name \a name to \a minimum and \a maximum, respectively. */
-  Parameter &setMinMax( const string &name, double minimum=-MAXDOUBLE, 
+  Parameter &setMinMax( const string &name, double minimum=-MAXDOUBLE,
 			double maximum=MAXDOUBLE, double step=1.0,
 			const string &unit="" );
 
@@ -844,41 +845,41 @@ public:
   inline static double ceil10( double v, double scale=1.0 )
     { return Parameter::ceil10( v, scale ); };
 
-    /*! Return the internal unit of the option 
-        with name \a name. 
+    /*! Return the internal unit of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, an empty string is returned. */
   Str unit( const string &name ) const;
     /*! Return the unit used for output and dialogs
-        of the option with name \a name. 
+        of the option with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, an empty string is returned. */
   Str outUnit( const string &name ) const;
-    /*! Set the internal unit and the output unit of an existing number option 
+    /*! Set the internal unit and the output unit of an existing number option
         with name \a name to \a internunit and \a outunit, respectively.
         If \a outunit is an empty string it is set to \a internunit. */
-  Parameter &setUnit( const string &name, const string &internunit, 
+  Parameter &setUnit( const string &name, const string &internunit,
 		      const string &outunit="" );
-    /*! Set the output unit of an existing number option 
+    /*! Set the output unit of an existing number option
         with name \a name to \a outputunit. */
   Parameter &setOutUnit( const string &name, const string &outputunit );
-    /*! Set the internal unit of an existing number option 
+    /*! Set the internal unit of an existing number option
         with name \a name to \a inputunit.
 	The values of the parameter are converted accordingly. */
   Parameter &changeUnit( const string &name, const string &internunit );
 
-    /*! Add a new integer option at the end of the options list. 
+    /*! Add a new integer option at the end of the options list.
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a default value \a dflt, minimum value \a minimum
         and maximum value \a maximum, as well as a unit \a unit
 	and a width of output format \a width. */
-  Parameter &addInteger( const string &name, const string &request,  
+  Parameter &addInteger( const string &name, const string &request,
 			 long dflt, long minimum=LONG_MIN,
 			 long maximum=LONG_MAX, long step=1,
-			 const string &unit="", const string &outputunit="", 
+			 const string &unit="", const string &outputunit="",
 			 int width=0, int flags=0, int style=0 );
-    /*! Add a new integer option at the end of the options list. 
+    /*! Add a new integer option at the end of the options list.
         Its name string and request string is set to \a name.
         The option has a default value \a dflt, a unit \a unit,
 	and a width of output format \a width. */
@@ -886,7 +887,7 @@ public:
 				const string &unit="", int width=0, int flags=0, int style=0 )
     { return addInteger( name, name, dflt, LONG_MIN, LONG_MAX, 1,
 			 unit, unit, width, flags, style ); };
-    /*! Add a new integer option at the end of the options list. 
+    /*! Add a new integer option at the end of the options list.
         Its name string and request string is set to \a name.
         The option has a unit \a unit,
 	and a width of output format \a width. */
@@ -902,11 +903,11 @@ public:
         The option has a default value \a dflt, minimum value \a minimum
         and maximum value \a maximum, as well as a unit \a unit
 	and a width of output format \a width. */
-  Parameter &insertInteger( const string &name, const string &atname, 
-			    const string &request, long dflt, 
+  Parameter &insertInteger( const string &name, const string &atname,
+			    const string &request, long dflt,
 			    long minimum=LONG_MIN, long maximum=LONG_MAX,
 			    long step=1,
-			    const string &unit="", const string &outputunit="", 
+			    const string &unit="", const string &outputunit="",
 			    int width=0, int flags=0, int style=0 );
     /*! Insert a new integer option at the beginning of the options list
         (\a atname == "") or at the position of the option with
@@ -915,8 +916,8 @@ public:
         Its name string and request string is set to \a name.
         The option has a default value \a dflt, a unit \a unit,
 	and a width of output format \a width. */
-  Parameter &insertInteger( const string &name, const string &atname, 
-			    long dflt, const string &unit="", 
+  Parameter &insertInteger( const string &name, const string &atname,
+			    long dflt, const string &unit="",
 			    int width=0, int flags=0, int style=0 )
     { return insertInteger( name, atname, name, dflt, LONG_MIN, LONG_MAX,
 			    1, unit, unit, width, flags, style ); };
@@ -927,77 +928,75 @@ public:
         Its name string and request string is set to \a name.
         The option has a unit \a unit,
 	and a width of output format \a width. */
-  Parameter &insertInteger( const string &name, const string &atname, 
-			    const string &unit="", 
+  Parameter &insertInteger( const string &name, const string &atname,
+			    const string &unit="",
 			    int width=0, int flags=0, int style=0 )
     { return insertInteger( name, atname, name, 0, LONG_MIN, LONG_MAX,
 			    1, unit, unit, width, flags, style ); };
-    /*! Return the \a index-th integer number of the option 
-        with name \a name. 
+    /*! Return the \a index-th integer number of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   long integer( const string &name, const string &unit="", long dflt=0, int index=0 ) const;
-    /*! Return the \a index-th integer number of the option 
-        with name \a name. 
+    /*! Return the \a index-th integer number of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   long integer( const string &name, int index, long dflt=0, const string &unit="" ) const
     { return integer( name, unit, dflt, index ); }
   long integer( const string &name, int index, const string &unit, long dflt=0 ) const
     { return integer( name, unit, dflt, index ); }
-   /*! Set the value of an existing integer option 
+   /*! Set the value of an existing integer option
         with name \a name to \a number. */
-  Parameter &setInteger( const string &name, long number, long error, 
+  Parameter &setInteger( const string &name, long number, long error,
 			 const string &unit="" );
-   /*! Set the value of an existing integer option 
+   /*! Set the value of an existing integer option
         with name \a name to \a number. */
   inline Parameter &setInteger( const string &name, long number, const string &unit="" )
     { return setInteger( name, number, -1, unit ); };
-   /*! Add \a number to the value of an existing integer option 
+   /*! Add \a number to the value of an existing integer option
         with name \a name. */
-  Parameter &pushInteger( const string &name, long number, long error, 
+  Parameter &pushInteger( const string &name, long number, long error,
 			  const string &unit="" );
-   /*! Add \a number to the value of an existing integer option 
+   /*! Add \a number to the value of an existing integer option
         with name \a name. */
   inline Parameter &pushInteger( const string &name, long number, const string &unit="" )
     { return pushInteger( name, number, -1, unit ); };
-    /*! Set value of an existing integer option 
+    /*! Set value of an existing integer option
         with name \a name to the one of \a p,
         if both are of valueType() Integer.
-	If the value of the parameter is changing 
+	If the value of the parameter is changing
 	then the changedFlag() is set. */
   Parameter &setInteger( const string &name, const Parameter &p );
-    /*! Return the default number of the integer option 
-        with name \a name. 
+    /*! Return the default number of the integer option
+        with name \a name.
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   long defaultInteger( const string &name, const string &unit="" ) const;
-    /*! Set the default number of an existing integer option 
+    /*! Set the default number of an existing integer option
         with name \a name to \a dflt. */
-  Parameter &setDefaultInteger( const string &name, long dflt, 
+  Parameter &setDefaultInteger( const string &name, long dflt,
 				const string &unit="" );
-    /*! Set the minimum and maximum of an existing integer number option 
+    /*! Set the minimum and maximum of an existing integer number option
         with name \a name to \a minimum and \a maximum, respectively. */
-  Parameter &setMinMax( const string &name, long minimum=LONG_MIN, 
+  Parameter &setMinMax( const string &name, long minimum=LONG_MIN,
 			long maximum=LONG_MAX, long step=1, const string &unit="" );
 
-    /*! Add a boolean option at the end of the options list. 
+    /*! Add a boolean option at the end of the options list.
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a default value \a dflt. */
-  Parameter &addBoolean( const string &name, const string &request,  
+  Parameter &addBoolean( const string &name, const string &request,
 			 bool dflt, int flags=0, int style=0 );
-    /*! Add a boolean option at the end of the options list. 
+    /*! Add a boolean option at the end of the options list.
         Its name string and request string is set to \a name.
         The option has a default value \a dflt. */
-  /*
+  inline Parameter &addBoolean( const char *name, const char *request, bool dflt, int flags=0, int style=0 )
+    { return addBoolean( string( name ), string( request ), dflt, flags, style ); };
   inline Parameter &addBoolean( const string &name, bool dflt, int flags=0, int style=0 )
     { return addBoolean( name, name, dflt, flags, style ); };
-  */
-    /*! Add a boolean option at the end of the options list. 
-        Its name string and request string is set to \a name. */
-  inline Parameter &addBoolean( const string &name, int flags=0, int style=0 )
-    { return addBoolean( name, name, false, flags, style ); };
+  inline Parameter &addBoolean( const char *name, bool dflt, int flags=0, int style=0 )
+    { return addBoolean( string( name ), dflt, flags, style ); };
     /*! Insert a new boolean option at the beginning of the options list
         (\a atname == "") or at the position of the option with
         name \a atname. If the option with name \a atname
@@ -1005,7 +1004,7 @@ public:
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
         The option has a default value \a dflt. */
-  Parameter &insertBoolean( const string &name, const string &atname="", 
+  Parameter &insertBoolean( const string &name, const string &atname="",
 			    const string &request="", bool dflt=false,
 			    int flags=0, int style=0 );
     /*! Insert a new boolean option at the beginning of the options list
@@ -1015,7 +1014,7 @@ public:
         Its name string and request string is set to \a name.
         The option has a default value \a dflt. */
   /*
-  Parameter &insertBoolean( const string &name, const string &atname, 
+  Parameter &insertBoolean( const string &name, const string &atname,
 			    bool dflt, int flags=0, int style=0 )
     { return insertBoolean( name, atname, name, dflt, flags, style ); };
   */
@@ -1024,36 +1023,36 @@ public:
         name \a atname. If the option with name \a atname
         does not exist, the option is appended to the end of the list.
         Its name string and request string is set to \a name. */
-  Parameter &insertBoolean( const string &name, const string &atname, 
+  Parameter &insertBoolean( const string &name, const string &atname,
 			    int flags=0, int style=0 )
     { return insertBoolean( name, atname, name, false, flags, style ); };
-    /*! Return the boolean of the option with name \a name. 
+    /*! Return the boolean of the option with name \a name.
         If there is no option with name \a name, or the option is
-	neither a boolean, nor a number, nor an integer, 
+	neither a boolean, nor a number, nor an integer,
 	false is returned. */
   bool boolean( const string &name, bool dflt=false, int index=0 ) const;
   bool boolean( const string &name, int index, bool dflt=false ) const
     { return boolean( name, dflt, index ); };
-    /*! Set the value of an existing boolean option 
+    /*! Set the value of an existing boolean option
         with name \a name to \a string. */
   Parameter &setBoolean( const string &name, bool b );
-    /*! Set value of an existing boolean option 
+    /*! Set value of an existing boolean option
         with name \a name to the one of \a p,
         if both are of valueType() Boolean.
-	If the value of the parameter is changing 
+	If the value of the parameter is changing
 	then the changedFlag() is set. */
   Parameter &setBoolean( const string &name, const Parameter &p );
-    /*! Return the default boolean of the option 
-        with name \a name. 
+    /*! Return the default boolean of the option
+        with name \a name.
         If there is no option with name \a name, or the option is
-	neither a boolean, nor a number nor an integer, 
+	neither a boolean, nor a number nor an integer,
 	false is returned. */
   bool defaultBoolean( const string &name ) const;
-    /*! Set the default value of an existing boolean option 
+    /*! Set the default value of an existing boolean option
         with name \a name to \a dflt. */
   Parameter &setDefaultBoolean( const string &name, bool dflt );
 
-    /*! Add a date option at the end of the options list. 
+    /*! Add a date option at the end of the options list.
         \param[in] name the name string of the new option
         \param[in] request the request string of the new option
 	\param[in] year the default value for the year
@@ -1063,10 +1062,10 @@ public:
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa insertDate(), setDate(), date() */
-  Parameter &addDate( const string &name, const string &request,  
+  Parameter &addDate( const string &name, const string &request,
 		      int year=0, int month=0, int day=0,
 		      int flags=0, int style=0 );
-    /*! Add a date option at the end of the options list. 
+    /*! Add a date option at the end of the options list.
         \param[in] name the name and request string of the new option
 	\param[in] year the default value for the year
 	\param[in] month the default value for the month
@@ -1080,7 +1079,7 @@ public:
 			     int flags=0, int style=0 )
     { return addDate( name, name, year, month, day, flags, style ); };
     /*! Add a date option at the end of the options list
-        with year, month and day set to zero. 
+        with year, month and day set to zero.
         \param[in] name the name and request string of the new option
 	\param[in] flags some flags
 	\param[in] style defines the style in a GUI.
@@ -1104,7 +1103,7 @@ public:
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa addDate(), setDate(), date() */
-  Parameter &insertDate( const string &name, const string &atname="", 
+  Parameter &insertDate( const string &name, const string &atname="",
 			 const string &request="",
 			 int year=0, int month=0, int day=0,
 			 int flags=0, int style=0 );
@@ -1123,7 +1122,7 @@ public:
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa addDate(), setDate(), date() */
-  Parameter &insertDate( const string &name, const string &atname, 
+  Parameter &insertDate( const string &name, const string &atname,
 			 int year=0, int month=0, int day=0,
 			 int flags=0, int style=0 )
     { return insertDate( name, atname, name, year, month, day, flags, style ); };
@@ -1131,7 +1130,7 @@ public:
         (\a atname == "") or at the position of the option with
         name \a atname. If the option with name \a atname
         does not exist, the option is appended to the end of the list.
-        The year, month and day are set to zero. 
+        The year, month and day are set to zero.
         \param[in] name the name and request string of the new option
         \param[in] atname the name string of the existing option
 	where the new options should be inserted. If left empty,
@@ -1140,7 +1139,7 @@ public:
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa addDate(), setDate(), date() */
-  Parameter &insertDate( const string &name, const string &atname, 
+  Parameter &insertDate( const string &name, const string &atname,
 			 int flags=0, int style=0 )
     { return insertDate( name, atname, name, 0, 0, 0, flags, style ); };
     /*! Get the date from a date option.
@@ -1184,10 +1183,10 @@ public:
 	\return a reference to the option.
         \sa setDate(), setDefaultDate(), addDate(), insertDate(), date() */
   Parameter &setCurrentDate( const string &name );
-    /*! Set value of an existing date option 
+    /*! Set value of an existing date option
         with name \a name to the one of \a p,
         if both are of valueType() Date.
-	If the value of the parameter is changing 
+	If the value of the parameter is changing
 	then the changedFlag() is set. */
   Parameter &setDate( const string &name, const Parameter &p );
     /*! Get the default date from a date option.
@@ -1210,7 +1209,7 @@ public:
   Parameter &setDefaultDate( const string &name,
 			     int year, int month, int day );
 
-    /*! Add a time option at the end of the options list. 
+    /*! Add a time option at the end of the options list.
         \param[in] name the name string of the new option
         \param[in] request the request string of the new option
 	\param[in] hour the default value for the hour
@@ -1220,10 +1219,10 @@ public:
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa insertTime(), setTime(), time() */
-  Parameter &addTime( const string &name, const string &request,  
+  Parameter &addTime( const string &name, const string &request,
 		      int hour=0, int minutes=0, int seconds=0,
 		      int flags=0, int style=0 );
-    /*! Add a time option at the end of the options list. 
+    /*! Add a time option at the end of the options list.
         \param[in] name the name and request string of the new option
 	\param[in] hour the default value for the hour
 	\param[in] minutes the default value for the minutes
@@ -1237,7 +1236,7 @@ public:
 			     int flags=0, int style=0 )
     { return addTime( name, name, hour, minutes, seconds, flags, style ); };
     /*! Add a time option at the end of the options list
-        with hour, minutes and seconds set to zero. 
+        with hour, minutes and seconds set to zero.
         \param[in] name the name and request string of the new option
 	\param[in] flags some flags
 	\param[in] style defines the style in a GUI.
@@ -1261,7 +1260,7 @@ public:
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa addTime(), setTime(), time() */
-  Parameter &insertTime( const string &name, const string &atname="", 
+  Parameter &insertTime( const string &name, const string &atname="",
 			 const string &request="",
 			 int hour=0, int minutes=0, int seconds=0,
 			 int flags=0, int style=0 );
@@ -1280,7 +1279,7 @@ public:
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa addTime(), setTime(), time() */
-  Parameter &insertTime( const string &name, const string &atname, 
+  Parameter &insertTime( const string &name, const string &atname,
 			 int hour=0, int minutes=0, int seconds=0,
 			 int flags=0, int style=0 )
     { return insertTime( name, atname, name, hour, minutes, seconds, flags, style ); };
@@ -1288,7 +1287,7 @@ public:
         (\a atname == "") or at the position of the option with
         name \a atname. If the option with name \a atname
         does not exist, the option is appended to the end of the list.
-        The hour, minutes and seconds are set to zero. 
+	The hour, minutes and seconds are set to zero.
         \param[in] name the name and request string of the new option
         \param[in] atname the name string of the existing option
 	where the new options should be inserted. If left empty,
@@ -1297,7 +1296,7 @@ public:
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa addTime(), setTime(), time() */
-  Parameter &insertTime( const string &name, const string &atname, 
+  Parameter &insertTime( const string &name, const string &atname,
 			 int flags=0, int style=0 )
     { return insertTime( name, atname, name, 0, 0, 0, flags, style ); };
     /*! Get the time from a time option.
@@ -1342,10 +1341,10 @@ public:
 	\return a reference to the option.
         \sa setTime(), setDefaultTime(), addTime(), insertTime(), time() */
   Parameter &setCurrentTime( const string &name );
-    /*! Set value of an existing time option 
+    /*! Set value of an existing time option
         with name \a name to the one of \a p,
         if both are of valueType() Time.
-	If the value of the parameter is changing 
+	If the value of the parameter is changing
 	then the changedFlag() is set. */
   Parameter &setTime( const string &name, const Parameter &p );
     /*! Get the default time from a time option.
@@ -1639,16 +1638,16 @@ public:
   void setSection( Options &opt );
 
     /*! Move this Options with its name-value pairs and sections
-        one level up in the hierachy to its parentSection(). 
-        \return 
+        one level up in the hierachy to its parentSection().
+	\return
 	- 0 successfully moved the Options up
         - -1 failed because this Options does not have a valid parentSection()
-        - +2 moved Options up but deleted existing name-value pairs of the parentSection() 
+        - +2 moved Options up but deleted existing name-value pairs of the parentSection()
         - +4 moved Options up but deleted further sections of the parentSection() */
   int up( void );
     /*! Make this Options with its name-value pairs and sections
-        a section of this, i.e. move it down the hierarchy. 
-        \return 
+        a section of this, i.e. move it down the hierarchy.
+	\return
 	- 0 successfully moved the Options down
         - -1 failed because this Options does not have a name or type */
   int down( void );
@@ -1729,7 +1728,7 @@ public:
 	\sa findSection(), exist() */
   bool existSection( const string &pattern ) const;
 
-    /*! Set flags of all options that are selected by \a selectflag to \a flags. 
+    /*! Set flags of all options that are selected by \a selectflag to \a flags.
         If \a selectflag equals zero, all options are considered.
 	If \a selectflag is negative, only options whose values differ
 	from the default value and have abs(\a selectflag) set in their flags
@@ -1738,7 +1737,7 @@ public:
 	from their default value are considered. */
   Options &setFlags( int flags, int selectflag=0 );
     /*! Add the bits specified by \a flags to the flags of all options
-        that are selected by \a selectflag. 
+        that are selected by \a selectflag.
         If \a selectflag equals zero, all options are considered.
 	If \a selectflag is negative, only options whose values differ
 	from the default value and have abs(\a selectflag) set in their flags
@@ -1747,7 +1746,7 @@ public:
 	from their default value are considered. */
   Options &addFlags( int flags, int selectflag=0 );
     /*! Clear the bits specified by \a flags of the flags of all options
-        that are selected by \a selectflag. 
+        that are selected by \a selectflag.
         If \a selectflag equals zero, all options are considered.
 	If \a selectflag is negative, only options whose values differ
 	from the default value and have abs(\a selectflag) set in their flags
@@ -1756,7 +1755,7 @@ public:
 	from their default value are considered. */
   Options &delFlags( int flags, int selectflag=0 );
 
-    /*! Set flags of all options whose type matches \a typemask 
+    /*! Set flags of all options whose type matches \a typemask
         (see Parameter::valueTypes() ) to \a flags. */
   Options &setValueTypeFlags( int flags, int typemask );
     /*! Add \a flags to the flags of all options
@@ -1779,7 +1778,7 @@ public:
         that have the style \a style set in their style(). */
   int styleSize( int style ) const;
 
-    /*! Set style of all Parameter and sections whose type matches \a typemask 
+    /*! Set style of all Parameter and sections whose type matches \a typemask
         (see Parameter::valueTypes() ) to \a style. */
   Options &setValueTypeStyles( int style, int typemask );
     /*! Add the bits specified by \a style to the style of all Parameter
@@ -1841,13 +1840,13 @@ public:
                    See Parameter::flags(int) for details.
         \param[in] flags some details on how the data should be saved.
         \param[in] level the level of indentation
-        \param[in] indent the indentation depth, 
+	\param[in] indent the indentation depth,
                    i.e. number of white space characters per level
         \return the output stream \a str */
   ostream &saveXML( ostream &str, int selectmask=0, int flags=0, int level=0,
 		    int indent=4 ) const;
 
-    /*! Read options from string \a opttxt of the form 
+    /*! Read options from string \a opttxt of the form
         "parameter1: x, parameter2: y, parameter3: z, ...".
         If the parameters 'parameter1', 'parameter2', ... match the
         name of an option, its value is set to x, y, z, ... respectively,
@@ -1872,13 +1871,13 @@ public:
 	then the last read line is returned in \a line.
 	The warning message is set. */
   istream &read( istream &str, int flag, const string &assignment=":=",
-		 const string &comment="#", 
+		 const string &comment="#",
 		 const string &stop="", Str *line=0 );
   istream &read( istream &str, const string &assignment=":=",
-		 const string &comment="#", 
-		 const string &stop="", Str *line=0 ) 
+		 const string &comment="#",
+		 const string &stop="", Str *line=0 )
     { return read( str, 0, assignment, comment, stop, line ); };
-    /*! Read options from the list of strings \a sq. 
+    /*! Read options from the list of strings \a sq.
 	Each line is assumed to be a single option.
 	The warning message is set. */
   Options &read( const StrQueue &sq, int flag=0,
@@ -1889,7 +1888,7 @@ public:
         ad \a flag to the flags of the Options that read it. */
   bool read( const Parameter &p, int flag=0 );
     /*! Read options from the options \a o.
-        A subset of the options can be selected by \a flags. 
+        A subset of the options can be selected by \a flags.
         Options that read a value get \a flag added to their flags. */
   Options &read( const Options &o, int flags=0, int flag=0 );
 
@@ -1904,16 +1903,16 @@ public:
         All options \a o that do not exist are appended.. */
   Options &readAppend( const Options &o, int flags=0 );
 
-    /*! Load options from string \a opttxt of the form 
+    /*! Load options from string \a opttxt of the form
         "parameter1=x; parameter2=y; parameter3=z; ...".
         New options are created with the names and request strings
-	set to parameter1, parameter2, parameter3, ... 
+	set to parameter1, parameter2, parameter3, ...
 	and their values set to x, y, z, ..., respectively. */
   Options &load( const Str &opttxt,
 		 const string &assignment=":=", const string &separator=",;",
 		 int *indent=0, int *indentspacing=0, int *level=0 );
     /*! Read from stream \a str and create new options, until end of file
-        or a line beginning with \a stop is reached. 
+        or a line beginning with \a stop is reached.
 	If \a stop equals the \a StopEmpty string,
 	reading is stopped at an empty line.
 	Each line is assumed to be a single option, which is loaded with
@@ -1924,9 +1923,9 @@ public:
 	then the last read line is returned in \a line.
 	The warning message is set. */
   istream &load( istream &str, const string &assignment=":=",
-		 const string &comment="#", 
+		 const string &comment="#",
 		 const string &stop="", string *line=0 );
-    /*! Create new options from the list of strings \a sq. 
+    /*! Create new options from the list of strings \a sq.
 	Each line is assumed to be a single option, which is loaded with
 	Parameter::load().
 	The warning message is set. */

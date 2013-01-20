@@ -44,7 +44,7 @@ typedef SampleData< double > SampleDataD;
 class Kernel;
 
 
-/*! 
+/*!
 \class EventData
 \author Jan Benda
 \version 2.1
@@ -54,13 +54,13 @@ class Kernel;
 \todo check equal size of input SampleDataD in e.g. rate, etc.
 */
 
-  /*! Flag for the mode() of EventData, 
+  /*! Flag for the mode() of EventData,
       indicating that the events are stimulus times. */
 static const int StimulusEventMode = 0x0001;
-  /*! Flag for the mode() of EventData, indicating that the events 
+  /*! Flag for the mode() of EventData, indicating that the events
       are restart times of the data acquisition. */
 static const int RestartEventMode = 0x0002;
-  /*! Flag for the mode() of EventData, indicating that the events 
+  /*! Flag for the mode() of EventData, indicating that the events
       are times of interruptions of the recording. */
 static const int RecordingEventMode = 0x0004;
 
@@ -73,7 +73,7 @@ class EventData
 
 public:
 
-    /*! Constructs an empty EventData 
+    /*! Constructs an empty EventData
         with a stepsize() of 0.0001 seconds (0.1 ms)
 	and a non-cyclic buffer. */
   EventData( void );
@@ -95,17 +95,17 @@ public:
 	an additional buffer for the widths of events is created. */
   EventData( int n, double tbegin, double tend, double stepsize=0.0001,
 	     bool sizebuffer=false, bool widthbuffer=false );
-    /*! Copy constructor. 
+    /*! Copy constructor.
         Copy the entire event list of \a events to \a *this. */
   EventData( const EventData &events );
     /*! Copy from \a events all events between \a tbegin and
         \a tend seconds to \a *this.
-	In the copy, all event times and the signalTime() 
+	In the copy, all event times and the signalTime()
 	are set relative to time \a tbegin. */
   EventData( const EventData &events, double tbegin, double tend );
-    /*! Copy from \a events all event times between time 
+    /*! Copy from \a events all event times between time
         \a tbegin and time \a tend seconds.
-	In the copy, all event times and the signalTime() 
+	In the copy, all event times and the signalTime()
 	are set relative to time \a tref. */
   EventData( const EventData &events, double tbegin, double tend,
 	     double tref );
@@ -131,7 +131,7 @@ public:
     /*! Destructs an EventData. */
   ~EventData( void );
 
-    /*! Number of events. 
+    /*! Number of events.
         In cyclic() mode the returned number can be larger than the capacity()! */
   long size( void ) const;
     /*! True if there are no events. */
@@ -144,10 +144,10 @@ public:
 	initialized with \a dflt.
 	New size data and width data are initialized with zero.
 	\warning The capacity of the event buffer is enlarged only.
-        It is never shrinked. 
+	It is never shrinked.
 	Use free() to control the buffer size.
 	The range() is not changed.
-	\sa clear(), size(), empty(), reserve(), free(), capacity() */ 
+	\sa clear(), size(), empty(), reserve(), free(), capacity() */
   void resize( long nevents, double dflt=0.0 );
     /*! Clear the buffer content.
 	The range() is not changed.
@@ -158,9 +158,9 @@ public:
   long capacity( void ) const;
     /*! If \a n is less than or equal to capacity(),
         this call has no effect.
-	Otherwise, it is a request for allocation 
-	of additional memory to hold \a n events altogether. 
-        If \a useSizeBuffer() is true,
+	Otherwise, it is a request for allocation
+	of additional memory to hold \a n events altogether.
+	If \a useSizeBuffer() is true,
 	an additional buffer for the sizes of events is created.
         If \a useWidthBuffer() is true,
 	an additional buffer for the widths of events is created.
@@ -173,7 +173,7 @@ public:
   void reserve( long n, double dflt=0.0 );
     /*! In contrast to the reserve() function, this function
         frees or allocates memory, such that capacity()
-	equals exactly \a n. 
+	equals exactly \a n.
         If \a useSizeBuffer() is true,
 	an additional buffer for the sizes of events is created.
         If \a useWidthBuffer() is true,
@@ -194,7 +194,7 @@ public:
 
     /*! True if an additional buffer for the sizes of the events exist. */
   bool sizeBuffer( void ) const;
-    /*! True if an additional buffer for the sizes of the events exist 
+    /*! True if an additional buffer for the sizes of the events exist
         or is going to be used. */
   bool useSizeBuffer( void ) const;
     /*! If \a use is set to true, the next call of reserve will
@@ -259,9 +259,9 @@ public:
   void assign( const EventData &events, double tbegin, double tend );
     /*! Copy from \a events all event times between time \a tbegin
         and time \a tend seconds to \a *this.
-	In the copy, all event times and the signalTime() 
+	In the copy, all event times and the signalTime()
 	are set relative to time \a tref. */
-  void assign( const EventData &events, double tbegin, 
+  void assign( const EventData &events, double tbegin,
 	       double tend, double tref );
     /*! Copy the event times \a times to \a *this
         and initializes the range with \a tbegin, \a tend, and \a stepsize.
@@ -288,9 +288,9 @@ public:
   void append( const EventData &events, double tbegin, double tend );
     /*! Append from \a events all event times between time \a tbegin
         and time \a tend seconds to \a *this.
-	The appended event times and the signalTime() 
+	The appended event times and the signalTime()
 	are set relative to time \a tref. */
-  void append( const EventData &events, double tbegin, 
+  void append( const EventData &events, double tbegin,
 	       double tend, double tref );
 
     /*! Copy event times between time \a tbegin
@@ -307,7 +307,7 @@ public:
         Specify in \a nevents the size of the buffer where \a events points to.
         After executing this function \a nevents is the number
         of events copied to \a events. */
-  void copy( double tbegin, double tend, double tref, 
+  void copy( double tbegin, double tend, double tref,
 	     double *events, long &nevents ) const;
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
@@ -317,7 +317,7 @@ public:
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
         The event times in \a events are set relative to \a tref. */
-  void copy( double tbegin, double tend, double tref, 
+  void copy( double tbegin, double tend, double tref,
 	     vector<double> &events ) const;
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
@@ -326,7 +326,7 @@ public:
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
         The event times in \a events are set relative to \a tref. */
-  void copy( double tbegin, double tend, double tref, 
+  void copy( double tbegin, double tend, double tref,
 	     ArrayD &events ) const;
     /*! Copy event times between time \a tbegin
         and time \a tend seconds and the corresponding sizes to \a events.
@@ -343,7 +343,7 @@ public:
 	then the widths are stored in the \a y-vector of \a events.
         If neither sizes or widths are available, the \a y-vector
         is initialized with zeros. */
-  void copy( double tbegin, double tend, double tref, 
+  void copy( double tbegin, double tend, double tref,
 	     MapD &events ) const;
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
@@ -352,7 +352,7 @@ public:
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
         The event times in \a events are set relative to \a tref. */
-  void copy( double tbegin, double tend, double tref, 
+  void copy( double tbegin, double tend, double tref,
 	     EventData &events ) const;
 
     /*! Get the time of the \a i -th event in seconds.
@@ -366,7 +366,7 @@ public:
 	If an invalid index is specified, \c -HUGE_VAL is returned. */
   inline double at( long i ) const;
     /*! Get a reference to the time of the \a i -th event in seconds.
-	If an invalid index is specified, 
+        If an invalid index is specified,
 	a reference to a dummy variable set to \c -HUGE_VAL is returned. */
   inline double &at( long i );
 
@@ -406,7 +406,7 @@ public:
   inline double eventSize( long i ) const;
     /*! Get a reference to the size of the \a i -th element of the event buffer.
 	If an invalid index is specified or the sizes of events
-	are not stored, 
+	are not stored,
 	a reference to a dummy variable set to \c -HUGE_VAL is returned. */
   inline double &eventSize( long i );
 
@@ -434,7 +434,7 @@ public:
   inline double eventWidth( long i ) const;
     /*! Get a reference to the width of the \a i -th element of the event buffer.
 	If an invalid index is specified or the widths of events
-	are not stored, 
+	are not stored,
 	a reference to a dummy variable set to \c -HUGE_VAL is returned. */
   inline double &eventWidth( long i );
 
@@ -483,11 +483,11 @@ public:
     /*! Erases the last event. */
   void pop( void );
 
-    /*! Return in \a all the event times merged (summed up) 
+    /*! Return in \a all the event times merged (summed up)
         with the ones of \a e. */
   void sum( const EventData &e, EventData &all ) const;
-    /*! For each time bin of width \a bin 
-        add the time of the time bin to \a s 
+    /*! For each time bin of width \a bin
+        add the time of the time bin to \a s
 	if an event is contained in both \a e and *this. */
   void sync( const EventData &e, EventData &s, double bin ) const;
 
@@ -518,7 +518,7 @@ public:
 
     /*! Number of events. Same as size(). */
   long currentEvent( void ) const;
-    /*! The smallest possible event index that can be accesed to return an event. 
+    /*! The smallest possible event index that can be accesed to return an event.
         In a non-cyclic buffer this is always 0. */
   long minEvent( void ) const;
     /*! The time of the first event that can be accesed. */
@@ -528,12 +528,12 @@ public:
         The mode is just a number, which can be used to label the traces. */
   int mode( void ) const;
     /*! Set mode to \a mode.
-        The mode \a mode is just a number, 
+        The mode \a mode is just a number,
 	which can be used to label the event data. */
   void setMode( int mode );
 
-    /*! Returns 1 if the events were extracted from an InData, 
-        2 if the events were extracted from other events. */ 
+    /*! Returns 1 if the events were extracted from an InData,
+        2 if the events were extracted from other events. */
   int source( void ) const;
     /*! Set the source of the events to \a source. */
   void setSource( int source );
@@ -581,13 +581,13 @@ public:
 
     /*! Minimum size of events between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval or
-        if the event sizes of the events are not stored 
+	if the event sizes of the events are not stored
 	then the current value of the running average of the event sizes
 	is returned. */
   double minSize( double tbegin, double tend ) const;
     /*! Maximum size of events between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval or
-        if the event sizes of the events are not stored 
+	if the event sizes of the events are not stored
 	then the current value of the running average of the event sizes
 	is returned. */
   double maxSize( double tbegin, double tend ) const;
@@ -595,26 +595,26 @@ public:
         size of events between time \a tbegin and time \a tend seconds,
 	respectively.
         If there are no events within this time interval or
-        if the event sizes of the events are not stored 
+	if the event sizes of the events are not stored
 	then \a min and \a max are set to the current value
 	of the running average of the event sizes. */
   void minMaxSize( double tbegin, double tend, double &min, double &max ) const;
     /*! Mean size of events and standard deviation \a stdev
         between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval zero is returned.
-        If the event sizes of the events are not stored 
+	If the event sizes of the events are not stored
 	then the current value of the running average of the event sizes
 	is returned. */
   double meanSize( double tbegin, double tend, double &stdev ) const;
     /*! Mean size of events between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval zero is returned.
-        If the event sizes of the events are not stored 
+	If the event sizes of the events are not stored
 	then the current value of the running average of the event sizes
 	is returned. */
   double meanSize( double tbegin, double tend ) const;
     /*! Mean size of events since \a time seconds before the last event.
         If there are no events within this time interval zero is returned.
-        If the event sizes of the events are not stored 
+	If the event sizes of the events are not stored
 	then the current value of the running average of the event sizes
 	is returned. */
   double meanSize( double time ) const { return meanSize( back() - time, back() ); };
@@ -666,13 +666,13 @@ public:
 
     /*! Minimum width of events between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval or
-        if the event widths of the events are not stored 
+	if the event widths of the events are not stored
 	then the current value of the running average of the event widths
 	is returned. */
   double minWidth( double tbegin, double tend ) const;
     /*! Maximum width of events between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval or
-        if the event widths of the events are not stored 
+	if the event widths of the events are not stored
 	then the current value of the running average of the event widths
 	is returned. */
   double maxWidth( double tbegin, double tend ) const;
@@ -680,13 +680,13 @@ public:
         width of events between time \a tbegin and time \a tend seconds,
 	respectively.
         If there are no events within this time interval or
-        if the event widths of the events are not stored 
+	if the event widths of the events are not stored
 	then \a min and \a max are set to the current value
 	of the running average of the event widths. */
   void minMaxWidth( double tbegin, double tend, double &min, double &max ) const;
     /*! Mean width of events between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval zero is returned.
-        If the event widths of the events are not stored 
+	If the event widths of the events are not stored
 	then the current value of the running average of the event widths
 	is returned. */
   double meanWidth( double tbegin, double tend ) const;
@@ -721,17 +721,17 @@ public:
     /*! Return the ratio value which is used to update the mean values. */
   double meanRatio( void ) const;
     /*! Set the ratio value which is used to update the mean values to \a ratio.
-        The mean values are updated according to 
+        The mean values are updated according to
         nm = om*(1-r) + nv*r
         where the old and the new value of the mean are om and nm, respectively,
-        the new value is nv and r is the mean ratio. 
+	the new value is nv and r is the mean ratio.
         N = 1/r is the number of new values which are needed for the mean value
         to adapt to a new value (in the sense of a time constant of an
 	exponential decay). */
   void setMeanRatio( double ratio );
 
     /*! Returns index of event following or equal to time \a time in seconds.
-        Returns \a size() if no event is found. 
+        Returns \a size() if no event is found.
         Uses a fast bisecting method. */
   long next( double time ) const;
     /*! Returns time of event following or equal to time \a time in seconds.
@@ -753,7 +753,7 @@ public:
     /*! Count events since time \a tbegin and time \a tend seconds. */
   long count( double tbegin, double tend ) const;
     /*! Count all events since time \a time (seconds). */
-  long count( double time ) const;        
+  long count( double time ) const;
 
     /*! Mean event rate (Hz) as the number of events between time \a tbegin
         and time \a tend seconds divided by the width of the time window
@@ -764,7 +764,7 @@ public:
         zero is returned. */
   double rate( int n ) const;
     /*! Mean rate (Hz) of all events since time \a time (seconds). */
-  double rate( double time ) const;        
+  double rate( double time ) const;
 
     /*! The time course of the event rate is returned in \a rate.
 	The rate is the number of events per bin.
@@ -855,7 +855,7 @@ public:
 	provided \a sd does not equal zero. */
   double interval( int n, double *sd ) const;
     /*! Interval (seconds) of the event interval at time \a time (seconds). */
-  double intervalAt( double time ) const; 
+  double intervalAt( double time ) const;
 
     /*! The time course of the event intervals
         is returned in \a intervals with \a intervals.stepsize() in seconds.
@@ -894,7 +894,7 @@ public:
         between \a tbegin and \a tend, and in \a intrvls.y() the corresponding
 	interevent intervals.
         The position of each interevent interval is the position of the left
-	event (\a pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -903,7 +903,7 @@ public:
         between \a tbegin and \a tend, and to \a intrvls.y() the corresponding
 	interevent intervals.
         The position of each interevent interval is the position of the left
-	event (\a pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -912,7 +912,7 @@ public:
         between \a tbegin and \a tend multiplied by \a tfac in the first column,
 	and the interevent interval in the second column.
         The position of the interevent interval is the position of the left
-	event (\a pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
 	Both the position and the intervals are
@@ -926,19 +926,19 @@ public:
 
     /*! Mean event frequency (Hz) as the inverse of the mean event interval
         of all event intervals between time \a tbegin and
-	time \a tend seconds. 
+	time \a tend seconds.
         In \a sd the standard deviation in Hz as the standard deviation
 	of the intervals devided by the squared mean interval is returned
 	provided \a sd does not equal zero. */
   double frequency( double tbegin, double tend, double *sd=0 ) const;
-    /*! Mean event frequency (Hz) as the inverse of 
+    /*! Mean event frequency (Hz) as the inverse of
         the mean event interval (seconds) of all event intervals
         since time \a time (seconds).
         In \a sd the standard deviation in Hz as the standard deviation
 	of the intervals devided by the squared mean interval is returned
 	provided \a sd does not equal zero. */
   double frequency( double time, double *sd=0 ) const;
-    /*! Mean event frequency (Hz) as the inverse of 
+    /*! Mean event frequency (Hz) as the inverse of
         the mean event interval (seconds) of the \a n recent events.
         If \a n < 1 or there are less than \a n events in the buffer
         zero is returned.
@@ -946,7 +946,7 @@ public:
 	of the intervals devided by the squared mean interval is returned
 	provided \a sd does not equal zero. */
   double frequency( int n, double *sd=0 ) const;
-    /*! Frequency (Hz) as the inverse of the event interval 
+    /*! Frequency (Hz) as the inverse of the event interval
         at time \a time (seconds).
 	If there is no interval, \a defaultfrequency is returned. */
   double frequencyAt( double time, double defaultfrequency=0.0 ) const;
@@ -999,14 +999,14 @@ public:
         according to sd = \a rate * sqrt( \a rate * \a period - 1 ).
 	The events between \a rate.leftMargin() and \a rate.rightMargin()
 	seconds relative to time \a time (seconds) are considered. */
-  void addCyclicFrequency( SampleDataD &rate, SampleDataD &period, 
+  void addCyclicFrequency( SampleDataD &rate, SampleDataD &period,
 			   int &trial, double time=0.0 ) const;
 
     /*! Returns in \a freqs.x() the position of each interevent interval
         between \a tbegin and \a tend, and in \a freqs.y() 1 divided
         by that interevent interval (the frequency).
         The position of the interevent interval is the position of the left
-	event (\a pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -1015,17 +1015,17 @@ public:
         between \a tbegin and \a tend, and to \a freqs.y() 1 divided
         by that interevent interval (the frequency).
         The position of the interevent interval is the position of the left
-	event (\a pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
   int addFrequencies( double tbegin, double tend, MapD &freqs, int pos=-1 ) const;
     /*! Write into stream \a os the position of each interevent interval
         between \a tbegin and \a tend multiplied by \a tfac in the first column,
-	and 1 divided by that interevent interval (the frequency) in 
+	and 1 divided by that interevent interval (the frequency) in
 	the second column.
         The position of the interevent interval is the position of the left
-	event (\a pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
 	Both the position and the frequency are
@@ -1038,12 +1038,12 @@ public:
 		       char frmt='g', const string &noevents="" ) const;
 
     /*! Compute interval histogram \a hist for the
-        event intervals between time \a tbegin and 
+        event intervals between time \a tbegin and
 	time \a tend seconds. Resolution and maximum interspike interval
         in \a hist are given in seconds. */
   void intervalHistogram( double tbegin, double tend,
 			  SampleDataD &hist ) const;
-    /*! Add event intervals between time \a tbegin and 
+    /*! Add event intervals between time \a tbegin and
 	time \a tend seconds to the interval
 	histogram \a hist. Resolution and maximum interspike interval
         in \a hist are given in seconds. */
@@ -1052,7 +1052,7 @@ public:
 
     /*! Compute the serial correlation coefficients
         for lag zero to lag \a sc.size()-1
-        of all event intervals between time \a tbegin 
+	of all event intervals between time \a tbegin
 	and time \a tend seconds. */
   void serialCorr( double tbegin, double tend, ArrayD &sc ) const;
 
@@ -1062,19 +1062,19 @@ public:
 
     /*! Compute the phase locking as the number of spikes per period \a period
         of all events between time \a tbegin and time \a tend seconds.
-        \a tend is reduced to \a tbegin plus 
+	\a tend is reduced to \a tbegin plus
 	the closest multiple of \a period. */
   double locking( double tbegin, double tend, double period ) const;
     /*! Compute the vector strength for a period \a period (seconds)
         of all events between time \a tbegin and time \a tend seconds
-	according to 
+	according to
         \f[ VS = \frac{1}{n} \sqrt{ \left( \sum_{i=1}^n \sin\varphi_i \right)^2 + \left( \sum_{i=1}^n \cos\varphi_i \right)^2} \f]
 	with \f[ \varphi_i = 2 \pi ( t_i - time ) / period \f]
 	for all \a n spike times \a t_i. */
   double vectorStrength( double tbegin, double tend, double period ) const;
     /*! Compute the vector phase for a period \a period (seconds)
         of all events between time \a tbegin and time \a tend seconds
-	according to 
+	according to
         \f[ VP = \mbox{atan} \frac{ \sum_{i=1}^n \sin\varphi_i }{ \sum_{i=1}^n \cos\varphi_i } \f]
 	with \f[ \varphi_i = 2 \pi ( t_i - time ) / period \f]
 	for all \a n spike times \a t_i.*/
@@ -1122,7 +1122,7 @@ public:
 		 SampleDataD &psd,
 		 bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
 
-    /*! Returns in \a c the stimulus-response coherence between 
+    /*! Returns in \a c the stimulus-response coherence between
         \a stimulus and the events (the S-R coherence).
 	The size of \a c times stimulus.stepsize() determines
 	the width of the time windows used for the fourier transformations.
@@ -1135,7 +1135,7 @@ public:
         The frequency axis of the coherence \a c is set to the appropriate values. */
   void coherence( const SampleDataD &stimulus, SampleDataD &c,
 		  bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
-    /*! Returns in \a c the coherence between 
+    /*! Returns in \a c the coherence between
         the events and the events in \a e
 	(the response-response (R-R) coherence).
 	The size of \a c times \a step determines
@@ -1149,7 +1149,7 @@ public:
 		  double step, SampleDataD &c,
 		  bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
 
-    /*! Latency of first event relative to \a time in seonds. 
+    /*! Latency of first event relative to \a time in seonds.
         A negative number is returned, if there is no event. */
   double latency( double time ) const;
 
@@ -1157,7 +1157,7 @@ public:
         and absoulte refractory period \a refract
         for duration \a duration seconds.
         Use the random number gnerator \a random. */
-  void poisson( double rate, double refract, 
+  void poisson( double rate, double refract,
 		double duration, RandomBase &random=rnd );
 
     /*! Write event times as a single column of text in stream \a s.
@@ -1174,7 +1174,7 @@ public:
 	formatted as specified by \a width, \a prec, and \a frmt.
 	The second column is an y-value as specified by \a y.
         If there aren't any events and \a noevents isn't empty, than
-        a single line with \a noevents as the time of an event 
+        a single line with \a noevents as the time of an event
 	followed by \a noy as the corresponding y-value
 	is printed as the only output. */
   void savePoint( ostream &os, double y=0.0, double tfac=1.0, int width=0,
@@ -1182,48 +1182,48 @@ public:
 		  const string &noevents="", double noy=-1.0 ) const;
     /*! Write event times as text in stream \a s
         such that each event gets two data points.
-	The y-value of the data points are set to 
+	The y-value of the data points are set to
 	\a offs + \a lower and \a offs + \a upper.
         Each event time is multiplied by \a tfac, and is
 	formatted as specified by \a width, \a prec, and \a frmt.
 	Events are separated by a blank line.
         If there aren't any events and \a noevents isn't empty, than
-        a single line with \a noevents as the time of an event 
+	a single line with \a noevents as the time of an event
 	followed by \a noy as the corresponding y-value
 	is printed as the only output. */
   void saveStroke( ostream &os, int offs=0, double tfac=1.0,
 		   int width=0, int prec=5, char frmt='g',
-		   double lower=0.1, double upper=0.9, 
+		   double lower=0.1, double upper=0.9,
 		   const string &noevents="", double noy=-1.0 ) const;
     /*! Write event times as text in stream \a s
         such that each event gets four data points.
 	Each such box has width \a bin and contains the corresponding event.
         The sides of the box are at multiples of \a bin.
-	The y-values of the box are set to 
+	The y-values of the box are set to
 	\a offs + \a lower and \a offs + \a upper.
         All times are multiplied by \a tfac, and are
 	formatted as specified by \a width, \a prec, and \a frmt.
 	Events are separated by a blank line.
         If there aren't any events and \a noevents isn't empty, than
-        a single line with \a noevents as the time of a event 
+	a single line with \a noevents as the time of a event
 	followed by \a noy as the corresponding y-value
 	is printed as the only output. */
   void saveBox( ostream &os, double bin, int offs=0, double tfac=1.0,
 		int width=0, int prec=5, char frmt='g',
-		double lower=0.1, double upper=0.9, 
+		double lower=0.1, double upper=0.9,
 		const string &noevents="", double noy=-1.0 ) const;
 
 
 private:
 
     /*! Buffer for the times of events measured in seconds. */
-  double *TimeBuffer;                  
+  double *TimeBuffer;
     /*! Optional buffer for the sizes of events. */
   double *SizeBuffer;
     /*! True if the buffer for the event sizes should be used. */
   bool UseSizeBuffer;
     /*! Optional buffer for the widths of events. */
-  double *WidthBuffer;                  
+  double *WidthBuffer;
     /*! True if the buffer for the event widths should be used. */
   bool UseWidthBuffer;
     /*! Number of elements the buffers \a TimeBuffer,
@@ -1289,7 +1289,7 @@ private:
 };
 
 
-/*! 
+/*!
   \class EventIterator
   \author Jan Benda
   \version 1.2
@@ -1302,38 +1302,38 @@ class EventIterator //: public iterator< random_access_iterator_tag, double, lon
 public:
     
     /*! Constructs an empty invalid iterator for an EventData. */
-  EventIterator( void ) 
+  EventIterator( void )
     : Index( 0 ), ED( 0 ) {};
     /*! Constructs an valid iterator for an EventData \a ed
         pointing to element \a index. */
-  EventIterator( const EventData &ed, long index ) 
+  EventIterator( const EventData &ed, long index )
     : Index( index ), ED( &ed ) {};
     /*! Copy constructor. */
   EventIterator( const EventIterator &p )
     : Index( p.Index ), ED( p.ED ) {};
     /*! Destructor. */
   ~EventIterator( void ) {};
-    
+
     /*! Assigns \a p to this. */
   EventIterator &operator=( const EventIterator &p );
-    
-    /*! Returns true if both iterators point to the same element 
+
+    /*! Returns true if both iterators point to the same element
         of the same instance of an EventData. */
   inline bool operator==( const EventIterator &p ) const
     { return ( ED == p.ED && Index == p.Index ); };
-    /*! Returns true if the iterators do not point to the same element 
+    /*! Returns true if the iterators do not point to the same element
         of the same instance of an EventData. */
   inline bool operator!=( const EventIterator &p ) const
     { return ( ED != p.ED || Index != p.Index ); };
-    /*! Returns true if \a this points to an element preceeding the 
+    /*! Returns true if \a this points to an element preceeding the
         element where \a points to. */
   inline bool operator<( const EventIterator &p ) const
     { return ( ED == p.ED && Index < p.Index ); };
-    /*! Returns true if \a this points to an element succeeding the 
+    /*! Returns true if \a this points to an element succeeding the
         element where \a p points to. */
   inline bool operator>( const EventIterator &p ) const
     { return ( ED == p.ED && Index > p.Index ); };
-    /*! Returns true if \a this points to an element preceeding 
+    /*! Returns true if \a this points to an element preceeding
         or equaling the element where this points to. */
   inline bool operator<=( const EventIterator &p ) const
     { return ( ED == p.ED && Index <= p.Index ); };
@@ -1345,7 +1345,7 @@ public:
         it points to an existing element. */
   inline bool operator!( void ) const
     { return ( ED != 0 && Index >= ED->minEvent() && Index < ED->currentEvent() ); };
-    
+
     /*! Increments the iterator to the next element. */
   inline const EventIterator &operator++( void )
     { Index++; return *this; };
@@ -1423,7 +1423,7 @@ public:
     /*! Returns the number of elements between the two iterators. */
   inline int operator-( const EventIterator &p ) const
     { if ( ED == p.ED ) return Index - p.Index; return 0; };
-    
+
     /*! Returns the time of the event where the iterator points to. */
   inline double operator*( void ) const
     { assert( ED != 0 ); return (*ED)[ Index ]; };
@@ -1440,17 +1440,17 @@ public:
     /*! The event data where the iterator points in. */
   inline const EventData &events( void ) const
     { return *ED; };
-    
-    
+
+
 protected:
 
-  long Index;    
+  long Index;
   const EventData *ED;
-    
+
 };
 
 
-/*! 
+/*!
   \class EventFrequencyIterator
   \author Jan Benda
   \version 1.2
@@ -1459,15 +1459,15 @@ protected:
 
 class EventFrequencyIterator : public EventIterator
 {
-    
+
 public:
-    
+
     /*! Constructs an empty invalid iterator for an EventData. */
-  EventFrequencyIterator( void ) 
+  EventFrequencyIterator( void )
     : EventIterator() {};
     /*! Constructs an valid iterator for an EventData \a ed
         pointing to element \a index. */
-  EventFrequencyIterator( const EventData &ed, long index ) 
+  EventFrequencyIterator( const EventData &ed, long index )
     : EventIterator( ed, index ) {};
     /*! Copy constructor. */
   EventFrequencyIterator( const EventFrequencyIterator &p )
@@ -1482,16 +1482,16 @@ public:
         it points to an existing element. */
   bool operator!( void ) const
     { return ( ED != 0 && Index >= ED->minEvent()+1 && Index < ED->currentEvent() ); };
-    
+
     /*! Returns the frequency of the preceeding event interval. */
   inline double operator*( void ) const;
     /*! Returns the frequency of the event interval [*i+n-1, *i+n]. */
   inline double operator[]( long n ) const;
-    
+
 };
 
 
-/*! 
+/*!
   \class EventSizeIterator
   \author Jan Benda
   \version 1.2
@@ -1500,15 +1500,15 @@ public:
 
 class EventSizeIterator : public EventIterator
 {
-    
+
 public:
-    
+
     /*! Constructs an empty invalid iterator for an EventData. */
-  EventSizeIterator( void ) 
+  EventSizeIterator( void )
     : EventIterator() {};
     /*! Constructs an valid iterator for an EventData \a ed
         pointing to element \a index. */
-  EventSizeIterator( const EventData &ed, long index ) 
+  EventSizeIterator( const EventData &ed, long index )
     : EventIterator( ed, index ) {};
     /*! Copy constructor. */
   EventSizeIterator( const EventSizeIterator &p )
@@ -1518,7 +1518,7 @@ public:
     : EventIterator( p ) {};
     /*! Destructor. */
   ~EventSizeIterator( void ) {};
-    
+
     /*! Returns the size of the event.
         If there is an extra buffer for event sizes,
 	the size is taken from that buffer.
@@ -1531,14 +1531,14 @@ public:
 	Otherwise the value of the data element
 	where the iterator points to is returned. */
   inline double operator[]( long n ) const;
-    
+
 };
 
 
 ///////////////////// INLINE FUNCTIONS /////////////////////////////////////
 
 inline double EventData::operator[] ( long i ) const
-{ 
+{
   i -= Index;
 
   if ( i < 0 ) {
@@ -1572,7 +1572,7 @@ inline double EventData::operator[] ( long i ) const
 
 
 inline double &EventData::operator[] ( long i )
-{ 
+{
   i -= Index;
 
   if ( i < 0 ) {
@@ -1853,7 +1853,7 @@ inline double &EventData::eventWidth( long i )
 
 
 inline double EventFrequencyIterator::operator*( void ) const
-{ 
+{
 #ifndef NDEBUG
   if ( !( ED != 0 && Index > 0 ) ) {
     cerr << "! Error in EventFrequencyIterator::operator*() ED = " << ED
@@ -1867,7 +1867,7 @@ inline double EventFrequencyIterator::operator*( void ) const
 
 
 inline double EventFrequencyIterator::operator[]( long n ) const
-{ 
+{
 #ifndef NDEBUG
   if ( !( ED != 0 && Index+n > 0 ) ) {
     cerr << "! Error in EventFrequencyIterator::operator*() ED = " << ED
@@ -1882,7 +1882,7 @@ inline double EventFrequencyIterator::operator[]( long n ) const
 
 
 inline double EventSizeIterator::operator*( void ) const
-{ 
+{
 #ifndef NDEBUG
   if ( !( ED != 0 && Index >= 0 ) ) {
     cerr << "! Error in EventSizeIterator::operator*() -> ED = " << ED
@@ -1900,7 +1900,7 @@ inline double EventSizeIterator::operator*( void ) const
 
 
 inline double EventSizeIterator::operator[]( long n ) const
-{ 
+{
 #ifndef NDEBUG
   if ( !( ED != 0 && Index+n >= 0 ) ) {
     cerr << "! Error in EventSizeIterator::operator*() ED = " << ED

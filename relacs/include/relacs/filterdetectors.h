@@ -25,7 +25,7 @@
 #include <string>
 #include <deque>
 #include <vector>
-#include <QMenu> 
+#include <QMenu>
 #include <relacs/configclass.h>
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
@@ -42,7 +42,7 @@ class Devices;
 class AttInterfaces;
 class RELACSWidget;
 
-/*! 
+/*!
 \class FilterDetectors
 \author Jan Benda
 \version 1.0
@@ -65,7 +65,7 @@ public:
     /*! Load options from config file. */
   virtual void readConfig( StrQueue &sq );
 
-    /*! Add filters / detectors to the ist according to 
+    /*! Add filters / detectors to the ist according to
         the configuration. */
   string createFilters( void );
 
@@ -89,7 +89,7 @@ public:
 			     deque< PlotTrace::EventStyle > &eventstyles );
 
     /*! Initialize the Filter.
-        \return in case of errors (init() not implemented) 
+        \return in case of errors (init() not implemented)
 	an appropriate message. */
   string init( const InList &data, EventList &events );
 
@@ -115,7 +115,7 @@ public:
   void autoConfigure( Filter *f, double tbegin, double tend );
 
     /*! Filter or detect events. The Filter is initialized at its first call.
-        \return in case of errors (filter() not implemented) 
+        \return in case of errors (filter() not implemented)
 	an appropriate message. */
   string filter( const InList &data, EventList &events );
 
@@ -143,16 +143,16 @@ public:
         to obtain input trace with identifier \a ident. */
   int traceInputEvent( const string &ident ) const;
 
-    /*! Return the index of the input trace on which the 
+    /*! Return the index of the input trace on which the
         events of the EventData with index \a event were detected. */
   int eventInputTrace( int event ) const;
-    /*! Return the index of the input trace on which the 
+    /*! Return the index of the input trace on which the
         events of the EventData with identifier \a ident were detected. */
   int eventInputTrace( const string &ident ) const;
-    /*! Return the index of the EventData on which the 
+    /*! Return the index of the EventData on which the
         events of the EventData with index \a event were detected. */
   int eventInputEvent( int event ) const;
-    /*! Return the index of the EventData on which the 
+    /*! Return the index of the EventData on which the
         events of the EventData with identifier \a ident were detected. */
   int eventInputEvent( const string &ident ) const;
 
@@ -186,7 +186,7 @@ private:
   {
   public:
     FilterData( Filter *filter, const string &pluginname,
-		const vector<string> &in, 
+		const vector<string> &in,
 		const vector<string> &other,
 		long n, bool size, bool width );
     FilterData( const FilterData &fd );

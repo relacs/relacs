@@ -1,6 +1,6 @@
 /*
   filter.h
-  Basic virtual class for filtering or detecting events (e.g. spikes) 
+  Basic virtual class for filtering or detecting events (e.g. spikes)
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -28,9 +28,9 @@
 namespace relacs {
 
 
-/*! 
+/*!
 \class Filter
-\brief Basic virtual class for filtering or detecting events (e.g. spikes) 
+\brief Basic virtual class for filtering or detecting events (e.g. spikes)
        in an InData or EventData
 \author Jan Benda
 */
@@ -46,7 +46,7 @@ public:
       /*! Filters a single analog input trace. */
     SingleAnalogFilter=0,
       /*! Filters multiple input traces. */
-    MultipleAnalogFilter=1, 
+    MultipleAnalogFilter=1,
       /*! Filters a single event trace. */
     SingleEventFilter=2,
       /*! Filters multiple event traces. */
@@ -54,7 +54,7 @@ public:
       /*! Detects events in a single analog input trace. */
     SingleAnalogDetector=4,
       /*! Detects multiple events in multiple input traces. */
-    MultipleAnalogDetector=5, 
+    MultipleAnalogDetector=5,
       /*! Detects events in a single event trace. */
     SingleEventDetector=6,
       /*! Detects multiple events in multiple event traces. */
@@ -92,7 +92,7 @@ public
 	\param[in] date date of the last change
     */
   Filter( const string &ident, int mode,
-	  FilterType type, int outtraces=0, 
+	  FilterType type, int outtraces=0,
 	  const string &name="",
 	  const string &pluginset="",
 	  const string &author="unknown",
@@ -102,38 +102,38 @@ public
   virtual ~Filter( void );
 
     /*! Reimplement this function to initialize your filter.
-        This function is for initializing filters 
-	that filter a single trace of the analog data 
+        This function is for initializing filters
+	that filter a single trace of the analog data
 	given in \a indata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outdata with an appropriate unit using InData::setUnit().
 	Default unit is the unit of \a indata.
         Returns zero on success or one at failure. */
   virtual int init( const InData &indata, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function to initialize your filter.
-        This function is for initializing filters 
-	that filter multiple traces of the analog data 
+        This function is for initializing filters
+	that filter multiple traces of the analog data
 	given in \a indata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outdata with an appropriate unit using InData::setUnit().
 	Default unit is the unit of the first trace in \a indata.
         Returns zero on success or one at failure. */
   virtual int init( const InList &indata, InList &outdata ) { return INT_MIN; };
     /*! Reimplement this function to initialize your filter.
-        This function is for initializing filters 
+        This function is for initializing filters
 	that filter the events \a inevents.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outdata with an appropriate unit using InData::setUnit().
 	Default unit is EventData::sizeUnit() of \a inevents.
         Returns zero on success or one at failure. */
   virtual int init( const EventData &inevents, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function to initialize your filter.
-        This function is for initializing filters 
+        This function is for initializing filters
 	that filter multiple events \a inevents.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outdata with an appropriate unit using InData::setUnit().
 	Default unit is EventData::sizeUnit() of the first EventData in \a inevents.
@@ -141,120 +141,120 @@ public
   virtual int init( const EventList &inevents, InList &outdata ) { return INT_MIN; };
 
     /*! Reimplement this function to initialize your event detector.
-        This function is for initializing detectors 
-	that detect events in a single trace of the analog data 
+        This function is for initializing detectors
+	that detect events in a single trace of the analog data
 	given in \a indata.
-	The detector and the data are already locked during this function 
+	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outevents with appropriate names, scale factors,
 	units and formats if required
         (EventData::setSizeName(), EventData::setSizeScale(),
-	EventData::setSizeUnit(), EventData::setSizeFormat(), 
+	EventData::setSizeUnit(), EventData::setSizeFormat(),
 	EventData::setWidthName(), EventData::setWidthScale(),
 	EventData::setWidthUnit(), EventData::setWidthFormat())
         Returns zero on success or one at failure. */
   virtual int init( const InData &indata, EventData &outevents,
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function to initialize your event detector.
-        This function is for initializing detectors 
-	that detect events in multiple traces of the analog data 
+        This function is for initializing detectors
+	that detect events in multiple traces of the analog data
 	given in \a indata.
-	The detector and the data are already locked during this function 
+	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outevents with appropriate names, scale factors,
 	units and formats if required
         (EventData::setSizeName(), EventData::setSizeScale(),
-	EventData::setSizeUnit(), EventData::setSizeFormat(), 
+	EventData::setSizeUnit(), EventData::setSizeFormat(),
 	EventData::setWidthName(), EventData::setWidthScale(),
 	EventData::setWidthUnit(), EventData::setWidthFormat())
         Returns zero on success or one at failure. */
   virtual int init( const InList &indata, EventList &outevents,
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function to initialize your event detector.
-        This function is for initializing detectors 
+        This function is for initializing detectors
 	that detect events in the events \a inevents.
-	The detector and the data are already locked during this function 
+	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outevents with appropriate names, scale factors,
 	units and formats if required
         (EventData::setSizeName(), EventData::setSizeScale(),
-	EventData::setSizeUnit(), EventData::setSizeFormat(), 
+	EventData::setSizeUnit(), EventData::setSizeFormat(),
 	EventData::setWidthName(), EventData::setWidthScale(),
 	EventData::setWidthUnit(), EventData::setWidthFormat())
         Returns zero on success or one at failure. */
   virtual int init( const EventData &inevents, EventData &outevents,
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function to initialize your event detector.
-        This function is for initializing detectors 
+        This function is for initializing detectors
 	that detect events in the multiple events \a inevents.
-	The detector and the data are already locked during this function 
+	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outevents with appropriate names, scale factors,
 	units and formats if required
         (EventData::setSizeName(), EventData::setSizeScale(),
-	EventData::setSizeUnit(), EventData::setSizeFormat(), 
+	EventData::setSizeUnit(), EventData::setSizeFormat(),
 	EventData::setWidthName(), EventData::setWidthScale(),
 	EventData::setWidthUnit(), EventData::setWidthFormat())
         Returns zero on success or one at failure. */
-  virtual int init( const EventList &inevents, EventList &outevents, 
+  virtual int init( const EventList &inevents, EventList &outevents,
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };
 
     /*! Reimplement this function to react to changes in the input gain.
         This function is for filters that filter a single trace	of the
 	analog data given in \a indata and write their result to \a outdata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Your reimplementation should return 0. */
   virtual int adjust( const InData &indata, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
         This function is for filters that filter multiple traces of the
 	analog data given in \a indata and write their result to \a outdata..
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Your reimplementation should return 0. */
   virtual int adjust( const InList &indata, InList &outdata ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
         This function is for filters that filter the events in \a inevents
 	and write their result to \a outdata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Your reimplementation should return 0. */
   virtual int adjust( const EventData &inevents, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
         This function is for filters that filter multiple events in \a inevents
 	and write their result to \a outdata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Your reimplementation should return 0. */
   virtual int adjust( const EventList &inevents, InList &outdata ) { return INT_MIN; };
 
     /*! Reimplement this function to react to changes in the input gain.
-        This function is for filters and detectors 
-	that detect events in a single trace of the analog data 
+        This function is for filters and detectors
+	that detect events in a single trace of the analog data
 	given in \a indata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Your reimplementation should return 0. */
   virtual int adjust( const InData &indata ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
-        This function is for filters and detectors 
-        that detect events in multiple traces of the analog data 
+        This function is for filters and detectors
+	that detect events in multiple traces of the analog data
 	given in \a indata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Your reimplementation should return 0. */
   virtual int adjust( const InList &indata ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
-        This function is for filters and detectors 
+        This function is for filters and detectors
 	that detect events in the events \a inevents.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Your reimplementation should return 0. */
   virtual int adjust( const EventData &inevents ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
-        This function is for filters and detectors 
+        This function is for filters and detectors
 	that detect events in the multiple events \a inevents.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
 	Your reimplementation should return 0. */
   virtual int adjust( const EventList &inevents ) { return INT_MIN; };
@@ -262,38 +262,38 @@ public
     /*! Reimplement this function to react to automatically set parameters
         of the filter/detector, based on the input data
 	between the times \a tbegin and \a tend.
-        This function is for filters and detectors 
-	that detect events in a single trace of the analog data 
+        This function is for filters and detectors
+	that detect events in a single trace of the analog data
 	given in \a indata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and readLockData(), respectively.
 	Your reimplementation should return 0 on success. */
   virtual int autoConfigure( const InData &indata, double tbegin, double tend ) { return INT_MIN; };
     /*! Reimplement this function to react to automatically set parameters
         of the filter/detector, based on the input data
 	between the times \a tbegin and \a tend.
-        This function is for filters and detectors 
-        that detect events in multiple traces of the analog data 
+	This function is for filters and detectors
+	that detect events in multiple traces of the analog data
 	given in \a indata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and readLockData(), respectively.
 	Your reimplementation should return 0 on success. */
   virtual int autoConfigure( const InList &indata, double tbegin, double tend ) { return INT_MIN; };
     /*! Reimplement this function to react to automatically set parameters
         of the filter/detector, based on the input data
 	between the times \a tbegin and \a tend.
-        This function is for filters and detectors 
+	This function is for filters and detectors
 	that detect events in the events \a inevents.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and readLockData(), respectively.
 	Your reimplementation should return 0 on success. */
   virtual int autoConfigure( const EventData &inevents, double tbegin, double tend ) { return INT_MIN; };
     /*! Reimplement this function to react to automatically set parameters
         of the filter/detector, based on the input data
 	between the times \a tbegin and \a tend.
-        This function is for filters and detectors 
+	This function is for filters and detectors
 	that detect events in the multiple events \a inevents.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and readLockData(), respectively.
 	Your reimplementation should return 0 on success. */
   virtual int autoConfigure( const EventList &inevents, double tbegin, double tend ) { return INT_MIN; };
@@ -302,7 +302,7 @@ public
         This function filters a single trace of
 	the analog data given in \a indata.
 	The filtered trace is stored in \a outdata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
 	whenever a new chunk of data is available. */
@@ -311,7 +311,7 @@ public
         This function filters multiple traces of
 	the analog data given in \a indata.
 	The filtered traces are stored in \a outdata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
 	whenever a new chunk of data is available. */
@@ -319,7 +319,7 @@ public
     /*! Reimplement this function with an appropriate filter.
         This function filters the events \a inevents.
 	The filtered trace is stored in \a outdata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
 	whenever a new chunk of data is available. */
@@ -327,7 +327,7 @@ public
     /*! Reimplement this function with an appropriate filter.
         This function filters multiple events \a inevents.
 	The filtered traces are stored in \a outdata.
-	The filter and the data are already locked during this function 
+	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
 	whenever a new chunk of data is available. */
@@ -337,41 +337,41 @@ public
 	the analog data given in \a data.
 	The trace number is specified by \a events->trace().
 	The events are stored in \a outevents.
-	The detector and the data are already locked during this function 
+	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
 	whenever a new chunk of data is available. */
-  virtual int detect( const InData &data, EventData &outevents, 
+  virtual int detect( const InData &data, EventData &outevents,
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
         This function detects events in multiple traces of
 	the analog data given in \a data.
 	The trace numbers are specified by \a events->trace() and \a event->traceNum().
 	The events are stored in \a outevents.
-	The detector and the data are already locked during this function 
+	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
 	whenever a new chunk of data is available. */
-  virtual int detect( const InList &data, EventList &outevents, 
+  virtual int detect( const InList &data, EventList &outevents,
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
         This function detects events in the events \a inevents.
 	The detected events are stored in \a outevents.
-	The detector and the data are already locked during this function 
+	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
 	whenever a new chunk of data is available. */
-  virtual int detect( const EventData &inevents, EventData &outevents, 
+  virtual int detect( const EventData &inevents, EventData &outevents,
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
         This function detects events in multiple events \a inevents.
 	The events are stored in \a outevents.
-	The detector and the data are already locked during this function 
+	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
 	whenever a new chunk of data is available. */
-  virtual int detect( const EventList &inevents, 
-		      EventList &outevents, 
+  virtual int detect( const EventList &inevents,
+		      EventList &outevents,
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
 
     /*! Reimplement this function if you want to save some
@@ -398,7 +398,7 @@ public
   int outTraces( void ) const { return OutTraces; };
     /*! Mode which is passed to the corresponding output InData or EventData. */
   int mode( void ) const { return Mode; };
-    /*! Set the mode which is passed to the corresponding output InData 
+    /*! Set the mode which is passed to the corresponding output InData
         or EventData to \a mode. */
   void setMode( int mode ) { Mode = mode; };
 

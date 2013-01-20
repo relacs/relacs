@@ -330,7 +330,7 @@ string FilterDetectors::createFilters( void )
     fp->setParent( this );
     fp->setIdent( ident );
     fp->setMode( mode );
-      
+
     // insert detector in list:
     FL.push_back( FilterData( fp, filter, intrace, othertrace,
 			      buffersize, storesize, storewidth ) );

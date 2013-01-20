@@ -1,6 +1,6 @@
 /*
   efish/session.cc
-  Session for in vivo recordings in weakly electric fish.
+  Session for recording EODs of weakly electric fish.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -30,7 +30,7 @@ namespace efish {
 
 
 Session::Session( void )
-  : Control( "Session", "efish", "Jan Benda", "1.0", "Nov 27, 2009" )
+  : Control( "Session", "efish", "Jan Benda", "1.1", "Jan 139, 2013" )
 {
   // parameter:
   PlotWindow = 3600.0;
@@ -47,6 +47,7 @@ Session::Session( void )
   WaterTemp = 0.0;
   WaterTemps.clear();
   WaterTemps.reserve( 1000000 );  // should be enough for 24h!
+  EPhys = true;
 
   // this options is needed to update LCDs via notify!
   // set by Search RePro
@@ -54,7 +55,9 @@ Session::Session( void )
   addNumber( "firingrate2", "Baseline Firing Rate 2", 0.0, 0.0, 10000.0, 10.0, "Hz", "", "%.1f", 4 );
   addNumber( "pvalue1", "P-Value 1", 0.0, 0.0, 10.0, 0.01, "", "", "%.2f", 4 );
   addNumber( "pvalue2", "P-Value 2", 0.0, 0.0, 10.0, 0.01, "", "", "%.2f", 4 );
-  setConfigSelectMask( -32 );
+  addBoolean( "ephys", "Electrophysiological recording", EPhys, 2 );
+  setConfigSelectMask( 2 );
+  setDialogSelectMask( 2 );
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -66,13 +69,13 @@ Session::Session( void )
   EODPlot.setCommonXRange();
 
   EODPlot[0].setXLabel( "[sec]" );
-  EODPlot[0].setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, 
+  EODPlot[0].setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis,
 			   Plot::Left, 0.0 );
   EODPlot[0].setYFallBackRange( 800.0, 820.0 );
   EODPlot[0].setYRange( Plot::AutoScale, Plot::AutoScale );
   EODPlot[0].setMinYTics( 1.0 );
   EODPlot[0].setYLabel( "EOD freq. [Hz]" );
-  EODPlot[0].setYLabelPos( 2.5, Plot::FirstMargin, 0.5, Plot::Graph, 
+  EODPlot[0].setYLabelPos( 2.5, Plot::FirstMargin, 0.5, Plot::Graph,
 			   Plot::Center, -90.0 );
   EODPlot[0].setLMarg( 8.0 );
   EODPlot[0].setRMarg( 2.0 );
@@ -87,7 +90,7 @@ Session::Session( void )
   EODPlot[1].setYRange( 0.0, Plot::AutoScale );
   EODPlot[1].setMinYTics( 0.01 );
   EODPlot[1].setYLabel( "Ampl. [mV/cm]" );
-  EODPlot[1].setYLabelPos( 2.5, Plot::FirstMargin, 0.5, Plot::Graph, 
+  EODPlot[1].setYLabelPos( 2.5, Plot::FirstMargin, 0.5, Plot::Graph,
 			   Plot::Center, -90.0 );
   EODPlot[1].setLMarg( 8.0 );
   EODPlot[1].setRMarg( 2.0 );
@@ -117,7 +120,7 @@ Session::Session( void )
   EODRateLCD->setAutoFillBackground( true );
   Numbers->addWidget( EODRateLCD, 0, 1 );
 
-  SessionButton = new QPushButton( "Cell Found (Enter)" );
+  SessionButton = new QPushButton( "(Enter)" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
   vb->addWidget( SessionButton );
   connect( SessionButton, SIGNAL( clicked() ),
@@ -217,7 +220,7 @@ void Session::initDevices( void )
     mo.clearSections();
     mo.unsetNotify();
     mo.erase( "temp-1" );
-    mo.addNumber( "temp-1", "Temperature", 0.0, "°C", "%.1f", 0, 
+    mo.addNumber( "temp-1", "Temperature", 0.0, "°C", "%.1f", 0,
 		  OptWidget::ValueBold + OptWidget::ValueRed + OptWidget::ValueBackBlack );
     mo.setNotify();
     unlockMetaData();
@@ -239,7 +242,7 @@ void Session::initDevices( void )
     EODPlot[2].setYRange( Plot::AutoScale, Plot::AutoScale );
     EODPlot[2].setMinYTics( 0.1 );
     EODPlot[2].setYLabel( "°C" );
-    EODPlot[2].setYLabelPos( 2.5, Plot::FirstMargin, 0.5, Plot::Graph, 
+    EODPlot[2].setYLabelPos( 2.5, Plot::FirstMargin, 0.5, Plot::Graph,
 			     Plot::Center, -90.0 );
     EODPlot[2].setLMarg( 8.0 );
     EODPlot[2].setRMarg( 2.0 );
@@ -254,7 +257,10 @@ void Session::initDevices( void )
 
 void Session::sessionStarted( void )
 {
-  SessionButton->setText( "Cell Lost (Enter)" );
+  if ( EPhys )
+    SessionButton->setText( "Cell lost (Enter)" );
+  else
+    SessionButton->setText( "Stop recording (Enter)" );
 
   EODOffset = EODRates.size() - 1;
   if ( EODOffset < 0 )
@@ -268,7 +274,10 @@ void Session::sessionStarted( void )
 
 void Session::sessionStopped( bool saved )
 {
-  SessionButton->setText( "Cell Found (Enter)" );
+  if ( EPhys )
+    SessionButton->setText( "Cell found (Enter)" );
+  else
+    SessionButton->setText( "Start recording (Enter)" );
   if ( saved ) {
     saveEOD();
     saveTemperature();
@@ -445,6 +454,7 @@ void Session::main( void )
 
 void Session::notify( void )
 {
+  addFlags( 16, Parameter::ChangedFlag );
   postCustomEvent( 12 );
 }
 
@@ -465,7 +475,12 @@ void Session::customEvent( QEvent *qce )
     unlock();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    lock();
+    if ( ! mutex()->tryLock( 5 ) ) {
+      // we do not get the lock now,
+      // so we repost the event to a later time.
+      postCustomEvent( 12 );
+      return;
+    }
     for ( int k=0; k<SpikeTraces; k++ ) {
       // XXX this option is set from a RePro without locking it!
       double frate = number( "firingrate" + Str( k+1 ) );
@@ -473,6 +488,14 @@ void Session::customEvent( QEvent *qce )
       double pval = number( "pvalue" + Str( k+1 ) );
       PValueLCD[k]->display( pval );
     }
+    if ( flags( "ephys", 16 ) ) {
+      EPhys = boolean( "ephys" );
+      if ( EPhys )
+	SessionButton->setText( "Cell found (Enter)" );
+      else
+	SessionButton->setText( "Start recording (Enter)" );
+    }
+    delFlags( 16 );
     unlock();
   }
   else

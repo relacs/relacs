@@ -31,7 +31,7 @@ Pause::Pause( void )
   // add some options:
   addNumber( "duration", "Duration", 1.0, 0.01, 1000.0, 0.02, "sec", "ms" );
   addInteger( "repeats", "Repeats", 1, 0, 10000, 2 );
-  addBoolean( "savedata", "Save Data", false );
+  addBoolean( "savedata", "Save raw data", false );
 }
 
 
@@ -57,8 +57,8 @@ int Pause::main( void )
   // plot trace:
   tracePlotContinuous( duration );
 
-  for ( int count=0; 
-	( repeats <= 0 || count < repeats ) && softStop() == 0; 
+  for ( int count=0;
+	( repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
     sleepWait( duration );
     if ( interrupt() )

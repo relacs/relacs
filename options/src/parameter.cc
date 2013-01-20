@@ -617,7 +617,7 @@ int Parameter::flags( void ) const
 bool Parameter::flags( int selectflag ) const
 {
   return ( selectflag == 0 ||
-	   ( ( selectflag == NonDefault || 
+	   ( ( selectflag == NonDefault ||
 	       ( flags() & abs( selectflag ) ) ) &&
 	     ( selectflag > 0 || nonDefault() ) ) );
 }
@@ -1033,7 +1033,7 @@ Parameter &Parameter::addText( const string &strg, bool clear )
 	  Warning += "string '" + String[ String.size() - sq.size() + k ]
 	    + "' is not a valid date!";
       }
-      else 
+      else
 	addDate( year, month, day );
     }
   }
@@ -1046,7 +1046,7 @@ Parameter &Parameter::addText( const string &strg, bool clear )
 	  Warning += "string '" + String[ String.size() - sq.size() + k ]
 	    + "' is not a valid time!";
       }
-      else 
+      else
 	addTime( hour, minutes, seconds );
     }
   }
@@ -1061,7 +1061,7 @@ Parameter &Parameter::addText( const string &strg, bool clear )
 
 Str Parameter::defaultText( int index, const string &format,
 			    const string &unit ) const
-{ 
+{
   Warning = "";
 
   if ( index < 0 ) {
@@ -1588,7 +1588,7 @@ Parameter &Parameter::addNumber( double number, double error,
     if ( error >= 0.0 )
       error *= u;
   }
-  
+
   // check range:
   if ( number < Minimum - 1.0e-8 ) {
     Warning += "number=" + Str( number ) + " < Minimum=" + Str( Minimum ) + ", ";
@@ -1612,7 +1612,7 @@ Parameter &Parameter::addNumber( double number, double error,
     Error.clear();
     String.clear();
   }
-      
+
   // add number and error:
   Value.push_back( number );
   Error.push_back( error );

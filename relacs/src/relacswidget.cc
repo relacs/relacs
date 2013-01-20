@@ -282,12 +282,12 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   CW->createControls();
 
   // data index:
-  DI = new DataIndex;
+  //  DI = new DataIndex;
   // data browser:
-  CW->addTab( new DataBrowser( DI, this ), "Data-Browser" );
+  //  CW->addTab( new DataBrowser( DI, this ), "Data-Browser" );
   // load current directory:
-  QDir dir;
-  DI->loadDirectory( dir.currentPath().toStdString() );
+  //  QDir dir;
+  //  DI->loadDirectory( dir.currentPath().toStdString() );
 
   // model plugin:
   MD = 0;
@@ -405,7 +405,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MC->load();
   MC->check();
   MC->create();
-  connect( RP, SIGNAL( noMacro( RePro* ) ), 
+  connect( RP, SIGNAL( noMacro( RePro* ) ),
 	   MC, SLOT( noMacro( RePro* ) ) );
   connect( RP, SIGNAL( reloadRePro( const string& ) ),
 	   MC, SLOT( reloadRePro( const string& ) ) );
@@ -496,9 +496,8 @@ void RELACSWidget::printlog( const string &message ) const
 void RELACSWidget::init ( void )
 {
   MC->warning();
-  if ( MC->fatal() ) {
+  if ( MC->fatal() )
     ::exit( 1 );
-  }
 
   QFont f( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
   SimLabel->setFont( f );
@@ -1280,11 +1279,11 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
     *InfoFile << QTime::currentTime().toString().toStdString();
     *InfoFile << "   " << CurrentRePro->name() << ": " << MC->options();
   }
-  DI->addRepro( *CurrentRePro );
+  //  DI->addRepro( *CurrentRePro );
 
   ReProRunning = true;
   SN->incrReProCount();
-  
+
   readLockData();
   SF->holdOn();
   CurrentRePro->setSaving( saving );
@@ -1396,7 +1395,7 @@ void RELACSWidget::customEvent( QEvent *qce )
 
   case 5: {
     OutDataEvent *ode = dynamic_cast<OutDataEvent*>( qce );
-    DI->addStimulus( ode->Description );
+    //    DI->addStimulus( ode->Description );
     break;
   }
 
@@ -1473,7 +1472,7 @@ void RELACSWidget::startSession( bool startmacro )
 	     << "Time:      Research Program:\n";
   }
 
-  DI->addSession( SF->path() + "stimuli.dat", Options() );
+  //  DI->addSession( SF->path() + "stimuli.dat", Options() );
 
   SessionStartWait.wakeAll();
 
@@ -1538,14 +1537,14 @@ void RELACSWidget::stopSession( bool saved )
 
   if ( InfoFile != 0 ) {
     *InfoFile << "\n\n"
-	     << "The session was stopped at time " 
-	     << QTime::currentTime().toString().toStdString() << " on "
-	     << QDate::currentDate().toString().toStdString() << '\n';
+	      << "The session was stopped at time "
+	      << QTime::currentTime().toString().toStdString() << " on "
+	      << QDate::currentDate().toString().toStdString() << '\n';
     delete InfoFile;
     InfoFile = 0;
   }
 
-  DI->endSession( saved );
+  //  DI->endSession( saved );
 
   SessionStopWait.wakeAll();
 
@@ -1805,6 +1804,10 @@ void RELACSWidget::startFirstAcquisition( void )
   CW->initDevices();
   RP->setSettings();
 
+  // macros:
+  MC->checkOptions();
+  MC->warning();
+
   // update layout:
   int wd = FD->sizeHint().width();
   int wc = CW->sizeHint().width();
@@ -1862,7 +1865,7 @@ void RELACSWidget::startFirstAcquisition( void )
   CW->start();
 
   // get first RePro and start it:
-  MC->startUp(); 
+  MC->startUp();
 
   AcquisitionAction->setEnabled( false );
   SimulationAction->setEnabled( true );
@@ -1946,6 +1949,10 @@ void RELACSWidget::startFirstSimulation( void )
   CW->initDevices();
   RP->setSettings();
 
+  // macros:
+  MC->checkOptions();
+  MC->warning();
+
   // update layout:
   int wd = FD->sizeHint().width();
   int wc = CW->sizeHint().width();
@@ -2005,7 +2012,7 @@ void RELACSWidget::startFirstSimulation( void )
   CW->start();
 
   // get first RePro and start it:
-  MC->startUp(); 
+  MC->startUp();
 
   AcquisitionAction->setEnabled( true );
   SimulationAction->setEnabled( false );
@@ -2021,6 +2028,10 @@ void RELACSWidget::startIdle( void )
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );
   CW->initDevices();
+
+  // macros:
+  MC->checkOptions();
+  MC->warning();
 
   // update layout:
   int wd = FD->sizeHint().width();

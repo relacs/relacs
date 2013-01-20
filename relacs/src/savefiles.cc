@@ -383,7 +383,7 @@ void SaveFiles::saveEvents( double offs )
 	double et = (*EventFiles[k].Events)[EventFiles[k].Index];
 	if ( et < st )
 	  EventFiles[k].SignalEvent = EventFiles[k].Written;
-	else if ( EventFiles[k].Index == 0 || 
+	else if ( EventFiles[k].Index == 0 ||
 		  (*EventFiles[k].Events)[EventFiles[k].Index-1] < st ) {
 	  EventFiles[k].SignalEvent = EventFiles[k].Written;
 	  *EventFiles[k].Stream << '\n';

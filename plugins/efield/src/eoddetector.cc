@@ -29,7 +29,7 @@ namespace efield {
 
 
 EODDetector::EODDetector( const string &ident, int mode )
-  : Filter( ident, mode, SingleAnalogDetector, 1, 
+  : Filter( ident, mode, SingleAnalogDetector, 1,
 	    "EODDetector", "efield",
 	    "Jan Benda", "1.6", "Dec 07, 2010" )
 {
@@ -73,6 +73,12 @@ EODDetector::EODDetector( const string &ident, int mode )
   QPushButton *pb = new QPushButton( "Dialog" );
   hb->addWidget( pb );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
+
+  // help:
+  pb = new QPushButton( "Help" );
+  hb->addWidget( pb );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
 
   // auto configure:
@@ -122,7 +128,7 @@ void EODDetector::notify( void )
   MaxEODPeriod = number( "maxperiod" );
   FilterTau = number( "filtertau" );
   EDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() ); // XXX really needed?
 }
 
 
@@ -183,12 +189,11 @@ int EODDetector::detect( const InData &data, EventData &outevents,
   setNumber( "meanvolts", MeanEOD );
   setNotify();
   EDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() );
   return 0;
 }
 
 
-int EODDetector::checkEvent( InData::const_iterator first, 
+int EODDetector::checkEvent( InData::const_iterator first,
 			     InData::const_iterator last,
 			     InData::const_iterator event,
 			     InData::const_range_iterator eventtime,
@@ -200,7 +205,7 @@ int EODDetector::checkEvent( InData::const_iterator first,
 			     double &threshold,
 			     double &minthresh, double &maxthresh,
 			     double &time, double &size, double &width )
-{ 
+{
   if ( event+1 >= last ) {
     // resume:
     return -1;
@@ -298,7 +303,7 @@ int EODDetector::checkEvent( InData::const_iterator first,
     threshold = ThreshRatio * 2.0 * size;
 
   // accept:
-  return 1; 
+  return 1;
 }
 
 

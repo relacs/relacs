@@ -22,6 +22,7 @@
 #ifndef _RELACS_BASE_SAVETRACES_H_
 #define _RELACS_BASE_SAVETRACES_H_ 1
 
+#include <QLabel>
 #include <relacs/repro.h>
 using namespace relacs;
 
@@ -33,6 +34,24 @@ namespace base {
 \brief [RePro] Saves selected input traces or events for each run into files
 \author Jan Benda
 \version 1.0 (Jan 17, 2013)
+
+\par Options
+- \c General
+    - \c duration=1000ms: Duration (\c number)
+    - \c repeats=0: Repeats (\c integer)
+    - \c savedata=false: Save raw data (\c boolean)
+    - \c split=false: Save each run into a separate file (\c boolean)
+- \c Analog input traces
+
+  A list of all available analog input traces.
+  Select the ones that you want to save into files.
+- \c Events
+  A list of all available events.
+  Select the ones that you want to save into files.
+
+\par Files
+- savetraces-<tracename>-<run>.dat
+- saveevents-<eventsname>-<run>.dat
 */
 
 
@@ -43,7 +62,17 @@ class SaveTraces : public RePro
 public:
 
   SaveTraces( void );
+  virtual void preConfig( void );
   virtual int main( void );
+
+
+protected:
+
+  virtual void customEvent( QEvent *qce );
+
+  QLabel *RecordingLabel;
+  QLabel *ElapsedTimeLabel;
+  QLabel *CommentLabel;
 
 };
 

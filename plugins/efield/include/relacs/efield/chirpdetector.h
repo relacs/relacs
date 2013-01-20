@@ -34,6 +34,8 @@ namespace efield {
 \class ChirpDetector
 \brief [Detector] Detects chirps of wave-type weakly electric fish
 \author Jan Benda
+\version 1.3 (Jan 19, 2013)
+
 
 Chirps are transient increases of the EOD frequency of wave-type weakly electric fish.
 A chirp is detected if the EOD frequency increases by more than \a threshold Hz.
@@ -47,12 +49,10 @@ The event times of an EOD.
 The times, sizes, and widths of chirps.
 
 \par Options
-- \c threshold=8Hz: Threshold (\c number)
+- \c threshold=10Hz: Threshold (\c number)
 - \c minthresh=0Hz: Minimum threshold (\c number)
 - \c minwidth=3ms: Minimum width (\c number)
 - \c maxwidth=50ms: Maximum width (\c number)
-
-\version 1.2 (Jun 17, 2009)
 */
 
 
@@ -68,22 +68,28 @@ public:
   virtual int init( const EventData &inevents, EventData &outevents,
 		    const EventList &other, const EventData &stimuli );
   virtual void notify( void );
+  virtual int autoConfigure( const EventData &data, double tbegin, double tend );
     /*! Detect chirps in EOD events \a inevents. */
   virtual int detect( const EventData &inevents, EventData &outevents,
 		      const EventList &other, const EventData &stimuli );
 
-  int checkEvent( EventFrequencyIterator first, 
+  int checkEvent( EventFrequencyIterator first,
 		  EventFrequencyIterator last,
-		  EventFrequencyIterator event, 
-		  EventIterator eventtime, 
+		  EventFrequencyIterator event,
+		  EventIterator eventtime,
 		  EventFrequencyIterator index,
 		  EventIterator indextime,
-		  EventFrequencyIterator prevevent, 
-		  EventIterator prevtime, 
-		  EventData &outevents, 
+		  EventFrequencyIterator prevevent,
+		  EventIterator prevtime,
+		  EventData &outevents,
 		  double &threshold,
 		  double &minthresh, double &maxthresh,
 		  double &time, double &size, double &width );
+
+
+public slots:
+
+  void autoConfigure( void );
 
 
 protected:
@@ -100,6 +106,7 @@ protected:
   const EventList *Other;
 
   OptWidget CDW;
+  const EventData *Data;
 
 };
 
