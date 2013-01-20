@@ -147,12 +147,10 @@ int SaveTraces::main( void )
       if ( split ) {
 	string fn = addPath( "savetrace-" + traces()[k].ident() +
 			     '-' + Str( completeRuns()+1 ) + ".dat" );
-	cerr << "APPEND TO " << fn << '\n';
 	tracefile.push_back( new ofstream( fn.c_str() ) );
       }
       else {
 	string fn = addPath( "savetrace-" + traces()[k].ident() + ".dat" );
-	cerr << "SAVE IN " << fn << '\n';
 	tracefile.push_back( new ofstream( fn.c_str(),
 					   ofstream::out | ofstream::app ) );
       }
