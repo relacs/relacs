@@ -1,4 +1,6 @@
 Options:
+- Options::load() : values that come in quotes cannot be of type number!
+- Options::save() : quote all strings that start with a number!
 - Check readAppend() functions!
 - Make all Options and optWidget style flags an enum
 - OptWidget: add smart hotkey selection for tabs

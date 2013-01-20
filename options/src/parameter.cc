@@ -42,7 +42,7 @@ Parameter::Parameter( const Parameter &p )
 }
 
 
-Parameter::Parameter( const string &name, const string &request,  
+Parameter::Parameter( const string &name, const string &request,
 		      const string &strg, int flags, int style,
 		      Options *parentsection )
   : ParentSection( parentsection )
@@ -62,9 +62,9 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
-Parameter::Parameter( const string &name, const string &request,  
+Parameter::Parameter( const string &name, const string &request,
 		      const char *strg, int flags, int style,
-		      Options *parentsection ) 
+		      Options *parentsection )
   : ParentSection( parentsection )
 {
   clear( name, request, Text );
@@ -83,10 +83,10 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
-Parameter::Parameter( const string &name, const string &request, 
+Parameter::Parameter( const string &name, const string &request,
 		      double number, double error,
 		      double minimum, double maximum, double step,
-		      const string &internunit, const string &outputunit, 
+		      const string &internunit, const string &outputunit,
 		      const string &format, int flags, int style,
 		      Options *parentsection )
   : ParentSection( parentsection )
@@ -110,8 +110,8 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
-Parameter::Parameter( const string &name, const string &request,  
-		      double number, const string &unit, 
+Parameter::Parameter( const string &name, const string &request,
+		      double number, const string &unit,
 		      const string &format, int flags, int style,
 		      Options *parentsection )
   : ParentSection( parentsection )
@@ -132,11 +132,11 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
-Parameter::Parameter( const string &name, const string &request, 
+Parameter::Parameter( const string &name, const string &request,
 		      const vector<double> &numbers,
-		      const vector<double> &errors, 
+		      const vector<double> &errors,
 		      double minimum, double maximum, double step,
-		      const string &internunit, const string &outputunit, 
+		      const string &internunit, const string &outputunit,
 		      const string &format, int flags, int style,
 		      Options *parentsection )
   : ParentSection( parentsection )
@@ -162,10 +162,10 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
-Parameter::Parameter( const string &name, const string &request, 
+Parameter::Parameter( const string &name, const string &request,
 		      long number, long error,
 		      long minimum, long maximum, long step,
-		      const string &internunit, const string &outputunit, 
+		      const string &internunit, const string &outputunit,
 		      int width, int flags, int style,
 		      Options *parentsection )
   : ParentSection( parentsection )
@@ -183,15 +183,15 @@ Parameter::Parameter( const string &name, const string &request,
   e += Warning;
   setFormat( width, 0, 'f' );
   e += Warning;
-  setFlags( flags ); 
+  setFlags( flags );
   setStyle( style );
   Warning = e;
 }
 
 
-Parameter::Parameter( const string &name, const string &request,  
+Parameter::Parameter( const string &name, const string &request,
 		      bool dflt, int flags, int style,
-		      Options *parentsection ) 
+		      Options *parentsection )
   : ParentSection( parentsection )
 {
   clear( name, request, Boolean );
@@ -211,7 +211,7 @@ Parameter::Parameter( const string &name, const string &request,
 		      ValueType type,
 		      int yearhour, int monthminutes, int dayseconds,
 		      int flags, int style,
-		      Options *parentsection ) 
+		      Options *parentsection )
   : ParentSection( parentsection )
 {
   string e;
@@ -264,7 +264,7 @@ Parameter::Parameter( const string &name, const string &value )
 }
 
 
-Parameter::~Parameter( void ) 
+Parameter::~Parameter( void )
 {
 }
 
@@ -276,7 +276,7 @@ Parameter &Parameter::clear( const string &name, const string &request,
   Request = request.empty() ? name : request;
   VType = type;
   Flags = 0;
-  if ( ( ! String.empty() && ! String[0].empty() ) || 
+  if ( ( ! String.empty() && ! String[0].empty() ) ||
        ( ! Value.empty() && Value[ 0 ] != 0.0 ) )
     Flags |= ChangedFlag;
   Style = 0;
@@ -324,7 +324,7 @@ Parameter &Parameter::operator=( const Parameter &p )
 
 Parameter &Parameter::assign( const Parameter &p )
 {
-  if ( this == &p ) 
+  if ( this == &p )
     return *this;
 
   ParentSection = p.ParentSection;
@@ -332,7 +332,7 @@ Parameter &Parameter::assign( const Parameter &p )
   Request = p.Request;
   VType = p.VType;
   Flags = p.Flags;
-  if ( ( ! String.empty() && ! p.String.empty() && String[0] != p.String[0] ) || 
+  if ( ( ! String.empty() && ! p.String.empty() && String[0] != p.String[0] ) ||
        ( ! Value.empty() && ! p.Value.empty() && Value[0] != p.Value[0] ) )
     Flags |= ChangedFlag;
   Style = p.Style;
@@ -969,7 +969,7 @@ Parameter &Parameter::setText( const Parameter &p )
     Flags |= ChangedFlag;
 
   String = p.String;
-  
+
   return *this;
 }
 
