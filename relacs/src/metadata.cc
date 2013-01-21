@@ -159,7 +159,7 @@ void MetaData::save( const string &title, const Options &opts )
     mo = &newSection( opts, title ).addFlags( saveFlags() );
 
   // save meta data:
-  Options::save( of, "# ", saveFlags(), Options::FirstOnly );
+  Options::save( of, "# ", saveFlags(), Options::FirstOnly + Options::NoType );
 
   if ( mo != 0 )
     erase( mo );

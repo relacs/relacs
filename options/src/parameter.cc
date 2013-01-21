@@ -2974,6 +2974,26 @@ bool Parameter::testActivation( double value, double tol )
 }
 
 
+string Parameter::quoteString( string s )
+{
+  if ( s.empty() )
+    return "~";
+
+  bool quote = false;
+  if ( s.find_first_of( ",{}[]:=" ) != string::npos )
+    quote = true;
+  if ( Str::WhiteSpace.string::find( s[0] ) != string::npos )
+    quote = true;
+  size_t i = s.find_first_not_of( Str::WhiteSpace );
+  if ( i != string::npos && Str::FirstNumber.string::find( s[i] ) != string::npos )
+    quote = true;
+  if ( quote )
+    return '"' + s + '"';
+  else
+    return s;
+}
+
+
 string Parameter::save( int flags ) const
 {
   string str;
@@ -3031,33 +3051,11 @@ string Parameter::save( int flags ) const
   else if ( isDate() || isTime() || isText() ) {
     if ( fulllist )
       str += "[ ";
-    string val = text( 0 );
-    if ( val.empty() )
-      str += '~';
-    else {
-      bool quote = false;
-      if ( val.find_first_of( ",{}[]:=" ) != string::npos )
-	quote = true;
-      if ( Str::WhiteSpace.string::find( val[0] ) != string::npos )
-	quote = true;
-      unsigned int i = val.find_first_not_of( Str::WhiteSpace );
-      if ( i != string::npos && Str::FirstNumber.string::find( val[i] ) != string::npos )
-	quote = true;
-      if ( quote )
-	str += '"' + val + '"';
-      else
-	str += val;
-    }
+    str += quoteString( text( 0 ) );
     if ( fulllist ) {
       for ( int k=1; k<(int)String.size(); k++ ) {
 	str += ", ";
-	val = text( k );
-	if ( val.empty() )
-	  str += "~";
-	else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
-	  str += '"' + val + '"';
-	else
-	  str += val;
+	str += quoteString( text( k ) );
       }
       str += " ]";
     }
@@ -3123,24 +3121,10 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
   else if ( isDate() || isTime() || isText() ) {
     if ( fulllist )
       str << "[ ";
-    string val = text( 0 );
-    if ( val.empty() )
-      str << '~';
-    else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
-      str << '"' << val << '"';
-    else
-      str << val;
+    str << quoteString( text( 0 ) );
     if ( fulllist ) {
-      for ( int k=1; k<(int)String.size(); k++ ) {
-	str << ", ";
-	val = text( k );
-	if ( val.empty() )
-	  str << '~';
-	else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
-	  str << '"' << val << '"';
-	else
-	  str << val;
-      }
+      for ( int k=1; k<(int)String.size(); k++ )
+	str << ", " << quoteString( text( k ) );
       str << " ]";
     }
   }

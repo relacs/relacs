@@ -941,6 +941,9 @@ public:
   
 private:
 
+    /*! Add quotation marks around the string if necessary. */
+  static string quoteString( string s );
+
     /*! A pointer to the Options this parameter belongs to. */
   Options *ParentSection;
 
