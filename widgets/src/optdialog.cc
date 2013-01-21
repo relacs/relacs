@@ -109,12 +109,12 @@ void OptDialog::setCaption( const string &title )
 
 
 OptWidget *OptDialog::addOptions( Options &opt, int selectmask, int romask,
-				  int style, QMutex *mutex )
+				  int style, QMutex *mutex, string *tabhotkeys )
 {
   Tabs = 0;
 
   OptWidget *ow = new OptWidget( &opt, selectmask, romask, false,
-				 style, mutex );
+				 style, mutex, tabhotkeys );
   OWs.push_back( ow );
   DialogBox->addWidget( ow );
 
@@ -124,10 +124,15 @@ OptWidget *OptDialog::addOptions( Options &opt, int selectmask, int romask,
 
 OptWidget *OptDialog::addTabOptions( const string &label, Options &opt,
 				     int selectmask, int romask, int style,
-				     QMutex *mutex )
+				     QMutex *mutex, string *tabhotkeys )
 {
+  string mytabhotkeys = "";
+  if ( tabhotkeys == 0 )
+    tabhotkeys = &mytabhotkeys;
+  string tabname = OptWidget::tabLabel( label, tabhotkeys );
+
   OptWidget *ow = new OptWidget( &opt, selectmask, romask, false,
-				 style, mutex );
+				 style, mutex, tabhotkeys );
   OWs.push_back( ow );
 
   if ( Tabs == 0 ) {
@@ -135,7 +140,7 @@ OptWidget *OptDialog::addTabOptions( const string &label, Options &opt,
     DialogBox->addWidget( Tabs );
   }
 
-  Tabs->addTab( ow, label.c_str() );
+  Tabs->addTab( ow, tabname.c_str() );
 
   return ow;
 
@@ -149,14 +154,18 @@ void OptDialog::addWidget( QWidget *widget )
 }
 
 
-void OptDialog::addTabWidget( const string &label, QWidget *widget )
+void OptDialog::addTabWidget( const string &label, QWidget *widget, string *tabhotkeys )
 {
   if ( Tabs == 0 ) {
     Tabs = new QTabWidget;
     DialogBox->addWidget( Tabs );
   }
 
-  Tabs->addTab( widget, label.c_str() );
+  string mytabhotkeys = "";
+  if ( tabhotkeys == 0 )
+    tabhotkeys = &mytabhotkeys;
+  string tabname = OptWidget::tabLabel( label, tabhotkeys );
+  Tabs->addTab( widget, tabname.c_str() );
 }
 
 

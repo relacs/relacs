@@ -1,9 +1,6 @@
 Options:
-- Options::load() : values that come in quotes cannot be of type number!
-- Options::save() : quote all strings that start with a number!
 - Check readAppend() functions!
 - Make all Options and optWidget style flags an enum
-- OptWidget: add smart hotkey selection for tabs
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
 - OutData: rename Ident to name OR remove it?
 - DeviceList and FilterDetectors (and others?) should use plugin name (ident) as section name.

@@ -995,15 +995,21 @@ Parameter &Parameter::addText( const string &strg, bool clear )
   if ( sq.empty() )
     sq.add( "" );
   // remove leading and trailing spaces, and make '~' an empty string:
+  bool stringtype = false;
   for ( int k=0; k<sq.size(); k++ ) {
     sq[k].strip( ' ' );
-    if ( ! sq[k].empty() && sq[k][0] == '"' && sq[k][sq[k].size()-1] == '"' ) {
+    bool quotes = ( sq[k][0] == '"' && sq[k][sq[k].size()-1] == '"' );
+    if ( quotes )
+      stringtype = true;
+    if ( ! sq[k].empty() && quotes ) {
       sq[k].erase( 0, 1 );
       sq[k].erase( sq[k].size() - 1 );
     }
     if ( sq[k] == "~" )
       sq[k].clear();
   }
+  if ( isNotype() && stringtype )
+    setValueType( Text );
 
   // clear:
   if ( clear ) {
@@ -3028,10 +3034,20 @@ string Parameter::save( int flags ) const
     string val = text( 0 );
     if ( val.empty() )
       str += '~';
-    else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
-      str += '"' + val + '"';
-    else
-      str += val;
+    else {
+      bool quote = false;
+      if ( val.find_first_of( ",{}[]:=" ) != string::npos )
+	quote = true;
+      if ( Str::WhiteSpace.string::find( val[0] ) != string::npos )
+	quote = true;
+      unsigned int i = val.find_first_not_of( Str::WhiteSpace );
+      if ( i != string::npos && Str::FirstNumber.string::find( val[i] ) != string::npos )
+	quote = true;
+      if ( quote )
+	str += '"' + val + '"';
+      else
+	str += val;
+    }
     if ( fulllist ) {
       for ( int k=1; k<(int)String.size(); k++ ) {
 	str += ", ";

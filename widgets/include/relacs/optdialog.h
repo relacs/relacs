@@ -211,9 +211,13 @@ public:
         The standard layout \a style = 0 puts each option into a separate line.
         If \a style = 1 then the option's identifier is in one line
         and the options value and unit is in the following line.
+        \a tabhotkeys can point to a string that contains
+        hotkey-characters that are already in use. This information is
+        used to choose hotkeys for tabs. The new hotkeys are added to
+        the string.
 	\sa addTabOptions(), addWidget(), addTabWidget(), addSeparator(), addButton() */
   OptWidget *addOptions( Options &opt, int selectmask=0,
-			 int romask=0, int style=0, QMutex *mutex=0 );
+			 int romask=0, int style=0, QMutex *mutex=0, string *tabhotkeys=0 );
     /*! Assigns Options \a o as a page of a TabWidget with label \a label
         to the dialog.
         Only Options with their mode() & \a selectmask > 0 are displayed.
@@ -225,10 +229,14 @@ public:
         The standard layout \a style = 0 puts each option into a separate line.
         If \a style = 1 then the option's identifier is in one line
         and the options value and unit is in the following line.
+        \a tabhotkeys can point to a string that contains
+        hotkey-characters that are already in use. This information is
+        used to choose hotkeys for \a label and furhter tabs.
+	The new hotkeys are added to the string.
 	\sa addOptions(), addWidget(), addTabWidget(), addSeparator(), addButton() */
   OptWidget *addTabOptions( const string &label, Options &opt,
 			    int selectmask=0, int romask=0, int style=0,
-			    QMutex *mutex=0 );
+			    QMutex *mutex=0, string *tabhotkeys=0 );
 
     /*! Add some widget to the dialog. 
         The widget is deleted when the dialog is closed.
@@ -237,8 +245,12 @@ public:
     /*! Add some widget as a page of a TabWidget with label \a label
         to the dialog. 
         The widget is deleted when the dialog is closed.
+        \a tabhotkeys can point to a string that contains
+        hotkey-characters that are already in use. This information is
+        used to choose a hotkeys for \a label. The new hotkey is added to
+        the string.
         \sa addOptions(), addTabOptions(), addWidget(), addSeparator(), addButton() */
-  void addTabWidget( const string &label, QWidget *widget );
+  void addTabWidget( const string &label, QWidget *widget, string *tabhotkeys=0 );
 
     /*! Add a separator line to the dialog. 
         \sa addOptions(), addTabOptions(), addWidget(), addTabWidget(), addButton() */

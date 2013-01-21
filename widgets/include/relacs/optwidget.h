@@ -269,9 +269,13 @@ public:
 	If \a contupdate equals \a true, inputs by the user are immediately
 	applied to the Options \a o.
         Otherwise, accept() has to be called in order
-	to apply the changes to the Options \a o. */
+	to apply the changes to the Options \a o.
+        \a tabhotkeys can point to a string that contains
+        hotkey-characters that are already in use. This information is
+        used to choose hotkeys for tabs. The new hotkeys are added to
+        the string. */
   OptWidget( Options *o, int selectmask, int romask, bool contupdate, int style,
-	     QMutex *mutex=0, QWidget *parent=0, Qt::WindowFlags f=0 );
+	     QMutex *mutex=0, string *tabhotkeys=0, QWidget *parent=0, Qt::WindowFlags f=0 );
     /*! Destructs the OptWidget. */
   ~OptWidget( void );
 
@@ -294,10 +298,14 @@ public:
         and the options value and unit is in the following line.
         \a mutex is a mutex that is used by OptWidget to lock
         access to the options \a o while they are accessed from OptWidget functions.
-	Especially, during calls of the notify() function this mutex will be locked. */
+	In particular during calls of the notify() function this mutex will be locked.
+        \a tabhotkeys can point to a string that contains
+        hotkey-characters that are already in use. This information is
+        used to choose hotkeys for tabs. The new hotkeys are added to
+        the string. */
   OptWidget &assign( Options *o, int selectmask=0, int romask=0,
 		     bool contupdate=false, int style=0,
-		     QMutex *mutex=0 );
+		     QMutex *mutex=0, string *tabhotkeys=0 );
 
     /*! The maximum number of lines in a single tab. */
   int lines( void ) const;
@@ -358,6 +366,11 @@ public:
   bool tryLockMutex( int timeout=1 );
     /*! Unlock the data mutex. \sa tryLockMutex(), setMutex() */
   void unlockMutex( void );
+
+    /*! \return Find for \a label a hotkey that is not already contained in
+        \a tabhotkeys and mark it by inserting '&'.
+	The new hotkey is added to \a tabhotkeys. */
+  static string tabLabel( string label, string *tabhotkeys );
 
 
 public slots:
@@ -493,7 +506,7 @@ private:
 
   void assignOptions( Options *o, bool tabs, int style,
 		      int &row, int &level,
-		      QWidget *parent, QTabWidget *tabwidget );
+		      QWidget *parent, QTabWidget *tabwidget, string *tabhotkeys );
   void addWidget( OptWidgetBase *owb );
   void disableUpdate( void );
   void enableUpdate( void );

@@ -880,9 +880,12 @@ void RePro::dialog( void )
     Options::addStyles( OptWidget::LabelGreen, OverwriteFlag );
     Options::delStyles( OptWidget::LabelGreen, CurrentFlag );
     Options::addStyles( OptWidget::LabelRed, CurrentFlag );
+    string tabhotkeys = "oartc";
+    if ( dialogHeader() )
+      tabhotkeys += 'h';
     OptWidget *roptw = od->addOptions( *this, dialogSelectMask(), 
 				       dialogReadOnlyMask(), dialogStyle(),
-				       mutex() );
+				       mutex(), &tabhotkeys );
     if ( Options::styleSize( OptWidget::TabSection ) == 0 &&
 	 ( dialogStyle() & OptWidget::TabSectionStyle ) == 0 ) {
       roptw->setMargins( 2 );
@@ -899,7 +902,7 @@ void RePro::dialog( void )
     od->addButton( "&Ok", OptDialog::Accept, 1 );
     od->addButton( "&Apply", OptDialog::Accept, 1, false );
     od->addButton( "&Run", OptDialog::Accept, 2, false );
-    od->addButton( "&Reset", OptDialog::Defaults, 3, false );
+    od->addButton( "Rese&t", OptDialog::Defaults, 3, false );
     od->addButton( "&Close" );
     connect( od, SIGNAL( dialogClosed( int ) ),
 	     this, SLOT( dClosed( int ) ) );

@@ -98,7 +98,8 @@ OptWidget::OptWidget( Options *o, QMutex *mutex,
 
 
 OptWidget::OptWidget( Options *o, int selectmask, int romask,
-		      bool contupdate, int style, QMutex *mutex, 
+		      bool contupdate, int style, QMutex *mutex,
+		      string *tabhotkeys, 
 		      QWidget *parent, Qt::WindowFlags f )
   : QWidget( parent, f ),
     Opt( 0 ),
@@ -120,7 +121,7 @@ OptWidget::OptWidget( Options *o, int selectmask, int romask,
     ContinuousUpdate( false )
 {
   GUIThread = QThread::currentThread();
-  assign( o, selectmask, romask, contupdate, style, mutex );
+  assign( o, selectmask, romask, contupdate, style, mutex, tabhotkeys );
 }
 
 
@@ -141,7 +142,8 @@ OptWidget &OptWidget::operator=( Options *o )
 
 void OptWidget::assignOptions( Options *o, bool tabs, int style,
 			       int &row, int &level,
-			       QWidget *parent, QTabWidget *tabwidget )
+			       QWidget *parent, QTabWidget *tabwidget,
+			       string *tabhotkeys )
 {
   level++;
 
@@ -376,10 +378,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 				row, 2 );
       // this section starts a new tab:
       QWidget *w = new QWidget;
-      if ( (*sp)->name().find( '&' ) != string::npos )
-	tabwidget->addTab( w, (*sp)->name().c_str() );
-      else
-	tabwidget->addTab( w, ( "&" + (*sp)->name() ).c_str() );
+      tabwidget->addTab( w, tabLabel( (*sp)->name(), tabhotkeys ).c_str() );
       parent = w;
       row = 0;
       // add layout to current widget:
@@ -415,7 +414,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
       Layout.back()->setColumnMinimumWidth( 0, 20 );
       row++;
     }
-    assignOptions( *sp, tabs, style, row, level, parent, tabwidget );
+    assignOptions( *sp, tabs, style, row, level, parent, tabwidget, tabhotkeys );
     firstsec = false;
   }
 
@@ -424,10 +423,15 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 
 
 OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
-			      bool contupdate, int style, QMutex *mutex )
+			      bool contupdate, int style, QMutex *mutex,
+			      string *tabhotkeys )
 {
   if ( mutex != 0 )
     OMutex = mutex;
+
+  string mytabhotkeys = "";
+  if ( tabhotkeys == 0 )
+    tabhotkeys = &mytabhotkeys;
 
   if ( MainWidget != 0 ) {
     layout()->removeWidget( MainWidget );
@@ -485,10 +489,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       if ( pp->flags( SelectMask ) ) {
 	// top level Options has parameter, we need to add a tab:
 	QWidget *w = new QWidget;
-	if ( Opt->name().find( '&' ) != string::npos )
-	  tabwidget->addTab( w, Opt->name().c_str() );
-	else
-	  tabwidget->addTab( w, ( "&" + Opt->name() ).c_str() );
+	tabwidget->addTab( w, tabLabel( Opt->name(), tabhotkeys ).c_str() );
 	parent = w;
 	needgridlayout = true;
 	break;
@@ -518,7 +519,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 
   int row = 0;
   int level = -1;
-  assignOptions( Opt, tabs, style, row, level, parent, tabwidget );
+  assignOptions( Opt, tabs, style, row, level, parent, tabwidget, tabhotkeys );
 
   // finish parameter:
   if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
@@ -546,6 +547,22 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   MainWidget->show();
 
   return *this;
+}
+
+
+string OptWidget::tabLabel( string label, string *tabhotkeys )
+{
+  size_t i = label.find( '&' );
+  if ( i != string::npos && i+1<label.size() )
+    label.erase( i, 1 );
+  else
+    i=0;
+  size_t ti = Str( label ).low().find_first_not_of( *tabhotkeys, i );
+  if ( ti != string::npos ) {
+    *tabhotkeys += Str( label[ti] ).low();
+    label.insert( ti, "&" );
+  }
+  return label;
 }
 
 

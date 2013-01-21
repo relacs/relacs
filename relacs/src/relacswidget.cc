@@ -2167,8 +2167,8 @@ void RELACSWidget::about()
   info += RELACSVERSION;
   info += "</p>\n";
   info += "<p align=center>(c) by Jan Benda</p>\n";
-  info += "<p align=center>Department Biology II,<br>\n";
-  info += "   Ludwig-Maximilian University Munich.</p>\n";
+  info += "<p align=center>Institute for Neurobiology,<br>\n";
+  info += "   Eberhard Karls Universit&auml;t T&uuml;bingen.</p>\n";
   MessageBox::information( "About RELACS", info, this ); 
 }
 

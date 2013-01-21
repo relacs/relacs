@@ -116,8 +116,11 @@ void ConfigDialog::setDate( const string &date )
 
 void ConfigDialog::dialogOptions( OptDialog *od )
 {
+  string tabhotkeys = "oatc";
+  if ( dialogHeader() )
+    tabhotkeys += 'h';
   OptWidget *ow = od->addOptions( *this, DialogSelectMask, DialogROMask,
-				  DialogStyle, mutex() );
+				  DialogStyle, mutex(), &tabhotkeys );
   od->setVerticalSpacing( (int)::floor(9.0*::exp(-double(ow->lines())/8.0))+1 );
 }
 
@@ -127,7 +130,7 @@ void ConfigDialog::dialogButtons( OptDialog *od )
   od->setRejectCode( 0 );
   od->addButton( "&Ok", OptDialog::Accept, 1 );
   od->addButton( "&Apply", OptDialog::Accept );
-  od->addButton( "&Reset", OptDialog::Reset );
+  od->addButton( "Rese&t", OptDialog::Reset );
   od->addButton( "&Close" );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dClosed( int ) ) );

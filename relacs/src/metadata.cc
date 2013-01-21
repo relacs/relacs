@@ -297,13 +297,14 @@ int MetaData::dialog( void )
   // create and exec dialog:
   Dialog = true;
   OptDialog *od = new OptDialog( this );
+  string tabhotkeys = "sdotc";
   od->addOptions( *this, dialogFlag(), 0,
-		  OptWidget::BoldSectionsStyle, &MetaDataLock );
+		  OptWidget::BoldSectionsStyle, &MetaDataLock, &tabhotkeys );
   od->setCaption( "Stop Session Dialog" );
   od->setRejectCode( -1 );
   od->addButton( "&Save", OptDialog::Accept, 1 );
   od->addButton( "&Discard", OptDialog::NoAction, 0 );
-  od->addButton( "&Reset", OptDialog::Defaults );
+  od->addButton( "Rese&t", OptDialog::Defaults );
   od->addButton( "&Cancel" );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dialogClosed( int ) ) );
@@ -333,12 +334,13 @@ void MetaData::presetDialog( void )
   // create and exec dialog:
   Dialog = true;
   OptDialog *od = new OptDialog( this );
+  string tabhotkeys = "sdotc";
   od->addOptions( *this, dialogFlag()+presetDialogFlag(), 0,
-		  OptWidget::BoldSectionsStyle, &MetaDataLock );
+		  OptWidget::BoldSectionsStyle, &MetaDataLock, &tabhotkeys );
   od->setCaption( "Stop Session Dialog" );
   od->setRejectCode( -1 );
   od->addButton( "&Ok", OptDialog::Accept, 1 );
-  od->addButton( "&Reset", OptDialog::Defaults );
+  od->addButton( "Rese&t", OptDialog::Defaults );
   od->addButton( "&Cancel" );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dialogClosed( int ) ) );
