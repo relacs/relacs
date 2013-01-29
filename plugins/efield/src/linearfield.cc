@@ -120,6 +120,7 @@ int LinearField::main( void )
   P.setYLabel( "RMS Amplitude [" + trace( 0 ).unit() + "]" );
   P.setYRange( 0.0, Plot::AutoScale );
   P.unlock();
+  plot();
 
   postCustomEvent( 11 ); // O.setFocus();
   do {

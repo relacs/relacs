@@ -144,6 +144,8 @@ string FilterDetectors::createFilters( void )
       mode |= SaveFiles::SaveMeanQuality;
     if ( filteropts->boolean( "plot", true ) )
       mode |= PlotTraceMode;
+    if ( filteropts->boolean( "trigger", false ) )
+      mode |= PlotTriggerMode;
     vector< string > intrace;
     Options::const_iterator ip = filteropts->find( "inputtrace" );
     if ( ip != filteropts->end() ) {

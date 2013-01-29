@@ -45,6 +45,8 @@ class RELACSWidget;
 
   /*! Flag for the modes of traces or events, indicating that they should be plotted. */
 static const int PlotTraceMode = 0x0008;
+  /*! Flag for the modes of events to be used as a trigger signal. */
+static const int PlotTriggerMode = 0x0800;
   /*! Flag for the modes of traces, indicating that it should be centered vertically. */
 static const int PlotTraceCenterVertically = 0x0100;
 
@@ -139,6 +141,7 @@ public slots:
   void moveSignalOffsRight( void );
   void viewEnd( void );
   void viewWrapped( void );
+  void toggleTrigger( void );
   void manualRange( void );
   void autoRange( void );
   void centerVertically( void );
@@ -194,6 +197,8 @@ private:
   bool PlotChanged;
   double LeftTime;
   double Offset;
+  bool Trigger;
+  int TriggerSource;
   bool Manual;
 
   bool Plotting;

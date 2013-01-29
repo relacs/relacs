@@ -48,6 +48,8 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   ViewMode = SignalView;
   setView( WrapView );
   Manual = false;
+  Trigger = true;
+  TriggerSource = -1;
   Plotting = true;
 
   connect( &P, SIGNAL( changedRanges( int ) ),
@@ -401,6 +403,15 @@ void PlotTrace::init( void )
   // set xlabel:
   P[VP.back()].setXLabel( tunit );
 
+  // trigger source:
+  TriggerSource = -1;
+  for ( int s=0; s<events().size(); s++ ) 
+    if ( (events(s).mode() & PlotTriggerMode) ) {
+      TriggerSource = s;
+      break;
+    }
+
+
   P.unlock();
   RW->unlockData();
 	
@@ -447,14 +458,27 @@ void PlotTrace::plot( void )
   else if ( ViewMode == WrapView ) {
     // offset wrapped at signalTime():
     leftwin = tfac * ::floor( ( currentTime() - sigtime ) / TimeWindow ) * TimeWindow;
-    rightwin += leftwin;
     LeftTime = leftwin/tfac + sigtime;
+    rightwin += leftwin;
     Offset = sigtime;
   }
   else {
     // offset fixed at LeftTime:
     leftwin = tfac * ( LeftTime - Offset );
     rightwin = leftwin + tfac * TimeWindow;
+  }
+
+  // align to trigger:
+  if ( ( ViewMode == EndView || ViewMode == WrapView ) &&
+       Trigger && TriggerSource >= 0 ) {
+    double nt = events( TriggerSource ).nextTime( LeftTime );      
+    if ( nt < 0.0 )
+      nt = events( TriggerSource ).previousTime( LeftTime );      
+    if ( nt > 0.0 ) {
+      LeftTime = nt;
+      leftwin = (LeftTime - sigtime)*tfac;
+      rightwin = leftwin + tfac * TimeWindow;
+    }
   }
       
   // set xrange:
@@ -510,6 +534,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "Move offset right", this, SLOT( moveSignalOffsRight() ), Qt::SHIFT + Qt::Key_PageDown );
   Menu->addAction( "&End view", this, SLOT( viewEnd() ), Qt::Key_End );
   Menu->addAction( "&Wrapped view", this, SLOT( viewWrapped() ), Qt::Key_Insert );
+  Menu->addAction( "&Trigger", this, SLOT( toggleTrigger() ), Qt::CTRL + Qt::Key_T );
   Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
   Menu->addAction( "&Center", this, SLOT( centerVertically() ) );
@@ -879,6 +904,16 @@ void PlotTrace::viewWrapped( void )
 {
   P.lock();
   setView( WrapView );
+  P.unlock();
+  if ( RW->idle() )
+    plot();
+}
+
+
+void PlotTrace::toggleTrigger( void )
+{
+  P.lock();
+  Trigger = ! Trigger;
   P.unlock();
   if ( RW->idle() )
     plot();
