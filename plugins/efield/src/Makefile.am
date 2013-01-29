@@ -11,7 +11,8 @@ pluginlib_LTLIBRARIES = \
     libefieldbeatdetector.la \
     libefieldtraces.la \
     libefieldcalibefield.la \
-    libefieldjar.la
+    libefieldjar.la \
+    libefieldmanualjar.la
 
 
 
@@ -301,6 +302,45 @@ libefieldjar_la_include_HEADERS = $(HEADER_PATH)/jar.h
 
 
 
+libefieldmanualjar_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../base/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libefieldmanualjar_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libefieldmanualjar_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../base/src/libbaselinearattenuate.la \
+    $(builddir)/libefieldtraces.la \
+    $(builddir)/libefieldeodtools.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libefieldmanualjar_la_OBJECTS) : moc_manualjar.cc
+
+libefieldmanualjar_la_SOURCES = manualjar.cc
+
+libefieldmanualjar_la_includedir = $(pkgincludedir)/efield
+
+libefieldmanualjar_la_include_HEADERS = $(HEADER_PATH)/manualjar.h
+
+
+
 check_PROGRAMS = \
     linktest_libefieldeodtools_la \
     linktest_libefieldlinearfield_la \
@@ -309,7 +349,8 @@ check_PROGRAMS = \
     linktest_libefieldbeatdetector_la \
     linktest_libefieldtraces_la \
     linktest_libefieldcalibefield_la \
-    linktest_libefieldjar_la
+    linktest_libefieldjar_la \
+    linktest_libefieldmanualjar_la
 
 linktest_libefieldeodtools_la_SOURCES = linktest.cc
 linktest_libefieldeodtools_la_LDADD = libefieldeodtools.la
@@ -334,5 +375,8 @@ linktest_libefieldcalibefield_la_LDADD = libefieldcalibefield.la
 
 linktest_libefieldjar_la_SOURCES = linktest.cc
 linktest_libefieldjar_la_LDADD = libefieldjar.la
+
+linktest_libefieldmanualjar_la_SOURCES = linktest.cc
+linktest_libefieldmanualjar_la_LDADD = libefieldmanualjar.la
 
 TESTS = $(check_PROGRAMS)

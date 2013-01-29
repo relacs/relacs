@@ -419,7 +419,6 @@ int JAR::main( void )
 	  Intensity = Contrast * LocalFishAmplitude * IntensityGain;
 	else
 	  Intensity = Contrast * IntensityGain;
-	cerr << "Intensity=" << Intensity << '\n';
 	signal.setIntensity( Intensity );
 	if ( LocalBeatPeakEvents[0] >= 0 )
 	  detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.7*signal.intensity() );
