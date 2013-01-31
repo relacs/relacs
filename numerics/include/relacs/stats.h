@@ -2861,7 +2861,7 @@ void propFit( ForwardIterX firstx, ForwardIterX lastx,
   }
 
   if ( nn < 1 ||
-       sxx < 1.0e-8 )
+       sxx < 1.0e-20 )
     return;
 
   m = sxy / sxx;
@@ -2920,7 +2920,7 @@ void propFit( ForwardIterX firstx, ForwardIterX lastx,
   }
 
   if ( nn < 1 ||
-       sxx < 1.0e-8 )
+       sxx < 1.0e-20 )
     return;
 
   m = sxy / sxx;
@@ -2987,7 +2987,7 @@ void lineFit( ForwardIterX firstx, ForwardIterX lastx,
     ++iterx;
     ++itery;
   }
-  if ( st2 < 1.0e-8 ) {
+  if ( st2 < 1.0e-20 ) {
     b = 0.0;
     m = 0.0;
     return;
@@ -3070,7 +3070,7 @@ void lineFit( ForwardIterX firstx, ForwardIterX lastx,
     ++iters;
   }
 
-  if ( st2 < 1.0e-8 ) {
+  if ( st2 < 1.0e-20 ) {
     b = 0.0;
     m = 0.0;
     return;

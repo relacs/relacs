@@ -1,5 +1,5 @@
 /*
-  linearfit.cc
+  linefit.cc
   
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -21,7 +21,6 @@
 
 #include <iostream>
 #include <relacs/array.h>
-#include <relacs/basisfunction.h>
 #include <relacs/fitalgorithm.h>
 #include <relacs/random.h>
 using namespace std;
@@ -31,12 +30,8 @@ using namespace relacs;
 int main( void )
 {
   // function:
-  //  Sine sf( 2.0 );
-  Polynom sf;
-  ArrayD c( 3 );
-  c[0] = 1.0;
-  c[1] = 2.0;
-  c[2] = 3.0;
+  double m = 2.0;
+  double b = -1.0;
 
   // generate data:
   double xmin = 0.0;
@@ -46,20 +41,21 @@ int main( void )
   ArrayD x( n ), y( n ), s( n );
   for ( int k=0; k<n; k++ ) {
     x[k] = rnd.gaussian()*(xmax-xmin)/4+0.5*(xmin+xmax);
-    y[k] = sf( c, x[k] ) + sig*rnd.gaussian();
+    y[k] = m*x[k] + b + sig*rnd.gaussian();
     s[k] = sig;
   }
 
   // fit:
-  ArrayD p( 3 );
-  ArrayI pi( 3, 1 );
-  ArrayD u( 3 );
-  double ch = 0.0;
-  linearFit( x, y, s, sf, p, pi, u, ch );
+  double br=0.0;
+  double bru=0.0;
+  double mr=0.0;
+  double mru=0.0;
+  double chisq=0.0;
+  lineFit( x, y, s, br, bru, mr, mru, chisq );
 
-  for ( int i=0; i<3; i++ )
-    cout << "c[" << i << "] = " << p[i] << " +/- " << u[i] << '\n';
-  cout << "chisq = " << ch << '\n';
+  cout << "m=" << m << " mr=" << mr << " mru=" << mru << '\n';
+  cout << "b=" << b << " br=" << br << " bru=" << bru << '\n';
+  cout << "chisq = " << chisq << '\n';
 
   return 0;
 }

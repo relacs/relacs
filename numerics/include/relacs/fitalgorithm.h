@@ -43,6 +43,27 @@ static bool FitFlag = true;
     \return 16: error 1 in gaussJordan 
     \return 32: error 2 in gaussJordan 
    */
+template < typename ForwardIterX, typename ForwardIterY, typename BasisFunc >
+int linearFit( ForwardIterX firstx, ForwardIterX lastx,
+	       ForwardIterY firsty, ForwardIterY lasty,
+	       BasisFunc &funcs, ArrayD &params, const ArrayI &paramfit,
+	       ArrayD &uncert, double &chisq  );
+template < typename ContainerX, typename ContainerY, 
+  typename BasisFunc >
+int linearFit( const ContainerX &x, const ContainerY &y,
+	       BasisFunc &funcs, ArrayD &params, const ArrayI &paramfit,
+	       ArrayD &uncert, double &chisq );
+  /*! 
+    \a funcs is a function object with the signature
+    void funcs( double x, ArrayD &y ) const
+    that returns in \a y the values of the first \a y.size()
+    basis functions at \a x.
+    \return 0: success
+    \return 1: no parameters to fit
+    \return 2: not enough data points
+    \return 16: error 1 in gaussJordan 
+    \return 32: error 2 in gaussJordan 
+   */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename ForwardIterS, typename BasisFunc >
 int linearFit( ForwardIterX firstx, ForwardIterX lastx,
@@ -242,6 +263,102 @@ double sineFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp );
 int gaussJordan( vector< ArrayD > &a, int n, ArrayD &b );
 
 void covarSort( vector< ArrayD > &covar, const ArrayI &paramfit, int mfit );
+
+
+template < typename ForwardIterX, typename ForwardIterY, 
+  typename BasisFunc >
+int linearFit( ForwardIterX firstx, ForwardIterX lastx,
+	       ForwardIterY firsty, ForwardIterY lasty,
+	       BasisFunc &funcs, ArrayD &params, const ArrayI &paramfit,
+	       ArrayD &uncert, double &chisq  )
+{
+  uncert = -1.0;
+  chisq = -1.0;
+
+  // number of fit parameter:
+  int mfit = 0;
+  for ( int j=0; j<paramfit.size(); j++ ) {
+    if ( paramfit[j] )
+      mfit++;
+  }
+  if ( mfit == 0 )
+    return 1;
+
+  ArrayD beta( params.size(), 0.0 );
+  ArrayD afunc( params.size() );
+  vector< ArrayD > covar( params.size(), ArrayD( params.size(), 0.0 ) );
+
+  int nn = 0;
+  ForwardIterX iterx = firstx;
+  ForwardIterY itery = firsty;
+  while ( iterx != lastx && itery != lasty ) {
+    ++nn;
+    funcs( *iterx, afunc );
+    double ym = *itery;
+    if ( mfit < params.size() ) {
+      for ( int j=0; j<params.size(); j++ ) {
+	if ( !paramfit[j] )
+	  ym -= params[j]*afunc[j];
+      }
+    }
+    for ( int j=0, l=0; l<params.size(); l++ ) {
+      if ( paramfit[l] ) {
+	double wt = afunc[l];
+	for ( int k=0, m=0; m<=l; m++ ) {
+	  if ( paramfit[m] ) {
+	    covar[j][k] += wt*afunc[m];
+	    k++;
+	  }
+	}
+	beta[j] += ym*wt;
+	j++;
+      }
+    }
+    ++iterx;
+    ++itery;
+  }
+  if ( nn <= mfit )
+    return 2;
+  for ( int j=1; j<mfit; j++ ) {
+    for ( int k=0; k<j; k++ )
+      covar[k][j] = covar[j][k];
+  }
+  int r = gaussJordan( covar, mfit, beta );
+  if ( r > 0 )
+    return 16*r;
+  for ( int j=0, l=0; l<params.size(); l++ ) {
+    if ( paramfit[l] ) {
+      params[l] = beta[j];
+      j++;
+    }
+  }
+  chisq = 0.0;
+  while ( firstx != lastx && firsty != lasty ) {
+    funcs( *firstx, afunc );
+    double sum = 0.0;
+    for ( int j=0; j<params.size(); j++ )
+      sum += params[j]*afunc[j];
+    double ys = *firsty - sum;
+    chisq += ys*ys;
+    ++firstx;
+    ++firsty;
+  }
+  covarSort( covar, paramfit, mfit );
+  for ( int i=0; i<params.size(); i++ )
+    uncert[i] = ::sqrt( ::fabs( covar[i][i] ) );
+  return 0;
+}
+
+
+template < typename ContainerX, typename ContainerY, 
+  typename BasisFunc >
+int linearFit( const ContainerX &x, const ContainerY &y,
+	       BasisFunc &funcs, ArrayD &params, const ArrayI &paramfit,
+	       ArrayD &uncert, double &chisq )
+{
+  return linearFit( x.begin(), x.end(), y.begin(), y.end(),
+		    funcs, params, paramfit, uncert, chisq );
+}
 
 
 template < typename ForwardIterX, typename ForwardIterY, 

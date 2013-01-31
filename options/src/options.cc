@@ -2296,6 +2296,29 @@ Parameter &Options::selectText( const string &name, const string &strg,
 }
 
 
+Parameter &Options::selectText( const string &name, int index )
+{
+  iterator pp = find( name );
+  if ( pp != end() ) {
+    pp->selectText( index );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::selectText( " << index << " ) -> " << Warning << '\n';
+#endif
+
+    // notify the change:
+    callNotifies();
+
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
+}
+
+
 int Options::index( const string &name ) const
 {
   const_iterator pp = find( name );

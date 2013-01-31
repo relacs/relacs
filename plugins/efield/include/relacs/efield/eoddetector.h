@@ -35,7 +35,7 @@ namespace efield {
 \class EODDetector
 \brief [Detector] A detector for EOD cycles of weakly electric fish
 \author Jan Benda
-\version 1.6 (Dec 07, 2010)
+\version 1.7 (Jan 31, 2013)
 
 
 Detects each cycle of a periodic input waveform, like the EOD of a wave-type
@@ -113,7 +113,10 @@ protected:
   double MaxThresh;
   double ThreshRatio;
   double AutoRatio;
+  double ZeroRatio;
   double FilterTau;
+  int Interpolation;
+  double FitWin;
   double SampleInterval;
   bool AdaptThresh;
   double MaxEODPeriod;

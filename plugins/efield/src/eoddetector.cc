@@ -22,6 +22,9 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <relacs/stats.h>
+#include <relacs/basisfunction.h>
+#include <relacs/fitalgorithm.h>
 #include <relacs/efield/eoddetector.h>
 using namespace relacs;
 
@@ -31,7 +34,7 @@ namespace efield {
 EODDetector::EODDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
 	    "EODDetector", "efield",
-	    "Jan Benda", "1.6", "Dec 07, 2010" )
+	    "Jan Benda", "1.7", "Jan 31, 2013" )
 {
   // parameter:
   Threshold = 0.0001;
@@ -40,8 +43,11 @@ EODDetector::EODDetector( const string &ident, int mode )
   MaxEODPeriod = 0.01;  // 100 Hz
   AdaptThresh = false;
   ThreshRatio = 0.5;
+  ZeroRatio = 0.25;
   AutoRatio = 0.5;
   FilterTau = 0.1;
+  Interpolation = 1;
+  FitWin = 0.4;
 
   // options:
   addNumber( "threshold", "Threshold", Threshold, MinThresh, MaxThresh, 0.01*MaxThresh, "", "", "%g", 2+8+32 );
@@ -50,10 +56,16 @@ EODDetector::EODDetector( const string &ident, int mode )
   addNumber( "autoratio", "Auto sets threshold relative to EOD peak-to-peak amplitude", AutoRatio, 0.05, 1.0, 0.05, "", "%", "%g", 8 );
   addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
   addNumber( "filtertau", "Filter time constant", FilterTau, 0.0, 10000.0, 0.001, "s", "ms", "%g", 8 );
+  addNumber( "zeroratio", "Time is computed from threshold crossing by ratio of peak-to-peak amplitude below peak", ZeroRatio, 0.05, 1.0, 0.05, "", "%", "%g", 8 );
+  addSelection( "interpolation", "Method for threshold-crossing time", "closest datapoint|linear interpolation|linear fit|quadratic fit", 8 ).selectText( Interpolation );
+  addNumber( "fitwin", "Fraction between threshold crossing and peak used for fit", FitWin, 0.05, 1.0, 0.05, "", "%", "%g", 8 ).setActivation( "interpolation", "linear fit|quadratic fit" );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
   addNumber( "size", "Size", 0.0, 0.0, 100000.0, 0.1, "", "", "%.3f", 2+4 );
   addNumber( "meanvolts", "Average", 0.0, -10000.0, 10000.0, 0.1, "", "", "%.1f", 2+4 );
   addStyles( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
+
+  setDialogSelectMask( 8 );
+  setConfigSelectMask( -8 );
 
   // main layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -86,10 +98,6 @@ EODDetector::EODDetector( const string &ident, int mode )
   hb->addWidget( pb );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
-
-  setDialogSelectMask( 8 );
-  setDialogReadOnlyMask( 16 );
-  setConfigSelectMask( -32 );
 
   Data = 0;
   MeanEOD = 0.0;
@@ -126,7 +134,10 @@ void EODDetector::notify( void )
   ThreshRatio = number( "ratio" );
   AutoRatio = number( "autoratio" );
   MaxEODPeriod = number( "maxperiod" );
+  ZeroRatio = number( "zeroratio" );
   FilterTau = number( "filtertau" );
+  Interpolation = index( "interpolation" );
+  FitWin = number( "fitwin" );
   EDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() ); // XXX really needed?
 }
@@ -233,20 +244,76 @@ int EODDetector::checkEvent( InData::const_iterator first,
   // threshold for EOD time:
   double maxsize = 0.0;
   if ( prevevent > first )
-    maxsize = *event - 0.25 * ( *event - *prevevent );
+    maxsize = *event - ZeroRatio * ( *event - *prevevent );
   else
-    maxsize = 0.5 * *event;
+    maxsize = *event - ZeroRatio * 2.0 * (*event);
 
   // previous maxsize crossing time:
   InData::const_iterator id = event;
   InData::const_range_iterator it = eventtime;
   double ival = *id;
   double pval = ival;
-  for ( --id, --it; id != first; --id, --it ) {
+  int w = 1;
+  for ( --id, --it; id != first; --id, --it, ++w ) {
     ival = *id;
     if ( ival < maxsize ) {
-      double m = SampleInterval / ( pval - ival );
-      time = *it + m * ( maxsize - ival );
+      if ( Interpolation == 1 ) {
+	// linear interpolation:
+	double m = SampleInterval / ( pval - ival );
+	time = *it + m * ( maxsize - ival );
+      }
+      else if ( Interpolation >= 2 ) {
+	// fit:
+	w = (int)::round( FitWin*w );
+	if ( w < 1 )
+	  w = 1;
+	double t0 = *it;
+	for ( int k=1; k<w && id != first; ++k, --id, --it );
+	int nw = 2*w;
+	if ( Interpolation == 3 && nw < 3 )
+	  nw = 3;
+	ArrayD times;
+	ArrayD volts;
+	for ( int k=0; k<nw && id != event; ++k, ++id, ++it ) {
+	  times.push( *it - t0 );
+	  volts.push( *id );
+	}
+	if ( Interpolation == 3 ) {
+	  // quadratic fit:
+	  Polynom qp;
+	  ArrayD p( 3 );
+	  ArrayI pi( 3, 1 );
+	  ArrayD u( 3 );
+	  double chisq = 0.0;
+	  linearFit( times, volts, qp, p, pi, u, chisq );
+	  double sq = sqrt( p[1]*p[1] - 4.0*p[2]*(p[0]-maxsize) );
+	  double t1 = (-p[1] + sq)/2.0/p[2];
+	  double t2 = (-p[1] - sq)/2.0/p[2];
+	  if ( t1 > -0.5*SampleInterval && t1 < 1.5*SampleInterval )
+	    time = t0 + t1;
+	  else if ( t2 > -0.5*SampleInterval && t2 < 1.5*SampleInterval )
+	    time = t0 + t2;
+	  else {
+	    printlog( "WARNING wrong quadratic fit t1=" + Str( t1 ) + " t2=" + Str( t2 ) );
+	    return 0;
+	  }
+	}
+	else {
+	  // linear fit:
+	  double b=0.0;
+	  double bu=0.0;
+	  double m=0.0;
+	  double mu=0.0;
+	  double chisq=0.0;
+	  lineFit( times, volts, b, bu, m, mu, chisq );
+	  time = t0 + (maxsize-b)/m;
+	}
+      }
+      else {
+	// closest data point:
+	time = *it;
+      }
+
       if ( outevents.size() > 0 && time <= outevents.back() ) {
 	// discard:
 	return 0;

@@ -64,28 +64,31 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   newSection( "Detector", 8 );
-  addNumber( "lowerthreshold", "Lower threshold", LowerThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 );
-  addBoolean( "useupperthresh", "Use upper threshold", UseUpperThresh, 0+8+32 );
-  addNumber( "upperthreshold", "Upper threshold", UpperThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 ).setActivation( "useupperthresh", "true" );;
-  addBoolean( "peaks", "Detect peaks", Peaks, 2+8+32 );
-  addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8+32 );
-  addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testisi", "true" );
+  addNumber( "lowerthreshold", "Lower threshold", LowerThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8 );
+  addBoolean( "useupperthresh", "Use upper threshold", UseUpperThresh, 0+8 );
+  addNumber( "upperthreshold", "Upper threshold", UpperThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8 ).setActivation( "useupperthresh", "true" );;
+  addBoolean( "peaks", "Detect peaks", Peaks, 2+8 );
+  addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8 );
+  addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8 ).setActivation( "testisi", "true" );
   newSection( "Indicators", 8 );
-  addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
-  addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8+32 );
-  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8+32 );
-  addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8+32 );
-  addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
-  addInteger( "nsnippets", "Number of spike snippets shown", NSnippets, 0, 10000, 5 ).setFlags( 0+8+32 );
-  addNumber( "snippetswidth", "Width of spike snippet", SnippetsWidth, 0.0, 1.0, 0.0005, "sec", "ms", "%.1f", 0+8+32 );
-  addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
-  addNumber( "qualitythresh", "Quality threshold", QualityThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
-  addNumber( "trendthresh", "Trend threshold", TrendThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
-  addNumber( "trendtime", "Trend timescale", TrendTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
+  addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8 );
+  addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8 );
+  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8 );
+  addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8 );
+  addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
+  addInteger( "nsnippets", "Number of spike snippets shown", NSnippets, 0, 10000, 5 ).setFlags( 0+8 );
+  addNumber( "snippetswidth", "Width of spike snippet", SnippetsWidth, 0.0, 1.0, 0.0005, "sec", "ms", "%.1f", 0+8 );
+  addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
+  addNumber( "qualitythresh", "Quality threshold", QualityThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8 );
+  addNumber( "trendthresh", "Trend threshold", TrendThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8 );
+  addNumber( "trendtime", "Trend timescale", TrendTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, Unit, Unit, "%.1f", 2+4, strongstyle );
   addInteger( "trend", "Trend", 0, 0, 4 );
   addInteger( "quality", "Quality", 0, 0, 3 );
+
+  setDialogSelectMask( 8 );
+  setConfigSelectMask( -8 );
 
   // main layout:
   QGridLayout *gb = new QGridLayout;
@@ -98,10 +101,6 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   SDW.setMargins( 4, 2, 4, 0 );
   SDW.setVerticalSpacing( 1 );
   gb->addWidget( &SDW, 0, 1, Qt::AlignHCenter );
-
-  setDialogSelectMask( 8 );
-  setDialogReadOnlyMask( 16 );
-  setConfigSelectMask( -32 );
 
   LastSize = 0;
   LastTime = 0.0;
@@ -360,6 +359,7 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
   IntervalEnd = 0.0;
   IntervalWidth = 0.0;
   D.init( data.begin(), data.end(), data.timeBegin() );
+  SDW.updateValues();
   return 0;
 }
 

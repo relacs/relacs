@@ -614,6 +614,9 @@ public:
 	in the Parameter's style is not set. */
   Parameter &selectText( const string &name, const string &strg,
 			 int add=0 );
+    /*! If the text parameter has several values,
+        then the \a index-th value is selected by inserting it as the first value. */
+  Parameter &selectText( const string &name, int index );
     /*! Returns the index of the selected value, i.e.
         the index minus one of the matching value with the first value. */
   int index( const string &name ) const;

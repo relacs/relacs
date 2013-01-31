@@ -474,7 +474,7 @@ void PlotTrace::plot( void )
     double nt = events( TriggerSource ).nextTime( LeftTime );      
     if ( nt < 0.0 )
       nt = events( TriggerSource ).previousTime( LeftTime );      
-    if ( nt > 0.0 ) {
+    if ( nt > 0.0 && fabs( nt - LeftTime ) < 0.8*TimeWindow ) {
       LeftTime = nt;
       leftwin = (LeftTime - sigtime)*tfac;
       rightwin = leftwin + tfac * TimeWindow;

@@ -72,35 +72,38 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   newSection( "Detector", 8 );
-  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8+32 );
-  addNumber( "maxthresh", "Maximum threshold", MaxThresh, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 8+32 );
-  addNumber( "threshold", "Threshold", Threshold, 0.0, 200.0, 1.0, "mV", "mV", "%.1f", 2+4+32 );
-  addNumber( "delay", "Delay time", RecordingDelay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "decay", "Decay time constant", RecordingDecay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "searchdelay", "Delay time used inbetween the recordings", SearchDelay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "searchdecay", "Decay time constant used inbetween the recordings", SearchDecay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f",  2+8+32 );
-  addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8+32 );
-  addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 0.006, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
-  addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8+32 );
-  addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testisi", "true" );
-  addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8+32 );
-  addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8+32 );
+  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8 );
+  addNumber( "maxthresh", "Maximum threshold", MaxThresh, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 8 );
+  addNumber( "threshold", "Threshold", Threshold, 0.0, 200.0, 1.0, "mV", "mV", "%.1f", 2+4 );
+  addNumber( "delay", "Delay time", RecordingDelay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8 );
+  addNumber( "decay", "Decay time constant", RecordingDecay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8 );
+  addNumber( "searchdelay", "Delay time used inbetween the recordings", SearchDelay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8 );
+  addNumber( "searchdecay", "Decay time constant used inbetween the recordings", SearchDecay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8 );
+  addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f",  2+8 );
+  addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8 );
+  addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 0.006, 0.0001, "sec", "ms", "%.1f", 0+8 ).setActivation( "testwidth", "true" );
+  addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8 );
+  addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8 ).setActivation( "testisi", "true" );
+  addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8 );
+  addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8 );
   newSection( "Indicators", 8 );
-  addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
-  addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8+32 );
-  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.1, "mV", "mV", "%.2f", 0+8+32 );
-  addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8+32 );
-  addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
-  addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
-  addNumber( "qualitythresh", "Quality threshold", QualityThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
-  addNumber( "trendthresh", "Trend threshold", TrendThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
-  addNumber( "trendtime", "Trend timescale", TrendTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
+  addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8 );
+  addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8 );
+  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.1, "mV", "mV", "%.2f", 0+8 );
+  addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8 );
+  addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
+  addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
+  addNumber( "qualitythresh", "Quality threshold", QualityThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8 );
+  addNumber( "trendthresh", "Trend threshold", TrendThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8 );
+  addNumber( "trendtime", "Trend timescale", TrendTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
   addInteger( "trend", "Trend", 0, 0, 4 );
   addInteger( "quality", "Quality", 0, 0, 3 );
   addDialogStyle( OptWidget::TabSectionStyle );
+
+  setDialogSelectMask( 8 );
+  setConfigSelectMask( -8 );
 
   // main layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -113,10 +116,6 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   SDW.setMargins( 4, 2, 4, 0 );
   SDW.setVerticalSpacing( 1 );
   vb->addWidget( &SDW, 0, Qt::AlignHCenter );
-
-  setDialogSelectMask( 8 );
-  setDialogReadOnlyMask( 16 );
-  setConfigSelectMask( -32 );
 
   MaxRangeThresh = 100.0;
   LastSize = 0;
@@ -369,6 +368,7 @@ int DynamicSUSpikeDetector::init( const InData &data, EventData &outevents,
   IntervalEnd = 0.0;
   IntervalWidth = 0.0;
   D.init( data.begin(), data.end(), data.timeBegin() );
+  SDW.updateValues();
   return 0;
 }
 

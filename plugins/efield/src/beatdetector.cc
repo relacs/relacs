@@ -42,22 +42,21 @@ BeatDetector::BeatDetector( const string &ident, int mode )
 
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
-  addNumber( "threshold", "Threshold", Threshold, 0.0, 1000.0, 0.001, "", "", "%.3f", 2+4+32 );
-  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 1000.0, 0.001, "", "", "%.3f", 2+8+32 );
-  addNumber( "delay", "Delay time", Delay, 0.0, 1000.0, 1.0, "sec", "sec", "", 8+32 );
-  addNumber( "decay", "Decay time constant", Decay, 0.0, 1000.0, 1.0, "sec", "sec", "", 2+8+32 );
-  addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f", 2+8+32 ); 
+  addNumber( "threshold", "Threshold", Threshold, 0.0, 1000.0, 0.001, "", "", "%.3f", 2+4 );
+  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 1000.0, 0.001, "", "", "%.3f", 2+8 );
+  addNumber( "delay", "Delay time", Delay, 0.0, 1000.0, 1.0, "sec", "sec", "", 8 );
+  addNumber( "decay", "Decay time constant", Decay, 0.0, 1000.0, 1.0, "sec", "sec", "", 2+8 );
+  addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f", 2+8 ); 
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4, strongstyle );
   addNumber( "contrast", "Contrast", 0.0, 0.0, 10000.0, 0.1, "%", "%", "%.1f", 2+4, strongstyle );
+
+  setDialogSelectMask( 8 );
+  setConfigSelectMask( -8 );
 
   BDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   BDW.setVerticalSpacing( 4 );
   BDW.setMargins( 4 );
   setWidget( &BDW );
-
-  setDialogSelectMask( 8 );
-  setDialogReadOnlyMask( 16 );
-  setConfigSelectMask( -32 );
 }
 
 

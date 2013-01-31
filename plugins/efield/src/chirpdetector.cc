@@ -44,14 +44,17 @@ ChirpDetector::ChirpDetector( const string &ident, int mode )
   Data = 0;
 
   // options:
-  addNumber( "threshold", "Threshold", Threshold, 0.0, 10000.0, 2.0, "Hz", "Hz", "%.0f", 2+8+32 );
-  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 10000.0, 2.0, "Hz", "Hz", "%.0f", 2+8+32 );
-  addNumber( "minwidth", "Minimum width", ChirpMinWidth, 0.0, 100.0, 0.002, "s", "ms", "%.0f", 2+8+32 );
-  addNumber( "maxwidth", "Maximum width", ChirpMaxWidth, 0.002, 1000.0, 0.002, "s", "ms", "%.0f", 2+8+32 );
+  addNumber( "threshold", "Threshold", Threshold, 0.0, 10000.0, 2.0, "Hz", "Hz", "%.0f", 2+8 );
+  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 10000.0, 2.0, "Hz", "Hz", "%.0f", 2+8 );
+  addNumber( "minwidth", "Minimum width", ChirpMinWidth, 0.0, 100.0, 0.002, "s", "ms", "%.0f", 2+8 );
+  addNumber( "maxwidth", "Maximum width", ChirpMaxWidth, 0.002, 1000.0, 0.002, "s", "ms", "%.0f", 2+8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 10000.0, 1.0, "Hz", "Hz", "%.0f", 2+4 );
   addNumber( "size", "Size", 0.0, 0.0, 10000.0, 1.0, "Hz", "Hz", "%.0f", 2+4 );
   addNumber( "width", "Width", 0.0, 0.0, 100000.0, 0.1, "ms", "ms", "%.0f", 2+4 );
   addStyles( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
+
+  setDialogSelectMask( 8 );
+  setConfigSelectMask( -8 );
 
   // main layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -79,10 +82,6 @@ ChirpDetector::ChirpDetector( const string &ident, int mode )
   hb->addWidget( pb );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
-
-  setDialogSelectMask( 8 );
-  setDialogReadOnlyMask( 16 );
-  setConfigSelectMask( -32 );
 }
 
 
@@ -107,6 +106,8 @@ int ChirpDetector::init( const EventData &inevents, EventData &outevents,
 	  EventIterator( inevents.begin() + 1 ) );
 
   Other = &other;
+
+  CDW.updateValues();
 
   return 0;
 }

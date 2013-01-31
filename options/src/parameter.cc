@@ -1361,6 +1361,68 @@ Parameter &Parameter::selectText( const string &strg, int add )
 }
 
 
+Parameter &Parameter::selectText( int index )
+{
+  if ( ! isText() ) {
+    Warning = "Parameter::selectText -> parameter '" + 
+      Name + "' is not of type text!";
+    return *this;
+  }
+
+  if ( index < 0 )
+    return *this;
+
+  if ( String.find( String[0], 1 ) > 0 ) {
+    if ( index+1 < String.size() ) {
+      String[0] = String[index+1];
+      Flags |= ChangedFlag;
+    }
+  }
+  else {
+    if ( index < String.size() ) {
+      String.insert( String[index] );
+      Flags |= ChangedFlag;
+    }
+  }
+  
+  // update numbers:
+  if ( isDate() ) {
+    Year.clear();
+    Month.clear();
+    Day.clear();
+    for ( int k=0; k<String.size(); k++ ) {
+      int year, month, day;
+      int d = String[k].date( year, month, day );
+      if ( d != 0 )
+	Warning += "string '" + String[k] + "' is not a valid date!";
+      else 
+	addDate( year, month, day );
+    }
+  }
+  else if ( isTime() ) {
+    Hour.clear();
+    Minutes.clear();
+    Seconds.clear();
+    for ( int k=0; k<String.size(); k++ ) {
+      int hour, minutes, seconds;
+      int d = String[k].time( hour, minutes, seconds );
+      if ( d != 0 )
+	Warning += "string '" + String[k] + "' is not a valid time!";
+      else 
+	addTime( hour, minutes, seconds );
+    }
+  }
+  else {
+    Value.clear();
+    Error.clear();
+    for ( int k=0; k<String.size(); k++ )
+      addNumber( String[k], "" );
+  }
+  
+  return *this;
+}
+
+
 int Parameter::index( void ) const
 {
   if ( ! isText() ) {

@@ -58,19 +58,22 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   newSection( "Detector", 8 );
-  addNumber( "threshold", "Detection threshold", Threshold, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8+32 );
-  addNumber( "abspeak", "Absolute threshold", AbsPeak, -200.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8+32 ).setActivation( "testpeak", "true" );
-  addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8+32 );
-  addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 1.000, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
-  addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8+32 );
-  addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8+32 );
+  addNumber( "threshold", "Detection threshold", Threshold, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8 );
+  addNumber( "abspeak", "Absolute threshold", AbsPeak, -200.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8 ).setActivation( "testpeak", "true" );
+  addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8 );
+  addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 1.000, 0.0001, "sec", "ms", "%.1f", 0+8 ).setActivation( "testwidth", "true" );
+  addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8 );
+  addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8 );
   newSection( "Indicators", 8 );
-  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.1, "mV", "mV", "%.2f", 0+8+32 );
-  addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8+32 );
-  addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
-  addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
+  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.1, "mV", "mV", "%.2f", 0+8 );
+  addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8 );
+  addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
+  addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
+
+  setDialogSelectMask( 8 );
+  setConfigSelectMask( -8 );
 
   // main layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -83,10 +86,6 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   SDW.setMargins( 4, 2, 4, 0 );
   SDW.setVerticalSpacing( 1 );
   vb->addWidget( &SDW, 0, Qt::AlignHCenter );
-
-  setDialogSelectMask( 8 );
-  setDialogReadOnlyMask( 16 );
-  setConfigSelectMask( -32 );
 
   Update.start();
 
@@ -172,6 +171,7 @@ int IntraSpikeDetector::init( const InData &data, EventData &outevents,
   outevents.setWidthFormat( "%4.2f" );
   D.setHistorySize( int( HistoryTime*1000.0 ) );
   D.init( data.begin(), data.end(), data.timeBegin() );
+  SDW.updateValues();
   return 0;
 }
 

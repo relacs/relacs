@@ -5,6 +5,7 @@ noinst_PROGRAMS = \
     generatepairs \
     isnan \
     linearfit \
+    linefit \
     marquardtfit \
     maxreturnval \
     meanreturnval \
@@ -57,6 +58,9 @@ isnan_SOURCES = isnan.cc
 
 linearfit_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 linearfit_SOURCES = linearfit.cc
+
+linefit_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
+linefit_SOURCES = linefit.cc
 
 marquardtfit_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 marquardtfit_SOURCES = marquardtfit.cc
