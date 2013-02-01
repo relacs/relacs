@@ -184,7 +184,7 @@ int ManualJAR::main( void )
 
     do {
       // EOD rate:
-      setNumber( "eodf", events( EODEvents ).frequency( averagetime ) );
+      setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
       postCustomEvent( 13 );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
       sleepWait( 0.2 );
@@ -199,7 +199,7 @@ int ManualJAR::main( void )
     double deltaf = number( "deltaf" );
     double amplitude = number( "amplitude" );
     double pause = currentTime() - starttime;
-    double fishrate = events( EODEvents ).frequency( averagetime );
+    double fishrate = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
     if ( fakefish > 0.0 )
       fishrate = fakefish;
 
@@ -245,7 +245,7 @@ int ManualJAR::main( void )
     message( s );
 
     do {
-      setNumber( "eodf", events( EODEvents ).frequency( averagetime ) );
+      setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
       postCustomEvent( 13 );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
       sleepWait( 0.2 );
@@ -288,7 +288,8 @@ void ManualJAR::analyze( double duration, double before, double after,
   const EventData &eodglobal = events( EODEvents );
 
   EventIterator first1 = eodglobal.begin( signalTime() - before );
-  ++first1; // XXX
+  for ( int k=0; k<10; k++ )
+    ++first1; // XXX
   EventIterator last1 = eodglobal.begin( signalTime() + duration + after );
   if ( last1 >= eodglobal.end() - 2 )
     last1 = eodglobal.end() - 2;
