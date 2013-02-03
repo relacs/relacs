@@ -24,7 +24,7 @@
 
 #include <QWidget>
 #include <QPushButton>
-#include <QMenu> 
+#include <QMenu>
 #include <vector>
 #include <relacs/relacsplugin.h>
 #include <relacs/multiplot.h>
@@ -177,7 +177,7 @@ protected slots:
 private:
 
     /*! Different view modes. */
-  enum Views { 
+  enum Views {
       /*! Keep the display fixed. */
     FixedView,
       /*! Show the traces relative to the current signal time. */
@@ -186,9 +186,14 @@ private:
     EndView,
       /*! Show the traces wrapped relative to the current data. */
     WrapView,
+      /*! Show the traces either in EndView or WrapView according to
+	  the ContinuousView variable. */
+    ContView,
   };
 
   void setView( Views mode );
+
+  Views ContinuousView;
 
   double TimeWindow;
   double TimeOffs;

@@ -34,13 +34,13 @@ namespace efield {
 EODDetector::EODDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
 	    "EODDetector", "efield",
-	    "Jan Benda", "1.7", "Jan 31, 2013" )
+	    "Jan Benda", "1.7", "Feb 3, 2013" )
 {
   // parameter:
   Threshold = 0.0001;
   MinThresh = 0.0;
   MaxThresh = 1000.0;
-  MaxEODPeriod = 0.01;  // 100 Hz
+  MaxEODPeriod = 0.1;  // 10 Hz
   AdaptThresh = false;
   ThreshRatio = 0.5;
   ZeroRatio = 0.25;
@@ -54,7 +54,7 @@ EODDetector::EODDetector( const string &ident, int mode )
   addBoolean( "adapt", "Adapt threshold", AdaptThresh, 2+8 );
   addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 ).setActivation( "adapt", "true" );
   addNumber( "autoratio", "Auto sets threshold relative to EOD peak-to-peak amplitude", AutoRatio, 0.05, 1.0, 0.05, "", "%", "%g", 8 );
-  addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
+  addNumber( "maxperiod", "Maximum EOD period for analyzing", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
   addNumber( "filtertau", "Filter time constant", FilterTau, 0.0, 10000.0, 0.001, "s", "ms", "%g", 8 );
   addNumber( "zeroratio", "Time is computed from threshold crossing by ratio of peak-to-peak amplitude below peak", ZeroRatio, 0.05, 1.0, 0.05, "", "%", "%g", 8 );
   addSelection( "interpolation", "Method for threshold-crossing time", "closest datapoint|linear interpolation|linear fit|quadratic fit", 8 ).selectText( Interpolation );

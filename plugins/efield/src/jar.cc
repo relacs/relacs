@@ -227,7 +227,7 @@ int JAR::main( void )
   }
 
   // check gain of attenuator:
-  base::LinearAttenuate *latt = 
+  base::LinearAttenuate *latt =
     dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( GlobalEField ) ) );
   if ( latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 ) {
     warning( "Attenuator gain is not set!" );
@@ -235,7 +235,7 @@ int JAR::main( void )
   }
 
   // plot trace:
-  tracePlotContinuous( 1.0 );
+  tracePlotContinuous();
 
   // ranges:
   ContrastCount = 0;

@@ -63,9 +63,8 @@ public:
   virtual int main( void );
   virtual void sessionStarted( void );
 
-  void analyze( double duration, double before, double after,
-		MapD &eodfrequency, MapD &eodamplitude, EventData &jarchirpevents );
   void plot( double deltaf, double amplitude, double duration,
+	     double before, double after,
 	     const MapD &eodfrequency, const EventData &jarchirpevents );
   void save( double deltaf, double amplitude, double duration, double pause,
 	     double fishrate, double stimulusrate,

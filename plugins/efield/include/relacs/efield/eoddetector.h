@@ -35,17 +35,34 @@ namespace efield {
 \class EODDetector
 \brief [Detector] A detector for EOD cycles of weakly electric fish
 \author Jan Benda
-\version 1.7 (Jan 31, 2013)
+\version 1.7 (Feb 3, 2013)
 
 
 Detects each cycle of a periodic input waveform, like the EOD of a wave-type
 weakly electric fish.
 
-The threshold defines the minimum distance between peaks and troughs that are detected.
-If \a adapt is set to \c true, then the threshold is set automatically to
-\a ratio times the two-fold size of the EOD amplitude.
-If the a previous peak of similar size is more than \a maxperiod away,
-then this peak is not regarded as an EOD cycle.
+The threshold defines the minimum distance between peaks and troughs
+that are detected.  If \a adapt is set to \c true, then the threshold
+is set automatically to \a ratio times the two-fold size of the EOD
+amplitude. Once a peak is detected the time of the EOD cycles is
+computed as the threshold crossing time of a voltage level that is at
+\a zeroratio times the peak-to-peak amplitude below the peak. You can
+select from four methods to determine the exact threshold crossing
+time (\a interpolation):
+- \c closest \c datapoint takes the time of the
+  the data point right before the threshold crossing.
+- \c linear \c interpolation takes the time of a linear interpolation
+  between the two data points directly below and above the threshold crossing.
+- \c linear \c fit and \c quadratic \c fit fit a line or a parabola to the
+  region determined by \a fitwin and compute from the fit
+  the threshold crossing time.
+.
+For computing the size (amplitude, half of the peak-to-peak amplitude)
+of the EOD a parabola is fitted to the three data points around the peak
+and the peak of this parabula is used as the peak size. If \a filtertau is
+greater than zero the the EOD waveform is low-pass filtered with this
+time constant and this mean value is subtracted from the peak size to result
+in the desired amplitude.
 
 \par Input
 A single voltage trace of the periodic input waveform
@@ -54,12 +71,15 @@ A single voltage trace of the periodic input waveform
 The times of the EOD peaks and their amplitude.
 
 \par Options
-- \c threshold=0.1mV: Threshold (\c number)
+- \c threshold=1mV: Threshold (\c number)
 - \c adapt=false: Adapt threshold (\c boolean)
 - \c ratio=50%: Ratio (\c number)
 - \c autoratio=50%: Auto sets threshold relative to EOD peak-to-peak amplitude (\c number)
-- \c maxperiod=10ms: Maximum EOD period (\c number)
+- \c maxperiod=100ms: Maximum EOD period for analyzing (\c number)
 - \c filtertau=100ms: Filter time constant (\c number)
+- \c zeroratio=25%: Time is computed from threshold crossing by ratio of peak-to-peak amplitude below peak (\c number)
+- \c interpolation=linear interpolation: Method for threshold-crossing time (\c string)
+- \c fitwin=40%: Fraction between threshold crossing and peak used for fit (\c number)
 
 \par Auto Button
 Clicking on the "Auto" button sets the threshold to \c autoratio of the

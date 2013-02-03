@@ -46,6 +46,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   setRELACSWidget( rw );
 
   ViewMode = SignalView;
+  ContinuousView = WrapView;
   setView( WrapView );
   Manual = false;
   Trigger = true;
@@ -689,7 +690,7 @@ void PlotTrace::setPlotContinuous( double length )
   postCustomEvent( 11 );  // animate on/off button
 
   // toggle fixed offset:
-  setView( WrapView );
+  setView( ContView );
 
   // length of total time window:
   TimeWindow = length;
@@ -727,7 +728,7 @@ void PlotTrace::setPlotContinuous( void )
   postCustomEvent( 11 );  // animate on/off button
 
   // toggle fixed offset:
-  setView( WrapView );
+  setView( ContView );
 
   P.unlock();
 }
@@ -1054,6 +1055,10 @@ void PlotTrace::viewToggle( void )
 void PlotTrace::setView( Views mode )
 {
   if ( ViewMode != mode ) {
+    if ( mode == EndView || mode == WrapView )
+      ContinuousView = mode;
+    if ( mode == ContView )
+      mode = ContinuousView;
     ViewMode = mode;
     PlotChanged = true;
     postCustomEvent( 12 );

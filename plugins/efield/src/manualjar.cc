@@ -40,11 +40,11 @@ ManualJAR::ManualJAR( void )
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV", "mV", "%.1f" ).setFlags( 2 );
 
   // add some parameter as options:
-  newSection( "Stimulation" );
-  addNumber( "duration", "Signal duration", 10.0, 0.0, 1000000.0, 1.0, "seconds" ).setFlags( 1 );
+  //  newSection( "Stimulation" );
+  addNumber( "duration", "Signal duration", 10.0, 0.0, 1000000.0, 1.0, "seconds" ).setFlags( 1+2 );
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" ).setFlags( 1 );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" ).setFlags( 1 );
-  newSection( "Analysis" );
+  //  newSection( "Analysis" );
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" ).setFlags( 1 );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" ).setFlags( 1 );
   addNumber( "averagetime", "Time for computing EOD frequency", 1.0, 0.0, 100000.0, 1.0, "seconds" ).setFlags( 1 );
@@ -155,15 +155,13 @@ int ManualJAR::main( void )
   }
 
   // check gain of attenuator:
-  base::LinearAttenuate *latt = 
+  base::LinearAttenuate *latt =
     dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( GlobalEField ) ) );
-  if ( latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 ) {
-    warning( "Attenuator gain is not set!" );
-    return Failed;
-  }
+  if ( fakefish == 0.0 && latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 )
+    warning( "Attenuator gain is probably not set!" );
 
   // plot trace:
-  tracePlotContinuous( 1.0 );
+  tracePlotContinuous();
 
   // plot:
   P.lock();
@@ -198,6 +196,7 @@ int ManualJAR::main( void )
 
     double deltaf = number( "deltaf" );
     double amplitude = number( "amplitude" );
+    duration = number( "duration" );
     double pause = currentTime() - starttime;
     double fishrate = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
     if ( fakefish > 0.0 )
@@ -238,11 +237,23 @@ int ManualJAR::main( void )
       writeZero( GlobalEField );
       return Failed;
     }
-	
-    // meassage: 
-    Str s = "Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
-    s += "  Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
+
+    // meassage:
+    Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
+    s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
     message( s );
+
+    // results:
+    MapD eodfrequency;
+    eodfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+    MapD eodamplitude;
+    eodamplitude.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+    EventData jarchirpevents;
+    jarchirpevents.reserve( 1000 );
+    const EventData &eodglobal = events( EODEvents );
+    EventIterator eoditer = eodglobal.begin( signalTime() - before );
+    for ( int k=0; k<10; k++ )
+      ++eoditer; // XXX
 
     do {
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
@@ -253,16 +264,25 @@ int ManualJAR::main( void )
 	writeZero( GlobalEField );
 	return Aborted;
       }
+      // get data:
+      for ( ; eoditer < eodglobal.end(); ++eoditer ) {
+	EventFrequencyIterator fiter = eoditer;
+	eodfrequency.push( fiter.time() - signalTime(), *fiter );
+	EventSizeIterator siter = eoditer;
+	eodamplitude.push( siter.time() - signalTime(), *siter );
+      }
+      plot( deltaf, amplitude, duration, before, after, eodfrequency, jarchirpevents );
+
     } while ( currentTime() - starttime < before + duration + after );
-	
+
     // analyze:
     starttime = currentTime();
-    MapD eodfrequency;
-    MapD eodamplitude;
-    EventData jarchirpevents;
-    analyze( duration, before, after, eodfrequency, eodamplitude, jarchirpevents );
-    sleep( 0.1 );
-    plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
+    // chirps:
+    if ( ChirpEvents >= 0 )
+      jarchirpevents.assign( events( ChirpEvents ),
+			     signalTime() - before,
+			     signalTime() + duration + after, signalTime() );
+    plot( deltaf, amplitude, duration, before, after, eodfrequency, jarchirpevents );
     save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
 	  eodfrequency, eodamplitude, jarchirpevents, split, Count );
     Count++;
@@ -282,46 +302,14 @@ void ManualJAR::sessionStarted( void )
 }
 
 
-void ManualJAR::analyze( double duration, double before, double after,
-			 MapD &eodfrequency, MapD &eodamplitude, EventData &jarchirpevents )
-{
-  const EventData &eodglobal = events( EODEvents );
-
-  EventIterator first1 = eodglobal.begin( signalTime() - before );
-  for ( int k=0; k<10; k++ )
-    ++first1; // XXX
-  EventIterator last1 = eodglobal.begin( signalTime() + duration + after );
-  if ( last1 >= eodglobal.end() - 2 )
-    last1 = eodglobal.end() - 2;
-
-  // EOD frequency:
-  EventFrequencyIterator findex;
-  eodfrequency.clear();
-  eodfrequency.reserve( last1 - first1 + 2 );
-  for ( findex=first1; findex < last1; ++findex )
-    eodfrequency.push( findex.time() - signalTime(), *findex );
-
-  // EOD amplitude:
-  EventSizeIterator sindex;
-  eodamplitude.clear();
-  eodamplitude.reserve( last1 - first1 + 2 );
-  for ( sindex=first1; sindex < last1; ++sindex )
-    eodamplitude.push( sindex.time() - signalTime(), *sindex );
-
-  // chirps:
-  jarchirpevents.clear();
-  if ( ChirpEvents >= 0 )
-    jarchirpevents.assign( events( ChirpEvents ),
-			   signalTime() - before, signalTime() + duration + after, signalTime() );
-}
-
-
 void ManualJAR::plot( double deltaf, double amplitude, double duration,
+		      double before, double after,
 		      const MapD &eodfrequency, const EventData &jarchirpevents )
 {
   P.lock();
   // eod frequency with chirp events:
   P.clear();
+  P.setXRange( -before, duration+after );
   Str s;
   s = "Delta f = " + Str( deltaf, 0, 0, 'f' ) + "Hz";
   s += ", Amplitude = " + Str( amplitude ) + "mV/cm";
@@ -329,7 +317,7 @@ void ManualJAR::plot( double deltaf, double amplitude, double duration,
   P.plotVLine( 0.0 );
   P.plotVLine( duration );
   P.plot( eodfrequency, 1.0, Plot::Green, 2, Plot::Solid );
-  P.plot( jarchirpevents, 2, 0.0, 1.0, 0.9, Plot::Graph, 
+  P.plot( jarchirpevents, 2, 0.0, 1.0, 0.9, Plot::Graph,
 	  1, Plot::Circle, 5, Plot::Pixel, Plot::Yellow, Plot::Yellow );
   P.draw();
   P.unlock();
@@ -352,8 +340,12 @@ void ManualJAR::save( double deltaf, double amplitude, double duration, double p
   header.addText( "Session Time", sessionTimeStr() );
   header.newSection( settings(), 1 );
 
+  unlockAll();
+  setWaitMouseCursor();
   saveEODFreq( header, eodfrequency, eodamplitude, split, count );
   saveChirps( header, jarchirpevents, split, count );
+  restoreMouseCursor();
+  lockAll();
 }
 
 
@@ -388,7 +380,7 @@ void ManualJAR::saveEODFreq( const Options &header,
 }
 
 
-  void ManualJAR::saveChirps( const Options &header, const EventData &jarchirpevents, bool split, int count )
+void ManualJAR::saveChirps( const Options &header, const EventData &jarchirpevents, bool split, int count )
 {
   if ( ChirpEvents < 0 )
     return;
