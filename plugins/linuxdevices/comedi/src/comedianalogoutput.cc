@@ -679,6 +679,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
     cmd.stop_src = TRIG_COUNT;
     // set length of acquisition as number of scans:
     cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay() );
+    // cmd.stop_arg -= 1; // for NI E Series - comedi-bug? 
   }
 
   cmd.chanlist = chanlist;

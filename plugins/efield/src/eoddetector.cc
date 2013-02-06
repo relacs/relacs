@@ -278,6 +278,14 @@ int EODDetector::checkEvent( InData::const_iterator first,
 	  times.push( *it - t0 );
 	  volts.push( *id );
 	}
+	if ( times.size() < nw ) {
+	  times.clear();
+	  volts.clear();
+	  for ( int k=0; k<nw && id != first; ++k, --id, --it ) {
+	    times.push( *it - t0 );
+	    volts.push( *id );
+	  }
+	}
 	if ( Interpolation == 3 ) {
 	  // quadratic fit:
 	  Polynom qp;
@@ -294,7 +302,9 @@ int EODDetector::checkEvent( InData::const_iterator first,
 	  else if ( t2 > -0.5*SampleInterval && t2 < 1.5*SampleInterval )
 	    time = t0 + t2;
 	  else {
-	    printlog( "WARNING wrong quadratic fit t1=" + Str( t1 ) + " t2=" + Str( t2 ) );
+#ifndef NDEBUG
+	    printlog( "\"" + ident() + "\" wrong quadratic fit: t1=" + Str( t1 ) + " t2=" + Str( t2 ) );
+#endif
 	    return 0;
 	  }
 	}
@@ -306,7 +316,15 @@ int EODDetector::checkEvent( InData::const_iterator first,
 	  double mu=0.0;
 	  double chisq=0.0;
 	  lineFit( times, volts, b, bu, m, mu, chisq );
-	  time = t0 + (maxsize-b)/m;
+	  if ( m > 0.0 )
+	    time = (maxsize-b)/m;
+	  if ( m <= 0.0 || time < -0.5*SampleInterval || time > 1.5*SampleInterval ) {
+#ifndef NDEBUG
+	    printlog( "\"" + ident() + "\" wrong linear fit: time=" + Str( time ) + " m=" + Str( m ) );
+#endif
+	    return 0;
+	  }
+	  time += t0;
 	}
       }
       else {
@@ -316,12 +334,18 @@ int EODDetector::checkEvent( InData::const_iterator first,
 
       if ( outevents.size() > 0 && time <= outevents.back() ) {
 	// discard:
+#ifndef NDEBUG
+	printlog( "\"" + ident() + "\" peak discarded because of doublet time=" + Str( time ) + " back=" + Str( outevents.back() ) );
+#endif
 	return 0;
       }
       break;
     }
     if ( *eventtime - *it > MaxEODPeriod ) {
       // discard:
+#ifndef NDEBUG
+      printlog( "\"" + ident() + "\" peak discarded because of MaxEODPeriod=" + Str( MaxEODPeriod ) + " eventtime=" + Str( *eventtime ) + " it=" + Str( *it ) );
+#endif
       return 0;
     }
     pval = ival;
@@ -359,8 +383,12 @@ int EODDetector::checkEvent( InData::const_iterator first,
   // amplitude:
   //  size = 0.5*(peakampl - troughampl);
   size = peakampl - MeanEOD;
-  if ( size <= 0.0 )
+  if ( size <= 0.0 ) {
+#ifndef NDEBUG
+    printlog( "\"" + ident() + "\" peak discarded because of size=" + Str( size ) );
+#endif
     return 0;
+  }
 
   // width:
   width = 0.0;

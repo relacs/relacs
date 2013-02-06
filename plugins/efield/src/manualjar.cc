@@ -255,6 +255,11 @@ int ManualJAR::main( void )
     for ( int k=0; k<10; k++ )
       ++eoditer; // XXX
 
+    P.lock();
+    P.setXRange( -before, duration+after );
+    P.unlock();
+
+    // stimulation loop:
     do {
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
       postCustomEvent( 13 );
@@ -271,18 +276,41 @@ int ManualJAR::main( void )
 	EventSizeIterator siter = eoditer;
 	eodamplitude.push( siter.time() - signalTime(), *siter );
       }
-      plot( deltaf, amplitude, duration, before, after, eodfrequency, jarchirpevents );
+      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
 
-    } while ( currentTime() - starttime < before + duration + after );
+    } while ( currentTime() - starttime < before + duration );
+
+    starttime = currentTime();
+    postCustomEvent( 15 );
+
+    // after stimulus recording loop:
+    do {
+      setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
+      postCustomEvent( 13 );
+      QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
+      sleepWait( 0.2 );
+      if ( interrupt() ) {
+	writeZero( GlobalEField );
+	return Aborted;
+      }
+      // get data:
+      for ( ; eoditer < eodglobal.end(); ++eoditer ) {
+	EventFrequencyIterator fiter = eoditer;
+	eodfrequency.push( fiter.time() - signalTime(), *fiter );
+	EventSizeIterator siter = eoditer;
+	eodamplitude.push( siter.time() - signalTime(), *siter );
+      }
+      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
+
+    } while ( currentTime() - starttime < after );
 
     // analyze:
-    starttime = currentTime();
     // chirps:
     if ( ChirpEvents >= 0 )
       jarchirpevents.assign( events( ChirpEvents ),
 			     signalTime() - before,
 			     signalTime() + duration + after, signalTime() );
-    plot( deltaf, amplitude, duration, before, after, eodfrequency, jarchirpevents );
+    plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
     save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
 	  eodfrequency, eodamplitude, jarchirpevents, split, Count );
     Count++;
@@ -303,13 +331,11 @@ void ManualJAR::sessionStarted( void )
 
 
 void ManualJAR::plot( double deltaf, double amplitude, double duration,
-		      double before, double after,
 		      const MapD &eodfrequency, const EventData &jarchirpevents )
 {
   P.lock();
   // eod frequency with chirp events:
   P.clear();
-  P.setXRange( -before, duration+after );
   Str s;
   s = "Delta f = " + Str( deltaf, 0, 0, 'f' ) + "Hz";
   s += ", Amplitude = " + Str( amplitude ) + "mV/cm";
@@ -364,8 +390,8 @@ void ManualJAR::saveEODFreq( const Options &header,
   // write key:
   const EventData &eodglobal = events( EODEvents );
   TableKey key;
-  key.addNumber( "time", "s", "%9.5f" );
-  key.addNumber( "freq", "Hz", "%5.1f" );
+  key.addNumber( "time", "s", "%11.7f" );
+  key.addNumber( "freq", "Hz", "%6.2f" );
   key.addNumber( "ampl", eodglobal.sizeUnit(), eodglobal.sizeFormat() );
   key.saveKey( df );
 
@@ -470,6 +496,10 @@ void ManualJAR::customEvent( QEvent *qce )
     ts += Str( mins, 2, '0' ) + ":";
     ts += Str( secs, 2, '0' );
     ElapsedTimeLabel->setText( ts.c_str() );
+    break;
+  }
+  case 15: {
+    ModeLabel->setText( "Pause" );
     break;
   }
   default:

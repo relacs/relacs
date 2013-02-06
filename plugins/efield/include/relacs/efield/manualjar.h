@@ -64,7 +64,6 @@ public:
   virtual void sessionStarted( void );
 
   void plot( double deltaf, double amplitude, double duration,
-	     double before, double after,
 	     const MapD &eodfrequency, const EventData &jarchirpevents );
   void save( double deltaf, double amplitude, double duration, double pause,
 	     double fishrate, double stimulusrate,
