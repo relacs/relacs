@@ -112,6 +112,7 @@ public:
     GrayGradient=0,
     BlueGreenRedGradient,
     BlackBlueGreenRedWhiteGradient,
+    BlackMagentaRedYellowWhiteGradient,
     BlueRedYellowWhiteGradient,
     BlueRedGradient,
     BlueMagentaRedGradient

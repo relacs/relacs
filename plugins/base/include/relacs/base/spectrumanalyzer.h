@@ -29,7 +29,7 @@ using namespace relacs;
 
 namespace base {
 
-/*! 
+/*!
 \class SpectrumAnalyzer
 \brief [Control] Displays the spectrum of a voltage trace.
 \author Jan Benda

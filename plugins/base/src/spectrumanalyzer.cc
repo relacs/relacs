@@ -152,7 +152,7 @@ void SpectrumAnalyzer::main( void )
 {
   sleep( Duration );
 
-  do { 
+  do {
 
     if ( Trace < 0 || Trace >= traces().size() ) {
       warning( "Trace does not exist!", 4.0 );

@@ -2331,6 +2331,13 @@ void Plot::drawSurface( QPainter &paint )
     hsvcolors.push_back( HSVGradientColor( 120, 255, 255, 0.5 ) );
     hsvcolors.push_back( HSVGradientColor( 0, 255, 255, 0.95 ) );
     hsvcolors.push_back( HSVGradientColor( 0, 0, 255, 1.0 ) );
+  case BlackMagentaRedYellowWhiteGradient :
+    hsvcolors.reserve( 5 );
+    hsvcolors.push_back( HSVGradientColor( 300, 255, 0, 0.0 ) );
+    hsvcolors.push_back( HSVGradientColor( 300, 255, 255, 0.2 ) );
+    hsvcolors.push_back( HSVGradientColor( 360, 255, 255, 0.5, false ) );
+    hsvcolors.push_back( HSVGradientColor( 420, 255, 255, 0.95 ) );
+    hsvcolors.push_back( HSVGradientColor( 420, 0, 255, 1.0 ) );
   case BlueRedGradient :
     hsvcolors.reserve( 2 );
     hsvcolors.push_back( HSVGradientColor( 240, 255, 255, 0.0 ) );
@@ -2418,6 +2425,10 @@ void Plot::drawSurface( QPainter &paint )
       double x1, y1, x2, y2, z;
       SData->point( r+fx, c+fy, x1, y1, x2, y2, z );
       double zfrac = ( z - ZMin )/(ZMax - ZMin);
+      if ( zfrac < 0.0 )
+	zfrac = 0.0;
+      else if ( zfrac > 1.0 )
+	zfrac = 1.0;
       int color = (int)::round( 255*zfrac );
       SurfaceData[(h-c-1)*w+r] = color;
     }

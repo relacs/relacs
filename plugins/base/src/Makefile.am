@@ -16,7 +16,8 @@ pluginlib_LTLIBRARIES = \
     libbasetransferfunction.la \
     libbasewait.la  \
     libbaseenvelope.la \
-    libbasesavetraces.la
+    libbasesavetraces.la \
+    libbasespectrogram.la
 
 
 if RELACS_COND_TML
@@ -467,6 +468,41 @@ libbasesavetraces_la_include_HEADERS = $(HEADER_PATH)/savetraces.h
 
 
 
+libbasespectrogram_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libbasespectrogram_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libbasespectrogram_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libbasespectrogram_la_OBJECTS) : moc_spectrogram.cc
+
+libbasespectrogram_la_SOURCES = spectrogram.cc
+
+libbasespectrogram_la_includedir = $(pkgincludedir)/base
+
+libbasespectrogram_la_include_HEADERS = $(HEADER_PATH)/spectrogram.h
+
+
+
 check_PROGRAMS = \
     linktest_libbaselinearattenuate_la \
     linktest_libbasedecibelattenuate_la \
@@ -480,7 +516,8 @@ check_PROGRAMS = \
     linktest_libbasetransferfunction_la \
     linktest_libbasewait_la  \
     linktest_libbaseenvelope_la \
-    linktest_libbasesavetraces_la
+    linktest_libbasesavetraces_la \
+    linktest_libbasespectrogram_la
 
 if RELACS_COND_TML
 check_PROGRAMS += \
@@ -530,5 +567,8 @@ linktest_libbaseenvelope_la_LDADD = libbaseenvelope.la
 
 linktest_libbasesavetraces_la_SOURCES = linktest.cc
 linktest_libbasesavetraces_la_LDADD = libbasesavetraces.la
+
+linktest_libbasespectrogram_la_SOURCES = linktest.cc
+linktest_libbasespectrogram_la_LDADD = libbasespectrogram.la
 
 TESTS = $(check_PROGRAMS)

@@ -53,7 +53,8 @@ int main( int argc, char **argv )
   p.setYLabelPos( -0.6, Plot::FirstAxis, 0.5, Plot::Graph, Plot::Center, -90.0 );
   p.setTitle( "title" );
   p.setTitlePos( 0.0, Plot::Graph, 0.0, Plot::SecondAxis, Plot::Left, 0.0 );
-  p.plot( surface, 1.0, Plot::BlackBlueGreenRedWhiteGradient );
+  //  p.plot( surface, 1.0, Plot::BlackBlueGreenRedWhiteGradient );
+  p.plot( surface, 1.0, Plot::BlackMagentaRedYellowWhiteGradient );
 
   p.show();
 

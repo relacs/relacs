@@ -32,9 +32,13 @@ namespace base {
 \class Record
 \brief [RePro] Simply records data
 \author Jan Benda
+\version 1.0 (Aug 13, 2012)
 
-The Record-RePro simply records data without writing out any stimulus
-and terminates after \c repeats times \c duration ms.
+The Record-%RePro simply records data without writing out any stimulus
+and terminates after \c repeats times \c duration ms. If \c repeats is
+set to zero, the %RePro keeps recording infinitely. Recording can be
+interrupted any time by pressing the space key or starting a different
+%RePro.
 
 \par Options
 - \c duration=1000ms: Duration (\c number)
@@ -48,8 +52,6 @@ No plot.
 
 \par Requirements
 No requirements.
-
-\version 1.0 (Aug 13, 2012)
 */
 
 

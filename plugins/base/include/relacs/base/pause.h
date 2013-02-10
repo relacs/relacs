@@ -32,10 +32,13 @@ namespace base {
 \class Pause
 \brief [RePro] Does nothing
 \author Jan Benda
+\version 1.2 (Oct 1, 2004)
 
-The Pause-RePro does not write any stimulus
-and terminates after \c repeats times \c duration ms.
-With the \c savedata option you can switch off saving of the raw data
+The Pause-RePro does not write any stimulus and terminates after \c
+repeats times \c duration ms.  If \c repeats is set to zero, the
+%RePro keeps running infinitely. The %RePro can be interrupted any
+time by pressing the space key or starting a different %RePro. With
+the \c savedata option you can switch off saving of the raw data
 recorded during Pause.
 
 \par Options
@@ -51,8 +54,6 @@ No plot.
 
 \par Requirements
 No requirements.
-
-\version 1.2 (Oct 1, 2004)
 */
 
 
