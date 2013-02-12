@@ -35,6 +35,27 @@
 namespace relacs {
 
 
+class StimuliEvent : public QEvent
+{
+
+public:
+
+  StimuliEvent( const deque< OutDataInfo > &stimuli )
+    : QEvent( Type( User+1 ) )
+  {
+    if ( stimuli.size() == 1 )
+      Description = stimuli[0].description();
+    else {
+      Description.setType( "stimulus" );
+      for ( unsigned int k=0; k<stimuli.size(); k++ )
+	Description.newSection( stimuli[k].description() );
+    }
+  }
+
+  Options Description;
+};
+
+
 SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 		      QWidget *parent )
   : QWidget( parent ),
@@ -64,7 +85,6 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   StimuliRePro = "";
   StimuliReProCount.clear();
   ReProStimuli.clear();
-  StimulusData = false;
   StimulusKey.clear();
   SignalTime = -1.0;
   PrevSignalTime = -1.0;
@@ -115,6 +135,10 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   NormalPalette = FileLabel->palette();
   HighlightPalette = FileLabel->palette();
   HighlightPalette.setColor( QPalette::WindowText, Qt::red );
+
+  // load current directory:
+  QDir dir;
+  DI.loadDirectory( dir.currentPath().toStdString() );
 }
 
 
@@ -287,7 +311,7 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
 	TraceFiles[k].Index = traces[k].size();
       for ( unsigned int k=0; k<EventFiles.size(); k++ )
 	EventFiles[k].Index = events[k].size();
-      
+
       // add recording event:
       for ( int k=0; k<events.size(); k++ ) {
 	if ( ( events[k].mode() & RecordingEventMode ) > 0 ) {
@@ -296,7 +320,7 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
 	}
       }
     }
-    
+
     Saving = ToggleOn;
     SaveLabel->setPause( ! Saving );
     ToggleData = false;
@@ -353,7 +377,7 @@ void SaveFiles::saveTraces( void )
 	TraceFiles[k].Index += n;
       }
       // there is a new stimulus:
-      if ( StimulusData && SignalTime >= 0.0 &&
+      if ( !Stimuli.empty() && SignalTime >= 0.0 &&
 	   TraceFiles[k].Trace->signalIndex() >= 0 )
 	TraceFiles[k].SignalOffset = TraceFiles[k].Trace->signalIndex() -
 	  TraceFiles[k].Index + TraceFiles[k].Written;
@@ -371,7 +395,7 @@ void SaveFiles::saveEvents( double offs )
     return;
 
   // wait for availability of signal start time:
-  if ( StimulusData && SignalTime < 0.0 )
+  if ( !Stimuli.empty() && SignalTime < 0.0 )
     return;
 
   // save event data:
@@ -410,7 +434,7 @@ void SaveFiles::saveEvents( double offs )
 
 void SaveFiles::save( const OutData &signal )
 {
-  // this function is called from RELACSWidget::write() 
+  // this function is called from RELACSWidget::write()
   // after a successfull call of Acquire::write()
 
   //  cerr << "SaveFiles::save( OutData &signal )\n";
@@ -420,7 +444,7 @@ void SaveFiles::save( const OutData &signal )
 
   QMutexLocker locker( &SaveMutex );
 
-  if ( StimulusData ) {
+  if ( !Stimuli.empty() ) {
     RW->printlog( "! warning: SaveFiles::save( OutData & ) -> already stimulus data there" );
     Stimuli.clear();
   }
@@ -429,7 +453,6 @@ void SaveFiles::save( const OutData &signal )
   StimulusOptions = *this;
 
   // store stimulus:
-  StimulusData = true;
   Stimuli.push_back( signal );
 
   // reset stimulus offset:
@@ -447,7 +470,7 @@ void SaveFiles::save( const OutList &signal )
 
   QMutexLocker locker( &SaveMutex );
 
-  if ( StimulusData ) {
+  if ( !Stimuli.empty() ) {
     RW->printlog( "! warning: SaveFiles::save( OutList& ) -> already stimulus data there" );
     Stimuli.clear();
   }
@@ -456,7 +479,6 @@ void SaveFiles::save( const OutList &signal )
   StimulusOptions = *this;
 
   // store stimulus:
-  StimulusData = true;
   for ( int k=0; k<signal.size(); k++ )
     Stimuli.push_back( signal[k] );
 
@@ -470,12 +492,15 @@ void SaveFiles::saveStimulus( void )
 {
   //      cerr << "saveStimulus \n";
 
-  if ( ! StimulusData )
+  if ( Stimuli.empty() )
     return;
 
   // no stimulus yet:
   if ( SignalTime < 0.0 )
     return;
+
+  // add to data index:
+  QCoreApplication::postEvent( this, new StimuliEvent( Stimuli ) );
 
   // extract intensity from stimulus description:
   // XXX there should be a flag indicating, which quantities to extract!
@@ -555,7 +580,7 @@ void SaveFiles::saveStimulus( void )
   int &rc = StimuliReProCount[ StimuliRePro ];
   rc++;
   string stimulirepro = StimuliRePro + "-" + Str( rc );
-    
+
   // stimulus indices file:
   if ( SF != 0 && saving() ) {
 
@@ -672,7 +697,6 @@ void SaveFiles::saveStimulus( void )
     sopt.saveXML( *XF, 0, Options::FirstOnly, 1 );
   }
 
-  StimulusData = false;
   Stimuli.clear();
 }
 
@@ -695,6 +719,7 @@ void SaveFiles::save( const RePro &rp )
   ReProInfo.setInteger( "run", rp.allRuns() );
   ReProSettings = rp;
   StimuliRePro = rp.name();
+  DI.addRepro( rp );
 }
 
 
@@ -758,13 +783,12 @@ void SaveFiles::saveRePro( void )
 
 bool SaveFiles::signalPending( void ) const
 {
-  return StimulusData;
+  return !Stimuli.empty();
 }
 
 
 void SaveFiles::clearSignal( void )
 {
-  StimulusData = false;
   Stimuli.clear();
 }
 
@@ -941,7 +965,6 @@ void SaveFiles::createStimulusFile( const InList &traces,
 				    const EventList &events )
 {
   // init stimulus variables:
-  StimulusData = false;
   Stimuli.clear();
   StimuliReProCount.clear();
   ReProStimuli.clear();
@@ -1200,6 +1223,9 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
   // message:
   RW->printlog( "save in " + path() );
 
+  // tell the data index:
+  DI.addSession( path() + "stimuli.dat", Options() );
+
   // update widget:
   FileLabel->setFont( HighlightFont );
   FileLabel->setPalette( HighlightPalette );
@@ -1311,7 +1337,7 @@ void SaveFiles::deleteFiles( void )
   // remove all files:
   removeFiles();
 
-  if ( path() != defaultPath() && 
+  if ( path() != defaultPath() &&
        path() != "" &&
        path()[path().size()-1] == '/' ) {
     removeDir( path().c_str() );
@@ -1326,6 +1352,9 @@ void SaveFiles::deleteFiles( void )
   // back to default path:
   setPath( defaultPath() );
   PathNumber--;
+
+  // tell data index:
+  DI.endSession( false );
 }
 
 
@@ -1345,6 +1374,29 @@ void SaveFiles::completeFiles( void )
 
   // back to default path:
   setPath( defaultPath() );
+
+  // tell data index:
+  DI.endSession( true );
+}
+
+
+DataIndex *SaveFiles::dataIndex( void )
+{
+  return &DI;
+}
+
+
+void SaveFiles::customEvent( QEvent *qce )
+{
+  switch ( qce->type() - QEvent::User ) {
+
+  case 1: {
+    StimuliEvent *se = dynamic_cast<StimuliEvent*>( qce );
+    DI.addStimulus( se->Description );
+    break;
+  }
+
+  }
 }
 
 

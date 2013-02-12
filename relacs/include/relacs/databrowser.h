@@ -24,16 +24,16 @@
 
 #include <QWidget>
 #include <QTreeView>
+#include <relacs/dataindex.h>
 using namespace std;
 
 namespace relacs {
 
 
-class DataIndex;
 class DataTreeModel;
 
 
-/*! 
+/*!
 \class DataBrowser
 \brief Interface for browsing recorded data.
 \author Karin Fisch, Jan Benda
@@ -54,6 +54,91 @@ private:
 
   QTreeView *OverviewWidget;
   QTreeView *DescriptionWidget;
+
+};
+
+
+/*!
+\class DataOverviewModel
+\brief The model for viewing an overview of the data of an DataIndex.
+\author Jan Benda
+*/
+
+
+class DataOverviewModel : public QAbstractItemModel
+{
+  Q_OBJECT
+
+public:
+  DataOverviewModel( QObject *parent = 0 );
+
+  void setDataIndex( DataIndex *data );
+  void setTreeView( QTreeView *view );
+
+  QVariant data( const QModelIndex &index, int role ) const;
+  Qt::ItemFlags flags( const QModelIndex &index ) const;
+  QVariant headerData( int section, Qt::Orientation orientation,
+		       int role = Qt::DisplayRole ) const;
+  QModelIndex index( int row, int column,
+		     const QModelIndex &parent = QModelIndex() ) const;
+  QModelIndex parent( const QModelIndex &index ) const;
+  bool hasChildren( const QModelIndex &parent = QModelIndex() ) const;
+  int rowCount( const QModelIndex &parent = QModelIndex() ) const;
+  int columnCount( const QModelIndex &parent = QModelIndex() ) const;
+  bool canFetchMore( const QModelIndex &parent ) const;
+  void fetchMore( const QModelIndex &parent );
+  void beginAddChild( DataIndex::DataItem *parent );
+  void endAddChild( DataIndex::DataItem *parent );
+  void beginPopChild( DataIndex::DataItem *parent );
+  void endPopChild( DataIndex::DataItem *parent );
+
+
+public slots:
+
+  void setDescription( const QModelIndex &index );
+  void setDescription( const QModelIndex &currrent, const QModelIndex &previous );
+
+
+private:
+
+  DataIndex *Data;
+  QTreeView *View;
+
+};
+
+
+/*!
+\class DataDescriptionModel
+\brief The model for viewing a description of the currently displayed data of an DataIndex.
+\author Jan Benda
+*/
+
+
+class DataDescriptionModel : public QAbstractItemModel
+{
+  Q_OBJECT
+
+public:
+  DataDescriptionModel( QObject *parent = 0 );
+
+  void setOptions( Options *data );
+  void setTreeView( QTreeView *view );
+
+  QVariant data( const QModelIndex &index, int role ) const;
+  Qt::ItemFlags flags( const QModelIndex &index ) const;
+  QVariant headerData( int section, Qt::Orientation orientation,
+		       int role = Qt::DisplayRole ) const;
+  QModelIndex index( int row, int column,
+		     const QModelIndex &parent = QModelIndex() ) const;
+  QModelIndex parent( const QModelIndex &index ) const;
+  bool hasChildren( const QModelIndex &parent = QModelIndex() ) const;
+  int rowCount( const QModelIndex &parent = QModelIndex() ) const;
+  int columnCount( const QModelIndex &parent = QModelIndex() ) const;
+
+private:
+
+  Options *Data;
+  QTreeView *View;
 
 };
 

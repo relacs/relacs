@@ -68,12 +68,11 @@ class Macros;
 class FilterDetectors;
 class ControlTabs;
 class Session;
-class DataIndex;
 
 
-/*! 
+/*!
 \class RELACSWidget
-\brief Coordinates RePros, session, input, output, plotting, and saving. 
+\brief Coordinates RePros, session, input, output, plotting, and saving.
 \author Jan Benda
 \author Christian Machens
 \version 1.8
@@ -83,7 +82,7 @@ class DataIndex;
 \bug what about wroteData?
 \todo Set ID gain factors before configuring Session
 
-The data are acquired from the DAQ boards and filtered, 
+The data are acquired from the DAQ boards and filtered,
 events are detected, data are saved,
 plotted, and analysed from an extra thread, function run().
 
@@ -392,7 +391,6 @@ private:
   Macros *MC;
   FilterDetectors *FD;
   Session *SN;
-  DataIndex *DI;
 
   InList IL;
   EventList ED;
@@ -410,8 +408,6 @@ private:
   bool ReProRunning;
 
   ofstream *LogFile;
-  ofstream *InfoFile;
-  string InfoFileMacro;
   QColor OrgBackground;
   bool IsFullScreen;
   bool IsMaximized;

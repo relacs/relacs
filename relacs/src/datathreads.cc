@@ -1,6 +1,6 @@
 /*
   datathreads.cc
-  The threads for reading and writing to the data acquisition boards. 
+  The threads for reading and writing to the data acquisition boards.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>

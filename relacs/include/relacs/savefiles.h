@@ -37,13 +37,14 @@
 #include <relacs/eventdata.h>
 #include <relacs/repro.h>
 #include <relacs/spiketrace.h>
+#include <relacs/dataindex.h>
 
 namespace relacs {
 
 
 class RELACSWidget;
 
-/*! 
+/*!
 \class SaveFiles
 \brief Save data to files
 \author Jan Benda
@@ -60,9 +61,9 @@ SaveFile sets the following environment variables:
 \todo saveStimulus: adaptive time for calculating the mean rate
 \todo check it carefully!
 \todo warning on Disk full (or even before!)
-\todo File formats: 
+\todo File formats:
 - .wav: enough flexibility, compression possible,
-  but file size limited to 2GB has to be known in advance, 
+  but file size limited to 2GB has to be known in advance,
 - .au: raw data with unlimited file size und minimal header information
   allows for float and double
 */
@@ -178,7 +179,7 @@ public:
     /*! Save RePro meta data to files. */
   void save( const RePro &rp );
 
-    /*! \return \c true if there is still a stimulus pending 
+  /*! \return \c true if there is still a stimulus pending
         that needs to be written into the index files. */
   bool signalPending( void ) const;
     /*! Clear a pending signal. */
@@ -191,6 +192,10 @@ public:
   void deleteFiles( void );
     /*! Close files and keep them. */
   void completeFiles( void );
+
+    /*! \return a pointer to the index of all recording, repro, and
+        stimulus data. */
+  DataIndex *dataIndex( void );
 
 
 protected:
@@ -208,7 +213,7 @@ protected:
   string pathName( void ) const;
     /*! Open the file path() + filename
         as specified by \a type (ios::out, ios::in, ios::binary, ...).
-        Add it to the list of files to be removed 
+	Add it to the list of files to be removed
         and print an error message if opening of the file failed. */
   ofstream *openFile( const string &filename, int type );
 
@@ -321,7 +326,6 @@ protected:
   string StimuliRePro;
   map< string, int > StimuliReProCount;
   map< string, map < Options, string > > ReProStimuli;
-  bool StimulusData;
   TableKey StimulusKey;
   Options StimulusOptions;
   void saveStimulus( void );
@@ -337,6 +341,9 @@ protected:
   bool ToggleData;
   void saveToggle( const InList &traces, EventList &events );
 
+  DataIndex DI;
+
+
     /*! The file \a filename will be removed if the session is not
         saved. */
   void addRemoveFile( const string &filename );
@@ -348,7 +355,7 @@ protected:
   void removeFiles( void );
     /*! A list of files which have to be deleted if the session is not
         to be saved. */
-  deque<string> RemoveFiles; 
+  deque<string> RemoveFiles;
 
   RELACSWidget *RW;
 
@@ -362,6 +369,8 @@ protected:
 
   QMutex SaveMutex;
   mutable QMutex StimulusDataLock;
+
+  virtual void customEvent( QEvent *qce );
 
 };
 

@@ -33,7 +33,7 @@ namespace relacs {
   class OutData;
 
 
-  /*! 
+  /*!
     \class OutDataInfo
     \brief Stores some properties of an OutData.
     \author Jan Benda
@@ -50,22 +50,22 @@ namespace relacs {
       /*! Constructor. Sets all properties to the values from \a signal. */
     OutDataInfo( const OutData &signal );
 
-      /*! The index of the output device. 
+      /*! The index of the output device.
           \sa setDevice(), channel(), trace(), traceName() */
     int device( void ) const;
       /*! Set the device index to \a device.
           \sa device(), setChannel(), setTrace(), setTraceName() */
     void setDevice( int device );
       /*! The number of the channel on the specified device
-          that is used for output. 
+	  that is used for output.
 	  \sa setChannel(), device(), trace(), traceName() */
     int channel( void ) const;
       /*! Set the number of the channel on the specified device
-          that should be used for output to \a channel. 
+	  that should be used for output to \a channel.
 	  \sa channel(), setDevice(), setTrace(), setTraceName() */
     void setChannel( int channel );
       /*! Set the number of the channel to \a channel
-          and the device to \a device. 
+	  and the device to \a device.
 	  \sa channel(), device(), setDevice(), setTrace(), setTraceName() */
     void setChannel( int channel, int device );
       /*! The index of the output trace.
@@ -107,7 +107,7 @@ namespace relacs {
 	  connected to the output channel.
 	  Setting the intensity overrides a possible set level().
 	  If no such hardware is used,
-	  then the intensity as well the carrier frequency settings 
+	  then the intensity as well the carrier frequency settings
 	  have no effect.
 	  \sa setCarrierFreq(), intensity(), setNoIntensity(), noIntensity(), setLevel() */
     void setIntensity( double intensity );
@@ -119,8 +119,8 @@ namespace relacs {
     void setNoIntensity( void );
       /*! Returns \c true if no intensity is set. \sa intensity(), noLevel() */
     bool noIntensity( void ) const;
-      /*! Request to mute the attenuator connected to the output channel. 
-          Same as setIntensity( MuteIntensity ). 
+      /*! Request to mute the attenuator connected to the output channel.
+	  Same as setIntensity( MuteIntensity ).
 	  \sa intensity(), setIntensity(), setNoIntensity() */
     void mute( void );
       /*! Carrier frequency of the signal in Hertz. */
@@ -129,7 +129,7 @@ namespace relacs {
           The carrier frequency is used in conjunction with the intensity
 	  to set an attenuator or amplifier.
 	  If no such hardware is used,
-	  then the intensity as well the carrier frequency settings 
+	  then the intensity as well the carrier frequency settings
 	  have no effect.
 	  \sa setIntensity() */
     void setCarrierFreq( double carrierfreq );
@@ -165,7 +165,7 @@ namespace relacs {
 
 
   protected:
-    
+
       /*! Device identifier. */
     int Device;
       /*! Channel number. */
@@ -190,7 +190,7 @@ namespace relacs {
     string Ident;
       /*! Description of the output signal. */
     Options Description;
-    
+
   };
 
 

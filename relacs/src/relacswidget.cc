@@ -41,7 +41,6 @@
 #include <relacs/control.h>
 #include <relacs/controltabs.h>
 #include <relacs/databrowser.h>
-#include <relacs/dataindex.h>
 #include <relacs/filter.h>
 #include <relacs/filterdetectors.h>
 #include <relacs/inputconfig.h>
@@ -103,8 +102,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     ReadLoop( this ),
     WriteLoop( this ),
     LogFile( 0 ),
-    InfoFile( 0 ),
-    InfoFileMacro( "" ),
     IsFullScreen( false ),
     IsMaximized( false ),
     AIMutex( QMutex::Recursive ),  // recursive, because of activateGains()???
@@ -281,14 +278,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   CW = new ControlTabs( this );
   CW->createControls();
 
-  // data index:
-  //  DI = new DataIndex;
-  // data browser:
-  //  CW->addTab( new DataBrowser( DI, this ), "Data-Browser" );
-  // load current directory:
-  //  QDir dir;
-  //  DI->loadDirectory( dir.currentPath().toStdString() );
-
   // model plugin:
   MD = 0;
   string ms = SS.text( "modelplugin", "" );
@@ -326,9 +315,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     MessageBox::error( "RELACS Error !", "No RePros found!<br>Exit now!", this );
     ::exit( 1 );
   }
-  connect( RP, SIGNAL( stopRePro( void ) ), 
+  connect( RP, SIGNAL( stopRePro( void ) ),
 	   this, SLOT( stopRePro( void ) ) );
-  connect( RP, SIGNAL( startRePro( RePro*, int, bool ) ), 
+  connect( RP, SIGNAL( startRePro( RePro*, int, bool ) ),
 	   this, SLOT( startRePro( RePro*, int, bool ) ) );
   CurrentRePro = 0;
 
@@ -346,6 +335,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // SaveFiles:
   SF = new SaveFiles( this, statusbarheight, statusBar() );
   SS.notify(); // initialize SF from the Settings
+  // data browser:
+  //  CW->addTab( new DataBrowser( SF->dataIndex(), this ), "Data-Browser" );
   statusBar()->addWidget( SF, 0 );
   // Simulation:
   SimLabel = new QLabel( this );
@@ -355,7 +346,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   SimLabel->setFixedHeight( statusbarheight );
   SimLabel->setToolTip( "The load of the simulation" );
   statusBar()->addWidget( SimLabel, 0 );
-  
+
+
   // menubar:
 
   // file:
@@ -479,7 +471,6 @@ RELACSWidget::~RELACSWidget( void )
   delete AID;
   delete AOD;
   delete KeyTime;
-  //  delete DI;
 }
 
 
@@ -788,7 +779,7 @@ void RELACSWidget::updateData( void )
   if ( IL.failed() ) {
     AIErrorMsg = "Error in acquisition: " + IL.errorText();
     //    QCoreApplication::postEvent( this, new QEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
-    IL.clearError();    
+    IL.clearError();
   }
   // read data:
   lockAI();
@@ -805,7 +796,7 @@ void RELACSWidget::updateData( void )
   MinTraceMutex.lock();
   double mintime = MinTraceTime;
   MinTraceMutex.unlock();
-  while ( IL.success() && 
+  while ( IL.success() &&
 	  mintime > 0.0 && ct < mintime &&
 	  ( simulation() || ReadLoop.isRunning() ) ) {
     RunDataMutex.lock();
@@ -966,27 +957,6 @@ void RELACSWidget::activateGains( bool datalocked )
 }
 
 
-class OutDataEvent : public QEvent
-{
-
-public:
-
-  OutDataEvent( const OutData &signal )
-    : QEvent( Type( User+5 ) )
-  {
-    Description = signal.description();
-  }
-
-  OutDataEvent( const OutList &signal )
-    : QEvent( Type( User+5 ) )
-  {
-    Description = signal.description();
-  }
-
-  Options Description;
-};
-
-
 int RELACSWidget::write( OutData &signal )
 {
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
@@ -1027,7 +997,6 @@ int RELACSWidget::write( OutData &signal )
     WriteLoop.start( signal.writeTime() );
     lockSignals();
     SF->save( signal );
-    QCoreApplication::postEvent( this, new OutDataEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1084,7 +1053,6 @@ int RELACSWidget::write( OutList &signal )
     WriteLoop.start( signal[0].writeTime() );
     lockSignals();
     SF->save( signal );
-    QCoreApplication::postEvent( this, new OutDataEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1138,7 +1106,6 @@ int RELACSWidget::directWrite( OutData &signal )
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
-    QCoreApplication::postEvent( this, new OutDataEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1191,7 +1158,6 @@ int RELACSWidget::directWrite( OutList &signal )
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
-    QCoreApplication::postEvent( this, new OutDataEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1270,16 +1236,6 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
 
   // update info file:
   printlog( "starting RePro \"" + CurrentRePro->name() + "\"" );
-  if ( ! InfoFileMacro.empty() ) {
-    if ( InfoFile != 0 )
-      *InfoFile << InfoFileMacro << '\n';
-    InfoFileMacro = "";
-  }
-  if ( InfoFile != 0 ) {
-    *InfoFile << QTime::currentTime().toString().toStdString();
-    *InfoFile << "   " << CurrentRePro->name() << ": " << MC->options();
-  }
-  //  DI->addRepro( *CurrentRePro );
 
   ReProRunning = true;
   SN->incrReProCount();
@@ -1348,18 +1304,6 @@ void RELACSWidget::stopRePro( void )
 
   // update Session:
   ReProAfterWait.wakeAll();
-
-  if ( InfoFile != 0 ) {
-    if ( CurrentRePro->aborted() )
-      *InfoFile << " (user interrupted)" << endl;
-    else
-      *InfoFile << ( CurrentRePro->completed() ? " (completed)" :  " (failed)" ) << endl;
-  }
-  if ( ! InfoFileMacro.empty() ) {
-    if ( InfoFile != 0 )
-      *InfoFile << InfoFileMacro << '\n';
-    InfoFileMacro = "";
-  }
 }
 
 
@@ -1393,12 +1337,6 @@ void RELACSWidget::customEvent( QEvent *qce )
     break;
   }
 
-  case 5: {
-    OutDataEvent *ode = dynamic_cast<OutDataEvent*>( qce );
-    //    DI->addStimulus( ode->Description );
-    break;
-  }
-
   }
 }
 
@@ -1412,9 +1350,6 @@ void RELACSWidget::updateRePro( void )
 void RELACSWidget::startedMacro( const string &ident, const string &param )
 {
   RP->setMacro( ident, param );
-  InfoFileMacro = "---------> Macro " + ident;
-  if ( ! param.empty() )
-    InfoFileMacro += ": " + param;
   printlog( "starting Macro \"" + ident + "\"" );
 }
 
@@ -1457,22 +1392,6 @@ void RELACSWidget::startSession( bool startmacro )
     }
   }
   SS.unlock();
-
-  InfoFile = new ofstream( SF->addPath( "repros.dat" ).c_str() );
-  if ( ! InfoFile->good() ) {
-    printlog( "! warning: InfoFile not good" );
-    delete InfoFile;
-    InfoFile = 0;
-  }
-  else {
-    *InfoFile << "This is RELACS, Version " << RELACSVERSION << "\n\n";
-    *InfoFile << "The session was started at time "
-	     << QTime::currentTime().toString().toStdString() << " on "
-	     << QDate::currentDate().toString().toStdString() << "\n\n"
-	     << "Time:      Research Program:\n";
-  }
-
-  //  DI->addSession( SF->path() + "stimuli.dat", Options() );
 
   SessionStartWait.wakeAll();
 
@@ -1521,7 +1440,7 @@ void RELACSWidget::stopSession( bool saved )
 
   if ( saved )
     SF->completeFiles();
-  else 
+  else
     SF->deleteFiles();
 
   CurrentRePro->setSaving( SF->filesOpen() );
@@ -1534,17 +1453,6 @@ void RELACSWidget::stopSession( bool saved )
     delete LogFile;
     LogFile = 0;
   }
-
-  if ( InfoFile != 0 ) {
-    *InfoFile << "\n\n"
-	      << "The session was stopped at time "
-	      << QTime::currentTime().toString().toStdString() << " on "
-	      << QDate::currentDate().toString().toStdString() << '\n';
-    delete InfoFile;
-    InfoFile = 0;
-  }
-
-  //  DI->endSession( saved );
 
   SessionStopWait.wakeAll();
 
