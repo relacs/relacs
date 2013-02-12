@@ -1208,13 +1208,13 @@ Parameter &Parameter::addDefaultText( const string &strg )
   // split strg:
   StrQueue sq;
   if ( strg.find( '|' ) != string::npos )
-    sq.assign( strg, "|" );  // compatibility with old styles
+    sq.assign( strg, "|", "\"" );  // compatibility with old styles
   else {
     if ( ! strg.empty() && strg[0] == '[' ) {
       Str s = strg;
       s.preventFirst( '[' );
       s.preventLast( ']' );
-      sq.assign( s, "," );
+      sq.assign( s, ",", "\"" );
     }
     else
       sq.assign( strg, "" );
@@ -1224,6 +1224,11 @@ Parameter &Parameter::addDefaultText( const string &strg )
   // remove leading and trailing spaces, and make '~' an empty string:
   for ( int k=0; k<sq.size(); k++ ) {
     sq[k].strip( ' ' );
+    bool quotes = ( sq[k][0] == '"' && sq[k][sq[k].size()-1] == '"' );
+    if ( ! sq[k].empty() && quotes ) {
+      sq[k].erase( 0, 1 );
+      sq[k].erase( sq[k].size() - 1 );
+    }
     if ( sq[k] == "~" )
       sq[k].clear();
   }
@@ -1278,13 +1283,13 @@ Parameter &Parameter::selectText( const string &strg, int add )
   // split strg:
   StrQueue sq;
   if ( strg.find( '|' ) != string::npos )
-    sq.assign( strg, "|" );  // compatibility with old styles
+    sq.assign( strg, "|", "\"" );  // compatibility with old styles
   else {
     if ( ! strg.empty() && strg[0] == '[' ) {
       Str s = strg;
       s.preventFirst( '[' );
       s.preventLast( ']' );
-      sq.assign( s, "," );
+      sq.assign( s, ",", "\"" );
     }
     else
       sq.assign( strg, "" );
@@ -1294,6 +1299,11 @@ Parameter &Parameter::selectText( const string &strg, int add )
   // remove leading and trailing spaces, and make '~' an empty string:
   for ( int k=0; k<sq.size(); k++ ) {
     sq[k].strip( ' ' );
+    bool quotes = ( sq[k][0] == '"' && sq[k][sq[k].size()-1] == '"' );
+    if ( ! sq[k].empty() && quotes ) {
+      sq[k].erase( 0, 1 );
+      sq[k].erase( sq[k].size() - 1 );
+    }
     if ( sq[k] == "~" )
       sq[k].clear();
   }
