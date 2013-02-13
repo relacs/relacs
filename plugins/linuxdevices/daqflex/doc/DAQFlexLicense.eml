@@ -1,0 +1,96 @@
+Return-Path: <Brent.Davis@mccdaq.com>
+Received: from mailserv09.uni-tuebingen.de ([unix socket])
+	 by mailserv09 (Cyrus v2.4.16) with LMTPA;
+	 Wed, 13 Feb 2013 16:25:44 +0100
+X-Sieve: CMU Sieve 2.4
+Received: from mx01.uni-tuebingen.de (mx01.uni-tuebingen.de [134.2.3.11])
+	by mailserv09.uni-tuebingen.de (Postfix) with ESMTP id 53A3C1100ED
+	for <bznbj01@mailserv09.uni-tuebingen.de>; Wed, 13 Feb 2013 16:25:44 +0100 (CET)
+Received: from us-nor-email.amer.corp.natinst.com (195.ComputerBoards.com [207.190.229.195])
+	by mx01.uni-tuebingen.de (8.13.6/8.13.6) with SMTP id r1DFPVQl007396
+	for <jan.benda@uni-tuebingen.de>; Wed, 13 Feb 2013 16:25:39 +0100
+X-MimeOLE: Produced By Microsoft Exchange V6.5
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: DAQFlex License Question    (tech # 96954)
+Date: Wed, 13 Feb 2013 10:25:30 -0500
+Message-ID: <1DF9F74A738C7647A8DF851A71369CF00555F058@us-nor-email.amer.corp.natinst.com>
+In-Reply-To: <US-NOR-EMAILLtneCH300000115@us-nor-email.amer.corp.natinst.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: DAQFlex License Question    (tech # 96954)
+Thread-Index: Ac4J/Esmwj95wqszScaFvQr2xFHJUwAAapWQ
+References: <US-NOR-EMAILLtneCH300000115@us-nor-email.amer.corp.natinst.com>
+From: "Brent Davis" <Brent.Davis@mccdaq.com>
+To: <jan.benda@uni-tuebingen.de>
+X-AntiVirus-Spam-Check: clean (checked by Avira MailGate: version: 3.2.1.26;
+ spam filter version: 3.2.0/2.3; host: mx01)
+X-AntiVirus: checked by Avira MailGate (version: 3.2.1.26; AVE: 8.2.10.250; VDF: 7.11.61.10; host: mx01); id=31618-fSW0pP
+X-Spam-Status: No, score=-1.0 required=5.0 tests=AV_CLEAN autolearn=ham
+	version=3.3.1
+X-Spam-Checker-Version: SpamAssassin 3.3.1 (2010-03-16) on
+	mx01.uni-tuebingen.de
+
+Dear Jan,
+
+Thank you for your email.
+
+Yes you can distribute the *.rbf firmware files along with your program
+sourcecode.
+
+Yes it is sufficient to mention Measurement Computing in the
+documentation of the DAQFlex plugin.
+
+
+Sincerely,
+
+Brent
+
+Brent Davis
+Applications Engineering Supervisor
+Measurement Computing Corp.  USA
+brent.davis@mccdaq.com
+
+
+-----Original Message-----
+From: MCC Tech Support [mailto:techsupport@mccdaq.com]=20
+Sent: Wednesday, February 13, 2013 10:11 AM
+To: Info Email [MCC]
+Subject: Tech Support
+
+Name: Jan Benda
+Organization: Tuebingen University
+Phone: 70712974573
+Email: jan.benda@uni-tuebingen.de
+Hardware: USB-1608GX-2AO
+Software: custom
+Operating System: Debian Linux
+
+Problem Description:
+Dear Madams and Sirs,
+
+I have a question regarding the license of the firmware files that are
+shipped with the DAQFlex tar archive.
+
+I develop a software for electrophysiological experiments
+(www.relacs.net). This software is licensed under the GNU GPL and the
+source code is available at sourceforge.net. I provide support also for
+your nice DAQFlex interface. The DAQFlex boards are accessed directly
+via libusb-1.0 without using your mono based API. That is, somebody who
+wants to use my RELACS software does not need to install the DAQFlex API
+and software. The only files I rely on are the firmware files (*.rbf).
+
+Can I distribute the *.rbf files along with the sourcecode of my
+software? Since the DAQFlex part is only a plugin to my software, would
+it be sufficient to mention MCC in the documentation of the DAQFlex
+plugin? Or how do you want me to document the origin and copyright on
+the rbf files?
+
+Best regards,
+Jan Benda
+
+
+

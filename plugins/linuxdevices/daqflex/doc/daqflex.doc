@@ -3,4 +3,53 @@
 
 \brief Data acquisition devices of Measurement Computing's DAQFlex series.
 
+\section install Installation requirements for DAQFlex
+
+You only need to install the libusb-1.0 development package:
+\code
+$ sudo apt-get install libusb-1.0-0-dev
+\endcode
+Then run \c ./configure and \c make to compile the DAFlex plugins.
+
+\c make \c install copies the firmware files from \c firmware/ to
+\c <prefix>/lib/daqflex/ .
+
+\note The firmware files are kindly provided by Measurement Computing Corporation.
+You may check their website mccdaq.com for more recent updates.
+
+
+\section udev Setting up udev permissions for DAQFlex USB devices
+
+You need to make sure that you (the user) have appropriate permissions
+for accessing the DAQFlex USB devices. One elegant way to achieve this
+to create a new group and tell udev to add the comedi device files to
+this group.
+ 
+-# Login as root.
+-# Create a new group "iocard":
+\code
+$ addgroup --system iocard
+\endcode
+-# Add udev rules to the /etc/udev/rules.d directory. Create the file
+\c /etc/udev/rules.d/daqflex.rules and paste the following lines into that file:
+\include daqflex.rules
+This file is also installed to \c
+<prefix>/lib/daqflex/ . So you can simply copy it to the
+\c udev directory:
+\code
+$ cp /usr/lib/daqflex/daqflex.rules /etc/udev/rules.d/
+\endcode
+(replace \c /usr by whatever path you specified as the prefix for \c ./configure).
+-# Run
+\code
+$ udevadm trigger
+\endcode
+to apply your new udev rules
+-# Add users to the "iocard" group:
+\code
+$ adduser <username> iocard
+\endcode
+After the next login, \c <username> is a member of the \c iocard group
+and and has sufficient permissions to access the DAQFlex data acquisition boards.
+
 */

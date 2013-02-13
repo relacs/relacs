@@ -16,6 +16,12 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
+daqflexlibdir = $(libdir)/daqflex
+dist_daqflexlib_DATA = \
+	firmware/USB_1208HS.rbf \
+	firmware/USB_1608G.rbf \
+        doc/daqflex.rules
+
 PLUGINSET = daqflex
 DX_PROJECT = daqflex
 DX_CONFIG = ../../../doc/Doxyfile

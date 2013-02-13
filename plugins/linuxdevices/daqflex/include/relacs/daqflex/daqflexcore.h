@@ -36,6 +36,8 @@ namespace daqflex {
 \author Jan Benda
 \version 1.0
 \brief [Device] The DAQFlex interface over libusb
+\par Options
+- \c firmwarepath=/usr/lib/daqflex/: Path to the *.rbf firmware files
 */
 
 class DAQFlexCore : public Device
@@ -123,7 +125,7 @@ public:
   unsigned char getEndpointInAddress( unsigned char* data, int n );
   unsigned char getEndpointOutAddress( unsigned char* data, int n );
 
-  int initDevice( void );
+  int initDevice( const string &path );
   int transferFPGAfile( const string &path );
 
   libusb_device_handle *DeviceHandle;
@@ -141,7 +143,7 @@ public:
   DAQFlexError ErrorState;
   static const uint16_t MaxMessageSize = 64;
   static const uint8_t StringMessage = 0x80;
-  static const string FirmwarePath;
+  static const string DefaultFirmwarePath;
   static const int FPGADATAREQUEST = 0x51;
 
 };

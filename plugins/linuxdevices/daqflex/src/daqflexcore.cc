@@ -30,7 +30,7 @@ using namespace relacs;
 namespace daqflex {
 
 
-const string DAQFlexCore::FirmwarePath = "/usr/lib/daqflex/";
+const string DAQFlexCore::DefaultFirmwarePath = "/usr/lib/daqflex/";
 
 
 DAQFlexCore::DAQFlexCore( void )
@@ -148,8 +148,11 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
     ErrorState = ErrorNoDevice;
     DeviceHandle = NULL;
   }
-  else 
-    initDevice();
+  else {
+    Str path = opts.text( "firmwarepath" );
+    path.provideSlash();
+    initDevice( path );
+  }
 
   return ErrorState;
 }
@@ -429,7 +432,7 @@ unsigned char DAQFlexCore::getEndpointOutAddress( unsigned char* data, int n )
 }
 
 
-int DAQFlexCore::initDevice( void )
+int DAQFlexCore::initDevice( const string &path )
 {
   ErrorState = Success;
 
@@ -454,10 +457,9 @@ int DAQFlexCore::initDevice( void )
     if ( response.find( "CONFIGURED" ) == string::npos ) {
       cout << "Firmware being flashed...\n";
       // firmware hasn't been loaded yet, do so:
-      stringstream firmwarefile;
-      firmwarefile << FirmwarePath << "USB_1608G.rbf";
-      transferFPGAfile( firmwarefile.str() );
-
+      transferFPGAfile( path + "USB_1608G.rbf" );
+      if ( ErrorState == ErrorCantOpenFPGAFile )
+	transferFPGAfile( DefaultFirmwarePath + "USB_1608G.rbf" );
       if ( ErrorState == Success ) {
 	// Check if the firmware got loaded successfully:
 	response = sendMessage( "?DEV:FPGACFG" );
@@ -519,7 +521,7 @@ int DAQFlexCore::transferFPGAfile( const string &path )
     return ErrorState;
     
   // Open file for input in binary mode, cursor at end of file:
-  ifstream file( path.data(), ios::in|ios::binary|ios::ate );
+  ifstream file( path.c_str(), ios::in|ios::binary|ios::ate );
   if ( file.is_open() ) {
     // read file into memblock:
     int size = (int)file.tellg();

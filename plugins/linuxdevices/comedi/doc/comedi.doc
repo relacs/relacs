@@ -614,7 +614,13 @@ $ chmod a+rw /dev/comedi*
     .
   .
 
-\section udev Set up udev permissions for Comedi device files
+\section udev Setting up udev permissions for Comedi device files
+
+Once comedi is installed you also need to make sure that you (the
+user) have appropriate permissions for accessing the comedi device
+files. That is you need to be able to have read and write access to
+the \c /dev/comedi* files. One elegant way to achieve this to create a
+new group and tell udev to add the comedi device files to this group.
 
 -# Login as root.
 -# Create a new group "iocard":
