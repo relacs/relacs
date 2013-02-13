@@ -91,13 +91,13 @@ void OutList::resize( int n, int m, double step )
 
 void OutList::clear( void )
 {
+  Description.clear( false );
+  Description.setType( "stimulus" );
   for ( unsigned int k=0; k<OL.size(); k++ ) {
     if ( OL[k].Own )
       delete OL[k].OD;
   }
   OL.clear();
-  Description.clear();
-  Description.setType( "stimulus" );
 }
 
 

@@ -29,6 +29,7 @@ namespace relacs {
 ReadThread::ReadThread( RELACSWidget *rw )
   : RW( rw )
 {
+  Run = false;
 }
 
 
@@ -93,6 +94,7 @@ void ReadThread::run( void )
 WriteThread::WriteThread( RELACSWidget *rw )
   : RW( rw )
 {
+  Run = false;
 }
 
 

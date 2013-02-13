@@ -598,6 +598,7 @@ int RELACSWidget::setupHardware( int n )
   if ( r < 2 ) {
 
     AQ = n == 0 ? AQD : SIM;
+    OutData::setAcquire( AQ );
 
     for ( int k=0; k<AID->size(); k++ ) {
       AQ->addInput( &(*AID)[k], InData::RefCommon );

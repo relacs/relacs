@@ -360,18 +360,17 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   }
 
   // set buffer size:
-  int bi = sigs[0].indices( sigs[0].writeTime() );
+  int bi = sigs[0].indices( 10.0 * sigs[0].writeTime() );
   if ( bi <= 0 )
     bi = 100;
-  //  int outps = DAQFlexDevice->outPacketSize();
-  //  BufferSize = ((5*sigs.size()*bi*2)/outps+1)*outps;
-  BufferSize = 5*sigs.size()*bi*2;
-  if ( BufferSize < DAQFlexDevice->outPacketSize() )
-    BufferSize = DAQFlexDevice->outPacketSize();
+  BufferSize = sigs.size()*bi*2;
   int nbuffer = sigs.deviceBufferSize()*2;
-  if ( nbuffer < BufferSize )
+  if ( BufferSize > nbuffer )
     BufferSize = nbuffer;
-  //    BufferSize = (nbuffer/outps+1)*outps;
+  int outps = DAQFlexDevice->outPacketSize();
+  BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
+  if ( BufferSize < outps )
+    BufferSize = outps;
   if ( BufferSize > 0xfffff )
     sigs.addError( DaqError::InvalidBufferTime );
   if ( BufferSize <= 0 )
@@ -490,13 +489,13 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
     return -1;
   }
 
-  int maxntry = 2;
+  int maxntry = 4;
   if ( stage==0 ) {
+    // XXX figure out FIFO size!
     maxntry = 100000/BufferSize;
     if ( maxntry <= 0 )
       maxntry = 1;
   }
-  //    maxntry = 1;
   
   int ern = 0;
   int elemWritten = 0;
@@ -508,30 +507,17 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
 	tryit++ ) {
     
     // convert data into buffer:
-    int bytesConverted = 0;
-    bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
+    int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
-    /*
-    if ( NBuffer < BufferSize ) {
-      // all data converted, fill up to package size:
-      int nbuffer = (NBuffer/outps+1)*outps;
-      unsigned short *lp = (unsigned short *)(Buffer+NBuffer-2);
-      unsigned short *fp = (unsigned short *)(Buffer+NBuffer);
-      while ( NBuffer < nbuffer ) {
-	*fp++ = *lp;
-	NBuffer += 2;
-      }
-    }
-    ofstream df( "signal.dat" );
-    unsigned short *dp = (unsigned short*)Buffer;
-    for ( int k=0; k<NBuffer/2; k++ )
-      df << k << "  " << *dp++ << '\n';
-    df.close();
-    exit(0);
-    */
+    if ( NBuffer <= 0 )
+      break;
 
     // transfer buffer to device:
-    //    int bytesToWrite = (NBuffer/outps)*outps; //  XXX
+    /*
+    int bytesToWrite = (NBuffer/outps)*outps; //  XXX
+    if ( bytesToWrite <= 0 )
+      bytesToWrite = NBuffer;
+    */
     int bytesToWrite = NBuffer; //  XXX
     //    if ( stage==0 && bytesToWrite > 4*4096 ) // XXX figure out FIFO size!
     //      bytesToWrite = 4*4096;
@@ -541,13 +527,13 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
 				(unsigned char*)(Buffer), bytesToWrite,
 				&bytesWritten, 50 );
 
-    if ( ern != 0 )
-      break;
-    else if ( bytesWritten > 0 ) {
+    if ( bytesWritten > 0 ) {
       memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
       NBuffer -= bytesWritten;
       elemWritten += bytesWritten / 2;
     }
+    if ( ern != 0 )
+      break;
   }
 
   if ( ern == 0 ) {

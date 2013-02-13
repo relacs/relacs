@@ -4229,7 +4229,7 @@ Options &Options::popSection( void )
 }
 
 
-Options &Options::clear( void )
+Options &Options::clear( bool revert )
 {
   Warning = "";
   Name = "";
@@ -4244,7 +4244,7 @@ Options &Options::clear( void )
 	++sp, ++inx ) {
     if ( OwnSecs[inx] )
       delete *sp;
-    else {
+    else if ( revert ) {
       if ( (*sp)->parentSection() == this )
 	(*sp)->setParentSection( 0 );
     }

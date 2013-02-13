@@ -1687,8 +1687,10 @@ public:
     /*! Remove last Options from the currently active section.
         \sa endSection(), clearSections() */
   Options &popSection( void );
-    /*! Remove all Parameter and sections of Options. */
-  Options &clear( void );
+    /*! Remove all Parameter and sections of Options.  If \a revert is
+        set to \c true, also revert parentSection() of non-owned
+        sections to zero. */
+  Options &clear( bool revert=true );
 
     /*! Total number of name-value pairs in this Options and all its sections.
         \sa parameterSize(), sectionSize() */
