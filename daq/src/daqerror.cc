@@ -28,19 +28,19 @@ namespace relacs {
 
 string DaqError::ErrorText[LastState] =
   { "no device", "device not open", "multiple devices",
-    "invalid start source", "multiple start sources", 
-    "invalid delay", "multiple delays", "multiple priorities", 
-    "invalid sampling rate", "multiple sampling rates", 
+    "invalid start source", "multiple start sources",
+    "invalid delay", "multiple delays", "multiple priorities",
+    "invalid sampling rate", "multiple sampling rates",
     "continuous mode not supported", "multiple continuous modes",
-    "multiple restart requests", "no data", "multiple buffer sizes", 
-    "invalid size for the driver's buffer", "multiple sizes for the driver's buffer", 
-    "invalid size for the update buffer", "multiple sizes for the update buffer", 
+    "multiple restart requests", "no data", "multiple buffer sizes",
+    "invalid size for the driver's buffer", "multiple sizes for the driver's buffer",
+    "invalid size for the update buffer", "multiple sizes for the update buffer",
     "invalid trace specification", "invalid channel", "multiple channels",
     "invalid reference", "multiple references",
     "dither not supported", "multiple dither settings",
     "reglitch not supported", "multiple reglitch settings",
     "invalid gain", "multiple gains", "signal underflow", "signal overflow",
-    "calibration failed", "invalid channel type", "invalid channel sequence", 
+    "calibration failed", "invalid channel type", "invalid channel sequence",
     "busy", "buffer overflow", "overflow/underrun", "unknown",
     "Intensity not set",
     "attenuator not open", "invalid attenuator device",
@@ -71,7 +71,7 @@ long long DaqError::error( void ) const
 
 void DaqError::setError( long long flags )
 {
-  State = flags; 
+  State = flags;
 }
 
 

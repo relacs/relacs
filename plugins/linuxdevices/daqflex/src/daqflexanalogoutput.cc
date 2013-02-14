@@ -34,7 +34,7 @@ namespace daqflex {
   // WORKS ONLY FOR 2ms updatetimes! XXXX Check what special buffersize this results in! That makes 512 Bytes - the packet size! XXX
 
 
-DAQFlexAnalogOutput::DAQFlexAnalogOutput( void ) 
+DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   : AnalogOutput( "DAQFlexAnalogOutput", DAQFlexAnalogIOType )
 {
   ErrorState = 0;
@@ -58,15 +58,15 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
   open( device, opts );
 }
 
-  
-DAQFlexAnalogOutput::~DAQFlexAnalogOutput( void ) 
+
+DAQFlexAnalogOutput::~DAQFlexAnalogOutput( void )
 {
   close();
 }
 
 
 int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
-{ 
+{
   if ( isOpen() )
     return -5;
 
@@ -95,7 +95,7 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   IsPrepared = false;
 
   setInfo();
-  
+
   return 0;
 }
 
@@ -106,13 +106,13 @@ int DAQFlexAnalogOutput::open( Device &device, const Options &opts )
 }
 
 
-bool DAQFlexAnalogOutput::isOpen( void ) const 
-{ 
+bool DAQFlexAnalogOutput::isOpen( void ) const
+{
   return ( DAQFlexDevice != NULL && DAQFlexDevice->isOpen() );
 }
 
 
-void DAQFlexAnalogOutput::close( void ) 
+void DAQFlexAnalogOutput::close( void )
 {
   if ( ! isOpen() )
     return;
@@ -128,7 +128,7 @@ void DAQFlexAnalogOutput::close( void )
 
 
 int DAQFlexAnalogOutput::channels( void ) const
-{ 
+{
   if ( !isOpen() )
     return -1;
   return DAQFlexDevice->maxAOChannels();
@@ -136,15 +136,15 @@ int DAQFlexAnalogOutput::channels( void ) const
 
 
 int DAQFlexAnalogOutput::bits( void ) const
-{ 
+{
   if ( !isOpen() )
     return -1;
   return (int)( log( DAQFlexDevice->maxAOData()+2.0 )/ log( 2.0 ) );
 }
 
 
-double DAQFlexAnalogOutput::maxRate( void ) const 
-{ 
+double DAQFlexAnalogOutput::maxRate( void ) const
+{
   return DAQFlexDevice->maxAORate();
 }
 
@@ -160,7 +160,7 @@ double DAQFlexAnalogOutput::unipolarRange( int index ) const
   return -1.0;
 }
 
-  
+
 double DAQFlexAnalogOutput::bipolarRange( int index ) const
 {
   if ( (index < 0) || (index >= (int)BipolarRange.size()) )
@@ -180,12 +180,12 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     double minval = sigs[k].minValue();
     double maxval = sigs[k].maxValue();
     double scale = sigs[k].scale();
-    
+
     // apply range:
     float v = sigs[k].size() > 0 ? sigs[k][0] : 0.0;
     if ( v > maxval )
       v = maxval;
-    else if ( v < minval ) 
+    else if ( v < minval )
       v = minval;
     v *= scale;
     // XXX    unsigned short data = comedi_from_physical( v, polynomial );
@@ -242,7 +242,7 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
 	float v = Sigs[k].deviceValue();
 	if ( v > maxval[k] )
 	  v = maxval[k];
-	else if ( v < minval[k] ) 
+	else if ( v < minval[k] )
 	  v = minval[k];
 	v *= scale[k];
 	// XXX calibration?
@@ -430,8 +430,8 @@ int DAQFlexAnalogOutput::writeData( void )
 }
 
 
-int DAQFlexAnalogOutput::reset( void ) 
-{ 
+int DAQFlexAnalogOutput::reset( void )
+{
   Sigs.clear();
   if ( Buffer != 0 )
     delete [] Buffer;
@@ -445,7 +445,7 @@ int DAQFlexAnalogOutput::reset( void )
   DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
   // clear underrun condition:
   DAQFlexDevice->sendControlTransfer( "AOSCAN:RESET", false );
-  libusb_clear_halt( DAQFlexDevice->deviceHandle(), 
+  libusb_clear_halt( DAQFlexDevice->deviceHandle(),
 		     DAQFlexDevice->endpointIn() );
   DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
 
@@ -458,7 +458,7 @@ int DAQFlexAnalogOutput::reset( void )
 
 
 bool DAQFlexAnalogOutput::running( void ) const
-{   
+{
   string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
   return ( response.find( "RUNNING" ) != string::npos );
 }
@@ -489,23 +489,23 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
     return -1;
   }
 
-  int maxntry = 4;
+  int maxntry = 2;
   if ( stage==0 ) {
     // XXX figure out FIFO size!
     maxntry = 100000/BufferSize;
-    if ( maxntry <= 0 )
-      maxntry = 1;
+    //    if ( maxntry <= 0 )
+      maxntry = 2;
   }
-  
+
   int ern = 0;
   int elemWritten = 0;
-  int outps = DAQFlexDevice->outPacketSize();
-  
+  //  int outps = DAQFlexDevice->outPacketSize();
+
   // try to write twice
   for ( int tryit = 0;
-	tryit < maxntry && Sigs[0].deviceWriting(); 
+	tryit < maxntry && Sigs[0].deviceWriting();
 	tryit++ ) {
-    
+
     // convert data into buffer:
     int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
@@ -522,10 +522,12 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
     //    if ( stage==0 && bytesToWrite > 4*4096 ) // XXX figure out FIFO size!
     //      bytesToWrite = 4*4096;
     int bytesWritten = 0;
+    cerr << "BULK START " << bytesToWrite << '\n';
     ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 				DAQFlexDevice->endpointOut(),
 				(unsigned char*)(Buffer), bytesToWrite,
 				&bytesWritten, 50 );
+    cerr << "BULK END " << bytesWritten << '\n';
 
     if ( bytesWritten > 0 ) {
       memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
@@ -551,7 +553,7 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
     // error:
     switch( ern ) {
 
-    case LIBUSB_ERROR_PIPE: 
+    case LIBUSB_ERROR_PIPE:
       ErrorState = 1;
       Sigs.addError( DaqError::OverflowUnderrun );
       return -1;
@@ -572,7 +574,7 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
       return -1;
     }
   }
-  
+
   return elemWritten;
 }
 

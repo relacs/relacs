@@ -1,0 +1,11 @@
+# allow access to Measurement Computing's DAQFlex usb devices by users of the iocard group:
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="00f0", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="00f2", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="00f9", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="00fd", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="00fe", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0110", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0111", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0112", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0113", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0114", MODE="0660", GROUP="iocard"

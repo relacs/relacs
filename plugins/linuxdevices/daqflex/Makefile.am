@@ -20,7 +20,8 @@ daqflexlibdir = $(libdir)/daqflex
 dist_daqflexlib_DATA = \
 	firmware/USB_1208HS.rbf \
 	firmware/USB_1608G.rbf \
-        doc/daqflex.rules
+        doc/98-daqflex-old.rules \
+        doc/98-daqflex-new.rules
 
 PLUGINSET = daqflex
 DX_PROJECT = daqflex
@@ -29,6 +30,7 @@ DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"DAQFlex Plugins"'
 DX_SETTINGS += INPUT='include/relacs/daqflex src doc'
+DX_SETTINGS += EXAMPLE_PATH='doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../../../doc/relacsall.tag=..'
 

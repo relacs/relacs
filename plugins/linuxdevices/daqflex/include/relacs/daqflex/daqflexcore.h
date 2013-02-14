@@ -1,6 +1,6 @@
 /*
   daqflex/daqflexcore.cc
-  The DAQFlex interface over libusb  
+  The DAQFlex interface over libusb
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -57,24 +57,26 @@ public:
     ErrorFPGAUploadFailed,
     ErrorLibUSBIO,
     ErrorLibUSBInvalidParam,
-    ErrorLibUSBAccess, 
+    ErrorLibUSBAccess,
     ErrorLibUSBNoDevice,
     ErrorLibUSBNotFound,
     ErrorLibUSBBusy,
-    ErrorLibUSBTimeout, 
+    ErrorLibUSBTimeout,
     ErrorLibUSBOverflow,
     ErrorLibUSBPipe,
     ErrorLibUSBInterrupted,
-    ErrorLibUSBNoMem, 
+    ErrorLibUSBNoMem,
     ErrorLibUSBNotSupported,
     ErrorLibUSBOther,
-    ErrorLibUSBUnknown 
+    ErrorLibUSBUnknown
   };
+  static const int DAQFlexErrorMax = 23;
+  static const string DAQFlexErrorText[DAQFlexErrorMax];
 
-  /*! Vendor ID of MCC USB DAQ boards. */
+    /*! vendor ID of MCC USB DAQ boards. */
   static const int MCCVendorID = 0x09db;
 
-  //Device Product IDs:
+  // device product IDs:
   static const int USB_2001_TC = 0x00F9;
   static const int USB_7202 = 0x00F2;
   static const int USB_7204 = 0x00F0;
@@ -90,7 +92,9 @@ public:
   virtual void close( void );
   virtual int reset( void );
 
+    /*! \return response if transfer successful, empty string if not. */
   string sendMessage( const string &message, bool display=true );
+    /*! Send a message to the device. */
   int sendControlTransfer( const string &message, bool display=true );
 
     /*! \return the resolution of the A/D converter. */
@@ -114,11 +118,13 @@ public:
   int inPacketSize( void ) const;
   int outPacketSize( void ) const;
 
-  
+
  private:
 
   string productName( int productid );
   void setLibUSBError( int libusberror );
+    /*! Receive a message from the device. This should follow a call to
+        sendControlTransfer. */
   string getControlTransfer( bool display=true );
 
   int getEndpoints( void );

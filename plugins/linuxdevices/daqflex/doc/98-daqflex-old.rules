@@ -9,4 +9,3 @@ BUS=="usb", SYSFS{idVendor}=="09db", SYSFS{idProduct}=="0111", MODE="0660", GROU
 BUS=="usb", SYSFS{idVendor}=="09db", SYSFS{idProduct}=="0112", MODE="0660", GROUP="iocard"
 BUS=="usb", SYSFS{idVendor}=="09db", SYSFS{idProduct}=="0113", MODE="0660", GROUP="iocard"
 BUS=="usb", SYSFS{idVendor}=="09db", SYSFS{idProduct}=="0114", MODE="0660", GROUP="iocard"
-

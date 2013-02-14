@@ -11,11 +11,11 @@ $ sudo apt-get install libusb-1.0-0-dev
 \endcode
 Then run \c ./configure and \c make to compile the DAFlex plugins.
 
-\c make \c install copies the firmware files from \c firmware/ to
-\c <prefix>/lib/daqflex/ .
+`make install`  copies the firmware files from `firmware/`  to
+`<prefix>/lib/daqflex/` .
 
 \note The firmware files are kindly provided by Measurement Computing Corporation.
-You may check their website mccdaq.com for more recent updates.
+You may check their website <http://www.mccdaq.com/> for more recent updates.
 
 
 \section udev Setting up udev permissions for DAQFlex USB devices
@@ -30,16 +30,22 @@ this group.
 \code
 $ addgroup --system iocard
 \endcode
--# Add udev rules to the /etc/udev/rules.d directory. Create the file
-\c /etc/udev/rules.d/daqflex.rules and paste the following lines into that file:
-\include daqflex.rules
-This file is also installed to \c
-<prefix>/lib/daqflex/ . So you can simply copy it to the
-\c udev directory:
+-# Add udev rules. On new (after mid 2012) Linux systems create the file
+`/lib/udev/rules.d/98-daqflex.rules`
+ and paste the following lines into that file:
+\include 98-daqflex-new.rules
+On older system (prior to mid 2012) create the file
+`/etc/udev/rules.d/98-daqflex.rules` and paste the following lines into that file:
+\include 98-daqflex-old.rules
+Both files are also installed to `<prefix>/lib/daqflex/` . So you can simply copy them to the
+right directory. New system:
 \code
-$ cp /usr/lib/daqflex/daqflex.rules /etc/udev/rules.d/
+$ cp /usr/lib/daqflex/98-daqflex-new.rules /lib/udev/rules.d/
+\endcode Old system:
+\code
+$ cp /usr/lib/daqflex/98-daqflex-old.rules /etc/udev/rules.d/
 \endcode
-(replace \c /usr by whatever path you specified as the prefix for \c ./configure).
+(replace `/usr` by whatever path you specified as the prefix for `./configure`).
 -# Run
 \code
 $ udevadm trigger
@@ -49,7 +55,7 @@ to apply your new udev rules
 \code
 $ adduser <username> iocard
 \endcode
-After the next login, \c <username> is a member of the \c iocard group
+After the next login, `<username>` is a member of the `iocard` group
 and and has sufficient permissions to access the DAQFlex data acquisition boards.
 
 */

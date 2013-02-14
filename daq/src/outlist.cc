@@ -149,7 +149,7 @@ OutData &OutList::back( void )
 int OutList::index( const string &ident ) const
 {
   for ( unsigned int k=0; k<OL.size(); k++ ) {
-    if ( OL[k].OD->ident() == ident ) 
+    if ( OL[k].OD->ident() == ident )
       return k;
   }
   return -1;

@@ -31,7 +31,7 @@ using namespace relacs;
 namespace daqflex {
 
 
-DAQFlexAnalogInput::DAQFlexAnalogInput( void ) 
+DAQFlexAnalogInput::DAQFlexAnalogInput( void )
   : AnalogInput( "DAQFlexAnalogInput", DAQFlexAnalogIOType )
 {
   ErrorState = 0;
@@ -49,7 +49,7 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( void )
 }
 
 
-DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts ) 
+DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts )
   : AnalogInput( "DAQFlexAnalogInput", DAQFlexAnalogIOType )
 {
   ErrorState = 0;
@@ -67,15 +67,15 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts
   open( device, opts );
 }
 
-  
-DAQFlexAnalogInput::~DAQFlexAnalogInput( void ) 
+
+DAQFlexAnalogInput::~DAQFlexAnalogInput( void )
 {
   close();
 }
 
 
 int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
-{ 
+{
   if ( isOpen() )
     return -5;
 
@@ -115,7 +115,7 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   ReadBufferSize = 4096;
 
   setInfo();
-  
+
   return 0;
 }
 
@@ -126,13 +126,13 @@ int DAQFlexAnalogInput::open( Device &device, const Options &opts )
 }
 
 
-bool DAQFlexAnalogInput::isOpen( void ) const 
-{ 
+bool DAQFlexAnalogInput::isOpen( void ) const
+{
   return ( DAQFlexDevice != NULL && DAQFlexDevice->isOpen() );
 }
 
 
-void DAQFlexAnalogInput::close( void ) 
+void DAQFlexAnalogInput::close( void )
 {
   if ( ! isOpen() )
     return;
@@ -151,7 +151,7 @@ void DAQFlexAnalogInput::close( void )
 
 
 int DAQFlexAnalogInput::channels( void ) const
-{ 
+{
   if ( !isOpen() )
     return -1;
   return DAQFlexDevice->maxAIChannels();
@@ -159,15 +159,15 @@ int DAQFlexAnalogInput::channels( void ) const
 
 
 int DAQFlexAnalogInput::bits( void ) const
-{ 
+{
   if ( !isOpen() )
     return -1;
   return (int)( log( DAQFlexDevice->maxAIData()+2.0 )/ log( 2.0 ) );
 }
 
 
-double DAQFlexAnalogInput::maxRate( void ) const 
-{ 
+double DAQFlexAnalogInput::maxRate( void ) const
+{
   return DAQFlexDevice->maxAIRate();
 }
 
@@ -183,7 +183,7 @@ double DAQFlexAnalogInput::unipolarRange( int index ) const
   return -1.0;
 }
 
-  
+
 double DAQFlexAnalogInput::bipolarRange( int index ) const
 {
   if ( (index < 0) || (index >= (int)BipolarRange.size()) )
@@ -264,7 +264,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   DAQFlexDevice->sendMessage( "AIQUEUE:CLEAR" );
   for( int k = 0; k < traces.size(); k++ ) {
     // DAQFlexDevice->sendMessage( "?AIQUEUE:COUNT" ); USE THIS AS QUEUE Element
-  
+
     // delay:
     if ( traces[k].delay() > 0.0 ) {
       traces[k].addError( DaqError::InvalidDelay );
@@ -279,7 +279,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 
     // reference:
     switch ( traces[k].reference() ) {
-    case InData::RefCommon: 
+    case InData::RefCommon:
       DAQFlexDevice->sendMessage( aiq + "CHMODE=SE" );
       break;
     case InData::RefDifferential:
@@ -328,7 +328,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 
   if ( traces.failed() )
     return -1;
-  
+
   if ( traces.success() ) {
     setSettings( traces, BufferSize, ReadBufferSize );
     Traces = &traces;
@@ -395,7 +395,7 @@ int DAQFlexAnalogInput::readData( void )
   CurrentSamples += readn;
 
   if ( failed ) {
-    return -1;   
+    return -1;
   }
 
   // no more data to be read:
@@ -469,7 +469,7 @@ int DAQFlexAnalogInput::convertData( void )
 
 
 int DAQFlexAnalogInput::stop( void )
-{ 
+{
   if ( !isOpen() )
     return NotOpen;
   DAQFlexDevice->sendMessage( "AISCAN:STOP" );
@@ -478,12 +478,12 @@ int DAQFlexAnalogInput::stop( void )
 }
 
 
-int DAQFlexAnalogInput::reset( void ) 
-{ 
+int DAQFlexAnalogInput::reset( void )
+{
   int retVal = stop();
   // clear overrun condition:
   DAQFlexDevice->sendControlTransfer( "AISCAN:RESET" , false );
-  libusb_clear_halt( DAQFlexDevice->deviceHandle(), 
+  libusb_clear_halt( DAQFlexDevice->deviceHandle(),
 		     DAQFlexDevice->endpointIn() );
 
   // flush:
@@ -518,7 +518,7 @@ int DAQFlexAnalogInput::reset( void )
 
 
 bool DAQFlexAnalogInput::running( void ) const
-{   
+{
   string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS", false );
   return ( response.find( "RUNNING" ) != string::npos );
 }
