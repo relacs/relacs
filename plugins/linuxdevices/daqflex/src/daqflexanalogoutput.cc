@@ -31,9 +31,6 @@ using namespace relacs;
 namespace daqflex {
 
 
-  // WORKS ONLY FOR 2ms updatetimes! XXXX Check what special buffersize this results in! That makes 512 Bytes - the packet size! XXX
-
-
 DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   : AnalogOutput( "DAQFlexAnalogOutput", DAQFlexAnalogIOType )
 {
@@ -361,16 +358,18 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
   // set buffer size:
   int bi = sigs[0].indices( 10.0 * sigs[0].writeTime() );
-  if ( bi <= 0 )
-    bi = 100;
+  if ( bi <= DAQFlexDevice->aoFIFOSize() )
+    bi = DAQFlexDevice->aoFIFOSize();
   BufferSize = sigs.size()*bi*2;
   int nbuffer = sigs.deviceBufferSize()*2;
-  if ( BufferSize > nbuffer )
-    BufferSize = nbuffer;
   int outps = DAQFlexDevice->outPacketSize();
-  BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
-  if ( BufferSize < outps )
-    BufferSize = outps;
+  if ( BufferSize > nbuffer ) {
+    BufferSize = nbuffer;
+    if ( BufferSize < outps )
+      BufferSize = outps;
+  }
+  else
+    BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
   if ( BufferSize > 0xfffff )
     sigs.addError( DaqError::InvalidBufferTime );
   if ( BufferSize <= 0 )
@@ -392,7 +391,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   }
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-  cerr << "STARTWRITE SCALE=" << Sigs[0].scale() << '\n';
+  //  cerr << "STARTWRITE SCALE=" << Sigs[0].scale() << '\n';
   fillWriteBuffer( 0 );
 
   IsPrepared = ol.success();
@@ -490,12 +489,8 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
   }
 
   int maxntry = 2;
-  if ( stage==0 ) {
-    // XXX figure out FIFO size!
-    maxntry = 100000/BufferSize;
-    //    if ( maxntry <= 0 )
-      maxntry = 2;
-  }
+  if ( stage==0 || stage == 1 )
+    maxntry = 1;
 
   int ern = 0;
   int elemWritten = 0;
@@ -518,16 +513,16 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
     if ( bytesToWrite <= 0 )
       bytesToWrite = NBuffer;
     */
-    int bytesToWrite = NBuffer; //  XXX
-    //    if ( stage==0 && bytesToWrite > 4*4096 ) // XXX figure out FIFO size!
-    //      bytesToWrite = 4*4096;
+    int bytesToWrite = NBuffer;
+    if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
+      bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
     int bytesWritten = 0;
-    cerr << "BULK START " << bytesToWrite << '\n';
+    //    cerr << "BULK START " << bytesToWrite << " STAGE=" << stage << '\n';
     ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 				DAQFlexDevice->endpointOut(),
 				(unsigned char*)(Buffer), bytesToWrite,
 				&bytesWritten, 50 );
-    cerr << "BULK END " << bytesWritten << '\n';
+    //    cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
 
     if ( bytesWritten > 0 ) {
       memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );

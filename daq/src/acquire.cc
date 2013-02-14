@@ -2017,6 +2017,11 @@ int Acquire::writeData( void )
 	  error = true;
       }
       else {
+	if ( AO[i].Signals[0].deviceWriting() ) {
+	  AO[i].Signals.addError( DaqError::OverflowUnderrun );
+	  error = true;
+	  finished = false;
+	}
 	AO[i].Signals.deviceReset();
 	AO[i].Signals.clear();
       }

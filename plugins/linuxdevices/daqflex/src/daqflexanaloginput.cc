@@ -112,7 +112,7 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   IsRunning = false;
   TotalSamples = 0;
   CurrentSamples = 0;
-  ReadBufferSize = 4096;
+  ReadBufferSize = 2 * DAQFlexDevice->aiFIFOSize();
 
   setInfo();
 
@@ -240,7 +240,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   // init internal buffer:
   if ( Buffer != 0 )
     delete [] Buffer;
-  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) *2;
+  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * 2;
   int inps = DAQFlexDevice->inPacketSize();
   BufferSize = (BufferSize/inps+1)*inps;
   Buffer = new char[BufferSize];
@@ -364,6 +364,8 @@ int DAQFlexAnalogInput::readData( void )
   int buffern = BufferN*2;
   int inps = DAQFlexDevice->inPacketSize();
   int maxn = ((BufferSize - buffern)/inps)*inps;
+  if ( maxn <= 0 && ! IsRunning )
+    maxn = BufferSize - buffern;
 
   // try to read twice:
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
@@ -373,12 +375,14 @@ int DAQFlexAnalogInput::readData( void )
     int err = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 				    DAQFlexDevice->endpointIn(),
 				    (unsigned char*)(Buffer + buffern),
-				    maxn, &m, 1000 );
+				    maxn, &m, 100 );
 
-    if ( err != 0 ) {
+    if ( err != 0 && err != LIBUSB_ERROR_TIMEOUT ) {
       Traces->addErrorStr( "LibUSB error " + Str( err ) );
-      if ( err == LIBUSB_ERROR_OVERFLOW )
+      if ( err == LIBUSB_ERROR_OVERFLOW ) {
+	ErrorState = 1;
 	Traces->addError( DaqError::OverflowUnderrun );
+      }
       failed = true;
       cerr << " DAQFlexAnalogInput::readData(): libUSB error " << err << "\n";
     }
@@ -394,15 +398,15 @@ int DAQFlexAnalogInput::readData( void )
   readn /= 2;
   CurrentSamples += readn;
 
-  if ( failed ) {
+  if ( failed )
     return -1;
-  }
 
   // no more data to be read:
   if ( readn <= 0 && !running() ) {
     if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       Traces->addErrorStr( deviceFile() + " - buffer-overflow " );
       Traces->addError( DaqError::OverflowUnderrun );
+      ErrorState = 1;
       cerr << " DAQFlexAnalogInput::readData(): no data and not running\n";
     }
     return -1;

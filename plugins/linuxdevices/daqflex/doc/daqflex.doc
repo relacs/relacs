@@ -11,8 +11,8 @@ $ sudo apt-get install libusb-1.0-0-dev
 \endcode
 Then run \c ./configure and \c make to compile the DAFlex plugins.
 
-`make install`  copies the firmware files from `firmware/`  to
-`<prefix>/lib/daqflex/` .
+\c make \c install  copies the firmware files from \c firmware/  to
+\c <prefix>/lib/daqflex/ .
 
 \note The firmware files are kindly provided by Measurement Computing Corporation.
 You may check their website <http://www.mccdaq.com/> for more recent updates.
@@ -31,13 +31,13 @@ this group.
 $ addgroup --system iocard
 \endcode
 -# Add udev rules. On new (after mid 2012) Linux systems create the file
-`/lib/udev/rules.d/98-daqflex.rules`
+\c /lib/udev/rules.d/98-daqflex.rules
  and paste the following lines into that file:
 \include 98-daqflex-new.rules
 On older system (prior to mid 2012) create the file
-`/etc/udev/rules.d/98-daqflex.rules` and paste the following lines into that file:
+\c /etc/udev/rules.d/98-daqflex.rules and paste the following lines into that file:
 \include 98-daqflex-old.rules
-Both files are also installed to `<prefix>/lib/daqflex/` . So you can simply copy them to the
+Both files are also installed to \c <prefix>/lib/daqflex/ . So you can simply copy them to the
 right directory. New system:
 \code
 $ cp /usr/lib/daqflex/98-daqflex-new.rules /lib/udev/rules.d/
@@ -45,7 +45,7 @@ $ cp /usr/lib/daqflex/98-daqflex-new.rules /lib/udev/rules.d/
 \code
 $ cp /usr/lib/daqflex/98-daqflex-old.rules /etc/udev/rules.d/
 \endcode
-(replace `/usr` by whatever path you specified as the prefix for `./configure`).
+(replace \c /usr by whatever path you specified as the prefix for \c ./configure).
 -# Run
 \code
 $ udevadm trigger
@@ -55,7 +55,18 @@ to apply your new udev rules
 \code
 $ adduser <username> iocard
 \endcode
-After the next login, `<username>` is a member of the `iocard` group
+After the next login, \c <username> is a member of the \c iocard group
 and and has sufficient permissions to access the DAQFlex data acquisition boards.
+
+
+\section test Testing acquisition
+
+Depending on your system the maximum possible sampling rates for
+analog input and out are lower than the ones the data acquisition
+boards suppports. If they are too high you get error messages (on
+console) about overflows and underruns.
+
+Play around with the sampling rates and the \c readinterval to figure
+out usefull values for stable acquisition.
 
 */

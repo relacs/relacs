@@ -148,13 +148,13 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 							    EndpointIn );
 	    OutPacketSize = libusb_get_max_iso_packet_size(  device,
 							     EndpointOut );
+	    // get the device serial number:
+	    string message = sendMessage( "?DEV:MFGSER" );
+	    // erase message while keeping serial number:
+	    message.erase( 0, 11 );
+	    cout << "DAQFlex: found device " << productName( ProductID )
+		 << " with serial number " << message << "\n";
 	    if ( ! serialno.empty() ) {
-	      // get the device serial number:
-	      string message = sendMessage( "?DEV:MFGSER" );
-	      // erase message while keeping serial number:
-	      message.erase( 0, 11 );
-	      cout << "Found " << productName( ProductID ) << " with serial number " << message << "\n";
-
 	      // check that the serial numbers are the same:
 	      if ( message.compare( serialno ) )
 		// serial numbers are not the same, release device and continue on:
@@ -168,7 +168,7 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 	  }
 	}
 	else
-	  cerr << "OPEN DAQFlex device failed: " << DAQFlexErrorText[ ErrorState ] << '\n';
+	  cerr << "DAQFlex: open device failed: " << DAQFlexErrorText[ ErrorState ] << '\n';
       }
     }
   }
@@ -234,6 +234,12 @@ int DAQFlexCore::maxAIChannels( void ) const
 }
 
 
+int DAQFlexCore::aiFIFOSize( void ) const
+{
+  return AIFIFOSize;
+}
+
+
 unsigned short DAQFlexCore::maxAOData( void ) const
 {
   return MaxAOData;
@@ -249,6 +255,12 @@ double DAQFlexCore::maxAORate( void ) const
 int DAQFlexCore::maxAOChannels( void ) const
 {
   return MaxAOChannels;
+}
+
+
+int DAQFlexCore::aoFIFOSize( void ) const
+{
+  return AOFIFOSize;
 }
 
 
@@ -293,8 +305,8 @@ string DAQFlexCore::productName( int productid )
     return "USB-7204";
   case USB_1608_GX:
     return "USB-1608GX";
-    case USB_1608_GX_2AO:
-      return "USB-1608GX-2AO";
+  case USB_1608_GX_2AO:
+    return "USB-1608GX-2AO";
   default:
     return "Invalid Product ID";
   }
@@ -474,15 +486,18 @@ int DAQFlexCore::initDevice( const string &path )
     MaxAIData = 0xFFFF;
     MaxAIRate = 500000.0;
     MaxAIChannels = 16;
+    AIFIFOSize = 4096;
     if ( ProductID == USB_1608_GX_2AO ) {
       MaxAOData = 0xFFFF;
       MaxAORate = 500000.0;
       MaxAOChannels = 2;
+      AOFIFOSize = 2048;
     }
     else {
       MaxAOData = 0;
       MaxAORate = 0.0;
       MaxAOChannels = 0;
+      AOFIFOSize = 0;
     }
     // check if the firmware has been loaded already:
     string response = sendMessage( "?DEV:FPGACFG" );
@@ -498,11 +513,18 @@ int DAQFlexCore::initDevice( const string &path )
 	if ( response.find( "CONFIGURED" ) == string::npos )
 	  ErrorState = ErrorFPGAUploadFailed;
       }
-      if ( ErrorState == Success )
-	cout << "Firmware successfully flashed...\n";
+      if ( ErrorState == Success ) {
+	response = sendMessage( "?DEV:FWV" );
+	if ( response.empty() )
+	  cout << "DAQFlex: firmware successfully flashed\n";
+	else
+	  cout << "DAQFlex: firmware version " << response.erase( 0, 8 ) << " successfully flashed\n";
+      }
     }
+    /*
     else
-      cout << "Firmware already flashed, skipping this time\n";
+      cout << "DAQFlex: firmware already flashed, skipping this time\n";
+    */
   }
     break;
 
@@ -510,27 +532,33 @@ int DAQFlexCore::initDevice( const string &path )
     MaxAIData = 0xFFFF;
     MaxAIRate = 50000.0;
     MaxAIChannels = 8;
+    AIFIFOSize = 32768;
     MaxAOData = 0;
     MaxAORate = 0.0;
     MaxAOChannels = 0;
+    AOFIFOSize = 0;
     break;
 
   case USB_7204:
     MaxAIData = 0xFFF;
     MaxAIRate = 50000.0;
     MaxAIChannels = 8;
+    AIFIFOSize = 32; // ???
     MaxAOData = 4096;
     MaxAORate = 10000.0;
     MaxAOChannels = 2;
+    AOFIFOSize = 32; // ???
     break;
 
   default:
     MaxAIData = 0xFFF;
     MaxAIRate = 50000.0;
     MaxAIChannels = 8;
+    AIFIFOSize = 32;
     MaxAOData = 0;
     MaxAORate = 0.0;
     MaxAOChannels = 0;
+    AOFIFOSize = 0;
     break;
   }
 

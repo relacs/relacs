@@ -232,6 +232,11 @@ int TransferFunction::main( void )
 	state = Aborted;
       break;
     }
+    if ( signal.failed() ) {
+      warning( signal.errorText() );
+      directWrite( orgdcsignal );
+      continue;
+    }
 
     // get data:
     SampleDataF input( 0.0, duration, trace( intrace ).stepsize() );

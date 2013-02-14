@@ -103,6 +103,8 @@ public:
   double maxAIRate( void ) const;
     /*! \return the number of analog input channels. */
   int maxAIChannels( void ) const;
+    /*! \return the number of samples the AI FIFO can hold. */
+  int aiFIFOSize( void ) const;
 
     /*! \return the resolution of the D/A converter. */
   unsigned short maxAOData( void ) const;
@@ -110,6 +112,8 @@ public:
   double maxAORate( void ) const;
     /*! \return the number of analog output channels. */
   int maxAOChannels( void ) const;
+    /*! \return the number of samples the AI FIFO can hold. */
+  int aoFIFOSize( void ) const;
 
     /*! A handle to the USB device. */
   libusb_device_handle *deviceHandle( void );
@@ -143,9 +147,11 @@ public:
   unsigned short MaxAIData;
   double MaxAIRate;
   int MaxAIChannels;
+  int AIFIFOSize;
   unsigned short MaxAOData;
   double MaxAORate;
   int MaxAOChannels;
+  int AOFIFOSize;
   DAQFlexError ErrorState;
   static const uint16_t MaxMessageSize = 64;
   static const uint8_t StringMessage = 0x80;

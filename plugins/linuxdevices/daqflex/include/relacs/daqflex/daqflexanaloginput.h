@@ -34,6 +34,7 @@ namespace daqflex {
 \class DAQFlexAnalogInput
 \author Jan Benda
 \brief [AnalogInput] Interface for accessing analog input of a DAQFlex board from Measurement Computing.
+\note In readData() we might want to reduce the bulk_transfer timeout, once RELACS thread timing gets smoother.
 */
 
 
@@ -145,7 +146,7 @@ private:
   DAQFlexCore *DAQFlexDevice;
 
     /*! Holds the list of supported bipolar ranges. */
-  vector< double > BipolarRange;\
+  vector< double > BipolarRange;
 
   struct Calibration {
     double Offset;
@@ -159,6 +160,7 @@ private:
         \note this differs from running(), which indicated that the driver is still running. */
   bool IsRunning;
 
+    /*! Errorcode of the last operation. */
   int ErrorState;
 
     /*! The input traces that were prepared by prepareRead(). */
