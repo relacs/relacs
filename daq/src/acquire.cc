@@ -337,7 +337,7 @@ int Acquire::applyOutTrace( OutData &signal ) const
   }
 
   signal.setTrace( inx, "" );
-  return OutTraces[inx].apply( signal ) * 3;  
+  return OutTraces[inx].apply( signal ) * 3;
 }
 
 

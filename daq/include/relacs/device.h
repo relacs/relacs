@@ -1,6 +1,6 @@
 /*
   device.h
-  Virtual class for accessing a device. 
+  Basic interface for accessing a device.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -33,13 +33,13 @@ namespace relacs {
 
 /*!
 \class Device
-\brief Basic interface for accessing a device. 
+\brief Basic interface for accessing a device.
 \author Jan Benda
 \version 1.3
 \todo Error codes and strings for errors in the open function
 
 The Device class defines the interface for the basic operations open(),
-close(), and reset() of a device. 
+close(), and reset() of a device.
 You have to implement at least the isOpen(), close() and one of the
 two open() functions.
 
@@ -59,19 +59,19 @@ The type of a Device class should be set in the constructor of
 the interface class either directly using setDeviceType()
 or by passing the type to the constructor of the Device class.
 
-A name for class of devices a particular implementation of the Device class 
+A name for class of devices a particular implementation of the Device class
 is handling is returned by deviceClass().
 Usually deviceClass() is the name of the class derived from Device.
 Set the class-name for the devices in the constructor
 with setDeviceClass() or by passing the name
 to the constructor of the Device class.
 
-Each individual physical device may have an unique identifier string 
+Each individual physical device may have an unique identifier string
 deviceIdent() that can be set by setDeviceIdent().
 The identifier string should be unique for each instance of a device class.
 The name and the vendor of the physical device is returned by
 deviceName() and deviceVendor().
-Both should be set from within the open() function using 
+Both should be set from within the open() function using
 setDeviceName() and setDeviceVendor().
 The device file on which the device was opened is returned by deviceFile().
 
@@ -86,7 +86,7 @@ of the Device class.
 There are four flags for indicating errors with handling the device:
 NotOpen, InvalidDevice, ReadError, and WriteError.
 */
-  
+
 
 class Device
 {
@@ -161,19 +161,19 @@ public:
 	by caling Info.clear().
         \sa open(), isOpen(), reset() */
   virtual void close( void ) = 0;
-    /*! Reset the device. 
-        Returns zero on success, otherwise one of the flags 
+    /*! Reset the device.
+        Returns zero on success, otherwise one of the flags
         NotOpen, InvalidDevice, WriteError.
         \sa close(), open(), isOpen() */
   virtual int reset( void );
 
-    /*! Returns some information about the capabilities of 
+    /*! Returns some information about the capabilities of
         the device (for example, maximum possible sampling rate).
 	This function can be reimplemented to set the
 	the infos right before returning them.
         \sa settings() */
   virtual const Options &info( void ) const;
-    /*! Returns some information about the current settings 
+    /*! Returns some information about the current settings
         of the device (for example, the currently used sampling rate).
 	This function can be reimplemented to set the
 	the settings right before returning them.
@@ -181,16 +181,18 @@ public:
   virtual const Options &settings( void ) const;
 
     /*! The id of the device type.
-        \sa deviceTypeStr() setDeviceType(), deviceClass(), deviceFile(), deviceIdent(),
-	deviceName(), deviceVendor() */
+        \sa deviceTypeStr() setDeviceType(), deviceClass(),
+	deviceFile(), deviceIdent(), deviceName(), deviceVendor() */
   int deviceType( void ) const;
     /*! \return a string naming the device type.
-        \sa deviceType() setDeviceType(), deviceClass(), deviceFile(), deviceIdent(),
-	deviceName(), deviceVendor() */
+        \sa deviceType() setDeviceType(), deviceClass(), deviceFile(),
+	deviceIdent(), deviceName(), deviceVendor() */
   string deviceTypeStr( void ) const;
-    /*! \return the number of known device types. \sa deviceTypeStr(), deviceType() */
+    /*! \return the number of known device types.
+        \sa deviceTypeStr(), deviceType() */
   static int deviceTypes( void );
-    /*! \return a string naming the device type \a type. \sa deviceType(), \a deviecTypes() */ 
+    /*! \return a string naming the device type \a type.
+        \sa deviceType(), \a deviecTypes() */
   static string deviceTypeStr( int type );
     /*! The name for the device(s) a particular implementation
         of the Device class is handling.
@@ -201,12 +203,12 @@ public:
         \sa setDeviceFile(), deviceIdent(), deviceClass(), deviceType(),
         deviceName(), deviceVendor() */
   string deviceFile( void ) const;
-    /*! The name of the particular physical device that is handled by 
+    /*! The name of the particular physical device that is handled by
         this instance of the Device class.
         \sa setDeviceName(), deviceIdent(), deviceClass(), deviceType(),
         deviceFile(), deviceVendor() */
   string deviceName( void ) const;
-    /*! The vendor of the particular physical device that is handled by 
+    /*! The vendor of the particular physical device that is handled by
         this instance of the Device class.
         \sa setDeviceVendor(), deviceIdent(), deviceClass(), deviceType(),
         deviceFile(), deviceName() */
@@ -270,7 +272,7 @@ private:
 
   static const int MaxDeviceTypeStrs = 9;
   static const string DeviceTypeStrs[MaxDeviceTypeStrs];
-  
+
   int DeviceType;
   string DeviceClass;
   string DeviceIdent;

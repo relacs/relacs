@@ -660,6 +660,8 @@ void RELACSWidget::clearHardware( void )
 
 void RELACSWidget::closeHardware( void )
 {
+  AQD->clear();
+  SIM->clear();
   ADV->close();
   DeviceMenu->clear();
 }
@@ -1181,7 +1183,7 @@ int RELACSWidget::stopWrite( void )
   // stop analog output:
   WriteLoop.stop();
   lockSignals();
-  int r = AQ->stopWrite();                
+  int r = AQ->stopWrite();
   unlockSignals();
   return r;
 }

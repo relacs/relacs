@@ -22,7 +22,7 @@
 #ifndef _RELACS_DEVICELIST_H_
 #define _RELACS_DEVICELIST_H_ 1
 
-#include <QMenu> 
+#include <QMenu>
 #include <deque>
 #include <vector>
 #include <relacs/str.h>
@@ -50,7 +50,7 @@ class DeviceList : public ConfigClass
 public:
 
     /*! Construct an empty list of devices.
-        The \a title is passed to the ConfigClass class and is 
+        The \a title is passed to the ConfigClass class and is
 	used to identify the device list in the configuration files.
 	Single devices are called \a name
 	in the error messages. */
@@ -161,7 +161,7 @@ bool DeviceList<T,PluginID>::empty( void ) const
 template < class T, int PluginID >
 void DeviceList<T,PluginID>::clear( void )
 {
-  // devices are deleted by Devices:clear() !
+  // devices are deleted by AllDevices:clear() !
   DVs.clear();
   for ( unsigned int k=0; k<Menus.size(); k++ ) {
     if ( Menus[k] != 0 )

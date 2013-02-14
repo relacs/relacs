@@ -204,6 +204,7 @@ void DAQFlexCore::close( void )
     libusb_release_interface( DeviceHandle, 0 );
     libusb_close( DeviceHandle );
     libusb_exit( NULL );
+    DeviceHandle = NULL;
   }
 
   Info.clear();
@@ -566,6 +567,13 @@ int DAQFlexCore::initDevice( const string &path )
   setDeviceName( productName( ProductID ) );
   setDeviceVendor( "Measurement Computing" );
   setDeviceFile( "USB" );
+
+  Device::addInfo();
+  // get the device serial number:
+  string serial = sendMessage( "?DEV:MFGSER" );
+  // erase message while keeping serial number:
+  serial.erase( 0, 11 );
+  Info.addText( "SerialNumber", serial );
 
   return ErrorState;
 }
