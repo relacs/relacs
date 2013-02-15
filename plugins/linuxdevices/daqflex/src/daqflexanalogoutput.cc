@@ -394,7 +394,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   WriteTime = (int)::ceil( 1000.0*ol[0].writeTime() );
 
   //  cerr << "STARTWRITE SCALE=" << Sigs[0].scale() << '\n';
-  fillWriteBuffer( 0 );
+  fillWriteBuffer();
 
   IsPrepared = ol.success();
 
@@ -409,7 +409,6 @@ int DAQFlexAnalogOutput::startWrite( void )
     return -1;
   }
   DAQFlexDevice->sendMessage( "AOSCAN:START" );
-  fillWriteBuffer( 1 );
   return 0;
 }
 
@@ -427,7 +426,7 @@ int DAQFlexAnalogOutput::writeData( void )
     return -1;
   }
 
-  return fillWriteBuffer( 2 );
+  return fillWriteBuffer();
 }
 
 
@@ -476,7 +475,7 @@ int DAQFlexAnalogOutput::error( void ) const
 }
 
 
-int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
+int DAQFlexAnalogOutput::fillWriteBuffer( void )
 {
   if ( Sigs[0].deviceWriting() ) {
     // convert data into buffer:
@@ -503,7 +502,7 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
   if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
   int bytesWritten = 0;
-  //    cerr << "BULK START " << bytesToWrite << " STAGE=" << stage << '\n';
+  //    cerr << "BULK START " << bytesToWrite << '\n';
   int ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 			      DAQFlexDevice->endpointOut(),
 			      (unsigned char*)(Buffer), bytesToWrite,
