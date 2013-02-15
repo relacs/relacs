@@ -61,8 +61,8 @@ void ReadThread::run( void )
   bool rd = true;
 
   double readinterval = RW->IL[0].readTime();
-  signed long ri = (unsigned long)::rint( 1000.0*readinterval );
-  QThread::msleep( ri/4 );
+  signed long ri = (unsigned long)::rint( 1000.0*readinterval*0.5 );
+  QThread::msleep( ri/2 );
   do {
     RW->lockAI();
     int r = RW->AQ->readData();
@@ -83,7 +83,8 @@ void ReadThread::run( void )
       RunMutex.unlock();
       break;
     }
-    QThread::msleep( ri );
+    if ( ri > 0 )
+      QThread::msleep( ri );
     RunMutex.lock();
     rd = Run;
     RunMutex.unlock();
@@ -126,8 +127,7 @@ void WriteThread::run( void )
 {
   bool rd = true;
 
-  signed long wi = (unsigned long)::rint( 1000.0*WriteInterval );
-  QThread::msleep( wi/4 );
+  signed long wi = (unsigned long)::rint( 1000.0*WriteInterval*0.5 );
   do {
     RW->lockSignals();
     int r = RW->AQ->writeData();
@@ -146,7 +146,8 @@ void WriteThread::run( void )
       RunMutex.unlock();
       break;
     }
-    QThread::msleep( wi );
+    if ( wi > 0 )
+      QThread::msleep( wi );
     RunMutex.lock();
     rd = Run;
     RunMutex.unlock();

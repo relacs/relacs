@@ -793,8 +793,8 @@ void RELACSWidget::updateData( void )
     cerr << "RELACSWidget::updateData(): CurrentTime=" << Str( CurrentTime ) << " smaller than zero!\n";
     cerr << IL << '\n';
   }
-  double ct = CurrentTime;
   unlockData();
+  double ct = CurrentTime;
   // do we need to wait for more data?
   MinTraceMutex.lock();
   double mintime = MinTraceTime;
@@ -981,17 +981,17 @@ int RELACSWidget::write( OutData &signal )
   if ( SF->signalPending() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
-  int r = AQ->setupWrite( signal );
+  int r = AQ->setupWrite( signal );   // might take some time (20ms with DAQFlex)
   if ( r >= 0 ) {
     SF->unlock();    // we assume that IL data are read locked while calling write()
     MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
     unlockData();
-    writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-    lockAI();
-    r = AQ->startWrite( signal );
+    writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead() (60ms)
+    lockAI();        // might take some time (40-90ms)
+    r = AQ->startWrite( signal );  // might take some time (90-200ms with DAQFlex)
     unlockAI();
     unlockData();
-    readLockData();  // put the data lock back into read lock state
+    readLockData();  // put the data lock back into read lock state (60ms)
     MTDT.lock();     // and the other locks as well
     SF->lock();
   }

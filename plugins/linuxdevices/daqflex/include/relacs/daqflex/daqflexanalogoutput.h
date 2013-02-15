@@ -167,6 +167,8 @@ private:
 
     /*! The sorted output signals that were prepared by prepareWrite(). */
   OutList Sigs;
+    /*! The approximate time writeData() should block in milliseconds. */
+  int WriteTime;
     /*! Size of the buffer for transfering data to the driver. */
   int BufferSize;
     /*! Buffer used for transfering data to the driver. */

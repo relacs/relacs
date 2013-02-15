@@ -2010,7 +2010,7 @@ int Acquire::writeData( void )
   bool error = false;
   for ( unsigned int i=0; i<AO.size(); i++ ) {
     if ( ! AO[i].Signals.empty() ) {
-      if ( AO[i].Signals[0].deviceWriting() && AO[i].AO->running() ) {
+      if ( AO[i].Signals[0].deviceWriting() || AO[i].AO->running() ) {
 	finished = false;
 	int r = AO[i].AO->writeData();
 	if ( r < 0 )

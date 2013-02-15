@@ -281,6 +281,15 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   if ( !isOpen() )
     return -1;
 
+  if ( Buffer != 0 ) { // should not be necessary!
+    delete [] Buffer;
+    Buffer = 0;
+    cerr << "DAQFlexAnalogOutput::prepareWrite() warning: Buffer was not freed!\n";
+  }
+  if ( NBuffer != 0 ) { // should not be necessary!
+    cerr << "DAQFlexAnalogOutput::prepareWrite() warning: NBuffer=" << NBuffer << " is not zero!\n";
+    NBuffer = 0;
+  }
   reset();
 
   // no signals:
@@ -381,15 +390,8 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     return -1;
 
   Sigs = ol;
-  if ( Buffer != 0 ) { // should not be necessary!
-    delete [] Buffer;
-    cerr << "DAQFlexAnalogOutput::prepareWrite() warning: Buffer was not freed!\n";
-  }
-  if ( NBuffer != 0 ) { // should not be necessary!
-    cerr << "DAQFlexAnalogOutput::prepareWrite() warning: NBuffer=" << NBuffer << " is not zero!\n";
-    NBuffer = 0;
-  }
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+  WriteTime = (int)::ceil( 1000.0*ol[0].writeTime() );
 
   //  cerr << "STARTWRITE SCALE=" << Sigs[0].scale() << '\n';
   fillWriteBuffer( 0 );
@@ -476,6 +478,12 @@ int DAQFlexAnalogOutput::error( void ) const
 
 int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
 {
+  if ( Sigs[0].deviceWriting() ) {
+    // convert data into buffer:
+    int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
+    NBuffer += bytesConverted;
+  }
+
   if ( !isOpen() ) {
     Sigs.setError( DaqError::DeviceNotOpen );
     return -1;
@@ -483,59 +491,35 @@ int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
 
   ErrorState = 0;
 
-  if ( ! Sigs[0].deviceWriting() ) {
-    Sigs.addError( DaqError::NoData );
-    return -1;
-  }
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
+    return 0;
 
-  int maxntry = 2;
-  if ( stage==0 || stage == 1 )
-    maxntry = 1;
+  // transfer buffer to device:
+  int outps = DAQFlexDevice->outPacketSize();
+  int bytesToWrite = (NBuffer/outps)*outps;
+  //  int bytesToWrite = NBuffer;
+  if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
+    bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
+  if ( bytesToWrite <= 0 )
+    bytesToWrite = NBuffer;
+  int bytesWritten = 0;
+  //    cerr << "BULK START " << bytesToWrite << " STAGE=" << stage << '\n';
+  int ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
+			      DAQFlexDevice->endpointOut(),
+			      (unsigned char*)(Buffer), bytesToWrite,
+			      &bytesWritten, WriteTime );
+  //    cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
 
-  int ern = 0;
   int elemWritten = 0;
-  //  int outps = DAQFlexDevice->outPacketSize();
-
-  // try to write twice
-  for ( int tryit = 0;
-	tryit < maxntry && Sigs[0].deviceWriting();
-	tryit++ ) {
-
-    // convert data into buffer:
-    int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
-    NBuffer += bytesConverted;
-    if ( NBuffer <= 0 )
-      break;
-
-    // transfer buffer to device:
-    /*
-    int bytesToWrite = (NBuffer/outps)*outps; //  XXX
-    if ( bytesToWrite <= 0 )
-      bytesToWrite = NBuffer;
-    */
-    int bytesToWrite = NBuffer;
-    if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
-      bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
-    int bytesWritten = 0;
-    //    cerr << "BULK START " << bytesToWrite << " STAGE=" << stage << '\n';
-    ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
-				DAQFlexDevice->endpointOut(),
-				(unsigned char*)(Buffer), bytesToWrite,
-				&bytesWritten, 50 );
-    //    cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
-
-    if ( bytesWritten > 0 ) {
-      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-      NBuffer -= bytesWritten;
-      elemWritten += bytesWritten / 2;
-    }
-    if ( ern != 0 )
-      break;
+  if ( bytesWritten > 0 ) {
+    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+    NBuffer -= bytesWritten;
+    elemWritten += bytesWritten / 2;
   }
 
   if ( ern == 0 ) {
     // no more data:
-    if ( ! Sigs[0].deviceWriting() ) {
+    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
       if ( Buffer != 0 )
 	delete [] Buffer;
       Buffer = 0;

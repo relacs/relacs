@@ -331,6 +331,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 
   if ( traces.success() ) {
     setSettings( traces, BufferSize, ReadBufferSize );
+    ReadTime = (int)::ceil( 1000.0*traces[0].readTime() );
     Traces = &traces;
   }
 
@@ -375,7 +376,7 @@ int DAQFlexAnalogInput::readData( void )
     int err = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 				    DAQFlexDevice->endpointIn(),
 				    (unsigned char*)(Buffer + buffern),
-				    maxn, &m, 100 );
+				    maxn, &m, ReadTime );
 
     if ( err != 0 && err != LIBUSB_ERROR_TIMEOUT ) {
       Traces->addErrorStr( "LibUSB error " + Str( err ) );

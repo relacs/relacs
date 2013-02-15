@@ -1035,33 +1035,7 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 
 int ComediAnalogOutput::fillWriteBuffer( bool first )
 {
-  if ( !isOpen() ) {
-    Sigs.setError( DaqError::DeviceNotOpen );
-    return -1;
-  }
-
-  ErrorState = 0;
-
-  if ( ! Sigs[0].deviceWriting() ) {
-    Sigs.addError( DaqError::NoData );
-    return -1;
-  }
-
-  int maxntry = 2;
-  if ( first ) {
-    maxntry = 100000/BufferSize;
-    if ( maxntry <= 0 )
-      maxntry = 1;
-  }
-
-  int ern = 0;
-  int elemWritten = 0;
-
-  // try to write twice
-  for ( int tryit = 0;
-	tryit < maxntry && Sigs[0].deviceWriting(); 
-	tryit++ ){
-
+  if ( Sigs[0].deviceWriting() ) {
     // convert data into buffer:
     int bytesConverted = 0;
     if ( LongSampleType )
@@ -1069,27 +1043,37 @@ int ComediAnalogOutput::fillWriteBuffer( bool first )
     else  
       bytesConverted = convert<sampl_t>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
+  }
 
-    // transfer buffer to comedi:
-    int bytesWritten = write( comedi_fileno( DeviceP ), Buffer, NBuffer );
+  if ( !isOpen() ) {
+    Sigs.setError( DaqError::DeviceNotOpen );
+    return -1;
+  }
 
-    if ( bytesWritten < 0 ) {
-      ern = errno;
-      if ( ern == EAGAIN || ern == EINTR ) {
-	ern = 0;
-	break;
-      }
-    }
-    else if ( bytesWritten > 0 ) {
-      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-      NBuffer -= bytesWritten;
-      elemWritten += bytesWritten / BufferElemSize;
-    }
+  ErrorState = 0;
+
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
+    return 0;
+
+  // transfer buffer to comedi:
+  int bytesWritten = write( comedi_fileno( DeviceP ), Buffer, NBuffer );
+  
+  int ern = 0;
+  int elemWritten = 0;
+  if ( bytesWritten < 0 ) {
+    ern = errno;
+    if ( ern == EAGAIN || ern == EINTR )
+      ern = 0;
+  }
+  else if ( bytesWritten > 0 ) {
+    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+    NBuffer -= bytesWritten;
+    elemWritten += bytesWritten / BufferElemSize;
   }
 
   if ( ern == 0 ) {
     // no more data:
-    if ( ! Sigs[0].deviceWriting() ) {
+    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
       if ( Buffer != 0 )
 	delete [] Buffer;
       Buffer = 0;
