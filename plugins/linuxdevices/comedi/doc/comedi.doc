@@ -116,7 +116,6 @@ $ tar xjvf linux-2.6.28.9.tar.bz2
 (replace \c linux-2.6.28.9 by the directory name of your new kernel source).
 Create a softlink to your kernel source 
 \code
-$ cd /usr/src
 $ ln -s linux-2.6.28.9 linux
 $ cd linux
 \endcode
@@ -136,7 +135,7 @@ $ make menuconfig
 (You might needto install the following packages first: \c apt-get \a install \c make \c gcc \c ncurses-dev \c zlib1g-dev).
 Possible settings you might want to change are:
   - Processor type and features: 
-    - Select your Subarchitecture Type (PC-Compatible)
+    - Select your Subarchitecture Type (PC-Compatible) - this option does not exist on newer kernels
     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
       check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
@@ -204,8 +203,9 @@ $ apt-get install kernel-package
    \endcode
    -# Configure and build the kernel:
    \code
-$ make-kpkg --initrd --revision r1 --config menuconfig kernel-image
+$ make-kpkg --initrd --revision 1 --config menuconfig kernel-image
    \endcode
+   You can also supply a \c -j option to tell make how many processes can be run in parallel.
    See step 3. for hints on the configuration options.
    -# Install the kernel
    \code
@@ -443,16 +443,18 @@ The most recent patches for intel and amd 32 and 64-bit systems are in the x86 d
 Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
   -# Currently, the 2.6.28.9 works, the patch for the 2.6.29 kernel is broken.
   -# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.gz from
-  http://www.kernel.org to \c /usr/src
+     http://www.kernel.org (e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2)
+     to \c /usr/src
   -# Unpack the kernel
 \code
+$ cd /usr/src
 $ tar xzvf linux-2.6.28.9.tar.bz2
-$ mv /usr/src/linux-2.6.28.9 /usr/src/linux-2.6.28.9-rtai
-$ ln -s /usr/src/linux-2.6.28.9-rtai linux
+$ mv linux-2.6.28.9 linux-2.6.28.9-rtai
+$ ln -s linux-2.6.28.9-rtai linux
 \endcode
 Currently, for compiling the DynClamp plugin RELACS assumes that 
 \c /usr/src/linux points to your rtai patched kernel.
--# Patch the kernel
+-# Patch the kernel (use the patch file that matches the downloaded kernel)
 \code
 $ cd /usr/src/linux
 $ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.28.9-x86-2.2-07.patch
@@ -461,7 +463,7 @@ $ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.28.9-x86-2
 Follow the intructions given in \ref installvanillakernel, starting at step 2.
 On Debian, the make-kpkg command should be
 \code
-make-kpkg --initrd --append-to-version -rtai --revision r1 --config menuconfig kernel-image
+make-kpkg --initrd --append-to-version -rtai --revision 1 --config menuconfig kernel-image
 \endcode
 In the kernel configuration dialog you should do the following settings:
   - General setup: set "Local version" to -rtai (not needed if you are using \c make-kpkg)
@@ -470,7 +472,7 @@ In the kernel configuration dialog you should do the following settings:
     - Deselect "Module versioning support"
   - Processor type and features: 
     - Deselect "Tickless System"
-    - Select your "Subarchitecture Type" (PC-Compatible)
+    - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist on newer kernels
     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
       check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
