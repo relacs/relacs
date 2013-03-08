@@ -1624,21 +1624,26 @@ public:
     /*! End the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to the parent section.
-        \sa clearSections(), setSection(), newSection(), newSubSection(), newSubSubSection(),
+        \sa clearSections(), setSection(), lastSection(), newSection(), newSubSection(), newSubSubSection(),
 	insertSection() */
   void endSection( void );
     /*! Reset the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to this Options.
-        \sa endSection(), setSection(), newSection(), newSubSection(), newSubSubSection(),
+        \sa endSection(), setSection(), lastSection(), newSection(), newSubSection(), newSubSubSection(),
 	insertSection() */
   void clearSections( void );
     /*! Make \a opt the currently active section of \a this such that
         subsequent calls to addText(), addNumber(), etc. add new
         Parameter to \a opt.
-        \sa endSection(), setSection(), newSection(), newSubSection(), newSubSubSection(),
+        \sa endSection(), setSection(), lastSection(), newSection(), newSubSection(), newSubSubSection(),
 	insertSection() */
   void setSection( Options &opt );
+    /*! Make the last top-level section of \a this the currently active section such that
+        addText(), addNumber(), etc. add new Parameter to the last top-level section.
+	If \a this does not have sections, \a this is made the currently active section.
+        \sa endSection(), clearSection(), setSection() */
+  void lastSection( void );
 
     /*! Move this Options with its name-value pairs and sections
         one level up in the hierachy to its parentSection().

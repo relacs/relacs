@@ -477,10 +477,14 @@ In the kernel configuration dialog you should do the following settings:
       check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
     - Set "Timer frequency" to 1000 Hz
+XXX - disable kernel irq balancing (noirqbalance)
   - Power Management options:
     - Deselect "CPU Frequency scaling"
     .
   .
+-# XXX Isolate CPUs If you have a multi-core system you should reserve at least one CPU for RTAI.
+  isolcpus=0,1,2
+  insmod rtai_hal.ko IsolCpusMask=0x07
 -# Reboot into your new RTAI real time kernel.
 
 

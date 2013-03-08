@@ -3649,6 +3649,11 @@ Options &Options::newSection( int level, const string &name, const string &type,
   so->Secs.push_back( o );
   so->OwnSecs.push_back( true );
   AddOpts = o;
+  Options *ps = this;
+  while ( ps->parentSection() != 0 ) {
+    ps = ps->parentSection();
+    ps->AddOpts = o;
+  }
 #ifndef NDEBUG
   if ( !Warning.empty() )
     cerr << "!warning in Options::newSection() -> " << Warning << '\n';
@@ -3685,6 +3690,11 @@ Options &Options::addSection( const string &name, const string &type,
   Options *o = &AddOpts->newSection( 0, name, type, flags, style );
   AddOpts->clearSections();
   AddOpts = o;
+  Options *ps = this;
+  while ( ps->parentSection() != 0 ) {
+    ps = ps->parentSection();
+    ps->AddOpts = o;
+  }
   return *o;
 }
 
@@ -3721,6 +3731,11 @@ Options &Options::insertSection( const string &name, const string &atpattern,
   }
 
   AddOpts = o;
+  Options *ps = this;
+  while ( ps->parentSection() != 0 ) {
+    ps = ps->parentSection();
+    ps->AddOpts = o;
+  }
   return *AddOpts;
 }
 
@@ -3749,6 +3764,11 @@ Options &Options::newSection( int level, const Options &opt, int selectmask,
   so->Secs.push_back( o );
   so->OwnSecs.push_back( true );
   AddOpts = o;
+  Options *ps = this;
+  while ( ps->parentSection() != 0 ) {
+    ps = ps->parentSection();
+    ps->AddOpts = o;
+  }
 #ifndef NDEBUG
   if ( !Warning.empty() )
     cerr << "!warning in Options::newSection() -> " << Warning << '\n';
@@ -3790,6 +3810,11 @@ Options &Options::addSection( const Options &opt, int selectmask,
 				     name, type, flags, style );
   AddOpts->clearSections();
   AddOpts = o;
+  Options *ps = this;
+  while ( ps->parentSection() != 0 ) {
+    ps = ps->parentSection();
+    ps->AddOpts = o;
+  }
   return *o;
 }
 
@@ -3833,6 +3858,11 @@ Options &Options::insertSection( const Options &opt, int selectmask,
   }
 
   AddOpts = o;
+  Options *ps = this;
+  while ( ps->parentSection() != 0 ) {
+    ps = ps->parentSection();
+    ps->AddOpts = o;
+  }
   return *AddOpts;
 }
 
@@ -3924,6 +3954,15 @@ void Options::clearSections( void )
 void Options::setSection( Options &opt )
 {
   AddOpts = &opt;
+}
+
+
+void Options::lastSection( void )
+{
+  if ( Secs.size() > 0 )
+    AddOpts = Secs.back();
+  else
+    AddOpts = this;
 }
 
 
