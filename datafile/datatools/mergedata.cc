@@ -202,9 +202,9 @@ void readData( DataFile &sf )
 		x2 = vals[c].number( HUGE_VAL );
 	      }
 	      if ( ( mode == -2 && val != vals[c] ) ||
-		   ( mode == 0 && 
-		     ( thresh == 0.0 && x1 != x2 ) ||
-		     ( thresh > 0.0 && ::fabs( x1 - x2 ) > thresh ) ) ||
+		   ( mode == 0 &&
+		     ( ( thresh == 0.0 && x1 != x2 ) ||
+		       ( thresh > 0.0 && ::fabs( x1 - x2 ) > thresh ) ) ) ||
 		   ( mode == 1 && ( x1 < x2 || x1 > x2 + thresh ) ) ||
 		   ( mode == -1 && ( x1 > x2 || x1 < x2 - thresh ) ) ) {
 		match = false;
@@ -242,9 +242,9 @@ void readData( DataFile &sf )
 		x2 = vals[c].number( HUGE_VAL );
 	      }
 	      if ( ( mode == -2 && val != vals[c] ) ||
-		   ( mode == 0 && 
-		     ( thresh == 0.0 && x1 != x2 ) ||
-		     ( thresh > 0.0 && ::fabs( x1 - x2 ) > thresh ) ) ||
+		   ( mode == 0 &&
+		     ( ( thresh == 0.0 && x1 != x2 ) ||
+		       ( thresh > 0.0 && ::fabs( x1 - x2 ) > thresh ) ) ) ||
 		   ( mode == 1 && ( x1 < x2 || x1 > x2 + thresh ) ) ||
 		   ( mode == -1 && ( x1 > x2 || x1 < x2 - thresh ) ) ) {
 		match = false;

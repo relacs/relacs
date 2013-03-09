@@ -525,56 +525,56 @@ void readData( DataFile &sf )
       switch ( outformat[k] ) {
       case 'a':
 	if ( ! momentslabel ) {
-	  statskey.addSection( "moments" );
+	  statskey.newSection( "moments" );
 	  momentslabel = true;
 	}
 	statskey.addNumber( "mean", xunit, "%10.4g" );
 	break;
       case 's':
 	if ( ! momentslabel ) {
-	  statskey.addSection( "moments" );
+	  statskey.newSection( "moments" );
 	  momentslabel = true;
 	}
 	statskey.addNumber( "s.d.", xunit, "%10.4g" );
 	break;
       case 'e':
 	if ( ! momentslabel ) {
-	  statskey.addSection( "moments" );
+	  statskey.newSection( "moments" );
 	  momentslabel = true;
 	}
 	statskey.addNumber( "sem", xunit, "%10.4g" );
 	break;
       case 'v':
 	if ( ! momentslabel ) {
-	  statskey.addSection( "moments" );
+	  statskey.newSection( "moments" );
 	  momentslabel = true;
 	}
 	statskey.addNumber( "var", xunit+"^2", "%10.4g" );
 	break;
       case 'c':
 	if ( ! momentslabel ) {
-	  statskey.addSection( "moments" );
+	  statskey.newSection( "moments" );
 	  momentslabel = true;
 	}
 	statskey.addNumber( "CV", "1", "%10.4g" );
 	break;
       case 'z':
 	if ( ! momentslabel ) {
-	  statskey.addSection( "moments" );
+	  statskey.newSection( "moments" );
 	  momentslabel = true;
 	}
 	statskey.addNumber( "sum", xunit, "%10.4g" );
 	break;
       case 'm':
 	if ( ! quantileslabel ) {
-	  statskey.addSection( "quantiles" );
+	  statskey.newSection( "quantiles" );
 	  quantileslabel = true;
 	}
 	statskey.addNumber( "median", xunit, "%10.4g" );
 	break;
       case 'q':
 	if ( ! quantileslabel ) {
-	  statskey.addSection( "quantiles" );
+	  statskey.newSection( "quantiles" );
 	  quantileslabel = true;
 	}
 	statskey.addNumber( "1.quart", xunit, "%10.4g" );
@@ -582,7 +582,7 @@ void readData( DataFile &sf )
 	break;
       case 'd':
 	if ( ! quantileslabel ) {
-	  statskey.addSection( "quantiles" );
+	  statskey.newSection( "quantiles" );
 	  quantileslabel = true;
 	}
 	statskey.addNumber( "1.dec", xunit, "%10.4g" );
@@ -590,7 +590,7 @@ void readData( DataFile &sf )
 	break;
       case 'x':
 	if ( ! quantileslabel ) {
-	  statskey.addSection( "quantiles" );
+	  statskey.newSection( "quantiles" );
 	  quantileslabel = true;
 	}
 	statskey.addNumber( "min", xunit, "%10.4g" );
@@ -598,41 +598,41 @@ void readData( DataFile &sf )
 	break;
       case 'w':
 	if ( ! quantileslabel ) {
-	  statskey.addSection( "quantiles" );
+	  statskey.newSection( "quantiles" );
 	  quantileslabel = true;
 	}
 	statskey.addNumber( "width", xunit, "%10.4g" );
 	break;
       case '<':
 	if ( ! threshlabel ) {
-	  statskey.addSection( "t=" + Str( threshold ) );
+	  statskey.newSection( "t=" + Str( threshold ) );
 	  threshlabel = true;
 	}
 	statskey.addNumber( "less", "1", "%5.0f" );
 	break;
       case '>':
 	if ( ! threshlabel ) {
-	  statskey.addSection( "t=" + Str( threshold ) );
+	  statskey.newSection( "t=" + Str( threshold ) );
 	  threshlabel = true;
 	}
 	statskey.addNumber( "more", "1", "%5.0f" );
 	break;
       case 'n':
-	statskey.addSection( "n" );
+	statskey.newSection( "n" );
 	statskey.addNumber( "n", "1", "%5.0f" );
 	break;
       case 't':
-	statskey.addSection( "t-Test" );
+	statskey.newSection( "t-Test" );
 	statskey.addNumber( "t", "1", "%10.4g" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'S':
 	if ( outformat[k+1] == '+' )
-	  statskey.addSection( "Sign-Test +" );
+	  statskey.newSection( "Sign-Test +" );
 	else if ( outformat[k+1] == '-' )
-	  statskey.addSection( "Sign-Test -" );
+	  statskey.newSection( "Sign-Test -" );
 	else
-	  statskey.addSection( "Sign-Test" );
+	  statskey.newSection( "Sign-Test" );
 	statskey.addNumber( "n", "1", "%6.0f" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
@@ -663,7 +663,7 @@ void readData( DataFile &sf )
       switch ( outformat[k] ) {
       case 'm':
 	if ( ! linearlabel ) {
-	  statskey.addSection( "linear regression" );
+	  statskey.newSection( "linear regression" );
 	  linearlabel = true;
 	}
 	statskey.addNumber( "m", yunit + "/" + xunit, "%10.4g" );
@@ -671,14 +671,14 @@ void readData( DataFile &sf )
 	break;
       case 'b':
 	if ( ! linearlabel ) {
-	  statskey.addSection( "linear regression" );
+	  statskey.newSection( "linear regression" );
 	  linearlabel = true;
 	}
 	statskey.addNumber( "b", yunit, "%10.4g" );
 	statskey.addNumber( "sd", yunit, "%10.4g" );
 	break;
       case 'o':
-	statskey.addSection( "proportionality" );
+	statskey.newSection( "proportionality" );
 	statskey.addNumber( "slope", yunit + "/" + xunit, "%10.4g" );
 	statskey.addNumber( "sd", yunit + "/" + xunit, "%10.4g" );
 	proplabel = true;
@@ -696,7 +696,7 @@ void readData( DataFile &sf )
 	break;
       case 'r':
 	if ( ! rlabel ) {
-	  statskey.addSection( "correlation" );
+	  statskey.newSection( "correlation" );
 	  rlabel = true;
 	}
 	statskey.addNumber( "r", "1", "%6.3g" );
@@ -705,58 +705,58 @@ void readData( DataFile &sf )
 	break;
       case 'z':
 	if ( ! rlabel ) {
-	  statskey.addSection( "correlation" );
+	  statskey.newSection( "correlation" );
 	  rlabel = true;
 	}
 	statskey.addNumber( "z", "1", "%10.4g" );
 	break;
       case 'u':
-	statskey.addSection( "unpaired t-Test" );
+	statskey.newSection( "unpaired t-Test" );
 	statskey.addNumber( "t", "1", "%6.3g" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'p':
-	statskey.addSection( "paired t-Test" );
+	statskey.newSection( "paired t-Test" );
 	statskey.addNumber( "t", "1", "%6.3g" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'U':
 	if ( outformat[k+1] == '+' )
-	  statskey.addSection( "Mann-Whitney U-Test +" );
+	  statskey.newSection( "Mann-Whitney U-Test +" );
 	else if ( outformat[k+1] == '-' )
-	  statskey.addSection( "Mann-Whitney U-Test -" );
+	  statskey.newSection( "Mann-Whitney U-Test -" );
 	else
-	  statskey.addSection( "Mann-Whitney U-Test" );
+	  statskey.newSection( "Mann-Whitney U-Test" );
 	statskey.addNumber( "U", "1", "%7.1f" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'W':
 	if ( outformat[k+1] == '+' )
-	  statskey.addSection( "Wilcoxon-Test +" );
+	  statskey.newSection( "Wilcoxon-Test +" );
 	else if ( outformat[k+1] == '-' )
-	  statskey.addSection( "Wilcoxon-Test -" );
+	  statskey.newSection( "Wilcoxon-Test -" );
 	else
-	  statskey.addSection( "Wilcoxon-Test" );
+	  statskey.newSection( "Wilcoxon-Test" );
 	statskey.addNumber( "W", "1", "%7.1f" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'F':
-	statskey.addSection( "F-Test" );
+	statskey.newSection( "F-Test" );
 	statskey.addNumber( "F", "1", "%6.3g" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'k':
-	statskey.addSection( "Kendall's tau" );
+	statskey.newSection( "Kendall's tau" );
 	statskey.addNumber( "tau", "1", "%6.3g" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'd':
-	statskey.addSection( "Difference" );
+	statskey.newSection( "Difference" );
 	statskey.addNumber( "d", xunit, "%10.4g" );
 	statskey.addNumber( "s.d.", xunit, "%7.5f" );
 	break;
       case 'n':
-	statskey.addSection( "n" );
+	statskey.newSection( "n" );
 	statskey.addNumber( "n", "1", "%5.0f" );
 	break;
       case '+':
@@ -1047,7 +1047,7 @@ void readArgs( int argc, char *argv[], int &filec )
 	string aident = as.ident();
 	Str val = as.value();
 	if ( ! alabel ) {
-	  statskey.addSection( "parameter" );
+	  statskey.newSection( "parameter" );
 	  alabel = true;
 	}
 	if ( ! aident.empty() && ! val.empty() ) {

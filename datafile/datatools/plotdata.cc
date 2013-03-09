@@ -65,7 +65,7 @@ FILE* openPlot( const string plotgeo="" )
 
   // start gnuplot as a background process:
   string cs = "gnuplot -bg white -title plotdata";
-  if ( ! plotgeo.empty() ) 
+  if ( ! plotgeo.empty() )
     cs += " -geometry " + plotgeo;
   FILE *plt = popen( cs.c_str(), "w" );
   // check for success:
@@ -163,15 +163,15 @@ void readData( const Str &datafile, const string &plotcommandfile,
   bool first = true;
   int pindex = 0;
   TableKey tk;
-  while ( sf.read( stopempty ) && 
+  while ( sf.read( stopempty ) &&
 	  !( allpages && plotted ) ) {
 
     // load key:
     if ( sf.newDataKey() )
       tk.loadKey( sf.dataKey() );
-    
+
     if ( !(morepages && pindex == dindex) && pindex >= dindex ) {
-      
+
       dindex += dindexincr;
 
       plotopts.setInteger( "index", pindex );
@@ -183,8 +183,8 @@ void readData( const Str &datafile, const string &plotcommandfile,
       opts[0] = plotopts;
       opts[1] = paramopts;
       for ( int k=0; k<sf.levels(); k++ )
-        opts[2+k].load( sf.metaData( k ).strippedComments( "-#" ) );
-      
+	opts[2+k].load( sf.metaData( k ).strippedComments( "-#" ) );
+
       // output term and file:
       if ( !multiplot || first ) {
 	if ( xplot ) {
@@ -285,7 +285,7 @@ void readData( const Str &datafile, const string &plotcommandfile,
   pclose( plt );
 }
 
- 
+
 void writeUsage()
 {
   cerr << "\nusage:\n";
@@ -389,10 +389,10 @@ void readArgs( int argc, char *argv[], int &filec )
   opterr = 0;
   while ( (c = getopt( argc, argv, "amd:f:i:e:sp:vt:g:h:x" )) >= 0 )
     switch ( c ) {
-    case 'a': 
+    case 'a':
       allpages = true;
       break;
-    case 'm': 
+    case 'm':
       allpages = true;
       morepages = true;
       break;
@@ -408,26 +408,27 @@ void readArgs( int argc, char *argv[], int &filec )
     case 'e':
       sscanf( optarg, " %d", &dindexincr );
       break;
-    case 's': 
+    case 's':
       save = true;
       break;
     case 'p': {
-      Parameter p( optarg );
+      Str ps( optarg );
+      Parameter p( ps.ident(), ps.value() );
       paramopts.add( p );
       break;}
-    case 'v': 
+    case 'v':
       view = true;
       break;
-    case 't': 
+    case 't':
       term = optarg;
       break;
-    case 'h': 
+    case 'h':
       header = optarg;
       break;
-    case 'g': 
+    case 'g':
       sscanf( optarg, " %d x %d", &xtiles, &ytiles );
       break;
-    case 'x': 
+    case 'x':
       xplot = true;
       break;
     default : writeUsage();
