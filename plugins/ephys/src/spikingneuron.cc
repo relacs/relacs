@@ -872,6 +872,183 @@ void HodgkinHuxley::notify( void )
 }
 
 
+Abbott::Abbott( void )
+  : HodgkinHuxley()
+{
+}
+
+
+string Abbott::name( void ) const
+{
+  return "Abbott";
+}
+
+
+int Abbott::dimension( void ) const
+{
+  return 2;
+}
+
+
+void Abbott::variables( vector< string > &varnames ) const
+{
+  varnames.clear();
+  varnames.reserve( dimension() );
+  varnames.push_back( "V" );
+  varnames.push_back( "U" );
+}
+
+
+void Abbott::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "mV" );
+}
+
+
+void Abbott::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+
+  double z = (x[1]+55.0)/10.0;
+  double ns = 1.0/(1.0+12.5*exp(-(x[1]+65.0)/80.0)*
+		   0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    ns = 1.0/(1.0+12.5*exp(-(x[1]+65.0)/80.0)*(1.0-exp(-(x[1]+55.0)/10.0))/(x[1]+55.0));
+
+  double dU = 0.001;
+  z = (x[1]+dU+55.0)/10.0;
+  double nsU = 1.0/(1.0+12.5*exp(-(x[1]+dU+65.0)/80.0)*
+		    0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    nsU = 1.0/(1.0+12.5*exp(-(x[1]+dU+65.0)/80.0)*(1.0-exp(-(x[1]+dU+55.0)/10.0))/(x[1]+dU+55.0));
+
+  z = (V+55.0)/10.0;
+  double nsV = 1.0/(1.0+12.5*exp(-(V+65.0)/80.0)*
+		    0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    nsV = 1.0/(1.0+12.5*exp(-(V+65.0)/80.0)*(1.0-exp(-(V+55.0)/10.0))/(V+55.0));
+
+  z = (V+40.0)/10.0;
+  double ms = 1.0/(1.0+40.0*exp(-(V+65)/18.0)*
+		   0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    ms = 1.0/(1.0+40.0*exp(-(V+65)/18.0)*(1.0-exp(-(V+40.0)/10.0))/(V+40.0));
+
+  double hs = 1.0/(1.0+1.0/(0.07*exp(-(x[1]+65)/20.0)*(exp(-(x[1]+35.0)/10.0)+1.0)));
+  double hsU = 1.0/(1.0+1.0/(0.07*exp(-(x[1]+dU+65)/20.0)*(exp(-(x[1]+dU+35.0)/10.0)+1.0)));
+  double hsV = 1.0/(1.0+1.0/(0.07*exp(-(V+65)/20.0)*(exp(-(V+35.0)/10.0)+1.0)));
+
+  double dgNa = GNa*ms*ms*ms*(V-ENa);
+  double dgK = GK*4.0*ns*ns*ns*(V-EK);
+  double th = 1.0/(0.07*exp(-(V+65.0)/20.0)+1.0/(exp(-(V+35.0)/10.0)+1.0));
+
+  z = (V+55.0)/10.0;
+  double tn = 1.0/(0.125*exp(-(V+65)/80.0)+
+		   0.1*(fabs( z ) < 1e-4 ? 1.0 : z/(1.0-exp(-z))) );
+  //    tn = 1.0/(0.125*exp(-(V+65)/80.0)+0.01*(V+55.0)/(1.0-exp(-(V+55.0)/10.0)));
+
+  double a = dgNa*(hsV-hs)/th+dgK*(nsV-ns)/tn;
+  double b = dgNa*(hsU-hs)/dU+dgK*(nsU-ns)/dU;
+
+  GNaGates = GNa*ms*ms*ms*hs;
+  GKGates = GK*ns*ns*ns*ns;
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = (-INa-IK-IL+s)/C;
+  /* U */ dxdt[1] = a/b;
+  /* U */// dxdt[1] = fabs(b)>1.0e-8 ? a/b : 1.0e20;
+}
+
+
+void Abbott::init( double *x ) const
+{
+  x[0] = -65.0;
+  x[1] = -65.0;
+}
+
+
+Kepler::Kepler( void )
+  : Abbott()
+{
+}
+
+
+string Kepler::name( void ) const
+{
+  return "Kepler";
+}
+
+
+void Kepler::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+
+  double z = (x[1]+55.0)/10.0;
+  double ns = 1.0/(1.0+12.5*exp(-(x[1]+65.0)/80.0)*
+		   0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    ns = 1.0/(1.0+12.5*exp(-(x[1]+65.0)/80.0)*(1.0-exp(-(x[1]+55.0)/10.0))/(x[1]+55.0));
+
+  double dU = 0.001;
+  z = (x[1]+dU+55.0)/10.0;
+  double nsU = 1.0/(1.0+12.5*exp(-(x[1]+dU+65.0)/80.0)*
+		    0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    nsU = 1.0/(1.0+12.5*exp(-(x[1]+dU+65.0)/80.0)*(1.0-exp(-(x[1]+dU+55.0)/10.0))/(x[1]+dU+55.0));
+
+  z = (V+55.0)/10.0;
+  double nsV = 1.0/(1.0+12.5*exp(-(V+65.0)/80.0)*
+		    0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    nsV = 1.0/(1.0+12.5*exp(-(V+65.0)/80.0)*(1.0-exp(-(V+55.0)/10.0))/(V+55.0));
+
+  z = (V+40.0)/10.0;
+  double ms = 1.0/(1.0+40.0*exp(-(V+65)/18.0)*
+		   0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    ms = 1.0/(1.0+40.0*exp(-(V+65)/18.0)*(1.0-exp(-(V+40.0)/10.0))/(V+40.0));
+
+  double dV = 0.001;
+  z = (V+dV+40.0)/10.0;
+  double msV = 1.0/(1.0+40.0*exp(-(V+dV+65)/18.0)*
+		    0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
+  //    msV = 1.0/(1.0+40.0*exp(-(V+dV+65)/18.0)*(1.0-exp(-(V+dV+40.0)/10.0))/(V+dV+40.0));
+
+  double hs = 1.0/(1.0+1.0/(0.07*exp(-(x[1]+65)/20.0)*(exp(-(x[1]+35.0)/10.0)+1.0)));
+  double hsU = 1.0/(1.0+1.0/(0.07*exp(-(x[1]+dU+65)/20.0)*(exp(-(x[1]+dU+35.0)/10.0)+1.0)));
+  double hsV = 1.0/(1.0+1.0/(0.07*exp(-(V+65)/20.0)*(exp(-(V+35.0)/10.0)+1.0)));
+
+  double dgNa = GNa*ms*ms*ms*(V-ENa);
+  double dgK = GK*4.0*ns*ns*ns*(V-EK);
+  double th = 1.0/(0.07*exp(-(V+65.0)/20.0)+1.0/(exp(-(V+35.0)/10.0)+1.0));
+
+  z = (V+55.0)/10.0;
+  double tn = 1.0/(0.125*exp(-(V+65)/80.0)+
+		   0.1*(fabs( z ) < 1e-4 ? 1.0 : z/(1.0-exp(-z))) );
+  //    tn = 1.0/(0.125*exp(-(V+65)/80.0)+0.01*(V+55.0)/(1.0-exp(-(V+55.0)/10.0)));
+
+  z = (V+40.0)/10.0;
+  //    tm = 1.0/(4.0*exp(-(V+65.0)/18.0)+0.1*(V+40.0)/(1.0-exp(-(V+40.0)/10.0)));
+  double tm = 1.0/(4.0*exp(-(V+65.0)/18.0)+(fabs( z ) < 1e-4 ? 1.0 : z/(1.0-exp(-z))));
+
+  double a = dgNa*(hsV-hs)/th+dgK*(nsV-ns)/tn;
+  double b = dgNa*(hsU-hs)/dU+dgK*(nsU-ns)/dU;
+
+  double g = GL + GK*ns*ns*ns*ns + GNa*ms*ms*ms*hs;
+  double dFdVm = GNa*3.0*ms*ms*hs*(V-ENa)*(msV-ms)/dV;
+  double alpha = 0.5*(C/tm+g - ::sqrt((C/tm+g)*(C/tm+g)-4.0*(g+dFdVm)*C/tm))/(g+dFdVm);
+
+  GNaGates = GNa*ms*ms*ms*hs;
+  GKGates = GK*ns*ns*ns*ns;
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = alpha * (-INa-IK-IL+s)/C;
+  /* U */ dxdt[1] = a/b;
+  /* U */// dxdt[1] = fabs(b)>1.0e-8 ? a/b : 1.0e20;
+}
+
+
 Connor::Connor( void )
   : HodgkinHuxley()
 {

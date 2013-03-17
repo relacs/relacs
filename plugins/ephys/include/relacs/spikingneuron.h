@@ -483,7 +483,55 @@ class HodgkinHuxley : public SpikingNeuron
 };
 
 
-/*! 
+/*!
+\class Abbott
+\brief [ModelLib] A 2-dimensional reduction of the Hodgkin-Huxley (1952) model by Larry Abbott
+\author Jan Benda
+\todo reference
+*/
+
+class Abbott : public HodgkinHuxley
+{
+ public:
+  Abbott( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+  virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+  virtual void variables( vector< string > &varnames ) const;
+    /*! \copydoc SpikingNeuron::units() */
+  virtual void units( vector< string > &u ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+};
+
+
+/*!
+\class Keppler
+\brief [ModelLib] A 2-dimensional reduction of the Hodgkin-Huxley (1952) model by Kepler
+\author Jan Benda
+\todo reference
+*/
+
+class Kepler : public Abbott
+{
+ public:
+  Kepler( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+};
+
+
+/*!
 \class Connor
 \brief [ModelLib] The %Connor model with A current.
 \author Jan Benda
