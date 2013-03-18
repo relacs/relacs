@@ -37,14 +37,14 @@ namespace relacs {
 \author Alexander Wolf
 \version 1.2 (May 7, 2008)
 -# SpikingNeuron inherits Options
--# Added interface for accessing the values 
+-# Added interface for accessing the values
    of the ionic currents and conductances
 \version 1.1 (Jan 10, 2006)
 
 Each model of a spiking neuron has a name().
 The model is implemented as a set of differential equations
 \f[ \left( \begin{array}{c} \frac{dx_1}{dt} \\ \frac{dx_2}{dt} \\
-                            \vdots \\ \frac{dx_n}{dt} \end{array} \right) = 
+                            \vdots \\ \frac{dx_n}{dt} \end{array} \right) =
     \left( \begin{array}{c} f_1(x_1, x_2, \ldots, x_n, s) \\ f_2(x_1, x_2, \ldots, x_n, s) \\
                             \vdots \\ f_n(x_1, x_2, \ldots, x_n, s) \end{array} \right) \f]
 The state of the model is described by the state vector \f$ \vec x = (x_1, x_2, \ldots, x_n)\f$
@@ -423,7 +423,6 @@ class MorrisLecarPrescott : public MorrisLecar
 \class HodgkinHuxley
 \brief [ModelLib] The Hodgkin-Huxley (1952) model
 \author Jan Benda
-\todo test it!
 
 This is an implementation of the famous Hodgkin-Huxley model for the
 membrane potential of the squid giant axon (A. L. Hodgkin and
@@ -485,9 +484,12 @@ class HodgkinHuxley : public SpikingNeuron
 
 /*!
 \class Abbott
-\brief [ModelLib] A 2-dimensional reduction of the Hodgkin-Huxley (1952) model by Larry Abbott
+\brief [ModelLib] A 2-dimensional reduction of the Hodgkin-Huxley (1952) model by Abbott and Kepler
 \author Jan Benda
-\todo reference
+
+Abbott LF, Kepler TB (1990) Model neurons: from Hodgkin-Huxley to Hopfield.
+In: Garrido L (ed) Statistical mechanics of neural networks.
+Springer, Berlin Heidelberg New York
 */
 
 class Abbott : public HodgkinHuxley
@@ -513,9 +515,11 @@ class Abbott : public HodgkinHuxley
 
 /*!
 \class Keppler
-\brief [ModelLib] A 2-dimensional reduction of the Hodgkin-Huxley (1952) model by Kepler
+\brief [ModelLib] A 2-dimensional reduction of the Hodgkin-Huxley (1952) model by Kepler et al.
 \author Jan Benda
-\todo reference
+
+Thomas B. Kepler, Laurence F. Abbott, Eve Marder (1992): Reduction of
+conductance-based neuron models. Biol Cybern 66, 381-387
 */
 
 class Kepler : public Abbott
@@ -535,7 +539,6 @@ class Kepler : public Abbott
 \class Connor
 \brief [ModelLib] The %Connor model with A current.
 \author Jan Benda
-\todo test it!
 
 This is the implementation of the %Connor model (John A. %Connor and
 David Walter and Russell McKown (1977): Neural Repetitive Firing.
@@ -596,7 +599,6 @@ class Connor : public HodgkinHuxley
 \class RushRinzel
 \brief [ModelLib] The Rush-Rinzel model with A current
 \author Jan Benda
-\todo test it!
 
 This is the implementation of the Rush-Rinzel model (Maureen E. Rush
 and John Rinzel (1995): The potassium A-current, low firing rates and
@@ -665,7 +667,6 @@ class Awiszus : public Connor
 \class FleidervishSI
 \brief [ModelLib] The Fleidervish model with slowly inactivating sodium current
 \author Jan Benda
-\todo verify reference, parameter values, and units
 
 (Ilya A. Fleidervish and Alon Friedman and Michael J. Gutnick (1996):
 Slow inactivation of Na+ current and slow cumulative spike adaptation
@@ -698,8 +699,6 @@ class FleidervishSI : public HodgkinHuxley
 \class TraubHH
 \brief [ModelLib] The Traub-Miles (1991) model with the HH currents I_Na, I_K, and I_l only.
 \author Jan Benda
-\todo verify reference, parameter values, and units
-\note Not working!
 
 Conductances are from %Traub, scaled to Ermentrouts Na.
 Potentials are from %Traub & Miles (1991)
@@ -784,6 +783,36 @@ class TraubMiles : public HodgkinHuxley
   double ECa, EAHP;
   double ICa, IAHP;
 
+};
+
+
+/*!
+\class TraubKepler
+\brief [ModelLib] A 2-dimensional reduction of the Traub (1991) model by Kepler et al.
+\author Jan Benda
+
+This is an implementation of the soma compartment only of the
+Traub-Miles model (Roger D. Traub and Richard Miles (1991): Neural networks of the
+hippocampus. Cambridge: Cambridge University Press) that contains the
+spike generating currents (sodium and potassium) only. The
+4-dimensional model is reduced to two dimensions following the
+procedure described in Thomas B. Kepler, Laurence F. Abbott, Eve
+Marder (1992): Reduction of conductance-based neuron models. Biol
+Cybern 66, 381-387.
+*/
+
+class TraubKepler : public Abbott
+{
+ public:
+  TraubKepler( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
 };
 
 
@@ -936,6 +965,7 @@ intrinsic conductances. J. Neurophysiol. 66, pp. 635-650).
 There are no Calcium, M-type and AHP-type currents.
 The \a n variable is mapped to \a 1-h and thus the dimension reduced 
 to 3.
+The activation variables are parameterized with Boltzman-functions.
 */
 
 class SimplifiedTraub : public HodgkinHuxley
@@ -972,9 +1002,8 @@ class SimplifiedTraub : public HodgkinHuxley
 
 /*! 
 \class WangBuzsaki
-\brief [ModelLib] Wang-Buzsaki (1996) model
+\brief [ModelLib] Wang-Buzsaki (1996) interneuron model
 \author Jan Benda
-\todo verify reference, parameter values, and units
 
 (Xiao-Jing Wang and Gy&ouml;rgy Buzs&aacute;ki (1996): Gamma
 oscillation by synaptic inhibition in a hippocampal interneuronal
@@ -1007,7 +1036,6 @@ class WangBuzsaki : public HodgkinHuxley
 \class WangBuzsakiAdapt
 \brief [ModelLib] The Wang-Buzsaki model with an additional adaptation current.
 \author Jan Benda
-\todo verify reference, parameter values, and units
 */
 
 class WangBuzsakiAdapt : public WangBuzsaki
@@ -1064,8 +1092,6 @@ class WangBuzsakiAdapt : public WangBuzsaki
 \class Crook
 \brief [ModelLib] The two-compartment %Crook model with adaptation currents.
 \author Jan Benda
-\todo unit of calcium concentration
-\todo verify reference, parameter values, and units
 
 (Sharon M. Crook and G. Bard Ermentrout and James M. Bower (1998):
 Spike frequency adaptation affects the synchronization properties of
@@ -1196,8 +1222,6 @@ class MilesDai : public HodgkinHuxley
 \class WangIKNa
 \brief [ModelLib] The %Wang et al. 2003 model with a sodium activated potassium current.
 \author Jan Benda
-\todo unit of calcium and sodium concentration
-\todo verify reference, parameter values, and units
 
 (X. J. Wang and Y. Liu and M.V. Sanchez-Vives and D.A. McCormick
 (2003): Adaptation and temporal decorrelation by single neurons in the

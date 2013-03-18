@@ -911,17 +911,18 @@ void Abbott::units( vector< string > &u ) const
 void Abbott::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
   double V = x[0];
+  double U = x[1];
 
-  double z = (x[1]+55.0)/10.0;
-  double ns = 1.0/(1.0+12.5*exp(-(x[1]+65.0)/80.0)*
+  double z = (U+55.0)/10.0;
+  double ns = 1.0/(1.0+12.5*exp(-(U+65.0)/80.0)*
 		   0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
-  //    ns = 1.0/(1.0+12.5*exp(-(x[1]+65.0)/80.0)*(1.0-exp(-(x[1]+55.0)/10.0))/(x[1]+55.0));
+  //    ns = 1.0/(1.0+12.5*exp(-(U+65.0)/80.0)*(1.0-exp(-(U+55.0)/10.0))/(U+55.0));
 
   double dU = 0.001;
-  z = (x[1]+dU+55.0)/10.0;
-  double nsU = 1.0/(1.0+12.5*exp(-(x[1]+dU+65.0)/80.0)*
+  z = (U+dU+55.0)/10.0;
+  double nsU = 1.0/(1.0+12.5*exp(-(U+dU+65.0)/80.0)*
 		    0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
-  //    nsU = 1.0/(1.0+12.5*exp(-(x[1]+dU+65.0)/80.0)*(1.0-exp(-(x[1]+dU+55.0)/10.0))/(x[1]+dU+55.0));
+  //    nsU = 1.0/(1.0+12.5*exp(-(U+dU+65.0)/80.0)*(1.0-exp(-(U+dU+55.0)/10.0))/(U+dU+55.0));
 
   z = (V+55.0)/10.0;
   double nsV = 1.0/(1.0+12.5*exp(-(V+65.0)/80.0)*
@@ -933,8 +934,8 @@ void Abbott::operator()(  double t, double s, double *x, double *dxdt, int n )
 		   0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
   //    ms = 1.0/(1.0+40.0*exp(-(V+65)/18.0)*(1.0-exp(-(V+40.0)/10.0))/(V+40.0));
 
-  double hs = 1.0/(1.0+1.0/(0.07*exp(-(x[1]+65)/20.0)*(exp(-(x[1]+35.0)/10.0)+1.0)));
-  double hsU = 1.0/(1.0+1.0/(0.07*exp(-(x[1]+dU+65)/20.0)*(exp(-(x[1]+dU+35.0)/10.0)+1.0)));
+  double hs = 1.0/(1.0+1.0/(0.07*exp(-(U+65)/20.0)*(exp(-(U+35.0)/10.0)+1.0)));
+  double hsU = 1.0/(1.0+1.0/(0.07*exp(-(U+dU+65)/20.0)*(exp(-(U+dU+35.0)/10.0)+1.0)));
   double hsV = 1.0/(1.0+1.0/(0.07*exp(-(V+65)/20.0)*(exp(-(V+35.0)/10.0)+1.0)));
 
   double dgNa = GNa*ms*ms*ms*(V-ENa);
@@ -964,8 +965,8 @@ void Abbott::operator()(  double t, double s, double *x, double *dxdt, int n )
 
 void Abbott::init( double *x ) const
 {
-  x[0] = -65.0;
-  x[1] = -65.0;
+  x[0] = -64.99561;
+  x[1] = -64.99561;
 }
 
 
@@ -984,17 +985,18 @@ string Kepler::name( void ) const
 void Kepler::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
   double V = x[0];
+  double U = x[1];
 
-  double z = (x[1]+55.0)/10.0;
-  double ns = 1.0/(1.0+12.5*exp(-(x[1]+65.0)/80.0)*
+  double z = (U+55.0)/10.0;
+  double ns = 1.0/(1.0+12.5*exp(-(U+65.0)/80.0)*
 		   0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
-  //    ns = 1.0/(1.0+12.5*exp(-(x[1]+65.0)/80.0)*(1.0-exp(-(x[1]+55.0)/10.0))/(x[1]+55.0));
+  //    ns = 1.0/(1.0+12.5*exp(-(U+65.0)/80.0)*(1.0-exp(-(U+55.0)/10.0))/(U+55.0));
 
   double dU = 0.001;
-  z = (x[1]+dU+55.0)/10.0;
-  double nsU = 1.0/(1.0+12.5*exp(-(x[1]+dU+65.0)/80.0)*
+  z = (U+dU+55.0)/10.0;
+  double nsU = 1.0/(1.0+12.5*exp(-(U+dU+65.0)/80.0)*
 		    0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
-  //    nsU = 1.0/(1.0+12.5*exp(-(x[1]+dU+65.0)/80.0)*(1.0-exp(-(x[1]+dU+55.0)/10.0))/(x[1]+dU+55.0));
+  //    nsU = 1.0/(1.0+12.5*exp(-(U+dU+65.0)/80.0)*(1.0-exp(-(U+dU+55.0)/10.0))/(U+dU+55.0));
 
   z = (V+55.0)/10.0;
   double nsV = 1.0/(1.0+12.5*exp(-(V+65.0)/80.0)*
@@ -1012,8 +1014,8 @@ void Kepler::operator()(  double t, double s, double *x, double *dxdt, int n )
 		    0.1*(fabs( z ) < 1e-4 ? 1.0 : (1.0-exp(-z))/z) );
   //    msV = 1.0/(1.0+40.0*exp(-(V+dV+65)/18.0)*(1.0-exp(-(V+dV+40.0)/10.0))/(V+dV+40.0));
 
-  double hs = 1.0/(1.0+1.0/(0.07*exp(-(x[1]+65)/20.0)*(exp(-(x[1]+35.0)/10.0)+1.0)));
-  double hsU = 1.0/(1.0+1.0/(0.07*exp(-(x[1]+dU+65)/20.0)*(exp(-(x[1]+dU+35.0)/10.0)+1.0)));
+  double hs = 1.0/(1.0+1.0/(0.07*exp(-(U+65)/20.0)*(exp(-(U+35.0)/10.0)+1.0)));
+  double hsU = 1.0/(1.0+1.0/(0.07*exp(-(U+dU+65)/20.0)*(exp(-(U+dU+35.0)/10.0)+1.0)));
   double hsV = 1.0/(1.0+1.0/(0.07*exp(-(V+65)/20.0)*(exp(-(V+35.0)/10.0)+1.0)));
 
   double dgNa = GNa*ms*ms*ms*(V-ENa);
@@ -1585,10 +1587,10 @@ void TraubHH::operator()(  double t, double s, double *x, double *dxdt, int n )
 
 void TraubHH::init( double *x ) const
 {
-  x[0] = -38.6761;
-  x[1] = 0.580671;
-  x[2] = 0.161987;
-  x[3] = 0.591686;
+  x[0] = -66.61556;
+  x[1] = 0.01596;
+  x[2] = 0.99552;
+  x[3] = 0.04012;
 }
 
 
@@ -1802,6 +1804,111 @@ void TraubMiles::notify( void )
   GCa = number( "gca" );
   EAHP = number( "eahp" );
   GAHP = number( "gahp" );
+}
+
+
+TraubKepler::TraubKepler( void )
+  : Abbott()
+{
+  // conductances are from Traub, scaled to Ermentrouts Na:
+  GNa = 100.0;
+  GK = 200.0;
+  GL = 0.1;
+
+  // potentials are from Traub & Miles (1991):
+  ENa = +48.0;
+  EK = -82.0;
+  EL = -67.0;
+
+  C = 1.0;
+  PT = 1.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+}
+
+
+string TraubKepler::name( void ) const
+{
+  return "Traub-Kepler";
+}
+
+
+void TraubKepler::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+  double U = x[1];
+
+  double z1 = (V+54.0)/4.0;
+  double ez1 = fabs(z1) < 1.0e-4 ? 1.0 : z1/(1.0-exp(-z1));
+  double z2 = (V+27.0)/5.0;
+  double ez2 = fabs(z2) < 1.0e-4 ? 1.0 : z2/(exp(z2)-1.0);
+  double ms = 1.0/(1.0+0.28*5.0*ez2/ez1/0.32/4.0);
+  //    ms = 1.0/(1.0+0.28*(V+27)*(1.0-exp(-(V+54.0)/4.0))/0.32/(V+54.0)/(exp((V+27)/5.0)-1.0));
+
+  double dV = 0.001;
+  double dU = 0.001;
+  double dz1 = (V+dV+54.0)/4.0;
+  double edz1 = fabs(dz1) < 1.0e-4 ? 1.0 : (1.0-exp(-dz1))/dz1;
+  double dz2 = (V+dV+27)/5.0;
+  double edz2 = fabs(dz2) < 1.0e-4 ? 1.0 : (exp(dz2)-1.0)/dz2;
+  double msV = 1.0/(1.0+0.28*5.0*edz1/edz2/0.32/4.0);
+//    msV = 1.0/(1.0+0.28*(V+dV+27)*(1.0-exp(-(V+dV+54.0)/4.0))/0.32/(V+dV+54.0)/(exp((V+dV+27)/5.0)-1.0));
+
+  double hs = 1.0/(1.0+4.0/(0.128*exp(-(U+50)/18.0)*(exp(-(U+27.0)/5.0)+1.0)));
+  double hsU = 1.0/(1.0+4.0/(0.128*exp(-(U+dU+50)/18.0)*(exp(-(U+dU+27.0)/5.0)+1.0)));
+  double hsV = 1.0/(1.0+4.0/(0.128*exp(-(V+50)/18.0)*(exp(-(V+27.0)/5.0)+1.0)));
+
+  double zu = (U+52.0)/5.0;
+  double ezu = fabs(zu) < 1.0e-4 ? 1.0 : (1.0-exp(-zu))/zu;
+  double ns = 1.0/(1.0+0.5*exp(-(U+57.0)/40.0)*ezu/0.032/5.0);
+  //    ns = 1.0/(1.0+0.5*exp(-(U+57.0)/40.0)*(1.0-exp(-(U+52.0)/5.0))/0.032/(U+52.0));
+
+  double dzu = (U+dU+52.0)/5.0;
+  double edzu = fabs(dzu) < 1.0e-4 ? 1.0 : (1.0-exp(-dzu))/dzu;
+  double nsU = 1.0/(1.0+0.5*exp(-(U+dU+57.0)/40.0)*edzu/0.032/5.0);
+  //    nsU = 1.0/(1.0+0.5*exp(-(U+dU+57.0)/40.0)*(1.0-exp(-(U+dU+52.0)/5.0))/0.032/(U+dU+52.0));
+
+  double z3 = (V+52.0)/5.0;
+  double ez3 = fabs(z3) < 1.0e-4 ? 1.0 : (1.0-exp(-z3))/z3;
+  double nsV = 1.0/(1.0+0.5*exp(-(V+57.0)/40.0)*ez3/0.032/5.0);
+  //    nsV = 1.0/(1.0+0.5*exp(-(V+57.0)/40.0)*(1.0-exp(-(V+52.0)/5.0))/0.032/(V+52.0));
+
+  double dgNa = GNa*ms*ms*ms*(V-ENa);
+  double dgK = GK*4.0*ns*ns*ns*(V-EK);
+
+  double tm = 1.0/(0.32*4.0*ez1+0.28*5.0*ez2);
+  //    tm = 1.0/(0.32*(V+54)/(1.0-exp(-(V+54.0)/4.0))+0.28*(V+27.0)/(exp((V+27.0)/5.0)-1.0));
+  
+  double th = 1.0/(0.128*exp(-(V+50.0)/18.0)+4.0/(exp(-(V+27.0)/5.0)+1.0));
+
+  double tn = 1.0/(0.5*exp(-(V+57)/40.0)+0.032*5.0/ez3);
+  //    tn = 1.0/(0.5*exp(-(V+57)/40.0)+0.032*(V+52.0)/(1.0-exp(-(V+52.0)/5.0)));
+
+  double a = dgNa*(hsV-hs)/th+dgK*(nsV-ns)/tn;
+  double b = dgNa*(hsU-hs)/dU+dgK*(nsU-ns)/dU;
+
+  double g = GL + GK*ns*ns*ns*ns + GNa*ms*ms*ms*hs;
+  double dFdVm = GNa*3.0*ms*ms*hs*(V-ENa)*(msV-ms)/dV;
+  double alpha = 0.5*(C/tm+g - ::sqrt((C/tm+g)*(C/tm+g)-4.0*(g+dFdVm)*C/tm))/(g+dFdVm);
+
+  GNaGates = GNa*ms*ms*ms*hs;
+  GKGates = GK*ns*ns*ns*ns;
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = alpha*( - INa - IK - IL + s )/C;
+  /* U */ dxdt[1] = a/b;
+  /* U */ // dxdt[1] = fabs(b)>ZERO ? a/b : HUGE_VAL;
+}
+
+
+void TraubKepler::init( double *x ) const
+{
+  x[0] = -66.61556;
+  x[1] = -66.61556;
 }
 
 
@@ -2533,14 +2640,15 @@ Crook::Crook( void )
   GL = 2.0;
   GCa = 8.5;
   GKAHP = 7.0;
-  GKM = 10.0;
+  GKM = 6.5;
   GLD = 0.05;
   GDS = 1.1;
 
-  ENa = +55.0;
-  EK = -90.0;
+  // potentials are shifted by -70mV:
+  ENa = +62.0;
+  EK = -83.0;
   EL = -70.0;
-  ECa = +120.0;
+  ECa = +127.0;
 
   PT = 1.0;
   C = 0.8;
@@ -2670,16 +2778,16 @@ void Crook::operator()(  double t, double s, double *x, double *dxdt, int n )
 
 void Crook::init( double *x ) const
 {
-  x[0] = -71.41;
-  x[1] = 0.001243;
-  x[2] = 0.999779;
-  x[3] = 0.001277;
-  x[4] = 0.005174;
+  x[0] = -71.27126;
+  x[1] = 0.00128;
+  x[2] = 0.99977;
+  x[3] = 0.00131;
+  x[4] = 0.00524;
   x[5] = 1.0;
-  x[6] = 0.000014;
-  x[7] = 0.025478;
-  x[8] = 7.615;
-  x[9] = -71.35;
+  x[6] = 0.00002;
+  x[7] = 0.02590;
+  x[8] = 8.32021;
+  x[9] = -71.26;
 }
 
 
@@ -3155,12 +3263,12 @@ void WangIKNa::units( vector< string > &u ) const
 {
   HodgkinHuxley::units( u );
   u.push_back( "1" );
-  u.push_back( "mM" );
+  u.push_back( "uM" );
   u.push_back( "1" );
   u.push_back( "mM" );
   u.push_back( "mV" );
   u.push_back( "1" );
-  u.push_back( "mM" );
+  u.push_back( "uM" );
 }
 
 
