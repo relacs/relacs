@@ -1833,23 +1833,23 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
   // no subdevice specified? => stop & close all subdevices & comedi-devices:
   if ( reqCloseSubdevID < 0 ) {
     DEBUG_MSG( "close: no IOC_REQ_CLOSE request received - closing all subdevices...\n" );
-    mutex_lock( &>mutex );
+    mutex_lock( &mutex );
     for ( iS = 0; iS < subdevN; iS++ ) {
       if ( stopSubdevice( iS, /*kill=*/1 ) )
         WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", iS );
       releaseSubdevice( iS );
     }
-    mutex_unlock( &>mutex );
+    mutex_unlock( &mutex );
     init_globals();
     return 0;
   }
 
   // stop & close specified subdevice (and device):
-  mutex_lock( &>mutex );
+  mutex_lock( &mutex );
   if ( stopSubdevice( reqCloseSubdevID, 1 ) )
     WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", reqCloseSubdevID );
   releaseSubdevice( reqCloseSubdevID );
-  mutex_unlock( &>mutex );
+  mutex_unlock( &mutex );
 
   if ( deviceN == 0 )
     init_globals();
@@ -1866,13 +1866,13 @@ void cleanup_module( void )
   INFO_MSG( "cleanup_module: dynamic clamp module %s unloaded\n", moduleName );
 
   // stop and release all subdevices & comedi-devices:
-  mutex_lock( &>mutex );
+  mutex_lock( &mutex );
   for ( iS = 0; iS < subdevN; iS++ ) {
     if ( stopSubdevice( iS, 1 ) )
       WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", iS );
     releaseSubdevice( iS );
   }
-  mutex_unlock( &>mutex );
+  mutex_unlock( &mutex );
 
   mutex_destroy( &mutex );
 
