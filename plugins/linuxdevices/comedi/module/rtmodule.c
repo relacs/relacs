@@ -2,6 +2,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <asm/uaccess.h>
+#include <linux/mutex.h>
 #include <linux/vmalloc.h>
 #include <linux/fs.h>
 
@@ -107,6 +108,8 @@ struct dynClampTaskT {
 // *** GLOBAL VARIABLES ***
 ///////////////////////////////////////////////////////////////////////////////
 
+struct mutex mutex;
+
 //* DAQ-DEVICES:
 
 struct deviceT device[MAXDEV];
@@ -148,13 +151,22 @@ int init_rt_task( void );
 void cleanup_rt_task( void );
 int rtmodule_open( struct inode *devFile, struct file *fModule );
 int rtmodule_close( struct inode *devFile, struct file *fModule );
+#ifdef HAVE_UNLOCKED_IOCTL
+long rtmodule_unlocked_ioctl( struct file *fModule, unsigned int cmd,
+			      unsigned long arg );
+#else
 int rtmodule_ioctl( struct inode *devFile, struct file *fModule, 
 		    unsigned int cmd, unsigned long arg );
+#endif
 static struct file_operations fops = {                     
-  .owner= THIS_MODULE,
-  .ioctl= rtmodule_ioctl,
-  .open= rtmodule_open, 
-  .release= rtmodule_close,
+  .owner = THIS_MODULE,
+#ifdef HAVE_UNLOCKED_IOCTL
+  .unlocked_ioctl = rtmodule_unlocked_ioctl,
+#else
+  .ioctl = rtmodule_ioctl,
+#endif
+  .open = rtmodule_open, 
+  .release = rtmodule_close,
 };
 
 
@@ -898,8 +910,13 @@ void cleanup_rt_task( void )
 // *** IOCTL ***
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef HAVE_UNLOCKED_IOCTL
+long rtmodule_unlocked_ioctl( struct file *fModule, unsigned int cmd,
+			      unsigned long arg)
+#else
 int rtmodule_ioctl( struct inode *devFile, struct file *fModule, 
 		    unsigned int cmd, unsigned long arg )
+#endif
 {
   static struct deviceIOCT deviceIOC;
   static struct chanlistIOCT chanlistIOC;
@@ -908,12 +925,15 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   int tmp, subdevID;
   int retVal;
+  int rc = 0;
   unsigned long luTmp;
 
   if (_IOC_TYPE(cmd) != RTMODULE_MAJOR) return -ENOTTY;
   if (_IOC_NR(cmd) > RTMODULE_IOC_MAXNR) return -ENOTTY;
 
   DEBUG_MSG( "ioctl: user triggered ioctl %d %s\n",_IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
+
+  mutex_lock( &mutex );
 
   switch( cmd ) {
     
@@ -923,180 +943,222 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_GETRATE:
     tmp = dynClampTask.setFreq;
     retVal = put_user( tmp, (int __user *)arg );
-    return retVal == 0 ? 0 : -EFAULT;
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
 
   case IOC_GETAOINDEX:
     luTmp = dynClampTask.aoIndex;
-    if ( luTmp < 0 )
-      return -ENOSPC;
+    if ( luTmp < 0 ) {
+      rc = -ENOSPC;
+      break;
+    }
     retVal = put_user( luTmp, (unsigned long __user *)arg );
-    return retVal == 0 ? 0 : -EFAULT;
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
 
   case IOC_GETLOOPCNT:
     luTmp = dynClampTask.loopCnt;
-    if ( luTmp < 0 )
-      return -ENOSPC;
+    if ( luTmp < 0 ) {
+      rc = -ENOSPC;
+      break;
+    }
     retVal = put_user( luTmp, (unsigned long __user *)arg );
-    return retVal == 0 ? 0 : -EFAULT;
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
 
 
     // ******* SET UP COMEDI: ***********************************************
 
   case IOC_GET_SUBDEV_ID:
     tmp = getSubdevID();
-    if ( tmp < 0 )
-      return -ENOSPC;
+    if ( tmp < 0 ) {
+      rc = -ENOSPC;
+      break;
+    }
     retVal = put_user( tmp, (int __user *)arg );
-    return retVal == 0 ? 0 : -EFAULT;
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
 
   case IOC_OPEN_SUBDEV:
     retVal = copy_from_user( &deviceIOC, (void __user *)arg, sizeof(struct deviceIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( deviceIOC.subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in deviceIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     retVal = openComediDevice( &deviceIOC );
-    if ( retVal != 0 )
-      return -EFAULT;
+    if ( retVal != 0 ) {
+      rc = -EFAULT;
+      break;
+    }
     retVal = copy_to_user( (void __user *)arg, &deviceIOC, sizeof(struct deviceIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
-    return 0;
+    rc = 0;
+    break;
 
   case IOC_CHANLIST:
     retVal = copy_from_user( &chanlistIOC, (void __user *)arg, sizeof(struct chanlistIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to chanlistIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( chanlistIOC.subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in chanlistIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     retVal = loadChanlist( &chanlistIOC );
-    return retVal == 0 ? 0 : -EFAULT;
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
 
   case IOC_SYNC_CMD:
     retVal = copy_from_user( &syncCmdIOC, (void __user *)arg, sizeof(struct syncCmdIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to syncCmdIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( syncCmdIOC.subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in syncCmdIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
-    retVal = loadSyncCmd( &syncCmdIOC );
-    return retVal;
+    rc = loadSyncCmd( &syncCmdIOC );
+    break;
 
 
   case IOC_GET_TRACE_INFO:
-    return -ERANGE; // Ende der Liste signalisieren
+    rc = -ERANGE; // signal end of list
+    break;
 
 
   case IOC_SET_TRACE_CHANNEL:
-    return 0;
+    rc = 0;
+    break;
 
 
   case IOC_START_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for start-query!" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for start-query!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
-    retVal = startSubdevice( subdevID );
-    return retVal;
+    rc = startSubdevice( subdevID );
+    break;
 
 
   case IOC_CHK_RUNNING:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for running-query!" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for running-query!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     tmp = subdev[subdevID].running;
     DEBUG_MSG( "rtmodule_ioctl: running = %d for subdevID %d\n", tmp, subdevID );
     retVal = put_user( tmp, (int __user *)arg );
-    return retVal == 0 ? 0 : -EFAULT;
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
 
 
   case IOC_REQ_CLOSE:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for close-request!" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for close-request!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( reqCloseSubdevID >= 0 ) {
       ERROR_MSG( "rtmodule_ioctl IOC_REQ_CLOSE ERROR: Another close-request in progress!\n" );
-      return -EAGAIN;
+      rc = -EAGAIN;
+      break;
     }
     reqCloseSubdevID = subdevID;
-    return 0;
+    rc = 0;
+    break;
 
   case IOC_REQ_READ: // Noch wichtig fuer tracename-List?
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for read-request!" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for read-request!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( reqTraceSubdevID >= 0 ) {
       ERROR_MSG( "rtmodule_ioctl IOC_REQ_READ ERROR: Another read-request in progress! (reqTraceSubdevID=%d)\n", reqTraceSubdevID );
-      return -EAGAIN;
+      rc = -EAGAIN;
+      break;
     }
     ERROR_MSG( "rtmodule_ioctl IOC_REQ_READ: Requested Read\n" );
     reqTraceSubdevID = subdevID;
-    return 0;
+    rc = 0;
+    break;
 
 
   case IOC_STOP_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for stop-query!" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for stop-query!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     retVal = stopSubdevice( subdevID );
     DEBUG_MSG( "rtmodule_ioctl: stopSubdevice returned %u\n", retVal );
-    return retVal == 0 ? 0 : -EFAULT;
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
 
 
   case IOC_RELEASE_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for release-query!" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for release-query!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
     releaseSubdevice( subdevID );
-    return 0;
+    rc = 0;
+    break;
 
 
     // ******* Trigger: ***********************************************
@@ -1106,25 +1168,31 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     retVal = copy_from_user( &triggerIOC, (void __user *)arg, sizeof(struct triggerIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to triggerIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
-    return setAnalogTrigger( &triggerIOC );
+   rc = setAnalogTrigger( &triggerIOC );
+    break;
 
   case IOC_UNSET_TRIGGER:
     retVal = copy_from_user( &triggerIOC, (void __user *)arg, sizeof(struct triggerIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to triggerIOCT-struct!\n" );
-      return -EFAULT;
+      rc = -EFAULT;
+      break;
     }
-    return unsetAnalogTrigger( &triggerIOC );
+    rc = unsetAnalogTrigger( &triggerIOC );
+    break;
 
+  default:
+    ERROR_MSG( "rtmodule_ioctl ERROR - Invalid IOCTL!\n" );
+    rc = -EINVAL;
 
   }
 
+  mutex_unlock( &mutex );
 
-  ERROR_MSG( "rtmodule_ioctl ERROR - Invalid IOCTL!\n" );
-
-  return -EINVAL;
+  return rc;
 }
 
 
@@ -1167,19 +1235,23 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
   // no subdevice specified? => stop & close all subdevices & comedi-devices:
   if ( reqCloseSubdevID < 0 ) {
     DEBUG_MSG( "close: no IOC_REQ_CLOSE request received - closing all subdevices...\n" );
+    mutex_lock( &mutex );
     for ( iS = 0; iS < subdevN; iS++ ) {
       if ( stopSubdevice( iS ) )
         WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", iS );
       releaseSubdevice( iS );
     }
+    mutex_unlock( &mutex );
     init_globals();
     return 0;
   }
 
   // stop & close specified subdevice (and device):
+  mutex_lock( &mutex );
   if ( stopSubdevice( reqCloseSubdevID ) )
     WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", reqCloseSubdevID );
   releaseSubdevice( reqCloseSubdevID );
+  mutex_unlock( &mutex );
 
   if ( deviceN == 0 )
     init_globals();
@@ -1196,11 +1268,13 @@ void cleanup_module( void )
   INFO_MSG( "cleanup_module: dynamic clamp module %s unloaded\n", moduleName );
 
   // stop and release all subdevices & comedi-devices:
+  mutex_lock( &mutex );
   for ( iS = 0; iS < subdevN; iS++ ) {
     if ( stopSubdevice( iS ) )
       WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", iS );
     releaseSubdevice( iS );
   }
+  mutex_unlock( &mutex );
 
   // unregister module device file:
   unregister_chrdev( RTMODULE_MAJOR, moduleName );
