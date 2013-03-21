@@ -97,6 +97,7 @@ public slots:
 
   void setDescription( const QModelIndex &index );
   void setDescription( const QModelIndex &currrent, const QModelIndex &previous );
+  void display( const QModelIndex &index );
 
 
 private:

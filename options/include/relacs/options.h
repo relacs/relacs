@@ -95,18 +95,20 @@ public:
       /*! Switch name and type, i.e.  the sections name is saved as its
           type, and its type is saved as its name. */
     SwitchNameType = 8,
-      /* Make sure that the saved string is embraced with curly braces
-         to get a valid YAML string. */
+      /*! Make sure that the saved string is embraced with curly braces
+          to get a valid YAML string. */
     Embrace = 16,
-      /* Print the request string. */
+      /*! Print the request string. */
     PrintRequest = 32,
-      /* If the Parameter::ListAlways style bit is not set only print
-	 out the first value. */
+      /*! If the Parameter::ListAlways style bit is not set only print
+	  out the first value. */
     FirstOnly = 64,
-      /* Specify the type of the value. */
+      /*! Specify the type of the value. */
     PrintType = 128,
-      /* Indicate the style of a section or Parameter name. */
-    PrintStyle = 256
+      /*! Indicate the style of a section or Parameter name. */
+    PrintStyle = 256,
+      /*! Do not write the finale closing </section>. */
+    DontCloseSection = 512
   };
 
     /*! Constructs an empty options list. */

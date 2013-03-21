@@ -408,6 +408,8 @@ void DataOverviewModel::setTreeView( QTreeView *view )
     connect( view->selectionModel(),
 	     SIGNAL( currentChanged( const QModelIndex&, const QModelIndex& ) ),
 	     this, SLOT( setDescription( const QModelIndex&, const QModelIndex& ) ) );
+    connect( view, SIGNAL( doubleClicked( const QModelIndex& ) ),
+	     this, SLOT( display( const QModelIndex& ) ) );
   }
 }
 
@@ -620,6 +622,31 @@ void DataOverviewModel::setDescription( const QModelIndex &current,
 					const QModelIndex &previous )
 {
   setDescription( current );
+}
+
+
+void DataOverviewModel::display( const QModelIndex &index )
+{
+  if ( ! index.isValid() )
+    return;
+
+  if ( index.column() > 0 )
+    return;
+
+  DataIndex::DataItem *item =
+    static_cast<DataIndex::DataItem*>( index.internalPointer() );
+
+  if ( item == 0 )
+    return;
+
+  // no stimulus:
+  if ( item->level() < 3 )
+    return;
+
+  // display stimulus:
+  deque<int> traceindex = item->traceIndex();
+  deque<int> eventsindex = item->eventsIndex();
+  cout << "DISPLAY STIMULUS AT " << traceindex[0] << '\n';
 }
 
 

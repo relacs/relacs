@@ -331,7 +331,6 @@ protected:
   void saveStimulus( void );
 
   Options ReProInfo;
-  Options ReProSettings;
   mutable deque< string > ReProFiles;
   bool ReProData;
   bool DatasetOpen;

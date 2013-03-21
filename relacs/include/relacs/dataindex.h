@@ -64,6 +64,9 @@ public:
     DataItem( const string &name, int level, DataItem *parent );
     DataItem( const string &name, const Options &data,
 	      int level, DataItem *parent );
+    DataItem( const string &name, const Options &data,
+	      const deque<int> &traceindex, const deque<int> &eventsindex,
+	      int level, DataItem *parent );
     bool empty( void ) const;
     int size( void ) const;
     void clear( void );
@@ -76,11 +79,15 @@ public:
     DataItem *parent( void ) const;
     void addChild( const string &name );
     void addChild( const string &name, const Options &data );
+    void addChild( const string &name, const Options &data,
+		   const deque<int> &traceindex, const deque<int> &eventsindex );
     int level( void ) const;
     void setName( const string &name );
     string name( void ) const;
     const Options &data( void ) const;
     Options &data( void );
+    deque<int> traceIndex( void ) const;
+    deque<int> eventsIndex( void ) const;
     DataOverviewModel *overviewModel( void );
     void setOverviewModel( DataOverviewModel *model );
     void print( void );
@@ -91,6 +98,8 @@ public:
     int Level;
     string Name;
     Options Data;
+    deque<int> TraceIndex;
+    deque<int> EventsIndex;
     deque<DataItem> Children;
     DataItem *Parent;
     DataOverviewModel *OverviewModel;
@@ -102,8 +111,9 @@ public:
 
   DataItem *cells( void ) { return &Cells; };
 
-  void addStimulus( const Options &signal );
-  void addRepro( const RePro &repro );
+  void addStimulus( const Options &signal, const deque<int> &traceindex,
+		    const deque<int> &eventsindex );
+  void addRepro( const Options &repro );
   void addSession( const string &path, const Options &data );
   void endSession( bool saved );
   void loadDirectory( const string &dir );

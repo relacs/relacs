@@ -4859,7 +4859,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int flags, int level,
       (*sp)->saveXML( str, selectmask, flags, level, indent );
   }
 
-  if ( printsection )
+  if ( printsection && ( ( flags & DontCloseSection ) == 0 ) )
     str << indstr1 << "</section>\n";
 
   return str;

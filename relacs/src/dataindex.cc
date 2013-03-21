@@ -37,6 +37,8 @@ DataIndex::DataItem::DataItem( void )
     Parent( 0 ),
     OverviewModel( 0 )
 {
+  TraceIndex.clear();
+  EventsIndex.clear();
   Data.clear();
   Children.clear();
 }
@@ -46,6 +48,8 @@ DataIndex::DataItem::DataItem( const DataIndex::DataItem &data )
   : Level( data.Level ),
     Name( data.Name ),
     Data( data.Data ),
+    TraceIndex( data.TraceIndex ),
+    EventsIndex( data.EventsIndex ),
     Children( data.Children ),
     Parent( data.Parent ),
     OverviewModel( data.OverviewModel )
@@ -60,6 +64,8 @@ DataIndex::DataItem::DataItem( const string &name )
     OverviewModel( 0 )
 {
   Data.clear();
+  TraceIndex.clear();
+  EventsIndex.clear();
   Children.clear();
 }
 
@@ -72,6 +78,8 @@ DataIndex::DataItem::DataItem( const string &name, int level,
     OverviewModel( parent->overviewModel() )
 {
   Data.clear();
+  TraceIndex.clear();
+  EventsIndex.clear();
   Children.clear();
 }
 
@@ -81,6 +89,23 @@ DataIndex::DataItem::DataItem( const string &name, const Options &data,
   : Level( level ),
     Name( name ),
     Data( data ),
+    Parent( parent ),
+    OverviewModel( parent->overviewModel() )
+{
+  TraceIndex.clear();
+  EventsIndex.clear();
+  Children.clear();
+}
+
+
+DataIndex::DataItem::DataItem( const string &name, const Options &data,
+			       const deque<int> &traceindex, const deque<int> &eventsindex,
+			       int level, DataIndex::DataItem *parent )
+  : Level( level ),
+    Name( name ),
+    Data( data ),
+    TraceIndex( traceindex ),
+    EventsIndex( eventsindex ),
     Parent( parent ),
     OverviewModel( parent->overviewModel() )
 {
@@ -173,6 +198,16 @@ void DataIndex::DataItem::addChild( const string &name, const Options &data )
 }
 
 
+void DataIndex::DataItem::addChild( const string &name, const Options &data,
+				    const deque<int> &traceindex,
+				    const deque<int> &eventsindex )
+{
+  OverviewModel->beginAddChild( this );
+  Children.push_back( DataItem( name, data, traceindex, eventsindex, level()+1, this ) );
+  OverviewModel->endAddChild( this );
+}
+
+
 int DataIndex::DataItem::level( void ) const
 {
   return Level;
@@ -201,6 +236,19 @@ Options &DataIndex::DataItem::data( void )
 {
   return Data;
 }
+
+
+deque<int> DataIndex::DataItem::traceIndex( void ) const
+{
+  return TraceIndex;
+}
+
+
+deque<int> DataIndex::DataItem::eventsIndex( void ) const
+{
+  return EventsIndex;
+}
+
 
 
 DataOverviewModel *DataIndex::DataItem::overviewModel( void )
@@ -248,20 +296,21 @@ DataIndex::~DataIndex( void )
 }
 
 
-void DataIndex::addStimulus( const Options &signal )
+void DataIndex::addStimulus( const Options &signal, const deque<int> &traceindex,
+			     const deque<int> &eventsindex )
 {
   if ( ! Cells.empty() && ! Cells.back().empty() && Session ) {
     string s = signal.type();
-    Cells.back().back().addChild( s, signal );
+    Cells.back().back().addChild( s, signal, traceindex, eventsindex );
   }
   print();
 }
 
 
-void DataIndex::addRepro( const RePro &repro )
+void DataIndex::addRepro( const Options &repro )
 {
   if ( ! Cells.empty() && Session )
-    Cells.back().addChild( repro.name(), repro );
+    Cells.back().addChild( repro.text( "RePro" ), repro );
   print();
 }
 

@@ -40,8 +40,11 @@ class StimuliEvent : public QEvent
 
 public:
 
-  StimuliEvent( const deque< OutDataInfo > &stimuli )
-    : QEvent( Type( User+1 ) )
+  StimuliEvent( const deque< OutDataInfo > &stimuli,
+		const deque<int> &traceindex, const deque<int> &eventsindex )
+    : QEvent( Type( User+1 ) ),
+      TraceIndex( traceindex ),
+      EventsIndex( eventsindex )
   {
     if ( stimuli.size() == 1 )
       Description = stimuli[0].description();
@@ -53,6 +56,8 @@ public:
   }
 
   Options Description;
+  deque<int> TraceIndex;
+  deque<int> EventsIndex;
 };
 
 
@@ -95,14 +100,6 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   ToggleData = false;
 
   ReProInfo.clear();
-  ReProInfo.addText( "project" );
-  ReProInfo.addText( "experiment" );
-  ReProInfo.addText( "repro" );
-  ReProInfo.addText( "author" );
-  ReProInfo.addText( "version" );
-  ReProInfo.addDate( "date" );
-  ReProInfo.addInteger( "run" );
-  ReProSettings.clear();
   ReProFiles.clear();
   ReProData = false;
   DatasetOpen = false;
@@ -500,7 +497,13 @@ void SaveFiles::saveStimulus( void )
     return;
 
   // add to data index:
-  QCoreApplication::postEvent( this, new StimuliEvent( Stimuli ) );
+  deque<int> traceindex;
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ )
+    traceindex.push_back( TraceFiles[k].SignalOffset );
+  deque<int> eventsindex;
+  for ( unsigned int k=0; k<EventFiles.size(); k++ )
+    eventsindex.push_back( EventFiles[k].SignalEvent );
+  QCoreApplication::postEvent( this, new StimuliEvent( Stimuli, traceindex, eventsindex ) );
 
   // extract intensity from stimulus description:
   // XXX there should be a flag indicating, which quantities to extract!
@@ -710,16 +713,20 @@ void SaveFiles::save( const RePro &rp )
   if ( ReProData )
     RW->printlog( "! warning: SaveFiles::save( RePro & ) -> already RePro data there." );
   ReProData = true;
-  ReProInfo.setText( "project", rp.projectOptions().text( "project" ) );
-  ReProInfo.setText( "experiment", rp.projectOptions().text( "experiment" ) );
-  ReProInfo.setText( "repro", rp.name() );
-  ReProInfo.setText( "author", rp.author() );
-  ReProInfo.setText( "version", rp.version() );
-  ReProInfo.setText( "date", rp.date() );
-  ReProInfo.setInteger( "run", rp.allRuns() );
-  ReProSettings = rp;
+  string dataset = Str( path() ).preventedSlash().name()
+    + "-" + rp.name() + "-" + Str( rp.allRuns() );
+  ReProInfo.clear();
+  ReProInfo.setName( "dataset-" + dataset, "dataset" );
+  ReProInfo.addText( "RePro", rp.name() );
+  ReProInfo.addText( "Author", rp.author() );
+  ReProInfo.addText( "Version", rp.version() );
+  ReProInfo.addText( "Date", rp.date() );
+  ReProInfo.addInteger( "Run", rp.allRuns() );
+  ReProInfo.addText( "Project", rp.projectOptions().text( "project" ) );
+  ReProInfo.addText( "Experiment", rp.projectOptions().text( "experiment" ) );
+  ReProInfo.newSection( rp, 0, "dataset-settings-" + dataset, "settings" );
+  DI.addRepro( ReProInfo );
   StimuliRePro = rp.name();
-  DI.addRepro( rp );
 }
 
 
@@ -729,17 +736,11 @@ void SaveFiles::saveRePro( void )
 
   if ( ReProData ) {
 
-    ReProSettings.setFlags( 0 );
-    ReProSettings.setValueTypeFlags( 1, -Parameter::Section );
-
     // stimulus indices file:
     if ( SF != 0 && saving() ) {
+      // save RePro info:
       *SF << '\n';
       ReProInfo.save( *SF, "# ", 0, Options::FirstOnly );
-      if ( ! ReProSettings.empty() ) {
-	ReProSettings.save( *SF, "# ", 1, Options::FirstOnly );
-      }
-
       // save StimulusKey:
       *SF << '\n';
       StimulusKey.saveKey( *SF );
@@ -758,25 +759,12 @@ void SaveFiles::saveRePro( void )
 	ReProFiles.clear();
 	*XF << "  </section>\n";
       }
-      string dataset = Str( path() ).preventedSlash().name()
-	+ "-" + ReProInfo.text( "repro" ) + "-" + Str( ReProInfo.integer( "run" ) );
-      *XF << "  <section>\n";
-      *XF << "    <type>dataset</type>\n";
-      *XF << "    <name>dataset-" << dataset << "</name>\n";
-      ReProInfo.saveXML( *XF, 0, Options::FirstOnly, 2 );
-      if ( ! ReProSettings.empty() ) {
-	*XF << "    <section>\n";
-	*XF << "      <type>settings</type>\n";
-	*XF << "      <name>dataset-settings-" << dataset << "</name>\n";
-	ReProSettings.saveXML( *XF, 1, Options::FirstOnly, 3 );
-	*XF << "    </section>\n";
-      }
+      ReProInfo.saveXML( *XF, 0, Options::FirstOnly | Options::DontCloseSection, 1 );
       StimuliReProCount[ StimuliRePro ] = 0;
       DatasetOpen = true;
     }
 
     ReProData = false;
-    ReProSettings.clear();
   }
 }
 
@@ -1150,7 +1138,7 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
   Saving = false;
 
   ReProData = false;
-  ReProSettings.clear();
+  ReProInfo.clear();
   ReProFiles.clear();
   DatasetOpen = false;
 
@@ -1392,7 +1380,7 @@ void SaveFiles::customEvent( QEvent *qce )
 
   case 1: {
     StimuliEvent *se = dynamic_cast<StimuliEvent*>( qce );
-    DI.addStimulus( se->Description );
+    DI.addStimulus( se->Description, se->TraceIndex, se->EventsIndex );
     break;
   }
 
