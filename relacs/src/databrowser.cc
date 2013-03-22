@@ -19,7 +19,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QHBoxLayout>
 #include <relacs/repro.h>
 #include <relacs/dataindex.h>
 #include <relacs/databrowser.h>
@@ -29,20 +28,15 @@ namespace relacs {
 
 
 DataBrowser::DataBrowser( DataIndex *data, QWidget *parent )
-  : QWidget( parent )
+  : QSplitter( parent )
 {
-  QHBoxLayout *layout = new QHBoxLayout;
-  setLayout( layout );
-
   OverviewWidget = new QTreeView;
-  layout->addWidget( OverviewWidget, 2 );
-  OverviewWidget->setMinimumWidth( fontMetrics().width( "xxxxxxxxxxxxxxxxxxxx" ) );
+  addWidget( OverviewWidget );
   OverviewWidget->setModel( data->overviewModel() );
   data->setOverviewView( OverviewWidget );
 
   DescriptionWidget = new QTreeView;
-  layout->addWidget( DescriptionWidget, 3 );
-  DescriptionWidget->setMinimumWidth( fontMetrics().width( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" ) );
+  addWidget( DescriptionWidget );
   DescriptionWidget->setModel( data->descriptionModel() );
   data->setDescriptionView( DescriptionWidget );
 }
@@ -432,6 +426,11 @@ QVariant DataOverviewModel::data( const QModelIndex &index, int role ) const
     Str file = item->name();
     return QVariant( QString( file.dir().preventedSlash().name().c_str() ) );
   }
+  else if ( item->level() == 3 ) {
+    Str stimulus = item->name();
+    stimulus.eraseFirst( "stimulus/" );
+    return QVariant( QString( stimulus.c_str() ) );
+  }
   return QVariant( QString( item->name().c_str() ) );
 }
 
@@ -690,11 +689,11 @@ QVariant DataDescriptionModel::data( const QModelIndex &index, int role ) const
   string s = "";
   int i = index.row();
   if ( i < item->parameterSize() )
-    s = index.column() > 0 ? (*item)[i].text() : (*item)[i].name();
+    s = index.column() > 0 ? (*item)[i].text( "%s" ) : (*item)[i].name();
   else {
     i -= item->parameterSize();
     if ( i < item->sectionsSize() )
-	 s = index.column() > 0 ? item->section( i ).type() : item->section( i ).name();
+      s = index.column() > 0 ? item->section( i ).type() : item->section( i ).name();
   }
 
   return QVariant( QString( s.c_str() ) );

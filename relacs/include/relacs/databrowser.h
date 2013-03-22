@@ -22,7 +22,7 @@
 #ifndef _RELACS_DATABROWSER_H_
 #define _RELACS_DATABROWSER_H_ 1
 
-#include <QWidget>
+#include <QSplitter>
 #include <QTreeView>
 #include <relacs/dataindex.h>
 using namespace std;
@@ -40,7 +40,7 @@ class DataTreeModel;
 */
 
 
-class DataBrowser : public QWidget
+class DataBrowser : public QSplitter
 {
   Q_OBJECT
 
