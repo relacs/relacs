@@ -33,7 +33,7 @@ DataBrowser::DataBrowser( DataIndex *data, QWidget *parent )
   OverviewWidget = new QTreeView;
   addWidget( OverviewWidget );
   OverviewWidget->setModel( data->overviewModel() );
-  data->setOverviewView( OverviewWidget );
+  data->setOverviewView( OverviewWidget, this );
 
   DescriptionWidget = new QTreeView;
   addWidget( DescriptionWidget );
@@ -44,6 +44,12 @@ DataBrowser::DataBrowser( DataIndex *data, QWidget *parent )
 
 DataBrowser::~DataBrowser( void )
 {
+}
+
+
+void DataBrowser::keyPressEvent( QKeyEvent *qke )
+{
+  // this eats up all left over key presses from the views.
 }
 
 
@@ -354,37 +360,19 @@ void DataBrowser::read( string cellname, QTreeWidgetItem *parent )
 */
 
 
-DataOverviewModel *DataIndex::overviewModel( void )
+void DataBrowser::display( const deque<int> &traceindex, const deque<int> &eventsindex,
+			   double time )
 {
-  return OverviewModel;
-}
-
-
-void DataIndex::setOverviewView( QTreeView *view )
-{
-  if ( OverviewModel != 0 ) {
-    OverviewModel->setTreeView( view );
-  }
-}
-
-
-DataDescriptionModel *DataIndex::descriptionModel( void )
-{
-  return DescriptionModel;
-}
-
-
-void DataIndex::setDescriptionView( QTreeView *view )
-{
-  if ( DescriptionModel != 0 )
-    DescriptionModel->setTreeView( view );
+  emit displayIndex( traceindex, eventsindex, time );
 }
 
 
 DataOverviewModel::DataOverviewModel( QObject *parent )
   : QAbstractItemModel( parent ),
     Data( 0 ),
-    View( 0 )
+    View( 0 ),
+    Browser( 0 ),
+    AutoActivate( false )
 {
 }
 
@@ -402,9 +390,13 @@ void DataOverviewModel::setTreeView( QTreeView *view )
     connect( view->selectionModel(),
 	     SIGNAL( currentChanged( const QModelIndex&, const QModelIndex& ) ),
 	     this, SLOT( setDescription( const QModelIndex&, const QModelIndex& ) ) );
-    connect( view, SIGNAL( doubleClicked( const QModelIndex& ) ),
-	     this, SLOT( display( const QModelIndex& ) ) );
   }
+}
+
+
+void DataOverviewModel::setBrowser( DataBrowser *browser )
+{
+  Browser = browser;
 }
 
 
@@ -568,9 +560,11 @@ void DataOverviewModel::endAddChild( DataIndex::DataItem *parent )
     }
     QModelIndex item = createIndex( parent->size()-1, 0,
 				    parent->child( parent->size()-1 ) );
+    AutoActivate = true;
     View->expand( item );
     View->scrollTo( item );
     View->setCurrentIndex( item );
+    AutoActivate = false;
   }
 }
 
@@ -592,8 +586,10 @@ void DataOverviewModel::endPopChild( DataIndex::DataItem *parent )
   if ( View != 0 ) {
     QModelIndex item = createIndex( parent->size()-1, 0,
 				    parent->child( parent->size()-1 ) );
+    AutoActivate = true;
     View->scrollTo( item );
     View->setCurrentIndex( item );
+    AutoActivate = false;
   }
 }
 
@@ -621,11 +617,18 @@ void DataOverviewModel::setDescription( const QModelIndex &current,
 					const QModelIndex &previous )
 {
   setDescription( current );
+
+  // plot selected data:
+  displayIndex( current );
 }
 
 
-void DataOverviewModel::display( const QModelIndex &index )
+void DataOverviewModel::displayIndex( const QModelIndex &index )
 {
+  // We only display the selection if the user activated it:
+  if ( AutoActivate )
+    return;
+
   if ( ! index.isValid() )
     return;
 
@@ -643,9 +646,8 @@ void DataOverviewModel::display( const QModelIndex &index )
     return;
 
   // display stimulus:
-  deque<int> traceindex = item->traceIndex();
-  deque<int> eventsindex = item->eventsIndex();
-  cout << "DISPLAY STIMULUS AT " << traceindex[0] << '\n';
+  if ( Browser != 0 )
+    Browser->display( item->traceIndex(), item->eventsIndex(), item->time() );
 }
 
 

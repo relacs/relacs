@@ -34,6 +34,7 @@ namespace relacs {
 
 DataIndex::DataItem::DataItem( void )
   : Level( 0 ),
+    Time( 0.0 ),
     Parent( 0 ),
     OverviewModel( 0 )
 {
@@ -50,6 +51,7 @@ DataIndex::DataItem::DataItem( const DataIndex::DataItem &data )
     Data( data.Data ),
     TraceIndex( data.TraceIndex ),
     EventsIndex( data.EventsIndex ),
+    Time( data.Time ),
     Children( data.Children ),
     Parent( data.Parent ),
     OverviewModel( data.OverviewModel )
@@ -60,6 +62,7 @@ DataIndex::DataItem::DataItem( const DataIndex::DataItem &data )
 DataIndex::DataItem::DataItem( const string &name )
   : Level( 0 ),
     Name( name ),
+    Time( 0.0 ),
     Parent( 0 ),
     OverviewModel( 0 )
 {
@@ -74,6 +77,7 @@ DataIndex::DataItem::DataItem( const string &name, int level,
 			       DataIndex::DataItem *parent )
   : Level( level ),
     Name( name ),
+    Time( 0.0 ),
     Parent( parent ),
     OverviewModel( parent->overviewModel() )
 {
@@ -89,6 +93,7 @@ DataIndex::DataItem::DataItem( const string &name, const Options &data,
   : Level( level ),
     Name( name ),
     Data( data ),
+    Time( 0.0 ),
     Parent( parent ),
     OverviewModel( parent->overviewModel() )
 {
@@ -100,12 +105,13 @@ DataIndex::DataItem::DataItem( const string &name, const Options &data,
 
 DataIndex::DataItem::DataItem( const string &name, const Options &data,
 			       const deque<int> &traceindex, const deque<int> &eventsindex,
-			       int level, DataIndex::DataItem *parent )
+			       double time, int level, DataIndex::DataItem *parent )
   : Level( level ),
     Name( name ),
     Data( data ),
     TraceIndex( traceindex ),
     EventsIndex( eventsindex ),
+    Time( time ),
     Parent( parent ),
     OverviewModel( parent->overviewModel() )
 {
@@ -200,10 +206,12 @@ void DataIndex::DataItem::addChild( const string &name, const Options &data )
 
 void DataIndex::DataItem::addChild( const string &name, const Options &data,
 				    const deque<int> &traceindex,
-				    const deque<int> &eventsindex )
+				    const deque<int> &eventsindex,
+				    double time )
 {
   OverviewModel->beginAddChild( this );
-  Children.push_back( DataItem( name, data, traceindex, eventsindex, level()+1, this ) );
+  Children.push_back( DataItem( name, data, traceindex, eventsindex, time,
+				level()+1, this ) );
   OverviewModel->endAddChild( this );
 }
 
@@ -247,6 +255,12 @@ deque<int> DataIndex::DataItem::traceIndex( void ) const
 deque<int> DataIndex::DataItem::eventsIndex( void ) const
 {
   return EventsIndex;
+}
+
+
+double DataIndex::DataItem::time( void ) const
+{
+  return Time;
 }
 
 
@@ -297,11 +311,11 @@ DataIndex::~DataIndex( void )
 
 
 void DataIndex::addStimulus( const Options &signal, const deque<int> &traceindex,
-			     const deque<int> &eventsindex )
+			     const deque<int> &eventsindex, double time )
 {
   if ( ! Cells.empty() && ! Cells.back().empty() && Session ) {
     string s = signal.type();
-    Cells.back().back().addChild( s, signal, traceindex, eventsindex );
+    Cells.back().back().addChild( s, signal, traceindex, eventsindex, time );
   }
   print();
 }
@@ -395,9 +409,49 @@ void DataIndex::loadCell( int index )
 }
 
 
+bool DataIndex::empty( void ) const
+{
+  return Cells.empty();
+}
+
+
+int DataIndex::size( void ) const
+{
+  return Cells.size();
+}
+
+
 void DataIndex::print( void )
 {
   Cells.print();
+}
+
+
+DataOverviewModel *DataIndex::overviewModel( void )
+{
+  return OverviewModel;
+}
+
+
+void DataIndex::setOverviewView( QTreeView *view, DataBrowser *browser )
+{
+  if ( OverviewModel != 0 ) {
+    OverviewModel->setTreeView( view );
+    OverviewModel->setBrowser( browser );
+  }
+}
+
+
+DataDescriptionModel *DataIndex::descriptionModel( void )
+{
+  return DescriptionModel;
+}
+
+
+void DataIndex::setDescriptionView( QTreeView *view )
+{
+  if ( DescriptionModel != 0 )
+    DescriptionModel->setTreeView( view );
 }
 
 

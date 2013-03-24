@@ -22,6 +22,7 @@
 #ifndef _RELACS_DATABROWSER_H_
 #define _RELACS_DATABROWSER_H_ 1
 
+#include <deque>
 #include <QSplitter>
 #include <QTreeView>
 #include <relacs/dataindex.h>
@@ -49,6 +50,18 @@ public:
   DataBrowser( DataIndex *data, QWidget *parent=0 );
   ~DataBrowser( void );
 
+  void display( const deque<int> &traceindex, const deque<int> &eventsindex, double time );
+
+
+signals:
+
+  void displayIndex( const deque<int> &traceindex, const deque<int> &eventsindex, double time );
+
+
+protected:
+
+  virtual void keyPressEvent( QKeyEvent *qke );
+
 
 private:
 
@@ -74,6 +87,7 @@ public:
 
   void setDataIndex( DataIndex *data );
   void setTreeView( QTreeView *view );
+  void setBrowser( DataBrowser *browser );
 
   QVariant data( const QModelIndex &index, int role ) const;
   Qt::ItemFlags flags( const QModelIndex &index ) const;
@@ -97,13 +111,19 @@ public slots:
 
   void setDescription( const QModelIndex &index );
   void setDescription( const QModelIndex &currrent, const QModelIndex &previous );
-  void display( const QModelIndex &index );
+
+
+private slots:
+
+  void displayIndex( const QModelIndex &index );
 
 
 private:
 
   DataIndex *Data;
   QTreeView *View;
+  DataBrowser *Browser;
+  bool AutoActivate;
 
 };
 

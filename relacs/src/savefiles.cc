@@ -41,10 +41,12 @@ class StimuliEvent : public QEvent
 public:
 
   StimuliEvent( const deque< OutDataInfo > &stimuli,
-		const deque<int> &traceindex, const deque<int> &eventsindex )
+		const deque<int> &traceindex, const deque<int> &eventsindex,
+		double time )
     : QEvent( Type( User+1 ) ),
       TraceIndex( traceindex ),
-      EventsIndex( eventsindex )
+      EventsIndex( eventsindex ),
+      Time( time )
   {
     if ( stimuli.size() == 1 )
       Description = stimuli[0].description();
@@ -58,6 +60,7 @@ public:
   Options Description;
   deque<int> TraceIndex;
   deque<int> EventsIndex;
+  double Time;
 };
 
 
@@ -503,7 +506,7 @@ void SaveFiles::saveStimulus( void )
   deque<int> eventsindex;
   for ( unsigned int k=0; k<EventFiles.size(); k++ )
     eventsindex.push_back( EventFiles[k].SignalEvent );
-  QCoreApplication::postEvent( this, new StimuliEvent( Stimuli, traceindex, eventsindex ) );
+  QCoreApplication::postEvent( this, new StimuliEvent( Stimuli, traceindex, eventsindex, SignalTime ) );
 
   // extract intensity from stimulus description:
   // XXX there should be a flag indicating, which quantities to extract!
@@ -1380,7 +1383,7 @@ void SaveFiles::customEvent( QEvent *qce )
 
   case 1: {
     StimuliEvent *se = dynamic_cast<StimuliEvent*>( qce );
-    DI.addStimulus( se->Description, se->TraceIndex, se->EventsIndex );
+    DI.addStimulus( se->Description, se->TraceIndex, se->EventsIndex, se->Time );
     break;
   }
 

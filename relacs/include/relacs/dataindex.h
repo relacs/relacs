@@ -36,6 +36,7 @@ namespace relacs {
   class RePro;
   class DataOverviewModel;
   class DataDescriptionModel;
+  class DataBrowser;
 
 
 /*!
@@ -66,7 +67,7 @@ public:
 	      int level, DataItem *parent );
     DataItem( const string &name, const Options &data,
 	      const deque<int> &traceindex, const deque<int> &eventsindex,
-	      int level, DataItem *parent );
+	      double time, int level, DataItem *parent );
     bool empty( void ) const;
     int size( void ) const;
     void clear( void );
@@ -80,7 +81,8 @@ public:
     void addChild( const string &name );
     void addChild( const string &name, const Options &data );
     void addChild( const string &name, const Options &data,
-		   const deque<int> &traceindex, const deque<int> &eventsindex );
+		   const deque<int> &traceindex, const deque<int> &eventsindex,
+		   double time );
     int level( void ) const;
     void setName( const string &name );
     string name( void ) const;
@@ -88,6 +90,7 @@ public:
     Options &data( void );
     deque<int> traceIndex( void ) const;
     deque<int> eventsIndex( void ) const;
+    double time( void ) const;
     DataOverviewModel *overviewModel( void );
     void setOverviewModel( DataOverviewModel *model );
     void print( void );
@@ -100,6 +103,7 @@ public:
     Options Data;
     deque<int> TraceIndex;
     deque<int> EventsIndex;
+    double Time;
     deque<DataItem> Children;
     DataItem *Parent;
     DataOverviewModel *OverviewModel;
@@ -112,22 +116,26 @@ public:
   DataItem *cells( void ) { return &Cells; };
 
   void addStimulus( const Options &signal, const deque<int> &traceindex,
-		    const deque<int> &eventsindex );
+		    const deque<int> &eventsindex, double time );
   void addRepro( const Options &repro );
   void addSession( const string &path, const Options &data );
   void endSession( bool saved );
   void loadDirectory( const string &dir );
   void loadCell( int index );
 
-  bool empty( void ) const { return Cells.empty(); };
-  int size( void ) const { return Cells.size(); };
+    /*! \return \c true if no recording session is in the DataIndex. */
+  bool empty( void ) const;
+    /*! \return the number of recording sessions hold in the DataIndex. */
+  int size( void ) const;
 
   void print( void );
 
   DataOverviewModel *overviewModel( void );
-  void setOverviewView( QTreeView *view );
+    /*! Passes \a view and \a browser to the overviewModel(). */
+  void setOverviewView( QTreeView *view, DataBrowser *browser );
 
   DataDescriptionModel *descriptionModel( void );
+    /*! Passes \a view to the descriptionModel(). */
   void setDescriptionView( QTreeView *view );
 
 

@@ -868,10 +868,13 @@ void PlotTrace::viewSignal( void )
 void PlotTrace::moveSignalOffsLeft( void )
 {
   P.lock();
-  if ( ViewMode != SignalView )
-    setView( SignalView );
+  if ( ViewMode == SignalView || ViewMode == FixedView ) {
+    TimeOffs += 0.25 * TimeWindow;
+    if ( ViewMode == FixedView )
+      LeftTime = Offset - TimeOffs;
+  }
   else
-    TimeOffs += 0.5 * TimeWindow;
+    setView( SignalView );
   P.unlock();
   if ( RW->idle() )
     plot();
@@ -881,10 +884,13 @@ void PlotTrace::moveSignalOffsLeft( void )
 void PlotTrace::moveSignalOffsRight( void )
 {
   P.lock();
-  if ( ViewMode != SignalView )
-    setView( SignalView );
+  if ( ViewMode == SignalView || ViewMode == FixedView ) {
+    TimeOffs -= 0.25 * TimeWindow;
+    if ( ViewMode == FixedView )
+      LeftTime = Offset - TimeOffs;
+  }
   else
-    TimeOffs -= 0.5 * TimeWindow;
+    setView( SignalView );
   P.unlock();
   if ( RW->idle() )
     plot();
@@ -1063,6 +1069,23 @@ void PlotTrace::setView( Views mode )
     PlotChanged = true;
     postCustomEvent( 12 );
   }
+}
+
+
+void PlotTrace::displayIndex( const deque<int> &traceindex, const deque<int> &eventsindex,
+			      double time )
+{
+  P.lock();
+  if ( ViewMode != FixedView ) {
+    TimeOffs = 0.0;
+    setView( FixedView );
+  }
+  Offset = time;
+  LeftTime = Offset - TimeOffs;
+  PlotChanged = true;
+  P.unlock();
+  if ( RW->idle() )
+    plot();
 }
 
 

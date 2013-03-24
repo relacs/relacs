@@ -336,7 +336,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   SF = new SaveFiles( this, statusbarheight, statusBar() );
   SS.notify(); // initialize SF from the Settings
   // data browser:
-  CW->addTab( new DataBrowser( SF->dataIndex(), this ), "Data-Browser" );
+  DataBrowser *db = new DataBrowser( SF->dataIndex(), this );
+  connect( db, SIGNAL( displayIndex( const deque<int>&, const deque<int>&, double ) ),
+	   PT, SLOT( displayIndex( const deque<int>&, const deque<int>&, double ) ) );
+  CW->addTab( db, "Data-Browser" );
   statusBar()->addWidget( SF, 0 );
   // Simulation:
   SimLabel = new QLabel( this );
