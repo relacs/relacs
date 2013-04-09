@@ -182,7 +182,7 @@ namespace efish {
       return Failed;
     }
     signal.fixSample();
-    int c = ::relacs::clip( -1.0, 1.0, signal );
+    int c = clip( -1.0, 1.0, signal );
     printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
     signal.setTrace( AM ? GlobalAMEField : GlobalEField );
     signal.setStartSource( 1 );
@@ -359,6 +359,7 @@ namespace efish {
 	  noise.ouNoiseWave( signal.duration(), signal.stepsize(), NoiseTau, noisestdev );
 	}
 	noisesignal += noise;
+	clip( -1.0, 1.0, signal );
 	//noisesignal = signal + noise;
       }
 
@@ -388,7 +389,7 @@ namespace efish {
 	return Aborted;
       }
       testWrite( noisesignal );
-      cerr << "signal.device: " << signal.device() << endl;
+
       // signal failed?
       if ( !noisesignal.success() ) {
 	if ( noisesignal.busy() ) {

@@ -209,6 +209,10 @@ int SAM::main( void )
     warning( "Delta f cannot be negative for absolute stimulus frequencies!\n" );
     return Failed;
   }
+  if ( ( Skip + 1.5 ) / fabs( DeltaF ) > Duration ) {
+    warning( "Stimulus duration too short. Duration must be larger than about 2 periods!\n" );
+    return Failed;
+  }
   if ( FreqAbs && AM )
     AM = false;
 
@@ -884,7 +888,7 @@ void SAM::analyze( void )
       double t0 = signalTime() + t;
       if ( ! events( ChirpEvents ).within( t0, 0.03 ) &&
 	   t0 >= Skip * Period + signalTime() && 
-	   t0 <= Signal->duration() - 2.0*Skip*Period + signalTime() ) {
+	   t0 <= Signal->duration() - 0.5*Period + signalTime() ) {
 	beattimes.push( t0 );
       }
     }
