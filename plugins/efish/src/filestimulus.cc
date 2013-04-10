@@ -33,6 +33,7 @@ namespace efish {
   {
     // parameter:
     SigStdev = 1.0;
+    Duration = 0.0;
     Pause = 1.0;
     UseContrast = true;
     Contrast = 0.2;
@@ -55,6 +56,7 @@ namespace efish {
     newSection( "Stimulus" );
     addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting );
     addNumber( "sigstdev", "Standard deviation of signal", SigStdev, 0.01, 1.0, 0.05 );
+    addNumber( "duration", "Duration of signal", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
     addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
     addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
     addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
@@ -133,6 +135,7 @@ namespace efish {
     // get options:
     Str file = text( "file" );
     SigStdev = number( "sigstdev" );
+    Duration = number( "duration" );
     Pause = number( "pause" );
     Repeats = integer( "repeats" );
     UseContrast = ( index( "amplsel" ) == 0 );
@@ -151,7 +154,7 @@ namespace efish {
     NoiseAmpl = number( "noiseampl" );
     NoiseContrast = number ( "noisecontrast" );
     bool addNoise = NoiseType != "none";
-    cerr << "Upper cutoff  " << UpperCutoff << endl;
+
     // checks:
     if ( LocalEODTrace[0] < 0 ) {
       warning( "need local recording of the EOD Trace." );
@@ -180,6 +183,12 @@ namespace efish {
       restoreMouseCursor();
       lockAll();
       return Failed;
+    }
+    if ( Duration > 0.0 ) {
+      if ( signal.length() >= Duration )
+	signal.resize( signal.indices( Duration ) );
+      else if ( signal.length() < Duration )
+	warning( "Duration of signal " + Str( signal.length() ) + " sec is smaller than requested duration of " + Str( Duration ) + " sec!" );
     }
     signal.fixSample();
     int c = clip( -1.0, 1.0, signal );
