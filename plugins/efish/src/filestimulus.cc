@@ -368,8 +368,9 @@ namespace efish {
 	  noise.ouNoiseWave( signal.duration(), signal.stepsize(), NoiseTau, noisestdev );
 	}
 	noisesignal += noise;
-	clip( -1.0, 1.0, signal );
-	//noisesignal = signal + noise;
+	noisesignal /= 1.0 + 3.0*noisestdev;
+	noisesignal.setIntensity( Intensity*(1.0 + 3.0*noisestdev) );
+	clip( -1.0, 1.0, noisesignal );
       }
 
       // put out the signal:
