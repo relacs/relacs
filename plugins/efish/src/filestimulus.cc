@@ -372,6 +372,7 @@ namespace efish {
 	noisesignal.setIntensity( Intensity*(1.0 + 3.0*noisestdev) );
 	clip( -1.0, 1.0, noisesignal );
       }
+      noisesignal.back() = 0.0;
 
       // put out the signal:
       write( noisesignal );
