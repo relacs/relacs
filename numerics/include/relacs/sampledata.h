@@ -1205,7 +1205,8 @@ class SampleData : public Array< T >
         mean squared amplitudes of the signal \a x.
         A fourier window of size \a n ( a power of two no less than 2*p.size() ) is used.
 	p.stepsize() is set to its appropriate value 0.5/x.stepsize()/n.
-	\a TT and \a SS are real numbers. */
+	\a TT and \a SS are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS >
   friend int rPSD( const SampleData<TT> &x, SampleData<SS> &p,
 		   bool overlap, double (*window)( int j, int n ) );
@@ -1217,7 +1218,8 @@ class SampleData : public Array< T >
 	The stepsize() of \a h is set to 1.0/x.stepsize()/h.size().
 	The gain and phase of the transfer function can be obtained
 	using hcMagnitude() and hcPhase().
-	\a TT, \a SS, and \a RR are real numbers. */
+	\a TT, \a SS, and \a RR are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS, typename RR >
   friend int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 		       SampleData<RR> &h,
@@ -1230,7 +1232,8 @@ class SampleData : public Array< T >
 	The stepsize() of \a h is set to 1.0/x.stepsize()/h.size().
 	The gain and phase of the transfer function can be obtained
 	using hcMagnitude() and hcPhase().
-	\a TT, \a SS, and \a RR are real numbers. */
+	\a TT, \a SS, and \a RR are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS, typename RR >
   friend int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 		       SampleData<RR> &h, SampleData<RR> &c,
@@ -1241,7 +1244,8 @@ class SampleData : public Array< T >
 	\a x and \a y are divided into chunks of two times \a N data points,
 	where \a N is the minimum power of two not less than g.size().
 	The stepsize() of \a g is set to 0.5/x.stepsize()/N.
-	\a TT, \a SS, and \a RR are real numbers. */
+	\a TT, \a SS, and \a RR are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS, typename RR >
   friend int gain( const SampleData<TT> &x, const SampleData<SS> &y,
 		   SampleData<RR> &g,
@@ -1251,7 +1255,8 @@ class SampleData : public Array< T >
 	\a x and \a y are divided into chunks of two times \a N data points,
 	where \a N is the minimum power of two not less than c.size().
 	The stepsize() of \a c is set to 0.5/x.stepsize()/N.
-	\a TT, \a SS, and \a RR are real numbers. */
+	\a TT, \a SS, and \a RR are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS, typename RR >
   friend int coherence( const SampleData<TT> &x, const SampleData<SS> &y,
 			SampleData<RR> &c,
@@ -1263,14 +1268,16 @@ class SampleData : public Array< T >
   friend double coherenceInfo( const SampleData< RR > &c, 
 			       double f0, double f1 );
     /*! Compute cross power spectrum (squared magnitude of cross spectrum) \a cps of \a x and \a y.
-	\a TT, \a SS, and \a RR are real numbers. */
+	\a TT, \a SS, and \a RR are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS, typename RR >
   friend int rCSD( const SampleData<TT> &x, const SampleData<SS> &y,
 		   SampleData<RR> &cps,
 		   bool overlap, double (*window)( int j, int n ) );
     /*! Compute gain \a g, coherence \a c and powerspectrum \a yps
         between \a x and \a y.
-	\a TT, \a SS, and \a RR are real numbers. */
+	\a TT, \a SS, and \a RR are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS, typename RR >
   friend int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 		      SampleData<RR> &g, SampleData<RR> &c,
@@ -1278,7 +1285,8 @@ class SampleData : public Array< T >
 		      bool overlap, double (*window)( int j, int n ) );
     /*! Compute gain \a g, coherence \a c, auto- (\a xps and \a yps)
         and cross power spectra (\a cps) between \a x and \a y.
-	\a TT, \a SS, and \a RR are real numbers. */
+	\a TT, \a SS, and \a RR are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS, typename RR >
   friend int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 		      SampleData<RR> &g, SampleData<RR> &c,
@@ -1287,7 +1295,8 @@ class SampleData : public Array< T >
 		      bool overlap, double (*window)( int j, int n ) );
     /*! Compute power spectra (\a xps and \a yps)
         and cross spectrum (\a cs) between \a x and \a y.
-	\a TT, \a SS, and \a RR are real numbers. */
+	\a TT, \a SS, and \a RR are real numbers.
+        \return the number of chunks used or a negative number indicating an error. */
   template < typename TT, typename SS, typename RR >
   friend int crossSpectra( const SampleData<TT> &x, const SampleData<SS> &y,
 			   SampleData<RR> &cs, 

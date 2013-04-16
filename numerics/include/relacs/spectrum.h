@@ -271,7 +271,8 @@ double welch( int j, int n );
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(2 N delta).
       \a ForwardIterX is a forward iterator that points to a real number.
-      \a ForwardIterP is a forward iterator that points to a real number. */
+      \a ForwardIterP is a forward iterator that points to a real number.
+      \return the number of chunks used or a negative number indicating an error. */
 template < typename ForwardIterX, typename ForwardIterP >
 int rPSD( ForwardIterX firstx, ForwardIterX lastx,
 	  ForwardIterP firstp, ForwardIterP lastp,
@@ -301,7 +302,8 @@ int rPSD( const ContainerX &x, ContainerP &p,
       respectively.
       \a ForwardIterX and \a ForwardIterY
       are forward iterators that point to real numbers. 
-      \a BidirectH is a bidirectional iterator pointing to real numbers. */
+      \a BidirectH is a bidirectional iterator pointing to real numbers.
+      \return the number of chunks used or a negative number indicating an error. */
 template < typename ForwardIterX, typename ForwardIterY,
   typename BidirectIterH >
 int transfer( ForwardIterX firstx, ForwardIterX lastx,
@@ -334,7 +336,8 @@ int transfer( const ContainerX &x, const ContainerY &y, ContainerH &h,
       \a ForwardIterX and \a ForwardIterY
       are forward iterators that point to real numbers. 
       \a BidirectH and \a BidirectC are a bidirectional iterators
-      pointing to real numbers. */
+      pointing to real numbers.
+      \return the number of chunks used or a negative number indicating an error. */
 template < typename ForwardIterX, typename ForwardIterY,
   typename BidirectIterH, typename BidirectIterC >
 int transfer( ForwardIterX firstx, ForwardIterX lastx,
@@ -363,7 +366,8 @@ int transfer( const ContainerX &x, const ContainerY &y,
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(2 N delta).
       \a ForwardIterX, \a ForwardIterY, and \a ForwardG
-      are forward iterators that point to real numbers. */
+      are forward iterators that point to real numbers.
+      \return the number of chunks used or a negative number indicating an error. */
 template < typename ForwardIterX, typename ForwardIterY,
   typename ForwardIterG >
 int gain( ForwardIterX firstx, ForwardIterX lastx,
@@ -390,7 +394,7 @@ int gain( const ContainerX &x, const ContainerY &y, ContainerG &g,
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterC
       are a forward iterators that point to real numbers. 
       \note Means are not subtracted from the data.
-  */
+      \return the number of chunks used or a negative number indicating an error. */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename ForwardIterC >
 int coherence( ForwardIterX firstx, ForwardIterX lastx,
@@ -425,7 +429,8 @@ double coherenceInfo( ContainerC &c, double deltaf );
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(N delta).
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterC
-      are a forward iterators that point to real numbers. */
+      are a forward iterators that point to real numbers.
+      \return the number of chunks used or a negative number indicating an error. */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename ForwardIterC >
 int rCSD( ForwardIterX firstx, ForwardIterX lastx,
@@ -440,7 +445,8 @@ int rCSD( const ContainerX &x, const ContainerY &y, ContainerC &c,
       and power spectrum of the response (in range \a firstyp, \a lastyp)
       between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterG, \a ForwardIterC,
-      and \a ForwardIterYP are a forward iterators that point to real numbers. */
+      and \a ForwardIterYP are a forward iterators that point to real numbers.
+      \return the number of chunks used or a negative number indicating an error. */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename ForwardIterG, typename ForwardIterC, typename ForwardIterYP >
 int spectra( ForwardIterX firstx, ForwardIterX lastx,
@@ -461,7 +467,8 @@ int spectra( const ContainerX &x, const ContainerY &y,
       between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterG, \a ForwardIterC,
       \a ForwardIterCP, \a ForwardIterXP, and \a ForwardIterYP
-      are a forward iterators that point to real numbers. */
+      are a forward iterators that point to real numbers.
+      \return the number of chunks used or a negative number indicating an error. */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename ForwardIterG, typename ForwardIterC, typename ForwardIterCP,
   typename ForwardIterXP, typename ForwardIterYP >
@@ -488,6 +495,7 @@ int spectra( const ContainerX &x, const ContainerY &y,
       \a BidirectIterCP is a bidirectional iterator that points to real numbers.
       The size of the power spectra must be a power of two.
       The size of the cross spectrum must be twice the size of the power spectra.
+      \return the number of chunks used or a negative number indicating an error.
       \sa coherence() */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename BidirectIterCP, typename ForwardIterXP, typename ForwardIterYP >
@@ -506,6 +514,7 @@ int crossSpectra( const ContainerX &x, const ContainerY &y,
       the cross spectrum, a half-complex sequence in the range \a firstcp, \a lastcp,
       the power spectrum of the input in the range \a firstxp, \a lastxp, and
       the power spectrum of the output in the range \a firstyp, \a lastyp.
+      \return the number of chunks used or a negative number indicating an error.
       \sa crossSpectra() */
 template < typename BidirectIterCP, typename ForwardIterXP,
   typename ForwardIterYP, typename ForwardIterC >
@@ -1245,7 +1254,7 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
   if ( np == nw/2 )
     *(firstp+nw/2-1) *= 0.25;
 
-  return 0;
+  return c;
 }
 
 
@@ -1426,7 +1435,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
   delete [] im;
   delete [] re;
 
-  return 0;
+  return c;
 }
 
 
@@ -1640,7 +1649,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
   }
   *iterhre = (*iterre) / (*iterhre);
 
-  return 0;
+  return c;
 }
 
 
@@ -1817,7 +1826,7 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
   delete [] im;
   delete [] re;
 
-  return 0;
+  return c;
 }
 
 
@@ -2006,7 +2015,7 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
   delete [] yp;
   delete [] xp;
 
-  return 0;
+  return c;
 }
 
 
@@ -2186,7 +2195,7 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
 
   delete [] cp;
 
-  return 0;
+  return c;
 }
 
 
@@ -2390,7 +2399,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
 
   delete [] xp;
 
-  return 0;
+  return c;
 }
 
 
@@ -2604,7 +2613,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     *firstcp *= 0.25;
   }
 
-  return 0;
+  return c;
 }
 
 
@@ -2791,7 +2800,7 @@ int crossSpectra( ForwardIterX firstx, ForwardIterX lastx,
   *(firstyp+np-1) *= 0.25;
   *(firstcp+np-1) *= 0.25;
 
-  return 0;
+  return c;
 }
 
 
