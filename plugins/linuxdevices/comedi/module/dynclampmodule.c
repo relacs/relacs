@@ -9,7 +9,6 @@
 #include <rtai.h>
 #include <rtai_fifos.h>
 #include <rtai_sched.h>
-#include <rtai_shm.h>
 
 #include "moduledef.h"
 
@@ -106,6 +105,10 @@ struct dynClampTaskT {
   int running;
   unsigned long loopCnt;
   long aoIndex;
+  RTIME currenttime;
+  RTIME sumperiod;
+  RTIME minperiod;
+  RTIME maxperiod;
 };
 
 
@@ -162,6 +165,7 @@ lsampl_t ttlLow = 0;
 lsampl_t ttlHigh = 1;
 #endif
 
+
 // for debug:
 
 char *iocNames[RTMODULE_IOC_MAXNR] = {
@@ -171,7 +175,8 @@ char *iocNames[RTMODULE_IOC_MAXNR] = {
   "IOC_SYNC_CMD", "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ",
   "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", "IOC_RELEASE_SUBDEV",
   "IOC_DIO_CMD", "IOC_SET_TRIGGER", "IOC_UNSET_TRIGGER", "IOC_GET_TRACE_INFO",
-  "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT", "IOC_GETAOINDEX" 
+  "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT", "IOC_GETLOOPAVG",
+  "IOC_GETLOOPMIN", "IOC_GETLOOPMAX", "IOC_GETAOINDEX" 
 };
 
 
@@ -659,6 +664,7 @@ int stopSubdevice( int iS, int kill )
     if ( subdev[i].running )
       return 0;
   SDEBUG_MSG( "stopSubdevice halts dynclamp task\n" );
+  SDEBUG_MSG( "rtDynClamp: average period %Lu ns, min=%Lu, max=%Lu, count=%lu\n", dynClampTask.sumperiod/dynClampTask.loopCnt, dynClampTask.minperiod, dynClampTask.maxperiod, dynClampTask.loopCnt );
   cleanup_rt_task();
   return 0;
 }
@@ -973,17 +979,56 @@ void rtDynClamp( long dummy )
   unsigned long readCnt = 0;
   struct chanT *pChan;
   float voltage;
+#if defined(ENABLE_STATISTICS) || defined(ENABLE_SYNCSEC)
+  RTIME newtime;
+  RTIME difftime;
+#endif
   int triggerevs[5] = { 1, 0, 0, 0, 0 };
   int prevtriggerevs[5] = { 0, 0, 0, 0, 0 };
+#ifdef ENABLE_SYNCSEC
+  // we need to set the following three variables:
+  XXX
+  comedi_t *syncSECDevice = 0;
+  int syncSECSubdevice = 0;
+  int syncSECLine = 0;
 
-  //  int vi, oi, pi; // DEBUG
+  comedi_insn syncSECInsnHigh;
+  comedi_insn syncSECInsnLow;
+  lsampl_t syncSECLow = 0;
+  lsampl_t syncSECHigh = 1;
+  float currentfac = 1.0;
+#endif
 
   SDEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
-	     1000000000/dynClampTask.periodLengthNs );
+	      1000000000/dynClampTask.periodLengthNs );
 
   dynClampTask.loopCnt = 0;
   dynClampTask.aoIndex = -1;
   dynClampTask.running = 1;
+#ifdef ENABLE_STATISTICS
+  dynClampTask.currenttime = rt_get_time_ns();
+  dynClampTask.sumperiod = 0;
+  dynClampTask.minperiod = 10*dynClampTask.periodLengthNs;
+  dynClampTask.maxperiod = 0;
+#endif
+
+#ifdef ENABLE_SYNCSEC
+  memset( &syncSECInsnHigh, 0, sizeof(comedi_insn) );
+  syncSECInsnHigh.insn = INSN_WRITE;
+  syncSECInsnHigh.n = 1;
+  syncSECInsnHigh.data = &syncSECHigh;
+  syncSECInsnHigh.subdev = syncSECSubdevice;
+  syncSECInsnHigh.chanspec = CR_PACK( syncSECLine, 0, 0 );
+  memset( &syncSECInsnLow, 0, sizeof(comedi_insn) );
+  syncSECInsnLow.insn = INSN_WRITE;
+  syncSECInsnLow.n = 1;
+  syncSECInsnLow.data = &syncSECLow;
+  syncSECInsnLow.subdev = syncSECSubdevice;
+  syncSECInsnLow.chanspec = CR_PACK( syncSECLine, 0, 0 );
+#endif
+
+  /* Somehow the first time this function waits for nothing... */
+  rt_task_wait_period();
   
   /**************************************************************************/
   /******** LOOP START: *****************************************************/
@@ -994,13 +1039,17 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteDevice[iT] != 0; iT++ ) {
-      retVal = comedi_do_insn( ttlStartWriteDevice[iT] ,ttlStartWriteInsn[iT] );
+      retVal = comedi_do_insn( ttlStartWriteDevice[iT], ttlStartWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start write: comedi_do_insn" );
 	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start write\n", iT );
       }
     }
+#endif
+
+#ifdef ENABLE_SYNCSEC
+    float currentfac = difftime / SYNCSEC_PULSE / 4; XXXX
 #endif
 
     /******** WRITE TO ANALOG OUTPUT: ******************************************/
@@ -1024,7 +1073,7 @@ void rtDynClamp( long dummy )
 	    DEBUG_MSG( "REALTIMELOOP PENDING AO STARTED duration=%lu delay=%lu, loopCnt=%lu\n", subdev[iS].duration, subdev[iS].delay, dynClampTask.loopCnt );
 #ifdef ENABLE_TTLPULSE
 	    for ( iT = 0; iT < MAXTTLPULSES && ttlStartAODevice[iT] != 0; iT++ ) {
-	      retVal = comedi_do_insn( ttlStartAODevice[iT] ,ttlStartAOInsn[iT] );
+	      retVal = comedi_do_insn( ttlStartAODevice[iT], ttlStartAOInsn[iT] );
 	      if ( retVal < 1 ) {
 		if ( retVal < 0 )
 		  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start ao: comedi_do_insn" );
@@ -1045,7 +1094,7 @@ void rtDynClamp( long dummy )
 	    stopSubdevice( iS, /*kill=*/0 );
 #ifdef ENABLE_TTLPULSE
 	    for ( iT = 0; iT < MAXTTLPULSES && ttlEndAODevice[iT] != 0; iT++ ) {
-	      retVal = comedi_do_insn( ttlEndAODevice[iT] ,ttlEndAOInsn[iT] );
+	      retVal = comedi_do_insn( ttlEndAODevice[iT], ttlEndAOInsn[iT] );
 	      if ( retVal < 1 ) {
 		if ( retVal < 0 )
 		  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end ao: comedi_do_insn" );
@@ -1104,6 +1153,9 @@ void rtDynClamp( long dummy )
 #endif
 	    // write out Sample:
 	    value_to_sample( pChan, voltage ); // sets pChan->lsample
+#ifdef ENABLE_SYNCSEC
+	    pChan->lsample *= currentfac;
+#endif
 	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );
 	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
@@ -1129,7 +1181,7 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlEndWriteDevice[iT] != 0; iT++ ) {
-      retVal = comedi_do_insn( ttlEndWriteDevice[iT] ,ttlEndWriteInsn[iT] );
+      retVal = comedi_do_insn( ttlEndWriteDevice[iT], ttlEndWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end write: comedi_do_insn" );
@@ -1138,16 +1190,28 @@ void rtDynClamp( long dummy )
     }
 #endif
 
+
+#ifdef ENABLE_SYNCSEC
+    retVal = comedi_do_insn( syncSECDevice, &syncSECInsnHigh );
+    if ( retVal < 1 ) {
+      if ( retVal < 0 )
+	comedi_perror( "dynclampmodule: rtDynClamp seting DIO high at start write for syncing SEC: comedi_do_insn" );
+      ERROR_MSG( "rtDynClamp: ERROR! failed to set DIO high at start write for syncing SEC\n" );
+    }
+
+#else
+
     /******** SLEEP FOR NEURON TO REACT TO GIVEN OUTPUT: ************************/
     /****************************************************************************/
     // PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
 	// int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
     rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
 
+#endif
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartReadDevice[iT] != 0; iT++ ) {
-      retVal = comedi_do_insn( ttlStartReadDevice[iT] ,ttlStartReadInsn[iT] );
+      retVal = comedi_do_insn( ttlStartReadDevice[iT], ttlStartReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start read: comedi_do_insn" );
@@ -1265,9 +1329,18 @@ void rtDynClamp( long dummy )
     } // end of device loop
 
 
+#ifdef ENABLE_SYNCSEC
+    retVal = comedi_do_insn( syncSECDevice, &syncSECInsnLow );
+    if ( retVal < 1 ) {
+      if ( retVal < 0 )
+	comedi_perror( "dynclampmodule: rtDynClamp seting DIO low at start write for syncing SEC: comedi_do_insn" );
+      ERROR_MSG( "rtDynClamp: ERROR! failed to set DIO low at start write for syncing SEC\n" );
+    }
+#endif
+
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlEndReadDevice[iT] != 0; iT++ ) {
-      retVal = comedi_do_insn( ttlEndReadDevice[iT] ,ttlEndReadInsn[iT] );
+      retVal = comedi_do_insn( ttlEndReadDevice[iT], ttlEndReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end read: comedi_do_insn" );
@@ -1289,14 +1362,27 @@ void rtDynClamp( long dummy )
     //    start = rt_get_cpu_time_ns();
     rt_task_wait_period();
 
+#if defined(ENABLE_STATISTICS) || defined(ENABLE_SYNCSEC)
+    newtime = rt_get_time_ns();
+    difftime = newtime - dynClampTask.currenttime;
+    dynClampTask.currenttime = newtime;
+#endif
+
+#ifdef ENABLE_STATISTICS
+    dynClampTask.sumperiod += difftime;
+    if ( dynClampTask.minperiod > difftime )
+      dynClampTask.minperiod = difftime;
+    if ( dynClampTask.maxperiod < difftime )
+      dynClampTask.maxperiod = difftime;
+#endif
+
   } // END OF DYNCLAMP LOOP
     
   dynClampTask.running = 0;
   dynClampTask.duration = 0;
 
   SDEBUG_MSG( "rtDynClamp: left dynamic clamp loop after %lu cycles\n",
-	     dynClampTask.loopCnt );
-
+	      dynClampTask.loopCnt );
 }
 
 
@@ -1431,6 +1517,39 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_GETLOOPCNT:
     luTmp = dynClampTask.loopCnt;
     if ( luTmp < 0 ) {
+      rc = -ENOSPC;
+      break;
+    }
+    retVal = put_user( luTmp, (unsigned long __user *)arg );
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
+
+  case IOC_GETLOOPAVG:
+    if ( dynClampTask.loopCnt > 0 )
+      luTmp = dynClampTask.sumperiod/dynClampTask.loopCnt;
+    else
+      luTmp = -1;
+    if ( luTmp < 0 ) {
+      rc = -ENOSPC;
+      break;
+    }
+    retVal = put_user( luTmp, (unsigned long __user *)arg );
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
+
+  case IOC_GETLOOPMIN:
+    luTmp = dynClampTask.minperiod;
+    if ( dynClampTask.loopCnt < 1 ) {
+      rc = -ENOSPC;
+      break;
+    }
+    retVal = put_user( luTmp, (unsigned long __user *)arg );
+    rc = retVal == 0 ? 0 : -EFAULT;
+    break;
+
+  case IOC_GETLOOPMAX:
+    luTmp = dynClampTask.maxperiod;
+    if ( dynClampTask.loopCnt < 1 ) {
       rc = -ENOSPC;
       break;
     }

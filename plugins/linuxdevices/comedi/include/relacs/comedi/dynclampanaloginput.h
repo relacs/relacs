@@ -157,6 +157,10 @@ public:
     /*! Match trace names with model trace names. */
   virtual int matchTraces( InList &traces ) const;
 
+    /*! Returns some information about the current settings 
+        and real time statistics. */
+  virtual const Options &settings( void ) const;
+
 
 protected:
 
