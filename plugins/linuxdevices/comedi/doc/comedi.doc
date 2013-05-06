@@ -107,16 +107,16 @@ $ make scripts
 \subsubsection installvanillakernel Compile your own kernel
 
 -# Either get a vanilla kernel from http://www.kernel.org,
-e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2,
+e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.38.8.tar.bz2,
 place the tar file in /usr/src and unpack it as root with
 \code
 $ cd /usr/src
-$ tar xjvf linux-2.6.28.9.tar.bz2
+$ tar xjvf linux-2.6.38.8.tar.bz2
 \endcode
-(replace \c linux-2.6.28.9 by the directory name of your new kernel source).
+(replace \c linux-2.6.38.8 by the directory name of your new kernel source).
 Create a softlink to your kernel source 
 \code
-$ ln -s linux-2.6.28.9 linux
+$ ln -s linux-2.6.38.8 linux
 $ cd linux
 \endcode
 -# Reuse your current configuration (replace \c XXX by the name of your running kernel):
@@ -135,7 +135,7 @@ $ make menuconfig
 (You might needto install the following packages first: \c apt-get \a install \c make \c gcc \c ncurses-dev \c zlib1g-dev).
 Possible settings you might want to change are:
   - Processor type and features: 
-    - Select your Subarchitecture Type (PC-Compatible) - this option does not exist on newer kernels
+    - Select your Subarchitecture Type (PC-Compatible) - this option does not exist for newer kernels
     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
       check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
@@ -148,10 +148,10 @@ $ make && make modules && make modules_install && make install
 \endcode
 This takes quite a while.
 -# Finally you might need to create a RAM disk image file,
-if \c make \c install did not create a \c /boot/initrd-2.6.28.9 file already:
+if \c make \c install did not create a \c /boot/initrd-2.6.38.8 file already:
 \code
 $ cd /boot
-$ update-initramfs -c -k 2.6.28.9
+$ update-initramfs -c -k 2.6.38.8
 \endcode
 -# Check the grub menu whether your new kernel was added.. 
 With \c grub \c v1 (default up-to Debian Lenny) 
@@ -165,15 +165,16 @@ initrd          /boot/initrd.img-2.6.28.9
 With \c grub \c v2 (default since Debian Lenny) 
 there should be an entry like this in \c /boot/grub/grub.cfg:
 \code
-menuentry "Ubuntu, Linux 2.6.28.9-rtai" {
-        recordfail=1
-        if [ -n ${have_grubenv} ]; then save_env recordfail; fi
-        set quiet=1
+menuentry 'Linux Mint 12 64-bit, 2.6.38.8-rtai (/dev/sda1)' --class linuxmint --class gnu-linux --class gnu --class os {
+        recordfail
+        set gfxpayload=$linux_gfx_mode
+        insmod gzio
+        insmod part_msdos
         insmod ext2
-        set root=(hd0,1)
-        search --no-floppy --fs-uuid --set cc028ecc-e801-4f23-a86d-ae2d10a71294
-        linux   /boot/vmlinuz-2.6.28.9-rtai root=UUID=cc028ecc-e801-4f23-a86d-ae2d10a71294 ro   quiet splash
-        initrd  /boot/initrd.img-2.6.28.9-rtai
+        set root='(hd0,msdos1)'
+        search --no-floppy --fs-uuid --set=root 6dae4cc8-49a3-437b-8d89-4d3580dad493
+        linux   /boot/vmlinuz-2.6.38.8-rtai root=UUID=6dae4cc8-49a3-437b-8d89-4d3580dad493 ro   
+        initrd  /boot/initrd.img-2.6.38.8-rtai
 }
 \endcode
 You can configure \c grub \c v2 by editing the file \c /etc/default/grub
@@ -203,14 +204,14 @@ $ apt-get install kernel-package
    \endcode
    -# Configure and build the kernel:
    \code
-$ make-kpkg --initrd --revision 1 --config menuconfig kernel-image
+$ make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image
    \endcode
    You can also supply a \c -j option to tell make how many processes can be run in parallel.
    See step 3. for hints on the configuration options.
    -# Install the kernel
    \code
 $ cd ..
-$ dpkg -i linux-image-2.6.28.9_r1_amd64.deb
+$ dpkg -i linux-image-2.6.38.8_1.0_amd64.deb
    \endcode
    -# continue with step 6.
 
@@ -426,14 +427,14 @@ For dynamic clamp you need an RTAI patched linux kernel and Comedi.
 
 \subsection rtaikernel Linux kernel and RTAI patch
 
--# Download the latest RTAI (http://www.rtai.org) version (version 3.7.1) from 
+-# Download the latest RTAI (http://www.rtai.org) version (version 3.9) from 
 the RTAI repository at http://www.rtai.org/RTAI
 and put it into \c /usr/local/src as root.
 -# Unpack RTAI in /usr/local/src:
 \code
 $ cd /usr/local/src
-$ tar xjvf rtai-3.7.1.tar.bz2
-$ ln -s rtai-3.7.1 rtai
+$ tar xjvf rtai-3.9.tar.bz2
+$ ln -s rtai-3.9 rtai
 \endcode
 -# Check for available patches. Get a list of all patches for all architectures:
 \code
@@ -441,29 +442,31 @@ $ find rtai/base/arch/ -name '*.patch' | sort
 \endcode
 The most recent patches for intel and amd 32 and 64-bit systems are in the x86 directory.
 Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
-  -# Currently, the 2.6.28.9 works, the patch for the 2.6.29 kernel is broken.
+  -# I got the 2.6.38.8 to work.
+  -# Too old (usually not so old) kernels do not compile with the curent version of the \c gcc compiler.
   -# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.gz from
-     http://www.kernel.org (e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2)
+     http://www.kernel.org (e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.38.8.tar.bz2)
      to \c /usr/src
   -# Unpack the kernel
 \code
 $ cd /usr/src
-$ tar xzvf linux-2.6.28.9.tar.bz2
-$ mv linux-2.6.28.9 linux-2.6.28.9-rtai
-$ ln -s linux-2.6.28.9-rtai linux
+$ tar xjvf linux-2.6.38.8.tar.bz2
+$ mv linux-2.6.38.8 linux-2.6.38.8-rtai
+$ ln -s linux-2.6.38.8-rtai linux
 \endcode
 Currently, for compiling the DynClamp plugin RELACS assumes that 
 \c /usr/src/linux points to your rtai patched kernel.
 -# Patch the kernel (use the patch file that matches the downloaded kernel)
 \code
 $ cd /usr/src/linux
-$ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.28.9-x86-2.2-07.patch
+$ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.38.8-x86-2.11-02.patch
 \endcode
 -# Configure, compile, and install the kernel.
 Follow the intructions given in \ref installvanillakernel, starting at step 2.
 On Debian, the make-kpkg command should be
 \code
-make-kpkg --initrd --append-to-version -rtai --revision 1 --config menuconfig kernel-image
+$ export CONCURRENCY_LEVEL=2  # set here the number of CPUs you have tospeed things up!
+$ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image
 \endcode
 In the kernel configuration dialog you should do the following settings:
   - General setup: set "Local version" to -rtai (not needed if you are using \c make-kpkg)
@@ -472,19 +475,15 @@ In the kernel configuration dialog you should do the following settings:
     - Deselect "Module versioning support"
   - Processor type and features: 
     - Deselect "Tickless System"
-    - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist on newer kernels
+    - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
       check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
     - Set "Timer frequency" to 1000 Hz
-XXX - disable kernel irq balancing (noirqbalance)
   - Power Management options:
     - Deselect "CPU Frequency scaling"
     .
   .
--# XXX Isolate CPUs If you have a multi-core system you should reserve at least one CPU for RTAI.
-  isolcpus=0,1,2
-  insmod rtai_hal.ko IsolCpusMask=0x07
 -# Reboot into your new RTAI real time kernel.
 
 
@@ -505,12 +504,12 @@ $ make menuconfig
 \endcode
 Check the following settings:
  - General
-   - Installation directory: should be set t\o \c /usr/realtime
+   - Installation directory: should be set to \c /usr/realtime
    - Linux source tree: must be set to \c /usr/src/linux
    - RTAI Documentation: select the documentation you want
    - Build RTAI testsuite: select
  - Machine
-    - Number of CPUs: set to the rigth value. The default is often right.
+    - Number of CPUs: set to the right value. The default is often right.
       If in doubt, look into the file \c /proc/cpuinfo .
     - Enable FPU support: select
  - Base system
@@ -528,6 +527,10 @@ and run \c .configure manually.
 \code
 $ make && make install
 \endcode
+In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
+\code
+$ apt-get install gcc-multilib
+\endcode
 In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
 then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
 -# Make the RTAI kernel modules known to modprobe:
@@ -542,6 +545,20 @@ $ modprobe rtai_sched
 If this fails:
 - add \c lapic to the kernel parameter in the \c kernel line of the
 \c grub menu in \c /boot/grub/menu.lst .
+-# If you have a multi-core system you should reserve at least one CPU for RTAI. You can isolate CPUs by using    the kernel parameter
+   \code
+isolcpus=0,1,2
+   \endcode
+  (for isolating the cores no. 0, 1, and 2) and by loading the rtai_hal kernel modul the following way:
+  \code
+insmod rtai_hal.ko IsolCpusMask=0x07
+  \endcode
+  See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
+-# Run the RTAI latency test
+\code
+$ cd /usr/realtime/testsuite/kern/latency
+$ run
+\endcode
 
 
 \subsection rtaicomedi Comedi
