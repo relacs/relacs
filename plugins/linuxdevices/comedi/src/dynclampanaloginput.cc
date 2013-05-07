@@ -578,6 +578,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
     setSettings( traces, BufferSize, ReadBufferSize );
     Settings.addInteger( "number of periods", 0 );
     Settings.addNumber( "average period", 0.0, "us" );
+    Settings.addNumber( "stdev period", 0.0, "us" );
     Settings.addNumber( "minimum period", 0.0, "us" );
     Settings.addNumber( "maximum period", 0.0, "us" );
     Traces = &traces;
@@ -965,6 +966,7 @@ const Options &DynClampAnalogInput::settings( void ) const
 {
   long long loopcnt = 0;
   double meanperiod = 0.0;
+  double stdevperiod = 0.0;
   double minperiod = 0.0;
   double maxperiod = 0.0;
 
@@ -976,6 +978,9 @@ const Options &DynClampAnalogInput::settings( void ) const
     r = ::ioctl( ModuleFd, IOC_GETLOOPAVG, &val );
     if ( r >= 0 )
       meanperiod = 0.001*val;
+    r = ::ioctl( ModuleFd, IOC_GETLOOPSQAVG, &val );
+    if ( r >= 0 )
+      stdevperiod = sqrt( 0.001*0.001*val - meanperiod*meanperiod );
     r = ::ioctl( ModuleFd, IOC_GETLOOPMIN, &val );
     if ( r >= 0 )
       minperiod = 0.001*val;
@@ -986,6 +991,7 @@ const Options &DynClampAnalogInput::settings( void ) const
 
   Settings.setInteger( "number of periods", loopcnt );
   Settings.setNumber( "average period", meanperiod, "us" );
+  Settings.setNumber( "stdev period", stdevperiod, "us" );
   Settings.setNumber( "minimum period", minperiod, "us" );
   Settings.setNumber( "maximum period", maxperiod, "us" );
   return Settings;

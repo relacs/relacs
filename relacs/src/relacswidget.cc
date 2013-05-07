@@ -1324,6 +1324,7 @@ void RELACSWidget::customEvent( QEvent *qce )
 
   case 2: {
     DV->updateMenu();
+    AID->updateMenu();
     lockSignals();
     AOD->updateMenu();
     ATD->updateMenu();
@@ -1745,19 +1746,6 @@ void RELACSWidget::startFirstAcquisition( void )
     return;
   }
 
-  // reset analog output for dynamic clamp:
-  lockAI();
-  string wr = AQ->writeReset( true, true );
-  unlockAI();
-  if ( ! wr.empty() ) {
-    printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed: " + wr );
-    MessageBox::warning( "RELACS Warning !",
-			 "error in resetting analog output: " + wr,
-			 true, 0.0, this );
-    startIdle();
-    return;
-  }
-
   AQ->readRestart( IL, ED );
   AID->updateMenu();
 
@@ -1776,6 +1764,20 @@ void RELACSWidget::startFirstAcquisition( void )
   RunData = true;
   RunDataMutex.unlock();
   Thread->start( QThread::HighPriority );
+
+  // reset analog output for dynamic clamp:
+  lockAI();
+  string wr = AQ->writeReset( true, true );
+  unlockAI();
+  if ( ! wr.empty() ) {
+    printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed: " + wr );
+    MessageBox::warning( "RELACS Warning !",
+			 "error in resetting analog output: " + wr,
+			 true, 0.0, this );
+    startIdle();
+    return;
+  }
+
   CW->start();
 
   // get first RePro and start it:
