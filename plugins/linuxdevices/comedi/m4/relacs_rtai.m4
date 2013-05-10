@@ -22,16 +22,19 @@ AS_HELP_STRING([--without-rtai],[don't use RTAI, i.e. prevent auto-detection])],
 	# --with-rtai  -> $with_rtai = yes
 	# --with-rtai=yes  -> $with_rtai = yes
 	# --with-rtai=foo  -> $with_rtai = foo
-	RTAI_ERROR="No path given for option --with-rtai"
 	AS_IF([test "x$with_rtai" != xyes -a "$xwith_rtai" != xcheck -a "x$with_rtai" != xno -a "x$with_rtai" != x],
 	        [RTAI_CPPFLAGS="-I${with_rtai}"
 		 CPPFLAGS="${RTAI_CPPFLAGS} ${CPPFLAGS}"],
               [test "x$with_rtai" = xyes],
-		[AC_MSG_ERROR(${RTAI_ERROR})],
+		[RTAI_CPPFLAGS="-I/usr/realtime/include"
+		 CPPFLAGS="${RTAI_CPPFLAGS} ${CPPFLAGS}"
+		 with_rtai=detect],
               [])
 ],
 [
 	# no rtai argument given
+        RTAI_CPPFLAGS="-I/usr/realtime/include"
+	CPPFLAGS="${RTAI_CPPFLAGS} ${CPPFLAGS}"
 	with_rtai=detect
 ])
 

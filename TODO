@@ -129,7 +129,6 @@ Analog Input/Output:
 
 Dynamic clamp:
 - CHECK IT! Both kernel modules, optional trigger, and DynClmapAnalogOutput
-- relacs_rtai.m4: provide good default location
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.
 - write back real time loop frequency to InList and OutList samplerate.
@@ -198,7 +197,6 @@ Documentation:
 - For developing: make sure LD_LIBRARY_PATH does not contain pathes to any relacs libraries,
   best is to set LD_LIBRARY_PATH=""
 - Add brief documentation to the examples! (a README file)
-- RTAI include path: --with-rtai=/usr/src/rtai-3.6/base/include
 
 Libraries:
 - Add relacs library tests to the libraries!

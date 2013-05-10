@@ -1035,6 +1035,11 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 
 int ComediAnalogOutput::fillWriteBuffer( bool first )
 {
+  if ( !isOpen() ) {
+    Sigs.setError( DaqError::DeviceNotOpen );
+    return -1;
+  }
+
   if ( Sigs[0].deviceWriting() ) {
     // convert data into buffer:
     int bytesConverted = 0;
@@ -1043,11 +1048,6 @@ int ComediAnalogOutput::fillWriteBuffer( bool first )
     else  
       bytesConverted = convert<sampl_t>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
-  }
-
-  if ( !isOpen() ) {
-    Sigs.setError( DaqError::DeviceNotOpen );
-    return -1;
   }
 
   ErrorState = 0;

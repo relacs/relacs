@@ -25,7 +25,13 @@
 // #define ENABLE_TRIGGER
 
   /*! Sets digitial outputs high or low at various time points of the dynamic clamp loop. */
-#define ENABLE_TTLPULSE
+//#define ENABLE_TTLPULSE
+
+  /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
+#define ENABLE_SYNCSEC
+
+  /*! Measures mean and standard deviation of periodic task. */
+#define ENABLE_STATISTICS
 
 
 // *** DEVICE LINUX CONFIGURATION ***
@@ -118,8 +124,11 @@ struct syncCmdIOCT {
   int continuous;
 };
 
-enum dioOps { DIO_CONFIGURE, DIO_READ, DIO_WRITE, DIO_ADD_TTLPULSE, DIO_CLEAR_TTLPULSE };
-enum ttlPulses { TTL_START_WRITE=0, TTL_END_WRITE, TTL_START_READ, TTL_END_READ, TTL_START_AO, TTL_END_AO, TTL_UNDEFINED };
+enum dioOps { DIO_CONFIGURE, DIO_READ, DIO_WRITE,
+	      DIO_ADD_TTLPULSE, DIO_CLEAR_TTLPULSE,
+	      DIO_SET_SYNCPULSE, DIO_CLEAR_SYNCPULSE };
+enum ttlPulses { TTL_START_WRITE=0, TTL_END_WRITE, TTL_START_READ, TTL_END_READ,
+		 TTL_START_AO, TTL_END_AO, TTL_UNDEFINED };
 
 struct dioIOCT {
   unsigned int subdevID;
@@ -127,7 +136,8 @@ struct dioIOCT {
   enum dioOps op;
   int lines;
   int output;
-  enum ttlPulses pulseType; /* only for op == DIO_ADD_TTLPULSE or DIO_CLEAR_TTLPULSE*/
+  enum ttlPulses pulseType; /* only for op == DIO_ADD_TTLPULSE or DIO_CLEAR_TTLPULSE */
+  long pulsewidth;          /* only for op == DIO_SET_SYNCPULSE */
 };
 
 struct triggerIOCT {
@@ -183,9 +193,13 @@ struct traceChannelIOCT {
 #define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  17, int)
 #define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  18, int)
 #define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  19, int)
-#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  20, int)
+#define IOC_GETLOOPAVG          _IOR(RTMODULE_MAJOR,  20, int)
+#define IOC_GETLOOPSQAVG        _IOR(RTMODULE_MAJOR,  21, int)
+#define IOC_GETLOOPMIN          _IOR(RTMODULE_MAJOR,  22, int)
+#define IOC_GETLOOPMAX          _IOR(RTMODULE_MAJOR,  23, int)
+#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  24, int)
 
-#define RTMODULE_IOC_MAXNR 21
+#define RTMODULE_IOC_MAXNR 25
 
 
 // *** KERNEL LOGGING STYLE ***

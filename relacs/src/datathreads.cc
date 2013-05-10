@@ -136,7 +136,7 @@ void WriteThread::run( void )
       RW->lockSignals();
       RW->AQ->stopWrite();
       RW->unlockSignals();
-      RW->printlog( "! error in writing data. Stop analog output." );
+      RW->printlog( "! error in transferring analog output data. Stop analog output." );
       // error message:
       QCoreApplication::postEvent( RW, new QEvent( QEvent::Type( QEvent::User+3 ) ) );
     }

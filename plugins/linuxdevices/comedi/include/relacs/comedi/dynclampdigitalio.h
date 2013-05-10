@@ -150,11 +150,20 @@ public:
         digital I/O line.
 	The digital I/O line has to be allocated and configured for output
 	before by the allocateLine() and configureLine() functions.
-	\param[in] line the digitla I/O line (channel) for which no more TTL pulses
+	\param[in] line the digital I/O line (channel) for which no more TTL pulses
 	should be generated.
 	\param[in] high set the digital I/O line high if \a high is \c true
 	\return 0 on success, otherwise a negative number indicating the error. */
   int clearTTLPulse( int line, bool high=false );
+
+    /*! Enables generation of TTL Pulses on DIO line \a line that is
+        high during reading analog input.  In addition the current for
+        analog output is rescaled according to the measured period
+        divided by the curent injection time of \a duration
+        microseconds. \sa clearSyncPulse() */
+  int setSyncPulse( int line, double duration );
+    /*! Disable TTL Pulse generation and current scaling. \sa setSyncPulse() */
+  int clearSyncPulse( void );
 
 
 private:

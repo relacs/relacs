@@ -156,6 +156,19 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
       continue;
     addTTLPulse( line, (enum ttlPulses)high, (enum ttlPulses)low );
   }
+
+  // set up SEC synchronization:
+  {
+    int line = opts.integer( "syncpulseline", 0, -1 );
+    double duration = opts.number( "syncpulsewidth", 0.0, "us" );
+    int id = allocateLine( line );
+    if ( id == WriteError )
+      cerr << "! error: DynClampDigitalIO::open() -> failed to allocate line " << line << " for sync pulse\n";
+    else if ( configureLine( line, true ) < 0 )
+      cerr << "! error: DynClampDigitalIO::open() -> failed to configure line " << line << " for sync pulse for writing\n";
+    else
+      setSyncPulse( line, duration );
+  }
   
   return 0;
 }
@@ -455,6 +468,61 @@ int DynClampDigitalIO::clearTTLPulse( int line, bool high )
   }
   TTLPulseHigh[line] = TTL_UNDEFINED;
   TTLPulseLow[line] = TTL_UNDEFINED;
+  return 0;
+}
+
+
+int DynClampDigitalIO::setSyncPulse( int line, double duration )
+{
+  if ( !isOpen() ) 
+    return NotOpen;
+  long durationns = (long)::round( 1000.0*duration );
+  if ( durationns <= 0 ) {
+    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> duration " << durationns << " ns not positive\n";
+    return WriteError;
+  }
+  if ( line < 0 || line >= MaxLines ) {
+    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> invalid line " << line << '\n';
+    return WriteError;
+  }
+  if ( ! allocatedLine( line ) ) {
+    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> line " << line << " not allocated\n";
+    return WriteError;
+  }
+  if ( ! lineConfiguration( line ) ) {
+    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> line " << line << " not configured for writing\n";
+    return WriteError;
+  }
+  struct dioIOCT dioIOC;
+  dioIOC.subdevID = SubdeviceID;
+  dioIOC.bitfield = 0;
+  dioIOC.op = DIO_SET_SYNCPULSE;
+  dioIOC.lines = line;
+  dioIOC.pulsewidth = durationns;
+  int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
+  if( retval < 0 ) {
+    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> "
+	 << "Setting pulse for DIO line " << line
+	 << " failed on subdeviceid " << SubdeviceID << '\n';
+    return WriteError;
+  }
+  return 0;
+}
+
+
+int DynClampDigitalIO::clearSyncPulse( void )
+{
+  if ( !isOpen() ) 
+    return NotOpen;
+  struct dioIOCT dioIOC;
+  dioIOC.subdevID = SubdeviceID;
+  dioIOC.op = DIO_CLEAR_SYNCPULSE;
+  int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
+  if( retval < 0 ) {
+    cerr << "! error: DynClampDigitalIO::clearSyncPulse() -> "
+	 << "Clearing sync pulse failed on subdeviceid " << SubdeviceID << '\n';
+    return WriteError;
+  }
   return 0;
 }
 

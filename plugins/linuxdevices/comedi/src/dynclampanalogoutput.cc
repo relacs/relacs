@@ -792,27 +792,12 @@ int DynClampAnalogOutput::fillWriteBuffer( void )
     return -1;
   }
 
-  ErrorState = 0;
-
-  for ( int k=0; k<Sigs.size(); k++ ) {
-    if ( ! Sigs[k].deviceWriting() ) {
-      Sigs.addError( DaqError::NoData );
-      return -1;
-    }
-  }
-
-  int maxntry = 2;
-  int ern = 0;
-  int elemWritten = 0;
-  bool writing = true;
-
-  // try to write twice
-  for ( int tryit = 0; tryit < maxntry && writing; tryit++ ){
-
+  if ( Sigs[0].deviceWriting() ) {
     // multiplex data into buffer:
     float *bp = (float*)(Buffer+NBuffer);
     int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
     int bytesConverted = 0;
+    bool writing = true;
     for ( int i=0; i<maxn && writing; i++ ) {
       for ( int k=0; k<Sigs.size(); k++ ) {
 	*bp = Sigs[k].deviceValue();
@@ -827,27 +812,33 @@ int DynClampAnalogOutput::fillWriteBuffer( void )
     }
     bytesConverted *= sizeof( float );
     NBuffer += bytesConverted;
+  }
 
-    // transfer buffer to kernel modul:
-    int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
+  ErrorState = 0;
+
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
+    return 0;
+
+  // transfer buffer to kernel modul:
+  int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
+
+  int ern = 0;
+  int elemWritten = 0;
       
-    if ( bytesWritten < 0 ) {
-      ern = errno;
-      if ( ern == EAGAIN || ern == EINTR ) {
-	ern = 0;
-	break;
-      }
-    }
-    else if ( bytesWritten > 0 ) {
-      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-      NBuffer -= bytesWritten;
-      elemWritten += bytesWritten / BufferElemSize;
-    }
+  if ( bytesWritten < 0 ) {
+    ern = errno;
+    if ( ern == EAGAIN || ern == EINTR )
+      ern = 0;
+  }
+  else if ( bytesWritten > 0 ) {
+    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+    NBuffer -= bytesWritten;
+    elemWritten += bytesWritten / BufferElemSize;
   }
 
   if ( ern == 0 ) {
     // no more data:
-    if ( Sigs[0].deviceWriting() == 0 ) {
+    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
       if ( Buffer != 0 )
 	delete [] Buffer;
       Buffer = 0;
