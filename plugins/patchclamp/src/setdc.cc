@@ -29,7 +29,8 @@ namespace patchclamp {
 
 
 SetDC::SetDC( void )
-  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.3", "Nov 25, 2010" ),
+  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.4", "May 10, 2013" ),
+    P( 2, 1 ),
     IUnit( "nA" )
 {
   // add some options:
@@ -42,8 +43,11 @@ SetDC::SetDC( void )
   addNumber( "dcamplitudestep", "Stepsize for entering dc", 0.001, 0.0, 1000.0, 0.001 );
   addNumber( "duration", "Duration for analysis", 0.5, 0.0, 1000.0, 0.01, "seconds", "ms" );
 
+  QHBoxLayout *hb = new QHBoxLayout;
+  setLayout( hb );
+
   QVBoxLayout *vb = new QVBoxLayout;
-  setLayout( vb );
+  hb->addLayout( vb );
 
   QGridLayout *gl = new QGridLayout;
   vb->addLayout( gl );
@@ -142,6 +146,8 @@ SetDC::SetDC( void )
 	   this, SLOT( zeroDC() ) );
   grabKey( Qt::ALT+Qt::Key_Z );
 
+  // plots:
+  hb->addWidget( &P );
 }
 
 
@@ -220,17 +226,28 @@ int SetDC::main( void )
     DCAmplitude -= dcamplitudedecr;
 
   if ( interactive ) {
+    // plot
+    P.lock();
+    P[0].setLMarg( 8.0 );
+    P[0].setRMarg( 2.0 );
+    P[0].setXLabel( trace( SpikeTrace[0] ).ident() + "(" + trace( SpikeTrace[0] ).unit() + ")"  );
+    P[0].setYLabel( "N"  );
+    P[0].setYLabelPos( 3.3, Plot::FirstMargin, 0.5, Plot::Graph,
+		       Plot::Center, -90.0 );
+    P[0].setYRange( 0.0, Plot::AutoScale );
+
+    P[1].setLMarg( 8.0 );
+    P[1].setRMarg( 2.0 );
+    P[1].setXLabel( "Interspike interval [ms]" );
+    P[1].setXRange( 0.0, Plot::AutoScale );
+    P[1].setYLabel( "N"  );
+    P[1].setYLabelPos( 3.3, Plot::FirstMargin, 0.5, Plot::Graph,
+		       Plot::Center, -90.0 );
+    P[1].setYRange( 0.0, Plot::AutoScale );
+    P.unlock();
+
     keepFocus();
-    if ( SpikeTrace[0] >= 0 ) {
-      double meanvoltage = trace( SpikeTrace[0] ).mean( currentTime()-duration,
-							currentTime() );
-      QCoreApplication::postEvent( this, new SetDCEvent( meanvoltage, 15 ) );
-    }
-    if ( SpikeEvents[0] >= 0 ) {
-      double meanrate = events( SpikeEvents[0] ).rate( currentTime()-duration,
-						       currentTime() );
-      QCoreApplication::postEvent( this, new SetDCEvent( meanrate, 16 ) );
-    }
+    analyze( duration );
     OutData dcsignal;
     dcsignal.setTrace( OutCurrent );
     dcsignal.constWave( DCAmplitude );
@@ -266,16 +283,7 @@ int SetDC::main( void )
       bool w = false;
       do {
 	w = sleepWait( duration );
-	if ( SpikeTrace[0] >= 0 ) {
-	  double meanvoltage = trace( SpikeTrace[0] ).mean( currentTime()-duration,
-							    currentTime() );
-	  QCoreApplication::postEvent( this, new SetDCEvent( meanvoltage, 15 ) );
-	}
-	if ( SpikeEvents[0] >= 0 ) {
-	  double meanrate = events( SpikeEvents[0] ).rate( currentTime()-duration,
-							   currentTime() );
-	  QCoreApplication::postEvent( this, new SetDCEvent( meanrate, 16 ) );
-	}
+	analyze( duration );
       } while ( ! w );
       if ( ! Finished || ! SetValue ) {
 	if ( Finished )
@@ -312,6 +320,48 @@ int SetDC::main( void )
 
   sleep( 0.01 );
   return Completed;
+}
+
+
+void SetDC::analyze( double duration )
+{
+  double ltime = currentTime()-duration;
+  if ( ltime < signalTime() ) 
+    ltime = signalTime();
+  if ( SpikeTrace[0] >= 0 ) {
+    const InData &data = trace( SpikeTrace[0] );
+    double meanvoltage = data.mean( ltime, currentTime() );
+    double min = 0;
+    double max = 0.0;
+    data.minMax( min, max, ltime, currentTime() );
+    SampleDataD hist( min, max, 0.01*(max-min), 0.0 );
+    double l = hist.rangeFront();
+    double s = hist.stepsize();
+    for ( int k=data.index( ltime ); k<data.size(); k++ ) {
+      int b = (int)rint( ( data[k] - l ) / s );
+      if ( b >= 0  && b < hist.size() )
+	hist[b] += 1.0;
+    }
+    P.lock();
+    P[0].clear();
+    P[0].plot( hist, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Green, Plot::Green );
+    P[0].draw();
+    P.unlock();
+    QCoreApplication::postEvent( this, new SetDCEvent( meanvoltage, 15 ) );
+  }
+  if ( SpikeEvents[0] >= 0 ) {
+    const EventData &spikes = events( SpikeEvents[0] );
+    double meanrate = spikes.rate( ltime, currentTime() );
+    double period = meanrate > 1.0e-8 ? 1.0/meanrate : 0.01;
+    SampleDataD isih( 0.0, 4.0*period, 0.1*period, 0.0 );
+    spikes.intervalHistogram( ltime, currentTime(), isih );
+    P.lock();
+    P[1].clear();
+    P[1].plot( isih, 1000.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Yellow, Plot::Yellow );
+    P[1].draw();
+    P.unlock();
+    QCoreApplication::postEvent( this, new SetDCEvent( meanrate, 16 ) );
+  }
 }
 
 

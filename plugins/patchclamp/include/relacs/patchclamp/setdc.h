@@ -25,6 +25,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QDoubleSpinBox>
+#include <relacs/multiplot.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/repro.h>
 using namespace relacs;
@@ -36,7 +37,7 @@ namespace patchclamp {
 \class SetDC
 \brief [RePro] Interactively set the DC current.
 \author Jan Benda
-\version 1.3 (Nov 25, 2010)
+\version 1.4 (May 10, 2013)
 \par Screenshot
 \image html setdc.png
 
@@ -66,12 +67,14 @@ public:
 
 protected:
 
+  void analyze( double duration );
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QEvent *qce );
   QDoubleSpinBox *EW;
   QLabel *UnitLabel;
   QLabel *VoltageLabel;
   QLabel *RateLabel;
+  MultiPlot P;
   QPushButton *OKButton;
   QPushButton *CancelButton;
   QPushButton *ResetButton;

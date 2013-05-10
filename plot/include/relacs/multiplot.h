@@ -52,7 +52,7 @@ public:
 	you are using multible threads, then
 	you need to provide a mutex for locking the data
 	via setDataMutex(). */
-  MultiPlot( int plots, int columns, bool horizontal=true, Plot::KeepMode keep=Plot::Copy,
+  MultiPlot( int plots, int columns, bool horizontal, Plot::KeepMode keep=Plot::Copy,
 	     QWidget *parent=0 );
     /*! Constructs \a plots plots. */
   MultiPlot( int plots, int columns, bool horizontal=true, QWidget *parent=0 );

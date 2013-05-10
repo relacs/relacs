@@ -431,8 +431,13 @@ bool Macros::check( void )
   if ( FallBackIndex < 0 ) {
     if ( !Warnings.empty() )
       Warnings += "\n";
-    Warnings += "No FallBack RePro found!\n";
+    Warnings += "No FallBack macro found!\n";
     Fatal = true;
+  }
+
+  // no startup macro?
+  if ( StartUpIndex < 0 ) {
+    StartUpIndex = FallBackIndex;
   }
 
   // set macro and command indices:
