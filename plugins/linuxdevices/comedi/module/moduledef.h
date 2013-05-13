@@ -28,10 +28,10 @@
 //#define ENABLE_TTLPULSE
 
   /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
-#define ENABLE_SYNCSEC
+//#define ENABLE_SYNCSEC
 
   /*! Measures mean and standard deviation of periodic task. */
-#define ENABLE_STATISTICS
+//#define ENABLE_STATISTICS
 
 
 // *** DEVICE LINUX CONFIGURATION ***

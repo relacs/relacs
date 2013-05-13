@@ -39,6 +39,7 @@ Beats::Beats( void )
   addNumber( "pause", "Pause between signals", 20.0, 1.0, 1000000.0, 1.0, "seconds" );
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
   addText( "deltafrange", "Range of delta f's", "10" ).setUnit( "Hz" );
+  addBoolean( "fixeddf", "Keep delta f fixed", false );
   addNumber( "amplitude", "Amplitude", 1.0, 0.1, 1000.0, 0.1, "mV/cm" );
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
@@ -46,6 +47,7 @@ Beats::Beats( void )
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "averagetime", "Time for computing EOD frequency", 1.0, 0.0, 100000.0, 1.0, "seconds" );
+  addBoolean( "showstimulus", "Plot frequency of stimulus", false );
   addBoolean( "split", "Save each run into a separate file", false );
   addBoolean( "savetraces", "Save traces during pause", false );
 
@@ -73,10 +75,12 @@ int Beats::main( void )
   double ramp = number( "ramp" );
   double amplitude = number( "amplitude" );
   string deltafrange = text( "deltafrange" );
+  bool fixeddf = boolean( "fixeddf" );
   int repeats = integer( "repeats" );
   double before = number( "before" );
   double after = number( "after" );
   double averagetime = number( "averagetime" );
+  bool showstimulus = boolean( "showstimulus" );
   bool split = boolean( "split" );
   bool savetraces = boolean( "savetraces" );
   double fakefish = number( "fakefish" );
@@ -103,6 +107,12 @@ int Beats::main( void )
   if ( fakefish == 0.0 && latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 )
     warning( "Attenuator gain is probably not set!" );
 
+  // reset outputs:
+  if ( fixeddf )
+    writeZero( GlobalEField );
+  else
+    writeZero( "Amplitude" );
+
   // plot trace:
   tracePlotContinuous();
 
@@ -125,6 +135,8 @@ int Beats::main( void )
       // results:
       MapD eodfrequency;
       eodfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+      MapD stimfrequency;
+      stimfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
       MapD eodamplitude;
       eodamplitude.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
       EventData jarchirpevents;
@@ -133,6 +145,8 @@ int Beats::main( void )
       EventIterator eoditer = eodglobal.begin( signalTime() - before );
       for ( int k=0; k<10; k++ )
 	++eoditer; // XXX
+      EventFrequencyIterator stimiter;
+      bool initstimiter = true;
 
       // eodf:
       double deltaf = *DFRange;
@@ -142,49 +156,89 @@ int Beats::main( void )
 
       setSaving( true );
 
-      // create signal:
-      OutData signal;
-      signal.setTrace( GlobalEField );
-      unlockAll();
-      double stimulusrate = fishrate + deltaf;
-      double p = 1.0;
-      if ( fabs( deltaf ) > 0.01 )
-	p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
-      else
-	p = 1.0/stimulusrate;
-      int n = (int)::rint( duration / p );
-      if ( n < 1 )
-	n = 1;
-      signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
-      signal.setIdent( "sinewave" );
-      lockAll();
-      duration = signal.length();
-      signal.setDelay( before );
-      signal.setIntensity( amplitude );
-
       // meassage:
       Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
       s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
       message( s );
 
-      // output signal:
+      // create signal:
       double starttime = currentTime();
-      write( signal );
+      double stimulusrate = fishrate + deltaf;
+      double ramptime = 0.0;
+      if ( fixeddf ) {
+	OutList signal;
+	OutData sig;
+	sig.setTraceName( "Frequency" );
+	sig.constWave( ramp, -1.0, stimulusrate );
+	signal.push( sig );
 
-      // signal failed?
-      if ( signal.failed() ) {
-	string s = "Output of stimulus failed!<br>Error code is <b>";
-	s += signal.errorText() + "</b>";
-	warning( s, 2.0 );
-	writeZero( GlobalEField );
-	return Failed;
+	sig.setTraceName( "Amplitude" );
+	sig.rampWave( ramp, -1.0, 0.0, 1.0 );
+	signal.push( sig );
+
+	sig.setTrace( GlobalEField );
+	sig.constWave( ramp, -1.0, 0.0 );
+	sig.setIntensity( amplitude );
+	signal.push( sig );
+
+	signal.setDelay( before );
+
+	// output signal:
+	starttime = currentTime();
+	write( signal );
+
+	// signal failed?
+	if ( signal.failed() ) {
+	  string s = "Output of stimulus failed!<br>Error code is <b>";
+	  s += signal.errorText() + "</b>";
+	  warning( s, 2.0 );
+	  writeZero( "Amplitude" );
+	  return Failed;
+	}
+	ramptime = ramp;
+	sleepWait( ramptime );
+      }
+      else {
+	OutData signal;
+	signal.setTrace( GlobalEField );
+	unlockAll();
+	double p = 1.0;
+	if ( fabs( deltaf ) > 0.01 )
+	  p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
+	else
+	  p = 1.0/stimulusrate;
+	int n = (int)::rint( duration / p );
+	if ( n < 1 )
+	  n = 1;
+	signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
+	signal.setIdent( "sinewave" );
+	lockAll();
+	duration = signal.length();
+	signal.setDelay( before );
+	signal.setIntensity( amplitude );
+
+	// output signal:
+	starttime = currentTime();
+	write( signal );
+
+	// signal failed?
+	if ( signal.failed() ) {
+	  string s = "Output of stimulus failed!<br>Error code is <b>";
+	  s += signal.errorText() + "</b>";
+	  warning( s, 2.0 );
+	  writeZero( GlobalEField );
+	  return Failed;
+	}
       }
 
       // stimulation loop:
       do {
 	sleepWait( 0.2 );
 	if ( interrupt() ) {
-	  writeZero( GlobalEField );
+	  if ( fixeddf )
+	    writeZero( "Amplitude" );
+	  else
+	    writeZero( GlobalEField );
 	  return Aborted;
 	}
 	// get data:
@@ -194,16 +248,65 @@ int Beats::main( void )
 	  EventSizeIterator siter = eoditer;
 	  eodamplitude.push( siter.time() - signalTime(), *siter );
 	}
-	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
+	if ( GlobalEFieldEvents >= 0 ) {
+	  const EventData &stimglobal = events( GlobalEFieldEvents );
+	  if ( initstimiter ) {
+	    stimiter = stimglobal.begin( signalTime() - before );
+	    int k = 0;
+	    for ( ; stimiter < stimglobal.end() && k<10; ++stimiter, ++k )
+	    if ( stimiter != stimglobal.end() )
+	      initstimiter =  false;
+	  }
+	  for ( ; stimiter < stimglobal.end(); ++stimiter )
+	    stimfrequency.push( stimiter.time() - signalTime(), *stimiter );
+	}
+	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
 
-      } while ( currentTime() - starttime < before + duration );
+	if ( fixeddf ) {
+	  double fishrate = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
+	  if ( fakefish > 0.0 )
+	    fishrate = fakefish;
+	  OutData signal;
+	  signal.setTraceName( "Frequency" );
+	  signal.constWave( fishrate + deltaf );
+	  write( signal );
+	  // signal failed?
+	  if ( signal.failed() ) {
+	    string s = "Output of frequency stimulus failed!<br>Error code is <b>";
+	    s += signal.errorText() + "</b>";
+	    warning( s, 2.0 );
+	    writeZero( "Amplitude" );
+	    return Failed;
+	  }
+	}
+
+      } while ( currentTime() - starttime < before + duration -  ramptime );
+
+      // ending stimulus:
+      if ( fixeddf && ramptime > 0.0 ) {
+	OutData signal;
+	signal.setTraceName( "Amplitude" );
+	signal.rampWave( ramp, -1.0, 1.0, 0.0 );
+	write( signal );
+	// signal failed?
+	if ( signal.failed() ) {
+	  string s = "Output of final ramp stimulus failed!<br>Error code is <b>";
+	  s += signal.errorText() + "</b>";
+	  warning( s, 2.0 );
+	  writeZero( "Amplitude" );
+	  return Failed;
+	}
+      }
 
       // after stimulus recording loop:
       starttime = currentTime();
       do {
 	sleepWait( 0.2 );
 	if ( interrupt() ) {
-	  writeZero( GlobalEField );
+	  if ( fixeddf )
+	    writeZero( "Amplitude" );
+	  else
+	    writeZero( GlobalEField );
 	  return Aborted;
 	}
 	// get data:
@@ -213,7 +316,12 @@ int Beats::main( void )
 	  EventSizeIterator siter = eoditer;
 	  eodamplitude.push( siter.time() - signalTime(), *siter );
 	}
-	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
+	if ( GlobalEFieldEvents >= 0 ) {
+	  const EventData &stimglobal = events( GlobalEFieldEvents );
+	  for ( ; stimiter < stimglobal.end(); ++stimiter )
+	    stimfrequency.push( stimiter.time() - signalTime(), *stimiter );
+	}
+	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
 
       } while ( currentTime() - starttime < after );
 
@@ -225,22 +333,27 @@ int Beats::main( void )
 	jarchirpevents.assign( events( ChirpEvents ),
 			       signalTime() - before,
 			       signalTime() + duration + after, signalTime() );
-      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
+      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
       save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
-	    eodfrequency, eodamplitude, jarchirpevents, split, FileCount );
+	    eodfrequency, eodamplitude, jarchirpevents, stimfrequency, split, FileCount );
       FileCount++;
 
       // pause:
       sleepWait( pause - after - before );
       if ( interrupt() ) {
-	writeZero( GlobalEField );
-	return Aborted;
+	if ( fixeddf )
+	  writeZero( "Amplitude" );
+	else
+	  writeZero( GlobalEField );
       }
 
     }
   }
-
-  writeZero( GlobalEField );
+  
+  if ( fixeddf )
+    writeZero( "Amplitude" );
+  else
+    writeZero( GlobalEField );
   return Completed;
 }
 
@@ -253,7 +366,8 @@ void Beats::sessionStarted( void )
 
 
 void Beats::plot( double deltaf, double amplitude, double duration,
-		  const MapD &eodfrequency, const EventData &jarchirpevents )
+		  const MapD &eodfrequency, const EventData &jarchirpevents, 
+		  bool showstimulus, const MapD &stimfrequency )
 {
   P.lock();
   // eod frequency with chirp events:
@@ -264,6 +378,8 @@ void Beats::plot( double deltaf, double amplitude, double duration,
   P.setTitle( s );
   P.plotVLine( 0.0 );
   P.plotVLine( duration );
+  if ( showstimulus )
+    P.plot( stimfrequency, 1.0, Plot::Cyan, 2, Plot::Solid );
   P.plot( eodfrequency, 1.0, Plot::Green, 2, Plot::Solid );
   P.plot( jarchirpevents, 2, 0.0, 1.0, 0.9, Plot::Graph,
 	  1, Plot::Circle, 5, Plot::Pixel, Plot::Yellow, Plot::Yellow );
@@ -275,7 +391,7 @@ void Beats::plot( double deltaf, double amplitude, double duration,
 void Beats::save( double deltaf, double amplitude, double duration, double pause,
 		  double fishrate, double stimulusrate,
 		  const MapD &eodfrequency, const MapD &eodamplitude, const EventData &jarchirpevents,
-		  bool split, int count )
+		  const MapD &stimfrequency, bool split, int count )
 {
   Options header;
   header.addNumber( "Delta f", deltaf, "Hz", "%.1f" );

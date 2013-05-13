@@ -1268,6 +1268,37 @@ void OutData::constWave( double value )
 }
 
 
+void OutData::constWave( double duration, double stepsize, double value )
+{
+  if ( stepsize <= 0.0 || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  SampleDataF::resize( 0.0, duration, stepsize );
+  *this = value;
+  Description.clear();
+  Description.setType( "stimulus/value" );
+  Description.addNumber( "Intensity", value, unit() );
+  Description.addNumber( "Duration", 1000.0*duration, "ms" );
+  clearError();
+}
+
+
+void OutData::rampWave( double duration, double stepsize,
+			double first, double last )
+{
+  if ( stepsize <= 0.0 || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  SampleDataF::resize( 0.0, duration, stepsize );
+  for ( int k=0; k<size(); k++ )
+    (*this)[k] = first + (last-first)*(k+1)/size();
+  Description.clear();
+  Description.setType( "stimulus/ramp" );
+  Description.addNumber( "Intensity0", first, unit() );
+  Description.addNumber( "Intensity", last, unit() );
+  Description.addNumber( "Duration", 1000.0*duration, "ms" );
+  clearError();
+}
+
+
 void OutData::pulseWave( double duration, double stepsize,
 			 double value, double base )
 {

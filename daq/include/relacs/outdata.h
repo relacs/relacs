@@ -751,14 +751,22 @@ class OutData : public SampleData< float >, public DaqError
 	If \a ident is not specified, it is set to "triangle wave". */
   void triangleWave( double duration, double stepsize, double period,
 		     double ampl=1.0, const string &ident="triangle wave" );
-  /*! Creates a constant stimulus consisting of a single data point
-      with value \a value. */
+    /*! Creates a constant stimulus consisting of a single data point
+        with value \a value. */
   void constWave( double value );
-  /*! Creates a pulse stimulus that assumes \a value for a duration
-      of \a duration seconds sampled with \a stepsize. A final
-      value after the pulse sets the amplitude of the signal back to \a base.
-      If \a stepsize is negative or if fixedSampleRate(),
-      the sampling rate is set using minSampleInterval(). */
+    /*! Creates a constant stimulus that assumes \a value for a
+        duration of \a duration seconds sampled with \a stepsize. \sa
+        pulseWave() */
+  void constWave( double duration, double stepsize, double value );
+    /*! Creates a ramp stimulus that starts at \a first and linearly
+        ramps up to \a last for a duration of \a duration seconds
+        sampled with \a stepsize. */
+  void rampWave( double duration, double stepsize, double first, double last );
+    /*! Creates a pulse stimulus that assumes \a value for a duration
+        of \a duration seconds sampled with \a stepsize. A final value
+        after the pulse sets the amplitude of the signal back to \a
+        base.  If \a stepsize is negative or if fixedSampleRate(), the
+        sampling rate is set using minSampleInterval(). */
   void pulseWave( double duration, double stepsize, double value, double base );
 
     /*! The index of the next element to be written to the data buffer.

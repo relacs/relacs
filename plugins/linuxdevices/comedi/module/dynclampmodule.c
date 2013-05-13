@@ -1,6 +1,7 @@
-#include <linux/version.h>
 #include <linux/module.h>
+#include <linux/init.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <asm/uaccess.h>
 #include <linux/mutex.h>
 #include <linux/vmalloc.h>
@@ -16,7 +17,10 @@
 #include <rtai_math.h>
 #endif
 
+
 MODULE_LICENSE( "GPL" );
+MODULE_DESCRIPTION( "Dynamic clamp for RELACS" );
+MODULE_AUTHOR( "Jan Benda <jan.benda@uni-tuebingen.de>" );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -952,7 +956,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     syncSECInsnHigh.chanspec = CR_PACK( dioIOC->lines, 0, 0 );
     syncSECPulse = dioIOC->pulsewidth;
     if ( syncSECPulse <= 0 )
-      ERROR_MSG( "setDigitalIO: syncSECPulse %d ns is not positive!\n", syncSECPulse );
+      ERROR_MSG( "setDigitalIO: syncSECPulse %ld ns is not positive!\n", syncSECPulse );
     if ( comedi_do_insn( syncSECDevice, &syncSECInsnHigh ) != 1 ) {
       comedi_perror( "setDigitalIO() -> DIO_SET_SYNCPULSE" );
       ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
@@ -1455,13 +1459,20 @@ int init_rt_task( void )
 {
   int stackSize = 20000;
   int priority;
-  const int usesFPU = 1;
+  int usesFPU = 0;
   void* signal = NULL;
   int dummy = 23;
   int retVal;
   RTIME periodTicks;
 
   DEBUG_MSG( "init_rt_task: Trying to initialize dynamic clamp RTAI task...\n" );
+
+#if defined(ENABLE_COMPUTATION) || defined(ENABLE_STATISTICS)
+  usesFPU = 1;
+#ifndef CONFIG_RTAI_FPU_SUPPORT
+  #error "RTAI FPU support is not enabled. Reconfigure, compile and install RTAI kernel modules."
+#endif
+#endif
 
   // test if dynamic clamp frequency is valid:
   if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY ) {
@@ -1471,7 +1482,8 @@ int init_rt_task( void )
   }
 
   // initializing rt-task for dynamic clamp with high priority:
-  priority = 1;
+  priority = RT_SCHED_HIGHEST_PRIORITY;
+  rt_linux_use_fpu( usesFPU );      /* declare if we use the FPU         */
   retVal = rt_task_init( &dynClampTask.rtTask, rtDynClamp, dummy, stackSize, 
 			 priority, usesFPU, signal );
   if ( retVal ) {

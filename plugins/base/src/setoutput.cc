@@ -33,7 +33,7 @@ const int SetOutput::ParameterFlag = 2;
 
 
 SetOutput::SetOutput( void )
-  : RePro( "SetOutput", "base", "Jan Benda", "1.0", "Mar 21, 2009" )
+  : RePro( "SetOutput", "base", "Jan Benda", "1.2", "May 13, 2013" )
 {
   Interactive = false;
 
@@ -58,10 +58,26 @@ SetOutput::SetOutput( void )
   bb->addWidget( okbutton );
   okbutton->setFixedHeight( okbutton->sizeHint().height() );
   connect( okbutton, SIGNAL( clicked() ),
-	   this, SLOT( setValues() ) );
+	   this, SLOT( acceptValues() ) );
   grabKey( Qt::ALT+Qt::Key_O );
   grabKey( Qt::Key_Return );
   grabKey( Qt::Key_Enter );
+
+  // Set button:
+  QPushButton *setbutton = new QPushButton( "&Set" );
+  bb->addWidget( setbutton );
+  setbutton->setFixedHeight( setbutton->sizeHint().height() );
+  connect( setbutton, SIGNAL( clicked() ),
+	   this, SLOT( setValues() ) );
+  grabKey( Qt::ALT+Qt::Key_S );
+
+  // Zero button:
+  QPushButton *zerobutton = new QPushButton( "&Zero" );
+  bb->addWidget( zerobutton );
+  zerobutton->setFixedHeight( zerobutton->sizeHint().height() );
+  connect( zerobutton, SIGNAL( clicked() ),
+	   this, SLOT( setZeros() ) );
+  grabKey( Qt::ALT+Qt::Key_Z );
 
   // Cancel button:
   QPushButton *cancelbutton = new QPushButton( "&Cancel" );
@@ -102,10 +118,36 @@ void SetOutput::notify( void )
 }
 
 
+void SetOutput::acceptValues( void )
+{
+  if ( Interactive ) {
+    Change = true;
+    Quit = true;
+    STW.accept( false );
+    wake();
+  }
+}
+
+
 void SetOutput::setValues( void )
 {
   if ( Interactive ) {
     Change = true;
+    Quit = false;
+    STW.accept( false );
+    wake();
+  }
+}
+
+
+void SetOutput::setZeros( void )
+{
+  if ( Interactive ) {
+    Change = true;
+    Quit = false;
+    for ( int k=0; k<OutOpts.size(); k++ )
+      OutOpts[k].setNumber( 0.0 );
+    STW.updateValues();
     STW.accept( false );
     wake();
   }
@@ -116,6 +158,7 @@ void SetOutput::keepValues( void )
 {
   if ( Interactive ) {
     Change = false;
+    Quit = true;
     wake();
   }
 }
@@ -132,46 +175,51 @@ int SetOutput::main( void )
 
   if ( Interactive ) {
     keepFocus();
-    OutOpts.delFlags( Parameter::changedFlag() );
     postCustomEvent( 11 ); // STW.setFocus()
-    // wait for input:
-    Change = false;
-    sleepWait();
+    Quit = true;
+    do {
+      OutOpts.delFlags( Parameter::changedFlag() );
+      // wait for input:
+      Change = false;
+      sleepWait();
+      // set new values:
+      if ( Change ) {
+	OutList sigs;
+	for ( int k=0; k<OutOpts.size(); k++ ) {
+	  if ( OutOpts[k].changed() ) {
+	    double value = OutOpts[k].number();
+	    OutData sig;
+	    sig.setTraceName( OutOpts[k].name() );
+	    sig.constWave( value );
+	    sigs.push( sig );
+	  }
+	}
+	if ( sigs.size() > 0 ) {
+	  string msg = "";
+	  for ( int k=0; k<sigs.size(); k++ ) {
+	    if ( k > 0 )
+	      msg += ",  ";
+	    msg += sigs[k].traceName() + '=' + Str( sigs[k][0] ) + sigs[k].unit();
+	  }
+	  message( msg );
+	  directWrite( sigs );
+	  if ( sigs.failed() ) {
+	    warning( "Failed to write new values: " + sigs.errorText() );
+	    postCustomEvent( 12 ); // clearFocus()
+	    return Failed;
+	  }
+	}
+	OutOpts.setToDefaults();
+      }
+      else {
+	OutOpts.setDefaults();
+	STW.updateValues();
+	postCustomEvent( 12 ); // clearFocus()
+	return Aborted;
+      }
+    } while ( ! Quit );
     postCustomEvent( 12 ); // clearFocus()
     Interactive = false;
-    // set new values:
-    if ( Change ) {
-      OutList sigs;
-      for ( int k=0; k<OutOpts.size(); k++ ) {
-	if ( OutOpts[k].changed() ) {
-	  double value = OutOpts[k].number();
-	  OutData sig;
-	  sig.setTraceName( OutOpts[k].name() );
-	  sig.constWave( value );
-	  sigs.push( sig );
-	}
-      }
-      if ( sigs.size() > 0 ) {
-	string msg = "";
-	for ( int k=0; k<sigs.size(); k++ ) {
-	  if ( k > 0 )
-	    msg += ",  ";
-	  msg += sigs[k].traceName() + '=' + Str( sigs[k][0] ) + sigs[k].unit();
-	}
-	message( msg );
-	directWrite( sigs );
-	if ( sigs.failed() ) {
-	  warning( "Failed to write new values: " + sigs.errorText() );
-	  return Failed;
-	}
-      }
-      OutOpts.setToDefaults();
-    }
-    else {
-      OutOpts.setDefaults();
-      STW.updateValues();
-      return Aborted;
-    }
   }
   else {
     // set the single requested value:
@@ -201,7 +249,15 @@ const Options &SetOutput::outTraces( void ) const
 void SetOutput::keyPressEvent( QKeyEvent *e )
 {
   if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
+    acceptValues();
+    e->accept();
+  }
+  if ( e->key() == Qt::Key_S && ( e->modifiers() & Qt::AltModifier ) ) {
     setValues();
+    e->accept();
+  }
+  if ( e->key() == Qt::Key_Z && ( e->modifiers() & Qt::AltModifier ) ) {
+    setZeros();
     e->accept();
   }
   else if ( e->key() == Qt::Key_C && ( e->modifiers() & Qt::AltModifier ) ) {
@@ -209,7 +265,7 @@ void SetOutput::keyPressEvent( QKeyEvent *e )
     e->accept();
   }
   else if ( ( e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ) && e->modifiers() == Qt::NoModifier ) {
-    setValues();
+    acceptValues();
     e->accept();
   }
   else if ( e->key() == Qt::Key_Escape && e->modifiers() == Qt::NoModifier ) {

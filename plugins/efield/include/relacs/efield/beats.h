@@ -66,10 +66,12 @@ public:
   virtual void sessionStarted( void );
 
   void plot( double deltaf, double amplitude, double duration,
-	     const MapD &eodfrequency, const EventData &jarchirpevents );
+	     const MapD &eodfrequency, const EventData &jarchirpevents,
+	     bool showstimulus, const MapD &stimfrequency );
   void save( double deltaf, double amplitude, double duration, double pause,
 	     double fishrate, double stimulusrate,
-	     const MapD &eodfrequency, const MapD &eodamplitude, const EventData &jarchirpevents,
+	     const MapD &eodfrequency, const MapD &eodamplitude,
+	     const EventData &jarchirpevents, const MapD &stimfrequency,
 	     bool split, int count );
   void saveEODFreq( const Options &header, const MapD &eodfrequency, const MapD &eodamplitude,
 		    bool split, int count );

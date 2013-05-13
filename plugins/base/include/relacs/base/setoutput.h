@@ -43,7 +43,7 @@ can be specified and set.
 - \c value=0: Value to be writen to output trace (\c number)
 - \c interactive=false: Set values interactively (\c boolean)
 
-\version 1.2 (Sep 14, 2012)
+\version 1.2 (May 13, 2013)
 */
 
 
@@ -63,7 +63,9 @@ public:
 
 public slots:
 
+  void acceptValues( void );
   void setValues( void );
+  void setZeros( void );
   void keepValues( void );
 
 
@@ -76,6 +78,7 @@ protected:
   Options OutOpts;
   bool Interactive;
   bool Change;
+  bool Quit;
   static const int ChannelFlag;
   static const int ParameterFlag;
 
