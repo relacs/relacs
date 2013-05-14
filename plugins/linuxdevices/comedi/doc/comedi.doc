@@ -708,11 +708,11 @@ $ for C in 0 1; do
 
 
 \section dynamicclamp Setting up dynamic clamp for RELACS
--# Tell the configure script of RELACS where RTAI is located.
-For this, \c cd into the RELACS top-level directory and do
+-# \c cd into the RELACS top-level directory and run
 \code
-$ ./configure --with-rtai=/usr/realtime/include
+$ ./configure
 \endcode
+This should detect RTAI (see message towards the end of the output of \c configure).
 -# Then compile the dynamic clamp plugins and the kernel module:
 \code
 $ cd plugins/linuxdevices/comedi

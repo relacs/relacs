@@ -994,13 +994,16 @@ int RELACSWidget::write( OutData &signal )
     r = AQ->startWrite( signal );  // might take some time (90-200ms with DAQFlex)
     unlockAI();
     unlockData();
+    if ( r == 0 ) {
+      //      r = AQ->writeData();
+      WriteLoop.start( signal.writeTime() );
+    }
     readLockData();  // put the data lock back into read lock state (60ms)
     MTDT.lock();     // and the other locks as well
     SF->lock();
   }
   unlockSignals();
   if ( r == 0 ) {
-    WriteLoop.start( signal.writeTime() );
     lockSignals();
     SF->save( signal );
     unlockSignals();
@@ -1050,13 +1053,16 @@ int RELACSWidget::write( OutList &signal )
     r = AQ->startWrite( signal );
     unlockAI();
     unlockData();
+    if ( r == 0 ) {
+      //      r = AQ->writeData();
+      WriteLoop.start( signal[0].writeTime() );
+    }
     readLockData();  // put the data lock back into read lock state
     MTDT.lock();     // and the other locks as well
     SF->lock();
   }
   unlockSignals();
   if ( r == 0 ) {
-    WriteLoop.start( signal[0].writeTime() );
     lockSignals();
     SF->save( signal );
     unlockSignals();

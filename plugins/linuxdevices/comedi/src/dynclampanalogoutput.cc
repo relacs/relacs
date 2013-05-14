@@ -766,7 +766,8 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   int bi = sigs[0].indices( sigs[0].writeTime() );
   if ( bi <= 0 )
     bi = 100;
-  BufferSize = 5*sigs.size()*bi*BufferElemSize;
+  //  BufferSize = 5*sigs.size()*bi*BufferElemSize;
+  BufferSize = 200*sigs.size()*bi*BufferElemSize;   // XXX This seems a bit large!!!!
   int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
   if ( nbuffer < BufferSize )
     BufferSize = nbuffer;

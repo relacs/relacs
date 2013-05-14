@@ -841,7 +841,8 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   int bi = sigs[0].indices( sigs[0].writeTime() );
   if ( bi <= 0 )
     bi = 100;
-  BufferSize = 5*sigs.size()*bi*BufferElemSize;
+  //  BufferSize = 5*sigs.size()*bi*BufferElemSize;
+  BufferSize = 200*sigs.size()*bi*BufferElemSize;   // XXX This seems a bit large!!!!
   int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
   if ( nbuffer < BufferSize )
     BufferSize = nbuffer;
@@ -881,7 +882,7 @@ int ComediAnalogOutput::executeCommand( void )
     */
     return -1;
   }
-  fillWriteBuffer( true );
+  fillWriteBuffer();
   return 0;
 }
 
@@ -964,7 +965,7 @@ int ComediAnalogOutput::writeData( void )
     return -1;
   }
 
-  return fillWriteBuffer( false );
+  return fillWriteBuffer();
 }
 
 
@@ -1033,7 +1034,7 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 }
 
 
-int ComediAnalogOutput::fillWriteBuffer( bool first )
+int ComediAnalogOutput::fillWriteBuffer( void )
 {
   if ( !isOpen() ) {
     Sigs.setError( DaqError::DeviceNotOpen );

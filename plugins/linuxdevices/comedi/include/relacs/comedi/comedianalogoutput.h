@@ -159,7 +159,7 @@ protected:
 	If an error ocurred in any channel, the corresponding errorflags in the
 	OutList structure are filled and a negative value is returned.  
 	For internal usage! */
-  int fillWriteBuffer( bool first );
+  int fillWriteBuffer( void );
 
     /*! Execute the command that was prepared by prepareWrite(). */
   int executeCommand( void );
