@@ -141,10 +141,8 @@ int Beats::main( void )
       eodamplitude.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
       EventData jarchirpevents;
       jarchirpevents.reserve( 1000 );
-      const EventData &eodglobal = events( EODEvents );
-      EventIterator eoditer = eodglobal.begin( signalTime() - before );
-      for ( int k=0; k<10; k++ )
-	++eoditer; // XXX
+      EventIterator eoditer;
+      bool initeoditer = true;
       EventFrequencyIterator stimiter;
       bool initstimiter = true;
 
@@ -186,7 +184,7 @@ int Beats::main( void )
 	// output signal:
 	starttime = currentTime();
 	write( signal );
-
+	
 	// signal failed?
 	if ( signal.failed() ) {
 	  string s = "Output of stimulus failed!<br>Error code is <b>";
@@ -196,7 +194,7 @@ int Beats::main( void )
 	  return Failed;
 	}
 	ramptime = ramp;
-	sleepWait( ramptime );
+	sleep( before + ramptime );
       }
       else {
 	OutData signal;
@@ -229,36 +227,45 @@ int Beats::main( void )
 	  writeZero( GlobalEField );
 	  return Failed;
 	}
+	sleep( 0.2 );
       }
+      if ( interrupt() ) {
+	if ( fixeddf )
+	  writeZero( "Amplitude" );
+	else
+	  writeZero( GlobalEField );
+	return Aborted;
+      }
+      double signaltime = signalTime();
 
       // stimulation loop:
       do {
-	sleepWait( 0.2 );
-	if ( interrupt() ) {
-	  if ( fixeddf )
-	    writeZero( "Amplitude" );
-	  else
-	    writeZero( GlobalEField );
-	  return Aborted;
-	}
 	// get data:
+	const EventData &eodglobal = events( EODEvents );
+	if ( initeoditer ) {
+	  eoditer = eodglobal.begin( signaltime - before );
+	  int k = 0;
+	  for ( ; eoditer < eodglobal.end() && k<10; ++eoditer, ++k );
+	  if ( eoditer != eodglobal.end() )
+	    initeoditer =  false;
+	}
 	for ( ; eoditer < eodglobal.end(); ++eoditer ) {
 	  EventFrequencyIterator fiter = eoditer;
-	  eodfrequency.push( fiter.time() - signalTime(), *fiter );
+	  eodfrequency.push( fiter.time() - signaltime, *fiter );
 	  EventSizeIterator siter = eoditer;
-	  eodamplitude.push( siter.time() - signalTime(), *siter );
+	  eodamplitude.push( siter.time() - signaltime, *siter );
 	}
 	if ( GlobalEFieldEvents >= 0 ) {
 	  const EventData &stimglobal = events( GlobalEFieldEvents );
 	  if ( initstimiter ) {
-	    stimiter = stimglobal.begin( signalTime() - before );
+	    stimiter = stimglobal.begin( signaltime - before );
 	    int k = 0;
-	    for ( ; stimiter < stimglobal.end() && k<10; ++stimiter, ++k )
+	    for ( ; stimiter < stimglobal.end() && k<10; ++stimiter, ++k );
 	    if ( stimiter != stimglobal.end() )
 	      initstimiter =  false;
 	  }
 	  for ( ; stimiter < stimglobal.end(); ++stimiter )
-	    stimfrequency.push( stimiter.time() - signalTime(), *stimiter );
+	    stimfrequency.push( stimiter.time() - signaltime, *stimiter );
 	}
 	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
 
@@ -269,7 +276,7 @@ int Beats::main( void )
 	  OutData signal;
 	  signal.setTraceName( "Frequency" );
 	  signal.constWave( fishrate + deltaf );
-	  write( signal );
+	  directWrite( signal );
 	  // signal failed?
 	  if ( signal.failed() ) {
 	    string s = "Output of frequency stimulus failed!<br>Error code is <b>";
@@ -278,6 +285,15 @@ int Beats::main( void )
 	    writeZero( "Amplitude" );
 	    return Failed;
 	  }
+	}
+
+	sleepWait( 0.2 );
+	if ( interrupt() ) {
+	  if ( fixeddf )
+	    writeZero( "Amplitude" );
+	  else
+	    writeZero( GlobalEField );
+	  return Aborted;
 	}
 
       } while ( currentTime() - starttime < before + duration -  ramptime );
@@ -301,6 +317,21 @@ int Beats::main( void )
       // after stimulus recording loop:
       starttime = currentTime();
       do {
+	// get data:
+	const EventData &eodglobal = events( EODEvents );
+	for ( ; eoditer < eodglobal.end(); ++eoditer ) {
+	  EventFrequencyIterator fiter = eoditer;
+	  eodfrequency.push( fiter.time() - signaltime, *fiter );
+	  EventSizeIterator siter = eoditer;
+	  eodamplitude.push( siter.time() - signaltime, *siter );
+	}
+	if ( GlobalEFieldEvents >= 0 ) {
+	  const EventData &stimglobal = events( GlobalEFieldEvents );
+	  for ( ; stimiter < stimglobal.end(); ++stimiter )
+	    stimfrequency.push( stimiter.time() - signaltime, *stimiter );
+	}
+	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
+
 	sleepWait( 0.2 );
 	if ( interrupt() ) {
 	  if ( fixeddf )
@@ -309,19 +340,6 @@ int Beats::main( void )
 	    writeZero( GlobalEField );
 	  return Aborted;
 	}
-	// get data:
-	for ( ; eoditer < eodglobal.end(); ++eoditer ) {
-	  EventFrequencyIterator fiter = eoditer;
-	  eodfrequency.push( fiter.time() - signalTime(), *fiter );
-	  EventSizeIterator siter = eoditer;
-	  eodamplitude.push( siter.time() - signalTime(), *siter );
-	}
-	if ( GlobalEFieldEvents >= 0 ) {
-	  const EventData &stimglobal = events( GlobalEFieldEvents );
-	  for ( ; stimiter < stimglobal.end(); ++stimiter )
-	    stimfrequency.push( stimiter.time() - signalTime(), *stimiter );
-	}
-	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
 
       } while ( currentTime() - starttime < after );
 
@@ -331,8 +349,8 @@ int Beats::main( void )
       // chirps:
       if ( ChirpEvents >= 0 )
 	jarchirpevents.assign( events( ChirpEvents ),
-			       signalTime() - before,
-			       signalTime() + duration + after, signalTime() );
+			       signaltime - before,
+			       signaltime + duration + after, signaltime );
       plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
       save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
 	    eodfrequency, eodamplitude, jarchirpevents, stimfrequency, split, FileCount );

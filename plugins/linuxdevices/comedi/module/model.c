@@ -50,12 +50,12 @@ void initModel( void )
 
 void computeModel( void )
 {
-  phase += 700.0 * loopInterval;
-  /*  phasexxx += paramOutput[1] * loopInterval; */
-#warning THE NEW MODULE
+  /*  phase += 700.0 * loopInterval;*/
+  phase += paramOutput[1] * loopInterval;
+#warning THE OTHER MODULE
   if ( phase > 1.0 )
     phase -= 1.0;
-  /*  paramInput[0] = paramOutput[0] * cos( 2.0*M_PI*phase );*/
-  paramInput[0] = 0.5 * cos( 2.0*M_PI*phase );
+  paramInput[0] = paramOutput[0] * cos( 2.0*M_PI*phase );
+  /*  paramInput[0] = 0.5 * cos( 2.0*M_PI*phase );*/
   output[0] = paramInput[0];
 }
