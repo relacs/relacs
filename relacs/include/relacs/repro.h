@@ -267,9 +267,11 @@ public:
         After writing the signal to the daq-board, the signal wrote()
         is emitted, which can be used to check the success of 
 	the output operation.
+	If \a setsignal is set \c true (default) then the start time of this
+	signal is recorded.
 	\note During the output of the stimulus, \a signal must exist 
 	and must not be modified! */
-  int write( OutData &signal );
+  int write( OutData &signal, bool setsignaltime=true );
     /*! Output of multiple signals \a signal.
         See OutList about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
@@ -279,28 +281,34 @@ public:
         After writing the signal to the daq-board, the signal wrote()
         is emitted, which can be used to check the success of 
 	the output operation.
+	If \a setsignal is set \c true (default) then the start time of this
+	signal is recorded.
 	\note During the output of the stimulus, \a signal must exist 
 	and must not be modified! */
-  int write( OutList &signal );
+  int write( OutList &signal, bool setsignaltime=true );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ board.
 	Only the output trace ( OutData::setTrace() ) or the the name of the
 	output trace ( OutData::setTraceName() ), as well as the
 	single data value need to be specified.
+	If \a setsignal is set \c true (default) then the start time of this
+	signal is recorded.
 	\return 0 on success, a negative number if the output of the signal
 	failed. The reason for the failure is specified in the error state
 	of \a signal. */
-  int directWrite( OutData &signal );
+  int directWrite( OutData &signal, bool setsignaltime=true );
     /*! Direct output of single data values as specified by \a signal
         to different channels of the DAQ board.
 	Only the output traces ( OutData::setTrace() ) or the the name of the
 	output traces ( OutData::setTraceName() ), as well as the
 	single data values need to be specified.
+	If \a setsignal is set \c true (default) then the start time of this
+	signal is recorded.
 	\return 0 on success, a negative number if the output of the signals
 	failed. The reason for the failure is specified in the error state
 	of \a signal. */
-  int directWrite( OutList &signal );
+  int directWrite( OutList &signal, bool setsignaltime=true );
 
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 

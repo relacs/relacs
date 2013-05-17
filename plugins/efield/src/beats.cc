@@ -276,7 +276,7 @@ int Beats::main( void )
 	  OutData signal;
 	  signal.setTraceName( "Frequency" );
 	  signal.constWave( fishrate + deltaf );
-	  directWrite( signal );
+	  directWrite( signal, false );
 	  // signal failed?
 	  if ( signal.failed() ) {
 	    string s = "Output of frequency stimulus failed!<br>Error code is <b>";

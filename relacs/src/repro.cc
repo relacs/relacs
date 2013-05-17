@@ -456,31 +456,31 @@ int RePro::testWrite( OutList &signal )
 }
 
 
-int RePro::write( OutData &signal )
+int RePro::write( OutData &signal, bool setsignaltime )
 {
   if ( interrupt() )
     return -1;
-  return RW->write( signal );
+  return RW->write( signal, setsignaltime );
 }
 
 
-int RePro::write( OutList &signal )
+int RePro::write( OutList &signal, bool setsignaltime )
 {
   if ( interrupt() )
     return -1;
-  return RW->write( signal );
+  return RW->write( signal, setsignaltime );
 }
 
 
-int RePro::directWrite( OutData &signal )
+int RePro::directWrite( OutData &signal, bool setsignaltime )
 {
-  return RW->directWrite( signal );
+  return RW->directWrite( signal, setsignaltime );
 }
 
 
-int RePro::directWrite( OutList &signal )
+int RePro::directWrite( OutList &signal, bool setsignaltime )
 {
-  return RW->directWrite( signal );
+  return RW->directWrite( signal, setsignaltime );
 }
 
 

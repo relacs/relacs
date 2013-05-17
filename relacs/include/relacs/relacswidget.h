@@ -173,17 +173,17 @@ public:
 
     /*! Output of signal \a signal.
         Passing infos to SaveFiles. */
-  int write( OutData &signal );
-  int write( OutList &signal );
+  int write( OutData &signal, bool setsignaltime=true );
+  int write( OutList &signal, bool setsignaltime=true );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ board.
         Passing infos to SaveFiles. */
-  int directWrite( OutData &signal );
+  int directWrite( OutData &signal, bool setsignaltime=true );
     /*! Direct output of single data values as specified by \a signal
         to different channels of the DAQ board.
         Passing infos to SaveFiles. */
-  int directWrite( OutList &signal );
+  int directWrite( OutList &signal, bool setsignaltime=true );
 
     /*! Stop all analog output activity. */
   int stopWrite( void );

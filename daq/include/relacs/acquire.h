@@ -478,33 +478,37 @@ public:
   virtual int testWrite( OutList &signal );
 
   virtual int setupWrite( OutData &signal );
-  virtual int startWrite( OutData &signal );
+  virtual int startWrite( OutData &signal, bool setsignaltime=true );
     /*! Output of a signal \a signal.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
 	If input gains are requested to be changed,
 	analog input is restarted with the new gain settings
 	right before the signal is put out.
+	If \a setsignal is set \c true (default) then the start time of this
+	signal can be retrieved by readSignal().
 	Returns 0 on success.
         If the output of the signal failed, a negative number is returned and
         the reason is specified in the error state of \a signal.
 	\note During the output of the stimulus, \a signal must exist and must not be modified!
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
-  int write( OutData &signal );
+  int write( OutData &signal, bool setsignaltime=true );
   virtual int setupWrite( OutList &signal );
-  virtual int startWrite( OutList &signal );
+  virtual int startWrite( OutList &signal, bool setsignaltime=true );
     /*! Output of multiple signals \a signal.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
 	If input gains are requested to be changed,
 	analog input is restarted with the new gain settings
 	right before the signal is put out.
+	If \a setsignal is set \c true (default) then the start time of this
+	signal can be retrieved by readSignal().
 	Returns 0 on success.
         If the output of the signals failed, a negative number is returned and
         the reason is specified in the error state of \a signal.
 	\note During the output of the stimulus, \a signal must exist and must not be modified!
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
-  virtual int write( OutList &signal );
+  virtual int write( OutList &signal, bool setsignaltime=true );
 
     /*! After having started an analog output with write()
         repeatedly call this function to fill up the buffer of
@@ -514,24 +518,29 @@ public:
 	successfully transfered to the hardware driver.
         \sa testWrite(), write(), writeZero(), stopWrite() */
   virtual int writeData( void );
+
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards.
 	Only the output trace ( OutData::setTrace() ) or the the name of the
 	output trace ( OutData::setTraceName() ), as well as the
 	single data value need to be specified.
+	If \a setsignal is set \c true (default) then the start time of this
+	signal can be retrieved by readSignal().
 	\return 0 on success, a negative number if the output of the signal
 	failed. The reason for the failure is specified in the error state
 	of \a signal. */
-  virtual int directWrite( OutData &signal );
+  virtual int directWrite( OutData &signal, bool setsignaltime=true );
     /*! Direct output of single data values as specified by \a signal
         to different channels of the DAQ boards.
 	Only the output traces ( OutData::setTrace() ) or the the name of the
 	output traces ( OutData::setTraceName() ), as well as the
 	single data values need to be specified.
+	If \a setsignal is set \c true (default) then the start time of this
+	signal can be retrieved by readSignal().
 	\return 0 on success, a negative number if the output of the signals
 	failed. The reason for the failure is specified in the error state
 	of \a signal. */
-  virtual int directWrite( OutList &signal );
+  virtual int directWrite( OutList &signal, bool setsignaltime=true );
 
     /*! Write a zero to all analog output channels. 
         \param[in] channels resets all physical output channels. 

@@ -1687,7 +1687,7 @@ int Acquire::setupWrite( OutData &signal )
 }
 
 
-int Acquire::startWrite( OutData &signal )
+int Acquire::startWrite( OutData &signal, bool setsignaltime )
 {
   int di = signal.device();
 
@@ -1715,20 +1715,22 @@ int Acquire::startWrite( OutData &signal )
     return -1;
   }
 
-  LastDevice = di;
-  LastDuration = signal.duration();
-  LastDelay = signal.delay();
+  if ( setsignaltime ) {
+    LastDevice = di;
+    LastDuration = signal.duration();
+    LastDelay = signal.delay();
+  }
 
   return 0;
 }
 
 
-int Acquire::write( OutData &signal )
+int Acquire::write( OutData &signal, bool setsignaltime )
 {
   int r = setupWrite( signal );
   if ( r < 0 )
     return -1;
-  r = startWrite( signal );
+  r = startWrite( signal, setsignaltime );
   return r;
 }
 
@@ -1945,7 +1947,7 @@ int Acquire::setupWrite( OutList &signal )
 }
 
 
-int Acquire::startWrite( OutList &signal )
+int Acquire::startWrite( OutList &signal, bool setsignaltime )
 {
   bool success = true;
 
@@ -1986,20 +1988,22 @@ int Acquire::startWrite( OutList &signal )
     return -1;
   }
 
-  LastDevice = signal[0].device();
-  LastDuration = signal[0].duration();
-  LastDelay = signal[0].delay();
+  if ( setsignaltime ) {
+    LastDevice = signal[0].device();
+    LastDuration = signal[0].duration();
+    LastDelay = signal[0].delay();
+  }
 
   return 0;
 }
 
 
-int Acquire::write( OutList &signal )
+int Acquire::write( OutList &signal, bool setsignaltime )
 {
   int r = setupWrite( signal );
   if ( r < 0 )
     return -1;
-  r = startWrite( signal );
+  r = startWrite( signal, setsignaltime );
   return r;
 }
 
@@ -2031,7 +2035,7 @@ int Acquire::writeData( void )
 }
 
 
-int Acquire::directWrite( OutData &signal )
+int Acquire::directWrite( OutData &signal, bool setsignaltime )
 {
   signal.clearError();
 
@@ -2156,9 +2160,11 @@ int Acquire::directWrite( OutData &signal )
     return -1;
   }
 
-  LastDevice = di;
-  LastDuration = signal.duration();
-  LastDelay = signal.delay();
+  if ( setsignaltime ) {
+    LastDevice = di;
+    LastDuration = signal.duration();
+    LastDelay = signal.delay();
+  }
 
   //  cerr << "Acquire::write( OutData& ) end\n";
 
@@ -2166,7 +2172,7 @@ int Acquire::directWrite( OutData &signal )
 }
 
 
-int Acquire::directWrite( OutList &signal )
+int Acquire::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( signal.size() <= 0 )
     return 0;
@@ -2379,9 +2385,11 @@ int Acquire::directWrite( OutList &signal )
     return -1;
   }
 
-  LastDevice = signal[0].device();
-  LastDuration = signal[0].duration();
-  LastDelay = signal[0].delay();
+  if ( setsignaltime ) {
+    LastDevice = signal[0].device();
+    LastDuration = signal[0].duration();
+    LastDelay = signal[0].delay();
+  }
 
   return 0;
 }

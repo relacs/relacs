@@ -386,7 +386,7 @@ int Simulator::setupWrite( OutData &signal )
 }
 
 
-int Simulator::startWrite( OutData &signal )
+  int Simulator::startWrite( OutData &signal, bool setsignaltime )
 {
   int di = signal.device();
 
@@ -414,7 +414,7 @@ int Simulator::startWrite( OutData &signal )
     else
       signal.addError( OutData::Busy );
   }
-  if ( st >= 0.0 ) {
+  if ( st >= 0.0 && setsignaltime ) {
     LastWrite = st;
     LastDuration = signal.duration();
     LastDelay = 0.0;  // this is already contained in st!
@@ -551,7 +551,7 @@ int Simulator::setupWrite( OutList &signal )
 }
 
 
-int Simulator::startWrite( OutList &signal )
+int Simulator::startWrite( OutList &signal, bool setsignaltime )
 {
   bool success = true;
 
@@ -596,7 +596,7 @@ int Simulator::startWrite( OutList &signal )
   }
 
   // successfull signal:
-  if ( st >= 0.0 ) {
+  if ( st >= 0.0 && setsignaltime ) {
     LastWrite = st;
     LastDuration = signal[0].duration();
     LastDelay = 0.0;  // this is already contained in st!
@@ -626,7 +626,7 @@ int Simulator::stopWrite( void )
 }
 
 
-int Simulator::directWrite( OutData &signal )
+int Simulator::directWrite( OutData &signal, bool setsignaltime )
 {
   signal.clearError();
 
@@ -723,7 +723,7 @@ int Simulator::directWrite( OutData &signal )
     else
       signal.addError( OutData::Busy );
   }
-  if ( st >= 0.0 ) {
+  if ( st >= 0.0 && setsignaltime ) {
     LastWrite = st;
     LastDuration = signal.duration();
     LastDelay = 0.0;  // this is already contained in st!
@@ -739,7 +739,7 @@ int Simulator::directWrite( OutData &signal )
 }
 
 
-int Simulator::directWrite( OutList &signal )
+int Simulator::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( signal.size() <= 0 )
     return 0;
@@ -922,7 +922,7 @@ int Simulator::directWrite( OutList &signal )
     else
       signal.addError( OutData::Busy );
   }
-  if ( st >= 0.0 ) {
+  if ( st >= 0.0 && setsignaltime ) {
     LastWrite = st;
     LastDuration = signal[0].duration();
     LastDelay = 0.0;  // this is already contained in st!

@@ -963,7 +963,7 @@ void RELACSWidget::activateGains( bool datalocked )
 }
 
 
-int RELACSWidget::write( OutData &signal )
+int RELACSWidget::write( OutData &signal, bool setsignaltime )
 {
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
        SF->signalPending() )                   // the signal time might not have been transferred to SF
@@ -991,7 +991,7 @@ int RELACSWidget::write( OutData &signal )
     unlockData();
     writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead() (60ms)
     lockAI();        // might take some time (40-90ms)
-    r = AQ->startWrite( signal );  // might take some time (90-200ms with DAQFlex)
+    r = AQ->startWrite( signal, setsignaltime );  // might take some time (90-200ms with DAQFlex)
     unlockAI();
     unlockData();
     if ( r == 0 ) {
@@ -1022,7 +1022,7 @@ int RELACSWidget::write( OutData &signal )
 }
 
 
-int RELACSWidget::write( OutList &signal )
+int RELACSWidget::write( OutList &signal, bool setsignaltime )
 {
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
        SF->signalPending() )                   // the signal time might not have been transferred to SF
@@ -1050,7 +1050,7 @@ int RELACSWidget::write( OutList &signal )
     unlockData();
     writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
     lockAI();
-    r = AQ->startWrite( signal );
+    r = AQ->startWrite( signal, setsignaltime );
     unlockAI();
     unlockData();
     if ( r == 0 ) {
@@ -1082,7 +1082,7 @@ int RELACSWidget::write( OutList &signal )
 }
 
 
-int RELACSWidget::directWrite( OutData &signal )
+int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 {
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
        SF->signalPending() )                   // the signal time might not have been transferred to SF
@@ -1108,7 +1108,7 @@ int RELACSWidget::directWrite( OutData &signal )
   unlockData();
   writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
   lockAI();
-  int r = AQ->directWrite( signal );
+  int r = AQ->directWrite( signal, setsignaltime );
   unlockAI();
   unlockData();
   readLockData();  // put the data lock back into read lock state
@@ -1134,7 +1134,7 @@ int RELACSWidget::directWrite( OutData &signal )
 }
 
 
-int RELACSWidget::directWrite( OutList &signal )
+int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
        SF->signalPending() )                   // the signal time might not have been transferred to SF
@@ -1160,7 +1160,7 @@ int RELACSWidget::directWrite( OutList &signal )
   unlockData();
   writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
   lockAI();
-  int r = AQ->directWrite( signal );
+  int r = AQ->directWrite( signal, setsignaltime );
   unlockAI();
   unlockData();
   readLockData();  // put the data lock back into read lock state

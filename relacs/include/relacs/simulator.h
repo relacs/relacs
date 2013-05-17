@@ -82,9 +82,9 @@ public:
 
     /*! Output of a signal \a signal. */
   virtual int setupWrite( OutData &signal );
-  virtual int startWrite( OutData &signal );
+  virtual int startWrite( OutData &signal, bool setsignaltime=true );
   virtual int setupWrite( OutList &signal );
-  virtual int startWrite( OutList &signal );
+  virtual int startWrite( OutList &signal, bool setsignaltime=true );
     /*! Transfer data to hardware driver. */
   virtual int writeData( void );
     /*! Stop current stimulus. */
@@ -98,10 +98,10 @@ public:
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards. */
-  virtual int directWrite( OutData &signal );
+  virtual int directWrite( OutData &signal, bool setsignaltime=true );
     /*! Direct output of single data values as specified by \a signal
         to different channels of the DAQ boards. */
-  virtual int directWrite( OutList &signal );
+  virtual int directWrite( OutList &signal, bool setsignaltime=true );
 
     /*! Write a zero to all analog output channels. 
         \param[in] channels resets all physical output channels. 
