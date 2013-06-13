@@ -6,6 +6,7 @@
 #include <linux/mutex.h>
 #include <linux/vmalloc.h>
 #include <linux/fs.h>
+#include <linux/cdev.h>
 
 #include <rtai.h>
 #include <rtai_fifos.h>
@@ -122,6 +123,7 @@ struct dynClampTaskT {
 // *** GLOBAL VARIABLES ***
 ///////////////////////////////////////////////////////////////////////////////
 
+struct cdev *rtcdev;
 struct mutex mutex;
 
 // DAQ-DEVICES:
@@ -695,6 +697,7 @@ int stopSubdevice( int iS, int kill )
       return 0;
   SDEBUG_MSG( "stopSubdevice halts dynclamp task\n" );
 #ifdef ENABLE_STATISTICS
+  /*" XXX Unknown symbol __divdi3: use rtai_ulldiv() from include/asm-i386/rtai_hal.h !!! */
   mean = dynClampTask.sumperiod/dynClampTask.loopCnt;
   sqmean = dynClampTask.sumsqperiod/dynClampTask.loopCnt;
   var = sqmean - mean*mean;
@@ -1431,6 +1434,7 @@ void rtDynClamp( long dummy )
 #endif
 
 #ifdef ENABLE_STATISTICS
+    /*" XXX Unknown symbol __divdi3: use rtai_ulldiv() from include/asm-i386/rtai_hal.h !!! */
     dynClampTask.sumperiod += difftime;
     dynClampTask.sumsqperiod += difftime*difftime;
     if ( dynClampTask.minperiod > difftime )
@@ -1595,9 +1599,11 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     rc = retVal == 0 ? 0 : -EFAULT;
     break;
 
+#ifdef ENABLE_STATISTICS
   case IOC_GETLOOPAVG:
     if ( dynClampTask.loopCnt > 0 )
       luTmp = dynClampTask.sumperiod/dynClampTask.loopCnt;
+      /*" XXX Unknown symbol __divdi3: use rtai_ulldiv() from include/asm-i386/rtai_hal.h !!! */
     else
       luTmp = -1;
     if ( luTmp < 0 ) {
@@ -1611,6 +1617,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_GETLOOPSQAVG:
     if ( dynClampTask.loopCnt > 0 )
       luTmp = dynClampTask.sumsqperiod/dynClampTask.loopCnt;
+      /*" XXX Unknown symbol __divdi3: use rtai_ulldiv() from include/asm-i386/rtai_hal.h !!! */
     else
       luTmp = -1;
     if ( luTmp < 0 ) {
@@ -1640,6 +1647,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     retVal = put_user( luTmp, (unsigned long __user *)arg );
     rc = retVal == 0 ? 0 : -EFAULT;
     break;
+#endif
 
     /******** SET UP COMEDI: ****************************************************/
 
@@ -1686,6 +1694,8 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       rc = -EFAULT;
       break;
     }
+    rc = (int)(100.0*chanlistIOC.scalelist[0]);
+    printk( "TESTSCALE=%d\n", rc );
     if ( chanlistIOC.subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in chanlistIOCT-struct!\n" );
       rc = -EFAULT;
@@ -1990,33 +2000,6 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 // *** DRIVER FUNCTIONS ***
 ///////////////////////////////////////////////////////////////////////////////
 
-int init_module( void )
-{
-  mutex_init( &mutex );
-
-  // initialize model-specific variables (this also sets the modulename):
-#ifdef ENABLE_COMPUTATION
-  initModel();
-#endif
-
-  // register module device file:
-  // TODO: adapt to kernel 2.6 convention (see char-device chapter in Linux device drivers 3)
-  if ( register_chrdev( RTMODULE_MAJOR, moduleName, &fops ) != 0 ) {
-    WARN_MSG( "init_module: couldn't register driver's major number\n" );
-    // return -1;
-  }
-  INFO_MSG( "module_init: dynamic clamp module %s loaded\n", moduleName );
-  DEBUG_MSG( "module_init: debugging enabled\n" );
-
-  comedi_loglevel( 3 ); 
-
-  // initialize global variables:
-  init_globals();
-
-  return 0;
-}
-
-
 int rtmodule_open( struct inode *devFile, struct file *fModule )
 {
   DEBUG_MSG( "open: user opened device file\n" );
@@ -2039,7 +2022,7 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
     mutex_lock( &mutex );
     for ( iS = 0; iS < subdevN; iS++ ) {
       if ( stopSubdevice( iS, /*kill=*/1 ) )
-        WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", iS );
+        WARN_MSG( "rtmodule_close: Stopping subdevice with ID %d failed\n", iS );
       releaseSubdevice( iS );
     }
     mutex_unlock( &mutex );
@@ -2050,7 +2033,7 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
   // stop & close specified subdevice (and device):
   mutex_lock( &mutex );
   if ( stopSubdevice( reqCloseSubdevID, 1 ) )
-    WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", reqCloseSubdevID );
+    WARN_MSG( "rtmodule_close: Stopping subdevice with ID %d failed\n", reqCloseSubdevID );
   releaseSubdevice( reqCloseSubdevID );
   mutex_unlock( &mutex );
 
@@ -2063,9 +2046,55 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
 }
 
 
-void cleanup_module( void )
+static int __init init_rtmodule( void )
+{
+  dev_t dev = 0;
+  int retVal = 0;
+
+  // register module device file:
+  dev = MKDEV( RTMODULE_MAJOR, 0 );
+  retVal = register_chrdev_region( dev, 1, moduleName );
+  if ( retVal < 0 ) {
+    WARN_MSG( "dynclamp: can't get major %d\n", RTMODULE_MAJOR );
+    return retVal;
+  }
+   
+  rtcdev = cdev_alloc();
+  rtcdev->ops = &fops;
+  rtcdev->owner = THIS_MODULE;
+  retVal = cdev_add( rtcdev, dev, 1 );
+  if ( retVal )
+    ERROR_MSG( "dynclamp: fail to register module with error %d\n", retVal );
+  /*
+  if ( register_chrdev( RTMODULE_MAJOR, moduleName, &fops ) != 0 ) {
+    WARN_MSG( "init_module: couldn't register driver's major number\n" );
+    // return -1;
+  }
+  */
+  INFO_MSG( "module_init: dynamic clamp module %s loaded\n", moduleName );
+  DEBUG_MSG( "module_init: debugging enabled\n" );
+
+  comedi_loglevel( 3 ); 
+
+  mutex_init( &mutex );
+
+  // initialize model-specific variables (this also sets the modulename):
+#ifdef ENABLE_COMPUTATION
+  initModel();
+#endif
+
+  // initialize global variables:
+  init_globals();
+
+  return retVal;
+}
+
+
+static void __exit cleanup_rtmodule( void )
 {
   int iS;
+  dev_t dev = MKDEV( RTMODULE_MAJOR, 0 );
+
   INFO_MSG( "cleanup_module: dynamic clamp module %s unloaded\n", moduleName );
 
   // stop and release all subdevices & comedi-devices:
@@ -2080,6 +2109,12 @@ void cleanup_module( void )
   mutex_destroy( &mutex );
 
   // unregister module device file:
-  unregister_chrdev( RTMODULE_MAJOR, moduleName );
+  /*  unregister_chrdev( RTMODULE_MAJOR, moduleName ); */
+  cdev_del( rtcdev );
+  unregister_chrdev_region( dev, 1 );
 }
+
+module_init( init_rtmodule );
+module_exit( cleanup_rtmodule );
+
 

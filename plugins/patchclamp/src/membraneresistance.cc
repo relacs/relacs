@@ -150,8 +150,8 @@ int MembraneResistance::main( void )
 
   // signal:
   OutData signal;
-  signal.pulseWave( Duration, 1.0/samplerate, DCCurrent + Amplitude, DCCurrent );
   signal.setTrace( CurrentOutput[0] );
+  signal.pulseWave( Duration, 1.0/samplerate, DCCurrent + Amplitude, DCCurrent );
   signal.setIdent( "I=" + Str( DCCurrent + Amplitude ) + IUnit );
 
   // dc signal:

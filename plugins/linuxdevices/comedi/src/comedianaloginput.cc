@@ -766,8 +766,11 @@ int ComediAnalogInput::startRead( void )
       for ( unsigned int k=0; k<ComediAOs.size() && success; k++ )
 	ComediAOs[k]->clearCommand();
     }
-    else
+    else {
       success = false;
+      cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist failed: "
+	   << comedi_strerror( comedi_errno() ) << endl;
+    }
   }
   delete [] insnlist.insns;
 

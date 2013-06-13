@@ -87,8 +87,8 @@ enum subdevTypes { SUBDEV_IN=0, SUBDEV_OUT, SUBDEV_DIO };
 
 struct deviceIOCT {
   unsigned int subdevID;
-  char devicename[DEV_NAME_MAXLEN+1];
   unsigned int subdev;
+  char devicename[DEV_NAME_MAXLEN+1];
   enum subdevTypes subdevType;
   unsigned int fifoIndex;
   unsigned int fifoSize;
@@ -96,18 +96,18 @@ struct deviceIOCT {
 
 #define MAX_CONVERSION_COEFFICIENTS 4
 struct converterT {
-  double coefficients[MAX_CONVERSION_COEFFICIENTS];
+  unsigned int order;
   double expansion_origin;
-  unsigned order;
+  double coefficients[MAX_CONVERSION_COEFFICIENTS];
 };
 
 struct chanlistIOCT {
   unsigned int subdevID;
-  struct converterT conversionlist[MAXCHANLIST];
-  float scalelist[MAXCHANLIST];
-  unsigned int chanlist[MAXCHANLIST];
   int userDeviceIndex;
   unsigned int chanlistN;
+  unsigned int chanlist[MAXCHANLIST];
+  float scalelist[MAXCHANLIST];
+  struct converterT conversionlist[MAXCHANLIST];
 };
 
 struct comediCmdIOCT {

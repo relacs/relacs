@@ -1014,6 +1014,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
 
   if ( ! success ) {
+    for ( unsigned int i=0; i<aod.size(); i++ ) {
+      if ( ! aod[i]->Signals.failed() )
+	aod[i]->Signals.addError( DaqError::Unknown );
+    }
     LastWrite = -1.0;
     return -1;
   }
@@ -1060,6 +1064,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
     
   if ( ! success ) {
+    for ( unsigned int i=0; i<aod.size(); i++ ) {
+      if ( ! aod[i]->Signals.failed() )
+	aod[i]->Signals.addError( DaqError::Unknown );
+    }
     LastWrite = -1.0;
     return -1;
   }
@@ -1094,6 +1102,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
     
   if ( ! success ) {
+    for ( unsigned int i=0; i<aod.size(); i++ ) {
+      if ( ! aod[i]->Signals.failed() )
+	aod[i]->Signals.addError( DaqError::Unknown );
+    }
     LastWrite = -1.0;
     return -1;
   }
