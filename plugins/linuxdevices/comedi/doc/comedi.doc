@@ -106,9 +106,9 @@ $ make scripts
 
 \subsubsection installvanillakernel Compile your own kernel
 
--# Either get a vanilla kernel from http://www.kernel.org,
+-# Get a vanilla kernel from http://www.kernel.org,
 e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.38.8.tar.bz2,
-place the tar file in /usr/src and unpack it as root with
+place the tar file in \c /usr/src and unpack it as root with
 \code
 $ cd /usr/src
 $ tar xjvf linux-2.6.38.8.tar.bz2
@@ -118,6 +118,10 @@ Create a softlink to your kernel source
 \code
 $ ln -s linux-2.6.38.8 linux
 $ cd linux
+\endcode
+and make sure the \c make, \c gcc, \c libncurses-dev, and \c zlib1g-dev packages are installed:
+\code
+$ apt-get install make gcc libncurses-dev zlib1g-dev
 \endcode
 -# Reuse your current configuration (replace \c XXX by the name of your running kernel):
 \code
@@ -132,7 +136,6 @@ First, you configure your kernel by calling
 \code
 $ make menuconfig
 \endcode
-(You might needto install the following packages first: \c apt-get \a install \c make \c gcc \c ncurses-dev \c zlib1g-dev).
 Possible settings you might want to change are:
   - Processor type and features: 
     - Select your Subarchitecture Type (PC-Compatible) - this option does not exist for newer kernels
@@ -162,23 +165,21 @@ root            (hd0,0)
 kernel          /boot/vmlinuz-2.6.28.9 root=/dev/sda1 ro quiet
 initrd          /boot/initrd.img-2.6.28.9
 \endcode
-With \c grub \c v2 (default since Debian Lenny) 
-there should be an entry like this in \c /boot/grub/grub.cfg:
+With \c grub \c v2 (default since Debian Lenny) simply run
 \code
-menuentry 'Linux Mint 12 64-bit, 2.6.38.8-rtai (/dev/sda1)' --class linuxmint --class gnu-linux --class gnu --class os {
-        recordfail
-        set gfxpayload=$linux_gfx_mode
-        insmod gzio
-        insmod part_msdos
-        insmod ext2
-        set root='(hd0,msdos1)'
-        search --no-floppy --fs-uuid --set=root 6dae4cc8-49a3-437b-8d89-4d3580dad493
-        linux   /boot/vmlinuz-2.6.38.8-rtai root=UUID=6dae4cc8-49a3-437b-8d89-4d3580dad493 ro   
-        initrd  /boot/initrd.img-2.6.38.8-rtai
-}
+$ update-grub
 \endcode
-You can configure \c grub \c v2 by editing the file \c /etc/default/grub
-and running \c update-grub afterwards.
+the output of \c update-grub should mention your new kernel image.
+You can configure \c grub \c v2 by editing the file \c /etc/default/grub .
+To get the boot menu that you need to select the kernel you want to boot
+you should for example unset the \c GRUB_HIDDEN_TIMEOUT and set the
+\c GRUB_TIMEOUT appropriately in that file. For example:
+\code
+#GRUB_HIDDEN_TIMEOUT=0
+#GRUB_HIDDEN_TIMEOUT_QUIET=true
+GRUB_TIMEOUT=10
+\endcode
+Afer editing run \c update-grub to apply the changes.
 -# Reboot the computer into the new kernel.
 \code
 $ reboot
@@ -197,13 +198,16 @@ $ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 2.6.28.9-rtai -K
 \endcode
 (replace 2.6.28.9-rtai by the name of the kernel where you want to install the nvidia driver,
 i.e. the string '\c uname \c -r' would return if that kernel is running).
--# On a Debian system there is an alternative to steps 3. - 6. for compiling a linux kernel. Do as root:
+-# On a Debian system there is an alternative to steps 3. - 6. for compiling a linux kernel. 
+   See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
+   Do as root:
    -# Get the kernel-package
    \code
 $ apt-get install kernel-package
    \endcode
    -# Configure and build the kernel:
    \code
+$ export CONCURRENCY_LEVEL=2  # set here the number of CPUs you have to speed things up!
 $ make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image
    \endcode
    You can also supply a \c -j option to tell make how many processes can be run in parallel.
@@ -213,7 +217,7 @@ $ make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image
 $ cd ..
 $ dpkg -i linux-image-2.6.38.8_1.0_amd64.deb
    \endcode
-   -# continue with step 6.
+   -# continue with step 7.
 
 
 \subsection installcomedidriver Comedi
@@ -223,11 +227,15 @@ implementation in the driver "staging" area. You can check whether it
 works for you by following the instructions of point 11 below.  
 However, we recommend installing a current version of the comedi drivers.
 
-Here are all commands that you can throw into a shell to completely install comedi:
+Here are all commands that you can throw into a shell to completely install comedi.
+Before you do this, you have to make sure that all required packages are installed:
+\code
+apt-get install git autoconf libtool bison flex libgsl0-dev libboost-program-options-dev
+\endcode
+Now you go:
 \code
 # download comedi sources:
 cd /usr/local/src
-apt-get install git
 git clone git://comedi.org/git/comedi/comedi.git
 git clone git://comedi.org/git/comedi/comedilib.git
 git clone git://comedi.org/git/comedi/comedi_calibrate.git
@@ -235,7 +243,6 @@ rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
 
 # comedi:
 cd /usr/local/src/comedi
-apt-get install autoconf libtool
 ./autogen.sh
 ./configure
 make && make install
@@ -251,7 +258,6 @@ make && make install
 
 # comedi_calibrate:
 cd /usr/local/src/comedi_calibrate
-apt-get install libgsl0-dev libboost-program-options-dev
 autoreconf -v -i
 ./configure --prefix=/usr --sysconfdir=/etc
 make && make install
@@ -425,6 +431,14 @@ $ make && make install
 
 For dynamic clamp you need an RTAI patched linux kernel and Comedi.
 
+\note (June 2013) There is a problem regarding newer versions of clib
+(version >= 2.15, version 2.13 works, check version with \c ldd \c
+--version). The \c rtai_math module does not compile correctly with
+the newer libc version. I have not figured out a nice solution to this
+bug other than to use a not so new linux distro.... Working is
+linuxMint upto version 12 (Lisa), Ubuntu Oneiric, Debian Linux 7.0.
+Find out your distro with \c cat \c /etc/issue .
+
 \subsection rtaikernel Linux kernel and RTAI patch
 
 -# Download the latest RTAI (http://www.rtai.org) version (version 3.9) from 
@@ -465,7 +479,6 @@ $ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.38.8-x86-2
 Follow the intructions given in \ref installvanillakernel, starting at step 2.
 On Debian, the make-kpkg command should be
 \code
-$ export CONCURRENCY_LEVEL=2  # set here the number of CPUs you have tospeed things up!
 $ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image
 \endcode
 In the kernel configuration dialog you should do the following settings:
@@ -480,7 +493,7 @@ In the kernel configuration dialog you should do the following settings:
       check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
     - Set "Timer frequency" to 1000 Hz
-  - Power Management options:
+  - Power management and ACPI options:
     - Deselect "CPU Frequency scaling"
     .
   .
@@ -509,7 +522,7 @@ Check the following settings:
    - RTAI Documentation: select the documentation you want
    - Build RTAI testsuite: select
  - Machine
-    - Number of CPUs: set to the right value. The default is often right.
+    - Number of CPUs: set to the right value. The default is not always right.
       If in doubt, look into the file \c /proc/cpuinfo .
     - Enable FPU support: select
  - Base system
@@ -544,7 +557,7 @@ $ modprobe rtai_sched
 \endcode
 If this fails:
 - add \c lapic to the kernel parameter in the \c kernel line of the
-\c grub menu in \c /boot/grub/menu.lst .
+\c grub menu in \c /boot/grub/menu.lst . Recompile and install RTAI (make clean && make && make install && depmod -a).
 -# If you have a multi-core system you should reserve at least one CPU for RTAI. You can isolate CPUs by using    the kernel parameter
    \code
 isolcpus=0,1,2
@@ -601,7 +614,7 @@ the top-level \c INSTALL file (the final \c make \c install is not necessary for
 Otherwise, \c cd into the RELACS top-level directory and do (you do not have to be root for this,
 except for loading the kernel modules in point 2)
 \code
-$ ./configure --with-rtai=/usr/realtime/include
+$ ./configure
 $ cd plugins/linuxdevices/comedi
 $ make clean
 $ make

@@ -1008,7 +1008,7 @@ void OutData::sineWave( double duration, double stepsize,
 {
   if ( fixedSampleRate() )
     stepsize = minSampleInterval();
-  else if ( stepsize <= 0.0  )
+  else if ( stepsize < minSampleInterval()  )
     stepsize = bestSampleInterval( freq );
   sin( 0.0, duration, stepsize, freq );
   if ( ampl != 1.0 )
@@ -1037,7 +1037,7 @@ void OutData::noiseWave( double duration, double stepsize,
 {
   if ( fixedSampleRate() )
     stepsize = minSampleInterval();
-  else if ( stepsize <= 0.0  )
+  else if ( stepsize < minSampleInterval()  )
     stepsize = bestSampleInterval( cutofffreq );
   Random rand;
   if ( seed != 0 )
@@ -1070,7 +1070,7 @@ void OutData::bandNoiseWave( double duration, double stepsize,
 {
   if ( fixedSampleRate() )
     stepsize = minSampleInterval();
-  else if ( stepsize <= 0.0  )
+  else if ( stepsize < minSampleInterval()  )
     stepsize = bestSampleInterval( cutofffreqhigh );
   Random rand;
   if ( seed != 0 )
@@ -1102,7 +1102,7 @@ void OutData::ouNoiseWave( double duration, double stepsize,
 			   double tau, double stdev, unsigned long *seed,
 			   double r, const string &ident )
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   Random rand;
   if ( seed != 0 )
@@ -1133,7 +1133,7 @@ void OutData::sweepWave( double duration, double stepsize,
 			 double ampl, double r, 
 			 const string &ident )
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   sweep( 0.0, duration, stepsize, startfreq, endfreq );
   if ( ampl != 1.0 )
@@ -1160,7 +1160,7 @@ void OutData::rectangleWave( double duration, double stepsize,
 			     double period, double width, double ramp, double ampl,
 			     const string &ident)
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   rectangle( 0.0, duration, stepsize, period, width, ramp );
   if ( ampl != 1.0 )
@@ -1185,7 +1185,7 @@ void OutData::rectangleWave( double duration, double stepsize,
 void OutData::sawUpWave( double duration, double stepsize, 
 			 double period, double ramp, double ampl, const string &ident)
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   sawUp( 0.0, duration, stepsize, period, ramp );
   if ( ampl != 1.0 )
@@ -1211,7 +1211,7 @@ void OutData::sawDownWave( double duration, double stepsize,
 			   double period, double ramp, double ampl,
 			   const string &ident)
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   sawDown( 0.0, duration, stepsize, period, ramp );
   if ( ampl != 1.0 )
@@ -1236,7 +1236,7 @@ void OutData::sawDownWave( double duration, double stepsize,
 void OutData::triangleWave( double duration, double stepsize, 
 			    double period, double ampl, const string &ident )
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   triangle( 0.0, duration, stepsize, period );
   if ( ampl != 1.0 )
@@ -1270,7 +1270,7 @@ void OutData::constWave( double value )
 
 void OutData::constWave( double duration, double stepsize, double value )
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   SampleDataF::resize( 0.0, duration, stepsize );
   *this = value;
@@ -1285,7 +1285,7 @@ void OutData::constWave( double duration, double stepsize, double value )
 void OutData::rampWave( double duration, double stepsize,
 			double first, double last )
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   SampleDataF::resize( 0.0, duration, stepsize );
   for ( int k=0; k<size(); k++ )
@@ -1302,7 +1302,7 @@ void OutData::rampWave( double duration, double stepsize,
 void OutData::pulseWave( double duration, double stepsize,
 			 double value, double base )
 {
-  if ( stepsize <= 0.0 || fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
   SampleDataF::resize( 0.0, duration, stepsize );
   *this = value;
