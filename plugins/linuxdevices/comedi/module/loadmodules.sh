@@ -8,6 +8,8 @@
 # process of your linux system, simply call this script from /etc/rc.local
 
 echo "please wait..."
+modprobe rtai_hal
+modprobe rtai_sched
 modprobe rtai_fifos
 modprobe rtai_math
 modprobe kcomedilib

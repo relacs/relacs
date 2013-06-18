@@ -208,14 +208,15 @@ $ apt-get install kernel-package
    -# Configure and build the kernel:
    \code
 $ export CONCURRENCY_LEVEL=2  # set here the number of CPUs you have to speed things up!
-$ make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image
+$ make-kpkg clean
+$ make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image kernel-headers kernel-source
    \endcode
    You can also supply a \c -j option to tell make how many processes can be run in parallel.
    See step 3. for hints on the configuration options.
    -# Install the kernel
    \code
 $ cd ..
-$ dpkg -i linux-image-2.6.38.8_1.0_amd64.deb
+$ dpkg -i linux-image-2.6.38.8_1.0_amd64.deb linux-headers-2.6.38.8_1.0_amd64.deb
    \endcode
    -# continue with step 7.
 
@@ -479,7 +480,7 @@ $ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.38.8-x86-2
 Follow the intructions given in \ref installvanillakernel, starting at step 2.
 On Debian, the make-kpkg command should be
 \code
-$ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image
+$ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image kernel-headers kernel-source
 \endcode
 In the kernel configuration dialog you should do the following settings:
   - General setup: set "Local version" to -rtai (not needed if you are using \c make-kpkg)
@@ -487,17 +488,27 @@ In the kernel configuration dialog you should do the following settings:
     - Select "Enable module support"
     - Deselect "Module versioning support"
   - Processor type and features: 
-    - Deselect "Tickless System"
+    - Disable "Tickless System"
     - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
       check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
+    - Disable “Use register arguments” - this option does not exist for newer kernels (version <= 2.6.19)
+    - Select "Interrupt pipeline"
     - Set "Timer frequency" to 1000 Hz
   - Power management and ACPI options:
-    - Deselect "CPU Frequency scaling"
+    - Disable "CPU Frequency scaling"
     .
   .
 -# Reboot into your new RTAI real time kernel.
+If this fails:
+Try adding one or several of the advanced configuration and power interface (ACPI) or 
+advanced programmable interrupt controller (APIC) options,
+\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic ,
+to the kernel parameter in the \c kernel line of the
+\c grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable
+in \c /etc/defaults/grub . 
+After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
 
 
 \subsection rtaiinstall RTAI modules
@@ -556,13 +567,19 @@ $ depmod -a
 $ modprobe rtai_sched
 \endcode
 If this fails:
-- add \c lapic to the kernel parameter in the \c kernel line of the
-\c grub menu in \c /boot/grub/menu.lst . Recompile and install RTAI (make clean && make && make install && depmod -a).
+Try adding one or several of the advanced configuration and power interface (ACPI) or 
+advanced programmable interrupt controller (APIC) options,
+\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic ,
+to the kernel parameter in the \c kernel line of the
+\c grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable
+in \c /etc/defaults/grub . 
+Recompile and install RTAI (make clean && make && make install && depmod -a).
+After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
 -# If you have a multi-core system you should reserve at least one CPU for RTAI. You can isolate CPUs by using    the kernel parameter
    \code
 isolcpus=0,1,2
    \endcode
-  (for isolating the cores no. 0, 1, and 2) and by loading the rtai_hal kernel modul the following way:
+  (for isolating the cores no. 0, 1, and 2) and by loading the rtai_hal kernel module the following way:
   \code
 insmod rtai_hal.ko IsolCpusMask=0x07
   \endcode
