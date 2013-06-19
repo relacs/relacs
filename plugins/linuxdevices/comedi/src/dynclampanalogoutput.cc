@@ -250,6 +250,15 @@ void DynClampAnalogOutput::close( void )
 
   ModuleFd = -1;
 
+  for ( int c=0; c<channels(); c++ ) {
+    delete [] UnipConverter[c];
+    delete [] BipConverter[c];
+  }
+  delete [] UnipConverter;
+  delete [] BipConverter;
+  UnipConverter = 0;
+  BipConverter = 0;
+
   Info.clear();
 }
 
@@ -341,7 +350,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     }
     // reference and polarity:
     bool unipolar = false;
-    if ( min >= 0.0 )
+    if ( fabs(min) > fabs(max) && min >= 0.0 )
       unipolar = true;
     bool extref = false;
     bool minislarger = false;
@@ -397,7 +406,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 	unipolar = false;
       if ( ! unipolar && index >= (int)CAO->BipolarRange.size() )
 	unipolar = true;
-      if ( index >= unipolar ? (int)CAO->UnipolarRange.size() : (int)CAO->BipolarRange.size() )
+      if ( index >= ( unipolar ? (int)CAO->UnipolarRange.size() : (int)CAO->BipolarRange.size() ) )
 	index = -1;
       if ( max > 1.0+1.0e-8 )
 	sigs[k].addError( DaqError::Overflow );
@@ -465,11 +474,11 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     // set up channel in chanlist:
     int gi = unipolar ? CAO->UnipolarRangeIndex[ index ] : CAO->BipolarRangeIndex[ index ];
     if ( unipolar ) {
-      memcpy( gainp, &UnipConverter[sigs[k].channel()][gi], sizeof(comedi_polynomial_t) );
+      memcpy( gainp, &UnipConverter[sigs[k].channel()][index], sizeof(comedi_polynomial_t) );
       chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
     }
     else {
-      memcpy( gainp, &BipConverter[sigs[k].channel()][gi], sizeof(comedi_polynomial_t) );
+      memcpy( gainp, &BipConverter[sigs[k].channel()][index], sizeof(comedi_polynomial_t) );
       chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
     }
 
@@ -512,7 +521,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 	(const comedi_polynomial_t *)ol[k].gainData();
       chanlistIOC.conversionlist[k].order = poly->order;
       if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-	cerr << "ERROR in DynClampAnalogInput::directWrite -> invalid order in converion polynomial!\n";
+	cerr << "ERROR in DynClampAnalogOutput::directWrite -> order=" << poly->order << " in conversion polynomial too large!\n";
       chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
       for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
 	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];

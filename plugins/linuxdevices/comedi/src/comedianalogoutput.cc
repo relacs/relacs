@@ -466,7 +466,7 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     }
     // reference and polarity:
     bool unipolar = false;
-    if ( min >= 0.0 )
+    if ( fabs(min) > fabs(max) && min >= 0.0 )
       unipolar = true;
     bool extref = false;
     bool minislarger = false;

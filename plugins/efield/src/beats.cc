@@ -39,6 +39,7 @@ Beats::Beats( void )
   addNumber( "pause", "Pause between signals", 20.0, 1.0, 1000000.0, 1.0, "seconds" );
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
   addText( "deltafrange", "Range of delta f's", "10" ).setUnit( "Hz" );
+  addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addBoolean( "fixeddf", "Keep delta f fixed", false );
   addNumber( "amplitude", "Amplitude", 1.0, 0.1, 1000.0, 0.1, "mV/cm" );
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 );
@@ -75,6 +76,7 @@ int Beats::main( void )
   double ramp = number( "ramp" );
   double amplitude = number( "amplitude" );
   string deltafrange = text( "deltafrange" );
+  RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
   bool fixeddf = boolean( "fixeddf" );
   int repeats = integer( "repeats" );
   double before = number( "before" );
@@ -126,7 +128,7 @@ int Beats::main( void )
   P.unlock();
 
   RangeLoop DFRange( deltafrange );
-  DFRange.random();
+  DFRange.setSequence( deltafshuffle );
   for ( int count = 0;
 	(repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {

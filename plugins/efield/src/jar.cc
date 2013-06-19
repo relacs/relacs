@@ -64,6 +64,7 @@ JAR::JAR( void )
   addNumber( "deltafmax", "Maximum delta f", DeltaFMax, -10000.0, 10000.0, 2.0, "Hz" );
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
   addText( "deltafrange", "Range of delta f's", "" );
+  addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
   newSection( "Amplitudes" );
   addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
@@ -171,6 +172,7 @@ int JAR::main( void )
   DeltaFMax = number( "deltafmax" );
   DeltaFMin = number( "deltafmin" );
   string deltafrange = text( "deltafrange" );
+  RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
   UseContrast = ( index( "amplsel" ) == 0 );
   ContrastMin = number( "contrastmin" );
   ContrastMax = number( "contrastmax" );
@@ -248,7 +250,7 @@ int JAR::main( void )
     DeltaFRange.set( DeltaFMin, DeltaFMax, DeltaFStep );
   else
     DeltaFRange.set( deltafrange );
-  DeltaFRange.random();
+  DeltaFRange.setSequence( deltafshuffle );
   OutData signal;
 
   // data:

@@ -376,7 +376,7 @@ int DynClampAnalogInput::setupChanList( InList &traces,
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( 0.0 );
       int gi = CAI->UnipolarRangeIndex[ traces[k].gainIndex() ];
-      memcpy( gainp, &UnipConverter[traces[k].channel()][gi], sizeof(comedi_polynomial_t) );
+      memcpy( gainp, &UnipConverter[traces[k].channel()][traces[k].gainIndex()], sizeof(comedi_polynomial_t) );
       chanlist[k] = CR_PACK( traces[k].channel(), gi, aref );
     }
     else {
@@ -387,7 +387,7 @@ int DynClampAnalogInput::setupChanList( InList &traces,
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( min );
       int gi = CAI->BipolarRangeIndex[ traces[k].gainIndex() ];
-      memcpy( gainp, &BipConverter[traces[k].channel()][gi], sizeof(comedi_polynomial_t) );
+      memcpy( gainp, &BipConverter[traces[k].channel()][traces[k].gainIndex()], sizeof(comedi_polynomial_t) );
       chanlist[k] = CR_PACK( traces[k].channel(), gi, aref );
     }
 
