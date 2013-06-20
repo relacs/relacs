@@ -571,7 +571,7 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 	sigs[k].addError( DaqError::InvalidReference );
 	extref = false;
       }
-      sigs[k].setScale( maxboardvolt );
+      sigs[k].multiplyScale( maxboardvolt );
     }
 
     if ( softcal && Calibration != 0 )

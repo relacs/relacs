@@ -1463,7 +1463,7 @@ int init_rt_task( void )
 {
   int stackSize = 20000;
   int priority;
-  int usesFPU = 0;
+  int usesFPU = 1;   /* we need FPU support in any case! */
   void* signal = NULL;
   int dummy = 23;
   int retVal;
@@ -1472,7 +1472,6 @@ int init_rt_task( void )
   DEBUG_MSG( "init_rt_task: Trying to initialize dynamic clamp RTAI task...\n" );
 
 #if defined(ENABLE_COMPUTATION) || defined(ENABLE_STATISTICS)
-  usesFPU = 1;
 #ifndef CONFIG_RTAI_FPU_SUPPORT
   #error "RTAI FPU support is not enabled. Reconfigure, compile and install RTAI kernel modules."
 #endif

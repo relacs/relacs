@@ -172,11 +172,16 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
   if ( sigs.size() == 0 )
     return -1;
 
+  const double maxboardvolt = 10.0;  // XXX is this really the same for all boards?
+
   for ( int k=0; k<sigs.size(); k++ ) {
 
     double minval = sigs[k].minValue();
     double maxval = sigs[k].maxValue();
     double scale = sigs[k].scale();
+    if ( ! sigs[k].noIntensity() )
+      scale *= maxboardvolt;
+
 
     // apply range:
     float v = sigs[k].size() > 0 ? sigs[k][0] : 0.0;
@@ -324,7 +329,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     sigs[k].setMinVoltage( -BipolarRange[0] );
     sigs[k].setMaxVoltage( BipolarRange[0] );
     if ( ! sigs[k].noIntensity() )
-      sigs[k].setScale( BipolarRange[0] );
+      sigs[k].multiplyScale( BipolarRange[0] );
 
     // allocate gain factor:
     char *gaindata = sigs[k].gainData();

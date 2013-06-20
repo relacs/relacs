@@ -160,14 +160,16 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   // set up SEC synchronization:
   {
     int line = opts.integer( "syncpulseline", 0, -1 );
-    double duration = opts.number( "syncpulsewidth", 0.0, "us" );
-    int id = allocateLine( line );
-    if ( id == WriteError )
-      cerr << "! error: DynClampDigitalIO::open() -> failed to allocate line " << line << " for sync pulse\n";
-    else if ( configureLine( line, true ) < 0 )
-      cerr << "! error: DynClampDigitalIO::open() -> failed to configure line " << line << " for sync pulse for writing\n";
-    else
-      setSyncPulse( line, duration );
+    if ( line >= 0 ) {
+      double duration = opts.number( "syncpulsewidth", 0.0, "us" );
+      int id = allocateLine( line );
+      if ( id == WriteError )
+	cerr << "! error: DynClampDigitalIO::open() -> failed to allocate line " << line << " for sync pulse\n";
+      else if ( configureLine( line, true ) < 0 )
+	cerr << "! error: DynClampDigitalIO::open() -> failed to configure line " << line << " for sync pulse for writing\n";
+      else
+	setSyncPulse( line, duration );
+    }
   }
   
   return 0;

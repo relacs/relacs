@@ -455,7 +455,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 	sigs[k].addError( DaqError::InvalidReference );
 	extref = false;
       }
-      sigs[k].setScale( maxboardvolt );
+      sigs[k].multiplyScale( maxboardvolt );
     }
 
     int gainIndex = index;
