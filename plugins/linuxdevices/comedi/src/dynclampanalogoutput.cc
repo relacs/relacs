@@ -318,7 +318,8 @@ double DynClampAnalogOutput::bipolarRange( int index ) const
 
 void DynClampAnalogOutput::setupChanList( OutList &sigs,
 					  unsigned int *chanlist,
-					  int maxchanlist )
+					  int maxchanlist,
+					  bool setscale )
 {
   memset( chanlist, 0, maxchanlist * sizeof( unsigned int ) );
 
@@ -375,7 +376,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     // set range:
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
-    if ( sigs[k].noIntensity() ) {
+    if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
       for ( int p=0; p<2 && index < 0; p++ ) {
 	if ( unipolar ) {
 	  for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
@@ -424,7 +425,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     double minboardvolt = unipolar ? CAO->UnipolarRange[index].min : CAO->BipolarRange[index].min;
 
     // external reference:
-    if ( sigs[k].noIntensity() ) {
+    if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
       if ( ! extref ) {
 	if ( externalReference() < maxboardvolt ) {
 	  if ( maxvolt < externalReference() )
@@ -455,7 +456,8 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 	sigs[k].addError( DaqError::InvalidReference );
 	extref = false;
       }
-      sigs[k].multiplyScale( maxboardvolt );
+      if ( setscale )
+	sigs[k].multiplyScale( maxboardvolt );
     }
 
     int gainIndex = index;
@@ -506,7 +508,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   ol.sortByChannel();
 
   unsigned int chanlist[MAXCHANLIST];
-  setupChanList( ol, chanlist, MAXCHANLIST );
+  setupChanList( ol, chanlist, MAXCHANLIST, true );
 
   if ( ol.failed() )
     return -1;
@@ -667,7 +669,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   }
 
   unsigned int chanlist[MAXCHANLIST];
-  setupChanList( ol, chanlist, MAXCHANLIST );
+  setupChanList( ol, chanlist, MAXCHANLIST, false );
 
   double buffertime = sigs[0].interval( FIFOSize/BufferElemSize/sigs.size() );
   if ( buffertime < sigs[0].writeTime() )
@@ -696,7 +698,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   ol.sortByChannel();
 
   unsigned int chanlist[MAXCHANLIST];
-  setupChanList( ol, chanlist, MAXCHANLIST );
+  setupChanList( ol, chanlist, MAXCHANLIST, true );
 
   if ( sigs.failed() )
     return -1;

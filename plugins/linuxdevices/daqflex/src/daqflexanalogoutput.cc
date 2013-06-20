@@ -179,7 +179,7 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     double minval = sigs[k].minValue();
     double maxval = sigs[k].maxValue();
     double scale = sigs[k].scale();
-    if ( ! sigs[k].noIntensity() )
+    if ( ! sigs[k].noIntensity() || ! sigs[k].noLevel() )
       scale *= maxboardvolt;
 
 
@@ -328,7 +328,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     sigs[k].setGainIndex( 0 );
     sigs[k].setMinVoltage( -BipolarRange[0] );
     sigs[k].setMaxVoltage( BipolarRange[0] );
-    if ( ! sigs[k].noIntensity() )
+    if ( ! sigs[k].noIntensity() || ! sigs[k].noLevel() )
       sigs[k].multiplyScale( BipolarRange[0] );
 
     // allocate gain factor:

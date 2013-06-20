@@ -346,7 +346,7 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
   // setup channel ranges:
   unsigned int *chanlist = new unsigned int[512];
   memset( chanlist, 0, sizeof( chanlist ) );
-  setupChanList( sigs, chanlist, 512 );
+  setupChanList( sigs, chanlist, 512, true );
 
   if ( sigs.failed() )
     return -1;
@@ -438,7 +438,7 @@ int ComediAnalogOutput::convert( char *cbuffer, int nbuffer )
 
 
 void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
-					int maxchanlist )
+					int maxchanlist, bool setscale )
 {
   bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
 		     SDF_SOFT_CALIBRATED ) > 0 );
@@ -491,7 +491,7 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     // set range:
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
-    if ( sigs[k].noIntensity() ) {
+    if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
       for ( int p=0; p<2 && index < 0; p++ ) {
 	if ( unipolar ) {
 	  for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
@@ -540,7 +540,7 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     double minboardvolt = unipolar ? UnipolarRange[index].min : BipolarRange[index].min;
 
     // external reference:
-    if ( sigs[k].noIntensity() ) {
+    if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
       if ( ! extref ) {
 	if ( externalReference() < maxboardvolt ) {
 	  if ( maxvolt < externalReference() )
@@ -571,7 +571,8 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 	sigs[k].addError( DaqError::InvalidReference );
 	extref = false;
       }
-      sigs[k].multiplyScale( maxboardvolt );
+      if ( setscale )
+	sigs[k].multiplyScale( maxboardvolt );
     }
 
     if ( softcal && Calibration != 0 )
@@ -604,7 +605,7 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 }
 
 
-int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
+int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setscale )
 {
   if ( !isOpen() ) {
     sigs.addError( DaqError::DeviceNotOpen );
@@ -618,7 +619,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
   memset( chanlist, 0, sizeof( chanlist ) );
   memset( &cmd, 0, sizeof( comedi_cmd ) );
 
-  setupChanList( sigs, chanlist, 512 );
+  setupChanList( sigs, chanlist, 512, setscale );
 
   if ( sigs.failed() )
     return -1;
@@ -783,7 +784,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 {
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
-  int retVal = setupCommand( sigs, cmd );
+  int retVal = setupCommand( sigs, cmd, false );
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
@@ -813,7 +814,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   ol.add( sigs );
   ol.sortByChannel();
 
-  if ( setupCommand( ol, Cmd ) < 0 )
+  if ( setupCommand( ol, Cmd, true ) < 0 )
     return -1;
 
   // apply calibration:

@@ -137,9 +137,9 @@ public:
 protected:
 
     /*! Initializes the \a chanlist from \a sigs. */
-  void setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist );
+  void setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist, bool setscale );
     /*! Setup and test \a cmd according to \a sigs. */
-  int setupCommand( OutList &sigs, comedi_cmd &cmd );
+  int setupCommand( OutList &sigs, comedi_cmd &cmd, bool setscale );
 
     /*! Device driver specific tests on the settings in \a sigs
         for each output signal.
