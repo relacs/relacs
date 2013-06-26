@@ -351,11 +351,10 @@ public:
   void save( void );
 
     /*! Set the way how the configuration is saved for the default implementation
-        of COnfigClass::saveConfig().
-        \param[in] detailed if \c true the identifier together with the request string are saved
-        \param[in] firstonly if \c true only the first value of each option is saved
+        of ConfigClass::saveConfig().
+        \param[in] flags a combination of flags for the Options::save() function from Options.
         \sa save() */
-  void setSaveStyle( bool detailed, bool firstonly );
+  void setSaveStyle( int flags );
 
     /*! Write the names of all configuration files to \a str.
         The file names of each configuration group are written
@@ -388,10 +387,8 @@ private:
   typedef vector<ConfigClass*> ConfigClassList;
   ConfigClassList Configs;
 
-    /*! Save identifier string together with request string to configuration file. */
-  bool Detailed;
-    /*! Save only the first value of each configuration option. */
-  bool FirstOnly;
+    /*! Flags indicating how configuration options should be stored in the file. */
+  int Flags;
 
 };
 
