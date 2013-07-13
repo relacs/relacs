@@ -433,7 +433,7 @@ bool TableKey::isText( const string &pattern ) const
 }
 
 
-Str TableKey::section( int column, int level ) const
+Str TableKey::sectionName( int column, int level ) const
 {
   if ( column >= 0 && column < (int)Columns.size() ) {
     if ( level <= 0 )
@@ -445,13 +445,13 @@ Str TableKey::section( int column, int level ) const
 }
 
 
-Str TableKey::section( const string &pattern, int level ) const
+Str TableKey::sectionName( const string &pattern, int level ) const
 {
-  return section( column( pattern ), level );
+  return sectionName( column( pattern ), level );
 }
 
 
-void TableKey::setSection( int column, const string &name, int level )
+void TableKey::setSectionName( int column, const string &name, int level )
 {
   if ( column >= 0 && column < (int)Columns.size() ) {
     if ( level <= 0 )
@@ -462,10 +462,31 @@ void TableKey::setSection( int column, const string &name, int level )
 }
 
 
-void TableKey::setSection( const string &pattern, const string &name,
-			 int level )
+void TableKey::setSectionName( const string &pattern, const string &name,
+			       int level )
 {
-  setSection( column( pattern ), name, level );
+  setSectionName( column( pattern ), name, level );
+}
+
+
+Options TableKey::subSection( int column, int level ) const
+{
+  if ( column >= 0 && column < (int)Columns.size() ) {
+    if ( level <= 0 ) {
+      Options opts;
+      opts.add( *Columns[column] );
+      return opts;
+    }
+    else if ( level-1 < (int)Sections[column].size() )
+      return **Sections[column][level-1];
+  }
+  return Options();
+}
+
+
+Options TableKey::subSection( const string &pattern, int level ) const
+{
+  return subSection( column( pattern ), level );
 }
 
 

@@ -246,21 +246,30 @@ public:
     /*! Returns the section name string of level \a level
         for the \a column-th column. 
         \a level = 0 returns the name string of the column. */
-  Str section( int column, int level=1 ) const;
+  Str sectionName( int column, int level=1 ) const;
     /*! Returns the section name string of level \a level
         for the column specified by \a pattern. 
         \a level = 0 returns the name string of the column.
 	\sa column() */
-  Str section( const string &pattern, int level=1 ) const;
+  Str sectionName( const string &pattern, int level=1 ) const;
     /*! Set the section name string of level \a level
         for the \a column-th column to \a section. 
         \a level = 0 sets the name string of the column. */
-  void setSection( int column, const string &section, int level=1 );
+  void setSectionName( int column, const string &section, int level=1 );
     /*! Set the section name string of level \a level
         for the column specified by \a pattern to \a section. 
         \a level = 0 sets the name string of the column.
 	\sa column() */
-  void setSection( const string &pattern, const string &section, int level=1 );
+  void setSectionName( const string &pattern, const string &section, int level=1 );
+
+    /*! Returns the section at \a column column and level \a level
+        with all its subsections and column labels.  \a level = 0
+        returns solely the column label. */
+  Options subSection( int column, int level ) const;
+    /*! Returns the section at the column specified by \a pattern and
+        level \a level with all its subsections and column labels.  \a
+        level = 0 returns solely the column label. */
+  Options subSection( const string &pattern, int level ) const;
 
     /*! Get \a i-th column. */
   const Parameter &operator[]( int i ) const;
