@@ -125,6 +125,8 @@ protected:
   double Amplitude;
   double PeakAmplitude;
   double PeakAmplitudeFac;
+  bool StimScale;
+  double StimHighCut;
   enum WaveTypes { Wave=0, Envelope, AM };
   WaveTypes WaveType;
   enum WaveForms { File=0, Const, Sine, Rectangular, Triangular,

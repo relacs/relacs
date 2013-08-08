@@ -44,6 +44,7 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   // parameter:
   LowerThreshold = 1.0;
   Peaks = true;
+  AbsLowerThresh = true;
   UseUpperThresh = true;
   UpperThreshold = 10.0;
   TestInterval = false;
@@ -65,6 +66,7 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   newSection( "Detector", 8 );
   addNumber( "lowerthreshold", "Lower threshold", LowerThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8 );
+  addBoolean( "abslowerthresh", "Use absolute lower threshold", AbsLowerThresh, 0+8 );
   addBoolean( "useupperthresh", "Use upper threshold", UseUpperThresh, 0+8 );
   addNumber( "upperthreshold", "Upper threshold", UpperThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8 ).setActivation( "useupperthresh", "true" );;
   addBoolean( "peaks", "Detect peaks", Peaks, 2+8 );
@@ -389,6 +391,7 @@ void ThresholdSUSpikeDetector::notify( void )
   LowerThreshold = number( "lowerthreshold", Unit );
   UpperThreshold = number( "upperthreshold", Unit );
   Peaks = boolean( "peaks" );
+  AbsLowerThresh = boolean( "abslowerthresh" );
   TestInterval = boolean( "testinterval" );
   MinInterval = number( "minisi" );
   NoSpikeInterval = number( "nospike" );
@@ -596,12 +599,22 @@ void ThresholdSUSpikeDetector::save( void )
 int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
 				      const EventList &other, const EventData &stimuli )
 {
-  if ( Peaks )
-    D.thresholdPeakHist( data.minBegin(), data.end(), outevents,
-			 LowerThreshold, LowerThreshold, LowerThreshold, *this );
-  else
-    D.thresholdTroughHist( data.minBegin(), data.end(), outevents,
+  if ( AbsLowerThresh ) {
+    if ( Peaks )
+      D.thresholdPeakHist( data.minBegin(), data.end(), outevents,
 			   LowerThreshold, LowerThreshold, LowerThreshold, *this );
+    else
+      D.thresholdTroughHist( data.minBegin(), data.end(), outevents,
+			     LowerThreshold, LowerThreshold, LowerThreshold, *this );
+  }
+  else {
+    if ( Peaks )
+      D.thresholdPeakHist( data.minBegin(), data.end(), outevents,
+			   LowerThreshold, LowerThreshold, LowerThreshold, *this );
+    else
+      D.thresholdTroughHist( data.minBegin(), data.end(), outevents,
+			     LowerThreshold, LowerThreshold, LowerThreshold, *this );
+  }
 
 
   // update mean spike size in case of no spikes:
@@ -685,6 +698,10 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
       xmax = AllSpikesHist.pos( k+1 );
       break;
     }
+  if ( xmin > LowerThreshold )
+    xmin = LowerThreshold;
+  if ( xmax < UpperThreshold )
+    xmax = UpperThreshold;
   if ( ! HP->zoomedXRange() )
     HP->setXRange( xmin, xmax );
   if ( LogHistogram ) {

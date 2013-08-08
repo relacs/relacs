@@ -50,7 +50,8 @@ struct WAVHeader {
 };
 
 
-char binfile[200] = "";
+int nbinfiles = 0;
+char binfiles[10][200];
 char datfile[200] = "signal.dat";
 int datasize = 2;
 int datatype = 'i';  /* i: integer, f: float, d: double */
@@ -64,24 +65,31 @@ double gain = 1.0;
 
 void extractData( void )
 {
-  FILE *BF;
+  int i;
+  FILE *BF[10];
   FILE *DF;
   struct WAVHeader header;
-  char buffer[2048];
-  long m, n, k, t;
-  signed short *swp, d;
-  float *fp;
+  char buffer[10][2048];
+  long filesize[10], m[10], n, k;
+  signed short *swp[10], d;
+  float *fp[10];
   float v;
-  int c, sn;
+  int c[10];
   int outdatasize;
   int outndata;
 
-  BF = fopen( binfile, "r" );
-  if ( BF == NULL ) {
-    fprintf( stderr, "can't open %s!\n", binfile );
-    return;
+  for ( i=0; i<nbinfiles; i++ ) {
+    BF[i] = fopen( binfiles[i], "r" );
+    if ( BF[i] == NULL ) {
+      fprintf( stderr, "can't open %s!\n", binfiles[i] );
+      return;
+    }
+    fseek( BF[i], 0L, SEEK_END );
+    filesize[i] = ftell( BF[i] );
+    fseek( BF[i], offset, SEEK_SET );
   }
-  fseek( BF, offset, SEEK_SET );
+  if ( ndata == LONG_MAX )
+    ndata = filesize[0];
   outdatasize = datasize;
   outndata = ndata;
   if ( datatype == 'f' ) {
@@ -105,7 +113,7 @@ void extractData( void )
   header.subChunk1ID[3] = ' ';
   header.subChunk1Size = 16;
   header.wFormatTag = 1;
-  header.wChannels = datachannels;
+  header.wChannels = datachannels * nbinfiles;
   header.dwSamplesPerSec = (unsigned long)rint( samplerate );
   header.wBitsPerSample = outdatasize*8;
   header.wBlockAlign = header.wChannels * header.wBitsPerSample/8;
@@ -117,42 +125,50 @@ void extractData( void )
   header.subChunk2Size = outndata;
   fwrite( &header, sizeof( struct WAVHeader ), 1, DF );
   n = 0;
-  t = 0;
-  c = 0;
-  sn = 0;
+  for ( i=0; i<nbinfiles; i++ ) {
+    c[i] = 0;
+  }
   do {
-    m = fread( buffer, 1, 2048, BF );
-    if ( n+m > ndata )
-      m = ndata - n;
+    for ( i=0; i<nbinfiles; i++ ) {
+      m[i] = fread( buffer[i], 1, 2048, BF[i] );
+      if ( n+m[i] > ndata )
+	m[i] = ndata - n;
+      if ( i > 0 && m[i-1] != m[i] )
+	fprintf( stderr, "not the same data chunks %d=%ld versus %d=%ld\n", i-1, m[i-1], i, m[i] );
+    } 
+    i = 0;
     if ( datatype == 'f' ) {
-      fp = (float *)buffer;
-      for ( k=0; k<m; k+=datasize ) {
-	v = *fp*gain;
-	if ( fabs( v ) >= 1.0 ) {
-	  fprintf( stderr, "warning: data value %g too high.\n", v );
-	  v = 1.0;
+      for ( i=0; i<nbinfiles; i++ )
+	fp[i] = (float *)buffer[i];
+      for ( k=0; k<m[0]; k+=datasize ) {
+	for ( i=0; i<nbinfiles; i++ ) {
+	  v = *fp[i]*gain;
+	  if ( fabs( v ) >= 1.0 ) {
+	    fprintf( stderr, "warning: data value %g too high.\n", v );
+	    v = 1.0;
+	  }
+	  d = (signed short)rint( v*0x7fff );
+	  fwrite( &d, 2, 1, DF );
+	  c[i]++;
+	  if ( c[i] >= datachannels ) {
+	    c[i] = 0;
+	  }
+	  fp[i]++;
 	}
-	d = (signed short)rint( v*0x7fff );
-	fwrite( &d, 2, 1, DF );
-	sn++;
-	c++;
-	if ( c >= datachannels ) {
-	  c = 0;
-	  t++;
-	}
-	fp++;
       }
     }
     else if ( datatype == 'i' && datasize == 2 && datasign == 1 ) {
-      swp = (signed short *)buffer;
-      for ( k=0; k<m; k+=datasize ) {
-	fwrite( swp, datasize, 1, DF );
-	c++;
-	if ( c >= datachannels ) {
-	  c = 0;
-	  t++;
+      for ( i=0; i<nbinfiles; i++ )
+	swp[i] = (signed short *)buffer[i];
+      for ( k=0; k<m[0]; k+=datasize ) {
+	for ( i=0; i<nbinfiles; i++ ) {
+	  fwrite( swp[i], datasize, 1, DF );
+	  c[i]++;
+	  if ( c[i] >= datachannels ) {
+	    c[i] = 0;
+	  }
+	  swp[i]++;
 	}
-	swp++;
       }
     }
     else {
@@ -162,12 +178,13 @@ void extractData( void )
       fprintf( stderr, "data size: %d\n", datasize );
       break;
     }
-    n += m;
-  } while ( m == 2048 && n<ndata);
+    n += m[0];
+  } while ( m[0] == 2048 && n<ndata);
   if ( n < ndata )
     fprintf( stderr, "warning: read only %ld from %ld requested bytes.\n", n, ndata );
   fclose( DF );
-  fclose( BF  );
+  for ( i=0; i<nbinfiles; i++ )
+    fclose( BF[i]  );
 }
 
  
@@ -175,9 +192,9 @@ void WriteUsage()
 {
   printf( "\nusage:\n" );
   printf( "\n" );
-  printf( "bin2wav [-o|O ## -u|U ## -n|N ## -T ## -s ## -d ## -f -F -c ## -v] -t ## | -r ## <binfile> <wavfile>\n" );
+  printf( "bin2wav [-o|O ## -u|U ## -n|N ## -T ## -s ## -d ## -f -F -c ## -v] -t ## | -r ## <binfile1> <binfile2> ... <wavfile>\n" );
   printf( "\n" );
-  printf( "Save binary data from file <binfile> as a wave file <wavfile>.\n" );
+  printf( "Save binary data from files <binfile1>, >binfile2>, ... as a wave file <wavfile>.\n" );
   printf( "-o : save data starting from byte offset ##.\n" );
   printf( "-O : save data starting from byte offset ## times size of data type.\n" );
   printf( "-u : save data upto byte offset ##.\n" );
@@ -304,10 +321,11 @@ void ReadArgs( int argc, char *argv[] )
   if ( optind >= argc-1 || argv[optind][0] == '?' )
     WriteUsage();
 
-  strcpy( binfile, argv[optind] );
-  strcpy( datfile, argv[optind+1] );
+  for ( nbinfiles=0; optind+nbinfiles+1 < argc; nbinfiles++ )
+    strcpy( binfiles[nbinfiles], argv[optind+nbinfiles] );
+  strcpy( datfile, argv[optind+nbinfiles] );
 
-  sp = strrchr( binfile, '.' );
+  sp = strrchr( binfiles[0], '.' );
   if ( sp != NULL ) {
     sp++;
     if ( *sp == 'r' ) {
@@ -356,7 +374,10 @@ void ReadArgs( int argc, char *argv[] )
     ndata = upto - offset;
 
   if ( showvals ) {
-    fprintf( stderr, "binary file: %s\n", binfile );
+    fprintf( stderr, "binary files:" );
+    for ( c=0; c<nbinfiles; c++ )
+      fprintf( stderr, " %s", binfiles[c] );
+    fprintf( stderr, "\n" );
     fprintf( stderr, "data file: %s\n", datfile );
     fprintf( stderr, "offset: %ld bytes\n", offset );
     fprintf( stderr, "ndata: %ld bytes\n", ndata );

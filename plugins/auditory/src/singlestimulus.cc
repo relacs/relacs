@@ -52,11 +52,13 @@ SingleStimulus::SingleStimulus( void )
   addSelection( "type", "Type of stimulus", "Wave|Envelope|AM" );
   addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
+  addBoolean( "stimscale", "Scale stimulus to maximum amplitudes", false ).setActivation( "waveform", "From file" );
+  addNumber( "stimhighcut", "Cutoff frequency of high-pass filter applied to stimulus", 0.0, 0.0, 1000000.0, 10.0, "Hz", "Hz" ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
   addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 130.0, 1.0, "dB" ).setActivation( "type", "AM" );
   addNumber( "freq", "Frequency of waveform", 1.0, 0.0, 10000.0, 1.0, "Hz" ).setActivation( "waveform", "From file|Const", false );
   addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
-  addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
+  addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   newSection( "Stimulus" );
@@ -181,6 +183,8 @@ int SingleStimulus::main( void )
   WaveType = (WaveTypes)index( "type" );
   WaveForm = (WaveForms)index( "waveform" );
   Str stimfile = text( "stimfile" );
+  StimHighCut = boolean( "stimhighcut" );
+  StimScale = boolean( "stimscale" );
   PeakAmplitudeFac = number( "stimampl" );
   Frequency = number( "freq" );
   DutyCycle = number( "dutycycle" );
@@ -594,7 +598,10 @@ int SingleStimulus::main( void )
   Intensity = signal.intensity() - PeakAmplitude;
 
   // plot trace:
-  tracePlotSignal( Duration );
+  if ( Duration < 2.0 )
+    tracePlotSignal( Duration );
+  else
+    tracePlotContinuous( 2.0 );
 
   // setup plots:
   postCustomEvent( 11 );
@@ -776,6 +783,14 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
   double ymax = Intensity + PeakAmplitude;
   if ( WaveType == Envelope )
     ymin = AMDB.min( Ramp, Duration-Ramp );
+  else if ( WaveType == Wave ) {
+    ymin = AMDB.min( Ramp, Duration-Ramp );
+    ymax = AMDB.max( Ramp, Duration-Ramp );
+    if ( ymax < Intensity )
+      ymax = Intensity;
+    if ( ymin > Intensity )
+      ymin = Intensity;
+  }
   if ( threshold > 0.0 ) {
     if ( ymin > threshold )
       ymin = threshold;
@@ -823,6 +838,7 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
 int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 				    double &duration, bool stoream )
 {
+  unlockAll();
   OutData wave;
   wave.setTrace( Speaker[ Side ] );
 
@@ -835,11 +851,22 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     wave.load( file, file );
     if ( wave.empty() ) {
       warning( "Unable to load stimulus from file " + file );
+      lockAll();
       return -1;
     }
     if ( duration > 0.0 && wave.length() > duration )
       wave.resize( wave.indices( duration ) );
     duration = wave.length();
+    if ( StimScale )
+      wave /= maxAbs( wave );
+    if ( StimHighCut > 0.0 ) {
+      double fac = wave.stepsize()*StimHighCut;
+      double x = wave[0];
+      for ( int k=0; k<wave.size(); k++ ) {
+	x += ( wave[k] - x )*fac;
+	wave[k] -= x;
+      }
+    }
     if ( PeakAmplitudeFac <= 0.0 )
       PeakAmplitudeFac = ::relacs::rms( wave );
     int c = ::relacs::clip( -1.0, 1.0, wave );
@@ -918,6 +945,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   if ( duration <= SkipWin ) {
     warning( "Stimulus duration <b>" + Str( 1000.0* duration, 0, 0, 'f' ) + "ms</b>" +
 	     " is smaller than analysis window!" );
+    lockAll();
     return -1;
   }
 
@@ -960,6 +988,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   else if ( WaveType == Envelope ) {
     if ( ::relacs::min( wave ) < 0.0 ) {
       warning( "This envelope contains negative values!" );
+      lockAll();
       return -1;
     }
     wave.ramp( Ramp );
@@ -992,12 +1021,28 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     }
   }
   else { // Wave
-    signal = wave;
+    // this should go into OutData::fixSample():
+    if ( wave.stepsize() < signal.minSampleInterval() )
+      signal.interpolate( wave, 0.0, signal.minSampleInterval() );
+    else
+      signal = wave;
     signal.setCarrierFreq( CarrierFreq );
     signal.setIdent( "wave=" + wavename );
+    static const double EnvTau = 0.0002;
+    AMDB = wave;
+    double x = wave[0]*wave[0];
+    for ( int k=0; k<AMDB.size(); k++ ) {
+      double v = AMDB[k];
+      x += ( v*v - x )*AMDB.stepsize()/EnvTau;
+      AMDB[k] = sqrt( 2.0*x );
+      AMDB[k] = 20.0 * ::log10( AMDB[k] );
+      if ( AMDB[k] < -60.0 )
+	AMDB[k] = -60.0;
+    }
   }
   signal.ramp( Ramp );
   
+  lockAll();
   return 0;
 }
 

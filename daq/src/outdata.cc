@@ -933,13 +933,21 @@ OutData &OutData::load( const string &file, const string &filename )
 {
   clear();
 
-  // open file:
-  ifstream str( file.c_str() );
-  if ( str.bad() )
-    return *this;
-
-  // load:
-  load( str, filename.empty() ? file : filename );
+  string ext = Str( filename ).extension().lower();
+  if ( ext == ".wav" ) {
+#ifdef HAVE_LIBSNDFILE
+    SampleDataF::loadSndFile( file );
+#endif
+  }
+  else {
+    // open file:
+    ifstream str( file.c_str() );
+    if ( str.bad() )
+      return *this;
+    
+    // load:
+    load( str, filename.empty() ? file : filename );
+  }
 
   return *this;
 }

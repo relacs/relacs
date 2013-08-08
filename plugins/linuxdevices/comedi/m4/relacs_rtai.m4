@@ -36,14 +36,14 @@ AS_HELP_STRING([--without-rtai],[don't use RTAI, i.e. prevent auto-detection])],
 ])
 
 # add CPU flags:
-AS_IF( [ grep -q -w mmx /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -mmmx"], [] )
-AS_IF( [ grep -q -w sse /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse"], [] )
-AS_IF( [ grep -q -w sse2 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse2"], [] )
-AS_IF( [ grep -q -w sse3 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse3"], [] )
-AS_IF( [ grep -q -w ssse3 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -mssse3"], [] )
-AS_IF( [ grep -q -w sse4 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse4"], [] )
-AS_IF( [ grep -q -w sse4_1 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse4.1"], [] )
-AS_IF( [ grep -q -w sse4_2 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse4.2"], [] )
+AS_IF( [ grep -q -w mmx /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -mmmx"] )
+AS_IF( [ grep -q -w sse /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse"] )
+AS_IF( [ grep -q -w sse2 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse2"] )
+AS_IF( [ grep -q -w sse3 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse3"] )
+AS_IF( [ grep -q -w ssse3 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -mssse3"] )
+AS_IF( [ grep -q -w sse4 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse4"] )
+AS_IF( [ grep -q -w sse4_1 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse4.1"] )
+AS_IF( [ grep -q -w sse4_2 /proc/cpuinfo ], [ RTAI_CPPFLAGS="$RTAI_CPPFLAGS -msse4.2"] )
 
 # set CFLAGS:
 CPPFLAGS="${RTAI_CPPFLAGS} ${CPPFLAGS}"

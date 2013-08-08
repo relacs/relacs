@@ -566,7 +566,7 @@ class Map : public Array < T >
         and \a precision decimals. */
   ostream &save( ostream &str, int width=10, int prec=5,
 		 const string &start="", const string &separator=" " ) const;
-  Map<T> &save( const string &file, int width=8, int prec=3 ) const;
+  void save( const string &file, int width=8, int prec=3 ) const;
   template < typename TT > 
   friend ostream &operator<<( ostream &str, const Map<TT> &a );
     /*! Read from stream \a str until end of file
@@ -1506,11 +1506,10 @@ ostream &Map<T>::save( ostream &str, int width, int prec,
 
 
 template < typename T > 
-Map<T> &Map<T>::save( const string &file, int width, int prec ) const
+void Map<T>::save( const string &file, int width, int prec ) const
 {
   ofstream str( file.c_str() );
   save( str, width, prec );
-  return *this;
 }
 
 

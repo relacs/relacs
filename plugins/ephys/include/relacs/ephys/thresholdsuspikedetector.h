@@ -93,6 +93,8 @@ public slots:
   double LowerThreshold;
     /*! Detect peaks (true) or troughs (false ). */
   bool Peaks;
+    /*! Use an absolute lower threshold. */
+  bool AbsLowerThresh;
     /*! True if the UpperThreshold is used in addition to the lower threshold. */
   bool UseUpperThresh;
     /*! The upper threshold for detecting spikes. */
