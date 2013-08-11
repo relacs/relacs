@@ -97,6 +97,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     SS( this ),
     MTDT( this ),
     CW( 0 ),
+    ShowFull( 0 ),
     SignalTime( -1.0 ),
     CurrentTime( 0.0 ),
     ReadLoop( this ),
@@ -155,10 +156,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // main widget:
   setWindowTitle( "RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );
   MainWidget = new QWidget;
-  QGridLayout *mainlayout = new QGridLayout;
-  mainlayout->setContentsMargins( 4, 4, 4, 4 );
-  mainlayout->setSpacing( 4 );
-  MainWidget->setLayout( mainlayout );
+  MainLayout = new QGridLayout;
+  MainLayout->setContentsMargins( 4, 4, 4, 4 );
+  MainLayout->setSpacing( 4 );
+  MainWidget->setLayout( MainLayout );
   MainWidget->setBackgroundRole( QPalette::Window );
   MainWidget->setAutoFillBackground( true );
   setCentralWidget( MainWidget );
@@ -407,6 +408,18 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // view:
   QMenu *viewmenu = menuBar()->addMenu( "&View" );
+  viewmenu->addAction( "Show &Filters",
+		       (QWidget*)this, SLOT( showFilters() ),
+		       Qt::CTRL + Qt::Key_1 );
+  viewmenu->addAction( "Show &Traces",
+		       (QWidget*)this, SLOT( showTraces() ),
+		       Qt::CTRL + Qt::Key_2 );
+  viewmenu->addAction( "Show &Controls",
+		       (QWidget*)this, SLOT( showControls() ),
+		       Qt::CTRL + Qt::Key_3 );
+  viewmenu->addAction( "Show &RePros",
+		       (QWidget*)this, SLOT( showRePros() ),
+		       Qt::CTRL + Qt::Key_4 );
   MaximizedAction = viewmenu->addAction( "&Maximize window",
 					 (QWidget*)this, SLOT( maximizeScreen() ),
 					 Qt::CTRL + Qt::SHIFT + Qt::Key_M );
@@ -427,15 +440,15 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   int w = wc > wd ? wc : wd;
   FD->setMaximumWidth( w );
   CW->setMaximumWidth( w );
-  mainlayout->addWidget( FD, 0, 0 );
-  mainlayout->addWidget( PT->widget(), 0, 1 );
-  mainlayout->addWidget( CW, 1, 0 );
-  mainlayout->addWidget( RP, 1, 1 );
-  mainlayout->addWidget( MC, 2, 0, 1, 2 );
-  mainlayout->setColumnStretch( 0, 1 );
-  mainlayout->setColumnStretch( 1, 100 );
-  mainlayout->setRowStretch( 0, 2 );
-  mainlayout->setRowStretch( 1, 3 );
+  MainLayout->addWidget( FD, 0, 0 );
+  MainLayout->addWidget( PT->widget(), 0, 1 );
+  MainLayout->addWidget( CW, 1, 0 );
+  MainLayout->addWidget( RP, 1, 1 );
+  MainLayout->addWidget( MC, 2, 0, 1, 2 );
+  MainLayout->setColumnStretch( 0, 1 );
+  MainLayout->setColumnStretch( 1, 100 );
+  MainLayout->setRowStretch( 0, 2 );
+  MainLayout->setRowStretch( 1, 3 );
   w *= 3/2;
   if ( PT->widget()->minimumWidth() < w || RP->minimumWidth() < w ) {
     PT->widget()->setMinimumWidth( w );
@@ -2048,6 +2061,136 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
 
 
 //----------------------------Private Functions----------------------------//
+
+
+void RELACSWidget::showFilters( void )
+{
+  if ( ShowFull == 1 ) {
+    ShowFull = 0;
+    int wd = FD->sizeHint().width();
+    int wc = CW->sizeHint().width();
+    int w = wc > wd ? wc : wd;
+    FD->setMaximumWidth( w );
+    CW->setMaximumWidth( w );
+    MainLayout->setColumnStretch( 0, 1 );
+    MainLayout->setColumnStretch( 1, 100 );
+    MainLayout->setRowStretch( 0, 2 );
+    MainLayout->setRowStretch( 1, 3 );
+    FD->show();
+    PT->widget()->show();
+    CW->show();
+    RP->show();
+  }
+  else {
+    ShowFull = 1;
+    MainLayout->setColumnStretch( 0, 0 );
+    MainLayout->setColumnStretch( 1, 0 );
+    MainLayout->setRowStretch( 0, 0 );
+    MainLayout->setRowStretch( 1, 0 );
+    FD->setMaximumWidth( 16777215 );
+    FD->show();
+    PT->widget()->hide();
+    CW->hide();
+    RP->hide();
+  }
+}
+
+
+void RELACSWidget::showTraces( void )
+{
+  if ( ShowFull == 2 ) {
+    ShowFull = 0;
+    int wd = FD->sizeHint().width();
+    int wc = CW->sizeHint().width();
+    int w = wc > wd ? wc : wd;
+    FD->setMaximumWidth( w );
+    CW->setMaximumWidth( w );
+    MainLayout->setColumnStretch( 0, 1 );
+    MainLayout->setColumnStretch( 1, 100 );
+    MainLayout->setRowStretch( 0, 2 );
+    MainLayout->setRowStretch( 1, 3 );
+    FD->show();
+    PT->widget()->show();
+    CW->show();
+    RP->show();
+  }
+  else {
+    ShowFull = 2;
+    MainLayout->setColumnStretch( 0, 0 );
+    MainLayout->setColumnStretch( 1, 0 );
+    MainLayout->setRowStretch( 0, 0 );
+    MainLayout->setRowStretch( 1, 0 );
+    FD->hide();
+    PT->widget()->show();
+    CW->hide();
+    RP->hide();
+  }
+}
+
+
+void RELACSWidget::showControls( void )
+{
+  if ( ShowFull == 3 ) {
+    ShowFull = 0;
+    int wd = FD->sizeHint().width();
+    int wc = CW->sizeHint().width();
+    int w = wc > wd ? wc : wd;
+    FD->setMaximumWidth( w );
+    CW->setMaximumWidth( w );
+    MainLayout->setColumnStretch( 0, 1 );
+    MainLayout->setColumnStretch( 1, 100 );
+    MainLayout->setRowStretch( 0, 2 );
+    MainLayout->setRowStretch( 1, 3 );
+    FD->show();
+    PT->widget()->show();
+    CW->show();
+    RP->show();
+  }
+  else {
+    ShowFull = 3;
+    MainLayout->setColumnStretch( 0, 0 );
+    MainLayout->setColumnStretch( 1, 0 );
+    MainLayout->setRowStretch( 0, 0 );
+    MainLayout->setRowStretch( 1, 0 );
+    FD->hide();
+    PT->widget()->hide();
+    CW->setMaximumWidth( 16777215 );
+    CW->show();
+    RP->hide();
+  }
+}
+
+
+void RELACSWidget::showRePros( void )
+{
+  if ( ShowFull == 4 ) {
+    ShowFull = 0;
+    int wd = FD->sizeHint().width();
+    int wc = CW->sizeHint().width();
+    int w = wc > wd ? wc : wd;
+    FD->setMaximumWidth( w );
+    CW->setMaximumWidth( w );
+    MainLayout->setColumnStretch( 0, 1 );
+    MainLayout->setColumnStretch( 1, 100 );
+    MainLayout->setRowStretch( 0, 2 );
+    MainLayout->setRowStretch( 1, 3 );
+    FD->show();
+    PT->widget()->show();
+    CW->show();
+    RP->show();
+  }
+  else {
+    ShowFull = 4;
+    MainLayout->setColumnStretch( 0, 0 );
+    MainLayout->setColumnStretch( 1, 0 );
+    MainLayout->setRowStretch( 0, 0 );
+    MainLayout->setRowStretch( 1, 0 );
+    FD->hide();
+    PT->widget()->hide();
+    CW->hide();
+    RP->show();
+  }
+}
 
 
 void RELACSWidget::fullScreen( void )

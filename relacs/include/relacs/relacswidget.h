@@ -23,6 +23,7 @@
 #define _RELACS_RELACSWIDGET_H_ 1
 
 #include <QMainWindow>
+#include <QGridLayout>
 #include <QMenu>
 #include <QAction>
 #include <QString>
@@ -285,6 +286,14 @@ public slots:
     /*! Stops all RELACSWidget activities and exits. */
   void quit( void );
 
+    /*! Toggle showing filters and detectors in full window. */
+  void showFilters( void );
+    /*! Toggle showing traces in full window. */
+  void showTraces( void );
+    /*! Toggle showing controls in full window. */
+  void showControls( void );
+    /*! Toggle showing RePros in full window. */
+  void showRePros( void );
     /*! Toggles full screen mode. */
   void fullScreen( void );
     /*! Toggles maximized screen mode. */
@@ -362,6 +371,7 @@ private:
 
   // Internal classes
   QWidget *MainWidget;
+  QGridLayout *MainLayout;
 
   ConfigureClasses CFG;
   Str DocPath;
@@ -391,6 +401,8 @@ private:
   Macros *MC;
   FilterDetectors *FD;
   Session *SN;
+
+  int ShowFull;
 
   InList IL;
   EventList ED;
