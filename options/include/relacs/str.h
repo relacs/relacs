@@ -650,7 +650,7 @@ public:
     /*! Extracts a list of integer numbers from the content of the string.
         Individual numbers are separated by \a sep, ranges of numbers are
 	indicated by \a r.
-	Example: "1,3,6..8,10" results in 1,3,6,7,8,10 */
+	Example: "1,3,6..8,10,20..32..3" results in 1,3,6,7,8,10,20,23,26,29,32 */
   void range( vector< int > &ri, const string &sep=",", const string &r=".." ) const;
 
   // find:

@@ -22,6 +22,7 @@
 #include <relacs/map.h>
 #include <relacs/eventdata.h>
 #include <relacs/tablekey.h>
+#include <relacs/datafile.h>
 #include <relacs/rangeloop.h>
 #include <relacs/base/linearattenuate.h>
 #include <relacs/efield/beats.h>
@@ -44,6 +45,12 @@ Beats::Beats( void )
   addNumber( "amplitude", "Amplitude", 1.0, 0.1, 1000.0, 0.1, "mV/cm" );
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
+  //  newSection( "Chirps" );
+  addText( "chirptimesfile", "File with chirp times", "" ).setStyle( OptWidget::BrowseExisting );
+  addNumber( "chirpsize", "Size of chirp", 100.0, 0.0, 1000.0, 10.0, "Hz" );
+  addNumber( "chirpwidth", "Width of chirp", 0.1, 0.002, 100.0, 0.001, "sec", "ms" );
+  addNumber( "chirpampl", "Amplitude reduction during chirp", 0.0, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
+  addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", 1.0, 0.01, 100.0, 0.01, "", "" );
   //  newSection( "Analysis" );
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
@@ -79,6 +86,11 @@ int Beats::main( void )
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
   bool fixeddf = boolean( "fixeddf" );
   int repeats = integer( "repeats" );
+  string chirptimesfile = text( "chirptimesfile" );
+  double chirpsize = number( "chirpsize" );
+  double chirpwidth = number( "chirpwidth" );
+  double chirpampl = number( "chirpampl" );
+  double chirpkurtosis = number( "chirpkurtosis" );
   double before = number( "before" );
   double after = number( "after" );
   double averagetime = number( "averagetime" );
@@ -102,12 +114,22 @@ int Beats::main( void )
     warning( "need EOD events of the EOD Trace." );
     return Failed;
   }
+  EventData chirptimes;
+  if ( ! chirptimesfile.empty() ) {
+    DataFile cf( chirptimesfile );
+    cf.read( 2 );
+    if ( cf.data().rows() <= 0 ) {
+      warning( "File " + chirptimesfile + " does not exist or doesnot contain data.\n" );
+      return Failed;
+    }
+    chirptimes = cf.col( 0 );
+  }
 
   // check gain of attenuator:
   base::LinearAttenuate *latt =
     dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( GlobalEField ) ) );
   if ( fakefish == 0.0 && latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 )
-    warning( "Attenuator gain is probably not set!" );
+    warning( "Attenuator gain is probably not set!", 10.0 );
 
   // reset outputs:
   if ( fixeddf )
@@ -202,16 +224,63 @@ int Beats::main( void )
 	OutData signal;
 	signal.setTrace( GlobalEField );
 	unlockAll();
-	double p = 1.0;
-	if ( fabs( deltaf ) > 0.01 )
-	  p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
-	else
-	  p = 1.0/stimulusrate;
-	int n = (int)::rint( duration / p );
-	if ( n < 1 )
-	  n = 1;
-	signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
-	signal.setIdent( "sinewave" );
+	if ( chirptimes.empty() ) {
+	  double p = 1.0;
+	  if ( fabs( deltaf ) > 0.01 )
+	    p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
+	  else
+	    p = 1.0/stimulusrate;
+	  int n = (int)::rint( duration / p );
+	  if ( n < 1 )
+	    n = 1;
+	  signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
+	  signal.setIdent( "sinewave" );
+	}
+	else {
+	  // EOD with chirps:
+	  signal.clear();
+	  signal.reserve( signal.indices( duration ) );
+	  if ( signal.fixedSampleRate() )
+	    signal.setSampleInterval( signal.minSampleInterval() );
+	  else
+	    signal.setSampleInterval( signal.bestSampleInterval( 2.0*stimulusrate ) );
+	  double sig = 0.5*chirpwidth / ::pow( 2.0*log(10.0), 0.5/chirpkurtosis );
+	  double p = 0.0;
+	  int k = 0;
+	  for ( double t=0.0; t<duration; ) {
+	    t = signal.length();
+	    double f = stimulusrate;
+	    double a = 1.0;
+	    if ( t < ramp )
+	      a = t/ramp;
+	    else if ( t > duration - ramp )
+	      a = (duration - t)/ramp;
+	    if ( k<chirptimes.size() && fabs( t - chirptimes[k] ) < 2.0*chirpwidth ) {
+	      double x = t - chirptimes[k];
+	      double g = exp( -0.5 * ::pow( (x/sig)*(x/sig), chirpkurtosis ) );
+	      f = chirpsize*g + stimulusrate;
+	      a *= 1.0 - chirpampl*g;
+	    }
+	    else if ( k<chirptimes.size() && t > chirptimes[k] + 2.0*chirpwidth )
+	      k++;
+	    p += f * signal.stepsize();
+	    signal.push( a * ::sin( 6.28318530717959 * p ) );
+	  }
+	  signal.description().setType( "stimulus/eod_chirps" );
+	  signal.description().addNumber( "Frequency", stimulusrate, "Hz" );
+	  signal.description().addNumber( "Amplitude", amplitude, "mV" );
+	  signal.description().addNumber( "TemporalOffset", 0.0, "s" );
+	  signal.description().addNumber( "Duration", duration, "s" );
+	  signal.description().addNumber( "ChirpSize", chirpsize, "Hz" );
+	  signal.description().addNumber( "ChirpWidth", 1000.0*chirpwidth, "ms" );
+	  signal.description().addNumber( "ChirpAmplitude", 100.0*(1.0-chirpampl), "%" );
+	  signal.description().addNumber( "ChirpKurtosis", chirpkurtosis );
+	  signal.description().addInteger( "ChirpNumber", k );
+	  signal.description().addText( "ChirpTimesFile", chirptimesfile );
+	  signal.description().addNumber( "ChirpTimes", chirptimes[0] );
+	  for ( int j=1; j<k; j++ )
+	    signal.description().pushNumber( "ChirpTimes", chirptimes[j] );
+	}
 	lockAll();
 	duration = signal.length();
 	signal.setDelay( before );
@@ -269,7 +338,8 @@ int Beats::main( void )
 	  for ( ; stimiter < stimglobal.end(); ++stimiter )
 	    stimfrequency.push( stimiter.time() - signaltime, *stimiter );
 	}
-	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
+	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents,
+	      showstimulus, stimfrequency, chirptimes );
 
 	if ( fixeddf ) {
 	  double fishrate = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
@@ -317,7 +387,6 @@ int Beats::main( void )
       }
 
       // after stimulus recording loop:
-      starttime = currentTime();
       do {
 	// get data:
 	const EventData &eodglobal = events( EODEvents );
@@ -332,7 +401,8 @@ int Beats::main( void )
 	  for ( ; stimiter < stimglobal.end(); ++stimiter )
 	    stimfrequency.push( stimiter.time() - signaltime, *stimiter );
 	}
-	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
+	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents,
+	      showstimulus, stimfrequency, chirptimes );
 
 	sleepWait( 0.2 );
 	if ( interrupt() ) {
@@ -343,7 +413,7 @@ int Beats::main( void )
 	  return Aborted;
 	}
 
-      } while ( currentTime() - starttime < after );
+      } while ( currentTime() - starttime < before + duration + after + 0.01 );
 
       setSaving( savetraces );
 
@@ -353,7 +423,8 @@ int Beats::main( void )
 	jarchirpevents.assign( events( ChirpEvents ),
 			       signaltime - before,
 			       signaltime + duration + after, signaltime );
-      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents, showstimulus, stimfrequency );
+      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents,
+	    showstimulus, stimfrequency, chirptimes );
       save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
 	    eodfrequency, eodamplitude, jarchirpevents, stimfrequency, split, FileCount );
       FileCount++;
@@ -387,7 +458,7 @@ void Beats::sessionStarted( void )
 
 void Beats::plot( double deltaf, double amplitude, double duration,
 		  const MapD &eodfrequency, const EventData &jarchirpevents, 
-		  bool showstimulus, const MapD &stimfrequency )
+		  bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes )
 {
   P.lock();
   // eod frequency with chirp events:
@@ -401,6 +472,12 @@ void Beats::plot( double deltaf, double amplitude, double duration,
   if ( showstimulus )
     P.plot( stimfrequency, 1.0, Plot::Cyan, 2, Plot::Solid );
   P.plot( eodfrequency, 1.0, Plot::Green, 2, Plot::Solid );
+  if ( ! eodfrequency.empty() ) {
+    EventData ct( chirptimes );
+    ct.resize( ct.next( eodfrequency.x().back() ) );
+    P.plot( ct, 2, 0.0, 1.0, 0.9, Plot::Graph,
+	    1, Plot::Circle, 5, Plot::Pixel, Plot::Blue, Plot::Blue );
+  }
   P.plot( jarchirpevents, 2, 0.0, 1.0, 0.9, Plot::Graph,
 	  1, Plot::Circle, 5, Plot::Pixel, Plot::Yellow, Plot::Yellow );
   P.draw();

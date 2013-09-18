@@ -303,6 +303,9 @@ void WriteUsage()
   cerr << "    matching 'cutoff=50Hz' and 'stdev' greater than 5 within the next level blocks\n";
   cerr << "    with indices 3, 4, 5\n";
   cerr << "-l: select a range of line numbers within the data blocks (first line = 0).\n";
+  cerr << "    single line numbers and ranges of line numbers are separated by commas,\n";
+  cerr << "    ranges are indicated by dashes with an optional increment as a third number:\n";
+  cerr << "    1-5 selects lines 1,2,3,4,5; 1-5-2 selects lines 1,3,5.\n";
   cerr << "-s: select lines based on their data values:\n";
   cerr << "    cc:oovv defines the column cc, an operand oo, and a comparison value vvv.\n";
   cerr << "    The column is either a number (first column = 0) or a string.\n";

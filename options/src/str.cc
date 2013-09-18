@@ -2577,25 +2577,36 @@ void Str::range( vector< int > &ri, const string &sep, const string &r ) const
   int next;
   int index = 0;
   do {
-    double val1 = number( 0.0, index, &next, space );
+    int val1 = static_cast< int >( number( 0.0, index, &next, space ) );
     if ( next <= index )
       break;
     index = next;
     if ( substr( next, r.size() ) == r ) {
       index += r.size();
-      double val2 = number( 0.0, index, &next, space );
+      int val2 = static_cast< int >( number( 0.0, index, &next, space ) );
       if ( next <= index )
 	break;
       index = next;
-      for ( double val=val1; val <= val2; val += 1.0 )
-	ri.push_back( static_cast< int >( val ) );
+      if ( substr( next, r.size() ) == r ) {
+	index += r.size();
+	int val3 = static_cast< int >( number( 0.0, index, &next, space ) );
+	if ( next <= index )
+	  break;
+	index = next;
+	for ( int val=val1; val <= val2; val += val3 )
+	  ri.push_back( val );
+      }
+      else {
+	for ( int val=val1; val <= val2; val++ )
+	  ri.push_back( val );
+      }
     }
     else if ( substr( next, sep.size() ) == sep ) {
       index += sep.size();
-      ri.push_back( static_cast< int >( val1 ) );
+      ri.push_back( val1 );
     }
     else {
-      ri.push_back( static_cast< int >( val1 ) );
+      ri.push_back( val1 );
       break;
     }
   } while ( true );

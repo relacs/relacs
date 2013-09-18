@@ -67,7 +67,7 @@ public:
 
   void plot( double deltaf, double amplitude, double duration,
 	     const MapD &eodfrequency, const EventData &jarchirpevents,
-	     bool showstimulus, const MapD &stimfrequency );
+	     bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
   void save( double deltaf, double amplitude, double duration, double pause,
 	     double fishrate, double stimulusrate,
 	     const MapD &eodfrequency, const MapD &eodamplitude,
