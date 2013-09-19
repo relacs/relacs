@@ -237,8 +237,8 @@ void MembraneResistance::analyzeOn( double duration,
   unlockAll();
 
   // resting potential:
-  VRest = MeanTrace.mean( -duration, 0.0 );
-  VRestsd = MeanTrace.stdev( -duration, 0.0 );
+  VRest = MeanTrace.mean( -sswidth, 0.0 );
+  VRestsd = MeanTrace.stdev( -sswidth, 0.0 );
 
   // steady-state potential:
   VSS = MeanTrace.mean( duration-sswidth, duration );
@@ -255,7 +255,7 @@ void MembraneResistance::analyzeOn( double duration,
   else
     VPeakInx = MeanTrace.minIndex( VPeak, 0.0, duration-sswidth );
   VPeaksd = StdevTrace[VPeakInx];
-  if ( fabs( VPeak - VSS ) <= VSSsd ) {
+  if ( fabs( VPeak - VSS ) <= 4.0*VSSsd || VPeakInx > MeanTrace.index( duration-sswidth ) ) {
     VPeak = VSS;
     VPeaksd = VSSsd;
     VPeakInx = MeanTrace.index( duration );
@@ -264,12 +264,21 @@ void MembraneResistance::analyzeOn( double duration,
   else
     VPeakTime = MeanTrace.pos( VPeakInx );
 
+
   // fit exponential to onset:
   int inxon0 = MeanTrace.index( 0.0 );
   int inxon1 = VPeakInx;
+  // guess time constant:
+  double tau = 0.01;
+  for ( int k = inxon0; k<VPeakInx; k++ ) {
+    if ( (MeanTrace[k]-VSS)/(VRest-VSS) < 1.0/2.71828182845905 ) {
+      tau = MeanTrace.pos( k );
+      break;
+    }
+  }
   ArrayD p( 3, 1.0 );
   p[0] = VRest-VSS;
-  p[1] = -0.01;
+  p[1] = -tau;
   p[2] = VSS;
   ArrayI pi( 3, 1 );
   if ( nossfit ) {
@@ -314,9 +323,19 @@ void MembraneResistance::analyzeOff( double duration,
   // fit exponential to offset:
   int inxon0 = MeanTrace.index( 0.0 );
   int inxon1 = VPeakInx;
+  int inxoff0 = MeanTrace.index( duration );
+  int inxoff1 = inxoff0 + inxon1 - inxon0;
+  // guess time constant:
+  double tau = 0.01;
+  for ( int k = inxoff0; k<inxoff1; k++ ) {
+    if ( (MeanTrace[k]-VRest)/(VSS-VRest) < 1.0/2.71828182845905 ) {
+      tau = MeanTrace.interval( k - inxoff0 );
+      break;
+    }
+  }
   ArrayD p( 3, 1.0 );
   p[0] = VSS-VRest;
-  p[1] = -0.01;
+  p[1] = -tau;
   p[2] = VRest;
   ArrayI pi( 3, 1 );
   if ( nossfit ) {
@@ -325,8 +344,6 @@ void MembraneResistance::analyzeOff( double duration,
   }
   ArrayD u( 3, 1.0 );
   double ch = 0.0;
-  int inxoff0 = MeanTrace.index( duration );
-  int inxoff1 = inxoff0 + inxon1 - inxon0;
   if ( inxoff1 > MeanTrace.size() )
     inxoff1 = MeanTrace.size();
   marquardtFit( MeanTrace.range().begin()+inxon0, MeanTrace.range().begin()+inxon1,

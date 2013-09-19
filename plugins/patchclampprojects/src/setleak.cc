@@ -193,6 +193,8 @@ int SetLeak::main( void )
   // get options:
   int preset = index( "preset" );
   bool interactive = boolean( "interactive" );
+  if ( ! interactive )
+    preset = 2;
   double g = number( "g" );
   double E = number( "E" );
   bool reversaltorest = boolean( "reversaltorest" );

@@ -19,7 +19,7 @@
 // *** FEATURES ***
 
   /*! Needed to compute a model and to enable math support. */
-//#define ENABLE_COMPUTATION
+#define ENABLE_COMPUTATION
 
   /*! Generates internal trigger events on which analog output signals can be started. */
 // #define ENABLE_TRIGGER
@@ -28,7 +28,7 @@
 //#define ENABLE_TTLPULSE
 
   /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
-//#define ENABLE_SYNCSEC
+#define ENABLE_SYNCSEC
 
   /*! Measures mean and standard deviation of periodic task. */
 //#define ENABLE_STATISTICS
