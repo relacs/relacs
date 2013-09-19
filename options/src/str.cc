@@ -2613,6 +2613,53 @@ void Str::range( vector< int > &ri, const string &sep, const string &r ) const
 }
 
 
+void Str::range( vector< double > &rd, const string &sep, const string &r ) const
+{
+  rd.clear();
+
+  string space = sep;
+  if ( ! r.empty() && r[0] != '.' )
+    space += r;
+  
+  int next;
+  int index = 0;
+  do {
+    double val1 = number( 0.0, index, &next, space );
+    if ( next <= index )
+      break;
+    index = next;
+    if ( substr( next, r.size() ) == r ) {
+      index += r.size();
+      double val2 = number( 0.0, index, &next, space );
+      if ( next <= index )
+	break;
+      index = next;
+      if ( substr( next, r.size() ) == r ) {
+	index += r.size();
+	double val3 = number( 0.0, index, &next, space );
+	if ( next <= index )
+	  break;
+	index = next;
+	for ( double val=val1; val <= val2; val += val3 )
+	  rd.push_back( val );
+      }
+      else {
+	for ( double val=val1; val <= val2; val += 1.0 )
+	  rd.push_back( val );
+      }
+    }
+    else if ( substr( next, sep.size() ) == sep ) {
+      index += sep.size();
+      rd.push_back( val1 );
+    }
+    else {
+      rd.push_back( val1 );
+      break;
+    }
+  } while ( true );
+}
+
+
 
 ///// find //////////////////////////////////////////////////////////////////
 

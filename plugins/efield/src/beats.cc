@@ -1,6 +1,6 @@
 /*
   efield/beats.cc
-  Apply sinewaves with automatically set difference frequencies and amplitudes.
+  Play EOD mimicks with optional chirps from a range of automatically set difference frequencies and amplitudes.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -32,10 +32,10 @@ namespace efield {
 
 
 Beats::Beats( void )
-  : RePro( "Beats", "efield", "Jan Benda", "1.0", "May 10, 2013" )
+  : RePro( "Beats", "efield", "Jan Benda", "2.0", "Sep 19, 2013" )
 {
   // add some parameter as options:
-  //  newSection( "Stimulation" );
+  newSection( "Stimulation" );
   addNumber( "duration", "Signal duration", 10.0, 0.0, 1000000.0, 1.0, "seconds" );
   addNumber( "pause", "Pause between signals", 20.0, 1.0, 1000000.0, 1.0, "seconds" );
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
@@ -45,13 +45,14 @@ Beats::Beats( void )
   addNumber( "amplitude", "Amplitude", 1.0, 0.1, 1000.0, 0.1, "mV/cm" );
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
-  //  newSection( "Chirps" );
-  addText( "chirptimesfile", "File with chirp times", "" ).setStyle( OptWidget::BrowseExisting );
+  newSection( "Chirps" );
   addNumber( "chirpsize", "Size of chirp", 100.0, 0.0, 1000.0, 10.0, "Hz" );
   addNumber( "chirpwidth", "Width of chirp", 0.1, 0.002, 100.0, 0.001, "sec", "ms" );
   addNumber( "chirpampl", "Amplitude reduction during chirp", 0.0, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
   addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", 1.0, 0.01, 100.0, 0.01, "", "" );
-  //  newSection( "Analysis" );
+  addText( "chirpfrequencies", "Chirp frequencies for each delta f", "" ).setUnit( "Hz" );
+  addText( "chirptimesfile", "File with chirp times", "" ).setStyle( OptWidget::BrowseExisting );
+  newSection( "Analysis" );
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "averagetime", "Time for computing EOD frequency", 1.0, 0.0, 100000.0, 1.0, "seconds" );
@@ -86,11 +87,14 @@ int Beats::main( void )
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
   bool fixeddf = boolean( "fixeddf" );
   int repeats = integer( "repeats" );
-  string chirptimesfile = text( "chirptimesfile" );
   double chirpsize = number( "chirpsize" );
   double chirpwidth = number( "chirpwidth" );
   double chirpampl = number( "chirpampl" );
   double chirpkurtosis = number( "chirpkurtosis" );
+  Str cfs = text( "chirpfrequencies" );
+  vector< double > chirpfrequencies;
+  cfs.range( chirpfrequencies );
+  string chirptimesfile = text( "chirptimesfile" );
   double before = number( "before" );
   double after = number( "after" );
   double averagetime = number( "averagetime" );
@@ -124,6 +128,7 @@ int Beats::main( void )
     }
     chirptimes = cf.col( 0 );
   }
+  bool generatechirps = ( ! chirptimes.empty() || ! chirpfrequencies.empty() );
 
   // check gain of attenuator:
   base::LinearAttenuate *latt =
@@ -149,12 +154,16 @@ int Beats::main( void )
   P.draw();
   P.unlock();
 
-  RangeLoop DFRange( deltafrange );
-  DFRange.setSequence( deltafshuffle );
+  RangeLoop dfrange( deltafrange );
+  if ( chirpfrequencies.size() > 1 && (int)chirpfrequencies.size() != dfrange.size() ) {
+    warning( "The number of chirp frequencies must match the number of delta f's!" );
+    return Failed;
+  }
+  dfrange.setSequence( deltafshuffle );
   for ( int count = 0;
 	(repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
-    for ( DFRange.reset(); !DFRange && softStop() <= 2; ++DFRange ) {
+    for ( dfrange.reset(); !dfrange && softStop() <= 2; ++dfrange ) {
 
       // results:
       MapD eodfrequency;
@@ -171,7 +180,7 @@ int Beats::main( void )
       bool initstimiter = true;
 
       // eodf:
-      double deltaf = *DFRange;
+      double deltaf = *dfrange;
       double fishrate = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
       if ( fakefish > 0.0 )
 	fishrate = fakefish;
@@ -224,20 +233,27 @@ int Beats::main( void )
 	OutData signal;
 	signal.setTrace( GlobalEField );
 	unlockAll();
-	if ( chirptimes.empty() ) {
-	  double p = 1.0;
-	  if ( fabs( deltaf ) > 0.01 )
-	    p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
-	  else
-	    p = 1.0/stimulusrate;
-	  int n = (int)::rint( duration / p );
-	  if ( n < 1 )
-	    n = 1;
-	  signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
-	  signal.setIdent( "sinewave" );
-	}
-	else {
+	if ( generatechirps ) {
 	  // EOD with chirps:
+	  double cf = 1.0;
+	  if ( chirpfrequencies.size() == 1 )
+	    cf = chirpfrequencies[0];
+	  else if ( chirpfrequencies.size() > 1 )
+	    cf = chirpfrequencies[dfrange.pos()];
+	  if ( cf < 1e-8 ) {
+	    warning( "Chirp frequency too small or negative!" );
+	    return Failed;
+	  }
+	  EventData ct( chirptimes );
+	  ct *= 1.0/cf;
+	  if ( ct.empty() ) {
+	    double p = 1.0/cf;
+	    double t = p;
+	    do {
+	      ct.push( t );
+	      t += p;
+	    } while ( t < duration );
+	  }
 	  signal.clear();
 	  signal.reserve( signal.indices( duration ) );
 	  if ( signal.fixedSampleRate() )
@@ -255,13 +271,13 @@ int Beats::main( void )
 	      a = t/ramp;
 	    else if ( t > duration - ramp )
 	      a = (duration - t)/ramp;
-	    if ( k<chirptimes.size() && fabs( t - chirptimes[k] ) < 2.0*chirpwidth ) {
-	      double x = t - chirptimes[k];
+	    if ( k<ct.size() && fabs( t - ct[k] ) < 2.0*chirpwidth ) {
+	      double x = t - ct[k];
 	      double g = exp( -0.5 * ::pow( (x/sig)*(x/sig), chirpkurtosis ) );
 	      f = chirpsize*g + stimulusrate;
 	      a *= 1.0 - chirpampl*g;
 	    }
-	    else if ( k<chirptimes.size() && t > chirptimes[k] + 2.0*chirpwidth )
+	    else if ( k<ct.size() && t > ct[k] + 2.0*chirpwidth )
 	      k++;
 	    p += f * signal.stepsize();
 	    signal.push( a * ::sin( 6.28318530717959 * p ) );
@@ -275,16 +291,32 @@ int Beats::main( void )
 	  signal.description().addNumber( "ChirpWidth", 1000.0*chirpwidth, "ms" );
 	  signal.description().addNumber( "ChirpAmplitude", 100.0*(1.0-chirpampl), "%" );
 	  signal.description().addNumber( "ChirpKurtosis", chirpkurtosis );
+	  signal.description().addNumber( "ChirpFrequency", cf, "Hz" );
+	  if ( ! chirptimesfile.empty() && ! chirptimes.empty() )
+	    signal.description().addText( "ChirpTimesFile", chirptimesfile );
 	  signal.description().addInteger( "ChirpNumber", k );
-	  signal.description().addText( "ChirpTimesFile", chirptimesfile );
-	  signal.description().addNumber( "ChirpTimes", chirptimes[0] );
+	  signal.description().addNumber( "ChirpTimes", ct[0] );
 	  for ( int j=1; j<k; j++ )
-	    signal.description().pushNumber( "ChirpTimes", chirptimes[j] );
+	    signal.description().pushNumber( "ChirpTimes", ct[j] );
+	}
+	else {
+	  double p = 1.0;
+	  if ( fabs( deltaf ) > 0.01 )
+	    p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
+	  else
+	    p = 1.0/stimulusrate;
+	  int n = (int)::rint( duration / p );
+	  if ( n < 1 )
+	    n = 1;
+	  signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
+	  signal.setIdent( "sinewave" );
 	}
 	lockAll();
 	duration = signal.length();
 	signal.setDelay( before );
 	signal.setIntensity( amplitude );
+
+	signal.save( "chirpeod.dat" );
 
 	// output signal:
 	starttime = currentTime();

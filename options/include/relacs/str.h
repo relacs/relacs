@@ -650,8 +650,13 @@ public:
     /*! Extracts a list of integer numbers from the content of the string.
         Individual numbers are separated by \a sep, ranges of numbers are
 	indicated by \a r.
-	Example: "1,3,6..8,10,20..32..3" results in 1,3,6,7,8,10,20,23,26,29,32 */
+	Example: "1,-3,6..8,10,20..32..3" results in 1,-3,6,7,8,10,20,23,26,29,32 */
   void range( vector< int > &ri, const string &sep=",", const string &r=".." ) const;
+    /*! Extracts a list of floating point numbers from the content of the string.
+        Individual numbers are separated by \a sep, ranges of numbers are
+	indicated by \a r.
+	Example: "1.2,-3,6.5..8,10,20..32..3" results in 1.2,-3,6.5,7.5,10,20,23,26,29,32 */
+  void range( vector< double > &rd, const string &sep=",", const string &r=".." ) const;
 
   // find:
   int find( const string &s, int index=0, bool cs=true, 
