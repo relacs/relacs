@@ -2474,6 +2474,7 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
     }
     else {
       double ax = (addpx+1) * ::fabs( ( XMax[xaxis] - XMin[xaxis] ) / ( PlotX2 - PlotX1 ) );
+      // XXX shouldn't it be sufficient to include the last data point in drawing?
       if ( ShiftData ) {
 	if ( ShiftX[xaxis] > 0.0 ) {
 	  f = d->first( XMax[xaxis]-ShiftX[xaxis]-ax, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
@@ -2493,7 +2494,8 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
 	if ( f < l && ax > 0.0 ) {
 	  double x, y;
 	  d->point( f, x, y );
-	  f = d->first( x-ax, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  long ff = d->first( x-ax, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  f = f - ff > 10 ? f-10 : ff; // XXX shouldn't 1 be enough instead of 10?
 	  if ( f < m )
 	    f = m;
 	}

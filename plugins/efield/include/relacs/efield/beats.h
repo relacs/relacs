@@ -88,18 +88,20 @@ public:
   virtual int main( void );
   virtual void sessionStarted( void );
 
-  void plot( double deltaf, double amplitude, double duration,
-	     const MapD &eodfrequency, const EventData &jarchirpevents,
-	     bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
+  void initPlot( double deltaf, double amplitude, double duration,
+		 const MapD &eodfrequency, const EventData &fishchirps,
+		 bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
   void save( double deltaf, double amplitude, double duration, double pause,
 	     double fishrate, double stimulusrate,
 	     const MapD &eodfrequency, const MapD &eodamplitude,
-	     const EventData &jarchirpevents, const MapD &stimfrequency,
-	     bool split, int count );
+	     const EventData &fishchirps, const EventData &playedchirpevents,
+	     const MapD &stimfrequency, const Options &chirpheader, bool split, int count );
   void saveEODFreq( const Options &header, const MapD &eodfrequency, const MapD &eodamplitude,
 		    bool split, int count );
-  void saveChirps( const Options &header, const EventData &jarchirpevents,
+  void saveChirps( const Options &header, const EventData &chirps,
 		   bool split, int count );
+  void savePlayedChirps( const Options &header, const EventData &chirps,
+			 bool split, int count );
 
 
 protected:

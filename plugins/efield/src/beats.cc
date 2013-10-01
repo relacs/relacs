@@ -128,6 +128,14 @@ int Beats::main( void )
     }
     chirptimes = cf.col( 0 );
   }
+  else if ( ! chirpfrequencies.empty() ) {
+    double maxt = duration * max( chirpfrequencies );
+    double t = 1.0;
+    do {
+      chirptimes.push( t );
+      t += 1.0;
+    } while ( t < maxt );
+  }
   bool generatechirps = ( ! chirptimes.empty() || ! chirpfrequencies.empty() );
 
   // check gain of attenuator:
@@ -172,8 +180,12 @@ int Beats::main( void )
       stimfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
       MapD eodamplitude;
       eodamplitude.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
-      EventData jarchirpevents;
-      jarchirpevents.reserve( 1000 );
+      EventData fishchirps;
+      fishchirps.reserve( (int)::rint( 100*duration ) );
+      EventData currentchirptimes;
+      currentchirptimes.reserve( chirptimes.size() );
+      EventData playedchirptimes;
+      playedchirptimes.reserve( chirptimes.size() );
       EventIterator eoditer;
       bool initeoditer = true;
       EventFrequencyIterator stimiter;
@@ -190,14 +202,40 @@ int Beats::main( void )
       // meassage:
       Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
       s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
+      if ( repeats != 1 ) {
+	s += "  Loop:  <b>" + Str( count+1 ) + "</b>";
+	if ( repeats > 0 )
+	  s += " from  <b>" + Str( repeats ) + "</b>";
+      }
+      if ( repeats > 0 ) {
+	int rc = dfrange.remainingCount();
+	rc += dfrange.maxCount()*(repeats-count-1);
+	int rs = (duration + pause)*rc;
+	double rm = floor( rs/60.0 );
+	rs -= rm*60.0;
+	double rh = floor( rm/60.0 );
+	rm -= rh*60.0;
+	string rt = "";
+	if ( rh > 0.0 )
+	  rt += Str( rh, 0, 0, 'f' ) + "h";
+	rt += Str( rm, 2, 0, 'f', '0' ) + "min";
+	rt += Str( rs, 2, 0, 'f', '0' ) + "sec";
+	s += "  Remaining time:  <b>" + rt + "</b>";
+      }
       message( s );
+
+      // plot:
+      initPlot( deltaf, amplitude, duration, eodfrequency, fishchirps,
+		showstimulus, stimfrequency, playedchirptimes );
 
       // create signal:
       double starttime = currentTime();
       double stimulusrate = fishrate + deltaf;
       double ramptime = 0.0;
+      Options chirpheader;
+      OutList signal;
       if ( fixeddf ) {
-	OutList signal;
+	chirpheader.clear();
 	OutData sig;
 	sig.setTraceName( "Frequency" );
 	sig.constWave( ramp, -1.0, stimulusrate );
@@ -224,14 +262,17 @@ int Beats::main( void )
 	  s += signal.errorText() + "</b>";
 	  warning( s, 2.0 );
 	  writeZero( "Amplitude" );
+	  P.lock();
+	  P.clear();
+	  P.unlock();
 	  return Failed;
 	}
 	ramptime = ramp;
 	sleep( before + ramptime );
       }
       else {
-	OutData signal;
-	signal.setTrace( GlobalEField );
+	OutData sig;
+	sig.setTrace( GlobalEField );
 	unlockAll();
 	if ( generatechirps ) {
 	  // EOD with chirps:
@@ -242,64 +283,64 @@ int Beats::main( void )
 	    cf = chirpfrequencies[dfrange.pos()];
 	  if ( cf < 1e-8 ) {
 	    warning( "Chirp frequency too small or negative!" );
+	    P.lock();
+	    P.clear();
+	    P.unlock();
 	    return Failed;
 	  }
-	  EventData ct( chirptimes );
-	  ct *= 1.0/cf;
-	  if ( ct.empty() ) {
-	    double p = 1.0/cf;
-	    double t = p;
-	    do {
-	      ct.push( t );
-	      t += p;
-	    } while ( t < duration );
-	  }
-	  signal.clear();
-	  signal.reserve( signal.indices( duration ) );
-	  if ( signal.fixedSampleRate() )
-	    signal.setSampleInterval( signal.minSampleInterval() );
+	  currentchirptimes = chirptimes;
+	  currentchirptimes *= 1.0/cf;
+	  sig.clear();
+	  if ( sig.fixedSampleRate() )
+	    sig.setSampleInterval( sig.minSampleInterval() );
 	  else
-	    signal.setSampleInterval( signal.bestSampleInterval( 2.0*stimulusrate ) );
-	  double sig = 0.5*chirpwidth / ::pow( 2.0*log(10.0), 0.5/chirpkurtosis );
+	    sig.setSampleInterval( sig.bestSampleInterval( 2.0*stimulusrate ) );
+	  sig.reserve( sig.indices( duration ) );
+	  double csig = 0.5*chirpwidth / ::pow( 2.0*log(10.0), 0.5/chirpkurtosis );
 	  double p = 0.0;
 	  int k = 0;
 	  for ( double t=0.0; t<duration; ) {
-	    t = signal.length();
+	    t = sig.length();
 	    double f = stimulusrate;
 	    double a = 1.0;
 	    if ( t < ramp )
 	      a = t/ramp;
 	    else if ( t > duration - ramp )
 	      a = (duration - t)/ramp;
-	    if ( k<ct.size() && fabs( t - ct[k] ) < 2.0*chirpwidth ) {
-	      double x = t - ct[k];
-	      double g = exp( -0.5 * ::pow( (x/sig)*(x/sig), chirpkurtosis ) );
+	    if ( k<currentchirptimes.size() &&
+		 fabs( t - currentchirptimes[k] ) < 2.0*chirpwidth ) {
+	      double x = t - currentchirptimes[k];
+	      double g = exp( -0.5 * ::pow( (x/csig)*(x/csig), chirpkurtosis ) );
 	      f = chirpsize*g + stimulusrate;
 	      a *= 1.0 - chirpampl*g;
 	    }
-	    else if ( k<ct.size() && t > ct[k] + 2.0*chirpwidth )
+	    else if ( k<currentchirptimes.size() &&
+		      t > currentchirptimes[k] + 2.0*chirpwidth )
 	      k++;
-	    p += f * signal.stepsize();
-	    signal.push( a * ::sin( 6.28318530717959 * p ) );
+	    p += f * sig.stepsize();
+	    sig.push( a * ::sin( 6.28318530717959 * p ) );
 	  }
-	  signal.description().setType( "stimulus/eod_chirps" );
-	  signal.description().addNumber( "Frequency", stimulusrate, "Hz" );
-	  signal.description().addNumber( "Amplitude", amplitude, "mV" );
-	  signal.description().addNumber( "TemporalOffset", 0.0, "s" );
-	  signal.description().addNumber( "Duration", duration, "s" );
-	  signal.description().addNumber( "ChirpSize", chirpsize, "Hz" );
-	  signal.description().addNumber( "ChirpWidth", 1000.0*chirpwidth, "ms" );
-	  signal.description().addNumber( "ChirpAmplitude", 100.0*(1.0-chirpampl), "%" );
-	  signal.description().addNumber( "ChirpKurtosis", chirpkurtosis );
-	  signal.description().addNumber( "ChirpFrequency", cf, "Hz" );
+	  currentchirptimes.resize( k );
+	  chirpheader.addNumber( "ChirpSize", chirpsize, "Hz" );
+	  chirpheader.addNumber( "ChirpWidth", 1000.0*chirpwidth, "ms" );
+	  chirpheader.addNumber( "ChirpAmplitude", 100.0*(1.0-chirpampl), "%" );
+	  chirpheader.addNumber( "ChirpKurtosis", chirpkurtosis );
+	  chirpheader.addNumber( "ChirpFrequency", cf, "Hz" );
 	  if ( ! chirptimesfile.empty() && ! chirptimes.empty() )
-	    signal.description().addText( "ChirpTimesFile", chirptimesfile );
-	  signal.description().addInteger( "ChirpNumber", k );
-	  signal.description().addNumber( "ChirpTimes", ct[0] );
+	    chirpheader.addText( "ChirpTimesFile", chirptimesfile );
+	  chirpheader.addInteger( "ChirpNumber", k );
+	  chirpheader.addNumber( "ChirpTimes", currentchirptimes[0], "s" );
 	  for ( int j=1; j<k; j++ )
-	    signal.description().pushNumber( "ChirpTimes", ct[j] );
+	    chirpheader.pushNumber( "ChirpTimes", currentchirptimes[j] );
+	  sig.description().setType( "stimulus/eod_chirps" );
+	  sig.description().addNumber( "Frequency", stimulusrate, "Hz" );
+	  sig.description().addNumber( "Amplitude", amplitude, "mV" );
+	  sig.description().addNumber( "TemporalOffset", 0.0, "s" );
+	  sig.description().addNumber( "Duration", duration, "s" );
+	  sig.description().append( chirpheader );
 	}
 	else {
+	  chirpheader.clear();
 	  double p = 1.0;
 	  if ( fabs( deltaf ) > 0.01 )
 	    p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
@@ -308,15 +349,14 @@ int Beats::main( void )
 	  int n = (int)::rint( duration / p );
 	  if ( n < 1 )
 	    n = 1;
-	  signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
-	  signal.setIdent( "sinewave" );
+	  sig.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
+	  sig.setIdent( "sinewave" );
 	}
 	lockAll();
-	duration = signal.length();
-	signal.setDelay( before );
-	signal.setIntensity( amplitude );
-
-	signal.save( "chirpeod.dat" );
+	duration = sig.length();
+	sig.setDelay( before );
+	sig.setIntensity( amplitude );
+	signal.push( sig );
 
 	// output signal:
 	starttime = currentTime();
@@ -328,6 +368,9 @@ int Beats::main( void )
 	  s += signal.errorText() + "</b>";
 	  warning( s, 2.0 );
 	  writeZero( GlobalEField );
+	  P.lock();
+	  P.clear();
+	  P.unlock();
 	  return Failed;
 	}
 	sleep( 0.2 );
@@ -337,6 +380,9 @@ int Beats::main( void )
 	  writeZero( "Amplitude" );
 	else
 	  writeZero( GlobalEField );
+	P.lock();
+	P.clear();
+	P.unlock();
 	return Aborted;
       }
       double signaltime = signalTime();
@@ -370,23 +416,29 @@ int Beats::main( void )
 	  for ( ; stimiter < stimglobal.end(); ++stimiter )
 	    stimfrequency.push( stimiter.time() - signaltime, *stimiter );
 	}
-	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents,
-	      showstimulus, stimfrequency, chirptimes );
+	if ( generatechirps )
+	  playedchirptimes.assign( currentchirptimes, 0.0, currentTime()-signalTime() );
+	else
+	  playedchirptimes.clear();
+	P.draw();
 
 	if ( fixeddf ) {
 	  double fishrate = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
 	  if ( fakefish > 0.0 )
 	    fishrate = fakefish;
-	  OutData signal;
-	  signal.setTraceName( "Frequency" );
-	  signal.constWave( fishrate + deltaf );
-	  directWrite( signal, false );
+	  OutData sig;
+	  sig.setTraceName( "Frequency" );
+	  sig.constWave( fishrate + deltaf );
+	  directWrite( sig, false );
 	  // signal failed?
-	  if ( signal.failed() ) {
+	  if ( sig.failed() ) {
 	    string s = "Output of frequency stimulus failed!<br>Error code is <b>";
-	    s += signal.errorText() + "</b>";
+	    s += sig.errorText() + "</b>";
 	    warning( s, 2.0 );
 	    writeZero( "Amplitude" );
+	    P.lock();
+	    P.clear();
+	    P.unlock();
 	    return Failed;
 	  }
 	}
@@ -397,23 +449,33 @@ int Beats::main( void )
 	    writeZero( "Amplitude" );
 	  else
 	    writeZero( GlobalEField );
+	  P.lock();
+	  P.clear();
+	  P.unlock();
 	  return Aborted;
 	}
 
       } while ( currentTime() - starttime < before + duration -  ramptime );
 
       // ending stimulus:
+      if ( generatechirps )
+	playedchirptimes.assign( currentchirptimes );
+      else
+	playedchirptimes.clear();
       if ( fixeddf && ramptime > 0.0 ) {
-	OutData signal;
-	signal.setTraceName( "Amplitude" );
-	signal.rampWave( ramp, -1.0, 1.0, 0.0 );
-	write( signal );
+	OutData sig;
+	sig.setTraceName( "Amplitude" );
+	sig.rampWave( ramp, -1.0, 1.0, 0.0 );
+	write( sig );
 	// signal failed?
-	if ( signal.failed() ) {
+	if ( sig.failed() ) {
 	  string s = "Output of final ramp stimulus failed!<br>Error code is <b>";
-	  s += signal.errorText() + "</b>";
+	  s += sig.errorText() + "</b>";
 	  warning( s, 2.0 );
 	  writeZero( "Amplitude" );
+	  P.lock();
+	  P.clear();
+	  P.unlock();
 	  return Failed;
 	}
       }
@@ -433,8 +495,7 @@ int Beats::main( void )
 	  for ( ; stimiter < stimglobal.end(); ++stimiter )
 	    stimfrequency.push( stimiter.time() - signaltime, *stimiter );
 	}
-	plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents,
-	      showstimulus, stimfrequency, chirptimes );
+	P.draw();
 
 	sleepWait( 0.2 );
 	if ( interrupt() ) {
@@ -442,23 +503,28 @@ int Beats::main( void )
 	    writeZero( "Amplitude" );
 	  else
 	    writeZero( GlobalEField );
+	  P.lock();
+	  P.clear();
+	  P.unlock();
 	  return Aborted;
 	}
 
-      } while ( currentTime() - starttime < before + duration + after + 0.01 );
+      } while ( currentTime() - starttime < before + duration + after + 0.2 );
 
       setSaving( savetraces );
 
       // analyze:
       // chirps:
       if ( ChirpEvents >= 0 )
-	jarchirpevents.assign( events( ChirpEvents ),
-			       signaltime - before,
-			       signaltime + duration + after, signaltime );
-      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents,
-	    showstimulus, stimfrequency, chirptimes );
+	fishchirps.assign( events( ChirpEvents ),
+			   signaltime - before,
+			   signaltime + duration + after, signaltime );
+      else
+	fishchirps.clear();
+      P.draw();
       save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
-	    eodfrequency, eodamplitude, jarchirpevents, stimfrequency, split, FileCount );
+	    eodfrequency, eodamplitude, fishchirps, playedchirptimes,
+	    stimfrequency, chirpheader, split, FileCount );
       FileCount++;
 
       // pause:
@@ -477,6 +543,9 @@ int Beats::main( void )
     writeZero( "Amplitude" );
   else
     writeZero( GlobalEField );
+  P.lock();
+  P.clear();
+  P.unlock();
   return Completed;
 }
 
@@ -488,11 +557,13 @@ void Beats::sessionStarted( void )
 }
 
 
-void Beats::plot( double deltaf, double amplitude, double duration,
-		  const MapD &eodfrequency, const EventData &jarchirpevents, 
-		  bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes )
+void Beats::initPlot( double deltaf, double amplitude, double duration,
+		      const MapD &eodfrequency, const EventData &fishchirps, 
+		      bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes )
 {
   P.lock();
+  P.keepPointer();
+  P.setDataMutex( mutex() );
   // eod frequency with chirp events:
   P.clear();
   Str s;
@@ -504,13 +575,9 @@ void Beats::plot( double deltaf, double amplitude, double duration,
   if ( showstimulus )
     P.plot( stimfrequency, 1.0, Plot::Cyan, 2, Plot::Solid );
   P.plot( eodfrequency, 1.0, Plot::Green, 2, Plot::Solid );
-  if ( ! eodfrequency.empty() ) {
-    EventData ct( chirptimes );
-    ct.resize( ct.next( eodfrequency.x().back() ) );
-    P.plot( ct, 2, 0.0, 1.0, 0.9, Plot::Graph,
-	    1, Plot::Circle, 5, Plot::Pixel, Plot::Blue, Plot::Blue );
-  }
-  P.plot( jarchirpevents, 2, 0.0, 1.0, 0.9, Plot::Graph,
+  P.plot( chirptimes, 2, 0.0, 1.0, 0.9, Plot::Graph,
+	  1, Plot::Circle, 5, Plot::Pixel, Plot::Blue, Plot::Blue );
+  P.plot( fishchirps, 2, 0.0, 1.0, 0.9, Plot::Graph,
 	  1, Plot::Circle, 5, Plot::Pixel, Plot::Yellow, Plot::Yellow );
   P.draw();
   P.unlock();
@@ -519,16 +586,19 @@ void Beats::plot( double deltaf, double amplitude, double duration,
 
 void Beats::save( double deltaf, double amplitude, double duration, double pause,
 		  double fishrate, double stimulusrate,
-		  const MapD &eodfrequency, const MapD &eodamplitude, const EventData &jarchirpevents,
-		  const MapD &stimfrequency, bool split, int count )
+		  const MapD &eodfrequency, const MapD &eodamplitude,
+		  const EventData &fishchirps, const EventData &playedchirpevents,
+		  const MapD &stimfrequency, const Options &chirpheader,
+		  bool split, int count )
 {
   Options header;
-  header.addNumber( "Delta f", deltaf, "Hz", "%.1f" );
   header.addNumber( "EODf", fishrate, "Hz", "%.1f" );
+  header.addNumber( "Delta f", deltaf, "Hz", "%.1f" );
   header.addNumber( "StimulusFrequency", stimulusrate, "Hz", "%.1f" );
   header.addNumber( "Amplitude", amplitude, "mV/cm", "%.3f" );
   header.addNumber( "Duration", duration, "sec", "%.3f" );
   header.addNumber( "Pause", pause, "sec", "%.3f" );
+  header.append( chirpheader );
   header.addText( "RePro Time", reproTimeStr() );
   header.addText( "Session Time", sessionTimeStr() );
   header.newSection( settings(), 1 );
@@ -536,7 +606,9 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
   unlockAll();
   setWaitMouseCursor();
   saveEODFreq( header, eodfrequency, eodamplitude, split, count );
-  saveChirps( header, jarchirpevents, split, count );
+  saveChirps( header, fishchirps, split, count );
+  if ( ! chirpheader.empty() )
+    savePlayedChirps( header, playedchirpevents, split, count );
   restoreMouseCursor();
   lockAll();
 }
@@ -573,7 +645,7 @@ void Beats::saveEODFreq( const Options &header, const MapD &eodfrequency,
 }
 
 
-void Beats::saveChirps( const Options &header, const EventData &jarchirpevents,
+void Beats::saveChirps( const Options &header, const EventData &chirps,
 			bool split, int count )
 {
   if ( ChirpEvents < 0 )
@@ -589,7 +661,6 @@ void Beats::saveChirps( const Options &header, const EventData &jarchirpevents,
   df << '\n';
 
   // write key:
-  const EventData &chirps = events( ChirpEvents );
   TableKey key;
   key.addNumber( "time", "s", "%9.5f" );
   key.addNumber( "freq", chirps.sizeUnit(), chirps.sizeFormat() );
@@ -597,16 +668,46 @@ void Beats::saveChirps( const Options &header, const EventData &jarchirpevents,
   key.saveKey( df );
 
   // write data into file:
-  for ( int k=0; k<jarchirpevents.size(); k++ ) {
-    key.save( df, jarchirpevents[k], 0 );
-    key.save( df, chirps.sizeScale() * jarchirpevents.eventSize( k ) );
-    key.save( df, chirps.widthScale() * jarchirpevents.eventWidth( k ) );
+  for ( int k=0; k<chirps.size(); k++ ) {
+    key.save( df, chirps[k], 0 );
+    key.save( df, chirps.sizeScale() * chirps.eventSize( k ) );
+    key.save( df, chirps.widthScale() * chirps.eventWidth( k ) );
     df << '\n';
   }
-  if ( jarchirpevents.size() <= 0 ) {
+  if ( chirps.size() <= 0 ) {
     key.save( df, "-0", 0 );
     key.save( df, "-0" );
     key.save( df, "-0" );
+    df << '\n';
+  }
+  df << "\n\n";
+}
+
+
+void Beats::savePlayedChirps( const Options &header, const EventData &chirps,
+			      bool split, int count )
+{
+  ofstream df( addPath( "beats-playedchirps" + ( split ? "-"+Str( count+1, 2, '0' ) : "" ) + ".dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header:
+  header.save( df, "# " );
+  df << '\n';
+
+  // write key:
+  TableKey key;
+  key.addNumber( "time", "s", "%8.3f" );
+  key.saveKey( df );
+
+  // write data into file:
+  for ( int k=0; k<chirps.size(); k++ ) {
+    key.save( df, chirps[k], 0 );
+    df << '\n';
+  }
+  if ( chirps.size() <= 0 ) {
+    key.save( df, "-0", 0 );
     df << '\n';
   }
   df << "\n\n";

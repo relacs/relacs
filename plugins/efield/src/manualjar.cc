@@ -235,6 +235,9 @@ int ManualJAR::main( void )
       s += signal.errorText() + "</b>";
       warning( s, 2.0 );
       writeZero( GlobalEField );
+      P.lock();
+      P.clear();
+      P.unlock();
       return Failed;
     }
 
@@ -255,9 +258,8 @@ int ManualJAR::main( void )
     for ( int k=0; k<10; k++ )
       ++eoditer; // XXX
 
-    P.lock();
-    P.setXRange( -before, duration+after );
-    P.unlock();
+    // plot:
+    initPlot( deltaf, amplitude, duration, before, after, eodfrequency, jarchirpevents );
 
     // stimulation loop:
     do {
@@ -267,6 +269,9 @@ int ManualJAR::main( void )
       sleepWait( 0.2 );
       if ( interrupt() ) {
 	writeZero( GlobalEField );
+	P.lock();
+	P.clear();
+	P.unlock();
 	return Aborted;
       }
       // get data:
@@ -276,8 +281,7 @@ int ManualJAR::main( void )
 	EventSizeIterator siter = eoditer;
 	eodamplitude.push( siter.time() - signalTime(), *siter );
       }
-      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
-
+      P.draw();
     } while ( currentTime() - starttime < before + duration );
 
     starttime = currentTime();
@@ -291,6 +295,9 @@ int ManualJAR::main( void )
       sleepWait( 0.2 );
       if ( interrupt() ) {
 	writeZero( GlobalEField );
+	P.lock();
+	P.clear();
+	P.unlock();
 	return Aborted;
       }
       // get data:
@@ -300,7 +307,7 @@ int ManualJAR::main( void )
 	EventSizeIterator siter = eoditer;
 	eodamplitude.push( siter.time() - signalTime(), *siter );
       }
-      plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
+      P.draw();
 
     } while ( currentTime() - starttime < after );
 
@@ -310,7 +317,7 @@ int ManualJAR::main( void )
       jarchirpevents.assign( events( ChirpEvents ),
 			     signalTime() - before,
 			     signalTime() + duration + after, signalTime() );
-    plot( deltaf, amplitude, duration, eodfrequency, jarchirpevents );
+    P.draw();
     save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
 	  eodfrequency, eodamplitude, jarchirpevents, split, Count );
     Count++;
@@ -319,6 +326,9 @@ int ManualJAR::main( void )
   }
 
   writeZero( GlobalEField );
+  P.lock();
+  P.clear();
+  P.unlock();
   return Completed;
 }
 
@@ -330,16 +340,20 @@ void ManualJAR::sessionStarted( void )
 }
 
 
-void ManualJAR::plot( double deltaf, double amplitude, double duration,
-		      const MapD &eodfrequency, const EventData &jarchirpevents )
+void ManualJAR::initPlot( double deltaf, double amplitude, double duration,
+			  double before, double after,
+			  const MapD &eodfrequency, const EventData &jarchirpevents )
 {
   P.lock();
+  P.keepPointer();
+  P.setDataMutex( mutex() );
   // eod frequency with chirp events:
   P.clear();
   Str s;
   s = "Delta f = " + Str( deltaf, 0, 0, 'f' ) + "Hz";
   s += ", Amplitude = " + Str( amplitude ) + "mV/cm";
   P.setTitle( s );
+  P.setXRange( -before, duration+after );
   P.plotVLine( 0.0 );
   P.plotVLine( duration );
   P.plot( eodfrequency, 1.0, Plot::Green, 2, Plot::Solid );
