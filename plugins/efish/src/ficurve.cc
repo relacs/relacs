@@ -427,7 +427,7 @@ void FICurve::saveRate( int trace )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%6.1f" );
@@ -466,7 +466,7 @@ void FICurve::saveSpikes( int trace )
     return;
   
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%6.2f" );
@@ -500,7 +500,7 @@ void FICurve::saveFICurves( int trace )
     return;
   
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "inx", "1", "%5.0f" );

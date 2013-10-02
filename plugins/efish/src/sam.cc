@@ -544,7 +544,7 @@ void SAM::saveRate( int trace )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%9.2f" );
@@ -574,7 +574,7 @@ void SAM::saveAmpl( void )
   // write header and key:
   if ( Count == 0 ) {
     df << '\n' << '\n';
-    Header.save( df, "# " );
+    Header.save( df, "# ", 0, Options::FirstOnly );
     settings().save( df, "#   " );
     df << '\n';
     AmplKey.setUnit( 1, EOD2Unit );
@@ -606,7 +606,7 @@ void SAM::saveAllAmpl( void )
   // write header and key:
   if ( Count == 0 ) {
     df << '\n' << '\n';
-    Header.save( df, "# " );
+    Header.save( df, "# ", 0, Options::FirstOnly );
     settings().save( df, "#   " );
     df << '\n';
     AmplKey.setUnit( 1, EOD2Unit );
@@ -635,7 +635,7 @@ void SAM::saveSpikes( int trace )
   // write header and key:
   if ( Count == 0 ) {
     df << '\n' << '\n';
-    Header.save( df, "# " );
+    Header.save( df, "# ", 0, Options::FirstOnly );
     settings().save( df, "#   " );
     df << '\n';
     SpikesKey.saveKey( df, true, false );
@@ -669,7 +669,7 @@ void SAM::saveAllSpikes( int trace )
   // write header and key:
   if ( Count == 0 ) {
     df << '\n' << '\n';
-    Header.save( df, "# " );
+    Header.save( df, "# ", 0, Options::FirstOnly );
     settings().save( df, "#   " );
     df << '\n';
     SpikesKey.saveKey( df, true, false );
@@ -701,7 +701,7 @@ void SAM::saveNerve( void )
   // write header and key:
   if ( Count == 0 ) {
     df << '\n' << '\n';
-    Header.save( df, "# " );
+    Header.save( df, "# ", 0, Options::FirstOnly);
     settings().save( df, "#   " );
     df << '\n';
     NerveKey.saveKey( df, true, true );
@@ -736,7 +736,7 @@ void SAM::saveAllNerve( void )
   // write header and key:
   if ( Count == 0 ) {
     df << '\n' << '\n';
-    Header.save( df, "# " );
+    Header.save( df, "# ", 0, Options::FirstOnly );
     settings().save( df, "#   " );
     df << '\n';
     NerveKey.saveKey( df, true, true );

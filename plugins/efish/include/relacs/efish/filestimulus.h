@@ -88,8 +88,10 @@ public:
 
   void stop( void );
   void saveRate( int trace );
+  void savePower( int trace );
   void saveAmpl( void );
   void saveNerve( void );
+  void saveNervePower( void );
   void saveSpikes( int trace );
     /*! Save results data. */
   void save( void );
@@ -115,6 +117,7 @@ private:
   double RateDeltaT;
   double Before;
   double After;
+  bool PlotPsd;
   double NoiseAmpl;
   double NoiseContrast;
   double UpperCutoff;
@@ -137,6 +140,7 @@ private:
   EventList Spikes[MaxSpikeTraces];
   SampleDataD SpikeRate[MaxSpikeTraces];
   SampleDataD SpikeFrequency[MaxSpikeTraces];
+  SampleDataD SpikePower[MaxSpikeTraces];
   int Trials[MaxSpikeTraces];
   double MaxRate[MaxSpikeTraces];
   vector< MapD > NerveAmplP;
@@ -146,6 +150,7 @@ private:
   SampleDataD NerveMeanAmplT;
   SampleDataD NerveMeanAmplM;
   AcceptEOD< InDataIterator, InDataTimeIterator > NerveAcceptEOD;
+  SampleDataD NervePower;
 
   Options Header;
   TableKey SpikesKey;

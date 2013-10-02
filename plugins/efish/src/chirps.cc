@@ -1000,7 +1000,7 @@ void Chirps::saveChirps( void )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   ChirpKey.saveKey( df, true, false );
 
@@ -1042,7 +1042,7 @@ void Chirps::saveChirpTraces( void )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   ChirpTraceKey.saveKey( df, true, false );
 
@@ -1074,7 +1074,7 @@ void Chirps::saveChirpSpikes( int trace )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   SpikesKey.saveKey( df, true, false );
 
@@ -1108,7 +1108,7 @@ void Chirps::saveChirpNerve( void )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   NerveKey.saveKey( df, true, true );
 
@@ -1153,7 +1153,7 @@ void Chirps::saveAmplitude( void )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   AmplKey.saveKey( df, true, false );
 
@@ -1177,7 +1177,7 @@ void Chirps::saveSpikes( int trace )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   SpikesKey.saveKey( df, true, false );
 
@@ -1205,7 +1205,7 @@ void Chirps::saveChirpRate( int trace )
 
   // write header and key:
   Header.setInteger( "index", totalRuns() );
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%7.2f" );
@@ -1245,7 +1245,7 @@ void Chirps::saveNerve( void )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   NerveKey.saveKey( df, true, true );
 

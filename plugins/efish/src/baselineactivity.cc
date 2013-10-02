@@ -341,7 +341,7 @@ void BaselineActivity::saveSpikes( int trace, const Options &header, const Event
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%8.2f" );
@@ -370,7 +370,7 @@ void BaselineActivity::saveISIH( int trace, const Options &header,
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%5.2f" );
@@ -408,7 +408,7 @@ void BaselineActivity::saveRate( int trace, const Options &header,
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%5.3f" );
@@ -438,7 +438,7 @@ void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.newSection( "peak" );
@@ -488,7 +488,7 @@ void BaselineActivity::saveEODTrace( const Options &header, double eodduration )
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.2f" );
@@ -519,7 +519,7 @@ void BaselineActivity::saveEODTimes( const Options &header, const EventData &eod
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%8.2f" );
