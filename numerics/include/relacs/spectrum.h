@@ -1430,7 +1430,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     ++iterim;
     ++iterre;
   }
-  *iterhre = (*iterre) / (*iterhre);
+  //  *iterhre = (*iterre) / (*iterhre);
 
   delete [] im;
   delete [] re;
@@ -1610,8 +1610,6 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
 
   }
 
-  delete [] im;
-  delete [] re;
   delete [] buffery;
   delete [] bufferx;
 
@@ -1647,7 +1645,10 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     ++iterim;
     ++iterre;
   }
-  *iterhre = (*iterre) / (*iterhre);
+  //  *iterhre = (*iterre) / (*iterhre);
+
+  delete [] im;
+  delete [] re;
 
   return c;
 }

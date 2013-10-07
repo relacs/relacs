@@ -710,9 +710,12 @@ void Macros::executeMacro( int newmacro, const Str &params )
   // put next command on the stack:
   if ( MCs[newmacro]->button() )
     setStackButton();
-  Stack.push_back( MacroPos( CurrentMacro, CurrentCommand + 1,
-			     MCs[CurrentMacro]->variables(),
-			     MCs[CurrentMacro]->project() ) );
+  // put current macro on stack only if the new macro is a different one or
+  // the currentcommand is not the last one:
+  if ( newmacro != CurrentMacro || CurrentCommand+1 < MCs[CurrentMacro]->size() )
+    Stack.push_back( MacroPos( CurrentMacro, CurrentCommand + 1,
+			       MCs[CurrentMacro]->variables(),
+			       MCs[CurrentMacro]->project() ) );
   // execute the requested macro:
   Options prjopts;
   MCs[newmacro]->variables().setDefaults();
