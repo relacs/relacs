@@ -1539,18 +1539,18 @@ bool Parameter::isNumber( void ) const
 }
 
 
-double Parameter::number( const string &unit, int index ) const
+double Parameter::number( const string &unit, int index, double dflt ) const
 { 
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::number -> parameter '" + 
       Name + "' is not of type number!";
-    return 0.0;
+    return dflt;
   }
   if ( index < 0 || index >= (int)Value.size() ) {
     Warning = "Parameter::number -> invalid index " +
       Str( index ) + " requested for parameter '" + Name + "' !";
-    return 0.0;
+    return dflt;
   }
 
   return changeUnit( Value[index], InternUnit, unit );
@@ -1733,14 +1733,14 @@ bool Parameter::isInteger( void ) const
 }
 
 
-long Parameter::integer( const string &unit, int index ) const
+long Parameter::integer( const string &unit, int index, long dflt ) const
 { 
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::integer -> parameter '" + 
       Name + "' is not of type number!";
-    return 0;
+    return dflt;
   }
-  return static_cast<long>( rint( number( unit, index ) ) );
+  return static_cast<long>( rint( number( unit, index, double( dflt ) ) ) );
 }
 
   

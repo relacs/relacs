@@ -471,13 +471,13 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 {
   string warning = "";
 
-  TraceInputTrace.resize( TraceInputTrace.size() + FilterDetectors::traces(), -1 );
-  TraceInputEvent.resize( TraceInputEvent.size() + FilterDetectors::traces(), -1 );
+  TraceInputTrace.resize( TraceInputTrace.size() + data.size() + FilterDetectors::traces(), -1 );
+  TraceInputEvent.resize( TraceInputEvent.size() + data.size() + FilterDetectors::traces(), -1 );
   EventInputTrace.resize( EventInputTrace.size() + FilterDetectors::events(), -1 );
   EventInputEvent.resize( EventInputEvent.size() + FilterDetectors::events(), -1 );
 
-  int dk = data.size();
-  int ek = events.size();
+  int dk = data.size();    // TraceInputTrace.size() and TraceInputEvent.size() was zero anyways.
+  int ek = events.size();  // should be the same as EventInputTrace.size() and EventInputEvent.size() !!!
 
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
 

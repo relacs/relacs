@@ -2400,7 +2400,7 @@ double Options::number( const string &name, double dflt,
 {
   const_iterator pp = find( name );
   if ( pp != end() ) {
-    double v = pp->number( unit, index );
+    double v = pp->number( unit, index, dflt );
     Warning += pp->warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
@@ -2805,7 +2805,7 @@ long Options::integer( const string &name,
 {
   const_iterator pp = find( name );
   if ( pp != end() ) {
-    long i = pp->integer( unit, index );
+    long i = pp->integer( unit, index, dflt );
     Warning += pp->warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )

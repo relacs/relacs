@@ -293,6 +293,8 @@ int TransferFunction::main( void )
     if ( interrupt() )
       break;
 
+    timeStamp();
+
   }
 
   if ( state == Completed )

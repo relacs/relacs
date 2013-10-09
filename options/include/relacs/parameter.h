@@ -436,13 +436,21 @@ public:
   
     /*! Returns the \a index-th number value in 
         the unit \a unit or in the internal standard unit, 
-        if \a unit is an empty string. */
-  double number( const string &unit="", int index=0 ) const;
+        if \a unit is an empty string.
+        If the Parameter is not a number, \a dflt is returned. */
+  double number( const string &unit="", int index=0, double dflt=0.0 ) const;
     /*! Returns the \a index-th number value in 
         the unit \a unit or in the internal standard unit, 
-        if \a unit is an empty string. */
-  inline double number( int index, const string &unit="" ) const
-    { return number( unit, index ); };
+        if \a unit is an empty string.
+        If the Parameter is not a number, \a dflt is returned. */
+  inline double number( int index, const string &unit="", double dflt=0.0 ) const
+  { return number( unit, index, dflt ); };
+    /*! Returns the \a index-th number value in 
+        the unit \a unit or in the internal standard unit, 
+        if \a unit is an empty string.
+        If the Parameter is not a number, \a dflt is returned. */
+  inline double number( int index, double dflt, const string &unit="" ) const
+  { return number( unit, index, dflt ); };
     /*! Returns the standard deviation value of the \a index-th number in 
         the unit \a unit or in the internal standard unit, 
         if \a unit is an empty string.
@@ -528,13 +536,21 @@ public:
   bool isInteger( void ) const;
     /*! Returns the \a index-th integer value in 
         the unit \a unit or in the internal standard unit, 
-        if \a unit is an empty string. */
-  long integer( const string &unit="", int index=0 ) const;
+        if \a unit is an empty string.
+        If the Parameter is not a number, \a dflt is returned. */
+  long integer( const string &unit="", int index=0, long dflt=0 ) const;
     /*! Returns the \a index-th integer value in 
         the unit \a unit or in the internal standard unit, 
-        if \a unit is an empty string. */
-  inline long integer( int index, const string &unit="" ) const
-    { return integer( unit, index ); };
+        if \a unit is an empty string.
+        If the Parameter is not a number, \a dflt is returned. */
+  inline long integer( int index, const string &unit="", long dflt=0 ) const
+  { return integer( unit, index, dflt ); };
+    /*! Returns the \a index-th integer value in 
+        the unit \a unit or in the internal standard unit, 
+        if \a unit is an empty string.
+        If the Parameter is not a number, \a dflt is returned. */
+  inline long integer( int index, long dflt, const string &unit="" ) const
+  { return integer( unit, index, dflt ); };
     /*! Set integer value to \a number and its
         standard deviation to \a error. 
         The warning message is set if \a number is invalid.

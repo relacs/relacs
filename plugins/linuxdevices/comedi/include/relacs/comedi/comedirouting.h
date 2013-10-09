@@ -39,6 +39,10 @@ namespace comedi {
 The signal \a routing is routed to the channel \c channel on subdevice
 \a subdevice.
 
+For routing signals to NI M-Series PFI lines, use the ComediNIPFI
+plugin (this plugin knows that the PFI channels are at subdevice 7 and
+provides meaningful names for the signals to be routed).
+
 \par Options
 - \c subdevice
 - \c channel
@@ -76,8 +80,11 @@ public:
 
 protected:
 
-    /*! Set routing and configure channel as output. */
-  int open( const string &device, int subdev, int channel, int routing );
+    /*! Set routing of signal \a routing to channel \a channel on
+        subdevice \a subdev and configure channel as output.  \a
+        signal is the optional name of the routing signal that is
+        displayed in the devices informations. */
+  int open( const string &device, int subdev, int channel, int routing, const string &signal="" );
 
     /*! Pointer to the comedi device. */
   comedi_t *DeviceP;

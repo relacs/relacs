@@ -34,11 +34,13 @@ namespace comedi {
 /*! 
 \class ComediNIPFI
 \author Jan Benda
-\brief [Device] Controlls the PFI pins of a NI daq-board via comedi.
+\brief [Device] Controlls the PFI pins of a NI M-series daq-board via comedi.
 
 The signal \a routing is routed to the channel \a channel on the 
-PFI subdevice of a national instruments board.
-Use for \a routing the following values (from comedi.h):
+PFI subdevice (subdevice no. 7) of a national instruments M-series  board.
+
+Use for \a routing either the following integer values or
+the names without the "NI_PFI_OUTPUT_" part (from comedi.h):
 \code
 enum ni_pfi_routing {
          NI_PFI_OUTPUT_PFI_DEFAULT = 0,
@@ -91,6 +93,12 @@ public:
 	indicating the error).
         \sa isOpen(), close() */
   virtual int open( const string &device, const Options &opts );
+
+
+protected:
+
+  static const int PFISignalsMax = 31;
+  static const string PFISignals[PFISignalsMax];
 
 };
 

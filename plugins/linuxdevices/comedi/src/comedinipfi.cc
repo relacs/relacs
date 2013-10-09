@@ -34,6 +34,13 @@ using namespace relacs;
 namespace comedi {
 
 
+const string ComediNIPFI::PFISignals[PFISignalsMax] = {
+  "PFI_DEFAULT", "AI_START1", "AI_START2", "AI_CONVERT", "G_SRC1", "G_GATE1", "AO_UPDATE_N", "AO_START1",
+  "AI_START_PULSE", "G_SRC0", "G_GATE0", "EXT_STROBE", "AI_EXT_MUX_CLK", "GOUT0", "GOUT1", "FREQ_OUT",
+  "PFI_DO", "I_ATRIG", "RTSI0", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID",
+  "INVALID", "PXI_STAR_TRIGGER_IN", "SCXI_TRIG1", "DIO_CHANGE_DETECT_RTSI", "CDI_SAMPLE", "CDO_UPDATE" };
+
+
 ComediNIPFI::ComediNIPFI( void ) 
   : ComediRouting( "ComediNIPFI" )
 {
@@ -59,15 +66,6 @@ int ComediNIPFI::open( const string &device, const Options &opts )
 
   // check PFI subdevice no. 7
   int subdev = 7;
-  int subdevtype = comedi_get_subdevice_type( DeviceP, subdev );
-  if ( subdevtype != COMEDI_SUBD_DIO ) {
-    cerr << "! error: ComediNIPFI::open() -> "
-	 << "Subdevice " << subdev << " on device "  << device
-	 << " is not a DIO subdevice.\n";
-    comedi_close( DeviceP );
-    DeviceP = NULL;
-    return InvalidDevice;
-  }
 
   // get channel:
   int channel = opts.integer( "channel", 0, -1 );
@@ -80,14 +78,29 @@ int ComediNIPFI::open( const string &device, const Options &opts )
 
   // get routing:
   int routing = opts.integer( "routing", 0, -1 );
+  string signal = opts.text( "routing", 0, "" );
+  if ( routing < 0 && ! signal.empty() ) {
+    for ( int k=0; k<PFISignalsMax; k++ ) {
+      if ( signal == PFISignals[k] ) {
+	routing = k;
+	break;
+      }
+    }
+  }
   if ( routing < 0 ) {
     cerr << "! error: ComediRouting::open() -> "
 	 << "Missing or invalid routing parameter for device "
 	 << deviceIdent() << " !\n";
     return WriteError;
   }
+  if ( routing >= PFISignalsMax || PFISignals[routing] == "INVALID" ) {
+    cerr << "! error: ComediRouting::open() -> "
+	 << "Invalid routing parameter for device "
+	 << deviceIdent() << " !\n";
+    return WriteError;
+  }
 
-  return ComediRouting::open( device, subdev, channel, routing );
+  return ComediRouting::open( device, subdev, channel, routing, PFISignals[routing] );
 }
 
 

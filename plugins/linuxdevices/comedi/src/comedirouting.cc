@@ -98,7 +98,7 @@ int ComediRouting::open( const string &device, const Options &opts )
 }
 
 
-int ComediRouting::open( const string &device, int subdev, int channel, int routing )
+int ComediRouting::open( const string &device, int subdev, int channel, int routing, const string &signal )
 {
   if ( isOpen() )
     return -5;
@@ -138,6 +138,23 @@ int ComediRouting::open( const string &device, int subdev, int channel, int rout
       return WriteError;
     }
   }
+  else if ( diotype != COMEDI_SUBD_DIO && diotype != COMEDI_SUBD_DO ) {
+    const char *subdevstrings[20] = { "unused", "analog input" , "analog output",
+				      "digital input", "digital output", "digital input/output",
+				      "counter", "timer", "memory", "calibration", "processor",
+				      "serial IO", "pulse width modulation" };
+    if ( diotype < 0 )
+      cerr << "! error: ComediRouting::open() -> "
+	   << "Failed to retrieve type of subdevice " << subdev << " on device "  << device
+	   << ": " << comedi_strerror( comedi_errno() ) << "\n";
+    else
+      cerr << "! error: ComediRouting::open() -> "
+	   << "Subdevice " << subdev << " on device "  << device
+	   << " is a " << subdevstrings[diotype] << " and not a digital output subdevice.\n";
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    return InvalidDevice;
+  }
 
   // set basic device infos:
   setDeviceName( comedi_get_board_name( DeviceP ) );
@@ -148,7 +165,10 @@ int ComediRouting::open( const string &device, int subdev, int channel, int rout
   // set settings:
   Settings.addInteger( "subdevice", subdev );
   Settings.addInteger( "channel", channel );
-  Settings.addInteger( "routing", routing );
+  if ( signal.empty() )
+    Settings.addInteger( "routing", routing );
+  else
+    Settings.addText( "routing", signal );
   
   return 0;
 }
