@@ -951,13 +951,13 @@ const Options &RePro::projectOptions( void ) const
 
 void RePro::setProjectOptions( void )
 {
-  MyProjectOpt = ProjectOpt;
+  MyProjectOpt.read( ProjectOpt );
 }
 
 
 void RePro::getProjectOptions( void )
 {
-  ProjectOpt = MyProjectOpt;
+  ProjectOpt.read( MyProjectOpt );
 }
 
 
