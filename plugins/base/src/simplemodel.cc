@@ -27,12 +27,13 @@ namespace base {
 
 
 SimpleModel::SimpleModel( void )
-  : Model( "SimpleModel", "base", "Jan Benda", "1.1", "Jan 31, 2008" )
+  : Model( "SimpleModel", "base", "Jan Benda", "1.2", "Oct 10, 2013" )
 {
   // define options:
-  addSelection( "model", "The model", "Noise|Sine|Stimulus" );
-  addNumber( "gain", "Gain", 1.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
-  addNumber( "freq", "Frequency", 1000.0, 0.0, 10000000.0, 10.0, "Hz", "Hz", "%.1f" ).setActivation( "model", "Sine", true );
+  addNumber( "stimulusgain", "Gain of stimulus", 1.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "noisegain", "Amplitude of white noise", 0.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "sinegain", "Amplitude of sine wave", 0.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "sinefreq", "Frequency of sine wave", 1000.0, 0.0, 10000000.0, 10.0, "Hz", "Hz", "%.1f" ).setActivation( "sinegain", "0.0", false );
 }
 
 
@@ -44,25 +45,18 @@ SimpleModel::~SimpleModel( void )
 void SimpleModel::main( void )
 {
   // read out options:
-  int model = index( "model" );
-  double gain = number( "gain" );
-  double freq = number( "freq" );
+  double stimulusgain = number( "stimulusgain" );
+  double noisegain = number( "noisegain" );
+  double sinegain = number( "sinegain" );
+  double sinefreq = number( "sinefreq" );
 
   // integrate:
-  if ( model == 1 ) {
-    while ( ! interrupt() ) {
-      push( 0, gain * ::sin( 6.28318530717959*freq*time( 0 ) ) );
-    }
-  }
-  else if ( model == 2 ) {
-    while ( ! interrupt() ) {
-      push( 0, gain*signal( time( 0 ) ) );
-    }
-  }
-  else {
-    while ( ! interrupt() ) {
-      push( 0, gain*rnd.gaussian() );
-    }
+  while ( ! interrupt() ) {
+    double v = 0.0;
+    v += stimulusgain * signal( time( 0 ) );
+    v += noisegain * rnd.gaussian();
+    v += sinegain * ::sin( 6.28318530717959*sinefreq*time( 0 ) );
+    push( 0, v );
   }
 }
 
