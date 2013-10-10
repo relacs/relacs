@@ -84,7 +84,7 @@ FileStimulus::FileStimulus( void )
   Count = 0;
   EODTransAmpl.clear();
   EFieldAmpl.clear();
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     Spikes[k].clear();
     Trials[k] = 0; 
     SpikeRate[k].clear();
@@ -214,7 +214,7 @@ int FileStimulus::main( void )
   else
     EFieldAmpl.reserve( Repeats>0 ? Repeats : 100 );
 
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
       Spikes[k].reserve( Repeats>0 ? Repeats : 100 );
@@ -516,7 +516,7 @@ int FileStimulus::main( void )
 
     // adjust input gains:
     if ( adjustg ) {
-      for ( int k=0; k<MaxSpikeTraces; k++ )
+      for ( int k=0; k<MaxTraces; k++ )
 	if ( SpikeTrace[k] >= 0 )
 	  adjust( trace( SpikeTrace[k] ), signalTime()+Duration,
 		  signalTime()+Duration+Pause, 0.8 );
@@ -545,7 +545,7 @@ int FileStimulus::main( void )
       Header.setInteger( "trace", -1 );
       unlockAll();
       saveAmpl();
-      for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
+      for ( int trace=0; trace<MaxTraces; trace++ ) {
 	if ( SpikeEvents[trace] >= 0 ) {
 	  Header.setInteger( "trace", trace );
 	  saveSpikes( trace );
@@ -572,7 +572,7 @@ void FileStimulus::stop( void )
   P.unlock();
   EODTransAmpl.clear();
   EFieldAmpl.clear();
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
       SpikeRate[k].clear();
@@ -786,7 +786,7 @@ void FileStimulus::save( void )
   unlockAll();
   if ( NerveTrace[0] >= 0 )
     saveNervePower();
-  for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
+  for ( int trace=0; trace<MaxTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
       Header.setInteger( "trace", trace );
       saveRate( trace );
@@ -818,7 +818,7 @@ void FileStimulus::plot( void )
   if ( maxspikes < 4 )
     maxspikes = 4;
   int n=0;
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       n++;
       P[n].clear();
@@ -938,7 +938,7 @@ void FileStimulus::analyze( void )
   }
 
   // spikes:
-  for ( int k=0; k<MaxSpikeTraces; k++ )
+  for ( int k=0; k<MaxTraces; k++ )
     if ( SpikeEvents[k] >= 0 )
       analyzeSpikes( events( SpikeEvents[k] ), k );
 

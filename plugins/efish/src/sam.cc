@@ -73,7 +73,7 @@ SAM::SAM( void )
   Intensity = 0.0;
   EODTransAmpl.clear();
   AllEODTransAmpl.clear();
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     Spikes[k].clear();
     AllSpikes[k].clear();
     SpikeRate[k] = 0;
@@ -236,7 +236,7 @@ int SAM::main( void )
   EODTransAmpl.reserve( beats );
   AllEODTransAmpl.reserve( int( 2000.0 * Duration ) );
   RateDeltaT = Period / RateN;
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
       Spikes[k].reserve( beats );
@@ -270,9 +270,9 @@ int SAM::main( void )
   P.lock();
   P.resize( (SpikeTraces+NerveTraces)*2, 2, false );
   int n=0;
-  for ( int k=0; k<MaxSpikeTraces + NerveTraces; k++ ) {
-    if ( ( k<MaxSpikeTraces && SpikeEvents[k] >= 0 ) ||
-	 ( k>=MaxSpikeTraces && NerveTrace[0] >= 0 ) ) {
+  for ( int k=0; k<MaxTraces + NerveTraces; k++ ) {
+    if ( ( k<MaxTraces && SpikeEvents[k] >= 0 ) ||
+	 ( k>=MaxTraces && NerveTrace[0] >= 0 ) ) {
       P[2*n].clear();
       P[2*n].setLMarg( 8.0 );
       P[2*n].setRMarg( 1.5 );
@@ -281,7 +281,7 @@ int SAM::main( void )
       P[2*n].setXLabel( "" );
       P[2*n].noXTics();
       P[2*n].setXRange( -500.0*Period, 500.0*Period );
-      if ( k<MaxSpikeTraces ) { 
+      if ( k<MaxTraces ) { 
 	P[2*n].setYLabel( "Firing Rate " + Str( k+1 ) + " [Hz]" );
 	P[2*n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
 			     Plot::Center, -90.0 );
@@ -443,7 +443,7 @@ int SAM::main( void )
 
     // adjust input gains:
     if ( adjustg ) {
-      for ( int k=0; k<MaxSpikeTraces; k++ ) {
+      for ( int k=0; k<MaxTraces; k++ ) {
 	if ( SpikeTrace[k] >= 0 )
 	  adjust( trace( SpikeTrace[k] ), signalTime()+Duration,
 		  signalTime()+Duration+Pause, 0.8 );
@@ -478,7 +478,7 @@ int SAM::main( void )
       Header.setInteger( "trace", -1 );
       saveAmpl();
       saveAllAmpl();
-      for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
+      for ( int trace=0; trace<MaxTraces; trace++ ) {
 	if ( SpikeEvents[trace] >= 0 ) {
 	  Header.setInteger( "trace", trace );
 	  saveSpikes( trace );
@@ -508,7 +508,7 @@ void SAM::stop( void )
   Signal = 0;
   EODTransAmpl.clear();
   AllEODTransAmpl.free();
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
       Spikes[k].reserve( 0 );
@@ -762,7 +762,7 @@ void SAM::save( void )
   if ( Repeats <= 0 || Count <= 0 )
     return;
 
-  for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
+  for ( int trace=0; trace<MaxTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
       Header.setInteger( "trace", trace );
       saveRate( trace );
@@ -775,11 +775,11 @@ void SAM::plot( void )
 {
   P.lock();
   int n=0;
-  for ( int k=0; k<MaxSpikeTraces + NerveTraces; k++ ) {
-    if ( ( k<MaxSpikeTraces && SpikeEvents[k] >= 0 ) ||
-	 ( k>=MaxSpikeTraces && NerveTrace[0] >= 0 ) ) {
+  for ( int k=0; k<MaxTraces + NerveTraces; k++ ) {
+    if ( ( k<MaxTraces && SpikeEvents[k] >= 0 ) ||
+	 ( k>=MaxTraces && NerveTrace[0] >= 0 ) ) {
       
-      if ( k<MaxSpikeTraces ) {
+      if ( k<MaxTraces ) {
 	// rate and spikes:
 	P[2*n].clear();
 	if ( ! P[2*n].zoomedYRange() )
@@ -958,7 +958,7 @@ XXX
   for ( ; pindex < plast; ++pindex )
     AllEODTransAmpl.push( pindex.time() - signalTime(), *pindex );
 
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 )
       analyzeSpikes( events( SpikeEvents[k] ), k, beattimes );
   }

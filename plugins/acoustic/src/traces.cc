@@ -27,25 +27,34 @@ using namespace relacs;
 namespace acoustic {
 
 
-string Traces::LoudspeakerName = "Speaker";
+string Traces::LoudspeakerIdentifier[2] = { "Speaker", "" };
 string Traces::LoudspeakerNames = "";
-string Traces::SoundTraceName = "Sound";
+string Traces::LeftLoudspeakerIdentifier[2] = { "Left-Speaker", "" };
+string Traces::LeftLoudspeakerNames = "";
+string Traces::RightLoudspeakerIdentifier[2] = { "Right-Speaker", "" };
+string Traces::RightLoudspeakerNames = "";
+
+string Traces::SoundTraceIdentifier[4] = { "Sound", "Microphone", "Mic", "" };
 string Traces::SoundTraceNames = "";
+string Traces::LeftSoundTraceIdentifier[4] = { "Left-Sound", "Left-Microphone", "Left-Mic", "" };
+string Traces::LeftSoundTraceNames = "";
+string Traces::RightSoundTraceIdentifier[4] = { "Right-Sound", "Right-Microphone", "Right-Mic", "" };
+string Traces::RightSoundTraceNames = "";
 
 int Traces::Loudspeakers = 0;
-int Traces::Loudspeaker[Traces::MaxLoudspeakers] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+int Traces::Loudspeaker[Traces::MaxTraces] = { -1, -1, -1, -1 };
 int Traces::LeftSpeakers = 0;
-int Traces::LeftSpeaker[Traces::MaxLoudspeakers] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+int Traces::LeftSpeaker[Traces::MaxTraces] = { -1, -1, -1, -1 };
 int Traces::RightSpeakers = 0;
-int Traces::RightSpeaker[Traces::MaxLoudspeakers] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+int Traces::RightSpeaker[Traces::MaxTraces] = { -1, -1, -1, -1 };
 int Traces::Speaker[2] = { -1, -1 };
 
 int Traces::SoundTraces = 0;
-int Traces::SoundTrace[Traces::MaxSoundTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+int Traces::SoundTrace[Traces::MaxTraces] = { -1, -1, -1, -1 };
 int Traces::LeftSoundTraces = 0;
-int Traces::LeftSoundTrace[Traces::MaxSoundTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+int Traces::LeftSoundTrace[Traces::MaxTraces] = { -1, -1, -1, -1 };
 int Traces::RightSoundTraces = 0;
-int Traces::RightSoundTrace[Traces::MaxSoundTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+int Traces::RightSoundTrace[Traces::MaxTraces] = { -1, -1, -1, -1 };
 
 
 Traces::Traces( void )
@@ -57,104 +66,23 @@ void Traces::initialize( const RELACSPlugin *rp,
 			 const InList &data, 
 			 const EventList &events )
 {
-  Loudspeakers = 0;
-  Loudspeaker[0] = rp->outTraceIndex( LoudspeakerName );
-  if ( Loudspeaker[0] >= 0 )
-    Loudspeakers++;
-  for ( int k=0; k<MaxLoudspeakers; k++ ) {
-    Loudspeaker[Loudspeakers] = rp->outTraceIndex( LoudspeakerName + "-" + Str( k ) );
-    if ( Loudspeaker[Loudspeakers] >= 0 )
-      Loudspeakers++;
-  }
-
-  LeftSpeakers = 0;
-  LeftSpeaker[0] = rp->outTraceIndex( "Left-" + LoudspeakerName );
-  if ( LeftSpeaker[0] >= 0 )
-    LeftSpeakers++;
-  for ( int k=0; k<MaxLoudspeakers; k++ ) {
-    LeftSpeaker[LeftSpeakers] = rp->outTraceIndex( "Left-" + LoudspeakerName + "-" + Str( k ) );
-    if ( LeftSpeaker[LeftSpeakers] >= 0 )
-      LeftSpeakers++;
-  }
-
-  RightSpeakers = 0;
-  RightSpeaker[0] = rp->outTraceIndex( "Right-" + LoudspeakerName );
-  if ( RightSpeaker[0] >= 0 )
-    RightSpeakers++;
-  for ( int k=0; k<MaxLoudspeakers; k++ ) {
-    RightSpeaker[RightSpeakers] = rp->outTraceIndex( "Right-" + LoudspeakerName + "-" + Str( k ) );
-    if ( RightSpeaker[RightSpeakers] >= 0 )
-      RightSpeakers++;
-  }
-
+  // speaker:
+  initStandardOutputs( rp, &Loudspeakers, Loudspeaker,
+		       LoudspeakerIdentifier, LoudspeakerNames );
+  initStandardOutputs( rp, &LeftSpeakers, LeftSpeaker,
+		       LeftLoudspeakerIdentifier, LeftLoudspeakerNames );
+  initStandardOutputs( rp, &RightSpeakers, RightSpeaker,
+		       RightLoudspeakerIdentifier, RightLoudspeakerNames );
   Speaker[0] = LeftSpeaker[0];
   Speaker[1] = RightSpeaker[0];
 
-  LoudspeakerNames = "";
-  for ( int k=0; k<MaxLoudspeakers; k++ ) {
-    if ( k<LeftSpeakers )
-      LoudspeakerNames += "|" + rp->outTraceName( LeftSpeaker[k] );
-    if ( k<RightSpeakers )
-      LoudspeakerNames += "|" + rp->outTraceName( RightSpeaker[k] );
-  }
-  for ( int k=0; k<Loudspeakers; k++ )
-    LoudspeakerNames += "|" + rp->outTraceName( Loudspeaker[k] );
-  LoudspeakerNames.erase( 0, 1 );
-
-
-  SoundTraces = 0;
-  SoundTrace[0] = data.index( SoundTraceName );
-  if ( SoundTrace[0] >= 0 )
-    SoundTraces++;
-  for ( int k=0; k<MaxSoundTraces; k++ ) {
-    SoundTrace[SoundTraces] = data.index( SoundTraceName + "-" + Str( k ) );
-    if ( SoundTrace[SoundTraces] >= 0 )
-      SoundTraces++;
-  }
-
-  LeftSoundTraces = 0;
-  LeftSoundTrace[0] = data.index( "Left-" + SoundTraceName );
-  if ( LeftSoundTrace[0] >= 0 )
-    LeftSoundTraces++;
-  for ( int k=0; k<MaxSoundTraces; k++ ) {
-    LeftSoundTrace[LeftSoundTraces] = data.index( "Left-" + SoundTraceName + "-" + Str( k ) );
-    if ( LeftSoundTrace[LeftSoundTraces] >= 0 )
-      LeftSoundTraces++;
-  }
-
-  RightSoundTraces = 0;
-  RightSoundTrace[0] = data.index( "Right-" + SoundTraceName );
-  if ( RightSoundTrace[0] >= 0 )
-    RightSoundTraces++;
-  for ( int k=0; k<MaxSoundTraces; k++ ) {
-    RightSoundTrace[RightSoundTraces] = data.index( "Right-" + SoundTraceName + "-" + Str( k ) );
-    if ( RightSoundTrace[RightSoundTraces] >= 0 )
-      RightSoundTraces++;
-  }
-
-  SoundTraceNames = "";
-  for ( int k=0; k<MaxSoundTraces; k++ ) {
-    if ( k<LeftSoundTraces )
-      SoundTraceNames += "|" + data[LeftSoundTrace[k]].ident();
-    if ( k<RightSoundTraces )
-      SoundTraceNames += "|" + data[RightSoundTrace[k]].ident();
-  }
-  for ( int k=0; k<SoundTraces; k++ )
-    SoundTraceNames += "|" + data[SoundTrace[k]].ident();
-  SoundTraceNames.erase( 0, 1 );
-
-}
-
-
-string Traces::loudspeakerName( void )
-{
-  return LoudspeakerName;
-}
-
-
-void Traces::setLoudspeakerName( const string &name )
-{
-  LoudspeakerName = name;
+  // sound recordings:
+  initStandardTraces( data, &SoundTraces, SoundTrace,
+		      SoundTraceIdentifier, SoundTraceNames );
+  initStandardTraces( data, &LeftSoundTraces, LeftSoundTrace,
+		      LeftSoundTraceIdentifier, LeftSoundTraceNames );
+  initStandardTraces( data, &RightSoundTraces, RightSoundTrace,
+		      RightSoundTraceIdentifier, RightSoundTraceNames );
 }
 
 
@@ -164,21 +92,33 @@ string Traces::loudspeakerTraceNames( void )
 }
 
 
-string Traces::soundTraceName( void )
+string Traces::leftLoudspeakerTraceNames( void )
 {
-  return SoundTraceName;
+  return LeftLoudspeakerNames;
 }
 
 
-void Traces::setSoundTraceName( const string &name )
+string Traces::rightLoudspeakerTraceNames( void )
 {
-  SoundTraceName = name;
+  return RightLoudspeakerNames;
 }
 
 
 string Traces::soundTraceNames( void )
 {
   return SoundTraceNames;
+}
+
+
+string Traces::leftSoundTraceNames( void )
+{
+  return LeftSoundTraceNames;
+}
+
+
+string Traces::rightSoundTraceNames( void )
+{
+  return RightSoundTraceNames;
 }
 
 

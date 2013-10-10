@@ -107,8 +107,8 @@ private:
   MultiPlot EODPlot;
   QGridLayout *Numbers;
   QLCDNumber *EODRateLCD;
-  QLCDNumber *FiringRateLCD[MaxSpikeTraces];
-  QLCDNumber *PValueLCD[MaxSpikeTraces];
+  QLCDNumber *FiringRateLCD[MaxTraces];
+  QLCDNumber *PValueLCD[MaxTraces];
   QPushButton *SessionButton;
 
   bool EPhys;

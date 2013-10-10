@@ -90,7 +90,7 @@ Chirps::Chirps( void )
   StimulusIndex = 0;
   Count = 0; 
   Response.clear();
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     Spikes[k].clear();
     SpikeRate[k].clear();
   }
@@ -740,7 +740,7 @@ int Chirps::main( void )
   // more data:
   Response.clear();
   Response.reserve( 2 * (Repeats>0?Repeats:100) * 2 * NChirps );
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
       SpikeRate[k].resize( BeatPos );
@@ -878,7 +878,7 @@ int Chirps::main( void )
 
     // adjust input gains:
     if ( adjustg ) {
-      for ( int k=0; k<MaxSpikeTraces; k++ )
+      for ( int k=0; k<MaxTraces; k++ )
 	if ( SpikeTrace[k] >= 0 )
 	  adjust( trace(SpikeTrace[k]), Duration, 0.8 );
       if ( NerveTrace[0] >= 0 )
@@ -920,7 +920,7 @@ int Chirps::main( void )
       saveChirps();
       saveChirpTraces();
       saveAmplitude();
-      for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
+      for ( int trace=0; trace<MaxTraces; trace++ ) {
 	if ( SpikeEvents[trace] >= 0 ) {
 	  Header.setInteger( "trace", trace );
 	  saveChirpSpikes( trace );
@@ -974,7 +974,7 @@ void Chirps::stop( void )
   ChirpTimes.clear();
   BeatPhases.clear();
   Response.clear();
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
       SpikeRate[k].clear();
@@ -1280,7 +1280,7 @@ void Chirps::save( void )
     return;
 
   unlockAll();
-  for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
+  for ( int trace=0; trace<MaxTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
       Header.setInteger( "trace", trace );
       saveChirpRate( trace );
@@ -1316,7 +1316,7 @@ void Chirps::plot( void )
       int maxspikes = (int)rint( 14.0 / SpikeTraces );
       if ( maxspikes < 4 )
 	maxspikes = 4;
-      for ( int k=0; k<MaxSpikeTraces; k++ ) {
+      for ( int k=0; k<MaxTraces; k++ ) {
 	if ( SpikeEvents[k] >= 0 ) {
 	  P[n].clear();
 	  if ( ! P[n].zoomedYRange() )
@@ -1418,7 +1418,7 @@ void Chirps::analyze( void )
   }
 
   // all spikes:
-  for ( int k=0; k<MaxSpikeTraces; k++ )
+  for ( int k=0; k<MaxTraces; k++ )
     if ( SpikeEvents[k] >= 0 )
       events(SpikeEvents[k]).copy( signalTime(), signalTime()+Duration,
 				   Spikes[k] );
@@ -1588,7 +1588,7 @@ void Chirps::analyze( void )
     }
 
     // spikes:
-    for ( int j=0; j<MaxSpikeTraces; j++ ) {
+    for ( int j=0; j<MaxTraces; j++ ) {
       if ( SpikeEvents[j] >= 0 ) {
 	EventData spikes;
 	events(SpikeEvents[j]).copy( chirptime-SaveWindow,

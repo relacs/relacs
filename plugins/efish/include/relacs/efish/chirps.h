@@ -202,7 +202,7 @@ private:
     ArrayD EODTime;
     ArrayD EODFreq;
     ArrayD EODAmpl;
-    EventData Spikes[MaxSpikeTraces];
+    EventData Spikes[MaxTraces];
     MapD NerveAmplP;
     MapD NerveAmplT;
     MapD NerveAmplM;
@@ -220,9 +220,9 @@ private:
     SampleDataD Frequency;
   };
 
-  EventData Spikes[MaxSpikeTraces];
-  vector < vector < RateData > > SpikeRate[MaxSpikeTraces];
-  double MaxRate[MaxSpikeTraces];
+  EventData Spikes[MaxTraces];
+  vector < vector < RateData > > SpikeRate[MaxTraces];
+  double MaxRate[MaxTraces];
 
   vector< vector < SampleDataD > > NerveMeanAmplP;
   vector< vector < SampleDataD > > NerveMeanAmplT;

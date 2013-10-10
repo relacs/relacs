@@ -25,6 +25,7 @@
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
 #include <relacs/relacsplugin.h>
+#include <relacs/standardtraces.h>
 using namespace relacs;
 
 namespace acoustic {
@@ -38,7 +39,7 @@ namespace acoustic {
        and recordings from microphones.
 */
 
-class Traces
+class Traces : public StandardTraces
 {
 public:
 
@@ -47,57 +48,70 @@ public:
   static void initialize( const RELACSPlugin *rp,
 			  const InList &data, const EventList &events );
 
-    /*! Maximum number of supported loadspeakers. */
-  static const int MaxLoudspeakers = 12;
     /*! The number of available loadspeakers. */
   static int Loudspeakers;
     /*! The indices of the available loudspeakers. */
-  static int Loudspeaker[MaxLoudspeakers];
+  static int Loudspeaker[MaxTraces];
     /*! The number of available left loadspeakers. */
   static int LeftSpeakers;
     /*! The indices of the available left loudspeakers. */
-  static int LeftSpeaker[MaxLoudspeakers];
+  static int LeftSpeaker[MaxTraces];
     /*! The number of available right loadspeakers. */
   static int RightSpeakers;
     /*! The indices of the available right loudspeakers. */
-  static int RightSpeaker[MaxLoudspeakers];
+  static int RightSpeaker[MaxTraces];
     /*! The indices of the first left and the first right loudspeaker. */
   static int Speaker[2];
 
-    /*! Maximum number of supported sound recording traces. */
-  static const int MaxSoundTraces = 12;
     /*! The number of available sound recording traces. */
   static int SoundTraces;
     /*! The indices of the available sound recording traces. */
-  static int SoundTrace[MaxSoundTraces];
+  static int SoundTrace[MaxTraces];
     /*! The number of available left sound recording traces. */
   static int LeftSoundTraces;
     /*! The indices of the available left sound recording traces. */
-  static int LeftSoundTrace[MaxSoundTraces];
+  static int LeftSoundTrace[MaxTraces];
     /*! The number of available right sound recording traces. */
   static int RightSoundTraces;
     /*! The indices of the available right sound recording traces. */
-  static int RightSoundTrace[MaxSoundTraces];
+  static int RightSoundTrace[MaxTraces];
 
-  static string loudspeakerName( void );
-  static void setLoudspeakerName( const string &name );
     /*! Returns the names of all output traces connected to loudspeakers,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string loudspeakerTraceNames( void );
+    /*! Returns the names of all output traces connected to left loudspeakers,
+        separated by ','. Can be passed to a text Parameter. */
+  static string leftLoudspeakerTraceNames( void );
+    /*! Returns the names of all output traces connected to right loudspeakers,
+        separated by ','. Can be passed to a text Parameter. */
+  static string rightLoudspeakerTraceNames( void );
 
-  static string soundTraceName( void );
-  static void setSoundTraceName( const string &name );
     /*! Returns the names of all input traces connected to microphones,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string soundTraceNames( void );
+    /*! Returns the names of all input traces connected to left microphones,
+        separated by ','. Can be passed to a text Parameter. */
+  static string leftSoundTraceNames( void );
+    /*! Returns the names of all input traces connected to right microphones,
+        separated by ','. Can be passed to a text Parameter. */
+  static string rightSoundTraceNames( void );
 
 
 private:
 
-  static string LoudspeakerName;
+  static string LoudspeakerIdentifier[2];
   static string LoudspeakerNames;
-  static string SoundTraceName;
+  static string LeftLoudspeakerIdentifier[2];
+  static string LeftLoudspeakerNames;
+  static string RightLoudspeakerIdentifier[2];
+  static string RightLoudspeakerNames;
+
+  static string SoundTraceIdentifier[4];
   static string SoundTraceNames;
+  static string LeftSoundTraceIdentifier[4];
+  static string LeftSoundTraceNames;
+  static string RightSoundTraceIdentifier[4];
+  static string RightSoundTraceNames;
 
 };
 

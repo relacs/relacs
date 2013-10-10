@@ -143,13 +143,13 @@ private:
   double Period;
   vector< MapD > EODTransAmpl;
   MapD AllEODTransAmpl;
-  vector < vector < double > > Spikes[MaxSpikeTraces];
-  vector < double > AllSpikes[MaxSpikeTraces];
+  vector < vector < double > > Spikes[MaxTraces];
+  vector < double > AllSpikes[MaxTraces];
   double RateDeltaT;
-  SampleDataD *SpikeRate[MaxSpikeTraces];
-  SampleDataD *SpikeFrequency[MaxSpikeTraces];
-  int Trials[MaxSpikeTraces];
-  double MaxRate[MaxSpikeTraces];
+  SampleDataD *SpikeRate[MaxTraces];
+  SampleDataD *SpikeFrequency[MaxTraces];
+  int Trials[MaxTraces];
+  double MaxRate[MaxTraces];
 
   int Offset;  
   vector< MapD > NerveAmplP;

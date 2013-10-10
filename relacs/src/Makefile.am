@@ -86,6 +86,7 @@ pkginclude_HEADERS = \
     ../include/relacs/settings.h \
     ../include/relacs/simulator.h \
     ../include/relacs/spiketrace.h \
+    ../include/relacs/standardtraces.h \
     ../include/relacs/devicelist.h \
     ../include/relacs/relacsdevices.h
 
@@ -119,7 +120,8 @@ librelacs_la_SOURCES = \
     session.cc \
     settings.cc \
     simulator.cc \
-    spiketrace.cc
+    spiketrace.cc \
+    standardtraces.cc
 
 
 check_PROGRAMS = linktest_librelacs_la

@@ -25,6 +25,7 @@
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
 #include <relacs/relacsplugin.h>
+#include <relacs/standardtraces.h>
 using namespace relacs;
 
 namespace ephys {
@@ -37,7 +38,7 @@ namespace ephys {
 \brief [lib] Variables for standard input traces and events in electrophysiology.
 */
 
-class Traces
+class Traces : public StandardTraces
 {
 public:
 
@@ -46,83 +47,75 @@ public:
   static void initialize( const RELACSPlugin *rp,
 			  const InList &data, const EventList &events );
 
-  static int StimulusEvents;
-
-  static const int MaxSpikeTraces = 10;
   static int SpikeTraces;
-  static int SpikeTrace[MaxSpikeTraces];
-  static int SpikeEvents[MaxSpikeTraces];
+  static int SpikeTrace[MaxTraces];
+  static int SpikeEvents[MaxTraces];
 
-  static const int MaxCurrentTraces = 10;
   static int CurrentTraces;
-  static int CurrentTrace[MaxCurrentTraces];
+  static int CurrentTrace[MaxTraces];
 
-  static const int MaxPotentialTraces = 10;
   static int PotentialTraces;
-  static int PotentialTrace[MaxPotentialTraces];
+  static int PotentialTrace[MaxTraces];
 
-  static const int MaxNerveTraces = 10;
   static int NerveTraces;
-  static int NerveTrace[MaxNerveTraces];
-  static int NerveEvents[MaxNerveTraces];
+  static int NerveTrace[MaxTraces];
+  static int NerveEvents[MaxTraces];
 
-  static const int MaxCurrentOutputs = 10;
   static int CurrentOutputs;
-  static int CurrentOutput[MaxCurrentOutputs];
+  static int CurrentOutput[MaxTraces];
 
-  static const int MaxPotentialOutputs = 10;
   static int PotentialOutputs;
-  static int PotentialOutput[MaxPotentialOutputs];
+  static int PotentialOutput[MaxTraces];
 
 
     /*! Returns the names of all input traces with voltages of neurons,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string spikeTraceNames( void );
     /*! Returns the names of all event traces with spikes of neurons,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string spikeEventNames( void );
     /*! Returns the names of all input traces with currents for current-clamp,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string currentTraceNames( void );
     /*! Returns the names of all input traces with command potentials for voltage-clamp,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string potentialTraceNames( void );
     /*! Returns the names of all input traces with voltages of whole nerves,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string nerveTraceNames( void );
     /*! Returns the names of all event traces with events detected in nerves,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string nerveEventNames( void );
     /*! Returns the names of all output traces for current injections,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string currentOutputNames( void );
     /*! Returns the names of all output traces for voltage-clamp potentials,
-        separated by '|'. Can be passed to a text Parameter. */
+        separated by ','. Can be passed to a text Parameter. */
   static string potentialOutputNames( void );
 
 
 private:
 
-  static string SpikeTraceName;
-  static string SpikeEventsName;
+  static string SpikeTraceIdentifier[2];
+  static string SpikeEventsIdentifier[2];
   static string SpikeTraceNames;
   static string SpikeEventsNames;
 
-  static string CurrentTraceName;
+  static string CurrentTraceIdentifier[2];
   static string CurrentTraceNames;
 
-  static string PotentialTraceName;
+  static string PotentialTraceIdentifier[2];
   static string PotentialTraceNames;
 
-  static string NerveTraceName;
-  static string NerveEventsName;
+  static string NerveTraceIdentifier[2];
+  static string NerveEventsIdentifier[2];
   static string NerveTraceNames;
   static string NerveEventsNames;
 
-  static string CurrentOutputName;
+  static string CurrentOutputIdentifier[2];
   static string CurrentOutputNames;
 
-  static string PotentialOutputName;
+  static string PotentialOutputIdentifier[2];
   static string PotentialOutputNames;
 
 };

@@ -137,12 +137,12 @@ private:
   string LocalEODUnit;
   vector< MapD > EODTransAmpl;
   vector< SampleDataF > EFieldAmpl;
-  EventList Spikes[MaxSpikeTraces];
-  SampleDataD SpikeRate[MaxSpikeTraces];
-  SampleDataD SpikeFrequency[MaxSpikeTraces];
-  SampleDataD SpikePower[MaxSpikeTraces];
-  int Trials[MaxSpikeTraces];
-  double MaxRate[MaxSpikeTraces];
+  EventList Spikes[MaxTraces];
+  SampleDataD SpikeRate[MaxTraces];
+  SampleDataD SpikeFrequency[MaxTraces];
+  SampleDataD SpikePower[MaxTraces];
+  int Trials[MaxTraces];
+  double MaxRate[MaxTraces];
   vector< MapD > NerveAmplP;
   vector< MapD > NerveAmplT;
   vector< MapD > NerveAmplM;

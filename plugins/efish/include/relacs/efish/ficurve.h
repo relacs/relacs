@@ -151,8 +151,8 @@ private:
     double OnsetRate;
     double SSRate;
   };
-  vector < vector < ResponseData > > Response[MaxSpikeTraces]; 
-  double MaxRate[MaxSpikeTraces];
+  vector < vector < ResponseData > > Response[MaxTraces]; 
+  double MaxRate[MaxTraces];
     
   Options Header;
  

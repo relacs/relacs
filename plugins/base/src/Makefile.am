@@ -4,6 +4,7 @@ include ${top_srcdir}/moc4.mk
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
+    libbasetraces.la \
     libbaselinearattenuate.la \
     libbasedecibelattenuate.la \
     libbasehighpass.la \
@@ -24,6 +25,36 @@ if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
     libbaserobot.la
 endif
+
+
+
+libbasetraces_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libbasetraces_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libbasetraces_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+libbasetraces_la_SOURCES = traces.cc
+
+libbasetraces_la_includedir = $(pkgincludedir)/base
+
+libbasetraces_la_include_HEADERS = $(HEADER_PATH)/traces.h
+
 
 
 libbaselinearattenuate_la_CPPFLAGS = \

@@ -25,6 +25,7 @@
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
 #include <relacs/relacsplugin.h>
+#include <relacs/standardtraces.h>
 using namespace relacs;
 
 namespace efield {
@@ -39,7 +40,7 @@ namespace efield {
 */
 
 
-class Traces
+class Traces : public StandardTraces
 {
 
 public:

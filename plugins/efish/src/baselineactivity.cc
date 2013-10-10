@@ -127,7 +127,7 @@ int BaselineActivity::main( void )
     pdy = 1.0 / ( SpikeTraces + NerveTraces );
   }
   int n=0;
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Str ns = "";
       if ( SpikeTraces > 1 )
@@ -184,13 +184,13 @@ int BaselineActivity::main( void )
   SearchDuration = 0.0;
   LastEODInx = 0;
 
-  EventList spikes( MaxSpikeTraces );
+  EventList spikes( MaxTraces );
   vector< vector < ArrayD > > eodspikes;
-  eodspikes.resize( MaxSpikeTraces );
+  eodspikes.resize( MaxTraces );
   vector< SampleDataD > isih;
   vector< SampleDataD > spikerate;
   vector< int > trials;
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     spikes[k].clear();
     eodspikes[k].clear();
     trials.push_back( 0 );
@@ -292,7 +292,7 @@ int BaselineActivity::main( void )
 
     // adjust gain of daq board:
     if ( adjustg ) {
-      for ( int k=0; k<MaxSpikeTraces; k++ ) {
+      for ( int k=0; k<MaxTraces; k++ ) {
 	if ( SpikeTrace[k] >= 0 )
 	  adjust( trace( SpikeTrace[k] ), Duration, 0.8 );
       }
@@ -556,7 +556,7 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
   header.addNumber( "EOD rate", EODRate, "Hz", "%.1f" );
   header.addNumber( "EOD period", 1000.0 * EODPeriod, "ms", "%.3f" );
   header.addNumber( "duration", SearchDuration, "sec", "%.3f" );
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Str ns( k+1 );
       header.addNumber( "firing frequency"+ns, FRate[k], "Hz", "%.1f" );
@@ -567,7 +567,7 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
   header.addText( "session time", sessionTimeStr() );
   header.newSection( settings() );
 
-  for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
+  for ( int trace=0; trace<MaxTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
       header.setInteger( "trace", trace );
       saveSpikes( trace, header, spikes );
@@ -597,7 +597,7 @@ void BaselineActivity::plot( const SampleDataD &eodcycle,
   P.lock();
 
   int n=0;
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       P[2*n].clear();
       if ( ! P[2*n].zoomedXRange() )
@@ -740,7 +740,7 @@ void BaselineActivity::analyze( int autodetect,
   else
     eodcycle = 0.0;
 
-  for ( int k=0; k<MaxSpikeTraces; k++ )
+  for ( int k=0; k<MaxTraces; k++ )
     if ( SpikeEvents[k] >= 0 )
       analyzeSpikes( events( SpikeEvents[k] ), eodtimes, k, eodspikes,
 		     spikes, isih, spikerate, trials );

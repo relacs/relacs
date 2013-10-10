@@ -73,7 +73,7 @@ FICurve::FICurve( void )
   // variables:
   IntensityRange.clear();
   PreIntensityRange.clear();
-  for ( int k=0; k<MaxSpikeTraces; k++ )
+  for ( int k=0; k<MaxTraces; k++ )
     Response[k].clear();
   Index = 0;
 
@@ -161,7 +161,7 @@ int FICurve::main( void )
     PreIntensityRange.set( FishAmplitude );
 
   // data:
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Response[k].resize( PreIntensityRange.size() );
       for ( unsigned int j = 0; j<Response[k].size(); j++ ) {
@@ -183,7 +183,7 @@ int FICurve::main( void )
 
   // plot:
   int n=0;
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       P[2*n].clear();
       P[2*n].setLMarg( 7 );
@@ -378,7 +378,7 @@ int FICurve::main( void )
 
       // adjust input gains:
       if ( adjustg ) {
-	for ( int k=0; k<MaxSpikeTraces; k++ )
+	for ( int k=0; k<MaxTraces; k++ )
 	  if ( SpikeTrace[k] >= 0 )
 	    adjust( trace( SpikeTrace[k] ), signalTime()+Duration,
 		    signalTime()+Duration+Pause, 0.8 );
@@ -404,7 +404,7 @@ void FICurve::stop( void )
 {
   IntensityRange.clear();
   PreIntensityRange.clear();
-  for ( int k=0; k<MaxSpikeTraces; k++ )
+  for ( int k=0; k<MaxTraces; k++ )
     if ( SpikeEvents[k] >= 0 )
       Response[k].clear();
   writeZero( GlobalAMEField );
@@ -554,7 +554,7 @@ void FICurve::save( void )
   Header.erase( "Settings" );
   Header.newSection( settings() );
 
-  for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
+  for ( int trace=0; trace<MaxTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
       Header.setInteger( "trace", trace );
       saveRate( trace );
@@ -571,7 +571,7 @@ void FICurve::plot( void )
 {
   P.lock();
   int n=0;
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
 
       // f-I-curves:
@@ -724,7 +724,7 @@ void FICurve::analyze( void )
 				       signalTime() + PreDuration, signalTime()+Duration );
 
   // spikes:
-  for ( int k=0; k<MaxSpikeTraces; k++ )
+  for ( int k=0; k<MaxTraces; k++ )
     if ( SpikeEvents[k] >= 0 )
       analyzeSpikes( events( SpikeEvents[k] ), k, truepreintensity, trueintensity );
 }

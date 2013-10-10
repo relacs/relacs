@@ -138,9 +138,9 @@ private:
   double SearchDuration;
   int LastEODInx;
 
-  double FRate[MaxSpikeTraces];
-  double CV[MaxSpikeTraces];
-  double PValue[MaxSpikeTraces];
+  double FRate[MaxTraces];
+  double CV[MaxTraces];
+  double PValue[MaxTraces];
 
   Detector< InData::const_iterator, InDataTimeIterator > D;
   efield::EODTools::AcceptEOD< InData::const_iterator, InDataTimeIterator > NerveAcceptEOD;
