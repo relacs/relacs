@@ -138,6 +138,7 @@ Session::~Session( void )
 void Session::preConfig( void )
 {
   // get trace indices:
+  base::Traces::initialize( this, traces(), events() );
   ephys::Traces::initialize( this, traces(), events() );
   efield::Traces::initialize( this, traces(), events() );
 

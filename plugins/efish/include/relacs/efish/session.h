@@ -27,6 +27,7 @@
 #include <QLCDNumber>
 #include <relacs/multiplot.h>
 #include <relacs/temperature.h>
+#include <relacs/base/traces.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/efield/traces.h>
 #include <relacs/efield/eodtools.h>
@@ -52,6 +53,7 @@ of the global EOD measurement.
 
 class Session
   : public Control,
+    public base::Traces,
     public ephys::Traces,
     public efield::Traces,
     public efield::EODTools

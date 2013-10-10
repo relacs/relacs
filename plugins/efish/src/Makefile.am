@@ -62,6 +62,7 @@ libefishsession_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../base/include \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
@@ -73,6 +74,7 @@ libefishsession_la_LDFLAGS = \
 
 libefishsession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../base/src/libbasetraces.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \

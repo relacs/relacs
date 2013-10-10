@@ -27,6 +27,7 @@
 #include <relacs/plot.h>
 #include <relacs/optwidget.h>
 #include <relacs/repro.h>
+#include <relacs/base/traces.h>
 #include <relacs/efield/traces.h>
 #include <relacs/efield/eodtools.h>
 using namespace relacs;
@@ -75,10 +76,16 @@ containing times is specified (no chirpfrequency) then the chirps are
 positioned as specified in the file. If in addition a chirp frequency
 is specified, the timepoints in the file are scaled with the inverse
 frequency. By specifying as many chirp frequency as there are delta f's
-the chirp frequency can be made depenendent on delta f.  */
+the chirp frequency can be made depenendent on delta f.  
+
+\par LED Output
+
+In case an "LED-1" output channel is defined, a 5 V signal is put out
+during stimulation. During generated chirps this signal is set to -5 V.
+*/
 
 
-class Beats : public RePro, public Traces, public EODTools
+class Beats : public RePro, public base::Traces, public efield::Traces, public EODTools
 {
   Q_OBJECT
 

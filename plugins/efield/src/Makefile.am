@@ -397,6 +397,7 @@ libefieldbeats_la_LDFLAGS = \
 libefieldbeats_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../base/src/libbaselinearattenuate.la \
+    $(builddir)/../../base/src/libbasetraces.la \
     $(builddir)/libefieldtraces.la \
     $(builddir)/libefieldeodtools.la \
     $(top_builddir)/daq/src/librelacsdaq.la \

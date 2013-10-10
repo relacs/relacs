@@ -273,6 +273,9 @@ int Beats::main( void )
       else {
 	OutData sig;
 	sig.setTrace( GlobalEField );
+	OutData led;
+	if ( LEDOutput[0] >= 0 )
+	  led.setTrace( LEDOutput[0] );
 	unlockAll();
 	if ( generatechirps ) {
 	  // EOD with chirps:
@@ -338,6 +341,18 @@ int Beats::main( void )
 	  sig.description().addNumber( "TemporalOffset", 0.0, "s" );
 	  sig.description().addNumber( "Duration", duration, "s" );
 	  sig.description().append( chirpheader );
+	  if ( LEDOutput[0] >= 0 ) {
+	    double von = 5.0;
+	    double vchirp = -5.0;
+	    double minledduration = 0.1;
+	    led.pulseWave( sig.length(), sig.stepsize(), von, 0.0 );
+	    int w = led.indices( chirpwidth>minledduration ? chirpwidth : minledduration );
+	    for ( int k=0; k<currentchirptimes.size() && currentchirptimes[k] < sig.length(); k++ ) {
+	      int s = led.index( currentchirptimes[k] - 0.5*chirpwidth );
+	      for ( int j=s; j<s+w; j++ )
+		led[j] = vchirp;
+	    }
+	  }
 	}
 	else {
 	  chirpheader.clear();
@@ -351,12 +366,18 @@ int Beats::main( void )
 	    n = 1;
 	  sig.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
 	  sig.setIdent( "sinewave" );
+	  if ( LEDOutput[0] >= 0 )
+	    led.pulseWave( sig.length(), sig.stepsize(), 5.0, 0.0 );
 	}
 	lockAll();
 	duration = sig.length();
 	sig.setDelay( before );
 	sig.setIntensity( amplitude );
 	signal.push( sig );
+	if ( LEDOutput[0] >= 0 ) {
+	  led.setDelay( before );
+	  signal.push( led );
+	}
 
 	// output signal:
 	starttime = currentTime();
