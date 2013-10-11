@@ -89,7 +89,7 @@ SampleData<> cos( double l, double r, double stepsize, double f )
 SampleData<> sweep( const LinearRange &r, double startfreq, double endfreq )
 {
   SampleData<> y( r );
-  double df2 = 0.5*(endfreq-startfreq);
+  double df2 = 0.5*(endfreq-startfreq)/r.length();
   typedef SampleData<>::iterator ForwardIter1;
   typedef LinearRange::const_iterator ForwardIter2;
   ForwardIter1 iter1 = y.begin();

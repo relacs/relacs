@@ -762,14 +762,14 @@ class SampleData : public Array< T >
     { return cos( LinearRange( l, r, stepsize ), f ); };
 
     /*! Returns a frequency sweep from \a startfreq f_1 to \a endfreq f_2,
-        i.e. sin(2*pi*(f_1+(f_2-f_1)*x/2)*x),
+        i.e. sin(2*pi*(f_1+0.5*(f_2-f_1)*x/r.length())*x),
 	computed for each element \a x of the range \a r. */
   friend SampleData<> sweep( const LinearRange &r, double startfreq, double endfreq );
   friend SampleData<> sweep( int n, double offset, double stepsize, double startfreq, double endfreq );
   friend SampleData<> sweep( double l, double r, double stepsize, double startfreq, double endfreq );
     /*! Initializes the range  with \a r 
         and the array with a frequency sweep from \a startfreq f_1 to \a endfreq f_2,
-        i.e. sin(2*pi*(f_1+(f_2-f_1)*x/2)*x),
+        i.e. sin(2*pi*(f_1+0.5*(f_2-f_1)*x/r.length())*x),
         computed for each element \a x of the range \a r. */
   SampleData< T > &sweep( const LinearRange &r, double startfreq, double endfreq );
   SampleData< T > &sweep( int n, double offset, double stepsize, double startfreq, double endfreq )
@@ -1509,7 +1509,7 @@ SampleData<> cos( int n, double offset, double stepsize, double f );
 SampleData<> cos( double l, double r, double stepsize, double f );
 
   /*! Returns a frequency sweep from \a startfreq f_1 to \a endfreq f_2,
-      i.e. sin(2*pi*(f_1+(f_2-f_1)*x/2)*x),
+      i.e. sin(2*pi*(f_1+0.5*(f_2-f_1)*x/r.length())*x),
       computed for each element \a x of the range \a r. */
 SampleData<> sweep( const LinearRange &r, double startfreq, double endfreq );
 SampleData<> sweep( int n, double offset, double stepsize, double startfreq, double endfreq );
@@ -2881,7 +2881,7 @@ SampleData< T > &SampleData< T >::sweep( const LinearRange &r, double startfreq,
 {
   Samples = r;
   resize( r.size() );
-  double df2 = 0.5*(endfreq-startfreq);
+  double df2 = 0.5*(endfreq-startfreq)/r.length();
   typedef typename LinearRange::const_iterator ForwardIter2;
   iterator iter1 = begin();
   iterator end1 = end();

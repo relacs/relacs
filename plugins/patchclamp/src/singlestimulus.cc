@@ -56,8 +56,8 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "periods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "periods" );
   addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
-  addNumber( "startfreq", "Start sweep with frequency", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "waveform", "Sweep" );
-  addNumber( "endfreq", "End sweep with frequency", 100.0, 0.0, 1000000.0, 1.0 ).setActivation( "waveform", "Sweep" );
+  addNumber( "startfreq", "Start sweep with frequency", 1.0, 0.0, 100000.0, 1.0, "Hz", "Hz", "%.2f" ).setActivation( "waveform", "Sweep" );
+  addNumber( "endfreq", "End sweep with frequency", 100.0, 0.0, 100000.0, 1.0, "Hz", "Hz", "%.2f" ).setActivation( "waveform", "Sweep" );
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   newSection( "Stimulus" );
@@ -624,8 +624,8 @@ int SingleStimulus::main( void )
   header.addInteger( "index", completeRuns() );
   header.addInteger( "ReProIndex", reproCount() );
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
-  header.addNumber( "offset", Offset, IUnit, "%.1f" );
-  header.addNumber( "amplitude", Amplitude, IUnit, "%.1f" );
+  header.addNumber( "offset", Offset, IUnit, "%g" );
+  header.addNumber( "amplitude", Amplitude, IUnit, "%g" );
   header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
@@ -652,7 +652,7 @@ int SingleStimulus::main( void )
     // message:
     Str s =  "<b>" + StimulusLabel + "</b>";
     s += ",  Offset: <b>" + Str( Offset, 0, 1, 'f' ) + " " + IUnit + "</b>";
-    s += ",  Amplitude: <b>" + Str( Amplitude, 0, 1, 'f' ) + " " + IUnit + "</b>";
+    s += ",  Amplitude: <b>" + Str( Amplitude, 0, 5, 'g' ) + " " + IUnit + "</b>";
     s += ",  Loop <b>" + Str( count+1 ) + "</b>";
     if ( Repeats > 0 )
       s += " of <b>" + Str( Repeats ) + "</b>";
