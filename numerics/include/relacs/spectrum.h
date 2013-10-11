@@ -1407,7 +1407,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     ++iterim;
     ++iterre;
   }
-  *iterhre = (*iterre) / (*iterhre);
+  //  *iterhre = (*iterre) / (*iterhre);
 
   return 0;
 }
@@ -1611,7 +1611,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     ++iterim;
     ++iterre;
   }
-  *iterhre = (*iterre) / (*iterhre);
+  //  *iterhre = (*iterre) / (*iterhre);
 
   return 0;
 }
