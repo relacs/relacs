@@ -100,10 +100,11 @@ public:
 		 bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
   void save( double deltaf, double amplitude, double duration, double pause,
 	     double fishrate, double stimulusrate,
-	     const MapD &eodfrequency, const MapD &eodamplitude,
+	     const MapD eodfrequencies[], const MapD eodamplitudes[],
 	     const EventData &fishchirps, const EventData &playedchirpevents,
 	     const MapD &stimfrequency, const Options &chirpheader, bool split, int count );
-  void saveEODFreq( const Options &header, const MapD &eodfrequency, const MapD &eodamplitude,
+  void saveEODFreq( const string &es, const Options &header,
+		    const MapD &eodfrequency, const MapD &eodamplitude,
 		    bool split, int count );
   void saveChirps( const Options &header, const EventData &chirps,
 		   bool split, int count );

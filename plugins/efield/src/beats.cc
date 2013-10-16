@@ -110,13 +110,17 @@ int Beats::main( void )
     warning( "Do you really want a fish with frequency " + Str( fakefish )
 	     + " Hz to be simulated? Switch this off by setting the fakefish option to zero." );
   }
-  if ( EODTrace < 0 ) {
-    warning( "need a recording of the EOD Trace." );
+  if ( FishEODTanks <= 0 ) {
+    warning( "need recordings of EOD Traces." );
     return Failed;
   }
-  if ( EODEvents < 0 ) {
-    warning( "need EOD events of the EOD Trace." );
-    return Failed;
+  for ( int k=0; k<FishEODTanks; k++ ) {
+    for ( int j=0; j<FishEODTraces[k]; j++ ) {
+      if ( FishEODEvents[k][j] < 0 ) {
+	warning( "need EOD events of each EOD Trace." );
+	return Failed;
+      }
+    }
   }
   EventData chirptimes;
   if ( ! chirptimesfile.empty() ) {
@@ -176,24 +180,42 @@ int Beats::main( void )
       // results:
       MapD eodfrequency;
       eodfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
-      MapD stimfrequency;
-      stimfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
-      MapD eodamplitude;
-      eodamplitude.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+      int eodinx[ FishEODTraces[0] ];
+      MapD eodfrequencies[ FishEODTraces[0] ];
+      MapD eodamplitudes[ FishEODTraces[0] ];
       EventData fishchirps;
       fishchirps.reserve( (int)::rint( 100*duration ) );
       EventData currentchirptimes;
       currentchirptimes.reserve( chirptimes.size() );
       EventData playedchirptimes;
       playedchirptimes.reserve( chirptimes.size() );
-      EventIterator eoditer;
-      bool initeoditer = true;
+      EventIterator eoditer[FishEODTraces[0]];
+      bool initeoditer[FishEODTraces[0]];
+      for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	eodinx[k] = 0;
+	eodfrequencies[k].reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+	eodamplitudes[k].reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+	initeoditer[k] = true;
+      }
+      MapD stimfrequency;
+      stimfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
       EventFrequencyIterator stimiter;
       bool initstimiter = true;
 
       // eodf:
       double deltaf = *dfrange;
-      double fishrate = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
+      // find EOD with largest amplitude:
+      int bigeodinx = 0;
+      double bigeod = 0.0;
+      for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	double a = events( FishEODEvents[0][k] ).meanSize( currentTime()-averagetime, currentTime() );
+	if ( bigeod < a ) {
+	  bigeod = a;
+	  bigeodinx = k;
+	}
+      }
+      double fishrate = events( FishEODEvents[0][bigeodinx] ).frequency( currentTime()-averagetime, currentTime() );
+      printlog( "EOD Frequency of fish is " + Str( fishrate, 0, 1, 'f' ) + "Hz" );
       if ( fakefish > 0.0 )
 	fishrate = fakefish;
 
@@ -245,7 +267,7 @@ int Beats::main( void )
 	sig.rampWave( ramp, -1.0, 0.0, 1.0 );
 	signal.push( sig );
 
-	sig.setTrace( GlobalEField );
+	sig.setTrace( FishEField[0] );
 	sig.constWave( ramp, -1.0, 0.0 );
 	sig.setIntensity( amplitude );
 	signal.push( sig );
@@ -272,7 +294,7 @@ int Beats::main( void )
       }
       else {
 	OutData sig;
-	sig.setTrace( GlobalEField );
+	sig.setTrace( FishEField[0] );
 	OutData led;
 	if ( LEDOutput[0] >= 0 )
 	  led.setTrace( LEDOutput[0] );
@@ -388,7 +410,7 @@ int Beats::main( void )
 	  string s = "Output of stimulus failed!<br>Error code is <b>";
 	  s += signal.errorText() + "</b>";
 	  warning( s, 2.0 );
-	  writeZero( GlobalEField );
+	  writeZero( FishEField[0] );
 	  P.lock();
 	  P.clear();
 	  P.unlock();
@@ -400,7 +422,7 @@ int Beats::main( void )
 	if ( fixeddf )
 	  writeZero( "Amplitude" );
 	else
-	  writeZero( GlobalEField );
+	  writeZero( FishEField[0] );
 	P.lock();
 	P.clear();
 	P.unlock();
@@ -411,22 +433,55 @@ int Beats::main( void )
       // stimulation loop:
       do {
 	// get data:
-	const EventData &eodglobal = events( EODEvents );
-	if ( initeoditer ) {
-	  eoditer = eodglobal.begin( signaltime - before );
-	  int k = 0;
-	  for ( ; eoditer < eodglobal.end() && k<10; ++eoditer, ++k );
-	  if ( eoditer != eodglobal.end() )
-	    initeoditer =  false;
+	for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	  const EventData &eodglobal = events( FishEODEvents[0][k] );
+	  if ( initeoditer[k] ) {
+	    eoditer[k] = eodglobal.begin( signaltime - before );
+	    for ( int j=0; eoditer[k] < eodglobal.end() && j<10; ++eoditer[k], ++j );
+	    if ( eoditer[k] != eodglobal.end() )
+	      initeoditer[k] =  false;
+	  }
+	  for ( ; eoditer[k] < eodglobal.end(); ++eoditer[k] ) {
+	    EventFrequencyIterator fiter = eoditer[k];
+	    eodfrequencies[k].push( fiter.time() - signaltime, *fiter );
+	    EventSizeIterator siter = eoditer[k];
+	    eodamplitudes[k].push( siter.time() - signaltime, *siter );
+	  }
 	}
-	for ( ; eoditer < eodglobal.end(); ++eoditer ) {
-	  EventFrequencyIterator fiter = eoditer;
-	  eodfrequency.push( fiter.time() - signaltime, *fiter );
-	  EventSizeIterator siter = eoditer;
-	  eodamplitude.push( siter.time() - signaltime, *siter );
+	// merge EOD frequencies:
+	for ( ; ; ) {
+	  // find trace with minimum EOD time:
+	  double mint = currentTime();
+	  int n = 0;
+	  for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	    if ( eodinx[k] < eodamplitudes[k].size() ) {
+	      if ( mint > eodamplitudes[k].x( eodinx[k] ) )
+		mint = eodamplitudes[k].x( eodinx[k] );
+	      n++;
+	    }
+	  }
+	  if ( n==0 )
+	    break;
+	  // find trace with largest EOD amplitude:
+	  double maxa = 0.0;
+	  int maxk = 0;
+	  int maxi = 0;
+	  for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	    double t = eodamplitudes[k].x( eodinx[k] );
+	    if ( fabs( t - mint ) < 0.5/fishrate ) {
+	      if ( maxa < eodamplitudes[k].y( eodinx[k] ) ) {
+		maxa = eodamplitudes[k].y( eodinx[k] );
+		maxk = k;
+		maxi = eodinx[k];
+	      }
+	      eodinx[k]++;
+	    }
+	  }
+	  eodfrequency.push( eodfrequencies[maxk].x( maxi ),
+			     eodfrequencies[maxk].y( maxi ) );
 	}
-	if ( GlobalEFieldEvents >= 0 ) {
-	  const EventData &stimglobal = events( GlobalEFieldEvents );
+	if ( FishEFieldEvents[0] >= 0 ) {
+	  const EventData &stimglobal = events( FishEFieldEvents[0] );
 	  if ( initstimiter ) {
 	    stimiter = stimglobal.begin( signaltime - before );
 	    int k = 0;
@@ -469,7 +524,7 @@ int Beats::main( void )
 	  if ( fixeddf )
 	    writeZero( "Amplitude" );
 	  else
-	    writeZero( GlobalEField );
+	    writeZero( FishEField[0] );
 	  P.lock();
 	  P.clear();
 	  P.unlock();
@@ -504,15 +559,49 @@ int Beats::main( void )
       // after stimulus recording loop:
       do {
 	// get data:
-	const EventData &eodglobal = events( EODEvents );
-	for ( ; eoditer < eodglobal.end(); ++eoditer ) {
-	  EventFrequencyIterator fiter = eoditer;
-	  eodfrequency.push( fiter.time() - signaltime, *fiter );
-	  EventSizeIterator siter = eoditer;
-	  eodamplitude.push( siter.time() - signaltime, *siter );
+	for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	  const EventData &eodglobal = events( FishEODEvents[0][k] );
+	  for ( ; eoditer[k] < eodglobal.end(); ++eoditer[k] ) {
+	    EventFrequencyIterator fiter = eoditer[k];
+	    eodfrequencies[k].push( fiter.time() - signaltime, *fiter );
+	    EventSizeIterator siter = eoditer[k];
+	    eodamplitudes[k].push( siter.time() - signaltime, *siter );
+	  }
 	}
-	if ( GlobalEFieldEvents >= 0 ) {
-	  const EventData &stimglobal = events( GlobalEFieldEvents );
+	// merge EOD frequencies:
+	for ( ; ; ) {
+	  // find trace with minimum EOD time:
+	  double mint = currentTime();
+	  int n = 0;
+	  for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	    if ( eodinx[k] < eodamplitudes[k].size() ) {
+	      if ( mint > eodamplitudes[k].x( eodinx[k] ) )
+		mint = eodamplitudes[k].x( eodinx[k] );
+	      n++;
+	    }
+	  }
+	  if ( n==0 )
+	    break;
+	  // find trace with largest EOD amplitude:
+	  double maxa = 0.0;
+	  int maxk = 0;
+	  int maxi = 0;
+	  for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	    double t = eodamplitudes[k].x( eodinx[k] );
+	    if ( fabs( t - mint ) < 0.5/fishrate ) {
+	      if ( maxa < eodamplitudes[k].y( eodinx[k] ) ) {
+		maxa = eodamplitudes[k].y( eodinx[k] );
+		maxk = k;
+		maxi = eodinx[k];
+	      }
+	      eodinx[k]++;
+	    }
+	  }
+	  eodfrequency.push( eodfrequencies[maxk].x( maxi ),
+			     eodfrequencies[maxk].y( maxi ) );
+	}
+	if ( FishEFieldEvents[0] >= 0 ) {
+	  const EventData &stimglobal = events( FishEFieldEvents[0] );
 	  for ( ; stimiter < stimglobal.end(); ++stimiter )
 	    stimfrequency.push( stimiter.time() - signaltime, *stimiter );
 	}
@@ -523,7 +612,7 @@ int Beats::main( void )
 	  if ( fixeddf )
 	    writeZero( "Amplitude" );
 	  else
-	    writeZero( GlobalEField );
+	    writeZero( FishEField[0] );
 	  P.lock();
 	  P.clear();
 	  P.unlock();
@@ -536,15 +625,15 @@ int Beats::main( void )
 
       // analyze:
       // chirps:
-      if ( ChirpEvents >= 0 )
-	fishchirps.assign( events( ChirpEvents ),
+      if ( FishChirpEvents[0][0] >= 0 )
+	fishchirps.assign( events( FishChirpEvents[0][0] ),
 			   signaltime - before,
 			   signaltime + duration + after, signaltime );
       else
 	fishchirps.clear();
       P.draw();
       save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
-	    eodfrequency, eodamplitude, fishchirps, playedchirptimes,
+	    eodfrequencies, eodamplitudes, fishchirps, playedchirptimes,
 	    stimfrequency, chirpheader, split, FileCount );
       FileCount++;
 
@@ -554,7 +643,7 @@ int Beats::main( void )
 	if ( fixeddf )
 	  writeZero( "Amplitude" );
 	else
-	  writeZero( GlobalEField );
+	  writeZero( FishEField[0] );
       }
 
     }
@@ -563,7 +652,7 @@ int Beats::main( void )
   if ( fixeddf )
     writeZero( "Amplitude" );
   else
-    writeZero( GlobalEField );
+    writeZero( FishEField[0] );
   P.lock();
   P.clear();
   P.unlock();
@@ -607,7 +696,7 @@ void Beats::initPlot( double deltaf, double amplitude, double duration,
 
 void Beats::save( double deltaf, double amplitude, double duration, double pause,
 		  double fishrate, double stimulusrate,
-		  const MapD &eodfrequency, const MapD &eodamplitude,
+		  const MapD eodfrequencies[], const MapD eodamplitudes[],
 		  const EventData &fishchirps, const EventData &playedchirpevents,
 		  const MapD &stimfrequency, const Options &chirpheader,
 		  bool split, int count )
@@ -619,6 +708,7 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
   header.addNumber( "Amplitude", amplitude, "mV/cm", "%.3f" );
   header.addNumber( "Duration", duration, "sec", "%.3f" );
   header.addNumber( "Pause", pause, "sec", "%.3f" );
+  header.addInteger( "Electrode", 0 );
   header.append( chirpheader );
   header.addText( "RePro Time", reproTimeStr() );
   header.addText( "Session Time", sessionTimeStr() );
@@ -626,7 +716,13 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
 
   unlockAll();
   setWaitMouseCursor();
-  saveEODFreq( header, eodfrequency, eodamplitude, split, count );
+  for ( int k=0; k<FishEODTraces[0]; k++ ) {
+    header.setInteger( "Electrode", k+1 );
+    string es = "";
+    if ( FishEODTraces[0] > 1 )
+      es = Str( k+1 );
+    saveEODFreq( es, header, eodfrequencies[k], eodamplitudes[k], split, count );
+  }
   saveChirps( header, fishchirps, split, count );
   if ( ! chirpheader.empty() )
     savePlayedChirps( header, playedchirpevents, split, count );
@@ -635,10 +731,10 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
 }
 
 
-void Beats::saveEODFreq( const Options &header, const MapD &eodfrequency,
+void Beats::saveEODFreq( const string &es, const Options &header, const MapD &eodfrequency,
 			 const MapD &eodamplitude, bool split, int count )
 {
-  ofstream df( addPath( "beats-eod" + ( split ? "-"+Str( count+1, 2, '0' ) : "" ) + ".dat" ).c_str(),
+  ofstream df( addPath( "beats-eod" + es + ( split ? "-"+Str( count+1, 2, '0' ) : "" ) + ".dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;

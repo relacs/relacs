@@ -25,36 +25,77 @@ using namespace relacs;
 namespace efield {
 
 
-int Traces::GlobalEField = -1;
-int Traces::GlobalAMEField = -1;
-int Traces::LocalEFields = 0;
-int Traces::LocalEField[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
-int Traces::LocalAMEFields = 0;
-int Traces::LocalAMEField[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
-int Traces::EFields = 0;
-int Traces::EField[2*MaxEFields] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-
 int Traces::EODTrace = -1;
 int Traces::EODEvents = -1;
 int Traces::ChirpEvents = -1;
 
 int Traces::LocalEODTraces = 0;
-int Traces::LocalEODTrace[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
-int Traces::LocalEODEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
-int Traces::LocalChirpEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
-int Traces::LocalBeatPeakEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
-int Traces::LocalBeatTroughEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::LocalEODTrace[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::LocalEODEvents[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::LocalChirpEvents[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::LocalBeatPeakEvents[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::LocalBeatTroughEvents[MaxTraces] = { -1, -1, -1, -1 };
+
+int Traces::FishEODTanks = 0;
+int Traces::FishEODTraces[MaxTraces] = { 0, 0, 0, 0 };
+int Traces::FishEODTrace[MaxTraces][MaxTraces] = { { -1, -1, -1, -1 }, { -1, -1, -1, -1 } };
+int Traces::FishEODEvents[MaxTraces][MaxTraces] = { { -1, -1, -1, -1 }, { -1, -1, -1, -1 } };
+int Traces::FishChirpEvents[MaxTraces][MaxTraces] = { { -1, -1, -1, -1 }, { -1, -1, -1, -1 } };
+
+int Traces::GlobalEField = -1;
+int Traces::GlobalAMEField = -1;
+int Traces::LocalEFields = 0;
+int Traces::LocalEField[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::LocalAMEFields = 0;
+int Traces::LocalAMEField[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::FishEFields = 0;
+int Traces::FishEField[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::EFields = 0;
+int Traces::EField[2*MaxTraces] = { -1, -1, -1, -1 };
 
 int Traces::GlobalEFieldTrace = -1;
 int Traces::GlobalEFieldEvents = -1;
 
 int Traces::LocalEFieldTraces = 0;
-int Traces::LocalEFieldTrace[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
-int Traces::LocalEFieldEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::LocalEFieldTrace[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::LocalEFieldEvents[MaxTraces] = { -1, -1, -1, -1 };
+
+int Traces::FishEFieldTraces = 0;
+int Traces::FishEFieldTrace[MaxTraces] = { -1, -1, -1, -1 };
+int Traces::FishEFieldEvents[MaxTraces] = { -1, -1, -1, -1 };
+
+string Traces::LocalEFieldIdentifier[2] = { "LocalEField", "" };
+string Traces::LocalAMEFieldIdentifier[2] = { "LocalAMEField", "" };
+string Traces::FishEFieldIdentifier[3] = { "GlobalEField", "EField", "" };
+string Traces::LocalEFieldTraceIdentifier[2] = { "LocalEFieldStimulus", "" };
+string Traces::LocalEFieldEventsIdentifier[2] = { "LocalEFieldStimulus", "" };
+string Traces::FishEFieldTraceIdentifier[3] = { "GlobalEFieldStimulus", "FishEFieldStimulus", "" };
+string Traces::FishEFieldEventsIdentifier[3] = { "GlobalEFieldStimulus", "FishEFieldStimulus", "" };
 
 
 Traces::Traces( void )
 {
+  clearIndices( LocalEODTrace );
+  clearIndices( LocalEODEvents );
+  clearIndices( LocalChirpEvents );
+  clearIndices( LocalBeatPeakEvents );
+  clearIndices( LocalBeatTroughEvents );
+  for ( int k=0; k<MaxTraces; k++ ) {
+    FishEODTraces[k] = 0;
+    for ( int j=0; j<MaxTraces; j++ ) {
+      FishEODTrace[k][j] = -1;
+      FishEODEvents[k][j] = -1;
+      FishChirpEvents[k][j] = -1;
+    }
+  }
+  clearIndices( LocalEField );
+  clearIndices( LocalAMEField );
+  clearIndices( FishEField );
+  clearIndices( EField, 2*MaxTraces );
+  clearIndices( LocalEFieldTrace );
+  clearIndices( LocalEFieldEvents );
+  clearIndices( FishEFieldTrace );
+  clearIndices( FishEFieldEvents );
 }
 
 
@@ -62,21 +103,61 @@ void Traces::initialize( const RELACSPlugin *rp,
 			 const InList &data,
 			 const EventList &events )
 {
+  // global EOD:
+  EODTrace = data.index( "EOD" );
+  EODEvents = events.index( "EOD" );
+  ChirpEvents = events.index( "Chirps" );
+
+  // local EODs:
+  LocalEODTraces = 0;
+  for ( int k=0; k<=MaxTraces; k++ ) {
+    string ns = "";
+    if ( k > 0 )
+      ns = "-" + Str( k );
+    LocalEODTrace[LocalEODTraces] = data.index( "LocalEOD" + ns );
+    LocalEODEvents[LocalEODTraces] = events.index( "LocalEOD" + ns );
+    LocalChirpEvents[LocalEODTraces] = events.index( "LocalChirps" + ns );
+    LocalBeatPeakEvents[LocalEODTraces] = events.index( "LocalBeat" + ns + "-1" );
+    LocalBeatTroughEvents[LocalEODTraces] = events.index( "LocalBeat" + ns + "-2" );
+    if ( LocalEODTrace[LocalEODTraces] >= 0 )
+      LocalEODTraces++;
+  }
+
+  // fish EODs:
+  FishEODTanks = 0;
+  for ( int k=0; k<=MaxTraces; k++ ) {
+    FishEODTraces[FishEODTanks] = 0;
+    string ts = "";
+    if ( k > 0 ) {
+      char a = 'A';
+      a += k-1;
+      ts = "-" + Str( a );
+    }
+    for ( int j=0; j<=MaxTraces; j++ ) {
+      string ns = "";
+      if ( j > 0 )
+	ns = "-" + Str( j );
+      FishEODTrace[FishEODTanks][FishEODTraces[FishEODTanks]] = data.index( "EOD" + ts + ns );
+      FishEODEvents[FishEODTanks][FishEODTraces[FishEODTanks]] = events.index( "EOD" + ts + ns );
+      FishChirpEvents[FishEODTanks][FishEODTraces[FishEODTanks]] = events.index( "Chirps" + ts + ns );
+      if ( FishEODTrace[FishEODTanks][FishEODTraces[FishEODTanks]] >= 0 )
+	FishEODTraces[FishEODTanks]++;
+    }
+    if ( FishEODTraces[FishEODTanks] > 0 )
+      FishEODTanks++;
+  }
+
   // global stimulation electrode:
   GlobalEField = rp->outTraceIndex( "GlobalEField" );
   GlobalAMEField = rp->outTraceIndex( "GlobalEFieldAM" );
 
   // local stimulation electrodes:
-  LocalEFields = 0;
-  LocalAMEFields = 0;
-  for ( int k=1; k<=MaxEFields; k++ ) {
-    LocalEField[LocalEFields] = rp->outTraceIndex( "LocalEField-" + Str( k ) );
-    if ( LocalEField[LocalEFields] >= 0 )
-      LocalEFields++;
-    LocalAMEField[LocalAMEFields] = rp->outTraceIndex( "LocalEFieldAM-" + Str( k ) );
-    if ( LocalAMEField[LocalAMEFields] >= 0 )
-      LocalAMEFields++;
-  }
+  string namelist;
+  initStandardOutputs( rp, &LocalEFields, LocalEField, LocalEFieldIdentifier, namelist );
+  initStandardOutputs( rp, &LocalAMEFields, LocalAMEField, LocalAMEFieldIdentifier, namelist );
+
+  // fish stimulation electrodes:
+  initStandardOutputs( rp, &FishEFields, FishEField, FishEFieldIdentifier, namelist, true );
 
   // all stimulation electrodes:
   if ( GlobalEField >= 0 )
@@ -91,36 +172,18 @@ void Traces::initialize( const RELACSPlugin *rp,
     if ( LocalAMEField[k] >= 0 )
       EField[EFields++] = LocalAMEField[k];
   }
-				    
-  // global EOD:
-  EODTrace = data.index( "EOD" );
-  EODEvents = events.index( "EOD" );
-  ChirpEvents = events.index( "Chirps" );
-
-  // local EODs:
-  LocalEODTraces = 0;
-  for ( int k=1; k<=MaxEFields; k++ ) {
-    LocalEODTrace[LocalEODTraces] = data.index( "LocalEOD-" + Str( k ) );
-    LocalEODEvents[LocalEODTraces] = events.index( "LocalEOD-" + Str( k ) );
-    LocalChirpEvents[LocalEODTraces] = events.index( "LocalChirps-" + Str( k ) );
-    LocalBeatPeakEvents[LocalEODTraces] = events.index( "LocalBeat-" + Str( k ) + "-1" );
-    LocalBeatTroughEvents[LocalEODTraces] = events.index( "LocalBeat-" + Str( k ) + "-2" );
-    if ( LocalEODTrace[LocalEODTraces] >= 0 )
-      LocalEODTraces++;
-  }
 
   // global stimulation fields:
   GlobalEFieldTrace = data.index( "GlobalEFieldStimulus" );
   GlobalEFieldEvents = events.index( "GlobalEFieldStimulus" );
 
   // local stimulation fields:
-  LocalEFieldTraces = 0;
-  for ( int k=1; k<=MaxEFields; k++ ) {
-    LocalEFieldTrace[LocalEFieldTraces] = data.index( "LocalEFieldStimulus-" + Str( k ) );
-    LocalEFieldEvents[LocalEFieldTraces] = events.index( "LocalEFieldStimulus-" + Str( k ) );
-    if ( LocalEFieldTrace[LocalEFieldTraces] >= 0 )
-      LocalEFieldTraces++;
-  }
+  initStandardEventTraces( data, events, &LocalEFieldTraces, LocalEFieldTrace, LocalEFieldEvents,
+			   LocalEFieldTraceIdentifier, LocalEFieldEventsIdentifier, namelist, namelist );
+
+  // fish stimulation fields:
+  initStandardEventTraces( data, events, &FishEFieldTraces, FishEFieldTrace, FishEFieldEvents,
+			   FishEFieldTraceIdentifier, FishEFieldEventsIdentifier, namelist, namelist, true );
 }
 
 

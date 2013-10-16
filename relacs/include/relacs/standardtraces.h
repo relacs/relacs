@@ -45,16 +45,16 @@ public:
 
 protected:
 
-  static void clearIndices( int *traceindices );
+  static void clearIndices( int *traceindices, int n=-1 );
 
   static void initStandardTraces( const InList &data, int *ntraces, int *traceindices,
-				  const string *names, string &namelist );
+				  const string *names, string &namelist, bool alpha=false );
   static void initStandardEventTraces( const InList &data, const EventList &events,
 				       int *ntraces, int *traceindices, int *eventindices,
 				       const string *tracenames, const string *eventnames,
-				       string &tracenamelist, string &eventnamelist );
+				       string &tracenamelist, string &eventnamelist, bool alpha=false );
   static void initStandardOutputs( const RELACSPlugin *rp, int *ntraces, int *traceindices,
-				   const string *names, string &namelist );
+				   const string *names, string &namelist, bool alpha=false );
 
   static const int MaxTraces = 10;
 

@@ -30,15 +30,17 @@ StandardTraces::StandardTraces( void )
 }
 
 
-void StandardTraces::clearIndices( int *traceindices )
+void StandardTraces::clearIndices( int *traceindices, int n )
 {
-  for ( int k=0; k<MaxTraces; k++ )
+  if ( n < 0 )
+    n = MaxTraces;
+  for ( int k=0; k<n; k++ )
     traceindices[k] = -1;
 }
 
 
 void StandardTraces::initStandardTraces( const InList &data, int *ntraces, int *traceindices,
-					 const string *names, string &namelist )
+					 const string *names, string &namelist, bool alpha )
 {
   for ( int k=0; k<MaxTraces; k++ )
     traceindices[k] = -1;
@@ -46,8 +48,15 @@ void StandardTraces::initStandardTraces( const InList &data, int *ntraces, int *
   namelist = "";
   for ( int k=0; k<MaxTraces; k++ ) {
     string ns = "";
-    if ( k > 0 )
-      ns = "-" + Str( k );
+    if ( k > 0 ) {
+      if ( alpha ) {
+	char a = 'A';
+	a += k-1;
+	ns = "-" + Str( a );
+      }
+      else
+	ns = "-" + Str( k );
+    }
     for ( int j=0; j<10 && !names[j].empty() && traceindices[*ntraces]<0; j++ )
       traceindices[*ntraces] = data.index( names[j] + ns );
     if ( traceindices[*ntraces] >= 0 ) {
@@ -63,7 +72,7 @@ void StandardTraces::initStandardTraces( const InList &data, int *ntraces, int *
 void StandardTraces::initStandardEventTraces( const InList &data, const EventList &events,
 					      int *ntraces, int *traceindices, int *eventindices,
 					      const string *tracenames, const string *eventnames,
-					      string &tracenamelist, string &eventnamelist )
+					      string &tracenamelist, string &eventnamelist, bool alpha )
 {
   for ( int k=0; k<MaxTraces; k++ ) {
     traceindices[k] = -1;
@@ -74,8 +83,15 @@ void StandardTraces::initStandardEventTraces( const InList &data, const EventLis
   eventnamelist = "";
   for ( int k=0; k<MaxTraces; k++ ) {
     string ns = "";
-    if ( k > 0 )
-      ns = "-" + Str( k );
+    if ( k > 0 ) {
+      if ( alpha ) {
+	char a = 'A';
+	a += k-1;
+	ns = "-" + Str( a );
+      }
+      else
+	ns = "-" + Str( k );
+    }
     for ( int j=0; j<10 && !tracenames[j].empty() && traceindices[*ntraces]<0; j++ )
       traceindices[*ntraces] = data.index( tracenames[j] + ns );
     for ( int j=0; j<10 && !eventnames[j].empty() && eventindices[*ntraces]<0; j++ )
@@ -97,7 +113,7 @@ void StandardTraces::initStandardEventTraces( const InList &data, const EventLis
 
 
 void StandardTraces::initStandardOutputs( const RELACSPlugin *rp, int *ntraces, int *traceindices,
-					  const string *names, string &namelist )
+					  const string *names, string &namelist, bool alpha )
 {
   for ( int k=0; k<MaxTraces; k++ )
     traceindices[k] = -1;
@@ -105,8 +121,15 @@ void StandardTraces::initStandardOutputs( const RELACSPlugin *rp, int *ntraces, 
   namelist = "";
   for ( int k=0; k<MaxTraces; k++ ) {
     string ns = "";
-    if ( k > 0 )
-      ns = "-" + Str( k );
+    if ( k > 0 ) {
+      if ( alpha ) {
+	char a = 'A';
+	a += k-1;
+	ns = "-" + Str( a );
+      }
+      else
+	ns = "-" + Str( k );
+    }
     for ( int j=0; j<10 && !names[j].empty() && traceindices[*ntraces]<0; j++ )
       traceindices[*ntraces] = rp->outTraceIndex( names[j] + ns );
     if ( traceindices[*ntraces] >= 0 ) {
