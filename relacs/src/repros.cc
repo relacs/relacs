@@ -487,7 +487,6 @@ void ReProData::start( void )
 
   RP->Options::setDefaults();
   RP->Options::read( CO );
-  RP->getProjectOptions();
 
   emit noMacro( RP );
   emit startRePro( RP, Macro::NoMacro, true );
@@ -501,7 +500,6 @@ void ReProData::dialog( void )
 
   RP->Options::setDefaults();
   RP->Options::read( CO, 0, RePro::CurrentFlag );
-  RP->getProjectOptions();
 
   RP->dialog();
 
@@ -529,8 +527,6 @@ void ReProData::acceptDialog( void )
   }
   else
     CO.readAppend( newopt );
-
-  RP->setProjectOptions();
 }
 
 

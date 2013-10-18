@@ -481,18 +481,6 @@ public:
   virtual void dialog( void );
     /*! Options of the RePro that overwrite macro options. */
   Options &overwriteOptions( void );
-    /*! Options of the RePro specifying the experiment and the project
-        this run of the RePro belongs to (for documentation purposes only). */
-  Options &projectOptions( void );
-    /*! Options of the RePro specifying the experiment and the project
-        this run of the RePro belongs to (for documentation purposes only). */
-  const Options &projectOptions( void ) const;
-    /*! Store the projectOptions() so that they are written
-        into the config file. */
-  void setProjectOptions( void );
-    /*! Retrieve the projectOptions() that were previously
-        stored by setProjectOptions(). */
-  void getProjectOptions( void );
 
     /*! Check for valid options.
         \param[in] opttxt string with options that are tesed for validity
@@ -588,8 +576,6 @@ private:
   double ReProStartTime;
 
   Options OverwriteOpt;
-  Options ProjectOpt;
-  Options MyProjectOpt;
 
   vector< int > GrabKeys;
   int GrabKeysBaseSize;

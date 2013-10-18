@@ -89,11 +89,6 @@ public:
   string macro( void ) const;
     /*! Returns the options of the current RePro. */
   string options( void ) const;
-    /*! Returns the project variables of macro \a macro. */
-  Options &project( int macro );
-    /*! Return the value for the identifier \a ident from the
-        last entry in the stack where it is defined. */
-  string projectTextFromStack( const string &ident ) const;
 
     /*! The number of macros. */
   int size( void ) const;
@@ -232,15 +227,14 @@ private:
   struct MacroPos
   {
     MacroPos( void );
-    MacroPos( int macro, int command, Options &var, Options &prj );
+    MacroPos( int macro, int command, Options &var );
     MacroPos( const MacroPos &mp );
-    void set( int macro, int command, Options &var, Options &prj );
+    void set( int macro, int command, Options &var );
     void clear( void );
     bool defined( void );
     int MacroID;
     int CommandID;
     Options MacroVariables;
-    Options MacroProject;
   };
     /*! A stack of macro commands. */
   deque< MacroPos > Stack;
@@ -317,15 +311,11 @@ public:
   Options &variables( void );
     /*! Returns the macro variables as a string. */
   string variablesStr( void ) const;
-    /*! Returns the macro's project options. */
-  Options &project( void );
 
     /*! Add parameter from \a param to the macros variables. */
   void addParameter( const Str &param );
-    /*! Replaces macro variables in \a params by their value.
-        The project options, "project" and "experiment" are deleted from
-        the string and loaded into \a prjopt. */
-  string expandParameter( const Str &params, Options &prjopt ) const;
+    /*! Replaces macro variables in \a params by their value. */
+  string expandParameter( const Str &params ) const;
 
     /*! The type of action on which this macro is executed. */
   int action( void ) const;
@@ -438,8 +428,6 @@ private:
   string Name;
     /*! Macro variables */
   Options Variables;
-    /*! Macro project/experiment identifiers */
-  Options Project;
 
     /*! Defines whether this Macro requests to be the
         startup, shutdown, fallback, startsession, or stopsession Macro.
@@ -640,8 +628,6 @@ public slots:
   RePro *RP;
     /*! The current options for this RePro that differ from the default. */
   Options CO;
-    /*! The project options for this RePro. */
-  Options PO;
     /*! The additional dialog options from RePros. */
   Options *DO;
     /*! If the command refers to a macro (\a Command == MacroCommand)
@@ -673,8 +659,6 @@ public slots:
   bool DialogOpen;
     /*! Options for a Macro-variable dialog. */
   Options MacroVars;
-    /*! Options for a Macro-project dialog. */
-  Options MacroProject;
     /*! The shortcut key for the menu entry (e.g. "&2 "). */
   string MenuShortcut;
     /*! The menu offering various actions for the command. */

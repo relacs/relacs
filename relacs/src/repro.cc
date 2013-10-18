@@ -43,9 +43,7 @@ RePro::RePro( const string &name, const string &pluginset,
 	      const string &version, const string &date )
   : RELACSPlugin( "RePro: " + name, RELACSPlugin::Plugins,
 		  name, pluginset, author, version, date ),
-    OverwriteOpt(),
-    ProjectOpt(),
-    MyProjectOpt()
+    OverwriteOpt()
 {
   addDialogStyle( OptWidget::TabSectionStyle );
 
@@ -55,10 +53,6 @@ RePro::RePro( const string &name, const string &pluginset,
   AllRuns = 0;
   FailedRuns = 0;
   ReProStartTime = 0.0;
-
-  ProjectOpt.addText( "project", "Project", "" );
-  ProjectOpt.addText( "experiment", "Experiment", "" );
-  MyProjectOpt = ProjectOpt;
 
   SoftStop = 0;
   SoftStopKey = Qt::Key_Space;
@@ -94,28 +88,6 @@ void RePro::setName( const string &name )
 
 void RePro::readConfig( StrQueue &sq )
 {
-  for ( int k=0; k<sq.size(); k++ ) {
-    size_t p = sq[k].find( "project" );
-    size_t c = string::npos;
-    if ( p != string::npos )
-      c = sq[k].find_first_not_of( ' ', p+7 );
-    if ( c != string::npos && sq[k][c] == ':' ) {
-      MyProjectOpt.read( sq[k] );
-      sq.erase( k );
-      break;
-    }
-  }
-  for ( int k=0; k<sq.size(); k++ ) {
-    size_t p = sq[k].find( "experiment" );
-    size_t c = string::npos;
-    if ( p != string::npos )
-      c = sq[k].find_first_not_of( ' ', p+10 );
-    if ( c != string::npos && sq[k][c] == ':' ) {
-      MyProjectOpt.read( sq[k] );
-      sq.erase( k );
-      break;
-    }
-  }
   ConfigClass::readConfig( sq );
   setToDefaults();
 }
@@ -125,7 +97,6 @@ void RePro::saveConfig( ofstream &str )
 {
   setDefaults();
   ConfigClass::saveConfig( str );
-  MyProjectOpt.save( str, "  " );
 }
 
 
@@ -892,17 +863,13 @@ void RePro::dialog( void )
     OptWidget *roptw = od->addOptions( *this, dialogSelectMask(), 
 				       dialogReadOnlyMask(), dialogStyle(),
 				       mutex(), &tabhotkeys );
-    if ( Options::styleSize( OptWidget::TabSection ) == 0 &&
-	 ( dialogStyle() & OptWidget::TabSectionStyle ) == 0 ) {
+    if ( ! roptw->tabs() ) {
       roptw->setMargins( 2 );
       od->addSeparator();
     }
     OptWidget *doptw = od->addOptions( reprosDialogOpts() );
     doptw->setMargins( 2 );
     doptw->setVerticalSpacing ( 4 );
-    OptWidget *poptw = od->addOptions( projectOptions() );
-    poptw->setMargins( 2 );
-    poptw->setVerticalSpacing ( 4 );
     // buttons:
     od->setRejectCode( 0 );
     od->addButton( "&Ok", OptDialog::Accept, 1 );
@@ -937,35 +904,9 @@ Options &RePro::overwriteOptions( void )
 }
 
 
-Options &RePro::projectOptions( void )
-{
-  return ProjectOpt;
-}
-
-
-const Options &RePro::projectOptions( void ) const
-{
-  return ProjectOpt;
-}
-
-
-void RePro::setProjectOptions( void )
-{
-  MyProjectOpt.read( ProjectOpt );
-}
-
-
-void RePro::getProjectOptions( void )
-{
-  ProjectOpt.read( MyProjectOpt );
-}
-
-
 string RePro::checkOptions( const string &opttxt )
 {
   Options opt = *(Options*)(this);
-  opt.erase( "project" );
-  opt.erase( "experiment" );
   opt.read( opttxt );
   return opt.warning();
 }

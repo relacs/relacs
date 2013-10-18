@@ -725,8 +725,6 @@ void SaveFiles::save( const RePro &rp )
   ReProInfo.addText( "Version", rp.version() );
   ReProInfo.addText( "Date", rp.date() );
   ReProInfo.addInteger( "Run", rp.allRuns() );
-  ReProInfo.addText( "Project", rp.projectOptions().text( "project" ) );
-  ReProInfo.addText( "Experiment", rp.projectOptions().text( "experiment" ) );
   ReProInfo.newSection( rp, 0, "dataset-settings-" + dataset, "settings" );
   DI.addRepro( ReProInfo );
   StimuliRePro = rp.name();

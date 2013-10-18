@@ -54,6 +54,7 @@ OptWidget::OptWidget( QWidget *parent, Qt::WindowFlags f )
     FirstWidget( 0 ),
     LastWidget( 0 ),
     OMutex( 0 ),
+    Tabs( false ),
     MaxLines( 0 ),
     LeftMargin( -1 ),
     RightMargin( -1 ),
@@ -79,6 +80,7 @@ OptWidget::OptWidget( Options *o, QMutex *mutex,
     FirstWidget( 0 ),
     LastWidget( 0 ),
     OMutex( mutex ),
+    Tabs( false ),
     MaxLines( 0 ),
     LeftMargin( -1 ),
     RightMargin( -1 ),
@@ -107,6 +109,7 @@ OptWidget::OptWidget( Options *o, int selectmask, int romask,
     FirstWidget( 0 ),
     LastWidget( 0 ),
     OMutex( mutex ),
+    Tabs( false ),
     MaxLines( 0 ),
     LeftMargin( -1 ),
     RightMargin( -1 ),
@@ -464,13 +467,13 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   QTabWidget *tabwidget = 0;
 
   // check for tab style:
-  bool tabs = false;
+  Tabs = false;
   for ( Options::const_section_iterator sp = o->sectionsBegin();
 	sp != o->sectionsEnd();
 	++sp ) {
     if ( (*sp)->flag( SelectMask ) && (*sp)->size( SelectMask ) > 0 ) {
-      tabs = ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) );
-      if ( tabs )
+      Tabs = ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) );
+      if ( Tabs )
 	break;
     }
   }
@@ -480,7 +483,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   l->setContentsMargins( 0, 0, 0, 0 );
   parent->setLayout( l );
   bool needgridlayout = false;
-  if ( tabs ) {
+  if ( Tabs ) {
     tabwidget = new QTabWidget;
     l->addWidget( tabwidget );
     MainWidget = tabwidget;
@@ -519,7 +522,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 
   int row = 0;
   int level = -1;
-  assignOptions( Opt, tabs, style, row, level, parent, tabwidget, tabhotkeys );
+  assignOptions( Opt, Tabs, style, row, level, parent, tabwidget, tabhotkeys );
 
   // finish parameter:
   if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
@@ -563,6 +566,12 @@ string OptWidget::tabLabel( string label, string *tabhotkeys )
     label.insert( ti, "&" );
   }
   return label;
+}
+
+
+bool OptWidget::tabs( void ) const
+{
+  return Tabs;
 }
 
 

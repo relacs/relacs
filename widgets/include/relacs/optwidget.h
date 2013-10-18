@@ -307,6 +307,8 @@ public:
 		     bool contupdate=false, int style=0,
 		     QMutex *mutex=0, string *tabhotkeys=0 );
 
+    /*! Returns \c true if tabbed widgets are used. */
+  bool tabs( void ) const;
     /*! The maximum number of lines in a single tab. */
   int lines( void ) const;
     /*! Set the spacing between the lines to \a pixel pixel.
@@ -526,6 +528,7 @@ private:
   QThread *GUIThread;
 
   vector< QGridLayout* > Layout;
+  bool Tabs;
   int MaxLines;
   int LeftMargin;
   int RightMargin;

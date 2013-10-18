@@ -137,31 +137,11 @@ string Macros::macro( void ) const
 string Macros::options( void ) const
 {
   if ( CurrentMacro >= 0 && CurrentCommand >= 0 ) {
-    Options prjopt;
-    return MCs[CurrentMacro]->expandParameter( MCs[CurrentMacro]->command( CurrentCommand )->parameter(),
-					       prjopt );
+    return MCs[CurrentMacro]->expandParameter( MCs[CurrentMacro]->command( CurrentCommand )->parameter() );
   }
   else {
     return "";
   }
-}
-
-
-Options &Macros::project( int macro )
-{
-  return MCs[macro]->project();
-}
-
-
-string Macros::projectTextFromStack( const string &ident ) const
-{
-  string ps = "";
-  for ( int k=(int)Stack.size()-1; k>=0; k-- ) {
-    ps = Stack[k].MacroProject.text( ident );
-    if ( ! ps.empty() )
-      break;
-  }
-  return ps;
 }
 
 
@@ -604,7 +584,6 @@ void Macros::startNextRePro( bool saving, bool enable )
 	  CurrentMacro = mc.MacroID;
 	  CurrentCommand = mc.CommandID;
 	  MCs[CurrentMacro]->variables() = mc.MacroVariables;
-	  MCs[CurrentMacro]->project() = mc.MacroProject;
 	  Stack.pop_back();
 	  setRunButton();
 	}
@@ -714,13 +693,10 @@ void Macros::executeMacro( int newmacro, const Str &params )
   // the currentcommand is not the last one:
   if ( newmacro != CurrentMacro || CurrentCommand+1 < MCs[CurrentMacro]->size() )
     Stack.push_back( MacroPos( CurrentMacro, CurrentCommand + 1,
-			       MCs[CurrentMacro]->variables(),
-			       MCs[CurrentMacro]->project() ) );
+			       MCs[CurrentMacro]->variables() ) );
   // execute the requested macro:
-  Options prjopts;
   MCs[newmacro]->variables().setDefaults();
-  MCs[newmacro]->variables().read( MCs[CurrentMacro]->expandParameter( params, prjopts ) );
-  MCs[newmacro]->project().read( prjopts );
+  MCs[newmacro]->variables().read( MCs[CurrentMacro]->expandParameter( params ) );
   CurrentMacro = newmacro;
   CurrentCommand = -1;
   setRunButton();
@@ -843,7 +819,7 @@ void Macros::store( void )
   // store macro position:
   if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() ) {
     ResumePos.set( CurrentMacro, CurrentCommand,
-		   MCs[CurrentMacro]->variables(), MCs[CurrentMacro]->project() );
+		   MCs[CurrentMacro]->variables() );
     ResumeStack = Stack;
     ResumeMacroOnly = ThisMacroOnly;
     ResumeAction->setEnabled( true );
@@ -884,7 +860,6 @@ void Macros::resume( void )
   if ( ResumePos.defined() ) {
     // resume:
     MCs[ResumePos.MacroID]->variables() = ResumePos.MacroVariables;
-    MCs[ResumePos.MacroID]->project() = ResumePos.MacroProject;
 
     startMacro( ResumePos.MacroID, ResumePos.CommandID, 
 		true, false, &ResumeStack );
@@ -906,7 +881,6 @@ void Macros::resumeNext( void )
   if ( ResumePos.defined() ) {
     // resume:
     MCs[ResumePos.MacroID]->variables() = ResumePos.MacroVariables;
-    MCs[ResumePos.MacroID]->project() = ResumePos.MacroProject;
 
     startMacro( ResumePos.MacroID, ResumePos.CommandID + 1, 
 		true, false, &ResumeStack );
@@ -977,18 +951,15 @@ void Macros::clearStackButtons( void )
 Macros::MacroPos::MacroPos( void )
   : MacroID( -1 ),
     CommandID( -1 ),
-    MacroVariables(),
-    MacroProject()
+    MacroVariables()
 {
 }
 
 
-Macros::MacroPos::MacroPos( int macro, int command,
-			    Options &var, Options &prj )
+Macros::MacroPos::MacroPos( int macro, int command, Options &var )
   : MacroID( macro ),
     CommandID( command ),
-    MacroVariables( var ),
-    MacroProject( prj )
+    MacroVariables( var )
 {
 }
 
@@ -996,19 +967,16 @@ Macros::MacroPos::MacroPos( int macro, int command,
 Macros::MacroPos::MacroPos( const MacroPos &mp )
   : MacroID( mp.MacroID ),
     CommandID( mp.CommandID ), 
-    MacroVariables( mp.MacroVariables ),
-    MacroProject( mp.MacroProject )
+    MacroVariables( mp.MacroVariables )
 {
 }
 
 
-void Macros::MacroPos::set( int macro, int command,
-			    Options &var, Options &prj ) 
+void Macros::MacroPos::set( int macro, int command, Options &var ) 
 {
   MacroID = macro;
   CommandID = command;
   MacroVariables = var;
-  MacroProject = prj;
 }
 
 
@@ -1017,7 +985,6 @@ void Macros::MacroPos::clear( void )
   MacroID = -1;
   CommandID = -1;
   MacroVariables.clear();
-  MacroProject.clear();
 }
 
 
@@ -1065,10 +1032,6 @@ Macro::Macro( Str name, Macros *mcs )
     DialogOpen( false ),
     Commands()
 {
-  Project.clear();
-  Project.addText( "project", "Project", "" );
-  Project.addText( "experiment", "Experiment", "" );
-
   Variables.clear();
   int cp = name.find( ':' );
   if ( cp > 0 ) {
@@ -1110,7 +1073,6 @@ Macro::Macro( Str name, Macros *mcs )
 Macro::Macro( const Macro &macro ) 
   : Name( macro.Name ), 
     Variables( macro.Variables ),
-    Project( macro.Project ),
     Action( macro.Action ), 
     Button( macro.Button ),
     Menu( macro.Menu ),
@@ -1154,30 +1116,14 @@ string Macro::variablesStr( void ) const
 }
 
 
-Options &Macro::project( void )
-{
-  return Project;
-}
-
-
 void Macro::addParameter( const Str &param )
 {
   Variables.load( param, "=", ";" );
   Variables.setToDefaults();
-  Options::iterator p = Variables.find( "project" );
-  if ( p != Variables.end() ) {
-    Project.setText( "project", p->text() );
-    Variables.erase( p );
-  }
-  p = Variables.find( "experiment" );
-  if ( p != Variables.end() ) {
-    Project.setText( "experiment", p->text() );
-    Variables.erase( p );
-  }
 }
 
 
-string Macro::expandParameter( const Str &params, Options &prjopt ) const
+string Macro::expandParameter( const Str &params ) const
 {
   StrQueue sq( params.stripped().preventLast( ";" ), ";" );
   for ( StrQueue::iterator sp=sq.begin(); sp != sq.end(); ++sp ) {
@@ -1220,15 +1166,6 @@ string Macro::expandParameter( const Str &params, Options &prjopt ) const
 	  (*sp) = name + "=" + p.text();
       }
     }
-  }
-  for ( StrQueue::iterator sp=sq.begin(); sp != sq.end(); ) {
-    string name = (*sp).ident( 0, "=", Str::WhiteSpace );
-    if ( name == "project" || name == "experiment" ) {
-      prjopt.load( *sp );
-      sp = sq.erase( sp );
-    }
-    else
-      ++sp;
   }
   string newparams;
   sq.copy( newparams, ";" );
@@ -1315,8 +1252,10 @@ void Macro::addMenu( QMenu *menu, int &num )
     if ( Key )
       RunAction->setShortcut( KeyCode );
     int n=2;
-    firstpop->addAction( "&Options", this, SLOT( dialog() ) );	
-    n++;
+    if ( ! Variables.empty() ) {
+      firstpop->addAction( "&Options", this, SLOT( dialog() ) );	
+      n++;
+    }
     firstpop->addSeparator();
     BottomAction = 0;
 
@@ -1366,23 +1305,6 @@ string Macro::menuStr( void ) const
     s += " ...";
     return s;
   }
-  for ( i=0; nc < Macros::MenuWidth && i<Project.size(); i++, k++ ) {
-    if ( ! Project[i].text().empty() ) {
-      if ( k>0 ) {
-	s += "; ";
-	nc += 2;
-      }
-      else {
-	s += ": ";
-	nc += 2;
-      }
-      string vs = Project[i].save( Options::FirstOnly );
-      s += vs;
-      nc += vs.size();
-    }
-  }
-  if ( i < Project.size() )
-    s += " ...";
   return s;
 }
 
@@ -1839,9 +1761,10 @@ void Macro::dialog( void )
   // create and exec dialog:
   OptDialog *od = new OptDialog( false, MCs );
   od->setCaption( "Macro " + Name + " Variables" );
-  if ( ! Variables.empty() )
+  if ( ! Variables.empty() ) {
     od->addOptions( Variables );
-  od->addOptions( Project );
+    od->addSeparator();
+  }
   od->setVerticalSpacing( int(9.0*exp(-double(Variables.size())/14.0))+1 );
   od->setRejectCode( 0 );
   od->addButton( "&Ok", OptDialog::Accept, 1 );
@@ -1862,7 +1785,6 @@ void Macro::dialog( void )
 void Macro::acceptDialog( void )
 {
   Variables.setToDefaults();
-  Project.setToDefaults();
   // update menu:
   RunAction->setText( menuStr().c_str() );
 }
@@ -1888,7 +1810,6 @@ MacroCommand::MacroCommand( void )
     Params( "" ),
     RP( 0 ),
     CO(),
-    PO(),
     DO( 0 ),
     MacroIndex( 0 ),
     FilterCommand( 0 ),
@@ -1903,7 +1824,6 @@ MacroCommand::MacroCommand( void )
     MCs( 0 ),
     DialogOpen( false ),
     MacroVars(),
-    MacroProject(),
     MenuShortcut( "" ),
     SubMenu( 0 )
 {
@@ -1916,7 +1836,6 @@ MacroCommand::MacroCommand( const string &line, Macros *mcs, Macro *mc )
     Params( "" ),
     RP( 0 ),
     CO(), 
-    PO(), 
     DO( 0 ),
     MacroIndex( 0 ),
     FilterCommand( 0 ),
@@ -1931,7 +1850,6 @@ MacroCommand::MacroCommand( const string &line, Macros *mcs, Macro *mc )
     MCs( mcs ),
     DialogOpen( false ),
     MacroVars(),
-    MacroProject(),
     MenuShortcut( "" ),
     SubMenu( 0 )
 {
@@ -2003,7 +1921,6 @@ MacroCommand::MacroCommand( RePro *repro, const string &params,
     Params( params ),
     RP( repro ),
     CO(), 
-    PO(), 
     DO( 0 ),
     MacroIndex( 0 ),
     FilterCommand( 0 ),
@@ -2018,7 +1935,6 @@ MacroCommand::MacroCommand( RePro *repro, const string &params,
     MCs( mcs ),
     DialogOpen( false ),
     MacroVars(),
-    MacroProject(),
     MenuShortcut( "" ),
     SubMenu( 0 )
 {
@@ -2031,7 +1947,6 @@ MacroCommand::MacroCommand( const MacroCommand &com )
     Params( com.Params ),
     RP( com.RP ),
     CO( com.CO ),
-    PO( com.PO ),
     DO( com.DO ),
     MacroIndex( com.MacroIndex ),
     FilterCommand( com.FilterCommand ), 
@@ -2046,7 +1961,6 @@ MacroCommand::MacroCommand( const MacroCommand &com )
     MCs( com.MCs ),
     DialogOpen( com.DialogOpen ),
     MacroVars( com. MacroVars ),
-    MacroProject( com.MacroProject ),
     MenuShortcut( com.MenuShortcut ),
     SubMenu( com.SubMenu )
 {
@@ -2365,9 +2279,7 @@ void MacroCommand::checkOptions( string &warnings )
 {
   if ( Command == ReProCom ) {
     // check options:
-    Options prjopt;
-    string error = RP->checkOptions( MC->expandParameter( parameter(),
-							  prjopt ) );
+    string error = RP->checkOptions( MC->expandParameter( parameter() ) );
     if ( error.size() > 0 ) {
       warnings += "Invalid options for RePro \"<b>";
       warnings += RP->name();
@@ -2516,26 +2428,10 @@ bool MacroCommand::execute( bool saving )
   }
   else if ( RP != 0 ) {
     // start RePro:
-    Options prjopt;
     RP->Options::setDefaults();
-    RP->Options::read( MC->expandParameter( Params, prjopt ) );
+    RP->Options::read( MC->expandParameter( Params ) );
     RP->Options::read( RP->overwriteOptions() );
     RP->Options::read( CO );
-    RP->projectOptions().read( prjopt );
-    RP->projectOptions().read( CO );
-    if ( RP->projectOptions().text( "project" ).empty() ) {
-      string ps = MC->project().text( "project" );
-      if ( ps.empty() )
-	ps = MCs->projectTextFromStack( "project" );
-      RP->projectOptions().setText( "project", ps );
-      string es = MC->project().text( "experiment" );
-      if ( es.empty() )
-	ps = MCs->projectTextFromStack( "experiment" );
-      if ( es.empty() )
-	es = RP->name();
-      RP->projectOptions().setText( "experiment", es );
-    }
-
     MCs->RW->startRePro( RP, MC->action(), saving );
     return true;
   }
@@ -2604,18 +2500,15 @@ void MacroCommand::dialog( void )
 
   if ( Command == MacroCom ) {
     // Macro dialog:
-    Options prjopt;
     MacroVars = MC->variables();
     MacroVars.setDefaults();
-    MacroVars.read( MC->expandParameter( Params, prjopt ) );
-    MacroProject = MCs->project( MacroIndex );
-    MacroProject.read( prjopt );
+    MacroVars.read( MC->expandParameter( Params ) );
     // create and exec dialog:
     OptDialog *od = new OptDialog( false, MCs );
     od->setCaption( "Macro " + Name + " Variables" );
     od->addOptions( MacroVars );
-    od->addOptions( MacroProject );
     od->setVerticalSpacing( int(9.0*exp(-double(MacroVars.size())/14.0))+1 );
+    od->addSeparator();
     od->setRejectCode( 0 );
     od->addButton( "&Ok", OptDialog::Accept, 1 );
     od->addButton( "&Apply", OptDialog::Accept, 1, false );
@@ -2632,13 +2525,10 @@ void MacroCommand::dialog( void )
   }
   else if ( Command == ReProCom ) {
     // RePro dialog:
-    Options prjopt;
     RP->Options::setDefaults();
-    RP->Options::read( MC->expandParameter( Params, prjopt ), RePro::MacroFlag );
+    RP->Options::read( MC->expandParameter( Params ), RePro::MacroFlag );
     RP->Options::read( RP->overwriteOptions(), 0, RePro::OverwriteFlag );
     RP->Options::read( CO, 0, RePro::CurrentFlag );
-    RP->projectOptions().read( prjopt );
-    RP->projectOptions().read( PO );
 
     RP->dialog();
 
@@ -2655,10 +2545,8 @@ void MacroCommand::dialog( void )
 void MacroCommand::acceptDialog( void )
 {
   if ( Command == MacroCom ) {
-    Options prjopt;
-    Options po( MC->expandParameter( Params, prjopt ) );
+    Options po( MC->expandParameter( Params ) );
     po.readAppend( MacroVars, OptDialog::changedFlag() );
-    po.readAppend( MacroProject, OptDialog::changedFlag() );
     Params = po.save();
     // update menu:
     Str s = MenuShortcut;
@@ -2683,9 +2571,8 @@ void MacroCommand::acceptDialog( void )
       RP->overwriteOptions().readAppend( newopt );
     }
     if ( DO->boolean( "default" ) ) {
-      Options prjopt;
       RP->Options::setToDefaults();
-      RP->Options::read( MC->expandParameter( Params, prjopt ) );
+      RP->Options::read( MC->expandParameter( Params ) );
       RP->Options::read( RP->overwriteOptions() );
       CO.assign( *((Options*)RP), Options::NonDefault );
       RP->Options::setDefaults();
@@ -2694,7 +2581,6 @@ void MacroCommand::acceptDialog( void )
     else {
       CO.readAppend( newopt );
     }
-    PO = RP->projectOptions();
   }
 }
 
