@@ -1762,7 +1762,8 @@ void Macro::dialog( void )
   OptDialog *od = new OptDialog( false, MCs );
   od->setCaption( "Macro " + Name + " Variables" );
   if ( ! Variables.empty() ) {
-    od->addOptions( Variables );
+    string tabhotkeys = "oarc";
+    od->addOptions( Variables, 0, 0, 0, 0, &tabhotkeys );
     od->addSeparator();
   }
   od->setVerticalSpacing( int(9.0*exp(-double(Variables.size())/14.0))+1 );
@@ -1770,8 +1771,8 @@ void Macro::dialog( void )
   od->addButton( "&Ok", OptDialog::Accept, 1 );
   od->addButton( "&Apply", OptDialog::Accept, 1, false );
   od->addButton( "&Run", OptDialog::Accept, 2, false );
-  od->addButton( "&Reset", OptDialog::Defaults );
-  od->addButton( "&Close" );
+  //  od->addButton( "&Reset", OptDialog::Defaults );
+  od->addButton( "&Cancel" );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dialogClosed( int ) ) );
   connect( od, SIGNAL( buttonClicked( int ) ),
@@ -2506,15 +2507,16 @@ void MacroCommand::dialog( void )
     // create and exec dialog:
     OptDialog *od = new OptDialog( false, MCs );
     od->setCaption( "Macro " + Name + " Variables" );
-    od->addOptions( MacroVars );
+    string tabhotkeys = "oarc";
+    od->addOptions( MacroVars, 0, 0, 0, 0, &tabhotkeys );
     od->setVerticalSpacing( int(9.0*exp(-double(MacroVars.size())/14.0))+1 );
     od->addSeparator();
     od->setRejectCode( 0 );
     od->addButton( "&Ok", OptDialog::Accept, 1 );
     od->addButton( "&Apply", OptDialog::Accept, 1, false );
     od->addButton( "&Run", OptDialog::Accept, 2, false );
-    od->addButton( "&Defaults", OptDialog::Defaults );
-    od->addButton( "&Close" );
+    //    od->addButton( "&Defaults", OptDialog::Defaults );
+    od->addButton( "&Cancel" );
     connect( od, SIGNAL( dialogClosed( int ) ),
 	     this, SLOT( dialogClosed( int ) ) );
     connect( od, SIGNAL( buttonClicked( int ) ),

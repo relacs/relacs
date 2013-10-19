@@ -10,7 +10,8 @@ Options:
 - Device menu should be hierarchically using section structure of device infos.
 - operator[] and section() should only return Parameter/Options from this Options
   BUT: auditory::session::notifyMetaData!
-- Add iterator that iterates through all sections and subsections ?
+- Add iterator that iterates through all sections and subsections ? 
+- Or flatten() function that creates Options with Parameters without the sections.
 - make clean and make | grep warning!
 
 patchclamp::SingleStimulus:
@@ -81,6 +82,8 @@ Locking:
 
 Macros:
 - delete all MacroCommands after usage!
+- The menu of a MacroCommand should have the options of the called Macro with
+  overwritten Options colored blue (same as for the repros).
 - add stopSession macro command
 - add new macro command to set all sorts of internal Options (e.g. stimulusData!)
 - add dialog macro command for launching macro and repro dialogs, meta data dialog, etc.
