@@ -95,17 +95,23 @@ public:
   virtual int main( void );
   virtual void sessionStarted( void );
 
+  void analyze( double signaltime, double before, double fishrate,
+		bool initeoditer[], EventIterator eoditer[], 
+		MapD eodfrequencies[], MapD eodamplitudes[],
+		int eodinx[], MapD &eodfrequency,
+		bool &initstimiter, EventFrequencyIterator &stimiter, MapD &stimfrequency );
   void initPlot( double deltaf, double amplitude, double duration,
 		 const MapD &eodfrequency, const EventData &fishchirps,
 		 bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
   void save( double deltaf, double amplitude, double duration, double pause,
 	     double fishrate, double stimulusrate,
-	     const MapD eodfrequencies[], const MapD eodamplitudes[],
+	     const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency,
 	     const EventData &fishchirps, const EventData &playedchirpevents,
 	     const MapD &stimfrequency, const Options &chirpheader, bool split, int count );
-  void saveEODFreq( const string &es, const Options &header,
+  void saveEODFreq( int trace, const string &es, const Options &header,
 		    const MapD &eodfrequency, const MapD &eodamplitude,
 		    bool split, int count );
+  void saveMergedEODFreq( const Options &header, const MapD &eodfrequency, bool split, int count );
   void saveChirps( const Options &header, const EventData &chirps,
 		   bool split, int count );
   void savePlayedChirps( const Options &header, const EventData &chirps,
