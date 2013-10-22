@@ -37,53 +37,55 @@ namespace patchclamp {
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
 \author Jan Benda
-\version 1.4 (Dec 14, 2010)
+\version 1.6 (Oct 22, 2013)
 \par Options
-- Waveform
-- \c waveform=From file: Stimulus waveform (\c string)
-- \c stimfile=: Stimulus file (\c string)
-- \c stimampl=0: Amplitude factor (standard deviation) of stimulus file (\c number)
-- \c amplitude=1nA: Amplitude of stimulus (\c number)
-- \c freqsel=frequency: Specify (\c string)
-- \c freq=10Hz: Frequency of waveform (\c number)
-- \c periods=1: Number of periods (\c number)
-- \c dutycycle=50%: Duty-cycle of rectangular waveform (\c number)
-- \c seed=0: Seed for random number generation (\c integer)
-- \c startfreq=1: Start sweep with frequency (\c number)
-- \c endfreq=100: End sweep with frequency (\c number)
-- \c duration=0ms: Maximum duration of stimulus (\c number)
-- \c ramp=2ms: Ramp of stimulus (\c number)
-- Stimulus
-- \c offset=0nA: Stimulus mean (\c number)
-- \c offsetbase=absolute: Stimulus mean relative to (\c string)
-- \c samerate=true: Use sampling rate of input (\c boolean)
-- \c samplerate=1kHz: Sampling rate of output (\c number)
-- \c repeats=10times: Number of stimulus presentations (\c number)
-- \c pause=1000ms: Duration of pause between stimuli (\c number)
-- \c outtrace=V-1: Output trace (\c string)
-- Offset - search
-- \c userate=false: Search offset for target firing rate (\c boolean)
-- \c rate=100Hz: Target firing rate (\c number)
-- \c ratetol=5Hz: Tolerance for target firing rate (\c number)
-- \c offsetstep=8nA: Initial offset step (\c number)
-- \c searchrepeats=2times: Number of search stimulus presentations (\c number)
-- \c silentrate=0Hz: Ignore response below (\c number)
-- \c maxsilent=1: Number of stimulus presentations if response is below silentrate (\c integer)
-- \c skippause=true: Skip pause if response is below silentrate (\c boolean)
-- \c maxsearch=1intensities: Stop search if response does not change for more than (\c integer)
-- \c method=Bisect: Method (\c string)
-- \c minslope=4Hz/nA: Minimum slope required for interpolation (\c number)
-- \c searchduration=0ms: Maximum duration of stimulus (\c number)
-- \c searchpause=0ms: Duration of pause between stimuli (\c number)
-- Analysis
-- \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
-- \c sigma=10ms: Standard deviation of rate smoothing kernel (\c number)
-- \c storevoltage=true: Save voltage trace (\c boolean)
-- \c plot=Voltage trace: Plot shows (\c string)
-- Save stimuli
-- \c storemode=session: Save stimuli in (\c string)
-- \c storepath=: Save stimuli in custom directory (\c string)
-- \c storelevel=all: Save (\c string)
+- \c Waveform
+    - \c waveform=From file: Stimulus waveform (\c string)
+    - \c stimfile=: Stimulus file (\c string)
+    - \c stimampl=0: Amplitude factor (standard deviation) of stimulus file (\c number)
+    - \c amplitude=1nA: Amplitude of stimulus (\c number)
+    - \c freqsel=frequency: Specify (\c string)
+    - \c freq=10Hz: Frequency of waveform (\c number)
+    - \c periods=1: Number of periods (\c number)
+    - \c dutycycle=50%: Duty-cycle of rectangular waveform (\c number)
+    - \c seed=0: Seed for random number generation (\c integer)
+    - \c startfreq=1Hz: Start sweep with frequency (\c number)
+    - \c endfreq=100Hz: End sweep with frequency (\c number)
+    - \c duration=0ms: Maximum duration of stimulus (\c number)
+    - \c ramp=2ms: Ramp of stimulus (\c number)
+- \c Stimulus
+    - \c offset=0nA: Stimulus mean (\c number)
+    - \c offsetbase=absolute: Stimulus mean relative to (\c string)
+    - \c samerate=true: Use sampling rate of input (\c boolean)
+    - \c samplerate=1kHz: Sampling rate of output (\c number)
+    - \c repeats=10times: Number of stimulus presentations (\c number)
+    - \c pause=1000ms: Duration of pause between stimuli (\c number)
+    - \c outtrace=Current-1: Output trace (\c string)
+- \c Offset - search
+    - \c userate=false: Search offset for target firing rate (\c boolean)
+    - \c rate=100Hz: Target firing rate (\c number)
+    - \c ratetol=5Hz: Tolerance for target firing rate (\c number)
+    - \c offsetstep=8nA: Initial offset step (\c number)
+    - \c searchrepeats=2times: Number of search stimulus presentations (\c number)
+    - \c silentrate=0Hz: Ignore response below (\c number)
+    - \c maxsilent=1: Number of stimulus presentations if response is below silentrate (\c integer)
+    - \c skippause=true: Skip pause if response is below silentrate (\c boolean)
+    - \c maxsearch=1intensities: Stop search if response does not change for more than (\c integer)
+    - \c method=Bisect: Method (\c string)
+    - \c minslope=4Hz/nA: Minimum slope required for interpolation (\c number)
+    - \c searchduration=0ms: Maximum duration of stimulus (\c number)
+    - \c searchpause=0ms: Duration of pause between stimuli (\c number)
+- \c Analysis
+    - \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
+    - \c sigma=10ms: Standard deviation of rate smoothing kernel (\c number)
+    - \c before=100ms: Time before stimulus to be analyzed (\c number)
+    - \c after=100ms: Time after stimulus to be analyzed (\c number)
+    - \c storevoltage=true: Save voltage trace (\c boolean)
+    - \c plot=Current voltage trace: Plot shows (\c string)
+    - \c Save stimuli
+        - \c storemode=session: Save stimuli in (\c string)
+        - \c storepath=: Save stimuli in custom directory (\c string)
+        - \c storelevel=all: Save (\c string)
 */
 
 
@@ -109,10 +111,12 @@ protected:
   void openTraceFile( ofstream &tf, TableKey &tracekey, const Options &header );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index,
 		  const SampleDataF &voltage, const SampleDataF &current );
+  void saveMeanTrace( Options &header, TableKey &tracekey,
+		      const SampleDataF &meanvoltage, const SampleDataF &meancurrent );
   void saveSpikes( Options &header, const EventList &spikes );
   void saveRate( Options &header, const SampleDataD &rate );
-  void plot( const EventList &spikes, const SampleDataD &rate,
-	     const OutData &signal, const SampleDataF &voltage, int plotmode );
+  void plot( const EventList &spikes, const SampleDataD &rate, const OutData &signal,
+	     const SampleDataF &voltage, const SampleDataF &meanvoltage, int plotmode );
   void analyze( EventList &spikes, SampleDataD &rate );
 
   int createStimulus( OutData &signal, const Str &file,

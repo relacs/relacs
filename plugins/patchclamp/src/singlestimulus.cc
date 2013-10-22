@@ -35,7 +35,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.4", "Dec 14, 2010" )
+  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.6", "Oct 22, 2013" )
 {
   IUnit = "nA";
   Offset = 0.0;
@@ -85,8 +85,10 @@ SingleStimulus::SingleStimulus( void )
   newSection( "Analysis" );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWin, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
+  addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
+  addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addBoolean( "storevoltage", "Save voltage trace", true );
-  addSelection( "plot", "Plot shows", "Voltage trace|Firing rate" );
+  addSelection( "plot", "Plot shows", "Current voltage trace|Mean voltage trace|Current and mean voltage trace|Firing rate" );
   newSubSection( "Save stimuli" );
   addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
   addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
@@ -249,6 +251,12 @@ int SingleStimulus::main( void )
     searchpause = pause;
   SkipWin = number( "skipwin" );
   Sigma = number( "sigma" );
+  double before = number( "before" );
+  if ( before > pause )
+    before = pause;
+  double after = number( "after" );
+  if ( after > pause )
+    after = pause;
   bool storevoltage = boolean( "storevoltage" );
   int plotmode = index( "plot" );
   StoreModes storemode = (StoreModes)index( "storemode" );
@@ -266,10 +274,11 @@ int SingleStimulus::main( void )
   StoreLevel = (StoreLevels)index( "storelevel" );
   StoreFile = "";
 
+  double dccurrent = stimulusData().number( outTraceName( outtrace ) );
   if ( offsetbase == 1 ) // amplitude
     Offset = offset + Amplitude;
   else if ( offsetbase == 2 ) // current
-    Offset = offset + stimulusData().number( outTraceName( outtrace ) );
+    Offset = offset + dccurrent;
   else if ( offsetbase == 3 ) { // threshold
     Offset = offset + metaData().number( "Cell>ithreshss" );
     if ( fabs( Offset - offset ) < 1.0e-8 )
@@ -286,12 +295,19 @@ int SingleStimulus::main( void )
   bool sameduration = ( Duration == searchduration );
   bool storedstimulus = false;
 
+  // signal:
   OutData signal;
   signal.setTrace( outtrace );
   if ( samerate )
     samplerate = trace( eventInputTrace( SpikeEvents[0] ) ).sampleRate();
   else if ( samplerate <= 0.0 )
     samplerate = signal.maxSampleRate();
+
+  // dc signal:
+  OutData dcsignal;
+  dcsignal.setTrace( outtrace );
+  dcsignal.constWave( dccurrent );
+  dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
 
   // search for offset that evokes the target firing rate:
   if ( userate ) {
@@ -374,7 +390,7 @@ int SingleStimulus::main( void )
 	  break;
 	sleep( searchduration );
 	if ( interrupt() ) {
-	  writeZero( outtrace );
+	  directWrite( dcsignal );
 	  return Aborted;
 	}
 
@@ -458,7 +474,7 @@ int SingleStimulus::main( void )
 	if ( rate >= silentrate ) {
 	  sleep( searchpause );
 	  if ( interrupt() ) {
-	    writeZero( outtrace );
+	    directWrite( dcsignal );
 	    return Aborted;
 	  }
 	}
@@ -466,7 +482,7 @@ int SingleStimulus::main( void )
 	  if ( ! skippause ) {
 	    sleep( searchpause );
 	    if ( interrupt() ) {
-	      writeZero( outtrace );
+	      directWrite( dcsignal );
 	      return Aborted;
 	    }
 	  }
@@ -475,7 +491,7 @@ int SingleStimulus::main( void )
 	}
       
 	if ( softStop() > 1 ) {
-	  writeZero( outtrace );
+	  directWrite( dcsignal );
 	  return Failed;
 	}
 
@@ -505,7 +521,7 @@ int SingleStimulus::main( void )
 		 rates.y( rinx+1 ) > 2.0*silentrate ) ||
 	       rates.y( rinx-1 ) > silentrate + 0.3*(targetrate - silentrate ) ) {
 	    info( "Cell probably lost!" );
-	    writeZero( outtrace );
+	    directWrite( dcsignal );
 	    return Failed;
 	  }
 	}
@@ -519,7 +535,7 @@ int SingleStimulus::main( void )
 		satcount++;
 	    if ( satcount >= maxsearch ) {
 	      info( "Target firing rate probably too high!" );
-	      writeZero( outtrace );
+	      directWrite( dcsignal );
 	      return Failed;
 	    }
 	  }
@@ -546,7 +562,7 @@ int SingleStimulus::main( void )
 	  if ( rates.size() > 0 && Offset > rates.x().back() &&
 	       offsetstep < minoffsetstep ) {
 	    info( "Offset needed for targetrate is too high!" );
-	    writeZero( outtrace );
+	    directWrite( dcsignal );
 	    return Failed;
 	  }
 	  // rate above target rate:
@@ -570,12 +586,12 @@ int SingleStimulus::main( void )
 	else if ( signal.failed() ) {
 	  warning( "Output of stimulus failed!<br>Signal error: <b>" +
 		   signal.errorText() + "</b><br>Exit now!" );
-	  writeZero( outtrace );
+	  directWrite( dcsignal );
 	  return Failed;
 	}
 	else {
 	  warning( "Could not establish firing rate!" );
-	  writeZero( outtrace );
+	  directWrite( dcsignal );
 	  return Failed;
 	}
       }
@@ -589,7 +605,7 @@ int SingleStimulus::main( void )
     int r = createStimulus( signal, stimfile, Duration, 
 			    1.0/samplerate, true );
     if ( r < 0 ) {
-      writeZero( outtrace );
+      directWrite( dcsignal );
       return Failed;
     }
     signal += Offset;
@@ -602,8 +618,8 @@ int SingleStimulus::main( void )
   postCustomEvent( 11 );
   P.lock();
   P.clearPlots();
-  P[0].setXRange( 1000.0*SkipWin, 1000.0*Duration );
-  if ( plotmode == 0 ) {
+  P[0].setXRange( -1000.0*before, 1000.0*(Duration+after) );
+  if ( plotmode < 3 ) {
     P[0].setYLabel( "Voltage [" + VUnit + "]" );
     P[0].setYRange( Plot::AutoScale, Plot::AutoScale );
   }
@@ -612,7 +628,7 @@ int SingleStimulus::main( void )
     P[0].setYLabel( "Firing rate [Hz]" );
     P[0].setYRange( 0.0, Plot::AutoScale );
   }
-  P[1].setXRange( 1000.0*SkipWin, 1000.0*Duration );
+  P[1].setXRange( -1000.0*before, 1000.0*(Duration+after) );
   P[1].setYLabel( "Stimulus [" + IUnit + "]" );
   P.draw();
   P.unlock();
@@ -635,11 +651,15 @@ int SingleStimulus::main( void )
   // variables:
   EventList spikes;
   MeanRate = 0.0;
-  SampleDataD rate( -0.1, Duration+0.1, 0.001, 0.0 );
-  SampleDataF voltage( -0.1, Duration+0.1, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+  SampleDataD rate( -before, Duration+after, 0.001, 0.0 );
+  SampleDataF voltage( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+  SampleDataF meanvoltage( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
   SampleDataF current;
-  if ( CurrentTrace[0] >= 0 )
-    current.resize( 0.0, Duration, trace( CurrentTrace[0] ).stepsize(), 0.0 );
+  SampleDataF meancurrent;
+  if ( CurrentTrace[0] >= 0 ) {
+    current.resize( -before, Duration+after, trace( CurrentTrace[0] ).stepsize(), 0.0 );
+    meancurrent.resize( -before, Duration+after, trace( CurrentTrace[0] ).stepsize(), 0.0 );
+  }
   int state = Completed;
 
   timeStamp();
@@ -671,11 +691,11 @@ int SingleStimulus::main( void )
 	       signal.errorText() + "</b>," +
 	       "<br> Loop: <b>" + Str( count+1 ) + "</b>" +
 	       "<br>Exit now!" );
-      writeZero( outtrace );
+      directWrite( dcsignal );
       return Failed;
     }
 
-    sleep( Duration + ( pause > 0.01 ? 0.01 : pause ) );
+    sleep( Duration + after );
 
     if ( interrupt() ) {
       if ( count == 0 )
@@ -685,13 +705,19 @@ int SingleStimulus::main( void )
 
     // voltage trace:
     trace( SpikeTrace[0] ).copy( signalTime(), voltage );
+    for ( int k=0; k<voltage.size(); k++ )
+      meanvoltage[k] += ( voltage[k] - meanvoltage[k] )/(count+1);
 
     // current trace:
-    if ( CurrentTrace[0] >= 0 )
+    if ( CurrentTrace[0] >= 0 ) {
       trace( CurrentTrace[0] ).copy( signalTime(), current );
+      for ( int k=0; k<current.size(); k++ )
+	meancurrent[k] += ( current[k] - meancurrent[k] )/(count+1);
+    }
     
     analyze( spikes, rate );
-    plot( spikes, rate, signal, voltage, plotmode );
+    plotmode = index( "plot" );
+    plot( spikes, rate, signal, voltage, meanvoltage, plotmode );
     if ( storevoltage ) {
       unlockAll();
       if ( count == 0 )
@@ -712,14 +738,16 @@ int SingleStimulus::main( void )
   
   if ( state == Completed ) {
     unlockAll();
-    if ( storevoltage )
+    if ( storevoltage ) {
       tf << '\n';
+      saveMeanTrace( header, tracekey, meanvoltage, meancurrent );
+    }
     saveRate( header, rate );
     saveSpikes( header, spikes );
     lockAll();
   }
 
-  writeZero( outtrace );
+  directWrite( dcsignal );
   return state;
 }
 
@@ -764,6 +792,45 @@ void SingleStimulus::saveTrace( ofstream &tf, TableKey &tracekey, int index,
     }
   }
   tf << '\n';
+}
+
+
+void SingleStimulus::saveMeanTrace( Options &header, TableKey &tracekey,
+				    const SampleDataF &meanvoltage,
+				    const SampleDataF &meancurrent )
+{
+  // create file:
+  Str waveform = text( "waveform" );
+  if ( waveform == "From file" )
+    waveform = "file";
+  waveform.lower();
+  ofstream df( addPath( "stimulus-" + waveform + "-meantraces.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  header.save( df, "# " );
+  df << '\n';
+  tracekey.saveKey( df, true, false );
+
+  // write data:
+  if ( ! meancurrent.empty() ) {
+    for ( int k=0; k<meanvoltage.size(); k++ ) {
+      tracekey.save( df, meanvoltage.pos( k ) * 1000.0, 0 );
+      tracekey.save( df, meanvoltage[k] );
+      tracekey.save( df, meancurrent[k] );
+      df << '\n';
+    }
+  }
+  else {
+    for ( int k=0; k<meanvoltage.size(); k++ ) {
+      tracekey.save( df, meanvoltage.pos( k ) * 1000.0, 0 );
+      tracekey.save( df, meanvoltage[k] );
+      df << '\n';
+    }
+  }
+  df << "\n\n";
 }
 
 
@@ -824,17 +891,28 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate )
 
 void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
 			   const OutData &signal, const SampleDataF &voltage,
-			   int plotmode )
+			   const SampleDataF &meanvoltage, int plotmode )
 {
   P.lock();
-  if ( plotmode == 0 ) {
-    P[0].clear();
-    P[0].plot( voltage, 1000.0, Plot::Yellow, 2, Plot::Solid );
+  P[0].clear();
+  P[0].plotVLine( 0.0, Plot::White, 2 );
+  P[0].plotVLine( 1000.0*Duration, Plot::White, 2 );
+  if ( plotmode < 3 ) {
+    P[0].setTitle( "" );
+    P[0].setYLabel( "Voltage [" + VUnit + "]" );
+    if ( ! P[0].zoomedYRange() )
+      P[0].setYRange( Plot::AutoScale, Plot::AutoScale );
+    if ( plotmode == 0 || plotmode == 2 )
+      P[0].plot( voltage, 1000.0, Plot::Yellow, 2, Plot::Solid );
+    if ( plotmode == 1 || plotmode == 2 )
+      P[0].plot( meanvoltage, 1000.0, Plot::Red, 2, Plot::Solid );
   }
   else {
     // spikes and firing rate:
-    P[0].clear();
     P[0].setTitle( "Mean firing rate = " + Str( MeanRate, 0, 0, 'f' ) + "Hz" );
+    P[0].setYLabel( "Firing rate [Hz]" );
+    if ( ! P[0].zoomedYRange() )
+      P[0].setYRange( 0.0, Plot::AutoScale );
     int maxspikes	= (int)rint( 20.0 / SpikeTraces );
     if ( maxspikes < 4 )
       maxspikes = 4;
@@ -863,6 +941,8 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
   P[1].plotHLine( Offset, Plot::White, 2 );
   if ( threshold > 0.0 )
     P[1].plotHLine( threshold, Plot::Yellow, 2 );
+  P[1].plotVLine( 0.0, Plot::White, 2 );
+  P[1].plotVLine( 1000.0*Duration, Plot::White, 2 );
   P[1].plot( signal, 1000.0, Plot::Green, 2 );
 
   P.draw();
