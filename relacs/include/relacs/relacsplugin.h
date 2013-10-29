@@ -206,6 +206,10 @@ public:
         \note call this function only once in the constructor.
         \sa widget(), setWidget() */
   void setLayout( QLayout *layout );
+     /*! The width in pixels of the desktop. \sa desktopHeight() */
+  int desktopWidth( void ) const;
+     /*! The height in pixels of the desktop. \sa desktopWidth() */
+  int desktopHeight( void ) const;
 
     /*! Set the name of the RELACSPlugin to \a name.
         Also calls updateUniqueName(). */

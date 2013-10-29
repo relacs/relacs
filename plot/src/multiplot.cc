@@ -22,6 +22,7 @@
 #include <cmath>
 #include <iostream>
 #include <QApplication>
+#include <QDesktopWidget>
 #include <QThread>
 #include <QPainter>
 #include <QEvent>
@@ -452,7 +453,10 @@ QSize MultiPlot::sizeHint( void ) const
     meanw = 0.5;
   if ( meanh < 0.02 )
     meanh = 0.5;
-  QSize qs( (int)::ceil( 180.0/meanw ), (int)::ceil( 120.0/meanh ) );
+  int h = QApplication::desktop()->availableGeometry( this ).height()/6;
+  if ( h < 40 )
+    h = 40;
+  QSize qs( (int)::ceil( 4.0*h/3.0/meanw ), (int)::ceil( h/meanh ) );
   return qs;
 }
 
@@ -479,7 +483,10 @@ QSize MultiPlot::minimumSizeHint( void ) const
     meanw = 0.5;
   if ( meanh < 0.02 )
     meanh = 0.5;
-  QSize qs( (int)::ceil( 120.0/meanw ), (int)::ceil( 80.0/meanh ) );
+  int h = QApplication::desktop()->availableGeometry( this ).height()/10;
+  if ( h < 30 )
+    h = 30;
+  QSize qs( (int)::ceil( 4.0*h/3.0/meanw ), (int)::ceil( h/meanh ) );
   return qs;
 }
 

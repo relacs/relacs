@@ -30,6 +30,7 @@
 #include <QCursor>
 #include <QMouseEvent>
 #include <QApplication>
+#include <QDesktopWidget>
 #include <QThread>
 #include <QActionGroup>
 #include <relacs/str.h>
@@ -1394,7 +1395,10 @@ void Plot::clearLabel( int index )
 QSize Plot::sizeHint( void ) const
 {
   PMutex.lock();
-  QSize qs( LMarg+RMarg+200, TMarg+BMarg+150 );
+  int h = QApplication::desktop()->availableGeometry( this ).height()/6;
+  if ( h < 40 )
+    h = 40;
+  QSize qs( LMarg+RMarg+4*h/3, TMarg+BMarg+h );
   PMutex.unlock();
   return qs;
 }
@@ -1403,7 +1407,10 @@ QSize Plot::sizeHint( void ) const
 QSize Plot::minimumSizeHint( void ) const
 {
   PMutex.lock();
-  QSize qs( LMarg+RMarg+120, TMarg+BMarg+90 );
+  int h = QApplication::desktop()->availableGeometry( this ).height()/10;
+  if ( h < 30 )
+    h = 30;
+  QSize qs( LMarg+RMarg+4*h/3, TMarg+BMarg+h );
   PMutex.unlock();
   return qs;
 }

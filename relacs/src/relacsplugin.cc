@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <QDesktopWidget>
 #include <QDateTime>
 #include <relacs/str.h>
 #include <relacs/messagebox.h>
@@ -96,6 +97,24 @@ void RELACSPlugin::setLayout( QLayout *layout )
       delete Widget->layout();
     Widget->setLayout( layout );
   }
+}
+
+
+int RELACSPlugin::desktopWidth( void ) const
+{
+  if ( Widget != 0 )
+    return QApplication::desktop()->availableGeometry( Widget ).width();
+  else
+    return QApplication::desktop()->availableGeometry().width();
+}
+
+
+int RELACSPlugin::desktopHeight( void ) const
+{
+  if ( Widget != 0 )
+    return QApplication::desktop()->availableGeometry( Widget ).height();
+  else
+    return QApplication::desktop()->availableGeometry().height();
 }
 
 

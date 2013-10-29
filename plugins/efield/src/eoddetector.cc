@@ -72,6 +72,10 @@ EODDetector::EODDetector( const string &ident, int mode )
   setLayout( vb );
 
   // parameter:
+  if ( desktopHeight() < 700 ) {
+    delFlags( "adapt", 2 );
+    delFlags( "ratio", 2 );
+  }
   EDW.assign( ((Options*)this), 2, 4, true, 0, mutex() ),
   EDW.setVerticalSpacing( 4 );
   EDW.setMargins( 4 );
