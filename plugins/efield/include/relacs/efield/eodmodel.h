@@ -23,6 +23,7 @@
 #define _RELACS_EFIELD_EODMODEL_H_ 1
 
 #include <relacs/model.h>
+#include <relacs/efield/traces.h>
 using namespace relacs;
 
 namespace efield {
@@ -32,20 +33,24 @@ namespace efield {
 \class EODModel
 \brief [Model] EOD with interruptions or chirps
 \author Jan Benda
-\version 1.0 (Feb 03, 2013)
+\version 1.2 (Oct 30, 2013)
 \par Options
 - \c eodtype=Sine: EOD type (\c string)
-- \c amplitude=1.0mV/cm: Amplitude (\c number)
+- \c localamplitude=1mV/cm: EOD Amplitude for local electrode (\c number)
+- \c globalamplitude=1mV/cm: EOD Amplitude for global electrode (\c number)
 - \c frequency=1000Hz: Frequency (\c number)
 - \c freqsd=10Hz: Standard deviation of frequency modulation (\c number)
 - \c freqtau=1000s: Timescale of frequency modulation (\c number)
 - \c interrupt=false: Add interruptions (\c boolean)
 - \c interruptduration=100ms: Duration of interruption (\c number)
 - \c interruptamplitude=0%: Amplitude fraction of interruption (\c number)
+- \c localstimulusgain=1: Gain for additive stimulus component to local electrode (\c number)
+- \c globalstimulusgain=0: Gain for additive stimulus component to global electrode (\c number)
+- \c stimulusgain=1: Gain for stimulus recording channel (\c number)
 */
 
 
-class EODModel : public Model
+  class EODModel : public Model, public Traces
 {
   Q_OBJECT
 

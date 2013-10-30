@@ -27,18 +27,21 @@ namespace efield {
 
 
 EODModel::EODModel( void )
-  : Model( "EODModel", "efield", "Jan Benda", "1.0", "Feb 03, 2013" )
+  : Model( "EODModel", "efield", "Jan Benda", "1.2", "Oct 30, 2013" )
 {
   // define options:
   addSelection( "eodtype", "EOD type", "Sine|None|Sine|Apteronotus|Eigenmannia" );
-  addNumber( "amplitude", "Amplitude", 1.0, 0.0, 100000.0, 1.0, "mV/cm", "mV/cm", "%.2f" );
+  addNumber( "localamplitude", "EOD Amplitude for local electrode", 1.0, 0.0, 100000.0, 1.0, "mV/cm", "mV/cm", "%.2f" );
+  addNumber( "globalamplitude", "EOD Amplitude for global electrode", 1.0, 0.0, 100000.0, 1.0, "mV/cm", "mV/cm", "%.2f" );
   addNumber( "frequency", "Frequency", 1000.0, 0.0, 10000000.0, 10.0, "Hz", "Hz", "%.1f" );
   addNumber( "freqsd", "Standard deviation of frequency modulation", 10.0, 0.0, 1000.0, 2.0, "Hz" );
   addNumber( "freqtau", "Timescale of frequency modulation", 1000.0, 0.5, 100000.0, 0.5, "s" );
   addBoolean( "interrupt", "Add interruptions", false );
   addNumber( "interruptduration", "Duration of interruption", 0.1, 0.0, 100.0, 0.1, "s", "ms" ).setActivation( "interrupt", "true" );
   addNumber( "interruptamplitude", "Amplitude fraction of interruption", 0.0, 0.0, 1.0, 0.5, "1", "%" ).setActivation( "interrupt", "true" );;
-  addNumber( "stimulusgain", "Gain of stimulus", 0.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "localstimulusgain", "Gain for additive stimulus component to local electrode", 0.0, 1.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "globalstimulusgain", "Gain for additive stimulus component to global electrode", 0.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "stimulusgain", "Gain for stimulus recording channel", 1.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
 }
 
 
@@ -46,7 +49,8 @@ void EODModel::main( void )
 {
   // read out options:
   int eodtype = index( "eodtype" );
-  double amplitude = number( "amplitude" );
+  double localamplitude = number( "localamplitude" );
+  double globalamplitude = number( "globalamplitude" );
   double frequency = 2.0*M_PI*number( "frequency" );
   double freqsd = 2.0*M_PI*number( "freqsd" );
   double freqtau = number( "freqtau" );
@@ -56,7 +60,43 @@ void EODModel::main( void )
   double interruptionduration = number( "interruptduration" );
   double interruptionamplitude = number( "interruptamplitude" );
   double nextinterruption = interrupteod ? time( 0 ) + 2.0 : -1.0;
+  double localstimulusgain = number( "localstimulusgain" );
+  double globalstimulusgain = number( "globalstimulusgain" );
   double stimulusgain = number( "stimulusgain" );
+
+  // init:
+  double amps[traces()];
+  double stimgains[traces()];
+  for ( int k=0; k<traces(); k++ ) {
+    amps[k] = 0.0;
+    stimgains[k] = 0.0;
+  }
+  if ( EODTrace >= 0 ) {
+    amps[EODTrace] = globalamplitude;
+    stimgains[EODTrace] = globalstimulusgain;
+  }
+  for ( int k=0; k<LocalEODTraces; k++ ) {
+    amps[LocalEODTrace[k]] = localamplitude;
+    stimgains[LocalEODTrace[k]] = localstimulusgain;
+  }
+  for ( int j=0; j<FishEODTanks; j++ ) {
+    for ( int k=0; k<FishEODTraces[j]; k++ ) {
+      amps[FishEODTrace[j][k]] = globalamplitude;
+      stimgains[FishEODTrace[j][k]] = globalstimulusgain;
+    }
+  }
+  if ( GlobalEFieldTrace >= 0 ) {
+    amps[GlobalEFieldTrace] = 0.0;
+    stimgains[GlobalEFieldTrace] = stimulusgain;
+  }
+  for ( int k=0; k<LocalEFieldTraces; k++ ) {
+    amps[LocalEFieldTrace[k]] = 0.0;
+    stimgains[LocalEFieldTrace[k]] = stimulusgain;
+  }
+  for ( int k=0; k<FishEFieldTraces; k++ ) {
+    amps[FishEFieldTrace[k]] = 0.0;
+    stimgains[FishEFieldTrace[k]] = stimulusgain;
+  }
 
   // integrate:
   Random rand;
@@ -68,22 +108,25 @@ void EODModel::main( void )
     // phase of EOD frequency:
     phase += (frequency + freqsd * eodf) * deltat( 0 );
     // amplitude modulations:
-    double amp = amplitude;
+    double ampfac = 1.0;
     if ( time( 0 ) > nextinterruption &&
 	 time( 0 ) < nextinterruption + interruptionduration ) {
-      amp *= interruptionamplitude;
+      ampfac = interruptionamplitude;
       if ( time( 0 ) > nextinterruption + interruptionduration - 2.0*deltat( 0 ) )
 	nextinterruption += 4.0;
     }
     double v = 0.0;
     if ( eodtype == 1 )
-      v = amp * ::sin( phase );
+      v = ::sin( phase );
     else if ( eodtype == 2 )
-      v = amp * ( ::sin( phase ) - 0.5*::sin( 2.0*phase ) );
+      v = ( ::sin( phase ) - 0.5*::sin( 2.0*phase ) ) / 1.3;
     else if ( eodtype == 3 )
-      v = amp * ( ::sin( phase ) + 0.25*::sin( 2.0*phase + 0.5*M_PI ) );
-    v += stimulusgain * signal( time( 0 ) );
-    push( 0, v );
+      v = ( ::sin( phase ) + 0.25*::sin( 2.0*phase + 0.5*M_PI ) ) + 0.25;
+    for ( int k=0; k<traces(); k++ ) {
+      double x = v * amps[k]*ampfac;
+      x += stimgains[k] * signal( time( 0 ) );
+      push( k, x );
+    }
   }
 }
 
@@ -91,6 +134,36 @@ void EODModel::main( void )
 void EODModel::process( const OutData &source, OutData &dest )
 {
   dest = source;
+  double intensfac = 0.0;
+  if ( source.level() != OutData::NoLevel ) {
+    intensfac = ( ::pow( 10.0, -source.level()/20.0 ) );
+    bool scaled = false;
+    if ( source.trace() == GlobalAMEField ) {
+      intensfac /= 0.3;
+      scaled = true;
+    }
+    for ( int k=0; ! scaled && k<LocalEFields; k++ ) {
+      if ( source.trace() == LocalEField[k] ) {
+	intensfac /= ( 0.4 + k*0.1 );
+	break;
+      }
+    }
+    for ( int k=0; ! scaled && k<LocalAMEFields; k++ ) {
+      if ( source.trace() == LocalAMEField[k] ) {
+	intensfac /= ( 0.2 + k*0.15 );
+	break;
+      }
+    }
+    for ( int k=0; ! scaled && k<FishEFields; k++ ) {
+      if ( source.trace() == FishEField[k] ) {
+	intensfac /= ( 0.5 + k*0.05 );
+	break;
+      }
+    }
+    if ( ! scaled )
+      intensfac /= 0.4;
+  }
+  dest *= intensfac;
 }
 
 

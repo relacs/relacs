@@ -37,18 +37,21 @@ namespace efield {
 \brief [RePro] Calibrates an attenuator for electric field stimuli.
 \author Jan Benda
 \version 2.2 (Oct 30, 2013)
-
 \par Options
-- \b reset (\c boolean): Reset calibration, i.e. do not use old calibration results.
-- \b am (\c boolean): Use amplitude modulation signal instead of sine wave.
-- \b frequency (\c number, \e Hz): If there is no fish EOD, then use sine wave with this frequency as a calibration stimulus.
-- \b beatfreq (\c number, \e Hz): If there is a fish EOD, then use calibration stimulus that results in this beat frequency.
-- \b duration (\c number, \e ms): Duration of calibration stimulus.
-- \b pause (\c number, \e ms): %Pause between successive stimuli.
-- \b targetcontrast (\c number, \e %): Target contrast to be tested first.
-- \b maxcontrast (\c number, \e %): Maximum contrast (beat amplitude / EOD amplitude) to be used.
-- \b maxint (\c integer): Maximum number of test intensities.
-- \b minintensity (\c number, \e %): Minimum stimulus intensity relative to EOD amplitude.
+- \c reset=false: Reset calibration? (\c boolean)
+- \c am=false: Calibrate amplitude modulation? (\c boolean)
+- \c beatfreq=20Hz: Beat frequency to be used when fish EOD present (\c number)
+- \c frequency=600Hz: Stimulus frequency to be used when no fish EOD is present (\c number)
+- \c duration=400ms: Duration of stimulus (\c number)
+- \c pause=0ms: Pause (\c number)
+- \c amplsel=contrast: Calibrate for (\c string)
+- \c targetcontrast=20%: Target contrast to be tested first (\c number)
+- \c mincontrast=10%: Minimum contrast (\c number)
+- \c maxcontrast=25%: Maximum contrast (\c number)
+- \c targetamplitude=1mV/cm: Target contrast to be tested first (\c number)
+- \c minamplitude=0.5mV/cm: Minimum amplitude (\c number)
+- \c maxamplitude=2mV/cm: Maximum amplitude (\c number)
+- \c numintensities=10: Number of intensities (amplitudes) to be measured (\c integer)
 
 \par Files
 - \b calibrate.dat : the calibration data (measured versus requested stimulus intensity).
@@ -58,10 +61,11 @@ The plot shows the measured versus the requested stimulus intensity (red circles
 The yellow line is a fit of a straight line to the data.
 In case of a successful calibration this line should coincide
 with the blue line.
+The horizontal white line is the target intensity.
 
 \par Requirements
-- Local EOD recording (\c LocalEOD), that is to be calibrated, 
-  and corresponding events (\c LocalEOD).
+- An EOD recording (\c GlobalEOD, LocalEOD, FishEOD), that is to be calibrated, 
+  and corresponding events.
 */
 
 
@@ -79,10 +83,11 @@ public:
 
     /*! Plot data. */
   void plotGain( const MapD &gainamplitudes, double targetintensity );
-  void plotIntensities( const MapD &intensities, double maxx );
+  void plotIntensities( const MapD &intensities, double targetintensity, double maxx );
     /*! Analyze data. */
   int analyze( const InData &eodtrace, double duration,
-	       double beatfrequency, double mincontrast, double maxcontrast,
+	       double beatfrequency, bool usecontrast,
+	       double mincontrast, double maxcontrast, double minamplitude, double maxamplitude,
 	       double intensity, bool fish, double &amplitude );
 
 

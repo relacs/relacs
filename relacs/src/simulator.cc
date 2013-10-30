@@ -330,8 +330,17 @@ int Simulator::setupWrite( OutData &signal )
   }
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
     return -1;
+  }
+
+  // clear device datas:
+  for ( unsigned int i=0; i<AO.size(); i++ )
+    AO[i].Signals.clear();
+
+  // add data to device:
+  AO[di].Signals.add( &signal );
 
   // set intensity:
   for ( unsigned int a=0; a<Att.size(); a++ ) {
@@ -376,29 +385,36 @@ int Simulator::setupWrite( OutData &signal )
   }
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
     return -1;
+  }
 
   // test writing to daq board:
   OutList ol( &signal );  
   AO[di].AO->testWrite( ol );
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
     return -1;
+  }
 
   // prepare writing to daq board:
   AO[di].AO->prepareWrite( ol );
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    AO[di].AO->reset();
+    AO[di].Signals.clear();
     return -1;
+  }
 
   return 0;
 }
 
 
-  int Simulator::startWrite( OutData &signal, bool setsignaltime )
+int Simulator::startWrite( OutData &signal, bool setsignaltime )
 {
   int di = signal.device();
 
@@ -434,6 +450,8 @@ int Simulator::setupWrite( OutData &signal )
 
   // error?
   if ( signal.failed() ) {
+    AO[di].AO->reset();
+    AO[di].Signals.clear();
     LastWrite = -1.0;
     return -1;
   }
@@ -476,6 +494,14 @@ int Simulator::setupWrite( OutList &signal )
   if ( signal.failed() )
     return -1;
 
+  // clear device datas:
+  for ( unsigned int i=0; i<AO.size(); i++ )
+    AO[i].Signals.clear();
+
+  // add signals:
+  for ( int k=0; k<signal.size(); k++ )
+    AO[signal[k].device()].Signals.add( &signal[k] );
+
   // multiple delays:
   for ( int k=0; k<signal.size(); k++ ) {
     if ( signal[k].delay() != 
@@ -488,8 +514,11 @@ int Simulator::setupWrite( OutList &signal )
   }
 
   // error?
-  if ( ! success )
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ )
+      AO[i].Signals.clear();
     return -1;
+  }
 
   // set intensities or levels:
   bool usedatt[Att.size()];
@@ -548,6 +577,13 @@ int Simulator::setupWrite( OutList &signal )
       Att[a].Att->mute();
   }
 
+  // error?
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ )
+      AO[i].Signals.clear();
+    return -1;
+  }
+
   // test writing to daq boards:
   for ( unsigned int i=0; i<AO.size(); i++ ) {
     if ( AO[i].Signals.size() > 0 &&
@@ -556,8 +592,13 @@ int Simulator::setupWrite( OutList &signal )
   }
 
   // error?
-  if ( ! success )
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
     return -1;
+  }
 
   // prepare writing to daq boards:
   for ( unsigned int i=0; i<AO.size(); i++ ) {
@@ -568,8 +609,13 @@ int Simulator::setupWrite( OutList &signal )
   }
 
   // error?
-  if ( ! success )
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
     return -1;
+  }
 
   return 0;
 }
@@ -605,8 +651,13 @@ int Simulator::startWrite( OutList &signal, bool setsignaltime )
   }
   
   // error?
-  if ( ! success )
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
     return -1;
+  }
 
   double st = Sim->add( signal );
   // device still busy?
@@ -628,6 +679,10 @@ int Simulator::startWrite( OutList &signal, bool setsignaltime )
 
   // error?
   if ( signal.failed() ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
     LastWrite = -1.0;
     return -1;
   }
@@ -746,8 +801,10 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
     AO[di].AO->directWrite( AO[di].Signals );
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
     return -1;
+  }
 
   double st = Sim->add( signal );
   // device still busy?
@@ -767,6 +824,8 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
 
   // error?
   if ( signal.failed() ) {
+    AO[di].AO->reset();
+    AO[di].Signals.clear();
     LastWrite = -1.0;
     return -1;
   }
@@ -978,6 +1037,10 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
 
   // error?
   if ( signal.failed() ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
     LastWrite = -1.0;
     return -1;
   }

@@ -31,27 +31,32 @@ namespace efish {
 
 
 PUnitModel::PUnitModel( void )
-  : NeuronModels( "PUnitModel", "efish", "Jan Benda", "1.0", "Nov 27, 2009" )
+  : NeuronModels( "PUnitModel", "efish", "Jan Benda", "2.0", "Oct 30, 2013" )
 {
   // EOD:
   EODFreq = 800.0;
   EODFreqSD = 10.0;
-  EODAmpl1 = 1.0;
-  EODAmpl2 = 1.0;
+  EODLocalAmplitude = 1.0;
+  EODGlobalAmplitude = 1.0;
   EODFreqTau = 1000.0;
-  SignalFac = 1.0;
+  LocalStimulusGain = 1.0;
+  GlobalStimulusGain = 0.0;
+  StimulusGain = 1.0;
   // Spikes:
   VoltageScale = 1.0;
 
   // options:
   newSection( "General" );
   newSubSection( "EOD" );
+  addSelection( "eodtype", "EOD type", "Sine|None|Sine|Apteronotus|Eigenmannia" );
   addNumber( "eodfreq", "Frequency", EODFreq, 0.0, 2000.0, 10.0, "Hz" );
   addNumber( "eodfreqsd", "SD of frequency", EODFreqSD, 0.0, 1000.0, 2.0, "Hz" );
   addNumber( "eodfreqtau", "Timescale of frequency", EODFreqTau, 0.5, 100000.0, 0.5, "s" );
-  addNumber( "eodampl1", "Amplitude 1", EODAmpl1, 0.0, 100.0, 0.1, "mV/cm" );
-  addNumber( "eodampl2", "Amplitude 2", EODAmpl2, 0.0, 100.0, 0.1, "mV/cm" );
-  addNumber( "sigfac", "Factor for signal", SignalFac, 0.0, 100000.0, 0.1 );
+  addNumber( "eodlocalamplitude", "Amplitude for local electrode", EODLocalAmplitude, 0.0, 100.0, 0.1, "mV/cm" );
+  addNumber( "eodglobalamplitude", "Amplitude for global electrode", EODGlobalAmplitude, 0.0, 100.0, 0.1, "mV/cm" );
+  addNumber( "localstimulusgain", "Gain for additive stimulus component to local electrode", LocalStimulusGain, 1.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "globalstimulusgain", "Gain for additive stimulus component to global electrode", GlobalStimulusGain, 0.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "stimulusgain", "Gain for stimulus recording channel", StimulusGain, 0.0, 100000.0, 1.0, "", "", "%.2f" );
   newSubSection( "Spikes" );
   addNumber( "voltagescale", "Scale factor for membrane potential", VoltageScale, 0.0, 100.0, 0.1 );
 
@@ -69,15 +74,41 @@ PUnitModel::~PUnitModel( void )
 void PUnitModel::main( void )
 {
   // eod:
+  EODType = index( "eodtype" );
   EODFreq = 0.001*2.0*M_PI*number( "eodfreq" );
   EODFreqSD = 0.001*2.0*M_PI*number( "eodfreqsd" );
   EODFreqTau = 1000.0*number( "eodfreqtau" );
-  EODAmpl1 = number( "eodampl1" );
-  EODAmpl2 = number( "eodampl2" ) / EODAmpl1;
-  SignalFac = number( "sigfac" );
+  EODLocalAmplitude = number( "eodlocalamplitude" );
+  EODGlobalAmplitude = number( "eodglobalamplitude" );
+  LocalStimulusGain = number( "localstimulusgain" );
+  GlobalStimulusGain = number( "globalstimulusgain" );
+  StimulusGain = number( "stimulusgain" );
   VoltageScale = number( "voltagescale" );
 
   int sigdimension = 2;
+
+  // init traces:
+  double null = 0.0;
+  double voltage = 0.0;
+  double *val[traces()];
+  for ( int k=0; k<traces(); k++ )
+    val[k] = &null;
+  for ( int k=0; k<SpikeTraces; k++ )
+    val[SpikeTrace[k]] = &voltage;
+  if ( EODTrace >= 0 )
+    val[EODTrace] = &EODGlobal;
+  for ( int k=0; k<LocalEODTraces; k++ )
+    val[LocalEODTrace[k]] = &EODLocal;
+  for ( int j=0; j<FishEODTanks; j++ ) {
+    for ( int k=0; k<FishEODTraces[j]; k++ )
+      val[FishEODTrace[j][k]] = &EODGlobal;
+  }
+  if ( GlobalEFieldTrace >= 0 )
+    val[GlobalEFieldTrace] = &Signal;
+  for ( int k=0; k<LocalEFieldTraces; k++ )
+    val[LocalEFieldTrace[k]] = &Signal;
+  for ( int k=0; k<FishEFieldTraces; k++ )
+    val[FishEFieldTrace[k]] = &Signal;
 
   // spiking neuron and general integration options:
   readOptions();
@@ -133,10 +164,9 @@ void PUnitModel::main( void )
 
     cs++;
     if ( cs == maxs ) {
-      push( 0, VoltageScale*simx[sigdimension] );
-      push( 1, EOD1 );
-      push( 2, EOD2 );
-      push( 3, Signal );
+      voltage = VoltageScale*simx[sigdimension];
+      for ( int k=0; k<traces(); k++ )
+	push( k, *val[k] );
       cs = 0;
     }
 
@@ -151,9 +181,30 @@ void PUnitModel::process( const OutData &source, OutData &dest )
   double intensfac = 0.0;
   if ( source.level() != OutData::NoLevel ) {
     intensfac = ( ::pow( 10.0, -source.level()/20.0 ) );
-    if ( source.trace() == GlobalAMEField )
+    bool scaled = false;
+    if ( source.trace() == GlobalAMEField ) {
       intensfac /= 0.3;
-    else
+      scaled = true;
+    }
+    for ( int k=0; ! scaled && k<LocalEFields; k++ ) {
+      if ( source.trace() == LocalEField[k] ) {
+	intensfac /= ( 0.4 + k*0.1 );
+	break;
+      }
+    }
+    for ( int k=0; ! scaled && k<LocalAMEFields; k++ ) {
+      if ( source.trace() == LocalAMEField[k] ) {
+	intensfac /= ( 0.2 + k*0.15 );
+	break;
+      }
+    }
+    for ( int k=0; ! scaled && k<FishEFields; k++ ) {
+      if ( source.trace() == FishEField[k] ) {
+	intensfac /= ( 0.5 + k*0.05 );
+	break;
+      }
+    }
+    if ( ! scaled )
       intensfac /= 0.4;
   }
   dest *= intensfac;
@@ -168,14 +219,22 @@ void PUnitModel::operator()( double t, double *x, double *dxdt, int n )
   dxdt[0] = ( -x[0] + EODFreqFac*rand.gaussian() ) / EODFreqTau;
   // phase of EOD frequency:
   dxdt[1] = EODFreq + EODFreqSD * x[0];
-  EOD1 = EODAmpl1 * ::sin( x[1] );
-  EOD2 = EODAmpl2 * EOD1;
+  double v = 0.0;
+  if ( EODType == 1 )
+    v = ::sin( x[1] );
+  else if ( EODType == 2 )
+    v = ( ::sin( x[1] ) - 0.5*::sin( 2.0*x[1] ) ) / 1.3;
+  else if ( EODType == 3 )
+    v = ( ::sin( x[1] ) + 0.25*::sin( 2.0*x[1] + 0.5*M_PI ) ) + 0.25;
+  EODLocal = EODLocalAmplitude * v;
+  EODGlobal = EODGlobalAmplitude * v;
   double sglobal = signal( 0.001 * t, GlobalEField );
-  double sglobalam = signal( 0.001 * t, GlobalAMEField ) * EOD2;
+  double sglobalam = signal( 0.001 * t, GlobalAMEField ) * EODGlobal;
   Signal = sglobal + sglobalam;
-  EOD2 += Signal;
-  Signal *= SignalFac;
-  double s = EOD2 * neuron()->gain() + neuron()->offset();
+  EODLocal += LocalStimulusGain*Signal;
+  EODGlobal += GlobalStimulusGain*Signal;
+  Signal *= StimulusGain;
+  double s = EODLocal * neuron()->gain() + neuron()->offset();
   s += noiseFac() * rand.gaussian();
   if ( MMCInx >= 0 )
     s -= GMC*x[MMCInx]*(x[2]-EMC);

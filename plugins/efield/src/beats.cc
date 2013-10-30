@@ -218,6 +218,10 @@ int Beats::main( void )
       printlog( "EOD Frequency of fish is " + Str( fishrate, 0, 1, 'f' ) + "Hz" );
       if ( fakefish > 0.0 )
 	fishrate = fakefish;
+      else if ( fishrate < 0.1 ) {
+	warning( "No fish EOD detected!" );
+	return Failed;
+      }
 
       setSaving( true );
 

@@ -41,9 +41,13 @@ CalibEField::CalibEField( void )
   addNumber( "frequency", "Stimulus frequency to be used when no fish EOD is present", 600.0, 10.0, 1000.0, 5.0, "Hz" );
   addNumber( "duration", "Duration of stimulus", 0.4, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", 0.0, 0.0, 10.0, 0.05, "seconds", "ms" );
-  addNumber( "targetcontrast", "Target contrast to be tested first", 0.2, 0.01, 1.0, 0.05, "", "%" );
-  addNumber( "mincontrast", "Minimum contrast", 0.1, 0.01, 1.0, 0.05, "", "%" );
-  addNumber( "maxcontrast", "Maximum contrast", 0.25, 0.01, 1.0, 0.05, "", "%" );
+  addSelection( "amplsel", "Calibrate for", "contrast|amplitude" );
+  addNumber( "targetcontrast", "Target contrast to be tested first", 0.2, 0.01, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
+  addNumber( "mincontrast", "Minimum contrast", 0.1, 0.01, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
+  addNumber( "maxcontrast", "Maximum contrast", 0.25, 0.01, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
+  addNumber( "targetamplitude", "Target contrast to be tested first", 1.0, 0.001, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "amplitude" );
+  addNumber( "minamplitude", "Minimum amplitude", 0.5, 0.0, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "amplitude" );
+  addNumber( "maxamplitude", "Maximum amplitude", 2.0, 0.0, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "amplitude" );
   addInteger( "numintensities", "Number of intensities (amplitudes) to be measured", 10, 4, 1000, 2 );
 
   // plot:
@@ -65,9 +69,13 @@ int CalibEField::main( void )
   double beatfrequency = number( "beatfreq" );
   double duration = number( "duration" );
   double pause = number( "pause" );
+  bool usecontrast = ( index( "amplsel" ) == 0 );
   double targetcontrast = number( "targetcontrast" );
   double maxcontrast = number( "maxcontrast" );
   double mincontrast = number( "mincontrast" );
+  double targetamplitude = number( "targetamplitude" );
+  double maxamplitude = number( "maxamplitude" );
+  double minamplitude = number( "minamplitude" );
   int numintensities = integer( "numintensities" );
 
   int outtrace = am ? GlobalAMEField : GlobalEField;
@@ -133,10 +141,20 @@ int CalibEField::main( void )
 				  currentTime() - 0.5, currentTime() );
     Str s = "EOD amplitude = " + Str( fishamplitude );
     message( s );
+    if ( ! usecontrast ) {
+      mincontrast = minamplitude / fishamplitude;
+      maxcontrast = maxamplitude / fishamplitude;
+    }
   }
-  else if ( am ) {
-    warning( "Need fish EOD for calibrating amplitude modulation!" );
-    return Failed;
+  else {
+    if ( usecontrast ) {
+      warning( "Need fish EOD for calibrating contrasts!" );
+      return Failed;
+    }
+    if ( am ) {
+      warning( "Need fish EOD for calibrating amplitude modulation!" );
+      return Failed;
+    }
   }
   EODUnit = eodtrace.unit();
   if ( reset ) {
@@ -152,9 +170,13 @@ int CalibEField::main( void )
   tracePlotSignal( duration );
 
   // adjust local EOD:
-  double val2 = eodtrace.maxAbs( currentTime()-0.1, currentTime() );
-  if ( val2 > 0.0 )
-    adjustGain( eodtrace, ( 1.0 + maxcontrast ) * val2 );
+  if ( usecontrast ) {
+    double val2 = eodtrace.maxAbs( currentTime()-0.1, currentTime() );
+    if ( val2 > 0.0 )
+      adjustGain( eodtrace, ( 1.0 + maxcontrast ) * val2 );
+  }
+  else
+    adjustGain( eodtrace, maxamplitude );
 
   // plot:
   P.lock();
@@ -166,13 +188,13 @@ int CalibEField::main( void )
   P.setYLabel( ylabel );
   P.unlock();
 
-  // phase 1: find right gain to get target contrast: ////////////////////
+  // phase 1: find right gain to get target contrast/amplitude: ////////////////////
   double maxsignal = 0.0;
   double targetintensity = 0.0;
-  if ( fish )
+  if ( usecontrast )
     targetintensity = targetcontrast * fishamplitude;
   else
-    targetintensity = maxcontrast * eodtrace.maxValue();
+    targetintensity = targetamplitude;
   // make sure the intensity is valid:
   double gain = latt->gain();
   double maxgain = ( ::pow( 10.0, -minLevel( outtrace )/20.0 ) )/targetintensity;
@@ -233,7 +255,8 @@ int CalibEField::main( void )
     // analyze amplitude:
     double amplitude = 0.0;
     int r = analyze( eodtrace, duration, beatfrequency,
-		     mincontrast, maxcontrast,
+		     usecontrast, mincontrast, maxcontrast,
+		     minamplitude, maxamplitude,
 		     targetintensity, fish, amplitude );
     gainamplitudes.push( latt->gain(), amplitude );
 
@@ -243,7 +266,8 @@ int CalibEField::main( void )
     message( s );
 
     if ( amplitude < 0.01 * eodtrace.maxValue() ) {
-      warning( "Did not record signal!" );
+      warning( "Did not record signal on measurement electrodes! Amplitude=" + Str( amplitude )
+	       + " < 0.01*" + Str( eodtrace.maxValue() ) );
       return Failed;
     }
 
@@ -300,13 +324,13 @@ int CalibEField::main( void )
 
   double maxintensity = 0.0;
   double minintensity = 0.0;
-  if ( fish ) {
+  if ( usecontrast ) {
     maxintensity = maxcontrast * fishamplitude;
     minintensity = mincontrast * fishamplitude;
   }
   else {
-    maxintensity = maxcontrast * eodtrace.maxValue();
-    minintensity = mincontrast * eodtrace.maxValue();
+    maxintensity = maxamplitude;
+    minintensity = minamplitude;
   }
   if ( maxintensity > maxIntensity( outtrace ) )
     maxintensity = maxIntensity( outtrace );
@@ -362,8 +386,8 @@ int CalibEField::main( void )
     }
 
     double amplitude = 0.0;
-    int r = analyze( eodtrace, duration, beatfrequency,
-		     mincontrast, maxcontrast, intensity, fish, amplitude );
+    int r = analyze( eodtrace, duration, beatfrequency, usecontrast, mincontrast, maxcontrast,
+		     minamplitude, maxamplitude, intensity, fish, amplitude );
 
     Str s = "Phase <b>" + Str( phase ) + "</b>";
     s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + EODUnit + "</b>";
@@ -391,7 +415,7 @@ int CalibEField::main( void )
       }
     }
 
-    plotIntensities( intensities, maxintensity );
+    plotIntensities( intensities, targetintensity, maxintensity );
 
     // next stimulus:
     intensitycount++;
@@ -439,13 +463,13 @@ int CalibEField::main( void )
 	s += ",  new offset = " + Str( offset );
 	message( s );
 	// reset intensity ranges:
-	if ( fish ) {
+	if ( usecontrast ) {
 	  maxintensity = maxcontrast * fishamplitude;
 	  minintensity = mincontrast * fishamplitude;
 	}
 	else {
-	  maxintensity = maxcontrast * eodtrace.maxValue();
-	  minintensity = mincontrast * eodtrace.maxValue();
+	  maxintensity = maxamplitude;
+	  minintensity = minamplitude;
 	}
 	if ( maxintensity > maxIntensity( outtrace ) )
 	  maxintensity = maxIntensity( outtrace );
@@ -540,14 +564,14 @@ void CalibEField::plotGain( const MapD &gainamplitudes, double targetintensity )
     ymax = targetintensity;
   if ( ! P.zoomedYRange() )
     P.setYRange( 0.0, ymax );
-  P.plotHLine( targetintensity, Plot::Yellow, 4 );
+  P.plotHLine( targetintensity, Plot::White, 4 );
   P.plot( gainamplitudes, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 10, Plot::Red, Plot::Red );
   P.draw();
   P.unlock();
 }
 
 
-void CalibEField::plotIntensities( const MapD &intensities, double maxx )
+void CalibEField::plotIntensities( const MapD &intensities, double targetintensity, double maxx )
 {
   P.lock();
   P.clear();
@@ -557,6 +581,7 @@ void CalibEField::plotIntensities( const MapD &intensities, double maxx )
   if ( ! P.zoomedYRange() )
     P.setYRange( 0.0, maxx*FitGain+FitOffset );
   //  P.setYRange( 0.0, Plot::AutoScale );
+  P.plotHLine( targetintensity, Plot::White, 4 );
   P.plotLine( 0.0, 0.0, maxx, maxx, Plot::Blue, 4 );
   P.plotLine( 0.0, FitOffset, maxx, maxx*FitGain+FitOffset, Plot::Yellow, 2 );
   P.plot( intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 10, Plot::Red, Plot::Red );
@@ -567,7 +592,8 @@ void CalibEField::plotIntensities( const MapD &intensities, double maxx )
 
 int CalibEField::analyze( const InData &eodtrace,
 			  double duration, double beatfrequency,
-			  double mincontrast, double maxcontrast,
+			  bool usecontrast, double mincontrast, double maxcontrast,
+			  double minamplitude, double maxamplitude,
 			  double intensity, bool fish, double &amplitude )
 {
   if ( fish ) {
@@ -599,15 +625,29 @@ int CalibEField::analyze( const InData &eodtrace,
     printlog( "Contrast: " + Str( 100.0*contrast ) + "%" );
 
     // contrast overflow?
-    if ( contrast > 1.1*maxcontrast ) {
-      Str s = "Contrast overflow: " + Str( 100.0*contrast ) + "%";
+    if ( usecontrast && contrast > 1.1*maxcontrast ) {
+      Str s = "Contrast overflow: " + Str( 100.0*contrast ) + "% > "
+	+ Str( 100.0*maxcontrast ) + "%";
+      message( s );
+      return 2;
+    }
+    if ( ! usecontrast && amplitude > 1.1*maxamplitude ) {
+      Str s = "Amplitude overflow: " + Str( amplitude ) + "mV/cm > "
+	+ Str( maxamplitude ) + "mV/cm";
       message( s );
       return 2;
     }
 
     // contrast underflow?
-    if ( contrast < 0.9*mincontrast ) {
-      Str s = "Contrast underflow: " + Str( 100.0*contrast ) + "%";
+    if ( usecontrast && contrast < 0.9*mincontrast ) {
+      Str s = "Contrast underflow: " + Str( 100.0*contrast ) + "% < "
+	+ Str( 100.0*mincontrast ) + "%";
+      message( s );
+      return 1;
+    }
+    if ( ! usecontrast && amplitude < 0.9*minamplitude ) {
+      Str s = "Amplitude underflow: " + Str( amplitude ) + "% < "
+	+ Str( minamplitude ) + "%";
       message( s );
       return 1;
     }
@@ -619,11 +659,12 @@ int CalibEField::analyze( const InData &eodtrace,
     double offset = 0.1 * duration;
     amplitude = eodAmplitude( eodtrace, signalTime() + offset,
 			      signalTime() + duration - offset );
+    printlog( "Amplitude: " + Str( amplitude ) + "mV/cm" );
     
     // overflow?
-    if ( amplitude > 0.95 * eodtrace.maxValue() ) {
-      Str s = "Signal overflow: Amplitude = " + Str( amplitude );
-      s += ", maxValue = " + Str( eodtrace.maxValue() );
+    if ( amplitude > 1.1 * maxamplitude ) {
+      Str s = "Signal overflow: Amplitude = " + Str( amplitude )
+	+ "mV/cm > " + Str( maxamplitude ) + "mV/cm";
       message( s );
       return 2;
     }

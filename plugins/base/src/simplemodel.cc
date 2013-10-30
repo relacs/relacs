@@ -56,7 +56,8 @@ void SimpleModel::main( void )
     v += stimulusgain * signal( time( 0 ) );
     v += noisegain * rnd.gaussian();
     v += sinegain * ::sin( 6.28318530717959*sinefreq*time( 0 ) );
-    push( 0, v );
+    for ( int k=0; k<traces(); k++ )
+      push( k, v );
   }
 }
 
