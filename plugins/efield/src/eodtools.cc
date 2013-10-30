@@ -68,7 +68,7 @@ public:
     // peak time:
     // time = *eventtime + event.sampleInterval()*a/b;  // very noisy!
     // peak size:
-    size = y1 - 0.25*a*a/b;
+    size = fabs( b ) > 1e-8 ? y1 - 0.25*a*a/b : y1;
     
     // width:
     width = 0.0;
@@ -130,7 +130,7 @@ public:
     double a = y3 - 4.0*y2 + 3.0*y1;
     double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
     // peak size:
-    size = y1 - 0.25*a*a/b;
+    size = fabs( b ) > 1e-8 ? y1 - 0.25*a*a/b : y1;
     
     // width:
     width = 0.0;
@@ -193,7 +193,7 @@ public:
     // peak time:
     // time = *eventtime + event.sampleInterval()*a/b;  // very noisy!
     // peak size:
-    size = y1 - 0.25*a*a/b;
+    size = fabs( b ) > 1e-8 ? y1 - 0.25*a*a/b : y1;
     
     // width:
     width = 0.0;
@@ -224,7 +224,7 @@ public:
     double a = y3 - 4.0*y2 + 3.0*y1;
     double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
     // peak size:
-    size = y1 - 0.25*a*a/b;
+    size = fabs( b ) > 1e-8 ? y1 - 0.25*a*a/b : y1;
     
     // width:
     width = 0.0;

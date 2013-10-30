@@ -363,7 +363,7 @@ int EODDetector::checkEvent( InData::const_iterator first,
   double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
   if ( fabs( b ) < 1.0e-5 )
     return 0;
-  double peakampl = y1 - 0.25*a*a/b;
+  double peakampl = fabs( b ) > 1e-8 ? y1 - 0.25*a*a/b : y1;
   /*
   // peak time:
   --event;

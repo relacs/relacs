@@ -36,7 +36,7 @@ namespace efield {
 \class CalibEField
 \brief [RePro] Calibrates an attenuator for electric field stimuli.
 \author Jan Benda
-\version 2.0 (Nov 21, 2010)
+\version 2.2 (Oct 30, 2013)
 
 \par Options
 - \b reset (\c boolean): Reset calibration, i.e. do not use old calibration results.
@@ -81,7 +81,7 @@ public:
   void plotGain( const MapD &gainamplitudes, double targetintensity );
   void plotIntensities( const MapD &intensities, double maxx );
     /*! Analyze data. */
-  int analyze( const InData &localeodtrace, double duration,
+  int analyze( const InData &eodtrace, double duration,
 	       double beatfrequency, double mincontrast, double maxcontrast,
 	       double intensity, bool fish, double &amplitude );
 
@@ -90,7 +90,7 @@ private:
 
   double FitGain;
   double FitOffset;
-  string LocalEODUnit;
+  string EODUnit;
   Plot P;
 
 };

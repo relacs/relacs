@@ -737,7 +737,7 @@ void Beats::saveEODFreq( int trace, const string &es, const Options &header, con
 
 void Beats::saveMergedEODFreq( const Options &header, const MapD &eodfrequency, bool split, int count )
 {
-  ofstream df( addPath( "beats-eod" + ( split ? "-"+Str( count+1, 2, '0' ) : "" ) + ".dat" ).c_str(),
+  ofstream df( addPath( "beats-mergedeod" + ( split ? "-"+Str( count+1, 2, '0' ) : "" ) + ".dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;

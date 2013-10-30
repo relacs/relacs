@@ -30,7 +30,7 @@ EODModel::EODModel( void )
   : Model( "EODModel", "efield", "Jan Benda", "1.0", "Feb 03, 2013" )
 {
   // define options:
-  addSelection( "eodtype", "EOD type", "Sine|Apteronotus|Eigenmannia" );
+  addSelection( "eodtype", "EOD type", "Sine|None|Sine|Apteronotus|Eigenmannia" );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 100000.0, 1.0, "mV/cm", "mV/cm", "%.2f" );
   addNumber( "frequency", "Frequency", 1000.0, 0.0, 10000000.0, 10.0, "Hz", "Hz", "%.1f" );
   addNumber( "freqsd", "Standard deviation of frequency modulation", 10.0, 0.0, 1000.0, 2.0, "Hz" );
@@ -38,6 +38,7 @@ EODModel::EODModel( void )
   addBoolean( "interrupt", "Add interruptions", false );
   addNumber( "interruptduration", "Duration of interruption", 0.1, 0.0, 100.0, 0.1, "s", "ms" ).setActivation( "interrupt", "true" );
   addNumber( "interruptamplitude", "Amplitude fraction of interruption", 0.0, 0.0, 1.0, 0.5, "1", "%" ).setActivation( "interrupt", "true" );;
+  addNumber( "stimulusgain", "Gain of stimulus", 0.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
 }
 
 
@@ -55,6 +56,7 @@ void EODModel::main( void )
   double interruptionduration = number( "interruptduration" );
   double interruptionamplitude = number( "interruptamplitude" );
   double nextinterruption = interrupteod ? time( 0 ) + 2.0 : -1.0;
+  double stimulusgain = number( "stimulusgain" );
 
   // integrate:
   Random rand;
@@ -73,12 +75,15 @@ void EODModel::main( void )
       if ( time( 0 ) > nextinterruption + interruptionduration - 2.0*deltat( 0 ) )
 	nextinterruption += 4.0;
     }
+    double v = 0.0;
     if ( eodtype == 1 )
-      push( 0, amp * ( ::sin( phase ) - 0.5*::sin( 2.0*phase ) ) );
+      v = amp * ::sin( phase );
     else if ( eodtype == 2 )
-      push( 0, amp * ( ::sin( phase ) + 0.25*::sin( 2.0*phase + 0.5*M_PI ) ) );
-    else
-      push( 0, amp * ::sin( phase ) );
+      v = amp * ( ::sin( phase ) - 0.5*::sin( 2.0*phase ) );
+    else if ( eodtype == 3 )
+      v = amp * ( ::sin( phase ) + 0.25*::sin( 2.0*phase + 0.5*M_PI ) );
+    v += stimulusgain * signal( time( 0 ) );
+    push( 0, v );
   }
 }
 

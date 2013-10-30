@@ -104,9 +104,15 @@ void Traces::initialize( const RELACSPlugin *rp,
 			 const EventList &events )
 {
   // global EOD:
-  EODTrace = data.index( "EOD" );
-  EODEvents = events.index( "EOD" );
-  ChirpEvents = events.index( "Chirps" );
+  string fs[3] = { "", "-1", "-A-1" };
+  for ( int k=0; k<3; k++ ) {
+    EODTrace = data.index( "EOD"+fs[k] );
+    if ( EODTrace >= 0 ) {
+      EODEvents = events.index( "EOD"+fs[k] );
+      ChirpEvents = events.index( "Chirps"+fs[k] );
+      break;
+    }
+  }
 
   // local EODs:
   LocalEODTraces = 0;

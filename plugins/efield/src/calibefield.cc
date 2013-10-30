@@ -32,7 +32,7 @@ namespace efield {
 
 CalibEField::CalibEField( void )
   : RePro( "CalibEField", "efield",
-	   "Jan Benda", "2.0", "Nov 21, 2010" )
+	   "Jan Benda", "2.2", "Oct 30, 2013" )
 {
   // add some parameter as options:
   addBoolean( "reset", "Reset calibration?", false );
@@ -86,24 +86,34 @@ int CalibEField::main( void )
   }
 
   // check for analog input traces:
-  if ( LocalEODTrace[0] < 0 ) {
-    warning( "No local EOD recording available!" );
-    return Failed;
+  int eodtraceindices[3] = { LocalEODTrace[0], EODTrace, FishEODTrace[0][0] };
+  int eodeventsindices[3] = { LocalEODEvents[0], EODEvents, FishEODEvents[0][0] };
+  int eodtraceinx = -1;
+  int eodeventsinx = -1;
+  for ( int k=0; k<3; k++ ) {
+    eodtraceinx = eodtraceindices[k];
+    eodeventsinx = eodeventsindices[k];
+    if ( eodtraceinx >= 0 )
+      break;
   }
-  if ( LocalEODEvents[0] < 0 ) {
-    warning( "No local EOD events available!" );
+  if ( eodtraceinx < 0 ) {
+    warning( "No EOD recording available!" );
     return Failed;
   }
 
   // data:
-  const InData &localeodtrace = trace( LocalEODTrace[0] );
-  const EventData &localeodevents = events( LocalEODEvents[0] );
-  bool fish = ( localeodevents.count( localeodevents.rangeBack() - 1.0 ) > 100 );
+  const InData &eodtrace = trace( eodtraceinx );
+  bool fish = false;
+  if ( eodeventsinx >= 0 ) {
+    const EventData &eodevents = events( eodeventsinx );
+    fish = ( eodevents.count( eodevents.rangeBack() - 1.0 ) > 100 );
+  }
   message( fish ? "There IS a fish EOD" : "NO fish EOD present" );
   double fishrate = 0.0;
   double fishamplitude = 0.0;
   if ( fish ) {
-    fishrate = localeodevents.frequency( localeodevents.rangeBack() - 0.5 );
+    const EventData &eodevents = events( eodeventsinx );
+    fishrate = eodevents.frequency( eodevents.rangeBack() - 0.5 );
     if ( duration * beatfrequency < 6 ) {
       double newbeatfrequency = ceil( 10.0 / duration );
       double newduration = 6.0/beatfrequency;
@@ -119,16 +129,16 @@ int CalibEField::main( void )
       frequency = fishrate + beatfrequency;
 
     // mean EOD amplitude:
-    fishamplitude = eodAmplitude( localeodtrace,
+    fishamplitude = eodAmplitude( eodtrace,
 				  currentTime() - 0.5, currentTime() );
-    Str s = "Local EOD amplitude = " + Str( fishamplitude );
+    Str s = "EOD amplitude = " + Str( fishamplitude );
     message( s );
   }
   else if ( am ) {
     warning( "Need fish EOD for calibrating amplitude modulation!" );
     return Failed;
   }
-  LocalEODUnit = trace( LocalEODTrace[0] ).unit();
+  EODUnit = eodtrace.unit();
   if ( reset ) {
     message( "reset gain to 0.1" );
     latt->setGain( 0.1, 0.0 );
@@ -142,18 +152,17 @@ int CalibEField::main( void )
   tracePlotSignal( duration );
 
   // adjust local EOD:
-  double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
-						  currentTime() );
+  double val2 = eodtrace.maxAbs( currentTime()-0.1, currentTime() );
   if ( val2 > 0.0 )
-    adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + maxcontrast ) * val2 );
+    adjustGain( eodtrace, ( 1.0 + maxcontrast ) * val2 );
 
   // plot:
   P.lock();
   P.clear();
   P.resetRanges();
   P.setXLabel( "Gain" );
-  string ylabel = am ? "Measured AM Intensity" : "Measured EOD Intensity";
-  ylabel += " [" + LocalEODUnit + "]";
+  string ylabel = am ? "Measured AM Amplitude" : "Measured EOD Amplitude";
+  ylabel += " [" + EODUnit + "]";
   P.setYLabel( ylabel );
   P.unlock();
 
@@ -163,7 +172,7 @@ int CalibEField::main( void )
   if ( fish )
     targetintensity = targetcontrast * fishamplitude;
   else
-    targetintensity = maxcontrast * trace( LocalEODTrace[0] ).maxValue();
+    targetintensity = maxcontrast * eodtrace.maxValue();
   // make sure the intensity is valid:
   double gain = latt->gain();
   double maxgain = ( ::pow( 10.0, -minLevel( outtrace )/20.0 ) )/targetintensity;
@@ -223,15 +232,20 @@ int CalibEField::main( void )
 
     // analyze amplitude:
     double amplitude = 0.0;
-    int r = analyze( localeodtrace, duration, beatfrequency,
+    int r = analyze( eodtrace, duration, beatfrequency,
 		     mincontrast, maxcontrast,
 		     targetintensity, fish, amplitude );
     gainamplitudes.push( latt->gain(), amplitude );
 
-    Str s = "Phase <b>1</b>: Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + LocalEODUnit + "</b>";
-    s += ",  Measured <b>" + Str( amplitude, 0, 3, 'g' ) + LocalEODUnit + "</b>";
+    Str s = "Phase <b>1</b>: Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + EODUnit + "</b>";
+    s += ",  Measured <b>" + Str( amplitude, 0, 3, 'g' ) + EODUnit + "</b>";
     s += " at gain <b>" + Str( latt->gain(), 0, 5, 'g' ) + "</b>";
     message( s );
+
+    if ( amplitude < 0.01 * eodtrace.maxValue() ) {
+      warning( "Did not record signal!" );
+      return Failed;
+    }
 
     plotGain( gainamplitudes, targetintensity );
 
@@ -291,8 +305,8 @@ int CalibEField::main( void )
     minintensity = mincontrast * fishamplitude;
   }
   else {
-    maxintensity = maxcontrast * trace( LocalEODTrace[0] ).maxValue();
-    minintensity = mincontrast * trace( LocalEODTrace[0] ).maxValue();
+    maxintensity = maxcontrast * eodtrace.maxValue();
+    minintensity = mincontrast * eodtrace.maxValue();
   }
   if ( maxintensity > maxIntensity( outtrace ) )
     maxintensity = maxIntensity( outtrace );
@@ -348,12 +362,12 @@ int CalibEField::main( void )
     }
 
     double amplitude = 0.0;
-    int r = analyze( localeodtrace, duration, beatfrequency,
+    int r = analyze( eodtrace, duration, beatfrequency,
 		     mincontrast, maxcontrast, intensity, fish, amplitude );
 
     Str s = "Phase <b>" + Str( phase ) + "</b>";
-    s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + LocalEODUnit + "</b>";
-    s += ",  Measured <b>" + Str( amplitude, 0, 3, 'g' ) + LocalEODUnit + "</b>";
+    s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + EODUnit + "</b>";
+    s += ",  Measured <b>" + Str( amplitude, 0, 3, 'g' ) + EODUnit + "</b>";
     message( s );
 
     if ( r == 0 ) {
@@ -430,8 +444,8 @@ int CalibEField::main( void )
 	  minintensity = mincontrast * fishamplitude;
 	}
 	else {
-	  maxintensity = maxcontrast * trace( LocalEODTrace[0] ).maxValue();
-	  minintensity = mincontrast * trace( LocalEODTrace[0] ).maxValue();
+	  maxintensity = maxcontrast * eodtrace.maxValue();
+	  minintensity = mincontrast * eodtrace.maxValue();
 	}
 	if ( maxintensity > maxIntensity( outtrace ) )
 	  maxintensity = maxIntensity( outtrace );
@@ -501,8 +515,8 @@ void CalibEField::saveData( const MapD &intensities,
   settings().save( df, "#   " );
   df << '\n';
   TableKey key;
-  key.addNumber( "intens", LocalEODUnit, "%8.5g" );
-  key.addNumber( "measured", LocalEODUnit, "%8.5g" );
+  key.addNumber( "intens", EODUnit, "%8.5g" );
+  key.addNumber( "measured", EODUnit, "%8.5g" );
   key.saveKey( df, true, false );
 
   // write data:
@@ -537,7 +551,7 @@ void CalibEField::plotIntensities( const MapD &intensities, double maxx )
 {
   P.lock();
   P.clear();
-  P.setXLabel( "Requested Intensity [" + LocalEODUnit + "]" );
+  P.setXLabel( "Requested Intensity [" + EODUnit + "]" );
   if ( ! P.zoomedXRange() )
     P.setXRange( 0.0, maxx );
   if ( ! P.zoomedYRange() )
@@ -551,7 +565,7 @@ void CalibEField::plotIntensities( const MapD &intensities, double maxx )
 }
 
 
-int CalibEField::analyze( const InData &localeodtrace,
+int CalibEField::analyze( const InData &eodtrace,
 			  double duration, double beatfrequency,
 			  double mincontrast, double maxcontrast,
 			  double intensity, bool fish, double &amplitude )
@@ -562,7 +576,7 @@ int CalibEField::analyze( const InData &localeodtrace,
     double upperampl = 0.0;
     double lowermean = 0.0;
     double lowerampl = 0.0;
-    beatAmplitudes( localeodtrace, signalTime(), signalTime() + duration,
+    beatAmplitudes( eodtrace, signalTime(), signalTime() + duration,
 		    1.0/beatfrequency, maxcontrast,
 		    uppermean, upperampl, lowermean, lowerampl );
     /*
@@ -572,11 +586,11 @@ int CalibEField::analyze( const InData &localeodtrace,
     amplitude = 0.5 * (upperampl + lowerampl);
 
     // range overflow?
-    if ( uppermean+upperampl > 0.95 * localeodtrace.maxValue() ||
-	 fabs(lowermean-lowerampl) > 0.95 * localeodtrace.maxValue() ) {
+    if ( uppermean+upperampl > 0.95 * eodtrace.maxValue() ||
+	 fabs(lowermean-lowerampl) > 0.95 * eodtrace.maxValue() ) {
       Str s = "Beat range overflow: upperpeak = " + Str( uppermean+upperampl );
       s += ", lowerpeak = " + Str( fabs(lowermean-lowerampl) );
-      s += ", maxValue = " + Str( localeodtrace.maxValue() );
+      s += ", maxValue = " + Str( eodtrace.maxValue() );
       message( s );
       return 2;
     }
@@ -603,13 +617,13 @@ int CalibEField::analyze( const InData &localeodtrace,
 
     // mean EOD amplitude:
     double offset = 0.1 * duration;
-    amplitude = eodAmplitude( localeodtrace, signalTime() + offset,
+    amplitude = eodAmplitude( eodtrace, signalTime() + offset,
 			      signalTime() + duration - offset );
     
     // overflow?
-    if ( amplitude > 0.95 * localeodtrace.maxValue() ) {
+    if ( amplitude > 0.95 * eodtrace.maxValue() ) {
       Str s = "Signal overflow: Amplitude = " + Str( amplitude );
-      s += ", maxValue = " + Str( localeodtrace.maxValue() );
+      s += ", maxValue = " + Str( eodtrace.maxValue() );
       message( s );
       return 2;
     }
