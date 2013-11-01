@@ -25,7 +25,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <relacs/cyclicarray.h>
+#include <relacs/bufferarray.h>
 #include <relacs/daqerror.h>
 using namespace std;
 
@@ -84,7 +84,7 @@ class InDataIterator;
 class InDataDiffIterator;
 class InDataTimeIterator;
 
-class InData : public CyclicArray<float>, public DaqError
+class InData : public BufferArrayF, public DaqError
 {
   
  public:
@@ -106,9 +106,9 @@ class InData : public CyclicArray<float>, public DaqError
   
     /*! Constructor. */
   InData( void );
-    /*! Constructs an InData with capacity \a n 
+    /*! Constructs an InData with capacity \a n, write buffer size \a m,
         and sampling interval \a step. */
-  InData( int n, double step );
+  InData( int n, int m, double step );
     /*! Copy constructor. */
   InData( const InData &data );
     /*! Destructor. */
@@ -453,7 +453,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the minimum value of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double min( int from, int upto ) const 
-    { return CyclicArrayF::min( from, upto ); };
+    { return BufferArrayF::min( from, upto ); };
     /*! Return the minimum value of the trace between times
         \a from and \a upto. */
   double min( double from, double upto ) const
@@ -464,7 +464,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the maximum value of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double max( int from, int upto ) const 
-    { return CyclicArrayF::max( from, upto ); };
+    { return BufferArrayF::max( from, upto ); };
     /*! Return the maximum value of the trace between times
         \a from and \a upto. */
   double max( double from, double upto ) const
@@ -476,7 +476,7 @@ class InData : public CyclicArray<float>, public DaqError
         of the trace between index \a from inclusively
         and index \a upto exclusively. */
   void minMax( double &min, double &max, int from, int upto ) const 
-    { CyclicArrayF::minMax( min, max, from, upto ); };
+    { BufferArrayF::minMax( min, max, from, upto ); };
     /*! Return the minimum and maximum value, \a min and \a max,
         of the trace between times \a from and \a upto. */
   void minMax( double &min, double &max, double from, double upto ) const
@@ -488,7 +488,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the minimum absolute value of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double minAbs( int from, int upto ) const 
-    { return CyclicArrayF::minAbs( from, upto ); };
+    { return BufferArrayF::minAbs( from, upto ); };
     /*! Return the minimum absolute value of the trace between times
         \a from and \a upto. */
   double minAbs( double from, double upto ) const
@@ -499,7 +499,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the maximum absolute value of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double maxAbs( int from, int upto ) const 
-    { return CyclicArrayF::maxAbs( from, upto ); };
+    { return BufferArrayF::maxAbs( from, upto ); };
     /*! Return the maximum absolute value of the trace between times
         \a from and \a upto. */
   double maxAbs( double from, double upto ) const
@@ -511,7 +511,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the mean value of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double mean( int from, int upto ) const 
-    { return CyclicArrayF::mean( from, upto ); };
+    { return BufferArrayF::mean( from, upto ); };
     /*! Return the mean value of the trace between times
         \a from and \a upto. */
   double mean( double from, double upto ) const
@@ -525,7 +525,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the variance of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double variance( int from, int upto ) const 
-    { return CyclicArrayF::variance( from, upto ); };
+    { return BufferArrayF::variance( from, upto ); };
     /*! Return the variance of the trace between times
         \a from and \a upto. */
   double variance( double from, double upto ) const
@@ -539,7 +539,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the standard deviation of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double stdev( int from, int upto ) const 
-    { return CyclicArrayF::stdev( from, upto ); };
+    { return BufferArrayF::stdev( from, upto ); };
     /*! Return the standard deviation of the trace between times
         \a from and \a upto. */
   double stdev( double from, double upto ) const
@@ -553,7 +553,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the root-mean-square of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double rms( int from, int upto ) const 
-    { return CyclicArrayF::rms( from, upto ); };
+    { return BufferArrayF::rms( from, upto ); };
     /*! Return the root-mean-square of the trace between times
         \a from and \a upto. */
   double rms( double from, double upto ) const

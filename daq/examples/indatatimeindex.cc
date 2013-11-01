@@ -142,7 +142,7 @@ void checkSignal( InData &data, int iindex )
 
 int main( int argc, char **argv )
 {
-  InData data( 1000, 0.001 );
+  InData data( 1000, 200, 0.001 );
 
   countt = 0;
   countl1 = 0;

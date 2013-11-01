@@ -34,23 +34,22 @@ int InData::DefaultDevice = 0;
 
 
 InData::InData( void )
-  : CyclicArrayF()
+  : BufferArrayF()
 {
   construct();
 }
 
 
-InData::InData( int n, double step )
-  : CyclicArrayF()
+InData::InData( int n, int m, double step )
+  : BufferArrayF( n, m )
 {
   construct();
-  reserve( n );
   Stepsize = step;
 }
 
 
 InData::InData( const InData &data )
-  : CyclicArrayF( data )
+  : BufferArrayF( data )
 {
   RestartIndex = data.RestartIndex;
   SignalIndex = data.SignalIndex;
@@ -119,7 +118,7 @@ const InData &InData::operator=( const InData &data )
   if ( &data == this )
     return *this;
 
-  CyclicArrayF::assign( data );
+  BufferArrayF::assign( data );
   RestartIndex = data.RestartIndex;
   SignalIndex = data.SignalIndex;
   Stepsize = data.Stepsize;
@@ -272,7 +271,7 @@ int InData::indices( double iv ) const
 
 double InData::length( void ) const
 {
-  return pos( CyclicArrayF::size() );
+  return pos( BufferArrayF::size() );
 }
 
 
@@ -286,19 +285,19 @@ void InData::clearBuffer( void )
 
 int InData::currentIndex( void ) const
 {
-  return CyclicArrayF::size();
+  return BufferArrayF::size();
 }
 
 
 double InData::currentTime( void ) const
 {
-  return pos( CyclicArrayF::size() );
+  return pos( BufferArrayF::size() );
 }
 
 
 int InData::minIndex( void ) const
 {
-  return CyclicArrayF::minIndex();
+  return BufferArrayF::minIndex();
 }
 
 
@@ -927,7 +926,7 @@ void InData::rms( double time, SampleDataD &rd, double width ) const
 
 ostream &operator<<( ostream &str, const InData &id )
 {
-  str << CyclicArrayF( id );
+  str << BufferArrayF( id );
   str << DaqError( id );
   str << "RestartIndex: " << id.RestartIndex << '\n';
   str << "SignalIndex: " << id.SignalIndex << '\n';

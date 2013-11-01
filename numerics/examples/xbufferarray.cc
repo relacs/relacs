@@ -1,5 +1,5 @@
 /*
-  xcyclicarray.cc
+  xbufferarray.cc
   
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -21,7 +21,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <relacs/cyclicarray.h>
+#include <relacs/bufferarray.h>
 using namespace std;
 using namespace relacs;
 
@@ -30,7 +30,7 @@ int main( void )
 {
   // write file:
   {
-    CyclicArray< float > buffer( 1000 );
+    BufferArrayF buffer( 1000, 500 );
     long n = 0;
     ofstream fs( "test.dat" );
     for ( long k=0; k<100000; k++ ) {

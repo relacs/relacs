@@ -43,7 +43,7 @@ The size() of CyclicSampleData, however, can exceed its capacity().
 Data elements below size()-capacity() are therefore not accessible.
 */
 
-template < class T = double >
+template < typename T = double >
   class CyclicSampleData : public CyclicArray< T >
 {
 
@@ -129,11 +129,11 @@ template < class T = double >
      /*! Set the offset and the stepsize of the range to \a offset and \a stepsize, respectively. */
   void setRange( const T &offset, const T &stepsize ) { Offset=offset; Stepsize=stepsize; };
      /*! The length of the range, i.e. abs( stepsize() * size() ) */
-  double length( void ) const { return ::fabs( stepsize()*size() ); };
+  double length( void ) const { return ::fabs( stepsize() * this->size() ); };
     /*! Returns the first range element, i.e. the offset. \sa offset() */
   double rangeFront( void ) const { return Offset; };
     /*! Returns the last range element. */
-  double rangeBack( void ) const { return pos( size() ); };
+  double rangeBack( void ) const { return pos( this->size() ); };
 
      /*! Add \a val to the offset of the range,
          i.e. shift the range by \a val. */
@@ -152,7 +152,7 @@ template < class T = double >
     /*! The number of indices corresponding to an interval \a iv. */
   int indices( double iv ) const { return long( ::floor( iv/stepsize() + 1.0e-6 ) ); };
     /*! True if \a pos is within the range. */
-  bool contains( double pos ) const { return ( p >= offset() && p <= pos( size() ) ); };
+  bool contains( double p ) const { return ( p >= offset() && p <= pos( this->size() ) ); };
 
     /*! Returns a reference to the data array. */
   const CyclicArray<T> &array( void ) const { return *this; };
@@ -160,7 +160,7 @@ template < class T = double >
   CyclicArray<T> &array( void ) { return *this; };
 
     /*! Returns a copy of the range. */
-  LinearRange range( void ) { return LinearRange( size(), offset(), stepsize() ); };
+  LinearRange range( void ) { return LinearRange( this->size(), offset(), stepsize() ); };
 
     /*! The type of an element of the range. */
   typedef double range_type;
@@ -169,49 +169,54 @@ template < class T = double >
 
     /*! Return the maximum value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  T max( long from, long upto ) const;
+  T max( long from, long upto ) const
+    { return CyclicArray<T>::max( from, upto ); };
     /*! Return the maximum value of the data during \a duration seconds
         starting at time \a time seconds. */
   T max( double time, double duration ) const
     { return max( indices( time ), indices( time + duration ) ); };
     /*! Return the maximum value of the data since time \a time seconds. */
   T max( double time ) const
-    { return max( indices( time ), size() ); };
+    { return max( indices( time ), this->size() ); };
     /*! Return the minimum value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  T min( long from, long upto ) const;
+  T min( long from, long upto ) const
+    { return CyclicArray<T>::min( from, upto ); };
     /*! Return the minimum value of the data during \a duration seconds
         starting at time \a time seconds. */
   T min( double time, double duration ) const
     { return min( indices( time ), indices( time + duration ) ); };
     /*! Return the minimum value of the data since time \a time seconds. */
   T min( double time ) const
-    { return min( indices( time ), size() ); };
+    { return min( indices( time ), this->size() ); };
     /*! Return the maximum absolute value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  T maxAbs( long from, long upto ) const;
+  T maxAbs( long from, long upto ) const
+    { return CyclicArray<T>::maxAbs( from, upto ); };
     /*! Return the maximum absolute value of the data during \a duration seconds
         starting at time \a time seconds. */
   T maxAbs( double time, double duration ) const
     { return maxAbs( indices( time ), indices( time + duration ) ); };
     /*! Return the maximum absolute value of the data since time \a time seconds. */
   T maxAbs( double time ) const
-    { return maxAbs( indices( time ), size() ); };
+    { return maxAbs( indices( time ), this->size() ); };
     /*! Return the minimum absolute value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  T minAbs( long from, long upto ) const;
+  T minAbs( long from, long upto ) const
+    { return CyclicArray<T>::minAbs( from, upto ); };
     /*! Return the minimum absolute value of the data during \a duration seconds
         starting at time \a time seconds. */
   T minAbs( double time, double duration ) const
     { return minAbs( indices( time ), indices( time + duration ) ); };
     /*! Return the minimum absolute value of the data since time \a time seconds. */
   T minAbs( double time ) const
-    { return minAbs( indices( time ), size() ); };
+    { return minAbs( indices( time ), this->size() ); };
 
     /*! Return the mean value of the data between index \a from inclusively
         and index \a upto exclusively. */
   typename numerical_traits< T >::mean_type
-  mean( long from, long upto ) const;
+  mean( long from, long upto ) const
+    { return CyclicArray<T>::mean( from, upto ); };
     /*! Return the mean value of the data during \a duration seconds
         starting at time \a time seconds. */
   typename numerical_traits< T >::mean_type
@@ -226,7 +231,8 @@ template < class T = double >
     /*! Return the variance of the data between index \a from inclusively
         and index \a upto exclusively. */
   typename numerical_traits< T >::variance_type
-  variance( long from, long upto ) const;
+  variance( long from, long upto ) const
+    { return CyclicArray<T>::variance( from, upto ); };
     /*! Return the variance of the data during \a duration seconds
         starting at time \a time seconds. */
   typename numerical_traits< T >::variance_type
@@ -241,7 +247,8 @@ template < class T = double >
     /*! Return the standard deviation of the data between index \a from inclusively
         and index \a upto exclusively. */
   typename numerical_traits< T >::variance_type
-  stdev( long from, long upto ) const;
+  stdev( long from, long upto ) const
+    { return CyclicArray<T>::stdev( from, upto ); };
     /*! Return the standard deviation of the data during \a duration seconds
         starting at time \a time seconds. */
   typename numerical_traits< T >::variance_type
@@ -256,7 +263,8 @@ template < class T = double >
     /*! Return the root-mean-square of the data between index \a from inclusively
         and index \a upto exclusively. */
   typename numerical_traits< T >::variance_type
-  rms( long from, long upto ) const;
+  rms( long from, long upto ) const
+    { return CyclicArray<T>::rms( from, upto ); };
     /*! Return the root-mean-square of the data during \a duration seconds
         starting at time \a time seconds. */
   typename numerical_traits< T >::variance_type
@@ -282,7 +290,7 @@ typedef CyclicSampleData< float > CyclicSampleDataF;
 typedef CyclicSampleData< int > CyclicSampleDataI;
 
 
-template < class T >
+template < typename T >
 CyclicSampleData< T >::CyclicSampleData( void )
   : CyclicArray< T >(),
     Offset( 0 ),
@@ -291,7 +299,7 @@ CyclicSampleData< T >::CyclicSampleData( void )
 }
 
 
-template < class T >
+template < typename T >
 CyclicSampleData< T >::CyclicSampleData( int n, double stepsize )
   : CyclicArray< T >( n ),
     Offset( 0 ),
@@ -300,16 +308,16 @@ CyclicSampleData< T >::CyclicSampleData( int n, double stepsize )
 }
 
 
-template < class T >
+template < typename T >
 CyclicSampleData< T >::CyclicSampleData( int n, double offset, double stepsize )
   : CyclicArray< T >( n ),
     Offset( offset ),
-    Stepsize( stepsize ),
+    Stepsize( stepsize )
 {
 }
 
 
-template < class T >
+template < typename T >
 CyclicSampleData< T >::CyclicSampleData( double duration, double stepsize )
   : CyclicArray< T >( (int)::ceil( duration/stepsize ) ),
     Offset( 0 ),
@@ -318,7 +326,7 @@ CyclicSampleData< T >::CyclicSampleData( double duration, double stepsize )
 }
 
 
-template < class T >
+template < typename T >
 CyclicSampleData< T >::CyclicSampleData( double duration, double offset, double stepsize )
   : CyclicArray< T >( (int)::ceil( duration/stepsize ) ),
     Offset( offset ),
@@ -327,29 +335,29 @@ CyclicSampleData< T >::CyclicSampleData( double duration, double offset, double 
 }
 
 
-template < class T >
+template < typename T >
 CyclicSampleData< T >::CyclicSampleData( const CyclicSampleData< T > &csd )
   : CyclicArray< T >( csd ),
     Offset( csd.Offset ),
-    Stepsize( csd.Stepsize ),
+    Stepsize( csd.Stepsize )
 {
 }
 
 
-template < class T >
+template < typename T >
 CyclicSampleData< T >::~CyclicSampleData( void )
 {
 }
 
 
-template < class T >
+template < typename T >
 void CyclicSampleData< T >::resize( int n, const T &val )
 {
   CyclicArray< T >::resize( n, val );
 }
 
 
-template < class T >
+template < typename T >
 void CyclicSampleData< T >::resize( double duration, const T &val )
 {
   CyclicArray< T >::resize( (int)::ceil( duration/stepsize() ), val );
@@ -357,133 +365,17 @@ void CyclicSampleData< T >::resize( double duration, const T &val )
 
 
 
-template < class T >
+template < typename T >
 void CyclicSampleData< T >::reserve( int n )
 {
   CyclicArray< T >::reserve( n );
 }
 
 
-template < class T >
+template < typename T >
 void CyclicSampleData< T >::reserve( double duration )
 {
   CyclicArray< T >::reserve( (int)::ceil( duration/stepsize() ) );
-}
-
-
-double CyclicSampleData< T >::max( long from, long upto ) const
-{
-  if ( from < minIndex() )
-    from = minIndex();
-  if ( upto > size() )
-    upto = size();
-
-  if ( from >= upto )
-    return 0.0;
-
-  return ::relacs::max( begin()+from, begin()+upto );
-}
-
-
-T CyclicSampleData< T >::min( long from, long upto ) const
-{
-  if ( from < minIndex() )
-    from = minIndex();
-  if ( upto > size() )
-    upto = size();
-
-  if ( from >= upto )
-    return 0.0;
-
-  return ::relacs::min( begin()+from, begin()+upto );
-}
-
-
-T CyclicSampleData< T >::maxAbs( long from, long upto ) const
-{
-  if ( from < minIndex() )
-    from = minIndex();
-  if ( upto > size() )
-    upto = size();
-
-  if ( from >= upto )
-    return 0.0;
-
-  return ::relacs::maxAbs( begin()+from, begin()+upto );
-}
-
-
-T CyclicSampleData< T >::minAbs( long from, long upto ) const
-{
-  if ( from < minIndex() )
-    from = minIndex();
-  if ( upto > size() )
-    upto = size();
-
-  if ( from >= upto )
-    return 0.0;
-
-  return ::relacs::minAbs( begin()+from, begin()+upto );
-}
-
-
-typename numerical_traits< T >::mean_type
-CyclicSampleData< T >::mean( long from, long upto ) const
-{
-  if ( from < minIndex() )
-    from = minIndex();
-  if ( upto > size() )
-    upto = size();
-
-  if ( from >= upto )
-    return 0;
-
-  return ::relacs::mean( begin()+from, begin()+upto );
-}
-
-
-typename numerical_traits< T >::variance_type
-  CyclicSampleData< T >::variance( long from, long upto ) const
-{
-  if ( from < minIndex() )
-    from = minIndex();
-  if ( upto > size() )
-    upto = size();
-
-  if ( from >= upto )
-    return 0;
-
-  return ::relacs::variance( begin()+from, begin()+upto );
-}
-
-
-typename numerical_traits< T >::variance_type
-  CyclicSampleData< T >::stdev( long from, long upto ) const
-{
-  if ( from < minIndex() )
-    from = minIndex();
-  if ( upto > size() )
-    upto = size();
-
-  if ( from >= upto )
-    return 0;
-
-  return ::relacs::stdev( begin()+from, begin()+upto );
-}
-
-
-typename numerical_traits< T >::variance_type
-  CyclicSampleData< T >::rms( long from, long upto ) const
-{
-  if ( from < minIndex() )
-    from = minIndex();
-  if ( upto > size() )
-    upto = size();
-
-  if ( from >= upto )
-    return 0;
-
-  return ::relacs::rms( begin()+from, begin()+upto );
 }
 
 

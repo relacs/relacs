@@ -20,6 +20,7 @@
 */
 
 #include <iostream>
+#include <unistd.h>
 #include <relacs/misc/tempdtm5080.h>
 using namespace misc;
 

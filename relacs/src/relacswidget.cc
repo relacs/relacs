@@ -693,6 +693,7 @@ void RELACSWidget::setupInTraces( void )
     if ( traceid.empty() )
       continue;
     Str ws;
+
     InData id;
     id.setIdent( traceid );
     id.setUnit( number( "inputtracescale", k, 1.0 ),
@@ -736,6 +737,7 @@ void RELACSWidget::setupInTraces( void )
     }
     IL.push( id );
     IL[k].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
+    IL[k].setWriteBufferCapacity( 100.0*id.indices( AQ->updateTime() ) );
     TraceStyles.push_back( PlotTrace::TraceStyle() );
     TraceStyles[k].PlotWindow = integer( "inputtraceplot", k, k );
   }
@@ -793,7 +795,6 @@ void RELACSWidget::setupOutTraces( void )
 
 void RELACSWidget::updateData( void )
 {
-  writeLockData();
   // check data:
   if ( IL.failed() ) {
     AIErrorMsg = "Error in acquisition: " + IL.errorText();
@@ -804,12 +805,14 @@ void RELACSWidget::updateData( void )
   lockAI();
   AQ->convertData();
   unlockAI();
+  writeLockData();
+  AQ->submitData();
   CurrentTime = IL.currentTime();
+  unlockData();
   if ( CurrentTime < 0.0 ) { // XXX DEBUG
     cerr << "RELACSWidget::updateData(): CurrentTime=" << Str( CurrentTime ) << " smaller than zero!\n";
     cerr << IL << '\n';
   }
-  unlockData();
   double ct = CurrentTime;
   // do we need to wait for more data?
   MinTraceMutex.lock();
@@ -831,17 +834,18 @@ void RELACSWidget::updateData( void )
     else
       ReadDataWait.wait( &mutex, 1 );
     mutex.unlock(); // XXX
-    writeLockData();
     lockAI();
     AQ->convertData();
     unlockAI();
+    writeLockData();
+    AQ->submitData();
     CurrentTime = IL.currentTime();
+    unlockData();
     if ( CurrentTime < 0.0 ) { // XXX DEBUG
       cerr << "RELACSWidget::updateData(): CurrentTime=" << Str( CurrentTime ) << " smaller than zero!\n";
       cerr << IL << '\n';
     }
     ct = CurrentTime;
-    unlockData();
     MinTraceMutex.lock();
     if ( mintime != MinTraceTime )
       printlog( "! warning in RELACSWidget::updateData() -> mintime=" + Str( mintime ) + " < MinTraceTime=" + Str( MinTraceTime ) + ", currentTime=" + Str( ct ) );
@@ -1687,6 +1691,8 @@ void RELACSWidget::startFirstAcquisition( void )
   }
 
   // analog input and output traces:
+  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
+  AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
   SignalTime = -1.0;
   CurrentTime = 0.0;
   setupInTraces();
@@ -1752,8 +1758,6 @@ void RELACSWidget::startFirstAcquisition( void )
   // start data aquisition:
   setMinTraceTime( 0.0 );
   lockAI();
-  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
-  AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
   int r = AQ->read( IL );
   unlockAI();
   if ( r < 0 ) {
@@ -1830,6 +1834,8 @@ void RELACSWidget::startFirstSimulation( void )
   }
 
   // analog input and output traces:
+  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
+  AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
   SignalTime = -1.0;
   CurrentTime = 0.0;
   setupInTraces();
@@ -1898,8 +1904,6 @@ void RELACSWidget::startFirstSimulation( void )
   // start data aquisition:
   setMinTraceTime( 0.0 );
   lockAI();
-  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
-  AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
   int r = AQ->read( IL );
   unlockAI();
   if ( r < 0 ) {

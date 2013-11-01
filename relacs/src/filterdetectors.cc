@@ -629,9 +629,10 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	if ( intrace < 0 )
 	  intrace = 0;
 	int nbuffer = d->NBuffer;
-	if ( nbuffer < 0 )
+	if ( nbuffer <= 0 )
 	  nbuffer = data[intrace].capacity();
-	InData dt( nbuffer, data[intrace].sampleInterval() );
+	InData dt( nbuffer, data[intrace].writeBufferCapacity(),
+		   data[intrace].sampleInterval() );
 	dt.setDevice( -1 );
 	dt.setChannel( -1 );
 	data.push( dt );

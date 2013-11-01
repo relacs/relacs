@@ -31,7 +31,6 @@ using namespace relacs;
 using namespace comedi;
 
 int aochannel = 0;
-double aocarrier = 5000.0;
 double aointensity = 80.0;
 int aichannel = 0;
 int aigain = 0;
@@ -43,7 +42,7 @@ void RecordSignal( const char *aofile, const char *aifile )
 {
   // load signal:  
   OutData signal;
-  signal.load( aofile, aofile, aocarrier );
+  signal.load( aofile );
   if ( signal.empty() ) {
     cerr << "can't read file " << aofile << "!\n";
     return;
@@ -59,7 +58,8 @@ void RecordSignal( const char *aofile, const char *aifile )
   AQ.addOutput( &CAO );
 
   // prepare reading:
-  InData trace( (int)::rint( signal.length()*airate ), 1.0/airate );
+  int n = (int)::rint( signal.length()*airate );
+  InData trace( 2*n, n, 1.0/airate );
   trace.setChannel( aichannel );
   trace.setGainIndex( aigain );
   InList traces;
@@ -70,6 +70,7 @@ void RecordSignal( const char *aofile, const char *aifile )
   AQ.write( signal );
   // XXX loop and fill up write buffer and read trace buffer?
   AQ.readData();
+  trace.submit();
 
   // save data:
   ofstream df( aifile );
@@ -112,11 +113,6 @@ void ReadArgs( int argc, char *argv[] )
     case 'c':
       if ( optarg == NULL || sscanf( optarg, "%d", &aochannel ) == 0 )
 	aochannel = 0;
-      break;
-    case 'f':
-      if ( optarg == NULL || sscanf( optarg, "%lf", &aocarrier ) == 0 )
-	aocarrier = 5.0;
-      aocarrier *= 1000.0;
       break;
     case 'i':
       if ( optarg == NULL || sscanf( optarg, "%lf", &aointensity ) == 0 )

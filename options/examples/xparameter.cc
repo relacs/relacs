@@ -124,9 +124,10 @@ int main( int argc, char *argv[] )
 
   while ( true ) {
     cout << '\n';
-    Parameter pp;
     cout << "enter a parameter (ident=value): ";
-    cin >> pp;
+    Str s;
+    cin >> s;
+    Parameter pp( s.ident(), s.value() );
     cout << "p.valueType(): " << pp.valueType() << '\n';
     cout << "p.format()   : " << pp.format() << '\n';
     print( pp );

@@ -389,6 +389,8 @@ public:
     /*! Read data from data aquisition board and store them in an internal buffer.
 	In case of an error, acquisition is restarted.
 	Input gains are not updated.
+	This function only accesses the hardware driver, the input traces passed
+	to the last call of read() are not affected.
 	Returns -1 on error, 0 if no more data are to be
 	expected from the hardware driver, and 1 if some data were read.
         Possible errors are indicated by the error state of the traces.
@@ -397,11 +399,21 @@ public:
     /*! Convert data from the internal buffer to the secondary unit
         and transfer them to the InList data from the last call of read()
 	that initiated the acquisition.
+	The data will not be accessible until submitData() has been called.
+	Therefore this function call does not need to be protected from
+	functions reading the data by mutexes.
 	Returns 0 on success, negative numbers otherwise.
         Possible errors are indicated by the error state of the traces (very unlikely).
         See InList for details about handling the data. 
         \sa testRead(), read(), readData(), stopRead() */
   virtual int convertData( void );
+    /*! Makes the converted data in the input traces passed
+        to the last call of read() accessible to reading processes.
+	This function returns quickly and needs to be protected from
+	functions reading the data by mutexes().
+        See InList for details about handling the data. 
+        \sa testRead(), read(), readData(), stopRead() */
+  virtual void submitData( void );
     /*! Stop analog input of all analog input devices.
         Remaining data can be still obtained with readData().
 	Returns 0 on success, negative numbers otherwise. 

@@ -62,10 +62,10 @@ public:
     /*! Resize the InList such that it contains \a n InData.
         If \a n equals zero, clear() is called.
 	If a larger size than the current size() is requested 
-	than empty InData are appended, each of capacity \a m
-	and sampling interval \a step seconds.
+	than empty InData are appended, each of capacity \a m,
+	size of write buffer \a w, and sampling interval \a step seconds.
 	\sa clear(), size(), empty() */
-  void resize( int n, int m=0, double step=1.0 );
+  void resize( int n, int m=0, int w=0, double step=1.0 );
     /*! Clear the InList, i.e. remove all InData the InList owns. */
   void clear( void );
 
@@ -123,6 +123,9 @@ public:
 
     /*! Erase the InData at index \a index. */
   void erase( int index );
+
+    /*! Make written data of all traces available for reading. */
+  void submit( void );
 
     /*! Clear buffer and reset indices of all InData traces. */
   void clearBuffer( void );

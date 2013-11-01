@@ -35,7 +35,6 @@ namespace relacs {
 \class CyclicArray
 \brief A template defining an one-dimensional cyclic array of data.
 \author Jan Benda
-\version 0.1
 
 This class is very similar to the vector class from 
 the standard template library, in that it is a
@@ -44,11 +43,11 @@ The size() of CyclicArray, however, can exceed its capacity().
 Data elements below size()-capacity() are therefore not accessible.
 */
 
-template < class T = double >
+template < typename T = double >
 class CyclicArray
 {
 
-  public:
+public:
 
     /*! Creates an empty CyclicArray. */
   CyclicArray( void );
@@ -227,15 +226,23 @@ class CyclicArray
   friend ostream &operator<<( ostream &str, const CyclicArray<TT> &ca );
 
 
-  private:
+protected:
 
+    /*! The data buffer. */
   T *Buffer;
+    /*! Number of elements the data buffer can hold. */
   int NBuffer;
+    /*! The number of cycles the writing process ("right index") filled the buffer. */
   int RCycles;
+    /*! The index into the buffer where to append data. */
   int R;
+    /*! The number of cycles the reading process ("left index") filled the buffer. */
   int LCycles;
+    /*! The index into the buffer where to read data. */
   int L;
-  T Val;  // for pop()
+    /*! Value storage for pop(). */
+  T Val;
+    /*! Dummy return value for invalid elements. */
   mutable T Dummy;
   
 };
@@ -246,7 +253,7 @@ typedef CyclicArray< float > CyclicArrayF;
 typedef CyclicArray< int > CyclicArrayI;
 
 
-template < class T >
+template < typename T >
 CyclicArray< T >::CyclicArray( void )
   : Buffer( 0 ),
     NBuffer( 0 ),
@@ -260,7 +267,7 @@ CyclicArray< T >::CyclicArray( void )
 }
 
 
-template < class T >
+template < typename T >
 CyclicArray< T >::CyclicArray( int n )
   : Buffer( 0 ),
     NBuffer( 0 ),
@@ -278,7 +285,7 @@ CyclicArray< T >::CyclicArray( int n )
 }
 
 
-template < class T >
+template < typename T >
 CyclicArray< T >::CyclicArray( const CyclicArray< T > &ca )
   : Buffer( 0 ),
     NBuffer( 0 ),
@@ -297,7 +304,7 @@ CyclicArray< T >::CyclicArray( const CyclicArray< T > &ca )
 }
 
 
-template < class T >
+template < typename T >
 CyclicArray< T >::~CyclicArray( void )
 {
   if ( Buffer != 0 )
@@ -305,14 +312,14 @@ CyclicArray< T >::~CyclicArray( void )
 }
 
 
-template < class T >
+template < typename T >
 const CyclicArray<T> &CyclicArray<T>::operator=( const CyclicArray<T> &a )
 {
   return assign( a );
 }
 
 
-template < class T >
+template < typename T >
 const CyclicArray<T> &CyclicArray<T>::assign( const CyclicArray<T> &a )
 {
   if ( &a == this )
@@ -345,35 +352,35 @@ const CyclicArray<T> &CyclicArray<T>::assign( const CyclicArray<T> &a )
 }
 
 
-template < class T >
+template < typename T >
 int CyclicArray< T >::size( void ) const
 {
   return RCycles * NBuffer + R;
 }
 
 
-template < class T >
+template < typename T >
 int CyclicArray< T >::accessibleSize( void ) const
 {
   return RCycles == 0 ? R : NBuffer;
 }
 
 
-template < class T >
+template < typename T >
 int CyclicArray< T >::minIndex( void ) const
 {
   return RCycles == 0 ? 0 : (RCycles-1) * NBuffer + R;
 }
 
 
-template < class T >
+template < typename T >
 bool CyclicArray< T >::empty( void ) const
 {
   return RCycles == 0 && R == 0;
 }
 
 
-template < class T >
+template < typename T >
 void CyclicArray< T >::resize( int n, const T &val )
 {
   if ( n <= 0 ) {
@@ -395,9 +402,9 @@ void CyclicArray< T >::resize( int n, const T &val )
   if ( n < size() ) {
     RCycles = (n-1) / NBuffer;
     R = 1 + (n-1) % NBuffer;
-    if ( RCycles * NBuffer + R < LCycles * NBuffer + L ) {
-      RCycles = LCycles;
-      R = L;
+    if ( LCycles * NBuffer + L < RCycles * NBuffer + R ) {
+      LCycles = RCycles;
+      L = R;
     }
   }
   else if ( n > size() ) {
@@ -427,7 +434,7 @@ void CyclicArray< T >::resize( int n, const T &val )
 }
 
 
-template < class T >
+template < typename T >
 void CyclicArray< T >::clear( void )
 {
   RCycles = 0;
@@ -437,7 +444,7 @@ void CyclicArray< T >::clear( void )
 }
 
 
-template < class T >
+template < typename T >
 void CyclicArray< T >::reserve( int n )
 {
   if ( n > NBuffer ) {
@@ -469,7 +476,7 @@ void CyclicArray< T >::reserve( int n )
 }
 
 
-template < class T >
+template < typename T >
 const T &CyclicArray< T >::operator[]( int i ) const
 {
   // XXX we do not want to crash anymore....
@@ -483,7 +490,7 @@ const T &CyclicArray< T >::operator[]( int i ) const
 }
 
 
-template < class T >
+template < typename T >
 T &CyclicArray< T >::operator[]( int i )
 {
   assert( ( i >= minIndex() && i < size() ) );
@@ -571,7 +578,7 @@ T &CyclicArray<T>::back( void )
 }
 
 
-template < class T >
+template < typename T >
 void CyclicArray< T >::push( const T &val )
 {
   assert( Buffer != 0 && NBuffer > 0 );
@@ -590,7 +597,7 @@ void CyclicArray< T >::push( const T &val )
 }
 
 
-template < class T >
+template < typename T >
 T CyclicArray< T >::pop( void )
 {
   if ( NBuffer <= 0 || R <= 0 )
@@ -610,21 +617,21 @@ T CyclicArray< T >::pop( void )
 }
 
 
-template < class T >
+template < typename T >
 int CyclicArray< T >::maxPush( void ) const
 {
   return R < NBuffer ? NBuffer - R : NBuffer;
 }
 
 
-template < class T >
+template < typename T >
 T *CyclicArray< T >::pushBuffer( void )
 {
   return R < NBuffer ? Buffer + R : Buffer;
 }
 
 
-template < class T >
+template < typename T >
 void CyclicArray< T >::push( int n )
 {
   if ( R >= NBuffer ) {
@@ -642,7 +649,7 @@ void CyclicArray< T >::push( int n )
 }
 
 
-template < class T >
+template < typename T >
 int CyclicArray< T >::readSize( void ) const
 { 
   int n = (RCycles - LCycles)*NBuffer + R - L;
@@ -655,14 +662,14 @@ int CyclicArray< T >::readSize( void ) const
 }
 
 
-template < class T >
+template < typename T >
 int CyclicArray< T >::readIndex( void ) const
 {
   return LCycles*NBuffer + L;
 }
 
 
-template < class T >
+template < typename T >
 T CyclicArray< T >::read( void )
 {
   if ( NBuffer <= 0 )
@@ -678,7 +685,7 @@ T CyclicArray< T >::read( void )
 }
 
 
-template < class T >
+template < typename T >
 T CyclicArray< T >::min( int from, int upto ) const
 {
   if ( from < minIndex() )
@@ -698,7 +705,7 @@ T CyclicArray< T >::min( int from, int upto ) const
 }
 
 
-template < class T >
+template < typename T >
 T CyclicArray< T >::max( int from, int upto ) const
 {
   if ( from < minIndex() )
@@ -718,7 +725,7 @@ T CyclicArray< T >::max( int from, int upto ) const
 }
 
 
-template < class T >
+template < typename T >
 void CyclicArray< T >::minMax( double &min, double &max, int from, int upto ) const
 {
   if ( from < minIndex() )
@@ -740,7 +747,7 @@ void CyclicArray< T >::minMax( double &min, double &max, int from, int upto ) co
 }
 
 
-template < class T >
+template < typename T >
 T CyclicArray< T >::maxAbs( int from, int upto ) const
 {
   if ( from < minIndex() )
@@ -760,7 +767,7 @@ T CyclicArray< T >::maxAbs( int from, int upto ) const
 }
 
 
-template < class T >
+template < typename T >
 T CyclicArray< T >::minAbs( int from, int upto ) const
 {
   if ( from < minIndex() )
@@ -780,7 +787,7 @@ T CyclicArray< T >::minAbs( int from, int upto ) const
 }
 
 
-template < class T >
+template < typename T >
 typename numerical_traits< T >::mean_type
 CyclicArray< T >::mean( int from, int upto ) const
 {
@@ -802,7 +809,7 @@ CyclicArray< T >::mean( int from, int upto ) const
 }
 
 
-template < class T >
+template < typename T >
 typename numerical_traits< T >::variance_type
 CyclicArray< T >::variance( int from, int upto ) const
 {
@@ -835,7 +842,7 @@ CyclicArray< T >::variance( int from, int upto ) const
 }
 
 
-template < class T >
+template < typename T >
 typename numerical_traits< T >::variance_type
 CyclicArray< T >::stdev( int from, int upto ) const
 {
@@ -868,7 +875,7 @@ CyclicArray< T >::stdev( int from, int upto ) const
 }
 
 
-template < class T >
+template < typename T >
 typename numerical_traits< T >::variance_type
 CyclicArray< T >::rms( int from, int upto ) const
 {
@@ -894,7 +901,7 @@ CyclicArray< T >::rms( int from, int upto ) const
 }
 
 
-template < class T > template< typename S >
+template < typename T > template< typename S >
 void CyclicArray< T >::hist( SampleData< S > &h ) const
 {
   h = 0.0;
@@ -914,7 +921,7 @@ void CyclicArray< T >::hist( SampleData< S > &h ) const
 }
 
 
-template < class T >
+template < typename T >
 int CyclicArray< T >::saveBinary( ostream &os, int index ) const
 {
   // stream not open:
@@ -953,7 +960,7 @@ int CyclicArray< T >::saveBinary( ostream &os, int index ) const
 }
 
 
-template < class T >
+template < typename T >
 ostream &operator<<( ostream &str, const CyclicArray< T > &ca )
 {
   str << "Buffer: " << ca.Buffer << '\n';

@@ -66,7 +66,7 @@ InList::~InList( void )
 }
 
 
-void InList::resize( int n, int m, double step )
+void InList::resize( int n, int m, int w, double step )
 {
   if ( n <= 0 ) {
     clear();
@@ -77,7 +77,7 @@ void InList::resize( int n, int m, double step )
   IL.resize( n, ILE() );
   if ( n > os ) {
     for ( int k=os; k<n; k++ ) {
-      IL[k].ID = new InData( m, step );
+      IL[k].ID = new InData( m, w, step );
       IL[k].Own = true;
     }
   }
@@ -232,6 +232,13 @@ bool lessDeviceChannelILE( const InList::ILE &a, const InList::ILE &b )
 void InList::sortByDeviceChannel( void )
 {
   sort( IL.begin(), IL.end(), lessDeviceChannelILE );
+}
+
+
+void InList::submit( void )
+{
+  for ( int k=0; k<size(); k++ )
+    operator[]( k ).submit();
 }
 
 

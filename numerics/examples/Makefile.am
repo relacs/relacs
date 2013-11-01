@@ -18,6 +18,7 @@ noinst_PROGRAMS = \
     xarray \
     xcontainerfuncs \
     xcyclicarray \
+    xbufferarray \
     xdetector \
     xeventdata \
     xkernel \
@@ -97,6 +98,9 @@ xcontainerfuncs_SOURCES = xcontainerfuncs.cc
 
 xcyclicarray_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xcyclicarray_SOURCES = xcyclicarray.cc
+
+xbufferarray_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
+xbufferarray_SOURCES = xbufferarray.cc
 
 xdetector_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xdetector_SOURCES = xdetector.cc

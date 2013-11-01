@@ -32,15 +32,15 @@ int main( int argc, char *argv[] )
 {
   TableKey key;
 
-  key.addSection( "Stimulus" );
+  key.newSection( "Stimulus" );
   key.addNumber( "n", "-", "%2.0f" );
   key.addNumber( "I", "mV/cm", "%5.1f" );
-  key.addSection( "Results" );
-  key.addSubSection( "Firing Frequency" );
+  key.newSection( "Results" );
+  key.newSubSection( "Firing Frequency" );
   key.addNumber( "f0", "Hz", "%5.2f" );
   key.addNumber( "fpeakfff", "Hz", "%5.3f" );
   key.addNumber( "fs", "Hzzzzzz", "%6.4f" );
-  key.addSection( "Timescales" );
+  key.newSection( "Timescales" );
   key.addNumber( "tau", "ms", "%7.5f" );
   key.addNumber( "delay", "ms", "%8.6f" );
 
