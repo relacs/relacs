@@ -34,26 +34,40 @@ int InData::DefaultDevice = 0;
 
 
 InData::InData( void )
-  : BufferArrayF()
+  : CyclicSampleDataF()
+{
+  construct();
+}
+
+
+InData::InData( int n, double step )
+  : CyclicSampleDataF( n, step )
 {
   construct();
 }
 
 
 InData::InData( int n, int m, double step )
-  : BufferArrayF( n, m )
+  : CyclicSampleDataF( n, step )
 {
   construct();
-  Stepsize = step;
+  setWriteBufferCapacity( m );
+}
+
+
+InData::InData( const InData *d )
+{
+  assign( d );
 }
 
 
 InData::InData( const InData &data )
-  : BufferArrayF( data )
+  : CyclicSampleDataF( data )
 {
+  ID = data.ID;
+  NWrite = data.NWrite;
   RestartIndex = data.RestartIndex;
   SignalIndex = data.SignalIndex;
-  Stepsize = data.Stepsize;
   Delay = data.Delay;
   StartSource = data.StartSource;
   Priority = data.Priority;
@@ -87,9 +101,10 @@ InData::~InData( void )
 
 void InData::construct( void )
 {
+  ID = 0;
+  NWrite = 0;
   RestartIndex = 0;
   SignalIndex = -1;
-  Stepsize = 1.0;
   Delay = 0.0;
   StartSource = 0;
   Priority = false;
@@ -109,6 +124,7 @@ void InData::construct( void )
   UpdateTime = 0.0;
   MinValue = -1.0;
   MaxValue = +1.0;
+  Mode = 0;
   Source = 0;
 }
 
@@ -118,10 +134,11 @@ const InData &InData::operator=( const InData &data )
   if ( &data == this )
     return *this;
 
-  BufferArrayF::assign( data );
+  CyclicSampleDataF::assign( data );
+  ID = data.ID;
+  NWrite = data.NWrite;
   RestartIndex = data.RestartIndex;
   SignalIndex = data.SignalIndex;
-  Stepsize = data.Stepsize;
   Delay = data.Delay;
   StartSource = data.StartSource;
   Priority = data.Priority;
@@ -141,17 +158,63 @@ const InData &InData::operator=( const InData &data )
   UpdateTime = data.UpdateTime;
   MinValue = data.MinValue;
   MaxValue = data.MaxValue;
+  Mode = data.Mode;
   Source = data.Source;
 
   return *this;
 }
 
 
+const InData &InData::assign( const InData *data )
+{
+  if ( data == 0 || data == this )
+    return *this;
+
+  CyclicSampleDataF::assign( data );
+  ID = data;
+  NWrite = data->NWrite;
+  RestartIndex = data->RestartIndex;
+  SignalIndex = data->SignalIndex;
+  Delay = data->Delay;
+  StartSource = data->StartSource;
+  Priority = data->Priority;
+  Continuous = data->Continuous;
+  Device = data->Device;
+  Channel = data->Channel;
+  Trace = data->Trace;
+  Ident = data->Ident;
+  Reference = data->Reference;
+  Dither = data->Dither;
+  Unipolar = data->Unipolar;
+  GainIndex = data->GainIndex;
+  GainData = NULL;
+  Scale = data->Scale;
+  Unit = data->Unit;
+  ReadTime = data->ReadTime;
+  UpdateTime = data->UpdateTime;
+  MinValue = data->MinValue;
+  MaxValue = data->MaxValue;
+  Mode = data->Mode;
+  Source = data->Source;
+
+  return *this;
+}
+
+
+const InData &InData::assign( void )
+{
+  return assign( ID );
+}
+
+
 void InData::copy( int first, int last, OutData &data ) const
 {
   data.clear();
-  if ( last - first <= 0 ||
-       last > size() )
+  if ( first < minIndex() )
+    first = minIndex();
+  if ( last > maxIndex() )
+    last = maxIndex();
+  if ( last - first <= 0 )
     return;
   data.resize( last - first );
 
@@ -245,65 +308,62 @@ string InData::errorMessage( void ) const
 }
 
 
-double InData::pos( int i ) const
+int InData::writeBufferCapacity( void ) const
 {
-  return Stepsize*i;
+  return NWrite;
 }
 
 
-double InData::interval( int indices ) const
+void InData::setWriteBufferCapacity( int m )
 {
-  return Stepsize*indices;
+  NWrite = m;
+  if ( NWrite > capacity() )
+    NWrite = capacity();
 }
 
 
-int InData::index( double pos ) const
+void InData::clear( void )
 {
-  return int( ::floor( pos/Stepsize + 1.0e-6 ) );
-}
-
-
-int InData::indices( double iv ) const
-{
-  return int( ::floor( iv/Stepsize + 1.0e-6 ) );
-}
-
-
-double InData::length( void ) const
-{
-  return pos( BufferArrayF::size() );
-}
-
-
-void InData::clearBuffer( void )
-{
-  resize( 0 );
+  CyclicSampleDataF::clear();
   RestartIndex = 0;
   SignalIndex = -1;
 }
 
 
+int InData::accessibleSize( void ) const
+{
+  int n = CyclicSampleDataF::accessibleSize() - NWrite;
+  return n < 0 ? 0 : n;;
+}
+
+
 int InData::currentIndex( void ) const
 {
-  return BufferArrayF::size();
+  return CyclicSampleDataF::size();
 }
 
 
 double InData::currentTime( void ) const
 {
-  return pos( BufferArrayF::size() );
+  return pos( CyclicSampleDataF::size() );
 }
 
 
 int InData::minIndex( void ) const
 {
-  return BufferArrayF::minIndex();
+  return CyclicSampleDataF::minIndex();
 }
 
 
 double InData::minTime( void ) const
 {
-  return pos( minIndex() );
+  return pos( CyclicSampleDataF::minIndex() + NWrite );
+}
+
+
+double InData::minPos( void ) const
+{
+  return pos( CyclicSampleDataF::minIndex() + NWrite );
 }
 
 
@@ -358,6 +418,23 @@ double InData::restartTime( void ) const
 void InData::setRestart( void )
 {
   RestartIndex = size();
+}
+
+
+void InData::update( void )
+{
+  if ( ID != 0 ) {
+    CyclicSampleDataF::update( ID );
+    RestartIndex = ID->RestartIndex;
+    SignalIndex = ID->SignalIndex;
+  }
+}
+
+
+int InData::readSize( void ) const
+{
+  int n = CyclicSampleDataF::readSize() - NWrite;
+  return n < 0 ? 0 : n;;
 }
 
 
@@ -471,38 +548,26 @@ InDataTimeIterator InData::timeEnd( void ) const
 
 double InData::sampleRate( void ) const
 {
-  return 1.0/Stepsize;
+  return 1.0/stepsize();
 }
 
 
 void InData::setSampleRate( double rate )
 {
   if ( rate > 0.0 )
-    Stepsize = 1.0/rate;
+    setStepsize( 1.0/rate );
 }
 
 
 double InData::sampleInterval( void ) const
 {
-  return Stepsize;
+  return stepsize();
 }
 
 
 void InData::setSampleInterval( double step )
 {
-  Stepsize = step;
-}
-
-
-double InData::stepsize( void ) const
-{
-  return Stepsize;
-}
-
-
-void InData::setStepsize( double step )
-{
-  Stepsize = step;
+  setStepsize( step );
 }
 
 
@@ -789,148 +854,17 @@ void InData::delMode( int flags )
 }
 
 
-void InData::mean( double time, SampleDataD &md, double width ) const
-{
-  if ( width <= 0.0 )
-    width = md.stepsize();
-  long wi = indices( width );
-  if ( wi <= 0 )
-    wi = 1;
-
-  for ( int i=0; i<md.size(); i++ ) {
-    long from = indices( time + md.pos( i ) );
-    long upto = from + wi;
-    if  ( from < minIndex() )
-      from = minIndex();
-    if ( upto > size() )
-      upto = size();
-
-    // mean:
-    double mean = 0.0;
-    long n = 0;
-    for ( long k=from; k<upto; k++ )
-      mean += ( operator[]( k ) - mean ) / (++n);
-
-    md[i] = mean;
-  }
-}
-
-
-void InData::variance( double time, SampleDataD &vd, double width ) const
-{
-  if ( width <= 0.0 )
-    width = vd.stepsize();
-  long wi = indices( width );
-  if ( wi <= 0 )
-    wi = 1;
-
-  for ( int i=0; i<vd.size(); i++ ) {
-    long from = indices( time + vd.pos( i ) );
-    long upto = from + wi;
-    if  ( from < minIndex() )
-      from = minIndex();
-    if ( upto > size() )
-      upto = size();
-
-    // mean:
-    double mean = 0.0;
-    long n = 0;
-    for ( long k=from; k<upto; k++ )
-      mean += ( operator[]( k ) - mean ) / (++n);
-
-    // mean squared diffference from mean:
-    double var = 0.0;
-    n = 0;
-    for ( long k=from; k<upto; k++ ) {
-      // subtract mean:
-      double d = operator[]( k ) - mean;
-      // average over squares:
-      var += ( d*d - var ) / (++n);
-    }
-
-    // variance:
-    vd[i] = var;
-  }
-}
-
-
-void InData::stdev( double time, SampleDataD &sd, double width ) const
-{
-  if ( width <= 0.0 )
-    width = sd.stepsize();
-  long wi = indices( width );
-  if ( wi <= 0 )
-    wi = 1;
-
-  for ( int i=0; i<sd.size(); i++ ) {
-    long from = indices( time + sd.pos( i ) );
-    long upto = from + wi;
-    if  ( from < minIndex() )
-      from = minIndex();
-    if ( upto > size() )
-      upto = size();
-
-    // mean:
-    double mean = 0.0;
-    long n = 0;
-    for ( long k=from; k<upto; k++ )
-      mean += ( operator[]( k ) - mean ) / (++n);
-
-    // mean squared diffference from mean:
-    double var = 0.0;
-    n = 0;
-    for ( long k=from; k<upto; k++ ) {
-      // subtract mean:
-      double d = operator[]( k ) - mean;
-      // average over squares:
-      var += ( d*d - var ) / (++n);
-    }
-
-    // square root:
-    sd[i] = sqrt( var );
-  }
-}
-
-
-void InData::rms( double time, SampleDataD &rd, double width ) const
-{
-  if ( width <= 0.0 )
-    width = rd.stepsize();
-  long wi = indices( width );
-  if ( wi <= 0 )
-    wi = 1;
-
-  for ( int i=0; i<rd.size(); i++ ) {
-    long from = indices( time + rd.pos( i ) );
-    long upto = from + wi;
-    if  ( from < minIndex() )
-      from = minIndex();
-    if ( upto > size() )
-      upto = size();
-
-    // mean squared diffference from mean:
-    double var = 0.0;
-    long n = 0;
-    for ( long k=from; k<upto; k++ ) {
-      // subtract mean:
-      double d = operator[]( k );
-      // average over squares:
-      var += ( d*d - var ) / (++n);
-    }
-
-    // square root:
-    rd[i] = sqrt( var );
-  }
-}
-
-
 ostream &operator<<( ostream &str, const InData &id )
 {
-  str << BufferArrayF( id );
+  str << CyclicSampleDataF( id );
   str << DaqError( id );
+  if ( id.ID == 0 )
+    str << "ID: none\n";
+  else
+    str << "ID->ident(): " << id.ID->ident() << '\n';
+  str << "NWrite: " << id.NWrite << '\n';
   str << "RestartIndex: " << id.RestartIndex << '\n';
   str << "SignalIndex: " << id.SignalIndex << '\n';
-  str << "Stepsize: " << id.Stepsize << '\n';
   str << "Delay: " << id.Delay << '\n';
   str << "StartSource: " << id.StartSource << '\n';
   str << "Priority: " << id.Priority << '\n';

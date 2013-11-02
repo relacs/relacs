@@ -222,7 +222,7 @@ int Simulator::read( InList &data )
 
 int Simulator::readData( void )
 {
-  return 0;
+  return 1;
 }
 
 

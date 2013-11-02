@@ -36,7 +36,7 @@ double EODTools::eodThreshold( const InData &data, double tbegin, double tend,
   contrast = fabs( contrast );
   if ( contrast > 0.99 )
     contrast = 0.99;
-  double min=0.0, max=0.0;
+  float min=0.0, max=0.0;
   data.minMax( min, max, tbegin, tend );
   return 0.75*(max-min)*(1.0-contrast)/(1.0+contrast);
 }

@@ -334,6 +334,12 @@ protected:
 	and the stimulus data (via unlockStimulusData()). */
   virtual void unlockAll( void );
 
+    /*! Copies \a il to this with copying a pointer to the data buffers only. */
+  void assignTraces( const InList *il );
+    /*! Copies again all settings and indices from the reference traces to this. */
+  void assignTraces( void );
+    /*! Updates the indices of the traces. */
+  void updateTraces( void );
     /*! Return the list of all input traces.
         \sa trace(), traceIndex(), events(), traceInputTrace(),
 	traceInputEvent(), eventInputTrace(), eventInputEvent() */
@@ -769,6 +775,8 @@ protected:
 
     /*! Pointer to the main RELACSWidget. */
   RELACSWidget *RW;
+    /*! Processes new data and makes them available in this. */
+  void updateData( void );
 
     /*! Reimplement this function in case you need 
         to handle key-press events.
@@ -834,6 +842,8 @@ protected slots:
 
 
 private:
+
+  InList IL;
 
   string PluginSet;
   string UniqueName;

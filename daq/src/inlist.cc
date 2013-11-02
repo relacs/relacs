@@ -46,6 +46,16 @@ InList::InList( InData *data, bool own )
 }
 
 
+InList::InList( const InList *il )
+  : IL()
+{
+  IL.resize( il->IL.size() );
+  for ( unsigned int k=0; k<IL.size(); k++ ) {
+    IL[k].ID->assign( &(*il)[k] );
+  }
+}
+
+
 InList::InList( const InList &il )
   : IL()
 {
@@ -108,6 +118,28 @@ InList &InList::operator=( const InList &il )
       IL[k].ID = il.IL[k].ID;
   }
 
+  return *this;
+}
+
+
+InList &InList::assign( const InList *il )
+{
+  if ( il == this )
+    return *this;
+
+  IL.resize( il->IL.size() );
+  for ( unsigned int k=0; k<IL.size(); k++ ) {
+    assign( k, &(*il)[k] );
+  }
+
+  return *this;
+}
+
+
+InList &InList::assign( void )
+{
+  for ( unsigned int k=0; k<IL.size(); k++ )
+    IL[k].ID->assign();
   return *this;
 }
 
@@ -198,6 +230,28 @@ void InList::add( const InList &traces, bool own )
 }
 
 
+void InList::set( int index, const InData *data, bool own )
+{
+  if ( index >= 0 && index < size() ) {
+    if ( IL[index].Own )
+      delete IL[index].ID;
+    IL[index].Own = own;
+    IL[index].ID = const_cast<InData*>(data);
+  }
+}
+
+
+void InList::assign( int index, const InData *data )
+{
+  if ( index >= 0 && index < size() ) {
+    if ( IL[index].Own )
+      delete IL[index].ID;
+    IL[index].Own = true;
+    IL[index].ID = new InData( data );
+  }
+}
+
+
 void InList::erase( int index )
 {
   if ( index >= 0 && index < size() ) {
@@ -235,17 +289,17 @@ void InList::sortByDeviceChannel( void )
 }
 
 
-void InList::submit( void )
+void InList::update( void )
 {
   for ( int k=0; k<size(); k++ )
-    operator[]( k ).submit();
+    operator[]( k ).update();
 }
 
 
 void InList::clearBuffer( void )
 {
   for ( int k=0; k<size(); k++ )
-    operator[]( k ).clearBuffer();
+    operator[]( k ).clear();
 }
 
 

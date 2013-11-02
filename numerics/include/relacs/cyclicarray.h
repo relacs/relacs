@@ -53,16 +53,21 @@ public:
   CyclicArray( void );
     /*! Creates an empty array with capacity \a n data elements. */
   CyclicArray( int n );
+    /*! Creates an CyclicArray with the same size and content as \a ca
+        that shares the buffer with the one of \a ca. */
+  CyclicArray( CyclicArray<T> *ca );
     /*! Copy constructor.
         Creates an CyclicArray with the same size and content as \a ca. */
-  CyclicArray( const CyclicArray< T > &ca );
+  CyclicArray( const CyclicArray<T> &ca );
     /*! The destructor. */
   virtual ~CyclicArray( void );
 
-    /*! Assigns \a a to *this. */
+    /*! Assigns \a a to *this by copying the content. */
   const CyclicArray<T> &operator=( const CyclicArray<T> &a );
-    /*! Assigns \a a to *this. */
+    /*! Assigns \a a to *this by copying the content. */
   const CyclicArray<T> &assign( const CyclicArray<T> &a );
+    /*! Assigns \a a to *this by only copying a pointer to the data. */
+  const CyclicArray<T> &assign( const CyclicArray<T> *a );
 
     /*! The size of the array, 
         i.e. the total number of added data elements.
@@ -73,10 +78,10 @@ public:
         and therefore are accessible.
         Less or equal than capacity() and size()!
         \sa minIndex(), readSize(), empty() */
-  int accessibleSize( void ) const;
+  virtual int accessibleSize( void ) const;
     /*! The index of the first accessible data element.
         \sa accessibleSize() */
-  int minIndex( void ) const;
+  virtual int minIndex( void ) const;
     /*! True if the array does not contain any data elements,
         i.e. size() equals zero.
         \sa size(), accessibleSize(), readSize() */
@@ -96,17 +101,21 @@ public:
 
     /*! The capacity of the array, i.e. the number of data
         elements for which memory has been allocated. */
-  int capacity( void ) const { return NBuffer; };
+  int capacity( void ) const;
     /*! If \a n is less than or equal to capacity(), 
         this call has no effect. 
 	Otherwise, it is a request for allocation 
 	of additional memory. 
 	If the request is successful, 
-	then capacity() is greater than or equal to \a n; 
+	then capacity() is greater than or equal to \a n
+	and the ownership is transferred to this; 
 	otherwise, capacity() is unchanged. 
 	In either case, size() is unchanged and the content
 	of the array is preserved. */
   virtual void reserve( int n );
+
+    /*! Copy the data indices from \a a to this. */
+  void update( const CyclicArray<T> *a );
 
     /*! Returns a const reference to the data element at index \a i.
         No range checking is performed. */
@@ -161,7 +170,7 @@ public:
 
     /*! The number of data elements available to be read from the array. 
         \sa read(), readIndex(), size(), accessibleSize() */
-  int readSize( void ) const;
+  virtual int readSize( void ) const;
     /*! The index of the data element to be read next from the array. 
         \sa read(), readSize() */
   int readIndex( void ) const;
@@ -187,34 +196,39 @@ public:
     /*! Return the maximum value of the array between index \a from inclusively
         and index \a upto exclusively. */
   T max( int from, int upto ) const;
-    /*! Return the minimum and maximum value, \a min and \a max,
-        of the array between index \a from inclusively and index \a upto exclusively. */
-  void minMax( double &min, double &max, int from, int upto ) const;
-    /*! Return the minimum absolute value of the array between index \a from inclusively
-        and index \a upto exclusively. */
+    /*! Return the minimum and maximum value, \a min and \a max, of
+        the array between index \a from inclusively and index \a upto
+        exclusively. */
+  void minMax( T &min, T &max, int from, int upto ) const;
+    /*! Return the minimum absolute value of the array between index
+        \a from inclusively and index \a upto exclusively. */
   T minAbs( int from, int upto ) const;
-    /*! Return the maximum absolute value of the array between index \a from inclusively
-        and index \a upto exclusively. */
+    /*! Return the maximum absolute value of the array between index
+        \a from inclusively and index \a upto exclusively. */
   T maxAbs( int from, int upto ) const;
 
-    /*! Return the mean value of the array between index \a from inclusively
-        and index \a upto exclusively. */
-  typename numerical_traits< T >::mean_type mean( int from, int upto ) const;
-    /*! Return the variance of the array between index \a from inclusively
-        and index \a upto exclusively. */
-  typename numerical_traits< T >::variance_type
+    /*! Return the mean value of the array between index \a from
+        inclusively and index \a upto exclusively. */
+  typename numerical_traits<T>::mean_type mean( int from, int upto ) const;
+    /*! Return the variance of the array between index \a from
+        inclusively and index \a upto exclusively. */
+  typename numerical_traits<T>::variance_type
   variance( int from, int upto ) const;
-    /*! Return the standard deviation of the array between index \a from inclusively
-        and index \a upto exclusively. */
-  typename numerical_traits< T >::variance_type
+    /*! Return the standard deviation of the array between index \a
+        from inclusively and index \a upto exclusively. */
+  typename numerical_traits<T>::variance_type
   stdev( int from, int upto ) const;
-    /*! Return the root-mean-square of the array between index \a from inclusively
-        and index \a upto exclusively. */
-  typename numerical_traits< T >::variance_type
+    /*! Return the root-mean-square of the array between index \a from
+        inclusively and index \a upto exclusively. */
+  typename numerical_traits<T>::variance_type
   rms( int from, int upto ) const;
 
-    /*! Compute histogram \a h of all data elements currently
-        stored in the array. */
+    /*! Compute histogram \a h of all data elements between index \a
+        from inclusively and index \a upto exclusively. */
+  template< typename S >
+  void hist( SampleData< S > &h, int from, int upto ) const;
+    /*! Compute histogram \a h of all data elements currently stored
+        in the array. */
   template< typename S >
   void hist( SampleData< S > &h ) const;
 
@@ -228,6 +242,8 @@ public:
 
 protected:
 
+    /*! \c true in case this owns the buffer. */
+  bool Own;
     /*! The data buffer. */
   T *Buffer;
     /*! Number of elements the data buffer can hold. */
@@ -254,8 +270,9 @@ typedef CyclicArray< int > CyclicArrayI;
 
 
 template < typename T >
-CyclicArray< T >::CyclicArray( void )
-  : Buffer( 0 ),
+CyclicArray<T>::CyclicArray( void )
+  : Own( false ),
+    Buffer( 0 ),
     NBuffer( 0 ),
     RCycles( 0 ),
     R( 0 ),
@@ -268,8 +285,9 @@ CyclicArray< T >::CyclicArray( void )
 
 
 template < typename T >
-CyclicArray< T >::CyclicArray( int n )
-  : Buffer( 0 ),
+CyclicArray<T>::CyclicArray( int n )
+  : Own( false ),
+    Buffer( 0 ),
     NBuffer( 0 ),
     RCycles( 0 ),
     R( 0 ),
@@ -281,13 +299,30 @@ CyclicArray< T >::CyclicArray( int n )
   if ( n > 0 ) {
     Buffer = new T[ n ];
     NBuffer = n;
+    Own = true;
   }
 }
 
 
 template < typename T >
-CyclicArray< T >::CyclicArray( const CyclicArray< T > &ca )
-  : Buffer( 0 ),
+CyclicArray<T>::CyclicArray( CyclicArray<T> *ca )
+  : Own( false ),
+    Buffer( ca->Buffer ),
+    NBuffer( ca->NBuffer ),
+    RCycles( ca->RCycles ),
+    R( ca->R ),
+    LCycles( ca->LCycles ),
+    L( ca->L ),
+    Val( ca->Val ),
+    Dummy( ca->Dummy )
+{
+}
+
+
+template < typename T >
+CyclicArray<T>::CyclicArray( const CyclicArray<T> &ca )
+  : Own( false ),
+    Buffer( 0 ),
     NBuffer( 0 ),
     RCycles( ca.RCycles ),
     R( ca.R ),
@@ -300,14 +335,15 @@ CyclicArray< T >::CyclicArray( const CyclicArray< T > &ca )
     Buffer = new T[ ca.capacity() ];
     NBuffer = ca.capacity();
     memcpy( Buffer, ca.Buffer, NBuffer * sizeof( T ) );
+    Own = true;
   }
 }
 
 
 template < typename T >
-CyclicArray< T >::~CyclicArray( void )
+CyclicArray<T>::~CyclicArray( void )
 {
-  if ( Buffer != 0 )
+  if ( Own && Buffer != 0 )
     delete [] Buffer;
 }
 
@@ -325,8 +361,9 @@ const CyclicArray<T> &CyclicArray<T>::assign( const CyclicArray<T> &a )
   if ( &a == this )
     return *this;
 
-  if ( Buffer != 0 )
+  if ( Own && Buffer != 0 )
     delete [] Buffer;
+  Own = false;
   Buffer = 0;
   NBuffer = 0;
   Val = 0;
@@ -334,6 +371,7 @@ const CyclicArray<T> &CyclicArray<T>::assign( const CyclicArray<T> &a )
   if ( a.capacity() > 0 ) {
     Buffer = new T[ a.capacity() ];
     NBuffer = a.capacity();
+    Own = true;
     R = a.size();
     memcpy( Buffer, a.Buffer, NBuffer * sizeof( T ) );
     RCycles = a.RCycles;
@@ -353,35 +391,56 @@ const CyclicArray<T> &CyclicArray<T>::assign( const CyclicArray<T> &a )
 
 
 template < typename T >
-int CyclicArray< T >::size( void ) const
+const CyclicArray<T> &CyclicArray<T>::assign( const CyclicArray<T> *a )
+{
+  if ( a == this )
+    return *this;
+
+  if ( Own && Buffer != 0 )
+    delete [] Buffer;
+  Own = false;
+  Buffer = a->Buffer;
+  NBuffer = a->NBuffer;
+  RCycles = a->RCycles;
+  R = a->R;
+  LCycles = a->LCycles;
+  L = a->L;
+  Val = a->Val;
+
+  return *this;
+}
+
+
+template < typename T >
+int CyclicArray<T>::size( void ) const
 {
   return RCycles * NBuffer + R;
 }
 
 
 template < typename T >
-int CyclicArray< T >::accessibleSize( void ) const
+int CyclicArray<T>::accessibleSize( void ) const
 {
   return RCycles == 0 ? R : NBuffer;
 }
 
 
 template < typename T >
-int CyclicArray< T >::minIndex( void ) const
+int CyclicArray<T>::minIndex( void ) const
 {
   return RCycles == 0 ? 0 : (RCycles-1) * NBuffer + R;
 }
 
 
 template < typename T >
-bool CyclicArray< T >::empty( void ) const
+bool CyclicArray<T>::empty( void ) const
 {
   return RCycles == 0 && R == 0;
 }
 
 
 template < typename T >
-void CyclicArray< T >::resize( int n, const T &val )
+void CyclicArray<T>::resize( int n, const T &val )
 {
   if ( n <= 0 ) {
     clear();
@@ -435,7 +494,7 @@ void CyclicArray< T >::resize( int n, const T &val )
 
 
 template < typename T >
-void CyclicArray< T >::clear( void )
+void CyclicArray<T>::clear( void )
 {
   RCycles = 0;
   R = 0;
@@ -445,7 +504,14 @@ void CyclicArray< T >::clear( void )
 
 
 template < typename T >
-void CyclicArray< T >::reserve( int n )
+int CyclicArray<T>::capacity( void ) const
+{
+  return NBuffer;
+}
+
+
+template < typename T >
+void CyclicArray<T>::reserve( int n )
 {
   if ( n > NBuffer ) {
     T *newbuf = new T[ n ];
@@ -465,19 +531,31 @@ void CyclicArray< T >::reserve( int n )
 	k--;
 	newbuf[k] = Buffer[j];
       }
-      delete [] Buffer;
+      if ( Own )
+	delete [] Buffer;
       int oln = LCycles*NBuffer + L;
       LCycles = (oln-1) / n;
       L = 1 + (oln-1) % n;
     }
     Buffer = newbuf;
     NBuffer = n;
+    Own = true;
   }
 }
 
 
 template < typename T >
-const T &CyclicArray< T >::operator[]( int i ) const
+void CyclicArray<T>::update( const CyclicArray<T> *a )
+{
+  if ( a != 0 ) {
+    RCycles = a->RCycles;
+    R = a->R;
+  }
+}
+
+
+template < typename T >
+const T &CyclicArray<T>::operator[]( int i ) const
 {
   // XXX we do not want to crash anymore....
   // this is the error from plot::drawLine() of an InData.
@@ -491,7 +569,7 @@ const T &CyclicArray< T >::operator[]( int i ) const
 
 
 template < typename T >
-T &CyclicArray< T >::operator[]( int i )
+T &CyclicArray<T>::operator[]( int i )
 {
   assert( ( i >= minIndex() && i < size() ) );
   return Buffer[ i % NBuffer ];
@@ -579,7 +657,7 @@ T &CyclicArray<T>::back( void )
 
 
 template < typename T >
-void CyclicArray< T >::push( const T &val )
+void CyclicArray<T>::push( const T &val )
 {
   assert( Buffer != 0 && NBuffer > 0 );
   if ( NBuffer <= 0 )
@@ -598,7 +676,7 @@ void CyclicArray< T >::push( const T &val )
 
 
 template < typename T >
-T CyclicArray< T >::pop( void )
+T CyclicArray<T>::pop( void )
 {
   if ( NBuffer <= 0 || R <= 0 )
     return 0;
@@ -618,21 +696,21 @@ T CyclicArray< T >::pop( void )
 
 
 template < typename T >
-int CyclicArray< T >::maxPush( void ) const
+int CyclicArray<T>::maxPush( void ) const
 {
   return R < NBuffer ? NBuffer - R : NBuffer;
 }
 
 
 template < typename T >
-T *CyclicArray< T >::pushBuffer( void )
+T *CyclicArray<T>::pushBuffer( void )
 {
   return R < NBuffer ? Buffer + R : Buffer;
 }
 
 
 template < typename T >
-void CyclicArray< T >::push( int n )
+void CyclicArray<T>::push( int n )
 {
   if ( R >= NBuffer ) {
     R = 0;
@@ -650,7 +728,7 @@ void CyclicArray< T >::push( int n )
 
 
 template < typename T >
-int CyclicArray< T >::readSize( void ) const
+int CyclicArray<T>::readSize( void ) const
 { 
   int n = (RCycles - LCycles)*NBuffer + R - L;
 #ifndef NDEBUG
@@ -663,14 +741,14 @@ int CyclicArray< T >::readSize( void ) const
 
 
 template < typename T >
-int CyclicArray< T >::readIndex( void ) const
+int CyclicArray<T>::readIndex( void ) const
 {
   return LCycles*NBuffer + L;
 }
 
 
 template < typename T >
-T CyclicArray< T >::read( void )
+T CyclicArray<T>::read( void )
 {
   if ( NBuffer <= 0 )
     return 0.0;
@@ -686,7 +764,7 @@ T CyclicArray< T >::read( void )
 
 
 template < typename T >
-T CyclicArray< T >::min( int from, int upto ) const
+T CyclicArray<T>::min( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -706,7 +784,7 @@ T CyclicArray< T >::min( int from, int upto ) const
 
 
 template < typename T >
-T CyclicArray< T >::max( int from, int upto ) const
+T CyclicArray<T>::max( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -726,7 +804,7 @@ T CyclicArray< T >::max( int from, int upto ) const
 
 
 template < typename T >
-void CyclicArray< T >::minMax( double &min, double &max, int from, int upto ) const
+void CyclicArray<T>::minMax( T &min, T &max, int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -748,7 +826,7 @@ void CyclicArray< T >::minMax( double &min, double &max, int from, int upto ) co
 
 
 template < typename T >
-T CyclicArray< T >::maxAbs( int from, int upto ) const
+T CyclicArray<T>::maxAbs( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -768,7 +846,7 @@ T CyclicArray< T >::maxAbs( int from, int upto ) const
 
 
 template < typename T >
-T CyclicArray< T >::minAbs( int from, int upto ) const
+T CyclicArray<T>::minAbs( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -788,8 +866,8 @@ T CyclicArray< T >::minAbs( int from, int upto ) const
 
 
 template < typename T >
-typename numerical_traits< T >::mean_type
-CyclicArray< T >::mean( int from, int upto ) const
+typename numerical_traits<T>::mean_type
+CyclicArray<T>::mean( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -800,7 +878,7 @@ CyclicArray< T >::mean( int from, int upto ) const
     return 0;
 
   // mean:
-  typename numerical_traits< T >::mean_type mean = 0.0;
+  typename numerical_traits<T>::mean_type mean = 0.0;
   int n = 0;
   for ( int k=from; k<upto; k++ )
     mean += ( operator[]( k ) - mean ) / (++n);
@@ -810,8 +888,8 @@ CyclicArray< T >::mean( int from, int upto ) const
 
 
 template < typename T >
-typename numerical_traits< T >::variance_type
-CyclicArray< T >::variance( int from, int upto ) const
+typename numerical_traits<T>::variance_type
+CyclicArray<T>::variance( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -822,17 +900,17 @@ CyclicArray< T >::variance( int from, int upto ) const
     return 0;
 
   // mean:
-  typename numerical_traits< T >::mean_type mean = 0;
+  typename numerical_traits<T>::mean_type mean = 0;
   int n = 0;
   for ( int k=from; k<upto; k++ )
     mean += ( operator[]( k ) - mean ) / (++n);
 
   // mean squared diffference from mean:
-  typename numerical_traits< T >::variance_type var = 0;
+  typename numerical_traits<T>::variance_type var = 0;
   n = 0;
   for ( int k=from; k<upto; k++ ) {
     // subtract mean:
-    typename numerical_traits< T >::mean_type d = operator[]( k ) - mean;
+    typename numerical_traits<T>::mean_type d = operator[]( k ) - mean;
     // average over squares:
     var += ( d*d - var ) / (++n);
   }
@@ -843,8 +921,8 @@ CyclicArray< T >::variance( int from, int upto ) const
 
 
 template < typename T >
-typename numerical_traits< T >::variance_type
-CyclicArray< T >::stdev( int from, int upto ) const
+typename numerical_traits<T>::variance_type
+CyclicArray<T>::stdev( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -855,17 +933,17 @@ CyclicArray< T >::stdev( int from, int upto ) const
     return 0;
 
   // mean:
-  typename numerical_traits< T >::mean_type mean = 0;
+  typename numerical_traits<T>::mean_type mean = 0;
   int n = 0;
   for ( int k=from; k<upto; k++ )
     mean += ( operator[]( k ) - mean ) / (++n);
 
   // mean squared diffference from mean:
-  typename numerical_traits< T >::variance_type var = 0;
+  typename numerical_traits<T>::variance_type var = 0;
   n = 0;
   for ( int k=from; k<upto; k++ ) {
     // subtract mean:
-    typename numerical_traits< T >::mean_type d = operator[]( k ) - mean;
+    typename numerical_traits<T>::mean_type d = operator[]( k ) - mean;
     // average over squares:
     var += ( d*d - var ) / (++n);
   }
@@ -876,8 +954,8 @@ CyclicArray< T >::stdev( int from, int upto ) const
 
 
 template < typename T >
-typename numerical_traits< T >::variance_type
-CyclicArray< T >::rms( int from, int upto ) const
+typename numerical_traits<T>::variance_type
+CyclicArray<T>::rms( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -888,7 +966,7 @@ CyclicArray< T >::rms( int from, int upto ) const
     return 0;
 
   // mean squared values:
-  typename numerical_traits< T >::variance_type var = 0;
+  typename numerical_traits<T>::variance_type var = 0;
   int n = 0;
   for ( int k=from; k<upto; k++ ) {
     T d = operator[]( k );
@@ -902,7 +980,31 @@ CyclicArray< T >::rms( int from, int upto ) const
 
 
 template < typename T > template< typename S >
-void CyclicArray< T >::hist( SampleData< S > &h ) const
+void CyclicArray<T>::hist( SampleData< S > &h, int from, int upto ) const
+{
+  h = 0.0;
+
+  if ( from < minIndex() )
+    from = minIndex();
+  if ( upto > size() )
+    upto = size();
+
+  if ( from >= upto )
+    return;
+
+  double l = h.rangeFront();
+  double s = h.stepsize();
+
+  for ( int k=from; k<upto; k++ ) {
+    int b = (int)rint( ( operator[]( k ) - l ) / s );
+    if ( b >= 0  && b < h.size() )
+      h[b] += 1;
+  }
+}
+
+
+template < typename T > template< typename S >
+void CyclicArray<T>::hist( SampleData< S > &h ) const
 {
   h = 0.0;
 
@@ -922,7 +1024,7 @@ void CyclicArray< T >::hist( SampleData< S > &h ) const
 
 
 template < typename T >
-int CyclicArray< T >::saveBinary( ostream &os, int index ) const
+int CyclicArray<T>::saveBinary( ostream &os, int index ) const
 {
   // stream not open:
   if ( !os )
@@ -961,7 +1063,7 @@ int CyclicArray< T >::saveBinary( ostream &os, int index ) const
 
 
 template < typename T >
-ostream &operator<<( ostream &str, const CyclicArray< T > &ca )
+ostream &operator<<( ostream &str, const CyclicArray<T> &ca )
 {
   str << "Buffer: " << ca.Buffer << '\n';
   str << "NBuffer: " << ca.NBuffer << '\n';

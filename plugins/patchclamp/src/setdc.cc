@@ -331,8 +331,8 @@ void SetDC::analyze( double duration )
   if ( SpikeTrace[0] >= 0 ) {
     const InData &data = trace( SpikeTrace[0] );
     double meanvoltage = data.mean( ltime, currentTime() );
-    double min = 0;
-    double max = 0.0;
+    float min = 0;
+    float max = 0.0;
     data.minMax( min, max, ltime, currentTime() );
     SampleDataD hist( min, max, 0.01*(max-min), 0.0 );
     double l = hist.rangeFront();

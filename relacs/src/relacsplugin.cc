@@ -273,7 +273,6 @@ void RELACSPlugin::widgetDestroyed( QObject *obj )
 void RELACSPlugin::lockAll( void )
 {
   lock();
-  readLockData();
   lockMetaData();
   lockStimulusData();
 }
@@ -283,7 +282,6 @@ void RELACSPlugin::unlockAll( void )
 {
   unlockStimulusData();
   unlockMetaData();
-  unlockData();
   unlock();
 }
 
@@ -308,37 +306,71 @@ QReadWriteLock &RELACSPlugin::dataMutex( void )
 }
 
 
+void RELACSPlugin::assignTraces( const InList *il )
+{
+  IL.assign( il );
+}
+
+
+void RELACSPlugin::assignTraces( void )
+{
+  IL.assign();
+}
+
+
+void RELACSPlugin::updateTraces( void )
+{
+  IL.update();
+}
+
+
+void RELACSPlugin::updateData( void )
+{
+  // get new data:
+  if ( ! RW->updateData() ) {
+    QMutex mutex;
+    mutex.lock();
+    RW->UpdateDataWait.wait( &mutex, 100 );
+    mutex.unlock();
+  }
+  // make them available:
+  readLockData();
+  updateTraces();
+  unlockData();
+}
+
+
 const InList &RELACSPlugin::traces( void ) const
 {
-  return RW->IL;
+  return IL;
 }
 
 
 const InData &RELACSPlugin::trace( int index ) const
 {
-  return RW->IL[index];
+  return IL[index];
 }
 
 
 const InData &RELACSPlugin::trace( const string &ident ) const
 {
-  return RW->IL[ident];
+  return IL[ident];
 }
 
 
 int RELACSPlugin::traceIndex( const string &ident ) const
 {
-  return RW->IL.index( ident );
+  return IL.index( ident );
 }
 
 
 string RELACSPlugin::traceNames( void ) const
 {
   string its = "";
-  for ( int k=0; k<RW->IL.size(); k++ ) {
+  for ( int k=0; k<IL.size(); k++ ) {
     if ( k > 0 )
       its += '|';
-    its += RW->IL[k].ident();
+    its += IL[k].ident();
   }
   return its;
 }
@@ -418,7 +450,7 @@ double RELACSPlugin::signalTime( void ) const
 
 double RELACSPlugin::currentTime( void ) const
 {
-  return RW->CurrentTime;
+  return IL.currentTime();
 }
 
 
@@ -746,7 +778,7 @@ Filter *RELACSPlugin::filterTrace( int index )
 
 Filter *RELACSPlugin::filterTrace( const string &name )
 {
-  int inx = RW->IL.index( name );
+  int inx = IL.index( name );
   return RW->FD == 0 || inx < 0 ? 0 : RW->FD->filter( inx );
 }
 

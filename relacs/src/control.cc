@@ -72,6 +72,7 @@ void Control::addActions( QMenu *menu, bool doxydoc )
 void Control::run( void )
 {
   timeStamp();
+  updateData();
   lockAll();
   setSettings();
   main();
@@ -98,9 +99,10 @@ bool Control::waitOnData( double time )
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   unlockStimulusData();
   unlockMetaData();
-  unlockData();
   RW->UpdateDataWait.wait( mutex(), t );
   readLockData();
+  updateTraces();
+  unlockData();
   lockMetaData();
   lockStimulusData();
   return interrupt();
@@ -112,9 +114,10 @@ bool Control::waitOnReProSleep( double time )
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   unlockStimulusData();
   unlockMetaData();
-  unlockData();
   RW->ReProSleepWait.wait( mutex(), t );
   readLockData();
+  updateTraces();
+  unlockData();
   lockMetaData();
   lockStimulusData();
   return interrupt();
@@ -126,9 +129,8 @@ bool Control::waitOnReProFinished( double time )
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   unlockStimulusData();
   unlockMetaData();
-  unlockData();
   RW->ReProAfterWait.wait( mutex(), t );
-  readLockData();
+  updateData();
   lockMetaData();
   lockStimulusData();
   return interrupt();
@@ -140,9 +142,8 @@ bool Control::waitOnSessionStart( double time )
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   unlockStimulusData();
   unlockMetaData();
-  unlockData();
   RW->SessionStartWait.wait( mutex(), t );
-  readLockData();
+  updateData();
   lockMetaData();
   lockStimulusData();
   return interrupt();
@@ -154,9 +155,8 @@ bool Control::waitOnSessionPrestop( double time )
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   unlockStimulusData();
   unlockMetaData();
-  unlockData();
   RW->SessionPrestopWait.wait( mutex(), t );
-  readLockData();
+  updateData();
   lockMetaData();
   lockStimulusData();
   return interrupt();
@@ -168,9 +168,8 @@ bool Control::waitOnSessionStop( double time )
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   unlockStimulusData();
   unlockMetaData();
-  unlockData();
   RW->SessionStopWait.wait( mutex(), t );
-  readLockData();
+  updateData();
   lockMetaData();
   lockStimulusData();
   return interrupt();
@@ -182,18 +181,17 @@ bool Control::sleep( double t )
   // sleep:
   unlockStimulusData();
   unlockMetaData();
-  unlockData();
   if ( t > 0.0 ) {
     unsigned long ms = (unsigned long)(1.0e3*t);
     if ( t < 0.001 || ms < 1 ) {
-      lock();
-      Thread->usleep( (unsigned long)(1.0e6*t) );
       unlock();
+      Thread->usleep( (unsigned long)(1.0e6*t) );
+      lock();
     }
     else
       SleepWait.wait( mutex(), ms );
   }
-  readLockData();
+  updateData();
   lockMetaData();
   lockStimulusData();
 

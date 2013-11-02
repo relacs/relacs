@@ -182,21 +182,19 @@ PlotTrace::~PlotTrace( void )
 void PlotTrace::resize( void )
 {
   // count active plots:
-  RW->readLockData();
   VP.clear();
   VP.reserve( traces().size() );
   for ( int c=0; c<traces().size(); c++ ) {
     if ( trace(c).mode() & PlotTraceMode )
       VP.push_back( c );
   }
-  RW->unlockData();
-
   P.lock();
 
   // setup plots:
   if ( traces().size() != P.size() )
     P.resize( traces().size(), Plot::Pointer );
-  P.setDataMutex( &RW->DataMutex );
+  // XXX  P.setDataMutex( &RW->DataMutex );
+  P.setDataMutex( mutex() );
   P.setCommonXRange();
   PlotElements.clear();
   PlotElements.resize( VP.size(), -1 );
@@ -230,7 +228,7 @@ void PlotTrace::resize( void )
 			     0.5, Plot::Graph, Plot::Center, -90.0 );
     }
     
-    if ( VP.size() >= 0 ) {
+    if ( VP.size() > 0 ) {
       P[VP.front()].setTMarg( 1.0 );
       P[VP.back()].setXTics();
       P[VP.back()].setXLabel( "msec" );
@@ -271,7 +269,6 @@ void PlotTrace::toggle( QAction *mtrace )
   if ( nodata )
     return;
 
-  RW->readLockData();
   int m = trace(i).mode();
   if ( m & PlotTraceMode ) {
     for ( unsigned int k=0; (int)k<traces().size(); k++ ) {
@@ -287,7 +284,6 @@ void PlotTrace::toggle( QAction *mtrace )
     PlotActions[i]->setChecked( true );
   }
   const_cast<InData&>(trace(i)).setMode( m );
-  RW->unlockData();
   resize();
   plot();
 }
@@ -295,7 +291,6 @@ void PlotTrace::toggle( QAction *mtrace )
 
 void PlotTrace::init( void )
 {
-  RW->readLockData();
   P.lock();
 
   int origin = ViewMode == FixedView ? 3 : 2;
@@ -414,13 +409,13 @@ void PlotTrace::init( void )
 
 
   P.unlock();
-  RW->unlockData();
 	
 }
 
 
 void PlotTrace::plot( void )
 {
+  //  cerr << "PLOTTRACE\n" << traces() << '\n';
   P.lock();
   bool plotting = Plotting;
   P.unlock();
@@ -432,7 +427,6 @@ void PlotTrace::plot( void )
     PlotChanged = false;
   }
 
-  RW->readLockData();
   P.lock();
 
   // set left- and rightmargin:
@@ -505,7 +499,6 @@ void PlotTrace::plot( void )
   P.draw();
 
   P.unlock();
-  RW->unlockData();
 }
 
 
@@ -743,7 +736,6 @@ void PlotTrace::zoomOut( void )
   if ( RW->idle() )
     plot();
   else {
-    RW->readLockData();
     P.lock();
     for ( unsigned int c=0; c<VP.size(); c++ ) {
       if ( PlotElements[c] >= 0 ) {
@@ -753,7 +745,6 @@ void PlotTrace::zoomOut( void )
       }
     }
     P.unlock();
-    RW->unlockData();
   }
 }
 
@@ -767,7 +758,6 @@ void PlotTrace::zoomIn( void )
   if ( RW->idle() )
     plot();
   else {
-    RW->readLockData();
     P.lock();
     for ( unsigned int c=0; c<VP.size(); c++ ) {
       if ( PlotElements[c] >= 0 ) {
@@ -777,7 +767,6 @@ void PlotTrace::zoomIn( void )
       }
     }
     P.unlock();
-    RW->unlockData();
   }
 }
 
@@ -822,13 +811,11 @@ void PlotTrace::moveStart( void )
 
 void PlotTrace::moveEnd( void )
 {
-  RW->readLockData();
   P.lock();
   if ( ViewMode != FixedView )
     setView( FixedView );
   LeftTime = currentTime() - TimeWindow;
   P.unlock();
-  RW->unlockData();
   if ( RW->idle() )
     plot();
 }
@@ -836,7 +823,6 @@ void PlotTrace::moveEnd( void )
 
 void PlotTrace::moveToSignal( void )
 {
-  RW->readLockData();
   P.lock();
   if ( ViewMode == SignalView )
     TimeOffs = 0.0;
@@ -849,7 +835,6 @@ void PlotTrace::moveToSignal( void )
     LeftTime = sigtime;
   }
   P.unlock();
-  RW->unlockData();
   if ( RW->idle() )
     plot();
 }
@@ -1020,7 +1005,6 @@ void PlotTrace::centerVertically( void )
     return;
 
   // center plots:
-  RW->readLockData();
   P.lock();
   double tfac = 1000.0;
   for ( unsigned int c=0; c<cp.size(); c++ ) {
@@ -1031,8 +1015,8 @@ void PlotTrace::centerVertically( void )
       xmin = trace( cp[c] ).currentTime() - (xmax-xmin);
       xmax = trace( cp[c] ).currentTime();
     }
-    double min = 0.0;
-    double max = 0.0;
+    float min = 0.0;
+    float max = 0.0;
     trace( cp[c] ).minMax( min, max, xmin, xmax );
     if ( P[cp[c]].ranges() == 0 )
       P[cp[c]].pushRanges();
@@ -1041,7 +1025,6 @@ void PlotTrace::centerVertically( void )
     P[cp[c]].setYRange( center-range, center+range );
   }
   P.unlock();
-  RW->unlockData();
 }
 
 

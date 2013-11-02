@@ -98,6 +98,30 @@ void ControlTabs::initDevices( void )
 }
 
 
+void ControlTabs::assignTraces( const InList *il )
+{
+  for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
+    (*cp)->assignTraces( il );
+  }
+}
+
+
+void ControlTabs::assignTraces( void )
+{
+  for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
+    (*cp)->assignTraces();
+  }
+}
+
+
+void ControlTabs::updateTraces( void )
+{
+  for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
+    (*cp)->updateTraces();
+  }
+}
+
+
 void ControlTabs::requestStop( void )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp )

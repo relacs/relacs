@@ -50,6 +50,8 @@ public:
         Setting \a own to \c true transfers the ownership to the InList. 
         \sa add( InData* ) */
   InList( InData *data, bool own=false );
+    /*! Copies \a il to this with copying a pointer to the data buffers only. */
+  InList( const InList *il );
     /*! Copy constructor. */
   InList( const InList &il );
     /*! Destructor. */
@@ -71,6 +73,10 @@ public:
 
     /*! Assignment. */
   InList &operator=( const InList &il );
+    /*! Copies \a il to this with copying a pointer to the data buffers only. */
+  InList &assign( const InList *il );
+    /*! Copies again all settings and indices from the reference InData. */
+  InList &assign( void );
 
     /*! Returns a const reference of the \a i -th InData of the list. */
   const InData &operator[]( int i ) const { return *(IL[i].ID); };
@@ -121,11 +127,18 @@ public:
         is transfered to the InList, i.e. the InList might delete it. */
   void add( const InList &traces, bool own=false );
 
+    /*! Set the pointer to \a data as the \a index-th element.
+        If \a own is set to \c true then the ownership of the traces
+        is transfered to the InList, i.e. the InList might delete it. */
+  void set( int index, const InData *data, bool own=false );
+    /*! Make the \a index-th element a copy of \a data with shared buffer. */
+  void assign( int index, const InData *data );
+
     /*! Erase the InData at index \a index. */
   void erase( int index );
 
     /*! Make written data of all traces available for reading. */
-  void submit( void );
+  void update( void );
 
     /*! Clear buffer and reset indices of all InData traces. */
   void clearBuffer( void );

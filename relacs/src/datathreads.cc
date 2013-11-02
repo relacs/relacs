@@ -60,21 +60,21 @@ void ReadThread::run( void )
 {
   bool rd = true;
 
-  double readinterval = RW->IL[0].readTime();
-  signed long ri = (unsigned long)::rint( 1000.0*readinterval*0.5 );
-  QThread::msleep( ri/2 );
+  // XXX remove:
+  //  double readinterval = RW->IL[0].readTime();
+  //  signed long ri = (unsigned long)::rint( 1000.0*readinterval*0.5 );
+  //  QThread::msleep( ri/2 );
   do {
     RW->lockAI();
     int r = RW->AQ->readData();
     RW->unlockAI();
-    RW->ReadDataWait.wakeAll();
     if ( r < 0 ) {
       RW->printlog( "! error in reading acquired data: " + RW->IL.errorText() );
-      RW->writeLockData();
+      RW->writeLockBuffer();
       RW->lockAI();
       RW->AQ->restartRead();
       RW->unlockAI();
-      RW->unlockData();
+      RW->unlockBuffer();
     }
     else if ( r == 0 ) {
       RW->printlog( "ReadThread -> finished reading data" );
@@ -83,8 +83,14 @@ void ReadThread::run( void )
       RunMutex.unlock();
       break;
     }
-    if ( ri > 0 )
-      QThread::msleep( ri );
+    RW->writeLockBuffer();
+    RW->lockAI();
+    RW->AQ->convertData();
+    RW->unlockAI();
+    RW->unlockBuffer();
+    RW->ReadDataWait.wakeAll();
+    //    if ( ri > 0 )
+    //      QThread::msleep( ri );
     RunMutex.lock();
     rd = Run;
     RunMutex.unlock();

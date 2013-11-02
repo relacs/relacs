@@ -832,7 +832,7 @@ void Acquire::submitData( void )
   //  cerr << "Acquire::submitData( void )\n";
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 )
-      AI[i].Traces.submit();
+      AI[i].Traces.update();
   }
 }
 
@@ -869,7 +869,7 @@ int Acquire::restartRead( void )
   double t = -1.0;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     AI[i].AI->convertData();
-    AI[i].Traces.submit();
+    AI[i].Traces.update();
     errorflags[i].resize( AI[i].Traces.size(), 0 );
     for ( int k=0; k<AI[i].Traces.size(); k++ ) {
       errorflags[i][k] = AI[i].Traces[k].error();

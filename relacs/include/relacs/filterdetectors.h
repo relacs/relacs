@@ -62,10 +62,17 @@ public:
   void clear( void );
   void clearIndices( void );
 
+    /*! Copies \a il to each Filter with copying a pointer to the data buffers only. */
+  void assignTraces( const InList *il );
+    /*! Copies again all settings and indices from the reference traces to each Filter. */
+  void assignTraces( void );
+    /*! Updates the indices of the traces. */
+  void updateTraces( void );
+
     /*! Load options from config file. */
   virtual void readConfig( StrQueue &sq );
 
-    /*! Add filters / detectors to the ist according to
+    /*! Add filters / detectors to this according to
         the configuration. */
   string createFilters( void );
 
@@ -91,15 +98,15 @@ public:
     /*! Initialize the Filter.
         \return in case of errors (init() not implemented)
 	an appropriate message. */
-  string init( const InList &data, EventList &events );
+  string init( void );
 
     /*! Notice input signal gain changes so that adjust() is called
         on the next invokation of filter(). */
-  void adjust( const InList &data, const EventList &events, int flag );
+  void adjust( int flag );
     /*! React to input signal gain changes.
         Calls the adjust() function of each filter/detector if the gain of its
         input data was adjusted. */
-  void adjust( const InList &data, const EventList &events );
+  void adjust( void );
 
     /*! Call the Filter::autoConfigure() function for all filter
         on the last \a duration seconds of data. */
@@ -117,7 +124,7 @@ public:
     /*! Filter or detect events. The Filter is initialized at its first call.
         \return in case of errors (filter() not implemented)
 	an appropriate message. */
-  string filter( const InList &data, EventList &events );
+  string filter( void );
 
     /*! Return filter of the \a index trace in an InList. */
   Filter *filter( int index );
@@ -214,6 +221,7 @@ private:
   typedef vector<FilterData> FilterList;
 
   FilterList FL;
+  InList IL;
 
     /*! Maps each InData to an InData. */
   vector<int> TraceInputTrace;

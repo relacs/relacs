@@ -62,6 +62,12 @@ public:
     /*! Add the menu from which each RePro can be started and
         configured to \a menu. See ReProData::addMenu() */
   void addMenu( QMenu *menu, bool doxydoc );
+    /*! Copies \a il to each RePro with copying a pointer to the data buffers only. */
+  void assignTraces( const InList *il );
+    /*! Copies again all settings and indices from the reference traces to each RePro. */
+  void assignTraces( void );
+    /*! Updates the indices of the traces. */
+  void updateTraces( void );
 
     /*! The index of the RePro with class name \a name. */
   int index( const string &name ) const;

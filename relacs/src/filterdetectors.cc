@@ -77,6 +77,43 @@ void FilterDetectors::clearIndices( void )
 }
 
 
+void FilterDetectors::assignTraces( const InList *il )
+{
+  IL.clear();
+  int n = 0;
+  for ( int k=0; k<il->size(); k ++ ) {
+    if ( (*il)[k].source() == 0 )
+      n++;
+  }
+  IL.resize( n );
+  n = 0;
+  for ( int k=0; k<il->size(); k ++ ) {
+    if ( (*il)[k].source() == 0 ) {
+      IL.assign( n, &(*il)[k] );
+      n++;
+    }
+  }
+  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
+    for ( int j=0; j < d->InTraces.size(); j++ ) {
+      if ( d->InTraces[j].source() == 0 )
+	d->InTraces.set( j, &IL[ d->InTraces[j].ident() ] );
+    }
+  }
+}
+
+
+void FilterDetectors::assignTraces( void )
+{
+  IL.assign();
+}
+
+
+void FilterDetectors::updateTraces( void )
+{
+  IL.update();
+}
+
+
 void FilterDetectors::readConfig( StrQueue &sq )
 {
   Options::clear();
@@ -677,7 +714,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 }
 
 
-string FilterDetectors::init( const InList &data, EventList &events )
+string FilterDetectors::init( void )
 {
   string warning = "";
 
@@ -782,15 +819,14 @@ string FilterDetectors::init( const InList &data, EventList &events )
 }
 
 
-void FilterDetectors::adjust( const InList &data, const EventList &events,
-			      int flag )
+void FilterDetectors::adjust( int flag )
 {
   NeedAdjust = true;
   AdjustFlag = flag;
 }
 
 
-void FilterDetectors::adjust( const InList &data, const EventList &events )
+void FilterDetectors::adjust( void )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
 
@@ -962,11 +998,11 @@ void FilterDetectors::autoConfigure( Filter *f, double tbegin, double tend )
 }
 
 
-string FilterDetectors::filter( const InList &data, EventList &events )
+string FilterDetectors::filter( void )
 {
   // adjust necessary?
   if ( NeedAdjust )
-    adjust( data, events );
+    adjust();
 
   string warning = "";
 

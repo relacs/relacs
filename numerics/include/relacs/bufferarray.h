@@ -381,7 +381,7 @@ void BufferArray< T >::submit( void )
 template < typename T >
 ostream &operator<<( ostream &str, const BufferArray< T > &ba )
 {
-  str << CyclicArrayF( ba );
+  str << CyclicArray<T>( ba );
   str << "NWrite: " << ba.NWrite << '\n';
   str << "WCycles: " << ba.WCycles << '\n';
   str << "W: " << ba.W << '\n';

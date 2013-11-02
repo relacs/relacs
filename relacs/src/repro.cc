@@ -122,6 +122,7 @@ void RePro::run( void )
   InterruptLock.lock();
   Interrupt = false;
   InterruptLock.unlock();
+  updateData();
   lockAll();
   RW->SF->holdOff();
   enable();
@@ -227,20 +228,19 @@ bool RePro::sleep( double t, double tracetime )
   if ( ir )
     return true;
 
-  unlockAll();
+  unlockStimulusData();
+  unlockMetaData();
 
   // sleep:
   if ( t > 0.0 ) {
     unsigned long ms = (unsigned long)::rint(1.0e3*t);
-    if ( t < 0.001 || ms < 1 )
+    if ( t < 0.001 || ms < 1 ) {
+      unlock();
       Thread->usleep( (unsigned long)::rint(1.0e6*t) );
-    else {
-      // XXX wait requires a mutex!
-      QMutex mutex;
-      mutex.lock();
-      SleepWait.wait( &mutex, ms );
-      mutex.unlock();
+      lock();
     }
+    else
+      SleepWait.wait( mutex(), ms );
   }
 
   // interrupt RePro:
@@ -250,14 +250,11 @@ bool RePro::sleep( double t, double tracetime )
 
   // force data updates:
   RW->setMinTraceTime( ir ? 0.0 : tracetime );
+  updateData();
   RW->ThreadSleepWait.wakeAll();
-  // XXX wait requires a mutex!
-  QMutex mutex;
-  mutex.lock();
-  RW->UpdateDataWait.wait( &mutex );
-  mutex.unlock();
 
-  lockAll();
+  lockMetaData();
+  lockStimulusData();
 
   // interrupt RePro:
   InterruptLock.lock();
@@ -284,21 +281,19 @@ bool RePro::sleepOn( double t )
 
 bool RePro::sleepWait( double time )
 {
-  unlockAll();
-  // XXX wait requires a mutex!
-  QMutex mutex;
-  mutex.lock();
+  unlockStimulusData();
+  unlockMetaData();
   bool r = false;
   if ( time <= 0.0 )
-    r = SleepWait.wait( &mutex );
+    r = SleepWait.wait( mutex() );
   else {
     unsigned long ms = (unsigned long)::rint(1.0e3*time);
     if ( ms < 1 )
       ms = 1;
-    r = SleepWait.wait( &mutex, ms );
+    r = SleepWait.wait( mutex(), ms );
   }
-  mutex.unlock();
-  lockAll();
+  lockMetaData();
+  lockStimulusData();
   return r;
 }
 

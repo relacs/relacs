@@ -143,10 +143,21 @@ public:
     /*! Write current time and \a message to stderr and into a log file. */
   void printlog( const string &message ) const;
 
-    /*! Updates the InData buffers and calls the filter and event detectors */
-  void updateData( void );
+    /*! Updates the InData buffers and calls the filter and event detectors.
+        \return \c true if new data have been get, otherwise you should wait() 
+        on the UpdateDataWait condition. */
+  bool updateData( void );
     /*! Writes the data to files and plots it. */
   void processData( void );
+
+    /*! Locks the mutex of the data thread for reading. */
+  void readLockBuffer( void ) { BufferMutex.lockForRead(); };
+    /*! Locks the buffer mutex of the data thread for writing. */
+  void writeLockBuffer( void ) { BufferMutex.lockForWrite(); };
+    /*! Unlocks the mutex of the data thread. */
+  void unlockBuffer( void ) { BufferMutex.unlock(); };
+    /*! Returns the mutex used for locking the buffer. */
+  QReadWriteLock &bufferMutex( void ) { return BufferMutex; };
 
     /*! Locks the mutex of the data thread for reading. */
   void readLockData( void ) { DataMutex.lockForRead(); };
@@ -410,7 +421,6 @@ private:
   deque<PlotTrace::EventStyle> EventStyles;
 
   double SignalTime;
-  double CurrentTime;
 
   ReadThread ReadLoop;
   WriteThread WriteLoop;
@@ -428,6 +438,8 @@ private:
   QLabel *SimLabel;
 
     /*! Controls the data reading thread. */
+  QReadWriteLock BufferMutex;
+    /*! Controls updateData(). */
   QReadWriteLock DataMutex;
   QMutex AIMutex;
   QMutex SignalMutex;

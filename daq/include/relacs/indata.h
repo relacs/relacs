@@ -25,7 +25,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <relacs/bufferarray.h>
+#include <relacs/cyclicsampledata.h>
 #include <relacs/daqerror.h>
 using namespace std;
 
@@ -36,7 +36,6 @@ namespace relacs {
 \class InData
 \brief A cyclic buffer for data acquired from a data acquisition board.
 \author Jan Benda
-\version 1.0
 
 
 InData contains all data necessary to specify the acquisition of data from
@@ -84,7 +83,7 @@ class InDataIterator;
 class InDataDiffIterator;
 class InDataTimeIterator;
 
-class InData : public BufferArrayF, public DaqError
+class InData : public CyclicSampleDataF, public DaqError
 {
   
  public:
@@ -106,9 +105,16 @@ class InData : public BufferArrayF, public DaqError
   
     /*! Constructor. */
   InData( void );
-    /*! Constructs an InData with capacity \a n, write buffer size \a m,
+    /*! Constructs an InData with capacity \a n,
+        and sampling interval \a step. */
+  InData( int n, double step );
+    /*! Constructs an InData with capacity \a n,
+        reserved elements for writing \a m,
         and sampling interval \a step. */
   InData( int n, int m, double step );
+    /*! Constructs an InData with the same settings
+        as \a d and using the same buffer as \a d. */
+  InData( const InData *d );
     /*! Copy constructor. */
   InData( const InData &data );
     /*! Destructor. */
@@ -116,6 +122,13 @@ class InData : public BufferArrayF, public DaqError
 
     /*! Assignment operator. */
   const InData &operator=( const InData &data );
+    /*! Make \a data internal reference to an InData and copy its properties
+        and a pointer to its buffer to this. */
+  const InData &assign( const InData *data );
+    /*! Assign all properties from the internal reference to an InData instance
+        to this. \sa update() */
+  const InData &assign( void );
+
     /*! Copy the data from element \a first to element \a last to \a data. */
   void copy( int first, int last, OutData &data ) const;
     /*! Copy the data from time \a tbegin to time \a tend seconds
@@ -143,32 +156,33 @@ class InData : public BufferArrayF, public DaqError
         If there isn't any error, an empty string is returned. */
   string errorMessage( void ) const;
 
-    /*! Returns the time (in seconds) of the data element with index \a i. */
-  double pos( int i ) const;
-    /*! Returns the time interval (in seconds) 
-        covered by \a indices indices. */
-  double interval( int indices ) const;
-    /*! The index corresponding to time \a pos. */
-  int index( double pos ) const;
-    /*! The number of indices corresponding to an interval \a iv. */
-  int indices( double iv ) const;
-
-    /*! The duration of the acquired data in seconds. Equals currentTime(). */
-  double length( void ) const;
+    /*! \return the size of the part of the buffer reserved for writing new data. */
+  int writeBufferCapacity( void ) const;
+    /*! Set the capacity of the part of the bufer to be used for
+        writing new data to \a m. If \a m is greater than capacity()
+	it is set to capacity(). */
+  void setWriteBufferCapacity( int m );
 
     /*! Empties the buffer and resets all indices. */
-  void clearBuffer( void );
+  void clear( void );
+    /*! The number of data elements that are actually stored in the array
+        and therefore are accessible. */
+  virtual int accessibleSize( void ) const;
 
     /*! Index + 1 where data end. Equals size(). \sa currentTime() */
   int currentIndex( void ) const;
     /*! Time in seconds where data end. Equals length(). \sa currentIndex() */
   double currentTime( void ) const;
     /*! The index of the first accessible data element. \sa minTime() */
-  int minIndex( void ) const;
+  virtual int minIndex( void ) const;
     /*! The time in seconds corresponding to 
         the first accessible data element.
         \sa minIndex() */
   double minTime( void ) const;
+    /*! The time in seconds corresponding to 
+        the first accessible data element.
+	Same as minTime(). \sa minIndex() */
+  virtual double minPos( void ) const;
     /*! Maximum possible index. \sa maxTime() */
   int maxIndex( void ) const;
     /*! Time in seconds corresponding to the maximum possible index.
@@ -197,6 +211,14 @@ class InData : public BufferArrayF, public DaqError
     /*! Set Restart-index to current size(). 
         \sa restartIndex(), restartTime() */
   void setRestart( void );
+
+    /*! Copy all indices from the internal reference to an InData instance
+        to this. \sa assign() */
+  void update( void );
+
+    /*! The number of data elements available to be read from the buffer. 
+        \sa read(), readIndex(), size(), accessibleSize() */
+  virtual int readSize( void ) const;
 
     /*! Minimum possible value (in the secondary unit).
         \sa maxValue(), minVoltage(), setMinValue() */
@@ -262,12 +284,6 @@ class InData : public BufferArrayF, public DaqError
     /*! Set the sampling interval of the input trace to \a step seconds. 
         Same as setStepsize(). */
   void setSampleInterval( double step );
-    /*! The sampling interval of the input trace in seconds.
-        Same as sampleInterval(). */
-  double stepsize( void ) const;
-    /*! Set the sampling interval of the input trace to \a step seconds.
-        Same as setSampleInterval(). */
-  void setStepsize( double step );
 
     /*! Delay in seconds from start trigger to start of aquisition. */
   double delay( void ) const;
@@ -450,120 +466,6 @@ class InData : public BufferArrayF, public DaqError
     /*! The id of the default device. */
   static int defaultDevice( void );
 
-    /*! Return the minimum value of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  double min( int from, int upto ) const 
-    { return BufferArrayF::min( from, upto ); };
-    /*! Return the minimum value of the trace between times
-        \a from and \a upto. */
-  double min( double from, double upto ) const
-    { return min( indices( from ), indices( upto ) ); };
-    /*! Return the minimum value of the trace since time \a from seconds. */
-  double min( double from ) const
-    { return min( indices( from ), size() ); };
-    /*! Return the maximum value of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  double max( int from, int upto ) const 
-    { return BufferArrayF::max( from, upto ); };
-    /*! Return the maximum value of the trace between times
-        \a from and \a upto. */
-  double max( double from, double upto ) const
-    { return max( indices( from ), indices( upto ) ); };
-    /*! Return the maximum value of the trace since time \a from seconds. */
-  double max( double from ) const
-    { return max( indices( from ), size() ); };
-    /*! Return the minimum and maximum value, \a min and \a max,
-        of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  void minMax( double &min, double &max, int from, int upto ) const 
-    { BufferArrayF::minMax( min, max, from, upto ); };
-    /*! Return the minimum and maximum value, \a min and \a max,
-        of the trace between times \a from and \a upto. */
-  void minMax( double &min, double &max, double from, double upto ) const
-    { minMax( min, max, indices( from ), indices( upto ) ); };
-    /*! Return the minimum and maximum value, \a min and \a max,
-        of the trace since time \a from seconds. */
-  void minMax( double &min, double &max, double from ) const
-    { minMax( min, max, indices( from ), size() ); };
-    /*! Return the minimum absolute value of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  double minAbs( int from, int upto ) const 
-    { return BufferArrayF::minAbs( from, upto ); };
-    /*! Return the minimum absolute value of the trace between times
-        \a from and \a upto. */
-  double minAbs( double from, double upto ) const
-    { return minAbs( indices( from ), indices( upto ) ); };
-    /*! Return the minimum absolute value of the trace since time \a from seconds. */
-  double minAbs( double from ) const
-    { return minAbs( indices( from ), size() ); };
-    /*! Return the maximum absolute value of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  double maxAbs( int from, int upto ) const 
-    { return BufferArrayF::maxAbs( from, upto ); };
-    /*! Return the maximum absolute value of the trace between times
-        \a from and \a upto. */
-  double maxAbs( double from, double upto ) const
-    { return maxAbs( indices( from ), indices( upto ) ); };
-    /*! Return the maximum absolute value of the trace since time \a from seconds. */
-  double maxAbs( double from ) const
-    { return maxAbs( indices( from ), size() ); };
-
-    /*! Return the mean value of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  double mean( int from, int upto ) const 
-    { return BufferArrayF::mean( from, upto ); };
-    /*! Return the mean value of the trace between times
-        \a from and \a upto. */
-  double mean( double from, double upto ) const
-    { return mean( indices( from ), indices( upto ) ); };
-    /*! Returns in \a md the mean values of the trace calculated during
-        \a width long time windows starting at the times
-        \a time + \a md.pos(i) (moving average).
-        If \a width equals zero it is set to the stepsize defined by \a md. */
-  void mean( double time, SampleDataD &md, double width=0.0 ) const;
-
-    /*! Return the variance of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  double variance( int from, int upto ) const 
-    { return BufferArrayF::variance( from, upto ); };
-    /*! Return the variance of the trace between times
-        \a from and \a upto. */
-  double variance( double from, double upto ) const
-    { return variance( indices( from ), indices( upto ) ); };
-    /*! Returns in \a vd the variance calculated during
-        \a width long time windows starting at the times
-        \a time + \a rd.pos(i).
-        If \a width equals zero it is set to the stepsize defined by \a vd. */
-  void variance( double time, SampleDataD &vd, double width=0.0 ) const;
-
-    /*! Return the standard deviation of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  double stdev( int from, int upto ) const 
-    { return BufferArrayF::stdev( from, upto ); };
-    /*! Return the standard deviation of the trace between times
-        \a from and \a upto. */
-  double stdev( double from, double upto ) const
-    { return stdev( indices( from ), indices( upto ) ); };
-    /*! Returns in \a sd the standard deviation calculated during
-        \a width long time windows starting at the times
-        \a time + \a rd.pos(i).
-        If \a width equals zero it is set to the stepsize defined by \a rd. */
-  void stdev( double time, SampleDataD &rd, double width=0.0 ) const;
-
-    /*! Return the root-mean-square of the trace between index \a from inclusively
-        and index \a upto exclusively. */
-  double rms( int from, int upto ) const 
-    { return BufferArrayF::rms( from, upto ); };
-    /*! Return the root-mean-square of the trace between times
-        \a from and \a upto. */
-  double rms( double from, double upto ) const
-    { return rms( indices( from ), indices( upto ) ); };
-    /*! Returns in \a rd the root-mean-square calculated during
-        \a width long time windows starting at the times
-        \a time + \a rd.pos(i).
-        If \a width equals zero it is set to the stepsize defined by \a rd. */
-  void rms( double time, SampleDataD &rd, double width=0.0 ) const;
-
     /*! Write the internal variables to \a str. */
   friend ostream &operator<<( ostream &str, const InData &id );
 
@@ -575,13 +477,17 @@ class InData : public BufferArrayF, public DaqError
     /*! Plain text description of RefType. */
   static const string RefStr[4];
 
+    /*! Pointer to the source InData. */
+  const InData *ID;
+    /*! Number of data elements of the buffer reserved for the writing process
+        and thus not accessible forthe reading process. */
+  int NWrite;
+
     /*! Index of last restart of data acquisition. */
   int RestartIndex;
     /*! Index of last signal output. */
   int SignalIndex;
 
-    /*! Sampling interval in seconds. */
-  double Stepsize;
     /*! Delay in seconds from start trigger to start of aquisition. */
   double Delay;
     /*! Source of start pulse for data aquisition. */

@@ -99,7 +99,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     CW( 0 ),
     ShowFull( 0 ),
     SignalTime( -1.0 ),
-    CurrentTime( 0.0 ),
     ReadLoop( this ),
     WriteLoop( this ),
     LogFile( 0 ),
@@ -793,83 +792,75 @@ void RELACSWidget::setupOutTraces( void )
 
 ///// Data thread ///////////////////////////////////////////////////////////
 
-void RELACSWidget::updateData( void )
+bool RELACSWidget::updateData( void )
 {
-  // check data:
-  if ( IL.failed() ) {
-    AIErrorMsg = "Error in acquisition: " + IL.errorText();
-    //    QCoreApplication::postEvent( this, new QEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
-    IL.clearError();
-  }
-  // read data:
-  lockAI();
-  AQ->convertData();
-  unlockAI();
-  writeLockData();
-  AQ->submitData();
-  CurrentTime = IL.currentTime();
-  unlockData();
-  if ( CurrentTime < 0.0 ) { // XXX DEBUG
-    cerr << "RELACSWidget::updateData(): CurrentTime=" << Str( CurrentTime ) << " smaller than zero!\n";
-    cerr << IL << '\n';
-  }
-  double ct = CurrentTime;
-  // do we need to wait for more data?
-  MinTraceMutex.lock();
-  double mintime = MinTraceTime;
-  MinTraceMutex.unlock();
-  while ( IL.success() &&
-	  mintime > 0.0 && ct < mintime &&
-	  ( simulation() || ReadLoop.isRunning() ) ) {
-    RunDataMutex.lock();
-    bool rd = RunData;
-    RunDataMutex.unlock();
-    if ( ! rd )
-      break;
-    // XXX wait needs a locked mutex!
-    QMutex mutex;
-    mutex.lock();
-    if ( acquisition() )
-      ReadDataWait.wait( &mutex );
-    else
-      ReadDataWait.wait( &mutex, 1 );
-    mutex.unlock(); // XXX
-    lockAI();
-    AQ->convertData();
-    unlockAI();
-    writeLockData();
-    AQ->submitData();
-    CurrentTime = IL.currentTime();
-    unlockData();
-    if ( CurrentTime < 0.0 ) { // XXX DEBUG
-      cerr << "RELACSWidget::updateData(): CurrentTime=" << Str( CurrentTime ) << " smaller than zero!\n";
-      cerr << IL << '\n';
+  if ( DataMutex.tryLockForWrite() ) {
+    // check data:
+    readLockBuffer();
+    if ( IL.failed() ) {
+      AIErrorMsg = "Error in acquisition: " + IL.errorText();
+      //    QCoreApplication::postEvent( this, new QEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
+      IL.clearError();
     }
-    ct = CurrentTime;
+    // get current index:
+    double currenttime = IL.currentTime();
+    unlockBuffer();
+    // do we need to wait for more data?
     MinTraceMutex.lock();
-    if ( mintime != MinTraceTime )
-      printlog( "! warning in RELACSWidget::updateData() -> mintime=" + Str( mintime ) + " < MinTraceTime=" + Str( MinTraceTime ) + ", currentTime=" + Str( ct ) );
-    mintime = MinTraceTime;
+    double mintime = MinTraceTime;
     MinTraceMutex.unlock();
+    while ( IL.success() &&
+	    mintime > 0.0 && currenttime < mintime &&
+	    ( simulation() || ReadLoop.isRunning() ) ) {
+      RunDataMutex.lock();
+      bool rd = RunData;
+      RunDataMutex.unlock();
+      if ( ! rd )
+	break;
+      // XXX wait needs a locked mutex!
+      QMutex mutex;
+      mutex.lock();
+      if ( acquisition() )
+	ReadDataWait.wait( &mutex );
+      else
+	ReadDataWait.wait( &mutex, 1 );
+      mutex.unlock(); // XXX
+      readLockBuffer();
+      currenttime = IL.currentTime();
+      unlockBuffer();
+      MinTraceMutex.lock();
+      if ( mintime != MinTraceTime )
+	printlog( "! warning in RELACSWidget::updateData() -> mintime=" + Str( mintime ) + " < MinTraceTime=" + Str( MinTraceTime ) + ", currentTime=" + Str( currenttime ) );
+      mintime = MinTraceTime;
+      MinTraceMutex.unlock();
+    }
+    setMinTraceTime( 0.0 );
+    // get current data:
+    writeLockBuffer();
+    AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
+    AQ->readRestart( IL, ED );
+    FD->updateTraces();
+    unlockBuffer();
+    Str fdw = FD->filter();
+    if ( !fdw.empty() )
+      printlog( "! error: " + fdw.erasedMarkup() );
+    ED.setRangeBack( IL.currentTime() );
+    UpdateDataWait.wakeAll();
+    DataMutex.unlock();
+    return true;
   }
-  setMinTraceTime( 0.0 );
-  // update derived data:
-  writeLockData();
-  AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
-  AQ->readRestart( IL, ED );
-  ED.setRangeBack( ct );
-  Str fdw = FD->filter( IL, ED );
-  if ( !fdw.empty() )
-    printlog( "! error: " + fdw.erasedMarkup() );
-  unlockData();
+  else
+    return false;
 }
 
 
 void RELACSWidget::processData( void )
 {
+  /* XXX SF should get its own copy of IL!
   readLockData();
   SF->save( IL, ED );
   unlockData();
+  */
   PT->plot();
 }
 
@@ -894,8 +885,7 @@ void RELACSWidget::run( void )
     ThreadSleepWait.wait( &mutex, di );
     mutex.unlock(); // XXX
     updatetime.restart();
-    updateData();
-    UpdateDataWait.wakeAll();
+    PT->updateData();
     processData();
     ProcessDataWait.wakeAll();
     RunDataMutex.lock();
@@ -973,7 +963,7 @@ void RELACSWidget::activateGains( bool datalocked )
   AQ->activateGains();
   unlockAI();
   AQ->readRestart( IL, ED );
-  FD->adjust( IL, ED, AQ->adjustFlag() );
+  FD->adjust( AQ->adjustFlag() );
   unlockData();
   if ( datalocked )
     readLockData();
@@ -1026,7 +1016,7 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
-    FD->adjust( IL, ED, AQ->adjustFlag() );
+    FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
@@ -1085,7 +1075,7 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
-    FD->adjust( IL, ED, AQ->adjustFlag() );
+    FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     for ( int k=0; k<signal.size(); k++ )
@@ -1138,7 +1128,7 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
-    FD->adjust( IL, ED, AQ->adjustFlag() );
+    FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
@@ -1190,7 +1180,7 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
-    FD->adjust( IL, ED, AQ->adjustFlag() );
+    FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     for ( int k=0; k<signal.size(); k++ )
@@ -1694,7 +1684,6 @@ void RELACSWidget::startFirstAcquisition( void )
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
   AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
   SignalTime = -1.0;
-  CurrentTime = 0.0;
   setupInTraces();
   if ( IL.empty() ) {
     printlog( "! error: No valid input traces configured!" );
@@ -1720,6 +1709,12 @@ void RELACSWidget::startFirstAcquisition( void )
   // files:
   SF->setPath( SF->defaultPath() );
 
+  // copy traces:
+  FD->assignTraces( &IL );
+  CW->assignTraces( &IL );
+  PT->assignTraces( &IL );
+  RP->assignTraces( &IL );
+
   // plot:
   PT->resize();
   PT->updateMenu();
@@ -1740,7 +1735,7 @@ void RELACSWidget::startFirstAcquisition( void )
   ATD->addMenu( DeviceMenu, menuindex );
   ATI->addMenu( DeviceMenu, menuindex );
 
-  // controls:
+  // init plugins:
   CW->initDevices();
   RP->setSettings();
 
@@ -1768,11 +1763,15 @@ void RELACSWidget::startFirstAcquisition( void )
     startIdle();
     return;
   }
+  AQ->readRestart( IL, ED );   // XXX this should not be needed here.
 
-  AQ->readRestart( IL, ED );
+  PT->assignTraces();
+  FD->assignTraces();
+  CW->assignTraces();
+  RP->assignTraces();
   AID->updateMenu();
 
-  fdw = FD->init( IL, ED );  // init filters/detectors before RePro!
+  fdw = FD->init();  // init filters/detectors before RePro!
   if ( ! fdw.empty() ) {
     printlog( "! error in initializing filter: " + fdw.erasedMarkup() );
     MessageBox::warning( "RELACS Warning !",
@@ -1837,7 +1836,6 @@ void RELACSWidget::startFirstSimulation( void )
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
   AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
   SignalTime = -1.0;
-  CurrentTime = 0.0;
   setupInTraces();
   if ( IL.empty() ) {
     printlog( "! error: No valid input traces configured!" );
@@ -1863,6 +1861,12 @@ void RELACSWidget::startFirstSimulation( void )
   // files:
   SF->setPath( SF->defaultPath() );
 
+  // copy traces:
+  FD->assignTraces( &IL );
+  CW->assignTraces( &IL );
+  PT->assignTraces( &IL );
+  RP->assignTraces( &IL );
+
   // plots:
   PT->resize();
   PT->updateMenu();
@@ -1886,7 +1890,7 @@ void RELACSWidget::startFirstSimulation( void )
   ATD->addMenu( DeviceMenu, menuindex );
   ATI->addMenu( DeviceMenu, menuindex );
 
-  // controls:
+  // init plugins:
   CW->initDevices();
   RP->setSettings();
 
@@ -1920,8 +1924,12 @@ void RELACSWidget::startFirstSimulation( void )
       return;
     }
   }
-  AQ->readRestart( IL, ED );
+  AQ->readRestart( IL, ED );   // XXX this should not be needed here.
 
+  PT->assignTraces();
+  FD->assignTraces();
+  CW->assignTraces();
+  RP->assignTraces();
   AID->updateMenu();
 
   // check success:
@@ -1934,7 +1942,7 @@ void RELACSWidget::startFirstSimulation( void )
     }
   }
 
-  fdw = FD->init( IL, ED );  // init filters/detectors before RePro!
+  fdw = FD->init();  // init filters/detectors before RePro!
   if ( ! fdw.empty() ) {
     printlog( "! error in initializing filter: " + fdw.erasedMarkup() );
     MessageBox::warning( "RELACS Warning !",
@@ -1944,6 +1952,7 @@ void RELACSWidget::startFirstSimulation( void )
     return;
   }
 
+  ReadLoop.start();
   RunDataMutex.lock();
   RunData = true;
   RunDataMutex.unlock();

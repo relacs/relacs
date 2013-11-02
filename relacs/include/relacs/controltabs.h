@@ -56,6 +56,12 @@ public:
 
     /*! Calls setSettings() and initDevices() of each Control. */
   void initDevices( void );
+    /*! Copies \a il to each Control with copying a pointer to the data buffers only. */
+  void assignTraces( const InList *il );
+    /*! Copies again all settings and indices from the reference traces to each Control. */
+  void assignTraces( void );
+    /*! Updates the indices of the traces. */
+  void updateTraces( void );
 
     /*! Start all Control threads. */
   void start( void );
