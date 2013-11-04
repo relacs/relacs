@@ -594,14 +594,14 @@ T CyclicSampleData<T>::min( int from, int upto ) const
 template < typename T >
 T CyclicSampleData<T>::min( double from, double upto ) const
 {
-  return min( indices( from ), indices( upto ) );
+  return min( index( from ), index( upto ) );
 }
 
 
 template < typename T >
 T CyclicSampleData<T>::min( double from ) const
 {
-  return min( indices( from ), this->size() );
+  return min( index( from ), this->size() );
 }
 
 
@@ -615,14 +615,14 @@ T CyclicSampleData<T>::max( int from, int upto ) const
 template < typename T >
 T CyclicSampleData<T>::max( double from, double upto ) const
 {
-  return max( indices( from ), indices( upto ) );
+  return max( index( from ), index( upto ) );
 }
 
 
 template < typename T >
 T CyclicSampleData<T>::max( double from ) const
 {
-  return max( indices( from ), this->size() );
+  return max( index( from ), this->size() );
 }
 
 
@@ -636,14 +636,14 @@ void CyclicSampleData<T>::minMax( T &min, T &max, int from, int upto ) const
 template < typename T >
 void CyclicSampleData<T>::minMax( T &min, T &max, double from, double upto ) const
 {
-  return minMax( min, max, indices( from ), indices( upto ) );
+  return minMax( min, max, index( from ), index( upto ) );
 }
 
 
 template < typename T >
 void CyclicSampleData<T>::minMax( T &min, T &max, double from ) const
 {
-  return minMax( min, max, indices( from ), this->size() );
+  return minMax( min, max, index( from ), this->size() );
 }
 
 
@@ -657,14 +657,14 @@ T CyclicSampleData<T>::minAbs( int from, int upto ) const
 template < typename T >
 T CyclicSampleData<T>::minAbs( double from, double upto ) const
 {
-  return minAbs( indices( from ), indices( upto ) );
+  return minAbs( index( from ), index( upto ) );
 }
 
 
 template < typename T >
 T CyclicSampleData<T>::minAbs( double from ) const
 {
-  return minAbs( indices( from ), this->size() );
+  return minAbs( index( from ), this->size() );
 }
 
 
@@ -678,14 +678,14 @@ T CyclicSampleData<T>::maxAbs( int from, int upto ) const
 template < typename T >
 T CyclicSampleData<T>::maxAbs( double from, double upto ) const
 {
-  return maxAbs( indices( from ), indices( upto ) );
+  return maxAbs( index( from ), index( upto ) );
 }
 
 
 template < typename T >
 T CyclicSampleData<T>::maxAbs( double from ) const
 {
-  return maxAbs( indices( from ), this->size() );
+  return maxAbs( index( from ), this->size() );
 }
 
 template < typename T >
@@ -700,7 +700,7 @@ template < typename T >
 typename numerical_traits<T>::mean_type
 CyclicSampleData<T>::mean( double from, double upto ) const
 {
-  return mean( indices( from ), indices( upto ) );
+  return mean( index( from ), index( upto ) );
 }
 
 
@@ -714,7 +714,7 @@ void CyclicSampleData<T>::mean( double time, SampleData<R> &d, double width ) co
     wi = 1;
 
   for ( int i=0; i<d.size(); i++ ) {
-    int from = indices( time + d.pos( i ) );
+    int from = index( time + d.pos( i ) );
     int upto = from + wi;
     if  ( from < minIndex() )
       from = minIndex();
@@ -744,7 +744,7 @@ template < typename T >
 typename numerical_traits<T>::variance_type
 CyclicSampleData<T>::variance( double from, double upto ) const
 {
-  return variance( indices( from ), indices( upto ) );
+  return variance( index( from ), index( upto ) );
 }
 
 
@@ -758,7 +758,7 @@ void CyclicSampleData<T>::variance( double time, SampleData<R> &d, double width 
     wi = 1;
 
   for ( int i=0; i<d.size(); i++ ) {
-    int from = indices( time + d.pos( i ) );
+    int from = index( time + d.pos( i ) );
     int upto = from + wi;
     if  ( from < minIndex() )
       from = minIndex();
@@ -799,7 +799,7 @@ template < typename T >
 typename numerical_traits<T>::variance_type
 CyclicSampleData<T>::stdev( double from, double upto ) const
 {
-  return stdev( indices( from ), indices( upto ) );
+  return stdev( index( from ), index( upto ) );
 }
 
 
@@ -813,7 +813,7 @@ void CyclicSampleData<T>::stdev( double time, SampleData<R> &d, double width ) c
     wi = 1;
 
   for ( int i=0; i<d.size(); i++ ) {
-    int from = indices( time + d.pos( i ) );
+    int from = index( time + d.pos( i ) );
     int upto = from + wi;
     if  ( from < minIndex() )
       from = minIndex();
@@ -854,7 +854,7 @@ template < typename T >
 typename numerical_traits<T>::variance_type
 CyclicSampleData<T>::rms( double from, double upto ) const
 {
-  return rms( indices( from ), indices( upto ) );
+  return rms( index( from ), index( upto ) );
 }
 
 
@@ -868,7 +868,7 @@ void CyclicSampleData<T>::rms( double time, SampleData<R> &d, double width ) con
     wi = 1;
 
   for ( int i=0; i<d.size(); i++ ) {
-    int from = indices( time + d.pos( i ) );
+    int from = index( time + d.pos( i ) );
     int upto = from + wi;
     if  ( from < minIndex() )
       from = minIndex();
@@ -900,7 +900,7 @@ void CyclicSampleData<T>::hist( SampleData< S > &h, int from, int upto ) const
 template < typename T > template< typename S >
 void CyclicSampleData<T>::hist( SampleData< S > &h, double from, double upto ) const
 {
-  hist( h, indices( from ), indices( upto ) );
+  hist( h, index( from ), index( upto ) );
 }
 
 

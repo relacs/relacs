@@ -66,7 +66,7 @@ public:
   void assignTraces( const InList *il );
     /*! Copies again all settings and indices from the reference traces to each Filter. */
   void assignTraces( void );
-    /*! Updates the indices of the traces. */
+    /*! Updates the indices of raw traces of each filter. */
   void updateTraces( void );
 
     /*! Load options from config file. */
@@ -221,7 +221,6 @@ private:
   typedef vector<FilterData> FilterList;
 
   FilterList FL;
-  InList IL;
 
     /*! Maps each InData to an InData. */
   vector<int> TraceInputTrace;

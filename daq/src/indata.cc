@@ -333,7 +333,7 @@ void InData::clear( void )
 int InData::accessibleSize( void ) const
 {
   int n = CyclicSampleDataF::accessibleSize() - NWrite;
-  return n < 0 ? 0 : n;;
+  return n < 0 ? 0 : n;
 }
 
 
@@ -351,19 +351,20 @@ double InData::currentTime( void ) const
 
 int InData::minIndex( void ) const
 {
-  return CyclicSampleDataF::minIndex();
+  int n = (RCycles-1) * NBuffer + R + NWrite;
+  return n > 0 ? n : 0;
 }
 
 
 double InData::minTime( void ) const
 {
-  return pos( CyclicSampleDataF::minIndex() + NWrite );
+  return minPos();
 }
 
 
 double InData::minPos( void ) const
 {
-  return pos( CyclicSampleDataF::minIndex() + NWrite );
+  return CyclicSampleDataF::minPos();
 }
 
 
@@ -427,6 +428,11 @@ void InData::update( void )
     CyclicSampleDataF::update( ID );
     RestartIndex = ID->RestartIndex;
     SignalIndex = ID->SignalIndex;
+    Scale = ID->Scale;
+    MinValue = ID->MinValue;
+    MaxValue = ID->MaxValue;
+    GainIndex = ID->GainIndex;
+    Mode = ID->Mode;
   }
 }
 

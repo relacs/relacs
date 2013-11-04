@@ -79,24 +79,11 @@ void FilterDetectors::clearIndices( void )
 
 void FilterDetectors::assignTraces( const InList *il )
 {
-  IL.clear();
-  int n = 0;
-  for ( int k=0; k<il->size(); k ++ ) {
-    if ( (*il)[k].source() == 0 )
-      n++;
-  }
-  IL.resize( n );
-  n = 0;
-  for ( int k=0; k<il->size(); k ++ ) {
-    if ( (*il)[k].source() == 0 ) {
-      IL.assign( n, &(*il)[k] );
-      n++;
-    }
-  }
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
+    d->FilterDetector->assignTraces( il );
     for ( int j=0; j < d->InTraces.size(); j++ ) {
       if ( d->InTraces[j].source() == 0 )
-	d->InTraces.set( j, &IL[ d->InTraces[j].ident() ] );
+	d->InTraces.set( j, &d->FilterDetector->trace( d->InTraces[j].ident() ) );
     }
   }
 }
@@ -104,13 +91,15 @@ void FilterDetectors::assignTraces( const InList *il )
 
 void FilterDetectors::assignTraces( void )
 {
-  IL.assign();
+  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
+    d->FilterDetector->assignTraces();
 }
 
 
 void FilterDetectors::updateTraces( void )
 {
-  IL.update();
+  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
+    d->FilterDetector->updateRawTraces();
 }
 
 
@@ -1008,6 +997,9 @@ string FilterDetectors::filter( void )
 
   // filter and detect events:
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
+
+    d->FilterDetector->updateDerivedTraces();
+
     string ident = d->FilterDetector->ident();
 
     d->FilterDetector->lock();

@@ -958,13 +958,13 @@ void RELACSWidget::activateGains( bool datalocked )
 {
   if ( datalocked )
     unlockData();
-  writeLockData();
+  writeLockBuffer();
   lockAI();
   AQ->activateGains();
   unlockAI();
   AQ->readRestart( IL, ED );
   FD->adjust( AQ->adjustFlag() );
-  unlockData();
+  unlockBuffer();
   if ( datalocked )
     readLockData();
 }
@@ -993,29 +993,25 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
   lockSignals();
   int r = AQ->setupWrite( signal );   // might take some time (20ms with DAQFlex)
   if ( r >= 0 ) {
-    SF->unlock();    // we assume that IL data are read locked while calling write()
-    MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
-    unlockData();
-    writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead() (60ms)
+    writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead() (60ms)
     lockAI();        // might take some time (40-90ms)
     r = AQ->startWrite( signal, setsignaltime );  // might take some time (90-200ms with DAQFlex)
     unlockAI();
-    unlockData();
+    unlockBuffer();
     if ( r == 0 ) {
       //      r = AQ->writeData();
       WriteLoop.start( signal.writeTime() );
     }
-    readLockData();  // put the data lock back into read lock state (60ms)
-    MTDT.lock();     // and the other locks as well
-    SF->lock();
   }
   unlockSignals();
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
     unlockSignals();
+    writeLockBuffer();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
+    unlockBuffer();
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
@@ -1052,29 +1048,25 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
   lockSignals();
   int r = AQ->setupWrite( signal );
   if ( r >= 0 ) {
-    SF->unlock();    // we assume that IL data are read locked while calling write()
-    MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
-    unlockData();
-    writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+    writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
     lockAI();
     r = AQ->startWrite( signal, setsignaltime );
     unlockAI();
-    unlockData();
+    unlockBuffer();
     if ( r == 0 ) {
       //      r = AQ->writeData();
       WriteLoop.start( signal[0].writeTime() );
     }
-    readLockData();  // put the data lock back into read lock state
-    MTDT.lock();     // and the other locks as well
-    SF->lock();
   }
   unlockSignals();
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
     unlockSignals();
+    writeLockBuffer();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
+    unlockBuffer();
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
@@ -1110,24 +1102,20 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
   if ( SF->signalPending() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
-  SF->unlock();    // we assume that IL data are read locked while calling write()
-  MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
-  unlockData();
-  writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+  writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
   lockAI();
   int r = AQ->directWrite( signal, setsignaltime );
   unlockAI();
-  unlockData();
-  readLockData();  // put the data lock back into read lock state
-  MTDT.lock();     // and the other locks as well
-  SF->lock();
+  unlockBuffer();
   unlockSignals();
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
     unlockSignals();
+    writeLockBuffer();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
+    unlockBuffer();
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
@@ -1162,24 +1150,20 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
   if ( SF->signalPending() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
-  SF->unlock();    // we assume that IL data are read locked while calling write()
-  MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
-  unlockData();
-  writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+  writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
   lockAI();
   int r = AQ->directWrite( signal, setsignaltime );
   unlockAI();
-  unlockData();
-  readLockData();  // put the data lock back into read lock state
-  MTDT.lock();     // and the other locks as well
-  SF->lock();
+  unlockBuffer();
   unlockSignals();
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
     unlockSignals();
+    writeLockBuffer();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
+    unlockBuffer();
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );

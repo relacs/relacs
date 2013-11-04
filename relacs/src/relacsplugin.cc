@@ -324,6 +324,18 @@ void RELACSPlugin::updateTraces( void )
 }
 
 
+void RELACSPlugin::updateRawTraces( void )
+{
+  IL.updateRaw();
+}
+
+
+void RELACSPlugin::updateDerivedTraces( void )
+{
+  IL.updateDerived();
+}
+
+
 void RELACSPlugin::updateData( void )
 {
   // get new data:

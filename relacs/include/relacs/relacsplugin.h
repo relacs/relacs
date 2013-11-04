@@ -338,8 +338,12 @@ protected:
   void assignTraces( const InList *il );
     /*! Copies again all settings and indices from the reference traces to this. */
   void assignTraces( void );
-    /*! Updates the indices of the traces. */
+    /*! Updates the indices of all traces. */
   void updateTraces( void );
+    /*! Updates the indices of raw traces (traces with source == 0). */
+  void updateRawTraces( void );
+    /*! Updates the indices of derived traces (traces with source != 0 ). */
+  void updateDerivedTraces( void );
     /*! Return the list of all input traces.
         \sa trace(), traceIndex(), events(), traceInputTrace(),
 	traceInputEvent(), eventInputTrace(), eventInputEvent() */

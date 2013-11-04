@@ -353,7 +353,7 @@ void PlotTrace::init( void )
 
 	  if ( sn == 0 ) {
 	    /*
-	      P[plots].plot( events(s), origin, Offset, tfac,
+	      P[vp].plot( events(s), origin, Offset, tfac,
 	      0.05, Plot::Graph, 1,
 	      Plot::StrokeUp, 20, Plot::Pixel,
 	      Plot::Red );
@@ -475,7 +475,7 @@ void PlotTrace::plot( void )
       rightwin = leftwin + tfac * TimeWindow;
     }
   }
-      
+
   // set xrange:
   for ( unsigned int c=0; c<VP.size(); c++ ) {
 

@@ -296,6 +296,24 @@ void InList::update( void )
 }
 
 
+void InList::updateRaw( void )
+{
+  for ( int k=0; k<size(); k++ ) {
+    if ( operator[]( k ).source() == 0 )
+      operator[]( k ).update();
+  }
+}
+
+
+void InList::updateDerived( void )
+{
+  for ( int k=0; k<size(); k++ ) {
+    if ( operator[]( k ).source() != 0 )
+      operator[]( k ).update();
+  }
+}
+
+
 void InList::clearBuffer( void )
 {
   for ( int k=0; k<size(); k++ )

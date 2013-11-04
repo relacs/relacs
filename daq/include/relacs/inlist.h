@@ -139,6 +139,10 @@ public:
 
     /*! Make written data of all traces available for reading. */
   void update( void );
+    /*! Make written data of raw traces (source == 0) available for reading. */
+  void updateRaw( void );
+    /*! Make written data of derived traces (source != 0 ) available for reading. */
+  void updateDerived( void );
 
     /*! Clear buffer and reset indices of all InData traces. */
   void clearBuffer( void );
