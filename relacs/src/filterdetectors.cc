@@ -77,29 +77,33 @@ void FilterDetectors::clearIndices( void )
 }
 
 
-void FilterDetectors::assignTraces( const InList *il )
+void FilterDetectors::assignTracesEvents( const InList &il, const EventList &el )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
-    d->FilterDetector->assignTraces( il );
+    d->FilterDetector->assignTracesEvents( il, el );
     for ( int j=0; j < d->InTraces.size(); j++ ) {
       if ( d->InTraces[j].source() == 0 )
 	d->InTraces.set( j, &d->FilterDetector->trace( d->InTraces[j].ident() ) );
+    }
+    for ( int j=0; j < d->InEvents.size(); j++ ) {
+      if ( d->InEvents[j].source() == 0 )
+	d->InEvents.set( j, &d->FilterDetector->events( d->InEvents[j].ident() ) );
     }
   }
 }
 
 
-void FilterDetectors::assignTraces( void )
+void FilterDetectors::assignTracesEvents( void )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
-    d->FilterDetector->assignTraces();
+    d->FilterDetector->assignTracesEvents();
 }
 
 
-void FilterDetectors::updateTraces( void )
+void FilterDetectors::updateTracesEvents( void )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
-    d->FilterDetector->updateRawTraces();
+    d->FilterDetector->updateRawTracesEvents();
 }
 
 
@@ -417,6 +421,7 @@ void FilterDetectors::createStimulusEvents( InList &data, EventList &events,
   e.setSource( 0 );
   e.setMode( SaveFiles::SaveTrace | SaveFiles::SaveWidth | PlotTraceMode | StimulusEventMode );
   e.setIdent( "Stimulus" );
+  e.setWriteBufferCapacity( 1000 );
   events.push( e );
   StimulusEvents = &events.back();
 
@@ -445,6 +450,7 @@ void FilterDetectors::createRestartEvents( InList &data, EventList &events,
   e.setSource( 0 );
   e.setMode( SaveFiles::SaveTrace | PlotTraceMode | RestartEventMode );
   e.setIdent( "Restart" );
+  e.setWriteBufferCapacity( 1000 );
   events.push( e );
 
   eventstyles.push_back( PlotTrace::EventStyle() );
@@ -473,6 +479,7 @@ void FilterDetectors::createRecordingEvents( InList &data, EventList &events,
   e.setSource( 0 );
   e.setMode( SaveFiles::SaveTrace | PlotTraceMode | RecordingEventMode );
   e.setIdent( "Recording" );
+  e.setWriteBufferCapacity( 1000 );
   events.push( e );
 
   eventstyles.push_back( PlotTrace::EventStyle() );
@@ -618,6 +625,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	  events[ek].setSizeBuffer( d->SizeBuffer );
 	  events[ek].setWidthBuffer( d->WidthBuffer );
 	  events[ek].reserve( d->NBuffer );
+	  events[ek].setWriteBufferCapacity( d->NBuffer/10 );
 	  events[ek].setSource( 2 );
 	  events[ek].setMode( d->FilterDetector->mode() );
 	  if ( d->FilterDetector->type() & Filter::MultipleTraces )
@@ -633,6 +641,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	  events[ek].setSizeBuffer( d->SizeBuffer );
 	  events[ek].setWidthBuffer( d->WidthBuffer );
 	  events[ek].reserve( d->NBuffer );
+	  events[ek].setWriteBufferCapacity( d->NBuffer/10 );
 	  events[ek].setSource( 1 );
 	  events[ek].setMode( d->FilterDetector->mode() );
 	  if ( d->FilterDetector->type() & Filter::MultipleTraces )
@@ -998,7 +1007,7 @@ string FilterDetectors::filter( void )
   // filter and detect events:
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
 
-    d->FilterDetector->updateDerivedTraces();
+    d->FilterDetector->updateDerivedTracesEvents();
 
     string ident = d->FilterDetector->ident();
 

@@ -236,24 +236,24 @@ void RePros::addMenu( QMenu *menu, bool doxydoc )
 }
 
 
-void RePros::assignTraces( const InList *il )
+void RePros::assignTracesEvents( const InList &il, const EventList &el )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->repro()->assignTraces( il );
+    RPs[k]->repro()->assignTracesEvents( il, el );
 }
 
 
-void RePros::assignTraces( void )
+void RePros::assignTracesEvents( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->repro()->assignTraces();
+    RPs[k]->repro()->assignTracesEvents();
 }
 
 
-void RePros::updateTraces( void )
+void RePros::updateTracesEvents( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->repro()->updateTraces();
+    RPs[k]->repro()->updateTracesEvents();
 }
 
 

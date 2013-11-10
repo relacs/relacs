@@ -118,6 +118,16 @@ EventList::EventList( int n, int m, bool sizebuffer, bool widthbuffer )
 }
 
 
+EventList::EventList( const EventList *el )
+  : Events(), Own()
+{
+  Events.resize( el->Events.size() );
+  for ( unsigned int k=0; k<Events.size(); k++ ) {
+    Events[k]->assign( &(*el)[k] );
+  }
+}
+
+
 EventList::~EventList( void )
 {
   clear();
@@ -196,6 +206,28 @@ EventList &EventList::operator=( const EventList &el )
     }   
   }
 
+  return *this;
+}
+
+
+EventList &EventList::assign( const EventList *el )
+{
+  if ( el == this )
+    return *this;
+
+  resize( el->size() );
+  for ( unsigned int k=0; k<Events.size(); k++ ) {
+    assign( k, &(*el)[k] );
+  }
+
+  return *this;
+}
+
+
+EventList &EventList::assign( void )
+{
+  for ( unsigned int k=0; k<Events.size(); k++ )
+    Events[k]->assign();
   return *this;
 }
 
@@ -370,6 +402,28 @@ void EventList::add( const EventData *events, bool own )
 }
 
 
+void EventList::set( int index, const EventData *data, bool own )
+{
+  if ( index >= 0 && index < size() ) {
+    if ( Own[index] )
+      delete Events[index];
+    Own[index] = own;
+    Events[index] = const_cast<EventData*>(data);
+  }
+}
+
+
+void EventList::assign( int index, const EventData *data )
+{
+  if ( index >= 0 && index < size() ) {
+    if ( Own[index] )
+      delete Events[index];
+    Own[index] = true;
+    Events[index] = new EventData( data );
+  }
+}
+
+
 void EventList::erase( int index )
 {
   if ( index >= 0 && index < size() ) {
@@ -378,6 +432,31 @@ void EventList::erase( int index )
     }
     Events.erase( Events.begin() + index );
     Own.erase( Own.begin() + index );
+  }
+}
+
+
+void EventList::update( void )
+{
+  for ( int k=0; k<size(); k++ )
+    operator[]( k ).update();
+}
+
+
+void EventList::updateRaw( void )
+{
+  for ( int k=0; k<size(); k++ ) {
+    if ( operator[]( k ).source() == 0 )
+      operator[]( k ).update();
+  }
+}
+
+
+void EventList::updateDerived( void )
+{
+  for ( int k=0; k<size(); k++ ) {
+    if ( operator[]( k ).source() != 0 )
+      operator[]( k ).update();
   }
 }
 

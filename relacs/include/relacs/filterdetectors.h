@@ -62,12 +62,14 @@ public:
   void clear( void );
   void clearIndices( void );
 
-    /*! Copies \a il to each Filter with copying a pointer to the data buffers only. */
-  void assignTraces( const InList *il );
-    /*! Copies again all settings and indices from the reference traces to each Filter. */
-  void assignTraces( void );
-    /*! Updates the indices of raw traces of each filter. */
-  void updateTraces( void );
+    /*! Copies \a il and \a el to each Filter by copying a pointer to
+        the data buffers only. */
+  void assignTracesEvents( const InList &il, const EventList &el );
+    /*! Copies again all settings and indices from the reference
+        traces and events to each Filter. */
+  void assignTracesEvents( void );
+    /*! Updates the indices of raw traces and events of each filter. */
+  void updateTracesEvents( void );
 
     /*! Load options from config file. */
   virtual void readConfig( StrQueue &sq );

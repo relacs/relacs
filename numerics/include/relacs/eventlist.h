@@ -71,6 +71,8 @@ public:
         All EventData that are owened by \a el are copied,
         otherwise only pointers to EventData are copied. */
   EventList( const EventList &el );
+    /*! Copies \a el to this with copying pointers to the data buffers only. */
+  EventList( const EventList *el );
     /*! Contruct an EventList with event times copied from each element
         of \a el between time \a tbegin and time \a tend seconds.
 	In the copy, all event times and the signalTime() 
@@ -141,6 +143,10 @@ public:
 
     /*! Assignment. */
   EventList &operator=( const EventList &el );
+    /*! Copies \a el to this with copying pointers to the data buffers only. */
+  EventList &assign( const EventList *el );
+    /*! Copies again all settings and indices from the reference EventData. */
+  EventList &assign( void );
 
     /*! Returns a const reference of the \a i -th EventData of the list. */
   inline const EventData &operator[]( int i ) const 
@@ -238,8 +244,22 @@ public:
         is transfered to the EventList, i.e. the EventList might delete it. */
   void add( const EventData *events, bool own=false );
 
+    /*! Set the pointer to \a data as the \a index-th element.
+        If \a own is set to \c true then the ownership of the events
+        is transferred to the EventList, i.e. the EventList might delete it. */
+  void set( int index, const EventData *data, bool own=false );
+    /*! Make the \a index-th element a copy of \a data with shared buffer. */
+  void assign( int index, const EventData *data );
+
     /*! Erase the EventData at index \a index. */
   void erase( int index );
+
+    /*! Make written data of all events available for reading. */
+  void update( void );
+    /*! Make written data of raw events (source == 0) available for reading. */
+  void updateRaw( void );
+    /*! Make written data of derived events (source != 0 ) available for reading. */
+  void updateDerived( void );
 
     /*! Clear each of the EventData without erasing them from the EventList. */
   void clearBuffer( void );

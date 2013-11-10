@@ -98,6 +98,9 @@ public:
     /*! Copy constructor.
         Copy the entire event list of \a events to \a *this. */
   EventData( const EventData &events );
+    /*! Creates an EventData with the same size and content as \a events
+        that shares the data buffers with the ones of \a events. */
+  EventData( const EventData *events );
     /*! Copy from \a events all events between \a tbegin and
         \a tend seconds to \a *this.
 	In the copy, all event times and the signalTime()
@@ -133,7 +136,7 @@ public:
 
     /*! Number of events.
         In cyclic() mode the returned number can be larger than the capacity()! */
-  long size( void ) const;
+  int size( void ) const;
     /*! True if there are no events. */
   bool empty( void ) const;
     /*! Resize the content of the buffers to \a nevents.
@@ -148,14 +151,14 @@ public:
 	Use free() to control the buffer size.
 	The range() is not changed.
 	\sa clear(), size(), empty(), reserve(), free(), capacity() */
-  void resize( long nevents, double dflt=0.0 );
+  void resize( int nevents, double dflt=0.0 );
     /*! Clear the buffer content.
 	The range() is not changed.
         The capacity of the event buffer is not changed. */
   void clear( void );
 
     /*! Maximum number of elements the event buffer can hold. */
-  long capacity( void ) const;
+  int capacity( void ) const;
     /*! If \a n is less than or equal to capacity(),
         this call has no effect.
 	Otherwise, it is a request for allocation
@@ -170,7 +173,7 @@ public:
 	New size data and width data are initialized with zero.
 	The range() is not changed.
         \sa free(), capacity(), resize(), clear(), size(), empty() */
-  void reserve( long n, double dflt=0.0 );
+  void reserve( int n, double dflt=0.0 );
     /*! In contrast to the reserve() function, this function
         frees or allocates memory, such that capacity()
 	equals exactly \a n.
@@ -184,7 +187,14 @@ public:
 	New size data and width data are initialized with zero.
 	The range() is not changed.
         \sa reserve(), capacity(), resize(), clear(), size(), empty() */
-  void free( long n=0, double dflt=0.0 );
+  void free( int n=0, double dflt=0.0 );
+
+    /*! \return the size of the part of the buffers reserved for writing new data. */
+  int writeBufferCapacity( void ) const;
+    /*! Set the capacity of the part of the bufers to be used for
+        writing new data to \a m. If \a m is greater than capacity()
+	it is set to capacity(). */
+  void setWriteBufferCapacity( int m );
 
     /*! True if events are stored in a cyclic buffer. */
   bool cyclic( void ) const;
@@ -282,6 +292,14 @@ public:
 	of \a times. */
   void assign( const ArrayD &times, const ArrayD &sizes, const ArrayD &width,
 	       double tbegin=-HUGE_VAL, double tend=HUGE_VAL, double stepsize=0.0001 );
+    /*! Assigns \a events to this by only copying pointers to the data buffers. */
+  const EventData &assign( const EventData *events );
+    /*! Assign all properties from the internal reference to an EventData instance
+        to this. \sa update() */
+  const EventData &assign( void );
+    /*! Copy all indices from the internal reference to an EventData instance
+        to this. \sa assign() */
+  void update( void );
 
     /*! Append from \a events all events between time \a tbegin
         and time \a tend seconds to \a *this. */
@@ -300,7 +318,7 @@ public:
         After executing this function \a nevents is the number
         of events copied to \a events. */
   void copy( double tbegin, double tend,
-	     double *events, long &nevents ) const;
+	     double *events, int &nevents ) const;
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
         The event times in \a events are set relative to \a tref.
@@ -308,7 +326,7 @@ public:
         After executing this function \a nevents is the number
         of events copied to \a events. */
   void copy( double tbegin, double tend, double tref,
-	     double *events, long &nevents ) const;
+	     double *events, int &nevents ) const;
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
         The event times in \a events are set relative to \a tbegin. */
@@ -357,36 +375,36 @@ public:
 
     /*! Get the time of the \a i -th event in seconds.
         No range checking is performed. */
-  inline double operator[] ( long i ) const;
+  inline double operator[] ( int i ) const;
     /*! Get a reference to the time of the \a i -th event in seconds.
         No range checking is performed. */
-  inline double &operator[] ( long i );
+  inline double &operator[] ( int i );
 
     /*! Get the time of the \a i -th event in seconds.
 	If an invalid index is specified, \c -HUGE_VAL is returned. */
-  inline double at( long i ) const;
+  inline double at( int i ) const;
     /*! Get a reference to the time of the \a i -th event in seconds.
         If an invalid index is specified,
 	a reference to a dummy variable set to \c -HUGE_VAL is returned. */
-  inline double &at( long i );
+  inline double &at( int i );
 
     /*! Get the time of the first accessible event in seconds. */
   double front( void ) const;
     /*! Get a reference to the time of the first accessible event in seconds. */
   double &front( void );
     /*! Get the time of the first plus \a n accessible event in seconds. */
-  double front( long n ) const;
+  double front( int n ) const;
     /*! Get a reference to the time of the first plus \a n accessible event in seconds. */
-  double &front( long n );
+  double &front( int n );
 
     /*! Get the time of the last event in seconds. */
   double back( void ) const;
     /*! Get a reference to the time of the last event in seconds. */
   double &back( void );
     /*! Get the time of the last minus \a n event in seconds. */
-  double back( long n ) const;
+  double back( int n ) const;
     /*! Get a reference to the time of the last minus \a n event in seconds. */
-  double &back( long n );
+  double &back( int n );
 
     /*! Const Iterator used to iterate through an EventData. */
   typedef EventIterator const_iterator;
@@ -403,58 +421,58 @@ public:
     /*! Get the size of the \a i -th element of the event buffer.
 	If an invalid index is specified or the sizes of events
 	are not stored, \c -HUGE_VAL is returned. */
-  inline double eventSize( long i ) const;
+  inline double eventSize( int i ) const;
     /*! Get a reference to the size of the \a i -th element of the event buffer.
 	If an invalid index is specified or the sizes of events
 	are not stored,
 	a reference to a dummy variable set to \c -HUGE_VAL is returned. */
-  inline double &eventSize( long i );
+  inline double &eventSize( int i );
 
     /*! Get the size of the first accessible event. */
   double frontSize( void ) const;
     /*! Get a reference to the size of the first accessible event. */
   double &frontSize( void );
     /*! Get the size of the first plus \a n accessible event. */
-  double frontSize( long n ) const;
+  double frontSize( int n ) const;
     /*! Get a reference to the size of the first plus \a n accessible event. */
-  double &frontSize( long n );
+  double &frontSize( int n );
 
     /*! Get the size of the last event. */
   double backSize( void ) const;
     /*! Get a reference to the size of the last event. */
   double &backSize( void );
     /*! Get the size of the last minus \a n event. */
-  double backSize( long n ) const;
+  double backSize( int n ) const;
     /*! Get a reference to the size of the last minus \a n event. */
-  double &backSize( long n );
+  double &backSize( int n );
 
     /*! Get the width of the \a i -th element of the event buffer.
 	If an invalid index is specified or the widths of events
 	are not stored, \c -HUGE_VAL is returned. */
-  inline double eventWidth( long i ) const;
+  inline double eventWidth( int i ) const;
     /*! Get a reference to the width of the \a i -th element of the event buffer.
 	If an invalid index is specified or the widths of events
 	are not stored,
 	a reference to a dummy variable set to \c -HUGE_VAL is returned. */
-  inline double &eventWidth( long i );
+  inline double &eventWidth( int i );
 
     /*! Get the width of the first accessible event. */
   double frontWidth( void ) const;
     /*! Get a reference to the width of the first accessible event. */
   double &frontWidth( void );
     /*! Get the width of the first plus \a n accessible event. */
-  double frontWidth( long n ) const;
+  double frontWidth( int n ) const;
     /*! Get a reference to the width of the first plus \a n accessible event. */
-  double &frontWidth( long n );
+  double &frontWidth( int n );
 
     /*! Get the width of the last event. */
   double backWidth( void ) const;
     /*! Get a reference to the width of the last event. */
   double &backWidth( void );
     /*! Get the width of the last minus \a n event. */
-  double backWidth( long n ) const;
+  double backWidth( int n ) const;
     /*! Get a reference to the width of the last minus \a n event. */
-  double &backWidth( long n );
+  double &backWidth( int n );
 
     /*! Add a new event which occured at time \a time (seconds) and has the
         size \a size and width \a width to the buffer.
@@ -517,10 +535,10 @@ public:
   string message( void ) const;
 
     /*! Number of events. Same as size(). */
-  long currentEvent( void ) const;
+  int currentEvent( void ) const;
     /*! The smallest possible event index that can be accesed to return an event.
         In a non-cyclic buffer this is always 0. */
-  long minEvent( void ) const;
+  int minEvent( void ) const;
     /*! The time of the first event that can be accesed. */
   double minTime( void ) const;
 
@@ -733,7 +751,7 @@ public:
     /*! Returns index of event following or equal to time \a time in seconds.
         Returns \a size() if no event is found.
         Uses a fast bisecting method. */
-  long next( double time ) const;
+  int next( double time ) const;
     /*! Returns time of event following or equal to time \a time in seconds.
         Returns \a dflt if no event is found. */
   double nextTime( double time, double dflt=-HUGE_VAL ) const;
@@ -741,7 +759,7 @@ public:
     /*! Returns index to event preceeding or equal to time \a time in seconds.
         Returns -1 if no event is found.
         Uses a fast bisecting method. */
-  long previous( double time ) const;
+  int previous( double time ) const;
     /*! Returns time to event preceeding or equal to time \a time in seconds.
         Returns \a dflt if no event is found. */
   double previousTime( double time, double dflt=-HUGE_VAL ) const;
@@ -751,9 +769,9 @@ public:
   bool within( double time, double distance ) const;
 
     /*! Count events since time \a tbegin and time \a tend seconds. */
-  long count( double tbegin, double tend ) const;
+  int count( double tbegin, double tend ) const;
     /*! Count all events since time \a time (seconds). */
-  long count( double time ) const;
+  int count( double time ) const;
 
     /*! Mean event rate (Hz) as the number of events between time \a tbegin
         and time \a tend seconds divided by the width of the time window
@@ -1216,6 +1234,8 @@ public:
 
 private:
 
+    /*! \c true in case this owns the buffers. */
+  bool Own;
     /*! Buffer for the times of events measured in seconds. */
   double *TimeBuffer;
     /*! Optional buffer for the sizes of events. */
@@ -1228,15 +1248,20 @@ private:
   bool UseWidthBuffer;
     /*! Number of elements the buffers \a TimeBuffer,
         \a SizeBuffer, and \a WidthBuffer can hold. */
-  long NBuffer;
+  int NBuffer;
+    /*! Pointer to the source EventData. */
+  const EventData *ED;
+    /*! Number of data elements of the buffer reserved for the writing process
+        and thus not accessible forthe reading process. */
+  int NWrite;
     /*! Flag indicating whether EventData is in cyclic buffer mode. */
   bool Cyclic;
     /*! Current event index in \a Buffer of current window. */
-  long R;
+  int R;
     /*! Index of buffer relative to first event. */
-  long Index;
+  int Index;
     /*! Number of completed buffer cycles. */
-  long Cycles;
+  int Cycles;
     /*! Mode. */
   int Mode;
     /*! An identifier for the events. */
@@ -1296,7 +1321,7 @@ private:
   \brief Iterator for EventData returning the event time.
 */
   
-class EventIterator //: public iterator< random_access_iterator_tag, double, long > 
+class EventIterator //: public iterator< random_access_iterator_tag, double, int > 
 {
     
 public:
@@ -1306,7 +1331,7 @@ public:
     : Index( 0 ), ED( 0 ) {};
     /*! Constructs an valid iterator for an EventData \a ed
         pointing to element \a index. */
-  EventIterator( const EventData &ed, long index )
+  EventIterator( const EventData &ed, int index )
     : Index( index ), ED( &ed ) {};
     /*! Copy constructor. */
   EventIterator( const EventIterator &p )
@@ -1428,11 +1453,11 @@ public:
   inline double operator*( void ) const
     { assert( ED != 0 ); return (*ED)[ Index ]; };
     /*! Returns the time of the event where the iterator + n points to. */
-  inline double operator[]( long n ) const
+  inline double operator[]( int n ) const
     { assert( ED != 0 ); return (*ED)[ Index+n ]; };
 
     /*! Returns the index of the element where the iterator points to. */
-  inline long index( void ) const { return Index; };
+  inline int index( void ) const { return Index; };
     /*! The time in seconds of the current event relative to time zero. */
   inline double time( void ) const
     { return ED->operator[]( Index ); };
@@ -1444,7 +1469,7 @@ public:
 
 protected:
 
-  long Index;
+  int Index;
   const EventData *ED;
 
 };
@@ -1467,7 +1492,7 @@ public:
     : EventIterator() {};
     /*! Constructs an valid iterator for an EventData \a ed
         pointing to element \a index. */
-  EventFrequencyIterator( const EventData &ed, long index )
+  EventFrequencyIterator( const EventData &ed, int index )
     : EventIterator( ed, index ) {};
     /*! Copy constructor. */
   EventFrequencyIterator( const EventFrequencyIterator &p )
@@ -1486,7 +1511,7 @@ public:
     /*! Returns the frequency of the preceeding event interval. */
   inline double operator*( void ) const;
     /*! Returns the frequency of the event interval [*i+n-1, *i+n]. */
-  inline double operator[]( long n ) const;
+  inline double operator[]( int n ) const;
 
 };
 
@@ -1508,7 +1533,7 @@ public:
     : EventIterator() {};
     /*! Constructs an valid iterator for an EventData \a ed
         pointing to element \a index. */
-  EventSizeIterator( const EventData &ed, long index )
+  EventSizeIterator( const EventData &ed, int index )
     : EventIterator( ed, index ) {};
     /*! Copy constructor. */
   EventSizeIterator( const EventSizeIterator &p )
@@ -1530,14 +1555,14 @@ public:
 	the size is taken from that buffer.
 	Otherwise the value of the data element
 	where the iterator points to is returned. */
-  inline double operator[]( long n ) const;
+  inline double operator[]( int n ) const;
 
 };
 
 
 ///////////////////// INLINE FUNCTIONS /////////////////////////////////////
 
-inline double EventData::operator[] ( long i ) const
+inline double EventData::operator[] ( int i ) const
 {
   i -= Index;
 
@@ -1571,7 +1596,7 @@ inline double EventData::operator[] ( long i ) const
 }
 
 
-inline double &EventData::operator[] ( long i )
+inline double &EventData::operator[] ( int i )
 {
   i -= Index;
 
@@ -1605,7 +1630,7 @@ inline double &EventData::operator[] ( long i )
 }
 
 
-inline double EventData::at( long i ) const
+inline double EventData::at( int i ) const
 {
   i -= Index;
 
@@ -1642,7 +1667,7 @@ inline double EventData::at( long i ) const
 }
 
 
-inline double &EventData::at( long i )
+inline double &EventData::at( int i )
 {
   i -= Index;
 
@@ -1682,7 +1707,7 @@ inline double &EventData::at( long i )
 }
 
 
-inline double EventData::eventSize( long i ) const
+inline double EventData::eventSize( int i ) const
 {
   if ( SizeBuffer == 0 )
     return -HUGE_VAL;
@@ -1722,7 +1747,7 @@ inline double EventData::eventSize( long i ) const
 }
 
 
-inline double &EventData::eventSize( long i )
+inline double &EventData::eventSize( int i )
 {
   if ( SizeBuffer == 0 ) {
     Dummy = -HUGE_VAL;
@@ -1767,7 +1792,7 @@ inline double &EventData::eventSize( long i )
 }
 
 
-inline double EventData::eventWidth( long i ) const
+inline double EventData::eventWidth( int i ) const
 {
   if ( WidthBuffer == 0 )
     return -HUGE_VAL;
@@ -1807,7 +1832,7 @@ inline double EventData::eventWidth( long i ) const
 }
 
 
-inline double &EventData::eventWidth( long i )
+inline double &EventData::eventWidth( int i )
 {
   if ( WidthBuffer == 0 ) {
     Dummy = -HUGE_VAL;
@@ -1866,7 +1891,7 @@ inline double EventFrequencyIterator::operator*( void ) const
 }
 
 
-inline double EventFrequencyIterator::operator[]( long n ) const
+inline double EventFrequencyIterator::operator[]( int n ) const
 {
 #ifndef NDEBUG
   if ( !( ED != 0 && Index+n > 0 ) ) {
@@ -1899,7 +1924,7 @@ inline double EventSizeIterator::operator*( void ) const
 }
 
 
-inline double EventSizeIterator::operator[]( long n ) const
+inline double EventSizeIterator::operator[]( int n ) const
 {
 #ifndef NDEBUG
   if ( !( ED != 0 && Index+n >= 0 ) ) {

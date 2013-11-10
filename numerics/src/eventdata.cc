@@ -36,10 +36,13 @@ const double EventData::MaxInterval = 1.0e12;
 EventData::EventData( void )
   : Range( 0, -HUGE_VAL, 0.0001 )
 {
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
   NBuffer = 0;
+  ED = 0;
+  NWrite = 0;
   Cyclic = false;
   UseSizeBuffer = false;
   UseWidthBuffer = false;
@@ -63,10 +66,13 @@ EventData::EventData( void )
 EventData::EventData( int n, bool sizebuffer, bool widthbuffer )
   : Range( 0, -HUGE_VAL, 0.0001 )
 {
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
   NBuffer = 0;
+  ED = 0;
+  NWrite = 0;
   Cyclic = false;
   UseSizeBuffer = sizebuffer;
   UseWidthBuffer = widthbuffer;
@@ -92,10 +98,13 @@ EventData::EventData( int n, double tbegin, double tend, double stepsize,
 		      bool sizebuffer, bool widthbuffer )
   : Range( tbegin, tend, stepsize )
 {
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
   NBuffer = 0;
+  ED = 0;
+  NWrite = 0;
   Cyclic = false;
   UseSizeBuffer = sizebuffer;
   UseWidthBuffer = widthbuffer;
@@ -119,6 +128,19 @@ EventData::EventData( int n, double tbegin, double tend, double stepsize,
 
 EventData::EventData( const EventData &events )
 {
+  Own = false;
+  TimeBuffer = 0;
+  SizeBuffer = 0;
+  WidthBuffer = 0;
+  NBuffer = 0;
+  Cyclic = false;
+  assign( events );
+}
+
+
+EventData::EventData( const EventData *events )
+{
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
@@ -130,6 +152,7 @@ EventData::EventData( const EventData &events )
 
 EventData::EventData( const EventData &events, double tbegin, double tend )
 {
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
@@ -142,6 +165,7 @@ EventData::EventData( const EventData &events, double tbegin, double tend )
 EventData::EventData( const EventData &events, double tbegin, double tend,
 		      double tref )
 {
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
@@ -154,6 +178,7 @@ EventData::EventData( const EventData &events, double tbegin, double tend,
 EventData::EventData( const ArrayD &times, double tbegin,
 		      double tend, double stepsize )
 {
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
@@ -166,6 +191,7 @@ EventData::EventData( const ArrayD &times, double tbegin,
 EventData::EventData( const ArrayD &times, const ArrayD &sizes, double tbegin,
 		      double tend, double stepsize )
 {
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
@@ -178,6 +204,7 @@ EventData::EventData( const ArrayD &times, const ArrayD &sizes, double tbegin,
 EventData::EventData( const ArrayD &times, const ArrayD &sizes, const ArrayD &widths,
 		      double tbegin, double tend, double stepsize )
 {
+  Own = false;
   TimeBuffer = 0;
   SizeBuffer = 0;
   WidthBuffer = 0;
@@ -189,16 +216,18 @@ EventData::EventData( const ArrayD &times, const ArrayD &sizes, const ArrayD &wi
 
 EventData::~EventData( void )
 {
-  if ( TimeBuffer != 0 )
-    delete [] TimeBuffer;
-  if ( SizeBuffer != 0 )
-    delete [] SizeBuffer;
-  if ( WidthBuffer != 0 )
-    delete [] WidthBuffer;
+  if ( Own ) {
+    if ( TimeBuffer != 0 )
+      delete [] TimeBuffer;
+    if ( SizeBuffer != 0 )
+      delete [] SizeBuffer;
+    if ( WidthBuffer != 0 )
+      delete [] WidthBuffer;
+  }
 }
 
 
-long EventData::size( void ) const
+int EventData::size( void ) const
 {
   return Index + R;
 }
@@ -210,7 +239,7 @@ bool EventData::empty( void ) const
 }
 
 
-void EventData::resize( long nevents, double dflt )
+void EventData::resize( int nevents, double dflt )
 {
   if ( nevents <= 0 ) {
     clear();
@@ -247,90 +276,86 @@ void EventData::clear( void )
 }
 
 
-long EventData::capacity( void ) const
+int EventData::capacity( void ) const
 {
   return NBuffer;
 }
 
 
-void EventData::reserve( long nevents, double dflt )
+void EventData::reserve( int nevents, double dflt )
 {
   if ( nevents > NBuffer ) {
 
-    long onb = NBuffer;
+    NBuffer = nevents;
+    int onb = NBuffer;
     double *otb = TimeBuffer;
     double *osb = SizeBuffer;
     double *owb = WidthBuffer;
 
-    NBuffer = nevents;
-    if ( NBuffer > 0 ) {
-      TimeBuffer = new double[NBuffer];
-      long k = 0;
-      if ( otb != 0 ) {
-	if ( Cyclic && Index > 0 )
-	  for ( long i=R; i<onb && k<NBuffer; i++, k++ )
-	    TimeBuffer[k] = otb[i];
-	for ( long i=0; i<R && k<NBuffer; i++, k++ )
+    TimeBuffer = new double[NBuffer];
+    int k = 0;
+    if ( otb != 0 ) {
+      if ( Cyclic && Index > 0 )
+	for ( int i=R; i<onb && k<NBuffer; i++, k++ )
 	  TimeBuffer[k] = otb[i];
+      for ( int i=0; i<R && k<NBuffer; i++, k++ )
+	TimeBuffer[k] = otb[i];
+    }
+    for ( ; k<NBuffer; k++ )
+      TimeBuffer[k] = dflt;
+
+    if ( UseSizeBuffer ) {
+      SizeBuffer = new double[NBuffer];
+      k = 0;
+      if ( osb != 0 ) {
+	if ( Cyclic && Index > 0 )
+	  for ( int i=R; i<onb && k<NBuffer; i++, k++ )
+	    SizeBuffer[k] = osb[i];
+	for ( int i=0; i<R && k<NBuffer; i++, k++ )
+	  SizeBuffer[k] = osb[i];
       }
       for ( ; k<NBuffer; k++ )
-	TimeBuffer[k] = dflt;
+	SizeBuffer[k] = 0.0;
+    }
 
-      if ( UseSizeBuffer ) {
-	SizeBuffer = new double[NBuffer];
-	k = 0;
-	if ( osb != 0 ) {
-	  if ( Cyclic && Index > 0 )
-	    for ( long i=R; i<onb && k<NBuffer; i++, k++ )
-	      SizeBuffer[k] = osb[i];
-	  for ( long i=0; i<R && k<NBuffer; i++, k++ )
-	    SizeBuffer[k] = osb[i];
-	}
-	for ( ; k<NBuffer; k++ )
-	  SizeBuffer[k] = 0.0;
-      }
-
-      if ( UseWidthBuffer ) {
-	WidthBuffer = new double[NBuffer];
-	k = 0;
-	if ( owb != 0 ) {
-	  if ( Cyclic && Index > 0 )
-	    for ( long i=R; i<onb && k<NBuffer; i++, k++ )
-	      WidthBuffer[k] = osb[i];
-	  for ( long i=0; i<R && k<NBuffer; i++, k++ )
+    if ( UseWidthBuffer ) {
+      WidthBuffer = new double[NBuffer];
+      k = 0;
+      if ( owb != 0 ) {
+	if ( Cyclic && Index > 0 )
+	  for ( int i=R; i<onb && k<NBuffer; i++, k++ )
 	    WidthBuffer[k] = osb[i];
-	}
-	for ( ; k<NBuffer; k++ )
-	  WidthBuffer[k] = 0.0;
+	for ( int i=0; i<R && k<NBuffer; i++, k++ )
+	  WidthBuffer[k] = osb[i];
       }
+      for ( ; k<NBuffer; k++ )
+	WidthBuffer[k] = 0.0;
+    }
 
-      if ( Index > 0 ) {
-	Index += R;
-	R = onb;
-	if ( R > NBuffer )
-	  R = NBuffer;
-      }
-      else {
-	if ( R > NBuffer )
-	  R = NBuffer;
-	if ( ! Cyclic ) {
-	  Index = 0;
-	  Cycles = 0;
-	}
-      }
-
+    if ( Index > 0 ) {
+      Index += R;
+      R = onb;
+      if ( R > NBuffer )
+	R = NBuffer;
     }
     else {
-      NBuffer = 0;
-      clear();
+      if ( R > NBuffer )
+	R = NBuffer;
+      if ( ! Cyclic ) {
+	Index = 0;
+	Cycles = 0;
+      }
     }
 
-    if ( otb != 0 )
-      delete [] otb;
-    if ( osb != 0 )
-      delete [] osb;
-    if ( owb != 0 )
-      delete [] owb;
+    if ( Own ) {
+      if ( otb != 0 )
+	delete [] otb;
+      if ( osb != 0 )
+	delete [] osb;
+      if ( owb != 0 )
+	delete [] owb;
+    }
+    Own = true;
 
   }
 
@@ -338,11 +363,11 @@ void EventData::reserve( long nevents, double dflt )
 }
 
 
-void EventData::free( long nevents, double dflt )
+void EventData::free( int nevents, double dflt )
 {
   if ( nevents != NBuffer ) {
 
-    long onb = NBuffer;
+    int onb = NBuffer;
     double *otb = TimeBuffer;
     double *osb = SizeBuffer;
     double *owb = WidthBuffer;
@@ -350,12 +375,12 @@ void EventData::free( long nevents, double dflt )
     NBuffer = nevents;
     if ( NBuffer > 0 ) {
       TimeBuffer = new double[NBuffer];
-      long k = 0;
+      int k = 0;
       if ( otb != 0 ) {
 	if ( Cyclic && Index > 0 )
-	  for ( long i=R; i<onb && k<NBuffer; i++, k++ )
+	  for ( int i=R; i<onb && k<NBuffer; i++, k++ )
 	    TimeBuffer[k] = otb[i];
-	for ( long i=0; i<R && k<NBuffer; i++, k++ )
+	for ( int i=0; i<R && k<NBuffer; i++, k++ )
 	  TimeBuffer[k] = otb[i];
       }
       for ( ; k<NBuffer; k++ )
@@ -366,9 +391,9 @@ void EventData::free( long nevents, double dflt )
 	k = 0;
 	if ( osb != 0 ) {
 	  if ( Cyclic && Index > 0 )
-	    for ( long i=R; i<onb && k<NBuffer; i++, k++ )
+	    for ( int i=R; i<onb && k<NBuffer; i++, k++ )
 	      SizeBuffer[k] = osb[i];
-	  for ( long i=0; i<R && k<NBuffer; i++, k++ )
+	  for ( int i=0; i<R && k<NBuffer; i++, k++ )
 	    SizeBuffer[k] = osb[i];
 	}
 	for ( ; k<NBuffer; k++ )
@@ -380,9 +405,9 @@ void EventData::free( long nevents, double dflt )
 	k = 0;
 	if ( owb != 0 ) {
 	  if ( Cyclic && Index > 0 )
-	    for ( long i=R; i<onb && k<NBuffer; i++, k++ )
+	    for ( int i=R; i<onb && k<NBuffer; i++, k++ )
 	      WidthBuffer[k] = osb[i];
-	  for ( long i=0; i<R && k<NBuffer; i++, k++ )
+	  for ( int i=0; i<R && k<NBuffer; i++, k++ )
 	    WidthBuffer[k] = osb[i];
 	}
 	for ( ; k<NBuffer; k++ )
@@ -407,19 +432,38 @@ void EventData::free( long nevents, double dflt )
     }
     else {
       NBuffer = 0;
+      TimeBuffer = 0;
+      SizeBuffer = 0;
+      WidthBuffer = 0;
       clear();
     }
 
-    if ( otb != 0 )
-      delete [] otb;
-    if ( osb != 0 )
-      delete [] osb;
-    if ( owb != 0 )
-      delete [] owb;
+    if ( Own ) {
+      if ( otb != 0 )
+	delete [] otb;
+      if ( osb != 0 )
+	delete [] osb;
+      if ( owb != 0 )
+	delete [] owb;
+    }
 
   }
 
   ErrorMessage = "";
+}
+
+
+int EventData::writeBufferCapacity( void ) const
+{
+  return NWrite;
+}
+
+
+void EventData::setWriteBufferCapacity( int m )
+{
+  NWrite = m;
+  if ( NWrite > capacity() )
+    NWrite = capacity();
 }
 
 
@@ -432,6 +476,8 @@ bool EventData::cyclic( void ) const
 void EventData::setCyclic( bool cyclic )
 {
   Cyclic = cyclic;
+  if ( ! Cyclic )
+    NWrite = 0;
 }
 
 
@@ -574,11 +620,21 @@ EventData &EventData::operator=( const ArrayD &times )
 
 void EventData::assign( const EventData &events )
 {
-  UseSizeBuffer = ( events.SizeBuffer != 0 );
-  UseWidthBuffer = ( events.WidthBuffer != 0 );
+  if ( &events == this )
+    return;
+
+  if ( ! Own ) {
+    NBuffer = 0;
+    TimeBuffer = 0;
+    SizeBuffer = 0;
+    WidthBuffer = 0;
+    Own = true;
+  }
   clear();
 
-  long ns = events.capacity();
+  UseSizeBuffer = events.UseSizeBuffer;
+  UseWidthBuffer = events.UseWidthBuffer;
+  int ns = events.capacity();
   reserve( ns );
   if ( NBuffer < ns )
     ns = NBuffer;
@@ -594,8 +650,8 @@ void EventData::assign( const EventData &events )
       WidthBuffer[k] = events.WidthBuffer[k];
   }
 
-  UseSizeBuffer = events.UseSizeBuffer;
-  UseWidthBuffer = events.UseWidthBuffer;
+  ED = events.ED;
+  NWrite = events.NWrite;
   Cyclic = events.Cyclic;
   R = events.R;
   Index = events.Index;
@@ -625,17 +681,23 @@ void EventData::assign( const EventData &events )
 void EventData::assign( const EventData &events,
 			double tbegin, double tend )
 {
-  long n = events.next( tbegin );
-  long p = events.previous( tend );
-  long ns = p - n + 1;
+  int n = events.next( tbegin );
+  int p = events.previous( tend );
+  int ns = p - n + 1;
   if ( p < n || p < 0 || tend <= tbegin ) 
     ns = 0;
 
+  if ( ! Own ) {
+    NBuffer = 0;
+    TimeBuffer = 0;
+    SizeBuffer = 0;
+    WidthBuffer = 0;
+    Own = true;
+  }
   clear();
 
-  UseSizeBuffer = ( events.SizeBuffer != 0 );
-  UseWidthBuffer = ( events.WidthBuffer != 0 );
-
+  UseSizeBuffer = events.UseSizeBuffer;
+  UseWidthBuffer = events.UseWidthBuffer;
   reserve( ns );
 
   if ( ns > 0 && NBuffer > 0 ) {
@@ -643,21 +705,23 @@ void EventData::assign( const EventData &events,
     if ( NBuffer < ns )
       ns = NBuffer;
 
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       TimeBuffer[k] = events[n+k] - tbegin;
 
     if ( UseSizeBuffer ) {
-      for ( long k=0; k<ns; k++ )
+      for ( int k=0; k<ns; k++ )
 	SizeBuffer[k] = events.eventSize( n + k );
     }
 
     if ( UseWidthBuffer ) {
-      for ( long k=0; k<ns; k++ )
+      for ( int k=0; k<ns; k++ )
 	WidthBuffer[k] = events.eventWidth( n + k );
     }
 
   }
 
+  ED = 0;
+  NWrite = 0;
   R = ns;
   Cyclic = false;
   Index = 0;
@@ -676,14 +740,14 @@ void EventData::assign( const EventData &events,
   MeanRatio = events.MeanRatio;
   if ( UseSizeBuffer ) {
     MeanSize = 0.0;
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       MeanSize += ( SizeBuffer[k] - MeanSize ) / ( k+1 );
   }
   else
     MeanSize = events.MeanSize;
   if ( UseWidthBuffer ) {
     MeanWidth = 0.0;
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       MeanWidth += ( WidthBuffer[k] - MeanWidth ) / ( k+1 );
   }
   else
@@ -707,17 +771,23 @@ void EventData::assign( const EventData &events,
 void EventData::assign( const EventData &events,
 			double tbegin, double tend, double tref )
 {
-  long n = events.next( tbegin );
-  long p = events.previous( tend );
-  long ns = p - n + 1;
+  int n = events.next( tbegin );
+  int p = events.previous( tend );
+  int ns = p - n + 1;
   if ( p < n || p < 0 ) 
     ns = 0;
 
+  if ( ! Own ) {
+    NBuffer = 0;
+    TimeBuffer = 0;
+    SizeBuffer = 0;
+    WidthBuffer = 0;
+    Own = true;
+  }
   clear();
 
-  UseSizeBuffer = ( events.SizeBuffer != 0 );
-  UseWidthBuffer = ( events.WidthBuffer != 0 );
-
+  UseSizeBuffer = events.UseSizeBuffer;
+  UseWidthBuffer = events.UseWidthBuffer;
   reserve( ns );
 
   if ( ns > 0 && NBuffer > 0 ) {
@@ -725,21 +795,23 @@ void EventData::assign( const EventData &events,
     if ( NBuffer < ns )
       ns = NBuffer;
 
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       TimeBuffer[k] = events[n+k] - tref;
 
     if ( UseSizeBuffer ) {
-      for ( long k=0; k<ns; k++ )
+      for ( int k=0; k<ns; k++ )
 	SizeBuffer[k] = events.eventSize( n + k );
     }
 
     if ( UseWidthBuffer ) {
-      for ( long k=0; k<ns; k++ )
+      for ( int k=0; k<ns; k++ )
 	WidthBuffer[k] = events.eventWidth( n + k );
     }
 
   }
 
+  ED = 0;
+  NWrite = 0;
   R = ns;
   Cyclic = false;
   Index = 0;
@@ -758,14 +830,14 @@ void EventData::assign( const EventData &events,
   MeanRatio = events.MeanRatio;
   if ( UseSizeBuffer ) {
     MeanSize = 0.0;
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       MeanSize += ( SizeBuffer[k] - MeanSize ) / ( k+1 );
   }
   else
     MeanSize = events.MeanSize;
   if ( UseWidthBuffer ) {
     MeanWidth = 0.0;
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       MeanWidth += ( WidthBuffer[k] - MeanWidth ) / ( k+1 );
   }
   else
@@ -789,11 +861,18 @@ void EventData::assign( const EventData &events,
 void EventData::assign( const ArrayD &times, 
 			double tbegin, double tend, double stepsize )
 {
-  UseSizeBuffer = false;
-  UseWidthBuffer = false;
+  if ( ! Own ) {
+    NBuffer = 0;
+    TimeBuffer = 0;
+    SizeBuffer = 0;
+    WidthBuffer = 0;
+    Own = true;
+  }
   clear();
 
-  long ns = times.size();
+  UseSizeBuffer = false;
+  UseWidthBuffer = false;
+  int ns = times.size();
   reserve( ns );
   if ( NBuffer < ns )
     ns = NBuffer;
@@ -801,6 +880,8 @@ void EventData::assign( const ArrayD &times,
   for ( int k=0; k<ns; k++ )
     TimeBuffer[k] = times[k];
 
+  ED = 0;
+  NWrite = 0;
   Cyclic = false;
   R = ns;
   Index = 0;
@@ -825,11 +906,18 @@ void EventData::assign( const ArrayD &times,
 void EventData::assign( const ArrayD &times, const ArrayD &sizes, 
 			double tbegin, double tend, double stepsize )
 {
-  UseSizeBuffer = true;
-  UseWidthBuffer = false;
+  if ( ! Own ) {
+    NBuffer = 0;
+    TimeBuffer = 0;
+    SizeBuffer = 0;
+    WidthBuffer = 0;
+    Own = true;
+  }
   clear();
 
-  long ns = times.size();
+  UseSizeBuffer = true;
+  UseWidthBuffer = false;
+  int ns = times.size();
   reserve( ns );
   if ( NBuffer < ns )
     ns = NBuffer;
@@ -839,6 +927,8 @@ void EventData::assign( const ArrayD &times, const ArrayD &sizes,
     SizeBuffer[k] = sizes[k];
   }
 
+  ED = 0;
+  NWrite = 0;
   Cyclic = false;
   R = ns;
   Index = 0;
@@ -863,11 +953,18 @@ void EventData::assign( const ArrayD &times, const ArrayD &sizes,
 void EventData::assign( const ArrayD &times, const ArrayD &sizes, const ArrayD &widths, 
 			double tbegin, double tend, double stepsize )
 {
-  UseSizeBuffer = true;
-  UseWidthBuffer = true;
+  if ( ! Own ) {
+    NBuffer = 0;
+    TimeBuffer = 0;
+    SizeBuffer = 0;
+    WidthBuffer = 0;
+    Own = true;
+  }
   clear();
 
-  long ns = times.size();
+  UseSizeBuffer = true;
+  UseWidthBuffer = true;
+  int ns = times.size();
   reserve( ns );
   if ( NBuffer < ns )
     ns = NBuffer;
@@ -878,6 +975,8 @@ void EventData::assign( const ArrayD &times, const ArrayD &sizes, const ArrayD &
     WidthBuffer[k] = widths[k];
   }
 
+  ED = 0;
+  NWrite = 0;
   Cyclic = false;
   R = ns;
   Index = 0;
@@ -899,15 +998,88 @@ void EventData::assign( const ArrayD &times, const ArrayD &sizes, const ArrayD &
 }
 
 
+const EventData &EventData::assign( const EventData *events )
+{
+  if ( events == this )
+    return *this;
+
+  if ( Own ) {
+    if ( TimeBuffer != 0 )
+      delete [] TimeBuffer;
+    if ( SizeBuffer != 0 )
+      delete [] SizeBuffer;
+    if ( WidthBuffer != 0 )
+      delete [] WidthBuffer;
+  }
+  Own = false;
+  NBuffer = events->NBuffer;
+  TimeBuffer = events->TimeBuffer;
+  UseSizeBuffer = events->UseSizeBuffer;
+  SizeBuffer = events->SizeBuffer;
+  UseWidthBuffer = events->UseWidthBuffer;
+  WidthBuffer = events->WidthBuffer;
+  ED = events;
+  NWrite = events->NWrite;
+  Cyclic = events->Cyclic;
+  R = events->R;
+  Index = events->Index;
+  Cycles = events->Cycles;
+  Mode = events->Mode;
+  Ident = events->Ident;
+  SizeName = events->SizeName;
+  SizeUnit = events->SizeUnit;
+  SizeScale = events->SizeScale;
+  SizeFormat = events->SizeFormat;
+  WidthName = events->WidthName;
+  WidthScale = events->WidthScale;
+  WidthUnit = events->WidthUnit;
+  WidthFormat = events->WidthFormat;
+  MeanRatio = events->MeanRatio;
+  MeanSize = events->MeanSize;
+  MeanWidth = events->MeanWidth;
+  MeanInterval = events->MeanInterval;
+  MeanQuality = events->MeanQuality;
+  Range = events->Range;
+  Source = events->Source;
+  SignalTime = events->SignalTime;
+  ErrorMessage = "";
+  return *this;
+}
+
+
+const EventData &EventData::assign( void )
+{
+  return assign( ED );
+}
+
+
+void EventData::update( void )
+{
+  if ( ED != 0 ) {
+    R = ED->R;
+    Index = ED->Index;
+    Cycles = ED->Cycles;
+    Mode = ED->Mode;
+    MeanRatio = ED->MeanRatio;
+    MeanSize = ED->MeanSize;
+    MeanWidth = ED->MeanWidth;
+    MeanInterval = ED->MeanInterval;
+    MeanQuality = ED->MeanQuality;
+    Range = ED->Range;
+    SignalTime = ED->SignalTime;
+  }
+}
+
+
 void EventData::append( const EventData &events, double tbegin, double tend )
 {
-  long n = events.next( tbegin );
-  long p = events.previous( tend );
-  long ns = p - n + 1;
+  int n = events.next( tbegin );
+  int p = events.previous( tend );
+  int ns = p - n + 1;
   if ( p < n || p < 0 ) 
     ns = 0;
 
-  long nn = size();
+  int nn = size();
   if ( ! Cyclic )
     reserve( nn + ns );
 
@@ -929,7 +1101,7 @@ void EventData::append( const EventData &events, double tbegin, double tend )
   }
 
   if ( ns > 0 && NBuffer > 0 ) {
-    for ( long k=0; k<ns; k++ ) {
+    for ( int k=0; k<ns; k++ ) {
       if ( R >= NBuffer ) {
 	if ( Cyclic ) {
 	  // set indices for new cycle:
@@ -954,14 +1126,14 @@ void EventData::append( const EventData &events, double tbegin, double tend )
   MeanRatio = events.MeanRatio;
   if ( UseSizeBuffer ) {
     MeanSize = 0.0;
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       MeanSize += ( SizeBuffer[nn+k] - MeanSize ) / ( k+1 );
   }
   else
     MeanSize = events.MeanSize;
   if ( UseWidthBuffer ) {
     MeanWidth = 0.0;
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       MeanWidth += ( WidthBuffer[nn+k] - MeanWidth ) / ( k+1 );
   }
   else
@@ -986,13 +1158,13 @@ void EventData::append( const EventData &events, double tbegin, double tend )
 void EventData::append( const EventData &events, double tbegin, 
 			double tend, double tref )
 {
-  long n = events.next( tbegin );
-  long p = events.previous( tend );
-  long ns = p - n + 1;
+  int n = events.next( tbegin );
+  int p = events.previous( tend );
+  int ns = p - n + 1;
   if ( p < n || p < 0 ) 
     ns = 0;
 
-  long nn = size();
+  int nn = size();
   if ( ! Cyclic )
     reserve( nn + ns );
 
@@ -1014,7 +1186,7 @@ void EventData::append( const EventData &events, double tbegin,
   }
 
   if ( ns > 0 && NBuffer > 0 ) {
-    for ( long k=0; k<ns; k++ ) {
+    for ( int k=0; k<ns; k++ ) {
       if ( R >= NBuffer ) {
 	if ( Cyclic ) {
 	  // set indices for new cycle:
@@ -1039,14 +1211,14 @@ void EventData::append( const EventData &events, double tbegin,
   MeanRatio = events.MeanRatio;
   if ( UseSizeBuffer ) {
     MeanSize = 0.0;
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       MeanSize += ( SizeBuffer[nn+k] - MeanSize ) / ( k+1 );
   }
   else
     MeanSize = events.MeanSize;
   if ( UseWidthBuffer ) {
     MeanWidth = 0.0;
-    for ( long k=0; k<ns; k++ )
+    for ( int k=0; k<ns; k++ )
       MeanWidth += ( WidthBuffer[nn+k] - MeanWidth ) / ( k+1 );
   }
   else
@@ -1069,23 +1241,23 @@ void EventData::append( const EventData &events, double tbegin,
 
 
 void EventData::copy( double tbegin, double tend,
-		      double *events, long &nevents ) const
+		      double *events, int &nevents ) const
 {
   copy( tbegin, tend, tbegin, events, nevents );
 }
 
 
 void EventData::copy( double tbegin, double tend, double tref, 
-		      double *events, long &nevents ) const
+		      double *events, int &nevents ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
-  long oldn = nevents;
+  int oldn = nevents;
   nevents = 0;
   if ( p < n || p < 0 )
     return;
-  for ( long k=n; k <= p && nevents < oldn; k++ ) {
+  for ( int k=n; k <= p && nevents < oldn; k++ ) {
     events[nevents] = (*this)[k] - tref;
     nevents++;
   }
@@ -1102,14 +1274,14 @@ void EventData::copy( double tbegin, double tend,
 void EventData::copy( double tbegin, double tend, double tref, 
 		      vector<double> &events ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   events.clear();
   if ( p < n || p < 0 )
     return;
   events.reserve( p-n+1 );
-  for ( long k=n; k<=p; k++ )
+  for ( int k=n; k<=p; k++ )
     events.push_back( (*this)[k] - tref );
 }
 
@@ -1123,14 +1295,14 @@ void EventData::copy( double tbegin, double tend, ArrayD &events ) const
 void EventData::copy( double tbegin, double tend, double tref, 
 		      ArrayD &events ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   events.clear();
   if ( p < n || p < 0 )
     return;
   events.reserve( p-n+1 );
-  for ( long k=n; k<=p; k++ )
+  for ( int k=n; k<=p; k++ )
     events.push( (*this)[k] - tref );
 }
 
@@ -1144,23 +1316,23 @@ void EventData::copy( double tbegin, double tend, MapD &events ) const
 void EventData::copy( double tbegin, double tend, double tref, 
 		      MapD &events ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   events.clear();
   if ( p < n || p < 0 )
     return;
   events.reserve( p-n+1 );
   if ( sizeBuffer() ) {
-    for ( long k=n; k<=p; k++ )
+    for ( int k=n; k<=p; k++ )
       events.push( (*this)[k] - tref, eventSize( k ) );
   }
   else if ( widthBuffer() ) {
-    for ( long k=n; k<=p; k++ )
+    for ( int k=n; k<=p; k++ )
       events.push( (*this)[k] - tref, eventWidth( k ) );
   }
   else {
-    for ( long k=n; k<=p; k++ )
+    for ( int k=n; k<=p; k++ )
       events.push( (*this)[k] - tref, 0 );
   }
 }
@@ -1175,15 +1347,15 @@ void EventData::copy( double tbegin, double tend, EventData &events ) const
 void EventData::copy( double tbegin, double tend, double tref, 
 		      EventData &events ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   events.clear();
   events.setCyclic( false );
   if ( p < n || p < 0 )
     return;
   events.reserve( p-n+1 );
-  for ( long k=n; k<=p; k++ )
+  for ( int k=n; k<=p; k++ )
     events.push( (*this)[k] - tref, eventSize( k ), eventWidth( k ) );
   events.Range = LinearRange( tbegin - tref, tend - tref, stepsize() );
   events.SignalTime = -HUGE_VAL;
@@ -1202,13 +1374,13 @@ double &EventData::front( void )
 }
 
 
-double EventData::front( long n ) const
+double EventData::front( int n ) const
 {
   return operator[]( minEvent() + n );
 }
 
 
-double &EventData::front( long n )
+double &EventData::front( int n )
 {
   return operator[]( minEvent() + n );
 }
@@ -1226,13 +1398,13 @@ double &EventData::back( void )
 }
 
 
-double EventData::back( long n ) const
+double EventData::back( int n ) const
 {
   return operator[]( size()-1-n );
 }
 
 
-double &EventData::back( long n )
+double &EventData::back( int n )
 {
   return operator[]( size()-1-n );
 }
@@ -1274,13 +1446,13 @@ double &EventData::frontSize( void )
 }
 
 
-double EventData::frontSize( long n ) const
+double EventData::frontSize( int n ) const
 {
   return eventSize( minEvent() + n );
 }
 
 
-double &EventData::frontSize( long n )
+double &EventData::frontSize( int n )
 {
   return eventSize( minEvent() + n );
 }
@@ -1298,13 +1470,13 @@ double &EventData::backSize( void )
 }
 
 
-double EventData::backSize( long n ) const
+double EventData::backSize( int n ) const
 {
   return eventSize( size()-1-n );
 }
 
 
-double &EventData::backSize( long n )
+double &EventData::backSize( int n )
 {
   return eventSize( size()-1-n );
 }
@@ -1322,13 +1494,13 @@ double &EventData::frontWidth( void )
 }
 
 
-double EventData::frontWidth( long n ) const
+double EventData::frontWidth( int n ) const
 {
   return eventWidth( minEvent() + n );
 }
 
 
-double &EventData::frontWidth( long n )
+double &EventData::frontWidth( int n )
 {
   return eventWidth( minEvent() + n );
 }
@@ -1346,13 +1518,13 @@ double &EventData::backWidth( void )
 }
 
 
-double EventData::backWidth( long n ) const
+double EventData::backWidth( int n ) const
 {
   return eventWidth( size()-1-n );
 }
 
 
-double &EventData::backWidth( long n )
+double &EventData::backWidth( int n )
 {
   return eventWidth( size()-1-n );
 }
@@ -1364,9 +1536,9 @@ void EventData::push( double time, double esize, double ewidth )
   if ( size() > 0 ) {
 #ifndef NDEBUG
     if ( time < back() )
-      cerr << "! warning in EventData('" << Ident << "'):: push() -> time " << time << " < back() " << back() << endl;
+      cerr << "! warning in EventData('" << Ident << "'):: push() -> time " << time << " < back() " << back() << '\n';
     else if ( fabs( time - back() ) < 1.0e-8 )
-      cerr << "! warning in EventData('" << Ident << "'):: push() -> time " << time << " == back() " << back() << endl;
+      cerr << "! warning in EventData('" << Ident << "'):: push() -> time " << time << " == back() " << back() << '\n';
 #endif
     interv = time - back();
   }
@@ -1379,8 +1551,8 @@ void EventData::push( double time, double esize, double ewidth )
 
 #ifndef NDEBUG
   if ( R < 0 || R > NBuffer ) {
-    cerr << "! fatal error in EventData('" << Ident << "')::push() -> R out of range" << endl 
-	 << *this << endl;
+    cerr << "! fatal error in EventData('" << Ident << "')::push() -> R out of range" << '\n' 
+	 << *this << '\n';
     assert( R >= 0 || R <= NBuffer );
   }
 #endif
@@ -1430,9 +1602,9 @@ void EventData::push( const ArrayD &time, double esize, double ewidth )
   if ( size() > 0 ) {
 #ifndef NDEBUG
     if ( time.front() < back() )
-      cerr << "! warning in EventData('" << Ident << "'):: push( ArrayD ) -> time[0] " << time.front() << " < back() " << back() << endl;
+      cerr << "! warning in EventData('" << Ident << "'):: push( ArrayD ) -> time[0] " << time.front() << " < back() " << back() << '\n';
     else if ( fabs( time.front() - back() ) < 1.0e-8 )
-      cerr << "! warning in EventData('" << Ident << "'):: push( ArrayD ) -> time[0] " << time.front() << " == back() " << back() << endl;
+      cerr << "! warning in EventData('" << Ident << "'):: push( ArrayD ) -> time[0] " << time.front() << " == back() " << back() << '\n';
 #endif
     interv = time.front() - back();
   }
@@ -1445,8 +1617,8 @@ void EventData::push( const ArrayD &time, double esize, double ewidth )
 
 #ifndef NDEBUG
   if ( R < 0 || R > NBuffer ) {
-    cerr << "! fatal error in EventData('" << Ident << "')::push( ArrayD ) -> R out of range" << endl 
-	 << *this << endl;
+    cerr << "! fatal error in EventData('" << Ident << "')::push( ArrayD ) -> R out of range" << '\n' 
+	 << *this << '\n';
     assert( R >= 0 || R <= NBuffer );
   }
 #endif
@@ -1500,7 +1672,7 @@ void EventData::insert( double time, double size, double width )
   if ( cyclic() )
     return;
 
-  long n = next( time );
+  int n = next( time );
 
   if ( n >= R ) {
     push( time, size, width );
@@ -1798,8 +1970,16 @@ ostream &operator<< ( ostream &str, const EventData &events )
 {
   str << "         Ident: " << events.Ident << '\n'
       << "       NBuffer: " << events.NBuffer << '\n'
+      << "           Own: " << events.Own << '\n'
+      << " UseSizeBuffer: " << events.UseSizeBuffer << '\n'
+      << "UseWidthBuffer: " << events.UseWidthBuffer << '\n'
       << "    SizeBuffer: " << ( events.SizeBuffer != 0 ) << '\n'
-      << "   WidthBuffer: " << ( events.WidthBuffer != 0 ) << '\n'
+      << "   WidthBuffer: " << ( events.WidthBuffer != 0 ) << '\n';
+  if ( events.ED == 0 )
+    str << "            ED: none\n";
+  else
+    str << "   ED->ident(): " << events.ED->ident() << '\n';
+  str << "        NWrite: " << events.NWrite << '\n'
       << "        Cyclic: " << events.Cyclic << '\n'
       << "             R: " << events.R << '\n'
       << "         Index: " << events.Index << '\n'
@@ -1810,8 +1990,16 @@ ostream &operator<< ( ostream &str, const EventData &events )
       << "     MeanWidth: " << events.MeanWidth << '\n'
       << "  MeanInterval: " << events.MeanInterval << '\n'
       << "   MeanQuality: " << events.MeanQuality << '\n'
+      << "      SizeName: " << events.SizeName << '\n'
+      << "     SizeScale: " << events.SizeScale << '\n'
+      << "      SizeUnit: " << events.SizeUnit << '\n'
+      << "    SizeFormat: " << events.SizeFormat << '\n'
+      << "     WidthName: " << events.WidthName << '\n'
+      << "    WidthScale: " << events.WidthScale << '\n'
+      << "     WidthUnit: " << events.WidthUnit << '\n'
+      << "   WidthFormat: " << events.WidthFormat << '\n'
       << "          Mode: " << events.Mode << '\n'
-      << "  ErrorMessage: " << events.ErrorMessage << endl;
+      << "  ErrorMessage: " << events.ErrorMessage << '\n';
   return str;
 }
 
@@ -1822,15 +2010,16 @@ string EventData::message( void ) const
 }
 
 
-long EventData::currentEvent( void ) const
+int EventData::currentEvent( void ) const
 {
   return Index + R;
 }
 
 
-long EventData::minEvent( void ) const
+int EventData::minEvent( void ) const
 {
-  return !Cyclic || Index+R-NBuffer < 0 ? 0 : Index+R-NBuffer;
+  int n = Index + R - NBuffer + NWrite;
+  return !Cyclic || n < 0 ? 0 : n;
 }
 
 
@@ -1929,13 +2118,13 @@ double EventData::minSize( double tbegin, double tend ) const
   if ( SizeBuffer == 0 )
     return MeanSize;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   if ( n > p || p < 0 || tend <= tbegin )
     return MeanSize;
 
   double min = eventSize( n );
-  for ( long k = n+1; k <= p; k++ )
+  for ( int k = n+1; k <= p; k++ )
     if ( min > eventSize( k ) )
       min = eventSize( k );
   return min;
@@ -1947,13 +2136,13 @@ double EventData::maxSize( double tbegin, double tend ) const
   if ( SizeBuffer == 0 )
     return MeanSize;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   if ( n > p || p < 0 || tend <= tbegin )
     return MeanSize;
 
   double max = eventSize( n );
-  for ( long k = n+1; k <= p; k++ )
+  for ( int k = n+1; k <= p; k++ )
     if ( max < eventSize( k ) )
       max = eventSize( k );
   return max;
@@ -1969,14 +2158,14 @@ void EventData::minMaxSize( double tbegin, double tend,
   if ( SizeBuffer == 0 )
     return;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   if ( n > p || p < 0 || tend <= tbegin )
     return;
 
   min = eventSize( n );
   max = min;
-  for ( long k = n+1; k <= p; k++ )
+  for ( int k = n+1; k <= p; k++ )
     if ( max < eventSize( k ) )
       max = eventSize( k );
     else if ( min > eventSize( k ) )
@@ -1991,13 +2180,13 @@ double EventData::meanSize( double tbegin, double tend,
   if ( SizeBuffer == 0 )
     return MeanSize;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   double ms = 0.0;
-  for ( long k=n; k<=p; k++ )
+  for ( int k=n; k<=p; k++ )
     ms += ( eventSize( k ) - ms ) / ( k-n+1 );
   double var = 0.0;
-  for ( long k=n; k<=p; k++ ) {
+  for ( int k=n; k<=p; k++ ) {
     double s = eventSize( k ) - ms;
     var += ( s*s - var ) / ( k-n+1 );
   }
@@ -2011,10 +2200,10 @@ double EventData::meanSize( double tbegin, double tend ) const
   if ( SizeBuffer == 0 )
     return MeanSize;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   double ms = 0.0;
-  for ( long k=n; k<=p; k++ )
+  for ( int k=n; k<=p; k++ )
     ms += ( eventSize( k ) - ms ) / ( k-n+1 );
   return ms;
 }
@@ -2031,15 +2220,15 @@ void EventData::sizeHist( double tbegin, double tend, SampleDataD &hist ) const
 {
   hist = 0.0;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   if ( p < n || p < 0 || tend <= tbegin )
     return;
 
   double l = hist.rangeFront();
   double s = hist.stepsize();
 
-  for ( long k=n; k <= p; k++ ) {
+  for ( int k=n; k <= p; k++ ) {
     int b = (int)rint( ( eventSize( k ) - l ) / s );
     if ( b >= 0 && b < hist.size() )
       hist[b] += 1.0;
@@ -2100,13 +2289,13 @@ double EventData::minWidth( double tbegin, double tend ) const
   if ( WidthBuffer == 0 )
     return MeanWidth;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   if ( n > p || p < 0 || tend <= tbegin )
     return MeanWidth;
 
   double min = eventWidth( n );
-  for ( long k = n+1; k <= p; k++ )
+  for ( int k = n+1; k <= p; k++ )
     if ( min > eventWidth( k ) )
       min = eventWidth( k );
   return min;
@@ -2118,13 +2307,13 @@ double EventData::maxWidth( double tbegin, double tend ) const
   if ( WidthBuffer == 0 )
     return MeanWidth;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   if ( n > p || p < 0 || tend <= tbegin )
     return MeanWidth;
 
   double max = eventWidth( n );
-  for ( long k = n+1; k <= p; k++ )
+  for ( int k = n+1; k <= p; k++ )
     if ( max < eventWidth( k ) )
       max = eventWidth( k );
   return max;
@@ -2140,14 +2329,14 @@ void EventData::minMaxWidth( double tbegin, double tend,
   if ( WidthBuffer == 0 )
     return;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   if ( n > p || p < 0 || tend <= tbegin )
     return;
 
   min = eventWidth( n );
   max = min;
-  for ( long k = n+1; k <= p; k++ )
+  for ( int k = n+1; k <= p; k++ )
     if ( max < eventWidth( k ) )
       max = eventWidth( k );
     else if ( min > eventWidth( k ) )
@@ -2160,10 +2349,10 @@ double EventData::meanWidth( double tbegin, double tend ) const
   if ( WidthBuffer == 0 )
     return MeanWidth;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   double ms = 0.0;
-  for ( long k=n; k<=p; k++ )
+  for ( int k=n; k<=p; k++ )
     ms += ( eventWidth( k ) - ms ) / ( k-n+1 );
   return ms;
 }
@@ -2180,15 +2369,15 @@ void EventData::widthHist( double tbegin, double tend, SampleDataD &hist ) const
 {
   hist = 0.0;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   if ( p < n || p < 0 || tend <= tbegin )
     return;
 
   double l = hist.rangeFront();
   double s = hist.stepsize();
 
-  for ( long k=n; k <= p; k++ ) {
+  for ( int k=n; k <= p; k++ ) {
     int b = (int)rint( ( eventWidth( k ) - l ) / s );
     if ( b >= 0  && b < hist.size() )
       hist[b] += 1.0;
@@ -2264,20 +2453,24 @@ void EventData::setMeanRatio( double ratio )
 }
 
 
-long EventData::next( double time ) const
+int EventData::next( double time ) const
 {
-  long l, r, h;
+  int l = 0;
+  int r = 0;
 
-  if ( !Cyclic || Index == 0 ||
-       R == NBuffer || TimeBuffer[NBuffer-1] < time ) {
-    // bisect in lower part of buffer:
-    l = 0;
+  if ( !Cyclic || Index == 0 || R == NBuffer ||
+       Index-1 < minEvent() || TimeBuffer[NBuffer-1] < time ) {
+    // bisect in lower readable part of buffer:
+    int n = R - NBuffer + NWrite;
+    l = n < 0 ? 0 : n;
     r = R-1;
   }
   else {
     // bisect in upper part of buffer:
-    l = R;
+    l = R + NWrite;
     r = NBuffer-1;
+    if ( r < l )
+      return Index+R;
   }
 
   // there is no next event?
@@ -2289,7 +2482,7 @@ long EventData::next( double time ) const
 	   << " [r]=" << operator[]( Index+r )
 	   << " Cyclic=" << Cyclic << " Index=" << Index
 	   << " R=" << R << " NBuffer=" << NBuffer
-	   << " l=" << l << " r=" << r << endl;
+	   << " l=" << l << " r=" << r << '\n';
     //    assert( Index+R-1 < minEvent() || operator[]( Index+R-1 ) < time);
 #endif
     return Index+R;
@@ -2302,14 +2495,14 @@ long EventData::next( double time ) const
     if ( ( Index+l>=minEvent() && Index+l<size() && operator[]( Index+l ) < time ) || ( Index+l-1>=minEvent() && Index+l-1<size() && operator[]( Index+l-1 ) >= time ) )
       cerr << "! warning in next( " << ident() << " ): time=" << time
 	   << " l=" << operator[]( Index+l )
-	   << " l-1=" << operator[]( Index+l-1 ) << endl;
+	   << " l-1=" << operator[]( Index+l-1 ) << '\n';
 #endif
     return Index+l;
   }
 
   // bisect:
   while ( r-l > 1 ) {
-    h = (l+r)/2;
+    int h = (l+r)/2;
     if ( TimeBuffer[h] < time )
       l = h;
     else
@@ -2322,7 +2515,7 @@ long EventData::next( double time ) const
   if ( ( Index+r>=minEvent() && Index+r<size() && operator[]( Index+r ) < time ) || ( Index+r-1>=minEvent() && Index+r-1<size() && operator[]( Index+r-1 ) >= time ) )
     cerr << "! warning in next( " << ident() << " ): time=" << time
 	 << " r=" << operator[]( Index+r )
-	 << " r-1=" << operator[]( Index+r-1 ) << endl;
+	 << " r-1=" << operator[]( Index+r-1 ) << '\n';
 #endif
   return Index+r;
 }
@@ -2330,7 +2523,7 @@ long EventData::next( double time ) const
 
 double EventData::nextTime( double time, double dflt ) const
 {
-  long n = next( time );
+  int n = next( time );
   if ( n >= 0 && n < size() )
     return operator[]( n );
   else
@@ -2338,20 +2531,24 @@ double EventData::nextTime( double time, double dflt ) const
 }
 
 
-long EventData::previous( double time ) const
+int EventData::previous( double time ) const
 {
-  long l, r, h;
+  int l = 0;
+  int r = 0;
 
-  if ( !Cyclic || Index == 0 ||
-       R == NBuffer || TimeBuffer[0] < time ) {
-    // bisect in lower part of buffer:
-    l = 0;
+  if ( !Cyclic || Index == 0 || R == NBuffer ||
+       Index < minEvent() || TimeBuffer[0] < time ) {
+    // bisect in lower readable part of buffer:
+    int n = R - NBuffer + NWrite;
+    l = n < 0 ? 0 : n;
     r = R-1;
   }
   else {
     // bisect in upper part of buffer:
-    l = R;
+    l = R + NWrite;
     r = NBuffer-1;
+    if ( r < l )
+      return -1;
   }
 
   // there is no previous event?
@@ -2359,7 +2556,7 @@ long EventData::previous( double time ) const
 #ifndef NDEBUG
     if ( size() > 0 && operator[]( minEvent() ) <= time )
       cerr << "! warning in previous( " << ident() << " ): time=" << time
-	   << " minEvent=" << operator[]( minEvent() ) << endl;
+	   << " minEvent=" << operator[]( minEvent() ) << '\n';
 #endif
     return -1;
   }
@@ -2371,14 +2568,14 @@ long EventData::previous( double time ) const
     if ( ( Index+r>=minEvent() && Index+r<size() && operator[]( Index+r ) > time ) || ( Index+r+1>=minEvent() && Index+r+1<size() && operator[]( Index+r+1 ) <= time ) )
       cerr << "! warning in previous( " << ident() << " ): time=" << time
 	   << " r=" << operator[]( Index+r )
-	   << " r+1=" << operator[]( Index+r+1 ) << endl;
+	   << " r+1=" << operator[]( Index+r+1 ) << '\n';
 #endif
     return Index+r;
   }
 
   // bisect:
   while ( r-l > 1 ) {
-    h = (l+r)/2;
+    int h = (l+r)/2;
     if ( TimeBuffer[h] <= time )
       l = h;
     else
@@ -2392,7 +2589,7 @@ long EventData::previous( double time ) const
        ( Index+l+1>=minEvent() && Index+l+1<size() && operator[]( Index+l+1 ) <= time ) )
     cerr << "! warning in previous( " << ident() << " ): time=" << time
 	 << " l=" << operator[]( Index+l )
-	 << " l+1=" << operator[]( Index+l+1 ) << endl;
+	 << " l+1=" << operator[]( Index+l+1 ) << '\n';
 #endif
   return Index+l;
 }
@@ -2400,7 +2597,7 @@ long EventData::previous( double time ) const
 
 double EventData::previousTime( double time, double dflt ) const
 {
-  long p = previous( time );
+  int p = previous( time );
   if ( p >= 0 && p < size() )
     return operator[]( p );
   else
@@ -2410,12 +2607,12 @@ double EventData::previousTime( double time, double dflt ) const
 
 bool EventData::within( double time, double distance ) const
 {
-  long n = next( time );
+  int n = next( time );
   if ( n < size() && 
        operator[]( n ) - time < distance )
     return true;
 
-  long p = previous( time );
+  int p = previous( time );
   if ( p >= 0 && 
        time - operator[]( p ) < distance )
     return true;
@@ -2424,10 +2621,10 @@ bool EventData::within( double time, double distance ) const
 }
 
 
-long EventData::count( double tbegin, double tend ) const
+int EventData::count( double tbegin, double tend ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p < n || p < 0 || tend <= tbegin )
     return 0;
@@ -2436,7 +2633,7 @@ long EventData::count( double tbegin, double tend ) const
 }
 
 
-long EventData::count( double time ) const
+int EventData::count( double time ) const
 {
   return size() - next( time );
 }
@@ -2444,8 +2641,8 @@ long EventData::count( double time ) const
 
 double EventData::rate( double tbegin, double tend ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   
   if ( p < n || p < 0 || tend <= tbegin )
     return 0.0;
@@ -2490,9 +2687,9 @@ void EventData::addRate( SampleDataD &rate, int &trials, double width,
     width = rate.stepsize();
 
   double tt = time + rate.pos( 0 );
-  long kl = next( tt );
+  int kl = next( tt );
   tt += width;
-  long kr = previous( tt );
+  int kr = previous( tt );
   if ( kr > 0 && (*this)[kr] >= tt )
     kr--;
 
@@ -2536,12 +2733,12 @@ void EventData::addCyclicRate( SampleDataD &rate, int &trials, double width,
     width = rate.length();
 
   double lmarg = time + rate.rangeFront();
-  long klm = next( lmarg );
+  int klm = next( lmarg );
   double rmarg = time + rate.rangeBack();
 
-  long kl = next( rmarg );
+  int kl = next( rmarg );
   double left = lmarg;
-  long kr = previous( lmarg + width );
+  int kr = previous( lmarg + width );
   if ( kr > 0 && (*this)[kr] >= lmarg + width )
     kr--;
   double right = rmarg;
@@ -2567,8 +2764,8 @@ void EventData::addCyclicRate( SampleDataD &rate, int &trials, double width,
     double r = 0.0;
     if ( left >= right ) {
       int n = 0;
-      for ( long k = kl; k < size() && (*this)[k] < rmarg; k++, n++ );
-      for ( long k = kr; k >= minEvent() && (*this)[k] >= lmarg; k--, n++ );
+      for ( int k = kl; k < size() && (*this)[k] < rmarg; k++, n++ );
+      for ( int k = kr; k >= minEvent() && (*this)[k] >= lmarg; k--, n++ );
       r = n/width;
     }
     else if ( kl < size() && (*this)[kl] < right &&
@@ -2587,9 +2784,9 @@ void EventData::rate( SampleDataD &rate, const Kernel &kernel,
 {
   rate = 0.0;
   double offs = time + rate.pos( 0 );
-  long n = next( offs );
-  long p = previous( offs + rate.length() );
-  for ( long k=n; k<=p; k++ ) {
+  int n = next( offs );
+  int p = previous( offs + rate.length() );
+  for ( int k=n; k<=p; k++ ) {
     int bin = rate.index( (*this)[k] - time );
     double dt = (*this)[k] - time - rate.pos( bin );
     for ( int i = rate.indices( kernel.left() ); 
@@ -2609,9 +2806,9 @@ void EventData::addRate( SampleDataD &rate, int &trials, const Kernel &kernel,
   ArrayD rr( rate.size(), 0.0 );
 
   double offs = time + rate.pos( 0 );
-  long n = next( offs );
-  long p = previous( offs + rate.length() );
-  for ( long k=n; k<=p; k++ ) {
+  int n = next( offs );
+  int p = previous( offs + rate.length() );
+  for ( int k=n; k<=p; k++ ) {
     int bin = rate.index( (*this)[k] - time );
     double dt = (*this)[k] - time - rate.pos( bin );
     for ( int i = rate.indices( kernel.left() ); 
@@ -2645,9 +2842,9 @@ void EventData::addCyclicRate( SampleDataD &rate, int &trials,
   for ( int k=0; k<rate.size(); k++ )
     rr[k] = 0.0;
 
-  long n = next( time + rate.rangeFront() );
-  long p = previous( time + rate.rangeBack() );
-  for ( long k=n; k<=p; k++ ) {
+  int n = next( time + rate.rangeFront() );
+  int p = previous( time + rate.rangeBack() );
+  for ( int k=n; k<=p; k++ ) {
     int bin = rate.index( (*this)[k] - time );
     double dt = (*this)[k] - time - rate.pos( bin );
     for ( int i = rate.indices( kernel.left() ); 
@@ -2671,8 +2868,8 @@ void EventData::addCyclicRate( SampleDataD &rate, int &trials,
 double EventData::interval( double tbegin, double tend, 
 			    double *sd ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   
   if ( p <= n || p < 0 || tend <= tbegin ) {
     if ( sd != 0 )
@@ -2716,7 +2913,7 @@ double EventData::interval( int n, double *sd ) const
 
 double EventData::intervalAt( double time ) const
 {
-  long n = next( time );
+  int n = next( time );
 
   if ( n < Index+R && n > 0 )
     return (*this)[n] - (*this)[n-1];
@@ -2737,7 +2934,7 @@ void EventData::addInterval( SampleDataD &intervals, int &trials,
 			     double time ) const
 {
   trials++;
-  long k = next( time + intervals.rangeFront() );
+  int k = next( time + intervals.rangeFront() );
   for ( int i=0; i<intervals.size(); i++ ) {
     for ( ; k<size() && (*this)[k] < time + intervals.pos( i ); k++ );
     double T = 0.0;
@@ -2760,12 +2957,12 @@ void EventData::addCyclicInterval( SampleDataD &intervals, int &trials,
 				   double time ) const
 {
   double lmarg = time + intervals.rangeFront();
-  long kl = next( lmarg );
+  int kl = next( lmarg );
   double rmarg = time + intervals.rangeBack();
-  long kr = previous( rmarg );
+  int kr = previous( rmarg );
 
   trials++;
-  long k = kl;
+  int k = kl;
   for ( int i=0; i<intervals.size(); i++ ) {
     for ( ; k<size() && (*this)[k] < time + intervals.pos( i ); k++ );
     double T = intervals.length();
@@ -2795,8 +2992,8 @@ int EventData::intervals( double tbegin, double tend, ArrayD &intervals ) const
 
 int EventData::addIntervals( double tbegin, double tend, ArrayD &intervals ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   
   if ( p <= n || p < 0 || tend <= tbegin )
     return 0;
@@ -2821,8 +3018,8 @@ int EventData::intervals( double tbegin, double tend,
 int EventData::addIntervals( double tbegin, double tend,
 			     MapD &intrvls, int pos ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   
   if ( p <= n || p < 0 || tend <= tbegin )
     return 0;
@@ -2851,8 +3048,8 @@ int EventData::saveIntervals( double tbegin, double tend, ostream &os,
 			      int prec, char frmt,
 			      const string &noevents ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( width < 0 )
     os.setf( ios::left, ios::adjustfield );
@@ -2901,8 +3098,8 @@ int EventData::saveIntervals( double tbegin, double tend, ostream &os,
 double EventData::frequency( double tbegin, double tend, 
 			     double *sd ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   
   if ( p <= n || p < 0 || tend <= tbegin ) {
     if ( sd != 0 )
@@ -2946,7 +3143,7 @@ double EventData::frequency( int n, double *sd ) const
 
 double EventData::frequencyAt( double time, double defaultfrequency ) const
 {
-  long n = next( time );
+  int n = next( time );
 
   if ( n < Index+R && n > 0 )
     return 1.0 / ( (*this)[n] - (*this)[n-1] );
@@ -2967,7 +3164,7 @@ void EventData::addFrequency( SampleDataD &rate, int &trials,
 			      double time, double defaultfrequency ) const
 {
   trials++;
-  long k = next( time + rate.rangeFront() );
+  int k = next( time + rate.rangeFront() );
   for ( int i=0; i<rate.size(); i++ ) {
     for ( ; k<size() && (*this)[k] < time + rate.pos( i ); k++ );
     double f = defaultfrequency;
@@ -2982,7 +3179,7 @@ void EventData::addFrequency( SampleDataD &rate, SampleDataD &ratesq,
 			      int &trials, double time, double defaultfrequency ) const
 {
   trials++;
-  long k = next( time + rate.rangeFront() );
+  int k = next( time + rate.rangeFront() );
   for ( int i=0; i<rate.size(); i++ ) {
     for ( ; k<size() && (*this)[k] < time + rate.pos( i ); k++ );
     double f = defaultfrequency;
@@ -3006,12 +3203,12 @@ void EventData::addCyclicFrequency( SampleDataD &rate, int &trials,
 				    double time ) const
 {
   double lmarg = time + rate.rangeFront();
-  long kl = next( lmarg );
+  int kl = next( lmarg );
   double rmarg = time + rate.rangeBack();
-  long kr = previous( rmarg );
+  int kr = previous( rmarg );
 
   trials++;
-  long k = kl;
+  int k = kl;
   for ( int i=0; i<rate.size(); i++ ) {
     for ( ; k<size() && (*this)[k] < time + rate.pos( i ); k++ );
     double T = rate.length();
@@ -3036,12 +3233,12 @@ void EventData::addCyclicFrequency( SampleDataD &rate, SampleDataD &period,
 				    int &trials, double time ) const
 {
   double lmarg = time + rate.rangeFront();
-  long kl = next( lmarg );
+  int kl = next( lmarg );
   double rmarg = time + rate.rangeBack();
-  long kr = previous( rmarg );
+  int kr = previous( rmarg );
 
   trials++;
-  long k = kl;
+  int k = kl;
   for ( int i=0; i<rate.size(); i++ ) {
     for ( ; k<size() && (*this)[k] < time + rate.pos( i ); k++ );
     double T = rate.length();
@@ -3074,8 +3271,8 @@ int EventData::frequencies( double tbegin, double tend,
 int EventData::addFrequencies( double tbegin, double tend,
 			       MapD &freqs, int pos ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
   
   if ( p <= n || p < 0 || tend <= tbegin )
     return 0;
@@ -3104,8 +3301,8 @@ int EventData::saveFrequencies( double tbegin, double tend, ostream &os,
 				int prec, char frmt,
 				const string &noevents ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( width < 0 )
     os.setf( ios::left, ios::adjustfield );
@@ -3162,8 +3359,8 @@ void EventData::intervalHistogram( double tbegin, double tend,
 void EventData::addIntervalHistogram( double tbegin, double tend, 
 				      SampleDataD &hist ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin )
     return;
@@ -3178,8 +3375,8 @@ void EventData::addIntervalHistogram( double tbegin, double tend,
 
 void EventData::serialCorr( double tbegin, double tend, ArrayD &sc ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin ) {
     sc = 0.0;
@@ -3198,8 +3395,8 @@ void EventData::serialCorr( double tbegin, double tend, ArrayD &sc ) const
 
 void EventData::fano( double tbegin, double tend, SampleDataD &ff ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin || ff.size() == 0 ) {
     ff = 0.0;
@@ -3250,8 +3447,8 @@ double EventData::locking( double tbegin, double tend, double period ) const
   double np = ::floor( (tend - tbegin) / period + 1.0e-6 );
   tend = tbegin + np*period;
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 )
     return 0.0;
@@ -3264,8 +3461,8 @@ double EventData::locking( double tbegin, double tend, double period ) const
 
 double EventData::vectorStrength( double tbegin, double tend, double period ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin )
     return 0.0;
@@ -3284,8 +3481,8 @@ double EventData::vectorStrength( double tbegin, double tend, double period ) co
 
 double EventData::vectorPhase( double tbegin, double tend, double period ) const
 {
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin )
     return 0.0;
@@ -3318,8 +3515,8 @@ int EventData::average( double tbegin, double tend, const SampleDataD &trace,
   if ( ave.rangeBack() > 0.0 )
     tend -= ave.rangeBack();
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin )
     return 0;
@@ -3352,8 +3549,8 @@ int EventData::average( double tbegin, double tend, const SampleDataD &trace,
   if ( ave.rangeBack() > 0.0 )
     tend -= ave.rangeBack();
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin )
     return 0;
@@ -3399,8 +3596,8 @@ int EventData::average( double tbegin, double tend, const SampleDataD &trace,
   if ( ave.rangeBack() > 0.0 )
     tend -= ave.rangeBack();
 
-  long n = next( tbegin );
-  long p = previous( tend );
+  int n = next( tbegin );
+  int p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin )
     return 0;
@@ -3471,7 +3668,7 @@ void EventData::coherence( const EventData &e, double tbegin, double tend,
 double EventData::latency( double time ) const
 {
   // get index to first event:
-  long n = next( time );
+  int n = next( time );
 
   // no event:
   if ( n == size() )

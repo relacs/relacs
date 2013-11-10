@@ -334,16 +334,6 @@ protected:
 	and the stimulus data (via unlockStimulusData()). */
   virtual void unlockAll( void );
 
-    /*! Copies \a il to this with copying a pointer to the data buffers only. */
-  void assignTraces( const InList *il );
-    /*! Copies again all settings and indices from the reference traces to this. */
-  void assignTraces( void );
-    /*! Updates the indices of all traces. */
-  void updateTraces( void );
-    /*! Updates the indices of raw traces (traces with source == 0). */
-  void updateRawTraces( void );
-    /*! Updates the indices of derived traces (traces with source != 0 ). */
-  void updateDerivedTraces( void );
     /*! Return the list of all input traces.
         \sa trace(), traceIndex(), events(), traceInputTrace(),
 	traceInputEvent(), eventInputTrace(), eventInputEvent() */
@@ -424,6 +414,16 @@ protected:
     /*! \return the current recording time of the input buffers. */
   double currentTime( void ) const;
 
+    /*! Copies \a il and \a el to this by copying a pointer to the data buffers only. */
+  void assignTracesEvents( const InList &il, const EventList &el );
+    /*! Copies again all settings and indices from the reference traces and events to this. */
+  void assignTracesEvents( void );
+    /*! Updates the indices of all traces and events. */
+  void updateTracesEvents( void );
+    /*! Updates the indices of raw traces and events (traces with source == 0). */
+  void updateRawTracesEvents( void );
+    /*! Updates the indices of derived traces and events (traces with source != 0 ). */
+  void updateDerivedTracesEvents( void );
 
  protected:
 
@@ -779,7 +779,7 @@ protected:
 
     /*! Pointer to the main RELACSWidget. */
   RELACSWidget *RW;
-    /*! Processes new data and makes them available in this. */
+    /*! Processes new trace and event data and makes them available in this. */
   void updateData( void );
 
     /*! Reimplement this function in case you need 
@@ -848,6 +848,7 @@ protected slots:
 private:
 
   InList IL;
+  EventList EL;
 
   string PluginSet;
   string UniqueName;

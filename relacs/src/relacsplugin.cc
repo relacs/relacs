@@ -306,33 +306,38 @@ QReadWriteLock &RELACSPlugin::dataMutex( void )
 }
 
 
-void RELACSPlugin::assignTraces( const InList *il )
+void RELACSPlugin::assignTracesEvents( const InList &il, const EventList &el )
 {
-  IL.assign( il );
+  IL.assign( &il );
+  EL.assign( &el );
 }
 
 
-void RELACSPlugin::assignTraces( void )
+void RELACSPlugin::assignTracesEvents( void )
 {
   IL.assign();
+  EL.assign();
 }
 
 
-void RELACSPlugin::updateTraces( void )
+void RELACSPlugin::updateTracesEvents( void )
 {
   IL.update();
+  EL.update();
 }
 
 
-void RELACSPlugin::updateRawTraces( void )
+void RELACSPlugin::updateRawTracesEvents( void )
 {
   IL.updateRaw();
+  EL.updateRaw();
 }
 
 
-void RELACSPlugin::updateDerivedTraces( void )
+void RELACSPlugin::updateDerivedTracesEvents( void )
 {
   IL.updateDerived();
+  EL.updateDerived();
 }
 
 
@@ -347,7 +352,7 @@ void RELACSPlugin::updateData( void )
   }
   // make them available:
   readLockData();
-  updateTraces();
+  updateTracesEvents();
   unlockData();
 }
 
@@ -390,19 +395,19 @@ string RELACSPlugin::traceNames( void ) const
 
 const EventList &RELACSPlugin::events( void ) const
 {
-  return RW->ED;
+  return EL;
 }
 
 
 const EventData &RELACSPlugin::events( int index ) const
 {
-  return RW->ED[index];
+  return EL[index];
 }
 
 
 const EventData &RELACSPlugin::events( const string &ident ) const
 {
-  return RW->ED[ident];
+  return EL[ident];
 }
 
 
@@ -915,7 +920,7 @@ Filter *RELACSPlugin::detectorEvents( int index )
 
 Filter *RELACSPlugin::detectorEvents( const string &name )
 {
-  int inx = RW->ED.index( name );
+  int inx = EL.index( name );
   return RW->FD == 0 || inx < 0 ? 0 : RW->FD->detector( inx );
 }
 

@@ -50,7 +50,7 @@ public:
         Setting \a own to \c true transfers the ownership to the InList. 
         \sa add( InData* ) */
   InList( InData *data, bool own=false );
-    /*! Copies \a il to this with copying a pointer to the data buffers only. */
+    /*! Copies \a il to this with copying pointers to the data buffers only. */
   InList( const InList *il );
     /*! Copy constructor. */
   InList( const InList &il );
@@ -73,7 +73,7 @@ public:
 
     /*! Assignment. */
   InList &operator=( const InList &il );
-    /*! Copies \a il to this with copying a pointer to the data buffers only. */
+    /*! Copies \a il to this with copying pointers to the data buffers only. */
   InList &assign( const InList *il );
     /*! Copies again all settings and indices from the reference InData. */
   InList &assign( void );
@@ -129,7 +129,7 @@ public:
 
     /*! Set the pointer to \a data as the \a index-th element.
         If \a own is set to \c true then the ownership of the traces
-        is transfered to the InList, i.e. the InList might delete it. */
+        is transferred to the InList, i.e. the InList might delete it. */
   void set( int index, const InData *data, bool own=false );
     /*! Make the \a index-th element a copy of \a data with shared buffer. */
   void assign( int index, const InData *data );

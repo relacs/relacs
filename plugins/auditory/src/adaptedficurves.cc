@@ -406,7 +406,7 @@ void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
 	       signalTime() );
 
   // spike count:
-  spikecount.push( count, spikes.back().count( 0.0, duration ) );
+  spikecount.push( count, double( spikes.back().count( 0.0, duration ) ) );
 
   // firing frequency:
   SampleDataD ratesd( rate );

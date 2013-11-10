@@ -101,7 +101,7 @@ bool Control::waitOnData( double time )
   unlockMetaData();
   RW->UpdateDataWait.wait( mutex(), t );
   readLockData();
-  updateTraces();
+  updateTracesEvents();
   unlockData();
   lockMetaData();
   lockStimulusData();
@@ -116,7 +116,7 @@ bool Control::waitOnReProSleep( double time )
   unlockMetaData();
   RW->ReProSleepWait.wait( mutex(), t );
   readLockData();
-  updateTraces();
+  updateTracesEvents();
   unlockData();
   lockMetaData();
   lockStimulusData();

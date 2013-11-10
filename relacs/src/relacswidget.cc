@@ -839,7 +839,7 @@ bool RELACSWidget::updateData( void )
     writeLockBuffer();
     AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
     AQ->readRestart( IL, ED );
-    FD->updateTraces();
+    FD->updateTracesEvents();
     unlockBuffer();
     Str fdw = FD->filter();
     if ( !fdw.empty() )
@@ -1694,10 +1694,10 @@ void RELACSWidget::startFirstAcquisition( void )
   SF->setPath( SF->defaultPath() );
 
   // copy traces:
-  FD->assignTraces( &IL );
-  CW->assignTraces( &IL );
-  PT->assignTraces( &IL );
-  RP->assignTraces( &IL );
+  FD->assignTracesEvents( IL, ED );
+  CW->assignTracesEvents( IL, ED );
+  PT->assignTracesEvents( IL, ED );
+  RP->assignTracesEvents( IL, ED );
 
   // plot:
   PT->resize();
@@ -1749,10 +1749,10 @@ void RELACSWidget::startFirstAcquisition( void )
   }
   AQ->readRestart( IL, ED );   // XXX this should not be needed here.
 
-  PT->assignTraces();
-  FD->assignTraces();
-  CW->assignTraces();
-  RP->assignTraces();
+  PT->assignTracesEvents();
+  FD->assignTracesEvents();
+  CW->assignTracesEvents();
+  RP->assignTracesEvents();
   AID->updateMenu();
 
   fdw = FD->init();  // init filters/detectors before RePro!
@@ -1846,10 +1846,10 @@ void RELACSWidget::startFirstSimulation( void )
   SF->setPath( SF->defaultPath() );
 
   // copy traces:
-  FD->assignTraces( &IL );
-  CW->assignTraces( &IL );
-  PT->assignTraces( &IL );
-  RP->assignTraces( &IL );
+  FD->assignTracesEvents( IL, ED );
+  CW->assignTracesEvents( IL, ED );
+  PT->assignTracesEvents( IL, ED );
+  RP->assignTracesEvents( IL, ED );
 
   // plots:
   PT->resize();
@@ -1910,10 +1910,10 @@ void RELACSWidget::startFirstSimulation( void )
   }
   AQ->readRestart( IL, ED );   // XXX this should not be needed here.
 
-  PT->assignTraces();
-  FD->assignTraces();
-  CW->assignTraces();
-  RP->assignTraces();
+  PT->assignTracesEvents();
+  FD->assignTracesEvents();
+  CW->assignTracesEvents();
+  RP->assignTracesEvents();
   AID->updateMenu();
 
   // check success:

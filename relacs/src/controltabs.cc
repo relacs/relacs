@@ -98,26 +98,26 @@ void ControlTabs::initDevices( void )
 }
 
 
-void ControlTabs::assignTraces( const InList *il )
+void ControlTabs::assignTracesEvents( const InList &il, const EventList &el )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
-    (*cp)->assignTraces( il );
+    (*cp)->assignTracesEvents( il, el );
   }
 }
 
 
-void ControlTabs::assignTraces( void )
+void ControlTabs::assignTracesEvents( void )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
-    (*cp)->assignTraces();
+    (*cp)->assignTracesEvents();
   }
 }
 
 
-void ControlTabs::updateTraces( void )
+void ControlTabs::updateTracesEvents( void )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
-    (*cp)->updateTraces();
+    (*cp)->updateTracesEvents();
   }
 }
 
