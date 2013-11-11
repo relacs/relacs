@@ -129,7 +129,7 @@ int Spectrogram::main( void )
 	( repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
     // wait:
-    sleepWait( step );
+    sleep( step );
     if ( interrupt() )
       return Aborted;
 

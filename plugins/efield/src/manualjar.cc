@@ -185,7 +185,7 @@ int ManualJAR::main( void )
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
       postCustomEvent( 13 );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
-      sleepWait( 0.2 );
+      sleep( 0.2 );
     } while ( ( ! Start && ! interrupt() && softStop() == 0 ) ||
 	      currentTime() - starttime < before );
 
@@ -266,7 +266,7 @@ int ManualJAR::main( void )
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
       postCustomEvent( 13 );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
-      sleepWait( 0.2 );
+      sleep( 0.2 );
       if ( interrupt() ) {
 	writeZero( GlobalEField );
 	P.lock();
@@ -292,7 +292,7 @@ int ManualJAR::main( void )
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
       postCustomEvent( 13 );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
-      sleepWait( 0.2 );
+      sleep( 0.2 );
       if ( interrupt() ) {
 	writeZero( GlobalEField );
 	P.lock();

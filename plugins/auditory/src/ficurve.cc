@@ -394,7 +394,7 @@ int FICurve::main( void )
 
 int FICurve::loop( vector< FIData > &results )
 {
-  sleepWait( Pause );
+  sleep( Pause );
   if ( interrupt() )
     return Aborted;
 
@@ -422,7 +422,7 @@ int FICurve::loop( vector< FIData > &results )
       // pause if there were spikes:
       if ( ! SkipPause ||
 	   events( SpikeEvents[0] ).rate( signalTime(), signalTime() + Duration ) > MaxSilentRate ) {
-	sleepWait( Pause );
+	sleep( Pause );
       }
       
       // if there were some spikes, adjust analog input gain:

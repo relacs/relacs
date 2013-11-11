@@ -192,9 +192,6 @@ void RePro::requestStop( void )
     
     // wake up the RePro from sleeping:
     SleepWait.wakeAll();
-    
-    // don't wait for the requested data:
-    RW->setMinTraceTime( 0.0 );
   }
 }
 
@@ -249,9 +246,7 @@ bool RePro::sleep( double t, double tracetime )
   InterruptLock.unlock();
 
   // force data updates:
-  RW->setMinTraceTime( ir ? 0.0 : tracetime );
-  updateData();
-  RW->ThreadSleepWait.wakeAll();
+  updateData( ir ? 0.0 : tracetime );
 
   lockMetaData();
   lockStimulusData();
@@ -292,6 +287,10 @@ bool RePro::sleepWait( double time )
       ms = 1;
     r = SleepWait.wait( mutex(), ms );
   }
+  // make new data available:
+  readLockData();
+  updateTracesEvents();
+  unlockData();
   lockMetaData();
   lockStimulusData();
   return r;

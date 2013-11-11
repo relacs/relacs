@@ -373,8 +373,6 @@ int Beats::main( void )
 	    double minledduration = 0.001;
 	    led.pulseWave( sig.length(), sig.stepsize(), von, 0.0 );
 	    led.resize( sig.size() );
-	    cerr << "LED " << led.size() << '\n';
-	    cerr << "SIG " << sig.size() << '\n';
 	    int w = led.indices( chirpwidth>minledduration ? chirpwidth : minledduration );
 	    for ( int k=0; k<currentchirptimes.size() && currentchirptimes[k] < sig.length(); k++ ) {
 	      int s = led.index( currentchirptimes[k] - 0.5*chirpwidth );
@@ -468,7 +466,7 @@ int Beats::main( void )
 	  }
 	}
 
-	sleepWait( 0.2 );
+	sleep( 0.2 );
 	if ( interrupt() ) {
 	  if ( fixeddf )
 	    writeZero( "Amplitude" );
@@ -511,7 +509,7 @@ int Beats::main( void )
 		 eodinx, eodfrequency, initstimiter, stimiter, stimfrequency );
 	P.draw();
 
-	sleepWait( 0.2 );
+	sleep( 0.2 );
 	if ( interrupt() ) {
 	  if ( fixeddf )
 	    writeZero( "Amplitude" );
@@ -542,7 +540,7 @@ int Beats::main( void )
       FileCount++;
 
       // pause:
-      sleepWait( pause - after - before );
+      sleep( pause - after - before );
       if ( interrupt() ) {
 	if ( fixeddf )
 	  writeZero( "Amplitude" );
@@ -646,7 +644,7 @@ void Beats::initPlot( double deltaf, double amplitude, double duration,
 {
   P.lock();
   P.keepPointer();
-  P.setDataMutex( mutex() );
+  //  P.setDataMutex( mutex() );
   // eod frequency with chirp events:
   P.clear();
   Str s;

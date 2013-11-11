@@ -142,7 +142,7 @@ void AmplifierControl::startResistance( void )
     DGain = trace( SpikeTrace[0] ).gainIndex();
     adjustGain( trace( SpikeTrace[0] ), MaxResistance / ResistanceScale );
     unlockData();
-    activateGains( false );
+    activateGains();
     Ampl->resistance();
     RMeasure = true;
   }
@@ -172,7 +172,7 @@ void AmplifierControl::stopResistance( void )
     readLockData();
     setGain( trace( SpikeTrace[0] ), DGain );
     unlockData();
-    activateGains( false );
+    activateGains();
     RMeasure = false;
   }
 }

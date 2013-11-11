@@ -69,7 +69,7 @@ public:
         traces and events to each Filter. */
   void assignTracesEvents( void );
     /*! Updates the indices of raw traces and events of each filter. */
-  void updateTracesEvents( void );
+  void updateRawTracesEvents( void );
 
     /*! Load options from config file. */
   virtual void readConfig( StrQueue &sq );

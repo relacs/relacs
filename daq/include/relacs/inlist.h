@@ -155,6 +155,9 @@ public:
 
     /*! Returns the smallest buffer time of all the InData. */
   double currentTime( void ) const;
+    /*! Returns the smallest buffer time of all the InData
+        that have a source() of zero, i.e. raw data. */
+  double currentTimeRaw( void ) const;
 
     /*! Set the device id of all traces to \a device. */
   void setDevice( int device );

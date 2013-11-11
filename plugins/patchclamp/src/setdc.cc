@@ -282,7 +282,7 @@ int SetDC::main( void )
     do {
       bool w = false;
       do {
-	w = sleepWait( duration );
+	w = sleep( duration );
 	analyze( duration );
       } while ( ! w );
       if ( ! Finished || ! SetValue ) {

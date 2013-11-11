@@ -144,28 +144,30 @@ public:
   void printlog( const string &message ) const;
 
     /*! Updates the InData buffers and calls the filter and event detectors.
-        \return \c true if new data have been get, otherwise you should wait() 
-        on the UpdateDataWait condition. */
-  bool updateData( void );
-    /*! Writes the data to files and plots it. */
+        If \a mintracetime is greater than zero, updateData() blocks
+        until data upto \a mintracetime are available.
+        \return \c true if new data have been got, otherwise you should wait() 
+        on the UpdateDataWait condition to make sure data are available for you. */
+  bool updateData( double mintracetime=0.0 );
+    /*! Write the data to files and plot them. */
   void processData( void );
 
-    /*! Locks the mutex of the data thread for reading. */
+    /*! Locks the mutex of the raw data traces and events. */
   void readLockBuffer( void ) { BufferMutex.lockForRead(); };
-    /*! Locks the buffer mutex of the data thread for writing. */
+    /*! Locks the buffer mutex of the raw data traces and events. */
   void writeLockBuffer( void ) { BufferMutex.lockForWrite(); };
-    /*! Unlocks the mutex of the data thread. */
+    /*! Unlocks the mutex of the raw data traces and events. */
   void unlockBuffer( void ) { BufferMutex.unlock(); };
-    /*! Returns the mutex used for locking the buffer. */
+    /*! Returns the mutex used for locking the raw data traces and events. */
   QReadWriteLock &bufferMutex( void ) { return BufferMutex; };
 
-    /*! Locks the mutex of the data thread for reading. */
+    /*! Locks the mutex of all the data traces and events. */
   void readLockData( void ) { DataMutex.lockForRead(); };
-    /*! Locks the data mutex of the data thread for writing. */
+    /*! Locks the data mutex of all the data traces and events. */
   void writeLockData( void ) { DataMutex.lockForWrite(); };
-    /*! Unlocks the mutex of the data thread. */
+    /*! Unlocks the mutex of all the data traces and events. */
   void unlockData( void ) { DataMutex.unlock(); };
-    /*! Returns the mutex used for locking the data. */
+    /*! Returns the mutex used for locking all the data traces and events. */
   QReadWriteLock &dataMutex( void ) { return DataMutex; };
 
     /*! Locks the mutex for analog input. */
@@ -176,9 +178,6 @@ public:
   void lockSignals( void ) { SignalMutex.lock(); };
     /*! Unlocks the mutex of output signals. */
   void unlockSignals( void ) { SignalMutex.unlock(); };
-
-    /*! set the minimum time the traces should have after updateData() to \a t. */
-  void setMinTraceTime( double t );
 
     /*! Wakes up all waitconditions. */
   void wakeAll( void );
@@ -255,11 +254,9 @@ public:
 
     /*! Activates the new gain settings for analog input
         set by the adjustGain() functions.
-        activateGains() assumes the data to be locked (default).
-        If you call activateGains() from a context where the data
-        are not locked, e.g. from a keyPressEvent(),
-        then call it with \a datalocked set to \c false. */
-  void activateGains( bool datalocked=true );
+        activateGains() assumes the data traces and events not to be locked
+	and will write-lock the raw data. */
+  void activateGains( void );
 
 
 public slots:
@@ -448,9 +445,6 @@ private:
 
     /*! wait for stimulus data to be written */
   QWaitCondition ThreadSleepWait;
-    /*! Minimum size the input trace must have after updateData. */
-  double MinTraceTime;
-  QMutex MinTraceMutex;
   QWaitCondition ReadDataWait;
 
   // synchronization of Session and Control threads:

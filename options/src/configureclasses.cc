@@ -177,12 +177,12 @@ int ConfigureClasses::read( int group, const string &file )
 	  getline( sf, line ).good() );
   if ( ! sf.good() ) {
     cerr << currentTime()
-	 << " cannot read configuration from " << file << '\n';
+	 << " Cannot read configuration from " << file << '\n';
     return 0;
   }
 
   cerr << currentTime()
-       << " read configuration from " << file << '\n';
+       << " Read configuration from " << file << '\n';
 
   // read in configuration sections:
   while ( sf.good() ) {
@@ -262,12 +262,12 @@ int ConfigureClasses::read( int level, ConfigClass &config )
 	  getline( sf, line ).good() );
   if ( ! sf.good() ) {
     cerr << currentTime()
-	 << " cannot read configuration from " << ConfigFile[group][level] << '\n';
+	 << " Cannot read configuration from " << ConfigFile[group][level] << '\n';
     return 0;
   }
 
   cerr << currentTime()
-       << " read configuration from " << ConfigFile[group][level] << '\n';
+       << " Read configuration from " << ConfigFile[group][level] << '\n';
 
   // read in configuration sections:
   while ( sf.good() ) {

@@ -323,15 +323,31 @@ void InList::clearBuffer( void )
 
 double InList::currentTime( void ) const
 {
-  if ( empty() )
-    return 0.0;
-  double ct = operator[]( 0 ).currentTime();
-  for ( int k=1; k<size(); k++ ) {
-    double ctk = operator[]( k ).currentTime();
-    if ( ct > ctk && ctk > 0.0 )  // skip empty traces in case a model does not simulate some traces
-      ct = ctk;
+  double t = -1.0;
+  for ( int k=0; k<size(); k++ ) {
+    // skip empty traces in case a model does not simulate some traces:
+    if ( ! operator[]( k ).empty() ) {
+      double ct = operator[]( k ).currentTime();
+      if ( t < 0.0 || t > ct )  
+	t = ct;
+    }
   }
-  return ct;
+  return t < 0.0 ? 0.0 : t;
+}
+
+
+double InList::currentTimeRaw( void ) const
+{
+  double t = -1.0;
+  for ( int k=0; k<size(); k++ ) {
+    // skip empty traces in case a model does not simulate some traces:
+    if ( operator[]( k ).source() == 0 && ! operator[]( k ).empty() ) {
+      double ct = operator[]( k ).currentTime();
+      if ( t < 0.0 || t > ct )  
+	t = ct;
+    }
+  }
+  return t < 0.0 ? 0.0 : t;
 }
 
 

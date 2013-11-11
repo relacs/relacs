@@ -341,10 +341,10 @@ void RELACSPlugin::updateDerivedTracesEvents( void )
 }
 
 
-void RELACSPlugin::updateData( void )
+void RELACSPlugin::updateData( double mintracetime )
 {
   // get new data:
-  if ( ! RW->updateData() ) {
+  if ( ! RW->updateData( mintracetime ) ) {
     QMutex mutex;
     mutex.lock();
     RW->UpdateDataWait.wait( &mutex, 100 );
@@ -509,9 +509,9 @@ void RELACSPlugin::adjust( const InData &data, double duration,
 }
 
 
-void RELACSPlugin::activateGains( bool datalocked )
+void RELACSPlugin::activateGains( void )
 {
-  RW->activateGains( datalocked );
+  RW->activateGains();
 }
 
 

@@ -100,7 +100,7 @@ void FilterDetectors::assignTracesEvents( void )
 }
 
 
-void FilterDetectors::updateTracesEvents( void )
+void FilterDetectors::updateRawTracesEvents( void )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
     d->FilterDetector->updateRawTracesEvents();

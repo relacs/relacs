@@ -208,7 +208,7 @@ int SaveTraces::main( void )
 	  ! interrupt();
 	count++ ) {
 
-    sleepWait( duration );
+    sleep( duration );
 
     // save data:
     for ( unsigned int k=0; k<tracefile.size(); k++ ) {
