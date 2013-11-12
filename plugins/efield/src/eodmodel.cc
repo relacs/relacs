@@ -59,7 +59,7 @@ void EODModel::main( void )
   bool interrupteod = boolean( "interrupt" );
   double interruptionduration = number( "interruptduration" );
   double interruptionamplitude = number( "interruptamplitude" );
-  double nextinterruption = interrupteod ? time( 0 ) + 2.0 : -1.0;
+  double nextinterruption = interrupteod ? time( 0 ) + 2.0 : -100.0;
   double localstimulusgain = number( "localstimulusgain" );
   double globalstimulusgain = number( "globalstimulusgain" );
   double stimulusgain = number( "stimulusgain" );
@@ -107,6 +107,8 @@ void EODModel::main( void )
     eodf += ( -eodf + freqfac*rand.gaussian() ) * deltat( 0 ) / freqtau;
     // phase of EOD frequency:
     phase += (frequency + freqsd * eodf) * deltat( 0 );
+    if ( phase > 2.0*M_PI )
+      phase -= 2.0*M_PI;
     // amplitude modulations:
     double ampfac = 1.0;
     if ( time( 0 ) > nextinterruption &&

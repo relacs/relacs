@@ -31,11 +31,18 @@ int main( void )
   // write file:
   {
     CyclicArray< float > buffer( 1000 );
-    long n = 0;
+    int n = 0;
+    int rk = 0;
     ofstream fs( "test.dat" );
-    for ( long k=0; k<100000; k++ ) {
+    for ( int k=0; k<100000; k++ ) {
       float val = k;
       buffer.push( val );
+      if ( k>648 ) {
+	double rval = buffer.read();
+	if ( rval != float( rk ) )
+	  cerr << "error in reading element " << rk << ". Is " << rval << '\n';
+	rk++;
+      }
       if ( k%123 == 50 ) {
 	int m = buffer.saveBinary( fs, n );
 	n += m;
@@ -46,6 +53,12 @@ int main( void )
     n += m;
     //    cerr << m << '\n';
     cerr << "wrote " << n << " data elements.\n";
+    while ( buffer.readSize() > 0 ) {
+      double rval = buffer.read();
+      if ( rval != float( rk ) )
+	cerr << "error in reading element " << rk << ". Is " << rval << '\n';
+      rk++;
+    }
   }
 
   // read file:
@@ -53,7 +66,7 @@ int main( void )
     ifstream fs( "test.dat" );
     float buffer[942];
     int n = 0;
-    long k=0;
+    int k=0;
     while ( fs.good() ) {
       fs.read( (char *)buffer, 942*sizeof( float ) );
       int m = fs.gcount()/sizeof( float );

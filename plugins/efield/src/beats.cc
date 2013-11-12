@@ -46,6 +46,7 @@ Beats::Beats( void )
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
   newSection( "Chirps" );
+  addBoolean( "generatechirp", "Generate chirps", false );
   addNumber( "chirpsize", "Size of chirp", 100.0, 0.0, 1000.0, 10.0, "Hz" );
   addNumber( "chirpwidth", "Width of chirp", 0.1, 0.002, 100.0, 0.001, "sec", "ms" );
   addNumber( "chirpampl", "Amplitude reduction during chirp", 0.0, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
@@ -87,6 +88,7 @@ int Beats::main( void )
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
   bool fixeddf = boolean( "fixeddf" );
   int repeats = integer( "repeats" );
+  bool generatechirps = boolean( "generatechirps" );
   double chirpsize = number( "chirpsize" );
   double chirpwidth = number( "chirpwidth" );
   double chirpampl = number( "chirpampl" );
@@ -123,24 +125,26 @@ int Beats::main( void )
     }
   }
   EventData chirptimes;
-  if ( ! chirptimesfile.empty() ) {
-    DataFile cf( chirptimesfile );
-    cf.read( 2 );
-    if ( cf.data().rows() <= 0 ) {
-      warning( "File " + chirptimesfile + " does not exist or doesnot contain data.\n" );
-      return Failed;
+  if ( generatechirps ) {
+    if ( ! chirptimesfile.empty() ) {
+      DataFile cf( chirptimesfile );
+      cf.read( 2 );
+      if ( cf.data().rows() <= 0 ) {
+	warning( "File " + chirptimesfile + " does not exist or doesnot contain data.\n" );
+	return Failed;
+      }
+      chirptimes = cf.col( 0 );
     }
-    chirptimes = cf.col( 0 );
+    else if ( ! chirpfrequencies.empty() ) {
+      double maxt = duration * max( chirpfrequencies );
+      double t = 1.0;
+      do {
+	chirptimes.push( t );
+	t += 1.0;
+      } while ( t < maxt );
+    }
+    generatechirps = ( ! chirptimes.empty() || ! chirpfrequencies.empty() );
   }
-  else if ( ! chirpfrequencies.empty() ) {
-    double maxt = duration * max( chirpfrequencies );
-    double t = 1.0;
-    do {
-      chirptimes.push( t );
-      t += 1.0;
-    } while ( t < maxt );
-  }
-  bool generatechirps = ( ! chirptimes.empty() || ! chirpfrequencies.empty() );
 
   // check gain of attenuator:
   base::LinearAttenuate *latt =
@@ -591,37 +595,46 @@ void Beats::analyze( double signaltime, double before, double fishrate,
       eodamplitudes[k].push( siter.time() - signaltime, *siter );
     }
   }
-  // merge EOD frequencies:
-  for ( ; ; ) {
-    // find trace with minimum EOD time:
-    double mint = currentTime();
-    int n = 0;
-    for ( int k=0; k<FishEODTraces[0]; k++ ) {
-      if ( eodinx[k] < eodamplitudes[k].size() ) {
-	if ( mint > eodamplitudes[k].x( eodinx[k] ) )
-	  mint = eodamplitudes[k].x( eodinx[k] );
-	n++;
-      }
+  if ( FishEODTraces[0] == 1 ) {
+    while ( eodinx[0] < eodamplitudes[0].size() ) {
+      eodfrequency.push( eodfrequencies[0].x( eodinx[0] ),
+			 eodfrequencies[0].y( eodinx[0] ) );
+      eodinx[0]++;
     }
-    if ( n==0 )
-      break;
-    // find trace with largest EOD amplitude:
-    double maxa = 0.0;
-    int maxk = 0;
-    int maxi = 0;
-    for ( int k=0; k<FishEODTraces[0]; k++ ) {
-      double t = eodamplitudes[k].x( eodinx[k] );
-      if ( fabs( t - mint ) < 0.5/fishrate ) {
-	if ( maxa < eodamplitudes[k].y( eodinx[k] ) ) {
-	  maxa = eodamplitudes[k].y( eodinx[k] );
-	  maxk = k;
-	  maxi = eodinx[k];
+  }
+  else {
+    // merge EOD frequencies:
+    for ( ; ; ) {
+      // find trace with minimum EOD time:
+      double mint = currentTime();
+      int n = 0;
+      for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	if ( eodinx[k] < eodamplitudes[k].size() ) {
+	  if ( mint > eodamplitudes[k].x( eodinx[k] ) )
+	    mint = eodamplitudes[k].x( eodinx[k] );
+	  n++;
 	}
-	eodinx[k]++;
       }
+      if ( n==0 )
+	break;
+      // find trace with largest EOD amplitude:
+      double maxa = 0.0;
+      int maxk = 0;
+      int maxi = 0;
+      for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	double t = eodamplitudes[k].x( eodinx[k] );
+	if ( fabs( t - mint ) < 0.5/fishrate ) {
+	  if ( maxa < eodamplitudes[k].y( eodinx[k] ) ) {
+	    maxa = eodamplitudes[k].y( eodinx[k] );
+	    maxk = k;
+	    maxi = eodinx[k];
+	  }
+	  eodinx[k]++;
+	}
+      }
+      eodfrequency.push( eodfrequencies[maxk].x( maxi ),
+			 eodfrequencies[maxk].y( maxi ) );
     }
-    eodfrequency.push( eodfrequencies[maxk].x( maxi ),
-		       eodfrequencies[maxk].y( maxi ) );
   }
   if ( FishEFieldEvents[0] >= 0 ) {
     const EventData &stimglobal = events( FishEFieldEvents[0] );

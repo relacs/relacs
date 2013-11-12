@@ -228,6 +228,7 @@ int Simulator::readData( void )
 
 int Simulator::convertData( void )
 {
+  Sim->SignalMutex.lock();
   for ( int k=0; k<Data.size(); k++ ) {
     if ( Data[k].device() >= 0 ) {
       // clear input error state:
@@ -244,6 +245,7 @@ int Simulator::convertData( void )
 	Data[k].push( Sim->pop( k ) );
     }
   }
+  Sim->SignalMutex.unlock();
 
   return 0;
 }

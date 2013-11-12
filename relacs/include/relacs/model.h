@@ -269,7 +269,6 @@ public:
   
   ModelThread( Model *m );
   virtual void run( void );
-  void msleep( unsigned long msecs );
 
 
 private:

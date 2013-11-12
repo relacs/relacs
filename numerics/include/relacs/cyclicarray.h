@@ -753,7 +753,8 @@ T CyclicArray<T>::read( void )
   if ( NBuffer <= 0 )
     return 0.0;
 
-  int l = L++;
+  int l = L;
+  L++;
   if ( L >= NBuffer ) {
     L = 0;
     LCycles++;

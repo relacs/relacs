@@ -128,9 +128,7 @@ void Model::push( int trace, float val )
       AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
       long st = (long)::rint( 1000.0 * dt );
       if ( st > 0 ) {
-	SignalMutex.unlock();
-	Thread->msleep( st );
-	SignalMutex.lock();
+	SleepWait.wait( &SignalMutex, st );
       }
     }
   }
@@ -409,12 +407,6 @@ ModelThread::ModelThread( Model *m )
 void ModelThread::run( void )
 {
   M->run();
-}
-
-
-void ModelThread::msleep( unsigned long msecs )
-{
-  QThread::msleep( msecs );
 }
 
 
