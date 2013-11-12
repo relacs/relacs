@@ -288,9 +288,7 @@ bool RePro::sleepWait( double time )
     r = SleepWait.wait( mutex(), ms );
   }
   // make new data available:
-  readLockData();
-  updateTracesEvents();
-  unlockData();
+  getData();
   lockMetaData();
   lockStimulusData();
   return r;

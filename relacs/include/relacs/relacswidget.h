@@ -50,7 +50,6 @@ using namespace std;
 namespace relacs {
 
 
-class UpdateThread;
 class AllDevices;
 class Devices;
 class AIDevices;
@@ -83,23 +82,12 @@ class Session;
 \bug what about wroteData?
 \todo Set ID gain factors before configuring Session
 
-The data are acquired from the DAQ boards and filtered,
-events are detected, data are saved,
-plotted, and analysed from an extra thread, function run().
-
-readRePro() periodically calls the read()
-function of the current RePro. It is controlled by sleep()
-which is called from the RePro.
+The data are acquired from the DAQ boards in the ReadLoop. On request
+via function updateData() the data are filtered and
+events are detected.
 
 A RePro is stoppped with the stopRePro() function and a new RePro is
 started with startRePro().
-A RePro terminates itself by calling doneRePro().
-
-When a session is started, startSession() is called.
-If the session is stopped, first preStopSession() is called.
-Then the dialog for the meta-data is launched.
-If the session is really to be stopped, stopSession() is called.
-
 */
 
 
@@ -149,8 +137,6 @@ public:
         \return \c true if new data have been got, otherwise you should wait() 
         on the UpdateDataWait condition to make sure data are available for you. */
   bool updateData( double mintracetime=0.0 );
-    /*! Write the data to files and plot them. */
-  void processData( void );
 
     /*! Locks the mutex of the raw data traces and events. */
   void readLockBuffer( void ) { BufferMutex.lockForRead(); };
@@ -339,7 +325,6 @@ protected slots:
 
 private:
 
-  friend class UpdateThread;
   friend class Settings;
   friend class MetaData;
   friend class MetaDataSection;
@@ -371,8 +356,6 @@ private:
     /*! Contains the UpateDataThread loop, continuously updates and 
         processes data. */    
   void run( void );
-
-  UpdateThread *Thread;
 
   ModeTypes Mode;
   static const string ModeStr[5];
@@ -449,7 +432,6 @@ private:
 
   // synchronization of Session and Control threads:
   QWaitCondition UpdateDataWait;
-  QWaitCondition ProcessDataWait;
   QWaitCondition ReProSleepWait;
   QWaitCondition ReProAfterWait;
   QWaitCondition SessionStartWait;
@@ -472,23 +454,6 @@ private:
 
   bool HandlingEvent;
   class KeyTimeOut *KeyTime;
-
-};
-
-
-class UpdateThread : public QThread
-{
-
-public:
-  
-  UpdateThread( RELACSWidget *rw );
-  virtual void run( void );
-  void msleep( unsigned long msecs );
-
-
-private:
-
-  RELACSWidget *RW;
 
 };
 

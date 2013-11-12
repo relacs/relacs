@@ -41,6 +41,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
 		  "PlotTrace", "base", "Jan Benda", "1.0", "Dec 1, 2009" ),
     PlotElements( 1, -1 ),
     Menu( 0 ),
+    PlotTimer( this ),
     P( 1, Plot::Pointer, parent )
 {
   setRELACSWidget( rw );
@@ -53,6 +54,8 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   TriggerSource = -1;
   Plotting = true;
 
+  connect( &PlotTimer, SIGNAL( timeout() ),
+	   this, SLOT( plot() ) );
   connect( &P, SIGNAL( changedRanges( int ) ),
 	   this, SLOT( updateRanges( int ) ) );
   connect( &P, SIGNAL( resizePlots( QResizeEvent* ) ),
@@ -422,6 +425,10 @@ void PlotTrace::plot( void )
   if ( !plotting ) 
     return;
 
+  // get data:
+  // XXX once we have the loop for saving data, this should simply be getData()!!!
+  updateData();
+
   if ( PlotChanged ) {
     init();
     PlotChanged = false;
@@ -569,6 +576,18 @@ void PlotTrace::updateMenu( void )
       PlotActions.back()->setChecked( (trace(k).mode() & PlotTraceMode) > 0 );
     }
   }
+}
+
+
+void PlotTrace::start( double time )
+{
+  PlotTimer.start( (int)::rint( 1000.0*time ) );
+}
+
+
+void PlotTrace::stop( void )
+{
+  PlotTimer.stop();
 }
 
 

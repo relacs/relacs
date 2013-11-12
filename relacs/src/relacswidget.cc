@@ -114,8 +114,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 {
   printlog( "This is RELACS, version " + string( RELACSVERSION ) );
 
-  Thread = new UpdateThread( this );
-
   // setup configuration files:
   CFG.clearGroups();
   CFG.addGroup( coreconfigfiles );
@@ -452,8 +450,11 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     PT->widget()->setMinimumWidth( w );
     RP->setMinimumWidth( w );
   }
+  /*
+    XXX
   if ( splash != 0 )
     Thread->msleep( 2000 );
+  */
 
   // miscellaneous:
   setFocusPolicy( Qt::StrongFocus );
@@ -839,50 +840,24 @@ bool RELACSWidget::updateData( double mintracetime )
     return false;
 }
 
-
+/*
 void RELACSWidget::processData( void )
 {
-  /* XXX SF should get its own copy of IL!
+  XXX SF should get its own copy of IL!
   readLockData();
   SF->save( IL, ED );
   unlockData();
-  */
+  
   PT->updateData();
   PT->plot();
 }
+*/
 
-
+ /*
 void RELACSWidget::run( void )
 {
-  bool rd = true;
-  double updateinterval = IL[0].updateTime();
-  signed long ui = (unsigned long)::rint( 1000.0*updateinterval );
-  QTime updatetime;
-  updatetime.start();
-  Thread->msleep( 1 );
 
-  do {
-    int ei = updatetime.elapsed();
-    int di = ui - ei;
-    if ( di < 2 )
-      di = 2;
-    // XXX wait needs a locked mutex!
-    QMutex mutex;
-    mutex.lock();
-    ThreadSleepWait.wait( &mutex, di );
-    mutex.unlock(); // XXX
-    updatetime.restart();
-    processData();
-    ProcessDataWait.wakeAll();
-    RunDataMutex.lock();
-    rd = RunData;
-    RunDataMutex.unlock();
-  } while( rd && ReadLoop.isRunning() );
-
-  if ( ! rd )
-    return;
-
-  // stop all activity:
+  // stop all activity in case ReadLoop is not running any more:
   UpdateDataWait.wakeAll();
   stopRePro();
   CW->requestStop();
@@ -908,6 +883,7 @@ void RELACSWidget::run( void )
   setMode( IdleMode );
   RP->message( "<b>Idle-mode</b>" );
 }
+ */
 
 
 void RELACSWidget::wakeAll( void )
@@ -1286,11 +1262,14 @@ void RELACSWidget::stopRePro( void )
   if ( SF->signalPending() ) {
     // force data updates:
     if ( ReadLoop.isRunning() ) {
+      // XXX here we need to write from SaveFile whatever is available!
+      /*
       // XXX wait needs a locked mutex!
       QMutex mutex;
       mutex.lock();
       ProcessDataWait.wait( &mutex );
       mutex.unlock(); // XXX
+      */
     }
     SF->clearSignal();
   }
@@ -1490,8 +1469,7 @@ void RELACSWidget::stopThreads( void )
   WriteLoop.stop();
   ThreadSleepWait.wakeAll();
   ReadDataWait.wakeAll();
-  if ( Thread->isRunning() )
-    Thread->wait();
+  PT->stop();
 
   // stop simulation and data acquisition:
   SimLoad.stop();
@@ -1655,8 +1633,9 @@ void RELACSWidget::startFirstAcquisition( void )
   }
 
   // analog input and output traces:
+  double ptime = SS.number( "processinterval", 0.1 );
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
-  AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
+  AQ->setUpdateTime( ptime );
   SignalTime = -1.0;
   setupInTraces();
   if ( IL.empty() ) {
@@ -1758,7 +1737,6 @@ void RELACSWidget::startFirstAcquisition( void )
   RunDataMutex.lock();
   RunData = true;
   RunDataMutex.unlock();
-  Thread->start( QThread::HighPriority );
 
   // reset analog output for dynamic clamp:
   lockAI();
@@ -1774,6 +1752,7 @@ void RELACSWidget::startFirstAcquisition( void )
   }
 
   CW->start();
+  PT->start( ptime );
 
   // get first RePro and start it:
   MC->startUp();
@@ -1806,8 +1785,9 @@ void RELACSWidget::startFirstSimulation( void )
   }
 
   // analog input and output traces:
+  double ptime = SS.number( "processinterval", 0.1 );
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
-  AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
+  AQ->setUpdateTime( ptime );
   SignalTime = -1.0;
   setupInTraces();
   if ( IL.empty() ) {
@@ -1928,8 +1908,9 @@ void RELACSWidget::startFirstSimulation( void )
   RunDataMutex.lock();
   RunData = true;
   RunDataMutex.unlock();
-  Thread->start( QThread::HighPriority );
+
   CW->start();
+  PT->start( ptime );
 
   // get first RePro and start it:
   MC->startUp();
@@ -2252,25 +2233,6 @@ void RELACSWidget::help( void )
 void RELACSWidget::helpClosed( int r )
 {
   Help = false;
-}
-
-
-UpdateThread::UpdateThread( RELACSWidget *rw )
-  : QThread( rw ),
-    RW( rw )
-{
-}
-
-
-void UpdateThread::run( void )
-{
-  RW->run();
-}
-
-
-void UpdateThread::msleep( unsigned long msecs )
-{
-  QThread::msleep( msecs );
 }
 
 

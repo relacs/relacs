@@ -25,6 +25,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QMenu>
+#include <QTimer>
 #include <vector>
 #include <relacs/relacsplugin.h>
 #include <relacs/multiplot.h>
@@ -97,9 +98,6 @@ public:
     /*! Destruct a PlotTrace. */
   ~PlotTrace( );
 
-    /*! Plot voltage traces and spike trains. */
-  void plot( void );
-
     /*! Switch plotting of raw traces on or off. */
   void setPlotOn( bool on=true );
     /*! Switch plotting of raw traces off. */
@@ -122,9 +120,16 @@ public:
   void addMenu( QMenu *menu );
     /*! Update menu entries toggeling the traces. */
   void updateMenu( void );
+    /*! Start plotting with time interval \a time. */
+  void start( double time );
+    /*! Stop plotting. */
+  void stop( void );
 
 
 public slots:
+
+    /*! Plot voltage traces and events. */
+  void plot( void );
 
     /*! Toggle plot of trace \a trace. */
   void toggle( QAction *trace );
@@ -220,6 +225,8 @@ private:
   vector< QAction* > PlotActions;
 
   QMenu *Menu;
+
+  QTimer PlotTimer;
 
   MultiPlot P;
   vector< int > VP;  // the indices of the visible plots

@@ -357,6 +357,14 @@ void RELACSPlugin::updateData( double mintracetime )
 }
 
 
+void RELACSPlugin::getData( void )
+{
+  readLockData();
+  updateTracesEvents();
+  unlockData();
+}
+
+
 const InList &RELACSPlugin::traces( void ) const
 {
   return IL;
