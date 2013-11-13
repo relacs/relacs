@@ -149,7 +149,10 @@ void EODDetector::notify( void )
 
 int EODDetector::adjust( const InData &data )
 {
+  MaxThresh = data.maxValue();
+  MinThresh = MaxThresh*0.0001;
   unsetNotify();
+  setMinMax( "threshold", 0.0, MaxThresh, MaxThresh*0.01 );
   setUnit( "threshold", data.unit() );
   setUnit( "size", data.unit() );
   setUnit( "meanvolts", data.unit() );
@@ -170,16 +173,13 @@ int EODDetector::autoConfigure( const InData &data,
 {
   // get rough estimate for a threshold:
   double ampl = eodAmplitude( data, tbegin, tend );
-  // set range:
-  double min = ceil10( 0.1*ampl );
-  double max = ceil10( ::floor( 10.0*ampl/min )*min );
   // refine threshold:
   Threshold = floor10( 2.0*AutoRatio*ampl, 0.1 );
   if ( Threshold < MinThresh )
     Threshold = MinThresh;
   // update values:
   unsetNotify();
-  setMinMax( "threshold", min, max, min );
+  setMinMax( "threshold", 0.0, data.maxValue(), ceil10( 0.1*Threshold ) );
   setNumber( "threshold", Threshold );
   setNotify();
   EDW.updateSettings( "threshold" );
