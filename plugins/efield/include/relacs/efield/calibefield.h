@@ -36,9 +36,11 @@ namespace efield {
 \class CalibEField
 \brief [RePro] Calibrates an attenuator for electric field stimuli.
 \author Jan Benda
-\version 2.2 (Oct 30, 2013)
+\version 2.2 (Nov 30, 2013)
+\note Calibration non-sine EODs has an offset!
 \par Options
 - \c reset=false: Reset calibration? (\c boolean)
+- \c resetval=0.1: Reset gain factor to (\c number)
 - \c am=false: Calibrate amplitude modulation? (\c boolean)
 - \c beatfreq=20Hz: Beat frequency to be used when fish EOD present (\c number)
 - \c frequency=600Hz: Stimulus frequency to be used when no fish EOD is present (\c number)

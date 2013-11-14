@@ -35,12 +35,15 @@ CalibEField::CalibEField( void )
 	   "Jan Benda", "2.2", "Oct 30, 2013" )
 {
   // add some parameter as options:
+  newSection( "General" );
   addBoolean( "reset", "Reset calibration?", false );
+  addNumber( "resetval", "Reset gain factor to", 0.1, 0.0, 100.0, 0.01 ).setActivation( "reset", "true" );
   addBoolean( "am", "Calibrate amplitude modulation?", false );
   addNumber( "beatfreq", "Beat frequency to be used when fish EOD present", 20.0, 1.0, 100.0, 1.0, "Hz" );
   addNumber( "frequency", "Stimulus frequency to be used when no fish EOD is present", 600.0, 10.0, 1000.0, 5.0, "Hz" );
   addNumber( "duration", "Duration of stimulus", 0.4, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", 0.0, 0.0, 10.0, 0.05, "seconds", "ms" );
+  newSection( "Range" );
   addSelection( "amplsel", "Calibrate for", "contrast|amplitude" );
   addNumber( "targetcontrast", "Target contrast to be tested first", 0.2, 0.01, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
   addNumber( "mincontrast", "Minimum contrast", 0.1, 0.01, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
@@ -64,6 +67,7 @@ int CalibEField::main( void )
 {
   // get options:
   bool reset = boolean( "reset" );
+  double resetval = number( "resetval" );
   bool am = boolean( "am" );
   double frequency = number( "frequency" );
   double beatfrequency = number( "beatfreq" );
@@ -127,7 +131,7 @@ int CalibEField::main( void )
       double newduration = 6.0/beatfrequency;
       Str s = "Not enough beat periods! <br>You should set the beat frequency to "
 	+ Str( newbeatfrequency ) + "Hz.<br>Alternatively, you should increase the stimulus duration to at least "
-	+ Str( newduration ) + "ms";
+	+ Str( 1000.0*newduration ) + "ms";
       warning( s, 4.0 );
       return Failed;
     }
@@ -158,8 +162,8 @@ int CalibEField::main( void )
   }
   EODUnit = eodtrace.unit();
   if ( reset ) {
-    message( "reset gain to 0.1" );
-    latt->setGain( 0.1, 0.0 );
+    message( "reset gain to " + Str( resetval ) );
+    latt->setGain( resetval, 0.0 );
   }
   double origgain = latt->gain();
   double origoffset = latt->offset();
