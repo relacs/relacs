@@ -28,7 +28,9 @@
 - <a href="efield/index.html">electric field measurements</a>
 - <a href="efish/index.html">recordings from the electrosensory system of weakly electric fish</a>
 - <a href="multielectrode/index.html">multi-electrode</a>
+- <a href="camera/index.html">video recordings</a>
 - <a href="comedi/index.html">comedi device driver</a>
+- <a href="daqflex/index.html">Measurement computing DAQFlex device driver</a>
 - <a href="nieseries/index.html">NI E-series device driver</a>
 - <a href="attcs3310/index.html">attenuator</a>
 - <a href="misc/index.html">miscellaneous device drivers</a>

@@ -832,6 +832,7 @@ bool RELACSWidget::updateData( double mintracetime )
     if ( !fdw.empty() )
       printlog( "! error: " + fdw.erasedMarkup() );
     ED.setRangeBack( IL.currentTime() );
+    SF->saveTraces();
     DataMutex.unlock();
     UpdateDataWait.wakeAll();
     return true;
@@ -839,19 +840,6 @@ bool RELACSWidget::updateData( double mintracetime )
   else
     return false;
 }
-
-/*
-void RELACSWidget::processData( void )
-{
-  XXX SF should get its own copy of IL!
-  readLockData();
-  SF->save( IL, ED );
-  unlockData();
-  
-  PT->updateData();
-  PT->plot();
-}
-*/
 
  /*
 void RELACSWidget::run( void )
@@ -923,9 +911,11 @@ void RELACSWidget::activateGains( void )
 
 int RELACSWidget::write( OutData &signal, bool setsignaltime )
 {
+  /*
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
        SF->signalPending() )                   // the signal time might not have been transferred to SF
-    SF->save( IL, ED );
+    SF->saveTraces();
+  */
   /*
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -961,12 +951,6 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
     lockSignals();
     SF->save( signal );
     unlockSignals();
-    writeLockData();
-    writeLockBuffer();
-    AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
-    AQ->readRestart( IL, ED );
-    unlockBuffer();
-    unlockData();
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
@@ -982,9 +966,11 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
 
 int RELACSWidget::write( OutList &signal, bool setsignaltime )
 {
+  /*
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
        SF->signalPending() )                   // the signal time might not have been transferred to SF
-    SF->save( IL, ED );
+    SF->saveTraces();
+  */
   /*
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -1020,12 +1006,6 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
     lockSignals();
     SF->save( signal );
     unlockSignals();
-    writeLockData();
-    writeLockBuffer();
-    AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
-    AQ->readRestart( IL, ED );
-    unlockBuffer();
-    unlockData();
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
@@ -1042,9 +1022,11 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
 
 int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 {
+  /*
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
        SF->signalPending() )                   // the signal time might not have been transferred to SF
-    SF->save( IL, ED );
+    SF->saveTraces();
+  */
   /*
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -1073,12 +1055,6 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
     lockSignals();
     SF->save( signal );
     unlockSignals();
-    writeLockData();
-    writeLockBuffer();
-    AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
-    AQ->readRestart( IL, ED );
-    unlockBuffer();
-    unlockData();
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
@@ -1094,9 +1070,11 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 
 int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
 {
+  /*
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
        SF->signalPending() )                   // the signal time might not have been transferred to SF
-    SF->save( IL, ED );
+    SF->saveTraces();
+  */
   /*
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -1125,12 +1103,6 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
     lockSignals();
     SF->save( signal );
     unlockSignals();
-    writeLockData();
-    writeLockBuffer();
-    AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
-    AQ->readRestart( IL, ED );
-    unlockBuffer();
-    unlockData();
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
@@ -1210,6 +1182,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   ReProRunning = true;
   SN->incrReProCount();
 
+  CurrentRePro->updateData();
   readLockData();
   SF->holdOn();
   CurrentRePro->setSaving( saving );
@@ -1257,7 +1230,7 @@ void RELACSWidget::stopRePro( void )
   window()->setFocus();
 
   if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
-    SF->save( IL, ED );
+    SF->saveTraces();
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
     // force data updates:

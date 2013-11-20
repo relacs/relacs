@@ -296,11 +296,11 @@ void SaveFiles::save( bool on  )
 }
 
 
-void SaveFiles::saveToggle( const InList &traces, EventList &events )
+void SaveFiles::writeToggle( void )
 {
-  // only called by save( InList, EventList ).
+  // only called by writeTraces().
 
-  //  cerr << "saveToggle(): " << ToggleData << ", on=" << ToggleOn << '\n';
+  //  cerr << "writeToggle(): " << ToggleData << ", on=" << ToggleOn << '\n';
 
   if ( ToggleData && ! Hold ) {
 
@@ -308,14 +308,14 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
       cerr << "UPDATE TOGGLE\n";
       // update offsets:
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
-	TraceFiles[k].Index = traces[k].size();
+	TraceFiles[k].Index = TraceFiles[k].Trace.size();
       for ( unsigned int k=0; k<EventFiles.size(); k++ )
-	EventFiles[k].Index = events[k].size();
-
+	EventFiles[k].Index = EventFiles[k].Events.size();
+      
       // add recording event:
-      for ( int k=0; k<events.size(); k++ ) {
-	if ( ( events[k].mode() & RecordingEventMode ) > 0 ) {
-	  events[k].push( traces[0].pos( TraceFiles[0].Index ) );
+      for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+	if ( ( EventFiles[k].Events.mode() & RecordingEventMode ) > 0 ) {
+	  EventFiles[k].Events.push( TraceFiles[0].Trace.pos( TraceFiles[0].Index ) );
 	  break;
 	}
       }
@@ -330,7 +330,7 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
 }
 
 
-void SaveFiles::save( const InList &traces, EventList &events )
+void SaveFiles::saveTraces( void )
 {
   QMutexLocker locker( &SaveMutex );
 
@@ -339,47 +339,53 @@ void SaveFiles::save( const InList &traces, EventList &events )
   // in case of a pending signal
   // and from RELACSWidget::stopRePro().
 
+  // get indices:
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ )
+    TraceFiles[k].Trace.update();
+  for ( unsigned int k=0; k<EventFiles.size(); k++ )
+    EventFiles[k].Events.update();
+
   // update save status:
-  saveToggle( traces, events );
+  writeToggle();
 
   // check for new signal:
-  if ( events[0].size() > 0 ) {
-    double st = events[0].back();
-    if ( saving() && ::fabs( TraceFiles[0].Trace->signalTime() - st ) >= TraceFiles[0].Trace->stepsize() )
-      cerr << "SignalTime PROBLEM trace: " << Str( TraceFiles[0].Trace->signalTime(), 0, 5, 'f' ) << " stimulus: " << Str( st, 0, 5, 'f' ) << "\n";
+  if ( ! EventFiles.empty() && EventFiles[0].Events.size() > 0 ) {
+    double st = EventFiles[0].Events.back();
+    if ( saving() && ::fabs( TraceFiles[0].Trace.signalTime() - st ) >= TraceFiles[0].Trace.stepsize() )
+      cerr << "SignalTime PROBLEM trace: " << Str( TraceFiles[0].Trace.signalTime(), 0, 5, 'f' ) << " stimulus: " << Str( st, 0, 5, 'f' ) << "\n";
     if ( st > PrevSignalTime )
       SignalTime = st;
   }
 
-  saveRePro();
-  saveTraces();
+  writeRePro();
+  writeTraces();
   double offs = 0.0;
-  if ( saving() )
-    offs = traces[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
-  saveEvents( offs );
-  saveStimulus();
+  if ( saving() && ! TraceFiles.empty() )
+    offs = TraceFiles[0].Trace.interval( TraceFiles[0].Index - TraceFiles[0].Written );
+  writeEvents( offs );
+  writeStimulus();
 }
 
 
-void SaveFiles::saveTraces( void )
+void SaveFiles::writeTraces( void )
 {
-  //  cerr << "SaveFiles::saveTraces()\n";
+  //  cerr << "SaveFiles::writeTraces()\n";
 
   if ( ! saving() )
     return;
 
   for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
     if ( TraceFiles[k].Stream != 0 ) {
-      int n = TraceFiles[k].Trace->saveBinary( *TraceFiles[k].Stream,
-					       TraceFiles[k].Index );
+      int n = TraceFiles[k].Trace.saveBinary( *TraceFiles[k].Stream,
+					      TraceFiles[k].Index );
       if ( n > 0 ) {
 	TraceFiles[k].Written += n;
 	TraceFiles[k].Index += n;
       }
       // there is a new stimulus:
       if ( !Stimuli.empty() && SignalTime >= 0.0 &&
-	   TraceFiles[k].Trace->signalIndex() >= 0 )
-	TraceFiles[k].SignalOffset = TraceFiles[k].Trace->signalIndex() -
+	   TraceFiles[k].Trace.signalIndex() >= 0 )
+	TraceFiles[k].SignalOffset = TraceFiles[k].Trace.signalIndex() -
 	  TraceFiles[k].Index + TraceFiles[k].Written;
     }
   }
@@ -387,9 +393,9 @@ void SaveFiles::saveTraces( void )
 }
 
 
-void SaveFiles::saveEvents( double offs )
+void SaveFiles::writeEvents( double offs )
 {
-  //  cerr << "SaveFiles::save( EventList &events )\n";
+  //  cerr << "SaveFiles::writeEvents( double offs )\n";
 
   if ( ! saving() )
     return;
@@ -399,28 +405,28 @@ void SaveFiles::saveEvents( double offs )
     return;
 
   // save event data:
-  double st = EventFiles[0].Events->size() > 0 ? EventFiles[0].Events->back() : EventFiles[0].Events->rangeBack();
+  double st = EventFiles[0].Events.size() > 0 ? EventFiles[0].Events.back() : EventFiles[0].Events.rangeBack();
   for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
 
     if ( EventFiles[k].Stream != 0 ) {
-      while ( EventFiles[k].Index < EventFiles[k].Events->size() ) {
-	double et = (*EventFiles[k].Events)[EventFiles[k].Index];
+      while ( EventFiles[k].Index < EventFiles[k].Events.size() ) {
+	double et = EventFiles[k].Events[EventFiles[k].Index];
 	if ( et < st )
 	  EventFiles[k].SignalEvent = EventFiles[k].Written;
 	else if ( EventFiles[k].Index == 0 ||
-		  (*EventFiles[k].Events)[EventFiles[k].Index-1] < st ) {
+		  EventFiles[k].Events[EventFiles[k].Index-1] < st ) {
 	  EventFiles[k].SignalEvent = EventFiles[k].Written;
 	  *EventFiles[k].Stream << '\n';
 	}
 	EventFiles[k].Key.save( *EventFiles[k].Stream, et - offs, 0 );
 	if ( EventFiles[k].SaveSize )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
-				  EventFiles[k].Events->sizeScale() *
-				  EventFiles[k].Events->eventSize( EventFiles[k].Index ) );
+				  EventFiles[k].Events.sizeScale() *
+				  EventFiles[k].Events.eventSize( EventFiles[k].Index ) );
 	if ( EventFiles[k].SaveWidth )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
-				  EventFiles[k].Events->widthScale() *
-				  EventFiles[k].Events->eventWidth( EventFiles[k].Index ) );
+				  EventFiles[k].Events.widthScale() *
+				  EventFiles[k].Events.eventWidth( EventFiles[k].Index ) );
 	*EventFiles[k].Stream << '\n';
 	EventFiles[k].Written++;
 	EventFiles[k].Index++;
@@ -488,9 +494,9 @@ void SaveFiles::save( const OutList &signal )
 }
 
 
-void SaveFiles::saveStimulus( void )
+void SaveFiles::writeStimulus( void )
 {
-  //      cerr << "saveStimulus \n";
+  //      cerr << "writeStimulus \n";
 
   if ( Stimuli.empty() )
     return;
@@ -506,7 +512,8 @@ void SaveFiles::saveStimulus( void )
   deque<int> eventsindex;
   for ( unsigned int k=0; k<EventFiles.size(); k++ )
     eventsindex.push_back( EventFiles[k].SignalEvent );
-  QCoreApplication::postEvent( this, new StimuliEvent( Stimuli, traceindex, eventsindex, SignalTime ) );
+  QCoreApplication::postEvent( this, new StimuliEvent( Stimuli, traceindex, eventsindex,
+						       SignalTime ) );
 
   // extract intensity from stimulus description:
   // XXX there should be a flag indicating, which quantities to extract!
@@ -609,15 +616,15 @@ void SaveFiles::saveStimulus( void )
       if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.save( *SF, EventFiles[k].SignalEvent );
 	if ( EventFiles[k].SaveMeanRate )
-	  StimulusKey.save( *SF, EventFiles[k].Events->meanRate() );  // XXX adaptive Zeit!
+	  StimulusKey.save( *SF, EventFiles[k].Events.meanRate() );  // XXX adaptive Time!
 	if ( EventFiles[k].SaveMeanSize )
-	  StimulusKey.save( *SF, EventFiles[k].Events->sizeScale() *
-			    EventFiles[k].Events->meanSize() );
+	  StimulusKey.save( *SF, EventFiles[k].Events.sizeScale() *
+			    EventFiles[k].Events.meanSize() );
 	if ( EventFiles[k].SaveMeanWidth )
-	  StimulusKey.save( *SF, EventFiles[k].Events->widthScale() *
-			    EventFiles[k].Events->meanWidth() );
+	  StimulusKey.save( *SF, EventFiles[k].Events.widthScale() *
+			    EventFiles[k].Events.meanWidth() );
 	if ( EventFiles[k].SaveMeanQuality )
-	  StimulusKey.save( *SF, 100.0*EventFiles[k].Events->meanQuality() );
+	  StimulusKey.save( *SF, 100.0*EventFiles[k].Events.meanQuality() );
       }
     }
 
@@ -626,7 +633,7 @@ void SaveFiles::saveStimulus( void )
 	StimulusKey.save( *SF, StimulusOptions[k] );
       }
     }
-    StimulusKey.save( *SF, TraceFiles[0].Trace->signalTime() - SessionTime );
+    StimulusKey.save( *SF, TraceFiles[0].Trace.signalTime() - SessionTime );
     // stimulus:
     StimulusKey.save( *SF, 1000.0*Stimuli[0].delay() );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
@@ -694,7 +701,7 @@ void SaveFiles::saveStimulus( void )
 	  stimuliref[j].insertText( "OutputChannel", "",
 				    RW->AQ->outTraceName( Stimuli[j].trace() ) );
 	  stimuliref[j].insertNumber( "Delay", "", 1000.0*Stimuli[j].delay(), "ms" );
-	  stimuliref[j].insertNumber( "Time", "", TraceFiles[0].Trace->signalTime() - SessionTime, "s" );
+	  stimuliref[j].insertNumber( "Time", "", TraceFiles[0].Trace.signalTime() - SessionTime, "s" );
 	  sopt.newSection( &stimuliref[j] );
 	  break;
 	}
@@ -731,9 +738,9 @@ void SaveFiles::save( const RePro &rp )
 }
 
 
-void SaveFiles::saveRePro( void )
+void SaveFiles::writeRePro( void )
 {
-  //  cerr << "save RePro\n";
+  //  cerr << "writeRePro()\n";
 
   if ( ReProData ) {
 
@@ -843,7 +850,7 @@ void SaveFiles::createTraceFiles( const InList &traces )
   for ( int k=0; k<traces.size(); k++ ) {
 
     // init trace variables:
-    TraceFiles[k].Trace = &traces[k];
+    TraceFiles[k].Trace.assign( &traces[k] );
     TraceFiles[k].Index = traces[k].size();
     TraceFiles[k].Written = 0;
     TraceFiles[k].SignalOffset = -1;
@@ -908,7 +915,7 @@ void SaveFiles::createEventFiles( const EventList &events )
   for ( int k=0; k<events.size(); k++ ) {
 
     // init event variables:
-    EventFiles[k].Events = &events[k];
+    EventFiles[k].Events.assign( &events[k] );
     EventFiles[k].Index = events[k].size();
     EventFiles[k].Written = 0;
     EventFiles[k].SignalEvent = 0;

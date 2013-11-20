@@ -179,7 +179,7 @@ int Beats::main( void )
   for ( int count = 0;
 	(repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
-    for ( dfrange.reset(); !dfrange && softStop() <= 2; ++dfrange ) {
+    for ( dfrange.reset(); !dfrange && softStop() < 2; ++dfrange ) {
 
       // results:
       MapD eodfrequency;
@@ -543,14 +543,13 @@ int Beats::main( void )
 	    stimfrequency, chirpheader, split, FileCount );
       FileCount++;
 
+      if ( softStop() > 1 )
+	break;
+
       // pause:
       sleep( pause - after - before );
-      if ( interrupt() ) {
-	if ( fixeddf )
-	  writeZero( "Amplitude" );
-	else
-	  writeZero( FishEField[0] );
-      }
+      if ( interrupt() )
+	break;
 
     }
   }

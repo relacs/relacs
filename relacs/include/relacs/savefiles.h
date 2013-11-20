@@ -171,7 +171,7 @@ public:
   void save( bool on );
 
     /*! Save data traces and events to files */
-  void save( const InList &traces, EventList &events );
+  void saveTraces( void );
     /*! Save output-meta-data to files. */
   void save( const OutData &signal );
     /*! Save output-meta-data to files. */
@@ -200,10 +200,10 @@ public:
 
 protected:
 
-    /*! Save data traces to files */
-  void saveTraces( void );
-    /*! Save events with \a offs subtracted to files. */
-  void saveEvents( double offs );
+    /*! Write data traces to files */
+  void writeTraces( void );
+    /*! Write events with \a offs subtracted to files. */
+  void writeEvents( double offs );
 
     /*! Close all open files */
   void closeFiles( void );
@@ -274,7 +274,7 @@ protected:
       /*! The file stream. */
     ofstream *Stream;
       /*! The trace data that have to be written into the file. */
-    const InData *Trace;
+    InData Trace;
       /*! Current index to trace data from where on to save data. */
     long Index;
       /*! Number of so far written trace data. */
@@ -293,7 +293,7 @@ protected:
       /*! The file stream. */
     ofstream *Stream;
       /*! The event data that have to be written into the file. */
-    const EventData *Events;
+    EventData Events;
       /*! Index to event data. */
     long Index;
       /*! Already written lines. */
@@ -328,17 +328,17 @@ protected:
   map< string, map < Options, string > > ReProStimuli;
   TableKey StimulusKey;
   Options StimulusOptions;
-  void saveStimulus( void );
+  void writeStimulus( void );
 
   Options ReProInfo;
   mutable deque< string > ReProFiles;
   bool ReProData;
   bool DatasetOpen;
-  void saveRePro( void );
+  void writeRePro( void );
 
   bool ToggleOn;
   bool ToggleData;
-  void saveToggle( const InList &traces, EventList &events );
+  void writeToggle( void );
 
   DataIndex DI;
 

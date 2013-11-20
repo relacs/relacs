@@ -1,6 +1,6 @@
 New InData threading:
-- We need to enable SaveFile for saving data. It should get its own Buffers.
-  For this it should be a RELACSPlugin?
+- Improve RELACSWidget::write() and stopRePro() etc.
+- Clean up RELACSWidget run() etc.
 - Remove the BufferArray and xbufferarray from numerics
 - Model: improve locking by adding an extra Mutex for push() and pop()
 

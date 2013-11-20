@@ -40,7 +40,6 @@ class ReProThread;
 \class RePro
 \author Jan Benda
 \author Christian Machens
-\version 3.0
 \brief Parent class of all research programs.
 \todo ~RePro: auto remove from RePros?
 \todo addPath: something with a format string giving the RePro's name, totalRuns, etc.

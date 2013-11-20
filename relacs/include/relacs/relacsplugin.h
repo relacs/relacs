@@ -424,6 +424,14 @@ protected:
   void updateRawTracesEvents( void );
     /*! Updates the indices of derived traces and events (traces with source != 0 ). */
   void updateDerivedTracesEvents( void );
+    /*! Process new trace and event data and make them available to this.
+        If \a mintracetime is greater than zero, updateData() blocks
+        until data upto \a mintracetime are available. */
+  void updateData( double mintracetime = 0.0 );
+    /*! Make current trace and event data available to this.
+        Do not retrieve and process brand new data. */
+  void getData( void );
+
 
  protected:
 
@@ -776,13 +784,6 @@ protected:
 
     /*! Pointer to the main RELACSWidget. */
   RELACSWidget *RW;
-    /*! Process new trace and event data and make them available to this.
-        If \a mintracetime is greater than zero, updateData() blocks
-        until data upto \a mintracetime are available. */
-  void updateData( double mintracetime = 0.0 );
-    /*! Make current trace and event data available to this.
-        Do not retrieve and process brand new data. */
-  void getData( void );
 
     /*! Reimplement this function in case you need 
         to handle key-press events.
