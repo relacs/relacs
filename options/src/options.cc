@@ -4848,7 +4848,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int flags, int level,
 
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
-      pp->saveXML( str, level, indent, flags );
+      pp->saveXML( str, level, indent, flags &~ DontCloseSection );
     }
   }
 
@@ -4856,7 +4856,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int flags, int level,
 	sp != sectionsEnd();
 	++sp ) {
     if ( (*sp)->flag( selectmask ) )
-      (*sp)->saveXML( str, selectmask, flags, level, indent );
+      (*sp)->saveXML( str, selectmask, flags &~ DontCloseSection, level, indent );
   }
 
   if ( printsection && ( ( flags & DontCloseSection ) == 0 ) )

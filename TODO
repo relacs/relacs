@@ -3,6 +3,12 @@ New InData threading:
 - Clean up RELACSWidget run() etc.
 - Remove the BufferArray and xbufferarray from numerics
 - Model: improve locking by adding an extra Mutex for push() and pop()
+- SaveFiles: where does stimulus intensity go, if there is no amplifier?
+  (e.g. patchclamp::MembranerEsistance)
+- SaveFiles: RELACSWidget::stopSession() "MTDT.save( modeltitle, modelopts );"
+  also needs to go into metadta.xml file. Maybe MetaData should be more closely tied to SaveFiles.
+- SaveFiles: recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
+
 
 Options:
 - Check readAppend() functions!

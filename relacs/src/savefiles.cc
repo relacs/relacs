@@ -284,7 +284,7 @@ void SaveFiles::save( bool on  )
   // this function is called from RELACSWidget::setSaving() and
   // right before starting a RePro in RELACSWidget::startRepRo()
 
-  //  cerr << "save toggle: " << on << '\n';
+  //  cerr << "SaveFiles::save( bool on ): on=" << on << '\n';
   QMutexLocker locker( &SaveMutex );
   if ( ! FilesOpen ) {
     Saving = false;
@@ -300,12 +300,13 @@ void SaveFiles::writeToggle( void )
 {
   // only called by writeTraces().
 
-  //  cerr << "writeToggle(): " << ToggleData << ", on=" << ToggleOn << '\n';
+  //  cerr << "SaveFiles::writeToggle(): ToggleData=" << ToggleData
+  //       << ", hold=" << Hold << ", on=" << ToggleOn << ", saving=" << saving() << '\n';
 
   if ( ToggleData && ! Hold ) {
 
-    if ( ToggleOn && ! Saving ) {
-      cerr << "UPDATE TOGGLE\n";
+    if ( ToggleOn && ! saving() ) {
+      cerr << "SaveFiles::writeToggle(): switched saving on!\n";
       // update offsets:
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
 	TraceFiles[k].Index = TraceFiles[k].Trace.size();
@@ -332,6 +333,8 @@ void SaveFiles::writeToggle( void )
 
 void SaveFiles::saveTraces( void )
 {
+  //  cerr << "SaveFiles::saveTraces(): saving=" << saving() << '\n';
+
   QMutexLocker locker( &SaveMutex );
 
   // this function is called from RELACSWidget::processData()
@@ -352,7 +355,7 @@ void SaveFiles::saveTraces( void )
   if ( ! EventFiles.empty() && EventFiles[0].Events.size() > 0 ) {
     double st = EventFiles[0].Events.back();
     if ( saving() && ::fabs( TraceFiles[0].Trace.signalTime() - st ) >= TraceFiles[0].Trace.stepsize() )
-      cerr << "SignalTime PROBLEM trace: " << Str( TraceFiles[0].Trace.signalTime(), 0, 5, 'f' ) << " stimulus: " << Str( st, 0, 5, 'f' ) << "\n";
+      cerr << "Warning in SaveFiles::saveTraces() -> SignalTime PROBLEM, trace: " << Str( TraceFiles[0].Trace.signalTime(), 0, 5, 'f' ) << " stimulus: " << Str( st, 0, 5, 'f' ) << "\n";
     if ( st > PrevSignalTime )
       SignalTime = st;
   }
@@ -369,7 +372,7 @@ void SaveFiles::saveTraces( void )
 
 void SaveFiles::writeTraces( void )
 {
-  //  cerr << "SaveFiles::writeTraces()\n";
+  //  cerr << "SaveFiles::writeTraces(): saving=" << saving() << "\n";
 
   if ( ! saving() )
     return;
@@ -395,7 +398,7 @@ void SaveFiles::writeTraces( void )
 
 void SaveFiles::writeEvents( double offs )
 {
-  //  cerr << "SaveFiles::writeEvents( double offs )\n";
+  //  cerr << "SaveFiles::writeEvents(): offs=" << offs << ", saving=" << saving() << "\n";
 
   if ( ! saving() )
     return;
@@ -443,7 +446,7 @@ void SaveFiles::save( const OutData &signal )
   // this function is called from RELACSWidget::write()
   // after a successfull call of Acquire::write()
 
-  //  cerr << "SaveFiles::save( OutData &signal )\n";
+  //  cerr << "SaveFiles::save( OutData &signal ): saving=" << saving() << "\n";
 
   if ( signal.failed() )
     return;
@@ -469,7 +472,7 @@ void SaveFiles::save( const OutData &signal )
 
 void SaveFiles::save( const OutList &signal )
 {
-  //  cerr << "SaveFiles::save( OutList &signal )\n";
+  //  cerr << "SaveFiles::save( OutList &signal ): saving=" << saving() << "\n";
 
   if ( signal.empty() || signal.failed() )
     return;
@@ -496,7 +499,8 @@ void SaveFiles::save( const OutList &signal )
 
 void SaveFiles::writeStimulus( void )
 {
-  //      cerr << "writeStimulus \n";
+  //  cerr << "SaveFiles::writeStimulus(): Stimuli.size()=" << Stimuli.size()
+  //       << ", saving=" << saving() << "\n";
 
   if ( Stimuli.empty() )
     return;
@@ -512,6 +516,7 @@ void SaveFiles::writeStimulus( void )
   deque<int> eventsindex;
   for ( unsigned int k=0; k<EventFiles.size(); k++ )
     eventsindex.push_back( EventFiles[k].SignalEvent );
+  // add signal to data browser:
   QCoreApplication::postEvent( this, new StimuliEvent( Stimuli, traceindex, eventsindex,
 						       SignalTime ) );
 
@@ -675,7 +680,7 @@ void SaveFiles::writeStimulus( void )
     if ( XSF != 0 ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	if ( newstimuli[j] )
-	  Stimuli[j].description().saveXML( *XSF, 0, Options::FirstOnly, 0 );
+	  Stimuli[j].description().saveXML( *XSF, 0, Options::FirstOnly, 1 );
       }
     }
 
@@ -707,7 +712,7 @@ void SaveFiles::writeStimulus( void )
 	}
       }
     }
-    sopt.saveXML( *XF, 0, Options::FirstOnly, 1 );
+    sopt.saveXML( *XF, 0, Options::FirstOnly, 2 );
   }
 
   Stimuli.clear();
@@ -716,11 +721,12 @@ void SaveFiles::writeStimulus( void )
 
 void SaveFiles::save( const RePro &rp )
 {
-  //  cerr << "SaveFiles::save( const RePro &rp ) \n";
+  //  cerr << "SaveFiles::save( const RePro &rp ): RePro=" << rp.name()
+  //       << ", saving=" << saving() << "\n";
 
   QMutexLocker locker( &SaveMutex );
 
-  if ( ReProData )
+  if ( ReProData && saving() )
     RW->printlog( "! warning: SaveFiles::save( RePro & ) -> already RePro data there." );
   ReProData = true;
   string dataset = Str( path() ).preventedSlash().name()
@@ -740,14 +746,15 @@ void SaveFiles::save( const RePro &rp )
 
 void SaveFiles::writeRePro( void )
 {
-  //  cerr << "writeRePro()\n";
+  //  cerr << "SaveFiles::writeRePro(): ReProData=" << ReProData
+  //       << ", saving=" << saving() << "\n";
 
-  if ( ReProData ) {
+  if ( ReProData && saving() && ! Hold ) {
 
     // stimulus indices file:
-    if ( SF != 0 && saving() ) {
+    if ( SF != 0 ) {
       // save RePro info:
-      *SF << '\n';
+      *SF << "\n\n";
       ReProInfo.save( *SF, "# ", 0, Options::FirstOnly );
       // save StimulusKey:
       *SF << '\n';
@@ -755,7 +762,7 @@ void SaveFiles::writeRePro( void )
     }
 
     // xml metadata file:
-    if ( XF != 0 && saving() ) {
+    if ( XF != 0 ) {
       if ( DatasetOpen ) {
 	if ( ReProFiles.size() > 0 ) {
 	  string files = ReProFiles[0];
@@ -765,7 +772,7 @@ void SaveFiles::writeRePro( void )
 	  p.saveXML( *XF, 2, 4 );
 	}
 	ReProFiles.clear();
-	*XF << "  </section>\n";
+	*XF << "    </section>\n";
       }
       ReProInfo.saveXML( *XF, 0, Options::FirstOnly | Options::DontCloseSection, 1 );
       StimuliReProCount[ StimuliRePro ] = 0;
@@ -996,7 +1003,6 @@ void SaveFiles::createStimulusFile( const InList &traces,
       *SF << "# maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
     }
     *SF << "# stimulus descriptions file: stimlus-descriptions.dat\n";
-    *SF << '\n';
 
     // create key:
     StimulusKey.clear();
@@ -1070,10 +1076,10 @@ void SaveFiles::createXMLFile( const InList &traces,
     *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
     *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
     *XF << "<odML version=\"1\">\n";
-    *XF << "  <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
-    *XF << "  <section>\n";
-    *XF << "    <type>hardware</type>\n";
-    *XF << "    <name>hardware-" << name << "</name>\n";
+    *XF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
+    *XF << "    <section>\n";
+    *XF << "        <type>hardware</type>\n";
+    *XF << "        <name>hardware-" << name << "</name>\n";
     for ( int k=0; k<RW->ADV->size(); k++ ) {
       const Device &dev = (*RW->ADV)[k];
       int dt = dev.deviceType();
@@ -1090,13 +1096,13 @@ void SaveFiles::createXMLFile( const InList &traces,
 	dts = "Attenuation";
       Options opts( dev.info() );
       opts.erase( "type" );
-      *XF << "    <section>\n";
-      *XF << "      <type>" << dts << "</type>\n";
-      *XF << "      <name>hardware-" << dts << "-" << name << "</name>\n";
+      *XF << "        <section>\n";
+      *XF << "            <type>" << dts << "</type>\n";
+      *XF << "            <name>hardware-" << dts << "-" << name << "</name>\n";
       opts.saveXML( *XF, 0, Options::FirstOnly, 3 );
-      *XF << "    </section>\n";
+      *XF << "        </section>\n";
     }
-    *XF << "  </section>\n";
+    *XF << "    </section>\n";
   }
 
   // create xml file for stimulus metadata:
@@ -1105,7 +1111,7 @@ void SaveFiles::createXMLFile( const InList &traces,
     *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
     *XSF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
     *XSF << "<odML version=\"1\">\n";
-    *XSF << "<repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
+    *XSF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
   }
 }
 
@@ -1269,7 +1275,7 @@ void SaveFiles::closeFiles( void )
 	p.saveXML( *XF, 2, 4 );
       }
       ReProFiles.clear();
-      *XF << "  </section>\n";
+      *XF << "    </section>\n";
       DatasetOpen = false;
     }
     string name = Str( path() ).preventedSlash().name();
