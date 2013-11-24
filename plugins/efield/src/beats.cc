@@ -46,7 +46,7 @@ Beats::Beats( void )
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
   newSection( "Chirps" );
-  addBoolean( "generatechirp", "Generate chirps", false );
+  addBoolean( "generatechirps", "Generate chirps", false );
   addNumber( "chirpsize", "Size of chirp", 100.0, 0.0, 1000.0, 10.0, "Hz" );
   addNumber( "chirpwidth", "Width of chirp", 0.1, 0.002, 100.0, 0.001, "sec", "ms" );
   addNumber( "chirpampl", "Amplitude reduction during chirp", 0.0, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
@@ -134,6 +134,8 @@ int Beats::main( void )
 	return Failed;
       }
       chirptimes = cf.col( 0 );
+      printlog( "Read in " + Str( chirptimes.size() ) + " chirp times from file "
+		+ chirptimesfile + "." );
     }
     else if ( ! chirpfrequencies.empty() ) {
       double maxt = duration * max( chirpfrequencies );
@@ -142,6 +144,7 @@ int Beats::main( void )
 	chirptimes.push( t );
 	t += 1.0;
       } while ( t < maxt );
+      printlog( "Generated " + Str( chirptimes.size() ) + " chirp times." );
     }
     generatechirps = ( ! chirptimes.empty() || ! chirpfrequencies.empty() );
   }
@@ -229,31 +232,6 @@ int Beats::main( void )
 
       setSaving( true );
 
-      // meassage:
-      Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
-      s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
-      if ( repeats != 1 ) {
-	s += "  Loop:  <b>" + Str( count+1 ) + "</b>";
-	if ( repeats > 0 )
-	  s += " from  <b>" + Str( repeats ) + "</b>";
-      }
-      if ( repeats > 0 ) {
-	int rc = dfrange.remainingCount();
-	rc += dfrange.maxCount()*(repeats-count-1);
-	int rs = (duration + pause)*rc;
-	double rm = floor( rs/60.0 );
-	rs -= rm*60.0;
-	double rh = floor( rm/60.0 );
-	rm -= rh*60.0;
-	string rt = "";
-	if ( rh > 0.0 )
-	  rt += Str( rh, 0, 0, 'f' ) + "h";
-	rt += Str( rm, 2, 0, 'f', '0' ) + "min";
-	rt += Str( rs, 2, 0, 'f', '0' ) + "sec";
-	s += "  Remaining time:  <b>" + rt + "</b>";
-      }
-      message( s );
-
       // plot:
       initPlot( deltaf, amplitude, duration, eodfrequency, fishchirps,
 		showstimulus, stimfrequency, playedchirptimes );
@@ -263,6 +241,7 @@ int Beats::main( void )
       double stimulusrate = fishrate + deltaf;
       double ramptime = 0.0;
       Options chirpheader;
+      double chirpfrequency = 0.0;
       OutList signal;
       if ( fixeddf ) {
 	chirpheader.clear();
@@ -309,12 +288,12 @@ int Beats::main( void )
 	unlockAll();
 	if ( generatechirps ) {
 	  // EOD with chirps:
-	  double cf = 1.0;
+	  chirpfrequency = 1.0;
 	  if ( chirpfrequencies.size() == 1 )
-	    cf = chirpfrequencies[0];
+	    chirpfrequency = chirpfrequencies[0];
 	  else if ( chirpfrequencies.size() > 1 )
-	    cf = chirpfrequencies[dfrange.pos()];
-	  if ( cf < 1e-8 ) {
+	    chirpfrequency = chirpfrequencies[dfrange.pos()];
+	  if ( chirpfrequency < 1e-8 ) {
 	    warning( "Chirp frequency too small or negative!" );
 	    P.lock();
 	    P.clear();
@@ -322,7 +301,7 @@ int Beats::main( void )
 	    return Failed;
 	  }
 	  currentchirptimes = chirptimes;
-	  currentchirptimes *= 1.0/cf;
+	  currentchirptimes *= 1.0/chirpfrequency;
 	  sig.clear();
 	  if ( sig.fixedSampleRate() )
 	    sig.setSampleInterval( sig.minSampleInterval() );
@@ -358,7 +337,7 @@ int Beats::main( void )
 	  chirpheader.addNumber( "ChirpWidth", 1000.0*chirpwidth, "ms" );
 	  chirpheader.addNumber( "ChirpAmplitude", 100.0*(1.0-chirpampl), "%" );
 	  chirpheader.addNumber( "ChirpKurtosis", chirpkurtosis );
-	  chirpheader.addNumber( "ChirpFrequency", cf, "Hz" );
+	  chirpheader.addNumber( "ChirpFrequency", chirpfrequency, "Hz" );
 	  if ( ! chirptimesfile.empty() && ! chirptimes.empty() )
 	    chirpheader.addText( "ChirpTimesFile", chirptimesfile );
 	  chirpheader.addInteger( "ChirpNumber", k );
@@ -438,6 +417,34 @@ int Beats::main( void )
 	return Aborted;
       }
       double signaltime = signalTime();
+
+
+      // meassage:
+      Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
+      s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
+      if ( generatechirps )
+	s += "  Chirps: <b>" + Str( chirpsize, "%g" ) + "Hz @ " + Str( chirpfrequency, "%.2f" ) + "Hz</b>";
+      if ( repeats != 1 ) {
+	s += "  Loop:  <b>" + Str( count+1 ) + "</b>";
+	if ( repeats > 0 )
+	  s += " from  <b>" + Str( repeats ) + "</b>";
+      }
+      if ( repeats > 0 ) {
+	int rc = dfrange.remainingCount();
+	rc += dfrange.maxCount()*(repeats-count-1);
+	int rs = (duration + pause)*rc;
+	double rm = floor( rs/60.0 );
+	rs -= rm*60.0;
+	double rh = floor( rm/60.0 );
+	rm -= rh*60.0;
+	string rt = "";
+	if ( rh > 0.0 )
+	  rt += Str( rh, 0, 0, 'f' ) + "h";
+	rt += Str( rm, 2, 0, 'f', '0' ) + "min";
+	rt += Str( rs, 2, 0, 'f', '0' ) + "sec";
+	s += "  Remaining time:  <b>" + rt + "</b>";
+      }
+      message( s );
 
       // stimulation loop:
       do {

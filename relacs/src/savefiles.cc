@@ -306,7 +306,7 @@ void SaveFiles::writeToggle( void )
   if ( ToggleData && ! Hold ) {
 
     if ( ToggleOn && ! saving() ) {
-      cerr << "SaveFiles::writeToggle(): switched saving on!\n";
+      RW->printlog( "SaveFiles::writeToggle(): switched saving on!" );
       // update offsets:
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
 	TraceFiles[k].Index = TraceFiles[k].Trace.size();
@@ -355,7 +355,9 @@ void SaveFiles::saveTraces( void )
   if ( ! EventFiles.empty() && EventFiles[0].Events.size() > 0 ) {
     double st = EventFiles[0].Events.back();
     if ( saving() && ::fabs( TraceFiles[0].Trace.signalTime() - st ) >= TraceFiles[0].Trace.stepsize() )
-      cerr << "Warning in SaveFiles::saveTraces() -> SignalTime PROBLEM, trace: " << Str( TraceFiles[0].Trace.signalTime(), 0, 5, 'f' ) << " stimulus: " << Str( st, 0, 5, 'f' ) << "\n";
+      RW->printlog( "Warning in SaveFiles::saveTraces() -> SignalTime PROBLEM, trace: " +
+		    Str( TraceFiles[0].Trace.signalTime(), 0, 5, 'f' ) +
+		    " stimulus: " + Str( st, 0, 5, 'f' ) );
     if ( st > PrevSignalTime )
       SignalTime = st;
   }
@@ -454,7 +456,8 @@ void SaveFiles::save( const OutData &signal )
   QMutexLocker locker( &SaveMutex );
 
   if ( !Stimuli.empty() ) {
-    RW->printlog( "! warning: SaveFiles::save( OutData & ) -> already stimulus data there" );
+    if ( saving() )
+      RW->printlog( "! warning: SaveFiles::save( OutData & ) -> already stimulus data there" );
     Stimuli.clear();
   }
 
@@ -480,7 +483,8 @@ void SaveFiles::save( const OutList &signal )
   QMutexLocker locker( &SaveMutex );
 
   if ( !Stimuli.empty() ) {
-    RW->printlog( "! warning: SaveFiles::save( OutList& ) -> already stimulus data there" );
+    if ( saving() )
+      RW->printlog( "! warning: SaveFiles::save( OutList& ) -> already stimulus data there" );
     Stimuli.clear();
   }
 

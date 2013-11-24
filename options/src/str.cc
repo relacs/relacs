@@ -2620,6 +2620,7 @@ void Str::range( vector< double > &rd, const string &sep, const string &r ) cons
   string space = sep;
   if ( ! r.empty() && r[0] != '.' )
     space += r;
+  space += BlankSpace;
   
   int next;
   int index = 0;
