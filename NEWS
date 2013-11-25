@@ -1,7 +1,11 @@
 Version 0.9.8
 
+November, 2013
+  Simplified blocking issues of the data-acquisition core for
+  improved data acquisition performance
+
 November, 2012
-  Made internal representation of key-value pais is hierarchical 
+  Made internal representation of key-value pais hierarchical 
   to simplify lots of code and to better fit the odML standard.
 
 Version 0.9.7

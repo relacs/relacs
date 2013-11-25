@@ -112,6 +112,7 @@ MetaData::MetaData( RELACSWidget *rw )
   : SaveFlags( 0 ),
     CoreData( RELACSPlugin::Core, this ),
     PluginData( RELACSPlugin::Plugins, this ),
+    AddedSection( 0 ),
     Dialog( false ),
     MetaDataLock( QMutex::Recursive ),
     RW( rw )
@@ -131,7 +132,7 @@ void MetaData::notify( void )
 }
 
 
-void MetaData::save( const string &title, const Options &opts )
+void MetaData::update( void )
 {
   lock();
 
@@ -148,24 +149,47 @@ void MetaData::save( const string &title, const Options &opts )
     (*sp)->setText( "Mode", RW->modeStr() );
   }
 
+  unlock();
+}
+
+
+void MetaData::add( const string &title, const Options &opts )
+{
+  lock();
+
+  // add model options:
+  AddedSection = 0;
+  if ( ! title.empty() && ! opts.empty() )
+    AddedSection = &newSection( opts, title ).addFlags( saveFlags() );
+
+  unlock();
+}
+
+
+void MetaData::remove( void )
+{
+  lock();
+
+  if ( AddedSection != 0 )
+    erase( AddedSection );
+
+  unlock();
+}
+
+
+void MetaData::save( void )
+{
+  lock();
+
   // write infofile:
   RW->SS.lock();
   ofstream of( RW->SF->addPath( RW->SS.text( "infofile" ) ).c_str() );
   RW->SS.unlock();
 
-  // add model options:
-  Options *mo = 0;
-  if ( ! title.empty() && ! opts.empty() )
-    mo = &newSection( opts, title ).addFlags( saveFlags() );
-
   // save meta data:
   Options::save( of, "# ", saveFlags(), Options::FirstOnly + Options::NoType );
 
-  if ( mo != 0 )
-    erase( mo );
-
   unlock();
-
 }
 
 

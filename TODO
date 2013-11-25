@@ -5,10 +5,8 @@ New InData threading:
 - Model: improve locking by adding an extra Mutex for push() and pop()
 - SaveFiles: where does stimulus intensity go, if there is no amplifier?
   (e.g. patchclamp::MembranerEsistance)
-- SaveFiles: RELACSWidget::stopSession() "MTDT.save( modeltitle, modelopts );"
-  also needs to go into metadta.xml file. Maybe MetaData should be more closely tied to SaveFiles.
+- SaveFiles: RePros without stimuli should get their start into stimuli.dat
 - SaveFiles: recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
-
 
 Options:
 - Check readAppend() functions!
@@ -72,7 +70,7 @@ Metadata support of OutData:
 - Where does setIntensity() get its unit from for descriptions?
 - Check usages of some "header" information in
   auditory::singlestimulus, auditoryprojects::spikeprecision.cc, patchclamp::singlestimulus, etc.
-- Can OutDataInfo, which is only used in SaveFiles, be replaced by Options or OutData/OutList with a copy function that only copies members butno data?
+- Can OutDataInfo, which is only used in SaveFiles, be replaced by Options or OutData/OutList with a copy function that only copies members but no data?
 - Check how OutList.description() can be used in SaveFiles
 - Check whether OutData/List.desription() can be filled up in SaveFiles
   and then passed to DataIndex - YES!

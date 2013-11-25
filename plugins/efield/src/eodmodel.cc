@@ -39,7 +39,7 @@ EODModel::EODModel( void )
   addBoolean( "interrupt", "Add interruptions", false );
   addNumber( "interruptduration", "Duration of interruption", 0.1, 0.0, 100.0, 0.1, "s", "ms" ).setActivation( "interrupt", "true" );
   addNumber( "interruptamplitude", "Amplitude fraction of interruption", 0.0, 0.0, 1.0, 0.5, "1", "%" ).setActivation( "interrupt", "true" );;
-  addNumber( "localstimulusgain", "Gain for additive stimulus component to local electrode", 0.0, 1.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "localstimulusgain", "Gain for additive stimulus component to local electrode", 0.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
   addNumber( "globalstimulusgain", "Gain for additive stimulus component to global electrode", 0.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
   addNumber( "stimulusgain", "Gain for stimulus recording channel", 1.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
 }

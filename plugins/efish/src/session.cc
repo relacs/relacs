@@ -189,24 +189,35 @@ void Session::config( void )
   lockMetaData();
   metaData().unsetNotify();
 
-  // additional meta data properties:
-  if ( ! metaData().existSection( "Cell" ) )
-    metaData().newSection( "Cell", "Cell" );
+  {
+    // additional meta data properties:
+    if ( ! metaData().existSection( "Subject" ) )
+      metaData().newSection( "Subject", "Subject" );
+    Options &mo = metaData().section( "Subject" );
+    mo.clearSections();
+    // following option is set by the BaselineActivity RePro:
+    mo.addNumber( "EOD Frequency", "EOD Frequency", 0.0, 0.0, 2000.0, 10.0, "Hz", "Hz", "%0.0f" );
+  }
 
-  Options &mo = metaData().section( "Cell" );
-  Options::section_iterator sp = mo.findSection( "Cell properties" );
-  if ( sp != mo.sectionsEnd() )
-    mo.erase( sp );
-  mo.newSection( "Cell properties" );
-  // following options are set by the BaselineActivity RePro
-  mo.addNumber( "EOD Frequency", "EOD Frequency", 0.0, 0.0, 2000.0, 10.0, "Hz", "Hz", "%0.0f" );
-  for ( int k=0; k<SpikeTraces; k++ ) {
-    if ( SpikeEvents[k] >= 0 ) {
-      Str ns( k+1 );
-      mo.addNumber( "Firing Rate"+ns, "Firing Rate "+ns, 0.0, 0.0, 2000.0, 1.0, "Hz", "Hz", "%0.0f" );
-      mo.addNumber( "P-Value"+ns, "P-Value "+ns, 0.0, 0.0, 2.0, 0.1, "1", "1", "%0.2f" );
+  if ( EPhys ) {
+    // additional meta data properties:
+    if ( ! metaData().existSection( "Cell" ) )
+      metaData().newSection( "Cell", "Cell" );
+    Options &mo = metaData().section( "Cell" );
+    Options::section_iterator sp = mo.findSection( "Cell properties" );
+    if ( sp != mo.sectionsEnd() )
+      mo.erase( sp );
+    mo.newSection( "Cell properties" );
+    // following options are set by the BaselineActivity RePro
+    for ( int k=0; k<SpikeTraces; k++ ) {
+      if ( SpikeEvents[k] >= 0 ) {
+	Str ns( k+1 );
+	mo.addNumber( "Firing Rate"+ns, "Firing Rate "+ns, 0.0, 0.0, 2000.0, 1.0, "Hz", "Hz", "%0.0f" );
+	mo.addNumber( "P-Value"+ns, "P-Value "+ns, 0.0, 0.0, 2.0, 0.1, "1", "1", "%0.2f" );
+      }
     }
   }
+
   metaData().setNotify();
   unlockMetaData();
 }
@@ -270,6 +281,13 @@ void Session::sessionStarted( void )
   TemperatureOffset = WaterTemps.size() - 1;
   if ( TemperatureOffset < 0 )
     TemperatureOffset = 0;
+
+  if ( EODEvents >= 0 ) {
+    double eodrate = events( EODEvents ).frequency( currentTime()-0.5, currentTime() );
+    lockMetaData();
+    metaData().setNumber( "Subject>EOD Frequency", eodrate );
+    unlockMetaData();
+  }
 }
 
 

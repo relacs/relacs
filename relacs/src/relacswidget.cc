@@ -929,7 +929,7 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
     CurrentRePro->lockAll();
   }
   */
-  if ( SF->signalPending() )
+  if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   int r = AQ->setupWrite( signal );   // might take some time (20ms with DAQFlex)
@@ -984,7 +984,7 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
     CurrentRePro->lockAll();
   }
   */
-  if ( SF->signalPending() )
+  if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   int r = AQ->setupWrite( signal );
@@ -1040,7 +1040,7 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
     CurrentRePro->lockAll();
   }
   */
-  if ( SF->signalPending() )
+  if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   writeLockData();
@@ -1088,7 +1088,7 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
     CurrentRePro->lockAll();
   }
   */
-  if ( SF->signalPending() )
+  if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   writeLockData();
@@ -1369,14 +1369,10 @@ void RELACSWidget::stopSession( bool saved )
 {
   printlog( "Stop session" );
 
-  string modeltitle = "";
-  Options modelopts;
-  if ( MD != 0 && simulation() ) {
-    modeltitle = "Simulation parameter";
-    modelopts = MD->metaData();
-  }
-
-  MTDT.save( modeltitle, modelopts );
+  MTDT.update();
+  if ( MD != 0 && simulation() )
+    MTDT.add( "Simulation", MD->metaData() );
+  MTDT.save();
 
   if ( MD != 0 )
     MD->sessionStopped( saved );
@@ -1390,6 +1386,8 @@ void RELACSWidget::stopSession( bool saved )
     SF->deleteFiles();
 
   CurrentRePro->setSaving( SF->filesOpen() );
+
+  MTDT.remove();
 
   QPalette p( palette() );
   p.setColor( QPalette::Window, OrgBackground );

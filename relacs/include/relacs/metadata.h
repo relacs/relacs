@@ -135,10 +135,17 @@ public:
         This function calls notifyMetaData() in all RELACSPlugins. */
   virtual void notify( void );
 
-    /*! Saves the meta data of all sections into the info file of the session.
-        Additionally appends the meta data \a opts with title \a title
-        to the info file, if both of them are not empty. */
-  void save( const string &title="", const Options &opts = Options() );
+    /*! Update the values of the standarad meta data.
+        Should be called before save(). */
+  void update( void );
+    /*! Add the meta data \a opts with title \a title as a section to the meta data,
+        if both of them are not empty. \sa remove() */
+  void add( const string &title="", const Options &opts = Options() );
+    /*! Remove an added section from the metadata. \sa update() */
+  void remove( void );
+
+    /*! Saves the meta data of all sections into the info file of the session. */
+  void save( void );
     /*! Write meta data that have saveFlags() set in their flags()
         in XML format to output stream.
         \param[in] str the output stream
@@ -146,7 +153,8 @@ public:
         \param[in] name the name prefix for the name tag of the section.
         \return the output stream \a str */
   ostream &saveXML( ostream &str, int level=0, const string &name="" );
-    /*! Clear the meta data. */
+
+    /*! Clear the entire meta data. */
   void clear( void );
 
     /*! Notify MetaData about loaded meta data \a opt. */
@@ -222,6 +230,7 @@ private:
   static const int ConfigFlag = 512;
   static const int StandardFlag = 1024;
   int SaveFlags;
+  Options *AddedSection;
 
   MetaDataGroup CoreData;
   MetaDataGroup PluginData;

@@ -722,7 +722,7 @@ void BaselineActivity::analyze( int autodetect,
   EODRate = localeod.frequency( FirstSignal, FirstSignal+SearchDuration );
   EODPeriod = 1.0/EODRate;
   if ( Repeats > 0 )
-    metaData().setNumber( "Cell>EOD Frequency", EODRate );
+    metaData().setNumber( "Subject>EOD Frequency", EODRate );
   double eodampl = eodAmplitude( localeodtrace, LastSignal, FirstSignal+SearchDuration );
 
   // EOD times
