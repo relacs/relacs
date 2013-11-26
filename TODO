@@ -1,7 +1,6 @@
 New InData threading:
 - Improve RELACSWidget::write() and stopRePro() etc.
 - Clean up RELACSWidget run() etc.
-- Remove the BufferArray and xbufferarray from numerics
 - Model: improve locking by adding an extra Mutex for push() and pop()
 - SaveFiles: where does stimulus intensity go, if there is no amplifier?
   (e.g. patchclamp::MembranerEsistance)

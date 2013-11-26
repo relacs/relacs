@@ -31,7 +31,6 @@ pkginclude_HEADERS = \
     ../include/relacs/spectrum.h \
     ../include/relacs/statstests.h \
     \
-    ../include/relacs/bufferarray.h \
     ../include/relacs/containerops.h \
     ../include/relacs/containerfuncs.h \
     ../include/relacs/cyclicarray.h \
