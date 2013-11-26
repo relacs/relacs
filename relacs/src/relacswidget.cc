@@ -89,7 +89,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			    const string &cfgexamplespath,
 			    const string &iconpath,
 			    bool doxydoc,
-			    QSplashScreen *splash,
 			    ModeTypes mode, QWidget *parent )
   : QMainWindow( parent ),
     ConfigClass( "RELACS", RELACSPlugin::Core ),
@@ -450,11 +449,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     PT->widget()->setMinimumWidth( w );
     RP->setMinimumWidth( w );
   }
-  /*
-    XXX
-  if ( splash != 0 )
-    Thread->msleep( 2000 );
-  */
 
   // miscellaneous:
   setFocusPolicy( Qt::StrongFocus );
@@ -841,38 +835,6 @@ bool RELACSWidget::updateData( double mintracetime )
     return false;
 }
 
- /*
-void RELACSWidget::run( void )
-{
-
-  // stop all activity in case ReadLoop is not running any more:
-  UpdateDataWait.wakeAll();
-  stopRePro();
-  CW->requestStop();
-  wakeAll();
-  CW->wait( 0.2 );
-  ReadLoop.stop();
-  WriteLoop.stop();
-  ReadDataWait.wakeAll();
-  SimLoad.stop();
-  if ( AQ != 0 ) {
-    lockSignals();
-    lockAI();
-    AQ->stop();
-    unlockAI();
-    unlockSignals();
-  }
-  qApp->processEvents();
-  closeHardware();
-  RP->activateRePro( 0 );
-  AcquisitionAction->setEnabled( true );
-  SimulationAction->setEnabled( true );
-  IdleAction->setEnabled( false );
-  setMode( IdleMode );
-  RP->message( "<b>Idle-mode</b>" );
-}
- */
-
 
 void RELACSWidget::wakeAll( void )
 {
@@ -911,43 +873,22 @@ void RELACSWidget::activateGains( void )
 
 int RELACSWidget::write( OutData &signal, bool setsignaltime )
 {
-  /*
-  if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
-       SF->signalPending() )                   // the signal time might not have been transferred to SF
-    SF->saveTraces();
-  */
-  /*
-  // last stimulus still not saved?
-  if ( SF->signalPending() ) {
-    CurrentRePro->unlockAll();
-    // force data updates:
-    ThreadSleepWait.wakeAll();
-    do {
-      // wait for data updates:
-      UpdateDataWait.wait();
-    } while ( SF->signalPending() );
-    CurrentRePro->lockAll();
-  }
-  */
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   int r = AQ->setupWrite( signal );   // might take some time (20ms with DAQFlex)
-  if ( r >= 0 ) {
+  if ( r == 0 ) {
     writeLockData();
-    writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead() (60ms)
-    lockAI();        // might take some time (40-90ms)
-    r = AQ->startWrite( signal, setsignaltime );  // might take some time (90-200ms with DAQFlex)
+    writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+    lockAI();
+    r = AQ->startWrite( signal, setsignaltime );
     unlockAI();
     unlockBuffer();
     unlockData();
-    if ( r == 0 ) {
-      //      r = AQ->writeData();
-      WriteLoop.start( signal.writeTime() );
-    }
   }
   unlockSignals();
   if ( r == 0 ) {
+    WriteLoop.start( signal.writeTime() );
     lockSignals();
     SF->save( signal );
     unlockSignals();
@@ -966,29 +907,11 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
 
 int RELACSWidget::write( OutList &signal, bool setsignaltime )
 {
-  /*
-  if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
-       SF->signalPending() )                   // the signal time might not have been transferred to SF
-    SF->saveTraces();
-  */
-  /*
-  // last stimulus still not saved?
-  if ( SF->signalPending() ) {
-    CurrentRePro->unlockAll();
-    // force data updates:
-    ThreadSleepWait.wakeAll();
-    do {
-      // wait for data updates:
-      UpdateDataWait.wait();
-    } while ( SF->signalPending() );
-    CurrentRePro->lockAll();
-  }
-  */
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   int r = AQ->setupWrite( signal );
-  if ( r >= 0 ) {
+  if ( r == 0 ) {
     writeLockData();
     writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
     lockAI();
@@ -996,13 +919,10 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
     unlockAI();
     unlockBuffer();
     unlockData();
-    if ( r == 0 ) {
-      //      r = AQ->writeData();
-      WriteLoop.start( signal[0].writeTime() );
-    }
   }
   unlockSignals();
   if ( r == 0 ) {
+    WriteLoop.start( signal[0].writeTime() );
     lockSignals();
     SF->save( signal );
     unlockSignals();
@@ -1022,24 +942,6 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
 
 int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 {
-  /*
-  if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
-       SF->signalPending() )                   // the signal time might not have been transferred to SF
-    SF->saveTraces();
-  */
-  /*
-  // last stimulus still not saved?
-  if ( SF->signalPending() ) {
-    CurrentRePro->unlockAll();
-    // force data updates:
-    ThreadSleepWait.wakeAll();
-    do {
-      // wait for data updates:
-      UpdateDataWait.wait();
-    } while ( SF->signalPending() );
-    CurrentRePro->lockAll();
-  }
-  */
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
@@ -1070,24 +972,6 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 
 int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
 {
-  /*
-  if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
-       SF->signalPending() )                   // the signal time might not have been transferred to SF
-    SF->saveTraces();
-  */
-  /*
-  // last stimulus still not saved?
-  if ( SF->signalPending() ) {
-    CurrentRePro->unlockAll();
-    // force data updates:
-    ThreadSleepWait.wakeAll();
-    do {
-      // wait for data updates:
-      UpdateDataWait.wait();
-    } while ( SF->signalPending() );
-    CurrentRePro->lockAll();
-  }
-  */
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
@@ -1183,16 +1067,11 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   SN->incrReProCount();
 
   CurrentRePro->updateData();
-  readLockData();
+  // XXX lock SF ?
   SF->holdOn();
   CurrentRePro->setSaving( saving );
   SF->save( *CurrentRePro );
-  unlockData();
-  /* XXX
-  // make sure all paintEvents are finished:???
-  if ( CurrentRePro->widget() != 0 )
-    QCoreApplication::sendPostedEvents( CurrentRePro->widget(), 0 );
-  */
+  // XXX unlock SF ?
   CurrentRePro->start( QThread::HighPriority );
 }
 
@@ -1204,20 +1083,10 @@ void RELACSWidget::stopRePro( void )
 
   // wait on RePro to stop:
   if ( CurrentRePro->isRunning() ) {
-    /*
-    // wait for the RePro to leave sensible code:
-    CurrentRePro->lock();
-    // RePro needs to be unlocked here,
-    // so that sendPostedEvents() does not wait on the RePro to unlock()!
-    CurrentRePro->unlock();
-    */
-
     // dispatch all posted events (that usually paint the RePro...)
     // as long as the RePro is normally running, so that it has
     // still all internal variables available:
     QCoreApplication::sendPostedEvents();
-    //    qApp->processEvents( QEventLoop::AllEvents, 100 );
-
     // request and wait for the RePro to properly terminate:
     CurrentRePro->requestStop();
     // the RePro may wait for an event to be processed:
@@ -1229,25 +1098,13 @@ void RELACSWidget::stopRePro( void )
   ReProRunning = false;
   window()->setFocus();
 
-  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
-    SF->saveTraces();
+  // save current data:
+  updateData();
   // last stimulus still not saved?
-  if ( SF->signalPending() ) {
-    // force data updates:
-    if ( ReadLoop.isRunning() ) {
-      // XXX here we need to write from SaveFile whatever is available!
-      /*
-      // XXX wait needs a locked mutex!
-      QMutex mutex;
-      mutex.lock();
-      ProcessDataWait.wait( &mutex );
-      mutex.unlock(); // XXX
-      */
-    }
+  if ( SF->signalPending() )
     SF->clearSignal();
-  }
 
-  // update Session:
+  // wake up controls waiting on RePros to finish:
   ReProAfterWait.wakeAll();
 }
 
@@ -1675,9 +1532,11 @@ void RELACSWidget::startFirstAcquisition( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
+  writeLockBuffer();
   lockAI();
   int r = AQ->read( IL );
   unlockAI();
+  unlockBuffer();
   if ( r < 0 ) {
     printlog( "! error in starting data acquisition: " + IL.errorText() );
     MessageBox::warning( "RELACS Warning !",
@@ -1710,9 +1569,15 @@ void RELACSWidget::startFirstAcquisition( void )
   RunDataMutex.unlock();
 
   // reset analog output for dynamic clamp:
+  lockSignals();
+  writeLockData();
+  writeLockBuffer();
   lockAI();
   string wr = AQ->writeReset( true, true );
   unlockAI();
+  unlockBuffer();
+  unlockData();
+  unlockSignals();
   if ( ! wr.empty() ) {
     printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed: " + wr );
     MessageBox::warning( "RELACS Warning !",
@@ -1830,14 +1695,18 @@ void RELACSWidget::startFirstSimulation( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
+  writeLockBuffer();
   lockAI();
   int r = AQ->read( IL );
   unlockAI();
+  unlockBuffer();
   if ( r < 0 ) {
     // give it a second chance with the adjusted input parameter:
+    writeLockBuffer();
     lockAI();
     r = AQ->read( IL );
     unlockAI();
+    unlockBuffer();
     if ( r < 0 ) {
       printlog( "! error in starting data acquisition: " + IL.errorText() );
       MessageBox::warning( "RELACS Warning !",

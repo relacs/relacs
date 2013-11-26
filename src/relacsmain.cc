@@ -23,9 +23,19 @@
 #include <getopt.h>
 #include <QApplication>
 #include <QSplashScreen>
+#include <QThread>
 #include <relacs/relacswidget.h>
 
 using namespace std;
+
+
+class Sleep : public QThread
+{
+public:
+  static void sleep( unsigned long secs ) {
+    QThread::sleep( secs );
+  }
+};
 
 
 int main( int argc, char **argv )
@@ -144,10 +154,12 @@ int main( int argc, char **argv )
   relacs::RELACSWidget relacs( pluginrelative, pluginhomes, pluginhelp,
 			       coreconfigfiles, pluginconfigfiles, 
 			       docpath, cfgexamplespath,
-			       iconpath, doxydoc, splash, mode );
+			       iconpath, doxydoc, mode );
 
-  if ( splashscreen )
+  if ( splashscreen ) {
+    Sleep::sleep( 2 );
     splash->showMessage( "Finished ...", Qt::AlignLeft | Qt::AlignBottom );
+  }
 
   if ( fullscreen )
     relacs.fullScreen();

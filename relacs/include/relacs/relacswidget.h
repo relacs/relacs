@@ -33,7 +33,6 @@
 #include <QMutex>
 #include <QReadWriteLock>
 #include <QWaitCondition>
-#include <QSplashScreen>
 #include <QApplication>
 #include <deque>
 #include <relacs/strqueue.h>
@@ -120,7 +119,6 @@ public:
 		const string &cfgexamplespath,
 		const string &iconpath,
 		bool doxydoc,
-		QSplashScreen *splash,
 		ModeTypes mode,
 		QWidget *parent=0 );
   ~RELACSWidget( void );
