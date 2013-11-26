@@ -39,10 +39,10 @@ namespace relacs {
 PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   : RELACSPlugin( "PlotTrace: PlotTrace", RELACSPlugin::Plugins,
 		  "PlotTrace", "base", "Jan Benda", "1.0", "Dec 1, 2009" ),
-    PlotElements( 1, -1 ),
     Menu( 0 ),
     PlotTimer( this ),
-    P( 1, Plot::Pointer, parent )
+    P( 1, Plot::Pointer, parent ),
+    PlotElements( 1, -1 )
 {
   setRELACSWidget( rw );
 
@@ -186,9 +186,8 @@ void PlotTrace::resize( void )
 {
   // count active plots:
   VP.clear();
-  VP.reserve( traces().size() );
-  for ( int c=0; c<traces().size(); c++ ) {
-    if ( trace(c).mode() & PlotTraceMode )
+  for ( unsigned int c=0; c<PlotProps.size(); c++ ) {
+    if ( PlotProps[c].Visible )
       VP.push_back( c );
   }
   P.lock();
@@ -206,10 +205,7 @@ void PlotTrace::resize( void )
 
     for ( int c=0; c<traces().size(); c++ ) {
       P[c].clear();
-      if ( trace(c).mode() & PlotTraceMode )
-	P[c].setSkip( false );
-      else
-	P[c].setSkip( true );
+      P[c].setSkip( ! PlotProps[c].Visible );
     }
     
     double lmarg = 11.0;
@@ -263,8 +259,8 @@ void PlotTrace::toggle( QAction *mtrace )
   // check for valid trace:
   bool nodata = true;
   unsigned int i=0;
-  for ( i=0; i<PlotActions.size(); i++ ) {
-    if ( PlotActions[i] == mtrace ) {
+  for ( i=0; i<PlotProps.size(); i++ ) {
+    if ( PlotProps[i].Action == mtrace ) {
       nodata = false;
       break;
     }
@@ -272,21 +268,17 @@ void PlotTrace::toggle( QAction *mtrace )
   if ( nodata )
     return;
 
-  int m = trace(i).mode();
-  if ( m & PlotTraceMode ) {
-    for ( unsigned int k=0; (int)k<traces().size(); k++ ) {
-      if ( k != i && ( trace(k).mode() & PlotTraceMode ) ) {
-	m &= ~PlotTraceMode;
-	PlotActions[i]->setChecked( false );
+  if ( PlotProps[i].Visible ) {
+    for ( unsigned int k=0; k<PlotProps.size(); k++ ) {
+      if ( k != i && PlotProps[k].Visible ) {
+	PlotProps[i].Visible = false;
 	break;
       }
     }
   }
-  else {
-    m |= PlotTraceMode;
-    PlotActions[i]->setChecked( true );
-  }
-  const_cast<InData&>(trace(i)).setMode( m );
+  else
+    PlotProps[i].Visible = true;
+  PlotProps[i].Action->setChecked( PlotProps[i].Visible );
   resize();
   plot();
 }
@@ -400,7 +392,8 @@ void PlotTrace::init( void )
     }
 
   // set xlabel:
-  P[VP.back()].setXLabel( tunit );
+  if ( VP.size() > 0 )
+    P[VP.back()].setXLabel( tunit );
 
   // trigger source:
   TriggerSource = -1;
@@ -418,7 +411,6 @@ void PlotTrace::init( void )
 
 void PlotTrace::plot( void )
 {
-  //  cerr << "PLOTTRACE\n" << traces() << '\n';
   P.lock();
   bool plotting = Plotting;
   P.unlock();
@@ -426,7 +418,6 @@ void PlotTrace::plot( void )
     return;
 
   // get data:
-  // XXX once we have the loop for saving data, this should simply be getData()!!!
   updateData();
 
   if ( PlotChanged ) {
@@ -543,14 +534,16 @@ void PlotTrace::addMenu( QMenu *menu )
 
   Menu->addSeparator();
 
-  PlotActions.clear();
+  PlotProps.clear();
   for ( int k=0; k<traces().size(); k++ ) {
     string s = "&" + Str( k+1 );
     s += " ";
     s += trace(k).ident();
-    PlotActions.push_back( Menu->addAction( s.c_str() ) );
-    PlotActions.back()->setCheckable( true );
-    PlotActions.back()->setChecked( true );
+    PlotProps.push_back( PlotProperties() );
+    PlotProps.back().Action = Menu->addAction( s.c_str() );
+    PlotProps.back().Action->setCheckable( true );
+    PlotProps.back().Visible = true;
+    PlotProps.back().Action->setChecked( PlotProps.back().Visible );
   }
   connect( Menu, SIGNAL( triggered( QAction* ) ),
 	   this, SLOT( toggle( QAction* ) ) );
@@ -562,18 +555,18 @@ void PlotTrace::updateMenu( void )
   if ( Menu != 0 ) {
 
     // remove old traces:
-    for ( unsigned int k=0; k<PlotActions.size(); k++ )
-      Menu->removeAction( PlotActions[k] );
-    PlotActions.clear();
+    for ( unsigned int k=0; k<PlotProps.size(); k++ )
+      Menu->removeAction( PlotProps[k].Action );
+    PlotProps.resize( traces().size() );
 
     // add new traces:
     for ( int k=0; k<traces().size(); k++ ) {
       string s = "&" + Str( k+1 );
       s += " ";
       s += trace(k).ident();
-      PlotActions.push_back( Menu->addAction( s.c_str() ) );
-      PlotActions.back()->setCheckable( true );
-      PlotActions.back()->setChecked( (trace(k).mode() & PlotTraceMode) > 0 );
+      PlotProps[k].Action = Menu->addAction( s.c_str() );
+      PlotProps[k].Action->setCheckable( true );
+      PlotProps[k].Action->setChecked( PlotProps.back().Visible );
     }
   }
 }
@@ -1099,8 +1092,8 @@ void PlotTrace::keyPressEvent( QKeyEvent *event )
   case Qt::Key_1: case Qt::Key_2: case Qt::Key_3: case Qt::Key_4: case Qt::Key_5: 
   case Qt::Key_6: case Qt::Key_7: case Qt::Key_8: case Qt::Key_9: {
     int n = event->key() - Qt::Key_1;
-    if ( n >=0 && n < (int)PlotActions.size() )
-      toggle( PlotActions[n] );
+    if ( n >=0 && n < (int)PlotProps.size() )
+      toggle( PlotProps[n].Action );
     break;
   }
 

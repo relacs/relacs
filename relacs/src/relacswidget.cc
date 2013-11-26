@@ -1639,9 +1639,9 @@ void RELACSWidget::startFirstAcquisition( void )
   PT->assignTracesEvents( IL, ED );
   RP->assignTracesEvents( IL, ED );
 
-  // plot:
-  PT->resize();
+  // plots:
   PT->updateMenu();
+  PT->resize();
 
   CFG.preConfigure( RELACSPlugin::Plugins );
   // XXX before configuring, something like AQ->init would be nice
@@ -1792,8 +1792,8 @@ void RELACSWidget::startFirstSimulation( void )
   RP->assignTracesEvents( IL, ED );
 
   // plots:
-  PT->resize();
   PT->updateMenu();
+  PT->resize();
 
   SimLabel->setText( "" );
   SimLabel->show();

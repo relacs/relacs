@@ -110,9 +110,9 @@ void MetaDataGroup::addRecordingOptions( Options *opt )
 
 MetaData::MetaData( RELACSWidget *rw )
   : SaveFlags( 0 ),
+    AddedSection( 0 ),
     CoreData( RELACSPlugin::Core, this ),
     PluginData( RELACSPlugin::Plugins, this ),
-    AddedSection( 0 ),
     Dialog( false ),
     MetaDataLock( QMutex::Recursive ),
     RW( rw )

@@ -26,7 +26,7 @@
 #include <QPushButton>
 #include <QMenu>
 #include <QTimer>
-#include <vector>
+#include <deque>
 #include <relacs/relacsplugin.h>
 #include <relacs/multiplot.h>
 
@@ -220,16 +220,28 @@ private:
   double AutoTime;
   double AutoOffs;
 
-  vector< int > PlotElements;
-
-  vector< QAction* > PlotActions;
+  struct PlotProperties
+  {
+    PlotProperties( void )
+    : Action( 0 ),
+      Visible( true )
+    {};
+    PlotProperties( const PlotProperties &p )
+    : Action( p.Action ),
+      Visible( p.Visible )
+    {};
+    QAction* Action;
+    bool Visible;
+  };
+  deque< PlotProperties > PlotProps;
 
   QMenu *Menu;
 
   QTimer PlotTimer;
 
   MultiPlot P;
-  vector< int > VP;  // the indices of the visible plots
+  deque< int > VP;  // the indices of the visible plots
+  deque< int > PlotElements;
 
 };
 
