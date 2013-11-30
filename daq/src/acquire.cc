@@ -1405,9 +1405,6 @@ int Acquire::testWrite( OutData &signal )
     }
   }
 
-  // request buffer size:
-  signal.setWriteTime( BufferTime );
-
   // write to daq board:
   OutList ol( &signal );  
   AO[di].AO->testWrite( ol );
@@ -1568,11 +1565,6 @@ int Acquire::testWrite( OutList &signal )
     }
   }
 
-  // request buffer size:
-  for ( unsigned int i=0; i<AO.size(); i++ ) {
-    AO[i].Signals.setWriteTime( BufferTime );
-  }
-
   // test writing to daq boards:
   for ( unsigned int i=0; i<dis.size(); i++ ) {
     if ( AO[dis[i]].AO->testWrite( dsignals[i] ) != 0 )
@@ -1679,9 +1671,6 @@ int Acquire::setupWrite( OutData &signal )
     AO[di].Signals.clear();
     return -1;
   }
-
-  // request buffer size:
-  signal.setWriteTime( BufferTime );
 
   // test writing to daq board:
   Signal.clear();
@@ -1914,10 +1903,6 @@ int Acquire::setupWrite( OutList &signal )
       AO[i].Signals.clear();
     return -1;
   }
-
-  // request buffer size:
-  for ( unsigned int i=0; i<AO.size(); i++ )
-    AO[i].Signals.setWriteTime( BufferTime );
 
   // test writing to daq boards:
   for ( unsigned int i=0; i<AO.size(); i++ ) {

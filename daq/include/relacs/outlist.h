@@ -146,9 +146,6 @@ public:
     /*! If \a restart is set to \c true, then the ouput of the signals
         will restart the data acquisition. */
   void setRestart( bool restart=true );
-    /*! Set the maximum time the hardware driver should buffer the data
-        to \a time seconds. */
-  void setWriteTime( double time );
 
     /*! Reset the device indices. */
   void deviceReset( void );

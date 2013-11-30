@@ -316,13 +316,6 @@ void OutList::setRestart( bool restart )
 }
 
 
-void OutList::setWriteTime( double time )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).setWriteTime( time );
-}
-
-
 void OutList::deviceReset( void )
 {
   for ( int k=0; k<size(); k++ )

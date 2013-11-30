@@ -151,9 +151,6 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
   comedi_set_buffer_size( DeviceP, SubDevice, ReadBufferSize );
   ReadBufferSize = comedi_get_buffer_size( DeviceP, SubDevice );
 
-  // make read calls non blocking:
-  fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
-
   // get calibration:
   {
     char *calibpath = comedi_get_default_calibration_path( DeviceP );

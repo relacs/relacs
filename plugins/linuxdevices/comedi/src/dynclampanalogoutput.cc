@@ -214,7 +214,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
   // initialize Connection to RTAI-FIFO:
   char fifoName[] = "/dev/rtfxxx";
   sprintf( fifoName, "/dev/rtf%u", deviceIOC.fifoIndex );
-  FifoFd = ::open( fifoName, O_WRONLY | O_NONBLOCK );
+  FifoFd = ::open( fifoName, O_WRONLY );
   if( FifoFd < 0 ) {
     cerr << " DynClampAnalogOutput::startWrite -> oping RTAI-FIFO " 
          << fifoName << " failed!\n";
@@ -672,7 +672,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   setupChanList( ol, chanlist, MAXCHANLIST, false );
 
   double buffertime = sigs[0].interval( FIFOSize/BufferElemSize/sigs.size() );
-  if ( buffertime < sigs[0].writeTime() )
+  if ( buffertime < 0.001 )
     ol.addError( DaqError::InvalidBufferTime );
 
   if( ol.failed() )
@@ -774,16 +774,10 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     ol[k].deviceReset( 0 );
 
   // set buffer size:
-  int bi = sigs[0].indices( sigs[0].writeTime() );
-  if ( bi <= 0 )
-    bi = 100;
-  //  BufferSize = 5*sigs.size()*bi*BufferElemSize;
-  BufferSize = 200*sigs.size()*bi*BufferElemSize;   // XXX This seems a bit large!!!!
+  BufferSize = FIFOSize;
   int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
   if ( nbuffer < BufferSize )
     BufferSize = nbuffer;
-  if ( BufferSize > FIFOSize/(int)BufferElemSize )
-    sigs.addError( DaqError::InvalidBufferTime );
 
   setSettings( ol, BufferSize );
 

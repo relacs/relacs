@@ -440,7 +440,8 @@ int NIAO::startWrite( void )
   if ( Sigs == 0 )
     return -1;
 
-  int bufsize = Sigs->size()*sizeof( signed short )*(*Sigs)[0].indices( (*Sigs)[0].writeTime() );
+  // XXX use buffer for 5ms, this can be improved:
+  int bufsize = Sigs->size()*sizeof( signed short )*(*Sigs)[0].indices( 0.005 );
   int r = write( Handle, (*Sigs)[0].deviceBuffer(), bufsize );
 
   if ( r < 0 ) {

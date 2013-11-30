@@ -34,7 +34,7 @@ namespace daqflex {
 \class DAQFlexAnalogOutput
 \author Jan Benda
 \brief [AnalogOutput] Interface for accessing analog output of a DAQFlex board from Measurement Computing.
-\bug WORKS ONLY FOR 2ms updatetimes! XXXX Check what special buffersize this results in! That makes 512 Bytes - the packet size! XXX
+\bug Calibration is not yet implemented.
 */
 
 
@@ -167,8 +167,6 @@ private:
 
     /*! The sorted output signals that were prepared by prepareWrite(). */
   OutList Sigs;
-    /*! The approximate time writeData() should block in milliseconds. */
-  int WriteTime;
     /*! Size of the buffer for transfering data to the driver. */
   int BufferSize;
     /*! Buffer used for transfering data to the driver. */

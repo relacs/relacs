@@ -140,10 +140,6 @@ void AnalogOutput::setSettings( const OutList &sigs, int writebuffer )
   Settings.addInteger( "startsource", sigs[0].startSource() );
   Settings.addNumber( "delay", 1000.0*sigs[0].delay(), "ms" );
   Settings.addNumber( "sampling rate", 0.001*sigs[0].sampleRate(), "kHz" );
-  if ( sigs[0].writeTime() > 0.0 && writebuffer >= 0 )
-    Settings.addNumber( "write buffer time", 1000.0*sigs[0].writeTime(), "ms" );
-  if ( writebuffer > 0 )
-    Settings.addNumber( "write buffer size", writebuffer, "Byte" );
 }
 
 
@@ -225,10 +221,6 @@ int AnalogOutput::testWriteData( OutList &sigs )
     }
     if ( sigs[k].size() != sigs[0].size() ) {
       sigs[k].addError( DaqError::MultipleBuffersizes );
-    }
-    if ( fabs( sigs[k].writeTime() - sigs[0].writeTime() ) > 1e-7 ) {
-      sigs[k].addError( DaqError::MultipleBufferTimes ); 
-      sigs[k].setWriteTime( sigs[0].writeTime() );
     }
   }
 

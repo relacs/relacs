@@ -114,7 +114,7 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
   }
 
   // get the list of USB devices connected to the PC:
-  libusb_device ** list;
+  libusb_device **list;
   ssize_t listsize = libusb_get_device_list( NULL, &list );
 
   // traverse the list of USB devices to find the requested device:
@@ -144,10 +144,8 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 	      libusb_release_interface( DeviceHandle, 0 );
 	      continue;
 	    }
-	    InPacketSize = libusb_get_max_iso_packet_size(  device,
-							    EndpointIn );
-	    OutPacketSize = libusb_get_max_iso_packet_size(  device,
-							     EndpointOut );
+	    InPacketSize = libusb_get_max_iso_packet_size( device, EndpointIn );
+	    OutPacketSize = libusb_get_max_iso_packet_size( device, EndpointOut );
 	    // get the device serial number:
 	    string message = sendMessage( "?DEV:MFGSER" );
 	    // erase message while keeping serial number:

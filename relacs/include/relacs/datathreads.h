@@ -37,7 +37,6 @@ class RELACSWidget;
 \class ReadThread
 \brief Thread for reading data from the daq boards
 \author Jan Benda
-\version 1.0
 */
 
 class ReadThread : public QThread
@@ -68,7 +67,6 @@ private:
 \class WriteThread
 \brief Thread for writing data to the daq boards
 \author Jan Benda
-\version 1.0
 */
 
 class WriteThread : public QThread
@@ -77,7 +75,7 @@ class WriteThread : public QThread
 public:
 
   WriteThread( RELACSWidget *rw );
-  void start( double writeinterval );
+  void start( void );
   void stop( void );
 
 
@@ -91,7 +89,6 @@ private:
   bool Run;
   QMutex RunMutex;
   RELACSWidget *RW;
-  double WriteInterval;
 
 };
 

@@ -888,7 +888,7 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
   }
   unlockSignals();
   if ( r == 0 ) {
-    WriteLoop.start( signal.writeTime() );
+    WriteLoop.start();
     lockSignals();
     SF->save( signal );
     unlockSignals();
@@ -922,7 +922,7 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
   }
   unlockSignals();
   if ( r == 0 ) {
-    WriteLoop.start( signal[0].writeTime() );
+    WriteLoop.start();
     lockSignals();
     SF->save( signal );
     unlockSignals();

@@ -2,11 +2,14 @@ New InData threading:
 - Check and further simplify RELACSWidget data locking
 - Can AQ->startWrite()/restartRead() made more independent from all the locks?
 - Update AnalogInput and AnalogOutput plugins!
+- Check whether InData, Acquire updateTime and readTime are still needed!
+  But we do not want to block on the input too long!
+  So maybe keep readTime.
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Check locking of SaveFiles data
 - Model: improve locking by adding an extra Mutex for push() and pop()
 - SaveFiles: where does stimulus intensity go, if there is no amplifier?
-  (e.g. patchclamp::MembranerEsistance)
+  (e.g. patchclamp::MembraneResistance)
 - SaveFiles: RePros without stimuli should get their start into stimuli.dat
 - SaveFiles: recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
 

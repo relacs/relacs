@@ -155,9 +155,6 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
     free( calibpath );
   }
 
-  // make write calls non blocking:
-  fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
-
   // initialize ranges:
   UnipolarRange.clear();
   BipolarRange.clear();
@@ -680,8 +677,8 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
     cmd.stop_src = TRIG_COUNT;
     // set length of acquisition as number of scans:
     cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay() );
-    // cmd.stop_arg -= 1; // for NI E Series - comedi-bug? 
-    // cmd.stop_arg += 2048; // for NI DAQCard - does not fix the problem!
+    // cmd.stop_arg -= 1; // XXX for NI E Series - comedi-bug? 
+    // cmd.stop_arg += 2048; // XXX for NI DAQCard - does not fix the problem!
   }
 
   cmd.chanlist = chanlist;
@@ -790,7 +787,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     delete [] cmd.chanlist;
 
   double buffertime = sigs[0].interval( bufferSize()/sigs.size() );
-  if ( buffertime < sigs[0].writeTime() ) {
+  if ( buffertime < 0.001 ) {
     sigs.addError( DaqError::InvalidBufferTime );
     retVal = -1;
   }
@@ -816,8 +813,10 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   ol.sortByChannel();
 
   // XXX Fix DAQCard bug: add 2k of zeros to the signals:
+  /*
   for ( int k=0; k<ol.size(); k++ )
     ol[k].append( 0.0, 2048 );
+  */
 
   if ( setupCommand( ol, Cmd, true ) < 0 )
     return -1;
@@ -844,18 +843,10 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     ol[k].deviceReset( delayinx );
 
   // set buffer size:
-  int bi = sigs[0].indices( sigs[0].writeTime() );
-  if ( bi <= 0 )
-    bi = 100;
-  //  BufferSize = 5*sigs.size()*bi*BufferElemSize;
-  BufferSize = 100*sigs.size()*bi*BufferElemSize;   // XXX This seems a bit large!!!!
+  BufferSize = bufferSize()*BufferElemSize;
   int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
   if ( nbuffer < BufferSize )
     BufferSize = nbuffer;
-  if ( BufferSize > bufferSize() )
-    sigs.addError( DaqError::InvalidBufferTime );
-  if ( BufferSize <= 0 )
-    sigs.addError( DaqError::NoData );
 
   setSettings( ol, BufferSize );
 

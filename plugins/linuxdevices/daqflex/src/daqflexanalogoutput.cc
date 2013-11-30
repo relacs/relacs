@@ -182,7 +182,6 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     if ( ! sigs[k].noIntensity() || ! sigs[k].noLevel() )
       scale *= maxboardvolt;
 
-
     // apply range:
     float v = sigs[k].size() > 0 ? sigs[k][0] : 0.0;
     if ( v > maxval )
@@ -214,13 +213,13 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
   double minval[ Sigs.size() ];
   double maxval[ Sigs.size() ];
   double scale[ Sigs.size() ];
-  const Calibration* calib[Sigs.size()];
+  //  const Calibration* calib[Sigs.size()];
   T zeros[ Sigs.size() ];
   for ( int k=0; k<Sigs.size(); k++ ) {
     minval[k] = Sigs[k].minValue();
     maxval[k] = Sigs[k].maxValue();
     scale[k] = Sigs[k].scale();
-    calib[k] = (const Calibration *)Sigs[k].gainData();
+    // calib[k] = (const Calibration *)Sigs[k].gainData();
     // XXX calibration?
     zeros[k] = (unsigned short)( (10.0/20.0) * 0xffff );
     // XXX    zeros[k] = comedi_from_physical( 0.0, calib[k] );
@@ -249,7 +248,6 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
 	v *= scale[k];
 	// XXX calibration?
 	*bp = (unsigned short)( ((v+10.0)/20.0) * 0xffff );
-	//	cerr << "V=" << v << " data=" << *bp << '\n';
 	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
 	  Sigs[k].incrDeviceCount();
       }
@@ -267,7 +265,7 @@ int DAQFlexAnalogOutput::testWriteDevice( OutList &sigs )
   int retVal = 0;
 
   double buffertime = sigs[0].interval( 0xffff/sigs.size() );
-  if ( buffertime < sigs[0].writeTime() ) {
+  if ( buffertime < 0.001 ) {
     sigs.addError( DaqError::InvalidBufferTime );
     retVal = -1;
   }
@@ -371,10 +369,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   }
 
   // set buffer size:
-  int bi = sigs[0].indices( 10.0 * sigs[0].writeTime() );
-  if ( bi <= DAQFlexDevice->aoFIFOSize() )
-    bi = DAQFlexDevice->aoFIFOSize();
-  BufferSize = sigs.size()*bi*2;
+  BufferSize = sigs.size()*DAQFlexDevice->aoFIFOSize()*2;
   int nbuffer = sigs.deviceBufferSize()*2;
   int outps = DAQFlexDevice->outPacketSize();
   if ( BufferSize > nbuffer ) {
@@ -385,9 +380,9 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   else
     BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
   if ( BufferSize > 0xfffff )
-    sigs.addError( DaqError::InvalidBufferTime );
+    BufferSize = 0xfffff;
   if ( BufferSize <= 0 )
-    sigs.addError( DaqError::NoData );
+    sigs.addError( DaqError::InvalidBufferTime );
 
   setSettings( ol, BufferSize );
 
@@ -396,7 +391,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
   Sigs = ol;
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
-  WriteTime = (int)::ceil( 1000.0*ol[0].writeTime() );
 
   //  cerr << "STARTWRITE SCALE=" << Sigs[0].scale() << '\n';
   fillWriteBuffer();
@@ -501,17 +495,17 @@ int DAQFlexAnalogOutput::fillWriteBuffer( void )
   // transfer buffer to device:
   int outps = DAQFlexDevice->outPacketSize();
   int bytesToWrite = (NBuffer/outps)*outps;
-  //  int bytesToWrite = NBuffer;
   if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
     bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
   if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
+  int timeout = (int)::ceil( 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
   int bytesWritten = 0;
   //    cerr << "BULK START " << bytesToWrite << '\n';
   int ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
-			      DAQFlexDevice->endpointOut(),
-			      (unsigned char*)(Buffer), bytesToWrite,
-			      &bytesWritten, WriteTime );
+				  DAQFlexDevice->endpointOut(),
+				  (unsigned char*)(Buffer), bytesToWrite,
+				  &bytesWritten, timeout );
   //    cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
 
   int elemWritten = 0;
