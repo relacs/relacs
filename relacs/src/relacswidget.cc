@@ -103,7 +103,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     LogFile( 0 ),
     IsFullScreen( false ),
     IsMaximized( false ),
-    AIMutex( QMutex::Recursive ),  // recursive, because of activateGains()???
+    AIMutex(),
     SignalMutex(),
     RunData( false ),
     RunDataMutex(),
@@ -111,7 +111,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     Help( false ),
     HandlingEvent( false )
 {
-  printlog( "This is RELACS, version " + string( RELACSVERSION ) );
+  printlog( "This is RELACS, version " + string( RELACSVERSION ) + ", compiled at " + string( __DATE__ ) );
 
   // setup configuration files:
   CFG.clearGroups();
@@ -790,7 +790,7 @@ bool RELACSWidget::updateData( double mintracetime )
 {
   bool doupdate = true;
   if ( mintracetime > 0.0 ) {
-    readLockBuffer();
+    readLockData();
     // do we need to wait for more data?
     while ( IL.success() &&
 	    mintracetime > 0.0 && IL.currentTimeRaw() < mintracetime &&
@@ -800,9 +800,9 @@ bool RELACSWidget::updateData( double mintracetime )
       RunDataMutex.unlock();
       if ( ! rd )
 	break;
-      ReadDataWait.wait( &bufferMutex() );
+      ReadDataWait.wait( &DataMutex );
     }
-    unlockBuffer();
+    unlockData();
     writeLockData();
   }
   else {
@@ -810,7 +810,7 @@ bool RELACSWidget::updateData( double mintracetime )
   }
 
   if ( doupdate ) {
-    writeLockBuffer();
+    writeLockAI();   // XXX is this really needed?
     // check data:
     if ( IL.failed() ) {
       AIErrorMsg = "Error in acquisition: " + IL.errorText();
@@ -821,7 +821,7 @@ bool RELACSWidget::updateData( double mintracetime )
     AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
     AQ->readRestart( IL, ED );
     FD->updateRawTracesEvents();
-    unlockBuffer();
+    unlockAI();
     Str fdw = FD->filter();
     if ( !fdw.empty() )
       printlog( "! error: " + fdw.erasedMarkup() );
@@ -860,13 +860,11 @@ void RELACSWidget::simLoadMessage( void )
 void RELACSWidget::activateGains( void )
 {
   writeLockData();
-  writeLockBuffer();
-  lockAI();
+  writeLockAI();
   AQ->activateGains();
-  unlockAI();
   AQ->readRestart( IL, ED );
   FD->adjust( AQ->adjustFlag() );
-  unlockBuffer();
+  unlockAI();
   unlockData();
 }
 
@@ -877,25 +875,24 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   int r = AQ->setupWrite( signal );   // might take some time (20ms with DAQFlex)
-  if ( r == 0 ) {
-    writeLockData();
-    writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-    lockAI();
-    r = AQ->startWrite( signal, setsignaltime );
-    unlockAI();
-    unlockBuffer();
-    unlockData();
-  }
   unlockSignals();
   if ( r == 0 ) {
-    WriteLoop.start();
+    writeLockData();
+    writeLockAI(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+    lockSignals();
+    r = AQ->startWrite( signal, setsignaltime );
+    unlockSignals();
+    unlockAI();
+    unlockData();
+  }
+  if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
     unlockSignals();
     FD->adjust( AQ->adjustFlag() );
+    WriteLoop.start();
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
-    SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
     printlog( "! failed to write signal: " + signal.errorText() );
@@ -911,26 +908,24 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   int r = AQ->setupWrite( signal );
-  if ( r == 0 ) {
-    writeLockData();
-    writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-    lockAI();
-    r = AQ->startWrite( signal, setsignaltime );
-    unlockAI();
-    unlockBuffer();
-    unlockData();
-  }
   unlockSignals();
   if ( r == 0 ) {
-    WriteLoop.start();
+    writeLockData();
+    writeLockAI(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+    lockSignals();
+    r = AQ->startWrite( signal, setsignaltime );
+    unlockSignals();
+    unlockAI();
+    unlockData();
+  }
+  if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
     unlockSignals();
     FD->adjust( AQ->adjustFlag() );
+    WriteLoop.start();
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
-    for ( int k=0; k<signal.size(); k++ )
-      SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
   else
     printlog( "! failed to write signals: " + signal.errorText() );
@@ -944,15 +939,13 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
-  lockSignals();
   writeLockData();
-  writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-  lockAI();
+  writeLockAI(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+  lockSignals();
   int r = AQ->directWrite( signal, setsignaltime );
-  unlockAI();
-  unlockBuffer();
-  unlockData();
   unlockSignals();
+  unlockAI();
+  unlockData();
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
@@ -960,7 +953,6 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
-    SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
     printlog( "! failed to write signal: " + signal.errorText() );
@@ -974,15 +966,13 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
-  lockSignals();
   writeLockData();
-  writeLockBuffer(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-  lockAI();
+  writeLockAI(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+  lockSignals();
   int r = AQ->directWrite( signal, setsignaltime );
-  unlockAI();
-  unlockBuffer();
-  unlockData();
   unlockSignals();
+  unlockAI();
+  unlockData();
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
@@ -990,8 +980,6 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
     FD->adjust( AQ->adjustFlag() );
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
-    for ( int k=0; k<signal.size(); k++ )
-      SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
   else
     printlog( "! failed to write signals: " + signal.errorText() );
@@ -1121,11 +1109,10 @@ void RELACSWidget::customEvent( QEvent *qce )
   case 2: {
     DV->updateMenu();
     AID->updateMenu();
-    lockSignals();
+    // no locking needed here, since this does not affect the AO device:
     AOD->updateMenu();
     ATD->updateMenu();
     ATI->updateMenu();
-    unlockSignals();
     TRIGD->updateMenu();
     break;
   }
@@ -1302,11 +1289,11 @@ void RELACSWidget::stopThreads( void )
   // stop simulation and data acquisition:
   SimLoad.stop();
   if ( AQ != 0 ) {
+    writeLockAI();
     lockSignals();
-    lockAI();
     AQ->stop();
-    unlockAI();
     unlockSignals();
+    unlockAI();
   }
 
   // process pending events posted from threads.
@@ -1532,11 +1519,9 @@ void RELACSWidget::startFirstAcquisition( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
-  writeLockBuffer();
-  lockAI();
+  writeLockAI();
   int r = AQ->read( IL );
   unlockAI();
-  unlockBuffer();
   if ( r < 0 ) {
     printlog( "! error in starting data acquisition: " + IL.errorText() );
     MessageBox::warning( "RELACS Warning !",
@@ -1569,15 +1554,13 @@ void RELACSWidget::startFirstAcquisition( void )
   RunDataMutex.unlock();
 
   // reset analog output for dynamic clamp:
-  lockSignals();
   writeLockData();
-  writeLockBuffer();
-  lockAI();
+  writeLockAI();
+  lockSignals();
   string wr = AQ->writeReset( true, true );
-  unlockAI();
-  unlockBuffer();
-  unlockData();
   unlockSignals();
+  unlockAI();
+  unlockData();
   if ( ! wr.empty() ) {
     printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed: " + wr );
     MessageBox::warning( "RELACS Warning !",
@@ -1695,18 +1678,14 @@ void RELACSWidget::startFirstSimulation( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
-  writeLockBuffer();
-  lockAI();
+  writeLockAI();
   int r = AQ->read( IL );
   unlockAI();
-  unlockBuffer();
   if ( r < 0 ) {
     // give it a second chance with the adjusted input parameter:
-    writeLockBuffer();
-    lockAI();
+    writeLockAI();
     r = AQ->read( IL );
     unlockAI();
-    unlockBuffer();
     if ( r < 0 ) {
       printlog( "! error in starting data acquisition: " + IL.errorText() );
       MessageBox::warning( "RELACS Warning !",

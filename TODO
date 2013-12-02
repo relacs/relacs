@@ -1,6 +1,9 @@
 New InData threading:
 - Check and further simplify RELACSWidget data locking
 - Can AQ->startWrite()/restartRead() made more independent from all the locks?
+- Filter buffersize should just be the same as the one of the input trace!
+- SpectrumAnalyzer Frequency resolution should not depend on sampling rate!
+  Use Frequency resolution instead of number of fft points.
 - Update AnalogInput and AnalogOutput plugins!
 - Check whether InData, Acquire updateTime and readTime are still needed!
   But we do not want to block on the input too long!

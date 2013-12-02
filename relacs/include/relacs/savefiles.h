@@ -48,7 +48,6 @@ class RELACSWidget;
 \class SaveFiles
 \brief Save data to files
 \author Jan Benda
-\version 2.2
 
 is owned by RELACSWidget and used by RELACSPlugin (path() and stimulusData())
 Settings (defaultPath()) and MetaData (path() only)

@@ -827,16 +827,6 @@ int Acquire::convertData( void )
 }
 
 
-void Acquire::submitData( void )
-{
-  //  cerr << "Acquire::submitData( void )\n";
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( AI[i].Traces.size() > 0 )
-      AI[i].Traces.update();
-  }
-}
-
-
 int Acquire::stopRead( void )
 {
   bool success = true;

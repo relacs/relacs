@@ -464,8 +464,10 @@ void SaveFiles::save( const OutData &signal )
   // StimulusDataLock is already locked from within the RePro!
   StimulusOptions = *this;
 
-  // store stimulus:
+  // store stimulus and update output channel setting:
   Stimuli.push_back( signal );
+  setNumber( RW->AQ->outTraceName( signal.trace() ), signal.back() );
+  // XXX why not using signal.traceName() ?
 
   // reset stimulus offset:
   PrevSignalTime = SignalTime;
@@ -491,10 +493,13 @@ void SaveFiles::save( const OutList &signal )
   // StimulusDataLock is already locked from within the RePro!
   StimulusOptions = *this;
 
-  // store stimulus:
-  for ( int k=0; k<signal.size(); k++ )
+  // store stimulus and update output channel settings:
+  for ( int k=0; k<signal.size(); k++ ) {
     Stimuli.push_back( signal[k] );
-
+    setNumber( RW->AQ->outTraceName( signal[k].trace() ), signal[k].back() );
+    // XXX why not using signal[k].traceName() ?
+  }
+  
   // reset stimulus offset:
   PrevSignalTime = SignalTime;
   SignalTime = -1.0;
