@@ -28,11 +28,8 @@
 	<para><application>relacs</application> is a small shell script. Its main purpose is to set
 	the environment variable <envar>LD_LIBRARY_PATH</envar> to the directories
 	where the RePros and other plugins are, so that RELACS can find them.
-	It is created from the file <filename>utils/relacsscript</filename> whenever you compile RELACS.
-	You can also specify a logfile by setting the variable <varname>LOGFILE</varname> in <command>relacsscript</command>
-	in order to store all messages and warnings that are usually written to 
-	<constant>stdout</constant> and <constant>stderr</constant> into a file.
-	For more details, try
+	It is created from the file <filename>src/relacs.in</filename> whenever you configure RELACS.
+	For more options (logfile, debug mode, core dump support) and details, try
 	<programlisting>
 <![CDATA[$> relacs --help]]>
 	</programlisting></para>

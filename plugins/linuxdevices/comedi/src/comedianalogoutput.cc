@@ -1072,9 +1072,10 @@ int ComediAnalogOutput::fillWriteBuffer( void )
   if ( ern == 0 ) {
     // no more data:
     if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      // XXX Fix DAQCard bug: add 2k of zeros to the signals:
+      /* XXX Fix DAQCard bug: add 2k of zeros to the signals:
       for ( int k=0; k<Sigs.size(); k++ )
 	Sigs[k].resize( Sigs[k].size()-2048 );
+      */
       if ( Buffer != 0 )
 	delete [] Buffer;
       Buffer = 0;
