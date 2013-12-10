@@ -880,8 +880,8 @@ int Acquire::restartRead( void )
 	AI[i].Traces[k].resize( n );
       }
     }
-    if ( m > 0 )
-      cerr << "truncated " << m << '\n';
+    if ( m >= AI[i].Traces.size() )
+      cerr << "Acquire::restartRead(): truncated " << m << " of " << AI[i].Traces.size() << "input traces\n";
     AI[i].Traces.setRestart();
   }
 
@@ -939,6 +939,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   //  cerr << currentTime() << " Acquire::restartRead() begin \n";
 
   bool success = true;
+  bool finished = true;
 
   // empty analog input buffer:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -975,8 +976,8 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	AI[i].Traces[k].resize( n );
       }
     }
-    if ( m > 0 )
-      cerr << "truncated " << m << '\n';
+    if ( m >= AI[i].Traces.size() )
+      cerr << "Acquire::restartRead( AOData ): truncated " << m << " of " << AI[i].Traces.size() << "input traces\n";
     AI[i].Traces.setRestart();
   }
 
@@ -1056,10 +1057,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead() != 0 )
+	int r = AI[i].AI->startRead();
+	if ( r < 0 )
 	  success = false;
-	else
+	else {
+	  if ( r > 0 )
+	    finished = false;
 	  aistarted.push_back( i );
+	}
       }
     }
   }
@@ -1094,10 +1099,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	if ( aod[i]->AO->startWrite() != 0 )
+	int r = aod[i]->AO->startWrite();
+	if ( r < 0 )
 	  success = false;
-      else
-	aostarted.push_back( aoinx[ i ] );
+	else {
+	  if ( r > 0 )
+	    finished = false;
+	  aostarted.push_back( aoinx[ i ] );
+	}
       }
     }
   }
@@ -1113,7 +1122,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 
   // cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";
 
-  return 0;
+  return finished ? 0 : 1;
 }
 
 
@@ -1690,6 +1699,8 @@ int Acquire::startWrite( OutData &signal, bool setsignaltime )
 {
   int di = signal.device();
 
+  bool finished = true;
+
   // start writing to daq board:
   if ( gainChanged() ||
        signal.restart() ||
@@ -1698,13 +1709,15 @@ int Acquire::startWrite( OutData &signal, bool setsignaltime )
       cerr << "Acquire::startWrite() -> called restartRead() because of gainChanged="
 	   << gainChanged() << " or signal restart=" << signal.restart() << '\n';
     vector< AOData* > aod( 1, &AO[di] );
-    restartRead( aod, false, true );
+    if ( restartRead( aod, false, true ) > 0 )
+      finished = false;
   }
   else {
     // clear adjust-flags:
     for ( unsigned int i=0; i<AI.size(); i++ )
       AI[i].Traces.delMode( AdjustFlag );
-    AO[di].AO->startWrite();
+    if ( AO[di].AO->startWrite() > 0 )
+      finished = false;
   }
 
   // error?
@@ -1720,7 +1733,7 @@ int Acquire::startWrite( OutData &signal, bool setsignaltime )
     LastDelay = signal.delay();
   }
 
-  return 0;
+  return finished ? 0 : 1;
 }
 
 
@@ -1934,6 +1947,7 @@ int Acquire::setupWrite( OutList &signal )
 int Acquire::startWrite( OutList &signal, bool setsignaltime )
 {
   bool success = true;
+  bool finished = true;
 
   // start writing to daq boards:
   if ( gainChanged() ||
@@ -1948,8 +1962,11 @@ int Acquire::startWrite( OutList &signal, bool setsignaltime )
       if ( AO[i].Signals.size() > 0 )
 	aod.push_back( &AO[i] );
     }
-    if ( restartRead( aod, false, true ) != 0 )
+    int r = restartRead( aod, false, true );
+    if ( r < 0 )
       success = false;
+    else if ( r > 0 )
+      finished = false;
   }
   else {
     // clear adjust-flags:
@@ -1957,8 +1974,11 @@ int Acquire::startWrite( OutList &signal, bool setsignaltime )
       AI[i].Traces.delMode( AdjustFlag );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
       if ( AO[i].Signals.size() > 0 ) {
-	if ( AO[i].AO->startWrite() != 0 )
+	int r = AO[i].AO->startWrite();
+	if ( r < 0 )
 	  success = false;
+	else if ( r > 0 )
+	  finished = false;
       }
     }
   }
@@ -1978,7 +1998,7 @@ int Acquire::startWrite( OutList &signal, bool setsignaltime )
     LastDelay = signal[0].delay();
   }
 
-  return 0;
+  return finished ? 0 : 1;
 }
 
 
@@ -1998,21 +2018,11 @@ int Acquire::writeData( void )
   bool error = false;
   for ( unsigned int i=0; i<AO.size(); i++ ) {
     if ( ! AO[i].Signals.empty() ) {
-      if ( AO[i].Signals[0].deviceWriting() || AO[i].AO->running() ) {
+      int r = AO[i].AO->writeData();
+      if ( r < 0 )
+	error = true;
+      else if ( r > 0 )
 	finished = false;
-	int r = AO[i].AO->writeData();
-	if ( r < 0 )
-	  error = true;
-      }
-      else {
-	if ( AO[i].Signals[0].deviceWriting() ) {
-	  AO[i].Signals.addError( DaqError::OverflowUnderrun );
-	  error = true;
-	  finished = false;
-	}
-	AO[i].Signals.deviceReset();
-	AO[i].Signals.clear();
-      }
     }
   }
   return error ? -1 : ( finished ? 0 : 1 );

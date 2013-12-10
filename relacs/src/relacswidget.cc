@@ -885,12 +885,13 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
     unlockAI();
     unlockData();
   }
-  if ( r == 0 ) {
+  if ( r >= 0 ) {
     lockSignals();
     SF->save( signal );
     unlockSignals();
     FD->adjust( AQ->adjustFlag() );
-    WriteLoop.start();
+    if ( r > 0 )
+      WriteLoop.start();
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
@@ -918,12 +919,13 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
     unlockAI();
     unlockData();
   }
-  if ( r == 0 ) {
+  if ( r >= 0 ) {
     lockSignals();
     SF->save( signal );
     unlockSignals();
     FD->adjust( AQ->adjustFlag() );
-    WriteLoop.start();
+    if ( r > 0 )
+      WriteLoop.start();
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }

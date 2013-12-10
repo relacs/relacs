@@ -1,7 +1,9 @@
 New InData threading:
 - Check and further simplify RELACSWidget data locking
+- Put the AIMutex and the SignalMutex into the device and simulate plugins!!!
 - Can AQ->startWrite()/restartRead() made more independent from all the locks?
 - Filter buffersize should just be the same as the one of the input trace!
+- Check Filter output alignment! (base, Transferfunction)
 - SpectrumAnalyzer Frequency resolution should not depend on sampling rate!
   Use Frequency resolution instead of number of fft points.
 - Update AnalogInput and AnalogOutput plugins!

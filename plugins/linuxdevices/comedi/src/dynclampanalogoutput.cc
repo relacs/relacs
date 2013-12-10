@@ -893,6 +893,8 @@ int DynClampAnalogOutput::startWrite( void )
   if ( retval < 0 )
     return -1;
 
+  bool finished = ( retVal == 0 );
+
   // start subdevice:
   retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
   if( retval < 0 ) {
@@ -917,7 +919,7 @@ int DynClampAnalogOutput::startWrite( void )
 
   ErrorState = 0;
   
-  return 0;
+  return finished ? 0 : 1;
 }
 
 

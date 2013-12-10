@@ -739,6 +739,7 @@ int ComediAnalogInput::startRead( void )
     insnlist.insns[k].n = 1;
   }
   bool success = true;
+  bool finished = true;
   int ilinx = 0;
   for ( unsigned int k=0; k<ComediAIs.size() && success; k++ ) {
     if ( ComediAIs[k]->prepared() ) {
@@ -750,10 +751,14 @@ int ComediAnalogInput::startRead( void )
   }
   for ( unsigned int k=0; k<ComediAOs.size() && success; k++ ) {
     if ( ComediAOs[k]->prepared() ) {
-      if ( ComediAOs[k]->executeCommand() < 0 )
+      int r = ComediAOs[k]->executeCommand();
+      if ( r < 0 )
 	success = false;
-      else
+      else {
+	if ( r > 0 )
+	  finished = false;
 	insnlist.insns[ilinx++].subdev = ComediAOs[k]->comediSubdevice();
+      }
     }
   }
   insnlist.n_insns = ilinx;
@@ -771,7 +776,7 @@ int ComediAnalogInput::startRead( void )
   }
   delete [] insnlist.insns;
 
-  return success ? 0 : -1;
+  return success ? ( finished ? 0 : 1 ) : -1;
 }
 
 

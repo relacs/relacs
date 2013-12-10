@@ -139,6 +139,8 @@ public:
         of prepareWrite().
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
+	If no further calls of writeData() are required, 0 is returned,
+	otherwise 1 is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take().
         This function is always called after a successfull prepareRead(). */

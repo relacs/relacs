@@ -489,7 +489,8 @@ public:
 	right before the signal is put out.
 	If \a setsignal is set \c true (default) then the start time of this
 	signal can be retrieved by readSignal().
-	Returns 0 on success.
+	Returns 0 or 1 on success.
+	If 1 is  returned writeData() needs to be called to further fill up the write buffer.
         If the output of the signal failed, a negative number is returned and
         the reason is specified in the error state of \a signal.
 	\note During the output of the stimulus, \a signal must exist and must not be modified!
@@ -505,7 +506,8 @@ public:
 	right before the signal is put out.
 	If \a setsignal is set \c true (default) then the start time of this
 	signal can be retrieved by readSignal().
-	Returns 0 on success.
+	Returns 0 or 1 on success.
+	If 1 is  returned writeData() needs to be called to further fill up the write buffer.
         If the output of the signals failed, a negative number is returned and
         the reason is specified in the error state of \a signal.
 	\note During the output of the stimulus, \a signal must exist and must not be modified!
@@ -715,7 +717,10 @@ protected:
         pending on devices in \a aos.
         If still running, stop analog input first.
 	If \a directao, then the analog output signals are scheduled for direct outut.
-        If \a updategains, the input gains are updated as well. */
+        If \a updategains, the input gains are updated as well. 
+	\return 0 on success and no further calls to writeData() are needed.
+	\return 1 on success and further calls to writeData() are needed. 
+	\return -1 on failure. */
   virtual int restartRead( vector< AOData* > &aod, bool directao,
 			   bool updategains );
 

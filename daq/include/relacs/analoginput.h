@@ -132,6 +132,8 @@ public:
 	InData structure are filled and a negative value is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take().
+	Returns -1 on failure, 0 on success and 1 on succes and if
+	for an analog output further calls to writeData() are necessary.
         This function is called after a successfull prepareRead() or after stop().
         This function should be as quick as possible. */
   virtual int startRead( void ) = 0;

@@ -677,7 +677,8 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
     cmd.stop_src = TRIG_COUNT;
     // set length of acquisition as number of scans:
     cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay() );
-    // cmd.stop_arg -= 1; // XXX for NI E Series - comedi-bug? 
+    if ( deviceName() == "pci-6052e" )
+      cmd.stop_arg -= 1; // XXX pci-6052e (all NI E Series ?) - comedi-bug? 
     // cmd.stop_arg += 2048; // XXX for NI DAQCard - does not fix the problem!
   }
 
@@ -879,8 +880,7 @@ int ComediAnalogOutput::executeCommand( void )
     */
     return -1;
   }
-  fillWriteBuffer();
-  return 0;
+  return fillWriteBuffer();
 }
 
 
@@ -918,13 +918,18 @@ int ComediAnalogOutput::startWrite( void )
     insnlist.insns[k].n = 1;
   }
   bool success = true;
+  bool finished = true;
   int ilinx = 0;
   for ( unsigned int k=0; k<ComediAOs.size() && success; k++ ) {
     if ( ComediAOs[k]->prepared() ) {
-      if ( ComediAOs[k]->executeCommand() < 0 )
+      int r = ComediAOs[k]->executeCommand();
+      if ( r < 0 )
 	success = false;
-      else
+      else {
+	if ( r > 0 )
+	  finished = false;
 	insnlist.insns[ilinx++].subdev = ComediAOs[k]->comediSubdevice();
+      }
     }
   }
   insnlist.n_insns = ilinx;
@@ -939,7 +944,7 @@ int ComediAnalogOutput::startWrite( void )
   }
   delete [] insnlist.insns;
   
-  return success ? 0 : -1;
+  return success ? ( finished ? 0 : 1 ) : -1;
 }
 
 
@@ -948,7 +953,7 @@ int ComediAnalogOutput::writeData( void )
   if ( Sigs.empty() )
     return -1;
 
-  //device stopped?
+  // device stopped?
   if ( !running() ) {
     if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
       ErrorState = 1;

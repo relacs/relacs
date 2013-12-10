@@ -36,6 +36,7 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
 {
   ErrorState = 0;
   IsPrepared = false;
+  NoMoreData = true;
   DAQFlexDevice = NULL;
   BufferSize = 0;
   Buffer = 0;
@@ -48,6 +49,7 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
 {
   ErrorState = 0;
   IsPrepared = false;
+  NoMoreData = true;
   DAQFlexDevice = NULL;
   BufferSize = 0;
   Buffer = 0;
@@ -90,6 +92,7 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   // clear flags:
   ErrorState = 0;
   IsPrepared = false;
+  NoMoreData = true;
 
   setInfo();
 
@@ -119,6 +122,7 @@ void DAQFlexAnalogOutput::close( void )
   // clear flags:
   DAQFlexDevice = NULL;
   IsPrepared = false;
+  NoMoreData = true;
 
   Info.clear();
 }
@@ -393,9 +397,13 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
   //  cerr << "STARTWRITE SCALE=" << Sigs[0].scale() << '\n';
-  fillWriteBuffer();
-
+  int r = fillWriteBuffer();
   IsPrepared = ol.success();
+
+  if ( r < 0 )
+    return -1;
+
+  NoMoreData = ( r == 0 );
 
   return 0;
 }
@@ -408,7 +416,7 @@ int DAQFlexAnalogOutput::startWrite( void )
     return -1;
   }
   DAQFlexDevice->sendMessage( "AOSCAN:START" );
-  return 0;
+  return NoMoreData ? 0 : 1;
 }
 
 

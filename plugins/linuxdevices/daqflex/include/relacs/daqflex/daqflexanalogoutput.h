@@ -161,6 +161,8 @@ private:
 
     /*! True if the command is prepared. */
   bool IsPrepared;
+    /*! True if no more data need to be written to the board. */
+  bool NoMoreData;
 
     /*! Errorcode of the last operation. */
   int ErrorState;
