@@ -1462,6 +1462,17 @@ void RELACSWidget::startFirstAcquisition( void )
     return;
   }
   setupOutTraces();
+  writeLockAI();
+  int r = AQ->testRead( IL );
+  unlockAI();
+  if ( r < 0 ) {
+    printlog( "! error in testing data acquisition: " + IL.errorText() );
+    MessageBox::warning( "RELACS Warning !",
+			 "error in testing data acquisition: " + IL.errorText(),
+			 true, 0.0, this );
+    startIdle();
+    return;
+  }
 
   // events:
   FD->clearIndices();
@@ -1522,7 +1533,7 @@ void RELACSWidget::startFirstAcquisition( void )
 
   // start data aquisition:
   writeLockAI();
-  int r = AQ->read( IL );
+  r = AQ->read( IL );
   unlockAI();
   if ( r < 0 ) {
     printlog( "! error in starting data acquisition: " + IL.errorText() );
@@ -1618,6 +1629,17 @@ void RELACSWidget::startFirstSimulation( void )
     return;
   }
   setupOutTraces();
+  writeLockAI();
+  int r = AQ->testRead( IL );
+  unlockAI();
+  if ( r < 0 ) {
+    printlog( "! error in testing data acquisition: " + IL.errorText() );
+    MessageBox::warning( "RELACS Warning !",
+			 "error in testing data acquisition: " + IL.errorText(),
+			 true, 0.0, this );
+    startIdle();
+    return;
+  }
 
   // events:
   FD->clearIndices();
@@ -1681,7 +1703,7 @@ void RELACSWidget::startFirstSimulation( void )
 
   // start data aquisition:
   writeLockAI();
-  int r = AQ->read( IL );
+  r = AQ->read( IL );
   unlockAI();
   if ( r < 0 ) {
     // give it a second chance with the adjusted input parameter:

@@ -24,25 +24,25 @@
 
 *RELACS
   input data:
-      inputsamplerate    : 10kHz
+      inputsamplerate    : 20kHz
       inputtracecapacity : 600s
       inputunipolar      : false
       inputtraceid       : V-1
       inputtracescale    : 100
       inputtraceunit     : mV
       inputtracedevice   : "0"
-      inputtracechannel  : 1
+      inputtracechannel  : 0
       inputtracereference: ground
       inputtracegain     : 2
       inputtracecenter   : true
   output data:
-      maxoutputrate      : 10kHz
+      maxoutputrate      : 20kHz
       outputtraceid      : Current-1
       outputtracechannel : 0
       outputtracedevice  : ao-1
       outputtracescale   : 1
       outputtraceunit    : nA
-      outputtracemaxrate : 10kHz
+      outputtracemaxrate : 20kHz
       outputtracedelay   : 0ms
       outputtracemodality: current
 

@@ -896,9 +896,9 @@ void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid )
 int DynClampAnalogInput::matchTraces( InList &traces ) const
 {
   int foundtraces = 0;
-  int tracefound[ traces.size() ];
+  bool tracefound[ traces.size() ];
   for ( int k=0; k<traces.size(); k++ )
-    tracefound[k] = 0;
+    tracefound[k] = false;
 
   // analog input traces:
   struct traceInfoIOCT traceInfo;
@@ -910,7 +910,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
     bool notfound = true;
     for ( int k=0; k<traces.size(); k++ ) {
       if ( traces[k].ident() == traceInfo.name ) {
-	tracefound[k] = 1;
+	tracefound[k] = true;
 	if ( traces[k].unit() != traceInfo.unit )
 	  traces[k].addErrorStr( "model input trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
 	traceChannel.device = traces[k].device();
@@ -939,7 +939,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
     for ( int k=0; k<traces.size(); k++ ) {
       if ( traces[k].ident() == traceInfo.name ) {
-	tracefound[k] = 1;
+	tracefound[k] = true;
 	if ( traces[k].unit() != traceInfo.unit )
 	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
 	traces[k].setChannel( PARAM_CHAN_OFFSET + pchan );
@@ -954,7 +954,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
     traces.addErrorStr( "failure in getting model input parameter traces -> errno=" + Str( ern ) );
   /*
   for ( int k=0; k<traces.size(); k++ ) {
-    if ( tracefound[k] == 0 )
+    if ( ! tracefound[k] )
       traces[k].addErrorStr( "no matching trace found for trace " + traces[k].ident() );
   }
   */
