@@ -55,7 +55,6 @@ void computeModel( void )
   if ( paramOutput[2] < 0.1 )
     paramOutput[2] = 0.1;
   vgate += loopInterval*1000.0/paramOutput[2]*(-vgate+1.0/(1.0+exp(-paramOutput[4]*(input[0]-paramOutput[3]))));
-  //  vgate = 0.0;
   paramInput[0] = -0.001*paramOutput[0]*vgate*(input[0]-paramOutput[1]);
   // total injected current:
   output[0] = paramInput[0];

@@ -48,6 +48,6 @@ void initModel( void )
 
 void computeModel( void )
 {
-   output[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
-   paramInput[0] = output[0];
+   paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
+   output[0] = paramInput[0];
 }

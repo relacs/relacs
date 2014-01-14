@@ -231,7 +231,13 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
 
   IsPrepared = false;
 
+  // publish information about the analog input device:
   setInfo();
+  vector< TraceSpec > traces;
+  traces.clear();
+  addTraces( traces, 0 );
+  for ( unsigned int k=0; k<traces.size(); k++ )
+    Info.addText( "Model input", traces[k].traceName() );
 
   return 0;
 }
@@ -935,15 +941,13 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
 
   // parameter traces:
   traceInfo.traceType = PARAM_IN;
-  int pchan = 0;
-  while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
+  for ( int pchan = 0; ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0; pchan++ ) {
     for ( int k=0; k<traces.size(); k++ ) {
       if ( traces[k].ident() == traceInfo.name ) {
 	tracefound[k] = true;
 	if ( traces[k].unit() != traceInfo.unit )
 	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
 	traces[k].setChannel( PARAM_CHAN_OFFSET + pchan );
-	pchan++;
 	foundtraces++;
 	break;
       }

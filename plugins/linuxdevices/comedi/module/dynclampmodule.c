@@ -1693,8 +1693,6 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       rc = -EFAULT;
       break;
     }
-    rc = (int)(100.0*chanlistIOC.scalelist[0]);
-    printk( "TESTSCALE=%d\n", rc );
     if ( chanlistIOC.subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in chanlistIOCT-struct!\n" );
       rc = -EFAULT;

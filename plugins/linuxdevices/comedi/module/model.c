@@ -28,10 +28,10 @@ int outputDevices[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
-#define PARAMINPUT_N 1
-char *paramInputNames[PARAMINPUT_N] = { "pinput0" };
-char *paramInputUnits[PARAMINPUT_N] = { "mV" };
-float paramInput[PARAMINPUT_N] = { 0.0 };
+#define PARAMINPUT_N 2
+char *paramInputNames[PARAMINPUT_N] = { "Leak-current",  "Capacitive-current" };
+char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA" };
+float paramInput[PARAMINPUT_N] = { 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
 #define PARAMOUTPUT_N 4
@@ -54,10 +54,13 @@ void initModel( void )
 void computeModel( void )
 {
    int k;
-   output[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]) - 1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate + paramOutput[3];
+   // leak current:
+   paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
+   // capacitive current:
+   paramInput[1] = -1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate + paramOutput[3];
    for ( k=0; k<MAXPREVINPUTS-1; k++ )
      previnputs[k] = previnputs[k+1];
    previnputs[MAXPREVINPUTS-1] = input[0];
-
-   //   output[0] = paramOutput[0];
+  // total injected current:
+  output[0] = paramInput[0] + paramInput[1];
 }
