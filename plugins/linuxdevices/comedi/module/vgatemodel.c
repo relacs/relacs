@@ -29,35 +29,34 @@ float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
 #define PARAMINPUT_N 1
-char *paramInputNames[PARAMINPUT_N] = { "pinput0" };
-char *paramInputUnits[PARAMINPUT_N] = { "mV" };
+char *paramInputNames[PARAMINPUT_N] = { "Voltage-gated current" };
+char *paramInputUnits[PARAMINPUT_N] = { "nA" };
 float paramInput[PARAMINPUT_N] = { 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 4
-char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C", "I" };
-char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF", "nA" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0 };
+#define PARAMOUTPUT_N 5
+char *paramOutputNames[PARAMOUTPUT_N] = { "gvgate", "Evgate", "vgatetau", "vgatevmid", "vgateslope" };
+char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "ms", "mV", "1/mV" };
+float paramOutput[PARAMOUTPUT_N] = { 10.0, 0.0, 50.0, 5.0, 1.0 };
 
   /*! Variables used by the model. */
-#define MAXPREVINPUTS 1
-float previnputs[MAXPREVINPUTS];
+float meaninput = 0.0;
+float vgate = 0.0;
 
 void initModel( void )
 {
-   int k;
    moduleName = "/dev/dynclamp";
-   for ( k=0; k<MAXPREVINPUTS; k++ )
-     previnputs[k] = 0.0;
+   vgate = 0.0;
 }
 
 void computeModel( void )
 {
-   int k;
-   output[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]) - 1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate + paramOutput[3];
-   for ( k=0; k<MAXPREVINPUTS-1; k++ )
-     previnputs[k] = previnputs[k+1];
-   previnputs[MAXPREVINPUTS-1] = input[0];
-
-   //   output[0] = paramOutput[0];
+  // voltage gated channel:
+  if ( paramOutput[2] < 0.1 )
+    paramOutput[2] = 0.1;
+  vgate += loopInterval*1000.0/paramOutput[2]*(-vgate+1.0/(1.0+exp(-paramOutput[4]*(input[0]-paramOutput[3]))));
+  //  vgate = 0.0;
+  paramInput[0] = -0.001*paramOutput[0]*vgate*(input[0]-paramOutput[1]);
+  // total injected current:
+  output[0] = paramInput[0];
 }

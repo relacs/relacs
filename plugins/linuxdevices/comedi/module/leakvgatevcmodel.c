@@ -35,9 +35,9 @@ float paramInput[PARAMINPUT_N] = { 0.0, 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
 #define PARAMOUTPUT_N 9
-char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "VCgain", "VC", "gvgate", "Evgate", "vgatetau", "vgatevmid", "vgatevwidth" };
-char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "mS", "mV", "nS", "mV", "ms", "mV", "mV" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 10.0 };
+char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "VCgain", "VC", "gvgate", "Evgate", "vgatetau", "vgatevmid", "vgateslope" };
+char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "mS", "mV", "nS", "mV", "ms", "mV", "1/mV" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0 };
 
   /*! Variables used by the model. */
 float meaninput = 0.0;
@@ -60,13 +60,9 @@ void computeModel( void )
   // voltage clamp:
   paramInput[1] = -paramOutput[2]*(meaninput-paramOutput[3]);
   // voltage gated channel:
-  if ( paramOutput[8] > -0.001 && paramOutput[8] < 0.001 ) {
-    if ( paramOutput[8] >= 0.0 )
-      paramOutput[8] = 0.001;
-    else
-      paramOutput[8] = -0.001;
-  }
-  vgate += loopInterval*1000.0/paramOutput[6]*(-vgate+1.0/(1.0+exp(-(input[0]-paramOutput[7])/paramOutput[8])));
+  if ( paramOutput[6] < 0.1 )
+    paramOutput[6] = 0.1;
+  vgate += loopInterval*1000.0/paramOutput[6]*(-vgate+1.0/(1.0+exp(-paramOutput[8]*(input[0]-paramOutput[7]))));
   paramInput[2] = -0.001*paramOutput[4]*vgate*(input[0]-paramOutput[5]);
   // total injected current:
   output[0] = paramInput[0] + paramInput[1] + paramInput[2];
