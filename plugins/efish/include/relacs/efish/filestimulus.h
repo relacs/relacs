@@ -93,6 +93,8 @@ public:
   void saveNerve( void );
   void saveNervePower( void );
   void saveSpikes( int trace );
+  void saveNoise( int trace, int trial, const OutData &noisesignal,
+		  const OutData &signal, double noisefac, const OutData &noise );
     /*! Save results data. */
   void save( void );
 
@@ -154,6 +156,7 @@ private:
 
   Options Header;
   TableKey SpikesKey;
+  TableKey NoiseKey;
   TableKey NerveKey;
   TableKey AmplKey;
   TableKey EFieldKey;

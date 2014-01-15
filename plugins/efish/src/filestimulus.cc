@@ -119,6 +119,11 @@ FileStimulus::FileStimulus( void )
 
   SpikesKey.addNumber( "time", "ms", "%9.2f" );
 
+  NoiseKey.addNumber( "time", "ms", "%9.2f" );
+  NoiseKey.addNumber( "signal+noise", "1", "%10.7f" );
+  NoiseKey.addNumber( "signal", "1", "%10.7f" );
+  NoiseKey.addNumber( "noise", "1", "%10.7f" );
+
   NerveKey.newSection( "peak" );
   NerveKey.addNumber( "time", "ms", "%9.2f" );
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
@@ -197,8 +202,6 @@ int FileStimulus::main( void )
       warning( "Duration of signal " + Str( signal.length() ) + " sec is smaller than requested duration of " + Str( Duration ) + " sec!" );
   }
   signal.fixSample();
-  int c = clip( -1.0, 1.0, signal );
-  printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
   signal.setTrace( AM ? GlobalAMEField : GlobalEField );
   signal.setStartSource( 1 );
   signal.setDelay( Before );
@@ -419,6 +422,8 @@ int FileStimulus::main( void )
 
     // create additive noise:
     OutData noisesignal( signal );
+    OutData noise;
+    double noisefac = 1.0;
     if ( addNoise ) {
       // noise intensity:
       double noisestdev = SigStdev;
@@ -427,7 +432,6 @@ int FileStimulus::main( void )
       else
 	noisestdev *= NoiseAmpl/Amplitude;
       // noise:
-      OutData noise;
       noise.setTrace( AM ? GlobalAMEField : GlobalEField );
       if ( NoiseType == "White" ) {
 	double cu = UpperCutoff;
@@ -444,10 +448,15 @@ int FileStimulus::main( void )
 	noise.ouNoiseWave( signal.duration(), signal.stepsize(), NoiseTau, noisestdev );
       }
       noisesignal += noise;
-      noisesignal /= 1.0 + 3.0*noisestdev;
-      noisesignal.setIntensity( Intensity*(1.0 + 3.0*noisestdev) );
-      clip( -1.0, 1.0, noisesignal );
+      noisefac = sqrt(SigStdev*SigStdev + noisestdev*noisestdev)*3.0;
+      noisesignal /= noisefac;
+      noisesignal.setIntensity( Intensity*noisefac );
     }
+    else {
+      noise.clear();
+    }
+    int c = ::relacs::clip( -1.0, 1.0, noisesignal );
+    printlog( "clipped " + Str( c ) + " from " + Str( noisesignal.size() ) + " data points.\n" );
     noisesignal.back() = 0.0;
 
     // put out the signal:
@@ -466,6 +475,8 @@ int FileStimulus::main( void )
       s += "  Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
     else
       s += "  Amplitude: <b>" + Str( Amplitude, 0, 3, 'g' ) + "mV/cm</b>";
+    if ( addNoise )
+      s += "  with <b>additive noise</b>";
     s += "  Loop: <b>" + Str( Count+1 ) + "</b>";
     message( s );
     
@@ -549,6 +560,7 @@ int FileStimulus::main( void )
 	if ( SpikeEvents[trace] >= 0 ) {
 	  Header.setInteger( "trace", trace );
 	  saveSpikes( trace );
+	  saveNoise( trace, Spikes[trace].size()-1, noisesignal, signal, noisefac, noise );
 	}
       }
       if ( NerveTrace[0] >= 0 ) {
@@ -622,7 +634,7 @@ void FileStimulus::saveRate( int trace )
 void FileStimulus::savePower( int trace )
 {
   // create file:
-  ofstream df( addPath( "stimpower" + Str(trace+1) + ".dat" ).c_str(),
+  ofstream df( addPath( "stimpowerspec" + Str(trace+1) + ".dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -678,7 +690,7 @@ void FileStimulus::saveNerve( void )
 void FileStimulus::saveNervePower( void )
 {
   // create file:
-  ofstream df( addPath( "stimnervepower.dat" ).c_str(),
+  ofstream df( addPath( "stimnervepowerspec.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -775,6 +787,48 @@ void FileStimulus::saveSpikes( int trace )
     }
   }
 
+}
+
+
+void FileStimulus::saveNoise( int trace, int trial, const OutData &noisesignal,
+			      const OutData &signal, double noisefac, const OutData &noise )
+{
+  // create file:
+  ofstream df( addPath( "stimadditivenoise" + Str(trace+1) + ".dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+  
+  // write header and key:
+  if ( Count == 0 ) {
+    df << '\n' << '\n';
+    Header.save( df, "# " );
+    settings().save( df, "#   " );
+    df << '\n';
+    NoiseKey.saveKey( df, true, false );
+  }
+  
+  // write data:
+  df << '\n';
+  df << "# trial: " << trial << '\n';
+  if ( noise.empty() ) {
+    for ( int j=0; j<noisesignal.size(); j++ ) {
+      NoiseKey.save( df, 1000.0 * noisesignal.pos( j ), 0 );
+      NoiseKey.save( df, noisesignal[j] );
+      NoiseKey.save( df, signal[j]/noisefac );
+      NoiseKey.save( df, 0.0 );
+      df << '\n';
+    }
+  }
+  else {
+    for ( int j=0; j<noisesignal.size(); j++ ) {
+      NoiseKey.save( df, 1000.0 * noisesignal.pos( j ), 0 );
+      NoiseKey.save( df, noisesignal[j] );
+      NoiseKey.save( df, signal[j]/noisefac );
+      NoiseKey.save( df, noise[j]/noisefac );
+      df << '\n';
+    }
+  }
 }
 
 
