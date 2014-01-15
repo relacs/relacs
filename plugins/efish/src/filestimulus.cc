@@ -120,6 +120,11 @@ namespace efish {
 
     SpikesKey.addNumber( "time", "ms", "%9.2f" );
 
+    NoiseKey.addNumber( "time", "ms", "%9.2f" );
+    NoiseKey.addNumber( "signal+noise", "1", "%10.7f" );
+    NoiseKey.addNumber( "signal", "1", "%10.7f" );
+    NoiseKey.addNumber( "noise", "1", "%10.7f" );
+
     NerveKey.addLabel( "peak" );
     NerveKey.addNumber( "time", "ms", "%9.2f" );
     NerveKey.addNumber( "ampl", "uV", "%6.1f" );
@@ -205,8 +210,6 @@ namespace efish {
       else
 	signal = lsig;
     }
-    int c = ::relacs::clip( -1.0, 1.0, signal );
-    printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
     signal.setTrace( AM ? GlobalAMEField : GlobalEField );
     signal.setStartSource( 1 );
     signal.setDelay( Before );
@@ -354,6 +357,8 @@ namespace efish {
 
       // create additive noise:
       OutData noisesignal( signal );
+      OutData noise;
+      double noisefac = 1.0;
       if ( addNoise ) {
 	// noise intensity:
 	double noisestdev = SigStdev;
@@ -362,7 +367,6 @@ namespace efish {
 	else
 	  noisestdev *= NoiseAmpl/Amplitude;
 	// noise:
-	OutData noise;
 	noise.setTrace( AM ? GlobalAMEField : GlobalEField );
 	if ( NoiseType == "Gaussian" ) {
 	  double cu = UpperCutoff;
@@ -379,12 +383,17 @@ namespace efish {
 	  noise.ouNoiseWave( signal.duration(), signal.stepsize(), NoiseTau, noisestdev );
 	}
 	noisesignal += noise;
-	noisesignal /= 1.0 + 3.0*noisestdev;
-	noisesignal.setIntensity( Intensity*(1.0 + 3.0*noisestdev) );
-	clip( -1.0, 1.0, noisesignal );
+	noisefac = sqrt(SigStdev*SigStdev + noisestdev*noisestdev)*3.0;
+	noisesignal /= noisefac;
+	noisesignal.setIntensity( Intensity*noisefac );
       }
+      else {
+	noise.clear();
+      }
+      int c = ::relacs::clip( -1.0, 1.0, noisesignal );
+      printlog( "clipped " + Str( c ) + " from " + Str( noisesignal.size() ) + " data points.\n" );
       noisesignal.back() = 0.0;
-
+       
       // put out the signal:
       write( noisesignal );
       if ( !noisesignal.success() ) {
@@ -484,6 +493,7 @@ namespace efish {
 	  if ( SpikeEvents[trace] >= 0 ) {
 	    Header.setInteger( "trace", trace );
 	    saveSpikes( trace );
+	    saveNoise( trace, Spikes[trace].size()-1, noisesignal, signal, noisefac, noise );
 	  }
 	}
 	if ( NerveTrace[0] >= 0 ) {
@@ -656,6 +666,48 @@ namespace efish {
     else {
       for ( int j=0; j<Spikes[trace].back().size(); j++ ) {
 	SpikesKey.save( df, 1000.0 * Spikes[trace].back()[j], 0 );
+	df << '\n';
+      }
+    }
+
+  }
+
+
+  void FileStimulus::saveNoise( int trace, int trial, const OutData &noisesignal, const OutData &signal, double noisefac, const OutData &noise )
+  {
+    // create file:
+    ofstream df( addPath( "stimadditivenoise" + Str(trace+1) + ".dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
+
+    // write header and key:
+    if ( Count == 0 ) {
+      df << '\n' << '\n';
+      Header.save( df, "# " );
+      settings().save( df, "#   " );
+      df << '\n';
+      NoiseKey.saveKey( df, true, false );
+    }
+
+    // write data:
+    df << '\n';
+    df << "# trial: " << trial << '\n';
+    if ( noise.empty() ) {
+      for ( int j=0; j<noisesignal.size(); j++ ) {
+	NoiseKey.save( df, 1000.0 * noisesignal.pos( j ), 0 );
+	NoiseKey.save( df, noisesignal[j] );
+	NoiseKey.save( df, signal[j]/noisefac );
+	NoiseKey.save( df, 0.0 );
+	df << '\n';
+      }
+    }
+    else {
+      for ( int j=0; j<noisesignal.size(); j++ ) {
+	NoiseKey.save( df, 1000.0 * noisesignal.pos( j ), 0 );
+	NoiseKey.save( df, noisesignal[j] );
+	NoiseKey.save( df, signal[j]/noisefac );
+	NoiseKey.save( df, noise[j]/noisefac );
 	df << '\n';
       }
     }
