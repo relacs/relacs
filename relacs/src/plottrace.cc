@@ -529,7 +529,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "&Trigger", this, SLOT( toggleTrigger() ), Qt::CTRL + Qt::Key_T );
   Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
-  Menu->addAction( "&Center", this, SLOT( centerVertically() ) );
+  Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ) );
   Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
 
   Menu->addSeparator();
