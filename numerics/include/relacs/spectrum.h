@@ -1041,8 +1041,6 @@ template < typename BidirectIterHC, typename ForwardIterM >
 void hcMagnitude( BidirectIterHC firsthc, BidirectIterHC lasthc,
 		  ForwardIterM firstm, ForwardIterM lastm )
 {
-  typedef typename iterator_traits<ForwardIterM>::value_type ValueTypeM;
-
   if ( firsthc == lasthc || firstm == lastm )
     return;
   *firstm = ::sqrt( (*firsthc) * (*firsthc) );

@@ -96,12 +96,12 @@ You either need to
   on a Debian-based system enter 'sudo apt-get install libqt4-dev'),
 - or provide the base path to the right Qt4 installation:
   e.g. './configure --with-qt4=/usr/lib/qt4'."
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <QWidget>
 #if !defined(QT_VERSION) || (QT_VERSION < 0x040000)
 # error Wrong Qt version
 #endif
-],,AC_MSG_ERROR(${QT4_WRONG_VESION}))
+])],,AC_MSG_ERROR(${QT4_WRONG_VESION}))
 
 # publish:
 AC_SUBST(QT4_CPPFLAGS)

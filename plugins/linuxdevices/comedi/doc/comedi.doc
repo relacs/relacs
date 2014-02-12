@@ -401,6 +401,29 @@ Pay attention to warnings and errors! You might need to install additional softw
 \code
 $ make && make install
 \endcode
+-# In case \c make fails with this error message:
+\code
+libtool: link: gcc -std=gnu99 -I../include -I../include -Wall -g -O2 -o .libs/comedi_test comedi_test-bufconfig.o comedi_test-cmd_1.o comedi_test-cmd_2.o comedi_test-cmd_3.o comedi_test-info.o comedi_test-insn_read.o comedi_test-insn_read_time.o comedi_test-inttrig.o comedi_test-lib.o comedi_test-main.o comedi_test-mmap.o comedi_test-mode0_read.o comedi_test-select.o  ../lib/.libs/libcomedi.so -lm
+../lib/.libs/libcomedi.so: undefined reference to `nearbyint'
+../lib/.libs/libcomedi.so: undefined reference to `floor'
+collect2: error: ld returned 1 exit status
+make[2]: *** [comedi_test] Error 1
+make[2]: Leaving directory `/usr/local/src/comedilib/testing'
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory `/usr/local/src/comedilib'
+make: *** [all] Error 2
+\endcode
+then add the following line
+\code
+libcomedi_la_LIBADD = -lm
+\endcode
+to \c lib/Makefile.am after the line \c libcomedi_la_LDFLAGS. Then run
+\code
+$ make clean
+$ ./autogen.sh
+$ ./configure --prefix=/usr --sysconfdir=/etc
+$ make && make install
+\endcode
 
 
 \subsection installcomedicalib Comedi_calibrate

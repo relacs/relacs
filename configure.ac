@@ -1,11 +1,16 @@
-# Process this file with autoconf to produce a configure script.
+# Process this file with ./bootstrap.sh to produce a configure script.
 
 AC_INIT(relacs, 0.9.8)
-AC_CONFIG_MACRO_DIR([m4 numerics/m4 \
-    plugins/linuxdevices/comedi/m4 plugins/linuxdevices/daqflex/m4])
+
+m4_version_prereq( 2.69,
+		   [ AC_CONFIG_MACRO_DIRS([m4 numerics/m4 \
+		     plugins/linuxdevices/comedi/m4 plugins/linuxdevices/daqflex/m4]) ],
+ 		   [ AC_CONFIG_MACRO_DIR([m4 numerics/m4 \
+    		     plugins/linuxdevices/comedi/m4 plugins/linuxdevices/daqflex/m4]) ] )
 
 AM_INIT_AUTOMAKE([1.10 -Wall gnits subdir-objects dist-bzip2])
 
+m4_version_prereq( 2.69, [ AM_PROG_AR ], [] )
 # no static libraries:
 AC_ENABLE_SHARED
 AC_DISABLE_STATIC

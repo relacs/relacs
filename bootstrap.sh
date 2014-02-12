@@ -22,11 +22,12 @@ LIBTOOL_M4=$(dirname $(dirname $(which libtool)))/share/libtool/libtool.m4
 if [ -e ${LIBTOOL_M4} ]; then
 	cp "${LIBTOOL_M4}" acinclude.m4 || exit 1
 fi
-aclocal -I m4 -I numerics/m4 -I plugins/linuxdevices/comedi/m4 -I plugins/linuxdevices/daqflex/m4 -I plugins/linuxdevices/misc/m4 || exit 1
+AMINCS=$(grep ACLOCAL_AMFLAGS Makefile.am)
+aclocal ${AMINCS#*=}  || exit 1
 
 ## Libtoolize
 LIBTOOLIZE=libtoolize
-WHITESPACE='  '
+WHITESPACE=''
 if glibtoolize --version &>/dev/null ; then
 	LIBTOOLIZE=glibtoolize
 	WHITESPACE=' '

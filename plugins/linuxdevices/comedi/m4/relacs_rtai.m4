@@ -14,7 +14,7 @@ RTAI_CPPFLAGS=
 
 # read arguments:
 AC_ARG_WITH([rtai],
-[AS_HELP_STRING([--with-rtai=DIR],[set path to RTAI])
+[AS_HELP_STRING([--with-rtai=DIR],[set path to RTAI base installation])
 AS_HELP_STRING([--without-rtai],[don't use RTAI, i.e. prevent auto-detection])],
 [
 	# --without-rtai  -> $with_rtai = no
