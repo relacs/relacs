@@ -37,7 +37,7 @@ namespace patchclamp {
 \class SetDC
 \brief [RePro] Interactively set the DC current.
 \author Jan Benda
-\version 1.4 (May 10, 2013)
+\version 1.5 (Feb 14, 2014)
 \par Screenshot
 \image html setdc.png
 
@@ -50,10 +50,11 @@ namespace patchclamp {
 - \c interactive=false: Set dc amplitude interactively (\c boolean)
 - \c dcamplitudestep=0.001nA: Stepsize for entering dc (\c number)
 - \c duration=500ms: Duration for analysis (\c number)
+- \c showstdev=true: Print standard deviation of voltage (\c boolean)
 */
 
 
-  class SetDC : public RePro, public ephys::Traces
+class SetDC : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
@@ -71,17 +72,18 @@ protected:
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QEvent *qce );
   QDoubleSpinBox *EW;
-  QLabel *UnitLabel;
+  QLabel *CurrentUnitLabel;
   QLabel *VoltageLabel;
+  QLabel *VoltageUnitLabel;
   QLabel *RateLabel;
   MultiPlot P;
   QPushButton *OKButton;
   QPushButton *CancelButton;
   QPushButton *ResetButton;
   QPushButton *ZeroButton;
+  bool ShowStdev;
   bool SetValue;
   bool Finished;
-  int OutCurrent;
   string IUnit;
   double DCAmplitude;
   double OrgDCAmplitude;

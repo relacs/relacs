@@ -29,10 +29,12 @@ namespace patchclamp {
 
 
 SetDC::SetDC( void )
-  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.4", "May 10, 2013" ),
+  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.5", "Feb 14, 2014" ),
     P( 2, 1 ),
     IUnit( "nA" )
 {
+  ShowStdev = true;
+
   // add some options:
   addSelection( "outcurrent", "Output trace", "Current-1" );
   addSelection( "dcamplitudesel", "Set DC amplitude", "to absolute value|to previous value|to a fraction of the threshold|relative to threshold" );
@@ -42,6 +44,7 @@ SetDC::SetDC( void )
   addBoolean( "interactive", "Set dc amplitude interactively", false );
   addNumber( "dcamplitudestep", "Stepsize for entering dc", 0.001, 0.0, 1000.0, 0.001 );
   addNumber( "duration", "Duration for analysis", 0.5, 0.0, 1000.0, 0.01, "seconds", "ms" );
+  addBoolean( "showstdev", "Print standard deviation of voltage", ShowStdev );
 
   QHBoxLayout *hb = new QHBoxLayout;
   setLayout( hb );
@@ -63,8 +66,8 @@ SetDC::SetDC( void )
   EW->setDecimals( 3 );
   EW->setSingleStep( 0.001 );
   gl->addWidget( EW, 0, 2 );
-  UnitLabel = new QLabel( "nA" );
-  gl->addWidget( UnitLabel, 0, 3 );
+  CurrentUnitLabel = new QLabel( "nA" );
+  gl->addWidget( CurrentUnitLabel, 0, 3 );
 
   // mean voltage:
   label = new QLabel( "Membrane potential" );
@@ -86,8 +89,8 @@ SetDC::SetDC( void )
   qp.setColor( QPalette::WindowText, Qt::green );
   VoltageLabel->setPalette( qp );
   gl->addWidget( VoltageLabel, 1, 2 );
-  QLabel *ul = new QLabel( "mV" );
-  gl->addWidget( ul, 1, 3 );
+  VoltageUnitLabel = new QLabel( "mV" );
+  gl->addWidget( VoltageUnitLabel, 1, 3 );
 
   // mean rate:
   label = new QLabel( "Firing rate" );
@@ -103,7 +106,7 @@ SetDC::SetDC( void )
   RateLabel->setAutoFillBackground( true );
   RateLabel->setPalette( qp );
   gl->addWidget( RateLabel, 2, 2 );
-  ul = new QLabel( "Hz" );
+  QLabel *ul = new QLabel( "Hz" );
   gl->addWidget( ul, 2, 3 );
 
   // buttons:
@@ -155,6 +158,7 @@ void SetDC::preConfig( void )
 {
   setText( "outcurrent", currentOutputNames() );
   setToDefault( "outcurrent" );
+  VoltageUnitLabel->setText( trace( SpikeTrace[0] ).unit().c_str() );
 }
 
 
@@ -166,7 +170,7 @@ void SetDC::notify( void )
     setUnit( "dcamplitude", IUnit );
     setUnit( "dcamplitudedecr", IUnit );
     setUnit( "dcamplitudestep", IUnit );
-    UnitLabel->setText( IUnit.c_str() );
+    CurrentUnitLabel->setText( IUnit.c_str() );
   }
   postCustomEvent( 13 ); // setStep();
 }
@@ -184,13 +188,20 @@ public:
       Max( max )
   {
   }
-  SetDCEvent( double val, int type )
-    : QEvent( Type( User+type ) ),
+  SetDCEvent( double val, double stdev )
+    : QEvent( Type( User+15 ) ),
+      Value( val ),
+      StDev( stdev )
+  {
+  }
+  SetDCEvent( double val )
+    : QEvent( Type( User+16 ) ),
       Value( val )
   {
   }
 
   double Value;
+  double StDev;
   double Min;
   double Max;
 };
@@ -199,13 +210,14 @@ public:
 int SetDC::main( void )
 {
   // get options:
-  OutCurrent = outTraceIndex( text( "outcurrent", 0 ) );
+  string outcurrent = text( "outcurrent", 0 );
   int dcamplitudesel = index( "dcamplitudesel" );
   double dcamplitude = number( "dcamplitude" );
   double dcamplitudefrac = number( "dcamplitudefrac" );
   double dcamplitudedecr = number( "dcamplitudedecr" );
   bool interactive = boolean( "interactive" );
   double duration = number( "duration" );
+  ShowStdev = boolean( "showstdev" );
 
   // don't print repro message:
   noMessage();
@@ -214,7 +226,7 @@ int SetDC::main( void )
   tracePlotContinuous( 1.0 );
 
   // init:
-  OrgDCAmplitude = stimulusData().number( outTraceName( OutCurrent ) );
+  OrgDCAmplitude = stimulusData().number( outcurrent );
   DCAmplitude = metaData().number( "Cell>ithreshss" );
   if ( dcamplitudesel == 0 )
     DCAmplitude = dcamplitude;
@@ -249,7 +261,7 @@ int SetDC::main( void )
     keepFocus();
     analyze( duration );
     OutData dcsignal;
-    dcsignal.setTrace( OutCurrent );
+    dcsignal.setTraceName( outcurrent );
     dcsignal.constWave( DCAmplitude );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );
@@ -282,7 +294,7 @@ int SetDC::main( void )
     do {
       bool w = false;
       do {
-	w = sleep( duration );
+	w = sleepWait( duration );
 	analyze( duration );
       } while ( ! w );
       if ( ! Finished || ! SetValue ) {
@@ -305,7 +317,7 @@ int SetDC::main( void )
   if ( SetValue ) {
     // DC signal:
     OutData dcsignal;
-    dcsignal.setTrace( OutCurrent );
+    dcsignal.setTraceName( outcurrent );
     dcsignal.constWave( DCAmplitude );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );
@@ -331,6 +343,7 @@ void SetDC::analyze( double duration )
   if ( SpikeTrace[0] >= 0 ) {
     const InData &data = trace( SpikeTrace[0] );
     double meanvoltage = data.mean( ltime, currentTime() );
+    double stdvoltage = data.stdev( ltime, currentTime() );
     float min = 0;
     float max = 0.0;
     data.minMax( min, max, ltime, currentTime() );
@@ -347,7 +360,7 @@ void SetDC::analyze( double duration )
     P[0].plot( hist, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Green, Plot::Green );
     P[0].draw();
     P.unlock();
-    QCoreApplication::postEvent( this, new SetDCEvent( meanvoltage, 15 ) );
+    QCoreApplication::postEvent( this, new SetDCEvent( meanvoltage, stdvoltage ) );
   }
   if ( SpikeEvents[0] >= 0 ) {
     const EventData &spikes = events( SpikeEvents[0] );
@@ -360,7 +373,7 @@ void SetDC::analyze( double duration )
     P[1].plot( isih, 1000.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Yellow, Plot::Yellow );
     P[1].draw();
     P.unlock();
-    QCoreApplication::postEvent( this, new SetDCEvent( meanrate, 16 ) );
+    QCoreApplication::postEvent( this, new SetDCEvent( meanrate ) );
   }
 }
 
@@ -475,12 +488,16 @@ void SetDC::customEvent( QEvent *qce )
   }
   case 15: {
     SetDCEvent *sde = dynamic_cast<SetDCEvent*>( qce );
-    VoltageLabel->setText( Str( sde->Value, 0, 1, 'f' ).c_str() );
+    string s = Str( sde->Value, 0, 2, 'f' );
+    if ( ShowStdev )
+      s += " +/- " + Str( sde->StDev, 0, 2, 'f' );
+    VoltageLabel->setText( s.c_str() );
     break;
   }
   case 16: {
     SetDCEvent *sde = dynamic_cast<SetDCEvent*>( qce );
-    RateLabel->setText( Str( sde->Value, 0, 1, 'f' ).c_str() );
+    string s = Str( sde->Value, 0, 1, 'f' );
+    RateLabel->setText( s.c_str() );
     break;
   }
   default:
