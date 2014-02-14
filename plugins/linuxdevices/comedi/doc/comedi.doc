@@ -156,30 +156,31 @@ if \c make \c install did not create a \c /boot/initrd-2.6.38.8 file already:
 $ cd /boot
 $ update-initramfs -c -k 2.6.38.8
 \endcode
--# Check the grub menu whether your new kernel was added.. 
-With \c grub \c v1 (default up-to Debian Lenny) 
-there should be an entry like this in \c /boot/grub/menu.lst:
-\code
+-# Check the grub menu whether your new kernel was added. 
+  - With \c grub \c v2 (default since Debian Lenny) simply run
+    \code
+$ update-grub
+\endcode
+    the output of \c update-grub should mention your new kernel image.
+    You can configure \c grub \c v2 by editing the file \c /etc/default/grub .
+    To get the boot menu that you need to select the kernel you want to boot
+    you should for example unset the \c GRUB_HIDDEN_TIMEOUT and set the
+    \c GRUB_TIMEOUT appropriately in that file. For example:
+    \code
+#GRUB_HIDDEN_TIMEOUT=0
+#GRUB_HIDDEN_TIMEOUT_QUIET=true
+GRUB_TIMEOUT=10
+\endcode
+    Afer editing run \c update-grub to apply the changes.
+  - With \c grub \c v1 (default up-to Debian Lenny) 
+    there should be an entry like this in \c /boot/grub/menu.lst:
+    \code
 title           Debian GNU/Linux, kernel 2.6.28.9
 root            (hd0,0)
 kernel          /boot/vmlinuz-2.6.28.9 root=/dev/sda1 ro quiet
 initrd          /boot/initrd.img-2.6.28.9
 \endcode
-With \c grub \c v2 (default since Debian Lenny) simply run
-\code
-$ update-grub
-\endcode
-the output of \c update-grub should mention your new kernel image.
-You can configure \c grub \c v2 by editing the file \c /etc/default/grub .
-To get the boot menu that you need to select the kernel you want to boot
-you should for example unset the \c GRUB_HIDDEN_TIMEOUT and set the
-\c GRUB_TIMEOUT appropriately in that file. For example:
-\code
-#GRUB_HIDDEN_TIMEOUT=0
-#GRUB_HIDDEN_TIMEOUT_QUIET=true
-GRUB_TIMEOUT=10
-\endcode
-Afer editing run \c update-grub to apply the changes.
+  .
 -# Reboot the computer into the new kernel.
 \code
 $ reboot
@@ -203,7 +204,7 @@ i.e. the string '\c uname \c -r' would return if that kernel is running).
    Do as root:
    -# Get the kernel-package
    \code
-$ apt-get install kernel-package
+$ apt-get install kernel-package libncurses-dev
    \endcode
    -# Configure and build the kernel:
    \code
@@ -218,7 +219,7 @@ $ make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image kernel-head
 $ cd ..
 $ dpkg -i linux-image-2.6.38.8_1.0_amd64.deb linux-headers-2.6.38.8_1.0_amd64.deb
    \endcode
-   -# continue with step 7.
+   -# continue with step 6.
 
 
 \subsection installcomedidriver Comedi
@@ -460,14 +461,19 @@ For dynamic clamp you need an RTAI patched linux kernel and Comedi.
 --version). The \c rtai_math module does not compile correctly with
 the newer libc version. I have not figured out a nice solution to this
 bug other than to use a not so new linux distro.... Working is
-linuxMint upto version 12 (Lisa), Ubuntu Oneiric, Debian Linux 7.0.
-Find out your distro with \c cat \c /etc/issue .
+linux Mint upto version 12 (Lisa), Ubuntu Oneiric, Debian Linux 7.0.
+Find out your distro with \c cat \c /etc/issue or \c lsb_release \c -a.
 
 \subsection rtaikernel Linux kernel and RTAI patch
 
--# Download the latest RTAI (http://www.rtai.org) version (version 3.9) from 
+-# Download the latest RTAI (http://www.rtai.org) version 
+(the following instructions where tested successfully with version 3.9) from
 the RTAI repository at http://www.rtai.org/RTAI
 and put it into \c /usr/local/src as root.
+Alternatively you could try to clone the source from \c https://github.com/ShabbyX/RTAI.
+This version fixed quite some autotools issues and
+is working hard on getting the rtai_math module back.
+Unfortunately, this also failed so far (February 2014, Linux Mint 16 Petra, kernel 3.8.13)
 -# Unpack RTAI in /usr/local/src:
 \code
 $ cd /usr/local/src
@@ -500,6 +506,12 @@ $ cd /usr/src/linux
 $ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.38.8-x86-2.11-02.patch
 \endcode
 -# Configure, compile, and install the kernel.
+\note In newer gcc and kernels there is a problem with some compiler
+flag when compiling the RTAI math module.  Disable (comment them out
+using '#') in \c /usr/src/linux/arch/x86/Makefile all lines with \c
+-mpreferred-stack-boundary=3 before configuring and compiling the
+kernel.
+
 Follow the intructions given in \ref installvanillakernel, starting at step 2.
 On Debian, the make-kpkg command should be
 \code
@@ -545,6 +557,12 @@ $ uname -r
 \code
 $ cd /usr/local/src/rtai
 \endcode
+-# In case you downloaded RTAI from https://github.com/ShabbyX/RTAI,
+you need to generate configure script and makefiles first:
+\code
+$ ./autogen.sh
+\endcode
+(do not call ./autogen.sh when using the original RTAI sources since it might fail).
 -# Configure RTAI by calling as root
 \code
 $ make menuconfig
@@ -553,7 +571,7 @@ Check the following settings:
  - General
    - Installation directory: should be set to \c /usr/realtime
    - Linux source tree: must be set to \c /usr/src/linux
-   - RTAI Documentation: select the documentation you want
+   - RTAI Documentation: deselect all documentation (if you don't you might get an error)
    - Build RTAI testsuite: select
  - Machine
     - Number of CPUs: set to the right value. The default is not always right.
@@ -574,12 +592,29 @@ and run \c .configure manually.
 \code
 $ make && make install
 \endcode
-In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
-\code
+Known issues:
+  - In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
+  \code
 $ apt-get install gcc-multilib
 \endcode
-In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
-then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
+  - In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
+  then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
+  - If you get error messages like 
+    "../../../base/sched/liblxrt/.libs/liblxrt.so: undefined reference to `pthread_create'",
+    i.e. undefined references to various pthread functions,
+    then open \c base/sched/liblxrt/GNUmakefile in you favourite editor,
+    find the line containing 'liblxrt_la_LIBADD' and add "-lpthread" to it so that this line looks like
+    \code
+liblxrt_la_LIBADD = -lpthread
+\endcode
+    Then
+    \code
+$ cd base/sched/liblxrt
+$ make clean
+$ cd -
+$ make
+\endcode
+  .
 -# Make the RTAI kernel modules known to modprobe:
 \code
 $ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai

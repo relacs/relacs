@@ -153,7 +153,11 @@ Analog Input/Output:
 - Comedi autotools check: old comedi versions do not have the setrouting function
 
 Dynamic clamp:
-- CHECK IT! Both kernel modules, optional trigger, and DynClmapAnalogOutput
+- We really should avoid using the rtai-math module, it would make installing RTAI much simpler.
+  For doing this we should provide an interface that allows to compute lookuptables for needed functions
+  in userspace, passing them into the kernel, and providing some nice functions in kernel space that do
+  the linear interpolation.
+- CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.
 - write back real time loop frequency to InList and OutList samplerate.
