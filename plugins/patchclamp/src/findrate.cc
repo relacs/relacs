@@ -281,10 +281,8 @@ void FindRate::saveData( const MapD &rates )
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
 
   header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
 
   TableKey datakey;

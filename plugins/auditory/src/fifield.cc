@@ -313,9 +313,8 @@ void FIField::saveThreshold( const string &file )
 
   // write header and key:
   FIFieldHeader.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 32, Options::FirstOnly );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 32, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.newSection( "threshold" );

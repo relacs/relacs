@@ -329,10 +329,8 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey )
     tf.open( addPath( "findthreshold-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
   Header.save( tf, "# " );
-  tf << "# status:\n";
-  stimulusData().save( tf, "#   " );
-  tf << "# settings:\n";
-  settings().save( tf, "#   " );
+  stimulusData().save( tf, "# ", 0, Options::FirstOnly );
+  settings().save( tf, "# ", 0, Options::FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
@@ -392,10 +390,8 @@ void FindThreshold::saveSpikes( void )
              ofstream::out | ofstream::app );
 
   Header.save( sf, "# " );
-  sf << "# status:\n";
-  stimulusData().save( sf, "#   " );
-  sf << "# settings:\n";
-  settings().save( sf, "#   " );
+  stimulusData().save( sf, "# ", 0, Options::FirstOnly );
+  settings().save( sf, "# ", 0, Options::FirstOnly );
   sf << '\n';
 
   TableKey spikekey;

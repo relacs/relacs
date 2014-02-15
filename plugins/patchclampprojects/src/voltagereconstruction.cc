@@ -262,10 +262,8 @@ void VoltageReconstruction::openTraceFile( ofstream &tf, TableKey &tracekey,
   tf.open( addPath( "voltagereconstruction-traces.dat" ).c_str(),
 	   ofstream::out | ofstream::app );
   header.save( tf, "# " );
-  tf << "# status:\n";
-  stimulusData().save( tf, "#   " );
-  tf << "# settings:\n";
-  settings().save( tf, "#   " );
+  stimulusData().save( tf, "# ", 0, Options::FirstOnly );
+  settings().save( tf, "# ", 0, Options::FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
@@ -308,10 +306,8 @@ void VoltageReconstruction::saveMeanTrace( const Options &header,
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
 
   TableKey datakey;
@@ -338,10 +334,8 @@ void VoltageReconstruction::saveData( const Options &header,
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
 
   TableKey datakey;

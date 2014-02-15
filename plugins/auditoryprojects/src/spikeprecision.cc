@@ -604,10 +604,8 @@ void SpikePrecision::saveSpikes( const vector < EnvelopeFrequencyData > &results
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, Options::FirstOnly );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -644,10 +642,8 @@ void SpikePrecision::saveRates( const vector < EnvelopeFrequencyData > &results 
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, Options::FirstOnly );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%5.1f" );

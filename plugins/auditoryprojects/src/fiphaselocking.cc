@@ -86,10 +86,8 @@ void FIPhaseLocking::saveSpikes( void )
     return;
 
   // write header and key:
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "# " );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );

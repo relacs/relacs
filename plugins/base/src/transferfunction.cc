@@ -35,6 +35,7 @@ TransferFunction::TransferFunction( void )
   addSelection( "offsetbase", "Set offset relative to", "custom|current" ).setUnit( "value" );
   addNumber( "offset", "Offset", 0.0, -100000.0, 100000.0, 0.001, "", "" );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 100000.0, 1.0, "", "" );
+  addNumber( "intensity", "Intensity for an attenuator", 1.0, -10000.0, 10000.0, 0.1, "", "" );
   addNumber( "fmax", "Maximum frequency", 1000.0, 0.0, 10000000.0, 100.0, "Hz", "Hz" );
   addNumber( "duration", "Duration of noise stimulus", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
   addNumber( "pause", "Length of pause inbetween successive stimuli", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
@@ -108,6 +109,7 @@ int TransferFunction::main( void )
   int offsetbase = index( "offsetbase" );
   double offset = number( "offset" );
   double amplitude = number( "amplitude" );
+  double intensity = number( "intensity" );
   double fmax = number( "fmax" );
   double duration = number( "duration" );
   double pause = number( "pause" );
@@ -186,6 +188,7 @@ int TransferFunction::main( void )
   OutData signal;
   signal.setIdent( "WhiteNoise, fmax=" + Str( fmax ) + "Hz" );
   signal.setTrace( outtrace );
+  signal.setIntensity( intensity );
 
   // original offset:
   OutData orgdcsignal;
@@ -371,10 +374,8 @@ void TransferFunction::openTraceFile( ofstream &tf, TableKey &tracekey,
   tf.open( addPath( "transferfunction-traces.dat" ).c_str(),
 	   ofstream::out | ofstream::app );
   header.save( tf, "# " );
-  tf << "# status:\n";
-  stimulusData().save( tf, "#   " );
-  tf << "# settings:\n";
-  settings().save( tf, "#   " );
+  stimulusData().save( tf, "# ", 0, Options::FirstOnly );
+  settings().save( tf, "# ", 0, Options::FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
@@ -403,10 +404,8 @@ void TransferFunction::saveData( const Options &header )
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
 
   TableKey datakey;

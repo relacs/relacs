@@ -803,7 +803,6 @@ void FileStimulus::saveNoise( int trace, int trial, const OutData &noisesignal,
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# " );
-    settings().save( df, "#   " );
     df << '\n';
     NoiseKey.saveKey( df, true, false );
   }

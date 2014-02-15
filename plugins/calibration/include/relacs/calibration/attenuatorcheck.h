@@ -30,10 +30,18 @@ namespace calibration {
 
 
 /*!
-\class AttenuatorCheck
-\brief [RePro] Checks performance of attenuator device
 \author Jan Benda
-\version 1.0 (Jun 20, 2013)
+\version 1.2 (Feb 15, 2014)
+\par Options
+- \c outtrace=V-1: Output trace (\c string)
+- \c intrace=V-1: Input trace (\c string)
+- \c duration=1s: Stimulus duration (\c number)
+- \c type=attenuation: Measurement type (\c string)
+- \c frequency=50Hz: Frequency of stimulus (\c number)
+- \c amplitude=1V: Amplitude of stimulus (\c number)
+- \c minlevel=0dB: Minimum attenuation level (\c number)
+- \c maxlevel=100dB: Maximum attenuation level (\c number)
+- \c dlevel=1dB: Increment of attenuation level (\c number)
 */
 
 
@@ -44,12 +52,19 @@ class AttenuatorCheck : public RePro
 public:
 
   AttenuatorCheck( void );
+  void preConfig( void );
+  void notify( void );
   virtual int main( void );
 
 
 protected:
  
   Plot P;
+
+  string InName;
+  string InUnit;
+  string OutName;
+  string OutUnit;
 
 };
 

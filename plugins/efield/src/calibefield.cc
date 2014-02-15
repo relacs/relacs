@@ -539,8 +539,8 @@ void CalibEField::saveData( const MapD &intensities,
   header.addInteger( "device", latt->aoDevice() );
   header.addInteger( "channel", latt->aoChannel() );
   header.addText( "session time", sessionTimeStr() );
-  header.save( df, "# " );
-  settings().save( df, "#   " );
+  header.newSection( settings() );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "intens", EODUnit, "%8.5g" );

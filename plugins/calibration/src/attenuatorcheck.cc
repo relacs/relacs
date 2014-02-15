@@ -21,6 +21,7 @@
 
 #include <cmath>
 #include <relacs/rangeloop.h>
+#include <relacs/tablekey.h>
 #include <relacs/calibration/attenuatorcheck.h>
 using namespace relacs;
 
@@ -28,11 +29,15 @@ namespace calibration {
 
 
 AttenuatorCheck::AttenuatorCheck( void )
-  : RePro( "AttenuatorCheck", "calibration", "Jan Benda", "1.0", "Jun 20, 2013" )
+  : RePro( "AttenuatorCheck", "calibration", "Jan Benda", "1.2", "Feb 15, 2014" )
 {
   // add some options:
-  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
-  addNumber( "frequency", "Frequency of stimulus", 100.0, 10.0, 100000.0, 10.0, "Hz", "Hz" );
+  addSelection( "outtrace", "Output trace", "V-1" );
+  addSelection( "intrace", "Input trace", "V-1" );
+  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "s" );
+  addSelection( "type", "Measurement type", "attenuation|noise" );
+  addNumber( "frequency", "Frequency of stimulus", 50.0, 10.0, 100000.0, 10.0, "Hz", "Hz" ).setActivation( "type", "attenuation" );
+  addNumber( "amplitude", "Amplitude of stimulus", 1.0, -10000.0, 10000.0, 0.1, "V", "V" ).setActivation( "type", "noise" );
   addNumber( "minlevel", "Minimum attenuation level", 0.0, -1000.0, 1000.0, 0.1, "dB", "dB" );
   addNumber( "maxlevel", "Maximum attenuation level", 100.0, -1000.0, 1000.0, 0.1, "dB", "dB" );
   addNumber( "dlevel", "Increment of attenuation level", 1.0, 0.0, 1000.0, 0.1, "dB", "dB" );
@@ -41,11 +46,41 @@ AttenuatorCheck::AttenuatorCheck( void )
 }
 
 
+void AttenuatorCheck::preConfig( void )
+{
+  setText( "intrace", traceNames() );
+  setToDefault( "intrace" );
+  setText( "outtrace", outTraceNames() );
+  setToDefault( "outtrace" );
+}
+
+
+void AttenuatorCheck::notify( void )
+{
+  int outtrace = index( "outtrace" );
+  if ( outtrace >= 0 && outtrace < outTracesSize() ) {
+    OutName = outTrace( outtrace ).traceName();
+    OutUnit = outTrace( outtrace ).unit();
+    setUnit( "amplitude", OutUnit );
+  }
+
+  int intrace = index( "intrace" );
+  if ( intrace >= 0 && intrace < traces().size() ) {
+    InName = trace( intrace ).ident();
+    InUnit = trace( intrace ).unit();
+  }
+}
+
+
 int AttenuatorCheck::main( void )
 {
   // get options:
+  int outtrace = index( "outtrace" );
+  int intrace = traceIndex( text( "intrace", 0 ) );
   double duration = number( "duration" );
+  int type = index( "type" );
   double frequency = number( "frequency" );
+  double amplitude = number( "amplitude" );
   double minlevel = number( "minlevel" );
   double maxlevel = number( "maxlevel" );
   double dlevel = number( "dlevel" );
@@ -59,18 +94,28 @@ int AttenuatorCheck::main( void )
   P.lock();
   P.setXRange( minlevel, Plot::AutoScale );
   P.setXLabel( "Attenuation level [dB]" );
-  P.setYLabel( "Log10 signal amplitude" );
+  if ( type == 1 ) {
+    P.setYLabel( "Standard deviation [" + InUnit + "]" );
+    P.setYRange( 0.0, Plot::AutoScale );
+  }
+  else {
+    P.setYLabel( "Signal amplitude [dB]" );
+    P.setYRange( Plot::AutoScale, Plot::AutoScale );
+  }
   P.unlock();
 
   OutData signal;
-  signal.setTrace( 0 );
-  signal.sineWave( duration, -1.0, frequency );
-  adjustGain( trace( 0 ), 10.0 );
+  signal.setTrace( outtrace );
+  if ( type == 1 )
+    signal.pulseWave( duration, -1.0, amplitude, 0.0 );
+  else
+    signal.sineWave( duration, -1.0, frequency, amplitude );
+  adjustGain( trace( intrace ), 10.0 );
 
   RangeLoop levelrange( minlevel, maxlevel, dlevel, 1, 1, 1 );
 
-  MapD amplitudes;
-  amplitudes.reserve( levelrange.size() );
+  MapD levels;
+  levels.reserve( levelrange.size() );
 
   for ( levelrange.reset(); ! levelrange && softStop() == 0; ++levelrange ) {
 
@@ -93,24 +138,59 @@ int AttenuatorCheck::main( void )
       return Aborted;
 
     // analyze:
-    double ampl = trace( 0 ).stdev( signalTime(), signalTime()+signal.length() ) * ::sqrt( 2.0 );
-    amplitudes.push( level, ::log10( ampl ) );
-    adjustGain( trace( 0 ), ampl );
+    double val = 0.0;
+    double max = 0.0;
+    double d = signal.length();
+    double stdev = trace( intrace ).stdev( signalTime() + 0.05*d, signalTime()+0.95*d );
+    if ( type == 1 ) {
+      val = stdev;
+      max = ::fabs( amplitude ) + stdev*4.0;
+    }
+    else {
+      max = stdev * ::sqrt( 2.0 );
+      val = 20.0*::log10( max );
+      max *= 1.1;
+    }
+    levels.push( level, val );
+    adjustGain( trace( intrace ), max );
 
     P.lock();
     P.clear();
-    P.plot( amplitudes, 1.0, Plot::Red, 2, Plot::Solid,
+    P.plot( levels, 1.0, Plot::Red, 2, Plot::Solid,
 	    Plot::Circle, 10, Plot::Red, Plot::Red );
-    if ( amplitudes.size() > 2 ) {
-      P.plotLine( amplitudes.x().front(), amplitudes.y().front(),
-		  amplitudes.x().back(), amplitudes.y().back(),
+    if ( type == 0 && levels.size() > 2 ) {
+      P.plotLine( levels.x().front(), levels.y().front(),
+		  levels.x().back(), levels.y().back(),
 		  Plot::Yellow, 2 );
     }
     P.draw();
     P.unlock();
+
+    sleep( 0.1 );
   }
 
-  adjustGain( trace( 0 ), 10.0 );
+  // save data:
+  string filename = type == 1 ? "attenuatorcheck-noise.dat" : "attenuatorcheck-amplitude.dat";
+  ofstream df( addPath( filename ).c_str(),
+	       ofstream::out | ofstream::app );
+  stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  settings().save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  TableKey datakey;
+  datakey.addNumber( "level", "dB", "%7.2f" );
+  if ( type == 1 )
+    datakey.addNumber( "stdev", InUnit, "%7.4f" );
+  else
+    datakey.addNumber( "ampl", "dB", "%8.4f" );
+  datakey.saveKey( df );
+  for ( int k=0; k<levels.size(); k++ ) {
+    datakey.save( df, levels.x( k ), 0 );
+    datakey.save( df, levels.y( k ) );
+    df << '\n';
+  }
+  df << "\n\n";
+
+  adjustGain( trace( intrace ), 10.0 );
   return Completed;
 }
 

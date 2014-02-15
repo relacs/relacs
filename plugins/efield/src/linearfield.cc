@@ -181,7 +181,7 @@ void LinearField::saveTrace( const SampleDataF &data )
     return;
 
   // write header and key:
-  settings().save( df, "# " );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   GUIOpts.save( df, "# " );
   df << '\n';
   TableKey key;
@@ -211,7 +211,7 @@ void LinearField::saveAmplitude( void )
     return;
 
   // write header and key:
-  settings().save( df, "# " );
+  settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "x", "cm", "%6.1f" );

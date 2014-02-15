@@ -144,6 +144,8 @@ void Model::main( void )
 void Model::process( const OutData &source, OutData &dest )
 {
   dest = source;
+  if ( source.level() != OutData::NoLevel )
+    dest *= ::pow( 10.0, -source.level()/20.0 );
 }
 
 

@@ -575,7 +575,6 @@ void SAM::saveAmpl( void )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# ", 0, Options::FirstOnly );
-    settings().save( df, "#   " );
     df << '\n';
     AmplKey.setUnit( 1, EOD2Unit );
     AmplKey.saveKey( df, true, false );
@@ -607,7 +606,6 @@ void SAM::saveAllAmpl( void )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# ", 0, Options::FirstOnly );
-    settings().save( df, "#   " );
     df << '\n';
     AmplKey.setUnit( 1, EOD2Unit );
     AmplKey.saveKey( df, true, false );
@@ -636,7 +634,6 @@ void SAM::saveSpikes( int trace )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# ", 0, Options::FirstOnly );
-    settings().save( df, "#   " );
     df << '\n';
     SpikesKey.saveKey( df, true, false );
   }
@@ -670,7 +667,6 @@ void SAM::saveAllSpikes( int trace )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# ", 0, Options::FirstOnly );
-    settings().save( df, "#   " );
     df << '\n';
     SpikesKey.saveKey( df, true, false );
   }
@@ -702,7 +698,6 @@ void SAM::saveNerve( void )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# ", 0, Options::FirstOnly);
-    settings().save( df, "#   " );
     df << '\n';
     NerveKey.saveKey( df, true, true );
   }
@@ -737,7 +732,6 @@ void SAM::saveAllNerve( void )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# ", 0, Options::FirstOnly );
-    settings().save( df, "#   " );
     df << '\n';
     NerveKey.saveKey( df, true, true );
   }
