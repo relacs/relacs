@@ -156,7 +156,9 @@ Dynamic clamp:
 - We really should avoid using the rtai-math module, it would make installing RTAI much simpler.
   For doing this we should provide an interface that allows to compute lookuptables for needed functions
   in userspace, passing them into the kernel, and providing some nice functions in kernel space that do
-  the linear interpolation.
+  the linear interpolation. Done! Needs to be tested.
+- Is it smart to use vmalloc in dynclampmodule? No! Better would be
+  kmalloc or even avoid it completely.
 - CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.

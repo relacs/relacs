@@ -1,3 +1,20 @@
+/*!
+Dynamic clamp model for a passive ionic current and a voltage clamp:
+\f[ I_{inj} = -g \cdot (V-E) - VCgain \cdot (V-VC) \f]
+
+\par Input/Output
+- V: Measured membrane potential in mV
+- \f$ I_{inj} \f$ : Injected current in nA
+
+\par Parameter
+- g: conductance of passive ionic current in nS
+- E: reversal potential of passive ionic current in  mV
+- VCgain: gain factor for voltage clamp in mS
+- VC: Voltage command for voltage clamp
+*/
+
+
+#ifdef __KERNEL__
 
   /*! Name, by which this module is known inside Linux: */
 char *moduleName;
@@ -60,3 +77,22 @@ void computeModel( void )
   // total injected current:
   output[0] = paramInput[0] + paramInput[1];
 }
+
+#else
+
+/*! This function is called from DynClampAnalogOutput in user
+    space/C++ context and can be used to create some lookuptables for
+    nonlinear functions to be used by computeModel(). The implementation of this
+    functions has to allocate an \a x and \a y array of floats of a sensible size \a n.
+    \param[in] \a k : the index for the lookup table to be generated.
+    \param[in] \a n : the size of the lookup table (the number of elements in \a x and \a y).
+    \param[in] \a x : the x-values.
+    \param[in] \a y : the corresponding y-values.
+    \return: 0 if a lookuptable was generated, -1 otherwise.
+*/
+int generateLookupTable( int k, float **x, float **y, int *n )
+{
+  return -1;
+}
+
+#endif

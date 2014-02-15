@@ -39,6 +39,9 @@ using namespace relacs;
 
 namespace comedi {
 
+#ifdef ENABLE_COMPUTATION
+#include "module/model.c"
+#endif
 
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
   : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
@@ -221,6 +224,44 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
     return -1;
   }
   FIFOSize = deviceIOC.fifoSize;
+
+  // compute lookup tables:
+#ifdef ENABLE_COMPUTATION
+  for ( int k=0; ; k++ ) {
+    float *x = 0;
+    float *y = 0;
+    int n = 0;
+    if ( generateLookupTable( k, &x, &y, &n ) < 0 ) 
+      break;
+    // transfer to kernel:
+    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_K, &k );
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::open -> ioctl command IOC_SET_LOOKUP_K on device "
+	   << ModuleDevice << " failed!\n";
+      return -1;
+    }
+    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_N, &n );
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::open -> ioctl command IOC_SET_LOOKUP_N on device "
+	   << ModuleDevice << " failed!\n";
+      return -1;
+    }
+    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_X, x );
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::open -> ioctl command IOC_SET_LOOKUP_X on device "
+	   << ModuleDevice << " failed!\n";
+      return -1;
+    }
+    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_Y, y );
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::open -> ioctl command IOC_SET_LOOKUP_Y on device "
+	   << ModuleDevice << " failed!\n";
+      return -1;
+    }
+    delete [] x;
+    delete [] y;
+  }
+#endif
 
   IsPrepared = false;
 

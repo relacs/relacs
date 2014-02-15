@@ -71,6 +71,9 @@
 
 #define PARAM_CHAN_OFFSET 1000
 
+//* Lookup tables:
+#define MAXLOOKUPTABLES 100
+
 //* Integration algorithms:
 
 #define EULER       0
@@ -199,7 +202,13 @@ struct traceChannelIOCT {
 #define IOC_GETLOOPMAX          _IOR(RTMODULE_MAJOR,  23, int)
 #define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  24, int)
 
-#define RTMODULE_IOC_MAXNR 25
+// lookuptables:
+#define IOC_SET_LOOKUP_K        _IOW(RTMODULE_MAJOR,  25, int)
+#define IOC_SET_LOOKUP_N        _IOW(RTMODULE_MAJOR,  26, int)
+#define IOC_SET_LOOKUP_X        _IOW(RTMODULE_MAJOR,  27, int)
+#define IOC_SET_LOOKUP_Y        _IOW(RTMODULE_MAJOR,  28, int)
+
+#define RTMODULE_IOC_MAXNR 29
 
 
 // *** KERNEL LOGGING STYLE ***

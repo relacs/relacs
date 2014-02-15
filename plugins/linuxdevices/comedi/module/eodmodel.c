@@ -1,3 +1,17 @@
+/*!
+A sine wave with an amplitude and frequency:
+\f[ \begin{array}{rcl} \varphi(t) & = & \int_0^t Frequency (t') \; dt' \\
+GlobalEField & = & Amplitude \cdot \cos(2 \pi \varphi(t)) \end{array} \f]
+
+\par Input/Output:
+- GlobalEField: Generated sine-wave EOD in V
+
+\par Parameter:
+- Amplitude: Amplitude of sine-wave in V
+- Frequency: Frequency of sine wave in Hz
+*/
+
+#ifdef __KERNEL__
 
   /*! Name, by which this module is known inside Linux: */
 char *moduleName;
@@ -50,9 +64,47 @@ void initModel( void )
 
 void computeModel( void )
 {
+  int k;
+
+  // phase:
   phase += paramOutput[1] * loopInterval;
-  if ( phase > 1.0 )
+  if ( phase >= 1.0 )
     phase -= 1.0;
-  paramInput[0] = paramOutput[0] * cos( 2.0*M_PI*phase );
+  // cosine from lookuptable:
+  k = phase*lookupn[0];
+  // eod:
+  paramInput[0] = paramOutput[0] * lookupy[0][k];
+  //  paramInput[0] = paramOutput[0] * cos( 2.0*M_PI*phase );
   output[0] = paramInput[0];
 }
+
+#else
+
+/*! This function is called from DynClampAnalogOutput in user
+    space/C++ context and can be used to create some lookuptables for
+    nonlinear functions to be used by computeModel(). The implementation of this
+    functions has to allocate an \a x and \a y array of floats of a sensible size \a n.
+    \param[in] \a k : the index for the lookup table to be generated.
+    \param[in] \a n : the size of the lookup table (the number of elements in \a x and \a y).
+    \param[in] \a x : the x-values.
+    \param[in] \a y : the corresponding y-values.
+    \return: 0 if a lookuptable was generated, -1 otherwise.
+*/
+int generateLookupTable( int k, float **x, float **y, int *n )
+{
+  if ( k == 0 ) {
+    const int nn = 100000;
+    *n = nn;
+    *x = new float[nn];
+    *y = new float[nn];
+    for ( int k=0; k<nn; k++ ) {
+      float xx = k*1.0/nn;
+      (*x)[k] = xx;
+      (*y)[k] = cos( 2.0*M_PI*xx );
+    }
+    return 0;
+  }
+  return -1;
+}
+
+#endif

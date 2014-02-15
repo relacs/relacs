@@ -1,3 +1,18 @@
+/*!
+Dynamic clamp model for a passive ionic current:
+\f[ I_{inj} = -g \cdot (V-E) \f]
+
+\par Input/Output:
+- V: Measured membrane potential in mV
+- \f$ I_{inj} \f$ : Injected current in nA
+
+\par Parameter:
+- g: conductance of passive ionic current in nS
+- E: reversal potential of passive ionic current in mV
+*/
+
+
+#ifdef __KERNEL__
 
   /*! Name, by which this module is known inside Linux: */
 char *moduleName;
@@ -51,3 +66,50 @@ void computeModel( void )
    paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
    output[0] = paramInput[0];
 }
+
+#else
+
+ passive ionic current:
+\f[ I_{inj} = -g \cdot (V-E) \f]
+
+\par Input/Output:
+- V: Measured membrane potential in mV
+- \f$ I_{inj} \f$ : Injected current in nA
+
+\par Parameter:
+- g: conductance of passive ionic current in nS
+- E: reversal potential of passive ionic current in mV
+*/
+
+
+#ifdef __KERNEL__
+
+  /*! Name, by which this module is known inside Linux: */
+char *moduleName;
+
+  /*! The period length of the realtime periodic task in seconds. */
+float loopInterval;
+  /*! One over the period length of the realtime periodic task in Hertz. */
+float loopRate;
+
+  /*! Analog input that is read from the DAQ board. */
+#define INPUT_N 1
+  /*! The \a inputNames are used to match the \a input variables with
+      analog input traces in Relacs. */
+char *inputNames[INPUT_N] = { "V-1" };
+char *inputUnits[INPUT_N] = { "mV" };
+  /*! The \a inputChannels and \a inputDevices are set automatically. */
+int inputChannels[INPUT_N];
+int inputDevices[INPUT_N];
+  /*! \a input holds the current value that was read in from the DAQ board. */
+float input[INPUT_N] = { 0.0 };
+
+  /*! Analog output that is written to the DAQ board. */
+#define OUTPUT_N 1
+char *outputNames[OUTPUT_N] = { "Current-1" };
+int generateLookupTable( int k, float **x, float **y, int *n )
+{
+  return -1;
+}
+
+#endif

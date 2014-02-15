@@ -15,7 +15,7 @@
 #include "moduledef.h"
 
 #ifdef ENABLE_COMPUTATION
-#include <rtai_math.h>
+// #include <rtai_math.h>
 #endif
 
 
@@ -142,6 +142,11 @@ struct triggerT trigger;
 #ifdef ENABLE_COMPUTATION
 int traceIndex = 0;
 int chanIndex = 0;
+
+int lookupinx = 0;
+int lookupn[MAXLOOKUPTABLES];
+float* lookupx[MAXLOOKUPTABLES];
+float* lookupy[MAXLOOKUPTABLES];
 #endif
 
 // RTAI TASK:
@@ -192,7 +197,8 @@ char *iocNames[RTMODULE_IOC_MAXNR] = {
   "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", "IOC_RELEASE_SUBDEV",
   "IOC_DIO_CMD", "IOC_SET_TRIGGER", "IOC_UNSET_TRIGGER", "IOC_GET_TRACE_INFO",
   "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT", "IOC_GETLOOPAVG",
-  "IOC_GETLOOPSQAVG", "IOC_GETLOOPMIN", "IOC_GETLOOPMAX", "IOC_GETAOINDEX" 
+  "IOC_GETLOOPSQAVG", "IOC_GETLOOPMIN", "IOC_GETLOOPMAX", "IOC_GETAOINDEX",
+  "IOC_SET_LOOKUP_K", "IOC_SET_LOOKUP_N", "IOC_SET_LOOKUP_X", "IOC_SET_LOOKUP_Y"
 };
 
 
@@ -274,6 +280,18 @@ void init_globals( void )
 #ifdef ENABLE_COMPUTATION
   traceIndex = 0;
   chanIndex = 0;
+  lookupinx = 0;
+  for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
+    lookupn[k] = 0;
+    if ( lookupx[lookupinx] != NULL ) {
+      kfree( lookupx[lookupinx] );
+      lookupx[lookupinx] = NULL;
+    }
+    if ( lookupy[lookupinx] != NULL ) {
+      kfree( lookupy[lookupinx] );
+      lookupy[lookupinx] = NULL;
+    }
+  }
 #endif
   memset( device, 0, sizeof(device) );
   memset( subdev, 0, sizeof(subdev) );
@@ -1083,6 +1101,11 @@ void rtDynClamp( long dummy )
   difftime = dynClampTask.periodLengthNs;
   if ( syncSECDevice == 0 )
     ERROR_MSG( "rtDynClamp: no sync device set!\n" );
+#endif
+
+#ifdef ENABLE_COMPUTATION
+  // initialize model-specific variables:
+  initModel();
 #endif
 
   /* Somehow the first time this function waits for nothing... */
@@ -1980,9 +2003,127 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     break;
 
 
+#ifdef ENABLE_COMPUTATION
+    // ******* Lookup tables: ***********************************************
+
+  case IOC_SET_LOOKUP_K:
+    retVal = get_user( lookupinx, (int __user *)arg );
+    if ( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to lookup index!" );
+      lookupinx = -1;
+      rc = -EFAULT;
+      break;
+    }
+    if ( lookupinx < 0 || lookupinx >= MAXLOOKUPTABLES ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid lookup index!" );
+      lookupinx = -1;
+      rc = -EINVAL;
+      break;
+    }
+    lookupn[lookupinx] = 0;
+    if ( lookupx[lookupinx] != NULL )
+      kfree( lookupx[lookupinx] );
+    if ( lookupy[lookupinx] != NULL )
+      kfree( lookupy[lookupinx] );
+    lookupx[lookupinx] = NULL;
+    lookupy[lookupinx] = NULL;
+    break;
+
+  case IOC_SET_LOOKUP_N:
+    if ( lookupinx < 0 ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid lookup index!" );
+      rc = -EINVAL;
+      break;
+    }
+    retVal = get_user( lookupn[lookupinx], (int __user *)arg );
+    if ( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to size of lookup table!" );
+      lookupn[lookupinx] = 0;
+      rc = -EFAULT;
+    }
+    break;
+
+  case IOC_SET_LOOKUP_X:
+    if ( lookupinx < 0 ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid lookup index!" );
+      rc = -EINVAL;
+      break;
+    }
+    if ( lookupx[lookupinx] != NULL ) {
+      kfree( lookupx[lookupinx] );
+      lookupx[lookupinx] = NULL;
+    }
+    if ( lookupn[lookupinx] > 0 ) {
+      lookupx[lookupinx] = kmalloc( lookupn[lookupinx]*sizeof(float), GFP_KERNEL );
+      if ( lookupx[lookupinx] == NULL ) {
+	ERROR_MSG( "rtmodule_ioctl ERROR: failed to allocate memory for x-array of lookup table!\n" );
+	rc = -ENOMEM;
+      }
+      else {
+	retVal = copy_from_user( lookupx[lookupinx], (void __user *)arg,
+				 lookupn[lookupinx]*sizeof(float) );
+	if ( retVal ) {
+	  ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to x-array of lookup table!\n" );
+	  rc = -EFAULT;
+	}
+      }
+      if ( rc != 0 ) {
+	if ( lookupx[lookupinx] != NULL ) {
+	  kfree( lookupx[lookupinx] );
+	  lookupx[lookupinx] = NULL;
+	}
+	if ( lookupy[lookupinx] != NULL ) {
+	  kfree( lookupy[lookupinx] );
+	  lookupy[lookupinx] = NULL;
+	}
+	lookupn[lookupinx] = 0;
+      }
+    }
+    break;
+
+  case IOC_SET_LOOKUP_Y:
+    if ( lookupinx < 0 ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid lookup index!" );
+      rc = -EINVAL;
+      break;
+    }
+    if ( lookupy[lookupinx] != NULL ) {
+      kfree( lookupy[lookupinx] );
+      lookupy[lookupinx] = NULL;
+    }
+    if ( lookupn[lookupinx] > 0 ) {
+      lookupy[lookupinx] = kmalloc( lookupn[lookupinx]*sizeof(float), GFP_KERNEL );
+      if ( lookupy[lookupinx] == NULL ) {
+	ERROR_MSG( "rtmodule_ioctl ERROR: failed to allocate memory for y-array of lookup table!\n" );
+	rc = -ENOMEM;
+      }
+      else {
+	retVal = copy_from_user( lookupy[lookupinx], (void __user *)arg,
+				 lookupn[lookupinx]*sizeof(float) );
+	if ( retVal ) {
+	  ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to y-array of lookup table!\n" );
+	  rc = -EFAULT;
+	}
+      }
+      if ( rc != 0 ) {
+	if ( lookupx[lookupinx] != NULL ) {
+	  kfree( lookupx[lookupinx] );
+	  lookupx[lookupinx] = NULL;
+	}
+	if ( lookupy[lookupinx] != NULL ) {
+	  kfree( lookupy[lookupinx] );
+	  lookupy[lookupinx] = NULL;
+	}
+	lookupn[lookupinx] = 0;
+      }
+    }
+    break;
+
+#endif
+
   default:
     ERROR_MSG( "rtmodule_ioctl ERROR - Invalid IOCTL!\n" );
-    rc = -EINVAL;
+    rc = -ENOTTY;
 
   }
 
@@ -2000,11 +2141,6 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 int rtmodule_open( struct inode *devFile, struct file *fModule )
 {
   DEBUG_MSG( "open: user opened device file\n" );
-
-  // initialize model-specific variables:
-#ifdef ENABLE_COMPUTATION
-  initModel();
-#endif
   
   return 0;
 }
@@ -2075,9 +2211,12 @@ static int __init init_rtmodule( void )
 
   mutex_init( &mutex );
 
-  // initialize model-specific variables (this also sets the modulename):
 #ifdef ENABLE_COMPUTATION
-  initModel();
+  for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
+    lookupn[k] = 0;
+    lookupx[lookupinx] = NULL;
+    lookupy[lookupinx] = NULL;
+  }
 #endif
 
   // initialize global variables:
