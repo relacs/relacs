@@ -4,6 +4,7 @@
 #include <linux/version.h>
 #include <asm/uaccess.h>
 #include <linux/mutex.h>
+#include <linux/slab.h>
 #include <linux/vmalloc.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
@@ -273,6 +274,8 @@ static inline void value_to_sample( struct chanT *pChan, float value )
 
 void init_globals( void )
 {
+  int k;
+
   deviceN = 0;
   subdevN = 0;
   reqCloseSubdevID = -1;
@@ -2183,6 +2186,9 @@ static int __init init_rtmodule( void )
 {
   dev_t dev = 0;
   int retVal = 0;
+#ifdef ENABLE_COMPUTATION
+  int k;
+#endif
 
   // register module device file:
   dev = MKDEV( RTMODULE_MAJOR, 0 );

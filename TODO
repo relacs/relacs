@@ -24,6 +24,11 @@ New InData threading:
 Options:
 - Check readAppend() functions!
 - Make all Options and optWidget style flags an enum
+- How to deal wih trace select options (e.g. in TransferFunction, AttenuatorCheck)?
+  - Set list in preConfig()
+  - BUT: readConfig overwrites this (for example, if option in relacsplugins.cfg is empty)!
+  - How to read that out: index( "intrace" ) or traceIndex( text( "intrace" ) )?
+  - Make sure that one always gets a valid trace index!
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
 - OutData: rename Ident to name OR remove it?
 - DeviceList and FilterDetectors (and others?) should use plugin name (ident) as section name.
@@ -154,12 +159,11 @@ Analog Input/Output:
 - Comedi autotools check: old comedi versions do not have the setrouting function
 
 Dynamic clamp:
-- We really should avoid using the rtai-math module, it would make installing RTAI much simpler.
-  For doing this we should provide an interface that allows to compute lookuptables for needed functions
-  in userspace, passing them into the kernel, and providing some nice functions in kernel space that do
-  the linear interpolation. Done! Needs to be tested.
 - Is it smart to use vmalloc in dynclampmodule? No! Better would be
   kmalloc or even avoid it completely.
+- Is it really necessary that the dyncclamp parameter are all set to zero by relacs initially?
+  It shoud be sufficient to set the AOs to zero and the parameters to their initial vallues.
+  For the latter we might need some support (saving the initial values to some array prior to starting, etc.)
 - CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.

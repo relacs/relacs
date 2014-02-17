@@ -41,6 +41,7 @@ AttenuatorCheck::AttenuatorCheck( void )
   addNumber( "minlevel", "Minimum attenuation level", 0.0, -1000.0, 1000.0, 0.1, "dB", "dB" );
   addNumber( "maxlevel", "Maximum attenuation level", 100.0, -1000.0, 1000.0, 0.1, "dB", "dB" );
   addNumber( "dlevel", "Increment of attenuation level", 1.0, 0.0, 1000.0, 0.1, "dB", "dB" );
+  addBoolean( "adjust", "Adjust input gain?", true );
 
   setWidget( &P );
 }
@@ -76,7 +77,7 @@ int AttenuatorCheck::main( void )
 {
   // get options:
   int outtrace = index( "outtrace" );
-  int intrace = traceIndex( text( "intrace", 0 ) );
+  int intrace = index( "intrace" );
   double duration = number( "duration" );
   int type = index( "type" );
   double frequency = number( "frequency" );
@@ -84,6 +85,7 @@ int AttenuatorCheck::main( void )
   double minlevel = number( "minlevel" );
   double maxlevel = number( "maxlevel" );
   double dlevel = number( "dlevel" );
+  bool adjust = boolean( "adjust" );
 
   // don't print repro message:
   noMessage();
@@ -104,13 +106,18 @@ int AttenuatorCheck::main( void )
   }
   P.unlock();
 
+  //  ouptut signal:
   OutData signal;
   signal.setTrace( outtrace );
   if ( type == 1 )
     signal.pulseWave( duration, -1.0, amplitude, 0.0 );
   else
     signal.sineWave( duration, -1.0, frequency, amplitude );
-  adjustGain( trace( intrace ), 10.0 );
+
+  // input gain setting:
+  int orggain = trace( intrace ).gainIndex();
+  if ( adjust )
+    setGain( trace( intrace ), 0 );
 
   RangeLoop levelrange( minlevel, maxlevel, dlevel, 1, 1, 1 );
 
@@ -152,7 +159,8 @@ int AttenuatorCheck::main( void )
       max *= 1.1;
     }
     levels.push( level, val );
-    adjustGain( trace( intrace ), max );
+    if ( adjust )
+      adjustGain( trace( intrace ), max );
 
     P.lock();
     P.clear();
@@ -190,7 +198,8 @@ int AttenuatorCheck::main( void )
   }
   df << "\n\n";
 
-  adjustGain( trace( intrace ), 10.0 );
+  if ( adjust )
+    setGain( trace( intrace ), orggain );
   return Completed;
 }
 

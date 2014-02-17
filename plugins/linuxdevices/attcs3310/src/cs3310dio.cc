@@ -85,7 +85,7 @@ int CS3310DIO::open( DigitalIO &dio, const Options &opts )
       }
       else {
 	setDeviceFile( dio.deviceIdent() );
-	return open();
+	return open( opts.boolean( "zerocrossing", false ) );
       }
     }
   }
@@ -108,7 +108,7 @@ int CS3310DIO::open( Device &device, const Options &opts )
 }
 
 
-int CS3310DIO::open( void )
+int CS3310DIO::open( bool zerocrossing )
 {
   Info.clear();
 
@@ -128,7 +128,7 @@ int CS3310DIO::open( void )
   // reset:
   DIO->write( CS, true );
   DIO->write( MUTE, true );
-  DIO->write( ZCEN, true );
+  DIO->write( ZCEN, zerocrossing );
 
   calibrate();
   

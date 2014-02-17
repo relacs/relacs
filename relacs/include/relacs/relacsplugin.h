@@ -436,6 +436,10 @@ protected:
  protected:
 
     /*! Set the gain for input trace \a data to \a gainindex.
+        The smallest possible gain is indexed with \a gainindex = 0.
+	Higher values for \a gainindex correspond to increasing gains.
+	The current value of the gain index ca be retrieved directly from \a data via
+	data.gainIndex().
         It depends on your hardware what gain is corresponding to \a gainindex.
         In order to activate the new gain you have to call activateGains().
         \sa adjustGain( InData, double, double ), 

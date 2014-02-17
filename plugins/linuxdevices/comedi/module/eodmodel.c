@@ -97,10 +97,10 @@ int generateLookupTable( int k, float **x, float **y, int *n )
     *n = nn;
     *x = new float[nn];
     *y = new float[nn];
-    for ( int k=0; k<nn; k++ ) {
-      float xx = k*1.0/nn;
-      (*x)[k] = xx;
-      (*y)[k] = cos( 2.0*M_PI*xx );
+    for ( int j=0; j<nn; k++ ) {
+      float xx = j*1.0/nn;
+      (*x)[j] = xx;
+      (*y)[j] = sin( 2.0*M_PI*xx );
     }
     return 0;
   }

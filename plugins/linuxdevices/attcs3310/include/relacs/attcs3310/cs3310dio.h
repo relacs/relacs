@@ -93,7 +93,7 @@ public:
 private:
 
     /*! Initialize the attenuator. */
-  int open( void );
+  int open( bool zerocrossing );
     /*! Write the current levels to the attenuator. */
   int write( void );
 

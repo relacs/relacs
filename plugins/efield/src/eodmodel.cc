@@ -136,7 +136,7 @@ void EODModel::main( void )
 void EODModel::process( const OutData &source, OutData &dest )
 {
   dest = source;
-  double intensfac = 0.0;
+  double intensfac = 1.0;
   if ( source.level() != OutData::NoLevel ) {
     intensfac = ( ::pow( 10.0, -source.level()/20.0 ) );
     bool scaled = false;

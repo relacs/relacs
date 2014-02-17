@@ -59,6 +59,7 @@ libcomedidynclamp_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
+    -I$(srcdir)/.. \
     -I/usr/src/linux/include \
     $(RTAI_CPPFLAGS) \
     $(QT4_CPPFLAGS)

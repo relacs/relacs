@@ -359,10 +359,10 @@ In case the \c ls command shows something like
 \endcode
 i.e. some \c comedi* character device files, your board probably was detected. Run
 \code
-$ comedi_test -t info -f /dev/comedi0
+$ comedi_board_info /dev/comedi0
 \endcode
-to see more details about your data acquisition board (note: \c comedi_test
-is part of comedilib, see below).
+(or comedi_test -t info -f /dev/comedi0) to see more details about your data acquisition board 
+(note: both \c comedi_board_info and \c comedi_test are part of comedilib, see below).
 In case no \c /dev/comedi* device file shows up
 or \c comedi_test reported an error (E: comedi_open("/dev/comedi0"): No such device),
 your data acquisition board needs to be configured manually, using something like

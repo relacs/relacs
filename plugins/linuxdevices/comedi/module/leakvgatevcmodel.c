@@ -139,10 +139,10 @@ int generateLookupTable( int k, float **x, float **y, int *n )
     *n = nn;
     *x = new float[nn];
     *y = new float[nn];
-    for ( int k=0; k<nn; k++ ) {
-      float xx = xmin + k*dx/nn;
-      (*x)[k] = xx;
-      (*y)[k] = 1.0/(1.0+exp(-xx));
+    for ( int j=0; j<nn; j++ ) {
+      float xx = xmin + j*dx/nn;
+      (*x)[j] = xx;
+      (*y)[j] = 1.0/(1.0+exp(-xx));
     }
     return 0;
   }

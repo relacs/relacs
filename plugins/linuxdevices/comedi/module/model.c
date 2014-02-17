@@ -1,19 +1,15 @@
 /*!
-Dynamic clamp model for a passive ionic current,
-a capacitive current and a current offset:
-\f[ I_{inj} = -g \cdot (V-E) - C \cdot \frac{dV}{dt} + I \f]
+A sine wave with an amplitude and frequency:
+\f[ \begin{array}{rcl} \varphi(t) & = & \int_0^t Frequency (t') \; dt' \\
+GlobalEField & = & Amplitude \cdot \sin(2 \pi \varphi(t)) \end{array} \f]
 
 \par Input/Output:
-- V: Measured membrane potential in mV
-- \f$ I_{inj} \f$ : Injected current in nA
+- GlobalEField: Generated sine-wave EOD in V
 
 \par Parameter:
-- g: conductance of passive ionic current in nS
-- E: reversal potential of passive ionic current in mV
-- C: Additional capacity of the neuron in pF
-- I: Additional injected offset current in nA
+- Amplitude: Amplitude of sine-wave in V
+- Frequency: Frequency of sine wave in Hz
 */
-
 
 #ifdef __KERNEL__
 
@@ -29,7 +25,7 @@ float loopRate;
 #define INPUT_N 1
   /*! The \a inputNames are used to match the \a input variables with
       analog input traces in Relacs. */
-char *inputNames[INPUT_N] = { "V-1" };
+char *inputNames[INPUT_N] = { "EOD" };
 char *inputUnits[INPUT_N] = { "mV" };
   /*! The \a inputChannels and \a inputDevices are set automatically. */
 int inputChannels[INPUT_N];
@@ -39,50 +35,57 @@ float input[INPUT_N] = { 0.0 };
 
   /*! Analog output that is written to the DAQ board. */
 #define OUTPUT_N 1
-char *outputNames[OUTPUT_N] = { "Current-1" };
-char *outputUnits[OUTPUT_N] = { "nA" };
+char *outputNames[OUTPUT_N] = { "GlobalEField" };
+char *outputUnits[OUTPUT_N] = { "V" };
 int outputChannels[OUTPUT_N];
 int outputDevices[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
-#define PARAMINPUT_N 3
-char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "Capacitive-current", "Offset-current" };
-char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA", "nA" };
-float paramInput[PARAMINPUT_N] = { 0.0, 0.0, 0.0 };
+#define PARAMINPUT_N 1
+char *paramInputNames[PARAMINPUT_N] = { "EODSignal" };
+char *paramInputUnits[PARAMINPUT_N] = { "V" };
+float paramInput[PARAMINPUT_N] = { 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 4
-char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C", "I" };
-char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF", "nA" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0 };
+#define PARAMOUTPUT_N 2
+char *paramOutputNames[PARAMOUTPUT_N] = { "Amplitude", "Frequency" };
+char *paramOutputUnits[PARAMOUTPUT_N] = { "V", "Hz" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0 };
 
   /*! Variables used by the model. */
-#define MAXPREVINPUTS 1
-float previnputs[MAXPREVINPUTS];
+float phase = 0.0;
 
 void initModel( void )
 {
-   int k;
    moduleName = "/dev/dynclamp";
-   for ( k=0; k<MAXPREVINPUTS; k++ )
-     previnputs[k] = 0.0;
+   phase = 0.0;
 }
 
 void computeModel( void )
 {
-   int k;
-   // leak current:
-   paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
-   // capacitive current:
-   paramInput[1] = -1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate;
-   for ( k=0; k<MAXPREVINPUTS-1; k++ )
-     previnputs[k] = previnputs[k+1];
-   previnputs[MAXPREVINPUTS-1] = input[0];
-   // offset current:
-   paramInput[2] = paramOutput[3];
-   // total injected current:
-   output[0] = paramInput[0] + paramInput[1] + paramInput[2];
+  int k;
+
+  // phase:
+  phase += paramOutput[1] * loopInterval;
+  if ( phase >= 1.0 )
+    phase -= 1.0;
+  // sine from lookuptable:
+  k = phase*lookupn[0];
+  if ( k >= lookupn[0] ) {
+    ERROR_MSG( " DYNCLAMPMODULE LOOKUPTABLE: K>=N" );
+    k = lookupn[0]-1;
+    //    k -= lookupn[0];
+  }
+  else if ( k < 0 ) {
+    ERROR_MSG( " DYNCLAMPMODULE LOOKUPTABLE: K<0" );
+    k = 0;
+  }
+  // eod:
+  //  paramInput[0] = paramOutput[0] * lookupy[0][k];
+  paramInput[0] = paramOutput[0] * 0.0;
+  //  paramInput[0] = paramOutput[0] * sin( 2.0*M_PI*phase );
+  output[0] = paramInput[0];
 }
 
 #else
@@ -99,6 +102,18 @@ void computeModel( void )
 */
 int generateLookupTable( int k, float **x, float **y, int *n )
 {
+  if ( k == 0 ) {
+    const int nn = 100000;
+    *n = nn;
+    *x = new float[nn];
+    *y = new float[nn];
+    for ( int j=0; j<nn; k++ ) {
+      float xx = j*1.0/nn;
+      (*x)[j] = xx;
+      (*y)[j] = sin( 2.0*M_PI*xx );
+    }
+    return 0;
+  }
   return -1;
 }
 
