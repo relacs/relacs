@@ -554,6 +554,11 @@ public:
     /*! \return Whether the MacroCommand is enabled. */
   bool enabled( void ) const;
 
+    /*! Set the command's icon to enabled or disabled. */
+  void clearIcon( void );
+    /*! Set the command's icon to running. */
+  void setRunIcon( void );
+
     /*! The RePro of this MacroCommand. */
   RePro *repro( void );
     /*! Set the CommandType of the MacroCommand to ReProCom . */
@@ -666,6 +671,7 @@ public slots:
 
   static QPixmap *EnabledIcon;
   static QPixmap *DisabledIcon;
+  static QPixmap *RunningIcon;
 
 };
 

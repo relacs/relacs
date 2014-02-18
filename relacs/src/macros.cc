@@ -60,6 +60,7 @@ QPixmap *Macro::SessionIcon = 0;
 
 QPixmap *MacroCommand::EnabledIcon = 0;
 QPixmap *MacroCommand::DisabledIcon = 0;
+QPixmap *MacroCommand::RunningIcon = 0;
 
 
 Macros::Macros( RELACSWidget *rw, QWidget *parent )
@@ -96,8 +97,8 @@ Macros::Macros( RELACSWidget *rw, QWidget *parent )
   addText( "mainfile", "Main configuration file", "" );
   addBoolean( "fallbackonreload", "Start fallback macro when loading macros", true );
 
-  Macro::createIcons( fontInfo().pixelSize() );
-  MacroCommand::createIcons( fontInfo().pixelSize() );
+  Macro::createIcons( 2*fontInfo().pixelSize() );
+  MacroCommand::createIcons( 2*fontInfo().pixelSize() );
 }
 
 
@@ -553,6 +554,12 @@ void Macros::startNextRePro( bool saving, bool enable )
   RW->stopRePro();
 
   do {
+
+    // clear running icon:
+    if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() &&
+	 CurrentCommand >= 0 && CurrentCommand < (int)MCs[CurrentMacro]->size() )
+	MCs[CurrentMacro]->command( CurrentCommand )->clearIcon();
+
     CurrentCommand++;
 
     do {
@@ -907,8 +914,11 @@ void Macros::noMacro( RePro *repro )
 
 void Macros::clearButton( void )
 {
-  if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() )
+  if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() ) {
     MCs[CurrentMacro]->clearButton();
+    if ( CurrentCommand >= 0 && CurrentCommand < (int)MCs[CurrentMacro]->size() )
+      MCs[CurrentMacro]->command( CurrentCommand )->clearIcon();
+  }
 }
 
 
@@ -940,8 +950,12 @@ void Macros::clearStackButtons( void )
 {
   for ( int k = (int)Stack.size()-1; k >= 0; k-- ) {
     int macro = Stack[k].MacroID;
-    if ( macro >= 0 && macro < (int)MCs.size() )
+    if ( macro >= 0 && macro < (int)MCs.size() ) {
       MCs[macro]->clearButton();
+      int com = Stack[k].CommandID;
+      if ( com >= 0 && com < (int)MCs[macro]->size() )
+	MCs[macro]->command( com )->clearIcon();
+    }
   }
   Stack.clear();
   clearButton();
@@ -2013,6 +2027,18 @@ bool MacroCommand::enabled( void ) const
 }
 
 
+void MacroCommand::clearIcon( void )
+{
+  SubMenu->menuAction()->setIcon( Enabled ? *EnabledIcon : *DisabledIcon );
+}
+
+
+void MacroCommand::setRunIcon( void )
+{
+  SubMenu->menuAction()->setIcon( *RunningIcon );
+}
+
+
 RePro *MacroCommand::repro( void )
 {
   return RP;
@@ -2296,6 +2322,8 @@ void MacroCommand::checkOptions( string &warnings )
 
 bool MacroCommand::execute( bool saving )
 {
+  setRunIcon();
+
   // execute macro:
   if ( Command == MacroCom ) {
     MCs->executeMacro( MacroIndex, Params );
@@ -2637,6 +2665,23 @@ void MacroCommand::createIcons( int size )
   p.drawEllipse( 0, 0, mx-1, mx-1 );
   p.end();
   DisabledIcon->setMask( DisabledIcon->createHeuristicMask() );
+
+  RunningIcon = new QPixmap( mx, mx );
+  p.begin( RunningIcon );
+  p.eraseRect( RunningIcon->rect() );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
+  QPolygon pa( 7 );
+  pa.setPoint( 0, 0, 2*my/3 );
+  pa.setPoint( 1, mx/2, 2*my/3 );
+  pa.setPoint( 2, mx/2, my );
+  pa.setPoint( 3, mx-1, my/2 );
+  pa.setPoint( 4, mx/2, 0 );
+  pa.setPoint( 5, mx/2, my/3 );
+  pa.setPoint( 6, 0, my/3 );
+  p.drawPolygon( pa );
+  p.end();
+  RunningIcon->setMask( RunningIcon->createHeuristicMask() );
 }
 
 
@@ -2644,6 +2689,7 @@ void MacroCommand::destroyIcons( void )
 {
   delete EnabledIcon;
   delete DisabledIcon;
+  delete RunningIcon;
 }
 
 
