@@ -6,7 +6,8 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libcalibrationrestartdelay.la \
     libcalibrationstimulusdelay.la  \
-    libcalibrationattenuatorcheck.la
+    libcalibrationattenuatorcheck.la \
+    libcalibrationinputrangecheck.la
 
 
 
@@ -76,9 +77,6 @@ libcalibrationstimulusdelay_la_include_HEADERS = $(HEADER_PATH)/stimulusdelay.h
 
 
 
-
-
-
 libcalibrationattenuatorcheck_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -114,10 +112,46 @@ libcalibrationattenuatorcheck_la_include_HEADERS = $(HEADER_PATH)/attenuatorchec
 
 
 
+libcalibrationinputrangecheck_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libcalibrationinputrangecheck_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libcalibrationinputrangecheck_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libcalibrationinputrangecheck_la_OBJECTS) : moc_inputrangecheck.cc
+
+libcalibrationinputrangecheck_la_SOURCES = inputrangecheck.cc
+
+libcalibrationinputrangecheck_la_includedir = $(pkgincludedir)/calibration
+
+libcalibrationinputrangecheck_la_include_HEADERS = $(HEADER_PATH)/inputrangecheck.h
+
+
+
 check_PROGRAMS = \
     linktest_libcalibrationrestartdelay_la \
     linktest_libcalibrationstimulusdelay_la  \
-    linktest_libcalibrationattenuatorcheck_la
+    linktest_libcalibrationattenuatorcheck_la \
+    linktest_libcalibrationinputrangecheck_la
 
 linktest_libcalibrationrestartdelay_la_SOURCES = linktest.cc
 linktest_libcalibrationrestartdelay_la_LDADD = libcalibrationrestartdelay.la
@@ -128,6 +162,9 @@ linktest_libcalibrationstimulusdelay_la_LDADD = libcalibrationstimulusdelay.la
 
 linktest_libcalibrationattenuatorcheck_la_SOURCES = linktest.cc
 linktest_libcalibrationattenuatorcheck_la_LDADD = libcalibrationattenuatorcheck.la
+
+linktest_libcalibrationinputrangecheck_la_SOURCES = linktest.cc
+linktest_libcalibrationinputrangecheck_la_LDADD = libcalibrationinputrangecheck.la
 
 TESTS = $(check_PROGRAMS)
 
