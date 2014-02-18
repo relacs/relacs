@@ -62,6 +62,20 @@ int AISim::open( const string &device, const Options &opts )
   setDeviceVendor( "RELACS" );
   setDeviceFile( device );
   setInfo();
+  vector<double> gainblacklist;
+  opts.numbers( "gainblacklist", gainblacklist );
+  for ( int j=0; j<MaxRanges; j++ ) {
+    for ( unsigned int k=0; k<gainblacklist.size(); k++ ) {
+      if ( ::fabs( AIbiRanges[j] - gainblacklist[k] ) < 1e-6 ) {
+	for ( int i=j+1; i<MaxRanges; i++ )
+	  AIbiRanges[i-1] =AIbiRanges[i];
+      }
+      if ( ::fabs( AIuniRanges[j] - gainblacklist[k] ) < 1e-6 ) {
+	for ( int i=j+1; i<MaxRanges; i++ )
+	  AIuniRanges[i-1] =AIuniRanges[i];
+      }
+    }
+  }
   return 0;
 }
 
@@ -74,6 +88,20 @@ int AISim::open( Device &device, const Options &opts )
   setDeviceVendor( "RELACS" );
   setDeviceFile( device.deviceIdent() );
   setInfo();
+  vector<double> gainblacklist;
+  opts.numbers( "gainblacklist", gainblacklist );
+  for ( int j=0; j<MaxRanges; j++ ) {
+    for ( unsigned int k=0; k<gainblacklist.size(); k++ ) {
+      if ( ::fabs( AIbiRanges[j] - gainblacklist[k] ) < 1e-6 ) {
+	for ( int i=j+1; i<MaxRanges; i++ )
+	  AIbiRanges[i-1] =AIbiRanges[i];
+      }
+      if ( ::fabs( AIuniRanges[j] - gainblacklist[k] ) < 1e-6 ) {
+	for ( int i=j+1; i<MaxRanges; i++ )
+	  AIuniRanges[i-1] =AIuniRanges[i];
+      }
+    }
+  }
   return 0;
 }
 

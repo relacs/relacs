@@ -2111,6 +2111,22 @@ Str Options::text( const string &name, int index, const string &dflt,
 }
 
 
+void Options::texts( const string &name, vector<string> &s,
+		     const string &format, const string &unit ) const
+{
+  s.clear();
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    pp->texts( s, format, unit );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::texts( " << name << " ) -> " << Warning << '\n';
+#endif
+  }
+}
+
+
 Str Options::allText( const string &name, const string &dflt, const string &format,
 		      const string &unit, const string &separator ) const
 {
@@ -2413,6 +2429,21 @@ double Options::number( const string &name, double dflt,
 }
 
 
+void Options::numbers( const string &name, vector<double> &n, const string &unit ) const
+{
+  n.clear();
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    pp->numbers( n, unit );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::numbers( " << name << " ) -> " << Warning << '\n';
+#endif
+  }
+}
+
+
 double Options::error( const string &name, const string &unit, int index ) const
 {
   const_iterator pp = find( name );
@@ -2427,6 +2458,21 @@ double Options::error( const string &name, const string &unit, int index ) const
   }
   else
     return 0.0;
+}
+
+
+void Options::errors( const string &name, vector<double> &n, const string &unit ) const
+{
+  n.clear();
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    pp->errors( n, unit );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::errors( " << name << " ) -> " << Warning << '\n';
+#endif
+  }
 }
 
 
@@ -2818,6 +2864,36 @@ long Options::integer( const string &name,
 }
 
 
+void Options::integers( const string &name, vector<long> &n, const string &unit ) const
+{
+  n.clear();
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    pp->integers( n, unit );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::integers( " << name << " ) -> " << Warning << '\n';
+#endif
+  }
+}
+
+
+void Options::integers( const string &name, vector<int> &n, const string &unit ) const
+{
+  n.clear();
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    pp->integers( n, unit );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::integers( " << name << " ) -> " << Warning << '\n';
+#endif
+  }
+}
+
+
 Parameter &Options::setInteger( const string &name, long number, long error,
 				const string &unit )
 {
@@ -3011,6 +3087,21 @@ bool Options::boolean( const string &name, bool dflt, int index ) const
   }
   else
     return dflt;
+}
+
+
+void Options::booleans( const string &name, vector<bool> &n ) const
+{
+  n.clear();
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    pp->booleans( n );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::booleans( " << name << " ) -> " << Warning << '\n';
+#endif
+  }
 }
 
 

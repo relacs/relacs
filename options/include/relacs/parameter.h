@@ -42,7 +42,6 @@ class Options;
 /*! 
 \class Parameter
 \author Jan Benda
-\version 2.0
 \brief A Parameter has a name, value and unit.
 
 Parameter basically are name-value pairs.  The parameter is uniquely
@@ -373,6 +372,10 @@ public:
         in the unit specified by \a unit.
         If \a unit is empty, then outUnit() is used. */ 
   Str text( const string &format="", const string &unit="" ) const;
+    /*! Return in \a s all values of the parameter as a list of strings
+        formatted according to \a format using \a unit.
+        See text() for details. */
+  void texts( vector<string> &s, const string &format="", const string &unit="" ) const;
     /*! Return all values of the parameter formatted according to \a format
         using \a unit, and concatenated using \a separator.
         See text() for details. */
@@ -451,6 +454,8 @@ public:
         If the Parameter is not a number, \a dflt is returned. */
   inline double number( int index, double dflt, const string &unit="" ) const
   { return number( unit, index, dflt ); };
+    /*! Return in \a n all number-values of the parameter in the unit \a unit. */
+  void numbers( vector<double> &n, const string &unit="" ) const;
     /*! Returns the standard deviation value of the \a index-th number in 
         the unit \a unit or in the internal standard unit, 
         if \a unit is an empty string.
@@ -462,6 +467,8 @@ public:
 	If no error value is set -1 is returned. */
   inline double error( int index, const string &unit="" ) const
     { return error( unit, index ); };
+    /*! Return in \a n all error-values of the parameter in the unit \a unit. */
+  void errors( vector<double> &n, const string &unit="" ) const;
     /*! Set number value to \a number and its
         standard deviation to \a error (only if it is non negative). 
         The text value is set according to the specified format.
@@ -551,6 +558,10 @@ public:
         If the Parameter is not a number, \a dflt is returned. */
   inline long integer( int index, long dflt, const string &unit="" ) const
   { return integer( unit, index, dflt ); };
+    /*! Return in \a n all integer-values of the parameter in the unit \a unit. */
+  void integers( vector<long> &n, const string &unit="" ) const;
+    /*! Return in \a n all integer-values of the parameter in the unit \a unit. */
+  void integers( vector<int> &n, const string &unit="" ) const;
     /*! Set integer value to \a number and its
         standard deviation to \a error. 
         The warning message is set if \a number is invalid.
@@ -687,6 +698,8 @@ public:
   bool isBoolean( void ) const;
     /*! Returns the \a index-th boolean value. */
   bool boolean( int index=0 ) const;
+    /*! Return in \a n all boolean-values of the parameter. */
+  void booleans( vector<bool> &n ) const;
     /*! Set value of boolean parameter to \a b.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */

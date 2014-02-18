@@ -938,6 +938,15 @@ Str Parameter::text( const string &format, const string &unit ) const
 }
 
 
+void Parameter::texts( vector<string> &s, const string &format, const string &unit ) const
+{
+  s.reserve( size() );
+  s.clear();
+  for ( int k=0; k<size(); k++ )
+    s.push_back( text( k, format, unit ) );
+}
+
+
 Str Parameter::allText( const string &format, const string &unit, const string &separator ) const
 {
   string s = "";
@@ -1557,6 +1566,23 @@ double Parameter::number( const string &unit, int index, double dflt ) const
 }
 
 
+void Parameter::numbers( vector<double> &n, const string &unit ) const
+{
+  n.reserve( size() );
+  n.clear();
+
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::numbers -> parameter '" + 
+      Name + "' is not of type number!";
+    return;
+  }
+
+  for ( int k=0; k<size(); k++ )
+    n.push_back( changeUnit( Value[k], InternUnit, unit ) );
+}
+
+
 double Parameter::error( const string &unit, int index ) const
 { 
   Warning = "";
@@ -1575,6 +1601,26 @@ double Parameter::error( const string &unit, int index ) const
     return changeUnit( Error[index], InternUnit, unit );
   }
   return Error[index];
+}
+
+void Parameter::errors( vector<double> &n, const string &unit ) const
+{
+  n.reserve( size() );
+  n.clear();
+
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::errors -> parameter '" + 
+      Name + "' is not of type number!";
+    return;
+  }
+
+  for ( int k=0; k<size(); k++ ) {
+    if ( Error[k] >= 0.0 )
+      n.push_back( changeUnit( Error[k], InternUnit, unit ) );
+    else
+      n.push_back( Error[k] );
+  }
 }
 
 
@@ -1743,7 +1789,41 @@ long Parameter::integer( const string &unit, int index, long dflt ) const
   return static_cast<long>( rint( number( unit, index, double( dflt ) ) ) );
 }
 
-  
+
+void Parameter::integers( vector<long> &n, const string &unit ) const
+{
+  n.reserve( size() );
+  n.clear();
+
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::integers -> parameter '" + 
+      Name + "' is not of type number!";
+    return;
+  }
+
+  for ( int k=0; k<size(); k++ )
+    n.push_back( static_cast<long>( rint( changeUnit( Value[k], InternUnit, unit ) ) ) );
+}
+
+
+void Parameter::integers( vector<int> &n, const string &unit ) const
+{
+  n.reserve( size() );
+  n.clear();
+
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::integers -> parameter '" + 
+      Name + "' is not of type number!";
+    return;
+  }
+
+  for ( int k=0; k<size(); k++ )
+    n.push_back( static_cast<int>( rint( changeUnit( Value[k], InternUnit, unit ) ) ) );
+}
+
+
 Parameter &Parameter::setInteger( long number, long error, 
 				  const string &unit )
 {
@@ -2156,7 +2236,24 @@ bool Parameter::boolean( int index ) const
   return ( Value[index] != 0.0 ); 
 }
 
-  
+
+void Parameter::booleans( vector<bool> &n ) const
+{
+  n.reserve( size() );
+  n.clear();
+
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::booleans -> parameter '" + 
+      Name + "' is not of type number!";
+    return;
+  }
+
+  for ( int k=0; k<size(); k++ )
+    n.push_back( Value[k] != 0.0 );
+}
+
+
 Parameter &Parameter::setBoolean( bool b )
 {
   if ( ! isAnyNumber() && ! isText() ) {

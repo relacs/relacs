@@ -32,7 +32,12 @@ namespace relacs {
 \author Jan Benda
 \version 1.0
 \brief Implementation of AnalogInput simulating an analog input device
- */
+
+\par Options:
+- \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its
+  maximal range value in volts.
+*/
+
 
 class AISim: public AnalogInput
 {

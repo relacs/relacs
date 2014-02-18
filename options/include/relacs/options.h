@@ -541,6 +541,11 @@ public:
   inline Str text( const string &name, const string &dflt="",
 		   const string &format="", const string &unit="" ) const
     { return text( name, 0, dflt, format, unit ); };
+    /*! Return in \a s all values of the text option with name \a name as a list of strings
+        formatted according to \a format using \a unit.
+        See Parameter::text() for details. */
+  void texts( const string &name, vector<string> &s,
+	      const string &format="", const string &unit="" ) const;
     /*! Return all values of the parameter with name \a name,
         formatted according to \a format
         using \a unit, and concatenated using \a separator.
@@ -759,6 +764,8 @@ public:
     { return number( name, dflt, unit, index ); };
   double number( const string &name, int index, const string &unit, double dflt=0.0 ) const
     { return number( name, dflt, unit, index ); };
+    /*! Return in \a n all number-values of the option with name \a name in the unit \a unit. */
+  void numbers( const string &name, vector<double> &n, const string &unit="" ) const;
     /*! Return the \a index-th standard deviation of the option
         with name \a name.
         If there is no option with name \a name, or the option is
@@ -770,6 +777,8 @@ public:
 	neither a number nor an integer, zero is returned. */
   double error( const string &name, int index, const string &unit="" ) const
     { return error( name, unit, index ); };
+    /*! Return in \a n all error-values of the option with name \a name in the unit \a unit. */
+  void errors( const string &name, vector<double> &n, const string &unit="" ) const;
     /*! Set the value of an existing number option
         with name \a name to \a number. */
   Parameter &setNumber( const string &name, double number, double error,
@@ -951,6 +960,10 @@ public:
     { return integer( name, unit, dflt, index ); }
   long integer( const string &name, int index, const string &unit, long dflt=0 ) const
     { return integer( name, unit, dflt, index ); }
+    /*! Return in \a n all integer-values of the option with name \a name in the unit \a unit. */
+  void integers( const string &name, vector<long> &n, const string &unit="" ) const;
+    /*! Return in \a n all integer-values of the option with name \a name in the unit \a unit. */
+  void integers( const string &name, vector<int> &n, const string &unit="" ) const;
    /*! Set the value of an existing integer option
         with name \a name to \a number. */
   Parameter &setInteger( const string &name, long number, long error,
@@ -1043,6 +1056,8 @@ public:
   bool boolean( const string &name, bool dflt=false, int index=0 ) const;
   bool boolean( const string &name, int index, bool dflt=false ) const
     { return boolean( name, dflt, index ); };
+    /*! Return in \a n all boolean-values of the options with name \a name. */
+  void booleans( const string &name, vector<bool> &n ) const;
     /*! Set the value of an existing boolean option
         with name \a name to \a string. */
   Parameter &setBoolean( const string &name, bool b );

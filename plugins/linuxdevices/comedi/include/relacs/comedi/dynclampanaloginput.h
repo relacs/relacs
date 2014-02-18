@@ -43,6 +43,11 @@ class ComediAnalogInput;
 \todo: testReadDevice(): we don't get integer data!!! sigs[k].setGain( 1.0 );
 \todo: Implement take()
 \bug fix errno usage
+
+
+\par Options:
+- \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its
+  maximal range value in volts.
 */
 
 

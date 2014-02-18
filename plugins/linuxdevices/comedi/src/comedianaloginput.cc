@@ -167,18 +167,29 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
   BipolarRange.clear();
   UnipolarRangeIndex.clear();
   BipolarRangeIndex.clear();
+  vector<double> gainblacklist;
+  opts.numbers( "gainblacklist", gainblacklist );
+  // XXX: if a ranges is not supported but comedi thinks so: add max gain to the blacklist.
+  // i.e. NI 6070E PCI and DAQCard-6062E: range #8 (0..20V) not supported
   int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  
   for ( int i = 0; i < nRanges; i++ ) {
     comedi_range *range = comedi_get_range( DeviceP, SubDevice, 0, i );
-    // XXX: if a ranges is not supported but comedi thinks so: set max = -1.0
-    // i.e. NI 6070E PCI and DAQCard-6062E: range #8 (0..20V) not supported
-    if ( range->min < 0.0 ) {
-      BipolarRange.push_back( *range );
-      BipolarRangeIndex.push_back( i );
+    bool add = range->max > 0.0 ? true : false;
+    for ( unsigned int k=0; k<gainblacklist.size(); k++ ) {
+      if ( ::fabs( range->max - gainblacklist[k] ) < 1e-6 ) {
+	add = false;
+	break;
+      }
     }
-    else {
-      UnipolarRange.push_back( *range );
-      UnipolarRangeIndex.push_back( i );
+    if ( add ) {
+      if ( range->min < 0.0 ) {
+	BipolarRange.push_back( *range );
+	BipolarRangeIndex.push_back( i );
+      }
+      else {
+	UnipolarRange.push_back( *range );
+	UnipolarRangeIndex.push_back( i );
+      }
     }
   }
   // bubble-sorting Uni/BipolarRange according to Uni/BipolarRange.max:

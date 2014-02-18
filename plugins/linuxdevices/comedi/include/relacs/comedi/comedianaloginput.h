@@ -40,6 +40,10 @@ class ComediAnalogOutput;
 \todo Support delays in testReadDevice() and convertData()!
 \todo Fix usage of ErrorState variable (also in readData() )
 
+\par Options:
+- \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its
+  maximal range value in volts.
+
 \code
 # for NI E-Series PCI daq boards
 modprobe ni_pcimio
