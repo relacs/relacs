@@ -65,6 +65,7 @@ SetDC::SetDC( void )
   EW->setValue( 0.0 );
   EW->setDecimals( 3 );
   EW->setSingleStep( 0.001 );
+  EW->setKeyboardTracking( false );
   gl->addWidget( EW, 0, 2 );
   CurrentUnitLabel = new QLabel( "nA" );
   gl->addWidget( CurrentUnitLabel, 0, 3 );
