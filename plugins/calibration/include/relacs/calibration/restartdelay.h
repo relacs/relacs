@@ -33,13 +33,13 @@ namespace calibration {
 \class RestartDelay
 \brief [RePro] Measures delays due to restart of the data acquisition
 \author Jan Benda
+\version 1.4 (Feb 18, 2014)
 
 \par Options
 \par Options
 - \c duration=100ms: Duration of analysis window (\c number)
 - \c repeats=100: Repeats (\c integer)
 - \c intrace=V-1: Input trace (\c string)
-- \c samplerate=10kHz: Sampling rate of zero output (\c number)
 
 \par Files
 \arg No output files.
@@ -49,8 +49,6 @@ namespace calibration {
 
 \par Requirements
 \arg A sine wave generator connected to the selected input channel.
-
-\version 1.3 (Feb 8, 2008)
 */
 
 

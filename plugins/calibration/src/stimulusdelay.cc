@@ -28,7 +28,7 @@ namespace calibration {
 
 
 StimulusDelay::StimulusDelay( void )
-  : RePro( "StimulusDelay", "calibration", "Jan Benda", "1.2", "Feb 8, 2008" )
+  : RePro( "StimulusDelay", "calibration", "Jan Benda", "1.3", "Feb 18, 2014" )
 {
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );
@@ -59,7 +59,7 @@ void StimulusDelay::preConfig( void )
 int StimulusDelay::main( void )
 {
   // get options:
-  int intrace = traceIndex( text( "intrace", 0 ) );
+  int intrace = index( "intrace" );
   int outtrace = index( "outtrace" );
   double samplerate = number( "samplerate" );
   double duration = number( "duration" );
@@ -102,6 +102,8 @@ int StimulusDelay::main( void )
       return count > 2 ? Completed : Aborted;
     timeStamp();
     analyze( trace( intrace ), duration, pause, count, deltat );
+    if ( count % 10 == 0 )
+      message( "Average stimulus delay: <b>" + Str( 1000.0*deltat, 0, 3, 'f' ) + " ms</b>" );
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
   }
@@ -140,7 +142,7 @@ int StimulusDelay::analyze( const InData &data, double duration,
 	      + Str( 1000.0*deltat, 0, 3, 'f' ) + "ms, n="
 	      + Str( count+1 ) );
   P.plotVLine( 0.0, Plot::White, 2 );
-  P.plot( d, 1000.0, Plot::Green, 4, Plot::Solid );
+  P.plot( d, 1000.0, Plot::Green, 2, Plot::Solid );
   P.draw();
   P.unlock();
 

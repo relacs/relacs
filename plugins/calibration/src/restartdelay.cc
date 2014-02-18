@@ -29,13 +29,12 @@ namespace calibration {
 
 
 RestartDelay::RestartDelay( void )
-  : RePro( "RestartDelay", "calibration", "Jan Benda", "1.3", "Feb 8, 2008" )
+  : RePro( "RestartDelay", "calibration", "Jan Benda", "1.4", "Feb 18, 2014" )
 {
   // add some options:
   addNumber( "duration", "Duration of analysis window", 0.1, 0.01, 1000.0, 0.02, "sec", "ms" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
   addSelection( "intrace", "Input trace", "V-1" );
-  addNumber( "samplerate", "Sampling rate of zero output", 10000.0, 1000.0, 1000000.0, 1000.0, "Hz", "kHz" );
 
   // plot:
   P.lock();
@@ -58,8 +57,7 @@ int RestartDelay::main( void )
   // get options:
   double duration = number( "duration" );
   int repeats = integer( "repeats" );
-  int intrace = traceIndex( text( "intrace", 0 ) );
-  double samplerate = number( "samplerate" );
+  int intrace = index( "intrace" );
 
   double deltat = 0.0;
 
@@ -79,7 +77,6 @@ int RestartDelay::main( void )
   signal.constWave( 0.0 );
   signal.setRestart();
   signal.mute();
-  signal.setIdent( "zero" );
 
   sleep( duration );
 
@@ -95,7 +92,9 @@ int RestartDelay::main( void )
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
     analyze( trace( intrace ), duration, count, deltat );
-    sleepWait( duration );
+    if ( count % 10 == 0 )
+      message( "Average restart delay: <b>" + Str( 1000.0*deltat, 0, 3, 'f' ) + " ms</b>" );
+    sleepWait( 5.0*duration );
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
   }
@@ -109,7 +108,7 @@ int RestartDelay::analyze( const InData &data, double duration,
 {
   // get data:
   SampleDataF d( -duration, duration, data.sampleInterval() );
-  int d2 = d.size()/2;
+  int d2 = d.index( 0.0 );
   for ( int k=0, j=data.restartIndex()-d2;
 	k<d.size() && j<data.size();
 	k++, j++ ) {
@@ -122,6 +121,8 @@ int RestartDelay::analyze( const InData &data, double duration,
   minMax( min, max, d );
   double offs = 0.5*(min+max);
   double ampl = 0.5*(max-min);
+  // detect zero crossings:
+  // this gets worse with noise on the input!
   int nz = 0;
   double t0 = 0.0;
   double t1 = 0.0;
@@ -137,8 +138,10 @@ int RestartDelay::analyze( const InData &data, double duration,
     return 1;
   }
   double freq = double( nz-1 ) / ( t1 - t0 );
-
-  unlockAll();
+  double phase = t1*freq;
+  while ( phase < 0.0 )
+    phase += 1.0;
+  phase *= 2.0*M_PI;
   
   // fit sine wave:
   SampleDataF s( d );
@@ -147,40 +150,52 @@ int RestartDelay::analyze( const InData &data, double duration,
   p[0] = offs;
   p[1] = ampl;
   p[2] = freq;
-  p[3] = 0.0;
-  ArrayI pi1( 4, 0 );
-  pi1[3] = 1;
-  ArrayI pi2( 4, 1 );
-  pi2[0] = 0;
-  pi2[1] = 0;
+  p[3] = phase;
+  ArrayI pi1( 4, 1 );  // freq and phase
+  pi1[0] = 0;
+  pi1[1] = 0;
+  ArrayI pi2( 4, 0 );  // phase only
+  pi2[3] = 1;
   ArrayD uncert( 4 );
   double chisq;
 
   marquardtFit( d.range().begin(), d.range().begin()+d2,
 		d.begin(), d.begin()+d2,
 		s.begin(), s.begin()+d2,
-		sineFuncDerivs, p, pi2, uncert, chisq );
+		sineFuncDerivs, p, pi1, uncert, chisq );
   /*
   marquardtFit( d.range().begin(), d.range().begin()+d2,
 		d.begin(), d.begin()+d2,
 		s.begin(), s.begin()+d2,
-		sineFuncDerivs, p, pi1, uncert, chisq );
+		sineFuncDerivs, p, pi2, uncert, chisq );
   */
   double phase1 = p[3];
   SampleDataF s1( -duration, 0.0, d.stepsize() );
   for ( int k=0; k<s1.size(); k++ )
     s1[k] = sineFunc( s1.pos( k ), p );
+
+  // detect zero crossings:
+  for ( int k=d2+1; k<d.size(); k++ ) {
+    if ( d[k-1] < offs && d[k] >= offs ) {
+      phase = d.pos( k ) * freq;
+      break;
+    }
+  }
+  while ( phase > 1.0 )
+    phase -= 1.0;
+  phase *= 2.0*M_PI;
+  p[3] = phase;
   marquardtFit( d.range().begin()+d2, d.range().end(),
 		d.begin()+d2, d.end(),
 		s.begin()+d2, s.end(),
-		sineFuncDerivs, p, pi1, uncert, chisq );
+		sineFuncDerivs, p, pi2, uncert, chisq );
   double phase2 = p[3];
   SampleDataF s2( 0.0, duration, d.stepsize() );
   for ( int k=0; k<s2.size(); k++ )
     s2[k] = sineFunc( s2.pos( k ), p );
 
   freq = p[2];
-  while ( phase2 < phase1 )
+  while ( phase2 < phase1-0.1*2.0*M_PI )
     phase2 += 2.0*M_PI;
   double dt = ( phase2 - phase1 ) / 2.0 / M_PI / freq;
   deltat += ( dt - deltat ) / ( count+1 );
@@ -198,8 +213,6 @@ int RestartDelay::analyze( const InData &data, double duration,
   P.plot( s2, 1000.0, Plot::Red, 2, Plot::Solid );
   P.draw();
   P.unlock();
-
-  lockAll();
 
   return 0;
 }

@@ -110,6 +110,8 @@ Locking:
 - dead locks: do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
 
 Macros:
+- check online message command and a following RePro (will be part of the message!)
+- Remove quotes from message
 - delete all MacroCommands after usage!
 - The menu of a MacroCommand should have the options of the called Macro with
   overwritten Options colored blue (same as for the repros).

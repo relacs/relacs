@@ -33,6 +33,7 @@ namespace calibration {
 \class StimulusDelay
 \brief [RePro] Measures delays between actual and reported onset of a stimulus
 \author Jan Benda
+\version 1.3 (Feb 18, 2014)
 
 \par Options
 - \c intrace=V-1: Input trace (\c string)
@@ -50,8 +51,6 @@ namespace calibration {
 
 \par Requirements
 \arg The output must be connected to the input.
-
-\version 1.2 (Feb 8, 2008)
 */
 
 
