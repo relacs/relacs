@@ -489,22 +489,17 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
     if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
-      for ( int p=0; p<2 && index < 0; p++ ) {
-	if ( unipolar ) {
-	  for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
-	    if ( unipolarRange( index ) > maxvolt )
-	      break;
-	  }
+      if ( unipolar ) {
+	for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
+	  if ( unipolarRange( index ) >= maxvolt )
+	    break;
 	}
-	else {
-	  for( index = BipolarRange.size() - 1; index >= 0; index-- ) {
-	    if ( bipolarRange( index ) > maxvolt )
-	      break;
-	  }
+      }
+      else {
+	for( index = BipolarRange.size() - 1; index >= 0; index-- ) {
+	  if ( bipolarRange( index ) >= maxvolt )
+	    break;
 	}
-	// try other polarity?
-	if ( index < 0 && p == 0 )
-	  unipolar = ! unipolar;
       }
       if ( index < 0 ) {
 	if ( minislarger )
@@ -516,10 +511,8 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     else {
       index = 0;
       if ( unipolar && index >= (int)UnipolarRange.size() )
-	unipolar = false;
+	index = -1;
       if ( ! unipolar && index >= (int)BipolarRange.size() )
-	unipolar = true;
-      if ( index >= ( unipolar ? (int)UnipolarRange.size() : (int)BipolarRange.size() ) )
 	index = -1;
       if ( max > 1.0+1.0e-8 )
 	sigs[k].addError( DaqError::Overflow );

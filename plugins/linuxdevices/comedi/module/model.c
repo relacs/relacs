@@ -105,8 +105,9 @@ void computeModel( void )
 */
 int generateLookupTable( int k, float **x, float **y, int *n )
 {
-  if ( k == 0 ) {
+  //  if ( k == 0 ) {
     /* Lookup-table for one period of the sine function: */
+  /*
     const int nn = 10;
     *n = nn;
     *x = new float[nn];
@@ -118,6 +119,7 @@ int generateLookupTable( int k, float **x, float **y, int *n )
     }
     return 0;
   }
+  */
   return -1;
 }
 

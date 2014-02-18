@@ -418,22 +418,17 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
     if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
-      for ( int p=0; p<2 && index < 0; p++ ) {
-	if ( unipolar ) {
-	  for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
-	    if ( unipolarRange( index ) > maxvolt )
-	      break;
-	  }
+      if ( unipolar ) {
+	for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
+	  if ( unipolarRange( index ) >= maxvolt )
+	    break;
 	}
-	else {
-	  for( index = CAO->BipolarRange.size() - 1; index >= 0; index-- ) {
-	    if ( bipolarRange( index ) > maxvolt )
-	      break;
-	  }
+      }
+      else {
+	for( index = CAO->BipolarRange.size() - 1; index >= 0; index-- ) {
+	  if ( bipolarRange( index ) >= maxvolt )
+	    break;
 	}
-	// try other polarity?
-	if ( index < 0 && p == 0 )
-	  unipolar = ! unipolar;
       }
       if ( index < 0 ) {
 	if ( minislarger )
@@ -445,10 +440,8 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     else {
       index = 0;
       if ( unipolar && index >= (int)CAO->UnipolarRange.size() )
-	unipolar = false;
+	index = -1;
       if ( ! unipolar && index >= (int)CAO->BipolarRange.size() )
-	unipolar = true;
-      if ( index >= ( unipolar ? (int)CAO->UnipolarRange.size() : (int)CAO->BipolarRange.size() ) )
 	index = -1;
       if ( max > 1.0+1.0e-8 )
 	sigs[k].addError( DaqError::Overflow );
