@@ -422,6 +422,23 @@ public:
 	gainChanged(), activateGains() */
   void setAdjustFlag( int flag );
 
+    /*! The list of input ranges the DAQ board supports for the input trace \a data. 
+        \param[in] \a data: the input trace that specifies the input device, channel,
+	and unipolar/bipolar mode.
+	\param[out] \a ranges: the list of available ranges specified as the maximum
+	voltage that can beacquired. The corresponding index can be passed directly to setGain().
+	On failure an empty list is returned.
+	\return 0 in succes, otherwise an DAQError code. */
+  int maxVoltages( const InData &data, vector<double> &ranges ) const;
+    /*! The list of input ranges the DAQ board supports for the input trace \a data. 
+        \param[in] \a data: the input trace that specifies the input device, channel,
+	and unipolar/bipolar mode.
+	\param[out] \a ranges: the list of available ranges specified as the maximum
+	values measured in data.unit(). The corresponding index can be passed directly to setGain().
+	On failure an empty list is returned.
+	\return 0 in succes, otherwise an DAQError code. */
+  int maxValues( const InData &data, vector<double> &ranges ) const;
+
     /*! Set the gain for input trace \a data to \a gainindex.
         It depends on your hardware what gain is corresponding to \a gainindex.
         In order to activate the new gain you have to call activateGains().

@@ -56,6 +56,7 @@ public:
   SimpleModel( void );
   virtual ~SimpleModel( void );
 
+  virtual void preConfig( void );
   virtual void main( void );
 
 };

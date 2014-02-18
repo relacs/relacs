@@ -42,6 +42,16 @@ SimpleModel::~SimpleModel( void )
 }
 
 
+void SimpleModel::preConfig( void )
+{
+  if ( traces() > 0 ) {
+    setUnit( "stimulusgain", trace( 0 ).unit() );
+    setUnit( "noisegain", trace( 0 ).unit() );
+    setUnit( "sinegain", trace( 0 ).unit() );
+  }
+}
+
+
 void SimpleModel::main( void )
 {
   // read out options:

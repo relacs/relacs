@@ -21,6 +21,9 @@ AC_PROG_LN_S
 AC_PROG_CXX
 AC_LANG(C++)
 
+# default installation directory:
+AC_PREFIX_DEFAULT([/usr])
+
 #################################################
 ## Check for presence of C++ compiler:
 #################################################

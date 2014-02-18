@@ -31,13 +31,15 @@ namespace calibration {
 AttenuatorCheck::AttenuatorCheck( void )
   : RePro( "AttenuatorCheck", "calibration", "Jan Benda", "1.2", "Feb 15, 2014" )
 {
+  InFac = 1.0;
+
   // add some options:
   addSelection( "outtrace", "Output trace", "V-1" );
   addSelection( "intrace", "Input trace", "V-1" );
   addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "s" );
   addSelection( "type", "Measurement type", "attenuation|noise" );
   addNumber( "frequency", "Frequency of stimulus", 50.0, 10.0, 100000.0, 10.0, "Hz", "Hz" ).setActivation( "type", "attenuation" );
-  addNumber( "amplitude", "Amplitude of stimulus", 1.0, -10000.0, 10000.0, 0.1, "V", "V" ).setActivation( "type", "noise" );
+  addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1.0, 1.0, 0.1, "Vmax", "Vmax" ).setActivation( "type", "noise" );
   addNumber( "minlevel", "Minimum attenuation level", 0.0, -1000.0, 1000.0, 0.1, "dB", "dB" );
   addNumber( "maxlevel", "Maximum attenuation level", 100.0, -1000.0, 1000.0, 0.1, "dB", "dB" );
   addNumber( "dlevel", "Increment of attenuation level", 1.0, 0.0, 1000.0, 0.1, "dB", "dB" );
@@ -61,14 +63,13 @@ void AttenuatorCheck::notify( void )
   int outtrace = index( "outtrace" );
   if ( outtrace >= 0 && outtrace < outTracesSize() ) {
     OutName = outTrace( outtrace ).traceName();
-    OutUnit = outTrace( outtrace ).unit();
-    setUnit( "amplitude", OutUnit );
   }
 
   int intrace = index( "intrace" );
   if ( intrace >= 0 && intrace < traces().size() ) {
     InName = trace( intrace ).ident();
     InUnit = trace( intrace ).unit();
+    InFac = Parameter::changeUnit( 1.0, InUnit, "V" );
   }
 }
 
@@ -101,7 +102,7 @@ int AttenuatorCheck::main( void )
     P.setYRange( 0.0, Plot::AutoScale );
   }
   else {
-    P.setYLabel( "Signal amplitude [dB]" );
+    P.setYLabel( "Gain [dB]" );
     P.setYRange( Plot::AutoScale, Plot::AutoScale );
   }
   P.unlock();
@@ -112,7 +113,7 @@ int AttenuatorCheck::main( void )
   if ( type == 1 )
     signal.pulseWave( duration, -1.0, amplitude, 0.0 );
   else
-    signal.sineWave( duration, -1.0, frequency, amplitude );
+    signal.sineWave( duration, -1.0, frequency, 1.0 );
 
   // input gain setting:
   int orggain = trace( intrace ).gainIndex();
@@ -146,21 +147,16 @@ int AttenuatorCheck::main( void )
 
     // analyze:
     double val = 0.0;
-    double max = 0.0;
     double d = signal.length();
     double stdev = trace( intrace ).stdev( signalTime() + 0.05*d, signalTime()+0.95*d );
-    if ( type == 1 ) {
+    if ( type == 1 )
       val = stdev;
-      max = ::fabs( amplitude ) + stdev*4.0;
-    }
-    else {
-      max = stdev * ::sqrt( 2.0 );
-      val = 20.0*::log10( max );
-      max *= 1.1;
-    }
+    else
+      val = 20.0*::log10( InFac * stdev * ::sqrt( 2.0 ) );
     levels.push( level, val );
     if ( adjust )
-      adjustGain( trace( intrace ), max );
+      adjustGain( trace( intrace ),
+		  trace( intrace ).maxAbs( signalTime() + 0.05*d, signalTime()+0.95*d ) );
 
     P.lock();
     P.clear();
@@ -178,7 +174,7 @@ int AttenuatorCheck::main( void )
   }
 
   // save data:
-  string filename = type == 1 ? "attenuatorcheck-noise.dat" : "attenuatorcheck-amplitude.dat";
+  string filename = type == 1 ? "attenuatorcheck-noise.dat" : "attenuatorcheck-gain.dat";
   ofstream df( addPath( filename ).c_str(),
 	       ofstream::out | ofstream::app );
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
@@ -189,7 +185,7 @@ int AttenuatorCheck::main( void )
   if ( type == 1 )
     datakey.addNumber( "stdev", InUnit, "%7.4f" );
   else
-    datakey.addNumber( "ampl", "dB", "%8.4f" );
+    datakey.addNumber( "gain", "dB", "%8.4f" );
   datakey.saveKey( df );
   for ( int k=0; k<levels.size(); k++ ) {
     datakey.save( df, levels.x( k ), 0 );

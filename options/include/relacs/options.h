@@ -986,6 +986,11 @@ public:
         with name \a name to \a minimum and \a maximum, respectively. */
   Parameter &setMinMax( const string &name, long minimum=LONG_MIN,
 			long maximum=LONG_MAX, long step=1, const string &unit="" );
+    /*! Set the minimum and maximum of an existing integer number option
+        with name \a name to \a minimum and \a maximum, respectively. */
+  Parameter &setMinMax( const string &name, int minimum,
+			int maximum, int step=1, const string &unit="" )
+    { return setMinMax( name, (long)minimum, (long)maximum, (long)step, unit ); };
 
     /*! Add a boolean option at the end of the options list.
         Its request string for the options dialog is set to \a request,

@@ -82,7 +82,7 @@ SetOutput::SetOutput( void )
   // Cancel button:
   QPushButton *cancelbutton = new QPushButton( "&Cancel" );
   bb->addWidget( cancelbutton );
-  cancelbutton->setFixedHeight( okbutton->sizeHint().height() );
+  cancelbutton->setFixedHeight( cancelbutton->sizeHint().height() );
   connect( cancelbutton, SIGNAL( clicked() ),
 	   this, SLOT( keepValues() ) );
   grabKey( Qt::ALT+Qt::Key_C );

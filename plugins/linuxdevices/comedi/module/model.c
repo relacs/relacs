@@ -60,6 +60,7 @@ void initModel( void )
 {
    moduleName = "/dev/dynclamp";
    phase = 0.0;
+   INFO_MSG( "DYNCLAMPMODULE lookup n=%d\n", lookupn[0] );
 }
 
 void computeModel( void )
@@ -71,6 +72,7 @@ void computeModel( void )
   if ( phase >= 1.0 )
     phase -= 1.0;
   // sine from lookuptable:
+  /*
   k = phase*lookupn[0];
   if ( k >= lookupn[0] ) {
     ERROR_MSG( " DYNCLAMPMODULE LOOKUPTABLE: K>=N" );
@@ -81,6 +83,7 @@ void computeModel( void )
     ERROR_MSG( " DYNCLAMPMODULE LOOKUPTABLE: K<0" );
     k = 0;
   }
+  */
   // eod:
   //  paramInput[0] = paramOutput[0] * lookupy[0][k];
   paramInput[0] = paramOutput[0] * 0.0;
@@ -95,19 +98,20 @@ void computeModel( void )
     nonlinear functions to be used by computeModel(). The implementation of this
     functions has to allocate an \a x and \a y array of floats of a sensible size \a n.
     \param[in] \a k : the index for the lookup table to be generated.
-    \param[in] \a n : the size of the lookup table (the number of elements in \a x and \a y).
-    \param[in] \a x : the x-values.
-    \param[in] \a y : the corresponding y-values.
+    \param[out] \a n : the size of the lookup table (the number of elements in \a x and \a y).
+    \param[out] \a x : the x-values.
+    \param[out] \a y : the corresponding y-values.
     \return: 0 if a lookuptable was generated, -1 otherwise.
 */
 int generateLookupTable( int k, float **x, float **y, int *n )
 {
   if ( k == 0 ) {
-    const int nn = 100000;
+    /* Lookup-table for one period of the sine function: */
+    const int nn = 10;
     *n = nn;
     *x = new float[nn];
     *y = new float[nn];
-    for ( int j=0; j<nn; k++ ) {
+    for ( int j=0; j<nn; j++ ) {
       float xx = j*1.0/nn;
       (*x)[j] = xx;
       (*y)[j] = sin( 2.0*M_PI*xx );

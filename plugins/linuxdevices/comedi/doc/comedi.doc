@@ -171,7 +171,15 @@ $ update-grub
 #GRUB_HIDDEN_TIMEOUT_QUIET=true
 GRUB_TIMEOUT=10
 \endcode
-    Afer editing run \c update-grub to apply the changes.
+    Also, if ou do not like that grub puts your rtai kernel into a subsection called
+    'Previous linux versions', then comment out the following lines in \c /etc/grub.d/10_linux
+    \code
+#  if [ "$list" ] && ! $in_submenu; then
+#    echo "submenu \"Previous Linux versions\" {"
+#    in_submenu=:
+#  fi
+\endcode
+    After editing run \c update-grub to apply the changes.
   - With \c grub \c v1 (default up-to Debian Lenny) 
     there should be an entry like this in \c /boot/grub/menu.lst:
     \code

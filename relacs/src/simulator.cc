@@ -206,7 +206,6 @@ int Simulator::read( InList &data )
   }
 
   // start simulation:
-  Sim->start();
   LastWrite = -1.0;
   Data.clear();
   for ( int k=0; k<data.size(); k++ )
@@ -215,6 +214,8 @@ int Simulator::read( InList &data )
 
   SoftReset = false;
   HardReset = false;
+
+  Sim->start();
 
   return 0;
 }

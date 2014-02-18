@@ -52,8 +52,8 @@ class AttenuatorCheck : public RePro
 public:
 
   AttenuatorCheck( void );
-  void preConfig( void );
-  void notify( void );
+  virtual void preConfig( void );
+  virtual void notify( void );
   virtual int main( void );
 
 
@@ -63,8 +63,8 @@ protected:
 
   string InName;
   string InUnit;
+  double InFac;
   string OutName;
-  string OutUnit;
 
 };
 

@@ -1138,6 +1138,74 @@ void Acquire::setAdjustFlag( int flag )
 }
 
 
+int Acquire::maxVoltages( const InData &data, vector<double> &ranges ) const
+{
+  ranges.clear();
+
+  // get device:
+  int di = data.device();
+
+  // data without device?
+  if ( di < 0 || di >= (int)AI.size() )
+    return DaqError::NoDevice;
+
+  // device not open?
+  if ( ! AI[di].AI->isOpen() )
+    return DaqError::DeviceNotOpen;
+
+  // the device:
+  AnalogInput *ai = AI[di].AI;
+
+  // fill in ranges:
+  ranges.reserve( ai->maxRanges() );
+  ranges.clear();
+  if ( data.unipolar() ) {
+    for ( int k=0; k<ai->maxRanges() && ai->unipolarRange( k ) > 0; k++ )
+      ranges.push_back( ai->unipolarRange( k ) );
+  }
+  else {
+    for ( int k=0; k<ai->maxRanges() && ai->bipolarRange( k ) > 0; k++ )
+      ranges.push_back( ai->bipolarRange( k ) );
+  }
+
+  return 0;
+}
+
+
+int Acquire::maxValues( const InData &data, vector<double> &ranges ) const
+{
+  ranges.clear();
+
+  // get device:
+  int di = data.device();
+
+  // data without device?
+  if ( di < 0 || di >= (int)AI.size() )
+    return DaqError::NoDevice;
+
+  // device not open?
+  if ( ! AI[di].AI->isOpen() )
+    return DaqError::DeviceNotOpen;
+
+  // the device:
+  AnalogInput *ai = AI[di].AI;
+
+  // fill in ranges:
+  ranges.reserve( ai->maxRanges() );
+  ranges.clear();
+  if ( data.unipolar() ) {
+    for ( int k=0; k<ai->maxRanges() && ai->unipolarRange( k ) > 0; k++ )
+      ranges.push_back( ai->unipolarRange( k ) * data.scale() );
+  }
+  else {
+    for ( int k=0; k<ai->maxRanges() && ai->bipolarRange( k ) > 0; k++ )
+      ranges.push_back( ai->bipolarRange( k ) * data.scale() );
+  }
+
+  return 0;
+}
+
+
 int Acquire::setGain( const InData &data, int gainindex )
 {
   // get device:

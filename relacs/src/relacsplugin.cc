@@ -479,6 +479,26 @@ double RELACSPlugin::currentTime( void ) const
 }
 
 
+int RELACSPlugin::maxVoltages( const InData &data, vector<double> &ranges ) const
+{
+  ranges.clear();
+  if ( RW->AQ != 0 )
+    return RW->AQ->maxVoltages( data, ranges );
+  else
+    return DaqError::NoDevice;;
+}
+
+
+int RELACSPlugin::maxValues( const InData &data, vector<double> &ranges ) const
+{
+  ranges.clear();
+  if ( RW->AQ != 0 )
+    return RW->AQ->maxValues( data, ranges );
+  else
+    return DaqError::NoDevice;;
+}
+
+
 void RELACSPlugin::setGain( const InData &data, int gainindex )
 {
   if ( RW->AQ != 0 )

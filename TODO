@@ -150,6 +150,7 @@ Plot:
 - check alignment of grid with plotted lines at various plot widget sizes!
 
 Analog Input/Output:
+- Docu regarding hard calibrate is probably wrong! Read man comedi_calibrate.
 - Replace Ident by Name in InData, OutData, TraceSpec
 - WriteDataThread should not be started if the whole stimulus is already transfered.
 - check and improve writeReset and writeZero interfaces and implementations.

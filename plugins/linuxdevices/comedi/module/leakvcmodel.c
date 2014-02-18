@@ -85,9 +85,9 @@ void computeModel( void )
     nonlinear functions to be used by computeModel(). The implementation of this
     functions has to allocate an \a x and \a y array of floats of a sensible size \a n.
     \param[in] \a k : the index for the lookup table to be generated.
-    \param[in] \a n : the size of the lookup table (the number of elements in \a x and \a y).
-    \param[in] \a x : the x-values.
-    \param[in] \a y : the corresponding y-values.
+    \param[out] \a n : the size of the lookup table (the number of elements in \a x and \a y).
+    \param[out] \a x : the x-values.
+    \param[out] \a y : the corresponding y-values.
     \return: 0 if a lookuptable was generated, -1 otherwise.
 */
 int generateLookupTable( int k, float **x, float **y, int *n )

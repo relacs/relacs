@@ -647,6 +647,12 @@ public:
         The warning message is set if \a minimum or \a maximum is invalid. */
   Parameter &setMinMax( long minimum=LONG_MIN, long maximum=LONG_MAX, long step=1,
 			const string &unit="" );
+    /*! Set minimum and maximum values of an integer parameter 
+        to \a minimum and \a maximum, respectively.
+        The warning message is set if \a minimum or \a maximum is invalid. */
+  Parameter &setMinMax( int minimum, int maximum, int step=1,
+			const string &unit="" )
+    { return setMinMax( (long)minimum, long(maximum), (long)step, unit ); };
     /*! Returns the largest power of ten smaller or equal to \a v. */
   static double floorLog10( double v );
     /*! Returns the next smaller multiple of floorLog10( \a v ).

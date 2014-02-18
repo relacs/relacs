@@ -1662,6 +1662,7 @@ void RELACSWidget::startFirstSimulation( void )
   CW->assignTracesEvents( IL, ED );
   PT->assignTracesEvents( IL, ED );
   RP->assignTracesEvents( IL, ED );
+  MD->assignTracesEvents( IL, ED );
 
   // plots:
   PT->updateMenu();
@@ -1725,6 +1726,7 @@ void RELACSWidget::startFirstSimulation( void )
   FD->assignTracesEvents();
   CW->assignTracesEvents();
   RP->assignTracesEvents();
+  MD->assignTracesEvents();
   AID->updateMenu();
 
   // check success:
