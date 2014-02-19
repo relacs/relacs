@@ -1,6 +1,6 @@
 /*
   base/savetraces.h
-  Saves selected input traces or events for each run into files
+  Saves data from  selected input traces or events for each run into files
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -31,9 +31,19 @@ namespace base {
 
 /*!
 \class SaveTraces
-\brief [RePro] Saves selected input traces or events for each run into files
+\brief [RePro] Saves data from selected input traces or events for each run into files
 \author Jan Benda
 \version 1.0 (Jan 17, 2013)
+
+The SaveTraces-%RePro records ascii-data without writing out any stimulus
+and terminates after \c repeats times \c duration seconds. If \c repeats is
+set to zero, the %RePro keeps recording infinitely. Recording can be
+interrupted any time by pressing the space key or starting a different
+%RePro.
+
+Data are recorded into ascii files. In addition, if \a savedata is set \c true,
+data are also saved into the raw-traces files of RELACS (trace-?.raw). For only storing data
+into the RELACS raw-traces files, use the Record %RePro.
 
 \par Options
 - \c General
@@ -42,7 +52,6 @@ namespace base {
     - \c savedata=false: Save raw data (\c boolean)
     - \c split=false: Save each run into a separate file (\c boolean)
 - \c Analog input traces
-
   A list of all available analog input traces.
   Select the ones that you want to save into files.
 - \c Events

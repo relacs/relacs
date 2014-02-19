@@ -350,9 +350,12 @@ protected:
         \sa events(), traceInputTrace(), traceInputEvent(), eventInputTrace(),
 	eventInputEvent() */
   int traceIndex( const string &ident ) const;
-    /*! Returns the names of all input traces separated by '|'.
+    /*! Returns the names of all input traces (raw traces and filtered traces) separated by '|'.
         This string can be used for a text Parameter. */
   string traceNames( void ) const;
+    /*! Returns the names of all raw input traces (with their source() == 0) separated by '|'.
+        This string can be used for a text Parameter. */
+  string rawTraceNames( void ) const;
 
     /*! Return the list of all events.
         \sa traces(), traceIndex(), traceInputTrace(), traceInputEvent(),

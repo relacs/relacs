@@ -22,6 +22,8 @@ New InData threading:
 - SaveFiles: recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
 
 Options:
+- RePro: when the RePo changes an Option in main(), this change should automatically be made permanent
+  (via setToDefaults() called after main()? E.g. SetInputGain RePro).
 - Check readAppend() functions!
 - Make all Options and optWidget style flags an enum
 - How to deal wih trace select options (e.g. in TransferFunction, AttenuatorCheck)?

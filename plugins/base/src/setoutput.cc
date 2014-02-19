@@ -104,7 +104,7 @@ void SetOutput::preConfig( void )
     OutOpts.addNumber( outTraceName( k ), outTraceName( k ), 0.0,
 		       -1.0e6, 1.0e6, 0.001, outTrace( k ).unit() ).setFlags( flag );
   }
-
+    
   // display values:
   STW.assign( &OutOpts, ParameterFlag, 0, false, 0, mutex() );
 }
@@ -174,6 +174,10 @@ int SetOutput::main( void )
   noMessage();
 
   if ( Interactive ) {
+    if ( OutOpts.size( ParameterFlag ) == 0 ) {
+      warning( "Sorry, there are no output parameter available!" );
+      return Failed;
+    }
     keepFocus();
     postCustomEvent( 11 ); // STW.setFocus()
     Quit = true;

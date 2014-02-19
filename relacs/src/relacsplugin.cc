@@ -401,6 +401,22 @@ string RELACSPlugin::traceNames( void ) const
 }
 
 
+string RELACSPlugin::rawTraceNames( void ) const
+{
+  string its = "";
+  int j = 0;
+  for ( int k=0; k<IL.size(); k++ ) {
+    if ( IL[k].source() == 0 ) {
+      if ( j > 0 )
+	its += '|';
+      its += IL[k].ident();
+      j++;
+    }
+  }
+  return its;
+}
+
+
 const EventList &RELACSPlugin::events( void ) const
 {
   return EL;

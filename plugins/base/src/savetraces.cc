@@ -1,6 +1,6 @@
 /*
   base/savetraces.cc
-  Saves selected input traces or events for each run into files
+  Saves data from selected input traces or events for each run into files
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>

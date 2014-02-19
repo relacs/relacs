@@ -1,6 +1,6 @@
 /*
-  base/record.h
-  Simply records data
+  base/setinputgain.h
+  Set the gain of analog input traces.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -9,18 +9,18 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_BASE_RECORD_H_
-#define _RELACS_BASE_RECORD_H_ 1
+#ifndef _RELACS_BASE_SETINPUTGAIN_H_
+#define _RELACS_BASE_SETINPUTGAIN_H_ 1
 
 #include <relacs/repro.h>
 using namespace relacs;
@@ -29,48 +29,52 @@ namespace base {
 
 
 /*!
-\class Record
-\brief [RePro] Simply records data
+\class SetInputGain
+\brief [RePro] Set the gain of analog input traces.
 \author Jan Benda
-\version 1.0 (Aug 13, 2012)
-
-The Record-%RePro simply records data without writing out any stimulus
-and terminates after \c repeats times \c duration ms. If \c repeats is
-set to zero, the %RePro keeps recording infinitely. Recording can be
-interrupted any time by pressing the space key or starting a different
-%RePro.
-
-Data are recorded into the raw-traces files of RELACS (trace-?.raw). If
-you want to have the data saved into ascii files use the SaveTraces %RePro.
+\version 1.0 (Feb 18, 2014)
 
 \par Options
-- \c duration=1000ms: Duration (\c number)
-- \c repeats=0: Repeats (\c integer)
-
-\par Files
-No output files.
-
-\par Plots
-No plot.
-
-\par Requirements
-No requirements.
+- \c intrace=V-1: Input trace (\c string)
+- \c gainindex=0: Index of the gain to be set (\c integer)
+- \c interactive=true: Set values interactively (\c boolean)
 */
 
 
-class Record : public RePro
+class SetInputGain : public RePro
 {
   Q_OBJECT
 
 public:
 
-  Record( void );
-  virtual ~Record( void );
+  SetInputGain( void );
+  virtual void preConfig( void );
+  virtual void notify( void );
   virtual int main( void );
+
+
+public slots:
+
+  void acceptGains( void );
+  void setGains( void );
+  void setMaxRanges( void );
+  void keepGains( void );
+
+
+protected:
+
+  virtual void keyPressEvent( QKeyEvent *e );
+  virtual void customEvent( QEvent *qce );
+
+  OptWidget SGW;
+  Options InOpts;
+  bool Interactive;
+  bool Change;
+  bool Quit;
 
 };
 
 
 }; /* namespace base */
 
-#endif /* ! _RELACS_BASE_RECORD_H_ */
+#endif /* ! _RELACS_BASE_SETINPUTGAIN_H_ */
