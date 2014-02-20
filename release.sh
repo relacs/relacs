@@ -42,6 +42,11 @@ CONFIGUREPREFIX="--prefix=$INSTALLPATH"
 CONFIGUREFLAGS="$@"
 export DISTCHECK_CONFIGURE_FLAGS="$CONFIGUREFLAGS"
 
+# relacs version from configure.ac:
+RV=$(grep AC_INIT configure.ac)
+RV=${RV#*relacs, }
+RELACSVERSION=${RV%)*}
+
 if test "x${MAKE}" = x; then
     MAKE=make
 fi
@@ -68,7 +73,7 @@ fi
 echo ""
 echo "Successfully checked RELACS!"
 echo "Upload the release to sourceforge using"
-echo "  rsync -avP -e ssh relacs-0.9.7.tar.gz janbenda,relacs@frs.sourceforge.net:/home/frs/project/r/re/relacs/relacs/"
+echo "  rsync -avP -e ssh relacs-${RELACSVERSION}.tar.gz janbenda,relacs@frs.sourceforge.net:/home/frs/project/r/re/relacs/relacs/"
 echo ""
 
 # configure and check everything for the libraries:
@@ -97,7 +102,7 @@ if test $CHECKLIBS = yes; then
   echo "Successfully checked relacs and all its libraries!"
   echo "You can go ahead and make a release :-)"
   echo "Upload the release to sourceforge using"
-  echo "  rsync -avP -e ssh relacs-0.9.7.tar.gz janbenda,relacs@frs.sourceforge.net:/home/frs/project/r/re/relacs/relacs/"
+  echo "  rsync -avP -e ssh relacs-${RELACSVERSION}.tar.gz janbenda,relacs@frs.sourceforge.net:/home/frs/project/r/re/relacs/relacs/"
   echo ""
 
 fi
