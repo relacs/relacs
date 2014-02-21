@@ -669,12 +669,14 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
     int w = 1;
     int n = 0;
     for ( unsigned int c=1; c<Sections.size(); c++ ) {
-      cerr << "c=" << c << "  l="<< l << '\n';
       if ( Sections[c][l] != Sections[c-1][l] ) {
 	if ( (*Sections[c-1][l])->flag( flags ) ) {
 	  if ( n > 0 )
 	    str << " & ";
-	  str << "\\multicolumn{" << w << "}{l}{" << Str( (*Sections[c-1][l])->name() ).latex() << "}";
+	  if ( (*Sections[c-1][l])->name() == "~" )
+	    str << "\\multicolumn{" << w << "}{l}{" << Str( (*Sections[c-1][l])->name() ).latex() << "}";
+	  else
+	    str << "\\multicolumn{" << w << "}{l}{" << Str( (*Sections[c-1][l])->name() ).latex() << "}";
 	  w = 1;
 	  n++;
 	}
@@ -948,9 +950,6 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
   int level = pos.size() - cn;
   bool units = ( cn > 1 );
 
-  cerr << "NUM=" << num <<'\n';
-  cerr << "UNITS=" << units <<'\n';
-  cerr << "LEVEL=" << level <<'\n';
   // read in table header:
   vector< int > inx( level, 0 );
   for ( unsigned int k=0; k<pos[level].size()-1; k++ ) {
@@ -958,6 +957,8 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
       if ( inx[j] < int(pos[j].size())-1 && pos[j][inx[j]] == pos[level][k] ) {
 	int index = pos[j][inx[j]];
 	string name = (*(fp+j)).wordAt( index, Str::DoubleWhiteSpace, comment );
+	if ( name == "~" )
+	  name = "";
 	newSection( j, name );
 	inx[j]++;
       }
@@ -972,6 +973,8 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
       if ( w > width )
 	width = w;
     }
+    if ( name == "~" )
+      name = "";
     addNumber( name, unit, "%" + Str( width ) + "g" );
   }
 

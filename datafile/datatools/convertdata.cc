@@ -139,7 +139,9 @@ void writeLaTeX( DataFile &sf )
       sf.splitLine( items, Str::DoubleWhiteSpace );
       StrQueue latexitems;
       for ( int k=0; k<items.size(); k++ ) {
-	if ( Str::FirstNumber.find( items[k][0] ) >= 0 )
+	if ( items[k] == "~" )
+	  latexitems.add( " " );
+	else if ( Str::FirstNumber.find( items[k][0] ) >= 0 )
 	  latexitems.add( items[k].latexNum() );
 	else
 	  latexitems.add( "\\multicolumn{1}{l}{" + items[k].latex() + "}" );
@@ -291,10 +293,12 @@ void writeHTML( DataFile &sf )
 	dcs = ndcs;
       }
       StrQueue items;
-      sf.splitLine( items );
+      sf.splitLine( items, Str::DoubleWhiteSpace );
       cout << "          <tr class=\"data\">\n";
       for ( int k=0; k<items.size(); k++ ) {
-	if ( Str::FirstNumber.find( items[k][0] ) >= 0 )
+	if ( items[k] == "~" )
+	  cout << "            <td align=\"right\"></td>\n";
+	else if ( Str::FirstNumber.find( items[k][0] ) >= 0 )
 	  cout << "            <td align=\"right\">" << items[k].htmlUnit() << "</td>\n";
 	else
 	  cout << "            <td align=\"left\">" << items[k].html() << "</td>\n";
