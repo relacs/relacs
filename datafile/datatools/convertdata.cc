@@ -136,7 +136,7 @@ void writeLaTeX( DataFile &sf )
 	dcs = ndcs;
       }
       StrQueue items;
-      sf.splitLine( items );
+      sf.splitLine( items, Str::DoubleWhiteSpace );
       StrQueue latexitems;
       for ( int k=0; k<items.size(); k++ ) {
 	if ( Str::FirstNumber.find( items[k][0] ) >= 0 )
@@ -417,7 +417,14 @@ int main( int argc, char *argv[] )
   // redirect cout:
   streambuf *coutb = 0;
   ofstream df;
+  bool pdf = false;
   if ( !destfile.empty() ) {
+    if ( destfile.find( ".pdf" ) == destfile.size() - 4 ) {
+      pdf = true;
+      destfile.erase( destfile.size() - 4 );
+      destfile += ".tex";
+      format = "l";
+    }
     df.open( destfile.c_str() );
     if ( !df.good() ) {
       cerr << "! can't open file " << destfile << " for writing\n";
@@ -440,6 +447,14 @@ int main( int argc, char *argv[] )
   if ( coutb != 0 ) {
     df.close();
     cout.rdbuf( coutb );
+  }
+
+  if ( pdf ) {
+    int r = system( string ( "pdflatex " + destfile ).c_str() );
+    destfile.erase( destfile.size() - 4 );
+    unlink( string ( destfile + ".aux" ).c_str() );
+    unlink( string ( destfile + ".log" ).c_str() );
+    return r;
   }
 
   return 0;

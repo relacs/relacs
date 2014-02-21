@@ -4355,9 +4355,8 @@ int Str::nextWord( int &index, const string &space, const string &comment ) cons
     // position of space:
     index = findFirst( space, index );
     // check for double blank:
-    if ( db ) {
-      if ( index < 0 || index+1 >= l ||
-	   ( at( index ) == ' ' && at( index+1 ) == ' ' ) )
+    if ( db && index >= 0 && index < l && at( index ) == ' ' ) {
+      if ( index+1 >= l || at( index+1 ) == ' ' )
 	break;
       index++;
     }
@@ -4443,11 +4442,10 @@ int Str::nextField( int &index, const string &space, const string &comment ) con
     // position of space:
     index = findFirst( space, index );
     // check for double blank:
-    if ( db ) {
-      if ( index < 0 || index+1 >= l ||
-	   ( at( index ) == ' ' && at( index+1 ) == ' ' ) )
+    if ( db && index >= 0 && index < l && at( index ) == ' ' ) {
+      if ( index+1 >= l || at( index+1 ) == ' ' )
 	break;
-      index += 2;
+      index++;
     }
     else
       break;
@@ -4504,9 +4502,8 @@ int Str::findSeparator( int index, const string &separator,
       // position of separator:
       i = findFirst( separator, i );
       // check for double blank:
-      if ( db ) {
-	if ( i < 0 || 
-	     ( i+1 < int( l ) && at( i ) == ' ' && at( i+1 ) == ' ' ) )
+      if ( db && i >= 0 && i < (int)l && at( i ) == ' ' ) {
+	if ( i+1 >= (int)l || at( i+1 ) == ' ' )
 	  break;
 	i++;
       }

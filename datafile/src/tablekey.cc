@@ -664,11 +664,12 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
   str << "  \\hline\n";
 
   // sections:
-  for ( unsigned int l=Sections[0].size()-1; l>=0; l-- ) {
+  for ( int l=(int)Sections[0].size()-1; l>=0; l-- ) {
     str << "  ";
     int w = 1;
     int n = 0;
     for ( unsigned int c=1; c<Sections.size(); c++ ) {
+      cerr << "c=" << c << "  l="<< l << '\n';
       if ( Sections[c][l] != Sections[c-1][l] ) {
 	if ( (*Sections[c-1][l])->flag( flags ) ) {
 	  if ( n > 0 )
@@ -758,7 +759,7 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
   str << "        <thead class=\"datakey\">\n";
 
   // sections:
-  for ( unsigned int l=Sections[0].size()-1; l>=0; l-- ) {
+  for ( int l=(int)Sections[0].size()-1; l>=0; l-- ) {
     str << "          <tr class=\"section" << l << "\">\n";
     int w = 1;
     for ( unsigned int c=1; c<Sections.size(); c++ ) {
@@ -942,10 +943,14 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
     if ( differ > maxdiffer ) // allow some columns without unit
       break;
   }
+
   // identify table lines:
   int level = pos.size() - cn;
   bool units = ( cn > 1 );
 
+  cerr << "NUM=" << num <<'\n';
+  cerr << "UNITS=" << units <<'\n';
+  cerr << "LEVEL=" << level <<'\n';
   // read in table header:
   vector< int > inx( level, 0 );
   for ( unsigned int k=0; k<pos[level].size()-1; k++ ) {
