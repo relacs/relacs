@@ -56,7 +56,7 @@ set to the maximum power in each powerspectrum (\c powermax is set to
 \c true) or to the maximum possible power of the input trace range.
 
 \par Options
-- \c trace=EOD: Input trace (\c string)
+- \c intrace=V-1: Input trace (\c string)
 - \c width=100ms: Width of powerspectrum  window (\c number)
 - \c step=0ms: Temporal increment for powerspectrum window (\c number)
 - \c tmax=10s: Maximum time to plot in spectrogram (\c number)

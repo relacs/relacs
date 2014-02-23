@@ -351,10 +351,55 @@ protected:
 	eventInputEvent() */
   int traceIndex( const string &ident ) const;
     /*! Returns the names of all input traces (raw traces and filtered traces) separated by '|'.
-        This string can be used for a text Parameter. */
+        This string can be used for a text Parameter. For example, to define an option
+        that selects an input trace:
+	\code
+MyPlugin::MyPlugin( void )
+{
+  addSelection( "intrace", "Input trace", "V-1" );
+  ...
+}
+
+void MyPlugin::preConfig( void )
+{
+  setText( "intrace", traceNames() );
+  setToDefault( "intrace" );
+  ...
+}
+
+
+int MyPlugin::main( void )
+{
+  int intrace = index( "intrace" );
+  ...
+}
+\endcode
+    */
   string traceNames( void ) const;
     /*! Returns the names of all raw input traces (with their source() == 0) separated by '|'.
-        This string can be used for a text Parameter. */
+        This string can be used for a text Parameter. For example, to define an option
+        that selects an input trace:
+	\code
+MyPlugin::MyPlugin( void )
+{
+  addSelection( "intrace", "Input trace", "V-1" );
+  ...
+}
+
+void MyPlugin::preConfig( void )
+{
+  setText( "intrace", rawTraceNames() );
+  setToDefault( "intrace" );
+  ...
+}
+
+
+int MyPlugin::main( void )
+{
+  int intrace = traceIndex( text( "intrace" ) );
+  ...
+}
+\endcode */
   string rawTraceNames( void ) const;
 
     /*! Return the list of all events.
@@ -514,7 +559,29 @@ protected:
         If \a index is invalid, an empty string is returned. */
   string outTraceName( int index ) const;
     /*! Returns the names of all output traces separated by '|'.
-        This string can be used for a text Parameter. */
+        This string can be used for a text Parameter. For example, to define an option
+        that selects an output trace:
+	\code
+MyPlugin::MyPlugin( void )
+{
+  addSelection( "outtrace", "Output trace", "V-1" );
+  ...
+}
+
+void MyPlugin::preConfig( void )
+{
+  setText( "outtrace", outTraceNames() );
+  setToDefault( "outtrace" );
+  ...
+}
+
+
+int MyPlugin::main( void )
+{
+  int outtrace = index( "outtrace" );
+  ...
+}
+\endcode */
   string outTraceNames( void ) const;
     /*! Return the output trace with index \a index. */
   const TraceSpec &outTrace( int index ) const;

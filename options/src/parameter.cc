@@ -379,7 +379,7 @@ Parameter &Parameter::operator=( const string &value )
 Parameter &Parameter::assign( const string &value )
 {
   Warning = "";
-  if ( isText() && size() > 1 ) {
+  if ( isText() && ( size() > 1 || ( style() && Parameter::SelectText ) > 0 ) ) {
     selectText( value );
   }
   else {
@@ -1336,7 +1336,7 @@ Parameter &Parameter::selectText( const string &strg, int add )
 	Flags |= ChangedFlag;
       }
     }
-    else {
+    else if ( inx > 0 && String.size() > 1 ) {
       String.insert( String[inx] );
       Flags |= ChangedFlag;
     }

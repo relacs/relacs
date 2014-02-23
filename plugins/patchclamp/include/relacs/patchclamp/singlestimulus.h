@@ -101,7 +101,6 @@ public:
   ~SingleStimulus( void );
 
   virtual void preConfig( void );
-  //  virtual void readConfig( StrQueue &sq );
   virtual void notify( void );
   virtual int main( void );
 

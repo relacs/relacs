@@ -35,7 +35,7 @@ namespace base {
 \author Jan Benda
 \version 1.1 (Jul 24, 2009)
 \par Options
-- \c trace=V-1: Input trace (\c string)
+- \c intrace=V-1: Input trace (\c string)
 - \c origin=before end of data: Analysis window (\c string)
 - \c offset=0ms: Offset of analysis window (\c number)
 - \c duration=1000ms: Width of analysis window (\c number)
@@ -64,7 +64,7 @@ public:
 
 private:
 
-  int Trace;
+  int InTrace;
   int Origin;
   double Offset;
   double Duration;

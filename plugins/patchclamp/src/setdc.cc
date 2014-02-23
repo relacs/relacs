@@ -211,7 +211,9 @@ public:
 int SetDC::main( void )
 {
   // get options:
-  string outcurrent = text( "outcurrent", 0 );
+  int outcurrent = index( "outcurrent" );
+  if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 )
+    outcurrent = CurrentOutput[outcurrent];
   int dcamplitudesel = index( "dcamplitudesel" );
   double dcamplitude = number( "dcamplitude" );
   double dcamplitudefrac = number( "dcamplitudefrac" );
@@ -227,7 +229,7 @@ int SetDC::main( void )
   tracePlotContinuous( 1.0 );
 
   // init:
-  OrgDCAmplitude = stimulusData().number( outcurrent );
+  OrgDCAmplitude = stimulusData().number( outTraceName( outcurrent ) );
   DCAmplitude = metaData().number( "Cell>ithreshss" );
   if ( dcamplitudesel == 0 )
     DCAmplitude = dcamplitude;
@@ -262,7 +264,7 @@ int SetDC::main( void )
     keepFocus();
     analyze( duration );
     OutData dcsignal;
-    dcsignal.setTraceName( outcurrent );
+    dcsignal.setTrace( outcurrent );
     dcsignal.constWave( DCAmplitude );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );
@@ -318,7 +320,7 @@ int SetDC::main( void )
   if ( SetValue ) {
     // DC signal:
     OutData dcsignal;
-    dcsignal.setTraceName( outcurrent );
+    dcsignal.setTrace( outcurrent );
     dcsignal.constWave( DCAmplitude );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );

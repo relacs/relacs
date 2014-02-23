@@ -22,15 +22,11 @@ New InData threading:
 - SaveFiles: recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
 
 Options:
+- Add special meaning to special values for numbers in OptWidgetBase (e.g. infinit repeats).
 - RePro: when the RePo changes an Option in main(), this change should automatically be made permanent
   (via setToDefaults() called after main()? E.g. SetInputGain RePro).
 - Check readAppend() functions!
 - Make all Options and optWidget style flags an enum
-- How to deal wih trace select options (e.g. in TransferFunction, AttenuatorCheck)?
-  - Set list in preConfig()
-  - BUT: readConfig overwrites this (for example, if option in relacsplugins.cfg is empty)!
-  - How to read that out: index( "intrace" ) or traceIndex( text( "intrace" ) )?
-  - Make sure that one always gets a valid trace index!
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
 - OutData: rename Ident to name OR remove it?
 - DeviceList and FilterDetectors (and others?) should use plugin name (ident) as section name.

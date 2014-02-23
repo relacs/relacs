@@ -179,6 +179,8 @@ OptWidgetText::OptWidgetText( Options::iterator param, QWidget *label,
     LW( 0 ),
     BrowseButton( 0 )
 {
+  if ( (Param->style() & OptWidget::SelectText) > 0 )
+    Editable = false;
   if ( Editable ) {
     W = EW = new QLineEdit( Param->text( "%s" ).c_str(), parent );
     OptWidget::setValueStyle( W, Param->style(), OptWidget::Text );

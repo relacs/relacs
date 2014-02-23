@@ -34,7 +34,7 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   : Control( "SpectrumAnalyzer", "base", "Jan Benda", "1.1", "Jul 24, 2009" )
 {
   // parameter:
-  Trace = 0;
+  InTrace = 0;
   Origin = 0;
   Offset = 0.0;
   Duration = 1.0;
@@ -46,7 +46,7 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   PMin = -50.0;
 
   // options:
-  addSelection( "trace", "Input trace", "V-1" ).setFlags( 8 );
+  addSelection( "intrace", "Input trace", "V-1" ).setFlags( 8 );
   addSelection( "origin", "Analysis window", "before end of data|before signal|after signal" );
   addNumber( "offset", "Offset of analysis window", Offset, -10000.0, 10000.0, 0.1, "s", "ms" );
   addNumber( "duration", "Width of analysis window", Duration, 0.0, 100.0, 0.1, "s", "ms" );
@@ -86,19 +86,20 @@ SpectrumAnalyzer::~SpectrumAnalyzer( void )
 
 void SpectrumAnalyzer::preConfig( void )
 {
-  setText( "trace", traceNames() );
-  setToDefault( "trace" );
-  if ( Options::size( "trace" ) <= 1 )
-    addFlags( "trace", 16 );
+  Parameter &p = *find( "intrace" );
+  p.setText( traceNames() );
+  p.setToDefault();
+  if ( p.size() <= 1 )
+    p.addFlags( 16 );
   else
-    delFlags( "trace", 16 );
+    p.delFlags( 16 );
 
   lock();
   P.lock();
   if ( Decibel )
     P.setYLabel( "Power [dB]" );
   else
-    P.setYLabel( trace( Trace ).ident() + " [" + trace( Trace ).unit() + "]" );
+    P.setYLabel( trace( InTrace ).ident() + " [" + trace( InTrace ).unit() + "]" );
   P.unlock();
   unlock();
 
@@ -110,7 +111,7 @@ void SpectrumAnalyzer::preConfig( void )
 void SpectrumAnalyzer::notify( void )
 {
   SW.updateValues( OptWidget::changedFlag() );
-  Trace = traceIndex( text( "trace", 0 ) );
+  InTrace = index( "intrace" );
   Origin = index( "origin" );
   Offset = number( "offset" );
   Duration = number( "duration" );
@@ -138,10 +139,7 @@ void SpectrumAnalyzer::notify( void )
     P.setYRange( PMin, 0.0 );
   }
   else {
-    if ( Trace >= 0 && Trace < traces().size() )
-      P.setYLabel( trace( Trace ).ident() + " [" + trace( Trace ).unit() + "]" );
-    else
-      P.setYLabel( "Amplitude" );
+    P.setYLabel( trace( InTrace ).ident() + " [" + trace( InTrace ).unit() + "]" );
     P.setYRange( 0.0, Plot::AutoScale );
   }
   P.unlock();
@@ -154,23 +152,23 @@ void SpectrumAnalyzer::main( void )
 
   do {
 
-    if ( Trace < 0 || Trace >= traces().size() ) {
+    if ( InTrace < 0 || InTrace >= traces().size() ) {
       warning( "Trace does not exist!", 4.0 );
       return;
     }
 
-    int n = trace( Trace ).indices( Duration );
+    int n = trace( InTrace ).indices( Duration );
     int offsinx = 0;
     if ( Origin == 1 )
-      offsinx = trace( Trace ).index( signalTime() - Offset - Duration );
+      offsinx = trace( InTrace ).index( signalTime() - Offset - Duration );
     else if ( Origin == 2 )
-      offsinx = trace( Trace ).index( signalTime() + Offset );
+      offsinx = trace( InTrace ).index( signalTime() + Offset );
     else
-      offsinx = trace( Trace ).index( currentTime() - Offset - Duration );
-    if ( offsinx < trace( Trace ).minIndex() )
-      offsinx = trace( Trace ).minIndex();
-    if ( offsinx + n > trace( Trace ).currentIndex() )
-      n = trace( Trace ).currentIndex() - offsinx;
+      offsinx = trace( InTrace ).index( currentTime() - Offset - Duration );
+    if ( offsinx < trace( InTrace ).minIndex() )
+      offsinx = trace( InTrace ).minIndex();
+    if ( offsinx + n > trace( InTrace ).currentIndex() )
+      n = trace( InTrace ).currentIndex() - offsinx;
 
     if ( n < 64 ) {
       printlog( "Not enough data points (n=" + Str( n ) + ")!" );
@@ -195,9 +193,9 @@ void SpectrumAnalyzer::main( void )
 	continue;
     }
 
-    SampleDataD d( n, 0.0, trace( Trace ).sampleInterval() );
+    SampleDataD d( n, 0.0, trace( InTrace ).sampleInterval() );
     for ( int k=0; k<d.size(); k++ )
-      d[k] = trace( Trace )[ offsinx+k ];
+      d[k] = trace( InTrace )[ offsinx+k ];
     d -= mean( d );
 
     SampleDataD spec( SpecSize );

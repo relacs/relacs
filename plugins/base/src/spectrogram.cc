@@ -29,7 +29,7 @@ Spectrogram::Spectrogram( void )
   : RePro( "Spectrogram", "base", "Jan Benda", "1.0", "Feb 10, 2013" )
 {
   // add some options:
-  addSelection( "trace", "Input trace", "V-1" );
+  addSelection( "intrace", "Input trace", "V-1" );
   addNumber( "width", "Width of powerspectrum  window", 0.1, 0.0, 100.0, 0.01, "s", "ms" );
   addNumber( "step", "Temporal increment for powerspectrum window", 0.0, 0.0, 100.0, 0.1, "s", "ms" );
   addNumber( "tmax", "Maximum time to plot in spectrogram", 10.0, 0.0, 100.0, 0.1, "s" );
@@ -58,15 +58,15 @@ Spectrogram::Spectrogram( void )
 
 void Spectrogram::preConfig( void )
 {
-  setText( "trace", traceNames() );
-  setToDefault( "trace" );
+  setText( "intrace", traceNames() );
+  setToDefault( "intrace" );
 }
 
 
 int Spectrogram::main( void )
 {
   // get options:
-  int intrace = traceIndex( text( "trace", 0 ) );
+  int intrace = index( "intrace" );
   double width = number( "width" );
   double step = number( "step" );
   double duration = number( "duration" );
@@ -79,10 +79,6 @@ int Spectrogram::main( void )
   double  pmax = number( "pmax" );
   double  pmin = number( "pmin" );
 
-  if ( intrace < 0 || intrace >= traces().size() ) {
-    warning( "Trace " + Str( intrace ) + " does not exist!", 4.0 );
-    return Failed;
-  }
   double (*window)( int j, int n );
   switch ( win ) {
   case 0: window = bartlett; break;

@@ -176,16 +176,6 @@ void SingleStimulus::preConfig( void )
   }
 }
 
-  /*
-void SingleStimulus::readConfig( StrQueue &sq )
-{
-  for ( int k=0; k<sq.size(); k++ ) {
-    if ( sq[k].find( "outtrace" ) >= 0 )
-      Options::read( sq[k] );
-  }
-  RePro::readConfig( sq );
-}
-  */
 
 void SingleStimulus::notify( void )
 {
