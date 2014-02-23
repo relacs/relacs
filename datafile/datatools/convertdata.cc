@@ -456,8 +456,8 @@ int main( int argc, char *argv[] )
   if ( pdf ) {
     int r = system( string ( "pdflatex " + destfile ).c_str() );
     destfile.erase( destfile.size() - 4 );
-    unlink( string ( destfile + ".aux" ).c_str() );
-    unlink( string ( destfile + ".log" ).c_str() );
+    remove( string ( destfile + ".aux" ).c_str() );
+    remove( string ( destfile + ".log" ).c_str() );
     return r;
   }
 

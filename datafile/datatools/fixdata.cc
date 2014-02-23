@@ -53,7 +53,7 @@ void fixData( DataFile &sf )
       }
     }
 
-    int pageemptylines = prevemptylines;;
+    int pageemptylines = prevemptylines;
 
     // check for doubled meta data at the beginning of read meta data:
     int firstdoubled = sf.newLevels();

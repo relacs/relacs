@@ -657,7 +657,6 @@ void readData( DataFile &sf )
     if ( outformat.empty() )
       outformat = "mbocrzupUFkdn";
     bool linearlabel = false;
-    bool proplabel = false;
     bool rlabel = false;
     for ( int k=0; k<outformat.size(); k++ ) {
       switch ( outformat[k] ) {
@@ -681,7 +680,6 @@ void readData( DataFile &sf )
 	statskey.newSection( "proportionality" );
 	statskey.addNumber( "slope", yunit + "/" + xunit, "%10.4g" );
 	statskey.addNumber( "sd", yunit + "/" + xunit, "%10.4g" );
-	proplabel = true;
 	break;
       case 'c':
 	{
