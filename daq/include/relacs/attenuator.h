@@ -68,6 +68,7 @@ you can use the testAttenuate()-function.
 
 The mute()-function can be used to mute an output line
 and testMute() checks whether the output line can be muted.
+Alternatively, you can call attenuate() with \a decibel set to MuteAttenuationLevel.
 
 Possible return values of attenuate(), test() and mute() are:
 - \c 0: success
@@ -89,14 +90,14 @@ Attenuator device known to RELACS with the \c addAttenuator(
 ClassNameOfYourAttenuatorImplementation, PluginSetName ) macro.
 */
 
-  /*! The attenuation level for which the outputline is muted. */
-const double MuteAttenuationLevel = 1.0e37;
-
 
 class Attenuator : public Device
 {
 
 public:
+
+    /*! The attenuation level for which the outputline is muted. */
+  static const double MuteAttenuationLevel;
 
     /*! Constructs an Attenuator. */
   Attenuator( void );
@@ -125,7 +126,10 @@ public:
 
     /*! Set the attenuation level of the output line specified by its index \a di
         to \a decibel decibel. 
+	\a decibel can also be set to MuteAttenuationLevel for requesting 
+	to mute the attenuator.
         Returns the actually set level in \a decibel.
+	In case the attenuator was muted, MuteAttenuationLevel is returned in \a decibel.
 	If the requested attenuation level is too high or too low 
 	(Underflow or Overflow), then the maximum or minimum possible 
         attenuation level is set and returned in \a decibel.
@@ -145,7 +149,10 @@ public:
   virtual int attenuate( int di, double &decibel ) =0;
     /*! Tests setting the attenuation level of the output line
         specified by its index \a di to \a decibel decibel. 
+	\a decibel can also be set to MuteAttenuationLevel for requesting 
+	to mute the attenuator.
         Returns the level that would be set in \a decibel. 
+	In case the attenuator would be muted, MuteAttenuationLevel is returned in \a decibel.
 	If the requested attenuation level is too high or too low 
 	(Underflow or Overflow), then the maximum or minimum possible 
         attenuation level is returned in \a decibel.

@@ -412,16 +412,11 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     bool unipolar = false;
     if ( fabs(min) > fabs(max) && min >= 0.0 )
       unipolar = true;
-    bool extref = false;
     bool minislarger = false;
-    if ( max == OutData::ExtRef )
-      extref = true;
-    else {
-      // maximum value:
-      if ( ::fabs( min ) > max ) {
-	max = ::fabs( min );
-	minislarger = true;
-      }
+    // maximum value:
+    if ( ::fabs( min ) > max ) {
+      max = ::fabs( min );
+      minislarger = true;
     }
 
     // allocate gain factor:
@@ -436,6 +431,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
     if ( sigs[k].noLevel() ) {
+      // check for suitable range:
       if ( unipolar ) {
 	for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
 	  if ( unipolarRange( index ) >= maxvolt )
@@ -448,19 +444,17 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 	    break;
 	}
       }
-      if ( index < 0 ) {
-	if ( minislarger )
-	  sigs[k].addError( DaqError::Underflow );
-	else
-	  sigs[k].addError( DaqError::Overflow );
-      }
+      if ( index < 0 )
+	sigs[k].addError( minislarger ? DaqError::Underflow : DaqError::Overflow );
     }
     else {
+      // use largest range:
       index = 0;
       if ( unipolar && index >= (int)CAO->UnipolarRange.size() )
 	index = -1;
       if ( ! unipolar && index >= (int)CAO->BipolarRange.size() )
 	index = -1;
+      // signal must be within -1 and 1:
       if ( max > 1.0+1.0e-8 )
 	sigs[k].addError( DaqError::Overflow );
       else if ( min < -1.0-1.0e-8 )
@@ -475,48 +469,17 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 
     double maxboardvolt = unipolar ? CAO->UnipolarRange[index].max : CAO->BipolarRange[index].max;
     double minboardvolt = unipolar ? CAO->UnipolarRange[index].min : CAO->BipolarRange[index].min;
-
-    // external reference:
-    if ( sigs[k].noLevel() ) {
-      if ( ! extref ) {
-	if ( externalReference() < maxboardvolt ) {
-	  if ( maxvolt < externalReference() )
-	    extref = true;
-	}
-	else
-	  if ( maxboardvolt == -1.0 )
-	    extref = true;
-      }
-      if ( extref ) {
-	if ( externalReference() < 0.0 ) {
-	  sigs[k].addError( DaqError::InvalidReference );
-	  extref = false;
-	}
-	else {
-	  if ( externalReference() == 0.0 )
-	    maxboardvolt = 1.0;
-	  else
-	    maxboardvolt = externalReference();
-	  minboardvolt = unipolar ? 0.0 : -maxboardvolt;
-	  index = unipolar ? CAO->UnipolarExtRefRangeIndex 
-	    : CAO->BipolarExtRefRangeIndex;
-	}
-      }
-    }
-    else {
-      if ( extref && externalReference() < 0.0 ) {
-	sigs[k].addError( DaqError::InvalidReference );
-	extref = false;
-      }
-      if ( setscale )
-	sigs[k].multiplyScale( maxboardvolt );
-    }
+    if ( !sigs[k].noLevel() && setscale )
+      sigs[k].multiplyScale( maxboardvolt );
 
     int gainIndex = index;
+    // XXX Where the hack is the following used? Shouldn't we just use the plain index?
     if ( unipolar )
       gainIndex |= 1<<14;
+    /*
     if ( extref )
       gainIndex |= 1<<15;
+    */
 
     sigs[k].setGainIndex( gainIndex );
     sigs[k].setMinVoltage( minboardvolt );

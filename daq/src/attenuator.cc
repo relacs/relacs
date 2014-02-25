@@ -26,6 +26,9 @@ using namespace std;
 namespace relacs {
 
 
+const double Attenuator::MuteAttenuationLevel = -1.0e37;
+
+
 Attenuator::Attenuator( void )
   : Device( AttenuatorType )
 {

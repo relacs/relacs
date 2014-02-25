@@ -135,6 +135,11 @@ class Attenuate : public Device
 
 public:
 
+    /*! The attenuation level for which an outputline is muted. */
+  static const double MuteAttenuationLevel;
+    /*! The intensity for which an outputline is muted. */
+  static const double MuteIntensity;
+
     /*! Constructor. */
   Attenuate( void );
     /*! Construct Attenuate with device class \a deviceclass.  The
@@ -219,6 +224,8 @@ public:
 	for the names and the corresponding units and formats of
 	\a intensity and \a frequency.
 	The function decibel() is used to calculate the attenuation level.
+	This function might also define an \a intensity (in addition to MuteIntensity)
+	for which the attenuator is muted.
 	Since attenuators have a certain resolution, 
 	the actually set intensity may differ from the requested
 	intensity \a intensity.
@@ -300,7 +307,10 @@ public:
   int testMute( void );
 
     /*! Set the attenuation level directly to \a level decibel. 
+	\a level can also be set to MuteAttenuationLevel for requesting 
+	to mute the attenuator.
         Returns the actually set level in \a level.
+	In case the attenuator was muted, MuteAttenuationLevel is returned in \a level.
 	If the requested attenuation level is too high or too low 
 	(Underflow or Overflow), then the maximum or minimum possible 
         attenuation level is set and returned in \a level.
@@ -318,7 +328,10 @@ public:
     */
   int attenuate( double &level );
     /*! Tests setting the attenuation level directly to \a level decibel. 
+	\a level can also be set to MuteAttenuationLevel for requesting 
+	to mute the attenuator.
         Returns the level that would be set in \a level. 
+	In case the attenuator would be muted, MuteAttenuationLevel is returned in \a level.
 	If the requested attenuation level is too high or too low 
 	(Underflow or Overflow), then the maximum or minimum possible 
         attenuation level is returned in \a level.
@@ -424,7 +437,7 @@ public:
   Attenuator *attenuator( void );
     /*! Returns the attenuator device that is used by this Attenuate class. */
   const Attenuator *attenuator( void ) const;
-    /*! Returns \c true if not attenuator is actually used. */
+    /*! Returns \c true if no attenuator is actually used. */
   bool noAttenuator( void ) const;
 
     /*! Return code indicating that the device driver is not opened. */
@@ -461,6 +474,10 @@ protected:
 	an attenuation level \a db for the attenuator.
 	This function is used by write() to set the attenuator
 	to the requested intensity.
+	The implementation of this function must set
+	\a db to MuteAttenuationLevel in case \a intensity equals MuteIntensity.
+	For certain other values of \a intensity \a db might be also set to
+	MuteAttenuationLevel for muting the attenuator.
 	If the computation of \a db fails, \a db should be set to a
         meaningful value.
 	\return
@@ -482,10 +499,12 @@ protected:
   virtual int decibel( double intensity, double frequency, double &db ) const =0;
     /*! Transform the attenuation level \a decibel
         for the carrier frequency \a frequency of the signal into
-        the intesity \a intens.
+        the intensity \a intens.
 	This function should be the inverse function of decibel()
 	and is used by write() to return the actually set
 	intensity from the set attenuation level.
+	If the attenuator was muted (\a decibel equals MuteAttenuationLevel),
+	\a intens is set to MuteIntensity.
 	\sa write(), testWrite(), decibel(),
 	intensityName(), intensityUnit(), intensityFormat(),
 	frequencyName(), frequencyUnit(), frequencyFormat()

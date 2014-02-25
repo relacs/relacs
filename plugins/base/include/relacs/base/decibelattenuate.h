@@ -80,11 +80,14 @@ protected:
 
     /*! Transform the requested intensity \a intensity
         for the carrier frequency \a frequency of the signal into
-        \a db decibel which are ued to set the attenuation level. */
+        \a db decibel which are used to set the attenuation level.
+	If \a intensity is set to MuteIntensity, the attenuator is muted. */
   int decibel( double intensity, double frequency, double &db ) const;
     /*! Transform the attenuation level \a decibel
         for the carrier frequency \a frequency of the signal into
-        the intesity \a intens. 
+        the intensity \a intens.
+	If \a decibel is set to MuteAttenuationLevel, then
+	MuteIntensity is returned in \a intens.
         This is the inverse function of decibel(). */
   void intensity( double &intens, double frequency, double decibel ) const;
 

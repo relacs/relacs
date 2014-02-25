@@ -78,20 +78,20 @@ class OutData : public SampleData< float >, public DaqError
  public:
 
     /*! Value for intensity requesting to mute the attenuator. */
-  static const double MuteIntensity = -1.0e37;
+  static const double MuteIntensity;
     /*! Default value for Intensity indicating that no attenuator is used. */
-  static const double NoIntensity = -2.0e37;
+  static const double NoIntensity;
 
     /*! Default value fur attenuator level indicating that no attenuator is used. */
-  static const double NoLevel = -2.0e37;
+  static const double NoLevel;
 
     /*! Indicates that the minimum or maximum value of the signal trace
         should be used for setting the appropriate gain on the daq board.
         \sa requestedMin(), requestedMax(), request() */
-  static const double AutoRange = -2.0e300;
+  static const double AutoRange;
     /*! Indicates that the external reference should be used.
         \sa requestedMin(), requestedMax(), request() */
-  static const double ExtRef = -1.0e300;
+  static const double ExtRef;
   
     /*! Create an empty signal. */
   OutData( void );
@@ -450,7 +450,7 @@ class OutData : public SampleData< float >, public DaqError
         If MuteIntensity is returned, the attenuator is muted.
 	If NoIntensity is returned, no attenuator is connected
 	to the output channel.
-        \sa setIntensity(), setNoIntensity(), noIntensity(), level() */
+        \sa setIntensity(), setNoIntensity(), noIntensity(), level(), muted() */
   double intensity( void ) const;
     /*! Set output peak intensity to \a intensity.
         The intensity is used in conjunction with the carrier frequency
@@ -461,7 +461,7 @@ class OutData : public SampleData< float >, public DaqError
         If no such hardware is used,
         then the intensity as well the carrier frequency settings 
 	have no effect.
-        \sa setCarrierFreq(), intensity(), setNoIntensity(), noIntensity(), setLevel() */
+        \sa mute(), setCarrierFreq(), intensity(), setNoIntensity(), noIntensity(), setLevel() */
   void setIntensity( double intensity );
     /*! Set the intensity to its default value, indicating that
         the intensity is not used for computing the output signal.
@@ -473,8 +473,10 @@ class OutData : public SampleData< float >, public DaqError
   bool noIntensity( void ) const;
     /*! Request to mute the attenuator connected to the output channel. 
         Same as setIntensity( MuteIntensity ). 
-        \sa intensity(), setIntensity(), setNoIntensity() */
+        \sa muted(), intensity(), setIntensity(), setNoIntensity() */
   void mute( void );
+    /*! Returns \c true if attenuator should be muted. \sa mute(), setIntensity() */
+  bool muted( void ) const;
     /*! Carrier frequency of the signal in Hertz. */
   double carrierFreq( void ) const;
     /*! Set carrier frequency of the signal to \a carrierfreq Hertz.

@@ -45,8 +45,6 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
-  UnipolarExtRefRangeIndex = -1;
-  BipolarExtRefRangeIndex = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   Calibration = 0;
@@ -67,8 +65,6 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
-  UnipolarExtRefRangeIndex = -1;
-  BipolarExtRefRangeIndex = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   pthread_mutex_init( &Mutex, NULL );
   open( device, opts );
@@ -170,31 +166,41 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
     free( calibpath );
   }
 
+  // external reference:
+  double extr = opts.number( "extref", -1.0, "V" );
+  setExternalReference( extr );
+
   // initialize ranges:
   UnipolarRange.clear();
   BipolarRange.clear();
   UnipolarRangeIndex.clear();
   BipolarRangeIndex.clear();
-  UnipolarExtRefRangeIndex = -1;
-  BipolarExtRefRangeIndex = -1;
   int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  
   for ( int i = 0; i < nRanges; i++ ) {
     comedi_range *range = comedi_get_range( DeviceP, SubDevice, 0, i );
     if ( range->min < 0.0 ) {
-      if ( range->unit & RF_EXTERNAL )
-	BipolarExtRefRangeIndex = i;
-      else {	
-	BipolarRange.push_back( *range );
-	BipolarRangeIndex.push_back( i );
+      if ( range->unit & RF_EXTERNAL ) {
+	if ( extr > 0.0 ) {
+	  range->max = extr;
+	  range->min = -extr;
+	}
+	else
+	  continue;
       }
+      BipolarRange.push_back( *range );
+      BipolarRangeIndex.push_back( i );
     }
     else {
-      if ( range->unit & RF_EXTERNAL )
-	UnipolarExtRefRangeIndex = i;
-      else {	
-	UnipolarRange.push_back( *range );
-	UnipolarRangeIndex.push_back( i );
+      if ( range->unit & RF_EXTERNAL ) {
+	if ( extr > 0.0 ) {
+	  range->max = extr;
+	  range->min = 0.0;
+	}
+	else
+	  continue;
       }
+      UnipolarRange.push_back( *range );
+      UnipolarRangeIndex.push_back( i );
     }
   }
   // bubble-sorting Uni/BipolarRange according to Uni/BipolarRange.max:
@@ -222,10 +228,6 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
       }
     }
   }
-
-  // external reference:
-  double extr = opts.number( "extref", -1.0, "V" );
-  setExternalReference( extr );
 
   // get size of datatype for sample values:
   LongSampleType = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
@@ -490,16 +492,11 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     bool unipolar = false;
     if ( fabs(min) > fabs(max) && min >= 0.0 )
       unipolar = true;
-    bool extref = false;
     bool minislarger = false;
-    if ( max == OutData::ExtRef )
-      extref = true;
-    else {
-      // maximum value:
-      if ( ::fabs( min ) > max ) {
-	max = ::fabs( min );
-	minislarger = true;
-      }
+    // maximum value:
+    if ( ::fabs( min ) > max ) {
+      max = ::fabs( min );
+      minislarger = true;
     }
 
     // allocate gain factor:
@@ -514,6 +511,7 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
     if ( sigs[k].noLevel() ) {
+      // check for suitable range:
       if ( unipolar ) {
 	for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
 	  if ( unipolarRange( index ) >= maxvolt )
@@ -526,19 +524,17 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 	    break;
 	}
       }
-      if ( index < 0 ) {
-	if ( minislarger )
-	  sigs[k].addError( DaqError::Underflow );
-	else
-	  sigs[k].addError( DaqError::Overflow );
-      }
+      if ( index < 0 )
+	sigs[k].addError( minislarger ? DaqError::Underflow : DaqError::Overflow );
     }
     else {
+      // use largest range:
       index = 0;
       if ( unipolar && index >= (int)UnipolarRange.size() )
 	index = -1;
       if ( ! unipolar && index >= (int)BipolarRange.size() )
 	index = -1;
+      // signal must be within -1 and 1:
       if ( max > 1.0+1.0e-8 )
 	sigs[k].addError( DaqError::Overflow );
       else if ( min < -1.0-1.0e-8 )
@@ -554,41 +550,8 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     double maxboardvolt = unipolar ? UnipolarRange[index].max : BipolarRange[index].max;
     double minboardvolt = unipolar ? UnipolarRange[index].min : BipolarRange[index].min;
 
-    // external reference:
-    if ( sigs[k].noLevel() ) {
-      if ( ! extref ) {
-	if ( externalReference() < maxboardvolt ) {
-	  if ( maxvolt < externalReference() )
-	    extref = true;
-	}
-	else
-	  if ( maxboardvolt == -1.0 )
-	    extref = true;
-      }
-      if ( extref ) {
-	if ( externalReference() < 0.0 ) {
-	  sigs[k].addError( DaqError::InvalidReference );
-	  extref = false;
-	}
-	else {
-	  if ( externalReference() == 0.0 )
-	    maxboardvolt = 1.0;
-	  else
-	    maxboardvolt = externalReference();
-	  minboardvolt = unipolar ? 0.0 : -maxboardvolt;
-	  index = unipolar ? UnipolarExtRefRangeIndex 
-	    :  BipolarExtRefRangeIndex;
-	}
-      }
-    }
-    else {
-      if ( extref && externalReference() < 0.0 ) {
-	sigs[k].addError( DaqError::InvalidReference );
-	extref = false;
-      }
-      if ( setscale )
-	sigs[k].multiplyScale( maxboardvolt );
-    }
+    if ( !sigs[k].noLevel() && setscale )
+      sigs[k].multiplyScale( maxboardvolt );
 
     if ( softcal && Calibration != 0 )
       comedi_get_softcal_converter( SubDevice, sigs[k].channel(),
@@ -600,10 +563,13 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 				    COMEDI_FROM_PHYSICAL, gainp );
 
     int gainIndex = index;
+    // XXX Where the hack is the following used? Shouldn't we just use the plain index?
     if ( unipolar )
       gainIndex |= 1<<14;
+    /*
     if ( extref )
       gainIndex |= 1<<15;
+    */
 
     sigs[k].setGainIndex( gainIndex );
     sigs[k].setMinVoltage( minboardvolt );

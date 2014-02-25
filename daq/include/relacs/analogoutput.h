@@ -285,6 +285,7 @@ private:
 
     /*! The type of the implementation of AnalogOutput. */
   int AnalogOutputSubType;
+    /*! Value of the external reference in Volt. */
   double ExternalReference;
 
 };

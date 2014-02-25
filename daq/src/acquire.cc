@@ -1704,20 +1704,17 @@ int Acquire::setupWrite( OutData &signal )
 	int ra = Att[a].Att->attenuate( level );
 	signal.setLevel( level );
 	signal.addAttError( ra );
+	if ( level == Attenuate::MuteAttenuationLevel )
+	  fac = 0.0;
       }
       else {
 	double intens = signal.intensity();
-	int ra = 0;
-	if ( intens == OutData::MuteIntensity ) {
-	  ra = Att[a].Att->mute();
-	  fac = 0.0;
-	}
-	else {
-	  ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
-	  signal.setIntensity( intens );
-	  signal.setLevel( level );
-	}
+	int ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
+	signal.setIntensity( intens );
+	signal.setLevel( level );
 	signal.addAttError( ra );
+	if ( intens == OutData::MuteIntensity || level == Attenuate::MuteAttenuationLevel )
+	  fac = 0.0;
       }
       if ( Att[a].Att->noAttenuator() ) {
 	// without attenuator we need to scale the signal!
@@ -1931,24 +1928,24 @@ int Acquire::setupWrite( OutList &signal )
 	    level = AO[i].Signals[k].level();
 	    int ra = Att[a].Att->attenuate( level );
 	    AO[i].Signals[k].setLevel( level );
-	    AO[i].Signals[k].addAttError( ra );
-	  }
-	  else {
-	    double intens = AO[i].Signals[k].intensity();
-	    int ra = 0;
-	    if ( intens == OutData::MuteIntensity ) {
-	      ra = Att[a].Att->mute();
-	      fac = 0.0;
-	    }
-	    else {
-	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
-	      AO[i].Signals[k].setIntensity( intens );
-	      AO[i].Signals[k].setLevel( level );
-	    }
 	    if ( ra != 0 ) {
 	      AO[i].Signals[k].addAttError( ra );
 	      success = false;
 	    }
+	    if ( level == Attenuate::MuteAttenuationLevel )
+	      fac = 0.0;
+	  }
+	  else {
+	    double intens = AO[i].Signals[k].intensity();
+	    int ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
+	    AO[i].Signals[k].setIntensity( intens );
+	    AO[i].Signals[k].setLevel( level );
+	    if ( ra != 0 ) {
+	      AO[i].Signals[k].addAttError( ra );
+	      success = false;
+	    }
+	    if ( intens == OutData::MuteIntensity || level == Attenuate::MuteAttenuationLevel )
+	      fac = 0.0;
 	  }
 	  if ( Att[a].Att->noAttenuator() ) {
 	    // without attenuator we need to scale the signal!
@@ -2157,20 +2154,17 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
 	int ra = Att[a].Att->attenuate( level );
 	signal.setLevel( level );
 	signal.addAttError( ra );
+	if ( level == Attenuate::MuteAttenuationLevel )
+	  fac = 0.0;
       }
       else {
 	double intens = signal.intensity();
-	int ra = 0;
-	if ( intens == OutData::MuteIntensity ) {
-	  ra = Att[a].Att->mute();
-	  fac = 0.0;
-	}
-	else {
-	  ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
-	  signal.setIntensity( intens );
-	  signal.setLevel( level );
-	}
+	int ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
+	signal.setIntensity( intens );
+	signal.setLevel( level );
 	signal.addAttError( ra );
+	if ( intens == OutData::MuteIntensity || level == Attenuate::MuteAttenuationLevel )
+	  fac = 0.0;
       }
       if ( Att[a].Att->noAttenuator() ) {
 	// without attenuator we need to scale the signal!
@@ -2348,24 +2342,24 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
 	    level = AO[i].Signals[k].level();
 	    int ra = Att[a].Att->attenuate( level );
 	    AO[i].Signals[k].setLevel( level );
-	    AO[i].Signals[k].addAttError( ra );
-	  }
-	  else {
-	    double intens = AO[i].Signals[k].intensity();
-	    int ra = 0;
-	    if ( intens == OutData::MuteIntensity ) {
-	      ra = Att[a].Att->mute();
-	      fac = 0.0;
-	    }
-	    else {
-	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
-	      AO[i].Signals[k].setIntensity( intens );
-	      AO[i].Signals[k].setLevel( level );
-	    }
 	    if ( ra != 0 ) {
 	      AO[i].Signals[k].addAttError( ra );
 	      success = false;
 	    }
+	    if ( level == Attenuate::MuteAttenuationLevel )
+	      fac = 0.0;
+	  }
+	  else {
+	    double intens = AO[i].Signals[k].intensity();
+	    int ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
+	    AO[i].Signals[k].setIntensity( intens );
+	    AO[i].Signals[k].setLevel( level );
+	    if ( ra != 0 ) {
+	      AO[i].Signals[k].addAttError( ra );
+	      success = false;
+	    }
+	    if ( intens == OutData::MuteIntensity || level == Attenuate::MuteAttenuationLevel )
+	      fac = 0.0;
 	  }
 	  if ( Att[a].Att->noAttenuator() ) {
 	    // without attenuator we need to scale the signal!

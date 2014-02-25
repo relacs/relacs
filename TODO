@@ -3,8 +3,6 @@ New InData threading:
   Each AnalogInput implementation should take care about its own locking
   and probably also thread using pthreads
   Put the AIMutex into the device and simulate plugins!!!
-- Fix up Acquire::setupWrite: If attenuatur, level() needs definitely to be set. Handle the Mute cases.
-- Fix and test the external reference for analog output
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.
 - Can AQ->startWrite()/restartRead() made more independent from all the locks?
@@ -71,6 +69,7 @@ Robot:
 
 Acquire:
 - check write( OutList ) functions. They should throw an error if sigs.size() == 0!
+- What about the outtrace delays? They should be used! And StimulusDelay should set them!
 - levels(), minLevel() and other Attenuate properties should all go
   into Attenuate in case of NoAttenuator!
 - How to make sure the right Attenuate is used for a given RePro?

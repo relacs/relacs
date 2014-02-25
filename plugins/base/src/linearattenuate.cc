@@ -51,7 +51,7 @@ LinearAttenuate::~LinearAttenuate( void )
 int LinearAttenuate::decibel( double intensity, double frequency, double &db ) const
 {
   errno = 0;
-  if ( intensity == 0.0 )
+  if ( intensity == MuteIntensity )
     db = MuteAttenuationLevel;
   else
     db = -20.0*::log10( intensity*Gain+Offset );
@@ -69,7 +69,7 @@ void LinearAttenuate::intensity( double &intens, double frequency,
   if ( decibel != MuteAttenuationLevel )
     intens = ( ::pow( 10.0, -decibel/20.0 ) - Offset )/ Gain;
   else
-    intens = 0.0;
+    intens = MuteIntensity;
 }
 
 

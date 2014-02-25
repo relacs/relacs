@@ -33,6 +33,12 @@ using namespace std;
 namespace relacs {
 
 
+const double OutData::MuteIntensity = Attenuate::MuteIntensity;
+const double OutData::NoIntensity = -2.0e37;
+const double OutData::NoLevel = -2.0e37;
+const double OutData::AutoRange = -2.0e300;
+const double OutData::ExtRef = -1.0e300;
+
 double OutData::DefaultMinSampleInterval = 0.001;
 const Acquire *OutData::A = 0;
 
@@ -505,6 +511,12 @@ bool OutData::noIntensity( void ) const
 void OutData::mute( void )
 {
   Intensity = MuteIntensity;
+}
+
+
+bool OutData::muted( void ) const
+{
+  return ( Level == MuteIntensity );
 }
 
 

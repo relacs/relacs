@@ -67,6 +67,18 @@ DAQFlexAnalogOutput::~DAQFlexAnalogOutput( void )
 }
 
 
+void DAQFlexAnalogOutput::lock( void ) const
+{
+  pthread_mutex_lock( &Mutex );
+}
+
+
+void DAQFlexAnalogOutput::unlock( void ) const
+{
+  pthread_mutex_unlock( &Mutex );
+}
+
+
 int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
 {
   if ( isOpen() )
@@ -187,6 +199,8 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
   const double maxboardvolt = 10.0;  // XXX is this really the same for all boards?
 
   for ( int k=0; k<sigs.size(); k++ ) {
+
+    // XXX what about output gain settings?
 
     double minval = sigs[k].minValue();
     double maxval = sigs[k].maxValue();
@@ -344,11 +358,14 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=" + Str( sigs.back().channel() ) );
   for( int k = 0; k < sigs.size(); k++ ) {
 
+    // we use only the largest range:
     sigs[k].setGainIndex( 0 );
     sigs[k].setMinVoltage( -BipolarRange[0] );
     sigs[k].setMaxVoltage( BipolarRange[0] );
     if ( ! sigs[k].noLevel() )
       sigs[k].multiplyScale( BipolarRange[0] );
+
+    // XXX Check for signal overflow/underflow!
 
     // allocate gain factor:
     char *gaindata = sigs[k].gainData();
@@ -538,11 +555,6 @@ int DAQFlexAnalogOutput::fillWriteBuffer( void )
     // convert data into buffer:
     int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
-  }
-
-  if ( !isOpen() ) {
-    Sigs.setError( DaqError::DeviceNotOpen );
-    return -1;
   }
 
   ErrorState = 0;
