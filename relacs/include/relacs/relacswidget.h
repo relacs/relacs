@@ -152,11 +152,6 @@ public:
     /*! Returns the mutex used for locking all the data traces and events. */
   QReadWriteLock &dataMutex( void ) { return DataMutex; };
 
-    /*! Locks the mutex of output signals. */
-  void lockSignals( void ) { SignalMutex.lock(); };
-    /*! Unlocks the mutex of output signals. */
-  void unlockSignals( void ) { SignalMutex.unlock(); };
-
     /*! Wakes up all waitconditions. */
   void wakeAll( void );
 
@@ -413,7 +408,6 @@ private:
   QReadWriteLock AIMutex;
     /*! Controls the primary input data buffer. */
   QReadWriteLock DataMutex;
-  QMutex SignalMutex;
   bool RunData;
   QMutex RunDataMutex;
 

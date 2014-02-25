@@ -119,13 +119,9 @@ void WriteThread::run( void )
   bool rd = true;
 
   do {
-    RW->lockSignals();
     int r = RW->AQ->writeData();
-    RW->unlockSignals();
     if ( r < 0 ) {
-      RW->lockSignals();
       RW->AQ->stopWrite();
-      RW->unlockSignals();
       RW->printlog( "! error in transferring analog output data. Stop analog output." );
       // error message:
       QCoreApplication::postEvent( RW, new QEvent( QEvent::Type( QEvent::User+3 ) ) );

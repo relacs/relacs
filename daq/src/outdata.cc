@@ -704,7 +704,7 @@ void OutData::setUnit( double scale, const string &unit )
 
 double OutData::minValue( void ) const
 {
-  if ( noIntensity() && noLevel() )
+  if ( noLevel() )
     return MinVoltage/Scale;
   else
     return -1.0;
@@ -713,7 +713,7 @@ double OutData::minValue( void ) const
 
 double OutData::maxValue( void ) const
 {
-  if ( noIntensity() && noLevel() )
+  if ( noLevel() )
     return MaxVoltage/Scale;
   else
     return 1.0;

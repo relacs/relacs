@@ -1,9 +1,15 @@
 New InData threading:
 - Check and further simplify RELACSWidget data locking
-  Each AnalogInput/Output implementation should take care about its own locking
+  Each AnalogInput implementation should take care about its own locking
   and probably also thread using pthreads
-  Put the AIMutex and the SignalMutex into the device and simulate plugins!!!
+  Put the AIMutex into the device and simulate plugins!!!
+- Fix up Acquire::setupWrite: If attenuatur, level() needs definitely to be set. Handle the Mute cases.
+- Fix and test the external reference for analog output
+- Rethink activateGains(): DynClamp can handle this without restarting and 
+  by passing a flag through the FIFO.
 - Can AQ->startWrite()/restartRead() made more independent from all the locks?
+- Filter/Detector influences reading dramatically (EODDetector in efield with comedi on 64kB) -
+  should be made independent.
 - Filter buffersize should just be the same as the one of the input trace!
 - Replace the source() flag by a sourceTrace and sourceEvent index
   Remove the source mapping functions from RELACSPlugin and FIlterDetectors

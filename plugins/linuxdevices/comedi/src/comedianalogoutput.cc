@@ -53,6 +53,7 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  pthread_mutex_init( &Mutex, NULL );
 }
 
 
@@ -69,6 +70,7 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   UnipolarExtRefRangeIndex = -1;
   BipolarExtRefRangeIndex = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
+  pthread_mutex_init( &Mutex, NULL );
   open( device, opts );
   IsPrepared = false;
   Calibration = 0;
@@ -81,6 +83,19 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
 ComediAnalogOutput::~ComediAnalogOutput( void ) 
 {
   close();
+  pthread_mutex_destroy( &Mutex );
+}
+
+
+void ComediAnalogOutput::lock( void ) const
+{
+  pthread_mutex_lock( &Mutex );
+}
+
+
+void ComediAnalogOutput::unlock( void ) const
+{
+  pthread_mutex_unlock( &Mutex );
 }
 
 
@@ -248,7 +263,10 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
 
 bool ComediAnalogOutput::isOpen( void ) const 
 { 
-  return ( DeviceP != NULL );
+  lock();
+  bool o = ( DeviceP != NULL );
+  unlock();
+  return o;
 }
 
 
@@ -340,6 +358,10 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
   if ( sigs.size() == 0 )
     return -1;
 
+  // not open:
+  if ( !isOpen() )
+    return -1;
+
   // setup channel ranges:
   unsigned int *chanlist = new unsigned int[512];
   memset( chanlist, 0, sizeof( chanlist ) );
@@ -348,6 +370,7 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
   if ( sigs.failed() )
     return -1;
 
+  lock();
   for ( int k=0; k<sigs.size(); k++ ) {
 
     // get range values:
@@ -375,6 +398,7 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
     }
 
   }
+  unlock();
 
   return ( sigs.success() ? 0 : -1 );
 }
@@ -444,7 +468,8 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
   for ( int k=0; k<sigs.size() && k<maxchanlist; k++ ) {
 
     // check channel:
-    if ( sigs[k].channel() < 0 || sigs[k].channel() >= channels() ) {
+    int maxchannels = comedi_get_n_channels( DeviceP, SubDevice );
+    if ( sigs[k].channel() < 0 || sigs[k].channel() >= maxchannels ) {
       sigs[k].addError( DaqError::InvalidChannel );
       return;
     }
@@ -488,7 +513,7 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     // set range:
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
-    if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
+    if ( sigs[k].noLevel() ) {
       if ( unipolar ) {
 	for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
 	  if ( unipolarRange( index ) >= maxvolt )
@@ -530,7 +555,7 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     double minboardvolt = unipolar ? UnipolarRange[index].min : BipolarRange[index].min;
 
     // external reference:
-    if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
+    if ( sigs[k].noLevel() ) {
       if ( ! extref ) {
 	if ( externalReference() < maxboardvolt ) {
 	  if ( maxvolt < externalReference() )
@@ -597,11 +622,6 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 
 int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setscale )
 {
-  if ( !isOpen() ) {
-    sigs.addError( DaqError::DeviceNotOpen );
-    return -1;
-  }
-
   // channels:
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
@@ -774,6 +794,11 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
 
 int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 {
+  if ( !isOpen() ) {
+    sigs.addError( DaqError::DeviceNotOpen );
+    return -1;
+  }
+
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
   int retVal = setupCommand( sigs, cmd, false );
@@ -792,14 +817,18 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 
 int ComediAnalogOutput::prepareWrite( OutList &sigs )
 {
-  if ( !isOpen() )
+  if ( !isOpen() ) {
+    sigs.addError( DaqError::DeviceNotOpen );
     return -1;
+  }
 
   reset();
 
   // no signals:
   if ( sigs.size() == 0 )
     return -1;
+
+  lock();
 
   // copy and sort signal pointers:
   OutList ol;
@@ -812,8 +841,10 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     ol[k].append( 0.0, 2048 );
   */
 
-  if ( setupCommand( ol, Cmd, true ) < 0 )
+  if ( setupCommand( ol, Cmd, true ) < 0 ) {
+    unlock();
     return -1;
+  }
 
   // apply calibration:
   if ( Calibration != 0 ) {
@@ -829,8 +860,10 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
   IsPrepared = ol.success();
 
-  if ( ! ol.success() )
+  if ( ! ol.success() ) {
+    unlock();
     return -1;
+  }
 
   int delayinx = ol[0].indices( ol[0].delay() );
   for ( int k=0; k<ol.size(); k++ )
@@ -844,8 +877,10 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
   setSettings( ol, BufferSize );
 
-  if ( ! ol.success() )
+  if ( ! ol.success() ) {
+    unlock();
     return -1;
+  }
 
   Sigs = ol;
   if ( Buffer != 0 ) { // should not be necessary!
@@ -857,6 +892,8 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     NBuffer = 0;
   }
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+
+  unlock();
 
   return 0;
 }
@@ -893,8 +930,11 @@ int ComediAnalogOutput::startWrite( void )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
 
+  lock();
+
   if ( !prepared() || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
+    unlock();
     return -1;
   }
 
@@ -937,17 +977,23 @@ int ComediAnalogOutput::startWrite( void )
   }
   delete [] insnlist.insns;
   
+  unlock();
+
   return success ? ( finished ? 0 : 1 ) : -1;
 }
 
 
 int ComediAnalogOutput::writeData( void )
 {
-  if ( Sigs.empty() )
+  lock();
+  if ( Sigs.empty() ) {
+    unlock();
     return -1;
+  }
 
   // device stopped?
-  if ( !running() ) {
+  if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 ) { 
+    // not running anymore.
     if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
       ErrorState = 1;
       Sigs.addError( DaqError::OverflowUnderrun );
@@ -957,16 +1003,24 @@ int ComediAnalogOutput::writeData( void )
 			deviceFile() + " is not running and not busy!" );
       cerr << "ComediAnalogOutput::writeData: device is not running and not busy! comedi_strerror: " << comedi_strerror( comedi_errno() ) << '\n';
     }
+    unlock();
     return -1;
   }
 
-  return fillWriteBuffer();
+  int r = fillWriteBuffer();
+
+  unlock();
+  return r;
 }
 
 
 int ComediAnalogOutput::reset( void ) 
 { 
   //  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
+
+  bool o = isOpen();
+
+  lock();
 
   Sigs.clear();
   if ( Buffer != 0 )
@@ -975,11 +1029,15 @@ int ComediAnalogOutput::reset( void )
   BufferSize = 0;
   NBuffer = 0;
 
-  if ( !isOpen() )
+  if ( !o ) {
+    unlock();
     return NotOpen;
+  }
 
-  if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
+  if ( comedi_cancel( DeviceP, SubDevice ) < 0 ) {
+    unlock();
     return WriteError;
+  }
 
   // clear buffers?
   // by closing and reopening comedi: XXX This closes the whole device, not only the subdevice!
@@ -992,25 +1050,32 @@ int ComediAnalogOutput::reset( void )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
 
+  unlock();
+
   return 0;
 }
 
 
 bool ComediAnalogOutput::running( void ) const
 {   
-  return ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
+  lock();
+  bool r = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
+  unlock();
+  return r;
 }
 
 
 int ComediAnalogOutput::error( void ) const
 {
-  return ErrorState;
+  lock();
+  int e = ErrorState;
+  unlock();
   /*
     0: ok
     1: OverflowUnderrun
     2: Unknown (device error)
   */
-
+  return e;
 }
 
 
@@ -1031,11 +1096,6 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 
 int ComediAnalogOutput::fillWriteBuffer( void )
 {
-  if ( !isOpen() ) {
-    Sigs.setError( DaqError::DeviceNotOpen );
-    return -1;
-  }
-
   if ( Sigs[0].deviceWriting() ) {
     // convert data into buffer:
     int bytesConverted = 0;
@@ -1110,7 +1170,7 @@ int ComediAnalogOutput::fillWriteBuffer( void )
 
 int ComediAnalogOutput::comediSubdevice( void ) const
 {
-  if ( !isOpen() )
+  if ( DeviceP == NULL )
     return -1;
   return SubDevice;
 }
@@ -1118,7 +1178,7 @@ int ComediAnalogOutput::comediSubdevice( void ) const
 
 int ComediAnalogOutput::bufferSize( void ) const
 {
-  if( !isOpen() )
+  if ( DeviceP == NULL )
     return -1;
   return comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
 }

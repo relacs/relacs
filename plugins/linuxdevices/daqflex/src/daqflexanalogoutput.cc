@@ -41,6 +41,7 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  pthread_mutex_init( &Mutex, NULL );
 }
 
 
@@ -54,6 +55,7 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  pthread_mutex_init( &Mutex, NULL );
   open( device, opts );
 }
 
@@ -61,6 +63,7 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
 DAQFlexAnalogOutput::~DAQFlexAnalogOutput( void )
 {
   close();
+  pthread_mutex_destroy( &Mutex );
 }
 
 
@@ -108,7 +111,10 @@ int DAQFlexAnalogOutput::open( Device &device, const Options &opts )
 
 bool DAQFlexAnalogOutput::isOpen( void ) const
 {
-  return ( DAQFlexDevice != NULL && DAQFlexDevice->isOpen() );
+  lock();
+  bool o = ( DAQFlexDevice != NULL && DAQFlexDevice->isOpen() );
+  unlock();
+  return o;
 }
 
 
@@ -176,6 +182,8 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
   if ( sigs.size() == 0 )
     return -1;
 
+  lock();
+
   const double maxboardvolt = 10.0;  // XXX is this really the same for all boards?
 
   for ( int k=0; k<sigs.size(); k++ ) {
@@ -183,7 +191,7 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     double minval = sigs[k].minValue();
     double maxval = sigs[k].maxValue();
     double scale = sigs[k].scale();
-    if ( ! sigs[k].noIntensity() || ! sigs[k].noLevel() )
+    if ( ! sigs[k].noLevel() )
       scale *= maxboardvolt;
 
     // apply range:
@@ -202,6 +210,8 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     //      sigs[k].addErrorStr( "DAQFlex direct write failed" );
 
   }
+
+  unlock();
 
   return ( sigs.success() ? 0 : -1 );
 }
@@ -288,6 +298,8 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   if ( !isOpen() )
     return -1;
 
+  lock();
+
   if ( Buffer != 0 ) { // should not be necessary!
     delete [] Buffer;
     Buffer = 0;
@@ -297,11 +309,16 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     cerr << "DAQFlexAnalogOutput::prepareWrite() warning: NBuffer=" << NBuffer << " is not zero!\n";
     NBuffer = 0;
   }
+
+  unlock();
+
   reset();
 
   // no signals:
   if ( sigs.size() == 0 )
     return -1;
+
+  lock();
 
   /*
   // clear out board buffer.
@@ -330,7 +347,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     sigs[k].setGainIndex( 0 );
     sigs[k].setMinVoltage( -BipolarRange[0] );
     sigs[k].setMaxVoltage( BipolarRange[0] );
-    if ( ! sigs[k].noIntensity() || ! sigs[k].noLevel() )
+    if ( ! sigs[k].noLevel() )
       sigs[k].multiplyScale( BipolarRange[0] );
 
     // allocate gain factor:
@@ -354,8 +371,10 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
   }
 
-  if ( ! ol.success() )
+  if ( ! ol.success() ) {
+    unlock();
     return -1;
+  }
 
   int delayinx = ol[0].indices( ol[0].delay() );
   for ( int k=0; k<ol.size(); k++ )
@@ -390,8 +409,10 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
   setSettings( ol, BufferSize );
 
-  if ( ! ol.success() )
+  if ( ! ol.success() ) {
+    unlock();
     return -1;
+  }
 
   Sigs = ol;
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
@@ -400,10 +421,14 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   int r = fillWriteBuffer();
   IsPrepared = ol.success();
 
-  if ( r < 0 )
+  if ( r < 0 ) {
+    unlock();
     return -1;
+  }
 
   NoMoreData = ( r == 0 );
+
+  unlock();
 
   return 0;
 }
@@ -411,34 +436,51 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
 int DAQFlexAnalogOutput::startWrite( void )
 {
+  lock();
+
   if ( !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
+    unlock();
     return -1;
   }
   DAQFlexDevice->sendMessage( "AOSCAN:START" );
-  return NoMoreData ? 0 : 1;
+  int r = NoMoreData ? 0 : 1;
+  unlock();
+  return r;
 }
 
 
 int DAQFlexAnalogOutput::writeData( void )
 {
-  if ( Sigs.empty() )
+  lock();
+  if ( Sigs.empty() ) {
+    unlock();
     return -1;
+  }
 
   // device stopped?
   string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
   if ( response.find( "UNDERRUN" ) != string::npos ) {
     ErrorState = 1;
     Sigs.addError( DaqError::OverflowUnderrun );
+    unlock();
     return -1;
   }
 
-  return fillWriteBuffer();
+  int r = fillWriteBuffer();
+
+  unlock();
+
+  return r;
 }
 
 
 int DAQFlexAnalogOutput::reset( void )
 {
+  bool o = isOpen();
+
+  lock();
+
   Sigs.clear();
   if ( Buffer != 0 )
     delete [] Buffer;
@@ -446,7 +488,7 @@ int DAQFlexAnalogOutput::reset( void )
   BufferSize = 0;
   NBuffer = 0;
 
-  if ( !isOpen() )
+  if ( !o )
     return NotOpen;
 
   DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
@@ -460,25 +502,33 @@ int DAQFlexAnalogOutput::reset( void )
   ErrorState = 0;
   IsPrepared = false;
 
+  unlock();
+
   return 0;
 }
 
 
 bool DAQFlexAnalogOutput::running( void ) const
 {
+  lock();
   string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
-  return ( response.find( "RUNNING" ) != string::npos );
+  bool r = ( response.find( "RUNNING" ) != string::npos );
+  unlock();
+  return r;
 }
 
 
 int DAQFlexAnalogOutput::error( void ) const
 {
-  return ErrorState;
+  lock();
+  int e = ErrorState;
+  unlock();
   /*
     0: ok
     1: OverflowUnderrun
     2: Unknown (device error)
   */
+  return e;
 }
 
 

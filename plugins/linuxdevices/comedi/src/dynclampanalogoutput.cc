@@ -65,6 +65,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  pthread_mutex_init( &Mutex, NULL );
 }
 
 
@@ -91,6 +92,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  pthread_mutex_init( &Mutex, NULL );
 
   open( device, opts );
 }
@@ -100,6 +102,19 @@ DynClampAnalogOutput::~DynClampAnalogOutput( void )
 {
   close();
   delete CAO;
+  pthread_mutex_destroy( &Mutex );
+}
+
+
+void DynClampAnalogOutput::lock( void ) const
+{
+  pthread_mutex_lock( &Mutex );
+}
+
+
+void DynClampAnalogOutput::unlock( void ) const
+{
+  pthread_mutex_unlock( &Mutex );
 }
 
 
@@ -273,7 +288,10 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
 
 bool DynClampAnalogOutput::isOpen( void ) const 
 { 
-  return ( ModuleFd >= 0 );
+  lock();
+  bool o = ( ModuleFd >= 0 );
+  unlock();
+  return o;
 }
 
 
@@ -417,7 +435,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     // set range:
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
-    if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
+    if ( sigs[k].noLevel() ) {
       if ( unipolar ) {
 	for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
 	  if ( unipolarRange( index ) >= maxvolt )
@@ -459,7 +477,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     double minboardvolt = unipolar ? CAO->UnipolarRange[index].min : CAO->BipolarRange[index].min;
 
     // external reference:
-    if ( sigs[k].noIntensity() && sigs[k].noLevel() ) {
+    if ( sigs[k].noLevel() ) {
       if ( ! extref ) {
 	if ( externalReference() < maxboardvolt ) {
 	  if ( maxvolt < externalReference() )
@@ -526,15 +544,19 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 
 int DynClampAnalogOutput::directWrite( OutList &sigs )
 {
+  // no signals:
   if ( sigs.size() <= 0 )
     return -1;
 
+  // not open:
   if ( !isOpen() )
     return -1;
 
   // XXX make sure that all signal have size 1!
 
   reset();
+
+  lock();
 
   // copy and sort signal pointers:
   OutList ol;
@@ -544,8 +566,10 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   unsigned int chanlist[MAXCHANLIST];
   setupChanList( ol, chanlist, MAXCHANLIST, true );
 
-  if ( ol.failed() )
+  if ( ol.failed() ) {
+    unlock();
     return -1;
+  }
 
   // set chanlist:
   struct chanlistIOCT chanlistIOC;
@@ -570,6 +594,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_CHANLIST on device "
 	 << ModuleDevice << " failed!\n";
+    unlock();
     return -1;
   }
 
@@ -589,6 +614,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
       ol.addError( DaqError::InvalidSampleRate );
     else
       ol.addErrorStr( errno );
+    unlock();
     return -1;
   }
 
@@ -607,8 +633,10 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   }
   */
 
-  if ( ol.failed() )
+  if ( ol.failed() ) {
+    unlock();
     return -1;
+  }
 
   BufferSize = ol.size() * BufferElemSize;
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
@@ -625,8 +653,10 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   BufferSize = 0;
   NBuffer = 0;
 
-  if ( retval < 0 )
+  if ( retval < 0 ) {
+    unlock();
     return -1;
+  }
 
   // start subdevice:
   retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
@@ -637,9 +667,11 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
     if ( ern == ENOMEM )
       cerr << " !!! No stack for kernel task !!!\n";
     sigs.addErrorStr( ern );
+    unlock();
     return -1;
   }
   
+  unlock();
   return 0;
 }
 
@@ -654,13 +686,16 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   }
 
   // sampling rate must be the one of the running rt-loop:
+  lock();
   unsigned int rate = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
 	 << ModuleDevice << " failed!\n";
+    unlock();
     return -1;
   }
+  unlock();
   unsigned int reqrate = (unsigned int)sigs[0].sampleRate();
   if ( reqrate == 0 ) {
     if ( rate > 0 )
@@ -726,6 +761,8 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if ( sigs.size() <= 0 )
     return -1;
 
+  lock();
+
   // copy and sort signal pointers:
   OutList ol;
   ol.add( sigs );
@@ -734,8 +771,10 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   unsigned int chanlist[MAXCHANLIST];
   setupChanList( ol, chanlist, MAXCHANLIST, true );
 
-  if ( sigs.failed() )
+  if ( sigs.failed() ) {
+    unlock();
     return -1;
+  }
 
   // set chanlist:
   struct chanlistIOCT chanlistIOC;
@@ -761,6 +800,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
 	 << ModuleDevice << " failed!\n";
+    unlock();
     return -1;
   }
 
@@ -781,6 +821,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
       ol.addError( DaqError::InvalidSampleRate );
     else
       ol.addErrorStr( errno );
+    unlock();
     return -1;
   }
 
@@ -801,8 +842,10 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
   IsPrepared = ol.success();
 
-  if ( ! ol.success() )
+  if ( ! ol.success() ) {
+    unlock();
     return -1;
+  }
 
   for ( int k=0; k<ol.size(); k++ )
     ol[k].deviceReset( 0 );
@@ -815,11 +858,15 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
   setSettings( ol, BufferSize );
 
-  if ( ! ol.success() )
+  if ( ! ol.success() ) {
+    unlock();
     return -1;
+  }
 
   Sigs = ol;
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+
+  unlock();
 
   return 0;
 }
@@ -827,11 +874,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
 int DynClampAnalogOutput::fillWriteBuffer( void )
 {
-  if ( !isOpen() ) {
-    Sigs.setError( DaqError::DeviceNotOpen );
-    return -1;
-  }
-
   if ( Sigs[0].deviceWriting() ) {
     // multiplex data into buffer:
     float *bp = (float*)(Buffer+NBuffer);
@@ -915,8 +957,10 @@ int DynClampAnalogOutput::fillWriteBuffer( void )
 
 int DynClampAnalogOutput::startWrite( void )
 {
+  lock();
   if( !prepared() || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
+    unlock();
     return -1;
   }
 
@@ -924,8 +968,10 @@ int DynClampAnalogOutput::startWrite( void )
   int retval = fillWriteBuffer();
   //  cerr << " DynClampAnalogOutput::startWrite -> fillWriteBuffer returned " << retval << '\n';
 
-  if ( retval < 0 )
+  if ( retval < 0 ) {
+    unlock();
     return -1;
+  }
 
   bool finished = ( retval == 0 );
 
@@ -938,6 +984,7 @@ int DynClampAnalogOutput::startWrite( void )
     if ( ern == ENOMEM )
       cerr << " !!! No stack for kernel task !!!\n";
     Sigs.addErrorStr( ern );
+    unlock();
     return -1;
   }
 
@@ -952,7 +999,9 @@ int DynClampAnalogOutput::startWrite( void )
     Sigs.setSampleRate( (double)rate );
 
   ErrorState = 0;
-  
+
+  unlock();
+
   return finished ? 0 : 1;
 }
 
@@ -960,24 +1009,35 @@ int DynClampAnalogOutput::startWrite( void )
 int DynClampAnalogOutput::writeData( void )
 {
   //  cerr << " DynClampAnalogOutput::writeData(): in\n";/////TEST/////
-
-  if ( Sigs.empty() )
+  lock();
+  if ( Sigs.empty() ) {
+    unlock();
     return -1;
+  }
 
   //device stopped?
   if( !running() ) {
     Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
 		      deviceFile() + " is not running!" );
     cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
+    unlock();
     return -1;
   }
 
-  return fillWriteBuffer();
+  int r = fillWriteBuffer();
+
+  unlock();
+
+  return r;
 }
 
 
 int DynClampAnalogOutput::reset( void )
 { 
+  bool o = isOpen();
+
+  lock();
+
   Sigs.clear();
   if ( Buffer != 0 )
     delete [] Buffer;
@@ -988,6 +1048,11 @@ int DynClampAnalogOutput::reset( void )
   Settings.clear();
   ErrorState = 0;
 
+  if ( !o ) {
+    unlock();
+    return NotOpen;
+  }
+
   if( !IsPrepared )
     return 0;
 
@@ -996,6 +1061,7 @@ int DynClampAnalogOutput::reset( void )
   if( retval < 0 ) {
     //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
     //	 << ModuleDevice << " failed!\n";
+    unlock();
     return -1;
   }
 
@@ -1004,6 +1070,7 @@ int DynClampAnalogOutput::reset( void )
     if( retval < 0 ) {
       cerr << " DynClampAnalogOutput::reset -> ioctl command IOC_STOP_SUBDEV on device "
 	   << ModuleDevice << " failed!\n";
+      unlock();
       return -1;
     }
     rtf_reset( FifoFd );
@@ -1012,23 +1079,32 @@ int DynClampAnalogOutput::reset( void )
   IsPrepared = false;
   IsRunning = false;
 
+  unlock();
+
   return 0;
 }
 
 
 bool DynClampAnalogOutput::running( void ) const
 {
-  if( !IsPrepared )
+  lock();
+
+  if( !IsPrepared ) {
+    unlock();
     return false;
+  }
 
   int running = SubdeviceID;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << ModuleDevice << " failed!\n";
+    unlock();
     return false;
   }
   //  cerr << "DynClampAnalogOutput::running returned " << running << '\n';
+
+  unlock();
 
   return running;
 }
@@ -1036,26 +1112,31 @@ bool DynClampAnalogOutput::running( void ) const
 
 int DynClampAnalogOutput::error( void ) const
 {
-  return ErrorState;
+  lock();
+  int e = ErrorState;
+  unlock();
   /*
     0: ok
     1: OverflowUnderrun
     2: Unknown (device error)
   */
-
+  return e;
 }
 
 
 long DynClampAnalogOutput::index( void ) const
 {
+  lock();
   long index = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETAOINDEX, &index );
   //    cerr << " DynClampAnalogOutput::index() -> " << index << '\n';
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::index() -> ioctl command IOC_GETLOOPCNT on device "
 	   << ModuleDevice << " failed!\n";
+    unlock();
     return -1;
   }
+  unlock();
   return index;
 }
 
