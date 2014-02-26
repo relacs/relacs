@@ -29,7 +29,6 @@ Options:
 - Add special meaning to special values for numbers in OptWidgetBase (e.g. infinit repeats).
 - RePro: when the RePo changes an Option in main(), this change should automatically be made permanent
   (via setToDefaults() called after main()? E.g. SetInputGain RePro).
-- Check readAppend() functions!
 - Make all Options and optWidget style flags an enum
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
 - OutData: rename Ident to name OR remove it?
@@ -118,6 +117,7 @@ Macros:
 - delete all MacroCommands after usage!
 - The menu of a MacroCommand should have the options of the called Macro with
   overwritten Options colored blue (same as for the repros).
+- The menu of a MacroCommand should display overwritten values.
 - add stopSession macro command
 - add new macro command to set all sorts of internal Options (e.g. stimulusData!)
 - add dialog macro command for launching macro and repro dialogs, meta data dialog, etc.

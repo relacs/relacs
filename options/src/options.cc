@@ -5275,6 +5275,7 @@ bool Options::readAppend( const Parameter &p )
 
 Options &Options::readAppend( const Options &o, int flags )
 {
+  // read parameter:
   for ( const_iterator op = o.begin(); op != o.end(); ++op ) {
     if ( (*op).flags( flags ) ) {
       bool app = true;
@@ -5288,6 +5289,31 @@ Options &Options::readAppend( const Options &o, int flags )
       }
       if ( app )
 	Opt.push_back( *op );
+    }
+  }
+
+  // read sections:
+  for ( const_section_iterator op = o.sectionsBegin();
+	op != o.sectionsEnd();
+	++op ) {
+    if ( (*op)->flag( flags ) ) {
+      bool app = true;
+      for ( section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	if ( (*op)->name() == (*sp)->name() ) {
+	  (*sp)->readAppend( *(*op), flags );
+	  app = false;
+	  break;
+	}
+      }
+      if ( app ) {
+	Options *no = new Options( (*op)->name(), (*op)->type(), (*op)->flag(), (*op)->style() );
+	no->setParentSection( this );
+	Secs.push_back( no );
+	OwnSecs.push_back( true );
+	no->readAppend( *(*op), flags );
+      }
     }
   }
 

@@ -192,6 +192,25 @@ int main( int argc, char *argv[] )
   opt5.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
+  // erase:
+  cout << "erase:\n";
+  opt.setDefaults();
+  Options opt6( opt );
+  opt6.erase( "pause" );
+  opt6.erase( "repeats" );
+  opt6.erase( "Analysis" );
+  opt6.erase( "Results>Color" );
+  opt6.erase( "Results>Animal>fish" );
+  opt6.erase( "Files" );
+  opt6.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
+  cout << '\n';
+
+  // read and append:
+  cout << "read and append:\n";
+  opt6.readAppend( opt5 );
+  opt5.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
+  cout << '\n';
+
   return 0;
 
   cout << "enter some options (ident1=value1; ident2=value2; ...): ";

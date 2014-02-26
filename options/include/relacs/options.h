@@ -1931,8 +1931,9 @@ public:
         Returns \c true if \a p was read, \c false if it was appended.
         \sa read(), endSection(), clearSections() */
   bool readAppend( const Parameter &p );
-    /*! Read options from the options \a o.
-        All options \a o that do not exist are appended.. */
+    /*! Read options from the options \a o that have \a flags set.
+        All options from \a o that do not exist are appended
+	to the sections where they belong to. */
   Options &readAppend( const Options &o, int flags=0 );
 
     /*! Load options from string \a opttxt of the form
