@@ -304,6 +304,7 @@ public:
 	\note the plugin is not removed from the list of plugins.
 	\return the number of still existing instances of the specified	plugin.
         \param[in] plugin the identifier string of the plugin to be destroyed.
+	\param[in] type the type of the plugin
         \sa create(), plugins() */
   static int destroy( const string &plugin, int type );
 

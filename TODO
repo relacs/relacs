@@ -39,10 +39,7 @@ Options:
 - Device menu should be hierarchically using section structure of device infos.
 - operator[] and section() should only return Parameter/Options from this Options
   BUT: auditory::session::notifyMetaData!
-- Add iterator that iterates through all sections and subsections ? 
-- Or flatten() function that creates Options with Parameters without the sections.
 - Check and update how plugins save data and use settings() and stimulusData()
-- make clean and make | grep warning!
 
 patchclamp::SingleStimulus:
 - Add zero to noise stimuli (all stimuli?)

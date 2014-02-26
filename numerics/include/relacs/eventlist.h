@@ -775,11 +775,14 @@ public:
 	is used as the bin width for discretizing the events.
         The frequency axis of the gain \a g, coherence \a c, stimulus spectrum \a ss,
 	response spectrum \a rs, and cross-spectrum \a cs are set to the appropriate values.
-	\param[out] \a g the gain between \a stimlus and response
-	\prama[out] \a c the coherence between \a stimulus and response (the S-R coherence \f$\gamma^2_{SR}\f$).
-        \param[out] \a cs the cross-spectrum between \a stimulus and the events.
-        \param[out] \a ss the power-spectrum of the \a stimulus.
-        \param[out] \a rs the power-spectrum of the events. */
+	\param[in] stimulus the stimulus that evoked the response
+	\param[out] g the gain between \a stimlus and response
+	\param[out] c the coherence between \a stimulus and response (the S-R coherence \f$\gamma^2_{SR}\f$).
+        \param[out] cs the cross-spectrum between \a stimulus and the events.
+        \param[out] ss the power-spectrum of the \a stimulus.
+        \param[out] rs the power-spectrum of the events.
+	\param[in] overlap if \c true overlap the fft windows by 50%.
+	\param[in] window the fft window to be used.  */
   void spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &c,
 		SampleDataD &cs, SampleDataD &ss, SampleDataD &rs,
 		bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
@@ -796,15 +799,18 @@ public:
         The frequency axis of the gain \a g, coherence \a c, stimulus spectrum \a ss,
 	response spectrum \a rs, and cross-spectrum \a cs and their standard deviations
 	are set to the appropriate values.
-	\param[out] \a g the gain between \a stimlus and response
-	\param[out] \a gsd the standard deviation of the gain.
-	\prama[out] \a c the coherence between \a stimulus and response (the S-R coherence \f$\gamma^2_{SR}\f$).
-	\param[out] \a csd the standard deviation of the coherence.
-        \param[out] \a cs the cross-spectrum between \a stimulus and the events.
-	\param[out] \a cssd the standard deviation of the cross spectrum.
-        \param[out] \a ss the power-spectrum of the \a stimulus.
-        \param[out] \a rs the power-spectrum of the events.
-	\param[out] \a rssd the standard deviation of the response spectrum. */
+	\param[in] stimulus the stimulus that evoked the response
+	\param[out] g the gain between \a stimlus and response
+	\param[out] gsd the standard deviation of the gain.
+	\param[out] c the coherence between \a stimulus and response (the S-R coherence \f$\gamma^2_{SR}\f$).
+	\param[out] csd the standard deviation of the coherence.
+        \param[out] cs the cross-spectrum between \a stimulus and the events.
+	\param[out] cssd the standard deviation of the cross spectrum.
+        \param[out] ss the power-spectrum of the \a stimulus.
+        \param[out] rs the power-spectrum of the events.
+	\param[out] rssd the standard deviation of the response spectrum.
+	\param[in] overlap if \c true overlap the fft windows by 50%.
+	\param[in] window the fft window to be used. */
   void spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &gsd,
 		SampleDataD &c, SampleDataD &csd, SampleDataD &cs, SampleDataD &cssd,
 		SampleDataD &ss, SampleDataD &rs, SampleDataD &rssd,
@@ -855,7 +861,7 @@ public:
         If \a keep is set true, then the event times of the first trial
         are added to \a s instead of the time bins.
         If \a advance is greater than zero, the bins of width \a bin
-        are advanced \by advance and not by \a bin. */
+        are advanced by \a advance and not by \a bin. */
   void sync( EventData &s, double bin, double p=1.0, bool keep=false,
 	     double advance=0.0 ) const;
 

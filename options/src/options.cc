@@ -4359,6 +4359,33 @@ Options &Options::popSection( void )
 }
 
 
+Options &Options::flatten( Options *root )
+{
+  Warning = "";
+  if ( root == 0 )
+    root = this;
+  for ( section_iterator sp = sectionsBegin();
+	sp != sectionsEnd(); ) {
+    // gather all Parameter:
+    root->clearSections();
+    for ( iterator pp = (*sp)->begin(); pp != (*sp)->end(); ++pp )
+      root->add( *pp );
+    // traverse through the sections:
+    (*sp)->flatten( root );
+    // erase section:
+    if ( OwnSecs[ 0 ] )
+      delete *sp;
+    else {
+      if ( (*sp)->parentSection() == this )
+	(*sp)->setParentSection( 0 );
+    }
+    sp = Secs.erase( sp );
+    OwnSecs.erase( OwnSecs.begin() );
+  }
+  return *this;
+}
+
+
 Options &Options::clear( bool revert )
 {
   Warning = "";

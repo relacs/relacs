@@ -185,6 +185,12 @@ int main( int argc, char *argv[] )
   opt4.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
 
+  // flatten:
+  cout << "flatten:\n";
+  opt4.flatten();
+  opt4.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
+  cout << '\n';
+
   // load options from string:
   cout << "load options from string:\n";
   Options opt5;

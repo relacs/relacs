@@ -517,9 +517,9 @@ public:
   void origin( double &x, double &y ) const;
     /*! If this Plot is part of a MultiPlot, then this function specifies
         the size of the Plot within the MultiPlot.
-        \param[in] x the width of the plot
-	\param[in] y the height of the plot
-        \a x and \a y range from 0 to 1 for the entire plot area of the MultiPlot.
+        \param[in] w the width of the plot
+	\param[in] h the height of the plot
+        \a w and \a h range from 0 to 1 for the entire plot area of the MultiPlot.
 	\sa setOrigin() */
   void setSize( double w, double h );
     /*! Return the size of this Plot. \sa setSize() */

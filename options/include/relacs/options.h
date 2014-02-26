@@ -39,38 +39,43 @@ namespace relacs {
 \version 2.0
 \brief A hierarchical name-value list for configuration files and dialogs.
 
-An Options class contains a list of name-value pairs that are
+An %Options class contains a list of name-value pairs that are
 identified by a string \a name and have a default value \a dflt.  For
-the dialog the string \a request is used to request the value of the
+a dialog the string request() is provided to request the value of the
 name-value pair.  Name-value pairs whose value-type is a Number have
 in addition a minimum and maximum value, a step size, a unit, and a
-format string. See class Parameter for more details on the name-value pairs.
+format string. See class Parameter for more details on the name-value
+pairs.
 
-Use addNumber() and addText() to add option variables,
-which can be either numbers or strings, respectively.
-With insertNumber() and insertStr() new options can be
-inserted at the beginning of the options list.
+In addition to the name-value pairs an %Options also contains other
+%Options as so called sections. This way a hierarchical structure is
+created. Each %Options has a name() and a type(). New sections can be
+added with the newSection() functions.
 
-Use setNumber() and setText() to change the default,
-minimum and maximum value, unit and format of an already existing option.
-With erase() options can selectively be erased.
+Use addNumber(), addInteger(), addBoolean(), addText(),
+addSelection(), addTime() and addDate() to add option variables to the
+currently active section.  With insertNumber(), insertText(), etc. new
+options can be inserted into the options list.
 
-The values of the options can be read out with number() or text().
-In addition the default values are accesible with defaultNumber()
-and defaultText().
+Use setNumber(), setText(), etc. to change the value, minimum and
+maximum value, unit and format of an already existing option.  With
+erase() options can selectively be erased.
+
+The values of the options can be read out with number(), integer(),
+boolean(), text(), index(), time() and date().  In addition the
+default values are accessible with defaultNumber() and defaultText().
 Minimum and maximum values can be read with minimum() and maximum().
 The corresponding unit and formatting string can be read with unit()
 and format().
 
-In addition to the name-value pairs, an Options class contains further
-Options, i.e. a list of sections of name-value pairs.
-
-The total number of defined options is returned by size().
-To check wether an option with a certain name exist use exist().
+The total number of defined options is returned by size().  To check
+wether an option with a certain name exist use exist().
 
 The read(), readAppend(), load() and save() functions read the values
-of options, load new options, and save options from and to strings or files.
-*/
+of options, load new options, and save options from and to strings or
+files.  %Options have a flag() and Parameter have flags(). These can
+be used to select them for saving, etc. THey also have a style() that
+is used to determine how they are displayed in a dialog.  */
 
 
 class Options
@@ -107,7 +112,7 @@ public:
     PrintType = 128,
       /*! Indicate the style of a section or Parameter name. */
     PrintStyle = 256,
-      /*! Do not write the finale closing </section>. */
+      /*! Do not write the final closing </section>. */
     DontCloseSection = 512
   };
 
@@ -1461,7 +1466,7 @@ public:
     { return addSection( name, "", flag, style ); };
     /*! Insert a new section of Options before the section
         specified by \a atpattern.
-	If \a atpattern is not found or if \atpattern is empty,
+	If \a atpattern is not found or if \a atpattern is empty,
 	the new section is added to the beginning or the end
 	of the currently active Options' section list, respectively.
         The new section is named \a name, has the optional
@@ -1585,7 +1590,7 @@ public:
     /*! Insert \a opt as a new section of Options before the section
         specified by \a atpattern. Only name-value pairs and sections
         as specified by \a selectmask are taken from \a opt.  If \a
-        atpattern is not found or if \atpattern is empty, the new
+        atpattern is not found or if \a atpattern is empty, the new
         section is added to the beginning or the end of the currently
         active Options' section list, respectively.  If \a name is not
         an empty string, the name of the new section is set to \a
@@ -1624,7 +1629,7 @@ public:
   Options &addSection( Options *opt, bool newparent=false );
     /*! Insert \a opt as a section of Options before the section
         specified by \a atpattern.  If \a atpattern is not found or if
-        \atpattern is empty, the new section is added to the beginning
+        \a atpattern is empty, the new section is added to the beginning
         or the end of the currently active Options' section list,
         respectively. Only a pointer of \a opt is stored,
 	the content of \a opt is not copied.
@@ -1714,6 +1719,10 @@ public:
     /*! Remove last Options from the currently active section.
         \sa endSection(), clearSections() */
   Options &popSection( void );
+    /*! Flatten the %Options, i.e. delete all sections and subsections
+        and copy their Parameter to this. 
+	The Parameter a copied to \a root, which by default is this. */
+  Options &flatten( Options *root=0 );
     /*! Remove all Parameter and sections of Options.  If \a revert is
         set to \c true, also revert parentSection() of non-owned
         sections to zero. */

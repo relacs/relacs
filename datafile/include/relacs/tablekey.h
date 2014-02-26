@@ -157,7 +157,7 @@ public:
   Options &newSubSubSection( const string &name, int flags=0 );
     /*! Insert a new section of columns before the section
         specified by \a atpattern.
-	If \a atpattern is not found or if \atpattern is empty,
+	If \a atpattern is not found or if \a atname is empty,
 	the new section is added to the beginning or the end
 	of the currently active section, respectively.
         The new section is named \a name and has some \a flag for selecting this section.

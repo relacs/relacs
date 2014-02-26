@@ -37,11 +37,14 @@ int nextPowerOfTwo( int n );
       of complex numbers.
       The size \a N = \a last - \a first of the range has to be a power of two,
       otherwise -1 is returned.
+      \param[in] first the beginning of the range
+      \param[in] last the end of the range
       \param[in] sign determines the sign of the exponential.
       Usually \a sign=-1 is used for forward and \a sign=1 for backward transformation.
       The backward transformation is not normalized;
       you need to multiply the real and imaginary part of each element by \a 1/N.
-      \param RandomAccessIter is a random access iterator that points to a REAL number. 
+      \tparam RandomAccessIter is a random access iterator that points to a REAL number. 
+
       Real and imaginary parts of each complex number are placed in alternate neighboring elements,
       i.e. *(first+2*i) and *(first+2*i+1) point to the real and imaginary part
       of the \a i-th complex number of the range.
@@ -114,7 +117,7 @@ void cPhase( ContainerC &c, ContainerP &p );
       If the input data are spaced by \a Delta,
       then the first half of the output range contains the positive frequencies
       at i/(N Delta), i=0..N/2.
-      \param RandomAccessIter is a random access iterator that points to a
+      \tparam RandomAccessIter is a random access iterator that points to a
       real number. 
       Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl .
       \sa hcFFT(), cFFT(), hcPower(), hcMagnitude(), hcPhase(), hcReal(), hcImaginary() */
@@ -130,7 +133,7 @@ int rFFT( Container &c );
       otherwise -1 is returned.
       The result is a real array stored in natural order that is not normalized;
       you need to multiply each element by \a 1/N.
-      \param RandomAccessIter is a random access iterator that points to a
+      \tparam RandomAccessIter is a random access iterator that points to a
       real number. 
       Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl .
       \sa rFFT(), cFFT() */
@@ -145,7 +148,7 @@ int hcFFT( Container &c );
       can be assigned a power in the range \a firstp, \a lastp,
       excess elements are set to zero.
       If you want to compute the power from rFFT, you need to multiply the
-      result by \[$ 2/N^2 \f$ to normalize the power such that its sum equals the
+      result by \f$ 2/N^2 \f$ to normalize the power such that its sum equals the
       mean squared amplitudes of the signal.
       If the input data to rFFT() were spaced by \a Delta,
       then the power is computed for the frequencies i/(N Delta), i=0..N/2.

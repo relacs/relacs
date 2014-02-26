@@ -95,22 +95,22 @@ double pearsonTest( double r, int n );
   /*! The Kolmogorov-Smirnov test for comparing a set of data values with
       a theoretically known distribution.
       \note \a data must be a sorted array of data values.
-      \param[in] \a data the observed data values (not their distribution or cumulative!).
-      \param[in] \a density the computed probability distribution 
+      \param[in] data the observed data values (not their distribution or cumulative!).
+      \param[in] density the computed probability distribution 
       (does not need to be normalized) to which \a data are compared
       (see SampleData::cumulative()).
       From this function the cumulative is computed with linear interpolation.
-      \param[out] \a d K-S statistics D
-      \param[out] \a p significance level of the disproof of the null hypothesis
+      \param[out] d K-S statistics D
+      \param[out] p significance level of the disproof of the null hypothesis
       that the distributions are the same. */
 void KSTest( const ArrayD &data, const SampleDataD &density, double &d, double &p );
 
   /*! The runs test (or Wald–Wolfowitz test) checks a randomness hypothesis 
       for a two-valued data sequence.
-      \param[in] \a data the data from which the runs are determined.
+      \param[in] data the data from which the runs are determined.
       Each run is a series of consecutive positive or negative data values.
-      \param[out] \a z the Z statistics of the runs test. 
-      \param[out] \a p the p-value for the runs being random. */
+      \param[out] z the Z statistics of the runs test. 
+      \param[out] p the p-value for the runs being random. */
 void runsTest( const ArrayD &data, double &z, double &p );
 
   /*! Compute the complementary normalized incomplete Gamma Function 

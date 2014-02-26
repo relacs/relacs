@@ -27,12 +27,9 @@
 namespace relacs {
 
 
-template < class Derivs >
-void eulerStep( double x, double *y, double *dydx, int n,
-		double deltax, Derivs &f );
   /*! Calculates a single Euler forward step for the set of ordinary
       differential equations dy/dx = f(y(x),x).
-      \param \a Derivs a functor with a function 
+      \tparam Derivs is a functor with a function 
                  f( XValue x, const YVector &y, YVector &dydx )
                  returning the derivative f(y,x) in \a dydx.
       \param[in] x the current value of \a x
@@ -44,6 +41,10 @@ void eulerStep( double x, double *y, double *dydx, int n,
                  f( x, y, dydx, n ) that computes the derivative \a dydx
                  for the current state vector \a y at \a x.
    */
+template < class Derivs >
+void eulerStep( double x, double *y, double *dydx, int n,
+		double deltax, Derivs &f );
+
 template < class YVector, class Derivs >
 void eulerStep( double x, YVector &y, YVector &dydx,
 		double deltax, Derivs &f );
