@@ -10,7 +10,7 @@
   Pathes:
       pathformat : %04Y-%02m-%02d-%a2a
       defaultpath: dry/
-      repropath  : stimuli/repros/
+      repropath  : [ stimuli/repros/, reprodata, stimuli/repros/ ]
       infofile   : info.dat
   Save:
       saverelacscore   : true
@@ -24,21 +24,21 @@
 
 *RELACS
   input data:
-      inputsamplerate    : 10kHz
+      inputsamplerate    : 20kHz
       inputtracecapacity : 600s
       inputunipolar      : false
       inputtraceid       : [ V-1, Current-1 ]
-      inputtracescale    : [ 100, 1 ]
+      inputtracescale    : [ 100, 10 ]
       inputtraceunit     : [ mV, nA ]
       inputtracedevice   : [ ai-1, ai-1 ]
-      inputtracechannel  : [ 1, 0 ]
+      inputtracechannel  : [ 1, 3 ]
       inputtracereference: [ ground, ground ]
       inputtracegain     : [ 2, 2 ]
       inputtracecenter   : [ true, false ]
   output data:
-      maxoutputrate      : 10kHz
+      maxoutputrate      : 20kHz
       outputtraceid      : Current-1
-      outputtracechannel : 0
+      outputtracechannel : 1
       outputtracedevice  : ao-1
       outputtracescale   : 1
       outputtraceunit    : nA

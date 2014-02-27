@@ -49,6 +49,7 @@ class BridgeTest : public RePro, public ephys::Traces
 public:
 
   BridgeTest( void );
+  virtual void preConfig( void );
   virtual int main( void );
 
 

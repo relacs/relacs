@@ -159,7 +159,8 @@ void SetDC::preConfig( void )
 {
   setText( "outcurrent", currentOutputNames() );
   setToDefault( "outcurrent" );
-  VoltageUnitLabel->setText( trace( SpikeTrace[0] ).unit().c_str() );
+  if ( SpikeTrace[0] >= 0 )
+    VoltageUnitLabel->setText( trace( SpikeTrace[0] ).unit().c_str() );
 }
 
 
