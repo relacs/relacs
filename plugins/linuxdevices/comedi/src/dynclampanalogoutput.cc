@@ -59,7 +59,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   MaxRate = 50000.0;
   IsPrepared = false;
   IsRunning = false;
-  ErrorState = 0;
   UnipConverter = 0;
   BipConverter = 0;
   BufferSize = 0;
@@ -86,7 +85,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   MaxRate = 50000.0;
   IsPrepared = false;
   IsRunning = false;
-  ErrorState = 0;
   UnipConverter = 0;
   BipConverter = 0;
   BufferSize = 0;
@@ -641,8 +639,6 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 
 int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
 {
-  ErrorState = 0;
- 
   if( ! isOpen() ) {
     sigs.setError( DaqError::DeviceNotOpen );
     return -1;
@@ -859,8 +855,6 @@ int DynClampAnalogOutput::fillWriteBuffer( void )
     NBuffer += bytesConverted;
   }
 
-  ErrorState = 0;
-
   if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
     return 0;
 
@@ -897,17 +891,14 @@ int DynClampAnalogOutput::fillWriteBuffer( void )
     switch( ern ) {
 
     case EPIPE: 
-      ErrorState = 1;
       Sigs.addError( DaqError::OverflowUnderrun );
       return -1;
 
     case EBUSY:
-      ErrorState = 2;
       Sigs.addError( DaqError::Busy );
       return -1;
 
     default:
-      ErrorState = 2;
       Sigs.addErrorStr( ern );
       Sigs.addError( DaqError::Unknown );
       return -1;
@@ -961,8 +952,6 @@ int DynClampAnalogOutput::startWrite( void )
   else
     Sigs.setSampleRate( (double)rate );
 
-  ErrorState = 0;
-
   unlock();
 
   return finished ? 0 : 1;
@@ -1009,7 +998,6 @@ int DynClampAnalogOutput::reset( void )
   NBuffer = 0;
 
   Settings.clear();
-  ErrorState = 0;
 
   if ( !o ) {
     unlock();
@@ -1070,20 +1058,6 @@ bool DynClampAnalogOutput::running( void ) const
   unlock();
 
   return running;
-}
-
-
-int DynClampAnalogOutput::error( void ) const
-{
-  lock();
-  int e = ErrorState;
-  unlock();
-  /*
-    0: ok
-    1: OverflowUnderrun
-    2: Unknown (device error)
-  */
-  return e;
 }
 
 

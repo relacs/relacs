@@ -27,7 +27,6 @@
 #include <relacs/daqerror.h>
 #include <relacs/analoginput.h>
 #include <relacs/comedi/moduledef.h>
-//#include <relacs/comedi/dynclampanalogoutput.h>
 using namespace std;
 using namespace relacs;
 
@@ -38,10 +37,12 @@ class ComediAnalogInput;
 
 /*! 
 \class DynClampAnalogInput
-\author Marco Hackenberg, Jan Benda
+\author Marco Hackenberg
+\author Jan Benda
 \brief [AnalogInput] Interface for accessing analog input of a daq-board via a dynamic clamp kernel module.
-\todo: testReadDevice(): we don't get integer data!!! sigs[k].setGain( 1.0 );
-\todo: Implement take()
+\todo testReadDevice(): we don't get integer data!!! sigs[k].setGain( 1.0 );
+\todo Implement take()
+\todo Error handling in readData()
 \bug fix errno usage
 
 
@@ -136,12 +137,6 @@ public:
     /*! True if analog input is running. */
   virtual bool running( void ) const;
 
-    /*! Get error status of the device. 
-        0: no error
-	-1: underrun
-        other: unknown */
-  virtual int error( void ) const;
-
     /*! Check for every analog input and input device in \a ais and \a aos
         whether it can be simultaneously started by startRead()
 	from this device. */
@@ -228,7 +223,6 @@ private:
   unsigned int ChanList[MAXCHANLIST];
   bool IsPrepared;
   mutable bool IsRunning;
-  int ErrorState;
 
     /*! The input traces that were prepared by prepareRead(). */
   InList *Traces;

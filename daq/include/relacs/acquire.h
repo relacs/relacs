@@ -404,6 +404,8 @@ public:
         See InList for details about handling the data. 
         \sa testRead(), read(), readData(), stopRead() */
   virtual int convertData( void );
+    /*! \return an error string describing problems that occured during analog input. */
+  string readError( void ) const;
     /*! Stop analog input of all analog input devices.
         Remaining data can be still obtained with readData().
 	Returns 0 on success, negative numbers otherwise. 
@@ -582,6 +584,9 @@ public:
         \sa testWrite(), write(), writeData(), stopWrite() */
   virtual int writeZero( const string &trace );
 
+    /*! \return an error string describing problems that occured during analog output. */
+  string writeError( void ) const;
+
     /*! Stop analog output of all analog output devices.
         \sa testWrite(), write(), writeData(), writeZero() */
   virtual int stopWrite( void );
@@ -719,8 +724,6 @@ protected:
   };
     /*! All devices for analog output. */
   vector < AOData > AO;
-    /*! OutList Dummy for single channel signals. */
-  OutList Signal;
     /*! Index of last output device. */
   int LastDevice;
     /*! Time of last signal output. */

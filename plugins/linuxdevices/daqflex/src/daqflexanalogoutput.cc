@@ -34,7 +34,6 @@ namespace daqflex {
 DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   : AnalogOutput( "DAQFlexAnalogOutput", DAQFlexAnalogIOType )
 {
-  ErrorState = 0;
   IsPrepared = false;
   NoMoreData = true;
   DAQFlexDevice = NULL;
@@ -48,7 +47,6 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
 DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &opts ) 
   : AnalogOutput( "DAQFlexAnalogOutput", DAQFlexAnalogIOType )
 {
-  ErrorState = 0;
   IsPrepared = false;
   NoMoreData = true;
   DAQFlexDevice = NULL;
@@ -105,7 +103,6 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   reset();
 
   // clear flags:
-  ErrorState = 0;
   IsPrepared = false;
   NoMoreData = true;
 
@@ -478,7 +475,6 @@ int DAQFlexAnalogOutput::writeData( void )
   // device stopped?
   string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
   if ( response.find( "UNDERRUN" ) != string::npos ) {
-    ErrorState = 1;
     Sigs.addError( DaqError::OverflowUnderrun );
     unlock();
     return -1;
@@ -516,7 +512,6 @@ int DAQFlexAnalogOutput::reset( void )
   DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
 
   Settings.clear();
-  ErrorState = 0;
   IsPrepared = false;
 
   unlock();
@@ -535,20 +530,6 @@ bool DAQFlexAnalogOutput::running( void ) const
 }
 
 
-int DAQFlexAnalogOutput::error( void ) const
-{
-  lock();
-  int e = ErrorState;
-  unlock();
-  /*
-    0: ok
-    1: OverflowUnderrun
-    2: Unknown (device error)
-  */
-  return e;
-}
-
-
 int DAQFlexAnalogOutput::fillWriteBuffer( void )
 {
   if ( Sigs[0].deviceWriting() ) {
@@ -556,8 +537,6 @@ int DAQFlexAnalogOutput::fillWriteBuffer( void )
     int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
   }
-
-  ErrorState = 0;
 
   if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
     return 0;
@@ -601,21 +580,17 @@ int DAQFlexAnalogOutput::fillWriteBuffer( void )
     switch( ern ) {
 
     case LIBUSB_ERROR_PIPE:
-      ErrorState = 1;
       Sigs.addError( DaqError::OverflowUnderrun );
       return -1;
 
     case LIBUSB_ERROR_BUSY:
-      ErrorState = 2;
       Sigs.addError( DaqError::Busy );
       return -1;
 
     case LIBUSB_ERROR_TIMEOUT:
-      ErrorState = 0;
       break;
 
     default:
-      ErrorState = 2;
       Sigs.addErrorStr( "Lib USB Error" );
       Sigs.addError( DaqError::Unknown );
       return -1;

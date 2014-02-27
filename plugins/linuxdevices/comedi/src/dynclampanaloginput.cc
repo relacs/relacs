@@ -54,7 +54,6 @@ DynClampAnalogInput::DynClampAnalogInput( void )
   MaxRate = 50000.0;
   IsPrepared = false;
   IsRunning = false;
-  ErrorState = 0;
   UnipConverter = 0;
   BipConverter = 0;
   Traces = 0;
@@ -83,7 +82,6 @@ DynClampAnalogInput::DynClampAnalogInput( const string &device, const Options &o
   MaxRate = 50000.0;
   IsPrepared = false;
   IsRunning = false;
-  ErrorState = 0;
   UnipConverter = 0;
   BipConverter = 0;
   Traces = 0;
@@ -405,8 +403,6 @@ int DynClampAnalogInput::setupChanList( InList &traces,
 
 int DynClampAnalogInput::testReadDevice( InList &traces )
 {
-  ErrorState = 0;
- 
   if( ! isOpen() ) {
     traces.setError( DaqError::DeviceNotOpen );
     return -1;
@@ -627,8 +623,6 @@ int DynClampAnalogInput::startRead( void )
   else
     Traces->setSampleRate( (double)rate );
 
-  ErrorState = 0;
-  
   return 0;
 }
 
@@ -647,7 +641,6 @@ int DynClampAnalogInput::readData( void )
   }
     */
 
-  ErrorState = 0;
   /*  cerr << "DynClampAnalogInput::readData: size of device buffer: " 
        << traces[0].deviceBufferSize() << " - size of indata: " 
        << " - continuous: " << traces[0].continuous() << '\n';*/
@@ -695,7 +688,6 @@ int DynClampAnalogInput::readData( void )
     switch( errnoSave ) {
 
     case EPIPE: 
-      ErrorState = 1;
       cerr << " DynClampAnalogInput::readData(): buffer-overflow: "
       	   << strerror( errnoSave ) << '\n';/////TEST/////
       traces.addErrorStr( deviceFile() + " - buffer-underrun: "
@@ -704,7 +696,6 @@ int DynClampAnalogInput::readData( void )
       return -1;
 
     case EBUSY:
-      ErrorState = 2;
       cerr << " DynClampAnalogInput::readData(): device busy: "
 	         << strerror( errnoSave ) << '\n';/////TEST/////
       traces.addErrorStr( deviceFile() + " - device busy: "
@@ -713,7 +704,6 @@ int DynClampAnalogInput::readData( void )
       return -1;
 
     default:
-      ErrorState = 2;
       cerr << " DynClampAnalogInput::readData(): buffer-underrun: "
 	   << "  system: " << strerror( errnoSave )
 	   << " (device file descriptor " << ModuleFd
@@ -836,7 +826,6 @@ int DynClampAnalogInput::reset( void )
   BufferN = 0;
 
   Settings.clear();
-  ErrorState = 0;
 
   return retval;
 }
@@ -860,18 +849,6 @@ bool DynClampAnalogInput::running( void ) const
   }
 
   return exchangeVal;
-}
-
-
-int DynClampAnalogInput::error( void ) const
-{
-  return ErrorState;
-  /*
-    0: ok
-    1: OverflowUnderrun
-    2: Unknown (device error)
-  */
-
 }
 
 

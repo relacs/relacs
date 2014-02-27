@@ -39,8 +39,8 @@ class ComediAnalogOutput;
 
 /*! 
 \class DynClampAnalogOutput
-\author Marco Hackenberg, Jan Benda
-\version 0.1
+\author Marco Hackenberg
+\author Jan Benda
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via a dynamic clamp kernel module.
 \bug fix errno usage
 */
@@ -124,12 +124,6 @@ public:
   
     /*! True if analog output is running. */
   virtual bool running( void ) const;
-
-    /*! Get error status of the device. 
-        0: no error
-	-1: underrun
-        other: unknown */
-  virtual int error( void ) const;
 
     /*! Index of signal start relative to the data stream of a running analog input. */
   virtual long index( void ) const;
@@ -226,7 +220,6 @@ private:
 
   bool IsPrepared;
   mutable bool IsRunning;
-  mutable int ErrorState;
 
     /*! The output signals that were prepared by prepareWrite(). */
   OutList Sigs;

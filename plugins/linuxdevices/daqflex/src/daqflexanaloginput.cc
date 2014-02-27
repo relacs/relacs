@@ -34,7 +34,6 @@ namespace daqflex {
 DAQFlexAnalogInput::DAQFlexAnalogInput( void )
   : AnalogInput( "DAQFlexAnalogInput", DAQFlexAnalogIOType )
 {
-  ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
   DAQFlexDevice = NULL;
@@ -52,7 +51,6 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( void )
 DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts )
   : AnalogInput( "DAQFlexAnalogInput", DAQFlexAnalogIOType )
 {
-  ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
   DAQFlexDevice = NULL;
@@ -107,7 +105,6 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   reset();
 
   // clear flags:
-  ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
   TotalSamples = 0;
@@ -359,7 +356,6 @@ int DAQFlexAnalogInput::readData( void )
   if ( Traces == 0 || Buffer == 0 || ! IsRunning )
     return -1;
 
-  ErrorState = 0;
   bool failed = false;
   int readn = 0;
   int buffern = BufferN*2;
@@ -380,10 +376,8 @@ int DAQFlexAnalogInput::readData( void )
 
     if ( err != 0 && err != LIBUSB_ERROR_TIMEOUT ) {
       Traces->addErrorStr( "LibUSB error " + Str( err ) );
-      if ( err == LIBUSB_ERROR_OVERFLOW ) {
-	ErrorState = 1;
+      if ( err == LIBUSB_ERROR_OVERFLOW )
 	Traces->addError( DaqError::OverflowUnderrun );
-      }
       failed = true;
       cerr << " DAQFlexAnalogInput::readData(): libUSB error " << err << "\n";
     }
@@ -407,7 +401,6 @@ int DAQFlexAnalogInput::readData( void )
     if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       Traces->addErrorStr( deviceFile() + " - buffer-overflow " );
       Traces->addError( DaqError::OverflowUnderrun );
-      ErrorState = 1;
       cerr << " DAQFlexAnalogInput::readData(): no data and not running\n";
     }
     return -1;
@@ -513,7 +506,6 @@ int DAQFlexAnalogInput::reset( void )
 
   Settings.clear();
 
-  ErrorState = 0;
   IsPrepared = false;
   Traces = 0;
   TraceIndex = 0;
@@ -526,17 +518,6 @@ bool DAQFlexAnalogInput::running( void ) const
 {
   string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS", false );
   return ( response.find( "RUNNING" ) != string::npos );
-}
-
-
-int DAQFlexAnalogInput::error( void ) const
-{
-  return ErrorState;
-  /*
-    0: ok
-    1: OverflowUnderrun
-    2: Unknown (device error)
-  */
 }
 
 

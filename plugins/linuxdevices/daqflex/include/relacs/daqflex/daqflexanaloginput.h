@@ -114,12 +114,6 @@ public:
     /*! True if the analog input driver is running. */
   virtual bool running( void ) const;
 
-    /*! Get error status of the device. 
-        0: no error
-	-1: input buffer overflow
-        other: unknown */
-  virtual int error( void ) const;
-
 
 protected:
 
@@ -159,9 +153,6 @@ private:
     /*! True if a command is supposed to be running.
         \note this differs from running(), which indicated that the driver is still running. */
   bool IsRunning;
-
-    /*! Errorcode of the last operation. */
-  int ErrorState;
 
     /*! The input traces that were prepared by prepareRead(). */
   InList *Traces;

@@ -84,6 +84,9 @@ void ReadThread::run( void )
     rd = Run;
     RunMutex.unlock();
   } while ( rd );
+  string errors = RW->AQ->readError();
+  if ( ! errors.empty() )
+    RW->printlog( "! error in transferring analog input data: " + errors );
 }
 
 
@@ -121,8 +124,8 @@ void WriteThread::run( void )
   do {
     int r = RW->AQ->writeData();
     if ( r < 0 ) {
+      RW->printlog( "! error in transferring analog output data: " + RW->AQ->writeError() );
       RW->AQ->stopWrite();
-      RW->printlog( "! error in transferring analog output data. Stop analog output." );
       // error message:
       QCoreApplication::postEvent( RW, new QEvent( QEvent::Type( QEvent::User+3 ) ) );
     }
@@ -136,6 +139,9 @@ void WriteThread::run( void )
     rd = Run;
     RunMutex.unlock();
   } while ( rd );
+  string errors = RW->AQ->writeError();
+  if ( ! errors.empty() )
+    RW->printlog( "! error in transferring analog output data: " + errors );
 }
 
 

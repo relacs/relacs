@@ -38,7 +38,6 @@ namespace comedi {
 ComediAnalogInput::ComediAnalogInput( void ) 
   : AnalogInput( "ComediAnalogInput", ComediAnalogIOType )
 {
-  ErrorState = 0;
   DeviceP = NULL;
   SubDevice = 0;
   LongSampleType = false;
@@ -62,7 +61,6 @@ ComediAnalogInput::ComediAnalogInput( void )
 ComediAnalogInput::ComediAnalogInput( const string &device, const Options &opts ) 
   : AnalogInput( "ComediAnalogInput", ComediAnalogIOType )
 {
-  ErrorState = 0;
   DeviceP = NULL;
   SubDevice = 0;
   LongSampleType = false;
@@ -241,7 +239,6 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
   // clear flags:
-  ErrorState = 0;
   ComediAIs.clear();
   ComediAOs.clear();
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
@@ -713,7 +710,6 @@ int ComediAnalogInput::prepareRead( InList &traces )
 
 int ComediAnalogInput::executeCommand( void )
 {
-  ErrorState = 0;
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     cerr << "AI command failed: " << comedi_strerror( comedi_errno() ) << endl;
     /*
@@ -846,7 +842,6 @@ int ComediAnalogInput::readData( void )
   if ( Traces == 0 || Buffer == 0 || ! IsRunning )
     return -1;
 
-  ErrorState = 0;
   bool failed = false;
   int readn = 0;
   int buffern = BufferN*BufferElemSize;
@@ -884,19 +879,16 @@ int ComediAnalogInput::readData( void )
     /* the following does not work:
     // check buffer underrun:
     if ( errno == EPIPE ) {
-      ErrorState = 1;
       Traces->addErrorStr( deviceFile() + " - buffer-overflow: "
 			  + comedi_strerror( comedi_errno() ) );
       Traces->addError( DaqError::OverflowUnderrun );
     }    
     else {
-      ErrorState = 2;
       Traces->addErrorStr( "Error while reading from device-file: " + deviceFile()
 			  + "  comedi: " + comedi_strerror( comedi_errno() ) 
 			  + "  system: " + strerror( errno ) );
       Traces->addError( DaqError::Unknown );
     }
-    cerr << "ComediAnalogInput::readData(): Errorstate = " << ErrorState << endl;
     */
     return -1;   
   }
@@ -972,7 +964,6 @@ int ComediAnalogInput::reset( void )
 
   Settings.clear();
 
-  ErrorState = 0;
   if ( Cmd.chanlist != 0 )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
@@ -987,17 +978,6 @@ int ComediAnalogInput::reset( void )
 bool ComediAnalogInput::running( void ) const
 {   
   return ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
-}
-
-
-int ComediAnalogInput::error( void ) const
-{
-  return ErrorState;
-  /*
-    0: ok
-    1: OverflowUnderrun
-    2: Unknown (device error)
-  */
 }
 
 

@@ -109,12 +109,6 @@ public:
     /*! True if the analog input driver is running. */
   virtual bool running( void ) const;
 
-    /*! Get error status of the device. 
-        0: no error
-	-1: input buffer overflow
-        other: unknown */
-  virtual int error( void ) const;
-
 
 protected:
 
@@ -169,9 +163,6 @@ private:
   bool IsPrepared;
     /*! True if no more data need to be written to the board. */
   bool NoMoreData;
-
-    /*! Errorcode of the last operation. */
-  int ErrorState;
 
     /*! The sorted output signals that were prepared by prepareWrite(). */
   OutList Sigs;

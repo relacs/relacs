@@ -165,12 +165,6 @@ public:
     /*! True if analog output is running. */
   virtual bool running( void ) const  = 0;
 
-    /*! Get error status of the device. 
-        0: no error
-        1: output underrun
-        other: unknown */
-  virtual int error( void ) const = 0;
-
     /*! Index of signal start.
         The default implemetation returns -1, indicating that
         no index is available.

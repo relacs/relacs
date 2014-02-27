@@ -39,7 +39,6 @@ namespace comedi {
 ComediAnalogOutput::ComediAnalogOutput( void ) 
   : AnalogOutput( "Comedi Analog Output", ComediAnalogIOType )
 {
-  ErrorState = 0;
   DeviceP = NULL;
   SubDevice = 0;
   LongSampleType = false;
@@ -59,7 +58,6 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
 					 const Options &opts ) 
   : AnalogOutput( "Comedi Analog Output", ComediAnalogIOType )
 {
-  ErrorState = 0;
   DeviceP = NULL;
   SubDevice = 0;
   LongSampleType = false;
@@ -252,7 +250,6 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
   // clear flags:
-  ErrorState = 0;
   ComediAOs.clear();
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
@@ -867,7 +864,6 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
 int ComediAnalogOutput::executeCommand( void )
 {
-  ErrorState = 0;
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     cerr << "AO command failed: " << comedi_strerror( comedi_errno() ) << endl;
     /*
@@ -960,10 +956,8 @@ int ComediAnalogOutput::writeData( void )
   // device stopped?
   if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 ) { 
     // not running anymore.
-    if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
-      ErrorState = 1;
+    if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY )
       Sigs.addError( DaqError::OverflowUnderrun );
-    }
     else {
       Sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
 			deviceFile() + " is not running and not busy!" );
@@ -1010,7 +1004,6 @@ int ComediAnalogOutput::reset( void )
   // the comedi_cancel seems to be sufficient!
 
   Settings.clear();
-  ErrorState = 0;
   if ( Cmd.chanlist != 0 )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
@@ -1028,20 +1021,6 @@ bool ComediAnalogOutput::running( void ) const
   bool r = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
   unlock();
   return r;
-}
-
-
-int ComediAnalogOutput::error( void ) const
-{
-  lock();
-  int e = ErrorState;
-  unlock();
-  /*
-    0: ok
-    1: OverflowUnderrun
-    2: Unknown (device error)
-  */
-  return e;
 }
 
 
@@ -1071,8 +1050,6 @@ int ComediAnalogOutput::fillWriteBuffer( void )
       bytesConverted = convert<sampl_t>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
   }
-
-  ErrorState = 0;
 
   if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
     return 0;
@@ -1113,17 +1090,14 @@ int ComediAnalogOutput::fillWriteBuffer( void )
     switch( ern ) {
 
     case EPIPE: 
-      ErrorState = 1;
       Sigs.addError( DaqError::OverflowUnderrun );
       return -1;
 
     case EBUSY:
-      ErrorState = 2;
       Sigs.addError( DaqError::Busy );
       return -1;
 
     default:
-      ErrorState = 2;
       Sigs.addErrorStr( ern );
       Sigs.addError( DaqError::Unknown );
       return -1;

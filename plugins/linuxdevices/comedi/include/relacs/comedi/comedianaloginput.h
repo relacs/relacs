@@ -36,9 +36,10 @@ class ComediAnalogOutput;
 /*! 
 \class ComediAnalogInput
 \author Marco Hackenberg
+\author Jan Benda
 \brief [AnalogInput] Interface for accessing analog input of a daq-board via comedi.
 \todo Support delays in testReadDevice() and convertData()!
-\todo Fix usage of ErrorState variable (also in readData() )
+\todo Error handling in readData()
 
 \par Options:
 - \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its
@@ -138,12 +139,6 @@ public:
     /*! True if the analog input driver is running. */
   virtual bool running( void ) const;
 
-    /*! Get error status of the device. 
-        0: no error
-	-1: input buffer overflow
-        other: unknown */
-  virtual int error( void ) const;
-
     /*! Check for every analog input and analog output device in \a ais
         and \a aos, respectively,
         whether it can be simultaneously started by startRead()
@@ -229,8 +224,6 @@ private:
     /*! True if a command is supposed to be running.
         \note this differs from running(), which indicated that the driver is still running. */
   bool IsRunning;
-
-  int ErrorState;
 
     /*! Calibration info. */
   comedi_calibration_t *Calibration;

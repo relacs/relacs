@@ -38,9 +38,7 @@ class ComediAnalogInput;
 \class ComediAnalogOutput
 \author Marco Hackenberg
 \author Jan Benda
-\version 0.2
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via comedi.
-\bug NI E Series start_arg-- needs to me implemented
 \bug NI DAQCard cmd.stop_arg += 2048 needs to tested
 
 
@@ -124,12 +122,6 @@ public:
   
     /*! True if analog output is running. */
   virtual bool running( void ) const;
-
-    /*! Get error status of the device. 
-        0: no error
-	-1: underrun
-        other: unknown */
-  virtual int error( void ) const;
 
     /*! Check for every analog output device in \a aos
         whether it can be simultaneously started by startWrite()
@@ -228,8 +220,6 @@ private:
   comedi_cmd Cmd;
     /*! True if the command is prepared. */
   bool IsPrepared;
-
-  int ErrorState;
 
     /*! Calibration info. */
   comedi_calibration_t *Calibration;

@@ -175,13 +175,6 @@ public:
     /*! True if analog input is running. */
   virtual bool running( void ) const = 0;
 
-    /*! Get error status of the device. 
-        0: no error
-	1: input buffer overflow
-        2: overrun
-        other: unknown */
-  virtual int error( void ) const = 0;
-
     /*! Check for every analog input and analog output device in \a ais
         and \a aos, respectively,
         whether it can be simultaneously started by startRead()

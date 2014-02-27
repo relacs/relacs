@@ -780,16 +780,6 @@ int Acquire::readData( void )
 
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
-
-      AI[i].Traces.clearError();
-
-      // get error from previous data input:
-      int aie = AI[i].AI->error();
-      if ( aie != 0 ) {
-	AI[i].Traces.addDaqError( aie );
-	error = true;
-      }
-
       // read data from daq boards:
       if ( AI[i].AI->readData() < 0 ) {
 	if ( AI[i].Traces.failed() )
@@ -797,7 +787,6 @@ int Acquire::readData( void )
       }
       else
 	finished = false;
- 
     }
   }
 
@@ -824,6 +813,15 @@ int Acquire::convertData( void )
   }
 
   return success ? 0 : -1;
+}
+
+
+string Acquire::readError( void ) const
+{
+  InList traces;
+  for ( unsigned int i = 0; i<AI.size(); i++ )
+    traces.add( AI[i].Traces );
+  return traces.errorText();
 }
 
 
@@ -1430,16 +1428,6 @@ int Acquire::testWrite( OutData &signal )
   if ( signal.failed() )
     return -1;
 
-  // get error from previous signal output:
-  if ( AO[di].Signals.size() == 1 &&
-       &AO[di].Signals[0] == &signal ) {
-    int aoe = AO[di].AO->error();
-    if ( aoe != 0 ) {
-      signal.addDaqError( aoe );
-      return -1;
-    }
-  }
-
   // device still busy?
   if ( AO[di].AO->running() && ! signal.priority() )
     signal.addError( DaqError::Busy );
@@ -1535,30 +1523,6 @@ int Acquire::testWrite( OutList &signal )
   // error?
   if ( ! success )
     return -1;
-
-  // get error from previous signal output:
-  bool same = true;
-  for ( unsigned int i=0; i<dis.size() && same; i++ ) {
-    if ( AO[dis[i]].Signals.size() != dsignals[i].size() ) {
-      same = false;
-      break;
-    }
-    for ( int k=0; k<dsignals[i].size(); k++ ) {
-      if ( &AO[dis[i]].Signals[k] != &dsignals[i][k] ) {
-	same = false;
-	break;
-      }
-    }
-  }
-  if ( same ) {
-    for ( unsigned int i=0; i<dis.size(); i++ ) {
-      int aoe = AO[dis[i]].AO->error();
-      if ( aoe != 0 ) {
-	dsignals[i].addDaqError( aoe );
-	success = false;
-      }
-    }
-  }
 
   // error?
   if ( ! success )
@@ -1684,11 +1648,9 @@ int Acquire::setupWrite( OutData &signal )
     return -1;
   }
 
-  // clear device datas:
+  // add signal to device:
   for ( unsigned int i=0; i<AO.size(); i++ )
     AO[i].Signals.clear();
-
-  // add data to device:
   AO[di].Signals.add( &signal );
 
   // set intensity or level:
@@ -1737,9 +1699,7 @@ int Acquire::setupWrite( OutData &signal )
   }
 
   // test writing to daq board:
-  Signal.clear();
-  Signal.add( &signal );
-  AO[di].AO->testWrite( Signal );
+  AO[di].AO->testWrite( AO[di].Signals );
 
   // error?
   if ( signal.failed() ) {
@@ -1747,7 +1707,7 @@ int Acquire::setupWrite( OutData &signal )
     return -1;
   }
 
-  AO[di].AO->prepareWrite( Signal );
+  AO[di].AO->prepareWrite( AO[di].Signals );
 
   // error?
   if ( signal.failed() ) {
@@ -1882,11 +1842,9 @@ int Acquire::setupWrite( OutList &signal )
     }
   }
 
-  // clear device datas:
+  // add signals to devices:
   for ( unsigned int i=0; i<AO.size(); i++ )
     AO[i].Signals.clear();
-
-  // add signals:
   for ( int k=0; k<signal.size(); k++ )
     AO[signal[k].device()].Signals.add( &signal[k] );
 
@@ -2134,11 +2092,9 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
     return -1;
   }
 
-  // clear device datas:
+  // add signal to device:
   for ( unsigned int i=0; i<AO.size(); i++ )
     AO[i].Signals.clear();
-
-  // add data to device:
   AO[di].Signals.add( &signal );
 
   // set intensity or level:
@@ -2291,11 +2247,9 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
     }
   }
 
-  // clear device datas:
+  // add signals to devices:
   for ( unsigned int i=0; i<AO.size(); i++ )
     AO[i].Signals.clear();
-
-  // add signals:
   for ( int k=0; k<signal.size(); k++ )
     AO[signal[k].device()].Signals.add( &signal[k] );
 
@@ -2516,6 +2470,15 @@ int Acquire::writeZero( const string &trace )
 {
   int index = outTraceIndex( trace );
   return writeZero( index );
+}
+
+
+string Acquire::writeError( void ) const
+{
+  OutList sigs;
+  for ( unsigned int i = 0; i<AO.size(); i++ )
+    sigs.add( AO[i].Signals );
+  return sigs.errorText();
 }
 
 
