@@ -121,6 +121,8 @@ Macros:
 - Macro Options and Macro stack (B R N keys) do not work together
 - Add possibility to call shell command that returns a command line,
    e.g. RePro call, for the Macros
+- Possibility to quit a macro after  the current RePro finished normally
+  (similar to break, but without softStopRequest).
 
 Numerics:
 - Problems with the pow function (in containerfuncs.h): bug in xarray.cc
@@ -262,10 +264,8 @@ Autotools:
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 - upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
 - uninstall: also remove relacs subdirectories?!
-- Use current version of doxygen for debian,
-  update the Doxyfile or remove new/old settings
 - make distcheck: 
-  release.sh /home/jan/prj/relacs/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
+  release.sh /home/jan/prj/relacs/relacsinstall
 
 Distribution details:
 - Look through and clean up utils/ folder
@@ -281,10 +281,6 @@ Distribution details:
 
 ---------------------------------
 
-RePros:
-  - check save() function of all RePros.
-  - test all RePros! Especially the files they are saving.
-
 Adjust input range:
   - outsource this in a control widget or to the PlotTrace widget.
   - Search/FIField: slower change of input range!
@@ -295,42 +291,19 @@ SpikeDetector:
   - Add plot showing the time evolution of the spike size.
   - Save this trace!
 
-Macros:
-  - Possibility to quit a macro after  the current RePro finished normally
-    (similar to break, but without softStopRequest).
-
 Devices:
   - Add and implement probe() and possibly requires() function
   - implement "dummy (DocDevice)" devices that only get infos from
     the config file and thus serve as documentation of all the used hardware.
 
-Attenuate:
-  - interaction with gain settings of daq board? Are there boards with
-    many gains for analog output?
-
-MetaData, RELACSWidget::AIMutex
-  - really need recursive mutexes?
-
-Filter/Detectors/PlotTrace:
-  Make PlotTrace better configurable!
-
 OutData, Acquire:
  - handle unset SampleInterval
-
-A virtual I/O Data handler controlling the data flow in RELACS.
- - * online data aquisition
- - * simulation
- - data browser
- - data analysis
 
 RELACS:
  - "labbook/protocol/log" options as a tab along with the session
    for recording manual manipulations of the experiment.
    Saved directly in the trigger.dat file and
    available to the RePros. 
- - clear and reset all inputdata, eventdata and data acquisition 
-   at session start and session end to avoid index and time overflows!
- - IOData, EventData, FileWrite, ...: new time zero reference handling!
 
 A new Tab-Widget Container:
  - show tabs only if more than one tab

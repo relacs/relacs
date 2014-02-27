@@ -59,8 +59,8 @@ into the RELACS raw-traces files, use the Record %RePro.
   Select the ones that you want to save into files.
 
 \par Files
-- savetraces-<tracename>-<run>.dat
-- saveevents-<eventsname>-<run>.dat
+- savetraces-\<tracename\>-\<run\>.dat
+- saveevents-\<eventsname\>-\<run\>.dat
 */
 
 

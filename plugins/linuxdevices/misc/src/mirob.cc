@@ -1252,7 +1252,7 @@ void Mirob::miroblog(const char* text){
   }
 }
 
-void Mirob::miroblog(relacs::Str text){
+void Mirob::miroblog(Str text){
   if (watchdog_info.gcb != NULL){
     watchdog_info.gcb->logBox->append(QString(((string)text).c_str()));
   }

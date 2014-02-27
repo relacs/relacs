@@ -112,7 +112,7 @@ public:
     PrintType = 128,
       /*! Indicate the style of a section or Parameter name. */
     PrintStyle = 256,
-      /*! Do not write the final closing </section>. */
+      /*! Do not write the final closing \c \</section\>. */
     DontCloseSection = 512
   };
 

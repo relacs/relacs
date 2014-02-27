@@ -252,7 +252,7 @@ private:
 
 
   void miroblog(const char* text);
-  void miroblog(::relacs::Str text);
+  void miroblog(Str text);
 
   int activateAxis(int ax);
   

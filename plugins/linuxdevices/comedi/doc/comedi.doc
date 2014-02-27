@@ -757,9 +757,9 @@ $ udevadm trigger
 to apply your new udev rules
 -# Add users to the "iocard" group:
 \code
-$ adduser <username> iocard
+$ adduser \<username\> iocard
 \endcode
-After the next login, \c <username> is a member of the \c iocard group
+After the next login, \c \<username\> is a member of the \c iocard group
 and and has sufficient permissions to access the data acquisition boards through \c Comedi.
 
 

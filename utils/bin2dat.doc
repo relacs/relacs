@@ -6,9 +6,9 @@ by RELACS, and especially the IOData::writeBinary() functions,
 into ascii data files.
 
 \section bin2datusage USAGE
-\c bin2dat \a <binfile> \a <datfile> \a <options>
+\c bin2dat \a \<binfile\> \a \<datfile\> \a \<options\>
 
-The first argument \a <binfile> is the full specification of the file
+The first argument \a \<binfile\> is the full specification of the file
 containing the binary data. 
 The second argument is the output file in which the ascii data are written.
 The program tries to guess the data type of the binary file from its extension.

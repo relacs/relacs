@@ -1,10 +1,10 @@
 /*!
 \page scaninf scaninf
 
-Search the *.inf files created by RELACS for a specific entry \a <spec>.
+Search the *.inf files created by RELACS for a specific entry \a \<spec\>.
 
 \section scaninfusage USAGE
-\c scaninf \a <spec> \c [-u|-s|-d|-f]
+\c scaninf \a \<spec\> \c [-u|-s|-d|-f]
 
 \section scaninfoptions OPTIONS
 \arg \c -s : sort the values

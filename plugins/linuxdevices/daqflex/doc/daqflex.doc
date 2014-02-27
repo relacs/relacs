@@ -12,7 +12,7 @@ $ sudo apt-get install libusb-1.0-0-dev
 Then run \c ./configure and \c make to compile the DAFlex plugins.
 
 \c make \c install  copies the firmware files from \c firmware/  to
-\c <prefix>/lib/daqflex/ .
+\c \<prefix\>/lib/daqflex/ .
 
 \note The firmware files are kindly provided by Measurement Computing Corporation.
 You may check their website <http://www.mccdaq.com/> for more recent updates.
@@ -37,7 +37,7 @@ $ addgroup --system iocard
 On older system (prior to mid 2012) create the file
 \c /etc/udev/rules.d/98-daqflex.rules and paste the following lines into that file:
 \include 98-daqflex-old.rules
-Both files are also installed to \c <prefix>/lib/daqflex/ . So you can simply copy them to the
+Both files are also installed to \c \<prefix\>/lib/daqflex/ . So you can simply copy them to the
 right directory. New system:
 \code
 $ cp /usr/lib/daqflex/98-daqflex-new.rules /lib/udev/rules.d/
@@ -53,9 +53,9 @@ $ udevadm trigger
 to apply your new udev rules
 -# Add users to the "iocard" group:
 \code
-$ adduser <username> iocard
+$ adduser \<username\> iocard
 \endcode
-After the next login, \c <username> is a member of the \c iocard group
+After the next login, \c \<username\> is a member of the \c iocard group
 and and has sufficient permissions to access the DAQFlex data acquisition boards.
 
 

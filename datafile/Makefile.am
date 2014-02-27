@@ -22,7 +22,7 @@ DX_SETTINGS += INPUT='src include/relacs doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
 if RELACS_TOP_BUILD
-DX_SETTINGS += TAGILES='../numerics/doc/numerics.tag=../numerics ../options/doc/options.tag=../options'
+DX_SETTINGS += TAGFILES='../numerics/doc/numerics.tag=../numerics ../options/doc/options.tag=../options'
 else
 DX_SETTINGS += TAGFILES='$(DESTDIR)$(docdir)/numerics.tag=../numerics $(DESTDIR)$(docdir)/options.tag=../options'
 endif
