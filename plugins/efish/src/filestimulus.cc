@@ -62,7 +62,7 @@ FileStimulus::FileStimulus( void )
   addNumber( "contrast", "Contrast", Contrast, 0.001, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
   addNumber( "amplitude", "Amplitude", Amplitude, 0.001, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addBoolean( "am", "Amplitude modulation", AM );
-  addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
+  addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Additional noise" );
   addSelection( "noisetype", "Type of noise", "none|White|Ornstein-Uhlenbeck");
   addNumber( "uppercutoff", "Upper cutoff frequency", UpperCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","White");

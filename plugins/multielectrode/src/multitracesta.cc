@@ -32,7 +32,7 @@ MultiTraceSTA::MultiTraceSTA( void )
   // add some options:
   addSelection( "inspikes", "Input spike train", "Spikes-1" );
   addNumber( "interval", "Averaging interval", 1.0, 0.001, 100000.0, 0.001, "sec" );
-  addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
+  addInteger( "repeats", "Repeats", 100, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "stamint", "Minimum STA time", -0.1, -1000.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "stamaxt", "Maximum STA time", 0.01, -1000.0, 1000.0, 0.01, "sec", "ms" );
   addBoolean( "plotsnippets", "Plot the individual snippets", true );

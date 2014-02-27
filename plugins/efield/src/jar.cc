@@ -65,7 +65,7 @@ JAR::JAR( void )
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
   addText( "deltafrange", "Range of delta f's", "" );
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
-  addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
+  addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Amplitudes" );
   addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
   addNumber( "contrastmax", "Maximum contrast", ContrastMax, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );

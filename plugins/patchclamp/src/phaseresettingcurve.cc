@@ -43,7 +43,7 @@ PhaseResettingCurve::PhaseResettingCurve( void )
   addNumber( "amplitude", "Test-pulse amplitude", 0.1, -10000.0, 10000.0, 0.01 );
   addNumber( "duration", "Duration of test-pulse", 0.001, 0.0, 1000.0, 0.001, "seconds", "ms" );
   addInteger( "nperiods", "Number of ISIs between test-pulses", 5, 0, 1000000 );
-  addInteger( "repeats", "Number of test-pulses", 100, 0, 1000000 );
+  addInteger( "repeats", "Number of test-pulses", 100, 0, 1000000 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "rateduration", "Time for initial estimate of firing rate", 1.0, 0.0, 100000.0, 0.01, "seconds", "ms" );
   addInteger( "averageisis", "Average ISI over", 10, 1, 100000, 1, "test-pulses" );
   addInteger( "minsave", "Minimum number of test pulses required for saving data", 10, 1, 100000, 1 );

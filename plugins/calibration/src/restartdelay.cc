@@ -33,7 +33,7 @@ RestartDelay::RestartDelay( void )
 {
   // add some options:
   addNumber( "duration", "Duration of analysis window", 0.1, 0.01, 1000.0, 0.02, "sec", "ms" );
-  addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
+  addInteger( "repeats", "Repeats", 100, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   addSelection( "intrace", "Input trace", "V-1" );
 
   // plot:

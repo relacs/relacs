@@ -65,7 +65,7 @@ SingleStimulus::SingleStimulus( void )
   addSelection( "offsetbase", "Stimulus mean relative to", "absolute|amplitude|current|threshold|previous" );
   addBoolean( "samerate", "Use sampling rate of input", true ).setActivation( "waveform", "From file", false );
   addNumber( "samplerate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "true", false );
-  addNumber( "repeats", "Number of stimulus presentations", Repeats, 0, 10000, 1, "times" );
+  addNumber( "repeats", "Number of stimulus presentations", Repeats, 0, 10000, 1, "times" ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "outtrace", "Output trace", "V-1" );
   newSection( "Offset - search" );

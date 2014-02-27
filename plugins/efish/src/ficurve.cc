@@ -48,7 +48,7 @@ FICurve::FICurve( void )
   addNumber( "maxintfac", "Maximum intensity of test stimulus", 1.6, 0.0, 2.0, 0.1, "1", "%" );
   addNumber( "minintfac", "Minimum intensity of test stimulus", 0.2, 0.0, 2.0, 0.1, "1", "%" );
   addInteger( "nints", "Number of intensities for test stimulus", 16, 2, 500, 1 );
-  addInteger( "repeats", "Total number of repetitions of an f-I curve measurement", 10, 0, 100000, 2 );
+  addInteger( "repeats", "Total number of repetitions of an f-I curve measurement", 10, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addInteger( "blockrepeats", "Number of repetitions of a sequence of intensities", 1, 1, 100000, 2 );
   addInteger( "singlerepeats", "Number of immediate repetitions of an intensity", 1, 1, 100000, 2 );
   addSelection( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() );

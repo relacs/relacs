@@ -43,7 +43,7 @@ MembraneResistance::MembraneResistance( void )
   addNumber( "vstep", "Steady-state voltage amplitude induced by output signal", -1.0, -1000.0, 1000.0, 0.1, "mV" ).setActivation( "userm", "true" );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
-  addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
+  addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Analysis" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );

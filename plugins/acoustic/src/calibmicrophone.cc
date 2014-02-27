@@ -39,7 +39,7 @@ CalibMicrophone::CalibMicrophone( void )
   addNumber( "frequency", "Frequency of the sound source", 1000.0, 0.0, 10000.0, 1.0, "Hz" );
   addSelection( "intrace", "Input trace", "Sound-1" );
   addNumber( "duration", "Duration of a single measurement", 1.0, 0.0, 1000.0, 0.5, "seconds" );
-  addInteger( "repeat", "Number of measurements", 10, 1, 10000, 1 );
+  addInteger( "repeats", "Number of measurements", 10, 1, 10000, 1 );
   Options::setFlags( 1 );
 
   addNumber( "amplitude", "rms amplitude", 0.0, 0.0, 10000.0, 0.05, "V" ).setFlags( 2 );
@@ -74,7 +74,7 @@ int CalibMicrophone::main( void )
   double frequency = number( "frequency" );
   int intrace = traceIndex( text( "intrace", 0 ) );
   double duration = number( "duration" );
-  int repeats = integer( "repeat" );
+  int repeats = integer( "repeats" );
 
   // input trace:
   if ( intrace < 0 || intrace >= traces().size() ) {

@@ -85,7 +85,7 @@ FICurve::FICurve( void )
   addInteger( "intincrement", "Initial increment for intensities", IntIncrement, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", SingleRepeat, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", IntBlockRepeat, 1, 10000, 1 );
-  addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 0, 10000, 1 );
+  addInteger( "repeats", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
   newSection( "Waveform" );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
@@ -195,7 +195,7 @@ int FICurve::main( void )
   IntensityExtension = number( "extint" );
   SingleRepeat = integer( "singlerepeat" );
   IntBlockRepeat = integer( "blockrepeat" );
-  IntRepeat = integer( "repeat" );
+  IntRepeat = integer( "repeats" );
   bool manualskip = boolean( "manualskip" );
   Waveform = index( "waveform" );
   Ramp = number( "ramp" );

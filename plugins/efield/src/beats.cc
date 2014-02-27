@@ -43,7 +43,7 @@ Beats::Beats( void )
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addBoolean( "fixeddf", "Keep delta f fixed", false );
   addNumber( "amplitude", "Amplitude", 1.0, 0.1, 1000.0, 0.1, "mV/cm" );
-  addInteger( "repeats", "Repeats", 10, 0, 1000, 2 );
+  addInteger( "repeats", "Repeats", 10, 0, 1000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
   newSection( "Chirps" );
   addBoolean( "generatechirps", "Generate chirps", false );

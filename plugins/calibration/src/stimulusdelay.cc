@@ -36,7 +36,7 @@ StimulusDelay::StimulusDelay( void )
   addNumber( "samplerate", "Sampling rate of output", 10000.0, 1000.0, 1000000.0, 1000.0, "Hz", "kHz" );
   addNumber( "duration", "Duration of output", 0.01, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Pause between outputs", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
-  addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
+  addInteger( "repeats", "Repeats", 100, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
 
   // plot:
   P.lock();

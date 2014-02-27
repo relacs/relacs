@@ -52,7 +52,7 @@ VICurve::VICurve( void )
   addInteger( "iincrement", "Initial increment for currents", -1, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
-  addInteger( "repeat", "Number of repetitions of the whole V-I curve measurement", 1, 0, 10000, 1 );
+  addInteger( "repeats", "Number of repetitions of the whole V-I curve measurement", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Analysis" );
   addNumber( "vmin", "Minimum value for membrane voltage", -100.0, -1000.0, 1000.0, 1.0 );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
@@ -109,7 +109,7 @@ int VICurve::main( void )
   int iincrement = integer( "iincrement" );
   int singlerepeat = integer( "singlerepeat" );
   int blockrepeat = integer( "blockrepeat" );
-  int repeat = integer( "repeat" );
+  int repeat = integer( "repeats" );
   double duration = number( "duration" );
   double delay = number( "delay" );
   double pause = number( "pause" );

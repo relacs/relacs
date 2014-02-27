@@ -42,7 +42,7 @@ VoltageReconstruction::VoltageReconstruction( void )
   addNumber( "dcamplitude", "Initial amplitude of dc-current", 0.0, 0.0, 1000.0, 0.01 ).setActivation( "dcamplitudesrc", "custom" );
   addNumber( "amplitude", "Test-pulse amplitude", 0.1, 0.0, 1000.0, 0.01 );
   addNumber( "duration", "Duration of test-pulse", 0.005, 0.0, 1000.0, 0.001, "seconds", "ms" );
-  addInteger( "repeats", "Number of test-pulses", 100, 0, 1000000 );
+  addInteger( "repeats", "Number of test-pulses", 100, 0, 1000000 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "rateduration", "Time for initial estimate of firing rate", 1.0, 0.0, 100000.0, 0.01, "seconds", "ms" );
 
   // setup plot:

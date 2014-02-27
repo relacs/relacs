@@ -64,7 +64,7 @@ SingleStimulus::SingleStimulus( void )
   newSection( "Stimulus" );
   addNumber( "intensity", "Stimulus intensity", Intensity, -200.0, 200.0, 5.0, "dB" );
   addSelection( "intensitybase", "Stimulus intensity relative to", "SPL|threshold|rate|previous" );
-  addNumber( "repeats", "Number of stimulus presentations", Repeats, 1, 10000, 1, "times" );
+  addNumber( "repeats", "Number of stimulus presentations", Repeats, 0, 10000, 1, "times" ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
   newSubSection( "Carrier" );
@@ -621,7 +621,7 @@ int SingleStimulus::main( void )
   timeStamp();
 
   // output stimulus:  
-  for ( int counter=0; counter<Repeats; counter++ ) {
+  for ( int counter=0; ( Repeats <= 0 || counter<Repeats ) && softStop() == 0; counter++ ) {
     
     // message:
     Str s =  wavetypes[WaveType] + ": <b>" + StimulusLabel + "</b>";
@@ -668,12 +668,6 @@ int SingleStimulus::main( void )
 
     sleepOn( Duration + pause );
     timeStamp();
-    
-    if ( softStop() > 0 ) {
-      save( spikes, rate1, rate2 );
-      writeZero( Speaker[ Side ] );
-      return Completed;
-    }
     
   }
   

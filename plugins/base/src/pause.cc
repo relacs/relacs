@@ -30,7 +30,7 @@ Pause::Pause( void )
 {
   // add some options:
   addNumber( "duration", "Duration", 1.0, 0.01, 1000.0, 0.02, "sec", "ms" );
-  addInteger( "repeats", "Repeats", 1, 0, 10000, 2 );
+  addInteger( "repeats", "Repeats", 1, 0, 10000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "savedata", "Save raw data", false );
 }
 

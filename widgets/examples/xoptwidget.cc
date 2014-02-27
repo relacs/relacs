@@ -47,7 +47,7 @@ MainWidget::MainWidget( void )
   Opt1.addNumber( "delay", "Pause before signal",
 		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", testflag ).setStyle( teststyle );
   // .setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | teststyle );
-  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setFlags( testflag ).setStyle( teststyle );
+  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setFlags( testflag ).setStyle( teststyle | OptWidget::SpecialInfinite );
   
   Opt1.addDate( "date", "Date", 2009, 6, 20, testflag ).setStyle( teststyle );
   Opt1.newSection( "Settings", 0,  teststyle );

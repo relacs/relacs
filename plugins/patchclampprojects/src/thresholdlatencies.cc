@@ -65,7 +65,7 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "pause", "Duration of pause between outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "delay", "Time before stimullus onset", 0.05, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "savetracetime", "Length of trace to be saved and analyzed (from test-pulse on)", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
-  addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
+  addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
 
   PrevMeanTestAmplitude = 0.0;
   PrevMeanDCTestAmplitude = 0.0;

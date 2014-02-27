@@ -46,7 +46,7 @@ SysLatency::SysLatency( void )
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   addNumber( "duration", "Duration of stimulus", 0.6, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", 0.6, 0.0, 10.0, 0.05, "seconds", "ms" );
-  addInteger( "repeats", "Number of stimulus repetitions", 10, 0, 10000, 2 );
+  addInteger( "repeats", "Number of stimulus repetitions", 10, 0, 10000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addSelection( "side", "Speaker", "left|right|best" );
   newSection( "Analysis" );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );

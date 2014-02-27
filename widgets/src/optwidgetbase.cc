@@ -705,8 +705,11 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
     EW->setSingleStep( step );
     if ( Param->isNumber() )
       EW->setFormat( Param->format() );
-    else
+    else {
       EW->setFormat( "%.0f" );
+      if ( Param->style() & OptWidget::SpecialInfinite )
+	EW->setSpecialValueText( "infinite" );
+    }
     EW->setValue( val );
     OptWidget::setValueStyle( W, Param->style(), OptWidget::Text );
     Value = EW->value();

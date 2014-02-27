@@ -214,7 +214,7 @@ public:
 
     /*! If set you can only select from text options with multiple values,
         but not add new values. */
-  static const long SelectText = Parameter::SelectText;
+  static const long SelectText = Parameter::SelectText; // 0x01000000
     /*! Enables auto completion mode of editable combo boxes. */
   static const long ComboAutoCompletion = 0x04000000;
     /*! Browse for existing file. */
@@ -229,6 +229,8 @@ public:
   static const long BrowseAbsolute = 0x40000000;
     /*! Use LCD numbers to display a number. */
   static const long ValueLCD = 0x01000000;
+    /*! For integer options: instead of minimum value display "infinite". */
+  static const long SpecialInfinite = 0x10000000;
     /*! Section is a new tab. */
   static const long TabSection = 0x04000000;
     /*! Try to format label as a mathematical equation. */

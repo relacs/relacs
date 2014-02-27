@@ -46,7 +46,7 @@ BaselineActivity::BaselineActivity( void )
   // add some parameter as options:
   newSection( "Timing" ).setStyle( OptWidget::Bold );
   addNumber( "duration", "Duration", Duration, 0.01, 100.0, 0.05, "sec", "ms" );
-  addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
+  addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Analysis" ).setStyle( OptWidget::Bold );
   addNumber( "isimax", "Maximum interspike-interval", 0.02, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "isistep", "Interspike-interval resolution", 0.0002, 0.0001, 0.01, 0.0002, "sec", "ms" );

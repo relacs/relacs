@@ -13,10 +13,9 @@ New InData threading:
   Remove the source mapping functions from RELACSPlugin and FIlterDetectors
 - SpectrumAnalyzer Frequency resolution should not depend on sampling rate!
   Use Frequency resolution instead of number of fft points.
-- Update AnalogInput and AnalogOutput plugins!
 - Check whether InData, Acquire updateTime and readTime are still needed!
   But we do not want to block on the input too long!
-  So maybe keep readTime.
+  So maybe keep readTime. Make it an option for each device!
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Check locking of SaveFiles data
 - Model: improve locking by adding an extra Mutex for push() and pop()
@@ -26,7 +25,6 @@ New InData threading:
 - SaveFiles: recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
 
 Options:
-- Add special meaning to special values for numbers in OptWidgetBase (e.g. infinit repeats).
 - RePro: when the RePo changes an Option in main(), this change should automatically be made permanent
   (via setToDefaults() called after main()? E.g. SetInputGain RePro).
 - Make all Options and optWidget style flags an enum

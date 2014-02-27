@@ -75,7 +75,7 @@ Search::Search( void )
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
   addNumber( "ramp", "Ramp", 0.002, 0.0, 10.0, 0.001, "sec", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
-  addInteger( "repeats", "Number of repetitions", 0, 0, 10000, 2 );
+  addInteger( "repeats", "Number of repetitions", 0, 0, 10000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "adjust", "Adjust input gains", true );
   addBoolean( "saving", "Save raw data", true );
   addSelection( "setbestside", "Set the sessions's best side", "never|no session|always" );

@@ -76,7 +76,7 @@ Chirps::Chirps( void )
   addBoolean( "sinewave", "Use sine wave", SineWave );
   addBoolean( "playback", "Playback AM", Playback );
   addNumber( "pause", "Pause between signals", Pause, 0.01, 1000.0, 0.05, "sec", "ms" );
-  addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
+  addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Analysis" );
   addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );

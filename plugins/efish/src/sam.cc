@@ -57,7 +57,7 @@ SAM::SAM( void )
   addSelection( "freqsel", "Stimulus frequency is", "relative to EOD|absolute" );
   addNumber( "deltaf", "Delta f (beat frequency)", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
   addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.05, "", "%" );
-  addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
+  addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
   newSection( "Analysis" );
