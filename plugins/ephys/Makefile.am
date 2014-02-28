@@ -1,5 +1,11 @@
 SUBDIRS = src
 
+ephyscfgdir = $(pkgdatadir)/configs/ephys
+dist_ephyscfg_DATA = \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg
+
 EXTRA_DIST = doc/ephys.doc
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old

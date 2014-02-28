@@ -12,8 +12,7 @@ pluginlib_LTLIBRARIES = \
     libpatchclampficurve.la \
     libpatchclampsetdc.la \
     libpatchclampfindrate.la \
-    libpatchclampphaseresettingcurve.la \
-    libpatchclampbridgetest.la
+    libpatchclampphaseresettingcurve.la
 
 
 
@@ -350,43 +349,6 @@ libpatchclampphaseresettingcurve_la_include_HEADERS = $(HEADER_PATH)/phaseresett
 
 
 
-libpatchclampbridgetest_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/plot/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(top_srcdir)/plugins/ephys/include \
-    -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
-
-libpatchclampbridgetest_la_LDFLAGS = \
-    -module -avoid-version \
-    $(QT4_LDFLAGS)
-
-libpatchclampbridgetest_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
-
-$(libpatchclampbridgetest_la_OBJECTS) : moc_bridgetest.cc
-
-libpatchclampbridgetest_la_SOURCES = bridgetest.cc
-
-libpatchclampbridgetest_la_includedir = $(pkgincludedir)/patchclamp
-
-libpatchclampbridgetest_la_include_HEADERS = $(HEADER_PATH)/bridgetest.h
-
-
-
 check_PROGRAMS = \
     linktest_libpatchclampsession_la \
     linktest_libpatchclampsimple_la \
@@ -396,8 +358,7 @@ check_PROGRAMS = \
     linktest_libpatchclampficurve_la \
     linktest_libpatchclampsetdc_la \
     linktest_libpatchclampfindrate_la \
-    linktest_libpatchclampphaseresettingcurve_la \
-    linktest_libpatchclampbridgetest_la
+    linktest_libpatchclampphaseresettingcurve_la
 
 linktest_libpatchclampsession_la_SOURCES = linktest.cc
 linktest_libpatchclampsession_la_LDADD = libpatchclampsession.la
@@ -425,9 +386,6 @@ linktest_libpatchclampfindrate_la_LDADD = libpatchclampfindrate.la
 
 linktest_libpatchclampphaseresettingcurve_la_SOURCES = linktest.cc
 linktest_libpatchclampphaseresettingcurve_la_LDADD = libpatchclampphaseresettingcurve.la
-
-linktest_libpatchclampbridgetest_la_SOURCES = linktest.cc
-linktest_libpatchclampbridgetest_la_LDADD = libpatchclampbridgetest.la
 
 TESTS = $(check_PROGRAMS)
 

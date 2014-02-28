@@ -14,7 +14,9 @@ pluginlib_LTLIBRARIES = \
     libephysdynamicsuspikedetector.la \
     libephysthresholdsuspikedetector.la \
     libephysmotorcontrol.la \
-    libephysamplifiercontrol.la
+    libephysamplifiercontrol.la \
+    libephyscapacitycompensation.la \
+    libephysbridgetest.la
 
 
 
@@ -270,6 +272,78 @@ libephysamplifiercontrol_la_include_HEADERS = $(HEADER_PATH)/amplifiercontrol.h
 
 
 
+libephyscapacitycompensation_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libephyscapacitycompensation_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libephyscapacitycompensation_la_LIBADD = \
+    $(builddir)/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libephyscapacitycompensation_la_OBJECTS) : moc_capacitycompensation.cc
+
+libephyscapacitycompensation_la_SOURCES = capacitycompensation.cc
+
+libephyscapacitycompensation_la_includedir = $(pkgincludedir)/ephys
+
+libephyscapacitycompensation_la_include_HEADERS = $(HEADER_PATH)/capacitycompensation.h
+
+
+
+libephysbridgetest_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libephysbridgetest_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libephysbridgetest_la_LIBADD = \
+    $(builddir)/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libephysbridgetest_la_OBJECTS) : moc_bridgetest.cc
+
+libephysbridgetest_la_SOURCES = bridgetest.cc
+
+libephysbridgetest_la_includedir = $(pkgincludedir)/ephys
+
+libephysbridgetest_la_include_HEADERS = $(HEADER_PATH)/bridgetest.h
+
+
+
 check_PROGRAMS = \
     linktest_librelacsspikingneuron_la \
     linktest_libephystraces_la \
@@ -278,7 +352,9 @@ check_PROGRAMS = \
     linktest_libephysdynamicsuspikedetector_la \
     linktest_libephysthresholdsuspikedetector_la \
     linktest_libephysmotorcontrol_la \
-    linktest_libephysamplifiercontrol_la
+    linktest_libephysamplifiercontrol_la \
+    linktest_libephyscapacitycompensation_la \
+    linktest_libephysbridgetest_la
 
 linktest_librelacsspikingneuron_la_SOURCES = linktest.cc
 linktest_librelacsspikingneuron_la_LDADD = librelacsspikingneuron.la
@@ -303,5 +379,11 @@ linktest_libephysmotorcontrol_la_LDADD = libephysmotorcontrol.la
 
 linktest_libephysamplifiercontrol_la_SOURCES = linktest.cc
 linktest_libephysamplifiercontrol_la_LDADD = libephysamplifiercontrol.la
+
+linktest_libephyscapacitycompensation_la_SOURCES = linktest.cc
+linktest_libephyscapacitycompensation_la_LDADD = libephyscapacitycompensation.la
+
+linktest_libephysbridgetest_la_SOURCES = linktest.cc
+linktest_libephysbridgetest_la_LDADD = libephysbridgetest.la
 
 TESTS = $(check_PROGRAMS)
