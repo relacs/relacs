@@ -30,7 +30,6 @@ namespace relacs {
 /*! 
 \class AISim
 \author Jan Benda
-\version 1.0
 \brief Implementation of AnalogInput simulating an analog input device
 
 \par Options:

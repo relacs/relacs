@@ -973,7 +973,6 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
 int RELACSWidget::stopWrite( void )
 {
   // stop analog output:
-  WriteLoop.stop();
   int r = AQ->stopWrite();
   return r;
 }
@@ -1260,7 +1259,6 @@ void RELACSWidget::stopThreads( void )
   RunData = false;
   RunDataMutex.unlock();
   ReadLoop.stop();
-  WriteLoop.stop();
   ThreadSleepWait.wakeAll();
   ReadDataWait.wakeAll();
   PT->stop();

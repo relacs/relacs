@@ -59,6 +59,8 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   MaxRate = 50000.0;
   IsPrepared = false;
   IsRunning = false;
+  Run = false;
+  Semaphore = 0;
   UnipConverter = 0;
   BipConverter = 0;
   BufferSize = 0;
@@ -84,6 +86,8 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   MaxRate = 50000.0;
   IsPrepared = false;
   IsRunning = false;
+  Run = false;
+  Semaphore = 0;
   UnipConverter = 0;
   BipConverter = 0;
   BufferSize = 0;
@@ -262,6 +266,8 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
 #endif
 
   IsPrepared = false;
+  Run = false;
+  Semaphore = 0;
 
   setInfo();
 
@@ -300,6 +306,10 @@ void DynClampAnalogOutput::close( void )
   delete [] BipConverter;
   UnipConverter = 0;
   BipConverter = 0;
+
+  IsPrepared = false;
+  Run = false;
+  Semaphore = 0;
 
   Info.clear();
 }
@@ -810,91 +820,16 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   Sigs = ol;
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
+  Run = false;
+  Semaphore = 0;
+
   unlock();
 
   return 0;
 }
 
 
-int DynClampAnalogOutput::fillWriteBuffer( void )
-{
-  if ( Sigs[0].deviceWriting() ) {
-    // multiplex data into buffer:
-    float *bp = (float*)(Buffer+NBuffer);
-    int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
-    int bytesConverted = 0;
-    bool writing = true;
-    for ( int i=0; i<maxn && writing; i++ ) {
-      for ( int k=0; k<Sigs.size(); k++ ) {
-	*bp = Sigs[k].deviceValue();
-	if ( Sigs[k].deviceIndex() >= Sigs[k].size() ) {
-	  Sigs[k].incrDeviceCount();
-	  if ( ! Sigs[k].deviceWriting() )
-	    writing = false;
-	}
-	++bp;
-	++bytesConverted;
-      }
-    }
-    bytesConverted *= sizeof( float );
-    NBuffer += bytesConverted;
-  }
-
-  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
-    return 0;
-
-  // transfer buffer to kernel modul:
-  int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
-
-  int ern = 0;
-  int elemWritten = 0;
-      
-  if ( bytesWritten < 0 ) {
-    ern = errno;
-    if ( ern == EAGAIN || ern == EINTR )
-      ern = 0;
-  }
-  else if ( bytesWritten > 0 ) {
-    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-    NBuffer -= bytesWritten;
-    elemWritten += bytesWritten / BufferElemSize;
-  }
-
-  if ( ern == 0 ) {
-    // no more data:
-    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      if ( Buffer != 0 )
-	delete [] Buffer;
-      Buffer = 0;
-      BufferSize = 0;
-      NBuffer = 0;
-      return 0;
-    }
-  }
-  else {
-    // error:
-    switch( ern ) {
-
-    case EPIPE: 
-      Sigs.addError( DaqError::OverflowUnderrun );
-      return -1;
-
-    case EBUSY:
-      Sigs.addError( DaqError::Busy );
-      return -1;
-
-    default:
-      Sigs.addErrorStr( ern );
-      Sigs.addError( DaqError::Unknown );
-      return -1;
-    }
-  }
-  
-  return elemWritten;
-}
-
-
-int DynClampAnalogOutput::startWrite( void )
+int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 {
   lock();
   if( !prepared() || Sigs.empty() ) {
@@ -908,6 +843,8 @@ int DynClampAnalogOutput::startWrite( void )
   //  cerr << " DynClampAnalogOutput::startWrite -> fillWriteBuffer returned " << retval << '\n';
 
   if ( retval < 0 ) {
+    if ( sp != 0 )
+      sp->release( 1000 );
     unlock();
     return -1;
   }
@@ -936,6 +873,12 @@ int DynClampAnalogOutput::startWrite( void )
   }
   else
     Sigs.setSampleRate( (double)rate );
+
+  if ( sp != 0 ) {
+    Semaphore = sp;
+    Run = true;
+    start( QThread::HighestPriority );
+  }
 
   unlock();
 
@@ -1043,6 +986,125 @@ bool DynClampAnalogOutput::running( void ) const
   unlock();
 
   return running;
+}
+
+
+int DynClampAnalogOutput::fillWriteBuffer( void )
+{
+  if ( Sigs[0].deviceWriting() ) {
+    // multiplex data into buffer:
+    float *bp = (float*)(Buffer+NBuffer);
+    int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
+    int bytesConverted = 0;
+    bool writing = true;
+    for ( int i=0; i<maxn && writing; i++ ) {
+      for ( int k=0; k<Sigs.size(); k++ ) {
+	*bp = Sigs[k].deviceValue();
+	if ( Sigs[k].deviceIndex() >= Sigs[k].size() ) {
+	  Sigs[k].incrDeviceCount();
+	  if ( ! Sigs[k].deviceWriting() )
+	    writing = false;
+	}
+	++bp;
+	++bytesConverted;
+      }
+    }
+    bytesConverted *= sizeof( float );
+    NBuffer += bytesConverted;
+  }
+
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
+    return 0;
+
+  // transfer buffer to kernel modul:
+  int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
+
+  int ern = 0;
+  int elemWritten = 0;
+      
+  if ( bytesWritten < 0 ) {
+    ern = errno;
+    if ( ern == EAGAIN || ern == EINTR )
+      ern = 0;
+  }
+  else if ( bytesWritten > 0 ) {
+    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+    NBuffer -= bytesWritten;
+    elemWritten += bytesWritten / BufferElemSize;
+  }
+
+  if ( ern == 0 ) {
+    // no more data:
+    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
+      if ( Buffer != 0 )
+	delete [] Buffer;
+      Buffer = 0;
+      BufferSize = 0;
+      NBuffer = 0;
+      return 0;
+    }
+  }
+  else {
+    // error:
+    switch( ern ) {
+
+    case EPIPE: 
+      Sigs.addError( DaqError::OverflowUnderrun );
+      return -1;
+
+    case EBUSY:
+      Sigs.addError( DaqError::Busy );
+      return -1;
+
+    default:
+      Sigs.addErrorStr( ern );
+      Sigs.addError( DaqError::Unknown );
+      return -1;
+    }
+  }
+  
+  return elemWritten;
+}
+
+
+void DynClampAnalogOutput::run( void )
+{
+
+void ComediAnalogOutput::run( void )
+{
+  bool rd = true;
+
+  // fill in data:
+  do {
+    int r = writeData();
+    if ( r < 0 ) {
+      Semaphore->release( 1000 );
+      Semaphore = 0;
+      lock();
+      Run = false;
+      unlock();
+      return;
+    }
+    if ( r == 0 )
+      break;
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  // wait for device to finish writing:
+  do {
+    if ( ! running() )
+      break;
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  Semaphore->release( 1 );
+  Semaphore = 0;
 }
 
 

@@ -36,6 +36,8 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
 {
   IsPrepared = false;
   NoMoreData = true;
+  Run = false;
+  Semaphore = 0;
   DAQFlexDevice = NULL;
   BufferSize = 0;
   Buffer = 0;
@@ -48,6 +50,8 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
 {
   IsPrepared = false;
   NoMoreData = true;
+  Run = false;
+  Semaphore = 0;
   DAQFlexDevice = NULL;
   BufferSize = 0;
   Buffer = 0;
@@ -90,6 +94,8 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   // clear flags:
   IsPrepared = false;
   NoMoreData = true;
+  Run = false;
+  Semaphore = 0;
 
   setInfo();
 
@@ -123,6 +129,8 @@ void DAQFlexAnalogOutput::close( void )
   DAQFlexDevice = NULL;
   IsPrepared = false;
   NoMoreData = true;
+  Run = false;
+  Semaphore = 0;
 
   Info.clear();
 }
@@ -426,6 +434,8 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   }
 
   NoMoreData = ( r == 0 );
+  Run = false;
+  Semaphore = 0;
 
   unlock();
 
@@ -433,7 +443,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 }
 
 
-int DAQFlexAnalogOutput::startWrite( void )
+int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
 {
   lock();
 
@@ -444,6 +454,11 @@ int DAQFlexAnalogOutput::startWrite( void )
   }
   DAQFlexDevice->sendMessage( "AOSCAN:START" );
   int r = NoMoreData ? 0 : 1;
+  if ( sp != 0 ) {
+    Semaphore = sp;
+    Run = true;
+    start( QThread::HighestPriority );
+  }
   unlock();
   return r;
 }
@@ -475,26 +490,33 @@ int DAQFlexAnalogOutput::writeData( void )
 
 int DAQFlexAnalogOutput::reset( void )
 {
-  bool o = isOpen();
-
-  lock();
-
-  Sigs.clear();
-  if ( Buffer != 0 )
-    delete [] Buffer;
-  Buffer = 0;
-  BufferSize = 0;
-  NBuffer = 0;
-
-  if ( !o )
+  if ( ! isOpen() )
     return NotOpen;
 
+  lock();
+  Run = false;
+  unlock();
+
+  lock();
   DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
   // clear underrun condition:
   DAQFlexDevice->sendControlTransfer( "AOSCAN:RESET", false );
   libusb_clear_halt( DAQFlexDevice->deviceHandle(),
 		     DAQFlexDevice->endpointIn() );
   DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
+  unlock();
+
+  wait();
+
+  lock();
+
+  Semaphore = 0;
+  Sigs.clear();
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = 0;
+  BufferSize = 0;
+  NBuffer = 0;
 
   Settings.clear();
   IsPrepared = false;
@@ -535,12 +557,12 @@ int DAQFlexAnalogOutput::fillWriteBuffer( void )
     bytesToWrite = NBuffer;
   int timeout = (int)::ceil( 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
   int bytesWritten = 0;
-  //    cerr << "BULK START " << bytesToWrite << '\n';
+  //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
   int ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 				  DAQFlexDevice->endpointOut(),
 				  (unsigned char*)(Buffer), bytesToWrite,
 				  &bytesWritten, timeout );
-  //    cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
+  //  cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
 
   int elemWritten = 0;
   if ( bytesWritten > 0 ) {
@@ -583,6 +605,56 @@ int DAQFlexAnalogOutput::fillWriteBuffer( void )
   }
 
   return elemWritten;
+}
+
+
+void DAQFlexAnalogOutput::run( void )
+{
+  bool rd = true;
+
+  // fill in data:
+  do {
+    int r = writeData();
+    if ( r < 0 ) {
+      Semaphore->release( 1000 );
+      Semaphore = 0;
+      lock();
+      Run = false;
+      unlock();
+      return;
+    }
+    if ( r == 0 )
+      break;
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  // wait for device to finish writing:
+  do {
+    string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
+    bool error = ( response.find( "UNDERRUN" ) != string::npos );
+    if ( error ) {
+      Sigs.addError( DaqError::OverflowUnderrun );
+      Semaphore->release( 1000 );
+      Semaphore = 0;
+      lock();
+      Run = false;
+      unlock();
+      return;
+    }
+    bool running = ( response.find( "RUNNING" ) != string::npos );
+    if ( ! running )
+      break;
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  Semaphore->release( 1 );
+  Semaphore = 0;
 }
 
 

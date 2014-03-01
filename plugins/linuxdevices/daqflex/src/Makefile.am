@@ -37,7 +37,6 @@ libdaqflex_la_SOURCES = \
     daqflexanalogoutput.cc \
     daqflexdevices.cc
 
-
 libdaqflex_la_includedir = $(pkgincludedir)/daqflex
 
 libdaqflex_la_include_HEADERS = \

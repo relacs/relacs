@@ -46,6 +46,8 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  Run = false;
+  Semaphore = 0;
   Calibration = 0;
   BufferSize = 0;
   Buffer = 0;
@@ -65,6 +67,8 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   open( device, opts );
   IsPrepared = false;
+  Run = false;
+  Semaphore = 0;
   Calibration = 0;
   BufferSize = 0;
   Buffer = 0;
@@ -238,6 +242,8 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   ComediAOs.clear();
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  Run = false;
+  Semaphore = 0;
 
   setInfo();
  
@@ -286,6 +292,8 @@ void ComediAnalogOutput::close( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  Run = false;
+  Semaphore = 0;
   Info.clear();
 }
 
@@ -841,13 +849,16 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   }
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
+  Run = false;
+  Semaphore = 0;
+
   unlock();
 
   return 0;
 }
 
 
-int ComediAnalogOutput::executeCommand( void )
+int ComediAnalogOutput::executeCommand( QSemaphore *sp )
 {
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     cerr << "AO command failed: " << comedi_strerror( comedi_errno() ) << endl;
@@ -857,7 +868,20 @@ int ComediAnalogOutput::executeCommand( void )
     */
     return -1;
   }
-  return fillWriteBuffer();
+
+  int r = fillWriteBuffer();
+
+  if ( sp != 0 ) {
+    Semaphore = sp;
+    if ( r >= 0 ) {
+      Run = true;
+      start( QThread::HighestPriority );
+    }
+    else
+      sp->release( 1000 );
+  }
+
+  return r;
 }
 
 
@@ -873,7 +897,7 @@ void ComediAnalogOutput::clearCommand( void )
 }
 
 
-int ComediAnalogOutput::startWrite( void )
+int ComediAnalogOutput::startWrite( QSemaphore *sp )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
 
@@ -902,7 +926,7 @@ int ComediAnalogOutput::startWrite( void )
   int ilinx = 0;
   for ( unsigned int k=0; k<ComediAOs.size() && success; k++ ) {
     if ( ComediAOs[k]->prepared() ) {
-      int r = ComediAOs[k]->executeCommand();
+      int r = ComediAOs[k]->executeCommand( sp );
       if ( r < 0 )
 	success = false;
       else {
@@ -963,7 +987,12 @@ int ComediAnalogOutput::reset( void )
 { 
   //  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
 
-  bool o = isOpen();
+  if ( ! isOpen() )
+    return NotOpen;
+
+  lock();
+  Run = false;
+  unlock();
 
   lock();
 
@@ -974,15 +1003,17 @@ int ComediAnalogOutput::reset( void )
   BufferSize = 0;
   NBuffer = 0;
 
-  if ( !o ) {
-    unlock();
-    return NotOpen;
-  }
-
   if ( comedi_cancel( DeviceP, SubDevice ) < 0 ) {
     unlock();
     return WriteError;
   }
+  unlock();
+
+  wait();
+
+  lock();
+
+  Semaphore = 0;
 
   // clear buffers?
   // by closing and reopening comedi: XXX This closes the whole device, not only the subdevice!
@@ -1090,6 +1121,44 @@ int ComediAnalogOutput::fillWriteBuffer( void )
   }
   
   return elemWritten;
+}
+
+
+void ComediAnalogOutput::run( void )
+{
+  bool rd = true;
+
+  // fill in data:
+  do {
+    int r = writeData();
+    if ( r < 0 ) {
+      Semaphore->release( 1000 );
+      Semaphore = 0;
+      lock();
+      Run = false;
+      unlock();
+      return;
+    }
+    if ( r == 0 )
+      break;
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  // wait for device to finish writing:
+  do {
+    if ( ! running() )
+      break;
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  Semaphore->release( 1 );
+  Semaphore = 0;
 }
 
 

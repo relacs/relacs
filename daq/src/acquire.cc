@@ -1077,6 +1077,8 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
     
   // start writing streaming signals:
+  if ( AOSemaphore.available() > 0 )
+    AOSemaphore.acquire( AOSemaphore.available() );
   if ( ! directao ) {
     vector< int > aostarted;
     aostarted.reserve( aod.size() );
@@ -1097,7 +1099,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	int r = aod[i]->AO->startWrite();
+	int r = aod[i]->AO->startWrite( &AOSemaphore );
 	if ( r < 0 )
 	  success = false;
 	else {
@@ -1741,7 +1743,9 @@ int Acquire::startWrite( OutData &signal, bool setsignaltime )
     // clear adjust-flags:
     for ( unsigned int i=0; i<AI.size(); i++ )
       AI[i].Traces.delMode( AdjustFlag );
-    if ( AO[di].AO->startWrite() > 0 )
+    if ( AOSemaphore.available() > 0 )
+      AOSemaphore.acquire( AOSemaphore.available() );
+    if ( AO[di].AO->startWrite( &AOSemaphore ) > 0 )
       finished = false;
   }
 
@@ -1995,9 +1999,11 @@ int Acquire::startWrite( OutList &signal, bool setsignaltime )
     // clear adjust-flags:
     for ( unsigned int i=0; i<AI.size(); i++ )
       AI[i].Traces.delMode( AdjustFlag );
+    if ( AOSemaphore.available() > 0 )
+      AOSemaphore.acquire( AOSemaphore.available() );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
       if ( AO[i].Signals.size() > 0 ) {
-	int r = AO[i].AO->startWrite();
+	int r = AO[i].AO->startWrite( &AOSemaphore );
 	if ( r < 0 )
 	  success = false;
 	else if ( r > 0 )
@@ -2035,20 +2041,33 @@ int Acquire::write( OutList &signal, bool setsignaltime )
 }
 
 
-int Acquire::writeData( void )
+int Acquire::waitForWrite( void )
 {
-  bool finished = true;
-  bool error = false;
+  // number of analog output devices used for writing:
+  int naos = 0;
   for ( unsigned int i=0; i<AO.size(); i++ ) {
-    if ( ! AO[i].Signals.empty() ) {
-      int r = AO[i].AO->writeData();
-      if ( r < 0 )
-	error = true;
-      else if ( r > 0 )
-	finished = false;
-    }
+    if ( ! AO[i].Signals.empty() )
+      naos++;
   }
-  return error ? -1 : ( finished ? 0 : 1 );
+
+  // wait for the threads to finish:
+  AOSemaphore.acquire( naos );
+
+  bool success = true;
+  // check:
+  for ( unsigned int i = 0; i<AO.size(); i++ ) {
+    if ( ! AO[i].Signals.empty() && AO[i].Signals.failed() )
+      success = false;
+  }
+
+  AOSemaphore.acquire( AOSemaphore.available() );
+  if ( ! success ) {
+    // error:
+    stopWrite();
+    return -1;
+  }
+
+  return 0;
 }
 
 

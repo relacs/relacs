@@ -65,7 +65,7 @@ private:
 
 /*! 
 \class WriteThread
-\brief Thread for writing data to the daq boards
+\brief Thread for waiting on data to be written out.
 \author Jan Benda
 */
 
@@ -76,7 +76,6 @@ public:
 
   WriteThread( RELACSWidget *rw );
   void start( void );
-  void stop( void );
 
 
 protected:
@@ -86,8 +85,6 @@ protected:
 
 private:
 
-  bool Run;
-  QMutex RunMutex;
   RELACSWidget *RW;
 
 };

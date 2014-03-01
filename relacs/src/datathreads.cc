@@ -93,55 +93,18 @@ void ReadThread::run( void )
 WriteThread::WriteThread( RELACSWidget *rw )
   : RW( rw )
 {
-  Run = false;
 }
 
 
 void WriteThread::start( void )
 {
-  RunMutex.lock();
-  Run = true;
-  RunMutex.unlock();
-  QThread::start( HighestPriority );
-}
-
-
-void WriteThread::stop( void )
-{
-  RunMutex.lock();
-  bool rd = Run;
-  Run = false;
-  RunMutex.unlock();
-  if ( rd )
-    QThread::wait();
+  QThread::start( HighPriority );
 }
 
 
 void WriteThread::run( void )
 {
-  bool rd = true;
-
-  do {
-    int r = RW->AQ->writeData();
-    if ( r < 0 ) {
-      RW->printlog( "! error in transferring analog output data: " + RW->AQ->writeError() );
-      RW->AQ->stopWrite();
-      // error message:
-      QCoreApplication::postEvent( RW, new QEvent( QEvent::Type( QEvent::User+3 ) ) );
-    }
-    if ( r <= 0 ) {
-      RunMutex.lock();
-      Run = false;
-      RunMutex.unlock();
-      break;
-    }
-    RunMutex.lock();
-    rd = Run;
-    RunMutex.unlock();
-  } while ( rd );
-  string errors = RW->AQ->writeError();
-  if ( ! errors.empty() )
-    RW->printlog( "! error in transferring analog output data: " + errors );
+  RW->AQ->waitForWrite();
 }
 
 

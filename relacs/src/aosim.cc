@@ -149,7 +149,7 @@ int AOSim::convertData( OutList &sigs )
 }
 
 
-int AOSim::startWrite( void )
+int AOSim::startWrite( QSemaphore *sp )
 {
   return 0;
 }

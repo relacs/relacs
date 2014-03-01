@@ -85,8 +85,8 @@ public:
   virtual int startWrite( OutData &signal, bool setsignaltime=true );
   virtual int setupWrite( OutList &signal );
   virtual int startWrite( OutList &signal, bool setsignaltime=true );
-    /*! Transfer data to hardware driver. */
-  virtual int writeData( void );
+    /*! Wait for analog output to be finished. */
+  virtual int waitForWrite( void );
     /*! Stop current stimulus. */
   virtual int stopWrite( void );
     /*! Check for a new signal event and add it to \a events.

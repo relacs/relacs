@@ -23,6 +23,7 @@
 #define _COMEDI_COMEDIANALOGOUTPUT_H_
 
 #include <vector>
+#include <QThread>
 #include <comedilib.h>
 #include <relacs/analogoutput.h>
 using namespace std;
@@ -48,7 +49,7 @@ for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -ca
 */
 
 
-class ComediAnalogOutput : public AnalogOutput
+class ComediAnalogOutput : public AnalogOutput, protected QThread
 {
 
   friend class ComediAnalogInput;
@@ -99,13 +100,20 @@ public:
 	This function assumes that \a sigs successfully passed testWrite().
         The channels in \a sigs are not sorted. */
   virtual int prepareWrite( OutList &sigs );
-    /*! Start analog output of the output signals
-        after they were prepared by prepareWrite().
+    /*! Start analog output of the output signals that were passed to the previous call
+        of prepareWrite().
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
+	If no further calls of writeData() are required, 0 is returned,
+	otherwise 1 is returned.
 	Also start possible pending acquisition on other devices
-	that are known from take(). */
-  virtual int startWrite( void );
+	that are known from take().
+        This function is always called after a successfull prepareRead().
+	\param[in] sp if not null, a thread is started feeding the running analog output.
+        When the thread and analog output is finished, releases the semaphore by one.
+        On error, the semaphore is released by 1000 so that the process waiting
+        on the semaphore is waking up immediately. */
+  virtual int startWrite( QSemaphore *sp = 0 );
     /*! Write data to a running data acquisition.
         Returns the number of data values that were popped from the signal 
 	device-buffers (sum over all signals).
@@ -155,9 +163,11 @@ protected:
 	OutList structure are filled and a negative value is returned.  
 	For internal usage! */
   int fillWriteBuffer( void );
+    /*! The thread feeding data to a running analog output. */
+  virtual void run( void );
 
     /*! Execute the command that was prepared by prepareWrite(). */
-  int executeCommand( void );
+  int executeCommand( QSemaphore *sp = 0 );
     /*! Clear the command that was prepared by prepareWrite()
         after successfull execution via the instruction list. */
   void clearCommand( void );
@@ -214,6 +224,10 @@ private:
   comedi_cmd Cmd;
     /*! True if the command is prepared. */
   bool IsPrepared;
+    /*! True while the thread is running. */
+  bool Run;
+    /*! A semaphore guarding analog output. */
+  QSemaphore *Semaphore;
 
     /*! Calibration info. */
   comedi_calibration_t *Calibration;

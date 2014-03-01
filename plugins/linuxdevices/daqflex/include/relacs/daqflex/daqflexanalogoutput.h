@@ -22,6 +22,7 @@
 #ifndef _DAQFLEX_DAQFLEXANALOGOUTPUT_H_
 #define _DAQFLEX_DAQFLEXANALOGOUTPUT_H_
 
+#include <QThread>
 #include <relacs/daqflex/daqflexcore.h>
 #include <relacs/analogoutput.h>
 using namespace std;
@@ -38,7 +39,7 @@ namespace daqflex {
 */
 
 
-class DAQFlexAnalogOutput : public AnalogOutput
+class DAQFlexAnalogOutput : public AnalogOutput, protected QThread
 {
 
 public:
@@ -91,7 +92,7 @@ public:
 	OutData are set and a negative value is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take(). */
-  virtual int startWrite( void );
+  virtual int startWrite( QSemaphore *sp = 0 );
     /*! Write data to a running data acquisition.
         Returns the number of data values that were popped from the signal 
 	device-buffers (sum over all signals).
@@ -131,6 +132,9 @@ protected:
 	For internal usage! */
   int fillWriteBuffer( void );
 
+    /*! The thread feeding data to a running analog output. */
+  virtual void run( void );
+
 
 private:
   
@@ -157,6 +161,10 @@ private:
   bool IsPrepared;
     /*! True if no more data need to be written to the board. */
   bool NoMoreData;
+    /*! True while the thread is running. */
+  bool Run;
+    /*! A semaphore guarding analog output. */
+  QSemaphore *Semaphore;
 
     /*! The sorted output signals that were prepared by prepareWrite(). */
   OutList Sigs;

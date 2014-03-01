@@ -26,6 +26,7 @@
 #include <ctime>
 #include <vector>
 #include <deque>
+#include <QSemaphore>
 #include <relacs/tracespec.h>
 #include <relacs/inlist.h>
 #include <relacs/outlist.h>
@@ -533,14 +534,10 @@ public:
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
   virtual int write( OutList &signal, bool setsignaltime=true );
 
-    /*! After having started an analog output with write()
-        repeatedly call this function to fill up the buffer of
-	the hardware driver with data.
-	Returns -1 on error, 0 if no more data need to be
-	transferred to the hardware driver, and 1 if some data were
-	successfully transfered to the hardware driver.
-        \sa testWrite(), write(), writeZero(), stopWrite() */
-  virtual int writeData( void );
+    /*! Wait for the analog output threads to finish.
+        \return 0 on success, i.e. all analog outputs finished successfully
+	or -1 if some output failed. */
+  virtual int waitForWrite( void );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards.
@@ -724,6 +721,8 @@ protected:
   };
     /*! All devices for analog output. */
   vector < AOData > AO;
+    /*! Semaphore guarding analog outputs. */
+  QSemaphore AOSemaphore;
     /*! Index of last output device. */
   int LastDevice;
     /*! Time of last signal output. */

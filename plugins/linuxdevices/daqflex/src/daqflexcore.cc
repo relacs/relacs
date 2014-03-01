@@ -191,7 +191,10 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 
 bool DAQFlexCore::isOpen( void ) const
 {
-  return ( DeviceHandle != NULL );
+  lock();
+  bool o = ( DeviceHandle != NULL );
+  unlock();
+  return o;
 }
 
 
@@ -355,6 +358,7 @@ void DAQFlexCore::setLibUSBError( int libusberror )
 
 int DAQFlexCore::sendControlTransfer( const string &message, bool display )
 {
+  lock();
   if ( display )
     cerr << "DAQFlex Sending: " << message << "\n";
   unsigned char data[MaxMessageSize];
@@ -366,6 +370,7 @@ int DAQFlexCore::sendControlTransfer( const string &message, bool display )
 					  MaxMessageSize, 100 );
 
   setLibUSBError( numbytes );
+  unlock();
   return ErrorState;
 }
 
@@ -392,10 +397,12 @@ string DAQFlexCore::sendMessage( const string &message, bool display )
 {
   display = false;
   int r = sendControlTransfer( message, display );
+  string s = "";
+  lock();
   if ( r == Success )
-    return getControlTransfer( display );
-  else
-    return "";
+    s = getControlTransfer( display );
+  unlock();
+  return s;
 }
 
 

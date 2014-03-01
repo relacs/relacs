@@ -72,7 +72,7 @@ public:
     /*! Convert data of the output signals \a sigs. */
   virtual int convertData( OutList &sigs );
     /*! Start analog output. */
-  virtual int startWrite( void );
+  virtual int startWrite( QSemaphore *sp = 0 );
     /*! Write data of the output signals to the analog output device. */
   virtual int writeData( void );
 

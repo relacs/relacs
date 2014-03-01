@@ -24,6 +24,7 @@
 #define _COMEDI_DYNCLAMPANALOGOUTPUT_H_
 
 #include <vector>
+#include <QThread>
 #include <comedilib.h>
 #include <relacs/daqerror.h>
 #include <relacs/analogoutput.h>
@@ -45,7 +46,7 @@ class ComediAnalogOutput;
 */
 
 
-class DynClampAnalogOutput : public AnalogOutput
+class DynClampAnalogOutput : public AnalogOutput, protected QThread
 {
 
 public:
@@ -103,8 +104,17 @@ public:
     /*! Start analog output of the output signals that were passed to the previous call
         of prepareWrite().
 	If an error ocurred in any signal, the corresponding errorflags in
-	OutData are set and a negative value is returned. */
-  virtual int startWrite( void );
+	OutData are set and a negative value is returned.
+	If no further calls of writeData() are required, 0 is returned,
+	otherwise 1 is returned.
+	Also start possible pending acquisition on other devices
+	that are known from take().
+        This function is always called after a successfull prepareRead().
+	\param[in] sp if not null, a thread is started feeding the running analog output.
+        When the thread and analog output is finished, releases the semaphore by one.
+        On error, the semaphore is released by 1000 so that the process waiting
+        on the semaphore is waking up immediately. */
+  virtual int startWrite( QSemaphore *sp = 0 );
     /*! Write data of the output signals that were passed to the previous call
         of prepareWrite() to the analog output device.
         Returns the number of transferred data elements.
@@ -172,6 +182,9 @@ protected:
 	For internal usage! */
   int fillWriteBuffer( void );
 
+    /*! The thread feeding data to a running analog output. */
+  virtual void run( void );
+
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
 
@@ -214,6 +227,10 @@ private:
 
   bool IsPrepared;
   mutable bool IsRunning;
+    /*! True while the thread is running. */
+  bool Run;
+    /*! A semaphore guarding analog output. */
+  QSemaphore *Semaphore;
 
     /*! The output signals that were prepared by prepareWrite(). */
   OutList Sigs;

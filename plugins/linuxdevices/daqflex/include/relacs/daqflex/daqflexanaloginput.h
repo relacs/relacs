@@ -104,7 +104,7 @@ public:
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, ReadError.
         \sa close(), open(), isOpen() */
-  virtual int stop ( void );
+  virtual int stop( void );
     /*! Stop any running ananlog input activity and reset the device.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, ReadError.

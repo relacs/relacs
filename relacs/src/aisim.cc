@@ -29,21 +29,21 @@ AISim::AISim( void )
 {
   MaxRanges = 8;
   AIuniRanges[0] = 10.0;
-  AIbiRanges[0] = 5.0;
+  AIbiRanges[0] = 10.0;
   AIuniRanges[1] = 5.0;
-  AIbiRanges[1] = 2.5;
+  AIbiRanges[1] = 5.0;
   AIuniRanges[2] = 2.0;
-  AIbiRanges[2] = 1.0;
+  AIbiRanges[2] = 2.5;
   AIuniRanges[3] = 1.0;
-  AIbiRanges[3] = 0.5;
+  AIbiRanges[3] = 1.0;
   AIuniRanges[4] = 0.5;
-  AIbiRanges[4] = 0.25;
+  AIbiRanges[4] = 0.5;
   AIuniRanges[5] = 0.2;
-  AIbiRanges[5] = 0.1;
+  AIbiRanges[5] = 0.25;
   AIuniRanges[6] = 0.1;
-  AIbiRanges[6] = 0.05;
+  AIbiRanges[6] = 0.1;
   AIuniRanges[7] = 0.05;
-  AIbiRanges[7] = 0.025;
+  AIbiRanges[7] = 0.05;
   AIuniRanges[8] = -1.0;
   AIbiRanges[8] = -1.0;
 }

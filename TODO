@@ -1,4 +1,5 @@
 New InData threading:
+- AnalogOutput: Simplify return value of startWrite, integrate fillWrite into writeData
 - Check and further simplify RELACSWidget data locking
   Each AnalogInput implementation should take care about its own locking
   and probably also thread using pthreads

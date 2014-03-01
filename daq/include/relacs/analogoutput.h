@@ -23,6 +23,7 @@
 #define _RELACS_ANALOGOUTPUT_H_ 1
 
 #include <vector>
+#include <QSemaphore>
 #include <relacs/device.h>
 #include <relacs/outlist.h>
 #include <relacs/tracespec.h>
@@ -44,9 +45,9 @@ class AnalogInput;
 \todo add a flag for indicating whether device is capable of streaming output
 
 In case you want to use a analog output device within RELACS, your
-AnalogOutput implementation needs to provide a void default constructor
+%AnalogOutput implementation needs to provide a void default constructor
 (i.e. with no parameters) that does not open the device.  Also,
-include the header file \c <relacs/relacsplugin.h> and make the
+include the header file \c \<relacs/relacsplugin.h\> and make the
 AnalogOutput device known to RELACS with the \c addAnalogOutput(
 ClassNameOfYourAnalogInputImplementation, PluginSetName ) macro.
 */
@@ -143,8 +144,12 @@ public:
 	otherwise 1 is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take().
-        This function is always called after a successfull prepareRead(). */
-  virtual int startWrite( void ) = 0;
+        This function is always called after a successfull prepareRead().
+	\param[in] sp if not null, a thread is started feeding the running analog output.
+        When the thread and analog output is finished, releases the semaphore by one.
+        On error, the semaphore is released by 1000 so that the process waiting
+        on the semaphore is waking up immediately. */
+  virtual int startWrite( QSemaphore *sp = 0 ) = 0;
     /*! Write data of the output signals that were passed to the previous call
         of prepareWrite() to the analog output device.
         Returns the number of transferred data elements.
