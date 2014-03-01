@@ -104,7 +104,7 @@ int CapacityCompensation::main( void )
   message( s );
     
   // write stimulus:
-  while ( true ) {
+  while ( ! interrupt() && softStop() == 0 ) {
 
     write( signal );
     if ( signal.failed() ) {
@@ -112,10 +112,6 @@ int CapacityCompensation::main( void )
       return Failed;
     }
     sleep( duration + pause );
-    if ( interrupt() ) {
-      writeZero( outtrace );
-      return Completed;
-    }
 
     // get input trace:
     SampleDataF input;

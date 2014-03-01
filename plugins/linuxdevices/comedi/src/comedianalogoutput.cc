@@ -50,7 +50,6 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
-  pthread_mutex_init( &Mutex, NULL );
 }
 
 
@@ -64,7 +63,6 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   BufferElemSize = 0;
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
-  pthread_mutex_init( &Mutex, NULL );
   open( device, opts );
   IsPrepared = false;
   Calibration = 0;
@@ -77,19 +75,6 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
 ComediAnalogOutput::~ComediAnalogOutput( void ) 
 {
   close();
-  pthread_mutex_destroy( &Mutex );
-}
-
-
-void ComediAnalogOutput::lock( void ) const
-{
-  pthread_mutex_lock( &Mutex );
-}
-
-
-void ComediAnalogOutput::unlock( void ) const
-{
-  pthread_mutex_unlock( &Mutex );
 }
 
 

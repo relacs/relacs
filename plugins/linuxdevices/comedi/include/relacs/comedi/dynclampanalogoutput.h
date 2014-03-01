@@ -23,7 +23,6 @@
 #ifndef _COMEDI_DYNCLAMPANALOGOUTPUT_H_
 #define _COMEDI_DYNCLAMPANALOGOUTPUT_H_
 
-#include <pthread.h>
 #include <vector>
 #include <comedilib.h>
 #include <relacs/daqerror.h>
@@ -150,11 +149,6 @@ public:
 
 protected:
 
-    /*! Lock the mutex. */
-  void lock( void ) const;
-    /*! Unlock the mutex. */
-  void unlock( void ) const;
-
     /*! Device driver specific tests on the settings in \a sigs
         for each output signal.
 	Before this function is called, the validity of the settings in 
@@ -231,9 +225,6 @@ private:
   char *Buffer;
     /*! Current number of elements in the buffer. */
   int NBuffer;
-
-    /*! A lock guarding all operations on the analog output. */
-  mutable pthread_mutex_t Mutex;
 
 };
 

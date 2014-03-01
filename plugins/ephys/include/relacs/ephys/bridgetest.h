@@ -1,6 +1,6 @@
 /*
   patchclamp/bridgetest.h
-  Short current pulses for testing the bridge
+  Short current pulses for testing the bridge.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -32,7 +32,7 @@ namespace ephys {
 
 /*!
 \class BridgeTest
-\brief [RePro] Short current pulses for testing the bridge
+\brief [RePro] Short current pulses for testing the bridge.
 \author Jan Benda
 \version 2.0 (Feb 27, 2014)
 \par Options

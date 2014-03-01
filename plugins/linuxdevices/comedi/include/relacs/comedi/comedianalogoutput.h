@@ -22,7 +22,6 @@
 #ifndef _COMEDI_COMEDIANALOGOUTPUT_H_
 #define _COMEDI_COMEDIANALOGOUTPUT_H_
 
-#include <pthread.h>
 #include <vector>
 #include <comedilib.h>
 #include <relacs/analogoutput.h>
@@ -132,11 +131,6 @@ public:
 
 protected:
 
-    /*! Lock the mutex. */
-  void lock( void ) const;
-    /*! Unlock the mutex. */
-  void unlock( void ) const;
-
     /*! Initializes the \a chanlist from \a sigs. */
   void setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist, bool setscale );
     /*! Setup and test \a cmd according to \a sigs. */
@@ -232,9 +226,6 @@ private:
   char *Buffer;
     /*! Current number of elements in the buffer. */
   int NBuffer;
-
-    /*! A lock guarding all operations on the analog output. */
-  mutable pthread_mutex_t Mutex;
 
 };
 

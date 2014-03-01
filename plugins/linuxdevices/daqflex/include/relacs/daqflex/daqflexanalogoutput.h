@@ -22,7 +22,6 @@
 #ifndef _DAQFLEX_DAQFLEXANALOGOUTPUT_H_
 #define _DAQFLEX_DAQFLEXANALOGOUTPUT_H_
 
-#include <pthread.h>
 #include <relacs/daqflex/daqflexcore.h>
 #include <relacs/analogoutput.h>
 using namespace std;
@@ -112,11 +111,6 @@ public:
 
 protected:
 
-    /*! Lock the mutex. */
-  void lock( void ) const;
-    /*! Unlock the mutex. */
-  void unlock( void ) const;
-
     /*! Device driver specific tests on the settings in \a sigs
         for each output signal.
 	Before this function is called, the validity of the settings in 
@@ -174,9 +168,6 @@ private:
   int NBuffer;
     /*! Overall number of samples to be transmmitted. */
   int Samples;
-
-    /*! A lock guarding all operations on the analog output. */
-  mutable pthread_mutex_t Mutex;
 
 };
 

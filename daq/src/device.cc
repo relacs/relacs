@@ -198,6 +198,18 @@ void Device::setDeviceVendor( const string &devicevendor )
 }
 
 
+void Device::lock( void ) const
+{
+  Mutex.lock();
+}
+
+
+void Device::unlock( void ) const
+{
+  Mutex.unlock();
+}
+
+
 ostream &operator<<( ostream &str, const Device &d )
 {
   str << d.info();

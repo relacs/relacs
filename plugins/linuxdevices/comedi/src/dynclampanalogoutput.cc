@@ -64,7 +64,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
-  pthread_mutex_init( &Mutex, NULL );
 }
 
 
@@ -90,7 +89,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
-  pthread_mutex_init( &Mutex, NULL );
 
   open( device, opts );
 }
@@ -100,19 +98,6 @@ DynClampAnalogOutput::~DynClampAnalogOutput( void )
 {
   close();
   delete CAO;
-  pthread_mutex_destroy( &Mutex );
-}
-
-
-void DynClampAnalogOutput::lock( void ) const
-{
-  pthread_mutex_lock( &Mutex );
-}
-
-
-void DynClampAnalogOutput::unlock( void ) const
-{
-  pthread_mutex_unlock( &Mutex );
 }
 
 

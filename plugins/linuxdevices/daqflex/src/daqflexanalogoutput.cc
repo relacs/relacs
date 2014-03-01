@@ -40,7 +40,6 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
-  pthread_mutex_init( &Mutex, NULL );
 }
 
 
@@ -53,7 +52,6 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
-  pthread_mutex_init( &Mutex, NULL );
   open( device, opts );
 }
 
@@ -61,19 +59,6 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
 DAQFlexAnalogOutput::~DAQFlexAnalogOutput( void )
 {
   close();
-  pthread_mutex_destroy( &Mutex );
-}
-
-
-void DAQFlexAnalogOutput::lock( void ) const
-{
-  pthread_mutex_lock( &Mutex );
-}
-
-
-void DAQFlexAnalogOutput::unlock( void ) const
-{
-  pthread_mutex_unlock( &Mutex );
 }
 
 

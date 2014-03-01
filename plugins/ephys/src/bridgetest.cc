@@ -1,6 +1,6 @@
 /*
   patchclamp/bridgetest.cc
-  Short current pulses for testing the bridge
+  Short current pulses for testing the bridge.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -97,7 +97,7 @@ int BridgeTest::main( void )
   message( s );
     
   // write stimulus:
-  while ( true ) {
+  while ( ! interrupt() && softStop() == 0 ) {
 
     write( signal );
     if ( signal.failed() ) {
@@ -105,10 +105,6 @@ int BridgeTest::main( void )
       return Failed;
     }
     sleep( duration + pause );
-    if ( interrupt() ) {
-      writeZero( outtrace );
-      return Completed;
-    }
 
     // get trace:
     SampleDataF output( tmin, tmax, intrace.stepsize(), 0.0F );

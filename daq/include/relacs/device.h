@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <string>
+#include <QMutex>
 #include <relacs/options.h>
 using namespace std;
 
@@ -35,8 +36,8 @@ namespace relacs {
 \class Device
 \brief Basic interface for accessing a device.
 \author Jan Benda
-\version 1.3
 \todo Error codes and strings for errors in the open function
+\todo Options as part of the device
 
 The Device class defines the interface for the basic operations open(),
 close(), and reset() of a device.
@@ -85,6 +86,9 @@ of the Device class.
 
 There are four flags for indicating errors with handling the device:
 NotOpen, InvalidDevice, ReadError, and WriteError.
+
+Each device has its own mutex for locking critical sections. Use
+lock() and unlock().
 */
 
 
@@ -264,6 +268,11 @@ protected:
         \sa info(), settings() */
   void addInfo( void );
 
+    /*! Lock the mutex of this device. \sa unlock() */
+  void lock( void ) const;
+    /*! Unlock the mutex of this device. \sa lock() */
+  void unlock( void ) const;
+
   mutable Options Info;
   mutable Options Settings;
 
@@ -279,6 +288,8 @@ private:
   string DeviceFile;
   string DeviceName;
   string DeviceVendor;
+
+  mutable QMutex Mutex;
 
 };
 
