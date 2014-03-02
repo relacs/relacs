@@ -476,7 +476,7 @@ int JAR::main( void )
 	s += "  Remaining:  <b>" + rt + "</b>";
 	message( s );
 	
-	sleep( Before + Duration + After );
+	sleep( After );
 	if ( interrupt() ) {
 	  writeZero( GlobalEField );
 	  save();

@@ -88,7 +88,6 @@ int RestartDelay::main( void )
       warning( signal.errorText() );
       return Failed;
     }
-    sleep( duration );
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
     analyze( trace( intrace ), duration, count, deltat );

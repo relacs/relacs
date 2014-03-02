@@ -157,8 +157,8 @@ public:
 
     /*! Output of signal \a signal.
         Passing infos to SaveFiles. */
-  int write( OutData &signal, bool setsignaltime=true );
-  int write( OutList &signal, bool setsignaltime=true );
+  int write( OutData &signal, bool setsignaltime=true, bool blocking=true );
+  int write( OutList &signal, bool setsignaltime=true, bool blocking=true );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ board.

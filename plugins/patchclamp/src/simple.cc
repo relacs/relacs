@@ -159,7 +159,6 @@ int Simple::main( void )
       warning( signal.errorText() );
       return Failed;
     }
-    sleep( duration );
     if ( interrupt() ) {
       //      writeZero( outtrace );
       return count > 2 ? Completed : Aborted;

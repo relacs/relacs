@@ -489,15 +489,15 @@ int IsoResponse::main( void )
 	IntensityRange.setSkipAbove( IntensityRange.pos() );
 	continue;
       }
-      write( signal );
       
       Str s = "Intensity <b>" + Str( *IntensityRange ) + " dB SPL</b>";
       s += ",  Increment <b>" + Str( IntensityRange.currentIncrement() ) + "</b>";
       s += ",  Loop <b>" + Str( IntensityRange.count()+1 ) + "</b>";
       s += ",  Angle <b>" + Str( *AmplitudeRelation, 0, 5, 'g' ) + "*pi/2.0</b>" ;
       message( s );
-      
-      sleep( Duration + Pause );
+
+      write( signal );
+      sleep( Pause );
       if ( interrupt() ) {
 	Results.clear();
 	writeZero( Speaker[ Side ] ); 

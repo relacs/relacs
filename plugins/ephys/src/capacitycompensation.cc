@@ -111,7 +111,9 @@ int CapacityCompensation::main( void )
       warning( signal.errorText() );
       return Failed;
     }
-    sleep( duration + pause );
+    if ( interrupt() )
+      break;
+    sleep( pause );
 
     // get input trace:
     SampleDataF input;

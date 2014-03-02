@@ -355,14 +355,14 @@ int FICurve::main( void )
     testWrite( Signal );
 
     if ( Signal.underflow() ) {
-      printlog( "start() -> attenuator underflow: " + Str( Signal.intensity() ) );
+      printlog( "attenuator underflow: " + Str( Signal.intensity() ) );
       IntensityRange.setSkipBelow( IntensityRange.pos() );
       IntensityRange.noCount();
       ++IntensityRange;
       Intensity = *IntensityRange;
     }
     else if ( Signal.overflow() ) {
-      printlog( "start() -> attenuator overflow: " + Str( Signal.intensity() ) );
+      printlog( "attenuator overflow: " + Str( Signal.intensity() ) );
       IntensityRange.setSkipAbove( IntensityRange.pos() );
       IntensityRange.noCount();
       ++IntensityRange;
@@ -401,19 +401,12 @@ int FICurve::loop( vector< FIData > &results )
   DoneState ds = Continue;
 
   do {
-    for ( int k=0; k<100; k++ ) {
-      write( Signal );
-      if ( Signal.success() )
-	break;
-      else
-	sleepWait( 0.001 );
-    }
+    write( Signal );
     if ( ! Signal.success() ) {
       warning( "Output of signal failed!<br>Signal error <b>" +
 	       Signal.errorText() + "</b>.<br>Exit now!" );
       return Failed;
     }
-    sleep( Duration );
     if ( interrupt() )
       ds = Aborted;
     else {

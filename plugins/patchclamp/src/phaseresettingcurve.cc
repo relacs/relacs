@@ -188,7 +188,7 @@ int PhaseResettingCurve::main( void )
       message( "<b>Measure</b> phase resetting at <b>" + Str( meanrate, 0, 0, 'f' ) + " Hz</b>: <b>" + Str( n ) + "</b> from <b>" + Str( repeats ) + "</b>" );
 
     // stimulus:
-    write( signal );
+    startWrite( signal );
     sleep( ( nperiods + rnd.uniform() )*baseperiod );
     while ( spikes.count( signalTime(), currentTime() ) < nperiods &&
 	    ! interrupt() )

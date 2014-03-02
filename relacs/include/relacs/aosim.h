@@ -30,7 +30,6 @@ namespace relacs {
 /*! 
 \class AOSim
 \author Jan Benda
-\version 1.0
 \brief Implementation of AnalogOutput simulating an analog output device
  */
 

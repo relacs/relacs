@@ -123,16 +123,29 @@ void Model::push( int trace, float val )
     PushCount++;
     if ( PushCount >= MaxPush ) {
       PushCount = 0;
-      double dt = deltat( 0 ) * Data[0].Buffer.size() - elapsed();
+      double t = deltat( 0 ) * Data[0].Buffer.size();
+      double dt = t - elapsed();
       double l = 1.0 - dt / MaxPushTime;
       AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
+      if ( ! Signals.empty() && ! Signals[0].Finished && t > Signals[0].Offset ) {
+	Signals[0].Finished = true;
+	SignalsWait.wakeAll();
+      }
       long st = (long)::rint( 1000.0 * dt );
       if ( st > 0 ) {
-	SleepWait.wait( &SignalMutex, st );
+	InputWait.wait( &SignalMutex, st );
       }
     }
   }
   Data[trace].Buffer.push( val );
+}
+
+
+void Model::waitOnSignals( void )
+{
+  QMutex mutex;
+  mutex.lock();
+  SignalsWait.wait( &mutex );
 }
 
 
@@ -238,7 +251,7 @@ void Model::stop( void )
     InterruptLock.unlock();
     
     // wake up the Model from sleeping:
-    SleepWait.wakeAll();
+    InputWait.wakeAll();
 
     Thread->wait();
   }
@@ -271,6 +284,7 @@ double Model::add( OutData &signal )
 
   Signals[signal.trace()].Buffer.clear();
   process( signal, Signals[signal.trace()].Buffer );
+  Signals[signal.trace()].Finished = false;
 
   // current time:
   ct = elapsed();
@@ -322,6 +336,7 @@ double Model::add( OutList &sigs )
   for ( int k=0; k<sigs.size(); k++ ) {
     Signals[sigs[k].trace()].Buffer.clear();
     process( sigs[k], Signals[sigs[k].trace()].Buffer );
+    Signals[sigs[k].trace()].Finished = false;
   }
 
   // current time:

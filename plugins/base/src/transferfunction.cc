@@ -226,19 +226,12 @@ int TransferFunction::main( void )
     if ( signal.failed() ) {
       warning( signal.errorText() );
       directWrite( orgdcsignal );
-      return Failed;
+      continue;
     }
-
-    sleep( duration + 0.1*pause );
     if ( interrupt() ) {
       if ( count == 0 )
 	state = Aborted;
       break;
-    }
-    if ( signal.failed() ) {
-      warning( signal.errorText() );
-      directWrite( orgdcsignal );
-      continue;
     }
 
     // get data:

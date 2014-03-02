@@ -181,9 +181,9 @@ int ThresholdLatencies::main( void )
     warning( "startamplitudestep must be larger than amplitudestep!" );
     return Failed;
   }
-  if ( savetracetime < duration+postduration ) {
+  if ( savetracetime < duration + postduration ) {
     warning( "savetracetime must be at least as long as the test- and post-pulse duration! Continue anyways.", 5.0 );
-    savetracetime = duration+postduration;
+    savetracetime = duration + postduration;
   }
   if ( duration + postduration + searchpause < savetracetime ) {
     warning( "Test-pulse plus post-pulse duration plus searchpause must be at least as long as savetracetime! Continue anyways.", 5.0 );
@@ -343,7 +343,7 @@ int ThresholdLatencies::main( void )
   }
 
   // wait:
-  sleep( pause );
+  sleepWait( pause );
   if ( interrupt() )
     return Aborted;
 
@@ -474,7 +474,7 @@ int ThresholdLatencies::main( void )
     }
 
     // sleep:
-    sleep( delay+preduration+pre2duration+savetracetime + 0.01 );
+    sleep( savetracetime - duration - postduration + 0.01 );
     if ( interrupt() ) {
       if ( ! record || count <= 1 )
 	state = Aborted;

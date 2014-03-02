@@ -948,7 +948,7 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, SampleDataD
       //return Failed;
     }
 
-    sleep( duration + number("pause")); 
+    sleep( number( "pause" ) ); 
 
   }
   else {
@@ -979,7 +979,7 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, SampleDataD
       //return Failed;
     }
   
-    sleep( duration + number("pause")); 
+    sleep( number( "pause" ) ); 
 
   }
   

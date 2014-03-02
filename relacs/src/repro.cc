@@ -423,7 +423,19 @@ int RePro::write( OutData &signal, bool setsignaltime )
 {
   if ( interrupt() )
     return -1;
-  return RW->write( signal, setsignaltime );
+
+  unlockStimulusData();
+  unlockMetaData();
+
+  int r = RW->write( signal, setsignaltime, true );
+
+  // force data updates:
+  updateData( 0.0 );
+
+  lockMetaData();
+  lockStimulusData();
+
+  return r;
 }
 
 
@@ -431,7 +443,35 @@ int RePro::write( OutList &signal, bool setsignaltime )
 {
   if ( interrupt() )
     return -1;
-  return RW->write( signal, setsignaltime );
+
+  unlockStimulusData();
+  unlockMetaData();
+
+  int r = RW->write( signal, setsignaltime, true );
+
+  // force data updates:
+  updateData( 0.0 );
+
+  lockMetaData();
+  lockStimulusData();
+
+  return r;
+}
+
+
+int RePro::startWrite( OutData &signal, bool setsignaltime )
+{
+  if ( interrupt() )
+    return -1;
+  return RW->write( signal, setsignaltime, false );
+}
+
+
+int RePro::startWrite( OutList &signal, bool setsignaltime )
+{
+  if ( interrupt() )
+    return -1;
+  return RW->write( signal, setsignaltime, false );
 }
 
 

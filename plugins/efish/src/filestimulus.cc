@@ -459,16 +459,6 @@ int FileStimulus::main( void )
     printlog( "clipped " + Str( c ) + " from " + Str( noisesignal.size() ) + " data points.\n" );
     noisesignal.back() = 0.0;
 
-    // put out the signal:
-    write( noisesignal );
-    if ( !noisesignal.success() ) {
-      string s = "Output of stimulus failed!<br>Error is <b>";
-      s += noisesignal.errorText() + "</b>";
-      warning( s );
-      stop();
-      return Failed;
-    }
-
     // message: 
     Str s = "Stimulus: <b>" + filename + "</b>";
     if ( UseContrast )
@@ -479,8 +469,18 @@ int FileStimulus::main( void )
       s += "  with <b>additive noise</b>";
     s += "  Loop: <b>" + Str( Count+1 ) + "</b>";
     message( s );
+
+    // put out the signal:
+    write( noisesignal );
+    if ( !noisesignal.success() ) {
+      string s = "Output of stimulus failed!<br>Error is <b>";
+      s += noisesignal.errorText() + "</b>";
+      warning( s );
+      stop();
+      return Failed;
+    }
     
-    sleep( noisesignal.duration() + Pause );
+    sleep( Pause );
     if ( interrupt() ) {
       save();
       stop();
@@ -495,7 +495,7 @@ int FileStimulus::main( void )
 	noisesignal.setStartSource( 0 );
 	noisesignal.setPriority();
 	write( noisesignal );
-	sleep( noisesignal.duration() + Pause );
+	sleep( Pause );
 	if ( interrupt() ) {
 	  save();
 	  stop();
@@ -508,7 +508,7 @@ int FileStimulus::main( void )
       else if ( noisesignal.error() == noisesignal.OverflowUnderrun ) {
 	warning( "Analog Output Overrun Error! <br> Try again.", 4.0 );
 	write( noisesignal );
-	sleep( noisesignal.duration() + Pause );
+	sleep( Pause );
 	if ( interrupt() ) {
 	  save();
 	  stop();

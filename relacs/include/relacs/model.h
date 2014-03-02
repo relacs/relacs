@@ -43,7 +43,6 @@ class ModelThread;
 /*! 
 \class Model
 \author Jan Benda
-\version 1.0
 \brief Base class of all models used by Simulate.
 \bug Check locking of signals AND traces!
 */
@@ -150,6 +149,9 @@ public:
 	the daq board. */
   float scale( int trace ) const;
 
+    /*! Wait until signals are finished. */
+  void waitOnSignals( void );
+
     /*! Returns the averaged load of the simulation process. */
   double load( void ) const;
 
@@ -243,21 +245,23 @@ private:
   deque< InTrace > Data;
 
   struct OutTrace {
-    OutTrace( void ) : Onset( 0.0 ), Offset( 0.0 ), LastSignal( 0.0 ) {};
+    OutTrace( void ) : Onset( 0.0 ), Offset( 0.0 ), LastSignal( 0.0 ), Finished( false ) {};
     OutTrace( double t, const OutData &signal ) : 
-      Onset( t ), Offset( t + signal.totalDuration() - signal.delay() ), Buffer( signal ), LastSignal( 0.0 ) {};
-    OutTrace( const OutTrace &signal ) : Onset( signal.Onset ), Offset( signal.Offset ), Buffer( signal.Buffer ), LastSignal( signal.LastSignal ) {};
+      Onset( t ), Offset( t + signal.totalDuration() - signal.delay() ), Buffer( signal ), LastSignal( 0.0 ), Finished( false ) {};
+    OutTrace( const OutTrace &signal ) : Onset( signal.Onset ), Offset( signal.Offset ), Buffer( signal.Buffer ), LastSignal( signal.LastSignal ), Finished( signal.Finished ) {};
     double Onset;
     double Offset;
     OutData Buffer;
     mutable double LastSignal;
+    bool Finished;
   };
   deque< OutTrace > Signals;
   QMutex SignalMutex;
+  QWaitCondition SignalsWait;
 
   bool InterruptModel;
   mutable QMutex InterruptLock;
-  QWaitCondition SleepWait;
+  QWaitCondition InputWait;
 
 };
 

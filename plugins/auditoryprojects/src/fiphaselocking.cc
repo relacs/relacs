@@ -317,7 +317,7 @@ int FIPhaseLocking::main( void )
 	    signal.errorText() + "</b>.<br>Exit now!" );
       return Failed;
     }
-    sleep( duration + pause );
+    sleep( pause );
     if ( interrupt() ) {
       saveSpikes();
       return Completed;

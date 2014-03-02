@@ -170,12 +170,12 @@ int CalibSpeakers::main( void )
     testWrite( signal );
 
     if ( signal.underflow() ) {
-      printlog( "start() -> attenuator underflow: " + Str( signal.intensity() ) );
+      printlog( "attenuator underflow: " + Str( signal.intensity() ) );
       minintensity += intensitystep;
       intensity = minintensity;
     }
     else if ( signal.overflow() ) {
-      printlog( "start() -> attenuator overflow: " + Str( signal.intensity() ) );
+      printlog( "attenuator overflow: " + Str( signal.intensity() ) );
       minintensity -= intensitystep;
       intensity = minintensity;
     }
@@ -184,7 +184,7 @@ int CalibSpeakers::main( void )
 
   // output stimulus:
   write( signal );
-  sleep( duration + pause );
+  sleep( pause );
 
   int nosignaltries = 0;
 
@@ -201,7 +201,7 @@ int CalibSpeakers::main( void )
       //      activateGains();
       // output signal again:
       write( signal );
-      sleep( duration + pause );
+      sleep( pause );
       if ( interrupt() ) {
 	saveOffsets( offsets, gains );
 	LAtt->save();
@@ -320,7 +320,7 @@ int CalibSpeakers::main( void )
     } while ( ! signal.success() );
 
     write( signal );
-    sleep( duration + pause );
+    sleep( pause );
 
   }
 

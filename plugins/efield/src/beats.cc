@@ -263,7 +263,7 @@ int Beats::main( void )
 
 	// output signal:
 	starttime = currentTime();
-	write( signal );
+	startWrite( signal );
 	
 	// signal failed?
 	if ( signal.failed() ) {
@@ -391,7 +391,7 @@ int Beats::main( void )
 
 	// output signal:
 	starttime = currentTime();
-	write( signal );
+	startWrite( signal );
 
 	// signal failed?
 	if ( signal.failed() ) {
@@ -500,7 +500,7 @@ int Beats::main( void )
 	OutData sig;
 	sig.setTraceName( "Amplitude" );
 	sig.rampWave( ramp, -1.0, 1.0, 0.0 );
-	write( sig );
+	startWrite( sig );
 	// signal failed?
 	if ( sig.failed() ) {
 	  string s = "Output of final ramp stimulus failed!<br>Error code is <b>";

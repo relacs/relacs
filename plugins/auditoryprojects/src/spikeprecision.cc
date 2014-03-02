@@ -362,7 +362,6 @@ int SpikePrecision::main( void )
 	write( signal );
 	if ( ! signal.success() )
 	  break;
-	sleep( Duration );
 	if ( interrupt() ) {
 	  writeZero( Speaker[ Side ] ); 
 	  return Aborted;
@@ -553,7 +552,7 @@ int SpikePrecision::main( void )
       }
       if ( ! signal.success() )
 	break;
-      sleep( Duration + pause );
+      sleep( pause );
       if ( interrupt() ) {
 	save( results );
 	writeZero( Speaker[ Side ] ); 

@@ -40,7 +40,6 @@ class AnalogInput;
 \author Marco Hackenberg
 \author Jan Benda
 \brief Interface for accessing analog output of a data-aquisition board.
-\todo add wait function for blocked writes. Returns an error code in the signals.
 \todo add probe function that returns a string of possible supported devices.
 \todo add a flag for indicating whether device is capable of streaming output
 

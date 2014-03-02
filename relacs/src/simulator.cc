@@ -696,7 +696,8 @@ int Simulator::startWrite( OutList &signal, bool setsignaltime )
 
 int Simulator::waitForWrite( void )
 {
-  // XXX needs to be implemented!?
+  if ( Sim != 0 )
+    Sim->waitOnSignals();
   return 0;
 }
 

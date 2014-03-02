@@ -217,7 +217,7 @@ int FICurve::main( void )
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
 
   // write stimulus:
-  sleep( pause );
+  sleepWait( pause );
   if ( interrupt() )
     return Aborted;
   for ( Range.reset(); ! Range && softStop() == 0; ) {
@@ -285,7 +285,7 @@ int FICurve::main( void )
     }
 
     // sleep:
-    sleep( delay + 2.0*duration + 0.01 );
+    sleep( duration + 0.01 );
     if ( interrupt() ) {
       if ( Range.count() < 1 )
 	state = Aborted;

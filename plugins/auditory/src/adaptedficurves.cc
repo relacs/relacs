@@ -271,7 +271,7 @@ int AdaptedFICurves::main( void )
       return Failed;
     }
 
-    sleep( signal.length() + delay + ( pause > 0.01 ? 0.01 : pause ) );
+    sleep( ( pause > 0.01 ? 0.01 : pause ) );
 
     if ( interrupt() ) {
       if ( count == 0 )

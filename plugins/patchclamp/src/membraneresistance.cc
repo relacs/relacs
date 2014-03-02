@@ -161,7 +161,7 @@ int MembraneResistance::main( void )
   dcsignal.setIdent( "DC=" + Str( DCCurrent ) + IUnit );
 
   // write stimulus:
-  sleep( pause );
+  sleepWait( pause );
   if ( interrupt() )
     return Aborted;
   for ( Count=0;
@@ -178,8 +178,6 @@ int MembraneResistance::main( void )
       directWrite( dcsignal );
       return Failed;
     }
-
-    sleep( Duration + 0.01 );
     if ( interrupt() ) {
       if ( Count < 1 )
 	state = Aborted;

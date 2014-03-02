@@ -176,7 +176,7 @@ int VoltageReconstruction::main( void )
       message( "<b>Measure</b> latencies at <b>" + Str( meanrate, 0, 0, 'f' ) + " Hz</b>: <b>" + Str( count ) + "</b> from <b>" + Str( repeats ) + "</b>" );
 
     // stimulus:
-    write( signal );
+    startWrite( signal );
     sleep( ( 5.0 + rnd.uniform() )*period );
     if ( interrupt() ) {
       if ( count == 0 )

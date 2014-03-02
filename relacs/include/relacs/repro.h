@@ -257,34 +257,55 @@ public:
         The error state of \a signal is set appropriately. */
   int testWrite( OutList &signal );
 
-    /*! Output of a signal \a signal.
+    /*! Blocking output of a signal \a signal.
+        The function blocks until the output of the signal finished.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
-	Returns 0 on success.
-        If the output of the signal failed, a negative number is returned and
-        the reason is specified in the error state of \a signal. 
-        After writing the signal to the daq-board, the signal wrote()
-        is emitted, which can be used to check the success of 
-	the output operation.
-	If \a setsignal is set \c true (default) then the start time of this
+	\param[in] signal The signal to be written out on an analog output.
+	\param[in] setsignal if set \c true (default) then the start time of this
 	signal is recorded.
-	\note During the output of the stimulus, \a signal must exist 
-	and must not be modified! */
+	\return 0 on success.
+        If the output of the signal failed, a negative number is returned and
+        the reason is specified in the error state of \a signal. */
   int write( OutData &signal, bool setsignaltime=true );
-    /*! Output of multiple signals \a signal.
+    /*! Blocking output of multiple signals \a signal.
+        The function blocks until the output of the signal finished.
         See OutList about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
-	Returns 0 on success.
+	\param[in] signal The signals to be written out on analog outputs.
+	\param[in] setsignal if set \c true (default) then the start time of this
+	signal is recorded.
+	\return 0 on success.
+        If the output of the signal failed, a negative number is returned and
+        the reason is specified in the error state of \a signal. */
+  int write( OutList &signal, bool setsignaltime=true );
+
+    /*! Non-blocking output of a signal \a signal.
+        The function returns immediately after signal output has been initiated.
+        See OutData about how to specify output channel, sampling rate, 
+	intensity, delay, etc. 
+	\param[in] signal The signal to be written out on an analog output.
+	\param[in] setsignal if set \c true (default) then the start time of this
+	signal is recorded.
+	\return 0 on success.
         If the output of the signal failed, a negative number is returned and
         the reason is specified in the error state of \a signal. 
-        After writing the signal to the daq-board, the signal wrote()
-        is emitted, which can be used to check the success of 
-	the output operation.
-	If \a setsignal is set \c true (default) then the start time of this
-	signal is recorded.
 	\note During the output of the stimulus, \a signal must exist 
 	and must not be modified! */
-  int write( OutList &signal, bool setsignaltime=true );
+  int startWrite( OutData &signal, bool setsignaltime=true );
+    /*! Non-blocking output of multiple signals \a signal.
+        The function returns immediately after signal output has been initiated.
+        See OutList about how to specify output channel, sampling rate, 
+	intensity, delay, etc. 
+	\param[in] signal The signals to be written out on analog outputs.
+	\param[in] setsignal if set \c true (default) then the start time of the
+	signals is recorded.
+	\return 0 on success.
+        If the output of the signal failed, a negative number is returned and
+        the reason is specified in the error state of \a signal. 
+	\note During the output of the stimulus, \a signal must exist 
+	and must not be modified! */
+  int startWrite( OutList &signal, bool setsignaltime=true );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ board.

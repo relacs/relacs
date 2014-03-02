@@ -227,7 +227,7 @@ int ManualJAR::main( void )
 
     // output signal:
     starttime = currentTime();
-    write( signal );
+    startWrite( signal );
 
     // signal failed?
     if ( signal.failed() ) {

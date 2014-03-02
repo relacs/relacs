@@ -32,15 +32,12 @@ namespace relacs {
 \class Simulator
 \brief Simulation of Acquire
 \author Jan Benda
-\version 0.8
 
 \todo Need possibility to get information of the real devices
 (limitations: maximum sampling rate, number of channels, bits,
 possible gain factors, maximum attenuation).
 Maybe via a single DAQ simulator that stores this information
 in a simulation config file.
-\todo readBuffer implementation
-\todo support of multiple inputs and outputs
 */
 
 class Model;
@@ -73,10 +70,6 @@ public:
     /*! Transfer simulated data to the data from the last call of read().
 	Returns 0 on success, negative numbers otherwise. */
   virtual int convertData( void );
-    /*! Returns pointer to the raw data buffer in \a buffer
-        of the analog input device \a ai
-        and its current size in \a n (in bytes). */
-  //  virtual void readBuffer( char **buffer, int *n, int ai=0 );
     /*! Stop simulation. */
   virtual int stopRead( void );
 

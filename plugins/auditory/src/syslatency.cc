@@ -246,11 +246,7 @@ int SysLatency::main( void )
     message( s );
     
     // output:
-    for ( int k=0; k<10; k++ ) {
-      write( signal );
-      if ( signal.success() )
-	break;
-    }
+    write( signal );
     if ( signal.error() ) {
       warning( "Output of perturbation stimulus failed!<br>Signal error: <b>" +
 	       signal.errorText() + "</b>," + 
@@ -259,7 +255,7 @@ int SysLatency::main( void )
       writeZero( Speaker[ side ] );
       return Failed;
     }
-    sleep( duration + pause );
+    sleep( pause );
     if ( interrupt() ) {
       save( carrierfrequency, side, pwaves/carrierfrequency, intensity,
 	    spikes, trigger, coincidentspikes, prc,

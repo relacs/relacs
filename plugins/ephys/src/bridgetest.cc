@@ -104,7 +104,9 @@ int BridgeTest::main( void )
       warning( signal.errorText() );
       return Failed;
     }
-    sleep( duration + pause );
+    if ( interrupt() )
+      break;
+    sleep( pause );
 
     // get trace:
     SampleDataF output( tmin, tmax, intrace.stepsize(), 0.0F );

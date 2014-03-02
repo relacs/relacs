@@ -378,7 +378,6 @@ int SingleStimulus::main( void )
 	write( signal );
 	if ( ! signal.success() )
 	  break;
-	sleep( searchduration );
 	if ( interrupt() ) {
 	  directWrite( dcsignal );
 	  return Aborted;
@@ -669,13 +668,7 @@ int SingleStimulus::main( void )
     message( s );
     
     // output:
-    for ( int k=0; k<10; k++ ) {
-      write( signal );
-      if ( signal.success() )
-	break;
-      else
-	sleep( 0.001 );
-    }
+    write( signal );
     if ( signal.error() ) {
       warning( "Output of stimulus failed!<br>Signal error: <b>" +
 	       signal.errorText() + "</b>," +
@@ -685,7 +678,7 @@ int SingleStimulus::main( void )
       return Failed;
     }
 
-    sleep( Duration + after );
+    sleep( after );
 
     if ( interrupt() ) {
       if ( count == 0 )

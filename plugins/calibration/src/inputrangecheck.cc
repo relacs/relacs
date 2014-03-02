@@ -110,6 +110,9 @@ int InputRangeCheck::main( void )
     for ( amplrange.reset(); ! amplrange && softStop() < 2; ++amplrange ) {
 
       double amplitude = *amplrange;
+      
+      message( "Input range <b>" + Str( r ) + "</b>: Test amplitude <b>" + 
+	       Str( amplitude ) + " " + InUnit + "</b>" );
 
       //  ouptut signal:
       OutData signal;
@@ -118,11 +121,6 @@ int InputRangeCheck::main( void )
       write( signal );
       if ( signal.failed() )
 	return Failed;
-      
-      message( "Input range <b>" + Str( r ) + "</b>: Test amplitude <b>" + 
-	       Str( amplitude ) + " " + InUnit + "</b>" );
-
-      sleep( signal.length() );
       if ( interrupt() )
 	return Aborted;
 
@@ -143,7 +141,7 @@ int InputRangeCheck::main( void )
       P.draw();
       P.unlock();
       
-      sleep( 0.1 );
+      sleepWait( 0.1 );
     }
 
     // save data:

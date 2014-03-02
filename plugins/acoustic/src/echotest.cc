@@ -102,7 +102,7 @@ int EchoTest::main( void )
       traceVector.erase(traceVector.begin());
     }
 
-    sleep( duration + pause );
+    sleep( pause );
     if ( interrupt() )
       return Aborted;
 

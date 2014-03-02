@@ -241,7 +241,7 @@ int CalibEField::main( void )
       return Failed;
     }
 
-    sleep( duration + pause );
+    sleep( pause );
     if ( interrupt() ) {
       writeZero( outtrace );
       return Aborted;
@@ -366,7 +366,7 @@ int CalibEField::main( void )
       return Failed;
     }
 
-    sleep( duration + pause );
+    sleep( pause );
     if ( interrupt() ) {
       saveData( intensities, latt );
       writeZero( outtrace );

@@ -176,7 +176,7 @@ int FindThreshold::main( void )
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
 
   // write stimulus:
-  sleep( pause );
+  sleepWait( pause );
   if ( interrupt() )
     return Aborted;
   for ( int count=1; softStop() == 0; count++ ) {
@@ -208,7 +208,7 @@ int FindThreshold::main( void )
     }
 
     // sleep:
-    sleep( duration + 0.5*pause );
+    sleep( 0.5*pause );
     if ( interrupt() ) {
       if ( ! record || count <= 1 )
 	state = Aborted;

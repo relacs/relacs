@@ -368,15 +368,6 @@ int SAM::main( void )
     Signal->setIntensity( Intensity );
     detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 1.5*Signal->intensity() );
 
-    // output signal:
-    write( *Signal );
-    if ( !Signal->success() ) {
-      string s = "Output of stimulus failed!<br>Error code is <b>";
-      s += Signal->errorText() + "</b>";
-      warning( s, 2.0 );
-      return Failed;
-    }
-
     // meassage: 
     Str s = AM ? "SAM" : ( FreqAbs ? "Direct" : "EOD" );
       s += ":  Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
@@ -384,14 +375,8 @@ int SAM::main( void )
     s += "  Loop: <b>" + Str( Count+1 ) + "</b>";
     message( s );
 
-    sleep( Signal->duration() );
-    if ( interrupt() ) {
-      save();
-      stop();
-      return Aborted;
-    }
-
-    testWrite( *Signal );
+    // output signal:
+    write( *Signal );
     // signal failed?
     if ( !Signal->success() ) {
       if ( Signal->busy() ) {
@@ -399,7 +384,6 @@ int SAM::main( void )
 	Signal->setStartSource( 0 );
 	Signal->setPriority();
 	write( *Signal );
-	sleep( Signal->duration() );
 	if ( interrupt() ) {
 	  save();
 	  stop();
@@ -411,7 +395,6 @@ int SAM::main( void )
       else if ( Signal->error() == Signal->OverflowUnderrun ) {
 	warning( "Analog Output Underrun Error!<br> Try again.", 4.0 );
 	write( *Signal );
-	sleep( Signal->duration() );
 	if ( interrupt() ) {
 	  save();
 	  stop();
@@ -424,7 +407,6 @@ int SAM::main( void )
 	warning( s );
 	return Failed;
       }
-      testWrite( *Signal );
       if ( !Signal->success() ) {
 	string s = "Output of stimulus failed again!<br>Error code is <b>";
 	s += Signal->errorText() + "</b>";

@@ -780,21 +780,10 @@ int Chirps::main( void )
 	( Repeats <= 0 || Count < Repeats ) && softStop() == 0; 
 	Count++ ) {
 
-    cerr << "LOOP " << Count << '\n';
-
     // stimulus intensity:
     Intensity = Contrast * FishAmplitude * IntensityGain;
     signal.setIntensity( Intensity );
     //  detectorOpts( BeatPeakEvents2 ).setNumber( "threshold", 0.5*signal.intensity() );
-
-    // output signal:
-    write( signal );
-    if ( !signal.success() ) {
-      string s = "Output of stimulus failed!<br>Error code is <b>" + signal.errorText() + "</b>";
-      warning( s, 4.0 );
-      stop();
-      return Failed;
-    }
 
     // meassage: 
     Str s = "<b>" + Str( Mode == 1 || AM ? "AM " : "EOD" ) + "</b>"; 
@@ -805,7 +794,16 @@ int Chirps::main( void )
     s += "  Loop: <b>" + Str( Count+1 ) + "</b>";
     message( s );
 
-    sleep( Duration + Pause );
+    // output signal:
+    write( signal );
+    if ( !signal.success() ) {
+      string s = "Output of stimulus failed!<br>Error code is <b>" + signal.errorText() + "</b>";
+      warning( s, 4.0 );
+      stop();
+      return Failed;
+    }
+
+    sleep( Pause );
     if ( interrupt() ) {
       if ( Count > 1 ) {
 	save();
@@ -829,7 +827,7 @@ int Chirps::main( void )
 	signal.setStartSource( 0 );
 	signal.setPriority();
 	write( signal );
-	sleep( Duration + Pause );
+	sleep( Pause );
 	if ( interrupt() ) {
 	  if ( Count > 1 ) {
 	    save();
@@ -850,7 +848,7 @@ int Chirps::main( void )
 	  OutWarning = false;
 	}
 	write( signal );
-	sleep( Duration + Pause );
+	sleep( Pause );
 	if ( interrupt() ) {
 	  if ( Count > 1 ) {
 	    save();

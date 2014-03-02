@@ -868,7 +868,7 @@ void RELACSWidget::activateGains( void )
 }
 
 
-int RELACSWidget::write( OutData &signal, bool setsignaltime )
+int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
@@ -883,7 +883,9 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
   if ( r >= 0 ) {
     SF->save( signal );
     FD->adjust( AQ->adjustFlag() );
-    if ( r > 0 )
+    if ( blocking )
+      AQ->waitForWrite();
+    else
       WriteLoop.start();
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
@@ -896,7 +898,7 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime )
 }
 
 
-int RELACSWidget::write( OutList &signal, bool setsignaltime )
+int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
@@ -911,7 +913,9 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime )
   if ( r >= 0 ) {
     SF->save( signal );
     FD->adjust( AQ->adjustFlag() );
-    if ( r > 0 )
+    if ( blocking )
+      AQ->waitForWrite();
+    else
       WriteLoop.start();
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );

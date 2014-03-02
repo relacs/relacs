@@ -128,6 +128,9 @@ int AttenuatorCheck::main( void )
   for ( levelrange.reset(); ! levelrange && softStop() == 0; ++levelrange ) {
 
     double level = *levelrange;
+
+    message( "Test attenuation level <b>" + Str( level, "%.1f" ) + " dB</b>" );
+
     signal.setNoIntensity();
     signal.setLevel( level );
     write( signal );
@@ -139,9 +142,6 @@ int AttenuatorCheck::main( void )
       else
 	return Failed;
     }
-    message( "Test attenuation level <b>" + Str( level, "%.1f" ) + " dB</b>" );
-
-    sleep( signal.length() );
     if ( interrupt() )
       return Aborted;
 
@@ -170,7 +170,7 @@ int AttenuatorCheck::main( void )
     P.draw();
     P.unlock();
 
-    sleep( 0.1 );
+    sleepWait( 0.1 );
   }
 
   // save data:

@@ -316,6 +316,16 @@ int FICurve::main( void )
 	signal.setComment( ss );
       */
 
+      // meassage: 
+      Str s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+      s += "  Intensity: <b>" + Str( Intensity, 0, 3, 'f' ) + "mV/cm</b>";
+      if ( PreDuration > 0.0 && fabs( PreIntensity - FishAmplitude ) > 1.0e-6 ) {
+	s += "  PreContrast: <b>" + Str( 100.0 * PreContrast, 0, 0, 'f' ) + "%</b>";
+	s += "  PreIntensity: <b>" + Str( PreIntensity, 0, 3, 'f' ) + "mV/cm</b>";
+      }
+      s += "  Loop: <b>" + Str( IntensityRange.count()+1 ) + "</b>";
+      message( s );
+
       // output signal:
       write( signal );
       if ( !signal.success() ) {
@@ -327,17 +337,7 @@ int FICurve::main( void )
 	return Failed;
       }
 
-      // meassage: 
-      Str s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
-      s += "  Intensity: <b>" + Str( Intensity, 0, 3, 'f' ) + "mV/cm</b>";
-      if ( PreDuration > 0.0 && fabs( PreIntensity - FishAmplitude ) > 1.0e-6 ) {
-	s += "  PreContrast: <b>" + Str( 100.0 * PreContrast, 0, 0, 'f' ) + "%</b>";
-	s += "  PreIntensity: <b>" + Str( PreIntensity, 0, 3, 'f' ) + "mV/cm</b>";
-      }
-      s += "  Loop: <b>" + Str( IntensityRange.count()+1 ) + "</b>";
-      message( s );
-
-      sleep( signal.duration() + Pause );
+      sleep( Pause );
       if ( interrupt() ) {
 	save();
 	stop();
@@ -352,14 +352,14 @@ int FICurve::main( void )
 	  signal.setStartSource( 0 );
 	  signal.setPriority();
 	  write( signal );
-	  sleep( signal.duration() + Pause );
+	  sleep( Pause );
 	  // trigger:
 	  //      setupTrigger( data, events );
 	}
 	else if ( signal.error() == signal.OverflowUnderrun ) {
 	  warning( "Analog Output Overrun Error!<br> Try again.", 2.0 );
 	  write( signal );
-	  sleep( signal.duration() + Pause );
+	  sleep( Pause );
 	}
 	else {
 	  string s = "Output of stimulus failed!<br>Error code is <b>";
