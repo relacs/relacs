@@ -46,8 +46,6 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  Run = false;
-  Semaphore = 0;
   Calibration = 0;
   BufferSize = 0;
   Buffer = 0;
@@ -67,8 +65,6 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   open( device, opts );
   IsPrepared = false;
-  Run = false;
-  Semaphore = 0;
   Calibration = 0;
   BufferSize = 0;
   Buffer = 0;
@@ -242,8 +238,6 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   ComediAOs.clear();
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  Run = false;
-  Semaphore = 0;
 
   setInfo();
  
@@ -292,8 +286,6 @@ void ComediAnalogOutput::close( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  Run = false;
-  Semaphore = 0;
   Info.clear();
 }
 
@@ -849,9 +841,6 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   }
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-  Run = false;
-  Semaphore = 0;
-
   unlock();
 
   return 0;
@@ -871,15 +860,7 @@ int ComediAnalogOutput::executeCommand( QSemaphore *sp )
 
   int r = fillWriteBuffer();
 
-  if ( sp != 0 ) {
-    Semaphore = sp;
-    if ( r >= 0 ) {
-      Run = true;
-      start( QThread::HighestPriority );
-    }
-    else
-      sp->release( 1000 );
-  }
+  startThread( sp, ( r<0 ) );
 
   return r;
 }
@@ -991,10 +972,6 @@ int ComediAnalogOutput::reset( void )
     return NotOpen;
 
   lock();
-  Run = false;
-  unlock();
-
-  lock();
 
   Sigs.clear();
   if ( Buffer != 0 )
@@ -1009,11 +986,9 @@ int ComediAnalogOutput::reset( void )
   }
   unlock();
 
-  wait();
+  stopWrite();
 
   lock();
-
-  Semaphore = 0;
 
   // clear buffers?
   // by closing and reopening comedi: XXX This closes the whole device, not only the subdevice!
@@ -1031,10 +1006,16 @@ int ComediAnalogOutput::reset( void )
 }
 
 
-bool ComediAnalogOutput::running( void ) const
+AnalogOutput::Status ComediAnalogOutput::status( void ) const
 {   
+  Status r = Idle;
   lock();
-  bool r = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
+  if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING )
+    r = Running;
+  else if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
+    Sigs.addError( DaqError::OverflowUnderrun );
+    r = Underrun;
+  }
   unlock();
   return r;
 }
@@ -1121,44 +1102,6 @@ int ComediAnalogOutput::fillWriteBuffer( void )
   }
   
   return elemWritten;
-}
-
-
-void ComediAnalogOutput::run( void )
-{
-  bool rd = true;
-
-  // fill in data:
-  do {
-    int r = writeData();
-    if ( r < 0 ) {
-      Semaphore->release( 1000 );
-      Semaphore = 0;
-      lock();
-      Run = false;
-      unlock();
-      return;
-    }
-    if ( r == 0 )
-      break;
-    QThread::msleep( 1 );
-    lock();
-    rd = Run;
-    unlock();
-  } while ( rd );
-
-  // wait for device to finish writing:
-  do {
-    if ( ! running() )
-      break;
-    QThread::msleep( 1 );
-    lock();
-    rd = Run;
-    unlock();
-  } while ( rd );
-
-  Semaphore->release( 1 );
-  Semaphore = 0;
 }
 
 

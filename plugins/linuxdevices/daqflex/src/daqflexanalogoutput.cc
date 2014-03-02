@@ -36,8 +36,6 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
 {
   IsPrepared = false;
   NoMoreData = true;
-  Run = false;
-  Semaphore = 0;
   DAQFlexDevice = NULL;
   BufferSize = 0;
   Buffer = 0;
@@ -50,8 +48,6 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
 {
   IsPrepared = false;
   NoMoreData = true;
-  Run = false;
-  Semaphore = 0;
   DAQFlexDevice = NULL;
   BufferSize = 0;
   Buffer = 0;
@@ -94,8 +90,6 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   // clear flags:
   IsPrepared = false;
   NoMoreData = true;
-  Run = false;
-  Semaphore = 0;
 
   setInfo();
 
@@ -129,8 +123,6 @@ void DAQFlexAnalogOutput::close( void )
   DAQFlexDevice = NULL;
   IsPrepared = false;
   NoMoreData = true;
-  Run = false;
-  Semaphore = 0;
 
   Info.clear();
 }
@@ -434,8 +426,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   }
 
   NoMoreData = ( r == 0 );
-  Run = false;
-  Semaphore = 0;
 
   unlock();
 
@@ -454,11 +444,7 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
   }
   DAQFlexDevice->sendMessage( "AOSCAN:START" );
   int r = NoMoreData ? 0 : 1;
-  if ( sp != 0 ) {
-    Semaphore = sp;
-    Run = true;
-    start( QThread::HighestPriority );
-  }
+  startThread( sp );
   unlock();
   return r;
 }
@@ -494,10 +480,6 @@ int DAQFlexAnalogOutput::reset( void )
     return NotOpen;
 
   lock();
-  Run = false;
-  unlock();
-
-  lock();
   DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
   // clear underrun condition:
   DAQFlexDevice->sendControlTransfer( "AOSCAN:RESET", false );
@@ -506,11 +488,10 @@ int DAQFlexAnalogOutput::reset( void )
   DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
   unlock();
 
-  wait();
+  stopWrite();
 
   lock();
 
-  Semaphore = 0;
   Sigs.clear();
   if ( Buffer != 0 )
     delete [] Buffer;
@@ -527,11 +508,17 @@ int DAQFlexAnalogOutput::reset( void )
 }
 
 
-bool DAQFlexAnalogOutput::running( void ) const
+AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
 {
+  Status r = Idle;
   lock();
   string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
-  bool r = ( response.find( "RUNNING" ) != string::npos );
+  if ( response.find( "RUNNING" ) != string::npos )
+    r = Running;
+  if ( response.find( "UNDERRUN" ) != string::npos ) {
+    Sigs.addError( DaqError::OverflowUnderrun );
+    r = Underrun;
+  }
   unlock();
   return r;
 }
@@ -605,56 +592,6 @@ int DAQFlexAnalogOutput::fillWriteBuffer( void )
   }
 
   return elemWritten;
-}
-
-
-void DAQFlexAnalogOutput::run( void )
-{
-  bool rd = true;
-
-  // fill in data:
-  do {
-    int r = writeData();
-    if ( r < 0 ) {
-      Semaphore->release( 1000 );
-      Semaphore = 0;
-      lock();
-      Run = false;
-      unlock();
-      return;
-    }
-    if ( r == 0 )
-      break;
-    QThread::msleep( 1 );
-    lock();
-    rd = Run;
-    unlock();
-  } while ( rd );
-
-  // wait for device to finish writing:
-  do {
-    string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
-    bool error = ( response.find( "UNDERRUN" ) != string::npos );
-    if ( error ) {
-      Sigs.addError( DaqError::OverflowUnderrun );
-      Semaphore->release( 1000 );
-      Semaphore = 0;
-      lock();
-      Run = false;
-      unlock();
-      return;
-    }
-    bool running = ( response.find( "RUNNING" ) != string::npos );
-    if ( ! running )
-      break;
-    QThread::msleep( 1 );
-    lock();
-    rd = Run;
-    unlock();
-  } while ( rd );
-
-  Semaphore->release( 1 );
-  Semaphore = 0;
 }
 
 

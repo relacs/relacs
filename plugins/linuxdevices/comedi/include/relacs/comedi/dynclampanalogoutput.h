@@ -24,7 +24,6 @@
 #define _COMEDI_DYNCLAMPANALOGOUTPUT_H_
 
 #include <vector>
-#include <QThread>
 #include <comedilib.h>
 #include <relacs/daqerror.h>
 #include <relacs/analogoutput.h>
@@ -46,7 +45,7 @@ class ComediAnalogOutput;
 */
 
 
-class DynClampAnalogOutput : public AnalogOutput, protected QThread
+class DynClampAnalogOutput : public AnalogOutput
 {
 
 public:
@@ -131,8 +130,8 @@ public:
         \sa close(), open(), isOpen() */
   virtual int reset( void );
   
-    /*! True if analog output is running. */
-  virtual bool running( void ) const;
+    /*! \return the status of the analog output. */
+  virtual Status status( void ) const;
 
     /*! Index of signal start relative to the data stream of a running analog input. */
   virtual long index( void ) const;
@@ -182,9 +181,6 @@ protected:
 	For internal usage! */
   int fillWriteBuffer( void );
 
-    /*! The thread feeding data to a running analog output. */
-  virtual void run( void );
-
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
 
@@ -227,13 +223,9 @@ private:
 
   bool IsPrepared;
   mutable bool IsRunning;
-    /*! True while the thread is running. */
-  bool Run;
-    /*! A semaphore guarding analog output. */
-  QSemaphore *Semaphore;
 
     /*! The output signals that were prepared by prepareWrite(). */
-  OutList Sigs;
+  mutable OutList Sigs;
     /*! Size of the FIFO for transfering data to the driver. */
   int FIFOSize;
     /*! Size of the buffer for transfering data to the driver. */

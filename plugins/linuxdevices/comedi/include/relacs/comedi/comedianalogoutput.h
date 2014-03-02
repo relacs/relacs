@@ -23,7 +23,6 @@
 #define _COMEDI_COMEDIANALOGOUTPUT_H_
 
 #include <vector>
-#include <QThread>
 #include <comedilib.h>
 #include <relacs/analogoutput.h>
 using namespace std;
@@ -49,7 +48,7 @@ for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -ca
 */
 
 
-class ComediAnalogOutput : public AnalogOutput, protected QThread
+class ComediAnalogOutput : public AnalogOutput
 {
 
   friend class ComediAnalogInput;
@@ -127,8 +126,8 @@ public:
         \sa close(), open(), isOpen() */
   virtual int reset( void );
   
-    /*! True if analog output is running. */
-  virtual bool running( void ) const;
+    /*! \return the status of the analog output. */
+  virtual Status status( void ) const;
 
     /*! Check for every analog output device in \a aos
         whether it can be simultaneously started by startWrite()
@@ -163,8 +162,6 @@ protected:
 	OutList structure are filled and a negative value is returned.  
 	For internal usage! */
   int fillWriteBuffer( void );
-    /*! The thread feeding data to a running analog output. */
-  virtual void run( void );
 
     /*! Execute the command that was prepared by prepareWrite(). */
   int executeCommand( QSemaphore *sp = 0 );
@@ -224,16 +221,12 @@ private:
   comedi_cmd Cmd;
     /*! True if the command is prepared. */
   bool IsPrepared;
-    /*! True while the thread is running. */
-  bool Run;
-    /*! A semaphore guarding analog output. */
-  QSemaphore *Semaphore;
 
     /*! Calibration info. */
   comedi_calibration_t *Calibration;
 
     /*! The sorted output signals that were prepared by prepareWrite(). */
-  OutList Sigs;
+  mutable OutList Sigs;
     /*! Size of the buffer for transfering data to the driver. */
   int BufferSize;
     /*! Buffer used for transfering data to the driver. */

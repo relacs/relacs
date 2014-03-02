@@ -22,7 +22,6 @@
 #ifndef _DAQFLEX_DAQFLEXANALOGOUTPUT_H_
 #define _DAQFLEX_DAQFLEXANALOGOUTPUT_H_
 
-#include <QThread>
 #include <relacs/daqflex/daqflexcore.h>
 #include <relacs/analogoutput.h>
 using namespace std;
@@ -39,7 +38,7 @@ namespace daqflex {
 */
 
 
-class DAQFlexAnalogOutput : public AnalogOutput, protected QThread
+class DAQFlexAnalogOutput : public AnalogOutput
 {
 
 public:
@@ -106,8 +105,8 @@ public:
         \sa close(), open(), isOpen() */
   virtual int reset( void );
   
-    /*! True if the analog input driver is running. */
-  virtual bool running( void ) const;
+    /*! \return the status of the analog output. */
+  virtual Status status( void ) const;
 
 
 protected:
@@ -131,9 +130,6 @@ protected:
 	OutList structure are filled and a negative value is returned.  
 	For internal usage! */
   int fillWriteBuffer( void );
-
-    /*! The thread feeding data to a running analog output. */
-  virtual void run( void );
 
 
 private:
@@ -161,13 +157,9 @@ private:
   bool IsPrepared;
     /*! True if no more data need to be written to the board. */
   bool NoMoreData;
-    /*! True while the thread is running. */
-  bool Run;
-    /*! A semaphore guarding analog output. */
-  QSemaphore *Semaphore;
 
     /*! The sorted output signals that were prepared by prepareWrite(). */
-  OutList Sigs;
+  mutable OutList Sigs;
     /*! Size of the buffer for transfering data to the driver. */
   int BufferSize;
     /*! Buffer used for transfering data to the driver. */

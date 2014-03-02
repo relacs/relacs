@@ -1431,7 +1431,7 @@ int Acquire::testWrite( OutData &signal )
     return -1;
 
   // device still busy?
-  if ( AO[di].AO->running() && ! signal.priority() )
+  if ( AO[di].AO->status() == AnalogOutput::Running && ! signal.priority() )
     signal.addError( DaqError::Busy );
 
   // set intensity or level:
@@ -1543,7 +1543,7 @@ int Acquire::testWrite( OutList &signal )
       }
     }
     // device still busy?
-    if ( dis[i] >= 0 && AO[dis[i]].AO->running() && 
+    if ( dis[i] >= 0 && AO[dis[i]].AO->status() == AnalogOutput::Running && 
 	 ! dsignals[i][0].priority() ) {
       dsignals[i].addError( DaqError::Busy );
       success = false;
@@ -1637,7 +1637,7 @@ int Acquire::setupWrite( OutData &signal )
     return -1;
 
   // device still busy?
-  if ( AO[di].AO->running() ) {
+  if ( AO[di].AO->status() == AnalogOutput::Running ) {
     if ( signal.priority() )
       AO[di].AO->reset();
     else
@@ -1832,7 +1832,7 @@ int Acquire::setupWrite( OutList &signal )
 	}
       }
       // device still busy?
-      if ( AO[i].AO->running() ) {
+      if ( AO[i].AO->status() == AnalogOutput::Running ) {
 	if ( signal[k0].priority() )
 	  AO[i].AO->reset();
 	else {
@@ -2098,7 +2098,7 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
     return -1;
 
   // device still busy?
-  if ( AO[di].AO->running() ) {
+  if ( AO[di].AO->status() == AnalogOutput::Running ) {
     if ( signal.priority() )
       AO[di].AO->reset();
     else
@@ -2252,7 +2252,7 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
 	}
       }
       // device still busy?
-      if ( AO[i].AO->running() ) {
+      if ( AO[i].AO->status() == AnalogOutput::Running ) {
 	if ( signal[k0].priority() )
 	  AO[i].AO->reset();
 	else {
@@ -2453,7 +2453,7 @@ int Acquire::writeZero( int channel, int device )
     return -1;
 
   // device still busy?
-  if ( AO[device].AO->running() )
+  if ( AO[device].AO->status() == AnalogOutput::Running )
     AO[device].AO->reset();
 
   OutData signal( 1, 0.0001 );

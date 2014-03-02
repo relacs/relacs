@@ -78,8 +78,8 @@ public:
     /*! Reset the analog output device simulation. */
   virtual int reset( void );
 
-    /*! True if analog output is running. */
-  virtual bool running( void ) const;
+    /*! \return the status of the analog output. */
+  virtual Status status( void ) const;
 
     /*! get error status of the AI-device. */
   virtual int error( void ) const;

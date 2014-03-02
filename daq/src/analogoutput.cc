@@ -32,7 +32,9 @@ namespace relacs {
 AnalogOutput::AnalogOutput( void )
   : Device( AnalogOutputType ),
     AnalogOutputSubType( 0 ),
-    ExternalReference( -1.0 )
+    ExternalReference( -1.0 ),
+    Run( false ),
+    Semaphore( 0 )
 {
 }
 
@@ -40,7 +42,9 @@ AnalogOutput::AnalogOutput( void )
 AnalogOutput::AnalogOutput( int aotype )
   : Device( AnalogOutputType ),
     AnalogOutputSubType( aotype ),
-    ExternalReference( -1.0 )
+    ExternalReference( -1.0 ),
+    Run( false ),
+    Semaphore( 0 )
 {
 }
 
@@ -48,7 +52,9 @@ AnalogOutput::AnalogOutput( int aotype )
 AnalogOutput::AnalogOutput( const string &deviceclass, int aotype )
   : Device( deviceclass, AnalogOutputType ),
     AnalogOutputSubType( aotype ),
-    ExternalReference( -1.0 )
+    ExternalReference( -1.0 ),
+    Run( false ),
+    Semaphore( 0 )
 {
 }
 
@@ -274,6 +280,85 @@ int AnalogOutput::testWriteData( OutList &sigs )
   }
 
   return sigs.failed() ? -1 : 0;
+}
+
+
+void AnalogOutput::startThread( QSemaphore *sp, bool error )
+{
+  if ( sp != 0 ) {
+    Semaphore = sp;
+    if ( error )
+      Semaphore->release( 1000 );
+    else {
+      Run = true;
+      start( QThread::HighestPriority );
+    }
+  }
+}
+
+
+void AnalogOutput::run( void )
+{
+  bool rd = true;
+
+  // fill in data:
+  do {
+    int r = writeData();
+    lock();
+    rd = Run;
+    unlock();
+    if ( r < 0 ) {
+      if ( Semaphore != 0 )
+	Semaphore->release( rd ? 1000 : 1 );
+      Semaphore = 0;
+      lock();
+      Run = false;
+      unlock();
+      return;
+    }
+    if ( r == 0 )
+      break;
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  // wait for device to finish writing:
+  do {
+    Status r = status();
+    if ( r == Underrun ) {
+      if ( Semaphore != 0 )
+	Semaphore->release( 1000 );
+      Semaphore = 0;
+      lock();
+      Run = false;
+      unlock();
+      return;
+    }
+    if ( r != Running )
+      break;
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  if ( Semaphore != 0 )
+    Semaphore->release( 1 );
+  Semaphore = 0;
+}
+
+
+void AnalogOutput::stopWrite( void )
+{
+  lock();
+  Run = false;
+  unlock();
+  wait();
+  lock();
+  Semaphore = 0;
+  unlock();
 }
 
 

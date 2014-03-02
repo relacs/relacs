@@ -733,7 +733,7 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
   }
 
   // device still busy?
-  if ( AO[di].AO->running() ) {
+  if ( AO[di].AO->status() == AnalogOutput::Running ) {
     if ( signal.priority() )
       AO[di].AO->reset();
     else
@@ -889,7 +889,7 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
 	}
       }
       // device still busy?
-      if ( AO[i].AO->running() ) {
+      if ( AO[i].AO->status() == AnalogOutput::Running ) {
 	if ( signal[k0].priority() )
 	  AO[i].AO->reset();
 	else {

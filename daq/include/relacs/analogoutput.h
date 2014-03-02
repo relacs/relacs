@@ -23,6 +23,7 @@
 #define _RELACS_ANALOGOUTPUT_H_ 1
 
 #include <vector>
+#include <QThread>
 #include <QSemaphore>
 #include <relacs/device.h>
 #include <relacs/outlist.h>
@@ -51,10 +52,22 @@ AnalogOutput device known to RELACS with the \c addAnalogOutput(
 ClassNameOfYourAnalogInputImplementation, PluginSetName ) macro.
 */
 
-class AnalogOutput : public Device
+class AnalogOutput : public Device, protected QThread
 {
 
 public:
+
+    /*! Return values for analog output status(). */
+  enum Status { 
+      /*! Not running and no error. */
+    Idle=0,
+      /*! Anaolog output is still in progress. */
+    Running=1,
+      /*! Buffer underrun error. */
+    Underrun=2,
+      /*! Any other error. */
+    UnknownError=3
+  };
   
     /*! Create a new AnalogOutput without opening a device.
         Reimplement this constructor. */
@@ -144,6 +157,7 @@ public:
 	Also start possible pending acquisition on other devices
 	that are known from take().
         This function is always called after a successfull prepareRead().
+	An implementation of startWrite() should call startThread() to start the thread.
 	\param[in] sp if not null, a thread is started feeding the running analog output.
         When the thread and analog output is finished, releases the semaphore by one.
         On error, the semaphore is released by 1000 so that the process waiting
@@ -166,8 +180,10 @@ public:
         \sa close(), open(), isOpen() */
   virtual int reset( void );
   
-    /*! True if analog output is running. */
-  virtual bool running( void ) const  = 0;
+    /*! \return the status of the analog output.
+        If an error is detected, this function should also set the appropriate error code
+	in the signals. */
+  virtual Status status( void ) const = 0;
 
     /*! Index of signal start.
         The default implemetation returns -1, indicating that
@@ -278,6 +294,14 @@ protected:
         \sa settings() */
   void setSettings( const OutList &sigs, int writebuffer=0 );
 
+    /*! Start the thread if \a sp is not null.
+      If \a error do not start the thread and release the semaphore \a sp. */
+  virtual void startThread( QSemaphore *sp = 0, bool error=false );
+    /*! The thread feeding data to a running analog output. */
+  virtual void run( void );
+    /*! Stop the running thread. */
+  virtual void stopWrite( void );
+
 
 private:
 
@@ -285,6 +309,10 @@ private:
   int AnalogOutputSubType;
     /*! Value of the external reference in Volt. */
   double ExternalReference;
+    /*! True while the thread is running. */
+  bool Run;
+    /*! A semaphore guarding analog output. */
+  QSemaphore *Semaphore;
 
 };
 

@@ -1,8 +1,6 @@
 New InData threading:
 - AnalogOutput: Simplify return value of startWrite, integrate fillWrite into writeData
-- Make running() to status() that can return running, overflow, error, ok.
-- Put thread already in AnalogOutput class
-- Blocking write: syncrhonization with analog input not yet solved!
+- Blocking write: synchronization with analog input not yet solved!
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Check and further simplify RELACSWidget data locking
   Each AnalogInput implementation should take care about its own locking

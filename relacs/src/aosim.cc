@@ -127,7 +127,7 @@ int AOSim::directWrite( OutList &sigs )
 int AOSim::prepareWrite( OutList &sigs )
 {
   // ao still running:
-  if ( running() ) {
+  if ( status() == Running ) {
     sigs.addError( DaqError::Busy );
     return -1;
   }
@@ -161,9 +161,9 @@ int AOSim::writeData( void )
 }
 
 
-bool AOSim::running( void ) const
+AnalogOutput::Status AOSim::status( void ) const
 {
-  return false;
+  return Idle;
 }
 
 

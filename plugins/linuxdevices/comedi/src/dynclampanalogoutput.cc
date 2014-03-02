@@ -59,8 +59,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   MaxRate = 50000.0;
   IsPrepared = false;
   IsRunning = false;
-  Run = false;
-  Semaphore = 0;
   UnipConverter = 0;
   BipConverter = 0;
   BufferSize = 0;
@@ -86,8 +84,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   MaxRate = 50000.0;
   IsPrepared = false;
   IsRunning = false;
-  Run = false;
-  Semaphore = 0;
   UnipConverter = 0;
   BipConverter = 0;
   BufferSize = 0;
@@ -266,8 +262,6 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
 #endif
 
   IsPrepared = false;
-  Run = false;
-  Semaphore = 0;
 
   setInfo();
 
@@ -308,8 +302,6 @@ void DynClampAnalogOutput::close( void )
   BipConverter = 0;
 
   IsPrepared = false;
-  Run = false;
-  Semaphore = 0;
 
   Info.clear();
 }
@@ -820,9 +812,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   Sigs = ol;
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-  Run = false;
-  Semaphore = 0;
-
   unlock();
 
   return 0;
@@ -874,11 +863,7 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
   else
     Sigs.setSampleRate( (double)rate );
 
-  if ( sp != 0 ) {
-    Semaphore = sp;
-    Run = true;
-    start( QThread::HighestPriority );
-  }
+  startThread( sp );
 
   unlock();
 
@@ -895,8 +880,16 @@ int DynClampAnalogOutput::writeData( void )
     return -1;
   }
 
-  //device stopped?
-  if( !running() ) {
+  // device stopped?
+  int running = SubdeviceID;
+  int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
+  if( retval < 0 ) {
+    //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
+    //	 << ModuleDevice << " failed!\n";
+    unlock();
+    return -1;
+  }
+  if( !running ) {
     Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
 		      deviceFile() + " is not running!" );
     cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
@@ -964,13 +957,13 @@ int DynClampAnalogOutput::reset( void )
 }
 
 
-bool DynClampAnalogOutput::running( void ) const
+AnalogOutput::Status DynClampAnalogOutput::status( void ) const
 {
   lock();
 
   if( !IsPrepared ) {
     unlock();
-    return false;
+    return Idle;
   }
 
   int running = SubdeviceID;
@@ -979,13 +972,13 @@ bool DynClampAnalogOutput::running( void ) const
     cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << ModuleDevice << " failed!\n";
     unlock();
-    return false;
+    return UnknownError;
   }
   //  cerr << "DynClampAnalogOutput::running returned " << running << '\n';
 
   unlock();
 
-  return running;
+  return running>0 ? Running : Idle;
 }
 
 
@@ -1064,47 +1057,6 @@ int DynClampAnalogOutput::fillWriteBuffer( void )
   }
   
   return elemWritten;
-}
-
-
-void DynClampAnalogOutput::run( void )
-{
-
-void ComediAnalogOutput::run( void )
-{
-  bool rd = true;
-
-  // fill in data:
-  do {
-    int r = writeData();
-    if ( r < 0 ) {
-      Semaphore->release( 1000 );
-      Semaphore = 0;
-      lock();
-      Run = false;
-      unlock();
-      return;
-    }
-    if ( r == 0 )
-      break;
-    QThread::msleep( 1 );
-    lock();
-    rd = Run;
-    unlock();
-  } while ( rd );
-
-  // wait for device to finish writing:
-  do {
-    if ( ! running() )
-      break;
-    QThread::msleep( 1 );
-    lock();
-    rd = Run;
-    unlock();
-  } while ( rd );
-
-  Semaphore->release( 1 );
-  Semaphore = 0;
 }
 
 
