@@ -882,6 +882,8 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
 
+  cerr << " ComediAnalogOutput::startWrite(): " << sp << '\n';
+
   lock();
 
   if ( !prepared() || Sigs.empty() ) {
@@ -1012,10 +1014,12 @@ AnalogOutput::Status ComediAnalogOutput::status( void ) const
   lock();
   if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING )
     r = Running;
+  /*
   else if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
     Sigs.addError( DaqError::OverflowUnderrun );
     r = Underrun;
   }
+  */
   unlock();
   return r;
 }

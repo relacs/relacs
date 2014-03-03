@@ -1034,6 +1034,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
   }
 
+  // clear analog output semaphore:
+  if ( AOSemaphore.available() > 0 )
+    AOSemaphore.acquire( AOSemaphore.available() );
+
   // direct analog output:
   if ( directao ) {
     for ( unsigned int i=0; i<aod.size(); i++ ) {
@@ -1055,7 +1059,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	int r = AI[i].AI->startRead();
+	int r = AI[i].AI->startRead( &AOSemaphore );
 	if ( r < 0 )
 	  success = false;
 	else {
@@ -1077,8 +1081,6 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
     
   // start writing streaming signals:
-  if ( AOSemaphore.available() > 0 )
-    AOSemaphore.acquire( AOSemaphore.available() );
   if ( ! directao ) {
     vector< int > aostarted;
     aostarted.reserve( aod.size() );
@@ -1728,6 +1730,10 @@ int Acquire::startWrite( OutData &signal, bool setsignaltime )
 
   bool finished = true;
 
+  // clear analog output semaphore:
+  if ( AOSemaphore.available() > 0 )
+    AOSemaphore.acquire( AOSemaphore.available() );
+
   // start writing to daq board:
   if ( gainChanged() ||
        signal.restart() ||
@@ -1743,8 +1749,6 @@ int Acquire::startWrite( OutData &signal, bool setsignaltime )
     // clear adjust-flags:
     for ( unsigned int i=0; i<AI.size(); i++ )
       AI[i].Traces.delMode( AdjustFlag );
-    if ( AOSemaphore.available() > 0 )
-      AOSemaphore.acquire( AOSemaphore.available() );
     if ( AO[di].AO->startWrite( &AOSemaphore ) > 0 )
       finished = false;
   }
@@ -1976,6 +1980,10 @@ int Acquire::startWrite( OutList &signal, bool setsignaltime )
   bool success = true;
   bool finished = true;
 
+  // clear analog output semaphore:
+  if ( AOSemaphore.available() > 0 )
+    AOSemaphore.acquire( AOSemaphore.available() );
+
   // start writing to daq boards:
   if ( gainChanged() ||
        signal[0].restart() ||
@@ -1999,8 +2007,6 @@ int Acquire::startWrite( OutList &signal, bool setsignaltime )
     // clear adjust-flags:
     for ( unsigned int i=0; i<AI.size(); i++ )
       AI[i].Traces.delMode( AdjustFlag );
-    if ( AOSemaphore.available() > 0 )
-      AOSemaphore.acquire( AOSemaphore.available() );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
       if ( AO[i].Signals.size() > 0 ) {
 	int r = AO[i].AO->startWrite( &AOSemaphore );

@@ -79,7 +79,7 @@ public:
     /*! Prepare analog input of the input traces \a traces on the device. */
   virtual int prepareRead( InList &traces );
     /*! Start analog input. */
-  virtual int startRead( void );
+  virtual int startRead( QSemaphore *aosp = 0 );
     /*! Read data from a running data acquisition. */
   virtual int readData( void );
     /*! Convert data. */

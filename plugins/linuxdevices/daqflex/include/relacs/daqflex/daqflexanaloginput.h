@@ -87,7 +87,7 @@ public:
 	InData structure are filled and a negative value is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take(). */
-  virtual int startRead( void );
+  virtual int startRead( QSemaphore *aosp = 0 );
     /*! Read data from a running data acquisition.
         Returns the total number of read data values.
 	If an error ocurred in any channel, the corresponding errorflags in the

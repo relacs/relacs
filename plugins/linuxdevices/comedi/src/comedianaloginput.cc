@@ -724,7 +724,7 @@ int ComediAnalogInput::executeCommand( void )
 }
 
 
-int ComediAnalogInput::startRead( void )
+int ComediAnalogInput::startRead( QSemaphore *aosp )
 {
   //  cerr << " ComediAnalogInput::startRead(): begin" << endl;/////TEST/////
 
@@ -758,7 +758,7 @@ int ComediAnalogInput::startRead( void )
   }
   for ( unsigned int k=0; k<ComediAOs.size() && success; k++ ) {
     if ( ComediAOs[k]->prepared() ) {
-      int r = ComediAOs[k]->executeCommand();
+      int r = ComediAOs[k]->executeCommand( aosp );
       if ( r < 0 )
 	success = false;
       else {

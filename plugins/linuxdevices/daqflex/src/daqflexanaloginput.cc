@@ -338,7 +338,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 }
 
 
-int DAQFlexAnalogInput::startRead( void )
+int DAQFlexAnalogInput::startRead( QSemaphore *aosp )
 {
   if ( !IsPrepared || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";

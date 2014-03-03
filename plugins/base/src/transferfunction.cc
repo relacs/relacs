@@ -211,13 +211,11 @@ int TransferFunction::main( void )
       s += " of <b>" + Str( repeats ) + "</b>";
     message( s );
 
-    unlockAll();
     signal.clear();
     signal.noiseWave( duration, -1.0, fmax, amplitude );
     //    signal.sineWave( duration, -1.0, 614.0, amplitude, 1.0 );
     signal.back() = 0.0;
     signal += offset;
-    lockAll();
     // debug:
     if ( signal.length() < duration )
       printlog( "WARNING: noiseWave() too short! duration=" + Str( duration ) +
@@ -239,8 +237,6 @@ int TransferFunction::main( void )
     input.interpolate( signal );
     SampleDataF output( 0.0, duration, trace( intrace ).stepsize() );
     trace( intrace ).copy( signalTime(), output );
-
-    unlockAll();
 
     analyze( input, output, duration, count );
 
@@ -282,8 +278,6 @@ int TransferFunction::main( void )
     if ( count == 0 )
       openTraceFile( tf, tracekey, header );
     saveTrace( tf, tracekey, count, input, output );
-
-    lockAll();
 
     sleepOn( duration+pause );
     if ( interrupt() )

@@ -592,7 +592,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 }
 
 
-int DynClampAnalogInput::startRead( void )
+int DynClampAnalogInput::startRead( QSemaphore *aosp )
 {
   //  cerr << " DynClampAnalogInput::startRead(): 1\n";/////TEST/////
 

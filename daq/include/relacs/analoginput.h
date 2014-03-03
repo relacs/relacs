@@ -23,6 +23,7 @@
 #define _RELACS_ANALOGINPUT_H_ 1
 
 #include <vector>
+#include <QSemaphore>
 #include <relacs/device.h>
 #include <relacs/inlist.h>
 #include <relacs/tracespec.h>
@@ -132,11 +133,12 @@ public:
 	InData structure are filled and a negative value is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take().
+	\a aosp is the semaphore that guards analog outputs.
 	Returns -1 on failure, 0 on success and 1 on succes and if
 	for an analog output further calls to writeData() are necessary.
         This function is called after a successfull prepareRead() or after stop().
         This function should be as quick as possible. */
-  virtual int startRead( void ) = 0;
+  virtual int startRead( QSemaphore *aosp = 0 ) = 0;
     /*! Read data from a running data acquisition
         and store them in an internal buffer.
         Returns the total number of read data values.

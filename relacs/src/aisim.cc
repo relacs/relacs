@@ -200,7 +200,7 @@ int AISim::prepareRead( InList &traces )
 }
 
 
-int AISim::startRead( void )
+int AISim::startRead( QSemaphore *aosp )
 {
   return 0;
 }

@@ -925,8 +925,10 @@ int DynClampAnalogOutput::reset( void )
     return NotOpen;
   }
 
-  if( !IsPrepared )
+  if( !IsPrepared ) {
+    unlock();
     return 0;
+  }
 
   int running = SubdeviceID;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
