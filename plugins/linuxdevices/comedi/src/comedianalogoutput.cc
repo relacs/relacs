@@ -1012,14 +1012,15 @@ AnalogOutput::Status ComediAnalogOutput::status( void ) const
 {   
   Status r = Idle;
   lock();
-  if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING )
-    r = Running;
-  /*
-  else if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
-    Sigs.addError( DaqError::OverflowUnderrun );
-    r = Underrun;
+  // Actually we should check for BUSY, but this is not cleared at the end of the command!
+  if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) {
+    if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY )
+      r = Running;
+    else {
+      Sigs.addError( DaqError::OverflowUnderrun );
+      r = Underrun;
+    }
   }
-  */
   unlock();
   return r;
 }

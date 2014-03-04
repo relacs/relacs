@@ -64,7 +64,7 @@ public:
   virtual void preConfig( void );
   virtual int main( void );
   int analyze( const InData &data, double duration, double pause, int count,
-	       double &deltat );
+	       double &deltat, double &maxdeltat );
 
 protected:
 

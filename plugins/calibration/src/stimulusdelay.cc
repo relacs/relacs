@@ -67,17 +67,13 @@ int StimulusDelay::main( void )
   int repeats = integer( "repeats" );
 
   double deltat = 0.0;
+  double maxdeltat = 0.001;
 
   // don't print repro message:
   noMessage();
 
   // plot trace:
   tracePlotSignal( 2.0*duration, 0.6*duration );
-
-  // plot:
-  P.lock();
-  P.setXRange( -500.0*pause, 1000.0*duration+500.0*pause );
-  P.unlock();
 
   OutData signal;
   signal.setTrace( outtrace );
@@ -100,7 +96,7 @@ int StimulusDelay::main( void )
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
     timeStamp();
-    analyze( trace( intrace ), duration, pause, count, deltat );
+    analyze( trace( intrace ), duration, pause, count, deltat, maxdeltat );
     if ( count % 10 == 0 )
       message( "Average stimulus delay: <b>" + Str( 1000.0*deltat, 0, 3, 'f' ) + " ms</b>" );
     if ( interrupt() )
@@ -112,7 +108,7 @@ int StimulusDelay::main( void )
 
 
 int StimulusDelay::analyze( const InData &data, double duration,
-			    double pause, int count, double &deltat )
+			    double pause, int count, double &deltat, double &maxdeltat )
 {
   // find transition:
   double max0 = data.max( signalTime()-duration, signalTime() );
@@ -130,8 +126,11 @@ int StimulusDelay::analyze( const InData &data, double duration,
 
   deltat += ( dt - deltat ) / ( count+1 );
 
+  if ( 1.2*dt > maxdeltat )
+    maxdeltat = 1.2*dt;
+
   // get data:
-  SampleDataF d( -0.5*pause, duration+0.5*pause, data.sampleInterval() );
+  SampleDataF d( -0.0001, maxdeltat, data.sampleInterval() );
   data.copy( signalTime(), d );
 
   // plot:
@@ -141,7 +140,10 @@ int StimulusDelay::analyze( const InData &data, double duration,
 	      + Str( 1000.0*deltat, 0, 3, 'f' ) + "ms, n="
 	      + Str( count+1 ) );
   P.plotVLine( 0.0, Plot::White, 2 );
-  P.plot( d, 1000.0, Plot::Green, 2, Plot::Solid );
+  if ( d.size() < 30 )
+    P.plot( d, 1000.0, Plot::Green, 2, Plot::Solid, Plot::Circle, 10, Plot::Green, Plot::Green );
+  else
+    P.plot( d, 1000.0, Plot::Green, 2, Plot::Solid );
   P.draw();
   P.unlock();
 
