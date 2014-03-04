@@ -613,6 +613,13 @@ const TraceSpec &RELACSPlugin::outTrace( const string &name ) const
 }
 
 
+void RELACSPlugin::setSignalDelay( int device, double delay )
+{
+  if ( RW->AQ != 0 )
+    RW->AQ->setSignalDelay( device, delay );
+}
+
+
 bool RELACSPlugin::acquisition( void ) const
 {
   return RW->acquisition();

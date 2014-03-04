@@ -1008,8 +1008,10 @@ void SaveFiles::createStimulusFile( const InList &traces,
       *SF << "#   identifier" + Str( k+1 ) + ": " << trace.traceName() << '\n';
       *SF << "#       device" + Str( k+1 ) + ": " << trace.device() << '\n';
       *SF << "#      channel" + Str( k+1 ) + ": " << trace.channel() << '\n';
+      /* XXX get this information from the device:
       *SF << "# signal delay" + Str( k+1 ) + ": " << 1000.0*trace.signalDelay() << "ms\n";
       *SF << "# maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
+      */
     }
     *SF << "# stimulus descriptions file: stimlus-descriptions.dat\n";
 

@@ -109,6 +109,22 @@ public:
     /*! Maximum sampling rate in Hz of analog output. */
   virtual double maxRate( void ) const = 0;
 
+    /*! Delay in seconds from calling startWrite() 
+        to the actual signal start of channel \a channel. */
+  double delay( int channel ) const;
+    /*! Set for each channel the delay in seconds it takes from
+        calling startWrite() to the actual signal start.
+        If there are such delays, this function should be called in
+	the implementation of the open() function to set them.
+	\sa setDelay() */
+  void setDelays( const vector<double> &delays );
+    /*! Set the delay in seconds it takes from calling startWrite() 
+        to the actual signal start for all channels to \a delay.
+        If there are such delays, this function should be called in
+	the implementation of the open() function to set them.
+	\sa setDelays() */
+  void setDelay( double delay );
+
     /*! The voltage of an external reference for scaling the analog output.
         A negative number indicates that an external reference is not
         connected to the daq board. 
@@ -181,7 +197,7 @@ public:
   virtual int reset( void );
   
     /*! \return the status of the analog output.
-        If an error is detected, this function should also set the appropriate error code
+        If an error is detected, this function could also set the appropriate error code
 	in the signals. */
   virtual Status status( void ) const = 0;
 
@@ -307,6 +323,9 @@ private:
 
     /*! The type of the implementation of AnalogOutput. */
   int AnalogOutputSubType;
+    /*! Delay in seconds from calling startWrite() 
+        to the actual signal start for each analog output channel. */
+  vector< double > Delays;
     /*! Value of the external reference in Volt. */
   double ExternalReference;
     /*! True while the thread is running. */

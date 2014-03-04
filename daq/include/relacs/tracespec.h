@@ -49,7 +49,7 @@ class TraceSpec
 	     int device, int channel,
 	     double scale=1.0, const string &unit="",
 	     bool reglitch=false, double maxrate=-1.0,
-	     double signaldelay=0.0, const string &modality="" );
+	     const string &modality="" );
     /*! Copy constructor. */
   TraceSpec( const TraceSpec &trace );
   
@@ -127,17 +127,6 @@ class TraceSpec
       \sa maxSampleRate(), setMaxSampleRate(), fixedSampleRate() */
   void setFixedSampleRate( double rate );
 
-    /*! The signal delay in seconds,
-	i.e. the time the signal needs from its emission from the daq board to
-	its destination. 
-        \sa setSignalDelay() */
-  double signalDelay( void ) const;
-    /*! Set the signal delay, i.e. the time the signal needs from
-        its emission from the daq board to its destination,
-	to \a sigdelay seconds.
-        \sa signalDelay() */
-  void setSignalDelay( double sigdelay );
-
     /*! The modality of the signal, i.e. electric, visual, acoustic, etc.
         \sa setModality() */
   string modality( void ) const;
@@ -177,7 +166,6 @@ class TraceSpec
   bool Reglitch;
   double MaxRate;
   bool FixedRate;
-  double SignalDelay;
   string Modality;
   
 };

@@ -33,15 +33,16 @@ namespace calibration {
 \class StimulusDelay
 \brief [RePro] Measures delays between actual and reported onset of a stimulus
 \author Jan Benda
-\version 1.3 (Feb 18, 2014)
+\version 2.0 (Mar 4, 2014)
 
 \par Options
 - \c intrace=V-1: Input trace (\c string)
-- \c outtrace=Speaker-1: Output trace (\c string)
+- \c outtrace=V-1: Output trace (\c string)
 - \c samplerate=10kHz: Sampling rate of output (\c number)
 - \c duration=10ms: Duration of output (\c number)
 - \c pause=50ms: Pause between outputs (\c number)
 - \c repeats=100: Repeats (\c integer)
+- \c setdelay=none: Set signal delay of analog output device (\c string)
 
 \par Files
 \arg No output files.
@@ -64,7 +65,8 @@ public:
   virtual void preConfig( void );
   virtual int main( void );
   int analyze( const InData &data, double duration, double pause, int count,
-	       double &deltat, double &maxdeltat );
+	       double &meandeltat, double &meansquaredeltat,
+	       double &mindeltat, double &maxdeltat );
 
 protected:
 

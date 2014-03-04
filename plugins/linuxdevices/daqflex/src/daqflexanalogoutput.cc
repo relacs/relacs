@@ -85,6 +85,11 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   BipolarRange.clear();
   BipolarRange.push_back( 10.0 );
 
+  // delays:
+  vector< double > delays;
+  opts.numbers( "delays", delays, "s" );
+  setDelays( delays );
+
   reset();
 
   // clear flags:

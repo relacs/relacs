@@ -36,7 +36,6 @@ TraceSpec::TraceSpec( void )
     Reglitch( false ),
     MaxRate( 1000.0 ),
     FixedRate( false ),
-    SignalDelay( 0.0 ),
     Modality( "" )
 {
 }
@@ -46,7 +45,7 @@ TraceSpec::TraceSpec( int index, const string &name,
 		      int device, int channel, 
 		      double scale, const string &unit,
 		      bool reglitch, double maxrate,
-		      double signaldelay, const string &modality )
+		      const string &modality )
   : Trace( index ),
     TraceName( name ),
     Device( device ),
@@ -56,7 +55,6 @@ TraceSpec::TraceSpec( int index, const string &name,
     Reglitch( reglitch ),
     MaxRate( maxrate ),
     FixedRate( false ),
-    SignalDelay( signaldelay ),
     Modality( modality )
 {
 }
@@ -72,7 +70,6 @@ TraceSpec::TraceSpec( const TraceSpec &trace )
     Reglitch( trace.Reglitch ),
     MaxRate( trace.MaxRate ),
     FixedRate( trace.FixedRate ),
-    SignalDelay( trace.SignalDelay ),
     Modality( trace.Modality )
 {
 }
@@ -202,18 +199,6 @@ void TraceSpec::setFixedSampleRate( double rate )
 }
 
 
-double TraceSpec::signalDelay( void ) const
-{
-  return SignalDelay;
-}
-
-
-void TraceSpec::setSignalDelay( double sigdelay )
-{
-  SignalDelay = sigdelay;
-}
-
-
 string TraceSpec::modality( void ) const
 {
   return Modality;
@@ -240,7 +225,6 @@ int TraceSpec::apply( OutData &signal ) const
       signal.setFixedSampleRate( MaxRate );
     else
       signal.setMaxSampleRate( MaxRate );
-    signal.setSignalDelay( SignalDelay );
     return 0;
   }
   else {

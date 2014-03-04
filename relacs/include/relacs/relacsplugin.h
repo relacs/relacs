@@ -300,7 +300,7 @@ protected:
         \code
 	postCustomEvent( 10 );
 	\endcode
-	Then yuo reimplement customEvent() like this:
+	Then you reimplement customEvent() like this:
 	\code
 	void MyPlugin::customEvent( QEvent *qce )
 	{
@@ -587,6 +587,11 @@ int MyPlugin::main( void )
   const TraceSpec &outTrace( int index ) const;
     /*! Return the output trace with name \a name. */
   const TraceSpec &outTrace( const string &name ) const;
+
+    /*! Set the delay in seconds it takes from starting analog output 
+        to the actual signal start for all channels of the
+	analog output device \a device to \a delay. */
+  void setSignalDelay( int device, double delay );
 
     /*! True if the current working mode is to
         acquiring real data from a data acquisition board.

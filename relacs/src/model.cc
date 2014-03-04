@@ -289,8 +289,8 @@ double Model::add( OutData &signal )
   // current time:
   ct = elapsed();
   double bt = time( 0 );
-  if ( ct < bt )
-    ct = bt;
+  if ( ct <= bt )
+    ct = bt + deltat( 0 );
   Signals[signal.trace()].Onset = ct + Signals[signal.trace()].Buffer.delay();
   Signals[signal.trace()].Offset = ct + Signals[signal.trace()].Buffer.totalDuration();
   double onset = Signals[signal.trace()].Onset;
@@ -342,8 +342,8 @@ double Model::add( OutList &sigs )
   // current time:
   ct = elapsed();
   double bt = time( 0 );
-  if ( ct < bt )
-    ct = bt;
+  if ( ct <= bt )
+    ct = bt + deltat( 0 );
   for ( int k=0; k<sigs.size(); k++ ) {
     Signals[sigs[k].trace()].Onset = ct + Signals[sigs[k].trace()].Buffer.delay();
     Signals[sigs[k].trace()].Offset = ct + Signals[sigs[k].trace()].Buffer.totalDuration();

@@ -39,7 +39,7 @@ const double OutData::NoLevel = -2.0e37;
 const double OutData::AutoRange = -2.0e300;
 const double OutData::ExtRef = -1.0e300;
 
-double OutData::DefaultMinSampleInterval = 0.001;
+double OutData::DefaultMinSampleInterval = 0.0001;
 const Acquire *OutData::A = 0;
 
 
@@ -89,7 +89,6 @@ OutData::OutData( const OutData  &od )
   Unit = od.Unit;
   MinVoltage = od.MinVoltage;
   MaxVoltage = od.MaxVoltage;
-  SignalDelay = od.SignalDelay;
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
   Level = od.Level;
@@ -131,7 +130,6 @@ void OutData::construct( void )
   Unit = "V";
   MinVoltage = -1.0;
   MaxVoltage = +1.0;
-  SignalDelay = 0.0;
   Intensity = NoIntensity;
   CarrierFreq = 0.0;
   Level = NoLevel;
@@ -214,7 +212,6 @@ const OutData &OutData::assign( const OutData &od )
   Unit = od.Unit;
   MinVoltage = od.MinVoltage;
   MaxVoltage = od.MaxVoltage;
-  SignalDelay = od.SignalDelay;
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
   Level = od.Level;
@@ -251,7 +248,6 @@ const OutData &OutData::copy( OutData &od ) const
   od.Unit = Unit;
   od.MinVoltage = MinVoltage;
   od.MaxVoltage = MaxVoltage;
-  od.SignalDelay = SignalDelay;
   od.Intensity = Intensity;
   od.CarrierFreq = CarrierFreq;
   od.Level = Level;
@@ -469,18 +465,6 @@ void OutData::setTrace( int index, const string &name )
 void OutData::setAcquire( const Acquire *a )
 {
   A = a;
-}
-
-
-double OutData::signalDelay( void ) const
-{
-  return SignalDelay;
-}
-
-
-void OutData::setSignalDelay( double sigdelay )
-{
-  SignalDelay = sigdelay;
 }
 
 
@@ -1350,7 +1334,6 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "Unit: " << od.Unit << '\n';
   str << "MinVoltage: " << od.MinVoltage << '\n';
   str << "MaxVoltage: " << od.MaxVoltage << '\n';
-  str << "SignalDelay: " << od.SignalDelay << '\n';
   str << "Intensity: " << od.Intensity << '\n';
   str << "CarrierFreq: " << od.CarrierFreq << '\n';
   str << "Level: " << od.Level << '\n';

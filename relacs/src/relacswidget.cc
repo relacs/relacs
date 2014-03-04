@@ -137,14 +137,12 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addInteger( "inputtracegain", "Input trace gain", 0 );
   addBoolean( "inputtracecenter", "Input trace center vertically", true );
   newSection( "output data" );
-  addNumber( "maxoutputrate", "Default maximum output sampling rate", 100000.0, 1.0, 10000000.0, 1000.0, "Hz", "kHz" );
   addText( "outputtraceid", "Output trace identifier", "" );
   addInteger( "outputtracechannel", "Output trace channel", 0 );
   addText( "outputtracedevice", "Output trace device", "ao-1" );
   addNumber( "outputtracescale", "Output trace scale factor to Volt", 1.0, -10000000.0, 10000000.0, 0.1 );
   addText( "outputtraceunit", "Output trace unit", "V" );
   addNumber( "outputtracemaxrate", "Maximum output sampling rate", 0.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" );
-  addNumber( "outputtracedelay", "Signal delay", 0.0, 0.0, 10.0, 0.00001, "s", "ms" );
   addText( "outputtracemodality", "Output trace modality", "voltage" );
 
   // main widget:
@@ -739,7 +737,6 @@ void RELACSWidget::setupInTraces( void )
 void RELACSWidget::setupOutTraces( void )
 {
   AQ->clearOutTraces();
-  OutData::setDefaultMaxSampleRate( number( "maxoutputrate", 100000.0 ) );
   int nod = Options::size( "outputtraceid" );
   int chan = 0;
   int lastdevi = 0;
@@ -767,7 +764,6 @@ void RELACSWidget::setupOutTraces( void )
 		     text( "outputtraceunit", k, "V" ),
 		     false,
 		     number( "outputtracemaxrate", k, 0.0 ),
-		     number( "outputtracedelay", k, 0.0 ),
 		     text( "outputtracemodality", k, "unknown" ) );
     chan++;
   }

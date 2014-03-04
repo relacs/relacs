@@ -429,8 +429,12 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 	    break;
 	}
       }
-      if ( index < 0 )
-	sigs[k].addError( minislarger ? DaqError::Underflow : DaqError::Overflow );
+      if ( index < 0 ) {
+	if ( minislarger )
+	  sigs[k].addError( DaqError::Underflow );
+	else
+	  sigs[k].addError( DaqError::Overflow );
+      }
     }
     else {
       // use largest range:

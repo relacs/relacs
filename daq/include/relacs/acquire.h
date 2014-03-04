@@ -215,6 +215,10 @@ public:
 	\sa addOutput(), oututsSize(), clearOutputs(),
 	closeInuts(), closeAttLines(), closeOutTraces() */
   void closeOutputs( void );
+    /*! Set the delay in seconds it takes from starting analog output 
+        to the actual signal start for all channels of the
+	analog output device \a device to \a delay. */
+  void setSignalDelay( int device, double delay );
 
     /*! Add the attenuator \a att to the list of attenuators.
         The attenuator is connected to the output channel
@@ -243,9 +247,8 @@ public:
 
     /*! Add an output trace with name \a name on channel \a channel of
         device \a device to the list of traces.
-	The trace has the reglitch circuit enabled (\a reglitch),
-	allows a maximum sampling rate of \a maxrate
-	and has a delay of signals of \a signaldelay.
+	The trace has the reglitch circuit enabled (\a reglitch)
+	and allows a maximum sampling rate of \a maxrate.
         The signal is given in unit \a unit and multiplied by \a scale
         to convert it to the voltage of the ananlog output.
 	The \a modality describes whether the output trace
@@ -256,7 +259,7 @@ public:
   void addOutTrace( const string &name, int device, int channel,
 		    double scale=1.0, const string &unit="",
 		    bool reglitch=false, double maxrate=-1.0,
-		    double signaldelay=0.0, const string &modality="" );
+		    const string &modality="" );
     /*! Check every analog output device for additionaly provided 
         output channels and add them to the list of output traces.
 	These output traces are usually no physical outputs but

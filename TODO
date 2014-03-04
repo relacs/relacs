@@ -1,5 +1,6 @@
 New InData threading:
 - AnalogOutput: Simplify return value of startWrite, integrate fillWrite into writeData
+- Put command execution and preloading fillwrite into prepareWrite() as in DAQFlex.
 - Blocking write: synchronization with analog input not yet solved!
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Check and further simplify RELACSWidget data locking
@@ -66,7 +67,6 @@ Robot:
 
 Acquire:
 - check write( OutList ) functions. They should throw an error if sigs.size() == 0!
-- What about the outtrace delays? They should be used! And StimulusDelay should set them!
 - levels(), minLevel() and other Attenuate properties should all go
   into Attenuate in case of NoAttenuator!
 - How to make sure the right Attenuate is used for a given RePro?

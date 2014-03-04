@@ -234,6 +234,11 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   else
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
+  // delays:
+  vector< double > delays;
+  opts.numbers( "delays", delays, "s" );
+  setDelays( delays );
+
   // clear flags:
   ComediAOs.clear();
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
@@ -506,8 +511,12 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 	    break;
 	}
       }
-      if ( index < 0 )
-	sigs[k].addError( minislarger ? DaqError::Underflow : DaqError::Overflow );
+      if ( index < 0 ) {
+	if ( minislarger )
+	  sigs[k].addError( DaqError::Underflow );
+	else
+	  sigs[k].addError( DaqError::Overflow );
+      }
     }
     else {
       // use largest range:

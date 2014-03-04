@@ -192,6 +192,14 @@ void Acquire::closeOutputs( void )
 }
 
 
+void Acquire::setSignalDelay( int device, double delay )
+{
+  if ( device >= 0 && device < (int)AO.size() && AO[device].AO != 0 ) {
+    AO[device].AO->setDelay( delay );
+  }
+}
+
+
 int Acquire::addAttLine( Attenuate *att, const string &device, int channel )
 {
   if ( att == 0 )
@@ -247,11 +255,10 @@ void Acquire::addOutTrace( const string &name,
 			   int device, int channel, 
 			   double scale, const string &unit,
 			   bool reglitch, double maxrate,
-			   double signaldelay, const string &modality )
+			   const string &modality )
 {
   OutTraces.push_back( TraceSpec( OutTraces.size(), name, device, channel,
-				  scale, unit, reglitch, maxrate,
-				  signaldelay, modality ) );
+				  scale, unit, reglitch, maxrate, modality ) );
 }
 
 
@@ -980,8 +987,12 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
 
   // set signal start:
-  if ( aod.size() > 0 && t >= 0.0 )
+  if ( aod.size() > 0 && t >= 0.0 ) {
     LastWrite = t;
+    // XXX How to deal with several daq boards with different delays?
+    if ( AO.size() > 0 && AO[0].Signals.size() > 0 )
+      LastWrite += AO[0].AO->delay( AO[0].Signals[0].channel() );
+  }
 
   // set new gain indices:
   bool gainchanged = false;

@@ -317,15 +317,6 @@ class OutData : public SampleData< float >, public DaqError
 	maxSampleRate(), fixedSampleRate(). */
   static void setAcquire( const Acquire *a );
 
-    /*! The signal delay in seconds,
-	i.e. the time the signal needs from its emission from the daq board to
-	its destination. */
-  double signalDelay( void ) const;
-    /*! Set the signal delay, i.e. the time the signal needs from
-        its emission from the daq board to its destination,
-	to \a sigdelay seconds. */
-  void setSignalDelay( double sigdelay );
-
     /*! A string identifying the signal. */
   string ident( void ) const;
     /*! Set the identifier of the ouput signal to \a ident. */
@@ -844,8 +835,6 @@ class OutData : public SampleData< float >, public DaqError
   double MinVoltage;
     /*! The maximum possible voltage for the preset gain of the daq board. */
   double MaxVoltage;
-    /*! The delay of the signal from emmision to its destination. */
-  double SignalDelay;
     /*! Output intensity. */
   double Intensity;
     /*! Carrier frequency of signal, important for attenuator. */

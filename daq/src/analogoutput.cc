@@ -95,6 +95,30 @@ long AnalogOutput::index( void ) const
 }
 
 
+double AnalogOutput::delay( int channel ) const
+{
+  if ( Delays.empty() )
+    return 0.0;
+  else if ( channel < 0 || channel > channels() || (int)Delays.size() < channels() )
+    return Delays[0];
+  else
+    return Delays[channel];
+}
+
+
+void AnalogOutput::setDelays( const vector<double> &delays )
+{
+  Delays = delays;
+}
+
+
+void AnalogOutput::setDelay( double delay )
+{
+  Delays.clear();
+  Delays.push_back( delay );
+}
+
+
 int AnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) const
 {
   return -1;
@@ -133,6 +157,7 @@ void AnalogOutput::setInfo( void )
     Info.addInteger( "channels", channels() );
     Info.addInteger( "bits", bits() );
     Info.addNumber( "max sampling rate", 0.001*maxRate(), " kHz" );
+    Info.addNumber( "delay", 1000.0*delay( 0 ), " ms" );
   }
 }
 
