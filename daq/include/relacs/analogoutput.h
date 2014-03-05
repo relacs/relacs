@@ -182,7 +182,8 @@ public:
     /*! Write data of the output signals that were passed to the previous call
         of prepareWrite() to the analog output device.
         Returns the number of transferred data elements.
-	Returns zero if all data are transferred.
+	Returns zero if all data are transferred and no more calls to writeData()
+	are necessary.
 	If an error ocurred in any channel, the corresponding errorflags in the
 	OutData structure are filled and a negative value is returned.
         This function is called periodically after writing has been successfully
@@ -311,7 +312,7 @@ protected:
   void setSettings( const OutList &sigs, int writebuffer=0 );
 
     /*! Start the thread if \a sp is not null.
-      If \a error do not start the thread and release the semaphore \a sp. */
+        If \a error do not start the thread and release the semaphore \a sp. */
   virtual void startThread( QSemaphore *sp = 0, bool error=false );
     /*! The thread feeding data to a running analog output. */
   virtual void run( void );

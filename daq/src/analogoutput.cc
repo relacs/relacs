@@ -316,7 +316,7 @@ void AnalogOutput::startThread( QSemaphore *sp, bool error )
       Semaphore->release( 1000 );
     else {
       Run = true;
-      start( QThread::HighestPriority );
+      start( QThread::HighPriority );
     }
   }
 }

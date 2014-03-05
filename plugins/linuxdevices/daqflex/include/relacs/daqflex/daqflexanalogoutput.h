@@ -123,14 +123,6 @@ protected:
         This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs );
 
-    /*! Write data to a running data acquisition.
-        Returns the number of data values that were popped from the \a trace- 
-	device-buffer (sum over all \a traces).
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutList structure are filled and a negative value is returned.  
-	For internal usage! */
-  int fillWriteBuffer( void );
-
 
 private:
   

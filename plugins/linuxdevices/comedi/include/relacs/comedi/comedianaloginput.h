@@ -166,9 +166,6 @@ protected:
         This function is called by testRead(). */
   int testReadDevice( InList &traces );
 
-    /*! Execute the command that was prepared by prepareRead(). */
-  int executeCommand( void );
-
     /*! Convert \a n data values from the daq board \a buffer and push them into \a traces. */
   template< typename T >
     void convert( InList &traces, char *buffer, int n );
@@ -209,12 +206,9 @@ private:
     /*! Maps bipolar range indices to comei range indices. */
   vector< unsigned int > BipolarRangeIndex;
 
-    /*! List of analog input subdevices that can be 
+    /*! Analog output subdevice that can be 
         started via an instruction list together with this subdevice. */
-  vector< ComediAnalogInput* > ComediAIs;
-    /*! List of analog output subdevices that can be 
-        started via an instruction list together with this subdevice. */
-  vector< ComediAnalogOutput* > ComediAOs;
+  ComediAnalogOutput* ComediAO;
 
     /*! Comedi command for asynchronous acquisition. */
   comedi_cmd Cmd;

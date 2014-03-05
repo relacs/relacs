@@ -58,6 +58,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   Bits = 0;
   MaxRate = 50000.0;
   IsPrepared = false;
+  NoMoreData = true;
   IsRunning = false;
   UnipConverter = 0;
   BipConverter = 0;
@@ -83,6 +84,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   Bits = 0;
   MaxRate = 50000.0;
   IsPrepared = false;
+  NoMoreData = true;
   IsRunning = false;
   UnipConverter = 0;
   BipConverter = 0;
@@ -262,6 +264,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
 #endif
 
   IsPrepared = false;
+  NoMoreData = true;
 
   setInfo();
 
@@ -302,6 +305,7 @@ void DynClampAnalogOutput::close( void )
   BipConverter = 0;
 
   IsPrepared = false;
+  NoMoreData = true;
 
   Info.clear();
 }
@@ -597,8 +601,10 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   for ( int k=0; k<ol.size(); k++ )
     ol[k].deviceReset( 0 );
   Sigs = ol;
-  retval = fillWriteBuffer();
+  unlock();
+  retval = writeData();
   //  cerr << " DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << '\n';
+  lock();
 
   delete [] Buffer;
   Buffer = 0;
@@ -790,8 +796,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   }
   */
 
-  IsPrepared = ol.success();
-
   if ( ! ol.success() ) {
     unlock();
     return -1;
@@ -818,6 +822,16 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
   unlock();
 
+  // fill buffer with initial data:
+  int r = writeData();
+  if ( r < 0 )
+    return -1;
+
+  lock();
+  IsPrepared = ol.success();
+  NoMoreData = ( r == 0 );
+  unlock();
+
   return 0;
 }
 
@@ -831,21 +845,8 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
     return -1;
   }
 
-  // fill buffer with initial data:
-  int retval = fillWriteBuffer();
-  //  cerr << " DynClampAnalogOutput::startWrite -> fillWriteBuffer returned " << retval << '\n';
-
-  if ( retval < 0 ) {
-    if ( sp != 0 )
-      sp->release( 1000 );
-    unlock();
-    return -1;
-  }
-
-  bool finished = ( retval == 0 );
-
   // start subdevice:
-  retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
+  int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::startWrite -> ioctl command IOC_START_SUBDEV on device "
 	 << ModuleDevice << " failed!\n";
@@ -871,7 +872,7 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 
   unlock();
 
-  return finished ? 0 : 1;
+  return NoMoreData ? 0 : 1;
 }
 
 
@@ -885,27 +886,105 @@ int DynClampAnalogOutput::writeData( void )
   }
 
   // device stopped?
-  int running = SubdeviceID;
-  int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
-  if( retval < 0 ) {
-    //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
-    //	 << ModuleDevice << " failed!\n";
-    unlock();
-    return -1;
-  }
-  if( !running ) {
-    Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
-		      deviceFile() + " is not running!" );
-    cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
-    unlock();
-    return -1;
+  if ( IsPrepared ) {
+    int running = SubdeviceID;
+    int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
+    if( retval < 0 ) {
+      //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
+      //	 << ModuleDevice << " failed!\n";
+      unlock();
+      return -1;
+    }
+    if( !running ) {
+      Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
+			deviceFile() + " is not running!" );
+      cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
+      unlock();
+      return -1;
+    }
   }
 
-  int r = fillWriteBuffer();
+  if ( Sigs[0].deviceWriting() ) {
+    // multiplex data into buffer:
+    float *bp = (float*)(Buffer+NBuffer);
+    int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
+    int bytesConverted = 0;
+    bool writing = true;
+    for ( int i=0; i<maxn && writing; i++ ) {
+      for ( int k=0; k<Sigs.size(); k++ ) {
+	*bp = Sigs[k].deviceValue();
+	if ( Sigs[k].deviceIndex() >= Sigs[k].size() ) {
+	  Sigs[k].incrDeviceCount();
+	  if ( ! Sigs[k].deviceWriting() )
+	    writing = false;
+	}
+	++bp;
+	++bytesConverted;
+      }
+    }
+    bytesConverted *= sizeof( float );
+    NBuffer += bytesConverted;
+  }
+
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 ) {
+    unlock();
+    return 0;
+  }
+
+  // transfer buffer to kernel modul:
+  int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
+
+  int ern = 0;
+  int elemWritten = 0;
+      
+  if ( bytesWritten < 0 ) {
+    ern = errno;
+    if ( ern == EAGAIN || ern == EINTR )
+      ern = 0;
+  }
+  else if ( bytesWritten > 0 ) {
+    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+    NBuffer -= bytesWritten;
+    elemWritten += bytesWritten / BufferElemSize;
+  }
+
+  if ( ern == 0 ) {
+    // no more data:
+    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
+      if ( Buffer != 0 )
+	delete [] Buffer;
+      Buffer = 0;
+      BufferSize = 0;
+      NBuffer = 0;
+      unlock();
+      return 0;
+    }
+  }
+  else {
+    // error:
+    switch( ern ) {
+
+    case EPIPE: 
+      Sigs.addError( DaqError::OverflowUnderrun );
+      unlock();
+      return -1;
+
+    case EBUSY:
+      Sigs.addError( DaqError::Busy );
+      unlock();
+      return -1;
+
+    default:
+      Sigs.addErrorStr( ern );
+      Sigs.addError( DaqError::Unknown );
+      unlock();
+      return -1;
+    }
+  }
 
   unlock();
-
-  return r;
+  
+  return elemWritten;
 }
 
 
@@ -955,6 +1034,7 @@ int DynClampAnalogOutput::reset( void )
   }
 
   IsPrepared = false;
+  NoMoreData = true;
   IsRunning = false;
 
   unlock();
@@ -985,84 +1065,6 @@ AnalogOutput::Status DynClampAnalogOutput::status( void ) const
   unlock();
 
   return running>0 ? Running : Idle;
-}
-
-
-int DynClampAnalogOutput::fillWriteBuffer( void )
-{
-  if ( Sigs[0].deviceWriting() ) {
-    // multiplex data into buffer:
-    float *bp = (float*)(Buffer+NBuffer);
-    int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
-    int bytesConverted = 0;
-    bool writing = true;
-    for ( int i=0; i<maxn && writing; i++ ) {
-      for ( int k=0; k<Sigs.size(); k++ ) {
-	*bp = Sigs[k].deviceValue();
-	if ( Sigs[k].deviceIndex() >= Sigs[k].size() ) {
-	  Sigs[k].incrDeviceCount();
-	  if ( ! Sigs[k].deviceWriting() )
-	    writing = false;
-	}
-	++bp;
-	++bytesConverted;
-      }
-    }
-    bytesConverted *= sizeof( float );
-    NBuffer += bytesConverted;
-  }
-
-  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
-    return 0;
-
-  // transfer buffer to kernel modul:
-  int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
-
-  int ern = 0;
-  int elemWritten = 0;
-      
-  if ( bytesWritten < 0 ) {
-    ern = errno;
-    if ( ern == EAGAIN || ern == EINTR )
-      ern = 0;
-  }
-  else if ( bytesWritten > 0 ) {
-    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-    NBuffer -= bytesWritten;
-    elemWritten += bytesWritten / BufferElemSize;
-  }
-
-  if ( ern == 0 ) {
-    // no more data:
-    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      if ( Buffer != 0 )
-	delete [] Buffer;
-      Buffer = 0;
-      BufferSize = 0;
-      NBuffer = 0;
-      return 0;
-    }
-  }
-  else {
-    // error:
-    switch( ern ) {
-
-    case EPIPE: 
-      Sigs.addError( DaqError::OverflowUnderrun );
-      return -1;
-
-    case EBUSY:
-      Sigs.addError( DaqError::Busy );
-      return -1;
-
-    default:
-      Sigs.addErrorStr( ern );
-      Sigs.addError( DaqError::Unknown );
-      return -1;
-    }
-  }
-  
-  return elemWritten;
 }
 
 

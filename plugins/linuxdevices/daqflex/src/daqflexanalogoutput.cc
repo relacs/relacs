@@ -421,17 +421,14 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   Sigs = ol;
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-  //  cerr << "STARTWRITE SCALE=" << Sigs[0].scale() << '\n';
-  int r = fillWriteBuffer();
-  IsPrepared = ol.success();
-
-  if ( r < 0 ) {
-    unlock();
+  unlock();
+  int r = writeData();
+  if ( r < 0 )
     return -1;
-  }
 
+  lock();
+  IsPrepared = ol.success();
   NoMoreData = ( r == 0 );
-
   unlock();
 
   return 0;
@@ -464,18 +461,91 @@ int DAQFlexAnalogOutput::writeData( void )
   }
 
   // device stopped?
-  string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
-  if ( response.find( "UNDERRUN" ) != string::npos ) {
-    Sigs.addError( DaqError::OverflowUnderrun );
-    unlock();
-    return -1;
+  if ( IsPrepared ) {
+    string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
+    if ( response.find( "UNDERRUN" ) != string::npos ) {
+      Sigs.addError( DaqError::OverflowUnderrun );
+      unlock();
+      return -1;
+    }
   }
 
-  int r = fillWriteBuffer();
+  if ( Sigs[0].deviceWriting() ) {
+    // convert data into buffer:
+    int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
+    NBuffer += bytesConverted;
+  }
+
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 ) {
+    unlock();
+    return 0;
+  }
+
+  // transfer buffer to device:
+  int outps = DAQFlexDevice->outPacketSize();
+  int bytesToWrite = (NBuffer/outps)*outps;
+  if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
+    bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
+  if ( bytesToWrite <= 0 )
+    bytesToWrite = NBuffer;
+  int timeout = (int)::ceil( 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
+  int bytesWritten = 0;
+  //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
+  int ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
+				  DAQFlexDevice->endpointOut(),
+				  (unsigned char*)(Buffer), bytesToWrite,
+				  &bytesWritten, timeout );
+  //  cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
+
+  int elemWritten = 0;
+  if ( bytesWritten > 0 ) {
+    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+    NBuffer -= bytesWritten;
+    elemWritten += bytesWritten / 2;
+  }
+
+  if ( ern == 0 ) {
+    // no more data:
+    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
+      if ( Buffer != 0 )
+	delete [] Buffer;
+      Buffer = 0;
+      BufferSize = 0;
+      NBuffer = 0;
+      unlock();
+      return 0;
+    }
+  }
+  else {
+    // error:
+    switch( ern ) {
+
+    case LIBUSB_ERROR_PIPE:
+      Sigs.addError( DaqError::OverflowUnderrun );
+      unlock();
+      return -1;
+
+    case LIBUSB_ERROR_BUSY:
+      Sigs.addError( DaqError::Busy );
+      unlock();
+      return -1;
+
+    case LIBUSB_ERROR_TIMEOUT:
+      cerr << "timeout in writing data\n";
+      unlock();
+      return -1;
+
+    default:
+      Sigs.addErrorStr( "Lib USB Error" );
+      Sigs.addError( DaqError::Unknown );
+      unlock();
+      return -1;
+    }
+  }
 
   unlock();
 
-  return r;
+  return elemWritten;
 }
 
 
@@ -526,77 +596,6 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
   }
   unlock();
   return r;
-}
-
-
-int DAQFlexAnalogOutput::fillWriteBuffer( void )
-{
-  if ( Sigs[0].deviceWriting() ) {
-    // convert data into buffer:
-    int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
-    NBuffer += bytesConverted;
-  }
-
-  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
-    return 0;
-
-  // transfer buffer to device:
-  int outps = DAQFlexDevice->outPacketSize();
-  int bytesToWrite = (NBuffer/outps)*outps;
-  if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
-    bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
-  if ( bytesToWrite <= 0 )
-    bytesToWrite = NBuffer;
-  int timeout = (int)::ceil( 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
-  int bytesWritten = 0;
-  //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
-  int ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
-				  DAQFlexDevice->endpointOut(),
-				  (unsigned char*)(Buffer), bytesToWrite,
-				  &bytesWritten, timeout );
-  //  cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
-
-  int elemWritten = 0;
-  if ( bytesWritten > 0 ) {
-    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-    NBuffer -= bytesWritten;
-    elemWritten += bytesWritten / 2;
-  }
-
-  if ( ern == 0 ) {
-    // no more data:
-    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      if ( Buffer != 0 )
-	delete [] Buffer;
-      Buffer = 0;
-      BufferSize = 0;
-      NBuffer = 0;
-      return 0;
-    }
-  }
-  else {
-    // error:
-    switch( ern ) {
-
-    case LIBUSB_ERROR_PIPE:
-      Sigs.addError( DaqError::OverflowUnderrun );
-      return -1;
-
-    case LIBUSB_ERROR_BUSY:
-      Sigs.addError( DaqError::Busy );
-      return -1;
-
-    case LIBUSB_ERROR_TIMEOUT:
-      break;
-
-    default:
-      Sigs.addErrorStr( "Lib USB Error" );
-      Sigs.addError( DaqError::Unknown );
-      return -1;
-    }
-  }
-
-  return elemWritten;
 }
 
 

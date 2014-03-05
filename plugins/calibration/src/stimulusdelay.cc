@@ -34,7 +34,7 @@ StimulusDelay::StimulusDelay( void )
   addSelection( "intrace", "Input trace", "V-1" );
   addSelection( "outtrace", "Output trace", "V-1" );
   addNumber( "samplerate", "Sampling rate of output", 10000.0, 1000.0, 1000000.0, 1000.0, "Hz", "kHz" );
-  addNumber( "duration", "Duration of output", 0.01, 0.001, 1.0, 0.001, "sec", "ms" );
+  addNumber( "duration", "Duration of output", 0.01, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Pause between outputs", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   addSelection( "setdelay", "Set signal delay of analog output device", "none|minimum|mean" );
@@ -128,12 +128,15 @@ int StimulusDelay::analyze( const InData &data, double duration,
 			    double &mindeltat, double &maxdeltat )
 {
   // find transition:
-  double max0 = data.max( signalTime()-duration, signalTime() );
-  double max1 = data.max( signalTime(), signalTime()+duration );
+  double twin = duration;
+  if ( pause < twin )
+    twin = pause;
+  double max0 = data.max( signalTime()-twin, signalTime() );
+  double max1 = data.max( signalTime(), signalTime()+twin );
   double thresh = 0.5*(max0+max1);
   double dt = 0.0;
-  for ( int k=data.index( signalTime()-duration ); 
-	k<data.index( signalTime()+duration );
+  for ( int k=data.index( signalTime()-twin ); 
+	k<data.index( signalTime()+twin );
 	k++ ) {
     if ( data[k] > thresh ) {
       dt = data.pos( k ) - signalTime();

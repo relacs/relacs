@@ -1,18 +1,17 @@
 New InData threading:
-- AnalogOutput: Simplify return value of startWrite, integrate fillWrite into writeData
-- Put command execution and preloading fillwrite into prepareWrite() as in DAQFlex.
-- Blocking write: synchronization with analog input not yet solved!
-- Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Check and further simplify RELACSWidget data locking
   Each AnalogInput implementation should take care about its own locking
   and probably also thread using pthreads
   Put the AIMutex into the device and simulate plugins!!!
-- Rethink activateGains(): DynClamp can handle this without restarting and 
-  by passing a flag through the FIFO.
 - Can AQ->startWrite()/restartRead() made more independent from all the locks?
 - Filter/Detector influences reading dramatically (EODDetector in efield with comedi on 64kB) -
   should be made independent.
+- Blocking write: synchronization with analog input not yet solved!
+- Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Filter buffersize should just be the same as the one of the input trace!
+- Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
+- Rethink activateGains(): DynClamp can handle this without restarting and 
+  by passing a flag through the FIFO.
 - Replace the source() flag by a sourceTrace and sourceEvent index
   Remove the source mapping functions from RELACSPlugin and FIlterDetectors
 - SpectrumAnalyzer Frequency resolution should not depend on sampling rate!

@@ -105,8 +105,6 @@ public:
 	OutData are set and a negative value is returned.
 	If no further calls of writeData() are required, 0 is returned,
 	otherwise 1 is returned.
-	Also start possible pending acquisition on other devices
-	that are known from take().
         This function is always called after a successfull prepareRead().
 	\param[in] sp if not null, a thread is started feeding the running analog output.
         When the thread and analog output is finished, releases the semaphore by one.
@@ -129,12 +127,6 @@ public:
     /*! \return the status of the analog output. */
   virtual Status status( void ) const;
 
-    /*! Check for every analog output device in \a aos
-        whether it can be simultaneously started by startWrite()
-        from this device. */
-  virtual void take( const vector< AnalogOutput* > &aos,
-                     vector< int > &aoinx, vector< bool > &aorate );
-
 
 protected:
 
@@ -155,19 +147,8 @@ protected:
         This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs );
 
-    /*! Write data to a running data acquisition.
-        Returns the number of data values that were popped from the \a trace- 
-	device-buffer (sum over all \a traces).
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutList structure are filled and a negative value is returned.  
-	For internal usage! */
-  int fillWriteBuffer( void );
-
-    /*! Execute the command that was prepared by prepareWrite(). */
-  int executeCommand( QSemaphore *sp = 0 );
-    /*! Clear the command that was prepared by prepareWrite()
-        after successfull execution via the instruction list. */
-  void clearCommand( void );
+    /*! \return \c true if writeData() does not need to be called any more. */
+  bool noMoreData( void ) const;
 
     /*! Comedi internal index of analog output subdevice. */
   int comediSubdevice( void ) const;
@@ -213,14 +194,12 @@ private:
   int UnipolarExtRefRangeIndex;
   int BipolarExtRefRangeIndex;
 
-    /*! List of analog output subdevices that can be 
-        started via an instruction list together with this subdevice. */
-  vector< ComediAnalogOutput* > ComediAOs;
-
     /*! Comedi command for asynchronous acquisition. */
   comedi_cmd Cmd;
     /*! True if the command is prepared. */
   bool IsPrepared;
+    /*! True if no more data need to be written to the board. */
+  bool NoMoreData;
 
     /*! Calibration info. */
   comedi_calibration_t *Calibration;

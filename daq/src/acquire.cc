@@ -257,6 +257,8 @@ void Acquire::addOutTrace( const string &name,
 			   bool reglitch, double maxrate,
 			   const string &modality )
 {
+  if ( device >= 0 && device < (int)AO.size() && maxrate > AO[device].AO->maxRate() )
+    maxrate = AO[device].AO->maxRate();
   OutTraces.push_back( TraceSpec( OutTraces.size(), name, device, channel,
 				  scale, unit, reglitch, maxrate, modality ) );
 }

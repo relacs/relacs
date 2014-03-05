@@ -239,8 +239,7 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
   // clear flags:
-  ComediAIs.clear();
-  ComediAOs.clear();
+  ComediAO = 0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   IsRunning = false;
@@ -286,8 +285,7 @@ void ComediAnalogInput::close( void )
   // clear flags:
   DeviceP = NULL;
   SubDevice = 0;
-  ComediAIs.clear();
-  ComediAOs.clear();
+  ComediAO = 0;
   if ( Cmd.chanlist != 0 )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
@@ -696,7 +694,7 @@ int ComediAnalogInput::prepareRead( InList &traces )
 	traces[k].addError( DaqError::CalibrationFailed );
     }
   }
-  
+
   if ( traces.success() ) {
     setSettings( traces, BufferSize, ReadBufferSize );
     Traces = &traces;
@@ -708,25 +706,9 @@ int ComediAnalogInput::prepareRead( InList &traces )
 }
 
 
-int ComediAnalogInput::executeCommand( void )
-{
-  if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
-    cerr << "AI command failed: " << comedi_strerror( comedi_errno() ) << endl;
-    /*
-    traces.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
-			+ comedi_strerror( comedi_errno() ) );
-    */
-    return -1;
-  }
-  TraceIndex = 0;
-  IsRunning = true;
-  return 0;
-}
-
-
 int ComediAnalogInput::startRead( QSemaphore *aosp )
 {
-  //  cerr << " ComediAnalogInput::startRead(): begin" << endl;/////TEST/////
+  //  cerr << " ComediAnalogInput::startRead(): begin" << '\n';
 
   if ( !prepared() || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
@@ -737,51 +719,50 @@ int ComediAnalogInput::startRead( QSemaphore *aosp )
   lsampl_t insndata[1];
   insndata[0] = 0;
   comedi_insnlist insnlist;
-  insnlist.n_insns = ComediAIs.size() + ComediAOs.size();
+  insnlist.n_insns = 2;
   insnlist.insns = new comedi_insn[insnlist.n_insns];
   for ( unsigned int k=0; k<insnlist.n_insns; k++ ) {
     insnlist.insns[k].insn = INSN_INTTRIG;
     insnlist.insns[k].subdev = -1;
+    insnlist.insns[k].chanspec = 0;
     insnlist.insns[k].data = insndata;
     insnlist.insns[k].n = 1;
   }
-  bool success = true;
-  bool finished = true;
   int ilinx = 0;
-  for ( unsigned int k=0; k<ComediAIs.size() && success; k++ ) {
-    if ( ComediAIs[k]->prepared() ) {
-      if ( ComediAIs[k]->executeCommand() < 0 )
-	success = false;
-      else
-	insnlist.insns[ilinx++].subdev = ComediAIs[k]->comediSubdevice();
-    }
+  TraceIndex = 0;
+  if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
+    int cerror = comedi_errno();
+    cerr << "AI command failed: " << comedi_strerror( cerror ) << endl;
+    Traces->addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
+			 + comedi_strerror( cerror ) );
+    return -1;
   }
-  for ( unsigned int k=0; k<ComediAOs.size() && success; k++ ) {
-    if ( ComediAOs[k]->prepared() ) {
-      int r = ComediAOs[k]->executeCommand( aosp );
-      if ( r < 0 )
-	success = false;
-      else {
-	if ( r > 0 )
-	  finished = false;
-	insnlist.insns[ilinx++].subdev = ComediAOs[k]->comediSubdevice();
-      }
-    }
-  }
+  else  
+    insnlist.insns[ilinx++].subdev = SubDevice;
+  if ( ComediAO != 0 && ComediAO->prepared() )
+    insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
   insnlist.n_insns = ilinx;
-  if ( success ) {
-    int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
-    if ( ninsns == ilinx ) {
-      for ( unsigned int k=0; k<ComediAOs.size() && success; k++ )
-	ComediAOs[k]->clearCommand();
-    }
-    else {
-      success = false;
-      cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist failed: "
-	   << comedi_strerror( comedi_errno() ) << endl;
-    }
+  bool success = true;
+  int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
+  if ( ninsns != ilinx ) {
+    success = false;
+    int cerror = comedi_errno();
+    cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist failed: "
+	 << comedi_strerror( cerror ) << endl;
+    Traces->addErrorStr( deviceFile() + " - execution of comedi_do_insnlist failed: "
+			 + comedi_strerror( cerror ) );
   }
   delete [] insnlist.insns;
+
+  bool finished = true;
+  if ( success ) {
+    IsRunning = true;
+    // start analog output thread:
+    if ( ComediAO != 0 ) {
+      ComediAO->startThread( aosp );
+      finished = ComediAO->noMoreData();
+    }
+  }
 
   return success ? ( finished ? 0 : 1 ) : -1;
 }
@@ -986,26 +967,16 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
 			      vector< int > &aiinx, vector< int > &aoinx,
 			      vector< bool > &airate, vector< bool > &aorate )
 {
-  ComediAIs.clear();
-  ComediAOs.clear();
+  ComediAO = 0;
 
-  // check for analog input devices:
-  for ( unsigned int k=0; k<ais.size(); k++ ) {
-    if ( ais[k]->analogInputType() == ComediAnalogIOType &&
-	 ais[k]->deviceFile() == deviceFile() ) {
-      aiinx.push_back( k );
-      airate.push_back( false );
-      ComediAIs.push_back( dynamic_cast< ComediAnalogInput* >( ais[k] ) );
-    }
-  }
-
-  // check for analog output devices:
+  // check for analog output device:
   for ( unsigned int k=0; k<aos.size(); k++ ) {
     if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
 	 aos[k]->deviceFile() == deviceFile() ) {
       aoinx.push_back( k );
       aorate.push_back( false );
-      ComediAOs.push_back( dynamic_cast< ComediAnalogOutput* >( aos[k] ) );
+      ComediAO = dynamic_cast< ComediAnalogOutput* >( aos[k] );
+      break;
     }
   }
 }
