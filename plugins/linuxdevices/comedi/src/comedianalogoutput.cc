@@ -886,8 +886,7 @@ bool ComediAnalogOutput::noMoreData( void ) const
 
 int ComediAnalogOutput::startWrite( QSemaphore *sp )
 {
-  //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
-
+  //  cerr << " ComediAnalogOutput::startWrite(): begin" << '\n';
   lock();
 
   if ( !prepared() || Sigs.empty() ) {
@@ -916,6 +915,8 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
   }
 
   startThread( sp );
+
+  unlock();
 
   return NoMoreData ? 0 : 1;
 }

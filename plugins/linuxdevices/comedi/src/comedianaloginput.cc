@@ -43,6 +43,7 @@ ComediAnalogInput::ComediAnalogInput( void )
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
+  TakeAO = true;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   IsRunning = false;
@@ -66,6 +67,7 @@ ComediAnalogInput::ComediAnalogInput( const string &device, const Options &opts 
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
+  TakeAO = true;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   IsRunning = false;
@@ -238,6 +240,9 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
   else
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
+  // For debugging:
+  TakeAO = opts.boolean( "takeao", true );
+
   // clear flags:
   ComediAO = 0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
@@ -294,6 +299,7 @@ void ComediAnalogInput::close( void )
   TotalSamples = 0;
   CurrentSamples = 0;
   Info.clear();
+  TakeAO = true;
 }
 
 
@@ -969,14 +975,16 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
 {
   ComediAO = 0;
 
-  // check for analog output device:
-  for ( unsigned int k=0; k<aos.size(); k++ ) {
-    if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
-	 aos[k]->deviceFile() == deviceFile() ) {
-      aoinx.push_back( k );
-      aorate.push_back( false );
-      ComediAO = dynamic_cast< ComediAnalogOutput* >( aos[k] );
-      break;
+  if ( TakeAO ) {
+    // check for analog output device:
+    for ( unsigned int k=0; k<aos.size(); k++ ) {
+      if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
+	   aos[k]->deviceFile() == deviceFile() ) {
+	aoinx.push_back( k );
+	aorate.push_back( false );
+	ComediAO = dynamic_cast< ComediAnalogOutput* >( aos[k] );
+	break;
+      }
     }
   }
 }
