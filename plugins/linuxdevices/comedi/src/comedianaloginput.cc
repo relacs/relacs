@@ -259,7 +259,10 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
 
 bool ComediAnalogInput::isOpen( void ) const 
 { 
-  return ( DeviceP != NULL );
+  lock();
+  bool o = ( DeviceP != NULL );
+  unlock();
+  return o;
 }
 
 
@@ -307,7 +310,10 @@ int ComediAnalogInput::channels( void ) const
 { 
   if ( !isOpen() )
     return -1;
-  return comedi_get_n_channels( DeviceP, SubDevice );
+  lock();
+  int n = comedi_get_n_channels( DeviceP, SubDevice );
+  unlock();
+  return n;
 }
 
 
@@ -315,7 +321,9 @@ int ComediAnalogInput::bits( void ) const
 { 
   if ( !isOpen() )
     return -1;
+  lock();
   int maxData = comedi_get_maxdata( DeviceP, SubDevice, 0 );
+  unlock();
   return (int)( log( maxData+2.0 )/ log( 2.0 ) );
 }
 
@@ -388,11 +396,6 @@ void dump_cmd( comedi_cmd *cmd )
   
 int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 {
-  if ( !isOpen() ) {
-    traces.addError( DaqError::DeviceNotOpen );
-    return -1;
-  }
-
   // channels:
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
@@ -624,6 +627,11 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 
 int ComediAnalogInput::testReadDevice( InList &traces )
 {
+  if ( !isOpen() ) {
+    traces.addError( DaqError::DeviceNotOpen );
+    return -1;
+  }
+
   for ( int k=0; k<traces.size(); k++ ) {
     if ( traces[k].gainIndex() < 0 ) {
       traces[k].addError( DaqError::InvalidGain );
@@ -645,7 +653,9 @@ int ComediAnalogInput::testReadDevice( InList &traces )
 
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
+  lock();
   int retVal = setupCommand( traces, cmd );
+  unlock();
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
@@ -675,9 +685,12 @@ int ComediAnalogInput::prepareRead( InList &traces )
 
   reset();
 
+  lock();
   int error = setupCommand( traces, Cmd );
-  if ( error )
+  if ( error ) {
+    unlock();
     return error;
+  }
 
   // init internal buffer:
   if ( Buffer != 0 )
@@ -708,6 +721,8 @@ int ComediAnalogInput::prepareRead( InList &traces )
 
   IsPrepared = traces.success();
 
+  unlock();
+
   return traces.success() ? 0 : -1;
 }
 
@@ -716,8 +731,10 @@ int ComediAnalogInput::startRead( QSemaphore *aosp )
 {
   //  cerr << " ComediAnalogInput::startRead(): begin" << '\n';
 
-  if ( !prepared() || Traces == 0 ) {
+  lock();
+  if ( !IsPrepared || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
+    unlock();
     return -1;
   }
 
@@ -741,6 +758,7 @@ int ComediAnalogInput::startRead( QSemaphore *aosp )
     cerr << "AI command failed: " << comedi_strerror( cerror ) << endl;
     Traces->addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
 			 + comedi_strerror( cerror ) );
+    unlock();
     return -1;
   }
   else  
@@ -769,6 +787,8 @@ int ComediAnalogInput::startRead( QSemaphore *aosp )
       finished = ComediAO->noMoreData();
     }
   }
+
+  unlock();
 
   return success ? ( finished ? 0 : 1 ) : -1;
 }
@@ -826,8 +846,11 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 int ComediAnalogInput::readData( void )
 {
   //  cerr << "Comedi::readData() start\n";
-  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
+  lock();
+  if ( Traces == 0 || Buffer == 0 || ! IsRunning ) {
+    unlock();
     return -1;
+  }
 
   bool failed = false;
   int readn = 0;
@@ -877,6 +900,7 @@ int ComediAnalogInput::readData( void )
       Traces->addError( DaqError::Unknown );
     }
     */
+    unlock();
     return -1;   
   }
 
@@ -888,8 +912,10 @@ int ComediAnalogInput::readData( void )
       Traces->addError( DaqError::OverflowUnderrun );
       cerr << " ComediAnalogInput::readData(): no data and not running\n";
     }
+    unlock();
     return -1;
   }
+  unlock();
 
   //  cerr << "Comedi::readData() end " << BufferN << "\n";
 
@@ -899,8 +925,11 @@ int ComediAnalogInput::readData( void )
 
 int ComediAnalogInput::convertData( void )
 {
-  if ( Traces == 0 || Buffer == 0 )
+  lock();
+  if ( Traces == 0 || Buffer == 0 ) {
+    unlock();
     return -1;
+  }
 
   if ( LongSampleType )
     convert<lsampl_t>( *Traces, Buffer, BufferN );
@@ -912,6 +941,8 @@ int ComediAnalogInput::convertData( void )
   int n = BufferN;
   BufferN = 0;
 
+  unlock();
+
   return n;
 }
 
@@ -921,11 +952,14 @@ int ComediAnalogInput::stop( void )
   if ( !isOpen() )
     return NotOpen;
 
-  if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
+  lock();
+  if ( comedi_cancel( DeviceP, SubDevice ) < 0 ) {
+    unlock();
     return ReadError;
+  }
 
   IsRunning = false;
-
+  unlock();
   return 0;
 }
 
@@ -934,6 +968,7 @@ int ComediAnalogInput::reset( void )
 { 
   int retVal = stop();
 
+  lock();
   // clear buffers by reading:
   while ( comedi_get_buffer_contents( DeviceP, SubDevice ) > 0 ) {
     char buffer[ReadBufferSize];
@@ -958,13 +993,18 @@ int ComediAnalogInput::reset( void )
   Traces = 0;
   TraceIndex = 0;
 
+  unlock();
+
   return retVal;
 }
 
 
 bool ComediAnalogInput::running( void ) const
 {   
-  return ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
+  lock();
+  bool r = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
+  unlock();
+  return r;
 }
 
 
@@ -1002,13 +1042,19 @@ int ComediAnalogInput::bufferSize( void ) const
 {
   if( !isOpen() )
     return -1;
-  return comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
+  lock();
+  int n = comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
+  unlock();
+  return n;
 }
 
 
 bool ComediAnalogInput::prepared( void ) const 
-{ 
-  return IsPrepared;
+{
+  lock();
+  bool ip = IsPrepared;
+  unlock();
+  return ip;
 }
 
 

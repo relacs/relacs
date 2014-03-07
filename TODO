@@ -1,8 +1,6 @@
 New InData threading:
 - Check and further simplify RELACSWidget data locking
-  Each AnalogInput implementation should take care about its own locking
-  and probably also thread using pthreads
-  Put the AIMutex into the device and simulate plugins!!!
+  AnalogInput should get its own thread?
 - Can AQ->startWrite()/restartRead() made more independent from all the locks?
 - Filter/Detector influences reading dramatically (EODDetector in efield with comedi on 64kB) -
   should be made independent.

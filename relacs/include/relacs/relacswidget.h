@@ -136,13 +136,6 @@ public:
         on the UpdateDataWait condition to make sure data are available for you. */
   bool updateData( double mintracetime=0.0 );
 
-    /*! Locks the mutex of the analog input plugin. */
-  void readLockAI( void ) { AIMutex.lockForRead(); };
-    /*! Locks the buffer mutex of the analog input plugin. */
-  void writeLockAI( void ) { AIMutex.lockForWrite(); };
-    /*! Unlocks the mutex of the analog input plugin. */
-  void unlockAI( void ) { AIMutex.unlock(); };
-
     /*! Locks the mutex of all the data traces and events. */
   void readLockData( void ) { DataMutex.lockForRead(); };
     /*! Locks the data mutex of all the data traces and events. */
@@ -404,8 +397,6 @@ private:
   QTimer SimLoad;
   QLabel *SimLabel;
 
-    /*! Controls operations on the analog input plugin. */
-  QReadWriteLock AIMutex;
     /*! Controls the primary input data buffer. */
   QReadWriteLock DataMutex;
   bool RunData;

@@ -839,11 +839,13 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 {
   lock();
-  if( !prepared() || Sigs.empty() ) {
+
+  if( !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     unlock();
     return -1;
   }
+
 
   // start subdevice:
   int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
@@ -1169,7 +1171,10 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 
 bool DynClampAnalogOutput::prepared( void ) const 
 { 
-  return IsPrepared;
+  lock();
+  bool ip = IsPrepared;
+  unlock();
+  return ip;
 }
 
 

@@ -58,14 +58,10 @@ void ReadThread::run( void )
   bool rd = true;
 
   do {
-    RW->writeLockAI();
     int r = RW->AQ->readData();
-    RW->unlockAI();
     if ( r < 0 ) {
       RW->printlog( "! error in reading acquired data: " + RW->IL.errorText() );
-      RW->writeLockAI();
       RW->AQ->restartRead();
-      RW->unlockAI();
     }
     else if ( r == 0 ) {
       RW->printlog( "ReadThread -> finished reading data" );
@@ -75,9 +71,7 @@ void ReadThread::run( void )
       break;
     }
     RW->writeLockData();
-    RW->writeLockAI();
     RW->AQ->convertData();
-    RW->unlockAI();
     RW->unlockData();
     RW->ReadDataWait.wakeAll();
     RunMutex.lock();

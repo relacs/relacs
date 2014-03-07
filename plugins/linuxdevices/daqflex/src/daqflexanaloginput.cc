@@ -125,7 +125,10 @@ int DAQFlexAnalogInput::open( Device &device, const Options &opts )
 
 bool DAQFlexAnalogInput::isOpen( void ) const
 {
-  return ( DAQFlexDevice != NULL && DAQFlexDevice->isOpen() );
+  lock();
+  bool o = ( DAQFlexDevice != NULL && DAQFlexDevice->isOpen() );
+  unlock();
+  return o;
 }
 
 
@@ -234,6 +237,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 
   reset();
 
+  lock();
   // init internal buffer:
   if ( Buffer != 0 )
     delete [] Buffer;
@@ -323,8 +327,10 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   }
   //    DAQFlexDevice->sendMessage( "?AIQUEUE:COUNT" );
 
-  if ( traces.failed() )
+  if ( traces.failed() ) {
+    unlock();
     return -1;
+  }
 
   if ( traces.success() ) {
     setSettings( traces, BufferSize, ReadBufferSize );
@@ -334,18 +340,23 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 
   IsPrepared = traces.success();
 
+  unlock();
+
   return traces.success() ? 0 : -1;
 }
 
 
 int DAQFlexAnalogInput::startRead( QSemaphore *aosp )
 {
+  lock();
   if ( !IsPrepared || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
+    unlock();
     return -1;
   }
   DAQFlexDevice->sendMessage( "AISCAN:START" );
   IsRunning = true;
+  unlock();
   return 0;
 }
 
@@ -353,8 +364,11 @@ int DAQFlexAnalogInput::startRead( QSemaphore *aosp )
 int DAQFlexAnalogInput::readData( void )
 {
   //  cerr << "DAQFlex::readData() start\n";
-  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
+  lock();
+  if ( Traces == 0 || Buffer == 0 || ! IsRunning ) {
+    unlock();
     return -1;
+  }
 
   bool failed = false;
   int readn = 0;
@@ -393,27 +407,34 @@ int DAQFlexAnalogInput::readData( void )
   readn /= 2;
   CurrentSamples += readn;
 
-  if ( failed )
+  if ( failed ) {
+    unlock();
     return -1;
+  }
 
   // no more data to be read:
-  if ( readn <= 0 && !running() ) {
+  if ( readn <= 0 && !IsRunning ) {
     if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       Traces->addErrorStr( deviceFile() + " - buffer-overflow " );
       Traces->addError( DaqError::OverflowUnderrun );
       cerr << " DAQFlexAnalogInput::readData(): no data and not running\n";
     }
+    unlock();
     return -1;
   }
 
+  unlock();
   return readn;
 }
 
 
 int DAQFlexAnalogInput::convertData( void )
 {
-  if ( Traces == 0 || Buffer == 0 )
+  lock();
+  if ( Traces == 0 || Buffer == 0 ) {
+    unlock();
     return -1;
+  }
 
   // conversion factors and scale factors:
   double scale[Traces->size()];
@@ -462,6 +483,8 @@ int DAQFlexAnalogInput::convertData( void )
   int n = BufferN;
   BufferN = 0;
 
+  unlock();
+
   return n;
 }
 
@@ -470,8 +493,10 @@ int DAQFlexAnalogInput::stop( void )
 {
   if ( !isOpen() )
     return NotOpen;
+  lock();
   DAQFlexDevice->sendMessage( "AISCAN:STOP" );
   IsRunning = false;
+  unlock();
   return 0;
 }
 
@@ -479,6 +504,7 @@ int DAQFlexAnalogInput::stop( void )
 int DAQFlexAnalogInput::reset( void )
 {
   int retVal = stop();
+  lock();
   // clear overrun condition:
   DAQFlexDevice->sendControlTransfer( "AISCAN:RESET" , false );
   libusb_clear_halt( DAQFlexDevice->deviceHandle(),
@@ -509,6 +535,8 @@ int DAQFlexAnalogInput::reset( void )
   IsPrepared = false;
   Traces = 0;
   TraceIndex = 0;
+  
+  unlock();
 
   return retVal;
 }
@@ -516,7 +544,9 @@ int DAQFlexAnalogInput::reset( void )
 
 bool DAQFlexAnalogInput::running( void ) const
 {
+  lock();
   string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS", false );
+  unlock();
   return ( response.find( "RUNNING" ) != string::npos );
 }
 

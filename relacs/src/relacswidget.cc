@@ -103,7 +103,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     LogFile( 0 ),
     IsFullScreen( false ),
     IsMaximized( false ),
-    AIMutex(),
     RunData( false ),
     RunDataMutex(),
     DeviceMenu( 0 ),
@@ -805,7 +804,6 @@ bool RELACSWidget::updateData( double mintracetime )
   }
 
   if ( doupdate ) {
-    writeLockAI();   // XXX is this really needed?
     // check data:
     if ( IL.failed() ) {
       AIErrorMsg = "Error in acquisition: " + IL.errorText();
@@ -816,7 +814,6 @@ bool RELACSWidget::updateData( double mintracetime )
     AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
     AQ->readRestart( IL, ED );
     FD->updateRawTracesEvents();
-    unlockAI();
     Str fdw = FD->filter();
     if ( !fdw.empty() )
       printlog( "! error: " + fdw.erasedMarkup() );
@@ -855,11 +852,9 @@ void RELACSWidget::simLoadMessage( void )
 void RELACSWidget::activateGains( void )
 {
   writeLockData();
-  writeLockAI();
   AQ->activateGains();
   AQ->readRestart( IL, ED );
   FD->adjust( AQ->adjustFlag() );
-  unlockAI();
   unlockData();
 }
 
@@ -870,10 +865,8 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   int r = AQ->setupWrite( signal );   // might take some time (20ms with DAQFlex)
   if ( r == 0 ) {
-    writeLockData();
-    writeLockAI(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+    writeLockData();// IL data need to be write locked, because data might be truncated in Acquire::restartRead()
     r = AQ->startWrite( signal, setsignaltime );
-    unlockAI();
     unlockData();
   }
   if ( r >= 0 ) {
@@ -900,10 +893,8 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   int r = AQ->setupWrite( signal );
   if ( r == 0 ) {
-    writeLockData();
-    writeLockAI(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+    writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
     r = AQ->startWrite( signal, setsignaltime );
-    unlockAI();
     unlockData();
   }
   if ( r >= 0 ) {
@@ -928,10 +919,8 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
-  writeLockData();
-  writeLockAI(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+  writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
   int r = AQ->directWrite( signal, setsignaltime );
-  unlockAI();
   unlockData();
   if ( r == 0 ) {
     SF->save( signal );
@@ -951,10 +940,8 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
-  writeLockData();
-  writeLockAI(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
+  writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
   int r = AQ->directWrite( signal, setsignaltime );
-  unlockAI();
   unlockData();
   if ( r == 0 ) {
     SF->save( signal );
@@ -1265,11 +1252,8 @@ void RELACSWidget::stopThreads( void )
 
   // stop simulation and data acquisition:
   SimLoad.stop();
-  if ( AQ != 0 ) {
-    writeLockAI();
+  if ( AQ != 0 )
     AQ->stop();
-    unlockAI();
-  }
 
   // process pending events posted from threads.
   qApp->processEvents();
@@ -1435,9 +1419,7 @@ void RELACSWidget::startFirstAcquisition( void )
     return;
   }
   setupOutTraces();
-  writeLockAI();
   int r = AQ->testRead( IL );
-  unlockAI();
   if ( r < 0 ) {
     printlog( "! error in testing data acquisition: " + IL.errorText() );
     MessageBox::warning( "RELACS Warning !",
@@ -1505,9 +1487,7 @@ void RELACSWidget::startFirstAcquisition( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
-  writeLockAI();
   r = AQ->read( IL );
-  unlockAI();
   if ( r < 0 ) {
     printlog( "! error in starting data acquisition: " + IL.errorText() );
     MessageBox::warning( "RELACS Warning !",
@@ -1541,9 +1521,7 @@ void RELACSWidget::startFirstAcquisition( void )
 
   // reset analog output for dynamic clamp:
   writeLockData();
-  writeLockAI();
   string wr = AQ->writeReset( true, true );
-  unlockAI();
   unlockData();
   if ( ! wr.empty() ) {
     printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed: " + wr );
@@ -1600,9 +1578,7 @@ void RELACSWidget::startFirstSimulation( void )
     return;
   }
   setupOutTraces();
-  writeLockAI();
   int r = AQ->testRead( IL );
-  unlockAI();
   if ( r < 0 ) {
     printlog( "! error in testing data acquisition: " + IL.errorText() );
     MessageBox::warning( "RELACS Warning !",
@@ -1674,14 +1650,10 @@ void RELACSWidget::startFirstSimulation( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
-  writeLockAI();
   r = AQ->read( IL );
-  unlockAI();
   if ( r < 0 ) {
     // give it a second chance with the adjusted input parameter:
-    writeLockAI();
     r = AQ->read( IL );
-    unlockAI();
     if ( r < 0 ) {
       printlog( "! error in starting data acquisition: " + IL.errorText() );
       MessageBox::warning( "RELACS Warning !",

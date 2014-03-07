@@ -301,7 +301,10 @@ int ComediAnalogOutput::channels( void ) const
 { 
   if ( !isOpen() )
     return -1;
-  return comedi_get_n_channels( DeviceP, SubDevice );
+  lock();
+  int n = comedi_get_n_channels( DeviceP, SubDevice );
+  unlock();
+  return n;
 }
 
 
@@ -309,7 +312,9 @@ int ComediAnalogOutput::bits( void ) const
 { 
   if ( !isOpen() )
     return -1;
+  lock();
   int maxData = comedi_get_maxdata( DeviceP, SubDevice, 0 );
+  unlock();
   return (int)( log( maxData+2.0 )/ log( 2.0 ) );
 }
 
@@ -760,7 +765,9 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
+  lock();
   int retVal = setupCommand( sigs, cmd, false );
+  unlock();
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
@@ -880,16 +887,19 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
 bool ComediAnalogOutput::noMoreData( void ) const
 {
-  return NoMoreData;
+  lock();
+  bool nmd = NoMoreData;
+  unlock();
+  return nmd;
 }
 
 
 int ComediAnalogOutput::startWrite( QSemaphore *sp )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << '\n';
-  lock();
 
-  if ( !prepared() || Sigs.empty() ) {
+  lock();
+  if ( !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     unlock();
     return -1;
@@ -1097,13 +1107,19 @@ int ComediAnalogOutput::bufferSize( void ) const
 {
   if ( DeviceP == NULL )
     return -1;
-  return comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
+  lock();
+  int n = comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
+  unlock();
+  return n;
 }
 
 
 bool ComediAnalogOutput::prepared( void ) const 
 { 
-  return IsPrepared;
+  lock();
+  bool ip = IsPrepared;
+  unlock();
+  return ip;
 }
 
 
