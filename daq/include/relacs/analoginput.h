@@ -23,7 +23,10 @@
 #define _RELACS_ANALOGINPUT_H_ 1
 
 #include <vector>
+#include <QThread>
+#include <QReadWriteLock>
 #include <QSemaphore>
+#include <QWaitCondition>
 #include <relacs/device.h>
 #include <relacs/inlist.h>
 #include <relacs/tracespec.h>
@@ -54,7 +57,7 @@ AnalogInput device known to RELACS with the \c addAnalogInput(
 ClassNameOfYourAnalogInputImplementation, PluginSetName ) macro.
 */
 
-class AnalogInput : public Device
+class AnalogInput : public Device, protected QThread
 {
 
 public:
@@ -272,11 +275,28 @@ protected:
   void setSettings( const InList &traces, int readbuffer=0,
 		    int updatebuffer=0 );
 
+    /*! Start the thread if \a sp is not null.
+        If \a error do not start the thread and release the semaphore \a sp. */
+  virtual void startThread( QSemaphore *sp = 0, QReadWriteLock *datamutex=0,
+			    QWaitCondition *datawait=0, bool error=false );
+    /*! The thread reading data from a running analog input. */
+  virtual void run( void );
+    /*! Stop the running thread. */
+  virtual void stopRead( void );
+
 
 private:
 
     /*! The type of the implementation of AnalogInput. */
   int AnalogInputSubType;
+    /*! True while the thread is running. */
+  bool Run;
+    /*! A semaphore guarding analog input. */
+  QSemaphore *Semaphore;
+    /*! A mutex locking the data buffer where the acquired data is stored to. */
+  QReadWriteLock *DataMutex;
+    /*! A waitcondition that is woken up whenever new data are written to the buffer. */
+  QWaitCondition *DataWait;
 
 };
 

@@ -1,4 +1,5 @@
 New InData threading:
+- AnalogInput::run(): readData() needs to indicate finish, failure and success by return value.
 - Check and further simplify RELACSWidget data locking
   AnalogInput should get its own thread?
 - Can AQ->startWrite()/restartRead() made more independent from all the locks?
@@ -167,6 +168,7 @@ Dynamic clamp:
 - Is it really necessary that the dyncclamp parameter are all set to zero by relacs initially?
   It shoud be sufficient to set the AOs to zero and the parameters to their initial vallues.
   For the latter we might need some support (saving the initial values to some array prior to starting, etc.)
+- Add a varable lastInterval that is set to the current period length in addition to loopInterval
 - CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.

@@ -9,7 +9,7 @@ You only need to install the libusb-1.0 development package:
 \code
 $ sudo apt-get install libusb-1.0-0-dev
 \endcode
-Then run \c ./configure and \c make to compile the DAFlex plugins.
+Then run \c ./configure and \c make to compile the DAQFlex plugins.
 
 \c make \c install  copies the firmware files from \c firmware/  to
 \c \<prefix\>/lib/daqflex/ .
@@ -22,8 +22,8 @@ You may check their website <http://www.mccdaq.com/> for more recent updates.
 
 You need to make sure that you (the user) have appropriate permissions
 for accessing the DAQFlex USB devices. One elegant way to achieve this
-to create a new group and tell udev to add the comedi device files to
-this group.
+is to create a new group and tell udev to add the usb device files with
+a DAQFlex device to this group.
  
 -# Login as root.
 -# Create a new group "iocard":

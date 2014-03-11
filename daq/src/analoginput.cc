@@ -31,21 +31,33 @@ namespace relacs {
 
 AnalogInput::AnalogInput( void )
   : Device( AnalogInputType ),
-    AnalogInputSubType( 0 )
+    AnalogInputSubType( 0 ),
+    Run( false ),
+    Semaphore( 0 ),
+    DataMutex( 0 ),
+    DataWait( 0 )
 {
 }
 
 
 AnalogInput::AnalogInput( int aitype )
   : Device( AnalogInputType ),
-    AnalogInputSubType( aitype )
+    AnalogInputSubType( aitype ),
+    Run( false ),
+    Semaphore( 0 ),
+    DataMutex( 0 ),
+    DataWait( 0 )
 {
 }
 
 
 AnalogInput::AnalogInput( const string &deviceclass, int aitype )
   : Device( deviceclass, AnalogInputType ),
-    AnalogInputSubType( aitype )
+    AnalogInputSubType( aitype ),
+    Run( false ),
+    Semaphore( 0 ),
+    DataMutex( 0 ),
+    DataWait( 0 )
 {
 }
 
@@ -286,6 +298,82 @@ int AnalogInput::testReadData( InList &traces )
   }
 
   return traces.failed() ? -1 : 0;
+}
+
+
+void AnalogInput::startThread( QSemaphore *sp, QReadWriteLock *datamutex,
+			       QWaitCondition *datawait, bool error )
+{
+  if ( sp != 0 ) {
+    if ( error )
+      sp->release( 1000 );
+    else {
+      Semaphore = sp;
+      DataMutex = datamutex;
+      DataWait = datawait;
+      Run = true;
+      start( QThread::HighPriority );
+    }
+  }
+}
+
+
+void AnalogInput::run( void )
+{
+  bool rd = true;
+
+  do {
+    // get data from the card:
+    int r = readData();
+    if ( r < 0 ) {
+      if ( Semaphore != 0 )
+	Semaphore->release( rd ? 1000 : 1 );
+      Semaphore = 0;
+      lock();
+      Run = false;
+      unlock();
+      return;
+    }
+    if ( r == 0 )
+      break;
+    // transfer data to the buffer:
+    if ( DataMutex != 0 )
+      DataMutex->lockForWrite();
+    convertData();
+    if ( DataMutex != 0 )
+      DataMutex->unlock();
+    if ( DataWait != 0 )
+      DataWait->wakeAll();
+    lock();
+    rd = Run;
+    unlock();
+    if ( ! rd )
+      break;
+    // the sleep is needed to allow for other processes to acquire the lock!
+    QThread::msleep( 1 );
+    lock();
+    rd = Run;
+    unlock();
+  } while ( rd );
+
+  lock();
+  Run = false;
+  unlock();
+  if ( Semaphore != 0 )
+    Semaphore->release( 1 );
+  Semaphore = 0;
+}
+
+
+void AnalogInput::stopRead( void )
+{
+  lock();
+  Run = false;
+  unlock();
+  wait();
+  lock();
+  Semaphore = 0;
+  unlock();
 }
 
 

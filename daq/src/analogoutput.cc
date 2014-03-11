@@ -311,10 +311,10 @@ int AnalogOutput::testWriteData( OutList &sigs )
 void AnalogOutput::startThread( QSemaphore *sp, bool error )
 {
   if ( sp != 0 ) {
-    Semaphore = sp;
     if ( error )
-      Semaphore->release( 1000 );
+      sp->release( 1000 );
     else {
+      Semaphore = sp;
       Run = true;
       start( QThread::HighPriority );
     }
@@ -329,9 +329,6 @@ void AnalogOutput::run( void )
   // fill in data:
   do {
     int r = writeData();
-    lock();
-    rd = Run;
-    unlock();
     if ( r < 0 ) {
       if ( Semaphore != 0 )
 	Semaphore->release( rd ? 1000 : 1 );
@@ -341,7 +338,10 @@ void AnalogOutput::run( void )
       unlock();
       return;
     }
-    if ( r == 0 )
+    lock();
+    rd = Run;
+    unlock();
+    if ( r == 0 || ! rd )
       break;
     // the sleep is needed to allow for other processes to acquire the lock!
     QThread::msleep( 1 );
@@ -362,7 +362,10 @@ void AnalogOutput::run( void )
       unlock();
       return;
     }
-    if ( r != Running )
+    lock();
+    rd = Run;
+    unlock();
+    if ( r != Running || ! rd )
       break;
     // the sleep is needed to allow for other processes to acquire the lock!
     QThread::msleep( 1 );
@@ -371,6 +374,9 @@ void AnalogOutput::run( void )
     unlock();
   } while ( rd );
 
+  lock();
+  Run = false;
+  unlock();
   if ( Semaphore != 0 )
     Semaphore->release( 1 );
   Semaphore = 0;

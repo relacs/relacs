@@ -33,7 +33,7 @@ InputRangeCheck::InputRangeCheck( void )
   // add some options:
   addSelection( "outtrace", "Output trace", "V-1" );
   addSelection( "intrace", "Input trace", "V-1" );
-  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "s" );
+  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addInteger( "amplnum", "Number of amplitudes to be tested", 10, 0, 100000 );
 
   setWidget( &P );
