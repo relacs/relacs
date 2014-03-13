@@ -544,13 +544,6 @@ public:
   virtual int directWrite( OutList &signal, bool setsignaltime=true,
 			   QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
 
-    /*! Write a zero to all analog output channels. 
-        \param[in] channels resets all physical output channels. 
-        \param[in] params resets parameter channels.
-        \return an error message on failure, an empty string on success. */
-  virtual string writeReset( bool channels=true, bool params=true,
-			     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
-
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 
         \sa testWrite(), write(), writeData(), stopWrite() */
@@ -563,6 +556,16 @@ public:
         Returns 0 on success or a negative number on error.
         \sa testWrite(), write(), writeData(), stopWrite() */
   virtual int writeZero( const string &trace );
+
+    /*! Write a zero to all analog output channels. 
+        \param[in] channels resets all physical output channels. 
+        \param[in] params resets parameter channels.
+        \return an error message on failure, an empty string on success. */
+  virtual string writeReset( bool channels, bool params,
+			     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+    /*! Write a zero to all physical analog output channels. 
+        \return \c -1 on failure, \c 0 on success. */
+  virtual int writeReset( void );
 
     /*! \return an error string describing problems that occured during analog output. */
   string writeError( void ) const;

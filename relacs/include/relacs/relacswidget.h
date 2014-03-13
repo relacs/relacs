@@ -434,6 +434,27 @@ private:
 };
 
 
+class RelacsWidgetEvent : public QEvent
+{
+
+public:
+
+  RelacsWidgetEvent( int type, const string &text )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Text( text ) {};
+
+  RelacsWidgetEvent( const RelacsWidgetEvent &rwe )
+    : QEvent( QEvent::Type( rwe.type() ) ), Text( rwe.Text ) {};
+
+  string text( void ) const { return Text; };
+
+
+private:
+
+  string Text;
+
+};
+
+
 class KeyTimeOut : public QObject
 {
   Q_OBJECT

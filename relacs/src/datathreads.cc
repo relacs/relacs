@@ -40,15 +40,19 @@ void ReadThread::start( void )
 
 void ReadThread::run( void )
 {
+  cerr << "START THREAD\n";
   while ( true ) {
     int r = RW->AQ->waitForRead();
     if ( r < 0 ) {
       RW->printlog( "! error in reading acquired data: " + RW->IL.errorText() );
+      QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog input: " + RW->IL.errorText() ) );
       RW->AQ->restartRead( &RW->DataMutex, &RW->ReadDataWait );
+      // XXX check error again and switch to idle mode!
     }
     else
       break;
   };
+  cerr << "END THREAD\n";
 }
 
 
@@ -66,8 +70,8 @@ void WriteThread::start( void )
 
 void WriteThread::run( void )
 {
-  RW->AQ->waitForWrite();
-  // XXX Check for errors!
+  if ( RW->AQ->waitForWrite() < 0 )
+    QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog output: " + RW->AQ->writeError() ) );
 }
 
 

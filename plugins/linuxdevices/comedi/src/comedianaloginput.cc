@@ -908,7 +908,7 @@ int ComediAnalogInput::readData( void )
   }
 
   // no more data to be read:
-  if ( readn <= 0 && !running() ) {
+  if ( readn <= 0 && ! ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) ) {
     if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       Traces->addErrorStr( deviceFile() + " - buffer-overflow: "
 			  + comedi_strerror( comedi_errno() ) );

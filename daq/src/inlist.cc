@@ -516,19 +516,32 @@ string InList::errorText( void ) const
   if ( flags > 0 )
     ss << DaqError::errorText( flags ) << ". ";
 
+  // common error strings:
+  bool commonstr = true;
+  for ( int k=1; k<size(); k++ ) {
+    if ( operator[]( k ).errorStr() != operator[]( 0 ).errorStr() )
+      commonstr = false;
+  }
+  if ( commonstr )
+    ss << operator[]( 0 ).errorStr() << ". ";
+
   // individual errors:
   for ( int k=0; k<size(); k++ ) {
     long long f = operator[]( k ).error() & (~flags);
-    if ( f > 0 || !operator[]( k ).errorStr().empty() ) {
+    string es = operator[]( k ).errorStr();
+    if ( commonstr )
+      es = "";
+    if ( f > 0 || !es.empty() ) {
       ss << "Channel " << operator[]( k ).channel()
 	 << " on device " << operator[]( k ).device() << ": ";
-      if ( !operator[]( k ).errorText( f ).empty() )
-	ss << operator[]( k ).errorText( f );
-      if ( !operator[]( k ).errorText( f ).empty() &&
-	   !operator[]( k ).errorStr().empty() )
-	ss << ", ";
-      if ( !operator[]( k ).errorStr().empty() )
-	ss << operator[]( k ).errorStr();
+      string ef = operator[]( k ).errorText( f );
+      if ( !ef.empty() ) {
+	ss << ef;
+	if ( !es.empty() )
+	  ss << ", ";
+      }
+      if ( !es.empty() )
+	ss << es;
       ss << ". ";
     }
   }

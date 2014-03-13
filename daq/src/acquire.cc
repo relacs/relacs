@@ -826,7 +826,6 @@ int Acquire::restartRead( QReadWriteLock *datamutex,
   // get error flags, data and shortest recording:
   double t = -1.0;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
-    AI[i].AI->convertData();
     AI[i].Traces.update();
     errorflags[i].resize( AI[i].Traces.size(), 0 );
     for ( int k=0; k<AI[i].Traces.size(); k++ ) {
@@ -928,11 +927,8 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   // get data and shortest recording:
   double t = -1.0;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
-    int n = AI[i].AI->readData();
-    if ( n < 0 && AI[i].Traces.failed() )
-      success = false;
-    AI[i].AI->convertData();
     for ( int k=0; k<AI[i].Traces.size(); k++ ) {
+      AI[i].Traces[k].clearError();
       if ( t < 0.0 || AI[i].Traces[k].length() < t )
 	t = AI[i].Traces[k].length();
     }
@@ -2396,6 +2392,52 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime,
 }
 
 
+int Acquire::writeZero( int channel, int device )
+{
+  // check ao device:
+  if ( device < 0 || device >= (int)AO.size() )
+    return -1;
+
+  // device still busy?
+  if ( AO[device].AO->status() == AnalogOutput::Running )
+    AO[device].AO->reset();
+
+  OutData signal( 1, 0.0001 );
+  signal.setChannel( channel, device );
+  signal[0] = 0.0;
+  OutList sigs( signal );
+
+  // write to daq board:
+  AO[device].AO->directWrite( sigs );
+
+  // error?
+  if ( ! signal.success() ) {
+    cerr << currentTime() << " ! error in Acquire::writeZero( int, int ) -> "
+	 << signal.errorText() << "\n";
+    return -1;
+  }
+
+  return 0;
+}
+
+
+int Acquire::writeZero( int index )
+{
+  if ( index < 0 || index >= outTracesSize() )
+    return -1;
+  else
+    return writeZero( OutTraces[index].channel(),
+		      OutTraces[index].device() );
+}
+
+
+int Acquire::writeZero( const string &trace )
+{
+  int index = outTraceIndex( trace );
+  return writeZero( index );
+}
+
+
 string Acquire::writeReset( bool channels, bool params,
 			    QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
@@ -2435,49 +2477,17 @@ string Acquire::writeReset( bool channels, bool params,
 }
 
 
-int Acquire::writeZero( int channel, int device )
+int Acquire::writeReset( void )
 {
-  // check ao device:
-  if ( device < 0 || device >= (int)AO.size() )
-    return -1;
-
-  // device still busy?
-  if ( AO[device].AO->status() == AnalogOutput::Running )
-    AO[device].AO->reset();
-
-  OutData signal( 1, 0.0001 );
-  signal.setChannel( channel, device );
-  signal[0] = 0.0;
-  OutList sigs( signal );
-
-  // write to daq board:
-  AO[device].AO->directWrite( sigs );
-
-  // error?
-  if ( ! signal.success() ) {
-    cerr << currentTime() << " ! error in Acquire::writeZero( int, int ) -> "
-	 << signal.errorStr() << "\n";
-    return -signal.error();
+  bool success = true;
+  for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
+    if ( OutTraces[k].channel() < 1000 ) {
+      int r = writeZero( OutTraces[k].device(), OutTraces[k].channel() );
+      if ( r < 0 )
+	success = false;
+    }
   }
-
-  return 0;
-}
-
-
-int Acquire::writeZero( int index )
-{
-  if ( index < 0 || index >= outTracesSize() )
-    return -1;
-  else
-    return writeZero( OutTraces[index].channel(),
-		      OutTraces[index].device() );
-}
-
-
-int Acquire::writeZero( const string &trace )
-{
-  int index = outTraceIndex( trace );
-  return writeZero( index );
+  return success ? 0 : -1;
 }
 
 

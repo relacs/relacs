@@ -763,11 +763,10 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     return -1;
   }
 
+  lock();
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
-  lock();
   int retVal = setupCommand( sigs, cmd, false );
-  unlock();
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
@@ -776,6 +775,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     sigs.addError( DaqError::InvalidBufferTime );
     retVal = -1;
   }
+  unlock();
 
   return retVal;
 }
@@ -1107,9 +1107,7 @@ int ComediAnalogOutput::bufferSize( void ) const
 {
   if ( DeviceP == NULL )
     return -1;
-  lock();
   int n = comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
-  unlock();
   return n;
 }
 

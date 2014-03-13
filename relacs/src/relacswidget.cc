@@ -806,8 +806,7 @@ bool RELACSWidget::updateData( double mintracetime )
   if ( doupdate ) {
     // check data:
     if ( IL.failed() ) {
-      AIErrorMsg = "Error in acquisition: " + IL.errorText();
-      //    QCoreApplication::postEvent( this, new QEvent( QEvent::User+4 ) ); // XXX this causes a lot of trouble!
+      QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in analog input: " + IL.errorText() ) );
       IL.clearError();
     }
     // get current data:
@@ -878,6 +877,8 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
     printlog( "! failed to write signal: " + signal.errorText() );
   if ( IL.failed() )
     printlog( "! error in restarting analog input: " + IL.errorText() );
+  else if ( ! ReadLoop.isRunning() )
+    ReadLoop.start();
   return r;
 }
 
@@ -901,6 +902,8 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
     printlog( "! failed to write signals: " + signal.errorText() );
   if ( IL.failed() )
     printlog( "! error in restarting analog input: " + IL.errorText() );
+  else if ( ! ReadLoop.isRunning() )
+    ReadLoop.start();
   return r;
 }
 
@@ -920,6 +923,8 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
     printlog( "! failed to write signal: " + signal.errorText() );
   if ( IL.failed() )
     printlog( "! error in restarting analog input: " + IL.errorText() );
+  else if ( ! ReadLoop.isRunning() )
+    ReadLoop.start();
   return r;
 }
 
@@ -939,6 +944,8 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
     printlog( "! failed to write signals: " + signal.errorText() );
   if ( IL.failed() )
     printlog( "! error in restarting analog input: " + IL.errorText() );
+  else if ( ! ReadLoop.isRunning() )
+    ReadLoop.start();
   return r;
 }
 
@@ -1069,12 +1076,8 @@ void RELACSWidget::customEvent( QEvent *qce )
   }
 
   case 3: {
-    MessageBox::error( "RELACS Error !", "Transfering stimulus data to hardware driver failed.", this );
-    break;
-  }
-
-  case 4: {
-    MessageBox::warning( "RELACS Error !", AIErrorMsg, 2.0, this );
+    RelacsWidgetEvent *rwe = dynamic_cast<RelacsWidgetEvent*>( qce );
+    MessageBox::warning( "RELACS Error !", rwe->text(), 2.0, this );
     break;
   }
 
@@ -1505,11 +1508,11 @@ void RELACSWidget::startFirstAcquisition( void )
   RunDataMutex.unlock();
 
   // reset analog output for dynamic clamp:
-  string wr = AQ->writeReset( true, true, &DataMutex, &ReadDataWait );
-  if ( ! wr.empty() ) {
-    printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed: " + wr );
+  r = AQ->writeReset();
+  if ( r < 0 ) {
+    printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed." );
     MessageBox::warning( "RELACS Warning !",
-			 "error in resetting analog output: " + wr,
+			 "error in resetting analog output.",
 			 true, 0.0, this );
     startIdle();
     return;

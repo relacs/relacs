@@ -131,6 +131,8 @@ void DaqError::setErrorStr( const string &strg )
 
 void DaqError::addErrorStr( const string &strg )
 {
+  if ( strg == ErrorString )
+    return;
   if ( !ErrorString.empty() )
     ErrorString += ", ";
   ErrorString += strg;
