@@ -605,7 +605,8 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 }
 
 
-int DynClampAnalogInput::startRead( QSemaphore *aosp )
+int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
+				    QWaitCondition *datawait, QSemaphore *aosp )
 {
   //  cerr << " DynClampAnalogInput::startRead(): 1\n";/////TEST/////
   lock();
@@ -627,6 +628,9 @@ int DynClampAnalogInput::startRead( QSemaphore *aosp )
     unlock();
     return -1;
   }
+
+  // start analog input thread:
+  startThread( sp, datamutex, datawait );
 
   // get sampling rate:
   unsigned int rate = 0;
@@ -714,7 +718,7 @@ int DynClampAnalogInput::readData( void )
 			+ strerror( errnoSave ) );
       traces.addError( DaqError::OverflowUnderrun );
       unlock();
-      return -1;
+      return -2;
 
     case EBUSY:
       cerr << " DynClampAnalogInput::readData(): device busy: "
@@ -723,7 +727,7 @@ int DynClampAnalogInput::readData( void )
 			+ strerror( errnoSave ) );
       traces.addError( DaqError::Busy );
       unlock();
-      return -1;
+      return -2;
 
     default:
       cerr << " DynClampAnalogInput::readData(): buffer-underrun: "
@@ -734,20 +738,23 @@ int DynClampAnalogInput::readData( void )
 //			+ "  system: " + strerror( errnoSave ) );
       traces.addError( DaqError::Unknown );
       unlock();
-      return -1;
+      return -2;
     }
     */
   }
 
   // debug:
   if ( BufferN < oldbuffern )
-    cerr << "DynClampAnalogInput::readData: buffer shrinking! BufferN=" << BufferN
+    cerr << "DynClampAnalogInput::readData warning: buffer shrinking! BufferN=" << BufferN
 	 << " BufferSize=" << BufferSize << " readn=" << readn << " maxn=" << maxn << " oldbuffern=" << oldbuffern << '\n';
 
   // no more data to be read:
   if ( BufferN <= 0 && !IsRunning ) {
-    if ( Traces->front().continuous() )
+    if ( Traces->front().continuous() ) {
       Traces->addError( DaqError::Unknown );
+      unlock();
+      return -2;
+    }
     unlock();
     return -1;
   }
@@ -838,7 +845,11 @@ int DynClampAnalogInput::stop( void )
       return -1;
     }
   }
+  unlock();
 
+  stopRead();
+
+  lock();
   IsPrepared = false;
   IsRunning = false;
   unlock();

@@ -325,7 +325,8 @@ void AnalogInput::run( void )
   do {
     // get data from the card:
     int r = readData();
-    if ( r < 0 ) {
+    // error:
+    if ( r < -1 ) {
       if ( Semaphore != 0 )
 	Semaphore->release( rd ? 1000 : 1 );
       Semaphore = 0;
@@ -334,16 +335,19 @@ void AnalogInput::run( void )
       unlock();
       return;
     }
-    if ( r == 0 )
+    // finished:
+    if ( r < 0 )
       break;
     // transfer data to the buffer:
-    if ( DataMutex != 0 )
-      DataMutex->lockForWrite();
-    convertData();
-    if ( DataMutex != 0 )
-      DataMutex->unlock();
-    if ( DataWait != 0 )
-      DataWait->wakeAll();
+    if ( r > 0 ) {
+      if ( DataMutex != 0 )
+	DataMutex->lockForWrite();
+      convertData();
+      if ( DataMutex != 0 )
+	DataMutex->unlock();
+      if ( DataWait != 0 )
+	DataWait->wakeAll();
+    }
     lock();
     rd = Run;
     unlock();
@@ -367,12 +371,30 @@ void AnalogInput::run( void )
 
 void AnalogInput::stopRead( void )
 {
+  // stop thread:
   lock();
   Run = false;
   unlock();
   wait();
+
+  // get data from the card:
+  int r = readData();
+
+  // transfer data to the buffer:
+  if ( r > 0 ) {
+    if ( DataMutex != 0 )
+      DataMutex->lockForWrite();
+    convertData();
+    if ( DataMutex != 0 )
+      DataMutex->unlock();
+    if ( DataWait != 0 )
+      DataWait->wakeAll();
+  }
+
   lock();
   Semaphore = 0;
+  DataMutex = 0;
+  DataWait = 0;
   unlock();
 }
 

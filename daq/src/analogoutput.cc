@@ -374,6 +374,8 @@ void AnalogOutput::run( void )
     unlock();
   } while ( rd );
 
+  // XXX some boards are still not finished with writing!
+  QThread::msleep( 10 );
   lock();
   Run = false;
   unlock();

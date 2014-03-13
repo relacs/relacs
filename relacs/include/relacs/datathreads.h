@@ -35,7 +35,7 @@ class RELACSWidget;
 
 /*! 
 \class ReadThread
-\brief Thread for reading data from the daq boards
+\brief Thread for monitoring data reading from the daq boards
 \author Jan Benda
 */
 
@@ -46,7 +46,6 @@ public:
 
   ReadThread( RELACSWidget *rw );
   void start( void );
-  void stop( void );
 
 
 protected:
@@ -56,8 +55,6 @@ protected:
 
 private:
 
-  bool Run;
-  QMutex RunMutex;
   RELACSWidget *RW;
 
 };

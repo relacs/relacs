@@ -136,19 +136,28 @@ public:
 	InData structure are filled and a negative value is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take().
-	\a aosp is the semaphore that guards analog outputs.
-	Returns -1 on failure, 0 on success and 1 on succes and if
+	\param[in] sp if not null, a thread is started reading out the running analog input.
+        When the thread and analog input is finished, releases the semaphore by one.
+        On error, the semaphore is released by 1000 so that the process waiting
+        on the semaphore is waking up immediately.
+	\param[in] datamutex the mutex for locking the input traces that were passed 
+        to the previous call of prepareRead().
+	\param[in] datawait a waitcondition that is waken up whnever
+	the thread put new data into the input traces.
+	\param[in] aosp is the semaphore that guards analog outputs.
+	\return -1 on failure, 0 on success and 1 on succes and if
 	for an analog output further calls to writeData() are necessary.
         This function is called after a successfull prepareRead() or after stop().
         This function should be as quick as possible. */
-  virtual int startRead( QSemaphore *aosp = 0 ) = 0;
+  virtual int startRead( QSemaphore *sp=0, QReadWriteLock *datamutex=0,
+			 QWaitCondition *datawait=0, QSemaphore *aosp=0 ) = 0;
     /*! Read data from a running data acquisition
         and store them in an internal buffer.
         Returns the total number of read data values.
 	If an error ocurred in any channel, the corresponding errorflags in the
-	InData structure are filled and a negative value is returned.
+	InData structure are filled and a -2 is returned.
 	If no acquisition is running and therefore no more data are to be expected,
-	a negative number is returned without setting an errorflag of the InData.
+	-1 is returned.
         This function is called periodically after reading has been successfully
         started by startRead().
         This function does not modify the traces passed to prepareRead()! */

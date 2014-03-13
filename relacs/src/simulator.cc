@@ -62,7 +62,7 @@ void Simulator::clearModel( void )
 }
 
 
-int Simulator::read( InList &data )
+int Simulator::read( InList &data, QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   //  cerr << "Simulator::read( InList& )\n";
 
@@ -172,15 +172,13 @@ int Simulator::read( InList &data )
   // start reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 && 
-	 AI[i].AI->startRead() != 0 )
+	 AI[i].AI->startRead( 0, datamutex, datawait, 0 ) != 0 )
       success = false;
   }
 
   // error?
   if ( ! success )
     return -1;
-
-  Sim->clear();
 
   // set ranges:
   for ( int k=0; k<data.size(); k++ ) {
@@ -201,52 +199,17 @@ int Simulator::read( InList &data )
 	bs = data[k].capacity();
       else
 	bs *= 100;
-      Sim->add( data[k].ident(), data[k].sampleInterval(), data[k].scale(), bs );
     }
   }
 
   // start simulation:
   LastWrite = -1.0;
-  Data.clear();
-  for ( int k=0; k<data.size(); k++ )
-    Data.add( &data[k] );
   SyncMode = AISync;
 
   SoftReset = false;
   HardReset = false;
 
-  Sim->start();
-
-  return 0;
-}
-
-
-int Simulator::readData( void )
-{
-  return 1;
-}
-
-
-int Simulator::convertData( void )
-{
-  Sim->SignalMutex.lock();
-  for ( int k=0; k<Data.size(); k++ ) {
-    if ( Data[k].device() >= 0 ) {
-      // clear input error state:
-      Data[k].clearError();
-
-      // mark restart:
-      if ( Sim->restarted() ) {
-	LastWrite = -1.0;
-	Data[k].setRestart();
-      }
-
-      // read data from simulation:
-      while ( Sim->size( k ) > 0 )
-	Data[k].push( Sim->pop( k ) );
-    }
-  }
-  Sim->SignalMutex.unlock();
+  Sim->start( data, datamutex, datawait );
 
   return 0;
 }
@@ -261,7 +224,8 @@ int Simulator::stopRead( void )
 
 
 int Simulator::restartRead( vector< AOData* > &aos, bool directao,
-			    bool updategains )
+			    bool updategains, 
+			    QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   bool success = true;
 
@@ -307,7 +271,8 @@ int Simulator::restartRead( vector< AOData* > &aos, bool directao,
 }
 
 
-int Simulator::setupWrite( OutData &signal )
+int Simulator::write( OutData &signal, bool setsignaltime,
+		      QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   signal.clearError();
 
@@ -413,14 +378,6 @@ int Simulator::setupWrite( OutData &signal )
     return -1;
   }
 
-  return 0;
-}
-
-
-int Simulator::startWrite( OutData &signal, bool setsignaltime )
-{
-  int di = signal.device();
-
   // start writing to daq board:
   if ( gainChanged() ||
        signal.restart() ||
@@ -463,7 +420,8 @@ int Simulator::startWrite( OutData &signal, bool setsignaltime )
 }
 
 
-int Simulator::setupWrite( OutList &signal )
+int Simulator::write( OutList &signal, bool setsignaltime,
+		      QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   bool success = true;
   signal.clearError();
@@ -620,14 +578,6 @@ int Simulator::setupWrite( OutList &signal )
     return -1;
   }
 
-  return 0;
-}
-
-
-int Simulator::startWrite( OutList &signal, bool setsignaltime )
-{
-  bool success = true;
-
   // start writing to daq boards:
   if ( gainChanged() ||
        signal[0].restart() ||
@@ -710,7 +660,8 @@ int Simulator::stopWrite( void )
 }
 
 
-int Simulator::directWrite( OutData &signal, bool setsignaltime )
+int Simulator::directWrite( OutData &signal, bool setsignaltime,
+			    QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   signal.clearError();
 
@@ -839,7 +790,8 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
 }
 
 
-int Simulator::directWrite( OutList &signal, bool setsignaltime )
+int Simulator::directWrite( OutList &signal, bool setsignaltime,
+			    QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   if ( signal.size() <= 0 )
     return 0;
@@ -1054,7 +1006,8 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
 }
 
 
-string Simulator::writeReset( bool channels, bool params )
+string Simulator::writeReset( bool channels, bool params,
+			      QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   Sim->stopSignals();
 
@@ -1083,7 +1036,7 @@ string Simulator::writeReset( bool channels, bool params )
 
   if ( sigs.size() > 0 ) {
     // write out data;
-    directWrite( sigs );
+    directWrite( sigs, true, datamutex, datawait );
     // error?
     if ( ! sigs.success() )
       return sigs.errorText();

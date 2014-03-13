@@ -851,8 +851,8 @@ void RELACSWidget::simLoadMessage( void )
 
 void RELACSWidget::activateGains( void )
 {
+  AQ->activateGains( &DataMutex, &ReadDataWait );
   writeLockData();
-  AQ->activateGains();
   AQ->readRestart( IL, ED );
   FD->adjust( AQ->adjustFlag() );
   unlockData();
@@ -863,12 +863,7 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
-  int r = AQ->setupWrite( signal );   // might take some time (20ms with DAQFlex)
-  if ( r == 0 ) {
-    writeLockData();// IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-    r = AQ->startWrite( signal, setsignaltime );
-    unlockData();
-  }
+  int r = AQ->write( signal, setsignaltime, &DataMutex, &ReadDataWait );
   if ( r >= 0 ) {
     SF->save( signal );
     FD->adjust( AQ->adjustFlag() );
@@ -891,12 +886,7 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
-  int r = AQ->setupWrite( signal );
-  if ( r == 0 ) {
-    writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-    r = AQ->startWrite( signal, setsignaltime );
-    unlockData();
-  }
+  int r = AQ->write( signal, setsignaltime, &DataMutex, &ReadDataWait );
   if ( r >= 0 ) {
     SF->save( signal );
     FD->adjust( AQ->adjustFlag() );
@@ -919,9 +909,7 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
-  writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-  int r = AQ->directWrite( signal, setsignaltime );
-  unlockData();
+  int r = AQ->directWrite( signal, setsignaltime, &DataMutex, &ReadDataWait );
   if ( r == 0 ) {
     SF->save( signal );
     FD->adjust( AQ->adjustFlag() );
@@ -940,9 +928,7 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( SF->signalPending() && SF->saving() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
-  writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
-  int r = AQ->directWrite( signal, setsignaltime );
-  unlockData();
+  int r = AQ->directWrite( signal, setsignaltime, &DataMutex, &ReadDataWait );
   if ( r == 0 ) {
     SF->save( signal );
     FD->adjust( AQ->adjustFlag() );
@@ -1245,7 +1231,6 @@ void RELACSWidget::stopThreads( void )
   RunDataMutex.lock();
   RunData = false;
   RunDataMutex.unlock();
-  ReadLoop.stop();
   ThreadSleepWait.wakeAll();
   ReadDataWait.wakeAll();
   PT->stop();
@@ -1487,7 +1472,7 @@ void RELACSWidget::startFirstAcquisition( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
-  r = AQ->read( IL );
+  r = AQ->read( IL, &DataMutex, &ReadDataWait );
   if ( r < 0 ) {
     printlog( "! error in starting data acquisition: " + IL.errorText() );
     MessageBox::warning( "RELACS Warning !",
@@ -1520,9 +1505,7 @@ void RELACSWidget::startFirstAcquisition( void )
   RunDataMutex.unlock();
 
   // reset analog output for dynamic clamp:
-  writeLockData();
-  string wr = AQ->writeReset( true, true );
-  unlockData();
+  string wr = AQ->writeReset( true, true, &DataMutex, &ReadDataWait );
   if ( ! wr.empty() ) {
     printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed: " + wr );
     MessageBox::warning( "RELACS Warning !",
@@ -1650,10 +1633,10 @@ void RELACSWidget::startFirstSimulation( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
-  r = AQ->read( IL );
+  r = AQ->read( IL, &DataMutex, &ReadDataWait );
   if ( r < 0 ) {
     // give it a second chance with the adjusted input parameter:
-    r = AQ->read( IL );
+    r = AQ->read( IL, &DataMutex, &ReadDataWait );
     if ( r < 0 ) {
       printlog( "! error in starting data acquisition: " + IL.errorText() );
       MessageBox::warning( "RELACS Warning !",

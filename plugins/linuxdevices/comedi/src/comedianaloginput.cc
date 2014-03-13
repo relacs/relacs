@@ -727,7 +727,8 @@ int ComediAnalogInput::prepareRead( InList &traces )
 }
 
 
-int ComediAnalogInput::startRead( QSemaphore *aosp )
+int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
+				  QWaitCondition *datawait, QSemaphore *aosp )
 {
   //  cerr << " ComediAnalogInput::startRead(): begin" << '\n';
 
@@ -781,6 +782,8 @@ int ComediAnalogInput::startRead( QSemaphore *aosp )
   bool finished = true;
   if ( success ) {
     IsRunning = true;
+    // start analog input thread:
+    startThread( sp, datamutex, datawait );
     // start analog output thread:
     if ( ComediAO != 0 ) {
       ComediAO->startThread( aosp );
@@ -849,7 +852,7 @@ int ComediAnalogInput::readData( void )
   lock();
   if ( Traces == 0 || Buffer == 0 || ! IsRunning ) {
     unlock();
-    return -1;
+    return -2;
   }
 
   bool failed = false;
@@ -901,7 +904,7 @@ int ComediAnalogInput::readData( void )
     }
     */
     unlock();
-    return -1;   
+    return -2;   
   }
 
   // no more data to be read:
@@ -911,6 +914,8 @@ int ComediAnalogInput::readData( void )
 			  + comedi_strerror( comedi_errno() ) );
       Traces->addError( DaqError::OverflowUnderrun );
       cerr << " ComediAnalogInput::readData(): no data and not running\n";
+      unlock();
+      return -2;
     }
     unlock();
     return -1;
@@ -957,7 +962,11 @@ int ComediAnalogInput::stop( void )
     unlock();
     return ReadError;
   }
+  unlock();
 
+  stopRead();
+
+  lock();
   IsRunning = false;
   unlock();
   return 0;

@@ -611,7 +611,8 @@ int Acquire::testRead( InList &data )
 }
 
 
-int Acquire::read( InList &data )
+int Acquire::read( InList &data, QReadWriteLock *datamutex,
+		   QWaitCondition *datawait )
 {
   //  cerr << "Acquire::read( InList& )\n";
 
@@ -723,6 +724,10 @@ int Acquire::read( InList &data )
     return -1;
   }
 
+  // clear analog input semaphore:
+  if ( AISemaphore.available() > 0 )
+    AISemaphore.acquire( AISemaphore.available() );
+
   // mark restart:
   for ( unsigned int i=0; i<AI.size(); i++ )
     AI[i].Traces.setRestart();
@@ -740,7 +745,7 @@ int Acquire::read( InList &data )
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead() != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, datamutex, datawait ) != 0 )
 	  success = false;
 	else
 	  aistarted.push_back( i );
@@ -780,51 +785,6 @@ int Acquire::read( InList &data )
 }
 
 
-int Acquire::readData( void )
-{
-  //  cerr << "Acquire::readData( void )\n";
-
-  bool error = false;
-  bool finished = true;
-
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( AI[i].Traces.size() > 0 ) {
-      // read data from daq boards:
-      if ( AI[i].AI->readData() < 0 ) {
-	if ( AI[i].Traces.failed() )
-	  error = true;
-      }
-      else
-	finished = false;
-    }
-  }
-
-  //  cerr << "Acquire::readData( void ) finished\n";
-
-  if ( error )
-    return -1;
-  return finished ? 0 : 1;
-}
-
-
-int Acquire::convertData( void )
-{
-  //  cerr << "Acquire::convertData( void )\n";
-
-  bool success = true;
-
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( AI[i].Traces.size() > 0 ) {
-      int r = AI[i].AI->convertData();
-      if ( r < 0 )
-	success = false;
-     }
-  }
-
-  return success ? 0 : -1;
-}
-
-
 string Acquire::readError( void ) const
 {
   InList traces;
@@ -856,7 +816,8 @@ int Acquire::stopRead( void )
 }
 
 
-int Acquire::restartRead( void )
+int Acquire::restartRead( QReadWriteLock *datamutex,
+			  QWaitCondition *datawait )
 {
   bool success = true;
 
@@ -906,6 +867,10 @@ int Acquire::restartRead( void )
     return -1;
   }
 
+  // clear analog input semaphore:
+  if ( AISemaphore.available() > 0 )
+    AISemaphore.acquire( AISemaphore.available() );
+
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
@@ -919,7 +884,7 @@ int Acquire::restartRead( void )
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead() != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, datamutex, datawait ) != 0 )
 	  success = false;
 	else
 	  aistarted.push_back( i );
@@ -941,7 +906,8 @@ int Acquire::restartRead( void )
 
 
 int Acquire::restartRead( vector< AOData* > &aod, bool directao,
-			  bool updategains )
+			  bool updategains, QReadWriteLock *datamutex,
+			  QWaitCondition *datawait )
 {
   //  cerr << currentTime() << " Acquire::restartRead() begin \n";
 
@@ -1047,6 +1013,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
   }
 
+  // clear analog input semaphore:
+  if ( AISemaphore.available() > 0 )
+    AISemaphore.acquire( AISemaphore.available() );
+
   // clear analog output semaphore:
   if ( AOSemaphore.available() > 0 )
     AOSemaphore.acquire( AOSemaphore.available() );
@@ -1072,7 +1042,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	int r = AI[i].AI->startRead( &AOSemaphore );
+	int r = AI[i].AI->startRead( &AISemaphore, datamutex, datawait, &AOSemaphore );
 	if ( r < 0 )
 	  success = false;
 	else {
@@ -1138,6 +1108,36 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   // cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";
 
   return finished ? 0 : 1;
+}
+
+
+int Acquire::waitForRead( void )
+{
+  // number of analog input devices used for writing:
+  int nais = 0;
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( ! AI[i].Traces.empty() )
+      nais++;
+  }
+
+  // wait for the threads to finish:
+  AISemaphore.acquire( nais );
+
+  bool success = true;
+  // check:
+  for ( unsigned int i = 0; i<AI.size(); i++ ) {
+    if ( ! AI[i].Traces.empty() && AI[i].Traces.failed() )
+      success = false;
+  }
+
+  AISemaphore.acquire( AISemaphore.available() );
+  if ( ! success ) {
+    // error:
+    stopRead();
+    return -1;
+  }
+
+  return 0;
 }
 
 
@@ -1412,7 +1412,7 @@ bool Acquire::gainChanged( void ) const
 }
 
 
-int Acquire::activateGains( void )
+int Acquire::activateGains( QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   // clear adjust-flags:
   for ( unsigned int i=0; i<AI.size(); i++ )
@@ -1422,7 +1422,7 @@ int Acquire::activateGains( void )
     return 0;
 
   vector< AOData* > aod( 0 );
-  return restartRead( aod, false, true );
+  return restartRead( aod, false, true, datamutex, datawait );
 }
 
 
@@ -1625,7 +1625,8 @@ int Acquire::testWrite( OutList &signal )
 }
 
 
-int Acquire::setupWrite( OutData &signal )
+int Acquire::write( OutData &signal, bool setsignaltime,
+		    QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   signal.clearError();
 
@@ -1733,14 +1734,6 @@ int Acquire::setupWrite( OutData &signal )
     return -1;
   }
 
-  return 0;
-}
-
-
-int Acquire::startWrite( OutData &signal, bool setsignaltime )
-{
-  int di = signal.device();
-
   bool finished = true;
 
   // clear analog output semaphore:
@@ -1755,7 +1748,7 @@ int Acquire::startWrite( OutData &signal, bool setsignaltime )
       cerr << "Acquire::startWrite() -> called restartRead() because of gainChanged="
 	   << gainChanged() << " or signal restart=" << signal.restart() << '\n';
     vector< AOData* > aod( 1, &AO[di] );
-    if ( restartRead( aod, false, true ) > 0 )
+    if ( restartRead( aod, false, true, datamutex, datawait ) > 0 )
       finished = false;
   }
   else {
@@ -1783,17 +1776,8 @@ int Acquire::startWrite( OutData &signal, bool setsignaltime )
 }
 
 
-int Acquire::write( OutData &signal, bool setsignaltime )
-{
-  int r = setupWrite( signal );
-  if ( r < 0 )
-    return -1;
-  r = startWrite( signal, setsignaltime );
-  return r;
-}
-
-
-int Acquire::setupWrite( OutList &signal )
+int Acquire::write( OutList &signal, bool setsignaltime,
+		    QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   bool success = true;
   signal.clearError();
@@ -1984,13 +1968,6 @@ int Acquire::setupWrite( OutList &signal )
     return -1;
   }
 
-  return 0;
-}
-
-
-int Acquire::startWrite( OutList &signal, bool setsignaltime )
-{
-  bool success = true;
   bool finished = true;
 
   // clear analog output semaphore:
@@ -2010,7 +1987,7 @@ int Acquire::startWrite( OutList &signal, bool setsignaltime )
       if ( AO[i].Signals.size() > 0 )
 	aod.push_back( &AO[i] );
     }
-    int r = restartRead( aod, false, true );
+    int r = restartRead( aod, false, true, datamutex, datawait );
     if ( r < 0 )
       success = false;
     else if ( r > 0 )
@@ -2050,16 +2027,6 @@ int Acquire::startWrite( OutList &signal, bool setsignaltime )
 }
 
 
-int Acquire::write( OutList &signal, bool setsignaltime )
-{
-  int r = setupWrite( signal );
-  if ( r < 0 )
-    return -1;
-  r = startWrite( signal, setsignaltime );
-  return r;
-}
-
-
 int Acquire::waitForWrite( void )
 {
   // number of analog output devices used for writing:
@@ -2090,7 +2057,8 @@ int Acquire::waitForWrite( void )
 }
 
 
-int Acquire::directWrite( OutData &signal, bool setsignaltime )
+int Acquire::directWrite( OutData &signal, bool setsignaltime,
+			  QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   signal.clearError();
 
@@ -2189,7 +2157,7 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
 	cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
 	     << gainChanged() << " or signal restart=" << signal.restart() << '\n';
       vector< AOData* > aod( 1, &AO[di] );
-      restartRead( aod, true, true );
+      restartRead( aod, true, true, datamutex, datawait );
     }
     else {
       // clear adjust-flags:
@@ -2218,7 +2186,8 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
 }
 
 
-int Acquire::directWrite( OutList &signal, bool setsignaltime )
+int Acquire::directWrite( OutList &signal, bool setsignaltime,
+			  QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   if ( signal.size() <= 0 )
     return 0;
@@ -2392,7 +2361,7 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
 	if ( AO[i].Signals.size() > 0 )
 	  aod.push_back( &AO[i] );
       }
-      if ( restartRead( aod, true, true ) != 0 )
+      if ( restartRead( aod, true, true, datamutex, datawait ) != 0 )
 	success = false;
     }
     else {
@@ -2427,7 +2396,8 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
 }
 
 
-string Acquire::writeReset( bool channels, bool params )
+string Acquire::writeReset( bool channels, bool params,
+			    QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   OutList sigs;
 
@@ -2455,7 +2425,7 @@ string Acquire::writeReset( bool channels, bool params )
 
   if ( sigs.size() > 0 ) {
     // write out data;
-    directWrite( sigs );
+    directWrite( sigs, true, datamutex, datawait );
     // error?
     if ( ! sigs.success() )
       return sigs.errorText();

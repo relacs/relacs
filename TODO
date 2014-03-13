@@ -1,13 +1,13 @@
 New InData threading:
-- AnalogInput::run(): readData() needs to indicate finish, failure and success by return value.
-- Check and further simplify RELACSWidget data locking
-  AnalogInput should get its own thread?
-- Can AQ->startWrite()/restartRead() made more independent from all the locks?
+- Check and further simplify RELACSWidget data locking: individual locks per trace/device/filter?
 - Filter/Detector influences reading dramatically (EODDetector in efield with comedi on 64kB) -
   should be made independent.
 - Blocking write: synchronization with analog input not yet solved!
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Filter buffersize should just be the same as the one of the input trace!
+- AnalogInput/Output check usage of IsPrepared and IsRunning
+- DynClamAnalogInput improve error checking in readData()
+- readData() several attemps only if maxn is too small
 - Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.

@@ -29,58 +29,26 @@ namespace relacs {
 ReadThread::ReadThread( RELACSWidget *rw )
   : RW( rw )
 {
-  Run = false;
 }
 
 
 void ReadThread::start( void )
 {
-  RunMutex.lock();
-  Run = true;
-  RunMutex.unlock();
-  QThread::start( HighestPriority );
-}
-
-
-void ReadThread::stop( void )
-{
-  RunMutex.lock();
-  bool rd = Run;
-  Run = false;
-  RunMutex.unlock();
-  if ( rd )
-    QThread::wait();
+  QThread::start( HighPriority );
 }
 
 
 void ReadThread::run( void )
 {
-  bool rd = true;
-
-  do {
-    int r = RW->AQ->readData();
+  while ( true ) {
+    int r = RW->AQ->waitForRead();
     if ( r < 0 ) {
       RW->printlog( "! error in reading acquired data: " + RW->IL.errorText() );
-      RW->AQ->restartRead();
+      RW->AQ->restartRead( &RW->DataMutex, &RW->ReadDataWait );
     }
-    else if ( r == 0 ) {
-      RW->printlog( "ReadThread -> finished reading data" );
-      RunMutex.lock();
-      Run = false;
-      RunMutex.unlock();
+    else
       break;
-    }
-    RW->writeLockData();
-    RW->AQ->convertData();
-    RW->unlockData();
-    RW->ReadDataWait.wakeAll();
-    RunMutex.lock();
-    rd = Run;
-    RunMutex.unlock();
-  } while ( rd );
-  string errors = RW->AQ->readError();
-  if ( ! errors.empty() )
-    RW->printlog( "! error in transferring analog input data: " + errors );
+  };
 }
 
 
@@ -99,6 +67,7 @@ void WriteThread::start( void )
 void WriteThread::run( void )
 {
   RW->AQ->waitForWrite();
+  // XXX Check for errors!
 }
 
 

@@ -164,8 +164,8 @@ public:
 	This function assumes that \a sigs successfully passed testWrite().
         The channels in \a sigs are not sorted. */
   virtual int prepareWrite( OutList &sigs ) = 0;
-    /*! Start analog output of the output signals that were passed to the previous call
-        of prepareWrite().
+    /*! Start non-blocking analog output of the output signals
+        that were passed to the previous call of prepareWrite().
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
 	If no further calls of writeData() are required, 0 is returned,
@@ -178,7 +178,7 @@ public:
         When the thread and analog output is finished, releases the semaphore by one.
         On error, the semaphore is released by 1000 so that the process waiting
         on the semaphore is waking up immediately. */
-  virtual int startWrite( QSemaphore *sp = 0 ) = 0;
+  virtual int startWrite( QSemaphore *sp=0 ) = 0;
     /*! Write data of the output signals that were passed to the previous call
         of prepareWrite() to the analog output device.
         Returns the number of transferred data elements.

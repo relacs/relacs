@@ -200,7 +200,8 @@ int AISim::prepareRead( InList &traces )
 }
 
 
-int AISim::startRead( QSemaphore *aosp )
+int AISim::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
+		      QWaitCondition *datawait, QSemaphore *aosp )
 {
   return 0;
 }

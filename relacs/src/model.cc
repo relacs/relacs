@@ -31,14 +31,14 @@ Model::Model( const string &name, const string &pluginset,
 	      const string &version, const string &date )
   : RELACSPlugin( "Model: " + name, RELACSPlugin::Plugins,
 		  name, pluginset, author, version, date ),
-    Data( 0 ),
+    DataMutex( 0 ),
+    DataWait( 0 ),
     Signals( 0 ),
     SignalMutex(),
     InterruptLock()
 {
   Thread = new ModelThread( this );
   InterruptModel = false;
-  Restarted = false;
   AveragedLoad = 0;
   AverageRatio = 0.01;
 }
@@ -57,25 +57,25 @@ int Model::traces( void ) const
 
 string Model::traceName( int trace ) const
 {
-  return trace >=0 && trace < (int)Data.size() ? Data[trace].Name : "";
+  return trace >=0 && trace < (int)Data.size() ? Data[trace].ident() : "";
 }
 
 
 double Model::deltat( int trace ) const
 {
-  return trace >=0 && trace < (int)Data.size() ? Data[trace].DeltaT : 0.0;
+  return trace >=0 && trace < (int)Data.size() ? Data[trace].sampleInterval() : 0.0;
 }
 
 
 double Model::time( int trace ) const
 {
-  return trace >=0 && trace < (int)Data.size() ? Data[trace].DeltaT * Data[trace].Buffer.size() : 0.0;
+  return trace >=0 && trace < (int)Data.size() ? Data[trace].currentTime() : 0.0;
 }
 
 
 float Model::scale( int trace ) const
 {
-  return trace >=0 && trace < (int)Data.size() ? Data[trace].Scale : 1.0;
+  return trace >=0 && trace < (int)Data.size() ? Data[trace].scale() : 1.0;
 }
 
 
@@ -85,45 +85,13 @@ double Model::load( void ) const
 }
 
 
-void Model::setDeltat( int trace, double deltat )
-{
-  if ( trace < 0 ) {
-    for ( unsigned int k=0; k<Data.size(); k++ )
-      Data[k].DeltaT = deltat;
-  }
-  else
-    Data[trace].DeltaT = deltat;
-}
-
-
-void Model::add( const string &name, double deltat, 
-		 double scale, int nbuffer )
-{
-  Data.push_back( InTrace( name, deltat, scale, nbuffer ) );
-}
-
-
-void Model::clearData( void )
-{
-  for ( unsigned int k=0; k<Data.size(); k++ )
-    Data[k].clear();
-}
-
-
-void Model::clear( void )
-{
-  clearData();
-  Data.clear();
-}
-
-
 void Model::push( int trace, float val )
 {
   if ( trace == 0 ) {
     PushCount++;
     if ( PushCount >= MaxPush ) {
       PushCount = 0;
-      double t = deltat( 0 ) * Data[0].Buffer.size();
+      double t = Data[0].currentTime();
       double dt = t - elapsed();
       double l = 1.0 - dt / MaxPushTime;
       AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
@@ -133,11 +101,11 @@ void Model::push( int trace, float val )
       }
       long st = (long)::rint( 1000.0 * dt );
       if ( st > 0 ) {
-	InputWait.wait( &SignalMutex, st );
+	InputWait.wait( DataMutex, st );
       }
     }
   }
-  Data[trace].Buffer.push( val );
+  Data[trace].push( val );
 }
 
 
@@ -210,35 +178,45 @@ bool Model::isRunning( void ) const
 }
 
 
-void Model::start( void )
+void Model::start( InList &data, QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
-  clearData();
+  Data.clear();
+  for ( int k=0; k<data.size(); k++ )
+    Data.add( &data[k] );
+  DataMutex = datamutex;
+  DataWait = datawait;
   InterruptModel = false;
-  Restarted = true;
   AveragedLoad = 0;
   MaxPush = deltat( 0 ) > 0.0 ? (int)::ceil( 0.01 / deltat( 0 ) ) : 100;
   MaxPushTime = MaxPush * deltat( 0 );
   PushCount = 0;
   Signals.clear();
   SimTime.start();
-  Thread->start( QThread::HighestPriority );
+  Thread->start( QThread::HighPriority );
 }
 
 
 void Model::restart( void )
 {
+  if ( DataMutex != 0 )
+    DataMutex->lockForWrite();
+  Data.setRestart();
+  if ( DataMutex != 0 )
+    DataMutex->unlock();
+
   InterruptModel = false;
-  Restarted = true;
-  Thread->start( QThread::HighestPriority );
+  Thread->start( QThread::HighPriority );
 }
 
 
 void Model::run( void )
 {
   setSettings();
-  SignalMutex.lock();
+  if ( DataMutex != 0 )
+    DataMutex->lockForWrite();
   main();
-  SignalMutex.unlock();
+  if ( DataMutex != 0 )
+    DataMutex->unlock();
 }
 
 
@@ -388,14 +366,6 @@ void Model::clearSignals( void )
 double Model::elapsed( void ) const
 {
   return 0.001 * SimTime.elapsed();
-}
-
-
-bool Model::restarted( void )
-{
-  bool r = Restarted;
-  Restarted = false;
-  return r; 
 }
 
 

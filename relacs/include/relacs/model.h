@@ -26,10 +26,11 @@
 #include <string>
 #include <QMenu>
 #include <QMutex>
+#include <QReadWriteLock>
 #include <QWaitCondition>
 #include <QThread>
 #include <QDateTime>
-#include <relacs/cyclicarray.h>
+#include <relacs/inlist.h>
 #include <relacs/outdata.h>
 #include <relacs/relacsplugin.h>
 using namespace std;
@@ -163,12 +164,9 @@ private:
 
   friend class ModelThread;
 
-     /*! Set the time step of trace \a trace to \a deltat. */
-  void setDeltat( int trace, double deltat );
-
     /*! Clear the content of the data buffers and start the simulation.
         \sa clearData(), main(), restart() */
-  void start( void );
+  void start( InList &data, QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
     /*! Restart a previously stopped simulation.
         \sa stop(), notify(), start() */
   void restart( void );
@@ -176,23 +174,6 @@ private:
   void run( void );
     /*! Stop the simulation. */
   void stop( void );
-
-    /*! The number of unread data elements of the buffer of trace \a trace. */
-  inline double size( int trace ) { return Data[trace].Buffer.readSize(); };
-    /*! Retrieve a single data value of the buffer of trace \a trace. */
-  inline float pop( int trace ) { return Data[trace].Buffer.read(); };
-
-    /*! Add trace \a name with sampling interval \a deltat seconds,
-	voltage to secondary unit factor \a scale,
-	a buffer with \a nbuffer elements.
-	\sa clear() */
-  void add( const string &name, double deltat, double scale, int nbuffer );
-    /*! Clear trace buffers. 
-        \sa add() */
-  void clear( void );
-    /*! Clear content of the trace buffers. 
-        \sa clear() */
-  void clearData( void );
 
     /*! Add output signal to the simulation. 
         Returns the starting time of the signal on success,
@@ -210,39 +191,18 @@ private:
     /*! The elapsed time of the simulation in seconds. */
   double elapsed( void ) const;
 
-    /*! True if the simulation was restarted since the last call of restart(). */
-  bool restarted( void );
-
   ModelThread *Thread;
 
   int MaxPush;
   double MaxPushTime;
   int PushCount;
   QTime SimTime;
-  bool Restarted;
   double AveragedLoad;
   double AverageRatio;
 
-  struct InTrace {
-    InTrace( void ) : Name( "" ), DeltaT( 0.0 ), 
-		      Scale( 1.0 ),
-		      Buffer() {};
-    InTrace( const string &name, double deltat, 
-	     float scale, int nbuffer )
-      : Name( name ), DeltaT( deltat ), 
-	Scale( scale ),	Buffer( nbuffer )
-      {};
-    InTrace( const InTrace &td )
-      : Name( td.Name ), DeltaT( td.DeltaT ), 
-	Scale( td.Scale ), Buffer( td.Buffer )
-      {};
-    void clear( void ) { Buffer.clear(); };
-    string Name;
-    double DeltaT;
-    float Scale;
-    CyclicArrayF Buffer;
-  };
-  deque< InTrace > Data;
+  InList Data;
+  QReadWriteLock *DataMutex;
+  QWaitCondition *DataWait;
 
   struct OutTrace {
     OutTrace( void ) : Onset( 0.0 ), Offset( 0.0 ), LastSignal( 0.0 ), Finished( false ) {};

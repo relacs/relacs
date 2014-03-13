@@ -67,9 +67,6 @@ They must be added with the addAttLine() function to Acquire.
 The hardware drivers need to know for how long they need to buffer data
 between successive calls to readData() and/or writeData().
 Specify this time by setBufferTime().
-In addition, the data from an analog input need to be converted and
-pushed into an InData once they have been obtained by readData().
-This is done by periodically by convertData(). 
 The time interval between successive calls to convertData() is specified by
 setUpdateTime() and is used by the AnalogInput implementations for
 providing an appropriately sized internal data buffer.
@@ -85,10 +82,6 @@ It takes an InList as argument. The settings of the individual
 InData specify the parameter (sampling rate, channels, ...)
 to be used for the analog input operation.
 Before calling read(), testRead() can be used to check if all parameter are valid.
-With readData() data from the data acquisition board are transfered to 
-and internal buffer of the AnalogInput interface.
-convertData() converts the data from the internal buffer to the secondary unit
-and transfers them to the InList.
 stopRead() stops any activity related to analog input.
 inTraces() returns a list of all available analog input traces.
 
@@ -383,40 +376,26 @@ public:
         Possible errors are indicated by the error state of \a data.
         If some parameters in \a data are invalid there are set to valid values
 	so that a following call of read( InList &data ) will succeed. 
-        \sa read(), readData(), convertData(), stopRead() */
+        \sa read(), stopRead() */
   virtual int testRead( InList &data );
     /*! Start analog input with the settings given by \a data. 
 	Returns 0 on success, negative numbers otherwise.
         Possible errors are indicated by the error state of \a data. 
-        \sa testRead(), readData(), convertData(), stopRead() */
-  virtual int read( InList &data );
-    /*! Read data from data aquisition board and store them in an internal buffer.
-	In case of an error, acquisition is restarted.
-	Input gains are not updated.
-	This function only accesses the hardware driver, the input traces passed
-	to the last call of read() are not affected.
-	Returns -1 on error, 0 if no more data are to be
-	expected from the hardware driver, and 1 if some data were read.
-        Possible errors are indicated by the error state of the traces.
-        \sa testRead(), read(), convertData(), stopRead() */
-  virtual int readData( void );
-    /*! Convert data from the internal buffer to the secondary unit
-        and transfer them to the InList data from the last call of read()
-	that initiated the acquisition.
-	Returns 0 on success, negative numbers otherwise.
-        Possible errors are indicated by the error state of the traces (very unlikely).
-        See InList for details about handling the data. 
-        \sa testRead(), read(), readData(), stopRead() */
-  virtual int convertData( void );
+        \sa testRead(), stopRead() */
+  virtual int read( InList &data, QReadWriteLock *datamutex=0,
+		    QWaitCondition *datawait=0 );
     /*! \return an error string describing problems that occured during analog input. */
   string readError( void ) const;
     /*! Stop analog input of all analog input devices.
-        Remaining data can be still obtained with readData().
 	Returns 0 on success, negative numbers otherwise. 
         \sa testRead(), read(), readData(), convertData() */
   virtual int stopRead( void );
-    /*! Restart data aquisition in case of an error returned by readData(). */
-  virtual int restartRead( void );
+    /*! Restart data aquisition in case of an error. */
+  virtual int restartRead( QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+    /*! Wait for the analog input threads to finish.
+        \return 0 on success, i.e. all analog inputs finished successfully
+	or -1 if some input failed. */
+  virtual int waitForRead( void );
 
     /*! The flag that is used to mark traces whose gain was changed. 
         \sa setAdjustFlag(), setGain(), adjustGain(),
@@ -481,7 +460,7 @@ public:
 	automatically.
         \sa setGain(), adjustGain( InData, double ),
 	adjustGain( InData, double, double ), gainChanged() */
-  virtual int activateGains( void );
+  virtual int activateGains( QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
 
     /*! Test of a single output signal \a signal for validity.
         If \a signal is the same as from the last call of write()
@@ -502,8 +481,6 @@ public:
         \sa write(), writeData(), writeZero(), stopWrite() */
   virtual int testWrite( OutList &signal );
 
-  virtual int setupWrite( OutData &signal );
-  virtual int startWrite( OutData &signal, bool setsignaltime=true );
     /*! Output of a signal \a signal.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
@@ -518,9 +495,8 @@ public:
         the reason is specified in the error state of \a signal.
 	\note During the output of the stimulus, \a signal must exist and must not be modified!
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
-  int write( OutData &signal, bool setsignaltime=true );
-  virtual int setupWrite( OutList &signal );
-  virtual int startWrite( OutList &signal, bool setsignaltime=true );
+  virtual int write( OutData &signal, bool setsignaltime=true,
+		     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
     /*! Output of multiple signals \a signal.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
@@ -535,7 +511,8 @@ public:
         the reason is specified in the error state of \a signal.
 	\note During the output of the stimulus, \a signal must exist and must not be modified!
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
-  virtual int write( OutList &signal, bool setsignaltime=true );
+  virtual int write( OutList &signal, bool setsignaltime=true,
+		     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
 
     /*! Wait for the analog output threads to finish.
         \return 0 on success, i.e. all analog outputs finished successfully
@@ -552,7 +529,8 @@ public:
 	\return 0 on success, a negative number if the output of the signal
 	failed. The reason for the failure is specified in the error state
 	of \a signal. */
-  virtual int directWrite( OutData &signal, bool setsignaltime=true );
+  virtual int directWrite( OutData &signal, bool setsignaltime=true,
+			   QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
     /*! Direct output of single data values as specified by \a signal
         to different channels of the DAQ boards.
 	Only the output traces ( OutData::setTrace() ) or the the name of the
@@ -563,13 +541,15 @@ public:
 	\return 0 on success, a negative number if the output of the signals
 	failed. The reason for the failure is specified in the error state
 	of \a signal. */
-  virtual int directWrite( OutList &signal, bool setsignaltime=true );
+  virtual int directWrite( OutList &signal, bool setsignaltime=true,
+			   QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
 
     /*! Write a zero to all analog output channels. 
         \param[in] channels resets all physical output channels. 
         \param[in] params resets parameter channels.
         \return an error message on failure, an empty string on success. */
-  virtual string writeReset( bool channels=true, bool params=true );
+  virtual string writeReset( bool channels=true, bool params=true,
+			     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
 
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 
@@ -695,6 +675,8 @@ protected:
   };
     /*! All devices for analog input. */
   vector < AIData > AI;
+    /*! Semaphore guarding analog inputs. */
+  QSemaphore AISemaphore;
 
     /*! The flag that is used to mark adjusted traces in InData. */
   int AdjustFlag;
@@ -744,7 +726,8 @@ protected:
 	\return 1 on success and further calls to writeData() are needed. 
 	\return -1 on failure. */
   virtual int restartRead( vector< AOData* > &aod, bool directao,
-			   bool updategains );
+			   bool updategains, QReadWriteLock *datamutex=0,
+			   QWaitCondition *datawait=0 );
 
     /*! The currently used synchronization method. */
   SyncModes SyncMode;

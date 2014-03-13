@@ -110,11 +110,12 @@ public:
 	InData structure are filled and a negative value is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take(). */
-  virtual int startRead( QSemaphore *aosp = 0 );
+  virtual int startRead( QSemaphore *sp=0, QReadWriteLock *datamutex=0,
+			 QWaitCondition *datawait=0, QSemaphore *aosp=0 );
     /*! Read data from a running data acquisition.
         Returns the total number of read data values.
 	If an error ocurred in any channel, the corresponding errorflags in the
-	InList structure are filled and a negative value is returned. */
+	InList structure are filled and -2 is returned. */
   virtual int readData( void );
     /*! Convert data from and push them to the traces.
         Returns the number of new data values that were added to the traces
