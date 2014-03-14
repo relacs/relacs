@@ -355,9 +355,11 @@ void AnalogInput::run( void )
       break;
     // the sleep is needed to allow for other processes to acquire the lock!
     QThread::msleep( 1 );
+    /*
     lock();
     rd = Run;
     unlock();
+    */
   } while ( rd );
 
   lock();
@@ -377,6 +379,7 @@ void AnalogInput::stopRead( void )
   unlock();
   wait();
 
+  /*
   // get data from the card:
   int r = readData();
 
@@ -390,7 +393,7 @@ void AnalogInput::stopRead( void )
     if ( DataWait != 0 )
       DataWait->wakeAll();
   }
-
+  */
   lock();
   Semaphore = 0;
   DataMutex = 0;

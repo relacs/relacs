@@ -852,10 +852,11 @@ int ComediAnalogInput::readData( void )
   lock();
   if ( Traces == 0 || Buffer == 0 || ! IsRunning ) {
     unlock();
-    return -2;
+    return -1;
   }
 
   bool failed = false;
+  int ern = 0;
   int readn = 0;
   int buffern = BufferN*BufferElemSize;
   int maxn = BufferSize - buffern;
@@ -870,11 +871,13 @@ int ComediAnalogInput::readData( void )
     // read data:
     ssize_t m = read( comedi_fileno( DeviceP ), Buffer + buffern, maxn );
 
-    int ern = errno;
+    ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
+      Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
       Traces->addErrorStr( ern );
       failed = true;
       cerr << " ComediAnalogInput::readData(): error\n";
+      break;
     }
     else if ( m > 0 ) {
       maxn -= m;
@@ -889,20 +892,8 @@ int ComediAnalogInput::readData( void )
   CurrentSamples += readn;
 
   if ( failed ) {
-    /* the following does not work:
-    // check buffer underrun:
-    if ( errno == EPIPE ) {
-      Traces->addErrorStr( deviceFile() + " - buffer-overflow: "
-			  + comedi_strerror( comedi_errno() ) );
+    if ( errno == EPIPE )
       Traces->addError( DaqError::OverflowUnderrun );
-    }    
-    else {
-      Traces->addErrorStr( "Error while reading from device-file: " + deviceFile()
-			  + "  comedi: " + comedi_strerror( comedi_errno() ) 
-			  + "  system: " + strerror( errno ) );
-      Traces->addError( DaqError::Unknown );
-    }
-    */
     unlock();
     return -2;   
   }
@@ -910,9 +901,8 @@ int ComediAnalogInput::readData( void )
   // no more data to be read:
   if ( readn <= 0 && ! ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) ) {
     if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
-      Traces->addErrorStr( deviceFile() + " - buffer-overflow: "
-			  + comedi_strerror( comedi_errno() ) );
-      Traces->addError( DaqError::OverflowUnderrun );
+      // The following error messages do not work after a comedi_cancel!
+      //      Traces->addError( DaqError::OverflowUnderrun );
       cerr << " ComediAnalogInput::readData(): no data and not running\n";
       unlock();
       return -2;
@@ -962,6 +952,10 @@ int ComediAnalogInput::stop( void )
     unlock();
     return ReadError;
   }
+  if ( comedi_poll( DeviceP, SubDevice ) < 0 ) {
+    unlock();
+    return ReadError;
+  }
   unlock();
 
   stopRead();
@@ -978,11 +972,6 @@ int ComediAnalogInput::reset( void )
   int retVal = stop();
 
   lock();
-  // clear buffers by reading:
-  while ( comedi_get_buffer_contents( DeviceP, SubDevice ) > 0 ) {
-    char buffer[ReadBufferSize];
-    read( comedi_fileno( DeviceP ), buffer, ReadBufferSize );
-  }
 
   // free internal buffer:
   if ( Buffer != 0 )

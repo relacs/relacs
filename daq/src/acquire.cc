@@ -908,21 +908,16 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 			  bool updategains, QReadWriteLock *datamutex,
 			  QWaitCondition *datawait )
 {
-  //  cerr << currentTime() << " Acquire::restartRead() begin \n";
+  cerr << currentTime() << " Acquire::restartRead() begin \n";
 
   bool success = true;
   bool finished = true;
 
-  // empty analog input buffer:
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    int n = AI[i].AI->readData();
-    if ( n < 0 && AI[i].Traces.failed() )
-      success = false;
-  }
-
   // stop reading:
   if ( stopRead() != 0 )
     success = false;
+
+ cerr << currentTime() << " Acquire::restartRead() -> stopped analog input\n";
 
   // get data and shortest recording:
   double t = -1.0;

@@ -10,6 +10,8 @@ comedicfgdir = $(pkgdatadir)/configs/comedi
 dist_comedicfg_DATA = \
     relacs.cfg \
     relacsplugins.cfg \
+    relacsdynclamp.cfg \
+    relacsdynclampplugins.cfg \
     macros.cfg
 
 EXTRA_DIST = \

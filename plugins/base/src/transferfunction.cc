@@ -222,8 +222,6 @@ int TransferFunction::main( void )
 		" length=" + Str( signal.length() ) );
     write( signal );
     if ( signal.failed() ) {
-      cerr << signal.sampleRate() << '\n';
-      warning( signal.errorText() );
       directWrite( orgdcsignal );
       continue;
     }

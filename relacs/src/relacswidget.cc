@@ -1077,7 +1077,7 @@ void RELACSWidget::customEvent( QEvent *qce )
 
   case 3: {
     RelacsWidgetEvent *rwe = dynamic_cast<RelacsWidgetEvent*>( qce );
-    MessageBox::warning( "RELACS Error !", rwe->text(), 2.0, this );
+    MessageBox::warning( "RELACS Error !", rwe->text(), 10.0, this );
     break;
   }
 
@@ -1972,8 +1972,9 @@ void RELACSWidget::about()
   info += RELACSVERSION;
   info += "</p>\n";
   info += "<p align=center>(c) by Jan Benda</p>\n";
-  info += "<p align=center>Institute for Neurobiology,<br>\n";
-  info += "   Eberhard Karls Universit&auml;t T&uuml;bingen.</p>\n";
+  info += "<p align=center>Neuroethology Lab<br>\n";
+  info += "<p align=center>Institute for Neurobiology<br>\n";
+  info += "   Eberhard Karls Universit&auml;t T&uuml;bingen</p>\n";
   MessageBox::information( "About RELACS", info, this ); 
 }
 
