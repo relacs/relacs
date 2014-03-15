@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <QMutexLocker>
 #include <relacs/analoginput.h>
 #include <relacs/comedi/comedianalogoutput.h>
 #include <relacs/comedi/dynclampanalogoutput.h>
@@ -512,109 +513,105 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 
   reset();
 
-  lock();
+  {
+    QMutexLocker locker( mutex() );
 
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
+    // copy and sort signal pointers:
+    OutList ol;
+    ol.add( sigs );
+    ol.sortByChannel();
 
-  unsigned int chanlist[MAXCHANLIST];
-  setupChanList( ol, chanlist, MAXCHANLIST, true );
+    unsigned int chanlist[MAXCHANLIST];
+    setupChanList( ol, chanlist, MAXCHANLIST, true );
 
-  if ( ol.failed() ) {
-    unlock();
-    return -1;
-  }
+    if ( ol.failed() )
+      return -1;
 
-  // set chanlist:
-  struct chanlistIOCT chanlistIOC;
-  chanlistIOC.subdevID = SubdeviceID;
-  for( int k = 0; k < ol.size(); k++ ){
-    chanlistIOC.chanlist[k] = chanlist[k];
-    if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
-      const comedi_polynomial_t* poly = 
-	(const comedi_polynomial_t *)ol[k].gainData();
-      chanlistIOC.conversionlist[k].order = poly->order;
-      if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-	cerr << "ERROR in DynClampAnalogOutput::directWrite -> order=" << poly->order << " in conversion polynomial too large!\n";
-      chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
-      for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
-	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
-      chanlistIOC.scalelist[k] = ol[k].scale();
+    // set chanlist:
+    struct chanlistIOCT chanlistIOC;
+    chanlistIOC.subdevID = SubdeviceID;
+    for( int k = 0; k < ol.size(); k++ ){
+      chanlistIOC.chanlist[k] = chanlist[k];
+      if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
+	const comedi_polynomial_t* poly = 
+	  (const comedi_polynomial_t *)ol[k].gainData();
+	chanlistIOC.conversionlist[k].order = poly->order;
+	if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
+	  cerr << "ERROR in DynClampAnalogOutput::directWrite -> order=" << poly->order << " in conversion polynomial too large!\n";
+	chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
+	for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
+	  chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
+	chanlistIOC.scalelist[k] = ol[k].scale();
+      }
     }
-  }
-  chanlistIOC.userDeviceIndex = ol[0].device();
-  chanlistIOC.chanlistN = ol.size();
-  int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
-  if( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_CHANLIST on device "
-	 << ModuleDevice << " failed!\n";
-    unlock();
-    return -1;
-  }
+    chanlistIOC.userDeviceIndex = ol[0].device();
+    chanlistIOC.chanlistN = ol.size();
+    int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_CHANLIST on device "
+	   << ModuleDevice << " failed!\n";
+      return -1;
+    }
 
-  // set up synchronous command:
-  struct syncCmdIOCT syncCmdIOC;
-  syncCmdIOC.subdevID = SubdeviceID;
-  syncCmdIOC.frequency = 0;
-  syncCmdIOC.delay = 0;
-  syncCmdIOC.duration = 1;
-  syncCmdIOC.continuous = 0;
-  syncCmdIOC.startsource = 0;
-  retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
-  if( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_SYNC_CMD on device "
-	 << ModuleDevice << " failed!\n";
-    if ( errno == EINVAL )
-      ol.addError( DaqError::InvalidSampleRate );
-    else
-      ol.addErrorStr( errno );
-    unlock();
-    return -1;
-  }
+    // set up synchronous command:
+    struct syncCmdIOCT syncCmdIOC;
+    syncCmdIOC.subdevID = SubdeviceID;
+    syncCmdIOC.frequency = 0;
+    syncCmdIOC.delay = 0;
+    syncCmdIOC.duration = 1;
+    syncCmdIOC.continuous = 0;
+    syncCmdIOC.startsource = 0;
+    retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_SYNC_CMD on device "
+	   << ModuleDevice << " failed!\n";
+      if ( errno == EINVAL )
+	ol.addError( DaqError::InvalidSampleRate );
+      else
+	ol.addErrorStr( errno );
+      return -1;
+    }
 
-  // apply calibration:
-  /*
-  XXX this requires user space comedi!
-  if ( Calibration != 0 ) {
-    for( int k=0; k < ol.size(); k++ ) {
+    // apply calibration:
+    /*
+      XXX this requires user space comedi!
+      if ( Calibration != 0 ) {
+      for( int k=0; k < ol.size(); k++ ) {
       unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
       unsigned int range = CR_RANGE( Cmd.chanlist[k] );
       unsigned int aref = CR_AREF( Cmd.chanlist[k] );
       if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
-					    range, aref, Calibration ) < 0 )
-	ol[k].addError( DaqError::CalibrationFailed );
-    }
-  }
-  */
+      range, aref, Calibration ) < 0 )
+      ol[k].addError( DaqError::CalibrationFailed );
+      }
+      }
+    */
 
-  if ( ol.failed() ) {
-    unlock();
-    return -1;
-  }
+    if ( ol.failed() )
+      return -1;
 
-  BufferSize = ol.size() * BufferElemSize;
-  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+    BufferSize = ol.size() * BufferElemSize;
+    Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-  // fill buffer with data:
-  for ( int k=0; k<ol.size(); k++ )
-    ol[k].deviceReset( 0 );
-  Sigs = ol;
-  unlock();
+    // fill buffer with data:
+    for ( int k=0; k<ol.size(); k++ )
+      ol[k].deviceReset( 0 );
+    Sigs = ol;
+
+  } // unlock
+
   retval = writeData();
   //  cerr << " DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << '\n';
-  lock();
+
+  QMutexLocker locker( mutex() );
 
   delete [] Buffer;
   Buffer = 0;
   BufferSize = 0;
   NBuffer = 0;
 
-  if ( retval < 0 ) {
-    unlock();
+  if ( retval < 0 )
     return -1;
-  }
 
   // start subdevice:
   retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
@@ -625,11 +622,9 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
     if ( ern == ENOMEM )
       cerr << " !!! No stack for kernel task !!!\n";
     sigs.addErrorStr( ern );
-    unlock();
     return -1;
   }
   
-  unlock();
   return 0;
 }
 
@@ -641,17 +636,18 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     return -1;
   }
 
-  // sampling rate must be the one of the running rt-loop:
-  lock();
-  unsigned int rate = 0;
-  int retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
-  if( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
-	 << ModuleDevice << " failed!\n";
-    unlock();
-    return -1;
+  {
+    QMutexLocker locker( mutex() );
+    // sampling rate must be the one of the running rt-loop:
+    unsigned int rate = 0;
+    int retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+	   << ModuleDevice << " failed!\n";
+      return -1;
+    }
   }
-  unlock();
+
   unsigned int reqrate = (unsigned int)sigs[0].sampleRate();
   if ( reqrate == 0 ) {
     if ( rate > 0 )
@@ -717,110 +713,103 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if ( sigs.size() <= 0 )
     return -1;
 
-  lock();
+  {
+    QMutexLocker locker( mutex() );
 
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
+    // copy and sort signal pointers:
+    OutList ol;
+    ol.add( sigs );
+    ol.sortByChannel();
 
-  unsigned int chanlist[MAXCHANLIST];
-  setupChanList( ol, chanlist, MAXCHANLIST, true );
+    unsigned int chanlist[MAXCHANLIST];
+    setupChanList( ol, chanlist, MAXCHANLIST, true );
 
-  if ( sigs.failed() ) {
-    unlock();
-    return -1;
-  }
+    if ( sigs.failed() )
+      return -1;
 
-  // set chanlist:
-  struct chanlistIOCT chanlistIOC;
-  chanlistIOC.subdevID = SubdeviceID;
-  for( int k = 0; k < ol.size(); k++ ){
-    chanlistIOC.chanlist[k] = chanlist[k];
-    if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
-      const comedi_polynomial_t* poly = 
-	(const comedi_polynomial_t *)ol[k].gainData();
-      chanlistIOC.conversionlist[k].order = poly->order;
-      if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-	cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in converion polynomial!\n";
-      chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
-      for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
-	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
-      chanlistIOC.scalelist[k] = ol[k].scale();
+    // set chanlist:
+    struct chanlistIOCT chanlistIOC;
+    chanlistIOC.subdevID = SubdeviceID;
+    for( int k = 0; k < ol.size(); k++ ){
+      chanlistIOC.chanlist[k] = chanlist[k];
+      if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
+	const comedi_polynomial_t* poly = 
+	  (const comedi_polynomial_t *)ol[k].gainData();
+	chanlistIOC.conversionlist[k].order = poly->order;
+	if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
+	  cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in converion polynomial!\n";
+	chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
+	for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
+	  chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
+	chanlistIOC.scalelist[k] = ol[k].scale();
+      }
     }
-  }
-  chanlistIOC.userDeviceIndex = ol[0].device();
-  chanlistIOC.chanlistN = ol.size();
-  int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
-  //  cerr << "prepareWrite(): IOC_CHANLIST done!\n"; /// TEST
-  if( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
-	 << ModuleDevice << " failed!\n";
-    unlock();
-    return -1;
-  }
+    chanlistIOC.userDeviceIndex = ol[0].device();
+    chanlistIOC.chanlistN = ol.size();
+    int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
+    //  cerr << "prepareWrite(): IOC_CHANLIST done!\n"; /// TEST
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
+	   << ModuleDevice << " failed!\n";
+      return -1;
+    }
 
-  // set up synchronous command:
-  struct syncCmdIOCT syncCmdIOC;
-  syncCmdIOC.subdevID = SubdeviceID;
-  syncCmdIOC.frequency = (unsigned int)::rint( ol[0].sampleRate() );
-  syncCmdIOC.delay = ol[0].indices( ol[0].delay() );
-  syncCmdIOC.duration = ol[0].size();
-  syncCmdIOC.continuous = ol[0].continuous();
-  syncCmdIOC.startsource = ol[0].startSource();
-  retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
-  //  cerr << "prepareWrite(): IOC_SYNC_CMD done!\n"; /// TEST
-  if( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
-	 << ModuleDevice << " failed!\n";
-    if ( errno == EINVAL )
-      ol.addError( DaqError::InvalidSampleRate );
-    else
-      ol.addErrorStr( errno );
-    unlock();
-    return -1;
-  }
+    // set up synchronous command:
+    struct syncCmdIOCT syncCmdIOC;
+    syncCmdIOC.subdevID = SubdeviceID;
+    syncCmdIOC.frequency = (unsigned int)::rint( ol[0].sampleRate() );
+    syncCmdIOC.delay = ol[0].indices( ol[0].delay() );
+    syncCmdIOC.duration = ol[0].size();
+    syncCmdIOC.continuous = ol[0].continuous();
+    syncCmdIOC.startsource = ol[0].startSource();
+    retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
+    //  cerr << "prepareWrite(): IOC_SYNC_CMD done!\n"; /// TEST
+    if( retval < 0 ) {
+      cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
+	   << ModuleDevice << " failed!\n";
+      if ( errno == EINVAL )
+	ol.addError( DaqError::InvalidSampleRate );
+      else
+	ol.addErrorStr( errno );
+      return -1;
+    }
 
-  // apply calibration:
-  /*
-  XXX this requires user space comedi!
-  if ( Calibration != 0 ) {
-    for( int k=0; k < ol.size(); k++ ) {
+    // apply calibration:
+    /*
+      XXX this requires user space comedi!
+      if ( Calibration != 0 ) {
+      for( int k=0; k < ol.size(); k++ ) {
       unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
       unsigned int range = CR_RANGE( Cmd.chanlist[k] );
       unsigned int aref = CR_AREF( Cmd.chanlist[k] );
       if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
-					    range, aref, Calibration ) < 0 )
-	ol[k].addError( DaqError::CalibrationFailed );
-    }
-  }
-  */
+      range, aref, Calibration ) < 0 )
+      ol[k].addError( DaqError::CalibrationFailed );
+      }
+      }
+    */
 
-  if ( ! ol.success() ) {
-    unlock();
-    return -1;
-  }
+    if ( ! ol.success() )
+      return -1;
 
-  for ( int k=0; k<ol.size(); k++ )
-    ol[k].deviceReset( 0 );
+    for ( int k=0; k<ol.size(); k++ )
+      ol[k].deviceReset( 0 );
 
-  // set buffer size:
-  BufferSize = FIFOSize;
-  int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
-  if ( nbuffer < BufferSize )
-    BufferSize = nbuffer;
+    // set buffer size:
+    BufferSize = FIFOSize;
+    int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
+    if ( nbuffer < BufferSize )
+      BufferSize = nbuffer;
 
-  setSettings( ol, BufferSize );
+    setSettings( ol, BufferSize );
 
-  if ( ! ol.success() ) {
-    unlock();
-    return -1;
-  }
+    if ( ! ol.success() )
+      return -1;
 
-  Sigs = ol;
-  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+    Sigs = ol;
+    Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-  unlock();
+  } //  unlock
 
   // fill buffer with initial data:
   int r = writeData();
@@ -838,11 +827,10 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
 int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 {
-  lock();
+  QMutexLocker locker( mutex() );
 
   if( !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
-    unlock();
     return -1;
   }
 
@@ -856,7 +844,6 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
     if ( ern == ENOMEM )
       cerr << " !!! No stack for kernel task !!!\n";
     Sigs.addErrorStr( ern );
-    unlock();
     return -1;
   }
 
@@ -872,8 +859,6 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 
   startThread( sp );
 
-  unlock();
-
   return NoMoreData ? 0 : 1;
 }
 
@@ -881,11 +866,11 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 int DynClampAnalogOutput::writeData( void )
 {
   //  cerr << " DynClampAnalogOutput::writeData(): in\n";/////TEST/////
-  lock();
-  if ( Sigs.empty() ) {
-    unlock();
+
+  QMutexLocker locker( mutex() );
+
+  if ( Sigs.empty() )
     return -1;
-  }
 
   // device stopped?
   if ( IsPrepared ) {
@@ -894,14 +879,12 @@ int DynClampAnalogOutput::writeData( void )
     if( retval < 0 ) {
       //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
       //	 << ModuleDevice << " failed!\n";
-      unlock();
       return -1;
     }
     if( !running ) {
       Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
 			deviceFile() + " is not running!" );
       cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
-      unlock();
       return -1;
     }
   }
@@ -928,10 +911,8 @@ int DynClampAnalogOutput::writeData( void )
     NBuffer += bytesConverted;
   }
 
-  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 ) {
-    unlock();
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
     return 0;
-  }
 
   // transfer buffer to kernel modul:
   int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
@@ -958,7 +939,6 @@ int DynClampAnalogOutput::writeData( void )
       Buffer = 0;
       BufferSize = 0;
       NBuffer = 0;
-      unlock();
       return 0;
     }
   }
@@ -968,24 +948,19 @@ int DynClampAnalogOutput::writeData( void )
 
     case EPIPE: 
       Sigs.addError( DaqError::OverflowUnderrun );
-      unlock();
       return -1;
 
     case EBUSY:
       Sigs.addError( DaqError::Busy );
-      unlock();
       return -1;
 
     default:
       Sigs.addErrorStr( ern );
       Sigs.addError( DaqError::Unknown );
-      unlock();
       return -1;
     }
   }
 
-  unlock();
-  
   return elemWritten;
 }
 
@@ -994,7 +969,7 @@ int DynClampAnalogOutput::reset( void )
 { 
   bool o = isOpen();
 
-  lock();
+  QMutexLocker locker( mutex() );
 
   Sigs.clear();
   if ( Buffer != 0 )
@@ -1005,22 +980,17 @@ int DynClampAnalogOutput::reset( void )
 
   Settings.clear();
 
-  if ( !o ) {
-    unlock();
+  if ( !o )
     return NotOpen;
-  }
 
-  if( !IsPrepared ) {
-    unlock();
+  if( !IsPrepared )
     return 0;
-  }
 
   int running = SubdeviceID;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if( retval < 0 ) {
     //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
     //	 << ModuleDevice << " failed!\n";
-    unlock();
     return -1;
   }
 
@@ -1029,7 +999,6 @@ int DynClampAnalogOutput::reset( void )
     if( retval < 0 ) {
       cerr << " DynClampAnalogOutput::reset -> ioctl command IOC_STOP_SUBDEV on device "
 	   << ModuleDevice << " failed!\n";
-      unlock();
       return -1;
     }
     rtf_reset( FifoFd );
@@ -1039,32 +1008,25 @@ int DynClampAnalogOutput::reset( void )
   NoMoreData = true;
   IsRunning = false;
 
-  unlock();
-
   return 0;
 }
 
 
 AnalogOutput::Status DynClampAnalogOutput::status( void ) const
 {
-  lock();
+  QMutexLocker locker( mutex() );
 
-  if( !IsPrepared ) {
-    unlock();
+  if( !IsPrepared )
     return Idle;
-  }
 
   int running = SubdeviceID;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << ModuleDevice << " failed!\n";
-    unlock();
     return UnknownError;
   }
   //  cerr << "DynClampAnalogOutput::running returned " << running << '\n';
-
-  unlock();
 
   return running>0 ? Running : Idle;
 }
@@ -1072,17 +1034,17 @@ AnalogOutput::Status DynClampAnalogOutput::status( void ) const
 
 long DynClampAnalogOutput::index( void ) const
 {
-  lock();
+  QMutexLocker locker( mutex() );
+
   long index = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETAOINDEX, &index );
   //    cerr << " DynClampAnalogOutput::index() -> " << index << '\n';
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::index() -> ioctl command IOC_GETLOOPCNT on device "
 	   << ModuleDevice << " failed!\n";
-    unlock();
     return -1;
   }
-  unlock();
+
   return index;
 }
 

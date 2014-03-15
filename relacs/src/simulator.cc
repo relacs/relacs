@@ -62,7 +62,7 @@ void Simulator::clearModel( void )
 }
 
 
-int Simulator::read( InList &data, QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Simulator::read( InList &data )
 {
   //  cerr << "Simulator::read( InList& )\n";
 
@@ -172,7 +172,7 @@ int Simulator::read( InList &data, QReadWriteLock *datamutex, QWaitCondition *da
   // start reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 && 
-	 AI[i].AI->startRead( 0, datamutex, datawait, 0 ) != 0 )
+	 AI[i].AI->startRead( 0, AIDataMutex, AIWait, 0 ) != 0 )
       success = false;
   }
 
@@ -209,7 +209,7 @@ int Simulator::read( InList &data, QReadWriteLock *datamutex, QWaitCondition *da
   SoftReset = false;
   HardReset = false;
 
-  Sim->start( data, datamutex, datawait );
+  Sim->start( data, AIDataMutex, AIWait );
 
   return 0;
 }
@@ -224,8 +224,7 @@ int Simulator::stopRead( void )
 
 
 int Simulator::restartRead( vector< AOData* > &aos, bool directao,
-			    bool updategains, 
-			    QReadWriteLock *datamutex, QWaitCondition *datawait )
+			    bool updategains )
 {
   bool success = true;
 
@@ -271,8 +270,7 @@ int Simulator::restartRead( vector< AOData* > &aos, bool directao,
 }
 
 
-int Simulator::write( OutData &signal, bool setsignaltime,
-		      QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Simulator::write( OutData &signal, bool setsignaltime )
 {
   signal.clearError();
 
@@ -420,8 +418,7 @@ int Simulator::write( OutData &signal, bool setsignaltime,
 }
 
 
-int Simulator::write( OutList &signal, bool setsignaltime,
-		      QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Simulator::write( OutList &signal, bool setsignaltime )
 {
   bool success = true;
   signal.clearError();
@@ -660,8 +657,7 @@ int Simulator::stopWrite( void )
 }
 
 
-int Simulator::directWrite( OutData &signal, bool setsignaltime,
-			    QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Simulator::directWrite( OutData &signal, bool setsignaltime )
 {
   signal.clearError();
 
@@ -790,8 +786,7 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime,
 }
 
 
-int Simulator::directWrite( OutList &signal, bool setsignaltime,
-			    QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Simulator::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( signal.size() <= 0 )
     return 0;
@@ -1003,46 +998,6 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime,
   }
 
   return 0;
-}
-
-
-string Simulator::writeReset( bool channels, bool params,
-			      QReadWriteLock *datamutex, QWaitCondition *datawait )
-{
-  Sim->stopSignals();
-
-  OutList sigs;
-
-  for ( unsigned int i=0; i<AO.size(); i++ ) {
-
-    AO[i].AO->reset();
-
-    for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
-      // this is a channel at the device that should be reset:
-      if ( OutTraces[k].device() == (int)i &&
-	   ( ( channels && OutTraces[k].channel() < 1000 ) ||
-	     ( params &&  OutTraces[k].channel() >= 1000 ) ) ) {
-	OutData sig;
-	sig.setTrace( OutTraces[k].trace() );
-	sig.constWave( 0.0 );
-	if ( OutTraces[k].apply( sig ) < 0 )
-	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
-	sig.setIdent( "init" );
-	sigs.push( sig );
-      }
-    }
-    
-  }
-
-  if ( sigs.size() > 0 ) {
-    // write out data;
-    directWrite( sigs, true, datamutex, datawait );
-    // error?
-    if ( ! sigs.success() )
-      return sigs.errorText();
-  }
-
-  return "";
 }
 
 

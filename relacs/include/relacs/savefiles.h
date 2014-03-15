@@ -169,6 +169,10 @@ public:
 	i.e. before writing any stimulus. */
   void save( bool on );
 
+    /*! Update raw data traces and events. Needs to be called right before saveTraces(). */
+  void updateRawTraces( void );
+    /*! Update derived data traces and events. Needs to be called right before saveTraces(). */
+  void updateDerivedTraces( void );
     /*! Save data traces and events to files */
   void saveTraces( void );
     /*! Save output-meta-data to files. */

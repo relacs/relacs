@@ -25,6 +25,7 @@
 #include <string>
 #include <deque>
 #include <vector>
+#include <QMutex>
 #include <QMenu>
 #include <relacs/configclass.h>
 #include <relacs/inlist.h>
@@ -102,12 +103,15 @@ public:
 	an appropriate message. */
   string init( void );
 
+    /*! Set the flag which is used to mark traces whose gain was changed to \a flag. 
+        \sa scheduleAdjust(), adjust() */
+  void setAdjustFlag( int flag );
     /*! Notice input signal gain changes so that adjust() is called
         on the next invokation of filter(). */
-  void adjust( int flag );
+  void scheduleAdjust( void );
     /*! React to input signal gain changes.
         Calls the adjust() function of each filter/detector if the gain of its
-        input data was adjusted. */
+        input data was adjusted. \sa scheduleAdjust() */
   void adjust( void );
 
     /*! Call the Filter::autoConfigure() function for all filter
@@ -239,6 +243,7 @@ private:
 
   bool NeedAdjust;
   int AdjustFlag;
+  QMutex AdjustMutex;
 
 };
 

@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <sstream>
+#include <QMutexLocker>
 #include <relacs/str.h>
 #include <relacs/comedi/comedianaloginput.h>
 #include <relacs/comedi/comedianalogoutput.h>
@@ -366,7 +367,8 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
   if ( sigs.failed() )
     return -1;
 
-  lock();
+  QMutexLocker locker( mutex() );
+
   for ( int k=0; k<sigs.size(); k++ ) {
 
     // get range values:
@@ -394,7 +396,6 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
     }
 
   }
-  unlock();
 
   return ( sigs.success() ? 0 : -1 );
 }
@@ -763,7 +764,8 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     return -1;
   }
 
-  lock();
+  QMutexLocker locker( mutex() );
+
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
   int retVal = setupCommand( sigs, cmd, false );
@@ -775,7 +777,6 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     sigs.addError( DaqError::InvalidBufferTime );
     retVal = -1;
   }
-  unlock();
 
   return retVal;
 }
@@ -794,82 +795,77 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   if ( sigs.size() == 0 )
     return -1;
 
-  lock();
+  {
+    QMutexLocker locker( mutex() );
 
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
+    // copy and sort signal pointers:
+    OutList ol;
+    ol.add( sigs );
+    ol.sortByChannel();
 
-  // XXX Fix DAQCard bug: add 2k of zeros to the signals:
-  /*
-  for ( int k=0; k<ol.size(); k++ )
-    ol[k].append( 0.0, 2048 );
-  */
+    // XXX Fix DAQCard bug: add 2k of zeros to the signals:
+    /*
+      for ( int k=0; k<ol.size(); k++ )
+      ol[k].append( 0.0, 2048 );
+    */
 
-  if ( setupCommand( ol, Cmd, true ) < 0 ) {
-    if ( Cmd.chanlist != 0 )
-      delete [] Cmd.chanlist;
-    unlock();
-    return -1;
-  }
-
-  // apply calibration:
-  if ( Calibration != 0 ) {
-    for( int k=0; k < ol.size(); k++ ) {
-      unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
-      unsigned int range = CR_RANGE( Cmd.chanlist[k] );
-      unsigned int aref = CR_AREF( Cmd.chanlist[k] );
-      if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
-					    range, aref, Calibration ) < 0 )
-	ol[k].addError( DaqError::CalibrationFailed );
+    if ( setupCommand( ol, Cmd, true ) < 0 ) {
+      if ( Cmd.chanlist != 0 )
+	delete [] Cmd.chanlist;
+      return -1;
     }
-  }
 
-  if ( ! ol.success() ) {
-    unlock();
-    return -1;
-  }
+    // apply calibration:
+    if ( Calibration != 0 ) {
+      for( int k=0; k < ol.size(); k++ ) {
+	unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
+	unsigned int range = CR_RANGE( Cmd.chanlist[k] );
+	unsigned int aref = CR_AREF( Cmd.chanlist[k] );
+	if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+					      range, aref, Calibration ) < 0 )
+	  ol[k].addError( DaqError::CalibrationFailed );
+      }
+    }
 
-  int delayinx = ol[0].indices( ol[0].delay() );
-  for ( int k=0; k<ol.size(); k++ )
-    ol[k].deviceReset( delayinx );
+    if ( ! ol.success() )
+      return -1;
 
-  // set buffer size:
-  BufferSize = bufferSize()*BufferElemSize;
-  int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
-  if ( nbuffer < BufferSize )
-    BufferSize = nbuffer;
+    int delayinx = ol[0].indices( ol[0].delay() );
+    for ( int k=0; k<ol.size(); k++ )
+      ol[k].deviceReset( delayinx );
 
-  setSettings( ol, BufferSize );
+    // set buffer size:
+    BufferSize = bufferSize()*BufferElemSize;
+    int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
+    if ( nbuffer < BufferSize )
+      BufferSize = nbuffer;
 
-  if ( ! ol.success() ) {
-    unlock();
-    return -1;
-  }
+    setSettings( ol, BufferSize );
 
-  Sigs = ol;
-  if ( Buffer != 0 ) { // should not be necessary!
-    delete [] Buffer;
-    cerr << "ComediAnalogOutput::prepareWrite() warning: Buffer was not freed!\n";
-  }
-  if ( NBuffer != 0 ) { // should not be necessary!
-    cerr << "ComediAnalogOutput::prepareWrite() warning: NBuffer=" << NBuffer << " is not zero!\n";
-    NBuffer = 0;
-  }
-  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+    if ( ! ol.success() )
+      return -1;
 
-  // execute command:
-  if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
-    int cerror = comedi_errno();
-    cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
-    ol.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
-		    + comedi_strerror( cerror ) );
-    unlock();
-    return -1;
-  }
+    Sigs = ol;
+    if ( Buffer != 0 ) { // should not be necessary!
+      delete [] Buffer;
+      cerr << "ComediAnalogOutput::prepareWrite() warning: Buffer was not freed!\n";
+    }
+    if ( NBuffer != 0 ) { // should not be necessary!
+      cerr << "ComediAnalogOutput::prepareWrite() warning: NBuffer=" << NBuffer << " is not zero!\n";
+      NBuffer = 0;
+    }
+    Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-  unlock();
+    // execute command:
+    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
+      int cerror = comedi_errno();
+      cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
+      ol.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
+		      + comedi_strerror( cerror ) );
+      return -1;
+    }
+
+  } // unlock
 
   // fill buffer with initial data:
   int r = writeData();
@@ -877,7 +873,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     return -1;
 
   lock();
-  IsPrepared = ol.success();
+  IsPrepared = Sigs.success();
   NoMoreData = ( r == 0 );
   unlock();
 
@@ -898,10 +894,10 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << '\n';
 
-  lock();
+  QMutexLocker locker( mutex() );
+
   if ( !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
-    unlock();
     return -1;
   }
 
@@ -920,13 +916,10 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
     cerr << "AO do_insn failed: " << comedi_strerror( cerror ) << endl;
     Sigs.addErrorStr( deviceFile() + " - execution of comedi_do_insn failed: "
 		      + comedi_strerror( cerror ) );
-    unlock();
     return -1;
   }
 
   startThread( sp );
-
-  unlock();
 
   return NoMoreData ? 0 : 1;
 }
@@ -934,12 +927,11 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
 
 int ComediAnalogOutput::writeData( void )
 {
-  lock();
-  if ( Sigs.empty() ) {
-    unlock();
-    return -1;
-  }
+  QMutexLocker locker( mutex() );
 
+  if ( Sigs.empty() )
+    return -1;
+ 
   // device stopped?
   if ( IsPrepared && ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 ) { 
     // not running anymore.
@@ -951,7 +943,6 @@ int ComediAnalogOutput::writeData( void )
       cerr << "ComediAnalogOutput::writeData: device is not running and not busy! comedi_strerror: " << comedi_strerror( comedi_errno() ) << '\n';
     }
     NoMoreData = true;
-    unlock();
     return -1;
   }
 
@@ -967,7 +958,6 @@ int ComediAnalogOutput::writeData( void )
 
   if ( ! Sigs[0].deviceWriting() && NBuffer == 0 ) {
     NoMoreData = true;
-    unlock();
     return 0;
   }
 
@@ -1000,7 +990,6 @@ int ComediAnalogOutput::writeData( void )
       BufferSize = 0;
       NBuffer = 0;
       NoMoreData = true;
-      unlock();
       return 0;
     }
   }
@@ -1012,24 +1001,19 @@ int ComediAnalogOutput::writeData( void )
 
     case EPIPE: 
       Sigs.addError( DaqError::OverflowUnderrun );
-      unlock();
       return -1;
 
     case EBUSY:
       Sigs.addError( DaqError::Busy );
-      unlock();
       return -1;
 
     default:
       Sigs.addErrorStr( ern );
       Sigs.addError( DaqError::Unknown );
-      unlock();
       return -1;
     }
   }
   
-  unlock();
-
   return elemWritten;
 }
 
@@ -1041,20 +1025,19 @@ int ComediAnalogOutput::reset( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  lock();
-
-  Sigs.clear();
-  if ( Buffer != 0 )
-    delete [] Buffer;
-  Buffer = 0;
-  BufferSize = 0;
-  NBuffer = 0;
-
-  if ( comedi_cancel( DeviceP, SubDevice ) < 0 ) {
-    unlock();
-    return WriteError;
+  {
+    QMutexLocker locker( mutex() );
+    
+    Sigs.clear();
+    if ( Buffer != 0 )
+      delete [] Buffer;
+    Buffer = 0;
+    BufferSize = 0;
+    NBuffer = 0;
+    
+    if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
+      return WriteError;
   }
-  unlock();
 
   stopWrite();
 

@@ -43,6 +43,8 @@ const TraceSpec Acquire::DummyTrace;
 
 
 Acquire::Acquire( void )
+  : AIDataMutex( 0 ),
+    AIWait( 0 )
 {
   AI.clear();
   AdjustFlag = 0;
@@ -70,7 +72,7 @@ Acquire::~Acquire()
 }
 
 
-int Acquire::addInput( AnalogInput *ai, int defaulttype )
+int Acquire::addInput( AnalogInput *ai, QMutex *datamutex, QWaitCondition *datawait )
 {
   if ( ai == 0 )
     return -1;
@@ -78,10 +80,9 @@ int Acquire::addInput( AnalogInput *ai, int defaulttype )
   if ( ! ai->isOpen() )
     return -2;
 
-  if ( defaulttype < 0 )
-    return -3;
-
-  AI.push_back( AIData( ai, defaulttype ) );
+  AI.push_back( AIData( ai ) );
+  AIDataMutex = datamutex;
+  AIWait = datawait;
 
   return 0;
 }
@@ -127,6 +128,8 @@ void Acquire::clearInputs( void )
 {
   stopRead();
   AI.clear();
+  AIDataMutex = 0;
+  AIWait = 0;
 }
 
 
@@ -611,8 +614,7 @@ int Acquire::testRead( InList &data )
 }
 
 
-int Acquire::read( InList &data, QReadWriteLock *datamutex,
-		   QWaitCondition *datawait )
+int Acquire::read( InList &data )
 {
   //  cerr << "Acquire::read( InList& )\n";
 
@@ -745,7 +747,7 @@ int Acquire::read( InList &data, QReadWriteLock *datamutex,
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, datamutex, datawait ) != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, AIDataMutex, AIWait ) != 0 )
 	  success = false;
 	else
 	  aistarted.push_back( i );
@@ -816,8 +818,7 @@ int Acquire::stopRead( void )
 }
 
 
-int Acquire::restartRead( QReadWriteLock *datamutex,
-			  QWaitCondition *datawait )
+int Acquire::restartRead( void )
 {
   bool success = true;
 
@@ -883,7 +884,7 @@ int Acquire::restartRead( QReadWriteLock *datamutex,
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, datamutex, datawait ) != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, AIDataMutex, AIWait ) != 0 )
 	  success = false;
 	else
 	  aistarted.push_back( i );
@@ -905,8 +906,7 @@ int Acquire::restartRead( QReadWriteLock *datamutex,
 
 
 int Acquire::restartRead( vector< AOData* > &aod, bool directao,
-			  bool updategains, QReadWriteLock *datamutex,
-			  QWaitCondition *datawait )
+			  bool updategains )
 {
   cerr << currentTime() << " Acquire::restartRead() begin \n";
 
@@ -1033,7 +1033,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	int r = AI[i].AI->startRead( &AISemaphore, datamutex, datawait, &AOSemaphore );
+	int r = AI[i].AI->startRead( &AISemaphore, AIDataMutex, AIWait, &AOSemaphore );
 	if ( r < 0 )
 	  success = false;
 	else {
@@ -1403,7 +1403,7 @@ bool Acquire::gainChanged( void ) const
 }
 
 
-int Acquire::activateGains( QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Acquire::activateGains( void )
 {
   // clear adjust-flags:
   for ( unsigned int i=0; i<AI.size(); i++ )
@@ -1413,7 +1413,7 @@ int Acquire::activateGains( QReadWriteLock *datamutex, QWaitCondition *datawait 
     return 0;
 
   vector< AOData* > aod( 0 );
-  return restartRead( aod, false, true, datamutex, datawait );
+  return restartRead( aod, false, true );
 }
 
 
@@ -1616,8 +1616,7 @@ int Acquire::testWrite( OutList &signal )
 }
 
 
-int Acquire::write( OutData &signal, bool setsignaltime,
-		    QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Acquire::write( OutData &signal, bool setsignaltime )
 {
   signal.clearError();
 
@@ -1739,7 +1738,7 @@ int Acquire::write( OutData &signal, bool setsignaltime,
       cerr << "Acquire::startWrite() -> called restartRead() because of gainChanged="
 	   << gainChanged() << " or signal restart=" << signal.restart() << '\n';
     vector< AOData* > aod( 1, &AO[di] );
-    if ( restartRead( aod, false, true, datamutex, datawait ) > 0 )
+    if ( restartRead( aod, false, true ) > 0 )
       finished = false;
   }
   else {
@@ -1767,8 +1766,7 @@ int Acquire::write( OutData &signal, bool setsignaltime,
 }
 
 
-int Acquire::write( OutList &signal, bool setsignaltime,
-		    QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Acquire::write( OutList &signal, bool setsignaltime )
 {
   bool success = true;
   signal.clearError();
@@ -1978,7 +1976,7 @@ int Acquire::write( OutList &signal, bool setsignaltime,
       if ( AO[i].Signals.size() > 0 )
 	aod.push_back( &AO[i] );
     }
-    int r = restartRead( aod, false, true, datamutex, datawait );
+    int r = restartRead( aod, false, true );
     if ( r < 0 )
       success = false;
     else if ( r > 0 )
@@ -2048,8 +2046,7 @@ int Acquire::waitForWrite( void )
 }
 
 
-int Acquire::directWrite( OutData &signal, bool setsignaltime,
-			  QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Acquire::directWrite( OutData &signal, bool setsignaltime )
 {
   signal.clearError();
 
@@ -2148,7 +2145,7 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime,
 	cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
 	     << gainChanged() << " or signal restart=" << signal.restart() << '\n';
       vector< AOData* > aod( 1, &AO[di] );
-      restartRead( aod, true, true, datamutex, datawait );
+      restartRead( aod, true, true );
     }
     else {
       // clear adjust-flags:
@@ -2177,8 +2174,7 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime,
 }
 
 
-int Acquire::directWrite( OutList &signal, bool setsignaltime,
-			  QReadWriteLock *datamutex, QWaitCondition *datawait )
+int Acquire::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( signal.size() <= 0 )
     return 0;
@@ -2352,7 +2348,7 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime,
 	if ( AO[i].Signals.size() > 0 )
 	  aod.push_back( &AO[i] );
       }
-      if ( restartRead( aod, true, true, datamutex, datawait ) != 0 )
+      if ( restartRead( aod, true, true ) != 0 )
 	success = false;
     }
     else {
@@ -2430,45 +2426,6 @@ int Acquire::writeZero( const string &trace )
 {
   int index = outTraceIndex( trace );
   return writeZero( index );
-}
-
-
-string Acquire::writeReset( bool channels, bool params,
-			    QReadWriteLock *datamutex, QWaitCondition *datawait )
-{
-  OutList sigs;
-
-  for ( unsigned int i=0; i<AO.size(); i++ ) {
-
-    AO[i].AO->reset();
-
-    for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
-      // this is a channel at the device that should be reset:
-      if ( OutTraces[k].device() == (int)i &&
-	   ( ( channels && OutTraces[k].channel() < 1000 ) ||
-	     ( params &&  OutTraces[k].channel() >= 1000 ) ) ) {
-	OutData sig;
-	sig.setTrace( OutTraces[k].trace() );
-	sig.constWave( 0.0 );
-	if ( OutTraces[k].apply( sig ) < 0 )
-	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
-	sig.setIdent( "init" );
-	sig.mute();
-	sigs.push( sig );
-      }
-    }
-    
-  }
-
-  if ( sigs.size() > 0 ) {
-    // write out data;
-    directWrite( sigs, true, datamutex, datawait );
-    // error?
-    if ( ! sigs.success() )
-      return sigs.errorText();
-  }
-
-  return "";
 }
 
 

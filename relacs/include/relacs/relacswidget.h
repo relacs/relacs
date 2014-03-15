@@ -31,7 +31,6 @@
 #include <QTimer>
 #include <QThread>
 #include <QMutex>
-#include <QReadWriteLock>
 #include <QWaitCondition>
 #include <QApplication>
 #include <deque>
@@ -135,15 +134,6 @@ public:
         \return \c true if new data have been got, otherwise you should wait() 
         on the UpdateDataWait condition to make sure data are available for you. */
   bool updateData( double mintracetime=0.0 );
-
-    /*! Locks the mutex of all the data traces and events. */
-  void readLockData( void ) { DataMutex.lockForRead(); };
-    /*! Locks the data mutex of all the data traces and events. */
-  void writeLockData( void ) { DataMutex.lockForWrite(); };
-    /*! Unlocks the mutex of all the data traces and events. */
-  void unlockData( void ) { DataMutex.unlock(); };
-    /*! Returns the mutex used for locking all the data traces and events. */
-  QReadWriteLock &dataMutex( void ) { return DataMutex; };
 
     /*! Wakes up all waitconditions. */
   void wakeAll( void );
@@ -398,7 +388,8 @@ private:
   QLabel *SimLabel;
 
     /*! Controls the primary input data buffer. */
-  QReadWriteLock DataMutex;
+  QMutex RawDataMutex;
+  QMutex DerivedDataMutex;
   bool RunData;
   QMutex RunDataMutex;
 

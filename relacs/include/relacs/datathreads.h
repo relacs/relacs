@@ -46,10 +46,6 @@ public:
 
   ReadThread( RELACSWidget *rw );
   void start( void );
-
-
-protected:
-
   virtual void run( void );
 
 
@@ -73,10 +69,6 @@ public:
 
   WriteThread( RELACSWidget *rw );
   void start( void );
-
-
-protected:
-
   virtual void run( void );
 
 

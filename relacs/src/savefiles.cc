@@ -331,22 +331,53 @@ void SaveFiles::writeToggle( void )
 }
 
 
+void SaveFiles::updateRawTraces( void )
+{
+  //  cerr << "SaveFiles::updateTraces(): saving=" << saving() << '\n';
+
+  QMutexLocker locker( &SaveMutex );
+
+  // this function is called from RELACSWidget::updateData()
+
+  // get indices:
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
+    if ( TraceFiles[k].Trace.source() == 0 )
+      TraceFiles[k].Trace.update();
+  }
+  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+    if ( EventFiles[k].Events.source() == 0 )
+      EventFiles[k].Events.update();
+  }
+}
+
+
+void SaveFiles::updateDerivedTraces( void )
+{
+  //  cerr << "SaveFiles::updateTraces(): saving=" << saving() << '\n';
+
+  QMutexLocker locker( &SaveMutex );
+
+  // this function is called from RELACSWidget::updateData()
+
+  // get indices:
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
+    if ( TraceFiles[k].Trace.source() != 0 )
+      TraceFiles[k].Trace.update();
+  }
+  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+    if ( EventFiles[k].Events.source() != 0 )
+      EventFiles[k].Events.update();
+  }
+}
+
+
 void SaveFiles::saveTraces( void )
 {
   //  cerr << "SaveFiles::saveTraces(): saving=" << saving() << '\n';
 
   QMutexLocker locker( &SaveMutex );
 
-  // this function is called from RELACSWidget::processData()
-  // and from the beginning of the write( OutData ) functions
-  // in case of a pending signal
-  // and from RELACSWidget::stopRePro().
-
-  // get indices:
-  for ( unsigned int k=0; k<TraceFiles.size(); k++ )
-    TraceFiles[k].Trace.update();
-  for ( unsigned int k=0; k<EventFiles.size(); k++ )
-    EventFiles[k].Events.update();
+  // this function is called from RELACSWidget::updateData()
 
   // update save status:
   writeToggle();

@@ -23,6 +23,7 @@
 #include <sstream>
 #include <cstdio>
 #include <cmath>
+#include <QMutexLocker>
 #include <relacs/str.h>
 #include <relacs/daqflex/daqflexanalogoutput.h>
 using namespace std;
@@ -181,7 +182,7 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
   if ( sigs.size() == 0 )
     return -1;
 
-  lock();
+  QMutexLocker locker( mutex() );
 
   const double maxboardvolt = 10.0;  // XXX is this really the same for all boards?
 
@@ -211,8 +212,6 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     //      sigs[k].addErrorStr( "DAQFlex direct write failed" );
 
   }
-
-  unlock();
 
   return ( sigs.success() ? 0 : -1 );
 }
@@ -319,115 +318,113 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   if ( sigs.size() == 0 )
     return -1;
 
-  lock();
+  {
+    QMutexLocker locker( mutex() );
 
-  /*
-  // clear out board buffer.
-  // this is not nice, since it actually writes data!
-  DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=0" );
-  DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=0" );
-  DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( maxRate(), "%g" ) );
-  DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
-  DAQFlexDevice->sendMessage( "AOSCAN:START" );
-  double dummy = 1.0;
-  for ( int k=0; k<100000; k++ )
-    dummy *= (double)k/(double)(k+1);
-  DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
-  */
-
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
-
-  // setup channels:
-  DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=" + Str( sigs[0].channel() ) );
-  DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=" + Str( sigs.back().channel() ) );
-  for( int k = 0; k < sigs.size(); k++ ) {
-
-    // we use only the largest range:
-    sigs[k].setGainIndex( 0 );
-    sigs[k].setMinVoltage( -BipolarRange[0] );
-    sigs[k].setMaxVoltage( BipolarRange[0] );
-    if ( ! sigs[k].noLevel() )
-      sigs[k].multiplyScale( BipolarRange[0] );
-
-    // XXX Check for signal overflow/underflow!
-
-    // allocate gain factor:
-    char *gaindata = sigs[k].gainData();
-    if ( gaindata != NULL )
-      delete [] gaindata;
-    gaindata = new char[sizeof(Calibration)];
-    sigs[k].setGainData( gaindata );
-    Calibration *gainp = (Calibration *)gaindata;
-
-    // get calibration:
-    string response = DAQFlexDevice->sendMessage( "?AO{" + Str( sigs[k].channel() ) + "}:SLOPE" );
-    gainp->Slope = Str( response.erase( 0, 12 ) ).number();
-    response = DAQFlexDevice->sendMessage( "?AO{" + Str( sigs[k].channel() ) + "}:OFFSET" );
-    gainp->Offset = Str( response.erase( 0, 13 ) ).number();
     /*
-    gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
-    gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
-    gainp->Offset -= max;
+    // clear out board buffer.
+    // this is not nice, since it actually writes data!
+    DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=0" );
+    DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=0" );
+    DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( maxRate(), "%g" ) );
+    DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
+    DAQFlexDevice->sendMessage( "AOSCAN:START" );
+    double dummy = 1.0;
+    for ( int k=0; k<100000; k++ )
+    dummy *= (double)k/(double)(k+1);
+    DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
     */
 
-  }
+    // copy and sort signal pointers:
+    OutList ol;
+    ol.add( sigs );
+    ol.sortByChannel();
 
-  if ( ! ol.success() ) {
-    unlock();
-    return -1;
-  }
+    // setup channels:
+    DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=" + Str( sigs[0].channel() ) );
+    DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=" + Str( sigs.back().channel() ) );
+    for( int k = 0; k < sigs.size(); k++ ) {
 
-  int delayinx = ol[0].indices( ol[0].delay() );
-  for ( int k=0; k<ol.size(); k++ )
-    ol[k].deviceReset( delayinx );
+      // we use only the largest range:
+      sigs[k].setGainIndex( 0 );
+      sigs[k].setMinVoltage( -BipolarRange[0] );
+      sigs[k].setMaxVoltage( BipolarRange[0] );
+      if ( ! sigs[k].noLevel() )
+	sigs[k].multiplyScale( BipolarRange[0] );
 
-  // setup acquisition:
-  DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" ) );
-  if ( sigs[0].continuous() ) {
-    Samples = 0;
-    DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
-  }
-  else {
-    Samples = sigs.deviceBufferSize();
-    DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=" + Str( Samples ) );
-  }
+      // XXX Check for signal overflow/underflow!
 
-  // set buffer size:
-  BufferSize = sigs.size()*DAQFlexDevice->aoFIFOSize()*2;
-  int nbuffer = sigs.deviceBufferSize()*2;
-  int outps = DAQFlexDevice->outPacketSize();
-  if ( BufferSize > nbuffer ) {
-    BufferSize = nbuffer;
-    if ( BufferSize < outps )
-      BufferSize = outps;
-  }
-  else
-    BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
-  if ( BufferSize > 0xfffff )
-    BufferSize = 0xfffff;
-  if ( BufferSize <= 0 )
-    sigs.addError( DaqError::InvalidBufferTime );
+      // allocate gain factor:
+      char *gaindata = sigs[k].gainData();
+      if ( gaindata != NULL )
+	delete [] gaindata;
+      gaindata = new char[sizeof(Calibration)];
+      sigs[k].setGainData( gaindata );
+      Calibration *gainp = (Calibration *)gaindata;
 
-  setSettings( ol, BufferSize );
+      // get calibration:
+      string response = DAQFlexDevice->sendMessage( "?AO{" + Str( sigs[k].channel() ) + "}:SLOPE" );
+      gainp->Slope = Str( response.erase( 0, 12 ) ).number();
+      response = DAQFlexDevice->sendMessage( "?AO{" + Str( sigs[k].channel() ) + "}:OFFSET" );
+      gainp->Offset = Str( response.erase( 0, 13 ) ).number();
+      /*
+	gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
+	gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
+	gainp->Offset -= max;
+      */
 
-  if ( ! ol.success() ) {
-    unlock();
-    return -1;
-  }
+    }
 
-  Sigs = ol;
-  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+    if ( ! ol.success() )
+      return -1;
 
-  unlock();
+    int delayinx = ol[0].indices( ol[0].delay() );
+    for ( int k=0; k<ol.size(); k++ )
+      ol[k].deviceReset( delayinx );
+
+    // setup acquisition:
+    DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" ) );
+    if ( sigs[0].continuous() ) {
+      Samples = 0;
+      DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
+    }
+    else {
+      Samples = sigs.deviceBufferSize();
+      DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=" + Str( Samples ) );
+    }
+
+    // set buffer size:
+    BufferSize = sigs.size()*DAQFlexDevice->aoFIFOSize()*2;
+    int nbuffer = sigs.deviceBufferSize()*2;
+    int outps = DAQFlexDevice->outPacketSize();
+    if ( BufferSize > nbuffer ) {
+      BufferSize = nbuffer;
+      if ( BufferSize < outps )
+	BufferSize = outps;
+    }
+    else
+      BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
+    if ( BufferSize > 0xfffff )
+      BufferSize = 0xfffff;
+    if ( BufferSize <= 0 )
+      sigs.addError( DaqError::InvalidBufferTime );
+
+    setSettings( ol, BufferSize );
+
+    if ( ! ol.success() )
+      return -1;
+
+    Sigs = ol;
+    Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+
+  }  // unlock MutexLocker
+
   int r = writeData();
   if ( r < 0 )
     return -1;
 
   lock();
-  IsPrepared = ol.success();
+  IsPrepared = Sigs.success();
   NoMoreData = ( r == 0 );
   unlock();
 
@@ -437,35 +434,31 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
 int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
 {
-  lock();
+  QMutexLocker locker( mutex() );
 
   if ( !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
-    unlock();
     return -1;
   }
   DAQFlexDevice->sendMessage( "AOSCAN:START" );
   int r = NoMoreData ? 0 : 1;
   startThread( sp );
-  unlock();
   return r;
 }
 
 
 int DAQFlexAnalogOutput::writeData( void )
 {
-  lock();
-  if ( Sigs.empty() ) {
-    unlock();
+  QMutexLocker locker( mutex() );
+
+  if ( Sigs.empty() )
     return -1;
-  }
 
   // device stopped?
   if ( IsPrepared ) {
     string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
     if ( response.find( "UNDERRUN" ) != string::npos ) {
       Sigs.addError( DaqError::OverflowUnderrun );
-      unlock();
       return -1;
     }
   }
@@ -476,10 +469,8 @@ int DAQFlexAnalogOutput::writeData( void )
     NBuffer += bytesConverted;
   }
 
-  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 ) {
-    unlock();
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
     return 0;
-  }
 
   // transfer buffer to device:
   int outps = DAQFlexDevice->outPacketSize();
@@ -512,7 +503,6 @@ int DAQFlexAnalogOutput::writeData( void )
       Buffer = 0;
       BufferSize = 0;
       NBuffer = 0;
-      unlock();
       return 0;
     }
   }
@@ -522,28 +512,22 @@ int DAQFlexAnalogOutput::writeData( void )
 
     case LIBUSB_ERROR_PIPE:
       Sigs.addError( DaqError::OverflowUnderrun );
-      unlock();
       return -1;
 
     case LIBUSB_ERROR_BUSY:
       Sigs.addError( DaqError::Busy );
-      unlock();
       return -1;
 
     case LIBUSB_ERROR_TIMEOUT:
       cerr << "timeout in writing data\n";
-      unlock();
       return -1;
 
     default:
       Sigs.addErrorStr( "Lib USB Error" );
       Sigs.addError( DaqError::Unknown );
-      unlock();
       return -1;
     }
   }
-
-  unlock();
 
   return elemWritten;
 }

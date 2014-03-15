@@ -87,8 +87,8 @@ of the Device class.
 There are four flags for indicating errors with handling the device:
 NotOpen, InvalidDevice, ReadError, and WriteError.
 
-Each device has its own mutex for locking critical sections. Use
-lock() and unlock().
+Each device has its own mutex() for locking critical sections. Use
+lock() and unlock() for locking the device.
 */
 
 
@@ -268,10 +268,12 @@ protected:
         \sa info(), settings() */
   void addInfo( void );
 
-    /*! Lock the mutex of this device. \sa unlock() */
+    /*! Lock the mutex of this device. \sa unlock(), mutex() */
   void lock( void ) const;
-    /*! Unlock the mutex of this device. \sa lock() */
+    /*! Unlock the mutex of this device. \sa lock(), mutex() */
   void unlock( void ) const;
+    /*! \return A pointer to the mutex of this device. \sa lock(), unlock() */
+  QMutex *mutex( void ) const;
 
   mutable Options Info;
   mutable Options Settings;

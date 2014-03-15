@@ -64,16 +64,13 @@ public:
     /*! Start analog input with the settings given by \a data. 
 	Returns 0 on success, negative numbers otherwise.
         Possible errors are indicated by the error state of \a data. */
-  virtual int read( InList &data, QReadWriteLock *datamutex=0,
-		    QWaitCondition *datawait=0 );
+  virtual int read( InList &data );
     /*! Stop simulation. */
   virtual int stopRead( void );
 
     /*! Output of a signal \a signal. */
-  virtual int write( OutData &signal, bool setsignaltime=true,
-		     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
-  virtual int write( OutList &signal, bool setsignaltime=true,
-		     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int write( OutData &signal, bool setsignaltime=true );
+  virtual int write( OutList &signal, bool setsignaltime=true );
     /*! Wait for analog output to be finished. */
   virtual int waitForWrite( void );
     /*! Stop current stimulus. */
@@ -87,19 +84,11 @@ public:
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards. */
-  virtual int directWrite( OutData &signal, bool setsignaltime=true,
-			   QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int directWrite( OutData &signal, bool setsignaltime=true );
     /*! Direct output of single data values as specified by \a signal
         to different channels of the DAQ boards. */
-  virtual int directWrite( OutList &signal, bool setsignaltime=true,
-			   QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int directWrite( OutList &signal, bool setsignaltime=true );
 
-    /*! Write a zero to all analog output channels. 
-        \param[in] channels resets all physical output channels. 
-        \param[in] params resets parameter channels.
-        \return an error message on failure, an empty string on success. */
-  virtual string writeReset( bool channels=true, bool params=true,
-			     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 
         \sa testWrite(), write(), writeData(), stopWrite() */
@@ -117,8 +106,7 @@ public:
 	If \a directao, then the analog output signals are scheduled for direct outut.
         If \a updategains, the input gains are updated as well. */
   virtual int restartRead( vector< AOData* > &aos, bool directao,
-			   bool updategains,
-			   QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+			   bool updategains );
 
 
 private:

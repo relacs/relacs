@@ -615,25 +615,6 @@ void RePro::keepFocus( void )
 }
 
 
-void RePro::readLockData( void )
-{
-  LockDataTime.start();
-  RELACSPlugin::readLockData();
-  double lockedtime = 0.001*LockDataTime.restart();
-  if ( traces().size() > 0 && lockedtime > trace( 0 ).updateTime() )
-    printlog( "WARNING! RePro waited " + Str( 1000.0*lockedtime, 0, 0, 'f' ) + "ms on data lock." );
-}
-
-
-void RePro::unlockData( void )
-{
-  RELACSPlugin::unlockData();
-  double lockedtime = 0.001*LockDataTime.elapsed();
-  if ( traces().size() > 0 && lockedtime > trace( 0 ).updateTime() )
-    printlog( "WARNING! RePro locked data for " + Str( 1000.0*lockedtime, 0, 0, 'f' ) + "ms." );
-}
-
-
 void RePro::lockAll( void )
 {
   //  LockAllTime.start();

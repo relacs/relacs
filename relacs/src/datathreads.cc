@@ -46,7 +46,7 @@ void ReadThread::run( void )
     if ( r < 0 ) {
       RW->printlog( "! error in reading acquired data: " + RW->IL.errorText() );
       QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog input: " + RW->IL.errorText() ) );
-      RW->AQ->restartRead( &RW->DataMutex, &RW->ReadDataWait );
+      RW->AQ->restartRead();
       // XXX check error again and switch to idle mode!
     }
     else

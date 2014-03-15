@@ -529,16 +529,6 @@ public:
 
 protected:
 
-    /*! Lock the input data and events for reading
-        and measures the time, the RePro locks the data.
-	\sa unlockData(), dataMutex() */
-  virtual void readLockData( void );
-    /*! Unlock the input data and events.
-        If the %RePro has locked the data for too long,
-	and error messages is printed to the console.
-	\sa readLockData(), dataMutex() */
-  virtual void unlockData( void );
-
     /*! Lock the %RePro (via lock()), the input data and events
         (via readLockData()), the meta data (via lockMetaData()),
         and the stimulus data (via lockStimulusData())

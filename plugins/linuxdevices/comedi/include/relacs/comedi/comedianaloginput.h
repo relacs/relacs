@@ -115,7 +115,7 @@ public:
 	InData structure are filled and a negative value is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take(). */
-  virtual int startRead( QSemaphore *sp=0, QReadWriteLock *datamutex=0,
+  virtual int startRead( QSemaphore *sp=0, QMutex *datamutex=0,
 			 QWaitCondition *datawait=0, QSemaphore *aosp=0 );
     /*! Read data from a running data acquisition.
         Returns the total number of read data values.

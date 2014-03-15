@@ -817,10 +817,17 @@ string FilterDetectors::init( void )
 }
 
 
-void FilterDetectors::adjust( int flag )
+void FilterDetectors::setAdjustFlag( int flag )
 {
-  NeedAdjust = true;
   AdjustFlag = flag;
+}
+
+
+void FilterDetectors::scheduleAdjust( void )
+{
+  AdjustMutex.lock();
+  NeedAdjust = true;
+  AdjustMutex.unlock();
 }
 
 
@@ -890,7 +897,9 @@ void FilterDetectors::adjust( void )
     d->FilterDetector->unlock();
   }
 
+  AdjustMutex.lock();
   NeedAdjust = false;
+  AdjustMutex.unlock();
 }
 
 
@@ -999,7 +1008,10 @@ void FilterDetectors::autoConfigure( Filter *f, double tbegin, double tend )
 string FilterDetectors::filter( void )
 {
   // adjust necessary?
-  if ( NeedAdjust )
+  AdjustMutex.lock();
+  bool adj = NeedAdjust;
+  AdjustMutex.unlock();
+  if ( adj )
     adjust();
 
   string warning = "";
@@ -1024,6 +1036,8 @@ string FilterDetectors::filter( void )
 	  if ( d->FilterDetector->detect( d->InEvents[0], d->OutEvents[0], 
 					  d->OtherEvents, *StimulusEvents ) == INT_MIN )
 	    warning += "detector <b>" + ident + "</b>: detect( EventData, EventData, EventList, EventData ) function must be implemented!<br>\n";
+	  else
+	    d->OutEvents.setRangeBack( d->InEvents[0].rangeBack() );
 	}
 	// multiple event traces -> multiple event traces
 	else {
@@ -1035,6 +1049,8 @@ string FilterDetectors::filter( void )
 	  if ( d->FilterDetector->detect( d->InEvents, d->OutEvents, 
 					  d->OtherEvents, *StimulusEvents ) == INT_MIN )
 	    warning += "detector <b>" + ident + "</b>: detect( EventList, EventList, EventList, EventData ) function must be implemented!<br>\n";
+	  else
+	    d->OutEvents.setRangeBack( d->InEvents[0].rangeBack() );
 	}
       }
       else {
@@ -1048,6 +1064,8 @@ string FilterDetectors::filter( void )
 	  if ( d->FilterDetector->detect( d->InTraces[0], d->OutEvents[0], 
 					  d->OtherEvents, *StimulusEvents ) == INT_MIN )
 	    warning += "detector <b>" + ident + "</b>: detect( InData, EventData, EventList, EventData ) function must be implemented!<br>\n";
+	  else
+	    d->OutEvents.setRangeBack( d->InTraces[0].currentTime() );
 	}
 	// multiple analog -> multiple event traces
 	else {
@@ -1059,6 +1077,8 @@ string FilterDetectors::filter( void )
 	  if ( d->FilterDetector->detect( d->InTraces, d->OutEvents, 
 					  d->OtherEvents, *StimulusEvents ) == INT_MIN )
 	    warning += "detector <b>" + ident + "</b>: detect( InList, EventList, EventList, EventData ) function must be implemented!<br>\n";
+	  else
+	    d->OutEvents.setRangeBack( d->InTraces.currentTime() );
 	}
       }
     }

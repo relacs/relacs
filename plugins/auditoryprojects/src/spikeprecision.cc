@@ -675,12 +675,8 @@ void SpikePrecision::save( const vector < EnvelopeFrequencyData > &results )
   if ( results.empty() )
     return;
 
-  unlockData();
-
   saveSpikes( results );
   saveRates( results );
-
-  readLockData();
 }
 
 

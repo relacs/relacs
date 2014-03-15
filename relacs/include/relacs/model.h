@@ -26,7 +26,6 @@
 #include <string>
 #include <QMenu>
 #include <QMutex>
-#include <QReadWriteLock>
 #include <QWaitCondition>
 #include <QThread>
 #include <QDateTime>
@@ -45,7 +44,6 @@ class ModelThread;
 \class Model
 \author Jan Benda
 \brief Base class of all models used by Simulate.
-\bug Check locking of signals AND traces!
 */
 
 class Model : public RELACSPlugin 
@@ -166,7 +164,7 @@ private:
 
     /*! Clear the content of the data buffers and start the simulation.
         \sa clearData(), main(), restart() */
-  void start( InList &data, QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  void start( InList &data, QMutex *datamutex, QWaitCondition *datawait );
     /*! Restart a previously stopped simulation.
         \sa stop(), notify(), start() */
   void restart( void );
@@ -201,7 +199,7 @@ private:
   double AverageRatio;
 
   InList Data;
-  QReadWriteLock *DataMutex;
+  QMutex *DataMutex;
   QWaitCondition *DataWait;
 
   struct OutTrace {

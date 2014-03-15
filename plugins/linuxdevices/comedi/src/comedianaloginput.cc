@@ -26,6 +26,7 @@
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
+#include <QMutexLocker>
 #include <relacs/str.h>
 #include <relacs/comedi/comedianalogoutput.h>
 #include <relacs/comedi/comedianaloginput.h>
@@ -685,12 +686,11 @@ int ComediAnalogInput::prepareRead( InList &traces )
 
   reset();
 
-  lock();
+  QMutexLocker locker( mutex() );
+
   int error = setupCommand( traces, Cmd );
-  if ( error ) {
-    unlock();
+  if ( error )
     return error;
-  }
 
   // init internal buffer:
   if ( Buffer != 0 )
@@ -721,21 +721,19 @@ int ComediAnalogInput::prepareRead( InList &traces )
 
   IsPrepared = traces.success();
 
-  unlock();
-
   return traces.success() ? 0 : -1;
 }
 
 
-int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
+int ComediAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
 				  QWaitCondition *datawait, QSemaphore *aosp )
 {
   //  cerr << " ComediAnalogInput::startRead(): begin" << '\n';
 
-  lock();
+  QMutexLocker locker( mutex() );
+
   if ( !IsPrepared || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
-    unlock();
     return -1;
   }
 
@@ -759,7 +757,6 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     cerr << "AI command failed: " << comedi_strerror( cerror ) << endl;
     Traces->addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
 			 + comedi_strerror( cerror ) );
-    unlock();
     return -1;
   }
   else  
@@ -790,8 +787,6 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
       finished = ComediAO->noMoreData();
     }
   }
-
-  unlock();
 
   return success ? ( finished ? 0 : 1 ) : -1;
 }
@@ -849,11 +844,11 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 int ComediAnalogInput::readData( void )
 {
   //  cerr << "Comedi::readData() start\n";
-  lock();
-  if ( Traces == 0 || Buffer == 0 || ! IsRunning ) {
-    unlock();
+
+  QMutexLocker locker( mutex() );
+
+  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
     return -1;
-  }
 
   bool failed = false;
   int ern = 0;
@@ -894,7 +889,6 @@ int ComediAnalogInput::readData( void )
   if ( failed ) {
     if ( errno == EPIPE )
       Traces->addError( DaqError::OverflowUnderrun );
-    unlock();
     return -2;   
   }
 
@@ -904,13 +898,10 @@ int ComediAnalogInput::readData( void )
       // The following error messages do not work after a comedi_cancel!
       //      Traces->addError( DaqError::OverflowUnderrun );
       cerr << " ComediAnalogInput::readData(): no data and not running\n";
-      unlock();
       return -2;
     }
-    unlock();
     return -1;
   }
-  unlock();
 
   //  cerr << "Comedi::readData() end " << BufferN << "\n";
 
@@ -920,11 +911,10 @@ int ComediAnalogInput::readData( void )
 
 int ComediAnalogInput::convertData( void )
 {
-  lock();
-  if ( Traces == 0 || Buffer == 0 ) {
-    unlock();
+  QMutexLocker locker( mutex() );
+
+  if ( Traces == 0 || Buffer == 0 )
     return -1;
-  }
 
   if ( LongSampleType )
     convert<lsampl_t>( *Traces, Buffer, BufferN );
@@ -936,8 +926,6 @@ int ComediAnalogInput::convertData( void )
   int n = BufferN;
   BufferN = 0;
 
-  unlock();
-
   return n;
 }
 
@@ -947,16 +935,13 @@ int ComediAnalogInput::stop( void )
   if ( !isOpen() )
     return NotOpen;
 
-  lock();
-  if ( comedi_cancel( DeviceP, SubDevice ) < 0 ) {
-    unlock();
-    return ReadError;
+  {
+    QMutexLocker locker( mutex() );
+    if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
+      return ReadError;
+    if ( comedi_poll( DeviceP, SubDevice ) < 0 )
+      return ReadError;
   }
-  if ( comedi_poll( DeviceP, SubDevice ) < 0 ) {
-    unlock();
-    return ReadError;
-  }
-  unlock();
 
   stopRead();
 
@@ -971,7 +956,7 @@ int ComediAnalogInput::reset( void )
 { 
   int retVal = stop();
 
-  lock();
+  QMutexLocker locker( mutex() );
 
   // free internal buffer:
   if ( Buffer != 0 )
@@ -990,8 +975,6 @@ int ComediAnalogInput::reset( void )
   IsPrepared = false;
   Traces = 0;
   TraceIndex = 0;
-
-  unlock();
 
   return retVal;
 }

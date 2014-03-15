@@ -23,6 +23,7 @@
 #include <sstream>
 #include <cstdio>
 #include <cmath>
+#include <QMutexLocker>
 #include <relacs/str.h>
 #include <relacs/daqflex/daqflexanaloginput.h>
 using namespace std;
@@ -237,7 +238,8 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 
   reset();
 
-  lock();
+  QMutexLocker locker( mutex() );
+
   // init internal buffer:
   if ( Buffer != 0 )
     delete [] Buffer;
@@ -327,10 +329,8 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   }
   //    DAQFlexDevice->sendMessage( "?AIQUEUE:COUNT" );
 
-  if ( traces.failed() ) {
-    unlock();
+  if ( traces.failed() )
     return -1;
-  }
 
   if ( traces.success() ) {
     setSettings( traces, BufferSize, ReadBufferSize );
@@ -340,25 +340,21 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 
   IsPrepared = traces.success();
 
-  unlock();
-
   return traces.success() ? 0 : -1;
 }
 
 
-int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
+int DAQFlexAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
 				   QWaitCondition *datawait, QSemaphore *aosp )
 {
-  lock();
+  QMutexLocker locker( mutex() );
   if ( !IsPrepared || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
-    unlock();
     return -1;
   }
   DAQFlexDevice->sendMessage( "AISCAN:START" );
   IsRunning = true;
   startThread( sp, datamutex, datawait );
-  unlock();
   return 0;
 }
 
@@ -366,11 +362,10 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 int DAQFlexAnalogInput::readData( void )
 {
   //  cerr << "DAQFlex::readData() start\n";
-  lock();
-  if ( Traces == 0 || Buffer == 0 || ! IsRunning ) {
-    unlock();
+  QMutexLocker locker( mutex() );
+
+  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
     return -2;
-  }
 
   bool failed = false;
   int readn = 0;
@@ -409,35 +404,29 @@ int DAQFlexAnalogInput::readData( void )
   readn /= 2;
   CurrentSamples += readn;
 
-  if ( failed ) {
-    unlock();
+  if ( failed )
     return -2;
-  }
 
   // no more data to be read:
   if ( readn <= 0 && !IsRunning ) {
     if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       Traces->addErrorStr( deviceFile() + " - buffer-overflow " );
       Traces->addError( DaqError::OverflowUnderrun );
-      unlock();
       return -2;
     }
-    unlock();
     return -1;
   }
 
-  unlock();
   return readn;
 }
 
 
 int DAQFlexAnalogInput::convertData( void )
 {
-  lock();
-  if ( Traces == 0 || Buffer == 0 ) {
-    unlock();
+  QMutexLocker locker( mutex() );
+
+  if ( Traces == 0 || Buffer == 0 )
     return -1;
-  }
 
   // conversion factors and scale factors:
   double scale[Traces->size()];
@@ -486,8 +475,6 @@ int DAQFlexAnalogInput::convertData( void )
   int n = BufferN;
   BufferN = 0;
 
-  unlock();
-
   return n;
 }
 
@@ -496,6 +483,7 @@ int DAQFlexAnalogInput::stop( void )
 {
   if ( !isOpen() )
     return NotOpen;
+
   lock();
   DAQFlexDevice->sendMessage( "AISCAN:STOP" );
   unlock();
@@ -505,6 +493,7 @@ int DAQFlexAnalogInput::stop( void )
   lock();
   IsRunning = false;
   unlock();
+
   return 0;
 }
 
@@ -512,7 +501,9 @@ int DAQFlexAnalogInput::stop( void )
 int DAQFlexAnalogInput::reset( void )
 {
   int retVal = stop();
-  lock();
+
+  QMutexLocker locker( mutex() );
+
   // clear overrun condition:
   DAQFlexDevice->sendControlTransfer( "AISCAN:RESET" , false );
   libusb_clear_halt( DAQFlexDevice->deviceHandle(),
@@ -544,8 +535,6 @@ int DAQFlexAnalogInput::reset( void )
   Traces = 0;
   TraceIndex = 0;
   
-  unlock();
-
   return retVal;
 }
 

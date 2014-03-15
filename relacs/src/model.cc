@@ -100,9 +100,8 @@ void Model::push( int trace, float val )
 	SignalsWait.wakeAll();
       }
       long st = (long)::rint( 1000.0 * dt );
-      if ( st > 0 ) {
+      if ( st > 0 )
 	InputWait.wait( DataMutex, st );
-      }
     }
   }
   Data[trace].push( val );
@@ -178,7 +177,7 @@ bool Model::isRunning( void ) const
 }
 
 
-void Model::start( InList &data, QReadWriteLock *datamutex, QWaitCondition *datawait )
+void Model::start( InList &data, QMutex *datamutex, QWaitCondition *datawait )
 {
   Data.clear();
   for ( int k=0; k<data.size(); k++ )
@@ -198,11 +197,9 @@ void Model::start( InList &data, QReadWriteLock *datamutex, QWaitCondition *data
 
 void Model::restart( void )
 {
-  if ( DataMutex != 0 )
-    DataMutex->lockForWrite();
+  DataMutex->lock();
   Data.setRestart();
-  if ( DataMutex != 0 )
-    DataMutex->unlock();
+  DataMutex->unlock();
 
   InterruptModel = false;
   Thread->start( QThread::HighPriority );
@@ -212,11 +209,9 @@ void Model::restart( void )
 void Model::run( void )
 {
   setSettings();
-  if ( DataMutex != 0 )
-    DataMutex->lockForWrite();
+  DataMutex->lock();
   main();
-  if ( DataMutex != 0 )
-    DataMutex->unlock();
+  DataMutex->unlock();
 }
 
 

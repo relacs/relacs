@@ -138,10 +138,10 @@ public:
 void AmplifierControl::startResistance( void )
 {
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && ! RMeasure ) {
-    readLockData();
+    lock();
     DGain = trace( SpikeTrace[0] ).gainIndex();
     adjustGain( trace( SpikeTrace[0] ), MaxResistance / ResistanceScale );
-    unlockData();
+    unlock();
     activateGains();
     Ampl->resistance();
     RMeasure = true;
@@ -152,10 +152,10 @@ void AmplifierControl::startResistance( void )
 void AmplifierControl::measureResistance( void )
 {
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
-    readLockData();
+    lock();
     double r = trace( SpikeTrace[0] ).stdev( currentTime() - 0.05,
 					     currentTime() );
-    unlockData();
+    unlock();
     r *= ResistanceScale;
     QCoreApplication::postEvent( this, new AmplifierEvent( Str( r, "%.0f" ) ) );
     lockMetaData();
@@ -169,9 +169,9 @@ void AmplifierControl::stopResistance( void )
 {
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
     Ampl->manual();
-    readLockData();
+    lock();
     setGain( trace( SpikeTrace[0] ), DGain );
-    unlockData();
+    unlock();
     activateGains();
     RMeasure = false;
   }

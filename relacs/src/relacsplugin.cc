@@ -286,26 +286,6 @@ void RELACSPlugin::unlockAll( void )
 }
 
 
-void RELACSPlugin::readLockData( void )
-{
-  if ( RW != 0 )
-    RW->readLockData();
-}
-
-
-void RELACSPlugin::unlockData( void )
-{
-  if ( RW != 0 )
-    RW->unlockData(); 
-}
-
-
-QReadWriteLock &RELACSPlugin::dataMutex( void )
-{
-  return RW->dataMutex(); 
-}
-
-
 void RELACSPlugin::assignTracesEvents( const InList &il, const EventList &el )
 {
   IL.assign( &il );
@@ -351,17 +331,23 @@ void RELACSPlugin::updateData( double mintracetime )
     mutex.unlock();
   }
   // make them available:
-  readLockData();
-  updateTracesEvents();
-  unlockData();
+  RW->RawDataMutex.lock();
+  updateRawTracesEvents();
+  RW->RawDataMutex.unlock();
+  RW->DerivedDataMutex.lock();
+  updateDerivedTracesEvents();
+  RW->DerivedDataMutex.unlock();
 }
 
 
 void RELACSPlugin::getData( void )
 {
-  readLockData();
-  updateTracesEvents();
-  unlockData();
+  RW->RawDataMutex.lock();
+  updateRawTracesEvents();
+  RW->RawDataMutex.unlock();
+  RW->DerivedDataMutex.lock();
+  updateDerivedTracesEvents();
+  RW->DerivedDataMutex.unlock();
 }
 
 

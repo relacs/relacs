@@ -210,6 +210,12 @@ void Device::unlock( void ) const
 }
 
 
+QMutex *Device::mutex( void ) const
+{
+  return &Mutex;
+}
+
+
 ostream &operator<<( ostream &str, const Device &d )
 {
   str << d.info();

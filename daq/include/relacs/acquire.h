@@ -26,7 +26,9 @@
 #include <ctime>
 #include <vector>
 #include <deque>
+#include <QMutex>
 #include <QSemaphore>
+#include <QWaitCondition>
 #include <relacs/tracespec.h>
 #include <relacs/inlist.h>
 #include <relacs/outlist.h>
@@ -143,16 +145,17 @@ public:
 
     /*! Add the analog input device \a ai to
 	the list of analog input devices.
-	The default type of the channels of this device is 
-	set to \a defaulttype.
+	\param[in] ai the analog input device to be added
+	\param[in] datamutex the mutex to be used to lock the data traces
+	\param[in] datawait a waitcondition to be woken up whenever new data are available
         \return
 	- 0 on success.
 	- -1: \a ai == 0
 	- -2: \a ai not opened
-	- -3: \a defaulttype not valid
 	\sa inputsSize(), inputDevice(), inputTraces(), clearInputs(),
-	closeInputs(), addOutput(), addAttenute(), addOutTrace() */
-  int addInput( AnalogInput *ai, int defaulttype=0 );
+	closeInputs(), addOutput(), addAttenuate(), addOutTrace() */
+  int addInput( AnalogInput *ai,
+		QMutex *datamutex=0, QWaitCondition *datawait=0 );
     /*! The number of device drivers for analog input
         stored in this Acquire. 
 	\sa addInput(), inputDevice(), inputTraces(), clearInputs(),
@@ -382,8 +385,7 @@ public:
 	Returns 0 on success, negative numbers otherwise.
         Possible errors are indicated by the error state of \a data. 
         \sa testRead(), stopRead() */
-  virtual int read( InList &data, QReadWriteLock *datamutex=0,
-		    QWaitCondition *datawait=0 );
+  virtual int read( InList &data );
     /*! \return an error string describing problems that occured during analog input. */
   string readError( void ) const;
     /*! Stop analog input of all analog input devices.
@@ -391,20 +393,17 @@ public:
         \sa testRead(), read(), readData(), convertData() */
   virtual int stopRead( void );
     /*! Restart data aquisition in case of an error. */
-  virtual int restartRead( QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int restartRead( void );
     /*! Wait for the analog input threads to finish.
         \return 0 on success, i.e. all analog inputs finished successfully
 	or -1 if some input failed. */
   virtual int waitForRead( void );
 
-    /*! The flag that is used to mark traces whose gain was changed. 
-        \sa setAdjustFlag(), setGain(), adjustGain(),
-	gainChanged(), activateGains() */
+    /*! \return the flag that is used to mark traces whose gain was changed. 
+        \sa setAdjustFlag(), setGain(), adjustGain(), gainChanged(), activateGains() */
   int adjustFlag( void ) const;
-    /*! Returns the flag which is used to mark traces
-        whose gain was changed to \a flag. 
-        \sa adjustFlag(), setGain(), adjustGain(),
-	gainChanged(), activateGains() */
+    /*! Set the flag which is used to mark traces whose gain was changed to \a flag. 
+        \sa adjustFlag(), setGain(), adjustGain(), gainChanged(), activateGains() */
   void setAdjustFlag( int flag );
 
     /*! The list of input ranges the DAQ board supports for the input trace \a data. 
@@ -460,7 +459,7 @@ public:
 	automatically.
         \sa setGain(), adjustGain( InData, double ),
 	adjustGain( InData, double, double ), gainChanged() */
-  virtual int activateGains( QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int activateGains( void );
 
     /*! Test of a single output signal \a signal for validity.
         If \a signal is the same as from the last call of write()
@@ -495,8 +494,7 @@ public:
         the reason is specified in the error state of \a signal.
 	\note During the output of the stimulus, \a signal must exist and must not be modified!
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
-  virtual int write( OutData &signal, bool setsignaltime=true,
-		     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int write( OutData &signal, bool setsignaltime=true );
     /*! Output of multiple signals \a signal.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
@@ -511,8 +509,7 @@ public:
         the reason is specified in the error state of \a signal.
 	\note During the output of the stimulus, \a signal must exist and must not be modified!
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
-  virtual int write( OutList &signal, bool setsignaltime=true,
-		     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int write( OutList &signal, bool setsignaltime=true );
 
     /*! Wait for the analog output threads to finish.
         \return 0 on success, i.e. all analog outputs finished successfully
@@ -529,8 +526,7 @@ public:
 	\return 0 on success, a negative number if the output of the signal
 	failed. The reason for the failure is specified in the error state
 	of \a signal. */
-  virtual int directWrite( OutData &signal, bool setsignaltime=true,
-			   QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int directWrite( OutData &signal, bool setsignaltime=true );
     /*! Direct output of single data values as specified by \a signal
         to different channels of the DAQ boards.
 	Only the output traces ( OutData::setTrace() ) or the the name of the
@@ -541,8 +537,7 @@ public:
 	\return 0 on success, a negative number if the output of the signals
 	failed. The reason for the failure is specified in the error state
 	of \a signal. */
-  virtual int directWrite( OutList &signal, bool setsignaltime=true,
-			   QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
+  virtual int directWrite( OutList &signal, bool setsignaltime=true );
 
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 
@@ -557,12 +552,6 @@ public:
         \sa testWrite(), write(), writeData(), stopWrite() */
   virtual int writeZero( const string &trace );
 
-    /*! Write a zero to all analog output channels. 
-        \param[in] channels resets all physical output channels. 
-        \param[in] params resets parameter channels.
-        \return an error message on failure, an empty string on success. */
-  virtual string writeReset( bool channels, bool params,
-			     QReadWriteLock *datamutex=0, QWaitCondition *datawait=0 );
     /*! Write a zero to all physical analog output channels. 
         \return \c -1 on failure, \c 0 on success. */
   virtual int writeReset( void );
@@ -659,13 +648,10 @@ protected:
 
   struct AIData {
       /*! Construct an AIData. */
-    AIData( AnalogInput *ai, int type=0 )
-      : AI( ai ), DefaultType( type ),
-	AIDevice( -1 ), AIRate( false ) {};
+    AIData( AnalogInput *ai )
+      : AI( ai ), AIDevice( -1 ), AIRate( false ) {};
       /*! Pointer to the interface to the hardware driver. */
     AnalogInput *AI;
-      /*! Default analog input type. */
-    int DefaultType;
       /*! The traces acquired from this device. */
     InList Traces;
       /*! New gain indices corresponding to \a Traces. */
@@ -680,6 +666,10 @@ protected:
   vector < AIData > AI;
     /*! Semaphore guarding analog inputs. */
   QSemaphore AISemaphore;
+    /*! Locks analog input data traces. */
+  QMutex *AIDataMutex;
+    /*! Waits on new data in input traces. */
+  QWaitCondition *AIWait;
 
     /*! The flag that is used to mark adjusted traces in InData. */
   int AdjustFlag;
@@ -729,8 +719,7 @@ protected:
 	\return 1 on success and further calls to writeData() are needed. 
 	\return -1 on failure. */
   virtual int restartRead( vector< AOData* > &aod, bool directao,
-			   bool updategains, QReadWriteLock *datamutex=0,
-			   QWaitCondition *datawait=0 );
+			   bool updategains );
 
     /*! The currently used synchronization method. */
   SyncModes SyncMode;

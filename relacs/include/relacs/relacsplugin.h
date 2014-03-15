@@ -314,14 +314,6 @@ protected:
         \sa customEvent() */
   void postCustomEvent( int type=0 );
 
-    /*! Lock the input data and events for reading. \sa unlockData(), dataMutex() */
-  virtual void readLockData( void );
-    /*! Unlock the input data and events. \sa readLockData(), dataMutex() */
-  virtual void unlockData( void );
-    /*! Returns the mutex used for locking the input data and events.
-        \sa readLockData(), unlockData() */
-  QReadWriteLock &dataMutex( void );
-
 
  public:
 

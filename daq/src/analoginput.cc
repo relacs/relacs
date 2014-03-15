@@ -301,7 +301,7 @@ int AnalogInput::testReadData( InList &traces )
 }
 
 
-void AnalogInput::startThread( QSemaphore *sp, QReadWriteLock *datamutex,
+void AnalogInput::startThread( QSemaphore *sp, QMutex *datamutex,
 			       QWaitCondition *datawait, bool error )
 {
   if ( sp != 0 ) {
@@ -341,7 +341,7 @@ void AnalogInput::run( void )
     // transfer data to the buffer:
     if ( r > 0 ) {
       if ( DataMutex != 0 )
-	DataMutex->lockForWrite();
+	DataMutex->lock();
       convertData();
       if ( DataMutex != 0 )
 	DataMutex->unlock();
