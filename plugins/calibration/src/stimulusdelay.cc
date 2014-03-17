@@ -165,7 +165,8 @@ int StimulusDelay::analyze( const InData &data, double duration,
   P.setTitle( "dt=" + Str( 1000.0*dt, 0, 3, 'f' ) + "ms, mean(dt)="
 	      + Str( 1000.0*meandeltat, 0, 3, 'f' ) + "ms, n="
 	      + Str( count+1 ) );
-  P.setYRange( -0.1, 1.1 );
+  double dy = 0.1*(max1-max0);
+  P.setYRange( max0-dy, max1+dy );
   P.plotVLine( 0.0, Plot::White, 2 );
   if ( d.size() < 30 )
     P.plot( d, 1000.0, Plot::Green, 2, Plot::Solid, Plot::Circle, 10, Plot::Green, Plot::Green );
