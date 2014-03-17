@@ -427,10 +427,12 @@ int RePro::write( OutData &signal, bool setsignaltime )
   unlockStimulusData();
   unlockMetaData();
 
+  double st = signalTime();
+
   int r = RW->write( signal, setsignaltime, true );
 
   // force data updates:
-  updateData( 0.0 );
+  updateData( signal.length(), st );
 
   lockMetaData();
   lockStimulusData();
@@ -447,10 +449,12 @@ int RePro::write( OutList &signal, bool setsignaltime )
   unlockStimulusData();
   unlockMetaData();
 
+  double st = signalTime();
+
   int r = RW->write( signal, setsignaltime, true );
 
   // force data updates:
-  updateData( 0.0 );
+  updateData( signal.maxLength(), st );
 
   lockMetaData();
   lockStimulusData();

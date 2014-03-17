@@ -80,7 +80,6 @@ OutData::OutData( const OutData  &od )
   TraceName = od.TraceName;
   Ident = od.Ident;
   Description = od.Description;
-  Reglitch = od.Reglitch;
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
   GainIndex = od.GainIndex;
@@ -121,7 +120,6 @@ void OutData::construct( void )
   TraceName = "";
   Ident = "";
   Description.clear();
-  Reglitch = false;
   RequestMinValue = AutoRange;
   RequestMaxValue = AutoRange;
   GainIndex = 0;
@@ -203,7 +201,6 @@ const OutData &OutData::assign( const OutData &od )
   TraceName = od.TraceName;
   Ident = od.Ident;
   Description = od.Description;
-  Reglitch = od.Reglitch;
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
   GainIndex = od.GainIndex;
@@ -239,7 +236,6 @@ const OutData &OutData::copy( OutData &od ) const
   od.TraceName = TraceName;
   od.Ident = Ident;
   od.Description = Description;
-  od.Reglitch = Reglitch;
   od.RequestMinValue = RequestMinValue;
   od.RequestMaxValue = RequestMaxValue;
   od.GainIndex = GainIndex;
@@ -561,18 +557,6 @@ const Options &OutData::description( void ) const
 Options &OutData::description( void )
 {
   return Description;
-}
-
-
-bool OutData::reglitch( void ) const
-{
-  return Reglitch;
-}
-
-
-void OutData::setReglitch( bool reglitch )
-{
-  Reglitch = reglitch;
 }
 
 
@@ -1325,7 +1309,6 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "Trace: " << od.Trace << '\n';
   str << "TraceName: " << od.TraceName << '\n';
   str << "Ident: " << od.Ident << '\n';
-  str << "Reglitch: " << od.Reglitch << '\n';
   str << "RequestMinValue: " << od.RequestMinValue << '\n';
   str << "RequestMaxValue: " << od.RequestMaxValue << '\n';
   str << "GainIndex: " << od.GainIndex << '\n';

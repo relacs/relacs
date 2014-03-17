@@ -77,7 +77,6 @@ InData::InData( const InData &data )
   Trace = data.Trace;
   Ident = data.Ident;
   Reference = data.Reference;
-  Dither = data.Dither;
   Unipolar = data.Unipolar;
   GainIndex = data.GainIndex;
   GainData = NULL;
@@ -114,7 +113,6 @@ void InData::construct( void )
   Trace = 0;
   Ident = "";
   Reference = RefDifferential;
-  Dither = false;
   Unipolar = false;
   GainIndex = 0;
   GainData = NULL;
@@ -148,7 +146,6 @@ const InData &InData::operator=( const InData &data )
   Trace = data.Trace;
   Ident = data.Ident;
   Reference = data.Reference;
-  Dither = data.Dither;
   Unipolar = data.Unipolar;
   GainIndex = data.GainIndex;
   GainData = NULL;
@@ -184,7 +181,6 @@ const InData &InData::assign( const InData *data )
   Trace = data->Trace;
   Ident = data->Ident;
   Reference = data->Reference;
-  Dither = data->Dither;
   Unipolar = data->Unipolar;
   GainIndex = data->GainIndex;
   GainData = NULL;
@@ -715,18 +711,6 @@ void InData::setReference( const string &ref )
 }
 
 
-bool InData::dither( void ) const
-{
-  return Dither;
-}
-
-
-void InData::setDither( bool dither )
-{
-  Dither = dither;
-}
-
-
 bool InData::unipolar( void ) const
 {
   return Unipolar;
@@ -880,7 +864,6 @@ ostream &operator<<( ostream &str, const InData &id )
   str << "Trace: " << id.Trace << '\n';
   str << "Ident: " << id.Ident << '\n';
   str << "Reference: " << id.Reference << '\n';
-  str << "Dither: " << id.Dither << '\n';
   str << "Unipolar: " << id.Unipolar << '\n';
   str << "GainIndex: " << id.GainIndex << '\n';
   str << "GainData: " << (void*)id.GainData << '\n';

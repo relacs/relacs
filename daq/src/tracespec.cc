@@ -33,7 +33,6 @@ TraceSpec::TraceSpec( void )
     Channel( 0 ),
     Scale( 1.0 ),
     Unit( "V" ),
-    Reglitch( false ),
     MaxRate( 1000.0 ),
     FixedRate( false ),
     Modality( "" )
@@ -44,15 +43,13 @@ TraceSpec::TraceSpec( void )
 TraceSpec::TraceSpec( int index, const string &name,
 		      int device, int channel, 
 		      double scale, const string &unit,
-		      bool reglitch, double maxrate,
-		      const string &modality )
+		      double maxrate, const string &modality )
   : Trace( index ),
     TraceName( name ),
     Device( device ),
     Channel( channel ),
     Scale( scale ),
     Unit( unit ),
-    Reglitch( reglitch ),
     MaxRate( maxrate ),
     FixedRate( false ),
     Modality( modality )
@@ -67,7 +64,6 @@ TraceSpec::TraceSpec( const TraceSpec &trace )
     Channel( trace.Channel ),
     Scale( trace.Scale ),
     Unit( trace.Unit ),
-    Reglitch( trace.Reglitch ),
     MaxRate( trace.MaxRate ),
     FixedRate( trace.FixedRate ),
     Modality( trace.Modality )
@@ -161,18 +157,6 @@ void TraceSpec::setUnit( double scale, const string &unit )
 }
 
 
-bool TraceSpec::reglitch( void ) const
-{
-  return Reglitch;
-}
-
-
-void TraceSpec::setReglitch( bool reglitch )
-{
-  Reglitch = reglitch;
-}
-
-
 double TraceSpec::maxSampleRate( void ) const
 {
   return MaxRate;
@@ -220,7 +204,6 @@ int TraceSpec::apply( OutData &signal ) const
     signal.setChannel( Channel );
     signal.setScale( Scale );
     signal.setUnit( Unit );
-    signal.setReglitch( Reglitch );
     if ( FixedRate )
       signal.setFixedSampleRate( MaxRate );
     else

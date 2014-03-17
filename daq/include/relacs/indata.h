@@ -66,7 +66,7 @@ with an unit returned by unit().
 
 The acquisition of the data is specified by sampleRate(), delay(),
 startSource(), priority(), continuous(), device(), channel(),
-reference(), dither(), unipolar(), gainIndex(), and updateTime().
+reference(), unipolar(), gainIndex(), and updateTime().
 Further, the InData has an identifier string ident(),
 a unique trace number trace() and mode() flags.
 
@@ -357,13 +357,6 @@ class InData : public CyclicSampleDataF, public DaqError
         Possible values are "differential", "common", "ground", "other".
 	\sa reference(), referenceStr() */
   void setReference( const string &ref );
-    /*! Returns \c true if dither is enabled for the input line. */
-  bool dither( void ) const;
-    /*! Enable dither for the input line if \a dither equals \c true,
-        i.e. adding white noise to minimze quantization errors
-        through averaging.
-        By default dither is disabled. */
-  void setDither( bool dither=true );
 
     /*! True if only positive values are acquired. */
   bool unipolar( void ) const;
@@ -508,8 +501,6 @@ class InData : public CyclicSampleDataF, public DaqError
   string Ident;
     /*! Reference mode. */
   RefType Reference;
-    /*! Dither enabled? */
-  bool Dither;
     /*! True if the data are only positive. */
   bool Unipolar;
     /*! Index determining the gain on the daq board. */

@@ -260,13 +260,6 @@ void OutList::setDevice( int device )
 }
 
 
-void OutList::setReglitch( bool reglitch )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).setReglitch( reglitch );
-}
-
-
 void OutList::setStartSource( int startsource )
 {
   for ( int k=0; k<size(); k++ )
@@ -313,6 +306,17 @@ void OutList::setRestart( bool restart )
 {
   for ( int k=0; k<size(); k++ )
     operator[]( k ).setRestart( restart );
+}
+
+
+double OutList::maxLength( void ) const
+{
+  double ml = 0.0;
+  for ( int k=0; k<size(); k++ ) {
+    if ( ml < operator[]( k ).length() )
+      ml = operator[]( k ).length();
+  }
+  return ml;
 }
 
 

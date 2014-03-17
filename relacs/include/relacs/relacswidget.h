@@ -131,9 +131,12 @@ public:
     /*! Updates the InData buffers and calls the filter and event detectors.
         If \a mintracetime is greater than zero, updateData() blocks
         until data upto \a mintracetime are available.
+	If in addition \a signaltime is greater than zero, updateData() blocks
+	until signalTime() is greater than \a signalTime and then until
+	data until signalTime() plus mintracetime are available.
         \return \c true if new data have been got, otherwise you should wait() 
         on the UpdateDataWait condition to make sure data are available for you. */
-  bool updateData( double mintracetime=0.0 );
+  bool updateData( double mintracetime=0.0, double signaltime=0.0 );
 
     /*! Wakes up all waitconditions. */
   void wakeAll( void );

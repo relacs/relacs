@@ -243,8 +243,7 @@ public:
 
     /*! Add an output trace with name \a name on channel \a channel of
         device \a device to the list of traces.
-	The trace has the reglitch circuit enabled (\a reglitch)
-	and allows a maximum sampling rate of \a maxrate.
+	The trace allows a maximum sampling rate of \a maxrate.
         The signal is given in unit \a unit and multiplied by \a scale
         to convert it to the voltage of the ananlog output.
 	The \a modality describes whether the output trace
@@ -254,8 +253,7 @@ public:
         addInput(), addOutput(), addAttLine() */
   void addOutTrace( const string &name, int device, int channel,
 		    double scale=1.0, const string &unit="",
-		    bool reglitch=false, double maxrate=-1.0,
-		    const string &modality="" );
+		    double maxrate=-1.0, const string &modality="" );
     /*! Check every analog output device for additionaly provided 
         output channels and add them to the list of output traces.
 	These output traces are usually no physical outputs but

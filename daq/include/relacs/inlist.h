@@ -165,11 +165,6 @@ public:
         Possible values are Differential, Referenced, Nonreferenced.
         Defaults to Differential. */
   void setReference( InData::RefType ref );
-    /*! Enable dither for all input lines if \a dither equals \c true,
-        i.e. adding white noise to minimze quantization errors
-        through averaging.
-        By default dither is disabled. */
-  void setDither( bool dither=true );
     /*! Set the polarity of all input traces to \a unipolar. 
         If \a unipolar is true only positive values are acquired,
 	if it is false positive and negative values are acquired.

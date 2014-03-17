@@ -48,7 +48,7 @@ class TraceSpec
   TraceSpec( int index, const string &name,
 	     int device, int channel,
 	     double scale=1.0, const string &unit="",
-	     bool reglitch=false, double maxrate=-1.0,
+	     double maxrate=-1.0,
 	     const string &modality="" );
     /*! Copy constructor. */
   TraceSpec( const TraceSpec &trace );
@@ -106,15 +106,6 @@ class TraceSpec
         \sa unit(), scale(), setScale() */
   void setUnit( double scale, const string &unit );
 
-    /*! Returns \c true if reglitch circuit to make glitches more uniform
-        is enabled. 
-        \sa setReglitch() */
-  bool reglitch( void ) const;
-    /*! Enable reglitch circuit to make glitches more uniform.
-        By default reglitch is disabled. 
-        \sa reglitch() */
-  void setReglitch( bool reglitch );
-
     /*! The maximum or fixed sampling rate to be used in Hertz.
         \sa setMaxSampleRate(), setFixedSampleRate(), fixedSampleRate() */
   double maxSampleRate( void ) const;
@@ -163,7 +154,6 @@ class TraceSpec
   int Channel;
   double Scale;
   string Unit;
-  bool Reglitch;
   double MaxRate;
   bool FixedRate;
   string Modality;

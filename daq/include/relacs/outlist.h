@@ -124,9 +124,6 @@ public:
 
     /*! Set the device id of all signals to \a device. */
   void setDevice( int device );
-    /*! Enable reglitch for all output lines if \a reglitch equals \c true.
-        By default reglitch is disabled. */
-  void setReglitch( bool reglitch=true );
     /*! Set the source for the start trigger of the output
         for all signals to \a startsource. */
   void setStartSource( int startsource );
@@ -146,6 +143,9 @@ public:
     /*! If \a restart is set to \c true, then the ouput of the signals
         will restart the data acquisition. */
   void setRestart( bool restart=true );
+
+    /*! \return The duration of the longest OutData in the list. */
+  double maxLength( void ) const;
 
     /*! Reset the device indices. */
   void deviceReset( void );

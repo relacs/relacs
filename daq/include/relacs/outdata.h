@@ -279,7 +279,7 @@ class OutData : public SampleData< float >, public DaqError
   int trace( void ) const;
     /*! Set the output trace by specifying its index \a index.
         If an Acquire class was specified by setAcquire(),
-	then channel number, device, reglitch mode, maximum sampling rate, etc.
+	then channel number, device, maximum sampling rate, etc.
 	are set according to the trace \a index.
 	Otherwise clears the channel(), device(), and the trace() index
 	so that they are set later by one of the Acquire::write() functions.
@@ -289,14 +289,14 @@ class OutData : public SampleData< float >, public DaqError
 	- -2: trace does not exist
 	- -3: invalid match
         \sa trace(), setChannel(), setDevice(), setTraceName(),
-	setReglitch(), setMaxSampleRate(), setFixedSampleRate() */
+	setMaxSampleRate(), setFixedSampleRate() */
   int setTrace( int index );
     /*! The name of the output trace.
         \sa setTrace(), channel(), device(), traceName() */
   string traceName( void ) const;
     /*! Set the output trace by specifying its name \a name.
         If an Acquire class was specified by setAcquire(),
-	then channel number, device, reglitch mode, maximum sampling rate, etc.
+	then channel number, device, maximum sampling rate, etc.
 	are set according to the trace \a name.
 	Otherwise clears the channel(), device(), and the trace() index
 	so that they are set later by one of the Acquire::write() functions.
@@ -306,14 +306,14 @@ class OutData : public SampleData< float >, public DaqError
 	- -2: trace does not exist
 	- -3: invalid match
         \sa trace(), setChannel(), setDevice(), setTraceName(),
-	setReglitch(), setMaxSampleRate(), setFixedSampleRate() */
+	setMaxSampleRate(), setFixedSampleRate() */
   int setTraceName( const string &name );
     /*! Set the index and the name of the output trace to \a index
         and \a name, respectively, without resetting or updating other information. */
   void setTrace( int index, const string &name );
     /*! Tell OutData the Acquire class \a a that manages all output traces.
         Used by setTrace() and setTraceName() to fill in further information
-	about the output trace (scale(), unit(), reglitch(),
+	about the output trace (scale(), unit(),
 	maxSampleRate(), fixedSampleRate(). */
   static void setAcquire( const Acquire *a );
 
@@ -327,12 +327,6 @@ class OutData : public SampleData< float >, public DaqError
     /*! Returns the description of the output signal. */
   Options &description( void );
 
-    /*! Returns \c true if reglitch circuit to make glitches more uniform
-        is enabled. */
-  bool reglitch( void ) const;
-    /*! Enable reglitch circuit to make glitches more uniform.
-        By default reglitch is disabled. */
-  void setReglitch( bool reglitch );
     /*! Returns the minimum value of the
         signal trace that should be used for determining the appropriate gain
 	setting on the daq board.
@@ -816,8 +810,6 @@ class OutData : public SampleData< float >, public DaqError
   string Ident;
     /*! Description of the output signal. */
   Options Description;
-    /*! True if reglitch circuit is enabled. */
-  bool Reglitch;
     /*! Minimum value for which a gain should be chosen. */
   double RequestMinValue;
     /*! Maximum value for which a gain should be chosen. */

@@ -761,7 +761,6 @@ void RELACSWidget::setupOutTraces( void )
 		     integer( "outputtracechannel", k, chan ),
 		     number( "outputtracescale", k, 1.0 ),
 		     text( "outputtraceunit", k, "V" ),
-		     false,
 		     number( "outputtracemaxrate", k, 0.0 ),
 		     text( "outputtracemodality", k, "unknown" ) );
     chan++;
@@ -780,11 +779,26 @@ void RELACSWidget::setupOutTraces( void )
 
 ///// Data thread ///////////////////////////////////////////////////////////
 
-bool RELACSWidget::updateData( double mintracetime )
+bool RELACSWidget::updateData( double mintracetime, double signaltime )
 {
   bool doupdate = true;
   if ( mintracetime > 0.0 ) {
     RawDataMutex.lock();
+    // do wee need to wait for a new signal?
+    if ( signaltime > 0.0 ) {
+      while ( IL.success() &&
+	      SignalTime <= signaltime &&
+	      ReadLoop.isRunning() ) {
+	RunDataMutex.lock();
+	bool rd = RunData;
+	RunDataMutex.unlock();
+	if ( ! rd )
+	  break;
+	ReadDataWait.wait( &RawDataMutex );
+	AQ->readSignal( SignalTime, IL, ED );
+      }
+      mintracetime += SignalTime;
+    }
     // do we need to wait for more data?
     while ( IL.success() &&
 	    mintracetime > 0.0 && IL.currentTimeRaw() < mintracetime &&

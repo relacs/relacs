@@ -365,13 +365,6 @@ void InList::setReference( InData::RefType ref )
 }
 
 
-void InList::setDither( bool dither )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).setDither( dither );
-}
-
-
 void InList::setUnipolar( bool unipolar )
 {
   for ( int k=0; k<size(); k++ )

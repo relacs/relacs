@@ -466,8 +466,11 @@ int MyPlugin::main( void )
   void updateDerivedTracesEvents( void );
     /*! Process new trace and event data and make them available to this.
         If \a mintracetime is greater than zero, updateData() blocks
-        until data upto \a mintracetime are available. */
-  void updateData( double mintracetime = 0.0 );
+        until data upto \a mintracetime are available.
+	If in addition \a signaltime is greater than zero, updateData() blocks
+	until signalTime() is greater than \a signalTime and then until
+	data until signalTime() plus mintracetime are available. */
+  void updateData( double mintracetime = 0.0, double signaltime=0.0 );
     /*! Make current trace and event data available to this.
         Do not retrieve and process brand new data. */
   void getData( void );

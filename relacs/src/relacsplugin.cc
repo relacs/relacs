@@ -321,10 +321,10 @@ void RELACSPlugin::updateDerivedTracesEvents( void )
 }
 
 
-void RELACSPlugin::updateData( double mintracetime )
+void RELACSPlugin::updateData( double mintracetime, double signaltime )
 {
   // get new data:
-  if ( ! RW->updateData( mintracetime ) ) {
+  if ( ! RW->updateData( mintracetime, signaltime ) ) {
     QMutex mutex;
     mutex.lock();
     RW->UpdateDataWait.wait( &mutex, 100 );
