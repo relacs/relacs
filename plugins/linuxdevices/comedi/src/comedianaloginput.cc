@@ -898,6 +898,7 @@ int ComediAnalogInput::readData( void )
       // The following error messages do not work after a comedi_cancel!
       //      Traces->addError( DaqError::OverflowUnderrun );
       cerr << " ComediAnalogInput::readData(): no data and not running\n";
+      cerr << " ComediAnalogInput::readData(): comedi_error: " << comedi_strerror( comedi_errno() ) << "\n";
       return -2;
     }
     return -1;
@@ -1021,7 +1022,7 @@ int ComediAnalogInput::comediSubdevice( void ) const
 
 int ComediAnalogInput::bufferSize( void ) const
 {
-  if( !isOpen() )
+  if ( !isOpen() )
     return -1;
   lock();
   int n = comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;

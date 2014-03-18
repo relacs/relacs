@@ -98,14 +98,14 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
-  if( ModuleFd == -1 ) {
+  if ( ModuleFd == -1 ) {
   cerr << " DynClampDigitalIO::open(): opening dynclamp-module failed\n";
     return -1;
   }
 
   // get subdevice ID from module:
   retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampDigitalIO::open -> ioctl command IOC_GET_SUBDEV_ID on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
@@ -121,7 +121,7 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   //  cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
   //       << &deviceIOC << '\n';
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampDigitalIO::open -> ioctl command IOC_OPEN_SUBDEV on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
@@ -188,7 +188,7 @@ void DynClampDigitalIO::close( void )
     return;
 
   ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
-  if( ::close( ModuleFd ) < 0 )
+  if ( ::close( ModuleFd ) < 0 )
     cerr << "Close of module file failed!\n";
 
   // clear flags:
@@ -240,7 +240,7 @@ int DynClampDigitalIO::configureLine( int line, bool output )
   dioIOC.output = output;
   dioIOC.pulseType = TTL_UNDEFINED;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::configureLine() -> "
 	 << "Configuring DIO line " << line
 	 << " failed on subdeviceid " << SubdeviceID
@@ -264,7 +264,7 @@ int DynClampDigitalIO::configureLines( int lines, int output )
   dioIOC.output = output;
   dioIOC.pulseType = TTL_UNDEFINED;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::configureLines() -> "
 	 << "Configuring DIO lines " << lines
 	 << " failed on subdeviceid " << SubdeviceID
@@ -290,7 +290,7 @@ int DynClampDigitalIO::write( int line, bool val )
   dioIOC.output = val ? 1 : 0;
   dioIOC.pulseType = TTL_UNDEFINED;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::write() -> "
 	 << "Writing to DIO line " << line
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
@@ -315,7 +315,7 @@ int DynClampDigitalIO::read( int line, bool &val ) const
   dioIOC.output = 0;
   dioIOC.pulseType = TTL_UNDEFINED;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::read() -> "
 	 << "Reading from DIO line " << line
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
@@ -339,7 +339,7 @@ int DynClampDigitalIO::writeLines( int lines, int val )
   dioIOC.output = val;
   dioIOC.pulseType = TTL_UNDEFINED;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::writeLines() -> "
 	 << "Writing to DIO lines " << lines
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
@@ -362,7 +362,7 @@ int DynClampDigitalIO::readLines( int lines, int &val ) const
   dioIOC.output = 0;
   dioIOC.pulseType = TTL_UNDEFINED;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::readLines() -> "
 	 << "Reading from DIO lines " << lines
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
@@ -408,7 +408,7 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
   dioIOC.output = 1;
   dioIOC.pulseType = high;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::addTTLPulse() -> "
 	 << "Adding TTL pulse high to DIO line " << line
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
@@ -417,7 +417,7 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
   dioIOC.output = inithigh ? 1 : 0;
   dioIOC.pulseType = low;
   retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::addTTLPulse() -> "
 	 << "Adding TTL pulse low to DIO line " << line
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
@@ -462,7 +462,7 @@ int DynClampDigitalIO::clearTTLPulse( int line, bool high )
   dioIOC.output = high ? 1 : 0;
   dioIOC.pulseType = TTL_UNDEFINED;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::clearTTLPulse() -> "
 	 << "Clearing TTL pulse at DIO line " << line
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
@@ -502,7 +502,7 @@ int DynClampDigitalIO::setSyncPulse( int line, double duration )
   dioIOC.lines = line;
   dioIOC.pulsewidth = durationns;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::setSyncPulse() -> "
 	 << "Setting pulse for DIO line " << line
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
@@ -520,7 +520,7 @@ int DynClampDigitalIO::clearSyncPulse( void )
   dioIOC.subdevID = SubdeviceID;
   dioIOC.op = DIO_CLEAR_SYNCPULSE;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::clearSyncPulse() -> "
 	 << "Clearing sync pulse failed on subdeviceid " << SubdeviceID << '\n';
     return WriteError;

@@ -188,14 +188,14 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
-  if( ModuleFd == -1 ) {
+  if ( ModuleFd == -1 ) {
   cerr << " DynClampAnalogInput::open(): opening dynclamp-module failed\n";
     return -1;
   }
 
   // get subdevice ID from module:
   retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_GET_SUBDEV_ID on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
@@ -211,7 +211,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   //  cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
   //       << &deviceIOC << '\n';
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_OPEN_SUBDEV on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
@@ -221,7 +221,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   char fifoName[] = "/dev/rtfxxx";
   sprintf( fifoName, "/dev/rtf%u", deviceIOC.fifoIndex );
   FifoFd = ::open( fifoName, O_RDONLY );
-  if( FifoFd < 0 ) {
+  if ( FifoFd < 0 ) {
     cerr << " DynClampAnalogInput::open() -> oping RTAI-FIFO " 
          << fifoName << " failed!\n";
     return -1;
@@ -261,7 +261,7 @@ void DynClampAnalogInput::close( void )
   ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
   ::close( FifoFd );
   FifoFd = -1;
-  if( ::close( ModuleFd ) < 0 )
+  if ( ::close( ModuleFd ) < 0 )
     cerr << "Close of module file failed!\n";
 
   ModuleFd = -1;
@@ -348,23 +348,23 @@ int DynClampAnalogInput::setupChanList( InList &traces,
     int aref = -1;
     switch( traces[k].reference() ) {
     case InData::RefCommon: 
-      if( CAISubDevFlags & SDF_COMMON )
+      if ( CAISubDevFlags & SDF_COMMON )
 	aref = AREF_COMMON;
       break;
     case InData::RefDifferential:
-      if( CAISubDevFlags & SDF_DIFF )
+      if ( CAISubDevFlags & SDF_DIFF )
 	aref = AREF_DIFF; 
       break;
     case InData::RefGround:
-      if( CAISubDevFlags & SDF_GROUND )
+      if ( CAISubDevFlags & SDF_GROUND )
 	aref = AREF_GROUND; 
       break;
     case InData::RefOther: 
-      if( CAISubDevFlags & SDF_OTHER )
+      if ( CAISubDevFlags & SDF_OTHER )
 	aref = AREF_OTHER;
       break;
     }
-    if( aref == -1 )
+    if ( aref == -1 )
       traces[k].addError( DaqError::InvalidReference );
 
     // allocate gain factor:
@@ -407,7 +407,7 @@ int DynClampAnalogInput::setupChanList( InList &traces,
 
 int DynClampAnalogInput::testReadDevice( InList &traces )
 {
-  if( ! isOpen() ) {
+  if ( ! isOpen() ) {
     traces.setError( DaqError::DeviceNotOpen );
     return -1;
   }
@@ -418,7 +418,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   // sampling rate must be the one of the running rt-loop:
   unsigned int rate = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
@@ -447,11 +447,11 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   for ( int k=0; k<traces.size(); k++ ) {
     traces[k].delError( DaqError::InvalidChannel );
     // check channel number:
-    if( traces[k].channel() < 0 ) {
+    if ( traces[k].channel() < 0 ) {
       traces[k].addError( DaqError::InvalidChannel );
       traces[k].setChannel( 0 );
     }
-    else if( traces[k].channel() >= channels() && traces[k].channel() < PARAM_CHAN_OFFSET ) {
+    else if ( traces[k].channel() >= channels() && traces[k].channel() < PARAM_CHAN_OFFSET ) {
       traces[k].addError( DaqError::InvalidChannel );
       traces[k].setChannel( channels()-1 );
     }
@@ -460,7 +460,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   for( int k = 0; k < traces.size(); k++ ) {
 
     // check delays:
-    if( traces[k].delay() > 0.0 ) {
+    if ( traces[k].delay() > 0.0 ) {
       traces[k].addError( DaqError::InvalidDelay );
       traces[k].addErrorStr( "delays are not supported for analog input!" );
       traces[k].setDelay( 0.0 );
@@ -471,7 +471,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   unsigned int chanlist[MAXCHANLIST];
   setupChanList( traces, chanlist, MAXCHANLIST );
 
-  if( traces.failed() )
+  if ( traces.failed() )
     return -1;
 
   //  cerr << " DynClampAnalogInput::testRead(): success\n";/////TEST/////
@@ -537,7 +537,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   chanlistIOC.chanlistN = traces.size();
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
   //  cerr << "prepareRead(): IOC_CHANLIST done!\n"; /// TEST
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_CHANLIST on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
@@ -552,7 +552,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   syncCmdIOC.startsource = traces[0].startSource();
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   //  cerr << "prepareRead(): IOC_SYNC_CMD done!\n"; /// TEST
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_SYNC_CMD on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
@@ -610,7 +610,7 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
 
   // start subdevice:
   int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampAnalogInput::startRead -> ioctl command IOC_START_SUBDEV on device "
 	 << ModuleDevice << " failed!\n";
     int ern = errno;
@@ -626,7 +626,7 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
   // get sampling rate:
   unsigned int rate = 0;
   retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
 	 << ModuleDevice << " failed!\n";
   }
@@ -639,13 +639,13 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
  
 int DynClampAnalogInput::readData( void )
 {
-  //  cerr << " DynClampAnalogInput::readData(): in\n";/////TEST/////
+  //  cerr << " DynClampAnalogInput::readData(): begin\n";/////TEST/////
 
   QMutexLocker locker( mutex() );
 
   //device stopped?
     /* // AI does not have to run in order to push data
-  if( !IsRunning ) {
+  if ( !IsRunning ) {
     traces.addErrorStr( "DynClampAnalogInput::readData: " +
 		      deviceFile() + " is not running!" );
     cerr << "DynClampAnalogInput::readData: device is not running!"  << '\n';/////TEST/////
@@ -670,7 +670,7 @@ int DynClampAnalogInput::readData( void )
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
 /*
     int retval = ioctl( ModuleFd, IOC_REQ_READ, &SubdeviceID );
-    if( retval < 0 ) {
+    if ( retval < 0 ) {
       cerr << " DynClampAnalogInput::readData() -> ioctl command IOC_REQ_READ on device "
 	   << ModuleDevice << " failed!\n";
       return -2;
@@ -695,7 +695,7 @@ int DynClampAnalogInput::readData( void )
 
   BufferN = readn / BufferElemSize;
 
-  if( failed ) {
+  if ( failed ) {
     /*
     switch( errnoSave ) {
 
@@ -801,32 +801,33 @@ int DynClampAnalogInput::convertData( void )
 
 int DynClampAnalogInput::stop( void )
 { 
+  int running = 0;
+
   {
     QMutexLocker locker( mutex() );
 
-    if( !IsPrepared )
+    if ( !IsPrepared )
       return 0;
 
-    int running = SubdeviceID;
+    running = SubdeviceID;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
-    if( retval < 0 ) {
+    if ( retval < 0 ) {
       cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
 	   << ModuleDevice << " failed!\n";
       return -1;
     }
-
-    if ( running  > 0 ) {
-      retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
-      if( retval < 0 ) {
-	cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	     << ModuleDevice << " failed!\n";
-	return -1;
-      }
-    }
-
   } // unlock
 
-  stopRead();
+  if ( running  > 0 ) {
+    stopRead();
+    QMutexLocker locker( mutex() );
+    int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
+    if ( retval < 0 ) {
+      cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+	   << ModuleDevice << " failed!\n";
+      return -1;
+    }
+  }
 
   lock();
   IsPrepared = false;
@@ -863,7 +864,7 @@ bool DynClampAnalogInput::running( void ) const
 {
   QMutexLocker locker( mutex() );
 
-  if( !IsPrepared )
+  if ( !IsPrepared )
     return false;
 
   int exchangeVal = SubdeviceID;
@@ -872,7 +873,7 @@ bool DynClampAnalogInput::running( void ) const
   //  cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
   //       << ModuleDevice << " " << exchangeVal << '\n';
 
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << ModuleDevice << " failed!\n";
     return false;

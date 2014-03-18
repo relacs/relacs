@@ -78,7 +78,7 @@ int DynClampTrigger::open( const string &device, const Options &opts )
   // open kernel module:
   ModuleDevice = device;
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
-  if( ModuleFd == -1 ) {
+  if ( ModuleFd == -1 ) {
     cerr << " DynClampTrigger::open(): opening dynclamp-module failed\n";
     return -1;
   }
@@ -106,7 +106,7 @@ void DynClampTrigger::close( void )
 
   reset();
 
-  if( ::close( ModuleFd ) < 0 )
+  if ( ::close( ModuleFd ) < 0 )
     cerr << "Close of module file failed!\n";
 
   ModuleFd = -1;
@@ -128,7 +128,7 @@ int DynClampTrigger::activate( void )
   triggerIOC.alevel = Hoop[0].ALevel;
 
   int retval = ::ioctl( ModuleFd, IOC_SET_TRIGGER, &triggerIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampTrigger::activate -> ioctl command IOC_SET_TRIGGER on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
@@ -151,7 +151,7 @@ int DynClampTrigger::disable( void )
   triggerIOC.alevel = 0.0;
 
   int retval = ::ioctl( ModuleFd, IOC_UNSET_TRIGGER, &triggerIOC );
-  if( retval < 0 ) {
+  if ( retval < 0 ) {
     cerr << " DynClampTrigger::disable -> ioctl command IOC_UNSET_TRIGGER on device "
 	 << ModuleDevice << " failed!\n";
     return -1;

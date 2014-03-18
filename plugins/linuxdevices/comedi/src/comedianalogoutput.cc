@@ -1028,13 +1028,6 @@ int ComediAnalogOutput::reset( void )
   {
     QMutexLocker locker( mutex() );
     
-    Sigs.clear();
-    if ( Buffer != 0 )
-      delete [] Buffer;
-    Buffer = 0;
-    BufferSize = 0;
-    NBuffer = 0;
-    
     if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
       return WriteError;
   }
@@ -1043,9 +1036,12 @@ int ComediAnalogOutput::reset( void )
 
   lock();
 
-  // clear buffers?
-  // by closing and reopening comedi: XXX This closes the whole device, not only the subdevice!
-  // the comedi_cancel seems to be sufficient!
+  Sigs.clear();
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = 0;
+  BufferSize = 0;
+  NBuffer = 0;
 
   Settings.clear();
   if ( Cmd.chanlist != 0 )
