@@ -221,14 +221,14 @@ int TransferFunction::main( void )
       printlog( "WARNING: noiseWave() too short! duration=" + Str( duration ) +
 		" length=" + Str( signal.length() ) );
     write( signal );
-    if ( signal.failed() ) {
-      directWrite( orgdcsignal );
-      continue;
-    }
     if ( interrupt() ) {
       if ( count == 0 )
 	state = Aborted;
       break;
+    }
+    if ( signal.failed() ) {
+      directWrite( orgdcsignal );
+      continue;
     }
 
     // get data:

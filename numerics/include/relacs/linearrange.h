@@ -34,9 +34,7 @@ namespace relacs {
 /*! 
 \class LinearRange
 \author Jan Benda
-\version 0.1
 \brief A linear range of discretized numbers.
-
 */ 
 
 
@@ -307,7 +305,6 @@ class LinearRange
 /*! 
   \class LinearRangeIterator
   \author Jan Benda
-  \version 1.0
   \brief Iterator for a LinearRange
 */
   

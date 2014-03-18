@@ -470,7 +470,7 @@ int MyPlugin::main( void )
 	If in addition \a signaltime is greater than zero, updateData() blocks
 	until signalTime() is greater than \a signalTime and then until
 	data until signalTime() plus mintracetime are available. */
-  void updateData( double mintracetime = 0.0, double signaltime=0.0 );
+  void updateData( double mintracetime = 0.0, double signaltime=-1000.0 );
     /*! Make current trace and event data available to this.
         Do not retrieve and process brand new data. */
   void getData( void );

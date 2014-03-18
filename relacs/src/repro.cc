@@ -424,8 +424,7 @@ int RePro::write( OutData &signal, bool setsignaltime )
   if ( interrupt() )
     return -1;
 
-  unlockStimulusData();
-  unlockMetaData();
+  unlockAll();
 
   double st = signalTime();
 
@@ -437,8 +436,7 @@ int RePro::write( OutData &signal, bool setsignaltime )
   else
     updateData( signal.length(), st );
 
-  lockMetaData();
-  lockStimulusData();
+  lockAll();
 
   return r;
 }
@@ -449,8 +447,7 @@ int RePro::write( OutList &signal, bool setsignaltime )
   if ( interrupt() )
     return -1;
 
-  unlockStimulusData();
-  unlockMetaData();
+  unlockAll();
 
   double st = signalTime();
 
@@ -462,8 +459,7 @@ int RePro::write( OutList &signal, bool setsignaltime )
   else
     updateData( signal.maxLength(), st );
 
-  lockMetaData();
-  lockStimulusData();
+  lockAll();
 
   return r;
 }

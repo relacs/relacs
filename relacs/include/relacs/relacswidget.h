@@ -136,7 +136,7 @@ public:
 	data until signalTime() plus mintracetime are available.
         \return \c true if new data have been got, otherwise you should wait() 
         on the UpdateDataWait condition to make sure data are available for you. */
-  bool updateData( double mintracetime=0.0, double signaltime=0.0 );
+  bool updateData( double mintracetime=0.0, double signaltime=-1000.0 );
 
     /*! Wakes up all waitconditions. */
   void wakeAll( void );

@@ -785,7 +785,7 @@ bool RELACSWidget::updateData( double mintracetime, double signaltime )
   if ( mintracetime > 0.0 ) {
     RawDataMutex.lock();
     // do wee need to wait for a new signal?
-    if ( signaltime > 0.0 ) {
+    if ( signaltime >= -1.0 ) {
       while ( IL.success() &&
 	      SignalTime <= signaltime &&
 	      ReadLoop.isRunning() ) {
@@ -885,6 +885,8 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
   if ( r >= 0 ) {
     SF->save( signal );
     FD->scheduleAdjust();
+    if ( ! ReadLoop.isRunning() )
+      ReadLoop.start();
     if ( blocking )
       WriteLoop.run();
     else
@@ -892,12 +894,11 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
-  else
+  else {
     printlog( "! failed to write signal: " + signal.errorText() );
-  if ( IL.failed() )
-    printlog( "! error in restarting analog input: " + IL.errorText() );
-  else if ( ! ReadLoop.isRunning() )
-    ReadLoop.start();
+    if ( IL.failed() )
+      printlog( "! error in restarting analog input: " + IL.errorText() );
+  }
   return r;
 }
 
@@ -910,6 +911,8 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
   if ( r >= 0 ) {
     SF->save( signal );
     FD->scheduleAdjust();
+    if ( ! ReadLoop.isRunning() )
+      ReadLoop.start();
     if ( blocking )
       WriteLoop.run();
     else
@@ -917,12 +920,11 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
-  else
+  else {
     printlog( "! failed to write signals: " + signal.errorText() );
-  if ( IL.failed() )
-    printlog( "! error in restarting analog input: " + IL.errorText() );
-  else if ( ! ReadLoop.isRunning() )
-    ReadLoop.start();
+    if ( IL.failed() )
+      printlog( "! error in restarting analog input: " + IL.errorText() );
+  }
   return r;
 }
 
@@ -933,17 +935,18 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   int r = AQ->directWrite( signal, setsignaltime );
   if ( r == 0 ) {
+    if ( ! ReadLoop.isRunning() )
+      ReadLoop.start();
     SF->save( signal );
     FD->scheduleAdjust();
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
-  else
+  else {
     printlog( "! failed to write signal: " + signal.errorText() );
-  if ( IL.failed() )
-    printlog( "! error in restarting analog input: " + IL.errorText() );
-  else if ( ! ReadLoop.isRunning() )
-    ReadLoop.start();
+    if ( IL.failed() )
+      printlog( "! error in restarting analog input: " + IL.errorText() );
+  }
   return r;
 }
 
@@ -954,17 +957,18 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   int r = AQ->directWrite( signal, setsignaltime );
   if ( r == 0 ) {
+    if ( ! ReadLoop.isRunning() )
+      ReadLoop.start();
     SF->save( signal );
     FD->scheduleAdjust();
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
-  else
+  else {
     printlog( "! failed to write signals: " + signal.errorText() );
-  if ( IL.failed() )
-    printlog( "! error in restarting analog input: " + IL.errorText() );
-  else if ( ! ReadLoop.isRunning() )
-    ReadLoop.start();
+    if ( IL.failed() )
+      printlog( "! error in restarting analog input: " + IL.errorText() );
+  }
   return r;
 }
 
