@@ -47,6 +47,7 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  IsRunning = false;
   NoMoreData = true;
   Calibration = 0;
   BufferSize = 0;
@@ -67,6 +68,7 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   open( device, opts );
   IsPrepared = false;
+  IsRunning = false;
   NoMoreData = true;
   Calibration = 0;
   BufferSize = 0;
@@ -245,6 +247,7 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   // clear flags:
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  IsRunning = false;
   NoMoreData = true;
 
   setInfo();
@@ -293,6 +296,7 @@ void ComediAnalogOutput::close( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  IsRunning = false;
   NoMoreData = true;
   Info.clear();
 }
@@ -361,7 +365,7 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
 
   // setup channel ranges:
   unsigned int *chanlist = new unsigned int[512];
-  memset( chanlist, 0, sizeof( chanlist ) );
+  memset( chanlist, 0, sizeof( *chanlist ) );
   setupChanList( sigs, chanlist, 512, true );
 
   if ( sigs.failed() )
@@ -396,6 +400,9 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
     }
 
   }
+
+  cerr << "ComediAnalogOutput::directWrite() IsPrepared=" << IsPrepared << '\n';
+  IsPrepared = false;
 
   return ( sigs.success() ? 0 : -1 );
 }
@@ -591,7 +598,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
   unsigned int *chanlist = new unsigned int[512];
-  memset( chanlist, 0, sizeof( chanlist ) );
+  memset( chanlist, 0, sizeof( *chanlist ) );
   memset( &cmd, 0, sizeof( comedi_cmd ) );
 
   setupChanList( sigs, chanlist, 512, setscale );
@@ -911,6 +918,7 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
   insn.data = insndata;
   insn.n = 1;
   int r = comedi_do_insn( DeviceP, &insn );
+  IsPrepared = false;
   if ( r < 0 ) {
     int cerror = comedi_errno();
     cerr << "AO do_insn failed: " << comedi_strerror( cerror ) << endl;
@@ -920,6 +928,8 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
   }
 
   startThread( sp );
+
+  IsRunning = true;
 
   return NoMoreData ? 0 : 1;
 }
@@ -933,7 +943,7 @@ int ComediAnalogOutput::writeData( void )
     return -1;
  
   // device stopped?
-  if ( IsPrepared && ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 ) { 
+  if ( IsRunning && ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 ) { 
     // not running anymore.
     if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY )
       Sigs.addError( DaqError::OverflowUnderrun );
@@ -943,6 +953,7 @@ int ComediAnalogOutput::writeData( void )
       cerr << "ComediAnalogOutput::writeData: device is not running and not busy! comedi_strerror: " << comedi_strerror( comedi_errno() ) << '\n';
     }
     NoMoreData = true;
+    IsRunning = false;
     return -1;
   }
 
@@ -958,6 +969,7 @@ int ComediAnalogOutput::writeData( void )
 
   if ( ! Sigs[0].deviceWriting() && NBuffer == 0 ) {
     NoMoreData = true;
+    IsRunning = false;
     return 0;
   }
 
@@ -990,11 +1002,13 @@ int ComediAnalogOutput::writeData( void )
       BufferSize = 0;
       NBuffer = 0;
       NoMoreData = true;
+      IsRunning = false;
       return 0;
     }
   }
   else {
     NoMoreData = true;
+    IsRunning = false;
 
     // error:
     switch( ern ) {
@@ -1048,6 +1062,7 @@ int ComediAnalogOutput::reset( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  IsRunning = false;
   NoMoreData = true;
 
   unlock();

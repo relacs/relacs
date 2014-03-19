@@ -156,6 +156,14 @@ void AmplMode::open( const Options &opts )
     // manual mode selection, no buzz:
     DIO->writeLines( Mask, 0x00 );
 
+    // full duplex mode:
+    int fd = ::open( "/dev/dsp", O_RDWR, 0 );
+    if ( fd >= 0 ) {
+      if ( ioctl( fd, SNDCTL_DSP_SETDUPLEX, NULL ) >= 0 )
+	cerr << "Enabled full duplex sound\n";
+    }
+
+    // open mixer:
     MixerHandle = ::open( "/dev/mixer", O_RDWR );
     if ( MixerHandle < 0 ) {
       cerr << "Failed to open mixer device.\n";

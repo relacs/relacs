@@ -196,8 +196,10 @@ private:
 
     /*! Comedi command for asynchronous acquisition. */
   comedi_cmd Cmd;
-    /*! True if the command is prepared. */
+    /*! True if the command is prepared and can be started. */
   bool IsPrepared;
+    /*! True if the analog output is running. */
+  bool IsRunning;
     /*! True if no more data need to be written to the board. */
   bool NoMoreData;
 

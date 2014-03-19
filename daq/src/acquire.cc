@@ -1013,12 +1013,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 
   // direct analog output:
   if ( directao ) {
+  cerr << "restartread directao\n";
     for ( unsigned int i=0; i<aod.size(); i++ ) {
       if ( aod[i]->AO->directWrite( aod[i]->Signals ) != 0 )
 	success = false;
     }
   }
 
+  cerr << "restartread startread\n";
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
@@ -1055,6 +1057,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     
   // start writing streaming signals:
   if ( ! directao ) {
+  cerr << "restartread further\n";
     vector< int > aostarted;
     aostarted.reserve( aod.size() );
     for ( unsigned int i=0; i<aod.size(); i++ ) {
@@ -2407,6 +2410,7 @@ int Acquire::writeZero( int channel, int device )
     return -1;
   }
 
+
   return 0;
 }
 
@@ -2433,7 +2437,7 @@ int Acquire::writeReset( void )
   bool success = true;
   for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
     if ( OutTraces[k].channel() < 1000 ) {
-      int r = writeZero( OutTraces[k].device(), OutTraces[k].channel() );
+      int r = writeZero( OutTraces[k].channel(), OutTraces[k].device() );
       if ( r < 0 )
 	success = false;
     }

@@ -401,7 +401,7 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
   unsigned int *chanlist = new unsigned int[512];
-  memset( chanlist, 0, sizeof( chanlist ) );
+  memset( chanlist, 0, sizeof( *chanlist ) );
   memset( &cmd, 0, sizeof( comedi_cmd ) );
 
   bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
@@ -761,8 +761,10 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
   }
   else  
     insnlist.insns[ilinx++].subdev = SubDevice;
-  if ( ComediAO != 0 && ComediAO->prepared() )
+  if ( ComediAO != 0 && ComediAO->prepared() ) {
     insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
+    cerr << "ALSO START AO\n";
+  }
   insnlist.n_insns = ilinx;
   bool success = true;
   int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
