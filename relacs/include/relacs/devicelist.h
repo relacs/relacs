@@ -39,7 +39,6 @@ class AllDevices;
 /*!
 \class DeviceList
 \author Jan Benda
-\version 1.0
 \brief A container template for Device-plugins.
 */
 

@@ -596,7 +596,8 @@ int RELACSWidget::openHardware( int n, int errorlevel )
 
 int RELACSWidget::setupHardware( int n )
 {
-  // XXX WHY DO WE NEED THIS TWICE???????  openHardware( n, 0 );
+  openHardware( n, 0 );
+  // We need to call this twice to make sure that devices that depend on other devices get a second chance:
   int r = openHardware( n, 1 );
 
   // setup Acquire:
