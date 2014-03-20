@@ -48,7 +48,8 @@ RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,
 			    const string &author, 
 			    const string &version, const string &date )
   : ConfigDialog( configident, configgroup,
-		  name, author, version, date )
+		  name, author, version, date ),
+    SignalTime( -1.0 )
 {
   setPluginSet( pluginset );
   UniqueName = name;
@@ -311,6 +312,7 @@ void RELACSPlugin::updateRawTracesEvents( void )
 {
   IL.updateRaw();
   EL.updateRaw();
+  SignalTime = RW->SignalTime;
 }
 
 
@@ -471,7 +473,7 @@ int RELACSPlugin::eventInputEvent( const string &ident ) const
 
 double RELACSPlugin::signalTime( void ) const
 {
-  return RW->SignalTime;
+  return SignalTime;
 }
 
 

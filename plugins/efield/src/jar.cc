@@ -1257,7 +1257,7 @@ void JAR::analyze( void )
     for ( int k=0; k < JARChirpEvents.size(); k++ ) {
 
       // time:
-      double time = JARChirpEvents[k] - JARChirpEvents.signalTime();
+      double time = JARChirpEvents[k] - signalTime();
       EventFrequencyIterator eventfp = eodglobal.begin( JARChirpEvents[k] + signalTime() );
       last1 = eodglobal.end() - 1;
 

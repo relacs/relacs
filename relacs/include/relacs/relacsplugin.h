@@ -43,8 +43,6 @@ namespace relacs {
 /*! 
 \class RELACSPlugin
 \brief Adds specific functions for RELACS plugins to ConfigDialog
-\author Jan Benda
-\version 2.1
 
 Whenever the RELACSPlugin is started (a RePro whenever it is executed,
 all other plugins when an acquisition is started) the current values
@@ -943,6 +941,7 @@ private:
 
   InList IL;
   EventList EL;
+  double SignalTime;
 
   string PluginSet;
   string UniqueName;
