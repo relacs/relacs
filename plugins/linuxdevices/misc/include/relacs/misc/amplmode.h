@@ -36,7 +36,24 @@ namespace misc {
 \brief [Device] Control the mode of an amplifier via DigitalIO
 
 \par Options
-- \c firstpin: the first pin of the dio lines used for controlling the amplifier.
+- \c bridgepin: the dio line that switches the amplifier into bridge mode.
+- \c cclamppin: the dio line that switches the amplifier into current clamp mode.
+- \c vclamppin: the dio line that switches the amplifier into voltage clamp mode.
+- \c resistancepin: the dio line that activates resistance measurement of the amplifier.
+- \c buzzerpin: the dio line that activates the buzzer.
+- \c buzzerpulse: the duration in ms the buzzer is activated.
+
+\par Sound
+When activating the buzzer the plugin mutes the soundcard via the OSS sound interface.
+We stay with the OSS interface since it is so simple to program. The ALSA mixer interface
+is too complicated...
+
+Check whether you a \c /dev/mixer device file. If not you need to load the 
+\c snd-mixer-oss kernel module:
+\code
+sudo modprobe snd-mixer-oss
+\endcode
+See http://alsa.opensrc.org/OSS_emulation for some information on that.
  */
 
 
