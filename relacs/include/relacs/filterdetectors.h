@@ -64,8 +64,10 @@ public:
   void clearIndices( void );
 
     /*! Copies \a il and \a el to each Filter by copying a pointer to
-        the data buffers only. */
-  void assignTracesEvents( const InList &il, const EventList &el );
+        the data buffers only. In addition add these local copies
+	to \a data and \a events. */
+  void assignTracesEvents( const InList &il, const EventList &el,
+			   deque<InList*> &data, deque<EventList*> &events );
     /*! Copies again all settings and indices from the reference
         traces and events to each Filter. */
   void assignTracesEvents( void );

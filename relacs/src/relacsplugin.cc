@@ -287,6 +287,13 @@ void RELACSPlugin::unlockAll( void )
 }
 
 
+void RELACSPlugin::addTracesEvents( deque<InList*> &data, deque<EventList*> &events )
+{
+  data.push_back( &IL );
+  events.push_back( &EL );
+}
+
+
 void RELACSPlugin::assignTracesEvents( const InList &il, const EventList &el )
 {
   IL.assign( &il );
@@ -324,38 +331,25 @@ void RELACSPlugin::updateDerivedTracesEvents( void )
 }
 
 
-void RELACSPlugin::updateData( double mintracetime, double signaltime )
+int RELACSPlugin::updateData( double mintracetime, double signaltime )
 {
   // get new data:
-  if ( ! RW->updateData( mintracetime, signaltime ) ) {
-    QMutex mutex;
-    mutex.lock();
-    RW->UpdateDataWait.wait( &mutex, 100 );
-    mutex.unlock();
-  }
-  // make them available:
-  RW->AQ->inputMutex()->lock();
-  updateRawTracesEvents();
-  RW->AQ->inputMutex()->unlock();
-  RW->DerivedDataMutex.lock();
-  updateDerivedTracesEvents();
-  RW->DerivedDataMutex.unlock();
+  int r = RW->updateData( IL, EL, mintracetime, signaltime );
+  SignalTime = EL[0].back(); // XXX this might be a hack!
+  return r;
 }
 
 
 void RELACSPlugin::getData( void )
 {
+  // this should go into Acquire!
   RW->AQ->inputMutex()->lock();
   updateRawTracesEvents();
-  RW->SF->updateRawTraces();
   RW->AQ->inputMutex()->unlock();
 
   RW->DerivedDataMutex.lock();
   updateDerivedTracesEvents();
-  RW->SF->updateDerivedTraces();
   RW->DerivedDataMutex.unlock();
-
-  RW->SF->saveTraces();
 }
 
 

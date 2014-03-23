@@ -77,10 +77,12 @@ void FilterDetectors::clearIndices( void )
 }
 
 
-void FilterDetectors::assignTracesEvents( const InList &il, const EventList &el )
+void FilterDetectors::assignTracesEvents( const InList &il, const EventList &el,
+					  deque<InList*> &data, deque<EventList*> &events )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
     d->FilterDetector->assignTracesEvents( il, el );
+    d->FilterDetector->addTracesEvents( data, events );
     for ( int j=0; j < d->InTraces.size(); j++ ) {
       if ( d->InTraces[j].source() == 0 )
 	d->InTraces.set( j, &d->FilterDetector->trace( d->InTraces[j].ident() ) );
@@ -88,6 +90,10 @@ void FilterDetectors::assignTracesEvents( const InList &il, const EventList &el 
     for ( int j=0; j < d->InEvents.size(); j++ ) {
       if ( d->InEvents[j].source() == 0 )
 	d->InEvents.set( j, &d->FilterDetector->events( d->InEvents[j].ident() ) );
+    }
+    for ( int j=0; j < d->OtherEvents.size(); j++ ) {
+      if ( d->OtherEvents[j].source() == 0 )
+	d->OtherEvents.set( j, &d->FilterDetector->events( d->OtherEvents[j].ident() ) );
     }
   }
 }
@@ -146,8 +152,7 @@ string FilterDetectors::createFilters( void )
     // create filter instance:
     string ident = filteropts->text( "name" );
     string filter = filteropts->text( "filter" );
-    Filter *fp = (Filter*)( Plugins::create( filter,
-					     RELACSPlugin::FilterId ) );
+    Filter *fp = (Filter*)( Plugins::create( filter, RELACSPlugin::FilterId ) );
     if ( fp == 0 ) {
       warning += "<b>" + ident + "</b>: Plugin \"<b>" + filter + "</b>\" not found!<br>\n";
       continue;
@@ -500,12 +505,17 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
 
+    d->InTraces.clear();
+    d->InEvents.clear();
+    d->OutTraces.clear();
+    d->OutEvents.clear();
+    d->OtherEvents.clear();
+
     string fs = ( d->FilterDetector->type() & Filter::EventDetector ) ? "detector" : "filter";
 
     // inputs:
     if ( d->FilterDetector->type() & Filter::EventInput ) {
       // input events:
-      d->InEvents.clear();
       bool store = true;
       for ( unsigned int j=0; j < d->In.size(); j++ ) {
 	int einx = events.index( d->In[j] );
@@ -532,7 +542,6 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
     }
     else {
       // input traces:
-      d->InTraces.clear();
       bool store = true;
       for ( unsigned int j=0; j < d->In.size(); j++ ) {
 	int dinx = data.index( d->In[j] );
@@ -567,7 +576,6 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
       d->Out = ek;
 
       // assemble output events:
-      d->OutEvents.clear();
       for ( int j=0; j < d->NOut; j++ ) {
 	int intrace = EventInputTrace[ek];
 	if ( intrace < 0 )
@@ -592,7 +600,6 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
       }
 
       // assemble other events:
-      d->OtherEvents.clear();
       for ( unsigned int j=0; j < d->Other.size(); j++ ) {
 	int oinx = events.index( d->Other[j] );
 	if ( oinx < 0 )
@@ -644,7 +651,6 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
       d->Out = dk;
 
       // assemble output traces:
-      d->OutTraces.clear();
       for ( int j=0; j < d->NOut; j++ ) {
 	int intrace = TraceInputTrace[dk];
 	if ( intrace < 0 )
@@ -1004,6 +1010,10 @@ string FilterDetectors::filter( void )
 
   // filter and detect events:
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
+
+    d->OutEvents.setSignalTime( StimulusEvents->back() );
+    d->OutTraces.setSignalTime( StimulusEvents->back() );
+    // XXX set restart index!
 
     d->FilterDetector->updateDerivedTracesEvents();
 

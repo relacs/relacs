@@ -169,6 +169,8 @@ public:
 	i.e. before writing any stimulus. */
   void save( bool on );
 
+    /*! Add the local copies of the data buffers to \a data and \a events. */
+  void addTracesEvents( deque<InList*> &data, deque<EventList*> &events );
     /*! Update raw data traces and events. Needs to be called right before saveTraces(). */
   void updateRawTraces( void );
     /*! Update derived data traces and events. Needs to be called right before saveTraces(). */

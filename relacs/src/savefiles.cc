@@ -331,6 +331,15 @@ void SaveFiles::writeToggle( void )
 }
 
 
+void SaveFiles::addTracesEvents( deque<InList*> &data, deque<EventList*> &events )
+{
+  /* XXX
+  data.push_back( *IL );
+  events.push_back( *EL );
+  */
+}
+
+
 void SaveFiles::updateRawTraces( void )
 {
   //  cerr << "SaveFiles::updateTraces(): saving=" << saving() << '\n';

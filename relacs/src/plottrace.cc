@@ -195,7 +195,6 @@ void PlotTrace::resize( void )
   // setup plots:
   if ( traces().size() != P.size() )
     P.resize( traces().size(), Plot::Pointer );
-  // XXX  P.setDataMutex( &RW->DataMutex );
   P.setDataMutex( mutex() );
   P.setCommonXRange();
   PlotElements.clear();

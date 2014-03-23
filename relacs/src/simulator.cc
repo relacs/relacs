@@ -167,15 +167,15 @@ int Simulator::read( InList &data )
 
   // mark restart:
   InTraces.setRestart();
-  EventDataMutex.lock();
+  DataMutex.lock();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
-  EventDataMutex.unlock();
+  DataMutex.unlock();
 
   // start reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 && 
-	 AI[i].AI->startRead( 0, &AIDataMutex, &AIWait, 0 ) != 0 )
+	 AI[i].AI->startRead( 0, &DataMutex, &DataWait, 0 ) != 0 )
       success = false;
   }
 
@@ -209,7 +209,7 @@ int Simulator::read( InList &data )
   LastWrite = -1.0;
   SyncMode = AISync;
 
-  Sim->start( data, &AIDataMutex, &AIWait );
+  Sim->start( data, &DataMutex, &DataWait );
 
   return 0;
 }
@@ -230,10 +230,10 @@ int Simulator::restartRead( vector< AOData* > &aos, bool directao,
 
   // set restart index:
   InTraces.setRestart();
-  EventDataMutex.lock();
+  DataMutex.lock();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
-  EventDataMutex.unlock();
+  DataMutex.unlock();
 
   // set new gain indices:
   int t = 0;
@@ -1051,7 +1051,6 @@ bool Simulator::getSignal( void )
   if ( signaltime <= SignalTime ) 
     return false;
 
-  EventDataMutex.lock();
   if ( NewSignalTime )
     cerr << currentTime()
 	 << " ! error in Acquire::getSignal() -> NewSignalTime still true\n";
@@ -1059,7 +1058,6 @@ bool Simulator::getSignal( void )
   NewSignalTime = true;
   if ( SignalEvents != 0 )
     SignalEvents->push( SignalTime, 0.0, LastDuration );
-  EventDataMutex.unlock();
 
   LastWrite = -1.0;
   return true;

@@ -1,5 +1,12 @@
 New InData threading:
-- How to set restart time in all events and data? In setSignal()?
+- SignalTime in Plugins is no longer set by updateData! In particular Filters! Check the hack in RELACSPlugin.
+- Implement local copy of data and events in SaveFiles in parallel to the single traces in the filelists. Updatethe addTracesEvents and the update functions accordingly.
+- FilterDetectors::filter() StimulusEvents should be replaced by the one of the copy of the respective filter!
+- How to set restart time in all data traces (see filterdetectors)?
+- Remove unused update functions from relacsplugin
+- What about recording events (SignalTime, locking)?
+- Add Model data also to UpdateRawData?
+- Fix Simulation mode!
 - Check and further simplify RELACSWidget data locking: individual locks per trace/device/filter?
 - Filter/Detector influences reading dramatically (EODDetector in efield with comedi on 64kB) -
   should be made independent.

@@ -398,19 +398,21 @@ public:
         \return 0 on success, i.e. all analog inputs finished successfully
 	or -1 if some input failed. */
   virtual int waitForRead( void );
-    /*! Waits until the input traces of the currently running acquisition
-        contain a minimum number of data elements.
-	Returns immediately in case of errors or the acquisition was stopped.
+    /*! Updates the raw traces of the lists \a data and \a events
+        to the current state of the data buffers.
+	If \a mintracetime is greater than zero waits until the input
+        traces of the currently running acquisition contain a minimum
+        number of data elements.  Returns immediately in case of
+        errors or the acquisition was stopped.
 	\param[in] mintracetime If \a mintracetime is greater than zero,
-	waitForData() blocks until data upto \a mintracetime are available.
+	blocks until data upto \a mintracetime are available.
 	\param[in] signaltime If in addition \a signaltime is greater than zero,
-	waitForData() first blocks until signalTime() is greater than \a signaltime
+	first blocks until signalTime() is greater than \a signaltime
 	and afterwards until data until signalTime() plus \a mintracetime are available.
-        \return \c true if the input traces contain the required data, \a false
-	otherwise, i.e. on error or interruptions. */
-  virtual bool waitForData( double mintracetime=0.0, double signaltime=-1000.0 );
-    /*! \return \c true if all the threads acquireing data are still running. */
-  bool isReadRunning( void ) const;
+        \return \c 1 if the input traces contain the required data,
+	\c 0 if interrupted, or \c -1 on error. */
+  int updateRawData( double mintracetime, double signaltime,
+		     deque<InList*> &data, deque<EventList*> &events );
 
     /*! \return the flag that is used to mark traces whose gain was changed. 
         \sa setAdjustFlag(), setGain(), adjustGain(), gainChanged(), activateGains() */
@@ -638,11 +640,6 @@ public:
 
     /*! \return the time where the last signal started. */
   double signalTime( void ) const;
-    /*! Get and set the current signal time in \a data and \a events.
-	\param[out] data all traces get the current signalTime() set
-	\param[out] events the stimulus events gets the current signal added.
-	\sa getSignal() */
-  void setSignal( InList &data, EventList &events );
 
     /*! Stop any activity related to
         analog output and analog input immediately. */
@@ -651,9 +648,10 @@ public:
 
 protected:
 
+    /*! \return \c true if all the threads acquiering data are still running. */
+  bool isReadRunning( void ) const;
     /*! Check for a new signal time and update it.
-        \return \c true if there was a new signal.
-	\sa setSignal() */
+        \return \c true if there was a new signal. */
   virtual bool getSignal( void );
 
     /*! \return a string with the current time. */
@@ -680,13 +678,11 @@ protected:
     /*! Semaphore guarding analog inputs. */
   QSemaphore AISemaphore;
     /*! Locks analog input data traces. */
-  QMutex AIDataMutex;
+  mutable QMutex DataMutex;
     /*! Waits on new data in input traces. */
-  QWaitCondition AIWait;
+  QWaitCondition DataWait;
     /*! The input data from the last read(). */
   InList InTraces;
-    /*! Locks primary event traces. */
-  mutable QMutex EventDataMutex;
 
     /*! The flag that is used to mark adjusted traces in InData. */
   int AdjustFlag;

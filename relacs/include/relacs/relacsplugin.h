@@ -452,6 +452,8 @@ int MyPlugin::main( void )
     /*! \return the current recording time of the input buffers. */
   double currentTime( void ) const;
 
+    /*! Add the local copies of the data buffers to \a data and \a events. */
+  void addTracesEvents( deque<InList*> &data, deque<EventList*> &events );
     /*! Copies \a il and \a el to this by copying a pointer to the data buffers only. */
   void assignTracesEvents( const InList &il, const EventList &el );
     /*! Copies again all settings and indices from the reference traces and events to this. */
@@ -467,8 +469,10 @@ int MyPlugin::main( void )
         until data upto \a mintracetime are available.
 	If in addition \a signaltime is greater than zero, updateData() blocks
 	until signalTime() is greater than \a signalTime and then until
-	data until signalTime() plus mintracetime are available. */
-  void updateData( double mintracetime = 0.0, double signaltime=-1000.0 );
+	data until signalTime() plus mintracetime are available.
+        \return \c 1 if the input traces contain the required data,
+	\c 0 if interrupted, or \c -1 on error. */
+  int updateData( double mintracetime = 0.0, double signaltime=-1000.0 );
     /*! Make current trace and event data available to this.
         Do not retrieve and process brand new data. */
   void getData( void );
