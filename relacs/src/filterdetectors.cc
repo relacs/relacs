@@ -412,17 +412,10 @@ int FilterDetectors::events( void )
 }
 
 
-void FilterDetectors::createStimulusEvents( InList &data, EventList &events,
+void FilterDetectors::createStimulusEvents( EventList &events,
 					    deque< PlotTrace::EventStyle > &eventstyles )
 {
-  EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
-	       false, true );  // as the width we store the signal durations
-  e.setCyclic();
-  e.setSource( 0 );
-  e.setMode( SaveFiles::SaveTrace | SaveFiles::SaveWidth | PlotTraceMode | StimulusEventMode );
-  e.setIdent( "Stimulus" );
-  e.setWriteBufferCapacity( 1000 );
-  events.push( e );
+  events.back().setMode( events.back().mode() | SaveFiles::SaveTrace | SaveFiles::SaveWidth | PlotTraceMode );
   StimulusEvents = &events.back();
 
   eventstyles.push_back( PlotTrace::EventStyle() );
@@ -441,18 +434,11 @@ void FilterDetectors::createStimulusEvents( InList &data, EventList &events,
 }
 
 
-void FilterDetectors::createRestartEvents( InList &data, EventList &events,
+void FilterDetectors::createRestartEvents( EventList &events,
 					   deque< PlotTrace::EventStyle > &eventstyles )
 {
-  EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
-	       false, false );
-  e.setCyclic();
-  e.setSource( 0 );
-  e.setMode( SaveFiles::SaveTrace | PlotTraceMode | RestartEventMode );
-  e.setIdent( "Restart" );
-  e.setWriteBufferCapacity( 1000 );
-  events.push( e );
-
+  events.back().setMode( events.back().mode() | SaveFiles::SaveTrace | PlotTraceMode );
+  
   eventstyles.push_back( PlotTrace::EventStyle() );
   eventstyles.back().PlotWindow = -2;
   eventstyles.back().Line.setColor( Plot::Orange );

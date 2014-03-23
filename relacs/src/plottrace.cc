@@ -1034,7 +1034,17 @@ void PlotTrace::centerVertically( void )
       P[cp[c]].pushRanges();
     double center = 0.5*(min+max);
     double range = 0.5*(P[cp[c]].ymaxRange() - P[cp[c]].yminRange());
-    P[cp[c]].setYRange( center-range, center+range );
+    double nmin = center-range;
+    double nmax = center+range;
+    if ( nmin < trace( cp[c] ).minValue() ) {
+      nmin = trace( cp[c] ).minValue();
+      nmax = nmin + 2.0*range;
+    }
+    if ( nmax > trace( cp[c] ).maxValue() ) {
+      nmax = trace( cp[c] ).maxValue();
+      nmin = nmax - 2.0*range;
+    }
+    P[cp[c]].setYRange( nmin, nmax );
   }
   P.unlock();
 }

@@ -544,7 +544,7 @@ bool DAQFlexAnalogInput::running( void ) const
   lock();
   string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS", false );
   unlock();
-  return ( response.find( "RUNNING" ) != string::npos );
+  return ( response.find( "RUNNING" ) != string::npos && AnalogInput::running() );
 }
 
 

@@ -243,7 +243,7 @@ public:
         then reimplement this function. 
         Add for each such parameter a TraceSpec to \a traces.
         \a deviceid is the id of the analog output device
-        that you should use for initializing the TraceSpec. */
+        that you should pass as the \a device to TraceSpec. */
   virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
 
     /*! May match trace names with driver internal trace names,

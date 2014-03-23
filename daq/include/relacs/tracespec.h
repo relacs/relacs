@@ -35,7 +35,6 @@ class OutData;
 /*! 
 \class TraceSpec
 \author Jan Benda
-\version 1.0
 \brief Specification of an output signal.
 */
 

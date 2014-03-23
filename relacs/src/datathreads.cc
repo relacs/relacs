@@ -44,10 +44,18 @@ void ReadThread::run( void )
   while ( true ) {
     int r = RW->AQ->waitForRead();
     if ( r < 0 ) {
-      RW->printlog( "! error in reading acquired data: " + RW->IL.errorText() );
-      QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog input: " + RW->IL.errorText() ) );
+      string es = RW->AQ->readError();
+      RW->printlog( "! error in reading acquired data: " + es );
+      QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog input: " + es ) );
       RW->AQ->restartRead();
-      // XXX check error again and switch to idle mode!
+      // check error and on failure switch to idle mode:
+      es = RW->AQ->readError();
+      if ( ! es.empty() ) {
+	RW->printlog( "! error in restarting analog input: " + es );
+	QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in restarting analog input: " + es ) );
+	// XXX switch to idle mode!
+	break;
+      }
     }
     else
       break;
@@ -70,8 +78,11 @@ void WriteThread::start( void )
 
 void WriteThread::run( void )
 {
-  if ( RW->AQ->waitForWrite() < 0 )
-    QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog output: " + RW->AQ->writeError() ) );
+  if ( RW->AQ->waitForWrite() < 0 ) {
+    string es = RW->AQ->writeError();
+    RW->printlog( "! error in writing data: " + es );
+    QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog output: " + es ) );
+  }
 }
 
 

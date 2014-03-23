@@ -301,6 +301,12 @@ int AnalogInput::testReadData( InList &traces )
 }
 
 
+bool AnalogInput::running( void ) const
+{
+  return QThread::isRunning();
+}
+
+
 void AnalogInput::startThread( QSemaphore *sp, QMutex *datamutex,
 			       QWaitCondition *datawait, bool error )
 {
@@ -355,16 +361,16 @@ void AnalogInput::run( void )
       break;
     // the sleep is needed to allow for other processes to acquire the lock!
     QThread::msleep( 1 );
-    /*
     lock();
     rd = Run;
     unlock();
-    */
   } while ( rd );
 
   lock();
   Run = false;
   unlock();
+  if ( DataWait != 0 )
+    DataWait->wakeAll();
   if ( Semaphore != 0 )
     Semaphore->release( 1 );
   Semaphore = 0;

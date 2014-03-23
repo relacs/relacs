@@ -987,6 +987,8 @@ bool ComediAnalogInput::running( void ) const
 {   
   lock();
   bool r = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
+  if ( ! AnalogInput::running() )
+    r = false;
   unlock();
   return r;
 }

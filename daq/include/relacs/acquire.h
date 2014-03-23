@@ -45,10 +45,8 @@ namespace relacs {
 /*! 
 \class Acquire
 \author Jan Benda
-\version 1.9
 \brief Read and write data streams from/to data aqcuisition boards.
 \todo Overflow in InData::Index (after 7h!) -> reset InData!
-  Implement the setReset() function and the HardReset variable.
 \todo internal list of Attenuate that corresponds to outTraces for faster access.
 \todo write(), testWrite(): check carrier frequency?
 
@@ -146,16 +144,13 @@ public:
     /*! Add the analog input device \a ai to
 	the list of analog input devices.
 	\param[in] ai the analog input device to be added
-	\param[in] datamutex the mutex to be used to lock the data traces
-	\param[in] datawait a waitcondition to be woken up whenever new data are available
         \return
 	- 0 on success.
 	- -1: \a ai == 0
 	- -2: \a ai not opened
 	\sa inputsSize(), inputDevice(), inputTraces(), clearInputs(),
 	closeInputs(), addOutput(), addAttenuate(), addOutTrace() */
-  int addInput( AnalogInput *ai,
-		QMutex *datamutex=0, QWaitCondition *datawait=0 );
+  int addInput( AnalogInput *ai );
     /*! The number of device drivers for analog input
         stored in this Acquire. 
 	\sa addInput(), inputDevice(), inputTraces(), clearInputs(),
@@ -183,6 +178,8 @@ public:
 	\sa addInput(), inputsSize(), inputDevice(), inputTraces(),
 	clearInputs(), closeOutputs(), closeAttLines() */
   void closeInputs( void );
+    /*! \return the mutex used for locking the input traces. */
+  QMutex *inputMutex( void );
 
     /*! Add the analog output device \a ao to
 	the list of analog output devices.
@@ -321,6 +318,11 @@ public:
         clearInputs(), clearOutputs(), clearAttLines() */
   void clearOutTraces( void );
 
+    /*! Add and initialize stimulus events to \a events. */
+  void addStimulusEvents( InList &data, EventList &events );
+    /*! Add and initialize restart events to \a events. */
+  void addRestartEvents( InList &data, EventList &events );
+
     /*! Add all available traces of each analog input device
         to \a traces.
         \sa addOutTraces() */
@@ -396,6 +398,19 @@ public:
         \return 0 on success, i.e. all analog inputs finished successfully
 	or -1 if some input failed. */
   virtual int waitForRead( void );
+    /*! Waits until the input traces of the currently running acquisition
+        contain a minimum number of data elements.
+	Returns immediately in case of errors or the acquisition was stopped.
+	\param[in] mintracetime If \a mintracetime is greater than zero,
+	waitForData() blocks until data upto \a mintracetime are available.
+	\param[in] signaltime If in addition \a signaltime is greater than zero,
+	waitForData() first blocks until signalTime() is greater than \a signaltime
+	and afterwards until data until signalTime() plus \a mintracetime are available.
+        \return \c true if the input traces contain the required data, \a false
+	otherwise, i.e. on error or interruptions. */
+  virtual bool waitForData( double mintracetime=0.0, double signaltime=-1000.0 );
+    /*! \return \c true if all the threads acquireing data are still running. */
+  bool isReadRunning( void ) const;
 
     /*! \return the flag that is used to mark traces whose gain was changed. 
         \sa setAdjustFlag(), setGain(), adjustGain(), gainChanged(), activateGains() */
@@ -621,18 +636,13 @@ public:
 	for the output trace with name \a trace. */
   void intensities( const string &trace, vector<double> &ints, double frequency=0.0 ) const;
 
-    /*! Check for a new signal event and add it to \a events.
-        \param[out] signaltime is set to the time of the most recent signal.
+    /*! \return the time where the last signal started. */
+  double signalTime( void ) const;
+    /*! Get and set the current signal time in \a data and \a events.
 	\param[out] data all traces get the current signalTime() set
-	\param[out] events the stimulus events gets the current signal added
-        \return \c true if there was a new signal event. */
-  virtual bool readSignal( double &signaltime, InList &data, EventList &events );
-    /*! Check for new restart events and add it to \a events.
-        \return \c true if there was a new restart event. */
-  virtual bool readRestart( InList &data, EventList &events );
-
-    /*! Force time zero reference to be reset. */
-  void setReset( void );
+	\param[out] events the stimulus events gets the current signal added.
+	\sa getSignal() */
+  void setSignal( InList &data, EventList &events );
 
     /*! Stop any activity related to
         analog output and analog input immediately. */
@@ -640,6 +650,11 @@ public:
   
 
 protected:
+
+    /*! Check for a new signal time and update it.
+        \return \c true if there was a new signal.
+	\sa setSignal() */
+  virtual bool getSignal( void );
 
     /*! \return a string with the current time. */
   string currentTime( void );
@@ -665,9 +680,13 @@ protected:
     /*! Semaphore guarding analog inputs. */
   QSemaphore AISemaphore;
     /*! Locks analog input data traces. */
-  QMutex *AIDataMutex;
+  QMutex AIDataMutex;
     /*! Waits on new data in input traces. */
-  QWaitCondition *AIWait;
+  QWaitCondition AIWait;
+    /*! The input data from the last read(). */
+  InList InTraces;
+    /*! Locks primary event traces. */
+  mutable QMutex EventDataMutex;
 
     /*! The flag that is used to mark adjusted traces in InData. */
   int AdjustFlag;
@@ -707,6 +726,16 @@ protected:
   double LastDuration;
     /*! Delay of last signal output. */
   double LastDelay;
+    /*! The start time of the last signal that was put out. */
+  double SignalTime;
+    /*! \c true if SignalTime was updated by getSignal(). */
+  bool NewSignalTime;
+    /*! The events recording the times in the input traces 
+        where signals where put out. */
+  EventData *SignalEvents;
+    /*! The events recording the times in the input traces 
+        where data acquisition was restarted. */
+  EventData *RestartEvents;
 
     /*! Restart data aquisition and write signals 
         pending on devices in \a aos.
@@ -748,16 +777,6 @@ protected:
     /*! The time, the buffers of AnalogInput implementations should
         be able to buffer data. */
   double UpdateTime;
-
-    /*! True if at the next best opportunity the input buffer Trace 
-        should be reset to avoid an index overflow. */
-  bool SoftReset;
-    /*! True if the input buffer Trace should immediately 
-        be reset to avoid an index overflow. */
-  bool HardReset;
-
-    /*! Set new time zero reference point. */
-  void reset( void );
 
 };
 

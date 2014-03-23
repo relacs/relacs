@@ -1,8 +1,8 @@
 New InData threading:
+- How to set restart time in all events and data? In setSignal()?
 - Check and further simplify RELACSWidget data locking: individual locks per trace/device/filter?
 - Filter/Detector influences reading dramatically (EODDetector in efield with comedi on 64kB) -
   should be made independent.
-- Blocking write: synchronization with analog input not yet solved!
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Filter buffersize should just be the same as the one of the input trace!
 - AnalogInput/Output check usage of IsPrepared and IsRunning
@@ -12,13 +12,13 @@ New InData threading:
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.
 - Replace the source() flag by a sourceTrace and sourceEvent index
-  Remove the source mapping functions from RELACSPlugin and FIlterDetectors
+  Remove the source mapping functions from RELACSPlugin and FilterDetectors
 - SpectrumAnalyzer Frequency resolution should not depend on sampling rate!
   Use Frequency resolution instead of number of fft points.
 - Check whether InData, Acquire updateTime and readTime are still needed!
   But we do not want to block on the input too long!
   So maybe keep readTime. Make it an option for each device!
-- Check InData::mode() usage, in particular AdjustField in FilterDetectors
+- Check InData::modeTogether with () usage, in particular AdjustField in FilterDetectors
 - Check locking of SaveFiles data
 - Model: improve locking by adding an extra Mutex for push() and pop()
 - SaveFiles: where does stimulus intensity go, if there is no amplifier?

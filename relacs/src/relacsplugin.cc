@@ -312,7 +312,8 @@ void RELACSPlugin::updateRawTracesEvents( void )
 {
   IL.updateRaw();
   EL.updateRaw();
-  SignalTime = RW->SignalTime;
+  if ( RW->AQ != 0 )
+    SignalTime = RW->AQ->signalTime();
 }
 
 
@@ -333,9 +334,9 @@ void RELACSPlugin::updateData( double mintracetime, double signaltime )
     mutex.unlock();
   }
   // make them available:
-  RW->RawDataMutex.lock();
+  RW->AQ->inputMutex()->lock();
   updateRawTracesEvents();
-  RW->RawDataMutex.unlock();
+  RW->AQ->inputMutex()->unlock();
   RW->DerivedDataMutex.lock();
   updateDerivedTracesEvents();
   RW->DerivedDataMutex.unlock();
@@ -344,12 +345,17 @@ void RELACSPlugin::updateData( double mintracetime, double signaltime )
 
 void RELACSPlugin::getData( void )
 {
-  RW->RawDataMutex.lock();
+  RW->AQ->inputMutex()->lock();
   updateRawTracesEvents();
-  RW->RawDataMutex.unlock();
+  RW->SF->updateRawTraces();
+  RW->AQ->inputMutex()->unlock();
+
   RW->DerivedDataMutex.lock();
   updateDerivedTracesEvents();
+  RW->SF->updateDerivedTraces();
   RW->DerivedDataMutex.unlock();
+
+  RW->SF->saveTraces();
 }
 
 

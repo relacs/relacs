@@ -43,8 +43,6 @@ const TraceSpec Acquire::DummyTrace;
 
 
 Acquire::Acquire( void )
-  : AIDataMutex( 0 ),
-    AIWait( 0 )
 {
   AI.clear();
   AdjustFlag = 0;
@@ -54,7 +52,11 @@ Acquire::Acquire( void )
   LastWrite = -1.0;
   LastDuration = 0.0;
   LastDelay = 0.0;
+  SignalTime = -1.0;
+  NewSignalTime = false;
   OutData::setAcquire( this );
+  SignalEvents = 0;
+  RestartEvents = 0;
 
   SyncMode = NoSync;
 
@@ -72,7 +74,7 @@ Acquire::~Acquire()
 }
 
 
-int Acquire::addInput( AnalogInput *ai, QMutex *datamutex, QWaitCondition *datawait )
+int Acquire::addInput( AnalogInput *ai )
 {
   if ( ai == 0 )
     return -1;
@@ -81,8 +83,6 @@ int Acquire::addInput( AnalogInput *ai, QMutex *datamutex, QWaitCondition *dataw
     return -2;
 
   AI.push_back( AIData( ai ) );
-  AIDataMutex = datamutex;
-  AIWait = datawait;
 
   return 0;
 }
@@ -128,8 +128,7 @@ void Acquire::clearInputs( void )
 {
   stopRead();
   AI.clear();
-  AIDataMutex = 0;
-  AIWait = 0;
+  InTraces.clear();
 }
 
 
@@ -143,6 +142,13 @@ void Acquire::closeInputs( void )
     AI[k].Gains.clear();
   }
   AI.clear();
+  InTraces.clear();
+}
+
+
+QMutex *Acquire::inputMutex( void )
+{
+  return &AIDataMutex;
 }
 
 
@@ -370,6 +376,38 @@ void Acquire::clearOutTraces( void )
 }
 
 
+void Acquire::addStimulusEvents( InList &data, EventList &events )
+{
+  EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
+	       false, true );  // as the width we store the signal durations
+  e.setMode( StimulusEventMode );
+  e.setCyclic();
+  e.setSource( 0 );
+  e.setIdent( "Stimulus" );
+  e.setWriteBufferCapacity( 1000 );
+  EventDataMutex.lock();
+  events.push( e );
+  SignalEvents = &events.back();
+  EventDataMutex.unlock();
+}
+
+
+void Acquire::addRestartEvents( InList &data, EventList &events )
+{
+  EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
+	       false, false );
+  e.setMode( RestartEventMode );
+  e.setCyclic();
+  e.setSource( 0 );
+  e.setIdent( "Restart" );
+  e.setWriteBufferCapacity( 1000 );
+  EventDataMutex.lock();
+  events.push( e );
+  RestartEvents = &events.back();
+  EventDataMutex.unlock();
+}
+
+
 void Acquire::inTraces( vector< TraceSpec > &traces )
 {
   for ( unsigned int k=0; k < AI.size(); k++ ) {
@@ -381,7 +419,8 @@ void Acquire::inTraces( vector< TraceSpec > &traces )
     }
   }
   // additional input variables:
-  AI[0].AI->addTraces( traces, 0 );
+  for ( unsigned int k=0; k < AI.size(); k++ )
+    AI[k].AI->addTraces( traces, 0 );
 }
 
 
@@ -627,6 +666,11 @@ int Acquire::read( InList &data )
     AI[i].Traces.clear();
     AI[i].Gains.clear();
   }
+  InTraces.clear();
+  EventDataMutex.lock();
+  SignalTime = -1.0;
+  NewSignalTime = false;
+  EventDataMutex.unlock();
 
   // sort data to devices:
   for ( int k=0; k<data.size(); k++ ) {
@@ -648,6 +692,7 @@ int Acquire::read( InList &data )
       // add data to device:
       AI[data[k].device()].Traces.add( &data[k] );
       AI[data[k].device()].Gains.push_back( -1 );
+      InTraces.add( &data[k] );
     }
   }
 
@@ -695,10 +740,8 @@ int Acquire::read( InList &data )
     return -1;
 
   // request buffer size:
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    AI[i].Traces.setReadTime( BufferTime );
-    AI[i].Traces.setUpdateTime( UpdateTime );
-  }
+  InTraces.setReadTime( BufferTime );
+  InTraces.setUpdateTime( UpdateTime );
 
   // test reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -730,8 +773,11 @@ int Acquire::read( InList &data )
     AISemaphore.acquire( AISemaphore.available() );
 
   // mark restart:
-  for ( unsigned int i=0; i<AI.size(); i++ )
-    AI[i].Traces.setRestart();
+  InTraces.setRestart();
+  EventDataMutex.lock();
+  if ( RestartEvents != 0 )
+    RestartEvents->push( InTraces[0].restartTime() );
+  EventDataMutex.unlock();
 
   // start reading from daq boards:
   vector< int > aistarted;
@@ -746,7 +792,7 @@ int Acquire::read( InList &data )
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, AIDataMutex, AIWait ) != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, &AIDataMutex, &AIWait ) != 0 )
 	  success = false;
 	else
 	  aistarted.push_back( i );
@@ -778,9 +824,6 @@ int Acquire::read( InList &data )
   LastDevice = -1;
   LastWrite = -1.0;
 
-  SoftReset = false;
-  HardReset = false;
-
   //  cerr << "Acquire::read( InList& ) finished\n";
   return 0;
 }
@@ -788,10 +831,7 @@ int Acquire::read( InList &data )
 
 string Acquire::readError( void ) const
 {
-  InList traces;
-  for ( unsigned int i = 0; i<AI.size(); i++ )
-    traces.add( AI[i].Traces );
-  return traces.errorText();
+  return InTraces.errorText();
 }
 
 
@@ -821,36 +861,36 @@ int Acquire::restartRead( void )
 {
   bool success = true;
 
-  vector< vector< long long > > errorflags( AI.size() );
+  vector< long long > errorflags( InTraces.size() );
+  vector< string > errorstrgs( InTraces.size() );
 
-  // get error flags, data and shortest recording:
+  // get error flags and shortest recording:
   double t = -1.0;
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    AI[i].Traces.update();
-    errorflags[i].resize( AI[i].Traces.size(), 0 );
-    for ( int k=0; k<AI[i].Traces.size(); k++ ) {
-      errorflags[i][k] = AI[i].Traces[k].error();
-      AI[i].Traces[k].clearError();
-      if ( t < 0.0 || AI[i].Traces[k].length() < t )
-	t = AI[i].Traces[k].length();
-    }
+  for ( int i=0; i<InTraces.size(); i++ ) {
+    errorflags[i] = InTraces[i].error();
+    errorstrgs[i] = InTraces[i].errorStr();
+    InTraces[i].clearError();
+    if ( t < 0.0 || InTraces[i].length() < t )
+      t = InTraces[i].length();
   }
 
   // make all data the same length and set restart time:
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    int m = 0;
-    for ( int k=0; k<AI[i].Traces.size(); k++ ) {
-      int n = AI[i].Traces[k].indices( t );
-      int nd = AI[i].Traces[k].size() - n;
-      if ( nd > 0 ) {
-	m += nd;
-	AI[i].Traces[k].resize( n );
-      }
+  int m = 0;
+  for ( int i=0; i<InTraces.size(); i++ ) {
+    int n = InTraces[i].indices( t );
+    int nd = InTraces[i].size() - n;
+    if ( nd > 0 ) {
+      m += nd;
+      InTraces[i].resize( n );
     }
-    if ( m >= AI[i].Traces.size() )
-      cerr << "Acquire::restartRead(): truncated " << m << " of " << AI[i].Traces.size() << "input traces\n";
-    AI[i].Traces.setRestart();
   }
+  if ( m >= InTraces.size() )
+    cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
+  InTraces.setRestart();
+  EventDataMutex.lock();
+  if ( RestartEvents != 0 )
+    RestartEvents->push( InTraces[0].restartTime() );
+  EventDataMutex.unlock();
 
   // reset and prepare reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -883,7 +923,7 @@ int Acquire::restartRead( void )
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, AIDataMutex, AIWait ) != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, &AIDataMutex, &AIWait ) != 0 )
 	  success = false;
 	else
 	  aistarted.push_back( i );
@@ -895,9 +935,9 @@ int Acquire::restartRead( void )
     return -1;
 
   // restore errorflags:
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    for ( int k=0; k<AI[i].Traces.size(); k++ )
-      AI[i].Traces[k].setError( errorflags[i][k] );
+  for ( int i=0; i<InTraces.size(); i++ ) {
+    InTraces[i].setError( errorflags[i] );
+    InTraces[i].setErrorStr( errorstrgs[i] );
   }
 
   return 0;
@@ -916,33 +956,31 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   if ( stopRead() != 0 )
     success = false;
 
- cerr << currentTime() << " Acquire::restartRead() -> stopped analog input\n";
-
   // get data and shortest recording:
   double t = -1.0;
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    for ( int k=0; k<AI[i].Traces.size(); k++ ) {
-      AI[i].Traces[k].clearError();
-      if ( t < 0.0 || AI[i].Traces[k].length() < t )
-	t = AI[i].Traces[k].length();
-    }
+  for ( int i=0; i<InTraces.size(); i++ ) {
+    InTraces[i].clearError();
+    if ( t < 0.0 || InTraces[i].length() < t )
+      t = InTraces[i].length();
   }
 
   // make all data the same length and set restart time:
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    int m = 0;
-    for ( int k=0; k<AI[i].Traces.size(); k++ ) {
-      int n = AI[i].Traces[k].indices( t );
-      int nd = AI[i].Traces[k].size() - n;
-      if ( nd > 0 ) {
-	m += nd;
-	AI[i].Traces[k].resize( n );
-      }
+  int m = 0;
+  for ( int i=0; i<InTraces.size(); i++ ) {
+    int n = InTraces[i].indices( t );
+    int nd = InTraces[i].size() - n;
+    if ( nd > 0 ) {
+      m += nd;
+      InTraces[i].resize( n );
     }
-    if ( m >= AI[i].Traces.size() )
-      cerr << "Acquire::restartRead( AOData ): truncated " << m << " of " << AI[i].Traces.size() << "input traces\n";
-    AI[i].Traces.setRestart();
   }
+  if ( m >= InTraces.size() )
+    cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
+  InTraces.setRestart();
+  EventDataMutex.lock();
+  if ( RestartEvents != 0 )
+    RestartEvents->push( InTraces[0].restartTime() );
+  EventDataMutex.unlock();
 
   // set signal start:
   if ( aod.size() > 0 && t >= 0.0 ) {
@@ -1013,14 +1051,12 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 
   // direct analog output:
   if ( directao ) {
-  cerr << "restartread directao\n";
     for ( unsigned int i=0; i<aod.size(); i++ ) {
       if ( aod[i]->AO->directWrite( aod[i]->Signals ) != 0 )
 	success = false;
     }
   }
 
-  cerr << "restartread startread\n";
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
@@ -1034,7 +1070,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	int r = AI[i].AI->startRead( &AISemaphore, AIDataMutex, AIWait, &AOSemaphore );
+	int r = AI[i].AI->startRead( &AISemaphore, &AIDataMutex, &AIWait, &AOSemaphore );
 	if ( r < 0 )
 	  success = false;
 	else {
@@ -1057,7 +1093,6 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     
   // start writing streaming signals:
   if ( ! directao ) {
-  cerr << "restartread further\n";
     vector< int > aostarted;
     aostarted.reserve( aod.size() );
     for ( unsigned int i=0; i<aod.size(); i++ ) {
@@ -1131,6 +1166,49 @@ int Acquire::waitForRead( void )
   }
 
   return 0;
+}
+
+
+bool Acquire::waitForData( double mintracetime, double signaltime )
+{
+  if ( mintracetime <= 0.0 )
+    return true;
+
+  AIDataMutex.lock();
+  // do wee need to wait for a new signal?
+  if ( signaltime >= -1.0 ) {
+    while ( InTraces.success() &&
+	    SignalTime <= signaltime &&
+	    isReadRunning() ) { 
+      AIWait.wait( &AIDataMutex );
+      getSignal();
+    }
+    mintracetime += SignalTime;
+  }
+
+  // do we need to wait for more data?
+  while ( InTraces.success() &&
+	  InTraces.currentTime() < mintracetime &&
+	  isReadRunning() ) {
+    AIWait.wait( &AIDataMutex );
+  }
+
+  bool r = ( InTraces.currentTime() >= mintracetime );
+  AIDataMutex.unlock();
+  return r;
+}
+
+
+bool Acquire::isReadRunning( void ) const
+{
+  bool isrunning = true;
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( ! AI[i].Traces.empty() && ! AI[i].AI->running() ) {
+      isrunning = false;
+      break;
+    }
+  }
+  return isrunning;
 }
 
 
@@ -1408,8 +1486,7 @@ bool Acquire::gainChanged( void ) const
 int Acquire::activateGains( void )
 {
   // clear adjust-flags:
-  for ( unsigned int i=0; i<AI.size(); i++ )
-    AI[i].Traces.delMode( AdjustFlag );
+  InTraces.delMode( AdjustFlag );
 
   if ( ! gainChanged() )
     return 0;
@@ -1745,8 +1822,7 @@ int Acquire::write( OutData &signal, bool setsignaltime )
   }
   else {
     // clear adjust-flags:
-    for ( unsigned int i=0; i<AI.size(); i++ )
-      AI[i].Traces.delMode( AdjustFlag );
+    InTraces.delMode( AdjustFlag );
     if ( AO[di].AO->startWrite( &AOSemaphore ) > 0 )
       finished = false;
   }
@@ -1986,8 +2062,7 @@ int Acquire::write( OutList &signal, bool setsignaltime )
   }
   else {
     // clear adjust-flags:
-    for ( unsigned int i=0; i<AI.size(); i++ )
-      AI[i].Traces.delMode( AdjustFlag );
+    InTraces.delMode( AdjustFlag );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
       if ( AO[i].Signals.size() > 0 ) {
 	int r = AO[i].AO->startWrite( &AOSemaphore );
@@ -2151,8 +2226,7 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
     }
     else {
       // clear adjust-flags:
-      for ( unsigned int i=0; i<AI.size(); i++ )
-	AI[i].Traces.delMode( AdjustFlag );
+      InTraces.delMode( AdjustFlag );
       AO[di].AO->directWrite( AO[di].Signals );
     }
   }
@@ -2355,8 +2429,7 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
     }
     else {
       // clear adjust-flags:
-      for ( unsigned int i=0; i<AI.size(); i++ )
-	AI[i].Traces.delMode( AdjustFlag );
+      InTraces.delMode( AdjustFlag );
       for ( unsigned int i=0; i<AO.size(); i++ ) {
 	if ( AO[i].Signals.size() > 0 ) {
 	  if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )
@@ -2616,11 +2689,18 @@ void Acquire::intensities( const string &trace, vector<double> &ints, double fre
 }
 
 
-bool Acquire::readSignal( double &signaltime, InList &data, EventList &events )
+double Acquire::signalTime( void ) const
+{
+  EventDataMutex.lock();
+  double st = SignalTime;
+  EventDataMutex.unlock();
+  return st;
+}
+
+
+bool Acquire::getSignal( void )
 {
   double sigtime = -1.0;
-
-  //  cerr << "Acquire::readSignal()\n";
 
   if ( SyncMode == CounterSync || SyncMode == AISync ) {
     if ( LastDevice < 0 )
@@ -2645,29 +2725,15 @@ bool Acquire::readSignal( double &signaltime, InList &data, EventList &events )
     sigtime = LastWrite + LastDelay;
   }
 
-  signaltime = sigtime;
-
-  // set signal time in input traces:
-  data.setSignalTime( sigtime );
-
-  // set signal time in events:
-  events.setSignalTime( sigtime );
-  
-  // add signal time to stimulus events:
-  for ( int k=0; k<events.size(); k++ ) {
-    if ( (events[k].mode() & StimulusEventMode) > 0 ) {
-      if ( events[k].empty() || events[k].back() < sigtime )
-	events[k].push( sigtime, 0.0, LastDuration );
-      else if ( ! events[k].empty() && events[k].back() >= sigtime ) {
-	cerr << currentTime()
-	     << " ! error in Acquire::readSignal() -> signalTime " << sigtime
-	     << " < back() " << events[k].back() 
-	     << ", current time = " << data[0].currentTime()
-	     << ", restart time = " << data[0].restartTime() << '\n';
-      }
-      break;
-    }
-  }
+  EventDataMutex.lock();
+  if ( NewSignalTime )
+    cerr << currentTime()
+	 << " ! error in Acquire::getSignal() -> NewSignalTime still true\n";
+  SignalTime = sigtime;
+  NewSignalTime = true;
+  if ( SignalEvents != 0 )
+    SignalEvents->push( SignalTime, 0.0, LastDuration );
+  EventDataMutex.unlock();
 
   LastDevice = -1;
   LastWrite = -1.0;
@@ -2676,33 +2742,21 @@ bool Acquire::readSignal( double &signaltime, InList &data, EventList &events )
 }
 
 
-bool Acquire::readRestart( InList &data, EventList &events )
+void Acquire::setSignal( InList &data, EventList &events )
 {
-  double found = false;
-  double restarttime = data[0].restartTime();
-  for ( int k=0; k<events.size(); k++ ) {
-    if ( (events[k].mode() & RestartEventMode) > 0 ) {
-      if ( events[k].empty() || events[k].back() < restarttime ) {
-	events[k].push( restarttime );
-	found = true;
-      }
-      else if ( ! events[k].empty() && events[k].back() > restarttime ) {
-	cerr << currentTime()
-	     << " ! error in Acquire::readSignal() -> restartTime " << restarttime
-	     << " < back() " << events[k].back() 
-	     << ", current time = " << data[0].currentTime()
-	     << ", restart time = " << data[0].restartTime() << '\n';
-      }
-      break;
-    }
+  getSignal();
+
+  if ( NewSignalTime ) {
+
+    // set signal time in input traces:
+    data.setSignalTime( SignalTime );
+    
+    // set signal time in events:
+    events.setSignalTime( SignalTime );
+
+    NewSignalTime = false;
+
   }
-  return found;
-}
-
-
-void Acquire::setReset( void )
-{
-  HardReset = true; 
 }
 
 
@@ -2710,11 +2764,6 @@ void Acquire::stop( void )
 {
   stopRead();
   stopWrite();
-}
-
-
-void Acquire::reset( void )
-{
 }
 
 

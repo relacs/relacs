@@ -373,8 +373,6 @@ private:
   deque<PlotTrace::TraceStyle> TraceStyles;
   deque<PlotTrace::EventStyle> EventStyles;
 
-  double SignalTime;
-
   ReadThread ReadLoop;
   WriteThread WriteLoop;
 
@@ -391,14 +389,7 @@ private:
   QLabel *SimLabel;
 
     /*! Controls the primary input data buffer. */
-  QMutex RawDataMutex;
   QMutex DerivedDataMutex;
-  bool RunData;
-  QMutex RunDataMutex;
-
-    /*! wait for stimulus data to be written */
-  QWaitCondition ThreadSleepWait;
-  QWaitCondition ReadDataWait;
 
   // synchronization of Session and Control threads:
   QWaitCondition UpdateDataWait;

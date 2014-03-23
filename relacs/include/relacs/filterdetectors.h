@@ -84,12 +84,10 @@ public:
     /*! Number of output events. */
   int events( void );
 
-    /*! Initialize stimulus events. */
-  void createStimulusEvents( InList &data, EventList &events,
-			     deque< PlotTrace::EventStyle > &eventstyles );
-    /*! Initialize restart events. */
-  void createRestartEvents( InList &data, EventList &events,
-			    deque< PlotTrace::EventStyle > &eventstyles );
+    /*! Further initialize the last event in \a events as stimulus events. */
+  void createStimulusEvents( EventList &events, deque< PlotTrace::EventStyle > &eventstyles );
+    /*! Further initialize the last event in \a events as restart events. */
+  void createRestartEvents( EventList &events, deque< PlotTrace::EventStyle > &eventstyles );
     /*! Initialize file recording events. */
   void createRecordingEvents( InList &data, EventList &events,
 			      deque< PlotTrace::EventStyle > &eventstyles );

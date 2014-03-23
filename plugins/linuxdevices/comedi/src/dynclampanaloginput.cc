@@ -879,7 +879,7 @@ bool DynClampAnalogInput::running( void ) const
     return false;
   }
 
-  return exchangeVal;
+  return ( exchangeVal > 0 && AnalogInput::running() );
 }
 
 

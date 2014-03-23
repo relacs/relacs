@@ -75,12 +75,9 @@ public:
   virtual int waitForWrite( void );
     /*! Stop current stimulus. */
   virtual int stopWrite( void );
-    /*! Check for a new signal event and add it to \a events.
-        \param[out] signaltime is set to the time of the most recent signal.
-	\param[out] data all traces get the current signalTime() set
-	\param[out] events the stimulus events gets the current signal added
-        \return \c true if there was a new signal event. */
-  virtual bool readSignal( double &signaltime, InList &data, EventList &events );
+    /*! Check for a new signal time and update it.
+        \return \c true if there was a new signal. */
+  virtual bool getSignal( void );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards. */

@@ -186,8 +186,10 @@ public:
         \sa stop(), close(), open(), isOpen() */
   virtual int reset( void ) = 0;
 
-    /*! True if analog input is running. */
-  virtual bool running( void ) const = 0;
+    /*! \return true if analog input is running.
+        The default implementation checks whether the thread is still running.
+        In your implementation you should use this information as well. */
+  virtual bool running( void ) const;
 
     /*! Check for every analog input and analog output device in \a ais
         and \a aos, respectively,
@@ -208,8 +210,8 @@ public:
         like model outputs of a dynamic clamp modul,
         then reimplement this function. 
         Add for each such variable a TraceSpec to \a traces.
-        \a deviceid is the id of the analog output device
-        that you should use for initializing the TraceSpec. */
+        \a deviceid is the id of this analog input device
+        that you should pass as the \a device to TraceSpec. */
   virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
 
     /*! May match trace names with driver internal trace names,

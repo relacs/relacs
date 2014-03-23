@@ -166,13 +166,16 @@ int Simulator::read( InList &data )
     return -1;
 
   // mark restart:
-  for ( unsigned int i=0; i<AI.size(); i++ )
-    AI[i].Traces.setRestart();
+  InTraces.setRestart();
+  EventDataMutex.lock();
+  if ( RestartEvents != 0 )
+    RestartEvents->push( InTraces[0].restartTime() );
+  EventDataMutex.unlock();
 
   // start reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 && 
-	 AI[i].AI->startRead( 0, AIDataMutex, AIWait, 0 ) != 0 )
+	 AI[i].AI->startRead( 0, &AIDataMutex, &AIWait, 0 ) != 0 )
       success = false;
   }
 
@@ -206,10 +209,7 @@ int Simulator::read( InList &data )
   LastWrite = -1.0;
   SyncMode = AISync;
 
-  SoftReset = false;
-  HardReset = false;
-
-  Sim->start( data, AIDataMutex, AIWait );
+  Sim->start( data, &AIDataMutex, &AIWait );
 
   return 0;
 }
@@ -229,8 +229,11 @@ int Simulator::restartRead( vector< AOData* > &aos, bool directao,
   bool success = true;
 
   // set restart index:
-  for ( unsigned int i=0; i<AI.size(); i++ )
-    AI[i].Traces.setRestart();
+  InTraces.setRestart();
+  EventDataMutex.lock();
+  if ( RestartEvents != 0 )
+    RestartEvents->push( InTraces[0].restartTime() );
+  EventDataMutex.unlock();
 
   // set new gain indices:
   int t = 0;
@@ -1038,39 +1041,27 @@ int Simulator::writeZero( int channel, int device )
 }
 
 
-bool Simulator::readSignal( double &signaltime, InList &data, EventList &events )
+bool Simulator::getSignal( void )
 {
   if ( LastWrite < 0.0 )
     return false;
 
-  double sigtime = LastWrite + LastDelay;
+  double signaltime = LastWrite + LastDelay;
 
-  signaltime = sigtime;
+  if ( signaltime <= SignalTime ) 
+    return false;
 
-  // set signal time in input traces:
-  data.setSignalTime( sigtime );
-
-  // set signal time in events:
-  events.setSignalTime( sigtime );
-  
-  // add signal time to stimulus events:
-  for ( int k=0; k<events.size(); k++ ) {
-    if ( (events[k].mode() & StimulusEventMode) > 0 ) {
-      if ( events[k].empty() || events[k].back() < sigtime )
-	events[k].push( sigtime, 0.0, LastDuration );
-      else if ( ! events[k].empty() && events[k].back() >= sigtime ) {
-	cerr << currentTime()
-	     << " ! error in Simulator::readSignal() -> signalTime " << sigtime
-	     << " < back() " << events[k].back() 
-	     << " Current " << data[0].currentIndex()
-	     << " Restart " << data[0].restartIndex() << '\n';
-      }
-      break;
-    }
-  }
+  EventDataMutex.lock();
+  if ( NewSignalTime )
+    cerr << currentTime()
+	 << " ! error in Acquire::getSignal() -> NewSignalTime still true\n";
+  SignalTime = signaltime;
+  NewSignalTime = true;
+  if ( SignalEvents != 0 )
+    SignalEvents->push( SignalTime, 0.0, LastDuration );
+  EventDataMutex.unlock();
 
   LastWrite = -1.0;
-
   return true;
 }
 

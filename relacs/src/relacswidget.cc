@@ -97,14 +97,11 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     MTDT( this ),
     CW( 0 ),
     ShowFull( 0 ),
-    SignalTime( -1.0 ),
     ReadLoop( this ),
     WriteLoop( this ),
     LogFile( 0 ),
     IsFullScreen( false ),
     IsMaximized( false ),
-    RunData( false ),
-    RunDataMutex(),
     DeviceMenu( 0 ),
     Help( false ),
     HandlingEvent( false )
@@ -607,7 +604,7 @@ int RELACSWidget::setupHardware( int n )
     OutData::setAcquire( AQ );
 
     for ( int k=0; k<AID->size(); k++ ) {
-      AQ->addInput( &(*AID)[k], &RawDataMutex, &ReadDataWait );
+      AQ->addInput( &(*AID)[k] );
     }
     for ( int k=0; k<AOD->size(); k++ ) {
       AQ->addOutput( &(*AOD)[k] );
@@ -693,7 +690,7 @@ void RELACSWidget::setupInTraces( void )
     id.setUnipolar( boolean( "inputunipolar", false ) );
     int channel = integer( "inputtracechannel", k, -1 );
     if ( channel < 0 ) {
-      ws += ", undefined channel number";
+      ws += ", invalid channel number <b>" + Str( channel ) + "</b>";
       failed = true;
     }
     id.setChannel( channel );
@@ -702,7 +699,7 @@ void RELACSWidget::setupInTraces( void )
     if ( devi < 0 || devi >= AQ->inputsSize() )
       devi = AQ->inputIndex( ds );
     if ( devi < 0 ) {
-      ws += ", device <b>" + ds + "</b> not known";
+      ws += ", unknown device <b>" + ds + "</b>";
       failed = true;
     }
     id.setDevice( devi );
@@ -714,13 +711,13 @@ void RELACSWidget::setupInTraces( void )
     id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
     int gain = integer( "inputtracegain", k, -1 );
     if ( gain < 0 ) {
-      ws += ", undefined gain";
+      ws += ", invalid gain <b>" + Str( gain ) + "</b>";
       failed = true;
     }
     id.setGainIndex( gain );
     if ( failed ) {
       ws.erase( 0, 2 );
-      ws += " for output trace <b>" + traceid + "</b>!<br> Skip this output trace.";
+      ws += " for input trace <b>" + traceid + "</b>!<br> Skipped this input trace.";
       printlog( "! warning: " + ws.erasedMarkup() );
       MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
       continue;
@@ -769,6 +766,7 @@ void RELACSWidget::setupOutTraces( void )
 
   AQ->addOutTraces();
 
+  // XXX this should go into SaveFile!
   SF->lock();
   SF->Options::erase( SF->TraceFlag );
   for ( int k=0; k<AQ->outTracesSize(); k++ )
@@ -784,36 +782,11 @@ bool RELACSWidget::updateData( double mintracetime, double signaltime )
 {
   bool doupdate = true;
   if ( mintracetime > 0.0 ) {
-    RawDataMutex.lock();
-    // do wee need to wait for a new signal?
-    if ( signaltime >= -1.0 ) {
-      while ( IL.success() &&
-	      SignalTime <= signaltime &&
-	      ReadLoop.isRunning() ) {
-	RunDataMutex.lock();
-	bool rd = RunData;
-	RunDataMutex.unlock();
-	if ( ! rd )
-	  break;
-	ReadDataWait.wait( &RawDataMutex );
-	AQ->readSignal( SignalTime, IL, ED );
-      }
-      mintracetime += SignalTime;
-    }
-    // do we need to wait for more data?
-    while ( IL.success() &&
-	    mintracetime > 0.0 && IL.currentTimeRaw() < mintracetime &&
-	    ReadLoop.isRunning() ) {
-      RunDataMutex.lock();
-      bool rd = RunData;
-      RunDataMutex.unlock();
-      if ( ! rd )
-	break;
-      ReadDataWait.wait( &RawDataMutex );
-    }
+    AQ->waitForData( mintracetime, signaltime );
+    AQ->inputMutex()->lock();
   }
   else {
-    doupdate = RawDataMutex.tryLock( 1 );
+    doupdate = AQ->inputMutex()->tryLock( 1 );
   }
 
   if ( doupdate ) {
@@ -824,20 +797,14 @@ bool RELACSWidget::updateData( double mintracetime, double signaltime )
       // XXX That is not sufficient and should be synchronized with ReadLoop!
     }
     // get current data:
-    AQ->readSignal( SignalTime, IL, ED );
-    AQ->readRestart( IL, ED );
+    AQ->setSignal( IL, ED );
     FD->updateRawTracesEvents();
-    RawDataMutex.unlock();
+    AQ->inputMutex()->unlock();
     DerivedDataMutex.lock();
     Str fdw = FD->filter();
     if ( !fdw.empty() )
       printlog( "! error: " + fdw.erasedMarkup() );
-    SF->updateDerivedTraces();
     DerivedDataMutex.unlock();
-    RawDataMutex.lock();
-    SF->updateRawTraces();
-    RawDataMutex.unlock();
-    SF->saveTraces();
     UpdateDataWait.wakeAll();
     return true;
   }
@@ -1253,13 +1220,6 @@ void RELACSWidget::stopThreads( void )
   CW->requestStop();
   wakeAll();
   CW->wait( 0.2 );
-
-  // stop data threads:
-  RunDataMutex.lock();
-  RunData = false;
-  RunDataMutex.unlock();
-  ThreadSleepWait.wakeAll();
-  ReadDataWait.wakeAll();
   PT->stop();
 
   // stop simulation and data acquisition:
@@ -1422,7 +1382,6 @@ void RELACSWidget::startFirstAcquisition( void )
   double ptime = SS.number( "processinterval", 0.1 );
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
   AQ->setUpdateTime( ptime );
-  SignalTime = -1.0;
   setupInTraces();
   if ( IL.empty() ) {
     printlog( "! error: No valid input traces configured!" );
@@ -1443,8 +1402,10 @@ void RELACSWidget::startFirstAcquisition( void )
 
   // events:
   FD->clearIndices();
-  FD->createStimulusEvents( IL, ED, EventStyles );
-  FD->createRestartEvents( IL, ED, EventStyles );
+  AQ->addStimulusEvents( IL, ED );
+  FD->createStimulusEvents( ED, EventStyles );
+  AQ->addRestartEvents( IL, ED );
+  FD->createRestartEvents( ED, EventStyles );
   FD->createRecordingEvents( IL, ED, EventStyles );
   Str fdw = FD->createTracesEvents( IL, ED, TraceStyles, EventStyles );
   if ( !fdw.empty() ) {
@@ -1527,9 +1488,6 @@ void RELACSWidget::startFirstAcquisition( void )
   }
 
   ReadLoop.start();
-  RunDataMutex.lock();
-  RunData = true;
-  RunDataMutex.unlock();
 
   // reset analog output for dynamic clamp:
   r = AQ->writeReset();
@@ -1579,7 +1537,6 @@ void RELACSWidget::startFirstSimulation( void )
   double ptime = SS.number( "processinterval", 0.1 );
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
   AQ->setUpdateTime( ptime );
-  SignalTime = -1.0;
   setupInTraces();
   if ( IL.empty() ) {
     printlog( "! error: No valid input traces configured!" );
@@ -1600,8 +1557,10 @@ void RELACSWidget::startFirstSimulation( void )
 
   // events:
   FD->clearIndices();
-  FD->createStimulusEvents( IL, ED, EventStyles );
-  FD->createRestartEvents( IL, ED, EventStyles );
+  AQ->addStimulusEvents( IL, ED );
+  FD->createStimulusEvents( ED, EventStyles );
+  AQ->addRestartEvents( IL, ED );
+  FD->createRestartEvents( ED, EventStyles );
   FD->createRecordingEvents( IL, ED, EventStyles );
   Str fdw = FD->createTracesEvents( IL, ED, TraceStyles, EventStyles );
   if ( !fdw.empty() ) {
@@ -1703,9 +1662,6 @@ void RELACSWidget::startFirstSimulation( void )
   }
 
   ReadLoop.start();
-  RunDataMutex.lock();
-  RunData = true;
-  RunDataMutex.unlock();
 
   CW->start();
   PT->start( ptime );
