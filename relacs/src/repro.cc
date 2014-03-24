@@ -158,9 +158,8 @@ void RePro::run( void )
   }
 
   // start next RePro:
-  if ( ! interrupt() ) {
+  if ( ! interrupt() )
     QApplication::postEvent( RW, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
-  }
 }
 
 

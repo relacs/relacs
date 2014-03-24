@@ -4144,8 +4144,7 @@ Options &Options::setDefaults( int flags )
   for ( section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( flags ) )
-      (*sp)->setDefaults( flags );
+    (*sp)->setDefaults( flags );
   }
   return *this;
 }
@@ -4186,8 +4185,7 @@ Options &Options::setToDefaults( int flags )
   for ( section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( flags ) )
-      (*sp)->setToDefaults( flags );
+    (*sp)->setToDefaults( flags );
   }
   return *this;
 }
@@ -4514,11 +4512,9 @@ Options &Options::setFlags( int flags, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) ) {
-      if ( (*sp)->flag() != 0 )
-	(*sp)->setFlag( flags );
-      (*sp)->setFlags( flags, selectflag );
-    }
+    if ( (*sp)->flag( selectflag ) )
+      (*sp)->setFlag( flags );
+    (*sp)->setFlags( flags, selectflag );
   }
   return *this;
 }
@@ -4533,11 +4529,9 @@ Options &Options::addFlags( int flags, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) ) {
-      if ( (*sp)->flag() != 0 )
-	(*sp)->addFlag( flags );
-      (*sp)->addFlags( flags, selectflag );
-    }
+    if ( (*sp)->flag( selectflag ) )
+      (*sp)->addFlag( flags );
+    (*sp)->addFlags( flags, selectflag );
   }
   return *this;
 }
@@ -4552,11 +4546,9 @@ Options &Options::delFlags( int flags, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) ) {
-      if ( (*sp)->flag() != 0 )
-	(*sp)->delFlag( flags );
-      (*sp)->delFlags( flags, selectflag );
-    }
+    if ( (*sp)->flag( selectflag ) )
+      (*sp)->delFlag( flags );
+    (*sp)->delFlags( flags, selectflag );
   }
   return *this;
 }
@@ -4622,11 +4614,9 @@ Options &Options::setStyles( int style, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) ) {
-      if ( (*sp)->flag() != 0 )
-	(*sp)->setStyle( style );
-      (*sp)->setStyles( style, selectflag );
-    }
+    if ( (*sp)->flag( selectflag ) )
+      (*sp)->setStyle( style );
+    (*sp)->setStyles( style, selectflag );
   }
   return *this;
 }
@@ -4641,11 +4631,9 @@ Options &Options::addStyles( int style, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) ) {
-      if ( (*sp)->flag() != 0 )
-	(*sp)->addStyle( style );
-      (*sp)->addStyles( style, selectflag );
-    }
+    if ( (*sp)->flag( selectflag ) )
+      (*sp)->addStyle( style );
+    (*sp)->addStyles( style, selectflag );
   }
   return *this;
 }
@@ -4660,11 +4648,9 @@ Options &Options::delStyles( int style, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) ) {
-      if ( (*sp)->flag() != 0 )
-	(*sp)->delStyle( style );
-      (*sp)->delStyles( style, selectflag );
-    }
+    if ( (*sp)->flag( selectflag ) )
+      (*sp)->delStyle( style );
+    (*sp)->delStyles( style, selectflag );
   }
   return *this;
 }

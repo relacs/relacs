@@ -616,6 +616,7 @@ void Macros::startNextRePro( bool saving, bool enable )
     }
 
   } while ( CurrentCommand < 0 ||
+	    ! MCs[CurrentMacro]->command( CurrentCommand )->enabled() ||
 	    MCs[CurrentMacro]->command( CurrentCommand )->repro() == 0 );
 }
 

@@ -186,13 +186,11 @@ int FileStimulus::main( void )
   file.expandPath();
   OutData signal;
   signal.setTrace( AM ? GlobalAMEField : GlobalEField );
-  unlockAll();
   setWaitMouseCursor();
   signal.load( file, filename );
   if ( signal.empty() ) {
     warning( "Cannot load stimulus file <b>" + file + "</b>!" );
     restoreMouseCursor();
-    lockAll();
     return Failed;
   }
   if ( Duration > 0.0 ) {
@@ -208,7 +206,6 @@ int FileStimulus::main( void )
   signal.setIdent( filename );
   Duration = signal.duration();
   restoreMouseCursor();
-  lockAll();
 
   // data:
   Intensity = 0.0;
@@ -554,7 +551,6 @@ int FileStimulus::main( void )
 	Header.setText( "session time", sessionTimeStr() );
       }
       Header.setInteger( "trace", -1 );
-      unlockAll();
       saveAmpl();
       for ( int trace=0; trace<MaxTraces; trace++ ) {
 	if ( SpikeEvents[trace] >= 0 ) {
@@ -567,7 +563,6 @@ int FileStimulus::main( void )
 	Header.setInteger( "trace", 0 );
 	saveNerve();
       }
-      lockAll();
     }
   }
 
@@ -836,7 +831,6 @@ void FileStimulus::save( void )
   if ( Repeats <= 0 )
     return;
 
-  unlockAll();
   if ( NerveTrace[0] >= 0 )
     saveNervePower();
   for ( int trace=0; trace<MaxTraces; trace++ ) {
@@ -846,7 +840,6 @@ void FileStimulus::save( void )
       savePower( trace );
     }
   }
-  lockAll();
 }
 
 
