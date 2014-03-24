@@ -1,5 +1,4 @@
 New InData threading:
-- saving to file does not work!!!
 - remove lockAll() from all plugins.
 - How to set restart time in all data traces (see filterdetectors)?
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
@@ -8,8 +7,8 @@ New InData threading:
 - Fix Simulation mode!
 - Remove auto locking of meta data! Only lock them when needed.
 - Remove auto locking of stimulus data! Only lock them when needed.
-- Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
+- Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Filter buffersize should just be the same as the one of the input trace!
 - Replace the source() flag by a sourceTrace and sourceEvent index
   Remove the source mapping functions from RELACSPlugin and FilterDetectors

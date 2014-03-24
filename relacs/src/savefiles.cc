@@ -306,7 +306,7 @@ void SaveFiles::writeToggle( void )
   if ( ToggleData && ! Hold ) {
 
     if ( ToggleOn && ! saving() ) {
-      RW->printlog( "SaveFiles::writeToggle(): switched saving on!" );
+      // RW->printlog( "SaveFiles::writeToggle(): switched saving on!" );
       // update offsets:
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
 	TraceFiles[k].Index = IL[k].size();
@@ -369,7 +369,7 @@ void SaveFiles::saveTraces( void )
   writeToggle();
 
   // check for new signal:
-  if ( ! EventFiles.empty() && EL[0].size() > 0 ) {
+  if ( ! Stimuli.empty() && ! EL.empty() && EL[0].size() > 0 ) {
     double st = EL[0].back();
     if ( saving() &&
 	 ::fabs( IL[0].signalTime() - st ) >= IL[0].stepsize() )
@@ -431,7 +431,7 @@ void SaveFiles::writeEvents( double offs )
   for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
 
     if ( EventFiles[k].Stream != 0 ) {
-      while ( EventFiles[k].Index < EL[0].size() ) {
+      while ( EventFiles[k].Index < EL[k].size() ) {
 	double et = EL[k][EventFiles[k].Index];
 	if ( et < st )
 	  EventFiles[k].SignalEvent = EventFiles[k].Written;
@@ -1000,10 +1000,10 @@ void SaveFiles::createStimulusFile( void )
     *SF << "# analog input traces:\n";
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( ! TraceFiles[k].FileName.empty() ) {
-	*SF << "#      identifier" + Str( k+1 ) + ": " << IL[k].ident() << '\n';
-	*SF << "#       data file" + Str( k+1 ) + ": " << TraceFiles[k].FileName << '\n';
-	*SF << "# sample interval" + Str( k+1 ) + ": " << Str( 1000.0*IL[k].sampleInterval(), 0, 2, 'f' ) << "ms\n";
-	*SF << "#            unit" + Str( k+1 ) + ": " << IL[k].unit() << '\n';
+	*SF << "#      identifier" + Str( k+1 ) + "     : " << IL[k].ident() << '\n';
+	*SF << "#      data file" + Str( k+1 ) + "      : " << TraceFiles[k].FileName << '\n';
+	*SF << "#      sample interval" + Str( k+1 ) + ": " << Str( 1000.0*IL[k].sampleInterval(), 0, 4, 'f' ) << "ms\n";
+	*SF << "#            unit" + Str( k+1 ) + "     : " << IL[k].unit() << '\n';
       }
     }
     *SF << "# event lists:\n";
@@ -1014,12 +1014,12 @@ void SaveFiles::createStimulusFile( void )
     *SF << "# analog output traces:\n";
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       TraceSpec trace( RW->AQ->outTrace( k ) );
-      *SF << "#   identifier" + Str( k+1 ) + ": " << trace.traceName() << '\n';
-      *SF << "#       device" + Str( k+1 ) + ": " << trace.device() << '\n';
-      *SF << "#      channel" + Str( k+1 ) + ": " << trace.channel() << '\n';
-      /* XXX get this information from the device:
-      *SF << "# signal delay" + Str( k+1 ) + ": " << 1000.0*trace.signalDelay() << "ms\n";
-      *SF << "# maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
+      *SF << "#      identifier" + Str( k+1 ) + ": " << trace.traceName() << '\n';
+      *SF << "#      device" + Str( k+1 ) + "    : " << trace.device() << '\n';
+      *SF << "#      channel" + Str( k+1 ) + "   : " << trace.channel() << '\n';
+      /* Get the following infos from the devices:
+      *SF << "#      signal delay" + Str( k+1 ) + ": " << 1000.0*trace.signalDelay() << "ms\n";
+      *SF << "#      maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
       */
     }
     *SF << "# stimulus descriptions file: stimlus-descriptions.dat\n";
