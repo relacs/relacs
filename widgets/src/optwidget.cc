@@ -32,18 +32,21 @@ class UpdateEvent : public QEvent
 {
 public:
   UpdateEvent( int type )
-    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( "" ), Flags( 0 ) {};
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( "" ), Flags( 0 ), Lock( true ) {};
   UpdateEvent( int type, const string &name )
-    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( name ), Flags( 0 ) {};
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( name ), Flags( 0 ), Lock( true ) {};
   UpdateEvent( int type, int flags )
-    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( "" ), Flags( flags ) {};
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( "" ), Flags( flags ), Lock( true ) {};
   UpdateEvent( const UpdateEvent &ue )
-    : QEvent( QEvent::Type( ue.type() ) ), Name( ue.Name ), Flags( ue.Flags ) {};
+    : QEvent( QEvent::Type( ue.type() ) ), Name( ue.Name ), Flags( ue.Flags ), Lock( true ) {};
   string name( void ) const { return Name; };
   int flags( void ) const { return Flags; };
+  bool lock( void ) const { return Lock; };
+  void setLock( bool lock ) { Lock = lock; };
 private:
   string Name;
   int Flags;
+  bool Lock;
 };
 
 
@@ -913,6 +916,7 @@ void OptWidget::updateValue( const string &name )
     QCoreApplication::postEvent( this, new UpdateEvent( 1, name ) );
   else {
     UpdateEvent *ue = new UpdateEvent( 1, name );
+    ue->setLock( false );
     customEvent( ue );
     delete ue;
   }
@@ -927,6 +931,7 @@ void OptWidget::updateValues( void )
     QCoreApplication::postEvent( this, new UpdateEvent( 2 ) );
   else {
     UpdateEvent *ue = new UpdateEvent( 2 );
+    ue->setLock( false );
     customEvent( ue );
     delete ue;
   }
@@ -943,6 +948,7 @@ void OptWidget::updateValues( int flag )
     QCoreApplication::postEvent( this, new UpdateEvent( 3, UpdateFlag ) );
   else {
     UpdateEvent *ue = new UpdateEvent( 3, UpdateFlag );
+    ue->setLock( false );
     customEvent( ue );
     delete ue;
   }
@@ -957,6 +963,7 @@ void OptWidget::updateSettings( const string &name )
     QCoreApplication::postEvent( this, new UpdateEvent( 4, name ) );
   else {
     UpdateEvent *ue = new UpdateEvent( 4, name );
+    ue->setLock( false );
     customEvent( ue );
     delete ue;
   }
@@ -971,6 +978,7 @@ void OptWidget::updateSettings( void )
     QCoreApplication::postEvent( this, new UpdateEvent( 5 ) );
   else {
     UpdateEvent *ue = new UpdateEvent( 5 );
+    ue->setLock( false );
     customEvent( ue );
     delete ue;
   }
@@ -986,6 +994,7 @@ void OptWidget::updateSettings( int flag )
     QCoreApplication::postEvent( this, new UpdateEvent( 6, UpdateFlag ) );
   else {
     UpdateEvent *ue = new UpdateEvent( 6, UpdateFlag );
+    ue->setLock( false );
     customEvent( ue );
     delete ue;
   }
@@ -996,7 +1005,7 @@ void OptWidget::customEvent( QEvent *e )
 {
   if ( e->type() >= QEvent::User+1 && e->type() <= QEvent::User+6 ) {
     UpdateEvent *ue = dynamic_cast<UpdateEvent*>( e );
-    if ( ! tryLockMutex( 5 ) ) {
+    if ( ue->lock() && ! tryLockMutex( 2 ) ) {
       // we do not get the lock for the data now,
       // so we repost the event to a later time.
       QCoreApplication::postEvent( this, new UpdateEvent( *ue ) );
@@ -1062,7 +1071,8 @@ void OptWidget::customEvent( QEvent *e )
       break;
     }
     }
-    unlockMutex();
+    if ( ue->lock() )
+      unlockMutex();
   }
   else
     QWidget::customEvent( e );

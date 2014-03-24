@@ -150,9 +150,11 @@ void SetInputGain::setGains( void )
 void SetInputGain::setMaxRanges( void )
 {
   if ( Interactive ) {
+    lock();
     for ( int k=0; k<InOpts.size(); k++ )
       InOpts[k].selectText( 0 );
     SGW.updateValues();
+    unlock();
     SGW.accept( false );
   }
 }
@@ -182,6 +184,7 @@ int SetInputGain::main( void )
   if ( Interactive ) {  
     keepFocus();
     postCustomEvent( 11 ); // SGW.setFocus()
+    SGW.updateValues();
     Quit = true;
     do {
       InOpts.delFlags( Parameter::changedFlag() );
@@ -268,7 +271,6 @@ void SetInputGain::customEvent( QEvent *qce )
   case 11: {
     if ( SGW.firstWidget() != 0 )
       SGW.firstWidget()->setFocus( Qt::TabFocusReason );
-    SGW.updateValues();
     break;
   }
   case 12: {

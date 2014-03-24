@@ -183,7 +183,7 @@ int ManualJAR::main( void )
     do {
       // EOD rate:
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
-      postCustomEvent( 13 );
+      JW.updateValue( "eodf" );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
       sleep( 0.2 );
     } while ( ( ! Start && ! interrupt() && softStop() == 0 ) ||
@@ -264,7 +264,7 @@ int ManualJAR::main( void )
     // stimulation loop:
     do {
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
-      postCustomEvent( 13 );
+      JW.updateValue( "eodf" );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
       sleep( 0.2 );
       if ( interrupt() ) {
@@ -290,7 +290,7 @@ int ManualJAR::main( void )
     // after stimulus recording loop:
     do {
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
-      postCustomEvent( 13 );
+      JW.updateValue( "eodf" );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
       sleep( 0.2 );
       if ( interrupt() ) {
@@ -491,10 +491,6 @@ void ManualJAR::customEvent( QEvent *qce )
     removeFocus();
     ModeLabel->setText( "Stimulation" );
     StartButton->setEnabled( false );
-    break;
-  }
-  case 13: {
-    JW.updateValue( "eodf" );
     break;
   }
   case 14: {

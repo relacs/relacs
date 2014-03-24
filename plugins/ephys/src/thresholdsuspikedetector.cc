@@ -343,7 +343,6 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
   setMinMax( "resolution", 0.0, 1000.0, 0.01, Unit );
   setNotify();
   notify();
-  postCustomEvent( 12 );
   HP->lock();
   HP->setXLabel( Unit );
   HP->unlock();
@@ -361,6 +360,7 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
   IntervalEnd = 0.0;
   IntervalWidth = 0.0;
   D.init( data.begin(), data.end(), data.timeBegin() );
+  SDW.updateSettings();
   SDW.updateValues();
   return 0;
 }
@@ -386,7 +386,7 @@ void ThresholdSUSpikeDetector::notify( void )
       setRequest( "lowerthreshold", "Threshold" );
       delFlags( "upperthreshold", 2 );
     }
-    postCustomEvent( 13 );
+    postCustomEvent( 12 );
   }
   LowerThreshold = number( "lowerthreshold", Unit );
   UpperThreshold = number( "upperthreshold", Unit );
@@ -862,10 +862,6 @@ void ThresholdSUSpikeDetector::customEvent( QEvent *qce )
     unlock();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    SDW.updateSettings();
-    SDW.updateValues();
-  }
-  else if ( qce->type() == QEvent::User+13 ) {
     SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   }
   else

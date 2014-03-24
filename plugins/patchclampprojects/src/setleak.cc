@@ -142,9 +142,7 @@ void SetLeak::notify( void )
       update = false;
     if ( update ) {
       delFlags( Parameter::changedFlag() );
-      // STW.updateValues() must be postboned, because it is disabled
-      // whenever notify() is called from OptWidget:
-      postCustomEvent( 13 );
+      STW.updateValues();
     }
   }
 }
@@ -180,11 +178,13 @@ void SetLeak::measureVRest( void )
   int involtage = traceIndex( settings().text( "involtage", 0 ) );
   if ( involtage < 0 ) 
     return;
+  lock();
   double duration = settings().number( "duration" );
   const InData &data = trace( involtage );
   double vrest = data.mean( currentTime()-duration, currentTime() );
   setNumber( "Edc", vrest );
   STW.updateValue( "Edc" );  
+  unlock();
 }
 
 
@@ -310,10 +310,6 @@ void SetLeak::customEvent( QEvent *qce )
   }
   case 12: {
     removeFocus();
-    break;
-  }
-  case 13: {
-    STW.updateValues();
     break;
   }
   default:

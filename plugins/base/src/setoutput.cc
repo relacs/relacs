@@ -143,11 +143,13 @@ void SetOutput::setValues( void )
 void SetOutput::setZeros( void )
 {
   if ( Interactive ) {
+    lock();
     Change = true;
     Quit = false;
     for ( int k=0; k<OutOpts.size(); k++ )
       OutOpts[k].setNumber( 0.0 );
     STW.updateValues();
+    unlock();
     STW.accept( false );
     wake();
   }
@@ -157,8 +159,10 @@ void SetOutput::setZeros( void )
 void SetOutput::keepValues( void )
 {
   if ( Interactive ) {
+    lock();
     Change = false;
     Quit = true;
+    unlock();
     wake();
   }
 }

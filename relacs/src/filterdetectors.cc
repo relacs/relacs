@@ -701,6 +701,7 @@ string FilterDetectors::init( void )
 
   // init filter and event detectors:
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
+    d->FilterDetector->lock();
     d->FilterDetector->setSettings();
     d->Init = true;
     string ident = d->FilterDetector->ident();
@@ -794,6 +795,7 @@ string FilterDetectors::init( void )
 	}
       }
     }
+    d->FilterDetector->unlock();
 
   }
 
