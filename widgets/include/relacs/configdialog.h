@@ -39,7 +39,6 @@ namespace relacs {
 \class ConfigDialog
 \brief A dialog for a ConfigClass.
 \author Jan Benda
-\version 1.2
 
 ConfigDialog adds a dialog for editing the configuration Options
 of a ConfigClass.
@@ -258,7 +257,7 @@ public:
     /*! Unlock the mutex of the ConfigDialog.
         \sa lock(), mutex() */
   void unlock() const;
-    /*! Try to lock the mutex of the ConfigDialog.
+    /*! Try to lock the mutex of the ConfigDialog for at most \a timeoutms milliseconds.
         Returns \c true if the lock was obtained within \a timeout milliseconds.
 	\sa lock(), mutex() */
   bool tryLock( int timeout=1 );

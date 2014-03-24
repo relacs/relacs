@@ -481,8 +481,13 @@ void Session::notify( void )
 void Session::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
-    lock();
-    if ( ! stimulusDataMutex()->tryLock( 5 ) ) {
+    if ( ! tryLock( 2 ) ) {
+      // we do not get the lock for the session now,
+      // so we repost the event to a later time.
+      postCustomEvent( 11 );
+      return;
+    }
+    if ( ! stimulusDataMutex()->tryLock( 2 ) ) {
       // we do not get the lock for the stimulus data now,
       // so we repost the event to a later time.
       unlock();
@@ -494,7 +499,7 @@ void Session::customEvent( QEvent *qce )
     unlock();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    if ( ! mutex()->tryLock( 5 ) ) {
+    if ( ! tryLock( 2 ) ) {
       // we do not get the lock now,
       // so we repost the event to a later time.
       postCustomEvent( 12 );

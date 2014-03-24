@@ -36,7 +36,6 @@ namespace relacs {
 /*! 
 \class MultiPlot
 \author Jan Benda
-\version 0.2
 \brief Having several Plots in a single widget.
 */
 
@@ -68,6 +67,8 @@ public:
 
     /*! Lock the plot mutex. */
   void lock( void );
+    /*! Try to lock the plot mutex for at maximum \a timeoutms milliseconds. */
+  bool tryLock( int timeoutms=1 );
     /*! Unlock the plot mutex. */
   void unlock( void );
 

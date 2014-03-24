@@ -529,9 +529,9 @@ void ConfigDialog::unlock() const
 }
 
 
-bool ConfigDialog::tryLock( int timeout )
+bool ConfigDialog::tryLock( int timeoutms )
 {
-  return CDMutex.tryLock( timeout );
+  return CDMutex.tryLock( timeoutms );
 }
 
 

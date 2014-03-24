@@ -970,13 +970,23 @@ int SpikePrecision::createStimulus( OutData &signal, SampleDataD &amdb,
 void SpikePrecision::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
-    P.lock();
+    if ( ! P.tryLock( 2 ) ) {
+      // we do not get the lock for the session now,
+      // so we repost the event to a later time.
+      postCustomEvent( 11 );
+      return;
+    }
     P.setDrawBackground();
     P.unlock();
     Stack->setCurrentWidget( &P );
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    P.lock();
+    if ( ! P.tryLock( 2 ) ) {
+      // we do not get the lock for the session now,
+      // so we repost the event to a later time.
+      postCustomEvent( 12 );
+      return;
+    }
     P.setDrawBackground();
     P.unlock();
     Stack->setCurrentWidget( &SP );

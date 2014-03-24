@@ -357,6 +357,12 @@ void Plot::lock( void )
 }
 
 
+bool Plot::tryLock( int timeoutms )
+{
+  return PMutex.tryLock( timeoutms );
+}
+
+
 void Plot::unlock( void )
 {
   PMutex.unlock();

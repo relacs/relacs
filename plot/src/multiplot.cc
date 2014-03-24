@@ -143,6 +143,12 @@ void MultiPlot::lock( void )
 }
 
 
+bool MultiPlot::tryLock( int timeoutms )
+{
+  return PMutex.tryLock( timeoutms );
+}
+
+
 void MultiPlot::unlock( void )
 {
   PMutex.unlock();

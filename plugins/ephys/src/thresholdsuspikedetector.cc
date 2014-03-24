@@ -851,7 +851,12 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
 void ThresholdSUSpikeDetector::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
-    lock();
+    if ( ! tryLock( 2 ) ) {
+      // we do not get the lock for the session now,
+      // so we repost the event to a later time.
+      postCustomEvent( 11 );
+      return;
+    }
     QualityIndicator->setPixmap( *QualityPixs[Quality] );
     TrendIndicator->setPixmap( *TrendPixs[Trend] );
     unlock();

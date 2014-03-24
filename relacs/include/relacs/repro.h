@@ -553,6 +553,8 @@ protected slots:
     /*! If you reimplement this event handler,
         don't forget to call this implementation
         via RePro::customEvent().
+	\note Make sure that you do not block this forever! This will freeze the GUI!
+	Better use tryLock() and if this fails, post the event again.
         \sa RELACSPlugin::postCustomEvent() */
   virtual void customEvent( QEvent *qce );
 

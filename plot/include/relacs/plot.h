@@ -49,7 +49,6 @@ namespace relacs {
 \class Plot
 \author Jan Benda
 \brief Plotting various data in a single widget.
-\version 0.5
 
 \bug autoscale with zero interval
 \bug check initTics algorithmns. Make them iterative!
@@ -471,6 +470,8 @@ public:
 
     /*! Lock the plot mutex. */
   void lock( void );
+    /*! Try to lock the plot mutex for at maximum \a timeoutms milliseconds. */
+  bool tryLock( int timeoutms=1 );
     /*! Unlock the plot mutex. */
   void unlock( void );
 
