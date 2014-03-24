@@ -1423,7 +1423,7 @@ void RELACSWidget::startFirstAcquisition( void )
   // copy traces:
   UpdateRawData.clear();
   UpdateRawEvents.clear();
-  SF->addTracesEvents( UpdateRawData, UpdateRawEvents );
+  SF->assignTracesEvents( IL, ED, UpdateRawData, UpdateRawEvents );
   FD->assignTracesEvents( IL, ED, UpdateRawData, UpdateRawEvents );
   CW->assignTracesEvents( IL, ED );
   PT->assignTracesEvents( IL, ED );
@@ -1475,6 +1475,7 @@ void RELACSWidget::startFirstAcquisition( void )
     return;
   }
 
+  SF->assignTracesEvents();
   PT->assignTracesEvents();
   FD->assignTracesEvents();
   CW->assignTracesEvents();
@@ -1581,7 +1582,7 @@ void RELACSWidget::startFirstSimulation( void )
   // copy traces:
   UpdateRawData.clear();
   UpdateRawEvents.clear();
-  SF->addTracesEvents( UpdateRawData, UpdateRawEvents );
+  SF->assignTracesEvents( IL, ED, UpdateRawData, UpdateRawEvents );
   FD->assignTracesEvents( IL, ED, UpdateRawData, UpdateRawEvents );
   CW->assignTracesEvents( IL, ED );
   PT->assignTracesEvents( IL, ED );
@@ -1641,6 +1642,7 @@ void RELACSWidget::startFirstSimulation( void )
     }
   }
 
+  SF->assignTracesEvents();
   PT->assignTracesEvents();
   FD->assignTracesEvents();
   CW->assignTracesEvents();

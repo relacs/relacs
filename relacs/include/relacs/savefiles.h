@@ -169,12 +169,18 @@ public:
 	i.e. before writing any stimulus. */
   void save( bool on );
 
-    /*! Add the local copies of the data buffers to \a data and \a events. */
-  void addTracesEvents( deque<InList*> &data, deque<EventList*> &events );
+    /*! Copies \a il and \a el to this by copying a pointer to
+        the data buffers only. In addition add these local copies
+	to \a data and \a events. */
+  void assignTracesEvents( const InList &il, const EventList &el,
+			   deque<InList*> &data, deque<EventList*> &events );
+    /*! Copies again all settings and indices from the reference traces and events to this. */
+  void assignTracesEvents( void );
     /*! Update raw data traces and events. Needs to be called right before saveTraces(). */
   void updateRawTraces( void );
     /*! Update derived data traces and events. Needs to be called right before saveTraces(). */
   void updateDerivedTraces( void );
+
     /*! Save data traces and events to files */
   void saveTraces( void );
     /*! Save output-meta-data to files. */
@@ -224,9 +230,9 @@ protected:
 
     /*! Open and initialize the files holding the traces from the
         analog input channels. */
-  void createTraceFiles( const InList &traces );
+  void createTraceFiles( void );
     /*! Open and initialize the files recording the event times. */
-  void createEventFiles( const EventList &events );
+  void createEventFiles( void );
     /*! Open and initialize the stimulus file that
         contains indices to he traces and event files.
         Call this *after* createEventFiles()! */
@@ -263,6 +269,11 @@ protected:
     /*! Time of start of the session. */
   double SessionTime;
 
+    /*! The local copy of all input traces. */
+  InList IL;
+    /*! The local copy of all event traces. */
+  EventList EL;
+
     /*! File with stimuli and indices to traces and events. */
   ofstream *SF;
     /*! File with stimulus descriptions. */
@@ -279,7 +290,7 @@ protected:
       /*! The file stream. */
     ofstream *Stream;
       /*! The trace data that have to be written into the file. */
-    InData Trace;
+    InData *Trace;
       /*! Current index to trace data from where on to save data. */
     long Index;
       /*! Number of so far written trace data. */
@@ -298,7 +309,7 @@ protected:
       /*! The file stream. */
     ofstream *Stream;
       /*! The event data that have to be written into the file. */
-    EventData Events;
+    EventData *Events;
       /*! Index to event data. */
     long Index;
       /*! Already written lines. */

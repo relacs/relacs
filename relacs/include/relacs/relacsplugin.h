@@ -943,8 +943,11 @@ protected slots:
 
 private:
 
+    /*! The local copy of all input traces. */
   InList IL;
+    /*! The local copy of all event traces. */
   EventList EL;
+    /*! THe local copy of the current signal time. */
   double SignalTime;
 
   string PluginSet;

@@ -1,9 +1,10 @@
 New InData threading:
 - SignalTime in Plugins is no longer set by updateData! In particular Filters! Check the hack in RELACSPlugin.
-- Implement local copy of data and events in SaveFiles in parallel to the single traces in the filelists. Updatethe addTracesEvents and the update functions accordingly.
+- SaveFiles: remove traces and events arguments from openFiles functions - use the local copies
+- How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFilels)?
 - FilterDetectors::filter() StimulusEvents should be replaced by the one of the copy of the respective filter!
 - How to set restart time in all data traces (see filterdetectors)?
-- Remove unused update functions from relacsplugin
+- Remove unused update functions from relacsplugin (updateRawTracesEvents and updateTracesEvents?)
 - What about recording events (SignalTime, locking)?
 - Add Model data also to UpdateRawData?
 - Fix Simulation mode!
