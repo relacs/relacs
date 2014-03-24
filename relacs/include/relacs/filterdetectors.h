@@ -71,8 +71,6 @@ public:
     /*! Copies again all settings and indices from the reference
         traces and events to each Filter. */
   void assignTracesEvents( void );
-    /*! Updates the indices of raw traces and events of each filter. */
-  void updateRawTracesEvents( void );
 
     /*! Load options from config file. */
   virtual void readConfig( StrQueue &sq );
@@ -128,9 +126,10 @@ public:
   void autoConfigure( Filter *f, double tbegin, double tend );
 
     /*! Filter or detect events. The Filter is initialized at its first call.
+        \param[in] signaltime this signaltime is set in the derived data.
         \return in case of errors (filter() not implemented)
 	an appropriate message. */
-  string filter( void );
+  string filter( double signaltime );
 
     /*! Return filter of the \a index trace in an InList. */
   Filter *filter( int index );
@@ -236,8 +235,6 @@ private:
   vector<int> EventInputTrace;
     /*! Maps each EventData to an EventData. */
   vector<int> EventInputEvent;
-
-  EventData *StimulusEvents;
 
   QMenu *Menu;
 

@@ -308,22 +308,6 @@ void RELACSPlugin::assignTracesEvents( void )
 }
 
 
-void RELACSPlugin::updateTracesEvents( void )
-{
-  IL.update();
-  EL.update();
-}
-
-
-void RELACSPlugin::updateRawTracesEvents( void )
-{
-  IL.updateRaw();
-  EL.updateRaw();
-  if ( RW->AQ != 0 )
-    SignalTime = RW->AQ->signalTime();
-}
-
-
 void RELACSPlugin::updateDerivedTracesEvents( void )
 {
   IL.updateDerived();
@@ -331,21 +315,15 @@ void RELACSPlugin::updateDerivedTracesEvents( void )
 }
 
 
-int RELACSPlugin::updateData( double mintracetime, double signaltime )
+int RELACSPlugin::updateData( double mintracetime, double prevsignal )
 {
-  // get new data:
-  int r = RW->updateData( IL, EL, mintracetime, signaltime );
-  SignalTime = EL[0].back(); // XXX this might be a hack!
-  return r;
+  return RW->updateData( IL, EL, SignalTime, mintracetime, prevsignal );
 }
 
 
 void RELACSPlugin::getData( void )
 {
-  // this should go into Acquire!
-  RW->AQ->inputMutex()->lock();
-  updateRawTracesEvents();
-  RW->AQ->inputMutex()->unlock();
+  RW->AQ->updateRawData( IL, EL, SignalTime );
 
   RW->DerivedDataMutex.lock();
   updateDerivedTracesEvents();
@@ -420,6 +398,24 @@ const EventData &RELACSPlugin::events( int index ) const
 const EventData &RELACSPlugin::events( const string &ident ) const
 {
   return EL[ident];
+}
+
+
+const EventData &RELACSPlugin::stimulusEvents( void ) const
+{
+  return EL[0];
+}
+
+
+const EventData &RELACSPlugin::restartEvents( void ) const
+{
+  return EL[1];
+}
+
+
+const EventData &RELACSPlugin::recordingEvents( void ) const
+{
+  return EL[2];
 }
 
 

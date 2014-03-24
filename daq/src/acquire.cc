@@ -53,7 +53,6 @@ Acquire::Acquire( void )
   LastDuration = 0.0;
   LastDelay = 0.0;
   SignalTime = -1.0;
-  NewSignalTime = false;
   OutData::setAcquire( this );
   SignalEvents = 0;
   RestartEvents = 0;
@@ -143,12 +142,6 @@ void Acquire::closeInputs( void )
   }
   AI.clear();
   InTraces.clear();
-}
-
-
-QMutex *Acquire::inputMutex( void )
-{
-  return &DataMutex;
 }
 
 
@@ -669,7 +662,6 @@ int Acquire::read( InList &data )
   InTraces.clear();
   DataMutex.lock();
   SignalTime = -1.0;
-  NewSignalTime = false;
   DataMutex.unlock();
 
   // sort data to devices:
@@ -947,7 +939,7 @@ int Acquire::restartRead( void )
 int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 			  bool updategains )
 {
-  cerr << currentTime() << " Acquire::restartRead() begin \n";
+  //  cerr << currentTime() << " Acquire::restartRead() begin \n";
 
   bool success = true;
   bool finished = true;
@@ -1169,16 +1161,17 @@ int Acquire::waitForRead( void )
 }
 
 
-int Acquire::updateRawData( double mintracetime, double signaltime,
-			    deque<InList*> &data, deque<EventList*> &events )
+int Acquire::updateRawData( double mintracetime, double prevsignal,
+			    InList &data, EventList &events, double &signaltime,
+			    deque<InList*> &datalist, deque<EventList*> &eventslist )
 {
   DataMutex.lock();
   bool interrupted = false;
   if ( mintracetime > 0.0 ) {
     // do wee need to wait for a new signal?
-    if ( signaltime >= -1.0 ) {
+    if ( prevsignal >= -1.0 ) {
       while ( InTraces.success() &&
-	      SignalTime <= signaltime &&
+	      SignalTime <= prevsignal &&
 	      isReadRunning() ) { 
 	DataWait.wait( &DataMutex );
 	getSignal();
@@ -1199,21 +1192,39 @@ int Acquire::updateRawData( double mintracetime, double signaltime,
     getSignal();
 
   // set signal time:
+  signaltime = SignalTime;
   InTraces.setSignalTime( SignalTime );
   if ( SignalEvents != 0 )
     SignalEvents->setSignalTime( SignalTime );
   if ( RestartEvents != 0 )
     RestartEvents->setSignalTime( SignalTime );
-  NewSignalTime = false;
   // update raw data:
-  for ( deque<InList*>::iterator dp = data.begin(); dp != data.end(); ++dp )
+  data.updateRaw();
+  for ( deque<InList*>::iterator dp = datalist.begin(); dp != datalist.end(); ++dp )
     (*dp)->updateRaw();
-  for ( deque<EventList*>::iterator ep = events.begin(); ep != events.end(); ++ep )
+  events.updateRaw();
+  for ( deque<EventList*>::iterator ep = eventslist.begin(); ep != eventslist.end(); ++ep )
     (*ep)->updateRaw();
   // check data:
   bool error = InTraces.failed();
   DataMutex.unlock();
   return error ? -1 : ( interrupted ? 0 : 1 );
+}
+
+
+void Acquire::updateRawData( InList &data, EventList &events, double &signaltime )
+{
+  DataMutex.lock();
+  // set signal time:
+  InTraces.setSignalTime( SignalTime );
+  if ( SignalEvents != 0 )
+    SignalEvents->setSignalTime( SignalTime );
+  if ( RestartEvents != 0 )
+    RestartEvents->setSignalTime( SignalTime );
+  data.updateRaw();
+  events.updateRaw();
+  signaltime = SignalTime;
+  DataMutex.unlock();
 }
 
 
@@ -1802,7 +1813,7 @@ int Acquire::write( OutData &signal, bool setsignaltime )
     AO[di].Signals.clear();
     return -1;
   }
-
+ 
   // test writing to daq board:
   AO[di].AO->testWrite( AO[di].Signals );
 
@@ -2707,12 +2718,6 @@ void Acquire::intensities( const string &trace, vector<double> &ints, double fre
 }
 
 
-double Acquire::signalTime( void ) const
-{
-  return SignalTime;
-}
-
-
 bool Acquire::getSignal( void )
 {
   double sigtime = -1.0;
@@ -2740,11 +2745,7 @@ bool Acquire::getSignal( void )
     sigtime = LastWrite + LastDelay;
   }
 
-  if ( NewSignalTime )
-    cerr << currentTime()
-	 << " ! error in Acquire::getSignal() -> NewSignalTime still true\n";
   SignalTime = sigtime;
-  NewSignalTime = true;
   if ( SignalEvents != 0 )
     SignalEvents->push( SignalTime, 0.0, LastDuration );
 

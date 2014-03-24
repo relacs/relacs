@@ -778,19 +778,16 @@ void RELACSWidget::setupOutTraces( void )
 
 ///// Data thread ///////////////////////////////////////////////////////////
 
-int RELACSWidget::updateData( InList &data, EventList &events,
-			      double mintracetime, double signaltime )
+int RELACSWidget::updateData( InList &data, EventList &events, double &signaltime,
+			      double mintracetime, double prevsignal )
 {
   // update raw data:
-  UpdateRawData.push_back( &data );
-  UpdateRawEvents.push_back( &events );
-  int r = AQ->updateRawData( mintracetime, signaltime, UpdateRawData, UpdateRawEvents );
-  UpdateRawData.pop_back();
-  UpdateRawEvents.pop_back();
+  int r = AQ->updateRawData( mintracetime, prevsignal,
+			     data, events, signaltime, UpdateRawData, UpdateRawEvents );
 
   // update derived data:
   DerivedDataMutex.lock();
-  Str fdw = FD->filter();
+  Str fdw = FD->filter( signaltime );
   if ( !fdw.empty() )
     printlog( "! error: " + fdw.erasedMarkup() );
   SF->updateDerivedTraces();
@@ -1098,7 +1095,7 @@ void RELACSWidget::startSession( bool startmacro )
   printlog( "Start new session" );
 
   // open files:
-  SF->openFiles( IL, ED );
+  SF->openFiles();
 
   QPalette p( palette() );
   p.setColor( QPalette::Window, QColor( 255, 96, 96 ) );

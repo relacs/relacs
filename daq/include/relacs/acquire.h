@@ -178,8 +178,6 @@ public:
 	\sa addInput(), inputsSize(), inputDevice(), inputTraces(),
 	clearInputs(), closeOutputs(), closeAttLines() */
   void closeInputs( void );
-    /*! \return the mutex used for locking the input traces. */
-  QMutex *inputMutex( void );
 
     /*! Add the analog output device \a ao to
 	the list of analog output devices.
@@ -398,21 +396,28 @@ public:
         \return 0 on success, i.e. all analog inputs finished successfully
 	or -1 if some input failed. */
   virtual int waitForRead( void );
-    /*! Updates the raw traces of the lists \a data and \a events
+    /*! Updates the raw traces of the lists \a datalist and \a eventslist
+        and of \a data and \a events
         to the current state of the data buffers.
-	If \a mintracetime is greater than zero waits until the input
+        Also set \a signaltime to the time of the most recent output signal.
+	If \a mintracetime is greater than zero updateRawData() waits until the input
         traces of the currently running acquisition contain a minimum
         number of data elements.  Returns immediately in case of
         errors or the acquisition was stopped.
 	\param[in] mintracetime If \a mintracetime is greater than zero,
-	blocks until data upto \a mintracetime are available.
-	\param[in] signaltime If in addition \a signaltime is greater than zero,
-	first blocks until signalTime() is greater than \a signaltime
-	and afterwards until data until signalTime() plus \a mintracetime are available.
+	blocks until data upto \a mintracetime seconds are available.
+	\param[in] prevsignal If in addition \a prevsignal is greater than zero,
+	first block until the time of the last signal is greater than \a prevsignal
+	and afterwards until data until the signal time plus \a mintracetime are available.
         \return \c 1 if the input traces contain the required data,
 	\c 0 if interrupted, or \c -1 on error. */
-  int updateRawData( double mintracetime, double signaltime,
-		     deque<InList*> &data, deque<EventList*> &events );
+  int updateRawData( double mintracetime, double prevsignal,
+		     InList &data, EventList &events, double &signaltime,
+		     deque<InList*> &datalist, deque<EventList*> &eventslist );
+    /*! Updates the raw traces of \a data and \a events
+        to the current state of the data buffers.
+        Also set \a signaltime to the time of the most recent output signal. */
+  void updateRawData( InList &data, EventList &events, double &signaltime );
 
     /*! \return the flag that is used to mark traces whose gain was changed. 
         \sa setAdjustFlag(), setGain(), adjustGain(), gainChanged(), activateGains() */
@@ -638,9 +643,6 @@ public:
 	for the output trace with name \a trace. */
   void intensities( const string &trace, vector<double> &ints, double frequency=0.0 ) const;
 
-    /*! \return the time where the last signal started. */
-  double signalTime( void ) const;
-
     /*! Stop any activity related to
         analog output and analog input immediately. */
   virtual void stop( void );
@@ -678,7 +680,7 @@ protected:
     /*! Semaphore guarding analog inputs. */
   QSemaphore AISemaphore;
     /*! Locks analog input data traces. */
-  mutable QMutex DataMutex;
+  QMutex DataMutex;
     /*! Waits on new data in input traces. */
   QWaitCondition DataWait;
     /*! The input data from the last read(). */
@@ -724,8 +726,6 @@ protected:
   double LastDelay;
     /*! The start time of the last signal that was put out. */
   double SignalTime;
-    /*! \c true if SignalTime was updated by getSignal(). */
-  bool NewSignalTime;
     /*! The events recording the times in the input traces 
         where signals where put out. */
   EventData *SignalEvents;

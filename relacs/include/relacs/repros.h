@@ -40,7 +40,6 @@ class RELACSWidget;
 /*! 
 \class RePros
 \author Jan Benda
-\version 1.0
 \brief Container handling RePros
 */
 
@@ -68,8 +67,6 @@ public:
     /*! Copies again all settings and indices from the reference
         traces and events to each RePro. */
   void assignTracesEvents( void );
-    /*! Updates the indices of the traces and events. */
-  void updateTracesEvents( void );
 
     /*! The index of the RePro with class name \a name. */
   int index( const string &name ) const;

@@ -97,11 +97,13 @@ void Model::push( int trace, float val )
       AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
       if ( ! Signals.empty() && ! Signals[0].Finished && t > Signals[0].Offset ) {
 	Signals[0].Finished = true;
-	SignalsWait.wakeAll();
+	SignalsWait.release( 1 );
       }
       long st = (long)::rint( 1000.0 * dt );
-      if ( st > 0 )
-	InputWait.wait( DataMutex, st );
+      if ( st <= 0 )
+	st = 1;
+      DataWait->wakeAll();
+      InputWait.wait( DataMutex, st );
     }
   }
   Data[trace].push( val );
@@ -110,9 +112,7 @@ void Model::push( int trace, float val )
 
 void Model::waitOnSignals( void )
 {
-  QMutex mutex;
-  mutex.lock();
-  SignalsWait.wait( &mutex );
+  SignalsWait.acquire( 1 );
 }
 
 
@@ -219,6 +219,7 @@ void Model::stop( void )
 {
   if ( Thread->isRunning() ) {
     // tell the Model to interrupt:
+    SignalsWait.release( 1 );
     InterruptLock.lock();
     InterruptModel = true;
     InterruptLock.unlock();

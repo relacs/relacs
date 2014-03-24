@@ -213,13 +213,9 @@ int TransferFunction::main( void )
 
     signal.clear();
     signal.noiseWave( duration, -1.0, fmax, amplitude );
-    //    signal.sineWave( duration, -1.0, 614.0, amplitude, 1.0 );
     signal.back() = 0.0;
     signal += offset;
-    // debug:
-    if ( signal.length() < duration )
-      printlog( "WARNING: noiseWave() too short! duration=" + Str( duration ) +
-		" length=" + Str( signal.length() ) );
+
     write( signal );
     if ( interrupt() ) {
       if ( count == 0 )
@@ -230,14 +226,13 @@ int TransferFunction::main( void )
       directWrite( orgdcsignal );
       continue;
     }
-
     // get data:
-    SampleDataF input( 0.0, duration, trace( intrace ).stepsize() );
+    SampleDataF input( 0.0, signal.length(), trace( intrace ).stepsize() );
     input.interpolate( signal );
-    SampleDataF output( 0.0, duration, trace( intrace ).stepsize() );
+    SampleDataF output( 0.0, signal.length(), trace( intrace ).stepsize() );
     trace( intrace ).copy( signalTime(), output );
 
-    analyze( input, output, duration, count );
+    analyze( input, output, signal.length(), count );
 
     // plot gain:
     bool plotstdevs = boolean( "plotstdevs" );

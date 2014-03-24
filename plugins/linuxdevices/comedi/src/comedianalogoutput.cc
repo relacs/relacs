@@ -401,7 +401,6 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
 
   }
 
-  cerr << "ComediAnalogOutput::directWrite() IsPrepared=" << IsPrepared << '\n';
   IsPrepared = false;
 
   return ( sigs.success() ? 0 : -1 );

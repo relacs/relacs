@@ -1051,11 +1051,7 @@ bool Simulator::getSignal( void )
   if ( signaltime <= SignalTime ) 
     return false;
 
-  if ( NewSignalTime )
-    cerr << currentTime()
-	 << " ! error in Acquire::getSignal() -> NewSignalTime still true\n";
   SignalTime = signaltime;
-  NewSignalTime = true;
   if ( SignalEvents != 0 )
     SignalEvents->push( SignalTime, 0.0, LastDuration );
 

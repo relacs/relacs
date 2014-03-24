@@ -1,32 +1,25 @@
 New InData threading:
-- SignalTime in Plugins is no longer set by updateData! In particular Filters! Check the hack in RELACSPlugin.
-- SaveFiles: remove traces and events arguments from openFiles functions - use the local copies
-- How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFilels)?
-- FilterDetectors::filter() StimulusEvents should be replaced by the one of the copy of the respective filter!
 - How to set restart time in all data traces (see filterdetectors)?
-- Remove unused update functions from relacsplugin (updateRawTracesEvents and updateTracesEvents?)
+- How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
 - What about recording events (SignalTime, locking)?
 - Add Model data also to UpdateRawData?
 - Fix Simulation mode!
-- Check and further simplify RELACSWidget data locking: individual locks per trace/device/filter?
-- Filter/Detector influences reading dramatically (EODDetector in efield with comedi on 64kB) -
-  should be made independent.
+- Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Filter buffersize should just be the same as the one of the input trace!
+- Replace the source() flag by a sourceTrace and sourceEvent index
+  Remove the source mapping functions from RELACSPlugin and FilterDetectors
 - AnalogInput/Output check usage of IsPrepared and IsRunning
 - DynClamAnalogInput improve error checking in readData()
 - readData() several attemps only if maxn is too small
 - Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.
-- Replace the source() flag by a sourceTrace and sourceEvent index
-  Remove the source mapping functions from RELACSPlugin and FilterDetectors
 - SpectrumAnalyzer Frequency resolution should not depend on sampling rate!
   Use Frequency resolution instead of number of fft points.
 - Check whether InData, Acquire updateTime and readTime are still needed!
   But we do not want to block on the input too long!
   So maybe keep readTime. Make it an option for each device!
-- Check InData::modeTogether with () usage, in particular AdjustField in FilterDetectors
 - Check locking of SaveFiles data
 - Model: improve locking by adding an extra Mutex for push() and pop()
 - SaveFiles: where does stimulus intensity go, if there is no amplifier?

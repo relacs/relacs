@@ -114,14 +114,6 @@ void ControlTabs::assignTracesEvents( void )
 }
 
 
-void ControlTabs::updateTracesEvents( void )
-{
-  for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
-    (*cp)->updateTracesEvents();
-  }
-}
-
-
 void ControlTabs::requestStop( void )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp )

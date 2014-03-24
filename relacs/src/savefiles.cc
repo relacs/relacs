@@ -309,14 +309,14 @@ void SaveFiles::writeToggle( void )
       RW->printlog( "SaveFiles::writeToggle(): switched saving on!" );
       // update offsets:
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
-	TraceFiles[k].Index = TraceFiles[k].Trace->size();
+	TraceFiles[k].Index = IL[k].size();
       for ( unsigned int k=0; k<EventFiles.size(); k++ )
-	EventFiles[k].Index = EventFiles[k].Events->size();
+	EventFiles[k].Index = EL[k].size();
       
       // add recording event:
       for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-	if ( ( EventFiles[k].Events->mode() & RecordingEventMode ) > 0 ) {
-	  EventFiles[k].Events->push( TraceFiles[0].Trace->pos( TraceFiles[0].Index ) );
+	if ( ( EL[k].mode() & RecordingEventMode ) > 0 ) {
+	  EL[k].push( IL[0].pos( TraceFiles[0].Index ) );
 	  break;
 	}
       }
@@ -348,15 +348,6 @@ void SaveFiles::assignTracesEvents( void )
 }
 
 
-void SaveFiles::updateRawTraces( void )
-{
-  // this function is called from RELACSWidget::updateData()
-  QMutexLocker locker( &SaveMutex );
-  IL.updateRaw();
-  EL.updateRaw();
-}
-
-
 void SaveFiles::updateDerivedTraces( void )
 {
   // this function is called from RELACSWidget::updateData()
@@ -378,12 +369,12 @@ void SaveFiles::saveTraces( void )
   writeToggle();
 
   // check for new signal:
-  if ( ! EventFiles.empty() && EventFiles[0].Events->size() > 0 ) {
-    double st = EventFiles[0].Events->back();
+  if ( ! EventFiles.empty() && EL[0].size() > 0 ) {
+    double st = EL[0].back();
     if ( saving() &&
-	 ::fabs( TraceFiles[0].Trace->signalTime() - st ) >= TraceFiles[0].Trace->stepsize() )
+	 ::fabs( IL[0].signalTime() - st ) >= IL[0].stepsize() )
       RW->printlog( "Warning in SaveFiles::saveTraces() -> SignalTime PROBLEM, trace: " +
-		    Str( TraceFiles[0].Trace->signalTime(), 0, 5, 'f' ) +
+		    Str( IL[0].signalTime(), 0, 5, 'f' ) +
 		    " stimulus: " + Str( st, 0, 5, 'f' ) );
     if ( st > PrevSignalTime )
       SignalTime = st;
@@ -393,7 +384,7 @@ void SaveFiles::saveTraces( void )
   writeTraces();
   double offs = 0.0;
   if ( saving() && ! TraceFiles.empty() )
-    offs = TraceFiles[0].Trace->interval( TraceFiles[0].Index - TraceFiles[0].Written );
+    offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
   writeEvents( offs );
   writeStimulus();
 }
@@ -408,16 +399,15 @@ void SaveFiles::writeTraces( void )
 
   for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
     if ( TraceFiles[k].Stream != 0 ) {
-      int n = TraceFiles[k].Trace->saveBinary( *TraceFiles[k].Stream,
-					       TraceFiles[k].Index );
+      int n = IL[k].saveBinary( *TraceFiles[k].Stream, TraceFiles[k].Index );
       if ( n > 0 ) {
 	TraceFiles[k].Written += n;
 	TraceFiles[k].Index += n;
       }
       // there is a new stimulus:
       if ( !Stimuli.empty() && SignalTime >= 0.0 &&
-	   TraceFiles[k].Trace->signalIndex() >= 0 )
-	TraceFiles[k].SignalOffset = TraceFiles[k].Trace->signalIndex() -
+	   IL[k].signalIndex() >= 0 )
+	TraceFiles[k].SignalOffset = IL[k].signalIndex() -
 	  TraceFiles[k].Index + TraceFiles[k].Written;
     }
   }
@@ -437,28 +427,25 @@ void SaveFiles::writeEvents( double offs )
     return;
 
   // save event data:
-  double st = EventFiles[0].Events->size() > 0 ? EventFiles[0].Events->back() : EventFiles[0].Events->rangeBack();
+  double st = EL[0].size() > 0 ? EL[0].back() : EL[0].rangeBack();
   for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
 
     if ( EventFiles[k].Stream != 0 ) {
-      while ( EventFiles[k].Index < EventFiles[k].Events->size() ) {
-	double et = EventFiles[k].Events->operator[]( EventFiles[k].Index );
+      while ( EventFiles[k].Index < EL[0].size() ) {
+	double et = EL[k][EventFiles[k].Index];
 	if ( et < st )
 	  EventFiles[k].SignalEvent = EventFiles[k].Written;
-	else if ( EventFiles[k].Index == 0 ||
-		  EventFiles[k].Events->operator[]( EventFiles[k].Index-1 ) < st ) {
+	else if ( EventFiles[k].Index == 0 || EL[k][EventFiles[k].Index-1] < st ) {
 	  EventFiles[k].SignalEvent = EventFiles[k].Written;
 	  *EventFiles[k].Stream << '\n';
 	}
 	EventFiles[k].Key.save( *EventFiles[k].Stream, et - offs, 0 );
 	if ( EventFiles[k].SaveSize )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
-				  EventFiles[k].Events->sizeScale() *
-				  EventFiles[k].Events->eventSize( EventFiles[k].Index ) );
+				  EL[k].sizeScale() * EL[k].eventSize( EventFiles[k].Index ) );
 	if ( EventFiles[k].SaveWidth )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
-				  EventFiles[k].Events->widthScale() *
-				  EventFiles[k].Events->eventWidth( EventFiles[k].Index ) );
+				  EL[k].widthScale() * EL[k].eventWidth( EventFiles[k].Index ) );
 	*EventFiles[k].Stream << '\n';
 	EventFiles[k].Written++;
 	EventFiles[k].Index++;
@@ -657,15 +644,13 @@ void SaveFiles::writeStimulus( void )
       if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.save( *SF, EventFiles[k].SignalEvent );
 	if ( EventFiles[k].SaveMeanRate )
-	  StimulusKey.save( *SF, EventFiles[k].Events->meanRate() );  // XXX adaptive Time!
+	  StimulusKey.save( *SF, EL[k].meanRate() );  // XXX adaptive Time!
 	if ( EventFiles[k].SaveMeanSize )
-	  StimulusKey.save( *SF, EventFiles[k].Events->sizeScale() *
-			    EventFiles[k].Events->meanSize() );
+	  StimulusKey.save( *SF, EL[k].sizeScale() * EL[k].meanSize() );
 	if ( EventFiles[k].SaveMeanWidth )
-	  StimulusKey.save( *SF, EventFiles[k].Events->widthScale() *
-			    EventFiles[k].Events->meanWidth() );
+	  StimulusKey.save( *SF, EL[k].widthScale() * EL[k].meanWidth() );
 	if ( EventFiles[k].SaveMeanQuality )
-	  StimulusKey.save( *SF, 100.0*EventFiles[k].Events->meanQuality() );
+	  StimulusKey.save( *SF, 100.0*EL[k].meanQuality() );
       }
     }
 
@@ -674,7 +659,7 @@ void SaveFiles::writeStimulus( void )
 	StimulusKey.save( *SF, StimulusOptions[k] );
       }
     }
-    StimulusKey.save( *SF, TraceFiles[0].Trace->signalTime() - SessionTime );
+    StimulusKey.save( *SF, IL[0].signalTime() - SessionTime );
     // stimulus:
     StimulusKey.save( *SF, 1000.0*Stimuli[0].delay() );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
@@ -742,7 +727,7 @@ void SaveFiles::writeStimulus( void )
 	  stimuliref[j].insertText( "OutputChannel", "",
 				    RW->AQ->outTraceName( Stimuli[j].trace() ) );
 	  stimuliref[j].insertNumber( "Delay", "", 1000.0*Stimuli[j].delay(), "ms" );
-	  stimuliref[j].insertNumber( "Time", "", TraceFiles[0].Trace->signalTime() - SessionTime, "s" );
+	  stimuliref[j].insertNumber( "Time", "", IL[0].signalTime() - SessionTime, "s" );
 	  sopt.newSection( &stimuliref[j] );
 	  break;
 	}
@@ -893,7 +878,6 @@ void SaveFiles::createTraceFiles( void )
   for ( int k=0; k<IL.size(); k++ ) {
 
     // init trace variables:
-    TraceFiles[k].Trace = &IL[k];
     TraceFiles[k].Index = IL[k].size();
     TraceFiles[k].Written = 0;
     TraceFiles[k].SignalOffset = -1;
@@ -958,7 +942,6 @@ void SaveFiles::createEventFiles( void )
   for ( int k=0; k<EL.size(); k++ ) {
 
     // init event variables:
-    EventFiles[k].Events = &EL[k];
     EventFiles[k].Index = EL[k].size();
     EventFiles[k].Written = 0;
     EventFiles[k].SignalEvent = 0;
@@ -1000,8 +983,7 @@ void SaveFiles::createEventFiles( void )
 }
 
 
-void SaveFiles::createStimulusFile( const InList &traces,
-				    const EventList &events )
+void SaveFiles::createStimulusFile( void )
 {
   // init stimulus variables:
   Stimuli.clear();
@@ -1016,12 +998,12 @@ void SaveFiles::createStimulusFile( const InList &traces,
   if ( (*SF) ) {
     // save header:
     *SF << "# analog input traces:\n";
-    for ( int k=0; k<traces.size(); k++ ) {
+    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( ! TraceFiles[k].FileName.empty() ) {
-	*SF << "#      identifier" + Str( k+1 ) + ": " << traces[k].ident() << '\n';
+	*SF << "#      identifier" + Str( k+1 ) + ": " << IL[k].ident() << '\n';
 	*SF << "#       data file" + Str( k+1 ) + ": " << TraceFiles[k].FileName << '\n';
-	*SF << "# sample interval" + Str( k+1 ) + ": " << Str( 1000.0*traces[k].sampleInterval(), 0, 2, 'f' ) << "ms\n";
-	*SF << "#            unit" + Str( k+1 ) + ": " << traces[k].unit() << '\n';
+	*SF << "# sample interval" + Str( k+1 ) + ": " << Str( 1000.0*IL[k].sampleInterval(), 0, 2, 'f' ) << "ms\n";
+	*SF << "#            unit" + Str( k+1 ) + ": " << IL[k].unit() << '\n';
       }
     }
     *SF << "# event lists:\n";
@@ -1047,25 +1029,25 @@ void SaveFiles::createStimulusFile( const InList &traces,
     StimulusKey.newSection( "traces" );
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 ) {
-	StimulusKey.newSubSection( traces[k].ident() );
+	StimulusKey.newSubSection( IL[k].ident() );
 	StimulusKey.addNumber( "index", "float", "%10.0f" );
       }
     }
     StimulusKey.newSection( "events" );
     for ( unsigned int k=0; k<EventFiles.size(); k++ )
       if ( EventFiles[k].Stream != 0 ) {
-	StimulusKey.newSubSection( events[k].ident() );
+	StimulusKey.newSubSection( EL[k].ident() );
 	StimulusKey.addNumber( "index", "line", "%10.0f" );
-	EventFiles[k].SaveMeanRate = ( events[k].mode() & SaveMeanRate );
+	EventFiles[k].SaveMeanRate = ( EL[k].mode() & SaveMeanRate );
 	if ( EventFiles[k].SaveMeanRate )
 	  StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
-	EventFiles[k].SaveMeanSize = ( events[k].mode() & SaveMeanSize );
+	EventFiles[k].SaveMeanSize = ( EL[k].mode() & SaveMeanSize );
 	if ( EventFiles[k].SaveMeanSize )
-	  StimulusKey.addNumber( events[k].sizeName(), events[k].sizeUnit(), events[k].sizeFormat() );
-	EventFiles[k].SaveMeanWidth = ( events[k].mode() & SaveMeanWidth );
+	  StimulusKey.addNumber( EL[k].sizeName(), EL[k].sizeUnit(), EL[k].sizeFormat() );
+	EventFiles[k].SaveMeanWidth = ( EL[k].mode() & SaveMeanWidth );
 	if ( EventFiles[k].SaveMeanWidth )
-	  StimulusKey.addNumber( events[k].widthName(), events[k].widthUnit(), events[k].widthFormat() );
-	EventFiles[k].SaveMeanQuality = ( events[k].mode() & SaveMeanQuality );
+	  StimulusKey.addNumber( EL[k].widthName(), EL[k].widthUnit(), EL[k].widthFormat() );
+	EventFiles[k].SaveMeanQuality = ( EL[k].mode() & SaveMeanQuality );
 	if ( EventFiles[k].SaveMeanQuality )
 	  StimulusKey.addNumber( "quality", "%", "%3.0f" );
       }
@@ -1103,8 +1085,7 @@ void SaveFiles::createStimulusFile( const InList &traces,
 }
 
 
-void SaveFiles::createXMLFile( const InList &traces,
-			       const EventList &events )
+void SaveFiles::createXMLFile( void )
 {
   // create xml file for all data:
   XF = openFile( "metadata.xml", ios::out );
@@ -1174,7 +1155,7 @@ string SaveFiles::pathName( void ) const
 }
 
 
-void SaveFiles::openFiles( const InList &traces, EventList &events )
+void SaveFiles::openFiles( void )
 {
   // nothing to be done, if files are already open:
   if ( FilesOpen )
@@ -1247,15 +1228,15 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
   // open files:
   createTraceFiles();
   createEventFiles();
-  createStimulusFile( traces, events );
-  createXMLFile( traces, events );
+  createStimulusFile();
+  createXMLFile();
   FilesOpen = true;
   Hold = false;
 
   // add recording event:
-  for ( int k=0; k<events.size(); k++ ) {
-    if ( (events[k].mode() & RecordingEventMode) > 0 ) {
-      events[k].push( traces.currentTime() );
+  for ( int k=0; k<EL.size(); k++ ) {
+    if ( (EL[k].mode() & RecordingEventMode) > 0 ) {
+      EL[k].push( IL.currentTime() );
       break;
     }
   }

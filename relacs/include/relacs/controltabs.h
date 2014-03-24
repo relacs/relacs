@@ -62,8 +62,6 @@ public:
     /*! Copies again all settings and indices from the reference
         traces and events to each Control. */
   void assignTracesEvents( void );
-    /*! Updates the indices of the traces and events. */
-  void updateTracesEvents( void );
 
     /*! Start all Control threads. */
   void start( void );

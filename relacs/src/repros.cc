@@ -250,13 +250,6 @@ void RePros::assignTracesEvents( void )
 }
 
 
-void RePros::updateTracesEvents( void )
-{
-  for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->repro()->updateTracesEvents();
-}
-
-
 void RePros::modeChanged( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )

@@ -131,15 +131,16 @@ public:
     /*! Updates the InData buffers and calls the filter and event detectors.
         Then assings the buffers to \a data and \a events and to
 	the ones of SaveFiles and Filter.
-        If \a mintracetime is greater than zero, updateData() blocks
-        until data upto \a mintracetime are available.
-	If in addition \a signaltime is greater than zero, updateData() blocks
-	until signalTime() is greater than \a signalTime and then until
-	data until signalTime() plus mintracetime are available.
+        Also set \a signaltime to the time of the most recent output signal.
+	\param[in] mintracetime If \a mintracetime is greater than zero,
+	blocks until data upto \a mintracetime seconds are available.
+	\param[in] prevsignal If in addition \a prevsignal is greater than zero,
+	first block until the time of the last signal is greater than \a prevsignal
+	and afterwards until data until the signal time plus \a mintracetime are available.
         \return \c 1 if the input traces contain the required data,
 	\c 0 if interrupted, or \c -1 on error. */
-  int updateData( InList &data, EventList &events,
-		  double mintracetime=0.0, double signaltime=-1000.0 );
+  int updateData( InList &data, EventList &events, double &signaltime,
+		  double mintracetime=0.0, double prevsignal=-1000.0 );
 
     /*! Wakes up all waitconditions. */
   void wakeAll( void );

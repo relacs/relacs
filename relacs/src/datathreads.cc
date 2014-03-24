@@ -40,7 +40,6 @@ void ReadThread::start( void )
 
 void ReadThread::run( void )
 {
-  cerr << "START THREAD\n";
   while ( true ) {
     int r = RW->AQ->waitForRead();
     if ( r < 0 ) {
@@ -60,7 +59,6 @@ void ReadThread::run( void )
     else
       break;
   };
-  cerr << "END THREAD\n";
 }
 
 

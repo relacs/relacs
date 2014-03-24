@@ -26,6 +26,7 @@
 #include <string>
 #include <QMenu>
 #include <QMutex>
+#include <QSemaphore>
 #include <QWaitCondition>
 #include <QThread>
 #include <QDateTime>
@@ -215,7 +216,7 @@ private:
   };
   deque< OutTrace > Signals;
   QMutex SignalMutex;
-  QWaitCondition SignalsWait;
+  QSemaphore SignalsWait;
 
   bool InterruptModel;
   mutable QMutex InterruptLock;

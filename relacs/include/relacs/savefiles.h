@@ -176,8 +176,6 @@ public:
 			   deque<InList*> &data, deque<EventList*> &events );
     /*! Copies again all settings and indices from the reference traces and events to this. */
   void assignTracesEvents( void );
-    /*! Update raw data traces and events. Needs to be called right before saveTraces(). */
-  void updateRawTraces( void );
     /*! Update derived data traces and events. Needs to be called right before saveTraces(). */
   void updateDerivedTraces( void );
 
@@ -198,7 +196,7 @@ public:
 
     /*! If no file is open: create a new file name, make a directory,
         open and initialize the data-, event-, and stimulus files. */
-  void openFiles( const InList &traces, EventList &events );
+  void openFiles( void );
     /*! Close files and delete them and/or remove base directory. */
   void deleteFiles( void );
     /*! Close files and keep them. */
@@ -236,11 +234,11 @@ protected:
     /*! Open and initialize the stimulus file that
         contains indices to he traces and event files.
         Call this *after* createEventFiles()! */
-  void createStimulusFile( const InList &traces, const EventList &events );
+  void createStimulusFile( void );
     /*! Open and initialize the XML file that
         contains all information.
         Call this *after* createEventFiles()! */
-  void createXMLFile( const InList &traces, const EventList &events );
+  void createXMLFile( void );
 
     /*! Are there any files open to save in? */
   bool FilesOpen;
@@ -289,8 +287,6 @@ protected:
     string FileName;
       /*! The file stream. */
     ofstream *Stream;
-      /*! The trace data that have to be written into the file. */
-    InData *Trace;
       /*! Current index to trace data from where on to save data. */
     long Index;
       /*! Number of so far written trace data. */
@@ -308,8 +304,6 @@ protected:
     string FileName;
       /*! The file stream. */
     ofstream *Stream;
-      /*! The event data that have to be written into the file. */
-    EventData *Events;
       /*! Index to event data. */
     long Index;
       /*! Already written lines. */

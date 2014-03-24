@@ -392,18 +392,27 @@ int MyPlugin::main( void )
 \endcode */
   string rawTraceNames( void ) const;
 
-    /*! Return the list of all events.
+    /*! \return the list of all events.
         \sa traces(), traceIndex(), traceInputTrace(), traceInputEvent(),
 	eventInputTrace(), eventInputEvent() */
   const EventList &events( void ) const;
-    /*! Return the events with index \a index.
+    /*! \return the events with index \a index.
         \sa traces(), traceIndex(), traceInputTrace(), traceInputEvent(),
 	eventInputTrace(), eventInputEvent() */
   const EventData &events( int index ) const;
-    /*! Return the events with identifier \a ident.
+    /*! \return the events with identifier \a ident.
         \sa traces(), traceIndex(), traceInputTrace(), traceInputEvent(),
 	eventInputTrace(), eventInputEvent() */
   const EventData &events( const string &ident ) const;
+    /*! \return the times where stimuli started. 
+        \sa restartEvents(), recordingEvents(), events() */
+  const EventData &stimulusEvents( void ) const;
+    /*! \return the times where the acquisition was restarted. 
+        \sa stimulusEvents(), recordingEvents(), events() */
+  const EventData &restartEvents( void ) const;
+    /*! \return the times where the recordings were started. 
+        \sa stimulusEvents(), restartEvents(), events() */
+  const EventData &recordingEvents( void ) const;
 
     /*! Return the index of the input trace that was filtered
         to obtain input trace with index \a trace.
@@ -458,21 +467,21 @@ int MyPlugin::main( void )
   void assignTracesEvents( const InList &il, const EventList &el );
     /*! Copies again all settings and indices from the reference traces and events to this. */
   void assignTracesEvents( void );
-    /*! Updates the indices of all traces and events. */
-  void updateTracesEvents( void );
-    /*! Updates the indices of raw traces and events (traces with source == 0). */
-  void updateRawTracesEvents( void );
     /*! Updates the indices of derived traces and events (traces with source != 0 ). */
   void updateDerivedTracesEvents( void );
     /*! Process new trace and event data and make them available to this.
-        If \a mintracetime is greater than zero, updateData() blocks
-        until data upto \a mintracetime are available.
-	If in addition \a signaltime is greater than zero, updateData() blocks
-	until signalTime() is greater than \a signalTime and then until
-	data until signalTime() plus mintracetime are available.
+	If \a mintracetime is greater than zero updateRawData() waits until the input
+        traces of the currently running acquisition contain a minimum
+        number of data elements.  Returns immediately in case of
+        errors or the acquisition was stopped.
+	\param[in] mintracetime If \a mintracetime is greater than zero,
+	blocks until data upto \a mintracetime seconds are available.
+	\param[in] prevsignal If in addition \a prevsignal is greater than zero,
+	first block until the time of the last signal is greater than \a prevsignal
+	and afterwards until data until the signal time plus \a mintracetime are available.
         \return \c 1 if the input traces contain the required data,
 	\c 0 if interrupted, or \c -1 on error. */
-  int updateData( double mintracetime = 0.0, double signaltime=-1000.0 );
+  int updateData( double mintracetime = 0.0, double prevsignal=-1000.0 );
     /*! Make current trace and event data available to this.
         Do not retrieve and process brand new data. */
   void getData( void );
@@ -947,7 +956,7 @@ private:
   InList IL;
     /*! The local copy of all event traces. */
   EventList EL;
-    /*! THe local copy of the current signal time. */
+    /*! The local copy of the current signal time. */
   double SignalTime;
 
   string PluginSet;
