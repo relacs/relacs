@@ -222,12 +222,12 @@ void Session::sessionStarted( void )
 {
   SessionButton->setText( "Cell lost" );
 
+  lockMetaData();
   double bf[2];
   bf[0] = metaData().number( "Cell>left frequency" );
   bf[1] = metaData().number( "Cell>right frequency" );
 
   // reset values of metaData() options:
-  lockMetaData();
   metaData().setDefaults( MetaDataReset );
   metaData().delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
   unlockMetaData();
@@ -273,7 +273,9 @@ void Session::main( void )
 
   while ( ! interrupt() ) {
     double temp = Temp->temperature();
+    lockMetaData();
     metaData().setNumber( "Recording>temp-1", temp );
+    unlockMetaData();
     stimulusData().setNumber( "temp-1", temp );
     sleep( 1.0 );
   }

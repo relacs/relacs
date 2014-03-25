@@ -222,6 +222,7 @@ int FICurve::main( void )
   if ( PreWidth > Pause )
     Pause = PreWidth;
 
+  lockMetaData();
   if ( Side > 1 )
     Side = metaData().index( "Cell>best side" );
   string sidestr = Side > 0 ? "right" :  "left";
@@ -269,6 +270,7 @@ int FICurve::main( void )
   }
   if ( SSWidth > Duration )
     SSWidth = Duration;
+  unlockMetaData();
 
   // plot trace:
   tracePlotSignal( 2.0*PreWidth+Duration, PreWidth );
@@ -721,7 +723,9 @@ void FICurve::analyzeFICurve( const vector< FIData > &results, double minrate )
 
       Threshold.Threshold += shift;
       // intensity at rate:
+      lockMetaData();
       Threshold.RateIntensity = ( metaData().number( "Cell>best rate" ) - b ) / s;
+      unlockMetaData();
       Threshold.RateIntensitySD = ( ub + fabs( Threshold.RateIntensity * us ) ) / as;
       Threshold.RateIntensity += shift;
       // saturation:
@@ -754,7 +758,9 @@ void FICurve::setHeader( void )
   Header.setNumber( "threshold", Threshold.Threshold, Threshold.ThresholdSD );
   Header.setNumber( "slope", Threshold.Slope, Threshold.SlopeSD );
   Header.setNumber( "intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
+  lockMetaData();
   Header.setNumber( "rate", metaData().number( "Cell>best rate" ) );
+  unlockMetaData();
   Header.setNumber( "saturation", Threshold.Saturation, Threshold.SaturationSD );
   Header.setNumber( "maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
   Header.setInteger( "nfit", Threshold.N );
@@ -765,6 +771,7 @@ void FICurve::setHeader( void )
 
 void FICurve::updateSession( const vector< FIData > &results )
 {
+  lockMetaData();
   if ( SetBest ) {
     auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
     Options &mo = metaData().section( "Cell properties" );
@@ -828,6 +835,7 @@ void FICurve::updateSession( const vector< FIData > &results )
     mo.unsetNotify();
     mo.callNotifies();
   }
+  unlockMetaData();
 }
 
 
@@ -969,7 +977,9 @@ void FICurve::silentActivity( void )
   }
 
   // update session:
+  lockMetaData();
   metaData().setNumber( "Cell>silent rate", SilentRate, SilentRateSD );
+  unlockMetaData();
 }
 
 

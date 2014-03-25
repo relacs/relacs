@@ -127,9 +127,11 @@ int FICurve::main( void )
     imax += dccurrent;
   }
   else if ( ibase == 2 ) {
+    lockMetaData();
     double ithresh = metaData().number( "Cell>ithreshon" );
     if ( ithresh == 0.0 )
       ithresh = metaData().number( "Cell>ithreshss" );
+    unlockMetaData();
     imin += ithresh;
     imax += ithresh;
   }
@@ -158,9 +160,11 @@ int FICurve::main( void )
     return Failed;
   }
   if ( userm ) {
+    lockMetaData();
     double rm = metaData().number( "Cell>rmss", "MOhm" );
     if ( rm <= 0 )
       rm = metaData().number( "Cell>rm", "MOhm" );
+    unlockMetaData();
     if ( rm <= 0 )
       warning( "Membrane resistance was not measured yet!" );
     else {

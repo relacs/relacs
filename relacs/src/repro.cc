@@ -225,7 +225,6 @@ bool RePro::sleep( double t, double tracetime )
     return true;
 
   unlockStimulusData();
-  unlockMetaData();
 
   // sleep:
   if ( t > 0.0 ) {
@@ -247,7 +246,6 @@ bool RePro::sleep( double t, double tracetime )
   // force data updates:
   updateData( ir ? 0.0 : tracetime );
 
-  lockMetaData();
   lockStimulusData();
 
   // interrupt RePro:
@@ -276,7 +274,6 @@ bool RePro::sleepOn( double t )
 bool RePro::sleepWait( double time )
 {
   unlockStimulusData();
-  unlockMetaData();
   bool r = false;
   if ( time <= 0.0 )
     r = SleepWait.wait( mutex() );
@@ -288,7 +285,6 @@ bool RePro::sleepWait( double time )
   }
   // make new data available:
   getData();
-  lockMetaData();
   lockStimulusData();
   return r;
 }

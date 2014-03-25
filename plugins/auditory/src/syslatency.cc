@@ -110,6 +110,7 @@ int SysLatency::main( void )
   double coincwin = number( "coincwin" );
   bool adjustgain = boolean( "adjust" );
 
+  lockMetaData();
   if ( side > 1 )
     side = metaData().index( "Cell>best side" );
   if ( usebestfreq ) {
@@ -118,6 +119,7 @@ int SysLatency::main( void )
       carrierfrequency += cf;
   }
   double intensity = 0.0;
+  unlockMetaData();
 
   // plot trace:
   tracePlotSignal( duration );
@@ -403,10 +405,12 @@ void SysLatency::save( double carrierfrequency, int side, double pduration,
 		       int maxcoincidence, double coinclatency,
 		       double offset, double slope, double meanrate )
 {
+  lockMetaData();
   if ( ! metaData().exist( "Cell>system latency" ) )
     metaData().section( "Cell" ).addNumber( "system latency", "System latency",
 					    -1.0, "s", "%.1f", 1+4 ).setUnit( "s", "ms" );
   metaData().setNumber( "Cell>system latency", coinclatency );
+  unlockMetaData();
 
   Options header;
   header.addInteger( "index1", totalRuns() );

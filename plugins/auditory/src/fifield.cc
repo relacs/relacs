@@ -169,8 +169,11 @@ int FIField::main( void )
 
   if ( PreWidth > Pause )
     Pause = PreWidth;
-  if ( Side > 1 )
+  if ( Side > 1 ) {
+    lockMetaData();
     Side = metaData().index( "Cell>best side" );
+    unlockMetaData();
+  }
   if ( SSWidth > Duration )
     SSWidth = Duration;
 
@@ -335,7 +338,9 @@ void FIField::saveThreshold( const string &file )
   key.saveKey( df, true, true );
 
   // write data:
+  lockMetaData();
   double rate = metaData().number( "Cell>best rate" );
+  unlockMetaData();
   for ( unsigned int k=0; k<FieldData.size(); k++ ) {
     if ( FieldData[k].Measured ) {
       key.save( df, 0.001*FieldData[k].Frequency, 0 );
@@ -359,10 +364,10 @@ void FIField::saveThreshold( const string &file )
 
 void FIField::save( void )
 {
-  if ( aborted() ) {
+  if ( aborted() )
     FieldData[FrequencyRange.pos()].Measured = false;
-  }
 
+  lockMetaData();
   Options &mo = metaData().section( "Cell properties" );
 
   if ( SetBest && BestIndex >= 0 ) {
@@ -428,6 +433,7 @@ void FIField::save( void )
   }
   FIFieldHeader.setNumber( "best rate", mo.number( "best rate" ) );
   FIFieldHeader.setText( "session time", sessionTimeStr() );
+  unlockMetaData();
 
   saveThreshold( "fifield.dat" );
 }

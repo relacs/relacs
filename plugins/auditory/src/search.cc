@@ -192,8 +192,11 @@ int Search::main( void )
   SetBestSide = index( "setbestside" );
   bool keepchanges = boolean( "keep" );
 
-  if ( side > 1 )
+  if ( side > 1 ) {
+    lockMetaData();
     side = metaData().index( "Cell>best side" );
+    unlockMetaData();
+  }
   SearchLeft = ( side == 0 );
 
   // update widgets:
@@ -203,8 +206,11 @@ int Search::main( void )
   if ( repeats <= 0 )
     noMessage();
 
-  if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 )
+  if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 ) {
+    lockMetaData();
     metaData().selectText( "Cell>best side", SearchLeft ? "left" : "right" );
+    unlockMetaData();
+  }
 
   // Header:
   Options header;
@@ -506,8 +512,11 @@ void Search::setSpeaker( bool left )
 void Search::setSpeakerLeft( void )
 {
   SearchLeft = true;
-  if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 )
+  if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 ) {
+    lockMetaData();
     metaData().selectText( "Cell>best side", "left" );
+    unlockMetaData();
+  }
   LeftButton->setChecked( true );
   RightButton->setChecked( false );
   selectText( "side", "left" );
@@ -517,8 +526,11 @@ void Search::setSpeakerLeft( void )
 void Search::setSpeakerRight( void )
 {
   SearchLeft = false;
-  if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 )
+  if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 ) {
+    lockMetaData();
     metaData().selectText( "Cell>best side", "right" );
+    unlockMetaData();
+  }
   LeftButton->setChecked( false );
   RightButton->setChecked( true );
   selectText( "side", "right" );
@@ -556,8 +568,11 @@ void Search::dialogAccepted( void )
   FLCD->setValue( int( number( "frequency", "Hz" ) ) );
   setWaveformButton( index( "waveform" ) );
   int side = index( "side" );
-  if ( side > 1 )
+  if ( side > 1 ) {
+    lockMetaData();
     side = metaData().index( "Cell>best side" );
+    unlockMetaData();
+  }
   setSpeaker( ( side == 0 ) );
 }
 
@@ -571,8 +586,11 @@ void Search::customEvent( QEvent *qce )
     FLCD->setValue( int(Frequency) );
     setWaveformButton( Waveform );
     int side = index( "side" );
-    if ( side > 1 )
+    if ( side > 1 ) {
+      lockMetaData();
       side = metaData().index( "Cell>best side" );
+      unlockMetaData();
+    }
     setSpeaker( ( side == 0 ) );
   }
   else

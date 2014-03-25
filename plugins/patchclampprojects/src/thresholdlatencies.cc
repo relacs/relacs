@@ -127,7 +127,9 @@ int ThresholdLatencies::main( void )
   double postduration = number( "postduration" );
   int postamplitudesrc = index( "postamplitudesrc" );
   double postamplitude = number( "postamplitude" );
+  lockMetaData();
   double membranetau = metaData().number( "Cell>taum" );
+  unlockMetaData();
   double pause = searchpause;
   if ( durationsel == 1 ) {
     if ( membranetau <= 0.0 ) {
@@ -138,6 +140,7 @@ int ThresholdLatencies::main( void )
   }
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
   // test-pulse amplitude:
+  lockMetaData();
   if ( startamplitudesrc == 1 ) // current dc
     amplitude = orgdcamplitude;
   else if ( startamplitudesrc == 2 ) {  // thresh
@@ -176,6 +179,7 @@ int ThresholdLatencies::main( void )
     if ( postamplitude == 0.0 )
       postamplitude = metaData().number( "Cell>ithreshon" );
   }
+  unlockMetaData();
 
   if ( amplitudestep < finalamplitudestep ) {
     warning( "startamplitudestep must be larger than amplitudestep!" );
@@ -319,7 +323,9 @@ int ThresholdLatencies::main( void )
   dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
 
   // measure resting potential:
+  lockMetaData();
   double restvoltage = metaData().number( "Cell>vrest" );
+  unlockMetaData();
   if ( prevc && preamplitudesrc == 4 ) {  // VC rest
     // zero DC current:
     dcsignal.constWave( 0.0 );

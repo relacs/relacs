@@ -236,6 +236,7 @@ int SingleStimulus::main( void )
   StoreLevel = (StoreLevels)index( "storelevel" );
   StoreFile = "";
 
+  lockMetaData();
   if ( Side > 1 )
     Side = metaData().index( "Cell>best side" );
   string sidestr = Side > 0 ? "right" :  "left";
@@ -244,6 +245,7 @@ int SingleStimulus::main( void )
     if ( cf > 0.0 )
       CarrierFreq += cf;
   }
+  unlockMetaData();
   if ( fabs( CarrierFreq ) < 1e-7 ) {
     warning( "Carrier frequency is set to zero!" );
     return Failed;
@@ -276,10 +278,13 @@ int SingleStimulus::main( void )
       intthresh = thresh.y(k) + ( CarrierFreq - thresh.x(k) )*( thresh.y(k) - thresh.y(k-1) )/( thresh.x(k) - thresh.x(k-1) );
     if ( intensitybase == 1 )  // relative to threshold
       Intensity = intensity + intthresh;
-    else if ( intensitybase == 2 )  // relative to target rate intensity
+    else if ( intensitybase == 2 ) {  // relative to target rate intensity
+      lockMetaData();
       Intensity = intensity
 	+ intthresh + metaData().number( "Cell>" + sidestr + " intensity" )
 	- metaData().number( "Cell>" + sidestr + " threshold" );
+      unlockMetaData();
+    }
   }
   else if ( intensitybase == 3 )  // relative to previous intensity
     Intensity += 0.0;
@@ -400,7 +405,9 @@ int SingleStimulus::main( void )
 	  SP[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
+	  lockMetaData();
 	  double threshold = metaData().number( "Cell>best threshold" );
+	  unlockMetaData();
 	  double ymin = Intensity - PeakAmplitude;
 	  double ymax = Intensity + PeakAmplitude;
 	  if ( threshold > 0.0 ) {
@@ -765,7 +772,9 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
   P[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
   // stimulus:
+  lockMetaData();
   double threshold = metaData().number( "Cell>best threshold" );
+  unlockMetaData();
   double ymin = Intensity - PeakAmplitude;
   double ymax = Intensity + PeakAmplitude;
   if ( WaveType == Envelope )

@@ -698,8 +698,10 @@ void BaselineActivity::analyzeSpikes( const EventData &se,
   controlOpts( "Session" ).setNumber( "pvalue"+ns, PValue[k] );
 
   if ( Repeats > 0 ) {
+    lockMetaData();
     metaData().setNumber( "Cell>Firing Rate"+ns, FRate[k] );
     metaData().setNumber( "Cell>P-Value"+ns, PValue[k] );
+    unlockMetaData();
   }
 }
 
@@ -721,8 +723,11 @@ void BaselineActivity::analyze( int autodetect,
   // EOD period & rate:
   EODRate = localeod.frequency( FirstSignal, FirstSignal+SearchDuration );
   EODPeriod = 1.0/EODRate;
-  if ( Repeats > 0 )
+  if ( Repeats > 0 ) {
+    lockMetaData();
     metaData().setNumber( "Subject>EOD Frequency", EODRate );
+    unlockMetaData();
+  }
   double eodampl = eodAmplitude( localeodtrace, LastSignal, FirstSignal+SearchDuration );
 
   // EOD times

@@ -117,7 +117,9 @@ void SetLeak::notify( void )
   double rm = number( "Rm", 0.0, "MOhm" );
   if ( rm > 1.0e-6 ) {
     bool update = true;
+    lockMetaData();
     double cm = metaData().number( "Cell>cm", 0.0, "pF" );
+    unlockMetaData();
     if ( changed( "gdc" ) ) {
       double rdc = 1.0/(0.001*number( "gdc" )+1.0/rm);
       setNumber( "Rdc", rdc );
@@ -199,6 +201,8 @@ int SetLeak::main( void )
   double E = number( "E" );
   bool reversaltorest = boolean( "reversaltorest" );
 
+  noMessage();
+
   if ( preset == 0 ) {
     // previous values:
     E = stimulusData().number( "E", 0.0, "mV" );
@@ -209,10 +213,9 @@ int SetLeak::main( void )
     E = 0.0;
     g = 0.0;
   }
+  lockMetaData();
   if ( reversaltorest && preset != 1 )
     E = metaData().number( "Cell>vrest", 0.0, "mV" );
-
-  noMessage();
 
   unsetNotify();
   setNumber( "Rm", metaData().number( "Cell>rm", 0.0, "MOhm" ) );
@@ -221,6 +224,7 @@ int SetLeak::main( void )
   setNumber( "gdc", g );
   delFlags( Parameter::changedFlag() );
   addFlags( "gdc", Parameter::changedFlag() );
+  unlockMetaData();
   notify();
   setNotify();
 

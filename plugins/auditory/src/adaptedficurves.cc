@@ -82,6 +82,7 @@ int AdaptedFICurves::main( void )
   double onsettime = number( "onsettime" );
   double sstime = number( "sstime" );
 
+  lockMetaData();
   if ( side > 1 )
     side = metaData().index( "Cell>best side" );
   string sidestr = side > 0 ? "right" :  "left";
@@ -103,6 +104,7 @@ int AdaptedFICurves::main( void )
     intmin += adaptint;
     intmax += adaptint;
   }
+  unlockMetaData();
 
   // test intensities:
   RangeLoop intrange( intmin, intmax, intstep );

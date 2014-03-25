@@ -122,11 +122,13 @@ int VICurve::main( void )
     imax += dccurrent;
   }
   else if ( ibase == 2 ) {
+    lockMetaData();
     double ithresh = metaData().number( "Cell>ithreshon" );
     if ( ithresh == 0.0 )
       ithresh = metaData().number( "Cell>ithreshss" );
     imin += ithresh;
     imax += ithresh;
+    unlockMetaData();
   }
   if ( imax <= imin ) {
     warning( "imin must be smaller than imax!" );
@@ -149,9 +151,11 @@ int VICurve::main( void )
     return Failed;
   }
   if ( userm ) {
+    lockMetaData();
     double rm = metaData().number( "Cell>rmss", "MOhm" );
     if ( rm <= 0 )
       rm = metaData().number( "Cell>rm", "MOhm" );
+    unlockMetaData();
     if ( rm <= 0 )
       warning( "Membrane resistance was not measured yet!" );
     else {
@@ -371,7 +375,9 @@ void VICurve::save( void )
 	j=Range.next( ++j ) ) {
     double spikecount = min( Results[j].SpikeCount );
     if ( spikecount > 0.0 ) {
+      lockMetaData();
       metaData().setNumber( "Cell>ithreshon", Results[j].I );
+      unlockMetaData();
       Header.addNumber( "Ithreshon", Results[j].I, IUnit );
       break;
     }

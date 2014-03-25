@@ -332,7 +332,9 @@ int IsoResponse::findIsoFreq( void )
 
 int IsoResponse::main( void )
 {  
+  lockMetaData();
   BestFreq = metaData().number( "Cell>best frequency" );
+  unlockMetaData();
   // get options:
   UseBestFrequency = index( "use_best_freq" );
   if( UseBestFrequency==0 ) {
@@ -372,6 +374,11 @@ int IsoResponse::main( void )
   Repeats = integer( "repeats" );
   EstRepeats = integer( "estrepeats" );
   Side = index( "side" );
+  if ( Side > 1 ) {
+    lockMetaData();
+    Side = metaData().index( "Cell>best side" );
+    unlockMetaData();
+  }
 
   IntensityUp = number("intup");
   Switch_high = boolean( "switch_high" );
@@ -386,9 +393,6 @@ int IsoResponse::main( void )
   IrsPoints = integer( "isopoints" );
 
   FIso.resize( IrsNumber );
-
-  if ( Side > 1 )
-    Side = metaData().index( "Cell>best side" );
 
   // Warnings
   if ( Switch_high && Switch_low && FRlow_fix>=FRhigh_fix ) {

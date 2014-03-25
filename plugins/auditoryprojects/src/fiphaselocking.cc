@@ -192,10 +192,12 @@ int FIPhaseLocking::main( void )
   int cfs = integer( "cfs" );
   double firingrate = number( "firingrate" );
   RangeLoop::Sequence intshuffle = RangeLoop::Sequence( index( "intshuffle" ) );
-  
 
-  if ( side > 1 )
+  if ( side > 1 ) {
+    lockMetaData();
     side = metaData().index( "Cell>best side" );
+    unlockMetaData();
+  }
 
   // plot trace:
   tracePlotSignal( duration );

@@ -270,9 +270,11 @@ int SingleStimulus::main( void )
   else if ( offsetbase == 2 ) // current
     Offset = offset + dccurrent;
   else if ( offsetbase == 3 ) { // threshold
+    lockMetaData();
     Offset = offset + metaData().number( "Cell>ithreshss" );
     if ( fabs( Offset - offset ) < 1.0e-8 )
       Offset = offset + metaData().number( "Cell>ithreshon" );
+    unlockMetaData();
   }
   else if ( offsetbase == 4 )  // previous
     Offset += 0.0;
@@ -412,7 +414,9 @@ int SingleStimulus::main( void )
 	  SP[0].plot( ratepsth, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
+	  lockMetaData();
 	  double threshold = metaData().number( "Cell>best threshold" );
+	  unlockMetaData();
 	  double ymin = Offset - PeakAmplitude;
 	  double ymax = Offset + PeakAmplitude;
 	  if ( threshold > 0.0 ) {
@@ -909,7 +913,9 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
   }
 
   // stimulus:
+  lockMetaData();
   double threshold = metaData().number( "Cell>best threshold" );
+  unlockMetaData();
   double ymin = Offset - PeakAmplitude;
   double ymax = Offset + PeakAmplitude;
   if ( threshold > 0.0 ) {

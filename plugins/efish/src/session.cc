@@ -461,7 +461,9 @@ void Session::main( void )
       if ( TempDev != 0 ) {
 	WaterTemp = TempDev->temperature();
 	WaterTemps.push( currentTime(), WaterTemp );
+	lockMetaData();
 	metaData().setNumber( "Recording>temp-1", WaterTemp );
+	unlockMetaData();
 	stimulusData().setNumber( "temp-1", WaterTemp );
       }
 

@@ -724,7 +724,9 @@ int Chirps::main( void )
     times *= ChirpWidth/filechirpwidth;
     ChirpFreqs.assign( times, freqs );
     ChirpAmpls.assign( times, ampls );
+    lockMetaData();
     Header.newSection( sf.metaDataOptions( 0 ), "FileChirp" );
+    unlockMetaData();
   }
 
   OutData signal;

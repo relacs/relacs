@@ -98,7 +98,9 @@ int MembraneResistance::main( void )
     return Failed;
   }
   if ( userm ) {
+    unlockMetaData();
     double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
+    lockMetaData();
     if ( rm > 1.0e-8 ) {
       double g = stimulusData().number( "g", 0.0, "ns" );
       double r = 1.0/(0.001*g + 1.0/rm);
@@ -422,11 +424,13 @@ void MembraneResistance::save( void )
   lockAll();
 
   if ( setdata ) {
+    lockMetaData();
     metaData().setNumber( "Cell>vrest", 0.001*VRest, 0.001*VRestsd );
     metaData().setNumber( "Cell>rm", RMOn  );
     metaData().setNumber( "Cell>rmss", RMss  );
     metaData().setNumber( "Cell>cm", CMOn );
     metaData().setNumber( "Cell>taum", 0.001*TauMOn );
+    unlockMetaData();
   }
 }
 

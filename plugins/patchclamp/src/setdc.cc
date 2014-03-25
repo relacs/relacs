@@ -231,7 +231,9 @@ int SetDC::main( void )
 
   // init:
   OrgDCAmplitude = stimulusData().number( outTraceName( outcurrent ) );
+  lockMetaData();
   DCAmplitude = metaData().number( "Cell>ithreshss" );
+  unlockMetaData();
   if ( dcamplitudesel == 0 )
     DCAmplitude = dcamplitude;
   else if ( dcamplitudesel == 1 )

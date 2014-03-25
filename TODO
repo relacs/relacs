@@ -5,7 +5,6 @@ New InData threading:
 - What about recording events (SignalTime, locking)?
 - Add Model data also to UpdateRawData?
 - Fix Simulation mode!
-- Remove auto locking of meta data! Only lock them when needed.
 - Remove auto locking of stimulus data! Only lock them when needed.
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors

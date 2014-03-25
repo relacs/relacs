@@ -230,11 +230,16 @@ int SpikePrecision::main( void )
     warning( "Amplitude > Intensity" );
     return Failed;
   }
-  if ( Side > 1 )
+  if ( Side > 1 ) {
+    lockMetaData();
     Side = metaData().index( "Cell>best side" );
+    unlockMetaData();
+  }
   string sidestr = Side > 0 ? "right" :  "left";
   if ( usebestfreq ) {
+    lockMetaData();
     double cf = metaData().number( "Cell>" + sidestr + " frequency" );
+    unlockMetaData();
     if ( cf > 0.0 )
       CarrierFrequency = cf;
   }
@@ -268,10 +273,13 @@ int SpikePrecision::main( void )
       intthresh = thresh.y(k) + ( CarrierFrequency - thresh.x(k) )*( thresh.y(k) - thresh.y(k-1) )/( thresh.x(k) - thresh.x(k-1) );
     if ( intensitybase == 1 )  // relative to threshold
       Intensity = intensity + intthresh;
-    else if ( intensitybase == 2 )  // relative to target rate intensity
+    else if ( intensitybase == 2 ) {  // relative to target rate intensity
+      lockMetaData();
       Intensity = intensity
 	+ intthresh + metaData().number( "Cell>" + sidestr + " intensity" )
 	- metaData().number( "Cell>" + sidestr + " threshold" );
+      unlockMetaData();
+    }
   }
   else if ( intensitybase == 3 )  // relative to previous intensity
     Intensity += 0.0;
@@ -395,7 +403,9 @@ int SpikePrecision::main( void )
 	  SP[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
+	  lockMetaData();
 	  double threshold = metaData().number( "Cell>best threshold" );
+	  unlockMetaData();
 	  double ymin = Intensity - PeakAmplitude;
 	  double ymax = Intensity + PeakAmplitude;
 	  if ( threshold > 0.0 ) {
@@ -599,7 +609,9 @@ void SpikePrecision::saveSpikes( const vector < EnvelopeFrequencyData > &results
 
   // write header and key:
   df << "#                 Intensity: " << Intensity << "dB SPL\n";
+  lockMetaData();
   df << "# Intensity above threshold: " << Intensity - metaData().number( "Cell>best threshold" ) << "dB\n";
+  unlockMetaData();
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
@@ -637,7 +649,9 @@ void SpikePrecision::saveRates( const vector < EnvelopeFrequencyData > &results 
 
   // write header and key:
   df << "#                 Intensity: " << Intensity << "dB SPL\n";
+  lockMetaData();
   df << "# Intensity above threshold: " << Intensity - metaData().number( "Cell>best threshold" ) << "dB\n";
+  unlockMetaData();
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
@@ -707,7 +721,9 @@ void SpikePrecision::plot( const SampleDataD &amdb,
   P[0].plot( efd.Rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
   // stimulus:
+  lockMetaData();
   double threshold = metaData().number( "Cell>best threshold" );
+  unlockMetaData();
   double ymin = Intensity - PeakAmplitude;
   double ymax = Intensity + PeakAmplitude;
   if ( threshold > 0.0 ) {
