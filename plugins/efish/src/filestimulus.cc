@@ -181,6 +181,156 @@ int FileStimulus::main( void )
     LowerCutoff = 0.0;
   }
 
+  // plot trace:
+  if ( Duration <= 1.0 )
+    tracePlotSignal( Before+Duration+After, Before );
+  else
+    tracePlotContinuous( 1.0 );
+
+  // plot:
+  P.lock();
+  int np = SpikeTraces + NerveTraces;
+  double psdw = 0.0;
+  if ( PlotPsd ) {
+    np *= 2;
+    psdw = 0.3;
+  }
+  P.resize( 1 + np );
+  double stimheight = SpikeTraces > 1 ? 1.0/(1.0+SpikeTraces+NerveTraces) : 0.4;
+  double rateheight = ( 1.0 - stimheight ) / ( SpikeTraces + NerveTraces );
+  P[0].setOrigin( 0.0, 0.0 );
+  P[0].setSize( 1.0-psdw, stimheight );
+  P[0].setLMarg( 6 );
+  P[0].setRMarg( 2 );
+  P[0].setBMarg( 3 );
+  P[0].setTMarg( 1 );
+  P[0].setXLabel( "[s]" );
+  P[0].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::FirstAxis, 
+		     Plot::Left, 0.0 );
+  P[0].setXTics();
+  if ( Duration <= 1.0 )
+    P[0].setXRange( -Before, Duration+After );
+  else
+    P[0].setXRange( 0.0, 1.0 );
+  P[0].setYLabel( "Stimulus" );
+  P[0].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
+		     Plot::Center, -90.0 );
+  P[0].setAutoScaleY();
+  P[0].setYTics( );
+
+  int n=0;
+  for ( int k=0; k<SpikeTraces; k++ ) {
+    if ( SpikeEvents[k] >= 0 ) {
+      n++;
+      double h = stimheight + (n-1)*rateheight;
+      if ( PlotPsd )
+	h =  stimheight + (n-1)/2*rateheight;
+      P[n].setOrigin( 0.0, h );
+      P[n].setSize( 1.0-psdw, rateheight );
+      P[n].setLMarg( 6 );
+      P[n].setRMarg( 2 );
+      P[n].setBMarg( 1 );
+      P[n].setTMarg( 1 );
+      P[n].setXLabel( "" );
+      P[n].noXTics();
+      P[n].setYLabel( "Firing rate [Hz]" );
+      P[n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
+			 Plot::Center, -90.0 );
+      P[n].setYRange( 0.0, 100.0 );
+      P[n].setYTics( );
+      P[n].clear();
+      if ( Duration <= 1.0 )
+	P[n].setXRange( -Before, Duration+After );
+      else
+	P[n].setXRange( 0.0, 1.0 );
+      P.setCommonXRange( 0, n );
+      if ( n > 1 )
+	P.setCommonYRange( n-(PlotPsd?2:1), n );
+
+      if ( PlotPsd ) {
+	n++;
+	P[n].setOrigin( 1.0-psdw, h );
+	P[n].setSize( psdw, rateheight );
+	P[n].setLMarg( 5 );
+	P[n].setRMarg( 2 );
+	P[n].setBMarg( 1 );
+	P[n].setTMarg( 1 );
+	P[n].setXRange( 0.0, 500.0 );
+	if ( n > 2 ) {
+	  P[n].setXLabel( "" );
+	  P[n].noXTics();
+	}
+	else {
+	  P[n].setXLabel( "Frequency [Hz]" );
+	  P[n].setXTics();
+	}
+	P[n].setYLabel( "Power [dB]" );
+	P[n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
+			   Plot::Center, -90.0 );
+	P[n].setYTics( );
+	P[n].clear();
+	if ( n > 2 ) {
+	  P.setCommonXRange( n-2, n );
+	  P.setCommonYRange( n-2, n );
+	}
+      }
+    }
+  }
+  if ( NerveTrace[0] >= 0 ) {
+    n++;
+    double h = stimheight + (n-1)*rateheight;
+    if ( PlotPsd )
+      h =  stimheight + (n-1)/2*rateheight;
+    P[n].setOrigin( 0.0, h );
+    P[n].setSize( 1.0-psdw, rateheight );
+    P[n].setLMarg( 6 );
+    P[n].setRMarg( 2 );
+    P[n].setBMarg( 1 );
+    P[n].setTMarg( 1 );
+    P[n].setXLabel( "" );
+    P[n].setYLabel( "Nerve Amplitude [uV]" );
+    P[n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
+		       Plot::Center, -90.0 );
+    P[n].setAutoScaleY();
+    P[n].setYTics( );
+    P[n].clear();
+    if ( Duration <= 1.0 )
+      P[n].setXRange( -Before, Duration+After );
+    else
+      P[n].setXRange( 0.0, 1.0 );
+    P.setCommonXRange( 0, n );
+
+    if ( PlotPsd ) {
+      n++;
+      P[n].setOrigin( 1.0-psdw, h );
+      P[n].setSize( psdw, rateheight );
+      P[n].setLMarg( 5 );
+      P[n].setRMarg( 2 );
+      P[n].setBMarg( 1 );
+      P[n].setTMarg( 1 );
+      P[n].setXRange( 0.0, 500.0 );
+      if ( n > 2 ) {
+	  P[n].setXLabel( "" );
+	  P[n].noXTics();
+      }
+      else {
+	P[n].setXLabel( "Frequency [Hz]" );
+	P[n].setXTics();
+      }
+      P[n].setYLabel( "Power [dB]" );
+      P[n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
+			 Plot::Center, -90.0 );
+      P[n].setYTics( );
+      P[n].clear();
+      if ( n > 2 ) {
+	P.setCommonXRange( n-2, n );
+	P.setCommonYRange( n-2, n );
+      }
+    }
+  }
+  P.draw();
+  P.unlock();
+
   // create signal:
   string filename = file.name();
   file.expandPath();
@@ -244,142 +394,6 @@ int FileStimulus::main( void )
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
 				currentTime() - Pause, currentTime() );
-
-  // plot trace:
-  tracePlotSignal( Before+Duration+After, Before );
-
-  // plot:
-  P.lock();
-  int np = SpikeTraces + NerveTraces;
-  double psdw = 0.0;
-  if ( PlotPsd ) {
-    np *= 2;
-    psdw = 0.3;
-  }
-  P.resize( 1 + np );
-  double stimheight = SpikeTraces > 1 ? 1.0/(1.0+SpikeTraces+NerveTraces) : 0.4;
-  double rateheight = ( 1.0 - stimheight ) / ( SpikeTraces + NerveTraces );
-  P[0].setOrigin( 0.0, 0.0 );
-  P[0].setSize( 1.0-psdw, stimheight );
-  P[0].setLMarg( 6 );
-  P[0].setRMarg( 2 );
-  P[0].setBMarg( 3 );
-  P[0].setTMarg( 1 );
-  P[0].setXLabel( "[s]" );
-  P[0].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::FirstAxis, 
-		     Plot::Left, 0.0 );
-  P[0].setXTics();
-  P[0].setYLabel( "Stimulus" );
-  P[0].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
-		     Plot::Center, -90.0 );
-  P[0].setAutoScaleY();
-  P[0].setYTics( );
-
-  int n=0;
-  for ( int k=0; k<SpikeTraces; k++ ) {
-    if ( SpikeEvents[k] >= 0 ) {
-      n++;
-      double h = stimheight + (n-1)*rateheight;
-      if ( PlotPsd )
-	h =  stimheight + (n-1)/2*rateheight;
-      P[n].setOrigin( 0.0, h );
-      P[n].setSize( 1.0-psdw, rateheight );
-      P[n].setLMarg( 6 );
-      P[n].setRMarg( 2 );
-      P[n].setBMarg( 1 );
-      P[n].setTMarg( 1 );
-      P[n].setXLabel( "" );
-      P[n].noXTics();
-      P[n].setYLabel( "Firing rate [Hz]" );
-      P[n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
-			 Plot::Center, -90.0 );
-      P[n].setYRange( 0.0, 100.0 );
-      P[n].setYTics( );
-      P[n].clear();
-      P[n].setXRange( -Before, Duration+After );
-      P.setCommonXRange( 0, n );
-      if ( n > 1 )
-	P.setCommonYRange( n-(PlotPsd?2:1), n );
-
-      if ( PlotPsd ) {
-	n++;
-	P[n].setOrigin( 1.0-psdw, h );
-	P[n].setSize( psdw, rateheight );
-	P[n].setLMarg( 5 );
-	P[n].setRMarg( 2 );
-	P[n].setBMarg( 1 );
-	P[n].setTMarg( 1 );
-	P[n].setXRange( 0.0, 500.0 );
-	if ( n > 2 ) {
-	  P[n].setXLabel( "" );
-	  P[n].noXTics();
-	}
-	else {
-	  P[n].setXLabel( "Frequency [Hz]" );
-	  P[n].setXTics();
-	}
-	P[n].setYLabel( "Power [dB]" );
-	P[n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
-			   Plot::Center, -90.0 );
-	P[n].setYTics( );
-	P[n].clear();
-	if ( n > 2 ) {
-	  P.setCommonXRange( n-2, n );
-	  P.setCommonYRange( n-2, n );
-	}
-      }
-    }
-  }
-  if ( NerveTrace[0] >= 0 ) {
-    n++;
-    double h = stimheight + (n-1)*rateheight;
-    if ( PlotPsd )
-      h =  stimheight + (n-1)/2*rateheight;
-    P[n].setOrigin( 0.0, h );
-    P[n].setSize( 1.0-psdw, rateheight );
-    P[n].setLMarg( 6 );
-    P[n].setRMarg( 2 );
-    P[n].setBMarg( 1 );
-    P[n].setTMarg( 1 );
-    P[n].setXLabel( "" );
-    P[n].setYLabel( "Nerve Amplitude [uV]" );
-    P[n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
-		       Plot::Center, -90.0 );
-    P[n].setAutoScaleY();
-    P[n].setYTics( );
-    P[n].clear();
-    P[n].setXRange( -Before, Duration+After );
-    P.setCommonXRange( 0, n );
-
-    if ( PlotPsd ) {
-      n++;
-      P[n].setOrigin( 1.0-psdw, h );
-      P[n].setSize( psdw, rateheight );
-      P[n].setLMarg( 5 );
-      P[n].setRMarg( 2 );
-      P[n].setBMarg( 1 );
-      P[n].setTMarg( 1 );
-      P[n].setXRange( 0.0, 500.0 );
-      if ( n > 2 ) {
-	  P[n].setXLabel( "" );
-	  P[n].noXTics();
-      }
-      else {
-	P[n].setXLabel( "Frequency [Hz]" );
-	P[n].setXTics();
-      }
-      P[n].setYLabel( "Power [dB]" );
-      P[n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
-			 Plot::Center, -90.0 );
-      P[n].setYTics( );
-      P[n].clear();
-      if ( n > 2 ) {
-	P.setCommonXRange( n-2, n );
-	P.setCommonYRange( n-2, n );
-      }
-    }
-  }
-  P.unlock();
 
   // adjust transdermal EOD:
   double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
