@@ -1745,31 +1745,22 @@ void Plot::initTics( void )
 	   YTicsIncr[k] < YTicsMinIncr[k] )
 	YTicsIncr[k] = YTicsMinIncr[k];
     }
+    // just to make sure:
+    if ( YTicsIncr[k] < 1.0e-32 )
+      YTicsIncr[k] = 1.0e-32;
     if ( YTicsStartAutoScale[k] )
       YTicsStart[k] = ticsStart( YMin[k], YTicsIncr[k] );
 
     // autoscale y range:
     if ( YMaxRange[k] == AutoScale || 
 	 ( YMaxRange[k] == AutoMinScale && YMax[k] > YMaxFB[k] ) ) {
-      for ( int i=0; ; i++ ) {
-	double y=YTicsStart[k] + i*YTicsIncr[k];
-	if ( (y - YMin[k])/(YMax[k] - YMin[k]) >= 1.0-1.0e-8 ) {
-	  YMax[k] = y;
-	  break;
-	}
-      }
+      YMax[k] = YTicsStart[k] + ::ceil( (YMax[k] - YTicsStart[k])/YTicsIncr[k] - 1.0e-8 )*YTicsIncr[k];
     }
     if ( YMinRange[k] == AutoScale || 
 	 ( YMinRange[k] == AutoMinScale && YMin[k] >= YMinFB[k] ) ) {
-      for ( int i=0; ; i++ ) {
-	double y=YTicsStart[k]-i*YTicsIncr[k];
-	if ( (y - YMin[k])/(YMax[k] - YMin[k]) <= 1.0e-8 ) {
-	  YMin[k] = y;
-	  if ( YTicsStartAutoScale[k] )
-	    YTicsStart[k] = y;
-	  break;
-	}
-      }
+      YMin[k] = YTicsStart[k] + ::floor( (YMin[k] - YTicsStart[k])/YTicsIncr[k] + 1.0e-8 )*YTicsIncr[k];
+      if ( YTicsStartAutoScale[k] )
+	YTicsStart[k] = YMin[k];
     }
   
     // margins for y1 tic labels:
@@ -1842,31 +1833,22 @@ void Plot::initTics( void )
 	   XTicsIncr[k] < XTicsMinIncr[k] )
 	XTicsIncr[k] = XTicsMinIncr[k];
     }
+    // just to make sure:
+    if ( XTicsIncr[k] < 1.0e-32 )
+      XTicsIncr[k] = 1.0e-32;
     if ( XTicsStartAutoScale[k] )
       XTicsStart[k] = ticsStart( XMin[k], XTicsIncr[k] );
 
     // autoscale x range:
     if ( XMaxRange[k] == AutoScale || 
 	 ( XMaxRange[k] == AutoMinScale && XMax[k] > XMaxFB[k] ) ) {
-      for ( int i=0; ; i++ ) {
-	double x=XTicsStart[k] + i*XTicsIncr[k];
-	if ( (x - XMin[k])/(XMax[k] - XMin[k]) >= 1.0-1.0e-8 ) {
-	  XMax[k] = x;
-	  break;
-	}
-      }
+      XMax[k] = XTicsStart[k] + ::ceil( (XMax[k] - XTicsStart[k])/XTicsIncr[k] - 1.0e-8 )*XTicsIncr[k];
     }
     if ( XMinRange[k] == AutoScale || 
 	 ( XMinRange[k] == AutoMinScale && XMin[k] >= XMinFB[k] ) ) {
-      for ( int i=0; ; i++ ) {
-	double x=XTicsStart[k] - i*XTicsIncr[k];
-	if ( (x - XMin[k])/(XMax[k] - XMin[k]) <= 1.0e-8 ) {
-	  XMin[k] = x;
-	  if ( XTicsStartAutoScale[k] )
-	    XTicsStart[k] = x;
-	  break;
-	}
-      }
+      XMin[k] = XTicsStart[k] + ::floor( (XMin[k] - XTicsStart[k])/XTicsIncr[k] + 1.0e-8 )*XTicsIncr[k];
+      if ( XTicsStartAutoScale[k] )
+	XTicsStart[k] = XMin[k];
     }
   
     // margins for x tic labels:
