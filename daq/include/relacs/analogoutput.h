@@ -201,6 +201,9 @@ public:
         If an error is detected, this function could also set the appropriate error code
 	in the signals. */
   virtual Status status( void ) const = 0;
+  
+    /*! \return true if the analog input thread is running. */
+  bool running( void ) const;
 
     /*! Index of signal start.
         The default implemetation returns -1, indicating that

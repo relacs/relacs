@@ -344,7 +344,6 @@ int FICurve::main( void )
 	return Aborted;
       }
 
-      testWrite( signal );
       // signal failed?
       if ( !signal.success() ) {
 	if ( signal.busy() ) {

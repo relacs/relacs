@@ -308,6 +308,12 @@ int AnalogOutput::testWriteData( OutList &sigs )
 }
 
 
+bool AnalogOutput::running( void ) const
+{
+  return QThread::isRunning();
+}
+
+
 void AnalogOutput::startThread( QSemaphore *sp, bool error )
 {
   if ( sp != 0 ) {

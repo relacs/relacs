@@ -818,7 +818,6 @@ int Chirps::main( void )
       }
     }
 
-    testWrite( signal );
     // signal failed?
     if ( !signal.success() ) {
       if ( signal.busy() ) {

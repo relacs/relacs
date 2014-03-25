@@ -227,13 +227,9 @@ bool RePro::sleep( double t, double tracetime )
   // sleep:
   if ( t > 0.0 ) {
     unsigned long ms = (unsigned long)::rint(1.0e3*t);
-    if ( t < 0.001 || ms < 1 ) {
-      unlock();
-      Thread->usleep( (unsigned long)::rint(1.0e6*t) );
-      lock();
-    }
-    else
-      SleepWait.wait( mutex(), ms );
+    if ( ms < 1 )
+      ms = 1;
+    SleepWait.wait( mutex(), ms );
   }
 
   // interrupt RePro:

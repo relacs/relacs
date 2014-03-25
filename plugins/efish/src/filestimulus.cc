@@ -497,7 +497,6 @@ int FileStimulus::main( void )
       stop();
       return Aborted;
     }
-    testWrite( noisesignal );
 
     // signal failed?
     if ( !noisesignal.success() ) {

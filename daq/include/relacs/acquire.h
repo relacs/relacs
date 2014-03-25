@@ -652,6 +652,8 @@ protected:
 
     /*! \return \c true if all the threads acquiering data are still running. */
   bool isReadRunning( void ) const;
+    /*! \return \c true if all the threads writing data are still running. */
+  bool isWriteRunning( void ) const;
     /*! Check for a new signal time and update it.
         \return \c true if there was a new signal. */
   virtual bool getSignal( void );

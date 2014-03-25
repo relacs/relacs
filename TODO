@@ -4,8 +4,9 @@ New InData threading:
 - What about recording events (SignalTime, locking)?
 - Add Model data also to UpdateRawData?
 - Fix Simulation mode!
-- Remove auto locking of stimulus data! Only lock them when needed.
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
+- Check locking of SaveFiles data
+- Model: improve locking by adding an extra Mutex for push() and pop()
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Filter buffersize should just be the same as the one of the input trace!
 - Replace the source() flag by a sourceTrace and sourceEvent index
@@ -21,8 +22,6 @@ New InData threading:
 - Check whether InData, Acquire updateTime and readTime are still needed!
   But we do not want to block on the input too long!
   So maybe keep readTime. Make it an option for each device!
-- Check locking of SaveFiles data
-- Model: improve locking by adding an extra Mutex for push() and pop()
 - SaveFiles: where does stimulus intensity go, if there is no amplifier?
   (e.g. patchclamp::MembraneResistance)
 - SaveFiles: RePros without stimuli should get their start into stimuli.dat

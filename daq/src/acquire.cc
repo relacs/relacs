@@ -1170,13 +1170,19 @@ int Acquire::updateRawData( double mintracetime, double prevsignal,
   if ( mintracetime > 0.0 ) {
     // do wee need to wait for a new signal?
     if ( prevsignal >= -1.0 ) {
+      getSignal();
       while ( InTraces.success() &&
 	      SignalTime <= prevsignal &&
 	      isReadRunning() ) { 
 	DataWait.wait( &DataMutex );
 	getSignal();
+	if ( ! isWriteRunning() )
+	  break;
       }
-      mintracetime += SignalTime;
+      if ( SignalTime > prevsignal )
+	mintracetime += SignalTime;
+      else
+	mintracetime = 0.0;
     }
     
     // do we need to wait for more data?
@@ -1186,7 +1192,7 @@ int Acquire::updateRawData( double mintracetime, double prevsignal,
       DataWait.wait( &DataMutex );
     }
     
-    interrupted = ( InTraces.currentTime() < mintracetime );
+    interrupted = ( InTraces.currentTime() < mintracetime || mintracetime == 0.0 );
   }
   else
     getSignal();
@@ -1233,6 +1239,19 @@ bool Acquire::isReadRunning( void ) const
   bool isrunning = true;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( ! AI[i].Traces.empty() && ! AI[i].AI->running() ) {
+      isrunning = false;
+      break;
+    }
+  }
+  return isrunning;
+}
+
+
+bool Acquire::isWriteRunning( void ) const
+{
+  bool isrunning = true;
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    if ( ! AO[i].Signals.empty() && ! AO[i].AO->running() ) {
       isrunning = false;
       break;
     }

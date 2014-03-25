@@ -854,12 +854,12 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
     FD->scheduleAdjust();
     if ( ! ReadLoop.isRunning() )
       ReadLoop.start();
+    // update device menu:
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     if ( blocking )
       WriteLoop.run();
     else
       WriteLoop.start();
-    // update device menu:
-    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
   else {
     printlog( "! failed to write signal: " + signal.errorText() );
@@ -880,12 +880,12 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
     FD->scheduleAdjust();
     if ( ! ReadLoop.isRunning() )
       ReadLoop.start();
+    // update device menu:
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     if ( blocking )
       WriteLoop.run();
     else
       WriteLoop.start();
-    // update device menu:
-    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
   else {
     printlog( "! failed to write signals: " + signal.errorText() );
@@ -1036,7 +1036,7 @@ void RELACSWidget::stopRePro( void )
 
   // save current data:
   CurrentRePro->updateData();
-  // last stimulus still not saved?
+  // XXX last stimulus still not saved?
   if ( SF->signalPending() )
     SF->clearSignal();
 
