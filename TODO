@@ -1,5 +1,4 @@
 New InData threading:
-- remove lockAll() from all plugins.
 - How to set restart time in all data traces (see filterdetectors)?
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
 - What about recording events (SignalTime, locking)?

@@ -305,7 +305,6 @@ int FeedForwardNetwork::main( void )
     // Neuron in groups
     message("Calculating inputs in group: "+Str(group));
     for (int neuron=0;neuron<nExc;neuron++){
-      unlockAll();
       // Collect the convergent input spikes
       // Excitatory spikes
       double delay1 = 0.;
@@ -424,7 +423,6 @@ int FeedForwardNetwork::main( void )
       VmVector[group][neuron] = vm;
       SampleDataD curr( 0.0, duration, 1.0/samplerate );
       CurrVector[group][neuron] = curr;
-      lockAll();
       //}
       //message("Start stimulations");
       //sleep( number("prestim_pause")); 
@@ -713,7 +711,6 @@ EventData FeedForwardNetwork::convergentInput(const vector<EventData> &SpikeTime
 }
 
 void FeedForwardNetwork::saveOnline(ofstream &dfvm,ofstream &dfge,ofstream &dfgi,ofstream &dfcurr,ofstream &dfsp,ofstream &dfsi,const SampleDataD &vm,const SampleDataD &ge,const SampleDataD &gi,const SampleDataD &curr,EventData &sp,double &si,int group, int neuron){
-  unlockAll();  
   // traces
   for (int i=0;i<vm.size();i++){
     // vm
@@ -748,7 +745,6 @@ void FeedForwardNetwork::saveOnline(ofstream &dfvm,ofstream &dfge,ofstream &dfgi
   Str line = Str(group)+" "+Str(neuron)+" "+Str(si)+"\n";
   dfsi << line;
   dfsi << "\n";
-  lockAll();
 }
 
 void FeedForwardNetwork::saveSettings(){
@@ -1269,7 +1265,6 @@ int FeedForwardNetwork::calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG,
     double calibrationsigma = number("calibrationsigma");
     double onset1 = number("onset1");
     for (int trial=0;trial<calibrationtrials;trial++){
-      unlockAll();
       EventData SpikeTimes;
       SpikeTimes.reserve(1000);
       double time=0.;
@@ -1307,8 +1302,6 @@ int FeedForwardNetwork::calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG,
       GeVector[1][trial] = ge;
       GiVector[1][trial] = gi;
       
-      lockAll();
-
       //
       stimulate(ge,gi,VmVector[1][trial],CurrVector[1][trial],SpikeTimesVector[1][trial],SignalTimesVector[1][trial],duration,noise_std,noise_mean);
       //EventData SpikeTimesResponse;

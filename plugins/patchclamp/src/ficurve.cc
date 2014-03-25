@@ -430,13 +430,11 @@ void FICurve::save( void )
   Header.newSection( stimulusData() );
   unlockStimulusData();
   Header.newSection( settings() );
-  unlockAll();
   saveData();
   saveRate();
   saveSpikes();
   saveTraces();
   message( "<b>FICurve finished.</b>" );
-  lockAll();
 }
 
 

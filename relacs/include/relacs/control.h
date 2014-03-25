@@ -62,9 +62,9 @@ For synchronization with data, repros or sessions use waitOnData(),
 waitOnReProSleep(), waitOnReProFinished(), waitOnSessionStart(),
 waitOnSessionPrestop(), waitOnSessionStop().
 Simply sleeping is possible with sleep(), timeStamp(), and sleepOn().
-Within main() access to the Control and common data is locked (via lockAllData()),
+Within main() access to the Control is locked (via lock()),
 during the waitOn*(), sleep(), and sleepOn() functions
-access is unlocked() (via unlockAllData()).
+access is unlocked (via unlock() ).
 You need to return from the thread if interrupt() returns \c true.
 If you want the thread to be stopped in a different way,
 reimplement requestStop().
@@ -150,8 +150,7 @@ protected:
     /*! Reimplement this function if you want to analyze input data traces
         and events. 
         This function is executed as a thread.
-	Within this thread the Control, all input data, events, meta data, 
-	and stimulus data are already locked (via lockAll()).
+	Within this thread the Control is locked (via lock() ).
 	Access to those data is unlocked during sleep(), sleepOn(),
 	and the waitOn* functions.
         To synchronize with the data, repros, or session use waitOnData(),

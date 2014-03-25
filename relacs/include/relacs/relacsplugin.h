@@ -322,15 +322,6 @@ protected:
 
  public:
 
-    /*! Lock the %RELACSPlugin (via lock()), the input data and events
-        (via readLockData()), the meta data (via lockMetaData()),
-        and the stimulus data (via lockStimulusData()). */
-  virtual void lockAll( void );
-    /*! Unlock the %RELACSPlugin (via unlock()), the input data and events
-        (via unlockData()), the meta data (via unlockMetaData()),
-	and the stimulus data (via unlockStimulusData()). */
-  virtual void unlockAll( void );
-
     /*! Return the list of all input traces.
         \sa trace(), traceIndex(), events(), traceInputTrace(),
 	traceInputEvent(), eventInputTrace(), eventInputEvent() */

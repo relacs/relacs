@@ -285,7 +285,6 @@ int Beats::main( void )
 	OutData led;
 	if ( LEDOutput[0] >= 0 )
 	  led.setTrace( LEDOutput[0] );
-	unlockAll();
 	if ( generatechirps ) {
 	  // EOD with chirps:
 	  chirpfrequency = 1.0;
@@ -379,7 +378,6 @@ int Beats::main( void )
 	  if ( LEDOutput[0] >= 0 )
 	    led.pulseWave( sig.length(), sig.stepsize(), 5.0, 0.0 );
 	}
-	lockAll();
 	duration = sig.length();
 	sig.setDelay( before );
 	sig.setIntensity( amplitude );
@@ -704,7 +702,6 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
   header.addText( "Session Time", sessionTimeStr() );
   header.newSection( settings(), 1 );
 
-  unlockAll();
   setWaitMouseCursor();
   for ( int k=0; k<FishEODTraces[0]; k++ ) {
     header.setInteger( "Electrode", k+1 );
@@ -721,7 +718,6 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
   if ( ! chirpheader.empty() )
     savePlayedChirps( header, playedchirpevents, split, count );
   restoreMouseCursor();
-  lockAll();
 }
 
 

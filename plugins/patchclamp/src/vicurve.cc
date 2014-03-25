@@ -371,7 +371,6 @@ void VICurve::save( void )
 {
   message( "<b>Saving ...</b>" );
   tracePlotContinuous();
-  unlockAll();
   for ( unsigned int j=Range.next( 0 );
 	j<Results.size();
 	j=Range.next( ++j ) ) {
@@ -392,7 +391,6 @@ void VICurve::save( void )
   saveData();
   saveTrace();
   message( "<b>VICurve finished.</b>" );
-  lockAll();
 }
 
 

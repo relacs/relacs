@@ -231,8 +231,6 @@ int PhaseResettingCurve::main( void )
     prcspikes.push( spikes, spikes[psi-nperiods/2]-baseperiod,
 		    spikes[psi+nperiods/2]+baseperiod, signalTime() );
 
-    unlockAll();
-
     // recalculate phase resetting:
     if ( n%10 == 0 || n == repeats ) {
       for ( int k=perturbedperiods.size()>3*averageisis?
@@ -298,13 +296,9 @@ int PhaseResettingCurve::main( void )
 		 prctimes.x(inx), prctimes.y(inx),
 		 prcphases.x(inx), prcphases.y(inx) );
     }
-
-    lockAll();
-
   }
 
   if ( prctimes.size() >= minsave ) {
-    unlockAll();
     while ( voltage.size() > 0 ) {
       int inx = prctimes.size()-voltage.size();
       saveTrace( tf, tracekey, inx, voltage, current,
@@ -318,7 +312,6 @@ int PhaseResettingCurve::main( void )
     saveData( header, periods, meanperiods, perturbedperiods,
 	      prctimes, prcphases );
     savePRC( header, prcphases );
-    lockAll();
   }
 
   // back to initial dc-current:

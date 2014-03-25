@@ -549,7 +549,6 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
   if ( Repeats <= 0 )
     return;
 
-  unlockAll();
   Options header;
   header.addInteger( "index", totalRuns() );
   header.addInteger( "trace", -1 );
@@ -584,7 +583,6 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
     saveEODTrace( header, eodduration );
   if ( saveeodtimes )
     saveEODTimes( header, eodtimes );
-  lockAll();
 }
 
 

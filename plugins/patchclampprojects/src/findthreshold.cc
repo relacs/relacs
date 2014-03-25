@@ -225,11 +225,9 @@ int FindThreshold::main( void )
     // analyze, plot, and save:
     analyze( amplitude, duration, savetime, skiptime );
     if ( record ) {
-      unlockAll();
       if ( TrialCount == 0 )
 	openFiles( tf, tracekey );
       saveTrace( tf, tracekey, count-1 );
-      lockAll();
     }
     plot( record, duration );
 
@@ -283,10 +281,8 @@ int FindThreshold::main( void )
   }
 
   if ( record && TrialCount > 0 ) {
-    unlockAll();
     tf << '\n';
     save();
-    lockAll();
   }
   Results.clear();
   Latencies.clear();

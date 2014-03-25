@@ -73,10 +73,10 @@ void Control::run( void )
 {
   timeStamp();
   updateData();
-  lockAll();
+  lock();
   setSettings();
   main();
-  unlockAll();
+  unlock();
 }
 
 

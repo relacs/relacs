@@ -208,7 +208,6 @@ int ManualJAR::main( void )
     // create signal:
     OutData signal;
     signal.setTrace( GlobalEField );
-    unlockAll();
     double stimulusrate = fishrate + deltaf;
     double p = 1.0;
     if ( fabs( deltaf ) > 0.01 )
@@ -220,7 +219,6 @@ int ManualJAR::main( void )
       n = 1;
     signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
     signal.setIdent( "sinewave" );
-    lockAll();
     duration = signal.length();
     signal.setDelay( before );
     signal.setIntensity( amplitude );
@@ -380,12 +378,10 @@ void ManualJAR::save( double deltaf, double amplitude, double duration, double p
   header.addText( "Session Time", sessionTimeStr() );
   header.newSection( settings(), 1 );
 
-  unlockAll();
   setWaitMouseCursor();
   saveEODFreq( header, eodfrequency, eodamplitude, split, count );
   saveChirps( header, jarchirpevents, split, count );
   restoreMouseCursor();
-  lockAll();
 }
 
 

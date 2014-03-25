@@ -710,11 +710,9 @@ int SingleStimulus::main( void )
     plotmode = index( "plot" );
     plot( spikes, rate, signal, voltage, meanvoltage, plotmode );
     if ( storevoltage ) {
-      unlockAll();
       if ( count == 0 )
 	openTraceFile( tf, tracekey, header );
       saveTrace( tf, tracekey, count, voltage, current );
-      lockAll();
     }
     
     sleepOn( Duration + pause );
@@ -728,14 +726,12 @@ int SingleStimulus::main( void )
   }
   
   if ( state == Completed ) {
-    unlockAll();
     if ( storevoltage ) {
       tf << '\n';
       saveMeanTrace( header, tracekey, meanvoltage, meancurrent );
     }
     saveRate( header, rate );
     saveSpikes( header, spikes );
-    lockAll();
   }
 
   directWrite( dcsignal );

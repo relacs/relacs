@@ -238,8 +238,6 @@ void MembraneResistance::analyzeOn( double duration,
     }
   }
 
-  unlockAll();
-
   // resting potential:
   VRest = MeanTrace.mean( -sswidth, 0.0 );
   VRestsd = MeanTrace.stdev( -sswidth, 0.0 );
@@ -300,8 +298,6 @@ void MembraneResistance::analyzeOn( double duration,
   CMOn = TauMOn/RMOn*1000.0;
   for ( int k=0; k<ExpOn.size(); k++ )
     ExpOn[k] = expFunc( ExpOn.pos( k ), p );
-
-  lockAll();
 }
 
 
@@ -321,8 +317,6 @@ void MembraneResistance::analyzeOff( double duration,
       MeanCurrent[k] += (c - MeanCurrent[k])/(Count+1);
     }
   }
-
-  unlockAll();
 
   // fit exponential to offset:
   int inxon0 = MeanTrace.index( 0.0 );
@@ -359,8 +353,6 @@ void MembraneResistance::analyzeOff( double duration,
   CMOff = TauMOff/RMOff*1000.0;
   for ( int k=0; k<ExpOff.size(); k++ )
     ExpOff[k] = expFunc( ExpOff.pos( k ) - duration, p );
-
-  lockAll();
 }
 
 

@@ -232,19 +232,15 @@ int VoltageReconstruction::main( void )
     P.unlock();
 
     // save:
-    unlockAll();
     if ( count == 0 )
       openTraceFile( tf, tracekey, header );
     saveTrace( tf, tracekey, count, voltages.back(), current, x, y );
-    lockAll();
   }
 
   if ( state == Completed ) {
-    unlockAll();
     tf << '\n';
     saveMeanTrace( header, meanvoltage, voltagesd );
     saveData( header, latencies );
-    lockAll();
   }
 
   // back to initial dc-current:

@@ -836,7 +836,6 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
 int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 				    double &duration, bool stoream )
 {
-  unlockAll();
   OutData wave;
   wave.setTrace( Speaker[ Side ] );
 
@@ -849,7 +848,6 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     wave.load( file, file );
     if ( wave.empty() ) {
       warning( "Unable to load stimulus from file " + file );
-      lockAll();
       return -1;
     }
     if ( duration > 0.0 && wave.length() > duration )
@@ -943,7 +941,6 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   if ( duration <= SkipWin ) {
     warning( "Stimulus duration <b>" + Str( 1000.0* duration, 0, 0, 'f' ) + "ms</b>" +
 	     " is smaller than analysis window!" );
-    lockAll();
     return -1;
   }
 
@@ -986,7 +983,6 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   else if ( WaveType == Envelope ) {
     if ( ::relacs::min( wave ) < 0.0 ) {
       warning( "This envelope contains negative values!" );
-      lockAll();
       return -1;
     }
     wave.ramp( Ramp );
@@ -1040,7 +1036,6 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   }
   signal.ramp( Ramp );
   
-  lockAll();
   return 0;
 }
 

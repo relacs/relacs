@@ -348,7 +348,6 @@ int JAR::main( void )
 	if ( GenerateStimulus ) {
 	  signal.clear();
 	  if ( SineWave ) {
-	     unlockAll();
 	    StimulusRate = FishRate + DeltaF;
 	    double p = 1.0;
 	    if ( fabs( DeltaF ) > 0.01 )
@@ -361,7 +360,6 @@ int JAR::main( void )
 	    signal.sineWave( n*p, -1.0, StimulusRate, 1.0, Ramp );
 	    signal.setIdent( "sinewave" );
 	    IntensityGain = 1.0;
-	    lockAll();
 	  }
 	  else if ( LocalEODEvents[0] >= 0 ) {
 	    // extract an EOD waveform:
@@ -375,24 +373,20 @@ int JAR::main( void )
 	    StimulusRate = ReadCycles/signal.duration();
 	    double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
 	    IntensityGain = maxamplitude / LocalFishAmplitude / g;
-	    unlockAll();
 	    signal.repeat( (int)floor( Duration/signal.duration() ) );
 	    signal.ramp( Ramp );
-	    lockAll();
 	  }
 	}
 	else {
 	  if ( signal.empty() ) {
 	    string filename = File.name();
 	    File.expandPath();
-	    unlockAll();
 	    setWaitMouseCursor();
 	    signal.setTrace( GlobalEField );
 	    signal.load( File, filename );
 	    if ( signal.empty() ) {
 	      warning( "Cannot load stimulus file <b>" + File + "</b>!" );
 	      restoreMouseCursor();
-	      lockAll();
 	      return Failed;
 	    }
 	    if ( Duration > 0.0 && signal.length() > Duration )
@@ -404,7 +398,6 @@ int JAR::main( void )
 	    IntensityGain = 1.0/sigstdev;
 	    restoreMouseCursor();
 	    StimulusRate = 0.0;
-	    lockAll();
 	  }
 	}
 	Duration = signal.length();
@@ -525,7 +518,6 @@ void JAR::sessionStopped( bool saved )
 
 void JAR::save( void )
 {
-  unlockAll();
   Options header;
   header.addInteger( "Index", totalRuns() );
   header.addText( "Waveform", GenerateStimulus ? ( SineWave ? "Sine-Wave" : "Fish-EOD" ) : "File" );
@@ -541,7 +533,6 @@ void JAR::save( void )
 
   saveJAR( header );
   saveMeanJAR( header );
-  lockAll();
   saveEOD( header );
 }
 
@@ -768,7 +759,6 @@ void JAR::saveEOD( const Options &header )
 
 void JAR::saveTrace( void )
 {
-  unlockAll();
   Options header;
   header.addInteger( "Index", FileIndex );
   header.addNumber( "Delta f", DeltaF, "Hz", "%.1f" );
@@ -796,7 +786,6 @@ void JAR::saveTrace( void )
   saveEODFreq( header );
   saveChirps( header );
   saveChirpTraces( header );
-  lockAll();
   saveChirpEOD( header );
 }
 

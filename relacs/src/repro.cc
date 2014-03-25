@@ -123,7 +123,7 @@ void RePro::run( void )
   Interrupt = false;
   InterruptLock.unlock();
   updateData();
-  lockAll();
+  lock();
   RW->SF->holdOff();
   enable();
 
@@ -141,7 +141,7 @@ void RePro::run( void )
   if ( LastState == Failed )
     FailedRuns++;
 
-  unlockAll();
+  unlock();
 
   RW->KeyTime->unsetNoFocusWidget();
   GrabKeysAllowed = false;
@@ -413,7 +413,7 @@ int RePro::write( OutData &signal, bool setsignaltime )
   if ( interrupt() )
     return -1;
 
-  unlockAll();
+  unlock();
 
   double st = signalTime();
 
@@ -425,7 +425,7 @@ int RePro::write( OutData &signal, bool setsignaltime )
   else
     updateData( signal.length(), st );
 
-  lockAll();
+  lock();
 
   return r;
 }
@@ -436,7 +436,7 @@ int RePro::write( OutList &signal, bool setsignaltime )
   if ( interrupt() )
     return -1;
 
-  unlockAll();
+  unlock();
 
   double st = signalTime();
 
@@ -448,7 +448,7 @@ int RePro::write( OutList &signal, bool setsignaltime )
   else
     updateData( signal.maxLength(), st );
 
-  lockAll();
+  lock();
 
   return r;
 }
@@ -607,25 +607,6 @@ string RePro::addPath( const string &file ) const
 void RePro::keepFocus( void )
 {
   RW->KeyTime->setNoFocusWidget( widget() );
-}
-
-
-void RePro::lockAll( void )
-{
-  //  LockAllTime.start();
-  RELACSPlugin::lockAll();
-  //  double lockedtime = 0.001*LockAllTime.restart();
-  //  if ( traces().size() > 0 && lockedtime > trace( 0 ).updateTime() )
-  //    printlog( "WARNING! RePro locked all data for " + Str( 1000.0*lockedtime, 0, 0, 'f' ) + "ms." );
-}
-
-
-void RePro::unlockAll( void )
-{
-  RELACSPlugin::unlockAll();
-  //  double lockedtime = 0.001*LockAllTime.elapsed();
-  //  if ( traces().size() > 0 && lockedtime > trace( 0 ).updateTime() )
-  //    printlog( "WARNING! RePro locked all data for " + Str( 1000.0*lockedtime, 0, 0, 'f' ) + "ms." );
 }
 
 

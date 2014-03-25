@@ -97,8 +97,7 @@ public:
 	e.g. read options, create and play stimulus, 
 	analyze the read voltage traces and events, etc.
         This function is executed as a thread.
-	Within this thread the RePro, all input data, events, meta data,
-	and stimulus data are already locked (via lockAll()).
+	Within this thread the RePro is locked (via lock()).
 	Access to those data is unlocked during sleep(), sleepOn(), and sleepWait().
 	Beware that main() is executed in a thread different from the GUI thread.
 	Use postCustomEvent() to call some functions that eventually
@@ -149,7 +148,6 @@ public:
 
     /*! Sleep for some time.
         Right before returning, the data and event buffers are updated.
-	During this function all data are unlocked by unlockAll().
 	\param[in] t the time to sleep in seconds.
 	\param[in] tracetime the size the input data should have after the sleep.
 	For internal use only!
@@ -163,14 +161,12 @@ public:
   void timeStamp( void );
     /*! Sleep for \a t seconds relative to the last call of timeStamp(). 
         Right before returning, the data and event buffers are updated.
-	During this function all data are unlocked by unlockAll().
 	\param[in] t the time to sleep since the last call to timeStamp() in seconds.
         \return \a true if the main() thread needs to be stopped.
         \sa sleep(), sleepWait(), timeStamp(), interrupt() */
   bool sleepOn( double t );
     /*! Wait on the RePro's waitcondition for sleeping
         or sleep for the specified time.
-	During this function all data are unlocked by unlockAll().
         The data and event buffers are NOT updated after sleeping.
         \param[in] time the maximum time to be waiting for,
 	i.e. the time to sleep in seconds.
@@ -529,18 +525,6 @@ public:
 
 protected:
 
-    /*! Lock the %RePro (via lock()), the input data and events
-        (via readLockData()), the meta data (via lockMetaData()),
-        and the stimulus data (via lockStimulusData())
-        and measures the time, the %RePro locks the data. */
-  virtual void lockAll( void );
-    /*! Unlock the %RePro (via unlock()), the input data and events
-        (via unlockData()), the meta data (via unlockMetaData()),
-	and the stimulus data (via unlockStimulusData()).
-        If the %RePro has locked the data for too long,
-	and error messages is printed to the console. */
-  virtual void unlockAll( void );
-
     /*! Reimplement this function to handle key-press events.
         This implementation handles softStop()*/
   virtual void keyPressEvent( QKeyEvent *event );
@@ -576,9 +560,6 @@ private:
   QWaitCondition SleepWait;
   QTime SleepTime;
   double TraceTime;
-
-  QTime LockDataTime;
-  QTime LockAllTime;
 
   int LastState;
   int CompleteRuns;

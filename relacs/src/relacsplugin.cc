@@ -271,18 +271,6 @@ void RELACSPlugin::widgetDestroyed( QObject *obj )
 }
 
 
-void RELACSPlugin::lockAll( void )
-{
-  lock();
-}
-
-
-void RELACSPlugin::unlockAll( void )
-{
-  unlock();
-}
-
-
 void RELACSPlugin::addTracesEvents( deque<InList*> &data, deque<EventList*> &events )
 {
   data.push_back( &IL );

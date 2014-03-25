@@ -494,11 +494,9 @@ int ThresholdLatencies::main( void )
 	     pre2amplitude, amplitude, postamplitude, delay, preduration,
 	     pre2duration, duration, postduration, savetracetime, pause );
     if ( record ) {
-      unlockAll();
       if ( TrialCount == 0 )
 	openTraceFile( tf, tracekey );
       saveTrace( tf, tracekey, count-1 );
-      lockAll();
     }
     plot( record, preduration, pre2duration, duration, postduration );
 
@@ -607,10 +605,8 @@ int ThresholdLatencies::main( void )
 
   bool usedc = fabs( orgdcamplitude ) > 1.0e-6;
   if ( record && TrialCount > 0 ) {
-    unlockAll();
     tf << '\n';
     save( usedc );
-    lockAll();
   }
   dcsignal.constWave( orgdcamplitude );
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
