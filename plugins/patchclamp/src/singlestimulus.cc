@@ -264,7 +264,9 @@ int SingleStimulus::main( void )
   StoreLevel = (StoreLevels)index( "storelevel" );
   StoreFile = "";
 
+  lockStimulusData();
   double dccurrent = stimulusData().number( outTraceName( outtrace ) );
+  unlockStimulusData();
   if ( offsetbase == 1 ) // amplitude
     Offset = offset + Amplitude;
   else if ( offsetbase == 2 ) // current
@@ -638,7 +640,9 @@ int SingleStimulus::main( void )
   header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
+  lockStimulusData();
   header.newSection( stimulusData() );
+  unlockStimulusData();
   header.newSection( settings() );
 
   // variables:

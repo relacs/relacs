@@ -95,7 +95,9 @@ int PhaseResettingCurve::main( void )
   int averageisis = integer( "averageisis" );
   int minsave = integer( "minsave" );
 
+  lockStimulusData();
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
+  unlockStimulusData();
   if ( dcamplitudesrc == 1 ) // dc
     dcamplitude = orgdcamplitude;
 
@@ -177,7 +179,9 @@ int PhaseResettingCurve::main( void )
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
   header.addNumber( "firing rate", meanrate, "Hz", "%0.1f" );
   header.addNumber( "period", 1000.0*baseperiod, "ms", "%0.2f" );
+  lockStimulusData();
   header.newSection( stimulusData() );
+  unlockStimulusData();
   header.newSection( settings() );
 
   for ( int n=1; (repeats == 0 || n<=repeats ) && softStop() <= 0; n++ ) {

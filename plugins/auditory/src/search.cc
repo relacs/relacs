@@ -216,7 +216,9 @@ int Search::main( void )
   Options header;
   header.addInteger( "index", totalRuns() );
   header.addText( "session time", sessionTimeStr() );
+  lockStimulusData();
   header.newSection( stimulusData() );
+  unlockStimulusData();
   header.newSection( settings() );
 
   // stimulus:

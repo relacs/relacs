@@ -168,7 +168,9 @@ void OneClick::saveSpikes( const string &file )
 
   // write header and key:
   Header.save( df, "# " );
+  lockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;

@@ -542,7 +542,9 @@ int IsoResponse::main( void )
     header.addNumber( "best", BestFreq, "Hz", "%.1f" );
     header.addNumber( "freq1", Frequency1, "Hz", "%.1f" );
     header.addNumber( "freq2", Frequency2, "Hz", "%.1f" );
+    lockStimulusData();
     header.newSection( stimulusData() );
+    unlockStimulusData();
     header.newSection( settings() );
     saveSpikes( header );
     saveRates( header );

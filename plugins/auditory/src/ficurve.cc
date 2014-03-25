@@ -845,7 +845,9 @@ void FICurve::save( const vector< FIData > &results )
 
   setHeader();
   Header.erase( "Status" );
+  lockStimulusData();
   Header.newSection( stimulusData() );
+  unlockStimulusData();
   Header.erase( "Settings" );
   Header.newSection( settings(), 16 );
   updateSession( results );

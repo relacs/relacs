@@ -147,9 +147,11 @@ void Session::preConfig( void )
 
   // options that are written into the trigger file
   // the values are set in EFishSession::main()
+  lockStimulusData();
   stimulusData().addNumber( "EOD Rate", "", EODRate, 0, 100000, 5.0, "Hz", "Hz", "%4.0f" );
   stimulusData().addNumber( "EOD Amplitude", "", EODAmplitude,
 			    0, 100000, 0.1, "mV", "mV", "%6.3f" );
+  unlockStimulusData();
 
   // LCDs:
   unsetNotify();
@@ -448,14 +450,18 @@ void Session::main( void )
       // EOD Rate:
       EODRate = eode.frequency( currentTime() - 0.5, currentTime() );
       EODRates.push( currentTime(), EODRate );
+      lockStimulusData();
       stimulusData().setNumber( "EOD Rate", EODRate );
+      unlockStimulusData();
       postCustomEvent( 11 );
 
       // EOD Amplitude:
       EODAmplitude = eodAmplitude( trace( EODTrace ), currentTime() - 0.5, currentTime() );
       EODAmplitudes.push( currentTime(), EODAmplitude );
+      lockStimulusData();
       stimulusData().setNumber( "EOD Amplitude", EODAmplitude );
       stimulusData().setUnit( "EOD Amplitude", trace( EODTrace ).unit() );
+      unlockStimulusData();
 
       // Temperature:
       if ( TempDev != 0 ) {
@@ -464,7 +470,9 @@ void Session::main( void )
 	lockMetaData();
 	metaData().setNumber( "Recording>temp-1", WaterTemp );
 	unlockMetaData();
+	lockStimulusData();
 	stimulusData().setNumber( "temp-1", WaterTemp );
+	unlockStimulusData();
       }
 
       plot();

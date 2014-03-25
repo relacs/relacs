@@ -88,7 +88,9 @@ int VoltageReconstruction::main( void )
   int repeats = number( "repeats" );
   double rateduration = number( "rateduration" );
 
+  lockStimulusData();
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
+  unlockStimulusData();
   if ( dcamplitudesrc == 1 ) // dc
     dcamplitude = orgdcamplitude;
 
@@ -262,7 +264,9 @@ void VoltageReconstruction::openTraceFile( ofstream &tf, TableKey &tracekey,
   tf.open( addPath( "voltagereconstruction-traces.dat" ).c_str(),
 	   ofstream::out | ofstream::app );
   header.save( tf, "# " );
+  lockStimulusData();
   stimulusData().save( tf, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( tf, "# ", 0, Options::FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
@@ -306,7 +310,9 @@ void VoltageReconstruction::saveMeanTrace( const Options &header,
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
+  lockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
 
@@ -334,7 +340,9 @@ void VoltageReconstruction::saveData( const Options &header,
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
+  lockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
 

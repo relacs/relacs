@@ -74,7 +74,9 @@ int FindRate::main( void )
   double duration = number( "duration" );
   double skipwin = number( "skipwin" );
 
+  lockStimulusData();
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
+  unlockStimulusData();
   double dcamplitude = startamplitude;
   if ( startamplitudesrc == 1 ) // dc
     dcamplitude = orgdcamplitude;
@@ -283,7 +285,9 @@ void FindRate::saveData( const MapD &rates )
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
 
   header.save( df, "# " );
+  lockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
 

@@ -116,7 +116,9 @@ int VICurve::main( void )
   double vmin = number( "vmin" );
   double ton = number( "ton" );
   double sswidth = number( "sswidth" );
+  lockStimulusData();
   double dccurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
+  unlockStimulusData();
   if ( ibase == 1 ) {
     imin += dccurrent;
     imax += dccurrent;
@@ -382,7 +384,9 @@ void VICurve::save( void )
       break;
     }
   }
+  lockStimulusData();
   Header.newSection( stimulusData() );
+  unlockStimulusData();
   Header.newSection( settings() );
 
   saveData();

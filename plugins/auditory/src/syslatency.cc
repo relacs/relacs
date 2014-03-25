@@ -427,7 +427,9 @@ void SysLatency::save( double carrierfrequency, int side, double pduration,
   header.addNumber( "prc slope", slope, "", "%.3f" );
   header.addNumber( "prc offset", offset, "", "%.3f" );
   header.addText( "session time", sessionTimeStr() );
+  lockStimulusData();
   header.newSection( stimulusData() );
+  unlockStimulusData();
   header.newSection( settings(), 16 );
 
   saveSpikes( header, spikes );

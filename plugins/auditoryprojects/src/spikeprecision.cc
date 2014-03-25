@@ -615,7 +615,9 @@ void SpikePrecision::saveSpikes( const vector < EnvelopeFrequencyData > &results
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
+  lockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
@@ -655,7 +657,9 @@ void SpikePrecision::saveRates( const vector < EnvelopeFrequencyData > &results 
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
+  lockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;

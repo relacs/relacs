@@ -316,7 +316,9 @@ void FIField::saveThreshold( const string &file )
 
   // write header and key:
   FIFieldHeader.save( df, "# " );
+  unlockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 32, Options::FirstOnly );
   df << '\n';
   TableKey key;
@@ -514,7 +516,9 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
 	FIFieldHeader.setInteger( "side", Side );
 	FIFieldHeader.setText( "session time", sessionTimeStr() );
 	FIFieldHeader.erase( "Status" );
+	lockStimulusData();
 	FIFieldHeader.newSection( stimulusData() );
+	unlockStimulusData();
 	FIFieldHeader.erase( "Settings" );
 	FIFieldHeader.newSection( settings(), 32 );
 	saveHeader( "fifieldspikes.dat" );

@@ -211,7 +211,9 @@ void Session::initDevices( void )
 	       metaDataMutex() );
   ASW->setVerticalSpacing( 2 );
 
+  lockStimulusData();
   stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
+  unlockStimulusData();
   SW->assign( &stimulusData(), 16, 0, true, 
 	      OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	      stimulusDataMutex() );
@@ -276,7 +278,9 @@ void Session::main( void )
     lockMetaData();
     metaData().setNumber( "Recording>temp-1", temp );
     unlockMetaData();
+    lockStimulusData();
     stimulusData().setNumber( "temp-1", temp );
+    unlockStimulusData();
     sleep( 1.0 );
   }
 }

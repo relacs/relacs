@@ -102,7 +102,9 @@ int MembraneResistance::main( void )
     double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
     lockMetaData();
     if ( rm > 1.0e-8 ) {
+      lockStimulusData();
       double g = stimulusData().number( "g", 0.0, "ns" );
+      unlockStimulusData();
       double r = 1.0/(0.001*g + 1.0/rm);
       Amplitude = vstep/r/IFac;
     }
@@ -122,7 +124,9 @@ int MembraneResistance::main( void )
     MeanCurrent = MeanTrace;
   else
     MeanCurrent.clear();
+  lockStimulusData();
   DCCurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
+  unlockStimulusData();
   VRest = 0.0;
   VRestsd = 0.0;
   VSS = 0.0;
@@ -383,8 +387,6 @@ void MembraneResistance::plot( void )
 
 void MembraneResistance::save( void )
 {
-  unlockAll();
-
   Options header;
   header.addInteger( "index", completeRuns() );
   header.addInteger( "ReProIndex", reproCount() );
@@ -403,7 +405,9 @@ void MembraneResistance::save( void )
   header.addNumber( "Tauoff", TauMOff, "ms", "%0.1f" );
   header.addNumber( "Vsag", fabs( VPeak-VSS ), VUnit, "%0.1f" );
   header.addNumber( "relVsag", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ), "%", "%0.1f" );
+  lockStimulusData();
   header.newSection( stimulusData() );
+  unlockStimulusData();
   header.newSection( settings() );
 
   saveData();
@@ -413,15 +417,15 @@ void MembraneResistance::save( void )
   bool setdata = ( settings().index( "setdata" ) <= 1 );
   if ( settings().index( "setdata" ) == 0 ) {
     // all outputs must be at 0:
+    lockStimulusData();
     for ( int k=0; k<outTracesSize(); k++ ) {
       if ( fabs( stimulusData().number( outTraceName( k ) ) ) > 1.0e-6 ) {
 	setdata = false;
 	break;
       }
     }
+    unlockStimulusData();
   }
-
-  lockAll();
 
   if ( setdata ) {
     lockMetaData();
@@ -468,7 +472,9 @@ void MembraneResistance::saveData( void )
   datakey.addNumber( "relVsag", "%", "%6.1f", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ) );
   datakey.addNumber( "s.d.", "%", "%6.1f", 100.0*sqrt( VPeaksd*VPeaksd + fabs((VRest-VPeak)*VSSsd/(VSS-VRest))*fabs((VRest-VPeak)*VSSsd/(VSS-VRest)) )/fabs(VSS-VRest) );
   datakey.newSection( "Status" );
+  lockStimulusData();
   datakey.add( stimulusData() );
+  unlockStimulusData();
 
   ofstream df;
   if ( completeRuns() <= 0 ) {

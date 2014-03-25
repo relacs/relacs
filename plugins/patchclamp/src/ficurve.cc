@@ -121,7 +121,9 @@ int FICurve::main( void )
   int diffincrement = number( "diffincrement" );
   double maxratediff = number( "maxratediff" );
 
+  lockStimulusData();
   double dccurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
+  unlockStimulusData();
   if ( ibase == 1 ) {
     imin += dccurrent;
     imax += dccurrent;
@@ -424,7 +426,9 @@ void FICurve::save( void )
 {
   message( "<b>Saving ...</b>" );
   tracePlotContinuous();
+  lockStimulusData();
   Header.newSection( stimulusData() );
+  unlockStimulusData();
   Header.newSection( settings() );
   unlockAll();
   saveData();

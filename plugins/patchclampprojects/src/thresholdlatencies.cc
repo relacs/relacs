@@ -138,7 +138,9 @@ int ThresholdLatencies::main( void )
     }
     duration = durationfac*membranetau;
   }
+  lockStimulusData();
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
+  unlockStimulusData();
   // test-pulse amplitude:
   lockMetaData();
   if ( startamplitudesrc == 1 ) // current dc
@@ -688,7 +690,9 @@ void ThresholdLatencies::openTraceFile( ofstream &tf, TableKey &tracekey )
     tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
   Header.save( tf, "# " );
+  lockStimulusData();
   stimulusData().save( tf, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( tf, "# ", 0, Options::FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
@@ -777,7 +781,9 @@ void ThresholdLatencies::saveSpikes( void )
     sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str(),
              ofstream::out | ofstream::app );
   Header.save( sf, "# " );
+  lockStimulusData();
   stimulusData().save( sf, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( sf, "# ", 0, Options::FirstOnly );
   sf << '\n';
 
@@ -850,7 +856,9 @@ void ThresholdLatencies::saveData( bool dc )
   datakey.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
   datakey.addNumber( "s.d.", "ms", "%6.2f", 1000.0*lsd );
   datakey.newSection( "Traces" );
+  lockStimulusData();
   datakey.add( stimulusData() );
+  unlockStimulusData();
 
   ofstream df;
   if ( completeRuns() <= 0 ) {

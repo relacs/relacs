@@ -97,10 +97,8 @@ bool Control::interrupt( void ) const
 bool Control::waitOnData( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  unlockStimulusData();
   RW->UpdateDataWait.wait( mutex(), t );
   getData();
-  lockStimulusData();
   return interrupt();
 }
 
@@ -108,10 +106,8 @@ bool Control::waitOnData( double time )
 bool Control::waitOnReProSleep( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  unlockStimulusData();
   RW->ReProSleepWait.wait( mutex(), t );
   getData();
-  lockStimulusData();
   return interrupt();
 }
 
@@ -119,10 +115,8 @@ bool Control::waitOnReProSleep( double time )
 bool Control::waitOnReProFinished( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  unlockStimulusData();
   RW->ReProAfterWait.wait( mutex(), t );
   updateData();
-  lockStimulusData();
   return interrupt();
 }
 
@@ -130,10 +124,8 @@ bool Control::waitOnReProFinished( double time )
 bool Control::waitOnSessionStart( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  unlockStimulusData();
   RW->SessionStartWait.wait( mutex(), t );
   updateData();
-  lockStimulusData();
   return interrupt();
 }
 
@@ -141,10 +133,8 @@ bool Control::waitOnSessionStart( double time )
 bool Control::waitOnSessionPrestop( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  unlockStimulusData();
   RW->SessionPrestopWait.wait( mutex(), t );
   updateData();
-  lockStimulusData();
   return interrupt();
 }
 
@@ -152,10 +142,8 @@ bool Control::waitOnSessionPrestop( double time )
 bool Control::waitOnSessionStop( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  unlockStimulusData();
   RW->SessionStopWait.wait( mutex(), t );
   updateData();
-  lockStimulusData();
   return interrupt();
 }
 
@@ -163,7 +151,6 @@ bool Control::waitOnSessionStop( double time )
 bool Control::sleep( double t )
 {
   // sleep:
-  unlockStimulusData();
   if ( t > 0.0 ) {
     unsigned long ms = (unsigned long)(1.0e3*t);
     if ( t < 0.001 || ms < 1 ) {
@@ -175,7 +162,6 @@ bool Control::sleep( double t )
       SleepWait.wait( mutex(), ms );
   }
   updateData();
-  lockStimulusData();
 
   // interrupt Control:
   return interrupt();

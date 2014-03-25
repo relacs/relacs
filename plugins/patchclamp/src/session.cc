@@ -114,6 +114,7 @@ void Session::initDevices( void )
 	      MetaDataDisplay, MetaDataReadOnly, true, 
 	      0, metaDataMutex() );
 
+  lockStimulusData();
   for ( int k=0; k<CurrentOutputs; k++ )
     stimulusData().setRequest( outTraceName( CurrentOutput[k] ), "DC current " + Str( k+1 ) );
   if ( stimulusData().size( stimulusDataTraceFlag() ) >= 4 ) {
@@ -138,6 +139,8 @@ void Session::initDevices( void )
 
   if ( ! stimulusData().exist( "Drugs" ) )
     stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
+  unlockStimulusData();
+
   DW->assign( &stimulusData(), 16, 0, true, 0, stimulusDataMutex() );
 }
 

@@ -205,8 +205,10 @@ int SetLeak::main( void )
 
   if ( preset == 0 ) {
     // previous values:
+    lockStimulusData();
     E = stimulusData().number( "E", 0.0, "mV" );
     g = stimulusData().number( "g", 0.0, "nS" );
+    unlockStimulusData();
   }
   else if ( preset == 1 ) {
     // zero:

@@ -177,7 +177,9 @@ int AttenuatorCheck::main( void )
   string filename = type == 1 ? "attenuatorcheck-noise.dat" : "attenuatorcheck-gain.dat";
   ofstream df( addPath( filename ).c_str(),
 	       ofstream::out | ofstream::app );
+  lockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey datakey;

@@ -274,13 +274,11 @@ void RELACSPlugin::widgetDestroyed( QObject *obj )
 void RELACSPlugin::lockAll( void )
 {
   lock();
-  lockStimulusData();
 }
 
 
 void RELACSPlugin::unlockAll( void )
 {
-  unlockStimulusData();
   unlock();
 }
 

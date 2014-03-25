@@ -91,7 +91,9 @@ int FindThreshold::main( void )
   double amplitudestep = number( "startamplitudestep" );
   double finalamplitudestep = number( "amplitudestep" );
   double minspikecount = number( "minspikecount" );
+  lockStimulusData();
   double orgdcamplitude = stimulusData().number( outTraceName( CurrentOutput[0] ) );
+  unlockStimulusData();
   bool resetcurrent = boolean( "resetcurrent" );
   if ( amplitudesrc == 1 )
     amplitude = orgdcamplitude;
@@ -333,7 +335,9 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey )
     tf.open( addPath( "findthreshold-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
   Header.save( tf, "# " );
+  lockStimulusData();
   stimulusData().save( tf, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( tf, "# ", 0, Options::FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
@@ -394,7 +398,9 @@ void FindThreshold::saveSpikes( void )
              ofstream::out | ofstream::app );
 
   Header.save( sf, "# " );
+  lockStimulusData();
   stimulusData().save( sf, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( sf, "# ", 0, Options::FirstOnly );
   sf << '\n';
 
@@ -432,7 +438,9 @@ void FindThreshold::saveData( void )
   datakey.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
   datakey.addNumber( "s.d.", "ms", "%6.2f", 1000.0*lsd );
   datakey.newSection( "Traces" );
+  lockStimulusData();
   datakey.add( stimulusData() );
+  unlockStimulusData();
 
   ofstream df;
   if ( completeRuns() <= 0 ) {

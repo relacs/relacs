@@ -81,9 +81,16 @@ Other functions related to sessions are sessionData(), sessionTime(),
 sessionTimeStr(), sessionRunning(), reproCount().
 
 The meta data sections of the current recording can be accessed by
-metaData().  Whenever some of the meta data are set to new values, the
-virtual function notifyMetaData() is called, that you can implement
-according to your needs.
+metaData(). Don't forget to lock every acces to metaData() with
+lockMetaData() and unlockMetaData().  Whenever some of the meta data
+are set to new values, the virtual function notifyMetaData() is
+called, that you can implement according to your needs.
+
+Same stimulation related information is stored in stimulusData().
+Don't forget to lock every acces to stimulusData() with
+lockStimulusData() and unlockStimulusData().  Whenever some of the stimulus data
+are set to new values, the virtual function notifyStimulusData() is
+called, that you can implement according to your needs.
 
 All other RELACS plugins can be accessed:
 devices(), device(), attenuator(), digitalIO(), trigger(), filter(), filterOpts(),
@@ -651,10 +658,14 @@ int MyPlugin::main( void )
   bool saving( void ) const;
 
     /*! The options that are stored with each stimulus in the trigger file.
-        \sa stimulusDataTraceFlag(), lockStimulusData() */
+        \note You have to lock and unlock usage of stimulusData() by 
+	calling lockStimulusData() and unlockStimulusData(). 
+        \sa stimulusDataTraceFlag(), stimulusDataMutex() */
   Options &stimulusData( void );
     /*! The options that are stored with each stimulus in the trigger file.
-        \sa stimulusDataTraceFlag(), lockStimulusData() */
+        \note You have to lock and unlock usage of stimulusData() by 
+	calling lockStimulusData() and unlockStimulusData(). 
+        \sa stimulusDataTraceFlag(), stimulusDataMutex() */
   const Options &stimulusData( void ) const;
     /*! Flag that marks output traces in stimulusData().
         \sa stimulusData(), lockStimulusData() */
@@ -672,18 +683,24 @@ int MyPlugin::main( void )
     /*! Return a reference to the MetaData instance that manages all
         the meta data sections. MetaData is an Options, therefore, for
         example, you can retireve values from the meta data using
-        something like \c metaData().number( "xyz" ); */
+        something like \c metaData().number( "xyz" );
+        \note You have to lock and unlock usage of metaData() by 
+	calling lockMetaData(), unlockMetaData(). 
+        \sa metaDataMutex() */
   MetaData &metaData( void );
     /*! Return a const reference to the MetaData instance that manages all 
         the meta data sections. MetaData is an Options, therefore, for
         example, you can retireve values from the meta data using
-        something like \c metaData().number( "xyz" ); */
+        something like \c metaData().number( "xyz" );
+        \note You have to lock and unlock usage of metaData() by 
+	calling lockMetaData(), unlockMetaData(). 
+        \sa metaDataMutex() */
   const MetaData &metaData( void ) const;
-    /*! Lock the meta data mutex. */
+    /*! Lock the meta data mutex. \sa unlockMetaData(), metaDataMutex() */
   void lockMetaData( void ) const;
-    /*! Unlock the meta data mutex. */
+    /*! Unlock the meta data mutex. \sa lockMetaData(), metaDataMutex() */
   void unlockMetaData( void ) const;
-    /*! The mutex for the meta data. */
+    /*! The mutex for the meta data. \sa lockMetaData(), unlockMetaData() */
   QMutex *metaDataMutex( void );
 
     /*! Return the complete device list. */

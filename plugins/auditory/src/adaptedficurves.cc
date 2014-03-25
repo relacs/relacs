@@ -297,13 +297,13 @@ int AdaptedFICurves::main( void )
   }
 
   if ( state == Completed ) {
-    unlockAll();
+    lockStimulusData();
     header.newSection( stimulusData() );
+    unlockStimulusData();
     header.newSection( settings() );
     saveSpikes( header, spikes );
     saveRate( header, rate );
     saveData( header, times, onsetrates, onsetratessd, ssrates, ssratessd );
-    lockAll();
   }
 
   writeZero( Speaker[ side ] );

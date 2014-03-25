@@ -130,7 +130,9 @@ int TransferFunction::main( void )
   default: Window = hanning;
   }
 
+  lockStimulusData();
   double orgoffset = stimulusData().number( outTraceName( outtrace ) );
+  unlockStimulusData();
   if ( offsetbase == 1 ) // current
     offset += orgoffset;
 
@@ -355,7 +357,9 @@ void TransferFunction::openTraceFile( ofstream &tf, TableKey &tracekey,
   tf.open( addPath( "transferfunction-traces.dat" ).c_str(),
 	   ofstream::out | ofstream::app );
   header.save( tf, "# " );
+  lockStimulusData();
   stimulusData().save( tf, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( tf, "# ", 0, Options::FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
@@ -385,7 +389,9 @@ void TransferFunction::saveData( const Options &header )
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
+  lockStimulusData();
   stimulusData().save( df, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
 

@@ -755,7 +755,9 @@ void FeedForwardNetwork::saveSettings(){
   // settings at start
   ofstream dfs(addPath( "ffn_settings_default_"+Str(completeRuns())+".dat" ).c_str());
   Header.save( dfs, "# " );
+  lockStimulusData();
   stimulusData().save( dfs, "# ", 0, Options::FirstOnly );
+  unlockStimulusData();
   settings().save( dfs, "# ", 0, Options::FirstOnly );
   dfs << '\n';
   

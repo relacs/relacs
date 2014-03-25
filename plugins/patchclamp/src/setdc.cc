@@ -230,7 +230,9 @@ int SetDC::main( void )
   tracePlotContinuous( 1.0 );
 
   // init:
+  lockStimulusData();
   OrgDCAmplitude = stimulusData().number( outTraceName( outcurrent ) );
+  unlockStimulusData();
   lockMetaData();
   DCAmplitude = metaData().number( "Cell>ithreshss" );
   unlockMetaData();

@@ -740,7 +740,9 @@ void SingleStimulus::save( const EventList &spikes, const SampleDataD &rate1,
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
   header.addText( "session time", sessionTimeStr() ); 
+  lockStimulusData();
   header.newSection( stimulusData() );
+  unlockStimulusData();
   header.newSection( settings() );
 
   saveSpikes( header, spikes );
