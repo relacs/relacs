@@ -2399,7 +2399,7 @@ istream &Array<T>::load( istream &str, const string &stop, string *line )
     char *ep;
     double v = strtod( line->c_str(), &ep );
     if ( ep > line->c_str() )
-      push( v );
+      push( T( v ) );
   }
 
   // read lines:
@@ -2414,7 +2414,7 @@ istream &Array<T>::load( istream &str, const string &stop, string *line )
     char *ep;
     double v = strtod( s.c_str(), &ep );
     if ( ep > s.c_str() && NSize < NBuffer )
-      push( v );
+      push( T( v ) );
   }
 
   // store last read line:
