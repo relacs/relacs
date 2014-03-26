@@ -5,7 +5,6 @@ New InData threading:
 - Add Model data also to UpdateRawData?
 - Fix Simulation mode!
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
-- Check locking of SaveFiles data
 - Model: improve locking by adding an extra Mutex for push() and pop()
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Filter buffersize should just be the same as the one of the input trace!
@@ -22,10 +21,17 @@ New InData threading:
 - Check whether InData, Acquire updateTime and readTime are still needed!
   But we do not want to block on the input too long!
   So maybe keep readTime. Make it an option for each device!
-- SaveFiles: where does stimulus intensity go, if there is no amplifier?
+
+SaveFiles:
+- check locking of dataindex in SaveFiles and DataBrowse.
+- where does stimulus intensity go, if there is no amplifier?
   (e.g. patchclamp::MembraneResistance)
-- SaveFiles: RePros without stimuli should get their start into stimuli.dat
-- SaveFiles: recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
+- RePros without stimuli should get their start into stimuli.dat
+- recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
+- remove signalPending() and clearSignals() once the warning does not occur anymore.
+- combine the file lists from storeFile() and removeFiles() ?
+- Improve SaveFiles: no hand coded saving of sections, all should be done with saveXML()!
+- finish reorganization of saveStimuli(): check XXX comments
 
 Options:
 - RePro: when the RePo changes an Option in main(), this change should automatically be made permanent
@@ -34,7 +40,6 @@ Options:
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
 - OutData: rename Ident to name OR remove it?
 - DeviceList and FilterDetectors (and others?) should use plugin name (ident) as section name.
-- Improve SaveFiles: no hand coded saving of sections, all should be done with saveXML()!
 - check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
 - are uniqueNames also used for relacsplugins.cfg ?
 - Device menu should be hierarchically using section structure of device infos.
@@ -101,7 +106,6 @@ Metadata support of OutData:
 - Stimulus section needs a file (if available)!
 - sineWave() can be stimulus or carrier with const AM. How to deal with that?
   Even worse: what is that two-frequency stimulus in isoresponse?
-- SaveFiles: finish reorganization of saveStimuli(): check XXX comments
 
 Locking:
 - DeviceList functions like updateData need to be locked!
@@ -142,8 +146,6 @@ Plugin documentation:
 - Option for automatic screenshot at the end of stimulus (in menu)
 
 Plot:
-- possibly infinite loop in line 1527 (autoscaling) from line 1534 (initTics)
-  because of YMin or YMax isnan: probably fixed...
 - change zoom behavior on axis (centered)
 - make the zoom stack optional - remember only the default range or a maximum number of stack frames
 - add min/maxZoomRanges to optionally restrict zooming
@@ -156,7 +158,6 @@ Plot:
 Analog Input/Output:
 - Docu regarding hard calibrate is probably wrong! Read man comedi_calibrate.
 - Replace Ident by Name in InData, OutData, TraceSpec
-- WriteDataThread should not be started if the whole stimulus is already transfered.
 - check and improve writeReset and writeZero interfaces and implementations.
 - directWrite implementation should take care about synchronization as well!
   ComediAnalogOutput should use instruction lists for this.
@@ -178,10 +179,6 @@ Dynamic clamp:
   similar to the analog output part
 - shouldn't it be better if the model would get the parameter first,
   then computes, and then analog output takes place?
-
-Save files:
-- check on hardware and with short stimuli!
-- check saveToggle, i.e. event times and stimuli indices!
 
 Thread safety:
 - make sure that any QWidget does not raise, lower, close, update, repaint, erase, 

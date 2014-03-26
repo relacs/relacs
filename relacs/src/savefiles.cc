@@ -158,35 +158,53 @@ SaveFiles::~SaveFiles()
 
 bool SaveFiles::saving( void ) const
 {
+  QMutexLocker locker( &SaveMutex );
+  return isSaving();
+}
+
+
+bool SaveFiles::isSaving( void ) const
+{
   return FilesOpen && Saving;
 }
 
 
 bool SaveFiles::filesOpen( void ) const
 {
+  QMutexLocker locker( &SaveMutex );
   return FilesOpen;
 }
 
 
 void SaveFiles::holdOn( void )
 {
+  QMutexLocker locker( &SaveMutex );
   Hold = true;
 }
 
 
 void SaveFiles::holdOff( void )
 {
+  QMutexLocker locker( &SaveMutex );
   Hold = false;
 }
 
 
 string SaveFiles::path( void ) const
 {
+  QMutexLocker locker( &SaveMutex );
   return Path;
 }
 
 
 void SaveFiles::setPath( const string &path )
+{
+  QMutexLocker locker( &SaveMutex );
+  setThePath( path );
+}
+
+
+void SaveFiles::setThePath( const string &path )
 {
   Path = path;
   setenv( "RELACSDATAPATH", Path.c_str(), 1 );
@@ -195,12 +213,14 @@ void SaveFiles::setPath( const string &path )
 
 string SaveFiles::addPath( const string &file ) const
 {
-  return path() + file;
+  QMutexLocker locker( &SaveMutex );
+  return Path + file;
 }
 
 
 void SaveFiles::storeFile( const string &file ) const
 {
+  QMutexLocker locker( &SaveMutex );
   for ( deque<string>::const_iterator sp = ReProFiles.begin(); sp != ReProFiles.end(); ++sp ) {
     if ( *sp == file )
       return;
@@ -211,6 +231,7 @@ void SaveFiles::storeFile( const string &file ) const
 
 string SaveFiles::pathTemplate( void ) const
 {
+  QMutexLocker locker( &SaveMutex );
   return PathTemplate;
 }
 
@@ -220,19 +241,22 @@ void SaveFiles::setPathTemplate( const string &path )
   if ( path.empty() )
     return;
 
+  SaveMutex.lock();
   PathTemplate = path;
-
   Str fn = PathTemplate;
   fn.format( localtime( &PathTime ) );
   fn.format( 99, 'n', 'd' );
   fn.format( "aa", 'a' );
   fn.format( "AA", 'A' );
+  SaveMutex.unlock();
+
   FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
 }
 
 
 string SaveFiles::defaultPath( void ) const
 {
+  QMutexLocker locker( &SaveMutex );
   return DefaultPath;
 }
 
@@ -242,8 +266,9 @@ void SaveFiles::setDefaultPath( const string &defaultpath )
   if ( defaultpath.empty() )
     return;
 
+  QMutexLocker locker( &SaveMutex );
   if ( Path == DefaultPath )
-    setPath( defaultpath );
+    setThePath( defaultpath );
   DefaultPath = defaultpath;
   setenv( "RELACSDEFAULTPATH", DefaultPath.c_str(), 1 );
 }
@@ -251,7 +276,8 @@ void SaveFiles::setDefaultPath( const string &defaultpath )
 
 string SaveFiles::addDefaultPath( const string &file ) const
 {
-  return defaultPath() + file;
+  QMutexLocker locker( &SaveMutex );
+  return DefaultPath + file;
 }
 
 
@@ -279,6 +305,34 @@ QMutex *SaveFiles::mutex( void )
 }
 
 
+void SaveFiles::assignTracesEvents( const InList &il, const EventList &el,
+				    deque<InList*> &data, deque<EventList*> &events )
+{
+  QMutexLocker locker( &SaveMutex );
+  IL.assign( &il );
+  EL.assign( &el );
+  data.push_back( &IL );
+  events.push_back( &EL );
+}
+
+
+void SaveFiles::assignTracesEvents( void )
+{
+  QMutexLocker locker( &SaveMutex );
+  IL.assign();
+  EL.assign();
+}
+
+
+void SaveFiles::updateDerivedTraces( void )
+{
+  // this function is called from RELACSWidget::updateData()
+  QMutexLocker locker( &SaveMutex );
+  IL.updateDerived();
+  EL.updateDerived();
+}
+
+
 void SaveFiles::save( bool on  )
 {
   // this function is called from RELACSWidget::setSaving() and
@@ -298,14 +352,14 @@ void SaveFiles::save( bool on  )
 
 void SaveFiles::writeToggle( void )
 {
-  // only called by writeTraces().
+  // only called by saveTraces().
 
   //  cerr << "SaveFiles::writeToggle(): ToggleData=" << ToggleData
-  //       << ", hold=" << Hold << ", on=" << ToggleOn << ", saving=" << saving() << '\n';
+  //       << ", hold=" << Hold << ", on=" << ToggleOn << ", saving=" << isSaving() << '\n';
 
   if ( ToggleData && ! Hold ) {
 
-    if ( ToggleOn && ! saving() ) {
+    if ( ToggleOn && ! isSaving() ) {
       // RW->printlog( "SaveFiles::writeToggle(): switched saving on!" );
       // update offsets:
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
@@ -331,32 +385,6 @@ void SaveFiles::writeToggle( void )
 }
 
 
-void SaveFiles::assignTracesEvents( const InList &il, const EventList &el,
-				    deque<InList*> &data, deque<EventList*> &events )
-{
-  IL.assign( &il );
-  EL.assign( &el );
-  data.push_back( &IL );
-  events.push_back( &EL );
-}
-
-
-void SaveFiles::assignTracesEvents( void )
-{
-  IL.assign();
-  EL.assign();
-}
-
-
-void SaveFiles::updateDerivedTraces( void )
-{
-  // this function is called from RELACSWidget::updateData()
-  QMutexLocker locker( &SaveMutex );
-  IL.updateDerived();
-  EL.updateDerived();
-}
-
-
 void SaveFiles::saveTraces( void )
 {
   //  cerr << "SaveFiles::saveTraces(): saving=" << saving() << '\n';
@@ -371,7 +399,7 @@ void SaveFiles::saveTraces( void )
   // check for new signal:
   if ( ! Stimuli.empty() && ! EL.empty() && EL[0].size() > 0 ) {
     double st = EL[0].back();
-    if ( saving() &&
+    if ( isSaving() &&
 	 ::fabs( IL[0].signalTime() - st ) >= IL[0].stepsize() )
       RW->printlog( "Warning in SaveFiles::saveTraces() -> SignalTime PROBLEM, trace: " +
 		    Str( IL[0].signalTime(), 0, 5, 'f' ) +
@@ -383,7 +411,7 @@ void SaveFiles::saveTraces( void )
   writeRePro();
   writeTraces();
   double offs = 0.0;
-  if ( saving() && ! TraceFiles.empty() )
+  if ( isSaving() && ! TraceFiles.empty() )
     offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
   writeEvents( offs );
   writeStimulus();
@@ -392,9 +420,11 @@ void SaveFiles::saveTraces( void )
 
 void SaveFiles::writeTraces( void )
 {
-  //  cerr << "SaveFiles::writeTraces(): saving=" << saving() << "\n";
+  // only called by saveTraces().
 
-  if ( ! saving() )
+  //  cerr << "SaveFiles::writeTraces(): saving=" << isSaving() << "\n";
+
+  if ( ! isSaving() )
     return;
 
   for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
@@ -417,9 +447,11 @@ void SaveFiles::writeTraces( void )
 
 void SaveFiles::writeEvents( double offs )
 {
-  //  cerr << "SaveFiles::writeEvents(): offs=" << offs << ", saving=" << saving() << "\n";
+  // only called by saveTraces().
 
-  if ( ! saving() )
+  //  cerr << "SaveFiles::writeEvents(): offs=" << offs << ", saving=" << isSaving() << "\n";
+
+  if ( ! isSaving() )
     return;
 
   // wait for availability of signal start time:
@@ -470,7 +502,7 @@ void SaveFiles::save( const OutData &signal )
   QMutexLocker locker( &SaveMutex );
 
   if ( !Stimuli.empty() ) {
-    if ( saving() )
+    if ( isSaving() )
       RW->printlog( "! warning: SaveFiles::save( OutData & ) -> already stimulus data there" );
     Stimuli.clear();
   }
@@ -499,7 +531,7 @@ void SaveFiles::save( const OutList &signal )
   QMutexLocker locker( &SaveMutex );
 
   if ( !Stimuli.empty() ) {
-    if ( saving() )
+    if ( isSaving() )
       RW->printlog( "! warning: SaveFiles::save( OutList& ) -> already stimulus data there" );
     Stimuli.clear();
   }
@@ -522,8 +554,10 @@ void SaveFiles::save( const OutList &signal )
 
 void SaveFiles::writeStimulus( void )
 {
+  // only called by saveTraces().
+
   //  cerr << "SaveFiles::writeStimulus(): Stimuli.size()=" << Stimuli.size()
-  //       << ", saving=" << saving() << "\n";
+  //       << ", saving=" << isSaving() << "\n";
 
   if ( Stimuli.empty() )
     return;
@@ -623,7 +657,7 @@ void SaveFiles::writeStimulus( void )
   string stimulirepro = StimuliRePro + "-" + Str( rc );
 
   // stimulus indices file:
-  if ( SF != 0 && saving() ) {
+  if ( SF != 0 && isSaving() ) {
 
     // stimulus description:
     if ( SDF != 0 ) {
@@ -695,7 +729,7 @@ void SaveFiles::writeStimulus( void )
   }
 
   // xml metadata file:
-  if ( XF != 0 && saving() ) {
+  if ( XF != 0 && isSaving() ) {
 
     // stimulus description:
     if ( XSF != 0 ) {
@@ -747,10 +781,10 @@ void SaveFiles::save( const RePro &rp )
 
   QMutexLocker locker( &SaveMutex );
 
-  if ( ReProData && saving() )
+  if ( ReProData && isSaving() )
     RW->printlog( "! warning: SaveFiles::save( RePro & ) -> already RePro data there." );
   ReProData = true;
-  string dataset = Str( path() ).preventedSlash().name()
+  string dataset = Str( Path ).preventedSlash().name()
     + "-" + rp.name() + "-" + Str( rp.allRuns() );
   ReProInfo.clear();
   ReProInfo.setName( "dataset-" + dataset, "dataset" );
@@ -767,10 +801,12 @@ void SaveFiles::save( const RePro &rp )
 
 void SaveFiles::writeRePro( void )
 {
-  //  cerr << "SaveFiles::writeRePro(): ReProData=" << ReProData
-  //       << ", saving=" << saving() << "\n";
+  // only called by saveTraces().
 
-  if ( ReProData && saving() && ! Hold ) {
+  //  cerr << "SaveFiles::writeRePro(): ReProData=" << ReProData
+  //       << ", saving=" << isSaving() << "\n";
+
+  if ( ReProData && isSaving() && ! Hold ) {
 
     // stimulus indices file:
     if ( SF != 0 ) {
@@ -807,12 +843,14 @@ void SaveFiles::writeRePro( void )
 
 bool SaveFiles::signalPending( void ) const
 {
+  QMutexLocker locker( &SaveMutex );
   return !Stimuli.empty();
 }
 
 
 void SaveFiles::clearSignal( void )
 {
+  QMutexLocker locker( &SaveMutex );
   Stimuli.clear();
 }
 
@@ -842,7 +880,7 @@ void SaveFiles::removeFiles( void )
 
 ofstream *SaveFiles::openFile( const string &filename, int type )
 {
-  string fs = path() + filename;
+  string fs = Path + filename;
   ofstream *f = new ofstream( fs.c_str(), ofstream::openmode( type ) );
   if ( ! f->good() ) {
     f = 0;
@@ -1091,7 +1129,7 @@ void SaveFiles::createXMLFile( void )
   XF = openFile( "metadata.xml", ios::out );
 
   if ( (*XF) ) {
-    string name = Str( path() ).preventedSlash().name();
+    string name = Str( Path ).preventedSlash().name();
     *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
     *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
     *XF << "<odML version=\"1\">\n";
@@ -1157,6 +1195,8 @@ string SaveFiles::pathName( void ) const
 
 void SaveFiles::openFiles( void )
 {
+  QMutexLocker locker( &SaveMutex );
+
   // nothing to be done, if files are already open:
   if ( FilesOpen )
     return;
@@ -1175,7 +1215,7 @@ void SaveFiles::openFiles( void )
   ReProFiles.clear();
   DatasetOpen = false;
 
-  setPath( defaultPath() );
+  setThePath( DefaultPath );
 
   PathTime = RW->SN->startSessionTime();
   // pathname for same PathNumber changed?
@@ -1199,7 +1239,7 @@ void SaveFiles::openFiles( void )
       if ( ! dir.exists( pathname.c_str() ) ) {
 	if ( dir.mkpath( pathname.c_str() ) ) {
 	  // valid base name found:
-	  setPath( pathname );
+	  setThePath( pathname );
 	  break;
 	}
 	else
@@ -1208,12 +1248,12 @@ void SaveFiles::openFiles( void )
     }
     else {
       // try to open files:
-      string fs = path() + "stimuli.dat";
+      string fs = Path + "stimuli.dat";
       ifstream f( fs.c_str() );
       // files do not exist?
       if ( ! f.good() ) {
 	// valid base name found:
-	setPath( pathname );
+	setThePath( pathname );
 	break;
       }
     }
@@ -1242,15 +1282,15 @@ void SaveFiles::openFiles( void )
   }
 
   // message:
-  RW->printlog( "save in " + path() );
+  RW->printlog( "save in " + Path );
 
   // tell the data index:
-  DI.addSession( path() + "stimuli.dat", Options() );
+  DI.addSession( Path + "stimuli.dat", Options() );
 
   // update widget:
   FileLabel->setFont( HighlightFont );
   FileLabel->setPalette( HighlightPalette );
-  FileLabel->setText( path().c_str() );
+  FileLabel->setText( Path.c_str() );
   SaveLabel->setPause( Saving );
   SaveLabel->setSpike( FilesOpen );
 }
@@ -1297,7 +1337,7 @@ void SaveFiles::closeFiles( void )
       *XF << "    </section>\n";
       DatasetOpen = false;
     }
-    string name = Str( path() ).preventedSlash().name();
+    string name = Str( Path ).preventedSlash().name();
     RW->MTDT.saveXML( *XF, 1, name );
     *XF << "</odML>\n";
     delete XF;
@@ -1353,25 +1393,27 @@ bool SaveFiles::removeDir( const QString &dirname )
 
 void SaveFiles::deleteFiles( void )
 {
+  QMutexLocker locker( &SaveMutex );
+
   closeFiles();
 
   // remove all files:
   removeFiles();
 
-  if ( path() != defaultPath() &&
-       path() != "" &&
-       path()[path().size()-1] == '/' ) {
-    removeDir( path().c_str() );
+  if ( Path != DefaultPath &&
+       ! Path.empty() &&
+       Path[Path.size()-1] == '/' ) {
+    removeDir( Path.c_str() );
   }
 
   // message:
-  RW->printlog( "discarded " + path() );
+  RW->printlog( "discarded " + Path );
   FileLabel->setPalette( NormalPalette );
   FileLabel->setFont( NormalFont );
   FileLabel->setText( "deleted" );
 
   // back to default path:
-  setPath( defaultPath() );
+  setThePath( DefaultPath );
   PathNumber--;
 
   // tell data index:
@@ -1381,20 +1423,22 @@ void SaveFiles::deleteFiles( void )
 
 void SaveFiles::completeFiles( void )
 {
+  QMutexLocker locker( &SaveMutex );
+
   closeFiles();
 
   // no files need to be deleted:
   clearRemoveFiles();
 
   // store path:
-  PrevPath = path();
+  PrevPath = Path;
 
   // message:
-  RW->printlog( "saved as " + path() );
+  RW->printlog( "saved as " + Path );
   FileLabel->setPalette( NormalPalette );
 
   // back to default path:
-  setPath( defaultPath() );
+  setThePath( DefaultPath );
 
   // tell data index:
   DI.endSession( true );

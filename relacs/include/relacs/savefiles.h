@@ -111,7 +111,7 @@ public:
   void holdOff( void );
 
     /*! \return the base path where data are currently stored.
-        \sa addPath(), setPath(), defaultPath(), pathTemplate() */
+        \sa addPath(), setPath(), defaultPath() */
   string path( void ) const;
     /*! Set the base path for all data to be stored and
         the corresponding environment variable RELACSDATAPATH
@@ -164,11 +164,6 @@ public:
     /*! The mutex of the stimulus data. */
   QMutex *mutex( void );
 
-    /*! Switch writing data to file on or off.
-        Call this only at the very beginning of your RePro::main() code,
-	i.e. before writing any stimulus. */
-  void save( bool on );
-
     /*! Copies \a il and \a el to this by copying a pointer to
         the data buffers only. In addition add these local copies
 	to \a data and \a events. */
@@ -179,6 +174,10 @@ public:
     /*! Update derived data traces and events. Needs to be called right before saveTraces(). */
   void updateDerivedTraces( void );
 
+    /*! Switch writing data to file on or off.
+        Call this only at the very beginning of your RePro::main() code,
+	i.e. before writing any stimulus. */
+  void save( bool on );
     /*! Save data traces and events to files */
   void saveTraces( void );
     /*! Save output-meta-data to files. */
@@ -209,10 +208,27 @@ public:
 
 protected:
 
-    /*! Write data traces to files */
+    /*! Set the base path for all data to be stored and
+        the corresponding environment variable RELACSDATAPATH
+        \param[in] path the base path for storing data.
+        This is the not-locked variant of setPath() */
+  void setThePath( const string &path );
+    /*! The current status of saving data to files.
+        \return \c true if files are opened and data are currently written
+	into the files.
+        This is the not-locked variant of saving(). */
+  bool isSaving( void ) const;
+
+    /*! Switch saving to files on or off. \sa save( bool ) */
+  void writeToggle( void );
+    /*! Write data traces to files. \sa saveTraces() */
   void writeTraces( void );
-    /*! Write events with \a offs subtracted to files. */
+    /*! Write events with \a offs subtracted to files. \sa saveTraces() */
   void writeEvents( double offs );
+    /*! Write pending stimuli to files. \sa save( const OutData& ), save( const OutList& ) */
+  void writeStimulus( void );
+    /*! Write information about a RePro to files. \sa save( const RePro& ) */
+  void writeRePro( void );
 
     /*! Close all open files */
   void closeFiles( void );
@@ -225,6 +241,16 @@ protected:
 	Add it to the list of files to be removed
         and print an error message if opening of the file failed. */
   ofstream *openFile( const string &filename, int type );
+
+    /*! The file \a filename will be removed if the session is not
+        saved. */
+  void addRemoveFile( const string &filename );
+    /*! Reset the list of files that have to be deleted if the session
+        is not to be saved. */
+  void clearRemoveFiles( void );
+    /*! Remove all files from the list and clear the list of files
+        that have to be deleted if the session is not to be saved. */
+  void removeFiles( void );
 
     /*! Open and initialize the files holding the traces from the
         analog input channels. */
@@ -239,6 +265,8 @@ protected:
         contains all information.
         Call this *after* createEventFiles()! */
   void createXMLFile( void );
+
+  virtual void customEvent( QEvent *qce );
 
     /*! Are there any files open to save in? */
   bool FilesOpen;
@@ -338,30 +366,17 @@ protected:
   map< string, map < Options, string > > ReProStimuli;
   TableKey StimulusKey;
   Options StimulusOptions;
-  void writeStimulus( void );
 
   Options ReProInfo;
   mutable deque< string > ReProFiles;
   bool ReProData;
   bool DatasetOpen;
-  void writeRePro( void );
 
   bool ToggleOn;
   bool ToggleData;
-  void writeToggle( void );
 
   DataIndex DI;
 
-
-    /*! The file \a filename will be removed if the session is not
-        saved. */
-  void addRemoveFile( const string &filename );
-    /*! Reset the list of files that have to be deleted if the session
-        is not to be saved. */
-  void clearRemoveFiles( void );
-    /*! Remove all files from the list and clear the list of files
-        that have to be deleted if the session is not to be saved. */
-  void removeFiles( void );
     /*! A list of files which have to be deleted if the session is not
         to be saved. */
   deque<string> RemoveFiles;
@@ -376,10 +391,8 @@ protected:
   SpikeTrace *SaveLabel;
   QHBoxLayout *StatusInfoLayout;
 
-  QMutex SaveMutex;
+  mutable QMutex SaveMutex;
   mutable QMutex StimulusDataLock;
-
-  virtual void customEvent( QEvent *qce );
 
 };
 
