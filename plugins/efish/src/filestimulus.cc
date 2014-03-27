@@ -64,7 +64,7 @@ FileStimulus::FileStimulus( void )
   addBoolean( "am", "Amplitude modulation", AM );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Additional noise" );
-  addSelection( "noisetype", "Type of noise", "none|White|Ornstein-Uhlenbeck");
+  addSelection( "noisetype", "Type of noise", "none|Gaussian-White|Ornstein-Uhlenbeck");
   addNumber( "uppercutoff", "Upper cutoff frequency", UpperCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","White");
   addNumber( "lowercutoff", "Lower cutoff frequency", LowerCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","White");
   addNumber( "noisetau", "Time constant of the Ornstein-Uhlenbeck process",NoiseTau,0.0,500.0,0.01,"seconds","ms" ).setActivation("noisetype","Ornstein-Uhlenbeck");
@@ -410,7 +410,10 @@ int FileStimulus::main( void )
     Intensity = Contrast * FishAmplitude / SigStdev;
   else
     Intensity = Amplitude / SigStdev;
-  signal.setIntensity( Intensity );
+  if ( ::fabs( Intensity ) < 1.0e-8 )
+    signal.mute();
+  else
+    signal.setIntensity( Intensity );
   detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.5*signal.intensity() );
 
   // reset all outputs:
@@ -461,7 +464,10 @@ int FileStimulus::main( void )
       noisesignal += noise;
       noisefac = sqrt(SigStdev*SigStdev + noisestdev*noisestdev)*3.0;
       noisesignal /= noisefac;
-      noisesignal.setIntensity( Intensity*noisefac );
+      if ( ::fabs( Intensity ) < 1.0e-8 )
+	noisesignal.mute();
+      else
+	noisesignal.setIntensity( Intensity*noisefac );
     }
     else {
       noise.clear();
