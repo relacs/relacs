@@ -71,7 +71,7 @@ Chirps::Chirps( void )
   addText( "file", "Chirp-waveform file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "chirpsel", "from file" );
   newSection( "Beat parameter" );
   addNumber( "deltaf", "Delta f", DeltaF, -500.0, 500.0, 5, "Hz" );
-  addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.01, "1", "%" );
+  addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" );
   addBoolean( "am", "Amplitude modulation", AM );
   addBoolean( "sinewave", "Use sine wave", SineWave );
   addBoolean( "playback", "Playback AM", Playback );
@@ -265,7 +265,7 @@ void Chirps::createEOD( OutData &signal )
   Str s = SineWave ? "sinewave+chirps_" : "EOD+chirps_";
   s += Str( StimulusIndex );
   signal.setIdent( s );
-  s = "C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
+  s = "C=" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   s += ", chirps=" + Str( NChirps );
   s += ", size=" + Str( ChirpSize, 0, 0, 'f' ) + "Hz";
@@ -364,7 +364,7 @@ void Chirps::createPlayback( OutData &signal )
   Str s = "am_";
   s += Str( StimulusIndex );
   signal.setIdent( s );
-  s = "C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
+  s = "C=" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   s += ", amplitude modulation";
   //  signal.setComment( s );
@@ -485,7 +485,7 @@ int Chirps::createAM( OutData &signal )
   signal.setStartSource( 1 );
   signal.setTrace( GlobalAMEField );
   signal.setIdent( "chirpam" );
-  Str s = "C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
+  Str s = "C=" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   s += ", AM";
   //  signal.setComment( s );
@@ -789,7 +789,7 @@ int Chirps::main( void )
 
     // meassage: 
     Str s = "<b>" + Str( Mode == 1 || AM ? "AM " : "EOD" ) + "</b>"; 
-    s += "  Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+    s += "  Contrast: <b>" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%</b>";
     s += "  Delta F: <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
     s += "  Size: <b>" + Str( ChirpSize, 0, 0, 'f' ) + "Hz</b>";
     s += "  Phase: <b>" + Str( ChirpPhase, 0, 2, 'f' ) + "</b>";

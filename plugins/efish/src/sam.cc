@@ -56,7 +56,7 @@ SAM::SAM( void )
   addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "freqsel", "Stimulus frequency is", "relative to EOD|absolute" );
   addNumber( "deltaf", "Delta f (beat frequency)", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
-  addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.05, "", "%" );
+  addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
@@ -178,7 +178,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
   }
   Duration = Signal->duration();
   Signal->setStartSource( 1 );
-  Str s = ident + ", C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
+  Str s = ident + ", C=" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   if ( AM )
     s += ", AM";
@@ -370,7 +370,7 @@ int SAM::main( void )
 
     // meassage: 
     Str s = AM ? "SAM" : ( FreqAbs ? "Direct" : "EOD" );
-      s += ":  Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+      s += ":  Contrast: <b>" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%</b>";
     s += "  Delta F: <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
     s += "  Loop: <b>" + Str( Count+1 ) + "</b>";
     message( s );

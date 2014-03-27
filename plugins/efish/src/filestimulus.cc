@@ -59,7 +59,7 @@ FileStimulus::FileStimulus( void )
   addNumber( "duration", "Duration of signal", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
-  addNumber( "contrast", "Contrast", Contrast, 0.001, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
+  addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" ).setActivation( "amplsel", "contrast" );
   addNumber( "amplitude", "Amplitude", Amplitude, 0.001, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addBoolean( "am", "Amplitude modulation", AM );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
@@ -68,7 +68,7 @@ FileStimulus::FileStimulus( void )
   addNumber( "uppercutoff", "Upper cutoff frequency", UpperCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","White");
   addNumber( "lowercutoff", "Lower cutoff frequency", LowerCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","White");
   addNumber( "noisetau", "Time constant of the Ornstein-Uhlenbeck process",NoiseTau,0.0,500.0,0.01,"seconds","ms" ).setActivation("noisetype","Ornstein-Uhlenbeck");
-  addNumber( "noisecontrast", "Contrast of the added noise",NoiseContrast, 0.000, 1.00, 0.005, "", "%" ).setActivation("amplsel", "contrast");
+  addNumber( "noisecontrast", "Contrast of the added noise",NoiseContrast, 0.0, 1.00, 0.005, "", "%" ).setActivation("amplsel", "contrast");
   addNumber( "noiseampl", "Amplitude of the additional noise", NoiseAmpl, 0.0, 100.00, 0.05, "mV/cm" ).setActivation( "amplsel", "absolute");
   newSection( "Analysis" );
   addNumber( "binwidth", "Bin width", RateDeltaT, 0.0001, 1.0, 0.002, "seconds", "ms" );
@@ -473,7 +473,7 @@ int FileStimulus::main( void )
     // message: 
     Str s = "Stimulus: <b>" + filename + "</b>";
     if ( UseContrast )
-      s += "  Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+      s += "  Contrast: <b>" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%</b>";
     else
       s += "  Amplitude: <b>" + Str( Amplitude, 0, 3, 'g' ) + "mV/cm</b>";
     if ( addNoise )
