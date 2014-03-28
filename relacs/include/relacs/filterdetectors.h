@@ -227,6 +227,9 @@ private:
 
   FilterList FL;
 
+    /*! Pointer to the events marking daq board restarts. */
+  EventData *RestartEvents;
+
     /*! Maps each InData to an InData. */
   vector<int> TraceInputTrace;
     /*! Maps each InData to an EventData. */

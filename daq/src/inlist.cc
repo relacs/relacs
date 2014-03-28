@@ -483,6 +483,13 @@ void InList::setRestart( void )
 }
 
 
+void InList::setRestartTime( double restarttime )
+{
+  for ( int k=0; k<size(); k++ )
+    operator[]( k ).setRestartTime( restarttime );
+}
+
+
 string InList::errorText( void ) const
 {
   ostringstream ss;

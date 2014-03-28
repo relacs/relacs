@@ -1,7 +1,8 @@
 New InData threading:
-- How to set restart time in all data traces (see filterdetectors)?
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
 - What about recording events (SignalTime, locking)?
+- Have another threads that gets data as soon as available and immediately filters them.
+  Then plottrace will not do this from within the GUI thread!
 - Add Model data also to UpdateRawData?
 - Fix Simulation mode!
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?

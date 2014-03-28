@@ -32,7 +32,6 @@ namespace relacs {
 /*!
 \class InList
 \author Jan Benda
-\version 1.0
 \brief A container for InData
 */
 
@@ -233,8 +232,11 @@ public:
         in all input traces. \sa setSignalIndex() */
   void setSignalTime( double time );
     /*! Set restart-index of all input traces to current size(). 
-        \sa restartIndex(), restartTime() */
+        \sa setRestartTime() */
   void setRestart( void );
+    /*! Set Restart-index of all input traces to the element at \a restarttime. 
+        \sa setRestart() */
+  void setRestartTime( double restarttime );
 
     /*! Return string with an error message. */
   string errorText( void ) const;

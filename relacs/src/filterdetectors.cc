@@ -37,6 +37,7 @@ FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent )
   : PluginTabs( Qt::Key_F, rw, parent ),
     ConfigClass( "FilterDetectors", RELACSPlugin::Core ),
     FL(),
+    RestartEvents( 0 ),
     TraceInputTrace( 0 ),
     TraceInputEvent( 0 ),
     EventInputTrace( 0 ),
@@ -434,6 +435,7 @@ void FilterDetectors::createRestartEvents( EventList &events,
 					   deque< PlotTrace::EventStyle > &eventstyles )
 {
   events.back().setMode( events.back().mode() | SaveFiles::SaveTrace | PlotTraceMode );
+  RestartEvents = &events.back();
   
   eventstyles.push_back( PlotTrace::EventStyle() );
   eventstyles.back().PlotWindow = -2;
@@ -1007,7 +1009,8 @@ string FilterDetectors::filter( double signaltime )
 
     d->OutEvents.setSignalTime( signaltime );
     d->OutTraces.setSignalTime( signaltime );
-    // XXX set restart index!
+    if ( RestartEvents != 0 && ! RestartEvents->empty() )
+      d->OutTraces.setRestartTime( RestartEvents->back() );
 
     d->FilterDetector->updateDerivedTracesEvents();
 

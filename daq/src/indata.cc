@@ -412,6 +412,12 @@ double InData::restartTime( void ) const
 }
 
 
+void InData::setRestartTime( double restarttime )
+{
+  RestartIndex = index( restarttime );
+}
+
+
 void InData::setRestart( void )
 {
   RestartIndex = size();

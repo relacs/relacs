@@ -209,8 +209,11 @@ class InData : public CyclicSampleDataF, public DaqError
         \sa restartIndex(), setRestart() */
   double restartTime( void ) const;
     /*! Set Restart-index to current size(). 
-        \sa restartIndex(), restartTime() */
+        \sa setRestartTime(), restartIndex(), restartTime() */
   void setRestart( void );
+    /*! Set Restart-index to the element at \a restarttime. 
+        \sa setRestart(), restartTime() */
+  void setRestartTime( double restarttime );
 
     /*! Copy all indices from the internal reference to an InData instance
         to this. \sa assign() */
