@@ -36,19 +36,20 @@ namespace misc {
 \brief [Device] Control the mode of an amplifier via DigitalIO
 
 \par Options
-- \c bridgepin: the dio line that switches the amplifier into bridge mode.
-- \c cclamppin: the dio line that switches the amplifier into current clamp mode.
 - \c vclamppin: the dio line that switches the amplifier into voltage clamp mode.
+- \c cclamppin: the dio line that switches the amplifier into current clamp mode.
+- \c bridgepin: the dio line that switches the amplifier into bridge mode.
 - \c resistancepin: the dio line that activates resistance measurement of the amplifier.
 - \c buzzerpin: the dio line that activates the buzzer.
 - \c buzzerpulse: the duration in ms the buzzer is activated.
 
 \par Sound
 When activating the buzzer the plugin mutes the soundcard via the OSS sound interface.
-We stay with the OSS interface since it is so simple to program. The ALSA mixer interface
-is too complicated...
 
-Check whether you a \c /dev/mixer device file. If not you need to load the 
+We stay with the OSS interface since it is so simple to program. The ALSA mixer interface
+is too complicated, but ALSA provides compatibility modules for OSS.
+
+Check whether you have a \c /dev/mixer device file. If not you need to load the 
 \c snd-mixer-oss kernel module:
 \code
 sudo modprobe snd-mixer-oss
@@ -71,13 +72,21 @@ public:
   virtual bool isOpen( void ) const;
   virtual void close( void );
 
-  int bridge( void );
-  int resistance( void );
-  int voltageClamp( void );
-  int currentClamp( void );
-  int manual( void );
+  int setBridgeMode( void );
+  int setCurrentClampMode( void );
+  int setVoltageClampMode( void );
+  int setManualSelection( void );
 
-  int buzzer( void );
+  int resistance( void );
+
+    /*! Mute the sound card and initiate buzzing by setting the pin for the buzzer high.
+        \return the return value of DigitalIO::write()
+	\sa stopBuzz() */
+  int startBuzz( void );
+    /*! Stop buzzing by setting the pin for the buzzer low and unmute the sound card.
+        \return the return value of DigitalIO::write()
+	\sa startBuzz() */
+  int stopBuzz( void );
 
 
 private:
@@ -90,18 +99,18 @@ private:
   int DIOId;
 
   /* The DIO lines for controlling the amplifier mode: */
-  int BuzzerPin;
-  int ResistancePin;
   int BridgePin;
   int CurrentClampPin;
   int VoltageClampPin;
+  int ResistancePin;
+  int BuzzerPin;
 
     /* The corresponding bit masks. */
-  int Buzzer;
-  int Resistance;
-  int Bridge;
-  int CurrentClamp;
-  int VoltageClamp;
+  int BridgeMask;
+  int CurrentClampMask;
+  int VoltageClampMask;
+  int ResistanceMask;
+  int BuzzerMask;
 
   int ModeMask;
   int Mask;

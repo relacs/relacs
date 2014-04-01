@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <QTimer>
 #include <relacs/ephys/amplifiercontrol.h>
 using namespace relacs;
 
@@ -41,9 +42,11 @@ AmplifierControl::AmplifierControl( void )
 
   MaxResistance = 100.0;
   ResistanceScale = 1.0;
+  BuzzPulse = 0.5;
 
   addNumber( "resistancescale", "Scaling factor for computing R from stdev of voltage trace", ResistanceScale, 0.0, 100000.0, 0.01 );
   addNumber( "maxresistance", "Maximum resistance to be expected for scaling voltage trace", MaxResistance, 0.0, 1000000.0, 10.0, "MOhm" );
+  addNumber( "buzzpulse", "Duration of buzz pulse", BuzzPulse, 0.0, 100.0, 0.1, "s", "ms" );
 
   setGlobalKeyEvents();
 }
@@ -53,6 +56,7 @@ void AmplifierControl::notify( void )
 {
   ResistanceScale = number( "resistancescale" );
   MaxResistance = number( "maxresistance" );
+  BuzzPulse = number( "buzzpulse" );
 }
 
 
@@ -76,7 +80,7 @@ void AmplifierControl::initDevices( void )
       BuzzerButton = new QPushButton( "Buzz" );
       AmplBox->addWidget( BuzzerButton );
       connect( BuzzerButton, SIGNAL( clicked() ),
-	       this, SLOT( buzz() ) );
+	       this, SLOT( startBuzz() ) );
 
       AmplBox->addWidget( new QLabel );
 
@@ -168,7 +172,7 @@ void AmplifierControl::measureResistance( void )
 void AmplifierControl::stopResistance( void )
 {
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
-    Ampl->manual();
+    Ampl->setManualSelection();
     lock();
     setGain( trace( SpikeTrace[0] ), DGain );
     unlock();
@@ -178,11 +182,19 @@ void AmplifierControl::stopResistance( void )
 }
 
 
-void AmplifierControl::buzz( void )
+void AmplifierControl::startBuzz( void )
 {
   if ( Ampl != 0 ) {
-    Ampl->buzzer( );
+    Ampl->startBuzz( );
+    QTimer::singleShot( int( 1000.0*BuzzPulse ), this, SLOT( stopBuzz() ) );
   }
+}
+
+
+void AmplifierControl::stopBuzz( void )
+{
+  if ( Ampl != 0 )
+    Ampl->stopBuzz( );
 }
 
 

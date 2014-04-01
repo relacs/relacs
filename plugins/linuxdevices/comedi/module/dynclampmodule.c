@@ -274,7 +274,9 @@ static inline void value_to_sample( struct chanT *pChan, float value )
 
 void init_globals( void )
 {
+#ifdef ENABLE_COMPUTATION
   int k;
+#endif
 
   deviceN = 0;
   subdevN = 0;
@@ -524,6 +526,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	    subdev[iS].chanlist[isC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
 	    subdev[iS].chanlist[isC].insn.chanspec = chanlistIOC->chanlist[iC];
 	    memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
+	SDEBUG_MSG( "CONVERTER 1: subdev=%d, oder=%d, origin=%d, coef0=%d, coef1=%d, coef2=%d\n", iS, subdev[iS].chanlist[iC].converter.order, (int)(1000.0*subdev[iS].chanlist[iC].converter.expansion_origin), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[0]), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[1]), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[2]) );
 	    subdev[iS].chanlist[isC].scale = chanlistIOC->scalelist[iC];
 	  }
 	  break;
@@ -602,6 +605,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	subdev[iS].chanlist[iC].insn.subdev = subdev[iS].subdev;
 	subdev[iS].chanlist[iC].insn.chanspec = chanlistIOC->chanlist[iC];
 	memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
+	SDEBUG_MSG( "CONVERTER 1: subdev=%d, oder=%d, origin=%d, coef0=%d, coef1=%d, coef2=%d\n", iS, subdev[iS].chanlist[iC].converter.order, (int)(1000.0*subdev[iS].chanlist[iC].converter.expansion_origin), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[0]), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[1]), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[2]) );
 	subdev[iS].chanlist[iC].scale = chanlistIOC->scalelist[iC];
 #ifdef ENABLE_COMPUTATION
       }
@@ -722,7 +726,7 @@ int stopSubdevice( int iS, int kill )
   mean = dynClampTask.sumperiod/dynClampTask.loopCnt;
   sqmean = dynClampTask.sumsqperiod/dynClampTask.loopCnt;
   var = sqmean - mean*mean;
-  SDEBUG_MSG( "rtDynClamp: average period %Lu ns, var=%Lu, min=%Lu, max=%Lu, count=%lu\n", mean, var, dynClampTask.minperiod, dynClampTask.maxperiod, dynClampTask.loopCnt );
+  SDEBUG_MSG( "dynclampmodule: average period %Lu ns, var=%Lu, min=%Lu, max=%Lu, count=%lu\n", mean, var, dynClampTask.minperiod, dynClampTask.maxperiod, dynClampTask.loopCnt );
 #endif
   cleanup_rt_task();
   return 0;
@@ -1027,7 +1031,7 @@ int setAnalogTrigger( struct triggerIOCT *triggerIOC )
   trigger.chan = triggerIOC->channel;
   trigger.alevel = triggerIOC->alevel;
 
-  DEBUG_MSG( "rtDynClamp: setup trigger for channel %d on device %s\n",
+  DEBUG_MSG( "dynclampmodule: setup trigger for channel %d on device %s\n",
 	     trigger.chan, trigger.devname );
 
   // enable trigger:
@@ -1086,7 +1090,7 @@ void rtDynClamp( long dummy )
   float currentfac = 1.0;
 #endif
 
-  SDEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
+  SDEBUG_MSG( "dynclampmodule: starting dynamic clamp loop at %u Hz\n", 
 	      1000000000/dynClampTask.periodLengthNs );
 
   dynClampTask.loopCnt = 0;
@@ -1103,7 +1107,7 @@ void rtDynClamp( long dummy )
 #ifdef ENABLE_SYNCSEC
   difftime = dynClampTask.periodLengthNs;
   if ( syncSECDevice == 0 )
-    ERROR_MSG( "rtDynClamp: no sync device set!\n" );
+    ERROR_MSG( "dynclampmodule: no sync device set!\n" );
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -1127,7 +1131,7 @@ void rtDynClamp( long dummy )
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start write: comedi_do_insn" );
-	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start write\n", iT );
+	ERROR_MSG( "dynclampmodule: ERROR! failed to write TTL pulse %d at start write\n", iT );
       }
     }
 #endif
@@ -1155,7 +1159,7 @@ void rtDynClamp( long dummy )
 	    DEBUG_MSG( "REALTIMELOOP PENDING AO SETUP duration=%lu, loopCnt=%lu\n", subdev[iS].duration, dynClampTask.loopCnt );
 	    subdev[iS].delay = dynClampTask.loopCnt + subdev[iS].delay; 
 	    subdev[iS].duration = subdev[iS].delay + subdev[iS].duration;
-	    dynClampTask.aoIndex = subdev[iS].delay;
+	    dynClampTask.aoIndex = subdev[iS].delay + 1;
 	    subdev[iS].pending = 0;
 	    DEBUG_MSG( "REALTIMELOOP PENDING AO STARTED duration=%lu delay=%lu, loopCnt=%lu\n", subdev[iS].duration, subdev[iS].delay, dynClampTask.loopCnt );
 #ifdef ENABLE_TTLPULSE
@@ -1164,7 +1168,7 @@ void rtDynClamp( long dummy )
 	      if ( retVal < 1 ) {
 		if ( retVal < 0 )
 		  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start ao: comedi_do_insn" );
-		ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start ao\n", iT );
+		ERROR_MSG( "dynclampmodule: ERROR! failed to write TTL pulse %d at start ao\n", iT );
 	      }
 	    }
 #endif
@@ -1176,7 +1180,7 @@ void rtDynClamp( long dummy )
 	  // check end of stimulus:
 	  if ( !subdev[iS].continuous &&
 	       subdev[iS].duration <= dynClampTask.loopCnt ) {
-	    SDEBUG_MSG( "rtDynClamp: finished subdevice %d at loop %lu\n", iS, dynClampTask.loopCnt );
+	    SDEBUG_MSG( "dynclampmodule: finished subdevice %d at loop %lu\n", iS, dynClampTask.loopCnt );
 	    rtf_reset( subdev[iS].fifo );
 	    stopSubdevice( iS, /*kill=*/0 );
 #ifdef ENABLE_TTLPULSE
@@ -1185,7 +1189,7 @@ void rtDynClamp( long dummy )
 	      if ( retVal < 1 ) {
 		if ( retVal < 0 )
 		  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end ao: comedi_do_insn" );
-		ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at end ao\n", iT );
+		ERROR_MSG( "dynclampmodule: ERROR! failed to write TTL pulse %d at end ao\n", iT );
 	      }
 	    }
 #endif
@@ -1199,7 +1203,7 @@ void rtDynClamp( long dummy )
 		retVal = rtf_get( pChan->fifo, &pChan->voltage, sizeof(float) );
 		if ( retVal != sizeof(float) ) {
 		  if ( retVal == EINVAL ) {
-		    ERROR_MSG( "rtDynClamp: ERROR! No open FIFO for AO subdevice ID %d at loopCnt %lu\n",
+		    ERROR_MSG( "dynclampmodule: ERROR! No open FIFO for AO subdevice ID %d at loopCnt %lu\n",
 			       iS, dynClampTask.loopCnt );
 		    ERROR_MSG( "Stop dynClampTask." );
 		    dynClampTask.running = 0;
@@ -1207,7 +1211,7 @@ void rtDynClamp( long dummy )
 		    return;
 		  }
 		  subdev[iS].error = E_UNDERRUN;
-		  ERROR_MSG( "rtDynClamp: ERROR! Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
+		  ERROR_MSG( "dynclampmodule: ERROR! Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
 			     iS, dynClampTask.loopCnt );
 		  subdev[iS].running = 0;
 		  continue;
@@ -1247,13 +1251,13 @@ void rtDynClamp( long dummy )
 	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
 	      subdev[iS].error = E_NODATA;
-	      ERROR_MSG( "rtDynClamp: ERROR! failed to write data to AO subdevice ID %d channel %d at loopCnt %lu\n",
+	      ERROR_MSG( "dynclampmodule: ERROR! failed to write data to AO subdevice ID %d channel %d at loopCnt %lu\n",
 			 iS, iC, dynClampTask.loopCnt );
 	      if ( retVal < 0 ) {
 		comedi_perror( "dynclampmodule: rtDynClamp: comedi_data_write" );
 		subdev[iS].error = E_COMEDI;
 		subdev[iS].running = 0;
-		ERROR_MSG( "rtDynClamp: ERROR! failed to write to AO subdevice ID %d channel %d at loopCnt %lu\n",
+		ERROR_MSG( "dynclampmodule: ERROR! failed to write to AO subdevice ID %d channel %d at loopCnt %lu\n",
 			   iS, iC, dynClampTask.loopCnt );
 	      }
 	    }
@@ -1272,7 +1276,7 @@ void rtDynClamp( long dummy )
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end write: comedi_do_insn" );
-	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at end write\n", iT );
+	ERROR_MSG( "dynclampmodule: ERROR! failed to write TTL pulse %d at end write\n", iT );
       }
     }
 #endif
@@ -1284,7 +1288,7 @@ void rtDynClamp( long dummy )
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp seting DIO high at start write for syncing SEC: comedi_do_insn" );
-	ERROR_MSG( "rtDynClamp: ERROR! failed to set DIO high at start write for syncing SEC\n" );
+	ERROR_MSG( "dynclampmodule: ERROR! failed to set DIO high at start write for syncing SEC\n" );
       }
     }
 
@@ -1304,7 +1308,7 @@ void rtDynClamp( long dummy )
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start read: comedi_do_insn" );
-	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start read\n", iT );
+	ERROR_MSG( "dynclampmodule: ERROR! failed to write TTL pulse %d at start read\n", iT );
       }
     }
 #endif
@@ -1348,19 +1352,23 @@ void rtDynClamp( long dummy )
 	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
 	      subdev[iS].error = E_NODATA;
-	      ERROR_MSG( "rtDynClamp: ERROR! failed to read data from AI subdevice ID %d channel %d at loopCnt %lu\n",
+	      ERROR_MSG( "dynclampmodule: ERROR! failed to read data from AI subdevice ID %d channel %d at loopCnt %lu\n",
 			 iS, iC, dynClampTask.loopCnt );
 	      if ( retVal < 0 ) {
 		comedi_perror( "dynclampmodule: rtDynClamp: comedi_data_read" );
 		subdev[iS].running = 0;
 		subdev[iS].error = E_COMEDI;
-		ERROR_MSG( "rtDynClamp: ERROR! failed to read from AI subdevice ID %d channel %d at loopCnt %lu\n",
+		ERROR_MSG( "dynclampmodule: ERROR! failed to read from AI subdevice ID %d channel %d at loopCnt %lu\n",
 			   iS, iC, dynClampTask.loopCnt );
 		continue;
 	      }
 	    }
 	    // convert to voltage:
 	    sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
+	    if ( dynClampTask.loopCnt % 10000 == 0 ) {
+	SDEBUG_MSG( "CONVERTIT: oder=%d, origin=%d, coef0=%d, coef1=%d, coef2=%d\n", pChan->converter.order, (int)(1000.0*pChan->converter.expansion_origin), (int)(1000000.0*pChan->converter.coefficients[0]), (int)(1000000.0*pChan->converter.coefficients[1]), (int)(1000000.0*pChan->converter.coefficients[2]) );
+	    }
+
 #ifdef ENABLE_COMPUTATION
 	    if ( pChan->modelIndex >= 0 )
 	      input[pChan->modelIndex] = pChan->voltage;
@@ -1372,17 +1380,17 @@ void rtDynClamp( long dummy )
 	  
 	  // debug:
 	  if ( subdev[iS].running == 0 )
-	    ERROR_MSG( "rtDynClamp: ERROR! subdevice %d somehow not running\n", iS);
+	    ERROR_MSG( "dynclampmodule: ERROR! subdevice %d somehow not running\n", iS);
 	  // write to FIFO:
 	  retVal = rtf_put( pChan->fifo, &pChan->voltage, sizeof(float) );
 	  // debug:
 	  if ( subdev[iS].running == 0 )
-	    ERROR_MSG( "rtDynClamp: ERROR! rtf_put turned subdevice %d not running\n", iS);
+	    ERROR_MSG( "dynclampmodule: ERROR! rtf_put turned subdevice %d not running\n", iS);
 
 	  if ( retVal != sizeof(float) ) {
-	    SDEBUG_MSG( "rtDynClamp: ERROR! rtf_put failed, return value=%d\n", retVal );
+	    SDEBUG_MSG( "dynclampmodule: ERROR! rtf_put failed, return value=%d\n", retVal );
 	    if ( retVal == EINVAL ) {
-	      ERROR_MSG( "rtDynClamp: ERROR! No open FIFO for AI subdevice ID %d at loopCnt %lu\n",
+	      ERROR_MSG( "dynclampmodule: ERROR! No open FIFO for AI subdevice ID %d at loopCnt %lu\n",
 			 iS, dynClampTask.loopCnt );
 	      ERROR_MSG( "Stop dynClampTask." );
 	      dynClampTask.running = 0;
@@ -1390,14 +1398,14 @@ void rtDynClamp( long dummy )
 	      return;
 	    }
 	    subdev[iS].error = E_OVERFLOW;
-	    ERROR_MSG( "rtDynClamp: ERROR! FIFO buffer overflow for AI subdevice ID %d at loopCnt %lu\n",
+	    ERROR_MSG( "dynclampmodule: ERROR! FIFO buffer overflow for AI subdevice ID %d at loopCnt %lu\n",
 		       iS, dynClampTask.loopCnt );
 	    subdev[iS].running = 0;
 	    continue;
 	  }
 
 	  if ( subdev[iS].running == 0 )
-	    ERROR_MSG( "rtDynClamp: ERROR! rtf_put error handling turned subdevice %d not running\n", iS);
+	    ERROR_MSG( "dynclampmodule: ERROR! rtf_put error handling turned subdevice %d not running\n", iS);
 
 #ifdef ENABLE_TRIGGER
 	  // trigger:
@@ -1424,7 +1432,7 @@ void rtDynClamp( long dummy )
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp seting DIO low at start write for syncing SEC: comedi_do_insn" );
-	ERROR_MSG( "rtDynClamp: ERROR! failed to set DIO low at start write for syncing SEC\n" );
+	ERROR_MSG( "dynclampmodule: ERROR! failed to set DIO low at start write for syncing SEC\n" );
       }
     }
 #endif
@@ -1435,7 +1443,7 @@ void rtDynClamp( long dummy )
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end read: comedi_do_insn" );
-	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at end read\n", iT );
+	ERROR_MSG( "dynclampmodule: ERROR! failed to write TTL pulse %d at end read\n", iT );
       }
     }
 #endif
@@ -1474,7 +1482,7 @@ void rtDynClamp( long dummy )
   dynClampTask.running = 0;
   dynClampTask.duration = 0;
 
-  SDEBUG_MSG( "rtDynClamp: left dynamic clamp loop after %lu cycles\n",
+  SDEBUG_MSG( "dynclampmodule: left dynamic clamp loop after %lu cycles\n",
 	      dynClampTask.loopCnt );
 }
 
@@ -1487,7 +1495,7 @@ void rtDynClamp( long dummy )
 // TODO: seperate into init and start?
 int init_rt_task( void )
 {
-  int stackSize = 20000;
+  int stackSize = 16384;
   int priority;
   int usesFPU = 1;   /* we need FPU support in any case! */
   void* signal = NULL;
@@ -1497,10 +1505,8 @@ int init_rt_task( void )
 
   DEBUG_MSG( "init_rt_task: Trying to initialize dynamic clamp RTAI task...\n" );
 
-#if defined(ENABLE_COMPUTATION) || defined(ENABLE_STATISTICS)
 #ifndef CONFIG_RTAI_FPU_SUPPORT
   #error "RTAI FPU support is not enabled. Reconfigure, compile and install RTAI kernel modules."
-#endif
 #endif
 
   // test if dynamic clamp frequency is valid:
@@ -1573,8 +1579,10 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   static struct deviceIOCT deviceIOC;
   static struct chanlistIOCT chanlistIOC;
   static struct syncCmdIOCT syncCmdIOC;
+#ifdef ENABLE_COMPUTATION
   static struct traceInfoIOCT traceInfo;
   static struct traceChannelIOCT traceChannel;
+#endif
   static struct dioIOCT dioIOC;
   static struct triggerIOCT triggerIOC;
 
@@ -1689,12 +1697,12 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_OPEN_SUBDEV:
     retVal = copy_from_user( &deviceIOC, (void __user *)arg, sizeof(struct deviceIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
     if ( deviceIOC.subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in deviceIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID in deviceIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1705,7 +1713,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     }
     retVal = copy_to_user( (void __user *)arg, &deviceIOC, sizeof(struct deviceIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1715,12 +1723,12 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_CHANLIST:
     retVal = copy_from_user( &chanlistIOC, (void __user *)arg, sizeof(struct chanlistIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to chanlistIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to chanlistIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
     if ( chanlistIOC.subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in chanlistIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID in chanlistIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1731,12 +1739,12 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_SYNC_CMD:
     retVal = copy_from_user( &syncCmdIOC, (void __user *)arg, sizeof(struct syncCmdIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to syncCmdIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to syncCmdIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
     if ( syncCmdIOC.subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in syncCmdIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID in syncCmdIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1749,7 +1757,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 #ifdef ENABLE_COMPUTATION
     retVal = copy_from_user( &traceInfo, (void __user *)arg, sizeof(struct traceInfoIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid user pointer for traceInfoIOCT!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid user pointer for traceInfoIOCT!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1797,7 +1805,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       break;
     retVal = copy_to_user( (void __user *)arg, &traceInfo, sizeof(struct traceInfoIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid user pointer for traceInfoIOCT!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid user pointer for traceInfoIOCT!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1813,7 +1821,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 #ifdef ENABLE_COMPUTATION
     retVal = copy_from_user( &traceChannel, (void __user *)arg, sizeof(struct traceChannelIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid user pointer for traceChannelIOCT!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid user pointer for traceChannelIOCT!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1842,12 +1850,12 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_START_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for start-query!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to subdevice ID for start-query!" );
       rc = -EFAULT;
       break;
     }
     if ( subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for start-query!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID for start-query!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1859,17 +1867,17 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_CHK_RUNNING:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for running-query!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to subdevice ID for running-query!" );
       rc = -EFAULT;
       break;
     }
     if ( subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for running-query!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID for running-query!\n" );
       rc = -EFAULT;
       break;
     }
     tmp = subdev[subdevID].running;
-    DEBUG_MSG( "rtmodule_ioctl: running = %d for subdevID %d\n", tmp, subdevID );
+    DEBUG_MSG( "dynclampmodule_ioctl: running = %d for subdevID %d\n", tmp, subdevID );
     retVal = put_user( tmp, (int __user *)arg );
     rc = retVal == 0 ? 0 : -EFAULT;
     break;
@@ -1878,17 +1886,17 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_REQ_CLOSE:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for close-request!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to subdevice ID for close-request!" );
       rc = -EFAULT;
       break;
     }
     if ( subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for close-request!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID for close-request!\n" );
       rc = -EFAULT;
       break;
     }
     if ( reqCloseSubdevID >= 0 ) {
-      ERROR_MSG( "rtmodule_ioctl IOC_REQ_CLOSE ERROR: Another close-request in progress!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl IOC_REQ_CLOSE ERROR: Another close-request in progress!\n" );
       rc = -EAGAIN;
       break;
     }
@@ -1899,21 +1907,21 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_REQ_READ: // Noch wichtig fuer tracename-List?
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for read-request!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to subdevice ID for read-request!" );
       rc = -EFAULT;
       break;
     }
     if ( subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for read-request!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID for read-request!\n" );
       rc = -EFAULT;
       break;
     }
     if ( reqTraceSubdevID >= 0 ) {
-      ERROR_MSG( "rtmodule_ioctl IOC_REQ_READ ERROR: Another read-request in progress! (reqTraceSubdevID=%d)\n", reqTraceSubdevID );
+      ERROR_MSG( "dynclampmodule_ioctl IOC_REQ_READ ERROR: Another read-request in progress! (reqTraceSubdevID=%d)\n", reqTraceSubdevID );
       rc = -EAGAIN;
       break;
     }
-    ERROR_MSG( "rtmodule_ioctl IOC_REQ_READ: Requested Read\n" );
+    ERROR_MSG( "dynclampmodule_ioctl IOC_REQ_READ: Requested Read\n" );
     reqTraceSubdevID = subdevID;
     rc = 0;
     break;
@@ -1922,18 +1930,18 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_STOP_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for stop-query!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to subdevice ID for stop-query!" );
       rc = -EFAULT;
       break;
     }
     if ( subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for stop-query!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID for stop-query!\n" );
       rc = -EFAULT;
       break;
     }
     SDEBUG_MSG( "ioctl: user requests to stop and potentially kill subdevice %d\n", subdevID );
     retVal = stopSubdevice( subdevID, /*kill=*/1 );
-    DEBUG_MSG( "rtmodule_ioctl: stopSubdevice returned %u\n", retVal );
+    DEBUG_MSG( "dynclampmodule_ioctl: stopSubdevice returned %u\n", retVal );
     rc = retVal == 0 ? 0 : -EFAULT;
     break;
 
@@ -1941,12 +1949,12 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_RELEASE_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for release-query!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to subdevice ID for release-query!" );
       rc = -EFAULT;
       break;
     }
     if ( subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for release-query!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID for release-query!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1960,12 +1968,12 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_DIO_CMD:
     retVal = copy_from_user( &dioIOC, (void __user *)arg, sizeof(struct dioIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to dioIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to dioIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
     if ( dioIOC.subdevID >= subdevN ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in dioIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid subdevice ID in dioIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1976,7 +1984,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     }
     retVal = copy_to_user( (void __user *)arg, &dioIOC, sizeof(struct dioIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to dioIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to dioIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1988,7 +1996,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_SET_TRIGGER:
     retVal = copy_from_user( &triggerIOC, (void __user *)arg, sizeof(struct triggerIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to triggerIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to triggerIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1998,7 +2006,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_UNSET_TRIGGER:
     retVal = copy_from_user( &triggerIOC, (void __user *)arg, sizeof(struct triggerIOCT) );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to triggerIOCT-struct!\n" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to triggerIOCT-struct!\n" );
       rc = -EFAULT;
       break;
     }
@@ -2012,13 +2020,13 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_SET_LOOKUP_K:
     retVal = get_user( lookupinx, (int __user *)arg );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to lookup index!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to lookup index!" );
       lookupinx = -1;
       rc = -EFAULT;
       break;
     }
     if ( lookupinx < 0 || lookupinx >= MAXLOOKUPTABLES ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid lookup index!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid lookup index!" );
       lookupinx = -1;
       rc = -EINVAL;
       break;
@@ -2034,13 +2042,13 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_SET_LOOKUP_N:
     if ( lookupinx < 0 ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid lookup index!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid lookup index!" );
       rc = -EINVAL;
       break;
     }
     retVal = get_user( lookupn[lookupinx], (int __user *)arg );
     if ( retVal ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to size of lookup table!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to size of lookup table!" );
       lookupn[lookupinx] = 0;
       rc = -EFAULT;
     }
@@ -2048,7 +2056,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_SET_LOOKUP_X:
     if ( lookupinx < 0 ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid lookup index!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid lookup index!" );
       rc = -EINVAL;
       break;
     }
@@ -2059,14 +2067,14 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     if ( lookupn[lookupinx] > 0 ) {
       lookupx[lookupinx] = kmalloc( lookupn[lookupinx]*sizeof(float), GFP_KERNEL );
       if ( lookupx[lookupinx] == NULL ) {
-	ERROR_MSG( "rtmodule_ioctl ERROR: failed to allocate memory for x-array of lookup table!\n" );
+	ERROR_MSG( "dynclampmodule_ioctl ERROR: failed to allocate memory for x-array of lookup table!\n" );
 	rc = -ENOMEM;
       }
       else {
 	retVal = copy_from_user( lookupx[lookupinx], (void __user *)arg,
 				 lookupn[lookupinx]*sizeof(float) );
 	if ( retVal ) {
-	  ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to x-array of lookup table!\n" );
+	  ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to x-array of lookup table!\n" );
 	  rc = -EFAULT;
 	}
       }
@@ -2086,7 +2094,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_SET_LOOKUP_Y:
     if ( lookupinx < 0 ) {
-      ERROR_MSG( "rtmodule_ioctl ERROR: invalid lookup index!" );
+      ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid lookup index!" );
       rc = -EINVAL;
       break;
     }
@@ -2097,14 +2105,14 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     if ( lookupn[lookupinx] > 0 ) {
       lookupy[lookupinx] = kmalloc( lookupn[lookupinx]*sizeof(float), GFP_KERNEL );
       if ( lookupy[lookupinx] == NULL ) {
-	ERROR_MSG( "rtmodule_ioctl ERROR: failed to allocate memory for y-array of lookup table!\n" );
+	ERROR_MSG( "dynclampmodule_ioctl ERROR: failed to allocate memory for y-array of lookup table!\n" );
 	rc = -ENOMEM;
       }
       else {
 	retVal = copy_from_user( lookupy[lookupinx], (void __user *)arg,
 				 lookupn[lookupinx]*sizeof(float) );
 	if ( retVal ) {
-	  ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to y-array of lookup table!\n" );
+	  ERROR_MSG( "dynclampmodule_ioctl ERROR: invalid pointer to y-array of lookup table!\n" );
 	  rc = -EFAULT;
 	}
       }
@@ -2125,7 +2133,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 #endif
 
   default:
-    ERROR_MSG( "rtmodule_ioctl ERROR - Invalid IOCTL!\n" );
+    ERROR_MSG( "dynclampmodule_ioctl ERROR - Invalid IOCTL!\n" );
     rc = -ENOTTY;
 
   }
@@ -2143,7 +2151,8 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 int rtmodule_open( struct inode *devFile, struct file *fModule )
 {
-  DEBUG_MSG( "open: user opened device file\n" );
+  DEBUG_MSG( "======================================\n" );
+  DEBUG_MSG( "rtmodule_open: user opened device file\n" );
   
   return 0;
 }
@@ -2158,7 +2167,7 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
     mutex_lock( &mutex );
     for ( iS = 0; iS < subdevN; iS++ ) {
       if ( stopSubdevice( iS, /*kill=*/1 ) )
-        WARN_MSG( "rtmodule_close: Stopping subdevice with ID %d failed\n", iS );
+        WARN_MSG( "dynclampmodule_close: Stopping subdevice with ID %d failed\n", iS );
       releaseSubdevice( iS );
     }
     mutex_unlock( &mutex );
@@ -2169,7 +2178,7 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
   // stop & close specified subdevice (and device):
   mutex_lock( &mutex );
   if ( stopSubdevice( reqCloseSubdevID, 1 ) )
-    WARN_MSG( "rtmodule_close: Stopping subdevice with ID %d failed\n", reqCloseSubdevID );
+    WARN_MSG( "dynclampmodule_close: Stopping subdevice with ID %d failed\n", reqCloseSubdevID );
   releaseSubdevice( reqCloseSubdevID );
   mutex_unlock( &mutex );
 

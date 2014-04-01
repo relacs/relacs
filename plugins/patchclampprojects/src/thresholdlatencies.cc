@@ -937,9 +937,9 @@ ThresholdLatencies::Data::Data( double delay, double predurations, double saveti
   Pre2Amplitude = 0.0;
   PostAmplitude = 0.0;
   Voltage.resize( -delay-predurations, savetime-delay, voltage.stepsize(), 0.0 );
-  voltage.copy( signalTime() + predurations, Voltage );
+  voltage.copy( voltage.signalTime() + predurations, Voltage );
   Current.resize( -delay-predurations, savetime-delay, current.stepsize(), 0.0 );
-  current.copy( signalTime() + predurations, Current );
+  current.copy( voltage.signalTime() + predurations, Current );
   SpikeCount = 0;
 }
 
@@ -954,7 +954,7 @@ ThresholdLatencies::Data::Data( double delay, double predurations, double saveti
   Pre2Amplitude = 0.0;
   PostAmplitude = 0.0;
   Voltage.resize( -delay-predurations, savetime-delay, voltage.stepsize(), 0.0 );
-  voltage.copy( signalTime() + predurations, Voltage );
+  voltage.copy( voltage.signalTime() + predurations, Voltage );
   Current.clear();
   SpikeCount = 0;
 }

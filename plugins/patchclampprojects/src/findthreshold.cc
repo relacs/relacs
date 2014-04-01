@@ -489,9 +489,9 @@ FindThreshold::Data::Data( double savetime, const InData &voltage,
 {
   Amplitude = 0.0;
   Voltage.resize( 0.0, savetime, voltage.stepsize(), 0.0 );
-  voltage.copy( signalTime(), Voltage );
+  voltage.copy( voltage.signalTime(), Voltage );
   Current.resize( 0.0, savetime, current.stepsize(), 0.0 );
-  current.copy( signalTime(), Current );
+  current.copy( voltage.signalTime(), Current );
   SpikeCount = 0;
 }
 
@@ -501,7 +501,7 @@ FindThreshold::Data::Data( double savetime, const InData &voltage )
 {
   Amplitude = 0.0;
   Voltage.resize( 0.0, savetime, voltage.stepsize(), 0.0 );
-  voltage.copy( signalTime(), Voltage );
+  voltage.copy( voltage.signalTime(), Voltage );
   Current.clear();
   SpikeCount = 0;
 }

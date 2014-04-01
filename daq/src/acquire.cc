@@ -926,6 +926,20 @@ int Acquire::restartRead( void )
   if ( ! success )
     return -1;
 
+  // set fixed rates in analog output traces:
+  for ( int k=0; k < outTracesSize(); k++ ) {
+    if ( AO[OutTraces[k].device()].AISyncRate &&
+	 AO[OutTraces[k].device()].AISyncDevice >= 0 &&
+	 AO[OutTraces[k].device()].AISyncDevice < (int)AI.size() && 
+	 AI[AO[OutTraces[k].device()].AISyncDevice].Traces.size() > 0 )
+      OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AISyncDevice].Traces[0].sampleRate() );
+    if ( AO[OutTraces[k].device()].AIRate &&
+	 AO[OutTraces[k].device()].AIDevice >= 0 &&
+	 AO[OutTraces[k].device()].AIDevice < (int)AI.size() && 
+	 AI[AO[OutTraces[k].device()].AIDevice].Traces.size() > 0 )
+      OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AIDevice].Traces[0].sampleRate() );
+  }
+
   // restore errorflags:
   for ( int i=0; i<InTraces.size(); i++ ) {
     InTraces[i].setError( errorflags[i] );
@@ -1123,6 +1137,20 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
     LastWrite = -1.0;
     return -1;
+  }
+
+  // set fixed rates in analog output traces:
+  for ( int k=0; k < outTracesSize(); k++ ) {
+    if ( AO[OutTraces[k].device()].AISyncRate &&
+	 AO[OutTraces[k].device()].AISyncDevice >= 0 &&
+	 AO[OutTraces[k].device()].AISyncDevice < (int)AI.size() && 
+	 AI[AO[OutTraces[k].device()].AISyncDevice].Traces.size() > 0 )
+      OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AISyncDevice].Traces[0].sampleRate() );
+    if ( AO[OutTraces[k].device()].AIRate &&
+	 AO[OutTraces[k].device()].AIDevice >= 0 &&
+	 AO[OutTraces[k].device()].AIDevice < (int)AI.size() && 
+	 AI[AO[OutTraces[k].device()].AIDevice].Traces.size() > 0 )
+      OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AIDevice].Traces[0].sampleRate() );
   }
 
   // cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";

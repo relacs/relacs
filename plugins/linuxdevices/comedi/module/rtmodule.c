@@ -460,7 +460,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   subdev[iS].startsource = syncCmdIOC->startsource;
   subdev[iS].pending = 0;
 
-  DEBUG_MSG( "loadSyncCmd: loaded %d samples with startsource %d for subdevice %d\n", subdev[iS].duration, subdev[iS].startsource, iS );
+  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d for subdevice %d\n", subdev[iS].duration, subdev[iS].startsource, iS );
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.reqFreq ) {
@@ -726,7 +726,7 @@ void rtDynClamp( long dummy )
 	      }
 	      subdev[iS].error = E_NODATA;
 	      DEBUG_MSG( "rtDynClamp: failed to write data to subdevice ID %d channel %d at loopCnt %lu\n",
-			 iS, iC, dynClampTask.loopCnt, subdev[iS].duration );
+			 iS, iC, dynClampTask.loopCnt );
 	    }
 	      
 	  } // end of chan loop

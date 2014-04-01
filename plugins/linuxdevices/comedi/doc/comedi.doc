@@ -774,33 +774,23 @@ Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
 
 
 \section calibration Calibrating analog input and output
+For calibrating analog input and output you should run \c comedi_calibrate 
+once in a while.
+\c comedi_calibrate writes a file to \c /usr/var/lib/comedi/calibrations that contains the calibration
+parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file and apply the
+calibration.
 
-For software calibrated boards (like NI M-Series boards) do (as root?)
+For hardware calibrated boards (like NI E-Series boards) do
+\code
+$ comedi_calibrate --reset --calibrate -f /dev/comedi0
+\endcode
+
+For software calibrated boards (like NI M-Series boards) do
 \code
 $ comedi_soft_calibrate -f /dev/comedi0
 \endcode
-This calibrates all channels for all ranges.
-A file is written to \c /usr/var/lib/comedi/calibrations that contains the calibration
-parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file.
 
-For calibrating all ranges, references, and channels of hardware calibrated
-boards (e.g. NI E-Series) do
-\code
-$ for C in 0 $(seq 16); do
-    for A in 0 1 2; do
-      for R in 0 $(seq 20); do
-        comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C;
-      done;
-    done;
-  done
-$ for C in 0 1; do
-    for A in 0 1 2; do
-      for R in 0 1; do
-        comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 1 -r $R -a $A -c $C;
-      done;
-    done;
-  done
-\endcode
+You may want to read the man page of \c comedi_calibrate.
 
 
 \section dynamicclamp Setting up dynamic clamp for RELACS

@@ -1,4 +1,7 @@
 New InData threading:
+- carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
+  the resulting index should be the one of the first data of the stimulus.
+- restart in dynclamp (and simulation?) mode is not properly processed??? (check inputrangecheck)
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
 - What about recording events (SignalTime, locking)?
 - Have another threads that gets data as soon as available and immediately filters them.
@@ -157,7 +160,6 @@ Plot:
 - check alignment of grid with plotted lines at various plot widget sizes!
 
 Analog Input/Output:
-- Docu regarding hard calibrate is probably wrong! Read man comedi_calibrate.
 - Replace Ident by Name in InData, OutData, TraceSpec
 - check and improve writeReset and writeZero interfaces and implementations.
 - directWrite implementation should take care about synchronization as well!

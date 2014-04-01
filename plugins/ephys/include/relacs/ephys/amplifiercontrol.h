@@ -61,8 +61,10 @@ public slots:
   void startResistance( void );
     /*! Stop measuring electrode resistance. */
   void stopResistance( void );
-    /*! Buzz the electrode. */
-  void buzz( void );
+    /*! Start buzzing the electrode. */
+  void startBuzz( void );
+    /*! Stop buzzing the electrode. */
+  void stopBuzz( void );
 
 
 protected:
@@ -80,6 +82,7 @@ private:
   int DGain;
   double MaxResistance;
   double ResistanceScale;
+  double BuzzPulse;
   QHBoxLayout *AmplBox;
   QPushButton *BuzzerButton;
   QPushButton *ResistanceButton;

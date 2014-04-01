@@ -34,8 +34,6 @@ using namespace relacs;
 namespace comedi {
 
 
-class ComediAnalogOutput;
-
 /*! 
 \class DynClampAnalogOutput
 \author Marco Hackenberg
@@ -183,11 +181,6 @@ private:
         DynClamp DAQ devices. */
   static const int DynClampAnalogIOType = 2;
 
-    /*! Pointer to the user space comedi interface. */
-  ComediAnalogOutput *CAO;
-    /*! Subdevice flags of the comedi analog output subdevice. */
-  unsigned int CAOSubDevFlags;
-
     /*! needed for assigning TraceInfo strings to channels. */
   int SubdeviceID;
 
@@ -198,16 +191,29 @@ private:
     /*! FIFO file descriptor for data exchange with kernel module. */
   int FifoFd;
 
+    /*! Pointer to the comedi device. */
+  comedi_t *DeviceP;
     /*! The comedi subdevice number. */
   unsigned int SubDevice;
     /*! The size of a single sample in bytes. */
   unsigned int BufferElemSize;  
     /*! Number of channels available on the device. */
   int Channels;
-    /*! Resolution in bits of each channel. */
-  int Bits;
     /*! Maximum sampling rate. */
   double MaxRate;
+    /*! Holds the list of supported unipolar comedi ranges. */
+  vector< comedi_range > UnipolarRange;
+    /*! Holds the list of supported bipolar comedi ranges. */
+  vector< comedi_range > BipolarRange;
+    /*! Maps descendingly sorted range indices to (unsorted) \a UnipolarRange
+        indices. */
+  vector< unsigned int > UnipolarRangeIndex;
+    /*! Maps descendingly sorted range indices to (unsorted) \a BipolarRange
+        indices. */
+  vector< unsigned int > BipolarRangeIndex;
+  int UnipolarExtRefRangeIndex;
+  int BipolarExtRefRangeIndex;
+
     /*! Conversion polynomials for all channels and unipolar gains. */
   comedi_polynomial_t **UnipConverter;
     /*! Conversion polynomials for all channels and bipolar gains. */
@@ -217,6 +223,9 @@ private:
     /*! True if no more data need to be written to the board. */
   bool NoMoreData;
   mutable bool IsRunning;
+
+    /*! Calibration info. */
+  comedi_calibration_t *Calibration;
 
     /*! The output signals that were prepared by prepareWrite(). */
   mutable OutList Sigs;

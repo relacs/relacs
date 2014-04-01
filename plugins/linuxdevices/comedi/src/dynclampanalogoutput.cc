@@ -32,7 +32,6 @@
 #include <fcntl.h>
 #include <QMutexLocker>
 #include <relacs/analoginput.h>
-#include <relacs/comedi/comedianalogoutput.h>
 #include <relacs/comedi/dynclampanalogoutput.h>
 #include <rtai_fifos.h>
 using namespace std;
@@ -47,8 +46,6 @@ namespace comedi {
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
   : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
 {
-  CAO = new ComediAnalogOutput;
-  CAOSubDevFlags = 0;
   SubdeviceID = -1;
   ModuleDevice = "";
   ModuleFd = -1;
@@ -56,7 +53,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
-  Bits = 0;
   MaxRate = 50000.0;
   IsPrepared = false;
   NoMoreData = true;
@@ -73,8 +69,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
 					    const Options &opts ) 
   : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
 {
-  CAO = new ComediAnalogOutput;
-  CAOSubDevFlags = 0;
   SubdeviceID = -1;
   ModuleDevice = "";
   ModuleFd = -1;
@@ -82,7 +76,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
-  Bits = 0;
   MaxRate = 50000.0;
   IsPrepared = false;
   NoMoreData = true;
@@ -100,91 +93,153 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
 DynClampAnalogOutput::~DynClampAnalogOutput( void ) 
 {
   close();
-  delete CAO;
 }
 
 
 int DynClampAnalogOutput::open( const string &device, const Options &opts )
 { 
+  if ( isOpen() )
+    return -5;
+
   Info.clear();
   Settings.clear();
-
   if ( device.empty() )
     return InvalidDevice;
-  setDeviceFile( device );
 
-  // open user space coemdi:
-  int retval = CAO->open( device, opts );
-  if ( retval != 0 )
-    return retval;
-  
-  // copy information not available after CAO->close()
-  SubDevice = CAO->comediSubdevice();
-  Channels = CAO->channels();
-  Bits =  CAO->bits();
-  MaxRate = CAO->maxRate();  // XXX This is not the max freq of the real time loop!
-  MaxRate = 50000.0;
+  // open comedi device:
+  DeviceP = comedi_open( device.c_str() );
+  if ( DeviceP == NULL ) {
+    cerr << "! error: ComediAnalogOutput::open() -> "
+	 << "Device-file " << device << " could not be opened!\n";
+    return NotOpen;
+  }
 
-  CAOSubDevFlags = comedi_get_subdevice_flags( CAO->DeviceP, SubDevice );
+  // get AO subdevice:
+  int subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_AO, 0 );
+  if ( subdev < 0 ) {
+    cerr << "! error: ComediAnalogOutput::open() -> "
+	 << "No SubDevice for AO found on device "  << device << '\n';
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    return InvalidDevice;
+  }
+  SubDevice = subdev;
 
   // set basic device infos:
-  setDeviceName( CAO->deviceName() );
-  setDeviceVendor( CAO->deviceVendor() );
+  setDeviceName( comedi_get_board_name( DeviceP ) );
+  setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
 
+  Channels = comedi_get_n_channels( DeviceP, SubDevice );
+
   // get calibration:
-  comedi_calibration_t *calibration;
   {
-    char *calibpath = comedi_get_default_calibration_path( CAO->DeviceP );
+    char *calibpath = comedi_get_default_calibration_path( DeviceP );
     ifstream cf( calibpath );
     if ( cf.good() )
-      calibration = comedi_parse_calibration_file( calibpath );
+      Calibration = comedi_parse_calibration_file( calibpath );
     else
-      calibration = 0;
+      Calibration = 0;
     free( calibpath );
   }
 
+  // external reference:
+  double extr = opts.number( "extref", -1.0, "V" );
+  setExternalReference( extr );
+
+  // initialize ranges:
+  UnipolarRange.clear();
+  BipolarRange.clear();
+  UnipolarRangeIndex.clear();
+  BipolarRangeIndex.clear();
+  int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  
+  for ( int i = 0; i < nRanges; i++ ) {
+    comedi_range *range = comedi_get_range( DeviceP, SubDevice, 0, i );
+    if ( range->min < 0.0 ) {
+      if ( range->unit & RF_EXTERNAL ) {
+	if ( extr > 0.0 ) {
+	  range->max = extr;
+	  range->min = -extr;
+	}
+	else
+	  continue;
+      }
+      BipolarRange.push_back( *range );
+      BipolarRangeIndex.push_back( i );
+    }
+    else {
+      if ( range->unit & RF_EXTERNAL ) {
+	if ( extr > 0.0 ) {
+	  range->max = extr;
+	  range->min = 0.0;
+	}
+	else
+	  continue;
+      }
+      UnipolarRange.push_back( *range );
+      UnipolarRangeIndex.push_back( i );
+    }
+  }
+  // bubble-sorting Uni/BipolarRange according to Uni/BipolarRange.max:
+  for( unsigned int i = 0; i < UnipolarRangeIndex.size(); i++ ) {
+    for ( unsigned int j = i+1; j < UnipolarRangeIndex.size(); j++ ) {
+      if (  UnipolarRange[i].max < UnipolarRange[j].max ) {
+	comedi_range rangeSwap = UnipolarRange[i];
+	UnipolarRange[i] = UnipolarRange[j];
+	UnipolarRange[j] = rangeSwap;
+	unsigned int indexSwap = UnipolarRangeIndex[i];
+	UnipolarRangeIndex[i] = UnipolarRangeIndex[j];
+	UnipolarRangeIndex[j] = indexSwap;
+      }
+    }
+  }
+  for( unsigned int i = 0; i < BipolarRangeIndex.size(); i++ ) {
+    for ( unsigned int j = i+1; j < BipolarRangeIndex.size(); j++ ) {
+      if (  BipolarRange[i].max < BipolarRange[j].max ) {
+	comedi_range rangeSwap = BipolarRange[i];
+	BipolarRange[i] = BipolarRange[j];
+	BipolarRange[j] = rangeSwap;
+	unsigned int indexSwap = BipolarRangeIndex[i];
+	BipolarRangeIndex[i] = BipolarRangeIndex[j];
+	BipolarRangeIndex[j] = indexSwap;
+      }
+    }
+  }
+
   // get conversion polynomials:
-  bool softcal = ( ( CAOSubDevFlags & SDF_SOFT_CALIBRATED ) > 0 );
+  bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_SOFT_CALIBRATED ) > 0 );
   UnipConverter = new comedi_polynomial_t* [Channels];
   BipConverter = new comedi_polynomial_t* [Channels];
-  for ( int c=0; c<channels(); c++ ) {
-    UnipConverter[c] = new comedi_polynomial_t[CAO->UnipolarRangeIndex.size()];
-    for ( unsigned int r=0; r<CAO->UnipolarRangeIndex.size(); r++ ) {
-      if ( softcal && calibration != 0 ) {
-	comedi_get_softcal_converter( SubDevice, c, CAO->UnipolarRangeIndex[r],
-				      COMEDI_FROM_PHYSICAL, calibration,
+  for ( int c=0; c<Channels; c++ ) {
+    UnipConverter[c] = new comedi_polynomial_t[UnipolarRangeIndex.size()];
+    for ( unsigned int r=0; r<UnipolarRangeIndex.size(); r++ ) {
+      if ( softcal && Calibration != 0 ) {
+	comedi_get_softcal_converter( SubDevice, c, UnipolarRangeIndex[r],
+				      COMEDI_FROM_PHYSICAL, Calibration,
 				      &UnipConverter[c][r] );
       }
       else {
-	comedi_get_hardcal_converter( CAO->DeviceP, SubDevice, c,
-				      CAO->UnipolarRangeIndex[r],
+	comedi_get_hardcal_converter( DeviceP, SubDevice, c,
+				      UnipolarRangeIndex[r],
 				      COMEDI_FROM_PHYSICAL,
 				      &UnipConverter[c][r] );
       }
     }
-    BipConverter[c] = new comedi_polynomial_t[CAO->BipolarRangeIndex.size()];
-    for ( unsigned int r=0; r<CAO->BipolarRangeIndex.size(); r++ ) {
-      if ( softcal && calibration != 0 ) {
-	comedi_get_softcal_converter( SubDevice, c, CAO->BipolarRangeIndex[r],
-				      COMEDI_FROM_PHYSICAL, calibration,
+    BipConverter[c] = new comedi_polynomial_t[BipolarRangeIndex.size()];
+    for ( unsigned int r=0; r<BipolarRangeIndex.size(); r++ ) {
+      if ( softcal && Calibration != 0 ) {
+	comedi_get_softcal_converter( SubDevice, c, BipolarRangeIndex[r],
+				      COMEDI_FROM_PHYSICAL, Calibration,
 				      &BipConverter[c][r] );
       }
       else {
-	comedi_get_hardcal_converter( CAO->DeviceP, SubDevice, c,
-				      CAO->BipolarRangeIndex[r],
+	comedi_get_hardcal_converter( DeviceP, SubDevice, c,
+				      BipolarRangeIndex[r],
 				      COMEDI_FROM_PHYSICAL, 
 				      &BipConverter[c][r] );
       }
     }
   }
-  
-  // cleanup calibration:
-  if ( calibration != 0 )
-    comedi_cleanup_calibration( calibration );
- 
-  // close user space comedi:
-  CAO->close();
 
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
@@ -195,7 +250,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
   }
 
   // get subdevice ID from module:
-  retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
+  int retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
   if ( retval < 0 ) {
     cerr << " DynClampAnalogOutput::open -> ioctl command IOC_GET_SUBDEV_ID on device "
 	 << ModuleDevice << " failed!\n";
@@ -225,6 +280,9 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
     return -1;
   }
   FIFOSize = deviceIOC.fifoSize;
+
+  // XXX Set the maximum possible sampling rate (of the rtai loop!):
+  MaxRate = 50000.0;
 
   // compute lookup tables:
 #ifdef ENABLE_COMPUTATION
@@ -289,14 +347,21 @@ void DynClampAnalogOutput::close( void )
 
   reset();
 
-  ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
-  ::close( FifoFd );
-  if ( ::close( ModuleFd ) < 0 )
-    cerr << "Close of module file failed!\n";
+  // cleanup calibration:
+  if ( Calibration != 0 )
+    comedi_cleanup_calibration( Calibration );
+  Calibration = 0;
 
-  ModuleFd = -1;
+  if ( ModuleFd >= 0 ) {
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
+    if ( FifoFd >= 0 )
+      ::close( FifoFd );
+    if ( ::close( ModuleFd ) < 0 )
+      cerr << "Close of module file failed!\n";
+    ModuleFd = -1;
+  }
 
-  for ( int c=0; c<channels(); c++ ) {
+  for ( int c=0; c<Channels; c++ ) {
     delete [] UnipConverter[c];
     delete [] BipConverter[c];
   }
@@ -334,7 +399,12 @@ int DynClampAnalogOutput::channels( void ) const
 
 int DynClampAnalogOutput::bits( void ) const
 { 
-  return Bits;
+  if ( !isOpen() )
+    return -1;
+  lock();
+  int maxData = comedi_get_maxdata( DeviceP, SubDevice, 0 );
+  unlock();
+  return (int)( log( maxData+2.0 )/ log( 2.0 ) );
 }
 
 
@@ -349,19 +419,24 @@ double DynClampAnalogOutput::maxRate( void ) const
 
 int DynClampAnalogOutput::maxRanges( void ) const
 {
-  return CAO->maxRanges();
+  return UnipolarRangeIndex.size() > BipolarRangeIndex.size() ?
+    UnipolarRangeIndex.size() : BipolarRangeIndex.size();
 }
 
 
 double DynClampAnalogOutput::unipolarRange( int index ) const
 {
-  return CAO->unipolarRange( index );
+  if ( (index < 0) || (index >= (int)UnipolarRangeIndex.size()) )
+    return -1.0;
+  return UnipolarRange[index].max;
 }
 
 
 double DynClampAnalogOutput::bipolarRange( int index ) const
 {
-  return CAO->bipolarRange( index );
+  if ( (index < 0) || (index >= (int)BipolarRangeIndex.size()) )
+    return -1.0;
+  return BipolarRange[index].max;
 }
 
 
@@ -423,13 +498,13 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     if ( sigs[k].noLevel() ) {
       // check for suitable range:
       if ( unipolar ) {
-	for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
+	for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
 	  if ( unipolarRange( index ) >= maxvolt )
 	    break;
 	}
       }
       else {
-	for( index = CAO->BipolarRange.size() - 1; index >= 0; index-- ) {
+	for( index = BipolarRange.size() - 1; index >= 0; index-- ) {
 	  if ( bipolarRange( index ) >= maxvolt )
 	    break;
 	}
@@ -444,9 +519,9 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     else {
       // use largest range:
       index = 0;
-      if ( unipolar && index >= (int)CAO->UnipolarRange.size() )
+      if ( unipolar && index >= (int)UnipolarRange.size() )
 	index = -1;
-      if ( ! unipolar && index >= (int)CAO->BipolarRange.size() )
+      if ( ! unipolar && index >= (int)BipolarRange.size() )
 	index = -1;
       // signal must be within -1 and 1:
       if ( max > 1.0+1.0e-8 )
@@ -461,8 +536,8 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
       break;
     }
 
-    double maxboardvolt = unipolar ? CAO->UnipolarRange[index].max : CAO->BipolarRange[index].max;
-    double minboardvolt = unipolar ? CAO->UnipolarRange[index].min : CAO->BipolarRange[index].min;
+    double maxboardvolt = unipolar ? UnipolarRange[index].max : BipolarRange[index].max;
+    double minboardvolt = unipolar ? UnipolarRange[index].min : BipolarRange[index].min;
     if ( !sigs[k].noLevel() && setscale )
       sigs[k].multiplyScale( maxboardvolt );
 
@@ -483,7 +558,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     int aref = AREF_GROUND;
 
     // set up channel in chanlist:
-    int gi = unipolar ? CAO->UnipolarRangeIndex[ index ] : CAO->BipolarRangeIndex[ index ];
+    int gi = unipolar ? UnipolarRangeIndex[ index ] : BipolarRangeIndex[ index ];
     if ( unipolar ) {
       memcpy( gainp, &UnipConverter[sigs[k].channel()][index], sizeof(comedi_polynomial_t) );
       chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
@@ -542,6 +617,15 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 	for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
 	  chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
 	chanlistIOC.scalelist[k] = ol[k].scale();
+	// apply calibration:
+	if ( Calibration != 0 ) {
+	  unsigned int channel = CR_CHAN( chanlist[k] );
+	  unsigned int range = CR_RANGE( chanlist[k] );
+	  unsigned int aref = CR_AREF( chanlist[k] );
+	  if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+						range, aref, Calibration ) < 0 )
+	    ol[k].addError( DaqError::CalibrationFailed );
+	}
       }
     }
     chanlistIOC.userDeviceIndex = ol[0].device();
@@ -571,21 +655,6 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 	ol.addErrorStr( errno );
       return -1;
     }
-
-    // apply calibration:
-    /*
-      XXX this requires user space comedi!
-      if ( Calibration != 0 ) {
-      for( int k=0; k < ol.size(); k++ ) {
-      unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
-      unsigned int range = CR_RANGE( Cmd.chanlist[k] );
-      unsigned int aref = CR_AREF( Cmd.chanlist[k] );
-      if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
-      range, aref, Calibration ) < 0 )
-      ol[k].addError( DaqError::CalibrationFailed );
-      }
-      }
-    */
 
     if ( ol.failed() )
       return -1;
@@ -740,6 +809,15 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 	for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
 	  chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
 	chanlistIOC.scalelist[k] = ol[k].scale();
+	// apply calibration:
+	if ( Calibration != 0 ) {
+	  unsigned int channel = CR_CHAN( chanlist[k] );
+	  unsigned int range = CR_RANGE( chanlist[k] );
+	  unsigned int aref = CR_AREF( chanlist[k] );
+	  if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+						range, aref, Calibration ) < 0 )
+	    ol[k].addError( DaqError::CalibrationFailed );
+	}
       }
     }
     chanlistIOC.userDeviceIndex = ol[0].device();
@@ -771,21 +849,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 	ol.addErrorStr( errno );
       return -1;
     }
-
-    // apply calibration:
-    /*
-      XXX this requires user space comedi!
-      if ( Calibration != 0 ) {
-      for( int k=0; k < ol.size(); k++ ) {
-      unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
-      unsigned int range = CR_RANGE( Cmd.chanlist[k] );
-      unsigned int aref = CR_AREF( Cmd.chanlist[k] );
-      if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
-      range, aref, Calibration ) < 0 )
-      ol[k].addError( DaqError::CalibrationFailed );
-      }
-      }
-    */
 
     if ( ! ol.success() )
       return -1;
@@ -836,9 +899,9 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
   // start subdevice:
   int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
   if ( retval < 0 ) {
+    int ern = errno;
     cerr << " DynClampAnalogOutput::startWrite -> ioctl command IOC_START_SUBDEV on device "
 	 << ModuleDevice << " failed!\n";
-    int ern = errno;
     if ( ern == ENOMEM )
       cerr << " !!! No stack for kernel task !!!\n";
     Sigs.addErrorStr( ern );

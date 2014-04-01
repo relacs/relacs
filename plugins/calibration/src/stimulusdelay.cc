@@ -105,7 +105,7 @@ int StimulusDelay::main( void )
     timeStamp();
     analyze( trace( intrace ), duration, pause, count,
 	     meandeltat, meansquaredeltat, mindeltat, maxdeltat );
-    double stddeltat = ::sqrt( meansquaredeltat - meandeltat*meandeltat );
+    double stddeltat = ::sqrt( ::fabs( meansquaredeltat - meandeltat*meandeltat ) );
     if ( count % 10 == 0 )
       message( "Stimulus delay: average=<b>" + Str( 1000.0*meandeltat, 0, 3, 'f' ) +
 	       " +/- " + Str( 1000.0*stddeltat, 0, 3, 'f' ) +
@@ -131,7 +131,7 @@ int StimulusDelay::analyze( const InData &data, double duration,
   double twin = duration;
   if ( pause < twin )
     twin = pause;
-  double max0 = data.max( signalTime()-twin, signalTime() );
+  double max0 = data.max( signalTime()-twin, signalTime()-0.1*twin );
   double max1 = data.max( signalTime(), signalTime()+twin );
   double thresh = 0.5*(max0+max1);
   double dt = 0.0;
@@ -139,7 +139,9 @@ int StimulusDelay::analyze( const InData &data, double duration,
 	k<data.index( signalTime()+twin );
 	k++ ) {
     if ( data[k] > thresh ) {
-      dt = data.pos( k ) - signalTime();
+      //      cerr << "thresh=" << thresh << " data1=" << data[k] << " data0=" << data[k-1] << " k=" << k-data.signalIndex() << '\n';
+      //      dt = data.pos( k ) - signalTime(); should be (almost) the same!
+      dt = data.pos( k ) - data.signalTime();
       break;
     }
   }

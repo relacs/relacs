@@ -128,13 +128,17 @@ void Session::initDevices( void )
 	n++;
       }
     }
+    unlockStimulusData();
     SW1->assign( &stimulusData(), 32, stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
     SW2->assign( &stimulusData(), 64, stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
+    lockStimulusData();
   }
   else {
+    unlockStimulusData();
     SW1->assign( &stimulusData(), stimulusDataTraceFlag(),
 		 stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
     SW2->hide();
+    lockStimulusData();
   }
 
   if ( ! stimulusData().exist( "Drugs" ) )

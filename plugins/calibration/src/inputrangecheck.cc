@@ -80,7 +80,7 @@ int InputRangeCheck::main( void )
   int orggain = trace( intrace ).gainIndex();
 
   // plot trace:
-  tracePlotSignal( duration, 0.0 );
+  tracePlotSignal( 1.3*duration, 0.2*duration );
 
   // init plot:
   P.lock();
@@ -102,6 +102,8 @@ int InputRangeCheck::main( void )
     P.unlock();
 
     setGain( trace( intrace ), r );
+    activateGains();
+    sleep( 0.1 );
 
     RangeLoop amplrange( -ranges[r], ranges[r], amplnum, 1, 1, 1 );
     MapD ampls;
@@ -110,6 +112,8 @@ int InputRangeCheck::main( void )
     for ( amplrange.reset(); ! amplrange && softStop() < 2; ++amplrange ) {
 
       double amplitude = *amplrange;
+      if ( ::fabs( amplitude ) < 1.0e-8 )
+	amplitude = 0.0;
       
       message( "Input range <b>" + Str( r ) + "</b>: Test amplitude <b>" + 
 	       Str( amplitude ) + " " + InUnit + "</b>" );

@@ -33,8 +33,6 @@ using namespace relacs;
 namespace comedi {
 
 
-class ComediAnalogInput;
-
 /*! 
 \class DynClampAnalogInput
 \author Marco Hackenberg
@@ -191,10 +189,10 @@ private:
         DynClamp DAQ devices. */
   static const int DynClampAnalogIOType = 2;
 
-    /*! Pointer to the user space comedi interface. */
-  ComediAnalogInput *CAI;
-    /*! Subdevice flags of the comedi analog input subdevice. */
-  unsigned int CAISubDevFlags;
+    /*! Pointer to the comedi device. */
+  comedi_t *DeviceP;
+    /*! The comedi subdevice number. */
+  unsigned int SubDevice;
 
     /*! Needed by for assigning TraceInfo strings to channels. */
   int SubdeviceID;
@@ -206,16 +204,21 @@ private:
     /*! FIFO file descriptor for data exchange with kernel module. */
   int FifoFd;
 
-    /*! The comedi subdevice number. */
-  unsigned int SubDevice;
     /*! The size of a single sample in bytes. */
   unsigned int BufferElemSize;  
     /*! Number of channels available on the device. */
   int Channels;
-    /*! Resolution in bits of each channel. */
-  int Bits;
     /*! Maximum sampling rate. */
   double MaxRate;
+
+    /*! Holds the list of supported unipolar comedi ranges. */
+  vector< comedi_range > UnipolarRange;
+    /*! Holds the list of supported bipolar comedi ranges. */
+  vector< comedi_range > BipolarRange;
+    /*! Maps unipolar range indices to comei range indices. */
+  vector< unsigned int > UnipolarRangeIndex;
+    /*! Maps bipolar range indices to comei range indices. */
+  vector< unsigned int > BipolarRangeIndex;
     /*! Conversion polynomials for all channels and unipolar gains. */
   comedi_polynomial_t **UnipConverter;
     /*! Conversion polynomials for all channels and bipolar gains. */
@@ -224,6 +227,9 @@ private:
   unsigned int ChanList[MAXCHANLIST];
   bool IsPrepared;
   mutable bool IsRunning;
+
+    /*! Calibration info. */
+  comedi_calibration_t *Calibration;
 
     /*! The input traces that were prepared by prepareRead(). */
   InList *Traces;

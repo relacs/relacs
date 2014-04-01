@@ -12,14 +12,14 @@
 
 // *** KERNEL LOGGING MODE ***
 
-// #define RTMODULE_DEBUG
+#define RTMODULE_DEBUG
 // #define RTMODULE_INFO
 
 
 // *** FEATURES ***
 
   /*! Needed to compute a model and to enable math support. */
-#define ENABLE_COMPUTATION
+// #define ENABLE_COMPUTATION
 
   /*! Generates internal trigger events on which analog output signals can be started. */
 // #define ENABLE_TRIGGER
