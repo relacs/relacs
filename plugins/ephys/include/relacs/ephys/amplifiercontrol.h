@@ -24,6 +24,9 @@
 
 #include <QLabel>
 #include <QPushButton>
+#include <QRadioButton>
+#include <QGroupBox>
+#include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <relacs/misc/amplmode.h>
 #include <relacs/ephys/traces.h>
@@ -37,7 +40,13 @@ namespace ephys {
 \class AmplifierControl
 \brief [Control] Controls an amplifier: buzzer and resistance measurement.
 \author Jan Benda
-\version 1.0 (Apr 16, 2010)
+\version 2.0 (Apr 3, 2014)
+\par Options
+- \c initmode=Bridge: Initial mode of the amplifier (\c string)
+- \c resistancescale=1: Scaling factor for computing R from stdev of voltage trace (\c number)
+- \c maxresistance=100MOhm: Maximum resistance to be expected for scaling voltage trace (\c number)
+- \c buzzpulse=500ms: Duration of buzz pulse (\c number)
+- \c adjust=false: Adjust input gain for resistance measurement (\c boolean)
 */
 
 
@@ -66,6 +75,15 @@ public slots:
     /*! Stop buzzing the electrode. */
   void stopBuzz( void );
 
+    /*! Activate/deactivate bridge mode of the amplifier. */
+  void activateBridgeMode( bool activate=true );
+    /*! Activate/deactivate current-clamp mode of the amplifier. */
+  void activateCurrentClampMode( bool activate=true );
+    /*! Activate/deactivate voltage-clamp mode of the amplifier. */
+  void activateVoltageClampMode( bool activate=true );
+    /*! Turn on manual selection of the amplifier. */
+  void manualSelection( bool activate=true );
+
 
 protected:
 
@@ -80,13 +98,20 @@ private:
   misc::AmplMode *Ampl;
   bool RMeasure;
   int DGain;
+  bool Adjust;
   double MaxResistance;
   double ResistanceScale;
   double BuzzPulse;
-  QHBoxLayout *AmplBox;
+  QVBoxLayout *AmplBox;
+  QHBoxLayout *BuzzBox;
   QPushButton *BuzzerButton;
   QPushButton *ResistanceButton;
   QLabel *ResistanceLabel;
+  QGroupBox *ModeBox;
+  QRadioButton *BridgeButton;
+  QRadioButton *CCButton;
+  QRadioButton *VCButton;
+  QRadioButton *ManualButton;
 
 };
 

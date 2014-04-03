@@ -50,6 +50,8 @@ AmplMode::AmplMode( DigitalIO &dio, const Options &opts )
   ModeMask = 0;
   Mask = 0;
 
+  CurrentMode = 0;
+
   MixerHandle = -1;
   MixerChannel = SOUND_MIXER_VOLUME;
   Volume = 0;
@@ -76,6 +78,8 @@ AmplMode::AmplMode( void )
 
   ModeMask = 0;
   Mask = 0;
+
+  CurrentMode = 0;
 
   MixerHandle = -1;
   MixerChannel = SOUND_MIXER_VOLUME;
@@ -150,6 +154,7 @@ void AmplMode::open( const Options &opts )
     DIO->configureLines( Mask, Mask );
     // manual mode selection, no buzz:
     DIO->writeLines( Mask, 0x00 );
+    CurrentMode = 0x00;
 
     // full duplex mode:
     int fd = ::open( "/dev/dsp", O_RDWR, 0 );
@@ -220,6 +225,7 @@ int AmplMode::setBridgeMode( void )
   if ( ! isOpen() )
     return NotOpen;
 
+  CurrentMode = BridgeMask;
   return DIO->writeLines( ModeMask, BridgeMask );
 }
 
@@ -229,6 +235,7 @@ int AmplMode::setCurrentClampMode( void )
   if ( ! isOpen() )
     return NotOpen;
 
+  CurrentMode = CurrentClampMask;
   return DIO->writeLines( ModeMask, CurrentClampMask );
 }
 
@@ -238,6 +245,7 @@ int AmplMode::setVoltageClampMode( void )
   if ( ! isOpen() )
     return NotOpen;
 
+  CurrentMode = VoltageClampMask;
   return DIO->writeLines( ModeMask, VoltageClampMask );
 }
 
@@ -247,19 +255,13 @@ int AmplMode::setManualSelection( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  int r = DIO->writeLines( ModeMask, 0x00 );
-
-  if ( MixerHandle != -1 && Volume != 0 ) {
-    // reset volume:
-    ::ioctl( MixerHandle, MIXER_WRITE(MixerChannel), &Volume );
-    Volume = 0;
-  }
-    
+  CurrentMode = 0x00;
+  int r = DIO->writeLines( ModeMask, 0x00 );    
   return r;
 }
 
 
-int AmplMode::resistance( void )
+int AmplMode::startResistance( void )
 {
   if ( ! isOpen() )
     return NotOpen;
@@ -273,6 +275,23 @@ int AmplMode::resistance( void )
     ::ioctl( MixerHandle, MIXER_WRITE(MixerChannel), &vol );
   }
   return DIO->writeLines( ModeMask, ResistanceMask );
+}
+
+
+int AmplMode::stopResistance( void )
+{
+  if ( ! isOpen() )
+    return NotOpen;
+
+  int r = DIO->writeLines( ModeMask, CurrentMode );
+  
+  if ( MixerHandle != -1 && Volume != 0 ) {
+    // reset volume:
+    ::ioctl( MixerHandle, MIXER_WRITE(MixerChannel), &Volume );
+    Volume = 0;
+  }
+  
+  return r;
 }
 
 

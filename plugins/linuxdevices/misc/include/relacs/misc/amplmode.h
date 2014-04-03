@@ -32,7 +32,7 @@ namespace misc {
 /*!
 \class AmplMode
 \author Jan Benda
-\version 1.0
+\version 2.0 (Apr 3, 2014)
 \brief [Device] Control the mode of an amplifier via DigitalIO
 
 \par Options
@@ -41,7 +41,6 @@ namespace misc {
 - \c bridgepin: the dio line that switches the amplifier into bridge mode.
 - \c resistancepin: the dio line that activates resistance measurement of the amplifier.
 - \c buzzerpin: the dio line that activates the buzzer.
-- \c buzzerpulse: the duration in ms the buzzer is activated.
 
 \par Sound
 When activating the buzzer the plugin mutes the soundcard via the OSS sound interface.
@@ -72,16 +71,39 @@ public:
   virtual bool isOpen( void ) const;
   virtual void close( void );
 
+    /*! Activate the bridge mode of the amplifier.
+        \return the return value of DigitalIO::writeLines()
+	\sa setCurrentClampMode(), setVoltageClampMode(), setManualSelection(),
+	startResistance(), startBuzz() */
   int setBridgeMode( void );
+    /*! Activate the current-clamp mode of the amplifier.
+        \return the return value of DigitalIO::writeLines()
+	\sa setBridgeMode(), setVoltageClampMode(), setManualSelection(),
+	startResistance(), startBuzz() */
   int setCurrentClampMode( void );
+    /*! Activate the voltage-clamp mode of the amplifier.
+        \return the return value of DigitalIO::writeLines()
+	\sa setBridgeMode(), setCurrentClampMode(), setManualSelection(),
+	startResistance(), startBuzz() */
   int setVoltageClampMode( void );
+    /*! Activate the manual mode of the amplifier.
+        \return the return value of DigitalIO::writeLines()
+	\sa setBridgeMode(), setCurrentClampMode(), setVoltageClampMode(),
+	startResistance(), startBuzz() */
   int setManualSelection( void );
 
-  int resistance( void );
+    /*! Mute the sound card and switch the amplifier into resitance measurement mode.
+        \return the return value of DigitalIO::writeLines()
+        \sa stopResistance() */
+  int startResistance( void );
+    /*! Switch the amplifier back into its previous mode and unmute the sound card.
+        \return the return value of DigitalIO::writeLines()
+        \sa startResistance() */
+  int stopResistance( void );
 
     /*! Mute the sound card and initiate buzzing by setting the pin for the buzzer high.
         \return the return value of DigitalIO::write()
-	\sa stopBuzz() */
+	\sa stopBuzz(), startResistance(), setBridgeMode() */
   int startBuzz( void );
     /*! Stop buzzing by setting the pin for the buzzer low and unmute the sound card.
         \return the return value of DigitalIO::write()
@@ -105,7 +127,7 @@ private:
   int ResistancePin;
   int BuzzerPin;
 
-    /* The corresponding bit masks. */
+  /* The corresponding bit masks. */
   int BridgeMask;
   int CurrentClampMask;
   int VoltageClampMask;
@@ -115,8 +137,9 @@ private:
   int ModeMask;
   int Mask;
 
-  int BuzzPulse;  // milliseconds
+  int CurrentMode;
 
+  /* The sound mixer device. */
   int MixerHandle;
   int MixerChannel;
   int Volume;

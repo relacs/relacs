@@ -27,15 +27,21 @@ namespace ephys {
 
 
 AmplifierControl::AmplifierControl( void )
-  : Control( "AmplifierControl", "ephys", "Jan Benda", "1.0", "Apr 16, 2010" )
+  : Control( "AmplifierControl", "ephys", "Jan Benda", "2.0", "Apr 3, 2014" )
 {
 
-  AmplBox = new QHBoxLayout;
+  AmplBox = new QVBoxLayout;
   setLayout( AmplBox );
 
+  BuzzBox = 0;
   BuzzerButton = 0;
   ResistanceButton = 0;
   ResistanceLabel = 0;
+  ModeBox = 0;
+  BridgeButton = 0;
+  CCButton = 0;
+  VCButton = 0;
+  ManualButton = 0;
 
   Ampl = 0;
   RMeasure = false;
@@ -44,9 +50,11 @@ AmplifierControl::AmplifierControl( void )
   ResistanceScale = 1.0;
   BuzzPulse = 0.5;
 
+  addSelection( "initmode", "Initial mode of the amplifier", "Bridge|Current-clamp|Voltage-clamp|Manual selection" );
   addNumber( "resistancescale", "Scaling factor for computing R from stdev of voltage trace", ResistanceScale, 0.0, 100000.0, 0.01 );
   addNumber( "maxresistance", "Maximum resistance to be expected for scaling voltage trace", MaxResistance, 0.0, 1000000.0, 10.0, "MOhm" );
   addNumber( "buzzpulse", "Duration of buzz pulse", BuzzPulse, 0.0, 100.0, 0.1, "s", "ms" );
+  addBoolean( "adjust", "Adjust input gain for resistance measurement", false );
 
   setGlobalKeyEvents();
 }
@@ -54,9 +62,22 @@ AmplifierControl::AmplifierControl( void )
 
 void AmplifierControl::notify( void )
 {
+  // initial mode:
+  int initmode = index( "initmode" );
+  switch ( initmode ) {
+  case 1 : activateCurrentClampMode();
+    break;
+  case 2 : activateVoltageClampMode();
+    break;
+  case 3 : manualSelection();
+    break;
+  default :
+    activateBridgeMode();
+  }
   ResistanceScale = number( "resistancescale" );
   MaxResistance = number( "maxresistance" );
   BuzzPulse = number( "buzzpulse" );
+  Adjust = number( "adjust" );
 }
 
 
@@ -64,6 +85,7 @@ void AmplifierControl::initDevices( void )
 {
   Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
   if ( Ampl != 0 ) {
+    // add meta data:
     lockMetaData();
     if ( ! metaData().existSection( "Electrode" ) )
       metaData().newSection( "Electrode", "Electrode" );
@@ -73,19 +95,23 @@ void AmplifierControl::initDevices( void )
       mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" );
     mo.setNotify();
     unlockMetaData();
-    if ( ResistanceButton == 0 && BuzzerButton == 0 ) {
-    
+    // add buzzer and resistance widgets:
+    if ( BuzzBox == 0 ) {
       AmplBox->addWidget( new QLabel );
+      BuzzBox = new QHBoxLayout;
+      AmplBox->addLayout( BuzzBox );
+    
+      BuzzBox->addWidget( new QLabel );
 
-      BuzzerButton = new QPushButton( "Buzz" );
-      AmplBox->addWidget( BuzzerButton );
+      BuzzerButton = new QPushButton( "Bu&zz" );
+      BuzzBox->addWidget( BuzzerButton );
       connect( BuzzerButton, SIGNAL( clicked() ),
 	       this, SLOT( startBuzz() ) );
 
-      AmplBox->addWidget( new QLabel );
+      BuzzBox->addWidget( new QLabel );
 
       ResistanceButton = new QPushButton( "R" );
-      AmplBox->addWidget( ResistanceButton );
+      BuzzBox->addWidget( ResistanceButton );
       connect( ResistanceButton, SIGNAL( pressed() ),
 	       this, SLOT( startResistance() ) );
       connect( ResistanceButton, SIGNAL( released() ),
@@ -93,7 +119,7 @@ void AmplifierControl::initDevices( void )
     
       QLabel *label = new QLabel( "=" );
       label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-      AmplBox->addWidget( label );
+      BuzzBox->addWidget( label );
 
       ResistanceLabel = new QLabel( "000" );
       ResistanceLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
@@ -103,6 +129,7 @@ void AmplifierControl::initDevices( void )
       nf.setPointSizeF( 1.6 * nf.pointSizeF() );
       nf.setBold( true );
       ResistanceLabel->setFont( nf );
+      ResistanceLabel->setAutoFillBackground( true );
       QPalette qp( ResistanceLabel->palette() );
       qp.setColor( QPalette::Window, Qt::black );
       qp.setColor( QPalette::WindowText, Qt::green );
@@ -110,13 +137,47 @@ void AmplifierControl::initDevices( void )
       ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
       ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
       ResistanceLabel->setText( "0" );
-      AmplBox->addWidget( ResistanceLabel );
+      BuzzBox->addWidget( ResistanceLabel );
 
-      AmplBox->addWidget( new QLabel( "MOhm" ) );
+      BuzzBox->addWidget( new QLabel( "M<u>O</u>hm" ) );
     
+      BuzzBox->addWidget( new QLabel );
+      AmplBox->addWidget( new QLabel );
+    }
+    // add mode selection widgets:
+    if ( ModeBox == 0 ) {
+      ModeBox = new QGroupBox( "Amplifier mode" );
+      BridgeButton = new QRadioButton( "&Bridge" );
+      BridgeButton->setChecked( true );
+      connect( BridgeButton, SIGNAL( clicked( bool ) ), this, SLOT( activateBridgeMode( bool ) ) );
+      CCButton = new QRadioButton( "&Current-clamp" );
+      connect( CCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateCurrentClampMode( bool ) ) );
+      VCButton = new QRadioButton( "&Voltage-clamp" );
+      connect( VCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateVoltageClampMode( bool ) ) );
+      ManualButton = new QRadioButton( "&Manual selection" );
+      connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
+      QVBoxLayout *vbox = new QVBoxLayout;
+      vbox->addWidget( BridgeButton );
+      vbox->addWidget( CCButton );
+      vbox->addWidget( VCButton );
+      vbox->addWidget( ManualButton );
+      ModeBox->setLayout( vbox );
+      AmplBox->addWidget( ModeBox );
       AmplBox->addWidget( new QLabel );
     }
     widget()->show();
+    // initial mode:
+    int initmode = index( "initmode" );
+    switch ( initmode ) {
+    case 1 : activateCurrentClampMode();
+      break;
+    case 2 : activateVoltageClampMode();
+      break;
+    case 3 : manualSelection();
+      break;
+    default :
+      activateBridgeMode();
+    }
   }
   else {
     widget()->hide();
@@ -141,13 +202,16 @@ public:
 
 void AmplifierControl::startResistance( void )
 {
-  if ( Ampl != 0 && SpikeTrace[0] >= 0 && ! RMeasure ) {
-    lock();
-    DGain = trace( SpikeTrace[0] ).gainIndex();
-    adjustGain( trace( SpikeTrace[0] ), MaxResistance / ResistanceScale );
-    unlock();
-    activateGains();
-    Ampl->resistance();
+  if ( Ampl != 0 && ! RMeasure ) {
+    if ( Adjust && SpikeTrace[0] >= 0 ) {
+      lock();
+      updateData();
+      DGain = trace( SpikeTrace[0] ).gainIndex();
+      adjustGain( trace( SpikeTrace[0] ), MaxResistance / ResistanceScale );
+      unlock();
+      activateGains();
+    }
+    Ampl->startResistance();
     RMeasure = true;
   }
 }
@@ -155,10 +219,14 @@ void AmplifierControl::startResistance( void )
 
 void AmplifierControl::measureResistance( void )
 {
-  if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
+  if ( Ampl != 0 && RMeasure ) {
+    int intrace = SpikeTrace[0];
+    if ( intrace < 0 )
+      intrace = 0;
     lock();
-    double r = trace( SpikeTrace[0] ).stdev( currentTime() - 0.05,
-					     currentTime() );
+    updateData();
+    double r = trace( intrace ).stdev( currentTime() - 0.05,
+				       currentTime() );
     unlock();
     r *= ResistanceScale;
     QCoreApplication::postEvent( this, new AmplifierEvent( Str( r, "%.0f" ) ) );
@@ -171,12 +239,15 @@ void AmplifierControl::measureResistance( void )
 
 void AmplifierControl::stopResistance( void )
 {
-  if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
-    Ampl->setManualSelection();
-    lock();
-    setGain( trace( SpikeTrace[0] ), DGain );
-    unlock();
-    activateGains();
+  if ( Ampl != 0 && RMeasure ) {
+    measureResistance();
+    Ampl->stopResistance();
+    if ( Adjust && SpikeTrace[0] >= 0 ) {
+      lock();
+      setGain( trace( SpikeTrace[0] ), DGain );
+      unlock();
+      activateGains();
+    }
     RMeasure = false;
   }
 }
@@ -195,6 +266,42 @@ void AmplifierControl::stopBuzz( void )
 {
   if ( Ampl != 0 )
     Ampl->stopBuzz( );
+}
+
+
+void AmplifierControl::activateBridgeMode( bool activate )
+{
+  if ( Ampl != 0 ) {
+    Ampl->setBridgeMode();
+    BridgeButton->setChecked( true );
+  }
+}
+
+
+void AmplifierControl::activateCurrentClampMode( bool activate )
+{
+  if ( Ampl != 0 ) {
+    Ampl->setCurrentClampMode();
+    CCButton->setChecked( true );
+  }
+}
+
+
+void AmplifierControl::activateVoltageClampMode( bool activate )
+{
+  if ( Ampl != 0 ) {
+    Ampl->setVoltageClampMode();
+    VCButton->setChecked( true );
+  }
+}
+
+
+void AmplifierControl::manualSelection( bool activate )
+{
+  if ( Ampl != 0 ) {
+    Ampl->setManualSelection();
+    ManualButton->setChecked( true );
+  }
 }
 
 
