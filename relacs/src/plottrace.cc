@@ -417,7 +417,7 @@ void PlotTrace::plot( void )
     return;
 
   // get data:
-  updateData();
+  getData();
 
   if ( PlotChanged ) {
     init();

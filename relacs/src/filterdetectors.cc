@@ -1007,10 +1007,12 @@ string FilterDetectors::filter( double signaltime )
   // filter and detect events:
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
 
-    d->OutEvents.setSignalTime( signaltime );
-    d->OutTraces.setSignalTime( signaltime );
-    if ( RestartEvents != 0 && ! RestartEvents->empty() )
-      d->OutTraces.setRestartTime( RestartEvents->back() );
+    if ( signaltime >= 0.0 ) {
+      d->OutEvents.setSignalTime( signaltime );
+      d->OutTraces.setSignalTime( signaltime );
+      if ( RestartEvents != 0 && ! RestartEvents->empty() )
+	d->OutTraces.setRestartTime( RestartEvents->back() );
+    }
 
     d->FilterDetector->updateDerivedTracesEvents();
 

@@ -1,13 +1,11 @@
 New InData threading:
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
   the resulting index should be the one of the first data of the stimulus.
-- restart in dynclamp (and simulation?) mode is not properly processed??? (check inputrangecheck)
+- restart in dynclamp mode is not properly processed??? (check inputrangecheck)
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
 - What about recording events (SignalTime, locking)?
-- Have another threads that gets data as soon as available and immediately filters them.
-  Then plottrace will not do this from within the GUI thread!
 - Add Model data also to UpdateRawData?
-- Fix Simulation mode!
+- Fix Simulation mode! Only filtered traces are still not working.
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Model: improve locking by adding an extra Mutex for push() and pop()
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors

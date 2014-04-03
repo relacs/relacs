@@ -72,7 +72,7 @@ void Control::addActions( QMenu *menu, bool doxydoc )
 void Control::run( void )
 {
   timeStamp();
-  updateData();
+  getData();
   lock();
   setSettings();
   main();
@@ -116,7 +116,7 @@ bool Control::waitOnReProFinished( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   RW->ReProAfterWait.wait( mutex(), t );
-  updateData();
+  getData();
   return interrupt();
 }
 
@@ -125,7 +125,7 @@ bool Control::waitOnSessionStart( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   RW->SessionStartWait.wait( mutex(), t );
-  updateData();
+  getData();
   return interrupt();
 }
 
@@ -134,7 +134,7 @@ bool Control::waitOnSessionPrestop( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   RW->SessionPrestopWait.wait( mutex(), t );
-  updateData();
+  getData();
   return interrupt();
 }
 
@@ -143,7 +143,7 @@ bool Control::waitOnSessionStop( double time )
 {
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
   RW->SessionStopWait.wait( mutex(), t );
-  updateData();
+  getData();
   return interrupt();
 }
 
@@ -161,7 +161,7 @@ bool Control::sleep( double t )
     else
       SleepWait.wait( mutex(), ms );
   }
-  updateData();
+  getData();
 
   // interrupt Control:
   return interrupt();

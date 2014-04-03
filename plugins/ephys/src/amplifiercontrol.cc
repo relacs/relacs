@@ -205,7 +205,7 @@ void AmplifierControl::startResistance( void )
   if ( Ampl != 0 && ! RMeasure ) {
     if ( Adjust && SpikeTrace[0] >= 0 ) {
       lock();
-      updateData();
+      getData();
       DGain = trace( SpikeTrace[0] ).gainIndex();
       adjustGain( trace( SpikeTrace[0] ), MaxResistance / ResistanceScale );
       unlock();
@@ -224,7 +224,7 @@ void AmplifierControl::measureResistance( void )
     if ( intrace < 0 )
       intrace = 0;
     lock();
-    updateData();
+    getData();
     double r = trace( intrace ).stdev( currentTime() - 0.05,
 				       currentTime() );
     unlock();

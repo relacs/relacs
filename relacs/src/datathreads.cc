@@ -40,25 +40,10 @@ void ReadThread::start( void )
 
 void ReadThread::run( void )
 {
-  while ( true ) {
-    int r = RW->AQ->waitForRead();
-    if ( r < 0 ) {
-      string es = RW->AQ->readError();
-      RW->printlog( "! error in reading acquired data: " + es );
-      QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog input: " + es ) );
-      RW->AQ->restartRead();
-      // check error and on failure switch to idle mode:
-      es = RW->AQ->readError();
-      if ( ! es.empty() ) {
-	RW->printlog( "! error in restarting analog input: " + es );
-	QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in restarting analog input: " + es ) );
-	// XXX switch to idle mode!
-	break;
-      }
-    }
-    else
-      break;
-  };
+  int r = 0;
+  do {
+    r = RW->updateData();
+  } while ( r > 0 );
 }
 
 

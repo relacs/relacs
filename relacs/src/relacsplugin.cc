@@ -299,19 +299,9 @@ void RELACSPlugin::updateDerivedTracesEvents( void )
 }
 
 
-int RELACSPlugin::updateData( double mintracetime, double prevsignal )
+int RELACSPlugin::getData( double mintracetime, double prevsignal )
 {
-  return RW->updateData( IL, EL, SignalTime, mintracetime, prevsignal );
-}
-
-
-void RELACSPlugin::getData( void )
-{
-  RW->AQ->updateRawData( IL, EL, SignalTime );
-
-  RW->DerivedDataMutex.lock();
-  updateDerivedTracesEvents();
-  RW->DerivedDataMutex.unlock();
+  return RW->getData( IL, EL, SignalTime, mintracetime, prevsignal );
 }
 
 

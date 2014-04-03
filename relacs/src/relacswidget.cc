@@ -778,36 +778,58 @@ void RELACSWidget::setupOutTraces( void )
 
 ///// Data thread ///////////////////////////////////////////////////////////
 
-int RELACSWidget::updateData( InList &data, EventList &events, double &signaltime,
-			      double mintracetime, double prevsignal )
+int RELACSWidget::getData( InList &data, EventList &events, double &signaltime,
+			   double mintracetime, double prevsignal )
 {
   // update raw data:
-  int r = AQ->updateRawData( mintracetime, prevsignal,
-			     data, events, signaltime, UpdateRawData, UpdateRawEvents );
+  int r = AQ->getRawData( data, events, signaltime, mintracetime, prevsignal );
 
   // update derived data:
   DerivedDataMutex.lock();
-  Str fdw = FD->filter( signaltime );
-  if ( !fdw.empty() )
-    printlog( "! error: " + fdw.erasedMarkup() );
-  SF->updateDerivedTraces();
   data.updateDerived();
   events.updateDerived();
   DerivedDataMutex.unlock();
 
-  // save data:
-  SF->saveTraces();
+  return r;
+}
 
-  // notify other plugins about available data:
-  UpdateDataWait.wakeAll();
 
-  if ( r < 0 || IL.failed() ) {
-    // error:
-    QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in analog input: " + IL.errorText() ) );
+int RELACSWidget::updateData( void )
+{
+  double signaltime = -1.0;
+  int r = AQ->updateRawData( signaltime, UpdateRawData, UpdateRawEvents );
+  if ( r < 0 ) {
+    string es = IL.errorText();
+    printlog( "! error in reading acquired data: " + es );
+    QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in analog input: " + es ) );
     IL.clearError();
-    // XXX That is not sufficient and should be synchronized with ReadLoop!
+    AQ->restartRead();
+    // check error and on failure switch to idle mode:
+    es = IL.errorText();
+    if ( ! es.empty() ) {
+      printlog( "! error in restarting analog input: " + es );
+      QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in restarting analog input: " + es ) );
+      // XXX switch to idle mode!
+      return -1;
+    }
+    else
+      return 1;
   }
+  else if ( r > 0 ) {
+    // update derived data:
+    DerivedDataMutex.lock();
+    Str fdw = FD->filter( signaltime );
+    if ( !fdw.empty() )
+      printlog( "! error: " + fdw.erasedMarkup() );
+    SF->updateDerivedTraces();
+    DerivedDataMutex.unlock();
 
+    // save data:
+    SF->saveTraces();
+
+    // notify other plugins about available data:
+    UpdateDataWait.wakeAll();
+  }
   return r;
 }
 
@@ -1002,7 +1024,6 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   ReProRunning = true;
   SN->incrReProCount();
 
-  CurrentRePro->updateData();
   // XXX lock SF ?
   SF->holdOn();
   CurrentRePro->setSaving( saving );
@@ -1034,8 +1055,6 @@ void RELACSWidget::stopRePro( void )
   ReProRunning = false;
   window()->setFocus();
 
-  // save current data:
-  CurrentRePro->updateData();
   // XXX last stimulus still not saved?
   if ( SF->signalPending() )
     SF->clearSignal();
@@ -1584,7 +1603,8 @@ void RELACSWidget::startFirstSimulation( void )
   CW->assignTracesEvents( IL, ED );
   PT->assignTracesEvents( IL, ED );
   RP->assignTracesEvents( IL, ED );
-  MD->assignTracesEvents( IL, ED ); // XXX also add to UpdateRawData?
+  MD->assignTracesEvents( IL, ED );
+  MD->addTracesEvents( UpdateRawData, UpdateRawEvents ); // XXX Is this ever used?
 
   // plots:
   PT->updateMenu();

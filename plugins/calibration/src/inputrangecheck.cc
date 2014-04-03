@@ -176,6 +176,7 @@ int InputRangeCheck::main( void )
   }
 
   setGain( trace( intrace ), orggain );
+  activateGains();
   return Completed;
 }
 

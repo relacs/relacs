@@ -122,7 +122,7 @@ void RePro::run( void )
   InterruptLock.lock();
   Interrupt = false;
   InterruptLock.unlock();
-  updateData();
+  getData();
   lock();
   RW->SF->holdOff();
   enable();
@@ -238,7 +238,7 @@ bool RePro::sleep( double t, double tracetime )
   InterruptLock.unlock();
 
   // force data updates:
-  updateData( ir ? 0.0 : tracetime );
+  getData( ir ? 0.0 : tracetime );
 
   // interrupt RePro:
   InterruptLock.lock();
@@ -417,9 +417,9 @@ int RePro::write( OutData &signal, bool setsignaltime )
 
   // force data updates:
   if ( r < 0 || interrupt() )
-    updateData();
+    getData();
   else
-    updateData( signal.length(), st );
+    getData( signal.length(), st );
 
   lock();
 
@@ -440,9 +440,9 @@ int RePro::write( OutList &signal, bool setsignaltime )
 
   // force data updates:
   if ( r < 0 || interrupt() )
-    updateData();
+    getData();
   else
-    updateData( signal.maxLength(), st );
+    getData( signal.maxLength(), st );
 
   lock();
 

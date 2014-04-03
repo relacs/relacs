@@ -661,6 +661,7 @@ int Acquire::read( InList &data )
   }
   InTraces.clear();
   DataMutex.lock();
+  PreviousTime = 0.0;
   SignalTime = -1.0;
   DataMutex.unlock();
 
@@ -774,6 +775,7 @@ int Acquire::read( InList &data )
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
+  QWaitCondition *datawait = &DataWait;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
       bool started = false;
@@ -784,14 +786,16 @@ int Acquire::read( InList &data )
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, &DataMutex, &DataWait ) != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, &DataMutex, datawait ) != 0 )
 	  success = false;
-	else
+	else {
 	  aistarted.push_back( i );
+	  datawait = 0; // we will wait on the first device only
+	}
       }
     }
   }
-
+  
   // error?
   if ( ! success ) {
     for ( unsigned int i=0; i<AI.size(); i++ )
@@ -878,6 +882,7 @@ int Acquire::restartRead( void )
   }
   if ( m >= InTraces.size() )
     cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
+  PreviousTime = InTraces.currentTime();
   InTraces.setRestart();
   DataMutex.lock();
   if ( RestartEvents != 0 )
@@ -905,6 +910,7 @@ int Acquire::restartRead( void )
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
+  QWaitCondition *datawait = &DataWait;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
       bool started = false;
@@ -915,14 +921,16 @@ int Acquire::restartRead( void )
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, &DataMutex, &DataWait ) != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, &DataMutex, datawait ) != 0 )
 	  success = false;
-	else
+	else {
 	  aistarted.push_back( i );
+	  datawait = 0; // we will wait on the first device only
+	}
       }
     }
   }
-    
+  
   if ( ! success )
     return -1;
 
@@ -982,6 +990,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
   if ( m >= InTraces.size() )
     cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
+  PreviousTime = InTraces.currentTime();
   InTraces.setRestart();
   DataMutex.lock();
   if ( RestartEvents != 0 )
@@ -1066,6 +1075,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
+  QWaitCondition *datawait = &DataWait;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
       bool started = false;
@@ -1076,13 +1086,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	int r = AI[i].AI->startRead( &AISemaphore, &DataMutex, &DataWait, &AOSemaphore );
+	int r = AI[i].AI->startRead( &AISemaphore, &DataMutex, datawait, &AOSemaphore );
 	if ( r < 0 )
 	  success = false;
 	else {
 	  if ( r > 0 )
 	    finished = false;
 	  aistarted.push_back( i );
+	  datawait = 0; // we will wait on the first device only
 	}
       }
     }
@@ -1171,15 +1182,8 @@ int Acquire::waitForRead( void )
   // wait for the threads to finish:
   AISemaphore.acquire( nais );
 
-  bool success = true;
-  // check:
-  for ( unsigned int i = 0; i<AI.size(); i++ ) {
-    if ( ! AI[i].Traces.empty() && AI[i].Traces.failed() )
-      success = false;
-  }
-
   AISemaphore.acquire( AISemaphore.available() );
-  if ( ! success ) {
+  if ( InTraces.failed() ) {
     // error:
     stopRead();
     return -1;
@@ -1189,21 +1193,18 @@ int Acquire::waitForRead( void )
 }
 
 
-int Acquire::updateRawData( double mintracetime, double prevsignal,
-			    InList &data, EventList &events, double &signaltime,
-			    deque<InList*> &datalist, deque<EventList*> &eventslist )
+int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
+			 double mintracetime, double prevsignal )
 {
   DataMutex.lock();
   bool interrupted = false;
   if ( mintracetime > 0.0 ) {
     // do wee need to wait for a new signal?
     if ( prevsignal >= -1.0 ) {
-      getSignal();
       while ( InTraces.success() &&
 	      SignalTime <= prevsignal &&
 	      isReadRunning() ) { 
 	DataWait.wait( &DataMutex );
-	getSignal();
 	if ( ! isWriteRunning() )
 	  break;
       }
@@ -1222,23 +1223,12 @@ int Acquire::updateRawData( double mintracetime, double prevsignal,
     
     interrupted = ( InTraces.currentTime() < mintracetime || mintracetime == 0.0 );
   }
-  else
-    getSignal();
 
   // set signal time:
   signaltime = SignalTime;
-  InTraces.setSignalTime( SignalTime );
-  if ( SignalEvents != 0 )
-    SignalEvents->setSignalTime( SignalTime );
-  if ( RestartEvents != 0 )
-    RestartEvents->setSignalTime( SignalTime );
   // update raw data:
   data.updateRaw();
-  for ( deque<InList*>::iterator dp = datalist.begin(); dp != datalist.end(); ++dp )
-    (*dp)->updateRaw();
   events.updateRaw();
-  for ( deque<EventList*>::iterator ep = eventslist.begin(); ep != eventslist.end(); ++ep )
-    (*ep)->updateRaw();
   // check data:
   bool error = InTraces.failed();
   DataMutex.unlock();
@@ -1246,19 +1236,34 @@ int Acquire::updateRawData( double mintracetime, double prevsignal,
 }
 
 
-void Acquire::updateRawData( InList &data, EventList &events, double &signaltime )
+int Acquire::updateRawData( double &signaltime,
+			    deque<InList*> &datalist, deque<EventList*> &eventslist )
 {
   DataMutex.lock();
+  DataWait.wait( &DataMutex );
+  bool finished = ( InTraces.currentTime() <= PreviousTime );
+  signaltime = getSignal();
   // set signal time:
-  InTraces.setSignalTime( SignalTime );
-  if ( SignalEvents != 0 )
-    SignalEvents->setSignalTime( SignalTime );
-  if ( RestartEvents != 0 )
-    RestartEvents->setSignalTime( SignalTime );
-  data.updateRaw();
-  events.updateRaw();
-  signaltime = SignalTime;
+  if ( signaltime >= 0.0 ) {
+    SignalTime = signaltime;
+    InTraces.setSignalTime( SignalTime );
+    if ( SignalEvents != 0 )
+      SignalEvents->setSignalTime( SignalTime );
+    if ( RestartEvents != 0 )
+      RestartEvents->setSignalTime( SignalTime );
+  }
+  // update raw data:
+  for ( deque<InList*>::iterator dp = datalist.begin(); dp != datalist.end(); ++dp )
+    (*dp)->updateRaw();
+  for ( deque<EventList*>::iterator ep = eventslist.begin(); ep != eventslist.end(); ++ep )
+    (*ep)->updateRaw();
+  PreviousTime = InTraces.currentTime();
+  // check data:
+  bool failed = InTraces.failed();
   DataMutex.unlock();
+  if ( failed )
+    stopRead();
+  return failed ? -1 : ( finished ? 0 : 1 );
 }
 
 
@@ -2765,41 +2770,40 @@ void Acquire::intensities( const string &trace, vector<double> &ints, double fre
 }
 
 
-bool Acquire::getSignal( void )
+double Acquire::getSignal( void )
 {
-  double sigtime = -1.0;
+  double signaltime = -1.0;
 
   if ( SyncMode == CounterSync || SyncMode == AISync ) {
     if ( LastDevice < 0 )
-      return false;
+      return -1.0;
     // get signal time:
     long inx = AO[LastDevice].AO->index();
     if ( inx < 0 )
-      return false;
+      return -1.0;
     int d = AO[LastDevice].AISyncDevice;
     if ( d < 0 || AI[d].Traces.empty() )
-      return false;
-    double prevsigtime = AI[d].Traces[0].signalTime();
+      return -1.0;
+    double prevsignaltime = AI[d].Traces[0].signalTime();
     AI[d].Traces[0].setSignalIndex( AI[d].Traces[0].restartIndex() + inx );
-    sigtime = AI[d].Traces[0].signalTime();
-    if ( prevsigtime >= 0.0 &&
-	 sigtime <= prevsigtime ) // got no new signal start yet
-      return false;
+    signaltime = AI[d].Traces[0].signalTime();
+    if ( prevsignaltime >= 0.0 &&
+	 signaltime <= prevsignaltime ) // got no new signal start yet
+      return -1.0;
   }
   else {
     if ( LastWrite < 0.0 )
-      return false;
-    sigtime = LastWrite + LastDelay;
+      return -1.0;
+    signaltime = LastWrite + LastDelay;
   }
 
-  SignalTime = sigtime;
   if ( SignalEvents != 0 )
-    SignalEvents->push( SignalTime, 0.0, LastDuration );
+    SignalEvents->push( signaltime, 0.0, LastDuration );
 
   LastDevice = -1;
   LastWrite = -1.0;
 
-  return true;
+  return signaltime;
 }
 
 

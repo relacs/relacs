@@ -400,7 +400,7 @@ public:
         and of \a data and \a events
         to the current state of the data buffers.
         Also set \a signaltime to the time of the most recent output signal.
-	If \a mintracetime is greater than zero updateRawData() waits until the input
+	If \a mintracetime is greater than zero getRawData() waits until the input
         traces of the currently running acquisition contain a minimum
         number of data elements.  Returns immediately in case of
         errors or the acquisition was stopped.
@@ -411,13 +411,16 @@ public:
 	and afterwards until data until the signal time plus \a mintracetime are available.
         \return \c 1 if the input traces contain the required data,
 	\c 0 if interrupted, or \c -1 on error. */
-  int updateRawData( double mintracetime, double prevsignal,
-		     InList &data, EventList &events, double &signaltime,
-		     deque<InList*> &datalist, deque<EventList*> &eventslist );
-    /*! Updates the raw traces of \a data and \a events
+  int getRawData( InList &data, EventList &events, double &signaltime,
+		  double mintracetime, double prevsignal );
+    /*! Wait for new data and update the raw traces of \a datalist and \a eventslist
         to the current state of the data buffers.
-        Also set \a signaltime to the time of the most recent output signal. */
-  void updateRawData( InList &data, EventList &events, double &signaltime );
+        Also set \a signaltime to the time of the most recent output signal
+	or to -1, if there wasn't any new output signal.
+        \return \c 1 if the input traces got new data,
+	\c 0 if no more data are available, or \c -1 on error. */
+  int updateRawData( double &signaltime,
+		     deque<InList*> &datalist, deque<EventList*> &eventslist );
 
     /*! \return the flag that is used to mark traces whose gain was changed. 
         \sa setAdjustFlag(), setGain(), adjustGain(), gainChanged(), activateGains() */
@@ -654,9 +657,9 @@ protected:
   bool isReadRunning( void ) const;
     /*! \return \c true if all the threads writing data are still running. */
   bool isWriteRunning( void ) const;
-    /*! Check for a new signal time and update it.
-        \return \c true if there was a new signal. */
-  virtual bool getSignal( void );
+    /*! Check for a new signal time and return it.
+        \return the new signal time, -1.0 if there is no new signal. */
+  virtual double getSignal( void );
 
     /*! \return a string with the current time. */
   string currentTime( void );
@@ -687,6 +690,8 @@ protected:
   QWaitCondition DataWait;
     /*! The input data from the last read(). */
   InList InTraces;
+    /*! The size of InTraces at hte last updateRawData(). */
+  double PreviousTime;
 
     /*! The flag that is used to mark adjusted traces in InData. */
   int AdjustFlag;

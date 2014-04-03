@@ -75,9 +75,9 @@ public:
   virtual int waitForWrite( void );
     /*! Stop current stimulus. */
   virtual int stopWrite( void );
-    /*! Check for a new signal time and update it.
-        \return \c true if there was a new signal. */
-  virtual bool getSignal( void );
+    /*! Check for a new signal time and return it.
+        \return the new signal time, -1.0 if there is no new signal. */
+  virtual double getSignal( void );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards. */

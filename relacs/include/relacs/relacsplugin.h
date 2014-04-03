@@ -467,8 +467,8 @@ int MyPlugin::main( void )
   void assignTracesEvents( void );
     /*! Updates the indices of derived traces and events (traces with source != 0 ). */
   void updateDerivedTracesEvents( void );
-    /*! Process new trace and event data and make them available to this.
-	If \a mintracetime is greater than zero updateRawData() waits until the input
+    /*! Make current trace and event data available to this.
+	If \a mintracetime is greater than zero getData() waits until the input
         traces of the currently running acquisition contain a minimum
         number of data elements.  Returns immediately in case of
         errors or the acquisition was stopped.
@@ -479,10 +479,7 @@ int MyPlugin::main( void )
 	and afterwards until data until the signal time plus \a mintracetime are available.
         \return \c 1 if the input traces contain the required data,
 	\c 0 if interrupted, or \c -1 on error. */
-  int updateData( double mintracetime = 0.0, double prevsignal=-1000.0 );
-    /*! Make current trace and event data available to this.
-        Do not retrieve and process brand new data. */
-  void getData( void );
+  int getData( double mintracetime=0.0, double prevsignal=-1000.0 );
 
 
  protected:

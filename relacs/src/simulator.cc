@@ -83,6 +83,11 @@ int Simulator::read( InList &data )
     AI[i].Traces.clear();
     AI[i].Gains.clear();
   }
+  InTraces.clear();
+  DataMutex.lock();
+  PreviousTime = 0.0;
+  SignalTime = -1.0;
+  DataMutex.unlock();
 
   // sort data to devices:
   for ( int k=0; k<data.size(); k++ ) {
@@ -104,6 +109,7 @@ int Simulator::read( InList &data )
       // add data to device:
       AI[data[k].device()].Traces.add( &data[k] );
       AI[data[k].device()].Gains.push_back( -1 );
+      InTraces.add( &data[k] );
     }
   }
 
@@ -138,10 +144,9 @@ int Simulator::read( InList &data )
   if ( ! success )
     return -1;
 
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    AI[i].Traces.setReadTime( BufferTime );
-    AI[i].Traces.setUpdateTime( UpdateTime );
-  }
+  // request buffer size:
+  InTraces.setReadTime( BufferTime );
+  InTraces.setUpdateTime( UpdateTime );
 
   // test reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -164,6 +169,10 @@ int Simulator::read( InList &data )
   // error?
   if ( ! success )
     return -1;
+
+  // clear analog input semaphore:
+  if ( AISemaphore.available() > 0 )
+    AISemaphore.acquire( AISemaphore.available() );
 
   // mark restart:
   InTraces.setRestart();
@@ -227,6 +236,8 @@ int Simulator::restartRead( vector< AOData* > &aos, bool directao,
 			    bool updategains )
 {
   bool success = true;
+
+  PreviousTime = InTraces.currentTime();
 
   // set restart index:
   InTraces.setRestart();
@@ -386,19 +397,26 @@ int Simulator::write( OutData &signal, bool setsignaltime )
     vector< AOData* > aos( 1, &AO[di] );
     restartRead( aos, false, true );
   }
-  else
+  else {
+    // clear adjust-flags:
+    InTraces.delMode( AdjustFlag );
     AO[di].AO->startWrite();
+  }
 
   // error?
   if ( signal.failed() )
     return -1;
 
+  DataMutex.lock();
   double st = Sim->add( signal );
+  DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal.priority() ) {
       Sim->stopSignals();
+      DataMutex.lock();
       st = Sim->add( signal );
+      DataMutex.unlock();
     }
     else
       signal.addError( OutData::Busy );
@@ -593,8 +611,7 @@ int Simulator::write( OutList &signal, bool setsignaltime )
   }
   else {
     // clear adjust-flags:
-    for ( unsigned int i=0; i<AI.size(); i++ )
-      AI[i].Traces.delMode( AdjustFlag );
+    InTraces.delMode( AdjustFlag );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
       if ( AO[i].Signals.size() > 0 ) {
 	if ( AO[i].AO->startWrite() != 0 )
@@ -612,12 +629,16 @@ int Simulator::write( OutList &signal, bool setsignaltime )
     return -1;
   }
 
+  DataMutex.lock();
   double st = Sim->add( signal );
+  DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal[0].priority() ) {
       Sim->stopSignals();
+      DataMutex.lock();
       st = Sim->add( signal );
+      DataMutex.unlock();
     }
     else
       signal.addError( OutData::Busy );
@@ -752,8 +773,11 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
     vector< AOData* > aos( 1, &AO[di] );
     restartRead( aos, true, true );
   }
-  else
+  else {
+    // clear adjust-flags:
+    InTraces.delMode( AdjustFlag );
     AO[di].AO->directWrite( AO[di].Signals );
+  }
 
   // error?
   if ( signal.failed() ) {
@@ -761,12 +785,16 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
     return -1;
   }
 
+  DataMutex.lock();
   double st = Sim->add( signal );
+  DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal.priority() ) {
       Sim->stopSignals();
+      DataMutex.lock();
       st = Sim->add( signal );
+      DataMutex.unlock();
     }
     else
       signal.addError( OutData::Busy );
@@ -956,6 +984,8 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
 	success = false;
     }
     else {
+      // clear adjust-flags:
+      InTraces.delMode( AdjustFlag );
       for ( unsigned int i=0; i<AO.size(); i++ ) {
 	if ( AO[i].Signals.size() > 0 ) {
 	  if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )
@@ -974,12 +1004,16 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
     return -1;
   }
 
+  DataMutex.lock();
   double st = Sim->add( signal[0] );
+  DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal[0].priority() ) {
       Sim->stopSignals();
+      DataMutex.lock();
       st = Sim->add( signal[0] );
+      DataMutex.unlock();
     }
     else
       signal.addError( OutData::Busy );
@@ -1028,7 +1062,9 @@ int Simulator::writeZero( int channel, int device )
 
   // write to daq board:
   AO[device].AO->directWrite( sigs );
+  DataMutex.lock();
   Sim->add( sigs[0] );
+  DataMutex.unlock();
 
   // error?
   if ( ! signal.success() ) {
@@ -1041,22 +1077,18 @@ int Simulator::writeZero( int channel, int device )
 }
 
 
-bool Simulator::getSignal( void )
+double Simulator::getSignal( void )
 {
   if ( LastWrite < 0.0 )
-    return false;
+    return -1.0;
 
   double signaltime = LastWrite + LastDelay;
 
-  if ( signaltime <= SignalTime ) 
-    return false;
-
-  SignalTime = signaltime;
   if ( SignalEvents != 0 )
-    SignalEvents->push( SignalTime, 0.0, LastDuration );
+    SignalEvents->push( signaltime, 0.0, LastDuration );
 
   LastWrite = -1.0;
-  return true;
+  return signaltime;
 }
 
 

@@ -139,8 +139,10 @@ public:
 	and afterwards until data until the signal time plus \a mintracetime are available.
         \return \c 1 if the input traces contain the required data,
 	\c 0 if interrupted, or \c -1 on error. */
-  int updateData( InList &data, EventList &events, double &signaltime,
-		  double mintracetime=0.0, double prevsignal=-1000.0 );
+  int getData( InList &data, EventList &events, double &signaltime,
+	       double mintracetime=0.0, double prevsignal=-1000.0 );
+    /*! Take and process new data from the acquisition devices. */
+  int updateData( void );
 
     /*! Wakes up all waitconditions. */
   void wakeAll( void );
