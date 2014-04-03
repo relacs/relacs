@@ -26,6 +26,25 @@ New InData threading:
   But we do not want to block on the input too long!
   So maybe keep readTime. Make it an option for each device!
 
+Dynamic clamp:
+- DynClampDigitalIO: syncsec parameter should also be set by settings!
+- DynClampDigitalIO: syncsec pulse duration should be made adjustable by AmplifierControl!
+  Amplifier Control: if using syncsec switch to CC, if not tell the driver to use factor 1
+- Is it smart to use vmalloc in dynclampmodule? No! Better would be
+  kmalloc or even avoid it completely.
+- Is it really necessary that the dyncclamp parameter are all set to zero by relacs initially?
+  It shoud be sufficient to set the AOs to zero and the parameters to their initial vallues.
+  For the latter we might need some support (saving the initial values to some array prior to starting, etc.)
+- Add a varable lastInterval that is set to the current period length in addition to loopInterval
+- CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
+- include of asm-offsets.h in src/Makefile.am could be made part of a
+   linux kernel source detection macro.
+- write back real time loop frequency to InList and OutList samplerate.
+- rewrite analog input part of the dynamic clamp loop in dynclampmodul
+  similar to the analog output part
+- shouldn't it be better if the model would get the parameter first,
+  then computes, and then analog output takes place?
+
 SaveFiles:
 - check locking of dataindex in SaveFiles and DataBrowse.
 - where does stimulus intensity go, if there is no amplifier?
@@ -166,22 +185,6 @@ Analog Input/Output:
   ComediAnalogOutput should use instruction lists for this.
 - Add error messages string to all devices that can be set especially from the open() call.
 - Comedi autotools check: old comedi versions do not have the setrouting function
-
-Dynamic clamp:
-- Is it smart to use vmalloc in dynclampmodule? No! Better would be
-  kmalloc or even avoid it completely.
-- Is it really necessary that the dyncclamp parameter are all set to zero by relacs initially?
-  It shoud be sufficient to set the AOs to zero and the parameters to their initial vallues.
-  For the latter we might need some support (saving the initial values to some array prior to starting, etc.)
-- Add a varable lastInterval that is set to the current period length in addition to loopInterval
-- CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
-- include of asm-offsets.h in src/Makefile.am could be made part of a
-   linux kernel source detection macro.
-- write back real time loop frequency to InList and OutList samplerate.
-- rewrite analog input part of the dynamic clamp loop in dynclampmodul
-  similar to the analog output part
-- shouldn't it be better if the model would get the parameter first,
-  then computes, and then analog output takes place?
 
 Thread safety:
 - make sure that any QWidget does not raise, lower, close, update, repaint, erase, 

@@ -1138,7 +1138,7 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_SYNCSEC
     if ( syncSECDevice != 0 )
-      currentfac = 0.25 * difftime / syncSECPulse;
+      currentfac = difftime / syncSECPulse;
     else
       currentfac = 1.0;
 #endif
