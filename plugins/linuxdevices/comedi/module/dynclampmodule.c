@@ -526,7 +526,6 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	    subdev[iS].chanlist[isC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
 	    subdev[iS].chanlist[isC].insn.chanspec = chanlistIOC->chanlist[iC];
 	    memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
-	SDEBUG_MSG( "CONVERTER 1: subdev=%d, oder=%d, origin=%d, coef0=%d, coef1=%d, coef2=%d\n", iS, subdev[iS].chanlist[iC].converter.order, (int)(1000.0*subdev[iS].chanlist[iC].converter.expansion_origin), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[0]), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[1]), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[2]) );
 	    subdev[iS].chanlist[isC].scale = chanlistIOC->scalelist[iC];
 	  }
 	  break;
@@ -605,7 +604,6 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	subdev[iS].chanlist[iC].insn.subdev = subdev[iS].subdev;
 	subdev[iS].chanlist[iC].insn.chanspec = chanlistIOC->chanlist[iC];
 	memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
-	SDEBUG_MSG( "CONVERTER 1: subdev=%d, oder=%d, origin=%d, coef0=%d, coef1=%d, coef2=%d\n", iS, subdev[iS].chanlist[iC].converter.order, (int)(1000.0*subdev[iS].chanlist[iC].converter.expansion_origin), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[0]), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[1]), (int)(1000000.0*subdev[iS].chanlist[iC].converter.coefficients[2]) );
 	subdev[iS].chanlist[iC].scale = chanlistIOC->scalelist[iC];
 #ifdef ENABLE_COMPUTATION
       }
@@ -1106,8 +1104,6 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_SYNCSEC
   difftime = dynClampTask.periodLengthNs;
-  if ( syncSECDevice == 0 )
-    ERROR_MSG( "dynclampmodule: no sync device set!\n" );
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -1365,9 +1361,6 @@ void rtDynClamp( long dummy )
 	    }
 	    // convert to voltage:
 	    sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
-	    if ( dynClampTask.loopCnt % 10000 == 0 ) {
-	SDEBUG_MSG( "CONVERTIT: oder=%d, origin=%d, coef0=%d, coef1=%d, coef2=%d\n", pChan->converter.order, (int)(1000.0*pChan->converter.expansion_origin), (int)(1000000.0*pChan->converter.coefficients[0]), (int)(1000000.0*pChan->converter.coefficients[1]), (int)(1000000.0*pChan->converter.coefficients[2]) );
-	    }
 
 #ifdef ENABLE_COMPUTATION
 	    if ( pChan->modelIndex >= 0 )

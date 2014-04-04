@@ -166,6 +166,50 @@ public:
   Options &insertSection( const string &name, const string &atname="",
 			int flags=0 );
 
+    /*! Add \a opt as a new subsection of level \a level. Only
+        name-value pairs and sections as specified by \a selectmask
+        are taken from \a opt. If \a name is not an empty string, the
+        name of the new section is set to \a name.  \a flag is added
+        to the new section's \a flag, respectively.  \a level = 0 is
+        the upper level, i.e. a new section is added.  Higher \a
+        levels add sections lower in the hierachy, i.e. \a level = 1
+        adds a subsection, \a \a level = 2 a subsubsection, etc.
+        Subsequent calls to addText(), addNumber(), etc. add new
+        Parameter to the added section.  \sa newSubSection(),
+        newSubSubSection() */
+  Options &newSection( int level, const Options &opt, int selectmask=0,
+		       const string &name="", int flag=0 );
+    /*! Add \a opt as a new section to the end of this section
+        list. Only name-value pairs and sections as specified by \a
+        selectmask are taken from \a opt.  If \a name is not an empty
+        string, the name of the new section is set to \a name.
+	\a flag is added to the new section's \a flag.  Subsequent
+        calls to addText(), addNumber(), etc. add new Parameter to the
+        added section.  \sa newSubSection(), newSubSubSection() */
+  Options &newSection( const Options &opt, int selectmask=0,
+		       const string &name="", int flag=0 );
+    /*! Add \a opt as a new subsection to the last section. Only
+        name-value pairs and sections as specified by \a selectmask
+        are taken from \a opt.  If \a name is not an empty string, the
+        name of the new section is set to \a name. 
+	\a flag is added to the new section's flag. Subsequent calls to
+        addText(), addNumber(), etc. add new Parameter to the added
+        section.  \note You can only add a subsection after having
+        added a section!  \sa newSection(), newSubSubSection() */
+  Options &newSubSection( const Options &opt, int selectmask=0,
+			  const string &name="", int flag=0 );
+    /*! Add \a opt as a new subsubsection to the last subsection of
+        the last section. Only name-value pairs and sections as
+        specified by \a selectmask are taken from \a opt.  If \a name
+        is not an empty string, the name of the new section is set to
+        \a name. \a flag are added to the new section's flag.
+        Subsequent calls to addText(), addNumber(), etc. add new
+        Parameter to the added section.  \note You can only add a
+        subsubsection after having added a subsection!  \sa
+        newSection(), newSubSection() */
+  Options &newSubSubSection( const Options &opt, int selectmask=0,
+			     const string &name="", int flag=0 );
+
     /*! Adds all Parameters and sections from \a opts
         to the key as specified by \a selectflag.
         \sa Options::append(const Options&, int) */

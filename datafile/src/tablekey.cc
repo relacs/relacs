@@ -227,6 +227,42 @@ Options &TableKey::insertSection( const string &name, const string &atname,
 }
 
 
+Options &TableKey::newSection( int level, const Options &opt, int selectmask,
+			       const string &name, int flag )
+{
+  Options &o = Opt.newSection( level, opt, selectmask, name, "", flag );
+  init();
+  return o;
+}
+
+
+Options &TableKey::newSection( const Options &opt, int selectmask,
+			       const string &name, int flag )
+{
+  Options &o = Opt.newSection( opt, selectmask, name, "", flag );
+  init();
+  return o;
+}
+
+
+Options &TableKey::newSubSection( const Options &opt, int selectmask,
+				  const string &name, int flag )
+{
+  Options &o = Opt.newSubSection( opt, selectmask, name, "", flag );
+  init();
+  return o;
+}
+
+
+Options &TableKey::newSubSubSection( const Options &opt, int selectmask,
+				     const string &name, int flag )
+{
+  Options &o = Opt.newSubSubSection( opt, selectmask, name, "", flag );
+  init();
+  return o;
+}
+
+
 void TableKey::add( const Options &opts, int selectflag )
 {
   Opt.append( opts, selectflag );

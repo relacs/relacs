@@ -45,6 +45,7 @@ DynClampDigitalIO::DynClampDigitalIO( void )
   SubdeviceID = -1;
   MaxLines = 0;
   ModuleFd = -1;
+  SyncLine = 0;
 }
 
 
@@ -56,6 +57,7 @@ DynClampDigitalIO::DynClampDigitalIO( const string &device, const Options &opts 
   SubdeviceID = -1;
   MaxLines = 0;
   ModuleFd = -1;
+  SyncLine = 0;
   open( device, opts );
 }
 
@@ -161,14 +163,16 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   {
     int line = opts.integer( "syncpulseline", 0, -1 );
     if ( line >= 0 ) {
-      double duration = opts.number( "syncpulsewidth", 0.0, "us" );
+      double duration = opts.number( "syncpulsewidth", 0.0, "s" );
       int id = allocateLine( line );
       if ( id == WriteError )
 	cerr << "! error: DynClampDigitalIO::open() -> failed to allocate line " << line << " for sync pulse\n";
       else if ( configureLine( line, true ) < 0 )
 	cerr << "! error: DynClampDigitalIO::open() -> failed to configure line " << line << " for sync pulse for writing\n";
-      else
+      else {
 	setSyncPulse( line, duration );
+	SyncLine = line;
+      }
     }
   }
   
@@ -476,9 +480,9 @@ int DynClampDigitalIO::clearTTLPulse( int line, bool high )
 
 int DynClampDigitalIO::setSyncPulse( int line, double duration )
 {
-  if ( !isOpen() ) 
+  if ( !isOpen() )
     return NotOpen;
-  long durationns = (long)::round( 1000.0*duration );
+  long durationns = (long)::round( 1.0e9*duration );
   if ( durationns <= 0 ) {
     cerr << "! error: DynClampDigitalIO::setSyncPulse() -> duration " << durationns << " ns not positive\n";
     return WriteError;
@@ -512,9 +516,15 @@ int DynClampDigitalIO::setSyncPulse( int line, double duration )
 }
 
 
+int DynClampDigitalIO::setSyncPulse( double duration )
+{
+  return setSyncPulse( SyncLine, duration );
+}
+
+
 int DynClampDigitalIO::clearSyncPulse( void )
 {
-  if ( !isOpen() ) 
+  if ( !isOpen() )
     return NotOpen;
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;

@@ -207,6 +207,22 @@ public:
         \sa write() */
   virtual int readLines( int lines, int &val ) const = 0;
 
+    /*! Enables generation of TTL Pulses on a previously defined DIO
+        line and the scaling of the current for analog output
+        according to the measured period divided by the curent
+        injection time of \a duration microseconds. This is used for
+        synchronizing a discontinous current-clamp amplifier with an
+        dynamic-clamp loop. 
+	\param[in] duration the duration of the current injection of 
+	the amplifier in seconds.
+	\return 0 on success, a Device error code on failure.
+	\sa clearSyncPulse() */
+  virtual int setSyncPulse( double duration );
+    /*! Disable TTL Pulse generation and current scaling.
+	\return 0 on success, a Device error code on failure.
+	\sa setSyncPulse() */
+  virtual int clearSyncPulse( void );
+
 
 protected:
 

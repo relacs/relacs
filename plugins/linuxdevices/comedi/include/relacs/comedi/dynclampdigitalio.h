@@ -164,8 +164,17 @@ public:
         divided by the curent injection time of \a duration
         microseconds. \sa clearSyncPulse() */
   int setSyncPulse( int line, double duration );
+    /*! (Re-)enables generation of TTL Pulses on the DIO line that was set by
+        setSyncPulse( int, double ) and the scaling of the current for
+        analog output according to the measured period
+        divided by the curent injection time of \a duration seconds.
+	\param[in] duration the duration of the current injection 
+	of the amplifier in seconds.
+	\return 0 on success, a Device error code on failure.
+	\sa clearSyncPulse() */
+  virtual int setSyncPulse( double duration );
     /*! Disable TTL Pulse generation and current scaling. \sa setSyncPulse() */
-  int clearSyncPulse( void );
+  virtual int clearSyncPulse( void );
 
 
 private:
@@ -190,6 +199,9 @@ private:
   enum ttlPulses TTLPulseHigh[MaxDIOLines];
     /*! Memorizes activated TTL pulses. */
   enum ttlPulses TTLPulseLow[MaxDIOLines];
+
+    /*! Digitial IO line for syncing amplifier. */
+  int SyncLine;
 
 };
 

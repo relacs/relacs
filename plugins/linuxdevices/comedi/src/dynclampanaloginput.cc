@@ -21,8 +21,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <cstdio>
-#include <cstring>
 #include <cmath>
 #include <ctime>
 #include <sys/types.h>
@@ -272,12 +272,12 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   MaxRate = 50000.0;
 
   // initialize connection to RTAI-FIFO:
-  char fifoName[] = "/dev/rtfxxx";
-  sprintf( fifoName, "/dev/rtf%u", deviceIOC.fifoIndex );
-  FifoFd = ::open( fifoName, O_RDONLY );
+  ostringstream fifoname;
+  fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
+  FifoFd = ::open( fifoname.str().c_str(), O_RDONLY );
   if ( FifoFd < 0 ) {
     cerr << " DynClampAnalogInput::open() -> oping RTAI-FIFO " 
-         << fifoName << " failed!\n";
+         << fifoname.str() << " failed!\n";
     return -1;
   }
   ReadBufferSize = deviceIOC.fifoSize;

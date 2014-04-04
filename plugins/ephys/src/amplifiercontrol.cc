@@ -42,9 +42,14 @@ AmplifierControl::AmplifierControl( void )
   CCButton = 0;
   VCButton = 0;
   ManualButton = 0;
+  SyncCheckBox = 0;
+  SyncSpinBox = 0;
 
   Ampl = 0;
+  DIO = 0;
   RMeasure = false;
+  SyncPulseEnabled = false;
+  SyncPulseDuration = 0.00001;
 
   MaxResistance = 100.0;
   ResistanceScale = 1.0;
@@ -88,11 +93,11 @@ void AmplifierControl::initDevices( void )
     // add meta data:
     lockMetaData();
     if ( ! metaData().existSection( "Electrode" ) )
-      metaData().newSection( "Electrode", "Electrode" );
+      metaData().newSection( "Electrode", "Electrode", metaData().saveFlags() );
     Options &mo = metaData().section( "Electrode" );
     mo.unsetNotify();
     if ( ! mo.exist( "Resistance" ) )
-      mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" );
+      mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" ).addFlags( metaData().saveFlags() );
     mo.setNotify();
     unlockMetaData();
     // add buzzer and resistance widgets:
@@ -144,7 +149,12 @@ void AmplifierControl::initDevices( void )
       BuzzBox->addWidget( new QLabel );
       AmplBox->addWidget( new QLabel );
     }
+    // add stimulus data:
+    lockStimulusData();
+    stimulusData().addText( "AmplifierMode", "Amplifier mode", "Bridge" );
+    unlockStimulusData();
     // add mode selection widgets:
+    QVBoxLayout *vbox = 0;
     if ( ModeBox == 0 ) {
       ModeBox = new QGroupBox( "Amplifier mode" );
       BridgeButton = new QRadioButton( "&Bridge" );
@@ -156,14 +166,48 @@ void AmplifierControl::initDevices( void )
       connect( VCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateVoltageClampMode( bool ) ) );
       ManualButton = new QRadioButton( "&Manual selection" );
       connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
-      QVBoxLayout *vbox = new QVBoxLayout;
+      vbox = new QVBoxLayout;
       vbox->addWidget( BridgeButton );
       vbox->addWidget( CCButton );
-      vbox->addWidget( VCButton );
-      vbox->addWidget( ManualButton );
+      // vbox->addWidget( VCButton );
+      // vbox->addWidget( ManualButton );
       ModeBox->setLayout( vbox );
       AmplBox->addWidget( ModeBox );
       AmplBox->addWidget( new QLabel );
+    }
+    // add amplifier synchronization:
+    DIO = digitalIO( "dio-1" );
+    if ( DIO != 0 ) {
+      if ( DIO->clearSyncPulse() == Device::InvalidDevice )
+	DIO = 0;
+    }
+    if ( DIO != 0 ) {
+      lockStimulusData();
+      double spd = 0.0;
+      if ( SyncPulseEnabled )
+	spd = 1.0e6*SyncPulseDuration;
+      stimulusData().addNumber( "SyncPulse", "Synchronization pulse", spd, "us" );
+      unlockStimulusData();
+    }
+    if ( DIO != 0 && SyncCheckBox == 0 ) {
+      vbox->addWidget( new QLabel );
+      SyncCheckBox = new QCheckBox( "&Synchronize amplifier" );
+      connect( SyncCheckBox, SIGNAL( clicked( bool ) ), this, SLOT( activateSyncPulse( bool ) ) );
+      SyncCheckBox->setChecked( SyncPulseEnabled );
+      vbox->addWidget( SyncCheckBox );
+      QHBoxLayout *hbox = new QHBoxLayout;
+      vbox->addLayout( hbox );
+      QLabel *label = new QLabel( "Pulse duration" );
+      hbox->addWidget( label );
+      SyncSpinBox = new QDoubleSpinBox;
+      SyncSpinBox->setRange( 0.1, 1000.0 );
+      SyncSpinBox->setSingleStep( 0.1 );
+      SyncSpinBox->setKeyboardTracking( false );
+      SyncSpinBox->setValue( 1.0e6 * SyncPulseDuration );
+      connect( SyncSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
+      hbox->addWidget( SyncSpinBox );
+      label = new QLabel( "microseconds" );
+      hbox->addWidget( label );
     }
     widget()->show();
     // initial mode:
@@ -271,36 +315,89 @@ void AmplifierControl::stopBuzz( void )
 
 void AmplifierControl::activateBridgeMode( bool activate )
 {
-  if ( Ampl != 0 ) {
+  if ( Ampl != 0 && activate ) {
     Ampl->setBridgeMode();
     BridgeButton->setChecked( true );
+    activateSyncPulse( false );
+    lockStimulusData();
+    stimulusData().setText( "AmplifierMode", "Bridge" );
+    unlockStimulusData();
   }
 }
 
 
 void AmplifierControl::activateCurrentClampMode( bool activate )
 {
-  if ( Ampl != 0 ) {
+  if ( Ampl != 0 && activate ) {
     Ampl->setCurrentClampMode();
     CCButton->setChecked( true );
+    lockStimulusData();
+    stimulusData().setText( "AmplifierMode", "CC" );
+    unlockStimulusData();
   }
 }
 
 
 void AmplifierControl::activateVoltageClampMode( bool activate )
 {
-  if ( Ampl != 0 ) {
+  if ( Ampl != 0 && activate ) {
     Ampl->setVoltageClampMode();
     VCButton->setChecked( true );
+    activateSyncPulse( false );
+    lockStimulusData();
+    stimulusData().setText( "AmplifierMode", "VC" );
+    unlockStimulusData();
   }
 }
 
 
 void AmplifierControl::manualSelection( bool activate )
 {
-  if ( Ampl != 0 ) {
+  if ( Ampl != 0 && activate ) {
     Ampl->setManualSelection();
     ManualButton->setChecked( true );
+    activateSyncPulse( false );
+    lockStimulusData();
+    stimulusData().setText( "AmplifierMode", "Manual" );
+    unlockStimulusData();
+  }
+}
+
+
+void AmplifierControl::activateSyncPulse( bool activate )
+{
+  if ( DIO != 0 ) {
+    if ( activate ) {
+      if ( DIO->setSyncPulse( SyncPulseDuration ) == 0 ) {
+	activateCurrentClampMode( true );
+	lockStimulusData();
+	stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
+	unlockStimulusData();
+      }
+    }
+    else {
+      DIO->clearSyncPulse();
+      lockStimulusData();
+      stimulusData().setNumber( "SyncPulse", 0.0 );
+      unlockStimulusData();
+    }
+    SyncPulseEnabled = activate;
+    SyncCheckBox->setChecked( SyncPulseEnabled );
+  }
+}
+
+
+void AmplifierControl::setSyncPulse( double durationus )
+{
+  double syncpulseduration = 1.0e-6 * durationus;
+  if ( DIO != 0 && SyncPulseEnabled ) {
+    if ( DIO->setSyncPulse( syncpulseduration ) == 0 ) {
+      SyncPulseDuration = syncpulseduration;
+      activateCurrentClampMode( true );
+      lockStimulusData();
+      stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
+      unlockStimulusData();
+    }
   }
 }
 

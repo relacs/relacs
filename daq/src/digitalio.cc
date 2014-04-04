@@ -250,5 +250,17 @@ void DigitalIO::setInfo( void )
 }
 
 
+int DigitalIO::setSyncPulse( double duration )
+{
+  return InvalidDevice;
+}
+
+
+int DigitalIO::clearSyncPulse( void )
+{
+  return InvalidDevice;
+}
+
+
 }; /* namespace relacs */
 

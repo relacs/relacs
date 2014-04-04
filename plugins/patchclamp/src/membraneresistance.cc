@@ -465,7 +465,7 @@ void MembraneResistance::saveData( void )
   datakey.addNumber( "s.d.", "%", "%6.1f", 100.0*sqrt( VPeaksd*VPeaksd + fabs((VRest-VPeak)*VSSsd/(VSS-VRest))*fabs((VRest-VPeak)*VSSsd/(VSS-VRest)) )/fabs(VSS-VRest) );
   datakey.newSection( "Status" );
   lockStimulusData();
-  datakey.add( stimulusData() );
+  datakey.newSection( stimulusData() );
   unlockStimulusData();
 
   ofstream df;

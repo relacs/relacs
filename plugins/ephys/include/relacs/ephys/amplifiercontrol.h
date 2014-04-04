@@ -25,9 +25,12 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QCheckBox>
+#include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <relacs/digitalio.h>
 #include <relacs/misc/amplmode.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/control.h>
@@ -84,6 +87,12 @@ public slots:
     /*! Turn on manual selection of the amplifier. */
   void manualSelection( bool activate=true );
 
+    /*! Turn on synchronization of the amplifier. */
+  void activateSyncPulse( bool activate=true );
+    /*! Set duration of the synchronization pulse
+        to \a durationus microseconds. */
+  void setSyncPulse( double durationus );
+
 
 protected:
 
@@ -96,6 +105,7 @@ protected:
 private:
 
   misc::AmplMode *Ampl;
+  DigitalIO *DIO;
   bool RMeasure;
   int DGain;
   bool Adjust;
@@ -112,6 +122,10 @@ private:
   QRadioButton *CCButton;
   QRadioButton *VCButton;
   QRadioButton *ManualButton;
+  QCheckBox *SyncCheckBox;
+  QDoubleSpinBox *SyncSpinBox;
+  bool SyncPulseEnabled;
+  double SyncPulseDuration;
 
 };
 

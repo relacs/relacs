@@ -25,9 +25,6 @@ New InData threading:
   So maybe keep readTime. Make it an option for each device!
 
 Dynamic clamp:
-- DynClampDigitalIO: syncsec parameter should also be set by settings!
-- DynClampDigitalIO: syncsec pulse duration should be made adjustable by AmplifierControl!
-  Amplifier Control: if using syncsec switch to CC, if not tell the driver to use factor 1
 - Is it smart to use vmalloc in dynclampmodule? No! Better would be
   kmalloc or even avoid it completely.
 - Is it really necessary that the dyncclamp parameter are all set to zero by relacs initially?
@@ -55,6 +52,7 @@ SaveFiles:
 - finish reorganization of saveStimuli(): check XXX comments
 
 Options:
+- MetaData: reading in of several config files fails in MetaData.
 - RePro: when the RePo changes an Option in main(), this change should automatically be made permanent
   (via setToDefaults() called after main()? E.g. SetInputGain RePro).
 - Make all Options and optWidget style flags an enum

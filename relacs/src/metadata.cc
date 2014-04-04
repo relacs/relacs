@@ -198,7 +198,7 @@ ostream &MetaData::saveXML( ostream &str, int level,
 {
   lock();
   setSectionName( this, names );
-  Options::saveXML( str, 0, Options::SwitchNameType | Options::FirstOnly, level );
+  Options::saveXML( str, saveFlags(), Options::SwitchNameType | Options::FirstOnly, level );
   unlock();
   return str;
 }
