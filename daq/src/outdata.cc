@@ -1290,6 +1290,27 @@ void OutData::pulseWave( double duration, double stepsize,
 }
 
 
+void OutData::alphaWave( double duration, double stepsize, 
+			 double tau, double ampl, double delay )
+{
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  alpha( 0.0, duration, stepsize, tau, delay );
+  if ( ampl != 1.0 )
+    array() *= ampl;
+  back() = 0.0;
+
+  Description.clear();
+  Description.setType( "stimulus/alpha" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "TemporalOffset", delay, "s" );
+  Description.addNumber( "TimeConstant", tau, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+
+  clearError();
+}
+
+
 ostream &operator<<( ostream &str, const OutData &od )
 {
   //  str << SampleDataF( od );

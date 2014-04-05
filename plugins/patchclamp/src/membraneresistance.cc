@@ -97,6 +97,10 @@ int MembraneResistance::main( void )
     warning( "Invalid input voltage trace!" );
     return Failed;
   }
+  if ( CurrentOutput[0] < 0 ) {
+    warning( "Invalid output current trace!" );
+    return Failed;
+  }
   if ( userm ) {
     unlockMetaData();
     double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
@@ -174,6 +178,8 @@ int MembraneResistance::main( void )
 	( repeats <= 0 || Count < repeats ) && softStop() == 0;
 	Count++ ) {
 
+    timeStamp();
+
     Str s = "Amplitude <b>" + Str( Amplitude ) + " " + IUnit +"</b>";
     s += ",  Loop <b>" + Str( Count+1 ) + "</b>";
     message( s );
@@ -191,10 +197,9 @@ int MembraneResistance::main( void )
       break;
     }
 
-    timeStamp();
     analyzeOn( Duration, sswidth, nossfit );
 
-    sleepOn( Duration + 0.02 );
+    sleepOn( 2.0*Duration );
     if ( interrupt() ) {
       if ( Count < 1 )
 	state = Aborted;
@@ -204,7 +209,7 @@ int MembraneResistance::main( void )
 
     analyzeOff( Duration, sswidth, nossfit );
     plot();
-    sleepOn( pause );
+    sleepOn( Duration+pause );
     if ( interrupt() ) {
       if ( Count < 1 )
 	state = Aborted;

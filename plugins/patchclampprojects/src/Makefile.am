@@ -8,7 +8,8 @@ pluginlib_LTLIBRARIES = \
     libpatchclampprojectsfindthreshold.la \
     libpatchclampprojectssetleak.la \
     libpatchclampprojectsvoltagereconstruction.la \
-    libpatchclampprojectsfeedforwardnetwork.la
+    libpatchclampprojectsfeedforwardnetwork.la \
+    libpatchclampprojectssynapticresistance.la
 
 
 
@@ -29,8 +30,14 @@ libpatchclampprojectsthresholdlatencies_la_LDFLAGS = \
     $(QT4_LDFLAGS)
 
 libpatchclampprojectsthresholdlatencies_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS)
 
 $(libpatchclampprojectsthresholdlatencies_la_OBJECTS) : moc_thresholdlatencies.cc
@@ -60,8 +67,14 @@ libpatchclampprojectsfindthreshold_la_LDFLAGS = \
     $(QT4_LDFLAGS)
 
 libpatchclampprojectsfindthreshold_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS)
 
 $(libpatchclampprojectsfindthreshold_la_OBJECTS) : moc_findthreshold.cc
@@ -91,6 +104,12 @@ libpatchclampprojectssetleak_la_LDFLAGS = \
 
 libpatchclampprojectssetleak_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS)
 
 $(libpatchclampprojectssetleak_la_OBJECTS) : moc_setleak.cc
@@ -120,8 +139,14 @@ libpatchclampprojectsvoltagereconstruction_la_LDFLAGS = \
     $(QT4_LDFLAGS)
 
 libpatchclampprojectsvoltagereconstruction_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS)
 
 $(libpatchclampprojectsvoltagereconstruction_la_OBJECTS) : moc_voltagereconstruction.cc
@@ -151,8 +176,14 @@ libpatchclampprojectsfeedforwardnetwork_la_LDFLAGS = \
     $(QT4_LDFLAGS)
 
 libpatchclampprojectsfeedforwardnetwork_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS)
 
 $(libpatchclampprojectsfeedforwardnetwork_la_OBJECTS) : moc_feedforwardnetwork.cc
@@ -165,12 +196,50 @@ libpatchclampprojectsfeedforwardnetwork_la_include_HEADERS = $(HEADER_PATH)/feed
 
 
 
+libpatchclampprojectssynapticresistance_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libpatchclampprojectssynapticresistance_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libpatchclampprojectssynapticresistance_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libpatchclampprojectssynapticresistance_la_OBJECTS) : moc_synapticresistance.cc
+
+libpatchclampprojectssynapticresistance_la_SOURCES = synapticresistance.cc
+
+libpatchclampprojectssynapticresistance_la_includedir = $(pkgincludedir)/patchclampprojects
+
+libpatchclampprojectssynapticresistance_la_include_HEADERS = $(HEADER_PATH)/synapticresistance.h
+
+
+
 check_PROGRAMS = \
     linktest_libpatchclampprojectsthresholdlatencies_la \
     linktest_libpatchclampprojectsfindthreshold_la \
     linktest_libpatchclampprojectssetleak_la \
     linktest_libpatchclampprojectsvoltagereconstruction_la \
-    linktest_libpatchclampprojectsfeedforwardnetwork_la
+    linktest_libpatchclampprojectsfeedforwardnetwork_la \
+    linktest_libpatchclampprojectssynapticresistance_la
 
 linktest_libpatchclampprojectsthresholdlatencies_la_SOURCES = linktest.cc
 linktest_libpatchclampprojectsthresholdlatencies_la_LDADD = libpatchclampprojectsthresholdlatencies.la
@@ -186,5 +255,8 @@ linktest_libpatchclampprojectsvoltagereconstruction_la_LDADD = libpatchclampproj
 
 linktest_libpatchclampprojectsfeedforwardnetwork_la_SOURCES = linktest.cc
 linktest_libpatchclampprojectsfeedforwardnetwork_la_LDADD = libpatchclampprojectsfeedforwardnetwork.la
+
+linktest_libpatchclampprojectssynapticresistance_la_SOURCES = linktest.cc
+linktest_libpatchclampprojectssynapticresistance_la_LDADD = libpatchclampprojectssynapticresistance.la
 
 TESTS = $(check_PROGRAMS)

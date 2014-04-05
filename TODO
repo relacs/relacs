@@ -5,7 +5,7 @@ New InData threading:
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
 - What about recording events (SignalTime, locking)?
 - Add Model data also to UpdateRawData?
-- Fix Simulation mode! Only filtered traces are still not working.
+- Fix Simulation mode! Only filtered traces are still not working. Also first pulse of synapticresistance seems to be lost.
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Model: improve locking by adding an extra Mutex for push() and pop()
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
@@ -30,7 +30,7 @@ Dynamic clamp:
 - Is it really necessary that the dyncclamp parameter are all set to zero by relacs initially?
   It shoud be sufficient to set the AOs to zero and the parameters to their initial vallues.
   For the latter we might need some support (saving the initial values to some array prior to starting, etc.)
-- Add a varable lastInterval that is set to the current period length in addition to loopInterval
+- Add a variable lastInterval that is set to the current period length in addition to loopInterval
 - CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.

@@ -746,6 +746,13 @@ class OutData : public SampleData< float >, public DaqError
         base.  If \a stepsize is negative or if fixedSampleRate(), the
         sampling rate is set using minSampleInterval(). */
   void pulseWave( double duration, double stepsize, double value, double base );
+    /*! Creates an alpha function duration of \a duration seconds
+        sampled with \a stepsize.  The time constant of the alpha
+        function is \a tau and the alpha function starts at time \a
+        delay. The maximum amplitude is \a ampl.If \a stepsize is
+        negative or if fixedSampleRate(), the sampling rate is set
+        using minSampleInterval(). */
+  void alphaWave( double duration, double stepsize, double tau, double ampl, double delay );
 
     /*! The index of the next element to be written to the data buffer.
         \sa incrDeviceIndex(), devieValue(), incrDeviceCount(), deviceReset() */
