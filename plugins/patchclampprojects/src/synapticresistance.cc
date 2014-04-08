@@ -185,7 +185,7 @@ int SynapticResistance::main( void )
       double v = intrace[inx+k];
       meantrace[k] += (v - meantrace[k])/(count+1);
       squaretrace[k] += (v*v - squaretrace[k])/(count+1);
-      stdevtrace[k] = sqrt( squaretrace[k] - meantrace[k]*meantrace[k] );
+      stdevtrace[k] = sqrt( ::fabs( squaretrace[k] - meantrace[k]*meantrace[k] ) );
       if ( CurrentTrace[0] >= 0 )
 	meancurrent[k] += (trace( CurrentTrace[0] )[inx+k] - meancurrent[k])/(count+1);
     }

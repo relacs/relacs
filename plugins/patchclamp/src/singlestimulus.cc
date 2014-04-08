@@ -926,7 +926,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
   }
   P[1].clear();
   if ( ! P[1].zoomedYRange() )
-    P[1].setYRange( ymin - 1.0, ymax + 1.0 );
+    P[1].setYRange( ymin - 0.05*PeakAmplitude, ymax + 0.05*PeakAmplitude );
   P[1].plotHLine( Offset, Plot::White, 2 );
   if ( threshold > 0.0 )
     P[1].plotHLine( threshold, Plot::Yellow, 2 );

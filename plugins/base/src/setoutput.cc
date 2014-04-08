@@ -182,6 +182,11 @@ int SetOutput::main( void )
       warning( "Sorry, there are no output parameter available!" );
       return Failed;
     }
+    lockStimulusData();
+    for ( int k=0; k<outTracesSize(); k++ )
+      OutOpts.setNumber( outTraceName( k ), stimulusData().number( outTraceName( k ) ) );
+    unlockStimulusData();
+    STW.updateValues();
     keepFocus();
     postCustomEvent( 11 ); // STW.setFocus()
     Quit = true;
@@ -207,7 +212,7 @@ int SetOutput::main( void )
 	  for ( int k=0; k<sigs.size(); k++ ) {
 	    if ( k > 0 )
 	      msg += ",  ";
-	    msg += sigs[k].traceName() + '=' + Str( sigs[k][0] ) + sigs[k].unit();
+	    msg += "<b>" + sigs[k].traceName() + '=' + Str( sigs[k][0] ) + sigs[k].unit() + "</b>";
 	  }
 	  message( msg );
 	  directWrite( sigs );

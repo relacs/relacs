@@ -229,6 +229,7 @@ int SetLeak::main( void )
   unlockMetaData();
   notify();
   setNotify();
+  STW.updateValues();
 
   if ( interactive ) {
     keepFocus();

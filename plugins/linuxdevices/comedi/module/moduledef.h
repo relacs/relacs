@@ -31,7 +31,7 @@
 #define ENABLE_SYNCSEC
 
   /*! Measures mean and standard deviation of periodic task. */
-//#define ENABLE_STATISTICS
+// #define ENABLE_STATISTICS
 
 
 // *** DEVICE LINUX CONFIGURATION ***
