@@ -149,9 +149,6 @@ int MembraneResistance::main( void )
   ExpOn = SampleDataF( 0.0, Duration, 1/samplerate, 0.0 );
   ExpOff = SampleDataF( Duration, 2.0*Duration, 1/samplerate, 0.0 );
 
-  // plot trace:
-  tracePlotSignal( 2.0*Duration, 0.5*Duration );
-
   // plot:
   P.lock();
   P.setXRange( -500.0*Duration, 2000.0*Duration );
@@ -170,10 +167,15 @@ int MembraneResistance::main( void )
   dcsignal.constWave( DCCurrent );
   dcsignal.setIdent( "DC=" + Str( DCCurrent ) + IUnit );
 
-  // write stimulus:
+  // sleep:
   sleepWait( pause );
   if ( interrupt() )
     return Aborted;
+
+  // plot trace:
+  tracePlotSignal( 2.0*Duration, 0.5*Duration );
+
+  // write stimulus:
   for ( Count=0;
 	( repeats <= 0 || Count < repeats ) && softStop() == 0;
 	Count++ ) {

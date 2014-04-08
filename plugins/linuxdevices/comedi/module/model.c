@@ -55,7 +55,7 @@ float paramInput[PARAMINPUT_N] = { 0.0, 0.0, 0.0 };
 #define PARAMOUTPUT_N 4
 char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C", "I" };
 char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF", "nA" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0 };
+float paramOutput[PARAMOUTPUT_N] = { 5.0, 0.0, 0.0, 0.0 };
 
   /*! Variables used by the model. */
 #define MAXPREVINPUTS 1

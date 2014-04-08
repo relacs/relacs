@@ -25,6 +25,8 @@ New InData threading:
   So maybe keep readTime. Make it an option for each device!
 
 Dynamic clamp:
+- Always create a new channel list! And only have a single AO and AI subdevice!
+- Then we do not need to reset all the channels at startup (Aquire::writeReset() )
 - Is it smart to use vmalloc in dynclampmodule? No! Better would be
   kmalloc or even avoid it completely.
 - Is it really necessary that the dyncclamp parameter are all set to zero by relacs initially?
@@ -71,10 +73,6 @@ patchclamp::SingleStimulus:
 - Check offset settings, are they relative to the previous last output value???
 
 auditory::Session plots do not work! Why???? It works on my laptop!
-
-OptWidget:
-  updateValues called from notify from valueChanged does nothing, since DisableUpdate is set!
-  This is a problem for all filters and detectors!
 
 General:
 - comedi m4 file should check for routing function

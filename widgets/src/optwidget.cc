@@ -702,6 +702,12 @@ void OptWidget::addWidget( OptWidgetBase *owb )
 }
 
 
+bool OptWidget::updateDisabled( void ) const
+{
+  return DisableUpdate;
+}
+
+
 void OptWidget::disableUpdate( void )
 {
   DisableUpdate = true;
@@ -910,8 +916,6 @@ void OptWidget::resetDefault( void )
 
 void OptWidget::updateValue( const string &name )
 {
-  if ( DisableUpdate )
-    return;
   if ( QThread::currentThread() != GUIThread )
     QCoreApplication::postEvent( this, new UpdateEvent( 1, name ) );
   else {
@@ -925,8 +929,6 @@ void OptWidget::updateValue( const string &name )
 
 void OptWidget::updateValues( void )
 {
-  if ( DisableUpdate )
-    return;
   if ( QThread::currentThread() != GUIThread )
     QCoreApplication::postEvent( this, new UpdateEvent( 2 ) );
   else {
@@ -940,7 +942,7 @@ void OptWidget::updateValues( void )
 
 void OptWidget::updateValues( int flag )
 {
-  if ( DisableUpdate || Opt == 0 )
+  if ( Opt == 0 )
     return;
   // save ChangedFlag:
   Opt->addFlags( UpdateFlag, flag );
@@ -957,8 +959,6 @@ void OptWidget::updateValues( int flag )
 
 void OptWidget::updateSettings( const string &name )
 {
-  if ( DisableUpdate )
-    return;
   if ( QThread::currentThread() != GUIThread )
     QCoreApplication::postEvent( this, new UpdateEvent( 4, name ) );
   else {
@@ -972,8 +972,6 @@ void OptWidget::updateSettings( const string &name )
 
 void OptWidget::updateSettings( void )
 {
-  if ( DisableUpdate )
-    return;
   if ( QThread::currentThread() != GUIThread )
     QCoreApplication::postEvent( this, new UpdateEvent( 5 ) );
   else {
@@ -987,7 +985,7 @@ void OptWidget::updateSettings( void )
 
 void OptWidget::updateSettings( int flag )
 {
-  if ( DisableUpdate || Opt == 0 )
+  if ( Opt == 0 )
     return;
   Opt->addFlags( UpdateFlag, flag );
   if ( QThread::currentThread() != GUIThread )
@@ -1042,7 +1040,7 @@ void OptWidget::customEvent( QEvent *e )
       break;
     }
     case 4: {
-      // updaeSettings( name )
+      // updateSettings( name )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	if ( Widgets[k]->param() != Opt->end() &&
 	     Widgets[k]->param()->name() == ue->name() ) {

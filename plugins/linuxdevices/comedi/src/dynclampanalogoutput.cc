@@ -955,15 +955,11 @@ int DynClampAnalogOutput::writeData( void )
     float *bp = (float*)(Buffer+NBuffer);
     int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
     int bytesConverted = 0;
-    bool writing = true;
-    for ( int i=0; i<maxn && writing; i++ ) {
+    for ( int i=0; i<maxn && Sigs[0].deviceWriting(); i++ ) {
       for ( int k=0; k<Sigs.size(); k++ ) {
 	*bp = Sigs[k].deviceValue();
-	if ( Sigs[k].deviceIndex() >= Sigs[k].size() ) {
+	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
 	  Sigs[k].incrDeviceCount();
-	  if ( ! Sigs[k].deviceWriting() )
-	    writing = false;
-	}
 	++bp;
 	++bytesConverted;
       }
@@ -1160,7 +1156,7 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
   while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
     bool notfound = true;
     for ( unsigned int k=0; k<traces.size(); k++ ) {
-      if ( traces[k].traceName() == traceInfo.name ) {
+      if ( traces[k].channel() < PARAM_CHAN_OFFSET && traces[k].traceName() == traceInfo.name ) {
 	if ( traces[k].unit() != traceInfo.unit ) {
 	  failed = true;
 	  cerr << "! DynClampAnalogOutput::matchTraces -> model input trace " << traces[k].traceName() << " requires as unit '" << traceInfo.unit << "', not '" << traces[k].unit() << "'\n";

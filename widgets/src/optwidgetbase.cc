@@ -255,7 +255,7 @@ void OptWidgetText::update( void )
 
 void OptWidgetText::textChanged( const QString &s )
 {
-  if ( InternRead )
+  if ( InternRead || OW->updateDisabled() )
     return;
 
   if ( ContUpdate && Editable ) {
@@ -302,7 +302,6 @@ void OptWidgetText::doTextChanged( const QString &s )
     QCoreApplication::postEvent( this, new OptWidgetTextEvent( 1, s ) );
     return;
   }
-  OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
   Param->setText( s.toStdString() );
@@ -314,7 +313,6 @@ void OptWidgetText::doTextChanged( const QString &s )
   if ( ContUpdate )
     Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
-  OW->enableUpdate();
   unlockMutex();
 }
 
@@ -349,6 +347,9 @@ void OptWidgetText::initActivation( void )
 
 void OptWidgetText::browse( void )
 {
+  if ( OW->updateDisabled() )
+    return;
+
   if ( ! tryLockMutex( 5 ) ) {
     // we do not get the lock for the data now,
     // so we repost the event to a later time.
@@ -398,7 +399,6 @@ void OptWidgetText::doBrowse( Str filename )
     filename.stripWorkingPath( 3 );
   if ( ( Param->style() & OptWidget::BrowseDirectory ) )
     filename.provideSlash();
-  OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
   Param->setText( filename );
@@ -411,7 +411,6 @@ void OptWidgetText::doBrowse( Str filename )
   if ( ContUpdate )
     Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
-  OW->enableUpdate();
   unlockMutex();
 }
 
@@ -547,7 +546,7 @@ void OptWidgetMultiText::update( void )
 
 void OptWidgetMultiText::textChanged( const QString &s )
 {
-  if ( InternRead )
+  if ( InternRead || OW->updateDisabled() )
     return;
 
   if ( ContUpdate && Editable && Update) {
@@ -590,7 +589,6 @@ void OptWidgetMultiText::doTextChanged( const QString &s )
     QCoreApplication::postEvent( this, new OptWidgetMultiTextEvent( 1, s ) );
     return;
   }
-  OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
   Param->setText( s.toStdString() );
@@ -604,7 +602,6 @@ void OptWidgetMultiText::doTextChanged( const QString &s )
   if ( ContUpdate )
     Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
-  OW->enableUpdate();
   unlockMutex();
 }
 
@@ -636,7 +633,7 @@ void OptWidgetMultiText::initActivation( void )
 
 void OptWidgetMultiText::insertText( const QString &text )
 {
-  if ( ! Update )
+  if ( ! Update || OW->updateDisabled() )
     return;
 
   doInsertText( text );
@@ -767,8 +764,9 @@ void OptWidgetNumber::get( void )
 void OptWidgetNumber::reset( void )
 {
   InternChanged = true;
-  if ( Editable )
+  if ( Editable ) {
     EW->setValue( Param->number( Param->outUnit() ) );
+  }
   else {
     if ( Param->style() & OptWidget::ValueLCD )
       LCDW->display( Param->text( "", Param->outUnit() ).c_str() );
@@ -821,7 +819,7 @@ void OptWidgetNumber::update( void )
 
 void OptWidgetNumber::valueChanged( double v )
 {
-  if ( InternRead )
+  if ( InternRead || OW->updateDisabled() )
     return;
 
   if ( ContUpdate && Editable ) {
@@ -844,7 +842,7 @@ void OptWidgetNumber::valueChanged( double v )
   if ( Param->isNumber() )
     tol = 0.01*Param->step();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    if ( Widgets[k]->param() != OO->end() )
+     if ( Widgets[k]->param() != OO->end() )
       Widgets[k]->activateOption( Widgets[k]->param()->testActivation( v, tol ) );
   }
 }
@@ -869,7 +867,6 @@ void OptWidgetNumber::doValueChanged( double v )
     QCoreApplication::postEvent( this, new OptWidgetNumberEvent( v ) );
     return;
   }
-  OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
   Param->setNumber( v, Param->outUnit() );
@@ -881,7 +878,6 @@ void OptWidgetNumber::doValueChanged( double v )
   if ( ContUpdate )
     Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
-  OW->enableUpdate();
   unlockMutex();
 }
 
@@ -990,7 +986,7 @@ void OptWidgetBoolean::resetDefault( void )
 
 void OptWidgetBoolean::valueChanged( bool v )
 {
-  if ( InternRead )
+  if ( InternRead || OW->updateDisabled() )
     return;
 
   if ( ContUpdate && Editable ) {
@@ -1032,7 +1028,6 @@ void OptWidgetBoolean::doValueChanged( bool v )
     QCoreApplication::postEvent( this, new OptWidgetBooleanEvent( v ) );
     return;
   }
-  OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
   Param->setBoolean( v );
@@ -1044,7 +1039,6 @@ void OptWidgetBoolean::doValueChanged( bool v )
   if ( ContUpdate )
     Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
-  OW->enableUpdate();
   unlockMutex();
 }
 
@@ -1141,7 +1135,7 @@ void OptWidgetDate::resetDefault( void )
 
 void OptWidgetDate::valueChanged( const QDate &date )
 {
-  if ( InternRead )
+  if ( InternRead || OW->updateDisabled() )
     return;
 
   if ( ContUpdate && Editable ) {
@@ -1189,7 +1183,6 @@ void OptWidgetDate::doValueChanged( const QDate &date )
     QCoreApplication::postEvent( this, new OptWidgetDateEvent( date ) );
     return;
   }
-  OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
   Param->setDate( date.year(), date.month(), date.day() );
@@ -1205,7 +1198,6 @@ void OptWidgetDate::doValueChanged( const QDate &date )
   if ( ContUpdate )
     Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
-  OW->enableUpdate();
   unlockMutex();
 }
 
@@ -1306,7 +1298,7 @@ void OptWidgetTime::resetDefault( void )
 
 void OptWidgetTime::valueChanged( const QTime &time )
 {
-  if ( InternRead )
+  if ( InternRead || OW->updateDisabled() )
     return;
 
   if ( ContUpdate && Editable ) {
@@ -1354,7 +1346,6 @@ void OptWidgetTime::doValueChanged( const QTime &time )
     QCoreApplication::postEvent( this, new OptWidgetTimeEvent( time ) );
     return;
   }
-  OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
   Param->setTime( time.hour(), time.minute(), time.second() );
@@ -1370,7 +1361,6 @@ void OptWidgetTime::doValueChanged( const QTime &time )
   if ( ContUpdate )
     Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
-  OW->enableUpdate();
   unlockMutex();
 }
 

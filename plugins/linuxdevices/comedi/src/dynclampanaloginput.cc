@@ -989,7 +989,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
     bool notfound = true;
     for ( int k=0; k<traces.size(); k++ ) {
-      if ( traces[k].ident() == traceInfo.name ) {
+      if ( traces[k].channel() < PARAM_CHAN_OFFSET && traces[k].ident() == traceInfo.name ) {
 	tracefound[k] = true;
 	if ( traces[k].unit() != traceInfo.unit )
 	  traces[k].addErrorStr( "model input trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
@@ -1017,7 +1017,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   traceInfo.traceType = PARAM_IN;
   for ( int pchan = 0; ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0; pchan++ ) {
     for ( int k=0; k<traces.size(); k++ ) {
-      if ( traces[k].ident() == traceInfo.name ) {
+      if ( traces[k].channel() >= PARAM_CHAN_OFFSET && traces[k].ident() == traceInfo.name ) {
 	tracefound[k] = true;
 	if ( traces[k].unit() != traceInfo.unit )
 	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
@@ -1030,12 +1030,10 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   ern = errno;
   if ( ern != ERANGE )
     traces.addErrorStr( "failure in getting model input parameter traces -> errno=" + Str( ern ) );
-  /*
   for ( int k=0; k<traces.size(); k++ ) {
-    if ( ! tracefound[k] )
+    if ( ! tracefound[k] && traces[k].channel() >= PARAM_CHAN_OFFSET )
       traces[k].addErrorStr( "no matching trace found for trace " + traces[k].ident() );
   }
-  */
   return traces.failed() ? -1 : foundtraces;
 }
 

@@ -2588,6 +2588,8 @@ int Acquire::writeZero( const string &trace )
 
 int Acquire::writeReset( void )
 {
+  /*
+    XXX This is what we want:
   bool success = true;
   for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
     if ( OutTraces[k].channel() < 1000 ) {
@@ -2597,6 +2599,34 @@ int Acquire::writeReset( void )
     }
   }
   return success ? 0 : -1;
+  */
+
+  // XXX This is what we need to do, because the dynclamp module needs to have a full list of all output channels:
+  OutList sigs;
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    AO[i].AO->reset();
+    for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
+      // this is a channel at the device that should be reset:
+      if ( OutTraces[k].device() == (int)i ) {
+	OutData sig;
+	sig.setTrace( OutTraces[k].trace() );
+	sig.constWave( 0.0 );
+	if ( OutTraces[k].apply( sig ) < 0 )
+	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
+	sig.setIdent( "init" );
+	sig.mute();
+	sigs.push( sig );
+      }
+    }
+  }
+  if ( sigs.size() > 0 ) {
+    // write out data;
+    directWrite( sigs );
+    // error?
+    if ( ! sigs.success() )
+      return -1;
+  }
+  return 0; 
 }
 
 

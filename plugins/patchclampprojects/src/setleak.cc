@@ -329,4 +329,3 @@ addRePro( SetLeak, patchclampprojects );
 }; /* namespace patchclampprojects */
 
 #include "moc_setleak.cc"
-

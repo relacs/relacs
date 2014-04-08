@@ -40,7 +40,6 @@ namespace relacs {
 /*! 
 \class OptWidget
 \author Jan Benda
-\version 1.0
 \brief A Widget for modifying Options.
 \bug OptWidgetDate input widget is crashing. Error in QDateEdit?
 
@@ -512,6 +511,7 @@ private:
 		      int &row, int &level,
 		      QWidget *parent, QTabWidget *tabwidget, string *tabhotkeys );
   void addWidget( OptWidgetBase *owb );
+  bool updateDisabled( void ) const;
   void disableUpdate( void );
   void enableUpdate( void );
   static void setLabelStyle( QWidget *w, long style, RoleType rt=Window );

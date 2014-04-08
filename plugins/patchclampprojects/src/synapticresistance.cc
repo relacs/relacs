@@ -180,7 +180,7 @@ int SynapticResistance::main( void )
     }
 
     // analyze:
-    int inx = intrace.signalIndex() - meantrace.index( 0.0 );
+    int inx = intrace.signalIndex();
     for ( int k=0; k<meantrace.size() && inx+k<intrace.size(); k++ ) {
       double v = intrace[inx+k];
       meantrace[k] += (v - meantrace[k])/(count+1);

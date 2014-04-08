@@ -1,6 +1,6 @@
 /*!
 Dynamic clamp model for a voltage gated ionic current:
-\f[ \begin{array}{rcl} I_{inj} & = & -g \cdot (V-E) - VCgain \cdot (V-VC) - gvgate \cdot x \cdot (V-Evgate) \\
+\f[ \begin{array}{rcl} I_{inj} & = & -g \cdot (V-E) - gvgate \cdot x \cdot (V-Evgate) \\
 vgatetau \cdot \frac{dx}{dt} & = & -x + \frac{1}{1+\exp(-vgateslope \cdot (V-vgatevmid))} \end{array} \f]
 
 \par Input/Output:
@@ -10,8 +10,6 @@ vgatetau \cdot \frac{dx}{dt} & = & -x + \frac{1}{1+\exp(-vgateslope \cdot (V-vga
 \par Parameter:
 - g: conductance of passive ionic current in nS
 - E: reversal potential of passive ionic current in mV
-- VCgain: gain factor for voltage clamp in mS
-- VC: Voltage command for voltage clamp
 - gvgate: conductance of voltage-gated ionic current in nS
 - Evgate: reversal potential of voltage-gated ionic current in mV
 - vgatetau: time constant of the gating variable in ms
@@ -50,19 +48,18 @@ int outputDevices[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
-#define PARAMINPUT_N 3
-char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "VC-current", "Voltage-gated current" };
-char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA", "nA" };
-float paramInput[PARAMINPUT_N] = { 0.0, 0.0, 0.0 };
+#define PARAMINPUT_N 2
+char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "Voltage-gated current" };
+char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA" };
+float paramInput[PARAMINPUT_N] = { 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 9
-char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "VCgain", "VC", "gvgate", "Evgate", "vgatetau", "vgatevmid", "vgateslope" };
-char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "mS", "mV", "nS", "mV", "ms", "mV", "1/mV" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0 };
+#define PARAMOUTPUT_N 7
+char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "gvgate", "Evgate", "vgatetau", "vgatevmid", "vgateslope" };
+char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "nS", "mV", "ms", "mV", "1/mV" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0 };
 
   /*! Variables used by the model. */
-float meaninput = 0.0;
 float vgate = 0.0;
 float xmin = 0.0;
 float xmax = 0.0;
@@ -71,7 +68,6 @@ float dx = 1.0;
 void initModel( void )
 {
    moduleName = "/dev/dynclamp";
-   meaninput = 0.0;
    vgate = 0.0;
 
   // steady-state activation from lookuptable:
@@ -93,28 +89,23 @@ void computeModel( void )
   float x;
   int k;
 
-  // running average:
-  meaninput += (input[0] - meaninput)/5.0;  // steps
-
   // leak:
   paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
-  // voltage clamp:
-  paramInput[1] = -paramOutput[2]*(meaninput-paramOutput[3]);
   // voltage gated channel:
-  if ( paramOutput[6] < 0.1 )
-    paramOutput[6] = 0.1;
+  if ( paramOutput[4] < 0.1 )
+    paramOutput[4] = 0.1;
   // steady-state activation from lookuptable:
-  x = paramOutput[8]*(input[0]-paramOutput[7]);
+  x = paramOutput[6]*(input[0]-paramOutput[5]);
   k = 0;
   if ( x >= xmax )
     k = lookupn[0]-1;
   else if ( x >= xmin )
     k = (x-xmin)/dx;
-  vgate += loopInterval*1000.0/paramOutput[6]*(-vgate+lookupy[0][k]);
-  //  vgate += loopInterval*1000.0/paramOutput[6]*(-vgate+1.0/(1.0+exp(-paramOutput[8]*(input[0]-paramOutput[7]))));
-  paramInput[2] = -0.001*paramOutput[4]*vgate*(input[0]-paramOutput[5]);
+  vgate += loopInterval*1000.0/paramOutput[4]*(-vgate+lookupy[0][k]);
+  //  vgate += loopInterval*1000.0/paramOutput[4]*(-vgate+1.0/(1.0+exp(-paramOutput[6]*(input[0]-paramOutput[5]))));
+  paramInput[1] = -0.001*paramOutput[2]*vgate*(input[0]-paramOutput[3]);
   // total injected current:
-  output[0] = paramInput[0] + paramInput[1] + paramInput[2];
+  output[0] = paramInput[0] + paramInput[1];
 }
 
 #else
