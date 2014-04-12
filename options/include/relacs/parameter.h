@@ -29,6 +29,7 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
+#include <deque>
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 using namespace std;
@@ -877,53 +878,82 @@ public:
         to determine the way of a numerical comparison.
 	Numerical values can be supplied with a unit.
 	If no unit is given, then the internally used unit is assumed.
-        \sa clearActivation(), activationName(), activationValue(),
-	activationValues(), activationNumber(), activationComparison(), activation() */
+        \sa addActivation(), clearActivation(), activations(),
+	activationName(), activationValue(), activationValues(),
+	activationNumber(), activationComparison(), activation() */
   Parameter &setActivation( const string &name, const string &value, bool activate=true );
-    /*! Disconnect this Parameter from another Parameter 
+    /*! Connect this Parameter to an additional Parameter with identifyer \a name.
+        Such that in a dialog (like OptWidget) setting the value of 
+	the parameter \a name to \a value will activate (\a activate = \c true)
+	or inactivate (\a activate = \c false) this Parameter.
+	Several values can be supplied by seperating them by '|'.
+	A numerical value can be preceeded by '=', '>', '>=', '<', '<=', '<>'
+        to determine the way of a numerical comparison.
+	Numerical values can be supplied with a unit.
+	If no unit is given, then the internally used unit is assumed.
+        \sa setActivation(), clearActivation(), activations(),
+	activationName(), activationValue(), activationValues(),
+	activationNumber(), activationComparison(), activation() */
+  Parameter &addActivation( const string &name, const string &value, bool activate=true );
+    /*! Disconnect this Parameter from other Parameters 
         that can activate or inactivate it.
-        \sa setActivation(), activationName(), activationValue(),
-	activationValues(), activation() */
+        \sa setActivation(), addActivation(), activations(),
+	activationName(), activationValue(), activationValues(),
+	activation() */
   Parameter &clearActivation( void );
-    /*! The name of the Parameter that might activate or inactivate
+    /*! The number of defined activation patterns.
+        \sa setActivation(), addActivation(), clearActivation(),
+	activationName(), activationValue(), activationValues(), activation() */
+  int activations() const;
+    /*! The name of the \a index-th Parameter that might activate or inactivate
         this Parameter.
-        \sa setActivation(), clearActivation(),
-	activationValue(), activationValues(), activation() */
-  string activationName( void ) const;
-    /*! The first value of the Parameter on which this Parameter is activated
+        \sa setActivation(), addActivation(), clearActivation(),
+	activations(), activationValue(), activationValues(), activation() */
+  string activationName( int index=0 ) const;
+    /*! The first value of the \a index-th Parameter on which this Parameter is activated
         or inactivated.
-        \sa setActivation(), clearActivation(), activationValues(), activationNumber(),
+        \sa setActivation(), addActivation(), clearActivation(),
+        activations(), activationValues(), activationNumber(),
         activationName(), activation() */
-  string activationValue( void ) const;
-    /*! All values of the Parameter on which this Parameter is activated
+  string activationValue( int index=0 ) const;
+    /*! All values of the \a index-th Parameter on which this Parameter is activated
         or inactivated separated by '|'.
-        \sa setActivation(), clearActivation(), activationValue(), activationNumber(),
+        \sa setActivation(), addActivation(), clearActivation(),
+        activations(), activationValue(), activationNumber(),
         activationName(), activation() */
-  string activationValues( void ) const;
-    /*! The numerical value of the Parameter on which this Parameter is activated
-        or inactivated according to activationComparison().
-        \sa setActivation(), clearActivation(), activationComparison(),
-	activationValue(), activationName(), activation() */
-  double activationNumber( void ) const;
+  string activationValues( int index=0 ) const;
+    /*! The numerical value of the \a index-th Parameter on which this Parameter is activated
+        or inactivated according to activationComparison( index ).
+        \sa setActivation(), addActivation(), clearActivation(),
+	activations(), activationComparison(), activationValue(),
+	activationName(), activation() */
+  double activationNumber( int index=0 ) const;
     /*! The type of numerical comparison used for activating
-        or inactivating this Parameter.
-        \sa setActivation(), clearActivation(), activationNumber(),
-	activationValue(), activationName(), activation() */
-  int activationComparison( void ) const;
+        or inactivating this Parameter by the \a index-th Parameter.
+        \sa setActivation(), addActivation(), clearActivation(),
+	activations(), activationNumber(), activationValue(),
+	activationName(), activation() */
+  int activationComparison( int index=0 ) const;
     /*! If \c true, this Parameter is activated, otherwise inactivated,
-        whenever the Parameter with identifyer \a activationName()
-	takes on the value activationValue().
-	\sa setActivation(), clearActivation(), activationNumber(),
-        activationName(), activationValue(), activationValues() */
-  bool activation( void ) const;
-    /*! Return \c true if \a value matches one of the activation values
-        activationValues().
-        \sa setActivation(), activationValue(), activationValues() */
-  bool testActivation( const string &value );
-    /*! Return \c true if \a value matches the activation number and
-        type of comparison within the given toelrance \a tol.
-        \sa setActivation(), activationNumber(), activationComparison() */
-  bool testActivation( double value, double tol=1e-8 );
+        whenever the Parameter with identifier activationName( index )
+	takes on the value activationValue( index).
+	\sa setActivation(), addActivation(), clearActivation(),
+        activations(), activationNumber(), activationName(),
+        activationValue(), activationValues() */
+  bool activation( int index=0 ) const;
+    /*! Set the status of comparisopn \a index to \c true if \a value
+        matches one of the activation values activationValues( index
+        ).  \return \a true if all the test have their status set to \a true.
+	\sa setActivation(), addActivation(), activations(),
+        activationValue(), activationValues() */
+  bool testActivation( int index, const string &value );
+    /*! Set the status of comparisopn \a index to \c true true if \a
+        value matches the activation number and type of comparison
+        within the given tolerance \a tol.
+	\return \a true if all the test have their status set to \a true.
+        \sa setActivation(), addActivation(), activations(),
+        activationNumber(), activationComparison() */
+  bool testActivation( int index, double value, double tol=1e-8 );
 
     /*! Return string in the format "name: value".  Use for \a flags
         values from Options::SaveFlags to modify the way how the
@@ -1042,23 +1072,25 @@ private:
     /*! Unit used for output. */
   Str OutUnit;
 
-    /*! The name of another Parameter. */
-  string ActivationName;
-    /*! The values the ActivationName Parameter needs to have
+    /*! The names of another Parameter. */
+  deque< string > ActivationName;
+    /*! The values the ActivationName Parameters need to have
         in order to activate/inactivate this Parameter
         (in a dialog). */
-  StrQueue ActivationValues;
-    /*! The number against which value of the ActivationName Parameter
-        is compared in order to activate/inactivate this Parameter
+  deque< StrQueue > ActivationValues;
+    /*! The numbers against which value of the ActivationName Parameters
+        are compared in order to activate/inactivate this Parameter
         (in a dialog). */
-  double ActivationNumber;
-    /*! The type of numerical comparison used for activating/inactivating this Parameter
+  deque< double > ActivationNumber;
+    /*! The types of numerical comparison used for activating/inactivating this Parameter
         (in a dialog). 0=none, 1: =, 2: >, 3: >=, 4: <, 5: <=, 6: '<>' */
-  int ActivationComparison;
+  deque< int > ActivationComparison;
     /*! Activate (\c true) or inactivate (\c false) this Parameter
-        if the other Parameter specified by ActivationName
-        has the value ActivationValue. */
-  bool Activation;
+        if the other Parameters specified by ActivationName
+        have the value ActivationValue. */
+  deque< bool > ActivationType;
+    /*! Status of each activation test. */
+  deque< bool > ActivationStatus;
 
     /*! Some warning messages. */
   mutable Str Warning;

@@ -306,11 +306,12 @@ Parameter &Parameter::clear( const string &name, const string &request,
   Step = 1.0;
   InternUnit = "";
   OutUnit = "";
-  ActivationName = "";
+  ActivationName.clear();
   ActivationValues.clear();
-  ActivationNumber = 0.0;
-  ActivationComparison = 0;
-  Activation = true;
+  ActivationNumber.clear();
+  ActivationComparison.clear();
+  ActivationType.clear();
+  ActivationStatus.clear();
   Warning = "";
   return *this;
 }
@@ -363,7 +364,8 @@ Parameter &Parameter::assign( const Parameter &p )
   ActivationValues = p.ActivationValues;
   ActivationNumber = p.ActivationNumber;
   ActivationComparison = p.ActivationComparison;
-  Activation = p.Activation;
+  ActivationType = p.ActivationType;
+  ActivationStatus = p.ActivationStatus;
   Warning = "";
 
   return *this;
@@ -3009,33 +3011,43 @@ Parameter &Parameter::setToDefault( void )
 Parameter &Parameter::setActivation( const string &name, const string &value,
 				     bool activate )
 {
-  ActivationName = name;
-  ActivationValues.assign( value, "|" );
-  ActivationComparison = 0;
-  Activation = activate;
-  if ( ActivationValues.size() > 0 && ActivationValues.front().size() > 0 &&
-       ( ActivationValues.front()[0] == '=' ||
-	 ActivationValues.front()[0] == '>' ||
-	 ActivationValues.front()[0] == '<' ) ) {
+  clearActivation();
+  return addActivation( name, value, activate );
+}
+
+
+Parameter &Parameter::addActivation( const string &name, const string &value,
+				     bool activate )
+{
+  ActivationName.push_back( name );
+  ActivationValues.push_back( StrQueue() );
+  ActivationValues.back().assign( value, "|" );
+  ActivationComparison.push_back( 0 );
+  ActivationType.push_back( activate );
+  ActivationStatus.push_back( true );
+  if ( ActivationValues.back().size() > 0 && ActivationValues.back().front().size() > 0 &&
+       ( ActivationValues.back().front()[0] == '=' ||
+	 ActivationValues.back().front()[0] == '>' ||
+	 ActivationValues.back().front()[0] == '<' ) ) {
     int inx=1;
-    if ( ActivationValues.front()[0] == '=' )
-      ActivationComparison |= 1;
-    else if ( ActivationValues.front()[0] == '>' )
-      ActivationComparison |= 2;
+    if ( ActivationValues.back().front()[0] == '=' )
+      ActivationComparison.back() |= 1;
+    else if ( ActivationValues.back().front()[0] == '>' )
+      ActivationComparison.back() |= 2;
     else
-      ActivationComparison |= 4;
-    if ( ActivationValues.front().size() > 1 &&
-	 ( ActivationValues.front()[1] == '=' ||
-	   ActivationValues.front()[1] == '>' ) ) {
-      if ( ActivationValues.front()[1] == '=' )
-	ActivationComparison |= 1;
+      ActivationComparison.back() |= 4;
+    if ( ActivationValues.back().front().size() > 1 &&
+	 ( ActivationValues.back().front()[1] == '=' ||
+	   ActivationValues.back().front()[1] == '>' ) ) {
+      if ( ActivationValues.back().front()[1] == '=' )
+	ActivationComparison.back() |= 1;
       else
-	ActivationComparison |= 2;
+	ActivationComparison.back() |= 2;
       inx=2;
     }
     Str vs( value );
     string unit = vs.unit( InternUnit, inx );
-    ActivationNumber = changeUnit( vs.number( 0.0, inx ), unit, OutUnit );
+    ActivationNumber.push_back( changeUnit( vs.number( 0.0, inx ), unit, OutUnit ) );
   }
   return *this;
 }
@@ -3043,103 +3055,163 @@ Parameter &Parameter::setActivation( const string &name, const string &value,
 
 Parameter &Parameter::clearActivation( void )
 {
-  ActivationName = "";
+  ActivationName.clear();
   ActivationValues.clear();
-  Activation = true;
+  ActivationComparison.clear();
+  ActivationType.clear();
+  ActivationNumber.clear();
+  ActivationStatus.clear();
   return *this;
 }
 
 
-string Parameter::activationName( void ) const
+int Parameter::activations( void ) const
 {
-  return ActivationName;
+  return ActivationName.size();
 }
 
 
-string Parameter::activationValue( void ) const
+string Parameter::activationName( int index ) const
 {
-  return ActivationValues.empty() ? "" : ActivationValues[0];
+  if ( index < 0 || index >= (int)ActivationName.size() )
+    return "";
+  else
+    return ActivationName[index];
 }
 
 
-string Parameter::activationValues( void ) const
+string Parameter::activationValue( int index ) const
 {
-  string s = "";
-  for ( int k=0; k<ActivationValues.size(); k++ ) {
-    if ( k > 0 )
-      s += '|';
-    s += ActivationValues[k];
+  if ( index < 0 || index >= (int)ActivationValues.size() )
+    return "";
+  else
+    return ActivationValues[index].empty() ? "" : ActivationValues[index][0];
+}
+
+
+string Parameter::activationValues( int index ) const
+{
+  if ( index < 0 || index >= (int)ActivationValues.size() )
+    return "";
+  else {
+    string s = "";
+    for ( int k=0; k<ActivationValues[index].size(); k++ ) {
+      if ( k > 0 )
+	s += '|';
+      s += ActivationValues[index][k];
+    }
+    return s;
   }
-  return s;
 }
 
 
-double Parameter::activationNumber( void ) const
+double Parameter::activationNumber( int index ) const
 {
-  return ActivationNumber;
+  if ( index < 0 || index >= (int)ActivationNumber.size() )
+    return 0.0;
+  else
+    return ActivationNumber.back();
 }
 
 
-int Parameter::activationComparison( void ) const
+int Parameter::activationComparison( int index ) const
 {
-  return ActivationComparison;
+  if ( index < 0 || index >= (int)ActivationComparison.size() )
+    return 0;
+  else
+    return ActivationComparison[index];
 }
 
 
-bool Parameter::activation( void ) const
+bool Parameter::activation( int index ) const
 {
-  return Activation;
+  if ( index < 0 || index >= (int)ActivationType.size() )
+    return true;
+  else
+    return ActivationType[index];
 }
 
 
-bool Parameter::testActivation( const string &value )
+bool Parameter::testActivation( int index, const string &value )
 {
-  for ( int k=0; k<ActivationValues.size(); k++ ) {
-    if ( ActivationValues[k] == value )
-      return true;
-  }
-  return false;
-}
-
-
-bool Parameter::testActivation( double value, double tol )
-{
-  bool b = true;
-
-  switch ( ActivationComparison ) {
-
-  case 1:
-    b = ( ::fabs( ActivationNumber - value ) < tol );
-    break;
-
-  case 2:
-    b = ( value > ActivationNumber );
-    break;
-
-  case 3:
-    b = ( value >= ActivationNumber-tol );
-    break;
-
-  case 4:
-    b = ( value < ActivationNumber );
-    break;
-
-  case 5:
-    b = ( value <= ActivationNumber+tol );
-    break;
-
-  case 6:
-    b = ( ::fabs( ActivationNumber - value ) >= tol );
-    break;
-
-  default:
-    // string comparison:
-    Str f( format() );
-    f.format( value, "fge" );
-    b = testActivation( f );
+  if ( index >= 0 && index < (int)ActivationValues.size() ) {
+    ActivationStatus[index] = false;
+    for ( int k=0; k<ActivationValues[index].size(); k++ ) {
+      if ( ActivationValues[index][k] == value ) {
+	ActivationStatus[index] = true;
+	break;
+      }
+    }
+    if ( ! ActivationType[index] )
+      ActivationStatus[index] = ! ActivationStatus[index];
   }
 
-  return b;
+  for ( unsigned int k=0; k<ActivationStatus.size(); k++ ) {
+    if ( ! ActivationStatus[k] )
+      return false;
+  }
+  return true;
+}
+
+
+bool Parameter::testActivation( int index, double value, double tol )
+{
+  if ( index >= 0 && index < (int)ActivationComparison.size() ) {
+    bool b = true;
+
+    switch ( ActivationComparison[index] ) {
+
+    case 1:
+      b = ( ::fabs( ActivationNumber[index] - value ) < tol );
+      if ( ! ActivationType[index] )
+	b = !b;
+      break;
+
+    case 2:
+      b = ( value > ActivationNumber[index] );
+      if ( ! ActivationType[index] )
+	b = !b;
+      break;
+
+    case 3:
+      b = ( value >= ActivationNumber[index]-tol );
+      if ( ! ActivationType[index] )
+	b = !b;
+      break;
+
+    case 4:
+      b = ( value < ActivationNumber[index] );
+      if ( ! ActivationType[index] )
+	b = !b;
+      break;
+
+    case 5:
+      b = ( value <= ActivationNumber[index]+tol );
+      if ( ! ActivationType[index] )
+	b = !b;
+      break;
+
+    case 6:
+      b = ( ::fabs( ActivationNumber[index] - value ) >= tol );
+      if ( ! ActivationType[index] )
+	b = !b;
+      break;
+
+    default:
+      // string comparison:
+      Str f( format() );
+      f.format( value, "fge" );
+      b = testActivation( index, f );
+    }
+
+    ActivationStatus[index] = b;
+  }
+
+  for ( unsigned int k=0; k<ActivationStatus.size(); k++ ) {
+    if ( ! ActivationStatus[k] )
+      return false;
+  }
+  return true;
 }
 
 

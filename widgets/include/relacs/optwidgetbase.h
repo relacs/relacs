@@ -22,7 +22,7 @@
 #ifndef _RELACS_OPTWIDGETBASE_H_
 #define _RELACS_OPTWIDGETBASE_H_ 1
 
-#include <vector>
+#include <deque>
 #include <QObject>
 #include <QWidget>
 #include <QMutex>
@@ -56,7 +56,7 @@ public:
   void lockMutex( void );
   bool tryLockMutex( int timeout=1 );
   void unlockMutex( void );
-  void addActivation( OptWidgetBase *w );
+  void addActivation( int index, OptWidgetBase *w );
   void activateOption( bool eq );
   QWidget *valueWidget( void );
   bool editable( void ) const;
@@ -77,7 +77,8 @@ public:
   bool ContUpdate;
   bool InternChanged;
   bool InternRead;
-  vector< OptWidgetBase* > Widgets;
+  deque< OptWidgetBase* > Widgets;
+  deque< int > Index;
 };
 
 

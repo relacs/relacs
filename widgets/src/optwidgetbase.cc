@@ -148,8 +148,9 @@ void OptWidgetBase::initActivation( void )
 }
 
 
-void OptWidgetBase::addActivation( OptWidgetBase *w )
+void OptWidgetBase::addActivation( int index, OptWidgetBase *w )
 {
+  Index.push_back( index );
   Widgets.push_back( w );
   initActivation();
 }
@@ -157,7 +158,7 @@ void OptWidgetBase::addActivation( OptWidgetBase *w )
 
 void OptWidgetBase::activateOption( bool eq )
 {
-  bool ac = Param != OO->end() ? ( Param->activation() ? eq : !eq ) : true;
+  bool ac = Param != OO->end() ? eq : true;
 
   if ( LabelW != 0 )
     LabelW->setEnabled( ac );
@@ -272,7 +273,7 @@ void OptWidgetText::textChanged( const QString &s )
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     if ( Widgets[k]->param() != OO->end() )
-      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( s.toStdString() ) );
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], s.toStdString() ) );
   }
 }
 
@@ -341,7 +342,7 @@ void OptWidgetText::initActivation( void )
   else
     s = LW->text().toStdString();
   if ( Widgets.back()->param() != OO->end() )
-    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( s ) );
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( Index.back(), s ) );
 }
 
 
@@ -565,7 +566,7 @@ void OptWidgetMultiText::textChanged( const QString &s )
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     if ( Widgets[k]->param() != OO->end() )
-      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( s.toStdString() ) );
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], s.toStdString() ) );
   }
 }
 
@@ -627,7 +628,7 @@ void OptWidgetMultiText::initActivation( void )
   else
     s = LW->text().toStdString();
   if ( Widgets.back()->param() != OO->end() )
-    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( s ) );
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( Index.back(), s ) );
 }
 
 
@@ -843,7 +844,7 @@ void OptWidgetNumber::valueChanged( double v )
     tol = 0.01*Param->step();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
      if ( Widgets[k]->param() != OO->end() )
-      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( v, tol ) );
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], v, tol ) );
   }
 }
 
@@ -906,7 +907,7 @@ void OptWidgetNumber::initActivation( void )
   if ( Param->isNumber() )
     tol = 0.01*Param->step();
   if ( Widgets.back()->param() != OO->end() )
-    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( v, tol ) );
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( Index.back(), v, tol ) );
 }
 
 
@@ -1004,7 +1005,7 @@ void OptWidgetBoolean::valueChanged( bool v )
   string b( v ? "true" : "false" );
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     if ( Widgets[k]->param() != OO->end() )
-      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( b ) );
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], b ) );
   }
 }
 
@@ -1056,7 +1057,7 @@ void OptWidgetBoolean::initActivation( void )
 {
   string b( EW->isChecked() ? "true" : "false" );
   if ( Widgets.back()->param() != OO->end() )
-    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( b ) );
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( Index.back(), b ) );
 }
 
 
@@ -1159,7 +1160,7 @@ void OptWidgetDate::valueChanged( const QDate &date )
     s = LW->text().toStdString();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     if ( Widgets[k]->param() != OO->end() )
-      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( s ) );
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], s ) );
   }
 }
 
@@ -1219,7 +1220,7 @@ void OptWidgetDate::initActivation( void )
   else
     s = LW->text().toStdString();
   if ( Widgets.back()->param() != OO->end() )
-    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( s ) );
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( Index.back(), s ) );
 }
 
 
@@ -1322,7 +1323,7 @@ void OptWidgetTime::valueChanged( const QTime &time )
     s = LW->text().toStdString();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     if ( Widgets[k]->param() != OO->end() )
-      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( s ) );
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], s ) );
   }
 }
 
@@ -1382,7 +1383,7 @@ void OptWidgetTime::initActivation( void )
   else
     s = LW->text().toStdString();
   if ( Widgets.back()->param() != OO->end() )
-    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( s ) );
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( Index.back(), s ) );
 }
 
 

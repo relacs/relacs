@@ -52,8 +52,8 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
   addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 10000.0, 1.0, IUnit ).setActivation( "waveform", "Const", false );;
   addSelection( "freqsel", "Specify", "frequency|periods" ).setActivation( "waveform", "From file|Const|Sweep", false );
-  addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "freqsel", "frequency" );
-  addNumber( "periods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "periods" );
+  addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "freqsel", "frequency" ).addActivation( "waveform", "From file|Const|Sweep", false );
+  addNumber( "periods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "periods" ).addActivation( "waveform", "From file|Const|Sweep", false );
   addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
   addNumber( "startfreq", "Start sweep with frequency", 1.0, 0.0, 100000.0, 1.0, "Hz", "Hz", "%.2f" ).setActivation( "waveform", "Sweep" );

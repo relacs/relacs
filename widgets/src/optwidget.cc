@@ -537,13 +537,15 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     if ( Widgets[k]->param() == Opt->end() )
       continue;
-    string aname = Widgets[k]->param()->activationName();
-    if ( aname.size() > 0 ) {
-      for ( unsigned int i=0; i<Widgets.size(); i++ ) {
-	if ( Widgets[i]->param() == Opt->end() )
-	  continue;
-	if ( *Widgets[i]->param() == aname )
-	  Widgets[i]->addActivation( Widgets[k] );
+    for ( int j=0; j<Widgets[k]->param()->activations(); j++ ) {
+      string aname = Widgets[k]->param()->activationName( j );
+      if ( aname.size() > 0 ) {
+	for ( unsigned int i=0; i<Widgets.size(); i++ ) {
+	  if ( Widgets[i]->param() == Opt->end() )
+	    continue;
+	  if ( *Widgets[i]->param() == aname )
+	    Widgets[i]->addActivation( j, Widgets[k] );
+	}
       }
     }
   }
