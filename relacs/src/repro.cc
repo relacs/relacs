@@ -45,7 +45,7 @@ RePro::RePro( const string &name, const string &pluginset,
 		  name, pluginset, author, version, date ),
     OverwriteOpt()
 {
-  addDialogStyle( OptWidget::TabSectionStyle );
+  addDialogStyle( OptWidget::TabSectionStyle | OptWidget::HideStyle );
 
   LastState = Continue;
   CompleteRuns = 0;

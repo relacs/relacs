@@ -160,14 +160,38 @@ void OptWidgetBase::activateOption( bool eq )
 {
   bool ac = Param != OO->end() ? eq : true;
 
-  if ( LabelW != 0 )
-    LabelW->setEnabled( ac );
-  if ( W != 0 )
-    W->setEnabled( ac );
-  if ( UnitLabel != 0 )
-    UnitLabel->setEnabled( ac );
-  if ( UnitBrowseW != 0 )
-    UnitBrowseW->setEnabled( ac );
+  if ( OW->style() & OptWidget::HideStyle ) {
+    if ( ac ) {
+      if ( LabelW != 0 )
+	LabelW->show();
+      if ( W != 0 )
+	W->show();
+      if ( UnitLabel != 0 )
+	UnitLabel->show();
+      if ( UnitBrowseW != 0 )
+	UnitBrowseW->show();
+    }
+    else {
+      if ( LabelW != 0 )
+	LabelW->hide();
+      if ( W != 0 )
+	W->hide();
+      if ( UnitLabel != 0 )
+	UnitLabel->hide();
+      if ( UnitBrowseW != 0 )
+	UnitBrowseW->hide();
+    }
+  }
+  else {
+    if ( LabelW != 0 )
+      LabelW->setEnabled( ac );
+    if ( W != 0 )
+      W->setEnabled( ac );
+    if ( UnitLabel != 0 )
+      UnitLabel->setEnabled( ac );
+    if ( UnitBrowseW != 0 )
+      UnitBrowseW->setEnabled( ac );
+  }
 }
 
 

@@ -65,6 +65,7 @@ OptWidget::OptWidget( QWidget *parent, Qt::WindowFlags f )
     BottomMargin( -1 ),
     VerticalSpacing( -1 ),
     HorizontalSpacing( -1 ),
+    Style( 0 ),
     Widgets(),
     DisableUpdate( false ),
     SelectMask( 0 ),
@@ -91,6 +92,7 @@ OptWidget::OptWidget( Options *o, QMutex *mutex,
     BottomMargin( -1 ),
     VerticalSpacing( -1 ),
     HorizontalSpacing( -1 ),
+    Style( 0 ),
     Widgets(),
     DisableUpdate( false ),
     SelectMask( 0 ),
@@ -120,6 +122,7 @@ OptWidget::OptWidget( Options *o, int selectmask, int romask,
     BottomMargin( -1 ),
     VerticalSpacing( -1 ),
     HorizontalSpacing( -1 ),
+    Style( 0 ),
     Widgets(),
     DisableUpdate( false ),
     SelectMask( 0 ),
@@ -146,8 +149,7 @@ OptWidget &OptWidget::operator=( Options *o )
 }
 
 
-void OptWidget::assignOptions( Options *o, bool tabs, int style,
-			       int &row, int &level,
+void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
 			       QWidget *parent, QTabWidget *tabwidget,
 			       string *tabhotkeys )
 {
@@ -165,14 +167,14 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
     bool added = true;
     // request string:
     string rs = pp->request();
-    if ( style & NameFrontStyle ) {
-      if ( style & HighlightNameStyle )
+    if ( Style & NameFrontStyle ) {
+      if ( Style & HighlightNameStyle )
 	rs = "<nobr><tt>" + pp->name() + "</tt>: " + rs + "</nobr>";
       else
 	rs = pp->name() + ": " + rs;
     }
-    else if ( style & NameBehindStyle ) {
-      if ( style & HighlightNameStyle )
+    else if ( Style & NameBehindStyle ) {
+      if ( Style & HighlightNameStyle )
 	rs = "<nobr>" + rs + " <tt>(" + pp->name() + ")</tt></nobr>";
       else
 	rs += " (" + pp->name() + ")";
@@ -181,7 +183,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
     if ( pp->isText() ) {
       l = new QLabel( rs.c_str() );
       setLabelStyle( l, pp->style() );
-      if ( style & BreakLinesStyle )
+      if ( Style & BreakLinesStyle )
 	Layout.back()->addWidget( l, row, 1, 1, 2,
 				  Qt::AlignLeft | Qt::AlignVCenter );
       else
@@ -191,7 +193,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
       if ( ! pp->outUnit().empty() && ( pp->style() & Browse ) == 0 ) {
 	ul = unitLabel( *pp );
 	setLabelStyle( ul, pp->style() );
-	if ( style & BreakLinesStyle )
+	if ( Style & BreakLinesStyle )
 	  Layout.back()->addWidget( ul, row+1, 2,
 				    Qt::AlignLeft | Qt::AlignVCenter );
 	else
@@ -205,7 +207,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	    FirstWidget = t->valueWidget();
 	  LastWidget = t->valueWidget();
 	}
-	if ( style & BreakLinesStyle ) {
+	if ( Style & BreakLinesStyle ) {
 	  row++;
 	  if ( ul != 0 || t->browseButton() != 0 )
 	    Layout.back()->addWidget( t->valueWidget(), row, 1 );
@@ -216,7 +218,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	  Layout.back()->addWidget( t->valueWidget(), row, 2 );
 	t->setUnitLabel( ul );
 	if ( t->browseButton() != 0 ) {
-	  if ( style & BreakLinesStyle )
+	  if ( Style & BreakLinesStyle )
 	    Layout.back()->addWidget( t->browseButton(), row, 2,
 				      Qt::AlignLeft | Qt::AlignVCenter );
 	  else
@@ -231,7 +233,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	    FirstWidget = t->valueWidget();
 	  LastWidget = t->valueWidget();
 	}
-	if ( style & BreakLinesStyle ) {
+	if ( Style & BreakLinesStyle ) {
 	  row++;
 	  if ( ul != 0 )
 	    Layout.back()->addWidget( t->valueWidget(), row, 1 );
@@ -247,7 +249,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
     else if ( pp->isNumber() || pp->isInteger() ) {
       l = new QLabel( rs.c_str() );
       setLabelStyle( l, pp->style() );
-      if ( style & BreakLinesStyle )
+      if ( Style & BreakLinesStyle )
 	Layout.back()->addWidget( l, row, 1, 1, 2,
 				  Qt::AlignLeft | Qt::AlignVCenter );
       else
@@ -259,7 +261,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	  FirstWidget = n->valueWidget();
 	LastWidget = n->valueWidget();
       }
-      if ( style & BreakLinesStyle ) {
+      if ( Style & BreakLinesStyle ) {
 	row++;
 	Layout.back()->addWidget( n->valueWidget(), row, 1 );
       }
@@ -267,7 +269,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	Layout.back()->addWidget( n->valueWidget(), row, 2 );
       QLabel *ul = unitLabel( *pp );
       setLabelStyle( ul, pp->style() );
-      if ( style & BreakLinesStyle )
+      if ( Style & BreakLinesStyle )
 	Layout.back()->addWidget( ul, row, 2,
 				  Qt::AlignLeft | Qt::AlignVCenter );
       else
@@ -283,7 +285,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	  FirstWidget = b->valueWidget();
 	LastWidget = b->valueWidget();
       }
-      if ( style & BreakLinesStyle )
+      if ( Style & BreakLinesStyle )
 	Layout.back()->addWidget( b->valueWidget(), row, 1, 1, 2,
 				  Qt::AlignLeft | Qt::AlignVCenter );
       else {
@@ -299,7 +301,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
     else if ( pp->isDate() ) {
       l = new QLabel( rs.c_str() );
       setLabelStyle( l, pp->style() );
-      if ( style & BreakLinesStyle )
+      if ( Style & BreakLinesStyle )
 	Layout.back()->addWidget( l, row, 1, 1, 2,
 				  Qt::AlignLeft | Qt::AlignVCenter );
       else
@@ -311,7 +313,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	  FirstWidget = d->valueWidget();
 	LastWidget = d->valueWidget();
       }
-      if ( style & BreakLinesStyle ) {
+      if ( Style & BreakLinesStyle ) {
 	row++;
 	Layout.back()->addWidget( d->valueWidget(), row, 1 );
       }
@@ -322,7 +324,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
     else if ( pp->isTime() ) {
       l = new QLabel( rs.c_str() );
       setLabelStyle( l, pp->style() );
-      if ( style & BreakLinesStyle )
+      if ( Style & BreakLinesStyle )
 	Layout.back()->addWidget( l, row, 1, 1, 2,
 				  Qt::AlignLeft | Qt::AlignVCenter );
       else
@@ -334,7 +336,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	  FirstWidget = t->valueWidget();
 	LastWidget = t->valueWidget();
       }
-      if ( style & BreakLinesStyle ) {
+      if ( Style & BreakLinesStyle ) {
 	row++;
 	Layout.back()->addWidget( t->valueWidget(), row, 1 );
       }
@@ -347,7 +349,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
       row--;
     }
     // extra space:
-    if ( (style & ExtraSpaceStyle) > 0 && added ) {
+    if ( (Style & ExtraSpaceStyle) > 0 && added ) {
       row++;
       Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum,
 					       QSizePolicy::Expanding ),
@@ -374,11 +376,11 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
       continue;
     if ( tabs && level == 0 &&
 	 (*sp)->flag( SelectMask ) && (*sp)->size( SelectMask ) > 0 &&
-	 ( (style & TabSectionStyle ) ||
+	 ( (Style & TabSectionStyle ) ||
 	   ( (*sp)->style() & TabSection ) ||
 	   firstsec ) ) {
       // finish parameter:
-      if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
+      if ( row > 0 && (Style & ExtraSpaceStyle) == 0 )
 	Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum,
 						 QSizePolicy::Expanding ),
 				row, 2 );
@@ -402,10 +404,10 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
       // this section is set as a label:
       OptWidgetSection *s = new OptWidgetSection( sp, Opt, this, OMutex );
       int sstyle = 0;
-      if ( (style & BoldSectionsStyle ) )
+      if ( (Style & BoldSectionsStyle ) )
 	sstyle |= Bold;
       setLabelStyle( s->valueWidget(), (*sp)->style() | sstyle );
-      if ( style & BreakLinesStyle ) {
+      if ( Style & BreakLinesStyle ) {
 	Layout.back()->addWidget( s->valueWidget(), row, 0, 1, 4,
 				  Qt::AlignLeft | Qt::AlignBottom );
       }
@@ -420,7 +422,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
       Layout.back()->setColumnMinimumWidth( 0, 20 );
       row++;
     }
-    assignOptions( *sp, tabs, style, row, level, parent, tabwidget, tabhotkeys );
+    assignOptions( *sp, tabs, row, level, parent, tabwidget, tabhotkeys );
     firstsec = false;
   }
 
@@ -432,6 +434,8 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 			      bool contupdate, int style, QMutex *mutex,
 			      string *tabhotkeys )
 {
+  Style = style;
+
   if ( mutex != 0 )
     OMutex = mutex;
 
@@ -525,7 +529,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 
   int row = 0;
   int level = -1;
-  assignOptions( Opt, Tabs, style, row, level, parent, tabwidget, tabhotkeys );
+  assignOptions( Opt, Tabs, row, level, parent, tabwidget, tabhotkeys );
 
   // finish parameter:
   if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
@@ -651,6 +655,12 @@ int OptWidget::readOnlyMask( void ) const
 bool OptWidget::continuousUpdate( void ) const
 {
   return ContinuousUpdate;
+}
+
+
+int OptWidget::style( void ) const
+{
+  return Style;
 }
 
 

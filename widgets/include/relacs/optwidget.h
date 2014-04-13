@@ -250,6 +250,8 @@ public:
   static const int HighlightNameStyle = 0x0020;
     /*! Display all section names using a bold font. */
   static const int BoldSectionsStyle = 0x0040;
+    /*! Hide inactivated options. */
+  static const int HideStyle = 0x0080;
 
 
     /*! Constructs an empty OptWidget.
@@ -347,6 +349,8 @@ public:
         Options values.
         \sa assign(). */
   bool continuousUpdate( void ) const;
+    /*! Returns the style flags of the widget. */
+  int style( void ) const;
     /*! The flag that is used to mark options whose value were changed
         by or-ing their flags with this flag.
         It is preset to a constant value (16384) and
@@ -507,8 +511,7 @@ private:
     TextShade,
   };
 
-  void assignOptions( Options *o, bool tabs, int style,
-		      int &row, int &level,
+  void assignOptions( Options *o, bool tabs, int &row, int &level,
 		      QWidget *parent, QTabWidget *tabwidget, string *tabhotkeys );
   void addWidget( OptWidgetBase *owb );
   bool updateDisabled( void ) const;
@@ -538,6 +541,7 @@ private:
   int BottomMargin;
   int VerticalSpacing;
   int HorizontalSpacing;
+  int Style;
 
   vector< OptWidgetBase* > Widgets;
 
