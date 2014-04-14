@@ -1910,6 +1910,7 @@ public:
 	Str::stripComment( \a comment ).
 	If \a line does not equal zero
 	then the last read line is returned in \a line.
+	Each parameter that has been read from the stream gets its flag set to \a flag.
 	The warning message is set. */
   istream &read( istream &str, int flag, const string &assignment=":=",
 		 const string &comment="#",
@@ -1920,17 +1921,18 @@ public:
     { return read( str, 0, assignment, comment, stop, line ); };
     /*! Read options from the list of strings \a sq.
 	Each line is assumed to be a single option.
+	Each parameter that has been read from \a sq gets its flag set to \a flag.
 	The warning message is set. */
   Options &read( const StrQueue &sq, int flag=0,
 		 const string &assignment=":=" );
 
     /*! Read options from the parameter \a p.
         Returns \c true if \a p was read and
-        ad \a flag to the flags of the Options that read it. */
+        add \a flag to the flags of the Parameter that read it. */
   bool read( const Parameter &p, int flag=0 );
     /*! Read options from the options \a o.
         A subset of the options can be selected by \a flags.
-        Options that read a value get \a flag added to their flags. */
+        Parameter that read a value get \a flag added to their flags. */
   Options &read( const Options &o, int flags=0, int flag=0 );
 
     /*! Read options from the parameter \a p.

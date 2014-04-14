@@ -671,7 +671,7 @@ int Options::flag( void ) const
 bool Options::flag( int selectflag ) const
 {
   return ( selectflag == 0 || selectflag == NonDefault || 
-	   flag() == 0 || ( ( flag() & abs(selectflag) ) ) );
+	   ( flag() & abs(selectflag) ) );
 }
 
 
@@ -5253,7 +5253,6 @@ Options &Options::read( const Options &o, int flags, int flag )
 	    ++sp ) {
 	if ( (*op)->name() == (*sp)->name() ) {
 	  (*sp)->read( **op, flags, flag );
-	  (*sp)->addFlag( flag );
 	  changed = true;
 	  break;
 	}
@@ -5379,7 +5378,7 @@ Options &Options::load( const Str &opttxt,
     // extract name:
     next = s.findSeparator( index, assignment, "\"" );
     Str name = s.mid( index, next-1 );
-    name.strip();
+    name.strip( Str::WhiteSpace + '"' );
     // go to value:
     if ( next >= 0 )
       index = s.findFirstNot( Str::WhiteSpace, next+1 );

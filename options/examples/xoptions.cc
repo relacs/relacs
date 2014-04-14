@@ -168,7 +168,6 @@ int main( int argc, char *argv[] )
   Options opt3;
   {
     ifstream sf( "tmp.dat" );
-    string s;
     opt3.load( sf );
   }
   opt3.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
@@ -180,7 +179,7 @@ int main( int argc, char *argv[] )
   {
     ifstream sf( "read.dat" );
     string s;
-    opt4.load( sf );
+    opt4.load( sf, ":" );
   }
   opt4.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
   cout << '\n';
