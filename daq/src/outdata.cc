@@ -1290,15 +1290,25 @@ void OutData::pulseWave( double duration, double stepsize,
 }
 
 
-void OutData::alphaWave( double duration, double stepsize, 
-			 double tau, double ampl, double delay )
+void OutData::alphaWave( double &duration, double stepsize, 
+			 double period, double tau, double ampl, double delay )
 {
   if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
-  alpha( 0.0, duration, stepsize, tau, delay );
-  if ( ampl != 1.0 )
-    array() *= ampl;
+  double d = duration;
+  if ( period < duration ) 
+    d = ::floor( duration / period )*period + delay + 5.0*tau;
+  SampleDataF::resize( 0.0, d, stepsize );
+  *this = 0.0;
+  for ( int k=0; k<indices( duration ); k += indices( period ) ) {
+    SampleDataF a;
+    a.alpha( 0.0, duration, stepsize, tau, delay );
+    for ( int i=0; i<a.size() && k+i<size(); i++ )
+      (*this)[k+i] += a[i];
+  }
+  array() *= ::exp( 1.0 ) * ampl;
   back() = 0.0;
+  duration = length();
 
   Description.clear();
   Description.setType( "stimulus/alpha" );
@@ -1306,6 +1316,8 @@ void OutData::alphaWave( double duration, double stepsize,
   Description.addNumber( "TemporalOffset", delay, "s" );
   Description.addNumber( "TimeConstant", tau, "s" );
   Description.addNumber( "Amplitude", ampl, unit() );
+  if ( period < duration )
+    Description.addNumber( "Period", period, "s" );
 
   clearError();
 }

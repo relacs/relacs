@@ -37,7 +37,7 @@ namespace patchclamp {
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
 \author Jan Benda
-\version 1.6 (Oct 22, 2013)
+\version 1.7 (Apr 14, 2014)
 \par Options
 - \c Waveform
     - \c waveform=From file: Stimulus waveform (\c string)
@@ -46,12 +46,15 @@ namespace patchclamp {
     - \c amplitude=1nA: Amplitude of stimulus (\c number)
     - \c freqsel=frequency: Specify (\c string)
     - \c freq=10Hz: Frequency of waveform (\c number)
-    - \c periods=1: Number of periods (\c number)
-    - \c dutycycle=50%: Duty-cycle of rectangular waveform (\c number)
+    - \c period=100ms: Period of waveform (\c number)
+    - \c numperiods=1: Number of periods (\c number)
+    - \c pulsesel=pulse duration: Specify (\c string)
+    - \c pulseduration=10ms: Pulse duration (\c number)
+    - \c dutycycle=50%: Duty-cycle (\c number)
     - \c seed=0: Seed for random number generation (\c integer)
     - \c startfreq=1Hz: Start sweep with frequency (\c number)
     - \c endfreq=100Hz: End sweep with frequency (\c number)
-    - \c duration=0ms: Maximum duration of stimulus (\c number)
+    - \c duration=1000ms: Maximum duration of stimulus (\c number)
     - \c ramp=2ms: Ramp of stimulus (\c number)
 - \c Stimulus
     - \c offset=0nA: Stimulus mean (\c number)
@@ -113,13 +116,15 @@ protected:
   void saveMeanTrace( Options &header, TableKey &tracekey,
 		      const SampleDataF &meanvoltage, const SampleDataF &meancurrent );
   void saveSpikes( Options &header, const EventList &spikes );
-  void saveRate( Options &header, const SampleDataD &rate );
+  void saveRate( Options &header, const SampleDataD &rate, double sigma );
   void plot( const EventList &spikes, const SampleDataD &rate, const OutData &signal,
-	     const SampleDataF &voltage, const SampleDataF &meanvoltage, int plotmode );
-  void analyze( EventList &spikes, SampleDataD &rate );
+	     const SampleDataF &voltage, const SampleDataF &meanvoltage, double meanrate,
+	     double duration, int repeats, int plotmode );
+  void analyze( EventList &spikes, SampleDataD &rate, double &meanrate,
+		double duration, double skipwin, double sigma );
 
-  int createStimulus( OutData &signal, const Str &file,
-		      double &duration, double deltat, bool storesignal );
+  int createStimulus( OutData &signal, const Str &file, double &duration, double deltat,
+		      double ramp, double skipwin, bool storesignal );
 
   void customEvent( QEvent *qce );
 
@@ -130,20 +135,16 @@ protected:
   double PeakAmplitude;
   double PeakAmplitudeFac;
   enum WaveForms { File=0, Const, Sine, Rectangular, Triangular,
-		   Sawup, Sawdown, Whitenoise, OUnoise, Sweep };
+		   Sawup, Sawdown, Alpha, Whitenoise, OUnoise, Sweep };
   WaveForms WaveForm;
   double Frequency;
+  double PulseDuration;
   double DutyCycle;
+  double Tau;
   int Seed;
   double StartFreq;
   double EndFreq;
-  double Ramp;
   double Offset;
-  double Duration;
-  int Side;
-  int Repeats;
-  double SkipWin;
-  double Sigma;
 
   string StimulusLabel;
   enum StoreModes { SessionPath, ReProPath, CustomPath };
@@ -151,7 +152,6 @@ protected:
   StoreLevels StoreLevel;
   Str StorePath;
   Str StoreFile;
-  double MeanRate;
 
   MultiPlot SP;
   MultiPlot P;

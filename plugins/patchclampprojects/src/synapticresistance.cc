@@ -142,7 +142,10 @@ int SynapticResistance::main( void )
   if ( enableconductance ) {
     signal.push( sig );
     signal.back().setTraceName( "g" );
-    signal.back().alphaWave( before+duration, -1.0, conductancetau, ::exp( 1.0 )*conductanceamplitude, before );
+    double d = before+duration;
+    signal.back().alphaWave( d, -1.0, 10.0*duration,
+			     conductancetau, conductanceamplitude, before );
+    signal.back().resize( signal.front().size() );
     signal.back().setIdent( "gsynaptic" );
   }
 

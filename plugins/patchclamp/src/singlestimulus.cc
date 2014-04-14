@@ -35,37 +35,36 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.6", "Oct 22, 2013" )
+  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.7", "Apr 14, 2014" )
 {
   IUnit = "nA";
-  Offset = 0.0;
   Amplitude = 1.0;
-  Duration = 0.0;
-  Repeats = 10;
-  SkipWin = 0.1;
-  Sigma = 0.01;
 
   // options:
   newSection( "Waveform" );
-  addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise|Sweep" );
+  addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Alpha|Whitenoise|OUnoise|Sweep" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
   addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 10000.0, 1.0, IUnit ).setActivation( "waveform", "Const", false );;
-  addSelection( "freqsel", "Specify", "frequency|periods" ).setActivation( "waveform", "From file|Const|Sweep", false );
+  addSelection( "freqsel", "Specify", "frequency|period|number of periods" ).setActivation( "waveform", "From file|Const|Sweep", false );
   addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "freqsel", "frequency" ).addActivation( "waveform", "From file|Const|Sweep", false );
-  addNumber( "periods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "periods" ).addActivation( "waveform", "From file|Const|Sweep", false );
-  addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
+  addNumber( "period", "Period of waveform", 0.1, 0.0, 1000000.0, 0.001, "s", "ms" ).setActivation( "freqsel", "period" ).addActivation( "waveform", "From file|Const|Sweep", false );
+  addNumber( "numperiods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "number of periods" ).addActivation( "waveform", "From file|Const|Sweep", false );
+  addSelection( "pulsesel", "Specify", "pulse duration|duty-cycle" ).setActivation( "waveform", "Rectangular" );
+  addNumber( "pulseduration", "Pulse duration", 0.01, 0.0, 10000.0, 0.001, "s", "ms" ).setActivation( "pulsesel", "pulse duration" ).addActivation( "waveform", "Rectangular" );
+  addNumber( "dutycycle", "Duty-cycle", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "pulsesel", "duty-cycle" ).addActivation( "waveform", "Rectangular" );
+  addNumber( "tau", "Time-constant", 1.0, 0.0, 100000.0, 0.001, "s", "ms" ).setActivation( "waveform", "Alpha" );
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
   addNumber( "startfreq", "Start sweep with frequency", 1.0, 0.0, 100000.0, 1.0, "Hz", "Hz", "%.2f" ).setActivation( "waveform", "Sweep" );
   addNumber( "endfreq", "End sweep with frequency", 100.0, 0.0, 100000.0, 1.0, "Hz", "Hz", "%.2f" ).setActivation( "waveform", "Sweep" );
-  addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
+  addNumber( "duration", "Maximum duration of stimulus", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   newSection( "Stimulus" );
-  addNumber( "offset", "Stimulus mean", Offset, -2000.0, 2000.0, 5.0, IUnit );
+  addNumber( "offset", "Stimulus mean", 0.0, -2000.0, 2000.0, 5.0, IUnit );
   addSelection( "offsetbase", "Stimulus mean relative to", "absolute|amplitude|current|threshold|previous" );
   addBoolean( "samerate", "Use sampling rate of input", true ).setActivation( "waveform", "From file", false );
   addNumber( "samplerate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "true", false );
-  addNumber( "repeats", "Number of stimulus presentations", Repeats, 0, 10000, 1, "times" ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "repeats", "Number of stimulus presentations", 10, 0, 10000, 1, "times" ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "outtrace", "Output trace", "V-1" );
   newSection( "Offset - search" );
@@ -83,8 +82,8 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "searchduration", "Maximum duration of stimulus", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
   addNumber( "searchpause", "Duration of pause between stimuli", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
   newSection( "Analysis" );
-  addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWin, 0.0, 100.0, 0.01, "seconds", "ms" );
-  addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
+  addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
+  addNumber( "sigma", "Standard deviation of rate smoothing kernel", 0.01, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addBoolean( "storevoltage", "Save voltage trace", true );
@@ -206,7 +205,11 @@ int SingleStimulus::main( void )
   PeakAmplitudeFac = number( "stimampl" );
   int freqsel = index( "freqsel" );
   Frequency = number( "freq" );
-  double periods = number( "periods" );
+  double period = number( "period" );
+  double numperiods = number( "numperiods" );
+  int pulsesel = index( "pulsesel" );
+  PulseDuration = number( "pulseduration" );
+  Tau = number( "tau" );
   DutyCycle = number( "dutycycle" );
   Seed = integer( "seed" );
   StartFreq = number( "startfreq" );
@@ -216,10 +219,10 @@ int SingleStimulus::main( void )
   int offsetbase = index( "offsetbase" );
   bool samerate = boolean( "samerate" );
   double samplerate = number( "samplerate" );
-  Repeats = integer( "repeats" );
-  Duration = number( "duration" );
+  int repeats = integer( "repeats" );
+  double duration = number( "duration" );
   double pause = number( "pause" );
-  Ramp = number( "ramp" );
+  double ramp = number( "ramp" );
   int outtrace = index( "outtrace" );
   bool userate = boolean( "userate" );
   double targetrate = number( "rate" );
@@ -235,12 +238,12 @@ int SingleStimulus::main( void )
   double minslope = number( "minslope" );
   double searchduration = number( "searchduration" );
   if ( searchduration <= 0.0 )
-    searchduration = Duration;
+    searchduration = duration;
   double searchpause = number( "searchpause" );
   if ( searchpause <= 0.0 )
     searchpause = pause;
-  SkipWin = number( "skipwin" );
-  Sigma = number( "sigma" );
+  double skipwin = number( "skipwin" );
+  double sigma = number( "sigma" );
   double before = number( "before" );
   if ( before > pause )
     before = pause;
@@ -283,10 +286,32 @@ int SingleStimulus::main( void )
   else   // absolute
     Offset = offset;
 
-  if ( freqsel == 1 ) // periods
-    Frequency = periods/Duration;
+  // check stimulus duration:
+  if ( WaveForm >= Sine && WaveForm <= OUnoise ) {
+    if ( duration < 1.0e-8 ) {
+      warning( "The stimulus duration must be greater than zero!" );
+      return Aborted;
+    }
+  }
 
-  bool sameduration = ( Duration == searchduration );
+  // stimulus frequency:
+  if ( freqsel == 1 ) { // period
+    if ( period < 1.0e-8 ) {
+      warning( "The period must be greater than zero!" );
+      return Aborted;
+    }
+    Frequency = 1.0/period;
+  }
+  else if ( freqsel == 2 ) // number of periods
+    Frequency = numperiods/duration;
+
+  // pulse duration:
+  if ( pulsesel == 1 )
+    PulseDuration = DutyCycle/Frequency;
+  else
+    DutyCycle = -1.0;
+
+  bool sameduration = ( duration == searchduration );
   bool storedstimulus = false;
 
   // signal:
@@ -308,7 +333,7 @@ int SingleStimulus::main( void )
 
     // stimulus:
     int r = createStimulus( signal, stimfile, searchduration,
-			    1.0/samplerate, sameduration );
+			    1.0/samplerate, ramp, skipwin, sameduration );
     if ( r < 0 )
       return Failed;
     storedstimulus = sameduration;
@@ -390,10 +415,10 @@ int SingleStimulus::main( void )
 	// analyze:
 	spikes.push( events( SpikeEvents[0] ), signalTime(),
 		     signalTime()+searchduration );
-	double rate = spikes.back().rate( SkipWin, searchduration );
-	double meanrate = spikes.rate( SkipWin, searchduration );
+	double rate = spikes.back().rate( skipwin, searchduration );
+	double meanrate = spikes.rate( skipwin, searchduration );
 	SampleDataD ratepsth( 0.0, searchduration, 0.0005 );
-	spikes.rate( ratepsth, GaussKernel( Sigma ) );
+	spikes.rate( ratepsth, GaussKernel( sigma ) );
 	
 	// plot:
 	{
@@ -401,7 +426,7 @@ int SingleStimulus::main( void )
 	  // spikes and firing rate:
 	  SP[0].clear();
 	  if ( ! SP[0].zoomedXRange() && ! SP[1].zoomedXRange() )
-	    SP[0].setXRange( 1000.0*SkipWin, 1000.0*searchduration );
+	    SP[0].setXRange( 1000.0*skipwin, 1000.0*searchduration );
 	  if ( ! SP[0].zoomedYRange() )
 	    SP[0].setYRange( 0.0, Plot::AutoScale );
 	  int maxspikes	= (int)rint( 20.0 / searchrepeats );
@@ -429,7 +454,7 @@ int SingleStimulus::main( void )
 	  }
 	  SP[1].clear();
 	  if ( ! SP[0].zoomedXRange() && ! SP[1].zoomedXRange() )
-	    SP[1].setXRange( 1000.0*SkipWin, 1000.0*searchduration );
+	    SP[1].setXRange( 1000.0*skipwin, 1000.0*searchduration );
 	  if ( ! SP[1].zoomedYRange() )
 	    SP[1].setYRange( ymin - 1.0, ymax + 1.0 );
 	  SP[1].plot( signal, 1000.0, Plot::Green, 2 );
@@ -492,7 +517,7 @@ int SingleStimulus::main( void )
 
       }
 
-      double rate = spikes.rate( SkipWin, searchduration );
+      double rate = spikes.rate( skipwin, searchduration );
       int rinx = 0;
       if ( signal.success() )
 	rinx = rates.insert( Offset, rate );
@@ -597,8 +622,8 @@ int SingleStimulus::main( void )
 
   // stimulus:
   if ( ! sameduration || ! storedstimulus ) {
-    int r = createStimulus( signal, stimfile, Duration, 
-			    1.0/samplerate, true );
+    int r = createStimulus( signal, stimfile, duration, 
+			    1.0/samplerate, ramp, skipwin, true );
     if ( r < 0 ) {
       directWrite( dcsignal );
       return Failed;
@@ -607,13 +632,13 @@ int SingleStimulus::main( void )
   }
 
   // plot trace:
-  tracePlotSignal( Duration );
+  tracePlotSignal( duration );
 
   // setup plots:
   postCustomEvent( 11 );
   P.lock();
   P.clearPlots();
-  P[0].setXRange( -1000.0*before, 1000.0*(Duration+after) );
+  P[0].setXRange( -1000.0*before, 1000.0*(duration+after) );
   if ( plotmode < 3 ) {
     P[0].setYLabel( "Voltage [" + VUnit + "]" );
     P[0].setYRange( Plot::AutoScale, Plot::AutoScale );
@@ -623,7 +648,7 @@ int SingleStimulus::main( void )
     P[0].setYLabel( "Firing rate [Hz]" );
     P[0].setYRange( 0.0, Plot::AutoScale );
   }
-  P[1].setXRange( -1000.0*before, 1000.0*(Duration+after) );
+  P[1].setXRange( -1000.0*before, 1000.0*(duration+after) );
   P[1].setYLabel( "Stimulus [" + IUnit + "]" );
   P.draw();
   P.unlock();
@@ -638,7 +663,7 @@ int SingleStimulus::main( void )
   header.addNumber( "offset", Offset, IUnit, "%g" );
   header.addNumber( "amplitude", Amplitude, IUnit, "%g" );
   header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
-  header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
+  header.addNumber( "duration", 1000.0*duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
   lockStimulusData();
   header.newSection( stimulusData() );
@@ -647,15 +672,15 @@ int SingleStimulus::main( void )
 
   // variables:
   EventList spikes;
-  MeanRate = 0.0;
-  SampleDataD rate( -before, Duration+after, 0.001, 0.0 );
-  SampleDataF voltage( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
-  SampleDataF meanvoltage( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+  double meanrate = 0.0;
+  SampleDataD rate( -before, duration+after, 0.001, 0.0 );
+  SampleDataF voltage( -before, duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+  SampleDataF meanvoltage( -before, duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
   SampleDataF current;
   SampleDataF meancurrent;
   if ( CurrentTrace[0] >= 0 ) {
-    current.resize( -before, Duration+after, trace( CurrentTrace[0] ).stepsize(), 0.0 );
-    meancurrent.resize( -before, Duration+after, trace( CurrentTrace[0] ).stepsize(), 0.0 );
+    current.resize( -before, duration+after, trace( CurrentTrace[0] ).stepsize(), 0.0 );
+    meancurrent.resize( -before, duration+after, trace( CurrentTrace[0] ).stepsize(), 0.0 );
   }
   int state = Completed;
 
@@ -663,7 +688,7 @@ int SingleStimulus::main( void )
 
   // stimulus loop:  
   for ( int count=0;
-	( Repeats <= 0 || count < Repeats ) && softStop() == 0;
+	( repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
     
     // message:
@@ -671,8 +696,8 @@ int SingleStimulus::main( void )
     s += ",  Offset: <b>" + Str( Offset, 0, 1, 'f' ) + " " + IUnit + "</b>";
     s += ",  Amplitude: <b>" + Str( Amplitude, 0, 5, 'g' ) + " " + IUnit + "</b>";
     s += ",  Loop <b>" + Str( count+1 ) + "</b>";
-    if ( Repeats > 0 )
-      s += " of <b>" + Str( Repeats ) + "</b>";
+    if ( repeats > 0 )
+      s += " of <b>" + Str( repeats ) + "</b>";
     message( s );
     
     // output:
@@ -706,16 +731,16 @@ int SingleStimulus::main( void )
 	meancurrent[k] += ( current[k] - meancurrent[k] )/(count+1);
     }
     
-    analyze( spikes, rate );
+    analyze( spikes, rate, meanrate, duration, skipwin, sigma );
     plotmode = index( "plot" );
-    plot( spikes, rate, signal, voltage, meanvoltage, plotmode );
+    plot( spikes, rate, signal, voltage, meanvoltage, meanrate, duration, repeats, plotmode );
     if ( storevoltage ) {
       if ( count == 0 )
 	openTraceFile( tf, tracekey, header );
       saveTrace( tf, tracekey, count, voltage, current );
     }
     
-    sleepOn( Duration + pause );
+    sleepOn( duration + pause );
     if ( interrupt() ) {
       if ( count == 0 )
 	state = Aborted;
@@ -730,7 +755,7 @@ int SingleStimulus::main( void )
       tf << '\n';
       saveMeanTrace( header, tracekey, meanvoltage, meancurrent );
     }
-    saveRate( header, rate );
+    saveRate( header, rate, sigma );
     saveSpikes( header, spikes );
   }
 
@@ -846,7 +871,7 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 }
 
 
-void SingleStimulus::saveRate( Options &header, const SampleDataD &rate )
+void SingleStimulus::saveRate( Options &header, const SampleDataD &rate, double sigma )
 {
   // create file:
   Str waveform = text( "waveform" );
@@ -863,7 +888,7 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate )
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
-  key.addNumber( "r" + Str( 1000.0*Sigma ) + "ms", "Hz", "%5.1f" );
+  key.addNumber( "r" + Str( 1000.0*sigma ) + "ms", "Hz", "%5.1f" );
   key.saveKey( df, true, false );
 
   // write data:
@@ -878,12 +903,13 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate )
 
 void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
 			   const OutData &signal, const SampleDataF &voltage,
-			   const SampleDataF &meanvoltage, int plotmode )
+			   const SampleDataF &meanvoltage, double meanrate,
+			   double duration, int repeats, int plotmode )
 {
   P.lock();
   P[0].clear();
   P[0].plotVLine( 0.0, Plot::White, 2 );
-  P[0].plotVLine( 1000.0*Duration, Plot::White, 2 );
+  P[0].plotVLine( 1000.0*duration, Plot::White, 2 );
   if ( plotmode < 3 ) {
     P[0].setTitle( "" );
     P[0].setYLabel( "Voltage [" + VUnit + "]" );
@@ -896,7 +922,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
   }
   else {
     // spikes and firing rate:
-    P[0].setTitle( "Mean firing rate = " + Str( MeanRate, 0, 0, 'f' ) + "Hz" );
+    P[0].setTitle( "Mean firing rate = " + Str( meanrate, 0, 0, 'f' ) + "Hz" );
     P[0].setYLabel( "Firing rate [Hz]" );
     if ( ! P[0].zoomedYRange() )
       P[0].setYRange( 0.0, Plot::AutoScale );
@@ -904,7 +930,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
     if ( maxspikes < 4 )
       maxspikes = 4;
     int offs = (int)spikes.size() > maxspikes ? spikes.size() - maxspikes : 0;
-    double delta = Repeats > 0 && Repeats < maxspikes ? 1.0/Repeats : 1.0/maxspikes;
+    double delta = repeats > 0 && repeats < maxspikes ? 1.0/repeats : 1.0/maxspikes;
     for ( int i=offs, j=0; i<spikes.size(); i++ ) {
       j++;
       P[0].plot( spikes[i], 0, 0.0, 1000.0, 1.0 - delta*(j-0.1), Plot::Graph, 2, Plot::StrokeUp, delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
@@ -931,7 +957,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
   if ( threshold > 0.0 )
     P[1].plotHLine( threshold, Plot::Yellow, 2 );
   P[1].plotVLine( 0.0, Plot::White, 2 );
-  P[1].plotVLine( 1000.0*Duration, Plot::White, 2 );
+  P[1].plotVLine( 1000.0*duration, Plot::White, 2 );
   P[1].plot( signal, 1000.0, Plot::Green, 2 );
 
   P.draw();
@@ -940,24 +966,25 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
 }
 
 
-void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate )
+void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate, double &meanrate,
+			      double duration, double skipwin, double sigma )
 {
   if ( SpikeEvents[0] < 0 )
     return;
 
   // spikes:
   spikes.push( events( SpikeEvents[0] ), signalTime(),
-	       signalTime() + Duration );
+	       signalTime() + duration );
   int trial = spikes.size()-1;
 
-  MeanRate = spikes.rate( SkipWin, Duration );
-  spikes.back().addRate( rate, trial, GaussKernel( Sigma ) );
+  meanrate = spikes.rate( skipwin, duration );
+  spikes.back().addRate( rate, trial, GaussKernel( sigma ) );
 }
 
 
 int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 				    double &duration, double deltat,
-				    bool storesignal )
+				    double ramp, double skipwin, bool storesignal )
 {
   string wavename;
   bool store = false;
@@ -979,7 +1006,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     wavename = file.notdir();
     header.addText( "file", file );
     header.addText( "filename", file.longName() + "-" );
-    if ( Duration < 1.0 )
+    if ( duration < 1.0 )
       header.addText( "duration", Str( 1000.0*duration ) + "ms" );
     else
       header.addText( "duration", Str( duration ) + "s" );
@@ -988,10 +1015,15 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     string waveforms[7] = { "Sine", "Rectangular", "Triangular", "Saw-up", "Saw-down", "Whitenoise", "OU-noise" };
     header.addText( "waveform", waveforms[WaveForm-2] );
     header.addText( "frequency", Str( Frequency ) + "Hz" );
-    if ( WaveForm == Sine || WaveForm == Whitenoise || WaveForm == OUnoise ) {
+    if ( WaveForm == Sine || WaveForm == Alpha || WaveForm == Whitenoise || WaveForm == OUnoise ) {
       if ( WaveForm == Sine ) {
 	PeakAmplitudeFac = 1.0;
 	signal.sineWave( duration, deltat, Frequency );
+      }
+      else if ( WaveForm == Alpha ) {
+	PeakAmplitudeFac = 1.0;
+	signal.alphaWave( duration, deltat, 1.0/Frequency, Tau );
+	header.addNumber( "tau", 1000.0*Tau );
       }
       else {
 	unsigned long seed = Seed;
@@ -1006,15 +1038,18 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     else {
       PeakAmplitudeFac = 1.0;
       if ( WaveForm == Rectangular ) {
-	signal.rectangleWave( duration, deltat, 1.0/Frequency, DutyCycle/Frequency, Ramp );
-	header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
+	signal.rectangleWave( duration, deltat, 1.0/Frequency, PulseDuration, ramp );
+	if ( DutyCycle >= 0.0 )
+	  header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
+	else
+	  header.addText( "pulseduration", Str( 1000.0*PulseDuration ) + "ms" );
       }
       else if ( WaveForm == Triangular )
 	signal.triangleWave( duration, deltat, 1.0/Frequency );
       else if ( WaveForm == Sawup )
-	signal.sawUpWave( duration, deltat, 1.0/Frequency, Ramp );
+	signal.sawUpWave( duration, deltat, 1.0/Frequency, ramp );
       else if ( WaveForm == Sawdown )
-	signal.sawDownWave( duration, deltat, 1.0/Frequency, Ramp );
+	signal.sawDownWave( duration, deltat, 1.0/Frequency, ramp );
       signal = 2.0*signal - 1.0;
     }
 
@@ -1046,7 +1081,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     store = true;
 
   // check wave:
-  if ( duration <= SkipWin ) {
+  if ( duration <= skipwin ) {
     warning( "Stimulus duration <b>" + Str( 1000.0* duration, 0, 0, 'f' ) + "ms</b>" +
 	     " is smaller than analysis window!" );
     return -1;
@@ -1058,21 +1093,21 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       info( "Clipped " + Str( cp, 0, 3, 'g' ) + "% of the stimulus waveform.", 4.0 );
    */
 
-  Str labelpattern = "$(waveform)$(filename)$(frequency)$(random seed) $(dutycycle)";
+  Str labelpattern = "$(waveform)$(filename)$(frequency)$(random seed) $(pulseduration)$(dutycycle)$(tau)";
   StimulusLabel = translate( labelpattern, header );
   if ( wavename.empty() )
     wavename = StimulusLabel;
 
   signal *= Amplitude;
-  signal.ramp( Ramp );
-  header.addText( "ramp", Str( 1000.0*Ramp ) + "ms" );
+  signal.ramp( ramp );
+  header.addText( "ramp", Str( 1000.0*ramp ) + "ms" );
   PeakAmplitude = Amplitude / PeakAmplitudeFac;
 
   signal.setIdent( "signal=" + wavename + ", amplitude=" + Str( Amplitude ) + IUnit );
   header.addText( "amplitude", Str( Amplitude ) + IUnit );
   header.addText( "amplitudefactor", Str( PeakAmplitude, 0, 3, 'g' ) );
   if ( storesignal && store ) {
-    Str filepattern = "$(waveform)$(filename)$(frequency)$(random seed)$(dutycycle)r$(ramp)$(duration)$(amplitude)$(amplitudefactor).dat";
+    Str filepattern = "$(waveform)$(filename)$(frequency)$(random seed)$(pulseduration)$(dutycycle)$(tau)r$(ramp)$(duration)$(amplitude)$(amplitudefactor).dat";
     StoreFile = StorePath + translate( filepattern, header );
     ifstream cf( StoreFile.c_str() );
     if ( ! cf ) {
