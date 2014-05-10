@@ -39,11 +39,11 @@ then you need to install a real-time linux kernel first, as described in
 
 You should install the \c Comedi drivers and library prior to
 configuring RELACS, so that ./configure can detect the presence of the
-\c Comedi library.  Un recent linux distributions comedi is available
+\c Comedi library.  On recent linux distributions comedi is available
 as a package (libcomedi-dev) and the kernel moduls are already in the
 kernel. However, these are not the most recent version of comedi and
 therefore you should reinstall the comedi drivers and the comedi
-library from scratch as described in the following sections
+library from scratch as described in the following sections.
 
 
 \subsection installkernel Linux kernel
@@ -238,13 +238,11 @@ implementation in the driver "staging" area. You can check whether it
 works for you by following the instructions of point 11 below.  
 However, we recommend installing a current version of the comedi drivers.
 
-Here are all commands that you can throw into a shell to completely install comedi.
-Before you do this, you have to make sure that all required packages are installed:
+Here are all commands that you can throw into a shell to completely install comedi:
 \code
+# install all required packages:
 apt-get install git autoconf libtool bison flex libgsl0-dev libboost-program-options-dev
-\endcode
-Now you go:
-\code
+
 # download comedi sources:
 cd /usr/local/src
 git clone git://comedi.org/git/comedi/comedi.git

@@ -1012,7 +1012,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       header.addText( "duration", Str( duration ) + "s" );
   }
   else if ( WaveForm >= Sine && WaveForm <= OUnoise ) {
-    string waveforms[7] = { "Sine", "Rectangular", "Triangular", "Saw-up", "Saw-down", "Whitenoise", "OU-noise" };
+    string waveforms[8] = { "Sine", "Rectangular", "Triangular", "Saw-up", "Saw-down", "Alpha", "Whitenoise", "OU-noise" };
     header.addText( "waveform", waveforms[WaveForm-2] );
     header.addText( "frequency", Str( Frequency ) + "Hz" );
     if ( WaveForm == Sine || WaveForm == Alpha || WaveForm == Whitenoise || WaveForm == OUnoise ) {
