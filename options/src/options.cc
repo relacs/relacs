@@ -4505,6 +4505,8 @@ bool Options::existSection( const string &pattern ) const
 
 Options &Options::setFlags( int flags, int selectflag )
 {
+  if ( flag( selectflag ) )
+    setFlag( flags );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectflag ) )
       pp->setFlags( flags );
@@ -4512,8 +4514,6 @@ Options &Options::setFlags( int flags, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) )
-      (*sp)->setFlag( flags );
     (*sp)->setFlags( flags, selectflag );
   }
   return *this;
@@ -4522,6 +4522,8 @@ Options &Options::setFlags( int flags, int selectflag )
 
 Options &Options::addFlags( int flags, int selectflag )
 {
+  if ( flag( selectflag ) )
+    addFlag( flags );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectflag ) )
       pp->addFlags( flags );
@@ -4529,8 +4531,6 @@ Options &Options::addFlags( int flags, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) )
-      (*sp)->addFlag( flags );
     (*sp)->addFlags( flags, selectflag );
   }
   return *this;
@@ -4539,6 +4539,8 @@ Options &Options::addFlags( int flags, int selectflag )
 
 Options &Options::delFlags( int flags, int selectflag )
 {
+  if ( flag( selectflag ) )
+    delFlag( flags );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectflag ) )
       pp->delFlags( flags );
@@ -4546,8 +4548,6 @@ Options &Options::delFlags( int flags, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) )
-      (*sp)->delFlag( flags );
     (*sp)->delFlags( flags, selectflag );
   }
   return *this;
@@ -4556,6 +4556,8 @@ Options &Options::delFlags( int flags, int selectflag )
 
 Options &Options::setValueTypeFlags( int flags, int typemask )
 {
+  if ( checkType( typemask ) )
+    setFlag( flags );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->valueType( typemask ) )
       pp->setFlags( flags );
@@ -4563,8 +4565,6 @@ Options &Options::setValueTypeFlags( int flags, int typemask )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->checkType( typemask ) )
-      (*sp)->setFlag( flags );
     (*sp)->setValueTypeFlags( flags, typemask );
   }
   return *this;
@@ -4573,6 +4573,8 @@ Options &Options::setValueTypeFlags( int flags, int typemask )
 
 Options &Options::addValueTypeFlags( int flags, int typemask )
 {
+  if ( checkType( typemask ) )
+    addFlag( flags );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->valueType( typemask ) )
       pp->addFlags( flags );
@@ -4580,8 +4582,6 @@ Options &Options::addValueTypeFlags( int flags, int typemask )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->checkType( typemask ) )
-      (*sp)->addFlag( flags );
     (*sp)->addValueTypeFlags( flags, typemask );
   }
   return *this;
@@ -4590,6 +4590,8 @@ Options &Options::addValueTypeFlags( int flags, int typemask )
 
 Options &Options::delValueTypeFlags( int flags, int typemask )
 {
+  if ( checkType( typemask ) )
+    delFlag( flags );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->valueType( typemask ) )
       pp->delFlags( flags );
@@ -4597,8 +4599,6 @@ Options &Options::delValueTypeFlags( int flags, int typemask )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->checkType( typemask ) )
-      (*sp)->delFlag( flags );
     (*sp)->delValueTypeFlags( flags, typemask );
   }
   return *this;
@@ -4607,6 +4607,8 @@ Options &Options::delValueTypeFlags( int flags, int typemask )
 
 Options &Options::setStyles( int style, int selectflag )
 {
+  if ( flag( selectflag ) )
+    setStyle( style );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectflag ) )
       pp->setStyle( style );
@@ -4614,8 +4616,6 @@ Options &Options::setStyles( int style, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) )
-      (*sp)->setStyle( style );
     (*sp)->setStyles( style, selectflag );
   }
   return *this;
@@ -4624,6 +4624,8 @@ Options &Options::setStyles( int style, int selectflag )
 
 Options &Options::addStyles( int style, int selectflag )
 {
+  if ( flag( selectflag ) )
+    addStyle( style );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectflag ) )
       pp->addStyle( style );
@@ -4631,8 +4633,6 @@ Options &Options::addStyles( int style, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) )
-      (*sp)->addStyle( style );
     (*sp)->addStyles( style, selectflag );
   }
   return *this;
@@ -4641,6 +4641,8 @@ Options &Options::addStyles( int style, int selectflag )
 
 Options &Options::delStyles( int style, int selectflag )
 {
+  if ( flag( selectflag ) )
+    delStyle( style );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectflag ) )
       pp->delStyle( style );
@@ -4648,8 +4650,6 @@ Options &Options::delStyles( int style, int selectflag )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectflag ) )
-      (*sp)->delStyle( style );
     (*sp)->delStyles( style, selectflag );
   }
   return *this;
@@ -4675,6 +4675,8 @@ int Options::styleSize( int style ) const
 
 Options &Options::setValueTypeStyles( int style, int typemask )
 {
+  if ( checkType( typemask ) )
+    setStyle( style );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->valueType( typemask ) )
       pp->setStyle( style );
@@ -4682,8 +4684,6 @@ Options &Options::setValueTypeStyles( int style, int typemask )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->checkType( typemask ) )
-      (*sp)->setStyle( style );
     (*sp)->setValueTypeStyles( style, typemask );
   }
   return *this;
@@ -4692,6 +4692,8 @@ Options &Options::setValueTypeStyles( int style, int typemask )
 
 Options &Options::addValueTypeStyles( int style, int typemask )
 {
+  if ( checkType( typemask ) )
+    addStyle( style );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->valueType( typemask ) )
       pp->addStyle( style );
@@ -4699,8 +4701,6 @@ Options &Options::addValueTypeStyles( int style, int typemask )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->checkType( typemask ) )
-      (*sp)->addStyle( style );
     (*sp)->addValueTypeStyles( style, typemask );
   }
   return *this;
@@ -4709,6 +4709,8 @@ Options &Options::addValueTypeStyles( int style, int typemask )
 
 Options &Options::delValueTypeStyles( int style, int typemask )
 {
+  if ( checkType( typemask ) )
+    delStyle( style );
   for ( iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->valueType( typemask ) )
       pp->delStyle( style );
@@ -4716,8 +4718,6 @@ Options &Options::delValueTypeStyles( int style, int typemask )
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->checkType( typemask ) )
-      (*sp)->delStyle( style );
     (*sp)->delValueTypeStyles( style, typemask );
   }
   return *this;
