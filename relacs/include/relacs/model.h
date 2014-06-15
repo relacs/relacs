@@ -176,12 +176,14 @@ private:
 
     /*! Add output signal to the simulation. 
         Returns the starting time of the signal on success,
-	otherwise -1.0. */
-  double add( OutData &signal );
+	otherwise -1.0.
+        If \a wait is set \c true, then a thread waiting on the end of the signal was started. */
+  double add( OutData &signal, bool wait );
     /*! Add output signals to the simulation. 
         Returns the starting time of the signals on success,
-	otherwise -1.0. */
-  double add( OutList &sigs );
+	otherwise -1.0.
+        If \a wait is set \c true, then a thread waiting on the end of the signal was started. */
+  double add( OutList &sigs, bool wait );
     /*! Stop current signals. */
   void stopSignals( void );
     /*! Remove all signals. */

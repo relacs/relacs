@@ -408,14 +408,14 @@ int Simulator::write( OutData &signal, bool setsignaltime )
     return -1;
 
   DataMutex.lock();
-  double st = Sim->add( signal );
+  double st = Sim->add( signal, true );
   DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal.priority() ) {
       Sim->stopSignals();
       DataMutex.lock();
-      st = Sim->add( signal );
+      st = Sim->add( signal, true );
       DataMutex.unlock();
     }
     else
@@ -630,14 +630,14 @@ int Simulator::write( OutList &signal, bool setsignaltime )
   }
 
   DataMutex.lock();
-  double st = Sim->add( signal );
+  double st = Sim->add( signal, true );
   DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal[0].priority() ) {
       Sim->stopSignals();
       DataMutex.lock();
-      st = Sim->add( signal );
+      st = Sim->add( signal, true );
       DataMutex.unlock();
     }
     else
@@ -786,14 +786,14 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
   }
 
   DataMutex.lock();
-  double st = Sim->add( signal );
+  double st = Sim->add( signal, false );
   DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal.priority() ) {
       Sim->stopSignals();
       DataMutex.lock();
-      st = Sim->add( signal );
+      st = Sim->add( signal, false );
       DataMutex.unlock();
     }
     else
@@ -1005,14 +1005,14 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
   }
 
   DataMutex.lock();
-  double st = Sim->add( signal[0] );
+  double st = Sim->add( signal, false );
   DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal[0].priority() ) {
       Sim->stopSignals();
       DataMutex.lock();
-      st = Sim->add( signal[0] );
+      st = Sim->add( signal, false );
       DataMutex.unlock();
     }
     else
@@ -1063,7 +1063,7 @@ int Simulator::writeZero( int channel, int device )
   // write to daq board:
   AO[device].AO->directWrite( sigs );
   DataMutex.lock();
-  Sim->add( sigs[0] );
+  Sim->add( signal, false );
   DataMutex.unlock();
 
   // error?

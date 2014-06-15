@@ -95,10 +95,18 @@ void Model::push( int trace, float val )
       double dt = t - elapsed();
       double l = 1.0 - dt / MaxPushTime;
       AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
-      if ( ! Signals.empty() && ! Signals[0].Finished && t > Signals[0].Offset ) {
-	Signals[0].Finished = true;
-	SignalsWait.release( 1 );
+      SignalMutex.lock();
+      bool released = false;
+      for ( unsigned int k=0; k<Signals.size(); k++ ) {
+	if ( ! Signals[k].Finished && t > Signals[k].Offset ) {
+	  Signals[k].Finished = true;
+	  if ( ! released ) {
+	    SignalsWait.release( 1 );
+	    released = true;
+	  }
+	}
       }
+      SignalMutex.unlock();
       long st = (long)::rint( 1000.0 * dt );
       if ( st <= 0 )
 	st = 1;
@@ -112,7 +120,18 @@ void Model::push( int trace, float val )
 
 void Model::waitOnSignals( void )
 {
-  SignalsWait.acquire( 1 );
+  SignalsWait.acquire( SignalsWait.available() );
+  bool wait = false;
+  SignalMutex.lock();
+  for ( unsigned int k=0; k<Signals.size(); k++ ) {
+    if ( ! Signals[k].Finished ) {
+      wait = true;
+      break;
+    }
+  }
+  SignalMutex.unlock();
+  if ( wait )
+    SignalsWait.acquire( 1 );
 }
 
 
@@ -232,7 +251,7 @@ void Model::stop( void )
 }
 
 
-double Model::add( OutData &signal )
+double Model::add( OutData &signal, bool wait )
 {
   // current time:
   double ct = elapsed();
@@ -258,7 +277,7 @@ double Model::add( OutData &signal )
 
   Signals[signal.trace()].Buffer.clear();
   process( signal, Signals[signal.trace()].Buffer );
-  Signals[signal.trace()].Finished = false;
+  Signals[signal.trace()].Finished = ! wait;
 
   // current time:
   ct = elapsed();
@@ -273,7 +292,7 @@ double Model::add( OutData &signal )
 }
 
 
-double Model::add( OutList &sigs )
+double Model::add( OutList &sigs, bool wait )
 {
   // current time:
   double ct = elapsed();
@@ -310,7 +329,7 @@ double Model::add( OutList &sigs )
   for ( int k=0; k<sigs.size(); k++ ) {
     Signals[sigs[k].trace()].Buffer.clear();
     process( sigs[k], Signals[sigs[k].trace()].Buffer );
-    Signals[sigs[k].trace()].Finished = false;
+    Signals[sigs[k].trace()].Finished = ! wait;
   }
 
   // current time:
@@ -343,6 +362,7 @@ void Model::stopSignals( void )
     else if ( sp->Offset > ct )
       sp->Offset = ct;
   }
+  SignalsWait.release( 1 );
   SignalMutex.unlock();
 }
 
@@ -354,7 +374,9 @@ void Model::clearSignals( void )
     sp->Onset = 0.0;
     sp->Offset = 0.0;
     sp->Buffer.clear();
+    sp->Finished = true;
   }
+  SignalsWait.release( 1 );
   SignalMutex.unlock();
 }
 

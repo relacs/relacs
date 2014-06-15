@@ -7,7 +7,6 @@ New InData threading:
 - Add Model data also to UpdateRawData?
 - Fix Simulation mode! Only filtered traces are still not working. Also first pulse of synapticresistance seems to be lost.
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
-- Model: improve locking by adding an extra Mutex for push() and pop()
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Filter buffersize should just be the same as the one of the input trace!
 - Replace the source() flag by a sourceTrace and sourceEvent index
@@ -75,6 +74,8 @@ patchclamp::SingleStimulus:
 auditory::Session plots do not work! Why???? It works on my laptop!
 
 General:
+- how to handle kernel modules:
+  https://groups.google.com/forum/#!msg/comedi_list/MbcD6Ml-HDU/vf4X89V93PgJ
 - comedi m4 file should check for routing function
 - relacshelp should know whether doxygen is there, or whether the files it is operating on, exist.
 - add a README file to share/relacs/configs/
