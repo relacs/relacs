@@ -169,8 +169,6 @@ int SaveTraces::main( void )
   deque<int> eventsindex;
   double eventstime = currentTime();
   deque<TableKey> eventskey;
-  deque<bool> eventssavesize;
-  deque<bool> eventssavewidth;
   for ( int k=0; k<events().size(); k++ ) {
     if ( boolean( "events-" + events()[k].ident() ) ) {
       eventsnum.push_back( k );
@@ -189,12 +187,10 @@ int SaveTraces::main( void )
       *eventsfile.back() << '\n';
       eventskey.push_back( TableKey() );
       eventskey.back().addNumber( "t", "sec", "%11.6f" );
-      eventssavesize.push_back( ( events()[k].sizeBuffer() && (events()[k].mode() & SaveFiles::SaveSize) ) );
-      if ( eventssavesize.back() )
+      if ( events()[k].sizeBuffer() )
 	eventskey.back().addNumber( events()[k].sizeName(), events()[k].sizeUnit(),
 				    events()[k].sizeFormat() );
-      eventssavewidth.push_back( events()[k].widthBuffer() && (events()[k].mode() & SaveFiles::SaveWidth) );
-      if ( eventssavewidth.back() )
+      if ( events()[k].widthBuffer() )
 	eventskey.back().addNumber( events()[k].widthName(), events()[k].widthUnit(),
 				    events()[k].widthFormat() );
       eventskey.back().saveKey( *eventsfile.back() );
@@ -227,11 +223,11 @@ int SaveTraces::main( void )
 	eventskey[k].save( *eventsfile[k],
 			   events()[eventsnum[k]][eventsindex[k]] - eventstime,
 			   0 );
-	if ( eventssavesize[k] )
+	if ( events()[eventsnum[k]].sizeBuffer() )
 	  eventskey[k].save( *eventsfile[k],
 			     events()[eventsnum[k]].eventSize( eventsindex[k] )
 			     * events()[eventsnum[k]].sizeScale() );
-	if ( eventssavewidth[k] )
+	if ( events()[eventsnum[k]].widthBuffer() )
 	  eventskey[k].save( *eventsfile[k],
 			     events()[eventsnum[k]].eventWidth( eventsindex[k] )
 			     * events()[eventsnum[k]].widthScale() );

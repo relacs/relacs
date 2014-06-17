@@ -75,16 +75,6 @@ public:
 
     /*! Flag for the modes of traces or events, indicating that they should be saved. */
   static const int SaveTrace = 0x0010;
-    /*! Flag for the modes of events, indicating that their size should be saved. */
-  static const int SaveSize = 0x0020;
-    /*! Flag for the modes of events, indicating that their width should be saved. */
-  static const int SaveWidth = 0x0040;
-    /*! Flag for the modes of events, indicating that their mean rate should be saved. */
-  static const int SaveMeanRate = 0x0080;
-    /*! Flag for the modes of events, indicating that their mean size should be saved. */
-  static const int SaveMeanSize = 0x0100;
-    /*! Flag for the modes of events, indicating that their mean width should be saved. */
-  static const int SaveMeanWidth = 0x0200;
     /*! Flag for the modes of events, indicating that their mean quality should be saved. */
   static const int SaveMeanQuality = 0x0400;
 
@@ -338,18 +328,8 @@ protected:
     long Written;
       /*! Line index to the signal start in the events files. */
     long SignalEvent;
-      /*! Save mean rate in the stimulus file. */
-    bool SaveMeanRate;
-      /*! Save mean size in the stimulus file. */
-    bool SaveMeanSize;
-      /*! Save mean width in the stimulus file. */
-    bool SaveMeanWidth;
       /*! Save mean quality in the stimulus file. */
     bool SaveMeanQuality;
-      /*! Save size in the event file. */
-    bool SaveSize;
-      /*! Save width in the event file. */
-    bool SaveWidth;
       /*! The key for the event file. */
     TableKey Key;
   };

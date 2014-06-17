@@ -46,6 +46,17 @@
       outputtracedelay   : 0ms
       outputtracemodality: current
 
+*Metadata
+  -Setup-:
+      Identifier (Name): Setup1
+      Maintainer       : Your name
+      Creator          : Whoever
+      Location (Room)  : virtual
+      Lab              : XYZ-Lab
+      Institute        : Your institute
+      University       : Your university
+      Address          : Your institute's address
+
 *Macros
   file            : macros.cfg
   mainfile        : macros.cfg
@@ -57,17 +68,10 @@
       filter         : IntraSpikeDetector
       inputtrace     : V-1
       save           : true
-      savesize       : true
-      savewidth      : true
-      savemeanrate   : true
-      savemeansize   : true
-      savemeanwidth  : true
       savemeanquality: true
       plot           : true
       buffersize     : 300000
-      yes:
-          storesize : true
-          storewidth: false
+      storesize      : true
 
 *Analog Input Devices
   Device1:

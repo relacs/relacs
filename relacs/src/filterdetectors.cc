@@ -158,16 +158,6 @@ string FilterDetectors::createFilters( void )
     int mode = 0;
     if ( filteropts->boolean( "save", false ) )
       mode |= SaveFiles::SaveTrace;
-    if ( filteropts->boolean( "savesize", false ) )
-      mode |= SaveFiles::SaveSize;
-    if ( filteropts->boolean( "savewidth", false ) )
-      mode |= SaveFiles::SaveWidth;
-    if ( filteropts->boolean( "savemeanrate", false ) )
-      mode |= SaveFiles::SaveMeanRate;
-    if ( filteropts->boolean( "savemeansize", false ) )
-      mode |= SaveFiles::SaveMeanSize;
-    if ( filteropts->boolean( "savemeanwidth", false ) )
-      mode |= SaveFiles::SaveMeanWidth;
     if ( filteropts->boolean( "savemeanquality", false ) )
       mode |= SaveFiles::SaveMeanQuality;
     if ( filteropts->boolean( "plot", true ) )
@@ -194,7 +184,7 @@ string FilterDetectors::createFilters( void )
       for ( unsigned int j=0; j<othertrace.size(); j++ )
 	othertrace[j] = (*op).text( j );
     }
-    int buffersize = filteropts->integer( "buffersize", 0, 1000 );
+    int buffersize = filteropts->integer( "buffersize", 0, 0 );
     bool storesize = filteropts->boolean( "storesize", false );
     bool storewidth = filteropts->boolean( "storewidth", false );
 
@@ -413,7 +403,7 @@ int FilterDetectors::events( void )
 void FilterDetectors::createStimulusEvents( EventList &events,
 					    deque< PlotTrace::EventStyle > &eventstyles )
 {
-  events.back().setMode( events.back().mode() | SaveFiles::SaveTrace | SaveFiles::SaveWidth | PlotTraceMode );
+  events.back().setMode( events.back().mode() | SaveFiles::SaveTrace | PlotTraceMode );
 
   eventstyles.push_back( PlotTrace::EventStyle() );
   eventstyles.back().PlotWindow = -2;
@@ -606,12 +596,18 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 
       // setup output events:
       if ( d->FilterDetector->type() & Filter::EventInput ) {
+	int inevent = EventInputEvent[ek];
+	if ( inevent < 0 )
+	  inevent = 0;
+	int nbuffer = d->NBuffer;
+	if ( nbuffer <= 0 )
+	  nbuffer = events[inevent].capacity();
 	// single / multiple event traces -> multiple event traces
 	for ( int i=0; i<d->NOut; i++, ek++ ) {
 	  events[ek].setSizeBuffer( d->SizeBuffer );
 	  events[ek].setWidthBuffer( d->WidthBuffer );
-	  events[ek].reserve( d->NBuffer );
-	  events[ek].setWriteBufferCapacity( d->NBuffer/10 );
+	  events[ek].reserve( nbuffer );
+	  events[ek].setWriteBufferCapacity( nbuffer/10 );
 	  events[ek].setSource( 2 );
 	  events[ek].setMode( d->FilterDetector->mode() );
 	  if ( d->FilterDetector->type() & Filter::MultipleTraces )
@@ -622,12 +618,18 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	}
       }
       else {
+	int intrace = EventInputTrace[ek];
+	if ( intrace < 0 )
+	  intrace = 0;
+	int nbuffer = d->NBuffer;
+	if ( nbuffer <= 0 )
+	  nbuffer = data[intrace].capacity();
 	// single / multiple analog -> multiple event traces
 	for ( int i=0; i<d->NOut; i++, ek++ ) {
 	  events[ek].setSizeBuffer( d->SizeBuffer );
 	  events[ek].setWidthBuffer( d->WidthBuffer );
-	  events[ek].reserve( d->NBuffer );
-	  events[ek].setWriteBufferCapacity( d->NBuffer/10 );
+	  events[ek].reserve( nbuffer );
+	  events[ek].setWriteBufferCapacity( nbuffer/10 );
 	  events[ek].setSource( 1 );
 	  events[ek].setMode( d->FilterDetector->mode() );
 	  if ( d->FilterDetector->type() & Filter::MultipleTraces )

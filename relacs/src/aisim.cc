@@ -133,7 +133,7 @@ int AISim::bits( void ) const
 
 double AISim::maxRate( void ) const
 {
-  return 100000.0;
+  return 500000.0;
 }
 
 

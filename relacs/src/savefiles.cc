@@ -472,10 +472,10 @@ void SaveFiles::writeEvents( double offs )
 	  *EventFiles[k].Stream << '\n';
 	}
 	EventFiles[k].Key.save( *EventFiles[k].Stream, et - offs, 0 );
-	if ( EventFiles[k].SaveSize )
+	if ( EL[k].sizeBuffer() )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
 				  EL[k].sizeScale() * EL[k].eventSize( EventFiles[k].Index ) );
-	if ( EventFiles[k].SaveWidth )
+	if ( EL[k].widthBuffer() )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
 				  EL[k].widthScale() * EL[k].eventWidth( EventFiles[k].Index ) );
 	*EventFiles[k].Stream << '\n';
@@ -677,11 +677,10 @@ void SaveFiles::writeStimulus( void )
     for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
       if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.save( *SF, EventFiles[k].SignalEvent );
-	if ( EventFiles[k].SaveMeanRate )
-	  StimulusKey.save( *SF, EL[k].meanRate() );  // XXX adaptive Time!
-	if ( EventFiles[k].SaveMeanSize )
+	StimulusKey.save( *SF, EL[k].meanRate() );  // XXX adaptive Time!
+	if ( EL[k].sizeBuffer() )
 	  StimulusKey.save( *SF, EL[k].sizeScale() * EL[k].meanSize() );
-	if ( EventFiles[k].SaveMeanWidth )
+	if ( EL[k].widthBuffer() )
 	  StimulusKey.save( *SF, EL[k].widthScale() * EL[k].meanWidth() );
 	if ( EventFiles[k].SaveMeanQuality )
 	  StimulusKey.save( *SF, 100.0*EL[k].meanQuality() );
@@ -996,12 +995,10 @@ void SaveFiles::createEventFiles( void )
 	// init key:
 	EventFiles[k].Key.clear();
 	EventFiles[k].Key.addNumber( "t", "sec", "%0.5f" );
-	EventFiles[k].SaveSize = ( EL[k].sizeBuffer() && (EL[k].mode() & SaveSize) );
-	if ( EventFiles[k].SaveSize )
+	if ( EL[k].sizeBuffer() )
 	  EventFiles[k].Key.addNumber( EL[k].sizeName(), EL[k].sizeUnit(),
 				       EL[k].sizeFormat() );
-	EventFiles[k].SaveWidth = ( EL[k].widthBuffer() && (EL[k].mode() & SaveWidth) );
-	if ( EventFiles[k].SaveWidth )
+	if ( EL[k].widthBuffer() )
 	  EventFiles[k].Key.addNumber( EL[k].widthName(), EL[k].widthUnit(),
 				       EL[k].widthFormat() );
 	// save key:
@@ -1076,14 +1073,10 @@ void SaveFiles::createStimulusFile( void )
       if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.newSubSection( EL[k].ident() );
 	StimulusKey.addNumber( "index", "line", "%10.0f" );
-	EventFiles[k].SaveMeanRate = ( EL[k].mode() & SaveMeanRate );
-	if ( EventFiles[k].SaveMeanRate )
-	  StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
-	EventFiles[k].SaveMeanSize = ( EL[k].mode() & SaveMeanSize );
-	if ( EventFiles[k].SaveMeanSize )
+	StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
+	if ( EL[k].sizeBuffer() )
 	  StimulusKey.addNumber( EL[k].sizeName(), EL[k].sizeUnit(), EL[k].sizeFormat() );
-	EventFiles[k].SaveMeanWidth = ( EL[k].mode() & SaveMeanWidth );
-	if ( EventFiles[k].SaveMeanWidth )
+	if ( EL[k].widthBuffer() )
 	  StimulusKey.addNumber( EL[k].widthName(), EL[k].widthUnit(), EL[k].widthFormat() );
 	EventFiles[k].SaveMeanQuality = ( EL[k].mode() & SaveMeanQuality );
 	if ( EventFiles[k].SaveMeanQuality )

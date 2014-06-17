@@ -7,7 +7,6 @@ New InData threading:
 - Add Model data also to UpdateRawData?
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
-- Filter buffersize should just be the same as the one of the input trace!
 - Replace the source() flag by a sourceTrace and sourceEvent index
   Remove the source mapping functions from RELACSPlugin and FilterDetectors
 - AnalogInput/Output check usage of IsPrepared and IsRunning
