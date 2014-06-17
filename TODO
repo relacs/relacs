@@ -5,7 +5,6 @@ New InData threading:
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
 - What about recording events (SignalTime, locking)?
 - Add Model data also to UpdateRawData?
-- Fix Simulation mode! Only filtered traces are still not working. Also first pulse of synapticresistance seems to be lost.
 - Simplify and unify the diverse RePro::sleep() functions. Add a waitOnSignal() ?
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Filter buffersize should just be the same as the one of the input trace!
@@ -14,9 +13,9 @@ New InData threading:
 - AnalogInput/Output check usage of IsPrepared and IsRunning
 - DynClamAnalogInput improve error checking in readData()
 - readData() several attemps only if maxn is too small
-- Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.
+- Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
 - SpectrumAnalyzer Frequency resolution should not depend on sampling rate!
   Use Frequency resolution instead of number of fft points.
 - Check whether InData, Acquire updateTime and readTime are still needed!
