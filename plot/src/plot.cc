@@ -2500,7 +2500,7 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
     if ( f >= l )
       return;
     long k = f;
-    bool compress = ( l-f > 10*(PlotX2-PlotX1+1) );  // too many data points to draw!
+    bool compress = ( l-f > 5*(PlotX2-PlotX1+1) );  // too many data points to draw!
     double x, y;
     double ox = 0.0, oy = 0.0;
     double nx, ny;
@@ -2567,6 +2567,9 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
       path.moveTo( xp, yp );
     }
     qreal oxp = xp;
+    qreal ypmin = yp;
+    qreal ypmax = yp;
+    int ncompress = 0;
 
     // draw remaining line:
     for ( ; k<l; k++ ) {
@@ -2660,8 +2663,24 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
 	yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]);
 	if ( compress ) {
 	  if ( xp-oxp >= 0.5 ) {
-	    path.lineTo( xp, yp );
+	    if ( ncompress > 1 ) {
+	      path.moveTo( xp, ypmin );
+	      path.lineTo( xp, ypmax );
+	      path.moveTo( xp, yp );
+	    }
+	    else
+	      path.lineTo( xp, yp );
 	    oxp = xp;
+	    ypmin = yp;
+	    ypmax = yp;
+	    ncompress = 0;
+	  }
+	  else {
+	    ncompress++;
+	    if ( yp < ypmin )
+	      ypmin = yp;
+	    if ( yp > ypmax )
+	      ypmax = yp;
 	  }
 	}
 	else
