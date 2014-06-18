@@ -228,6 +228,7 @@ int Simulator::stopRead( void )
 {
   if ( Sim != 0 )
     Sim->stop();
+  DataWait.wakeAll();
   return 0;
 }
 

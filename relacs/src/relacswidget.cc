@@ -99,6 +99,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     ShowFull( 0 ),
     ReadLoop( this ),
     WriteLoop( this ),
+    DataRun( false ),
     LogFile( 0 ),
     IsFullScreen( false ),
     IsMaximized( false ),
@@ -812,8 +813,12 @@ int RELACSWidget::updateData( void )
       // XXX switch to idle mode!
       return -1;
     }
-    else
-      return 1;
+    else {
+      DataRunLock.lock();
+      bool dr = DataRun;
+      DataRunLock.unlock();
+      return dr ? 1 : 0;
+    }
   }
   else if ( r > 0 ) {
     // update derived data:
@@ -830,7 +835,10 @@ int RELACSWidget::updateData( void )
     // notify other plugins about available data:
     UpdateDataWait.wakeAll();
   }
-  return r;
+  DataRunLock.lock();
+  bool dr = DataRun;
+  DataRunLock.unlock();
+  return dr ? r : 0;
 }
 
 
@@ -860,8 +868,10 @@ void RELACSWidget::activateGains( void )
   AQ->activateGains();
   if ( IL.failed() )
     printlog( "! error in restarting analog input for changing gains: " + IL.errorText() );
-  else if ( ! ReadLoop.isRunning() )
+  else if ( ! ReadLoop.isRunning() ) {
+    DataRun = true;
     ReadLoop.start();
+  }
   FD->scheduleAdjust();
 }
 
@@ -874,8 +884,10 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
   if ( r >= 0 ) {
     SF->save( signal );
     FD->scheduleAdjust();
-    if ( ! ReadLoop.isRunning() )
+    if ( ! ReadLoop.isRunning() ) {
+      DataRun = true;
       ReadLoop.start();
+    }
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     if ( blocking )
@@ -900,8 +912,10 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
   if ( r >= 0 ) {
     SF->save( signal );
     FD->scheduleAdjust();
-    if ( ! ReadLoop.isRunning() )
+    if ( ! ReadLoop.isRunning() ) {
+      DataRun = true;
       ReadLoop.start();
+    }
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     if ( blocking )
@@ -924,8 +938,10 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   int r = AQ->directWrite( signal, setsignaltime );
   if ( r == 0 ) {
-    if ( ! ReadLoop.isRunning() )
+    if ( ! ReadLoop.isRunning() ) {
+      DataRun = true;
       ReadLoop.start();
+    }
     SF->save( signal );
     FD->scheduleAdjust();
     // update device menu:
@@ -946,8 +962,10 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   int r = AQ->directWrite( signal, setsignaltime );
   if ( r == 0 ) {
-    if ( ! ReadLoop.isRunning() )
+    if ( ! ReadLoop.isRunning() ) {
+      DataRun = true;
       ReadLoop.start();
+    }
     SF->save( signal );
     FD->scheduleAdjust();
     // update device menu:
@@ -1242,8 +1260,13 @@ void RELACSWidget::stopThreads( void )
 
   // stop simulation and data acquisition:
   SimLoad.stop();
-  if ( AQ != 0 )
+  if ( AQ != 0 ) {
+    DataRunLock.lock();
+    DataRun = false;
+    DataRunLock.unlock();
     AQ->stop();
+    ReadLoop.wait();
+  }
 
   // process pending events posted from threads.
   qApp->processEvents();
@@ -1509,6 +1532,7 @@ void RELACSWidget::startFirstAcquisition( void )
     return;
   }
 
+  DataRun = true;
   ReadLoop.start();
 
   // reset analog output for dynamic clamp:
@@ -1688,6 +1712,7 @@ void RELACSWidget::startFirstSimulation( void )
     return;
   }
 
+  DataRun = true;
   ReadLoop.start();
 
   CW->start();

@@ -384,6 +384,12 @@ private:
   ReadThread ReadLoop;
   WriteThread WriteLoop;
 
+  bool DataRun;
+  QMutex DataRunLock;
+    /*! Controls the primary input data buffer. */
+  QMutex DerivedDataMutex;
+
+
   // Research Program = RePros
   RePro *CurrentRePro;      // always the current program
   bool ReProRunning;
@@ -395,9 +401,6 @@ private:
 
   QTimer SimLoad;
   QLabel *SimLabel;
-
-    /*! Controls the primary input data buffer. */
-  QMutex DerivedDataMutex;
 
   // synchronization of Session and Control threads:
   QWaitCondition UpdateDataWait;
