@@ -38,6 +38,7 @@
 #include <relacs/attsim.h>
 #include <relacs/attenuate.h>
 #include <relacs/acquire.h>
+#include <relacs/audiomonitor.h>
 #include <relacs/control.h>
 #include <relacs/controltabs.h>
 #include <relacs/databrowser.h>
@@ -314,6 +315,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // setup PlotTrace:
   PT = new PlotTrace( this );
 
+  // setup AudioMonitor:
+  AM = new AudioMonitor;
+
   // status bar:
   // RePro message:
   QLabel *rl = RP->display();
@@ -415,6 +419,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   FullscreenAction = viewmenu->addAction( "&Full-Screen Mode",
 					  (QWidget*)this, SLOT( fullScreen() ),
 					  Qt::CTRL + Qt::SHIFT + Qt::Key_F );
+  viewmenu->addSeparator();
+  MuteAction = viewmenu->addAction( "Mute audio &monitor",
+				    (QWidget*)this, SLOT( muteAudioMonitor() ),
+				    Qt::Key_M );
   viewmenu->addSeparator();
   PT->addMenu( viewmenu );
 
@@ -827,6 +835,7 @@ int RELACSWidget::updateData( void )
     if ( !fdw.empty() )
       printlog( "! error: " + fdw.erasedMarkup() );
     SF->updateDerivedTraces();
+    AM->updateDerivedTraces();
     DerivedDataMutex.unlock();
 
     // save data:
@@ -1467,6 +1476,7 @@ void RELACSWidget::startFirstAcquisition( void )
   CW->assignTracesEvents( IL, ED );
   PT->assignTracesEvents( IL, ED );
   RP->assignTracesEvents( IL, ED );
+  AM->assignTraces( IL, UpdateRawData );
 
   // plots:
   PT->updateMenu();
@@ -1519,6 +1529,7 @@ void RELACSWidget::startFirstAcquisition( void )
   FD->assignTracesEvents();
   CW->assignTracesEvents();
   RP->assignTracesEvents();
+  AM->assignTraces();
   AID->updateMenu();
 
   FD->setAdjustFlag( AQ->adjustFlag() );
@@ -1629,6 +1640,7 @@ void RELACSWidget::startFirstSimulation( void )
   RP->assignTracesEvents( IL, ED );
   MD->assignTracesEvents( IL, ED );
   MD->addTracesEvents( UpdateRawData, UpdateRawEvents ); // XXX Is this ever used?
+  AM->assignTraces( IL, UpdateRawData );
 
   // plots:
   PT->updateMenu();
@@ -1689,6 +1701,7 @@ void RELACSWidget::startFirstSimulation( void )
   CW->assignTracesEvents();
   RP->assignTracesEvents();
   MD->assignTracesEvents();
+  AM->assignTraces();
   AID->updateMenu();
 
   // check success:
@@ -1991,6 +2004,21 @@ void RELACSWidget::maximizeScreen( void )
     showMaximized();
     IsMaximized = true;
     MaximizedAction->setText( "Exit &Maximize window" );
+  }
+}
+
+
+void RELACSWidget::muteAudioMonitor( void )
+{
+  if ( AM != 0 ) {
+    if ( AM->muted() ) {
+      AM->unmute();
+      MuteAction->setText( "Mute audio &monitor" );
+    }
+    else {
+      AM->mute();
+      MuteAction->setText( "Unmute audio &monitor" );
+    }
   }
 }
 

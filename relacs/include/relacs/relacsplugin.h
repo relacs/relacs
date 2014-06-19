@@ -889,6 +889,11 @@ protected:
     /*! Unlock the current RePro. */ 
   void unlockCurrentRePro( void );
 
+    /*! Mute the audio monitor. */
+  void muteAudioMonitor( void );
+    /*! Unmute the audio monitor. */
+  void unmuteAudioMonitor( void );
+
     /*! Pointer to the main RELACSWidget. */
   RELACSWidget *RW;
 

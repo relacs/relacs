@@ -69,12 +69,16 @@ public:
 
 public slots:
 
-    /*! Start measuring electrode resistance. */
+    /*! Mute audio monitor and call doResistance() a little bit delayed. */
   void startResistance( void );
+    /*! Start measuring electrode resistance. */
+  void doResistance( void );
     /*! Stop measuring electrode resistance. */
   void stopResistance( void );
-    /*! Start buzzing the electrode. */
+    /*! Mute audio monitor and call doBuzz() a little bit delayed. */
   void startBuzz( void );
+    /*! Start buzzing the electrode. */
+  void doBuzz( void );
     /*! Stop buzzing the electrode. */
   void stopBuzz( void );
 

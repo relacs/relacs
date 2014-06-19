@@ -32,7 +32,9 @@ relacsgui_CPPFLAGS = \
 
 relacsgui_LDFLAGS = \
     $(QT4_LDFLAGS) \
-    $(GSL_LDFLAGS)
+    $(GSL_LDFLAGS) \
+    $(SNDFILE_LDFLAGS) \
+    $(PORTAUDIO_LDFLAGS)
 # the GSL part should not be here, it is already in librelacs.la!
 # but libtool 2.4 seems to require it.
 
@@ -40,7 +42,9 @@ relacsgui_LDADD = \
     ../relacs/src/librelacs.la \
     ../numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) \
-    $(GSL_LIBS)
+    $(GSL_LIBS) \
+    $(SNDFILE_LIBS) \
+    $(PORTAUDIO_LIBS)
 # the GSL and librelacsnumerics part should not be here,
 # it is already in librelacs.la!
 # but libtool 2.4 seems to require it.

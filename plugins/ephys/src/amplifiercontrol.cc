@@ -255,9 +255,17 @@ void AmplifierControl::startResistance( void )
       unlock();
       activateGains();
     }
-    Ampl->startResistance();
+    muteAudioMonitor();
     RMeasure = true;
+    QTimer::singleShot( 100, this, SLOT( doResistance() ) );
   }
+}
+
+
+void AmplifierControl::doResistance( void )
+{
+  if ( Ampl != 0 && RMeasure )
+    Ampl->startResistance();
 }
 
 
@@ -292,12 +300,22 @@ void AmplifierControl::stopResistance( void )
       unlock();
       activateGains();
     }
+    unmuteAudioMonitor();
     RMeasure = false;
   }
 }
 
 
 void AmplifierControl::startBuzz( void )
+{
+  if ( Ampl != 0 ) {
+    muteAudioMonitor();
+    QTimer::singleShot( 100, this, SLOT( doBuzz() ) );
+  }
+}
+
+
+void AmplifierControl::doBuzz( void )
 {
   if ( Ampl != 0 ) {
     Ampl->startBuzz( );
@@ -308,8 +326,10 @@ void AmplifierControl::startBuzz( void )
 
 void AmplifierControl::stopBuzz( void )
 {
-  if ( Ampl != 0 )
-    Ampl->stopBuzz( );
+  if ( Ampl != 0 ) {
+    Ampl->stopBuzz();
+    unmuteAudioMonitor();
+  }
 }
 
 

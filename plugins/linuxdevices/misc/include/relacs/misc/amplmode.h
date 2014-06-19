@@ -32,7 +32,7 @@ namespace misc {
 /*!
 \class AmplMode
 \author Jan Benda
-\version 2.0 (Apr 3, 2014)
+\version 3.0 (June 19, 2014)
 \brief [Device] Control the mode of an amplifier via DigitalIO
 
 \par Options
@@ -41,19 +41,6 @@ namespace misc {
 - \c bridgepin: the dio line that switches the amplifier into bridge mode.
 - \c resistancepin: the dio line that activates resistance measurement of the amplifier.
 - \c buzzerpin: the dio line that activates the buzzer.
-
-\par Sound
-When activating the buzzer the plugin mutes the soundcard via the OSS sound interface.
-
-We stay with the OSS interface since it is so simple to program. The ALSA mixer interface
-is too complicated, but ALSA provides compatibility modules for OSS.
-
-Check whether you have a \c /dev/mixer device file. If not you need to load the 
-\c snd-mixer-oss kernel module:
-\code
-sudo modprobe snd-mixer-oss
-\endcode
-See http://alsa.opensrc.org/OSS_emulation for some information on that.
  */
 
 
@@ -92,20 +79,20 @@ public:
 	startResistance(), startBuzz() */
   int setManualSelection( void );
 
-    /*! Mute the sound card and switch the amplifier into resitance measurement mode.
+    /*! Switch the amplifier into resitance measurement mode.
         \return the return value of DigitalIO::writeLines()
         \sa stopResistance() */
   int startResistance( void );
-    /*! Switch the amplifier back into its previous mode and unmute the sound card.
+    /*! Switch the amplifier back into its previous mode.
         \return the return value of DigitalIO::writeLines()
         \sa startResistance() */
   int stopResistance( void );
 
-    /*! Mute the sound card and initiate buzzing by setting the pin for the buzzer high.
+    /*! Initiate buzzing by setting the pin for the buzzer high.
         \return the return value of DigitalIO::write()
 	\sa stopBuzz(), startResistance(), setBridgeMode() */
   int startBuzz( void );
-    /*! Stop buzzing by setting the pin for the buzzer low and unmute the sound card.
+    /*! Stop buzzing by setting the pin for the buzzer low.
         \return the return value of DigitalIO::write()
 	\sa startBuzz() */
   int stopBuzz( void );
@@ -138,11 +125,6 @@ private:
   int Mask;
 
   int CurrentMode;
-
-  /* The sound mixer device. */
-  int MixerHandle;
-  int MixerChannel;
-  int Volume;
 
 };
 

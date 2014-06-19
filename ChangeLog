@@ -1,4 +1,16 @@
 -----------------------------------------------------------------------------
+Version 0.9.8
+2014-06-19  Jan Benda
+	Added audio monitor via portaudio.
+2014-06-17  Jan Benda
+	Improved plotting of many data points.
+2013-11-01  Jan Benda
+	Simplified blocking issues of the data-acquisition core for
+	improved data acquisition performance.
+2011-11-01  Jan Benda
+	Made internal representation of key-value pais hierarchical
+	to simplify lots of code and to better fit the odML standard.
+-----------------------------------------------------------------------------
 Version 0.9.7
 2010-05-22  Jan Benda
 	Start to merge the qt4 branch into the trunk.
@@ -13,8 +25,8 @@ Version 0.9.6
 	Added plugin documentation to web page
 2008-02-13  Jan Benda
 	Added setupInTraces() function to RELACSWidget class.
-	Added addTraces() to AnalogInput and AnalogOutput, addOutTraces() 
-	and inTraces() to Acquire, and updated the setupOutTraces() function 
+	Added addTraces() to AnalogInput and AnalogOutput, addOutTraces()
+	and inTraces() to Acquire, and updated the setupOutTraces() function
 	to handle internal parameter and variables of a dynamic clamp modul.
 2008-02-12  Jan Benda
 	New class TraceSpec replaces OutData::Trace.
@@ -47,7 +59,7 @@ Version 0.9.5
 -----------------------------------------------------------------------------
 Version 0.9.4
 2008-01-16  Jan Benda
-	Extended RELACSWidget and RELACSPlugin to allow for 
+	Extended RELACSWidget and RELACSPlugin to allow for
 	multiple Control plugins.
 2008-01-10  Jan Benda
 	Removed stop() and save() functions from the RePro interface.
@@ -61,11 +73,11 @@ Version 0.9.2
 how to use ChangeLog from Emacs
 (from http://autotoolset.sourceforge.net/tutorial.html#SEC24):
 
-To use Dired effectively, we recommend that you add the following customizations to your `.emacs' file: First, add 
- 
+To use Dired effectively, we recommend that you add the following customizations to your `.emacs' file: First, add
+
 (add-hook 'dired-load-hook (function (lambda () (load "dired-x"))))
 (setq dired-omit-files-p t)
 
-to activate the extended features of Dired. Then add the following key-bindings to the global keymap: 
- 
+to activate the extended features of Dired. Then add the following key-bindings to the global keymap:
+
 (global-set-key [f8] 'add-change-log-entry-other-window)

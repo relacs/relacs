@@ -88,9 +88,10 @@ RELACS_LIB_GSL()
 
 
 #################################################
-## SNDFILE
+## AUDIO
 #################################################
 RELACS_LIB_SNDFILE()
+RELACS_LIB_PORTAUDIO()
 
 
 #################################################
@@ -356,6 +357,7 @@ cat <<SUMMARY
 
     Use GSL ...................... ${RELACS_GSL}
     Use sndfile .................. ${RELACS_SNDFILE}
+    Use portaudio ................ ${RELACS_PORTAUDIO}
     Use Comedi ................... ${RELACS_COMEDI}
     Use RTAI ..................... ${RELACS_RTAI}
     Use libusb ................... ${RELACS_USB}

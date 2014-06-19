@@ -1,5 +1,8 @@
 Version 0.9.8
 
+June, 2014
+  Added audio monitor via portaudio.
+
 November, 2013
   Simplified blocking issues of the data-acquisition core for
   improved data acquisition performance

@@ -21,6 +21,7 @@
 
 #include <relacs/relacswidget.h>
 #include <relacs/acquire.h>
+#include <relacs/audiomonitor.h>
 #include <relacs/datathreads.h>
 
 namespace relacs {
@@ -41,9 +42,11 @@ void ReadThread::start( void )
 void ReadThread::run( void )
 {
   int r = 0;
+  RW->AM->start();
   do {
     r = RW->updateData();
   } while ( r > 0 );
+  RW->AM->stop();
 }
 
 

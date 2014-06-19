@@ -17,7 +17,7 @@ librelacs_la_CPPFLAGS = \
 
 librelacs_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(QT4_LDFLAGS) $(GSL_LDFLAGS) $(SNDFILE_LDFLAGS)
+    $(QT4_LDFLAGS) $(GSL_LDFLAGS) $(SNDFILE_LDFLAGS) $(PORTAUDIO_LDFLAGS)
 
 librelacs_la_LIBADD = \
     ../../plot/src/librelacsplot.la \
@@ -27,7 +27,7 @@ librelacs_la_LIBADD = \
     ../../daq/src/librelacsdaq.la \
     ../../numerics/src/librelacsnumerics.la \
     -ldl \
-    $(QT4_LIBS) $(GSL_LIBS) $(SNDFILE_LIBS)
+    $(QT4_LIBS) $(GSL_LIBS) $(SNDFILE_LIBS) $(PORTAUDIO_LIBS)
 
 $(librelacs_la_OBJECTS) : \
     moc_control.cc \
@@ -59,6 +59,7 @@ pkginclude_HEADERS = \
     ../include/relacs/aisim.h \
     ../include/relacs/aosim.h \
     ../include/relacs/attsim.h \
+    ../include/relacs/audiomonitor.h \
     ../include/relacs/control.h \
     ../include/relacs/controltabs.h \
     ../include/relacs/databrowser.h \
@@ -94,6 +95,7 @@ librelacs_la_SOURCES = \
     aisim.cc \
     aosim.cc \
     attsim.cc \
+    audiomonitor.cc \
     control.cc \
     controltabs.cc \
     databrowser.cc \

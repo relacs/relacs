@@ -26,6 +26,7 @@
 #include <relacs/metadata.h>
 #include <relacs/model.h>
 #include <relacs/acquire.h>
+#include <relacs/audiomonitor.h>
 #include <relacs/control.h>
 #include <relacs/controltabs.h>
 #include <relacs/filter.h>
@@ -1335,6 +1336,20 @@ void RELACSPlugin::unlockCurrentRePro( void )
   RePro *rp = currentRePro();
   if ( rp != 0 )
     rp->unlock();
+}
+
+
+void RELACSPlugin::muteAudioMonitor( void )
+{
+  if ( RW != 0 && RW->AM != 0 )
+    RW->AM->mute();
+}
+
+
+void RELACSPlugin::unmuteAudioMonitor( void )
+{
+  if ( RW != 0 && RW->AM != 0 )
+    RW->AM->unmute();
 }
 
 

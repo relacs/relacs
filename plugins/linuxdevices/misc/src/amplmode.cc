@@ -20,12 +20,6 @@
 */
 
 #include <cmath>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <sys/soundcard.h>
 #include <relacs/misc/amplmode.h>
 using namespace relacs;
 
@@ -53,10 +47,6 @@ AmplMode::AmplMode( DigitalIO &dio, const Options &opts )
 
   CurrentMode = 0;
 
-  MixerHandle = -1;
-  MixerChannel = SOUND_MIXER_VOLUME;
-  Volume = 0;
-
   open( dio, opts );
 }
 
@@ -81,10 +71,6 @@ AmplMode::AmplMode( void )
   Mask = 0;
 
   CurrentMode = 0;
-
-  MixerHandle = -1;
-  MixerChannel = SOUND_MIXER_VOLUME;
-  Volume = 0;
 }
 
 
@@ -157,29 +143,6 @@ void AmplMode::open( const Options &opts )
     DIO->writeLines( Mask, 0x00 );
     CurrentMode = 0x00;
 
-    // full duplex mode:
-    int fd = ::open( "/dev/dsp", O_RDWR, 0 );
-    if ( fd >= 0 ) {
-      if ( ioctl( fd, SNDCTL_DSP_SETDUPLEX, NULL ) >= 0 )
-	cerr << "AmplMode: Enabled full duplex sound\n";
-    }
-
-    // open mixer:
-    MixerHandle = ::open( "/dev/mixer", O_RDWR );
-    if ( MixerHandle < 0 ) {
-      cerr << "AmplMode: Failed to open mixer device.\n";
-    }
-    else {
-      int mask = 0;
-      int r = ::ioctl( MixerHandle, SOUND_MIXER_READ_DEVMASK, &mask );
-      if ( r == -1 ||
-	   MixerChannel < 0 || MixerChannel >= SOUND_MIXER_NRDEVICES ||
-	   (mask & (1 << MixerChannel)) == 0 ) {
-	::close( MixerHandle );
-	MixerHandle = -1;
-      }
-    }
-    Volume = 0;
     setDeviceVendor( "npi electronic GmbH (Tamm, Germany)" );
     setDeviceName( "SEC-05LX" );
     addInfo();
@@ -205,19 +168,12 @@ void AmplMode::close( void )
     DIO->writeLines( Mask, 0x00 );
 
     DIO->freeLines( DIOId );
-
-    if ( MixerHandle != -1 ) {
-      ::close( MixerHandle );
-      MixerHandle = -1;
-    }
-
   }
 
   DIO = 0;
 
   Info.clear();
   Settings.clear();
-
 }
 
 
@@ -267,14 +223,6 @@ int AmplMode::startResistance( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  if ( MixerHandle != -1 ) {
-    // get volume settings:
-    if ( Volume == 0 )
-      ::ioctl( MixerHandle, MIXER_READ(MixerChannel), &Volume );
-    // mute sound card:
-    int vol = 0;
-    ::ioctl( MixerHandle, MIXER_WRITE(MixerChannel), &vol );
-  }
   return DIO->writeLines( ModeMask, ResistanceMask );
 }
 
@@ -284,15 +232,7 @@ int AmplMode::stopResistance( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  int r = DIO->writeLines( ModeMask, CurrentMode );
-  
-  if ( MixerHandle != -1 && Volume != 0 ) {
-    // reset volume:
-    ::ioctl( MixerHandle, MIXER_WRITE(MixerChannel), &Volume );
-    Volume = 0;
-  }
-  
-  return r;
+  return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
@@ -300,17 +240,7 @@ int AmplMode::startBuzz( void )
 {
   if ( ! isOpen() )
     return NotOpen;
-    
-  if ( MixerHandle != -1 ) {
-    // get volume settings:
-    if ( Volume == 0 )
-      ::ioctl( MixerHandle, MIXER_READ(MixerChannel), &Volume );
-    // mute sound card:
-    int vol = 0;
-    ::ioctl( MixerHandle, MIXER_WRITE(MixerChannel), &vol );
-  }
   
-  // buzz:
   return DIO->write( BuzzerPin, true );
 }
 
@@ -320,15 +250,7 @@ int AmplMode::stopBuzz( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  int r = DIO->write( BuzzerPin, false );
-  
-  if ( MixerHandle != -1 && Volume != 0 ) {
-    // reset volume:
-    ::ioctl( MixerHandle, MIXER_WRITE(MixerChannel), &Volume );
-    Volume = 0;
-  }
-  
-  return r;
+  return DIO->write( BuzzerPin, false );
 }
 
 

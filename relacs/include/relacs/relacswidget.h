@@ -57,6 +57,7 @@ class TriggerDevices;
 class AttDevices;
 class AttInterfaces;
 class Acquire;
+class AudioMonitor;
 class Simulator;
 class Model;
 class PlotTrace;
@@ -73,7 +74,7 @@ class Session;
 \brief Coordinates RePros, session, input, output, plotting, and saving.
 \author Jan Benda
 \author Christian Machens
-\version 1.8
+\version 2.0
 
 \todo make sure startFirstAcquisition() and startFirstSimulation() are only called from the GUI thread
       (because of MessageBox calls).
@@ -271,6 +272,8 @@ public slots:
   void fullScreen( void );
     /*! Toggles maximized screen mode. */
   void maximizeScreen( void );
+    /*! Toggles muting the audio monitor. */
+  void muteAudioMonitor( void );
 
     /*! Displays highly relevant information about the culprits that
         wrote this piece of software.*/
@@ -371,6 +374,7 @@ private:
   Macros *MC;
   FilterDetectors *FD;
   Session *SN;
+  AudioMonitor *AM;
 
   int ShowFull;
 
@@ -418,6 +422,7 @@ private:
 
   QAction *FullscreenAction;
   QAction *MaximizedAction;
+  QAction *MuteAction;
 
   QMenu *DeviceMenu;
 
