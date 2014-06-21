@@ -83,6 +83,7 @@ public:
     void addChild( const string &name, const Options &data,
 		   const deque<int> &traceindex, const deque<int> &eventsindex,
 		   double time );
+    void loadCell( void );
     int level( void ) const;
     void setName( const string &name );
     string name( void ) const;
@@ -121,7 +122,6 @@ public:
   void addSession( const string &path, const Options &data );
   void endSession( bool saved );
   void loadDirectory( const string &dir );
-  void loadCell( int index );
 
     /*! \return \c true if no recording session is in the DataIndex. */
   bool empty( void ) const;

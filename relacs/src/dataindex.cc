@@ -19,6 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+#include <fstream>
 #include <QDir>
 #include <QStringList>
 #include <relacs/datafile.h>
@@ -216,6 +218,117 @@ void DataIndex::DataItem::addChild( const string &name, const Options &data,
 }
 
 
+
+void DataIndex::DataItem::loadCell( void )
+{
+  if ( level() != 1 )
+    return;
+  DataFile sf( name() );
+
+  // read in meta data:
+  sf.readMetaData();
+  // load stimulus descriptions:
+  string sd = sf.metaDataOptions( sf.levels()-1 ).text( "stimulus descriptions file", "stimulus-descriptions.dat" );
+  // fix for the first stimulus descriptions implementation until 2014-06-21:
+  if ( sd == "stimlus-descriptions.dat" )
+    sd = "stimulus-descriptions.dat"; 
+  Options stimuli;
+  {
+    string filename = Str( name() ).dir() + sd;
+    ifstream sf( filename.c_str() );
+    stimuli.load( sf );
+  }
+  // get columns for stimulus names:
+  int k1 = sf.key().column( "stimulus>" );
+  deque< int > stimcols;
+  for ( int k=k1; sf.key().sectionName( k, 2 ) == "stimulus"; k++ ) {
+    if ( sf.key().sectionName( k, 0 ) == "signal" )
+      stimcols.push_back( k );
+  }
+  deque< deque< string > > stimnames( stimcols.size() );
+
+  do {
+    // add RePro:
+    Options &repro = sf.metaDataOptions( 0 );
+    OverviewModel->beginAddChild( this );
+    Children.push_back( DataItem( repro.text( "RePro" ), repro, level()+1, this ) );
+    DataItem *parent = &Children.back();
+    OverviewModel->endAddChild( this, false );
+    // read in stimuli:
+    sf.initData();
+    for ( unsigned int k=0; k<stimnames.size(); k++ )
+      stimnames[k].clear();
+    do {
+      sf.scanDataLine();
+      int index = 0;
+      int word = 0;
+      unsigned int j = 0;
+      for ( int k=0; k<sf.data().columns() && index>=0; k++ ) {
+	word = Str( sf.line() ).nextWord( index, Str::WhiteSpace, "#" );
+	if ( word >= 0 && k == stimcols[j] ) {
+	  stimnames[j].push_back( sf.line().substr( word, index-word ) );
+	  j++;
+	  if ( j >= stimcols.size() )
+	    break;
+	}
+      }
+    } while ( sf.readDataLine( 1 ) );
+    // add stimuli:
+    for ( int j=0; j<sf.data().rows(); j++ ) {
+      // trace indices:
+      k1 = sf.key().column( "traces>" );
+      deque<int> traceindex;
+      for ( int k=k1; sf.key().sectionName( k, 2 ) == "traces"; k++ )
+	traceindex.push_back( sf.data( k, j ) );
+      // event indices:
+      k1 = sf.key().column( "events>" );
+      deque<int> eventsindex;
+      for ( int k=k1; sf.key().sectionName( k, 2 ) == "events"; k++ ) {
+	if ( sf.key().sectionName( k, 0 ) == "index" )
+	  eventsindex.push_back( sf.data( k, j ) );
+      }
+      // signal time:
+      double deltat = data().number( "sample interval1", "s" );
+      double signaltime = traceindex[0]*deltat;
+      // signal description:
+      int nstimuli = 0;
+      int firststimulus = -1;
+      for ( unsigned int k=0; k<stimnames.size(); k++ ) {
+	if ( stimnames[k][j] != "-" ) {
+	  nstimuli++;
+	  if ( firststimulus < 0 )
+	    firststimulus = k;
+	}
+      }
+      Options description;
+      for ( unsigned int k=0; k<stimnames.size(); k++ ) {
+	if ( stimnames[k][j] != "-" ) {
+	  Options::const_section_iterator sp = stimuli.findSection( stimnames[k][j] );
+	  if ( sp != stimuli.sectionsEnd() ) {
+	    if ( nstimuli == 1 ) {
+	      description = **sp;
+	      break;
+	    }
+	    else
+	      description.newSection( **sp );
+	  }
+	}
+      }
+      if ( nstimuli > 1 )
+	description.setType( "stimulus" );
+      // add stimulus to tree:
+      OverviewModel->beginAddChild( parent );
+      parent->Children.push_back( DataItem( description.type(), description,
+					    traceindex, eventsindex,
+					    signaltime, level()+2, parent ) );
+      OverviewModel->endAddChild( parent, false );
+
+    }
+  } while ( sf.readMetaData() );
+  sf.close();
+}
+
+
 int DataIndex::DataItem::level( void ) const
 {
   return Level;
@@ -386,26 +499,6 @@ void DataIndex::loadDirectory( const string &path )
   }
   print();
 
-}
-
-
-void DataIndex::loadCell( int index )
-{
-  if ( index < 0 || index >= (int)Cells.size() )
-    return;
-
-  Cells[index].clear();
-  DataFile sf( Cells[index].name() );
-  while ( sf.read( 1 ) ) {
-    // add RePro:
-    Options &repro = sf.metaDataOptions( 0 );
-    string name = repro.text( "repro" );
-    Cells[index].addChild( name, repro );
-    Cells[index].back().clear();
-    for ( int k=0; k<sf.data().rows(); k++ ) {
-      // whatever:	Cells[index].Protocolls.back().Stimuli.push_back();
-    }
-  }
 }
 
 

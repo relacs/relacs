@@ -1057,7 +1057,7 @@ void SaveFiles::createStimulusFile( void )
       *SF << "#      maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
       */
     }
-    *SF << "# stimulus descriptions file: stimlus-descriptions.dat\n";
+    *SF << "# stimulus descriptions file: stimulus-descriptions.dat\n";
 
     // create key:
     StimulusKey.clear();

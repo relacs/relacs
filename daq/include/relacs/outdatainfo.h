@@ -162,6 +162,8 @@ namespace relacs {
     const Options &description( void ) const;
       /*! Returns the description of the output signal. */
     Options &description( void );
+      /*! Set the description of the ouput signal to \a descr. */
+    void setDescription( const Options &descr );
 
 
   protected:

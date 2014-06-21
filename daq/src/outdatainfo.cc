@@ -259,4 +259,10 @@ Options &OutDataInfo::description( void )
 }
 
 
+void OutDataInfo::setDescription( const Options &descr )
+{
+  Description = descr;
+}
+
+
 }; /* namespace relacs */

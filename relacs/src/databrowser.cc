@@ -525,12 +525,28 @@ int DataOverviewModel::columnCount( const QModelIndex &parent ) const
 
 bool DataOverviewModel::canFetchMore( const QModelIndex &parent ) const
 {
+  if ( ! parent.isValid() )
+    return false;
+
+  DataIndex::DataItem *item =
+    static_cast<DataIndex::DataItem*>( parent.internalPointer() );
+
+  if ( item->level() == 1 && item->size() == 0 )
+    return true;
+
   return false;
 }
 
 
 void DataOverviewModel::fetchMore( const QModelIndex &parent )
 {
+  if ( ! parent.isValid() )
+    return;
+
+  DataIndex::DataItem *item =
+    static_cast<DataIndex::DataItem*>( parent.internalPointer() );
+
+  item->loadCell();
 }
 
 
@@ -545,7 +561,7 @@ void DataOverviewModel::beginAddChild( DataIndex::DataItem *parent )
 }
 
 
-void DataOverviewModel::endAddChild( DataIndex::DataItem *parent )
+  void DataOverviewModel::endAddChild( DataIndex::DataItem *parent, bool showlast )
 {
   endInsertRows();
   if ( View != 0 ) {
@@ -558,8 +574,10 @@ void DataOverviewModel::endAddChild( DataIndex::DataItem *parent )
 	View->collapse( createIndex( item->size()-1, 0, child ) );
       }
     }
-    QModelIndex item = createIndex( parent->size()-1, 0,
-				    parent->child( parent->size()-1 ) );
+    QModelIndex item = createIndex( 0, 0, parent->child( 0 ) );
+    if ( showlast )
+      item = createIndex( parent->size()-1, 0,
+			  parent->child( parent->size()-1 ) );
     AutoActivate = true;
     View->expand( item );
     View->scrollTo( item );
