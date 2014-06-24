@@ -27,19 +27,23 @@
 #endif
 #include <QMutex>
 #include <relacs/inlist.h>
+#include <relacs/configdialog.h>
 
 using namespace std;
 
 namespace relacs {
 
 
-class AudioMonitor
+class AudioMonitor : public ConfigDialog
 {
 
 public:
 
   AudioMonitor( void );
   ~AudioMonitor( void );
+
+  virtual void notify( void );
+
   void start( void );
   void stop( void );
 

@@ -167,6 +167,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // simulator:
   SIM = new Simulator();
 
+  // setup AudioMonitor:
+  AM = new AudioMonitor();
+
   // devices:
   ADV = new AllDevices();
   DV = new Devices();
@@ -315,9 +318,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // setup PlotTrace:
   PT = new PlotTrace( this );
 
-  // setup AudioMonitor:
-  AM = new AudioMonitor;
-
   // status bar:
   // RePro message:
   QLabel *rl = RP->display();
@@ -364,6 +364,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   filemenu->addSeparator();
   filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
   filemenu->addAction( "Save Settings", (QWidget*)this, SLOT( saveConfig() ) );
+  filemenu->addAction( "&AudioMonitor...", AM, SLOT( dialog() ) );
   filemenu->addAction( "&Quit", (QWidget*)this, SLOT( quit() ), Qt::ALT + Qt::Key_Q );
   //  filemenu->addAction( "&Channels", this, SLOT( channels() ) );
 

@@ -1,8 +1,4 @@
-#include <iostream>
-#include <cmath>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <termios.h>
+#include <relacs/relacsplugin.h>
 #include <relacs/audiomonitor.h>
 
 using namespace std;
@@ -10,10 +6,17 @@ using namespace relacs;
 
 
 AudioMonitor::AudioMonitor( void )
-  : Running( false ),
+  : ConfigDialog( "AudioMonitor", RELACSPlugin::Core, "AudioMonitor" ),
+    Running( false ),
     Gain( 1.0 ),
     Mute( 1.0 )
 {
+  setDate( "" );
+  setDialogHelp( false );
+
+  // options:
+  addNumber( "gain", "Gain factor", 1.0, 0.0, 10000.0, 0.1 );
+
   // initialize:
 #ifdef HAVE_LIBPORTAUDIO
   Stream = 0;
@@ -31,6 +34,12 @@ AudioMonitor::~AudioMonitor( void )
 #ifdef HAVE_LIBPORTAUDIO
   Pa_Terminate();
 #endif
+}
+
+
+void AudioMonitor::notify( void )
+{
+  Gain = number( "gain" );
 }
 
   
