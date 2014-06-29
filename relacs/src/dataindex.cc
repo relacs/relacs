@@ -359,6 +359,14 @@ Options &DataIndex::DataItem::data( void )
 }
 
 
+string DataIndex::DataItem::fileName( void ) const
+{
+  if ( level() == 3 )
+    return Parent->Parent->name();
+  return "";
+}
+
+
 deque<int> DataIndex::DataItem::traceIndex( void ) const
 {
   return TraceIndex;

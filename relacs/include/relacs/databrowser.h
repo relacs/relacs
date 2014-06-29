@@ -50,12 +50,14 @@ public:
   DataBrowser( DataIndex *data, QWidget *parent=0 );
   ~DataBrowser( void );
 
-  void display( const deque<int> &traceindex, const deque<int> &eventsindex, double time );
+  void display( const string &path, const deque<int> &traceindex,
+		const deque<int> &eventsindex, double time );
 
 
 signals:
 
-  void displayIndex( const deque<int> &traceindex, const deque<int> &eventsindex, double time );
+  void displayIndex( const string &path, const deque<int> &traceindex,
+		     const deque<int> &eventsindex, double time );
 
 
 protected:

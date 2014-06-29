@@ -1076,14 +1076,15 @@ void PlotTrace::setView( Views mode )
 }
 
 
-void PlotTrace::displayIndex( const deque<int> &traceindex, const deque<int> &eventsindex,
-			      double time )
+void PlotTrace::displayIndex( const string &path, const deque<int> &traceindex,
+			      const deque<int> &eventsindex, double time )
 {
   P.lock();
   if ( ViewMode != FixedView ) {
     TimeOffs = 0.0;
     setView( FixedView );
   }
+  cerr << "PLOT " << path << '\n';
   Offset = time;
   LeftTime = Offset - TimeOffs;
   PlotChanged = true;

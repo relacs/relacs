@@ -89,6 +89,7 @@ public:
     string name( void ) const;
     const Options &data( void ) const;
     Options &data( void );
+    string fileName( void ) const;
     deque<int> traceIndex( void ) const;
     deque<int> eventsIndex( void ) const;
     double time( void ) const;

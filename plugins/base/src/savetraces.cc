@@ -135,6 +135,14 @@ int SaveTraces::main( void )
   QCoreApplication::postEvent( this,
 			       new SaveTracesEvent( split ? completeRuns()+1 : -1 ) );
 
+  // header for files:
+  Options header;
+  Parameter &pp = header.addText( "trace", "" );
+  lockStimulusData();
+  header.newSection( stimulusData() );
+  unlockStimulusData();
+  header.newSection( settings() );
+
   // open files:
   deque<int> tracenum;
   deque<ofstream*> tracefile;
@@ -156,7 +164,8 @@ int SaveTraces::main( void )
       }
       traceindex.push_back( traces()[k].size() );
       tracetime.push_back( traces()[k].currentTime() );
-      *tracefile.back() << "# trace: " << traces()[k].ident() << '\n';
+      pp.setText( traces()[k].ident() );
+      header.save( *tracefile.back(), "# " );
       *tracefile.back() << '\n';
       tracekey.push_back( TableKey() );
       tracekey.back().addNumber( "t", "sec", "%11.6f" );
@@ -164,6 +173,7 @@ int SaveTraces::main( void )
       tracekey.back().saveKey( *tracefile.back() );
     }
   }
+  pp.setName( "events" );
   deque<int> eventsnum;
   deque<ofstream*> eventsfile;
   deque<int> eventsindex;
@@ -183,7 +193,8 @@ int SaveTraces::main( void )
 					    ofstream::out | ofstream::app ) );
       }
       eventsindex.push_back( events()[k].size() );
-      *eventsfile.back() << "# events: " << events()[k].ident() << '\n';
+      pp.setText( events()[k].ident() );
+      header.save( *eventsfile.back(), "# " );
       *eventsfile.back() << '\n';
       eventskey.push_back( TableKey() );
       eventskey.back().addNumber( "t", "sec", "%11.6f" );

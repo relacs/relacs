@@ -360,10 +360,10 @@ void DataBrowser::read( string cellname, QTreeWidgetItem *parent )
 */
 
 
-void DataBrowser::display( const deque<int> &traceindex, const deque<int> &eventsindex,
-			   double time )
+void DataBrowser::display( const string &path, const deque<int> &traceindex,
+			   const deque<int> &eventsindex, double time )
 {
-  emit displayIndex( traceindex, eventsindex, time );
+  emit displayIndex( path, traceindex, eventsindex, time );
 }
 
 
@@ -665,7 +665,7 @@ void DataOverviewModel::displayIndex( const QModelIndex &index )
 
   // display stimulus:
   if ( Browser != 0 )
-    Browser->display( item->traceIndex(), item->eventsIndex(), item->time() );
+    Browser->display( item->fileName(), item->traceIndex(), item->eventsIndex(), item->time() );
 }
 
 

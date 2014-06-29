@@ -155,7 +155,8 @@ public slots:
   void viewToggle( void );
   void toggleManual( void );
 
-  void displayIndex( const deque<int> &traceindex, const deque<int> &eventsindex, double time );
+  void displayIndex( const string &path, const deque<int> &traceindex,
+		     const deque<int> &eventsindex, double time );
 
 
 protected:
