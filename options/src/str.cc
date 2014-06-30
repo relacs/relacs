@@ -1602,7 +1602,7 @@ int Str::format( long number, char type, char ftype, int pos )
 }
 
 
-Str &Str::format( const struct tm *t )
+Str &Str::format( int year, int month, int day, int hour, int minute, int second, int microsecond )
 {
   for ( int pos=0; pos < size(); pos++ )
     if ( operator[]( pos ) == '%' ) {
@@ -1613,38 +1613,43 @@ Str &Str::format( const struct tm *t )
       int np = readFormat( pos, width, precision, ft, pad );
       int n = np - pos;
       switch ( ft ) {
+      case 'U' : {
+	Str s = Str( microsecond, width, pad );
+	string::replace( pos, n, s );
+	pos += s.size();
+	break; }
       case 'S' : {
-	Str s = Str( t->tm_sec, width, pad );
+	Str s = Str( second, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
       case 'M' : {
-	Str s = Str( t->tm_min, width, pad );
+	Str s = Str( minute, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
       case 'H' : {
-	Str s = Str( t->tm_hour, width, pad );
+	Str s = Str( hour, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
       case 'd' : {
-	Str s = Str( t->tm_mday, width, pad );
+	Str s = Str( day, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
       case 'm' : {
-	Str s = Str( t->tm_mon+1, width, pad );
+	Str s = Str( month, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
       case 'y' : {
-	Str s = Str( t->tm_year%100, width, pad );
+	Str s = Str( year%100, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
       case 'Y' : {
-	Str s = Str( t->tm_year+1900, width, pad );
+	Str s = Str( year+1900, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
@@ -1655,6 +1660,12 @@ Str &Str::format( const struct tm *t )
     }
 
   return *this;
+}
+
+
+Str &Str::format( const struct tm *t )
+{
+  return format( t->tm_year, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec );
 }
 
 
@@ -2326,11 +2337,12 @@ int Str::date( int &year, int &month, int &day ) const
 }
 
 
-int Str::time( int &hour, int &minutes, int &seconds ) const
+int Str::time( int &hour, int &minutes, int &seconds, int &microseconds ) const
 {
   hour = 0;
   minutes = 0;
   seconds = 0;
+  microseconds = 0;
 
   const_iterator p = begin();
 
@@ -2345,9 +2357,11 @@ int Str::time( int &hour, int &minutes, int &seconds ) const
   if ( n == 0 )
     return -1;
   hour = strtol( numstr, 0, 10 );
-  if ( *p != ':' )
-    return -1;
-  ++p;
+  if ( p != end() ) {
+    if ( *p != ':' )
+      return -1;
+    ++p;
+  }
 
   // second number:
   n = 0;
@@ -2359,12 +2373,11 @@ int Str::time( int &hour, int &minutes, int &seconds ) const
   if ( n == 0 )
     return -1;
   minutes = strtol( numstr, 0, 10 );
-  if ( *p != ':' ) {
-    if ( p != end() )
+  if ( p != end() ) {
+    if ( *p != ':' )
       return -1;
-  }
-  else
     ++p;
+  }
   
   // third number:
   n = 0;
@@ -2377,6 +2390,23 @@ int Str::time( int &hour, int &minutes, int &seconds ) const
     seconds = 0;
   else
     seconds = strtol( numstr, 0, 10 );
+  if ( p != end() ) {
+    if ( *p != '.' )
+      return -1;
+    ++p;
+  }
+  
+  // fourth number:
+  n = 0;
+  while ( p != end() && isdigit( *p ) ) {
+    numstr[n++] = *p;
+    ++p;
+  }
+  numstr[n] = '\0';
+  if ( n == 0 )
+    microseconds = 0;
+  else
+    microseconds = strtol( numstr, 0, 10 );
 
   // check ranges:
   if ( hour < 0 || hour > 24 )
@@ -2385,8 +2415,17 @@ int Str::time( int &hour, int &minutes, int &seconds ) const
     return -4;
   if ( seconds < 0 || seconds > 59 )
     return -8;
+  if ( microseconds < 0 || microseconds > 999 )
+    return -16;
 
   return 0;
+}
+
+
+int Str::time( int &hour, int &minutes, int &seconds ) const
+{
+  int microseconds = 0;
+  return time( hour, minutes, seconds, microseconds );
 }
 
 

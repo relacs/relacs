@@ -495,17 +495,23 @@ public:
   inline int format( unsigned short number, char type='u', char ftype=' ', int pos=0 )
    { return format( long( number ), type, ftype, pos ); };
 
-  /*! Format the string using the time given by \a time.
-      The following format specifiers are recognized:
-      %S: second (0..59)
-      %M: minute (0..59)
-      %H: hour (0..23)
-      %d: day of month (1..31)
-      %m: month (1..12)
-      %y: last two digits of year (0..99)
-      %Y: year (1970...)
-      Width and padding character may also be specified, 
-      e.g. %02d produces 01, 02, 03, ... 10, 11, ... 31. */
+    /*! Format the string using the time given by \a year, \a month, \a day, 
+        \a hour, \a minute, \a second, \a microsecond.
+        The following format specifiers are recognized:
+	%U: microsecond (0..999)
+	%S: second (0..59)
+	%M: minute (0..59)
+	%H: hour (0..23)
+	%d: day of month (1..31)
+	%m: month (1..12)
+	%y: last two digits of year (0..99)
+	%Y: year (1970...)
+	Width and padding character may also be specified, 
+	e.g. %02d produces 01, 02, 03, ... 10, 11, ... 31. */
+  Str &format( int year, int month, int day, int hour=0, int minute=0, int second=0, int microsecond=0 );
+    /*! Format the string using the time given by \a time. 
+        See format( int year, int month, int day, int hour, int minute, int second, int microsecond )
+        for details. */
   Str &format( const struct tm *time );
 
 
@@ -587,8 +593,17 @@ public:
         \return -8 invalid day */
   int date( int &year, int &month, int &day ) const;
 
+    /*! Reads the \a hour, \a minutes, \a seconds, and \a microseconds of a time string.
+        The string should be formatted as "HH:MM:SS.UU".
+        \return 0 on success
+        \return -1 the string is not a time
+        \return -2 invalid hour
+        \return -4 invalid minutes
+        \return -8 invalid seconds
+        \return -16 invalid microseconds */
+  int time( int &hour, int &minutes, int &seconds, int &microseconds ) const;
     /*! Reads the \a hour, \a minutes, and \a seconds of a time string.
-        The string should be formatted as "HH:MM:SS".
+        The string should be formatted as "HH:MM:SS.UU".
         \return 0 on success
         \return -1 the string is not a time
         \return -2 invalid hour
