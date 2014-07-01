@@ -104,7 +104,8 @@ public:
   bool canFetchMore( const QModelIndex &parent ) const;
   void fetchMore( const QModelIndex &parent );
   void beginAddChild( DataIndex::DataItem *parent );
-  void endAddChild( DataIndex::DataItem *parent, bool showlast=true );
+  void endAddChild( DataIndex::DataItem *parent );
+  void endAddChild( void );
   void beginPopChild( DataIndex::DataItem *parent );
   void endPopChild( DataIndex::DataItem *parent );
 

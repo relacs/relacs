@@ -561,7 +561,7 @@ void DataOverviewModel::beginAddChild( DataIndex::DataItem *parent )
 }
 
 
-  void DataOverviewModel::endAddChild( DataIndex::DataItem *parent, bool showlast )
+void DataOverviewModel::endAddChild( DataIndex::DataItem *parent )
 {
   endInsertRows();
   if ( View != 0 ) {
@@ -574,16 +574,20 @@ void DataOverviewModel::beginAddChild( DataIndex::DataItem *parent )
 	View->collapse( createIndex( item->size()-1, 0, child ) );
       }
     }
-    QModelIndex item = createIndex( 0, 0, parent->child( 0 ) );
-    if ( showlast )
-      item = createIndex( parent->size()-1, 0,
-			  parent->child( parent->size()-1 ) );
+    QModelIndex item = createIndex( parent->size()-1, 0,
+				    parent->child( parent->size()-1 ) );
     AutoActivate = true;
     View->expand( item );
     View->scrollTo( item );
     View->setCurrentIndex( item );
     AutoActivate = false;
   }
+}
+
+
+void DataOverviewModel::endAddChild( void )
+{
+  endInsertRows();
 }
 
 

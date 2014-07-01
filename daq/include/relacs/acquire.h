@@ -690,8 +690,10 @@ protected:
   QWaitCondition DataWait;
     /*! The input data from the last read(). */
   InList InTraces;
-    /*! The size of InTraces at hte last updateRawData(). */
+    /*! The size of InTraces at the last updateRawData(). */
   double PreviousTime;
+    /*! Count the successive calls of updateRawData() that did not get more data. */
+  int NumEmptyData;
 
     /*! The flag that is used to mark adjusted traces in InData. */
   int AdjustFlag;

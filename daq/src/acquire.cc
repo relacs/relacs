@@ -662,6 +662,7 @@ int Acquire::read( InList &data )
   InTraces.clear();
   DataMutex.lock();
   PreviousTime = 0.0;
+  NumEmptyData = 0;
   SignalTime = -1.0;
   DataMutex.unlock();
 
@@ -883,6 +884,7 @@ int Acquire::restartRead( void )
   if ( m >= InTraces.size() )
     cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
   PreviousTime = InTraces.currentTime();
+  NumEmptyData = 0;
   InTraces.setRestart();
   DataMutex.lock();
   if ( RestartEvents != 0 )
@@ -991,6 +993,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   if ( m >= InTraces.size() )
     cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
   PreviousTime = InTraces.currentTime();
+  NumEmptyData = 0;
   InTraces.setRestart();
   DataMutex.lock();
   if ( RestartEvents != 0 )
@@ -1242,6 +1245,19 @@ int Acquire::updateRawData( double &signaltime,
   DataMutex.lock();
   DataWait.wait( &DataMutex );
   bool finished = ( InTraces.currentTime() <= PreviousTime );
+  // XXX the follow contruct is needed, because DataWait.wait() sometimes
+  // returns immediately, without being waken up. (with daqflex/relacs/cfg)
+  // XXX Maybe we should figure out, why this happens...
+  // From Qt doc: If mutex is not in a locked state, wait() returns immediately.
+  if ( finished ) {
+    NumEmptyData++;
+    if ( NumEmptyData < 2 ) {
+      finished = false;
+      cerr << "! warning in Acquire::updateRawData() -> indicated empty data\n";
+    }
+  }
+  else
+    NumEmptyData = 0;
   signaltime = getSignal();
   // set signal time:
   if ( signaltime >= 0.0 ) {

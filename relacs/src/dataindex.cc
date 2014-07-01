@@ -253,7 +253,7 @@ void DataIndex::DataItem::loadCell( void )
     OverviewModel->beginAddChild( this );
     Children.push_back( DataItem( repro.text( "RePro" ), repro, level()+1, this ) );
     DataItem *parent = &Children.back();
-    OverviewModel->endAddChild( this, false );
+    OverviewModel->endAddChild();
     // read in stimuli:
     sf.initData();
     for ( unsigned int k=0; k<stimnames.size(); k++ )
@@ -321,7 +321,7 @@ void DataIndex::DataItem::loadCell( void )
       parent->Children.push_back( DataItem( description.type(), description,
 					    traceindex, eventsindex,
 					    signaltime, level()+2, parent ) );
-      OverviewModel->endAddChild( parent, false );
+      OverviewModel->endAddChild();
 
     }
   } while ( sf.readMetaData() );

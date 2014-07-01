@@ -542,8 +542,15 @@ int DAQFlexAnalogOutput::reset( void )
   DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
   // clear underrun condition:
   DAQFlexDevice->sendControlTransfer( "AOSCAN:RESET", false );
+  // the following blocks at high rates:
   libusb_clear_halt( DAQFlexDevice->deviceHandle(),
 		     DAQFlexDevice->endpointIn() );
+  /* from the docu: Clear the halt/stall condition for an endpoint.
+     Endpoints with halt status are unable to receive or transmit data
+     until the halt condition is stalled.  YOU SHOULD CANCEL ALL
+     PENDING TRANSFERS BEFORE ATTEMPTING TO CLEAR THE HALT CONDITION
+     (is this really given when stopping relacs?).  This is a BLOCKING
+     FUNCTION. */
   DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
   unlock();
 

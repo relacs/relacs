@@ -331,8 +331,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   SS.notify(); // initialize SF from the Settings
   // data browser:
   DataBrowser *db = new DataBrowser( SF->dataIndex(), this );
-  connect( db, SIGNAL( displayIndex( const deque<int>&, const deque<int>&, double ) ),
-	   PT, SLOT( displayIndex( const deque<int>&, const deque<int>&, double ) ) );
+  connect( db, SIGNAL( displayIndex( const string&, const deque<int>&, const deque<int>&, double ) ),
+	   PT, SLOT( displayIndex( const string&, const deque<int>&, const deque<int>&, double ) ) );
   CW->addTab( db, "Data-Browser" );
   statusBar()->addWidget( SF, 0 );
   // Simulation:
