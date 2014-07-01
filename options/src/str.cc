@@ -1602,7 +1602,7 @@ int Str::format( long number, char type, char ftype, int pos )
 }
 
 
-Str &Str::format( int year, int month, int day, int hour, int minute, int second, int microsecond )
+Str &Str::format( int year, int month, int day, int hour, int minute, int second, int millisecond )
 {
   for ( int pos=0; pos < size(); pos++ )
     if ( operator[]( pos ) == '%' ) {
@@ -1613,8 +1613,8 @@ Str &Str::format( int year, int month, int day, int hour, int minute, int second
       int np = readFormat( pos, width, precision, ft, pad );
       int n = np - pos;
       switch ( ft ) {
-      case 'U' : {
-	Str s = Str( microsecond, width, pad );
+      case 'Z' : {
+	Str s = Str( millisecond, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
@@ -2337,12 +2337,12 @@ int Str::date( int &year, int &month, int &day ) const
 }
 
 
-int Str::time( int &hour, int &minutes, int &seconds, int &microseconds ) const
+int Str::time( int &hour, int &minutes, int &seconds, int &milliseconds ) const
 {
   hour = 0;
   minutes = 0;
   seconds = 0;
-  microseconds = 0;
+  milliseconds = 0;
 
   const_iterator p = begin();
 
@@ -2404,9 +2404,9 @@ int Str::time( int &hour, int &minutes, int &seconds, int &microseconds ) const
   }
   numstr[n] = '\0';
   if ( n == 0 )
-    microseconds = 0;
+    milliseconds = 0;
   else
-    microseconds = strtol( numstr, 0, 10 );
+    milliseconds = strtol( numstr, 0, 10 );
 
   // check ranges:
   if ( hour < 0 || hour > 24 )
@@ -2415,7 +2415,7 @@ int Str::time( int &hour, int &minutes, int &seconds, int &microseconds ) const
     return -4;
   if ( seconds < 0 || seconds > 59 )
     return -8;
-  if ( microseconds < 0 || microseconds > 999 )
+  if ( milliseconds < 0 || milliseconds > 999 )
     return -16;
 
   return 0;
@@ -2424,8 +2424,8 @@ int Str::time( int &hour, int &minutes, int &seconds, int &microseconds ) const
 
 int Str::time( int &hour, int &minutes, int &seconds ) const
 {
-  int microseconds = 0;
-  return time( hour, minutes, seconds, microseconds );
+  int milliseconds = 0;
+  return time( hour, minutes, seconds, milliseconds );
 }
 
 

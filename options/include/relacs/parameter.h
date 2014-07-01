@@ -181,9 +181,9 @@ public:
 	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Time.
         Its value and its default value are set to 
-	\a hour, \a minutes, \a seconds, and \a microseconds. */
+	\a hour, \a minutes, \a seconds, and \a milliseconds. */
   Parameter( const string &name, const string &request,
-	     int hour, int minutes, int seconds, int microseconds,
+	     int hour, int minutes, int seconds, int milliseconds,
 	     int flags=0, int style=0,
 	     Options *parentsection=0 );
     /*! Create parameter with name \a name and value \a value.
@@ -796,29 +796,29 @@ public:
 
     /*! True if parameter is of type time. */
   bool isTime( void ) const;
-    /*! \return the \a index-th hour. \sa minutes(), seconds(), microSeconds(), text() */ 
+    /*! \return the \a index-th hour. \sa minutes(), seconds(), milliSeconds(), text() */ 
   int hour( int index=0 ) const;
-    /*! \return the \a index-th minutes. \sa hour(), seconds(), microSeconds(), text() */ 
+    /*! \return the \a index-th minutes. \sa hour(), seconds(), milliSeconds(), text() */ 
   int minutes( int index=0 ) const;
-    /*! \return the \a index-th seconds. \sa hour(), minutes(), microSeconds(), text() */ 
+    /*! \return the \a index-th seconds. \sa hour(), minutes(), milliSeconds(), text() */ 
   int seconds( int index=0 ) const;
-    /*! \return the \a index-th microseconds. \sa hour(), minutes(), seconds(), text() */ 
-  int microSeconds( int index=0 ) const;
+    /*! \return the \a index-th milliseconds. \sa hour(), minutes(), seconds(), text() */ 
+  int milliSeconds( int index=0 ) const;
     /*! Returns the \a index-th time.
         \param[out] hour If Parameter is not a Time or \a index is invalid, 0 is returned.
         \param[out] minutes If Parameter is not a Time or \a index is invalid, 0 is returned. 
         \param[out] seconds If Parameter is not a Time or \a index is invalid, 0 is returned. 
-        \param[out] microseconds If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[out] milliseconds If Parameter is not a Time or \a index is invalid, 0 is returned. 
         \param[in] index determines which one of the size() stored
 	time values is returned in \a hour, \a minutes, and \a seconds.
-	\sa hour(), minutes(), seconds(), microSeconds(), setTime() */
-  void time( int &hour, int &minutes, int &seconds, int &microseconds, int index=0 ) const;
-    /*! Set time of time parameter to \a hour, \a minutes, \a seconds, and \a microseconds.
+	\sa hour(), minutes(), seconds(), milliSeconds(), setTime() */
+  void time( int &hour, int &minutes, int &seconds, int &milliseconds, int index=0 ) const;
+    /*! Set time of time parameter to \a hour, \a minutes, \a seconds, and \a milliseconds.
         If the value of the parameter is changing then the changedFlag() is set. */
-  Parameter &setTime( int hour, int minutes, int seconds, int microseconds=0 );
-    /*! Add time \a hour, \a minutes, \a seconds, and \a microseconds to time parameter.
+  Parameter &setTime( int hour, int minutes, int seconds, int milliseconds=0 );
+    /*! Add time \a hour, \a minutes, \a seconds, and \a milliseconds to time parameter.
         If the value of the parameter is changing then the changedFlag() is set. */
-  Parameter &addTime( int hour, int minutes, int seconds, int microseconds=0 );
+  Parameter &addTime( int hour, int minutes, int seconds, int milliseconds=0 );
     /*! Set time of time parameter to \a time.
         See Str::time() for valid date strings.
         If the value of the parameter is changing 
@@ -826,46 +826,46 @@ public:
   Parameter &setTime( const string &time );
     /*! Set time of time parameter to \a time.
         If the value of the parameter is changing then the changedFlag() is set.
-	\note the microseconds are set to 0. */
+	\note the milliseconds are set to 0. */
   Parameter &setTime( const struct tm &time );
     /*! Set time of time parameter to \a time.
         If the value of the parameter is changing then the changedFlag() is set.
-	\note the microseconds are set to 0. */
+	\note the milliseconds are set to 0. */
   Parameter &setTime( const time_t &time );
     /*! Set time of time parameter to the current time.
         If the value of the parameter is changing then the changedFlag() is set.
-	\note the microseconds are set to 0. */
+	\note the milliseconds are set to 0. */
   Parameter &setCurrentTime( void );
     /*! Set time value to the one of \a p,
         if \a this and \a p are both of valueType() Time.
         If the value of the parameter is changing then the changedFlag() is set. */
   Parameter &setTime( const Parameter &p );
     /*! \return the \a index-th default hour. 
-        \sa defaultMinutes(), defaultSeconds(), defaultMicroSeconds(), defaultText() */ 
+        \sa defaultMinutes(), defaultSeconds(), defaultMilliSeconds(), defaultText() */ 
   int defaultHour( int index=0 ) const;
     /*! \return the \a index-th default minutes. 
-        \sa defaultHour(), defaultSeconds(), defaultMicroSeconds(), defaultText() */ 
+        \sa defaultHour(), defaultSeconds(), defaultMilliSeconds(), defaultText() */ 
   int defaultMinutes( int index=0 ) const;
     /*! \return the \a index-th default seconds. 
-        \sa defaultHour(), defaultMinutes(), defaultMicroSeconds(), defaultText() */ 
+        \sa defaultHour(), defaultMinutes(), defaultMilliSeconds(), defaultText() */ 
   int defaultSeconds( int index=0 ) const;
-    /*! \return the \a index-th default microseconds. 
+    /*! \return the \a index-th default milliseconds. 
         \sa defaultHour(), defaultMinutes(), defaultSeconds(), defaultText() */ 
-  int defaultMicroSeconds( int index=0 ) const;
+  int defaultMilliSeconds( int index=0 ) const;
     /*! Returns the \a index-th default time.
         \param[out] hour If Parameter is not a Time or \a index is invalid, 0 is returned.
         \param[out] minutes If Parameter is not a Time or \a index is invalid, 0 is returned. 
         \param[out] seconds If Parameter is not a Time or \a index is invalid, 0 is returned. 
-        \param[out] microseconds If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[out] milliseconds If Parameter is not a Time or \a index is invalid, 0 is returned. 
         \param[in] index determines which one of the size() stored
-	default time values is returned in \a hour, \a minutes, \a seconds, and \a microseconds.
-	\sa defaultHour(), defaultMinutes(), defaultSeconds(), defaultMicroSeconds(), setDefaultTime() */
-  void defaultTime( int &hour, int &minutes, int &seconds, int &microseconds, int index=0 ) const;
+	default time values is returned in \a hour, \a minutes, \a seconds, and \a milliseconds.
+	\sa defaultHour(), defaultMinutes(), defaultSeconds(), defaultMilliSeconds(), setDefaultTime() */
+  void defaultTime( int &hour, int &minutes, int &seconds, int &milliseconds, int index=0 ) const;
     /*! Set default time of time parameter to \a hour,
-        \a minutes, \a microseconds, and \a seconds. */
-  Parameter &setDefaultTime( int hour, int minutes, int seconds, int microseconds=0 );
-    /*! Add time \a hour, \a minutes, \a seconds, and \a microseconds to default of time parameter to. */
-  Parameter &addDefaultTime( int hour, int minutes, int seconds, int microseconds=0 );
+        \a minutes, \a milliseconds, and \a seconds. */
+  Parameter &setDefaultTime( int hour, int minutes, int seconds, int milliseconds=0 );
+    /*! Add time \a hour, \a minutes, \a seconds, and \a milliseconds to default of time parameter to. */
+  Parameter &addDefaultTime( int hour, int minutes, int seconds, int milliseconds=0 );
     /*! Set default time of time parameter to \a time.
         See Str::time() for valid date strings. */
   Parameter &setDefaultTime( const string &time );
@@ -1072,16 +1072,16 @@ private:
   vector< int > Minutes;
     /*! Seconds */
   vector< int > Seconds;
-    /*! Microseconds */
-  vector< int > MicroSeconds;
+    /*! Milliseconds */
+  vector< int > MilliSeconds;
     /*! Default hour */
   vector< int > DefaultHour;
     /*! Default minutes */
   vector< int > DefaultMinutes;
     /*! Default seconds */
   vector< int > DefaultSeconds;
-    /*! Default microseconds */
-  vector< int > DefaultMicroSeconds;
+    /*! Default milliseconds */
+  vector< int > DefaultMilliSeconds;
     /*! Internal unit of the parameter. */
   Str InternUnit;
     /*! Unit used for output. */

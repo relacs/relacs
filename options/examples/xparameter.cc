@@ -122,7 +122,7 @@ int main( int argc, char *argv[] )
   cout << '\n';
   print( tip );
 
-  Parameter tip2( "microtimeid", "enter time", 23, 59, 3, 497 );
+  Parameter tip2( "millitimeid", "enter time", 23, 59, 3, 497 );
   cout << '\n';
   print( tip2 );
 

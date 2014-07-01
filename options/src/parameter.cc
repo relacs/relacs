@@ -1,4 +1,3 @@
-
 /*
   parameter.cc
   A Parameter has a name, value and unit.
@@ -239,7 +238,7 @@ Parameter::Parameter( const string &name, const string &request,
 
 
 Parameter::Parameter( const string &name, const string &request,
-		      int hour, int minutes, int seconds, int microseconds,
+		      int hour, int minutes, int seconds, int milliseconds,
 		      int flags, int style,
 		      Options *parentsection )
   : ParentSection( parentsection )
@@ -248,10 +247,10 @@ Parameter::Parameter( const string &name, const string &request,
 
   clear( name, request, Time );
 
-  setFormat( "%02H:%02M:%02S.%03U" );
-  setTime( hour, minutes, seconds, microseconds );
+  setFormat( "%02H:%02M:%02S.%03Z" );
+  setTime( hour, minutes, seconds, milliseconds );
   e += Warning;
-  setDefaultTime( hour, minutes, seconds, microseconds );
+  setDefaultTime( hour, minutes, seconds, milliseconds );
   e += Warning;
   setFlags( flags );
   setStyle( style );
@@ -313,11 +312,11 @@ Parameter &Parameter::clear( const string &name, const string &request,
   Hour.resize( 1 ); Hour[0] = 0;
   Minutes.resize( 1 ); Minutes[0] = 0;
   Seconds.resize( 1 ); Seconds[0] = 0;
-  MicroSeconds.resize( 1 ); MicroSeconds[0] = 0;
+  MilliSeconds.resize( 1 ); MilliSeconds[0] = 0;
   DefaultHour.resize( 1 ); DefaultHour[0] = 0;
   DefaultMinutes.resize( 1 ); DefaultMinutes[0] = 0;
   DefaultSeconds.resize( 1 ); DefaultSeconds[0] = 0;
-  DefaultMicroSeconds.resize( 1 ); DefaultMicroSeconds[0] = 0;
+  DefaultMilliSeconds.resize( 1 ); DefaultMilliSeconds[0] = 0;
   Value.resize( 1 );
   Value[ 0 ] = 0.0;
   DefaultValue.resize( 1 );
@@ -372,11 +371,11 @@ Parameter &Parameter::assign( const Parameter &p )
   Hour = p.Hour;
   Minutes = p.Minutes;
   Seconds = p.Seconds;
-  MicroSeconds = p.MicroSeconds;
+  MilliSeconds = p.MilliSeconds;
   DefaultHour = p.DefaultHour;
   DefaultMinutes = p.DefaultMinutes;
   DefaultSeconds = p.DefaultSeconds;
-  DefaultMicroSeconds = p.DefaultMicroSeconds;
+  DefaultMilliSeconds = p.DefaultMilliSeconds;
   Value = p.Value;
   DefaultValue = p.DefaultValue;
   Error = p.Error;
@@ -444,11 +443,11 @@ Parameter &Parameter::assign( const string &value )
 	  Hour.clear();
 	  Minutes.clear();
 	  Seconds.clear();
-	  MicroSeconds.clear();
+	  MilliSeconds.clear();
 	  for ( int k=0; k<String.size(); k++ ) {
-	    int hour, minutes, seconds, microseconds;
-	    Str( String[k] ).time( hour, minutes, seconds, microseconds );
-	    addTime( hour, minutes, seconds, microseconds );
+	    int hour, minutes, seconds, milliseconds;
+	    Str( String[k] ).time( hour, minutes, seconds, milliseconds );
+	    addTime( hour, minutes, seconds, milliseconds );
 	  }
 	  setUnit( "", "" );
 	}
@@ -576,7 +575,7 @@ bool Parameter::nonDefault( void ) const
     return ( DefaultYear != Year || DefaultMonth != Month || DefaultDay != Day );
   else if ( isTime() )
     return ( DefaultHour != Hour || DefaultMinutes != Minutes ||
-	     DefaultSeconds != Seconds || DefaultMicroSeconds != MicroSeconds );
+	     DefaultSeconds != Seconds || DefaultMilliSeconds != MilliSeconds );
   else if ( isText() )
     return ( DefaultString != String );
   else
@@ -930,12 +929,12 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
   }
   else if ( isTime() ) {
     if ( s.empty() && f == "%s" ) {
-      if ( MicroSeconds[index] > 0 )
-	f = "%02H:%02M:%02S.%03U";
+      if ( MilliSeconds[index] > 0 )
+	f = "%02H:%02M:%02S.%03Z";
       else
 	f = "%02H:%02M:%02S";
     }
-    f.format( 0, 0, 0, Hour[index], Minutes[index], Seconds[index], MicroSeconds[index] );
+    f.format( 0, 0, 0, Hour[index], Minutes[index], Seconds[index], MilliSeconds[index] );
   }
 
   if ( u == "1" )
@@ -1059,7 +1058,7 @@ Parameter &Parameter::addText( const string &strg, bool clear )
     Hour.clear();
     Minutes.clear();
     Seconds.clear();
-    MicroSeconds.clear();
+    MilliSeconds.clear();
   }
 
   // add sq:
@@ -1186,13 +1185,13 @@ Str Parameter::defaultText( int index, const string &format,
   }
   else if ( isTime() ) {
     if ( s.empty() && f == "%s" ) {
-      if ( DefaultMicroSeconds[index] > 0 )
-	f = "%02H:%02M:%02S.%03U";
+      if ( DefaultMilliSeconds[index] > 0 )
+	f = "%02H:%02M:%02S.%03Z";
       else
 	f = "%02H:%02M:%02S";
     }
     f.format( 0, 0, 0, DefaultHour[index], DefaultMinutes[index],
-	      DefaultSeconds[index], DefaultMicroSeconds[index] );
+	      DefaultSeconds[index], DefaultMilliSeconds[index] );
   }
 
   if ( u == "1" )
@@ -1233,7 +1232,7 @@ Parameter &Parameter::setDefaultText( const string &strg )
   DefaultHour.clear();
   DefaultMinutes.clear();
   DefaultSeconds.clear();
-  DefaultMicroSeconds.clear();
+  DefaultMilliSeconds.clear();
 
   return addDefaultText( strg );
 }
@@ -1389,14 +1388,14 @@ Parameter &Parameter::selectText( const string &strg, int add )
     Hour.clear();
     Minutes.clear();
     Seconds.clear();
-    MicroSeconds.clear();
+    MilliSeconds.clear();
     for ( int k=0; k<String.size(); k++ ) {
-      int hour, minutes, seconds, microseconds;
-      int d = String[k].time( hour, minutes, seconds, microseconds );
+      int hour, minutes, seconds, milliseconds;
+      int d = String[k].time( hour, minutes, seconds, milliseconds );
       if ( d != 0 )
 	Warning += "string '" + String[k] + "' is not a valid time!";
       else 
-	addTime( hour, minutes, seconds, microseconds );
+	addTime( hour, minutes, seconds, milliseconds );
     }
   }
   else {
@@ -1452,14 +1451,14 @@ Parameter &Parameter::selectText( int index )
     Hour.clear();
     Minutes.clear();
     Seconds.clear();
-    MicroSeconds.clear();
+    MilliSeconds.clear();
     for ( int k=0; k<String.size(); k++ ) {
-      int hour, minutes, seconds, microseconds;
-      int d = String[k].time( hour, minutes, seconds, microseconds );
+      int hour, minutes, seconds, milliseconds;
+      int d = String[k].time( hour, minutes, seconds, milliseconds );
       if ( d != 0 )
 	Warning += "string '" + String[k] + "' is not a valid time!";
       else 
-	addTime( hour, minutes, seconds, microseconds );
+	addTime( hour, minutes, seconds, milliseconds );
     }
   }
   else {
@@ -2719,28 +2718,28 @@ int Parameter::seconds( int index ) const
 }
 
 
-int Parameter::microSeconds( int index ) const
+int Parameter::milliSeconds( int index ) const
 {
   if ( ! isTime() ) {
-    Warning = "Parameter::microSeconds -> parameter '" + 
+    Warning = "Parameter::milliSeconds -> parameter '" + 
       Name + "' is not of type time!";
     return 0;
   }
-  if ( index < 0 || index >= (int)MicroSeconds.size() ) {
-    Warning = "Parameter::microSeconds -> invalid index " +
+  if ( index < 0 || index >= (int)MilliSeconds.size() ) {
+    Warning = "Parameter::milliSeconds -> invalid index " +
       Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
-  return MicroSeconds[index];
+  return MilliSeconds[index];
 }
 
 
-void Parameter::time( int &hour, int &minutes, int &seconds, int &microseconds, int index ) const
+void Parameter::time( int &hour, int &minutes, int &seconds, int &milliseconds, int index ) const
 {
   hour = 0;
   minutes = 0;
   seconds = 0;
-  microseconds = 0;
+  milliseconds = 0;
   if ( ! isTime() ) {
     Warning = "Parameter::time -> parameter '" + 
       Name + "' is not of type time!";
@@ -2754,11 +2753,11 @@ void Parameter::time( int &hour, int &minutes, int &seconds, int &microseconds, 
   hour = Hour[index];
   minutes = Minutes[index];
   seconds = Seconds[index];
-  microseconds = MicroSeconds[index];
+  milliseconds = MilliSeconds[index];
 }
 
 
-Parameter &Parameter::setTime( int hour, int minutes, int seconds, int microseconds )
+Parameter &Parameter::setTime( int hour, int minutes, int seconds, int milliseconds )
 {
   if ( ! isTime() ) {
     Warning = "Parameter::setTime -> parameter '" + 
@@ -2768,27 +2767,27 @@ Parameter &Parameter::setTime( int hour, int minutes, int seconds, int microseco
 
   // changed:
   if ( Hour.size() > 0 &&
-       ( Hour[0] != hour || Minutes[0] != minutes || Seconds[0] != seconds || MicroSeconds[0] != microseconds ) )
+       ( Hour[0] != hour || Minutes[0] != minutes || Seconds[0] != seconds || MilliSeconds[0] != milliseconds ) )
     Flags |= ChangedFlag;
 
   // clear:
   Hour.clear();
   Minutes.clear();
   Seconds.clear();
-  MicroSeconds.clear();
+  MilliSeconds.clear();
   String.clear();
 
   // add:
   Hour.push_back( hour );
   Minutes.push_back( minutes );
   Seconds.push_back( seconds );
-  MicroSeconds.push_back( microseconds );
+  MilliSeconds.push_back( milliseconds );
 
   return *this;
 }
 
 
-Parameter &Parameter::addTime( int hour, int minutes, int seconds, int microseconds )
+Parameter &Parameter::addTime( int hour, int minutes, int seconds, int milliseconds )
 {
   if ( ! isTime() ) {
     Warning = "Parameter::addTime -> parameter '" + 
@@ -2804,7 +2803,7 @@ Parameter &Parameter::addTime( int hour, int minutes, int seconds, int microseco
   Hour.push_back( hour );
   Minutes.push_back( minutes );
   Seconds.push_back( seconds );
-  MicroSeconds.push_back( microseconds );
+  MilliSeconds.push_back( milliseconds );
 
   return *this;
 }
@@ -2813,15 +2812,15 @@ Parameter &Parameter::addTime( int hour, int minutes, int seconds, int microseco
 Parameter &Parameter::setTime( const string &time )
 {
   // read time:
-  int hour, minutes, seconds, microseconds;
-  int istime = Str( time ).time( hour, minutes, seconds, microseconds );
+  int hour, minutes, seconds, milliseconds;
+  int istime = Str( time ).time( hour, minutes, seconds, milliseconds );
   if ( istime != 0 ) {
     Warning = "Parameter::setTime -> argument '" + 
       time + "' is not a time!";
     return *this;
   }
 
-  setTime( hour, minutes, seconds, microseconds );
+  setTime( hour, minutes, seconds, milliseconds );
 
   return *this;
 }
@@ -2868,13 +2867,13 @@ Parameter &Parameter::setTime( const Parameter &p )
   if ( Hour.size() != p.Hour.size() ||
        ( Hour.size() > 0 && p.Hour.size() > 0 && 
 	 ( Hour[0] != p.Hour[0] || Minutes[0] != p.Minutes[0] ||
-	   Seconds[0] != p.Seconds[0] || MicroSeconds[0] != p.MicroSeconds[0] ) ) )
+	   Seconds[0] != p.Seconds[0] || MilliSeconds[0] != p.MilliSeconds[0] ) ) )
     Flags |= ChangedFlag;
 
   Hour = p.Hour;
   Minutes = p.Minutes;
   Seconds = p.Seconds;
-  MicroSeconds = p.MicroSeconds;
+  MilliSeconds = p.MilliSeconds;
   String = p.String;
   
   return *this;
@@ -2929,28 +2928,28 @@ int Parameter::defaultSeconds( int index ) const
 }
 
 
-int Parameter::defaultMicroSeconds( int index ) const
+int Parameter::defaultMilliSeconds( int index ) const
 {
   if ( ! isTime() ) {
-    Warning = "Parameter::defaultMicroSeconds -> parameter '" + 
+    Warning = "Parameter::defaultMilliSeconds -> parameter '" + 
       Name + "' is not of type time!";
     return 0;
   }
-  if ( index < 0 || index >= (int)DefaultMicroSeconds.size() ) {
-    Warning = "Parameter::defaultMicroSeconds -> invalid index " +
+  if ( index < 0 || index >= (int)DefaultMilliSeconds.size() ) {
+    Warning = "Parameter::defaultMilliSeconds -> invalid index " +
       Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
-  return DefaultMicroSeconds[index];
+  return DefaultMilliSeconds[index];
 }
 
 
-void Parameter::defaultTime( int &hour, int &minutes, int &seconds, int &microseconds, int index ) const
+void Parameter::defaultTime( int &hour, int &minutes, int &seconds, int &milliseconds, int index ) const
 {
   hour = 0;
   minutes = 0;
   seconds = 0;
-  microseconds = 0;
+  milliseconds = 0;
   if ( ! isDate() ) {
     Warning = "Parameter::defaultTime -> parameter '" + 
       Name + "' is not of type date!";
@@ -2964,11 +2963,11 @@ void Parameter::defaultTime( int &hour, int &minutes, int &seconds, int &microse
   hour = DefaultHour[index];
   minutes = DefaultMinutes[index];
   seconds = DefaultSeconds[index];
-  microseconds = DefaultMicroSeconds[index];
+  milliseconds = DefaultMilliSeconds[index];
 }
 
 
-Parameter &Parameter::setDefaultTime( int hour, int minutes, int seconds, int microseconds )
+Parameter &Parameter::setDefaultTime( int hour, int minutes, int seconds, int milliseconds )
 {
   if ( ! isTime() ) {
     Warning = "Parameter::setDefaultTime -> parameter '" + 
@@ -2980,20 +2979,20 @@ Parameter &Parameter::setDefaultTime( int hour, int minutes, int seconds, int mi
   DefaultHour.clear();
   DefaultMinutes.clear();
   DefaultSeconds.clear();
-  DefaultMicroSeconds.clear();
+  DefaultMilliSeconds.clear();
   DefaultString.clear();
 
   // set:
   DefaultHour.push_back( hour );
   DefaultMinutes.push_back( minutes );
   DefaultSeconds.push_back( seconds );
-  DefaultMicroSeconds.push_back( microseconds );
+  DefaultMilliSeconds.push_back( milliseconds );
 
   return *this;
 }
 
 
-Parameter &Parameter::addDefaultTime( int hour, int minutes, int seconds, int microseconds )
+Parameter &Parameter::addDefaultTime( int hour, int minutes, int seconds, int milliseconds )
 {
   if ( ! isTime() ) {
     Warning = "Parameter::addDefaultTime -> parameter '" + 
@@ -3005,7 +3004,7 @@ Parameter &Parameter::addDefaultTime( int hour, int minutes, int seconds, int mi
   DefaultHour.push_back( hour );
   DefaultMinutes.push_back( minutes );
   DefaultSeconds.push_back( seconds );
-  DefaultMicroSeconds.push_back( microseconds );
+  DefaultMilliSeconds.push_back( milliseconds );
 
   return *this;
 }
@@ -3014,15 +3013,15 @@ Parameter &Parameter::addDefaultTime( int hour, int minutes, int seconds, int mi
 Parameter &Parameter::setDefaultTime( const string &time )
 {
   // read time:
-  int hour, minutes, seconds, microseconds;
-  int istime = Str( time ).time( hour, minutes, seconds, microseconds );
+  int hour, minutes, seconds, milliseconds;
+  int istime = Str( time ).time( hour, minutes, seconds, milliseconds );
   if ( istime != 0 ) {
     Warning = "Parameter::setDefaultTime -> argument '" + 
       time + "' is not a time!";
     return *this;
   }
 
-  setDefaultTime( hour, minutes, seconds, microseconds );
+  setDefaultTime( hour, minutes, seconds, milliseconds );
 
   return *this;
 }
@@ -3051,7 +3050,7 @@ Parameter &Parameter::setDefault( void )
     Hour = DefaultHour;
     Minutes = DefaultMinutes;
     Seconds = DefaultSeconds;
-    MicroSeconds = DefaultMicroSeconds;
+    MilliSeconds = DefaultMilliSeconds;
   }
   else {
     Value = DefaultValue;
@@ -3073,7 +3072,7 @@ Parameter &Parameter::setToDefault( void )
   else if ( isTime() ) {
     DefaultHour = Hour;
     DefaultMinutes = Minutes;
-    DefaultMicroSeconds = MicroSeconds;
+    DefaultMilliSeconds = MilliSeconds;
   }
   else
     DefaultValue = Value;
@@ -3566,12 +3565,12 @@ bool Parameter::read( const Parameter &p )
     else if ( isTime() && p.isTime() ) {
       if ( ! Hour.empty() && ! p.Hour.empty() &&
 	   ( Hour[0] != p.Hour[0] || Minutes[0] != p.Minutes[0] ||
-	     Seconds[0] != p.Seconds[0] || MicroSeconds[0] != p.MicroSeconds[0] ) )
+	     Seconds[0] != p.Seconds[0] || MilliSeconds[0] != p.MilliSeconds[0] ) )
 	Flags |= ChangedFlag;
       Hour = p.Hour;
       Minutes = p.Minutes;
       Seconds = p.Seconds;
-      MicroSeconds = p.MicroSeconds;
+      MilliSeconds = p.MilliSeconds;
     }
     else if  ( isText() && p.isText() ) {
       if ( ! String.empty() && ! p.String.empty() && String[0] != p.String[0] )
@@ -3598,7 +3597,7 @@ bool Parameter::read( const Parameter &p )
       Hour.clear();
       Minutes.clear();
       Seconds.clear();
-      MicroSeconds.clear();
+      MilliSeconds.clear();
       for ( int k=0; k<p.size(); k++ )
 	addText( p.text( k ) );
     }

@@ -1245,28 +1245,28 @@ public:
 	\param[in] hour the default value for the hour
 	\param[in] minutes the default value for the minutes
 	\param[in] seconds the default value for the seconds
-	\param[in] microseconds the default value for the microseconds
+	\param[in] milliseconds the default value for the milliseconds
 	\param[in] flags some flags
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa insertTime(), setTime(), time() */
   Parameter &addTime( const string &name, const string &request,
-		      int hour=0, int minutes=0, int seconds=0, int microseconds=0,
+		      int hour=0, int minutes=0, int seconds=0, int milliseconds=0,
 		      int flags=0, int style=0 );
     /*! Add a time option at the end of the options list.
         \param[in] name the name and request string of the new option
 	\param[in] hour the default value for the hour
 	\param[in] minutes the default value for the minutes
 	\param[in] seconds the default value for the seconds
-	\param[in] microseconds the default value for the microseconds
+	\param[in] milliseconds the default value for the milliseconds
 	\param[in] flags some flags
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa insertTime(), setTime(), time() */
   inline Parameter &addTime( const string &name,
-			     int hour, int minutes, int seconds, int microseconds=0,
+			     int hour, int minutes, int seconds, int milliseconds=0,
 			     int flags=0, int style=0 )
-    { return addTime( name, name, hour, minutes, seconds, microseconds, flags, style ); };
+    { return addTime( name, name, hour, minutes, seconds, milliseconds, flags, style ); };
     /*! Add a time option at the end of the options list
         with hour, minutes and seconds set to zero.
         \param[in] name the name and request string of the new option
@@ -1288,14 +1288,14 @@ public:
 	\param[in] hour the default value for the hour
 	\param[in] minutes the default value for the minutes
 	\param[in] seconds the default value for the seconds
-	\param[in] microseconds the default value for the microseconds
+	\param[in] milliseconds the default value for the milliseconds
 	\param[in] flags some flags
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa addTime(), setTime(), time() */
   Parameter &insertTime( const string &name, const string &atname="",
 			 const string &request="",
-			 int hour=0, int minutes=0, int seconds=0, int microseconds=0,
+			 int hour=0, int minutes=0, int seconds=0, int milliseconds=0,
 			 int flags=0, int style=0 );
     /*! Insert a new time option at the beginning of the options list
         (\a atname == "") or at the position of the option with
@@ -1308,20 +1308,20 @@ public:
 	\param[in] hour the default value for the hour
 	\param[in] minutes the default value for the minutes
 	\param[in] seconds the default value for the seconds
-	\param[in] microseconds the default value for the microseconds
+	\param[in] milliseconds the default value for the milliseconds
 	\param[in] flags some flags
 	\param[in] style defines the style in a GUI.
 	\return a reference to the new option
 	\sa addTime(), setTime(), time() */
   Parameter &insertTime( const string &name, const string &atname,
-			 int hour=0, int minutes=0, int seconds=0, int microseconds=0,
+			 int hour=0, int minutes=0, int seconds=0, int milliseconds=0,
 			 int flags=0, int style=0 )
-    { return insertTime( name, atname, name, hour, minutes, seconds, microseconds, flags, style ); };
+    { return insertTime( name, atname, name, hour, minutes, seconds, milliseconds, flags, style ); };
     /*! Insert a new time option at the beginning of the options list
         (\a atname == "") or at the position of the option with
         name \a atname. If the option with name \a atname
         does not exist, the option is appended to the end of the list.
-	The hour, minutes, seconds and microseconds are set to zero.
+	The hour, minutes, seconds and milliseconds are set to zero.
         \param[in] name the name and request string of the new option
         \param[in] atname the name string of the existing option
 	where the new options should be inserted. If left empty,
@@ -1339,21 +1339,21 @@ public:
 	\param[out] hour the hour of the specified time
 	\param[out] minutes the minutes of the specified time
 	\param[out] seconds the seconds of the specified time
-	\param[out] microseconds the microseconds of the specified time
+	\param[out] milliseconds the milliseconds of the specified time
 	\return the reference of the option
         \sa defaultTime(), setTime(), addTime(), insertTime() */
   const Parameter &time( const string &name, int index,
-			 int &hour, int &minutes, int &seconds, int &microseconds ) const;
+			 int &hour, int &minutes, int &seconds, int &milliseconds ) const;
     /*! Set the value of an existing time option.
 	\param[in] name the name string of the option
 	\param[in] hour the new value for the hour
 	\param[in] minutes the new value for the minutes
 	\param[in] seconds the new value for the seconds
-	\param[in] microseconds the new value for the microseconds
+	\param[in] milliseconds the new value for the milliseconds
 	\return a reference to the option.
         \sa setCurrentTime(), setDefaultTime(), addTime(), insertTime(), time() */
   Parameter &setTime( const string &name,
-		      int hour, int minutes, int seconds, int microseconds=0 );
+		      int hour, int minutes, int seconds, int milliseconds=0 );
     /*! Set the value of an existing time option.
 	\param[in] name the name string of the option
 	\param[in] time the new value for the time
@@ -1389,21 +1389,21 @@ public:
 	\param[out] hour the hour of the specified default time
 	\param[out] minutes the minutes of the specified default time
 	\param[out] seconds the seconds of the specified default time
-	\param[out] microseconds the microseconds of the specified default time
+	\param[out] milliseconds the milliseconds of the specified default time
 	\return the reference of the option
         \sa time(), setTime(), addTime(), insertTime() */
   const Parameter &defaultTime( const string &name, int index,
-				int &hour, int &minutes, int &seconds, int &microseconds ) const;
+				int &hour, int &minutes, int &seconds, int &milliseconds ) const;
     /*! Set the default value of an existing time option.
 	\param[in] name the name string of the option
 	\param[in] hour the new value for the default hour
 	\param[in] minutes the new value for the default minutes
 	\param[in] seconds the new value for the default seconds
-	\param[in] microseconds the new value for the default microseconds
+	\param[in] milliseconds the new value for the default milliseconds
 	\return a reference to the option.
         \sa setTime(), addTime(), insertTime(), defaultTime() */
   Parameter &setDefaultTime( const string &name,
-			     int hour, int minutes, int seconds, int microseconds=0 );
+			     int hour, int minutes, int seconds, int milliseconds=0 );
 
     /*! Add a new subsection of level \a level.
         The new section is named \a name, has the optional

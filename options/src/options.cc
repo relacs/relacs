@@ -3461,11 +3461,11 @@ Parameter &Options::setDefaultDate( const string &name,
 
 
 Parameter &Options::addTime( const string &name, const string &request,
-			     int hour, int minutes, int seconds, int microseconds,
+			     int hour, int minutes, int seconds, int milliseconds,
 			     int flags, int style )
 {
   // new parameter:
-  Parameter np( name, request, hour, minutes, seconds, microseconds, flags, style, this );
+  Parameter np( name, request, hour, minutes, seconds, milliseconds, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -3480,11 +3480,11 @@ Parameter &Options::addTime( const string &name, const string &request,
 
 Parameter &Options::insertTime( const string &name, const string &atname,
 				const string &request,
-				int hour, int minutes, int seconds, int microseconds,
+				int hour, int minutes, int seconds, int milliseconds,
 				int flags, int style )
 {
   // new parameter:
-  Parameter np( name, request, hour, minutes, seconds, microseconds, flags, style, this );
+  Parameter np( name, request, hour, minutes, seconds, milliseconds, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atname );
   // error?
@@ -3498,14 +3498,14 @@ Parameter &Options::insertTime( const string &name, const string &atname,
 
 
 const Parameter &Options::time( const string &name, int index,
-				int &hour, int &minutes, int &seconds, int &microseconds ) const
+				int &hour, int &minutes, int &seconds, int &milliseconds ) const
 {
   hour = 0;
   minutes = 0;
   seconds = 0;
   const_iterator pp = find( name );
   if ( pp != end() ) {
-    pp->time( hour, minutes, seconds, microseconds, index );
+    pp->time( hour, minutes, seconds, milliseconds, index );
     Warning += pp->warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
@@ -3521,12 +3521,12 @@ const Parameter &Options::time( const string &name, int index,
 
 
 Parameter &Options::setTime( const string &name,
-			     int hour, int minutes, int seconds, int microseconds )
+			     int hour, int minutes, int seconds, int milliseconds )
 {
   iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
-    pp->setTime( hour, minutes, seconds, microseconds );
+    pp->setTime( hour, minutes, seconds, milliseconds );
     Warning += pp->warning();
   }
 #ifndef NDEBUG
@@ -3678,11 +3678,11 @@ Parameter &Options::setTime( const string &name, const Parameter &p )
 
 
 const Parameter &Options::defaultTime( const string &name, int index,
-				       int &hour, int &minutes, int &seconds, int &microseconds ) const
+				       int &hour, int &minutes, int &seconds, int &milliseconds ) const
 {
   const_iterator pp = find( name );
   if ( pp != end() ) {
-    pp->defaultTime( hour, minutes, seconds, microseconds, index );
+    pp->defaultTime( hour, minutes, seconds, milliseconds, index );
     Warning += pp->warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
@@ -3698,12 +3698,12 @@ const Parameter &Options::defaultTime( const string &name, int index,
 
 
 Parameter &Options::setDefaultTime( const string &name,
-				    int hour, int minutes, int seconds, int microseconds )
+				    int hour, int minutes, int seconds, int milliseconds )
 {
   iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
-    pp->setDefaultTime( hour, minutes, seconds, microseconds );
+    pp->setDefaultTime( hour, minutes, seconds, milliseconds );
     Warning += pp->warning();
   }
 #ifndef NDEBUG

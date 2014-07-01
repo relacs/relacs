@@ -37,8 +37,8 @@ int main( int argc, char *argv[] )
 
   int year, month, day;
   int date = ss.date( year, month, day );
-  int hour, minutes, seconds, microseconds;
-  int time = ss.time( hour, minutes, seconds, microseconds );
+  int hour, minutes, seconds, milliseconds;
+  int time = ss.time( hour, minutes, seconds, milliseconds );
 
   if ( date == 0 ) {
     cout << ss << " is a date\n";
@@ -51,7 +51,7 @@ int main( int argc, char *argv[] )
     cout << "hour   =" << hour << '\n';
     cout << "minutes=" << minutes << '\n';
     cout << "seconds=" << seconds << '\n';
-    cout << "microseconds=" << microseconds << '\n';
+    cout << "milliseconds=" << milliseconds << '\n';
   }
   else
     cout << ss << " is an invalid time (" << time << ") or date (" << date << ")\n";
