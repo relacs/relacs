@@ -1649,7 +1649,7 @@ Str &Str::format( int year, int month, int day, int hour, int minute, int second
 	pos += s.size();
 	break; }
       case 'Y' : {
-	Str s = Str( year+1900, width, pad );
+	Str s = Str( year, width, pad );
 	string::replace( pos, n, s );
 	pos += s.size();
 	break; }
@@ -1665,7 +1665,7 @@ Str &Str::format( int year, int month, int day, int hour, int minute, int second
 
 Str &Str::format( const struct tm *t )
 {
-  return format( t->tm_year, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec );
+  return format( t->tm_year+1900, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec );
 }
 
 

@@ -105,8 +105,8 @@ int Wait::main( void )
 {
   // get options:
   bool absdate = boolean( "absdate" );
-  int hour, minutes, seconds;
-  Options::time( "time", 0, hour, minutes, seconds );
+  int hour, minutes, seconds, microseconds;
+  Options::time( "time", 0, hour, minutes, seconds, microseconds );
   QDateTime endtime = QDateTime::currentDateTime();
   endtime.setTime( QTime( hour, minutes, seconds ) );
   if ( absdate ) {

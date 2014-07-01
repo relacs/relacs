@@ -48,7 +48,7 @@ void print( const Parameter &p )
   cout << "p.outUnit()  : " << p.outUnit() << '\n';
   cout << "p.format()   : " << p.format() << '\n';
   cout << "p.valueType(): " << p.valueType() << '\n';
-  cout << "p.text()     : " << p.text( "r='%r', i=%i, s=%s, n=%g, e=%G, u=%u, date=%Y-%m-%d, time=%H:%M:%S" ) << '\n';
+  cout << "p.text()     : " << p.text( "r='%r', i=%i, s=%s, n=%g, e=%G, u=%u, date=%04Y-%02m-%02d, time=%02H:%02M:%02S.%03U" ) << '\n';
   cout << "p            : ";
   p.save( cout, 0 );
   cout << '\n';
@@ -121,6 +121,10 @@ int main( int argc, char *argv[] )
   Parameter tip( "timeid", "enter time", Parameter::Time, 23, 59, 3 );
   cout << '\n';
   print( tip );
+
+  Parameter tip2( "microtimeid", "enter time", 23, 59, 3, 497 );
+  cout << '\n';
+  print( tip2 );
 
   while ( true ) {
     cout << '\n';

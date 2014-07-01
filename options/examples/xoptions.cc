@@ -38,7 +38,7 @@ int main( int argc, char *argv[] )
   opt.addInteger( "repeats", "Repeats", 10 );
   opt.addBoolean( "sinewave", "Use Sine Wave", true );
   opt.addDate( "recordingdate", 2009, 6, 20 );
-  opt.addTime( "recordingtime", 16, 42, 13 );
+  opt.addTime( "recordingtime", 16, 42, 13, 987 );
   opt.insertNumber( "pause", "repeats", "Pause between Signals",
 		    0.1, 0.01, 1000.0, 0.01, "seconds", "ms", "%5.1f" );
   opt.newSection( "Analysis", "analysis/basics" );
