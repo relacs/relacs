@@ -7,7 +7,9 @@ using namespace relacs;
 
 AudioMonitor::AudioMonitor( void )
   : ConfigDialog( "AudioMonitor", RELACSPlugin::Core, "AudioMonitor" ),
+    Initialized( false ),
     Running( false ),
+    AudioDevice( 0 ),
     Gain( 1.0 ),
     Mute( 1.0 )
 {
@@ -15,9 +17,44 @@ AudioMonitor::AudioMonitor( void )
   setDialogHelp( false );
 
   // options:
+  addInteger( "device", "Audio device number", 0, 0, 100 );
+  addBoolean( "enable", "Enable audio monitor", true );
+  addBoolean( "mute", "Mute audio monitor", false );
   addNumber( "gain", "Gain factor", 1.0, 0.0, 10000.0, 0.1 );
+}
 
-  // initialize:
+
+AudioMonitor::~AudioMonitor( void )
+{
+  terminate();
+}
+
+
+void AudioMonitor::notify( void )
+{
+  Mutex.lock();
+  int audiodevice = integer( "device" );
+  Gain = number( "gain" );
+  Mute = boolean( "mute" ) ? 0.0f : 1.0f;
+  bool enable = boolean( "enable" );
+  Mutex.unlock();
+  if ( enable ) {
+    if ( Initialized && audiodevice != AudioDevice )
+      terminate();
+    AudioDevice = audiodevice;
+    initialize();
+  }
+  else
+    terminate();
+  AudioDevice = audiodevice;
+}
+
+  
+void AudioMonitor::initialize( void )
+{
+  if ( Initialized )
+    return;
+
 #ifdef HAVE_LIBPORTAUDIO
   Stream = 0;
   PaError err = Pa_Initialize();
@@ -25,27 +62,51 @@ AudioMonitor::AudioMonitor( void )
     cerr << "Failed to initialize PortAudio: " << Pa_GetErrorText( err ) << '\n';
     return;
   }
+  int numdev = Pa_GetDeviceCount();
+  if ( AudioDevice >= numdev )
+    AudioDevice = numdev-1;
+  cerr << "Available audio devices for the audio monitor:\n";
+  for ( int k=0; k<numdev; k++ ) {
+    const PaDeviceInfo *devinfo = Pa_GetDeviceInfo( k );
+    string ds = "  ";
+    if ( k == AudioDevice )
+      ds = "* ";
+    cout << "  " << ds << k << " " << devinfo->name
+	 << " with " << devinfo->maxOutputChannels << " output channels\n";
+  }
+  cerr << "Defaul audio device is " << Pa_GetDefaultOutputDevice() << '\n';
 #endif
+
+  Initialized = true;
+
+  if ( Running )
+    start();
 }
 
-
-AudioMonitor::~AudioMonitor( void )
+  
+void AudioMonitor::terminate( void )
 {
+  if ( Running ) {
+    stop();
+    Running = true;
+  }
+
 #ifdef HAVE_LIBPORTAUDIO
-  Pa_Terminate();
+  if ( Initialized )
+    Pa_Terminate();
 #endif
-}
 
-
-void AudioMonitor::notify( void )
-{
-  Gain = number( "gain" );
+  Initialized = false;
 }
 
   
 void AudioMonitor::start( void )
 {
-  Running = false;
+  Running = true;
+
+  if ( ! Initialized )
+    return;
+
   Trace = 0;
   Index = Data[Trace].currentIndex() - 256;
   if ( Index < Data[Trace].minIndex() )
@@ -54,8 +115,15 @@ void AudioMonitor::start( void )
 #ifdef HAVE_LIBPORTAUDIO
 
   // open default stream for output:
-  PaError err = Pa_OpenDefaultStream( &Stream, 0, 1, paFloat32, Data[Trace].sampleRate(),
-				      256, audioCallback, this );
+  PaStreamParameters params;
+  params.channelCount = 1;
+  params.device = AudioDevice;
+  params.hostApiSpecificStreamInfo = NULL;
+  params.sampleFormat = paFloat32;
+  params.suggestedLatency = Pa_GetDeviceInfo( AudioDevice )->defaultLowOutputLatency ;
+  params.hostApiSpecificStreamInfo = NULL;
+  PaError err = Pa_OpenStream( &Stream, NULL, &params, Data[Trace].sampleRate(),
+			       256, paNoFlag, audioCallback, this );
   if( err != paNoError ) {
     cerr << "Failed to open default audio output: " << Pa_GetErrorText( err ) << '\n';
     Stream = 0;
@@ -68,23 +136,31 @@ void AudioMonitor::start( void )
     cerr << "Failed to start audio stream: " << Pa_GetErrorText( err ) << '\n';
     return;
   }
-  Running = true;
-
 #endif
 }
 
 
 void AudioMonitor::stop( void )
 {
+  if ( ! Initialized ) {
+    Running = false;
+    return;
+  }
+
   // stop stream:
-  if ( Running ) {
+  Mutex.lock();
+  bool run = Running;
+  Mutex.unlock();
+  if ( run ) {
+    Mutex.lock();
+    Running = false;
+    Mutex.unlock();
 #ifdef HAVE_LIBPORTAUDIO
     PaError err = Pa_StopStream( Stream );
     if ( err != paNoError ) {
       cerr << "Failed to stop audio stream: " << Pa_GetErrorText( err ) << '\n';
     }
 #endif
-    Running = false;
   }
 
 #ifdef HAVE_LIBPORTAUDIO

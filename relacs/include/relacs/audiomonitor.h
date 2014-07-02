@@ -44,6 +44,9 @@ public:
 
   virtual void notify( void );
 
+  void initialize( void );
+  void terminate( void );
+
   void start( void );
   void stop( void );
 
@@ -69,7 +72,9 @@ protected:
   PaStream *Stream;
 #endif
 
+  bool Initialized;
   bool Running;
+  int AudioDevice;
 
   InList Data;
   int Trace;
