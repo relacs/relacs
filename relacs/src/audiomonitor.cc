@@ -9,7 +9,7 @@ AudioMonitor::AudioMonitor( void )
   : ConfigDialog( "AudioMonitor", RELACSPlugin::Core, "AudioMonitor" ),
     Initialized( false ),
     Running( false ),
-    AudioDevice( 0 ),
+    AudioDevice( -1 ),
     Gain( 1.0 ),
     Mute( 1.0 )
 {
@@ -17,7 +17,7 @@ AudioMonitor::AudioMonitor( void )
   setDialogHelp( false );
 
   // options:
-  addInteger( "device", "Audio device number", 0, 0, 100 );
+  addInteger( "device", "Audio device number", -1, -1, 100 );
   addBoolean( "enable", "Enable audio monitor", true );
   addBoolean( "mute", "Mute audio monitor", false );
   addNumber( "gain", "Gain factor", 1.0, 0.0, 10000.0, 0.1 );
@@ -63,13 +63,18 @@ void AudioMonitor::initialize( void )
     return;
   }
   int numdev = Pa_GetDeviceCount();
-  if ( AudioDevice >= numdev )
-    AudioDevice = numdev-1;
+  int audiodev = AudioDevice;
+  if ( audiodev >= numdev )
+    audiodev = numdev-1;
+  if ( audiodev < 0 )
+    audiodev = Pa_GetDefaultOutputDevice();
   cerr << "Available audio devices for the audio monitor:\n";
   for ( int k=0; k<numdev; k++ ) {
     const PaDeviceInfo *devinfo = Pa_GetDeviceInfo( k );
+    if ( devinfo->maxOutputChannels == 0 )
+      continue;
     string ds = "  ";
-    if ( k == AudioDevice )
+    if ( k == audiodev )
       ds = "* ";
     cout << "  " << ds << k << " " << devinfo->name
 	 << " with " << devinfo->maxOutputChannels << " output channels\n";
@@ -115,12 +120,17 @@ void AudioMonitor::start( void )
 #ifdef HAVE_LIBPORTAUDIO
 
   // open default stream for output:
+  int audiodev = AudioDevice;
+  if ( audiodev >= Pa_GetDeviceCount() )
+    audiodev = Pa_GetDeviceCount()-1;
+  if ( audiodev < 0 )
+    audiodev = Pa_GetDefaultOutputDevice();
   PaStreamParameters params;
   params.channelCount = 1;
-  params.device = AudioDevice;
+  params.device = audiodev;
   params.hostApiSpecificStreamInfo = NULL;
   params.sampleFormat = paFloat32;
-  params.suggestedLatency = Pa_GetDeviceInfo( AudioDevice )->defaultLowOutputLatency ;
+  params.suggestedLatency = Pa_GetDeviceInfo( audiodev )->defaultLowOutputLatency ;
   params.hostApiSpecificStreamInfo = NULL;
   PaError err = Pa_OpenStream( &Stream, NULL, &params, Data[Trace].sampleRate(),
 			       256, paNoFlag, audioCallback, this );
