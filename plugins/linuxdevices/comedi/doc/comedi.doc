@@ -241,7 +241,7 @@ However, we recommend installing a current version of the comedi drivers.
 Here are all commands that you can throw into a shell to completely install comedi:
 \code
 # install all required packages:
-apt-get install git autoconf libtool bison flex libgsl0-dev libboost-program-options-dev
+apt-get -y install gcc g++ git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
 
 # download comedi sources:
 cd /usr/local/src
@@ -282,6 +282,7 @@ In the following the necessary steps are described in detail:
 -# Download the current \c Comedi sources from the Git repository to \c /usr/local/src
 as root.
 \code
+$ apt-get install git
 $ cd /usr/local/src
 $ git clone git://comedi.org/git/comedi/comedi.git
 $ git clone git://comedi.org/git/comedi/comedilib.git
@@ -297,7 +298,7 @@ $ tar xzvf comedi_calibrate-HEAD-*.tar.gz
 \endcode
 -# You may need to install the packages: \c autoconf, \c libtool.
 \code
-$ apt-get install autoconf libtool
+$ apt-get install autoconf automake libtool
 \endcode
 -# Make sure that you are really running the kernel
   for which you want to install \c Comedi!
@@ -309,7 +310,7 @@ $ uname -r
 \code
 $ rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
 \endcode
--# Change to the \c Comedi directory:
+-# Change to the \c comedi directory:
 \code
 $ cd /usr/local/src/comedi
 \endcode
@@ -378,11 +379,14 @@ $ comedi_config /dev/comedi0 ni_mio_cs
 \endcode
 that can be put into the \c /etc/init.d/boot.local file, so that
 the board is configured during startup of the system.
-Read the man page of \c comedi_config first!
+For this you also need to tell comedi to create a \c /dev/comedi0
+device file for you. Add the following line to \c /etc/modprobe.conf or
+\c /etc/modprobe.d/comedi.conf (the latter you have to create if the
+directory \c /etc/modprobe.d exists):
 \code
-$ man comedi_config
+options comedi comedi_num_legacy_minors=4
 \endcode
-
+See also http://www.comedi.org/doc/install.html#cardconfiguration .
 
 \subsection installcomedilib Comedilib
 -# You may need to install the packages: \c autoconf, \c libtool, \c bison, \c flex.
