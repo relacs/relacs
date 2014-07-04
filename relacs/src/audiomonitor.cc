@@ -130,7 +130,7 @@ void AudioMonitor::start( void )
   params.device = audiodev;
   params.hostApiSpecificStreamInfo = NULL;
   params.sampleFormat = paFloat32;
-  params.suggestedLatency = Pa_GetDeviceInfo( audiodev )->defaultLowOutputLatency ;
+  params.suggestedLatency = Pa_GetDeviceInfo( audiodev )->defaultHighOutputLatency;
   params.hostApiSpecificStreamInfo = NULL;
   PaError err = Pa_OpenStream( &Stream, NULL, &params, Data[Trace].sampleRate(),
 			       256, paNoFlag, audioCallback, this );

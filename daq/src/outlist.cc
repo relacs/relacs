@@ -353,7 +353,7 @@ string OutList::errorText( void ) const
     if ( operator[]( k ).errorStr() != operator[]( 0 ).errorStr() )
       commonstr = false;
   }
-  if ( commonstr )
+  if ( size() > 0 && commonstr )
     ss << operator[]( 0 ).errorStr() << ". ";
 
   // individual errors:

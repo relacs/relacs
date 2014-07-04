@@ -2663,8 +2663,6 @@ int Acquire::stopWrite( void )
     if ( AO[i].AO->isOpen() ) {
       if ( AO[i].AO->reset() != 0 )
 	success = false;
-      else
-	AO[i].Signals.clear();
     }
   }
 

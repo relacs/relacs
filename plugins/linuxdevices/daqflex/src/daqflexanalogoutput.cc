@@ -477,9 +477,11 @@ int DAQFlexAnalogOutput::writeData( void )
   int bytesToWrite = (NBuffer/outps)*outps;
   if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
     bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
+  else if ( NBuffer <= DAQFlexDevice->aoFIFOSize() * 2 )
+    bytesToWrite = NBuffer;
   if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
-  int timeout = (int)::ceil( 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
+  int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
   int bytesWritten = 0;
   //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
   int ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
