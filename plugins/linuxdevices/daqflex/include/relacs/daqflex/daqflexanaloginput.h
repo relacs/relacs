@@ -157,8 +157,6 @@ private:
 
     /*! The input traces that were prepared by prepareRead(). */
   InList *Traces;
-    /*! The approximate time readData() should block in milliseconds. */
-  int ReadTime;
     /*! Size of the driver buffer used for getting the data from the daq board. */
   int ReadBufferSize;
     /*! Size of the internal buffer used for getting the data from the driver. */

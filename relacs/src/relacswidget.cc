@@ -1548,6 +1548,7 @@ void RELACSWidget::startFirstAcquisition( void )
   ReadLoop.start();
 
   // reset analog output for dynamic clamp:
+  /*
   r = AQ->writeReset();
   if ( r < 0 ) {
     printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed." );
@@ -1557,6 +1558,7 @@ void RELACSWidget::startFirstAcquisition( void )
     startIdle();
     return;
   }
+  */
 
   CW->start();
   PT->start( ptime );

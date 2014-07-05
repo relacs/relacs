@@ -109,6 +109,7 @@ double AnalogOutput::delay( int channel ) const
 void AnalogOutput::setDelays( const vector<double> &delays )
 {
   Delays = delays;
+  setInfo();
 }
 
 
@@ -116,6 +117,7 @@ void AnalogOutput::setDelay( double delay )
 {
   Delays.clear();
   Delays.push_back( delay );
+  setInfo();
 }
 
 

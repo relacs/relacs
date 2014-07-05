@@ -93,9 +93,7 @@ public:
   virtual int reset( void );
 
     /*! \return response if transfer successful, empty string if not. */
-  string sendMessage( const string &message, bool display=true );
-    /*! Send a message to the device. */
-  int sendControlTransfer( const string &message, bool display=true );
+  string sendMessage( const string &message );
 
     /*! \return the resolution of the A/D converter. */
   unsigned short maxAIData( void ) const;
@@ -127,9 +125,11 @@ public:
 
   string productName( int productid );
   void setLibUSBError( int libusberror );
+    /*! Send a message to the device. */
+  int sendControlTransfer( const string &message );
     /*! Receive a message from the device. This should follow a call to
         sendControlTransfer. */
-  string getControlTransfer( bool display=true );
+  string getControlTransfer( void );
 
   int getEndpoints( void );
   unsigned char getEndpointInAddress( unsigned char* data, int n );

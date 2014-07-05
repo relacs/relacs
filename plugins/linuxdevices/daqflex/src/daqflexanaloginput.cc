@@ -212,21 +212,6 @@ int DAQFlexAnalogInput::testReadDevice( InList &traces )
     }
   }
 
-  // check read buffer size:
-  int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() ) * 2;
-  if ( readbufsize > ReadBufferSize ) {
-    traces.addError( DaqError::InvalidBufferTime );
-    traces.setReadTime( ReadBufferSize/traces.size()/2/traces[0].sampleRate() );
-    retVal = -1;
-  }
-
-  // check update buffer size:
-  int bufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * 2;
-  if ( bufsize < readbufsize ) {
-    traces.addError( DaqError::InvalidUpdateTime );
-    retVal = -1;
-  }
-
   return retVal;
 }
 
@@ -243,7 +228,9 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   // init internal buffer:
   if ( Buffer != 0 )
     delete [] Buffer;
+  // 2 times the updatetime ...
   BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * 2;
+  // ... as a multiple of the packet size:
   int inps = DAQFlexDevice->inPacketSize();
   BufferSize = (BufferSize/inps+1)*inps;
   Buffer = new char[BufferSize];
@@ -333,8 +320,9 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     return -1;
 
   if ( traces.success() ) {
+    traces.setReadTime( traces[0].interval( ReadBufferSize/2/traces.size() ) );
+    traces.setUpdateTime( traces[0].interval( BufferSize/2/traces.size() ) );
     setSettings( traces, BufferSize, ReadBufferSize );
-    ReadTime = (int)::ceil( 1000.0*traces[0].readTime() );
     Traces = &traces;
   }
 
@@ -372,32 +360,30 @@ int DAQFlexAnalogInput::readData( void )
   int buffern = BufferN*2;
   int inps = DAQFlexDevice->inPacketSize();
   int maxn = ((BufferSize - buffern)/inps)*inps;
+  if ( maxn > ReadBufferSize )
+    maxn = ReadBufferSize;
   if ( maxn <= 0 && ! IsRunning )
     maxn = BufferSize - buffern;
 
-  // try to read twice:
-  for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
+  // read data:
+  int timeout = (int)::ceil( 10.0 * 1000.0*(*Traces)[0].interval( maxn/2/Traces->size() ) ); // in ms
+  int err = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
+				  DAQFlexDevice->endpointIn(),
+				  (unsigned char*)(Buffer + buffern),
+				  maxn, &readn, timeout );
+  string status = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
+  if ( err != 0 || readn <= 0 || status != "AISCAN:STATUS=RUNNING" )
+    cerr << "DONE err=" << err << " readn=" << readn << " status=" << status << '\n';
 
-    // read data:
-    int m = 0;
-    int err = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
-				    DAQFlexDevice->endpointIn(),
-				    (unsigned char*)(Buffer + buffern),
-				    maxn, &m, ReadTime );
-
-    if ( err != 0 && err != LIBUSB_ERROR_TIMEOUT ) {
-      Traces->addErrorStr( "LibUSB error " + Str( err ) );
-      if ( err == LIBUSB_ERROR_OVERFLOW )
-	Traces->addError( DaqError::OverflowUnderrun );
-      failed = true;
-      cerr << " DAQFlexAnalogInput::readData(): libUSB error " << err << "\n";
-    }
-    else if ( m > 0 ) {
-      buffern += m;
-      readn += m;
-      maxn = ((BufferSize - buffern)/inps)*inps;
-    }
-
+  if ( err != 0 && err != LIBUSB_ERROR_TIMEOUT ) {
+    Traces->addErrorStr( "LibUSB error " + Str( err ) );
+    if ( err == LIBUSB_ERROR_OVERFLOW )
+      Traces->addError( DaqError::OverflowUnderrun );
+    failed = true;
+    cerr << " DAQFlexAnalogInput::readData(): libUSB error " << err << "\n";
+  }
+  else if ( readn > 0 ) {
+    buffern += readn;
   }
 
   BufferN = buffern / 2;
@@ -505,7 +491,7 @@ int DAQFlexAnalogInput::reset( void )
   QMutexLocker locker( mutex() );
 
   // clear overrun condition:
-  DAQFlexDevice->sendControlTransfer( "AISCAN:RESET" , false );
+  DAQFlexDevice->sendMessage( "AISCAN:RESET" );
   libusb_clear_halt( DAQFlexDevice->deviceHandle(),
 		     DAQFlexDevice->endpointIn() );
 
@@ -542,7 +528,7 @@ int DAQFlexAnalogInput::reset( void )
 bool DAQFlexAnalogInput::running( void ) const
 {
   lock();
-  string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS", false );
+  string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
   unlock();
   return ( response.find( "RUNNING" ) != string::npos && AnalogInput::running() );
 }

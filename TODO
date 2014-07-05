@@ -1,7 +1,6 @@
 New InData threading:
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
   the resulting index should be the one of the first data of the stimulus.
-- restart in dynclamp mode is not properly processed??? (check inputrangecheck)
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
 - What about recording events (SignalTime, locking)?
 - Add Model data also to UpdateRawData?
@@ -10,10 +9,11 @@ New InData threading:
 - Replace the source() flag by a sourceTrace and sourceEvent index
   Remove the source mapping functions from RELACSPlugin and FilterDetectors
 - AnalogInput/Output check usage of IsPrepared and IsRunning
-- DynClamAnalogInput improve error checking in readData()
 - readData() several attemps only if maxn is too small
 - DAQFlex: does not like the initial writeReset()
   as well as normal writes at high sampling rates.
+  The startwrite message blocks forever, while new data are read in.
+  Solution could be to start both devices at onece as in comedi.
 - DAQFlex error handling needs to be improved, 
   e.g. invalid sampling rate and stall after write with high sampling rate.
 - Rethink activateGains(): DynClamp can handle this without restarting and 
@@ -26,6 +26,8 @@ New InData threading:
   So maybe keep readTime. Make it an option for each device!
 
 Dynamic clamp:
+- restart in dynclamp mode is not properly processed??? (check inputrangecheck)
+- DynClamAnalogInput improve error checking in readData()
 - Always create a new channel list! And only have a single AO and AI subdevice!
 - Then we do not need to reset all the channels at startup (Aquire::writeReset() )
 - Is it smart to use vmalloc in dynclampmodule? No! Better would be

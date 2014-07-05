@@ -543,7 +543,7 @@ int DAQFlexAnalogOutput::reset( void )
   lock();
   DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
   // clear underrun condition:
-  DAQFlexDevice->sendControlTransfer( "AOSCAN:RESET", false );
+  DAQFlexDevice->sendMessage( "AOSCAN:RESET" );
   // the following blocks at high rates:
   libusb_clear_halt( DAQFlexDevice->deviceHandle(),
 		     DAQFlexDevice->endpointIn() );

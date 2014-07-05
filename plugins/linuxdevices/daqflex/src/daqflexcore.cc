@@ -356,11 +356,8 @@ void DAQFlexCore::setLibUSBError( int libusberror )
 }
 
 
-int DAQFlexCore::sendControlTransfer( const string &message, bool display )
+int DAQFlexCore::sendControlTransfer( const string &message )
 {
-  lock();
-  if ( display )
-    cerr << "DAQFlex Sending: " << message << "\n";
   unsigned char data[MaxMessageSize];
   for ( unsigned int i = 0; i < MaxMessageSize; i++ )
     data[i] = i < message.size() ? toupper( message[i] ) : 0;
@@ -370,12 +367,11 @@ int DAQFlexCore::sendControlTransfer( const string &message, bool display )
 					  MaxMessageSize, 100 );
 
   setLibUSBError( numbytes );
-  unlock();
   return ErrorState;
 }
 
 
-string DAQFlexCore::getControlTransfer( bool display )
+string DAQFlexCore::getControlTransfer( void )
 {
   unsigned char message[MaxMessageSize];
   int numbytes = libusb_control_transfer( DeviceHandle,
@@ -387,20 +383,17 @@ string DAQFlexCore::getControlTransfer( bool display )
   if ( ErrorState != Success )
     return "";
 
-  if ( display )
-    cerr << "DAQFlex Got: " << message << "\n";
   return (char *)message;
 }
 
 
-string DAQFlexCore::sendMessage( const string &message, bool display )
+string DAQFlexCore::sendMessage( const string &message )
 {
-  display = false;
-  int r = sendControlTransfer( message, display );
-  string s = "";
   lock();
+  int r = sendControlTransfer( message );
+  string s = "";
   if ( r == Success )
-    s = getControlTransfer( display );
+    s = getControlTransfer();
   unlock();
   return s;
 }
