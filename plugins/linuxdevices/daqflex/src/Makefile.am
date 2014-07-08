@@ -35,6 +35,7 @@ libdaqflex_la_SOURCES = \
     daqflexcore.cc \
     daqflexanaloginput.cc \
     daqflexanalogoutput.cc \
+    daqflexdigitaliocc \
     daqflexdevices.cc
 
 libdaqflex_la_includedir = $(pkgincludedir)/daqflex
@@ -42,7 +43,8 @@ libdaqflex_la_includedir = $(pkgincludedir)/daqflex
 libdaqflex_la_include_HEADERS = \
     $(HEADER_PATH)/daqflexcore.h \
     $(HEADER_PATH)/daqflexanaloginput.h \
-    $(HEADER_PATH)/daqflexanalogoutput.h
+    $(HEADER_PATH)/daqflexanalogoutput.h \
+    $(HEADER_PATH)/daqflexdigitalio.h
 
 
 check_PROGRAMS = \

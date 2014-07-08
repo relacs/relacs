@@ -1,6 +1,6 @@
 /*
   comedi/comedidigitalio.cc
-  Interface for accessing analog input of a daq-board via comedi.
+  Interface for accessing digital I/O lines of a daq-board via comedi.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>

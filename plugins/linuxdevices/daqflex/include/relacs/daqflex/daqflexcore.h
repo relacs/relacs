@@ -119,6 +119,9 @@ public:
     /*! \return the number of samples the AI FIFO can hold. */
   int aoFIFOSize( void ) const;
 
+    /*! \return the number of digital I/O lines. */
+  int dioLines( void ) const;
+
     /*! The size of a single incoming packet in bytes. */
   int inPacketSize( void ) const;
     /*! The size of a single outgoing packet in bytes. */
@@ -175,6 +178,7 @@ public:
   double MaxAORate;
   int MaxAOChannels;
   int AOFIFOSize;
+  int DIOLines;
   DAQFlexError ErrorState;
   static const uint16_t MaxMessageSize = 64;
   static const uint8_t StringMessage = 0x80;

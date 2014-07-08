@@ -266,6 +266,12 @@ int DAQFlexCore::aoFIFOSize( void ) const
 }
 
 
+int DAQFlexCore::dioLines( void ) const
+{
+  return DIOLines;
+}
+
+
 libusb_device_handle *DAQFlexCore::deviceHandle( void )
 {
   return DeviceHandle;
@@ -518,6 +524,7 @@ int DAQFlexCore::initDevice( const string &path )
       MaxAOChannels = 0;
       AOFIFOSize = 0;
     }
+    DIOLines = 8;
     // check if the firmware has been loaded already:
     string response = sendMessage( "?DEV:FPGACFG" );
     if ( response.find( "CONFIGURED" ) == string::npos ) {
@@ -556,6 +563,7 @@ int DAQFlexCore::initDevice( const string &path )
     MaxAORate = 0.0;
     MaxAOChannels = 0;
     AOFIFOSize = 0;
+    DIOLines = 8;
     break;
 
   case USB_7204:
@@ -567,6 +575,7 @@ int DAQFlexCore::initDevice( const string &path )
     MaxAORate = 10000.0;
     MaxAOChannels = 2;
     AOFIFOSize = 32; // ???
+    DIOLines = 16;
     break;
 
   default:
@@ -578,6 +587,7 @@ int DAQFlexCore::initDevice( const string &path )
     MaxAORate = 0.0;
     MaxAOChannels = 0;
     AOFIFOSize = 0;
+    DIOLines = 8;
     break;
   }
 
