@@ -761,8 +761,11 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
   }
   else  
     insnlist.insns[ilinx++].subdev = SubDevice;
-  if ( ComediAO != 0 && ComediAO->prepared() )
+  bool tookao = false;
+  if ( TakeAO && ComediAO != 0 && ComediAO->prepared() ) {
     insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
+    tookao = true;
+  }
   insnlist.n_insns = ilinx;
   bool success = true;
   int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
@@ -782,7 +785,7 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
     // start analog input thread:
     startThread( sp, datamutex, datawait );
     // start analog output thread:
-    if ( ComediAO != 0 ) {
+    if ( tookao ) {
       ComediAO->startThread( aosp );
       finished = ComediAO->noMoreData();
     }

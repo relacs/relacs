@@ -328,11 +328,11 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=0" );
     DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( maxRate(), "%g" ) );
     DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
-    DAQFlexDevice->sendMessage( "AOSCAN:START" );
+    DAQFlexDevice->sendCommand( "AOSCAN:START" );
     double dummy = 1.0;
     for ( int k=0; k<100000; k++ )
     dummy *= (double)k/(double)(k+1);
-    DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
+    DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
     */
 
     // copy and sort signal pointers:
@@ -440,7 +440,7 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
     cerr << "AO not prepared or no signals!\n";
     return -1;
   }
-  DAQFlexDevice->sendMessage( "AOSCAN:START" );
+  DAQFlexDevice->sendCommand( "AOSCAN:START" );
   int r = NoMoreData ? 0 : 1;
   startThread( sp );
   return r;
@@ -484,10 +484,8 @@ int DAQFlexAnalogOutput::writeData( void )
   int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
   int bytesWritten = 0;
   //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
-  int ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
-				  DAQFlexDevice->endpointOut(),
-				  (unsigned char*)(Buffer), bytesToWrite,
-				  &bytesWritten, timeout );
+  int ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), bytesToWrite,
+					      &bytesWritten, timeout );
   //  cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
 
   int elemWritten = 0;
@@ -541,18 +539,10 @@ int DAQFlexAnalogOutput::reset( void )
     return NotOpen;
 
   lock();
-  DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
+  DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
   // clear underrun condition:
   DAQFlexDevice->sendMessage( "AOSCAN:RESET" );
-  // the following blocks at high rates:
-  libusb_clear_halt( DAQFlexDevice->deviceHandle(),
-		     DAQFlexDevice->endpointIn() );
-  /* from the docu: Clear the halt/stall condition for an endpoint.
-     Endpoints with halt status are unable to receive or transmit data
-     until the halt condition is stalled.  YOU SHOULD CANCEL ALL
-     PENDING TRANSFERS BEFORE ATTEMPTING TO CLEAR THE HALT CONDITION
-     (is this really given when stopping relacs?).  This is a BLOCKING
-     FUNCTION. */
+  DAQFlexDevice->clearWrite();
   DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
   unlock();
 
@@ -589,6 +579,24 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
   }
   unlock();
   return r;
+}
+
+
+bool DAQFlexAnalogOutput::prepared( void ) const 
+{ 
+  lock();
+  bool ip = IsPrepared;
+  unlock();
+  return ip;
+}
+
+
+bool DAQFlexAnalogOutput::noMoreData( void ) const
+{
+  lock();
+  bool nmd = NoMoreData;
+  unlock();
+  return nmd;
 }
 
 

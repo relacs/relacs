@@ -34,7 +34,7 @@ namespace daqflex {
 /*!
 \class DAQFlexCore
 \author Jan Benda
-\version 1.0
+\version 1.2
 \brief [Device] The DAQFlex interface over libusb
 \par Options
 - \c firmwarepath=/usr/lib/daqflex/: Path to the *.rbf firmware files
@@ -94,6 +94,12 @@ public:
 
     /*! \return response if transfer successful, empty string if not. */
   string sendMessage( const string &message );
+    /*! Send command to the device. 
+        \return error code */
+  int sendCommand( const string &command );
+    /*! Send commands to the device.
+        \return error code  */
+  int sendCommands( const string &command1, const string &command2 );
 
     /*! \return the resolution of the A/D converter. */
   unsigned short maxAIData( void ) const;
@@ -113,15 +119,32 @@ public:
     /*! \return the number of samples the AI FIFO can hold. */
   int aoFIFOSize( void ) const;
 
-    /*! A handle to the USB device. */
-  libusb_device_handle *deviceHandle( void );
-  unsigned char endpointIn( void );
-  unsigned char endpointOut( void );
+    /*! The size of a single incoming packet in bytes. */
   int inPacketSize( void ) const;
+    /*! The size of a single outgoing packet in bytes. */
   int outPacketSize( void ) const;
+
+    /*! Transfer data from the device to a buffer. */
+  int readBulkTransfer( unsigned char *data, int length, int *transferred,
+			unsigned int timeout );
+    /*! Transfer data from a buffer to the device. */
+  int writeBulkTransfer( unsigned char *data, int length, int *transferred,
+			 unsigned int timeout );
+
+    /*! Clear the reading endpoint. */
+  void clearRead( void );
+    /*! Clear the writing endpoint. */
+  void clearWrite( void );
 
 
  private:
+
+    /*! A handle to the USB device. */
+  libusb_device_handle *deviceHandle( void );
+    /*! The endpoint for reading data. */
+  unsigned char endpointIn( void );
+    /*! The endpoint for writing data. */
+  unsigned char endpointOut( void );
 
   string productName( int productid );
   void setLibUSBError( int libusberror );

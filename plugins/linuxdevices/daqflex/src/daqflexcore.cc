@@ -399,6 +399,26 @@ string DAQFlexCore::sendMessage( const string &message )
 }
 
 
+int DAQFlexCore::sendCommand( const string &command )
+{
+  lock();
+  int r = sendControlTransfer( command );
+  unlock();
+  return r;
+}
+
+
+int DAQFlexCore::sendCommands( const string &command1, const string &command2 )
+{
+  lock();
+  int r = sendControlTransfer( command1 );
+  if ( r == Success )
+    r = sendControlTransfer( command2 );
+  unlock();
+  return r;
+}
+
+
 int DAQFlexCore::getEndpoints( void )
 {
   unsigned char epdescriptor[MaxMessageSize];
@@ -622,6 +642,43 @@ int DAQFlexCore::transferFPGAfile( const string &path )
     ErrorState = ErrorCantOpenFPGAFile;
 
   return ErrorState;
+}
+
+
+int DAQFlexCore::readBulkTransfer( unsigned char *data, int length, int *transferred,
+				   unsigned int timeout )
+{
+  int err = libusb_bulk_transfer( deviceHandle(), endpointIn(),
+				  data, length, transferred, timeout );
+  return err;
+}
+
+
+int DAQFlexCore::writeBulkTransfer( unsigned char *data, int length, int *transferred,
+				    unsigned int timeout )
+{
+  int err = libusb_bulk_transfer( deviceHandle(), endpointOut(),
+				  data, length, transferred, timeout );
+  return err;
+}
+
+
+void DAQFlexCore::clearRead( void )
+{
+  libusb_clear_halt( deviceHandle(), endpointIn() );
+}
+
+
+void DAQFlexCore::clearWrite( void )
+{
+  // this blocks at high rates:
+  libusb_clear_halt( deviceHandle(), endpointOut() );
+  /* from the docu: Clear the halt/stall condition for an endpoint.
+     Endpoints with halt status are unable to receive or transmit data
+     until the halt condition is stalled.  YOU SHOULD CANCEL ALL
+     PENDING TRANSFERS BEFORE ATTEMPTING TO CLEAR THE HALT CONDITION
+     (is this really given when stopping relacs?).  This is a BLOCKING
+     FUNCTION. */
 }
 
 

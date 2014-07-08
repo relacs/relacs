@@ -30,6 +30,9 @@ using namespace relacs;
 namespace daqflex {
 
 
+class DAQFlexAnalogOutput;
+
+
 /*! 
 \class DAQFlexAnalogInput
 \author Jan Benda
@@ -115,6 +118,15 @@ public:
     /*! True if the analog input driver is running. */
   virtual bool running( void ) const;
 
+    /*! Check for every analog input and analog output device in \a ais
+        and \a aos, respectively,
+        whether it can be simultaneously started by startRead()
+        from this device. */
+  virtual void take( const vector< AnalogInput* > &ais,
+		     const vector< AnalogOutput* > &aos,
+		     vector< int > &aiinx, vector< int > &aoinx,
+		     vector< bool > &airate, vector< bool > &aorate );
+
 
 protected:
 
@@ -172,6 +184,12 @@ private:
   int TotalSamples;
     /*! The number of samples so far read in by readData(). */
   int CurrentSamples;
+
+    /*! If \c true, start the analog output of the same device together with this. */
+  bool TakeAO;
+
+    /*! Analog output subdevice that should be together with this device. */
+  DAQFlexAnalogOutput* DAQFlexAO;
 
 };
 

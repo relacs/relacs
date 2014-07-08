@@ -25,6 +25,7 @@
 #include <cmath>
 #include <QMutexLocker>
 #include <relacs/str.h>
+#include <relacs/daqflex/daqflexanalogoutput.h>
 #include <relacs/daqflex/daqflexanaloginput.h>
 using namespace std;
 using namespace relacs;
@@ -46,6 +47,8 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( void )
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
+  TakeAO = true;
+  DAQFlexAO = 0;
 }
 
 
@@ -63,6 +66,8 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
+  TakeAO = true;
+  DAQFlexAO = 0;
   open( device, opts );
 }
 
@@ -112,6 +117,10 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   CurrentSamples = 0;
   ReadBufferSize = 2 * DAQFlexDevice->aiFIFOSize();
 
+  // For debugging:
+  TakeAO = opts.boolean( "takeao", true );
+  DAQFlexAO = 0;
+
   setInfo();
 
   return 0;
@@ -146,6 +155,8 @@ void DAQFlexAnalogInput::close( void )
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
+  TakeAO = true;
+  DAQFlexAO = 0;
 
   Info.clear();
 }
@@ -340,10 +351,22 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
     cerr << "AI not prepared or no traces!\n";
     return -1;
   }
-  DAQFlexDevice->sendMessage( "AISCAN:START" );
+
+  bool tookao = ( TakeAO && DAQFlexAO != 0 && DAQFlexAO->prepared() );
+
+  if ( tookao )
+    DAQFlexDevice->sendCommands( "AISCAN:START", "AOSCAN:START" );
+  else
+    DAQFlexDevice->sendCommand( "AISCAN:START" );
+
+  bool finished = true;
   IsRunning = true;
   startThread( sp, datamutex, datawait );
-  return 0;
+  if ( tookao ) {
+    DAQFlexAO->startThread( aosp );
+    finished = DAQFlexAO->noMoreData();
+  }
+  return finished ? 0 : 1;
 }
 
 
@@ -367,10 +390,8 @@ int DAQFlexAnalogInput::readData( void )
 
   // read data:
   int timeout = (int)::ceil( 10.0 * 1000.0*(*Traces)[0].interval( maxn/2/Traces->size() ) ); // in ms
-  int err = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
-				  DAQFlexDevice->endpointIn(),
-				  (unsigned char*)(Buffer + buffern),
-				  maxn, &readn, timeout );
+  int err = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
+					     maxn, &readn, timeout );
   string status = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
   if ( err != 0 || readn <= 0 || status != "AISCAN:STATUS=RUNNING" )
     cerr << "DONE err=" << err << " readn=" << readn << " status=" << status << '\n';
@@ -471,7 +492,7 @@ int DAQFlexAnalogInput::stop( void )
     return NotOpen;
 
   lock();
-  DAQFlexDevice->sendMessage( "AISCAN:STOP" );
+  DAQFlexDevice->sendCommand( "AISCAN:STOP" );
   unlock();
 
   stopRead();
@@ -492,8 +513,7 @@ int DAQFlexAnalogInput::reset( void )
 
   // clear overrun condition:
   DAQFlexDevice->sendMessage( "AISCAN:RESET" );
-  libusb_clear_halt( DAQFlexDevice->deviceHandle(),
-		     DAQFlexDevice->endpointIn() );
+  DAQFlexDevice->clearRead();
 
   // flush:
   int numbytes = 0;
@@ -501,9 +521,7 @@ int DAQFlexAnalogInput::reset( void )
   do {
     const int nbuffer = DAQFlexDevice->inPacketSize()*4;
     unsigned char buffer[nbuffer];
-    status = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
-				   DAQFlexDevice->endpointIn(),
-				   buffer, nbuffer, &numbytes, 200 );
+    status = DAQFlexDevice->readBulkTransfer( buffer, nbuffer, &numbytes, 200 );
   } while ( numbytes > 0 && status == 0 );
 
   // free internal buffer:
@@ -531,6 +549,28 @@ bool DAQFlexAnalogInput::running( void ) const
   string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
   unlock();
   return ( response.find( "RUNNING" ) != string::npos && AnalogInput::running() );
+}
+
+
+void DAQFlexAnalogInput::take( const vector< AnalogInput* > &ais,
+			       const vector< AnalogOutput* > &aos,
+			       vector< int > &aiinx, vector< int > &aoinx,
+			       vector< bool > &airate, vector< bool > &aorate )
+{
+  DAQFlexAO = 0;
+
+  if ( TakeAO ) {
+    // check for analog output device:
+    for ( unsigned int k=0; k<aos.size(); k++ ) {
+      if ( aos[k]->analogOutputType() == DAQFlexAnalogIOType &&
+	   aos[k]->deviceFile() == deviceFile() ) {
+	aoinx.push_back( k );
+	aorate.push_back( false );
+	DAQFlexAO = dynamic_cast< DAQFlexAnalogOutput* >( aos[k] );
+	break;
+      }
+    }
+  }
 }
 
 

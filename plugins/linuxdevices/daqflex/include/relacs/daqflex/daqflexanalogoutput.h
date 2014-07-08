@@ -41,6 +41,8 @@ namespace daqflex {
 class DAQFlexAnalogOutput : public AnalogOutput
 {
 
+  friend class DAQFlexAnalogInput;
+
 public:
 
     /*! Create a new DAQFlexAnalogOutput without opening a device. */
@@ -107,6 +109,11 @@ public:
   
     /*! \return the status of the analog output. */
   virtual Status status( void ) const;
+
+    /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
+  bool prepared( void ) const;
+    /*! \return \c true if writeData() does not need to be called any more. */
+  bool noMoreData( void ) const;
 
 
 protected:
