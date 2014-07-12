@@ -411,43 +411,43 @@ Parameter &Parameter::assign( const string &value )
   else {
     setText( value );
     if ( isNotype() ) {
-      // check for date:
-      bool date = true;
-      for ( int k=0; date && k<String.size(); k++ ) {
-	int year, month, day;
-	if ( Str( String[k] ).date( year, month, day ) != 0 )
-	  date = false;
+      // check for time:
+      bool time = true;
+      for ( int k=0; time && k<String.size(); k++ ) {
+	int hour, minutes, seconds, milliseconds;
+	if ( Str( String[k] ).time( hour, minutes, seconds, milliseconds ) != 0 )
+	  time = false;
       }
-      if ( date ) {
-	setValueType( Date );
-	Year.clear();
-	Month.clear();
-	Day.clear();
+      if ( time ) {
+	setValueType( Time );
+	Hour.clear();
+	Minutes.clear();
+	Seconds.clear();
+	MilliSeconds.clear();
 	for ( int k=0; k<String.size(); k++ ) {
-	  int year, month, day;
-	  Str( String[k] ).date( year, month, day );
-	  addDate( year, month, day );
+	  int hour, minutes, seconds, milliseconds;
+	  Str( String[k] ).time( hour, minutes, seconds, milliseconds );
+	  addTime( hour, minutes, seconds, milliseconds );
 	}
 	setUnit( "", "" );
       }
       else {
-	// check for time:
-	bool time = true;
-	for ( int k=0; time && k<String.size(); k++ ) {
-	  int hour, minutes, seconds;
-	  if ( Str( String[k] ).time( hour, minutes, seconds ) != 0 )
-	    time = false;
+	// check for date:
+	bool date = true;
+	for ( int k=0; date && k<String.size(); k++ ) {
+	  int year, month, day;
+	  if ( Str( String[k] ).date( year, month, day ) != 0 )
+	    date = false;
 	}
-	if ( time ) {
-	  setValueType( Time );
-	  Hour.clear();
-	  Minutes.clear();
-	  Seconds.clear();
-	  MilliSeconds.clear();
+	if ( date ) {
+	  setValueType( Date );
+	  Year.clear();
+	  Month.clear();
+	  Day.clear();
 	  for ( int k=0; k<String.size(); k++ ) {
-	    int hour, minutes, seconds, milliseconds;
-	    Str( String[k] ).time( hour, minutes, seconds, milliseconds );
-	    addTime( hour, minutes, seconds, milliseconds );
+	    int year, month, day;
+	    Str( String[k] ).date( year, month, day );
+	    addDate( year, month, day );
 	  }
 	  setUnit( "", "" );
 	}
@@ -1079,15 +1079,16 @@ Parameter &Parameter::addText( const string &strg, bool clear )
   }
   else if ( isTime() ) {
     for ( int k=0; k<sq.size(); k++ ) {
-      int hour, minutes, seconds;
-      int d = String[ String.size() - sq.size() + k ].time( hour, minutes, seconds );
+      int hour, minutes, seconds, milliseconds;
+      int d = String[ String.size() - sq.size() + k ].time( hour, minutes,
+							    seconds, milliseconds );
       if ( d != 0 ) {
 	if ( ! String[ String.size() - sq.size() + k ].empty() )
 	  Warning += "string '" + String[ String.size() - sq.size() + k ]
 	    + "' is not a valid time!";
       }
       else
-	addTime( hour, minutes, seconds );
+	addTime( hour, minutes, seconds, milliseconds );
     }
   }
   else {
