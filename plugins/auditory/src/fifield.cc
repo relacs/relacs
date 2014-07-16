@@ -147,7 +147,7 @@ int FIField::main( void )
   IntensityExtension = number( "extint" );
   SingleRepeat = integer( "singlerepeat" );
   IntBlockRepeat = integer( "blockrepeat" );
-  IntRepeat = integer( "repeat" );
+  IntRepeat = integer( "repeats" );
   Ramp = number( "ramp" );
   Side = index( "side" );
   Duration = number( "duration" );

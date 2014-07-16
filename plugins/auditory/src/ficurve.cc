@@ -737,8 +737,11 @@ void FICurve::analyzeFICurve( const vector< FIData > &results, double minrate )
       Threshold.Measured = true;
       
       // threshold should be near left margin:
+      int sii = SlopeIntIncrement;
+      if ( sii <= 0 )
+	sii = 2;
       if ( fabs( Threshold.Threshold - IntensityRange.value( l ) ) > 
-	   fabs( IntensityRange.value( l + 2*SlopeIntIncrement ) - IntensityRange.value( l ) ) ) {
+	   fabs( IntensityRange.value( l + 2*sii ) - IntensityRange.value( l ) ) ) {
 	printlog( "analyzeFICurve() -> suspicious threshold" );
       }
     }
