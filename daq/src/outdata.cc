@@ -901,6 +901,11 @@ OutData &OutData::load( const string &file, const string &filename )
   if ( ext == ".wav" ) {
 #ifdef HAVE_LIBSNDFILE
     SampleDataF::loadSndFile( file );
+    Description.clear();
+    Description.insertText( "File", "", filename );
+    Description.setType( "stimulus/file" );
+    setIdent( filename );
+    clearError();
 #endif
   }
   else {
