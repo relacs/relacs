@@ -35,7 +35,7 @@ libdaqflex_la_SOURCES = \
     daqflexcore.cc \
     daqflexanaloginput.cc \
     daqflexanalogoutput.cc \
-    daqflexdigitaliocc \
+    daqflexdigitalio.cc \
     daqflexdevices.cc
 
 libdaqflex_la_includedir = $(pkgincludedir)/daqflex

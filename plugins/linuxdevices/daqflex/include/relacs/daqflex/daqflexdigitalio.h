@@ -46,8 +46,8 @@ public:
 
     /*! Create a new %DAQFlexDigitalIO without opening a device. */
   DAQFlexDigitalIO( void );
-    /*! Open the digital I/O driver specified by its device file \a device. */
-  DAQFlexDigitalIO( const string &device, const Options &opts );
+    /*! Open the digital I/O driver on DAQFlexCore device \a daqflexdevice. */
+  DAQFlexDigitalIO( DAQFlexCore &daqflexdevice, const Options &opts );
     /*! Close the daq driver. */
   virtual ~DAQFlexDigitalIO( void );
 

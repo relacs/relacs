@@ -34,11 +34,11 @@ DAQFlexDigitalIO::DAQFlexDigitalIO( void )
 }
 
 
-DAQFlexDigitalIO::DAQFlexDigitalIO( const string &device, const Options &opts ) 
+DAQFlexDigitalIO::DAQFlexDigitalIO( DAQFlexCore &daqflexdevice, const Options &opts ) 
   : DigitalIO( "DAQFlexDigitalIO" )
 {
   DAQFlexDevice = NULL;
-  open( device, opts );
+  open( daqflexdevice, opts );
 }
 
   
@@ -60,7 +60,7 @@ int DAQFlexDigitalIO::open( DAQFlexCore &daqflexdevice, const Options &opts )
   if ( !DAQFlexDevice->isOpen() )
     return NotOpen;
 
-  DigitalIO::open( DAQFlexDevice, opts );
+  DigitalIO::open( *this, opts );
 
   // set basic device infos:
   setDeviceName( DAQFlexDevice->deviceName() );
@@ -111,7 +111,7 @@ int DAQFlexDigitalIO::lines( void ) const
 
 int DAQFlexDigitalIO::configureLine( int line, bool output )
 {
-  string r = sendMessage( "DIO{0/" + Str( line ) + "}:DIR=" + ( output ? "OUT" : "IN" ) );
+  string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:DIR=" + ( output ? "OUT" : "IN" ) );
   return r.empty() ? WriteError : 0;
 }
 
@@ -124,7 +124,7 @@ int DAQFlexDigitalIO::configureLines( int lines, int output )
       bool direction = false;
       if ( ( output & bit ) > 0 )
 	direction = true;
-      string r = sendMessage( "DIO{0/" + Str( channel ) + "}:DIR=" + ( direction ? "OUT" : "IN" ) );
+      string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( channel ) + "}:DIR=" + ( direction ? "OUT" : "IN" ) );
       if ( r.empty() )
 	WriteError;
     }
@@ -136,14 +136,14 @@ int DAQFlexDigitalIO::configureLines( int lines, int output )
 
 int DAQFlexDigitalIO::write( int line, bool val )
 {
-  string r = sendMessage( "DIO{0/" + Str( line ) + "}:VALUE=" + ( val ? "1" : "0" ) );
+  string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:VALUE=" + ( val ? "1" : "0" ) );
   return r.empty() ? WriteError : 0;
 }
 
 
 int DAQFlexDigitalIO::read( int line, bool &val ) const
 {
-  string r = sendMessage( "DIO{0/" + Str( line ) + "}:VALUE" );
+  string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:VALUE" );
   if ( r.empty() )
     ReadError;
   // XXX READ THE RESULT
