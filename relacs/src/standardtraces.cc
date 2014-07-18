@@ -61,7 +61,7 @@ void StandardTraces::initStandardTraces( const InList &data, int *ntraces, int *
       traceindices[*ntraces] = data.index( names[j] + ns );
     if ( traceindices[*ntraces] >= 0 ) {
       if ( ! namelist.empty() )
-	namelist += ", ";
+	namelist += "|";
       namelist += data[ traceindices[*ntraces] ].ident();
       (*ntraces)++;
     }
@@ -98,12 +98,12 @@ void StandardTraces::initStandardEventTraces( const InList &data, const EventLis
       eventindices[*ntraces] = events.index( eventnames[j] + ns );
     if ( traceindices[*ntraces] >= 0 ) {
       if ( ! tracenamelist.empty() )
-	tracenamelist += ", ";
+	tracenamelist += "|";
       tracenamelist += data[ traceindices[*ntraces] ].ident();
     }
     if ( eventindices[*ntraces] >= 0 ) {
       if ( ! eventnamelist.empty() )
-	eventnamelist += ", ";
+	eventnamelist += "|";
       eventnamelist += events[ eventindices[*ntraces] ].ident();
     }
     if ( traceindices[*ntraces] >= 0 || eventindices[*ntraces] >= 0 )
@@ -134,7 +134,7 @@ void StandardTraces::initStandardOutputs( const RELACSPlugin *rp, int *ntraces, 
       traceindices[*ntraces] = rp->outTraceIndex( names[j] + ns );
     if ( traceindices[*ntraces] >= 0 ) {
       if ( ! namelist.empty() )
-	namelist += ", ";
+	namelist += "|";
       namelist += rp->outTraceName( traceindices[*ntraces] );
       (*ntraces)++;
     }

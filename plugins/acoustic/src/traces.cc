@@ -73,6 +73,16 @@ void Traces::initialize( const RELACSPlugin *rp,
 		       LeftLoudspeakerIdentifier, LeftLoudspeakerNames );
   initStandardOutputs( rp, &RightSpeakers, RightSpeaker,
 		       RightLoudspeakerIdentifier, RightLoudspeakerNames );
+  if ( ! LeftLoudspeakerNames.empty() ) {
+    if ( ! LoudspeakerNames.empty() )
+      LoudspeakerNames += "|";
+    LoudspeakerNames += LeftLoudspeakerNames;
+  }
+  if ( ! RightLoudspeakerNames.empty() ) {
+    if ( ! LoudspeakerNames.empty() )
+      LoudspeakerNames += "|";
+    LoudspeakerNames += RightLoudspeakerNames;
+  }
   Speaker[0] = LeftSpeaker[0];
   Speaker[1] = RightSpeaker[0];
 

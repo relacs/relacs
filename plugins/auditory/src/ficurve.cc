@@ -34,7 +34,7 @@ namespace auditory {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "auditory", "Jan Benda", "1.4", "Oct 1, 2008" )
+  : RePro( "FICurve", "auditory", "Jan Benda", "1.6", "Jul 18, 2014" )
 {
   // parameter:
   MinIntensity = 30.0;
@@ -69,6 +69,7 @@ FICurve::FICurve( void )
   RateDt = 0.001;
   PeakWidth = 0.1;
   SSWidth = 0.05;
+  PlotOnSSRate = true;
   AdjustGain = true;
   SetBest = true;
   SetCurves = 1;
@@ -115,6 +116,7 @@ FICurve::FICurve( void )
   addNumber( "prewidth", "Window length for baseline firing rate", PreWidth, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "peakwidth", "Window length for peak firing rate", PeakWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
   addNumber( "sswidth", "Window length for steady-state firing rate", SSWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
+  addBoolean( "plotonssrate", "Plot onset- and steady-state rate", PlotOnSSRate );
   addBoolean( "adjust", "Adjust input gain", AdjustGain );
   addBoolean( "setbest", "Set results to the session variables", SetBest );
   addSelection( "setcurves", "F-I curves to be passed to session", "none|mean rate|onset + steady-state|mean + onset + steady-state" );
@@ -215,6 +217,7 @@ int FICurve::main( void )
   RateDt = number( "ratedt" );
   PeakWidth = number( "peakwidth" );
   SSWidth = number( "sswidth" );
+  PlotOnSSRate = boolean( "plotonssrate" );
   AdjustGain = boolean( "adjust" );
   SetBest = boolean( "setbest" );
   SetCurves = index( "setcurves" );
@@ -919,14 +922,18 @@ void FICurve::plot( const vector< FIData > &results )
     }
   }
   P[1].plot( bm, 1.0, Plot::Cyan, 3, Plot::Solid, Plot::Circle, 6, Plot::Cyan, Plot::Cyan );
-  P[1].plot( om, 1.0, Plot::Green, 3, Plot::Solid, Plot::Circle, 6, Plot::Green, Plot::Green );
-  P[1].plot( sm, 1.0, Plot::Red, 3, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
+  if ( PlotOnSSRate ) {
+    P[1].plot( om, 1.0, Plot::Green, 3, Plot::Solid, Plot::Circle, 6, Plot::Green, Plot::Green );
+    P[1].plot( sm, 1.0, Plot::Red, 3, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
+  }
   P[1].plot( cm, 1.0, Plot::Orange, 3, Plot::Solid, Plot::Circle, 6, Plot::Orange, Plot::Orange );
   int c = IntensityRange.pos();
   MapD am;
   am.push( results[c].Intensity, results[c].PreRate );
-  am.push( results[c].Intensity, results[c].OnRate );
-  am.push( results[c].Intensity, results[c].SSRate );
+  if ( PlotOnSSRate ) {
+    am.push( results[c].Intensity, results[c].OnRate );
+    am.push( results[c].Intensity, results[c].SSRate );
+  }
   am.push( results[c].Intensity, results[c].MeanRate );
   P[1].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
 

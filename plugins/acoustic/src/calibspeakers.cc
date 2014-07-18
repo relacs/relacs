@@ -188,7 +188,7 @@ int CalibSpeakers::main( void )
 
   int nosignaltries = 0;
 
-  while ( ! interrupt() ) {
+  while ( ! interrupt() && softStop() == 0 ) {
 
     // adjust analog input gains:
     double max = trace( intrace ).maxAbs( signalTime(), signalTime()+duration );

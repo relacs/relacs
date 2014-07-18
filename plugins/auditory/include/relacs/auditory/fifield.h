@@ -36,60 +36,70 @@ namespace auditory {
 /*!
 \class FIField
 \brief [RePro] Optimized measuring of f-I curves for a range of carrier frequencies.
+\version 1.6 (Jul 18, 2014)
 \author Jan Benda
 
 \par Options
-- Frequencies
-- Range
-- \c freqmin=2.5kHz: Minimum stimulus frequency (\c number)
-- \c freqmax=40kHz: Maximum stimulus frequency (\c number)
-- \c freqstep=1kHz: Frequency step (\c number)
-- \c freqfac=1.1892: Frequency factor (\c number)
-- \c freqrange=: Frequency range (\c string)
-- \c freqshuffle=Up: Order of frequencies (\c string)
-- \c freqincrement=0: Initial increment for frequencies (\c integer)
-- Optimization
-- \c reducedfreqincrement=0: Reduce frequency range at frequency increments below (\c integer)
-- \c reducedfreqnumber=10: Number of frequencies used for the reduced frequency range (\c integer)
-- Intensities
-- \c intmin=30dB SPL: Minimum stimulus intensity (\c number)
-- \c intmax=100dB SPL: Maximum stimulus intensity (\c number)
-- \c intstep=1dB SPL: Sound intensity step (\c number)
-- \c intshuffle=Up: Order of intensities (\c string)
-- \c intincrement=0: Initial increment for intensities (\c integer)
-- \c singlerepeat=6: Number of immediate repetitions of a single stimulus (\c integer)
-- \c blockrepeat=1: Number of repetitions of a fixed intensity increment (\c integer)
-- \c repeat=1: Number of repetitions of the whole f-I curve measurement (\c integer)
-- Waveform
-- \c ramp=2ms: Ramp of stimulus (\c number)
-- \c duration=400ms: Duration of stimulus (\c number)
-- \c pause=400ms: Pause (\c number)
-- \c side=left: Speaker (\c string)
-- Optimization
-- Baseline activity
-- \c usesilent=false: Use measured baseline activity (\c boolean)
-- \c maxbaserate=10Hz: Maximum baseline activity (\c number)
-- \c maxsilent=100: Maximum trials used for baseline activity (\c integer)
-- \c resetsilent=Never: Reset estimation of baseline activity at (\c string)
-- \c silentfactor=3: Weight for standard deviation of baseline activity (\c number)
-- No response
-- \c skippause=true: Skip pause if there is no response (\c boolean)
-- \c silentintincrement=1: Skip all stimuli below not responding ones<br> at intensity increments below (\c integer)
-- Slope
-- \c slopeintincrement=2: Optimize slopes at intensity increments below (\c integer)
-- \c minrateslope=0Hz/dB: Minimum slope of firing rate (\c number)
-- \c maxratefrac=100%: Fraction of maximum firing rate above which slopes are optimized (\c number)
-- \c extint=0dB SPL: Extend intensity range by (\c number)
-- Analysis
-- \c ratedt=1ms: Bin width for firing rate (\c number)
-- \c prewidth=50ms: Window length for baseline firing rate (\c number)
-- \c peakwidth=100ms: Window length for peak firing rate (\c number)
-- \c sswidth=50ms: Window length for steady-state firing rate (\c number)
-- \c minratefrac=30%: Fraction of maximum rate required for f-I curve analysis (\c number)
-- \c setbest=true: Set results to the session variables (\c boolean)
-- \c setcurves=none: F-I curves to be passed to session (\c string)
+- \c Intensities
+    - \c intmin=30dB SPL: Minimum stimulus intensity (\c number)
+    - \c intmax=100dB SPL: Maximum stimulus intensity (\c number)
+    - \c intstep=1dB SPL: Sound intensity step (\c number)
+    - \c usethresh=false: Relative to the cell's threshold (\c boolean)
+    - \c usesat=false: Maximum intensity relative to the cell's best saturation (\c boolean)
+    - \c useprevints=no: Re-use intensities from the previous run (\c string)
+    - \c intshuffle=Up: Order of intensities (\c string)
+    - \c intincrement=0: Initial increment for intensities (\c integer)
+    - \c singlerepeat=6: Number of immediate repetitions of a single stimulus (\c integer)
+    - \c blockrepeat=1: Number of repetitions of a fixed intensity increment (\c integer)
+    - \c repeats=1: Number of repetitions of the whole f-I curve measurement (\c integer)
+    - \c manualskip=false: Show buttons for manual selection of intensities (\c boolean)
+- \c Waveform
+    - \c waveform=sine: Waveform of stimulus (\c string)
+    - \c carrierfreq=5kHz: Frequency of carrier (\c number)
+    - \c usebestfreq=false: Relative to the cell's best frequency (\c boolean)
+    - \c ramp=2ms: Ramp of stimulus (\c number)
+    - \c duration=400ms: Duration of stimulus (\c number)
+    - \c pause=400ms: Pause (\c number)
+    - \c side=left: Speaker (\c string)
+- \c Optimization
+    - \c Baseline activity
+        - \c usesilent=false: Use measured baseline activity (\c boolean)
+        - \c maxbaserate=10Hz: Maximum baseline activity (\c number)
+        - \c maxsilent=100: Maximum trials used for baseline activity (\c integer)
+        - \c resetsilent=Never: Reset estimation of baseline activity at (\c string)
+        - \c silentfactor=3: Weight for standard deviation of baseline activity (\c number)
+    - \c No response
+        - \c skippause=true: Skip pause if there is no response (\c boolean)
+        - \c silentintincrement=1: Skip all stimuli below not responding ones<br> at intensity increments below (\c integer)
+    - \c Slope
+        - \c slopeintincrement=2: Optimize slopes at intensity increments below (\c integer)
+        - \c minrateslope=0Hz/dB: Minimum slope of firing rate (\c number)
+        - \c maxratefrac=100%: Fraction of maximum firing rate above which slopes are optimized (\c number)
+        - \c extint=0dB SPL: Extend intensity range by (\c number)
+- \c Analysis
+    - \c ratedt=1ms: Bin width for firing rate (\c number)
+    - \c prewidth=50ms: Window length for baseline firing rate (\c number)
+    - \c peakwidth=100ms: Window length for peak firing rate (\c number)
+    - \c sswidth=50ms: Window length for steady-state firing rate (\c number)
+    - \c plotonssrate=true: Plot onset- and steady-state rate (\c boolean)
+    - \c adjust=true: Adjust input gain (\c boolean)
+    - \c setbest=true: Set results to the session variables (\c boolean)
+    - \c setcurves=none: F-I curves to be passed to session (\c string)
 
-\version 1.4 (Oct 1, 2008)
+\par Plots 
+The left plot shows the sensitivity of the cell as a function of
+carrier frequency. At each carrier frequency a straight line is fitted
+into the dynamic range of the f-I curve. The intersection of this line
+with zero is the threshold of the cell (yellow line). The intersection
+with the maximum firing rate of the f-I curve is the red line, and the
+intersection with the "best rate" from the session dialog is the
+orange line.
+
+The right plot shows the f-I curve of the currently measured carrier
+frequency.  Cyan is the firing rate before the stimulus, orange is the
+mean firing rate (spike count divided by stimulus duration), red is
+the steady-state firing rate, and green is the onset spike frequency
+(mean max spike frequency).
 */
 
 

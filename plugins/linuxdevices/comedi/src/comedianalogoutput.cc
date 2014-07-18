@@ -663,7 +663,8 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
     cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay() );
     if ( deviceName() == "pci-6052e" )
       cmd.stop_arg -= 1; // XXX pci-6052e (all NI E Series ?) - comedi-bug? 
-    // cmd.stop_arg += 2048; // XXX for NI DAQCard - does not fix the problem!
+    else if ( deviceVendor() == "ni_mio_cs" )
+      cmd.stop_arg += 2048; // XXX NI DAQCard - does not fix the problem!
   }
 
   cmd.chanlist = chanlist;
@@ -809,11 +810,12 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     ol.add( sigs );
     ol.sortByChannel();
 
-    // XXX Fix DAQCard bug: add 2k of zeros to the signals:
-    /*
+    if ( deviceVendor() == "ni_mio_cs" ) {
+      // XXX Fix DAQCard bug: add 2k of zeros to the signals:
+      // cerr << "ADD SIGNAL\n";
       for ( int k=0; k<ol.size(); k++ )
-      ol[k].append( 0.0, 2048 );
-    */
+	ol[k].append( 0.0, 2048 );
+    }
 
     if ( setupCommand( ol, Cmd, true ) < 0 ) {
       if ( Cmd.chanlist != 0 )
@@ -991,10 +993,12 @@ int ComediAnalogOutput::writeData( void )
   if ( ern == 0 ) {
     // no more data:
     if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      /* XXX Fix DAQCard bug: add 2k of zeros to the signals:
-      for ( int k=0; k<Sigs.size(); k++ )
-	Sigs[k].resize( Sigs[k].size()-2048 );
-      */
+      if ( deviceVendor() == "ni_mio_cs" ) {
+	// XXX Fix DAQCard bug: remove the 2k of zeros from the signals:
+	// cerr << "REMOVE SIGNAL\n";
+	for ( int k=0; k<Sigs.size(); k++ )
+	  Sigs[k].resize( Sigs[k].size()-2048 );
+      }
       if ( Buffer != 0 )
 	delete [] Buffer;
       Buffer = 0;

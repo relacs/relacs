@@ -1251,9 +1251,9 @@ int Acquire::updateRawData( double &signaltime,
   // From Qt doc: If mutex is not in a locked state, wait() returns immediately.
   if ( finished ) {
     NumEmptyData++;
-    if ( NumEmptyData < 2 ) {
+    if ( NumEmptyData < 3 ) {
       finished = false;
-      cerr << "! warning in Acquire::updateRawData() -> indicated empty data\n";
+      //      cerr << "! warning in Acquire::updateRawData() -> indicated empty data\n";
     }
   }
   else

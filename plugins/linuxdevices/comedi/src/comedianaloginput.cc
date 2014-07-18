@@ -860,11 +860,11 @@ int ComediAnalogInput::readData( void )
   int maxn = BufferSize - buffern;
 
   // try to read twice:
-  for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
+  for ( int tryit = 0; tryit < 1 && ! failed && maxn > 0; tryit++ ) {
 
     // data present?
-    if ( comedi_get_buffer_contents( DeviceP, SubDevice ) <= 0 )
-      break;
+    //    if ( comedi_get_buffer_contents( DeviceP, SubDevice ) <= 0 )
+    //      break;
     
     // read data:
     ssize_t m = read( comedi_fileno( DeviceP ), Buffer + buffern, maxn );
