@@ -36,7 +36,7 @@ namespace auditory {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "auditory", "Jan Benda", "1.2", "Jan 10, 2008" )
+  : RePro( "SingleStimulus", "auditory", "Jan Benda", "1.4", "Jul 18, 2014" )
 {
   Intensity = 50.0;
   Amplitude = 1.0;
@@ -56,8 +56,13 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "stimhighcut", "Cutoff frequency of high-pass filter applied to stimulus", 0.0, 0.0, 1000000.0, 10.0, "Hz", "Hz" ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
   addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 130.0, 1.0, "dB" ).setActivation( "type", "AM" );
-  addNumber( "freq", "Frequency of waveform", 1.0, 0.0, 10000.0, 1.0, "Hz" ).setActivation( "waveform", "From file|Const", false );
-  addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
+  addSelection( "freqsel", "Specify", "frequency|period|number of periods" ).setActivation( "waveform", "From file|Const|Sweep", false );
+  addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "freqsel", "frequency" ).addActivation( "waveform", "From file|Const|Sweep", false );
+  addNumber( "period", "Period of waveform", 0.1, 0.0, 1000000.0, 0.001, "s", "ms" ).setActivation( "freqsel", "period" ).addActivation( "waveform", "From file|Const|Sweep", false );
+  addNumber( "numperiods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "number of periods" ).addActivation( "waveform", "From file|Const|Sweep", false );
+  addSelection( "pulsesel", "Specify", "pulse duration|duty-cycle" ).setActivation( "waveform", "Rectangular" );
+  addNumber( "pulseduration", "Pulse duration", 0.01, 0.0, 10000.0, 0.001, "s", "ms" ).setActivation( "pulsesel", "pulse duration" ).addActivation( "waveform", "Rectangular" );
+  addNumber( "dutycycle", "Duty-cycle", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "pulsesel", "duty-cycle" ).addActivation( "waveform", "Rectangular" );
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
@@ -186,7 +191,12 @@ int SingleStimulus::main( void )
   StimHighCut = boolean( "stimhighcut" );
   StimScale = boolean( "stimscale" );
   PeakAmplitudeFac = number( "stimampl" );
+  int freqsel = index( "freqsel" );
   Frequency = number( "freq" );
+  double period = number( "period" );
+  double numperiods = number( "numperiods" );
+  int pulsesel = index( "pulsesel" );
+  PulseDuration = number( "pulseduration" );
   DutyCycle = number( "dutycycle" );
   Seed = integer( "seed" );
   Amplitude = number( "amplitude" );
@@ -235,6 +245,23 @@ int SingleStimulus::main( void )
     StorePath = "";
   StoreLevel = (StoreLevels)index( "storelevel" );
   StoreFile = "";
+
+  // stimulus frequency:
+  if ( freqsel == 1 ) { // period
+    if ( period < 1.0e-8 ) {
+      warning( "The period must be greater than zero!" );
+      return Aborted;
+    }
+    Frequency = 1.0/period;
+  }
+  else if ( freqsel == 2 ) // number of periods
+    Frequency = numperiods/Duration;
+
+  // pulse duration:
+  if ( pulsesel == 1 )
+    PulseDuration = DutyCycle/Frequency;
+  else
+    DutyCycle = -1.0;
 
   lockMetaData();
   if ( Side > 1 )
@@ -905,8 +932,11 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     else {
       PeakAmplitudeFac = 1.0;
       if ( WaveForm == Rectangular ) {
-	wave.rectangleWave( duration, -1.0, 1.0/Frequency, DutyCycle/Frequency, Ramp );
-	header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
+	wave.rectangleWave( duration, -1.0, 1.0/Frequency, PulseDuration, Ramp );
+	if ( DutyCycle >= 0.0 )
+	  header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
+	else
+	  header.addText( "pulseduration", Str( 1000.0*PulseDuration ) + "ms" );
       }
       else if ( WaveForm == Triangular )
 	wave.triangleWave( duration, -1.0, 1.0/Frequency );

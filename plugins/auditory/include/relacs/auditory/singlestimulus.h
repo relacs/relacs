@@ -37,54 +37,60 @@ namespace auditory {
 /*! 
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
+\version 1.4 (Jul 18, 2014)
 \author Jan Benda
 
 \par Options
-- Waveform
-- \c type=Wave: Type of stimulus (\c string)
-- \c waveform=From file: Stimulus waveform (\c string)
-- \c stimfile=: Stimulus file (\c string)
-- \c stimampl=0: Amplitude factor (standard deviation) of stimulus file (\c number)
-- \c amplitude=1dB: Amplitude of stimulus (\c number)
-- \c freq=1Hz: Frequency of waveform (\c number)
-- \c dutycycle=50%: Duty-cycle of rectangular waveform (\c number)
-- \c seed=0: Seed for random number generation (\c integer)
-- \c duration=0ms: Maximum duration of stimulus (\c number)
-- \c ramp=2ms: Ramp of stimulus (\c number)
-- Stimulus
-- \c intensity=50dB: Stimulus intensity (\c number)
-- \c intensitybase=SPL: Stimulus intensity relative to (\c string)
-- \c repeats=10times: Number of stimulus presentations (\c number)
-- \c pause=1000ms: Duration of pause between stimuli (\c number)
-- \c side=left: Speaker (\c string)
-- Carrier
-- \c carrierfreq=5kHz: Carrier frequency (\c number)
-- \c usebestfreq=true: Use the cell's best frequency (\c boolean)
-- Intensity - search
-- \c userate=true: Search intensity for target firing rate (\c boolean)
-- \c rate=100Hz: Target firing rate (\c number)
-- \c ratetol=5Hz: Tolerance for target firing rate (\c number)
-- \c intensitystep=8dB: Initial intensity step (\c number)
-- \c searchrepeats=2times: Number of search stimulus presentations (\c number)
-- \c silentrate=0Hz: Ignore response below (\c number)
-- \c maxsilent=1: Number of stimulus presentations if response is below silentrate (\c integer)
-- \c skippause=true: Skip pause if response is below silentrate (\c boolean)
-- \c maxsearch=1intensities: Stop search if response does not change for more than (\c integer)
-- \c method=Bisect: Method (\c string)
-- \c minslope=4Hz/dB: Minimum slope required for interpolation (\c number)
-- \c searchduration=0ms: Maximum duration of stimulus (\c number)
-- \c searchpause=0ms: Duration of pause between stimuli (\c number)
-- Analysis
-- \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
-- \c sigma1=2ms: Standard deviation of rate smoothing kernel 1 (\c number)
-- \c sigma2=20ms: Standard deviation of rate smoothing kernel 2 (\c number)
-- \c adjust=true: Adjust input gain (\c boolean)
-- Save stimuli
-- \c storemode=session: Save stimuli in (\c string)
-- \c storepath=: Save stimuli in custom directory (\c string)
-- \c storelevel=all: Save (\c string)
-
-\version 1.2 (Jan 10, 2008)
+- \c Waveform
+    - \c type=Wave: Type of stimulus (\c string)
+    - \c waveform=From file: Stimulus waveform (\c string)
+    - \c stimfile=: Stimulus file (\c string)
+    - \c stimscale=false: Scale stimulus to maximum amplitudes (\c boolean)
+    - \c stimhighcut=0Hz: Cutoff frequency of high-pass filter applied to stimulus (\c number)
+    - \c stimampl=0: Amplitude factor (standard deviation) of stimulus file (\c number)
+    - \c amplitude=1dB: Amplitude of stimulus (\c number)
+    - \c freqsel=frequency: Specify (\c string)
+    - \c freq=10Hz: Frequency of waveform (\c number)
+    - \c period=100ms: Period of waveform (\c number)
+    - \c numperiods=1: Number of periods (\c number)
+    - \c pulsesel=pulse duration: Specify (\c string)
+    - \c pulseduration=10ms: Pulse duration (\c number)
+    - \c dutycycle=50%: Duty-cycle (\c number)
+    - \c seed=0: Seed for random number generation (\c integer)
+    - \c duration=0ms: Maximum duration of stimulus (\c number)
+    - \c ramp=2ms: Ramp of stimulus (\c number)
+- \c Stimulus
+    - \c intensity=50dB: Stimulus intensity (\c number)
+    - \c intensitybase=SPL: Stimulus intensity relative to (\c string)
+    - \c repeats=10times: Number of stimulus presentations (\c number)
+    - \c pause=1000ms: Duration of pause between stimuli (\c number)
+    - \c side=left: Speaker (\c string)
+    - \c Carrier
+        - \c carrierfreq=5kHz: Carrier frequency (\c number)
+        - \c usebestfreq=true: Relative to the cell's best frequency (\c boolean)
+- \c Intensity - search
+    - \c userate=true: Search intensity for target firing rate (\c boolean)
+    - \c rate=100Hz: Target firing rate (\c number)
+    - \c ratetol=5Hz: Tolerance for target firing rate (\c number)
+    - \c intensitystep=8dB: Initial intensity step (\c number)
+    - \c searchrepeats=2times: Number of search stimulus presentations (\c number)
+    - \c silentrate=0Hz: Ignore response below (\c number)
+    - \c maxsilent=1: Number of stimulus presentations if response is below silentrate (\c integer)
+    - \c skippause=true: Skip pause if response is below silentrate (\c boolean)
+    - \c maxsearch=1intensities: Stop search if response does not change for more than (\c integer)
+    - \c method=Bisect: Method (\c string)
+    - \c minslope=4Hz/dB: Minimum slope required for interpolation (\c number)
+    - \c searchduration=0ms: Maximum duration of stimulus (\c number)
+    - \c searchpause=0ms: Duration of pause between stimuli (\c number)
+- \c Analysis
+    - \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
+    - \c sigma1=2ms: Standard deviation of rate smoothing kernel 1 (\c number)
+    - \c sigma2=20ms: Standard deviation of rate smoothing kernel 2 (\c number)
+    - \c adjust=true: Adjust input gain (\c boolean)
+    - \c Save stimuli
+        - \c storemode=session: Save stimuli in (\c string)
+        - \c storepath=: Save stimuli in custom directory (\c string)
+        - \c storelevel=all: Save (\c string)
 */
 
 
@@ -133,6 +139,7 @@ protected:
 		   Sawup, Sawdown, Whitenoise, OUnoise };
   WaveForms WaveForm;
   double Frequency;
+  double PulseDuration;
   double DutyCycle;
   int Seed;
   double Ramp;
