@@ -1,3 +1,6 @@
+Auditory SingleStimulus:
+- Filling with noise: need to adjust stimulus amplitude in OutData::fill() and auditory::SingleStimulus!
+
 New InData threading:
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
   the resulting index should be the one of the first data of the stimulus.

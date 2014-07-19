@@ -936,31 +936,46 @@ void OutData::fill( const OutData &am, double carrierfreq,
 {
   clear();
 
-  if ( carrierfreq <= 0.0 )
-    return;
-
-  setStepsize( bestSampleInterval( carrierfreq ) );
+  setBestSample( carrierfreq );
   setRangeBack( am.length() );
 
   if ( am.size() < 2 )
     return;
 
-  // create lookup-table for one sine wave:
-  SampleDataF sinbuf;
-  sinbuf.sin( LinearRange( int( rint( 1.0 / ( carrierfreq * stepsize() ) ) ), 
-			   0.0, stepsize() ), carrierfreq );
-  
-  // fill am with carrier sine wave:
-  double slope = (am[1]-am[0])/am.stepsize();
-  for ( int i=0, j=0, k=1; i<size(); i++, j++ ) {
-    double t = pos( i );
-    while ( am.pos( k ) < t && k+1 < am.size() ) {
-      k++;
-      slope = (am[k]-am[k-1])/am.stepsize();
+  if ( carrierfreq > 1.0e-8 ) {
+    // create lookup-table for one sine wave:
+    SampleDataF sinbuf;
+    sinbuf.sin( LinearRange( int( rint( 1.0 / ( carrierfreq * stepsize() ) ) ), 
+			     0.0, stepsize() ), carrierfreq );
+    // fill am with carrier sine wave:
+    double slope = (am[1]-am[0])/am.stepsize();
+    for ( int i=0, j=0, k=1; i<size(); i++, j++ ) {
+      double t = pos( i );
+      while ( am.pos( k ) < t && k+1 < am.size() ) {
+	k++;
+	slope = (am[k]-am[k-1])/am.stepsize();
+      }
+      if ( j >= sinbuf.size() ) 
+	j=0;
+      operator[]( i ) = sinbuf[j] * ( am[k-1] + slope * ( t - am.pos(k-1) ) );
     }
-    if ( j >= sinbuf.size() ) 
-      j=0;
-    operator[]( i ) = sinbuf[j] * ( am[k-1] + slope * ( t - am.pos(k-1) ) );
+  }
+  else {
+    // create noise:
+    SampleDataF noisebuf;
+    noisebuf.whiteNoise( size(), stepsize(), 0.0, carrierfreq, rnd );
+    // fill am with carrier noise:
+    double slope = (am[1]-am[0])/am.stepsize();
+    for ( int i=0, j=0, k=1; i<size(); i++, j++ ) {
+      double t = pos( i );
+      while ( am.pos( k ) < t && k+1 < am.size() ) {
+	k++;
+	slope = (am[k]-am[k-1])/am.stepsize();
+      }
+      operator[]( i ) = noisebuf[j] * ( am[k-1] + slope * ( t - am.pos(k-1) ) );
+      // XXX Problem: noise standard deviation is one, noise extends beyond that!
+      // Set Descriptions stdev right, and pass out stimampl!
+    }
   }
   back() = 0.0;
 
@@ -968,13 +983,21 @@ void OutData::fill( const OutData &am, double carrierfreq,
   Description.setType( "stimulus" );
   Description.newSection( am.Description );
   Description.insertText( "Function", "", "AM" );
-  Description.newSection( "", "stimulus/sine_wave" );
-  Description.addText( "Function", "Carrier" );
-  Description.addNumber( "Frequency", carrierfreq, "Hz" );
+  if ( carrierfreq > 1.0e-8 ) {
+    Description.newSection( "", "stimulus/sine_wave" );
+    Description.addNumber( "Frequency", carrierfreq, "Hz" );
+  }
+  else {
+    Description.newSection( "", "stimulus/white_noise" );
+    Description.addNumber( "UpperCutoffFrequency", -carrierfreq, "Hz" );
+    Description.addNumber( "LowerCutoffFrequency", 0.0, "Hz" );
+    Description.addNumber( "Mean", 0.0, unit() );
+    Description.addNumber( "StDev", 1.0, unit() );
+  }
   Description.addNumber( "Duration", am.length(), "s" );
   Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addText( "Function", "Carrier" );
 
-  setCarrierFreq( carrierfreq );
   setIdent( ident );
   clearError();
 }

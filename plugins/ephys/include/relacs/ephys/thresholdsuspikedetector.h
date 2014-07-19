@@ -39,7 +39,27 @@ namespace ephys {
 \class ThresholdSUSpikeDetector
 \brief [Detector] Spike detection based on an absolute voltage threshold.
 \author Jan Benda
-\version 1.0 (Jan 17, 2011)
+\version 1.2 (Jul 19, 2014)
+
+\par Options
+- \c Detector
+    - \c threshold=1mV: Detection threshold (\c number)
+    - \c peaks=true: Detect peaks (\c boolean)
+    - \c usemaxsize=false: Use maximum size (\c boolean)
+    - \c maxsize=1mV: Maximum size (\c number)
+    - \c testisi=false: Test interspike interval (\c boolean)
+    - \c minisi=1ms: Minimum interspike interval (\c number)
+- \c Indicators
+    - \c nospike=100ms: Interval for no spike (\c number)
+    - \c considerstimulus=false: Expect spikes during stimuli only (\c boolean)
+    - \c resolution=0.5mV: Resolution of spike size (\c number)
+    - \c log=false: Logarithmic histograms (\c boolean)
+    - \c update=1sec: Update time interval (\c number)
+    - \c nsnippets=20: Number of spike snippets shown (\c integer)
+    - \c snippetswidth=2ms: Width of spike snippet (\c number)
+    - \c history=10sec: Maximum history time (\c number)
+    - \c rate=100Hz: Rate (\c number)
+    - \c size=100mV: Spike size (\c number)
 */
 
 
@@ -89,16 +109,14 @@ public slots:
 
   Detector< InData::const_iterator, InDataTimeIterator > D;
 
-    /*! The lower threshold for detecting spikes. */
-  double LowerThreshold;
+    /*! The threshold for detecting peaks. */
+  double Threshold;
     /*! Detect peaks (true) or troughs (false ). */
   bool Peaks;
-    /*! Use an absolute lower threshold. */
-  bool AbsLowerThresh;
-    /*! True if the UpperThreshold is used in addition to the lower threshold. */
-  bool UseUpperThresh;
-    /*! The upper threshold for detecting spikes. */
-  double UpperThreshold;
+    /*! True if MaxSize is used. */
+  bool UseMaxSize;
+    /*! The maximum size of a spike. */
+  double MaxSize;
     /*! Test interspike interval? */
   bool TestInterval;
     /*! Minimum interspike interval. */
@@ -119,12 +137,6 @@ public slots:
   double UpdateTime;
     /*! Maximum time for history spike events. */
   double HistoryTime;
-    /*! Threshold for quality indicator (fraction of overlap). */
-  double QualityThresh;
-    /*! Threshold for trend indicator relative to spike size. */
-  double TrendThresh;
-    /*! Time scale for determining the trend. */
-  double TrendTime;
 
     /*! Resolution of spike sizes and thresholds. */
   double SizeResolution;
@@ -145,23 +157,6 @@ public slots:
   SampleDataD BadSpikesHist;
   SampleDataD AllSpikesHist;
   string Unit;
-
-  QPixmap GoodQuality;
-  QPixmap OkQuality;
-  QPixmap PotentialQuality;
-  QPixmap BadQuality;
-  QPixmap *QualityPixs[4];
-  int Quality;
-  QLabel *QualityIndicator;
-  QPixmap BadTrend;
-  QPixmap OkTrend;
-  QPixmap GoodTrend;
-  QPixmap BadArrow;
-  QPixmap GoodArrow;
-  QPixmap *TrendPixs[5];
-  int Trend;
-  QLabel *TrendIndicator;
-  double LastSpikeSize;
 
 };
 

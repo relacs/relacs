@@ -37,7 +37,7 @@ namespace auditory {
 /*! 
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
-\version 1.4 (Jul 18, 2014)
+\version 1.4 (Jul 19, 2014)
 \author Jan Benda
 
 \par Options
@@ -86,6 +86,8 @@ namespace auditory {
     - \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
     - \c sigma1=2ms: Standard deviation of rate smoothing kernel 1 (\c number)
     - \c sigma2=20ms: Standard deviation of rate smoothing kernel 2 (\c number)
+    - \c before=100ms: Time before stimulus to be analyzed (\c number)
+    - \c after=100ms: Time after stimulus to be analyzed (\c number)
     - \c adjust=true: Adjust input gain (\c boolean)
     - \c Save stimuli
         - \c storemode=session: Save stimuli in (\c string)
@@ -117,7 +119,8 @@ public:
   void plot( const EventList &spikes, const SampleDataD &rate1,
 	     const SampleDataD &rate2 );
     /*! Analyze data. */
-  void analyze( EventList &spikes, SampleDataD &rate1, SampleDataD &rate2 );
+  void analyze( EventList &spikes, SampleDataD &rate1, SampleDataD &rate2,
+		double before, double after );
 
 
 protected:

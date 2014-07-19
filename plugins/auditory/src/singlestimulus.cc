@@ -36,7 +36,7 @@ namespace auditory {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "auditory", "Jan Benda", "1.4", "Jul 18, 2014" )
+  : RePro( "SingleStimulus", "auditory", "Jan Benda", "1.4", "Jul 19, 2014" )
 {
   Intensity = 50.0;
   Amplitude = 1.0;
@@ -93,6 +93,8 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWin, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", Sigma1, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", Sigma2, 0.0, 1.0, 0.001, "seconds", "ms" );
+  addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
+  addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain", true );
   newSubSection( "Save stimuli" );
   addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
@@ -184,7 +186,6 @@ int SingleStimulus::main( void )
   }
 
   // get options:
-  settings().setValueTypeFlags( 16, -Parameter::Section );
   WaveType = (WaveTypes)index( "type" );
   WaveForm = (WaveForms)index( "waveform" );
   Str stimfile = text( "stimfile" );
@@ -230,6 +231,12 @@ int SingleStimulus::main( void )
   SkipWin = number( "skipwin" );
   Sigma1 = number( "sigma1" );
   Sigma2 = number( "sigma2" );
+  double before = number( "before" );
+  if ( before > pause )
+    before = pause;
+  double after = number( "after" );
+  if ( after > pause )
+    after = pause;
   bool adjustgain = boolean( "adjust" );
   StoreModes storemode = (StoreModes)index( "storemode" );
   if ( storemode == SessionPath )
@@ -648,8 +655,8 @@ int SingleStimulus::main( void )
   // variables:
   EventList spikes;
   MeanRate = 0.0;
-  SampleDataD rate1( 0.0, Duration, 0.001, 0.0 );
-  SampleDataD rate2( 0.0, Duration, 0.001, 0.0 );
+  SampleDataD rate1( -before, Duration+after, 0.001, 0.0 );
+  SampleDataD rate2( -before, Duration+after, 0.001, 0.0 );
 
   timeStamp();
 
@@ -684,7 +691,7 @@ int SingleStimulus::main( void )
       return Aborted;
     }
     
-    analyze( spikes, rate1, rate2 );
+    analyze( spikes, rate1, rate2, before, after );
     plot( spikes, rate1, rate2 );
     
     // adjust gain of daq board:
@@ -707,13 +714,13 @@ int SingleStimulus::main( void )
 void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 {
   // create file:
-  ofstream df( addPath( "stimulusspikes.dat" ).c_str(),
+  ofstream df( addPath( "singlestimulus-spikes.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
 
   // write header and key:
-  header.save( df, "# ", 16, Options::FirstOnly );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -729,25 +736,31 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate1,
 			       const SampleDataD &rate2 )
 {
   // create file:
-  ofstream df( addPath( "stimulusrate.dat" ).c_str(),
+  ofstream df( addPath( "singlestimulus-rate.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
 
   // write header and key:
-  header.save( df, "# ", 16, Options::FirstOnly );
+  header.save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
   key.addNumber( "r" + Str( 1000.0*Sigma1 ) + "ms", "Hz", "%5.1f" );
   key.addNumber( "r" + Str( 1000.0*Sigma2 ) + "ms", "Hz", "%5.1f" );
+  key.addNumber( "I", "dB SPL", "%7.2f" );
   key.saveKey( df, true, false );
 
   // write data:
   for ( int k=0; k<rate1.size(); k++ ) {
-    key.save( df, rate1.pos( k ) * 1000.0, 0 );
+    double t = rate1.pos( k );
+    key.save( df, t * 1000.0, 0 );
     key.save( df, rate1[k] );
     key.save( df, rate2[k] );
+    if ( t < 0.0 || t > AMDB.rangeBack() )
+      key.save( df, 0.0 );
+    else
+      key.save( df, AMDB.interpolate( rate1.pos( k ) ) );
     df << '\n';
   }
   df << "\n\n";
@@ -844,13 +857,14 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
 
 
 void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
-			      SampleDataD &rate2 )
+			      SampleDataD &rate2, double before, double after )
 {
   if ( SpikeEvents[0] < 0 )
     return;
 
   // spikes:
-  spikes.push( events( SpikeEvents[0] ), signalTime(), signalTime() + Duration );
+  spikes.push( events( SpikeEvents[0] ), signalTime()-before,
+	       signalTime() + Duration + after, signalTime() );
   int trial1 = spikes.size()-1;
   int trial2 = spikes.size()-1;
 
@@ -919,6 +933,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 	  wave.noiseWave( duration, -1.0, Frequency, 1.0, &seed );
 	else if ( WaveForm == OUnoise )
 	  wave.ouNoiseWave( duration, -1.0, 1.0/Frequency, 1.0, &seed );
+	PeakAmplitudeFac = 0.3;
 	wave *= PeakAmplitudeFac;
 	int c = ::relacs::clip( -1.0, 1.0, wave );
 	double cp = 100.0*double(c)/wave.size();
@@ -1052,6 +1067,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       signal = wave;
     signal.setCarrierFreq( CarrierFreq );
     signal.setIdent( "wave=" + wavename );
+    PeakAmplitude = -20.0 * ::log10( PeakAmplitudeFac );
     static const double EnvTau = 0.0002;
     AMDB = wave;
     double x = wave[0]*wave[0];

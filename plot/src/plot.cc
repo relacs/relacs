@@ -2664,7 +2664,7 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
 	if ( compress ) {
 	  if ( xp-oxp >= 0.5 ) {
 	    if ( ncompress > 1 ) {
-	      path.moveTo( xp, ypmin );
+	      path.lineTo( xp, ypmin );
 	      path.lineTo( xp, ypmax );
 	      path.moveTo( xp, yp );
 	    }
