@@ -122,15 +122,13 @@ void RePro::run( void )
   InterruptLock.lock();
   Interrupt = false;
   InterruptLock.unlock();
+  enable();
   getData();
   lock();
   RW->SF->holdOff();
-  enable();
 
   // run RePro:
   LastState = main();
-
-  disable();
 
   // update statistics:
   if ( LastState == Completed )
@@ -143,6 +141,7 @@ void RePro::run( void )
 
   unlock();
 
+  disable();
   RW->KeyTime->unsetNoFocusWidget();
   GrabKeysAllowed = false;
   releaseKeys();

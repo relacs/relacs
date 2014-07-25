@@ -36,7 +36,7 @@ namespace ephys {
 ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
 	    "ThresholdSUSpikeDetector", "ephys",
-	    "Jan Benda", "1.2", "Jul 19, 2014" ),
+	    "Jan Benda", "1.2", "Jul 20, 2014" ),
     GoodSpikesHist( -2000.0, 2000.0, 0.5 ),
     BadSpikesHist( -2000.0, 2000.0, 0.5 ),
     AllSpikesHist( -2000.0, 2000.0, 0.5 )
@@ -44,14 +44,18 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   // parameter:
   Threshold = 1.0;
   Peaks = true;
-  UseMaxSize = false;
+  TestMaxSize = false;
   MaxSize = 1.0;
+  TestSymmetry = false;
+  MaxSymmetry = 1.0;
+  MinSymmetry = -1.0;
   TestInterval = false;
   MinInterval = 0.001;
   NoSpikeInterval = 0.1;
   StimulusRequired = false;
-  NSnippets = 20;
-  SnippetsWidth = 0.002;
+  SnippetsTime = 1.0;
+  SnippetsWidth = 0.001;
+  SnippetsSymmetry = 0.1;
   LogHistogram = false;
   UpdateTime = 1.0;
   HistoryTime = 10.0;
@@ -62,9 +66,12 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   newSection( "Detector", 8 );
   addNumber( "threshold", "Detection threshold", Threshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8 );
-  addBoolean( "peaks", "Detect peaks", Peaks, 2+8 );
-  addBoolean( "usemaxsize", "Use maximum size", UseMaxSize, 0+8 );
-  addNumber( "maxsize", "Maximum size", MaxSize, 0.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", (UseMaxSize ? 2 : 0)+8 ).setActivation( "usemaxsize", "true" );;
+  addBoolean( "peaks", "Detect peaks", Peaks, 8 );
+  addBoolean( "testmaxsize", "Use maximum size", TestMaxSize, 0+8 );
+  addNumber( "maxsize", "Maximum size", MaxSize, 0.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", (TestMaxSize ? 2 : 0)+8 ).setActivation( "testmaxsize", "true" );
+  addBoolean( "testsymmetry", "Use symmetry thresholds", TestSymmetry, 0+8 );
+  addNumber( "maxsymmetry", "Maximum symmetry", MaxSymmetry, -1.0, 1.0, 0.05 ).setFlags( (TestSymmetry ? 2 : 0)+8 ).setActivation( "testsymmetry", "true" );
+  addNumber( "minsymmetry", "Minimum symmetry", MinSymmetry, -1.0, 1.0, 0.05 ).setFlags( (TestSymmetry ? 2 : 0)+8 ).setActivation( "testsymmetry", "true" );
   addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8 );
   addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8 ).setActivation( "testisi", "true" );
   newSection( "Indicators", 8 );
@@ -73,8 +80,9 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8 );
   addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8 );
   addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
-  addInteger( "nsnippets", "Number of spike snippets shown", NSnippets, 0, 10000, 5 ).setFlags( 0+8 );
+  addNumber( "snippetstime", "Spike snippets shown from the last", SnippetsTime, 0, 10000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
   addNumber( "snippetswidth", "Width of spike snippet", SnippetsWidth, 0.0, 1.0, 0.0005, "sec", "ms", "%.1f", 0+8 );
+  addNumber( "snippetssymmetry", "Symmetry threshold for spike snippets", SnippetsSymmetry, 0.0, 1.0, 0.05 ).setFlags( 0+8 );
   addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, Unit, Unit, "%.1f", 2+4, strongstyle );
@@ -131,7 +139,8 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   HP->setXLabel( "L [" + Unit + "]" );
   HP->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
   HP->setXTics();
-  HP->setYLabel( "R [" + Unit + "]" );
+  //  HP->setYLabel( "R [" + Unit + "]" );
+  HP->setYLabel( "Symmetry" );
   HP->unlock();
   gb->addWidget( HP, 1, 0 );
 
@@ -165,7 +174,7 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
 {
   Unit = data.unit();
   setOutUnit( "threshold", Unit );
-  setOutUnit( "symmetrythreshold", Unit );
+  setOutUnit( "maxsize", Unit );
   setOutUnit( "size", Unit );
   setOutUnit( "resolution", Unit );
   setMinMax( "resolution", 0.0, 1000.0, 0.01, Unit );
@@ -174,7 +183,9 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
   HP->lock();
   //  HP->setXLabel( Unit );
   HP->setXLabel( "L [" + Unit + "]" );
-  HP->setYLabel( "R [" + Unit + "]" );
+  //  HP->setYLabel( "R [" + Unit + "]" );
+  HP->setYLabel( "Symmetry" );
+  HP->setYRange( -1.0, 1.0 );
   HP->unlock();
   outevents.setSizeScale( 1.0 );
   outevents.setSizeUnit( Unit );
@@ -204,24 +215,40 @@ void ThresholdSUSpikeDetector::readConfig( StrQueue &sq )
 
 void ThresholdSUSpikeDetector::notify( void )
 {
-  bool uut = boolean( "usemaxsize" );
-  if ( uut != UseMaxSize ) {
-    UseMaxSize = uut;
-    if ( UseMaxSize )
+  bool tms = boolean( "testmaxsize" );
+  if ( tms != TestMaxSize ) {
+    TestMaxSize = tms;
+    if ( TestMaxSize )
       addFlags( "maxsize", 2 );
     else
       delFlags( "maxsize", 2 );
     postCustomEvent( 12 );
   }
+  tms = boolean( "testsymmetry" );
+  if ( tms != TestSymmetry ) {
+    TestSymmetry = tms;
+    if ( TestSymmetry ) {
+      addFlags( "maxsymmetry", 2 );
+      addFlags( "minsymmetry", 2 );
+    }
+    else {
+      delFlags( "maxsymmetry", 2 );
+      delFlags( "minsymmetry", 2 );
+    }
+    postCustomEvent( 12 );
+  }
   Threshold = number( "threshold", Unit );
   MaxSize = number( "maxsize", Unit );
+  MaxSymmetry = number( "maxsymmetry" );
+  MinSymmetry = number( "minsymmetry" );
   Peaks = boolean( "peaks" );
   TestInterval = boolean( "testinterval" );
   MinInterval = number( "minisi" );
   NoSpikeInterval = number( "nospike" );
   StimulusRequired = boolean( "considerstimulus" );
-  NSnippets = integer( "nsnippets" );
+  SnippetsTime = number( "snippetstime" );
   SnippetsWidth = number( "snippetswidth" );
+  SnippetsSymmetry = number( "snippetssymmetry" );
   SP->lock();
   SP->setXRange( -1000.0*SnippetsWidth, 1000.0*SnippetsWidth );
   SP->unlock();
@@ -249,8 +276,8 @@ void ThresholdSUSpikeDetector::notify( void )
     } while ( pre < 3 && fabs( resolution ) > 1.0e-3 );
     setFormat( "threshold", 4+pre, pre, 'f' );
     setStep( "threshold", SizeResolution, Unit );
-    setFormat( "symmetrythreshold", 4+pre, pre, 'f' );
-    setStep( "symmetrythreshold", SizeResolution, Unit );
+    setFormat( "maxsize", 4+pre, pre, 'f' );
+    setStep( "maxsize", SizeResolution, Unit );
     setFormat( "size", 4+pre, pre, 'f' );
     double max = 1000.0*SizeResolution;
     GoodSpikesHist = SampleDataD( -max, max, SizeResolution );
@@ -424,70 +451,81 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   delFlags( OptWidget::changedFlag() );
 
   // snippets:
+  int nsnippets = (int)( ::ceil( outevents.meanRate() * SnippetsTime ) );
+  if ( nsnippets < 100 )
+    nsnippets = 100;
   ArrayD snippetleftheight;
-  snippetleftheight.reserve( NSnippets );
+  snippetleftheight.reserve( nsnippets );
   ArrayD snippetrightheight;
-  snippetrightheight.reserve( NSnippets );
+  snippetrightheight.reserve( nsnippets );
+  ArrayF snippetsymmetry;
+  snippetsymmetry.reserve( nsnippets );
   ArrayD snippetwidth;
-  snippetwidth.reserve( NSnippets );
+  snippetwidth.reserve( nsnippets );
   SP->lock();
   SP->clear();
-  SP->plotVLine( 0, Plot::White, 2 );
-  for ( int k=0; k<NSnippets; k++ ) {
+  SP->plotVLine( 0.0, Plot::White, 2 );
+  for ( int k=0; ; k++ ) {
     if ( k >= outevents.size() )
       break;
     double st = outevents[outevents.size()-1-k];
+    if ( currentTime() - st > SnippetsTime )
+      break;
     if ( st - SnippetsWidth <= data.minTime() )
       break;
-    SampleDataD snippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0 );
+    SampleDataF snippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0.0f );
     data.copy( st, snippet );
     int k0 = snippet.index( 0.0 );
     snippet -= snippet[k0];
-    SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
+
+    k0 = data.index( st );
+    float peakheight = data[ k0 ];
     // find first right minimum:
-    int kr = 0;
+    int kr = -1;
+    double rightheight = 0.0;
     if ( Peaks ) {
-      for ( int k=k0; k<snippet.size()-1; k++ ) {
-	if ( -snippet[k] >= Threshold &&
-	     snippet[k-1] > snippet[k] && snippet[k] < snippet[k+1] ) {
-	  snippetrightheight.push( -snippet[k] );
+      for ( int k=k0+1; k<data.size()-2; k++ ) {
+	if ( data[k-2] > data[k] && data[k] < data[k+2] ) {
+	  rightheight = peakheight - data[k];
 	  kr = k;
 	  break;
 	}
       }
     }
     else {
-      for ( int k=k0; k<snippet.size()-1; k++ ) {
-	if ( snippet[k] >= Threshold &&
-	     snippet[k-1] < snippet[k] && snippet[k] > snippet[k+1] ) {
-	  snippetrightheight.push( snippet[k] );
+      for ( int k=k0+1; k<data.size()-2; k++ ) {
+	if ( data[k-2] < data[k] && data[k] > data[k+2] ) {
+	  rightheight = data[k] - peakheight;
 	  kr = k;
 	  break;
 	}
       }
     }
     // find first left minimum:
-    int kl = 0;
+    int kl = -1;
+    double leftheight = 0.0;
     if ( Peaks ) {
-      for ( int k=k0; k>0; k-- ) {
-	if ( -snippet[k] >= Threshold &&
-	     snippet[k-1] > snippet[k] && snippet[k] < snippet[k+1] ) {
-	  snippetleftheight.push( -snippet[k] );
+      for ( int k=k0-1; k>data.minIndex()+1; k-- ) {
+	if ( data[k-2] > data[k] && data[k] < data[k+2] ) {
+	  leftheight = peakheight - data[k];
 	  kl = k;
 	  break;
 	}
       }
     }
     else {
-      for ( int k=k0; k>0; k-- ) {
-	if ( snippet[k] >= Threshold &&
-	     snippet[k-1] < snippet[k] && snippet[k] > snippet[k+1] ) {
-	  snippetleftheight.push( snippet[k] );
+      for ( int k=k0-1; k>data.minIndex()+1; k-- ) {
+	if ( data[k-2] < data[k] && data[k] > data[k+2] ) {
+	  leftheight = data[k] - peakheight;
 	  kl = k;
 	  break;
 	}
       }
     }
+
+    snippetrightheight.push( leftheight );
+    snippetleftheight.push( rightheight );
+
     // width:
     double minheight = snippetrightheight.back();
     if ( minheight > snippetleftheight.back() )
@@ -495,16 +533,16 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     double rt = 0.0;
     if ( Peaks ) {
       for ( int k=k0; k<kr; k++ ) {
-	if ( snippet[k] < -minheight/2 ) {
-	  rt = snippet.pos( k );
+	if ( data[k] < peakheight - minheight/2 ) {
+	  rt = data.pos( k );
 	  break;
 	}
       }
     }
     else {
       for ( int k=k0; k<kr; k++ ) {
-	if ( snippet[k] > minheight/2 ) {
-	  rt = snippet.pos( k );
+	if ( data[k] > peakheight + minheight/2 ) {
+	  rt = data.pos( k );
 	  break;
 	}
       }
@@ -512,21 +550,30 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     double lt = 0.0;
     if ( Peaks ) {
       for ( int k=k0; k>kl; k-- ) {
-	if ( snippet[k] < -minheight/2 ) {
-	  lt = snippet.pos( k );
+	if ( data[k] < peakheight - minheight/2 ) {
+	  lt = data.pos( k );
 	  break;
 	}
       }
     }
     else {
       for ( int k=k0; k>kl; k-- ) {
-	if ( snippet[k] > minheight/2 ) {
-	  lt = snippet.pos( k );
+	if ( data[k] > peakheight + minheight/2 ) {
+	  lt = data.pos( k );
 	  break;
 	}
       }
     }
     snippetwidth.push( rt - lt );
+    // plot snippet:
+    float symmetry = (snippetleftheight.back() - snippetrightheight.back())/(snippetleftheight.back() + snippetrightheight.back());
+    snippetsymmetry.push( symmetry );
+    if ( symmetry < -SnippetsSymmetry )
+      SP->plot( snippet, 1000.0, Plot::Red, 1, Plot::Solid );
+    else if ( symmetry > SnippetsSymmetry )
+      SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
+    else
+      SP->plot( snippet, 1000.0, Plot::Orange, 1, Plot::Solid );
   }
   SP->draw();
   SP->unlock();
@@ -534,7 +581,7 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   // plot snippet properties:
   HP->lock();
   HP->clear();
-  HP->plot( snippetleftheight, snippetrightheight, Plot::Transparent, 0, Plot::Solid, 
+  HP->plot( snippetleftheight, snippetsymmetry, Plot::Transparent, 0, Plot::Solid, 
 	    Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
   HP->draw();
   HP->unlock();
@@ -583,7 +630,7 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     HP->setYTics();
   }
   HP->plotVLine( Threshold, Plot::White, 2 );
-  if ( UseMaxSize )
+  if ( TestMaxSize )
     HP->plotVLine( MaxSize, Plot::White, 2 );
   HP->draw();
   HP->unlock();
@@ -616,13 +663,13 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
     if ( right+2 >= last )
       return -1;
     if ( Peaks ) {
-      if ( *event - *right > threshold && *(right+2) > *right && *(right-2) > *right ) {
+      if ( *(right+2) > *right && *(right-2) > *right ) {
 	rightsize = *event - *right;
 	break;
       }
     }
     else {
-      if ( *right - *event > threshold && *(right+2) < *right && *(right-2) < *right ) {
+      if ( *(right+2) < *right && *(right-2) < *right ) {
 	rightsize = *right - *event;
 	break;
       }
@@ -635,30 +682,37 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
     if ( left <= first+2 )
       return 0;
     if ( Peaks ) {
-      if ( *event - *left > threshold && *(left+2) > *left && *(left-2) > *left ) {
+      if ( *(left+2) > *left && *(left-2) > *left ) {
 	leftsize = *event - *left;
 	break;
       }
     }
     else {
-      if ( *left - *event > threshold && *(left+2) < *left && *(left-2) < *left ) {
+      if ( *(left+2) < *left && *(left-2) < *left ) {
 	leftsize = *left - *event;
 	break;
       }
     }
   }
 
-  // check:
-  if ( UseMaxSize && ( rightsize > MaxSize || leftsize > MaxSize ) )
-    return 0;
-  if ( TestInterval && 
-       outevents.size() > 0 && time - outevents.back() < MinInterval )
-    return 0;
-
   // size:
   size = leftsize;
   if ( size > rightsize )
     size = rightsize;
+
+  // symmetry:
+  double symmetry = ( leftsize - rightsize )/( leftsize + rightsize );
+
+  // check:
+  if ( rightsize < threshold || leftsize < threshold )
+    return 0;
+  if ( TestMaxSize && ( rightsize > MaxSize || leftsize > MaxSize ) )
+    return 0;
+  if ( TestSymmetry && ( symmetry > MaxSymmetry || symmetry < MinSymmetry ) )
+    return 0;
+  if ( TestInterval && 
+       outevents.size() > 0 && time - outevents.back() < MinInterval )
+    return 0;
 
   // accept:
   return 1; 

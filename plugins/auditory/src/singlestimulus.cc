@@ -1004,7 +1004,11 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     OutData am( AMDB );
     for ( int k=0; k<am.size(); k++ )
       am[k] = ::pow (10.0, AMDB[k] / 20.0 );
-    signal.fill( am, CarrierFreq );
+    double fac = signal.fill( am, CarrierFreq );
+    PeakAmplitudeFac *= fac;
+    PeakAmplitude += -20.0 * ::log10( fac );
+    AMDB -= -20.0 * ::log10( fac );
+    signal.ramp( Ramp );
     signal.setIdent( "am=" + wavename + ", amplitude=" + Str( Amplitude ) + "dB" );
     header.addText( "amplitude", Str( Amplitude ) + "dB" );
     header.addText( "intensityfactor", Str( ::pow (10.0, -PeakAmplitude / 20.0 ), 0, 3, 'g' ) );
@@ -1031,7 +1035,6 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       return -1;
     }
     wave.ramp( Ramp );
-    PeakAmplitude = -20.0 * ::log10( PeakAmplitudeFac );
     Amplitude = 0.0;
     AMDB = wave;
     for ( int k=0; k<AMDB.size(); k++ ) {
@@ -1039,7 +1042,10 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       if ( AMDB[k] < -60.0 )
 	AMDB[k] = -60.0;
     }
-    signal.fill( wave, CarrierFreq );
+    double fac = signal.fill( wave, CarrierFreq );
+    PeakAmplitudeFac *= fac;
+    PeakAmplitude = -20.0 * ::log10( PeakAmplitudeFac );
+    AMDB -= -20.0 * ::log10( fac );
     signal.setIdent( "envelope=" + wavename );
     header.addText( "intensityfactor", Str( PeakAmplitudeFac, 0, 3, 'g' ) );
     if ( stoream && store ) {
@@ -1065,10 +1071,12 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       signal.interpolate( wave, 0.0, signal.minSampleInterval() );
     else
       signal = wave;
+    signal.ramp( Ramp );
     signal.setCarrierFreq( CarrierFreq );
     signal.setIdent( "wave=" + wavename );
     PeakAmplitude = -20.0 * ::log10( PeakAmplitudeFac );
     static const double EnvTau = 0.0002;
+    // compute envelope:
     AMDB = wave;
     double x = wave[0]*wave[0];
     for ( int k=0; k<AMDB.size(); k++ ) {
@@ -1080,7 +1088,6 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 	AMDB[k] = -60.0;
     }
   }
-  signal.ramp( Ramp );
   
   return 0;
 }

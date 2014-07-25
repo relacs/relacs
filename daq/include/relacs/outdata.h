@@ -612,15 +612,20 @@ class OutData : public SampleData< float >, public DaqError
         Returns the used multiplication factor. */
   double maximize( double max=1.0 );
 
- /*! Create a stimulus with description \a ident from the given amplitude 
+    /*! Create a stimulus with description \a ident from the given amplitude 
         modulation \a am (in seconds) filled with a sine wave carrier
 	with frequency \a carrierfreq Hz.
+	In case the carrier frequency is negative, the aamplitude modulation is filled
+	with a Gaussian white noise from 0 to \a -carrierfreq Hz.
 	The sampling rate is set using bestSampleRate( \a carrierfreq ).
 	The carrier frequency of the signal is set to \a carrierfreq.
         \a am must have values ranging from 0...1 and 
-	must contain at least 2 elements. */
-  void fill( const OutData &am, double carrierfreq, 
-	     const string &ident = "" );
+	must contain at least 2 elements. 
+        \return 1.0 for positive carrier frequencies (sine waves)
+        or the factor that was used to scale the signal down to accomodate
+        a noise carrier. */
+  double fill( const OutData &am, double carrierfreq, 
+	       const string &ident = "" );
 
     /*! Create a sine wave of constant amplitude \a ampl (1.0 = maximum amplitude)
         with freqency \a freq Hz, \a duration seconds, 

@@ -112,45 +112,61 @@ void LoudSpeaker::gain( double &gain, double &offset, double &frequency ) const
   }
   else {
     // get value from calibration table:
-    if ( Gain.size() == 1 ) {
-      gain = Gain[0];
-      offset = Offset[0];
-      frequency = Frequency[0];
+    int l = 0;
+    int r = Gain.size();
+    int lo = 0;
+    int ro = Gain.size();
+    int m = 0;
+    for ( m=0; m<r && Frequency[m] < 0.0; m++ );
+    if ( frequency >= 0.0 ) {
+      // sine wave:
+      l = m;
+      ro = m;
     }
     else {
-      int l = 0;
-      int r = Gain.size();
-      int m = 0;
-      for ( m=0; m<r && Frequency[m] < 0.0; m++ );
-      if ( frequency >= 0.0 ) {
-	// sine wave:
-	l = m;
+      // white noise:
+      r = m;
+      lo = m;
+    }
+    if ( r-l <= 0 ) {
+      // no calibration available
+      // take average of other frequencies:
+      gain = 0.0;
+      offset = 0.0;
+      frequency = 0.0;
+      int j = 1;
+      for ( int k=lo; k<ro; k++ ) {
+	gain += ( Gain[k] - gain )/j;
+	offset += ( Offset[k] - offset )/j;
+	frequency += ( Frequency[k] - frequency )/j;
       }
-      else {
-	// white noise:
-	r = m;
-      }
-      if ( frequency <= Frequency[l] ) {
-	gain = Gain[l];
-	offset = Offset[l];
-	frequency = Frequency[l];
-      }
-      else if ( frequency >= Frequency[r-1] ) {
-	gain = Gain[r-1];
-	offset = Offset[r-1];
-	frequency = Frequency[r-1];
-      }
-      else {
-	// interpolate:
-	int k=0;
-	for ( k=l; k<r && Frequency[k] < frequency; k++ );
-	gain = (frequency-Frequency[k])*(Gain[k]-Gain[k-1])/(Frequency[k]-Frequency[k-1]) + Gain[k];
-	offset = (frequency-Frequency[k])*(Offset[k]-Offset[k-1])/(Frequency[k]-Frequency[k-1]) + Offset[k];
-	if ( Frequency[k] - frequency > frequency - Frequency[k-1] )
-	  frequency = Frequency[k-1];
-	else
-	  frequency = Frequency[k];
-      }
+    }
+    else if ( r-l == 1 ) {
+      // return the only available calibration:
+      gain = Gain[l];
+      offset = Offset[l];
+      frequency = Frequency[l];
+    }
+    else if ( frequency <= Frequency[l] ) {
+      gain = Gain[l];
+      offset = Offset[l];
+      frequency = Frequency[l];
+    }
+    else if ( frequency >= Frequency[r-1] ) {
+      gain = Gain[r-1];
+      offset = Offset[r-1];
+      frequency = Frequency[r-1];
+    }
+    else {
+      // interpolate:
+      int k=0;
+      for ( k=l; k<r && Frequency[k] < frequency; k++ );
+      gain = (frequency-Frequency[k])*(Gain[k]-Gain[k-1])/(Frequency[k]-Frequency[k-1]) + Gain[k];
+      offset = (frequency-Frequency[k])*(Offset[k]-Offset[k-1])/(Frequency[k]-Frequency[k-1]) + Offset[k];
+      if ( Frequency[k] - frequency > frequency - Frequency[k-1] )
+	frequency = Frequency[k-1];
+      else
+	frequency = Frequency[k];
     }
   }
 }

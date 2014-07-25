@@ -39,14 +39,16 @@ namespace ephys {
 \class ThresholdSUSpikeDetector
 \brief [Detector] Spike detection based on an absolute voltage threshold.
 \author Jan Benda
-\version 1.2 (Jul 19, 2014)
+\version 1.2 (Jul 20, 2014)
 
 \par Options
 - \c Detector
     - \c threshold=1mV: Detection threshold (\c number)
     - \c peaks=true: Detect peaks (\c boolean)
-    - \c usemaxsize=false: Use maximum size (\c boolean)
+    - \c testmaxsize=false: Use maximum size (\c boolean)
     - \c maxsize=1mV: Maximum size (\c number)
+    - \c testmaxsymmetry=false: Use maximum symmetry (\c boolean)
+    - \c maxsymmetry=1: Maximum symmetry (\c number)
     - \c testisi=false: Test interspike interval (\c boolean)
     - \c minisi=1ms: Minimum interspike interval (\c number)
 - \c Indicators
@@ -55,8 +57,9 @@ namespace ephys {
     - \c resolution=0.5mV: Resolution of spike size (\c number)
     - \c log=false: Logarithmic histograms (\c boolean)
     - \c update=1sec: Update time interval (\c number)
-    - \c nsnippets=20: Number of spike snippets shown (\c integer)
-    - \c snippetswidth=2ms: Width of spike snippet (\c number)
+    - \c snippetstime=1sec: Spike snippets shown from the last (\c number)
+    - \c snippetswidth=1ms: Width of spike snippet (\c number)
+    - \c snippetssymmetry=0.1: Symmetry threshold for spike snippets (\c number)
     - \c history=10sec: Maximum history time (\c number)
     - \c rate=100Hz: Rate (\c number)
     - \c size=100mV: Spike size (\c number)
@@ -114,9 +117,15 @@ public slots:
     /*! Detect peaks (true) or troughs (false ). */
   bool Peaks;
     /*! True if MaxSize is used. */
-  bool UseMaxSize;
+  bool TestMaxSize;
     /*! The maximum size of a spike. */
   double MaxSize;
+    /*! True if MaxSymmetry and MinSymmetry are used. */
+  bool TestSymmetry;
+    /*! The maximum symmetry. */
+  double MaxSymmetry;
+    /*! The minimum symmetry. */
+  double MinSymmetry;
     /*! Test interspike interval? */
   bool TestInterval;
     /*! Minimum interspike interval. */
@@ -127,10 +136,12 @@ public slots:
     /*! True if spikes are expected during stimuli only. */
   bool StimulusRequired;
 
-    /*! Number of spike snippets to be plotted. */
-  int NSnippets;
+    /*! Time from which spike snippets are plotted. */
+  double SnippetsTime;
     /*! Width of spike snippets. */
   double SnippetsWidth;
+    /*! Threshold for symmetry of spike snippets. */
+  double SnippetsSymmetry;
     /*! Plot histogram logarithmically. */
   bool LogHistogram;
     /*! Update time for histograms and indicators. */

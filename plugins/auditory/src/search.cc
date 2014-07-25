@@ -282,13 +282,13 @@ int Search::main( void )
     }
 
     sleepOn( Duration + Pause );
+    timeStamp();
     if ( interrupt() ) {
       writeZero( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0] );
       if ( keepchanges )
 	setToDefaults();
       return Aborted;
     }
-    timeStamp();
 
     // adjust gain of daq board:
     if ( adjustgain ) {

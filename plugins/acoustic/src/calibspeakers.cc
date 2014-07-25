@@ -124,7 +124,8 @@ int CalibSpeakers::main( void )
   P[1].setAutoScaleY();
   P.unlock();
 
-  MapD oldoffsets;  // need reserve!
+  MapD oldoffsets;
+  oldoffsets.reserve( frequencyrange.size() );
   for ( frequencyrange.reset(); ! frequencyrange; ++frequencyrange ) {
     double freq = *frequencyrange;
     double g, o;
@@ -135,9 +136,12 @@ int CalibSpeakers::main( void )
   frequencyrange.reset();
   double frequency = *frequencyrange;
   double intensity = minintensity;
-  MapD intensities;  // need reserve!
-  MapD offsets;  // need reserve!
-  ArrayD gains;  // need reserve!
+  MapD intensities;
+  intensities.reserve( frequencyrange.size() );
+  MapD offsets;
+  offsets.reserve( frequencyrange.size() );
+  ArrayD gains;
+  gains.reserve( frequencyrange.size() );
 
   double origgain = 1.0;
   double origoffset = 0.0;
@@ -198,7 +202,6 @@ int CalibSpeakers::main( void )
 	   max > 0.3 * trace( intrace ).maxValue() )
 	break;
       adjustGain( trace( intrace ), 1.5 * max );
-      //      activateGains();
       // output signal again:
       write( signal );
       sleep( pause );
