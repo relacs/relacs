@@ -360,6 +360,7 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
     DAQFlexDevice->sendCommand( "AISCAN:START" );
 
   bool finished = true;
+  TraceIndex = 0;
   IsRunning = true;
   startThread( sp, datamutex, datawait );
   if ( tookao ) {
@@ -493,6 +494,7 @@ int DAQFlexAnalogInput::stop( void )
 
   lock();
   DAQFlexDevice->sendCommand( "AISCAN:STOP" );
+  DAQFlexDevice->sendMessage( "AISCAN:RESET" );
   unlock();
 
   stopRead();

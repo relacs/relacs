@@ -1,5 +1,7 @@
-Auditory SingleStimulus:
-- Filling with noise: need to adjust stimulus amplitude in OutData::fill() and auditory::SingleStimulus!
+Macros, flow control:
+- RELACS crashes after too many automatically called macros
+- auditory::search does not exit cleanly upon ESC
+- macro start should also be reported in the log file (and stimulus.dat ?) including parameter
 
 New InData threading:
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
