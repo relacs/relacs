@@ -3289,7 +3289,7 @@ bool Parameter::testActivation( int index, double value, double tol )
 }
 
 
-string Parameter::quoteString( string s )
+string Parameter::quoteString( string s, bool escape )
 {
   if ( s.empty() )
     return "~";
@@ -3302,8 +3302,12 @@ string Parameter::quoteString( string s )
   size_t i = s.find_first_not_of( Str::WhiteSpace );
   if ( i != string::npos && Str::FirstNumber.string::find( s[i] ) != string::npos )
     quote = true;
-  if ( quote )
-    return '"' + s + '"';
+  if ( quote ) {
+    if ( escape )
+      return "\\\"" + s + "\\\"";
+    else
+      return '"' + s + '"';
+  }
   else
     return s;
 }
@@ -3329,6 +3333,7 @@ string Parameter::save( int flags ) const
   bool fulllist = ( size() > 1 &&
 		    ( (Style & ListAlways) ||
 		      (flags & Options::FirstOnly) == 0 ) );
+  bool escape = ( flags & Options::EscapeQuotes );
   if ( isNumber() || isInteger() ) {
     if ( fulllist )
       str += "[ ";
@@ -3366,11 +3371,11 @@ string Parameter::save( int flags ) const
   else if ( isDate() || isTime() || isText() ) {
     if ( fulllist )
       str += "[ ";
-    str += quoteString( text( 0 ) );
+    str += quoteString( text( 0 ), escape );
     if ( fulllist ) {
       for ( int k=1; k<(int)String.size(); k++ ) {
 	str += ", ";
-	str += quoteString( text( k ) );
+	str += quoteString( text( k ), escape );
       }
       str += " ]";
     }
@@ -3400,6 +3405,7 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
   bool fulllist = ( size() > 1 &&
 		    ( (Style & ListAlways) ||
 		      (flags & Options::FirstOnly) == 0 ) );
+  bool escape = ( flags & Options::EscapeQuotes );
   if ( isNumber() || isInteger() ) {
     if ( fulllist )
       str << "[ ";
@@ -3436,10 +3442,10 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
   else if ( isDate() || isTime() || isText() ) {
     if ( fulllist )
       str << "[ ";
-    str << quoteString( text( 0 ) );
+    str << quoteString( text( 0 ), escape );
     if ( fulllist ) {
       for ( int k=1; k<(int)String.size(); k++ )
-	str << ", " << quoteString( text( k ) );
+	str << ", " << quoteString( text( k ), escape );
       str << " ]";
     }
   }

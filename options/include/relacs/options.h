@@ -113,7 +113,9 @@ public:
       /*! Indicate the style of a section or Parameter name. */
     PrintStyle = 256,
       /*! Do not write the final closing \c \</section\>. */
-    DontCloseSection = 512
+    DontCloseSection = 512,
+      /*! Escape the quotes of strings with an backslash. */
+    EscapeQuotes = 1024
   };
 
     /*! Constructs an empty options list. */
