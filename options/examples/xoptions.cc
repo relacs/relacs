@@ -213,7 +213,7 @@ int main( int argc, char *argv[] )
   // read and append:
   cout << "read and append:\n";
   opt6.readAppend( opt5 );
-  opt5.save( cout, "", 0, Options::PrintType | Options::PrintRequest );
+  opt5.save( cout, "", 0, Options::PrintType | Options::PrintRequest  );
   cout << '\n';
 
   return 0;

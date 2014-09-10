@@ -3289,7 +3289,7 @@ bool Parameter::testActivation( int index, double value, double tol )
 }
 
 
-string Parameter::quoteString( string s, bool escape )
+string Parameter::quoteString( string s, bool always, bool escape )
 {
   if ( s.empty() )
     return "~";
@@ -3301,6 +3301,8 @@ string Parameter::quoteString( string s, bool escape )
     quote = true;
   size_t i = s.find_first_not_of( Str::WhiteSpace );
   if ( i != string::npos && Str::FirstNumber.string::find( s[i] ) != string::npos )
+    quote = true;
+  if ( always )
     quote = true;
   if ( quote ) {
     if ( escape )
@@ -3316,14 +3318,23 @@ string Parameter::quoteString( string s, bool escape )
 string Parameter::save( int flags ) const
 {
   string str;
+  bool escape = ( flags & Options::EscapeQuotes );
   // name:
-  if ( name().find_first_of( ",{}[]:=" ) != string::npos )
-    str = '"' + name() + '"';
+  if ( name().find_first_of( ",{}[]:=" ) != string::npos ) {
+    if ( escape )
+      str = "\\\"" + name() + "\\\"";
+    else
+      str = '"' + name() + '"';
+  }
   else
     str = name();
   if ( (flags & Options::PrintRequest) && name() != request() ) {
-    if ( request().find_first_of( ",{}[]:=" ) != string::npos )
-      str += " (\"" + request() + "\")";
+    if ( request().find_first_of( ",{}[]:=" ) != string::npos ) {
+      if ( escape )
+	str += " (\\\"" + request() + "\\\")";
+      else
+	str += " (\"" + request() + "\")";
+    }
     else
       str += " (" + request() + ")";
   }
@@ -3333,7 +3344,7 @@ string Parameter::save( int flags ) const
   bool fulllist = ( size() > 1 &&
 		    ( (Style & ListAlways) ||
 		      (flags & Options::FirstOnly) == 0 ) );
-  bool escape = ( flags & Options::EscapeQuotes );
+  bool always = ( flags & Options::AlwaysQuote );
   if ( isNumber() || isInteger() ) {
     if ( fulllist )
       str += "[ ";
@@ -3371,11 +3382,11 @@ string Parameter::save( int flags ) const
   else if ( isDate() || isTime() || isText() ) {
     if ( fulllist )
       str += "[ ";
-    str += quoteString( text( 0 ), escape );
+    str += quoteString( text( 0 ), always, escape );
     if ( fulllist ) {
       for ( int k=1; k<(int)String.size(); k++ ) {
 	str += ", ";
-	str += quoteString( text( k ), escape );
+	str += quoteString( text( k ), always, escape );
       }
       str += " ]";
     }
@@ -3387,15 +3398,24 @@ string Parameter::save( int flags ) const
 
 ostream &Parameter::save( ostream &str, int width, int flags ) const
 {
+  bool escape = ( flags & Options::EscapeQuotes );
   // name:
   string is = "";
-  if ( name().find_first_of( ",{}[]:=" ) != string::npos )
-    is = '"' + name() + '"';
+  if ( name().find_first_of( ",{}[]:=" ) != string::npos ) {
+    if ( escape )
+      is = "\\\"" + name() + "\\\"";
+    else
+      is = '"' + name() + '"';
+  }
   else
     is = name();
   if ( (flags & Options::PrintRequest) && name() != request() ) {
-    if ( request().find_first_of( ",{}[]:=" ) != string::npos )
-      is += " (\"" + request() + "\")";
+    if ( request().find_first_of( ",{}[]:=" ) != string::npos ) {
+      if ( escape )
+	is += " (\\\"" + request() + "\\\")";
+      else
+	is += " (\"" + request() + "\")";
+    }
     else
       is += " (" + request() + ")";
   }
@@ -3405,7 +3425,7 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
   bool fulllist = ( size() > 1 &&
 		    ( (Style & ListAlways) ||
 		      (flags & Options::FirstOnly) == 0 ) );
-  bool escape = ( flags & Options::EscapeQuotes );
+  bool always = ( flags & Options::AlwaysQuote );
   if ( isNumber() || isInteger() ) {
     if ( fulllist )
       str << "[ ";
@@ -3442,10 +3462,10 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
   else if ( isDate() || isTime() || isText() ) {
     if ( fulllist )
       str << "[ ";
-    str << quoteString( text( 0 ), escape );
+    str << quoteString( text( 0 ), always, escape );
     if ( fulllist ) {
       for ( int k=1; k<(int)String.size(); k++ )
-	str << ", " << quoteString( text( k ), escape );
+	str << ", " << quoteString( text( k ), always, escape );
       str << " ]";
     }
   }

@@ -4722,7 +4722,7 @@ Options &Options::delValueTypeStyles( int style, int typemask )
 }
 
 
-int Options::nameWidth( int selectmask, bool detailed ) const
+int Options::nameWidth( int selectmask, bool detailed, bool escape ) const
 {
   Warning = "";
 
@@ -4731,12 +4731,18 @@ int Options::nameWidth( int selectmask, bool detailed ) const
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
       unsigned int w = pp->name().size();
-      if ( pp->name().find_first_of( ",{}[]:=" ) != string::npos )
+      if ( pp->name().find_first_of( ",{}[]:=" ) != string::npos ) {
 	w += 2;
+	if ( escape )
+	  w += 2;
+      }
       if ( detailed && pp->name() != pp->request() ) {
 	w += 3 + pp->request().size();
-	if ( pp->request().find_first_of( ",{}[]:=" ) != string::npos )
+	if ( pp->request().find_first_of( ",{}[]:=" ) != string::npos ) {
 	  w += 2;
+	  if ( escape )
+	    w += 2;
+	}
       }
       if ( w > width )
 	width = w;
@@ -4749,7 +4755,7 @@ int Options::nameWidth( int selectmask, bool detailed ) const
     if ( (*sp)->size( selectmask ) > 0 &&
 	 ( ! flag( selectmask ) ||
 	   ( name().empty() && type().empty() ) ) ) {
-      unsigned int w = (*sp)->nameWidth( selectmask, detailed );
+      unsigned int w = (*sp)->nameWidth( selectmask, detailed, escape );
       if ( w > width )
 	width = w;
     }
@@ -4772,6 +4778,7 @@ ostream &Options::save( ostream &str, const string &start,
     ns = type();
     ts = name();
   }
+  bool escape = ( flags & EscapeQuotes );
   bool printname = ( ( ! ns.empty() ) && ( ( flags & NoName ) == 0 ) );
   bool printtype = ( ( ! ts.empty() ) && ( ( flags & NoType ) == 0 ) );
   bool printsection = ( flag( selectmask ) && ( printname || printtype ) );
@@ -4779,23 +4786,31 @@ ostream &Options::save( ostream &str, const string &start,
     if ( printname ) {
       if ( (flags & PrintStyle) && (style() & TabSection) > 0 )
 	ns = '-' + ns + '-';
-      if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
-	str << starts << '"' << ns << '"';
+      if ( ns.find_first_of( ",{}[]:=" ) != string::npos ) {
+	if ( escape )
+	  str << starts << "\\\"" << ns << "\\\"";
+	else
+	  str << starts << '"' << ns << '"';
+      }
       else
 	str << starts << ns;
     }
     if ( printtype ) {
-      if ( ts.find_first_of( ",{}[]:=" ) != string::npos )
-	str << " (\"" << ts << "\")";
+      if ( ts.find_first_of( ",{}[]:=" ) != string::npos ) {
+	if ( escape )
+	  str << " (\\\"" << ts << "\\\")";
+	else
+	  str << " (\"" << ts << "\")";
+      }
       else
 	str << " (" << ts << ")";
     }
     str << ":\n";
     starts += "    ";
-    width = nameWidth( selectmask, (flags & PrintRequest) );
+    width = nameWidth( selectmask, (flags & PrintRequest), escape );
   }
   if ( width < 0 )
-    width = nameWidth( selectmask, (flags & PrintRequest) );
+    width = nameWidth( selectmask, (flags & PrintRequest), escape );
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( pp->flags( selectmask ) ) {
       str << starts;
@@ -4865,6 +4880,7 @@ string Options::save( int selectmask, int flags ) const
     ns = type();
     ts = name();
   }
+  bool escape = ( flags & EscapeQuotes );
   bool printname = ( ( ! ns.empty() ) && ( ( flags & NoName ) == 0 ) );
   bool printtype = ( ( ! ts.empty() ) && ( ( flags & NoType ) == 0 ) );
   bool printsection = ( flag( selectmask ) && ( printname || printtype ) );
@@ -4872,14 +4888,22 @@ string Options::save( int selectmask, int flags ) const
     if ( printname ) {
       if ( (flags & PrintStyle) && (style() & TabSection) > 0 )
 	ns = '-' + ns + '-';
-      if ( ns.find_first_of( ",{}[]:=" ) != string::npos )
-	str += '"' + ns + '"';
+      if ( ns.find_first_of( ",{}[]:=" ) != string::npos ) {
+	if ( escape )
+	  str += "\\\"" + ns + "\\\"";
+	else
+	  str += '"' + ns + '"';
+      }
       else
 	str += ns;
     }
     if ( printtype ) {
-      if ( ts.find_first_of( ",{}[]:=" ) != string::npos )
-	str += " (\"" + ts + "\")";
+      if ( ts.find_first_of( ",{}[]:=" ) != string::npos ) {
+	if ( escape )
+	  str += " (\\\"" + ts + "\\\")";
+	else
+	  str += " (\"" + ts + "\")";
+      }
       else
 	str += " (" + ts + ")";
     }

@@ -114,8 +114,10 @@ public:
     PrintStyle = 256,
       /*! Do not write the final closing \c \</section\>. */
     DontCloseSection = 512,
+      /*! Always quote value strings. */
+    AlwaysQuote = 1024,
       /*! Escape the quotes of strings with an backslash. */
-    EscapeQuotes = 1024
+    EscapeQuotes = 2048
   };
 
     /*! Constructs an empty options list. */
@@ -1842,8 +1844,9 @@ public:
   Options &delValueTypeStyles( int style, int typemask );
 
     /*! Length of largest name.
-        If \a detailed is \c true, then include length of request string as well. */
-  int nameWidth( int selectmask=0, bool detailed=false ) const;
+        If \a detailed is \c true, then include length of request string as well.
+        If \a escape is \c true, then include lenght of escaped quotes. */
+  int nameWidth( int selectmask=0, bool detailed=false, bool escape=false ) const;
 
     /*! Write names and their values to a string
         separated by ", ".

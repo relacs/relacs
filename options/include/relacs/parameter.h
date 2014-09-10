@@ -1021,8 +1021,9 @@ public:
 private:
 
     /*! Add quotation marks around the string if necessary.
+        If \a always is \t true, then always quote the string.
         If \a escape is \t true, then escape the quotes with backslash. */
-  static string quoteString( string s, bool escape=false );
+  static string quoteString( string s, bool always=false, bool escape=false );
 
     /*! A pointer to the Options this parameter belongs to. */
   Options *ParentSection;
