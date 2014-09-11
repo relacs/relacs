@@ -216,10 +216,10 @@ void MetaData::setSectionName( Options *opt, const string &names )
 void MetaData::clear( void )
 {
   lock();
+  Options::clear();
   // Clear only PluginData!
   //  CoreData.clear();
   PluginData.clear();
-  Options::clear();
   unlock();
 }
 
