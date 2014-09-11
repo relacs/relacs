@@ -29,7 +29,7 @@ namespace patchclamp {
 
 
 MembraneResistance::MembraneResistance( void )
-  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.0", "Nov 12, 2009" ),
+  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.2", "Sep 11, 2014" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -121,13 +121,19 @@ int MembraneResistance::main( void )
 
   // init:
   DoneState state = Completed;
-  MeanTrace = SampleDataF( -0.5*Duration, 2.0*Duration, 1/samplerate, 0.0 );
-  SquareTrace = MeanTrace;
-  StdevTrace = MeanTrace;
-  if ( CurrentTrace[0] >= 0 )
-    MeanCurrent = MeanTrace;
-  else
-    MeanCurrent.clear();
+  MeanVoltage = SampleDataF( -0.5*Duration, 2.0*Duration, 1/samplerate, 0.0 );
+  SquareVoltage = MeanVoltage;
+  StdevVoltage = MeanVoltage;
+  MeanTraces.clear();
+  SquareTraces.clear();
+  for ( int j=0; j<traces().size(); j++ ) {
+    if ( j != SpikeTrace[0] &&
+	 ::fabs( trace( j ).stepsize() - trace( SpikeTrace[0] ).stepsize() )/trace( SpikeTrace[0] ).stepsize() < 1e-8 ) {
+      TraceIndices.push_back( j );
+      MeanTraces.push_back( MeanVoltage );
+      SquareTraces.push_back( MeanVoltage );
+    }
+  }
   lockStimulusData();
   DCCurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
   unlockStimulusData();
@@ -201,7 +207,7 @@ int MembraneResistance::main( void )
 
     analyzeOn( Duration, sswidth, nossfit );
 
-    sleepOn( 2.0*Duration );
+    sleep( Duration );
     if ( interrupt() ) {
       if ( Count < 1 )
 	state = Aborted;
@@ -233,25 +239,21 @@ void MembraneResistance::analyzeOn( double duration,
 {
   // update averages:
   const InData &intrace = trace( SpikeTrace[0] );
-  int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
-  for ( int k=0; k<MeanTrace.index( duration ) && inx+k<intrace.size(); k++ ) {
+  int inx = intrace.signalIndex() - MeanVoltage.index( 0.0 );
+  for ( int k=0; k<MeanVoltage.index( duration ) && inx+k<intrace.size(); k++ ) {
     double v = intrace[inx+k];
-    MeanTrace[k] += (v - MeanTrace[k])/(Count+1);
-    SquareTrace[k] += (v*v - SquareTrace[k])/(Count+1);
-    StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
-    if ( CurrentTrace[0] >= 0 ) {
-      double c = IInFac*trace( CurrentTrace[0] )[inx+k];
-      MeanCurrent[k] += (c - MeanCurrent[k])/(Count+1);
-    }
+    MeanVoltage[k] += (v - MeanVoltage[k])/(Count+1);
+    SquareVoltage[k] += (v*v - SquareVoltage[k])/(Count+1);
+    StdevVoltage[k] = sqrt( SquareVoltage[k] - MeanVoltage[k]*MeanVoltage[k] );
   }
 
   // resting potential:
-  VRest = MeanTrace.mean( -sswidth, 0.0 );
-  VRestsd = MeanTrace.stdev( -sswidth, 0.0 );
+  VRest = MeanVoltage.mean( -sswidth, 0.0 );
+  VRestsd = MeanVoltage.stdev( -sswidth, 0.0 );
 
   // steady-state potential:
-  VSS = MeanTrace.mean( duration-sswidth, duration );
-  VSSsd = MeanTrace.stdev( duration-sswidth, duration );
+  VSS = MeanVoltage.mean( duration-sswidth, duration );
+  VSSsd = MeanVoltage.stdev( duration-sswidth, duration );
 
   // membrane resitance:
   RMss = ::fabs( (VSS - VRest)/Amplitude )*VFac/IFac;
@@ -260,28 +262,28 @@ void MembraneResistance::analyzeOn( double duration,
   VPeak = VRest;
   VPeakInx = 0;
   if ( VSS > VRest )
-    VPeakInx = MeanTrace.maxIndex( VPeak, 0.0, duration-sswidth );
+    VPeakInx = MeanVoltage.maxIndex( VPeak, 0.0, duration-sswidth );
   else
-    VPeakInx = MeanTrace.minIndex( VPeak, 0.0, duration-sswidth );
-  VPeaksd = StdevTrace[VPeakInx];
-  if ( fabs( VPeak - VSS ) <= 4.0*VSSsd || VPeakInx > MeanTrace.index( duration-sswidth ) ) {
+    VPeakInx = MeanVoltage.minIndex( VPeak, 0.0, duration-sswidth );
+  VPeaksd = StdevVoltage[VPeakInx];
+  if ( fabs( VPeak - VSS ) <= 4.0*VSSsd || VPeakInx > MeanVoltage.index( duration-sswidth ) ) {
     VPeak = VSS;
     VPeaksd = VSSsd;
-    VPeakInx = MeanTrace.index( duration );
+    VPeakInx = MeanVoltage.index( duration );
     VPeakTime = 0.0;
   }
   else
-    VPeakTime = MeanTrace.pos( VPeakInx );
+    VPeakTime = MeanVoltage.pos( VPeakInx );
 
 
   // fit exponential to onset:
-  int inxon0 = MeanTrace.index( 0.0 );
+  int inxon0 = MeanVoltage.index( 0.0 );
   int inxon1 = VPeakInx;
   // guess time constant:
   double tau = 0.01;
   for ( int k = inxon0; k<VPeakInx; k++ ) {
-    if ( (MeanTrace[k]-VSS)/(VRest-VSS) < 1.0/2.71828182845905 ) {
-      tau = MeanTrace.pos( k );
+    if ( (MeanVoltage[k]-VSS)/(VRest-VSS) < 1.0/2.71828182845905 ) {
+      tau = MeanVoltage.pos( k );
       break;
     }
   }
@@ -292,13 +294,13 @@ void MembraneResistance::analyzeOn( double duration,
   ArrayI pi( 3, 1 );
   if ( nossfit ) {
     pi[2] = 0;
-    inxon1 = MeanTrace.index( duration );
+    inxon1 = MeanVoltage.index( duration );
   }
   ArrayD u( 3, 1.0 );
   double ch = 0.0;
-  marquardtFit( MeanTrace.range().begin()+inxon0, MeanTrace.range().begin()+inxon1,
-		MeanTrace.begin()+inxon0, MeanTrace.begin()+inxon1,
-		StdevTrace.begin()+inxon0, StdevTrace.begin()+inxon1,
+  marquardtFit( MeanVoltage.range().begin()+inxon0, MeanVoltage.range().begin()+inxon1,
+		MeanVoltage.begin()+inxon0, MeanVoltage.begin()+inxon1,
+		StdevVoltage.begin()+inxon0, StdevVoltage.begin()+inxon1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOn = -1000.0*p[1];
   RMOn = ::fabs( (p[2] - VRest)/Amplitude )*VFac/IFac;
@@ -313,28 +315,37 @@ void MembraneResistance::analyzeOff( double duration,
 {
   // update averages:
   const InData &intrace = trace( SpikeTrace[0] );
-  int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
-  for ( int k=MeanTrace.index( duration ); k<MeanTrace.size() && inx+k<intrace.size(); k++ ) {
+  int inx = intrace.signalIndex() - MeanVoltage.index( 0.0 );
+  for ( int k=MeanVoltage.index( duration );
+	k<MeanVoltage.size() && inx+k<intrace.size();
+	k++ ) {
     double v = intrace[inx+k];
-    MeanTrace[k] += (v - MeanTrace[k])/(Count+1);
-    SquareTrace[k] += (v*v - SquareTrace[k])/(Count+1);
-    StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
-    if ( CurrentTrace[0] >= 0 ) {
-      double c = IInFac*trace( CurrentTrace[0] )[inx+k];
-      MeanCurrent[k] += (c - MeanCurrent[k])/(Count+1);
+    MeanVoltage[k] += (v - MeanVoltage[k])/(Count+1);
+    SquareVoltage[k] += (v*v - SquareVoltage[k])/(Count+1);
+    StdevVoltage[k] = sqrt( SquareVoltage[k] - MeanVoltage[k]*MeanVoltage[k] );
+  }
+
+  for ( unsigned int j=0; j<TraceIndices.size(); j++ ) {
+    const InData &intrace = trace( TraceIndices[j] );
+    for ( int k=0; k<MeanTraces[j].size() && inx+k<intrace.size(); k++ ) {
+      double v = intrace[inx+k];
+      if ( TraceIndices[j] == CurrentTrace[0] )
+	v *= IInFac;
+      MeanTraces[j][k] += (v - MeanTraces[j][k])/(Count+1);
+      SquareTraces[j][k] += (v*v - SquareTraces[j][k])/(Count+1);
     }
   }
 
   // fit exponential to offset:
-  int inxon0 = MeanTrace.index( 0.0 );
+  int inxon0 = MeanVoltage.index( 0.0 );
   int inxon1 = VPeakInx;
-  int inxoff0 = MeanTrace.index( duration );
+  int inxoff0 = MeanVoltage.index( duration );
   int inxoff1 = inxoff0 + inxon1 - inxon0;
   // guess time constant:
   double tau = 0.01;
   for ( int k = inxoff0; k<inxoff1; k++ ) {
-    if ( (MeanTrace[k]-VRest)/(VSS-VRest) < 1.0/2.71828182845905 ) {
-      tau = MeanTrace.interval( k - inxoff0 );
+    if ( (MeanVoltage[k]-VRest)/(VSS-VRest) < 1.0/2.71828182845905 ) {
+      tau = MeanVoltage.interval( k - inxoff0 );
       break;
     }
   }
@@ -345,15 +356,15 @@ void MembraneResistance::analyzeOff( double duration,
   ArrayI pi( 3, 1 );
   if ( nossfit ) {
     pi[2] = 0;
-    inxon1 = MeanTrace.index( duration );
+    inxon1 = MeanVoltage.index( duration );
   }
   ArrayD u( 3, 1.0 );
   double ch = 0.0;
-  if ( inxoff1 > MeanTrace.size() )
-    inxoff1 = MeanTrace.size();
-  marquardtFit( MeanTrace.range().begin()+inxon0, MeanTrace.range().begin()+inxon1,
-		MeanTrace.begin()+inxoff0, MeanTrace.begin()+inxoff1,
-		StdevTrace.begin()+inxoff0, StdevTrace.begin()+inxoff1,
+  if ( inxoff1 > MeanVoltage.size() )
+    inxoff1 = MeanVoltage.size();
+  marquardtFit( MeanVoltage.range().begin()+inxon0, MeanVoltage.range().begin()+inxon1,
+		MeanVoltage.begin()+inxoff0, MeanVoltage.begin()+inxoff1,
+		StdevVoltage.begin()+inxoff0, StdevVoltage.begin()+inxoff1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOff = -1000.0*p[1];
   RMOff = ::fabs( (VSS - p[2])/Amplitude )*VFac/IFac;
@@ -373,10 +384,10 @@ void MembraneResistance::plot( void )
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*Duration, Plot::White, 2 );
   if ( boolean( "plotstdev" ) ) {
-    P.plot( MeanTrace+StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
-    P.plot( MeanTrace-StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
+    P.plot( MeanVoltage+StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
+    P.plot( MeanVoltage-StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
   }
-  P.plot( MeanTrace, 1000.0, Plot::Red, 3, Plot::Solid );
+  P.plot( MeanVoltage, 1000.0, Plot::Red, 3, Plot::Solid );
   P.plot( ExpOn, 1000.0, Plot::Yellow, 2, Plot::Solid );
   P.plot( ExpOff, 1000.0, Plot::Yellow, 2, Plot::Solid );
   P.draw();
@@ -497,19 +508,30 @@ void MembraneResistance::saveTrace( const Options &header )
   df << '\n';
 
   TableKey datakey;
-  datakey.addNumber( "t", "ms", "%6.2f" );
+  datakey.addNumber( "t", "ms", "%7.2f" );
   datakey.addNumber( "V", VUnit, "%6.2f" );
   datakey.addNumber( "s.d.", VUnit, "%6.2f" );
-  if ( ! MeanCurrent.empty() )
-    datakey.addNumber( "I", IUnit, "%6.3f" );
+  for ( unsigned int j=0; j<TraceIndices.size(); j++ ) {
+    int i = TraceIndices[j];
+    if ( i == CurrentTrace[0] ) {
+      datakey.addNumber( "I", IUnit, "%6.3f" );
+      datakey.addNumber( "s.d.", IUnit, "%6.3f" );
+    }
+    else {
+      datakey.addNumber( trace( i ).ident(), trace( i ).unit(), "%7.3f" );
+      datakey.addNumber( "s.d.", trace( i ).unit(), "%7.3f" );
+    }
+  }
   datakey.saveKey( df );
 
-  for ( int k=0; k<MeanTrace.size(); k++ ) {
-    datakey.save( df, 1000.0*MeanTrace.pos( k ), 0 );
-    datakey.save( df, MeanTrace[k] );
-    datakey.save( df, StdevTrace[k] );
-    if ( ! MeanCurrent.empty() )
-      datakey.save( df, MeanCurrent[k] );
+  for ( int k=0; k<MeanVoltage.size(); k++ ) {
+    datakey.save( df, 1000.0*MeanVoltage.pos( k ), 0 );
+    datakey.save( df, MeanVoltage[k] );
+    datakey.save( df, StdevVoltage[k] );
+    for ( unsigned int j=0; j<MeanTraces.size(); j++ ) {
+      datakey.save( df, MeanTraces[j][k] );
+      datakey.save( df, sqrt( SquareTraces[j][k] - MeanTraces[j][k]*MeanTraces[j][k] ) );
+    }
     df << '\n';
   }
   

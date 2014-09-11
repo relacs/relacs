@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 VICurve::VICurve( void )
-  : RePro( "VICurve", "patchclamp", "Jan Benda", "1.1", "Nov 03, 2010" ),
+  : RePro( "VICurve", "patchclamp", "Jan Benda", "1.2", "Sep 11, 2014" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -283,9 +283,9 @@ int VICurve::main( void )
 
     Results[Range.pos()].I = amplitude;
     Results[Range.pos()].DC = dccurrent;
-    Results[Range.pos()].analyze( Range.count(), trace( 0 ),
-				  events( SpikeEvents[0] ), 
-				  CurrentTrace[0] >= 0 ? &trace( CurrentTrace[0] ) : 0,
+    Results[Range.pos()].analyze( Range.count(), traces(),
+				  events( SpikeEvents[0] ),
+				  SpikeTrace[0], CurrentTrace[0],
 				  IInFac, delay, duration, ton, sswidth );
 
     if ( Results[Range.pos()].VSS < vmin ) {
@@ -328,10 +328,10 @@ void VICurve::plot( double duration, int inx )
   P[0].plotVLine( 0, Plot::White, 2 );
   P[0].plotVLine( 1000.0*duration, Plot::White, 2 );
   if ( boolean( "plotstdev" ) ) {
-    P[0].plot( data.MeanTrace+data.StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
-    P[0].plot( data.MeanTrace-data.StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
+    P[0].plot( *data.MeanVoltage + data.StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
+    P[0].plot( *data.MeanVoltage - data.StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
   }
-  P[0].plot( data.MeanTrace, 1000.0, Plot::Red, 3, Plot::Solid );
+  P[0].plot( *data.MeanVoltage, 1000.0, Plot::Red, 3, Plot::Solid );
 
   // V-I curves:
   P[1].clear();
@@ -452,11 +452,20 @@ void VICurve::saveTrace( void )
   df << '\n';
 
   TableKey datakey;
-  datakey.addNumber( "t", "ms", "%6.2f" );
+  datakey.addNumber( "t", "ms", "%7.2f" );
   datakey.addNumber( "V", VUnit, "%6.2f" );
   datakey.addNumber( "s.d.", VUnit, "%6.2f" );
-  if ( ! Results[0].MeanCurrent.empty() )
-    datakey.addNumber( "I", IUnit, "%6.3f" );
+  for ( unsigned int j=0; j<Results[0].TraceIndices.size();  j++ ) {
+    int i = Results[0].TraceIndices[j];
+    if ( i == CurrentTrace[0] ) {
+      datakey.addNumber( "I", IUnit, "%6.3f" );
+      datakey.addNumber( "s.d.", IUnit, "%6.3f" );
+    }
+    else if ( i != SpikeTrace[0] ) {
+      datakey.addNumber( trace( i ).ident(), trace( i ).unit(), "%7.3f" );
+      datakey.addNumber( "s.d.", trace( i ).unit(), "%7.3f" );
+    }
+  }
 
   int inx = 0;
   for ( unsigned int j=Range.next( 0 );
@@ -472,12 +481,16 @@ void VICurve::saveTrace( void )
     df << "#    VSS: " << Str( Results[j].VSS ) << VUnit << '\n';
     df << '\n';
     datakey.saveKey( df );
-    for ( int k=0; k<Results[j].MeanTrace.size(); k++ ) {
-      datakey.save( df, 1000.0*Results[j].MeanTrace.pos( k ), 0 );
-      datakey.save( df, Results[j].MeanTrace[k] );
-      datakey.save( df, Results[j].StdevTrace[k] );
-      if ( ! Results[j].MeanCurrent.empty() )
-	datakey.save( df, Results[j].MeanCurrent[k] );
+    for ( int k=0; k<Results[j].MeanVoltage->size(); k++ ) {
+      datakey.save( df, 1000.0*Results[j].MeanVoltage->pos( k ), 0 );
+      datakey.save( df, (*Results[j].MeanVoltage)[k] );
+      datakey.save( df, Results[j].StdevVoltage[k] );
+      for ( unsigned int i=0; i<Results[j].MeanTraces.size(); i++ ) {
+	if ( Results[j].TraceIndices[i] != SpikeTrace[0] ) {
+	  datakey.save( df, Results[j].MeanTraces[i][k] );
+	  datakey.save( df, sqrt( Results[j].SquareTraces[i][k] - Results[j].MeanTraces[i][k]*Results[j].MeanTraces[i][k] ) );
+	}
+      }
       df << '\n';
     }
     df << "\n\n";
@@ -501,70 +514,81 @@ VICurve::Data::Data( void )
     VSSsd( 0.0 )
 {
   SpikeCount.clear();
-  MeanTrace.clear();
-  SquareTrace.clear();
-  StdevTrace.clear();
-  MeanCurrent.clear();
+  TraceIndices.clear();
+  MeanTraces.clear();
+  SquareTraces.clear();
+  MeanVoltage = 0;
+  StdevVoltage.clear();
 }
 
 
-void VICurve::Data::analyze( int count, const InData &intrace,
+void VICurve::Data::analyze( int count, const InList &intraces,
 			     const EventData &spikes,
-			     const InData *incurrent, double iinfac,
+			     int vinx, int cinx, double iinfac,
 			     double delay, double duration,
 			     double ton, double sswidth )
 {
   // initialize:
-  if ( MeanTrace.empty() ) {
-    double stepsize = intrace.stepsize();
-    MeanTrace = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
-    SquareTrace = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
-    StdevTrace = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
+  if ( MeanTraces.empty() ) {
+    TraceIndices.clear();
+    MeanTraces.clear();
+    SquareTraces.clear();
+    double stepsize = intraces[vinx].stepsize();
+    for ( int j=0; j<intraces.size(); j++ ) {
+      if ( ::fabs( intraces[j].stepsize() - stepsize )/stepsize < 1e-8 ) {
+	TraceIndices.push_back( j );
+	MeanTraces.push_back( SampleDataD( -delay, 2.0*duration, stepsize, 0.0 ) );
+	SquareTraces.push_back( SampleDataD( -delay, 2.0*duration, stepsize, 0.0 ) );
+	if ( j == vinx )
+	  MeanVoltage = &MeanTraces.back();
+      }
+    }
+    StdevVoltage = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
     SpikeCount.reserve( 100 );
-    if ( incurrent != 0 )
-      MeanCurrent = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
   }
 
   // update averages:
-  int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
-  for ( int k=0; k<MeanTrace.size() && inx+k<intrace.size(); k++ ) {
-    double v = intrace[inx+k];
-    MeanTrace[k] += (v - MeanTrace[k])/(count+1);
-    SquareTrace[k] += (v*v - SquareTrace[k])/(count+1);
-    StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
-    if ( incurrent != 0 ) {
-      double c = iinfac*(*incurrent)[inx+k];
-      MeanCurrent[k] += (c - MeanCurrent[k])/(count+1);
+  for ( unsigned int j=0; j<TraceIndices.size(); j++ ) {
+    int i = TraceIndices[j];
+    int inx = intraces[i].signalIndex() - MeanTraces[j].index( 0.0 );
+    for ( int k=0; k<MeanTraces[j].size() && inx+k<intraces[i].size(); k++ ) {
+      double v = intraces[i][inx+k];
+      if ( i == cinx )
+	v *= iinfac;
+      MeanTraces[j][k] += (v - MeanTraces[j][k])/(count+1);
+      SquareTraces[j][k] += (v*v - SquareTraces[j][k])/(count+1);
+      if ( i == vinx )
+	StdevVoltage[k] = sqrt( SquareTraces[j][k] - MeanTraces[j][k]*MeanTraces[j][k] );
     }
   }
 
   // resting potential:
-  VRest = MeanTrace.mean( -delay, 0.0 );
-  VRestsd = MeanTrace.stdev( -delay, 0.0 );
+  VRest = MeanVoltage->mean( -delay, 0.0 );
+  VRestsd = MeanVoltage->stdev( -delay, 0.0 );
 
   // steady-state potential:
-  VSS = MeanTrace.mean( duration-sswidth, duration );
-  VSSsd = MeanTrace.stdev( duration-sswidth, duration );
+  VSS = MeanVoltage->mean( duration-sswidth, duration );
+  VSSsd = MeanVoltage->stdev( duration-sswidth, duration );
 
   // onset potential:
-  VOn = MeanTrace[ ton ];
-  VOnsd = StdevTrace[ ton ];
+  VOn = (*MeanVoltage)[ ton ];
+  VOnsd = StdevVoltage[ ton ];
 
   // peak potential:
   VPeak = VRest;
   int vpeakinx = 0;
   if ( VSS > VRest )
-    vpeakinx = MeanTrace.maxIndex( VPeak, 0.0, duration-sswidth );
+    vpeakinx = MeanVoltage->maxIndex( VPeak, 0.0, duration-sswidth );
   else
-    vpeakinx = MeanTrace.minIndex( VPeak, 0.0, duration-sswidth );
-  VPeaksd = StdevTrace[vpeakinx];
+    vpeakinx = MeanVoltage->minIndex( VPeak, 0.0, duration-sswidth );
+  VPeaksd = StdevVoltage[vpeakinx];
   if ( fabs( VPeak - VSS ) <= VSSsd ) {
     VPeak = VSS;
     VPeaksd = VSSsd;
     VPeakTime = 0.0;
   }
   else
-    VPeakTime = MeanTrace.pos( vpeakinx );
+    VPeakTime = MeanVoltage->pos( vpeakinx );
 
   // spikes:
   double sigtime = spikes.signalTime();

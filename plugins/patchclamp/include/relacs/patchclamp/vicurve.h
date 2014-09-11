@@ -22,7 +22,7 @@
 #ifndef _RELACS_PATCHCLAMP_VICURVE_H_
 #define _RELACS_PATCHCLAMP_VICURVE_H_ 1
 
-#include <vector>
+#include <deque>
 #include <relacs/sampledata.h>
 #include <relacs/multiplot.h>
 #include <relacs/rangeloop.h>
@@ -37,7 +37,7 @@ namespace patchclamp {
 \class VICurve
 \brief [RePro] V-I curve measured in current-clamp
 \author Jan Benda
-\version 1.1 (Nov 03, 2010)
+\version 1.2 (Sep 11, 2014)
 \par Screenshot
 \image html vicurve.png
 
@@ -94,8 +94,8 @@ protected:
   struct Data
   {
     Data( void );
-    void analyze( int count, const InData &intrace,
-		  const EventData &spikes, const InData *incurrent,
+    void analyze( int count, const InList &intraces,
+		  const EventData &spikes, int vinx, int iinx,
 		  double iinfac, double delay,
 		  double duration, double ton, double sswidth );
     double DC;
@@ -110,12 +110,13 @@ protected:
     double VSS;
     double VSSsd;
     ArrayD SpikeCount;
-    SampleDataD MeanTrace;
-    SampleDataD SquareTrace;
-    SampleDataD StdevTrace;
-    SampleDataD MeanCurrent;
+    deque< int > TraceIndices;
+    deque<SampleDataD> MeanTraces;
+    deque<SampleDataD> SquareTraces;
+    SampleDataD *MeanVoltage;
+    SampleDataD StdevVoltage;
   };
-  vector< Data > Results;
+  deque< Data > Results;
   RangeLoop Range;
   Options Header;
 
