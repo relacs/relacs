@@ -37,7 +37,7 @@ namespace patchclamp {
 \class SetDC
 \brief [RePro] Interactively set the DC current.
 \author Jan Benda
-\version 1.5 (Feb 14, 2014)
+\version 1.6 (Sep 12, 2014)
 \par Screenshot
 \image html setdc.png
 
@@ -51,6 +51,10 @@ namespace patchclamp {
 - \c dcamplitudestep=0.001nA: Stepsize for entering dc (\c number)
 - \c duration=500ms: Duration for analysis (\c number)
 - \c showstdev=true: Print standard deviation of voltage (\c boolean)
+
+\par Key shortcuts
+- \c ALT+ArrowUp: Increase stepsize for setting the DC current by a factor ten
+- \c ALT+ArrowUp: Decrease stepsize for setting the DC current by a factor ten
 */
 
 
@@ -87,6 +91,7 @@ protected:
   string IUnit;
   double DCAmplitude;
   double OrgDCAmplitude;
+  double DCStep;
 
 
 protected slots:

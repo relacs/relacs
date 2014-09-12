@@ -60,11 +60,12 @@ SetDC::SetDC( void )
   label->setSizePolicy( QSizePolicy( QSizePolicy::Minimum,
 				     QSizePolicy::MinimumExpanding ) );
   gl->addWidget( label, 0, 1 );
+  DCStep = 0.001;
   EW = new QDoubleSpinBox;
   EW->setRange( -1000.0, 1000.0 );
   EW->setValue( 0.0 );
   EW->setDecimals( 3 );
-  EW->setSingleStep( 0.001 );
+  EW->setSingleStep( DCStep );
   EW->setKeyboardTracking( false );
   gl->addWidget( EW, 0, 2 );
   CurrentUnitLabel = new QLabel( "nA" );
@@ -174,6 +175,7 @@ void SetDC::notify( void )
     setUnit( "dcamplitudestep", IUnit );
     CurrentUnitLabel->setText( IUnit.c_str() );
   }
+  DCStep = number( "dcamplitudestep" );
   postCustomEvent( 13 ); // setStep();
 }
 
@@ -350,6 +352,8 @@ void SetDC::analyze( double duration )
     ltime = signalTime();
   if ( SpikeTrace[0] >= 0 ) {
     const InData &data = trace( SpikeTrace[0] );
+    if ( ltime < data.minTime() ) 
+      ltime = data.minTime();
     double meanvoltage = data.mean( ltime, currentTime() );
     double stdvoltage = data.stdev( ltime, currentTime() );
     float min = 0;
@@ -439,7 +443,15 @@ void SetDC::zeroDC( void )
 
 void SetDC::keyPressEvent( QKeyEvent *e )
 {
-  if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
+  if ( e->key() == Qt::Key_Left && ( e->modifiers() & Qt::AltModifier ) ) {
+    DCStep *= 10.0;
+    EW->setSingleStep( DCStep );
+  }
+  else if ( e->key() == Qt::Key_Right && ( e->modifiers() & Qt::AltModifier ) ) {
+    DCStep *= 0.1;
+    EW->setSingleStep( DCStep );
+  }
+  else if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     OKButton->animateClick();
     e->accept();
   }
@@ -484,7 +496,7 @@ void SetDC::customEvent( QEvent *qce )
     break;
   }
   case 13: {
-    EW->setSingleStep( number( "dcamplitudestep" ) );
+    EW->setSingleStep( DCStep );
     break;
   }
   case 14: {
