@@ -25,6 +25,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QDoubleSpinBox>
+#include <QComboBox>
 #include <relacs/multiplot.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/repro.h>
@@ -49,12 +50,13 @@ namespace patchclamp {
 - \c dcamplitudedecr=0.1nA: Decrement below threshold (\c number)
 - \c interactive=false: Set dc amplitude interactively (\c boolean)
 - \c dcamplitudestep=0.001nA: Stepsize for entering dc (\c number)
+- \c showstep=true: Show stepsize widget (\c boolean)
 - \c duration=500ms: Duration for analysis (\c number)
 - \c showstdev=true: Print standard deviation of voltage (\c boolean)
 
 \par Key shortcuts
-- \c ALT+ArrowUp: Increase stepsize for setting the DC current by a factor ten
-- \c ALT+ArrowUp: Decrease stepsize for setting the DC current by a factor ten
+- \c ALT+ArrowUp: Increase stepsize for setting the DC current
+- \c ALT+ArrowUp: Decrease stepsize for setting the DC current
 */
 
 
@@ -76,7 +78,10 @@ protected:
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QEvent *qce );
   QDoubleSpinBox *EW;
-  QLabel *CurrentUnitLabel;
+  QComboBox *CW;
+  QLabel *DCStepLabel;
+  QLabel *CurrentUnitLabel1;
+  QLabel *CurrentUnitLabel2;
   QLabel *VoltageLabel;
   QLabel *VoltageUnitLabel;
   QLabel *RateLabel;
@@ -92,6 +97,9 @@ protected:
   double DCAmplitude;
   double OrgDCAmplitude;
   double DCStep;
+  int DCStepIndex;
+  static const int NDCSteps = 10;
+  static const double DCSteps[NDCSteps];
 
 
 protected slots:
@@ -101,6 +109,7 @@ protected slots:
   void keepValue( void );
   void resetDC( void );
   void zeroDC( void );
+  void setStep( int index );
 
 };
 

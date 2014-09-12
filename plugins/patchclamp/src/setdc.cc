@@ -28,6 +28,9 @@ using namespace relacs;
 namespace patchclamp {
 
 
+const double SetDC::DCSteps[NDCSteps] = { 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0 };
+
+
 SetDC::SetDC( void )
   : RePro( "SetDC", "patchclamp", "Jan Benda", "1.5", "Feb 14, 2014" ),
     P( 2, 1 ),
@@ -42,7 +45,14 @@ SetDC::SetDC( void )
   addNumber( "dcamplitudefrac", "Fraction of threshold", 0.9, 0.0, 1.0, 0.01, "1", "%" ).setActivation( "dcamplitudesel", "to a fraction of the threshold" );
   addNumber( "dcamplitudedecr", "Decrement below threshold", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "dcamplitudesel", "relative to threshold" );
   addBoolean( "interactive", "Set dc amplitude interactively", false );
-  addNumber( "dcamplitudestep", "Stepsize for entering dc", 0.001, 0.0, 1000.0, 0.001 );
+  string dcsteps;
+  for ( int k=0; k<NDCSteps; k++ ) {
+    if ( k > 0 )
+      dcsteps += '|';
+    dcsteps += Str( DCSteps[k] );
+  }
+  addSelection( "dcamplitudestep", "Stepsize for entering dc", dcsteps );
+  addBoolean( "showstep", "Show stepsize widget", true );
   addNumber( "duration", "Duration for analysis", 0.5, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addBoolean( "showstdev", "Print standard deviation of voltage", ShowStdev );
 
@@ -60,7 +70,8 @@ SetDC::SetDC( void )
   label->setSizePolicy( QSizePolicy( QSizePolicy::Minimum,
 				     QSizePolicy::MinimumExpanding ) );
   gl->addWidget( label, 0, 1 );
-  DCStep = 0.001;
+  DCStepIndex = 0;
+  DCStep = DCSteps[DCStepIndex];
   EW = new QDoubleSpinBox;
   EW->setRange( -1000.0, 1000.0 );
   EW->setValue( 0.0 );
@@ -68,14 +79,27 @@ SetDC::SetDC( void )
   EW->setSingleStep( DCStep );
   EW->setKeyboardTracking( false );
   gl->addWidget( EW, 0, 2 );
-  CurrentUnitLabel = new QLabel( "nA" );
-  gl->addWidget( CurrentUnitLabel, 0, 3 );
+  CurrentUnitLabel1 = new QLabel( "nA" );
+  gl->addWidget( CurrentUnitLabel1, 0, 3 );
+
+  // stepsize:
+  DCStepLabel = new QLabel( "DC current increment" );
+  DCStepLabel->setSizePolicy( QSizePolicy( QSizePolicy::Minimum,
+					   QSizePolicy::MinimumExpanding ) );
+  gl->addWidget( DCStepLabel, 1, 1 );
+  CW = new QComboBox;
+  CW->setEditable( false );
+  for ( int k=0; k<NDCSteps; k++ )
+    CW->addItem( Str( DCSteps[k] ).c_str() );
+  gl->addWidget( CW, 1, 2 );
+  CurrentUnitLabel2 = new QLabel( "nA" );
+  gl->addWidget( CurrentUnitLabel2, 1, 3 );
 
   // mean voltage:
   label = new QLabel( "Membrane potential" );
   label->setSizePolicy( QSizePolicy( QSizePolicy::Minimum,
 				     QSizePolicy::MinimumExpanding ) );
-  gl->addWidget( label, 1, 1 );
+  gl->addWidget( label, 2, 1 );
   VoltageLabel = new QLabel( "0.0" );
   VoltageLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
   VoltageLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
@@ -90,15 +114,15 @@ SetDC::SetDC( void )
   qp.setColor( QPalette::Window, Qt::black );
   qp.setColor( QPalette::WindowText, Qt::green );
   VoltageLabel->setPalette( qp );
-  gl->addWidget( VoltageLabel, 1, 2 );
+  gl->addWidget( VoltageLabel, 2, 2 );
   VoltageUnitLabel = new QLabel( "mV" );
-  gl->addWidget( VoltageUnitLabel, 1, 3 );
+  gl->addWidget( VoltageUnitLabel, 2, 3 );
 
   // mean rate:
   label = new QLabel( "Firing rate" );
   label->setSizePolicy( QSizePolicy( QSizePolicy::Minimum,
 				     QSizePolicy::MinimumExpanding ) );
-  gl->addWidget( label, 2, 1 );
+  gl->addWidget( label, 3, 1 );
   RateLabel = new QLabel( "0.0" );
   RateLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
   RateLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
@@ -107,9 +131,9 @@ SetDC::SetDC( void )
   RateLabel->setFont( nf );
   RateLabel->setAutoFillBackground( true );
   RateLabel->setPalette( qp );
-  gl->addWidget( RateLabel, 2, 2 );
+  gl->addWidget( RateLabel, 3, 2 );
   QLabel *ul = new QLabel( "Hz" );
-  gl->addWidget( ul, 2, 3 );
+  gl->addWidget( ul, 3, 3 );
 
   // buttons:
   QHBoxLayout *bb = new QHBoxLayout;
@@ -173,9 +197,11 @@ void SetDC::notify( void )
     setUnit( "dcamplitude", IUnit );
     setUnit( "dcamplitudedecr", IUnit );
     setUnit( "dcamplitudestep", IUnit );
-    CurrentUnitLabel->setText( IUnit.c_str() );
+    CurrentUnitLabel1->setText( IUnit.c_str() );
+    CurrentUnitLabel2->setText( IUnit.c_str() );
   }
-  DCStep = number( "dcamplitudestep" );
+  DCStepIndex = index( "dcamplitudestep" );
+  DCStep = DCSteps[DCStepIndex];
   postCustomEvent( 13 ); // setStep();
 }
 
@@ -318,8 +344,11 @@ int SetDC::main( void )
       }
     } while ( ! Finished && ! interrupt() );
     postCustomEvent( 12 ); // clearFocus();
-    if ( interrupt() )
+    if ( interrupt() ) {
+      selectText( "dcamplitudestep", DCStepIndex );
+      setToDefault( "dcamplitudestep" );
       return Aborted;
+    }
   }
   else
     SetValue = true;
@@ -341,6 +370,8 @@ int SetDC::main( void )
   }
 
   sleep( 0.01 );
+  selectText( "dcamplitudestep", DCStepIndex );
+  setToDefault( "dcamplitudestep" );
   return Completed;
 }
 
@@ -394,7 +425,7 @@ void SetDC::setValue( double value )
 {
   lock();
   DCAmplitude = value;
-  if ( ::fabs( DCAmplitude ) < 1e-8 )
+  if ( ::fabs( DCAmplitude ) < 1e-5 )
     DCAmplitude = 0.0;
   unlock();
   wake();
@@ -406,7 +437,7 @@ void SetDC::setValue( void )
   lock();
   SetValue = true;
   DCAmplitude = EW->value();
-  if ( ::fabs( DCAmplitude ) < 1e-8 )
+  if ( ::fabs( DCAmplitude ) < 1e-5 )
     DCAmplitude = 0.0;
   Finished = true;
   unlock();
@@ -441,15 +472,31 @@ void SetDC::zeroDC( void )
 }
 
 
+void SetDC::setStep( int index )
+{
+  DCStepIndex = index;
+  DCStep = DCSteps[DCStepIndex];
+  EW->setSingleStep( DCStep );
+}
+
+
 void SetDC::keyPressEvent( QKeyEvent *e )
 {
   if ( e->key() == Qt::Key_Left && ( e->modifiers() & Qt::AltModifier ) ) {
-    DCStep *= 10.0;
+    DCStepIndex++;
+    if ( DCStepIndex >= NDCSteps )
+      DCStepIndex = NDCSteps-1;
+    DCStep = DCSteps[DCStepIndex];
     EW->setSingleStep( DCStep );
+    CW->setCurrentIndex( DCStepIndex );
   }
   else if ( e->key() == Qt::Key_Right && ( e->modifiers() & Qt::AltModifier ) ) {
-    DCStep *= 0.1;
+    DCStepIndex--;
+    if ( DCStepIndex < 0 )
+      DCStepIndex = 0;
+    DCStep = DCSteps[DCStepIndex];
     EW->setSingleStep( DCStep );
+    CW->setCurrentIndex( DCStepIndex );
   }
   else if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     OKButton->animateClick();
@@ -484,15 +531,29 @@ void SetDC::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
   case 11: {
+    if ( boolean( "showstep" ) ) {
+      DCStepLabel->show();
+      CW->show();
+      CurrentUnitLabel2->show();
+    }
+    else {
+      DCStepLabel->hide();
+      CW->hide();
+      CurrentUnitLabel2->hide();
+    }
     EW->setFocus( Qt::TabFocusReason );
     connect( EW, SIGNAL( valueChanged( double ) ),
 	     this, SLOT( setValue( double ) ) );
+    connect( CW, SIGNAL( currentIndexChanged( int ) ),
+	     this, SLOT( setStep( int ) ) );
     break;
   }
   case 12: {
     removeFocus();
     disconnect( EW, SIGNAL( valueChanged( double ) ),
 		this, SLOT( setValue( double ) ) );
+    disconnect( CW, SIGNAL( currentIndexChanged( int ) ),
+		this, SLOT( setStep( int ) ) );
     break;
   }
   case 13: {
@@ -504,6 +565,7 @@ void SetDC::customEvent( QEvent *qce )
     EW->setMinimum( sde->Min );
     EW->setMaximum( sde->Max );
     EW->setValue( sde->Value );
+    CW->setCurrentIndex( DCStepIndex );
     break;
   }
   case 15: {
