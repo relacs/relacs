@@ -34,11 +34,12 @@ namespace ephys {
 \class BridgeTest
 \brief [RePro] Short current pulses for testing the bridge.
 \author Jan Benda
-\version 2.0 (Feb 27, 2014)
+\version 2.2 (Sep 12, 2014)
 \par Options
 - \c amplitude=1nA: Amplitude of stimulus (\c number)
 - \c duration=10ms: Duration of stimulus (\c number)
 - \c pause=100ms: Duration of pause between pulses (\c number)
+- \c average=10: Number of trials to be averaged (\c integer)
 */
 
 

@@ -28,12 +28,13 @@ namespace ephys {
 
 
 BridgeTest::BridgeTest( void )
-  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.0", "Feb 27, 2014" )
+  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.2", "Sep 12, 2014" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of stimulus", 0.01, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between pulses", 0.1, 0.01, 1.0, 0.01, "sec", "ms" );
+  addInteger( "average", "Number of trials to be averaged", 10, 0, 1000000 );
 
   // plot:
   P.lock();
@@ -59,6 +60,7 @@ int BridgeTest::main( void )
   double amplitude = number( "amplitude" );
   double duration = number( "duration" );
   double pause = number( "pause" );
+  unsigned int naverage = integer( "average" );
 
   // don't print repro message:
   noMessage();
@@ -66,6 +68,7 @@ int BridgeTest::main( void )
   // in- and outtrace:
   const InData &intrace = trace( SpikeTrace[0] >= 0 ? SpikeTrace[0] : 0 );
   int outtrace = CurrentOutput[0] >= 0 ? CurrentOutput[0] : 0;
+  deque< SampleDataF > datatraces;
 
   // plot:
   double ymin = 0.0;
@@ -111,6 +114,20 @@ int BridgeTest::main( void )
     // get trace:
     SampleDataF output( tmin, tmax, intrace.stepsize(), 0.0F );
     intrace.copy( signalTime(), output );
+
+    // average:
+    SampleDataF average( tmin, tmax, intrace.stepsize(), 0.0F );
+    if ( naverage > 1 ) {
+      datatraces.push_back( output );
+      if ( datatraces.size() > naverage )
+	datatraces.pop_front();
+      for ( int k=0; k<average.size(); k++ ) {
+	for ( unsigned int j=0; j<datatraces.size(); j++ )
+	  average[k] += ( datatraces[j][k] - average[k] )/(j+1);
+      }
+    }
+
+    // range:
     float min = 0.0;
     float max = 0.0;
     minMax( min, max, output );
@@ -138,6 +155,8 @@ int BridgeTest::main( void )
     P.setYRange( ymin, ymax );
     P.plotVLine( 0.0, Plot::White, 2 );
     P.plotVLine( 1000.0*duration, Plot::White, 2 );
+    if ( naverage > 1 )
+      P.plot( average, 1000.0, Plot::Orange, 4, Plot::Solid );
     P.plot( output, 1000.0, Plot::Green, 2, Plot::Solid );
     P.draw();
     P.unlock();
