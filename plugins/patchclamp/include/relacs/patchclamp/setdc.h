@@ -38,7 +38,7 @@ namespace patchclamp {
 \class SetDC
 \brief [RePro] Interactively set the DC current.
 \author Jan Benda
-\version 1.6 (Sep 12, 2014)
+\version 1.6 (Sep 13, 2014)
 \par Screenshot
 \image html setdc.png
 
@@ -51,7 +51,8 @@ namespace patchclamp {
 - \c interactive=false: Set dc amplitude interactively (\c boolean)
 - \c dcamplitudestep=0.001nA: Stepsize for entering dc (\c number)
 - \c showstep=true: Show stepsize widget (\c boolean)
-- \c duration=500ms: Duration for analysis (\c number)
+- \c duration=2seconds: Duration for analysis (\c number)
+- \c update=0.5seconds: Update time for analysis (\c number)
 - \c showstdev=true: Print standard deviation of voltage (\c boolean)
 
 \par Key shortcuts

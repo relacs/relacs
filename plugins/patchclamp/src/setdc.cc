@@ -32,7 +32,7 @@ const double SetDC::DCSteps[NDCSteps] = { 0.001, 0.002, 0.005, 0.01, 0.02, 0.05,
 
 
 SetDC::SetDC( void )
-  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.5", "Feb 14, 2014" ),
+  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.6", "Sep 13, 2014" ),
     P( 2, 1 ),
     IUnit( "nA" )
 {
@@ -53,7 +53,8 @@ SetDC::SetDC( void )
   }
   addSelection( "dcamplitudestep", "Stepsize for entering dc", dcsteps );
   addBoolean( "showstep", "Show stepsize widget", true );
-  addNumber( "duration", "Duration for analysis", 0.5, 0.0, 1000.0, 0.01, "seconds", "ms" );
+  addNumber( "duration", "Duration for analysis", 2.0, 0.0, 1000.0, 0.1, "seconds" );
+  addNumber( "update", "Update time for analysis", 0.5, 0.0, 1000.0, 0.1, "seconds" );
   addBoolean( "showstdev", "Print standard deviation of voltage", ShowStdev );
 
   QHBoxLayout *hb = new QHBoxLayout;
@@ -249,6 +250,9 @@ int SetDC::main( void )
   double dcamplitudedecr = number( "dcamplitudedecr" );
   bool interactive = boolean( "interactive" );
   double duration = number( "duration" );
+  double update = number( "update" );
+  if ( update < 1.0e-3 )
+    update = duration;
   ShowStdev = boolean( "showstdev" );
 
   // don't print repro message:
@@ -276,15 +280,15 @@ int SetDC::main( void )
   if ( interactive ) {
     // plot
     P.lock();
-    P[0].setLMarg( 8.0 );
+    P[0].setLMarg( 9.0 );
     P[0].setRMarg( 2.0 );
     P[0].setXLabel( trace( SpikeTrace[0] ).ident() + "(" + trace( SpikeTrace[0] ).unit() + ")"  );
     P[0].setYLabel( "N"  );
-    P[0].setYLabelPos( 3.3, Plot::FirstMargin, 0.5, Plot::Graph,
+    P[0].setYLabelPos( 1.0, Plot::FirstMargin, 0.5, Plot::Graph,
 		       Plot::Center, -90.0 );
     P[0].setYRange( 0.0, Plot::AutoScale );
 
-    P[1].setLMarg( 8.0 );
+    P[1].setLMarg( 9.0 );
     P[1].setRMarg( 2.0 );
     P[1].setXLabel( "Interspike interval [ms]" );
     P[1].setXRange( 0.0, Plot::AutoScale );
@@ -330,7 +334,7 @@ int SetDC::main( void )
     do {
       bool w = false;
       do {
-	w = sleepWait( duration );
+	w = sleepWait( update );
 	analyze( duration );
       } while ( ! w );
       if ( ! Finished || ! SetValue ) {
@@ -408,8 +412,15 @@ void SetDC::analyze( double duration )
   if ( SpikeEvents[0] >= 0 ) {
     const EventData &spikes = events( SpikeEvents[0] );
     double meanrate = spikes.rate( ltime, currentTime() );
-    double period = meanrate > 1.0e-8 ? 1.0/meanrate : 0.01;
-    SampleDataD isih( 0.0, 4.0*period, 0.1*period, 0.0 );
+    double periodsd = 0.0;
+    double period = spikes.interval( ltime, currentTime(), &periodsd );
+    double count = spikes.count( ltime, currentTime() );
+    double binwidth = count > 10.0 ? 6.0*periodsd/count/0.2 : 0.1*period;
+    if ( count > 10.0 && binwidth < 0.02*periodsd )
+      binwidth = 0.02*periodsd;
+    if ( count > 10.0 && binwidth < 0.0001 )
+      binwidth = 0.0001;
+    SampleDataD isih( 0.0, 3.0*period, binwidth, 0.0 );
     spikes.intervalHistogram( ltime, currentTime(), isih );
     P.lock();
     P[1].clear();
