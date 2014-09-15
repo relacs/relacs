@@ -3,7 +3,7 @@
 if test "x$1" = "x--help"; then
   echo "Usage:"
   echo ""
-  echo "release.sh [-l] [-d] [--prefix=]<install-path> <configure-options>"
+  echo "release.sh [-l] [-d] [-j #] [--prefix=]<install-path> <configure-options>"
   echo ""
   echo "Calls ./bootstrap.sh && ./configure && make distcheck &&"
   echo "make && make check && make install && make installcheck"
@@ -14,6 +14,7 @@ if test "x$1" = "x--help"; then
   echo ""
   echo "-d: make distcheck only"
   echo "-l: check the relacs library packages as well"
+  echo "-j: the -j option to be passed to make to compile with # processes in parallel"
   exit 0
 fi
 
@@ -26,6 +27,13 @@ fi
 DISTCHECKONLY=no
 if test "x$1" = "x-d"; then
   DISTCHECKONLY=yes
+  shift
+fi
+
+MAKEJ=""
+if test "x$1" = "x-j"; then
+  MAKEJ="-j $2"
+  shift
   shift
 fi
 
@@ -48,7 +56,7 @@ RV=${RV#*relacs, }
 RELACSVERSION=${RV%)*}
 
 if test "x${MAKE}" = x; then
-    MAKE=make
+    MAKE="make $MAKEJ"
 fi
 
 # minimal clean up:
@@ -61,7 +69,7 @@ echo "Check relacs:"
 ./bootstrap.sh || exit 1
 echo "./configure $CONFIGUREPREFIX $CONFIGUREFLAGS"
 ./configure $CONFIGUREPREFIX $CONFIGUREFLAGS # Also creates configure.ac files of libraries
-make uninstall
+${MAKE} uninstall
 ${MAKE} distcheck || exit 1
 echo ""
 if test $DISTCHECKONLY = no; then

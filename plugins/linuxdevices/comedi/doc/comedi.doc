@@ -37,13 +37,28 @@ then you need to install a real-time linux kernel first, as described in
 
 \section installcomedi Install comedi
 
-You should install the \c Comedi drivers and library prior to
+On recent linux distributions comedi modules are already in the Linux kernel.
+You only need to install the comedilib library
+\code
+sudo apt-get install libcomedi-dev 
+\endcode
+and to set the permissions as described in \ref udev.
+If your data acquisition board needs to be calibrated, you also need
+to install comedi_calibrate. This seems not to be available as a
+package, so you have to compile it yourself. See \ref
+installcomedicalib for details.
+
+If this does not work (some older versions did not provide some
+functions needed by the RELACS comedi plugins), or if you require the
+most recent version of comedi, you should reinstall the comedi drivers
+and the comedi library from scratch as described in the following
+sections.
+
+You should install the \c comedi drivers and library prior to
 configuring RELACS, so that ./configure can detect the presence of the
-\c Comedi library.  On recent linux distributions comedi is available
-as a package (libcomedi-dev) and the kernel moduls are already in the
-kernel. However, these are not the most recent version of comedi and
-therefore you should reinstall the comedi drivers and the comedi
-library from scratch as described in the following sections.
+\c comedi library. If you install \c comedi later, simply run \c
+./configure and \c make again to detect comedi and compile the
+corresponding plugins for RELACS.
 
 
 \subsection installkernel Linux kernel
@@ -839,9 +854,9 @@ In case you do not have a \c /var/log/messages file
 you have to enable it. As root open the file \c /etc/rsyslog.d/50-default.conf
 in an editor. Remove the hash marks in front of the following lines:
 \code
-*.=info;*.=notice;*.=warn;\
-        auth,authpriv.none;\
-        cron,daemon.none;\
+*.=info;*.=notice;*.=warn;\\
+        auth,authpriv.none;\\
+        cron,daemon.none;\\
         mail,news.none          -/var/log/messages
 \endcode
 The tell the system that you changed this file (still as root):

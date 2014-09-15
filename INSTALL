@@ -1,5 +1,38 @@
+0. For the  unpatient, cd into the directory of the relacs source and
+paste the following into your shell:
 
-1. Change to the directory containing the relacs source code.
+sudo apt-get -y install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen subversion
+sudo make uninstall
+make clean
+./bootstrap.sh
+./configure
+make
+sudo make install
+
+
+Here are the details:
+
+1. Make sure you have the following packages installed:
+
+   autoconf
+   automake
+   libtool
+   g++
+   libc6-dev
+   libqt4-dev
+   libgsl0-dev
+   libsndfile1-dev 
+   libcomedi-dev
+   libusb-1.0.0-dev
+   doxygen
+   subversion
+
+On Debian or Ubuntu based systems execute:
+
+sudo apt-get install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen subversion
+
+
+2. Change to the directory containing the relacs source code.
 
 > cd relacs-x.x.x
 
@@ -12,39 +45,18 @@ root directory of the older version:
 > make clean
 
 
-2. Create the configure script
+3. Create the configure script
 
 In case you downloaded the RELACS source code from the subversion
 repository then you need to run
 
 > ./bootstrap.sh
 
-or alternatively
-
-> autoreconf -v -i
-
 first. On success, the ./bootstrap.sh script finishes with the
 message "Successfully generated the ./configure script".
 
-For this to work you need to have the autoconf, automake (version 1.10
-or higher), and libtool packages installed on your system. On Debian
-or Ubuntu execute as root:
 
-> apt-get install autoconf automake libtool 
-
-In case of warnings or errors, try running
-
-> autoupdate
-
-first. This updates the configure.ac script to newer versions
-of the GNU autotools.
-
-If you still have problems with this and you do not know how to proceed,
-then I can send you a tar archive with a complete RELACS distribution
-upon request (benda@bio.lmu.de, subject: RELACS).
-
-
-3. Configure RELACS
+4. Configure RELACS
 
 If you want to use the comedi data acquisition interface (www.comedi.org)
 for acquiring real data, then you need to install comedi first.
@@ -59,14 +71,6 @@ If ./configure finishes with a message like
 "If you can read these lines ./configure finished sucessfully...."
 you can continue with compiling RELACS.
 
-However, if you see a line "Use GSL ... no" towards the end of the
-output of ./configure, you may optionally want to install the GNU
-Scientific library (www.gnu.org/software/gsl/) on your system (package
-libgsl0-dev on Debian) as well.  If you see a line "Generate
-documentation ... no" towards the end of the output of ./configure,
-you may want to install the doxygen program (www.doxygen.org) for
-generating the documentation.
-
 On failure, ./configure prints out a more or less usefull error message.
 Usually ./configure fails because of some missing libraries or programs.
 This means that you either
@@ -78,14 +82,8 @@ After installation of new packages you need to run ./configure again.
 
 See ./configure --help and the instructions below for details.
 
-In case you really cannot get ./configure to run successfully or it
-fails with an error message that does not help you, then please write
-me an email (benda@bio.lmu.de, subject: RELACS) containing the full
-output of ./configure and all config* files in the RELACS root
-directory.
 
-
-4. Compile RELACS
+5. Compile RELACS
 
 Run
 
@@ -93,39 +91,32 @@ Run
 
 That takes a while!
 
-In case compilation fails, then please write me an email
-(benda@bio.lmu.de, subject: RELACS) containing the full output of
-"make" (run "make &> make.log" and send the file "make.log").
 
-
-5. Optionally run
+6. Optionally run
 
 > make check
 
 for executing some self tests.
 
-In case checking fails, then please write
-me an email (benda@bio.lmu.de, subject: RELACS) containing the full
-output of "make check".
 
-
-6. Run a demo
+7. Run a demo
 
 > ./relacslocal -3
 
 Press for example 'F1'. More instructions on the demo will follow...
 
 
-7. If you want to install RELACS, simply execute
+8. If you want to install RELACS, simply execute
 
 > make install
 
-You can specify where RELACS is installed to by the --prefix and
-related options during the configure step No. 3. See ./configure
---help and the instructions below for details.
+By default RELACS is installed to /usr . You can specify where RELACS
+is installed to by the --prefix and related options during the
+configure step No. 4. See ./configure --help and the instructions
+below for details.
 
 
-8. Integrate RELACS into your desktop
+9. Integrate RELACS into your desktop
 
 If RELACS does not use the same widget style as all your other applications
 you need to run
@@ -135,7 +126,7 @@ you need to run
 and select the appropriate GUI style. Then File->Save.
 
 
-9. Run RELACS
+10. Run RELACS
 
 > relacs
 
@@ -143,6 +134,23 @@ Note, that RELACS requires the configuration files relacs.cfg and
 macros.cfg in the current directory. For configuring RELACS 
 see the user manual.
 
+
+11. Troubleshooting
+
+In case you really cannot get ./configure to run successfully or it
+fails with an error message that does not help you, then please write
+me an email (benda@bio.lmu.de, subject: RELACS) containing the full
+output of ./configure and all config* files in the RELACS root
+directory.
+
+In case compilation fails, then please write me an email
+(benda@bio.lmu.de, subject: RELACS) containing the full output of
+"make" (run "make &> make.log" and send the file "make.log").
+
+In case checking fails, then please write
+me an email (benda@bio.lmu.de, subject: RELACS) containing the full
+output of "make check".
+syb
 
 ====================================================================
 The following is a general instruction to the GNU configure script:
