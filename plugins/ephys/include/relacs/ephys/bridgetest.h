@@ -40,6 +40,7 @@ namespace ephys {
 - \c duration=10ms: Duration of stimulus (\c number)
 - \c pause=100ms: Duration of pause between pulses (\c number)
 - \c average=10: Number of trials to be averaged (\c integer)
+- \c plottrace=true: Plut current voltage trace (\c boolean)
 */
 
 

@@ -35,6 +35,7 @@ BridgeTest::BridgeTest( void )
   addNumber( "duration", "Duration of stimulus", 0.01, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between pulses", 0.1, 0.01, 1.0, 0.01, "sec", "ms" );
   addInteger( "average", "Number of trials to be averaged", 10, 0, 1000000 );
+  addBoolean( "plottrace", "Plut current voltage trace", true );
 
   // plot:
   P.lock();
@@ -61,6 +62,7 @@ int BridgeTest::main( void )
   double duration = number( "duration" );
   double pause = number( "pause" );
   unsigned int naverage = integer( "average" );
+  bool plottrace = boolean( "plottrace" );
 
   // don't print repro message:
   noMessage();
@@ -155,9 +157,10 @@ int BridgeTest::main( void )
     P.setYRange( ymin, ymax );
     P.plotVLine( 0.0, Plot::White, 2 );
     P.plotVLine( 1000.0*duration, Plot::White, 2 );
+    if ( plottrace )
+      P.plot( output, 1000.0, Plot::Green, 2, Plot::Solid );
     if ( naverage > 1 )
       P.plot( average, 1000.0, Plot::Orange, 4, Plot::Solid );
-    P.plot( output, 1000.0, Plot::Green, 2, Plot::Solid );
     P.draw();
     P.unlock();
   }
