@@ -1038,7 +1038,7 @@ void SaveFiles::createStimulusFile( void )
 	*SF << "#      identifier" + Str( k+1 ) + "     : " << IL[k].ident() << '\n';
 	*SF << "#      data file" + Str( k+1 ) + "      : " << TraceFiles[k].FileName << '\n';
 	*SF << "#      sample interval" + Str( k+1 ) + ": " << Str( 1000.0*IL[k].sampleInterval(), 0, 4, 'f' ) << "ms\n";
-	*SF << "#            unit" + Str( k+1 ) + "     : " << IL[k].unit() << '\n';
+	*SF << "#      unit" + Str( k+1 ) + "           : " << IL[k].unit() << '\n';
       }
     }
     *SF << "# event lists:\n";
