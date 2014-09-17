@@ -44,12 +44,18 @@ namespace ephys {
 \brief [Control] Controls an amplifier: buzzer and resistance measurement.
 \author Jan Benda
 \version 2.0 (Apr 3, 2014)
+
 \par Options
 - \c initmode=Bridge: Initial mode of the amplifier (\c string)
 - \c resistancescale=1: Scaling factor for computing R from stdev of voltage trace (\c number)
 - \c maxresistance=100MOhm: Maximum resistance to be expected for scaling voltage trace (\c number)
 - \c buzzpulse=500ms: Duration of buzz pulse (\c number)
 - \c adjust=false: Adjust input gain for resistance measurement (\c boolean)
+
+\par Key shortcuts
+- \c Z: Buzz
+- \c .: Buzz
+- \c O: Measure resistance ("O" is the shortcut of "Ohm"!)
 */
 
 

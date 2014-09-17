@@ -58,8 +58,12 @@ AmplifierControl::AmplifierControl( void )
   addSelection( "initmode", "Initial mode of the amplifier", "Bridge|Current-clamp|Voltage-clamp|Manual selection" );
   addNumber( "resistancescale", "Scaling factor for computing R from stdev of voltage trace", ResistanceScale, 0.0, 100000.0, 0.01 );
   addNumber( "maxresistance", "Maximum resistance to be expected for scaling voltage trace", MaxResistance, 0.0, 1000000.0, 10.0, "MOhm" );
-  addNumber( "buzzpulse", "Duration of buzz pulse", BuzzPulse, 0.0, 100.0, 0.1, "s", "ms" );
   addBoolean( "adjust", "Adjust input gain for resistance measurement", false );
+  addNumber( "buzzpulse", "Duration of buzz pulse", BuzzPulse, 0.0, 100.0, 0.1, "s", "ms" );
+  addBoolean( "showbridge", "Make bridge mode for amplifier selectable", true );
+  addBoolean( "showcc", "Make currenct clamp mode for amplifier selectable", false );
+  addBoolean( "showvc", "Make voltage clamp mode for amplifier selectable", false );
+  addBoolean( "showmanual", "Make manual mode for amplifier selectable", false );
 
   setGlobalKeyEvents();
 }
@@ -68,16 +72,43 @@ AmplifierControl::AmplifierControl( void )
 void AmplifierControl::notify( void )
 {
   // initial mode:
-  int initmode = index( "initmode" );
-  switch ( initmode ) {
-  case 1 : activateCurrentClampMode();
-    break;
-  case 2 : activateVoltageClampMode();
-    break;
-  case 3 : manualSelection();
-    break;
-  default :
-    activateBridgeMode();
+  if ( changed( "initmode" ) ) {
+    int initmode = index( "initmode" );
+    switch ( initmode ) {
+    case 1 : activateCurrentClampMode();
+      break;
+    case 2 : activateVoltageClampMode();
+      break;
+    case 3 : manualSelection();
+      break;
+    default :
+      activateBridgeMode();
+    }
+  }
+  // show mode selections:
+  if ( BridgeButton != 0 ) {
+    if ( boolean( "showbridge" ) )
+      BridgeButton->show();
+    else
+      BridgeButton->hide();
+  }
+  if ( CCButton != 0 ) {
+    if ( boolean( "showcc" ) )
+      CCButton->show();
+    else
+      CCButton->hide();
+  }
+  if ( VCButton != 0 ) {
+    if ( boolean( "showvc" ) )
+      VCButton->show();
+    else
+      VCButton->hide();
+  }
+  if ( ManualButton != 0 ) {
+    if ( boolean( "showmanual" ) )
+      ManualButton->show();
+    else
+      ManualButton->hide();
   }
   ResistanceScale = number( "resistancescale" );
   MaxResistance = number( "maxresistance" );
@@ -168,9 +199,17 @@ void AmplifierControl::initDevices( void )
       connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
       vbox = new QVBoxLayout;
       vbox->addWidget( BridgeButton );
+      if ( ! boolean( "showbridge" ) )
+	BridgeButton->hide();
       vbox->addWidget( CCButton );
-      // vbox->addWidget( VCButton );
-      // vbox->addWidget( ManualButton );
+      if ( ! boolean( "showcc" ) )
+        CCButton->hide();
+      vbox->addWidget( VCButton );
+      if ( ! boolean( "showvc" ) )
+        VCButton->hide();
+      vbox->addWidget( ManualButton );
+      if ( ! boolean( "showmanual" ) )
+        ManualButton->hide();
       ModeBox->setLayout( vbox );
       AmplBox->addWidget( ModeBox );
       AmplBox->addWidget( new QLabel );
@@ -435,6 +474,7 @@ void AmplifierControl::keyPressEvent( QKeyEvent *e )
       e->ignore();
     break;
 
+  case Qt::Key_Period:
   case Qt::Key_Z:
     if ( Ampl != 0 && BuzzerButton != 0 ) {
       BuzzerButton->animateClick();
