@@ -56,8 +56,38 @@ namespace ephys {
 - \c Z: Buzz
 - \c .: Buzz
 - \c O: Measure resistance ("O" is the shortcut of "Ohm"!)
-*/
 
+\par Use a presenter to control RELACS
+You can map key presses of a presenter to keys RELACS understands as follows:
+- Look in \c /lib/udev/hwdb.d/60-keyboard.hwdb for your presenter/keyboard
+- Copy the lines to a file \c 70-keyboard-relacs.hwdb in \c /etc/udev/hwdb.d/
+- Edit these lines according to your needs.
+  Each line maps a scancode (as hex-value) to a keycode (lower case).
+  For example, the four buttons of a Logitech R400 can be remapped as follows:
+\code
+# Logitech Presenter R400
+keyboard:usb:v046DpC52Dd*dc*dsc*dp*ic*isc*ip*in00*
+ KEYBOARD_KEY_7004B=space
+ KEYBOARD_KEY_7004E=f1
+ KEYBOARD_KEY_70029=dot
+ KEYBOARD_KEY_7003E=dot
+ KEYBOARD_KEY_70037=f2
+\endcode
+ With this, the "arrow left" terminates the running repro gracefully by sending "space".
+ "arrow right" starts the macro bound to the "F1" key, the "start presentation" button
+ activates the buzzer, and the "blank screen" button starts the macro bound to the "F2" key.
+- inform your system about the new key bindings (as root):
+\code
+# udevadm hwdb --update
+\endcode
+- and then you need to reboot (!) so that these key mappings take into effect
+- to find out what scancodes your device emits use (as root)
+\code
+# evtest
+\endcode
+- possible keycodes are listed at http://hal.freedesktop.org/quirk/quirk-keymap-list.txt
+  or in the header file /usr/include/linux/input.h (the long section with the \c #define KEY_1 etc.
+*/
 
 class AmplifierControl : public Control, public ephys::Traces
 {
