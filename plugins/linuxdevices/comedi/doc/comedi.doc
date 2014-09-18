@@ -554,11 +554,16 @@ In the kernel configuration dialog you should do the following settings:
     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
       check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
-    - Disable “Use register arguments” - this option does not exist for newer kernels (version <= 2.6.19)
+    - Disable “Use register arguments” - this option does not exist for newer kernels (version > 2.6.19)
     - Select "Interrupt pipeline"
     - Set "Timer frequency" to 1000 Hz
   - Power management and ACPI options:
+    - Disable "Suspend to RAM and standby"
+    - Disable "Hibernation (aka 'suspend to disk')"
+    - Disable "Run-time PM core functionality"
+    - Disable "ACPI (Advanced Configuration and Power Interface) Support"
     - Disable "CPU Frequency scaling"
+    - Disable "CPU idle PM support"
     .
   .
 -# Reboot into your new RTAI real time kernel.
@@ -671,8 +676,10 @@ insmod rtai_hal.ko IsolCpusMask=0x07
 -# Run the RTAI latency test
 \code
 $ cd /usr/realtime/testsuite/kern/latency
-$ run
+$ ./run
 \endcode
+Maybe this link is helpful to find good motherboards: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Latency-Test 
+(I am, however, not sure how this relates to RTAI).
 
 
 \subsection rtaicomedi Comedi
