@@ -1,4 +1,4 @@
-ACLOCAL_AMFLAGS = -I m4 -I numerics/m4 -I plugins/linuxdevices/comedi/m4 -I plugins/linuxdevices/daqflex/m4 -I plugins/linuxdevices/misc/m4
+ACLOCAL_AMFLAGS = -I m4 -I numerics/m4 -I plugins/linuxdevices/comedi/m4 -I plugins/linuxdevices/rtaicomedi/m4 -I plugins/linuxdevices/daqflex/m4 -I plugins/linuxdevices/misc/m4
 # these have to go in a single line to have autoreconf work properly!
 
 man_MANS = doc/relacs.1

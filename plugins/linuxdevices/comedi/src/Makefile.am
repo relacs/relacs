@@ -4,10 +4,6 @@ pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
     libcomedistreaming.la
-if RELACS_COND_RTAI
-pluginlib_LTLIBRARIES += \
-    libcomedidynclamp.la
-endif
 
 
 libcomedistreaming_la_CPPFLAGS = \
@@ -52,61 +48,10 @@ libcomedistreaming_la_include_HEADERS = \
 
 
 
-libcomedidynclamp_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(srcdir)/../include \
-    -I$(srcdir)/.. \
-    -I/usr/src/linux/include \
-    $(RTAI_CPPFLAGS) \
-    $(QT4_CPPFLAGS)
-
-libcomedidynclamp_la_LDFLAGS = \
-    -module -avoid-version \
-    $(COMEDI_LDFLAGS) \
-    $(QT4_LDFLAGS)
-
-libcomedidynclamp_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    libcomedistreaming.la \
-    $(COMEDI_LIBS) \
-    $(QT4_LIBS) $(GSL_LIBS)
-
-libcomedidynclamp_la_SOURCES = \
-    dynclampanaloginput.cc \
-    dynclampanalogoutput.cc \
-    dynclampdigitalio.cc \
-    dynclamptrigger.cc \
-    dynclamp.cc
-
-libcomedidynclamp_la_includedir = $(pkgincludedir)/comedi
-
-libcomedidynclamp_la_include_HEADERS = \
-    $(HEADER_PATH)/moduledef.h \
-    $(HEADER_PATH)/dynclampanaloginput.h \
-    $(HEADER_PATH)/dynclampanalogoutput.h \
-    $(HEADER_PATH)/dynclampdigitalio.h \
-    $(HEADER_PATH)/dynclamptrigger.h
-
-
-
 check_PROGRAMS = \
     linktest_libcomedistreaming_la
-if RELACS_COND_RTAI
-check_PROGRAMS += \
-    linktest_libcomedidynclamp_la
-endif
 
 linktest_libcomedistreaming_la_SOURCES = linktest.cc
 linktest_libcomedistreaming_la_LDADD = libcomedistreaming.la
-
-linktest_libcomedidynclamp_la_SOURCES = linktest.cc
-linktest_libcomedidynclamp_la_LDADD = libcomedidynclamp.la
 
 TESTS = $(check_PROGRAMS)

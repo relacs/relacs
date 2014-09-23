@@ -4,9 +4,13 @@ AC_INIT(relacs, 0.9.8)
 
 m4_ifdef( [AC_CONFIG_MACRO_DIRS],
 	  [ AC_CONFIG_MACRO_DIRS([m4 numerics/m4 \
-	    plugins/linuxdevices/comedi/m4 plugins/linuxdevices/daqflex/m4]) ],
+	    plugins/linuxdevices/comedi/m4 \
+	    plugins/linuxdevices/rtaicomedi/m4 \
+	    plugins/linuxdevices/daqflex/m4]) ],
 	  [ AC_CONFIG_MACRO_DIR([m4 numerics/m4 \
-	    plugins/linuxdevices/comedi/m4 plugins/linuxdevices/daqflex/m4]) ] )
+	    plugins/linuxdevices/comedi/m4 \
+	    plugins/linuxdevices/rtaicomedi/m4 \
+	    plugins/linuxdevices/daqflex/m4]) ] )
 
 AM_INIT_AUTOMAKE([1.10 -Wall gnits subdir-objects dist-bzip2])
 
@@ -101,11 +105,11 @@ RELACS_LIB_QT4()
 
 
 #################################################
-## RTAI and Comedi
+## Comedi and RTAI
 #################################################
+RELACS_LIB_COMEDI()
 RELACS_HEADER_RTAI()
 AM_CONDITIONAL(RELACS_COND_RTAI,[test "$RELACS_RTAI" != no])
-RELACS_LIB_COMEDI()
 
 
 #################################################
@@ -175,7 +179,8 @@ DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 
 RELACS_PLUGINSET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/examples/Makefile])
-AC_CONFIG_FILES([plugins/linuxdevices/comedi/module/Makefile])
+RELACS_PLUGINSET([rtaicomedi],[linuxdevices/rtaicomedi],[comedi],[test "$RELACS_RTAI" != no])
+AC_CONFIG_FILES([plugins/linuxdevices/rtaicomedi/module/Makefile])
 RELACS_PLUGINSET([daqflex],[linuxdevices/daqflex],[],[test "$RELACS_USB" != no])
 RELACS_NOPLUGINSET([nieseries],[linuxdevices/nieseries])
 RELACS_PLUGINSET([attcs3310],[linuxdevices/attcs3310])
@@ -265,6 +270,7 @@ AC_CONFIG_FILES([plugins/efield/relacslocal], [chmod a+x plugins/efield/relacslo
 AC_CONFIG_FILES([plugins/efish/relacslocal], [chmod a+x plugins/efish/relacslocal])
 AC_CONFIG_FILES([plugins/multielectrode/relacslocal], [chmod a+x plugins/multielectrode/relacslocal])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/relacslocal], [chmod a+x plugins/linuxdevices/comedi/relacslocal])
+AC_CONFIG_FILES([plugins/linuxdevices/rtaicomedi/relacslocal], [chmod a+x plugins/linuxdevices/rtaicomedi/relacslocal])
 AC_CONFIG_FILES([plugins/linuxdevices/daqflex/relacslocal], [chmod a+x plugins/linuxdevices/daqflex/relacslocal])
 AC_CONFIG_FILES([plugins/linuxdevices/attcs3310/relacslocal], [chmod a+x plugins/linuxdevices/attcs3310/relacslocal])
 AC_CONFIG_FILES([plugins/linuxdevices/misc/relacslocal], [chmod a+x plugins/linuxdevices/misc/relacslocal])

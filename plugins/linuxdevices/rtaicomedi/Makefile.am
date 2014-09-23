@@ -1,29 +1,36 @@
-SUBDIRS = src
-if RELACS_EXAMPLES_COND
-SUBDIRS += examples
-endif
+SUBDIRS = src module
 
-comedicfgdir = $(pkgdatadir)/configs/comedi
-dist_comedicfg_DATA = \
+rtaicomedicfgdir = $(pkgdatadir)/configs/rtaicomedi
+dist_rtaicomedicfg_DATA = \
     relacs.cfg \
     relacsplugins.cfg \
     macros.cfg
 
 EXTRA_DIST = \
-    doc/comedi.doc
+    doc/rtaicomedi.doc \
+    module/Makefile \
+    module/model.c \
+    module/rtmodule.c \
+    module/dynclampmodule.c \
+    module/irisdynclampmodule.c \
+    module/moduledef.h \
+    module/loadmodules.sh \
+    module/killmodules.sh \
+    module/reloadmodule.sh
+
 
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = comedi
-DX_PROJECT = comedi
+PLUGINSET = rtaicomedi
+DX_PROJECT = rtaicomedi
 DX_CONFIG = ../../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
-DX_SETTINGS = PROJECT_NAME='"Comedi Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/comedi src doc'
+DX_SETTINGS = PROJECT_NAME='"RTAI-Comedi Relacs Plugins"'
+DX_SETTINGS += INPUT='include/relacs/rtaicomedi src doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../../../doc/relacsall.tag=..'
 

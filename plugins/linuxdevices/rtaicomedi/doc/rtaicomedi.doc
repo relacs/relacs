@@ -1,7 +1,7 @@
 /*!
-\mainpage Comedi Relacs Plugins
+\mainpage RTAI-Comedi Relacs Plugins
 
-\brief Interfaces to the Comedi data acquisition library for normal (streaming) analog input and output.
+\brief Plugins for dynamic clamp based on RTAI and comedi.
 
 
 Comedi (linux control and measurement device interface) provides hardware drivers
