@@ -29,7 +29,7 @@ namespace patchclamp {
 
 
 MembraneResistance::MembraneResistance( void )
-  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.2", "Sep 11, 2014" ),
+  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.2", "Sep 25, 2014" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -124,6 +124,7 @@ int MembraneResistance::main( void )
   MeanVoltage = SampleDataF( -0.5*Duration, 2.0*Duration, 1/samplerate, 0.0 );
   SquareVoltage = MeanVoltage;
   StdevVoltage = MeanVoltage;
+  TraceIndices.clear();
   MeanTraces.clear();
   SquareTraces.clear();
   for ( int j=0; j<traces().size(); j++ ) {
@@ -257,6 +258,8 @@ void MembraneResistance::analyzeOn( double duration,
 
   // membrane resitance:
   RMss = ::fabs( (VSS - VRest)/Amplitude )*VFac/IFac;
+  if ( RMss <= 0.0 && RMss > 1.0e10 )
+    RMss = 0.0;
 
   // peak potential:
   VPeak = VRest;
@@ -303,8 +306,15 @@ void MembraneResistance::analyzeOn( double duration,
 		StdevVoltage.begin()+inxon0, StdevVoltage.begin()+inxon1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOn = -1000.0*p[1];
+  if ( TauMOn <= 0.0 && TauMOn > 1.0e5 )
+    TauMOn = 0.0;
   RMOn = ::fabs( (p[2] - VRest)/Amplitude )*VFac/IFac;
-  CMOn = TauMOn/RMOn*1000.0;
+  if ( RMOn <= 0.0 && RMOn > 1.0e10 ) {
+    RMOn = 0.0;
+    CMOn = 0.0;
+  }
+  else
+    CMOn = TauMOn/RMOn*1000.0;
   for ( int k=0; k<ExpOn.size(); k++ )
     ExpOn[k] = expFunc( ExpOn.pos( k ), p );
 }
@@ -326,9 +336,9 @@ void MembraneResistance::analyzeOff( double duration,
   }
 
   for ( unsigned int j=0; j<TraceIndices.size(); j++ ) {
-    const InData &intrace = trace( TraceIndices[j] );
-    for ( int k=0; k<MeanTraces[j].size() && inx+k<intrace.size(); k++ ) {
-      double v = intrace[inx+k];
+    const InData &intrace2 = trace( TraceIndices[j] );
+    for ( int k=0; k<MeanTraces[j].size() && inx+k<intrace2.size(); k++ ) {
+      double v = intrace2[inx+k];
       if ( TraceIndices[j] == CurrentTrace[0] )
 	v *= IInFac;
       MeanTraces[j][k] += (v - MeanTraces[j][k])/(Count+1);
@@ -367,8 +377,15 @@ void MembraneResistance::analyzeOff( double duration,
 		StdevVoltage.begin()+inxoff0, StdevVoltage.begin()+inxoff1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOff = -1000.0*p[1];
+  if ( TauMOff <= 0.0 && TauMOff > 1.0e5 )
+    TauMOff = 0.0;
   RMOff = ::fabs( (VSS - p[2])/Amplitude )*VFac/IFac;
-  CMOff = TauMOff/RMOff*1000.0;
+  if ( RMOff <= 0.0 && RMOff > 1.0e10 ) {
+    RMOff = 0.0;
+    CMOff = 0.0;
+  }
+  else
+    CMOff = TauMOff/RMOff*1000.0;
   for ( int k=0; k<ExpOff.size(); k++ )
     ExpOff[k] = expFunc( ExpOff.pos( k ) - duration, p );
 }
@@ -378,9 +395,9 @@ void MembraneResistance::plot( void )
 {
   P.lock();
   P.clear();
-  P.setTitle( "R=" + Str( RMOn, 0, 2, 'f' ) +
-	      " MOhm,  C=" + Str( CMOn, 0, 1, 'f' ) +
-	      " pF,  tau=" + Str( TauMOn, 0, 1, 'f' ) + " ms" );
+  P.setTitle( "R=" + Str( RMOn, 0, 0, 'f' ) +
+	      " MOhm,  C=" + Str( CMOn, 0, 0, 'f' ) +
+	      " pF,  tau=" + Str( TauMOn, 0, 0, 'f' ) + " ms" );
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*Duration, Plot::White, 2 );
   if ( boolean( "plotstdev" ) ) {

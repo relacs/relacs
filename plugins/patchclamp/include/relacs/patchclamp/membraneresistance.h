@@ -37,7 +37,7 @@ namespace patchclamp {
 \class MembraneResistance
 \brief [RePro] Measures membrane resistance, capacitance, and time constant with current pulses
 \author Jan Benda
-\version 1.2 (Sep 11, 2014)
+\version 1.2 (Sep 25, 2014)
 \par Screenshot
 \image html membraneresistance.png
 
