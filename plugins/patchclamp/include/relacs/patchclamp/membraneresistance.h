@@ -22,7 +22,7 @@
 #ifndef _RELACS_PATCHCLAMP_MEMBRANERESISTANCE_H_
 #define _RELACS_PATCHCLAMP_MEMBRANERESISTANCE_H_ 1
 
-#include <vector>
+#include <deque>
 #include <relacs/sampledata.h>
 #include <relacs/plot.h>
 #include <relacs/repro.h>
@@ -37,7 +37,7 @@ namespace patchclamp {
 \class MembraneResistance
 \brief [RePro] Measures membrane resistance, capacitance, and time constant with current pulses
 \author Jan Benda
-\version 1.0 (Nov 12, 2009)
+\version 1.2 (Sep 25, 2014)
 \par Screenshot
 \image html membraneresistance.png
 
@@ -83,10 +83,12 @@ protected:
   double VFac;
   double IFac;
   double IInFac;
-  SampleDataD MeanTrace;
-  SampleDataD SquareTrace;
-  SampleDataD StdevTrace;
-  SampleDataD MeanCurrent;
+  SampleDataD MeanVoltage;
+  SampleDataD SquareVoltage;
+  SampleDataD StdevVoltage;
+  deque< int > TraceIndices;
+  deque< SampleDataD > MeanTraces;
+  deque< SampleDataD > SquareTraces;
   double DCCurrent;
   double Amplitude;
   double Duration;
