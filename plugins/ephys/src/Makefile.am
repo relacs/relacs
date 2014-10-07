@@ -16,7 +16,8 @@ pluginlib_LTLIBRARIES = \
     libephysmotorcontrol.la \
     libephysamplifiercontrol.la \
     libephyscapacitycompensation.la \
-    libephysbridgetest.la
+    libephysbridgetest.la \
+    libephysiontophoresis.la
 
 
 
@@ -344,6 +345,42 @@ libephysbridgetest_la_include_HEADERS = $(HEADER_PATH)/bridgetest.h
 
 
 
+libephysiontophoresis_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libephysiontophoresis_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libephysiontophoresis_la_LIBADD = \
+    $(builddir)/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libephysiontophoresis_la_OBJECTS) : moc_iontophoresis.cc
+
+libephysiontophoresis_la_SOURCES = iontophoresis.cc
+
+libephysiontophoresis_la_includedir = $(pkgincludedir)/ephys
+
+libephysiontophoresis_la_include_HEADERS = $(HEADER_PATH)/iontophoresis.h
+
+
+
 check_PROGRAMS = \
     linktest_librelacsspikingneuron_la \
     linktest_libephystraces_la \
@@ -354,7 +391,8 @@ check_PROGRAMS = \
     linktest_libephysmotorcontrol_la \
     linktest_libephysamplifiercontrol_la \
     linktest_libephyscapacitycompensation_la \
-    linktest_libephysbridgetest_la
+    linktest_libephysbridgetest_la \
+    linktest_libephysiontophoresis_la
 
 linktest_librelacsspikingneuron_la_SOURCES = linktest.cc
 linktest_librelacsspikingneuron_la_LDADD = librelacsspikingneuron.la
@@ -385,5 +423,8 @@ linktest_libephyscapacitycompensation_la_LDADD = libephyscapacitycompensation.la
 
 linktest_libephysbridgetest_la_SOURCES = linktest.cc
 linktest_libephysbridgetest_la_LDADD = libephysbridgetest.la
+
+linktest_libephysiontophoresis_la_SOURCES = linktest.cc
+linktest_libephysiontophoresis_la_LDADD = libephysiontophoresis.la
 
 TESTS = $(check_PROGRAMS)
