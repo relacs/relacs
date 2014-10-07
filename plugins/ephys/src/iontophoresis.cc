@@ -41,20 +41,16 @@ Iontophoresis::Iontophoresis( void )
   QGridLayout *gl = new QGridLayout;
 
   PosTimeLabel = new QLabel( "Positive current injection:" );
-  PosTimeLabel->setAlignment( Qt::AlignHCenter );
-  gl->addWidget( PosTimeLabel, 1, 0 );
+  gl->addWidget( PosTimeLabel, 0, 0 );
 
   PosTime = new QLabel;
-  PosTime->setAlignment( Qt::AlignHCenter );
-  gl->addWidget( PosTime, 1, 1 );
+  gl->addWidget( PosTime, 0, 1 );
 
   NegTimeLabel = new QLabel( "Negative current injection:" );
-  NegTimeLabel->setAlignment( Qt::AlignHCenter );
-  gl->addWidget( NegTimeLabel, 2, 0 );
+  gl->addWidget( NegTimeLabel, 1, 0 );
 
   NegTime = new QLabel;
-  NegTime->setAlignment( Qt::AlignHCenter );
-  gl->addWidget( NegTime, 2, 1 );
+  gl->addWidget( NegTime, 1, 1 );
 
   setLayout( gl );
 }
