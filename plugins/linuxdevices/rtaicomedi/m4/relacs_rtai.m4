@@ -23,15 +23,16 @@ AS_HELP_STRING([--without-rtai],[don't use RTAI, i.e. prevent auto-detection])],
 	# --with-rtai=yes  -> $with_rtai = yes
 	# --with-rtai=foo  -> $with_rtai = foo
 	AS_IF([test "x$with_rtai" != xyes -a "$xwith_rtai" != xcheck -a "x$with_rtai" != xno -a "x$with_rtai" != x],
-	      [RTAI_CPPFLAGS="-I /usr/include `${with_rtai}/bin/rtai-config --module-cflags`"],
+	      [PATH="$PATH:${with_rtai}/bin/"; RTAI_CPPFLAGS="-I /usr/include `rtai-config -r --module-cflags`"],
               [test "x$with_rtai" = xyes],
-		[RTAI_CPPFLAGS="-I /usr/include `/usr/realtime/bin/rtai-config --module-cflags`"
+		[PATH="$PATH:/usr/realtime/bin/"; RTAI_CPPFLAGS="-I /usr/include `rtai-config -r --module-cflags`"
 		 with_rtai=detect],
               [])
 ],
 [
 	# no rtai argument given
-        RTAI_CPPFLAGS="-I /usr/include `/usr/realtime/bin/rtai-config --module-cflags`"
+	PATH="$PATH:/usr/realtime/bin/"; 
+        RTAI_CPPFLAGS="-I /usr/include `rtai-config -r --module-cflags`"
 	with_rtai=detect
 ])
 

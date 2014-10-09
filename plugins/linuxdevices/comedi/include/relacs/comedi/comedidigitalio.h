@@ -44,8 +44,6 @@ namespace comedi {
 class ComediDigitalIO : public DigitalIO
 {
 
-  friend class DynClampDigitalIO;
-
 public:
 
     /*! Create a new %ComediDigitalIO without opening a device. */
@@ -115,9 +113,6 @@ public:
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
   virtual int readLines( int lines, int &val ) const;
-
-
-protected:
 
     /*! Comedi internal index of analog input subdevice. */
   int comediSubdevice( void ) const;

@@ -1,5 +1,5 @@
 /*
-  comedi/dynclamptrigger.h
+  rtaicomedi/dynclamptrigger.h
   Interface for setting up an analog trigger in the dynamic clamp kernel module.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,14 +19,14 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _COMEDI_DYNCLAMPTRIGGER_H_
-#define _COMEDI_DYNCLAMPTRIGGER_H_
+#ifndef _RTAICOMEDI_DYNCLAMPTRIGGER_H_
+#define _RTAICOMEDI_DYNCLAMPTRIGGER_H_
 
 #include <relacs/trigger.h>
 using namespace std;
 using namespace relacs;
 
-namespace comedi {
+namespace rtaicomedi {
 
 
 /*! 
@@ -80,6 +80,6 @@ public:
 };
 
 
-}; /* namespace comedi */
+}; /* namespace rtaicomedi */
 
-#endif /* ! _COMEDI_DYNCLAMPTRIGGER_H_ */
+#endif /* ! _RTAICOMEDI_DYNCLAMPTRIGGER_H_ */

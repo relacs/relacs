@@ -1,5 +1,5 @@
 /*
-  comedi/dynclampdigitalio.h
+  rtaicomedi/dynclampdigitalio.h
   Interface for accessing digital I/O lines of a daq-board via comedi and the dynclamp kernel module.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _COMEDI_DYNCLAMPDIGITALIO_H_
-#define _COMEDI_DYNCLAMPDIGITALIO_H_
+#ifndef _RTAICOMEDI_DYNCLAMPDIGITALIO_H_
+#define _RTAICOMEDI_DYNCLAMPDIGITALIO_H_
 
 #include <comedilib.h>
 #include <relacs/digitalio.h>
@@ -28,10 +28,10 @@
 using namespace std;
 using namespace relacs;
 
-namespace comedi {
+namespace rtaicomedi {
 
 
-class ComediDigitalIO;
+  class ComediDigitalIO;
 
 
 /*! 
@@ -180,7 +180,7 @@ public:
 private:
 
     /*! Pointer to the user space comedi interface. */
-  ComediDigitalIO *CDIO;
+  comedi::ComediDigitalIO *CDIO;
 
     /*! The comedi subdevice number. */
   unsigned int SubDevice;
@@ -206,6 +206,6 @@ private:
 };
 
 
-}; /* namespace comedi */
+}; /* namespace rtaicomedi */
 
-#endif /* ! _COMEDI_DYNCLAMPDIGITALIO_H_ */
+#endif /* ! _RTAICOMEDI_DYNCLAMPDIGITALIO_H_ */

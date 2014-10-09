@@ -1,5 +1,5 @@
 /*
-  comedi/dynclampanaloginput.h
+  rtaicomedi/dynclampanaloginput.h
   Interface for accessing analog input of a daq-board via a dynamic clamp kernel module.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _COMEDI_DYNCLAMPANALOGINPUT_H_
-#define _COMEDI_DYNCLAMPANALOGINPUT_H_
+#ifndef _RTAICOMEDI_DYNCLAMPANALOGINPUT_H_
+#define _RTAICOMEDI_DYNCLAMPANALOGINPUT_H_
 
 #include <vector>
 #include <comedilib.h>
@@ -30,7 +30,7 @@
 using namespace std;
 using namespace relacs;
 
-namespace comedi {
+namespace rtaicomedi {
 
 
 /*! 
@@ -254,6 +254,6 @@ private:
 };
 
 
-}; /* namespace comedi */
+}; /* namespace rtaicomedi */
 
-#endif /* ! _COMEDI_DYNCLAMPANALOGINPUT_H_ */
+#endif /* ! _RTAICOMEDI_DYNCLAMPANALOGINPUT_H_ */

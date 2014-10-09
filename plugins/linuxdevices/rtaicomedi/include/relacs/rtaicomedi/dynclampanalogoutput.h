@@ -1,5 +1,5 @@
 /*
-  coemdi/dynclampanalogoutput.h
+  rtaicoemdi/dynclampanalogoutput.h
   Interface for accessing analog output of a daq-board via the dynamic clamp 
   kernel module.
 
@@ -20,8 +20,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _COMEDI_DYNCLAMPANALOGOUTPUT_H_
-#define _COMEDI_DYNCLAMPANALOGOUTPUT_H_
+#ifndef _RTAICOMEDI_DYNCLAMPANALOGOUTPUT_H_
+#define _RTAICOMEDI_DYNCLAMPANALOGOUTPUT_H_
 
 #include <vector>
 #include <comedilib.h>
@@ -31,7 +31,7 @@
 using namespace std;
 using namespace relacs;
 
-namespace comedi {
+namespace rtaicomedi {
 
 
 /*! 
@@ -241,6 +241,6 @@ private:
 };
 
 
-}; /* namespace comedi */
+}; /* namespace rtaicomedi */
 
-#endif /* ! _COMEDI_DYNCLAMPANALOGOUTPUT_H_ */
+#endif /* ! _RTAICOMEDI_DYNCLAMPANALOGOUTPUT_H_ */

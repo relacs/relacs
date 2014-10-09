@@ -12,10 +12,9 @@ librtaicomedidynclamp_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/comedi/include/relacs/comedi \
+    -I$(top_srcdir)/plugins/linuxdevices/comedi/include \
     -I$(srcdir)/../include \
     -I$(srcdir)/.. \
-    -I/usr/src/linux/include \
     $(RTAI_CPPFLAGS) \
     $(QT4_CPPFLAGS)
 

@@ -3,7 +3,7 @@
 # This script loads all the necessary kernal modules that are needed
 # for using dynamic clamp.
 # This requires an RTAI patched linux kernel.
-# See www.relacs.net/plugins/comedi/index.html for more information.
+# See www.relacs.net/plugins/rtaicomedi/index.html for more information.
 # If you want to load the kernel modules automatically by the boot
 # process of your linux system, simply call this script from /etc/rc.local
 
