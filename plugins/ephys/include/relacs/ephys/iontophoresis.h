@@ -34,7 +34,7 @@ namespace ephys {
 \class Iontophoresis
 \brief [RePro] Current injection for iontophoresis
 \author Jan Benda
-\version 1.0 (Oct 06, 2014)
+\version 1.2 (Oct 9, 2014)
 
 \par Screenshot
 \image html iontophoresis.png
@@ -46,6 +46,8 @@ namespace ephys {
 - \c durationneg=1s: Duration of negative current (\c number)
 - \c amplitudeneg=1nA: Amplitude of negative current (\c number)
 - \c pauseneg=1s: Pause after negative current (\c number)
+- \c fortunes=true: Display fortunes (\c boolean)
+- \c fortuneperiod=10s: Period for displaying fortunes (\c number)
 */
 
 
@@ -69,6 +71,7 @@ protected:
   QLabel *PosTime;
   QLabel *NegTimeLabel;
   QLabel *NegTime;
+  QLabel *FortuneText;
 
 };
 
