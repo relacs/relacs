@@ -11,10 +11,12 @@ The RELACS Comedi plugins access data acquisition boards by means of the Comedi 
 For general information about Comedi and a list of supported devices
 see http://www.comedi.org
 
-\section comedicontent Content
-- \ref comediintro
-- \ref installcomedi
+\section rtaicomedicontent Content
+- \ref rtaicomediintro
+- \ref installrtaikernel
+- \ref installnewlib
 - \ref installrtai
+- \ref installcomedi
 - \ref udev
 - \ref buffer
 - \ref calibration
@@ -23,16 +25,356 @@ see http://www.comedi.org
 - \ref rtailinks
 
 
-\section comediintro Introduction
+\section rtaicomediintro Introduction
 
-If you only need normal ("streaming", asynchronous) data acquisition
-as it is implemented by the ComediAnalogInput and ComediAnalogOutput plugins,
-then follow the instructions in \ref installcomedi.
+For using dynamic clamp, i.e. some realtime computation, as it is
+implemented by the DynClampAnalogInput and DynClampAnalogOutput
+plugins, you need to install an RTAI-patched real-time linux
+kernel, RTAI kernelmodules, and comedi, as described in the following
+sections.
 
-If you want to use dynamic clamp, i.e. some realtime computation,
-as it is implemented by the DynClampAnalogInput and DynClampAnalogOutput plugins,
-then you need to install a real-time linux kernel first, as described in
-\ref installrtai.
+
+\section installrtaikernel  Linux kernel and RTAI patch
+
+\subsection patchkernel Download RTAI, a linux kernel and patch the kernel
+
+-# Login as root and cd into \c /usr/local/src:
+\code
+sudo su  # or su
+cd /usr/local/src
+\endcode
+-# Download the latest RTAI (http://www.rtai.org) version into \c
+/usr/local/src. Either from the official RTAI cvs repository
+\code
+cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai co magma
+ln -sf magma rtai
+\endcode
+or from Shahbaz Youssefi's rtai clone on github:
+\code
+git clone https://github.com/ShabbyX/RTAI.git
+ln -sf RTAI rtai
+\endcode
+\note Read the rtai/README.INSTALL file!
+-# Find out your CPU architecture:
+\code
+uname -m
+\endcode
+-# Check for available patches. Get a list of all patches for all architectures:
+\code
+find rtai/base/arch/ -name '*.patch' | sort
+\endcode
+The most recent patches for both intel and amd 32 and 64-bit systems (x86_64 and i386 architectures)
+are in the \c x86/ directory.
+Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
+\warning Too old (usually not so old) kernels do not compile with the curent version of the \c gcc compiler.
+-# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.xz from http://www.kernel.org
+  to \c /usr/src and unpack the kernel:
+\code
+cd /usr/src
+wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.8.13.tar.xz
+tar xf linux-3.8.13.tar.xz
+mv linux-3.8.13 linux-3.8.13-rtai
+ln -sfv linux-3.8.13-rtai linux
+cd linux
+make mrproper
+\endcode
+\note For compiling the DynClamp plugin RELACS assumes that 
+\c /usr/src/linux points to your rtai patched kernel!
+So the softlink is important.
+-# Patch the kernel (use the patch file that matches the downloaded kernel)
+\code
+$ cd /usr/src/linux
+$ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.8.13-x86-4.patch
+\endcode
+-# Configure, compile, and install the kernel.
+ as described in the following section.
+
+
+\subsection compilekernel Compile the rtai-patched linux kernel
+
+-# make sure the \c make, \c gcc, \c libncurses-dev, and \c zlib1g-dev packages are installed:
+\code
+apt-get -y install make gcc libncurses-dev zlib1g-dev
+\endcode
+-# There are (at least) two strategies for getting a good real-time kernel. The somewhat simpler approach
+that most likely gives a running kernel, but also might result in bad or not so good real-time performance
+is described here. Alternatively, I highly recommend to consider the approach described in 
+\c /usr/local/src/rtai/README.INSTALL . For this you need more time to set the right kernel options,
+but the kernel will compile much faster.
+-# So, be warned! Here is the beginners way to make a real-time kernel, that is
+reuse your current configuration:
+\code
+cd /usr/src/linux
+cp /boot/config-`uname -r` .config
+make oldconfig
+\endcode
+Hit \c enter to all the (probably many) questions.
+-# Steps 5. to 8. describe the normal way to compile a linux kernel.
+On Debian systems there is an elegant alternative that is described
+in step 9. below.
+-# First, you configure your kernel by calling
+\code
+make menuconfig
+\endcode
+In the kernel configuration dialog you should do the following settings:
+  - General setup: set "Local version" to "-rtai" or make sure it is empty in case you are using \c make-kpkg
+  - Enable loadable module support: 
+    - Select "Enable module support"
+    - Deselect "Module versioning support"
+  - Processor type and features: 
+    - Disable "Tickless System"
+    - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
+    - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
+      check \c "help" to find out, which Processor family you have to select)
+    - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
+    - Disable “Use register arguments” - this option does not exist for newer kernels (version > 2.6.19)
+    - Select "Interrupt pipeline"
+    - Set "Timer frequency" to 1000 Hz
+  - Power management and ACPI options:
+    - Disable "Suspend to RAM and standby"
+    - Disable "Hibernation (aka 'suspend to disk')"
+    - Disable "Run-time PM core functionality"
+    - Disable "ACPI (Advanced Configuration and Power Interface) Support"
+    - Disable "CPU Frequency scaling"
+    - Disable "CPU idle PM support"
+    .
+  .
+Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
+Select "Yes".
+-# Then compile and install the kernel
+\code
+make -j$(grep processor /proc/cpuinfo | wc -l) && make modules && make modules_install && make install
+\endcode
+This takes quite a while.
+-# Install third party kernel modules as well,
+like for example the ones for your graphics board.
+For your nvidia graphics board, download the driver from
+http://www.nvidia.com/Download/index.aspx?lang=en-us.
+Install it by calling
+\code
+$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 3.8.13-rtai -K
+\endcode
+(replace 3.8.13-rtai by the name of the kernel where you want to install the nvidia driver,
+i.e. the string '\c uname \c -r' would return if that kernel is running).
+-# Finally you might need to create a RAM disk image file,
+if \c make \c install did not create a \c /boot/initrd-3.8.13-rtai file already:
+\code
+$ cd /boot
+$ update-initramfs -c -k 3.8.13-rtai
+\endcode
+-# On a Debian system there is an alternative to steps 5. - 8. for compiling a linux kernel. 
+   See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
+   Do as root:
+   -# Get the kernel-package
+   \code
+apt-get -y install kernel-package
+   \endcode
+   -# Configure and build the kernel:
+   \code
+export CONCURRENCY_LEVEL=$(grep processor /proc/cpuinfo | wc -l) # the number of CPU cores you have
+make-kpkg clean
+make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image kernel-headers kernel-source
+   \endcode
+   See step 5. for the necessary kernel configurations.
+   -# Install the kernel
+   \code
+cd ..
+dpkg -i linux-image-3.8.13-rtai_1.0_amd64.deb linux-headers-3.8.13-rtai_1.0_amd64.deb
+   \endcode
+   -# continue with step 6.
+-# Update your boot loader:
+\code
+update-grub
+\endcode
+    The output of \c update-grub should mention your new kernel image.
+    You can configure \c grub \c v2 by editing the file \c /etc/default/grub .
+    To get the boot menu that you need to select the kernel you want to boot
+    you should for example unset the \c GRUB_HIDDEN_TIMEOUT and set the
+    \c GRUB_TIMEOUT appropriately in that file. For example:
+    \code
+#GRUB_HIDDEN_TIMEOUT=0
+#GRUB_HIDDEN_TIMEOUT_QUIET=true
+GRUB_TIMEOUT=10
+\endcode
+    Also, if you do not like that grub puts your rtai kernel into a subsection called
+    'Previous linux versions', then comment out the following lines in \c /etc/grub.d/10_linux
+    \code
+#  if [ "$list" ] && ! $in_submenu; then
+#    echo "submenu \"Previous Linux versions\" {"
+#    in_submenu=:
+#  fi
+\endcode
+    After editing run \c update-grub to apply the changes.
+-# Reboot the computer into the new kernel:
+\code
+reboot
+\endcode
+If this fails:
+Try adding one or several of the advanced configuration and power interface (ACPI) or 
+advanced programmable interrupt controller (APIC) options,
+\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic ,
+to the kernel parameter in the \c kernel line of the
+\c grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable
+in \c /etc/defaults/grub . 
+After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
+
+
+\subsection installnewlib Install the newlib library
+
+For dynamic clamp having math functions available in the kernel is quite handy. For this RTAI needs
+on a 64-bit system the math library from the newlib library as a replacement for the standrad \c libm.a .
+As root:
+\code
+cd /usr/local/src
+mkdir newlib
+cd newlib
+cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src login  # password: anoncvs
+cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src co newlib
+mkdir install
+cd src/newlib
+./configure --prefix=/usr/local/src/newlib/install --disable-shared --build=x86_64-pc-none CFLAGS="-O2 -mcmodel=kernel"   # this is for x86_64 only. Do we really need the --build?
+make
+make install
+\endcode
+
+
+\subsection rtaiinstall RTAI modules
+
+-# Make sure that you are really running your RTAI kernel!
+   You can check with
+\code
+uname -r
+\endcode
+-# Change to the RTAI directory
+\code
+cd /usr/local/src/rtai
+\endcode
+-# In case you downloaded RTAI from https://github.com/ShabbyX/RTAI,
+you need to generate configure script and makefiles first:
+\code
+$ ./autogen.sh
+\endcode
+(do not call ./autogen.sh when using the original RTAI sources since it might fail).
+-# Configure RTAI by calling as root
+\code
+$ make menuconfig
+\endcode
+Check the following settings:
+ - General
+   - Installation directory: should be set to \c /usr/realtime
+   - Linux source tree: must be set to \c /usr/src/linux
+   - RTAI Documentation: deselect all documentation (if you don't you might get an error)
+   - Build RTAI testsuite: select
+ - Machine
+    - Number of CPUs: set to the right value. The default is not always right.
+      If in doubt, look into the file \c /proc/cpuinfo .
+    - Enable FPU support: select
+ - Base system
+   - Other features
+     - Mathfuns support in kernel: select
+     - C99 standard support: select
+ - Add-ons
+   - Real Time COMEDI support in user space: leave unselected
+ .
+Then exit and save configuration.
+Watch the output while RTAI is configured for possible warnings and errors.
+In case this fails, you should check and/or edit the file \c .rtai_config
+and run \c .configure manually.
+-# Compile and install (as root)
+\code
+$ make && make install
+\endcode
+Known issues:
+  - In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
+  \code
+$ apt-get install gcc-multilib
+\endcode
+  - In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
+  then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
+  - If you get error messages like 
+    "../../../base/sched/liblxrt/.libs/liblxrt.so: undefined reference to `pthread_create'",
+    i.e. undefined references to various pthread functions,
+    then open \c base/sched/liblxrt/GNUmakefile in you favourite editor,
+    find the line containing 'liblxrt_la_LIBADD' and add "-lpthread" to it so that this line looks like
+    \code
+liblxrt_la_LIBADD = -lpthread
+\endcode
+    Then
+    \code
+$ cd base/sched/liblxrt
+$ make clean
+$ cd -
+$ make
+\endcode
+  .
+-# Make the RTAI kernel modules known to modprobe:
+\code
+$ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai
+$ depmod -a
+\endcode
+-# Test RTAI by loading the \c rtai_sched module:
+\code
+$ modprobe rtai_sched
+\endcode
+If this fails:
+Try adding one or several of the advanced configuration and power interface (ACPI) or 
+advanced programmable interrupt controller (APIC) options,
+\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic ,
+to the kernel parameter in the \c kernel line of the
+\c grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable
+in \c /etc/defaults/grub . 
+Recompile and install RTAI (make clean && make && make install && depmod -a).
+After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
+-# If you have a multi-core system you should reserve at least one CPU for RTAI. You can isolate CPUs by using    the kernel parameter
+   \code
+isolcpus=0,1,2
+   \endcode
+  (for isolating the cores no. 0, 1, and 2) and by loading the rtai_hal kernel module the following way:
+  \code
+insmod rtai_hal.ko IsolCpusMask=0x07
+  \endcode
+  See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
+-# Run the RTAI latency test
+\code
+$ cd /usr/realtime/testsuite/kern/latency
+$ ./run
+\endcode
+Maybe this link is helpful to find good motherboards: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Latency-Test 
+(I am, however, not sure how this relates to RTAI).
+
+
+\subsection rtaicomedi Comedi
+For an RTAI kernel you definitely have to install the Comedi drivers 
+yourself according to the following instructions:
+
+-# Follow the instructions above for installing 
+\ref installcomedidriver .
+For configuring \c Comedi you should use
+\code
+$ ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
+\endcode
+-# Check loading the \c Comedi module:
+\code
+$ modprobe comedi
+\endcode
+On failure, call 
+\code
+$ dmesg
+\endcode
+to get more details. If it says "unknown symbol", then you might have forgotten
+to deselect the "Module versioning support" in the "loadable module support"
+section of the kernel configuration. Either recompile your kernel with the 
+"Module versioning support" deselected, or
+\code
+$ cp /lib/modules/`uname -r`/rtai/Module.symvers /usr/local/src/comedi/comedi
+$ make clean
+$ make && make install
+$ depmod -a
+$ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
+\endcode
+-# Then follow the instructions above for installing (if not already done, this is independent of the kernel used)
+  - \ref installcomedilib
+  - \ref installcomedicalib
 
 
 \section installcomedi Install comedi
@@ -120,130 +462,6 @@ $ make prepare
 $ make scripts
 \endcode
 
-\subsubsection installvanillakernel Compile your own kernel
-
--# Get a vanilla kernel from http://www.kernel.org,
-e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.38.8.tar.bz2,
-place the tar file in \c /usr/src and unpack it as root with
-\code
-$ cd /usr/src
-$ tar xjvf linux-2.6.38.8.tar.bz2
-\endcode
-(replace \c linux-2.6.38.8 by the directory name of your new kernel source).
-Create a softlink to your kernel source 
-\code
-$ ln -s linux-2.6.38.8 linux
-$ cd linux
-\endcode
-and make sure the \c make, \c gcc, \c libncurses-dev, and \c zlib1g-dev packages are installed:
-\code
-$ apt-get install make gcc libncurses-dev zlib1g-dev
-\endcode
--# Reuse your current configuration (replace \c XXX by the name of your running kernel):
-\code
-$ cp /boot/config-XXX .config
-$ make oldconfig
-\endcode
-Hit \c enter to all the (probably many) questions.
--# Steps 3. to 6. describe the normal way to compile a linux kernel.
-On Debian systems there is an elegant alternative that is described
-in step 9. below.
-First, you configure your kernel by calling
-\code
-$ make menuconfig
-\endcode
-Possible settings you might want to change are:
-  - Processor type and features: 
-    - Select your Subarchitecture Type (PC-Compatible) - this option does not exist for newer kernels
-    - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
-      check \c "help" to find out, which Processor family you have to select)
-    - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
-  .
-Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
-Select "Yes".
--# Then compile and install (as root) the kernel
-\code
-$ make && make modules && make modules_install && make install
-\endcode
-This takes quite a while.
--# Finally you might need to create a RAM disk image file,
-if \c make \c install did not create a \c /boot/initrd-2.6.38.8 file already:
-\code
-$ cd /boot
-$ update-initramfs -c -k 2.6.38.8
-\endcode
--# Check the grub menu whether your new kernel was added. 
-  - With \c grub \c v2 (default since Debian Lenny) simply run
-    \code
-$ update-grub
-\endcode
-    the output of \c update-grub should mention your new kernel image.
-    You can configure \c grub \c v2 by editing the file \c /etc/default/grub .
-    To get the boot menu that you need to select the kernel you want to boot
-    you should for example unset the \c GRUB_HIDDEN_TIMEOUT and set the
-    \c GRUB_TIMEOUT appropriately in that file. For example:
-    \code
-#GRUB_HIDDEN_TIMEOUT=0
-#GRUB_HIDDEN_TIMEOUT_QUIET=true
-GRUB_TIMEOUT=10
-\endcode
-    Also, if ou do not like that grub puts your rtai kernel into a subsection called
-    'Previous linux versions', then comment out the following lines in \c /etc/grub.d/10_linux
-    \code
-#  if [ "$list" ] && ! $in_submenu; then
-#    echo "submenu \"Previous Linux versions\" {"
-#    in_submenu=:
-#  fi
-\endcode
-    After editing run \c update-grub to apply the changes.
-  - With \c grub \c v1 (default up-to Debian Lenny) 
-    there should be an entry like this in \c /boot/grub/menu.lst:
-    \code
-title           Debian GNU/Linux, kernel 2.6.28.9
-root            (hd0,0)
-kernel          /boot/vmlinuz-2.6.28.9 root=/dev/sda1 ro quiet
-initrd          /boot/initrd.img-2.6.28.9
-\endcode
-  .
--# Reboot the computer into the new kernel.
-\code
-$ reboot
-\endcode
--# Install third party kernel modules as well,
-like for example the ones for your graphics board.
-For your nvidia graphics board, download the driver from
-http://www.nvidia.com/Download/index.aspx?lang=en-us.
-Install it by calling
-\code
-$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run
-\endcode
-If you want to install the nvidia driver for a second kernel, then call
-\code
-$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 2.6.28.9-rtai -K
-\endcode
-(replace 2.6.28.9-rtai by the name of the kernel where you want to install the nvidia driver,
-i.e. the string '\c uname \c -r' would return if that kernel is running).
--# On a Debian system there is an alternative to steps 3. - 6. for compiling a linux kernel. 
-   See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
-   Do as root:
-   -# Get the kernel-package
-   \code
-$ apt-get install kernel-package libncurses-dev
-   \endcode
-   -# Configure and build the kernel:
-   \code
-$ export CONCURRENCY_LEVEL=2  # set here the number of CPUs you have to speed things up!
-$ make-kpkg clean
-$ make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image kernel-headers kernel-source
-   \endcode
-   You can also supply a \c -j option to tell make how many processes can be run in parallel.
-   See step 3. for hints on the configuration options.
-   -# Install the kernel
-   \code
-$ cd ..
-$ dpkg -i linux-image-2.6.38.8_1.0_amd64.deb linux-headers-2.6.38.8_1.0_amd64.deb
-   \endcode
-   -# continue with step 6.
 
 
 \subsection installcomedidriver Comedi
@@ -476,244 +694,6 @@ $ ./configure --prefix=/usr --sysconfdir=/etc
 \code
 $ make && make install
 \endcode
-
-
-\section installrtai Install RTAI and Comedi
-
-For dynamic clamp you need an RTAI patched linux kernel and Comedi.
-
-\note (June 2013) There is a problem regarding newer versions of clib
-(version >= 2.15, version 2.13 works, check version with \c ldd \c
---version). The \c rtai_math module does not compile correctly with
-the newer libc version. I have not figured out a nice solution to this
-bug other than to use a not so new linux distro.... Working is
-linux Mint upto version 12 (Lisa), Ubuntu Oneiric, Debian Linux 7.0.
-Find out your distro with \c cat \c /etc/issue or \c lsb_release \c -a.
-
-\subsection rtaikernel Linux kernel and RTAI patch
-
--# Download the latest RTAI (http://www.rtai.org) version 
-(the following instructions where tested successfully with version 3.9) from
-the RTAI repository at http://www.rtai.org/RTAI
-and put it into \c /usr/local/src as root.
-Alternatively you could try to clone the source from \c https://github.com/ShabbyX/RTAI.
-This version fixed quite some autotools issues and
-is working hard on getting the rtai_math module back.
-Unfortunately, this also failed so far (February 2014, Linux Mint 16 Petra, kernel 3.8.13)
--# Unpack RTAI in /usr/local/src:
-\code
-$ cd /usr/local/src
-$ tar xjvf rtai-3.9.tar.bz2
-$ ln -s rtai-3.9 rtai
-\endcode
--# Check for available patches. Get a list of all patches for all architectures:
-\code
-$ find rtai/base/arch/ -name '*.patch' | sort
-\endcode
-The most recent patches for intel and amd 32 and 64-bit systems are in the x86 directory.
-Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
-  -# I got the 2.6.38.8 to work.
-  -# Too old (usually not so old) kernels do not compile with the curent version of the \c gcc compiler.
-  -# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.gz from
-     http://www.kernel.org (e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.38.8.tar.bz2)
-     to \c /usr/src
-  -# Unpack the kernel
-\code
-$ cd /usr/src
-$ tar xjvf linux-2.6.38.8.tar.bz2
-$ mv linux-2.6.38.8 linux-2.6.38.8-rtai
-$ ln -s linux-2.6.38.8-rtai linux
-\endcode
-Currently, for compiling the DynClamp plugin RELACS assumes that 
-\c /usr/src/linux points to your rtai patched kernel.
--# Patch the kernel (use the patch file that matches the downloaded kernel)
-\code
-$ cd /usr/src/linux
-$ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.38.8-x86-2.11-02.patch
-\endcode
--# Configure, compile, and install the kernel.
-\note In newer gcc and kernels there is a problem with some compiler
-flag when compiling the RTAI math module.  Disable (comment them out
-using '#') in \c /usr/src/linux/arch/x86/Makefile all lines with \c
--mpreferred-stack-boundary=3 before configuring and compiling the
-kernel.
-
-Follow the intructions given in \ref installvanillakernel, starting at step 2.
-On Debian, the make-kpkg command should be
-\code
-$ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image kernel-headers kernel-source
-\endcode
-In the kernel configuration dialog you should do the following settings:
-  - General setup: set "Local version" to -rtai (not needed if you are using \c make-kpkg)
-  - Enable loadable module support: 
-    - Select "Enable module support"
-    - Deselect "Module versioning support"
-  - Processor type and features: 
-    - Disable "Tickless System"
-    - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
-    - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
-      check \c "help" to find out, which Processor family you have to select)
-    - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
-    - Disable “Use register arguments” - this option does not exist for newer kernels (version > 2.6.19)
-    - Select "Interrupt pipeline"
-    - Set "Timer frequency" to 1000 Hz
-  - Power management and ACPI options:
-    - Disable "Suspend to RAM and standby"
-    - Disable "Hibernation (aka 'suspend to disk')"
-    - Disable "Run-time PM core functionality"
-    - Disable "ACPI (Advanced Configuration and Power Interface) Support"
-    - Disable "CPU Frequency scaling"
-    - Disable "CPU idle PM support"
-    .
-  .
--# Reboot into your new RTAI real time kernel.
-If this fails:
-Try adding one or several of the advanced configuration and power interface (ACPI) or 
-advanced programmable interrupt controller (APIC) options,
-\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic ,
-to the kernel parameter in the \c kernel line of the
-\c grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable
-in \c /etc/defaults/grub . 
-After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
-
-
-\subsection rtaiinstall RTAI modules
-
--# Make sure that you are really running your RTAI kernel!
-   You can check with
-\code
-$ uname -r
-\endcode
--# Change to the RTAI directory
-\code
-$ cd /usr/local/src/rtai
-\endcode
--# In case you downloaded RTAI from https://github.com/ShabbyX/RTAI,
-you need to generate configure script and makefiles first:
-\code
-$ ./autogen.sh
-\endcode
-(do not call ./autogen.sh when using the original RTAI sources since it might fail).
--# Configure RTAI by calling as root
-\code
-$ make menuconfig
-\endcode
-Check the following settings:
- - General
-   - Installation directory: should be set to \c /usr/realtime
-   - Linux source tree: must be set to \c /usr/src/linux
-   - RTAI Documentation: deselect all documentation (if you don't you might get an error)
-   - Build RTAI testsuite: select
- - Machine
-    - Number of CPUs: set to the right value. The default is not always right.
-      If in doubt, look into the file \c /proc/cpuinfo .
-    - Enable FPU support: select
- - Base system
-   - Other features
-     - Mathfuns support in kernel: select
-     - C99 standard support: select
- - Add-ons
-   - Real Time COMEDI support in user space: leave unselected
- .
-Then exit and save configuration.
-Watch the output while RTAI is configured for possible warnings and errors.
-In case this fails, you should check and/or edit the file \c .rtai_config
-and run \c .configure manually.
--# Compile and install (as root)
-\code
-$ make && make install
-\endcode
-Known issues:
-  - In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
-  \code
-$ apt-get install gcc-multilib
-\endcode
-  - In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
-  then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
-  - If you get error messages like 
-    "../../../base/sched/liblxrt/.libs/liblxrt.so: undefined reference to `pthread_create'",
-    i.e. undefined references to various pthread functions,
-    then open \c base/sched/liblxrt/GNUmakefile in you favourite editor,
-    find the line containing 'liblxrt_la_LIBADD' and add "-lpthread" to it so that this line looks like
-    \code
-liblxrt_la_LIBADD = -lpthread
-\endcode
-    Then
-    \code
-$ cd base/sched/liblxrt
-$ make clean
-$ cd -
-$ make
-\endcode
-  .
--# Make the RTAI kernel modules known to modprobe:
-\code
-$ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai
-$ depmod -a
-\endcode
--# Test RTAI by loading the \c rtai_sched module:
-\code
-$ modprobe rtai_sched
-\endcode
-If this fails:
-Try adding one or several of the advanced configuration and power interface (ACPI) or 
-advanced programmable interrupt controller (APIC) options,
-\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic ,
-to the kernel parameter in the \c kernel line of the
-\c grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable
-in \c /etc/defaults/grub . 
-Recompile and install RTAI (make clean && make && make install && depmod -a).
-After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
--# If you have a multi-core system you should reserve at least one CPU for RTAI. You can isolate CPUs by using    the kernel parameter
-   \code
-isolcpus=0,1,2
-   \endcode
-  (for isolating the cores no. 0, 1, and 2) and by loading the rtai_hal kernel module the following way:
-  \code
-insmod rtai_hal.ko IsolCpusMask=0x07
-  \endcode
-  See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
--# Run the RTAI latency test
-\code
-$ cd /usr/realtime/testsuite/kern/latency
-$ ./run
-\endcode
-Maybe this link is helpful to find good motherboards: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Latency-Test 
-(I am, however, not sure how this relates to RTAI).
-
-
-\subsection rtaicomedi Comedi
-For an RTAI kernel you definitely have to install the Comedi drivers 
-yourself according to the following instructions:
-
--# Follow the instructions above for installing 
-\ref installcomedidriver .
-For configuring \c Comedi you should use
-\code
-$ ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
-\endcode
--# Check loading the \c Comedi module:
-\code
-$ modprobe comedi
-\endcode
-On failure, call 
-\code
-$ dmesg
-\endcode
-to get more details. If it says "unknown symbol", then you might have forgotten
-to deselect the "Module versioning support" in the "loadable module support"
-section of the kernel configuration. Either recompile your kernel with the 
-"Module versioning support" deselected, or
-\code
-$ cp /lib/modules/`uname -r`/rtai/Module.symvers /usr/local/src/comedi/comedi
-$ make clean
-$ make && make install
-$ depmod -a
-$ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
-\endcode
--# Then follow the instructions above for installing (if not already done, this is independent of the kernel used)
-  - \ref installcomedilib
-  - \ref installcomedicalib
 
 
 \subsection testrelacs Test RELACS

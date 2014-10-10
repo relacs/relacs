@@ -71,11 +71,11 @@ keyboard:usb:v046DpC52Dd*dc*dsc*dp*ic*isc*ip*in00*
  KEYBOARD_KEY_7004E=f1
  KEYBOARD_KEY_70029=dot
  KEYBOARD_KEY_7003E=dot
- KEYBOARD_KEY_70037=f2
+ KEYBOARD_KEY_70037=v
 \endcode
  With this, the "arrow left" terminates the running repro gracefully by sending "space".
  "arrow right" starts the macro bound to the "F1" key, the "start presentation" button
- activates the buzzer, and the "blank screen" button starts the macro bound to the "F2" key.
+ activates the buzzer, and the "blank screen" button centers the traces in the plot.
 - inform your system about the new key bindings (as root):
 \code
 # udevadm hwdb --update
