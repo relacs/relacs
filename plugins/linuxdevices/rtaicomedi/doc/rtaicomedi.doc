@@ -66,7 +66,6 @@ find rtai/base/arch/ -name '*.patch' | sort
 The most recent patches for both intel and amd 32 and 64-bit systems (x86_64 and i386 architectures)
 are in the \c x86/ directory.
 Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
-\warning Too old (usually not so old) kernels do not compile with the curent version of the \c gcc compiler.
 -# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.xz from http://www.kernel.org
   to \c /usr/src and unpack the kernel:
 \code
@@ -86,8 +85,7 @@ So the softlink is important.
 $ cd /usr/src/linux
 $ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.8.13-x86-4.patch
 \endcode
--# Configure, compile, and install the kernel.
- as described in the following section.
+-# Configure, compile, and install the kernel as described in the following section.
 
 
 \subsection compilekernel Compile the rtai-patched linux kernel
@@ -101,8 +99,7 @@ that most likely gives a running kernel, but also might result in bad or not so 
 is described here. Alternatively, I highly recommend to consider the approach described in 
 \c /usr/local/src/rtai/README.INSTALL . For this you need more time to set the right kernel options,
 but the kernel will compile much faster.
--# So, be warned! Here is the beginners way to make a real-time kernel, that is
-reuse your current configuration:
+-# So, be warned! Here is the beginners way to make a real-time kernel. Simply reuse your current kernel configuration:
 \code
 cd /usr/src/linux
 cp /boot/config-`uname -r` .config
@@ -146,9 +143,9 @@ Select "Yes".
 make -j$(grep processor /proc/cpuinfo | wc -l) && make modules && make modules_install && make install
 \endcode
 This takes quite a while.
--# Install third party kernel modules as well,
+-# If necessary, install third party kernel modules as well,
 like for example the ones for your graphics board.
-For your nvidia graphics board, download the driver from
+(The following is probably outdated) For your nvidia graphics board, download the driver from
 http://www.nvidia.com/Download/index.aspx?lang=en-us.
 Install it by calling
 \code
@@ -163,6 +160,7 @@ $ cd /boot
 $ update-initramfs -c -k 3.8.13-rtai
 \endcode
 -# On a Debian system there is an alternative to steps 5. - 8. for compiling a linux kernel. 
+   You get a nice \c .deb fil ewith the compiled kernel, that you can install also on other machines.
    See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
    Do as root:
    -# Get the kernel-package
@@ -173,15 +171,15 @@ apt-get -y install kernel-package
    \code
 export CONCURRENCY_LEVEL=$(grep processor /proc/cpuinfo | wc -l) # the number of CPU cores you have
 make-kpkg clean
-make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image kernel-headers kernel-source
+make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image # kernel-headers kernel-source
    \endcode
    See step 5. for the necessary kernel configurations.
    -# Install the kernel
    \code
 cd ..
-dpkg -i linux-image-3.8.13-rtai_1.0_amd64.deb linux-headers-3.8.13-rtai_1.0_amd64.deb
+dpkg -i linux-image-3.8.13-rtai_1.0_amd64.deb # linux-headers-3.8.13-rtai_1.0_amd64.deb
    \endcode
-   -# continue with step 6.
+   -# continue with step 10 (if you need to modify your grub configuration) or step 11.
 -# Update your boot loader:
 \code
 update-grub
@@ -232,7 +230,7 @@ cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src login  # password: anoncvs
 cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src co newlib
 mkdir install
 cd src/newlib
-./configure --prefix=/usr/local/src/newlib/install --disable-shared --build=x86_64-pc-none CFLAGS="-O2 -mcmodel=kernel"   # this is for x86_64 only. Do we really need the --build?
+./configure --prefix=/usr/local/src/newlib/install --disable-shared CFLAGS="-O2 -mcmodel=kernel"
 make
 make install
 \endcode
