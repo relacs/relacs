@@ -17,9 +17,8 @@ see http://www.comedi.org
 - \ref installnewlib
 - \ref installrtai
 - \ref installcomedi
+- \ref testrelacs
 - \ref udev
-- \ref buffer
-- \ref calibration
 - \ref dynamicclamp
 - \ref kernelmessages
 - \ref rtailinks
@@ -135,6 +134,11 @@ In the kernel configuration dialog you should do the following settings:
     - Disable "CPU Frequency scaling"
     - Disable "CPU idle PM support"
     .
+  - Device Drivers:
+    - Enable "Staging drivers"
+      - Select "Data acquisition support (comedi)"
+        and all the comedi modules you need (or simply all of them)
+    .
   .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
 Select "Yes".
@@ -217,7 +221,7 @@ in \c /etc/defaults/grub .
 After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
 
 
-\subsection installnewlib Install the newlib library
+\section installnewlib Install the newlib library
 
 For dynamic clamp having math functions available in the kernel is quite handy. For this RTAI needs
 on a 64-bit system the math library from the newlib library as a replacement for the standrad \c libm.a .
@@ -236,9 +240,9 @@ make install
 \endcode
 
 
-\subsection rtaiinstall RTAI modules
+\section rtaiinstall RTAI kernel modules
 
--# Make sure that you are really running your RTAI kernel!
+-# Make sure that you are root and you are really running your RTAI kernel!
    You can check with
 \code
 uname -r
@@ -248,14 +252,14 @@ uname -r
 cd /usr/local/src/rtai
 \endcode
 -# In case you downloaded RTAI from https://github.com/ShabbyX/RTAI,
-you need to generate configure script and makefiles first:
+you need to generate the configure script and makefiles first:
 \code
-$ ./autogen.sh
+./autogen.sh
 \endcode
 (do not call ./autogen.sh when using the original RTAI sources since it might fail).
--# Configure RTAI by calling as root
+-# Configure RTAI by calling
 \code
-$ make menuconfig
+make menuconfig
 \endcode
 Check the following settings:
  - General
@@ -264,13 +268,20 @@ Check the following settings:
    - RTAI Documentation: deselect all documentation (if you don't you might get an error)
    - Build RTAI testsuite: select
  - Machine
-    - Number of CPUs: set to the right value. The default is not always right.
-      If in doubt, look into the file \c /proc/cpuinfo .
     - Enable FPU support: select
+    - Number of CPUs: set to the right value.
+      If in doubt, look into the file \c /proc/cpuinfo or run
+      \code
+grep processor /proc/cpuinfo | wc -l
+\endcode
+    .
  - Base system
    - Other features
      - Mathfuns support in kernel: select
-     - C99 standard support: select
+     - 1 - NEWLIB (default), 2 - UCLIB, 3 - GLIBC: set to (1)
+     - The installation directory of your chosen libm.a: set to "/usr/local/src/newlib/install/lib"
+     .
+   .
  - Add-ons
    - Real Time COMEDI support in user space: leave unselected
  .
@@ -278,14 +289,14 @@ Then exit and save configuration.
 Watch the output while RTAI is configured for possible warnings and errors.
 In case this fails, you should check and/or edit the file \c .rtai_config
 and run \c .configure manually.
--# Compile and install (as root)
+-# Compile and install
 \code
-$ make && make install
+make && make install
 \endcode
 Known issues:
   - In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
   \code
-$ apt-get install gcc-multilib
+apt-get install gcc-multilib
 \endcode
   - In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
   then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
@@ -299,20 +310,19 @@ liblxrt_la_LIBADD = -lpthread
 \endcode
     Then
     \code
-$ cd base/sched/liblxrt
-$ make clean
-$ cd -
-$ make
+cd base/sched/liblxrt
+make clean
+cd -
+make
 \endcode
   .
--# Make the RTAI kernel modules known to modprobe:
+-# Test RTAI by loading some modules:
 \code
-$ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai
-$ depmod -a
-\endcode
--# Test RTAI by loading the \c rtai_sched module:
-\code
-$ modprobe rtai_sched
+cd /usr/realtime/modules
+insmod rtai_hal.ko
+insmod rtai_sched.ko
+insmod rtai_fifos.ko
+insmod rtai_math.ko
 \endcode
 If this fails:
 Try adding one or several of the advanced configuration and power interface (ACPI) or 
@@ -334,14 +344,29 @@ insmod rtai_hal.ko IsolCpusMask=0x07
   See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
 -# Run the RTAI latency test
 \code
-$ cd /usr/realtime/testsuite/kern/latency
-$ ./run
+cd /usr/realtime/testsuite/kern/latency
+./run
 \endcode
 Maybe this link is helpful to find good motherboards: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Latency-Test 
 (I am, however, not sure how this relates to RTAI).
 
 
-\subsection rtaicomedi Comedi
+\section installcomedi Comedi
+
+The comedi kernel modules are already part of the kernel. You only need to install the comedi library:
+\code
+sudo apt-get install libcomedi-dev
+\endcode
+
+You should install the \c comedi drivers and library prior to
+configuring RELACS, so that ./configure can detect the presence of the
+\c comedi library. If you install \c comedi later, simply run \c
+./configure and \c make again to detect comedi and compile the
+corresponding plugins for RELACS.
+
+
+\section installcomediold Install comedi from scratch
+
 For an RTAI kernel you definitely have to install the Comedi drivers 
 yourself according to the following instructions:
 
@@ -375,340 +400,17 @@ $ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
   - \ref installcomedicalib
 
 
-\section installcomedi Install comedi
-
-On recent linux distributions comedi modules are already in the Linux kernel.
-You only need to install the comedilib library
+\section testrelacs Test RELACS
+-# Configure and compile RELACS. cd into the root directory of the relacs source tree, then:
 \code
-sudo apt-get install libcomedi-dev 
-\endcode
-and to set the permissions as described in \ref udev.
-If your data acquisition board needs to be calibrated, you also need
-to install comedi_calibrate. This seems not to be available as a
-package, so you have to compile it yourself. See \ref
-installcomedicalib for details.
-
-If this does not work (some older versions did not provide some
-functions needed by the RELACS comedi plugins), or if you require the
-most recent version of comedi, you should reinstall the comedi drivers
-and the comedi library from scratch as described in the following
-sections.
-
-You should install the \c comedi drivers and library prior to
-configuring RELACS, so that ./configure can detect the presence of the
-\c comedi library. If you install \c comedi later, simply run \c
-./configure and \c make again to detect comedi and compile the
-corresponding plugins for RELACS.
-
-
-\subsection installkernel Linux kernel
-
-In order to be able to install the \c Comedi drivers you need to have a kernel source tree
-that matches your running kernel image. Either compile your own kernel from scratch 
-(section \ref installvanillakernel , takes some time),
-or make sure that you get a matching source tree for your kernel image
-(section \ref installkernelsources).
-
-
-\subsubsection installkernelsources Install sources for an existing kernel
-
--# Get the soure that matches your kernel. 
-On Ubuntu/Debian you get the kernel source and header files
-matching your running kernel image by executing as root
-\code
-$ cd /usr/src
-$ apt-get install dpkg-dev
-$ apt-get source linux-image-`uname -r`
-$ apt-get install linux-headers-`uname -r`
-\endcode
-If \c apt-get \c source tells you "E: You must put some 'source' URIs in your sources.list"
-then you need to enable the source repositories for the package manager. For this
-open with your favorite editor \c /etc/apt/sources.list and the \c *.list files in 
-\c /etc/apt/sources.list.d/. Remove the comments in front of the lines
-that start with \c "deb-src". Then run
-\code
-$ apt-get update
-\endcode
-to resynchronize the package index files with the new repositories. Now 
-\c apt-get \c source should be able to download the kernel sources.
-After downloading the kernel source create a link to the kernel source:
-\code
-ln -s linux <kernel-source>
-\endcode
-where \c <kernel-source> is the kernel source installed by \c apt-get.
-Note that often the kernel source directory that you installed with \c apt-get
-has a different name than the name of the currently running kernel that \c uname -r
-returns. Use \c ls \c -rtl to list the directories in the \c /usr/src folder.
-The last one is the one that was added by \c apt-get \c source.
-Now you can \c cd into the kernel source directory
-\code
-$ cd linux
-\endcode
--# Copy the kernel configuration file of your kernel image to the source:
-\code
-$ cp /boot/config-`uname -r` .config
-\endcode
--# Make sure the file \c Module.symvers is also in your source. 
-On Ubuntu/Debian you find it in the corresponding \c linux-headers directory:
-\code
-$ cp ../linux-headers-`uname -r`/Module.symvers .
-\endcode
--# Run
-\code
-$ make oldconfig
-$ make prepare
-$ make scripts
-\endcode
-
-
-
-\subsection installcomedidriver Comedi
-
-Kernel versions 2.6.30 onwards have an experimental in-tree Comedi
-implementation in the driver "staging" area. You can check whether it
-works for you by following the instructions of point 11 below.  
-However, we recommend installing a current version of the comedi drivers.
-
-Here are all commands that you can throw into a shell to completely install comedi:
-\code
-# install all required packages:
-apt-get -y install gcc g++ git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
-
-# download comedi sources:
-cd /usr/local/src
-git clone git://comedi.org/git/comedi/comedi.git
-git clone git://comedi.org/git/comedi/comedilib.git
-git clone git://comedi.org/git/comedi/comedi_calibrate.git
-rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
-
-# comedi:
-cd /usr/local/src/comedi
-./autogen.sh
+./bootstrap.sh
 ./configure
-make && make install
-depmod -a
-cp include/linux/comedi.h /usr/include/linux/
-cp include/linux/comedilib.h /usr/include/linux/
-
-# comedilib:
-cd /usr/local/src/comedilib
-./autogen.sh
-./configure --prefix=/usr --sysconfdir=/etc
-make && make install
-
-# comedi_calibrate:
-cd /usr/local/src/comedi_calibrate
-autoreconf -v -i
-./configure --prefix=/usr --sysconfdir=/etc
-make && make install
-
-# setup udev permissions:
-addgroup --system iocard
-echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
-udevadm trigger
-adduser $USER iocard
-\endcode
-In the following the necessary steps are described in detail:
-
--# Download the current \c Comedi sources from the Git repository to \c /usr/local/src
-as root.
-\code
-$ apt-get install git
-$ cd /usr/local/src
-$ git clone git://comedi.org/git/comedi/comedi.git
-$ git clone git://comedi.org/git/comedi/comedilib.git
-$ git clone git://comedi.org/git/comedi/comedi_calibrate.git
-\endcode
-Or download the current	Git snapshots from http://www.comedi.org/download.html 
-to \c /usr/local/src and unpack them
-\code
-$ cd /usr/local/src
-$ tar xzvf comedi-HEAD-*.tar.gz
-$ tar xzvf comedilib-HEAD-*.tar.gz
-$ tar xzvf comedi_calibrate-HEAD-*.tar.gz
-\endcode
--# You may need to install the packages: \c autoconf, \c libtool.
-\code
-$ apt-get install autoconf automake libtool
-\endcode
--# Make sure that you are really running the kernel
-  for which you want to install \c Comedi!
-  You can check with
-\code
-$ uname -r
-\endcode
--# Remove the Comedi staging modules to avoid conflicts:
-\code
-$ rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
-\endcode
--# Change to the \c comedi directory:
-\code
-$ cd /usr/local/src/comedi
-\endcode
--# Generate the configuration script by calling
-\code
-$ ./autogen.sh
-\endcode
-You may ignore warnings and reminders.
--# Configure simply by calling
-\code
-./configure
-\endcode
-in case you want to install \c Comedi into your currently running kernel.
-If \c /usr/src/linux is not your running kernel, then call
-\code
-$ ./configure --with-linuxsrcdir=/usr/src/linux
-\endcode
-with \c /usr/src/linux replaced by the path to the sources of the kernel
-for which you want to install \c Comedi.
--# Compile
-\code
-$ make
-\endcode
-and install (as root)
-\code
-$ make install
-$ depmod -a
-\endcode
--# For some strange reason, the include files for kcomedilib \c linux/comedilib.h and 
-\c linux/comedi.h are not installed by \c Comedi to \c [prefix]/include/linux .
-These files are needed for compiling the kernel modules that use Comedi.
-Also, RTAI expects \c Comedi include files in \c [prefix]/include/linux.
-Therefore you need to copy the \c Comedi include files 
-to \c [prefix]/include/linux yourself:
-\code
-$ cp include/linux/comedi.h /usr/include/linux/
-$ cp include/linux/comedilib.h /usr/include/linux/
-\endcode
--# Check loading the Comedi module:
-\code
-$ modprobe comedi
-\endcode
-If you do not get any error message, then the Comedi kernel modules were
-successfully compiled and can be loaded into the kernel.
--# Check autodetection of your data acquisition board:
-\code
-$ udevadm trigger
-$ ls /dev/comedi*
-\endcode
-In case the \c ls command shows something like
-\code
-/dev/comedi0        /dev/comedi0_subd1   /dev/comedi0_subd12
-/dev/comedi0_subd0  /dev/comedi0_subd11  /dev/comedi0_subd2
-\endcode
-i.e. some \c comedi* character device files, your board probably was detected. Run
-\code
-$ comedi_board_info /dev/comedi0
-\endcode
-(or comedi_test -t info -f /dev/comedi0) to see more details about your data acquisition board 
-(note: both \c comedi_board_info and \c comedi_test are part of comedilib, see below).
-In case no \c /dev/comedi* device file shows up
-or \c comedi_test reported an error (E: comedi_open("/dev/comedi0"): No such device),
-your data acquisition board needs to be configured manually, using something like
-\code
-$ comedi_config /dev/comedi0 ni_mio_cs
-\endcode
-that can be put into the \c /etc/init.d/boot.local file, so that
-the board is configured during startup of the system.
-For this you also need to tell comedi to create a \c /dev/comedi0
-device file for you. Add the following line to \c /etc/modprobe.conf or
-\c /etc/modprobe.d/comedi.conf (the latter you have to create if the
-directory \c /etc/modprobe.d exists):
-\code
-options comedi comedi_num_legacy_minors=4
-\endcode
-See also http://www.comedi.org/doc/install.html#cardconfiguration .
-
-\subsection installcomedilib Comedilib
--# You may need to install the packages: \c autoconf, \c libtool, \c bison, \c flex.
-\code
-$ apt-get install bison flex
-\endcode
--# Change to the \c comedilib directory as root:
-\code
-$ cd /usr/local/src/comedilib
-\endcode
--# Generate the configuration script by calling
-\code
-$ ./autogen.sh
-\endcode
-You may ignore warnings and reminders.
--# Configure comedilib to be installed in \c /usr/lib and \c /usr/include
-\code
-$ ./configure --prefix=/usr --sysconfdir=/etc
-\endcode
-If you want to have Comedlib to be installed somewhere else, specify another \c prefix.
-You may want to read \c ./configure \c --help as well.
-Pay attention to warnings and errors! You might need to install additional software first.
--# Compile and install (as root)
-\code
-$ make && make install
-\endcode
--# In case \c make fails with this error message:
-\code
-libtool: link: gcc -std=gnu99 -I../include -I../include -Wall -g -O2 -o .libs/comedi_test comedi_test-bufconfig.o comedi_test-cmd_1.o comedi_test-cmd_2.o comedi_test-cmd_3.o comedi_test-info.o comedi_test-insn_read.o comedi_test-insn_read_time.o comedi_test-inttrig.o comedi_test-lib.o comedi_test-main.o comedi_test-mmap.o comedi_test-mode0_read.o comedi_test-select.o  ../lib/.libs/libcomedi.so -lm
-../lib/.libs/libcomedi.so: undefined reference to `nearbyint'
-../lib/.libs/libcomedi.so: undefined reference to `floor'
-collect2: error: ld returned 1 exit status
-make[2]: *** [comedi_test] Error 1
-make[2]: Leaving directory `/usr/local/src/comedilib/testing'
-make[1]: *** [all-recursive] Error 1
-make[1]: Leaving directory `/usr/local/src/comedilib'
-make: *** [all] Error 2
-\endcode
-then add the following line
-\code
-libcomedi_la_LIBADD = -lm
-\endcode
-to \c lib/Makefile.am after the line \c libcomedi_la_LDFLAGS. Then run
-\code
-$ make clean
-$ ./autogen.sh
-$ ./configure --prefix=/usr --sysconfdir=/etc
-$ make && make install
-\endcode
-
-
-\subsection installcomedicalib Comedi_calibrate
--# You may need to install the packages:  \c autoconf, \c libtool, 
-   \c libgsl0-dev, \c libboost-program-options-dev.
-\code
-$ apt-get install libgsl0-dev libboost-program-options-dev
-\endcode
--# Change to the \c comedi_calibrate directory as root:
-\code
-$ cd /usr/local/src/comedi_calibrate
-\endcode
--# Generate the configuration script by calling
-\code
-$ autoreconf -v -i
-\endcode
-You may ignore warnings and reminders.
--# Configure
-\code
-$ ./configure --prefix=/usr --sysconfdir=/etc
-\endcode
--# Compile and install (as root)
-\code
-$ make && make install
-\endcode
-
-
-\subsection testrelacs Test RELACS
--# If you haven't compiled RELACS yet, then follow the instructions in
-the top-level \c INSTALL file (the final \c make \c install is not necessary for testing).
-Otherwise, \c cd into the RELACS top-level directory and do (you do not have to be root for this,
-except for loading the kernel modules in point 2)
-\code
-$ ./configure
-$ cd plugins/linuxdevices/comedi
-$ make clean
-$ make
+make -j$(grep processor /proc/cpuinfo | wc -l)
 \endcode
 -# Load the dynamic clamp kernel module (as root):
 \code
-$ cd plugins/linuxdevices/comedi/module
-$ ./loadmodules.sh
+cd plugins/linuxdevices/rtaicomedi/module
+./loadmodules.sh
 \endcode
 -# Run RELACS
 \code
@@ -747,53 +449,23 @@ new group and tell udev to add the comedi device files to this group.
 -# Login as root.
 -# Create a new group "iocard":
 \code
-$ addgroup --system iocard
+addgroup --system iocard
 \endcode
 -# Add udev rules to the /etc/udev/rules.d directory:
 \code
-$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
+echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
 \endcode
 -# Run
 \code
-$ udevadm trigger
+udevadm trigger
 \endcode
 to apply your new udev rules
 -# Add users to the "iocard" group:
 \code
-$ adduser \<username\> iocard
+adduser \<username\> iocard
 \endcode
 After the next login, \c \<username\> is a member of the \c iocard group
 and and has sufficient permissions to access the data acquisition boards through \c Comedi.
-
-
-\section buffer Resize Comedi buffer
-
-To set the \c Comedi internal buffers to 640kB do as root:
-\code
-$ comedi_config -r /dev/comedi0
-$ comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi0 ni_pcimio
-\endcode
-Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
-
-
-\section calibration Calibrating analog input and output
-For calibrating analog input and output you should run \c comedi_calibrate 
-once in a while.
-\c comedi_calibrate writes a file to \c /usr/var/lib/comedi/calibrations that contains the calibration
-parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file and apply the
-calibration.
-
-For hardware calibrated boards (like NI E-Series boards) do
-\code
-$ comedi_calibrate --reset --calibrate -f /dev/comedi0
-\endcode
-
-For software calibrated boards (like NI M-Series boards) do
-\code
-$ comedi_soft_calibrate -f /dev/comedi0
-\endcode
-
-You may want to read the man page of \c comedi_calibrate.
 
 
 \section dynamicclamp Setting up dynamic clamp for RELACS
@@ -846,7 +518,7 @@ in an editor. Remove the hash marks in front of the following lines:
 \endcode
 The tell the system that you changed this file (still as root):
 \code
-$ restart rsyslog 
+restart rsyslog 
 \endcode
 
 \section rtailinks Links

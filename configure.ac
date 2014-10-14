@@ -109,7 +109,7 @@ RELACS_LIB_QT4()
 #################################################
 RELACS_LIB_COMEDI()
 RELACS_HEADER_RTAI()
-AM_CONDITIONAL(RELACS_COND_RTAI,[test "$RELACS_RTAI" != no])
+AM_CONDITIONAL(RELACS_COND_RTAI,[test "$RELACS_COMEDI" != no -a  "$RELACS_RTAI" != no])
 
 
 #################################################
