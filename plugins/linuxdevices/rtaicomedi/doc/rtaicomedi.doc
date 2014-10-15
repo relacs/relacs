@@ -1,14 +1,14 @@
 /*!
-\mainpage RTAI-Comedi Relacs Plugins
+\mainpage RTAI-comedi Relacs Plugins
 
 \brief Plugins for dynamic clamp based on RTAI and comedi.
 
 
 Comedi (linux control and measurement device interface) provides hardware drivers
 to many data acquisition boards with a common library interface.
-The RELACS Comedi plugins access data acquisition boards by means of the Comedi library.
+The RELACS comedi plugins access data acquisition boards by means of the comedi library.
 
-For general information about Comedi and a list of supported devices
+For general information about comedi and a list of supported devices
 see http://www.comedi.org
 
 \section rtaicomedicontent Content
@@ -17,10 +17,10 @@ see http://www.comedi.org
 - \ref installnewlib
 - \ref installrtai
 - \ref installcomedi
-- \ref testrelacs
+- \ref installrelacs
 - \ref udev
-- \ref dynamicclamp
 - \ref kernelmessages
+- \ref comedicheck
 - \ref rtailinks
 
 
@@ -29,7 +29,7 @@ see http://www.comedi.org
 For using dynamic clamp, i.e. some realtime computation, as it is
 implemented by the DynClampAnalogInput and DynClampAnalogOutput
 plugins, you need to install an RTAI-patched real-time linux
-kernel, RTAI kernelmodules, and comedi, as described in the following
+kernel, RTAI kernel modules, and comedi, as described in the following
 sections.
 
 
@@ -135,16 +135,16 @@ In the kernel configuration dialog you should do the following settings:
     - Disable "CPU idle PM support"
     .
   - Device Drivers:
-    - Enable "Staging drivers"
-      - Select "Data acquisition support (comedi)"
-        and all the comedi modules you need (or simply all of them)
+    - Staging drivers:
+      - Deselect "Data acquisition support (comedi)"
     .
   .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
 Select "Yes".
 -# Then compile and install the kernel
 \code
-make -j$(grep processor /proc/cpuinfo | wc -l) && make modules && make modules_install && make install
+export MAKEFLAGS=" -j$(grep -c "^processor" /proc/cpuinfo)"
+make && make modules && make modules_install && make install
 \endcode
 This takes quite a while.
 -# If necessary, install third party kernel modules as well,
@@ -173,7 +173,7 @@ apt-get -y install kernel-package
    \endcode
    -# Configure and build the kernel:
    \code
-export CONCURRENCY_LEVEL=$(grep processor /proc/cpuinfo | wc -l) # the number of CPU cores you have
+export CONCURRENCY_LEVEL=$(grep -c "^processor" /proc/cpuinfo)  # the number of CPU cores you have
 make-kpkg clean
 make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image # kernel-headers kernel-source
    \endcode
@@ -221,7 +221,7 @@ in \c /etc/defaults/grub .
 After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
 
 
-\section installnewlib Install the newlib library
+\section installnewlib Newlib library
 
 For dynamic clamp having math functions available in the kernel is quite handy. For this RTAI needs
 on a 64-bit system the math library from the newlib library as a replacement for the standrad \c libm.a .
@@ -240,7 +240,7 @@ make install
 \endcode
 
 
-\section rtaiinstall RTAI kernel modules
+\section installrtai RTAI kernel modules
 
 -# Make sure that you are root and you are really running your RTAI kernel!
    You can check with
@@ -272,7 +272,7 @@ Check the following settings:
     - Number of CPUs: set to the right value.
       If in doubt, look into the file \c /proc/cpuinfo or run
       \code
-grep processor /proc/cpuinfo | wc -l
+grep -c "^processor" /proc/cpuinfo
 \endcode
     .
  - Base system
@@ -351,73 +351,116 @@ Maybe this link is helpful to find good motherboards: http://wiki.linuxcnc.org/c
 (I am, however, not sure how this relates to RTAI).
 
 
-\section installcomedi Comedi
+\section installcomedi comedi data acquisition driver
 
-The comedi kernel modules are already part of the kernel. You only need to install the comedi library:
-\code
-sudo apt-get install libcomedi-dev
+For an RTAI kernel you definitely have to install the comedi drivers 
+yourself according to the following instructions:
+
+-# Login as root
+-# Remove all comedi modules:
+IFSORG="$IFS""
+IFS=","
+for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ print $4}'); do
+  modprobe -r $i
+done
+IFS="$IFSORG"
 \endcode
+-# Remove all installed comedi stuff:
+\code
+apt-get purge libcomedi-dev libcomedi0
+rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
+depmod -a
+\endcode
+-# Install comedi from source.
+Here are all commands that you can throw into a shell to completely install comedi:
+\code
+# install all required packages:
+apt-get -y install gcc g++ git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
 
-You should install the \c comedi drivers and library prior to
+# download comedi sources:
+cd /usr/local/src
+git clone git://comedi.org/git/comedi/comedi.git
+git clone git://comedi.org/git/comedi/comedilib.git
+git clone git://comedi.org/git/comedi/comedi_calibrate.git
+rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
+
+# comedi:
+cd /usr/local/src/comedi
+./autogen.sh
+PATH="$PATH:/usr/realtime/bin"
+./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
+make && make install
+depmod -a
+cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
+cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
+
+# comedilib:
+cd /usr/local/src/comedilib
+./autogen.sh
+./configure --prefix=/usr --sysconfdir=/etc
+make && make install
+
+# comedi_calibrate:
+cd /usr/local/src/comedi_calibrate
+autoreconf -v -i
+./configure --prefix=/usr --sysconfdir=/etc
+make && make install
+
+# setup udev permissions:
+addgroup --system iocard
+echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
+\endcode
+For details see the documentation for the comedi plugin set.
+
+
+\section installrelacs Setting up dynamic clamp for RELACS
+You should install \c RTAI and the \c comedi drivers and library prior to
 configuring RELACS, so that ./configure can detect the presence of the
-\c comedi library. If you install \c comedi later, simply run \c
+\c comedi library. If you install \c RTAI and \c comedi later, simply run \c
 ./configure and \c make again to detect comedi and compile the
 corresponding plugins for RELACS.
 
-
-\section installcomediold Install comedi from scratch
-
-For an RTAI kernel you definitely have to install the Comedi drivers 
-yourself according to the following instructions:
-
--# Follow the instructions above for installing 
-\ref installcomedidriver .
-For configuring \c Comedi you should use
+-# Login as a normal user
+-# If you are not member of the \c iocard group (necessary for accessing the comedi devices), 
+then
 \code
-$ ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
+sudo adduser $USER iocard
 \endcode
--# Check loading the \c Comedi module:
+\note You need to log out and log in again to actuelle be member of that group. Maybe it is enough just to open a new shell, though.
+-# \c cd into the RELACS top-level directory and run
 \code
-$ modprobe comedi
-\endcode
-On failure, call 
-\code
-$ dmesg
-\endcode
-to get more details. If it says "unknown symbol", then you might have forgotten
-to deselect the "Module versioning support" in the "loadable module support"
-section of the kernel configuration. Either recompile your kernel with the 
-"Module versioning support" deselected, or
-\code
-$ cp /lib/modules/`uname -r`/rtai/Module.symvers /usr/local/src/comedi/comedi
-$ make clean
-$ make && make install
-$ depmod -a
-$ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
-\endcode
--# Then follow the instructions above for installing (if not already done, this is independent of the kernel used)
-  - \ref installcomedilib
-  - \ref installcomedicalib
-
-
-\section testrelacs Test RELACS
--# Configure and compile RELACS. cd into the root directory of the relacs source tree, then:
-\code
-./bootstrap.sh
 ./configure
-make -j$(grep processor /proc/cpuinfo | wc -l)
 \endcode
--# Load the dynamic clamp kernel module (as root):
+This should detect comedi and RTAI (see message towards the end of the output of \c configure).
+-# Then clean and compile the dynamic clamp plugins and the kernel module:
 \code
-cd plugins/linuxdevices/rtaicomedi/module
-./loadmodules.sh
+cd plugins/linuxdevices/comedi
+make clean
+cd -
+cd plugins/linuxdevices/rtaicomedi
+make clean
+cd -
+make -j$(grep -c "^processor" /proc/cpuinfo)
 \endcode
+-# If you get an "-mpreferred-stack-boundary" error uncomment line 4 in \c plugins/linuxdevices/rtaicomedi/module/Makefile.in and run \c make again.
+-# Load the dynamic-clamp kernel module (as root):
+\code
+cd plugins/linuxdevices/comedi/module
+sudo ./loadmodules.sh
+cd -
+\endcode
+-# If you want to load the dynamic-clamp kernel module automatically during 
+the boot process, then call the \c loadmodules.sh script from the script
+\c /etc/rc.local . Simply add a line like this
+\code
+/where/ever/the/script/is/located/loadmodules.sh
+\endcode
+to \c /etc/rc.local.
 -# Run RELACS
 \code
-$ cd - # cd back into the top-level directory of RELACS
-$ cd plugins/patchclamp
-$ cp relacs.cfg.dynclamp relacs.cfg
-$ ./relacslocal
+cd plugins/patchclamp
+cp relacs.cfg.dynclamp relacs.cfg
+./relacslocal
 \endcode
 -# Possible problems are:
   - Data acquisition does not start:
@@ -438,7 +481,7 @@ $ chmod a+rw /dev/comedi*
     .
   .
 
-\section udev Setting up udev permissions for Comedi device files
+\section udev Setting up udev permissions for comedi device files
 
 Once comedi is installed you also need to make sure that you (the
 user) have appropriate permissions for accessing the comedi device
@@ -465,43 +508,18 @@ to apply your new udev rules
 adduser \<username\> iocard
 \endcode
 After the next login, \c \<username\> is a member of the \c iocard group
-and and has sufficient permissions to access the data acquisition boards through \c Comedi.
+and and has sufficient permissions to access the data acquisition boards through \c comedi.
 
-
-\section dynamicclamp Setting up dynamic clamp for RELACS
--# \c cd into the RELACS top-level directory and run
-\code
-$ ./configure
-\endcode
-This should detect RTAI (see message towards the end of the output of \c configure).
--# Then compile the dynamic clamp plugins and the kernel module:
-\code
-$ cd plugins/linuxdevices/comedi
-$ make clean
-$ make
-\endcode
--# Load the dynamic-clamp kernel module (as root):
-\code
-$ cd plugins/linuxdevices/comedi/module
-$ ./loadmodules.sh
-\endcode
--# If you want to load the dynamic-clamp kernel module automatically during 
-the boot process, then call the \c loadmodules.sh script from the script
-\c /etc/rc.local . Simply add a line like this
-\code
-/where/ever/the/script/is/located/loadmodules.sh
-\endcode
-to \c /etc/rc.local.
 
 \section kernelmessages Kernel messages
 When fiddling around with kernel modules you might want to have a look 
 at the kernel messages in \c /var/log/messages:
 \code
-$ tail -f /var/log/messages
+tail -f /var/log/messages
 \endcode
 alternatively use
 \code
-$ less /var/log/messages
+less /var/log/messages
 \endcode
 and hit 'F'. Both commands will then show what was added 
 to the messages immediately. Interrupt this by hitting \c ctrl-c.
@@ -520,6 +538,30 @@ The tell the system that you changed this file (still as root):
 \code
 restart rsyslog 
 \endcode
+
+
+\section comedicheck comedi leftovers
+-# Check loading the \c comedi module:
+\note We need to load the rtai modules first! Then udevadm trigger, then kcomedilib
+\code
+$ modprobe comedi
+\endcode
+On failure, call 
+\code
+$ dmesg
+\endcode
+to get more details. If it says "unknown symbol", then you might have forgotten
+to deselect the "Module versioning support" in the "loadable module support"
+section of the kernel configuration. Either recompile your kernel with the 
+"Module versioning support" deselected, or
+\code
+$ cp /lib/modules/`uname -r`/rtai/Module.symvers /usr/local/src/comedi/comedi
+$ make clean
+$ make && make install
+$ depmod -a
+$ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
+\endcode
+
 
 \section rtailinks Links
 - http://www.comedi.org

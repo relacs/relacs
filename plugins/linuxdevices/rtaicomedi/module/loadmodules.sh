@@ -8,10 +8,11 @@
 # process of your linux system, simply call this script from /etc/rc.local
 
 echo "please wait..."
-modprobe rtai_hal
-modprobe rtai_sched
-modprobe rtai_fifos
-# modprobe rtai_math
+insmod /usr/realtime/modules/rtai_hal.ko
+insmod /usr/realtime/modules/rtai_sched.ko
+insmod /usr/realtime/modules/rtai_fifos.ko
+insmod /usr/realtime/modules/rtai_math.ko
+udevadm trigger  # for comedi
 modprobe kcomedilib
 
 test -c /dev/dynclamp || mknod -m 666 /dev/dynclamp c 227 0

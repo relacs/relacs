@@ -24,14 +24,12 @@
 
 #include <comedilib.h>
 #include <relacs/digitalio.h>
-#include <relacs/comedi/moduledef.h>
+#include <relacs/comedi/comedidigitalio.h>
+#include <relacs/rtaicomedi/moduledef.h>
 using namespace std;
 using namespace relacs;
 
 namespace rtaicomedi {
-
-
-  class ComediDigitalIO;
 
 
 /*! 

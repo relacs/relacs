@@ -20,12 +20,12 @@
 */
 
 #include <relacs/relacsplugin.h>
-#include <relacs/comedi/dynclampanaloginput.h>
-#include <relacs/comedi/dynclampanalogoutput.h>
-#include <relacs/comedi/dynclampdigitalio.h>
-#include <relacs/comedi/dynclamptrigger.h>
+#include <relacs/rtaicomedi/dynclampanaloginput.h>
+#include <relacs/rtaicomedi/dynclampanalogoutput.h>
+#include <relacs/rtaicomedi/dynclampdigitalio.h>
+#include <relacs/rtaicomedi/dynclamptrigger.h>
 
-namespace comedi {
+namespace rtaicomedi {
 
   addAnalogInput( DynClampAnalogInput, comedi );
   addAnalogOutput( DynClampAnalogOutput, comedi );

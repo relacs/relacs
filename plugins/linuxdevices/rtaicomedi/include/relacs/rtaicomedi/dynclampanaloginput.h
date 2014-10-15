@@ -26,7 +26,7 @@
 #include <comedilib.h>
 #include <relacs/daqerror.h>
 #include <relacs/analoginput.h>
-#include <relacs/comedi/moduledef.h>
+#include <relacs/rtaicomedi/moduledef.h>
 using namespace std;
 using namespace relacs;
 

@@ -29,7 +29,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <relacs/str.h>
-#include <relacs/comedi/comedidigitalio.h>
 #include <relacs/rtaicomedi/dynclampdigitalio.h>
 using namespace std;
 using namespace relacs;
