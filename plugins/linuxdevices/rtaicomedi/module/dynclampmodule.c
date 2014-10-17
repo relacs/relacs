@@ -981,8 +981,11 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     syncSECInsnHigh.subdev = subdevice;
     syncSECInsnHigh.chanspec = CR_PACK( dioIOC->lines, 0, 0 );
     syncSECPulse = dioIOC->pulsewidth;
-    if ( syncSECPulse <= 0 )
+    if ( syncSECPulse <= 0 ) {
       ERROR_MSG( "setDigitalIO: syncSECPulse %d ns is not positive!\n", syncSECPulse );
+      syncSECPulse = 20000;
+      ERROR_MSG( "setDigitalIO: setting syncSECPulse to %d ns.\n", syncSECPulse );
+    }
     if ( comedi_do_insn( syncSECDevice, &syncSECInsnHigh ) != 1 ) {
       comedi_perror( "setDigitalIO() -> DIO_SET_SYNCPULSE" );
       ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
