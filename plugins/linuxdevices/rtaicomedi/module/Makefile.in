@@ -4,31 +4,21 @@ EXTRA_CFLAGS += @RTAI_CPPFLAGS@
 #EXTRA_CFLAGS += -mpreferred-stack-boundary=4
 EXTRA_CFLAGS += -Wall
 
+KBUILD_EXTRA_SYMBOLS := /lib/modules/$(shell uname -r)/comedi/Module.symvers
 
-obj-m := dynclampmodule.o rtmodule.o
+obj-m := dynclampmodule.o # rtmodule.o
 
 else
 
-LINUXDIR := /lib/modules/`uname -r`/build
-CC := gcc
+KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 
 all: module
 
 module:
-# if builddir is not srcdir, make symbolic links in the builddir to the
-# source files so the kernel's build system doesn't get lost
-# (from comedi).
-	if test "$(srcdir)" != "."; then \
-	  for file in `ls @abs_srcdir@/*\.[ch] | grep -v \.mod\.c`; do \
-	    LINK_NAME=`basename "$$file"`; \
-	    if test ! -e $$LINK_NAME; then ln -vs $$file $$LINK_NAME; fi; \
-	  done; \
-	fi
-# invoke kernel's build system:
-	$(MAKE) -C $(LINUXDIR) CC=$(CC) M=@abs_builddir@ modules
+	$(MAKE) -C $(KERNELDIR) M=@abs_builddir@ modules
 
 clean:
-	$(MAKE) -C $(LINUXDIR) CC=$(CC) M=@abs_builddir@ clean
+	$(MAKE) -C $(KERNELDIR) M=@abs_builddir@ clean
 # Michale Hanke: This COMEDI module clean target tries to clean the
 # systems /lib. This is most likely not desired for a package build.
 # ... and should not be used.
@@ -36,6 +26,9 @@ clean:
 
 distclean: clean
 	rm -f modules.order
+
+help:
+	$(MAKE) -C $(KERNELDIR) M=@abs_builddir@ help
 
 dvi:
 html:

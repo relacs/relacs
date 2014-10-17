@@ -116,7 +116,10 @@ In the kernel configuration dialog you should do the following settings:
   - General setup: set "Local version" to "-rtai" or make sure it is empty in case you are using \c make-kpkg
   - Enable loadable module support: 
     - Select "Enable module support"
-    - Deselect "Module versioning support"
+    - You may deselect "Module versioning support" 
+      (if you select this option you have to copy the RTAI and comedi \c Module.symvers files around 
+      as described below. This has the advantage that you get rid of annoying warnings
+      regarding undefined functions during compilation)
   - Processor type and features: 
     - Disable "Tickless System"
     - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
@@ -386,11 +389,13 @@ rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
 
 # comedi:
 cd /usr/local/src/comedi
-./autogen.sh
+cp /usr/realtime/modules/Module.symvers comedi/
+$./autogen.sh
 PATH="$PATH:/usr/realtime/bin"
 ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
 make && make install
 depmod -a
+cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi/
 cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
 cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
 
@@ -426,7 +431,7 @@ then
 \code
 sudo adduser $USER iocard
 \endcode
-\note You need to log out and log in again to actuelle be member of that group. Maybe it is enough just to open a new shell, though.
+\note You need to log out and log in again to actually be member of that group (maybe it is enough just to open a new shell, though).
 -# \c cd into the RELACS top-level directory and run
 \code
 ./configure
