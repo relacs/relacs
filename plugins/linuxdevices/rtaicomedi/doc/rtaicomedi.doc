@@ -20,7 +20,6 @@ see http://www.comedi.org
 - \ref installrelacs
 - \ref udev
 - \ref kernelmessages
-- \ref comedicheck
 - \ref rtailinks
 
 
@@ -76,9 +75,6 @@ ln -sfv linux-3.8.13-rtai linux
 cd linux
 make mrproper
 \endcode
-\note For compiling the DynClamp plugin RELACS assumes that 
-\c /usr/src/linux points to your rtai patched kernel!
-So the softlink is important.
 -# Patch the kernel (use the patch file that matches the downloaded kernel)
 \code
 $ cd /usr/src/linux
@@ -147,7 +143,10 @@ Select "Yes".
 -# Then compile and install the kernel
 \code
 export MAKEFLAGS=" -j$(grep -c "^processor" /proc/cpuinfo)"
-make && make modules && make modules_install && make install
+make
+make modules
+make modules_install
+make install
 \endcode
 This takes quite a while.
 -# If necessary, install third party kernel modules as well,
@@ -294,7 +293,8 @@ In case this fails, you should check and/or edit the file \c .rtai_config
 and run \c .configure manually.
 -# Compile and install
 \code
-make && make install
+make
+make install
 \endcode
 Known issues:
   - In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
@@ -393,7 +393,8 @@ cp /usr/realtime/modules/Module.symvers comedi/
 $./autogen.sh
 PATH="$PATH:/usr/realtime/bin"
 ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
-make && make install
+make
+make install
 depmod -a
 cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi/
 cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
@@ -403,13 +404,15 @@ cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
 cd /usr/local/src/comedilib
 ./autogen.sh
 ./configure --prefix=/usr --sysconfdir=/etc
-make && make install
+make
+make install
 
 # comedi_calibrate:
 cd /usr/local/src/comedi_calibrate
 autoreconf -v -i
 ./configure --prefix=/usr --sysconfdir=/etc
-make && make install
+make
+make install
 
 # setup udev permissions:
 addgroup --system iocard
@@ -539,32 +542,9 @@ in an editor. Remove the hash marks in front of the following lines:
         cron,daemon.none;\\
         mail,news.none          -/var/log/messages
 \endcode
-The tell the system that you changed this file (still as root):
+Then tell the system that you changed this file (still as root):
 \code
 restart rsyslog 
-\endcode
-
-
-\section comedicheck comedi leftovers
--# Check loading the \c comedi module:
-\note We need to load the rtai modules first! Then udevadm trigger, then kcomedilib
-\code
-$ modprobe comedi
-\endcode
-On failure, call 
-\code
-$ dmesg
-\endcode
-to get more details. If it says "unknown symbol", then you might have forgotten
-to deselect the "Module versioning support" in the "loadable module support"
-section of the kernel configuration. Either recompile your kernel with the 
-"Module versioning support" deselected, or
-\code
-$ cp /lib/modules/`uname -r`/rtai/Module.symvers /usr/local/src/comedi/comedi
-$ make clean
-$ make && make install
-$ depmod -a
-$ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
 \endcode
 
 
