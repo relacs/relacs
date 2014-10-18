@@ -60,15 +60,18 @@ float paramOutput[PARAMOUTPUT_N] = { 10.0, 0.0, 50.0, 5.0, 1.0 };
   /*! Variables used by the model. */
 float meaninput = 0.0;
 float vgate = 0.0;
+#ifdef ENABLE_LOOKUPTABLES
 float xmin = 0.0;
 float xmax = 0.0;
 float dx = 1.0;
+#endif
 
 void initModel( void )
 {
   moduleName = "/dev/dynclamp";
   vgate = 0.0;
 
+#ifdef ENABLE_LOOKUPTABLES
   // steady-state activation from lookuptable:
   if ( lookupn[0] > 0 ) {
     xmin = lookupx[0][0];
@@ -81,6 +84,7 @@ void initModel( void )
     xmax = 0.0;
     dx = 1.0;
   }
+#endif
 }
 
 void computeModel( void )
@@ -90,6 +94,7 @@ void computeModel( void )
   // voltage gated channel:
   if ( paramOutput[2] < 0.1 )
     paramOutput[2] = 0.1;
+#ifdef ENABLE_LOOKUPTABLES
   // steady-state activation from lookuptable:
   x = paramOutput[4]*(input[0]-paramOutput[3]);
   k = 0;
@@ -98,13 +103,17 @@ void computeModel( void )
   else if ( x >= xmin )
     k = (x-xmin)/dx;
   vgate += loopInterval*1000.0/paramOutput[2]*(-vgate+lookupy[0][k]);
-  //  vgate += loopInterval*1000.0/paramOutput[2]*(-vgate+1.0/(1.0+exp(-paramOutput[4]*(input[0]-paramOutput[3]))));
+#else
+  vgate += loopInterval*1000.0/paramOutput[2]*(-vgate+1.0/(1.0+exp(-paramOutput[4]*(input[0]-paramOutput[3]))));
+#endif
   paramInput[0] = -0.001*paramOutput[0]*vgate*(input[0]-paramOutput[1]);
   // total injected current:
   output[0] = paramInput[0];
 }
 
 #else
+
+#ifdef ENABLE_LOOKUPTABLES
 
 /*! This function is called from DynClampAnalogOutput in user
     space/C++ context and can be used to create some lookuptables for
@@ -136,5 +145,7 @@ int generateLookupTable( int k, float **x, float **y, int *n )
   }
   return -1;
 }
+
+#endif
 
 #endif

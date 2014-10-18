@@ -70,15 +70,20 @@ void computeModel( void )
   phase += paramOutput[1] * loopInterval;
   if ( phase >= 1.0 )
     phase -= 1.0;
+#ifdef ENABLE_LOOKUPTABLES
   // cosine from lookuptable:
   k = phase*lookupn[0];
   // eod:
   paramInput[0] = paramOutput[0] * lookupy[0][k];
-  //  paramInput[0] = paramOutput[0] * cos( 2.0*M_PI*phase );
+#else
+  paramInput[0] = paramOutput[0] * cos( 2.0*M_PI*phase );
+#endif
   output[0] = paramInput[0];
 }
 
 #else
+
+#ifdef ENABLE_LOOKUPTABLES
 
 /*! This function is called from DynClampAnalogOutput in user
     space/C++ context and can be used to create some lookuptables for
@@ -107,5 +112,7 @@ int generateLookupTable( int k, float **x, float **y, int *n )
   }
   return -1;
 }
+
+#endif
 
 #endif

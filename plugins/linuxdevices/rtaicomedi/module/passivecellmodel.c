@@ -87,6 +87,8 @@ void computeModel( void )
 
 #else
 
+#ifdef ENABLE_LOOKUPTABLES
+
 /*! This function is called from DynClampAnalogOutput in user
     space/C++ context and can be used to create some lookuptables for
     nonlinear functions to be used by computeModel(). The implementation of this
@@ -101,5 +103,7 @@ int generateLookupTable( int k, float **x, float **y, int *n )
 {
   return -1;
 }
+
+#endif
 
 #endif

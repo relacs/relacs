@@ -18,17 +18,20 @@
 
 // *** FEATURES ***
 
-  /*! Needed to compute a model and to enable math support. */
-#define ENABLE_COMPUTATION
+  /*! Needed to compute a model. */
+// #define ENABLE_COMPUTATION
+
+  /*! Generate lokup tables and do not use rtai_math module. */
+// #define ENABLE_LOOKUPTABLES
 
   /*! Generates internal trigger events on which analog output signals can be started. */
 // #define ENABLE_TRIGGER
 
   /*! Sets digitial outputs high or low at various time points of the dynamic clamp loop. */
-//#define ENABLE_TTLPULSE
+// #define ENABLE_TTLPULSE
 
   /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
-#define ENABLE_SYNCSEC
+// #define ENABLE_SYNCSEC
 
   /*! Measures mean and standard deviation of periodic task. */
 // #define ENABLE_STATISTICS

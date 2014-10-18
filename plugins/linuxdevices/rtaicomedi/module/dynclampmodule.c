@@ -16,7 +16,9 @@
 #include "moduledef.h"
 
 #ifdef ENABLE_COMPUTATION
-// #include <rtai_math.h>
+#ifndef ENABLE_LOOKUPTABLE
+#include <rtai_math.h>
+#endif
 #endif
 
 
@@ -144,10 +146,12 @@ struct triggerT trigger;
 int traceIndex = 0;
 int chanIndex = 0;
 
+#ifdef ENABLE_LOOKUPTABLE
 int lookupinx = 0;
 int lookupn[MAXLOOKUPTABLES];
 float* lookupx[MAXLOOKUPTABLES];
 float* lookupy[MAXLOOKUPTABLES];
+#endif
 #endif
 
 // RTAI TASK:
@@ -275,7 +279,9 @@ static inline void value_to_sample( struct chanT *pChan, float value )
 void init_globals( void )
 {
 #ifdef ENABLE_COMPUTATION
+#ifdef ENABLE_LOOKUPTABLE
   int k;
+#endif
 #endif
 
   deviceN = 0;
@@ -285,6 +291,7 @@ void init_globals( void )
 #ifdef ENABLE_COMPUTATION
   traceIndex = 0;
   chanIndex = 0;
+#ifdef ENABLE_LOOKUPTABLE
   lookupinx = 0;
   for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
     lookupn[k] = 0;
@@ -297,6 +304,7 @@ void init_globals( void )
       lookupy[lookupinx] = NULL;
     }
   }
+#endif
 #endif
   memset( device, 0, sizeof(device) );
   memset( subdev, 0, sizeof(subdev) );
@@ -984,7 +992,13 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     if ( syncSECPulse <= 0 ) {
       ERROR_MSG( "setDigitalIO: syncSECPulse %d ns is not positive!\n", syncSECPulse );
       syncSECPulse = 20000;
-      ERROR_MSG( "setDigitalIO: setting syncSECPulse to %d ns.\n", syncSECPulse );
+      syncSECDevice = 0;
+      syncSECInsnLow.subdev = 0;
+      syncSECInsnLow.chanspec = 0;
+      syncSECInsnHigh.subdev = 0;
+      syncSECInsnHigh.chanspec = 0;
+      ERROR_MSG( "setDigitalIO: disabled syncSECPulse.\n" );
+      return -EVALUE;
     }
     if ( comedi_do_insn( syncSECDevice, &syncSECInsnHigh ) != 1 ) {
       comedi_perror( "setDigitalIO() -> DIO_SET_SYNCPULSE" );
@@ -995,6 +1009,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
       syncSECInsnLow.chanspec = 0;
       syncSECInsnHigh.subdev = 0;
       syncSECInsnHigh.chanspec = 0;
+      ERROR_MSG( "setDigitalIO: disabled syncSECPulse.\n" );
       return -EFAULT;
     }
   }
@@ -2011,6 +2026,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 
 #ifdef ENABLE_COMPUTATION
+#idfe ENABLE_LOOKUPTABLE
     // ******* Lookup tables: ***********************************************
 
   case IOC_SET_LOOKUP_K:
@@ -2127,6 +2143,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     break;
 
 #endif
+#endif
 
   default:
     ERROR_MSG( "dynclampmodule_ioctl ERROR - Invalid IOCTL!\n" );
@@ -2192,7 +2209,9 @@ static int __init init_rtmodule( void )
   dev_t dev = 0;
   int retVal = 0;
 #ifdef ENABLE_COMPUTATION
+#ifdef ENABLE_LOOKUPTABLE
   int k;
+#endif
 #endif
 
   // register module device file:
@@ -2223,11 +2242,13 @@ static int __init init_rtmodule( void )
   mutex_init( &mutex );
 
 #ifdef ENABLE_COMPUTATION
+#ifdef ENABLE_LOOKUPTABLE
   for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
     lookupn[k] = 0;
     lookupx[lookupinx] = NULL;
     lookupy[lookupinx] = NULL;
   }
+#endif
 #endif
 
   // initialize global variables:

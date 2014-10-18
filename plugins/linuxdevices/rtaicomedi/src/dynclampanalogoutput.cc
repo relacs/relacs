@@ -286,6 +286,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
 
   // compute lookup tables:
 #ifdef ENABLE_COMPUTATION
+#ifdef ENABLE_LOOKUPTABLES
   for ( int k=0; ; k++ ) {
     float *x = 0;
     float *y = 0;
@@ -320,6 +321,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
     delete [] x;
     delete [] y;
   }
+#endif
 #endif
 
   IsPrepared = false;
