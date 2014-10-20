@@ -556,5 +556,7 @@ restart rsyslog
 - http://www.lara.unb.br/~phsantana/data/files/technotes/HowTo_RTAI_Linux.pdf
 - http://rt-fsm.googlecode.com/svn/trunk/INSTALL
 - http://www.cyberciti.biz/faq/howto-install-kernel-headers-package/
-
+.
+- Linux kernel crash dump: https://help.ubuntu.com/12.04/serverguide/kernel-crash-dump.html
+- crash debugger: http://docs.oracle.com/cd/E52668_01/E54669/html/ol7-s4-sysdumpa.html
 */

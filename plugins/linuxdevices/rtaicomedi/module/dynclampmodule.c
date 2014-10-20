@@ -2026,7 +2026,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 
 #ifdef ENABLE_COMPUTATION
-#idfe ENABLE_LOOKUPTABLE
+#ifdef ENABLE_LOOKUPTABLE
     // ******* Lookup tables: ***********************************************
 
   case IOC_SET_LOOKUP_K:
