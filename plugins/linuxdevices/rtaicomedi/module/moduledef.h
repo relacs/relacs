@@ -19,10 +19,10 @@
 // *** FEATURES ***
 
   /*! Needed to compute a model. */
-// #define ENABLE_COMPUTATION
+#define ENABLE_COMPUTATION
 
   /*! Generate lokup tables and do not use rtai_math module. */
-// #define ENABLE_LOOKUPTABLES
+#define ENABLE_LOOKUPTABLES
 
   /*! Generates internal trigger events on which analog output signals can be started. */
 // #define ENABLE_TRIGGER

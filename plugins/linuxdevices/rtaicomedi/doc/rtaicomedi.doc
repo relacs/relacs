@@ -45,12 +45,12 @@ cd /usr/local/src
 /usr/local/src. Either from the official RTAI cvs repository
 \code
 cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai co magma
-ln -sf magma rtai
+ln -sfn magma rtai
 \endcode
 or from Shahbaz Youssefi's rtai clone on github:
 \code
 git clone https://github.com/ShabbyX/RTAI.git
-ln -sf RTAI rtai
+ln -sfn RTAI rtai
 \endcode
 \note Read the rtai/README.INSTALL file!
 -# Find out your CPU architecture:
@@ -71,7 +71,7 @@ cd /usr/src
 wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.8.13.tar.xz
 tar xf linux-3.8.13.tar.xz
 mv linux-3.8.13 linux-3.8.13-rtai
-ln -sfv linux-3.8.13-rtai linux
+ln -sfn linux-3.8.13-rtai linux
 cd linux
 make mrproper
 \endcode
@@ -185,7 +185,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
 cd ..
 dpkg -i linux-image-3.8.13-rtai_1.0_amd64.deb # linux-headers-3.8.13-rtai_1.0_amd64.deb
    \endcode
-   -# continue with step 10 (if you need to modify your grub configuration) or step 11.
+   -# continue with step 10 (only if you want to modify your grub configuration) or step 11.
 -# Update your boot loader:
 \code
 update-grub
@@ -303,21 +303,31 @@ apt-get install gcc-multilib
 \endcode
   - In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
   then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
-  - If you get error messages like 
-    "../../../base/sched/liblxrt/.libs/liblxrt.so: undefined reference to `pthread_create'",
-    i.e. undefined references to various pthread functions,
-    then open \c base/sched/liblxrt/GNUmakefile in you favourite editor,
-    find the line containing 'liblxrt_la_LIBADD' and add "-lpthread" to it so that this line looks like
-    \code
+  - (Old) rtai_lxrt errors:
+    - If you get error messages like 
+      "../../../base/sched/liblxrt/.libs/liblxrt.so: undefined reference to `pthread_create'",
+      i.e. undefined references to various pthread functions,
+      then open \c base/sched/liblxrt/GNUmakefile in you favourite editor,
+      find the line containing 'liblxrt_la_LIBADD' and add "-lpthread" to it so that this line looks like
+      \code
 liblxrt_la_LIBADD = -lpthread
 \endcode
-    Then
+    - In case of an error message like
+      "../../../../base/include/rtai_lxrt.h:655:11: error: ‘CLONE_VM’ undeclared (first use in this function)"
+      open \c base/include/rtai_lxrt.h in you favorite editor and add the line
+      \code
+#include <linux/sched.h>
+\endcode
+      right before the line "#include <rtai_sched.h>"
+    .
+    In both cases do
     \code
 cd base/sched/liblxrt
 make clean
 cd -
 make
 \endcode
+  - 
   .
 -# Test RTAI by loading some modules:
 \code
@@ -390,10 +400,10 @@ rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
 # comedi:
 cd /usr/local/src/comedi
 cp /usr/realtime/modules/Module.symvers comedi/
-$./autogen.sh
+./autogen.sh
 PATH="$PATH:/usr/realtime/bin"
 ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
-make
+make -j$(grep -c "^processor" /proc/cpuinfo)
 make install
 depmod -a
 cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi/
@@ -463,7 +473,7 @@ the boot process, then call the \c loadmodules.sh script from the script
 \code
 /where/ever/the/script/is/located/loadmodules.sh
 \endcode
-to \c /etc/rc.local.
+to \c /etc/rc.local (as root).
 -# Run RELACS
 \code
 cd plugins/patchclamp

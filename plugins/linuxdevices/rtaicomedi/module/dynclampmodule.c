@@ -16,7 +16,7 @@
 #include "moduledef.h"
 
 #ifdef ENABLE_COMPUTATION
-#ifndef ENABLE_LOOKUPTABLE
+#ifndef ENABLE_LOOKUPTABLES
 #include <rtai_math.h>
 #endif
 #endif
@@ -146,7 +146,7 @@ struct triggerT trigger;
 int traceIndex = 0;
 int chanIndex = 0;
 
-#ifdef ENABLE_LOOKUPTABLE
+#ifdef ENABLE_LOOKUPTABLES
 int lookupinx = 0;
 int lookupn[MAXLOOKUPTABLES];
 float* lookupx[MAXLOOKUPTABLES];
@@ -279,7 +279,7 @@ static inline void value_to_sample( struct chanT *pChan, float value )
 void init_globals( void )
 {
 #ifdef ENABLE_COMPUTATION
-#ifdef ENABLE_LOOKUPTABLE
+#ifdef ENABLE_LOOKUPTABLES
   int k;
 #endif
 #endif
@@ -291,7 +291,7 @@ void init_globals( void )
 #ifdef ENABLE_COMPUTATION
   traceIndex = 0;
   chanIndex = 0;
-#ifdef ENABLE_LOOKUPTABLE
+#ifdef ENABLE_LOOKUPTABLES
   lookupinx = 0;
   for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
     lookupn[k] = 0;
@@ -2026,7 +2026,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 
 #ifdef ENABLE_COMPUTATION
-#ifdef ENABLE_LOOKUPTABLE
+#ifdef ENABLE_LOOKUPTABLES
     // ******* Lookup tables: ***********************************************
 
   case IOC_SET_LOOKUP_K:
@@ -2209,7 +2209,7 @@ static int __init init_rtmodule( void )
   dev_t dev = 0;
   int retVal = 0;
 #ifdef ENABLE_COMPUTATION
-#ifdef ENABLE_LOOKUPTABLE
+#ifdef ENABLE_LOOKUPTABLES
   int k;
 #endif
 #endif
@@ -2242,7 +2242,7 @@ static int __init init_rtmodule( void )
   mutex_init( &mutex );
 
 #ifdef ENABLE_COMPUTATION
-#ifdef ENABLE_LOOKUPTABLE
+#ifdef ENABLE_LOOKUPTABLES
   for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
     lookupn[k] = 0;
     lookupx[lookupinx] = NULL;
