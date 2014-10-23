@@ -1595,7 +1595,7 @@ void Chirps::analyze( void )
       beatfreq = 1.0/(events(LocalBeatPeakEvents[0])[bpe] - events(LocalBeatPeakEvents[0])[bpe-1]);
 
       // location of chirp relative to beat:
-      if ( AM || noglobaleod ) {
+      if ( AM ) {
 	beatphase = BeatPhases[k];
       }
       else {
