@@ -862,7 +862,7 @@ void SAM::analyze( void )
   if ( AM || FreqAbs ) {
     for ( double t = fabs(0.25/TrueDeltaF); t < Duration; t += fabs(1.0/TrueDeltaF) ) {
       double t0 = signalTime() + t;
-      if ( ! events( ChirpEvents ).within( t0, 0.03 ) &&
+      if ( ChirpEvents >= 0 && ! events( ChirpEvents ).within( t0, 0.03 ) &&
 	   t0 >= Skip * Period + signalTime() && 
 	   t0 <= Signal->duration() - 0.5*Period + signalTime() ) {
 	beattimes.push( t0 );
@@ -899,7 +899,7 @@ XXX
       if ( p - floor( p ) < 0.95 &&
 	   p2 - floor( p2 ) > 0.95 &&
       */
-	   ! events( ChirpEvents ).within( t0, 0.03 ) &&
+	   ChirpEvents >= 0 && ! events( ChirpEvents ).within( t0, 0.03 ) &&
 	   t0 >= Skip * Period + signalTime() && 
 	   t0 <= Signal->duration() - 2.0*Skip*Period + signalTime() ) {
 	beattimes.push( localeod[ pi - 1 ] );
@@ -1014,10 +1014,12 @@ XXX
       AllNerveAmplT.push( peaktroughs[1][k] - left, peaktroughs[1].eventSize( k ) );
     }
     // averaged amplitude:
-    double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
-    for ( int k=0; k<AllNerveAmplP.size(); k++ ) {
-      AllNerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
-      left += st;
+    if ( peaktroughs[0].size() > 1 ) {
+      double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
+      for ( int k=0; k<AllNerveAmplP.size(); k++ ) {
+	AllNerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
+	left += st;
+      }
     }
   }
 }
