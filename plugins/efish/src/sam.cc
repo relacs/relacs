@@ -33,7 +33,7 @@ namespace efish {
 
 
 SAM::SAM( void )
-  : RePro( "SAM", "efish", "Jan Benda", "2.0", "Dec 01, 2009" )
+  : RePro( "SAM", "efish", "Jan Benda", "2.2", "Oct 23, 2014" )
 {
   // parameter:
   ReadCycles = 100;
@@ -84,12 +84,15 @@ SAM::SAM( void )
   NerveAmplP.clear();
   NerveAmplT.clear();
   NerveAmplM.clear();
+  NerveAmplS.clear();
   AllNerveAmplP.clear();
   AllNerveAmplT.clear();
   AllNerveAmplM.clear();
+  AllNerveAmplS.clear();
   NerveMeanAmplP.clear();
   NerveMeanAmplT.clear();
   NerveMeanAmplM.clear();
+  NerveMeanAmplS.clear();
   RateDeltaT = 0.005;   // seconds
 
   // header for files:
@@ -118,6 +121,9 @@ SAM::SAM( void )
   NerveKey.newSection( "average" );
   NerveKey.addNumber( "time", "ms", "%9.2f" );
   NerveKey.addNumber( "ampl", "uV", "%7.2f" );
+
+  SmoothKey.addNumber( "time", "ms", "%9.2f" );
+  SmoothKey.addNumber( "ampl", "uV", "%7.2f" );
 
   // plot:
   setWidget( &P );
@@ -252,12 +258,15 @@ int SAM::main( void )
     NerveAmplP.reserve( beats );
     NerveAmplT.reserve( beats );
     NerveAmplM.reserve( beats );
+    NerveAmplS.reserve( beats );
     AllNerveAmplP.reserve( (int)rint(1500.0*Duration) );
     AllNerveAmplT.reserve( (int)rint(1500.0*Duration) );
     AllNerveAmplM.reserve( (int)rint(1500.0*Duration) );
+    AllNerveAmplS = SampleDataD( 0.0, Duration, 0.0001 );
     NerveMeanAmplP = SampleDataD( -0.5*Period, 0.5*Period, 0.0005 );
     NerveMeanAmplT = SampleDataD( -0.5*Period, 0.5*Period, 0.0005 );
     NerveMeanAmplM = SampleDataD( -0.5*Period, 0.5*Period, 0.0005 );
+    NerveMeanAmplS = SampleDataD( -0.5*Period, 0.5*Period, 0.0001 );
   }
 
   Header.erase( "Settings" );
@@ -506,12 +515,15 @@ void SAM::stop( void )
     NerveAmplP.clear();
     NerveAmplT.clear();
     NerveAmplM.clear();
+    NerveAmplS.clear();
     AllNerveAmplP.free();
     AllNerveAmplT.free();
     AllNerveAmplM.free();
+    AllNerveAmplS.free();
     NerveMeanAmplP.clear();
     NerveMeanAmplT.clear();
     NerveMeanAmplM.clear();
+    NerveMeanAmplS.clear();
   }
   writeZero( AM ? GlobalAMEField : GlobalEField );
 }
@@ -670,33 +682,63 @@ void SAM::saveAllSpikes( int trace )
 
 void SAM::saveNerve( void )
 {
-  // create file:
-  ofstream df( addPath( "samnerveampl.dat" ).c_str(),
-	       ofstream::out | ofstream::app );
-  if ( ! df.good() )
-    return;
+  {
+    // create file:
+    ofstream df( addPath( "samnerveampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
 
-  // write header and key:
-  if ( Count == 0 ) {
-    df << '\n' << '\n';
-    Header.save( df, "# ", 0, Options::FirstOnly);
-    df << '\n';
-    NerveKey.saveKey( df, true, true );
+    // write header and key:
+    if ( Count == 0 ) {
+      df << '\n' << '\n';
+      Header.save( df, "# ", 0, Options::FirstOnly);
+      df << '\n';
+      NerveKey.saveKey( df, true, true );
+    }
+
+    // write data:
+    for ( unsigned int i=Offset; i<NerveAmplP.size(); i++ ) {
+      df << '\n';
+      df << "# trial: " << Count << '\n';
+      df << "#  beat: " << i << '\n';
+      for ( int j=0; j<NerveAmplP[i].size(); j++ ) {
+	NerveKey.save( df, 1000.0 * NerveAmplP[i].x( j ), 0 );
+	NerveKey.save( df, NerveAmplP[i][j] );
+	NerveKey.save( df, 1000.0 * NerveAmplT[i].x( j ) );
+	NerveKey.save( df, NerveAmplT[i][j] );
+	NerveKey.save( df, 1000.0 * NerveAmplM[i].x( j ) );
+	NerveKey.save( df, NerveAmplM[i][j] );
+	df << '\n';
+      }
+    }
   }
 
-  // write data:
-  for ( unsigned int i=Offset; i<NerveAmplP.size(); i++ ) {
-    df << '\n';
-    df << "# trial: " << Count << '\n';
-    df << "#  beat: " << i << '\n';
-    for ( int j=0; j<NerveAmplP[i].size(); j++ ) {
-      NerveKey.save( df, 1000.0 * NerveAmplP[i].x( j ), 0 );
-      NerveKey.save( df, NerveAmplP[i][j] );
-      NerveKey.save( df, 1000.0 * NerveAmplT[i].x( j ) );
-      NerveKey.save( df, NerveAmplT[i][j] );
-      NerveKey.save( df, 1000.0 * NerveAmplM[i].x( j ) );
-      NerveKey.save( df, NerveAmplM[i][j] );
+  {
+    // create file:
+    ofstream df( addPath( "samnervesmoothampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
+
+    // write header and key:
+    if ( Count == 0 ) {
+      df << '\n' << '\n';
+      Header.save( df, "# ", 0, Options::FirstOnly);
       df << '\n';
+      SmoothKey.saveKey( df, true, true );
+    }
+
+    // write data:
+    for ( unsigned int i=Offset; i<NerveAmplS.size(); i++ ) {
+      df << '\n';
+      df << "# trial: " << Count << '\n';
+      df << "#  beat: " << i << '\n';
+      for ( int j=0; j<NerveAmplS[i].size(); j++ ) {
+	NerveKey.save( df, 1000.0 * NerveAmplS[i].pos( j ), 0 );
+	NerveKey.save( df, NerveAmplS[i][j] );
+	df << '\n';
+      }
     }
   }
 }
@@ -704,31 +746,58 @@ void SAM::saveNerve( void )
 
 void SAM::saveAllNerve( void )
 {
-  // create file:
-  ofstream df( addPath( "samallnerveampl.dat" ).c_str(),
-	       ofstream::out | ofstream::app );
-  if ( ! df.good() )
-    return;
+  {
+    // create file:
+    ofstream df( addPath( "samallnerveampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
 
-  // write header and key:
-  if ( Count == 0 ) {
-    df << '\n' << '\n';
-    Header.save( df, "# ", 0, Options::FirstOnly );
-    df << '\n';
-    NerveKey.saveKey( df, true, true );
-  }
+    // write header and key:
+    if ( Count == 0 ) {
+      df << '\n' << '\n';
+      Header.save( df, "# ", 0, Options::FirstOnly );
+      df << '\n';
+      NerveKey.saveKey( df, true, true );
+    }
       
-  // write data:
-  df << '\n';
-  df << "# trial: " << Count << '\n';
-  for ( int j=0; j<AllNerveAmplP.size(); j++ ) {
-    NerveKey.save( df, 1000.0 * AllNerveAmplP.x( j ), 0 );
-    NerveKey.save( df, AllNerveAmplP[j] );
-    NerveKey.save( df, 1000.0 * AllNerveAmplT.x( j ) );
-    NerveKey.save( df, AllNerveAmplT[j] );
-    NerveKey.save( df, 1000.0 * AllNerveAmplM.x( j ) );
-    NerveKey.save( df, AllNerveAmplM[j] );
+    // write data:
     df << '\n';
+    df << "# trial: " << Count << '\n';
+    for ( int j=0; j<AllNerveAmplP.size(); j++ ) {
+      NerveKey.save( df, 1000.0 * AllNerveAmplP.x( j ), 0 );
+      NerveKey.save( df, AllNerveAmplP[j] );
+      NerveKey.save( df, 1000.0 * AllNerveAmplT.x( j ) );
+      NerveKey.save( df, AllNerveAmplT[j] );
+      NerveKey.save( df, 1000.0 * AllNerveAmplM.x( j ) );
+      NerveKey.save( df, AllNerveAmplM[j] );
+      df << '\n';
+    }
+  }
+
+  {
+    // create file:
+    ofstream df( addPath( "samallnervesmoothampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
+
+    // write header and key:
+    if ( Count == 0 ) {
+      df << '\n' << '\n';
+      Header.save( df, "# ", 0, Options::FirstOnly );
+      df << '\n';
+      SmoothKey.saveKey( df, true, true );
+    }
+      
+    // write data:
+    df << '\n';
+    df << "# trial: " << Count << '\n';
+    for ( int j=0; j<AllNerveAmplS.size(); j++ ) {
+      NerveKey.save( df, 1000.0 * AllNerveAmplS.pos( j ), 0 );
+      NerveKey.save( df, AllNerveAmplS[j] );
+      df << '\n';
+    }
   }
 }
 
@@ -979,12 +1048,19 @@ XXX
 	NerveAmplM.back().push( left-ref, nd.mean( left, left+st ) );
 	left += st;
       }
+      // smoothed averaged amplitude:
+      NerveAmplS.push_back( SampleDataD( -0.5*Period-1.0/FishRate, 0.5*Period+1.0/FishRate, 0.0001 ) );
+      for ( int k=0; k<NerveAmplS.back().size(); k++ ) {
+	double t = ref + NerveAmplS.back().pos(k);
+	NerveAmplS.back()[k] = nd.mean( t, t+st );
+      }
     }
 
     // nerve mean amplitudes:
     average( NerveMeanAmplP, NerveAmplP );
     average( NerveMeanAmplT, NerveAmplT );
     average( NerveMeanAmplM, NerveAmplM );
+    average( NerveMeanAmplS, NerveAmplS );
 
     // nerve amplitudes:
     // peak and trough amplitudes:
@@ -1019,6 +1095,11 @@ XXX
       for ( int k=0; k<AllNerveAmplP.size(); k++ ) {
 	AllNerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
 	left += st;
+      }
+      // smoothed averaged amplitude:
+      for ( int k=0; k<AllNerveAmplS.size(); k++ ) {
+	double t = signalTime() + NerveAmplS.back().pos(k);
+	AllNerveAmplS[k] = nd.mean( t, t+st );
       }
     }
   }

@@ -42,7 +42,7 @@ namespace efish {
 \brief [RePro] Measures responses to sinusoidal amplitude modulations.
 \author Jan Benda
 \bug Using EOD waveforms is broken (sampling rate!)
-\version 2.0 (Dec 01, 2009)
+\version 2.2 (Oct 23, 2014)
 
 \par Options
 - \b duration (\c number, \e ms): Duration of stimulus.
@@ -61,7 +61,9 @@ namespace efish {
 - \b samspikes#.dat : the spikes elicited by each SAM period of trace #.
 - \b samallspikes#.dat : the spikes elicited by each SAM stimulus of trace #.
 - \b samnerveampl.dat : the nerve potential elicited by each SAM period.
+- \b samnervesmoothampl.dat : the smoothed nerve potential elicited by each SAM period.
 - \b samallnerveampl.dat : the nerve potential elicited by each SAM stimulus.
+- \b samallnervesmoothampl.dat : the smoothed nerve potential elicited by each SAM stimulus.
 - \b samampl.dat : the SAM amplitudes for each SAM period.
 - \b samallampl.dat : the SAM amplitude for each stimulus.
 - \b samrate#.dat : the cyclic firing rate for a single SAM period of trace #.
@@ -155,17 +157,21 @@ private:
   vector< MapD > NerveAmplP;
   vector< MapD > NerveAmplT;
   vector< MapD > NerveAmplM;
+  vector< SampleDataD > NerveAmplS;
   SampleDataD NerveMeanAmplP;
   SampleDataD NerveMeanAmplT;
   SampleDataD NerveMeanAmplM;
+  SampleDataD NerveMeanAmplS;
   MapD AllNerveAmplP;
   MapD AllNerveAmplT;
   MapD AllNerveAmplM;
+  SampleDataD AllNerveAmplS;
   AcceptEOD<InData::const_iterator,InDataTimeIterator> NerveAcceptEOD;
 
   Options Header;
   TableKey SpikesKey;
   TableKey NerveKey;
+  TableKey SmoothKey;
   TableKey AmplKey;
   
   MultiPlot P;

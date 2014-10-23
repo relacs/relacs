@@ -42,7 +42,7 @@ namespace efish {
 \class Chirps
 \brief [RePro] Measures responses to chirps.
 \author Jan Benda
-\version 1.9 (Apr 13, 2012)
+\version 2.0 (Oct 23, 2014)
 \todo Make independent of beat detector
 
 \par Options
@@ -70,7 +70,9 @@ and replay it as an AM stimulus.
 - \b chirpspikes#.dat : The spikes elicited by each chirp of trace #.
 - \b chirpallspikes#.dat : The spikes elicited by each stimulus of trace #.
 - \b chirpnerveampl.dat : The nerve potential elicited by each chirp.
+- \b chirpnervesmoothampl.dat : The smoothed nerve potential elicited by each chirp.
 - \b chirpallnerveampl.dat : The nerve potential elicited by each stimulus.
+- \b chirpallnervesmoothampl.dat : The smoothed nerve potential elicited by each stimulus.
 - \b chirpeodampl.dat : Amplitude of the transdermal EOD for each stimulus.
 - \b chirprate.dat : The firing rate for each chirp position.
 
@@ -180,7 +182,7 @@ private:
 	 BeatFreq( bf ), BeatPhase( bph ), BeatLoc( bl ), BeatBin( bbin ), 
 	 BeatBefore( bb ), BeatAfter( ba ), BeatPeak( bp ), BeatTrough( bt ),
 	 EODTime(), EODFreq(), EODAmpl(), Spikes(),
-	NerveAmplP(), NerveAmplT(), NerveAmplM() {};
+      NerveAmplP(), NerveAmplT(), NerveAmplM(), NerveAmplS() {};
     int Index;
     int Mode;
     int Trace;
@@ -206,6 +208,7 @@ private:
     MapD NerveAmplP;
     MapD NerveAmplT;
     MapD NerveAmplM;
+    SampleDataD NerveAmplS;
   };
   vector < ChirpData > Response;
   long FirstResponse;
@@ -227,9 +230,11 @@ private:
   vector< vector < SampleDataD > > NerveMeanAmplP;
   vector< vector < SampleDataD > > NerveMeanAmplT;
   vector< vector < SampleDataD > > NerveMeanAmplM;
+  vector< vector < SampleDataD > > NerveMeanAmplS;
   MapD NerveAmplP;
   MapD NerveAmplT;
   MapD NerveAmplM;
+  SampleDataD NerveAmplS;
   AcceptEOD<InData::const_iterator,InDataTimeIterator> NerveAcceptEOD;
 
   MapD EODAmplitude;
@@ -239,6 +244,7 @@ private:
   TableKey ChirpTraceKey;
   TableKey SpikesKey;
   TableKey NerveKey;
+  TableKey SmoothKey;
   TableKey AmplKey;
 
   MultiPlot P;

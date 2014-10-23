@@ -40,7 +40,7 @@ namespace efish {
 \class BaselineActivity
 \brief [RePro] ISI statistics and EOD locking of baseline activity.
 \author Jan Benda
-\version 1.0 (Nov 26, 2009)
+\version 2.2 (Oct 23, 2014)
 \todo Put beat detector auto settings into beat detector.
 
 \par Options
@@ -61,6 +61,7 @@ PUnitSearch writes some information about baseline activity if \c repeats>0.
 - \b baseisih#.dat : the interspike-interval histogram of trace #.
 - \b baserate#.dat : the cyclic firing rate for a single EOD period of trace #.
 - \b basenerveampl.dat : the nerve potential.
+- \b basenervesmoothampl.dat : the smoothed nerve potential.
 - \b baseeodtrace.dat : \c eodduration ms of the EOD.
 - \b baseeodtimes.dat : times of the eod peaks, saved only if \c saveeodtimes is true.
 
@@ -100,7 +101,7 @@ public:
 		 const SampleDataD &eodcycle );
     /*! Save potential of the nerve recording for the whole run of PUnitSearch. */
   void saveNerve( const Options &header, const MapD &nerveamplp,
-		  const MapD &nerveamplt, const MapD &nerveamplm );
+		  const MapD &nerveamplt, const MapD &nerveamplm, const SampleDataD &nerveampls );
     /*! Save the fishes EOD waveform. */
   void saveEODTrace( const Options &header, double eodduration );
     /*! Save the fishes EOD times. */
@@ -110,7 +111,7 @@ public:
 	     const EventData &eodtimes, const SampleDataD &eodcycle,
 	     const EventList &spikes, const vector<SampleDataD> &isih,
 	     const vector<SampleDataD> &spikerate, const MapD &nerveamplp,
-	     const MapD &nerveamplt, const MapD &nerveamplm );
+	     const MapD &nerveamplt, const MapD &nerveamplm, const SampleDataD &nerveampls );
 
   void plot( const SampleDataD &eodcycle,
 	     const vector< vector< ArrayD > > &eodspikes,
@@ -125,7 +126,7 @@ public:
 		vector< vector< ArrayD > > &eodspikes,
 		EventList &spikes, vector<SampleDataD> &isih,
 		vector<SampleDataD> &spikerate,	vector<int> &trials,
-		MapD &nerveamplp, MapD &nerveamplt, MapD &nerveamplm );
+		MapD &nerveamplp, MapD &nerveamplt, MapD &nerveamplm, SampleDataD &nerveampls );
 
 
 private:

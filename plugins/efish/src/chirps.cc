@@ -33,7 +33,7 @@ namespace efish {
 
 
 Chirps::Chirps( void )
-  : RePro( "Chirps", "efish", "Jan Benda", "1.9", "Apr 13, 2012" )
+  : RePro( "Chirps", "efish", "Jan Benda", "2.0", "Oct 23, 2014" )
 {
   // parameter:
   ReadCycles = 100;
@@ -97,9 +97,11 @@ Chirps::Chirps( void )
   NerveMeanAmplP.clear();
   NerveMeanAmplT.clear();
   NerveMeanAmplM.clear();
+  NerveMeanAmplS.clear();
   NerveAmplP.clear();
   NerveAmplT.clear();
   NerveAmplM.clear();
+  NerveAmplS.clear();
   EODAmplitude.clear();
 
   // header for files:
@@ -159,6 +161,10 @@ Chirps::Chirps( void )
   NerveKey.newSection( "average" );
   NerveKey.addNumber( "time", "ms", "%7.2f" );
   NerveKey.addNumber( "ampl", "uV", "%7.2f" );
+
+  SmoothKey.newSection( "peak" );
+  SmoothKey.addNumber( "time", "ms", "%7.2f" );
+  SmoothKey.addNumber( "ampl", "uV", "%6.1f" );
 
   AmplKey.addNumber( "time", "ms", "%8.2f" );
   AmplKey.addNumber( "ampl", "", "%5.3f" );
@@ -755,14 +761,17 @@ int Chirps::main( void )
     NerveMeanAmplP.resize( BeatPos );
     NerveMeanAmplT.resize( BeatPos );
     NerveMeanAmplM.resize( BeatPos );
+    NerveMeanAmplS.resize( BeatPos );
     for ( unsigned int i=0; i<NerveMeanAmplP.size(); i++ ) {
       NerveMeanAmplP[i].resize( 2, SampleDataD( -SaveWindow, SaveWindow, 0.001 ) );
       NerveMeanAmplT[i].resize( 2, SampleDataD( -SaveWindow, SaveWindow, 0.001 ) );
       NerveMeanAmplM[i].resize( 2, SampleDataD( -SaveWindow, SaveWindow, 0.001 ) );
+      NerveMeanAmplS[i].resize( 2, SampleDataD( -SaveWindow, SaveWindow, 0.0001 ) );
     }
     NerveAmplP.clear();
     NerveAmplT.clear();
     NerveAmplM.clear();
+    NerveAmplS.clear();
   }
   EODAmplitude.clear();
 
@@ -980,9 +989,11 @@ void Chirps::stop( void )
   NerveMeanAmplP.clear();
   NerveMeanAmplT.clear();
   NerveMeanAmplM.clear();
+  NerveMeanAmplS.clear();
   NerveAmplP.free();
   NerveAmplT.free();
   NerveAmplM.free();
+  NerveAmplS.free();
   EODAmplitude.free();
   writeZero( Mode == 1 || AM ? GlobalAMEField : GlobalEField );
 }
@@ -1097,47 +1108,85 @@ void Chirps::saveChirpSpikes( int trace )
 
 void Chirps::saveChirpNerve( void )
 {
-  // create file:
-  ofstream df( addPath( SineWave ? "chirpnerveampls.dat" : 
-			"chirpnerveampl.dat" ).c_str(),
-	       ofstream::out | ofstream::app );
-  if ( ! df.good() )
-    return;
+  {
+    // create file:
+    ofstream df( addPath( SineWave ? "chirpnerveampls.dat" : 
+			  "chirpnerveampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
 
-  // write header and key:
-  Header.save( df, "# ", 0, Options::FirstOnly );
-  df << '\n';
-  NerveKey.saveKey( df, true, true );
-
-  // write data into file:
-  for ( unsigned int j=FirstResponse; j<Response.size(); j++ ) {
+    // write header and key:
+    Header.save( df, "# ", 0, Options::FirstOnly );
     df << '\n';
-    df << "# chirp index: " << j-FirstResponse << '\n';
-    df << "#  beat phase: " << Str( Response[j].BeatPhase, "%.3f" ) << '\n';
-    df << "#    beat pos: " << Str( Response[j].BeatLoc, "%.3f" ) << '\n';
-    df << "#    beat bin: " << Response[j].BeatBin << '\n';
-    if ( Response[j].NerveAmplP.empty() ) {
-      NerveKey.save( df, 0.0, 0 );
-      NerveKey.save( df, 0.0 );
-      NerveKey.save( df, 0.0 );
-      NerveKey.save( df, 0.0 );
-      NerveKey.save( df, 0.0 );
-      NerveKey.save( df, 0.0 );
+    NerveKey.saveKey( df, true, true );
+
+    // write data into file:
+    for ( unsigned int j=FirstResponse; j<Response.size(); j++ ) {
       df << '\n';
-    }
-    else {
-      for ( int i=0; i<Response[j].NerveAmplP.size(); i++ ) {
-	NerveKey.save( df, 1000.0 * Response[j].NerveAmplP.x( i ), 0 );
-	NerveKey.save( df, Response[j].NerveAmplP.y(i) );
-	NerveKey.save( df, 1000.0 * Response[j].NerveAmplT.x( i ) );
-	NerveKey.save( df, Response[j].NerveAmplT.y(i) );
-	NerveKey.save( df, 1000.0 * Response[j].NerveAmplM.x( i ) );
-	NerveKey.save( df, Response[j].NerveAmplM.y(i) );
+      df << "# chirp index: " << j-FirstResponse << '\n';
+      df << "#  beat phase: " << Str( Response[j].BeatPhase, "%.3f" ) << '\n';
+      df << "#    beat pos: " << Str( Response[j].BeatLoc, "%.3f" ) << '\n';
+      df << "#    beat bin: " << Response[j].BeatBin << '\n';
+      if ( Response[j].NerveAmplP.empty() ) {
+	NerveKey.save( df, 0.0, 0 );
+	NerveKey.save( df, 0.0 );
+	NerveKey.save( df, 0.0 );
+	NerveKey.save( df, 0.0 );
+	NerveKey.save( df, 0.0 );
+	NerveKey.save( df, 0.0 );
 	df << '\n';
       }
+      else {
+	for ( int i=0; i<Response[j].NerveAmplP.size(); i++ ) {
+	  NerveKey.save( df, 1000.0 * Response[j].NerveAmplP.x( i ), 0 );
+	  NerveKey.save( df, Response[j].NerveAmplP.y(i) );
+	  NerveKey.save( df, 1000.0 * Response[j].NerveAmplT.x( i ) );
+	  NerveKey.save( df, Response[j].NerveAmplT.y(i) );
+	  NerveKey.save( df, 1000.0 * Response[j].NerveAmplM.x( i ) );
+	  NerveKey.save( df, Response[j].NerveAmplM.y(i) );
+	  df << '\n';
+	}
+      }
     }
+    df << "\n\n";
   }
-  df << "\n\n";
+
+  {
+    // create file:
+    ofstream df( addPath( SineWave ? "chirpnervesmoothampls.dat" : 
+			  "chirpnervesmoothampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
+
+    // write header and key:
+    Header.save( df, "# ", 0, Options::FirstOnly );
+    df << '\n';
+    SmoothKey.saveKey( df, true, true );
+
+    // write data into file:
+    for ( unsigned int j=FirstResponse; j<Response.size(); j++ ) {
+      df << '\n';
+      df << "# chirp index: " << j-FirstResponse << '\n';
+      df << "#  beat phase: " << Str( Response[j].BeatPhase, "%.3f" ) << '\n';
+      df << "#    beat pos: " << Str( Response[j].BeatLoc, "%.3f" ) << '\n';
+      df << "#    beat bin: " << Response[j].BeatBin << '\n';
+      if ( Response[j].NerveAmplS.empty() ) {
+	SmoothKey.save( df, 0.0, 0 );
+	SmoothKey.save( df, 0.0 );
+	df << '\n';
+      }
+      else {
+	for ( int i=0; i<Response[j].NerveAmplS.size(); i++ ) {
+	  SmoothKey.save( df, 1000.0 * Response[j].NerveAmplS.pos( i ), 0 );
+	  SmoothKey.save( df, Response[j].NerveAmplS[i] );
+	  df << '\n';
+	}
+      }
+    }
+    df << "\n\n";
+  }
 }
 
 
@@ -1234,40 +1283,71 @@ void Chirps::saveChirpRate( int trace )
 
 void Chirps::saveNerve( void )
 {
-  // create file:
-  ofstream df( addPath( SineWave ? "chirpallnerveampls.dat" :
-			"chirpallnerveampl.dat" ).c_str(),
-	       ofstream::out | ofstream::app );
-  if ( ! df.good() )
-    return;
+  {
+    // create file:
+    ofstream df( addPath( SineWave ? "chirpallnerveampls.dat" :
+			  "chirpallnerveampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
 
-  // write header and key:
-  Header.save( df, "# ", 0, Options::FirstOnly );
-  df << '\n';
-  NerveKey.saveKey( df, true, true );
-
-  // write data into file:
-  if ( NerveAmplP.empty() ) {
-    NerveKey.save( df, 0.0, 0 );
-    NerveKey.save( df, 0.0 );
-    NerveKey.save( df, 0.0 );
-    NerveKey.save( df, 0.0 );
-    NerveKey.save( df, 0.0 );
-    NerveKey.save( df, 0.0 );
+    // write header and key:
+    Header.save( df, "# ", 0, Options::FirstOnly );
     df << '\n';
-  }
-  else {
-    for ( int j=0; j<NerveAmplP.size(); j++ ) {
-      NerveKey.save( df, 1000.0 * NerveAmplP.x( j ), 0 );
-      NerveKey.save( df, NerveAmplP.y( j ) );
-      NerveKey.save( df, 1000.0 * NerveAmplT.x( j ) );
-      NerveKey.save( df, NerveAmplT.y( j ) );
-      NerveKey.save( df, 1000.0 * NerveAmplM.x( j ) );
-      NerveKey.save( df, NerveAmplM.y( j ) );
+    NerveKey.saveKey( df, true, true );
+
+    // write data into file:
+    if ( NerveAmplP.empty() ) {
+      NerveKey.save( df, 0.0, 0 );
+      NerveKey.save( df, 0.0 );
+      NerveKey.save( df, 0.0 );
+      NerveKey.save( df, 0.0 );
+      NerveKey.save( df, 0.0 );
+      NerveKey.save( df, 0.0 );
       df << '\n';
     }
+    else {
+      for ( int j=0; j<NerveAmplP.size(); j++ ) {
+	NerveKey.save( df, 1000.0 * NerveAmplP.x( j ), 0 );
+	NerveKey.save( df, NerveAmplP.y( j ) );
+	NerveKey.save( df, 1000.0 * NerveAmplT.x( j ) );
+	NerveKey.save( df, NerveAmplT.y( j ) );
+	NerveKey.save( df, 1000.0 * NerveAmplM.x( j ) );
+	NerveKey.save( df, NerveAmplM.y( j ) );
+	df << '\n';
+      }
+    }
+    df << "\n\n";
   }
-  df << "\n\n";
+
+  {
+    // create file:
+    ofstream df( addPath( SineWave ? "chirpallnervesmoothampls.dat" :
+			  "chirpallnervesmoothampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
+
+    // write header and key:
+    Header.save( df, "# ", 0, Options::FirstOnly );
+    df << '\n';
+    SmoothKey.saveKey( df, true, true );
+
+    // write data into file:
+    if ( NerveAmplS.empty() ) {
+      SmoothKey.save( df, 0.0, 0 );
+      SmoothKey.save( df, 0.0 );
+      df << '\n';
+    }
+    else {
+      for ( int j=0; j<NerveAmplS.size(); j++ ) {
+	SmoothKey.save( df, 1000.0 * NerveAmplS.pos( j ), 0 );
+	SmoothKey.save( df, NerveAmplS[j] );
+	df << '\n';
+      }
+    }
+    df << "\n\n";
+  }
 }
 
 
@@ -1439,6 +1519,7 @@ void Chirps::analyze( void )
     NerveAmplP.clear();
     NerveAmplT.clear();
     NerveAmplM.clear();
+    NerveAmplS.clear();
     NerveAmplP.reserve( peaktroughs[0].size() + 100 );
     NerveAmplT.reserve( peaktroughs[0].size() + 100 );
     NerveAmplM.reserve( peaktroughs[0].size() + 100 );
@@ -1455,6 +1536,12 @@ void Chirps::analyze( void )
       for ( int k=0; k<NerveAmplP.size(); k++ ) {
 	NerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
 	left += st;
+      }
+      // smoothed averaged amplitude:
+      NerveAmplS = SampleDataD( 0.0, Duration, 0.0001 );
+      for ( int k=0; k<NerveAmplS.size(); k++ ) {
+	double t = signalTime() + NerveAmplS.pos(k);
+	NerveAmplS[k] = nd.mean( t, t+st );
       }
     }
   }
@@ -1634,6 +1721,7 @@ void Chirps::analyze( void )
       rd.NerveAmplP.clear();
       rd.NerveAmplT.clear();
       rd.NerveAmplM.clear();
+      rd.NerveAmplS.clear();
       rd.NerveAmplP.reserve( peaktroughs[0].size() + 100 );
       rd.NerveAmplT.reserve( peaktroughs[0].size() + 100 );
       rd.NerveAmplM.reserve( peaktroughs[0].size() + 100 );
@@ -1650,6 +1738,12 @@ void Chirps::analyze( void )
 	  rd.NerveAmplM.push( left-chirptime, nd.mean( left, left+st ) );
 	  left += st;
 	}
+	// smoothed averaged amplitude:
+	rd.NerveAmplS = SampleDataD( -SaveWindow, SaveWindow, 0.0001 );
+	for ( int k=0; k<rd.NerveAmplS.size(); k++ ) {
+	  double t = chirptime + rd.NerveAmplS.pos(k);
+	  rd.NerveAmplS[k] = nd.mean( t, t+st );
+	}
       }
     }
   }
@@ -1661,14 +1755,17 @@ void Chirps::analyze( void )
       vector< MapD > nerveamplp;
       vector< MapD > nerveamplt;
       vector< MapD > nerveamplm;
+      vector< SampleDataD > nerveampls;
       nerveamplp.reserve( (Repeats>0?Repeats:100)*2*NChirps/BeatPos );
       nerveamplt.reserve( (Repeats>0?Repeats:100)*2*NChirps/BeatPos );
       nerveamplm.reserve( (Repeats>0?Repeats:100)*2*NChirps/BeatPos );
+      nerveampls.reserve( (Repeats>0?Repeats:100)*2*NChirps/BeatPos );
       for ( unsigned int j = 0; j < Response.size(); j++ ) {
 	if ( Response[j].BeatBin == b ) {
 	  nerveamplp.push_back( Response[j].NerveAmplP );
 	  nerveamplt.push_back( Response[j].NerveAmplT );
 	  nerveamplm.push_back( Response[j].NerveAmplM );
+	  nerveampls.push_back( Response[j].NerveAmplS );
 	}
       }
 
@@ -1676,6 +1773,7 @@ void Chirps::analyze( void )
       average( NerveMeanAmplP[b][Mode], nerveamplp );
       average( NerveMeanAmplT[b][Mode], nerveamplt );
       average( NerveMeanAmplM[b][Mode], nerveamplm );
+      average( NerveMeanAmplS[b][Mode], nerveampls );
     }
   }
 

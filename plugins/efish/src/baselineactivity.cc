@@ -34,7 +34,7 @@ namespace efish {
 
 
 BaselineActivity::BaselineActivity( void )
-  : RePro( "BaselineActivity", "efish", "Jan Benda", "2.1", "Nov 26, 2009" )
+  : RePro( "BaselineActivity", "efish", "Jan Benda", "2.2", "Oct 23, 2014" )
 {
   // parameter:
   Duration = 0.3;
@@ -223,6 +223,7 @@ int BaselineActivity::main( void )
   MapD nerveamplp;
   MapD nerveamplt;
   MapD nerveamplm;
+  SampleDataD nerveampls( 0.0, 1.0, 0.0001 );
   if ( NerveTrace[0] >= 0 ) {
     nerveamplp.reserve( eodtimes.capacity() );
     nerveamplt.reserve( eodtimes.capacity() );
@@ -231,6 +232,7 @@ int BaselineActivity::main( void )
   nerveamplp.clear();
   nerveamplt.clear();
   nerveamplm.clear();
+  nerveampls.clear();
 
   if ( autodetect > 0 && Repeats <= 0 ) {
     // setup Beat detector:
@@ -319,14 +321,14 @@ int BaselineActivity::main( void )
     // analyze:
     analyze( autodetect, eodcycle, eodtimes, eodspikes,
 	     spikes, isih, spikerate, trials,
-	     nerveamplp, nerveamplt, nerveamplm );
+	     nerveamplp, nerveamplt, nerveamplm, nerveampls );
     plot( eodcycle, eodspikes, isih, spikerate, nerveamplm );
 
   }
 
   setMessage();
   save( saveeodtrace, eodduration, saveeodtimes, eodtimes, eodcycle,
-	spikes, isih, spikerate, nerveamplp, nerveamplt, nerveamplm );
+	spikes, isih, spikerate, nerveamplp, nerveamplt, nerveamplm, nerveampls );
 
   return Completed;
 }
@@ -429,53 +431,87 @@ void BaselineActivity::saveRate( int trace, const Options &header,
 
 
 void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
-				  const MapD &nerveamplt, const MapD &nerveamplm )
+				  const MapD &nerveamplt, const MapD &nerveamplm,
+				  const SampleDataD &nerveampls )
 {
-  // create file:
-  ofstream df( addPath( "basenerveampl.dat" ).c_str(),
-	       ofstream::out | ofstream::app );
-  if ( ! df.good() )
-    return;
+  {
+    // create file:
+    ofstream df( addPath( "basenerveampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
 
-  // write header and key:
-  header.save( df, "# ", 0, Options::FirstOnly );
-  df << '\n';
-  TableKey key;
-  key.newSection( "peak" );
-  key.addNumber( "time", "ms", "%9.2f" );
-  key.addNumber( "ampl", "uV", "%6.1f" );
-  key.newSection( "trough" );
-  key.addNumber( "time", "ms", "%9.2f" );
-  key.addNumber( "ampl", "uV", "%6.1f" );
-  key.newSection( "average" );
-  key.addNumber( "time", "ms", "%9.2f" );
-  key.addNumber( "ampl", "uV", "%6.1f" );
-  key.saveKey( df, true, true );
-
-  // write data into file:
-  if ( nerveamplm.empty() ) {
-    key.save( df, 0.0, 0 );
-    key.save( df, 0.0 );
-    key.save( df, 0.0 );
-    key.save( df, 0.0 );
-    key.save( df, 0.0 );
-    key.save( df, 0.0 );
+    // write header and key:
+    header.save( df, "# ", 0, Options::FirstOnly );
     df << '\n';
-  }
-  else {
-    for ( int k=0; k<nerveamplp.size() &&
-	    k<nerveamplt.size() &&
-	    k<nerveamplm.size(); k++ ) {
-      key.save( df, 1000.0 * nerveamplp.x(k), 0 );
-      key.save( df, nerveamplp.y(k) );
-      key.save( df, 1000.0 * nerveamplt.x(k), 0 );
-      key.save( df, nerveamplt.y(k) );
-      key.save( df, 1000.0 * nerveamplm.x(k), 0 );
-      key.save( df, nerveamplm.y(k) );
+    TableKey key;
+    key.newSection( "peak" );
+    key.addNumber( "time", "ms", "%9.2f" );
+    key.addNumber( "ampl", "uV", "%6.1f" );
+    key.newSection( "trough" );
+    key.addNumber( "time", "ms", "%9.2f" );
+    key.addNumber( "ampl", "uV", "%6.1f" );
+    key.newSection( "average" );
+    key.addNumber( "time", "ms", "%9.2f" );
+    key.addNumber( "ampl", "uV", "%6.1f" );
+    key.saveKey( df, true, true );
+
+    // write data into file:
+    if ( nerveamplm.empty() ) {
+      key.save( df, 0.0, 0 );
+      key.save( df, 0.0 );
+      key.save( df, 0.0 );
+      key.save( df, 0.0 );
+      key.save( df, 0.0 );
+      key.save( df, 0.0 );
       df << '\n';
     }
+    else {
+      for ( int k=0; k<nerveamplp.size() &&
+	      k<nerveamplt.size() &&
+	      k<nerveamplm.size(); k++ ) {
+	key.save( df, 1000.0 * nerveamplp.x(k), 0 );
+	key.save( df, nerveamplp.y(k) );
+	key.save( df, 1000.0 * nerveamplt.x(k), 0 );
+	key.save( df, nerveamplt.y(k) );
+	key.save( df, 1000.0 * nerveamplm.x(k), 0 );
+	key.save( df, nerveamplm.y(k) );
+	df << '\n';
+      }
+    }
+    df << "\n\n";
   }
-  df << "\n\n";
+
+  {
+    // create file:
+    ofstream df( addPath( "basenervesmoothampl.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      return;
+
+    // write header and key:
+    header.save( df, "# ", 0, Options::FirstOnly );
+    df << '\n';
+    TableKey key;
+    key.addNumber( "time", "ms", "%9.2f" );
+    key.addNumber( "ampl", "uV", "%6.1f" );
+    key.saveKey( df, true, true );
+
+    // write data into file:
+    if ( nerveamplm.empty() ) {
+      key.save( df, 0.0, 0 );
+      key.save( df, 0.0 );
+      df << '\n';
+    }
+    else {
+      for ( int k=0; k<nerveampls.size(); k++ ) {
+	key.save( df, 1000.0 * nerveampls.pos(k), 0 );
+	key.save( df, nerveampls[k] );
+	df << '\n';
+      }
+    }
+    df << "\n\n";
+  }
 }
 
 
@@ -544,7 +580,8 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
 			     const vector<SampleDataD> &spikerate,
 			     const MapD &nerveamplp,
 			     const MapD &nerveamplt,
-			     const MapD &nerveamplm )
+			     const MapD &nerveamplm,
+			     const SampleDataD &nerveampls )
 {
   if ( Repeats <= 0 )
     return;
@@ -576,7 +613,7 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
   }
   if ( NerveTrace[0] >= 0 ) {
     header.setInteger( "trace", 0 );
-    saveNerve( header, nerveamplp, nerveamplt, nerveamplm );
+    saveNerve( header, nerveamplp, nerveamplt, nerveamplm, nerveampls );
   }
 
   if ( saveeodtrace )
@@ -713,7 +750,7 @@ void BaselineActivity::analyze( int autodetect,
 				vector<SampleDataD> &spikerate,
 				vector<int> &trials,
 				MapD &nerveamplp, MapD &nerveamplt,
-				MapD &nerveamplm )
+				MapD &nerveamplm, SampleDataD &nerveampls )
 {
   const EventData &localeod = events( LocalEODEvents[0] );
   const InData &localeodtrace = trace( LocalEODTrace[0] );
@@ -759,9 +796,11 @@ void BaselineActivity::analyze( int autodetect,
     nerveamplp.clear();
     nerveamplt.clear();
     nerveamplm.clear();
+    nerveampls.clear();
     nerveamplp.reserve( (int)rint(5000.0*SearchDuration) );
     nerveamplt.reserve( (int)rint(5000.0*SearchDuration) );
     nerveamplm.reserve( (int)rint(5000.0*SearchDuration) );
+    nerveampls.reserve( nerveampls.indices( SearchDuration ) );
     threshold = nd.stdev( FirstSignal, FirstSignal+4.0/EODRate );
     if ( threshold < 1.0e-8 )
       threshold = 0.001;
@@ -782,6 +821,11 @@ void BaselineActivity::analyze( int autodetect,
       for ( int k=0; k<nerveamplp.size(); k++ ) {
 	nerveamplm.push( left-FirstSignal, nd.mean( left, left+st ) );
 	left += st;
+      }
+      // smoothed averaged amplitude:
+      for ( int k=0; k<nerveampls.size(); k++ ) {
+	double t = FirstSignal + nerveampls.pos( k );
+	nerveampls.push( nd.mean( t, t+st ) );
       }
     }
   }
