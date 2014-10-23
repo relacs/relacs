@@ -908,11 +908,16 @@ void SAM::analyze( void )
     FishRate = events( LocalEODEvents[0] ).frequency( ReadCycles );
 
   // Delta F:
+  bool noglobaleod = false;
   if ( AM || FreqAbs )
     TrueDeltaF = DeltaF;
   else {
     if ( GlobalEFieldEvents >= 0 )
       TrueDeltaF = events( GlobalEFieldEvents ).frequency( ReadCycles ) - FishRate;
+    if ( GlobalEFieldEvents < 0 || fabs( (TrueDeltaF - DeltaF)/DeltaF ) > 0.1 ) {
+      TrueDeltaF = DeltaF;
+      noglobaleod = true;
+    }
   }
 
   // EOD amplitude:
@@ -928,10 +933,10 @@ void SAM::analyze( void )
   // beat positions:
   EventData beattimes( EODTransAmpl.capacity() );
 
-  if ( AM || FreqAbs ) {
+  if ( AM || FreqAbs || noglobaleod ) {
     for ( double t = fabs(0.25/TrueDeltaF); t < Duration; t += fabs(1.0/TrueDeltaF) ) {
       double t0 = signalTime() + t;
-      if ( ChirpEvents >= 0 && ! events( ChirpEvents ).within( t0, 0.03 ) &&
+      if ( ( ChirpEvents < 0 || ! events( ChirpEvents ).within( t0, 0.03 ) ) &&
 	   t0 >= Skip * Period + signalTime() && 
 	   t0 <= Signal->duration() - 0.5*Period + signalTime() ) {
 	beattimes.push( t0 );
@@ -968,7 +973,7 @@ XXX
       if ( p - floor( p ) < 0.95 &&
 	   p2 - floor( p2 ) > 0.95 &&
       */
-	   ChirpEvents >= 0 && ! events( ChirpEvents ).within( t0, 0.03 ) &&
+	   ( ChirpEvents < 0 || ! events( ChirpEvents ).within( t0, 0.03 ) ) &&
 	   t0 >= Skip * Period + signalTime() && 
 	   t0 <= Signal->duration() - 2.0*Skip*Period + signalTime() ) {
 	beattimes.push( localeod[ pi - 1 ] );

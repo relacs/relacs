@@ -223,7 +223,7 @@ int BaselineActivity::main( void )
   MapD nerveamplp;
   MapD nerveamplt;
   MapD nerveamplm;
-  SampleDataD nerveampls( 0.0, 1.0, 0.0001 );
+  SampleDataD nerveampls;
   if ( NerveTrace[0] >= 0 ) {
     nerveamplp.reserve( eodtimes.capacity() );
     nerveamplt.reserve( eodtimes.capacity() );
@@ -232,7 +232,6 @@ int BaselineActivity::main( void )
   nerveamplp.clear();
   nerveamplt.clear();
   nerveamplm.clear();
-  nerveampls.clear();
 
   if ( autodetect > 0 && Repeats <= 0 ) {
     // setup Beat detector:
@@ -498,7 +497,7 @@ void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
     key.saveKey( df, true, true );
 
     // write data into file:
-    if ( nerveamplm.empty() ) {
+    if ( nerveampls.empty() ) {
       key.save( df, 0.0, 0 );
       key.save( df, 0.0 );
       df << '\n';
@@ -800,7 +799,7 @@ void BaselineActivity::analyze( int autodetect,
     nerveamplp.reserve( (int)rint(5000.0*SearchDuration) );
     nerveamplt.reserve( (int)rint(5000.0*SearchDuration) );
     nerveamplm.reserve( (int)rint(5000.0*SearchDuration) );
-    nerveampls.reserve( nerveampls.indices( SearchDuration ) );
+    nerveampls = SampleDataD( 0.0, SearchDuration, 0.0001 );
     threshold = nd.stdev( FirstSignal, FirstSignal+4.0/EODRate );
     if ( threshold < 1.0e-8 )
       threshold = 0.001;

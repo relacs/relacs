@@ -1471,7 +1471,16 @@ void Chirps::analyze( void )
 								    signalTime()+Duration );
 
   // Delta F:
-  TrueDeltaF = AM ? DeltaF : sigfreq - FishRate;
+  bool noglobaleod = false;
+  if ( AM )
+    TrueDeltaF = DeltaF;
+  else {
+    TrueDeltaF = sigfreq - FishRate;
+    if ( fabs( (TrueDeltaF - DeltaF)/DeltaF ) > 0.1 ) {
+      TrueDeltaF = DeltaF;
+      noglobaleod = true;
+    }
+  }
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace(LocalEODTrace[0]),
@@ -1571,7 +1580,7 @@ void Chirps::analyze( void )
       double meaninterv = 1.0 / eodrate;
 
       // current deltaf:
-      double cdeltaf = AM ? DeltaF : sigfreq - eodrate;
+      double cdeltaf = AM || noglobaleod ? DeltaF : sigfreq - eodrate;
 
       // beat amplitudes before chirp:
       double t = signalTime() + ChirpTimes[k] - 1.0 * ChirpWidth;
@@ -1586,7 +1595,7 @@ void Chirps::analyze( void )
       beatfreq = 1.0/(events(LocalBeatPeakEvents[0])[bpe] - events(LocalBeatPeakEvents[0])[bpe-1]);
 
       // location of chirp relative to beat:
-      if ( AM ) {
+      if ( AM || noglobaleod ) {
 	beatphase = BeatPhases[k];
       }
       else {
