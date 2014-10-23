@@ -164,7 +164,7 @@ Chirps::Chirps( void )
 
   SmoothKey.newSection( "peak" );
   SmoothKey.addNumber( "time", "ms", "%7.2f" );
-  SmoothKey.addNumber( "ampl", "uV", "%6.1f" );
+  SmoothKey.addNumber( "ampl", "uV", "%7.3f" );
 
   AmplKey.addNumber( "time", "ms", "%8.2f" );
   AmplKey.addNumber( "ampl", "", "%5.3f" );

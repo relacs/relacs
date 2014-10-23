@@ -493,7 +493,7 @@ void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
     df << '\n';
     TableKey key;
     key.addNumber( "time", "ms", "%9.2f" );
-    key.addNumber( "ampl", "uV", "%6.1f" );
+    key.addNumber( "ampl", "uV", "%7.3f" );
     key.saveKey( df, true, true );
 
     // write data into file:
@@ -799,7 +799,6 @@ void BaselineActivity::analyze( int autodetect,
     nerveamplp.reserve( (int)rint(5000.0*SearchDuration) );
     nerveamplt.reserve( (int)rint(5000.0*SearchDuration) );
     nerveamplm.reserve( (int)rint(5000.0*SearchDuration) );
-    nerveampls = SampleDataD( 0.0, SearchDuration, 0.0001 );
     threshold = nd.stdev( FirstSignal, FirstSignal+4.0/EODRate );
     if ( threshold < 1.0e-8 )
       threshold = 0.001;
@@ -822,9 +821,10 @@ void BaselineActivity::analyze( int autodetect,
 	left += st;
       }
       // smoothed averaged amplitude:
+      nerveampls = SampleDataD( 0.0, SearchDuration, 0.0001 );
       for ( int k=0; k<nerveampls.size(); k++ ) {
 	double t = FirstSignal + nerveampls.pos( k );
-	nerveampls.push( nd.mean( t, t+st ) );
+	nerveampls[k] = nd.mean( t, t+st );
       }
     }
   }

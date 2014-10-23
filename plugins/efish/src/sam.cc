@@ -123,7 +123,7 @@ SAM::SAM( void )
   NerveKey.addNumber( "ampl", "uV", "%7.2f" );
 
   SmoothKey.addNumber( "time", "ms", "%9.2f" );
-  SmoothKey.addNumber( "ampl", "uV", "%7.2f" );
+  SmoothKey.addNumber( "ampl", "uV", "%7.3f" );
 
   // plot:
   setWidget( &P );
@@ -735,8 +735,8 @@ void SAM::saveNerve( void )
       df << "# trial: " << Count << '\n';
       df << "#  beat: " << i << '\n';
       for ( int j=0; j<NerveAmplS[i].size(); j++ ) {
-	NerveKey.save( df, 1000.0 * NerveAmplS[i].pos( j ), 0 );
-	NerveKey.save( df, NerveAmplS[i][j] );
+	SmoothKey.save( df, 1000.0 * NerveAmplS[i].pos( j ), 0 );
+	SmoothKey.save( df, NerveAmplS[i][j] );
 	df << '\n';
       }
     }
@@ -794,8 +794,8 @@ void SAM::saveAllNerve( void )
     df << '\n';
     df << "# trial: " << Count << '\n';
     for ( int j=0; j<AllNerveAmplS.size(); j++ ) {
-      NerveKey.save( df, 1000.0 * AllNerveAmplS.pos( j ), 0 );
-      NerveKey.save( df, AllNerveAmplS[j] );
+      SmoothKey.save( df, 1000.0 * AllNerveAmplS.pos( j ), 0 );
+      SmoothKey.save( df, AllNerveAmplS[j] );
       df << '\n';
     }
   }
