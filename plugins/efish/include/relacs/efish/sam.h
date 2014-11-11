@@ -42,7 +42,7 @@ namespace efish {
 \brief [RePro] Measures responses to sinusoidal amplitude modulations.
 \author Jan Benda
 \bug Using EOD waveforms is broken (sampling rate!)
-\version 2.2 (Oct 23, 2014)
+\version 2.2 (Nov 11, 2014)
 
 \par Options
 - \b duration (\c number, \e ms): Duration of stimulus.

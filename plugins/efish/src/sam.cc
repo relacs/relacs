@@ -33,7 +33,7 @@ namespace efish {
 
 
 SAM::SAM( void )
-  : RePro( "SAM", "efish", "Jan Benda", "2.2", "Oct 23, 2014" )
+  : RePro( "SAM", "efish", "Jan Benda", "2.2", "Nov 11, 2014" )
 {
   // parameter:
   ReadCycles = 100;
@@ -259,6 +259,10 @@ int SAM::main( void )
     NerveAmplT.reserve( beats );
     NerveAmplM.reserve( beats );
     NerveAmplS.reserve( beats );
+    NerveAmplP.clear();
+    NerveAmplT.clear();
+    NerveAmplM.clear();
+    NerveAmplS.clear();
     AllNerveAmplP.reserve( (int)rint(1500.0*Duration) );
     AllNerveAmplT.reserve( (int)rint(1500.0*Duration) );
     AllNerveAmplM.reserve( (int)rint(1500.0*Duration) );
@@ -1090,6 +1094,9 @@ XXX
     AllNerveAmplP.reserve( peaktroughs[0].size() );
     AllNerveAmplT.reserve( peaktroughs[0].size() );
     AllNerveAmplM.reserve( peaktroughs[0].size() );
+    AllNerveAmplP.clear();
+    AllNerveAmplT.clear();
+    AllNerveAmplM.clear();
     for ( int k=0; k<peaktroughs[0].size() && k<peaktroughs[1].size(); k++ ) {
       AllNerveAmplP.push( peaktroughs[0][k] - left, peaktroughs[0].eventSize( k ) );
       AllNerveAmplT.push( peaktroughs[1][k] - left, peaktroughs[1].eventSize( k ) );
@@ -1098,13 +1105,13 @@ XXX
     if ( peaktroughs[0].size() > 1 ) {
       double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
       for ( int k=0; k<AllNerveAmplP.size(); k++ ) {
-	AllNerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
-	left += st;
+	double t = AllNerveAmplP.x( k ) + left;
+	AllNerveAmplM.push( t - left, nd.mean( t-0.5*st, t+0.5*st ) );
       }
       // smoothed averaged amplitude:
       for ( int k=0; k<AllNerveAmplS.size(); k++ ) {
-	double t = signalTime() + NerveAmplS.back().pos(k);
-	AllNerveAmplS[k] = nd.mean( t, t+st );
+	double t = signalTime() + AllNerveAmplS.pos(k);
+	AllNerveAmplS[k] = nd.mean( t-0.5*st, t+0.5*st );
       }
     }
   }

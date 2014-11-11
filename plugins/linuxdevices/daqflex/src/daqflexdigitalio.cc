@@ -126,7 +126,7 @@ int DAQFlexDigitalIO::configureLines( int lines, int output )
 	direction = true;
       string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( channel ) + "}:DIR=" + ( direction ? "OUT" : "IN" ) );
       if ( r.empty() )
-	WriteError;
+	return WriteError;
     }
     bit *= 2;
   }
@@ -145,7 +145,7 @@ int DAQFlexDigitalIO::read( int line, bool &val ) const
 {
   string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:VALUE" );
   if ( r.empty() )
-    ReadError;
+    return ReadError;
   // XXX READ THE RESULT
   return 0;
 }

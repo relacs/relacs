@@ -42,7 +42,7 @@ namespace efish {
 \class Chirps
 \brief [RePro] Measures responses to chirps.
 \author Jan Benda
-\version 2.0 (Oct 23, 2014)
+\version 2.0 (Nov 11, 2014)
 \todo Make independent of beat detector
 
 \par Options

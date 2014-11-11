@@ -33,7 +33,7 @@ namespace efish {
 
 
 Chirps::Chirps( void )
-  : RePro( "Chirps", "efish", "Jan Benda", "2.0", "Oct 23, 2014" )
+  : RePro( "Chirps", "efish", "Jan Benda", "2.0", "Nov 11, 2014" )
 {
   // parameter:
   ReadCycles = 100;
@@ -1543,14 +1543,14 @@ void Chirps::analyze( void )
       double left = signalTime();
       double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
       for ( int k=0; k<NerveAmplP.size(); k++ ) {
-	NerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
-	left += st;
+	double t = NerveAmplP.x( k ) + left;
+	NerveAmplM.push( t - left, nd.mean( t-0.5*st, t+0.5*st ) );
       }
       // smoothed averaged amplitude:
       NerveAmplS = SampleDataD( 0.0, Duration, 0.0001 );
       for ( int k=0; k<NerveAmplS.size(); k++ ) {
 	double t = signalTime() + NerveAmplS.pos(k);
-	NerveAmplS[k] = nd.mean( t, t+st );
+	NerveAmplS[k] = nd.mean( t-0.5*st, t+0.5*st );
       }
     }
   }
@@ -1744,14 +1744,14 @@ void Chirps::analyze( void )
       if ( peaktroughs[0].size() > 1 ) {
 	double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
 	for ( int k=0; k<rd.NerveAmplP.size(); k++ ) {
-	  rd.NerveAmplM.push( left-chirptime, nd.mean( left, left+st ) );
-	  left += st;
+	  double t = rd.NerveAmplP.x( k ) + left;
+	  rd.NerveAmplM.push( t - left, nd.mean( t-0.5*st, t+0.5*st ) );
 	}
 	// smoothed averaged amplitude:
 	rd.NerveAmplS = SampleDataD( -SaveWindow, SaveWindow, 0.0001 );
 	for ( int k=0; k<rd.NerveAmplS.size(); k++ ) {
 	  double t = chirptime + rd.NerveAmplS.pos(k);
-	  rd.NerveAmplS[k] = nd.mean( t, t+st );
+	  rd.NerveAmplS[k] = nd.mean( t-0.5*st, t+0.5*st );
 	}
       }
     }
