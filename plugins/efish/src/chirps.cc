@@ -1540,11 +1540,10 @@ void Chirps::analyze( void )
     }
     // averaged amplitude:
     if ( peaktroughs[0].size() > 1 ) {
-      double left = signalTime();
       double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
       for ( int k=0; k<NerveAmplP.size(); k++ ) {
-	double t = NerveAmplP.x( k ) + left;
-	NerveAmplM.push( t - left, nd.mean( t-0.5*st, t+0.5*st ) );
+	double t = NerveAmplP.x( k ) + signalTime();
+	NerveAmplM.push( t - signalTime(), nd.mean( t-0.5*st, t+0.5*st ) );
       }
       // smoothed averaged amplitude:
       NerveAmplS = SampleDataD( 0.0, Duration, 0.0001 );
@@ -1744,8 +1743,8 @@ void Chirps::analyze( void )
       if ( peaktroughs[0].size() > 1 ) {
 	double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
 	for ( int k=0; k<rd.NerveAmplP.size(); k++ ) {
-	  double t = rd.NerveAmplP.x( k ) + left;
-	  rd.NerveAmplM.push( t - left, nd.mean( t-0.5*st, t+0.5*st ) );
+	  double t = rd.NerveAmplP.x( k ) + chirptime;
+	  rd.NerveAmplM.push( t - chirptime, nd.mean( t-0.5*st, t+0.5*st ) );
 	}
 	// smoothed averaged amplitude:
 	rd.NerveAmplS = SampleDataD( -SaveWindow, SaveWindow, 0.0001 );
