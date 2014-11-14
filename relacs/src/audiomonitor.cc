@@ -11,7 +11,12 @@ AudioMonitor::AudioMonitor( void )
     Running( false ),
     AudioDevice( -1 ),
     Gain( 1.0 ),
-    Mute( 1.0 )
+    Mute( 1.0 ),
+    FrameCount( 0 ),
+    SkipCount( 0 ),
+    MaxSkip( 0 ),
+    NSkip( 0 ),
+    Mean( 0.0 )
 {
   setDate( "" );
   setDialogHelp( false );
@@ -112,10 +117,20 @@ void AudioMonitor::start( void )
   if ( ! Initialized )
     return;
 
+  const int nbuffer = 256;
+
   Trace = 0;
-  Index = Data[Trace].currentIndex() - 256;
+  Index = Data[Trace].currentIndex() - nbuffer;
   if ( Index < Data[Trace].minIndex() )
     Index = Data[Trace].minIndex();
+  SkipCount = 0;
+  FrameCount = 0;
+  NSkip = 0;
+  MaxSkip = Data[Trace].indices( 0.2 )/nbuffer;
+  if ( Index < Data[Trace].size() )
+    Mean = Data[Trace][Index];
+  else
+    Mean = 0.0;
 
 #ifdef HAVE_LIBPORTAUDIO
 
@@ -133,7 +148,7 @@ void AudioMonitor::start( void )
   params.suggestedLatency = Pa_GetDeviceInfo( audiodev )->defaultHighOutputLatency;
   params.hostApiSpecificStreamInfo = NULL;
   PaError err = Pa_OpenStream( &Stream, NULL, &params, Data[Trace].sampleRate(),
-			       256, paNoFlag, audioCallback, this );
+			       nbuffer, paNoFlag, audioCallback, this );
   if( err != paNoError ) {
     cerr << "Failed to open default audio output: " << Pa_GetErrorText( err ) << '\n';
     Stream = 0;
@@ -221,13 +236,31 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   data->Mutex.lock();
   float fac = data->Mute * data->Gain / data->Data[data->Trace].maxValue();
   data->Mutex.unlock();
+  data->FrameCount++;
+  if ( data->Index < data->Data[data->Trace].minIndex() )
+    data->Index = data->Data[data->Trace].minIndex();
   if ( data->Data[data->Trace].size() - data->Index < (signed long)framesperbuffer ) {
+    data->SkipCount++;
     for( unsigned long i=0; i<framesperbuffer; i++ )
       *out++ = 0.0f;
+    data->Index += framesperbuffer;  // do not skip
+    if ( double(data->SkipCount)/double(data->FrameCount) > 0.9 ) {
+      data->SkipCount = 0;
+      data->FrameCount = 0;
+      if ( data->NSkip < data->MaxSkip ) {
+	data->NSkip++;
+	data->Index -= framesperbuffer; // skip!
+      }
+    }
   }
   else {
-    for( unsigned long i=0; i<framesperbuffer; i++ )
-      *out++ = data->Data[data->Trace][data->Index++]*fac;
+    double m = data->Mean;
+    for( unsigned long i=0; i<framesperbuffer; i++ ) {
+      double x = data->Data[data->Trace][data->Index++]*fac;
+      m += ( x - m )*0.0001;
+      *out++ = x - m;
+    }
+    data->Mean = m;
   }
   return paContinue;
 }

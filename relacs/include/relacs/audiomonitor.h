@@ -82,7 +82,12 @@ protected:
   float Gain;
   float Mute;
   mutable QMutex Mutex;
-	
+
+  int FrameCount;
+  int SkipCount;
+  int MaxSkip;
+  int NSkip;
+  double Mean;
 };
 
 
