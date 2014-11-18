@@ -101,6 +101,8 @@
 		
 		<para>In all modes, the <keycap>-</keycap> and <keycap>+</keycap> keys expand and shrink the visible time range,
 		respectively.</para>
+		<para>Pressing <keycap>v</keycap> vertically centers the traces in the plots and 
+		<keycap>V</keycap> centers and zooms the y-range to make the current traces fully visible.</para>
 
 		<para>
 		The plots for each voltage trace can be closed by pressing <keycap>1</keycap>, <keycap>2</keycap>, ...

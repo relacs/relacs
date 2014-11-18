@@ -516,11 +516,13 @@ void Session::customEvent( QEvent *qce )
       return;
     }
     for ( int k=0; k<SpikeTraces; k++ ) {
-      // XXX this option is set from a RePro without locking it!
-      double frate = number( "firingrate" + Str( k+1 ) );
-      FiringRateLCD[k]->display( floor( frate ) );
-      double pval = number( "pvalue" + Str( k+1 ) );
-      PValueLCD[k]->display( pval );
+      if ( SpikeEvents[k] >= 0 ) {
+	// XXX this option is set from a RePro without locking it!
+	double frate = number( "firingrate" + Str( k+1 ) );
+	FiringRateLCD[k]->display( floor( frate ) );
+	double pval = number( "pvalue" + Str( k+1 ) );
+	PValueLCD[k]->display( pval );
+      }
     }
     if ( flags( "ephys", 16 ) ) {
       EPhys = boolean( "ephys" );

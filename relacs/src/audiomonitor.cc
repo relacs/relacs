@@ -12,11 +12,10 @@ AudioMonitor::AudioMonitor( void )
     AudioDevice( -1 ),
     Gain( 1.0 ),
     Mute( 1.0 ),
-    FrameCount( 0 ),
-    SkipCount( 0 ),
+    MaxSkipTime( 0.2 ),
     MaxSkip( 0 ),
     NSkip( 0 ),
-    Mean( 0.0 )
+    FullCount( 0 )
 {
   setDate( "" );
   setDialogHelp( false );
@@ -26,6 +25,7 @@ AudioMonitor::AudioMonitor( void )
   addBoolean( "enable", "Enable audio monitor", true );
   addBoolean( "mute", "Mute audio monitor", false );
   addNumber( "gain", "Gain factor", 1.0, 0.0, 10000.0, 0.1 );
+  addNumber( "maxskip", "Maximum playback delay", MaxSkip, 0.0, 100.0, 0.02, "s", "ms" );
 }
 
 
@@ -42,9 +42,11 @@ void AudioMonitor::notify( void )
   Gain = number( "gain" );
   Mute = boolean( "mute" ) ? 0.0f : 1.0f;
   bool enable = boolean( "enable" );
+  MaxSkipTime = number( "maxskip" );
+  bool initialized = Initialized;
   Mutex.unlock();
   if ( enable ) {
-    if ( Initialized && audiodevice != AudioDevice )
+    if ( initialized && AudioDevice != audiodevice )
       terminate();
     AudioDevice = audiodevice;
     initialize();
@@ -57,7 +59,10 @@ void AudioMonitor::notify( void )
   
 void AudioMonitor::initialize( void )
 {
-  if ( Initialized )
+  Mutex.lock();
+  bool initialized = Initialized;
+  Mutex.unlock();
+  if ( initialized )
     return;
 
 #ifdef HAVE_LIBPORTAUDIO
@@ -87,34 +92,49 @@ void AudioMonitor::initialize( void )
   cerr << "Defaul audio device is " << Pa_GetDefaultOutputDevice() << '\n';
 #endif
 
+  Mutex.lock();
   Initialized = true;
-
-  if ( Running )
+  bool run = Running;
+  Mutex.unlock();
+  if ( run )
     start();
 }
 
   
 void AudioMonitor::terminate( void )
 {
-  if ( Running ) {
+  Mutex.lock();
+  bool run = Running;
+  Mutex.unlock();
+  if ( run ) {
     stop();
+    Mutex.lock();
     Running = true;
+    Mutex.unlock();
   }
 
 #ifdef HAVE_LIBPORTAUDIO
-  if ( Initialized )
+  Mutex.lock();
+  bool initialized = Initialized;
+  Mutex.unlock();
+  if ( initialized )
     Pa_Terminate();
 #endif
 
+  Mutex.lock();
   Initialized = false;
+  Mutex.unlock();
 }
 
   
 void AudioMonitor::start( void )
 {
+  Mutex.lock();
   Running = true;
+  bool initialized = Initialized;
+  Mutex.unlock();
 
-  if ( ! Initialized )
+  if ( ! initialized )
     return;
 
   const int nbuffer = 256;
@@ -123,14 +143,9 @@ void AudioMonitor::start( void )
   Index = Data[Trace].currentIndex() - nbuffer;
   if ( Index < Data[Trace].minIndex() )
     Index = Data[Trace].minIndex();
-  SkipCount = 0;
-  FrameCount = 0;
+  MaxSkip = Data[Trace].indices( MaxSkipTime );
   NSkip = 0;
-  MaxSkip = Data[Trace].indices( 0.2 )/nbuffer;
-  if ( Index < Data[Trace].size() )
-    Mean = Data[Trace][Index];
-  else
-    Mean = 0.0;
+  FullCount = 0;
 
 #ifdef HAVE_LIBPORTAUDIO
 
@@ -167,8 +182,13 @@ void AudioMonitor::start( void )
 
 void AudioMonitor::stop( void )
 {
-  if ( ! Initialized ) {
+  Mutex.lock();
+  bool initialized = Initialized;
+  Mutex.unlock();
+  if ( ! initialized ) {
+    Mutex.lock();
     Running = false;
+    Mutex.unlock();
     return;
   }
 
@@ -236,31 +256,40 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   data->Mutex.lock();
   float fac = data->Mute * data->Gain / data->Data[data->Trace].maxValue();
   data->Mutex.unlock();
-  data->FrameCount++;
   if ( data->Index < data->Data[data->Trace].minIndex() )
     data->Index = data->Data[data->Trace].minIndex();
   if ( data->Data[data->Trace].size() - data->Index < (signed long)framesperbuffer ) {
-    data->SkipCount++;
-    for( unsigned long i=0; i<framesperbuffer; i++ )
+    // write all that is available:
+    unsigned long i=0;
+    for( i=0; i<framesperbuffer && data->Index < data->Data[data->Trace].size(); i++ )
+      *out++ = data->Data[data->Trace][data->Index++]*fac;
+    // fill up with zeros:
+    int nzeros = 0;
+    for( ; i<framesperbuffer; i++ ) {
       *out++ = 0.0f;
-    data->Index += framesperbuffer;  // do not skip
-    if ( double(data->SkipCount)/double(data->FrameCount) > 0.9 ) {
-      data->SkipCount = 0;
-      data->FrameCount = 0;
-      if ( data->NSkip < data->MaxSkip ) {
-	data->NSkip++;
-	data->Index -= framesperbuffer; // skip!
-      }
+      nzeros ++;
     }
+    if ( data->NSkip < data->MaxSkip ) {
+      int nskip = nzeros;
+      if ( data->NSkip + nskip > data->MaxSkip )
+	nskip = data->MaxSkip - data->NSkip;
+      data->NSkip += nskip;
+      data->Index -= nskip; // skip!
+    }
+    else
+      data->Index += nzeros;  // do not skip
+    data->FullCount = 0;
   }
   else {
-    double m = data->Mean;
-    for( unsigned long i=0; i<framesperbuffer; i++ ) {
-      double x = data->Data[data->Trace][data->Index++]*fac;
-      m += ( x - m )*0.0001;
-      *out++ = x - m;
+    // write out full buffer:
+    for( unsigned long i=0; i<framesperbuffer; i++ )
+      *out++ = data->Data[data->Trace][data->Index++]*fac;
+    // advance buffer:
+    data->FullCount++;
+    if ( data->FullCount % 10 == 0 && data->NSkip > 0 ) {
+      data->Index++;
+      data->NSkip--;
     }
-    data->Mean = m;
   }
   return paContinue;
 }

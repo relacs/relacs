@@ -2,8 +2,8 @@
   AudioMonitor.h
   Plays recordings on speakers using portaudio library.
 
-  FishGrid
-  Copyright (C) 2009 Jan Benda <benda@bio.lmu.de> & Joerg Henninger <henninger@bio.lmu.de>
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -33,6 +33,12 @@ using namespace std;
 
 namespace relacs {
 
+
+/*!
+\class AudioMonitor
+\author Jan Benda
+\brief Plays recordings on speakers using portaudio library.
+*/
 
 class AudioMonitor : public ConfigDialog
 {
@@ -83,11 +89,10 @@ protected:
   float Mute;
   mutable QMutex Mutex;
 
-  int FrameCount;
-  int SkipCount;
+  double MaxSkipTime;
   int MaxSkip;
   int NSkip;
-  double Mean;
+  int FullCount;
 };
 
 

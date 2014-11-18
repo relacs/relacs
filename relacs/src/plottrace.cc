@@ -529,6 +529,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
   Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ) );
+  Menu->addAction( "&Zoom vertically", this, SLOT( centerZoomVertically() ) );
   Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
 
   Menu->addSeparator();
@@ -1049,6 +1050,59 @@ void PlotTrace::centerVertically( void )
 }
 
 
+void PlotTrace::centerZoomVertically( void )
+{
+  // select plots to be centered:
+  vector<int> cp;
+  cp.reserve( VP.size() );
+  cp.clear();
+  P.lock();
+  if ( VP.size() == 1 )
+    cp.push_back( VP[0] );
+  else {
+    for ( unsigned int c=0; c<VP.size(); c++ ) {
+      if ( trace(c).mode() & PlotTraceCenterVertically )
+	cp.push_back( VP[c] );
+    }
+  }
+  P.unlock();
+  if ( cp.empty() )
+    return;
+
+  // center plots:
+  P.lock();
+  double tfac = 1000.0;
+  for ( unsigned int c=0; c<cp.size(); c++ ) {
+    double xmin = P[cp[c]].xminRange()/tfac + Offset;
+    double xmax = P[cp[c]].xmaxRange()/tfac + Offset;
+    // make sure, there are enough data shown in the window:
+    if ( trace( cp[c] ).currentTime() < 0.5*(xmin+xmax) ) {
+      xmin = trace( cp[c] ).currentTime() - (xmax-xmin);
+      xmax = trace( cp[c] ).currentTime();
+    }
+    float min = 0.0;
+    float max = 0.0;
+    trace( cp[c] ).minMax( min, max, xmin, xmax );
+    if ( P[cp[c]].ranges() == 0 )
+      P[cp[c]].pushRanges();
+    double center = 0.5*(min+max);
+    double range = 0.6*(max-min);
+    double nmin = center-range;
+    double nmax = center+range;
+    if ( nmin < trace( cp[c] ).minValue() ) {
+      nmin = trace( cp[c] ).minValue();
+      nmax = nmin + 2.0*range;
+    }
+    if ( nmax > trace( cp[c] ).maxValue() ) {
+      nmax = trace( cp[c] ).maxValue();
+      nmin = nmax - 2.0*range;
+    }
+    P[cp[c]].setYRange( nmin, nmax );
+  }
+  P.unlock();
+}
+
+
 void PlotTrace::viewToggle( void )
 {
   P.lock();
@@ -1112,7 +1166,10 @@ void PlotTrace::keyPressEvent( QKeyEvent *event )
     break;
 
   case Qt::Key_V:
-    centerVertically();
+    if ( event->modifiers() & Qt::ShiftModifier )
+      centerZoomVertically();
+    else
+      centerVertically();
     break;
 
   default: {
