@@ -265,11 +265,14 @@ const OutData &OutData::append( float a, int n )
 const OutData &OutData::append( const OutData &od )
 {
   SampleDataF::append( (SampleDataF&)od );
-  Options myopt = Description;
 
-  Description.clear();
-  Description.setType( "stimulus" );
-  Description.newSection( myopt );
+  if ( Description.type() != "stimulus" ) {
+    Options myopt = Description;
+    Description.clear();
+    Description.setType( "stimulus" );
+    Description.newSection( myopt );
+  }
+  Description.clearSections();
   Description.newSection( od.Description );
   // XXX adjust timing information!
   return *this;

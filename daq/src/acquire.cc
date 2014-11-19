@@ -850,6 +850,9 @@ int Acquire::stopRead( void )
   // sleep for two sampleintervals:
   usleep( long( 2000000.0 * si ) );
 
+  // wake up all jobs sleeping on AISemaphore:
+  AISemaphore.release( 1000 );
+
   return success ? 0 : -1;
 }
 
@@ -1178,7 +1181,7 @@ int Acquire::waitForRead( void )
   // number of analog input devices used for writing:
   int nais = 0;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( ! AI[i].Traces.empty() )
+    if ( ! AI[i].Traces.empty() && AI[i].AI->running() )
       nais++;
   }
 
@@ -2195,7 +2198,7 @@ int Acquire::waitForWrite( void )
   // number of analog output devices used for writing:
   int naos = 0;
   for ( unsigned int i=0; i<AO.size(); i++ ) {
-    if ( ! AO[i].Signals.empty() )
+    if ( ! AO[i].Signals.empty() && AO[i].AO->running() )
       naos++;
   }
 
@@ -2665,6 +2668,8 @@ int Acquire::stopWrite( void )
 	success = false;
     }
   }
+  // wake up all jobs sleeping on AOSemaphore:
+  AOSemaphore.release( 1000 );
 
   return success ? 0 : -1;
 }

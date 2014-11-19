@@ -4783,17 +4783,16 @@ ostream &Options::save( ostream &str, const string &start,
   bool printtype = ( ( ! ts.empty() ) && ( ( flags & NoType ) == 0 ) );
   bool printsection = ( flag( selectmask ) && ( printname || printtype ) );
   if ( printsection ) {
+    str << starts << ns;
     if ( printname ) {
       if ( (flags & PrintStyle) && (style() & TabSection) > 0 )
 	ns = '-' + ns + '-';
       if ( ns.find_first_of( ",{}[]:=" ) != string::npos ) {
 	if ( escape )
-	  str << starts << "\\\"" << ns << "\\\"";
+	  str << "\\\"" << ns << "\\\"";
 	else
-	  str << starts << '"' << ns << '"';
+	  str << '"' << ns << '"';
       }
-      else
-	str << starts << ns;
     }
     if ( printtype ) {
       if ( ts.find_first_of( ",{}[]:=" ) != string::npos ) {

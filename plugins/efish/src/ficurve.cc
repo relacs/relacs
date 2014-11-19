@@ -300,14 +300,27 @@ int FICurve::main( void )
       }
 
       // signal:
-      int k=0;
+      signal.clear();
       if ( PreDuration > 0.0 ) {
-	for ( ; signal.pos( k ) < PreDuration && k<signal.size(); k++ )
+	OutData presignal;
+	presignal.constWave( PreDuration, signal.stepsize(), y );
+	signal.append( presignal );
+	/*
+	  int k=0;
+	  if ( PreDuration > 0.0 ) {
+	  for ( ; signal.pos( k ) < PreDuration && k<signal.size(); k++ )
 	  signal[k] = y;
+	  }
+	*/
       }
+      OutData testsignal;
+      testsignal.pulseWave( Duration, signal.stepsize(), x, 0.0 );
+      signal.append( testsignal );
+      /*
       for ( ; k<signal.size(); k++ )
 	signal[k] = x;
       signal.back() = 0.0;
+      */
       /*
 	string ss = "I0=" + Str( PreIntensity );
 	ss += ", T0=" + Str( PreDuration, 0, 0, 'f' ) + "ms";

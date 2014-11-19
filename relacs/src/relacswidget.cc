@@ -1075,8 +1075,10 @@ void RELACSWidget::stopRePro( void )
     // request and wait for the RePro to properly terminate:
     CurrentRePro->requestStop();
     // the RePro may wait for an event to be processed:
-    while ( CurrentRePro->isRunning() )
+    while ( CurrentRePro->isRunning() ) {
       qApp->processEvents( QEventLoop::AllEvents, 10 );
+      CurrentRePro->requestStop();
+    }
     CurrentRePro->wait();
   }
 
