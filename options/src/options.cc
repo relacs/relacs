@@ -4795,14 +4795,16 @@ ostream &Options::save( ostream &str, const string &start,
       }
     }
     if ( printtype ) {
+      if ( printname )
+	str << " ";
       if ( ts.find_first_of( ",{}[]:=" ) != string::npos ) {
 	if ( escape )
-	  str << " (\\\"" << ts << "\\\")";
+	  str << "(\\\"" << ts << "\\\")";
 	else
-	  str << " (\"" << ts << "\")";
+	  str << "(\"" << ts << "\")";
       }
       else
-	str << " (" << ts << ")";
+	str << "(" << ts << ")";
     }
     str << ":\n";
     starts += "    ";

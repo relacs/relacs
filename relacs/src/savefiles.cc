@@ -581,11 +581,16 @@ void SaveFiles::writeStimulus( void )
   // XXX there should be a flag indicating, which quantities to extract!
   deque< Options > stimuliref( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
+    /*
+      XXX This really reduces the number of stimuli, but the extracted intensity
+      does not get stored in stimuli.dat! Only metadata.xml stores it, but that
+      file does not save the trace offsets (yet).
     Options::iterator pi = Stimuli[j].description().find( "Intensity" );
     if ( pi != Stimuli[j].description().end() ) {
       stimuliref[j].add( *pi );
       Stimuli[j].description().erase( pi );
     }
+    */
     // XXX once OutData does not have idents any more, the following lines can be erased:
     if ( ! Stimuli[j].ident().empty() ) {
       stimuliref[j].addText( "Description", Stimuli[j].ident() );
