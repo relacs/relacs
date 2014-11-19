@@ -42,9 +42,13 @@ void ReadThread::start( void )
 void ReadThread::run( void )
 {
   int r = 0;
-  RW->AM->start();
+  bool startam = true;
   do {
     r = RW->updateData();
+    if ( startam ) {
+      RW->AM->start();
+      startam = false;
+    }
   } while ( r > 0 );
   RW->AM->stop();
 }

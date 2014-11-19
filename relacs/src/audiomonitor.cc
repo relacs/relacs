@@ -15,7 +15,8 @@ AudioMonitor::AudioMonitor( void )
     MaxSkipTime( 0.2 ),
     MaxSkip( 0 ),
     NSkip( 0 ),
-    FullCount( 0 )
+    FullCount( 0 ),
+    LastOut( 0.0f )
 {
   setDate( "" );
   setDialogHelp( false );
@@ -42,13 +43,15 @@ void AudioMonitor::notify( void )
   Gain = number( "gain" );
   Mute = boolean( "mute" ) ? 0.0f : 1.0f;
   bool enable = boolean( "enable" );
-  MaxSkipTime = number( "maxskip" );
+  double maxskiptime = number( "maxskip" );
   bool initialized = Initialized;
   Mutex.unlock();
   if ( enable ) {
-    if ( initialized && AudioDevice != audiodevice )
+    if ( initialized && 
+	 ( AudioDevice != audiodevice || maxskiptime != MaxSkipTime ) )
       terminate();
     AudioDevice = audiodevice;
+    MaxSkipTime = maxskiptime;
     initialize();
   }
   else
@@ -146,6 +149,10 @@ void AudioMonitor::start( void )
   MaxSkip = Data[Trace].indices( MaxSkipTime );
   NSkip = 0;
   FullCount = 0;
+  if ( Index < Data[Trace].size() )
+    LastOut = Data[Trace][Index];
+  else
+    LastOut = 0.0f;
 
 #ifdef HAVE_LIBPORTAUDIO
 
@@ -255,7 +262,6 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   float *out = (float*)output;
   data->Mutex.lock();
   float fac = data->Mute * data->Gain / data->Data[data->Trace].maxValue();
-  data->Mutex.unlock();
   if ( data->Index < data->Data[data->Trace].minIndex() )
     data->Index = data->Data[data->Trace].minIndex();
   if ( data->Data[data->Trace].size() - data->Index < (signed long)framesperbuffer ) {
@@ -263,10 +269,12 @@ int AudioMonitor::audioCallback( const void *input, void *output,
     unsigned long i=0;
     for( i=0; i<framesperbuffer && data->Index < data->Data[data->Trace].size(); i++ )
       *out++ = data->Data[data->Trace][data->Index++]*fac;
+    if ( data->Index-1 < data->Data[data->Trace].size() )
+      data->LastOut = data->Data[data->Trace][data->Index-1]*fac;
     // fill up with zeros:
     int nzeros = 0;
     for( ; i<framesperbuffer; i++ ) {
-      *out++ = 0.0f;
+      *out++ = data->LastOut;
       nzeros ++;
     }
     if ( data->NSkip < data->MaxSkip ) {
@@ -284,6 +292,7 @@ int AudioMonitor::audioCallback( const void *input, void *output,
     // write out full buffer:
     for( unsigned long i=0; i<framesperbuffer; i++ )
       *out++ = data->Data[data->Trace][data->Index++]*fac;
+    data->LastOut = data->Data[data->Trace][data->Index-1]*fac;
     // advance buffer:
     data->FullCount++;
     if ( data->FullCount % 10 == 0 && data->NSkip > 0 ) {
@@ -291,6 +300,7 @@ int AudioMonitor::audioCallback( const void *input, void *output,
       data->NSkip--;
     }
   }
+  data->Mutex.unlock();
   return paContinue;
 }
 
