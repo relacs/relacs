@@ -4783,7 +4783,7 @@ ostream &Options::save( ostream &str, const string &start,
   bool printtype = ( ( ! ts.empty() ) && ( ( flags & NoType ) == 0 ) );
   bool printsection = ( flag( selectmask ) && ( printname || printtype ) );
   if ( printsection ) {
-    str << starts << ns;
+    str << starts;
     if ( printname ) {
       if ( (flags & PrintStyle) && (style() & TabSection) > 0 )
 	ns = '-' + ns + '-';
@@ -4793,6 +4793,8 @@ ostream &Options::save( ostream &str, const string &start,
 	else
 	  str << '"' << ns << '"';
       }
+      else
+	str << ns;
     }
     if ( printtype ) {
       if ( printname )
