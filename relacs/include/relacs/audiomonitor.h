@@ -56,8 +56,12 @@ public:
   void start( void );
   void stop( void );
 
-  void mute( void );
+    /*! Mute the audio monitor.
+        \return \c true if it was already muted. */
+  bool mute( void );
+    /*! unmute the audio monitor. */
   void unmute( void );
+    /*! \return \c true if the audio monitor is muted. */
   bool muted( void ) const;
 
   void assignTraces( const InList &il, deque<InList*> &data );

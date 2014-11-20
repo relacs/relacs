@@ -226,11 +226,13 @@ void AudioMonitor::stop( void )
 }
 
 
-void AudioMonitor::mute( void )
+bool AudioMonitor::mute( void )
 {
   Mutex.lock();
+  float mute = Mute;
   Mute = 0.0f;
   Mutex.unlock();
+  return ( mute < 0.1 );
 }
 
 
