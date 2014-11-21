@@ -103,9 +103,18 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   for ( int i = 0; i < 20 && checkrange[i] > 0.0; i++ ) {
     string message = "AI{0}:RANGE=BIP" + Str( checkrange[i], "%g" ) + "V";
     DAQFlexDevice->sendMessage( message );
-    string response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
-    if ( response == message )
-      BipolarRange.push_back( checkrange[i] );
+    if ( DAQFlexDevice->success() ) {
+      string response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
+      if ( DAQFlexDevice->success() && response == message )
+	BipolarRange.push_back( checkrange[i] );
+    }
+  }
+  if ( BipolarRange.size() == 0 ) {
+      cerr << "Error in initializing DAQFlexAnalogInput device:\n"
+	   << "no input ranges found. error: " << DAQFlexDevice->errorStr() << '\n';
+      if ( DAQFlexDevice->error() == DAQFlexCore::ErrorLibUSBIO )
+	cerr << "Check the USB cable!\n";
+    return ReadError;
   }
 
   reset();

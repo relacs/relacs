@@ -139,6 +139,13 @@ public:
     /*! Clear the writing endpoint. */
   void clearWrite( void );
 
+    /*! \return the current error state. */
+  int error( void ) const;
+    /*! \return \c true if there is no error. */
+  bool success( void ) const;
+    /*! \return the current error state as a descriptive string. */
+  string errorStr( void ) const;
+
 
  private:
 

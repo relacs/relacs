@@ -22,7 +22,7 @@ dist_daqflexlib_DATA = \
 	firmware/USB_1608G.rbf \
 	firmware/USB_254x.rbf \
         doc/98-daqflex-old.rules \
-        doc/98-daqflex-new.rules
+        doc/98-daqflex.rules
 
 PLUGINSET = daqflex
 DX_PROJECT = daqflex

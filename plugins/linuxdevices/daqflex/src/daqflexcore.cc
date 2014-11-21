@@ -166,7 +166,7 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 	  }
 	}
 	else
-	  cerr << "DAQFlex: open device failed: " << DAQFlexErrorText[ ErrorState ] << '\n';
+	  cerr << "DAQFlex: open device failed: " << errorStr() << '\n';
       }
     }
   }
@@ -176,13 +176,19 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
   if ( !found ) {
     if ( ErrorState == Success )
       ErrorState = ErrorNoDevice;
-    cerr << "Failed to open DAQFlex device: " << DAQFlexErrorText[ ErrorState ] << '\n';
+    cerr << "Failed to open DAQFlex device: " << errorStr() << '\n';
     DeviceHandle = NULL;
   }
   else {
     Str path = opts.text( "firmwarepath" );
     path.provideSlash();
     initDevice( path );
+    if ( ErrorState != Success ) {
+      cerr << "Error in initializing DAQFlex device: " << errorStr() << '\n';
+      if ( ErrorState == ErrorLibUSBIO )
+	cerr << "Check the USB cable!\n";
+      close();
+    }
   }
 
   return ErrorState;
@@ -400,6 +406,10 @@ string DAQFlexCore::sendMessage( const string &message )
   string s = "";
   if ( r == Success )
     s = getControlTransfer();
+  /*
+  else
+    cerr << "error in DAQFlexCore::sendMessage( " << message << " ): " << DAQFlexErrorText[r] << '\n';
+  */
   unlock();
   return s;
 }
@@ -527,6 +537,8 @@ int DAQFlexCore::initDevice( const string &path )
     DIOLines = 8;
     // check if the firmware has been loaded already:
     string response = sendMessage( "?DEV:FPGACFG" );
+    if ( ErrorState != Success )
+      return ErrorState;
     if ( response.find( "CONFIGURED" ) == string::npos ) {
       cout << "Firmware being flashed...\n";
       // firmware hasn't been loaded yet, do so:
@@ -536,7 +548,7 @@ int DAQFlexCore::initDevice( const string &path )
       if ( ErrorState == Success ) {
 	// check if the firmware got loaded successfully:
 	response = sendMessage( "?DEV:FPGACFG" );
-	if ( response.find( "CONFIGURED" ) == string::npos )
+	if ( ErrorState == Success && response.find( "CONFIGURED" ) == string::npos )
 	  ErrorState = ErrorFPGAUploadFailed;
       }
       if ( ErrorState == Success ) {
@@ -546,6 +558,8 @@ int DAQFlexCore::initDevice( const string &path )
 	else
 	  cout << "DAQFlex: firmware version " << response.erase( 0, 8 ) << " successfully flashed\n";
       }
+      else
+	return ErrorState;
     }
     /*
     else
@@ -689,6 +703,24 @@ void DAQFlexCore::clearWrite( void )
      PENDING TRANSFERS BEFORE ATTEMPTING TO CLEAR THE HALT CONDITION
      (is this really given when stopping relacs?).  This is a BLOCKING
      FUNCTION. */
+}
+
+
+int DAQFlexCore::error( void ) const
+{
+  return ErrorState;
+}
+
+
+bool DAQFlexCore::success( void ) const
+{
+  return ( ErrorState == Success );
+}
+
+
+string DAQFlexCore::errorStr( void ) const
+{
+  return DAQFlexErrorText[ ErrorState ];
 }
 
 

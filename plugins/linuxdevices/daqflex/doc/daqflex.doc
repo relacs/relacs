@@ -40,7 +40,7 @@ On older system (prior to mid 2012) create the file
 Both files are also installed to \c \<prefix\>/lib/daqflex/ . So you can simply copy them to the
 right directory. New system:
 \code
-$ cp /usr/lib/daqflex/98-daqflex-new.rules /lib/udev/rules.d/
+$ cp /usr/lib/daqflex/98-daqflex.rules /lib/udev/rules.d/
 \endcode Old system:
 \code
 $ cp /usr/lib/daqflex/98-daqflex-old.rules /etc/udev/rules.d/
