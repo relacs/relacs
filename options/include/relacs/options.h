@@ -1418,6 +1418,7 @@ public:
 	i.e. \a level = 1 adds a subsection, \a \a level = 2 a subsubsection, etc.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
+	\return the new section.
         \sa newSubSection(), newSubSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
   Options &newSection( int level, const string &name, const string &type="",
@@ -1430,6 +1431,7 @@ public:
 	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
+	\return the new section.
         \sa newSubSection(), newSubSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
   Options &newSection( const string &name, const string &type="",
@@ -1443,6 +1445,7 @@ public:
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsection.
         \note You can only add a subsection after having added a section!
+	\return the new section.
         \sa newSection(), newSubSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
   Options &newSubSection( const string &name, const string &type="",
@@ -1457,6 +1460,7 @@ public:
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsubsection.
         \note You can only add a subsubsection after having added a subsection!
+	\return the new section.
         \sa newSection(), newSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
   Options &newSubSubSection( const string &name, const string &type="",
@@ -1470,6 +1474,7 @@ public:
 	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
+	\return the new section.
         \sa newSection(), newSubSection(), newSubSubSection(), insertSection(),
 	endSection(), clearSections() */
   Options &addSection( const string &name, const string &type="",
@@ -1486,6 +1491,7 @@ public:
 	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the inserted section.
+	\return the new section.
         \sa newSection(), newSubSection(), newSubSubSection(), addSection(),
 	endSection(), clearSections(), findSection()  */
   Options &insertSection( const string &name, const string &atpattern,
@@ -1505,9 +1511,10 @@ public:
         add sections lower in the hierachy, i.e. \a level = 1 adds a
         subsection, \a \a level = 2 a subsubsection, etc.  Subsequent
         calls to addText(), addNumber(), etc. add new Parameter to the
-        added section.  \sa newSubSection(), newSubSubSection(),
-        addSection(), insertSection(), endSection(),
-        clearSections() */
+        added section.
+	\return the new section.
+	\sa newSubSection(), newSubSubSection(), addSection(),
+	insertSection(), endSection(), clearSections() */
   Options &newSection( int level, const Options &opt, int selectmask,
 		       const string &name="", const string &type="",
 		       int flag=0, int style=0 );
@@ -1526,9 +1533,10 @@ public:
         set to \a type.  \a flag and \a style are added to the new
         sections \a flag and \a style flag, respectively.  Subsequent
         calls to addText(), addNumber(), etc. add new Parameter to the
-        added section.  \sa newSubSection(), newSubSubSection(),
-        addSection(), insertSection(), endSection(),
-        clearSections() */
+        added section.
+	\return the new section.
+	\sa newSubSection(), newSubSubSection(), addSection(),
+	insertSection(), endSection(), clearSections() */
   Options &newSection( const Options &opt, int selectmask,
 		       const string &name="", const string &type="",
 		       int flag=0, int style=0 );
@@ -1547,9 +1555,10 @@ public:
         flag and \a style flag, respectively.  Subsequent calls to
         addText(), addNumber(), etc. add new Parameter to the added
         section.  \note You can only add a subsection after having
-        added a section!  \sa newSection(), newSubSubSection(),
-        addSection(), insertSection(), endSection(),
-        clearSections() */
+        added a section! 
+	\return the new section.
+	\sa newSection(), newSubSubSection(), addSection(),
+	insertSection(), endSection(), clearSections() */
   Options &newSubSection( const Options &opt, int selectmask,
 			  const string &name="", const string &type="",
 			  int flag=0, int style=0 );
@@ -1568,8 +1577,9 @@ public:
         to the new sections \a flag and \a style flag, respectively.
         Subsequent calls to addText(), addNumber(), etc. add new
         Parameter to the added section.  \note You can only add a
-        subsubsection after having added a subsection!  \sa
-        newSection(), newSubSection(), addSection(), insertSection(),
+        subsubsection after having added a subsection!  
+	\return the new section.
+	\sa newSection(), newSubSection(), addSection(), insertSection(),
         endSection(), clearSections() */
   Options &newSubSubSection( const Options &opt, int selectmask,
 			     const string &name="", const string &type="",
@@ -1588,6 +1598,7 @@ public:
         formatted according to the \a style flag.  Subsequent calls to
         addText(), addNumber(), etc. add new Parameter to the added
         section.
+	\return the new section.
         \sa newSection(), newSubSection(), newSubSubSection(), insertSection(),
 	endSection(), clearSections() */
   Options &addSection( const Options &opt, int selectmask,
@@ -1610,8 +1621,9 @@ public:
         section is set to \a type.  \a flag and \a style are added to
         the new sections \a flag and \a style flag, respectively.
         Subsequent calls to addText(), addNumber(), etc. add new
-        Parameter to the inserted section.  \sa newSection(),
-        newSubSection(), newSubSubSection(), addSection(),
+        Parameter to the inserted section.  
+	\return the new section.
+	\sa newSection(), newSubSection(), newSubSubSection(), addSection(),
         endSection(), clearSections(), findSection()  */
   Options &insertSection( const Options &opt, int selectmask,
 			  const string &name, const string &atpattern,
@@ -1629,7 +1641,8 @@ public:
 	If \a opt does not have a parentSection() or \a newparent is \c true
 	then its parent section	is set to \a this.
         Subsequent calls to addText(), addNumber(), etc. still add new
-	Parameter to the currently active section. */
+	Parameter to the currently active section.
+	\return the new section. */
   Options &newSection( Options *opt, bool newparent=false );
     /*! Add \a opt as a section to the end of the currently active
         Option's sections list. Only a pointer of \a opt is stored,
@@ -1637,7 +1650,8 @@ public:
 	If \a opt does not have a parentSection() or \a newparent is \c true
 	then its parent section	is set to currently active section.
         Subsequent calls to addText(), addNumber(), etc. still add new
-	Parameter to the currently active section. */
+	Parameter to the currently active section.
+	\return the new section. */
   Options &addSection( Options *opt, bool newparent=false );
     /*! Insert \a opt as a section of Options before the section
         specified by \a atpattern.  If \a atpattern is not found or if
@@ -1648,7 +1662,8 @@ public:
 	If \a opt does not have a parentSection() or \a newparent is \c true
 	then its parent section	is set to its parent in the new tree.
         Subsequent calls to addText(), addNumber(), etc. still add new
-	Parameter to the currently active section. */
+	Parameter to the currently active section. 
+	\return the new section. */
   Options &insertSection( Options *opt, const string &atpattern,
 			  bool newparent=false );
 
@@ -1657,7 +1672,8 @@ public:
 	newparent is \c true then the sections' parent section is set
 	to \a this.  Subsequent calls to addText(), addNumber(),
 	etc. still add new Parameter to the currently active
-	section. */
+	section. 
+	\return *this */
   Options &newSections( Options *opt, bool newparent=false );
 
     /*! End the currently active section such that subsequent calls

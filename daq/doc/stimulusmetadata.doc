@@ -1,0 +1,115 @@
+/*!
+\page stimulusmetadata Metadata description of stimuli
+
+Stimuli are assembled from basic components like sine-waves, pulses,
+etc.  Each stimulus component is described by a odML section.  The
+type of the section defines which type of stimulus component was used.
+The properties of the section describe timing and amplitude
+information and further specific parameter of the stimulus component.
+
+A stimulus component can also get a usefull name in addition to its
+type.  This name can be used to mark functional aspects of the
+stimulus components.  For example, "prepulse" and "testpulse" can be
+used to differeniate between succeeding pulse stimuli. THe names
+should be unique in its level of the hierarchy.
+
+
+\section general General properties
+
+- Modality: what kind of physical stimulus is it, sound, light etc.
+  \todo We need to define useful keywords!
+- OutputChannel: what exactly should this denote?
+
+
+\section timing Timing properties
+
+- StartTime: the start of the stimulus component relative to the 
+  temporaloffset of the parent node.
+- Duration: the duration of the stimulus component.
+
+
+\section amplitude Amplitude properties
+- Intensity:
+- Meanintensity:
+- Standarddeviation:
+- Amplitude:
+
+
+\section assemble Assemble a complex stimulus from components
+
+- appending stimuli
+- adding stimuli
+- multiplying stimuli (amplitude modulations):
+  - Function: Carrier/AM
+
+
+\subsection ramp Ramps
+
+\subsection fadeinout Fading
+
+
+\section stimuluscomponents List of stimulus components
+
+\subsection valuestimulus stimulus/value
+- Intensity
+
+\subsection rampstimulus stimulus/ramp
+- StartIntensity
+- Intensity
+
+\subsection pulsestimulus stimulus/pulse
+- Intensity
+- IntensityOffset
+
+\subsection squarestimulus stimulus/square_wave
+- Frequency
+- DutyCycle
+- StartAmplitude
+
+\subsection sinestimulus stimulus/sine_wave
+- Frequency
+- Phase
+
+\subsection whitenoisestimulus stimulus/white_noise
+- LowerCutoffFrequency
+- UpperCutoffFrequency
+- Mean
+- StDev
+
+\subsection colorednoisestimulus stimulus/colored_noise
+- CorrlationTime
+- Mean
+- StDev
+
+\subsection sweepstimulus stimulus/sweep_wave
+- StartFrequency
+- EndFrequency
+- Phase
+
+\subsection sawtoothstimulus stimulus/sawtooth
+- Period
+- UpstrokeWidth
+- DownstrokeWidth
+- Ramp
+
+\subsection alphastimulus stimulus/alpha
+- TimeConstant
+- Period
+
+\section ambiguities Ambiguities
+and rules how to avoid them
+
+- sineWave() can be stimulus or carrier with const AM. How to deal with that?
+  Even worse: what is that two-frequency stimulus in isoresponse?
+- morphing stimuli from pulses to sine waves
+- pulses with ramps look like triangles
+
+
+\section sequences Sequences of stimuli
+for example, how o define a series of pulses with growing amplitudes
+- InterstimulusInterval
+- Repetitions
+- etc.
+
+
+*/

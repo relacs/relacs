@@ -186,14 +186,6 @@ class OutData : public SampleData< float >, public DaqError
     /*! Make \a od a copy of the OutData object. */
   const OutData &copy( OutData &od ) const;
 
-    /*! Append \a n - times the value \a to the OutData object. */
-  const OutData &append( float a, int n=1 );
-    /*! Append \a a of size \a n to the OutData object. */
-  template < typename R >
-  const OutData &append( const R *a, int n );
-    /*! Append \a a to the OutData object. */
-  template < typename R >
-  const OutData &append( const R &a );
     /*! Append \a od to the OutData object.
         If the stepsize of \a od differs,
         then \a od is resampled with linear interpolation. */
@@ -627,21 +619,45 @@ class OutData : public SampleData< float >, public DaqError
   double fill( const OutData &am, double carrierfreq, 
 	       const string &ident = "" );
 
+    /*! Creates a constant stimulus consisting of a single data point
+        with value \a value.
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
+  void constWave( double value, const string &name="" );
+    /*! Creates a constant stimulus that assumes \a value for a
+        duration of \a duration seconds sampled with \a stepsize.
+	\param[in] \a name the optional name can be used to functionally describe the signal.
+	\sa pulseWave() */
+  void constWave( double duration, double stepsize, double value, const string &name="" );
+    /*! Creates a pulse stimulus that assumes \a value for a duration
+        of \a duration seconds sampled with \a stepsize. A final value
+        after the pulse sets the amplitude of the signal back to \a
+        base.  If \a stepsize is negative or if fixedSampleRate(), the
+        sampling rate is set using minSampleInterval().
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
+  void pulseWave( double duration, double stepsize, double value, double base,
+		  const string &name="" );
+    /*! Creates a rectangle pulse pattern with period \a period,
+        duration of the rectangle \a width and constant amplitude \a
+	ampl. The up- and downstrokes have a width of \a ramp.
+	If \a stepsize is negative or if fixedSampleRate(),
+	the sampling rate is set using minSampleInterval().
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
+  void rectangleWave( double duration, double stepsize,
+		      double period, double width, double ramp, double ampl=1.0,
+		      const string &name="" );
     /*! Create a sine wave of constant amplitude \a ampl (1.0 = maximum amplitude)
-        with freqency \a freq Hz, \a duration seconds, 
-	ramps of \a ramp seconds length, and description \a ident.
+        with freqency \a freq Hz, \a duration seconds and ramps of \a ramp seconds length.
 	If fixedSampleRate() the \a stepsize is set to minSampleInterval().
 	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a freq ).
 	The carrier frequency of the signal is set to \a freq.
-        If \a ident is not specified, it is set to "sine wave".
+	\param[in] \a name the optional name can be used to functionally describe the signal.
         \note specify an output trace using setTrace() or setTraceName()
 	before calling sineWave()! */
   void sineWave( double duration, double stepsize,
 		 double freq, double ampl=1.0, double ramp=0.0, 
-		 const string &ident="sine wave" );
+		 const string &name="" );
     /*! Create Gaussian white noise with cut-off freqency \a cutofffreq in Hz,
-        \a duration seconds, 
-	ramps of \a ramp seconds length, and description \a ident.
+        \a duration seconds, and ramps of \a ramp seconds length.
 	The noise signal has zero mean and standard deviation \a stdev.
 	The carrier frequency of the signal is set to \a cutofffreq.
 	If fixedSampleRate() the \a stepsize is set to minSampleInterval().
@@ -650,16 +666,15 @@ class OutData : public SampleData< float >, public DaqError
 	If \a *seed is 0, then the system time is used to generate a seed
         to imitate real randomness.
 	The actually used seed is returned in \a *seed.
-        If \a ident is not specified, it is set to "white noise wave".
+	\param[in] \a name the optional name can be used to functionally describe the signal.
         \note specify an output trace using setTrace() or setTraceName()
 	before calling sineWave()! */
   void noiseWave( double duration, double stepsize, double cutofffreq,
 		  double stdev=1.0, unsigned long *seed=0, double ramp=0.0, 
-		  const string &ident="white noise wave" );
+		  const string &name="" );
     /*! Create Gaussian white noise between frequencies
         \a cutofffreqlow and \a cutofffreqhigh in Hz,
-        \a duration seconds, 
-	ramps of \a ramp seconds length, and description \a ident.
+        \a duration seconds, and ramps of \a ramp seconds length.
 	The noise signal has zero mean and standard deviation \a stdev.
 	If fixedSampleRate() the \a stepsize is set to minSampleInterval().
 	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a cutofffreqhigh ).
@@ -668,16 +683,15 @@ class OutData : public SampleData< float >, public DaqError
 	If \a *seed is 0, then the system time is used to generate a seed
         to imitate real randomness.
 	The actually used seed is returned in \a *seed.
-        If \a ident is not specified, it is set to "band noise wave".
+	\param[in] \a name the optional name can be used to functionally describe the signal.
         \note specify an output trace using setTrace() or setTraceName()
 	before calling sineWave()! */
   void bandNoiseWave( double duration, double stepsize,
 		      double cutofffreqlow, double cutofffreqhigh,
 		      double stdev=1.0, unsigned long *seed=0, double ramp=0.0,
-		      const string &ident="band noise wave" );
+		      const string &name="" );
     /*! Create Ohrnstein-Uhlenbeck noise with time-constant \a tau in sec,
-        \a duration seconds, 
-	ramps of \a ramp seconds length, and description \a ident.
+        \a duration seconds, and ramps of \a ramp seconds length.
 	The noise signal has zero mean and standard deviation \a stdev.
 	The carrier frequency of the signal is set to 1/\a tau.
  	If \a stepsize is negative or if fixedSampleRate(),
@@ -686,71 +700,51 @@ class OutData : public SampleData< float >, public DaqError
 	If \a *seed is 0, then the system time is used to generate a seed
         to imitate real randomness.
 	The actually used seed is returned in \a *seed.
-        If \a ident is not specified, it is set to "ou noise wave". */
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
   void ouNoiseWave( double duration, double stepsize,
 		    double tau, double stdev=1.0, unsigned long *seed=0, double ramp=0.0, 
-		    const string &ident="ou noise wave" );
+		    const string &name="" );
     /*! Creates a frequency sweep from \a startfreq f_1 to \a endfreq
         f_2 of constant amplitude \a ampl and with \a duration seconds. 
 	If \a stepsize is negative or if fixedSampleRate(),
 	the sampling rate is set using minSampleInterval().
-	If \a ident is not specified, it is set to "sweep wave". */
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
   void sweepWave( double duration, double stepsize,
 		  double startfreq, double endfreq,
 		  double ampl=1.0, double ramp=0.0, 
-		  const string &ident="sweep wave" );
-    /*! Creates a rectangle pulse pattern with period \a period,
-        duration of the rectangle \a width and constant amplitude \a
-	ampl. The up- and downstrokes have a width of \a ramp.
-	If \a stepsize is negative or if fixedSampleRate(),
-	the sampling rate is set using minSampleInterval().
-	If \a ident is not specified, it is set to "rectangle wave". */
-  void rectangleWave( double duration, double stepsize,
-		      double period, double width, double ramp, double ampl=1.0, 
-		      const string &ident="rectangle wave" );
+		  const string &name="" );
+    /*! Creates a ramp stimulus that starts at \a first and linearly
+        ramps up to \a last for a duration of \a duration seconds
+        sampled with \a stepsize. 
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
+  void rampWave( double duration, double stepsize, double first, double last,
+		 const string &name="" );
     /*! Creates a sawtooth with period \a period and constant amplitude
         \a ampl with \a duration seconds. The downstroke has a width of
 	\a ramp.
 	If \a stepsize is negative or if fixedSampleRate(),
 	the sampling rate is set using minSampleInterval().
-	If \a ident is not specified, it is set to "saw up wave". */
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
   void sawUpWave( double duration, double stepsize,
 		  double period, double ramp, double ampl=1.0,
-		  const string &ident="saw up wave" );
+		  const string &name="" );
     /*! Creates a sawtooth with period \a period and constant amplitude
         \a ampl with \a duration seconds. The upstroke has a width of \a
 	ramp.
 	If \a stepsize is negative or if fixedSampleRate(),
 	the sampling rate is set using minSampleInterval().
-	If \a ident is not specified, it is set to "saw down wave". */
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
   void sawDownWave( double duration, double stepsize,
 		    double period, double ramp, double ampl=1.0,
-		    const string &ident="saw down wave" );
+		    const string &name="" );
     /*! Creates a triangle with period \a period and constant amplitude
         \a ampl with \a duration seconds. The upstroke and downstroke
 	have a width of \a 0.5*period.
 	If \a stepsize is negative or if fixedSampleRate(),
 	the sampling rate is set using minSampleInterval().
-	If \a ident is not specified, it is set to "triangle wave". */
+	\param[in] \a name the optional name can be used to functionally describe the signal. */
   void triangleWave( double duration, double stepsize, double period,
-		     double ampl=1.0, const string &ident="triangle wave" );
-    /*! Creates a constant stimulus consisting of a single data point
-        with value \a value. */
-  void constWave( double value );
-    /*! Creates a constant stimulus that assumes \a value for a
-        duration of \a duration seconds sampled with \a stepsize. \sa
-        pulseWave() */
-  void constWave( double duration, double stepsize, double value );
-    /*! Creates a ramp stimulus that starts at \a first and linearly
-        ramps up to \a last for a duration of \a duration seconds
-        sampled with \a stepsize. */
-  void rampWave( double duration, double stepsize, double first, double last );
-    /*! Creates a pulse stimulus that assumes \a value for a duration
-        of \a duration seconds sampled with \a stepsize. A final value
-        after the pulse sets the amplitude of the signal back to \a
-        base.  If \a stepsize is negative or if fixedSampleRate(), the
-        sampling rate is set using minSampleInterval(). */
-  void pulseWave( double duration, double stepsize, double value, double base );
+		     double ampl=1.0, const string &name="" );
     /*! Creates a train of alpha functions with period \a period seconds and
         of \a duration seconds total duration sampled with \a stepsize. 
 	The time constant of the alpha functions is \a tau and
@@ -760,9 +754,11 @@ class OutData : public SampleData< float >, public DaqError
 	The maximum amplitude of each single aplha-function is \a ampl.
 	Note, however, that by summation the resulting signal can have much larger amplitudes.
 	If \a stepsize is negative or if fixedSampleRate(),
-	the sampling rate is set using minSampleInterval(). */
+	the sampling rate is set using minSampleInterval().
+        \param[in] \a name the optional name can be used to functionally describe the signal. */
   void alphaWave( double &duration, double stepsize, double period,
-		  double tau, double ampl=1.0, double delay=0.0 );
+		  double tau, double ampl=1.0, double delay=0.0,
+		  const string &name="" );
 
     /*! The index of the next element to be written to the data buffer.
         \sa incrDeviceIndex(), devieValue(), incrDeviceCount(), deviceReset() */
@@ -951,22 +947,6 @@ template < typename R >
 const OutData &OutData::copy( R &a ) const
 {
   SampleDataF::copy( a );
-  return *this;
-}
-
-
-template < typename R >
-const OutData &OutData::append( const R *a, int n )
-{
-  SampleDataF::append( a, n );
-  return *this;
-}
-
-
-template < typename R >
-const OutData &OutData::append( const R &a )
-{
-  SampleDataF::append( a );
   return *this;
 }
 

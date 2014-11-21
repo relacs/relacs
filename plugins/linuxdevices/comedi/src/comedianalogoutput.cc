@@ -814,7 +814,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
       // XXX Fix DAQCard bug: add 2k of zeros to the signals:
       // cerr << "ADD SIGNAL\n";
       for ( int k=0; k<ol.size(); k++ )
-	ol[k].append( 0.0, 2048 );
+	ol[k].SampleDataF::append( 0.0, 2048 );
     }
 
     if ( setupCommand( ol, Cmd, true ) < 0 ) {

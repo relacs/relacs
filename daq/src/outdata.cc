@@ -255,15 +255,10 @@ const OutData &OutData::copy( OutData &od ) const
 }
 
 
-const OutData &OutData::append( float a, int n )
-{
-  SampleDataF::append( a, n );
-  return *this;
-}
-
-
 const OutData &OutData::append( const OutData &od )
 {
+  double tstart = length();
+
   SampleDataF::append( (SampleDataF&)od );
 
   if ( Description.type() != "stimulus" ) {
@@ -273,8 +268,21 @@ const OutData &OutData::append( const OutData &od )
     Description.newSection( myopt );
   }
   Description.clearSections();
-  Description.newSection( od.Description );
-  // XXX adjust timing information!
+  Options &opt = Description.newSection( od.Description );
+  bool foundtstart = false;
+  bool foundduration = false;
+  for ( Options::iterator pp = opt.begin(); pp != opt.end(); ++pp ) {
+    if ( pp->name() == "StartTime" ) {
+      pp->setNumber( pp->number() + tstart );
+      foundtstart = true;
+    }
+    else if ( pp->name() == "Duration" )
+      foundduration = true;
+  }
+  if ( ! foundduration )
+    opt.insertNumber( "Duration", "", od.length(), "s" );
+  if ( ! foundtstart )
+    opt.insertNumber( "StartTime", "", tstart, "s" );
   return *this;
 }
 
@@ -1003,8 +1011,8 @@ double OutData::fill( const OutData &am, double carrierfreq,
     Description.addNumber( "Mean", 0.0 );
     Description.addNumber( "StDev", 1.0 );
   }
+  Description.addNumber( "StartTime", 0.0, "s" );
   Description.addNumber( "Duration", am.length(), "s" );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
   Description.addText( "Function", "Carrier" );
 
   setIdent( ident );
@@ -1013,8 +1021,85 @@ double OutData::fill( const OutData &am, double carrierfreq,
 }
 
 
+void OutData::constWave( double value, const string &name )
+{
+  SampleDataF::resize( 1, 0.0, minSampleInterval() );
+  *this = value;
+  Description.clear();
+  Description.setType( "stimulus/value" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
+  Description.addNumber( "Duration", stepsize(), "s" );
+  Description.addNumber( "Intensity", value, unit() );
+  clearError();
+}
+
+
+void OutData::constWave( double duration, double stepsize, double value, const string &name )
+{
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  SampleDataF::resize( 0.0, duration, stepsize );
+  *this = value;
+  Description.clear();
+  Description.setType( "stimulus/value" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "Intensity", value, unit() );
+  clearError();
+}
+
+
+void OutData::pulseWave( double duration, double stepsize,
+			 double value, double base, const string &name )
+{
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  SampleDataF::resize( 0.0, duration, stepsize );
+  *this = value;
+  Description.clear();
+  Description.setType( "stimulus/pulse" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "Intensity", value, unit() );
+  if ( fabs( value - base ) > 1e-8 ) {
+    back() = base;
+    Description.addNumber( "IntensityOffset", base, unit() );
+  }
+  clearError();
+}
+
+
+void OutData::rectangleWave( double duration, double stepsize, 
+			     double period, double width, double ramp, double ampl,
+			     const string &name )
+{
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
+    stepsize = minSampleInterval();
+  rectangle( 0.0, duration, stepsize, period, width, ramp );
+  if ( ampl != 1.0 )
+    array() *= ampl;
+  back() = 0.0;
+
+  Description.clear();
+  Description.setType( "stimulus/square_wave" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "Frequency", 1.0/period, "Hz" );
+  Description.addNumber( "DutyCycle", width/period );
+  Description.addNumber( "StartAmplitude", 0.0 );
+
+  setCarrierFreq( 1.0/period );
+  clearError();
+}
+
+
 void OutData::sineWave( double duration, double stepsize,
-			double freq, double ampl, double r, const string &ident )
+			double freq, double ampl, double r, const string &name )
 {
   if ( fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1029,21 +1114,21 @@ void OutData::sineWave( double duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/sine_wave" );
-  Description.addNumber( "Frequency", freq, "Hz" );
-  Description.addNumber( "Amplitude", ampl, unit() );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
   Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "Frequency", freq, "Hz" );
   Description.addNumber( "Phase", 0.0 );
 
   setCarrierFreq( freq );
-  setIdent( ident );
   clearError();
 }
 
 
 void OutData::noiseWave( double duration, double stepsize,
 			 double cutofffreq, double stdev,
-			 unsigned long *seed, double r, const string &ident )
+			 unsigned long *seed, double r, const string &name )
 {
   if ( fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1061,22 +1146,22 @@ void OutData::noiseWave( double duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/white_noise" );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "StartTime", 0.0, "s" );
+  Description.setName( name );
   Description.addNumber( "Duration", duration, "s" );
-  Description.addNumber( "UpperCutoffFrequency", cutofffreq, "Hz" );
-  Description.addNumber( "LowerCutoffFrequency", 0.0, "Hz" );
   Description.addNumber( "Mean", 0.0, unit() );
   Description.addNumber( "StDev", stdev, unit() );
+  Description.addNumber( "UpperCutoffFrequency", cutofffreq, "Hz" );
+  Description.addNumber( "LowerCutoffFrequency", 0.0, "Hz" );
 
   setCarrierFreq( cutofffreq );
-  setIdent( ident );
   clearError();
 }
 
 
 void OutData::bandNoiseWave( double duration, double stepsize,
 			     double cutofffreqlow, double cutofffreqhigh, double stdev, 
-			     unsigned long *seed, double r, const string &ident )
+			     unsigned long *seed, double r, const string &name )
 {
   if ( fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1095,22 +1180,22 @@ void OutData::bandNoiseWave( double duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/white_noise" );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
   Description.addNumber( "Duration", duration, "s" );
-  Description.addNumber( "UpperCutoffFrequency", cutofffreqhigh, "Hz" );
-  Description.addNumber( "LowerCutoffFrequency", cutofffreqlow, "Hz" );
   Description.addNumber( "Mean", 0.0, unit() );
   Description.addNumber( "StDev", stdev, unit() );
+  Description.addNumber( "UpperCutoffFrequency", cutofffreqhigh, "Hz" );
+  Description.addNumber( "LowerCutoffFrequency", cutofffreqlow, "Hz" );
 
   setCarrierFreq( cutofffreqhigh );
-  setIdent( ident );
   clearError();
 }
 
 
 void OutData::ouNoiseWave( double duration, double stepsize,
 			   double tau, double stdev, unsigned long *seed,
-			   double r, const string &ident )
+			   double r, const string &name )
 {
   if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1126,14 +1211,14 @@ void OutData::ouNoiseWave( double duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/colored_noise" );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
   Description.addNumber( "Duration", duration, "s" );
-  Description.addNumber( "CorrelationTime", tau, "s" );
   Description.addNumber( "Mean", 0.0, unit() );
   Description.addNumber( "StDev", stdev, unit() );
+  Description.addNumber( "CorrelationTime", tau, "s" );
 
   setCarrierFreq( 1/tau );
-  setIdent( ident );
   clearError();
 }
 
@@ -1141,7 +1226,7 @@ void OutData::ouNoiseWave( double duration, double stepsize,
 void OutData::sweepWave( double duration, double stepsize, 
 			 double startfreq, double endfreq,
 			 double ampl, double r, 
-			 const string &ident )
+			 const string &name )
 {
   if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1154,46 +1239,39 @@ void OutData::sweepWave( double duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/sweep_wave" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
   Description.addNumber( "StartFrequency", startfreq, "Hz" );
   Description.addNumber( "EndFrequency", endfreq, "Hz" );
-  Description.addNumber( "Amplitude", ampl, unit() );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
-  Description.addNumber( "Duration", duration, "s" );
   Description.addNumber( "Phase", 0.0 );
 
-  setIdent( ident );
   clearError();
 }
 
 
-void OutData::rectangleWave( double duration, double stepsize, 
-			     double period, double width, double ramp, double ampl,
-			     const string &ident)
+void OutData::rampWave( double duration, double stepsize,
+			double first, double last, const string &name )
 {
   if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
-  rectangle( 0.0, duration, stepsize, period, width, ramp );
-  if ( ampl != 1.0 )
-    array() *= ampl;
-  back() = 0.0;
-
+  SampleDataF::resize( 0.0, duration, stepsize );
+  for ( int k=0; k<size(); k++ )
+    (*this)[k] = first + (last-first)*(k+1)/size();
   Description.clear();
-  Description.setType( "stimulus/square_wave" );
+  Description.setType( "stimulus/ramp" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
   Description.addNumber( "Duration", duration, "s" );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
-  Description.addNumber( "DutyCycle", width/period );
-  Description.addNumber( "Amplitude", ampl, unit() );
-  Description.addNumber( "Frequency", 1.0/period, "Hz" );
-  Description.addNumber( "StartAmplitude", 0.0 );
-
-  setCarrierFreq( 1.0/period );
-  setIdent( ident );
+  Description.addNumber( "StartIntensity", first, unit() );
+  Description.addNumber( "Intensity", last, unit() );
   clearError();
 }
 
 
 void OutData::sawUpWave( double duration, double stepsize, 
-			 double period, double ramp, double ampl, const string &ident)
+			 double period, double ramp, double ampl, const string &name )
 {
   if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1204,22 +1282,22 @@ void OutData::sawUpWave( double duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/sawtooth" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
   Description.addNumber( "Duration", duration, "s" );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "Period", period, "s" );
   Description.addNumber( "UpstrokeWidth", period-ramp, "s" );
   Description.addNumber( "DownstrokeWidth", ramp, "s" );
   Description.addNumber( "Ramp", ramp, "s" );
-  Description.addNumber( "Amplitude", ampl, unit() );
-  Description.addNumber( "Period", period, "s" );
 
-  setIdent( ident );
   clearError();
 }
 
 
 void OutData::sawDownWave( double duration, double stepsize, 
 			   double period, double ramp, double ampl,
-			   const string &ident)
+			   const string &name )
 {
   if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1230,21 +1308,21 @@ void OutData::sawDownWave( double duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/sawtooth" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
   Description.addNumber( "Duration", duration, "s" );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
   Description.addNumber( "UpstrokeWidth", ramp, "s" );
   Description.addNumber( "DownstrokeWidth", period-ramp, "s" );
   Description.addNumber( "Ramp", ramp, "s" );
-  Description.addNumber( "Amplitude", ampl, unit() );
   Description.addNumber( "Period", period, "s" );
 
-  setIdent( ident );
   clearError();
 }
 
 
 void OutData::triangleWave( double duration, double stepsize, 
-			    double period, double ampl, const string &ident )
+			    double period, double ampl, const string &name )
 {
   if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1255,81 +1333,21 @@ void OutData::triangleWave( double duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/sawtooth" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
   Description.addNumber( "Duration", duration, "s" );
-  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
   Description.addNumber( "UpstrokeWidth", 0.5*period, "s" );
   Description.addNumber( "DownstrokeWidth", 0.5*period, "s" );
-  Description.addNumber( "Amplitude", ampl, unit() );
   Description.addNumber( "Period", period, "s" );
 
-  setIdent( ident );
-  clearError();
-}
-
-
-void OutData::constWave( double value )
-{
-  SampleDataF::resize( 1, 0.0, minSampleInterval() );
-  *this = value;
-  Description.clear();
-  Description.setType( "stimulus/value" );
-  Description.addNumber( "Intensity", value, unit() );
-  clearError();
-}
-
-
-void OutData::constWave( double duration, double stepsize, double value )
-{
-  if ( stepsize < minSampleInterval() || fixedSampleRate() )
-    stepsize = minSampleInterval();
-  SampleDataF::resize( 0.0, duration, stepsize );
-  *this = value;
-  Description.clear();
-  Description.setType( "stimulus/value" );
-  Description.addNumber( "Intensity", value, unit() );
-  Description.addNumber( "Duration", 1000.0*duration, "ms" );
-  clearError();
-}
-
-
-void OutData::rampWave( double duration, double stepsize,
-			double first, double last )
-{
-  if ( stepsize < minSampleInterval() || fixedSampleRate() )
-    stepsize = minSampleInterval();
-  SampleDataF::resize( 0.0, duration, stepsize );
-  for ( int k=0; k<size(); k++ )
-    (*this)[k] = first + (last-first)*(k+1)/size();
-  Description.clear();
-  Description.setType( "stimulus/ramp" );
-  Description.addNumber( "Intensity0", first, unit() );
-  Description.addNumber( "Intensity", last, unit() );
-  Description.addNumber( "Duration", 1000.0*duration, "ms" );
-  clearError();
-}
-
-
-void OutData::pulseWave( double duration, double stepsize,
-			 double value, double base )
-{
-  if ( stepsize < minSampleInterval() || fixedSampleRate() )
-    stepsize = minSampleInterval();
-  SampleDataF::resize( 0.0, duration, stepsize );
-  *this = value;
-  Description.clear();
-  Description.setType( "stimulus/pulse" );
-  Description.addNumber( "Intensity", value, unit() );
-  if ( fabs( value - base ) > 1e-8 ) {
-    back() = base;
-    Description.addNumber( "IntensityOffset", base, unit() );
-  }
-  Description.addNumber( "Duration", 1000.0*duration, "ms" );
   clearError();
 }
 
 
 void OutData::alphaWave( double &duration, double stepsize, 
-			 double period, double tau, double ampl, double delay )
+			 double period, double tau, double ampl, double delay,
+			 const string &name )
 {
   if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
@@ -1350,10 +1368,11 @@ void OutData::alphaWave( double &duration, double stepsize,
 
   Description.clear();
   Description.setType( "stimulus/alpha" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", delay, "s" );
   Description.addNumber( "Duration", duration, "s" );
-  Description.addNumber( "TemporalOffset", delay, "s" );
-  Description.addNumber( "TimeConstant", tau, "s" );
   Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "TimeConstant", tau, "s" );
   if ( period < duration )
     Description.addNumber( "Period", period, "s" );
 

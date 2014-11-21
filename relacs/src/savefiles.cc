@@ -606,8 +606,10 @@ void SaveFiles::writeStimulus( void )
     Str tn = Stimuli[j].description().type();
     if ( tn.empty() )
       tn = Stimuli[j].description().name();
-    tn.eraseFirst( "stimulus" );
-    tn.preventFirst( '/' );
+    else {
+      tn.eraseFirst( "stimulus" );
+      tn.preventFirst( '/' );
+    }
     if ( ! tn.empty() )
       sn += '-' + tn;
     for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
@@ -616,8 +618,10 @@ void SaveFiles::writeStimulus( void )
       tn = (*si)->type();
       if ( tn.empty() )
 	tn = (*si)->name();
-      tn.eraseFirst( "stimulus" );
-      tn.preventFirst( '/' );
+      else {
+	tn.eraseFirst( "stimulus" );
+	tn.preventFirst( '/' );
+      }
       if ( ! tn.empty() )
 	sn += '-' + tn;
     }

@@ -88,7 +88,6 @@ General:
 - comedi m4 file should check for routing function
 - relacshelp should know whether doxygen is there, or whether the files it is operating on, exist.
 - add a README file to share/relacs/configs/
-- make the config files more generic (lab address!)
 - check device config files
 - check all config files
 - update m4 files: relacs_sndfile is most up to date
@@ -107,7 +106,7 @@ Metadata support of OutData:
   auditory: adaptedficurve, syslatency
   auditoryprojects: spikeprecision
   efield: jar
-  efish: chirps, ficurve, sam
+  efish: sam, chirps
   patchclamp: simple
   patchclampprojects: thresholdlatencies, feedforwardnetwork
 - Remove OutData::ident()
@@ -127,7 +126,6 @@ Metadata support of OutData:
 - ThresholdLatencies: check stimulus descriptions
 - There should be a flag for Parameter in OutData::description()
   indicating, which quantities to extract in SaveFiles
-- OutData::append() needs to update timing information!
 - Add ramp and appendRamp functions to OutData that set also the descriptions
 - Update odML terminologies accordingly.
 - Stimulus section needs a file (if available)!

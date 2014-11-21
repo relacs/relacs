@@ -1,0 +1,7 @@
+/*!
+\mainpage 
+
+See \ref stimulusmetadata for a general description on how to write a metadata description
+for stimuli. This is implemented by the OutData and OutList classes.
+
+*/
