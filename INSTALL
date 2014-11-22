@@ -89,7 +89,7 @@ Run
 
 > make -j$(grep -c "^processor" /proc/cpuinfo)"
 
-That takes a while! The -j options runs as many processes as you have cpu cores in parallel
+That takes a while! The -j options runs as many processes as you have cpu cores in parallel.
 
 
 6. Optionally run

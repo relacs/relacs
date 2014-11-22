@@ -33,6 +33,9 @@ should be unique in its level of the hierarchy.
 - Meanintensity:
 - Standarddeviation:
 - Amplitude:
+- How to incorporate attenuator settings?
+- There could be a general problem: the stimulus put out is not exactly the stimulus that is delivered.
+  E.g. sound pressure level versus sound intensity, EFish AM, direct versus resulting AM.
 
 
 \section assemble Assemble a complex stimulus from components

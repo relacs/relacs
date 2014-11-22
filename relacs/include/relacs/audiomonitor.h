@@ -88,15 +88,13 @@ protected:
 
   InList Data;
   int Trace;
-  int Index;
   float Gain;
   float Mute;
   mutable QMutex Mutex;
 
-  double MaxSkipTime;
-  int MaxSkip;
-  int NSkip;
-  int FullCount;
+  double AudioRate;
+  int AudioSize;
+  double DataStartTime;
   float LastOut;
 };
 

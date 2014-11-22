@@ -12,10 +12,9 @@ AudioMonitor::AudioMonitor( void )
     AudioDevice( -1 ),
     Gain( 1.0 ),
     Mute( 1.0 ),
-    MaxSkipTime( 0.2 ),
-    MaxSkip( 0 ),
-    NSkip( 0 ),
-    FullCount( 0 ),
+    AudioRate( 44100.0 ),
+    AudioSize( 0 ),
+    DataStartTime( 0.0 ),
     LastOut( 0.0f )
 {
   setDate( "" );
@@ -26,7 +25,6 @@ AudioMonitor::AudioMonitor( void )
   addBoolean( "enable", "Enable audio monitor", true );
   addBoolean( "mute", "Mute audio monitor", false );
   addNumber( "gain", "Gain factor", 1.0, 0.0, 10000.0, 0.1 );
-  addNumber( "maxskip", "Maximum playback delay", MaxSkip, 0.0, 100.0, 0.02, "s", "ms" );
 }
 
 
@@ -43,15 +41,12 @@ void AudioMonitor::notify( void )
   Gain = number( "gain" );
   Mute = boolean( "mute" ) ? 0.0f : 1.0f;
   bool enable = boolean( "enable" );
-  double maxskiptime = number( "maxskip" );
   bool initialized = Initialized;
   Mutex.unlock();
   if ( enable ) {
-    if ( initialized && 
-	 ( AudioDevice != audiodevice || maxskiptime != MaxSkipTime ) )
+    if ( initialized && AudioDevice != audiodevice )
       terminate();
     AudioDevice = audiodevice;
-    MaxSkipTime = maxskiptime;
     initialize();
   }
   else
@@ -140,19 +135,11 @@ void AudioMonitor::start( void )
   if ( ! initialized )
     return;
 
-  const int nbuffer = 256;
-
+  int nbuffer = 256;
   Trace = 0;
-  Index = Data[Trace].currentIndex() - nbuffer;
-  if ( Index < Data[Trace].minIndex() )
-    Index = Data[Trace].minIndex();
-  MaxSkip = Data[Trace].indices( MaxSkipTime );
-  NSkip = 0;
-  FullCount = 0;
-  if ( Index < Data[Trace].size() )
-    LastOut = Data[Trace][Index];
-  else
-    LastOut = 0.0f;
+  AudioSize = 0;
+  DataStartTime = 0.0;
+  LastOut = 0.0f;
 
 #ifdef HAVE_LIBPORTAUDIO
 
@@ -169,8 +156,31 @@ void AudioMonitor::start( void )
   params.sampleFormat = paFloat32;
   params.suggestedLatency = Pa_GetDeviceInfo( audiodev )->defaultHighOutputLatency;
   params.hostApiSpecificStreamInfo = NULL;
-  PaError err = Pa_OpenStream( &Stream, NULL, &params, Data[Trace].sampleRate(),
-			       nbuffer, paNoFlag, audioCallback, this );
+  AudioRate = Data[Trace].sampleRate();
+  if ( AudioRate > 44100.0 )
+    AudioRate = 44100.0;
+  AudioRate = 44100.0;
+  PaError err = Pa_IsFormatSupported( NULL, &params, AudioRate );
+  if ( err == paInvalidSampleRate ) {
+    const int nrates = 6;
+    const double defaultrates[nrates] = { 44100.0, 48000.0, 22050.0, 16000.0, 8000.0, 96000.0 }; 
+    for ( int k=0; k<nrates; k++ ) {
+      AudioRate = defaultrates[k];
+      err = Pa_IsFormatSupported( NULL, &params, AudioRate );
+      if ( err != paInvalidSampleRate )
+	break;
+    }
+    if( err != paNoError ) {
+      cerr << "Failed to find appropriate sampling rate and format for audio output: "
+	   << Pa_GetErrorText( err ) << '\n';
+      Stream = 0;
+      return;
+    }
+  }
+  while ( nbuffer < 0.02*AudioRate )
+    nbuffer *= 2;
+  err = Pa_OpenStream( &Stream, NULL, &params, AudioRate,
+		       nbuffer, paNoFlag, audioCallback, this );
   if( err != paNoError ) {
     cerr << "Failed to open default audio output: " << Pa_GetErrorText( err ) << '\n';
     Stream = 0;
@@ -183,7 +193,11 @@ void AudioMonitor::start( void )
     cerr << "Failed to start audio stream: " << Pa_GetErrorText( err ) << '\n';
     return;
   }
+  else
+    cerr << "Started audio stream at " << AudioRate << " Hz\n";
 #endif
+
+  DataStartTime = Data[Trace].currentTime() - Data[Trace].interval( nbuffer );
 }
 
 
@@ -263,45 +277,34 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   AudioMonitor *data = (AudioMonitor*)userdata;
   float *out = (float*)output;
   data->Mutex.lock();
-  float fac = data->Mute * data->Gain / data->Data[data->Trace].maxValue();
-  if ( data->Index < data->Data[data->Trace].minIndex() )
-    data->Index = data->Data[data->Trace].minIndex();
-  if ( data->Data[data->Trace].size() - data->Index < (signed long)framesperbuffer ) {
-    // write all that is available:
-    unsigned long i=0;
-    for( i=0; i<framesperbuffer && data->Index < data->Data[data->Trace].size(); i++ )
-      *out++ = data->Data[data->Trace][data->Index++]*fac;
-    if ( data->Index-1 < data->Data[data->Trace].size() )
-      data->LastOut = data->Data[data->Trace][data->Index-1]*fac;
-    // fill up with zeros:
-    int nzeros = 0;
-    for( ; i<framesperbuffer; i++ ) {
-      *out++ = data->LastOut;
-      nzeros ++;
+  const InData &trace = data->Data[data->Trace];
+  float fac = data->Mute * data->Gain / trace.maxValue();
+  double rate = trace.sampleRate();
+  int datasize = trace.size();
+  int dataminsize = trace.minIndex();
+  int index = datasize;
+  unsigned long i=0;
+  for( ; i<framesperbuffer; i++, data->AudioSize++ ) {
+    double time = data->AudioSize/data->AudioRate + data->DataStartTime;
+    index = trace.index( time );
+    if ( index + 1 >= datasize )
+      break;
+    if ( index >= dataminsize ) {
+      // linear interpolation:
+      double m = (trace[index+1]-trace[index])*rate;
+      data->LastOut = (m*(time-trace.pos(index))+trace[index])*fac;
     }
-    if ( data->NSkip < data->MaxSkip ) {
-      int nskip = nzeros;
-      if ( data->NSkip + nskip > data->MaxSkip )
-	nskip = data->MaxSkip - data->NSkip;
-      data->NSkip += nskip;
-      data->Index -= nskip; // skip!
-    }
-    else
-      data->Index += nzeros;  // do not skip
-    data->FullCount = 0;
+    *out++ = data->LastOut;
   }
-  else {
-    // write out full buffer:
-    for( unsigned long i=0; i<framesperbuffer; i++ )
-      *out++ = data->Data[data->Trace][data->Index++]*fac;
-    data->LastOut = data->Data[data->Trace][data->Index-1]*fac;
-    // advance buffer:
-    data->FullCount++;
-    if ( data->FullCount % 10 == 0 && data->NSkip > 0 ) {
-      data->Index++;
-      data->NSkip--;
-    }
-  }
+  for( ; i<framesperbuffer; i++, data->AudioSize++ )
+    *out++ = data->LastOut;
+
+  // adjust rate to align the ends of the data buffers:
+  double newrate = data->AudioSize/(trace.currentTime()-data->DataStartTime);
+  data->AudioRate += ( newrate - data->AudioRate )*0.01;
+  data->DataStartTime = trace.pos( index+1 ) - data->AudioSize/data->AudioRate;
+  //  cerr << data->AudioRate << '\n';
+
   data->Mutex.unlock();
   return paContinue;
 }
