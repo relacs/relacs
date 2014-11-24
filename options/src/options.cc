@@ -5659,18 +5659,6 @@ Options &Options::load( const StrQueue &sq, const string &assignment )
 }
 
 
-void Options::setNotify( bool notify )
-{
-  CallNotify = notify;
-}
-
-
-void Options::unsetNotify( void )
-{
-  CallNotify = false;
-}
-
-
 void Options::callNotifies( void )
 {
   bool tn = Notified;
@@ -5684,6 +5672,28 @@ void Options::callNotifies( void )
     rootSection()->notify();
   rootSection()->Notified = rn;
   Notified = tn;
+}
+
+
+bool Options::setNotify( bool notify )
+{
+  bool cn = CallNotify;
+  CallNotify = notify;
+  return cn;
+}
+
+
+bool Options::unsetNotify( void )
+{
+  bool cn = CallNotify;
+  CallNotify = false;
+  return cn;
+}
+
+
+bool Options::notifying( void ) const
+{
+  return CallNotify;
 }
 
 

@@ -2009,16 +2009,21 @@ public:
         This function is called after each of the setNumber(), setText(), etc
         functions. */
   virtual void notify( void ) {};
-    /*! Calls the rootSections() and this Options notify() functions
-        if appropriate.
-        \sa notif(), setNotify() */
+    /*! Calls the rootSection()'s and this Option's notify() functions
+        if calling the notify() function is enbaled.
+        \sa notifying(), setNotify() */
   void callNotifies( void );
-    /*! Enables the call of the notify() function if \a notify equals \c true. */
-  void setNotify( bool notify=true );
-    /*! Disables the call of the notify() function. */
-  void unsetNotify( void );
-    /*! Returns true if calling the notify() function is enabled. */
-  bool notifying( void ) const { return CallNotify; };
+    /*! Enables the call of the notify() function if \a notify equals \c true.
+        \return the value notifying() returns before disabling it.
+        \sa unsetNotify(), notifying(), callNotifies() */
+  bool setNotify( bool notify=true );
+    /*! Disables the call of the notify() function. 
+        \return the value notifying() returns before disabling it.
+        \sa setNotify(), notifying(), callNotifies() */
+  bool unsetNotify( void );
+    /*! Returns \c true if calling the notify() function is enabled.
+        \sa setNotify(). unsetNotify() */
+  bool notifying( void ) const;
 
 
 private:

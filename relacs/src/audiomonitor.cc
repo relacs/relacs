@@ -245,6 +245,9 @@ bool AudioMonitor::mute( void )
   Mutex.lock();
   float mute = Mute;
   Mute = 0.0f;
+  bool cn = unsetNotify();
+  setBoolean( "mute", true );
+  setNotify( cn );
   Mutex.unlock();
   return ( mute < 0.1 );
 }
@@ -254,6 +257,9 @@ void AudioMonitor::unmute( void )
 {
   Mutex.lock();
   Mute = 1.0f;
+  bool cn = unsetNotify();
+  setBoolean( "mute", false );
+  setNotify( cn );
   Mutex.unlock();
 }
 
