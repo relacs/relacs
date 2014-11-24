@@ -203,7 +203,7 @@ const InData &InData::assign( void )
 }
 
 
-void InData::copy( int first, int last, OutData &data ) const
+void InData::copy( int first, int last, OutData &data, const string &name ) const
 {
   data.clear();
   if ( first < minIndex() )
@@ -212,22 +212,28 @@ void InData::copy( int first, int last, OutData &data ) const
     last = maxIndex();
   if ( last - first <= 0 )
     return;
-  data.resize( last - first );
 
+  data.resize( last - first );
+  data.setSampleRate( sampleRate() );
   for ( int k=0; k<data.size(); k++ )
     data[ k ] = operator[]( first + k );
 
-  data.setSampleRate( sampleRate() );
-  data.setIdent( ident() );
+  data.description().clear();
+  data.description().setType( "stimulus/recording" );
+  data.description().setName( name );
+  data.description().addNumber( "StartTime", 0.0, "s" );
+  data.description().addNumber( "Duration", data.length(), "s" );
+  data.description().addNumber( "SamplingRate", sampleRate(), "Hz" );
+  data.description().addText( "Trace", ident() );
 }
 
 
-void InData::copy( double tbegin, double tend, OutData &data ) const
+void InData::copy( double tbegin, double tend, OutData &data, const string &name ) const
 {
   int first = index( tbegin );
   int last = index( tend );
 
-  copy( first, last, data );
+  copy( first, last, data, name );
 }
 
 

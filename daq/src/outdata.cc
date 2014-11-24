@@ -185,7 +185,7 @@ OUTDATAOPS1SCALARDEF( operator=, = )
 #undef OUTDATAOPS1SCALARDEF
 
 
-const OutData &OutData::assign( const OutData &od )
+OutData &OutData::assign( const OutData &od )
 {
   SampleDataF::assign( (SampleDataF&)od );
   Delay = od.Delay;
@@ -255,7 +255,7 @@ const OutData &OutData::copy( OutData &od ) const
 }
 
 
-const OutData &OutData::append( const OutData &od )
+OutData &OutData::append( const OutData &od, const string &name )
 {
   double tstart = length();
 
@@ -265,6 +265,8 @@ const OutData &OutData::append( const OutData &od )
     Options myopt = Description;
     Description.clear();
     Description.setType( "stimulus" );
+    Description.setName( name );
+    // XXX if myopt only contains sections, we should add these sections!
     Description.newSection( myopt );
   }
   Description.clearSections();
@@ -283,6 +285,27 @@ const OutData &OutData::append( const OutData &od )
     opt.insertNumber( "Duration", "", od.length(), "s" );
   if ( ! foundtstart )
     opt.insertNumber( "StartTime", "", tstart, "s" );
+  return *this;
+}
+
+
+OutData &OutData::repeat( int n, const string &name )
+{
+  double duration = length();
+  SampleDataF::repeat( n );
+
+  Options myopt = Description;
+  Description.clear();
+  Description.setType( "stimulus/periodic" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
+  Description.addNumber( "Duration", length(), "s" );
+  Description.addInteger( "Repeats", n );
+  Description.addNumber( "Pause", 0.0, "s" );
+  Description.addNumber( "Frequency", 1.0/duration, "Hz" );
+  // XXX if myopt only contains sections, we should add these sections!
+  Description.newSection( myopt );
+
   return *this;
 }
 
@@ -568,6 +591,12 @@ const Options &OutData::description( void ) const
 Options &OutData::description( void )
 {
   return Description;
+}
+
+
+void OutData::setDescription( const Options &description )
+{
+  Description = description;
 }
 
 

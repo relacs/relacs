@@ -63,7 +63,7 @@ SaveFiles:
 
 Options:
 - MetaData: reading in of several config files fails in MetaData.
-- RePro: when the RePo changes an Option in main(), this change should automatically be made permanent
+- RePro: when the RePro changes an Option in main(), this change should automatically be made permanent
   (via setToDefaults() called after main()? E.g. SetInputGain RePro).
 - Make all Options and optWidget style flags an enum
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?
@@ -106,12 +106,14 @@ Metadata support of OutData:
   auditory: adaptedficurve, syslatency
   auditoryprojects: spikeprecision
   efield: jar
-  efish: sam, chirps
+  efish: chirps
   patchclamp: simple
   patchclampprojects: thresholdlatencies, feedforwardnetwork
 - Remove OutData::ident()
 - Check loading of metadata descriptions from stimulus files in OutData::load(),
   check usage in auditory::singlestimulus, efield::jar, etc.
+- OutData::repeat() with pause.
+- OutData::setSampleRate should update timing information in the descriptions? See efish::SAM for the recorded EOD stimulus.
 - Implement oprators =, +, etc. for OutData such that they take descriptions into account!
   (i.e. in isoresponse, spikeprecision, efish::filestimulus, patchclamp::singlestimulus, OutData::maximize())
 - Remove most of the OutData constructors that resize the data? You should use *Wave() instead!

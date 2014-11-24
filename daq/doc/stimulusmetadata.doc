@@ -60,6 +60,16 @@ should be unique in its level of the hierarchy.
 - StartIntensity
 - Intensity
 
+\subsection periodicstimulus stimulus/periodic
+Describes an arbitrary periodic stimulus.
+A single period is defined as a subsection.
+- StartTime
+- Duration: of the resulting stimulus
+- Repeats: The number of repetitions of a single period
+- Pause: optional pauses between repetitions
+- Frequency: the frequency of the resulting waveform
+\todo implement repeat function with pause option
+
 \subsection pulsestimulus stimulus/pulse
 - Intensity
 - IntensityOffset
@@ -98,6 +108,12 @@ should be unique in its level of the hierarchy.
 \subsection alphastimulus stimulus/alpha
 - TimeConstant
 - Period
+
+\subsection recordedstimulus stimulus/recorded
+- Trace
+- SampleRate
+e.g. efish::SAM
+
 
 \section ambiguities Ambiguities
 and rules how to avoid them

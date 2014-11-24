@@ -129,11 +129,15 @@ class InData : public CyclicSampleDataF, public DaqError
         to this. \sa update() */
   const InData &assign( void );
 
-    /*! Copy the data from element \a first to element \a last to \a data. */
-  void copy( int first, int last, OutData &data ) const;
+    /*! Copy the data from element \a first to element \a last to \a data.
+        No amplitude information is stored into the description of \a data.
+        Set the name of the description to \a name. */
+  void copy( int first, int last, OutData &data, const string &name="" ) const;
     /*! Copy the data from time \a tbegin to time \a tend seconds
-        to \a data. */
-  void copy( double tbegin, double tend, OutData &data ) const;
+        to \a data.
+        No amplitude information is stored into the description of \a data.
+	Set the name of the description to \a name. */
+  void copy( double tbegin, double tend, OutData &data, const string &name="" ) const;
     /*! Copy the data values from \a time + \a trace.leftMargin()
         to \a time + \a trace.rightMargin() to \a trace.
         The sample interval given by \a trace is used.

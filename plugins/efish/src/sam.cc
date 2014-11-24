@@ -172,15 +172,16 @@ int SAM::createSignal( const InData &data, const EventData &events )
       // extract an EOD waveform:
       double t1 = events.back( ReadCycles+1 );
       double t2 = events.back( 1 );
-      data.copy( t1, t2, *Signal );
+      data.copy( t1, t2, *Signal, "EOD" );
       Signal->maximize( 0.5 );
+      IntensityGain = 0.5*(Signal->maxValue() - Signal->minValue());
+      Signal->description().insertNumber( "Amplitude", "SamplingRate", IntensityGain, Signal->unit() );
       Signal->setSampleRate( data.sampleRate() * ( FishRate + DeltaF ) / FishRate );
       Signal->setCarrierFreq( FishRate + DeltaF );
+      Signal->repeat( (int)rint( Duration/Signal->duration() ) );
+      Signal->description().setNumber( "Frequency", FishRate + DeltaF );
       ident = "EOD";
-      double maxamplitude = Signal->maxValue() - Signal->minValue();
-      IntensityGain = maxamplitude;
     }
-    Signal->repeat( (int)rint( Duration/Signal->duration() ) );
   }
   Duration = Signal->duration();
   Signal->setStartSource( 1 );

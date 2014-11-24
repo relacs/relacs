@@ -159,20 +159,20 @@ class OutData : public SampleData< float >, public DaqError
         its content to \a a, and the stepsize to \a stepsize.
         All other properties are not affected. */
   template < typename R >
-  const OutData &assign( const R *a, int n, const double stepsize=1 );
+  OutData &assign( const R *a, int n, const double stepsize=1 );
     /*! Set the size(), capacity(), and content of the OutData array to \a a, 
         and the stepsize to \a stepsize.
         All other properties are not affected. */
   template < typename R >
-  const OutData &assign( const R &a, const double stepsize=1 );
+  OutData &assign( const R &a, const double stepsize=1 );
     /*! Set the size(), capacity(), stepsize(), and content 
         of the OutData array to \a sa.
         sa.offset() is set tot zero.
         All other properties are not affected. */
   template < typename R >
-  const OutData &assign( const SampleData< R > &sa );
+  OutData &assign( const SampleData< R > &sa );
     /*! Make the OutData object a copy of \a od. */
-  const OutData &assign( const OutData &od );
+  OutData &assign( const OutData &od );
 
     /*! Copy the content of the OutData object to \a a. 
         If necessary remaining elements of \a a
@@ -188,8 +188,13 @@ class OutData : public SampleData< float >, public DaqError
 
     /*! Append \a od to the OutData object.
         If the stepsize of \a od differs,
-        then \a od is resampled with linear interpolation. */
-  const OutData &append( const OutData &od );
+        then \a od is resampled with linear interpolation.
+	\param[in] \a name the optional name can be used to functionally describe the resulting signal. */
+  OutData &append( const OutData &od, const string &name="" );
+
+    /*! Repeat the current content of the OutData array \a n times.
+	\param[in] \a name the optional name can be used to functionally describe the resulting signal. */
+  OutData &repeat( int n, const string &name="" );
 
     /*! Clear the data and the description(), but not any additional
         information like trace(), intenisty() ,etc. */
@@ -318,6 +323,8 @@ class OutData : public SampleData< float >, public DaqError
   const Options &description( void ) const;
     /*! Returns the description of the output signal. */
   Options &description( void );
+    /*! Set the description of the output signal to \a description. */
+  void setDescription( const Options &description );
 
     /*! Returns the minimum value of the
         signal trace that should be used for determining the appropriate gain
@@ -911,7 +918,7 @@ const OutData &OutData::operator=( const SampleData< R > &a )
 
 
 template < typename R >
-const OutData &OutData::assign( const R *a, int n, const double stepsize )
+OutData &OutData::assign( const R *a, int n, const double stepsize )
 {
   SampleDataF::assign( a, n, 0, stepsize);
   return *this;
@@ -919,7 +926,7 @@ const OutData &OutData::assign( const R *a, int n, const double stepsize )
 
 
 template < typename R >
-const OutData &OutData::assign( const R &a, const double stepsize )
+OutData &OutData::assign( const R &a, const double stepsize )
 {
   SampleDataF::assign( a, 0.0, stepsize);
   return *this;
@@ -927,7 +934,7 @@ const OutData &OutData::assign( const R &a, const double stepsize )
 
 
 template < typename R >
-const OutData &OutData::assign( const SampleData< R > &sa )
+OutData &OutData::assign( const SampleData< R > &sa )
 {
   SampleDataF::assign( sa );
   SampleDataF::setOffset( 0.0 );
@@ -936,17 +943,17 @@ const OutData &OutData::assign( const SampleData< R > &sa )
 
 
 template < typename R >
-const OutData &OutData::copy( R *a, int n, const float &val ) const
+const OutData &OutData::copy( R &a ) const
 {
-  SampleDataF::copy( a, n, val );
+  SampleDataF::copy( a );
   return *this;
 }
 
 
 template < typename R >
-const OutData &OutData::copy( R &a ) const
+const OutData &OutData::copy( R *a, int n, const float &val ) const
 {
-  SampleDataF::copy( a );
+  SampleDataF::copy( a, n, val );
   return *this;
 }
 
