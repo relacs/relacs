@@ -18,12 +18,10 @@ New InData threading:
 - DAQFlex: does not like the initial writeReset()
   as well as normal writes at high sampling rates.
   The startwrite message blocks forever, while new data are read in.
-  Solution could be to start both devices at onece as in comedi.
 - DAQFlex error handling needs to be improved, 
   e.g. invalid sampling rate and stall after write with high sampling rate.
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.
-- Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
 - SpectrumAnalyzer Frequency resolution should not depend on sampling rate!
   Use Frequency resolution instead of number of fft points.
 - Check whether InData, Acquire updateTime and readTime are still needed!
@@ -71,10 +69,16 @@ Options:
 - DeviceList and FilterDetectors (and others?) should use plugin name (ident) as section name.
 - check config files (in particular empty comments, units in lists [a, b, ckHz], etc!)
 - are uniqueNames also used for relacsplugins.cfg ?
-- Device menu should be hierarchically using section structure of device infos.
 - operator[] and section() should only return Parameter/Options from this Options
   BUT: auditory::session::notifyMetaData!
 - Check and update how plugins save data and use settings() and stimulusData()
+
+Devices:
+- Device menu should be hierarchically using section structure of device infos.
+- Devices should inherit Options or even ConfigClass
+- Attenuate uses the configure mechanism, so it should inherit ConfigClass
+- Attenuate should also have a dialog
+- Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
 
 patchclamp::SingleStimulus:
 - Add zero to noise stimuli (all stimuli?)

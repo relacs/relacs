@@ -305,7 +305,7 @@ int SAM::main( void )
 	  P.setCommonYRange( 2*(n-1), 2*n );
       }
       else {
-	P[2*n].setYLabel( "Potential [mV]" );
+	P[2*n].setYLabel( "Potential [" + trace( NerveTrace[k-MaxTraces] ).unit() + "]" );
 	P[2*n].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
 			     Plot::Center, -90.0 );
 	P[2*n].setAutoScaleY();

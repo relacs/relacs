@@ -499,7 +499,7 @@ int Chirps::createAM( OutData &signal )
 }
 
 
-void Chirps::initMultiPlot( double ampl )
+  void Chirps::initMultiPlot( double ampl, double contrast )
 {
   int nsub = 1 + SpikeTraces + NerveTraces;
 
@@ -511,6 +511,12 @@ void Chirps::initMultiPlot( double ampl )
   const double ylabelmarg = 7.0;
   const double ymarg = 1.0;
   const double ratemax = 100.0;
+  double minampl = (1.0-1.5*contrast)*ampl;
+  if ( minampl < 0.0 )
+    minampl = 0.0;
+  double maxampl = (1.0+1.5*contrast)*ampl;
+  if ( maxampl > 2.0*ampl )
+    maxampl = 2.0*ampl;
   
   double xr = 100.0;
   if ( fabs( DeltaF ) > 50.0 )
@@ -553,7 +559,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setYLabel( "Beat" );
 	  P[n].setYLabelPos( -0.55, Plot::FirstAxis, 0.5, Plot::Graph, 
 			     Plot::Center, -90.0 );
-	  P[n].setYRange( 0.5*ampl, 1.5*ampl );
+	  P[n].setYRange( minampl, maxampl );
 	  P[n].setYTics( );
 	}
 	else if ( row == 0 && sub == 0 ) {
@@ -561,7 +567,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setSize( dx, yo+dys*dy );
 	  P[n].setBMarg( xlabelmarg );
 	  P[n].setXTics();
-	  P[n].setYRange( 0.5*ampl, 1.5*ampl );
+	  P[n].setYRange( minampl, maxampl );
 	}
 	else if ( col == 0 && sub == 0 ) {
 	  P[n].setOrigin( 0.0, yo+row*dy );
@@ -571,7 +577,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setYLabel( "Beat" );
 	  P[n].setYLabelPos( -0.55, Plot::FirstAxis, 0.5, Plot::Graph, 
 			     Plot::Center, -90.0 );
-	  P[n].setYRange( 0.5*ampl, 1.5*ampl );
+	  P[n].setYRange( minampl, maxampl );
 	  P[n].setYTics();
 	}
 	else if ( col == 0 && sub > 0 ) {
@@ -580,8 +586,8 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setLMarg( ylabelmarg );
 	  if ( sub == nsub-1 )
 	    P[n].setTMarg( 3.0*xmarg );
-	  if ( NerveTraces > 0 && sub == SpikeTraces + NerveTraces )
-	    P[n].setYLabel( "Voltage [uV]" );
+	  if ( NerveTraces > 0 && sub > SpikeTraces )
+	    P[n].setYLabel( "Potential [" + trace( NerveTrace[sub-SpikeTraces-1] ).unit() + "]" );
 	  else
 	    P[n].setYLabel( "Rate " + Str( sub ) + " [Hz]" );
 	  P[n].setYLabelPos( -0.55, Plot::FirstAxis, 0.5, Plot::Graph, 
@@ -593,7 +599,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setOrigin( xo+col*dx, yo+row*dy );
 	  P[n].setSize( dx, dys*dy );
 	  P[n].setBMarg( 3.0*xmarg );
-	  P[n].setYRange( 0.5*ampl, 1.5*ampl );
+	  P[n].setYRange( minampl, maxampl );
 	}
 	else {
 	  P[n].setOrigin( xo+col*dx, yo+row*dy+dys*(nsub-sub)*dy );
@@ -685,7 +691,7 @@ int Chirps::main( void )
 				currentTime() - 0.5, currentTime() );
 
   // plot:
-  initMultiPlot( FishAmplitude );
+  initMultiPlot( FishAmplitude, Contrast );
 
   // first stimulus:
   if ( ChirpSel == 1 ) {

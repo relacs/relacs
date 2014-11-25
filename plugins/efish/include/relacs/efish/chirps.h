@@ -121,7 +121,7 @@ public:
 
 private:
 
-  void initMultiPlot( double maxampl );
+  void initMultiPlot( double ampl, double contrast );
   void createEOD( OutData &signal );
   void createPlayback( OutData &signal );
   int createAM( OutData &signal );

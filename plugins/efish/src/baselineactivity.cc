@@ -167,7 +167,7 @@ int BaselineActivity::main( void )
   if ( NerveTrace[0] >= 0 ) {
     P[2*n].setOrigin( 0.0, 0.0 );
     P[2*n].setSize( 1.0, pdy );
-    P[2*n].setTitle( "Nerve Potential" );
+    P[2*n].setTitle( "Nerve Potential [" + trace( NerveTrace[0] ).unit() + "]" );
     P[2*n].setTitlePos( 0.0, Plot::Graph, 0.0, Plot::SecondAxis, Plot::Left );
     P[2*n].setXLabel( "Time [ms]" );
     P[2*n].setAutoScaleY();
