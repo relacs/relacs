@@ -691,7 +691,9 @@ int Chirps::main( void )
 				currentTime() - 0.5, currentTime() );
 
   // plot:
-  initMultiPlot( FishAmplitude, Contrast );
+  double ampl = meanPeaks( trace(LocalEODTrace[0]), currentTime() - 0.5, currentTime(),
+			   eodThreshold( trace(LocalEODTrace[0]), currentTime() - 0.5, currentTime(), 0.0 ) );
+  initMultiPlot( ampl, Contrast );
 
   // first stimulus:
   if ( ChirpSel == 1 ) {
