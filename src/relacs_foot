@@ -119,6 +119,10 @@ if ! test -f "$RELACSEXEC"; then
     exit 1
 fi
 
+# set locale:
+export LC_NUMERIC=en_US.UTF-8
+export LC_TIME=en_US.UTF-8
+
 # switch on coredumps:
 if test "x$COREDUMP" = "xyes" || test "x$DEBUGDUMPCORE" != "xno"; then
   ulimit -c unlimited 

@@ -693,11 +693,17 @@ void RELACSWidget::setupInTraces( void )
 
     InData id;
     id.setIdent( traceid );
-    id.setUnit( number( "inputtracescale", k, 1.0 ),
-		text( "inputtraceunit", k, "V" ) );
     id.setSampleRate( number( "inputsamplerate", 1000.0 ) );
     id.setStartSource( 0 );
     id.setUnipolar( boolean( "inputunipolar", false ) );
+    double scale = number( "inputtracescale", k, 1.0 );
+    if ( fabs( scale ) < 1e-8 ) {
+      Str ss = "inputtracescale for input trace <b>" + traceid + "</b> is zero, set to 1";
+      printlog( "! warning: " + ss.erasedMarkup() );
+      MessageBox::warning( "RELACS Warning !", ss, true, 0.0, this );
+      scale = 1.0;
+    }
+    id.setUnit( scale, text( "inputtraceunit", k, "V" ) );
     int channel = integer( "inputtracechannel", k, -1 );
     if ( channel < 0 ) {
       ws += ", invalid channel number <b>" + Str( channel ) + "</b>";
@@ -765,9 +771,16 @@ void RELACSWidget::setupOutTraces( void )
       lastdevi = devi;
       chan = 0;
     }
+    double scale = number( "outputtracescale", k, 1.0 );
+    if ( fabs( scale ) < 1e-8 ) {
+      Str ws = "outputtracescale for output trace <b>" + traceid + "</b> is zero, set to 1";
+      printlog( "! warning: " + ws.erasedMarkup() );
+      MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
+      scale = 1.0;
+    }
     AQ->addOutTrace( traceid, devi,
 		     integer( "outputtracechannel", k, chan ),
-		     number( "outputtracescale", k, 1.0 ),
+		     scale,
 		     text( "outputtraceunit", k, "V" ),
 		     number( "outputtracemaxrate", k, 0.0 ),
 		     text( "outputtracemodality", k, "unknown" ) );
