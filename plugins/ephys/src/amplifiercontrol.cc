@@ -49,11 +49,13 @@ AmplifierControl::AmplifierControl( void )
   RMeasure = false;
   SyncPulseEnabled = false;
   SyncPulseDuration = 0.00001;
-
   MaxResistance = 100.0;
   ResistancePeriod = 0.05;
   ResistanceScale = 1.0;
   BuzzPulse = 0.5;
+  DoBuzz = false;
+  Muted = false;
+  MuteCount = 0;
 
   addSelection( "initmode", "Initial mode of the amplifier", "Bridge|Current-clamp|Voltage-clamp|Manual selection" );
   addNumber( "resistancescale", "Scaling factor for computing R from stdev of voltage trace", ResistanceScale, 0.0, 100000.0, 0.01 );
@@ -294,6 +296,7 @@ public:
 void AmplifierControl::startResistance( void )
 {
   if ( Ampl != 0 && ! RMeasure ) {
+    RMeasure = true;
     if ( Adjust && SpikeTrace[0] >= 0 ) {
       lock();
       getData();
@@ -302,9 +305,10 @@ void AmplifierControl::startResistance( void )
       unlock();
       activateGains();
     }
-    Muted = muteAudioMonitor();
-    RMeasure = true;
-    QTimer::singleShot( 100, this, SLOT( doResistance() ) );
+    if ( MuteCount == 0 )
+      Muted = muteAudioMonitor();
+    MuteCount++;
+    QTimer::singleShot( 20, this, SLOT( doResistance() ) );
   }
 }
 
@@ -324,12 +328,34 @@ void AmplifierControl::measureResistance( void )
       intrace = 0;
     lock();
     getData();
+    const InData &data = trace( intrace );
+    double starttime = currentTime()-10.0*ResistancePeriod;
+    float min=0.0, max=0.0;
+    data.minMax( min, max, starttime, currentTime() );
+    double threshold = 0.5*(min+max);
+    AcceptEvent< typename InData::const_iterator, typename InData::const_range_iterator > check;
+    Detector< typename InData::const_iterator, 
+	      typename InData::const_range_iterator > D;
+    D.init( data.begin( starttime ), data.end(), data.timeBegin( starttime ) );
+    EventData events;
+    D.falling( data.begin( starttime ), data.end(), events,
+	       threshold, threshold, threshold, check );
     double r = 0;
-    for ( int k=0; k<10; k++ ) {
-      float min=0.0, max=0.0;
-      trace( intrace ).minMax( min, max,
-			       currentTime()-(k+1)*ResistancePeriod, currentTime()-k*ResistancePeriod );
-      r += (max-min - r)/(k+1);
+    if ( events.size() > 2 ) {
+      double period = (events.size()-1.0)/(events.back()-events.back());
+      for ( int k=0; k<events.size(); k++ ) {
+	double rm = data.mean( events[k] - 0.11*period, events[k] - 0.01*period );
+	r += (rm - r)/(k+1);
+      }
+    }
+    else {
+      /*
+      for ( int k=0; k<10; k++ ) {
+	trace( intrace ).minMax( min, max,
+				 currentTime()-(k+1)*ResistancePeriod, currentTime()-k*ResistancePeriod );
+	r += (max-min - r)/(k+1);
+      }
+      */
     }
     unlock();
     r *= ResistanceScale;
@@ -352,8 +378,7 @@ void AmplifierControl::stopResistance( void )
       unlock();
       activateGains();
     }
-    if ( ! Muted )
-      unmuteAudioMonitor();
+    QTimer::singleShot( 300, this, SLOT( unmute() ) );
     RMeasure = false;
   }
 }
@@ -361,8 +386,11 @@ void AmplifierControl::stopResistance( void )
 
 void AmplifierControl::startBuzz( void )
 {
-  if ( Ampl != 0 ) {
-    Muted = muteAudioMonitor();
+  if ( Ampl != 0 && ! DoBuzz ) {
+    DoBuzz = true;
+    if ( MuteCount == 0 )
+      Muted = muteAudioMonitor();
+    MuteCount++;
     QTimer::singleShot( 20, this, SLOT( doBuzz() ) );
   }
 }
@@ -370,7 +398,7 @@ void AmplifierControl::startBuzz( void )
 
 void AmplifierControl::doBuzz( void )
 {
-  if ( Ampl != 0 ) {
+  if ( Ampl != 0 && DoBuzz ) {
     Ampl->startBuzz( );
     QTimer::singleShot( int( 1000.0*BuzzPulse ), this, SLOT( stopBuzz() ) );
   }
@@ -379,11 +407,19 @@ void AmplifierControl::doBuzz( void )
 
 void AmplifierControl::stopBuzz( void )
 {
-  if ( Ampl != 0 ) {
+  if ( Ampl != 0 && DoBuzz ) {
     Ampl->stopBuzz();
-    if ( ! Muted )
-      unmuteAudioMonitor();
+    QTimer::singleShot( 300, this, SLOT( unmute() ) );
+    DoBuzz = false;
   }
+}
+
+
+void AmplifierControl::unmute( void )
+{
+  MuteCount--;
+  if ( MuteCount == 0 && ! Muted )
+    unmuteAudioMonitor();
 }
 
 

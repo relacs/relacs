@@ -1,7 +1,6 @@
 Macros, flow control:
 - RELACS crashes after too many automatically called macros
 - auditory::search does not exit cleanly upon ESC
-- macro start should also be reported in the log file (and stimulus.dat ?) including parameter
 
 New InData threading:
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
@@ -144,6 +143,7 @@ Locking:
 - dead locks: do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
 
 Macros:
+- macro start should be reported in stimulus.dat including parameter
 - check online message command and a following RePro (will be part of the message!)
 - Remove quotes from message
 - delete all MacroCommands after usage!
