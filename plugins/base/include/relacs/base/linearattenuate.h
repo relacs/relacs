@@ -58,11 +58,11 @@ public:
   ~LinearAttenuate( void );
 
     /*! Returns the gain factor. */
-  double gain( void ) const { return Gain; };
+  double gain( void ) const;
     /*! Set the gain factor to \a gain. */
   void setGain( double gain );
     /*! Returns the offset. */
-  double offset( void ) const { return Offset; };
+  double offset( void ) const;
     /*! Set the offset to \a offset. */
   void setOffset( double offset );
     /*! Set the gain factor to \a gain and the offset to \a offset. */

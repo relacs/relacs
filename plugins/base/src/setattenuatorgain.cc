@@ -1,6 +1,6 @@
 /*
-  base/setinputgain.cc
-  Set the gain of analog input traces.
+  base/setattenuatorgain.cc
+  Set the gain factor of an Attenuate interface
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -19,23 +19,22 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QPushButton>
-#include <relacs/base/setinputgain.h>
+#include <relacs/base/linearattenuate.h>
+#include <relacs/base/setattenuatorgain.h>
 using namespace relacs;
 
 namespace base {
 
 
-SetInputGain::SetInputGain( void )
-  : RePro( "SetInputGain", "base", "Jan Benda", "1.0", "Feb 18, 2014" )
+SetAttenuatorGain::SetAttenuatorGain( void )
+  : RePro( "SetAttenuatorGain", "base", "Jan Benda", "1.0", "Nov 26, 2014" )
 {
   Interactive = true;
 
   // add some options:
-  addSelection( "intrace", "Input trace", "V-1" );
-  addInteger( "gainindex", "Index of the gain to be set", 0, 0, 20 );
+  addSelection( "outrace", "Input trace", "V-1" );
+  addNumber( "gain", "attenuator gain to be set", 1.0, -1.0e6, 1.0e6, 0.001 );
   addBoolean( "interactive", "Set values interactively", Interactive );
 
   // layout:
@@ -59,22 +58,6 @@ SetInputGain::SetInputGain( void )
   grabKey( Qt::Key_Return );
   grabKey( Qt::Key_Enter );
 
-  // Set button:
-  QPushButton *setbutton = new QPushButton( "&Set" );
-  bb->addWidget( setbutton );
-  setbutton->setFixedHeight( setbutton->sizeHint().height() );
-  connect( setbutton, SIGNAL( clicked() ),
-	   this, SLOT( setGains() ) );
-  grabKey( Qt::ALT+Qt::Key_S );
-
-  // Max range button:
-  QPushButton *maxbutton = new QPushButton( "&Max Ranges" );
-  bb->addWidget( maxbutton );
-  maxbutton->setFixedHeight( maxbutton->sizeHint().height() );
-  connect( maxbutton, SIGNAL( clicked() ),
-	   this, SLOT( setMaxRanges() ) );
-  grabKey( Qt::ALT+Qt::Key_M );
-
   // Cancel button:
   QPushButton *cancelbutton = new QPushButton( "&Cancel" );
   bb->addWidget( cancelbutton );
@@ -88,44 +71,36 @@ SetInputGain::SetInputGain( void )
 }
 
 
-void SetInputGain::preConfig( void )
+void SetAttenuatorGain::preConfig( void )
 {
-  setText( "intrace", rawTraceNames() );
-  setToDefault( "intrace" );
+  setText( "outtrace", outTraceNames() );
+  setToDefault( "outtrace" );
 
-  // assemble input traces to InOpts:
-  InOpts.clear();
-  for ( int k=0; k<traces().size(); k++ ) {
-    if ( trace( k ).source() == 0 ) {
-      vector<double> ranges;
-      maxVoltages( trace( k ), ranges );
-      string rs = "";
-      for ( unsigned int j=0; j<ranges.size(); j++ ) {
-	if ( j > 0 )
-	  rs += '|';
-	rs += '-' + Str( ranges[j] ) + " --- " + Str( ranges[j] ) + ' ' + trace( k ).unit();
-      }
-      InOpts.addSelection( trace( k ).ident(), trace( k ).ident(), rs );
+  // assemble output traces to OutOpts:
+  AttOpts.clear();
+  for ( int k=0; k<outTracesSize(); k++ ) {
+    string tname = outTraceName( k );
+    base::LinearAttenuate *latt = 
+      dynamic_cast<base::LinearAttenuate*>( attenuator( tname ) );
+    if ( latt != 0 ) {
+      string name = tname;
+      string iname = latt->intensityName();
+      if ( ! iname.empty() && name != iname )
+	name += " - " + iname;
+      string unit = latt->intensityUnit();
+      if ( unit.empty() )
+	unit = "1";
+      unit += "/" + outTrace( k ).unit();
+      AttOpts.addNumber( tname, name, latt->gain(), -1.0e6, 1.0e6, 0.001, unit );
     }
   }
-
+    
   // display values:
-  SGW.assign( &InOpts, 0, 0, false, 0, mutex() );
+  SGW.assign( &AttOpts, 0, 0, false, 0, mutex() );
 }
 
 
-void SetInputGain::notify( void )
-{
-  int intrace = traceIndex( text( "intrace" ) );
-  if ( intrace >= 0 && intrace < traces().size() ) {
-    vector<double> ranges;
-    maxVoltages( trace( intrace ), ranges );
-    setMinMax( "gainindex", 0, (int)ranges.size() );
-  }
-}
-
-
-void SetInputGain::acceptGains( void )
+void SetAttenuatorGain::acceptGains( void )
 {
   if ( Interactive ) {
     Change = true;
@@ -136,7 +111,7 @@ void SetInputGain::acceptGains( void )
 }
 
 
-void SetInputGain::setGains( void )
+void SetAttenuatorGain::setGains( void )
 {
   if ( Interactive ) {
     Change = true;
@@ -147,20 +122,7 @@ void SetInputGain::setGains( void )
 }
 
 
-void SetInputGain::setMaxRanges( void )
-{
-  if ( Interactive ) {
-    lock();
-    for ( int k=0; k<InOpts.size(); k++ )
-      InOpts[k].selectText( 0 );
-    SGW.updateValues();
-    unlock();
-    SGW.accept( false );
-  }
-}
-
-
-void SetInputGain::keepGains( void )
+void SetAttenuatorGain::keepGains( void )
 {
   if ( Interactive ) {
     Change = false;
@@ -170,16 +132,22 @@ void SetInputGain::keepGains( void )
 }
 
 
-int SetInputGain::main( void )
+int SetAttenuatorGain::main( void )
 {
   // get options:
-  int intrace = traceIndex( text( "intrace" ) );
-  int gainindex = integer( "gainindex" );
+  int outtrace = index( "outtrace" );
+  double gain = number( "gain" );
   Interactive = boolean( "interactive" );
 
   noMessage();
 
-  InOpts[intrace].selectText( gainindex );
+  // set the current gain values:
+  for ( int k=0; k<AttOpts.parameterSize(); k++ ) {
+    base::LinearAttenuate *latt = 
+      dynamic_cast<base::LinearAttenuate*>( attenuator( AttOpts[k].name() ) );
+    if ( latt != 0 )
+      AttOpts[k].setNumber( latt->gain() );
+  }
 
   if ( Interactive ) {  
     keepFocus();
@@ -187,34 +155,32 @@ int SetInputGain::main( void )
     SGW.updateValues();
     Quit = true;
     do {
-      InOpts.delFlags( Parameter::changedFlag() );
+      AttOpts.delFlags( Parameter::changedFlag() );
       // wait for input:
       Change = false;
       sleepWait();
       // set new values:
       if ( Change ) {
-	string msg = "";
+	string msg = "Set attenuator gains of ";
 	int j = 0;
-	for ( int k=0; k<InOpts.size(); k++ ) {
-	  if ( InOpts[k].changed() ) {
-	    setGain( trace( k ), InOpts[k].index() );
-	    if ( j == 0 ) {
-	      selectText( "intrace", trace( k ).ident() );
-	      setInteger( "gainindex", InOpts[k].index() );
-	      setToDefaults();
+	for ( int k=0; k<AttOpts.parameterSize(); k++ ) {
+	  if ( AttOpts[k].changed() ) {
+	    base::LinearAttenuate *latt = 
+	      dynamic_cast<base::LinearAttenuate*>( attenuator( AttOpts[k].name() ) );
+	    if ( latt != 0 ) {
+	      latt->setGain( AttOpts[k].number() );
+	      if ( j > 0 )
+		msg += ",  ";
+	      msg += AttOpts[k].name() + ": " + Str( latt->gain() );
+	      j++;
 	    }
-	    else
-	      msg += ",  ";
-	    msg += InOpts[k].name() + ": gain-index " + Str( InOpts[k].index() );
-	    j++;
 	  }
 	}
-	activateGains();
 	message( msg );
-	InOpts.setToDefaults();
+	AttOpts.setToDefaults();
       }
       else {
-	InOpts.setDefaults();
+	AttOpts.setDefaults();
 	SGW.updateValues();
 	postCustomEvent( 12 ); // clearFocus()
 	return Aborted;
@@ -224,9 +190,13 @@ int SetInputGain::main( void )
     Interactive = false;
   }
   else {
-    setGain( trace( intrace ), gainindex );
-    activateGains();
-    SGW.updateValues();
+    base::LinearAttenuate *latt = 
+      dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( outtrace ) ) );
+    if ( latt != 0 ) {
+      latt->setGain( gain );
+      AttOpts.setNumber( outTraceName( outtrace ), latt->gain() );
+      SGW.updateValues();
+    }
   }
 
   sleep( 0.01 );
@@ -234,18 +204,10 @@ int SetInputGain::main( void )
 }
 
 
-void SetInputGain::keyPressEvent( QKeyEvent *e )
+void SetAttenuatorGain::keyPressEvent( QKeyEvent *e )
 {
   if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     acceptGains();
-    e->accept();
-  }
-  if ( e->key() == Qt::Key_S && ( e->modifiers() & Qt::AltModifier ) ) {
-    setGains();
-    e->accept();
-  }
-  if ( e->key() == Qt::Key_M && ( e->modifiers() & Qt::AltModifier ) ) {
-    setMaxRanges();
     e->accept();
   }
   else if ( e->key() == Qt::Key_C && ( e->modifiers() & Qt::AltModifier ) ) {
@@ -265,7 +227,7 @@ void SetInputGain::keyPressEvent( QKeyEvent *e )
 }
 
 
-void SetInputGain::customEvent( QEvent *qce )
+void SetAttenuatorGain::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
   case 11: {
@@ -283,8 +245,8 @@ void SetInputGain::customEvent( QEvent *qce )
 }
 
 
-addRePro( SetInputGain, base );
+addRePro( SetAttenuatorGain, base );
 
 }; /* namespace base */
 
-#include "moc_setinputgain.cc"
+#include "moc_setattenuatorgain.cc"

@@ -73,11 +73,23 @@ void LinearAttenuate::intensity( double &intens, double frequency,
 }
 
 
+double LinearAttenuate::gain( void ) const
+{
+  return Gain;
+}
+
+
 void LinearAttenuate::setGain( double gain )
 {
   Gain = gain;
   setNumber( "gain", Gain );
   Info.setNumber( "gain", Gain );
+}
+
+
+double LinearAttenuate::offset( void ) const
+{
+  return Offset;
 }
 
 

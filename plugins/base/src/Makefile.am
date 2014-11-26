@@ -19,7 +19,8 @@ pluginlib_LTLIBRARIES = \
     libbaseenvelope.la \
     libbasesavetraces.la \
     libbasespectrogram.la \
-    libbasesetinputgain.la
+    libbasesetinputgain.la \
+    libbasesetattenuatorgain.la
 
 
 if RELACS_COND_TML
@@ -570,6 +571,41 @@ libbasesetinputgain_la_include_HEADERS = $(HEADER_PATH)/setinputgain.h
 
 
 
+libbasesetattenuatorgain_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libbasesetattenuatorgain_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libbasesetattenuatorgain_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libbasesetattenuatorgain_la_OBJECTS) : moc_setattenuatorgain.cc
+
+libbasesetattenuatorgain_la_SOURCES = setattenuatorgain.cc
+
+libbasesetattenuatorgain_la_includedir = $(pkgincludedir)/base
+
+libbasesetattenuatorgain_la_include_HEADERS = $(HEADER_PATH)/setattenuatorgain.h
+
+
+
 check_PROGRAMS = \
     linktest_libbaselinearattenuate_la \
     linktest_libbasedecibelattenuate_la \
@@ -585,7 +621,8 @@ check_PROGRAMS = \
     linktest_libbaseenvelope_la \
     linktest_libbasesavetraces_la \
     linktest_libbasespectrogram_la \
-    linktest_libbasesetinputgain_la
+    linktest_libbasesetinputgain_la \
+    linktest_libbasesetattenuatorgain_la
 
 if RELACS_COND_TML
 check_PROGRAMS += \
@@ -641,5 +678,8 @@ linktest_libbasespectrogram_la_LDADD = libbasespectrogram.la
 
 linktest_libbasesetinputgain_la_SOURCES = linktest.cc
 linktest_libbasesetinputgain_la_LDADD = libbasesetinputgain.la
+
+linktest_libbasesetattenuatorgain_la_SOURCES = linktest.cc
+linktest_libbasesetattenuatorgain_la_LDADD = libbasesetattenuatorgain.la
 
 TESTS = $(check_PROGRAMS)

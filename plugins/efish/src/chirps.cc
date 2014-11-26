@@ -511,6 +511,8 @@ int Chirps::createAM( OutData &signal )
   const double ylabelmarg = 7.0;
   const double ymarg = 1.0;
   const double ratemax = 100.0;
+  if ( contrast < 0.05 )
+    contrast = 0.05;
   double minampl = (1.0-1.5*contrast)*ampl;
   if ( minampl < 0.0 )
     minampl = 0.0;
