@@ -7,7 +7,14 @@ dist_patchclampcfg_DATA = \
     macros.cfg
 
 EXTRA_DIST = \
-    doc/patchclamp.doc
+    doc/patchclamp.doc \
+    doc/ficurve.png \
+    doc/findrate.png \
+    doc/session.png \
+    doc/phaseresettingcurve.png \
+    doc/vicurve.png \
+    doc/setdc.png \
+    doc/membraneresistance.png
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

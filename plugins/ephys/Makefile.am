@@ -6,7 +6,9 @@ dist_ephyscfg_DATA = \
     relacsplugins.cfg \
     macros.cfg
 
-EXTRA_DIST = doc/ephys.doc
+EXTRA_DIST = \
+    doc/ephys.doc \
+    doc/iontophoresis.png
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

@@ -7,7 +7,9 @@ dist_basecfg_DATA = \
     macros.cfg
 
 EXTRA_DIST = \
-    doc/base.doc
+    doc/base.doc \
+    doc/wait.png \
+    doc/transferfunction.png
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

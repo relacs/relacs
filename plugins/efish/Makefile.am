@@ -9,7 +9,8 @@ dist_efishcfg_DATA = \
     macrosdc.cfg
 
 EXTRA_DIST = \
-    doc/efish.doc
+    doc/efish.doc \
+    doc/chirps.png
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

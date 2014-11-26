@@ -8,7 +8,9 @@ dist_auditorycfg_DATA = \
     calib0-0.cfg \
     calib0-1.cfg
 
-EXTRA_DIST = doc/auditory.doc
+EXTRA_DIST = \
+    doc/auditory.doc \
+    doc/adaptedficurves.png
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

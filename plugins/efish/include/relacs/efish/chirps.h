@@ -45,6 +45,9 @@ namespace efish {
 \version 2.0 (Nov 11, 2014)
 \todo Make independent of beat detector
 
+\par Screenshot
+\image html chirps.png
+
 \par Options
 - \b nchirps (\c integer): Number of chirps per stimulus.
 - \b minspace (\c number, \e ms): Minimum time between chirps (AM only).

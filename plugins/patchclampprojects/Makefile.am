@@ -7,7 +7,9 @@ dist_patchclampprojectscfg_DATA = \
     macros.cfg
 
 EXTRA_DIST = \
-    doc/patchclampprojects.doc
+    doc/patchclampprojects.doc \
+    doc/thresholdlatenciesstimuli.png \
+   doc/voltagereconstruction.png
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 
