@@ -99,22 +99,27 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
 
   // initialize ranges:
   BipolarRange.clear();
-  double checkrange[6] = { 10.0, 5.0, 2.0, 1.0, 0.5, -1.0 };
-  for ( int i = 0; i < 20 && checkrange[i] > 0.0; i++ ) {
-    string message = "AI{0}:RANGE=BIP" + Str( checkrange[i], "%g" ) + "V";
-    DAQFlexDevice->sendMessage( message );
-    if ( DAQFlexDevice->success() ) {
-      string response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
-      if ( DAQFlexDevice->success() && response == message )
-	BipolarRange.push_back( checkrange[i] );
+  if ( DAQFlexDevice->aiRanges() ) {
+    double checkrange[6] = { 10.0, 5.0, 2.0, 1.0, 0.5, -1.0 };
+    for ( int i = 0; i < 20 && checkrange[i] > 0.0; i++ ) {
+      string message = "AI{0}:RANGE=BIP" + Str( checkrange[i], "%g" ) + "V";
+      DAQFlexDevice->sendMessage( message );
+      if ( DAQFlexDevice->success() ) {
+	string response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
+	if ( DAQFlexDevice->success() && response == message )
+	  BipolarRange.push_back( checkrange[i] );
+      }
     }
-  }
-  if ( BipolarRange.size() == 0 ) {
+    if ( BipolarRange.size() == 0 ) {
       cerr << "Error in initializing DAQFlexAnalogInput device:\n"
 	   << "no input ranges found. error: " << DAQFlexDevice->errorStr() << '\n';
       if ( DAQFlexDevice->error() == DAQFlexCore::ErrorLibUSBIO )
 	cerr << "Check the USB cable!\n";
-    return ReadError;
+      return ReadError;
+    }
+  }
+  else {
+    BipolarRange.push_back( 10.0 );
   }
 
   reset();

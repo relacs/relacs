@@ -9,3 +9,4 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0111", MODE="0660", 
 SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0112", MODE="0660", GROUP="iocard"
 SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0113", MODE="0660", GROUP="iocard"
 SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0114", MODE="0660", GROUP="iocard"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="012c", MODE="0660", GROUP="iocard"

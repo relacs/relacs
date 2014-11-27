@@ -98,6 +98,7 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
        productid != USB_7204 &&
        productid != USB_1608_GX &&
        productid != USB_1608_GX_2AO &&
+       productid != USB_205 &&
        productid != 0 ) {
     ErrorState = ErrorInvalidID;
     return ErrorState;
@@ -133,6 +134,8 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 	// open the device:
 	int ern = libusb_open( device, &DeviceHandle );
 	setLibUSBError( ern );
+	// if ern ErrorLibUSBAccess then we do not have permissions for the device!
+	// write an appropriate error message!
 	if ( ErrorState == Success ) {
 	  // claim interface with the device:
 	  ern = libusb_claim_interface( DeviceHandle, 0 );
@@ -248,6 +251,12 @@ int DAQFlexCore::aiFIFOSize( void ) const
 }
 
 
+bool DAQFlexCore::aiRanges( void ) const
+{
+  return AIRanges;
+}
+
+
 unsigned short DAQFlexCore::maxAOData( void ) const
 {
   return MaxAOData;
@@ -321,6 +330,8 @@ string DAQFlexCore::productName( int productid )
     return "USB-1608GX";
   case USB_1608_GX_2AO:
     return "USB-1608GX-2AO";
+  case USB_205:
+    return "USB-205";
   default:
     return "Invalid Product ID";
   }
@@ -514,6 +525,7 @@ unsigned char DAQFlexCore::getEndpointOutAddress( unsigned char* data, int n )
 int DAQFlexCore::initDevice( const string &path )
 {
   ErrorState = Success;
+  AIRanges = true;
 
   switch ( ProductID ) {
   case USB_1608_GX: // Fall through, same init for USB-1608GX and USB-1608GX-2AO
@@ -566,6 +578,20 @@ int DAQFlexCore::initDevice( const string &path )
       cout << "DAQFlex: firmware already flashed, skipping this time\n";
     */
   }
+    break;
+
+  case USB_205:
+    MaxAIData = 0x0FFF;
+    MaxAIRate = 50000.0;
+    MaxAIChannels = 8;
+    AIFIFOSize = 12288;
+    AIRanges = false;
+    MaxAOData = 0x0FFF;
+    MaxAORate = 500.0;
+    MaxAOChannels = 2;
+    AOFIFOSize = 2048;
+    AOFIFOSize = 1024;
+    DIOLines = 8;
     break;
 
   case USB_7202:

@@ -82,6 +82,7 @@ public:
   static const int USB_7204 = 0x00F0;
   static const int USB_1608_GX = 0x0111;
   static const int USB_1608_GX_2AO = 0x0112;
+  static const int USB_205 = 0x012c;
 
   DAQFlexCore( void );
   DAQFlexCore( const string &device, const Options &opts );
@@ -109,6 +110,8 @@ public:
   int maxAIChannels( void ) const;
     /*! \return the number of samples the AI FIFO can hold. */
   int aiFIFOSize( void ) const;
+    /*! Return \c true if analog input ranges are supported. */
+  bool aiRanges( void ) const;
 
     /*! \return the resolution of the D/A converter. */
   unsigned short maxAOData( void ) const;
@@ -181,6 +184,7 @@ public:
   double MaxAIRate;
   int MaxAIChannels;
   int AIFIFOSize;
+  bool AIRanges;
   unsigned short MaxAOData;
   double MaxAORate;
   int MaxAOChannels;

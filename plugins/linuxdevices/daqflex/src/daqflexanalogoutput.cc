@@ -344,7 +344,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=" + Str( sigs[0].channel() ) );
     DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=" + Str( sigs.back().channel() ) );
     for( int k = 0; k < sigs.size(); k++ ) {
-
       // we use only the largest range:
       sigs[k].setGainIndex( 0 );
       sigs[k].setMinVoltage( -BipolarRange[0] );
@@ -418,7 +417,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
   }  // unlock MutexLocker
-
   int r = writeData();
   if ( r < 0 )
     return -1;
@@ -441,6 +439,7 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
     return -1;
   }
   DAQFlexDevice->sendCommand( "AOSCAN:START" );
+  cerr << "STARTED\n";
   int r = NoMoreData ? 0 : 1;
   startThread( sp );
   return r;
@@ -486,7 +485,6 @@ int DAQFlexAnalogOutput::writeData( void )
   //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
   int ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), bytesToWrite,
 					      &bytesWritten, timeout );
-  //  cerr << "BULK END " << bytesWritten << " ern=" << ern << '\n';
 
   int elemWritten = 0;
   if ( bytesWritten > 0 ) {
