@@ -80,9 +80,18 @@ public:
   static const int USB_2001_TC = 0x00F9;
   static const int USB_7202 = 0x00F2;
   static const int USB_7204 = 0x00F0;
+  static const int USB_1608_G = 0x0110;
   static const int USB_1608_GX = 0x0111;
   static const int USB_1608_GX_2AO = 0x0112;
-  static const int USB_205 = 0x012c;
+  static const int USB_201 = 0x0113;
+  static const int USB_204 = 0x0114;
+  static const int USB_202 = 0x012B;
+  static const int USB_205 = 0x012C;
+  static const int USB_2408 = 0x00FD;
+  static const int USB_2408_2AO = 0x00FE;
+  static const int USB_1208_FS_Plus = 0x00E8;
+  static const int USB_1408_FS_Plus = 0x00E9;
+  static const int USB_1608_FS_Plus = 0x00EA;
 
   DAQFlexCore( void );
   DAQFlexCore( const string &device, const Options &opts );

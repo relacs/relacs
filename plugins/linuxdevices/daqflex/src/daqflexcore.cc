@@ -96,9 +96,18 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
   if ( productid != USB_2001_TC &&
        productid != USB_7202 &&
        productid != USB_7204 &&
+       productid != USB_1608_G &&
        productid != USB_1608_GX &&
        productid != USB_1608_GX_2AO &&
+       productid != USB_201 &&
+       productid != USB_204 &&
+       productid != USB_202 &&
        productid != USB_205 &&
+       productid != USB_2408 &&
+       productid != USB_2408_2AO &&
+       productid != USB_1208_FS_Plus &&
+       productid != USB_1408_FS_Plus &&
+       productid != USB_1608_FS_Plus &&
        productid != 0 ) {
     ErrorState = ErrorInvalidID;
     return ErrorState;
@@ -326,12 +335,30 @@ string DAQFlexCore::productName( int productid )
     return "USB-7202";
   case USB_7204:
     return "USB-7204";
+  case USB_1608_G:
+    return "USB-1608G";
   case USB_1608_GX:
     return "USB-1608GX";
   case USB_1608_GX_2AO:
     return "USB-1608GX-2AO";
+  case USB_201:
+    return "USB-201";
+  case USB_204:
+    return "USB-204";
+  case USB_202:
+    return "USB-202";
   case USB_205:
     return "USB-205";
+  case USB_2408:
+    return "USB-2408";
+  case USB_2408_2AO:
+    return "USB-2408-2AO";
+  case USB_1208_FS_Plus:
+    return "USB-1208-FS-Plus";
+  case USB_1408_FS_Plus:
+    return "USB-1408-FS-Plus";
+  case USB_1608_FS_Plus:
+    return "USB-1608-FS-Plus";
   default:
     return "Invalid Product ID";
   }
