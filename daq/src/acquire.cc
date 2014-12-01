@@ -1069,6 +1069,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   // clear analog output semaphore:
   if ( AOSemaphore.available() > 0 )
     AOSemaphore.acquire( AOSemaphore.available() );
+  QSemaphore *aos = &AOSemaphore;
 
   // direct analog output:
   if ( directao ) {
@@ -1076,6 +1077,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
       if ( aod[i]->AO->directWrite( aod[i]->Signals ) != 0 )
 	success = false;
     }
+    aos = 0;
   }
 
   // start reading from daq boards:
@@ -1092,7 +1094,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	int r = AI[i].AI->startRead( &AISemaphore, &DataMutex, datawait, &AOSemaphore );
+	int r = AI[i].AI->startRead( &AISemaphore, &DataMutex, datawait, aos );
 	if ( r < 0 )
 	  success = false;
 	else {

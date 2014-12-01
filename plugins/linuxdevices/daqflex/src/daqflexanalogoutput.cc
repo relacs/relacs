@@ -77,6 +77,12 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   if ( !DAQFlexDevice->isOpen() )
     return NotOpen;
 
+  // is AO supported?
+  if ( DAQFlexDevice->maxAOChannels() == 0 ) {
+    cerr << "Device " << DAQFlexDevice->deviceName() << " does not support anaolog output.\n";
+    return InvalidDevice;
+  }
+
   // set basic device infos:
   setDeviceName( DAQFlexDevice->deviceName() );
   setDeviceVendor( DAQFlexDevice->deviceVendor() );
@@ -84,7 +90,31 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
 
   // initialize ranges:
   BipolarRange.clear();
-  BipolarRange.push_back( 10.0 );
+  UnipolarRange.clear();
+
+  Str response = DAQFlexDevice->sendMessage( "?AO{0}:RANGE" );
+  if ( DAQFlexDevice->success() && response.size() > 16 ) {
+    // Analog output ranges:
+    // 1608GX_2AO: BIP10V
+    // 202, 205: UNI5V
+    // 1208FS, 1408FS: UNI5V
+    // 2408-2AO:  BIP10V
+    // 7204: UNI4.096V
+    bool uni = ( response[12] == 'U' );
+    double range = response.number( 0.0, 15 );
+    if ( range <= 1e-6 ) {
+      cerr << "Failed to read out analog output range from device " << DAQFlexDevice->deviceName() << "\n";
+      return InvalidDevice;
+    }
+    if ( uni )
+      UnipolarRange.push_back( range );
+    else
+      BipolarRange.push_back( range );
+  }
+  else {
+    cerr << "Failed to retrieve analog output range from device " << DAQFlexDevice->deviceName() << ". Error: " << DAQFlexDevice->errorStr() << "\n";
+    return InvalidDevice;
+  }
 
   // delays:
   vector< double > delays;
@@ -158,13 +188,19 @@ double DAQFlexAnalogOutput::maxRate( void ) const
 
 int DAQFlexAnalogOutput::maxRanges( void ) const
 {
-  return BipolarRange.size();
+  unsigned int n = BipolarRange.size();
+  if ( n < UnipolarRange.size() )
+    return UnipolarRange.size();
+  else
+    return n;
 }
 
 
 double DAQFlexAnalogOutput::unipolarRange( int index ) const
 {
-  return -1.0;
+  if ( (index < 0) || (index >= (int)UnipolarRange.size()) )
+    return -1.0;
+  return UnipolarRange[index];
 }
 
 
@@ -184,14 +220,27 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
 
   QMutexLocker locker( mutex() );
 
-  const double maxboardvolt = 10.0;  // XXX is this really the same for all boards?
-
   for ( int k=0; k<sigs.size(); k++ ) {
 
-    // XXX what about output gain settings?
+    // we use only the largest range:
+    sigs[k].setGainIndex( 0 );
+    if ( BipolarRange.size() > 0 ) {
+      sigs[k].setMinVoltage( -BipolarRange[0] );
+      sigs[k].setMaxVoltage( BipolarRange[0] );
+      if ( ! sigs[k].noLevel() )
+	sigs[k].multiplyScale( BipolarRange[0] );
+    }
+    else {
+      sigs[k].setMinVoltage( 0.0 );
+      sigs[k].setMaxVoltage( UnipolarRange[0] );
+      if ( ! sigs[k].noLevel() )
+	sigs[k].multiplyScale( UnipolarRange[0] );
+    }
 
+    double maxboardvolt = sigs[k].maxVoltage();
     double minval = sigs[k].minValue();
     double maxval = sigs[k].maxValue();
+    double gain = DAQFlexDevice->maxAOData()/(maxval-minval);
     double scale = sigs[k].scale();
     if ( ! sigs[k].noLevel() )
       scale *= maxboardvolt;
@@ -203,8 +252,7 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     else if ( v < minval )
       v = minval;
     v *= scale;
-    // XXX    unsigned short data = comedi_from_physical( v, polynomial );
-    unsigned short data = (unsigned short)((v+10.0)/20.0 * 0xffff);
+    unsigned short data = (unsigned short)( (v-minval)*gain );
 
     // write data:
     string response = DAQFlexDevice->sendMessage( "AO{" + Str( sigs[k].channel() ) + "}:VALUE=" + Str( data ) );
@@ -226,17 +274,18 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
   // conversion polynomials and scale factors:
   double minval[ Sigs.size() ];
   double maxval[ Sigs.size() ];
+  double gain[ Sigs.size() ];
   double scale[ Sigs.size() ];
   //  const Calibration* calib[Sigs.size()];
   T zeros[ Sigs.size() ];
   for ( int k=0; k<Sigs.size(); k++ ) {
     minval[k] = Sigs[k].minValue();
     maxval[k] = Sigs[k].maxValue();
+    gain[k] = DAQFlexDevice->maxAOData()/(maxval[k]-minval[k]);
     scale[k] = Sigs[k].scale();
     // calib[k] = (const Calibration *)Sigs[k].gainData();
     // XXX calibration?
-    zeros[k] = (unsigned short)( (10.0/20.0) * 0xffff );
-    // XXX    zeros[k] = comedi_from_physical( 0.0, calib[k] );
+    zeros[k] = (unsigned short)( (0.0-minval[k])*gain[k] );
   }
 
   // buffer pointer:
@@ -261,7 +310,7 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
 	  v = minval[k];
 	v *= scale[k];
 	// XXX calibration?
-	*bp = (unsigned short)( ((v+10.0)/20.0) * 0xffff );
+	*bp = (unsigned short)( (v-minval[k])*gain[k] );
 	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
 	  Sigs[k].incrDeviceCount();
       }
@@ -344,14 +393,45 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=" + Str( sigs[0].channel() ) );
     DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=" + Str( sigs.back().channel() ) );
     for( int k = 0; k < sigs.size(); k++ ) {
-      // we use only the largest range:
+      // minimum and maximum values:
+      double min = sigs[k].requestedMin();
+      double max = sigs[k].requestedMax();
+      if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
+	float smin = 0.0;
+	float smax = 0.0;
+	minMax( smin, smax, sigs[k] );
+	if ( min == OutData::AutoRange )
+	  min = smin;
+	if ( max == OutData::AutoRange )
+	  max = smax;
+      }
+      // we use only the largest range and there is only one range:
       sigs[k].setGainIndex( 0 );
-      sigs[k].setMinVoltage( -BipolarRange[0] );
-      sigs[k].setMaxVoltage( BipolarRange[0] );
-      if ( ! sigs[k].noLevel() )
-	sigs[k].multiplyScale( BipolarRange[0] );
-
-      // XXX Check for signal overflow/underflow!
+      if ( BipolarRange.size() > 0 ) {
+	sigs[k].setMinVoltage( -BipolarRange[0] );
+	sigs[k].setMaxVoltage( BipolarRange[0] );
+	if ( ! sigs[k].noLevel() )
+	  sigs[k].multiplyScale( BipolarRange[0] );
+      }
+      else {
+	sigs[k].setMinVoltage( 0.0 );
+	sigs[k].setMaxVoltage( UnipolarRange[0] );
+	if ( ! sigs[k].noLevel() )
+	  sigs[k].multiplyScale( UnipolarRange[0] );
+      }
+      // check for signal overflow/underflow:
+      if ( sigs[k].noLevel() ) {
+	if ( min < sigs[k].minValue() )
+	  sigs[k].addError( DaqError::Underflow );
+	else if ( max > sigs[k].maxValue() )
+	  sigs[k].addError( DaqError::Overflow );
+      }
+      else {
+	if ( max > 1.0+1.0e-8 )
+	  sigs[k].addError( DaqError::Overflow );
+	else if ( min < -1.0-1.0e-8 )
+	  sigs[k].addError( DaqError::Underflow );
+      }
 
       // allocate gain factor:
       char *gaindata = sigs[k].gainData();
@@ -393,18 +473,23 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     }
 
     // set buffer size:
-    BufferSize = sigs.size()*DAQFlexDevice->aoFIFOSize()*2;
-    int nbuffer = sigs.deviceBufferSize()*2;
-    int outps = DAQFlexDevice->outPacketSize();
-    if ( BufferSize > nbuffer ) {
-      BufferSize = nbuffer;
-      if ( BufferSize < outps )
+    if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
+      BufferSize = sigs.size()*DAQFlexDevice->aoFIFOSize()*2;
+      int nbuffer = sigs.deviceBufferSize()*2;
+      int outps = DAQFlexDevice->outPacketSize();
+      if ( BufferSize > nbuffer ) {
+	BufferSize = nbuffer;
+	if ( BufferSize < outps )
 	BufferSize = outps;
+      }
+      else
+	BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
+      if ( BufferSize > 0xfffff )
+	BufferSize = 0xfffff;
     }
-    else
-      BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
-    if ( BufferSize > 0xfffff )
-      BufferSize = 0xfffff;
+    else {
+      BufferSize = sigs.deviceBufferSize()*2;
+    }
     if ( BufferSize <= 0 )
       sigs.addError( DaqError::InvalidBufferTime );
 
@@ -416,10 +501,18 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     Sigs = ol;
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
+    if ( DAQFlexDevice->aoFIFOSize() <= 0 ) {
+      // no FIFO and bulk transfer:
+      convert<unsigned short>( Buffer, BufferSize );
+    }
+
   }  // unlock MutexLocker
-  int r = writeData();
-  if ( r < 0 )
-    return -1;
+  int r = 1;
+  if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
+    r = writeData();
+    if ( r < 0 )
+      return -1;
+  }
 
   lock();
   IsPrepared = Sigs.success();
@@ -438,8 +531,8 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
     cerr << "AO not prepared or no signals!\n";
     return -1;
   }
-  DAQFlexDevice->sendCommand( "AOSCAN:START" );
-  cerr << "STARTED\n";
+  if ( DAQFlexDevice->aoFIFOSize() > 0 )
+    DAQFlexDevice->sendCommand( "AOSCAN:START" );
   int r = NoMoreData ? 0 : 1;
   startThread( sp );
   return r;
@@ -452,6 +545,27 @@ int DAQFlexAnalogOutput::writeData( void )
 
   if ( Sigs.empty() )
     return -1;
+
+  if ( DAQFlexDevice->aoFIFOSize() <= 0 ) {
+    unsigned short *bp = (unsigned short *)Buffer;
+    for ( int k=0; k<Sigs.size(); k++ ) {
+      unsigned short val = *(bp+NBuffer/2);
+      string cmd = "AO{" + Str( Sigs[k].channel() ) + "}:VALUE=" + Str( val );
+      DAQFlexDevice->sendMessage( cmd );
+      NBuffer += 2;
+    }
+    // no more data:
+    if ( NBuffer >= BufferSize ) {
+      if ( Buffer != 0 )
+	delete [] Buffer;
+      Buffer = 0;
+      BufferSize = 0;
+      NBuffer = 0;
+      return 0;
+    }
+    else
+      return Sigs.size();
+  }
 
   // device stopped?
   if ( IsPrepared ) {

@@ -38,6 +38,21 @@ namespace daqflex {
 \brief [Device] The DAQFlex interface over libusb
 \par Options
 - \c firmwarepath=/usr/lib/daqflex/: Path to the *.rbf firmware files
+
+\par Supported devices: 
+In principle all DAQFlex Devices are supported. However, it might be
+necessary to adjust some properties for some of the devices.
+
+Currently tested and working are the following devices:
+- USB_1608_GX_2AO
+- USB_205
+
+Therefore, the following devices should work as well:
+- USB_1608_G
+- USB_1608_GX
+- USB_201
+- USB_202
+- USB_204
 */
 
 class DAQFlexCore : public Device
@@ -112,23 +127,25 @@ public:
   int sendCommands( const string &command1, const string &command2 );
 
     /*! \return the resolution of the A/D converter. */
-  unsigned short maxAIData( void ) const;
+  unsigned int maxAIData( void ) const;
     /*! \return the maximum scan rate of the A/D converter. */
   double maxAIRate( void ) const;
     /*! \return the number of analog input channels. */
   int maxAIChannels( void ) const;
-    /*! \return the number of samples the AI FIFO can hold. */
+    /*! \return the number of samples the AI FIFO can hold.
+        0: no FIFO present but hardware paced AI supported.
+        -1: no FIFO and no hardware paced AI. */
   int aiFIFOSize( void ) const;
-    /*! Return \c true if analog input ranges are supported. */
-  bool aiRanges( void ) const;
 
     /*! \return the resolution of the D/A converter. */
-  unsigned short maxAOData( void ) const;
+  unsigned int maxAOData( void ) const;
     /*! \return the maximum scan rate of the D/A converter. */
   double maxAORate( void ) const;
     /*! \return the number of analog output channels. */
   int maxAOChannels( void ) const;
-    /*! \return the number of samples the AI FIFO can hold. */
+    /*! \return the number of samples the AI FIFO can hold.
+        0: no FIFO present but hardware paced AO supported.
+        -1: no FIFO and no hardware paced AO. */
   int aoFIFOSize( void ) const;
 
     /*! \return the number of digital I/O lines. */
@@ -155,6 +172,8 @@ public:
   int error( void ) const;
     /*! \return \c true if there is no error. */
   bool success( void ) const;
+    /*! \return \c true if there is an error. */
+  bool failed( void ) const;
     /*! \return the current error state as a descriptive string. */
   string errorStr( void ) const;
 
@@ -181,6 +200,7 @@ public:
   unsigned char getEndpointOutAddress( unsigned char* data, int n );
 
   int initDevice( const string &path );
+  int uploadFirmware( const string &path, const string &filename );
   int transferFPGAfile( const string &path );
 
   libusb_device_handle *DeviceHandle;
@@ -189,15 +209,14 @@ public:
   int InPacketSize;
   int OutPacketSize;
   int ProductID;
-  unsigned short MaxAIData;
+  unsigned int MaxAIData;
   double MaxAIRate;
   int MaxAIChannels;
-  int AIFIFOSize;
-  bool AIRanges;
-  unsigned short MaxAOData;
+  int AIFIFOSize;  // 0: no FIFO but AISCAN, -1: no FIFO and no AISCAN
+  unsigned int MaxAOData;
   double MaxAORate;
   int MaxAOChannels;
-  int AOFIFOSize;
+  int AOFIFOSize;  // 0: no FIFO but AOSCAN, -1: no FIFO and no AOSCAN
   int DIOLines;
   DAQFlexError ErrorState;
   static const uint16_t MaxMessageSize = 64;

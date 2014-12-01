@@ -1,3 +1,5 @@
+- DAQFlex: check initial RW->writeReset() (enable it!)
+
 Macros, flow control:
 - RELACS crashes after too many automatically called macros
 - auditory::search does not exit cleanly upon ESC
@@ -12,9 +14,9 @@ New InData threading:
 - Check InData::mode() usage, in particular AdjustField in FilterDetectors
 - Replace the source() flag by a sourceTrace and sourceEvent index
   Remove the source mapping functions from RELACSPlugin and FilterDetectors
-- AnalogInput/Output check usage of IsPrepared and IsRunning
+- AnalogInput/Output check usage of IsPrepared and IsRunning! Yes, do it!
 - readData() several attemps only if maxn is too small
-- DAQFlex: does not like the initial writeReset()
+- DAQFlex: does not like the initial writeReset() 
   as well as normal writes at high sampling rates.
   The startwrite message blocks forever, while new data are read in.
 - DAQFlex error handling needs to be improved, 

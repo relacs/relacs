@@ -476,9 +476,7 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 	max = smax;
     }
     // reference and polarity:
-    bool unipolar = false;
-    if ( fabs(min) > fabs(max) && min >= 0.0 )
-      unipolar = true;
+    bool unipolar = ( min >= 0.0 );
     bool minislarger = false;
     // maximum value:
     if ( ::fabs( min ) > max ) {

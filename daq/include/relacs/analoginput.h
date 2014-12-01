@@ -145,6 +145,7 @@ public:
 	\param[in] datawait a waitcondition that is waken up whnever
 	the thread put new data into the input traces.
 	\param[in] aosp is the semaphore that guards analog outputs.
+	if \c null, then do not start analog outputs.
 	\return -1 on failure, 0 on success and 1 on succes and if
 	for an analog output further calls to writeData() are necessary.
         This function is called after a successfull prepareRead() or after stop().

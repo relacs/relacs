@@ -236,7 +236,7 @@ int DAQFlexCore::reset( void )
 }
 
 
-unsigned short DAQFlexCore::maxAIData( void ) const
+unsigned int DAQFlexCore::maxAIData( void ) const
 {
   return MaxAIData;
 }
@@ -260,13 +260,7 @@ int DAQFlexCore::aiFIFOSize( void ) const
 }
 
 
-bool DAQFlexCore::aiRanges( void ) const
-{
-  return AIRanges;
-}
-
-
-unsigned short DAQFlexCore::maxAOData( void ) const
+unsigned int DAQFlexCore::maxAOData( void ) const
 {
   return MaxAOData;
 }
@@ -552,13 +546,16 @@ unsigned char DAQFlexCore::getEndpointOutAddress( unsigned char* data, int n )
 int DAQFlexCore::initDevice( const string &path )
 {
   ErrorState = Success;
-  AIRanges = true;
 
   switch ( ProductID ) {
-  case USB_1608_GX: // Fall through, same init for USB-1608GX and USB-1608GX-2AO
-  case USB_1608_GX_2AO: {
+  case USB_1608_G:
+  case USB_1608_GX:
+  case USB_1608_GX_2AO:
     MaxAIData = 0xFFFF;
-    MaxAIRate = 500000.0;
+    if ( ProductID == USB_1608_G )
+      MaxAIRate = 250000.0;
+    else
+      MaxAIRate = 500000.0;
     MaxAIChannels = 16;
     AIFIFOSize = 4096;
     if ( ProductID == USB_1608_GX_2AO ) {
@@ -574,50 +571,56 @@ int DAQFlexCore::initDevice( const string &path )
       AOFIFOSize = 0;
     }
     DIOLines = 8;
-    // check if the firmware has been loaded already:
-    string response = sendMessage( "?DEV:FPGACFG" );
+    uploadFirmware( path, "USB_1608G.rbf" );
     if ( ErrorState != Success )
       return ErrorState;
-    if ( response.find( "CONFIGURED" ) == string::npos ) {
-      cout << "Firmware being flashed...\n";
-      // firmware hasn't been loaded yet, do so:
-      transferFPGAfile( path + "USB_1608G.rbf" );
-      if ( ErrorState == ErrorCantOpenFPGAFile )
-	transferFPGAfile( DefaultFirmwarePath + "USB_1608G.rbf" );
-      if ( ErrorState == Success ) {
-	// check if the firmware got loaded successfully:
-	response = sendMessage( "?DEV:FPGACFG" );
-	if ( ErrorState == Success && response.find( "CONFIGURED" ) == string::npos )
-	  ErrorState = ErrorFPGAUploadFailed;
-      }
-      if ( ErrorState == Success ) {
-	response = sendMessage( "?DEV:FWV" );
-	if ( response.empty() )
-	  cout << "DAQFlex: firmware successfully flashed\n";
-	else
-	  cout << "DAQFlex: firmware version " << response.erase( 0, 8 ) << " successfully flashed\n";
-      }
-      else
-	return ErrorState;
-    }
-    /*
-    else
-      cout << "DAQFlex: firmware already flashed, skipping this time\n";
-    */
-  }
+    break;
+
+  case USB_201:
+    MaxAIData = 0x0FFF;
+    MaxAIRate = 100000.0;
+    MaxAIChannels = 8;
+    AIFIFOSize = 12288;
+    MaxAOData = 0;
+    MaxAORate = 0.0;
+    MaxAOChannels = 0;
+    AOFIFOSize = 0;
+    DIOLines = 8;
+    break;
+
+  case USB_202:
+    MaxAIData = 0x0FFF;
+    MaxAIRate = 100000.0;
+    MaxAIChannels = 8;
+    AIFIFOSize = 12288;
+    MaxAOData = 0x0FFF;
+    MaxAORate = 600.0;
+    MaxAOChannels = 2;
+    AOFIFOSize = -1;
+    DIOLines = 8;
+    break;
+
+  case USB_204:
+    MaxAIData = 0x0FFF;
+    MaxAIRate = 500000.0;
+    MaxAIChannels = 8;
+    AIFIFOSize = 12288;
+    MaxAOData = 0;
+    MaxAORate = 0.0;
+    MaxAOChannels = 0;
+    AOFIFOSize = 0;
+    DIOLines = 8;
     break;
 
   case USB_205:
     MaxAIData = 0x0FFF;
-    MaxAIRate = 50000.0;
+    MaxAIRate = 500000.0;
     MaxAIChannels = 8;
     AIFIFOSize = 12288;
-    AIRanges = false;
     MaxAOData = 0x0FFF;
-    MaxAORate = 500.0;
+    MaxAORate = 600.0;
     MaxAOChannels = 2;
-    AOFIFOSize = 2048;
-    AOFIFOSize = 1024;
+    AOFIFOSize = -1;
     DIOLines = 8;
     break;
 
@@ -637,25 +640,80 @@ int DAQFlexCore::initDevice( const string &path )
     MaxAIData = 0xFFF;
     MaxAIRate = 50000.0;
     MaxAIChannels = 8;
-    AIFIFOSize = 32; // ???
-    MaxAOData = 4096;
+    AIFIFOSize = 32768;
+    MaxAOData = 0xFFF;
     MaxAORate = 10000.0;
     MaxAOChannels = 2;
-    AOFIFOSize = 32; // ???
-    DIOLines = 16;
+    AOFIFOSize = 0; // ???
+    DIOLines = 8;
     break;
 
-  default:
+  case USB_1208_FS_Plus:
     MaxAIData = 0xFFF;
     MaxAIRate = 50000.0;
     MaxAIChannels = 8;
-    AIFIFOSize = 32;
+    AIFIFOSize = 0; // ???
+    MaxAOData = 0xFFF;
+    MaxAORate = 10000.0;
+    MaxAOChannels = 2;
+    AOFIFOSize = 0;  // ???
+    DIOLines = 16;
+    uploadFirmware( path, "USB_1208GHS.rbf" );
+    if ( ErrorState != Success )
+      return ErrorState;
+    break;
+
+  case USB_1408_FS_Plus:
+    MaxAIData = 0xFFF;
+    MaxAIRate = 48000.0;
+    MaxAIChannels = 8;
+    AIFIFOSize = 0; // ???
+    MaxAOData = 0xFFF;
+    MaxAORate = 10000.0;
+    MaxAOChannels = 2;
+    AOFIFOSize = 0; // ???
+    DIOLines = 16;
+    break;
+
+  case USB_1608_FS_Plus:
+    MaxAIData = 0xFFFF;
+    MaxAIRate = 400000.0;
+    MaxAIChannels = 8;
+    AIFIFOSize = 32768;
     MaxAOData = 0;
     MaxAORate = 0.0;
     MaxAOChannels = 0;
     AOFIFOSize = 0;
     DIOLines = 8;
     break;
+
+  case USB_2408:
+    MaxAIData = 0xFFFFFF;
+    MaxAIRate = 1000.0;
+    MaxAIChannels = 16;
+    AIFIFOSize = 32768;
+    MaxAOData = 0;
+    MaxAORate = 0.0;
+    MaxAOChannels = 0;
+    AOFIFOSize = 0;
+    DIOLines = 8;
+    break;
+
+  case USB_2408_2AO:
+    MaxAIData = 0xFFFFFF;
+    MaxAIRate = 1000.0;
+    MaxAIChannels = 16;
+    AIFIFOSize = 32768;
+    MaxAOData = 0xFFFF;
+    MaxAORate = 1000.0;
+    MaxAOChannels = 2;
+    AOFIFOSize = 0;
+    DIOLines = 8;
+    break;
+
+  default:
+    ErrorState = ErrorInvalidID;
+    return ErrorState;
   }
 
   // set basic device infos:
@@ -670,6 +728,36 @@ int DAQFlexCore::initDevice( const string &path )
   serial.erase( 0, 11 );
   Info.addText( "SerialNumber", serial );
 
+  return ErrorState;
+}
+
+
+int DAQFlexCore::uploadFirmware( const string &path, const string &filename )
+{
+  // check if the firmware has been loaded already:
+  string response = sendMessage( "?DEV:FPGACFG" );
+  if ( ErrorState != Success )
+    return ErrorState;
+  if ( response.find( "CONFIGURED" ) == string::npos ) {
+    // firmware hasn't been loaded yet, do so:
+    cout << "Firmware being flashed...\n";
+    transferFPGAfile( path + filename );
+    if ( ErrorState == ErrorCantOpenFPGAFile )
+      transferFPGAfile( DefaultFirmwarePath + filename );
+    if ( ErrorState == Success ) {
+      // check if the firmware got loaded successfully:
+      response = sendMessage( "?DEV:FPGACFG" );
+      if ( ErrorState == Success && response.find( "CONFIGURED" ) == string::npos )
+	ErrorState = ErrorFPGAUploadFailed;
+    }
+    if ( ErrorState == Success ) {
+      response = sendMessage( "?DEV:FWV" );
+      if ( response.empty() )
+	cout << "DAQFlex: firmware successfully flashed\n";
+      else
+	cout << "DAQFlex: firmware version " << response.erase( 0, 8 ) << " successfully flashed\n";
+    }
+  }
   return ErrorState;
 }
 
@@ -768,6 +856,12 @@ int DAQFlexCore::error( void ) const
 bool DAQFlexCore::success( void ) const
 {
   return ( ErrorState == Success );
+}
+
+
+bool DAQFlexCore::failed( void ) const
+{
+  return ( ErrorState != Success );
 }
 
 

@@ -33,27 +33,29 @@ namespace base {
 \class TransferFunction
 \brief [RePro] Measures the transfer function with white-noise stimuli.
 \author Jan Benda
-\version 1.4 (Dec 14, 2010)
+\version 1.6 (Dec 1, 2014)
 \par Screenshot
 \image html transferfunction.png
 
 \par Options
-- Stimulus
-- \c outtrace=Current-1: Output trace (\c string)
-- \c offsetbase=custom: Set offset relative to (\c string)
-- \c offset=0V: Offset (\c number)
-- \c amplitude=1V: Amplitude (\c number)
-- \c fmax=1000Hz: Maximum frequency (\c number)
-- \c duration=1000ms: Duration of noise stimulus (\c number)
-- \c pause=1000ms: Length of pause inbetween successive stimuli (\c number)
-- \c repeats=100: Repeats (\c integer)
-- Analysis
-- \c intrace=V-1: Input trace (\c string)
-- \c size=1024: Number of data points for FFT (\c string)
-- \c overlap=true: Overlap FFT windows (\c boolean)
-- \c window=Hanning: FFT window function (\c string)
-- \c plotstdevs=true: Plot standard deviations (\c boolean)
-- \c plotcoherence=true: Plot coherence (\c boolean)
+- \c Stimulus
+    - \c outtrace=V-1: Output trace (\c string)
+    - \c offsetbase=custom: Set offset relative to (\c string)
+    - \c offset=0V: Offset (\c number)
+    - \c amplitude=1V: Amplitude (\c number)
+    - \c clip=4: Multiple of amplitude where to clip signal (\c number)
+    - \c intensity=1: Intensity for an attenuator (\c number)
+    - \c fmax=1000Hz: Maximum frequency (\c number)
+    - \c duration=1000ms: Duration of noise stimulus (\c number)
+    - \c pause=1000ms: Length of pause inbetween successive stimuli (\c number)
+    - \c repeats=100: Repeats (\c integer)
+- \c Analysis
+    - \c intrace=V-1: Input trace (\c string)
+    - \c size=1024: Number of data points for FFT (\c string)
+    - \c overlap=true: Overlap FFT windows (\c boolean)
+    - \c window=Hanning: FFT window function (\c string)
+    - \c plotstdevs=true: Plot standard deviations (\c boolean)
+    - \c plotcoherence=true: Plot coherence (\c boolean)
 */
 
 

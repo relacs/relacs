@@ -762,7 +762,7 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
   else  
     insnlist.insns[ilinx++].subdev = SubDevice;
   bool tookao = false;
-  if ( TakeAO && ComediAO != 0 && ComediAO->prepared() ) {
+  if ( TakeAO && aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
     insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
     tookao = true;
   }

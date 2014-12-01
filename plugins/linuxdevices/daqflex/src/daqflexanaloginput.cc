@@ -99,27 +99,43 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
 
   // initialize ranges:
   BipolarRange.clear();
-  if ( DAQFlexDevice->aiRanges() ) {
-    double checkrange[6] = { 10.0, 5.0, 2.0, 1.0, 0.5, -1.0 };
-    for ( int i = 0; i < 20 && checkrange[i] > 0.0; i++ ) {
-      string message = "AI{0}:RANGE=BIP" + Str( checkrange[i], "%g" ) + "V";
-      DAQFlexDevice->sendMessage( message );
-      if ( DAQFlexDevice->success() ) {
-	string response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
-	if ( DAQFlexDevice->success() && response == message )
-	  BipolarRange.push_back( checkrange[i] );
+  BipolarRangeCmds.clear();
+  double checkrange[17] = { 20.0, 10.0, 5.0, 4.0, 2.5, 2.5, 2.0, 1.25, 1.25, 1.0, 0.625, 0.3125, 0.15625, 0.14625, 0.078125, 0.073125, -1.0 };
+  string checkstr[16] = { "BIP20V", "BIP10V", "BIP5V", "BIP4V", "BIP2PT5V", "BIP2.5V", "BIP2V", "BIP1PT25V", "BIP1.25V", "BIP1V", "BIP625.0E-3V", "BIP312.5E-3V", "BIP156.25E-3V", "BIP146.25E-3V", "BIP78.125E-3V", "BIP73.125E-3V" };
+  for ( int i = 0; i < 20 && checkrange[i] > 0.0; i++ ) {
+    string message = "AI{0}:RANGE=" + checkstr[i];
+    DAQFlexDevice->sendMessage( message );
+    if ( DAQFlexDevice->success() ) {
+      string response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
+      if ( DAQFlexDevice->success() && response == message ) {
+	BipolarRange.push_back( checkrange[i] );
+	BipolarRangeCmds.push_back( checkstr[i] );
       }
     }
-    if ( BipolarRange.size() == 0 ) {
+  }
+  if ( BipolarRange.size() == 0 ) {
+    if ( DAQFlexDevice->error() == DAQFlexCore::ErrorLibUSBIO ) {
       cerr << "Error in initializing DAQFlexAnalogInput device:\n"
-	   << "no input ranges found. error: " << DAQFlexDevice->errorStr() << '\n';
-      if ( DAQFlexDevice->error() == DAQFlexCore::ErrorLibUSBIO )
-	cerr << "Check the USB cable!\n";
+	   << "no input ranges found. Error: " << DAQFlexDevice->errorStr() << '\n';
+      cerr << "Check the USB cable!\n";
       return ReadError;
     }
-  }
-  else {
-    BipolarRange.push_back( 10.0 );
+    // retrieve single supported range:
+    Str response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
+    if ( DAQFlexDevice->success() && response.size() > 16 ) {
+      bool uni = ( response[12] == 'U' );
+      double range = response.number( 0.0, 15 );
+      if ( range <= 1e-6 || uni ) {
+	cerr << "Failed to read out analog input range from device " << DAQFlexDevice->deviceName() << "\n";
+	return InvalidDevice;
+      }
+      BipolarRange.push_back( range );
+      BipolarRangeCmds.push_back( response.right( 12 ) );
+    }
+    else {
+      cerr << "Failed to retrieve analog input range from device " << DAQFlexDevice->deviceName() << ". Error: " << DAQFlexDevice->errorStr() << "\n";
+      return InvalidDevice;
+    }
   }
 
   reset();
@@ -287,12 +303,17 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
       traces[k].setDelay( 0.0 );
     }
 
+    // XXX 7202, 7204 do not have AIQUEUE! channels need to be in a sequence!
     string aiq = "AIQUEUE{" + Str( k ) + "}:";
 
     // channel:
     DAQFlexDevice->sendMessage( aiq + "CHAN=" + Str( traces[k].channel() ) );
 
     // reference:
+    // XXX 20X: Has only SE CHMODE! Cannot be set.
+    // XXX 7202, 1608FS: Has no CHMODE
+    // XXX 7204: Has only AI:CHMODE
+    // XXX 1208-FS, 1408FS do not have CHMODE FOR AIQUEUE! But AI:CHMODE
     switch ( traces[k].reference() ) {
     case InData::RefCommon:
       DAQFlexDevice->sendMessage( aiq + "CHMODE=SE" );
@@ -326,20 +347,25 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
       else {
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( -max );
-	string message = aiq + "RANGE=BIP" + Str( max, "%g" ) + "V";
-	DAQFlexDevice->sendMessage( message );
-	// get calibration:
-	string response = DAQFlexDevice->sendMessage( "?AI{" + Str( traces[k].channel() ) + "}:SLOPE" );
-	gainp->Slope = Str( response.erase( 0, 12 ) ).number();
-	response = DAQFlexDevice->sendMessage( "?AI{" + Str( traces[k].channel() ) + "}:OFFSET" );
-	gainp->Offset = Str( response.erase( 0, 13 ) ).number();
-	gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
-	gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
-	gainp->Offset -= max;
+	if ( BipolarRange.size() > 1 ) {
+	  string message = aiq + "RANGE=" + BipolarRangeCmds[traces[k].gainIndex()];
+	  string response = DAQFlexDevice->sendMessage( message );
+	  if ( DAQFlexDevice->failed() || response.empty() )
+	    traces[k].addError( DaqError::InvalidGain );
+	}
+	if ( traces[k].success() ) {
+	  // get calibration:
+	  string response = DAQFlexDevice->sendMessage( "?AI{" + Str( traces[k].channel() ) + "}:SLOPE" );
+	  gainp->Slope = Str( response.erase( 0, 12 ) ).number();
+	  response = DAQFlexDevice->sendMessage( "?AI{" + Str( traces[k].channel() ) + "}:OFFSET" );
+	  gainp->Offset = Str( response.erase( 0, 13 ) ).number();
+	  gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
+	  gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
+	  gainp->Offset -= max;
+	}
       }
     }
   }
-  //    DAQFlexDevice->sendMessage( "?AIQUEUE:COUNT" );
 
   if ( traces.failed() )
     return -1;
@@ -366,7 +392,7 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
     return -1;
   }
 
-  bool tookao = ( TakeAO && DAQFlexAO != 0 && DAQFlexAO->prepared() );
+  bool tookao = ( TakeAO && aosp != 0 && DAQFlexAO != 0 && DAQFlexAO->prepared() );
 
   if ( tookao )
     DAQFlexDevice->sendCommands( "AISCAN:START", "AOSCAN:START" );
@@ -576,13 +602,16 @@ void DAQFlexAnalogInput::take( const vector< AnalogInput* > &ais,
   DAQFlexAO = 0;
 
   if ( TakeAO ) {
+    TakeAO = false;
     // check for analog output device:
     for ( unsigned int k=0; k<aos.size(); k++ ) {
       if ( aos[k]->analogOutputType() == DAQFlexAnalogIOType &&
-	   aos[k]->deviceFile() == deviceFile() ) {
+	   aos[k]->deviceFile() == deviceFile() &&
+	   DAQFlexDevice->aoFIFOSize() > 0 ) {
 	aoinx.push_back( k );
 	aorate.push_back( false );
 	DAQFlexAO = dynamic_cast< DAQFlexAnalogOutput* >( aos[k] );
+	TakeAO = true;
 	break;
       }
     }

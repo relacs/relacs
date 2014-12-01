@@ -27,7 +27,7 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "base", "Jan Benda", "1.4", "Dec 14, 2010" )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.6", "Dec 1, 2014" )
 {
   // options:
   newSection( "Stimulus" );
@@ -35,6 +35,7 @@ TransferFunction::TransferFunction( void )
   addSelection( "offsetbase", "Set offset relative to", "custom|current" ).setUnit( "value" );
   addNumber( "offset", "Offset", 0.0, -100000.0, 100000.0, 0.001, "", "" );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 100000.0, 1.0, "", "" );
+  addNumber( "clip", "Multiple of amplitude where to clip signal", 4.0, 1.0, 1000.0, 0.1, "", "" );
   addNumber( "intensity", "Intensity for an attenuator", 1.0, -10000.0, 10000.0, 0.1, "", "" );
   addNumber( "fmax", "Maximum frequency", 1000.0, 0.0, 10000000.0, 100.0, "Hz", "Hz" );
   addNumber( "duration", "Duration of noise stimulus", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
@@ -109,6 +110,7 @@ int TransferFunction::main( void )
   int offsetbase = index( "offsetbase" );
   double offset = number( "offset" );
   double amplitude = number( "amplitude" );
+  double clip = number( "clip" );
   double intensity = number( "intensity" );
   double fmax = number( "fmax" );
   double duration = number( "duration" );
@@ -215,6 +217,8 @@ int TransferFunction::main( void )
 
     signal.clear();
     signal.noiseWave( duration, -1.0, fmax, amplitude );
+    int c = ::relacs::clip( -clip*amplitude, clip*amplitude, signal );
+    printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
     signal.back() = 0.0;
     signal += offset;
 
@@ -225,8 +229,15 @@ int TransferFunction::main( void )
       break;
     }
     if ( signal.failed() ) {
-      directWrite( orgdcsignal );
-      continue;
+      warning( signal.errorText(), 5.0 );
+      if ( signal.error() == DaqError::OverflowUnderrun ) {
+	directWrite( orgdcsignal );
+	continue;
+      }
+      else {
+	state = Failed;
+	break;
+      }
     }
     // get data:
     SampleDataF input( 0.0, signal.length(), trace( intrace ).stepsize() );

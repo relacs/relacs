@@ -154,6 +154,8 @@ private:
 
     /*! Holds the list of supported bipolar ranges. */
   vector< double > BipolarRange;
+    /*! Holds the list of daqflex commands of the supported bipolar ranges. */
+  vector< string > BipolarRangeCmds;
 
   struct Calibration {
     double Offset;

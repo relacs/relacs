@@ -35,6 +35,7 @@ namespace daqflex {
 \author Jan Benda
 \brief [AnalogOutput] Interface for accessing analog output of a DAQFlex board from Measurement Computing.
 \bug Calibration is not yet implemented.
+\bug Analog output timing is not yet implemented for no-FIFO boards
 */
 
 
@@ -146,6 +147,8 @@ private:
 
     /*! Holds the list of supported bipolar ranges. */
   vector< double > BipolarRange;
+    /*! Holds the list of supported unipolar ranges. */
+  vector< double > UnipolarRange;
 
   struct Calibration {
     double Offset;
