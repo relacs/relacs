@@ -39,6 +39,7 @@ class ComediAnalogInput;
 \author Jan Benda
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via comedi.
 \bug NI DAQCard cmd.stop_arg += 2048 needs to tested
+\bug unipolar support is not really working
 
 For hardware calibrated boards (like NI E-Series boards) do
 \code

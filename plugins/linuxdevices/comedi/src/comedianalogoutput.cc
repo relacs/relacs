@@ -66,6 +66,7 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
+  ChannelValues = 0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   open( device, opts );
   IsPrepared = false;
@@ -75,7 +76,6 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
-  ChannelValues = 0;
 }
 
 
@@ -518,7 +518,11 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 	max = smax;
     }
     // reference and polarity:
-    bool unipolar = ( min >= 0.0 );
+    bool unipolar = false;
+    // whatever the following was ment to be, it ensures that unipolar never gets true!
+    // if it gets true, we get errors elsewhere.
+    if ( fabs(min) > fabs(max) && min >= 0.0 )
+      unipolar = true;
     bool minislarger = false;
     // maximum value:
     if ( ::fabs( min ) > max ) {

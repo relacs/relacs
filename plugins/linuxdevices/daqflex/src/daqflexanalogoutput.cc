@@ -41,6 +41,7 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  ChannelValues = 0;
 }
 
 
@@ -53,6 +54,7 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &op
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  ChannelValues = 0;
   open( device, opts );
 }
 
@@ -116,6 +118,11 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
     return InvalidDevice;
   }
 
+  // set default output values for channels:
+  ChannelValues = new float[channels()];
+  for ( int k=0; k<channels(); k++ )
+    ChannelValues[k] = 0.0;
+
   // delays:
   vector< double > delays;
   opts.numbers( "delays", delays, "s" );
@@ -154,6 +161,11 @@ void DAQFlexAnalogOutput::close( void )
     return;
 
   reset();
+
+  // clean up stored channel values:
+  if ( ChannelValues != 0 )
+    delete[] ChannelValues;
+  ChannelValues = 0;
 
   // clear flags:
   DAQFlexDevice = NULL;
@@ -259,6 +271,8 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     //    if ( retval < 1 )
     //      sigs[k].addErrorStr( "DAQFlex direct write failed" );
 
+    ChannelValues[sigs[k].channel()] = sigs[k].size() > 0 ? sigs[k][0] : 0.0;
+
   }
 
   return ( sigs.success() ? 0 : -1 );
@@ -285,7 +299,13 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
     scale[k] = Sigs[k].scale();
     // calib[k] = (const Calibration *)Sigs[k].gainData();
     // XXX calibration?
-    zeros[k] = (unsigned short)( (0.0-minval[k])*gain[k] );
+    float v = ChannelValues[Sigs[k].channel()];
+    if ( v > maxval[k] )
+      v = maxval[k];
+    else if ( v < minval[k] ) 
+      v = minval[k];
+    v *= scale[k];
+    zeros[k] = (unsigned short)( (v-minval[k])*gain[k] );
   }
 
   // buffer pointer:
@@ -317,6 +337,14 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
       ++bp;
       ++n;
     }
+  }
+
+  // memorize last values:
+  for ( int k=0; k<Sigs.size(); k++ ) {
+    if ( Sigs[k].deviceCount() >= 0 && Sigs[k].deviceIndex() > 0 )
+      ChannelValues[Sigs[k].channel()] = Sigs[k][Sigs[k].deviceIndex()-1];
+    else if ( Sigs[k].deviceCount() > 0 && Sigs[k].deviceIndex() == 0 )
+      ChannelValues[Sigs[k].channel()] = Sigs[k].back();
   }
 
   return n * sizeof( T );

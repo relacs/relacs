@@ -170,6 +170,8 @@ private:
   int NBuffer;
     /*! Overall number of samples to be transmmitted. */
   int Samples;
+    /*! Stores the last output value for each channel. */
+  float *ChannelValues;
 
 };
 

@@ -212,7 +212,8 @@ void Session::initDevices( void )
   ASW->setVerticalSpacing( 2 );
 
   lockStimulusData();
-  stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
+  if ( ! stimulusData().exist( "Drugs" ) )
+       stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
   unlockStimulusData();
   SW->assign( &stimulusData(), 16, 0, true, 
 	      OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
