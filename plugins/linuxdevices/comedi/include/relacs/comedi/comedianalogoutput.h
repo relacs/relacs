@@ -40,11 +40,17 @@ class ComediAnalogInput;
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via comedi.
 \bug NI DAQCard cmd.stop_arg += 2048 needs to tested
 
-
+For hardware calibrated boards (like NI E-Series boards) do
 \code
-# calibrate all ranges, references and channels:
-for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 1 -r $R -a $A -c $C; done; done; done
+$ comedi_calibrate --reset --calibrate -f /dev/comedi0
 \endcode
+
+For software calibrated boards (like NI M-Series boards) do
+\code
+$ comedi_soft_calibrate -f /dev/comedi0
+\endcode
+
+You may want to read the man page of \c comedi_calibrate.
 */
 
 
@@ -214,6 +220,8 @@ private:
   char *Buffer;
     /*! Current number of elements in the buffer. */
   int NBuffer;
+    /*! Stores the last output value for each channel. */
+  float *ChannelValues;
 
 };
 

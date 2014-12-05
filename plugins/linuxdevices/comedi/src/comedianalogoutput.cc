@@ -53,6 +53,7 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  ChannelValues = 0;
 }
 
 
@@ -74,6 +75,7 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+  ChannelValues = 0;
 }
 
 
@@ -225,6 +227,11 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   else
     BufferElemSize = sizeof( sampl_t );
 
+  // set default output values for channels:
+  ChannelValues = new float[channels()];
+  for ( int k=0; k<channels(); k++ )
+    ChannelValues[k] = 0.0;
+
   // try to find out the maximum sampling rate:
   comedi_cmd cmd;
   memset( &cmd,0, sizeof(comedi_cmd) );
@@ -271,6 +278,11 @@ void ComediAnalogOutput::close( void )
     return;
 
   reset();
+
+  // clean up stored channel values:
+  if ( ChannelValues != 0 )
+    delete[] ChannelValues;
+  ChannelValues = 0;
 
   // cleanup calibration:
   if ( Calibration != 0 )
@@ -398,6 +410,8 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
       emsg += comedi_strerror( comedi_errno() );
       sigs[k].addErrorStr( emsg );
     }
+    else
+      ChannelValues[sigs[k].channel()] = sigs[k].size() > 0 ? sigs[k][0] : 0.0;
 
   }
 
@@ -424,7 +438,13 @@ int ComediAnalogOutput::convert( char *cbuffer, int nbuffer )
     maxval[k] = Sigs[k].maxValue();
     scale[k] = Sigs[k].scale();
     polynomial[k] = (const comedi_polynomial_t *)Sigs[k].gainData();
-    zeros[k] = comedi_from_physical( 0.0, polynomial[k] );
+    float v = ChannelValues[Sigs[k].channel()];
+    if ( v > maxval[k] )
+      v = maxval[k];
+    else if ( v < minval[k] ) 
+      v = minval[k];
+    v *= scale[k];
+    zeros[k] = comedi_from_physical( v, polynomial[k] );
   }
 
   // buffer pointer:
@@ -455,6 +475,14 @@ int ComediAnalogOutput::convert( char *cbuffer, int nbuffer )
       ++bp;
       ++n;
     }
+  }
+
+  // memorize last values:
+  for ( int k=0; k<Sigs.size(); k++ ) {
+    if ( Sigs[k].deviceCount() >= 0 && Sigs[k].deviceIndex() > 0 )
+      ChannelValues[Sigs[k].channel()] = Sigs[k][Sigs[k].deviceIndex()-1];
+    else if ( Sigs[k].deviceCount() > 0 && Sigs[k].deviceIndex() == 0 )
+      ChannelValues[Sigs[k].channel()] = Sigs[k].back();
   }
 
   return n * sizeof( T );
