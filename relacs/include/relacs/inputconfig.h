@@ -46,13 +46,13 @@ public:
     /*! Construct widget for setting input traces based on the input trace options \a opts. */
   InputConfig( Options &opts, QWidget *parent=0 );
 
-  void fillCells( int, bool );
-  
 
 public slots:
 
-  void addRow( void );
-  void deleteRow( void );
+    /*! Insert a number of rows. */
+  void addRows( void );
+    /*! Delete selected rows. */
+  void deleteRows( void );
     /*! Writes new settings to the input trace options and emit newInputSettings(). */
   void dialogClosed( int r );
  
@@ -66,15 +66,16 @@ private:
 
     /*! Read in table from current input trace options. */
   void fillTable( void );
+    /*! Fill in a row of the table. */
+  void fillRow( int row, const string &name, const string &device, int channel,
+		const string &reference, double samplerate, double scale,
+		const string &unit, int gainindex, bool center );
 
   QTableWidget *Table;
   QPushButton *AddButton;
   QPushButton *RemoveButton;
 
   Options &Opts;
-
-  QItemSelectionModel *Selection;
-  QModelIndexList Indexes;
 
 };
 
