@@ -237,6 +237,11 @@ public slots:
         and call the readRePro functions of the Session and Control plugins.  */
   void updateRePro( void );
 
+    /*! Opens a dialog for editing the analog input traces. */
+  void editInputTraces( void );
+    /*! Opens a dialog for editing the analog output traces. */
+  void editOutputTraces( void );
+
     /*! Save settings to configuration files. */
   void saveConfig( void );
 
@@ -256,6 +261,8 @@ public slots:
   void startSimulation( void );
     /*! Start idle mode. */
   void startIdle( void );
+    /*! Restart the currently active acquisition mode. */
+  void restartAcquisition( void );
 
     /*! Stops all RELACSWidget activities and exits. */
   void quit( void );
@@ -302,7 +309,6 @@ protected slots:
 
   void helpClosed( int r );
   void simLoadMessage( void );
-  void channels( void );
 
 
 private:

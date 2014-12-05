@@ -362,11 +362,12 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   SN->addActions( filemenu );
   MTDT.addActions( filemenu );
   filemenu->addSeparator();
+  filemenu->addAction( "&Input traces...", this, SLOT( editInputTraces() ) );
+  //filemenu->addAction( "&Input traces...", this, SLOT( editInputTraces() ) );
   filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
   filemenu->addAction( "Save Settings", (QWidget*)this, SLOT( saveConfig() ) );
   filemenu->addAction( "&AudioMonitor...", AM, SLOT( dialog() ) );
   filemenu->addAction( "&Quit", (QWidget*)this, SLOT( quit() ), Qt::ALT + Qt::Key_Q );
-  //  filemenu->addAction( "&Channels", this, SLOT( channels() ) );
 
   // plugins:
   QMenu *pluginmenu = menuBar()->addMenu( "&Plugins" );
@@ -1338,17 +1339,26 @@ void RELACSWidget::closeEvent( QCloseEvent *ce )
 }
 
 
-void RELACSWidget::channels( void )
+void RELACSWidget::editInputTraces( void )
 {
-  InputConfig *ic = new InputConfig( this );
+  InputConfig *ic = new InputConfig( section( "input data" ), this );
   OptDialog *od = new OptDialog( false, this );
   od->addWidget( ic );
+  od->addButton( "&Ok", OptDialog::Accept, 2 );
+  od->addButton( "&Apply", OptDialog::Accept, 1, false );
+  od->addButton( "&Cancel" );
+  QObject::connect( od, SIGNAL( buttonClicked( int ) ), ic, SLOT( dialogClosed( int ) ) );
+  QObject::connect( ic, SIGNAL( newInputSettings() ), this, SLOT( restartAcquisition() ) );
   od->exec();
+}
 
+
+void RELACSWidget::editOutputTraces( void )
+{
   OutputConfig *oc = new OutputConfig( this );
-  OptDialog *od2 = new OptDialog( false, this );
-  od2->addWidget( oc );
-  od2->exec();
+  OptDialog *od = new OptDialog( false, this );
+  od->addWidget( oc );
+  od->exec();
 }
 
 
@@ -1789,6 +1799,21 @@ void RELACSWidget::startIdle( void )
   RP->message( "<b>Idle-mode</b>" );
 }
 
+
+
+void RELACSWidget::restartAcquisition( void )
+{
+  ModeTypes mode = Mode;
+  if ( ! idle() )
+    stopActivity();
+  clearActivity();
+  if ( mode == AcquisitionMode )
+    startFirstAcquisition();
+  else if ( mode == SimulationMode )
+    startFirstSimulation();
+  else
+    startIdle();
+}
 
 
 //-------------------------Keyboard Interaction----------------------------//
