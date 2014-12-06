@@ -20,16 +20,19 @@
 */
 
 #include <cmath>
+#include <cctype>
 #include <iostream>
+#include <QStringList>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QPushButton>
 #include <QComboBox>
 #include <QSpinBox>
-#include <QDoubleSpinBox>
 #include <QCheckBox>
 #include <QHeaderView>
 #include <QInputDialog>
 #include <relacs/indata.h>
+#include <relacs/doublespinbox.h>
 #include <relacs/inputconfig.h>
 
 namespace relacs {
@@ -58,12 +61,15 @@ InputConfig::InputConfig( Options &opts, QWidget *parent )
   
   QVBoxLayout *buttonlayout = new QVBoxLayout;
   layout->addLayout( buttonlayout );
-  AddButton = new QPushButton( "Add", this );
-  buttonlayout->addWidget( AddButton );
-  QObject::connect( AddButton, SIGNAL( clicked() ), this, SLOT( addRows() ) );
-  RemoveButton = new QPushButton( "Remove", this );
-  buttonlayout->addWidget( RemoveButton );
-  QObject::connect( RemoveButton, SIGNAL( clicked() ), this, SLOT( deleteRows() ) );
+  QPushButton *insertbutton = new QPushButton( "&Insert", this );
+  buttonlayout->addWidget( insertbutton );
+  QObject::connect( insertbutton, SIGNAL( clicked() ), this, SLOT( insertRows() ) );
+  QPushButton *erasebutton = new QPushButton( "&Erase", this );
+  buttonlayout->addWidget( erasebutton );
+  QObject::connect( erasebutton, SIGNAL( clicked() ), this, SLOT( eraseRows() ) );
+  QPushButton *fillbutton = new QPushButton( "&Fill", this );
+  buttonlayout->addWidget( fillbutton );
+  QObject::connect( fillbutton, SIGNAL( clicked() ), this, SLOT( fillCells() ) );
 
   setLayout( layout );
 }
@@ -123,12 +129,14 @@ void InputConfig::fillRow( int row, const string &name, const string &device, in
     }
   }
   Table->setCellWidget( row, 3, referencebox );
-  QDoubleSpinBox *sampleratebox = new QDoubleSpinBox;
+  DoubleSpinBox *sampleratebox = new DoubleSpinBox;
+  sampleratebox->setFormat( "%g" );
   sampleratebox->setRange( 1.0, 1000.0 );
   sampleratebox->setValue( 0.001*samplerate );
   sampleratebox->setSuffix( " kHz" );
   Table->setCellWidget( row, 4, sampleratebox );
-  QDoubleSpinBox *scalebox = new QDoubleSpinBox;
+  DoubleSpinBox *scalebox = new DoubleSpinBox;
+  scalebox->setFormat( "%g" );
   scalebox->setRange( 0.0, 1000000.0 );
   scalebox->setValue( scale );
   Table->setCellWidget( row, 5, scalebox );
@@ -156,7 +164,38 @@ void InputConfig::fillRow( int row, const string &name, const string &device, in
 }
 
 
-void InputConfig::addRows( void )
+void InputConfig::getRow( int row, string &basename, int &nameinx, string &device, int &channel,
+			  string &reference, double &samplerate, double &scale,
+			  string &unit, int &gainindex, bool &center )
+{
+  basename = Table->item( row, 0 )->text().toStdString();
+  int k=0;
+  for ( k=(int)basename.length()-1; k>=0 && isdigit( basename[k] ); k-- );
+  nameinx = (int)::round( Str( basename.substr( k+1 ) ).number( 0.0 ) );
+  basename.erase( k+1 );
+  if ( basename.empty() )
+    basename = "V-";
+  else if ( basename[basename.size()-1] != '-' )
+    basename.push_back( '-' );
+  device = Table->item( row, 1 )->text().toStdString();
+  QSpinBox *cb = (QSpinBox *)Table->cellWidget( row, 2 );
+  channel = cb->value();
+  QComboBox *rb = (QComboBox *)Table->cellWidget( row, 3 );
+  reference = rb->currentText().toStdString();
+  DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( row, 4 );
+  samplerate = 1000.0*srb->value();
+  DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( row, 5 );
+  scale = sb->value();
+  QComboBox *ub = (QComboBox *)Table->cellWidget( row, 6 );
+  unit = ub->currentText().toStdString();
+  QSpinBox *gb = (QSpinBox *)Table->cellWidget( row, 7 );
+  gainindex = gb->value();
+  QCheckBox *cvb = (QCheckBox *)Table->cellWidget( row, 8 );
+  center = cvb->isChecked();
+}
+
+
+void InputConfig::insertRows( void )
 {
   bool ok;
   int n = QInputDialog::getInteger( this, "Input trace configuration", "Add # rows:", 1, 0, 1024, 1, &ok );
@@ -171,12 +210,88 @@ void InputConfig::addRows( void )
   }
   else {
     // a row is selected, insert rows before that row:
-    row = selection.front().topRow();
+    row = selection.front().bottomRow()+1;
   }
 
   // fill in the rows:
-  for ( int i=0; i<n; i++ )
-    Table->insertRow( row );
+  string name = "V-";
+  int nameinx = 1;
+  string device = "ai-1";
+  int channel = 0;
+  string reference = InData::referenceStr( InData::RefGround );
+  double samplerate = 20000.0;
+  double scale = 1.0;
+  string unit = "V";
+  int gainindex = 0;
+  bool center = true;
+  if ( row > 0 ) {
+    getRow( row-1, name, nameinx, device, channel,
+	    reference, samplerate, scale, unit, gainindex, center );
+    if ( nameinx == 0 ) {
+      nameinx = 1;
+      // check for name doublets:
+      for ( int j=0; j<Table->rowCount(); j++ ) {
+	string rowname = Table->item( j, 0 )->text().toStdString();
+	if ( name+Str( nameinx ) == rowname ) {
+	  int k=0;
+	  for ( k=(int)rowname.length()-1; k>=0 && isdigit( rowname[k] ); k-- );
+	  nameinx = (int)::round( Str( rowname.substr( k+1 ) ).number( 0.0 ) ) + 1;
+	  j=0;
+	}
+      }
+      Table->item( row-1, 0 )->setText( string( name+Str( nameinx ) ).c_str() );
+    }
+    else
+      nameinx++;
+    channel++;
+  }
+  for ( int i=0; i<n; i++ ) {
+    // check for name doublets:
+    for ( int j=0; j<Table->rowCount(); j++ ) {
+      string rowname = Table->item( j, 0 )->text().toStdString();
+      if ( name+Str( nameinx ) == rowname ) {
+	int k=0;
+	for ( k=(int)rowname.length()-1; k>=0 && isdigit( rowname[k] ); k-- );
+	nameinx = (int)::round( Str( rowname.substr( k+1 ) ).number( 0.0 ) ) + 1;
+	j=0;
+      }
+    }
+    // check for channel doublets:
+    for ( int j=0; j<Table->rowCount(); j++ ) {
+      string rowdevice = Table->item( j, 1 )->text().toStdString();
+      QSpinBox *cb = (QSpinBox *)Table->cellWidget( j, 2 );
+      int rowchannel = cb->value();
+      if ( device == rowdevice && channel == rowchannel ) {
+	channel = rowchannel+1;
+	j=0;
+      }
+    }
+    // insert row:
+    Table->insertRow( row+i );
+    fillRow( row+i, name+Str( nameinx ), device, channel, reference, samplerate, scale, unit, gainindex, center );
+    nameinx++;
+    channel++;
+  }
+}
+
+
+void InputConfig::eraseRows( void )
+{
+  QList<QTableWidgetSelectionRange> selection = Table->selectedRanges();
+  if ( selection.empty() || selection.front().columnCount() < 9 )
+    return;
+
+  for ( int i=0; i<selection.front().rowCount(); i++ )
+    Table->removeRow( selection.front().topRow() );
+}
+
+
+void InputConfig::fillCells( void )
+{
+  QList<QTableWidgetSelectionRange> selection = Table->selectedRanges();
+  if ( selection.empty() || selection.front().rowCount() <= 1 || selection.front().columnCount() < 1 )
+    return;
+
   string name = "V-";
   int nameinx = 1;
   string device = "ai=1";
@@ -187,40 +302,118 @@ void InputConfig::addRows( void )
   string unit = "V";
   int gainindex = 0;
   bool center = true;
-  if ( row > 0 ) {
-    name = Table->item( row-1, 0 )->text().toStdString();
-    device = Table->item( row-1, 1 )->text().toStdString();
-    QSpinBox *cb = (QSpinBox *)Table->cellWidget( row-1, 2 );
-    channel = cb->value()+1;
-    QComboBox *rb = (QComboBox *)Table->cellWidget( row-1, 3 );
-    reference = rb->currentText().toStdString();
-    QDoubleSpinBox *srb = (QDoubleSpinBox *)Table->cellWidget( row-1, 4 );
-    samplerate = 1000.0*srb->value();
-    QDoubleSpinBox *sb = (QDoubleSpinBox *)Table->cellWidget( row-1, 5 );
-    scale = sb->value();
-    QComboBox *ub = (QComboBox *)Table->cellWidget( row-1, 6 );
-    unit = ub->currentText().toStdString();
-    QSpinBox *gb = (QSpinBox *)Table->cellWidget( row-1, 7 );
-    gainindex = gb->value();
-    QCheckBox *cvb = (QCheckBox *)Table->cellWidget( row-1, 8 );
-    center = cvb->isChecked();
+  getRow( selection.front().topRow(), name, nameinx, device, channel,
+	  reference, samplerate, scale, unit, gainindex, center );
+  if ( nameinx == 0 ) {
+    nameinx = 1;
+    // check for name doublets:
+    for ( int j=0; j<Table->rowCount(); j++ ) {
+      string rowname = Table->item( j, 0 )->text().toStdString();
+      if ( name+Str( nameinx ) == rowname ) {
+	int k=0;
+	for ( k=(int)rowname.length()-1; k>=0 && isdigit( rowname[k] ); k-- );
+	nameinx = (int)::round( Str( rowname.substr( k+1 ) ).number( 0.0 ) ) + 1;
+	j=0;
+      }
+    }
+    Table->item( selection.front().topRow(), 0 )->setText( string( name+Str( nameinx ) ).c_str() );
   }
-  for ( int i=0; i<n; i++ ) {
-    fillRow( row+i, name+Str( nameinx ), device, channel, reference, samplerate, scale, unit, gainindex, center );
+  else
+    nameinx++;
+  channel++;
+  string prevdevice = device;
+
+  for ( int row=selection.front().topRow()+1; row<=selection.front().bottomRow(); row++ ) {
+    // name:
+    if ( selection.front().leftColumn() <= 0 && selection.front().rightColumn() >= 0 ) {
+      // check for name doublets:
+      for ( int j=0; j<Table->rowCount(); j++ ) {
+	if ( j < row || j > selection.front().bottomRow() ) {
+	  string rowname = Table->item( j, 0 )->text().toStdString();
+	  if ( name+Str( nameinx ) == rowname ) {
+	    int k=0;
+	    for ( k=(int)rowname.length()-1; k>=0 && isdigit( rowname[k] ); k-- );
+	    nameinx = (int)::round( Str( rowname.substr( k+1 ) ).number( 0.0 ) ) + 1;
+	    j=0;
+	  }
+	}
+      }
+      Table->item( row, 0 )->setText( string( name+Str( nameinx ) ).c_str() );
+    }
+    // device:
+    if ( selection.front().leftColumn() <= 1 && selection.front().rightColumn() >= 1 )
+      Table->item( row, 1 )->setText( device.c_str() );
+    string rowdevice = Table->item( row, 1 )->text().toStdString();
+    // channel:
+    if ( rowdevice != prevdevice )
+      channel = 0;
+    if ( selection.front().leftColumn() <= 2 && selection.front().rightColumn() >= 2 ) {
+      // check for channel doublets:
+      for ( int j=0; j<Table->rowCount(); j++ ) {
+	if ( j < row || j > selection.front().bottomRow() ) {
+	  string rdevice = Table->item( j, 1 )->text().toStdString();
+	  QSpinBox *cb = (QSpinBox *)Table->cellWidget( j, 2 );
+	  int rchannel = cb->value();
+	  if ( rowdevice == rdevice && channel == rchannel ) {
+	    channel = rchannel+1;
+	    j=0;
+	  }
+	}
+      }
+      QSpinBox *cb = (QSpinBox *)Table->cellWidget( row, 2 );
+      cb->setValue( channel );
+    }
+    // reference:
+    if ( selection.front().leftColumn() <= 3 && selection.front().rightColumn() >= 3 ) {
+      QComboBox *rb = (QComboBox *)Table->cellWidget( row, 3 );
+      for ( int c=0; c < rb->count(); c++ ) {
+	if ( rb->itemText( c ).toStdString() == reference ) {
+	  rb->setCurrentIndex( c );
+	  break;
+	}
+      }
+    }
+    // sample rate:
+    if ( selection.front().leftColumn() <= 4 && selection.front().rightColumn() >= 4 ) {
+      DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( row, 4 );
+      srb->setValue( 0.001*samplerate );
+    }
+    // scale:
+    if ( selection.front().leftColumn() <= 5 && selection.front().rightColumn() >= 5 ) {
+      DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( row, 5 );
+      sb->setValue( scale );
+    }
+    // unit:
+    if ( selection.front().leftColumn() <= 6 && selection.front().rightColumn() >= 6 ) {
+      QComboBox *ub = (QComboBox *)Table->cellWidget( row, 6 );
+      bool found = false;
+      for ( int c=0; c < ub->count(); c++ ) {
+	if ( ub->itemText( c ).toStdString() == unit ) {
+	  ub->setCurrentIndex( c );
+	  found= true;
+	  break;
+	}
+      }
+      if ( ! found ) {
+	ub->insertItem( 0, unit.c_str() );
+	ub->setCurrentIndex( 0 );
+      }
+    }
+    // gain index:
+    if ( selection.front().leftColumn() <= 7 && selection.front().rightColumn() >= 7 ) {
+      QSpinBox *gb = (QSpinBox *)Table->cellWidget( row, 7 );
+      gb->setValue( gainindex );
+    }
+    // center:
+    if ( selection.front().leftColumn() <= 8 && selection.front().rightColumn() >= 8 ) {
+      QCheckBox *cvb = (QCheckBox *)Table->cellWidget( row, 8 );
+      cvb->setChecked( center );
+    }
+
     nameinx++;
     channel++;
+    prevdevice = rowdevice;
   }
-}
-
-
-void InputConfig::deleteRows( void )
-{
-  QList<QTableWidgetSelectionRange> selection = Table->selectedRanges();
-  if ( selection.empty() || selection.front().columnCount() < 9 )
-    return;
-
-  for ( int i=0; i<selection.front().rowCount(); i++ )
-    Table->removeRow( selection.front().topRow() );
 }
 
 
@@ -265,14 +458,14 @@ void InputConfig::dialogClosed( int rv )
   }
 
   // sampling rate:
-  QDoubleSpinBox *srb = (QDoubleSpinBox *)Table->cellWidget( 0, 4 );
+  DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( 0, 4 );
   Opts.setNumber( "inputsamplerate", 1000.0*srb->value() );
 
   // scale:
-  QDoubleSpinBox *sb = (QDoubleSpinBox *)Table->cellWidget( 0, 5 );
+  DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( 0, 5 );
   Parameter &sp = Opts.setNumber( "inputtracescale", sb->value() );
   for ( int r=1; r<Table->rowCount(); r++ ) {
-    sb = (QDoubleSpinBox *)Table->cellWidget( r, 5 );
+    sb = (DoubleSpinBox *)Table->cellWidget( r, 5 );
     sp.addNumber( sb->value() );
   }
 

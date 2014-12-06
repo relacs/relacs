@@ -1343,6 +1343,7 @@ void RELACSWidget::editInputTraces( void )
 {
   InputConfig *ic = new InputConfig( section( "input data" ), this );
   OptDialog *od = new OptDialog( false, this );
+  od->setCaption( "Analog input traces" );
   od->addWidget( ic );
   od->addButton( "&Ok", OptDialog::Accept, 2 );
   od->addButton( "&Apply", OptDialog::Accept, 1, false );

@@ -22,9 +22,7 @@
 #ifndef INPUTCONFIG_H
 #define INPUTCONFIG_H
  
-#include <QStringList>
 #include <QTableWidget>
-#include <QPushButton>
 #include <relacs/options.h>
 using namespace std;
 
@@ -50,9 +48,11 @@ public:
 public slots:
 
     /*! Insert a number of rows. */
-  void addRows( void );
-    /*! Delete selected rows. */
-  void deleteRows( void );
+  void insertRows( void );
+    /*! Erase selected rows. */
+  void eraseRows( void );
+    /*! Fill in selected cells. */
+  void fillCells( void );
     /*! Writes new settings to the input trace options and emit newInputSettings(). */
   void dialogClosed( int r );
  
@@ -70,10 +70,12 @@ private:
   void fillRow( int row, const string &name, const string &device, int channel,
 		const string &reference, double samplerate, double scale,
 		const string &unit, int gainindex, bool center );
+    /*! Get content of a row of the table. */
+  void getRow( int row, string &basename, int &nameinx, string &device, int &channel,
+	       string &reference, double &samplerate, double &scale,
+	       string &unit, int &gainindex, bool &center );
 
   QTableWidget *Table;
-  QPushButton *AddButton;
-  QPushButton *RemoveButton;
 
   Options &Opts;
 
