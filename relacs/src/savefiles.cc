@@ -21,6 +21,7 @@
 
 #include <cstdio>
 #include <QDir>
+#include <QHostInfo>
 #include <QDateTime>
 #include <QPainter>
 #include <QToolTip>
@@ -248,6 +249,7 @@ void SaveFiles::setPathTemplate( const string &path )
   fn.format( 99, 'n', 'd' );
   fn.format( "aa", 'a' );
   fn.format( "AA", 'A' );
+  fn.format( QHostInfo::localHostName().toStdString(), 'h' );
   SaveMutex.unlock();
 
   FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
@@ -1191,6 +1193,7 @@ string SaveFiles::pathName( void ) const
   pathname.format( s, 'a' );
   s.upper();
   pathname.format( s, 'A' );
+  pathname.format( QHostInfo::localHostName().toStdString(), 'h' );
   return pathname;
 }
 

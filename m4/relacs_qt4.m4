@@ -1,7 +1,7 @@
 # RELACS_LIB_QT4() 
 # - Provides --with-qt4(-(inc|lib))? options and performs header and link checks
 # - Fills QT4CORE_(LD|CPP)FLAGS and QT4CORE_LIBS with values for the QtCore library and marks them for substitution
-# - Fills QT4_(LD|CPP)FLAGS and QT4_LIBS with values for the QtCore and QtGui library and marks them for substitution
+# - Fills QT4_(LD|CPP)FLAGS and QT4_LIBS with values for the QtCore, QtGui, and QtNetwork library and marks them for substitution
 # - Fills MOC and marks it for substitution
 # - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 
@@ -25,24 +25,23 @@ if test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists QtGui ; then
     QT4CORE_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore`"
     QT4CORE_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore`"
     QT4CORE_LIBS="`${PKG_CONFIG} --libs-only-l QtCore`"
-    QT4_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore` `${PKG_CONFIG} --cflags QtGui`"
-    QT4_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore` `${PKG_CONFIG} --libs-only-L QtGui`"
-    QT4_LIBS="`${PKG_CONFIG} --libs-only-l QtCore` `${PKG_CONFIG} --libs-only-l QtGui`"
+    QT4_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore` `${PKG_CONFIG} --cflags QtGui` `${PKG_CONFIG} --cflags QtNetwork`"
+    QT4_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore` `${PKG_CONFIG} --libs-only-L QtGui` `${PKG_CONFIG} --libs-only-L QtNetwork`"
+    QT4_LIBS="`${PKG_CONFIG} --libs-only-l QtCore` `${PKG_CONFIG} --libs-only-l QtGui` `${PKG_CONFIG} --libs-only-l QtNetwork`"
 fi
 
 # default flags:
 if test "x${QT4CORE_CPPFLAGS}" = x ; then
     QT4CORE_CPPFLAGS="-DQT_SHARED -I/usr/include/qt4 -I/usr/include/qt4/QtCore"
-QtGui"
 fi
 if test "x${QT4_CPPFLAGS}" = x ; then
-    QT4_CPPFLAGS="-DQT_SHARED -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/fi
+    QT4_CPPFLAGS="-DQT_SHARED -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui -I/usr/include/qt4/QtNetwork"
 fi
 if test "x${QT4CORE_LIBS}" = x ; then
     QT4CORE_LIBS="-lQtCore"
 fi
 if test "x${QT4_LIBS}" = x ; then
-    QT4_LIBS="-lQtGui -lQtCore"
+    QT4_LIBS="-lQtGui -lQtNetwork -lQtCore"
 fi
 
 # read arguments:
@@ -53,7 +52,7 @@ AC_ARG_WITH([qt4],
 	[QT4_ERROR="no path given for option --with-qt4"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 	   	QT4CORE_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore"
-    		QT4_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore -I${withval}/include/qt4/QtGui"	
+    		QT4_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore -I${withval}/include/qt4/QtGui -I${withval}/include/qt4/QtNetwork"
 		QT4CORE_LDFLAGS="-L${withval}/lib"
 		QT4_LDFLAGS="-L${withval}/lib"
 		EXTRA_MOC_LOCATION="${withval}/bin"
@@ -67,7 +66,7 @@ AC_ARG_WITH([qt4-inc],
 	[QT4_INC_ERROR="no path given for option --with-qt4-inc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 	   	QT4CORE_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore"
-    		QT4_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore -I${withval}/QtGui"	
+    		QT4_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore -I${withval}/QtGui -I${withval}/QtCore -I${withval}/QtNetwork"	
 	else
 		AC_MSG_ERROR(${QT4_INC_ERROR})
 	fi],
@@ -117,6 +116,16 @@ You either need to
 - or provide the base path to the Qt4 installation:
   e.g. './configure --with-qt4=/usr/lib/qt4'."
 AC_CHECK_LIB(QtGui, main,, AC_MSG_ERROR(${QT4_LIB_MISSING}), ${QT4_LDFLAGS})
+
+QT4NETWORK_LIB_MISSING="cannot find the Qt4 network libraries!
+You either need to
+- install a Qt4 development package (e.g. libqt4-dev,
+  on a Debian-based system enter 'sudo apt-get install libqt4-dev'),
+- or provide the path to the Qt4 libraries:
+  e.g. './configure --with-qt4-lib=/usr/lib/qt4/lib'
+- or provide the base path to the Qt4 installation:
+  e.g. './configure --with-qt4=/usr/lib/qt4'."
+AC_CHECK_LIB(QtNetwork, main,, AC_MSG_ERROR(${QT4NETWORK_LIB_MISSING}), ${QT4_LDFLAGS})
 
 QT4_WRONG_VESION="Qt version 4.0 or higher is required, you have another version!
 You either need to
