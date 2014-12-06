@@ -15,6 +15,10 @@ AudioMonitor::AudioMonitor( void )
     AudioRate( 44100.0 ),
     AudioSize( 0 ),
     DataStartTime( 0.0 ),
+    DataRefTime( 0.0 ),
+    DataCurrentTime( 0.0 ),
+    DataPackageTime( 0.0 ),
+    DataMean( 0.0f ),
     LastOut( 0.0f )
 {
   setDate( "" );
@@ -139,6 +143,10 @@ void AudioMonitor::start( void )
   Trace = 0;
   AudioSize = 0;
   DataStartTime = 0.0;
+  DataRefTime = 0.0;
+  DataCurrentTime = 0.0;
+  DataPackageTime = 0.0;
+  DataMean = 0.0;
   LastOut = 0.0f;
 
 #ifdef HAVE_LIBPORTAUDIO
@@ -198,6 +206,10 @@ void AudioMonitor::start( void )
 #endif
 
   DataStartTime = Data[Trace].currentTime() - Data[Trace].interval( nbuffer );
+  DataRefTime = DataStartTime;
+  DataCurrentTime = Data[Trace].currentTime();
+  if ( Data[Trace].size() > 0 )
+    DataMean = Data[Trace].back();
 }
 
 
@@ -285,13 +297,16 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   data->Mutex.lock();
   const InData &trace = data->Data[data->Trace];
   float fac = data->Mute * data->Gain / trace.maxValue();
-  double rate = trace.sampleRate();
+  double rate = 1.0/trace.stepsize();
   int datasize = trace.size();
   int dataminsize = trace.minIndex();
   int index = datasize;
+  bool tuneaudiorate = ( trace.currentTime()-data->DataStartTime > 3.0 );
+
+  // write out data:
   unsigned long i=0;
   for( ; i<framesperbuffer; i++, data->AudioSize++ ) {
-    double time = data->AudioSize/data->AudioRate + data->DataStartTime;
+    double time = data->AudioSize/data->AudioRate + data->DataRefTime;
     index = trace.index( time );
     if ( index + 1 >= datasize )
       break;
@@ -300,16 +315,45 @@ int AudioMonitor::audioCallback( const void *input, void *output,
       double m = (trace[index+1]-trace[index])*rate;
       data->LastOut = (m*(time-trace.pos(index))+trace[index])*fac;
     }
-    *out++ = data->LastOut;
+    // subtract mean:
+    data->DataMean += ( data->LastOut - data->DataMean )*0.01;
+    *out++ = data->LastOut - data->DataMean;
   }
-  for( ; i<framesperbuffer; i++, data->AudioSize++ )
-    *out++ = data->LastOut;
 
-  // adjust rate to align the ends of the data buffers:
-  double newrate = data->AudioSize/(trace.currentTime()-data->DataStartTime);
-  data->AudioRate += ( newrate - data->AudioRate )*0.01;
-  data->DataStartTime = trace.pos( index+1 ) - data->AudioSize/data->AudioRate;
-  //  cerr << data->AudioRate << '\n';
+  // data mising (e.g. because of restart of analog input!):
+  if ( i < framesperbuffer ) {
+    // cerr << "Audio skipped - missed " << framesperbuffer - i << " data points\n";
+    data->AudioSize -= framesperbuffer - i;
+    // data->AudioSize -= framesperbuffer;
+    // data->AudioSize -= data->DataPackageTime*rate;
+    tuneaudiorate = false;
+  }
+  // fill up the audio buffer:
+  for( ; i<framesperbuffer; i++, data->AudioSize++ ) {
+    data->DataMean += ( data->LastOut - data->DataMean )*0.01;
+    *out++ = data->LastOut - data->DataMean;
+  }
+
+  // measure size increments of input data:
+  if ( trace.currentTime() > data->DataCurrentTime ) {
+    double packagetime = 1.5*(trace.currentTime() - data->DataCurrentTime);
+    if ( data->DataPackageTime == 0.0 )
+      data->DataPackageTime = packagetime;
+    else
+      data->DataPackageTime += ( packagetime - data->DataPackageTime )*0.01;
+  }
+  else
+    tuneaudiorate = false;
+
+  // adjust rate in order to align the ends of the data buffers:
+  if ( tuneaudiorate ) {
+    double newrate = data->AudioSize/(trace.currentTime()-data->DataStartTime-data->DataPackageTime);
+    data->AudioRate += ( newrate - data->AudioRate )*0.01;
+    data->DataRefTime = trace.pos( index+1 ) - data->AudioSize/data->AudioRate;
+    //    cerr << data->AudioRate << "  " << data->DataPackageTime << '\n';
+  }
+
+  data->DataCurrentTime = trace.currentTime();
 
   data->Mutex.unlock();
   return paContinue;

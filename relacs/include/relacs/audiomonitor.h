@@ -95,6 +95,10 @@ protected:
   double AudioRate;
   int AudioSize;
   double DataStartTime;
+  double DataRefTime;
+  double DataCurrentTime;
+  double DataPackageTime;
+  float DataMean;
   float LastOut;
 };
 

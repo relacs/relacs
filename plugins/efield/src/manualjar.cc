@@ -36,12 +36,12 @@ ManualJAR::ManualJAR( void )
 {
   // dialog:
   addNumber( "eodf", "Current EOD frequency", 0.0, 0.0, 10000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+4 );
-  addNumber( "deltaf", "Difference frequency", 0.0, -1000.0, 1000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2 );
-  addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV", "mV", "%.1f" ).setFlags( 2 );
+  addNumber( "deltaf", "Difference frequency", 0.0, -1000.0, 1000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+8 );
+  addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV", "mV", "%.1f" ).setFlags( 2+8 );
 
   // add some parameter as options:
   //  newSection( "Stimulation" );
-  addNumber( "duration", "Signal duration", 10.0, 0.0, 1000000.0, 1.0, "seconds" ).setFlags( 1+2 );
+  addNumber( "duration", "Signal duration", 10.0, 0.0, 1000000.0, 1.0, "seconds" ).setFlags( 1+2+8 );
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" ).setFlags( 1 );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" ).setFlags( 1 );
   //  newSection( "Analysis" );
@@ -50,7 +50,7 @@ ManualJAR::ManualJAR( void )
   addNumber( "averagetime", "Time for computing EOD frequency", 1.0, 0.0, 100000.0, 1.0, "seconds" ).setFlags( 1 );
   addBoolean( "split", "Save each run into a separate file", false ).setFlags( 1 );
   addBoolean( "savetraces", "Save traces during pause", false ).setFlags( 1 );
-  setConfigSelectMask( 1 );
+  setConfigSelectMask( 1+8 );
   setDialogSelectMask( 1 );
 
   // layout:
@@ -320,6 +320,8 @@ int ManualJAR::main( void )
 	  eodfrequency, eodamplitude, jarchirpevents, split, Count );
     Count++;
 
+    setToDefaults();
+
     setSaving( savetraces );
   }
 
@@ -472,6 +474,7 @@ void ManualJAR::customEvent( QEvent *qce )
   switch ( qce->type() - QEvent::User ) {
   case 11: {
     StartButton->setEnabled( true );
+    JW.updateValues();
     if ( JW.firstWidget() != 0 )
       JW.firstWidget()->setFocus( Qt::TabFocusReason );
     QFont nf( widget()->font() );
