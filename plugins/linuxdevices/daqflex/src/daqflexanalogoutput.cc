@@ -680,15 +680,19 @@ int DAQFlexAnalogOutput::reset( void )
 
   lock();
   DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
-  // clear underrun condition:
-  DAQFlexDevice->sendMessage( "AOSCAN:RESET" );
-  DAQFlexDevice->clearWrite();
-  DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
   unlock();
 
   stopWrite();
 
   lock();
+
+  // clear underrun condition:
+  DAQFlexDevice->sendMessage( "AOSCAN:RESET" );
+  // XXX the following blocks for quite a while at high rates! See DQFlexCore for more comments.
+  // what is about still ongoin analog input transfers ?
+  // We should only call this on an underrun condition!
+  DAQFlexDevice->clearWrite();
+  DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
 
   Sigs.clear();
   if ( Buffer != 0 )

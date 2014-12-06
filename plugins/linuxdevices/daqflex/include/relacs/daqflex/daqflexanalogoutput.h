@@ -34,6 +34,7 @@ namespace daqflex {
 \class DAQFlexAnalogOutput
 \author Jan Benda
 \brief [AnalogOutput] Interface for accessing analog output of a DAQFlex board from Measurement Computing.
+\bug reset() blocks for a long time at high analog input sampling rates!!!
 \bug Calibration is not yet implemented.
 \bug Analog output timing is not yet implemented for no-FIFO boards
 */

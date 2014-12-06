@@ -244,6 +244,16 @@ int ManualJAR::main( void )
     s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
     message( s );
 
+    // we need to get the signal time!
+    sleep( 0.2 );
+    if ( interrupt() ) {
+      writeZero( GlobalEField );
+      P.lock();
+      P.clear();
+      P.unlock();
+      return Aborted;
+    }
+
     // results:
     MapD eodfrequency;
     eodfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
@@ -254,13 +264,21 @@ int ManualJAR::main( void )
     const EventData &eodglobal = events( EODEvents );
     EventIterator eoditer = eodglobal.begin( signalTime() - before );
     for ( int k=0; k<10; k++ )
-      ++eoditer; // XXX
+      ++eoditer; // XXX minimum increment of one for later acces with frequency iterator!
 
     // plot:
     initPlot( deltaf, amplitude, duration, before, after, eodfrequency, jarchirpevents );
 
     // stimulation loop:
     do {
+      // get data:
+      for ( ; eoditer < eodglobal.end(); ++eoditer ) {
+	EventFrequencyIterator fiter = eoditer;
+	eodfrequency.push( fiter.time() - signalTime(), *fiter );
+	EventSizeIterator siter = eoditer;
+	eodamplitude.push( siter.time() - signalTime(), *siter );
+      }
+      P.draw();
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
       JW.updateValue( "eodf" );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
@@ -272,14 +290,6 @@ int ManualJAR::main( void )
 	P.unlock();
 	return Aborted;
       }
-      // get data:
-      for ( ; eoditer < eodglobal.end(); ++eoditer ) {
-	EventFrequencyIterator fiter = eoditer;
-	eodfrequency.push( fiter.time() - signalTime(), *fiter );
-	EventSizeIterator siter = eoditer;
-	eodamplitude.push( siter.time() - signalTime(), *siter );
-      }
-      P.draw();
     } while ( currentTime() - starttime < before + duration );
 
     starttime = currentTime();
@@ -287,6 +297,14 @@ int ManualJAR::main( void )
 
     // after stimulus recording loop:
     do {
+      // get data:
+      for ( ; eoditer < eodglobal.end(); ++eoditer ) {
+	EventFrequencyIterator fiter = eoditer;
+	eodfrequency.push( fiter.time() - signalTime(), *fiter );
+	EventSizeIterator siter = eoditer;
+	eodamplitude.push( siter.time() - signalTime(), *siter );
+      }
+      P.draw();
       setNumber( "eodf", events( EODEvents ).frequency( currentTime()-averagetime, currentTime() ) );
       JW.updateValue( "eodf" );
       QCoreApplication::postEvent( this, new ManualJAREvent( currentTime() - starttime ) );
@@ -298,18 +316,8 @@ int ManualJAR::main( void )
 	P.unlock();
 	return Aborted;
       }
-      // get data:
-      for ( ; eoditer < eodglobal.end(); ++eoditer ) {
-	EventFrequencyIterator fiter = eoditer;
-	eodfrequency.push( fiter.time() - signalTime(), *fiter );
-	EventSizeIterator siter = eoditer;
-	eodamplitude.push( siter.time() - signalTime(), *siter );
-      }
-      P.draw();
+    } while ( currentTime() - starttime < after + 0.2 );
 
-    } while ( currentTime() - starttime < after );
-
-    // analyze:
     // chirps:
     if ( ChirpEvents >= 0 )
       jarchirpevents.assign( events( ChirpEvents ),

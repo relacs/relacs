@@ -236,7 +236,7 @@ SAVEDLOG="no"
 
 # core dumps:
 if test "x$COREDUMP" = "xyes"; then
-  CF=$(ls -rtd core* | tail -n 1)
+  CF=$(ls -rtd core* 2> /dev/null | tail -n 1)
   if test -f "$CF"; then
     mkdir -p $COREDIR
     NCF=$COREDIR/core.$(date --iso-8601=sec)${CF#core}
