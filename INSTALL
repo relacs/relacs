@@ -1,7 +1,12 @@
 0. For the  unpatient, cd into the directory of the relacs source and
 paste the following into your shell:
 
-sudo apt-get -y install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen subversion
+# the currently needed packages for portaudio. We need version 19!
+sudo apt-get -y remove libjack-dev libportaudio-dev libportaudio0
+sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portaudio19-dev
+
+# the main stuff:
+sudo apt-get -y install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto subversion
 sudo make uninstall
 make clean
 ./bootstrap.sh
@@ -25,11 +30,30 @@ Here are the details:
    libcomedi-dev
    libusb-1.0.0-dev
    doxygen
+   xmlto
    subversion
 
 On Debian or Ubuntu based systems execute:
 
-sudo apt-get install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen subversion
+sudo apt-get install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto subversion
+
+For the audio monitor we need libportaudio version 19. 
+On ubuntu based systems you first need to remove
+
+libjack-dev 
+libportaudio-dev 
+libportaudio0
+
+and then install
+
+libjack-jackd2-dev
+libportaudio2
+libportaudiocpp0
+portaudio19-dev
+
+On Debian or Ubuntu based systems execute:
+sudo apt-get -y remove libjack-dev libportaudio-dev libportaudio0
+sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portaudio19-dev
 
 
 2. Change to the directory containing the relacs source code.
