@@ -172,6 +172,14 @@ int ManualJAR::main( void )
   P.draw();
   P.unlock();
 
+  // results:
+  MapD eodfrequency;
+  eodfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+  MapD eodamplitude;
+  eodamplitude.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+  EventData jarchirpevents;
+  jarchirpevents.reserve( 1000 );
+
   Start = false;
   double starttime = currentTime();
   keepFocus();
@@ -255,16 +263,12 @@ int ManualJAR::main( void )
     }
 
     // results:
-    MapD eodfrequency;
-    eodfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
-    MapD eodamplitude;
-    eodamplitude.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
-    EventData jarchirpevents;
-    jarchirpevents.reserve( 1000 );
+    eodfrequency.clear();
+    eodamplitude.clear();
+    jarchirpevents.clear();
     const EventData &eodglobal = events( EODEvents );
+    bool initeoditer = true;
     EventIterator eoditer = eodglobal.begin( signalTime() - before );
-    for ( int k=0; k<10; k++ )
-      ++eoditer; // XXX minimum increment of one for later acces with frequency iterator!
 
     // plot:
     initPlot( deltaf, amplitude, duration, before, after, eodfrequency, jarchirpevents );
@@ -272,6 +276,12 @@ int ManualJAR::main( void )
     // stimulation loop:
     do {
       // get data:
+      if ( initeoditer ) {
+	eoditer = eodglobal.begin( signalTime() - before );
+	for ( int j=0; eoditer < eodglobal.end() && j<10; ++eoditer, ++j );
+	if ( eoditer != eodglobal.end() )
+	  initeoditer =  false;
+      }
       for ( ; eoditer < eodglobal.end(); ++eoditer ) {
 	EventFrequencyIterator fiter = eoditer;
 	eodfrequency.push( fiter.time() - signalTime(), *fiter );
@@ -298,6 +308,12 @@ int ManualJAR::main( void )
     // after stimulus recording loop:
     do {
       // get data:
+      if ( initeoditer ) {
+	eoditer = eodglobal.begin( signalTime() - before );
+	for ( int j=0; eoditer < eodglobal.end() && j<10; ++eoditer, ++j );
+	if ( eoditer != eodglobal.end() )
+	  initeoditer =  false;
+      }
       for ( ; eoditer < eodglobal.end(); ++eoditer ) {
 	EventFrequencyIterator fiter = eoditer;
 	eodfrequency.push( fiter.time() - signalTime(), *fiter );

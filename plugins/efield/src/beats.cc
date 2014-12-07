@@ -173,6 +173,24 @@ int Beats::main( void )
   P.draw();
   P.unlock();
 
+  // results:
+  MapD eodfrequency;
+  eodfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+  MapD eodfrequencies[ FishEODTraces[0] ];
+  MapD eodamplitudes[ FishEODTraces[0] ];
+  EventData fishchirps;
+  fishchirps.reserve( (int)::rint( 100*duration ) );
+  EventData currentchirptimes;
+  currentchirptimes.reserve( chirptimes.size() );
+  EventData playedchirptimes;
+  playedchirptimes.reserve( chirptimes.size() );
+  for ( int k=0; k<FishEODTraces[0]; k++ ) {
+    eodfrequencies[k].reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+    eodamplitudes[k].reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+  }
+  MapD stimfrequency;
+  stimfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+
   RangeLoop dfrange( deltafrange );
   if ( chirpfrequencies.size() > 1 && (int)chirpfrequencies.size() != dfrange.size() ) {
     warning( "The number of chirp frequencies must match the number of delta f's!" );
@@ -185,27 +203,20 @@ int Beats::main( void )
     for ( dfrange.reset(); !dfrange && softStop() < 2; ++dfrange ) {
 
       // results:
-      MapD eodfrequency;
-      eodfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
+      eodfrequency.clear();
+      fishchirps.clear();
+      currentchirptimes.clear();
+      playedchirptimes.clear();
+      stimfrequency.clear();
       int eodinx[ FishEODTraces[0] ];
-      MapD eodfrequencies[ FishEODTraces[0] ];
-      MapD eodamplitudes[ FishEODTraces[0] ];
-      EventData fishchirps;
-      fishchirps.reserve( (int)::rint( 100*duration ) );
-      EventData currentchirptimes;
-      currentchirptimes.reserve( chirptimes.size() );
-      EventData playedchirptimes;
-      playedchirptimes.reserve( chirptimes.size() );
       EventIterator eoditer[FishEODTraces[0]];
       bool initeoditer[FishEODTraces[0]];
       for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	eodfrequencies[k].clear();
+	eodamplitudes[k].clear();
 	eodinx[k] = 0;
-	eodfrequencies[k].reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
-	eodamplitudes[k].reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
 	initeoditer[k] = true;
       }
-      MapD stimfrequency;
-      stimfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
       EventFrequencyIterator stimiter;
       bool initstimiter = true;
 

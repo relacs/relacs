@@ -12,6 +12,7 @@ AudioMonitor::AudioMonitor( void )
     AudioDevice( -1 ),
     Gain( 1.0 ),
     Mute( 1.0 ),
+    PrevMute( 0.0 ),
     AudioRate( 44100.0 ),
     AudioSize( 0 ),
     DataStartTime( 0.0 ),
@@ -43,6 +44,7 @@ void AudioMonitor::notify( void )
   Mutex.lock();
   int audiodevice = integer( "device" );
   Gain = number( "gain" );
+  PrevMute = Mute;
   Mute = boolean( "mute" ) ? 0.0f : 1.0f;
   bool enable = boolean( "enable" );
   bool initialized = Initialized;
@@ -255,19 +257,20 @@ void AudioMonitor::stop( void )
 bool AudioMonitor::mute( void )
 {
   Mutex.lock();
-  float mute = Mute;
+  PrevMute = Mute;
   Mute = 0.0f;
   bool cn = unsetNotify();
   setBoolean( "mute", true );
   setNotify( cn );
   Mutex.unlock();
-  return ( mute < 0.1 );
+  return ( PrevMute < 0.1 );
 }
 
 
 void AudioMonitor::unmute( void )
 {
   Mutex.lock();
+  PrevMute = Mute;
   Mute = 1.0f;
   bool cn = unsetNotify();
   setBoolean( "mute", false );
@@ -296,12 +299,14 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   float *out = (float*)output;
   data->Mutex.lock();
   const InData &trace = data->Data[data->Trace];
-  float fac = data->Mute * data->Gain / trace.maxValue();
+  float fac = data->Gain / trace.maxValue();
   double rate = 1.0/trace.stepsize();
   int datasize = trace.size();
   int dataminsize = trace.minIndex();
   int index = datasize;
   bool tuneaudiorate = ( trace.currentTime()-data->DataStartTime > 3.0 );
+  float mute = data->PrevMute;
+  float muteincr = (data->Mute - data->PrevMute)/(float)framesperbuffer;
 
   // write out data:
   unsigned long i=0;
@@ -316,8 +321,9 @@ int AudioMonitor::audioCallback( const void *input, void *output,
       data->LastOut = (m*(time-trace.pos(index))+trace[index])*fac;
     }
     // subtract mean:
+    mute += muteincr;
     data->DataMean += ( data->LastOut - data->DataMean )*0.01;
-    *out++ = data->LastOut - data->DataMean;
+    *out++ = mute * (data->LastOut - data->DataMean);
   }
 
   // data mising (e.g. because of restart of analog input!):
@@ -330,8 +336,9 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   }
   // fill up the audio buffer:
   for( ; i<framesperbuffer; i++, data->AudioSize++ ) {
+    mute += muteincr;
     data->DataMean += ( data->LastOut - data->DataMean )*0.01;
-    *out++ = data->LastOut - data->DataMean;
+    *out++ = mute * (data->LastOut - data->DataMean);
   }
 
   // measure size increments of input data:
@@ -354,6 +361,7 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   }
 
   data->DataCurrentTime = trace.currentTime();
+  data->PrevMute = data->Mute;
 
   data->Mutex.unlock();
   return paContinue;

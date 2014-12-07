@@ -90,6 +90,7 @@ protected:
   int Trace;
   float Gain;
   float Mute;
+  float PrevMute;
   mutable QMutex Mutex;
 
   double AudioRate;
