@@ -304,6 +304,7 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   int datasize = trace.size();
   int dataminsize = trace.minIndex();
   int index = datasize;
+  float audiofilter = 1.0/data->AudioRate;
   bool tuneaudiorate = ( trace.currentTime()-data->DataStartTime > 3.0 );
   float mute = data->PrevMute;
   float muteincr = (data->Mute - data->PrevMute)/(float)framesperbuffer;
@@ -322,7 +323,7 @@ int AudioMonitor::audioCallback( const void *input, void *output,
     }
     // subtract mean:
     mute += muteincr;
-    data->DataMean += ( data->LastOut - data->DataMean )*0.01;
+    data->DataMean += ( data->LastOut - data->DataMean )*audiofilter;
     *out++ = mute * (data->LastOut - data->DataMean);
   }
 
@@ -337,7 +338,7 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   // fill up the audio buffer:
   for( ; i<framesperbuffer; i++, data->AudioSize++ ) {
     mute += muteincr;
-    data->DataMean += ( data->LastOut - data->DataMean )*0.01;
+    data->DataMean += ( data->LastOut - data->DataMean )*audiofilter;
     *out++ = mute * (data->LastOut - data->DataMean);
   }
 
