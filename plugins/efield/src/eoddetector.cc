@@ -143,7 +143,6 @@ void EODDetector::notify( void )
   Interpolation = index( "interpolation" );
   FitWin = number( "fitwin" );
   EDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() ); // XXX really needed?
 }
 
 

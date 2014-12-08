@@ -212,7 +212,6 @@ void IntraSpikeDetector::notify( void )
     AllSpikesHist = SampleDataD( 0.0, 200.0, SizeResolution );
   }
   SDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() );
 }
 
 
@@ -294,7 +293,6 @@ int IntraSpikeDetector::detect( const InData &data, EventData &outevents,
   Update.start();
 
   SDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() );
 
   // histogramms:
   D.goodEvents().sizeHist( currentTime() - HistoryTime, currentTime(), GoodSpikesHist );

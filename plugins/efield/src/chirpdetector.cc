@@ -125,7 +125,6 @@ void ChirpDetector::notify( void )
     setNumber( "threshold", Threshold );
   }
   CDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() ); // XXX really needed?
 }
 
 

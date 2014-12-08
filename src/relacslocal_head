@@ -55,7 +55,7 @@ VALGRINDERARGS=""
 EMAILADDRESS=""
 
 # Core dumps?
-COREDUMP="yes"
+COREDUMP="no"
 COREDIR="coredumps"
 COREMAILSUBJ="RELACS coredump"
 

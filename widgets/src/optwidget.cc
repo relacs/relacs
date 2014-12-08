@@ -926,7 +926,7 @@ void OptWidget::resetDefault( void )
 }
 
 
-void OptWidget::updateValue( const string &name )
+  void OptWidget::updateValue( const string &name )
 {
   if ( QThread::currentThread() != GUIThread )
     QCoreApplication::postEvent( this, new UpdateEvent( 1, name ) );
@@ -952,12 +952,14 @@ void OptWidget::updateValues( void )
 }
 
 
-void OptWidget::updateValues( int flag )
+void OptWidget::updateValues( int flag, bool delflags )
 {
   if ( Opt == 0 )
     return;
-  // save ChangedFlag:
+  // save flag:
   Opt->addFlags( UpdateFlag, flag );
+  if ( delflags )
+    Opt->delFlags( flag );
   if ( QThread::currentThread() != GUIThread )
     QCoreApplication::postEvent( this, new UpdateEvent( 3, UpdateFlag ) );
   else {
@@ -995,11 +997,13 @@ void OptWidget::updateSettings( void )
 }
 
 
-void OptWidget::updateSettings( int flag )
+void OptWidget::updateSettings( int flag, bool delflags )
 {
   if ( Opt == 0 )
     return;
   Opt->addFlags( UpdateFlag, flag );
+  if ( delflags )
+    Opt->delFlags( flag );
   if ( QThread::currentThread() != GUIThread )
     QCoreApplication::postEvent( this, new UpdateEvent( 6, UpdateFlag ) );
   else {

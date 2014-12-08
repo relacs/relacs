@@ -54,17 +54,16 @@ using namespace relacs;
 ...
 
 Options opt1;
-opt1.addLabel( "Timing" );
+opt1.newSection( "Timing" );
 opt1.addNumber( "duration", "Duration of Signal", 0.3527, 0.01, 1.0, 0.0001, "seconds", "ms" );
 opt1.addNumber( "pause", "Pause between Signals", 0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 );
 opt1.setNumber( "pause", 0.180 );
 opt1.addInteger( "repeats", "Repeats", 8, 0, 100 );
-opt1.addSeparator( "Settings" );
+opt1.newSection( "Settings" );
 opt1.addText( "color", "Color", "red,green,blue");
 opt1.addText( "comment", "Comments", "no comment" );
 
 Options opt2;
-opt2.addSeparator();
 opt2.addBoolean( "sinewave", "Use Sine Wave", false );
 opt2.addBoolean( "loop", "Loop", true, 1 );
 
@@ -72,8 +71,8 @@ opt2.addBoolean( "loop", "Loop", true, 1 );
 
 OptDialog d( this );
 d.setCaption( "Example Dialog" );
-d.addOptions( opt1, 0, 1 );
-d.addOptions( opt2 );
+d.addOptions( &opt1, 0, 1 );
+d.addOptions( &opt2 );
 d.setVerticalSpacing( 4 );
 d.setMargins( 10 );
 d.addButton( "&Ok", OptDialog::Accept, 1 );

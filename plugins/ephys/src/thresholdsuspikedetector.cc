@@ -286,7 +286,6 @@ void ThresholdSUSpikeDetector::notify( void )
     SDW.updateSettings();
   }
   SDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() );
 }
 
 
@@ -327,7 +326,6 @@ void ThresholdSUSpikeDetector::autoConfigure( void )
   setNumber( "threshold", Threshold, Unit );
   setNotify();
   SDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() );
 }
 
 
@@ -448,7 +446,6 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   Update.start();
 
   SDW.updateValues( OptWidget::changedFlag() );
-  delFlags( OptWidget::changedFlag() );
 
   // snippets:
   int nsnippets = (int)( ::ceil( outevents.meanRate() * SnippetsTime ) );

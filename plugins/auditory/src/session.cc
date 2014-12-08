@@ -323,7 +323,7 @@ void Session::notifyMetaData( void )
 
 void Session::notifyStimulusData( void )
 {
-  SW->updateValues( OptWidget::changedFlag() );
+  SW->updateValues( OptWidget::changedFlag(), false );
 }
 
 

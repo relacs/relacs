@@ -172,15 +172,15 @@ void Session::sessionStopped( bool saved )
 void Session::notifyMetaData( void )
 {
   metaData().section( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
-  CW->updateValues( OptWidget::changedFlag() );
+  CW->updateValues( OptWidget::changedFlag(), false );
 }
 
 
 void Session::notifyStimulusData( void )
 {
-  SW1->updateValues( OptWidget::changedFlag() );
-  SW2->updateValues( OptWidget::changedFlag() );
-  DW->updateValues( OptWidget::changedFlag() );
+  SW1->updateValues( OptWidget::changedFlag(), false );
+  SW2->updateValues( OptWidget::changedFlag(), false );
+  DW->updateValues( OptWidget::changedFlag(), false );
 }
 
 

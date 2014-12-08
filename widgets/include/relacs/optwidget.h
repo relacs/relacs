@@ -63,21 +63,21 @@ using namespace relacs;
 ...
 
 Options opt;
-opt.addLabel( "Timing" );
+opt.newSection( "Timing" );
 opt.addNumber( "duration", "Duration of Signal", 0.3527, 0.01, 1.0, 0.0001, "seconds", "ms" );
 opt.addNumber( "pause", "Pause between Signals", 0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 1 );
 opt.setNumber( "pause", 0.180 );
-opt.addSeparator( "Flow Control" );
+opt.newSection( "Flow Control" );
 opt.addInteger( "repeats", "Repeats", 8, 0, 100 );
 opt.addBoolean( "loop", "Loop", true );
-opt.addSeparator();
-opt.addText( "color", "Color", "red,green,blue");
+opt.newSection( "General" );
+opt.addText( "color", "Color", "red|green|blue");
 opt.addText( "comment", "Comments", "no comment" );
 
 ...
 
 OptWidget ow( this );
-ow.assign( opt, 0, 1 );
+ow.assign( &opt, 0, 1 );
 ow.setVerticalSpacing( 4 );
 ow.setMargins( 10 );
 
@@ -446,11 +446,12 @@ public slots:
   void updateValues( void );
     /*! Read out the values of all options that have \a flag set
         and update their input fields accordingly.
+	The flag is automatically removed from all options if \a delflags is set \c true.
 	If a mutex was provided it is locked while the options
 	are accessed.
 	In a multithreaded program this is usually after this function returns.
         \sa updateValue(), updateSettings(), setMutex() */
-  void updateValues( int flag );
+  void updateValues( int flag, bool delflags=true );
     /*! Read out the value, range, stepsize, and unit
         of the option with name \a name
         and update the input field accordingly.
@@ -469,11 +470,12 @@ public slots:
     /*! Read out the value, range, stepsize, and unit
         of all options that have \a flag set
 	and update their input fields accordingly.
+	The flag is automatically removed from all options if \a delflags is set \c true.
 	If a mutex was provided it is locked while the options
 	are accessed.
 	In a multithreaded program this is usually after this function returns.
         \sa updateValue(), updateValues(), setMutex() */
-  void updateSettings( int flag );
+  void updateSettings( int flag, bool delflags=true );
 
 
 signals:
