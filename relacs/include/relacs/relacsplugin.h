@@ -70,9 +70,9 @@ with setGain(), adjustGain(), adjust(), activateGains().
 Use these functions with care! Make sure that you do not interfere
 with other RELACS plugins.
 
-The current mode() of RELACS can be acquisition(), simulation(), or analysis().
-If the mode is changed, modeChanged() is called that you can reimplement
-according to your needs.
+The current mode() of RELACS can be acquisition(), simulation(),
+analysis(), or idle().  If the mode is changed, modeChanged() is
+called that you can reimplement according to your needs.
 
 Whenever a recording session is started or stopped,
 sessionStarted() or sessionStopped() are called, respectively.
@@ -245,7 +245,9 @@ public:
     /*! Copy the plugin's current Options to its settings(). */
   void setSettings( void );
 
-    /*! Called whenever the mode is changed. */
+    /*! Called whenever the acquisition mode is changed. 
+        The new mode() of RELACS can be acquisition(), simulation(), analysis(), or idle().
+	Reimplement this functions according to your needs. */
   virtual void modeChanged( void );
     /*! This function is called whenever some values of meta data have
         been changed.  Implement this function if the plugin needs to

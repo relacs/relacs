@@ -68,12 +68,6 @@ AmplifierControl::AmplifierControl( void )
 }
 
 
-AmplifierControl::~AmplifierControl( void )
-{
-  manualSelection();
-}
-
-
 void AmplifierControl::notify( void )
 {
   // initial mode:
@@ -270,6 +264,13 @@ void AmplifierControl::initDevices( void )
   else {
     widget()->hide();
   }
+}
+
+
+void AmplifierControl::modeChanged( void )
+{
+  if ( idle() )
+    manualSelection();
 }
 
 

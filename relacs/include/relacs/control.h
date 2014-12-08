@@ -41,7 +41,6 @@ class ControlThread;
 \class Control
 \brief Base class for widgets that control hardware or analyze data.
 \author Jan Benda
-\version 2.0
 
 A %Control widget can be used to control some hardware or analyze data
 independently and in parallel to the RePros.

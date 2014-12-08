@@ -104,13 +104,13 @@ class AmplifierControl : public Control, public ephys::Traces
 public:
 
   AmplifierControl( void );
-    /*! Destructor sets manual mode selection for the amplifier. */
-  ~AmplifierControl( void );
 
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void keyReleaseEvent( QKeyEvent *e );
   virtual void initDevices( void );
   virtual void notify( void );
+    /*! If idle() sets manual mode selection for the amplifier. */
+  virtual void modeChanged( void );
 
 
 public slots:
