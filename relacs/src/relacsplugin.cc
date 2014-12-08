@@ -1339,12 +1339,10 @@ void RELACSPlugin::unlockCurrentRePro( void )
 }
 
 
-bool RELACSPlugin::muteAudioMonitor( void )
+void RELACSPlugin::muteAudioMonitor( void )
 {
   if ( RW != 0 && RW->AM != 0 )
-    return RW->AM->mute();
-  else
-    return false;
+    RW->AM->mute();
 }
 
 

@@ -889,12 +889,6 @@ protected:
     /*! Unlock the current RePro. */ 
   void unlockCurrentRePro( void );
 
-    /*! Mute the audio monitor.
-        \return \c true if it was already muted. */
-  bool muteAudioMonitor( void );
-    /*! Unmute the audio monitor. */
-  void unmuteAudioMonitor( void );
-
     /*! Pointer to the main RELACSWidget. */
   RELACSWidget *RW;
 
@@ -948,6 +942,11 @@ public slots:
 
 
 protected slots:
+
+    /*! Mute the audio monitor. */
+  void muteAudioMonitor( void );
+    /*! Unmute the audio monitor. */
+  void unmuteAudioMonitor( void );
 
     /*! Called from warning(), info(), updateDeviceMenu().
         If you reimplement this event handler,

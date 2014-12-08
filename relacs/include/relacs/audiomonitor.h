@@ -56,9 +56,8 @@ public:
   void start( void );
   void stop( void );
 
-    /*! Mute the audio monitor.
-        \return \c true if it was already muted. */
-  bool mute( void );
+    /*! Mute the audio monitor. */
+  void mute( void );
     /*! unmute the audio monitor. */
   void unmute( void );
     /*! \return \c true if the audio monitor is muted. */
@@ -67,6 +66,7 @@ public:
   void assignTraces( const InList &il, deque<InList*> &data );
   void assignTraces( void );
   void updateDerivedTraces( void );
+
 
 protected:
 	
@@ -91,6 +91,7 @@ protected:
   float Gain;
   float Mute;
   float PrevMute;
+  int MuteCount;
   mutable QMutex Mutex;
 
   double AudioRate;

@@ -127,8 +127,6 @@ public slots:
   void doBuzz( void );
     /*! Stop buzzing the electrode. */
   void stopBuzz( void );
-    /*! Unmute the audio monitor after measuring the resistance or buzzing. */
-  void unmute( void );
 
     /*! Activate/deactivate bridge mode of the amplifier. */
   void activateBridgeMode( bool activate=true );
@@ -178,8 +176,6 @@ private:
   QDoubleSpinBox *SyncSpinBox;
   bool SyncPulseEnabled;
   double SyncPulseDuration;
-  bool Muted;
-  int MuteCount;
   bool DoBuzz;
 
 };

@@ -53,8 +53,6 @@ AmplifierControl::AmplifierControl( void )
   ResistanceCurrent = 1.0;
   BuzzPulse = 0.5;
   DoBuzz = false;
-  Muted = false;
-  MuteCount = 0;
 
   addSelection( "initmode", "Initial mode of the amplifier", "Bridge|Current-clamp|Voltage-clamp|Manual selection" );
   addNumber( "resistancecurrent", "The average current of the amplifier used for measuring electrode resistance", ResistanceCurrent, 0.0, 100000.0, 0.01, "nA" );
@@ -302,10 +300,8 @@ void AmplifierControl::startResistance( void )
       unlock();
       activateGains();
     }
-    if ( MuteCount == 0 )
-      Muted = muteAudioMonitor();
-    MuteCount++;
-    QTimer::singleShot( 20, this, SLOT( doResistance() ) );
+    muteAudioMonitor();
+    QTimer::singleShot( 50, this, SLOT( doResistance() ) );
   }
 }
 
@@ -348,7 +344,8 @@ void AmplifierControl::stopResistance( void )
       unlock();
       activateGains();
     }
-    QTimer::singleShot( 300, this, SLOT( unmute() ) );
+    QTimer::singleShot( 300, this, SLOT( unmuteAudioMonitor() ) );
+
     RMeasure = false;
   }
 }
@@ -358,10 +355,8 @@ void AmplifierControl::startBuzz( void )
 {
   if ( Ampl != 0 && ! DoBuzz ) {
     DoBuzz = true;
-    if ( MuteCount == 0 )
-      Muted = muteAudioMonitor();
-    MuteCount++;
-    QTimer::singleShot( 20, this, SLOT( doBuzz() ) );
+    muteAudioMonitor();
+    QTimer::singleShot( 100, this, SLOT( doBuzz() ) );
   }
 }
 
@@ -379,17 +374,9 @@ void AmplifierControl::stopBuzz( void )
 {
   if ( Ampl != 0 && DoBuzz ) {
     Ampl->stopBuzz();
-    QTimer::singleShot( 300, this, SLOT( unmute() ) );
+    QTimer::singleShot( 300, this, SLOT( unmuteAudioMonitor() ) );
     DoBuzz = false;
   }
-}
-
-
-void AmplifierControl::unmute( void )
-{
-  MuteCount--;
-  if ( MuteCount == 0 && ! Muted )
-    unmuteAudioMonitor();
 }
 
 

@@ -13,6 +13,7 @@ AudioMonitor::AudioMonitor( void )
     Gain( 1.0 ),
     Mute( 1.0 ),
     PrevMute( 0.0 ),
+    MuteCount( 0 ),
     AudioRate( 44100.0 ),
     AudioSize( 0 ),
     DataStartTime( 0.0 ),
@@ -46,6 +47,10 @@ void AudioMonitor::notify( void )
   Gain = number( "gain" );
   PrevMute = Mute;
   Mute = boolean( "mute" ) ? 0.0f : 1.0f;
+  if ( Mute > 0.1 )
+    MuteCount = 0;
+  else
+    MuteCount++;
   bool enable = boolean( "enable" );
   bool initialized = Initialized;
   Mutex.unlock();
@@ -150,6 +155,8 @@ void AudioMonitor::start( void )
   DataPackageTime = 0.0;
   DataMean = 0.0;
   LastOut = 0.0f;
+  if ( Mute < 0.1 )
+    PrevMute = 0.0;
 
 #ifdef HAVE_LIBPORTAUDIO
 
@@ -254,27 +261,33 @@ void AudioMonitor::stop( void )
 }
 
 
-bool AudioMonitor::mute( void )
+void AudioMonitor::mute( void )
 {
   Mutex.lock();
+  if ( Mute > 0.0 )
+    MuteCount = 0;
   PrevMute = Mute;
   Mute = 0.0f;
+  MuteCount++;
   bool cn = unsetNotify();
   setBoolean( "mute", true );
   setNotify( cn );
   Mutex.unlock();
-  return ( PrevMute < 0.1 );
 }
 
 
 void AudioMonitor::unmute( void )
 {
   Mutex.lock();
-  PrevMute = Mute;
-  Mute = 1.0f;
-  bool cn = unsetNotify();
-  setBoolean( "mute", false );
-  setNotify( cn );
+  MuteCount--;
+  if ( MuteCount <= 0 ) {
+    MuteCount = 0;
+    PrevMute = Mute;
+    Mute = 1.0f;
+    bool cn = unsetNotify();
+    setBoolean( "mute", false );
+    setNotify( cn );
+  }
   Mutex.unlock();
 }
 
