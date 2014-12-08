@@ -68,16 +68,18 @@ private:
   void fillTable( void );
     /*! Fill in a row of the table. */
   void fillRow( int row, const string &name, const string &device, int channel,
-		const string &reference, double samplerate, double scale,
-		const string &unit, int gainindex, bool center );
+		const string &reference, double samplerate, int gainindex,
+		double scale, const string &unit, bool center );
     /*! Get content of a row of the table. */
   void getRow( int row, string &basename, int &nameinx, string &device, int &channel,
-	       string &reference, double &samplerate, double &scale,
-	       string &unit, int &gainindex, bool &center );
+	       string &reference, double &samplerate, int &gainindex,
+	       double &scale, string &unit, bool &center );
 
   QTableWidget *Table;
 
   Options &Opts;
+
+  bool Processing;
 
 };
 

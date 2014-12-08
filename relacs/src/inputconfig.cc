@@ -31,6 +31,7 @@
 #include <QCheckBox>
 #include <QHeaderView>
 #include <QInputDialog>
+#include <QApplication>
 #include <relacs/indata.h>
 #include <relacs/doublespinbox.h>
 #include <relacs/inputconfig.h>
@@ -40,7 +41,8 @@ namespace relacs {
 
 InputConfig::InputConfig( Options &opts, QWidget *parent )
   : QWidget( parent ),
-    Opts( opts )
+    Opts( opts ),
+    Processing( false )
 {
   // the table for editing the traces:  
   Table = new QTableWidget( this );
@@ -79,7 +81,7 @@ void InputConfig::fillTable( void )
 {
   Table->setColumnCount( 9 );
   QStringList list;
-  list << "Name" << "Device" << "Channel" << "Reference" << "Sampling rate" << "Scale" << "Unit" << "Gain index" << "Center";
+  list << "Name" << "Device" << "Channel" << "Reference" << "Sampling rate" << "Gain index" << "Scale" << "Unit" << "Center";
   Table->setHorizontalHeaderLabels( list );
 
   int nid = Opts.size( "inputtraceid" );
@@ -87,28 +89,28 @@ void InputConfig::fillTable( void )
   for ( int k=0; k<nid; k++ ) {
     // read out settings:
     string traceid = Opts.text( "inputtraceid", k, "" );
+    string device = Opts.text( "inputtracedevice", k, "" );
+    int channel = Opts.integer( "inputtracechannel", k, 0 );
+    string reference = Opts.text( "inputtracereference", k, "ground" );
     double samplerate = Opts.number( "inputsamplerate", 1000.0 );
+    int gainindex = Opts.integer( "inputtracegain", k, -1 );
     double scale = Opts.number( "inputtracescale", k, 1.0 );
     if ( fabs( scale ) < 1e-8 )
       scale = 1.0;
     string unit = Opts.text( "inputtraceunit", k, "V" );
-    int channel = Opts.integer( "inputtracechannel", k, 0 );
-    string device = Opts.text( "inputtracedevice", k, "" );
     bool center = Opts.boolean( "inputtracecenter", k, false );
-    string reference = Opts.text( "inputtracereference", k, "ground" );
-    int gainindex = Opts.integer( "inputtracegain", k, -1 );
     if ( gainindex < 0 )
       gainindex = 0;
 
     // add settings to table:
-    fillRow( k, traceid, device, channel, reference, samplerate, scale, unit, gainindex, center );
+    fillRow( k, traceid, device, channel, reference, samplerate, gainindex, scale, unit, center );
   }
 }
 
 
 void InputConfig::fillRow( int row, const string &name, const string &device, int channel,
-			   const string &reference, double samplerate, double scale,
-			   const string &unit, int gainindex, bool center )
+			   const string &reference, double samplerate, int gainindex,
+			   double scale, const string &unit, bool center )
 {
   Table->setItem( row, 0, new QTableWidgetItem( name.c_str() ) );
   Table->setItem( row, 1, new QTableWidgetItem( device.c_str() ) );
@@ -135,11 +137,15 @@ void InputConfig::fillRow( int row, const string &name, const string &device, in
   sampleratebox->setValue( 0.001*samplerate );
   sampleratebox->setSuffix( " kHz" );
   Table->setCellWidget( row, 4, sampleratebox );
+  QSpinBox *gainbox = new QSpinBox;
+  gainbox->setRange( 0, 20 );
+  gainbox->setValue( gainindex );
+  Table->setCellWidget( row, 5, gainbox );
   DoubleSpinBox *scalebox = new DoubleSpinBox;
   scalebox->setFormat( "%g" );
   scalebox->setRange( 0.0, 1000000.0 );
   scalebox->setValue( scale );
-  Table->setCellWidget( row, 5, scalebox );
+  Table->setCellWidget( row, 6, scalebox );
   QComboBox *unitbox = new QComboBox;
   unitbox->setEditable( true );
   unitbox->addItem( unit.c_str() );
@@ -153,11 +159,7 @@ void InputConfig::fillRow( int row, const string &name, const string &device, in
   unitbox->addItem( "nA" );
   unitbox->addItem( "pA" );
   unitbox->addItem( "kA" );
-  Table->setCellWidget( row, 6, unitbox );
-  QSpinBox *gainbox = new QSpinBox;
-  gainbox->setRange( 0, 20 );
-  gainbox->setValue( gainindex );
-  Table->setCellWidget( row, 7, gainbox );
+  Table->setCellWidget( row, 7, unitbox );
   QCheckBox *centerbox = new QCheckBox;
   centerbox->setChecked( center );
   Table->setCellWidget( row, 8, centerbox );
@@ -165,8 +167,8 @@ void InputConfig::fillRow( int row, const string &name, const string &device, in
 
 
 void InputConfig::getRow( int row, string &basename, int &nameinx, string &device, int &channel,
-			  string &reference, double &samplerate, double &scale,
-			  string &unit, int &gainindex, bool &center )
+			  string &reference, double &samplerate, int &gainindex,
+			  double &scale, string &unit, bool &center )
 {
   basename = Table->item( row, 0 )->text().toStdString();
   int k=0;
@@ -184,12 +186,12 @@ void InputConfig::getRow( int row, string &basename, int &nameinx, string &devic
   reference = rb->currentText().toStdString();
   DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( row, 4 );
   samplerate = 1000.0*srb->value();
-  DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( row, 5 );
-  scale = sb->value();
-  QComboBox *ub = (QComboBox *)Table->cellWidget( row, 6 );
-  unit = ub->currentText().toStdString();
-  QSpinBox *gb = (QSpinBox *)Table->cellWidget( row, 7 );
+  QSpinBox *gb = (QSpinBox *)Table->cellWidget( row, 5 );
   gainindex = gb->value();
+  DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( row, 6 );
+  scale = sb->value();
+  QComboBox *ub = (QComboBox *)Table->cellWidget( row, 7 );
+  unit = ub->currentText().toStdString();
   QCheckBox *cvb = (QCheckBox *)Table->cellWidget( row, 8 );
   center = cvb->isChecked();
 }
@@ -197,10 +199,16 @@ void InputConfig::getRow( int row, string &basename, int &nameinx, string &devic
 
 void InputConfig::insertRows( void )
 {
+  if ( Processing )
+    return;
+  Processing = true;
+
   bool ok;
   int n = QInputDialog::getInteger( this, "Input trace configuration", "Add # rows:", 1, 0, 1024, 1, &ok );
-  if ( ! ok )
+  if ( ! ok ) {
+    Processing = false;
     return;
+  }
 
   QList<QTableWidgetSelectionRange> selection = Table->selectedRanges();
   int row = 0;
@@ -220,13 +228,13 @@ void InputConfig::insertRows( void )
   int channel = 0;
   string reference = InData::referenceStr( InData::RefGround );
   double samplerate = 20000.0;
+  int gainindex = 0;
   double scale = 1.0;
   string unit = "V";
-  int gainindex = 0;
   bool center = true;
   if ( row > 0 ) {
     getRow( row-1, name, nameinx, device, channel,
-	    reference, samplerate, scale, unit, gainindex, center );
+	    reference, samplerate, gainindex, scale, unit, center );
     if ( nameinx == 0 ) {
       nameinx = 1;
       // check for name doublets:
@@ -268,29 +276,45 @@ void InputConfig::insertRows( void )
     }
     // insert row:
     Table->insertRow( row+i );
-    fillRow( row+i, name+Str( nameinx ), device, channel, reference, samplerate, scale, unit, gainindex, center );
+    fillRow( row+i, name+Str( nameinx ), device, channel, reference, samplerate, gainindex, scale, unit, center );
     nameinx++;
     channel++;
   }
+
+  Processing = false;
 }
 
 
 void InputConfig::eraseRows( void )
 {
-  QList<QTableWidgetSelectionRange> selection = Table->selectedRanges();
-  if ( selection.empty() || selection.front().columnCount() < 9 )
+  if ( Processing )
     return;
+  Processing = true;
+
+  QList<QTableWidgetSelectionRange> selection = Table->selectedRanges();
+  if ( selection.empty() || selection.front().columnCount() < 9 ) {
+    Processing = false;
+    return;
+  }
 
   for ( int i=0; i<selection.front().rowCount(); i++ )
     Table->removeRow( selection.front().topRow() );
+
+  Processing = false;
 }
 
 
 void InputConfig::fillCells( void )
 {
-  QList<QTableWidgetSelectionRange> selection = Table->selectedRanges();
-  if ( selection.empty() || selection.front().rowCount() <= 1 || selection.front().columnCount() < 1 )
+  if ( Processing )
     return;
+  Processing = true;
+
+  QList<QTableWidgetSelectionRange> selection = Table->selectedRanges();
+  if ( selection.empty() || selection.front().rowCount() <= 1 || selection.front().columnCount() < 1 ){
+    Processing = false;
+    return;
+  }
 
   string name = "V-";
   int nameinx = 1;
@@ -298,12 +322,12 @@ void InputConfig::fillCells( void )
   int channel = 0;
   string reference = InData::referenceStr( InData::RefGround );
   double samplerate = 20000.0;
+  int gainindex = 0;
   double scale = 1.0;
   string unit = "V";
-  int gainindex = 0;
   bool center = true;
   getRow( selection.front().topRow(), name, nameinx, device, channel,
-	  reference, samplerate, scale, unit, gainindex, center );
+	  reference, samplerate, gainindex, scale, unit, center );
   if ( nameinx == 0 ) {
     nameinx = 1;
     // check for name doublets:
@@ -378,14 +402,19 @@ void InputConfig::fillCells( void )
       DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( row, 4 );
       srb->setValue( 0.001*samplerate );
     }
-    // scale:
+    // gain index:
     if ( selection.front().leftColumn() <= 5 && selection.front().rightColumn() >= 5 ) {
-      DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( row, 5 );
+      QSpinBox *gb = (QSpinBox *)Table->cellWidget( row, 5 );
+      gb->setValue( gainindex );
+    }
+    // scale:
+    if ( selection.front().leftColumn() <= 6 && selection.front().rightColumn() >= 6 ) {
+      DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( row, 6 );
       sb->setValue( scale );
     }
     // unit:
-    if ( selection.front().leftColumn() <= 6 && selection.front().rightColumn() >= 6 ) {
-      QComboBox *ub = (QComboBox *)Table->cellWidget( row, 6 );
+    if ( selection.front().leftColumn() <= 7 && selection.front().rightColumn() >= 7 ) {
+      QComboBox *ub = (QComboBox *)Table->cellWidget( row, 7 );
       bool found = false;
       for ( int c=0; c < ub->count(); c++ ) {
 	if ( ub->itemText( c ).toStdString() == unit ) {
@@ -399,11 +428,6 @@ void InputConfig::fillCells( void )
 	ub->setCurrentIndex( 0 );
       }
     }
-    // gain index:
-    if ( selection.front().leftColumn() <= 7 && selection.front().rightColumn() >= 7 ) {
-      QSpinBox *gb = (QSpinBox *)Table->cellWidget( row, 7 );
-      gb->setValue( gainindex );
-    }
     // center:
     if ( selection.front().leftColumn() <= 8 && selection.front().rightColumn() >= 8 ) {
       QCheckBox *cvb = (QCheckBox *)Table->cellWidget( row, 8 );
@@ -414,16 +438,25 @@ void InputConfig::fillCells( void )
     channel++;
     prevdevice = rowdevice;
   }
+
+  Processing = false;
 }
 
 
 void InputConfig::dialogClosed( int rv )
 {
+  if ( Processing )
+    return;
+  Processing = true;
+
   if ( rv < 1 || Table->rowCount() == 0 ) {
+    Processing = false;
     if ( rv != 1 )
       delete this;
     return;
   }
+
+  QApplication::setOverrideCursor( QCursor( Qt::WaitCursor ) );
 
   // trace name:
   QTableWidgetItem *item = Table->item( 0, 0 );
@@ -461,28 +494,28 @@ void InputConfig::dialogClosed( int rv )
   DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( 0, 4 );
   Opts.setNumber( "inputsamplerate", 1000.0*srb->value() );
 
+  // gain index:
+  QSpinBox *gb = (QSpinBox *)Table->cellWidget( 0, 5 );
+  Parameter &gp = Opts.setInteger( "inputtracegain", gb->value() );
+  for ( int r=1; r<Table->rowCount(); r++ ) {
+    gb = (QSpinBox *)Table->cellWidget( r, 5 );
+    gp.addInteger( gb->value() );
+  }
+
   // scale:
-  DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( 0, 5 );
+  DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( 0, 6 );
   Parameter &sp = Opts.setNumber( "inputtracescale", sb->value() );
   for ( int r=1; r<Table->rowCount(); r++ ) {
-    sb = (DoubleSpinBox *)Table->cellWidget( r, 5 );
+    sb = (DoubleSpinBox *)Table->cellWidget( r, 6 );
     sp.addNumber( sb->value() );
   }
 
   // unit:
-  QComboBox *ub = (QComboBox *)Table->cellWidget( 0, 6 );
+  QComboBox *ub = (QComboBox *)Table->cellWidget( 0, 7 );
   Parameter &up = Opts.setText( "inputtraceunit", ub->currentText().toStdString() );
   for ( int r=1; r<Table->rowCount(); r++ ) {
-    ub = (QComboBox *)Table->cellWidget( r, 6 );
+    ub = (QComboBox *)Table->cellWidget( r, 7 );
     up.addText( ub->currentText().toStdString() );
-  }
-
-  // gain index:
-  QSpinBox *gb = (QSpinBox *)Table->cellWidget( 0, 7 );
-  Parameter &gp = Opts.setInteger( "inputtracegain", gb->value() );
-  for ( int r=1; r<Table->rowCount(); r++ ) {
-    gb = (QSpinBox *)Table->cellWidget( r, 7 );
-    gp.addInteger( gb->value() );
   }
 
   // center:
@@ -494,6 +527,10 @@ void InputConfig::dialogClosed( int rv )
   }
 
   emit newInputSettings();
+
+  QApplication::restoreOverrideCursor();
+
+  Processing = false;
 
   if ( rv != 1 )
     delete this;
