@@ -32,18 +32,17 @@ namespace base {
 \class Pause
 \brief [RePro] Does nothing
 \author Jan Benda
-\version 1.2 (Oct 1, 2004)
+\version 1.4 (Dec 9, 2014)
 
-The Pause-RePro does not write any stimulus and terminates after \c
-repeats times \c duration ms.  If \c repeats is set to zero, the
+The Pause-RePro does not write any stimulus and terminates after 
+\c duration seconds.  If \c duration is set to zero, the
 %RePro keeps running infinitely. The %RePro can be interrupted any
 time by pressing the space key or starting a different %RePro. With
 the \c savedata option you can switch off saving of the raw data
 recorded during Pause.
 
 \par Options
-- \c duration=1000ms: Duration (\c number)
-- \c repeats=1: Repeats (\c integer)
+- \c duration=0s: Duration (\c number)
 - \c savedata=false: Save Data (\c boolean)
 
 \par Files
@@ -64,7 +63,6 @@ class Pause : public RePro
 public:
 
   Pause( void );
-  virtual ~Pause( void );
   virtual int main( void );
 
 };

@@ -26,17 +26,11 @@ namespace base {
 
 
 Pause::Pause( void )
-  : RePro( "Pause", "base", "Jan Benda", "1.2", "Oct 1, 2004" )
+  : RePro( "Pause", "base", "Jan Benda", "1.4", "Dec 9, 2014" )
 {
   // add some options:
-  addNumber( "duration", "Duration", 1.0, 0.01, 1000.0, 0.02, "sec", "ms" );
-  addInteger( "repeats", "Repeats", 1, 0, 10000, 2 ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "duration", "Duration", 0.0, 0.0, 1000000.0, 1.0, "sec" ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "savedata", "Save raw data", false );
-}
-
-
-Pause::~Pause( void )
-{
 }
 
 
@@ -44,7 +38,6 @@ int Pause::main( void )
 {
   // get options:
   double duration = number( "duration" );
-  int repeats = integer( "repeats" );
   bool savedata = boolean( "savedata" );
 
   // don't print repro message:
@@ -55,15 +48,16 @@ int Pause::main( void )
     noSaving();
 
   // plot trace:
-  tracePlotContinuous( duration );
+  tracePlotContinuous();
 
-  for ( int count=0;
-	( repeats <= 0 || count < repeats ) && softStop() == 0;
-	count++ ) {
-    sleepWait( duration );
+  double starttime = currentTime();
+
+  do {
+    sleepWait( 0.5 );
     if ( interrupt() )
       return Aborted;
-  }
+  }  while ( softStop() == 0 &&
+	     ( duration <= 0 || currentTime() - starttime < duration ) );
 
   return Completed;
 }

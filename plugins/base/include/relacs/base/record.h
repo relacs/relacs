@@ -32,10 +32,10 @@ namespace base {
 \class Record
 \brief [RePro] Simply records data
 \author Jan Benda
-\version 1.0 (Aug 13, 2012)
+\version 1.2 (Dec 9, 2014)
 
 The Record-%RePro simply records data without writing out any stimulus
-and terminates after \c repeats times \c duration ms. If \c repeats is
+and terminates after \c duration seconds. If \c duration is
 set to zero, the %RePro keeps recording infinitely. Recording can be
 interrupted any time by pressing the space key or starting a different
 %RePro.
@@ -44,8 +44,7 @@ Data are recorded into the raw-traces files of RELACS (trace-?.raw). If
 you want to have the data saved into ascii files use the SaveTraces %RePro.
 
 \par Options
-- \c duration=1000ms: Duration (\c number)
-- \c repeats=0: Repeats (\c integer)
+- \c duration=0s: Duration (\c number)
 
 \par Files
 No output files.
@@ -65,7 +64,6 @@ class Record : public RePro
 public:
 
   Record( void );
-  virtual ~Record( void );
   virtual int main( void );
 
 };

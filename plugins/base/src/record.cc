@@ -26,16 +26,10 @@ namespace base {
 
 
 Record::Record( void )
-  : RePro( "Record", "base", "Jan Benda", "1.0", "Aug 13, 2012" )
+  : RePro( "Record", "base", "Jan Benda", "1.2", "Dec 9, 2014" )
 {
   // add some options:
-  addNumber( "duration", "Duration", 1.0, 0.01, 1000.0, 0.02, "sec", "ms" );
-  addInteger( "repeats", "Repeats", 0, 0, 10000, 2 ).setStyle( OptWidget::SpecialInfinite );
-}
-
-
-Record::~Record( void )
-{
+  addNumber( "duration", "Duration", 0.0, 0.0, 1000000.0, 1.0, "sec" ).setStyle( OptWidget::SpecialInfinite );
 }
 
 
@@ -43,21 +37,21 @@ int Record::main( void )
 {
   // get options:
   double duration = number( "duration" );
-  int repeats = integer( "repeats" );
 
   // don't print repro message:
   noMessage();
 
   // plot trace:
-  tracePlotContinuous( duration );
+  tracePlotContinuous();
 
-  for ( int count=0;
-	( repeats <= 0 || count < repeats ) && softStop() == 0;
-	count++ ) {
-    sleepWait( duration );
+  double starttime = currentTime();
+
+  do {
+    sleepWait( 0.5 );
     if ( interrupt() )
       return Aborted;
-  }
+  }  while ( softStop() == 0 &&
+	     ( duration <= 0 || currentTime() - starttime < duration ) );
 
   return Completed;
 }

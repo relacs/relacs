@@ -30,12 +30,11 @@ namespace base {
 
 
 SaveTraces::SaveTraces( void )
-  : RePro( "SaveTraces", "base", "Jan Benda", "1.0", "Jan 17, 2013" )
+  : RePro( "SaveTraces", "base", "Jan Benda", "1.2", "Dec 9, 2014" )
 {
   // add some options:
   newSection( "General" );
-  addNumber( "duration", "Duration", 1.0, 0.01, 1000.0, 0.02, "sec", "ms" );
-  addInteger( "repeats", "Repeats", 0, 0, 10000, 2 ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "duration", "Duration", 0.0, 0.0, 1000000.0, 1.0, "sec" ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "savedata", "Save raw data", false );
   addBoolean( "split", "Save each run into a separate file", false );
 
@@ -117,7 +116,6 @@ int SaveTraces::main( void )
 {
   // get options:
   double duration = number( "duration" );
-  int repeats = integer( "repeats" );
   bool savedata = boolean( "savedata" );
   bool split = boolean( "split" );
 
@@ -129,11 +127,13 @@ int SaveTraces::main( void )
     noSaving();
 
   // plot trace:
-  tracePlotContinuous( duration );
+  tracePlotContinuous();
 
   // init fonts:
   QCoreApplication::postEvent( this,
 			       new SaveTracesEvent( split ? completeRuns()+1 : -1 ) );
+
+  double starttime = currentTime();
 
   // header for files:
   Options header;
@@ -177,7 +177,6 @@ int SaveTraces::main( void )
   deque<int> eventsnum;
   deque<ofstream*> eventsfile;
   deque<int> eventsindex;
-  double eventstime = currentTime();
   deque<TableKey> eventskey;
   for ( int k=0; k<events().size(); k++ ) {
     if ( boolean( "events-" + events()[k].ident() ) ) {
@@ -209,13 +208,9 @@ int SaveTraces::main( void )
   }
 
   // run:
-  for ( int count=0;
-	( repeats <= 0 || count < repeats ) &&
-	  softStop() == 0 &&
-	  ! interrupt();
-	count++ ) {
+  do {
 
-    sleep( duration );
+    sleep( 0.5 );
 
     // save data:
     for ( unsigned int k=0; k<tracefile.size(); k++ ) {
@@ -232,7 +227,7 @@ int SaveTraces::main( void )
     for ( unsigned int k=0; k<eventsfile.size(); k++ ) {
       while ( eventsindex[k] < events()[eventsnum[k]].size() ) {
 	eventskey[k].save( *eventsfile[k],
-			   events()[eventsnum[k]][eventsindex[k]] - eventstime,
+			   events()[eventsnum[k]][eventsindex[k]] - starttime,
 			   0 );
 	if ( events()[eventsnum[k]].sizeBuffer() )
 	  eventskey[k].save( *eventsfile[k],
@@ -249,8 +244,11 @@ int SaveTraces::main( void )
 
     // update time:
     QCoreApplication::postEvent( this, new SaveTracesEvent( currentTime() -
-							    eventstime ) );
-  }
+							    starttime ) );
+
+
+  }  while ( softStop() == 0 && ! interrupt() &&
+	     ( duration <= 0 || currentTime() - starttime < duration ) );
 
   // close files:
   for ( unsigned int k=0; k<tracefile.size(); k++ ) {

@@ -33,22 +33,20 @@ namespace base {
 \class SaveTraces
 \brief [RePro] Saves data from selected input traces or events for each run into files
 \author Jan Benda
-\version 1.0 (Jan 17, 2013)
+\version 1.2 (Dec 9, 2014)
 
 The SaveTraces-%RePro records ascii-data without writing out any stimulus
-and terminates after \c repeats times \c duration seconds. If \c repeats is
+and terminates after \c duration seconds. If \c duration is
 set to zero, the %RePro keeps recording infinitely. Recording can be
 interrupted any time by pressing the space key or starting a different
 %RePro.
 
 Data are recorded into ascii files. In addition, if \a savedata is set \c true,
-data are also saved into the raw-traces files of RELACS (trace-?.raw). For only storing data
-into the RELACS raw-traces files, use the Record %RePro.
+data are also saved into the raw-traces files of RELACS (trace-?.raw). For only storing data into the RELACS raw-traces files, use the Record %RePro.
 
 \par Options
 - \c General
-    - \c duration=1000ms: Duration (\c number)
-    - \c repeats=0: Repeats (\c integer)
+    - \c duration=0s: Duration (\c number)
     - \c savedata=false: Save raw data (\c boolean)
     - \c split=false: Save each run into a separate file (\c boolean)
 - \c Analog input traces

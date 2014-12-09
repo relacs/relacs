@@ -61,7 +61,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   connect( &P, SIGNAL( resizePlots( QResizeEvent* ) ),
 	   this, SLOT( resizePlots( QResizeEvent* ) ) );
 
-  TimeWindow = 0.1;
+  TimeWindow = 1.0;
   TimeOffs = 0.0;
   Offset = 0.0;
 
