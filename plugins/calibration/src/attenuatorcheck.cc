@@ -113,7 +113,7 @@ int AttenuatorCheck::main( void )
   if ( type == 1 )
     signal.pulseWave( duration, -1.0, amplitude, 0.0 );
   else
-    signal.sineWave( duration, -1.0, frequency, 1.0 );
+    signal.sineWave( duration, -1.0, frequency, 0.0, 1.0 );
 
   // input gain setting:
   int orggain = trace( intrace ).gainIndex();

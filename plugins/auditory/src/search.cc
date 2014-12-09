@@ -256,7 +256,7 @@ int Search::main( void )
 	  meanintensity = 10.458; // stdev = 0.3
 	}
 	else {
-	  signal.sineWave( Duration, -1.0, Frequency, 1.0, ramp );
+	  signal.sineWave( Duration, -1.0, Frequency, 0.0, 1.0, ramp );
 	  meanintensity = 3.0103;
 	}
       }

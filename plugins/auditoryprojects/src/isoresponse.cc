@@ -155,11 +155,11 @@ void IsoResponse::createSignal( OutData &signal, double a1, double a2 )
   OutData sin1;
   sin1.setTrace( Speaker[ Side ] );
   double n1 = a1/(a1+a2);
-  sin1.sineWave( Duration, 1.0/2.0e5, Frequency1, n1 );
+  sin1.sineWave( Duration, 1.0/2.0e5, Frequency1, 0.0, n1 );
   OutData sin2;
   double n2 = a2/(a1+a2);
   sin2.setTrace( Speaker[ Side ] );
-  sin2.sineWave( Duration, 1.0/2.0e5, Frequency2, n2 );
+  sin2.sineWave( Duration, 1.0/2.0e5, Frequency2, 0.0, n2 );
 
   signal.setTrace( Speaker[ Side ] );
   signal = sin1 + sin2;

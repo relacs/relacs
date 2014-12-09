@@ -733,33 +733,33 @@ class SampleData : public Array< T >
         element of the range. */
   SampleData< T > &identity( void );
 
-    /*! Returns sin(2*pi*f*x)
+    /*! Returns sin(2*pi*f*x+p)
         computed for each element \a x of the range \a r. */
-  friend SampleData<> sin( const LinearRange &r, double f );
-  friend SampleData<> sin( int n, double offset, double stepsize, double f );
-  friend SampleData<> sin( double l, double r, double stepsize, double f );
+  friend SampleData<> sin( const LinearRange &r, double f, double p );
+  friend SampleData<> sin( int n, double offset, double stepsize, double f, double p );
+  friend SampleData<> sin( double l, double r, double stepsize, double f, double p );
     /*! Initializes the range  with \a r 
-        and the array with sin(2*pi*f*x)
+        and the array with sin(2*pi*f*x+p)
         computed for each element \a x of the range \a r. */
-  SampleData< T > &sin( const LinearRange &r, double f );
-  SampleData< T > &sin( int n, double offset, double stepsize, double f )
-    { return sin( LinearRange( n, offset, stepsize ), f ); };
-  SampleData< T > &sin( double l,  double r, double stepsize, double f )
-    { return sin( LinearRange( l, r, stepsize ), f ); };
+  SampleData< T > &sin( const LinearRange &r, double f, double p=0.0 );
+  SampleData< T > &sin( int n, double offset, double stepsize, double f, double p=0.0 )
+  { return sin( LinearRange( n, offset, stepsize ), f, p ); };
+  SampleData< T > &sin( double l,  double r, double stepsize, double f, double p=0.0 )
+  { return sin( LinearRange( l, r, stepsize ), f, p ); };
 
-    /*! Returns cos(2*pi*f*x)
+    /*! Returns cos(2*pi*f*x+p)
         computed for each element \a x of the range \a r. */
-  friend SampleData<> cos( const LinearRange &r, double f );
-  friend SampleData<> cos( int n, double offset, double stepsize, double f );
-  friend SampleData<> cos( double l, double r, double stepsize, double f );
+  friend SampleData<> cos( const LinearRange &r, double f, double p );
+  friend SampleData<> cos( int n, double offset, double stepsize, double f, double p );
+  friend SampleData<> cos( double l, double r, double stepsize, double f, double p );
     /*! Initializes the range  with \a r 
         and the array with cos(2*pi*f*x)
         computed for each element \a x of the range \a r. */
-  SampleData< T > &cos( const LinearRange &r, double f );
-  SampleData< T > &cos( int n, double offset, double stepsize, double f )
-    { return cos( LinearRange( n, offset, stepsize ), f ); };
-  SampleData< T > &cos( double l,  double r, double stepsize, double f )
-    { return cos( LinearRange( l, r, stepsize ), f ); };
+  SampleData< T > &cos( const LinearRange &r, double f, double p=0.0 );
+  SampleData< T > &cos( int n, double offset, double stepsize, double f, double p=0.0 )
+  { return cos( LinearRange( n, offset, stepsize ), f, p ); };
+  SampleData< T > &cos( double l,  double r, double stepsize, double f, double p=0.0 )
+  { return cos( LinearRange( l, r, stepsize ), f, p ); };
 
     /*! Returns a frequency sweep from \a startfreq f_1 to \a endfreq f_2,
         i.e. sin(2*pi*(f_1+0.5*(f_2-f_1)*x/r.length())*x),
@@ -1496,17 +1496,17 @@ private:
 typedef SampleData< double > SampleDataD;
 typedef SampleData< float > SampleDataF;
 
-  /*! Returns sin(2*pi*f*x)
+  /*! Returns sin(2*pi*f*x+p)
       computed for each element \a x of the range \a r. */
-SampleData<> sin( const LinearRange &r, double f );
-SampleData<> sin( int n, double offset, double stepsize, double f );
-SampleData<> sin( double l, double r, double stepsize, double f );
+SampleData<> sin( const LinearRange &r, double f, double p=0.0 );
+SampleData<> sin( int n, double offset, double stepsize, double f, double p=0.0 );
+SampleData<> sin( double l, double r, double stepsize, double f, double p=0.0 );
 
-  /*! Returns cos(2*pi*f*x)
+  /*! Returns cos(2*pi*f*x+p)
       computed for each element \a x of the range \a r. */
-SampleData<> cos( const LinearRange &r, double f );
-SampleData<> cos( int n, double offset, double stepsize, double f );
-SampleData<> cos( double l, double r, double stepsize, double f );
+SampleData<> cos( const LinearRange &r, double f, double p=0.0 );
+SampleData<> cos( int n, double offset, double stepsize, double f, double p=0.0 );
+SampleData<> cos( double l, double r, double stepsize, double f, double p=0.0 );
 
   /*! Returns a frequency sweep from \a startfreq f_1 to \a endfreq f_2,
       i.e. sin(2*pi*(f_1+0.5*(f_2-f_1)*x/r.length())*x),
@@ -2840,7 +2840,7 @@ SampleData< T > &SampleData< T >::identity( void )
 
 
 template < typename T >
-SampleData< T > &SampleData< T >::sin( const LinearRange &r, double f )
+SampleData< T > &SampleData< T >::sin( const LinearRange &r, double f, double p )
 {
   Samples = r;
   resize( r.size() );
@@ -2849,7 +2849,7 @@ SampleData< T > &SampleData< T >::sin( const LinearRange &r, double f )
   iterator end1 = end();
   ForwardIter2 iter2 = r.begin();
   while ( iter1 != end1 ) {
-    *iter1 = ::sin( 6.28318530717959*f*(*iter2) );
+    *iter1 = ::sin( 6.28318530717959*f*(*iter2) + p );
     ++iter1;
     ++iter2;
   }
@@ -2858,7 +2858,7 @@ SampleData< T > &SampleData< T >::sin( const LinearRange &r, double f )
 
 
 template < typename T >
-SampleData< T > &SampleData< T >::cos( const LinearRange &r, double f )
+SampleData< T > &SampleData< T >::cos( const LinearRange &r, double f, double p )
 {
   Samples = r;
   resize( r.size() );
@@ -2867,7 +2867,7 @@ SampleData< T > &SampleData< T >::cos( const LinearRange &r, double f )
   iterator end1 = end();
   ForwardIter2 iter2 = r.begin();
   while ( iter1 != end1 ) {
-    *iter1 = ::cos( 6.28318530717959*f*(*iter2) );
+    *iter1 = ::cos( 6.28318530717959*f*(*iter2) + p );
     ++iter1;
     ++iter2;
   }

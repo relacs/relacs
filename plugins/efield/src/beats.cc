@@ -384,7 +384,7 @@ int Beats::main( void )
 	  int n = (int)::rint( duration / p );
 	  if ( n < 1 )
 	    n = 1;
-	  sig.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
+	  sig.sineWave( n*p, -1.0, stimulusrate, 0.0, 1.0, ramp );
 	  sig.setIdent( "sinewave" );
 	  if ( LEDOutput[0] >= 0 )
 	    led.pulseWave( sig.length(), sig.stepsize(), 5.0, 0.0 );

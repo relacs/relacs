@@ -123,6 +123,10 @@ private:
   bool FreqAbs;
   double DeltaF;
   double Contrast;
+  double Ampl1;
+  double Phase1;
+  double Ampl2;
+  double Phase2;
   int Repeats;
   bool AM;
   bool SineWave;

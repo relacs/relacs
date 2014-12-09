@@ -60,6 +60,10 @@ SAM::SAM( void )
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
+  addNumber( "ampl1", "Relative amplitude of first harmonic", 0.0, 0.0, 10.0, 0.1 ).setActivation( "sinewave", "true" );
+  addNumber( "phase1", "Phase of first harmonic", 0.0, 0.0, 1.0, 0.01, "pi" ).setActivation( "sinewave", "true" ).addActivation( "ampl1", ">0" );
+  addNumber( "ampl2", "Relative amplitude of second harmonic", 0.0, 0.0, 10.0, 0.1 ).setActivation( "sinewave", "true" );
+  addNumber( "phase2", "Phase of second harmonic", 0.0, 0.0, 1.0, 0.01, "pi" ).addActivation( "sinewave", "true" ).setActivation( "ampl2", ">0" );
   newSection( "Analysis" );
   addNumber( "skip", "Skip", Skip, 0.0, 100.0, 0.1, "Periods" );
   addInteger( "ratebins", "Number of bins for firing rate", RateN, 2, 1000 );
@@ -146,9 +150,25 @@ int SAM::createSignal( const InData &data, const EventData &events )
       if ( n < 1 )
 	n = 1;
       Signal->sineWave( n/DeltaF, -1.0, DeltaF );
-      ident = "SAM";
-      IntensityGain = 1.0;
+      if ( Ampl1 > 0.0 ) {
+	OutData harmonics;
+	harmonics.setTrace( Signal->trace() );
+	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 2.0*DeltaF, Phase1, Ampl1 );
+	*Signal += harmonics;
+      }
+      if ( Ampl2 > 0.0 ) {
+	OutData harmonics;
+	harmonics.setTrace( Signal->trace() );
+	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 3.0*DeltaF, Phase2, Ampl2 );
+	*Signal += harmonics;
+      }
+      Signal->minmaximize();
+      float minval = 0.0;
+      float maxval = 0.0;
+      ::relacs::minMax( minval, maxval, *Signal );
+      IntensityGain = 2.0/(maxval-minval);
       TrueDeltaF = 1.0 / Signal->duration();
+      ident = "SAM";
     }
     else {
       warning( "Non-Sinewave as AM not supported yet!" );
@@ -165,8 +185,24 @@ int SAM::createSignal( const InData &data, const EventData &events )
       if ( n < 1 )
 	n = 1;
       Signal->sineWave( n*p, -1.0, stimulusrate );
+      if ( Ampl1 > 0.0 ) {
+	OutData harmonics;
+	harmonics.setTrace( Signal->trace() );
+	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 2.0*stimulusrate, Phase1, Ampl1 );
+	*Signal += harmonics;
+      }
+      if ( Ampl2 > 0.0 ) {
+	OutData harmonics;
+	harmonics.setTrace( Signal->trace() );
+	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 3.0*stimulusrate, Phase2, Ampl2 );
+	*Signal += harmonics;
+      }
+      Signal->minmaximize();
+      float minval = 0.0;
+      float maxval = 0.0;
+      ::relacs::minMax( minval, maxval, *Signal );
+      IntensityGain = 2.0/(maxval-minval);
       ident = "sinewave";
-      IntensityGain = 1.0;
     }
     else {
       // extract an EOD waveform:
@@ -174,7 +210,10 @@ int SAM::createSignal( const InData &data, const EventData &events )
       double t2 = events.back( 1 );
       data.copy( t1, t2, *Signal, "EOD" );
       Signal->maximize( 0.5 );
-      IntensityGain = 0.5*(Signal->maxValue() - Signal->minValue());
+      float minval = 0.0;
+      float maxval = 0.0;
+      ::relacs::minMax( minval, maxval, *Signal );
+      IntensityGain = 2.0/(maxval-minval);
       Signal->description().insertNumber( "Amplitude", "SamplingRate", IntensityGain, Signal->unit() );
       Signal->setSampleRate( data.sampleRate() * ( FishRate + DeltaF ) / FishRate );
       Signal->setCarrierFreq( FishRate + DeltaF );
@@ -204,6 +243,10 @@ int SAM::main( void )
   FreqAbs = ( index( "freqsel" ) == 1 );
   DeltaF = number( "deltaf" );
   Contrast = number( "contrast" );
+  Ampl1 = number( "ampl1" );
+  Phase1 = number( "phase1" ) * M_PI;
+  Ampl2 = number( "ampl2" );
+  Phase2 = number( "phase2" ) * M_PI;
   SineWave = boolean( "sinewave" );
   AM = boolean( "am" );
   Skip = number( "skip" );

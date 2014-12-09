@@ -95,7 +95,7 @@ int CapacityCompensation::main( void )
   double samplerate = intrace.sampleRate();
   OutData signal;
   signal.setTrace( outtrace );
-  signal.sineWave( duration, 1.0/samplerate, frequency, amplitude, 0.0 );
+  signal.sineWave( duration, 1.0/samplerate, frequency, 0.0, amplitude, 0.0 );
 
   // message:
   Str s = "Amplitude <b>" + Str( amplitude ) + " nA</b>";

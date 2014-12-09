@@ -357,7 +357,7 @@ int JAR::main( void )
 	    int n = (int)::rint( Duration / p );
 	    if ( n < 1 )
 	      n = 1;
-	    signal.sineWave( n*p, -1.0, StimulusRate, 1.0, Ramp );
+	    signal.sineWave( n*p, -1.0, StimulusRate, 0.0, 1.0, Ramp );
 	    signal.setIdent( "sinewave" );
 	    IntensityGain = 1.0;
 	  }

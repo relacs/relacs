@@ -144,45 +144,211 @@ const OutData &OutData::operator=( const OutData &od )
 }
 
 
-/* Used by macro OUTDATAOPS1SCALARDEF to generate
-   definitions for unary operators of class OutData 
+/* Used by macro OUTDATAASSIGNSCALARDEF to generate
+   definitions for unary assignment operators of class OutData 
    that take a scalar as argument. 
-   \a COPNAME is the operator name (like operator+= ),
-   \a COP is the operator (like += ), and
    \a SCALAR is the type of the scalar argument. */
-#define OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, SCALAR ) \
-  const OutData &OutData::COPNAME( SCALAR x )		\
+#define OUTDATAASSIGNSCALAR( SCALAR ) \
+  const OutData &OutData::operator=( SCALAR x )		\
   {									\
     iterator iter1 = begin();						\
     iterator end1 = end();						\
     while ( iter1 != end1 ) {						\
-      (*iter1) COP static_cast< value_type >( x );			\
+      (*iter1) = static_cast< value_type >( x );			\
       ++iter1;								\
     };									\
     return *this;							\
   }									\
 
 
-/* Generates definitions for unary operators of class OutData 
-   that take scalars as argument.
-   \a COPNAME is the operator name (like operator+= ), and
-   \a COP is the operator name (like += ). */
-#define OUTDATAOPS1SCALARDEF( COPNAME, COP ) \
-  OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, float ) \
-    OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, double ) \
-    OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, long double ) \
-    OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, signed char ) \
-    OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, unsigned char ) \
-    OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, signed int ) \
-    OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, unsigned int ) \
-    OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, signed long ) \
-    OUTDATAOPS1SINGLESCALARDEF( COPNAME, COP, unsigned long ) \
+/* Generates definitions for unary assignment operators of class OutData 
+   that take scalars as argument. */
+#define OUTDATAASSIGNSCALARDEF \
+  OUTDATAASSIGNSCALAR( float ) \
+    OUTDATAASSIGNSCALAR( double ) \
+    OUTDATAASSIGNSCALAR( long double ) \
+    OUTDATAASSIGNSCALAR( signed char ) \
+    OUTDATAASSIGNSCALAR( unsigned char ) \
+    OUTDATAASSIGNSCALAR( signed int ) \
+    OUTDATAASSIGNSCALAR( unsigned int ) \
+    OUTDATAASSIGNSCALAR( signed long ) \
+    OUTDATAASSIGNSCALAR( unsigned long ) \
 
 
-OUTDATAOPS1SCALARDEF( operator=, = )
+OUTDATAASSIGNSCALARDEF
 
-#undef OUTDATAOPS1SINGLESCALARDEF
-#undef OUTDATAOPS1SCALARDEF
+#undef OUTDATAASSIGNSCALAR
+#undef OUTDATAASSIGNSCALARDEF
+
+
+/* Used by macro OUTDATAADDSCALARDEF to generate
+   definitions for unary addition operators of class OutData 
+   that take a scalar as argument. 
+   \a SCALAR is the type of the scalar argument. */
+#define OUTDATAADDSCALAR( SCALAR ) \
+  const OutData &OutData::operator+=( SCALAR x )		\
+  {									\
+    iterator iter1 = begin();						\
+    iterator end1 = end();						\
+    while ( iter1 != end1 ) {						\
+      (*iter1) += static_cast< value_type >( x );			\
+      ++iter1;								\
+    };									\
+    return *this;							\
+  }									\
+
+
+/* Generates definitions for unary addition operators of class OutData 
+   that take scalars as argument. */
+#define OUTDATAADDSCALARDEF \
+  OUTDATAADDSCALAR( float ) \
+    OUTDATAADDSCALAR( double ) \
+    OUTDATAADDSCALAR( long double ) \
+    OUTDATAADDSCALAR( signed char ) \
+    OUTDATAADDSCALAR( unsigned char ) \
+    OUTDATAADDSCALAR( signed int ) \
+    OUTDATAADDSCALAR( unsigned int ) \
+    OUTDATAADDSCALAR( signed long ) \
+    OUTDATAADDSCALAR( unsigned long ) \
+
+
+OUTDATAADDSCALARDEF
+
+#undef OUTDATAADDSCALAR
+#undef OUTDATAADDSCALARDEF
+
+
+/* Used by macro OUTDATASUBTRACTSCALARDEF to generate
+   definitions for unary subtraction operators of class OutData 
+   that take a scalar as argument. 
+   \a SCALAR is the type of the scalar argument. */
+#define OUTDATASUBTRACTSCALAR( SCALAR ) \
+  const OutData &OutData::operator-=( SCALAR x )		\
+  {									\
+    iterator iter1 = begin();						\
+    iterator end1 = end();						\
+    while ( iter1 != end1 ) {						\
+      (*iter1) -= static_cast< value_type >( x );			\
+      ++iter1;								\
+    };									\
+    return *this;							\
+  }									\
+
+
+/* Generates definitions for unary subtraction operators of class OutData 
+   that take scalars as argument. */
+#define OUTDATASUBTRACTSCALARDEF \
+  OUTDATASUBTRACTSCALAR( float ) \
+    OUTDATASUBTRACTSCALAR( double ) \
+    OUTDATASUBTRACTSCALAR( long double ) \
+    OUTDATASUBTRACTSCALAR( signed char ) \
+    OUTDATASUBTRACTSCALAR( unsigned char ) \
+    OUTDATASUBTRACTSCALAR( signed int ) \
+    OUTDATASUBTRACTSCALAR( unsigned int ) \
+    OUTDATASUBTRACTSCALAR( signed long ) \
+    OUTDATASUBTRACTSCALAR( unsigned long ) \
+
+
+OUTDATASUBTRACTSCALARDEF
+
+#undef OUTDATASUBTRACTSCALAR
+#undef OUTDATASUBTRACTSCALARDEF
+
+
+/* Used by macro OUTDATAMULTIPLYSCALARDEF to generate
+   definitions for unary multiplication operators of class OutData 
+   that take a scalar as argument. 
+   \a SCALAR is the type of the scalar argument. */
+#define OUTDATAMULTIPLYSCALAR( SCALAR ) \
+  const OutData &OutData::operator*=( SCALAR x )		\
+  {									\
+    iterator iter1 = begin();						\
+    iterator end1 = end();						\
+    while ( iter1 != end1 ) {						\
+      (*iter1) *= static_cast< value_type >( x );			\
+      ++iter1;								\
+    };									\
+    return *this;							\
+  }									\
+
+
+/* Generates definitions for unary multiplication operators of class OutData 
+   that take scalars as argument. */
+#define OUTDATAMULTIPLYSCALARDEF \
+    OUTDATAMULTIPLYSCALAR( float ) \
+    OUTDATAMULTIPLYSCALAR( double ) \
+    OUTDATAMULTIPLYSCALAR( long double ) \
+    OUTDATAMULTIPLYSCALAR( signed char ) \
+    OUTDATAMULTIPLYSCALAR( unsigned char ) \
+    OUTDATAMULTIPLYSCALAR( signed int ) \
+    OUTDATAMULTIPLYSCALAR( unsigned int ) \
+    OUTDATAMULTIPLYSCALAR( signed long ) \
+    OUTDATAMULTIPLYSCALAR( unsigned long ) \
+
+
+OUTDATAMULTIPLYSCALARDEF
+
+#undef OUTDATAMULTIPLYSCALAR
+#undef OUTDATAMULTIPLYSCALARDEF
+
+
+/* Used by macro OUTDATADIVIDESCALARDEF to generate
+   definitions for unary division operators of class OutData 
+   that take a scalar as argument. 
+   \a SCALAR is the type of the scalar argument. */
+#define OUTDATADIVIDESCALAR( SCALAR ) \
+  const OutData &OutData::operator/=( SCALAR x )		\
+  {									\
+    iterator iter1 = begin();						\
+    iterator end1 = end();						\
+    while ( iter1 != end1 ) {						\
+      (*iter1) /= static_cast< value_type >( x );			\
+      ++iter1;								\
+    };									\
+    return *this;							\
+  }									\
+
+
+/* Generates definitions for unary division operators of class OutData 
+   that take scalars as argument. */
+#define OUTDATADIVIDESCALARDEF \
+    OUTDATADIVIDESCALAR( float ) \
+    OUTDATADIVIDESCALAR( double ) \
+    OUTDATADIVIDESCALAR( long double ) \
+    OUTDATADIVIDESCALAR( signed char ) \
+    OUTDATADIVIDESCALAR( unsigned char ) \
+    OUTDATADIVIDESCALAR( signed int ) \
+    OUTDATADIVIDESCALAR( unsigned int ) \
+    OUTDATADIVIDESCALAR( signed long ) \
+    OUTDATADIVIDESCALAR( unsigned long ) \
+
+
+OUTDATADIVIDESCALARDEF
+
+#undef OUTDATADIVIDESCALAR
+#undef OUTDATADIVIDESCALARDEF
+
+
+const OutData &OutData::operator+=( const OutData &od )
+{
+  if ( ::fabs( stepsize() - od.stepsize() ) > 1e-8 || 
+       size() != od.size() )
+    return *this;
+
+  iterator iter1 = begin();
+  iterator end1 = end();
+  const_iterator iter2 = od.begin();
+  const_iterator end2 = od.end();
+  while ( iter1 != end1 && iter2 != end2 ) {
+    (*iter1) += static_cast< value_type >( *iter2 );
+    ++iter1;
+    ++iter2;
+  };
+
+  Description.append( od.Description );
+
+  return *this;
+}
 
 
 OutData &OutData::assign( const OutData &od )
@@ -964,8 +1130,21 @@ OutData &OutData::load( const string &file, const string &filename )
 
 double OutData::maximize( double max )
 {
-  double maxval = ::relacs::max( *this );
-  double c = max/maxval;
+  float maxval = ::relacs::max( *this );
+  float c = max/maxval;
+  *this *= c;
+  return c;
+}
+
+
+double OutData::minmaximize( double max )
+{
+  float minval = 0.0;
+  float maxval = 0.0;
+  ::relacs::minMax( minval, maxval, *this );
+  if ( -minval > maxval )
+    maxval = -minval;
+  float c = max/maxval;
   *this *= c;
   return c;
 }
@@ -1128,13 +1307,14 @@ void OutData::rectangleWave( double duration, double stepsize,
 
 
 void OutData::sineWave( double duration, double stepsize,
-			double freq, double ampl, double r, const string &name )
+			double freq, double phase, double ampl,
+			double r, const string &name )
 {
   if ( fixedSampleRate() )
     stepsize = minSampleInterval();
   else if ( stepsize < minSampleInterval()  )
     stepsize = bestSampleInterval( freq );
-  sin( 0.0, duration, stepsize, freq );
+  sin( 0.0, duration, stepsize, freq, phase );
   if ( ampl != 1.0 )
     array() *= ampl;
   if ( r > 0.0 )
@@ -1148,7 +1328,7 @@ void OutData::sineWave( double duration, double stepsize,
   Description.addNumber( "Duration", duration, "s" );
   Description.addNumber( "Amplitude", ampl, unit() );
   Description.addNumber( "Frequency", freq, "Hz" );
-  Description.addNumber( "Phase", 0.0 );
+  Description.addNumber( "Phase", phase );
 
   setCarrierFreq( freq );
   clearError();

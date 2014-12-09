@@ -157,7 +157,7 @@ int CalibSpeakers::main( void )
   // stimulus:
   OutData signal;
   signal.setTraceName( outtrace );
-  signal.sineWave( duration, -1.0, frequency, 1.0, 0.001 );
+  signal.sineWave( duration, -1.0, frequency, 0.0, 1.0, 0.001 );
   signal.setError( OutData::Unknown );
 
   // try stimulus:
@@ -305,7 +305,7 @@ int CalibSpeakers::main( void )
 	  // stimulus:
 	  signal.free();
 	  signal.setTraceName( outtrace );
-	  signal.sineWave( duration, -1.0, frequency, 1.0, 0.001 );
+	  signal.sineWave( duration, -1.0, frequency, 0.0, 1.0, 0.001 );
 	  signal.ramp( 0.001 );
 	  signal.setDelay( 0.0 );
 	}

@@ -154,6 +154,18 @@ class OutData : public SampleData< float >, public DaqError
 
     /*! Set the value of each data element to \a val. */
   OUTDATAOPS1SCALARDEC( operator= );
+    /*! Add \a val to of each data element. */
+  OUTDATAOPS1SCALARDEC( operator+= );
+    /*! Subtract \a val to of each data element. */
+  OUTDATAOPS1SCALARDEC( operator-= );
+    /*! Multiply \a val to of each data element. */
+  OUTDATAOPS1SCALARDEC( operator*= );
+    /*! Divide each data element by \a val */
+  OUTDATAOPS1SCALARDEC( operator/= );
+
+    /*! Add the content and description of \a od to this
+        provided the sampling rates and the sizes are the same. */
+  const OutData &operator+=( const OutData &od );
 
     /*! Set the size() and capacity() of the OutData array to \a n,
         its content to \a a, and the stepsize to \a stepsize.
@@ -610,6 +622,11 @@ class OutData : public SampleData< float >, public DaqError
         element takes the value \a max.
         Returns the used multiplication factor. */
   double maximize( double max=1.0 );
+    /*! Multiplies each element of the signal
+        with some factor such that no value is greater than \a max
+	or smaller than - \a max.
+        Returns the used multiplication factor. */
+  double minmaximize( double max=1.0 );
 
     /*! Create a stimulus with description \a ident from the given amplitude 
         modulation \a am (in seconds) filled with a sine wave carrier
@@ -653,7 +670,8 @@ class OutData : public SampleData< float >, public DaqError
 		      double period, double width, double ramp, double ampl=1.0,
 		      const string &name="" );
     /*! Create a sine wave of constant amplitude \a ampl (1.0 = maximum amplitude)
-        with freqency \a freq Hz, \a duration seconds and ramps of \a ramp seconds length.
+        with freqency \a freq Hz, phase shift \a phase (in rad), \a duration seconds,
+	and ramps of \a ramp seconds length.
 	If fixedSampleRate() the \a stepsize is set to minSampleInterval().
 	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a freq ).
 	The carrier frequency of the signal is set to \a freq.
@@ -661,7 +679,7 @@ class OutData : public SampleData< float >, public DaqError
         \note specify an output trace using setTrace() or setTraceName()
 	before calling sineWave()! */
   void sineWave( double duration, double stepsize,
-		 double freq, double ampl=1.0, double ramp=0.0, 
+		 double freq, double phase=0.0, double ampl=1.0, double ramp=0.0, 
 		 const string &name="" );
     /*! Create Gaussian white noise with cut-off freqency \a cutofffreq in Hz,
         \a duration seconds, and ramps of \a ramp seconds length.

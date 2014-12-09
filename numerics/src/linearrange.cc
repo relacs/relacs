@@ -94,7 +94,7 @@ LinearRange::LinearRange( double r, double stepsize )
       Stepsize = 1;
   }
   else {
-    NSize = index( r ) + 1;
+    NSize = index( r );
   }
 }
 
@@ -113,7 +113,7 @@ LinearRange::LinearRange( double l, double r, double stepsize )
       Stepsize = 1.0;
   }
   else {
-    NSize = index( r ) + 1;
+    NSize = index( r );
   }
 }
 
@@ -203,7 +203,7 @@ const LinearRange &LinearRange::assign( double r, double stepsize )
       Stepsize = 1.0;
   }
   else {
-    NSize = index( r ) + 1;
+    NSize = index( r );
   }
   return *this;
 }
@@ -219,7 +219,7 @@ const LinearRange &LinearRange::assign( double l, double r, double stepsize )
       Stepsize = 1.0;
   }
   else {
-    NSize = index( r ) + 1;
+    NSize = index( r );
   }
   return *this;
 }

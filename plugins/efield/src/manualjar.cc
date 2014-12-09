@@ -225,7 +225,7 @@ int ManualJAR::main( void )
     int n = (int)::rint( duration / p );
     if ( n < 1 )
       n = 1;
-    signal.sineWave( n*p, -1.0, stimulusrate, 1.0, ramp );
+    signal.sineWave( n*p, -1.0, stimulusrate, 0.0, 1.0, ramp );
     signal.setIdent( "sinewave" );
     duration = signal.length();
     signal.setDelay( before );

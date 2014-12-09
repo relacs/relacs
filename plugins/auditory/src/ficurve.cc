@@ -333,7 +333,7 @@ int FICurve::main( void )
     MeanIntensity = 10.458; // stdev = 0.3
   }
   else {
-    Signal.sineWave( Duration, -1.0, CarrierFrequency, 1.0, Ramp );
+    Signal.sineWave( Duration, -1.0, CarrierFrequency, 0.0, 1.0, Ramp );
     MeanIntensity = 3.0103;
   }
   Signal.back() = 0;

@@ -28,7 +28,7 @@ template < typename T >
 const string SampleData<T>::RampStrings = "linear|square|sqrt|cosine";
 
 
-SampleData<> sin( const LinearRange &r, double f )
+SampleData<> sin( const LinearRange &r, double f, double p )
 {
   SampleData<> y( r );
   typedef SampleData<>::iterator ForwardIter1;
@@ -37,7 +37,7 @@ SampleData<> sin( const LinearRange &r, double f )
   ForwardIter1 end1 = y.end();
   ForwardIter2 iter2 = r.begin();
   while ( iter1 != end1 ) {
-    *iter1 = ::sin( 6.28318530717959*f*(*iter2) );
+    *iter1 = ::sin( 6.28318530717959*f*(*iter2) + p );
     ++iter1;
     ++iter2;
   }
@@ -45,19 +45,19 @@ SampleData<> sin( const LinearRange &r, double f )
 }
 
 
-SampleData<> sin( int n, double offset, double stepsize, double f )
+SampleData<> sin( int n, double offset, double stepsize, double f, double p )
 {
-  return sin( LinearRange( n, offset, stepsize ), f );
+  return sin( LinearRange( n, offset, stepsize ), f, p );
 }
 
 
-SampleData<> sin( double l, double r, double stepsize, double f )
+SampleData<> sin( double l, double r, double stepsize, double f, double p )
 {
-  return sin( LinearRange( l, r, stepsize ), f );
+  return sin( LinearRange( l, r, stepsize ), f, p );
 }
 
 
-SampleData<> cos( const LinearRange &r, double f )
+SampleData<> cos( const LinearRange &r, double f, double p )
 {
   SampleData<> y( r );
   typedef SampleData<>::iterator ForwardIter1;
@@ -66,7 +66,7 @@ SampleData<> cos( const LinearRange &r, double f )
   ForwardIter1 end1 = y.end();
   ForwardIter2 iter2 = r.begin();
   while ( iter1 != end1 ) {
-    *iter1 = ::cos( 6.28318530717959*f*(*iter2) );
+    *iter1 = ::cos( 6.28318530717959*f*(*iter2) + p );
     ++iter1;
     ++iter2;
   }
@@ -74,15 +74,15 @@ SampleData<> cos( const LinearRange &r, double f )
 }
 
 
-SampleData<> cos( int n, double offset, double stepsize, double f )
+SampleData<> cos( int n, double offset, double stepsize, double f, double p )
 {
-  return cos( LinearRange( n, offset, stepsize ), f );
+  return cos( LinearRange( n, offset, stepsize ), f, p );
 }
 
 
-SampleData<> cos( double l, double r, double stepsize, double f )
+SampleData<> cos( double l, double r, double stepsize, double f, double p )
 {
-  return cos( LinearRange( l, r, stepsize ), f );
+  return cos( LinearRange( l, r, stepsize ), f, p );
 }
 
 
