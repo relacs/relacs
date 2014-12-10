@@ -479,7 +479,7 @@ void readData( DataFile &sf )
     acol[k] = int( acols[k].number( -1.0 ) );
     if ( acol[k] <= 0 )
       amode[k] = 1;
-    unsigned int i = acols[k].rfind( '>' );
+    size_t i = acols[k].rfind( '>' );
     if ( i != string::npos )
       i++;
     else {

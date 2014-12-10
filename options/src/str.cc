@@ -1559,7 +1559,7 @@ int Str::format( double number, const string &type, const string &ftype,
       char pad = ' ';
       int np = readFormat( ps, width, precision, ft, pad );
       int n = np - ps;
-      size_t fi = type.find( ft );
+      size_type fi = type.find( ft );
       if ( fi != npos ) {
 	ft = fi < ftype.size() ? ftype[fi] : type[fi];
 	Str s = Str( number, width, precision, ft, pad );
@@ -4175,7 +4175,7 @@ Str Str::stripped( const string &space, const string &comment ) const
 
 Str Str::stripped( char space, const string &comment ) const
 {
-  size_type c;
+  size_type c = 0;
   if ( comment.size() == 0 )
     c = size();
   else {
@@ -4504,7 +4504,7 @@ int Str::findSeparator( int index, const string &separator,
 			const string &comment ) const
 {
   // maximum length of string:
-  size_type l;
+  size_type l = 0;
   if ( comment.size() == 0 )
     l = size(); 
   else {

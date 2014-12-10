@@ -238,6 +238,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
   if ( AM )
     s += ", AM";
   Signal->setIdent( s );
+  Signal->setDelay( Before );
   Signal->clearError();
   return 0;
 }

@@ -778,7 +778,7 @@ void readData( DataFile &sf )
   // set up additional parameter:
   vector<Parameter*> aparam;
   aparam.reserve( acols.size() );
-  vector<int> amode; 
+  vector<int> amode;
   amode.reserve( acols.size() ); // 0: column number, 1: column title, 2: meta data
   for ( unsigned int k=0; k<acols.size(); k++ ) {
     aparam.push_back( &statskey[acol[k]] );
@@ -786,7 +786,7 @@ void readData( DataFile &sf )
     acol[k] = int( acols[k].number( -1.0 ) );
     if ( acol[k] <= 0 )
       amode[k] = 1;
-    unsigned int i = acols[k].rfind( '>' );
+    size_t i = acols[k].rfind( '>' );
     if ( i != string::npos )
       i++;
     else {
@@ -1065,7 +1065,7 @@ void readArgs( int argc, char *argv[], int &filec )
 	  acols.push_back( as );
 	  acol.push_back( statskey.columns() );
 	  statskey.addNumber( as, "-", "%7.5g" );
-		  }
+	}
       }
       break;
     case 'f':

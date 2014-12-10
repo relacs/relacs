@@ -470,7 +470,7 @@ int Plugins::index( const string &plugin, int type )
     for ( unsigned int k=0; k<Plugs.size(); k++ ) {
       if ( ( type <= 0 || (Plugs[k].Type & type) == type ) ) {
 	string ps = Plugs[k].Ident;
-	unsigned int n = ps.find_first_of( '[' );
+	string::size_type n = ps.find_first_of( '[' );
 	if ( n != string::npos && n < ps.size() )
 	  ps.resize( n );
 	if ( ps == plugin )
