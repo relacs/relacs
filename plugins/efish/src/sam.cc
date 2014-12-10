@@ -33,7 +33,7 @@ namespace efish {
 
 
 SAM::SAM( void )
-  : RePro( "SAM", "efish", "Jan Benda", "2.2", "Nov 11, 2014" )
+  : RePro( "SAM", "efish", "Jan Benda", "2.4", "Dec 10, 2014" )
 {
   // parameter:
   ReadCycles = 100;
@@ -61,9 +61,10 @@ SAM::SAM( void )
   addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
   addNumber( "ampl1", "Relative amplitude of first harmonic", 0.0, 0.0, 10.0, 0.1 ).setActivation( "sinewave", "true" );
-  addNumber( "phase1", "Phase of first harmonic", 0.0, 0.0, 1.0, 0.01, "pi" ).setActivation( "sinewave", "true" ).addActivation( "ampl1", ">0" );
+  addNumber( "phase1", "Phase of first harmonic", 0.0, -2.0, 2.0, 0.01, "pi" ).setActivation( "sinewave", "true" ).addActivation( "ampl1", ">0" );
   addNumber( "ampl2", "Relative amplitude of second harmonic", 0.0, 0.0, 10.0, 0.1 ).setActivation( "sinewave", "true" );
-  addNumber( "phase2", "Phase of second harmonic", 0.0, 0.0, 1.0, 0.01, "pi" ).addActivation( "sinewave", "true" ).setActivation( "ampl2", ">0" );
+  addNumber( "phase2", "Phase of second harmonic", 0.0, -2.0, 2.0, 0.01, "pi" ).setActivation( "sinewave", "true" ).addActivation( "ampl2", ">0" );
+  addSelection( "contrastsel", "Contrast is", "fundamental|peak amplitude" ).setActivation( "sinewave", "true" );
   newSection( "Analysis" );
   addNumber( "skip", "Skip", Skip, 0.0, 100.0, 0.1, "Periods" );
   addInteger( "ratebins", "Number of bins for firing rate", RateN, 2, 1000 );
@@ -162,11 +163,15 @@ int SAM::createSignal( const InData &data, const EventData &events )
 	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 3.0*DeltaF, Phase2, Ampl2 );
 	*Signal += harmonics;
       }
-      Signal->minmaximize();
-      float minval = 0.0;
-      float maxval = 0.0;
-      ::relacs::minMax( minval, maxval, *Signal );
-      IntensityGain = 2.0/(maxval-minval);
+      double c = Signal->minmaximize();
+      if ( ContrastFundamental )
+	IntensityGain = c;
+      else {
+	float minval = 0.0;
+	float maxval = 0.0;
+	::relacs::minMax( minval, maxval, *Signal );
+	IntensityGain = 0.5*(maxval-minval);
+      }
       TrueDeltaF = 1.0 / Signal->duration();
       ident = "SAM";
     }
@@ -197,11 +202,15 @@ int SAM::createSignal( const InData &data, const EventData &events )
 	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 3.0*stimulusrate, Phase2, Ampl2 );
 	*Signal += harmonics;
       }
-      Signal->minmaximize();
-      float minval = 0.0;
-      float maxval = 0.0;
-      ::relacs::minMax( minval, maxval, *Signal );
-      IntensityGain = 2.0/(maxval-minval);
+      double c = Signal->minmaximize();
+      if ( ContrastFundamental )
+	IntensityGain = c;
+      else {
+	float minval = 0.0;
+	float maxval = 0.0;
+	::relacs::minMax( minval, maxval, *Signal );
+	IntensityGain = 0.5*(maxval-minval);
+      }
       ident = "sinewave";
     }
     else {
@@ -213,8 +222,8 @@ int SAM::createSignal( const InData &data, const EventData &events )
       float minval = 0.0;
       float maxval = 0.0;
       ::relacs::minMax( minval, maxval, *Signal );
-      IntensityGain = 2.0/(maxval-minval);
-      Signal->description().insertNumber( "Amplitude", "SamplingRate", IntensityGain, Signal->unit() );
+      IntensityGain = 0.5*(maxval-minval);
+      Signal->description().insertNumber( "Amplitude", "SamplingRate", 1.0/IntensityGain, Signal->unit() );
       Signal->setSampleRate( data.sampleRate() * ( FishRate + DeltaF ) / FishRate );
       Signal->setCarrierFreq( FishRate + DeltaF );
       Signal->repeat( (int)rint( Duration/Signal->duration() ) );
@@ -247,6 +256,7 @@ int SAM::main( void )
   Phase1 = number( "phase1" ) * M_PI;
   Ampl2 = number( "ampl2" );
   Phase2 = number( "phase2" ) * M_PI;
+  ContrastFundamental = ( index( "contrastsel" ) == 0 );
   SineWave = boolean( "sinewave" );
   AM = boolean( "am" );
   Skip = number( "skip" );
@@ -421,7 +431,7 @@ int SAM::main( void )
 	Count++ ) {
 
     // stimulus intensity:
-    Intensity = Contrast * FishAmplitude * IntensityGain;
+    Intensity = Contrast * FishAmplitude / IntensityGain;
     Signal->setIntensity( Intensity );
     detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 1.5*Signal->intensity() );
 

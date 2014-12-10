@@ -41,21 +41,30 @@ namespace efish {
 \class SAM
 \brief [RePro] Measures responses to sinusoidal amplitude modulations.
 \author Jan Benda
-\bug Using EOD waveforms is broken (sampling rate!)
-\version 2.2 (Nov 11, 2014)
+\version 2.4 (Dec 10, 2014)
 
 \par Options
-- \b duration (\c number, \e ms): Duration of stimulus.
-- \b pause (\c number, \e ms): %Pause between successive stimuli.
-- \b deltaf (\c number, \e Hz): Beat frequency (frequency of the SAM).
-- \b contrast (\c number, \e %): Contrast (AM amplitude / EOD amplitude)
-- \b repeats (\c integer): Number of stimulus repetitions (0: infinite).
-- \b am (\c boolean): AM stimulus or direct stimulus.
-- \b sinewave (\c boolean): If direct stimulus: use sine wave or the fishes EOD.
-- \b skip (\c number ): Number of initial and trailing beat cycles that are skipped for the analysis.
-- \b ratebins (\c integer ): Number of bins for the firing rate per beat cycle.
-- \b before (\c number, \e ms): Spikes recorded before stimulus.
-- \b after (\c number, \e ms): Spikes recorded after stimulus.
+\par Options
+- \c Stimulus
+    - \c duration=1000ms: Duration of signal (\c number)
+    - \c pause=1000ms: Pause between signals (\c number)
+    - \c freqsel=relative to EOD: Stimulus frequency is (\c string)
+    - \c deltaf=5Hz: Delta f (beat frequency) (\c number)
+    - \c contrast=20%: Contrast (\c number)
+    - \c repeats=6: Repeats (\c integer)
+    - \c am=true: Amplitude modulation (\c boolean)
+    - \c sinewave=true: Use sine wave (\c boolean)
+    - \c ampl1=0: Relative amplitude of first harmonic (\c number)
+    - \c phase1=0pi: Phase of first harmonic (\c number)
+    - \c ampl2=0: Relative amplitude of second harmonic (\c number)
+    - \c phase2=0pi: Phase of second harmonic (\c number)
+    - \c contrastsel=fundamental: Contrast is (\c string)
+- \c Analysis
+    - \c skip=0.5Periods: Skip (\c number)
+    - \c ratebins=10: Number of bins for firing rate (\c integer)
+    - \c before=0ms: Spikes recorded before stimulus (\c number)
+    - \c after=0ms: Spikes recorded after stimulus (\c number)
+    - \c adjust=true: Adjust input gain? (\c boolean)
 
 \par Files
 - \b samspikes#.dat : the spikes elicited by each SAM period of trace #.
@@ -127,6 +136,7 @@ private:
   double Phase1;
   double Ampl2;
   double Phase2;
+  bool ContrastFundamental;
   int Repeats;
   bool AM;
   bool SineWave;
