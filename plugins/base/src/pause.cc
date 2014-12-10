@@ -26,11 +26,12 @@ namespace base {
 
 
 Pause::Pause( void )
-  : RePro( "Pause", "base", "Jan Benda", "1.4", "Dec 9, 2014" )
+  : RePro( "Pause", "base", "Jan Benda", "1.4", "Dec 10, 2014" )
 {
   // add some options:
   addNumber( "duration", "Duration", 0.0, 0.0, 1000000.0, 1.0, "sec" ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "savedata", "Save raw data", false );
+  addNumber( "plotwidth", "Width of plotting window", 0.0, 0.0, 100.0, 0.1, "sec" ).setStyle( OptWidget::SpecialNone );
 }
 
 
@@ -39,6 +40,7 @@ int Pause::main( void )
   // get options:
   double duration = number( "duration" );
   bool savedata = boolean( "savedata" );
+  double plotwidth = number( "plotwidth" );
 
   // don't print repro message:
   noMessage();
@@ -48,7 +50,10 @@ int Pause::main( void )
     noSaving();
 
   // plot trace:
-  tracePlotContinuous();
+  if ( plotwidth > 0.001 )
+    tracePlotContinuous( plotwidth );
+  else
+    tracePlotContinuous();
 
   double starttime = currentTime();
 

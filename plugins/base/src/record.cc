@@ -26,10 +26,11 @@ namespace base {
 
 
 Record::Record( void )
-  : RePro( "Record", "base", "Jan Benda", "1.2", "Dec 9, 2014" )
+  : RePro( "Record", "base", "Jan Benda", "1.2", "Dec 10, 2014" )
 {
   // add some options:
   addNumber( "duration", "Duration", 0.0, 0.0, 1000000.0, 1.0, "sec" ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "plotwidth", "Width of plotting window", 0.0, 0.0, 100.0, 0.1, "sec" ).setStyle( OptWidget::SpecialNone );
 }
 
 
@@ -37,12 +38,16 @@ int Record::main( void )
 {
   // get options:
   double duration = number( "duration" );
+  double plotwidth = number( "plotwidth" );
 
   // don't print repro message:
   noMessage();
 
   // plot trace:
-  tracePlotContinuous();
+  if ( plotwidth > 0.001 )
+    tracePlotContinuous( plotwidth );
+  else
+    tracePlotContinuous();
 
   double starttime = currentTime();
 

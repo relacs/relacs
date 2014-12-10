@@ -54,10 +54,8 @@ namespace efish {
     - \c repeats=6: Repeats (\c integer)
     - \c am=true: Amplitude modulation (\c boolean)
     - \c sinewave=true: Use sine wave (\c boolean)
-    - \c ampl1=0: Relative amplitude of first harmonic (\c number)
-    - \c phase1=0pi: Phase of first harmonic (\c number)
-    - \c ampl2=0: Relative amplitude of second harmonic (\c number)
-    - \c phase2=0pi: Phase of second harmonic (\c number)
+    - \c ampl=0.0: Relative amplitude of harmonics (\c string)
+    - \c phase=0.0: Phase of harmonics (\c string)
     - \c contrastsel=fundamental: Contrast is (\c string)
 - \c Analysis
     - \c skip=0.5Periods: Skip (\c number)
@@ -65,6 +63,10 @@ namespace efish {
     - \c before=0ms: Spikes recorded before stimulus (\c number)
     - \c after=0ms: Spikes recorded after stimulus (\c number)
     - \c adjust=true: Adjust input gain? (\c boolean)
+
+Harmonics can be defined by \c ampl and \c phase.
+Enter the relative amplitude and the corresponding phase of each harmonic
+as comma separated values.
 
 \par Files
 - \b samspikes#.dat : the spikes elicited by each SAM period of trace #.
@@ -132,10 +134,8 @@ private:
   bool FreqAbs;
   double DeltaF;
   double Contrast;
-  double Ampl1;
-  double Phase1;
-  double Ampl2;
-  double Phase2;
+  vector< double > HarmonicAmpls;
+  vector< double > HarmonicPhases;
   bool ContrastFundamental;
   int Repeats;
   bool AM;

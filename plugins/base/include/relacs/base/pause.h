@@ -32,7 +32,7 @@ namespace base {
 \class Pause
 \brief [RePro] Does nothing
 \author Jan Benda
-\version 1.4 (Dec 9, 2014)
+\version 1.4 (Dec 10, 2014)
 
 The Pause-RePro does not write any stimulus and terminates after 
 \c duration seconds.  If \c duration is set to zero, the
@@ -41,9 +41,13 @@ time by pressing the space key or starting a different %RePro. With
 the \c savedata option you can switch off saving of the raw data
 recorded during Pause.
 
+If \c plotwidth is greater than zero, then the width of the plotting window
+is set to \c plotwidth .
+
 \par Options
 - \c duration=0s: Duration (\c number)
 - \c savedata=false: Save Data (\c boolean)
+- \c plotwidth=0s: Width of plotting window (\c number)
 
 \par Files
 No output files.

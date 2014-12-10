@@ -63,6 +63,8 @@ public:
 
     /*! Converts \a value to the text displayed in the DoubleSpinBox. */
   virtual QString textFromValue( double value ) const;
+    /*! Converts \a text to a value. */
+  virtual double valueFromText( const QString &text ) const;
 
 
  private:

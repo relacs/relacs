@@ -228,8 +228,10 @@ public:
   static const long BrowseAbsolute = 0x40000000;
     /*! Use LCD numbers to display a number. */
   static const long ValueLCD = 0x01000000;
-    /*! For integer options: instead of minimum value display "infinite". */
+    /*! For number options: instead of minimum value display "infinite". */
   static const long SpecialInfinite = 0x10000000;
+    /*! For number options: instead of minimum value display "none". */
+  static const long SpecialNone = 0x20000000;
     /*! Section is a new tab. */
   static const long TabSection = 0x04000000;
     /*! Try to format label as a mathematical equation. */

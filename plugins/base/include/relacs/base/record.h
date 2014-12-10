@@ -32,7 +32,7 @@ namespace base {
 \class Record
 \brief [RePro] Simply records data
 \author Jan Benda
-\version 1.2 (Dec 9, 2014)
+\version 1.2 (Dec 10, 2014)
 
 The Record-%RePro simply records data without writing out any stimulus
 and terminates after \c duration seconds. If \c duration is
@@ -40,14 +40,17 @@ set to zero, the %RePro keeps recording infinitely. Recording can be
 interrupted any time by pressing the space key or starting a different
 %RePro.
 
-Data are recorded into the raw-traces files of RELACS (trace-?.raw). If
-you want to have the data saved into ascii files use the SaveTraces %RePro.
+If \c plotwidth is greater than zero, then the width of the plotting window
+is set to \c plotwidth .
 
 \par Options
 - \c duration=0s: Duration (\c number)
+- \c plotwidth=0s: Width of plotting window (\c number)
 
 \par Files
 No output files.
+Data are recorded into the raw-traces files of RELACS (trace-?.raw). If
+you want to have the data saved into ascii files use the SaveTraces %RePro.
 
 \par Plots
 No plot.

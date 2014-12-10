@@ -60,10 +60,8 @@ SAM::SAM( void )
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
-  addNumber( "ampl1", "Relative amplitude of first harmonic", 0.0, 0.0, 10.0, 0.1 ).setActivation( "sinewave", "true" );
-  addNumber( "phase1", "Phase of first harmonic", 0.0, -2.0, 2.0, 0.01, "pi" ).setActivation( "sinewave", "true" ).addActivation( "ampl1", ">0" );
-  addNumber( "ampl2", "Relative amplitude of second harmonic", 0.0, 0.0, 10.0, 0.1 ).setActivation( "sinewave", "true" );
-  addNumber( "phase2", "Phase of second harmonic", 0.0, -2.0, 2.0, 0.01, "pi" ).setActivation( "sinewave", "true" ).addActivation( "ampl2", ">0" );
+  addText( "ampl", "Relative amplitude of harmonics", "0.0" ).setActivation( "sinewave", "true" );
+  addText( "phase", "Phase of harmonics", "0.0" ).setUnit( "pi" ).setActivation( "sinewave", "true" );
   addSelection( "contrastsel", "Contrast is", "fundamental|peak amplitude" ).setActivation( "sinewave", "true" );
   newSection( "Analysis" );
   addNumber( "skip", "Skip", Skip, 0.0, 100.0, 0.1, "Periods" );
@@ -151,17 +149,14 @@ int SAM::createSignal( const InData &data, const EventData &events )
       if ( n < 1 )
 	n = 1;
       Signal->sineWave( n/DeltaF, -1.0, DeltaF );
-      if ( Ampl1 > 0.0 ) {
-	OutData harmonics;
-	harmonics.setTrace( Signal->trace() );
-	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 2.0*DeltaF, Phase1, Ampl1 );
-	*Signal += harmonics;
-      }
-      if ( Ampl2 > 0.0 ) {
-	OutData harmonics;
-	harmonics.setTrace( Signal->trace() );
-	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 3.0*DeltaF, Phase2, Ampl2 );
-	*Signal += harmonics;
+      for ( unsigned int k=0; k<HarmonicAmpls.size(); k++ ) {
+	if ( ::fabs( HarmonicAmpls[k] ) > 1.0e-8 ) {
+	  OutData harmonics;
+	  harmonics.setTrace( Signal->trace() );
+	  harmonics.sineWave( Signal->duration(), Signal->stepsize(),
+			      (2.0+k)*DeltaF, HarmonicPhases[k], HarmonicAmpls[k] );
+	  *Signal += harmonics;
+	}
       }
       double c = Signal->minmaximize();
       if ( ContrastFundamental )
@@ -190,17 +185,14 @@ int SAM::createSignal( const InData &data, const EventData &events )
       if ( n < 1 )
 	n = 1;
       Signal->sineWave( n*p, -1.0, stimulusrate );
-      if ( Ampl1 > 0.0 ) {
-	OutData harmonics;
-	harmonics.setTrace( Signal->trace() );
-	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 2.0*stimulusrate, Phase1, Ampl1 );
-	*Signal += harmonics;
-      }
-      if ( Ampl2 > 0.0 ) {
-	OutData harmonics;
-	harmonics.setTrace( Signal->trace() );
-	harmonics.sineWave( Signal->duration(), Signal->stepsize(), 3.0*stimulusrate, Phase2, Ampl2 );
-	*Signal += harmonics;
+      for ( unsigned int k=0; k<HarmonicAmpls.size(); k++ ) {
+	if ( ::fabs( HarmonicAmpls[k] ) > 1.0e-8 ) {
+	  OutData harmonics;
+	  harmonics.setTrace( Signal->trace() );
+	  harmonics.sineWave( Signal->duration(), Signal->stepsize(),
+			      (2.0+k)*stimulusrate, HarmonicPhases[k], HarmonicAmpls[k] );
+	  *Signal += harmonics;
+	}
       }
       double c = Signal->minmaximize();
       if ( ContrastFundamental )
@@ -253,10 +245,10 @@ int SAM::main( void )
   FreqAbs = ( index( "freqsel" ) == 1 );
   DeltaF = number( "deltaf" );
   Contrast = number( "contrast" );
-  Ampl1 = number( "ampl1" );
-  Phase1 = number( "phase1" ) * M_PI;
-  Ampl2 = number( "ampl2" );
-  Phase2 = number( "phase2" ) * M_PI;
+  Str ampl = text( "ampl" );
+  ampl.range( HarmonicAmpls );
+  Str phase = text( "phase" );
+  phase.range( HarmonicPhases );
   ContrastFundamental = ( index( "contrastsel" ) == 0 );
   SineWave = boolean( "sinewave" );
   AM = boolean( "am" );
@@ -273,6 +265,17 @@ int SAM::main( void )
   if ( ( Skip + 1.5 ) / fabs( DeltaF ) > Duration ) {
     warning( "Stimulus duration too short. Duration must be larger than about 2 periods!\n" );
     return Failed;
+  }
+  if ( HarmonicAmpls.size() != HarmonicPhases.size() ) {
+    warning( "The number of phases for harmonics needs to be the same as the number of amplitudes!\n" );
+    return Failed;
+  }
+  for ( unsigned int k=0; k<HarmonicPhases.size(); k++ ) {
+    if ( ::fabs( HarmonicPhases[k] ) > 2.0 ) {
+      warning( "Wrong phase value. Phases need to be between -2 and 2!\n" );
+      return Failed;
+    }
+    HarmonicPhases[k] *= M_PI;
   }
   if ( FreqAbs && AM )
     AM = false;

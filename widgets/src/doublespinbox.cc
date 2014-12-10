@@ -20,6 +20,7 @@
 */
 
 
+#include <cmath>
 #include <relacs/str.h>
 #include <relacs/doublespinbox.h>
 
@@ -75,9 +76,20 @@ void DoubleSpinBox::setPrecision( int p )
 
 QString DoubleSpinBox::textFromValue( double value ) const
 {
+  if ( ::fabs( value ) < 0.001*::pow( 10.0, -decimals() ) )
+    value = 0.0;
   QLocale ql;
   ql.setNumberOptions( QLocale::OmitGroupSeparator );
   return ql.toString( value, FormatType, decimals() );
+}
+
+
+double DoubleSpinBox::valueFromText( const QString &text ) const
+{
+  double value = QDoubleSpinBox::valueFromText( text );
+  if ( ::fabs( value ) < 0.001*::pow( 10.0, -decimals() ) )
+    value = 0.0;
+  return value;
 }
 
 
