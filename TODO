@@ -1,3 +1,4 @@
+- Buzzing is not responsive
 - DAQFlex: check initial RW->writeReset() (enable it!)
 
 Macros, flow control:

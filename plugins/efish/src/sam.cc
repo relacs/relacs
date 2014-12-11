@@ -180,7 +180,13 @@ int SAM::createSignal( const InData &data, const EventData &events )
       double stimulusrate = DeltaF;
       if ( ! FreqAbs )
 	stimulusrate += FishRate;
+      if ( stimulusrate < 1.0e-8 ) {
+	warning( "Stimulus frequency is negative!" );
+	return 1;
+      }
       double p = rint( stimulusrate / fabs( DeltaF ) ) / stimulusrate;
+      if ( stimulusrate < fabs( DeltaF ) )
+	p = 1.0/fabs( DeltaF );
       int n = (int)::rint( Duration / p );
       if ( n < 1 )
 	n = 1;

@@ -31,6 +31,7 @@ AudioMonitor::AudioMonitor( void )
   addBoolean( "enable", "Enable audio monitor", true );
   addBoolean( "mute", "Mute audio monitor", false );
   addNumber( "gain", "Gain factor", 1.0, 0.0, 10000.0, 0.1 );
+  addSelection( "audiorate", "Audio sampling rate", "44.1|8|16|22.05|44.1|48|96" ).setUnit( "kHz" );
 }
 
 
@@ -53,11 +54,15 @@ void AudioMonitor::notify( void )
     MuteCount++;
   bool enable = boolean( "enable" );
   bool initialized = Initialized;
+  Str ars = text( "audiorate" );
+  double audiorate = 1000.0* ars.number( 44.1 );
   Mutex.unlock();
   if ( enable ) {
-    if ( initialized && AudioDevice != audiodevice )
+    if ( initialized &&
+	 ( AudioDevice != audiodevice || AudioRate != audiorate ) )
       terminate();
     AudioDevice = audiodevice;
+    AudioRate = audiorate;
     initialize();
   }
   else
@@ -173,10 +178,6 @@ void AudioMonitor::start( void )
   params.sampleFormat = paFloat32;
   params.suggestedLatency = Pa_GetDeviceInfo( audiodev )->defaultHighOutputLatency;
   params.hostApiSpecificStreamInfo = NULL;
-  AudioRate = Data[Trace].sampleRate();
-  if ( AudioRate > 44100.0 )
-    AudioRate = 44100.0;
-  AudioRate = 44100.0;
   PaError err = Pa_IsFormatSupported( NULL, &params, AudioRate );
   if ( err == paInvalidSampleRate ) {
     const int nrates = 6;
