@@ -201,6 +201,7 @@ private:
   };
 
   void setView( Views mode );
+  void updateStyle( void );
 
   Views ContinuousView;
 

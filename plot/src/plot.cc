@@ -2500,7 +2500,7 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
     if ( f >= l )
       return;
     long k = f;
-    bool compress = ( l-f > 5*(PlotX2-PlotX1+1) );  // too many data points to draw!
+    bool compress = ( l-f > 2*(PlotX2-PlotX1+1) );  // too many data points to draw!
     double x, y;
     double ox = 0.0, oy = 0.0;
     double nx, ny;
@@ -2517,7 +2517,7 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
       ox = x;
       oy = y;
       d->point( k, x, y );
-      // missing: what's about lines intersecting the plot but with both
+      // XXX missing: what's about lines intersecting the plot but with both
       // sides outside the plot?
       // if ( intersect ) { drawLine() };
     }
@@ -2663,7 +2663,11 @@ void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
 	yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]);
 	if ( compress ) {
 	  if ( xp-oxp >= 0.5 ) {
-	    if ( ncompress > 1 ) {
+	    if ( ncompress > 0 ) {
+	      if ( yp < ypmin )
+		ypmin = yp;
+	      if ( yp > ypmax )
+		ypmax = yp;
 	      path.lineTo( xp, ypmin );
 	      path.lineTo( xp, ypmax );
 	      path.moveTo( xp, yp );

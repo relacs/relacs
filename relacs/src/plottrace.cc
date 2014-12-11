@@ -379,7 +379,11 @@ void PlotTrace::init( void )
       }
       // plot voltage trace:
       int inx = -1;
-      if ( trace(vp).indices( TimeWindow ) > 80 )
+      if ( trace(vp).indices( TimeWindow ) > 2000 )
+	inx = P[vp].plot( trace(vp), origin, Offset, tfac,
+			  Plot::Green, 1, Plot::Solid,
+			  Plot::Circle, 0, Plot::Green, Plot::Green );
+      else if ( trace(vp).indices( TimeWindow ) > 80 )
 	inx = P[vp].plot( trace(vp), origin, Offset, tfac,
 			  Plot::Green, 2, Plot::Solid,
 			  Plot::Circle, 0, Plot::Green, Plot::Green );
@@ -475,13 +479,25 @@ void PlotTrace::plot( void )
 
   // set xrange:
   for ( unsigned int c=0; c<VP.size(); c++ ) {
-
     // setting axis:
     P[VP[c]].setXRange( leftwin, rightwin );
     if ( ! P[VP[c]].zoomedYRange() )
       P[VP[c]].setYRange( trace(VP[c]).minValue(), trace(VP[c]).maxValue() );
-    
-    // pointstyle:
+  }
+
+  updateStyle();
+
+  // plot:
+  P.draw();
+
+  P.unlock();
+}
+
+
+void PlotTrace::updateStyle( void )
+{
+  // line and pointstyle:
+  for ( unsigned int c=0; c<VP.size(); c++ ) {
     if ( PlotElements[c] >= 0 ) {
       if ( trace(VP[c]).indices( TimeWindow ) > 80 )
 	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
@@ -489,13 +505,12 @@ void PlotTrace::plot( void )
       else
 	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
 					    Plot::Green, Plot::Green );
+      if ( trace(VP[c]).indices( TimeWindow ) > 2000 )
+	P[VP[c]][PlotElements[c]].setLine( Plot::Green, 1, Plot::Solid );
+      else
+	P[VP[c]][PlotElements[c]].setLine( Plot::Green, 2, Plot::Solid );
     }
   }
-
-  // plot:
-  P.draw();
-
-  P.unlock();
 }
 
 
@@ -637,17 +652,8 @@ void PlotTrace::setPlotSignal( double length, double offs )
   // left offset to signal:
   TimeOffs = offs;
 
-  // pointstyle:
-  for ( unsigned int c=0; c<VP.size(); c++ ) {
-    if ( PlotElements[c] >= 0 ) {
-      if ( trace(VP[c]).indices( TimeWindow ) > 80 )
-	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
-					    Plot::Green, Plot::Green );
-      else
-	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
-					    Plot::Green, Plot::Green );
-    }
-  }
+  updateStyle();
+
   P.unlock();
 }
 
@@ -700,17 +706,8 @@ void PlotTrace::setPlotContinuous( double length )
   // length of total time window:
   TimeWindow = length;
 
-  // pointstyle:
-  for ( unsigned int c=0; c<VP.size(); c++ ) {
-    if ( PlotElements[c] >= 0 ) {
-      if ( trace(VP[c]).indices( TimeWindow ) > 80 )
-	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
-					    Plot::Green, Plot::Green );
-      else
-	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
-					    Plot::Green, Plot::Green );
-    }
-  }
+  updateStyle();
+
   P.unlock();
 }
 
@@ -749,13 +746,7 @@ void PlotTrace::zoomOut( void )
     plot();
   else {
     P.lock();
-    for ( unsigned int c=0; c<VP.size(); c++ ) {
-      if ( PlotElements[c] >= 0 ) {
-	if ( trace(VP[c]).indices( TimeWindow ) > 80 )
-	  P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
-					      Plot::Green, Plot::Green );
-      }
-    }
+    updateStyle();
     P.unlock();
   }
 }
@@ -771,13 +762,7 @@ void PlotTrace::zoomIn( void )
     plot();
   else {
     P.lock();
-    for ( unsigned int c=0; c<VP.size(); c++ ) {
-      if ( PlotElements[c] >= 0 ) {
-	if ( trace(VP[c]).indices( TimeWindow ) <= 80 )
-	  P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
-					      Plot::Green, Plot::Green );
-      }
-    }
+    updateStyle();
     P.unlock();
   }
 }
@@ -982,17 +967,8 @@ void PlotTrace::autoRange( void )
   // left offset to signal:
   TimeOffs = AutoOffs;
 
-  // pointstyle:
-  for ( unsigned int c=0; c<VP.size(); c++ ) {
-    if ( PlotElements[c] >= 0 ) {
-      if ( trace(VP[c]).indices( TimeWindow ) > 80 )
-	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
-					    Plot::Green, Plot::Green );
-      else
-	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
-					    Plot::Green, Plot::Green );
-    }
-  }
+  updateStyle();
+
   P.unlock();
 }
 
