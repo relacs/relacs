@@ -23,11 +23,13 @@
 #include <relacs/daqflex/daqflexcore.h>
 #include <relacs/daqflex/daqflexanaloginput.h>
 #include <relacs/daqflex/daqflexanalogoutput.h>
+#include <relacs/daqflex/daqflexdigitalio.h>
 
 namespace daqflex {
 
   addDevice( DAQFlexCore, daqflex );
   addAnalogInput( DAQFlexAnalogInput, daqflex );
   addAnalogOutput( DAQFlexAnalogOutput, daqflex );
+  addDigitalIO( DAQFlexDigitalIO, daqflex );
 
 };

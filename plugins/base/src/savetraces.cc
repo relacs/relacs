@@ -22,6 +22,7 @@
 #include <deque>
 #include <QVBoxLayout>
 #include <relacs/tablekey.h>
+#include <relacs/digitalio.h>
 #include <relacs/savefiles.h>
 #include <relacs/base/savetraces.h>
 using namespace relacs;
@@ -37,6 +38,9 @@ SaveTraces::SaveTraces( void )
   addNumber( "duration", "Duration", 0.0, 0.0, 1000000.0, 1.0, "sec" ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "savedata", "Save raw data", false );
   addBoolean( "split", "Save each run into a separate file", false );
+  addBoolean( "dioout", "Indicate recording on a DIO line", false );
+  addText( "diodevice", "Name of the digitial I/O device", "dio-1" ).setActivation( "dioout", "true" );
+  addInteger( "dioline", "Output line on the digitial I/O device", 0, 0, 128 ).setActivation( "dioout", "true" );
 
   // widget:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -118,6 +122,9 @@ int SaveTraces::main( void )
   double duration = number( "duration" );
   bool savedata = boolean( "savedata" );
   bool split = boolean( "split" );
+  bool dioout = boolean( "dioout" );
+  string diodevice = text( "diodevice" );
+  int dioline = integer( "dioline" );
 
   // don't print repro message:
   noMessage();
@@ -207,6 +214,17 @@ int SaveTraces::main( void )
     }
   }
 
+  // find dio device:
+  DigitalIO *dio = 0;
+  if ( dioout ) {
+    dio = digitalIO( diodevice );
+    if ( dio != 0 ) {
+      dio->allocateLine( dioline );
+      dio->configureLine( dioline, true );
+      dio->write( dioline, true );
+    }
+  }
+
   // run:
   do {
 
@@ -249,6 +267,9 @@ int SaveTraces::main( void )
 
   }  while ( softStop() == 0 && ! interrupt() &&
 	     ( duration <= 0 || currentTime() - starttime < duration ) );
+
+  if ( dio != 0 )
+    dio->write( dioline, false );
 
   // close files:
   for ( unsigned int k=0; k<tracefile.size(); k++ ) {
