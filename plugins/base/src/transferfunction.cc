@@ -198,6 +198,7 @@ int TransferFunction::main( void )
   OutData orgdcsignal;
   orgdcsignal.setTrace( outtrace );
   orgdcsignal.constWave( orgoffset );
+  orgdcsignal.setIntensity( intensity );
   orgdcsignal.setIdent( "DC=" + Str( orgoffset ) + OutUnit );
 
   // stimulus loop:

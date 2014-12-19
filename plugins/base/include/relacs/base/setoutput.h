@@ -41,9 +41,10 @@ can be specified and set.
 \par Options
 - \c outtrace=V-1: Output trace (\c string)
 - \c value=0: Value to be writen to output trace (\c number)
+- \c intensity=0: Intensity for an attenuator (\c number)
 - \c interactive=false: Set values interactively (\c boolean)
 
-\version 1.2 (May 13, 2013)
+\version 1.4 (Dec 19, 2014)
 */
 
 

@@ -1848,8 +1848,10 @@ int Acquire::write( OutData &signal, bool setsignaltime )
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
       double level = 0.0;
       double fac = 1.0;
-      if ( signal.noIntensity() && signal.noLevel() )
+      if ( signal.noIntensity() && signal.noLevel() ) {
 	signal.addError( DaqError::NoIntensity );
+	break;
+      }
       else if ( signal.noIntensity() ) {
 	level = signal.level();
 	int ra = Att[a].Att->attenuate( level );
@@ -2055,6 +2057,7 @@ int Acquire::write( OutList &signal, bool setsignaltime )
 	  if ( AO[i].Signals[k].noIntensity() && AO[i].Signals[k].noLevel() ) {
 	    AO[i].Signals[k].addError( DaqError::NoIntensity );
 	    success = false;
+	    break;
 	  }
 	  else if ( AO[i].Signals[k].noIntensity() ) {
 	    level = AO[i].Signals[k].level();
@@ -2276,8 +2279,10 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
       double level = 0.0;
       double fac = 1.0;
-      if ( signal.noIntensity() && signal.noLevel() )
+      if ( signal.noIntensity() && signal.noLevel() ) {
 	signal.addError( DaqError::NoIntensity );
+	break;
+      }
       else if ( signal.noIntensity() ) {
 	level = signal.level();
 	int ra = Att[a].Att->attenuate( level );
@@ -2463,6 +2468,7 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
 	  if ( AO[i].Signals[k].noIntensity() && AO[i].Signals[k].noLevel() ) {
 	    AO[i].Signals[k].addError( DaqError::NoIntensity );
 	    success = false;
+	    break;
 	  }
 	  else if ( AO[i].Signals[k].noIntensity() ) {
 	    level = AO[i].Signals[k].level();

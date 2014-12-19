@@ -233,7 +233,6 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
   QMutexLocker locker( mutex() );
 
   for ( int k=0; k<sigs.size(); k++ ) {
-
     // we use only the largest range:
     sigs[k].setGainIndex( 0 );
     if ( BipolarRange.size() > 0 ) {
@@ -249,21 +248,25 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
 	sigs[k].multiplyScale( UnipolarRange[0] );
     }
 
-    double maxboardvolt = sigs[k].maxVoltage();
-    double minval = sigs[k].minValue();
-    double maxval = sigs[k].maxValue();
-    double gain = DAQFlexDevice->maxAOData()/(maxval-minval);
-    double scale = sigs[k].scale();
-    if ( ! sigs[k].noLevel() )
-      scale *= maxboardvolt;
-
     // apply range:
+    double minval = sigs[k].minVoltage()/sigs[k].scale();
+    double maxval = sigs[k].maxVoltage()/sigs[k].scale();
+    double gain = DAQFlexDevice->maxAOData()/(maxval-minval);
     float v = sigs[k].size() > 0 ? sigs[k][0] : 0.0;
-    if ( v > maxval )
-      v = maxval;
-    else if ( v < minval )
-      v = minval;
-    v *= scale;
+    if ( sigs[k].noLevel() ) {
+      if ( v < sigs[k].minValue() )
+	sigs[k].addError( DaqError::Underflow );
+      else if ( v > sigs[k].maxValue() )
+	sigs[k].addError( DaqError::Overflow );
+    }
+    else {
+      if ( v > 1.0+1.0e-8 )
+	sigs[k].addError( DaqError::Overflow );
+      else if ( v < -1.0-1.0e-8 )
+	sigs[k].addError( DaqError::Underflow );
+    }
+    if ( sigs[k].failed() )
+      continue;
     unsigned short data = (unsigned short)( (v-minval)*gain );
 
     // write data:
@@ -271,7 +274,7 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     //    if ( retval < 1 )
     //      sigs[k].addErrorStr( "DAQFlex direct write failed" );
 
-    ChannelValues[sigs[k].channel()] = sigs[k].size() > 0 ? sigs[k][0] : 0.0;
+    ChannelValues[sigs[k].channel()] = v;
 
   }
 
@@ -289,14 +292,12 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
   double minval[ Sigs.size() ];
   double maxval[ Sigs.size() ];
   double gain[ Sigs.size() ];
-  double scale[ Sigs.size() ];
   //  const Calibration* calib[Sigs.size()];
   T zeros[ Sigs.size() ];
   for ( int k=0; k<Sigs.size(); k++ ) {
-    minval[k] = Sigs[k].minValue();
-    maxval[k] = Sigs[k].maxValue();
+    minval[k] = Sigs[k].minVoltage()/Sigs[k].scale();
+    maxval[k] = Sigs[k].maxVoltage()/Sigs[k].scale();
     gain[k] = DAQFlexDevice->maxAOData()/(maxval[k]-minval[k]);
-    scale[k] = Sigs[k].scale();
     // calib[k] = (const Calibration *)Sigs[k].gainData();
     // XXX calibration?
     float v = ChannelValues[Sigs[k].channel()];
@@ -304,7 +305,6 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
       v = maxval[k];
     else if ( v < minval[k] ) 
       v = minval[k];
-    v *= scale[k];
     zeros[k] = (unsigned short)( (v-minval[k])*gain[k] );
   }
 
@@ -328,7 +328,6 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
 	  v = maxval[k];
 	else if ( v < minval[k] )
 	  v = minval[k];
-	v *= scale[k];
 	// XXX calibration?
 	*bp = (unsigned short)( (v-minval[k])*gain[k] );
 	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
@@ -397,20 +396,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
   {
     QMutexLocker locker( mutex() );
-
-    /*
-    // clear out board buffer.
-    // this is not nice, since it actually writes data!
-    DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=0" );
-    DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=0" );
-    DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( maxRate(), "%g" ) );
-    DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
-    DAQFlexDevice->sendCommand( "AOSCAN:START" );
-    double dummy = 1.0;
-    for ( int k=0; k<100000; k++ )
-    dummy *= (double)k/(double)(k+1);
-    DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
-    */
 
     // copy and sort signal pointers:
     OutList ol;

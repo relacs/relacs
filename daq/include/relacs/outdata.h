@@ -209,7 +209,7 @@ class OutData : public SampleData< float >, public DaqError
   OutData &repeat( int n, const string &name="" );
 
     /*! Clear the data and the description(), but not any additional
-        information like trace(), intenisty() ,etc. */
+        information like trace(), intensity() ,etc. */
   void clear( void );
 
     /*! Return string with an error message: 
@@ -394,16 +394,19 @@ class OutData : public SampleData< float >, public DaqError
   double voltage( int index ) const;
     /*! Returns the voltage corresponding to the value \a val in Volt. */
   double getVoltage( double val ) const;
-    /*! Minimum possible voltage value for the preset gain of the daq board.
+
+    /*! Minimum possible output voltage value of the daq board. 
+        Only available AFTER writing the signal	to the daq board.
         \sa maxVoltage(), minValue() */
   double minVoltage( void ) const;
-    /*! Maximum possible voltage value for the preset gain of the daq board.
+    /*! Maximum possible output voltage value of the daq board.
+        Only available AFTER writing the signal	to the daq board.
         \sa minVoltage(), maxValue() */
   double maxVoltage( void ) const;
-    /*! Set the minimum possible voltage value to \a minv.
+    /*! Set the minimum possible output voltage value to \a minv.
         \sa setMaxVoltage(), setMinValue(), minValue() */
   void setMinVoltage( double minv );
-    /*! Set the maximum possible votlage value to \a maxv.
+    /*! Set the maximum possible output votlage value to \a maxv.
         \sa setMinVoltage(), setMaxValue(), maxValue() */
   void setMaxVoltage( double maxv );
 
@@ -433,12 +436,14 @@ class OutData : public SampleData< float >, public DaqError
 	that is put out by the analog output device.
         \sa unit(), scale(), setScale() */
   void setUnit( double scale, const string &unit );
-    /*! Minimum possible value of the signal, given the preset gain
-        value of the daq board.
+    /*! Minimum possible value of the signal, given the minimum output
+        voltage of the daq board. Only available AFTER writing the signal
+	to the daq board.
         \sa maxValue(), minVoltage() */
   double minValue( void ) const;
-    /*! Maximum possible value of the signal, given the preset gain
-        value of the daq board.
+    /*! Maximum possible value of the signal, given the maximum output
+        voltage of the daq board. Only available AFTER writing the signal
+	to the daq board.
         \sa minValue(), maxVoltage() */
   double maxValue( void ) const;
 

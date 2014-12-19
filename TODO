@@ -1,4 +1,5 @@
-- Buzzing is not responsive
+- Comedi (und RTAIComedi?): problems with maxboardvolt in case of virtual attenuator
+- Buzzing is not responsive: allow for mu;tiple buzzes
 - DAQFlex: check initial RW->writeReset() (enable it!)
 
 Macros, flow control:

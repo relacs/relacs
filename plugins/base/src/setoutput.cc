@@ -33,13 +33,14 @@ const int SetOutput::ParameterFlag = 2;
 
 
 SetOutput::SetOutput( void )
-  : RePro( "SetOutput", "base", "Jan Benda", "1.2", "May 13, 2013" )
+  : RePro( "SetOutput", "base", "Jan Benda", "1.4", "Dec 19, 2014" )
 {
   Interactive = false;
 
   // add some options:
-  addSelection( "outtrace", "Output trace", "V-1" );
-  addNumber( "value", "Value to be writen to output trace", 0.0, -100000.0, 100000.0, 0.1 );
+  addSelection( "outtrace", "Output trace", "V-1" ).setActivation( "interactive", "false" );
+  addNumber( "value", "Value to be writen to output trace", 0.0, -100000.0, 100000.0, 0.1 ).setActivation( "interactive", "false" );
+  addNumber( "intensity", "Intensity for an attenuator", 1.0, -10000.0, 10000.0, 0.1, "", "" );
   addBoolean( "interactive", "Set values interactively", false );
 
   // layout:
@@ -173,6 +174,7 @@ int SetOutput::main( void )
   // get options:
   int outtrace = index( "outtrace" );
   double value = number( "value" );
+  double intensity = number( "intensity" );
   Interactive = boolean( "interactive" );
 
   noMessage();
@@ -204,6 +206,7 @@ int SetOutput::main( void )
 	    OutData sig;
 	    sig.setTraceName( OutOpts[k].name() );
 	    sig.constWave( value );
+	    sig.setIntensity( intensity );
 	    sigs.push( sig );
 	  }
 	}
@@ -239,6 +242,7 @@ int SetOutput::main( void )
     OutData signal;
     signal.setTrace( outtrace );
     signal.constWave( value );
+    signal.setIntensity( intensity );
     directWrite( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );
