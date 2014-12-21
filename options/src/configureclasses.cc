@@ -166,8 +166,8 @@ int ConfigureClasses::read( int group, const string &file )
   // open the requested configuration file:
   ifstream sf( file.c_str() );
   if ( ! sf.good() ) {
-    cerr << currentTime()
-	 << " failed to open configuration file " << file << '\n';
+    // cerr << currentTime()
+    //	 << " failed to open configuration file " << file << '\n';
     return 0;
   }
 
@@ -251,8 +251,8 @@ int ConfigureClasses::read( int level, ConfigClass &config )
   // open the requested configuration file:
   ifstream sf( ConfigFile[group][level].c_str() );
   if ( ! sf.good() ) {
-    cerr << currentTime()
-	 << " failed to open configuration file " << ConfigFile[group][level] << '\n';
+    // cerr << currentTime()
+    //	 << " failed to open configuration file " << ConfigFile[group][level] << '\n';
     return 0;
   }
 

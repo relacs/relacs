@@ -1,10 +1,9 @@
 - Comedi (und RTAIComedi?): problems with maxboardvolt in case of virtual attenuator
-- Buzzing is not responsive: allow for mu;tiple buzzes
-- DAQFlex: check initial RW->writeReset() (enable it!)
+- Buzzing is not responsive: allow for multiple buzzes
 
 Macros, flow control:
 - RELACS crashes after too many automatically called macros
-- auditory::search does not exit cleanly upon ESC
+- auditory::search does not exit cleanly upon ESC: should be solved, check it
 
 New InData threading:
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
@@ -32,6 +31,10 @@ New InData threading:
   So maybe keep readTime. Make it an option for each device!
 
 Dynamic clamp:
+- See http://mail.rtai.org/pipermail/rtai/2013-December/026198.html for the
+  -mpreferred-stack-boundary=3 issue
+- localmodconfig kernel make target might be very interesting for generating a rtai kernel:
+  http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
 - restart in dynclamp mode is not properly processed??? (check inputrangecheck)
 - DynClamAnalogInput improve error checking in readData()
 - Always create a new channel list! And only have a single AO and AI subdevice!
@@ -63,8 +66,8 @@ SaveFiles:
 - finish reorganization of saveStimuli(): check XXX comments
 
 Options:
-- MetaData: reading in of several config files fails in MetaData.
-- RePro: when the RePro changes an Option in main(), this change should automatically be made permanent
+- RePro: when the RePro changes an Option in main(), 
+  this change should automatically be made permanent
   (via setToDefaults() called after main()? E.g. SetInputGain RePro).
 - Make all Options and optWidget style flags an enum
 - ConfigDialog: name should be the Options::name! Maybe already in ConfigClass?

@@ -4,7 +4,6 @@ prefix="@prefix@"
 exec_prefix="@exec_prefix@"
 libdir="@libdir@"
 datarootdir="@datarootdir@"
-docdir="@docdir@/api"
 
 # Full path of the RELACS executable to be used:
 RELACSEXEC="@abs_top_builddir@/src/relacsgui"
@@ -32,8 +31,8 @@ PLUGINRELATIVE="@abs_builddir@"
 
 # Possible config files separated by '|':
 # for local demo's use only the ones in the current directory.
-CONFCOREFILES="@abs_srcdir@/relacs.cfg"
-CONFPLUGINSFILES="@abs_srcdir@/relacsplugins.cfg"
+CONFCOREFILES="@datadir@/@PACKAGE@/relacs.cfg|${HOME}/.relacs/relacs.cfg|@abs_srcdir@/relacs.cfg"
+CONFPLUGINSFILES="@datadir@/@PACKAGE@/relacsplugins.cfg|${HOME}/.relacs/relacsplugins.cfg|@abs_srcdir@/relacsplugins.cfg"
 
 # Path to the documentation:
 DOCPATH="@abs_top_builddir@/doc/userman/html"
