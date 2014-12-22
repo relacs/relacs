@@ -1,4 +1,5 @@
 - Comedi (und RTAIComedi?): problems with maxboardvolt in case of virtual attenuator
+- PlotTrace: align to trigger behaves weired for large plotwindows, also check for very small windows
 - Buzzing is not responsive: allow for multiple buzzes
 
 Macros, flow control:

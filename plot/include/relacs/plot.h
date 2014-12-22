@@ -536,6 +536,21 @@ public:
         handled by this widget. */
   bool inside( int xpixel, int ypixel );
 
+    /*! \return the width of the plot area (the part spanned by the axis) in pixels.
+        Only defined after the first draw().
+        \sa  pixelPlotHeight(), pixelScreenWidth() */
+  int pixelPlotWidth( void ) const;
+    /*! \return the height of the plot area (the part spanned by the axis) in pixels.
+        Only defined after the first draw().
+        \sa  pixelPlotWidth(), pixelScreenHeight() */
+  int pixelPlotHeight( void ) const;
+    /*! \return the width of the plot screen (including the margins
+        around the axis) in pixels. \sa pixelScreenHeight(), pixelPlotWidth() */
+  int pixelScreenWidth( void ) const;
+    /*! \return the height of the plot screen (including the margins
+        around the axis) in pixels. \sa pixelScreenWidth(), pixelPlotHeight() */
+  int pixelScreenHeight( void ) const;
+
     /*! Computes the pixel coordinate for the specified x position. 
         \param[in] xpos the position
         \param[in] xcoor the coordinate system

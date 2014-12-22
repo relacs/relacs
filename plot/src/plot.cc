@@ -1078,6 +1078,30 @@ void Plot::setFormat( const string &format )
 }
 
 
+int Plot::pixelPlotWidth( void ) const
+{
+  return PlotX2 - PlotX1 + 1;
+}
+
+
+int Plot::pixelPlotHeight( void ) const
+{
+  return PlotY2 - PlotY1 + 1;
+}
+
+
+int Plot::pixelScreenWidth( void ) const
+{
+  return ScreenX2 - ScreenX1 + 1;
+}
+
+
+int Plot::pixelScreenHeight( void ) const
+{
+  return ScreenY2 - ScreenY1 + 1;
+}
+
+
 int Plot::xPixel( double xpos, Plot::Coordinates xcoor ) const
 {
   if ( xcoor == First || xcoor == FirstX || xcoor == FirstY )

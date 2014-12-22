@@ -519,10 +519,12 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     }
     // reference and polarity:
     bool unipolar = false;
+    /*
     // whatever the following was ment to be, it ensures that unipolar never gets true!
     // if it gets true, we get errors elsewhere.
     if ( fabs(min) > fabs(max) && min >= 0.0 )
       unipolar = true;
+    */
     bool minislarger = false;
     // maximum value:
     if ( ::fabs( min ) > max ) {
@@ -585,6 +587,18 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     double maxboardvolt = unipolar ? UnipolarRange[index].max : BipolarRange[index].max;
     double minboardvolt = unipolar ? UnipolarRange[index].min : BipolarRange[index].min;
 
+    /*
+    cerr << "UNIPOLAR=" << unipolar << '\n';
+    cerr << "INDEX=" << index << '\n';
+    cerr << "BIPOLARRANGE.SIZE=" << BipolarRange.size() << '\n';
+    cerr << "UNIPOLARRANGE.SIZE=" << UnipolarRange.size() << '\n';
+    cerr << "MAXBOARDVOLT=" << maxboardvolt << '\n';
+    for ( unsigned int j=0; j<BipolarRange.size(); j++ ) {
+      cerr << "BIPOLARRANGEMAX" << j << "=" << BipolarRange[j].max << '\n';
+      cerr << "BIPOLARRANGEMIN" << j << "=" << BipolarRange[j].min << '\n';
+    }
+    */
+
     if ( !sigs[k].noLevel() && setscale )
       sigs[k].multiplyScale( maxboardvolt );
 
@@ -598,10 +612,10 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 				    COMEDI_FROM_PHYSICAL, gainp );
 
     int gainIndex = index;
+    /*
     // XXX Where the hack is the following used? Shouldn't we just use the plain index?
     if ( unipolar )
       gainIndex |= 1<<14;
-    /*
     if ( extref )
       gainIndex |= 1<<15;
     */

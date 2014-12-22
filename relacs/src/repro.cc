@@ -180,13 +180,14 @@ void RePro::start( QThread::Priority priority )
 void RePro::requestStop( void )
 {
   if ( Thread->isRunning() ) {
+    // stop analog output,
+    // before the repro gets any chance to delete the output signal:
+    stopWrite();
+
     // tell the RePro to interrupt:
     InterruptLock.lock();
     Interrupt = true;
     InterruptLock.unlock();
-
-    // stop analog output:
-    stopWrite();
     
     // wake up the RePro from sleeping:
     SleepWait.wakeAll();

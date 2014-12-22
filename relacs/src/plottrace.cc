@@ -337,7 +337,7 @@ void PlotTrace::init( void )
     }
     // plot events:
     int sn = 0;
-    for ( int s=0; s<events().size(); s++ ) 
+    for ( int s=0; s<events().size(); s++ ) {
       if ( (events(s).mode() & PlotTraceMode) &&
 	   !(events(s).mode() & StimulusEventMode) &&
 	   !(events(s).mode() & RestartEventMode) &&
@@ -377,22 +377,13 @@ void PlotTrace::init( void )
 	  sn++;
 	}
       }
-      // plot voltage trace:
-      int inx = -1;
-      if ( trace(vp).indices( TimeWindow ) > 2000 )
-	inx = P[vp].plot( trace(vp), origin, Offset, tfac,
-			  Plot::Green, 1, Plot::Solid,
-			  Plot::Circle, 0, Plot::Green, Plot::Green );
-      else if ( trace(vp).indices( TimeWindow ) > 80 )
-	inx = P[vp].plot( trace(vp), origin, Offset, tfac,
-			  Plot::Green, 2, Plot::Solid,
-			  Plot::Circle, 0, Plot::Green, Plot::Green );
-      else
-	inx = P[vp].plot( trace(vp), origin, Offset, tfac,
-			  Plot::Green, 2, Plot::Solid,
-			  Plot::Circle, 4, Plot::Green, Plot::Green );
-      PlotElements[c] = inx;
     }
+    // plot voltage trace:
+    PlotElements[c] = P[vp].plot( trace(vp), origin, Offset, tfac,
+				  Plot::Green, 1, Plot::Solid,
+				  Plot::Circle, 0, Plot::Green, Plot::Green );
+  }
+  updateStyle();
 
   // set xlabel:
   if ( VP.size() > 0 )
@@ -400,11 +391,12 @@ void PlotTrace::init( void )
 
   // trigger source:
   TriggerSource = -1;
-  for ( int s=0; s<events().size(); s++ ) 
+  for ( int s=0; s<events().size(); s++ ) {
     if ( (events(s).mode() & PlotTriggerMode) ) {
       TriggerSource = s;
       break;
     }
+  }
 
 
   P.unlock();
@@ -499,13 +491,21 @@ void PlotTrace::updateStyle( void )
   // line and pointstyle:
   for ( unsigned int c=0; c<VP.size(); c++ ) {
     if ( PlotElements[c] >= 0 ) {
-      if ( trace(VP[c]).indices( TimeWindow ) > 80 )
+      double width = P[VP[c]].pixelPlotWidth();
+      if ( width < 10.0 )
+	width = P[VP[c]].pixelScreenWidth();
+      if ( width < 10.0 )
+	width = 10.0;
+      if ( trace(VP[c]).indices( TimeWindow )/width > 0.2 )
 	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
 					    Plot::Green, Plot::Green );
-      else
+      else if ( trace(VP[c]).indices( TimeWindow )/width > 0.05 )
 	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
 					    Plot::Green, Plot::Green );
-      if ( trace(VP[c]).indices( TimeWindow ) > 2000 )
+      else
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 8,
+					    Plot::Green, Plot::Green );
+      if ( trace(VP[c]).indices( TimeWindow )/width > 2.0 )
 	P[VP[c]][PlotElements[c]].setLine( Plot::Green, 1, Plot::Solid );
       else
 	P[VP[c]][PlotElements[c]].setLine( Plot::Green, 2, Plot::Solid );
