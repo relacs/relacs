@@ -196,7 +196,7 @@ bool Model::isRunning( void ) const
 }
 
 
-void Model::start( InList &data, QMutex *datamutex, QWaitCondition *datawait )
+void Model::start( InList &data, QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   Data.clear();
   for ( int k=0; k<data.size(); k++ )
@@ -216,7 +216,7 @@ void Model::start( InList &data, QMutex *datamutex, QWaitCondition *datawait )
 
 void Model::restart( void )
 {
-  DataMutex->lock();
+  DataMutex->lockForWrite();
   Data.setRestart();
   DataMutex->unlock();
 
@@ -228,7 +228,7 @@ void Model::restart( void )
 void Model::run( void )
 {
   setSettings();
-  DataMutex->lock();
+  DataMutex->lockForWrite();
   main();
   DataMutex->unlock();
 }

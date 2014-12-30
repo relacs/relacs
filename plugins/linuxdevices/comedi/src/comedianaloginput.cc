@@ -725,7 +725,7 @@ int ComediAnalogInput::prepareRead( InList &traces )
 }
 
 
-int ComediAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
+int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				  QWaitCondition *datawait, QSemaphore *aosp )
 {
   //  cerr << " ComediAnalogInput::startRead(): begin" << '\n';

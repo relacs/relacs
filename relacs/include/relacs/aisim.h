@@ -79,7 +79,7 @@ public:
     /*! Prepare analog input of the input traces \a traces on the device. */
   virtual int prepareRead( InList &traces );
     /*! Start analog input. */
-  virtual int startRead( QSemaphore *sp=0, QMutex *datamutex=0,
+  virtual int startRead( QSemaphore *sp=0, QReadWriteLock *datamutex=0,
 			 QWaitCondition *datawait=0, QSemaphore *aosp=0 );
     /*! Read data from a running data acquisition. */
   virtual int readData( void );

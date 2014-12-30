@@ -805,11 +805,11 @@ void RELACSWidget::setupOutTraces( void )
 int RELACSWidget::getData( InList &data, EventList &events, double &signaltime,
 			   double mintracetime, double prevsignal )
 {
-  // update raw data:
+  // update raw data (may block if mintracetime > 0.0):
   int r = AQ->getRawData( data, events, signaltime, mintracetime, prevsignal );
 
   // update derived data:
-  DerivedDataMutex.lock();
+  DerivedDataMutex.lockForRead();
   data.updateDerived();
   events.updateDerived();
   DerivedDataMutex.unlock();
@@ -819,6 +819,7 @@ int RELACSWidget::getData( InList &data, EventList &events, double &signaltime,
 
 
 int RELACSWidget::updateData( void )
+// called continuously from ReadThread:run()
 {
   double signaltime = -1.0;
   int r = AQ->updateRawData( signaltime, UpdateRawData, UpdateRawEvents );
@@ -845,7 +846,7 @@ int RELACSWidget::updateData( void )
   }
   else if ( r > 0 ) {
     // update derived data:
-    DerivedDataMutex.lock();
+    DerivedDataMutex.lockForWrite();
     Str fdw = FD->filter( signaltime );
     if ( !fdw.empty() )
       printlog( "! error: " + fdw.erasedMarkup() );

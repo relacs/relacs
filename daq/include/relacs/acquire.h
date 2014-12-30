@@ -26,7 +26,7 @@
 #include <ctime>
 #include <vector>
 #include <deque>
-#include <QMutex>
+#include <QReadWriteLock>
 #include <QSemaphore>
 #include <QWaitCondition>
 #include <relacs/tracespec.h>
@@ -685,7 +685,7 @@ protected:
     /*! Semaphore guarding analog inputs. */
   QSemaphore AISemaphore;
     /*! Locks analog input data traces. */
-  QMutex DataMutex;
+  QReadWriteLock DataMutex;
     /*! Waits on new data in input traces. */
   QWaitCondition DataWait;
     /*! The input data from the last read(). */

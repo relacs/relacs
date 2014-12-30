@@ -24,7 +24,7 @@
 
 #include <vector>
 #include <QThread>
-#include <QMutex>
+#include <QReadWriteLock>
 #include <QSemaphore>
 #include <QWaitCondition>
 #include <relacs/device.h>
@@ -150,7 +150,7 @@ public:
 	for an analog output further calls to writeData() are necessary.
         This function is called after a successfull prepareRead() or after stop().
         This function should be as quick as possible. */
-  virtual int startRead( QSemaphore *sp=0, QMutex *datamutex=0,
+  virtual int startRead( QSemaphore *sp=0, QReadWriteLock *datamutex=0,
 			 QWaitCondition *datawait=0, QSemaphore *aosp=0 ) = 0;
     /*! Read data from a running data acquisition
         and store them in an internal buffer.
@@ -289,7 +289,7 @@ protected:
 
     /*! Start the thread if \a sp is not null.
         If \a error do not start the thread and release the semaphore \a sp. */
-  virtual void startThread( QSemaphore *sp = 0, QMutex *datamutex=0,
+  virtual void startThread( QSemaphore *sp = 0, QReadWriteLock *datamutex=0,
 			    QWaitCondition *datawait=0, bool error=false );
     /*! The thread reading data from a running analog input. */
   virtual void run( void );
@@ -306,7 +306,7 @@ private:
     /*! A semaphore guarding analog input. */
   QSemaphore *Semaphore;
     /*! A mutex locking the data buffer where the acquired data is stored to. */
-  QMutex *DataMutex;
+  QReadWriteLock *DataMutex;
     /*! A waitcondition that is woken up whenever new data are written to the buffer. */
   QWaitCondition *DataWait;
 

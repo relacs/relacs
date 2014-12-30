@@ -378,7 +378,7 @@ void Acquire::addStimulusEvents( InList &data, EventList &events )
   e.setSource( 0 );
   e.setIdent( "Stimulus" );
   e.setWriteBufferCapacity( 1000 );
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   events.push( e );
   SignalEvents = &events.back();
   DataMutex.unlock();
@@ -394,7 +394,7 @@ void Acquire::addRestartEvents( InList &data, EventList &events )
   e.setSource( 0 );
   e.setIdent( "Restart" );
   e.setWriteBufferCapacity( 1000 );
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   events.push( e );
   RestartEvents = &events.back();
   DataMutex.unlock();
@@ -660,7 +660,7 @@ int Acquire::read( InList &data )
     AI[i].Gains.clear();
   }
   InTraces.clear();
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   PreviousTime = 0.0;
   NumEmptyData = 0;
   SignalTime = -1.0;
@@ -768,7 +768,7 @@ int Acquire::read( InList &data )
 
   // mark restart:
   InTraces.setRestart();
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
   DataMutex.unlock();
@@ -889,7 +889,7 @@ int Acquire::restartRead( void )
   PreviousTime = InTraces.currentTime();
   NumEmptyData = 0;
   InTraces.setRestart();
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
   DataMutex.unlock();
@@ -998,7 +998,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   PreviousTime = InTraces.currentTime();
   NumEmptyData = 0;
   InTraces.setRestart();
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
   DataMutex.unlock();
@@ -1204,7 +1204,7 @@ int Acquire::waitForRead( void )
 int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
 			 double mintracetime, double prevsignal )
 {
-  DataMutex.lock();
+  DataMutex.lockForRead();
   bool interrupted = false;
   if ( mintracetime > 0.0 ) {
     // do wee need to wait for a new signal?
@@ -1247,11 +1247,11 @@ int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
 int Acquire::updateRawData( double &signaltime,
 			    deque<InList*> &datalist, deque<EventList*> &eventslist )
 {
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   DataWait.wait( &DataMutex );
   bool finished = ( InTraces.currentTime() <= PreviousTime );
-  // XXX the follow contruct is needed, because DataWait.wait() sometimes
-  // returns immediately, without being waken up. (with daqflex/relacs/cfg)
+  // XXX the following contruct is needed, because DataWait.wait() sometimes
+  // returns immediately, without being waken up. (with daqflex/relacs.cfg)
   // XXX Maybe we should figure out, why this happens...
   // From Qt doc: If mutex is not in a locked state, wait() returns immediately.
   if ( finished ) {
@@ -1273,14 +1273,16 @@ int Acquire::updateRawData( double &signaltime,
     if ( RestartEvents != 0 )
       RestartEvents->setSignalTime( SignalTime );
   }
+  PreviousTime = InTraces.currentTime();
+  // check data:
+  bool failed = InTraces.failed();
+  DataMutex.unlock();
   // update raw data:
+  DataMutex.lockForRead();
   for ( deque<InList*>::iterator dp = datalist.begin(); dp != datalist.end(); ++dp )
     (*dp)->updateRaw();
   for ( deque<EventList*>::iterator ep = eventslist.begin(); ep != eventslist.end(); ++ep )
     (*ep)->updateRaw();
-  PreviousTime = InTraces.currentTime();
-  // check data:
-  bool failed = InTraces.failed();
   DataMutex.unlock();
   if ( failed )
     stopRead();

@@ -662,7 +662,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 }
 
 
-int DynClampAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
+int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				    QWaitCondition *datawait, QSemaphore *aosp )
 {
   //  cerr << " DynClampAnalogInput::startRead(): 1\n";/////TEST/////

@@ -26,6 +26,7 @@
 #include <string>
 #include <QMenu>
 #include <QMutex>
+#include <QReadWriteLock>
 #include <QSemaphore>
 #include <QWaitCondition>
 #include <QThread>
@@ -165,7 +166,7 @@ private:
 
     /*! Clear the content of the data buffers and start the simulation.
         \sa clearData(), main(), restart() */
-  void start( InList &data, QMutex *datamutex, QWaitCondition *datawait );
+  void start( InList &data, QReadWriteLock *datamutex, QWaitCondition *datawait );
     /*! Restart a previously stopped simulation.
         \sa stop(), notify(), start() */
   void restart( void );
@@ -202,7 +203,7 @@ private:
   double AverageRatio;
 
   InList Data;
-  QMutex *DataMutex;
+  QReadWriteLock *DataMutex;
   QWaitCondition *DataWait;
 
   struct OutTrace {

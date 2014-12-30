@@ -383,7 +383,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 }
 
 
-int DAQFlexAnalogInput::startRead( QSemaphore *sp, QMutex *datamutex,
+int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				   QWaitCondition *datawait, QSemaphore *aosp )
 {
   QMutexLocker locker( mutex() );

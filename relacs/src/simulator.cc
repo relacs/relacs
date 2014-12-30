@@ -84,7 +84,7 @@ int Simulator::read( InList &data )
     AI[i].Gains.clear();
   }
   InTraces.clear();
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   PreviousTime = 0.0;
   SignalTime = -1.0;
   DataMutex.unlock();
@@ -176,7 +176,7 @@ int Simulator::read( InList &data )
 
   // mark restart:
   InTraces.setRestart();
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
   DataMutex.unlock();
@@ -242,7 +242,7 @@ int Simulator::restartRead( vector< AOData* > &aos, bool directao,
 
   // set restart index:
   InTraces.setRestart();
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
   DataMutex.unlock();
@@ -408,14 +408,14 @@ int Simulator::write( OutData &signal, bool setsignaltime )
   if ( signal.failed() )
     return -1;
 
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   double st = Sim->add( signal, true );
   DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal.priority() ) {
       Sim->stopSignals();
-      DataMutex.lock();
+      DataMutex.lockForWrite();
       st = Sim->add( signal, true );
       DataMutex.unlock();
     }
@@ -630,14 +630,14 @@ int Simulator::write( OutList &signal, bool setsignaltime )
     return -1;
   }
 
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   double st = Sim->add( signal, true );
   DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal[0].priority() ) {
       Sim->stopSignals();
-      DataMutex.lock();
+      DataMutex.lockForWrite();
       st = Sim->add( signal, true );
       DataMutex.unlock();
     }
@@ -786,14 +786,14 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
     return -1;
   }
 
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   double st = Sim->add( signal, false );
   DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal.priority() ) {
       Sim->stopSignals();
-      DataMutex.lock();
+      DataMutex.lockForWrite();
       st = Sim->add( signal, false );
       DataMutex.unlock();
     }
@@ -1005,14 +1005,14 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
     return -1;
   }
 
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   double st = Sim->add( signal, false );
   DataMutex.unlock();
   // device still busy?
   if ( st < 0.0 ) {
     if ( signal[0].priority() ) {
       Sim->stopSignals();
-      DataMutex.lock();
+      DataMutex.lockForWrite();
       st = Sim->add( signal, false );
       DataMutex.unlock();
     }
@@ -1063,7 +1063,7 @@ int Simulator::writeZero( int channel, int device )
 
   // write to daq board:
   AO[device].AO->directWrite( sigs );
-  DataMutex.lock();
+  DataMutex.lockForWrite();
   Sim->add( signal, false );
   DataMutex.unlock();
 

@@ -459,13 +459,36 @@ void PlotTrace::plot( void )
   // align to trigger:
   if ( ( ViewMode == EndView || ViewMode == WrapView ) &&
        Trigger && TriggerSource >= 0 ) {
-    double nt = events( TriggerSource ).nextTime( LeftTime );      
-    if ( nt < 0.0 )
-      nt = events( TriggerSource ).previousTime( LeftTime );      
-    if ( nt > 0.0 && fabs( nt - LeftTime ) < 0.8*TimeWindow ) {
-      LeftTime = nt;
-      leftwin = (LeftTime - sigtime)*tfac;
-      rightwin = leftwin + tfac * TimeWindow;
+    //    cerr << "CT=" << events( TriggerSource ).length() - trace( 0 ).currentTime()
+    //	 << ", LE=" << events( TriggerSource ).length() - events( TriggerSource ).back() << '\n'; 
+    int ninx = events( TriggerSource ).next( LeftTime );
+    int pinx = events( TriggerSource ).previous( LeftTime );      
+    if ( ninx >= events( TriggerSource ).size() ) {
+      ninx = pinx;
+      pinx--;
+    }
+    if ( ninx > 0 && pinx >= 0 ) {
+      double dt = events( TriggerSource )[ninx] - events( TriggerSource )[pinx];
+      /*
+      if ( dt/TimeWindow > 2.0 )
+	ninx--;
+      */
+      double nt = events( TriggerSource )[ninx];
+      //if ( ninx < events( TriggerSource ).size() && ninx > 1 )
+	//cerr << "DIST=" << events( TriggerSource )[ninx] - LeftTime << ", PREV=" << events( TriggerSource )[ninx-1] - LeftTime << '\n';
+      if ( TimeWindow < dt || fabs( nt - LeftTime ) <= 2.0*dt ) {
+	LeftTime = nt;
+	leftwin = (LeftTime - sigtime)*tfac;
+	rightwin = leftwin + tfac * TimeWindow;
+      }
+      //      else
+      //	cerr << "FAILED TO TRIGGER, dt=" << dt << ", ||=" << fabs( nt - LeftTime ) << "\n";
+      // XXX It looks like when we plot things not every event is detected yet!!!
+      // XXX Let's first figure out how RW->getData() can make sure to return synchronized data
+      // XXX The common data block does not help since analoginput keeps writing raw data as soon the Acquire->DataMutex is unlocked, in particular during filtering!
+      // XXX We need one mor ecopy of the data and events, that is updated at the same time as the ones for the filter!!!
+      // XXX Then think about how to remove most of the PlotTrace load from the GUI thread
+      // XXX and how to make sure it gets synchronized data.
     }
   }
 
