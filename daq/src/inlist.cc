@@ -507,7 +507,7 @@ string InList::errorText( void ) const
     if ( operator[]( k ).errorStr() != operator[]( 0 ).errorStr() )
       commonstr = false;
   }
-  if ( commonstr )
+  if ( commonstr && ! operator[]( 0 ).errorStr().empty() )
     ss << operator[]( 0 ).errorStr() << ". ";
 
   // individual errors:

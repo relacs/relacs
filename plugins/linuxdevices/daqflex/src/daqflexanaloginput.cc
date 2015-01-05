@@ -260,9 +260,12 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   if ( !isOpen() )
     return -1;
 
-  reset();
-
   QMutexLocker locker( mutex() );
+
+  Settings.clear();
+  IsPrepared = false;
+  Traces = 0;
+  TraceIndex = 0;
 
   // init internal buffer:
   if ( Buffer != 0 )
@@ -400,6 +403,7 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   bool finished = true;
   TraceIndex = 0;
   IsRunning = true;
+  IsPrepared = false;
   startThread( sp, datamutex, datawait );
   if ( tookao ) {
     DAQFlexAO->startThread( aosp );
@@ -417,7 +421,6 @@ int DAQFlexAnalogInput::readData( void )
   if ( Traces == 0 || Buffer == 0 || ! IsRunning )
     return -2;
 
-  bool failed = false;
   int readn = 0;
   int buffern = BufferN*2;
   int inps = DAQFlexDevice->inPacketSize();
@@ -432,25 +435,30 @@ int DAQFlexAnalogInput::readData( void )
   int err = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
 					     maxn, &readn, timeout );
   string status = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
-  if ( err != 0 || readn <= 0 || status != "AISCAN:STATUS=RUNNING" )
-    cerr << "DONE err=" << err << " readn=" << readn << " status=" << status << '\n';
-
-  if ( err != 0 && err != LIBUSB_ERROR_TIMEOUT ) {
-    Traces->addErrorStr( "LibUSB error " + Str( err ) );
-    if ( err == LIBUSB_ERROR_OVERFLOW )
-      Traces->addError( DaqError::OverflowUnderrun );
-    failed = true;
-    cerr << " DAQFlexAnalogInput::readData(): libUSB error " << err << "\n";
+  if ( err != 0 ) {
+    if ( readn <= 0 || status != "AISCAN:STATUS=RUNNING" ) {
+      if ( status == "AISCAN:STATUS=OVERRUN" )
+	Traces->addError( DaqError::OverflowUnderrun );
+      else
+	Traces->addError( DaqError::Unknown );
+      cerr << "READBULKTRANSFER err=" << err << " readn=" << readn << " status=" << status << '\n';
+    }
+    else if ( err != LIBUSB_ERROR_TIMEOUT ) {
+      Traces->addErrorStr( "LibUSB error " + Str( err ) );
+      if ( err == LIBUSB_ERROR_OVERFLOW )
+	Traces->addError( DaqError::OverflowUnderrun );
+      cerr << " DAQFlexAnalogInput::readData(): libUSB error " << err << "\n";
+    }
   }
-  else if ( readn > 0 ) {
+
+  if ( readn > 0 ) {
     buffern += readn;
+    BufferN = buffern / 2;
+    readn /= 2;
+    CurrentSamples += readn;
   }
 
-  BufferN = buffern / 2;
-  readn /= 2;
-  CurrentSamples += readn;
-
-  if ( failed )
+  if ( Traces->failed() )
     return -2;
 
   // no more data to be read:
@@ -550,12 +558,17 @@ int DAQFlexAnalogInput::stop( void )
 
 int DAQFlexAnalogInput::reset( void )
 {
-  int retVal = stop();
+  if ( !isOpen() )
+    return NotOpen;
 
   QMutexLocker locker( mutex() );
 
-  // clear overrun condition:
+  if ( IsRunning )
+    DAQFlexDevice->sendCommand( "AISCAN:STOP" );
+
   DAQFlexDevice->sendMessage( "AISCAN:RESET" );
+
+  // clear overrun condition:
   DAQFlexDevice->clearRead();
 
   // flush:
@@ -579,10 +592,11 @@ int DAQFlexAnalogInput::reset( void )
   Settings.clear();
 
   IsPrepared = false;
+  IsRunning = false;
   Traces = 0;
   TraceIndex = 0;
   
-  return retVal;
+  return 0;
 }
 
 

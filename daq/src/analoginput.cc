@@ -333,6 +333,7 @@ void AnalogInput::run( void )
     int r = readData();
     // error:
     if ( r < -1 ) {
+      reset();
       if ( DataWait != 0 )
 	DataWait->wakeAll();
       if ( Semaphore != 0 )

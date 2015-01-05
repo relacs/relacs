@@ -859,9 +859,10 @@ int RELACSWidget::updateData( void )
     AQ->restartRead();
     // check error and on failure switch to idle mode:
     AQ->lockRead();
+    bool failed = IRawData.failed();
     es = IRawData.errorText();
     AQ->unlockRead();
-    if ( ! es.empty() ) {
+    if ( failed ) {
       printlog( "! error in restarting analog input: " + es );
       QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in restarting analog input: " + es ) );
       // XXX switch to idle mode!?!

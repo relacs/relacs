@@ -129,15 +129,18 @@ public:
 	InList structure are filled and a negative value is returned. */
   virtual int convertData( void );
 
-    /*! Stop any running ananlog input activity on the device.
+    /*! Stop any running ananlog input activity,
+        but preserve all so far read in data.
+	The next call to readData() will return the data.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, ReadError.
-        \sa close(), open(), isOpen() */
-  virtual int stop ( void );
-    /*! Stop any running ananlog input activity and reset the device.
+        \sa reset(), startRead() */
+  virtual int stop( void );
+    /*! Clear any internal data buffers and reset the device.
+        Assumes that analog input is already stopped.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, ReadError.
-        \sa close(), open(), isOpen() */
+        \sa stop(), close(), open(), isOpen() */
   virtual int reset( void );
   
     /*! True if the analog input driver is running. */

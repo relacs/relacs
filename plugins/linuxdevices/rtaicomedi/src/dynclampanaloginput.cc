@@ -580,16 +580,22 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   if ( !isOpen() )
     return -1;
 
-  reset();
-
   if ( traces.size() <= 0 )
     return -1;
 
   QMutexLocker locker( mutex() );
 
-  setupChanList( traces, ChanList, MAXCHANLIST );
+  // reset:
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = NULL;
+  BufferSize = 0;
+  BufferN = 0;
+  Settings.clear();
 
   // set chanlist:
+  setupChanList( traces, ChanList, MAXCHANLIST );
+
   struct chanlistIOCT chanlistIOC;
   chanlistIOC.subdevID = SubdeviceID;
   for( int k = 0; k < traces.size(); k++ ) {
@@ -640,8 +646,6 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   }
 
   // init internal buffer:
-  if ( Buffer != 0 )
-    delete [] Buffer;
   BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
   Buffer = new char[BufferSize];
   BufferN = 0;
@@ -905,9 +909,23 @@ int DynClampAnalogInput::stop( void )
 
 int DynClampAnalogInput::reset( void ) 
 { 
-  int retval = stop();
-
   QMutexLocker locker( mutex() );
+
+  if ( IsPrepared || IsRunning ) {
+    running = SubdeviceID;
+    int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
+    if ( retval < 0 ) {
+      cerr << " DynClampAnalogInput::reset -> ioctl command IOC_CHK_RUNNING on device "
+	   << ModuleDevice << " failed!\n";
+    }
+    if ( running > 0 ) {
+      retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
+      if ( retval < 0 ) {
+	cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+	     << ModuleDevice << " failed!\n";
+      }
+    }
+  }
 
   // XXX clear buffers by flushing FIFO:
   if ( FifoFd >= 0 )
@@ -919,6 +937,9 @@ int DynClampAnalogInput::reset( void )
   Buffer = NULL;
   BufferSize = 0;
   BufferN = 0;
+
+  IsPrepared = false;
+  IsRunning = false;
 
   Settings.clear();
 

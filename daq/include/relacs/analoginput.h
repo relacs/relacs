@@ -176,12 +176,13 @@ public:
     /*! Stop any running ananlog input activity,
         but preserve all so far read in data.
 	The next call to readData() will return the data.
+	Should call stopRead() to stop the thread.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, ReadError.
-        \sa reset() */
+        \sa reset(), startRead() */
   virtual int stop( void ) = 0;
-    /*! Stop any running ananlog input activity,
-        clear any internal data buffers and reset the device.
+    /*! Clear any internal data buffers and reset the device.
+        Assumes that analog input is already stopped.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, ReadError.
         \sa stop(), close(), open(), isOpen() */

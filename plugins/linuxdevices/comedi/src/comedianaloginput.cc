@@ -684,17 +684,30 @@ int ComediAnalogInput::prepareRead( InList &traces )
   if ( !isOpen() )
     return -1;
 
-  reset();
-
   QMutexLocker locker( mutex() );
 
+  // reset:
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = NULL;
+  BufferSize = 0;
+  BufferN = 0;
+  TotalSamples = 0;
+  CurrentSamples = 0;
+  Settings.clear();
+  if ( Cmd.chanlist != 0 )
+    delete [] Cmd.chanlist;
+  memset( &Cmd, 0, sizeof( comedi_cmd ) );
+  IsPrepared = false;
+  Traces = 0;
+  TraceIndex = 0;
+
+  // command:
   int error = setupCommand( traces, Cmd );
   if ( error )
     return error;
 
   // init internal buffer:
-  if ( Buffer != 0 )
-    delete [] Buffer;
   BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
   Buffer = new char[BufferSize];
   BufferN = 0;
@@ -958,9 +971,16 @@ int ComediAnalogInput::stop( void )
 
 int ComediAnalogInput::reset( void ) 
 { 
-  int retVal = stop();
+  if ( !isOpen() )
+    return NotOpen;
 
   QMutexLocker locker( mutex() );
+  if ( IsRunning ) {
+    if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
+      return ReadError;
+    if ( comedi_poll( DeviceP, SubDevice ) < 0 )
+      return ReadError;
+  }
 
   // free internal buffer:
   if ( Buffer != 0 )
@@ -977,10 +997,11 @@ int ComediAnalogInput::reset( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  IsRunning = false;
   Traces = 0;
   TraceIndex = 0;
 
-  return retVal;
+  return 0;
 }
 
 

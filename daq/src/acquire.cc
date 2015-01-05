@@ -979,11 +979,13 @@ int Acquire::restartRead( void )
       OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AIDevice].Traces[0].sampleRate() );
   }
 
+  /*
   // restore errorflags:
   for ( int i=0; i<InTraces.size(); i++ ) {
     InTraces[i].setError( errorflags[i] );
     InTraces[i].setErrorStr( errorstrgs[i] );
   }
+  */
 
   return 0;
 }
