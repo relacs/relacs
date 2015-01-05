@@ -138,8 +138,6 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
     }
   }
 
-  reset();
-
   // clear flags:
   IsPrepared = false;
   IsRunning = false;
@@ -531,6 +529,9 @@ int DAQFlexAnalogInput::stop( void )
 {
   if ( !isOpen() )
     return NotOpen;
+
+  if ( ! IsRunning )
+    return 0;
 
   lock();
   DAQFlexDevice->sendCommand( "AISCAN:STOP" );

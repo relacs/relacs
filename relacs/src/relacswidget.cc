@@ -509,9 +509,9 @@ void RELACSWidget::init ( void )
 
   MTDT.clear();
   if ( acquisition() )
-    startFirstAcquisition();
+    startFirstAcquisition( false );
   else if ( simulation() )
-    startFirstSimulation();
+    startFirstAcquisition( true );
 }
 
 
@@ -683,7 +683,7 @@ void RELACSWidget::closeHardware( void )
 
 void RELACSWidget::setupInTraces( void )
 {
-  IL.clear();
+  IRawData.clear();
   int nid = Options::size( "inputtraceid" );
   for ( int k=0; k<nid; k++ ) {
     bool failed = false;
@@ -739,9 +739,9 @@ void RELACSWidget::setupInTraces( void )
       MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
       continue;
     }
-    IL.push( id );
-    IL[k].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
-    IL[k].setWriteBufferCapacity( 100.0*id.indices( AQ->updateTime() ) );
+    IRawData.push( id );
+    IRawData[k].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
+    IRawData[k].setWriteBufferCapacity( 100.0*id.indices( AQ->updateTime() ) );
     TraceStyles.push_back( PlotTrace::TraceStyle() );
     TraceStyles[k].PlotWindow = integer( "inputtraceplot", k, k );
   }
@@ -805,16 +805,42 @@ void RELACSWidget::setupOutTraces( void )
 int RELACSWidget::getData( InList &data, EventList &events, double &signaltime,
 			   double mintracetime, double prevsignal )
 {
-  // update raw data (may block if mintracetime > 0.0):
-  int r = AQ->getRawData( data, events, signaltime, mintracetime, prevsignal );
-
-  // update derived data:
   DerivedDataMutex.lockForRead();
-  data.updateDerived();
-  events.updateDerived();
-  DerivedDataMutex.unlock();
+  bool interrupted = false;
+  if ( mintracetime > 0.0 ) {
+    // do wee need to wait for a new signal?
+    if ( prevsignal >= -1.0 ) {
+      while ( IData.success() &&
+	      SignalTime <= prevsignal+1.0e-8 &&
+	      AQ->isReadRunning() ) { 
+	UpdateDataWait.wait( &DerivedDataMutex );
+	if ( ! AQ->isWriteRunning() )
+	  break;
+      }
+      if ( SignalTime > prevsignal+1.0e-8 )
+	mintracetime += SignalTime;
+      else
+	mintracetime = 0.0;
+    }
+    
+    // do we need to wait for more data?
+    while ( IData.success() &&
+	    IData.currentTime() < mintracetime+1.0e-8 &&
+	    AQ->isReadRunning() ) {
+      UpdateDataWait.wait( &DerivedDataMutex );
+    }
+    
+    interrupted = ( IData.currentTime() < mintracetime || mintracetime == 0.0 );
+  }
 
-  return r;
+  // update data:
+  signaltime = SignalTime;
+  data.update();
+  events.update();
+  // check data:
+  bool error = IData.failed();
+  DerivedDataMutex.unlock();
+  return error ? -1 : ( interrupted ? 0 : 1 );
 }
 
 
@@ -822,19 +848,23 @@ int RELACSWidget::updateData( void )
 // called continuously from ReadThread:run()
 {
   double signaltime = -1.0;
-  int r = AQ->updateRawData( signaltime, UpdateRawData, UpdateRawEvents );
+  int r = AQ->waitForData( signaltime );
   if ( r < 0 ) {
-    string es = IL.errorText();
+    AQ->lockRead();
+    string es = IRawData.errorText();
     printlog( "! error in reading acquired data: " + es );
     QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in analog input: " + es ) );
-    IL.clearError();
+    IRawData.clearError();
+    AQ->unlockRead();
     AQ->restartRead();
     // check error and on failure switch to idle mode:
-    es = IL.errorText();
+    AQ->lockRead();
+    es = IRawData.errorText();
+    AQ->unlockRead();
     if ( ! es.empty() ) {
       printlog( "! error in restarting analog input: " + es );
       QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in restarting analog input: " + es ) );
-      // XXX switch to idle mode!
+      // XXX switch to idle mode!?!
       return -1;
     }
     else {
@@ -847,11 +877,18 @@ int RELACSWidget::updateData( void )
   else if ( r > 0 ) {
     // update derived data:
     DerivedDataMutex.lockForWrite();
+    if ( signaltime >= 0.0 )
+      SignalTime = signaltime;
+    AQ->lockRead();
+    for ( deque<InList*>::iterator dp = UpdateRawData.begin(); dp != UpdateRawData.end(); ++dp )
+      (*dp)->updateRaw();
+    for ( deque<EventList*>::iterator ep = UpdateRawEvents.begin(); ep != UpdateRawEvents.end(); ++ep )
+      (*ep)->updateRaw();
+    AQ->unlockRead();
     Str fdw = FD->filter( signaltime );
     if ( !fdw.empty() )
       printlog( "! error: " + fdw.erasedMarkup() );
-    SF->updateDerivedTraces();
-    AM->updateDerivedTraces();
+    AM->updateDerivedTraces(); // XXX is this really good?
     DerivedDataMutex.unlock();
 
     // save data:
@@ -891,8 +928,8 @@ void RELACSWidget::simLoadMessage( void )
 void RELACSWidget::activateGains( void )
 {
   AQ->activateGains();
-  if ( IL.failed() )
-    printlog( "! error in restarting analog input for changing gains: " + IL.errorText() );
+  if ( IRawData.failed() )
+    printlog( "! error in restarting analog input for changing gains: " + IRawData.errorText() );
   else if ( ! ReadLoop.isRunning() ) {
     DataRun = true;
     ReadLoop.start();
@@ -922,8 +959,8 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
   }
   else {
     printlog( "! failed to write signal: " + signal.errorText() );
-    if ( IL.failed() )
-      printlog( "! error in restarting analog input: " + IL.errorText() );
+    if ( IRawData.failed() )
+      printlog( "! error in restarting analog input: " + IRawData.errorText() );
   }
   return r;
 }
@@ -950,8 +987,8 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
   }
   else {
     printlog( "! failed to write signals: " + signal.errorText() );
-    if ( IL.failed() )
-      printlog( "! error in restarting analog input: " + IL.errorText() );
+    if ( IRawData.failed() )
+      printlog( "! error in restarting analog input: " + IRawData.errorText() );
   }
   return r;
 }
@@ -974,8 +1011,8 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
   }
   else {
     printlog( "! failed to write signal: " + signal.errorText() );
-    if ( IL.failed() )
-      printlog( "! error in restarting analog input: " + IL.errorText() );
+    if ( IRawData.failed() )
+      printlog( "! error in restarting analog input: " + IRawData.errorText() );
   }
   return r;
 }
@@ -998,8 +1035,8 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
   }
   else {
     printlog( "! failed to write signals: " + signal.errorText() );
-    if ( IL.failed() )
-      printlog( "! error in restarting analog input: " + IL.errorText() );
+    if ( IRawData.failed() )
+      printlog( "! error in restarting analog input: " + IRawData.errorText() );
   }
   return r;
 }
@@ -1430,8 +1467,10 @@ void RELACSWidget::clearActivity( void )
 {
   CFG.save();
   clearHardware();
-  IL.clearBuffer();
-  ED.clear();
+  IRawData.clearBuffer();
+  IData.clear();
+  ERawData.clear();
+  EData.clear();
   SimLabel->hide();
   MTDT.clear();
 }
@@ -1442,16 +1481,25 @@ void RELACSWidget::startAcquisition( void )
   if ( ! idle() )
     stopActivity();
   clearActivity();
-  startFirstAcquisition();
+  startFirstAcquisition( false );
 }
 
 
-void RELACSWidget::startFirstAcquisition( void )
+void RELACSWidget::startSimulation( void )
 {
-  setMode( AcquisitionMode );
+  if ( ! idle() )
+    stopActivity();
+  clearActivity();
+  startFirstAcquisition( true );
+}
+
+
+void RELACSWidget::startFirstAcquisition( bool simulation )
+{
+  setMode( simulation ? SimulationMode : AcquisitionMode );
 
   // hardware:
-  if ( setupHardware( 0 ) ) {
+  if ( setupHardware( simulation ? 1 : 0 ) ) {
     startIdle();
     return;
   }
@@ -1461,31 +1509,36 @@ void RELACSWidget::startFirstAcquisition( void )
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
   AQ->setUpdateTime( ptime );
   setupInTraces();
-  if ( IL.empty() ) {
+  if ( IRawData.empty() ) {
     printlog( "! error: No valid input traces configured!" );
     MessageBox::error( "RELACS Error !", "No valid input traces configured!", this );
     startIdle();
     return;
   }
   setupOutTraces();
-  int r = AQ->testRead( IL );
+  int r = AQ->testRead( IRawData );
   if ( r < 0 ) {
-    printlog( "! error in testing data acquisition: " + IL.errorText() );
+    printlog( "! error in testing data acquisition: " + IRawData.errorText() );
     MessageBox::warning( "RELACS Warning !",
-			 "error in testing data acquisition: " + IL.errorText(),
+			 "error in testing data acquisition: " + IRawData.errorText(),
 			 true, 0.0, this );
     startIdle();
     return;
   }
 
-  // events:
+  // basic events:
   FD->clearIndices();
-  AQ->addStimulusEvents( IL, ED );
-  FD->createStimulusEvents( ED, EventStyles );
-  AQ->addRestartEvents( IL, ED );
-  FD->createRestartEvents( ED, EventStyles );
-  FD->createRecordingEvents( IL, ED, EventStyles );
-  Str fdw = FD->createTracesEvents( IL, ED, TraceStyles, EventStyles );
+  SignalTime = -1.0;
+  AQ->addStimulusEvents( IRawData, ERawData );
+  FD->createStimulusEvents( ERawData, EventStyles );
+  AQ->addRestartEvents( IRawData, ERawData );
+  FD->createRestartEvents( ERawData, EventStyles );
+  FD->createRecordingEvents( IRawData, ERawData, EventStyles );
+
+  // derived (filtered) traces and events:
+  IData.assign( &IRawData );
+  EData.assign( &ERawData );
+  Str fdw = FD->createTracesEvents( IData, EData, TraceStyles, EventStyles );
   if ( !fdw.empty() ) {
     printlog( "! error: " + fdw.erasedMarkup() );
     MessageBox::error( "RELACS Error !", fdw, this );
@@ -1499,20 +1552,33 @@ void RELACSWidget::startFirstAcquisition( void )
   // copy traces:
   UpdateRawData.clear();
   UpdateRawEvents.clear();
-  SF->assignTracesEvents( IL, ED, UpdateRawData, UpdateRawEvents );
-  FD->assignTracesEvents( IL, ED, UpdateRawData, UpdateRawEvents );
-  CW->assignTracesEvents( IL, ED );
-  PT->assignTracesEvents( IL, ED );
-  RP->assignTracesEvents( IL, ED );
-  AM->assignTraces( IL, UpdateRawData );
+  UpdateRawData.push_back( &IData );
+  UpdateRawEvents.push_back( &EData );
+
+  FD->setTracesEvents( IData, EData );
+  SF->setTracesEvents( IData, EData );
+  AM->assignTraces( IData, UpdateRawData ); // XXX is this really good in this way???
+  CW->assignTracesEvents( IData, EData );
+  PT->assignTracesEvents( IData, EData );
+  RP->assignTracesEvents( IData, EData );
+  if ( simulation ) {
+    MD->assignTracesEvents( IData, EData );
+    MD->addTracesEvents( UpdateRawData, UpdateRawEvents ); // XXX is this ever used?
+  }
 
   // plots:
   PT->updateMenu();
   PT->resize();
 
+  // simulation status widget:
+  if ( simulation ) {
+    SimLabel->setText( "" );
+    SimLabel->show();
+  }
+
   CFG.preConfigure( RELACSPlugin::Plugins );
   // XXX before configuring, something like AQ->init would be nice
-  // in order to set the IL gain factors.
+  // in order to set the IRawData gain factors.
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );
 
@@ -1542,24 +1608,43 @@ void RELACSWidget::startFirstAcquisition( void )
   CW->setMaximumWidth( w );
 
   // start data aquisition:
-  r = AQ->read( IL );
+  r = AQ->read( IRawData );
+  if ( simulation && r < 0 ) {
+    // give it a second chance with the adjusted input parameter:
+    r = AQ->read( IRawData );
+  }
   if ( r < 0 ) {
-    printlog( "! error in starting data acquisition: " + IL.errorText() );
+    printlog( "! error in starting data acquisition: " + IRawData.errorText() );
     MessageBox::warning( "RELACS Warning !",
-			 "error in starting data acquisition: " + IL.errorText(),
+			 "error in starting data acquisition: " + IRawData.errorText(),
 			 true, 0.0, this );
     startIdle();
     return;
   }
 
-  SF->assignTracesEvents();
+  IData.assign();
   PT->assignTracesEvents();
-  FD->assignTracesEvents();
   CW->assignTracesEvents();
   RP->assignTracesEvents();
+  if ( simulation )
+    MD->assignTracesEvents();
   AM->assignTraces();
   AID->updateMenu();
 
+  // check success:
+  if ( simulation ) {
+    // XXX why this here and why not return with startIdle() ?
+    for ( int k=0; k<IRawData.size(); k++ ) {
+      if ( IRawData[k].failed() ) {
+	printlog( "Error in starting simulation of trace " + IRawData[k].ident() + ": "
+		  + IRawData[k].errorText() );
+	stopActivity();
+	return;
+      }
+    }
+  }
+
+  // initialize filters:
   FD->setAdjustFlag( AQ->adjustFlag() );
   fdw = FD->init();  // init filters/detectors before RePro!
   if ( ! fdw.empty() ) {
@@ -1593,182 +1678,14 @@ void RELACSWidget::startFirstAcquisition( void )
   // get first RePro and start it:
   MC->startUp();
 
-  AcquisitionAction->setEnabled( false );
-  SimulationAction->setEnabled( true );
+  AcquisitionAction->setEnabled( simulation );
+  SimulationAction->setEnabled( ! simulation );
   IdleAction->setEnabled( true );
 
-  printlog( "Acquisition-mode started" );
-}
-
-
-void RELACSWidget::startSimulation( void )
-{
-  if ( ! idle() )
-    stopActivity();
-  clearActivity();
-  startFirstSimulation();
-}
-
-
-void RELACSWidget::startFirstSimulation( void )
-{
-  setMode( SimulationMode );
-
-  // hardware:
-  if ( setupHardware( 1 ) ) {
-    startIdle();
-    return;
-  }
-
-  // analog input and output traces:
-  double ptime = SS.number( "processinterval", 0.1 );
-  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
-  AQ->setUpdateTime( ptime );
-  setupInTraces();
-  if ( IL.empty() ) {
-    printlog( "! error: No valid input traces configured!" );
-    MessageBox::error( "RELACS Error !", "No valid input traces configured!", this );
-    startIdle();
-    return;
-  }
-  setupOutTraces();
-  int r = AQ->testRead( IL );
-  if ( r < 0 ) {
-    printlog( "! error in testing data acquisition: " + IL.errorText() );
-    MessageBox::warning( "RELACS Warning !",
-			 "error in testing data acquisition: " + IL.errorText(),
-			 true, 0.0, this );
-    startIdle();
-    return;
-  }
-
-  // events:
-  FD->clearIndices();
-  AQ->addStimulusEvents( IL, ED );
-  FD->createStimulusEvents( ED, EventStyles );
-  AQ->addRestartEvents( IL, ED );
-  FD->createRestartEvents( ED, EventStyles );
-  FD->createRecordingEvents( IL, ED, EventStyles );
-  Str fdw = FD->createTracesEvents( IL, ED, TraceStyles, EventStyles );
-  if ( !fdw.empty() ) {
-    printlog( "! error: " + fdw.erasedMarkup() );
-    MessageBox::error( "RELACS Error !", fdw, this );
-    startIdle();
-    return;
-  }
-
-  // files:
-  SF->setPath( SF->defaultPath() );
-
-  // copy traces:
-  UpdateRawData.clear();
-  UpdateRawEvents.clear();
-  SF->assignTracesEvents( IL, ED, UpdateRawData, UpdateRawEvents );
-  FD->assignTracesEvents( IL, ED, UpdateRawData, UpdateRawEvents );
-  CW->assignTracesEvents( IL, ED );
-  PT->assignTracesEvents( IL, ED );
-  RP->assignTracesEvents( IL, ED );
-  MD->assignTracesEvents( IL, ED );
-  MD->addTracesEvents( UpdateRawData, UpdateRawEvents ); // XXX Is this ever used?
-  AM->assignTraces( IL, UpdateRawData );
-
-  // plots:
-  PT->updateMenu();
-  PT->resize();
-
-  SimLabel->setText( "" );
-  SimLabel->show();
-
-  CFG.preConfigure( RELACSPlugin::Plugins );
-  // XXX before configuring, something like AQ->init would be nice
-  // in order to set the IL gain factors.
-  CFG.read( RELACSPlugin::Plugins );
-  CFG.configure( RELACSPlugin::Plugins );
-
-  // device menu:
-  int menuindex = 0;
-  DV->addMenu( DeviceMenu, menuindex );
-  AID->addMenu( DeviceMenu, menuindex );
-  AOD->addMenu( DeviceMenu, menuindex );
-  DIOD->addMenu( DeviceMenu, menuindex );
-  TRIGD->addMenu( DeviceMenu, menuindex );
-  ATD->addMenu( DeviceMenu, menuindex );
-  ATI->addMenu( DeviceMenu, menuindex );
-
-  // init plugins:
-  CW->initDevices();
-  RP->setSettings();
-
-  // macros:
-  MC->checkOptions();
-  MC->warning();
-
-  // update layout:
-  int wd = FD->sizeHint().width();
-  int wc = CW->sizeHint().width();
-  int w = wc > wd ? wc : wd;
-  FD->setMaximumWidth( w );
-  CW->setMaximumWidth( w );
-
-  // start data aquisition:
-  r = AQ->read( IL );
-  if ( r < 0 ) {
-    // give it a second chance with the adjusted input parameter:
-    r = AQ->read( IL );
-    if ( r < 0 ) {
-      printlog( "! error in starting data acquisition: " + IL.errorText() );
-      MessageBox::warning( "RELACS Warning !",
-			   "error in starting data acquisition: " + IL.errorText(),
-			   true, 0.0, this );
-      startIdle();
-      return;
-    }
-  }
-
-  SF->assignTracesEvents();
-  PT->assignTracesEvents();
-  FD->assignTracesEvents();
-  CW->assignTracesEvents();
-  RP->assignTracesEvents();
-  MD->assignTracesEvents();
-  AM->assignTraces();
-  AID->updateMenu();
-
-  // check success:
-  for ( int k=0; k<IL.size(); k++ ) {
-    if ( IL[k].failed() ) {
-      printlog( "Error in starting simulation of trace " + IL[k].ident() + ": "
-		+ IL[k].errorText() );
-      stopActivity();
-      return;
-    }
-  }
-
-  FD->setAdjustFlag( AQ->adjustFlag() );
-  fdw = FD->init();  // init filters/detectors before RePro!
-  if ( ! fdw.empty() ) {
-    printlog( "! error in initializing filter: " + fdw.erasedMarkup() );
-    MessageBox::warning( "RELACS Warning !",
-			 "error in initializing filter: " + fdw,
-			 true, 0.0, this );
-    startIdle();
-    return;
-  }
-
-  DataRun = true;
-  ReadLoop.start();
-
-  CW->start();
-  PT->start( ptime );
-
-  // get first RePro and start it:
-  MC->startUp();
-
-  AcquisitionAction->setEnabled( true );
-  SimulationAction->setEnabled( false );
-  IdleAction->setEnabled( true );
-
-  printlog( "Simulation-mode started" );
+  if ( simulation )
+    printlog( "Simulation-mode started" );
+  else
+    printlog( "Acquisition-mode started" );
 }
 
 
@@ -1791,8 +1708,8 @@ void RELACSWidget::startIdle( void )
   CW->setMaximumWidth( w );
 
   RP->setSettings();
-  //  IL->clearBuffer();
-  //  ED.clear();
+  //  XXX IRawData->clearBuffer();
+  //  XXX ERawData.clear();
   RP->activateRePro( 0 );
   AcquisitionAction->setEnabled( true );
   SimulationAction->setEnabled( true );
@@ -1810,9 +1727,9 @@ void RELACSWidget::restartAcquisition( void )
     stopActivity();
   clearActivity();
   if ( mode == AcquisitionMode )
-    startFirstAcquisition();
+    startFirstAcquisition( false );
   else if ( mode == SimulationMode )
-    startFirstSimulation();
+    startFirstAcquisition( true );
   else
     startIdle();
 }

@@ -107,6 +107,9 @@ private:
   int MaxRanges;
   double AIuniRanges[30];
   double AIbiRanges[30];
+
+  bool IsRunning;
+
 };
 
 

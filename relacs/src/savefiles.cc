@@ -307,31 +307,13 @@ QMutex *SaveFiles::mutex( void )
 }
 
 
-void SaveFiles::assignTracesEvents( const InList &il, const EventList &el,
-				    deque<InList*> &data, deque<EventList*> &events )
+void SaveFiles::setTracesEvents( const InList &il, const EventList &el )
 {
   QMutexLocker locker( &SaveMutex );
-  IL.assign( &il );
-  EL.assign( &el );
-  data.push_back( &IL );
-  events.push_back( &EL );
-}
-
-
-void SaveFiles::assignTracesEvents( void )
-{
-  QMutexLocker locker( &SaveMutex );
-  IL.assign();
-  EL.assign();
-}
-
-
-void SaveFiles::updateDerivedTraces( void )
-{
-  // this function is called from RELACSWidget::updateData()
-  QMutexLocker locker( &SaveMutex );
-  IL.updateDerived();
-  EL.updateDerived();
+  IL.clear();
+  IL.add( il );
+  EL.clear();
+  EL.add( el );
 }
 
 

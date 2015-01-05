@@ -128,8 +128,6 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   opts.numbers( "delays", delays, "s" );
   setDelays( delays );
 
-  reset();
-
   // clear flags:
   IsPrepared = false;
   NoMoreData = true;
@@ -386,9 +384,12 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     NBuffer = 0;
   }
 
-  unlock();
+  Sigs.clear();
+  BufferSize = 0;
+  Settings.clear();
+  IsPrepared = false;
 
-  reset();
+  unlock();
 
   // no signals:
   if ( sigs.size() == 0 )
@@ -581,7 +582,7 @@ int DAQFlexAnalogOutput::writeData( void )
   }
 
   // device stopped?
-  if ( IsPrepared ) {
+  if ( IsPrepared ) {  // XXX where is IsPrepared set to false???
     string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
     if ( response.find( "UNDERRUN" ) != string::npos ) {
       Sigs.addError( DaqError::OverflowUnderrun );
@@ -603,8 +604,10 @@ int DAQFlexAnalogOutput::writeData( void )
   int bytesToWrite = (NBuffer/outps)*outps;
   if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
     bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
+  /*
   else if ( NBuffer <= DAQFlexDevice->aoFIFOSize() * 2 )
     bytesToWrite = NBuffer;
+  */
   if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
   int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
@@ -621,8 +624,16 @@ int DAQFlexAnalogOutput::writeData( void )
   }
 
   if ( ern == 0 ) {
+    if ( bytesWritten < bytesToWrite )
+      cerr << "FAILED TO TRANSFER DATA : " << bytesWritten << " < " <<  bytesToWrite << '\n';
     // no more data:
     if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
+      if ( bytesToWrite % outps == 0 ) {
+	cerr << "WRITING ZERO DATA\n";  // not yet tested...
+	// write a zero length packet to indicate end of data:
+	DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), 0,
+					  &bytesWritten, 10 );
+      }
       if ( Buffer != 0 )
 	delete [] Buffer;
       Buffer = 0;
@@ -663,6 +674,9 @@ int DAQFlexAnalogOutput::reset( void )
   if ( ! isOpen() )
     return NotOpen;
 
+  if ( ! IsPrepared )
+    return 0;
+
   lock();
   DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
   unlock();
@@ -673,11 +687,11 @@ int DAQFlexAnalogOutput::reset( void )
 
   // clear underrun condition:
   DAQFlexDevice->sendMessage( "AOSCAN:RESET" );
-  // XXX the following blocks for quite a while at high rates! See DQFlexCore for more comments.
-  // what is about still ongoin analog input transfers ?
+  // XXX the following blocks for quite a while at high rates! See DAQFlexCore for more comments.
+  // what is about still ongoing analog input transfers ?
   // We should only call this on an underrun condition!
   DAQFlexDevice->clearWrite();
-  DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
+  //  DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" ); // XXX the output is not used....
 
   Sigs.clear();
   if ( Buffer != 0 )

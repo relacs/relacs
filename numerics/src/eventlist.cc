@@ -402,6 +402,24 @@ void EventList::add( const EventData *events, bool own )
 }
 
 
+void EventList::add( EventList &events, bool own )
+{
+  for ( int k=0; k<events.size(); k++ ) {
+    Events.push_back( &events[k] );
+    Own.push_back( own );
+  }
+}
+
+
+void EventList::add( const EventList &events, bool own )
+{
+  for ( int k=0; k<events.size(); k++ ) {
+    Events.push_back( const_cast<EventData*>(&events[k]) );
+    Own.push_back( own );
+  }
+}
+
+
 void EventList::set( int index, const EventData *data, bool own )
 {
   if ( index >= 0 && index < size() ) {

@@ -77,12 +77,10 @@ void FilterDetectors::clearIndices( void )
 }
 
 
-void FilterDetectors::assignTracesEvents( const InList &il, const EventList &el,
-					  deque<InList*> &data, deque<EventList*> &events )
+void FilterDetectors::setTracesEvents( const InList &il, const EventList &el )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
-    d->FilterDetector->assignTracesEvents( il, el );
-    d->FilterDetector->addTracesEvents( data, events );
+    d->FilterDetector->setTracesEvents( il, el );
     for ( int j=0; j < d->InTraces.size(); j++ ) {
       if ( d->InTraces[j].source() == 0 )
 	d->InTraces.set( j, &d->FilterDetector->trace( d->InTraces[j].ident() ) );
@@ -96,13 +94,6 @@ void FilterDetectors::assignTracesEvents( const InList &il, const EventList &el,
 	d->OtherEvents.set( j, &d->FilterDetector->events( d->OtherEvents[j].ident() ) );
     }
   }
-}
-
-
-void FilterDetectors::assignTracesEvents( void )
-{
-  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
-    d->FilterDetector->assignTracesEvents();
 }
 
 
@@ -1195,9 +1186,9 @@ int FilterDetectors::traceInputTrace( int trace ) const
 int FilterDetectors::traceInputTrace( const string &ident ) const
 {
   for ( int trace=0; 
-	trace < RW->ED.size() && trace < (int)TraceInputTrace.size();
+	trace < RW->EData.size() && trace < (int)TraceInputTrace.size();
 	trace++ ) {
-    if ( RW->IL[trace].ident() == ident )
+    if ( RW->IData[trace].ident() == ident )
       return TraceInputTrace[ trace ];
   }
   return -1;
@@ -1216,9 +1207,9 @@ int FilterDetectors::traceInputEvent( int trace ) const
 int FilterDetectors::traceInputEvent( const string &ident ) const
 {
   for ( int trace=0; 
-	trace < RW->IL.size() && trace < (int)TraceInputEvent.size();
+	trace < RW->IData.size() && trace < (int)TraceInputEvent.size();
 	trace++ ) {
-    if ( RW->IL[trace].ident() == ident )
+    if ( RW->IData[trace].ident() == ident )
       return TraceInputEvent[ trace ];
   }
   return -1;
@@ -1237,9 +1228,9 @@ int FilterDetectors::eventInputTrace( int trace ) const
 int FilterDetectors::eventInputTrace( const string &ident ) const
 {
   for ( int event=0; 
-	event < RW->ED.size() && event < (int)EventInputTrace.size();
+	event < RW->EData.size() && event < (int)EventInputTrace.size();
 	event++ ) {
-    if ( RW->ED[event].ident() == ident )
+    if ( RW->EData[event].ident() == ident )
       return EventInputTrace[ event ];
   }
   return -1;
@@ -1258,9 +1249,9 @@ int FilterDetectors::eventInputEvent( int event ) const
 int FilterDetectors::eventInputEvent( const string &ident ) const
 {
   for ( int event=0; 
-	event < RW->ED.size() && event < (int)EventInputEvent.size();
+	event < RW->EData.size() && event < (int)EventInputEvent.size();
 	event++ ) {
-    if ( RW->ED[event].ident() == ident )
+    if ( RW->EData[event].ident() == ident )
       return EventInputEvent[ event ];
   }
   return -1;

@@ -545,6 +545,9 @@ protected slots:
 
 private:
 
+    /*! Return \c true if the analog output was interrupted and set interrupt() to \c true. */
+  bool interruptWrite( void );
+
     /*! Install the event filter for grabbing keys. */
   void grabKeys( void );
 
@@ -555,7 +558,7 @@ private:
   void run( void );
 
   ReProThread *Thread;
-  bool Interrupt;
+  int Interrupt;   // 0: no interruption, 1: stop write, 2: interrupt repro
   mutable QMutex InterruptLock;
   QWaitCondition SleepWait;
   QTime SleepTime;

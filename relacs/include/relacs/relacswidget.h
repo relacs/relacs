@@ -76,7 +76,7 @@ class Session;
 \author Christian Machens
 \version 2.0
 
-\todo make sure startFirstAcquisition() and startFirstSimulation() are only called from the GUI thread
+\todo make sure startFirstAcquisition() are only called from the GUI thread
       (because of MessageBox calls).
 \bug what about wroteData?
 \todo Set ID gain factors before configuring Session
@@ -251,12 +251,10 @@ public slots:
   void stopActivity( void );
     /*! Clear the state of stopped activity. */
   void clearActivity( void );
-    /*! Start acquisition mode. */
-  void startFirstAcquisition( void );
+    /*! Start acquisition or simulation mode. */
+  void startFirstAcquisition( bool simulation );
     /*! Clear activity and start acquisition mode. */
   void startAcquisition( void );
-    /*! Start simulation mode. */
-  void startFirstSimulation( void );
     /*! Clear activity and start simulation mode. */
   void startSimulation( void );
     /*! Start idle mode. */
@@ -384,8 +382,11 @@ private:
 
   int ShowFull;
 
-  InList IL;
-  EventList ED;
+  double SignalTime;
+  InList IRawData;
+  InList IData;  // Buffers point to IRawData but is in sync with filtered traces and events
+  EventList ERawData;
+  EventList EData;  // Buffers point to ED but is in sync with filtered traces and events
   deque<PlotTrace::TraceStyle> TraceStyles;
   deque<PlotTrace::EventStyle> EventStyles;
   deque<InList*> UpdateRawData;

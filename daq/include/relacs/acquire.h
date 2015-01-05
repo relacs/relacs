@@ -396,6 +396,8 @@ public:
         \return 0 on success, i.e. all analog inputs finished successfully
 	or -1 if some input failed. */
   virtual int waitForRead( void );
+    /*! \return \c true if all the threads acquiering data are still running. */
+  bool isReadRunning( void ) const;
     /*! Updates the raw traces of the lists \a datalist and \a eventslist
         and of \a data and \a events
         to the current state of the data buffers.
@@ -413,14 +415,15 @@ public:
 	\c 0 if interrupted, or \c -1 on error. */
   int getRawData( InList &data, EventList &events, double &signaltime,
 		  double mintracetime, double prevsignal );
-    /*! Wait for new data and update the raw traces of \a datalist and \a eventslist
-        to the current state of the data buffers.
-        Also set \a signaltime to the time of the most recent output signal
+    /*! Wait for new data and set \a signaltime to the time of the most recent output signal
 	or to -1, if there wasn't any new output signal.
         \return \c 1 if the input traces got new data,
 	\c 0 if no more data are available, or \c -1 on error. */
-  int updateRawData( double &signaltime,
-		     deque<InList*> &datalist, deque<EventList*> &eventslist );
+  int waitForData( double &signaltime );
+    /*! Lock the input data for reading. \sa unlockRead(), lockWrite() */
+  void lockRead( void );
+    /*! Unlock the input data. \sa lockRead(), unlockWrite() */
+  void unlockRead( void );
 
     /*! \return the flag that is used to mark traces whose gain was changed. 
         \sa setAdjustFlag(), setGain(), adjustGain(), gainChanged(), activateGains() */
@@ -538,6 +541,12 @@ public:
         \return 0 on success, i.e. all analog outputs finished successfully
 	or -1 if some output failed. */
   virtual int waitForWrite( void );
+    /*! \return \c true if all the threads writing data are still running. */
+  bool isWriteRunning( void ) const;
+    /*! Lock the output signals for reading. \sa unlockWrite(), lockRead() */
+  void lockWrite( void );
+    /*! Unlock the output signals. \sa lockWrite(), unlockRead() */
+  void unlockWrite( void );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards.
@@ -578,6 +587,9 @@ public:
     /*! Write a zero to all physical analog output channels. 
         \return \c -1 on failure, \c 0 on success. */
   virtual int writeReset( void );
+
+    /*! \return the start time of the last output signal relative to the input data. */
+  double signalTime( void ) const;
 
     /*! \return an error string describing problems that occured during analog output. */
   string writeError( void ) const;
@@ -653,10 +665,6 @@ public:
 
 protected:
 
-    /*! \return \c true if all the threads acquiering data are still running. */
-  bool isReadRunning( void ) const;
-    /*! \return \c true if all the threads writing data are still running. */
-  bool isWriteRunning( void ) const;
     /*! Check for a new signal time and return it.
         \return the new signal time, -1.0 if there is no new signal. */
   virtual double getSignal( void );
@@ -685,9 +693,9 @@ protected:
     /*! Semaphore guarding analog inputs. */
   QSemaphore AISemaphore;
     /*! Locks analog input data traces. */
-  QReadWriteLock DataMutex;
+  mutable QReadWriteLock ReadMutex;
     /*! Waits on new data in input traces. */
-  QWaitCondition DataWait;
+  QWaitCondition ReadWait;
     /*! The input data from the last read(). */
   InList InTraces;
     /*! The size of InTraces at the last updateRawData(). */
@@ -725,6 +733,8 @@ protected:
   vector < AOData > AO;
     /*! Semaphore guarding analog outputs. */
   QSemaphore AOSemaphore;
+    /*! Locks analog output signals. */
+  mutable QReadWriteLock WriteMutex;
     /*! Index of last output device. */
   int LastDevice;
     /*! Time of last signal output. */

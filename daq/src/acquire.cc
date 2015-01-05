@@ -27,6 +27,8 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
+#include <QReadLocker>
+#include <QWriteLocker>
 #include <relacs/acquire.h>
 
 namespace relacs {
@@ -81,6 +83,8 @@ int Acquire::addInput( AnalogInput *ai )
   if ( ! ai->isOpen() )
     return -2;
 
+  QWriteLocker locker( &ReadMutex );
+
   AI.push_back( AIData( ai ) );
 
   return 0;
@@ -89,12 +93,15 @@ int Acquire::addInput( AnalogInput *ai )
 
 int Acquire::inputsSize( void ) const
 { 
-  return AI.size();
+  QReadLocker locker( &ReadMutex );
+  int as = AI.size();
+  return as;
 }
 
 
 int Acquire::inputIndex( const string &ident ) const
 {
+  QReadLocker locker( &ReadMutex );
   for ( unsigned int k=0; k < AI.size(); k++ ) {
     if ( AI[k].AI->deviceIdent() == ident )
       return k;
@@ -105,6 +112,7 @@ int Acquire::inputIndex( const string &ident ) const
 
 const AnalogInput *Acquire::inputDevice( int deviceindex ) const
 {
+  QReadLocker locker( &ReadMutex );
   if ( deviceindex < 0 || deviceindex >= (int)AI.size() )
     return 0;
 
@@ -114,6 +122,7 @@ const AnalogInput *Acquire::inputDevice( int deviceindex ) const
 
 const InList &Acquire::inputTraces( int deviceindex ) const
 {
+  QReadLocker locker( &ReadMutex );
   if ( deviceindex < 0 )
     deviceindex = 0;
   if ( deviceindex >= (int)AI.size() )
@@ -126,6 +135,7 @@ const InList &Acquire::inputTraces( int deviceindex ) const
 void Acquire::clearInputs( void )
 {
   stopRead();
+  QWriteLocker locker( &ReadMutex );
   AI.clear();
   InTraces.clear();
 }
@@ -134,6 +144,7 @@ void Acquire::clearInputs( void )
 void Acquire::closeInputs( void )
 {
   stopRead();
+  QWriteLocker locker( &ReadMutex );
   for ( unsigned int k=0; k < AI.size(); k++ ) {
     if ( AI[k].AI->isOpen() )
       AI[k].AI->close();
@@ -153,6 +164,8 @@ int Acquire::addOutput( AnalogOutput *ao )
   if ( ! ao->isOpen() )
     return -2;
 
+  QWriteLocker locker( &WriteMutex );
+
   AO.push_back( AOData( ao ) );
 
   return 0;
@@ -161,12 +174,15 @@ int Acquire::addOutput( AnalogOutput *ao )
 
 int Acquire::outputsSize( void ) const
 {
-  return AO.size();
+  QReadLocker locker( &WriteMutex );
+  int as = AO.size();
+  return as;
 }
 
 
 int Acquire::outputIndex( const string &ident ) const
 {
+  QReadLocker locker( &WriteMutex );
   for ( unsigned int k=0; k < AO.size(); k++ ) {
     if ( AO[k].AO->deviceIdent() == ident )
       return k;
@@ -178,6 +194,7 @@ int Acquire::outputIndex( const string &ident ) const
 void Acquire::clearOutputs( void )
 {
   stopWrite();
+  QWriteLocker locker( &WriteMutex );
   AO.clear();
 }
 
@@ -185,6 +202,7 @@ void Acquire::clearOutputs( void )
 void Acquire::closeOutputs( void )
 {
   stopWrite();
+  QWriteLocker locker( &WriteMutex );
   for ( unsigned int k=0; k < AO.size(); k++ ) {
     if ( AO[k].AO->isOpen() )
       AO[k].AO->close();
@@ -196,6 +214,7 @@ void Acquire::closeOutputs( void )
 
 void Acquire::setSignalDelay( int device, double delay )
 {
+  QWriteLocker locker( &WriteMutex );
   if ( device >= 0 && device < (int)AO.size() && AO[device].AO != 0 ) {
     AO[device].AO->setDelay( delay );
   }
@@ -216,6 +235,7 @@ int Acquire::addAttLine( Attenuate *att, const string &device, int channel )
     att->setAOChannel( channel );
 
   // get id of analog output device:
+  QWriteLocker locker( &WriteMutex );
   int id = -1;
   for ( unsigned int k=0; k<AO.size(); k++ ) {
     if ( AO[k].AO->deviceIdent() == att->aoDevice() ) {
@@ -234,18 +254,22 @@ int Acquire::addAttLine( Attenuate *att, const string &device, int channel )
 
 int Acquire::attLinesSize( void ) const
 {
-  return Att.size();
+  QReadLocker locker( &WriteMutex );
+  int as = Att.size();
+  return as;
 }
 
 
 void Acquire::clearAttLines( void )
 {
+  QWriteLocker locker( &WriteMutex );
   Att.clear();
 }
 
 
 void Acquire::closeAttLines( void )
 {
+  QWriteLocker locker( &WriteMutex );
   for ( unsigned int k=0; k < Att.size(); k++ )
     if ( Att[k].Att->isOpen() )
       Att[k].Att->close();
@@ -378,10 +402,9 @@ void Acquire::addStimulusEvents( InList &data, EventList &events )
   e.setSource( 0 );
   e.setIdent( "Stimulus" );
   e.setWriteBufferCapacity( 1000 );
-  DataMutex.lockForWrite();
+  QWriteLocker locker( &ReadMutex );
   events.push( e );
   SignalEvents = &events.back();
-  DataMutex.unlock();
 }
 
 
@@ -394,10 +417,9 @@ void Acquire::addRestartEvents( InList &data, EventList &events )
   e.setSource( 0 );
   e.setIdent( "Restart" );
   e.setWriteBufferCapacity( 1000 );
-  DataMutex.lockForWrite();
+  QWriteLocker locker( &ReadMutex );
   events.push( e );
   RestartEvents = &events.back();
-  DataMutex.unlock();
 }
 
 
@@ -437,6 +459,9 @@ void Acquire::close( void )
 
 void Acquire::initSync( void )
 {
+  QWriteLocker readlocker( &ReadMutex );
+  QWriteLocker writelocker( &WriteMutex );
+
   // set synchronization mode:
   SyncMode = NoSync;
 
@@ -569,6 +594,8 @@ void Acquire::setUpdateTime( double time )
 
 int Acquire::testRead( InList &data )
 {
+  QReadLocker locker( &ReadMutex );
+
   //  cerr << "Acquire::testRead( InList& )\n";
 
   bool success = true;
@@ -592,7 +619,7 @@ int Acquire::testRead( InList &data )
     }
     else if ( data[k].device() >= (int)AI.size() ) {
       data[k].addError( DaqError::NoDevice );
-      data[k].setDevice( AO.size()-1 );
+      data[k].setDevice( AI.size()-1 );
       success = false;
     }
     else {
@@ -648,6 +675,7 @@ int Acquire::testRead( InList &data )
 int Acquire::read( InList &data )
 {
   //  cerr << "Acquire::read( InList& )\n";
+  QWriteLocker readlocker( &ReadMutex );
 
   bool success = true;
 
@@ -660,11 +688,9 @@ int Acquire::read( InList &data )
     AI[i].Gains.clear();
   }
   InTraces.clear();
-  DataMutex.lockForWrite();
   PreviousTime = 0.0;
   NumEmptyData = 0;
   SignalTime = -1.0;
-  DataMutex.unlock();
 
   // sort data to devices:
   for ( int k=0; k<data.size(); k++ ) {
@@ -679,7 +705,7 @@ int Acquire::read( InList &data )
     }
     else if ( data[k].device() >= (int)AI.size() ) {
       data[k].addError( DaqError::NoDevice );
-      data[k].setDevice( AO.size()-1 );
+      data[k].setDevice( AI.size()-1 );
       success = false;
     }
     else {
@@ -696,6 +722,7 @@ int Acquire::read( InList &data )
       data.addErrorStr( "unable to match model input traces" );
     success = false;
   }
+  QWriteLocker writelocker( &WriteMutex );
   if ( AO.size() > 0 && AO[0].AO->matchTraces( OutTraces ) < 0 ) {
     /*
     if ( ! OutTraces.failed() )
@@ -768,15 +795,13 @@ int Acquire::read( InList &data )
 
   // mark restart:
   InTraces.setRestart();
-  DataMutex.lockForWrite();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
-  DataMutex.unlock();
 
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
-  QWaitCondition *datawait = &DataWait;
+  QWaitCondition *readwait = &ReadWait;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
       bool started = false;
@@ -787,11 +812,11 @@ int Acquire::read( InList &data )
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, &DataMutex, datawait ) != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait ) != 0 )
 	  success = false;
 	else {
 	  aistarted.push_back( i );
-	  datawait = 0; // we will wait on the first device only
+	  readwait = 0; // we will wait on the first device only
 	}
       }
     }
@@ -828,6 +853,7 @@ int Acquire::read( InList &data )
 
 string Acquire::readError( void ) const
 {
+  QReadLocker locker( &WriteMutex );
   return InTraces.errorText();
 }
 
@@ -859,6 +885,7 @@ int Acquire::stopRead( void )
 
 int Acquire::restartRead( void )
 {
+  QWriteLocker readlocker( &ReadMutex );
   bool success = true;
 
   vector< long long > errorflags( InTraces.size() );
@@ -889,10 +916,8 @@ int Acquire::restartRead( void )
   PreviousTime = InTraces.currentTime();
   NumEmptyData = 0;
   InTraces.setRestart();
-  DataMutex.lockForWrite();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
-  DataMutex.unlock();
 
   // reset and prepare reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -915,7 +940,7 @@ int Acquire::restartRead( void )
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
-  QWaitCondition *datawait = &DataWait;
+  QWaitCondition *readwait = &ReadWait;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
       bool started = false;
@@ -926,11 +951,11 @@ int Acquire::restartRead( void )
 	}
       }
       if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, &DataMutex, datawait ) != 0 )
+	if ( AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait ) != 0 )
 	  success = false;
 	else {
 	  aistarted.push_back( i );
-	  datawait = 0; // we will wait on the first device only
+	  readwait = 0; // we will wait on the first device only
 	}
       }
     }
@@ -940,6 +965,7 @@ int Acquire::restartRead( void )
     return -1;
 
   // set fixed rates in analog output traces:
+  QWriteLocker writelocker( &WriteMutex );
   for ( int k=0; k < outTracesSize(); k++ ) {
     if ( AO[OutTraces[k].device()].AISyncRate &&
 	 AO[OutTraces[k].device()].AISyncDevice >= 0 &&
@@ -975,6 +1001,9 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   if ( stopRead() != 0 )
     success = false;
 
+  // WriteMutex gets locked from the calling functions.
+  QWriteLocker locker( &ReadMutex );
+
   // get data and shortest recording:
   double t = -1.0;
   for ( int i=0; i<InTraces.size(); i++ ) {
@@ -998,10 +1027,8 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   PreviousTime = InTraces.currentTime();
   NumEmptyData = 0;
   InTraces.setRestart();
-  DataMutex.lockForWrite();
   if ( RestartEvents != 0 )
     RestartEvents->push( InTraces[0].restartTime() );
-  DataMutex.unlock();
 
   // set signal start:
   if ( aod.size() > 0 && t >= 0.0 ) {
@@ -1083,7 +1110,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
-  QWaitCondition *datawait = &DataWait;
+  QWaitCondition *readwait = &ReadWait;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
       bool started = false;
@@ -1094,14 +1121,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 	}
       }
       if ( ! started ) {
-	int r = AI[i].AI->startRead( &AISemaphore, &DataMutex, datawait, aos );
+	int r = AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait, aos );
 	if ( r < 0 )
 	  success = false;
 	else {
 	  if ( r > 0 )
 	    finished = false;
 	  aistarted.push_back( i );
-	  datawait = 0; // we will wait on the first device only
+	  readwait = 0; // we will wait on the first device only
 	}
       }
     }
@@ -1180,18 +1207,25 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 
 int Acquire::waitForRead( void )
 {
-  // number of analog input devices used for writing:
   int nais = 0;
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( ! AI[i].Traces.empty() && AI[i].AI->running() )
-      nais++;
+  {
+    // number of analog input devices used for writing:
+    QReadLocker locker( &ReadMutex );
+    for ( unsigned int i=0; i<AI.size(); i++ ) {
+      if ( ! AI[i].Traces.empty() && AI[i].AI->running() )
+	nais++;
+    }
   }
 
   // wait for the threads to finish:
   AISemaphore.acquire( nais );
 
   AISemaphore.acquire( AISemaphore.available() );
-  if ( InTraces.failed() ) {
+
+  ReadMutex.lockForRead();
+  bool failed =  InTraces.failed();
+  ReadMutex.unlock();
+  if ( failed ) {
     // error:
     stopRead();
     return -1;
@@ -1204,7 +1238,7 @@ int Acquire::waitForRead( void )
 int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
 			 double mintracetime, double prevsignal )
 {
-  DataMutex.lockForRead();
+  QReadLocker locker( &ReadMutex );
   bool interrupted = false;
   if ( mintracetime > 0.0 ) {
     // do wee need to wait for a new signal?
@@ -1212,7 +1246,7 @@ int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
       while ( InTraces.success() &&
 	      SignalTime <= prevsignal &&
 	      isReadRunning() ) { 
-	DataWait.wait( &DataMutex );
+	ReadWait.wait( &ReadMutex );
 	if ( ! isWriteRunning() )
 	  break;
       }
@@ -1226,7 +1260,7 @@ int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
     while ( InTraces.success() &&
 	    InTraces.currentTime() < mintracetime &&
 	    isReadRunning() ) {
-      DataWait.wait( &DataMutex );
+      ReadWait.wait( &ReadMutex );
     }
     
     interrupted = ( InTraces.currentTime() < mintracetime || mintracetime == 0.0 );
@@ -1239,18 +1273,16 @@ int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
   events.updateRaw();
   // check data:
   bool error = InTraces.failed();
-  DataMutex.unlock();
   return error ? -1 : ( interrupted ? 0 : 1 );
 }
 
 
-int Acquire::updateRawData( double &signaltime,
-			    deque<InList*> &datalist, deque<EventList*> &eventslist )
+int Acquire::waitForData( double &signaltime )
 {
-  DataMutex.lockForWrite();
-  DataWait.wait( &DataMutex );
+  ReadMutex.lockForWrite();
+  ReadWait.wait( &ReadMutex );
   bool finished = ( InTraces.currentTime() <= PreviousTime );
-  // XXX the following contruct is needed, because DataWait.wait() sometimes
+  // XXX the following contruct is needed, because ReadWait.wait() sometimes
   // returns immediately, without being waken up. (with daqflex/relacs.cfg)
   // XXX Maybe we should figure out, why this happens...
   // From Qt doc: If mutex is not in a locked state, wait() returns immediately.
@@ -1276,38 +1308,31 @@ int Acquire::updateRawData( double &signaltime,
   PreviousTime = InTraces.currentTime();
   // check data:
   bool failed = InTraces.failed();
-  DataMutex.unlock();
-  // update raw data:
-  DataMutex.lockForRead();
-  for ( deque<InList*>::iterator dp = datalist.begin(); dp != datalist.end(); ++dp )
-    (*dp)->updateRaw();
-  for ( deque<EventList*>::iterator ep = eventslist.begin(); ep != eventslist.end(); ++ep )
-    (*ep)->updateRaw();
-  DataMutex.unlock();
+  ReadMutex.unlock();
   if ( failed )
     stopRead();
   return failed ? -1 : ( finished ? 0 : 1 );
 }
 
 
-bool Acquire::isReadRunning( void ) const
+void Acquire::lockRead( void )
 {
-  bool isrunning = true;
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( ! AI[i].Traces.empty() && ! AI[i].AI->running() ) {
-      isrunning = false;
-      break;
-    }
-  }
-  return isrunning;
+  ReadMutex.lockForRead();
 }
 
 
-bool Acquire::isWriteRunning( void ) const
+void Acquire::unlockRead( void )
 {
+  ReadMutex.unlock();
+}
+
+
+bool Acquire::isReadRunning( void ) const
+{
+  QReadLocker locker( &ReadMutex );
   bool isrunning = true;
-  for ( unsigned int i=0; i<AO.size(); i++ ) {
-    if ( ! AO[i].Signals.empty() && ! AO[i].AO->running() ) {
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( ! AI[i].Traces.empty() && ! AI[i].AI->running() ) {
       isrunning = false;
       break;
     }
@@ -1330,6 +1355,8 @@ void Acquire::setAdjustFlag( int flag )
 
 int Acquire::maxVoltages( const InData &data, vector<double> &ranges ) const
 {
+  QReadLocker locker( &ReadMutex );
+
   ranges.clear();
 
   // get device:
@@ -1364,6 +1391,8 @@ int Acquire::maxVoltages( const InData &data, vector<double> &ranges ) const
 
 int Acquire::maxValues( const InData &data, vector<double> &ranges ) const
 {
+  QReadLocker locker( &ReadMutex );
+
   ranges.clear();
 
   // get device:
@@ -1398,6 +1427,8 @@ int Acquire::maxValues( const InData &data, vector<double> &ranges ) const
 
 int Acquire::setGain( const InData &data, int gainindex )
 {
+  QWriteLocker locker( &ReadMutex );
+
   // get device:
   int di = data.device();
 
@@ -1443,6 +1474,8 @@ int Acquire::setGain( const InData &data, int gainindex )
 
 int Acquire::adjustGain( const InData &data, double maxvalue )
 {
+  QWriteLocker locker( &ReadMutex );
+
   // get device:
   int di = data.device();
 
@@ -1504,6 +1537,8 @@ int Acquire::adjustGain( const InData &data, double maxvalue )
 int Acquire::adjustGain( const InData &data,
 			 double minvalue, double maxvalue )
 {
+  QWriteLocker locker( &ReadMutex );
+
   // get device:
   int di = data.device();
 
@@ -1577,6 +1612,7 @@ int Acquire::adjustGain( const InData &data,
 
 bool Acquire::gainChanged( void ) const
 {
+  QReadLocker locker( &ReadMutex );
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     for ( unsigned int k=0; k<AI[i].Gains.size(); k++ ) {
       if ( AI[i].Gains[k] >= 0 )
@@ -1589,12 +1625,16 @@ bool Acquire::gainChanged( void ) const
 
 int Acquire::activateGains( void )
 {
-  // clear adjust-flags:
-  InTraces.delMode( AdjustFlag );
+  {
+    // clear adjust-flags:
+    QWriteLocker locker( &ReadMutex );
+    InTraces.delMode( AdjustFlag );
+  }
 
   if ( ! gainChanged() )
     return 0;
 
+  QWriteLocker locker( &WriteMutex );
   vector< AOData* > aod( 0 );
   return restartRead( aod, false, true );
 }
@@ -1602,6 +1642,8 @@ int Acquire::activateGains( void )
 
 int Acquire::testWrite( OutData &signal )
 {
+  QReadLocker locker( &WriteMutex );
+
   signal.clearError();
 
   // get ao device:
@@ -1663,6 +1705,8 @@ int Acquire::testWrite( OutData &signal )
 
 int Acquire::testWrite( OutList &signal )
 {
+  QReadLocker locker( &WriteMutex );
+
   //  cerr << "Acquire::testWrite( OutList& )\n";
 
   bool success = true;
@@ -1801,6 +1845,8 @@ int Acquire::testWrite( OutList &signal )
 
 int Acquire::write( OutData &signal, bool setsignaltime )
 {
+  QWriteLocker locker( &WriteMutex );
+
   signal.clearError();
 
   // set trace:
@@ -1834,10 +1880,8 @@ int Acquire::write( OutData &signal, bool setsignaltime )
   }
 
   // error?
-  if ( signal.failed() ) {
-    AO[di].Signals.clear();
+  if ( signal.failed() )
     return -1;
-  }
 
   // add signal to device:
   for ( unsigned int i=0; i<AO.size(); i++ )
@@ -1952,6 +1996,8 @@ int Acquire::write( OutData &signal, bool setsignaltime )
 
 int Acquire::write( OutList &signal, bool setsignaltime )
 {
+  QWriteLocker locker( &WriteMutex );
+
   bool success = true;
   signal.clearError();
 
@@ -2019,6 +2065,10 @@ int Acquire::write( OutList &signal, bool setsignaltime )
       }
     }
   }
+
+  // error?
+  if ( signal.failed() )
+    return -1;
 
   // add signals to devices:
   for ( unsigned int i=0; i<AO.size(); i++ )
@@ -2202,24 +2252,29 @@ int Acquire::write( OutList &signal, bool setsignaltime )
 
 int Acquire::waitForWrite( void )
 {
-  // number of analog output devices used for writing:
   int naos = 0;
-  for ( unsigned int i=0; i<AO.size(); i++ ) {
-    if ( ! AO[i].Signals.empty() && AO[i].AO->running() )
-      naos++;
+  {
+    QReadLocker locker( &WriteMutex );
+    // number of analog output devices used for writing:
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      if ( ! AO[i].Signals.empty() && AO[i].AO->running() )
+	naos++;
+    }
   }
 
   // wait for the threads to finish:
   AOSemaphore.acquire( naos );
 
+  AOSemaphore.acquire( AOSemaphore.available() );
+
+  WriteMutex.lockForRead();
   bool success = true;
   // check:
   for ( unsigned int i = 0; i<AO.size(); i++ ) {
     if ( ! AO[i].Signals.empty() && AO[i].Signals.failed() )
       success = false;
   }
-
-  AOSemaphore.acquire( AOSemaphore.available() );
+  WriteMutex.unlock();
   if ( ! success ) {
     // error:
     stopWrite();
@@ -2230,8 +2285,36 @@ int Acquire::waitForWrite( void )
 }
 
 
+bool Acquire::isWriteRunning( void ) const
+{
+  QReadLocker locker( &WriteMutex );
+  bool isrunning = true;
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    if ( ! AO[i].Signals.empty() && ! AO[i].AO->running() ) {
+      isrunning = false;
+      break;
+    }
+  }
+  return isrunning;
+}
+
+
+void Acquire::lockWrite( void )
+{
+  WriteMutex.lockForWrite();
+}
+
+
+void Acquire::unlockWrite( void )
+{
+  WriteMutex.unlock();
+}
+
+
 int Acquire::directWrite( OutData &signal, bool setsignaltime )
 {
+  QWriteLocker locker( &WriteMutex );
+
   signal.clearError();
 
   // set trace:
@@ -2265,10 +2348,8 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
   }
 
   // error?
-  if ( signal.failed() ) {
-    AO[di].Signals.clear();
+  if ( signal.failed() )
     return -1;
-  }
 
   // add signal to device:
   for ( unsigned int i=0; i<AO.size(); i++ )
@@ -2361,6 +2442,8 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
 
 int Acquire::directWrite( OutList &signal, bool setsignaltime )
 {
+  QWriteLocker locker( &WriteMutex );
+
   if ( signal.size() <= 0 )
     return 0;
 
@@ -2425,6 +2508,10 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
       }
     }
   }
+
+  // error?
+  if ( signal.failed() )
+    return -1;
 
   // add signals to devices:
   for ( unsigned int i=0; i<AO.size(); i++ )
@@ -2570,6 +2657,8 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
 
 int Acquire::writeZero( int channel, int device )
 {
+  QWriteLocker locker( &WriteMutex );
+
   // check ao device:
   if ( device < 0 || device >= (int)AO.size() )
     return -1;
@@ -2659,8 +2748,16 @@ int Acquire::writeReset( void )
 }
 
 
+double Acquire::signalTime( void ) const
+{
+  QReadLocker locker( &WriteMutex );
+  return SignalTime;
+}
+
+
 string Acquire::writeError( void ) const
 {
+  QReadLocker locker( &WriteMutex );
   OutList sigs;
   for ( unsigned int i = 0; i<AO.size(); i++ )
     sigs.add( AO[i].Signals );
@@ -2670,6 +2767,7 @@ string Acquire::writeError( void ) const
 
 int Acquire::stopWrite( void )
 {
+  QReadLocker locker( &WriteMutex );
   bool success = true;
 
   for ( unsigned int i = 0; i<AO.size(); i++ ) {
@@ -2687,6 +2785,7 @@ int Acquire::stopWrite( void )
 
 double Acquire::minLevel( int trace ) const
 {
+  QReadLocker locker( &WriteMutex );
   if ( trace < 0 || trace > outTracesSize() )
     return OutData::NoLevel;
 
@@ -2712,6 +2811,7 @@ double Acquire::minLevel( const string &trace ) const
 
 double Acquire::maxLevel( int trace ) const
 {
+  QReadLocker locker( &WriteMutex );
   if ( trace < 0 || trace > outTracesSize() )
     return OutData::NoLevel;
 
@@ -2737,6 +2837,7 @@ double Acquire::maxLevel( const string &trace ) const
 
 void Acquire::levels( int trace, vector<double> &l ) const
 {
+  QReadLocker locker( &WriteMutex );
   l.clear();
   if ( trace < 0 || trace > outTracesSize() )
     return;
@@ -2765,6 +2866,7 @@ void Acquire::levels( const string &trace, vector<double> &l ) const
 
 double Acquire::minIntensity( int trace, double frequency ) const
 {
+  QReadLocker locker( &WriteMutex );
   if ( trace < 0 || trace > outTracesSize() )
     return OutData::NoIntensity;
 
@@ -2787,6 +2889,7 @@ double Acquire::minIntensity( const string &trace, double frequency ) const
 
 double Acquire::maxIntensity( int trace, double frequency ) const
 {
+  QReadLocker locker( &WriteMutex );
   if ( trace < 0 || trace > outTracesSize() )
     return OutData::NoIntensity;
 
@@ -2809,6 +2912,7 @@ double Acquire::maxIntensity( const string &trace, double frequency ) const
 
 void Acquire::intensities( int trace, vector<double> &ints, double frequency ) const
 {
+  QReadLocker locker( &WriteMutex );
   ints.clear();
   if ( trace < 0 || trace > outTracesSize() )
     return;
@@ -2831,6 +2935,8 @@ void Acquire::intensities( const string &trace, vector<double> &ints, double fre
 
 double Acquire::getSignal( void )
 {
+  // ReadMutex is already locked.
+
   double signaltime = -1.0;
 
   if ( SyncMode == CounterSync || SyncMode == AISync ) {
@@ -2841,6 +2947,7 @@ double Acquire::getSignal( void )
     if ( inx < 0 )
       return -1.0;
     int d = AO[LastDevice].AISyncDevice;
+    QReadLocker locker( &ReadMutex );
     if ( d < 0 || AI[d].Traces.empty() )
       return -1.0;
     double prevsignaltime = AI[d].Traces[0].signalTime();

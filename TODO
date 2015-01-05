@@ -1,12 +1,9 @@
 - Comedi (und RTAIComedi?): problems with maxboardvolt in case of virtual attenuator
-- PlotTrace: align to trigger behaves weired for large plotwindows, also check for very small windows
 - Buzzing is not responsive: allow for multiple buzzes
 
-Macros, flow control:
-- RELACS crashes after too many automatically called macros
-- auditory::search does not exit cleanly upon ESC: should be solved, check it
-
 New InData threading:
+- check for XXX in RelacsWidget
+- check and improve AudioMonitor input data updates - are they locked? 
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
   the resulting index should be the one of the first data of the stimulus.
 - How to propagate a new recording event from SaveFiles back to the raw data (SaveFiles::openFiles)?
@@ -17,6 +14,7 @@ New InData threading:
 - Replace the source() flag by a sourceTrace and sourceEvent index
   Remove the source mapping functions from RELACSPlugin and FilterDetectors
 - AnalogInput/Output check usage of IsPrepared and IsRunning! Yes, do it!
+  In DAQFlex the IsPrepared seems to kill a proper restart on error
 - readData() several attemps only if maxn is too small
 - DAQFlex: does not like the initial writeReset() 
   as well as normal writes at high sampling rates.
@@ -31,6 +29,10 @@ New InData threading:
   But we do not want to block on the input too long!
   So maybe keep readTime. Make it an option for each device!
 
+Macros, flow control:
+- RELACS crashes after too many automatically called macros
+- auditory::search does not exit cleanly upon ESC: should be solved, check it
+
 Dynamic clamp:
 - See http://mail.rtai.org/pipermail/rtai/2013-December/026198.html for the
   -mpreferred-stack-boundary=3 issue
@@ -42,7 +44,7 @@ Dynamic clamp:
 - Then we do not need to reset all the channels at startup (Aquire::writeReset() )
 - Is it smart to use vmalloc in dynclampmodule? No! Better would be
   kmalloc or even avoid it completely.
-- Is it really necessary that the dyncclamp parameter are all set to zero by relacs initially?
+- Is it really necessary that the dynclamp parameter are all set to zero by relacs initially?
   It shoud be sufficient to set the AOs to zero and the parameters to their initial vallues.
   For the latter we might need some support (saving the initial values to some array prior to starting, etc.)
 - Add a variable lastInterval that is set to the current period length in addition to loopInterval

@@ -154,15 +154,8 @@ public:
     /*! The mutex of the stimulus data. */
   QMutex *mutex( void );
 
-    /*! Copies \a il and \a el to this by copying a pointer to
-        the data buffers only. In addition add these local copies
-	to \a data and \a events. */
-  void assignTracesEvents( const InList &il, const EventList &el,
-			   deque<InList*> &data, deque<EventList*> &events );
-    /*! Copies again all settings and indices from the reference traces and events to this. */
-  void assignTracesEvents( void );
-    /*! Update derived data traces and events. Needs to be called right before saveTraces(). */
-  void updateDerivedTraces( void );
+    /*! Copies pointers of each element of \a il and \a el to this. */
+  void setTracesEvents( const InList &il, const EventList &el );
 
     /*! Switch writing data to file on or off.
         Call this only at the very beginning of your RePro::main() code,

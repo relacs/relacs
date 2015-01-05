@@ -80,7 +80,7 @@ Macros::Macros( RELACSWidget *rw, QWidget *parent )
     StartUpIndex( 0 ),
     ShutDownIndex( -1 ),
     FallBackIndex( 0 ),
-    StartSessionIndex( 1 ),
+    StartSessionIndex( -1 ),
     StopSessionIndex( -1 ),
     MacroFile( "" ),
     Menu( 0 ),
@@ -419,6 +419,11 @@ bool Macros::check( void )
   // no startup macro?
   if ( StartUpIndex < 0 ) {
     StartUpIndex = FallBackIndex;
+  }
+
+  // no startsession macro?
+  if ( StartSessionIndex < 0 ) {
+    StartSessionIndex = FallBackIndex;
   }
 
   // set macro and command indices:

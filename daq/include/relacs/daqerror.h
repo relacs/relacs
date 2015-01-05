@@ -257,6 +257,9 @@ class DaqError
     /*! Failure in attenuator. \sa AttFailed, AttIntensityFailed */
   bool attenuatorFailed( void ) const;
 
+    /*! Copy the error flag and string from \a de to this. */
+  void update( const DaqError *de );
+
     /*! Write the internal variables to \a str. */
   friend ostream &operator<<( ostream &str, const DaqError &de );
 

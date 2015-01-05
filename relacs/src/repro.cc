@@ -64,7 +64,7 @@ RePro::RePro( const string &name, const string &pluginset,
   GrabKeysAllowed = false;
 
   Thread = new ReProThread( this );
-  Interrupt = false;
+  Interrupt = 0;
 
   // start timer:
   ReProTime.start();
@@ -120,7 +120,7 @@ void RePro::run( void )
   grabKeys();
   setSettings();
   InterruptLock.lock();
-  Interrupt = false;
+  Interrupt = 0;
   InterruptLock.unlock();
   enable();
   getData();
@@ -157,7 +157,7 @@ void RePro::run( void )
   }
 
   // start next RePro:
-  if ( ! interrupt() )
+  if ( ! interruptWrite() )
     QApplication::postEvent( RW, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
 }
 
@@ -165,7 +165,18 @@ void RePro::run( void )
 bool RePro::interrupt( void ) const
 {
   InterruptLock.lock();
-  bool ir = Interrupt; 
+  bool ir = ( Interrupt >= 2 ); 
+  InterruptLock.unlock();
+  return ir;
+}
+
+
+bool RePro::interruptWrite( void )
+{
+  InterruptLock.lock();
+  bool ir = ( Interrupt >= 1 ); 
+  if ( ir )
+    Interrupt = 2;
   InterruptLock.unlock();
   return ir;
 }
@@ -182,11 +193,14 @@ void RePro::requestStop( void )
   if ( Thread->isRunning() ) {
     // stop analog output,
     // before the repro gets any chance to delete the output signal:
+    InterruptLock.lock();
+    Interrupt = 1;
+    InterruptLock.unlock();
     stopWrite();
 
     // tell the RePro to interrupt:
     InterruptLock.lock();
-    Interrupt = true;
+    Interrupt = 2;
     InterruptLock.unlock();
     
     // wake up the RePro from sleeping:
@@ -218,10 +232,7 @@ bool RePro::sleep( double t, double tracetime )
   RW->updateRePro();
 
   // interrupt RePro:
-  InterruptLock.lock();
-  bool ir = Interrupt; 
-  InterruptLock.unlock();
-  if ( ir )
+  if ( interrupt() )
     return true;
 
   // sleep:
@@ -232,20 +243,10 @@ bool RePro::sleep( double t, double tracetime )
     SleepWait.wait( mutex(), ms );
   }
 
-  // interrupt RePro:
-  InterruptLock.lock();
-  ir = Interrupt; 
-  InterruptLock.unlock();
-
   // force data updates:
-  getData( ir ? 0.0 : tracetime );
+  getData( interrupt() ? 0.0 : tracetime );
 
-  // interrupt RePro:
-  InterruptLock.lock();
-  ir = Interrupt; 
-  InterruptLock.unlock();
-
-  return ir;
+  return interrupt();
 }
 
 
@@ -406,7 +407,7 @@ int RePro::testWrite( OutList &signal )
 
 int RePro::write( OutData &signal, bool setsignaltime )
 {
-  if ( interrupt() )
+  if ( interruptWrite() )
     return -1;
 
   unlock();
@@ -416,7 +417,7 @@ int RePro::write( OutData &signal, bool setsignaltime )
   int r = RW->write( signal, setsignaltime, true );
 
   // force data updates:
-  if ( r < 0 || interrupt() )
+  if ( r < 0 || interruptWrite() )
     getData();
   else
     getData( signal.length(), st );
@@ -429,7 +430,7 @@ int RePro::write( OutData &signal, bool setsignaltime )
 
 int RePro::write( OutList &signal, bool setsignaltime )
 {
-  if ( interrupt() )
+  if ( interruptWrite() )
     return -1;
 
   unlock();
@@ -439,7 +440,7 @@ int RePro::write( OutList &signal, bool setsignaltime )
   int r = RW->write( signal, setsignaltime, true );
 
   // force data updates:
-  if ( r < 0 || interrupt() )
+  if ( r < 0 || interruptWrite() )
     getData();
   else
     getData( signal.maxLength(), st );
@@ -452,7 +453,7 @@ int RePro::write( OutList &signal, bool setsignaltime )
 
 int RePro::startWrite( OutData &signal, bool setsignaltime )
 {
-  if ( interrupt() )
+  if ( interruptWrite() )
     return -1;
   return RW->write( signal, setsignaltime, false );
 }
@@ -460,7 +461,7 @@ int RePro::startWrite( OutData &signal, bool setsignaltime )
 
 int RePro::startWrite( OutList &signal, bool setsignaltime )
 {
-  if ( interrupt() )
+  if ( interruptWrite() )
     return -1;
   return RW->write( signal, setsignaltime, false );
 }

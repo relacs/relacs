@@ -31,7 +31,6 @@ namespace relacs {
 /*!
 \class Filter
 \brief Basic virtual class for filtering or detecting events (e.g. spikes)
-       in an InData or EventData
 \author Jan Benda
 */
 

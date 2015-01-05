@@ -243,6 +243,14 @@ public:
         If \a own is set to \c true then the ownership of \a events
         is transfered to the EventList, i.e. the EventList might delete it. */
   void add( const EventData *events, bool own=false );
+    /*! Add pointer to each element of \a events as a new element to the end of the EventList.
+        If \a own is set to \c true then the ownership of \a events
+        is transfered to the EventList, i.e. the EventList might delete it. */
+  void add( EventList &events, bool own=false );
+    /*! Add pointer to each element of \a events as a new element to the end of the EventList.
+        If \a own is set to \c true then the ownership of \a events
+        is transfered to the EventList, i.e. the EventList might delete it. */
+  void add( const EventList &events, bool own=false );
 
     /*! Set the pointer to \a data as the \a index-th element.
         If \a own is set to \c true then the ownership of the events

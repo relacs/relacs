@@ -463,8 +463,10 @@ int MyPlugin::main( void )
 
     /*! Add the local copies of the data buffers to \a data and \a events. */
   void addTracesEvents( deque<InList*> &data, deque<EventList*> &events );
-    /*! Copies \a il and \a el to this by copying a pointer to the data buffers only. */
-  void assignTracesEvents( const InList &il, const EventList &el );
+    /*! Copies pointers to each element of \a data and \a events to this. */
+  void setTracesEvents( const InList &data, const EventList &event );
+    /*! Copies \a data and \a events to this by copying a pointer to the data buffers only. */
+  void assignTracesEvents( const InList &data, const EventList &events );
     /*! Copies again all settings and indices from the reference traces and events to this. */
   void assignTracesEvents( void );
     /*! Updates the indices of derived traces and events (traces with source != 0 ). */
@@ -965,9 +967,9 @@ protected slots:
 private:
 
     /*! The local copy of all input traces. */
-  InList IL;
+  InList IData;
     /*! The local copy of all event traces. */
-  EventList EL;
+  EventList EData;
     /*! The local copy of the current signal time. */
   double SignalTime;
 

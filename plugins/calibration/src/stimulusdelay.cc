@@ -95,10 +95,8 @@ int StimulusDelay::main( void )
 	( repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
     write( signal );
-    if ( signal.failed() ) {
-      warning( signal.errorText() );
+    if ( signal.failed() )
       return Failed;
-    }
     sleepOn( duration+pause );
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;

@@ -576,17 +576,28 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 
 int DynClampAnalogOutput::directWrite( OutList &sigs )
 {
-  // no signals:
-  if ( sigs.size() <= 0 )
-    return -1;
-
   // not open:
   if ( !isOpen() )
     return -1;
 
-  // XXX make sure that all signal have size 1!
+  lock();
+  Sigs.clear();
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = 0;
+  BufferSize = 0;
+  NBuffer = 0;
+  Settings.clear();
+  IsPrepared = false;
+  NoMoreData = true;
+  IsRunning = false;
+  unlock();
 
-  reset();
+  // no signals:
+  if ( sigs.size() <= 0 )
+    return -1;
+
+  // XXX make sure that all signal have size 1!
 
   {
     QMutexLocker locker( mutex() );
@@ -775,7 +786,18 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if ( !isOpen() )
     return -1;
 
-  reset();
+  lock();
+  Sigs.clear();
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = 0;
+  BufferSize = 0;
+  NBuffer = 0;
+  Settings.clear();
+  IsPrepared = false;
+  NoMoreData = true;
+  IsRunning = false;
+  unlock();
 
   if ( sigs.size() <= 0 )
     return -1;

@@ -175,8 +175,10 @@ int TransferFunction::main( void )
 
   // plot:
   P.lock();
+  P[0].clearData();
   P[0].resetRanges();
   P[0].setYLabel( "Gain [" + InUnit + "/" + OutUnit + "]" );
+  P[1].clearData();
   P[1].resetRanges();
   P.unlock();
 

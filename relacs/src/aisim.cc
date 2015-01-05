@@ -46,6 +46,7 @@ AISim::AISim( void )
   AIbiRanges[7] = 0.05;
   AIuniRanges[8] = -1.0;
   AIbiRanges[8] = -1.0;
+  IsRunning = false;
 }
 
 
@@ -76,6 +77,7 @@ int AISim::open( const string &device, const Options &opts )
       }
     }
   }
+  IsRunning = false;
   return 0;
 }
 
@@ -102,6 +104,7 @@ int AISim::open( Device &device, const Options &opts )
       }
     }
   }
+  IsRunning = false;
   return 0;
 }
 
@@ -116,6 +119,7 @@ void AISim::close( void )
 {
   Info.clear();
   Settings.clear();
+  IsRunning = false;
 }
 
 
@@ -203,6 +207,7 @@ int AISim::prepareRead( InList &traces )
 int AISim::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 		      QWaitCondition *datawait, QSemaphore *aosp )
 {
+  IsRunning = true;
   return 0;
 }
 
@@ -221,6 +226,7 @@ int AISim::convertData( void )
 
 int AISim::stop( void )
 {
+  IsRunning = false;
   return 0;
 }
 
@@ -228,13 +234,14 @@ int AISim::stop( void )
 int AISim::reset( void )
 {
   Settings.clear();
+  IsRunning = false;
   return 0;
 }
 
 
 bool AISim::running( void ) const
 {
-  return false;
+  return IsRunning;
 }
 
 

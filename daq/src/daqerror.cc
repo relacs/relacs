@@ -237,6 +237,13 @@ bool DaqError::attenuatorFailed( void ) const
 }
 
 
+void DaqError::update( const DaqError *de )
+{
+  State = de->State;
+  ErrorString = de->ErrorString;
+}
+
+
 ostream &operator<<( ostream &str, const DaqError &de )
 {
   str << "Error: " << de.State << '\n';

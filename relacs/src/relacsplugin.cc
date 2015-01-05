@@ -274,69 +274,78 @@ void RELACSPlugin::widgetDestroyed( QObject *obj )
 
 void RELACSPlugin::addTracesEvents( deque<InList*> &data, deque<EventList*> &events )
 {
-  data.push_back( &IL );
-  events.push_back( &EL );
+  data.push_back( &IData );
+  events.push_back( &EData );
 }
 
 
-void RELACSPlugin::assignTracesEvents( const InList &il, const EventList &el )
+void RELACSPlugin::setTracesEvents( const InList &data, const EventList &events )
 {
-  IL.assign( &il );
-  EL.assign( &el );
+  IData.clear();
+  IData.add( data );
+  EData.clear();
+  EData.add( events );
+}
+
+
+void RELACSPlugin::assignTracesEvents( const InList &data, const EventList &events )
+{
+  IData.assign( &data );
+  EData.assign( &events );
 }
 
 
 void RELACSPlugin::assignTracesEvents( void )
 {
-  IL.assign();
-  EL.assign();
+  IData.assign();
+  EData.assign();
 }
 
 
 void RELACSPlugin::updateDerivedTracesEvents( void )
 {
-  IL.updateDerived();
-  EL.updateDerived();
+  IData.updateDerived();
+  EData.updateDerived();
 }
 
 
 int RELACSPlugin::getData( double mintracetime, double prevsignal )
 {
-  return RW->getData( IL, EL, SignalTime, mintracetime, prevsignal );
+  return RW->getData( IData, EData, SignalTime, mintracetime, prevsignal );
 }
 
 
 const InList &RELACSPlugin::traces( void ) const
 {
-  return IL;
+  return IData;
 }
 
 
 const InData &RELACSPlugin::trace( int index ) const
 {
-  return IL[index];
+  return IData[index];
 }
 
 
 const InData &RELACSPlugin::trace( const string &ident ) const
 {
-  return IL[ident];
+  return IData[ident];
 }
 
 
 int RELACSPlugin::traceIndex( const string &ident ) const
 {
-  return IL.index( ident );
+  return IData.index( ident );
 }
 
 
 string RELACSPlugin::traceNames( void ) const
 {
   string its = "";
-  for ( int k=0; k<IL.size(); k++ ) {
+  for ( int k=0; k<IData.size(); k++ ) {
     if ( k > 0 )
       its += '|';
-    its += IL[k].ident();
+    its += IData[k].ident();
   }
   return its;
 }
@@ -346,11 +355,11 @@ string RELACSPlugin::rawTraceNames( void ) const
 {
   string its = "";
   int j = 0;
-  for ( int k=0; k<IL.size(); k++ ) {
-    if ( IL[k].source() == 0 ) {
+  for ( int k=0; k<IData.size(); k++ ) {
+    if ( IData[k].source() == 0 ) {
       if ( j > 0 )
 	its += '|';
-      its += IL[k].ident();
+      its += IData[k].ident();
       j++;
     }
   }
@@ -360,37 +369,37 @@ string RELACSPlugin::rawTraceNames( void ) const
 
 const EventList &RELACSPlugin::events( void ) const
 {
-  return EL;
+  return EData;
 }
 
 
 const EventData &RELACSPlugin::events( int index ) const
 {
-  return EL[index];
+  return EData[index];
 }
 
 
 const EventData &RELACSPlugin::events( const string &ident ) const
 {
-  return EL[ident];
+  return EData[ident];
 }
 
 
 const EventData &RELACSPlugin::stimulusEvents( void ) const
 {
-  return EL[0];
+  return EData[0];
 }
 
 
 const EventData &RELACSPlugin::restartEvents( void ) const
 {
-  return EL[1];
+  return EData[1];
 }
 
 
 const EventData &RELACSPlugin::recordingEvents( void ) const
 {
-  return EL[2];
+  return EData[2];
 }
 
 
@@ -450,7 +459,7 @@ double RELACSPlugin::signalTime( void ) const
 
 double RELACSPlugin::currentTime( void ) const
 {
-  return IL.currentTime();
+  return IData.currentTime();
 }
 
 
@@ -805,7 +814,7 @@ Filter *RELACSPlugin::filterTrace( int index )
 
 Filter *RELACSPlugin::filterTrace( const string &name )
 {
-  int inx = IL.index( name );
+  int inx = IData.index( name );
   return RW->FD == 0 || inx < 0 ? 0 : RW->FD->filter( inx );
 }
 
@@ -930,7 +939,7 @@ Filter *RELACSPlugin::detectorEvents( int index )
 
 Filter *RELACSPlugin::detectorEvents( const string &name )
 {
-  int inx = EL.index( name );
+  int inx = EData.index( name );
   return RW->FD == 0 || inx < 0 ? 0 : RW->FD->detector( inx );
 }
 

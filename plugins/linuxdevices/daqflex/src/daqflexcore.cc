@@ -831,6 +831,12 @@ int DAQFlexCore::writeBulkTransfer( unsigned char *data, int length, int *transf
 void DAQFlexCore::clearRead( void )
 {
   libusb_clear_halt( deviceHandle(), endpointIn() );
+  /* from the docu: Clear the halt/stall condition for an endpoint.
+     Endpoints with halt status are unable to receive or transmit data
+     until the halt condition is stalled.  YOU SHOULD CANCEL ALL
+     PENDING TRANSFERS BEFORE ATTEMPTING TO CLEAR THE HALT CONDITION
+     (is this really given when stopping relacs?).  This is a BLOCKING
+     FUNCTION. */
 }
 
 

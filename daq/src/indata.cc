@@ -434,6 +434,7 @@ void InData::update( void )
 {
   if ( ID != 0 ) {
     CyclicSampleDataF::update( ID );
+    DaqError::update( ID );
     RestartIndex = ID->RestartIndex;
     SignalIndex = ID->SignalIndex;
     Scale = ID->Scale;
