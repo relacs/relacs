@@ -1876,8 +1876,10 @@ int Acquire::write( OutData &signal, bool setsignaltime )
 
   // device still busy?
   if ( AO[di].AO->status() == AnalogOutput::Running ) {
-    if ( signal.priority() )
+    if ( signal.priority() ) {
+      AO[di].AO->stop();
       AO[di].AO->reset();
+    }
     else
       signal.addError( DaqError::Busy );
   }
@@ -2056,8 +2058,10 @@ int Acquire::write( OutList &signal, bool setsignaltime )
       }
       // device still busy?
       if ( AO[i].AO->status() == AnalogOutput::Running ) {
-	if ( signal[k0].priority() )
+	if ( signal[k0].priority() ) {
+	  AO[i].AO->stop();
 	  AO[i].AO->reset();
+	}
 	else {
 	  for ( int k=k0; k<signal.size(); k++ ) {
 	    if ( signal[k].device() == i )
@@ -2344,8 +2348,10 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
 
   // device still busy?
   if ( AO[di].AO->status() == AnalogOutput::Running ) {
-    if ( signal.priority() )
+    if ( signal.priority() ) {
+      AO[di].AO->stop();
       AO[di].AO->reset();
+    }
     else
       signal.addError( DaqError::Busy );
   }
@@ -2499,8 +2505,10 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
       }
       // device still busy?
       if ( AO[i].AO->status() == AnalogOutput::Running ) {
-	if ( signal[k0].priority() )
+	if ( signal[k0].priority() ) {
+	  AO[i].AO->stop();
 	  AO[i].AO->reset();
+	}
 	else {
 	  for ( int k=k0; k<signal.size(); k++ ) {
 	    if ( signal[k].device() == i )
@@ -2667,8 +2675,10 @@ int Acquire::writeZero( int channel, int device )
     return -1;
 
   // device still busy?
-  if ( AO[device].AO->status() == AnalogOutput::Running )
+  if ( AO[device].AO->status() == AnalogOutput::Running ) {
+    AO[device].AO->stop();
     AO[device].AO->reset();
+  }
 
   OutData signal( 1, 0.0001 );
   signal.setChannel( channel, device );
@@ -2775,6 +2785,8 @@ int Acquire::stopWrite( void )
 
   for ( unsigned int i = 0; i<AO.size(); i++ ) {
     if ( AO[i].AO->isOpen() ) {
+      if ( AO[i].AO->stop() != 0 )
+	success = false;
       if ( AO[i].AO->reset() != 0 )
 	success = false;
     }

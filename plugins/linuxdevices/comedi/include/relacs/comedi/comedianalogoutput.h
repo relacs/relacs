@@ -125,10 +125,14 @@ public:
 	OutList structure are filled and a negative value is returned.  */
   virtual int writeData( void );
 
-    /*! Stop any running ananlog output activity and reset the device.
-        Returns zero on success, otherwise one of the flags 
-        NotOpen, InvalidDevice, WriteError.
-        \sa close(), open(), isOpen() */
+    /*! Stop any running ananlog output activity.
+        Returns zero on success, otherwise NotOpen.
+        \sa reset(), startWrite() */
+  virtual int stop( void );
+    /*! Clear any internal data buffers and reset the device.
+        Assumes that analog output is already stopped.
+        Returns zero on success, otherwise NotOpen.
+        \sa stop(), close(), open(), isOpen() */
   virtual int reset( void );
   
     /*! \return the status of the analog output. */

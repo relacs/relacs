@@ -1093,9 +1093,9 @@ int ComediAnalogOutput::writeData( void )
 }
 
 
-int ComediAnalogOutput::reset( void ) 
+int ComediAnalogOutput::stop( void ) 
 { 
-  //  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
+  //  cerr << " ComediAnalogOutput::stop()" << endl;/////TEST/////
 
   if ( ! isOpen() )
     return NotOpen;
@@ -1109,7 +1109,20 @@ int ComediAnalogOutput::reset( void )
 
   stopWrite();
 
+  return 0;
+}
+
+
+int ComediAnalogOutput::reset( void ) 
+{ 
+  //  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
+
+  if ( ! isOpen() )
+    return NotOpen;
+
   lock();
+
+  comedi_cancel( DeviceP, SubDevice );
 
   Sigs.clear();
   if ( Buffer != 0 )

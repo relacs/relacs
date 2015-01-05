@@ -221,7 +221,7 @@ int TransferFunction::main( void )
     signal.clear();
     signal.noiseWave( duration, -1.0, fmax, amplitude );
     int c = ::relacs::clip( -clip*amplitude, clip*amplitude, signal );
-    printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
+    printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points." );
     signal.back() = 0.0;
     signal += offset;
 

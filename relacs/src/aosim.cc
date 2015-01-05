@@ -79,6 +79,12 @@ void AOSim::close( void )
 }
 
 
+int AOSim::stop( void )
+{
+  return 0;
+}
+
+
 int AOSim::reset( void )
 {
   Settings.clear();

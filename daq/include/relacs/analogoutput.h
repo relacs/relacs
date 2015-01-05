@@ -190,12 +190,16 @@ public:
         started by startWrite(). */
   virtual int writeData( void ) = 0;
 
-    /*! Stop any running ananlog output activity and reset the device,
-        i.e. clear all buffers.
-        Returns zero on success, otherwise one of the flags 
-        NotOpen, InvalidDevice, WriteError.
-        \sa close(), open(), isOpen() */
-  virtual int reset( void );
+    /*! Stop any running ananlog output activity.
+	Should call stopWrite() to stop the thread.
+        Returns zero on success, otherwise NotOpen.
+        \sa reset(), startWrite() */
+  virtual int stop( void ) = 0;
+    /*! Clear any internal data buffers and reset the device.
+        Assumes that analog output is already stopped.
+        Returns zero on success, otherwise NotOpen.
+        \sa stop(), close(), open(), isOpen() */
+  virtual int reset( void ) = 0;
   
     /*! \return the status of the analog output.
         If an error is detected, this function could also set the appropriate error code

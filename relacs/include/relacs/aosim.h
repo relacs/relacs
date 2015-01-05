@@ -75,6 +75,8 @@ public:
     /*! Write data of the output signals to the analog output device. */
   virtual int writeData( void );
 
+    /*! Stop the analog output device simulation. */
+  virtual int stop( void );
     /*! Reset the analog output device simulation. */
   virtual int reset( void );
 

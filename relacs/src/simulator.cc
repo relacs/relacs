@@ -703,8 +703,10 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
 
   // device still busy?
   if ( AO[di].AO->status() == AnalogOutput::Running ) {
-    if ( signal.priority() )
+    if ( signal.priority() ) {
+      AO[di].AO->stop();
       AO[di].AO->reset();
+    }
     else
       signal.addError( DaqError::Busy );
   }
@@ -864,8 +866,10 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
       }
       // device still busy?
       if ( AO[i].AO->status() == AnalogOutput::Running ) {
-	if ( signal[k0].priority() )
+	if ( signal[k0].priority() ) {
+	  AO[i].AO->stop();
 	  AO[i].AO->reset();
+	}
 	else {
 	  for ( int k=k0; k<signal.size(); k++ ) {
 	    if ( signal[k].device() == i )
@@ -1040,6 +1044,7 @@ int Simulator::writeZero( int channel, int device )
 
   // device still busy?
   Sim->stopSignals();
+  AO[device].AO->stop();
   AO[device].AO->reset();
 
   OutData signal( 1, 0.0001 );

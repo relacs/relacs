@@ -1044,7 +1044,7 @@ int DynClampAnalogOutput::writeData( void )
 }
 
 
-int DynClampAnalogOutput::reset( void )
+int DynClampAnalogOutput::stop( void )
 { 
   if ( !isOpen() )
     return NotOpen;
@@ -1077,7 +1077,18 @@ int DynClampAnalogOutput::reset( void )
     rtf_reset( FifoFd );
   }
 
+  return 0;
+}
+
+
+int DynClampAnalogOutput::reset( void )
+{ 
+  if ( !isOpen() )
+    return NotOpen;
+
   lock();
+
+  rtf_reset( FifoFd );
 
   Sigs.clear();
   if ( Buffer != 0 )
