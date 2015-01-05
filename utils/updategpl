@@ -3,10 +3,10 @@
 ###############################################################################
 #
 # updategpl
-# 
+# Update the copyright in GPL headers of all files.
 #
 # RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-# Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
+# Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,13 +34,15 @@ function rewritegpl
     FILE="$1"
     if test -f "$FILE" && fgrep -q 'Copyright (C) 200' "$FILE"; then
 	test $VERBOSE = yes && ls -l "$FILE"
-	sed -i -e 's/2002-20[0-9][0-9] Jan Benda/2002-2012 Jan Benda/' "$FILE"
+	sed -i -e 's/2002-20[0-9][0-9] Jan Benda/2002-2015 Jan Benda/' "$FILE"
     fi
 }
 
 # help:
 if test "$1" = "--help"; then
   echo "updategpl"
+  echo
+  echo "Update the copyright in GPL headers of all files."
   echo
   echo "Run this script from the relacs base directory!"
   echo "Note: enable the examples beforehand:"

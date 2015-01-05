@@ -3,7 +3,7 @@
   Interface for accessing analog input of a DAQFlex board from Measurement Computing.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -376,11 +376,11 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     traces.setUpdateTime( traces[0].interval( BufferSize/2/traces.size() ) );
     setSettings( traces, BufferSize, ReadBufferSize );
     Traces = &traces;
+    IsPrepared = true;
+    return 0;
   }
-
-  IsPrepared = traces.success();
-
-  return traces.success() ? 0 : -1;
+  else
+    return -1;
 }
 
 
@@ -403,7 +403,6 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   bool finished = true;
   TraceIndex = 0;
   IsRunning = true;
-  IsPrepared = false;
   startThread( sp, datamutex, datawait );
   if ( tookao ) {
     DAQFlexAO->startThread( aosp );

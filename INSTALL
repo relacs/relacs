@@ -163,16 +163,16 @@ see the user manual.
 
 In case you really cannot get ./configure to run successfully or it
 fails with an error message that does not help you, then please write
-me an email (benda@bio.lmu.de, subject: RELACS) containing the full
+me an email (jan.benda@uni-tuebingen.de, subject: RELACS) containing the full
 output of ./configure and all config* files in the RELACS root
 directory.
 
 In case compilation fails, then please write me an email
-(benda@bio.lmu.de, subject: RELACS) containing the full output of
+(jan.benda@uni-tuebingen.de, subject: RELACS) containing the full output of
 "make" (run "make &> make.log" and send the file "make.log").
 
 In case checking fails, then please write
-me an email (benda@bio.lmu.de, subject: RELACS) containing the full
+me an email (jan.benda@uni-tuebingen.de, subject: RELACS) containing the full
 output of "make check".
 syb
 

@@ -3,7 +3,7 @@
   Interface for accessing digital I/O lines of a daq-board via comedi and the dynclamp kernel module.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

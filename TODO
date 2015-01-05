@@ -14,6 +14,7 @@ New InData threading:
 - Replace the source() flag by a sourceTrace and sourceEvent index
   Remove the source mapping functions from RELACSPlugin and FilterDetectors
 - AnalogInput/Output check usage of IsPrepared and IsRunning! Yes, do it!
+  AI->startRead() should work after AI->stop() without prepareRead()! (restartRead()!)
 - readData() several attemps only if maxn is too small
 - DAQFlex: does not like the initial writeReset() 
   as well as normal writes at high sampling rates.

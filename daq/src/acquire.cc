@@ -3,7 +3,7 @@
   Read and write data from/to the data aqcuisition board.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -921,6 +921,7 @@ int Acquire::restartRead( void )
 
   // reset and prepare reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
+    cerr << "RESTART " << AI[i].Traces.size() << '\n';
     if ( AI[i].Traces.size() > 0 &&
 	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
       success = false;

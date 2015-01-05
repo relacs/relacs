@@ -3,7 +3,7 @@
   Interface for accessing analog input of a daq-board via the dynamic clamp kernel module.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -592,6 +592,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   BufferSize = 0;
   BufferN = 0;
   Settings.clear();
+  IsPrepared = false;
 
   // set chanlist:
   setupChanList( traces, ChanList, MAXCHANLIST );
@@ -658,11 +659,11 @@ int DynClampAnalogInput::prepareRead( InList &traces )
     Settings.addNumber( "minimum period", 0.0, "us" );
     Settings.addNumber( "maximum period", 0.0, "us" );
     Traces = &traces;
+    IsPrepared = true;
+    return 0;
   }
-
-  IsPrepared = traces.success();
-
-  return traces.success() ? 0 : -1;
+  else
+    return -1;
 }
 
 
