@@ -232,7 +232,6 @@ int TransferFunction::main( void )
       break;
     }
     if ( signal.failed() ) {
-      warning( signal.errorText(), 5.0 );
       if ( signal.error() == DaqError::OverflowUnderrun ) {
 	directWrite( orgdcsignal );
 	continue;

@@ -156,12 +156,22 @@ public:
     /*! The size of a single outgoing packet in bytes. */
   int outPacketSize( void ) const;
 
-    /*! Transfer data from the device to a buffer. */
-  int readBulkTransfer( unsigned char *data, int length, int *transferred,
-			unsigned int timeout );
-    /*! Transfer data from a buffer to the device. */
-  int writeBulkTransfer( unsigned char *data, int length, int *transferred,
-			 unsigned int timeout );
+    /*! Transfer data from the device to a buffer.
+        \param[in] data a buffer for the received data
+        \param[in] length number of bytes \a data can receive
+        \param[in] transferred number of bytes actually transferred
+        \param[in] timeout in milliseconds
+        \return an eror code. */
+  DAQFlexError readBulkTransfer( unsigned char *data, int length, int *transferred,
+				 unsigned int timeout );
+    /*! Transfer data from a buffer to the device.
+        \param[in] data to be sent
+        \param[in] length number of bytes in \a data to be sent
+        \param[in] transferred number of bytes actually transferred
+        \param[in] timeout in milliseconds
+        \return an eror code. */
+  DAQFlexError writeBulkTransfer( unsigned char *data, int length, int *transferred,
+				  unsigned int timeout );
 
     /*! Clear the reading endpoint. */
   void clearRead( void );
@@ -176,6 +186,8 @@ public:
   bool failed( void ) const;
     /*! \return the current error state as a descriptive string. */
   string errorStr( void ) const;
+    /*! \return a descriptive string for \a error. */
+  string errorStr( DAQFlexError error ) const;
 
 
  private:
@@ -202,6 +214,9 @@ public:
   int initDevice( const string &path );
   int uploadFirmware( const string &path, const string &filename );
   int transferFPGAfile( const string &path );
+
+    /*! Convert the \a libusberror to an \a DAQFlexError. */
+  static DAQFlexError getLibUSBError( int libusberror );
 
   libusb_device_handle *DeviceHandle;
   unsigned char EndpointIn;

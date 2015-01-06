@@ -921,7 +921,6 @@ int Acquire::restartRead( void )
 
   // reset and prepare reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
-    cerr << "RESTART " << AI[i].Traces.size() << '\n';
     if ( AI[i].Traces.size() > 0 &&
 	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
       success = false;

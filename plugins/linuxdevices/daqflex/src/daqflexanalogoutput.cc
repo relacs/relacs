@@ -575,6 +575,7 @@ int DAQFlexAnalogOutput::writeData( void )
       Buffer = 0;
       BufferSize = 0;
       NBuffer = 0;
+      NoMoreData = true;
       return 0;
     }
     else
@@ -582,22 +583,27 @@ int DAQFlexAnalogOutput::writeData( void )
   }
 
   // device stopped?
+  /*
   if ( IsPrepared ) {  // XXX where is IsPrepared set to false???
     string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
     if ( response.find( "UNDERRUN" ) != string::npos ) {
+    // XXX this occurs often, but it looks like the whole signal was put out...
+    // XXX Also, in AnalogOutput thread we check for status anyways...
       Sigs.addError( DaqError::OverflowUnderrun );
       return -1;
     }
   }
-
+  */
   if ( Sigs[0].deviceWriting() ) {
     // convert data into buffer:
     int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
   }
 
-  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
+  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 ) {
+    NoMoreData = true;
     return 0;
+  }
 
   // transfer buffer to device:
   int outps = DAQFlexDevice->outPacketSize();
@@ -613,8 +619,9 @@ int DAQFlexAnalogOutput::writeData( void )
   int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
   int bytesWritten = 0;
   //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
-  int ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), bytesToWrite,
-					      &bytesWritten, timeout );
+  DAQFlexCore::DAQFlexError ern = DAQFlexCore::Success;
+  ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), bytesToWrite,
+					  &bytesWritten, timeout );
 
   int elemWritten = 0;
   if ( bytesWritten > 0 ) {
@@ -623,13 +630,13 @@ int DAQFlexAnalogOutput::writeData( void )
     elemWritten += bytesWritten / 2;
   }
 
-  if ( ern == 0 ) {
+  if ( ern == DAQFlexCore::Success ) {
     if ( bytesWritten < bytesToWrite )
-      cerr << "FAILED TO TRANSFER DATA : " << bytesWritten << " < " <<  bytesToWrite << '\n';
+      cerr << "DAQFlexAnalogOutput::writeData() -> FAILED TO TRANSFER DATA : " << bytesWritten << " < " <<  bytesToWrite << '\n';
     // no more data:
     if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
       if ( bytesToWrite % outps == 0 ) {
-	cerr << "WRITING ZERO DATA\n";  // not yet tested...
+	cerr << "DAQFlexAnalogOutput::writeData() -> WRITING ZERO DATA\n";  // not yet tested...
 	// write a zero length packet to indicate end of data:
 	DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), 0,
 					  &bytesWritten, 10 );
@@ -639,27 +646,31 @@ int DAQFlexAnalogOutput::writeData( void )
       Buffer = 0;
       BufferSize = 0;
       NBuffer = 0;
+      NoMoreData = true;
       return 0;
     }
   }
-  else {
+  else if ( ern != DAQFlexCore::ErrorLibUSBTimeout ) {
     // error:
+    cerr << "WRITEBULKTRANSFER error=" << DAQFlexDevice->errorStr( ern )
+	 << " bytesWritten=" << bytesWritten << '\n';
+
     switch( ern ) {
 
-    case LIBUSB_ERROR_PIPE:
+    case DAQFlexCore::ErrorLibUSBPipe:
       Sigs.addError( DaqError::OverflowUnderrun );
       return -1;
 
-    case LIBUSB_ERROR_BUSY:
+    case DAQFlexCore::ErrorLibUSBBusy:
       Sigs.addError( DaqError::Busy );
       return -1;
 
-    case LIBUSB_ERROR_TIMEOUT:
-      cerr << "timeout in writing data\n";
+    case DAQFlexCore::ErrorLibUSBNoDevice:
+      Sigs.addError( DaqError::NoDevice );
       return -1;
 
     default:
-      Sigs.addErrorStr( "Lib USB Error" );
+      Sigs.addErrorStr( DAQFlexDevice->errorStr( ern ) );
       Sigs.addError( DaqError::Unknown );
       return -1;
     }
@@ -727,7 +738,10 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
   string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
   if ( response.find( "RUNNING" ) != string::npos )
     r = Running;
-  if ( response.find( "UNDERRUN" ) != string::npos ) {
+  // The following underrun check seems stupid after the last stimulus has been put out.
+  // We get underrun errors although the stimulus seems to be put out completely.
+  // XXX This needs to be checked with appropriate stimuli!
+  if ( ! NoMoreData && response.find( "UNDERRUN" ) != string::npos ) {
     Sigs.addError( DaqError::OverflowUnderrun );
     r = Underrun;
   }

@@ -359,47 +359,6 @@ string DAQFlexCore::productName( int productid )
 }
 
 
-void DAQFlexCore::setLibUSBError( int libusberror )
-{
-  if ( libusberror >= 0 )
-    ErrorState = Success;
-  else {
-    switch( libusberror ) {
-    case LIBUSB_SUCCESS:
-      ErrorState = Success; break;
-    case LIBUSB_ERROR_IO:
-      ErrorState = ErrorLibUSBIO; break;
-    case LIBUSB_ERROR_INVALID_PARAM:
-      ErrorState = ErrorLibUSBInvalidParam; break;
-    case LIBUSB_ERROR_ACCESS:
-      ErrorState = ErrorLibUSBAccess; break;
-    case LIBUSB_ERROR_NO_DEVICE:
-      ErrorState = ErrorLibUSBNoDevice; break;
-    case LIBUSB_ERROR_NOT_FOUND:
-      ErrorState = ErrorLibUSBNotFound; break;
-    case LIBUSB_ERROR_BUSY:
-      ErrorState = ErrorLibUSBBusy; break;
-    case LIBUSB_ERROR_TIMEOUT:
-      ErrorState = ErrorLibUSBTimeout; break;
-    case LIBUSB_ERROR_OVERFLOW:
-      ErrorState = ErrorLibUSBOverflow; break;
-    case LIBUSB_ERROR_PIPE:
-      ErrorState = ErrorLibUSBPipe; break;
-    case LIBUSB_ERROR_INTERRUPTED:
-      ErrorState = ErrorLibUSBInterrupted; break;
-    case LIBUSB_ERROR_NO_MEM:
-      ErrorState = ErrorLibUSBNoMem; break;
-    case LIBUSB_ERROR_NOT_SUPPORTED:
-      ErrorState = ErrorLibUSBNotSupported; break;
-    case LIBUSB_ERROR_OTHER:
-      ErrorState = ErrorLibUSBOther; break;
-    default:
-      ErrorState = ErrorLibUSBUnknown;
-    }
-  }
-}
-
-
 int DAQFlexCore::sendControlTransfer( const string &message )
 {
   unsigned char data[MaxMessageSize];
@@ -810,21 +769,23 @@ int DAQFlexCore::transferFPGAfile( const string &path )
 }
 
 
-int DAQFlexCore::readBulkTransfer( unsigned char *data, int length, int *transferred,
-				   unsigned int timeout )
+DAQFlexCore::DAQFlexError DAQFlexCore::readBulkTransfer( unsigned char *data, int length,
+							 int *transferred,
+							 unsigned int timeout )
 {
   int err = libusb_bulk_transfer( deviceHandle(), endpointIn(),
 				  data, length, transferred, timeout );
-  return err;
+  return getLibUSBError( err );
 }
 
 
-int DAQFlexCore::writeBulkTransfer( unsigned char *data, int length, int *transferred,
-				    unsigned int timeout )
+DAQFlexCore::DAQFlexError DAQFlexCore::writeBulkTransfer( unsigned char *data, int length,
+							  int *transferred,
+							  unsigned int timeout )
 {
   int err = libusb_bulk_transfer( deviceHandle(), endpointOut(),
 				  data, length, transferred, timeout );
-  return err;
+  return getLibUSBError( err );
 }
 
 
@@ -853,6 +814,56 @@ void DAQFlexCore::clearWrite( void )
 }
 
 
+DAQFlexCore::DAQFlexError DAQFlexCore::getLibUSBError( int libusberror )
+{
+  DAQFlexError error = Success;
+
+  if ( libusberror >= 0 )
+    error = Success;
+  else {
+    switch( libusberror ) {
+    case LIBUSB_SUCCESS:
+      error = Success; break;
+    case LIBUSB_ERROR_IO:
+      error = ErrorLibUSBIO; break;
+    case LIBUSB_ERROR_INVALID_PARAM:
+      error = ErrorLibUSBInvalidParam; break;
+    case LIBUSB_ERROR_ACCESS:
+      error = ErrorLibUSBAccess; break;
+    case LIBUSB_ERROR_NO_DEVICE:
+      error = ErrorLibUSBNoDevice; break;
+    case LIBUSB_ERROR_NOT_FOUND:
+      error = ErrorLibUSBNotFound; break;
+    case LIBUSB_ERROR_BUSY:
+      error = ErrorLibUSBBusy; break;
+    case LIBUSB_ERROR_TIMEOUT:
+      error = ErrorLibUSBTimeout; break;
+    case LIBUSB_ERROR_OVERFLOW:
+      error = ErrorLibUSBOverflow; break;
+    case LIBUSB_ERROR_PIPE:
+      error = ErrorLibUSBPipe; break;
+    case LIBUSB_ERROR_INTERRUPTED:
+      error = ErrorLibUSBInterrupted; break;
+    case LIBUSB_ERROR_NO_MEM:
+      error = ErrorLibUSBNoMem; break;
+    case LIBUSB_ERROR_NOT_SUPPORTED:
+      error = ErrorLibUSBNotSupported; break;
+    case LIBUSB_ERROR_OTHER:
+      error = ErrorLibUSBOther; break;
+    default:
+      error = ErrorLibUSBUnknown;
+    }
+  }
+  return error;
+}
+
+
+void DAQFlexCore::setLibUSBError( int libusberror )
+{
+  ErrorState = getLibUSBError( libusberror );
+}
+
+
 int DAQFlexCore::error( void ) const
 {
   return ErrorState;
@@ -874,6 +885,12 @@ bool DAQFlexCore::failed( void ) const
 string DAQFlexCore::errorStr( void ) const
 {
   return DAQFlexErrorText[ ErrorState ];
+}
+
+
+string DAQFlexCore::errorStr( DAQFlexError error ) const
+{
+  return DAQFlexErrorText[ error ];
 }
 
 

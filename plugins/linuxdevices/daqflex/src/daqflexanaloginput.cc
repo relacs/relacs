@@ -426,30 +426,16 @@ int DAQFlexAnalogInput::readData( void )
   int maxn = ((BufferSize - buffern)/inps)*inps;
   if ( maxn > ReadBufferSize )
     maxn = ReadBufferSize;
-  if ( maxn <= 0 && ! IsRunning )
-    maxn = BufferSize - buffern;
+  if ( maxn <= 0 )
+    return 0;
 
   // read data:
   int timeout = (int)::ceil( 10.0 * 1000.0*(*Traces)[0].interval( maxn/2/Traces->size() ) ); // in ms
-  int err = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
-					     maxn, &readn, timeout );
-  string status = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
-  if ( err != 0 ) {
-    if ( readn <= 0 || status != "AISCAN:STATUS=RUNNING" ) {
-      if ( status == "AISCAN:STATUS=OVERRUN" )
-	Traces->addError( DaqError::OverflowUnderrun );
-      else
-	Traces->addError( DaqError::Unknown );
-      cerr << "READBULKTRANSFER err=" << err << " readn=" << readn << " status=" << status << '\n';
-    }
-    else if ( err != LIBUSB_ERROR_TIMEOUT ) {
-      Traces->addErrorStr( "LibUSB error " + Str( err ) );
-      if ( err == LIBUSB_ERROR_OVERFLOW )
-	Traces->addError( DaqError::OverflowUnderrun );
-      cerr << " DAQFlexAnalogInput::readData(): libUSB error " << err << "\n";
-    }
-  }
+  DAQFlexCore::DAQFlexError ern = DAQFlexCore::Success;
+  ern = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
+					 maxn, &readn, timeout );
 
+  // store data:
   if ( readn > 0 ) {
     buffern += readn;
     BufferN = buffern / 2;
@@ -457,17 +443,55 @@ int DAQFlexAnalogInput::readData( void )
     CurrentSamples += readn;
   }
 
-  if ( Traces->failed() )
-    return -2;
-
-  // no more data to be read:
-  if ( readn <= 0 && !IsRunning ) {
-    if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
-      Traces->addErrorStr( deviceFile() + " - buffer-overflow " );
-      Traces->addError( DaqError::OverflowUnderrun );
+  if ( ern == DAQFlexCore::Success || ern == DAQFlexCore::ErrorLibUSBTimeout ) {
+    string status = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
+    if ( status != "AISCAN:STATUS=RUNNING" ) {
+      if ( status == "AISCAN:STATUS=OVERRUN" )
+	Traces->addError( DaqError::OverflowUnderrun );
+      else {
+	Traces->addErrorStr( "analog input not running anymore" );
+	Traces->addError( DaqError::Unknown );
+      }
       return -2;
     }
-    return -1;
+    /*
+    // no more data to be read:
+    XXX This does not make any sense, since IsRunning is always true!!!
+    if ( readn <= 0 && !IsRunning ) {
+      if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
+	Traces->addErrorStr( deviceFile() + " - buffer-overflow " );
+	Traces->addError( DaqError::OverflowUnderrun );
+	return -2;
+      }
+      return -1;
+    }
+    */
+  }
+  else {
+    // error:
+    cerr << "READBULKTRANSFER error=" << DAQFlexDevice->errorStr( ern )
+	 << " readn=" << readn << '\n';
+
+    switch( ern ) {
+
+    case DAQFlexCore::ErrorLibUSBOverflow:
+    case DAQFlexCore::ErrorLibUSBPipe:
+      Traces->addError( DaqError::OverflowUnderrun );
+      return -2;
+
+    case DAQFlexCore::ErrorLibUSBBusy:
+      Traces->addError( DaqError::Busy );
+      return -2;
+
+    case DAQFlexCore::ErrorLibUSBNoDevice:
+      Traces->addError( DaqError::NoDevice );
+      return -2;
+
+    default:
+      Traces->addErrorStr( DAQFlexDevice->errorStr( ern ) );
+      Traces->addError( DaqError::Unknown );
+      return -2;
+    }
   }
 
   return readn;
