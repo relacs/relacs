@@ -635,12 +635,6 @@ int DAQFlexAnalogOutput::writeData( void )
       cerr << "DAQFlexAnalogOutput::writeData() -> FAILED TO TRANSFER DATA : " << bytesWritten << " < " <<  bytesToWrite << '\n';
     // no more data:
     if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      if ( bytesToWrite % outps == 0 ) {
-	cerr << "DAQFlexAnalogOutput::writeData() -> WRITING ZERO DATA\n";  // not yet tested...
-	// write a zero length packet to indicate end of data:
-	DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), 0,
-					  &bytesWritten, 10 );
-      }
       if ( Buffer != 0 )
 	delete [] Buffer;
       Buffer = 0;

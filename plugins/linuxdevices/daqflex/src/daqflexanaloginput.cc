@@ -446,13 +446,16 @@ int DAQFlexAnalogInput::readData( void )
   if ( ern == DAQFlexCore::Success || ern == DAQFlexCore::ErrorLibUSBTimeout ) {
     string status = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
     if ( status != "AISCAN:STATUS=RUNNING" ) {
-      if ( status == "AISCAN:STATUS=OVERRUN" )
+      if ( status == "AISCAN:STATUS=OVERRUN" ) {
 	Traces->addError( DaqError::OverflowUnderrun );
-      else {
-	Traces->addErrorStr( "analog input not running anymore" );
-	Traces->addError( DaqError::Unknown );
+	return -2;
       }
-      return -2;
+      else {
+	cerr << "DAQFlexAnalogInput::readData() -> analog input not running anymore\n";
+	// Traces->addErrorStr( "analog input not running anymore" );
+	// Traces->addError( DaqError::Unknown );
+      }
+      // return -2;
     }
     /*
     // no more data to be read:
