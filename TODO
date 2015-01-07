@@ -1,7 +1,52 @@
-- Comedi (und RTAIComedi?): problems with maxboardvolt in case of virtual attenuator
+
+void WriteThread::run( void )
+{
+  if ( RW->AQ->waitForWrite() < 0 ) {
+    string es = RW->AQ->writeError(); // XXX Signals might not exist anymore, because RePro exits on error!
+    RW->printlog( "! error in writing data: " + es );
+    QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog output: " + es ) );
+  }
+}
+
+
+14:34:24 ManualJAR: Delta F:  20.0Hz  Amplitude: 2mV/cm
+14:34:24 EODDetector: "EOD" peak discarded because of size=-0.0098064
+14:34:24 EODDetector: "EOD" peak discarded because of size=-0.0037046
+14:34:24 EODDetector: "EOD" peak discarded because of size=-0.0036867
+14:35:20 ManualJAR: Delta F:  20.0Hz  Amplitude: 2mV/cm
+14:35:52 Starting Macro "Idle"
+14:35:52 ManualJAR: ManualJAR aborted after 37min39sec
+14:35:52 Starting RePro "Pause"
+terminate called after throwing an instance of 'std::length_error'
+  what():  basic_string::_S_create
+
+Thread 1 (Thread 0x7f11714be700 (LWP 10953)):
+#0  0x00007f11a651cbb9 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x00007f11a651ffc8 in abort () from /lib/x86_64-linux-gnu/libc.so.6
+#2  0x00007f11a6b226b5 in __gnu_cxx::__verbose_terminate_handler() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#3  0x00007f11a6b20836 in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#4  0x00007f11a6b20863 in std::terminate() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#5  0x00007f11a6b20aa2 in __cxa_throw () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#6  0x00007f11a6b72537 in std::__throw_length_error(char const*) () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#7  0x00007f11a6b7c3d2 in std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#8  0x00007f11a6b7cf7b in std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#9  0x00007f11a6b7d5fc in std::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::string const&) () from /usr/lib/x86_64-linux-gnu/lib
+#10 0x00007f11a593973d in relacs::DaqError::errorStr (this=<optimized out>) at daqerror.cc:122
+#11 0x00007f11a595ff4d in relacs::OutList::errorText (this=this@entry=0x7f11714bdc30) at outlist.cc:357
+#12 0x00007f11a591de04 in relacs::Acquire::writeError (this=0xcb2710) at acquire.cc:2776
+#13 0x00007f11a86853d5 in relacs::WriteThread::run (this=0x7fff2fe14848) at datathreads.cc:72
+#14 0x00007f11a72a132f in ?? () from /usr/lib/x86_64-linux-gnu/libQtCore.so.4
+#15 0x00007f11a4f69182 in start_thread () from /lib/x86_64-linux-gnu/libpthread.so.0
+#16 0x00007f11a65e0efd in clone () from /lib/x86_64-linux-gnu/libc.so.6
+
+
+- Plot (used from ManualJAR) P.clear(); P.draw() do not always clear the plot!
 - Buzzing is not responsive: allow for multiple buzzes
 
 New InData threading:
+- analog  outputs with delay might not deliver enough data: comedi output should not need to be canceled in prepareWrite, daqflex should not have an underrun condition
+- ManualJAR: if interrupted by another macro a segfault occurs in some event filtering in customEvent->RePro::customEvent (probably from RePro::disable())
+  might be fixed, but needs to be checked
 - check for XXX in RelacsWidget
 - check and improve AudioMonitor input data updates - are they locked? 
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)

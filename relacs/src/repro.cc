@@ -141,10 +141,10 @@ void RePro::run( void )
 
   unlock();
 
-  disable();
   RW->KeyTime->unsetNoFocusWidget();
   GrabKeysAllowed = false;
   releaseKeys();
+  disable();
 
   // write message:
   if ( PrintMessage ) {

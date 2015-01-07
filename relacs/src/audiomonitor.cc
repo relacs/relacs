@@ -176,7 +176,12 @@ void AudioMonitor::start( void )
   params.device = audiodev;
   params.hostApiSpecificStreamInfo = NULL;
   params.sampleFormat = paFloat32;
-  params.suggestedLatency = Pa_GetDeviceInfo( audiodev )->defaultHighOutputLatency;
+  const PaDeviceInfo *di = Pa_GetDeviceInfo( audiodev );
+  if ( di == NULL ) {
+    Stream = 0;
+    return;
+  }
+  params.suggestedLatency = di->defaultHighOutputLatency;
   params.hostApiSpecificStreamInfo = NULL;
   PaError err = Pa_IsFormatSupported( NULL, &params, AudioRate );
   if ( err == paInvalidSampleRate ) {
