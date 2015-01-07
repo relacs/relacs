@@ -840,21 +840,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     return -1;
   }
 
-  lock();
-  Sigs.clear();
-  if ( Buffer != 0 )
-    delete [] Buffer;
-  Buffer = 0;
-  BufferSize = 0;
-  NBuffer = 0;
-  Settings.clear();
-  if ( Cmd.chanlist != 0 )
-    delete [] Cmd.chanlist;
-  memset( &Cmd, 0, sizeof( comedi_cmd ) );
-  IsPrepared = false;
-  IsRunning = false;
-  NoMoreData = true;
-  unlock();
+  reset();
 
   // no signals:
   if ( sigs.size() == 0 )
