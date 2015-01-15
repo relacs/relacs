@@ -1,3 +1,5 @@
+- in RELACSWidgt::stopRePro:   qApp->processEvents( QEventLoop::AllEvents, 10 );
+  "is not safe to be called from another thread than the main thread."????
 
 void WriteThread::run( void )
 {
@@ -40,6 +42,9 @@ Thread 1 (Thread 0x7f11714be700 (LWP 10953)):
 #16 0x00007f11a65e0efd in clone () from /lib/x86_64-linux-gnu/libc.so.6
 
 
+- DAQFlex: There is a difference between firmware and fpga
+  configuration files! Rename the functions and output accordingly.
+  See also email from 2012
 - Plot (used from ManualJAR) P.clear(); P.draw() do not always clear the plot!
 - Buzzing is not responsive: allow for multiple buzzes
 
