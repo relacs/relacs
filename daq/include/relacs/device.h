@@ -36,7 +36,6 @@ namespace relacs {
 \class Device
 \brief Basic interface for accessing a device.
 \author Jan Benda
-\todo Error codes and strings for errors in the open function
 \todo Options as part of the device
 
 The Device class defines the interface for the basic operations open(),
@@ -86,6 +85,8 @@ of the Device class.
 
 There are four flags for indicating errors with handling the device:
 NotOpen, InvalidDevice, ReadError, and WriteError.
+In addition an arbitrary error string errorStr() can be set with setErrorStr() 
+and addErrorStr() to indicate a failure in detail.
 
 Each device has its own mutex() for locking critical sections. Use
 lock() and unlock() for locking the device.
@@ -227,6 +228,34 @@ public:
 	setDeviceName(), setDeviceVendor() */
   virtual void setDeviceIdent( const string &ident );
 
+    /*! Clear the error string.
+        \sa setErrorStr(), addErrorStr() */
+  void clearError( void );
+    /*! Return error string of the last operation.
+        \sa setErrorStr(), addErrorStr() */
+  string errorStr( void ) const;
+    /*! Set error string to \a strg. 
+        \sa addErrorStr(), errorStr() */
+  void setErrorStr( const string &strg );
+    /*! Add \a strg to the error string. 
+        \sa setErrorStr(), errorStr() */
+  void addErrorStr( const string &strg );
+    /*! Set error string to the string describing the 
+        standard C error code \a errnum (from \c errno). 
+        \sa addErrorStr(), errorStr() */
+  void setErrorStr( int errnum );
+    /*! Add the string describing the standard C error code \a errnum 
+        (from \c errno) to the error string. 
+        \sa setErrorStr(), errorStr() */
+  void addErrorStr( int errnum );
+
+    /*! Return \c true if the last operation was successfull and did not set an error string,
+        i.e. errorStr().empty(). */
+  bool success( void ) const;
+    /*! Return \c true if the last operation failed and did set an error string,
+        i.e. not errorStr().empty(). */
+  bool failed( void ) const;
+
     /*! Write info() to \a str. */
   friend ostream &operator<<( ostream &str, const Device &d );
 
@@ -290,6 +319,8 @@ private:
   string DeviceFile;
   string DeviceName;
   string DeviceVendor;
+
+  string ErrorString;
 
   mutable QMutex Mutex;
 
