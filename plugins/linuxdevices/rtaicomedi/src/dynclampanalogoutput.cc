@@ -673,9 +673,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
     BufferSize = ol.size() * BufferElemSize;
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-    // fill buffer with data:
-    for ( int k=0; k<ol.size(); k++ )
-      ol[k].deviceReset( 0 );
+    ol.deviceReset( 0 );
     Sigs = ol;
 
   } // unlock
@@ -968,6 +966,7 @@ int DynClampAnalogOutput::writeData( void )
       Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
 			deviceFile() + " is not running!" );
       cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
+      setErrorStr( Sigs );
       return -1;
     }
   }
@@ -1027,17 +1026,20 @@ int DynClampAnalogOutput::writeData( void )
 
     case EPIPE: 
       Sigs.addError( DaqError::OverflowUnderrun );
-      return -1;
+      break;
 
     case EBUSY:
       Sigs.addError( DaqError::Busy );
-      return -1;
+      break;
 
     default:
       Sigs.addErrorStr( ern );
       Sigs.addError( DaqError::Unknown );
-      return -1;
+      break;
     }
+
+    setErrorStr( Sigs );
+    return -1;
   }
 
   return elemWritten;

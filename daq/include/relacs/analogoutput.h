@@ -173,21 +173,25 @@ public:
 	Also start possible pending acquisition on other devices
 	that are known from take().
         This function is always called after a successfull prepareRead().
-	An implementation of startWrite() should call startThread() to start the thread.
-	\param[in] sp if not null, a thread is started feeding the running analog output.
-        When the thread and analog output is finished, releases the semaphore by one.
-        On error, the semaphore is released by 1000 so that the process waiting
-        on the semaphore is waking up immediately. */
+	An implementation of startWrite() should call startThread() to
+	start the thread.
+	\param[in] sp if not null, a thread is started feeding the
+        running analog output.  When the thread and analog output is
+        finished, releases the semaphore by one.  On error, the
+        semaphore is released by 1000 so that the process waiting on
+        the semaphore is waking up immediately. */
   virtual int startWrite( QSemaphore *sp=0 ) = 0;
     /*! Write data of the output signals that were passed to the previous call
         of prepareWrite() to the analog output device.
         Returns the number of transferred data elements.
-	Returns zero if all data are transferred and no more calls to writeData()
-	are necessary.
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutData structure are filled and a negative value is returned.
+	Returns zero if all data are transferred and no more calls to
+	writeData() are necessary.
+	If an error ocurred in any channel, the corresponding
+	errorflags in the OutData structure are filled, the error
+	string is set, and a negative value is returned.
         This function is called periodically after writing has been successfully
-        started by startWrite(). */
+        started by startWrite().
+        \sa setErrorStr() */
   virtual int writeData( void ) = 0;
 
     /*! Stop any running ananlog output activity.
@@ -198,6 +202,7 @@ public:
     /*! Clear any internal data buffers and reset the device.
         Assumes that analog output is already stopped.
         Returns zero on success, otherwise NotOpen.
+	An implementation should NOT clear the error string!
         \sa stop(), close(), open(), isOpen() */
   virtual int reset( void ) = 0;
   
@@ -306,6 +311,13 @@ protected:
 	of an implementation of AnalogOutput.
         \sa analogOutputType(), setDeviceType(), setDeviceName(), setIdent() */
   void setAnalogOutputType( int aotype );
+
+    /*! If sigs.failed(), set error string to the error set in \a sigs
+        otherwise clear the error string. \sa addErrorStr() */
+  void setErrorStr( const OutList &sigs );
+    /*! If sigs.failed(), add error string to the error set in \a sigs.
+        \sa setErrorStr() */
+  void addErrorStr( const OutList &sigs );
 
     /*! Set the device info().
         Call this function from open().

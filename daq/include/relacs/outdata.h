@@ -811,10 +811,8 @@ class OutData : public SampleData< float >, public DaqError
   void incrDeviceCount( void ) { DeviceCount++; DeviceIndex = 0; };
     /*! Returns \c true as long data need to be transferred to the device. */
   bool deviceWriting( void ) const { return ( DeviceCount <= 0 ); };
-    /*! Reset the device index and counter. */
-  void deviceReset( void ) { DeviceIndex = 0; DeviceCount = 0; };
     /*! Reset the device index, counter, and delay. */
-  void deviceReset( int delay )
+  void deviceReset( int delay=0 )
     { DeviceIndex = 0; DeviceDelay = delay; DeviceCount = delay > 0 ? -1 : 0; };
 
   friend ostream &operator<<( ostream &str, const OutData &od );

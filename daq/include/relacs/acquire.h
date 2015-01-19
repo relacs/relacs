@@ -591,7 +591,10 @@ public:
     /*! \return the start time of the last output signal relative to the input data. */
   double signalTime( void ) const;
 
-    /*! \return an error string describing problems that occured during analog output. */
+    /*! \return an error string describing problems that occured
+        during analog output. The error string is assembled from the
+        error strings of the analog output devices - not from the
+        signals. */
   string writeError( void ) const;
 
     /*! Stop analog output of all analog output devices.

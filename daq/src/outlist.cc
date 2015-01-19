@@ -320,10 +320,10 @@ double OutList::maxLength( void ) const
 }
 
 
-void OutList::deviceReset( void )
+void OutList::deviceReset( int delay )
 {
   for ( int k=0; k<size(); k++ )
-    operator[]( k ).deviceReset();
+    operator[]( k ).deviceReset( delay );
 }
 
 

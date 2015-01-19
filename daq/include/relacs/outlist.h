@@ -147,8 +147,8 @@ public:
     /*! \return The duration of the longest OutData in the list. */
   double maxLength( void ) const;
 
-    /*! Reset the device indices. */
-  void deviceReset( void );
+    /*! Reset the device indices for a delay of \a delay indices. */
+  void deviceReset( int delay=0 );
     /*! Returns the required size of the device buffer
         (total number of data elements include delays). */
   int deviceBufferSize( void );

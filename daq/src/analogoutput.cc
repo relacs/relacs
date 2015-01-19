@@ -151,6 +151,22 @@ int AnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 }
 
 
+void AnalogOutput::setErrorStr( const OutList &sigs )
+{
+  if ( sigs.failed() )
+    Device::setErrorStr( sigs.errorText() );
+  else
+    clearError();
+}
+
+
+void AnalogOutput::addErrorStr( const OutList &sigs )
+{
+  if ( sigs.failed() )
+    Device::addErrorStr( sigs.errorText() );
+}
+
+
 void AnalogOutput::setInfo( void )
 {
   Info.clear();

@@ -2770,10 +2770,16 @@ double Acquire::signalTime( void ) const
 string Acquire::writeError( void ) const
 {
   QReadLocker locker( &WriteMutex );
-  OutList sigs;
-  for ( unsigned int i = 0; i<AO.size(); i++ )
-    sigs.add( AO[i].Signals );
-  return sigs.errorText();
+  string es = "";
+  for ( unsigned int i = 0; i<AO.size(); i++ ) {
+    string aoes = AO[i].AO->errorStr();
+    if ( ! aoes.empty() ) {
+      if ( ! es.empty() )
+	es += ", ";
+      es += aoes;
+    }
+  }
+  return es;
 }
 
 

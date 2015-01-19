@@ -883,8 +883,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
       return -1;
 
     int delayinx = ol[0].indices( ol[0].delay() );
-    for ( int k=0; k<ol.size(); k++ )
-      ol[k].deviceReset( delayinx );
+    ol.deviceReset( delayinx );
 
     // set buffer size:
     BufferSize = bufferSize()*BufferElemSize;
@@ -997,6 +996,7 @@ int ComediAnalogOutput::writeData( void )
 			deviceFile() + " is not running and not busy!" );
       cerr << "ComediAnalogOutput::writeData: device is not running and not busy! comedi_strerror: " << comedi_strerror( comedi_errno() ) << '\n';
     }
+    setErrorStr( Sigs );
     NoMoreData = true;
     IsRunning = false;
     return -1;
@@ -1062,17 +1062,20 @@ int ComediAnalogOutput::writeData( void )
 
     case EPIPE: 
       Sigs.addError( DaqError::OverflowUnderrun );
-      return -1;
+      break;
 
     case EBUSY:
       Sigs.addError( DaqError::Busy );
-      return -1;
+      break;
 
     default:
       Sigs.addErrorStr( ern );
       Sigs.addError( DaqError::Unknown );
-      return -1;
+      break;
     }
+
+    setErrorStr( Sigs );
+    return -1;
   }
   
   return elemWritten;

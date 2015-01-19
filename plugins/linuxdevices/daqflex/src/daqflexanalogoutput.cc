@@ -472,8 +472,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       return -1;
 
     int delayinx = ol[0].indices( ol[0].delay() );
-    for ( int k=0; k<ol.size(); k++ )
-      ol[k].deviceReset( delayinx );
+    ol.deviceReset( delayinx );
 
     // setup acquisition:
     DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" ) );
@@ -590,6 +589,7 @@ int DAQFlexAnalogOutput::writeData( void )
     // XXX this occurs often, but it looks like the whole signal was put out...
     // XXX Also, in AnalogOutput thread we check for status anyways...
       Sigs.addError( DaqError::OverflowUnderrun );
+      setErrorStr( Sigs );
       return -1;
     }
   }
@@ -653,21 +653,23 @@ int DAQFlexAnalogOutput::writeData( void )
 
     case DAQFlexCore::ErrorLibUSBPipe:
       Sigs.addError( DaqError::OverflowUnderrun );
-      return -1;
+      break;
 
     case DAQFlexCore::ErrorLibUSBBusy:
       Sigs.addError( DaqError::Busy );
-      return -1;
+      break;
 
     case DAQFlexCore::ErrorLibUSBNoDevice:
       Sigs.addError( DaqError::NoDevice );
-      return -1;
+      break;
 
     default:
       Sigs.addErrorStr( DAQFlexDevice->errorStr( ern ) );
       Sigs.addError( DaqError::Unknown );
-      return -1;
     }
+
+    setErrorStr( Sigs );
+    return -1;
   }
 
   return elemWritten;
