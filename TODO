@@ -1,5 +1,3 @@
-- DAQFlex: Put firmware and fpga version for all devices into info!
-  See also email from 2012
 - Plot (used from ManualJAR) P.clear(); P.draw() do not always clear the plot!
 - Buzzing is not responsive: allow for multiple buzzes
 
@@ -93,6 +91,7 @@ Devices:
 - Attenuate uses the configure mechanism, so it should inherit ConfigClass
 - Attenuate should also have a dialog
 - Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
+- DAQFlex: See email on firmware update from 2012
 
 patchclamp::SingleStimulus:
 - Add zero to noise stimuli (all stimuli?)

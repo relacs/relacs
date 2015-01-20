@@ -687,6 +687,19 @@ int DAQFlexCore::initDevice( const string &path )
   serial.erase( 0, 11 );
   Info.addText( "SerialNumber", serial );
 
+  // firmware version:
+  string fwv = sendMessage( "?DEV:FWV" );
+  if ( ! fwv.empty() ) {
+    fwv.erase( 0, 8 );
+    Info.addText( "Firmware version", fwv );
+  }
+  // fpga firmware version:
+  string fpgav = sendMessage( "?DEV:FPGAV" );
+  if ( ! fpgav.empty() ) {
+    fpgav.erase( 0, 10 );
+    Info.addText( "FPGA version", fpgav );
+  }
+
   return ErrorState;
 }
 
@@ -707,19 +720,6 @@ int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename 
       response = sendMessage( "?DEV:FPGACFG" );
       if ( ErrorState == Success && response.find( "CONFIGURED" ) == string::npos )
 	ErrorState = ErrorFPGAUploadFailed;
-    }
-    if ( ErrorState == Success ) {
-      string fwv = sendMessage( "?DEV:FWV" );
-      if ( ! fwv.empty() ) {
-	fwv.erase( 0, 8 );
-	fwv = " version " + fwv;
-      }
-      string fpgav = sendMessage( "?DEV:FPGAV" );
-      if ( ! fpgav.empty() ) {
-	fpgav.erase( 0, 10 );
-	fpgav = " version " + fpgav;
-      }
-      cout << "DAQFlex: FPGA firmware " << fpgav << " successfully flashed. Firmware " + fwv << '\n';
     }
   }
   return ErrorState;
