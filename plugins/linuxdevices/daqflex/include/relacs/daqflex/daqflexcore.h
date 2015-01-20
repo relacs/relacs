@@ -212,7 +212,7 @@ public:
   unsigned char getEndpointOutAddress( unsigned char* data, int n );
 
   int initDevice( const string &path );
-  int uploadFirmware( const string &path, const string &filename );
+  int uploadFPGAFirmware( const string &path, const string &filename );
   int transferFPGAfile( const string &path );
 
     /*! Convert the \a libusberror to an \a DAQFlexError. */

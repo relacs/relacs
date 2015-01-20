@@ -530,7 +530,7 @@ int DAQFlexCore::initDevice( const string &path )
       AOFIFOSize = 0;
     }
     DIOLines = 8;
-    uploadFirmware( path, "USB_1608G.rbf" );
+    uploadFPGAFirmware( path, "USB_1608G.rbf" );
     if ( ErrorState != Success )
       return ErrorState;
     break;
@@ -617,7 +617,7 @@ int DAQFlexCore::initDevice( const string &path )
     MaxAOChannels = 2;
     AOFIFOSize = 0;  // ???
     DIOLines = 16;
-    uploadFirmware( path, "USB_1208GHS.rbf" );
+    uploadFPGAFirmware( path, "USB_1208GHS.rbf" );
     if ( ErrorState != Success )
       return ErrorState;
     break;
@@ -691,7 +691,7 @@ int DAQFlexCore::initDevice( const string &path )
 }
 
 
-int DAQFlexCore::uploadFirmware( const string &path, const string &filename )
+int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename )
 {
   // check if the firmware has been loaded already:
   string response = sendMessage( "?DEV:FPGACFG" );
@@ -699,7 +699,6 @@ int DAQFlexCore::uploadFirmware( const string &path, const string &filename )
     return ErrorState;
   if ( response.find( "CONFIGURED" ) == string::npos ) {
     // firmware hasn't been loaded yet, do so:
-    cout << "Firmware being flashed...\n";
     transferFPGAfile( path + filename );
     if ( ErrorState == ErrorCantOpenFPGAFile )
       transferFPGAfile( DefaultFirmwarePath + filename );
@@ -710,11 +709,17 @@ int DAQFlexCore::uploadFirmware( const string &path, const string &filename )
 	ErrorState = ErrorFPGAUploadFailed;
     }
     if ( ErrorState == Success ) {
-      response = sendMessage( "?DEV:FWV" );
-      if ( response.empty() )
-	cout << "DAQFlex: firmware successfully flashed\n";
-      else
-	cout << "DAQFlex: firmware version " << response.erase( 0, 8 ) << " successfully flashed\n";
+      string fwv = sendMessage( "?DEV:FWV" );
+      if ( ! fwv.empty() ) {
+	fwv.erase( 0, 8 );
+	fwv = " version " + fwv;
+      }
+      string fpgav = sendMessage( "?DEV:FPGAV" );
+      if ( ! fpgav.empty() ) {
+	fpgav.erase( 0, 10 );
+	fpgav = " version " + fpgav;
+      }
+      cout << "DAQFlex: FPGA firmware " << fpgav << " successfully flashed. Firmware " + fwv << '\n';
     }
   }
   return ErrorState;

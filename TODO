@@ -1,5 +1,4 @@
-- DAQFlex: There is a difference between firmware and fpga
-  configuration files! Rename the functions and output accordingly.
+- DAQFlex: Put firmware and fpga version for all devices into info!
   See also email from 2012
 - Plot (used from ManualJAR) P.clear(); P.draw() do not always clear the plot!
 - Buzzing is not responsive: allow for multiple buzzes
