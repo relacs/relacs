@@ -26,8 +26,27 @@ AudioMonitor::AudioMonitor( void )
   setDate( "" );
   setDialogHelp( false );
 
+  string audiodevs = "-1 default";
+#ifdef HAVE_LIBPORTAUDIO
+  // get available audio devices:
+  PaError err = Pa_Initialize();
+  if ( err == paNoError ) {
+    int numdev = Pa_GetDeviceCount();
+    int defaultdev = Pa_GetDefaultOutputDevice();
+    for ( int k=0; k<numdev; k++ ) {
+      const PaDeviceInfo *devinfo = Pa_GetDeviceInfo( k );
+      if ( devinfo->maxOutputChannels == 0 )
+	continue;
+      audiodevs += "|" + Str( k ) + " " + devinfo->name + " (" + Str( devinfo->maxOutputChannels ) + " channels)";
+      if ( k == defaultdev )
+	audiodevs += " - default";
+    }
+    Pa_Terminate();
+  }
+#endif
+
   // options:
-  addInteger( "device", "Audio device number", -1, -1, 100 );
+  addSelection( "device", "Audio device", audiodevs );
   addBoolean( "enable", "Enable audio monitor", true );
   addBoolean( "mute", "Mute audio monitor", false );
   addNumber( "gain", "Gain factor", 1.0, 0.0, 10000.0, 0.1 );
@@ -44,7 +63,8 @@ AudioMonitor::~AudioMonitor( void )
 void AudioMonitor::notify( void )
 {
   Mutex.lock();
-  int audiodevice = integer( "device" );
+  Str audiodevs = text( "device" );
+  int audiodevice = (int)::round( audiodevs.number( -1.0 ) );
   Gain = number( "gain" );
   PrevMute = Mute;
   Mute = boolean( "mute" ) ? 0.0f : 1.0f;
@@ -92,18 +112,6 @@ void AudioMonitor::initialize( void )
     audiodev = numdev-1;
   if ( audiodev < 0 )
     audiodev = Pa_GetDefaultOutputDevice();
-  cerr << "Available audio devices for the audio monitor:\n";
-  for ( int k=0; k<numdev; k++ ) {
-    const PaDeviceInfo *devinfo = Pa_GetDeviceInfo( k );
-    if ( devinfo->maxOutputChannels == 0 )
-      continue;
-    string ds = "  ";
-    if ( k == audiodev )
-      ds = "* ";
-    cout << "  " << ds << k << " " << devinfo->name
-	 << " with " << devinfo->maxOutputChannels << " output channels\n";
-  }
-  cerr << "Defaul audio device is " << Pa_GetDefaultOutputDevice() << '\n';
 #endif
 
   Mutex.lock();
