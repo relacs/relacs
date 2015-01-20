@@ -312,6 +312,20 @@ protected:
         \sa analogOutputType(), setDeviceType(), setDeviceName(), setIdent() */
   void setAnalogOutputType( int aotype );
 
+    /*! Set error string to \a strg. 
+        \sa addErrorStr(), errorStr() */
+  void setErrorStr( const string &strg );
+    /*! Add \a strg to the error string. 
+        \sa setErrorStr(), errorStr() */
+  void addErrorStr( const string &strg );
+    /*! Set error string to the string describing the 
+        standard C error code \a errnum (from \c errno). 
+        \sa addErrorStr(), errorStr() */
+  void setErrorStr( int errnum );
+    /*! Add the string describing the standard C error code \a errnum 
+        (from \c errno) to the error string. 
+        \sa setErrorStr(), errorStr() */
+  void addErrorStr( int errnum );
     /*! If sigs.failed(), set error string to the error set in \a sigs
         otherwise clear the error string. \sa addErrorStr() */
   void setErrorStr( const OutList &sigs );

@@ -178,16 +178,20 @@ public:
     /*! Clear the writing endpoint. */
   void clearWrite( void );
 
+    /*! Clear the error state and the error string. */
+  virtual void clearError( void );
     /*! \return the current error state. */
   int error( void ) const;
+    /*! Return the translated error state and the error string. */
+  virtual string errorStr( void ) const;
     /*! \return \c true if there is no error. */
-  bool success( void ) const;
+  virtual bool success( void ) const;
     /*! \return \c true if there is an error. */
-  bool failed( void ) const;
+  virtual bool failed( void ) const;
     /*! \return the current error state as a descriptive string. */
-  string errorStr( void ) const;
+  string daqflexErrorStr( void ) const;
     /*! \return a descriptive string for \a error. */
-  string errorStr( DAQFlexError error ) const;
+  string daqflexErrorStr( DAQFlexError error ) const;
 
 
  private:

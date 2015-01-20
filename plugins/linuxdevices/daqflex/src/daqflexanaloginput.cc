@@ -89,8 +89,10 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
     return InvalidDevice;
 
   DAQFlexDevice = &daqflexdevice;
-  if ( !DAQFlexDevice->isOpen() )
+  if ( !DAQFlexDevice->isOpen() ) {
+    setErrorStr( "Daqflex core device " + DAQFlexDevice->deviceName() + " is not open." );
     return NotOpen;
+  }
 
   // set basic device infos:
   setDeviceName( DAQFlexDevice->deviceName() );
@@ -115,9 +117,8 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   }
   if ( BipolarRange.size() == 0 ) {
     if ( DAQFlexDevice->error() == DAQFlexCore::ErrorLibUSBIO ) {
-      cerr << "Error in initializing DAQFlexAnalogInput device:\n"
-	   << "no input ranges found. Error: " << DAQFlexDevice->errorStr() << '\n';
-      cerr << "Check the USB cable!\n";
+      setErrorStr( "Error in initializing DAQFlexAnalogInput device: no input ranges found. Error: " +
+		   DAQFlexDevice->daqflexErrorStr() + ". Check the USB cable/connection!" );
       return ReadError;
     }
     // retrieve single supported range:
@@ -126,14 +127,15 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
       bool uni = ( response[12] == 'U' );
       double range = response.number( 0.0, 15 );
       if ( range <= 1e-6 || uni ) {
-	cerr << "Failed to read out analog input range from device " << DAQFlexDevice->deviceName() << "\n";
+	setErrorStr( "Failed to read out analog input range from device " + DAQFlexDevice->deviceName() );
 	return InvalidDevice;
       }
       BipolarRange.push_back( range );
       BipolarRangeCmds.push_back( response.right( 12 ) );
     }
     else {
-      cerr << "Failed to retrieve analog input range from device " << DAQFlexDevice->deviceName() << ". Error: " << DAQFlexDevice->errorStr() << "\n";
+      setErrorStr( "Failed to retrieve analog input range from device " + DAQFlexDevice->deviceName() +
+		   ". Error: " + DAQFlexDevice->daqflexErrorStr() );
       return InvalidDevice;
     }
   }
@@ -472,7 +474,7 @@ int DAQFlexAnalogInput::readData( void )
   }
   else {
     // error:
-    cerr << "READBULKTRANSFER error=" << DAQFlexDevice->errorStr( ern )
+    cerr << "READBULKTRANSFER error=" << DAQFlexDevice->daqflexErrorStr( ern )
 	 << " readn=" << readn << '\n';
 
     switch( ern ) {
@@ -491,7 +493,7 @@ int DAQFlexAnalogInput::readData( void )
       return -2;
 
     default:
-      Traces->addErrorStr( DAQFlexDevice->errorStr( ern ) );
+      Traces->addErrorStr( DAQFlexDevice->daqflexErrorStr( ern ) );
       Traces->addError( DaqError::Unknown );
       return -2;
     }

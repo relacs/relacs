@@ -230,10 +230,10 @@ public:
 
     /*! Clear the error string.
         \sa setErrorStr(), addErrorStr() */
-  void clearError( void );
+  virtual void clearError( void );
     /*! Return error string of the last operation.
         \sa setErrorStr(), addErrorStr() */
-  string errorStr( void ) const;
+  virtual string errorStr( void ) const;
     /*! Set error string to \a strg. 
         \sa addErrorStr(), errorStr() */
   void setErrorStr( const string &strg );
@@ -251,10 +251,10 @@ public:
 
     /*! Return \c true if the last operation was successfull and did not set an error string,
         i.e. errorStr().empty(). */
-  bool success( void ) const;
+  virtual bool success( void ) const;
     /*! Return \c true if the last operation failed and did set an error string,
         i.e. not errorStr().empty(). */
-  bool failed( void ) const;
+  virtual bool failed( void ) const;
 
     /*! Write info() to \a str. */
   friend ostream &operator<<( ostream &str, const Device &d );

@@ -257,6 +257,18 @@ void Device::addErrorStr( int errnum )
 }
 
 
+bool Device::success( void ) const
+{
+  return ( ErrorString.empty() );
+}
+
+
+bool Device::failed( void ) const
+{
+  return ( ! ErrorString.empty() );
+}
+
+
 void Device::lock( void ) const
 {
   Mutex.lock();

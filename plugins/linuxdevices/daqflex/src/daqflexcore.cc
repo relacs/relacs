@@ -36,11 +36,11 @@ const string DAQFlexCore::DAQFlexErrorText[DAQFlexCore::DAQFlexErrorMax] =
   { "success",
     "no device",
     "invalid ID",
-    "USB init",
+    "USB init failed",
     "pipe",
     "transfer failed",
     "invalid buffer size",
-    "cant open FPGA file",
+    "failed to open FPGA file",
     "FPGA upload failed",
     "libusb IO",
     "libusb invalid parameter",
@@ -83,7 +83,7 @@ DAQFlexCore::~DAQFlexCore( void )
 
 int DAQFlexCore::open( const string &devicestr, const Options &opts )
 {
-  ErrorState = Success;
+  clearError();
 
   Info.clear();
   Settings.clear();
@@ -91,7 +91,6 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
   int productid = 0;
   /* set it from options:
      productid = opts.number( "productid" );
-  */
   // check if the product ID is a valid MCC product ID:
   if ( productid != USB_2001_TC &&
        productid != USB_7202 &&
@@ -109,9 +108,11 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
        productid != USB_1408_FS_Plus &&
        productid != USB_1608_FS_Plus &&
        productid != 0 ) {
+    setErrorStr( "Product ID " + Str( productid ) + " not supported." );
     ErrorState = ErrorInvalidID;
     return ErrorState;
   }
+  */
 
   string serialno = opts.text( "serialno", "" );
 
@@ -143,8 +144,6 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 	// open the device:
 	int ern = libusb_open( device, &DeviceHandle );
 	setLibUSBError( ern );
-	// if ern ErrorLibUSBAccess then we do not have permissions for the device!
-	// write an appropriate error message!
 	if ( ErrorState == Success ) {
 	  // claim interface with the device:
 	  ern = libusb_claim_interface( DeviceHandle, 0 );
@@ -177,8 +176,10 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 	      found = true;
 	  }
 	}
-	else
-	  cerr << "DAQFlex: open device failed: " << errorStr() << '\n';
+	else {
+	  if ( ErrorState == ErrorLibUSBAccess )
+	    setErrorStr( "you do not have the permissions to access the USB device." );
+	}
       }
     }
   }
@@ -188,7 +189,6 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
   if ( !found ) {
     if ( ErrorState == Success )
       ErrorState = ErrorNoDevice;
-    cerr << "Failed to open DAQFlex device: " << errorStr() << '\n';
     DeviceHandle = NULL;
   }
   else {
@@ -196,9 +196,8 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
     path.provideSlash();
     initDevice( path );
     if ( ErrorState != Success ) {
-      cerr << "Error in initializing DAQFlex device: " << errorStr() << '\n';
       if ( ErrorState == ErrorLibUSBIO )
-	cerr << "Check the USB cable!\n";
+	setErrorStr( "check the USB cable/connector!" );
       close();
     }
   }
@@ -869,6 +868,27 @@ void DAQFlexCore::setLibUSBError( int libusberror )
 }
 
 
+void DAQFlexCore::clearError( void )
+{
+  ErrorState = Success;
+  Device::clearError();
+}
+
+
+string DAQFlexCore::errorStr( void ) const
+{
+  string es = "";
+  if ( ErrorState != Success )
+    es = daqflexErrorStr();
+  if ( ! Device::errorStr().empty() ) {
+    if ( ! es.empty() )
+      es += ", ";
+    es += Device::errorStr();
+  }
+  return es;
+}
+
+
 int DAQFlexCore::error( void ) const
 {
   return ErrorState;
@@ -877,23 +897,23 @@ int DAQFlexCore::error( void ) const
 
 bool DAQFlexCore::success( void ) const
 {
-  return ( ErrorState == Success );
+  return ( ErrorState == Success && Device::success() );
 }
 
 
 bool DAQFlexCore::failed( void ) const
 {
-  return ( ErrorState != Success );
+  return ( ErrorState != Success && Device::failed() );
 }
 
 
-string DAQFlexCore::errorStr( void ) const
+string DAQFlexCore::daqflexErrorStr( void ) const
 {
   return DAQFlexErrorText[ ErrorState ];
 }
 
 
-string DAQFlexCore::errorStr( DAQFlexError error ) const
+string DAQFlexCore::daqflexErrorStr( DAQFlexError error ) const
 {
   return DAQFlexErrorText[ error ];
 }

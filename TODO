@@ -1,3 +1,4 @@
+- Update all devices open() function to use setErrorStr(): daqflex already done
 - Plot (used from ManualJAR) P.clear(); P.draw() do not always clear the plot!
 - Buzzing is not responsive: allow for multiple buzzes
 

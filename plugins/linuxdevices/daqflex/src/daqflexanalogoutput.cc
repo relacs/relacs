@@ -76,12 +76,14 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
     return InvalidDevice;
 
   DAQFlexDevice = &daqflexdevice;
-  if ( !DAQFlexDevice->isOpen() )
+  if ( !DAQFlexDevice->isOpen() ) {
+    setErrorStr( "Daqflex core device " + DAQFlexDevice->deviceName() + " is not open." );
     return NotOpen;
+  }
 
   // is AO supported?
   if ( DAQFlexDevice->maxAOChannels() == 0 ) {
-    cerr << "Device " << DAQFlexDevice->deviceName() << " does not support anaolog output.\n";
+    setErrorStr( "Device " + DAQFlexDevice->deviceName() + " does not support anaolog output." );
     return InvalidDevice;
   }
 
@@ -105,7 +107,7 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
     bool uni = ( response[12] == 'U' );
     double range = response.number( 0.0, 15 );
     if ( range <= 1e-6 ) {
-      cerr << "Failed to read out analog output range from device " << DAQFlexDevice->deviceName() << "\n";
+      setErrorStr( "Failed to read out analog output range from device " + DAQFlexDevice->deviceName() );
       return InvalidDevice;
     }
     if ( uni )
@@ -114,7 +116,8 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
       BipolarRange.push_back( range );
   }
   else {
-    cerr << "Failed to retrieve analog output range from device " << DAQFlexDevice->deviceName() << ". Error: " << DAQFlexDevice->errorStr() << "\n";
+    setErrorStr( "Failed to retrieve analog output range from device " + DAQFlexDevice->deviceName() +
+		 ". Error: " + DAQFlexDevice->daqflexErrorStr() );
     return InvalidDevice;
   }
 
@@ -646,7 +649,7 @@ int DAQFlexAnalogOutput::writeData( void )
   }
   else if ( ern != DAQFlexCore::ErrorLibUSBTimeout ) {
     // error:
-    cerr << "WRITEBULKTRANSFER error=" << DAQFlexDevice->errorStr( ern )
+    cerr << "WRITEBULKTRANSFER error=" << DAQFlexDevice->daqflexErrorStr( ern )
 	 << " bytesWritten=" << bytesWritten << '\n';
 
     switch( ern ) {
@@ -664,7 +667,7 @@ int DAQFlexAnalogOutput::writeData( void )
       break;
 
     default:
-      Sigs.addErrorStr( DAQFlexDevice->errorStr( ern ) );
+      Sigs.addErrorStr( DAQFlexDevice->daqflexErrorStr( ern ) );
       Sigs.addError( DaqError::Unknown );
     }
 

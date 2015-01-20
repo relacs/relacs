@@ -57,8 +57,10 @@ int DAQFlexDigitalIO::open( DAQFlexCore &daqflexdevice, const Options &opts )
     return InvalidDevice;
 
   DAQFlexDevice = &daqflexdevice;
-  if ( !DAQFlexDevice->isOpen() )
+  if ( !DAQFlexDevice->isOpen() ) {
+    setErrorStr( "Daqflex core device " + DAQFlexDevice->deviceName() + " is not open." );
     return NotOpen;
+  }
 
   DigitalIO::open( *this, opts );
 

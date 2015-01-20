@@ -339,7 +339,12 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	  if ( ds.empty() )
 	    ds = "-empty-";
 	  Warnings += "Cannot open " + Name + " plugin <b>" + ms
-	    + "</b> with identifier <b>" + ident + "</b> on device <b>" + ds + " !\n";
+	    + "</b> with identifier <b>" + ident + "</b> on device <b>" + ds;
+	  string es = dv->errorStr();
+	  if ( es.empty() )
+	    Warnings += " !\n";
+	  else
+	    Warnings += " ! " +  es + '\n';
 	}
       }
       else {
@@ -351,7 +356,7 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
     else {
       if ( ms.empty() )
 	ms = "-empty-";
-      Warnings += Name + " Plugin <b>" + ms + "</b> not found!\n";
+      Warnings += Name + " Plugin <b>" + ms + "</b> not found! Check pluginpathes in relacs.cfg.\n";
     }
   }
   return n;
