@@ -37,7 +37,7 @@ namespace patchclamp {
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
 \author Jan Benda
-\version 1.7 (Apr 14, 2014)
+\version 1.8 (Jan 21, 2015)
 \par Options
 - \c Waveform
     - \c waveform=From file: Stimulus waveform (\c string)
@@ -51,11 +51,13 @@ namespace patchclamp {
     - \c pulsesel=pulse duration: Specify (\c string)
     - \c pulseduration=10ms: Pulse duration (\c number)
     - \c dutycycle=50%: Duty-cycle (\c number)
+    - \c tau=1000ms: Time-constant (\c number)
     - \c seed=0: Seed for random number generation (\c integer)
     - \c startfreq=1Hz: Start sweep with frequency (\c number)
     - \c endfreq=100Hz: End sweep with frequency (\c number)
+    - \c cycleramp=0ms: Ramp for each cycle (\c number)
     - \c duration=1000ms: Maximum duration of stimulus (\c number)
-    - \c ramp=2ms: Ramp of stimulus (\c number)
+    - \c ramp=0ms: Ramp for stimulus onset and offset (\c number)
 - \c Stimulus
     - \c offset=0nA: Stimulus mean (\c number)
     - \c offsetbase=absolute: Stimulus mean relative to (\c string)
@@ -63,6 +65,8 @@ namespace patchclamp {
     - \c samplerate=1kHz: Sampling rate of output (\c number)
     - \c repeats=10times: Number of stimulus presentations (\c number)
     - \c pause=1000ms: Duration of pause between stimuli (\c number)
+    - \c before=100ms: Time before stimulus to be analyzed (\c number)
+    - \c after=100ms: Time after stimulus to be analyzed (\c number)
     - \c outtrace=Current-1: Output trace (\c string)
 - \c Offset - search
     - \c userate=false: Search offset for target firing rate (\c boolean)
@@ -81,8 +85,6 @@ namespace patchclamp {
 - \c Analysis
     - \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
     - \c sigma=10ms: Standard deviation of rate smoothing kernel (\c number)
-    - \c before=100ms: Time before stimulus to be analyzed (\c number)
-    - \c after=100ms: Time after stimulus to be analyzed (\c number)
     - \c storevoltage=true: Save voltage trace (\c boolean)
     - \c plot=Current voltage trace: Plot shows (\c string)
     - \c Save stimuli
@@ -124,7 +126,7 @@ protected:
 		double duration, double skipwin, double sigma );
 
   int createStimulus( OutData &signal, const Str &file, double &duration, double deltat,
-		      double ramp, double skipwin, bool storesignal );
+		      double ramp, double cycleramp, double skipwin, bool storesignal );
 
   void customEvent( QEvent *qce );
 

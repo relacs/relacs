@@ -35,7 +35,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.7", "Apr 14, 2014" )
+  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.8", "Jan 21, 2015" )
 {
   IUnit = "nA";
   Amplitude = 1.0;
@@ -57,8 +57,9 @@ SingleStimulus::SingleStimulus( void )
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
   addNumber( "startfreq", "Start sweep with frequency", 1.0, 0.0, 100000.0, 1.0, "Hz", "Hz", "%.2f" ).setActivation( "waveform", "Sweep" );
   addNumber( "endfreq", "End sweep with frequency", 100.0, 0.0, 100000.0, 1.0, "Hz", "Hz", "%.2f" ).setActivation( "waveform", "Sweep" );
+  addNumber( "cycleramp", "Ramp for each cycle", 0.0, 0.0, 10.0, 0.001, "seconds", "ms" ).setActivation( "waveform", "Rectangular|Sawup|Sawdown" );
   addNumber( "duration", "Maximum duration of stimulus", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
+  addNumber( "ramp", "Ramp for stimulus onset and offset", 0.0, 0.0, 10.0, 0.001, "seconds", "ms" );
   newSection( "Stimulus" );
   addNumber( "offset", "Stimulus mean", 0.0, -2000.0, 2000.0, 5.0, IUnit );
   addSelection( "offsetbase", "Stimulus mean relative to", "absolute|amplitude|current|threshold|previous" );
@@ -66,6 +67,8 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "samplerate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "true", false );
   addNumber( "repeats", "Number of stimulus presentations", 10, 0, 10000, 1, "times" ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
+  addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
+  addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addSelection( "outtrace", "Output trace", "V-1" );
   newSection( "Offset - search" );
   addBoolean( "userate", "Search offset for target firing rate", false );
@@ -84,8 +87,6 @@ SingleStimulus::SingleStimulus( void )
   newSection( "Analysis" );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "sigma", "Standard deviation of rate smoothing kernel", 0.01, 0.0, 1.0, 0.0001, "seconds", "ms" );
-  addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
-  addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addBoolean( "storevoltage", "Save voltage trace", true );
   addSelection( "plot", "Plot shows", "Current voltage trace|Mean voltage trace|Current and mean voltage trace|Firing rate" );
   newSubSection( "Save stimuli" );
@@ -222,6 +223,7 @@ int SingleStimulus::main( void )
   int repeats = integer( "repeats" );
   double duration = number( "duration" );
   double pause = number( "pause" );
+  double cycleramp = number( "cycleramp" );
   double ramp = number( "ramp" );
   int outtrace = index( "outtrace" );
   bool userate = boolean( "userate" );
@@ -333,7 +335,8 @@ int SingleStimulus::main( void )
 
     // stimulus:
     int r = createStimulus( signal, stimfile, searchduration,
-			    1.0/samplerate, ramp, skipwin, sameduration );
+			    1.0/samplerate, ramp, cycleramp,
+			    skipwin, sameduration );
     if ( r < 0 )
       return Failed;
     storedstimulus = sameduration;
@@ -623,7 +626,8 @@ int SingleStimulus::main( void )
   // stimulus:
   if ( ! sameduration || ! storedstimulus ) {
     int r = createStimulus( signal, stimfile, duration, 
-			    1.0/samplerate, ramp, skipwin, true );
+			    1.0/samplerate, ramp, cycleramp,
+			    skipwin, true );
     if ( r < 0 ) {
       directWrite( dcsignal );
       return Failed;
@@ -984,7 +988,8 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate, double &mean
 
 int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 				    double &duration, double deltat,
-				    double ramp, double skipwin, bool storesignal )
+				    double ramp, double cycleramp,
+				    double skipwin, bool storesignal )
 {
   string wavename;
   bool store = false;
@@ -1038,7 +1043,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     else {
       PeakAmplitudeFac = 1.0;
       if ( WaveForm == Rectangular ) {
-	signal.rectangleWave( duration, deltat, 1.0/Frequency, PulseDuration, ramp );
+	signal.rectangleWave( duration, deltat, 1.0/Frequency, PulseDuration, cycleramp );
 	if ( DutyCycle >= 0.0 )
 	  header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
 	else
@@ -1047,10 +1052,12 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       else if ( WaveForm == Triangular )
 	signal.triangleWave( duration, deltat, 1.0/Frequency );
       else if ( WaveForm == Sawup )
-	signal.sawUpWave( duration, deltat, 1.0/Frequency, ramp );
+	signal.sawUpWave( duration, deltat, 1.0/Frequency, cycleramp );
       else if ( WaveForm == Sawdown )
-	signal.sawDownWave( duration, deltat, 1.0/Frequency, ramp );
+	signal.sawDownWave( duration, deltat, 1.0/Frequency, cycleramp );
       signal = 2.0*signal - 1.0;
+      if ( WaveForm != Triangular )
+	header.addText( "cycleramp", Str( 1000.0*cycleramp ) + "ms" );
     }
 
     if ( StoreLevel == Noise && 
