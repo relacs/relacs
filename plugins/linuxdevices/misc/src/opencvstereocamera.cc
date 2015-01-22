@@ -59,6 +59,7 @@ OpenCVStereoCamera::~OpenCVStereoCamera( void )
 
 int OpenCVStereoCamera::open( const string &device, const Options &opts )
 {
+  clearError();
   Info.clear();
   Settings.clear();
 

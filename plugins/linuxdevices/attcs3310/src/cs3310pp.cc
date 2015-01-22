@@ -59,6 +59,7 @@ CS3310PP::~CS3310PP( void )
 
 int CS3310PP::open( const string &device, const Options &opts )
 {
+  clearError();
   Info.clear();
 
   // open ppdev:
@@ -89,6 +90,7 @@ int CS3310PP::open( const string &device, const Options &opts )
   }
   if ( ar != 0 ) {
     // attenuator is not active:
+    setErrorStr( "attenuator is not active" );
     ::close( Handle );
     Handle = -1;
     return WriteError;

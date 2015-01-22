@@ -78,7 +78,7 @@ int CS3310SerialNIDIO::open( const string &device, const Options &opts )
     DIO = new NIDIO( device );
     if ( DIO->isOpen() ) {
       if ( DIO->allocPins( DioPins ) > 0 ) {
-	cerr << "! warning: CS3310SerialNIDIO::open( device ) -> cannot allocate pins.\n";
+	setErrorStr( "cannot allocate pins" );
 	DIO->close();
 	delete DIO;
 	DIO = 0;
@@ -95,7 +95,7 @@ int CS3310SerialNIDIO::open( const string &device, const Options &opts )
       bool notopen = ( DIO != NULL && ! DIO->isOpen() );
       DIO = 0;
       Own = false;
-      cerr << "! warning: CS3310SerialNIDIO::open( device ) -> cannot open NIDIO.\n";
+      setErrorStr( "cannot open NIDIO" );
       if ( notopen )
 	return NotOpen;
       else
@@ -124,7 +124,7 @@ int CS3310SerialNIDIO::open( NIDIO &nidio, const Options &opts )
 
   if ( isOpen() ) {
     if ( DIO->allocPins( DioPins ) > 0 ) {
-      cerr << "! warning: CS3310SerialNIDIO::open( device ) -> cannot allocate pins.\n";
+      setErrorStr( "cannot allocate pins" );
       DIO = 0;
       Own = false;
       return InvalidDevice;
@@ -208,6 +208,7 @@ int CS3310SerialNIDIO::open( void )
 
   if ( failed ) {
     // attenuator is not active:
+    setErrorStr( "attenuator is not active" );
     close();
     return WriteError;
   }

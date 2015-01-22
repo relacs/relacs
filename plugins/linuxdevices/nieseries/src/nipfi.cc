@@ -56,6 +56,7 @@ NIPFI::~NIPFI( void )
 
 int NIPFI::open( const string &device, const Options &opts )
 {
+  clearError();
   if ( Handle >= 0 )
     return 0;
 

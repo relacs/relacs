@@ -67,6 +67,7 @@ CS3310NIDIO::~CS3310NIDIO( void )
 
 int CS3310NIDIO::open( const string &device, const Options &opts )
 {
+  clearError();
   Info.clear();
 
   if ( DIO != 0  && !DIO->isOpen() ) {
@@ -79,7 +80,7 @@ int CS3310NIDIO::open( const string &device, const Options &opts )
     DIO = new NIDIO( device );
     if ( DIO->isOpen() ) {
       if ( DIO->allocPins( DioPins ) > 0 ) {
-	cerr << "! warning: CS3310NIDIO::open( device ) -> cannot allocate pins.\n";
+	setErrorStr( "cannot allocate CS pin" );
 	DIO->close();
 	delete DIO;
 	DIO = 0;
@@ -96,7 +97,7 @@ int CS3310NIDIO::open( const string &device, const Options &opts )
       bool notopen = ( DIO != NULL && ! DIO->isOpen() );
       DIO = 0;
       Own = false;
-      cerr << "! warning: CS3310NIDIO::open( device ) -> cannot open NIDIO.\n";
+      setErrorStr( "cannot open NIDIO" );
       if ( notopen )
 	return NotOpen;
       else
@@ -124,7 +125,7 @@ int CS3310NIDIO::open( NIDIO &nidio, const Options &opts )
   
   if ( isOpen() ) {
     if ( DIO->allocPins( DioPins ) > 0 ) {
-      cerr << "! warning: CS3310NIDIO::open( device ) -> cannot allocate pins.\n";
+      setErrorStr( "cannot allocate pins" );
       DIO = 0;
       Own = false;
       return InvalidDevice;
@@ -179,6 +180,7 @@ int CS3310NIDIO::open( void )
   if ( ar != 0 ) {
     // attenuator is not active:
     close();
+    setErrorStr( "attenuator is not active" );
     return WriteError;
   }
   else {

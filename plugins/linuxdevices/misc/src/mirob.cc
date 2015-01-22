@@ -464,7 +464,7 @@ Mirob::~Mirob( void )
 
 int Mirob::open( const string &device, const Options &opts )
 {
-  cerr << "MIROB open " << device << '\n';
+  clearError();
   if ( Opened )
     return 0;
 
@@ -474,48 +474,48 @@ int Mirob::open( const string &device, const Options &opts )
 
   // open device:
   if ( TS_OpenChannel( device.c_str(), ChannelType, HostID, Baudrate ) < 0 ) {
-    cerr << "Communication error! " << TS_GetLastErrorText() << '\n';
+    setErrorStr( "communication error: " + TS_GetLastErrorText() );
     return InvalidDevice;
   }
 
   // load setup file:
   int setupindex = TS_LoadSetup( SetupFile.c_str() );
   if ( setupindex < 0 ) {
-    cerr << "Failed to load setup file! " << TS_GetLastErrorText() << '\n';
+    setErrorStr( "failed to load setup file: " + TS_GetLastErrorText() );
     return 1;
   }
 
   // setup axis:
   for ( int k=1; k<=3; k++ ) {
     if ( ! TS_SetupAxis( k, setupindex ) )  {
-      cerr << "Failed to setup axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      setErrorStr( "failed to setup axis " + Str( k ) + ": " + TS_GetLastErrorText() );
       return 1;
     }
     if ( ! TS_SelectAxis( k ) ) {
-      cerr << "Failed to select axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      setErrorStr( "failed to select axis " + Str( k ) + ": " + TS_GetLastErrorText() );
       return 1;
     }
     
     if ( ! TS_SetTargetPositionToActual()){
-      cerr << "Failed to set target position to actual for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      setErrorStr( "failed to set target position to actual for axis " + Str( k ) + ": " + TS_GetLastErrorText() );
       return 1;
     }
     
 
     if ( ! TS_DriveInitialisation() ) {
-      cerr << "Failed to initialize drive for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      setErrorStr( "failed to initialize drive for axis " + Str( k ) + ": " + TS_GetLastErrorText() );
       return 1;
     }
     
     if ( ! TS_Power( POWER_ON ) ) {
-      cerr << "Failed to power on drive for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      setErrorStr( "failed to power on drive for axis " + Str( k ) + ": " + TS_GetLastErrorText() );
       return 1;
     }
     WORD axison = 0;
     while ( axison == 0 ) {
       // Check the status of the power stage:
       if ( ! TS_ReadStatus( REG_SRL, axison ) ) {
-	cerr << "Failed to read status for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+	setErrorStr( "failed to read status for axis " + Str( k ) + ": " + TS_GetLastErrorText() );
 	return 1;
       }
       axison = ((axison & 1<<15) != 0 ? 1 : 0);
@@ -610,11 +610,11 @@ void Mirob::close( void )
   if ( Opened ) {
     for ( int k=1; k<=3; k++ ) {
       if ( ! TS_SelectAxis( k ) )
-	cerr << "Failed to select axis " << k << "! " << TS_GetLastErrorText() << '\n';
+	setErrorStr( "failed to select axis " + Str( k ) + ": " + TS_GetLastErrorText() );
       if ( ! TS_Stop() )
-	cerr << "Failed to stop motion for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+	setErrorStr( "failed to stop motion for axis " + Str( k ) + ": " + TS_GetLastErrorText() );
       if ( ! TS_Power( POWER_OFF ) )
-	cerr << "Failed to power off drive for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+	setErrorStr( "failed to power off drive for axis " + Str( k ) + ": " + TS_GetLastErrorText() );
     }
     TS_CloseChannel( -1 );
   }

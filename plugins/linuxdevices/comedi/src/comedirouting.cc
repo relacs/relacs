@@ -64,33 +64,28 @@ ComediRouting::~ComediRouting( void )
 
 int ComediRouting::open( const string &device, const Options &opts )
 { 
+  clearError();
   Info.clear();
   Settings.clear();
 
   // get subdevice:
   int subdev = opts.integer( "subdevice", 0, -1 );
   if ( subdev < 0 ) {
-    cerr << "! error: ComediRouting::open() -> "
-	 << "Missing or invalid subdevice id for device "
-	 << deviceIdent() << " !\n";
+    setErrorStr( "missing or invalid subdevice id for device " + deviceIdent() );
     return WriteError;
   }
 
   // get channel:
   int channel = opts.integer( "channel", 0, -1 );
   if ( channel < 0 ) {
-    cerr << "! error: ComediRouting::open() -> "
-	 << "Missing or invalid channel for device "
-	 << deviceIdent() << " !\n";
+    setErrorStr( "missing or invalid channel for device " + deviceIdent() );
     return WriteError;
   }
 
   // get routing:
   int routing = opts.integer( "routing", 0, -1 );
   if ( routing < 0 ) {
-    cerr << "! error: ComediRouting::open() -> "
-	 << "Missing or invalid routing parameter for device "
-	 << deviceIdent() << " !\n";
+    setErrorStr( "Missing or invalid routing parameter for device " + deviceIdent() );
     return WriteError;
   }
 

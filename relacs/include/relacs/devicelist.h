@@ -323,28 +323,40 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	  }
 	}
 	*/
+	int ern = 0;
 	Device *d = devices.device( ds );
 	if ( d != 0 ) {
-	  dv->open( *d, *deviceopts );
+	  ern = dv->open( *d, *deviceopts );
 	  if ( dv->isOpen() )
 	    ds = "";
 	}
 	if ( ! ds.empty() )
-	  dv->open( ds, *deviceopts );
+	  ern = dv->open( ds, *deviceopts );
 	if ( dv->isOpen() )
 	  n++;
 	else {
 	  if ( ms.empty() )
-	    ms = "-empty-";
+	    ms = "-unknown-";
 	  if ( ds.empty() )
-	    ds = "-empty-";
+	    ds = "-unknown-";
 	  Warnings += "Cannot open " + Name + " plugin <b>" + ms
 	    + "</b> with identifier <b>" + ident + "</b> on device <b>" + ds;
+	  string en = dv->getErrorStr( ern );
 	  string es = dv->errorStr();
-	  if ( es.empty() )
+	  if ( ! es.empty() ) {
+	    if ( ! en.empty() ) {
+	      if ( en[en.size()-1] != '.' )
+		en += ".";
+	      en += " ";
+	    }
+	    if ( es[es.size()-1] != '.' )
+	      es += ".";
+	    en += es;
+	  }
+	  if ( en.empty() )
 	    Warnings += " !\n";
 	  else
-	    Warnings += " ! " +  es + '\n';
+	    Warnings += " ! " +  en + '\n';
 	}
       }
       else {

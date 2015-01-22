@@ -257,6 +257,27 @@ void Device::addErrorStr( int errnum )
 }
 
 
+string Device::getErrorStr( int ern )
+{
+  string es = "";
+  switch ( ern ) {
+  case NotOpen :
+    es = "device not open";
+    break;
+  case InvalidDevice :
+    es = "invalid device";
+    break;
+  case ReadError :
+    es = "read error";
+    break;
+  case WriteError :
+    es = "write error";
+    break;
+  }
+  return es;
+}
+
+
 bool Device::success( void ) const
 {
   return ( ErrorString.empty() );

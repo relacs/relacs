@@ -82,6 +82,7 @@ AmplMode::~AmplMode( void )
 
 int AmplMode::open( DigitalIO &dio, const Options &opts )
 {
+  clearError();
   Info.clear();
   Settings.clear();
 
@@ -104,7 +105,7 @@ int AmplMode::open( DigitalIO &dio, const Options &opts )
     Mask = ModeMask + BuzzerMask;
     DIOId = DIO->allocateLines( Mask );
     if ( DIOId < 0 ) {
-      cerr << "! warning: AmplMode::open( dio ) -> cannot allocate pins on lines " << -DIOId << ".\n";
+      setErrorStr( "cannot allocate pins on lines " + Str( -DIOId ) );
       DIO = 0;
       return InvalidDevice;
     }

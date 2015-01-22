@@ -61,6 +61,7 @@ ComediDigitalIO::~ComediDigitalIO( void )
 
 int ComediDigitalIO::open( const string &device, const Options &opts )
 { 
+  clearError();
   if ( isOpen() )
     return -5;
 
@@ -69,8 +70,7 @@ int ComediDigitalIO::open( const string &device, const Options &opts )
   // open comedi device:
   DeviceP = comedi_open( device.c_str() );
   if ( DeviceP == NULL ) {
-    cerr << "! error: ComediDigitalIO::open() -> "
-	 << "Device-file " << device << " could not be opened!\n";
+    setErrorStr( "device file " + device + " could not be opened. Check permissions." );
     return NotOpen;
   }
 
@@ -81,9 +81,7 @@ int ComediDigitalIO::open( const string &device, const Options &opts )
     if ( diotype != COMEDI_SUBD_DI &&
 	 diotype != COMEDI_SUBD_DO &&
 	 diotype != COMEDI_SUBD_DIO ) {
-      cerr << "! error: ComediDigitalIO::open() -> "
-	   << "Subdevice " << subdev << "is not a digital I/o on device "
-	   << device << '\n';
+      setErrorStr( "subdevice " + Str( subdev ) + " on device "  + device + " is not a digital I/O device" );
       comedi_close( DeviceP );
       DeviceP = NULL;
       return InvalidDevice;
@@ -94,9 +92,8 @@ int ComediDigitalIO::open( const string &device, const Options &opts )
     subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_DIO,
 					    startsubdev );
     if ( subdev < 0 ) {
-      cerr << "! error: ComediDigitalIO::open() -> "
-	   << "No subdevice for DIO found on device "  << device
-	   << " for startsubdevice >= " << startsubdev << '\n';
+      setErrorStr( "no subdevice for DIO found on device "  + device +
+		   " for startsubdevice >= " + Str( startsubdev ) );
       comedi_close( DeviceP );
       DeviceP = NULL;
       return InvalidDevice;
@@ -106,8 +103,7 @@ int ComediDigitalIO::open( const string &device, const Options &opts )
 
   // lock DIO subdevice:
   if ( comedi_lock( DeviceP, SubDevice ) != 0 ) {
-    cerr << "! error: ComediDigitalIO::open() -> "
-	 << "Locking of AI subdevice failed on device " << device << '\n';
+    setErrorStr( "locking of digital I/O subdevice failed on device " + device );
     comedi_close( DeviceP );
     DeviceP = NULL;
     SubDevice = 0;

@@ -62,6 +62,7 @@ NIAO::~NIAO( void )
 
 int NIAO::open( const string &device, const Options &opts )
 {
+  clearError();
   Info.clear();
   Settings.clear();
 

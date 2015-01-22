@@ -61,6 +61,7 @@ ComediNIPFI::~ComediNIPFI( void )
 
 int ComediNIPFI::open( const string &device, const Options &opts )
 { 
+  clearError();
   Info.clear();
   Settings.clear();
 
@@ -70,9 +71,7 @@ int ComediNIPFI::open( const string &device, const Options &opts )
   // get channel:
   int channel = opts.integer( "channel", 0, -1 );
   if ( channel < 0 ) {
-    cerr << "! error: ComediRouting::open() -> "
-	 << "Missing or invalid channel for device "
-	 << deviceIdent() << " !\n";
+    setErrorStr( "missing or invalid channel for device " + deviceIdent() );
     return WriteError;
   }
 
@@ -88,15 +87,11 @@ int ComediNIPFI::open( const string &device, const Options &opts )
     }
   }
   if ( routing < 0 ) {
-    cerr << "! error: ComediRouting::open() -> "
-	 << "Missing or invalid routing parameter for device "
-	 << deviceIdent() << " !\n";
+    setErrorStr( "missing or invalid routing parameter for device " + deviceIdent() );
     return WriteError;
   }
   if ( routing >= PFISignalsMax || PFISignals[routing] == "INVALID" ) {
-    cerr << "! error: ComediRouting::open() -> "
-	 << "Invalid routing parameter for device "
-	 << deviceIdent() << " !\n";
+    setErrorStr( "invalid routing parameter for device " + deviceIdent() );
     return WriteError;
   }
 

@@ -167,6 +167,7 @@ namespace misc {
 
   int OpenCVCamera::open( const string &device, const Options &opts )
   {
+    clearError();
     Info.clear();
     Settings.clear();
 

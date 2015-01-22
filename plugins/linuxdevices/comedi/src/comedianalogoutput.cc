@@ -87,6 +87,7 @@ ComediAnalogOutput::~ComediAnalogOutput( void )
 
 int ComediAnalogOutput::open( const string &device, const Options &opts )
 { 
+  clearError();
   if ( isOpen() )
     return -5;
 
@@ -98,16 +99,14 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   // open comedi device:
   DeviceP = comedi_open( device.c_str() );
   if ( DeviceP == NULL ) {
-    cerr << "! error: ComediAnalogOutput::open() -> "
-	 << "Device-file " << device << " could not be opened!\n";
+    setErrorStr( "device file " + device + " could not be opened. Check permissions." );
     return NotOpen;
   }
 
   // get AO subdevice:
   int subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_AO, 0 );
   if ( subdev < 0 ) {
-    cerr << "! error: ComediAnalogOutput::open() -> "
-	 << "No SubDevice for AO found on device "  << device << '\n';
+    setErrorStr( "device "  + device + " does not support analog output" );
     comedi_close( DeviceP );
     DeviceP = NULL;
     return InvalidDevice;
@@ -116,8 +115,7 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
 
   // lock AI subdevice:
   if ( comedi_lock( DeviceP, SubDevice ) != 0 ) {
-    cerr << "! error: ComediAnalogOutput::open() -> "
-	 << "Locking of AO SubDevice failed on device " << device << '\n';
+    setErrorStr( "locking of analog output subdevice failed on device " + device );
     comedi_close( DeviceP );
     DeviceP = NULL;
     SubDevice = 0;
@@ -126,9 +124,7 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
 
   // check for async. command support:
   if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_CMD_WRITE ) == 0 ) {
-    cerr << "! error: ComediAnalogOutput::open() -> "
-	 << "Device "  << device << " not supported! "
-	 << "SubDevice needs to support async. commands!" << endl;
+    setErrorStr( "device "  + device + " does not support async. commands" );
     comedi_unlock( DeviceP,  SubDevice );
     comedi_close( DeviceP );
     DeviceP = NULL;
@@ -238,8 +234,8 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   int retVal = comedi_get_cmd_generic_timed( DeviceP, SubDevice, &cmd,
 					     1 /*chans*/, 1 /*ns*/ );
   if ( retVal < 0 ){
-    cerr << "! error in ComediAnalogOutput::open -> cannot get maximum sampling rate from comedi_get_cmd_generic_timed failed: "
-	 << comedi_strerror( comedi_errno() ) << endl;
+    setErrorStr( "cannot get maximum sampling rate from comedi_get_cmd_generic_timed(): " +
+		 string( comedi_strerror( comedi_errno() ) ) );
     close();
     return -1;
   }

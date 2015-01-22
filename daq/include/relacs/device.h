@@ -249,6 +249,9 @@ public:
         \sa setErrorStr(), errorStr() */
   void addErrorStr( int errnum );
 
+    /*! Translates the error code \a ern returned by open(), reset(), etc. into a string. */
+  static string getErrorStr( int ern );
+
     /*! Return \c true if the last operation was successfull and did not set an error string,
         i.e. errorStr().empty(). */
   virtual bool success( void ) const;

@@ -54,6 +54,7 @@ CS3310DIO::~CS3310DIO( void )
 
 int CS3310DIO::open( DigitalIO &dio, const Options &opts )
 {
+  clearError();
   DIO = &dio;
 
   Info.clear();
@@ -61,7 +62,7 @@ int CS3310DIO::open( DigitalIO &dio, const Options &opts )
   if ( isOpen() ) {
     DIOId = DIO->allocateLine( CS );
     if (DIOId <= 0 ) {
-      cerr << "! warning: CS3310DIO::open( DigitalIO ) -> cannot allocate CS pin.\n";
+      setErrorStr( "cannot allocate CS pin" );
       DIO = 0;
       return InvalidDevice;
     }
@@ -79,7 +80,7 @@ int CS3310DIO::open( DigitalIO &dio, const Options &opts )
 	failed = true;
       if ( failed ) {
 	DIO->freeLines( DIOId );
-	cerr << "! warning: CS3310DIO::open( DigitalIO ) -> cannot allocate pins.\n";
+	setErrorStr( "cannot allocate pins" );
 	DIO = 0;
 	return InvalidDevice;
       }
@@ -150,6 +151,7 @@ int CS3310DIO::open( bool zerocrossing )
   if ( ar != 0 ) {
     // attenuator is not active:
     close();
+    setErrorStr( "attenuator is not active" );
     return WriteError;
   }
   else {

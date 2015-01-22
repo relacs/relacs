@@ -99,6 +99,7 @@ DynClampAnalogInput::~DynClampAnalogInput( void )
 
 int DynClampAnalogInput::open( const string &device, const Options &opts )
 { 
+  clearError();
   if ( isOpen() )
     return -5;
 
@@ -111,16 +112,14 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   // open comedi device:
   DeviceP = comedi_open( device.c_str() );
   if ( DeviceP == NULL ) {
-    cerr << "! error: DynClampAnalogInput::open() -> "
-	 << "Device-file " << device << " could not be opened!\n";
+    setErrorStr( "device file " + device + " could not be opened. Check permissions." );
     return NotOpen;
   }
 
   // get AI subdevice:
   int subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_AI, 0 );
   if ( subdev < 0 ) {
-    cerr << "! error: DynClampAnalogInput::open() -> "
-	 << "No subdevice for AI found on device "  << device << '\n';
+    setErrorStr( "device "  + device + " does not support analog input" );
     comedi_close( DeviceP );
     DeviceP = NULL;
     return InvalidDevice;
@@ -240,15 +239,14 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   ModuleDevice = "/dev/dynclamp";
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
   if ( ModuleFd == -1 ) {
-  cerr << " DynClampAnalogInput::open(): opening dynclamp-module failed\n";
+    setErrorStr( "opening dynclamp-module " + ModuleDevice + " failed" );
     return -1;
   }
 
   // get subdevice ID from module:
   int retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogInput::open -> ioctl command IOC_GET_SUBDEV_ID on device "
-	 << ModuleDevice << " failed!\n";
+    setErrorStr( "ioctl command IOC_GET_SUBDEV_ID on device " + ModuleDevice + " failed" );
     return -1;
   }
 
@@ -260,11 +258,8 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   deviceIOC.subdevType = SUBDEV_IN;
   deviceIOC.fifoSize = 0;
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
-  //  cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
-  //       << &deviceIOC << '\n';
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogInput::open -> ioctl command IOC_OPEN_SUBDEV on device "
-	 << ModuleDevice << " failed!\n";
+    setErrorStr( "ioctl command IOC_OPEN_SUBDEV on device " + ModuleDevice + " failed" );
     return -1;
   }
 
@@ -276,8 +271,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
   FifoFd = ::open( fifoname.str().c_str(), O_RDONLY );
   if ( FifoFd < 0 ) {
-    cerr << " DynClampAnalogInput::open() -> oping RTAI-FIFO " 
-         << fifoname.str() << " failed!\n";
+    setErrorStr( "oping RTAI-FIFO " + fifoname + " failed" );
     return -1;
   }
   ReadBufferSize = deviceIOC.fifoSize;

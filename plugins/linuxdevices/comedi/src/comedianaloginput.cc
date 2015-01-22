@@ -93,6 +93,7 @@ ComediAnalogInput::~ComediAnalogInput( void )
 
 int ComediAnalogInput::open( const string &device, const Options &opts )
 { 
+  clearError();
   if ( isOpen() )
     return -5;
 
@@ -104,16 +105,14 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
   // open comedi device:
   DeviceP = comedi_open( device.c_str() );
   if ( DeviceP == NULL ) {
-    cerr << "! error: ComediAnalogInput::open() -> "
-	 << "Device-file " << device << " could not be opened!\n";
+    setErrorStr( "device file " + device + " could not be opened. Check permissions." );
     return NotOpen;
   }
 
   // get AI subdevice:
   int subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_AI, 0 );
   if ( subdev < 0 ) {
-    cerr << "! error: ComediAnalogInput::open() -> "
-	 << "No subdevice for AI found on device "  << device << '\n';
+    setErrorStr( "device "  + device + " does not support analog input" );
     comedi_close( DeviceP );
     DeviceP = NULL;
     return InvalidDevice;
@@ -122,8 +121,7 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
 
   // lock AI subdevice:
   if ( comedi_lock( DeviceP, SubDevice ) != 0 ) {
-    cerr << "! error: ComediAnalogInput::open() -> "
-	 << "Locking of AI subdevice failed on device " << device << '\n';
+    setErrorStr( "locking of analog input subdevice failed on device " + device );
     comedi_close( DeviceP );
     DeviceP = NULL;
     SubDevice = 0;
@@ -132,9 +130,7 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
 
   // check for async. command support:
   if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_CMD_READ ) == 0 ) {
-    cerr << "! error: ComediAnalogInput::open() -> "
-	 << "Device "  << device << " not supported! "
-	 << "SubDevice needs to support async. commands!" << endl;
+    setErrorStr( "device "  + device + " does not support async. commands" );
     comedi_unlock( DeviceP,  SubDevice );
     comedi_close( DeviceP );
     DeviceP = NULL;
@@ -170,7 +166,7 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
   BipolarRangeIndex.clear();
   vector<double> gainblacklist;
   opts.numbers( "gainblacklist", gainblacklist );
-  // XXX: if a ranges is not supported but comedi thinks so: add max gain to the blacklist.
+  // XXX: if a range is not supported but comedi thinks so: add max gain to the blacklist.
   // i.e. NI 6070E PCI and DAQCard-6062E: range #8 (0..20V) not supported
   int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  
   for ( int i = 0; i < nRanges; i++ ) {
@@ -233,8 +229,8 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
   int retVal = comedi_get_cmd_generic_timed( DeviceP, SubDevice, &cmd,
 					     1 /*chans*/, 1 /*ns*/ );
   if ( retVal < 0 ) {
-    cerr << "! error in ComediAnalogInput::open -> cannot get maximum sampling rate from comedi_get_cmd_generic_timed failed: "
-	 << comedi_strerror( comedi_errno() ) << endl;
+    setErrorStr( "cannot get maximum sampling rate from comedi_get_cmd_generic_timed(): " +
+		 string( comedi_strerror( comedi_errno() ) ) );
     close();
     return -1;
   }

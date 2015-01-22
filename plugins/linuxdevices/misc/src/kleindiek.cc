@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cmath>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -71,6 +72,7 @@ void Kleindiek::construct( void )
 
 int Kleindiek::open( const string &device, const Options &opts )
 {
+  clearError();
   if ( Handle >= 0 )
     return 0;
 
@@ -80,7 +82,7 @@ int Kleindiek::open( const string &device, const Options &opts )
   // open device:
   Handle = ::open( device.c_str(), O_RDWR | O_NOCTTY );
   if ( Handle < 0 ) {
-    perror( "! warning: Kleindiek::open() -> Can't open device" );
+    setErrorStr( errno );
     return InvalidDevice;
   }
 

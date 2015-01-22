@@ -69,6 +69,7 @@ NIAI::~NIAI( void )
 
 int NIAI::open( const string &device, const Options &opts )
 {
+  clearError();
   if ( isOpen() )
     return -5;
 

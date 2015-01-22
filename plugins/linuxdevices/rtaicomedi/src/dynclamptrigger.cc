@@ -63,6 +63,7 @@ DynClampTrigger::~DynClampTrigger( void )
 
 int DynClampTrigger::open( const string &device, const Options &opts )
 { 
+  clearError();
   Info.clear();
   Settings.clear();
 
@@ -79,7 +80,7 @@ int DynClampTrigger::open( const string &device, const Options &opts )
   ModuleDevice = device;
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
   if ( ModuleFd == -1 ) {
-    cerr << " DynClampTrigger::open(): opening dynclamp-module failed\n";
+    setErrorStr( "opening dynclamp-module " + ModuleDevice + " failed" );
     return -1;
   }
 

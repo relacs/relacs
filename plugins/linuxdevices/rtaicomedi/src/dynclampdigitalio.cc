@@ -70,6 +70,7 @@ DynClampDigitalIO::~DynClampDigitalIO( void )
 
 int DynClampDigitalIO::open( const string &device, const Options &opts )
 { 
+  clearError();
   if ( isOpen() )
     return -5;
 
@@ -81,8 +82,9 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
 
   // open user space coemdi:
   int retval = CDIO->open( device, opts );
-  if ( retval != 0 )
+  if ( retval != 0 ) {
     return retval;
+  }
 
   // copy information not available after CDIO->close()
   SubDevice = CDIO->comediSubdevice();
@@ -100,15 +102,14 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   ModuleDevice = "/dev/dynclamp";
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
   if ( ModuleFd == -1 ) {
-  cerr << " DynClampDigitalIO::open(): opening dynclamp-module failed\n";
+    setErrorStr( "opening dynclamp-module " + ModuleDevice + " failed" );
     return -1;
   }
 
   // get subdevice ID from module:
   retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
   if ( retval < 0 ) {
-    cerr << " DynClampDigitalIO::open -> ioctl command IOC_GET_SUBDEV_ID on device "
-	 << ModuleDevice << " failed!\n";
+    setErrorStr( "ioctl command IOC_GET_SUBDEV_ID on device " + ModuleDevice + " failed" );
     return -1;
   }
 
@@ -120,11 +121,8 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   deviceIOC.subdevType = SUBDEV_DIO;
   deviceIOC.fifoSize = 0;
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
-  //  cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
-  //       << &deviceIOC << '\n';
   if ( retval < 0 ) {
-    cerr << " DynClampDigitalIO::open -> ioctl command IOC_OPEN_SUBDEV on device "
-	 << ModuleDevice << " failed!\n";
+    setErrorStr( "ioctl command IOC_OPEN_SUBDEV on device " + ModuleDevice + " failed" );
     return -1;
   }
 
@@ -165,9 +163,9 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
       double duration = opts.number( "syncpulsewidth", 0.0, "s" );
       int id = allocateLine( line );
       if ( id == WriteError )
-	cerr << "! error: DynClampDigitalIO::open() -> failed to allocate line " << line << " for sync pulse\n";
+	setErrorStr( "failed to allocate line " + Str( line ) + " for sync pulse" );
       else if ( configureLine( line, true ) < 0 )
-	cerr << "! error: DynClampDigitalIO::open() -> failed to configure line " << line << " for sync pulse for writing\n";
+	setErrorStr( "failed to configure line " + Str( line ) + " for sync pulse for writing" );
       else {
 	setSyncPulse( line, duration );
 	SyncLine = line;

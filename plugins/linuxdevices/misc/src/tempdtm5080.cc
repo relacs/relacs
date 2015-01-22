@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <cerrno>
 #include <cmath>
 #include <iostream>
 #include <sstream>
@@ -63,13 +64,14 @@ TempDTM5080::~TempDTM5080( void )
 
 int TempDTM5080::open( const string &device, const Options &opts )
 {
+  clearError();
   if ( Handle >= 0 )
     return 0;
 
   // open device:
   Handle = ::open( device.c_str(), O_RDWR | O_NOCTTY );
   if ( Handle < 0 ) {
-    perror( "! warning: TempDTM5080::open() -> Can't open device" );
+    setErrorStr( errno );
     return InvalidDevice;
   }
 
