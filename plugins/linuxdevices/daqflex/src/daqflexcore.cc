@@ -187,8 +187,10 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
   libusb_free_device_list( list, true );
 
   if ( !found ) {
-    if ( ErrorState == Success )
+    if ( ErrorState == Success ) {
+      setErrorStr( "did not find an USB device. Simply reconnect the USB DAQ board." );
       ErrorState = ErrorNoDevice;
+    }
     DeviceHandle = NULL;
   }
   else {

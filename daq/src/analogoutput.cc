@@ -389,10 +389,7 @@ void AnalogOutput::run( void )
       unlock();
       return;
     }
-    lock();
-    rd = Run;
-    unlock();
-    if ( r == 0 || ! rd )
+    if ( r == 0 )
       break;
     // the sleep is needed to allow for other processes to acquire the lock!
     QThread::msleep( 1 );
@@ -416,10 +413,7 @@ void AnalogOutput::run( void )
       unlock();
       return;
     }
-    lock();
-    rd = Run;
-    unlock();
-    if ( r != Running || ! rd )
+    if ( r != Running )
       break;
     // the sleep is needed to allow for other processes to acquire the lock!
     QThread::msleep( 1 );
