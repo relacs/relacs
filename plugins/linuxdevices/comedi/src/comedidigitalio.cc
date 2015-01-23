@@ -132,20 +132,19 @@ bool ComediDigitalIO::isOpen( void ) const
 
 void ComediDigitalIO::close( void ) 
 {
+  clearError();
   if ( ! isOpen() )
     return;
 
   // unlock:
   int error = comedi_unlock( DeviceP,  SubDevice );
   if ( error < 0 )
-    cerr << "! warning: ComediDigitalIO::close() -> "
-	 << "Unlocking of AI subdevice on device " << deviceFile() << "failed\n";
+    setErrorStr( "unlocking of digital I/O subdevice on device " + deviceFile() + "failed" );
 
   // close:
   error = comedi_close( DeviceP );
   if ( error )
-    cerr << "! warning: ComediDigitalIO::close() -> "
-	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
+    setErrorStr( "closing of digital I/O subdevice on device " + deviceFile() + "failed" );
 
   // clear flags:
   DeviceP = NULL;

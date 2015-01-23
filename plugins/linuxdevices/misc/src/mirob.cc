@@ -607,6 +607,7 @@ void Mirob::setGUICallback(GUICallback* gcb){
 
 void Mirob::close( void )
 {
+  clearError();
   if ( Opened ) {
     for ( int k=1; k<=3; k++ ) {
       if ( ! TS_SelectAxis( k ) )
@@ -623,8 +624,6 @@ void Mirob::close( void )
   Settings.clear();
 
   watchdog->Stop();
-  //  stopWatchdog();
-  cerr << "MIROB closed " << endl;
 }
 
 

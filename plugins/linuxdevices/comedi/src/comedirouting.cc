@@ -177,14 +177,14 @@ bool ComediRouting::isOpen( void ) const
 
 void ComediRouting::close( void ) 
 {
+  clearError();
   if ( ! isOpen() )
     return;
 
   // close:
   int error = comedi_close( DeviceP );
   if ( error )
-    cerr << "! warning: ComediRouting::close() -> "
-	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
+    setErrorStr( "closing of routing subdevice on device " + deviceFile() + "failed" );
 
   // clear flags:
   DeviceP = NULL;

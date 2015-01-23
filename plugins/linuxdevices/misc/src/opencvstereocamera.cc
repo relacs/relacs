@@ -115,8 +115,8 @@ void OpenCVStereoCamera::close( void ){
   Opened = false;
   Info.clear();
   Settings.clear();
-
 }
+
 
 void OpenCVStereoCamera::transformLeftToRight( Mat& q){
   if (Calibrated){

@@ -173,8 +173,14 @@ void DeviceList<T,PluginID>::clear( void )
 template < class T, int PluginID >
 void DeviceList<T,PluginID>::close( void )
 {
-  for ( int k=(int)DVs.size()-1; k >= 0; k-- )
+  Warnings = "";
+  for ( int k=(int)DVs.size()-1; k >= 0; k-- ) {
+    DVs[k]->clearError();
     DVs[k]->close();
+    string es = DVs[k]->errorStr();
+    if ( ! es.empty() )
+      Warnings += DVs[k]->deviceIdent() + ": " + es + ".\n";
+  }
 }
 
 
@@ -324,6 +330,7 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	}
 	*/
 	int ern = 0;
+	dv->clearError();
 	Device *d = devices.device( ds );
 	if ( d != 0 ) {
 	  ern = dv->open( *d, *deviceopts );

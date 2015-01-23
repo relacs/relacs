@@ -185,12 +185,13 @@ bool DynClampDigitalIO::isOpen( void ) const
 
 void DynClampDigitalIO::close( void ) 
 {
+  clearError();
   if ( ! isOpen() )
     return;
 
   ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
   if ( ::close( ModuleFd ) < 0 )
-    cerr << "Close of module file failed!\n";
+    setErrorStr( "closing of module file failed" );
 
   // clear flags:
   SubDevice = 0;

@@ -265,6 +265,7 @@ bool ComediAnalogInput::isOpen( void ) const
 
 void ComediAnalogInput::close( void ) 
 {
+  clearError();
   if ( ! isOpen() )
     return;
 
@@ -278,14 +279,12 @@ void ComediAnalogInput::close( void )
   // unlock:
   int error = comedi_unlock( DeviceP,  SubDevice );
   if ( error < 0 )
-    cerr << "! warning: ComediAnalogInput::close() -> "
-	 << "Unlocking of AI subdevice on device " << deviceFile() << "failed\n";
+    setErrorStr( "unlocking of AI subdevice on device " + deviceFile() + "failed" );
 
   // close:
   error = comedi_close( DeviceP );
   if ( error )
-    cerr << "! warning: ComediAnalogInput::close() -> "
-	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
+    setErrorStr( "closing of AI subdevice on device " + deviceFile() + "failed" );
 
   // clear flags:
   DeviceP = NULL;

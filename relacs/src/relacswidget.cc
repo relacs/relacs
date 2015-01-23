@@ -677,6 +677,24 @@ void RELACSWidget::closeHardware( void )
   AQD->clear();
   SIM->clear();
   ADV->close();
+  string warnings = ADV->warnings();
+  if ( ! warnings.empty() ) {
+    Str ws = "errors in closing devices:\n";
+    warnings.insert( 0, "<ul><li>" );
+    int p = warnings.find( "\n" );
+    while ( p >= 0 ) {
+      warnings.insert( p, "</li>" );
+      p += 6;
+      int n = warnings.find( "\n", p );
+      if ( n < 0 )
+	break;
+      warnings.insert( p, "<li>" );
+      p = n + 4;
+    }
+    ws += warnings + "</ul>";
+    printlog( "! warning: " + ws.erasedMarkup() );
+    MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
+  }
   DeviceMenu->clear();
 }
 

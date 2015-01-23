@@ -102,13 +102,14 @@ bool DynClampTrigger::isOpen( void ) const
 
 void DynClampTrigger::close( void )
 { 
+  clearError();
   if ( ! isOpen() )
     return;
 
   reset();
 
   if ( ::close( ModuleFd ) < 0 )
-    cerr << "Close of module file failed!\n";
+    setErrorStr( "closing of module file failed" );
 
   ModuleFd = -1;
 

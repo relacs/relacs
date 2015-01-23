@@ -340,6 +340,7 @@ bool DynClampAnalogOutput::isOpen( void ) const
 
 void DynClampAnalogOutput::close( void )
 { 
+  clearError();
   if ( ! isOpen() )
     return;
 
@@ -355,7 +356,7 @@ void DynClampAnalogOutput::close( void )
     if ( FifoFd >= 0 )
       ::close( FifoFd );
     if ( ::close( ModuleFd ) < 0 )
-      cerr << "Close of module file failed!\n";
+      setErrorStr( "closing of module file failed" );
     ModuleFd = -1;
   }
 
