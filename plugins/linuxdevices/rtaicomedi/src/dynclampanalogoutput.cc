@@ -1069,7 +1069,7 @@ int DynClampAnalogOutput::stop( void )
     QMutexLocker locker( mutex() );
     int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
     if ( retval < 0 ) {
-      cerr << " DynClampAnalogOutput::reset -> ioctl command IOC_STOP_SUBDEV on device "
+      cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
 	   << ModuleDevice << " failed!\n";
       return -1;
     }

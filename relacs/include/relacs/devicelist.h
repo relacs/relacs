@@ -178,8 +178,11 @@ void DeviceList<T,PluginID>::close( void )
     DVs[k]->clearError();
     DVs[k]->close();
     string es = DVs[k]->errorStr();
-    if ( ! es.empty() )
-      Warnings += DVs[k]->deviceIdent() + ": " + es + ".\n";
+    if ( ! es.empty() ) {
+      if ( es[es.size()-1] != '.' )
+	es += ".";
+      Warnings += DVs[k]->deviceIdent() + ": " + es + '\n';
+    }
   }
 }
 
@@ -187,8 +190,25 @@ void DeviceList<T,PluginID>::close( void )
 template < class T, int PluginID >
 void DeviceList<T,PluginID>::reset( void )
 {
-  for ( unsigned int k=0; k<DVs.size(); k++ )
-    DVs[k]->reset();
+  Warnings = "";
+  for ( unsigned int k=0; k<DVs.size(); k++ ) {
+    DVs[k]->clearError();
+    int ern = DVs[k]->reset();
+    string en = DVs[k]->getErrorStr( ern );
+    string es = DVs[k]->errorStr();
+    if ( ! es.empty() ) {
+      if ( ! en.empty() ) {
+	if ( en[en.size()-1] != '.' )
+	  en += ".";
+	en += " ";
+      }
+      if ( es[es.size()-1] != '.' )
+	es += ".";
+      en += es;
+    }
+    if ( ! en.empty() )
+      Warnings += DVs[k]->deviceIdent() + ": " + en + '\n';
+  }
 }
 
 
@@ -274,9 +294,15 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
       ms = dflt;
     if ( ms == "0" )
       continue;
-    int k = -1;
-    if ( !ms.empty() )
-      k = Plugins::index( ms, PluginID );
+    if ( ms.empty() ) {
+      Warnings += "a plugin name needs to be specified for " + Name + ".\n";
+      continue;
+    }
+    int k = Plugins::index( ms, PluginID );
+    if ( k < 0 ) {
+      Warnings += Name + " plugin <b>" + ms + "</b> not found! Check pluginpathes in relacs.cfg.\n";
+      continue;
+    }
 
     // check plugin:
     string ident = deviceopts->text( "ident" );
@@ -299,83 +325,63 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
       continue;
 
     // create plugin:
-    if ( k >= 0 ) {
-      void *mp = 0;
-      if ( deviceindex >= 0 )
-	mp = DVs[deviceindex];
-      else
-	mp = Plugins::create( k );
-      if ( mp != 0 ) {
-	// add plugin:
-	T *dv = static_cast<T*>( mp );
-	if ( deviceindex < 0 ) {
-	  dv->setDeviceIdent( ident );
-	  add( dv, devices );
-	}
-	else {
-	  // swap device to the end of the lists:
-	  swapBack( dv );
-	  if ( (void *)&devices != (void *)this )
-	    devices.swapBack( dv );
-	}
-	// open device:
-	Str ds = deviceopts->text( "device" );
-	/*
-	for ( int i = 0; i<devices.size(); i++ ) {
-	  if ( devices[i].deviceIdent() == ds ) {
-	    dv->open( devices[i], m );
-	    ds = "";
-	    break;
-	  }
-	}
-	*/
-	int ern = 0;
-	dv->clearError();
-	Device *d = devices.device( ds );
-	if ( d != 0 ) {
-	  ern = dv->open( *d, *deviceopts );
-	  if ( dv->isOpen() )
-	    ds = "";
-	}
-	if ( ! ds.empty() )
-	  ern = dv->open( ds, *deviceopts );
-	if ( dv->isOpen() )
-	  n++;
-	else {
-	  if ( ms.empty() )
-	    ms = "-unknown-";
-	  if ( ds.empty() )
-	    ds = "-unknown-";
-	  Warnings += "Cannot open " + Name + " plugin <b>" + ms
-	    + "</b> with identifier <b>" + ident + "</b> on device <b>" + ds;
-	  string en = dv->getErrorStr( ern );
-	  string es = dv->errorStr();
-	  if ( ! es.empty() ) {
-	    if ( ! en.empty() ) {
-	      if ( en[en.size()-1] != '.' )
-		en += ".";
-	      en += " ";
-	    }
-	    if ( es[es.size()-1] != '.' )
-	      es += ".";
-	    en += es;
-	  }
-	  if ( en.empty() )
-	    Warnings += " !\n";
-	  else
-	    Warnings += " ! " +  en + '\n';
-	}
-      }
-      else {
-	if ( ms.empty() )
-	  ms = "-empty-";
-	Warnings += "Cannot create " + Name + " plugin <b>" + ms + "</b> !\n";
-      }
+    void *mp = 0;
+    if ( deviceindex >= 0 )
+      mp = DVs[deviceindex];
+    else
+      mp = Plugins::create( k );
+    if ( mp == 0 ) {
+      Warnings += "Failed to create " + Name + " plugin <b>" + ms + "</b> !\n";
+      continue;
+    }
+
+    // add plugin:
+    T *dv = static_cast<T*>( mp );
+    if ( deviceindex < 0 ) {
+      dv->setDeviceIdent( ident );
+      add( dv, devices );
     }
     else {
-      if ( ms.empty() )
-	ms = "-empty-";
-      Warnings += Name + " Plugin <b>" + ms + "</b> not found! Check pluginpathes in relacs.cfg.\n";
+      // swap device to the end of the lists:
+      swapBack( dv );
+      if ( (void *)&devices != (void *)this )
+	devices.swapBack( dv );
+    }
+    // open device:
+    Str ds = deviceopts->text( "device" );
+    int ern = 0;
+    dv->clearError();
+    Device *d = devices.device( ds );
+    if ( d != 0 ) {
+      ern = dv->open( *d, *deviceopts );
+      if ( dv->isOpen() )
+	ds = "";
+    }
+    if ( ! ds.empty() )
+      ern = dv->open( ds, *deviceopts );
+    if ( dv->isOpen() )
+      n++;
+    else {
+      Warnings += "Cannot open " + Name + " plugin <b>" + ms
+	+ "</b> with identifier <b>" + ident + "</b>";
+      if ( ! ds.empty() )
+	Warnings += " on device <b>" + ds;
+      string en = dv->getErrorStr( ern );
+      string es = dv->errorStr();
+      if ( ! es.empty() ) {
+	if ( ! en.empty() ) {
+	  if ( en[en.size()-1] != '.' )
+	    en += ".";
+	  en += " ";
+	}
+	if ( es[es.size()-1] != '.' )
+	  es += ".";
+	en += es;
+      }
+      if ( en.empty() )
+	Warnings += " !\n";
+      else
+	Warnings += " ! " +  en + '\n';
     }
   }
   return n;

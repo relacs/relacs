@@ -633,29 +633,29 @@ int Mirob::reset( void )
 {
   for ( int k=1; k<=3; k++ ) {
     if ( ! TS_SelectAxis( k ) ) {
-      cerr << "Failed to select axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      addErrorStr( "failed to select axis " + Str( k ) + "! " + TS_GetLastErrorText() );
       return 1;
     }
     if ( ! TS_ResetFault() ) {
-      cerr << "Failed to reset fault axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      addErrorStr( "failed to reset fault axis " + Str( k ) + "! " + TS_GetLastErrorText() );
       return 1;
     }
     if ( ! TS_Power( POWER_ON ) ) {
-      cerr << "Failed to power on drive for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      addErrorStr( "failed to power on drive for axis " + Str( k ) + "! " + TS_GetLastErrorText() );
       return 1;
     }
     WORD axison = 0;
     while ( axison == 0 ) {
       // Check the status of the power stage:
       if ( ! TS_ReadStatus( REG_SRL, axison ) ) {
-	cerr << "Failed toread status for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+	addErrorStr( "failed toread status for axis " + Str( k ) + "! " + TS_GetLastErrorText() );
 	return 1;
       }
       axison = ((axison & 1<<15) != 0 ? 1 : 0);
     }
     /*
     if ( ! TS_Reset() ) {
-      cerr << "Failed to reset axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      addErrorStr( "failed to reset axis " + Str( k ) + "! " + TS_GetLastErrorText() );
       return 1;
     }
    // Requires much more setup afterwards!

@@ -79,7 +79,6 @@ int Device::open( Device &device, const Options &opts )
 
 int Device::reset( void )
 {
-  clearError();
   return 0;
 }
 

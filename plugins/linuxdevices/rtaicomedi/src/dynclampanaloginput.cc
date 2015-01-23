@@ -911,14 +911,14 @@ int DynClampAnalogInput::reset( void )
     running = SubdeviceID;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
-      cerr << " DynClampAnalogInput::reset -> ioctl command IOC_CHK_RUNNING on device "
-	   << ModuleDevice << " failed!\n";
+      addErrorStr( "ioctl command IOC_CHK_RUNNING on device " +
+		   ModuleDevice + " failed" );
     }
     if ( running > 0 ) {
       retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
       if ( retval < 0 ) {
-	cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	     << ModuleDevice << " failed!\n";
+	addErrorStr( "ioctl command IOC_STOP_SUBDEV on device " +
+		     ModuleDevice + " failed" );
       }
     }
   }

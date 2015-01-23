@@ -169,6 +169,8 @@ public:
     /*! Reset the device.
         Returns zero on success, otherwise one of the flags
         NotOpen, InvalidDevice, WriteError.
+	An implementation should not clear the error string
+	and should onlyadd error strings using addErrorStr().
         \sa close(), open(), isOpen() */
   virtual int reset( void );
 

@@ -378,7 +378,9 @@ void AnalogOutput::run( void )
   do {
     int r = writeData();
     if ( r < 0 ) {
-      reset();
+      int rr = reset();
+      if ( rr != 0 )
+	addErrorStr( getErrorStr( rr ) );
       if ( Semaphore != 0 )
 	Semaphore->release( rd ? 1000 : 1 );
       Semaphore = 0;
@@ -403,7 +405,9 @@ void AnalogOutput::run( void )
   do {
     Status r = status();
     if ( r == Underrun ) {
-      reset();
+      int rr = reset();
+      if ( rr != 0 )
+	addErrorStr( getErrorStr( rr ) );
       if ( Semaphore != 0 )
 	Semaphore->release( 1000 );
       Semaphore = 0;
