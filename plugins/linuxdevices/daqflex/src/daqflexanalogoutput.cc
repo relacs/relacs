@@ -681,9 +681,6 @@ int DAQFlexAnalogOutput::writeData( void )
 
 int DAQFlexAnalogOutput::stop( void )
 {
-  if ( ! isOpen() )
-    return NotOpen;
-
   if ( ! IsPrepared )
     return 0;
 
@@ -699,9 +696,6 @@ int DAQFlexAnalogOutput::stop( void )
 
 int DAQFlexAnalogOutput::reset( void )
 {
-  if ( ! isOpen() )
-    return NotOpen;
-
   lock();
 
   DAQFlexDevice->sendCommand( "AOSCAN:STOP" );

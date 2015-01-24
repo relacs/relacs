@@ -1,4 +1,5 @@
 - Why is this msleep( 1 ) needed in the daq threads?
+- Acquire::stopWrite() should check whether the AO is running
 - Plot (used from ManualJAR) P.clear(); P.draw() do not always clear the plot!
 - Buzzing is not responsive: allow for multiple buzzes
 

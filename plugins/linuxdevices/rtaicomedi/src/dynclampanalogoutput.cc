@@ -1045,9 +1045,6 @@ int DynClampAnalogOutput::writeData( void )
 
 int DynClampAnalogOutput::stop( void )
 { 
-  if ( !isOpen() )
-    return NotOpen;
-
   int running = 0;
   {
     QMutexLocker locker( mutex() );
@@ -1082,9 +1079,6 @@ int DynClampAnalogOutput::stop( void )
 
 int DynClampAnalogOutput::reset( void )
 { 
-  if ( !isOpen() )
-    return NotOpen;
-
   lock();
 
   rtf_reset( FifoFd );

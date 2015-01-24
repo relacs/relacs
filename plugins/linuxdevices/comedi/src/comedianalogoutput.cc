@@ -1080,10 +1080,6 @@ int ComediAnalogOutput::writeData( void )
 int ComediAnalogOutput::stop( void ) 
 { 
   //  cerr << " ComediAnalogOutput::stop()" << endl;/////TEST/////
-
-  if ( ! isOpen() )
-    return NotOpen;
-
   {
     QMutexLocker locker( mutex() );
     
@@ -1099,11 +1095,6 @@ int ComediAnalogOutput::stop( void )
 
 int ComediAnalogOutput::reset( void ) 
 { 
-  //  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
-
-  if ( ! isOpen() )
-    return NotOpen;
-
   lock();
 
   comedi_cancel( DeviceP, SubDevice );

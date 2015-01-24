@@ -195,13 +195,14 @@ public:
   virtual int writeData( void ) = 0;
 
     /*! Stop any running ananlog output activity.
+        Assumes that analog output is open.
 	Should call stopWrite() to stop the thread.
-        Returns zero on success, otherwise NotOpen.
+        Returns zero on success.
         \sa reset(), startWrite() */
   virtual int stop( void ) = 0;
     /*! Clear any internal data buffers and reset the device.
-        Assumes that analog output is already stopped.
-        Returns zero on success, otherwise NotOpen.
+        Assumes that analog output is open and already stopped.
+        Returns zero on success.
 	An implementation should NOT clear the error string!
         \sa stop(), close(), open(), isOpen() */
   virtual int reset( void ) = 0;

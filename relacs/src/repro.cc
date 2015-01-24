@@ -191,15 +191,15 @@ void RePro::start( QThread::Priority priority )
 void RePro::requestStop( void )
 {
   if ( Thread->isRunning() ) {
+    InterruptLock.lock();
+    int ir = Interrupt;
+    Interrupt = 1;
     // stop analog output,
     // before the repro gets any chance to delete the output signal:
-    InterruptLock.lock();
-    Interrupt = 1;
-    InterruptLock.unlock();
-    stopWrite();
+    if ( ir < 2 )
+      stopWrite();
 
     // tell the RePro to interrupt:
-    InterruptLock.lock();
     Interrupt = 2;
     InterruptLock.unlock();
     

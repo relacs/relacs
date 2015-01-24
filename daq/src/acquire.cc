@@ -2789,12 +2789,10 @@ int Acquire::stopWrite( void )
   bool success = true;
 
   for ( unsigned int i = 0; i<AO.size(); i++ ) {
-    if ( AO[i].AO->isOpen() ) {
-      if ( AO[i].AO->stop() != 0 )
-	success = false;
-      if ( AO[i].AO->reset() != 0 )
-	success = false;
-    }
+    if ( AO[i].AO->stop() != 0 )
+      success = false;
+    if ( AO[i].AO->reset() != 0 )
+      success = false;
   }
   // wake up all jobs sleeping on AOSemaphore:
   AOSemaphore.release( 1000 );

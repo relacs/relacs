@@ -359,8 +359,8 @@ void AnalogInput::run( void )
       if ( DataWait != 0 )
 	DataWait->wakeAll();
     }
-    // the sleep is needed to allow for other processes to acquire the lock!
-    QThread::msleep( 1 );
+    // the sleep is needed to allow for other processes to wake up and acquire the lock!
+    QThread::sleep( 0 );
     lock();
     rd = Run;
     unlock();
