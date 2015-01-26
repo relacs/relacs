@@ -353,7 +353,7 @@ int Beats::main( void )
 	  double p = 0.0;
 	  int ck = 0;
 	  for ( int k=0; k<sig.size(); k++ ) {
-	    double t = sig.length();
+	    double t = sig.pos( k );
 	    double f = stimulusrate;
 	    double a = 1.0;
 	    if ( t < ramp )
@@ -371,10 +371,11 @@ int Beats::main( void )
 		      t > currentchirptimes[ck] + 2.0*chirpwidth )
 	      ck++;
 	    p += f * sig.stepsize();
-	    sig[ a * ::sin( 6.28318530717959 * p ) ];
+	    sig[k] = a * ::sin( 6.28318530717959 * p );
 	  }
 	  sig.back() = 0.0;
 	  currentchirptimes.resize( ck );
+	  chirpheader.clear();
 	  chirpheader.addNumber( "ChirpSize", chirpsize, "Hz" );
 	  chirpheader.addNumber( "ChirpWidth", 1000.0*chirpwidth, "ms" );
 	  chirpheader.addNumber( "ChirpAmplitude", 100.0*(1.0-chirpampl), "%" );
@@ -708,7 +709,7 @@ void Beats::initPlot( double deltaf, double amplitude, double duration,
 {
   P.lock();
   P.keepPointer();
-  //  P.setDataMutex( mutex() );
+  P.setDataMutex( mutex() );
   // eod frequency with chirp events:
   P.clear();
   Str s;
