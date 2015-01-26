@@ -233,7 +233,7 @@ public:
     /*! For number options: instead of minimum value display "none". */
   static const long SpecialNone = 0x20000000;
     /*! Section is a new tab. */
-  static const long TabSection = 0x04000000;
+  static const long TabSection = Options::TabSection; // 0x04000000
     /*! Try to format label as a mathematical equation. */
   static const long MathLabel = 0x08000000;
 

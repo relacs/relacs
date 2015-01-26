@@ -138,10 +138,42 @@ int AOSim::prepareWrite( OutList &sigs )
     return -1;
   }
 
-  for ( int k=0; k<sigs.size(); k++ ) {
+  for( int k=0; k<sigs.size(); k++ ) {
+    // minimum and maximum values:
+    double min = sigs[k].requestedMin();
+    double max = sigs[k].requestedMax();
+    if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
+      float smin = 0.0;
+      float smax = 0.0;
+      minMax( smin, smax, sigs[k] );
+      if ( min == OutData::AutoRange )
+	min = smin;
+      if ( max == OutData::AutoRange )
+	max = smax;
+    }
+    // we use only the largest range and there is only one range:
+    sigs[k].setGainIndex( 0 );
     sigs[k].setMinVoltage( -10.0 );
     sigs[k].setMaxVoltage( 10.0 );
+    if ( ! sigs[k].noLevel() )
+      sigs[k].multiplyScale( 10.0 );
+    // check for signal overflow/underflow:
+    if ( sigs[k].noLevel() ) {
+      if ( min < sigs[k].minValue() )
+	sigs[k].addError( DaqError::Underflow );
+      else if ( max > sigs[k].maxValue() )
+	sigs[k].addError( DaqError::Overflow );
+    }
+    else {
+      if ( max > 1.0+1.0e-8 )
+	sigs[k].addError( DaqError::Overflow );
+      else if ( min < -1.0-1.0e-8 )
+	sigs[k].addError( DaqError::Underflow );
+    }
   }
+
+  if ( ! sigs.success() )
+    return -1;
 
   // success:
   setSettings( sigs, -1 );

@@ -1202,7 +1202,7 @@ public:
     /*! Return the string with all '.' directories removed. */
   Str removedWorking( char dirsep=DirSep ) const;
 
-    /*! Prepends the directory \a dir to the sring
+    /*! Prepends the directory \a dir to the string
         if it does not begin with a slash (\a dirsep).
 	It is ensured that between the current content of the Str and 
 	\a dir there is slash (\a dirsep).

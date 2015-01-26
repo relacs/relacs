@@ -39,7 +39,7 @@ namespace efield {
 \class Beats
 \brief [RePro]   Play EOD mimicks with optional chirps from a range of automatically set difference frequencies and amplitudes.
 \author Jan Benda
-\version 2.0 (Sep 19, 2013)
+\version 2.2 (Jan 26, 2014)
 \par Options
 - \c Stimulation
     - \c duration=10seconds: Signal duration (\c number)
@@ -52,12 +52,14 @@ namespace efield {
     - \c repeats=10: Repeats (\c integer)
     - \c fakefish=0Hz: Assume a fish with frequency (\c number)
 - \c Chirps
+    - \c generatechirps=false: Generate chirps (\c boolean)
     - \c chirpsize=100Hz: Size of chirp (\c number)
     - \c chirpwidth=100ms: Width of chirp (\c number)
     - \c chirpampl=0%: Amplitude reduction during chirp (\c number)
     - \c chirpkurtosis=1: Kurtosis of Gaussian chirp (\c number)
     - \c chirpfrequencies=: Chirp frequencies for each delta f (\c string)
     - \c chirptimesfile=: File with chirp times (\c string)
+    - \c chirptimeshuffle=Up: Order of chirp-time sequences (\c string)
 - \c Analysis
     - \c before=1seconds: Time before stimulation to be analyzed (\c number)
     - \c after=1seconds: Time after stimulation to be analyzed (\c number)
@@ -75,8 +77,11 @@ evenly spaced chirps with that frequency are produced. If only a file
 containing times is specified (no chirpfrequency) then the chirps are
 positioned as specified in the file. If in addition a chirp frequency
 is specified, the timepoints in the file are scaled with the inverse
-frequency. By specifying as many chirp frequency as there are delta f's
-the chirp frequency can be made depenendent on delta f.  
+frequency. By specifying as many chirp frequencies as there are delta f's
+the chirp frequency can be made dependent on delta f.
+
+The chirptimesfile may contain several blocks of chirp time sequences.
+These are then used one after the other as specified by chirptimeshuffle.
 
 \par LED Output
 

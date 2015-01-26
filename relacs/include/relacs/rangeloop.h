@@ -48,7 +48,7 @@ namespace relacs {
   The basic usage is like this:
   \code
   RangeLoop range( 1.0, 4.0, 0.5 );
-  for ( Range.reset(); ! Range; ++Range )
+  for ( range.reset(); ! range; ++range )
     cout << *range << '\n';
   \endcode
   This will print the sequence 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0
@@ -83,7 +83,7 @@ namespace relacs {
 
   Data values can be excluded form being further traversed by setSkip(),
   setSkipAbove(), setSkipBelow(), and setSkipBetween().
-  How often a data value was traversed can be retireieved by count().
+  How often a data value was traversed can be retrieved by count().
   You can remove data elements that have their skip flag set by calling purge().
 
   pos() is the index of an data element from the whole data array.

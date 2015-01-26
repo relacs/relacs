@@ -32,7 +32,7 @@ namespace efield {
 
 
 Beats::Beats( void )
-  : RePro( "Beats", "efield", "Jan Benda", "2.0", "Sep 19, 2013" )
+  : RePro( "Beats", "efield", "Jan Benda", "2.2", "Jan 26, 2014" )
 {
   // add some parameter as options:
   newSection( "Stimulation" );
@@ -53,6 +53,7 @@ Beats::Beats( void )
   addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", 1.0, 0.01, 100.0, 0.01, "", "" );
   addText( "chirpfrequencies", "Chirp frequencies for each delta f", "" ).setUnit( "Hz" );
   addText( "chirptimesfile", "File with chirp times", "" ).setStyle( OptWidget::BrowseExisting );
+  addSelection( "chirptimeshuffle", "Order of chirp-time sequences", RangeLoop::sequenceStrings() );
   newSection( "Analysis" );
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
@@ -97,6 +98,7 @@ int Beats::main( void )
   vector< double > chirpfrequencies;
   cfs.range( chirpfrequencies );
   string chirptimesfile = text( "chirptimesfile" );
+  RangeLoop::Sequence chirptimeshuffle = RangeLoop::Sequence( index( "chirptimeshuffle" ) );
   double before = number( "before" );
   double after = number( "after" );
   double averagetime = number( "averagetime" );
@@ -124,29 +126,45 @@ int Beats::main( void )
       }
     }
   }
-  EventData chirptimes;
+  EventList chirptimes;
+  int maxchirptimes = 0;
   if ( generatechirps ) {
     if ( ! chirptimesfile.empty() ) {
       DataFile cf( chirptimesfile );
-      cf.read( 2 );
-      if ( cf.data().rows() <= 0 ) {
-	warning( "File " + chirptimesfile + " does not exist or doesnot contain data.\n" );
+      int allchirptimes = 0;
+      int chirptimesblocks = 0;
+      while ( cf.read( 2 ) ) {
+	if ( cf.data().rows() > 0 ) {
+	  chirptimes.push( cf.col( 0 ) );
+	  allchirptimes += chirptimes.back().size();
+	  chirptimesblocks++;
+	  if ( chirptimes.back().size() > maxchirptimes )
+	    maxchirptimes = chirptimes.back().size();
+	}
+      }
+      if ( maxchirptimes <= 0 ) {
+	warning( "File " + chirptimesfile + " does not exist or does not contain data.\n" );
 	return Failed;
       }
-      chirptimes = cf.col( 0 );
-      printlog( "Read in " + Str( chirptimes.size() ) + " chirp times from file "
-		+ chirptimesfile + "." );
+      else
+	printlog( "Read in " + Str( allchirptimes ) + " chirp times from " +
+		  Str( chirptimesblocks ) + " blocks of data from file " +
+		  chirptimesfile + "." );
     }
     else if ( ! chirpfrequencies.empty() ) {
+      chirptimes.push( EventData() );
       double maxt = duration * max( chirpfrequencies );
       double t = 1.0;
       do {
-	chirptimes.push( t );
+	chirptimes.back().push( t );
 	t += 1.0;
       } while ( t < maxt );
-      printlog( "Generated " + Str( chirptimes.size() ) + " chirp times." );
+      if ( chirptimes.back().size() > maxchirptimes )
+	maxchirptimes = chirptimes.back().size();
+      printlog( "Generated " + Str( chirptimes.back().size() ) + " evenly spaced chirp times." );
     }
-    generatechirps = ( ! chirptimes.empty() || ! chirpfrequencies.empty() );
+    generatechirps = ( ( !chirptimes.empty() && ! chirptimes[0].empty() ) ||
+		       ! chirpfrequencies.empty() );
   }
 
   // check gain of attenuator:
@@ -181,9 +199,9 @@ int Beats::main( void )
   EventData fishchirps;
   fishchirps.reserve( (int)::rint( 100*duration ) );
   EventData currentchirptimes;
-  currentchirptimes.reserve( chirptimes.size() );
+  currentchirptimes.reserve( maxchirptimes );
   EventData playedchirptimes;
-  playedchirptimes.reserve( chirptimes.size() );
+  playedchirptimes.reserve( maxchirptimes );
   for ( int k=0; k<FishEODTraces[0]; k++ ) {
     eodfrequencies[k].reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
     eodamplitudes[k].reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
@@ -191,6 +209,9 @@ int Beats::main( void )
   MapD stimfrequency;
   stimfrequency.reserve( (int)::ceil( 1000.0*(before+duration+after) ) );
 
+  RangeLoop chirptimesrange( 0.0, 1.0, chirptimes.size() );
+  chirptimesrange.setSequence( chirptimeshuffle );
+  chirptimesrange.reset();
   RangeLoop dfrange( deltafrange );
   if ( chirpfrequencies.size() > 1 && (int)chirpfrequencies.size() != dfrange.size() ) {
     warning( "The number of chirp frequencies must match the number of delta f's!" );
@@ -253,6 +274,7 @@ int Beats::main( void )
       double ramptime = 0.0;
       Options chirpheader;
       double chirpfrequency = 0.0;
+      int chirpsequence = -1;
       OutList signal;
       if ( fixeddf ) {
 	chirpheader.clear();
@@ -310,49 +332,61 @@ int Beats::main( void )
 	    P.unlock();
 	    return Failed;
 	  }
-	  currentchirptimes = chirptimes;
+	  chirpsequence = chirptimesrange.pos();
+	  if ( chirpsequence < 0 ) {
+	    chirpsequence = 0;
+	    printlog( "! ERROR: chirpsequence < 0" );
+	  }
+	  currentchirptimes = chirptimes[chirptimesrange.pos()];
 	  currentchirptimes *= 1.0/chirpfrequency;
+	  if ( ! chirptimesrange )
+	    ++chirptimesrange;
+	  else
+	    chirptimesrange.reset();
 	  sig.clear();
 	  if ( sig.fixedSampleRate() )
 	    sig.setSampleInterval( sig.minSampleInterval() );
 	  else
 	    sig.setSampleInterval( sig.bestSampleInterval( 2.0*stimulusrate ) );
-	  sig.reserve( sig.indices( duration ) );
+	  sig.resize( sig.indices( duration ) );
 	  double csig = 0.5*chirpwidth / ::pow( 2.0*log(10.0), 0.5/chirpkurtosis );
 	  double p = 0.0;
-	  int k = 0;
-	  for ( double t=0.0; t<duration; ) {
-	    t = sig.length();
+	  int ck = 0;
+	  for ( int k=0; k<sig.size(); k++ ) {
+	    double t = sig.length();
 	    double f = stimulusrate;
 	    double a = 1.0;
 	    if ( t < ramp )
 	      a = t/ramp;
 	    else if ( t > duration - ramp )
 	      a = (duration - t)/ramp;
-	    if ( k<currentchirptimes.size() &&
-		 fabs( t - currentchirptimes[k] ) < 2.0*chirpwidth ) {
-	      double x = t - currentchirptimes[k];
+	    if ( ck<currentchirptimes.size() &&
+		 fabs( t - currentchirptimes[ck] ) < 2.0*chirpwidth ) {
+	      double x = t - currentchirptimes[ck];
 	      double g = exp( -0.5 * ::pow( (x/csig)*(x/csig), chirpkurtosis ) );
 	      f = chirpsize*g + stimulusrate;
 	      a *= 1.0 - chirpampl*g;
 	    }
-	    else if ( k<currentchirptimes.size() &&
-		      t > currentchirptimes[k] + 2.0*chirpwidth )
-	      k++;
+	    else if ( ck<currentchirptimes.size() &&
+		      t > currentchirptimes[ck] + 2.0*chirpwidth )
+	      ck++;
 	    p += f * sig.stepsize();
-	    sig.push( a * ::sin( 6.28318530717959 * p ) );
+	    sig[ a * ::sin( 6.28318530717959 * p ) ];
 	  }
-	  currentchirptimes.resize( k );
+	  sig.back() = 0.0;
+	  currentchirptimes.resize( ck );
 	  chirpheader.addNumber( "ChirpSize", chirpsize, "Hz" );
 	  chirpheader.addNumber( "ChirpWidth", 1000.0*chirpwidth, "ms" );
 	  chirpheader.addNumber( "ChirpAmplitude", 100.0*(1.0-chirpampl), "%" );
 	  chirpheader.addNumber( "ChirpKurtosis", chirpkurtosis );
 	  chirpheader.addNumber( "ChirpFrequency", chirpfrequency, "Hz" );
-	  if ( ! chirptimesfile.empty() && ! chirptimes.empty() )
+	  if ( ! chirptimesfile.empty() && ! chirptimes.empty() ) {
 	    chirpheader.addText( "ChirpTimesFile", chirptimesfile );
-	  chirpheader.addInteger( "ChirpNumber", k );
+	    chirpheader.addInteger( "ChirpSequence", chirpsequence );
+	  }
+	  chirpheader.addInteger( "ChirpNumber", ck );
 	  chirpheader.addNumber( "ChirpTimes", currentchirptimes[0], "s" );
-	  for ( int j=1; j<k; j++ )
+	  for ( int j=1; j<ck; j++ )
 	    chirpheader.pushNumber( "ChirpTimes", currentchirptimes[j] );
 	  sig.description().setType( "stimulus/eod_chirps" );
 	  sig.description().addNumber( "Frequency", stimulusrate, "Hz" );
@@ -427,12 +461,14 @@ int Beats::main( void )
       }
       double signaltime = signalTime();
 
-
       // meassage:
       Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
       s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
-      if ( generatechirps )
+      if ( generatechirps ) {
 	s += "  Chirps: <b>" + Str( chirpsize, "%g" ) + "Hz @ " + Str( chirpfrequency, "%.2f" ) + "Hz</b>";
+	if ( chirptimes.size() > 1 && chirpsequence >= 0 )
+	  s += " from <b>sequence " + Str( chirpsequence ) + "</b>";
+      }
       if ( repeats != 1 ) {
 	s += "  Loop:  <b>" + Str( count+1 ) + "</b>";
 	if ( repeats > 0 )

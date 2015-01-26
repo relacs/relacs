@@ -405,7 +405,7 @@ Parameter &Parameter::operator=( const string &value )
 Parameter &Parameter::assign( const string &value )
 {
   Warning = "";
-  if ( isText() && ( size() > 1 || ( style() && Parameter::SelectText ) > 0 ) ) {
+  if ( isText() && ( size() > 1 || ( style() & Parameter::SelectText ) > 0 ) ) {
     selectText( value );
   }
   else {

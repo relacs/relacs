@@ -23,6 +23,7 @@
 #include <cmath>
 #include <QCoreApplication>
 #include <QHBoxLayout>
+#include <QDir>
 #include <QFileDialog>
 #include <relacs/optwidgetbase.h>
 
@@ -380,6 +381,7 @@ void OptWidgetText::browse( void )
     return;
   }
   Str file = Param->text( 0 );
+  file.addWorking();
   int style = Param->style();
   unlockMutex();
   QFileDialog* fd = new QFileDialog( 0 );
@@ -419,7 +421,7 @@ void OptWidgetText::doBrowse( Str filename )
     return;
   }
   if ( ( Param->style() & OptWidget::BrowseAbsolute ) == 0 )
-    filename.stripWorkingPath( 3 );
+    filename.stripWorkingPath( 5 );
   if ( ( Param->style() & OptWidget::BrowseDirectory ) )
     filename.provideSlash();
   bool cn = OO->notifying();
