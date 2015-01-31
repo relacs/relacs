@@ -1,7 +1,8 @@
+SUBDIRS = src
+
 if RELACS_EXAMPLES_COND
-    EXAMPLES = examples
+    SUBDIRS += examples
 endif
-SUBDIRS = src $(EXAMPLES)
 
 misccfgdir = $(pkgdatadir)/configs/misc
 dist_misccfg_DATA = \

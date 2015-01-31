@@ -1,6 +1,11 @@
-SUBDIRS = src
+SUBDIRS =
+
+if RELACS_COND_COMPILE_comedi
+    SUBDIRS += src
+endif
+
 if RELACS_EXAMPLES_COND
-SUBDIRS += examples
+    SUBDIRS += examples
 endif
 
 comedicfgdir = $(pkgdatadir)/configs/comedi

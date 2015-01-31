@@ -134,7 +134,7 @@ AM_CONDITIONAL(RELACS_COND_OPENCV,[test "$RELACS_OPENCV" != no])
 
 
 #################################################
-## RELACSDAQ
+## RELACSDAQ (for Plot)
 #################################################
 DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSDAQ"
 AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
@@ -364,7 +364,7 @@ cat <<SUMMARY
     Use GSL ...................... ${RELACS_GSL}
     Use sndfile .................. ${RELACS_SNDFILE}
     Use portaudio ................ ${RELACS_PORTAUDIO}
-    Use Comedi ................... ${RELACS_COMEDI}
+    Use comedi ................... ${RELACS_COMEDI}
     Use RTAI ..................... ${RELACS_RTAI}
     Use libusb ................... ${RELACS_USB}
     Use TML_lib .................. ${RELACS_TML}
@@ -372,19 +372,24 @@ cat <<SUMMARY
     Generate user manual ......... ${RELACS_GENERATE_DOCBOOK}
     Generate API documentation ... ${DX_SUMMARY}
     Compile example programs ..... ${RELACS_COMPILE_EXAMPLES}
-    Compile the following plugin sets:
 SUMMARY
 
-for RELACS_PLUGIN in ${RELACS_PLUGINS}; do
+if test "x${RELACS_PLUGINS_ENABLE}" != "x"; then
+   echo "    Document the following plugin sets:"
+   for RELACS_PLUGIN in ${RELACS_PLUGINS_ENABLE}; do
+       echo "        ${RELACS_PLUGIN}"
+   done
+fi
+
+echo "    Compile and document the following plugin sets:"
+for RELACS_PLUGIN in ${RELACS_PLUGINS_COMPILE}; do
     echo "        ${RELACS_PLUGIN}"
 done
 
 cat <<SUMMARY
 
 If you can read these lines ./configure finished sucessfully.
-Relacs should build and install smoothly. If it doesn't please
-open a bug describing your problem and configuration at
-http://sourceforge.net/tracker/?group_id=199846&atid=971134
+Relacs should build and install smoothly.
 
 Continue with .... \$ make
 Run a demo ....... \$ ./relacslocal -3

@@ -175,11 +175,15 @@ libcameraopencvcalibrationquality_la_include_HEADERS = $(HEADER_PATH)/opencvcali
 
 
 
-check_PROGRAMS = \
+check_PROGRAMS= 
+
+if RELACS_COND_OPENCV
+check_PROGRAMS += \
     linktest_libcameracameracontrol_la \
     linktest_libcameraopencvcameracalibration_la  \
     linktest_libcameraopencvstereocameracalibration_la \
     linktest_libcameraopencvcalibrationquality_la
+endif
 
 linktest_libcameracameracontrol_la_SOURCES = linktest.cc
 linktest_libcameracameracontrol_la_LDADD = libcameracameracontrol.la

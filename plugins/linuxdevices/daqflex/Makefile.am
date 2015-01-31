@@ -1,7 +1,14 @@
+SUBDIRS =
+
+if RELACS_COND_COMPILE_daqflex
+    SUBDIRS += src
+endif
+
 #if RELACS_EXAMPLES_COND
-#    EXAMPLES = examples
+#    SUBDIRS += examples
 #endif
-SUBDIRS = src $(EXAMPLES)
+
+
 
 daqflexcfgdir = $(pkgdatadir)/configs/daqflex
 dist_daqflexcfg_DATA = \

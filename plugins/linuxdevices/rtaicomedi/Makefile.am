@@ -1,4 +1,8 @@
-SUBDIRS = src module
+SUBDIRS =
+
+if RELACS_COND_COMPILE_rtaicomedi
+    SUBDIRS += src module
+endif
 
 rtaicomedicfgdir = $(pkgdatadir)/configs/rtaicomedi
 dist_rtaicomedicfg_DATA = \

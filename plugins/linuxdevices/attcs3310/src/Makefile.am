@@ -5,7 +5,7 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libattcs3310cs3310pp.la \
     libattcs3310cs3310dio.la
-if RELACS_COND_nieseries
+if RELACS_COND_COMPILE_nieseries
 pluginlib_LTLIBRARIES += \
     libattcs3310cs3310nidio.la \
     libattcs3310cs3310serialnidio.la
@@ -125,7 +125,7 @@ libattcs3310cs3310serialnidio_la_include_HEADERS = $(HEADER_PATH)/cs3310serialni
 check_PROGRAMS = \
     linktest_libattcs3310cs3310pp_la \
     linktest_libattcs3310cs3310dio_la
-if RELACS_COND_nieseries
+if RELACS_COND_COMPILE_nieseries
 check_PROGRAMS += \
     linktest_libattcs3310cs3310nidio_la \
     linktest_libattcs3310cs3310serialnidio_la
