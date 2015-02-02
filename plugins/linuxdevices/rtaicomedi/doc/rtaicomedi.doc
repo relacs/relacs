@@ -52,7 +52,7 @@ or from Shahbaz Youssefi's rtai clone on github:
 git clone https://github.com/ShabbyX/RTAI.git
 ln -sfn RTAI rtai
 \endcode
-\note Read the rtai/README.INSTALL file!
+\note Read the \c rtai/README.INSTALL and \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL file!
 -# Find out your CPU architecture:
 \code
 uname -m
@@ -92,7 +92,7 @@ apt-get -y install make gcc libncurses-dev zlib1g-dev
 -# There are (at least) two strategies for getting a good real-time kernel. The somewhat simpler approach
 that most likely gives a running kernel, but also might result in bad or not so good real-time performance
 is described here. Alternatively, I highly recommend to consider the approach described in 
-\c /usr/local/src/rtai/README.INSTALL . For this you need more time to set the right kernel options,
+\c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL . For this you need more time to set the right kernel options,
 but the kernel will compile much faster.
 -# So, be warned! Here is the beginners way to make a real-time kernel. Simply reuse your current kernel configuration:
 \code
@@ -110,6 +110,11 @@ make menuconfig
 \endcode
 In the kernel configuration dialog you should do the following settings:
   - General setup: set "Local version" to "-rtai" or make sure it is empty in case you are using \c make-kpkg
+    - Timers subsystem: 
+      - set "Timer tick handling" to "Periodic timer ticks" (no tickless system!)
+      - Timers subsystem: deselect "Old Idle dynticks config"
+      .
+    .
   - Enable loadable module support: 
     - Select "Enable module support"
     - You may deselect "Module versioning support" 
@@ -121,6 +126,11 @@ In the kernel configuration dialog you should do the following settings:
     - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
       check \c "help" to find out, which Processor family you have to select)
+    - Select "Supported processor vendors" to fit your CPU
+    - Disable "IBM Calgary IOMMU support"
+    - Set the "Maximum numbers of CPUs" to the number of cores you have in your machine (see /proc/cpuinfo)
+    - Disable "SMT (Hyperthreading) scheduler support"
+    - Disable "Multi-core scheduler support"
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
     - Disable “Use register arguments” - this option does not exist for newer kernels (version > 2.6.19)
     - Select "Interrupt pipeline"
@@ -129,13 +139,19 @@ In the kernel configuration dialog you should do the following settings:
     - Disable "Suspend to RAM and standby"
     - Disable "Hibernation (aka 'suspend to disk')"
     - Disable "Run-time PM core functionality"
-    - Disable "ACPI (Advanced Configuration and Power Interface) Support"
+    - Enable "ACPI (Advanced Configuration and Power Interface) Support"
+      - Disable everything execpt for:
+      - Select "Power Management Timer Suppport"
+      .
     - Disable "CPU Frequency scaling"
     - Disable "CPU idle PM support"
+    - Disable whatever else there is
     .
   - Device Drivers:
+    - Disable IOMMU Hardware Support
     - Staging drivers:
       - Deselect "Data acquisition support (comedi)"
+      .
     .
   .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
@@ -166,7 +182,7 @@ $ cd /boot
 $ update-initramfs -c -k 3.8.13-rtai
 \endcode
 -# On a Debian system there is an alternative to steps 5. - 8. for compiling a linux kernel. 
-   You get a nice \c .deb fil ewith the compiled kernel, that you can install also on other machines.
+   You get a nice \c .deb file with the compiled kernel, that you can install also on other machines.
    See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
    Do as root:
    -# Get the kernel-package
@@ -226,7 +242,7 @@ After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be 
 \section installnewlib Newlib library
 
 For dynamic clamp having math functions available in the kernel is quite handy. For this RTAI needs
-on a 64-bit system the math library from the newlib library as a replacement for the standrad \c libm.a .
+on a 64-bit system the math library from the newlib library as a replacement for the standard \c libm.a .
 As root:
 \code
 cd /usr/local/src
@@ -297,6 +313,8 @@ make
 make install
 \endcode
 Known issues:
+  - In case you get an error like: "-mpreferred-stack-boundary=3 is not between 4 and 12"
+    Read http://mail.rtai.org/pipermail/rtai/2014-October/026542.html
   - In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
   \code
 apt-get install gcc-multilib
@@ -371,7 +389,8 @@ yourself according to the following instructions:
 
 -# Login as root
 -# Remove all comedi modules:
-IFSORG="$IFS""
+\code
+IFSORG="$IFS"
 IFS=","
 for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ print $4}'); do
   modprobe -r $i
@@ -561,10 +580,9 @@ restart rsyslog
 \section rtailinks Links
 - http://www.comedi.org
 - http://www.rtai.org
+- http://wiki.linuxcnc.org/cgi-bin/wiki.pl?TroubleShooting
 - http://wiki.linuxcnc.org/cgi-bin/emcinfo.pl?Debian_Lenny_Compile_RTAI
-- http://www.captain.at/programming/kernel/
 - http://www.lara.unb.br/~phsantana/data/files/technotes/HowTo_RTAI_Linux.pdf
-- http://rt-fsm.googlecode.com/svn/trunk/INSTALL
 - http://www.cyberciti.biz/faq/howto-install-kernel-headers-package/
 .
 - Linux kernel crash dump: https://help.ubuntu.com/12.04/serverguide/kernel-crash-dump.html

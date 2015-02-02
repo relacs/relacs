@@ -1,4 +1,3 @@
-- Why is this msleep( 1 ) needed in the daq threads?
 - Acquire::stopWrite() should check whether the AO is running
 - Plot (used from ManualJAR) P.clear(); P.draw() do not always clear the plot!
 - Buzzing is not responsive: allow for multiple buzzes
@@ -41,8 +40,10 @@ Macros, flow control:
 Dynamic clamp:
 - See http://mail.rtai.org/pipermail/rtai/2013-December/026198.html for the
   -mpreferred-stack-boundary=3 issue
+- kernel boot parameter: libata.dma=0 disables all dma transfers
 - localmodconfig kernel make target might be very interesting for generating a rtai kernel:
   http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
+- autoconf script: check for presence of rtai-config and whether -r option is supported!
 - restart in dynclamp mode is not properly processed??? (check inputrangecheck)
 - DynClamAnalogInput improve error checking in readData()
 - Always create a new channel list! And only have a single AO and AI subdevice!
