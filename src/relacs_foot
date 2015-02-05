@@ -55,10 +55,10 @@ PLUGINRELATIVE=$(cd "$PLUGINRELATIVE"; pwd)
 
 # Find all directories we need to link plugins at runtime:
 dirlist=
-IFS="|"
+IFS=", "
 # 1) absolute pathes:
 if test "x${CONFFILE}" != x; then
-    for pattern in $(grep 'pluginpathes' < "${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/'); do
+    for pattern in $(grep 'pluginpathes' < "${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes[ \t]*:[ \t]*\[[ \t]*\(.*\)[ \t]*\]/\1/'); do
         # absolute path?
         if test "x${pattern:0:1}" = "/"; then
 	    dir=${pattern%/*}
@@ -80,10 +80,9 @@ while read dir ; do
     if test "x${dir}" = x; then
         continue
     fi
-#    echo "directory >$dir<"
+    # echo "directory >$dir<"
     RELACSPLUGINPATHES="${RELACSPLUGINPATHES}${dir}:"
 done < <(sed "s/|/\n/g" <<< ${dirlist} | sort -u)
-#echo "plugin pathes: >$RELACSPLUGINPATHES<"
 
 # set the library path:
 NEW_LD_LIBRARY_PATH=""

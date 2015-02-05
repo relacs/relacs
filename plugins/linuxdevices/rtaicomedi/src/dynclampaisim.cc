@@ -1,6 +1,6 @@
 /*
-  comedi/dynclamp.cc
-  Makes dynclamp devices a relacs plugin
+  dynclampaisim.cc
+  Implementation of AnalogInput simulating an analog input device supporting analog ouput.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -20,16 +20,41 @@
 */
 
 #include <relacs/relacsplugin.h>
-#include <relacs/rtaicomedi/dynclampanaloginput.h>
-#include <relacs/rtaicomedi/dynclampanalogoutput.h>
-#include <relacs/rtaicomedi/dynclampdigitalio.h>
-#include <relacs/rtaicomedi/dynclamptrigger.h>
+#include <relacs/rtaicomedi/dynclampaisim.h>
 
-namespace rtaicomedi {
+namespace relacs {
 
-  addAnalogInput( DynClampAnalogInput, rtaicomedi );
-  addAnalogOutput( DynClampAnalogOutput, rtaicomedi );
-  addDigitalIO( DynClampDigitalIO, rtaicomedi );
-  addTrigger( DynClampTrigger, rtaicomedi );
 
-};
+DynClampAISim::DynClampAISim( void )
+  : AISim()
+{
+}
+
+
+DynClampAISim::~DynClampAISim( void )
+{
+}
+
+
+int DynClampAISim::open( const string &device, const Options &opts )
+{
+  AISim::open( device, opts );
+  setDeviceName( "Dynamic Clamp AI Simulation" );
+  setInfo();
+  return 0;
+}
+
+
+int DynClampAISim::open( Device &device, const Options &opts )
+{
+  AISim::open( device, opts );
+  setDeviceName( "Dynamic Clamp AI Simulation" );
+  setInfo();
+  return 0;
+}
+
+
+addAnalogInput( DynClampAISim, rtaicomedi );
+
+}; /* namespace relacs */
+

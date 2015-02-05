@@ -1,8 +1,7 @@
-SUBDIRS =
-
 if RELACS_COND_COMPILE_nieseries
-    SUBDIRS += src
+    SD = src
 endif
+SUBDIRS = $(SD)
 
 EXTRA_DIST = doc/nieseries.doc
 
