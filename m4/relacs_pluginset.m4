@@ -27,13 +27,11 @@ AC_ARG_ENABLE(plugins-$1,
 RELACS_PLUGINSET_COMPILE="$RELACS_PLUGINSET_ENABLE"
 
 # is the external dependency fullfilled?
-RELACS_EXTERNAL_DEPENDENCY="$4"
-if test "x$RELACS_EXTERNAL_DEPENDENCY" = x; then
-    RELACS_EXTERNAL_DEPENDENCY=true
-fi
-if ! $RELACS_EXTERNAL_DEPENDENCY; then
-    RELACS_PLUGINSET_COMPILE="no"
-fi
+RELACS_EXTERNAL_TEST="$4"
+AS_IF( [ test "x$RELACS_EXTERNAL_TEST" = x ], [ RELACS_EXTERNAL_TEST=true ] )
+AS_IF( [ $RELACS_EXTERNAL_TEST ], 
+       [ AC_MSG_NOTICE([plugin set $1: external dependency fullfilled]) ], 
+       [ RELACS_PLUGINSET_COMPILE="no" ] )
 
 # check for missing dependencies on other plugin sets:
 if test "x$RELACS_PLUGINSET_ENABLE" = "xyes"; then

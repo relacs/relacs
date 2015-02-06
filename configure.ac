@@ -177,18 +177,18 @@ DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 ## Plugin sets
 #################################################
 
-RELACS_PLUGINSET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
+RELACS_PLUGINSET([comedi],[linuxdevices/comedi],[],[test x$RELACS_COMEDI != xno])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/examples/Makefile])
-RELACS_PLUGINSET([rtaicomedi],[linuxdevices/rtaicomedi],[comedi],[test "$RELACS_RTAI" != no])
+RELACS_PLUGINSET([rtaicomedi],[linuxdevices/rtaicomedi],[comedi],[test x$RELACS_RTAI != xno])
 AC_CONFIG_FILES([plugins/linuxdevices/rtaicomedi/module/Makefile])
-RELACS_PLUGINSET([daqflex],[linuxdevices/daqflex],[],[test "$RELACS_USB" != no])
+RELACS_PLUGINSET([daqflex],[linuxdevices/daqflex],[],[test x$RELACS_USB != xno])
 RELACS_NOPLUGINSET([nieseries],[linuxdevices/nieseries])
 RELACS_PLUGINSET([attcs3310],[linuxdevices/attcs3310])
 RELACS_PLUGINSET([misc],[linuxdevices/misc])
 AC_CONFIG_FILES([plugins/linuxdevices/misc/examples/Makefile])
 RELACS_PLUGINSET([base],[base])
 RELACS_PLUGINSET([calibration],[calibration])
-RELACS_NOPLUGINSET([camera],[camera],[],[test "$RELACS_OPENCV" != no])
+RELACS_NOPLUGINSET([camera],[camera],[],[test x$RELACS_OPENCV != xno])
 RELACS_PLUGINSET([ephys],[ephys])
 RELACS_PLUGINSET([acoustic],[acoustic])
 RELACS_PLUGINSET([auditory],[auditory],[ephys acoustic])

@@ -272,7 +272,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
   fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
   FifoFd = ::open( fifoname.str().c_str(), O_WRONLY );
   if ( FifoFd < 0 ) {
-    setErrorStr( "oping RTAI-FIFO " + fifoname + " failed" );
+    setErrorStr( "oping RTAI-FIFO " + fifoname.str() + " failed" );
     return -1;
   }
   FIFOSize = deviceIOC.fifoSize;
