@@ -11,7 +11,7 @@ GlobalEField & = & Amplitude \cdot \cos(2 \pi \varphi(t)) \end{array} \f]
 - Frequency: Frequency of sine wave in Hz
 */
 
-#ifdef __KERNEL__
+#if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
   /*! Name, by which this module is known inside Linux: */
 char *moduleName;

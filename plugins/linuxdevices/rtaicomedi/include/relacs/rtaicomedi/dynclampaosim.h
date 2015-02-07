@@ -22,6 +22,7 @@
 #ifndef _RELACS_DYNCLAMPAOSIM_H_
 #define _RELACS_DYNCLAMPAOSIM_H_ 1
 
+#include <relacs/rtaicomedi/moduledef.h>
 #include <relacs/aosim.h>
 
 namespace relacs {
@@ -50,6 +51,33 @@ public:
   virtual int open( const string &device, const Options &opts );
     /*! Open the analog output device simulation. */
   virtual int open( Device &device, const Options &opts );
+
+    /*! If the analog output device supports outputs that
+        are not physical output lines but rather writeable parameter,
+        like model parameter for a dynamic clamp modul,
+        then reimplement this function. 
+        Add for each such parameter a TraceSpec to \a traces.
+        \a deviceid is the id of the analog output device
+        that you should use for initializing the TraceSpec. */
+  virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
+
+    /*! Match trace names with model output trace names. */
+  virtual int matchTraces( vector< TraceSpec > &traces ) const;
+
+
+protected:
+
+    /*! Device driver specific tests on the settings in \a sigs
+        for each output signal.
+	Before this function is called, the validity of the settings in 
+	\a sigs was already tested by testReadData().
+	This function should test whether the settings are really supported
+	by the hardware.
+	If an error ocurred in any trace, the corresponding errorflags in the
+	OutData are set and a negative value is returned.
+        The channels in \a sigs are not sorted.
+        This function is called by testWrite(). */
+  virtual int testWriteDevice( OutList &sigs );
 
 };
 

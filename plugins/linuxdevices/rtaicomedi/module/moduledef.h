@@ -5,10 +5,6 @@
 
 #include <linux/ioctl.h>
 
-#ifdef __KERNEL__
-#include <linux/comedilib.h>
-#endif
-
 
 // *** KERNEL LOGGING MODE ***
 
@@ -116,11 +112,6 @@ struct chanlistIOCT {
   struct converterT conversionlist[MAXCHANLIST];
 };
 
-struct comediCmdIOCT {
-  unsigned int subdevID;
-  comedi_cmd cmd;
-};
-
 struct syncCmdIOCT {
   unsigned int subdevID;
   unsigned int frequency;
@@ -177,41 +168,40 @@ struct traceChannelIOCT {
 // control devices:
 
 #define IOC_GET_SUBDEV_ID       _IOR(RTMODULE_MAJOR,  1, int)
-#define IOC_OPEN_SUBDEV         _IOWR(RTMODULE_MAJOR,  2, int)
+#define IOC_OPEN_SUBDEV         _IOWR(RTMODULE_MAJOR, 2, int)
 #define IOC_CHANLIST            _IOW(RTMODULE_MAJOR,  3, int)
-#define IOC_COMEDI_CMD          _IOW(RTMODULE_MAJOR,  4, int)
-#define IOC_SYNC_CMD            _IOW(RTMODULE_MAJOR,  5, int)
-#define IOC_START_SUBDEV        _IOW(RTMODULE_MAJOR,  6, int)
-#define IOC_CHK_RUNNING         _IOWR(RTMODULE_MAJOR, 7, int)
-#define IOC_REQ_READ            _IOW(RTMODULE_MAJOR,  8, int)
-#define IOC_REQ_WRITE           _IOW(RTMODULE_MAJOR,  9, int)
-#define IOC_REQ_CLOSE           _IOW(RTMODULE_MAJOR, 10, int)
-#define IOC_STOP_SUBDEV         _IOW(RTMODULE_MAJOR, 11, int)
-#define IOC_RELEASE_SUBDEV      _IOW(RTMODULE_MAJOR, 12, int)
+#define IOC_SYNC_CMD            _IOW(RTMODULE_MAJOR,  4, int)
+#define IOC_START_SUBDEV        _IOW(RTMODULE_MAJOR,  5, int)
+#define IOC_CHK_RUNNING         _IOWR(RTMODULE_MAJOR, 6, int)
+#define IOC_REQ_READ            _IOW(RTMODULE_MAJOR,  7, int)
+#define IOC_REQ_WRITE           _IOW(RTMODULE_MAJOR,  8, int)
+#define IOC_REQ_CLOSE           _IOW(RTMODULE_MAJOR,  9, int)
+#define IOC_STOP_SUBDEV         _IOW(RTMODULE_MAJOR, 10, int)
+#define IOC_RELEASE_SUBDEV      _IOW(RTMODULE_MAJOR, 11, int)
 
-#define IOC_DIO_CMD             _IOWR(RTMODULE_MAJOR, 13 ,int)
-#define IOC_SET_TRIGGER         _IOW(RTMODULE_MAJOR, 14, int)
-#define IOC_UNSET_TRIGGER       _IOW(RTMODULE_MAJOR, 15, int)
+#define IOC_DIO_CMD             _IOWR(RTMODULE_MAJOR, 12 ,int)
+#define IOC_SET_TRIGGER         _IOW(RTMODULE_MAJOR, 13, int)
+#define IOC_UNSET_TRIGGER       _IOW(RTMODULE_MAJOR, 14, int)
 
 // exchange info:
 
-#define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 16, int)
-#define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  17, int)
-#define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  18, int)
-#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  19, int)
-#define IOC_GETLOOPAVG          _IOR(RTMODULE_MAJOR,  20, int)
-#define IOC_GETLOOPSQAVG        _IOR(RTMODULE_MAJOR,  21, int)
-#define IOC_GETLOOPMIN          _IOR(RTMODULE_MAJOR,  22, int)
-#define IOC_GETLOOPMAX          _IOR(RTMODULE_MAJOR,  23, int)
-#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  24, int)
+#define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 15, int)
+#define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  16, int)
+#define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  17, int)
+#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  18, int)
+#define IOC_GETLOOPAVG          _IOR(RTMODULE_MAJOR,  19, int)
+#define IOC_GETLOOPSQAVG        _IOR(RTMODULE_MAJOR,  20, int)
+#define IOC_GETLOOPMIN          _IOR(RTMODULE_MAJOR,  21, int)
+#define IOC_GETLOOPMAX          _IOR(RTMODULE_MAJOR,  22, int)
+#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  23, int)
 
 // lookuptables:
-#define IOC_SET_LOOKUP_K        _IOW(RTMODULE_MAJOR,  25, int)
-#define IOC_SET_LOOKUP_N        _IOW(RTMODULE_MAJOR,  26, int)
-#define IOC_SET_LOOKUP_X        _IOW(RTMODULE_MAJOR,  27, int)
-#define IOC_SET_LOOKUP_Y        _IOW(RTMODULE_MAJOR,  28, int)
+#define IOC_SET_LOOKUP_K        _IOW(RTMODULE_MAJOR,  24, int)
+#define IOC_SET_LOOKUP_N        _IOW(RTMODULE_MAJOR,  25, int)
+#define IOC_SET_LOOKUP_X        _IOW(RTMODULE_MAJOR,  26, int)
+#define IOC_SET_LOOKUP_Y        _IOW(RTMODULE_MAJOR,  27, int)
 
-#define RTMODULE_IOC_MAXNR 29
+#define RTMODULE_IOC_MAXNR 28
 
 
 // *** KERNEL LOGGING STYLE ***

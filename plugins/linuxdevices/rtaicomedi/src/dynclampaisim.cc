@@ -20,6 +20,7 @@
 */
 
 #include <relacs/relacsplugin.h>
+#include <relacs/rtaicomedi/dynclampmodelsim.h>
 #include <relacs/rtaicomedi/dynclampaisim.h>
 
 namespace relacs {
@@ -51,6 +52,60 @@ int DynClampAISim::open( Device &device, const Options &opts )
   setDeviceName( "Dynamic Clamp AI Simulation" );
   setInfo();
   return 0;
+}
+
+
+int DynClampAISim::testReadDevice( InList &traces )
+{
+  QMutexLocker locker( mutex() );
+
+  // start source:
+  if ( traces[0].startSource() < 0 || traces[0].startSource() >= 5 ) {
+    traces.setStartSource( 0 );
+    traces.addError( DaqError::InvalidStartSource );
+  }
+
+  // channel configuration:
+  for ( int k=0; k<traces.size(); k++ ) {
+    traces[k].delError( DaqError::InvalidChannel );
+    // check channel number:
+    if ( traces[k].channel() < 0 ) {
+      traces[k].addError( DaqError::InvalidChannel );
+      traces[k].setChannel( 0 );
+    }
+    else if ( traces[k].channel() >= channels() && traces[k].channel() < PARAM_CHAN_OFFSET ) {
+      traces[k].addError( DaqError::InvalidChannel );
+      traces[k].setChannel( channels()-1 );
+    }
+  }
+
+  for( int k = 0; k < traces.size(); k++ ) {
+
+    // check delays:
+    if ( traces[k].delay() > 0.0 ) {
+      traces[k].addError( DaqError::InvalidDelay );
+      traces[k].addErrorStr( "delays are not supported for analog input!" );
+      traces[k].setDelay( 0.0 );
+    }
+
+  }
+
+  if ( traces.failed() )
+    return -1;
+
+  return 0;
+}
+
+
+void DynClampAISim::addTraces( vector< TraceSpec > &traces, int deviceid ) const
+{
+  dynclampmodelsim::addAITraces( traces, deviceid );
+}
+
+
+int DynClampAISim::matchTraces( InList &traces ) const
+{
+  return dynclampmodelsim::matchAITraces( traces );
 }
 
 

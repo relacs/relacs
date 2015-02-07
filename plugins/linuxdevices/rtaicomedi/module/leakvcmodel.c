@@ -14,7 +14,7 @@ Dynamic clamp model for a passive ionic current and a voltage clamp:
 */
 
 
-#ifdef __KERNEL__
+#if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
   /*! Name, by which this module is known inside Linux: */
 char *moduleName;

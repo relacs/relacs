@@ -22,6 +22,7 @@
 #ifndef _RELACS_DYNCLAMPAISIM_H_
 #define _RELACS_DYNCLAMPAISIM_H_ 1
 
+#include <relacs/rtaicomedi/moduledef.h>
 #include <relacs/aisim.h>
 
 namespace relacs {
@@ -55,6 +56,33 @@ public:
   virtual int open( const string &device, const Options &opts );
     /*! Open the analog input device simulation. */
   virtual int open( Device &device, const Options &opts );
+
+    /*! If the analog input device supports inputs that
+        are not physical input lines but rather readable internal variables,
+        like model outputs of a dynamic clamp modul,
+        then reimplement this function. 
+        Add for each such variable a TraceSpec to \a traces.
+        \a deviceid is the id of the analog output device
+        that you should use for initializing the TraceSpec. */
+  virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
+
+    /*! Match trace names with model trace names. */
+  virtual int matchTraces( InList &traces ) const;
+
+
+protected:
+
+    /*! Device driver specific tests on the settings in \a traces
+        for each input signal.
+	Before this function is called, the validity of the settings in 
+	\a traces was already tested by testReadData().
+	This function should test whether the settings are really supported
+	by the hardware.
+	If an error ocurred in any trace, the corresponding errorflags in the
+	InData are set and a negative value is returned.
+        The channels in \a traces are not sorted.
+        This function is called by testRead(). */
+  virtual int testReadDevice( InList &traces );
 
 };
 

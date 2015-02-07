@@ -44,6 +44,7 @@ Dynamic clamp:
 - localmodconfig kernel make target might be very interesting for generating a rtai kernel:
   http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
 - autoconf script: check for presence of rtai-config and whether -r option is supported!
+- matchTraces should set error string of device, and this should be used by relacswidget
 - restart in dynclamp mode is not properly processed??? (check inputrangecheck)
 - DynClamAnalogInput improve error checking in readData()
 - Always create a new channel list! And only have a single AO and AI subdevice!

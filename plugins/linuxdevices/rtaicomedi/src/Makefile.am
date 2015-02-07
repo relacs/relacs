@@ -16,7 +16,6 @@ libdynclampsim_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
     -I$(srcdir)/.. \
-    $(RTAI_CPPFLAGS) \
     $(QT4_CPPFLAGS)
 
 libdynclampsim_la_LDFLAGS = \
@@ -33,6 +32,7 @@ libdynclampsim_la_LIBADD = \
     $(QT4_LIBS) $(GSL_LIBS)
 
 libdynclampsim_la_SOURCES = \
+    dynclampmodelsim.cc \
     dynclampaisim.cc \
     dynclampaosim.cc
 
@@ -40,6 +40,7 @@ libdynclampsim_la_includedir = $(pkgincludedir)/rtaicomedi
 
 libdynclampsim_la_include_HEADERS = \
     $(HEADER_PATH)/moduledef.h \
+    $(HEADER_PATH)/dynclampmodelsim.h \
     $(HEADER_PATH)/dynclampaisim.h \
     $(HEADER_PATH)/dynclampaosim.h
 

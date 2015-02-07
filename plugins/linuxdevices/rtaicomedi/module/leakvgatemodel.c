@@ -17,7 +17,7 @@ vgatetau \cdot \frac{dx}{dt} & = & -x + \frac{1}{1+\exp(-vgateslope \cdot (V-vga
 - vgateslope: slope factor of the steady-state activation function in 1/mV
 */
 
-#ifdef __KERNEL__
+#if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
   /*! Name, by which this module is known inside Linux: */
 char *moduleName;
