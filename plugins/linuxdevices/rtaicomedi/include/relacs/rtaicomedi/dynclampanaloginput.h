@@ -139,7 +139,8 @@ public:
     /*! True if analog input is running. */
   virtual bool running( void ) const;
 
-    /*! Check for every analog input and input device in \a ais and \a aos
+    /*! Check for every analog input and analog output device 
+        in \a ais and \a aos, respectively,
         whether it can be simultaneously started by startRead()
 	from this device. */
   virtual void take( vector< AnalogInput* > &ais,

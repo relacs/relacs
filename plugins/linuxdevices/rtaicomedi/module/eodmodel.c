@@ -14,7 +14,7 @@ GlobalEField & = & Amplitude \cdot \cos(2 \pi \varphi(t)) \end{array} \f]
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
   /*! Name, by which this module is known inside Linux: */
-char *moduleName;
+const char *moduleName;
 
   /*! The period length of the realtime periodic task in seconds. */
 float loopInterval;
@@ -25,8 +25,8 @@ float loopRate;
 #define INPUT_N 1
   /*! The \a inputNames are used to match the \a input variables with
       analog input traces in Relacs. */
-char *inputNames[INPUT_N] = { "EOD" };
-char *inputUnits[INPUT_N] = { "mV" };
+const char *inputNames[INPUT_N] = { "EOD" };
+const char *inputUnits[INPUT_N] = { "mV" };
   /*! The \a inputChannels and \a inputDevices are set automatically. */
 int inputChannels[INPUT_N];
 int inputDevices[INPUT_N];
@@ -35,22 +35,22 @@ float input[INPUT_N] = { 0.0 };
 
   /*! Analog output that is written to the DAQ board. */
 #define OUTPUT_N 1
-char *outputNames[OUTPUT_N] = { "GlobalEField" };
-char *outputUnits[OUTPUT_N] = { "V" };
+const char *outputNames[OUTPUT_N] = { "GlobalEField" };
+const char *outputUnits[OUTPUT_N] = { "V" };
 int outputChannels[OUTPUT_N];
 int outputDevices[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
 #define PARAMINPUT_N 1
-char *paramInputNames[PARAMINPUT_N] = { "EODSignal" };
-char *paramInputUnits[PARAMINPUT_N] = { "V" };
+const char *paramInputNames[PARAMINPUT_N] = { "EODSignal" };
+const char *paramInputUnits[PARAMINPUT_N] = { "V" };
 float paramInput[PARAMINPUT_N] = { 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
 #define PARAMOUTPUT_N 2
-char *paramOutputNames[PARAMOUTPUT_N] = { "Amplitude", "Frequency" };
-char *paramOutputUnits[PARAMOUTPUT_N] = { "V", "Hz" };
+const char *paramOutputNames[PARAMOUTPUT_N] = { "Amplitude", "Frequency" };
+const char *paramOutputUnits[PARAMOUTPUT_N] = { "V", "Hz" };
 float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0 };
 
   /*! Variables used by the model. */
@@ -64,7 +64,9 @@ void initModel( void )
 
 void computeModel( void )
 {
+#ifdef ENABLE_LOOKUPTABLES
   int k;
+#endif
 
   // phase:
   phase += paramOutput[1] * loopInterval;

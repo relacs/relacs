@@ -39,9 +39,12 @@ namespace relacs {
 
 namespace dynclampmodelsim {
 
-  void initModel( void );
+  void generateLookupTables( void );
 
-  void computeModel( void );
+  void initialize( float stepsize );
+
+  void computeModel( InList &data,
+		     const vector< int > &aochannels, vector< float > &aovalues );
 
   void addAITraces( vector< TraceSpec > &traces, int deviceid );
   void addAOTraces( vector< TraceSpec > &traces, int deviceid );

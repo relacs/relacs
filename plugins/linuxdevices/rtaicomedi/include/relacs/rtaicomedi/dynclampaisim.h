@@ -57,6 +57,13 @@ public:
     /*! Open the analog input device simulation. */
   virtual int open( Device &device, const Options &opts );
 
+    /*! Initialize dynamic clamp model and prepare analog input of the input traces \a traces. */
+  virtual int prepareRead( InList &traces );
+
+    /*! Compute the dynamic clamp model. */
+  virtual void model( InList &data,
+		      const vector< int > &aochannels, vector< float > &aovalues );
+
     /*! If the analog input device supports inputs that
         are not physical input lines but rather readable internal variables,
         like model outputs of a dynamic clamp modul,

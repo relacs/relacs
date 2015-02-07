@@ -34,6 +34,8 @@ Model::Model( const string &name, const string &pluginset,
     DataMutex( 0 ),
     DataWait( 0 ),
     Signals( 0 ),
+    SignalChannels( 0 ),
+    SignalValues( 0 ),
     SignalMutex(),
     InterruptLock()
 {
@@ -88,10 +90,18 @@ double Model::load( void ) const
 void Model::push( int trace, float val )
 {
   if ( trace == 0 ) {
+    double t = Data[0].currentTime();
+    if ( AIDevice != 0 ) {
+      // compute dynamic clamp model:
+      for ( unsigned int k=0; k<SignalValues.size(); k++ )
+	SignalValues[k] = signal( t, k );
+      AIDevice->model( Data, SignalChannels, SignalValues );
+      for ( unsigned int k=0; k<SignalValues.size(); k++ )
+	Signals[k].ModelValue = SignalValues[k];
+    }
     PushCount++;
     if ( PushCount >= MaxPush ) {
       PushCount = 0;
-      double t = Data[0].currentTime();
       double dt = t - elapsed();
       double l = 1.0 - dt / MaxPushTime;
       AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
@@ -177,7 +187,7 @@ double Model::signal( double t, int trace ) const
       inx = Signals[trace].Buffer.size()-1;
     Signals[trace].LastSignal = Signals[trace].Buffer[inx];
   }
-  return Signals[trace].LastSignal;
+  return Signals[trace].LastSignal + Signals[trace].ModelValue;
 }
 
 
@@ -196,19 +206,23 @@ bool Model::isRunning( void ) const
 }
 
 
-void Model::start( InList &data, QReadWriteLock *datamutex, QWaitCondition *datawait )
+void Model::start( InList &data, AnalogInput *aidevice,
+		   QReadWriteLock *datamutex, QWaitCondition *datawait )
 {
   Data.clear();
   for ( int k=0; k<data.size(); k++ )
     Data.add( &data[k] );
   DataMutex = datamutex;
   DataWait = datawait;
+  AIDevice = aidevice;
   InterruptModel = false;
   AveragedLoad = 0;
   MaxPush = deltat( 0 ) > 0.0 ? (int)::ceil( 0.01 / deltat( 0 ) ) : 100;
   MaxPushTime = MaxPush * deltat( 0 );
   PushCount = 0;
   Signals.clear();
+  SignalChannels.clear();
+  SignalValues.clear();
   SimTime.start();
   Thread->start( QThread::HighPriority );
 }
@@ -266,6 +280,8 @@ double Model::add( OutData &signal, bool wait )
   if ( signal.trace() >= (int)Signals.size() ) {
     // add new signals:
     Signals.resize( signal.trace()+1 );
+    SignalChannels.resize( signal.trace()+1 );
+    SignalValues.resize( signal.trace()+1 );
   }
 
   // trace still busy?
@@ -275,6 +291,8 @@ double Model::add( OutData &signal, bool wait )
     return -1.0;
   }
 
+  SignalChannels[signal.trace()] = signal.channel();
+  SignalValues[signal.trace()] = 0.0;
   Signals[signal.trace()].Buffer.clear();
   process( signal, Signals[signal.trace()].Buffer );
   Signals[signal.trace()].Finished = ! wait;
@@ -311,6 +329,8 @@ double Model::add( OutList &sigs, bool wait )
     if ( sigs[k].trace() >= (int)Signals.size() ) {
       // add new signals:
       Signals.resize( sigs[k].trace()+1 );
+      SignalChannels.resize( sigs[k].trace()+1 );
+      SignalValues.resize( sigs[k].trace()+1 );
     }
   }
 
@@ -327,6 +347,8 @@ double Model::add( OutList &sigs, bool wait )
 
   // transer signals to buffer:
   for ( int k=0; k<sigs.size(); k++ ) {
+    SignalChannels[sigs[k].trace()] = sigs[k].channel();
+    SignalValues[sigs[k].trace()] = 0.0;
     Signals[sigs[k].trace()].Buffer.clear();
     process( sigs[k], Signals[sigs[k].trace()].Buffer );
     Signals[sigs[k].trace()].Finished = ! wait;

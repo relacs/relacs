@@ -712,6 +712,7 @@ void RELACSWidget::setupInTraces( void )
 
     InData id;
     id.setIdent( traceid );
+    id.setTrace( k );
     id.setSampleRate( number( "inputsamplerate", 1000.0 ) );
     id.setStartSource( 0 );
     id.setUnipolar( boolean( "inputunipolar", false ) );

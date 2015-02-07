@@ -173,6 +173,11 @@ public:
         This function is called periodically after one or several calls to readData(). */
   virtual int convertData( void ) = 0;
 
+    /*! Compute a dynamic clamp model.
+        An implementation is only needed for an analog input simulation. */
+  virtual void model( InList &data,
+		      const vector< int > &aochannels, vector< float > &aovalues );
+
     /*! Stop any running ananlog input activity,
         but preserve all so far read in data.
 	The next call to readData() will return the data.

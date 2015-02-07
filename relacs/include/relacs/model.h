@@ -33,6 +33,7 @@
 #include <QDateTime>
 #include <relacs/inlist.h>
 #include <relacs/outdata.h>
+#include <relacs/analoginput.h>
 #include <relacs/relacsplugin.h>
 using namespace std;
 
@@ -166,7 +167,8 @@ private:
 
     /*! Clear the content of the data buffers and start the simulation.
         \sa clearData(), main(), restart() */
-  void start( InList &data, QReadWriteLock *datamutex, QWaitCondition *datawait );
+  void start( InList &data, AnalogInput *aidevice,
+	      QReadWriteLock *datamutex, QWaitCondition *datawait );
     /*! Restart a previously stopped simulation.
         \sa stop(), notify(), start() */
   void restart( void );
@@ -195,6 +197,8 @@ private:
 
   ModelThread *Thread;
 
+  AnalogInput *AIDevice;
+
   int MaxPush;
   double MaxPushTime;
   int PushCount;
@@ -207,17 +211,28 @@ private:
   QWaitCondition *DataWait;
 
   struct OutTrace {
-    OutTrace( void ) : Onset( 0.0 ), Offset( 0.0 ), LastSignal( 0.0 ), Finished( false ) {};
+    OutTrace( void ) :
+    Onset( 0.0 ), Offset( 0.0 ), LastSignal( 0.0 ), ModelValue( 0.0 ), Finished( false )
+    {};
     OutTrace( double t, const OutData &signal ) : 
-      Onset( t ), Offset( t + signal.totalDuration() - signal.delay() ), Buffer( signal ), LastSignal( 0.0 ), Finished( false ) {};
-    OutTrace( const OutTrace &signal ) : Onset( signal.Onset ), Offset( signal.Offset ), Buffer( signal.Buffer ), LastSignal( signal.LastSignal ), Finished( signal.Finished ) {};
+    Onset( t ), Offset( t + signal.totalDuration() - signal.delay() ),
+      Buffer( signal ), LastSignal( 0.0 ), ModelValue( 0.0 ), Finished( false )
+    {};
+    OutTrace( const OutTrace &signal ) :
+    Onset( signal.Onset ), Offset( signal.Offset ),
+      Buffer( signal.Buffer ), LastSignal( signal.LastSignal ),
+      ModelValue( signal.ModelValue ), Finished( signal.Finished )
+    {};
     double Onset;
     double Offset;
     OutData Buffer;
     mutable double LastSignal;
+    double ModelValue;
     bool Finished;
   };
   deque< OutTrace > Signals;
+  vector< int > SignalChannels;
+  vector< float > SignalValues;
   QMutex SignalMutex;
   QSemaphore SignalsWait;
 

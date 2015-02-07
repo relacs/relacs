@@ -40,6 +40,7 @@ DynClampAOSim::~DynClampAOSim( void )
 int DynClampAOSim::open( const string &device, const Options &opts )
 {
   AOSim::open( device, opts );
+  dynclampmodelsim::generateLookupTables();
   setDeviceName( "Dynamic Clamp AO Simulation" );
   setInfo();
   return 0;
@@ -49,6 +50,7 @@ int DynClampAOSim::open( const string &device, const Options &opts )
 int DynClampAOSim::open( Device &device, const Options &opts )
 {
   AOSim::open( device, opts );
+  dynclampmodelsim::generateLookupTables();
   setDeviceName( "Dynamic Clamp AO Simulation" );
   setInfo();
   return 0;
@@ -134,6 +136,12 @@ int DynClampAOSim::testWriteDevice( OutList &sigs )
     return -1;
 
   return 0;
+}
+
+
+bool DynClampAOSim::useAIRate( void ) const
+{
+  return true;
 }
 
 

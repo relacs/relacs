@@ -85,6 +85,12 @@ int AnalogInput::open( Device &device, const Options &opts )
 }
 
 
+void AnalogInput::model( InList &data,
+			 const vector< int > &aochannels, vector< float > &aovalues )
+{
+}
+
+
 void AnalogInput::take( const vector< AnalogInput* > &ais,
 			const vector< AnalogOutput* > &aos,
 			vector< int > &aiinx, vector< int > &aoinx,

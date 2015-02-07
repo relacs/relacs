@@ -29,11 +29,16 @@ namespace relacs {
 
 namespace dynclampmodelsim {
 
+vector<int> modelaitraces;
+vector<int> modelaotraces;
+
+#ifdef ENABLE_COMPUTATION
 #ifdef ENABLE_LOOKUPTABLES
 int lookupinx = 0;
 int lookupn[MAXLOOKUPTABLES];
 float* lookupx[MAXLOOKUPTABLES];
 float* lookupy[MAXLOOKUPTABLES];
+#endif
 #endif
 
 #define DYNCLAMPMODEL
@@ -41,6 +46,57 @@ float* lookupy[MAXLOOKUPTABLES];
 #undef DYNCLAMPMODEL
 
 #include "../module/model.c"
+
+void generateLookupTables( void )
+{
+#ifdef ENABLE_COMPUTATION
+#ifdef ENABLE_LOOKUPTABLES
+  for ( int k=0; ; k++ ) {
+    lookupx[k] = 0;
+    lookupy[k] = 0;
+    lookupn[k] = 0;
+    if ( generateLookupTable( k, &lookupx[k], &lookupy[k], &lookupn[k] ) < 0 ) 
+      break;
+  }
+#endif
+#endif
+}
+
+
+void initialize( float stepsize )
+{
+  loopInterval = stepsize;
+  loopRate = 1.0/loopRate;
+  initModel();
+}
+
+
+void computeModel( InList &data,
+		   const vector< int > &aochannels, vector< float > &aovalues )
+{
+  for ( int k=0; k<data.size(); k++ ) {
+    int inx = modelaitraces[data[k].trace()];
+    if ( inx >= 0  )
+      input[ inx ] = data[k].back();
+  }
+  for ( unsigned int k=0; k<aochannels.size(); k++ ) {
+    if ( aochannels[k] >= PARAM_CHAN_OFFSET )
+      paramOutput[ aochannels[k]-PARAM_CHAN_OFFSET ] = aovalues[k];      
+  }
+
+  computeModel();
+
+  for ( int k=0; k<data.size(); k++ ) {
+    if ( data[k].channel() >= PARAM_CHAN_OFFSET )
+      data[k].push( paramInput[ data[k].channel()-PARAM_CHAN_OFFSET ] );
+  }
+  for ( unsigned int k=0; k<aochannels.size(); k++ ) {
+    if ( aochannels[k] < PARAM_CHAN_OFFSET )
+      aovalues[k] = output[ modelaotraces[ k ] ];
+    else
+      aovalues[k] = 0.0;
+  }
+}
 
 
 void addAITraces( vector< TraceSpec > &traces, int deviceid )
@@ -68,12 +124,17 @@ int matchAITraces( InList &traces )
   for ( int k=0; k<traces.size(); k++ )
     tracefound[k] = false;
 
+  modelaitraces.resize( traces.size() );
+  for ( unsigned int k=0; k<modelaitraces.size(); k++ )
+    modelaitraces[k] = -1;
+
   string unknowntraces = "";
   for ( int j=0; j<INPUT_N; j++ ) {
     bool notfound = true;
     for ( int k=0; k<traces.size(); k++ ) {
       if ( traces[k].channel() < PARAM_CHAN_OFFSET && traces[k].ident() == inputNames[j] ) {
 	tracefound[k] = true;
+	modelaitraces[traces[k].trace()] = j;
 	if ( traces[k].unit() != inputUnits[j] )
 	  traces[k].addErrorStr( "model input trace " + traces[k].ident() + " requires as unit '" + inputUnits[j] + "', not '" + traces[k].unit() + "'" );
 	notfound = false;
@@ -113,6 +174,10 @@ int matchAITraces( InList &traces )
 
 int matchAOTraces( vector< TraceSpec > &traces )
 {
+  modelaotraces.resize( traces.size() );
+  for ( unsigned int k=0; k<modelaotraces.size(); k++ )
+    modelaotraces[k] = -1;
+
   bool failed = false;
   string unknowntraces = "";
   int foundtraces = 0;
@@ -120,6 +185,7 @@ int matchAOTraces( vector< TraceSpec > &traces )
     bool notfound = true;
     for ( unsigned int k=0; k<traces.size(); k++ ) {
       if ( traces[k].channel() < PARAM_CHAN_OFFSET && traces[k].traceName() == outputNames[j] ) {
+	modelaotraces[traces[k].trace()] = j;
 	if ( traces[k].unit() != outputUnits[j] ) {
 	  failed = true;
 	  // traces[k].addErrorStr( "model output trace " + traces[k].traceName() + " requires as unit '" + outputUnits[j] + "', not '" + traces[k].unit() + "'" );

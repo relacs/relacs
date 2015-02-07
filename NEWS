@@ -1,5 +1,11 @@
 Version 0.9.8
 
+February, 2015
+  Added dynamic clamp support to simulation mode.
+
+December, 2014
+  Added widget for configuring analog input traces.
+
 June, 2014
   Added audio monitor via portaudio.
 

@@ -97,6 +97,20 @@ int DynClampAISim::testReadDevice( InList &traces )
 }
 
 
+int DynClampAISim::prepareRead( InList &traces )
+{
+  dynclampmodelsim::initialize( traces[0].stepsize() );
+  return AISim::prepareRead( traces );
+}
+
+
+void DynClampAISim::model( InList &data,
+			   const vector< int > &aochannels, vector< float > &aovalues )
+{
+  dynclampmodelsim::computeModel( data, aochannels, aovalues );
+}
+
+
 void DynClampAISim::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 {
   dynclampmodelsim::addAITraces( traces, deviceid );

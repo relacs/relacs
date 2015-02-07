@@ -56,7 +56,7 @@ float paramInput[PARAMINPUT_N] = { 0.0, 0.0 };
   /*! Parameter that are read by the model and are written to the model. */
 #define PARAMOUTPUT_N 7
 const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "gvgate", "Evgate", "vgatetau", "vgatevmid", "vgateslope" };
-const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "nS", "mV", "ms", "mV", "1/mV" };
+const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "nS", "mV", "ms", "mV", "/mV" };
 float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0 };
 
   /*! Variables used by the model. */
@@ -90,8 +90,10 @@ void initModel( void )
 
 void computeModel( void )
 {
+#ifdef ENABLE_LOOKUPTABLES
   float x;
   int k;
+#endif
 
   // leak:
   paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);

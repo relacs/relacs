@@ -113,6 +113,22 @@ int Simulator::read( InList &data )
     }
   }
 
+  // check model traces:
+  if ( AI.size() > 0 && AI[0].AI->matchTraces( data ) < 0 ) {
+    if ( ! data.failed() )
+      data.addErrorStr( "unable to match model input traces" );
+    success = false;
+  }
+  QWriteLocker writelocker( &WriteMutex );
+  if ( AO.size() > 0 && AO[0].AO->matchTraces( OutTraces ) < 0 ) {
+    /*
+    if ( ! OutTraces.failed() )
+      OutTraces.addErrorStr( "unable to match model output traces" );
+    */
+    data.addErrorStr( "unable to match model output traces" );
+    success = false;
+  }
+
   // priority, busy:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     // multiple priorities?
@@ -160,10 +176,16 @@ int Simulator::read( InList &data )
     return -1;
 
   // prepare reading from daq boards:
+  AnalogInput *aidevice = 0;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( AI[i].Traces.size() > 0 &&
-	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
-      success = false;
+    if ( AI[i].Traces.size() > 0 ) {
+      if ( AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
+	success = false;
+      else {
+	if ( aidevice == 0 )
+	  aidevice = AI[i].AI;
+      }
+    }
   }
 
   // error?
@@ -216,7 +238,7 @@ int Simulator::read( InList &data )
   LastWrite = -1.0;
   SyncMode = AISync;
 
-  Sim->start( data, &ReadMutex, &ReadWait );
+  Sim->start( data, aidevice, &ReadMutex, &ReadWait );
 
   return 0;
 }

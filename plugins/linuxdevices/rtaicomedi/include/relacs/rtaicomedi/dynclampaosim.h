@@ -52,6 +52,10 @@ public:
     /*! Open the analog output device simulation. */
   virtual int open( Device &device, const Options &opts );
 
+    /*! Returns \c true to indicate that the analog output is required to have the
+        same sampling rate as the analog input returned by getAISyncDevice(). */
+  virtual bool useAIRate( void ) const;
+
     /*! If the analog output device supports outputs that
         are not physical output lines but rather writeable parameter,
         like model parameter for a dynamic clamp modul,
