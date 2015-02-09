@@ -984,11 +984,27 @@ private:
     /*! Dummy trace. */
   static const TraceSpec DummyTrace;
 
-  string WarningStr;
-  double WarningTimeout;
-  string InfoStr;
-  double InfoTimeout;
   Options Dummy;
+
+};
+
+
+class RelacsPluginEvent : public QEvent
+{
+
+public:
+
+ RelacsPluginEvent( int type, const string &text, double timeout=0.0 )
+   : QEvent( QEvent::Type( QEvent::User+type ) ), Text( text ), TimeOut( timeout ) {};
+
+  string text( void ) const { return Text; };
+  double timeOut( void ) const { return TimeOut; };
+
+
+private:
+
+  string Text;
+  double TimeOut;
 
 };
 

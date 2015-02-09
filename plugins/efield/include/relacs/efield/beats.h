@@ -37,9 +37,9 @@ namespace efield {
 
 /*!
 \class Beats
-\brief [RePro]   Play EOD mimicks with optional chirps from a range of automatically set difference frequencies and amplitudes.
+\brief [RePro] Play EOD mimicks with optional chirps from a range of automatically set difference frequencies and amplitudes.
 \author Jan Benda
-\version 2.2 (Jan 26, 2014)
+\version 2.3 (Feb 9, 2015)
 \par Options
 - \c Stimulation
     - \c duration=10seconds: Signal duration (\c number)
@@ -64,6 +64,11 @@ namespace efield {
     - \c before=1seconds: Time before stimulation to be analyzed (\c number)
     - \c after=1seconds: Time after stimulation to be analyzed (\c number)
     - \c averagetime=1seconds: Time for computing EOD frequency (\c number)
+    - \c usepsd=true: Use power spectrum to measure EOD frequency (\c boolean)
+    - \c mineodfreq=100Hz: Minimum expected EOD frequency (\c number)
+    - \c maxeodfreq=2000Hz: Maximum expected EOD frequency (\c number)
+    - \c eodfreqprec=1Hz: Precision of EOD frequency measurement (\c number)
+    - \c neod=2: Number of attempts for measuring EOD frequency (\c integer)
     - \c showstimulus=false: Plot frequency of stimulus (\c boolean)
     - \c split=false: Save each run into a separate file (\c boolean)
     - \c savetraces=false: Save traces during pause (\c boolean)
@@ -109,7 +114,7 @@ public:
 		 const MapD &eodfrequency, const EventData &fishchirps,
 		 bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
   void save( double deltaf, double amplitude, double duration, double pause,
-	     double fishrate, double stimulusrate,
+	     double fishrate, double stimulusrate, int nfft, double eodfreqprec,
 	     const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency,
 	     const EventData &fishchirps, const EventData &playedchirpevents,
 	     const MapD &stimfrequency, const Options &chirpheader, bool split, int count );

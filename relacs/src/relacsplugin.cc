@@ -207,10 +207,7 @@ void RELACSPlugin::warning( const string &s, double timeout )
   Str ws = s;
   ws.eraseMarkup();
   printlog( "! warning: " + ws );
-
-  WarningStr = s;
-  WarningTimeout = timeout;
-  postCustomEvent( 3 );
+  QCoreApplication::postEvent( this, new RelacsPluginEvent( 3, s, timeout ) );
 }
 
 
@@ -219,10 +216,7 @@ void RELACSPlugin::info( const string &s, double timeout )
   Str ws = s;
   ws.eraseMarkup();
   printlog( ws );
-
-  InfoStr = s;
-  InfoTimeout = timeout;
-  postCustomEvent( 4 );
+  QCoreApplication::postEvent( this, new RelacsPluginEvent( 4, s, timeout ) );
 }
 
 
@@ -236,15 +230,17 @@ void RELACSPlugin::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
   case 3: {
+    RelacsPluginEvent *rpe = dynamic_cast<RelacsPluginEvent*>( qce );
     string ss = "RELACS: ";
     ss += uniqueName();
-    MessageBox::warning( ss, WarningStr, WarningTimeout, RW );
+    MessageBox::warning( ss, rpe->text(), rpe->timeOut(), RW );
     break;
   }
   case 4: {
+    RelacsPluginEvent *rpe = dynamic_cast<RelacsPluginEvent*>( qce );
     string ss = "RELACS: ";
     ss += uniqueName();
-    MessageBox::information( ss, InfoStr, InfoTimeout, RW );
+    MessageBox::information( ss, rpe->text(), rpe->timeOut(), RW );
     break;
   }
   case 5: {

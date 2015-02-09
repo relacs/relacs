@@ -20,6 +20,7 @@
 */
 
 #include <relacs/map.h>
+#include <relacs/spectrum.h>
 #include <relacs/eventdata.h>
 #include <relacs/tablekey.h>
 #include <relacs/datafile.h>
@@ -32,7 +33,7 @@ namespace efield {
 
 
 Beats::Beats( void )
-  : RePro( "Beats", "efield", "Jan Benda", "2.2", "Jan 26, 2014" )
+  : RePro( "Beats", "efield", "Jan Benda", "2.3", "Feb 9, 2015" )
 {
   // add some parameter as options:
   newSection( "Stimulation" );
@@ -58,6 +59,11 @@ Beats::Beats( void )
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "averagetime", "Time for computing EOD frequency", 1.0, 0.0, 100000.0, 1.0, "seconds" );
+  addBoolean( "usepsd", "Use power spectrum to measure EOD frequency", true );
+  addNumber( "mineodfreq", "Minimum expected EOD frequency", 100.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
+  addNumber( "maxeodfreq", "Maximum expected EOD frequency", 2000.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
+  addNumber( "eodfreqprec", "Precision of EOD frequency measurement", 1.0, 0.0, 100.0, 0.1, "Hz" ).setActivation( "usepsd", "true" );
+  addInteger( "neod", "Number of attempts for measuring EOD frequency", 2, 1, 100000 );
   addBoolean( "showstimulus", "Plot frequency of stimulus", false );
   addBoolean( "split", "Save each run into a separate file", false );
   addBoolean( "savetraces", "Save traces during pause", false );
@@ -102,6 +108,11 @@ int Beats::main( void )
   double before = number( "before" );
   double after = number( "after" );
   double averagetime = number( "averagetime" );
+  bool usepsd = boolean( "usepsd" );
+  double mineodfreq = number( "mineodfreq" );
+  double maxeodfreq = number( "maxeodfreq" );
+  double eodfreqprec = number( "eodfreqprec" );
+  int neod = integer( "neod" );
   bool showstimulus = boolean( "showstimulus" );
   bool split = boolean( "split" );
   bool savetraces = boolean( "savetraces" );
@@ -126,6 +137,21 @@ int Beats::main( void )
       }
     }
   }
+  int nfft = 0;
+  if ( usepsd ) {
+    nfft = nextPowerOfTwo( (int)::ceil( 1.0/trace( FishEODTrace[0][0] ).stepsize()/eodfreqprec ) );
+    eodfreqprec = 1.0/trace( FishEODTrace[0][0] ).stepsize()/nfft;
+    if ( averagetime < 2.0/trace( FishEODTrace[0][0] ).stepsize()/nfft ) {
+      averagetime = 2.0/trace( FishEODTrace[0][0] ).stepsize()/nfft;
+      warning( "averagetime is too small for requested frequency resolution. Set it to " +
+	       Str( averagetime ) + "s for now." );
+    }
+  }
+  if ( averagetime > pause ) {
+    pause = averagetime;
+    warning( "Pause is smaller than averagetime. Set it to averagetime for now." );
+  }
+
   EventList chirptimes;
   int maxchirptimes = 0;
   if ( generatechirps ) {
@@ -241,26 +267,63 @@ int Beats::main( void )
       EventFrequencyIterator stimiter;
       bool initstimiter = true;
 
-      // eodf:
-      double deltaf = *dfrange;
-      // find EOD with largest amplitude:
-      int bigeodinx = 0;
-      double bigeod = 0.0;
-      for ( int k=0; k<FishEODTraces[0]; k++ ) {
-	double a = events( FishEODEvents[0][k] ).meanSize( currentTime()-averagetime, currentTime() );
-	if ( bigeod < a ) {
-	  bigeod = a;
-	  bigeodinx = k;
-	}
-      }
-      double fishrate = events( FishEODEvents[0][bigeodinx] ).frequency( currentTime()-averagetime, currentTime() );
-      printlog( "EOD Frequency of fish is " + Str( fishrate, 0, 1, 'f' ) + "Hz" );
+      // eod frequency:
+      double fishrate = 0.0;
       if ( fakefish > 0.0 )
 	fishrate = fakefish;
-      else if ( fishrate < 0.1 ) {
+      for ( int j=0; j<neod && fishrate < 0.1; j++ ) {
+	if ( usepsd ) {
+	  // take EOD from largest peak:
+	  double bigeod = 0.0;
+	  double bigeodf = 0.0;
+	  for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	    SampleDataF data( 0.0, averagetime, trace( FishEODTrace[0][k] ).stepsize() );
+	    trace( FishEODTrace[0][k] ).copy( currentTime()-averagetime, data );
+	    SampleDataF power( nfft );
+	    rPSD( data, power );
+	    double threshold = power.max( mineodfreq, maxeodfreq );
+	    EventData powerpeaks( 1000, true );
+	    peaks( power, powerpeaks, 0.1*threshold );
+	    double maxpower = 0.0;
+	    double maxfreq = 0.0;
+	    for ( int i=0; i<powerpeaks.size(); i++ ) {
+	      if ( powerpeaks[i] >= mineodfreq && powerpeaks[i] <= maxeodfreq ) {
+		if ( powerpeaks.eventSize( i ) > maxpower ) {
+		  maxpower = powerpeaks.eventSize( i );
+		  maxfreq = powerpeaks[i];
+		}
+	      }
+	    }
+	    if ( bigeod < maxpower ) {
+	      bigeod = maxpower;
+	      bigeodf = maxfreq;
+	    }
+	  }
+	  fishrate = bigeodf;
+	}
+	else {
+	  // find EOD with largest amplitude:
+	  int bigeodinx = 0;
+	  double bigeod = 0.0;
+	  for ( int k=0; k<FishEODTraces[0]; k++ ) {
+	    double a = events( FishEODEvents[0][k] ).meanSize( currentTime()-averagetime, currentTime() );
+	    if ( bigeod < a ) {
+	      bigeod = a;
+	      bigeodinx = k;
+	    }
+	  }
+	  fishrate = events( FishEODEvents[0][bigeodinx] ).frequency( currentTime()-averagetime, currentTime() );
+	}
+	if ( fishrate < 0.1 )
+	  sleep( averagetime );
+      }
+      printlog( "EOD Frequency of fish is " + Str( fishrate, 0, 1, 'f' ) + "Hz" );
+      if ( fishrate < 0.1 ) {
 	warning( "No fish EOD detected!" );
 	return Failed;
       }
+
+      double deltaf = *dfrange;
 
       setSaving( true );
 
@@ -591,7 +654,7 @@ int Beats::main( void )
       else
 	fishchirps.clear();
       P.draw();
-      save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
+      save( deltaf, amplitude, duration, pause, fishrate, stimulusrate, nfft, eodfreqprec,
 	    eodfrequencies, eodamplitudes, eodfrequency, fishchirps, playedchirptimes,
 	    stimfrequency, chirpheader, split, FileCount );
       FileCount++;
@@ -731,7 +794,7 @@ void Beats::initPlot( double deltaf, double amplitude, double duration,
 
 
 void Beats::save( double deltaf, double amplitude, double duration, double pause,
-		  double fishrate, double stimulusrate,
+		  double fishrate, double stimulusrate, int nfft, double eodfreqprec,
 		  const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency, 
 		  const EventData &fishchirps, const EventData &playedchirpevents,
 		  const MapD &stimfrequency, const Options &chirpheader,
@@ -744,6 +807,10 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
   header.addNumber( "Amplitude", amplitude, "mV/cm", "%.3f" );
   header.addNumber( "Duration", duration, "sec", "%.3f" );
   header.addNumber( "Pause", pause, "sec", "%.3f" );
+  if ( nfft > 0 ) {
+    header.addInteger( "NFFT", nfft );
+    header.addNumber( "FrequencyResolution", eodfreqprec, "Hz", "%.2f" );
+  }
   header.addInteger( "Electrode", 0 );
   header.append( chirpheader );
   header.addText( "RePro Time", reproTimeStr() );
