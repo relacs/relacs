@@ -200,7 +200,8 @@ int Iontophoresis::main( void )
     }
 
     // fortune:
-    if ( calltime.elapsed() > (int)::rint( 1000.0*fortuneperiod ) ) {
+    if ( fortunes &&
+	 calltime.elapsed() > (int)::rint( 1000.0*fortuneperiod ) ) {
       QProcess p;
       p.start( "fortune" );
       p.waitForFinished( -1 );
