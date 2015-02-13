@@ -18,7 +18,7 @@ a capacitive current and a current offset:
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
   /*! Name, by which this module is known inside Linux: */
-const char *moduleName;
+const char *modelName;
 
   /*! The period length of the realtime periodic task in seconds. */
 float loopInterval;
@@ -64,7 +64,7 @@ float previnputs[MAXPREVINPUTS];
 void initModel( void )
 {
    int k;
-   moduleName = "/dev/dynclamp";
+   modelName = "passivecell";
    for ( k=0; k<MAXPREVINPUTS; k++ )
      previnputs[k] = 0.0;
 }

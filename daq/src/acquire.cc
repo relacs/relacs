@@ -2412,21 +2412,19 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
   }
 
   // start writing to daq board:
-  if ( ! signal.failed() ) {
-    if ( gainChanged() ||
-	 signal.restart() ||
-	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
-      if ( SyncMode == AISync )
-	cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
-	     << gainChanged() << " or signal restart=" << signal.restart() << '\n';
-      vector< AOData* > aod( 1, &AO[di] );
-      restartRead( aod, true, true );
-    }
-    else {
-      // clear adjust-flags:
-      InTraces.delMode( AdjustFlag );
-      AO[di].AO->directWrite( AO[di].Signals );
-    }
+  if ( gainChanged() ||
+       signal.restart() ||
+       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+    if ( SyncMode == AISync )
+      cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
+	   << gainChanged() << " or signal restart=" << signal.restart() << '\n';
+    vector< AOData* > aod( 1, &AO[di] );
+    restartRead( aod, true, true );
+  }
+  else {
+    // clear adjust-flags:
+    InTraces.delMode( AdjustFlag );
+    AO[di].AO->directWrite( AO[di].Signals );
   }
 
   // error?
@@ -2618,30 +2616,28 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
   }
 
   // start writing to daq boards:
-  if ( success ) {
-    if ( gainChanged() ||
-	 signal[0].restart() ||
-	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
-      if ( SyncMode == AISync )
-	cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
-	     << gainChanged() << " or signal restart=" << signal[0].restart() << '\n';
-      vector< AOData* > aod;
-      aod.reserve( AO.size() );
-      for ( unsigned int i=0; i<AO.size(); i++ ) {
-	if ( AO[i].Signals.size() > 0 )
-	  aod.push_back( &AO[i] );
-      }
-      if ( restartRead( aod, true, true ) != 0 )
-	success = false;
+  if ( gainChanged() ||
+       signal[0].restart() ||
+       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+    if ( SyncMode == AISync )
+      cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
+	   << gainChanged() << " or signal restart=" << signal[0].restart() << '\n';
+    vector< AOData* > aod;
+    aod.reserve( AO.size() );
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      if ( AO[i].Signals.size() > 0 )
+	aod.push_back( &AO[i] );
     }
-    else {
-      // clear adjust-flags:
-      InTraces.delMode( AdjustFlag );
-      for ( unsigned int i=0; i<AO.size(); i++ ) {
-	if ( AO[i].Signals.size() > 0 ) {
-	  if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )
-	    success = false;
-	}
+    if ( restartRead( aod, true, true ) != 0 )
+      success = false;
+  }
+  else {
+    // clear adjust-flags:
+    InTraces.delMode( AdjustFlag );
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      if ( AO[i].Signals.size() > 0 ) {
+	if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )
+	  success = false;
       }
     }
   }
@@ -2750,11 +2746,13 @@ int Acquire::writeReset( void )
     }
   }
   if ( sigs.size() > 0 ) {
-    // write out data;
+    // write out data:
     directWrite( sigs );
     // error?
-    if ( ! sigs.success() )
+    if ( ! sigs.success() ) {
+      cerr << "! error: Acquire::writeReset() -> directWrite() returns " << sigs.errorText() << "\n";
       return -1;
+    }
   }
   return 0; 
 }
@@ -2965,7 +2963,6 @@ double Acquire::getSignal( void )
     if ( inx < 0 )
       return -1.0;
     int d = AO[LastDevice].AISyncDevice;
-    QReadLocker locker( &ReadMutex );
     if ( d < 0 || AI[d].Traces.empty() )
       return -1.0;
     double prevsignaltime = AI[d].Traces[0].signalTime();

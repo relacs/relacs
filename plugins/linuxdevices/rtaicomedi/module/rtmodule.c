@@ -11,6 +11,8 @@
 #include <rtai_sched.h>
 #include <rtai_shm.h>
 
+#include <linux/comedilib.h>
+
 #include "moduledef.h"
 
 MODULE_LICENSE( "GPL" );
@@ -128,7 +130,7 @@ struct triggerT trigger;
 
 struct dynClampTaskT dynClampTask;
 
-char *moduleName = "/dev/dynclamp";
+char *moduleName = "rtmodule";
 
 
 // for debug:

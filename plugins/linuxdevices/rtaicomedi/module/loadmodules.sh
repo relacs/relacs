@@ -13,7 +13,7 @@ lsmod | grep -q rtai_fifos || { insmod /usr/realtime/modules/rtai_fifos.ko && ec
 if test -f /usr/realtime/modules/rtai_math.ko; then
   lsmod | grep -q rtai_math || { insmod /usr/realtime/modules/rtai_math.ko && echo "loaded rtai_math"; }
 else
-  echo "rtai_math not available"
+  echo "rtai_math is not available"
 fi
 udevadm trigger  # for comedi
 lsmod | grep -q kcomedilib || { modprobe kcomedilib && echo "loaded kcomedilib"; }

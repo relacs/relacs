@@ -14,7 +14,7 @@ GlobalEField & = & Amplitude \cdot \cos(2 \pi \varphi(t)) \end{array} \f]
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
   /*! Name, by which this module is known inside Linux: */
-const char *moduleName;
+const char *modelName;
 
   /*! The period length of the realtime periodic task in seconds. */
 float loopInterval;
@@ -58,7 +58,7 @@ float phase = 0.0;
 
 void initModel( void )
 {
-   moduleName = "/dev/dynclamp";
+   modelName = "eod";
    phase = 0.0;
 }
 

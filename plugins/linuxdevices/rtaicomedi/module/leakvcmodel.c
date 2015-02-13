@@ -17,7 +17,7 @@ Dynamic clamp model for a passive ionic current and a voltage clamp:
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
   /*! Name, by which this module is known inside Linux: */
-const char *moduleName;
+const char *modelName;
 
   /*! The period length of the realtime periodic task in seconds. */
 float loopInterval;
@@ -61,7 +61,7 @@ float meaninput = 0.0;
 
 void initModel( void )
 {
-   moduleName = "/dev/dynclamp";
+   modelName = "leakvc";
    meaninput = 0.0;
 }
 

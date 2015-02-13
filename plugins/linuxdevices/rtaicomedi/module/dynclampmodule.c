@@ -13,6 +13,8 @@
 #include <rtai_fifos.h>
 #include <rtai_sched.h>
 
+#include <linux/comedilib.h>
+
 #include "moduledef.h"
 
 #ifdef ENABLE_COMPUTATION
@@ -157,8 +159,6 @@ float* lookupy[MAXLOOKUPTABLES];
 // RTAI TASK:
 
 struct dynClampTaskT dynClampTask;
-
-char *moduleName = "/dev/dynclamp";
 
 // TTL pulse generation:
 #ifdef ENABLE_TTLPULSE
@@ -1380,7 +1380,7 @@ void rtDynClamp( long dummy )
 	    sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
 
 #ifdef ENABLE_COMPUTATION
-	    if ( pChan->modelIndex >= 0 )
+            if ( pChan->modelIndex >= 0 )
 	      input[pChan->modelIndex] = pChan->voltage;
 	  }
 	  else {
@@ -2215,7 +2215,7 @@ static int __init init_rtmodule( void )
 
   // register module device file:
   dev = MKDEV( RTMODULE_MAJOR, 0 );
-  retVal = register_chrdev_region( dev, 1, moduleName );
+  retVal = register_chrdev_region( dev, 1, "dynclamp" );
   if ( retVal < 0 ) {
     WARN_MSG( "dynclamp: can't get major %d\n", RTMODULE_MAJOR );
     return retVal;
@@ -2227,13 +2227,7 @@ static int __init init_rtmodule( void )
   retVal = cdev_add( rtcdev, dev, 1 );
   if ( retVal )
     ERROR_MSG( "dynclamp: fail to register module with error %d\n", retVal );
-  /*
-  if ( register_chrdev( RTMODULE_MAJOR, moduleName, &fops ) != 0 ) {
-    WARN_MSG( "init_module: couldn't register driver's major number\n" );
-    // return -1;
-  }
-  */
-  INFO_MSG( "module_init: dynamic clamp module %s loaded\n", moduleName );
+  INFO_MSG( "module_init: dynamic clamp module loaded\n" );
   DEBUG_MSG( "module_init: debugging enabled\n" );
 
   comedi_loglevel( 3 ); 
@@ -2262,7 +2256,7 @@ static void __exit cleanup_rtmodule( void )
   int iS;
   dev_t dev = MKDEV( RTMODULE_MAJOR, 0 );
 
-  INFO_MSG( "cleanup_module: dynamic clamp module %s unloaded\n", moduleName );
+  INFO_MSG( "cleanup_module: dynamic clamp module unloaded\n" );
 
   // stop and release all subdevices & comedi-devices:
   mutex_lock( &mutex );
@@ -2276,7 +2270,6 @@ static void __exit cleanup_rtmodule( void )
   mutex_destroy( &mutex );
 
   // unregister module device file:
-  /*  unregister_chrdev( RTMODULE_MAJOR, moduleName ); */
   cdev_del( rtcdev );
   unregister_chrdev_region( dev, 1 );
 }
