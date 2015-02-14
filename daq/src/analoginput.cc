@@ -88,6 +88,8 @@ int AnalogInput::open( Device &device, const Options &opts )
 void AnalogInput::model( InList &data,
 			 const vector< int > &aochannels, vector< float > &aovalues )
 {
+  for ( unsigned int k=0; k<aochannels.size(); k++ )
+    aovalues[k] = 0.0;
 }
 
 

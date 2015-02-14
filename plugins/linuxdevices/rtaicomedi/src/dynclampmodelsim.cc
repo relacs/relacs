@@ -33,12 +33,12 @@ vector<int> modelaitraces;
 vector<int> modelaotraces;
 
 #ifdef ENABLE_COMPUTATION
+
 #ifdef ENABLE_LOOKUPTABLES
 int lookupinx = 0;
 int lookupn[MAXLOOKUPTABLES];
 float* lookupx[MAXLOOKUPTABLES];
 float* lookupy[MAXLOOKUPTABLES];
-#endif
 #endif
 
 #define DYNCLAMPMODEL
@@ -46,6 +46,8 @@ float* lookupy[MAXLOOKUPTABLES];
 #undef DYNCLAMPMODEL
 
 #include "../module/model.c"
+
+#endif
 
 void generateLookupTables( void )
 {
@@ -65,15 +67,18 @@ void generateLookupTables( void )
 
 void initialize( float stepsize )
 {
+#ifdef ENABLE_COMPUTATION
   loopInterval = stepsize;
   loopRate = 1.0/loopRate;
   initModel();
+#endif
 }
 
 
 void computeModel( InList &data,
 		   const vector< int > &aochannels, vector< float > &aovalues )
 {
+#ifdef ENABLE_COMPUTATION
   for ( int k=0; k<data.size(); k++ ) {
     int inx = modelaitraces[data[k].trace()];
     if ( inx >= 0  )
@@ -96,29 +101,40 @@ void computeModel( InList &data,
     else
       aovalues[k] = 0.0;
   }
+#else
+  for ( unsigned int k=0; k<aochannels.size(); k++ )
+    aovalues[k] = 0.0;
+#endif
 }
 
 
 void addAITraces( vector< TraceSpec > &traces, int deviceid )
 {
+#ifdef ENABLE_COMPUTATION
   int channel = PARAM_CHAN_OFFSET;
-  for ( int k=0; k<PARAMINPUT_N; k++ )
+  for ( int k=0; k<PARAMINPUT_N; k++ ) {
     traces.push_back( TraceSpec( traces.size(), paramInputNames[k],
 				 deviceid, channel++, 1.0, paramInputUnits[k] ) );
+  }
+#endif
 }
 
 
 void addAOTraces( vector< TraceSpec > &traces, int deviceid )
 {
+#ifdef ENABLE_COMPUTATION
   int channel = PARAM_CHAN_OFFSET;
-  for ( int k=0; k<PARAMOUTPUT_N; k++ )
+  for ( int k=0; k<PARAMOUTPUT_N; k++ ) {
     traces.push_back( TraceSpec( traces.size(), paramOutputNames[k],
 				 deviceid, channel++, 1.0, paramOutputUnits[k] ) );
+  }
+#endif
 }
 
 
 int matchAITraces( InList &traces )
 {
+#ifdef ENABLE_COMPUTATION
   int foundtraces = 0;
   bool tracefound[ traces.size() ];
   for ( int k=0; k<traces.size(); k++ )
@@ -169,11 +185,15 @@ int matchAITraces( InList &traces )
       traces[k].addErrorStr( "no matching trace found for trace " + traces[k].ident() );
   }
   return traces.failed() ? -1 : foundtraces;
+#else
+  return 0;
+#endif
 }
 
 
 int matchAOTraces( vector< TraceSpec > &traces )
 {
+#ifdef ENABLE_COMPUTATION
   modelaotraces.resize( traces.size() );
   for ( unsigned int k=0; k<modelaotraces.size(); k++ )
     modelaotraces[k] = -1;
@@ -209,6 +229,9 @@ int matchAOTraces( vector< TraceSpec > &traces )
   }
 
   return failed ? -1 : foundtraces;
+#else
+  return 0;
+#endif
 }
 
 
