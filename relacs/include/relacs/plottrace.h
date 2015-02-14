@@ -246,6 +246,16 @@ private:
   deque< int > VP;  // the indices of the visible plots
   deque< int > PlotElements;
 
+  bool FilePlot;
+  string FilePath;
+  Options FileHeader;
+  InList FileTraces;
+  EventList FileEvents;
+  int FileOffset;
+
+  InList PlotTraces;
+  EventList PlotEvents;
+
 };
 
 

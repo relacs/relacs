@@ -29,6 +29,7 @@
 #include <QToolTip>
 #include <QApplication>
 #include <relacs/str.h>
+#include <relacs/datafile.h>
 #include <relacs/filterdetectors.h>
 #include <relacs/relacswidget.h>
 #include <relacs/plottrace.h>
@@ -74,6 +75,15 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   ViewButton = 0;
   ManualButton = 0;
   OnOffButton = 0;
+
+  FilePlot = false;
+  FilePath = "";
+  FileTraces.clear();
+  FileEvents.clear();
+  FileOffset = 0;
+
+  PlotTraces.clear();
+  PlotEvents.clear();
 
   setWidget( &P );
 
@@ -193,16 +203,16 @@ void PlotTrace::resize( void )
   P.lock();
 
   // setup plots:
-  if ( traces().size() != P.size() )
-    P.resize( traces().size(), Plot::Pointer );
+  if ( PlotTraces.size() != P.size() )
+    P.resize( PlotTraces.size(), Plot::Pointer );
   P.setDataMutex( mutex() );
   P.setCommonXRange();
   PlotElements.clear();
   PlotElements.resize( VP.size(), -1 );
 
-  if ( traces().size() > 0 ) {
+  if ( PlotTraces.size() > 0 ) {
 
-    for ( int c=0; c<traces().size(); c++ ) {
+    for ( int c=0; c<PlotTraces.size(); c++ ) {
       P[c].clear();
       P[c].setSkip( ! PlotProps[c].Visible );
     }
@@ -299,14 +309,14 @@ void PlotTrace::init( void )
     P[vp].clear();
 
     // y-label:
-    string s = trace(vp).ident() + " [" + trace(vp).unit() + "]";
+    string s = PlotTraces[vp].ident() + " [" + PlotTraces[vp].unit() + "]";
     P[vp].setYLabel( s );
 	
     // plot stimulus events:
-    for ( int s=0; s<events().size(); s++ ) {
-      if ( (events(s).mode() & PlotTraceMode) &&
-	   (events(s).mode() & StimulusEventMode) ) {
-	P[vp].plot( events(s), origin, Offset, tfac,
+    for ( int s=0; s<PlotEvents.size(); s++ ) {
+      if ( (PlotEvents[s].mode() & PlotTraceMode) &&
+	   (PlotEvents[s].mode() & StimulusEventMode) ) {
+	P[vp].plot( PlotEvents[s], origin, Offset, tfac,
 		    0.0, Plot::Graph, 2,
 		    Plot::StrokeUp, 1.0, Plot::GraphY,
 		    Plot::White );
@@ -314,10 +324,10 @@ void PlotTrace::init( void )
       }
     }
     // plot restart events:
-    for ( int s=0; s<events().size(); s++ ) {
-      if ( (events(s).mode() & PlotTraceMode) &&
-	   (events(s).mode() & RestartEventMode) ) {
-	P[vp].plot( events(s), origin, Offset, tfac,
+    for ( int s=0; s<PlotEvents.size(); s++ ) {
+      if ( (PlotEvents[s].mode() & PlotTraceMode) &&
+	   (PlotEvents[s].mode() & RestartEventMode) ) {
+	P[vp].plot( PlotEvents[s], origin, Offset, tfac,
 		    1.0, Plot::Graph, 1,
 		    Plot::TriangleNorth, 0.07, Plot::GraphY,
 		    Plot::Orange, Plot::Orange );
@@ -325,10 +335,10 @@ void PlotTrace::init( void )
       }
     }
     // plot recording events:
-    for ( int s=0; s<events().size(); s++ ) {
-      if ( (events(s).mode() & PlotTraceMode) &&
-	   (events(s).mode() & RecordingEventMode) ) {
-	P[vp].plot( events(s), origin, Offset, tfac,
+    for ( int s=0; s<PlotEvents.size(); s++ ) {
+      if ( (PlotEvents[s].mode() & PlotTraceMode) &&
+	   (PlotEvents[s].mode() & RecordingEventMode) ) {
+	P[vp].plot( PlotEvents[s], origin, Offset, tfac,
 		    0.0, Plot::Graph, 4,
 		    Plot::StrokeUp, 1.0, Plot::GraphY,
 		    Plot::Red );
@@ -337,39 +347,39 @@ void PlotTrace::init( void )
     }
     // plot events:
     int sn = 0;
-    for ( int s=0; s<events().size(); s++ ) {
-      if ( (events(s).mode() & PlotTraceMode) &&
-	   !(events(s).mode() & StimulusEventMode) &&
-	   !(events(s).mode() & RestartEventMode) &&
-	   !(events(s).mode() & RecordingEventMode) ) {
+    for ( int s=0; s<PlotEvents.size(); s++ ) {
+      if ( (PlotEvents[s].mode() & PlotTraceMode) &&
+	   !(PlotEvents[s].mode() & StimulusEventMode) &&
+	   !(PlotEvents[s].mode() & RestartEventMode) &&
+	   !(PlotEvents[s].mode() & RecordingEventMode) ) {
 	
 	if ( RW->FD->eventInputTrace( s ) == int( vp ) ) {
 
 	  if ( sn == 0 ) {
 	    /*
-	      P[vp].plot( events(s), origin, Offset, tfac,
+	      P[vp].plot( PlotEvents[s], origin, Offset, tfac,
 	      0.05, Plot::Graph, 1,
 	      Plot::StrokeUp, 20, Plot::Pixel,
 	      Plot::Red );
 	    */
-	    P[vp].plot( events(s), trace(vp),
+	    P[vp].plot( PlotEvents[s], PlotTraces[vp],
 			origin, Offset, tfac,
 			1, Plot::Circle, 6, Plot::Pixel,
 			Plot::Gold, Plot::Gold );
 	  }
 	  else if ( sn == 1 )
-	    P[vp].plot( events(s), origin, Offset, tfac,
+	    P[vp].plot( PlotEvents[s], origin, Offset, tfac,
 			0.1, Plot::Graph, 1,
 			Plot::Circle, 6, Plot::Pixel,
 			Plot::Yellow, Plot::Yellow );
 	  else if ( sn == 2 )
-	    P[vp].plot( events(s), origin, Offset, tfac, 0.2,
+	    P[vp].plot( PlotEvents[s], origin, Offset, tfac, 0.2,
 			Plot::Graph, 1,
 			Plot::Diamond, 6, Plot::Pixel,
 			Plot::Blue, Plot::Blue );
 	  
 	  else
-	    P[vp].plot( events(s), origin, Offset, tfac,
+	    P[vp].plot( PlotEvents[s], origin, Offset, tfac,
 			0.3, Plot::Graph, 1,
 			Plot::TriangleUp, 6, Plot::Pixel,
 			Plot::Red, Plot::Red );
@@ -379,7 +389,7 @@ void PlotTrace::init( void )
       }
     }
     // plot voltage trace:
-    PlotElements[c] = P[vp].plot( trace(vp), origin, Offset, tfac,
+    PlotElements[c] = P[vp].plot( PlotTraces[vp], origin, Offset, tfac,
 				  Plot::Green, 1, Plot::Solid,
 				  Plot::Circle, 0, Plot::Green, Plot::Green );
   }
@@ -391,8 +401,8 @@ void PlotTrace::init( void )
 
   // trigger source:
   TriggerSource = -1;
-  for ( int s=0; s<events().size(); s++ ) {
-    if ( (events(s).mode() & PlotTriggerMode) ) {
+  for ( int s=0; s<PlotEvents.size(); s++ ) {
+    if ( (PlotEvents[s].mode() & PlotTriggerMode) ) {
       TriggerSource = s;
       break;
     }
@@ -459,9 +469,9 @@ void PlotTrace::plot( void )
   // align to trigger:
   if ( ( ViewMode == EndView || ViewMode == WrapView ) &&
        Trigger && TriggerSource >= 0 ) {
-    int ninx = events( TriggerSource ).next( LeftTime );
-    int pinx = events( TriggerSource ).previous( LeftTime );      
-    if ( ninx >= events( TriggerSource ).size() ) {
+    int ninx = PlotEvents[TriggerSource].next( LeftTime );
+    int pinx = PlotEvents[TriggerSource].previous( LeftTime );      
+    if ( ninx >= PlotEvents[TriggerSource].size() ) {
       ninx = pinx;
       pinx--;
     }
@@ -470,10 +480,10 @@ void PlotTrace::plot( void )
       pinx = ninx - 10;
       if ( pinx < 0 ) 
 	pinx = 0;
-      double dt = (events( TriggerSource )[ninx] - events( TriggerSource )[pinx])/(ninx-pinx);
+      double dt = (PlotEvents[TriggerSource][ninx] - PlotEvents[TriggerSource][pinx])/(ninx-pinx);
       if ( dt/TimeWindow > 0.02 )
 	ninx--;
-      double nt = events( TriggerSource )[ninx];
+      double nt = PlotEvents[TriggerSource][ninx];
       if ( TimeWindow < dt || fabs( nt - LeftTime ) <= 2.0*dt ) {
 	LeftTime = nt;
 	leftwin = (LeftTime - sigtime)*tfac;
@@ -487,7 +497,7 @@ void PlotTrace::plot( void )
     // setting axis:
     P[VP[c]].setXRange( leftwin, rightwin );
     if ( ! P[VP[c]].zoomedYRange() )
-      P[VP[c]].setYRange( trace(VP[c]).minValue(), trace(VP[c]).maxValue() );
+      P[VP[c]].setYRange( PlotTraces[VP[c]].minValue(), PlotTraces[VP[c]].maxValue() );
   }
 
   updateStyle();
@@ -509,16 +519,16 @@ void PlotTrace::updateStyle( void )
 	width = P[VP[c]].pixelScreenWidth();
       if ( width < 10.0 )
 	width = 10.0;
-      if ( trace(VP[c]).indices( TimeWindow )/width > 0.2 )
+      if ( PlotTraces[VP[c]].indices( TimeWindow )/width > 0.2 )
 	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
 					    Plot::Green, Plot::Green );
-      else if ( trace(VP[c]).indices( TimeWindow )/width > 0.05 )
+      else if ( PlotTraces[VP[c]].indices( TimeWindow )/width > 0.05 )
 	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
 					    Plot::Green, Plot::Green );
       else
 	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 8,
 					    Plot::Green, Plot::Green );
-      if ( trace(VP[c]).indices( TimeWindow )/width > 2.0 )
+      if ( PlotTraces[VP[c]].indices( TimeWindow )/width > 2.0 )
 	P[VP[c]][PlotElements[c]].setLine( Plot::Green, 1, Plot::Solid );
       else
 	P[VP[c]][PlotElements[c]].setLine( Plot::Green, 2, Plot::Solid );
@@ -585,13 +595,25 @@ void PlotTrace::updateMenu( void )
     // remove old traces:
     for ( unsigned int k=0; k<PlotProps.size(); k++ )
       Menu->removeAction( PlotProps[k].Action );
-    PlotProps.resize( traces().size() );
+
+    // get traces and events:
+    PlotTraces.clear();
+    PlotEvents.clear();
+    if ( FilePlot ) {
+      PlotTraces.add( FileTraces );
+      PlotEvents.add( FileEvents );
+    }
+    else {
+      PlotTraces.add( traces() );
+      PlotEvents.add( events() );
+    }
 
     // add new traces:
-    for ( int k=0; k<traces().size(); k++ ) {
+    PlotProps.resize( PlotTraces.size() );
+    for ( int k=0; k<PlotTraces.size(); k++ ) {
       string s = "&" + Str( k+1 );
       s += " ";
-      s += trace(k).ident();
+      s += PlotTraces[k].ident();
       PlotProps[k].Action = Menu->addAction( s.c_str() );
       PlotProps[k].Action->setCheckable( true );
       PlotProps[k].Action->setChecked( PlotProps.back().Visible );
@@ -997,7 +1019,7 @@ void PlotTrace::centerVertically( void )
     cp.push_back( VP[0] );
   else {
     for ( unsigned int c=0; c<VP.size(); c++ ) {
-      if ( trace(c).mode() & PlotTraceCenterVertically )
+      if ( PlotTraces[c].mode() & PlotTraceCenterVertically )
 	cp.push_back( VP[c] );
     }
   }
@@ -1012,25 +1034,25 @@ void PlotTrace::centerVertically( void )
     double xmin = P[cp[c]].xminRange()/tfac + Offset;
     double xmax = P[cp[c]].xmaxRange()/tfac + Offset;
     // make sure, there are enough data shown in the window:
-    if ( trace( cp[c] ).currentTime() < 0.5*(xmin+xmax) ) {
-      xmin = trace( cp[c] ).currentTime() - (xmax-xmin);
-      xmax = trace( cp[c] ).currentTime();
+    if ( PlotTraces[cp[c]].currentTime() < 0.5*(xmin+xmax) ) {
+      xmin = PlotTraces[cp[c]].currentTime() - (xmax-xmin);
+      xmax = PlotTraces[cp[c]].currentTime();
     }
     float min = 0.0;
     float max = 0.0;
-    trace( cp[c] ).minMax( min, max, xmin, xmax );
+    PlotTraces[cp[c]].minMax( min, max, xmin, xmax );
     if ( P[cp[c]].ranges() == 0 )
       P[cp[c]].pushRanges();
     double center = 0.5*(min+max);
     double range = 0.5*(P[cp[c]].ymaxRange() - P[cp[c]].yminRange());
     double nmin = center-range;
     double nmax = center+range;
-    if ( nmin < trace( cp[c] ).minValue() ) {
-      nmin = trace( cp[c] ).minValue();
+    if ( nmin < PlotTraces[cp[c]].minValue() ) {
+      nmin = PlotTraces[cp[c]].minValue();
       nmax = nmin + 2.0*range;
     }
-    if ( nmax > trace( cp[c] ).maxValue() ) {
-      nmax = trace( cp[c] ).maxValue();
+    if ( nmax > PlotTraces[cp[c]].maxValue() ) {
+      nmax = PlotTraces[cp[c]].maxValue();
       nmin = nmax - 2.0*range;
     }
     P[cp[c]].setYRange( nmin, nmax );
@@ -1050,7 +1072,7 @@ void PlotTrace::centerZoomVertically( void )
     cp.push_back( VP[0] );
   else {
     for ( unsigned int c=0; c<VP.size(); c++ ) {
-      if ( trace(c).mode() & PlotTraceCenterVertically )
+      if ( PlotTraces[c].mode() & PlotTraceCenterVertically )
 	cp.push_back( VP[c] );
     }
   }
@@ -1065,25 +1087,25 @@ void PlotTrace::centerZoomVertically( void )
     double xmin = P[cp[c]].xminRange()/tfac + Offset;
     double xmax = P[cp[c]].xmaxRange()/tfac + Offset;
     // make sure, there are enough data shown in the window:
-    if ( trace( cp[c] ).currentTime() < 0.5*(xmin+xmax) ) {
-      xmin = trace( cp[c] ).currentTime() - (xmax-xmin);
-      xmax = trace( cp[c] ).currentTime();
+    if ( PlotTraces[cp[c]].currentTime() < 0.5*(xmin+xmax) ) {
+      xmin = PlotTraces[cp[c]].currentTime() - (xmax-xmin);
+      xmax = PlotTraces[cp[c]].currentTime();
     }
     float min = 0.0;
     float max = 0.0;
-    trace( cp[c] ).minMax( min, max, xmin, xmax );
+    PlotTraces[cp[c]].minMax( min, max, xmin, xmax );
     if ( P[cp[c]].ranges() == 0 )
       P[cp[c]].pushRanges();
     double center = 0.5*(min+max);
     double range = 0.6*(max-min);
     double nmin = center-range;
     double nmax = center+range;
-    if ( nmin < trace( cp[c] ).minValue() ) {
-      nmin = trace( cp[c] ).minValue();
+    if ( nmin < PlotTraces[cp[c]].minValue() ) {
+      nmin = PlotTraces[cp[c]].minValue();
       nmax = nmin + 2.0*range;
     }
-    if ( nmax > trace( cp[c] ).maxValue() ) {
-      nmax = trace( cp[c] ).maxValue();
+    if ( nmax > PlotTraces[cp[c]].maxValue() ) {
+      nmax = PlotTraces[cp[c]].maxValue();
       nmin = nmax - 2.0*range;
     }
     P[cp[c]].setYRange( nmin, nmax );
@@ -1119,19 +1141,96 @@ void PlotTrace::setView( Views mode )
 }
 
 
-void PlotTrace::displayIndex( const string &path, const deque<int> &traceindex,
+void PlotTrace::displayIndex( const string &fpath, const deque<int> &traceindex,
 			      const deque<int> &eventsindex, double time )
 {
+  bool success = true;
   P.lock();
-  if ( ViewMode != FixedView ) {
-    TimeOffs = 0.0;
-    setView( FixedView );
+  // XXX this comparison needs the absolute path of both sides:
+  if ( Str( fpath ).dir() == defaultPath() ) {
+    FilePlot = false;
+    FileHeader.clear();
+    FileTraces.clear();
+    FileEvents.clear();
   }
-  cerr << "PLOT " << path << '\n';
-  Offset = time;
-  LeftTime = Offset - TimeOffs;
-  PlotChanged = true;
+  else {
+    if ( FilePath != fpath ) {
+      DataFile sf( fpath );
+      // read in meta data:
+      sf.readMetaData();
+      Options header = sf.metaDataOptions( sf.levels()-1 );
+      if ( header.empty() )
+	success = false;
+      else
+	FileHeader = header;
+    }
+    /*
+    if ( offsets in already loaded file ) {
+    }
+    else {
+      // load data:
+    */
+    FileTraces.clear();
+    for ( int k=1; ; k++ ) {
+      string tracename = FileHeader.text( "identifier" + Str( k ), "" );
+      if ( tracename.empty() )
+	break;
+      string tracefile = FileHeader.text( "data file" + Str( k ) );
+      double tracestep = FileHeader.number( "sample interval" + Str( k ), "s" );
+      string traceunit = FileHeader.text( "unit" + Str( k ) );
+      cerr << "load trace " << tracename << " from file " << tracefile << " with unit " << traceunit << " and stepsize " << tracestep << "s at " << traceindex[k-1] << "\n";
+
+      InData id;
+      id.setIdent( tracename );
+      id.setTrace( k-1 );
+      id.setSampleRate( tracestep );
+      id.setStartSource( 0 );
+      id.setUnipolar( false );
+      id.setUnit( 1.0, traceunit );
+      id.setChannel( k-1 );
+      id.setDevice( 0 );
+      id.setContinuous();
+      /*
+      int m = SaveFiles::SaveTrace | PlotTraceMode;
+      if ( boolean( "inputtracecenter", k, false ) )
+	m |= PlotTraceCenterVertically;
+      id.setMode( m );
+      id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
+      */
+      id.setGainIndex( 0 );
+      FileTraces.push( id );
+      // FileTraces.back().reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
+      // FileTraces.back().load( tracefile, traceindex[k-1], window );
+    }
+    FileEvents.clear();
+    for ( int k=1; ; k++ ) {
+      string eventfile = FileHeader.text( "event file" + Str( k ), "" );
+      if ( eventfile.empty() )
+	break;
+      cerr << "load events from file " << eventfile << " at " << eventsindex[k-1] << "\n";
+    }
+    /*
+    }
+    */
+    //FilePlot = true;
+    //FileOffset = traceindex[0]; // XXX this might fail!
+    success = false;
+  }
+  if ( success ) {
+    if ( ViewMode != FixedView ) {
+      TimeOffs = 0.0;
+      setView( FixedView );
+    }
+    Offset = time;
+    LeftTime = Offset - TimeOffs;
+    PlotChanged = true;
+  }
   P.unlock();
+  if ( success && FilePath != fpath ) { // XXX if something changed!!!!
+    updateMenu();
+    resize();
+  }
+  FilePath = fpath;
   if ( RW->idle() )
     plot();
 }

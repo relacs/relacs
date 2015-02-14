@@ -222,13 +222,13 @@ void DataBrowser::read( string cellname, QTreeWidgetItem *parent )
     map<long, Stimulus> * NStimuli = new map<long, Stimulus>;
     map<int, Rep> * NRepro = new map<int, Rep>;
 
-    string file = Folder + "/" + cellname + "/stimuli.dat";//relacs
+    string file = Folder + "/" + cellname + "/stimuli.dat"; //relacs
     string version = "relacs";
     
     DataFile sf;
     sf.open( file );
     if ( !sf.good() ) {
-      file = Folder + "/" + cellname + "/trigger.dat";//oel
+      file = Folder + "/" + cellname + "/trigger.dat"; //oel
       version="oel";
       sf.open( file );
       if ( !sf.good() ) {

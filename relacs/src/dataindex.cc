@@ -237,6 +237,8 @@ void DataIndex::DataItem::loadCell( void )
     string filename = Str( name() ).dir() + sd;
     ifstream sf( filename.c_str() );
     stimuli.load( sf );
+    if ( stimuli.sectionsSize() <= 0 )
+      stimuli.down();
   }
   // get columns for stimulus names:
   int k1 = sf.key().column( "stimulus>" );
