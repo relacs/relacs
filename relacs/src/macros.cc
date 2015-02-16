@@ -1746,6 +1746,7 @@ void Macro::run( void )
   if ( KeyCode == Qt::Key_Escape &&
        qApp->focusWidget() != MCs->window() ) {
     MCs->window()->setFocus();
+    MCs->RW->displayData();
   }
   else
     launch();

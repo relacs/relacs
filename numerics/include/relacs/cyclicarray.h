@@ -235,6 +235,9 @@ public:
     /*! Save binary data to stream \a os starting at index \a index upto size().
         \return the number of saved data elements. */
   int saveBinary( ostream &os, int index ) const;
+    /*! Load binary data from stream \a is from index \a index on.
+        \return the number of loaded data elements. */
+  int loadBinary( istream &is, int index );
 
   template < typename TT > 
   friend ostream &operator<<( ostream &str, const CyclicArray<TT> &ca );
@@ -1059,6 +1062,45 @@ int CyclicArray<T>::saveBinary( ostream &os, int index ) const
     }
   }
   os.flush();
+  return n;
+}
+
+
+template < typename T >
+int CyclicArray<T>::loadBinary( istream &is, int index )
+{
+  // stream not open:
+  if ( !is )
+    return -1;
+
+  // invalid index
+  if ( index < 0 )
+    return -1;
+
+  // indices:
+  LCycles = index / NBuffer;
+  L = index - LCycles * NBuffer;
+  RCycles = LCycles + 1;
+  R = L;
+
+  // load data:
+  is.seekg( index*sizeof( T ) );
+  is.read( (char *)(Buffer+L), sizeof( T )*(NBuffer-L) );
+  int n = is.gcount()/sizeof( T );
+  if ( is ) {
+    if ( R > 0 ) {
+      is.read( (char *)Buffer, sizeof( T )*R );
+      int m = is.gcount()/sizeof( T );
+      n += m;
+      if ( ! is )
+	R = m;
+    }
+  }
+  else {
+    RCycles = LCycles;
+    R = L + n;
+  }
+
   return n;
 }
 

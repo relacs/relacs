@@ -20,6 +20,7 @@
 */
 
 #include <iostream>
+#include <fstream>
 #include <QPixmap>
 #include <QBitmap>
 #include <QPainter>
@@ -39,7 +40,7 @@ namespace relacs {
 
 PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   : RELACSPlugin( "PlotTrace: PlotTrace", RELACSPlugin::Plugins,
-		  "PlotTrace", "base", "Jan Benda", "1.0", "Dec 1, 2009" ),
+		  "PlotTrace", "base" ),
     Menu( 0 ),
     PlotTimer( this ),
     P( 1, Plot::Pointer, parent ),
@@ -79,8 +80,10 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   FilePlot = false;
   FilePath = "";
   FileTraces.clear();
+  FileTracesNames.clear();
+  FileSizes.clear();
   FileEvents.clear();
-  FileOffset = 0;
+  FileEventsNames.clear();
 
   PlotTraces.clear();
   PlotEvents.clear();
@@ -194,13 +197,14 @@ PlotTrace::~PlotTrace( void )
 
 void PlotTrace::resize( void )
 {
+  P.lock();
+
   // count active plots:
   VP.clear();
   for ( unsigned int c=0; c<PlotProps.size(); c++ ) {
     if ( PlotProps[c].Visible )
       VP.push_back( c );
   }
-  P.lock();
 
   // setup plots:
   if ( PlotTraces.size() != P.size() )
@@ -592,6 +596,8 @@ void PlotTrace::updateMenu( void )
 {
   if ( Menu != 0 ) {
 
+    P.lock();
+  
     // remove old traces:
     for ( unsigned int k=0; k<PlotProps.size(); k++ )
       Menu->removeAction( PlotProps[k].Action );
@@ -618,6 +624,8 @@ void PlotTrace::updateMenu( void )
       PlotProps[k].Action->setCheckable( true );
       PlotProps[k].Action->setChecked( PlotProps.back().Visible );
     }
+
+    P.unlock();
   }
 }
 
@@ -631,6 +639,24 @@ void PlotTrace::start( double time )
 void PlotTrace::stop( void )
 {
   PlotTimer.stop();
+}
+
+
+double PlotTrace::signalTime( void ) const
+{
+  if ( FilePlot && FileTraces.size() > 0 )
+    return FileTraces[0].signalTime();
+  else
+    return RELACSPlugin::signalTime();
+}
+
+
+double PlotTrace::currentTime( void ) const
+{
+  if ( FilePlot && FileTraces.size() > 0 )
+    return FileTraces[0].currentTime();
+  else
+    return RELACSPlugin::currentTime();
 }
 
 
@@ -1145,76 +1171,148 @@ void PlotTrace::displayIndex( const string &fpath, const deque<int> &traceindex,
 			      const deque<int> &eventsindex, double time )
 {
   bool success = true;
+  bool newfile = false;
   P.lock();
   // XXX this comparison needs the absolute path of both sides:
   if ( Str( fpath ).dir() == defaultPath() ) {
-    FilePlot = false;
-    FileHeader.clear();
-    FileTraces.clear();
-    FileEvents.clear();
+    if ( FilePlot ) {
+      newfile = true;
+      FilePlot = false;
+      FileHeader.clear();
+      FileTraces.clear();
+      FileTracesNames.clear();
+      FileSizes.clear();
+      FileEvents.clear();
+      FileEventsNames.clear();
+    }
   }
   else {
     if ( FilePath != fpath ) {
-      DataFile sf( fpath );
+      newfile = true;
+      FileHeader.clear();
+      FileTraces.clear();
+      FileTracesNames.clear();
+      FileSizes.clear();
+      FileEvents.clear();
+      FileEventsNames.clear();
+
       // read in meta data:
+      DataFile sf( fpath );
       sf.readMetaData();
       Options header = sf.metaDataOptions( sf.levels()-1 );
       if ( header.empty() )
 	success = false;
       else
 	FileHeader = header;
+
+      // create traces:
+      for ( int k=1; ; k++ ) {
+	string tracename = FileHeader.text( "identifier" + Str( k ), "" );
+	if ( tracename.empty() )
+	  break;
+	string tracefile = FileHeader.text( "data file" + Str( k ) );
+	double tracestep = FileHeader.number( "sample interval" + Str( k ), "ms" );
+	// we need to guess the exact rate:
+	double rate = ::round( 1.0/tracestep );
+	tracestep = 0.001/rate;
+	string traceunit = FileHeader.text( "unit" + Str( k ) );
+
+	InData id;
+	id.setIdent( tracename );
+	id.setTrace( k-1 );
+	id.setStepsize( tracestep );
+	id.setStartSource( 0 );
+	id.setUnipolar( false );
+	id.setUnit( 1.0, traceunit );
+	id.setChannel( k-1 );
+	id.setMinValue( -150.0 );  // XXX get this somehow from the configuration file?
+	id.setMaxValue( +150.0 );
+	id.setDevice( 0 );
+	id.setContinuous();
+	int m = PlotTraceMode;
+	/*
+	  if ( boolean( "inputtracecenter", k, false ) )
+	  m |= PlotTraceCenterVertically;
+	*/
+	id.setMode( m );
+	// id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
+	id.setGainIndex( 0 );
+	FileTraces.push( id );
+	// FileTraces.back().reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
+	FileTraces.back().reserve( 60.0 );
+	FileTracesNames.push_back( Str( fpath ).dir() + tracefile );
+	ifstream is( FileTracesNames.back().c_str() );
+	if ( k-1 >= (int)FileSizes.size() ) {
+	  is.seekg( 0, is.end );
+	  FileSizes.push_back( is.tellg()/sizeof(float) );
+	}
+      }
+      for ( int k=1; ; k++ ) {
+	string eventfile = FileHeader.text( "event file" + Str( k ), "" );
+	if ( eventfile.empty() )
+	  break;
+	FileEventsNames.push_back( Str( fpath ).dir() + eventfile );
+	DataFile sf( FileEventsNames.back() );
+	sf.readMetaData();
+	Options header = sf.metaDataOptions( sf.levels()-1 );
+	bool eventsizes = ( sf.key().columns() > 1 );
+	bool eventwidths = ( sf.key().columns() > 2 );
+	EventData ed( 1000, eventsizes, eventwidths );
+	ed.setCyclic();
+	string eventname = header.text( "events" );
+	ed.setIdent( eventname );
+	if ( eventname == "Stimulus" )
+	  ed.setMode( StimulusEventMode );
+	else if ( eventname == "Restart" )
+	  ed.setMode( RestartEventMode );
+	else if ( eventname == "Recording" )
+	  ed.setMode( RecordingEventMode );
+	ed.setMode( ed.mode() | PlotTraceMode );
+	if ( eventsizes ) {
+	  ed.setSizeName( sf.key().name( 1 ) );
+	  ed.setSizeUnit( sf.key().unit( 1 ) );
+	}
+	if ( eventwidths ) {
+	  ed.setWidthName( sf.key().name( 2 ) );
+	  ed.setWidthUnit( sf.key().unit( 2 ) );
+	}
+	FileEvents.push( ed );
+      }
     }
-    /*
-    if ( offsets in already loaded file ) {
+    if ( FilePlot && FileTraces.size() > 0 && FileTraces[0].size() > 0 &&
+	 FileTraces[0].minIndex() <= traceindex[0] && 
+	 ( FileTraces[0].size() == FileSizes[0] ||
+	   FileTraces[0].size() >= traceindex[0] + FileTraces[0].indices( 10.0 ) ) ) {
+      time = FileTraces[0].pos( traceindex[0] );
     }
     else {
       // load data:
-    */
-    FileTraces.clear();
-    for ( int k=1; ; k++ ) {
-      string tracename = FileHeader.text( "identifier" + Str( k ), "" );
-      if ( tracename.empty() )
-	break;
-      string tracefile = FileHeader.text( "data file" + Str( k ) );
-      double tracestep = FileHeader.number( "sample interval" + Str( k ), "s" );
-      string traceunit = FileHeader.text( "unit" + Str( k ) );
-      cerr << "load trace " << tracename << " from file " << tracefile << " with unit " << traceunit << " and stepsize " << tracestep << "s at " << traceindex[k-1] << "\n";
-
-      InData id;
-      id.setIdent( tracename );
-      id.setTrace( k-1 );
-      id.setSampleRate( tracestep );
-      id.setStartSource( 0 );
-      id.setUnipolar( false );
-      id.setUnit( 1.0, traceunit );
-      id.setChannel( k-1 );
-      id.setDevice( 0 );
-      id.setContinuous();
-      /*
-      int m = SaveFiles::SaveTrace | PlotTraceMode;
-      if ( boolean( "inputtracecenter", k, false ) )
-	m |= PlotTraceCenterVertically;
-      id.setMode( m );
-      id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
-      */
-      id.setGainIndex( 0 );
-      FileTraces.push( id );
-      // FileTraces.back().reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
-      // FileTraces.back().load( tracefile, traceindex[k-1], window );
+      for ( int k=0; k<FileTraces.size(); k++ ) {
+	int index = traceindex[k];
+	index -= FileTraces.back().indices( 10.0 );  // we want to have some time before as well, at least TimeOffs!
+	if ( index + FileTraces.back().capacity() > FileSizes[k] )
+	  index = FileSizes[k] - FileTraces.back().capacity();
+	if ( index < 0 )
+	  index = 0;
+	ifstream is( FileTracesNames[k].c_str() );
+	FileTraces[k].loadBinary( is, index );
+	FileTraces[k].setSignalIndex( traceindex[k] );
+	time = FileTraces[k].pos( traceindex[k] );
+      }
+      for ( int k=0; k<FileEvents.size(); k++ ) {
+	DataFile sf( FileEventsNames[k] );
+	sf.read( 10 );
+	int index = eventsindex[k];
+	if ( index >=0 && index < sf.data().rows() )
+	  for ( ; index>=0 && sf.data( 0, index ) > time-10.0; index-- );
+	if ( index + FileEvents[k].capacity() > sf.data().rows() )
+	  index = sf.data().rows() - FileEvents[k].capacity();
+	if ( index < 0 )
+	  index = 0;
+	FileEvents[k].set( index, sf.col( 0 ), sf.col( 1 ), sf.col( 2 ) );  
+      }
     }
-    FileEvents.clear();
-    for ( int k=1; ; k++ ) {
-      string eventfile = FileHeader.text( "event file" + Str( k ), "" );
-      if ( eventfile.empty() )
-	break;
-      cerr << "load events from file " << eventfile << " at " << eventsindex[k-1] << "\n";
-    }
-    /*
-    }
-    */
-    //FilePlot = true;
-    //FileOffset = traceindex[0]; // XXX this might fail!
-    success = false;
+    FilePlot = true;
   }
   if ( success ) {
     if ( ViewMode != FixedView ) {
@@ -1226,13 +1324,38 @@ void PlotTrace::displayIndex( const string &fpath, const deque<int> &traceindex,
     PlotChanged = true;
   }
   P.unlock();
-  if ( success && FilePath != fpath ) { // XXX if something changed!!!!
+  if ( success && newfile ) {
     updateMenu();
     resize();
   }
   FilePath = fpath;
   if ( RW->idle() )
     plot();
+}
+
+
+void PlotTrace::displayData( void )
+{
+  P.lock();
+  if ( FilePlot ) {
+    FilePlot = false;
+    FilePath = path();
+    FileHeader.clear();
+    FileTraces.clear();
+    FileTracesNames.clear();
+    FileSizes.clear();
+    FileEvents.clear();
+    FileEventsNames.clear();
+    setView( WrapView );
+    Offset = trace( 0 ).currentTime() - TimeWindow;
+    LeftTime = Offset - TimeOffs;
+    PlotChanged = true;
+    P.unlock();
+    updateMenu();
+    resize();
+    if ( RW->idle() )
+      plot();
+  }
 }
 
 

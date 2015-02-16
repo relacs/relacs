@@ -1624,10 +1624,8 @@ void EventData::push( const ArrayD &time, double esize, double ewidth )
 #endif
 
   // reserve memory:
-  if ( ! Cyclic && R + time.size() > NBuffer ) {
+  if ( ! Cyclic && R + time.size() > NBuffer )
     reserve( R + time.size() );
-  }
-
 
   for ( int k=0; k<time.size(); k++ ) {
 
@@ -1649,7 +1647,7 @@ void EventData::push( const ArrayD &time, double esize, double ewidth )
     // update index:
     R++;
 
-    if ( k > 0.0 )
+    if ( k > 0 )
       interv = time[k] - time[k-1];
 
     // update mean size, width, interval and quality:
@@ -1664,6 +1662,63 @@ void EventData::push( const ArrayD &time, double esize, double ewidth )
   if ( Range.back() < back() )
     Range.setBack( back() );
 
+}
+
+
+void EventData::set( int index, const ArrayD &time, const ArrayD &esize, const ArrayD &ewidth )
+{
+  if ( time.empty() )
+    return;
+
+  // reserve memory and set indices:
+  if ( Cyclic ) {
+    Cycles = index / NBuffer;
+    Index = Cycles * NBuffer;
+    R = index - Index;
+  }
+  else {
+    if ( R + time.size() > NBuffer ) {
+      reserve( R + time.size() );
+      assert( R >= index );
+    }
+    R = index;
+  }
+
+  for ( int k=0; k<NBuffer && index<time.size(); k++ ) {
+
+    // new cycle?
+    if ( Cyclic && R >= NBuffer ) {
+      // set indices for new cycle:
+      R = 0;
+      Index += NBuffer;
+      Cycles++;
+    }
+
+    // add event:
+    TimeBuffer[R] = time[index];
+    if ( SizeBuffer != 0 && k<esize.size() ) {
+      SizeBuffer[R] = esize[index];
+      MeanSize = MeanSize * (1.0 - MeanRatio ) + esize[index] * MeanRatio;
+    }
+    if ( WidthBuffer != 0 && k<ewidth.size() ) {
+      WidthBuffer[R] = ewidth[index];
+      MeanWidth = MeanWidth * (1.0 - MeanRatio ) + ewidth[index] * MeanRatio;
+    }
+    if ( k > 0 ) {
+      double interv = time[k] - time[k-1];
+      MeanInterval = MeanInterval * (1.0 - MeanRatio ) + interv * MeanRatio;
+    }
+    MeanQuality = MeanQuality * (1.0 - MeanRatio ) + MeanRatio;
+    
+    // update index:
+    R++;
+    index++;
+
+  }
+
+  // update range:
+  if ( Range.back() < back() )
+    Range.setBack( back() );
 }
 
 

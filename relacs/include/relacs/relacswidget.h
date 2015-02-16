@@ -265,6 +265,9 @@ public slots:
     /*! Stops all RELACSWidget activities and exits. */
   void quit( void );
 
+    /*! Tell PlotTrace to display currently recorded data. */
+  void displayData( void );
+
     /*! Toggle showing filters and detectors in full window. */
   void showFilters( void );
     /*! Toggle showing traces in full window. */

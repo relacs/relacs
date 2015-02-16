@@ -39,7 +39,6 @@ class RELACSWidget;
 \class PlotTrace
 \author Jan Benda
 \author Christian Machens
-\version 2.0
 \brief Plot trace and spikes.
 \todo init(): user configurabel plot modes (paged, fixed, contiuous): origin and time units
 */
@@ -125,6 +124,11 @@ public:
     /*! Stop plotting. */
   void stop( void );
 
+    /*! \return the time of the last signal. */
+  double signalTime( void ) const;
+    /*! \return the current recording time of the input buffers. */
+  double currentTime( void ) const;
+
 
 public slots:
 
@@ -158,6 +162,7 @@ public slots:
 
   void displayIndex( const string &path, const deque<int> &traceindex,
 		     const deque<int> &eventsindex, double time );
+  void displayData( void );
 
 
 protected:
@@ -250,8 +255,10 @@ private:
   string FilePath;
   Options FileHeader;
   InList FileTraces;
+  deque< string > FileTracesNames;
+  deque< int > FileSizes;
   EventList FileEvents;
-  int FileOffset;
+  deque< string > FileEventsNames;
 
   InList PlotTraces;
   EventList PlotEvents;

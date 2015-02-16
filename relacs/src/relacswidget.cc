@@ -1825,7 +1825,11 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
 }
 
 
-//----------------------------Private Functions----------------------------//
+
+void RELACSWidget::displayData( void )
+{
+  PT->displayData();
+}
 
 
 void RELACSWidget::showFilters( void )

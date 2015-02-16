@@ -484,6 +484,9 @@ public:
         The mean size and the mean width are updated using \a size and \a width.
         Mean rate it updated to. */
   void push( const ArrayD &time, double size=1.0, double width=0.0 );
+    /*! Set the content of the buffers to \a time, \a size, an \a width
+        starting at index \a index. */
+  void set( int index, const ArrayD &time, const ArrayD &size, const ArrayD &width );
 
     /*! Insert a new event which occured at time \a time (seconds) and has the
         size \a size and width \a width to the buffer.
