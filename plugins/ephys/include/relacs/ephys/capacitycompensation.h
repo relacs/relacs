@@ -22,7 +22,7 @@
 #ifndef _RELACS_EPHYS_CAPACITYCOMPENSATION_H_
 #define _RELACS_EPHYS_CAPACITYCOMPENSATION_H_ 1
 
-#include <relacs/plot.h>
+#include <relacs/multiplot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
 using namespace relacs;
@@ -32,15 +32,17 @@ namespace ephys {
 
 /*!
 \class CapacityCompensation
-\brief [RePro] Lissajous figures for checking the capacity compensation of the amplifier.
+\brief [RePro] Sine waves for checking the capacity compensation of the amplifier inside the cell.
 \author Jan Benda
-\version 1.0 (Feb 28, 2014)
+\version 2.0 (Feb 17, 2015)
 \par Options
-- \c amplitude=1: Amplitude of stimulus (\c number)
-- \c duration=200ms: Duration of stimulus (\c number)
-- \c frequency=100Hz: Frequency of sine-wave stimulus (\c number)
+- \c amplitude=1nA: Amplitude of stimulus (\c number)
+- \c duration=100ms: Duration of stimulus (\c number)
+- \c frequency=1000Hz: Frequency of sine-wave stimulus (\c number)
 - \c skipcycles=10: Number of initial cycles to be skipped (\c integer)
+- \c showcycles=10: Number of cycles plotted (\c integer)
 - \c pause=100ms: Duration of pause between pulses (\c number)
+- \c average=10: Number of trials to be averaged (\c integer)
 */
 
 
@@ -57,7 +59,7 @@ public:
 
 protected:
 
-  Plot P;
+  MultiPlot P;
 
 };
 
