@@ -34,7 +34,6 @@ CapacityCompensation::CapacityCompensation( void )
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of stimulus", 0.1, 0.01, 10000.0, 0.01, "sec", "ms" );
   addNumber( "frequency", "Frequency of sine-wave stimulus", 1000.0, 1.0, 10000.0, 10.0, "Hz" );
-  addInteger( "skipcycles", "Number of initial cycles to be skipped", 10, 0, 10000, 1 );
   addInteger( "showcycles", "Number of cycles plotted", 10, 1, 10000, 1 );
   addNumber( "pause", "Duration of pause between pulses", 0.1, 0.01, 10000.0, 0.01, "sec", "ms" );
   addInteger( "average", "Number of trials to be averaged", 10, 1, 1000000 );
@@ -61,7 +60,6 @@ int CapacityCompensation::main( void )
   double amplitude = number( "amplitude" );
   double duration = number( "duration" );
   double frequency = number( "frequency" );
-  int skipcycles = integer( "skipcycles" );
   int showcycles = integer( "showcycles" );
   double pause = number( "pause" );
   unsigned int naverage = integer( "average" );
@@ -75,23 +73,29 @@ int CapacityCompensation::main( void )
   deque< SampleDataF > indatatraces;
   deque< SampleDataF > outdatatraces;
 
+  // dc current:
+  double dccurrent = stimulusData().number( outTraceName( outtrace ) );
+  OutData dcsignal;
+  dcsignal.setTrace( outtrace );
+  dcsignal.constWave( dccurrent );
+  dcsignal.setIdent( "DC=" + Str( dccurrent ) + outTrace( outtrace ).unit() );
+
   // plot:
   double ymin = 0.0;
   double ymax = 0.0;
-  double tmin = skipcycles/frequency;
-  double tmax = duration;
-  if ( duration - tmin < tmin ) {
-    duration = 2.0*tmin;
-    tmax = duration;
+  if ( duration - showcycles/frequency < 2.0/frequency ) {
+    duration = (showcycles+2.0)/frequency;
     warning( "Duration too small. Set to at least " + Str( 1000.0*duration, "%.0f" ) + "ms !", 4.0 );
   }
+  double tmin = duration - showcycles/frequency;
+  double tmax = duration;
   P.lock();
   P.resize( 2, 2, true );
   P.setCommonYRange( 0, 1 );
   P[0].setXRange( 1000.0*(tmax-showcycles/frequency), 1000.0*tmax );
   P[0].setXLabel( "Time [ms]" );
   P[0].setYLabel( intrace.ident() + " [" + intrace.unit() + "]" );
-  P[1].setXRange( -1.1*amplitude, 1.1*amplitude );
+  P[1].setXRange( dccurrent-1.1*amplitude, dccurrent+1.1*amplitude );
   if ( CurrentTrace[0] >= 0 )
     P[1].setXLabel( trace( CurrentTrace[0] ).ident() + " [" + trace( CurrentTrace[0] ).unit() + "]" );
   else
@@ -107,6 +111,7 @@ int CapacityCompensation::main( void )
   OutData signal;
   signal.setTrace( outtrace );
   signal.sineWave( duration, 1.0/samplerate, frequency, 0.0, amplitude, 0.0 );
+  signal += dccurrent;
 
   // message:
   Str s = "Amplitude <b>" + Str( amplitude ) + " nA</b>";
@@ -193,7 +198,7 @@ int CapacityCompensation::main( void )
     P[0].setYRange( ymin, ymax );
     double offs = 0.5*(ymax+ymin);
     double ampl = 0.5*(ymax-ymin)/amplitude/1.1;
-    P[0].plot( offs+ampl*inaverage, 1000.0, Plot::Red, 2, Plot::Solid );
+    P[0].plot( offs+ampl*(inaverage-dccurrent), 1000.0, Plot::Red, 2, Plot::Solid );
     P[0].plot( outaverage, 1000.0, Plot::Yellow, 2, Plot::Solid );
     P[1].clear();
     P[1].setYRange( ymin, ymax );
@@ -207,7 +212,7 @@ int CapacityCompensation::main( void )
     P.unlock();
   }
 
-  writeZero( outtrace );
+  directWrite( dcsignal );
   return Completed;
 }
 

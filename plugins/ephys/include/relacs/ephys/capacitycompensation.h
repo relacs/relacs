@@ -39,7 +39,6 @@ namespace ephys {
 - \c amplitude=1nA: Amplitude of stimulus (\c number)
 - \c duration=100ms: Duration of stimulus (\c number)
 - \c frequency=1000Hz: Frequency of sine-wave stimulus (\c number)
-- \c skipcycles=10: Number of initial cycles to be skipped (\c integer)
 - \c showcycles=10: Number of cycles plotted (\c integer)
 - \c pause=100ms: Duration of pause between pulses (\c number)
 - \c average=10: Number of trials to be averaged (\c integer)

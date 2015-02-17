@@ -28,7 +28,7 @@ namespace ephys {
 
 
 BridgeTest::BridgeTest( void )
-  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.2", "Sep 12, 2014" )
+  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.4", "Feb 17, 2015" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
@@ -72,6 +72,13 @@ int BridgeTest::main( void )
   int outtrace = CurrentOutput[0] >= 0 ? CurrentOutput[0] : 0;
   deque< SampleDataF > datatraces;
 
+  // dc current:
+  double dccurrent = stimulusData().number( outTraceName( outtrace ) );
+  OutData dcsignal;
+  dcsignal.setTrace( outtrace );
+  dcsignal.constWave( dccurrent );
+  dcsignal.setIdent( "DC=" + Str( dccurrent ) + outTrace( outtrace ).unit() );
+
   // plot:
   double ymin = 0.0;
   double ymax = 0.0;
@@ -94,7 +101,7 @@ int BridgeTest::main( void )
   double samplerate = intrace.sampleRate();
   OutData signal;
   signal.setTrace( outtrace );
-  signal.pulseWave( duration, 1.0/samplerate, amplitude, 0.0 );
+  signal.pulseWave( duration, 1.0/samplerate, amplitude+dccurrent, dccurrent );
 
   // message:
   Str s = "Amplitude <b>" + Str( amplitude ) + " nA</b>";
@@ -165,7 +172,7 @@ int BridgeTest::main( void )
     P.unlock();
   }
 
-  writeZero( outtrace );
+  directWrite( dcsignal );
   return Completed;
 }
 
