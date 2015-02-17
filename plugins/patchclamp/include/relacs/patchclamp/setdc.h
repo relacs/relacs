@@ -24,9 +24,9 @@
 
 #include <QLabel>
 #include <QPushButton>
-#include <QDoubleSpinBox>
 #include <QComboBox>
 #include <relacs/multiplot.h>
+#include <relacs/doublespinbox.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/repro.h>
 using namespace relacs;
@@ -78,7 +78,7 @@ protected:
   void analyze( double duration );
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QEvent *qce );
-  QDoubleSpinBox *EW;
+  DoubleSpinBox *EW;
   QComboBox *CW;
   QLabel *DCStepLabel;
   QLabel *CurrentUnitLabel1;

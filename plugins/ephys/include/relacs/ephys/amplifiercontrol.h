@@ -26,11 +26,11 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QCheckBox>
-#include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <relacs/digitalio.h>
+#include <relacs/doublespinbox.h>
 #include <relacs/misc/amplmode.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/control.h>
@@ -173,7 +173,7 @@ private:
   QRadioButton *VCButton;
   QRadioButton *ManualButton;
   QCheckBox *SyncCheckBox;
-  QDoubleSpinBox *SyncSpinBox;
+  DoubleSpinBox *SyncSpinBox;
   bool SyncPulseEnabled;
   double SyncPulseDuration;
   bool DoBuzz;

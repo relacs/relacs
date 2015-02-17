@@ -87,12 +87,12 @@ int CapacityCompensation::main( void )
     duration = (showcycles+2.0)/frequency;
     warning( "Duration too small. Set to at least " + Str( 1000.0*duration, "%.0f" ) + "ms !", 4.0 );
   }
-  double tmin = duration - showcycles/frequency;
-  double tmax = duration;
+  double tmin = duration - (showcycles+1)/frequency;
+  double tmax = duration - 1.0/frequency;
   P.lock();
   P.resize( 2, 2, true );
   P.setCommonYRange( 0, 1 );
-  P[0].setXRange( 1000.0*(tmax-showcycles/frequency), 1000.0*tmax );
+  P[0].setXRange( 1000.0*tmin, 1000.0*tmax );
   P[0].setXLabel( "Time [ms]" );
   P[0].setYLabel( intrace.ident() + " [" + intrace.unit() + "]" );
   P[1].setXRange( dccurrent-1.1*amplitude, dccurrent+1.1*amplitude );
@@ -142,8 +142,11 @@ int CapacityCompensation::main( void )
 	input.interpolate( data, tmin, intrace.stepsize() );
     }
     else {
-      input.sin( tmin, tmax, intrace.stepsize(), frequency );
-      input *= amplitude;
+      SampleDataF insine;
+      insine.sin( 0.0, duration, intrace.stepsize(), frequency );
+      insine += dccurrent;
+      insine *= amplitude;
+      insine.copy( tmin, tmax, input );
     }
 
     // average:
@@ -175,7 +178,7 @@ int CapacityCompensation::main( void )
     float max = 0.0;
     minMax( min, max, outaverage );
     double mean = 0.5*(min+max);
-    double range = 1.1*0.5*(max- min);
+    double range = 1.1*0.5*(max-min);
     min = mean - range;
     max = mean + range;
     if ( ymin == 0.0 && ymax == 0.0 ) {
@@ -183,7 +186,7 @@ int CapacityCompensation::main( void )
       ymax = max;
     }
     else {
-      double rate = 0.001;
+      double rate = 0.01;
       ymin += ( min - ymin )*rate;
       ymax += ( max - ymax )*rate;
       if ( ymax < max )
@@ -202,12 +205,7 @@ int CapacityCompensation::main( void )
     P[0].plot( outaverage, 1000.0, Plot::Yellow, 2, Plot::Solid );
     P[1].clear();
     P[1].setYRange( ymin, ymax );
-    P[1].plot( inaverage.array(), outaverage.array(), Plot::Yellow, 2, Plot::Solid );
-    SampleDataF inp;
-    inaverage.copy( duration-showcycles/frequency, duration, inp );
-    SampleDataF outp;
-    outaverage.copy( duration-showcycles/frequency, duration, outp );
-    P[1].plot( inp.array(), outp.array(), Plot::Red, 3, Plot::Solid );
+    P[1].plot( inaverage.array(), outaverage.array(), Plot::Yellow, 3, Plot::Solid );
     P.draw();
     P.unlock();
   }

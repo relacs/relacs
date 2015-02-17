@@ -67,6 +67,11 @@ public:
   virtual double valueFromText( const QString &text ) const;
 
 
+ protected:
+
+  virtual void keyPressEvent( QKeyEvent *event );
+
+
  private:
 
   char FormatType;

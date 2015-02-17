@@ -73,10 +73,10 @@ SetDC::SetDC( void )
   gl->addWidget( label, 0, 1 );
   DCStepIndex = 0;
   DCStep = DCSteps[DCStepIndex];
-  EW = new QDoubleSpinBox;
+  EW = new DoubleSpinBox;
   EW->setRange( -1000.0, 1000.0 );
   EW->setValue( 0.0 );
-  EW->setDecimals( 3 );
+  EW->setFormat( "%.3f" );
   EW->setSingleStep( DCStep );
   EW->setKeyboardTracking( false );
   gl->addWidget( EW, 0, 2 );

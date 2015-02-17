@@ -33,13 +33,13 @@ namespace base {
 \class SpectrumAnalyzer
 \brief [Control] Displays the spectrum of a voltage trace.
 \author Jan Benda
-\version 1.1 (Jul 24, 2009)
+\version 1.2 (Feb 17, 2015)
 \par Options
 - \c intrace=V-1: Input trace (\c string)
 - \c origin=before end of data: Analysis window (\c string)
 - \c offset=0ms: Offset of analysis window (\c number)
 - \c duration=1000ms: Width of analysis window (\c number)
-- \c size=1024: Number of data points for FFT (\c string)
+- \c resolution=10Hz: Frequency resolution of power spectrum (\c number)
 - \c overlap=true: Overlap FFT windows (\c boolean)
 - \c window=Hanning: FFT window function (\c string)
 - \c fmax=500Hz: Maximum frequency (\c number)
@@ -68,6 +68,7 @@ private:
   int Origin;
   double Offset;
   double Duration;
+  double Resolution;
   int SpecSize;
   bool Overlap;
   double (*Window)( int j, int n );

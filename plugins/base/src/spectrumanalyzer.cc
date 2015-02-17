@@ -31,7 +31,7 @@ namespace base {
 
 
 SpectrumAnalyzer::SpectrumAnalyzer( void )
-  : Control( "SpectrumAnalyzer", "base", "Jan Benda", "1.1", "Jul 24, 2009" )
+  : Control( "SpectrumAnalyzer", "base", "Jan Benda", "1.2", "Feb 17, 2015" )
 {
   // parameter:
   InTrace = 0;
@@ -50,13 +50,12 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   addSelection( "origin", "Analysis window", "before end of data|before signal|after signal" );
   addNumber( "offset", "Offset of analysis window", Offset, -10000.0, 10000.0, 0.1, "s", "ms" );
   addNumber( "duration", "Width of analysis window", Duration, 0.0, 100.0, 0.1, "s", "ms" );
-  addSelection( "size", "Number of data points for FFT", "1024|64|128|256|512|1024|2048|4096|8192|16384|32768|65536|131072|262144|524288|1048576" );
+  addNumber( "resolution", "Frequency resolution of power spectrum", 10.0, 0.0, 1000.0, 1.0, "Hz" );
   addBoolean( "overlap", "Overlap FFT windows", Overlap );
   addSelection( "window", "FFT window function", "Hanning|Bartlett|Blackman|Blackman-Harris|Hamming|Hanning|Parzen|Square|Welch" );
   addNumber( "fmax", "Maximum frequency", FMax, 0.0, 100000.0, 100.0, "Hz", "Hz" );
   addBoolean( "decibel", "Plot decibel relative to maximum", Decibel );
   addNumber( "pmin", "Minimum power", PMin, -1000.0, 0.0, 10.0, "dB" ).setActivation( "decibel", "true" );
-
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -115,8 +114,15 @@ void SpectrumAnalyzer::notify( void )
   Origin = index( "origin" );
   Offset = number( "offset" );
   Duration = number( "duration" );
-  SpecSize = integer( "size" );
+  Resolution = number( "resolution" );
+  SpecSize = nextPowerOfTwo( trace( InTrace ).indices( 1.0/Resolution ) );
   Overlap = boolean( "overlap" );
+  if ( Overlap && Duration < 1.5*trace( InTrace ).interval( SpecSize ) ) {
+    Duration = 1.5*trace( InTrace ).interval( SpecSize );
+  }
+  else if ( ! Overlap && Duration < 2.0*trace( InTrace ).interval( SpecSize ) ) {
+    Duration = 2.0*trace( InTrace ).interval( SpecSize );
+  }
   int win = index( "window" );
   switch ( win ) {
   case 0: Window = bartlett; break;

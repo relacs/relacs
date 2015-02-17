@@ -469,6 +469,11 @@ int Simulator::write( OutList &signal, bool setsignaltime )
   if ( Sim == 0 )
     signal.addError( OutData::NoDevice );
 
+  if ( signal.size() <= 0 ) {
+    signal.addError( DaqError::NoData );
+    return -1;
+  }
+
   // set trace:
   applyOutTrace( signal );
 
@@ -839,8 +844,10 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
 {
   QWriteLocker locker( &WriteMutex );
 
-  if ( signal.size() <= 0 )
-    return 0;
+  if ( signal.size() <= 0 ) {
+    signal.addError( DaqError::NoData );
+    return -1;
+  }
 
   bool success = true;
   signal.clearError();

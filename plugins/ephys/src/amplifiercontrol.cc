@@ -237,7 +237,7 @@ void AmplifierControl::initDevices( void )
       vbox->addLayout( hbox );
       QLabel *label = new QLabel( "Pulse duration" );
       hbox->addWidget( label );
-      SyncSpinBox = new QDoubleSpinBox;
+      SyncSpinBox = new DoubleSpinBox;
       SyncSpinBox->setRange( 0.1, 1000.0 );
       SyncSpinBox->setSingleStep( 0.1 );
       SyncSpinBox->setKeyboardTracking( false );

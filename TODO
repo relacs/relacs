@@ -27,8 +27,6 @@ New InData threading:
   e.g. invalid sampling rate and stall after write with high sampling rate.
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.
-- SpectrumAnalyzer Frequency resolution should not depend on sampling rate!
-  Use Frequency resolution instead of number of fft points.
 - Check whether InData, Acquire updateTime and readTime are still needed!
   But we do not want to block on the input too long!
   So maybe keep readTime. Make it an option for each device!
@@ -117,7 +115,6 @@ Robot:
 - Remove RELACS_COND_TML from plugins/base/src/Makefile.am once the necessary functionality has been moved back to Manipulator
 
 Acquire:
-- check write( OutList ) functions. They should throw an error if sigs.size() == 0!
 - levels(), minLevel() and other Attenuate properties should all go
   into Attenuate in case of NoAttenuator!
 - How to make sure the right Attenuate is used for a given RePro?

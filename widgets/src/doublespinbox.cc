@@ -21,6 +21,7 @@
 
 
 #include <cmath>
+#include <QKeyEvent>
 #include <relacs/str.h>
 #include <relacs/doublespinbox.h>
 
@@ -90,6 +91,39 @@ double DoubleSpinBox::valueFromText( const QString &text ) const
   if ( ::fabs( value ) < 0.001*::pow( 10.0, -decimals() ) )
     value = 0.0;
   return value;
+}
+
+
+void DoubleSpinBox::keyPressEvent( QKeyEvent *event )
+{
+  event->accept();
+  switch ( event->key() ) {
+
+  case Qt::Key_Up:
+    if ( event->modifiers() & Qt::ControlModifier ) {
+      stepBy( 50 );
+      return;
+    }
+    else if ( event->modifiers() & Qt::AltModifier ) {
+      stepBy( 10 );
+      return;
+    }
+    break;
+
+  case Qt::Key_Down:
+    if ( event->modifiers() & Qt::ControlModifier ) {
+      stepBy( -50 );
+      return;
+    }
+    else if ( event->modifiers() & Qt::AltModifier ) {
+      stepBy( -10 );
+      return;
+    }
+    break;
+
+  }
+
+  QDoubleSpinBox::keyPressEvent( event );
 }
 
 
