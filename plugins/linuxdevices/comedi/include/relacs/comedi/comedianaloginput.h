@@ -227,6 +227,8 @@ private:
     /*! True if a command is supposed to be running.
         \note this differs from running(), which indicated that the driver is still running. */
   bool IsRunning;
+    /*! True if analog input is about to stop. */
+  bool AboutToStop;
 
     /*! Calibration info. */
   comedi_calibration_t *Calibration;

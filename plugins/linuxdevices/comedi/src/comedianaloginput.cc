@@ -48,6 +48,7 @@ ComediAnalogInput::ComediAnalogInput( void )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   IsRunning = false;
+  AboutToStop = false;
   Calibration = 0;
   Traces = 0;
   ReadBufferSize = 0;
@@ -72,6 +73,7 @@ ComediAnalogInput::ComediAnalogInput( const string &device, const Options &opts 
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   IsRunning = false;
+  AboutToStop = false;
   Calibration = 0;
   Traces = 0;
   ReadBufferSize = 0;
@@ -245,6 +247,7 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   IsRunning = false;
+  AboutToStop = false;
   TotalSamples = 0;
   CurrentSamples = 0;
 
@@ -905,13 +908,15 @@ int ComediAnalogInput::readData( void )
 
   // no more data to be read:
   if ( readn <= 0 && ! ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) ) {
-    if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
+    if ( IsRunning && ( ! AboutToStop ) &&
+	 ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       // The following error messages do not work after a comedi_cancel!
       //      Traces->addError( DaqError::OverflowUnderrun );
       cerr << " ComediAnalogInput::readData(): no data and not running\n";
       cerr << " ComediAnalogInput::readData(): comedi_error: " << comedi_strerror( comedi_errno() ) << "\n";
       return -2;
     }
+    AboutToStop = false;
     return -1;
   }
 
@@ -953,6 +958,7 @@ int ComediAnalogInput::stop( void )
       return ReadError;
     if ( comedi_poll( DeviceP, SubDevice ) < 0 )
       return ReadError;
+    AboutToStop = true;
   }
 
   stopRead();
@@ -993,6 +999,7 @@ int ComediAnalogInput::reset( void )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   IsRunning = false;
+  AboutToStop = false;
   Traces = 0;
   TraceIndex = 0;
 

@@ -261,9 +261,9 @@ void PlotTrace::resize( void )
     resizeLayout();
   }
   
-  P.unlock();
-  
   PlotChanged = true;
+  
+  P.unlock();
 }
 
 
@@ -412,9 +412,7 @@ void PlotTrace::init( void )
     }
   }
 
-
   P.unlock();
-	
 }
 
 
@@ -1337,7 +1335,10 @@ void PlotTrace::displayIndex( const string &fpath, const deque<int> &traceindex,
 void PlotTrace::displayData( void )
 {
   P.lock();
-  if ( FilePlot ) {
+  bool fp = FilePlot;
+  P.unlock();
+  if ( fp ) {
+    P.lock();
     FilePlot = false;
     FilePath = path();
     FileHeader.clear();
