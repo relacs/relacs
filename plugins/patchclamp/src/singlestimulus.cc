@@ -35,7 +35,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.8", "Jan 21, 2015" )
+  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.8", "Feb 26, 2015" )
 {
   IUnit = "nA";
   Amplitude = 1.0;
@@ -394,6 +394,7 @@ int SingleStimulus::main( void )
 
       Offset += offsetincr;
       signal += offsetincr;
+      signal.back() = dccurrent;
     
       EventList spikes;
 
@@ -633,6 +634,7 @@ int SingleStimulus::main( void )
       return Failed;
     }
     signal += Offset;
+    signal.back() = dccurrent;
   }
 
   // plot trace:
@@ -753,6 +755,8 @@ int SingleStimulus::main( void )
     timeStamp();
     
   }
+
+  directWrite( dcsignal );
   
   if ( state == Completed ) {
     if ( storevoltage ) {
@@ -763,7 +767,6 @@ int SingleStimulus::main( void )
     saveSpikes( header, spikes );
   }
 
-  directWrite( dcsignal );
   return state;
 }
 

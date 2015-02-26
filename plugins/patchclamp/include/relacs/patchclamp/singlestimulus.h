@@ -37,7 +37,7 @@ namespace patchclamp {
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
 \author Jan Benda
-\version 1.8 (Jan 21, 2015)
+\version 1.8 (Feb 26, 2015)
 \par Options
 - \c Waveform
     - \c waveform=From file: Stimulus waveform (\c string)
