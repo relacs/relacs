@@ -95,7 +95,7 @@ int CapacityCompensation::main( void )
   P[0].setXRange( 1000.0*tmin, 1000.0*tmax );
   P[0].setXLabel( "Time [ms]" );
   P[0].setYLabel( intrace.ident() + " [" + intrace.unit() + "]" );
-  P[1].setXRange( dccurrent-1.1*amplitude, dccurrent+1.1*amplitude );
+  P[1].setXRange( -1.1*amplitude, 1.1*amplitude );
   if ( CurrentTrace[0] >= 0 )
     P[1].setXLabel( trace( CurrentTrace[0] ).ident() + " [" + trace( CurrentTrace[0] ).unit() + "]" );
   else
