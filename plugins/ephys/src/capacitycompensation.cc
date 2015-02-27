@@ -28,7 +28,7 @@ namespace ephys {
 
 
 CapacityCompensation::CapacityCompensation( void )
-  : RePro( "CapacityCompensation", "ephys", "Jan Benda", "2.0", "Feb 17, 2015" )
+  : RePro( "CapacityCompensation", "ephys", "Jan Benda", "2.0", "Feb 27, 2015" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
@@ -158,6 +158,7 @@ int CapacityCompensation::main( void )
       for ( unsigned int j=0; j<indatatraces.size(); j++ )
 	inaverage[k] += ( indatatraces[j][k] - inaverage[k] )/(j+1);
     }
+    inaverage -= mean( inaverage );
 
     // get output trace:
     SampleDataF output( tmin, tmax, intrace.stepsize(), 0.0F );
@@ -172,15 +173,14 @@ int CapacityCompensation::main( void )
       for ( unsigned int j=0; j<outdatatraces.size(); j++ )
 	outaverage[k] += ( outdatatraces[j][k] - outaverage[k] )/(j+1);
     }
+    outaverage -= mean( outaverage );
 
-    // voltage range:
+    // current and voltage range:
     float min = 0.0;
     float max = 0.0;
+    minMax( min, max, inaverage );
+    double amplitude = max - min;
     minMax( min, max, outaverage );
-    double mean = 0.5*(min+max);
-    double range = 1.1*0.5*(max-min);
-    min = mean - range;
-    max = mean + range;
     if ( ymin == 0.0 && ymax == 0.0 ) {
       ymin = min;
       ymax = max;
@@ -199,9 +199,8 @@ int CapacityCompensation::main( void )
     P.lock();
     P[0].clear();
     P[0].setYRange( ymin, ymax );
-    double offs = 0.5*(ymax+ymin);
-    double ampl = 0.5*(ymax-ymin)/amplitude/1.1;
-    P[0].plot( offs+ampl*(inaverage-dccurrent), 1000.0, Plot::Red, 2, Plot::Solid );
+    double ampl = (ymax-ymin)/amplitude/1.1;
+    P[0].plot( ampl*inaverage, 1000.0, Plot::Red, 2, Plot::Solid );
     P[0].plot( outaverage, 1000.0, Plot::Yellow, 2, Plot::Solid );
     P[1].clear();
     P[1].setYRange( ymin, ymax );

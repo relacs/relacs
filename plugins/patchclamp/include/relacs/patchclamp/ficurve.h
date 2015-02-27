@@ -38,7 +38,7 @@ namespace patchclamp {
 \class FICurve
 \brief [RePro] F-I curve measured in current-clamp
 \author Jan Benda
-\version 1.2 (Nov 25, 2010)
+\version 1.4 (Feb 27, 2015)
 \par Screenshot
 \image html ficurve.png
 
@@ -50,7 +50,7 @@ namespace patchclamp {
 - \c istep=0.001nA: Minimum step-size of current (\c number)
 - \c userm=false: Use membrane resistance for estimating istep from vstep (\c boolean)
 - \c vstep=1mV: Minimum step-size of voltage (\c number)
-- \c optimizeimin=false: Skip currents that do not evoke action potentials (\c boolean)
+- \c optimizedimin=1000: Minimum current below firing threshold (\c number)
 - Timing
 - \c duration=100ms: Duration of current output (\c number)
 - \c delay=100ms: Delay before current pulses (\c number)

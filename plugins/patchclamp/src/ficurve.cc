@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.2", "Nov 25, 2010" ),
+  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.4", "Feb 27, 2015" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -43,7 +43,7 @@ FICurve::FICurve( void )
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "false" );
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
   addNumber( "vstep", "Minimum step-size of voltage", 1.0, 0.001, 10000.0, 0.1 ).setActivation( "userm", "true" );
-  addBoolean( "optimizeimin", "Skip currents that do not evoke action potentials", false );
+  addNumber( "optimizedimin", "Minimum current below firing threshold", 1000.0, 0.0, 1000.0, 0.001 );
   newSection( "Timing" );
   addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 10.0, 0.001, "sec", "ms" );
@@ -81,6 +81,7 @@ void FICurve::preConfig( void )
     setUnit( "imin", IUnit );
     setUnit( "imax", IUnit );
     setUnit( "istep", IUnit );
+    setUnit( "optimizedimin", IUnit );
     IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
   }
 
@@ -105,7 +106,7 @@ int FICurve::main( void )
   double istep = number( "istep" );
   bool userm = boolean( "userm" );
   double vstep = number( "vstep" );
-  bool optimizeimin = boolean( "optimizeimin" );
+  double optimizedimin = number( "optimizedimin" );
   RangeLoop::Sequence shuffle = RangeLoop::Sequence( index( "shuffle" ) );
   RangeLoop::Sequence ishuffle = RangeLoop::Sequence( index( "ishuffle" ) );
   int iincrement = integer( "iincrement" );
@@ -319,8 +320,9 @@ int FICurve::main( void )
       Range.noCount();
     }
     // skip currents too low to make the neuron fire:
-    else if ( optimizeimin && Results[Range.pos()].SpikeCount <= 0.01 ) {
-      Range.setSkipBelow( Range.pos()-1 );
+    else if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
+      double maxcurrent = Range.value() - optimizedimin;
+      Range.setSkipBelow( Range.pos( maxcurrent ) - 1 );
     }
     // skip currents above large enough fon - fss differences:
     if ( Range.finishedBlock() &&
