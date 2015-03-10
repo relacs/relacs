@@ -105,7 +105,6 @@ auditory::Session plots do not work! Why???? It works on my laptop!
 General:
 - how to handle kernel modules:
   https://groups.google.com/forum/#!msg/comedi_list/MbcD6Ml-HDU/vf4X89V93PgJ
-- comedi m4 file should check for routing function
 - relacshelp should know whether doxygen is there, or whether the files it is operating on, exist.
 - add a README file to share/relacs/configs/
 - check device config files

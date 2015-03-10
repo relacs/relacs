@@ -23,15 +23,20 @@
 #include <relacs/comedi/comedianaloginput.h>
 #include <relacs/comedi/comedianalogoutput.h>
 #include <relacs/comedi/comedidigitalio.h>
+
+#ifdef HAVE_COMEDI_SET_ROUTING
 #include <relacs/comedi/comedirouting.h>
 #include <relacs/comedi/comedinipfi.h>
+#endif
 
 namespace comedi {
 
   addAnalogInput( ComediAnalogInput, comedi );
   addAnalogOutput( ComediAnalogOutput, comedi );
   addDigitalIO( ComediDigitalIO, comedi );
+#ifdef HAVE_COMEDI_SET_ROUTING
   addDevice( ComediRouting, comedi );
   addDevice( ComediNIPFI, comedi );
+#endif
 
 };

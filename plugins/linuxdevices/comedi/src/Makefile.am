@@ -32,9 +32,13 @@ libcomedistreaming_la_LIBADD = \
 libcomedistreaming_la_SOURCES = \
     comedianaloginput.cc \
     comedianalogoutput.cc \
-    comedidigitalio.cc \
+    comedidigitalio.cc
+if RELACS_COND_COMEDIROUTING
+libcomedistreaming_la_SOURCES += \
     comedirouting.cc \
-    comedinipfi.cc \
+    comedinipfi.cc
+endif
+libcomedistreaming_la_SOURCES += \
     comedistreaming.cc
 
 libcomedistreaming_la_includedir = $(pkgincludedir)/comedi
@@ -42,9 +46,12 @@ libcomedistreaming_la_includedir = $(pkgincludedir)/comedi
 libcomedistreaming_la_include_HEADERS = \
     $(HEADER_PATH)/comedianaloginput.h \
     $(HEADER_PATH)/comedianalogoutput.h \
-    $(HEADER_PATH)/comedidigitalio.h \
+    $(HEADER_PATH)/comedidigitalio.h
+if RELACS_COND_COMEDIROUTING
+libcomedistreaming_la_include_HEADERS += \
     $(HEADER_PATH)/comedirouting.h \
     $(HEADER_PATH)/comedinipfi.h
+endif
 
 
 

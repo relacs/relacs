@@ -1,8 +1,8 @@
 if RELACS_COND_COMPILE_comedi
     SDC = src
-endif
 if RELACS_EXAMPLES_COND
     SDE = examples
+endif
 endif
 SUBDIRS = $(SDC) $(SDE)
 

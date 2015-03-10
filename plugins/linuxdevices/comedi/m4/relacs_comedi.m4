@@ -2,6 +2,7 @@
 # - Provides --with(out)?-comedi options and performs header and link checks
 # - Fills (COMEDI_(LD|CPP)FLAGS|LIBS) and marks them for substitution
 # - Leaves ((LD|CPP)FLAGS|LIBS) untouched
+# - Sets HAVE_COMEDI_SET_ROUTING to yes if the comedi_set_routing function is present
 # - Sets RELACS_COMEDI with the result of the tests
 
 AC_DEFUN([RELACS_LIB_COMEDI], [
@@ -15,6 +16,8 @@ SAVE_LIBS=${LIBS}
 COMEDI_LDFLAGS=
 COMEDI_CPPFLAGS=
 COMEDI_LIBS=
+
+HAVE_COMEDI_SET_ROUTING=no
 
 # read arguments:
 AC_ARG_WITH([comedi],
@@ -65,6 +68,7 @@ AS_IF([test "x$with_comedi" != xno],
       else
         RELACS_COMEDI=yes
       fi
+      AC_CHECK_LIB([comedi], [comedi_set_routing], [HAVE_COMEDI_SET_ROUTING=yes], [] )
      ], 
      [if test "x$with_comedi" != xdetect; then
         AC_MSG_ERROR(${COMEDI_MISSING})
