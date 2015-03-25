@@ -62,7 +62,6 @@
 
 //* DAQ-devices:
 
-#define MAXDEV       4
 #define MAXSUBDEV    8
 #define MAXCHANLIST  128
 #define MAXTTLPULSES 5
