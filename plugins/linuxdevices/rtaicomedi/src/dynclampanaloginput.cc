@@ -246,7 +246,10 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   // get subdevice ID from module:
   int retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
   if ( retval < 0 ) {
-    setErrorStr( "ioctl command IOC_GET_SUBDEV_ID on device " + ModuleDevice + " failed" );
+    setErrorStr( "ioctl command IOC_GET_SUBDEV_ID on device " + ModuleDevice + " failed."
+		 " See kernel logs for more details." );
+    ::close( ModuleFd );
+    ModuleFd = -1;
     return -1;
   }
 
@@ -257,9 +260,14 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_IN;
   deviceIOC.fifoSize = 0;
+  deviceIOC.errorstr[0] = '\0';
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   if ( retval < 0 ) {
-    setErrorStr( "ioctl command IOC_OPEN_SUBDEV on device " + ModuleDevice + " failed" );
+    setErrorStr( "ioctl command IOC_OPEN_SUBDEV on device " + ModuleDevice + " failed: " +
+		 deviceIOC.errorstr );
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
+    ::close( ModuleFd );
+    ModuleFd = -1;
     return -1;
   }
 

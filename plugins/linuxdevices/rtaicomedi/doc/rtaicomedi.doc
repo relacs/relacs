@@ -564,9 +564,9 @@ to the messages immediately. Interrupt this by hitting \c ctrl-c.
 In case you do not have a \c /var/log/messages file
 (unfortunately the default in modern ubuntu based systems),
 you have to enable it. As root open the file \c /etc/rsyslog.d/50-default.conf
-in an editor. Remove the hash marks in front of the following lines:
+in an editor. Remove the hash marks in front of the following lines and add '*.=err;':
 \code
-*.=info;*.=notice;*.=warn;\\
+*.=info;*.=notice;*.=warn;*.=err;\\
         auth,authpriv.none;\\
         cron,daemon.none;\\
         mail,news.none          -/var/log/messages

@@ -8,16 +8,16 @@
 
 // *** KERNEL LOGGING MODE ***
 
+#define RTMODULE_INFO
 #define RTMODULE_DEBUG
-// #define RTMODULE_INFO
 
 
 // *** FEATURES ***
 
-  /*! Needed to compute a model. */
+  /*! Compute a model. */
 #define ENABLE_COMPUTATION
 
-  /*! Generate lokup tables and do not use rtai_math module. */
+  /*! Generate lookup tables and do not use rtai_math module. */
 #define ENABLE_LOOKUPTABLES
 
   /*! Generates internal trigger events on which analog output signals can be started. */
@@ -45,6 +45,7 @@
 // (one byte reserved for null-termination!)
 #define PARAM_NAME_MAXLEN 128
 #define DEV_NAME_MAXLEN   128
+#define DEV_ERROR_MAXLEN  128
 
 
 //* default waiting time for neuron to react to injected current
@@ -93,6 +94,7 @@ struct deviceIOCT {
   enum subdevTypes subdevType;
   unsigned int fifoIndex;
   unsigned int fifoSize;
+  char errorstr[DEV_ERROR_MAXLEN+1];
 };
 
 #define MAX_CONVERSION_COEFFICIENTS 4
