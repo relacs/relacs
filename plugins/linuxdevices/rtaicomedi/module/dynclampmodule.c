@@ -130,8 +130,10 @@ comedi_t *device;
 char devname[DEV_NAME_MAXLEN+1];
 
 struct subdeviceT subdev[MAXSUBDEV];
-int subdevN = 0;
+int subdevN = 2;
+const int aisubdevinx = 0;
 struct subdeviceT *aisubdev = 0;
+const int aosubdevinx = 1;
 struct subdeviceT *aosubdev = 0;
 
 int reqTraceSubdevID = -1;
@@ -183,9 +185,9 @@ lsampl_t syncSECHigh = 1;
 
 char *iocNames[RTMODULE_IOC_MAXNR] = {
   "dummy",
-  "IOC_GET_SUBDEV_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST",
-  "IOC_SYNC_CMD", "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ",
-  "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", "IOC_RELEASE_SUBDEV",
+  "IOC_GET_SUBDEV_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_SYNC_CMD",
+  "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ", "IOC_REQ_WRITE",
+  "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV",
   "IOC_DIO_CMD", "IOC_SET_TRIGGER", "IOC_UNSET_TRIGGER", "IOC_GET_TRACE_INFO",
   "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT", "IOC_GETLOOPAVG",
   "IOC_GETLOOPSQAVG", "IOC_GETLOOPMIN", "IOC_GETLOOPMAX", "IOC_GETAOINDEX",
@@ -220,17 +222,19 @@ static struct file_operations fops = {
 int getSubdevID( void );
 int openComediDevice( struct deviceIOCT *deviceIOC );
 void releaseSubdevice( int iS );
+
 int loadChanlist( struct chanlistIOCT *chanlistIOC );
 int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC );
 int startSubdevice( int iS );
 int stopSubdevice( struct subdeviceT *subd, int kill );
-int setDigitalIO( struct dioIOCT *dioIOC );
-int setAnalogTrigger( struct triggerIOCT *triggerIOC );
-int unsetAnalogTrigger( struct triggerIOCT *triggerIOC );
-
 void dynclamp_loop( long dummy );
 int init_dynclamp_loop( void );
 void cleanup_dynclamp_loop( void );
+
+int setDigitalIO( struct dioIOCT *dioIOC );
+
+int setAnalogTrigger( struct triggerIOCT *triggerIOC );
+int unsetAnalogTrigger( struct triggerIOCT *triggerIOC );
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -252,9 +256,14 @@ void init_globals( void )
 #endif
 #endif
 
-  subdevN = 0;
-  aisubdev = 0;
-  aosubdev = 0;
+  device = 0;
+  subdevN = 2;
+  aisubdev = &subdev[aisubdevinx];
+  aosubdev = &subdev[aosubdevinx];
+  memset( subdev, 0, sizeof(subdev) );
+  memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
+  aisubdev->subdev = -1;
+  aosubdev->subdev = -1;
   reqCloseSubdevID = -1;
   reqTraceSubdevID = -1;
 #ifdef ENABLE_COMPUTATION
@@ -275,9 +284,6 @@ void init_globals( void )
   }
 #endif
 #endif
-  device = 0;
-  memset( subdev, 0, sizeof(subdev) );
-  memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
 
 #ifdef ENABLE_TTLPULSE
   ttlInsns[0] = ttlStartWriteInsn;
@@ -310,7 +316,7 @@ int getSubdevID( void )
 {
   int i = 0;
   // find free slot in subdev[]:
-  for ( i = 0; i < subdevN && subdev[i].used; i++ );
+  for ( i = 2; i < subdevN && subdev[i].used; i++ );
   if ( i == subdevN ) {
     if ( subdevN >= MAXSUBDEV ) {
       ERROR_MSG( "getSubdevID ERROR: number of requested subdevices exceeds MAXSUBDEV!\n" );
@@ -331,8 +337,16 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
 {
   int iS, retVal;
 
+  if ( deviceIOC->subdevType == SUBDEV_IN )
+    iS = aisubdevinx;
+  else if ( deviceIOC->subdevType == SUBDEV_OUT )
+    iS = aosubdevinx;
+  else
+    iS = deviceIOC->subdevID;
+  deviceIOC->subdevID = iS; // report back for ai and ao devices
+
   // initialize subdevice structure:
-  iS = deviceIOC->subdevID;
+  subdev[iS].used = 1;
   subdev[iS].subdev = deviceIOC->subdev;
   subdev[iS].userSubdevIndex = -1;
   subdev[iS].type = deviceIOC->subdevType;
@@ -459,10 +473,6 @@ void releaseSubdevice( int iS )
   if ( subdev[iS].type == SUBDEV_IN || subdev[iS].type == SUBDEV_OUT ) {
     // delete FIFO
     rtf_destroy( subdev[iS].fifo );
-    if ( subdev[iS].type == SUBDEV_IN )
-      aisubdev = 0;
-    else if ( subdev[iS].type == SUBDEV_OUT )
-      aosubdev = 0;
   }
 #ifdef ENABLE_TTLPULSE
   else if ( subdev[iS].type == SUBDEV_DIO ) {
@@ -494,7 +504,7 @@ void releaseSubdevice( int iS )
 
   // reset subdevice structure:
   memset( &(subdev[iS]), 0, sizeof(struct subdeviceT) );
-  while ( subdevN > 0 && subdev[subdevN-1].used == 0 )
+  while ( subdevN > 2 && subdev[subdevN-1].used == 0 )
     subdevN--;
   DEBUG_MSG( "releaseSubdevice: released subdevice id %d, new subdevN=%d\n", iS, subdevN );
  
@@ -513,8 +523,6 @@ void releaseSubdevice( int iS )
   else
     DEBUG_MSG( "releaseSubdevice: successfully closed comedi device %s!\n",
 	       devname );
-
-  // reset device structure:
   device = 0;
 }
 
@@ -718,7 +726,9 @@ int startSubdevice( int iS )
   }
 
   subdev[iS].pending = 1;
-  if ( !dynClampTask.running ) {
+  if ( !dynClampTask.running && iS == aisubdevinx ) {
+    // only ai can start the loop!
+
     dynClampTask.aoIndex = 0;
     dynClampTask.reqFreq = subdev[iS].frequency;
 
@@ -757,11 +767,21 @@ int stopSubdevice( struct subdeviceT *subd, int kill )
   if ( !subd->running )
     return 0;
 
-  // check whether other subdevices are still running:
-  for ( i = 0; i < subdevN; i++ ) {
-    if ( &subdev[i] != subd && subdev[i].running ) {
-      subdevsrunning = 1;
-      break;
+  if ( kill && &subdev[aisubdevinx] == subd ) {
+    // stopping ai stops everything:
+    for ( i = 0; i < subdevN; i++ ) {
+      if ( &subdev[i] != subd )
+	stopSubdevice( &subdev[i], 0 );
+    }
+    subdevsrunning = 0;
+  }
+  else {
+    // check whether other subdevices are still running:
+    for ( i = 0; i < subdevN; i++ ) {
+      if ( &subdev[i] != subd && subdev[i].running ) {
+	subdevsrunning = 1;
+	break;
+      }
     }
   }
 
@@ -1057,7 +1077,6 @@ void dynclamp_loop( long dummy )
 #ifdef ENABLE_TTLPULSE
   int iT;
 #endif
-  int subdevRunning = 1;
   struct chanT *pChan;
   float voltage;
 #if defined(ENABLE_STATISTICS) || defined(ENABLE_SYNCSEC)
@@ -1099,9 +1118,7 @@ void dynclamp_loop( long dummy )
   /**************************************************************************/
   /******** LOOP START: *****************************************************/
   /**************************************************************************/
-  while( subdevRunning ) {
-    
-    subdevRunning = 0;
+  while( aisubdev->running ) {
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteInsn[iT] != 0; iT++ ) {
@@ -1123,10 +1140,11 @@ void dynclamp_loop( long dummy )
 
     /******** WRITE TO ANALOG OUTPUT: ******************************************/
     /****************************************************************************/
-    if ( aosubdev != 0 ) {
+
+    if ( aosubdev->running ) {
 
       // check for pending start trigger:
-      if ( aosubdev->running && aosubdev->pending ) {
+      if ( aosubdev->pending ) {
 	DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO startsrc=%d, prevtriger1=%d, triger1=%d, pv=%d, v=%d\n",
 		   aosubdev->startsource, prevtriggerevs[1], triggerevs[1],
 		   (int)(100.0*subdev[0].chanlist[0].prevvoltage), (int)(100.0*subdev[0].chanlist[0].voltage) );
@@ -1141,8 +1159,7 @@ void dynclamp_loop( long dummy )
 	}
       }
 
-      if ( aosubdev->running && ! aosubdev->pending ) {
-	  
+      if (  ! aosubdev->pending ) {
 	// check end of stimulus:
 	if ( !aosubdev->continuous &&
 	     aosubdev->duration <= dynClampTask.loopCnt ) {
@@ -1162,6 +1179,7 @@ void dynclamp_loop( long dummy )
 	}
 	else if ( dynClampTask.loopCnt >= aosubdev->delay ) {
 #ifdef ENABLE_TTLPULSE
+	  // start of stimulus:
 	  if ( dynClampTask.loopCnt == aosubdev->delay ) {
 	    for ( iT = 0; iT < MAXTTLPULSES && ttlStartAOInsn[iT] != 0; iT++ ) {
 	      retVal = comedi_do_insn( device, ttlStartAOInsn[iT] );
@@ -1201,47 +1219,44 @@ void dynclamp_loop( long dummy )
 	  }
 	}
 
-      }  // aosubdev->running && ! aosubdev->pending
+      }  // ! aosubdev->pending
+    }  // aosubdev->running
 	
-      subdevRunning = 1;
-	
-      // write output to daq board:
-      for ( iC = 0; iC < aosubdev->chanN; iC++ ) {
-	pChan = &aosubdev->chanlist[iC];
-	// this is an output to the DAQ board:
+    // write output to daq board:
+    for ( iC = 0; iC < aosubdev->chanN; iC++ ) {
+      pChan = &aosubdev->chanlist[iC];
+      // this is an output to the DAQ board:
 #ifdef ENABLE_COMPUTATION
-	if ( !pChan->isParamChan ) {
+      if ( !pChan->isParamChan ) {
 #endif
-	  voltage = pChan->voltage;
+	voltage = pChan->voltage;
 #ifdef ENABLE_COMPUTATION
-	  // add model output to sample:
-	  if ( pChan->modelIndex >= 0 )
-	    voltage += output[pChan->modelIndex];
+	// add model output to sample:
+	if ( pChan->modelIndex >= 0 )
+	  voltage += output[pChan->modelIndex];
 #endif
-	  // write out Sample:
+	// write out Sample:
 #ifdef ENABLE_SYNCSEC
-	  voltage *= currentfac;
+	voltage *= currentfac;
 #endif
-	  value_to_sample( pChan, voltage ); // sets pChan->lsample
-	  retVal = comedi_do_insn( device, &pChan->insn );
-	  if ( retVal < 1 ) {
-	    aosubdev->running = 0;
-	    aosubdev->error = E_NODATA;
-	    ERROR_MSG( "dynclamp_loop: ERROR! failed to write data to AO subdevice channel %d at loopCnt %lu\n",
+	value_to_sample( pChan, voltage ); // sets pChan->lsample
+	retVal = comedi_do_insn( device, &pChan->insn );
+	if ( retVal < 1 ) {
+	  aosubdev->running = 0;
+	  aosubdev->error = E_NODATA;
+	  ERROR_MSG( "dynclamp_loop: ERROR! failed to write data to AO subdevice channel %d at loopCnt %lu\n",
+		     iC, dynClampTask.loopCnt );
+	  if ( retVal < 0 ) {
+	    comedi_perror( "dynclampmodule: dynclamp_loop: comedi_data_write" );
+	    aosubdev->error = E_COMEDI;
+	    ERROR_MSG( "dynclamp_loop: ERROR! failed to write to AO subdevice channel %d at loopCnt %lu\n",
 		       iC, dynClampTask.loopCnt );
-	    if ( retVal < 0 ) {
-	      comedi_perror( "dynclampmodule: dynclamp_loop: comedi_data_write" );
-	      aosubdev->error = E_COMEDI;
-	      ERROR_MSG( "dynclamp_loop: ERROR! failed to write to AO subdevice channel %d at loopCnt %lu\n",
-			 iC, dynClampTask.loopCnt );
-	    }
 	  }
-#ifdef ENABLE_COMPUTATION
 	}
+#ifdef ENABLE_COMPUTATION
+      }
 #endif
-      } // end of chan loop
-
-    } // analog output available
+    } // end of ao channel loop
 
 
 #ifdef ENABLE_TTLPULSE
@@ -1272,7 +1287,7 @@ void dynclamp_loop( long dummy )
     /****************************************************************************/
     // PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
 	// int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
-    rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
+    rt_busy_sleep( INJECT_RECORD_DELAY );
 
 #endif
 
@@ -1289,112 +1304,109 @@ void dynclamp_loop( long dummy )
     
     /******** FROM ANALOG INPUT: **********************************************/
     /****************************************************************************/
-    if ( aisubdev != 0 && aisubdev->running ) {
-	
-      if ( aisubdev->pending ) {
-	if ( triggerevs[aisubdev->startsource] &&
-	     ! prevtriggerevs[aisubdev->startsource] ) {
-	  aisubdev->delay = dynClampTask.loopCnt + aisubdev->delay; 
-	  aisubdev->duration = aisubdev->delay + aisubdev->duration;
-	  aisubdev->pending = 0;
-	}
+    // ai is always running!
+    if ( aisubdev->pending ) {
+      if ( triggerevs[aisubdev->startsource] &&
+	   ! prevtriggerevs[aisubdev->startsource] ) {
+	aisubdev->delay = dynClampTask.loopCnt + aisubdev->delay; 
+	aisubdev->duration = aisubdev->delay + aisubdev->duration;
+	aisubdev->pending = 0;
       }
+    }
           
-      if ( ! aisubdev->pending ) {
-	// check duration:
-	if ( !aisubdev->continuous &&
-	     aisubdev->chanN > 0 &&
-	     aisubdev->duration <= dynClampTask.loopCnt ) {
-	  stopSubdevice( aisubdev, /*kill=*/0 );
-	}
-	subdevRunning = 1;
+    if ( ! aisubdev->pending ) {
+      // check duration:
+      if ( !aisubdev->continuous &&
+	   aisubdev->chanN > 0 &&
+	   aisubdev->duration <= dynClampTask.loopCnt ) {
+	stopSubdevice( aisubdev, /*kill=*/1 );
+      }
 
-	// for every ai channel:
-	for ( iC = 0; iC < aisubdev->chanN; iC++ ) {
+      // for every ai channel:
+      for ( iC = 0; iC < aisubdev->chanN; iC++ ) {
 
-	  pChan = &aisubdev->chanlist[iC];
+	pChan = &aisubdev->chanlist[iC];
 
-	  // previous sample:
-	  pChan->prevvoltage = pChan->voltage;
+	// previous sample:
+	pChan->prevvoltage = pChan->voltage;
 
-	  // acquire sample:
+	// acquire sample:
 #ifdef ENABLE_COMPUTATION
-	  if ( !pChan->isParamChan ) {
+	if ( !pChan->isParamChan ) {
 #endif
-	    retVal = comedi_do_insn( device, &pChan->insn );     
-	    if ( retVal < 1 ) {
-	      aisubdev->running = 0;
-	      aisubdev->error = E_NODATA;
-	      ERROR_MSG( "dynclamp_loop: ERROR! failed to read data from AI subdevice channel %d at loopCnt %lu\n",
+	  retVal = comedi_do_insn( device, &pChan->insn );     
+	  if ( retVal < 1 ) {
+	    aisubdev->running = 0;
+	    aisubdev->error = E_NODATA;
+	    ERROR_MSG( "dynclamp_loop: ERROR! failed to read data from AI subdevice channel %d at loopCnt %lu\n",
+		       iC, dynClampTask.loopCnt );
+	    if ( retVal < 0 ) {
+	      comedi_perror( "dynclampmodule: dynclamp_loop: comedi_data_read" );
+	      aisubdev->error = E_COMEDI;
+	      ERROR_MSG( "dynclamp_loop: ERROR! failed to read from AI subdevice channel %d at loopCnt %lu\n",
 			 iC, dynClampTask.loopCnt );
-	      if ( retVal < 0 ) {
-		comedi_perror( "dynclampmodule: dynclamp_loop: comedi_data_read" );
-		aisubdev->error = E_COMEDI;
-		ERROR_MSG( "dynclamp_loop: ERROR! failed to read from AI subdevice channel %d at loopCnt %lu\n",
-			   iC, dynClampTask.loopCnt );
-		continue;
-	      }
+	      continue;
 	    }
-	    // convert to voltage:
-	    sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
+	  }
+	  // convert to voltage:
+	  sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
 
 #ifdef ENABLE_COMPUTATION
-	    if ( pChan->modelIndex >= 0 )
-	      input[pChan->modelIndex] = pChan->voltage;
-	  }
-	  else {
-	    pChan->voltage = paramInput[pChan->chan];
-	  }
+	  if ( pChan->modelIndex >= 0 )
+	    input[pChan->modelIndex] = pChan->voltage;
+	}
+	else {
+	  pChan->voltage = paramInput[pChan->chan];
+	}
 #endif
 	  
 #ifdef RTMODULE_DEBUG
-	  if ( aisubdev->running == 0 )
-	    ERROR_MSG( "dynclamp_loop: ERROR! ai subdevice somehow not running\n" );
+	if ( aisubdev->running == 0 )
+	  ERROR_MSG( "dynclamp_loop: ERROR! ai subdevice somehow not running\n" );
 #endif
-	  // write to FIFO:
-	  retVal = rtf_put( pChan->fifo, &pChan->voltage, sizeof(float) );
+	// write to FIFO:
+	retVal = rtf_put( pChan->fifo, &pChan->voltage, sizeof(float) );
 #ifdef RTMODULE_DEBUG
-	  if ( aisubdev->running == 0 )
-	    ERROR_MSG( "dynclamp_loop: ERROR! rtf_put turned ai subdevice not running\n" );
+	if ( aisubdev->running == 0 )
+	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put turned ai subdevice not running\n" );
 #endif
 
-	  if ( retVal != sizeof(float) ) {
-	    ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
-	    if ( retVal == EINVAL ) {
-	      ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-	      ERROR_MSG( "dynclamp_loop: stop dynClampTask." );
-	      dynClampTask.running = 0;
-	      dynClampTask.duration = 0;
-	      return;
-	    }
-	    aisubdev->error = E_OVERFLOW;
-	    ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
-		       dynClampTask.loopCnt );
-	    aisubdev->running = 0;
-	    continue;
+	if ( retVal != sizeof(float) ) {
+	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
+	  if ( retVal == EINVAL ) {
+	    ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	    ERROR_MSG( "dynclamp_loop: stop dynClampTask." );
+	    dynClampTask.running = 0;
+	    dynClampTask.duration = 0;
+	    return;
 	  }
+	  aisubdev->error = E_OVERFLOW;
+	  ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
+		     dynClampTask.loopCnt );
+	  aisubdev->running = 0;
+	  continue;
+	}
 
 #ifdef RTMODULE_DEBUG
-	  if ( aisubdev->running == 0 )
-	    ERROR_MSG( "dynclamp_loop: ERROR! rtf_put error handling turned ai subdevice not running\n" );
+	if ( aisubdev->running == 0 )
+	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put error handling turned ai subdevice not running\n" );
 #endif
 
 #ifdef ENABLE_TRIGGER
-	  // trigger:
-	  if ( pChan->trigger ) {
-	    prevtriggerevs[1] = triggerevs[1];
-	    if ( pChan->voltage > pChan->alevel && pChan->prevvoltage <= pChan->alevel ) {
-	      triggerevs[1] = 1;
-	    }
-	    else if ( pChan->voltage < pChan->alevel && pChan->prevvoltage >= pChan->alevel ) {
-	      triggerevs[1] = 0;
-	    }
+	// trigger:
+	if ( pChan->trigger ) {
+	  prevtriggerevs[1] = triggerevs[1];
+	  if ( pChan->voltage > pChan->alevel && pChan->prevvoltage <= pChan->alevel ) {
+	    triggerevs[1] = 1;
 	  }
+	  else if ( pChan->voltage < pChan->alevel && pChan->prevvoltage >= pChan->alevel ) {
+	    triggerevs[1] = 0;
+	  }
+	}
 #endif
 	  
-	} // end of chan loop
-      } // ! pending
-    } // analog input available
+      } // end of channel loop
+    } // ! pending
 
 #ifdef ENABLE_SYNCSEC
     if ( syncSECInsnLow.subdev >= 0 ) {
@@ -1562,7 +1574,8 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 	       _IOC_TYPE(cmd), RTMODULE_IOC_MAXNR );
     return -ENOTTY;
   }
-  DEBUG_MSG( "ioctl: user triggered ioctl %d %s\n",_IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
+  DEBUG_MSG( "dynclampmodule_ioctl: user triggered ioctl %d %s\n",
+	     _IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
 
   mutex_lock( &mutex );
 
@@ -1662,7 +1675,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
   case IOC_OPEN_SUBDEV:
     cpRetVal = copy_from_user( &deviceIOC, (void __user *)arg, sizeof(struct deviceIOCT) );
     if ( cpRetVal ) {
-      ERROR_MSG( "ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
+      ERROR_MSG( "ioctl ERROR: invalid pointer to deviceIOCT-struct for reading!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1674,7 +1687,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     retVal = openComediDevice( &deviceIOC );
     cpRetVal = copy_to_user( (void __user *)arg, &deviceIOC, sizeof(struct deviceIOCT) );
     if ( cpRetVal ) {
-      ERROR_MSG( "ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
+      ERROR_MSG( "ioctl ERROR: invalid pointer to deviceIOCT-struct for writing!\n" );
       rc = -EFAULT;
       break;
     }
@@ -1912,23 +1925,6 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     break;
 
 
-  case IOC_RELEASE_SUBDEV:
-    retVal = get_user( subdevID, (int __user *)arg );
-    if ( retVal ) {
-      ERROR_MSG( "ioctl ERROR: invalid pointer to subdevice ID for release-query!" );
-      rc = -EFAULT;
-      break;
-    }
-    if ( subdevID >= subdevN ) {
-      ERROR_MSG( "ioctl ERROR: invalid subdevice ID for release-query!\n" );
-      rc = -EFAULT;
-      break;
-    }
-    releaseSubdevice( subdevID );
-    rc = 0;
-    break;
-
-
     // ******* Digital IO: ********************************************
   case IOC_DIO_CMD:
     retVal = copy_from_user( &dioIOC, (void __user *)arg, sizeof(struct dioIOCT) );
@@ -2142,7 +2138,7 @@ int dynclampmodule_close( struct inode *devFile, struct file *fModule )
   mutex_lock( &mutex );
   releaseSubdevice( reqCloseSubdevID );
   DEBUG_MSG( "dynclampmodule_close: closing subdevice %d\n", reqCloseSubdevID );
-  if ( subdevN <= 0 )
+  if ( subdevN <= 2 && aisubdev->used == 0 && aosubdev->used == 0 )
     init_globals();
   reqCloseSubdevID = -1;
   mutex_unlock( &mutex );

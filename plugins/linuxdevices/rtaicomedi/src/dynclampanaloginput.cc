@@ -243,25 +243,16 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
     return -1;
   }
 
-  // get subdevice ID from module:
-  int retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
-  if ( retval < 0 ) {
-    setErrorStr( "ioctl command IOC_GET_SUBDEV_ID on device " + ModuleDevice + " failed."
-		 " See kernel logs for more details." );
-    ::close( ModuleFd );
-    ModuleFd = -1;
-    return -1;
-  }
-
   // set device and subdevice:
   struct deviceIOCT deviceIOC;
-  deviceIOC.subdevID = SubdeviceID;
+  deviceIOC.subdevID = 0;
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_IN;
   deviceIOC.fifoSize = 0;
   deviceIOC.errorstr[0] = '\0';
-  retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
+  int retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
+  SubdeviceID = deviceIOC.subdevID;
   if ( retval < 0 ) {
     setErrorStr( "ioctl command IOC_OPEN_SUBDEV on device " + ModuleDevice + " failed: " +
 		 deviceIOC.errorstr );
@@ -272,7 +263,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   }
 
   // XXX Set the maximum possible sampling rate (of the rtai loop!):
-  MaxRate = 50000.0;
+  MaxRate = MAX_FREQUENCY;
 
   // initialize connection to RTAI-FIFO:
   ostringstream fifoname;
@@ -684,12 +675,10 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   // start subdevice:
   int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogInput::startRead -> ioctl command IOC_START_SUBDEV on device "
-	 << ModuleDevice << " failed!\n";
     int ern = errno;
-    if ( ern == ENOMEM )
-      cerr << " !!! No stack for kernel task !!!\n";
     Traces->addErrorStr( ern );
+    if ( ern == ENOMEM )
+      Traces->addErrorStr( "no stack for kernel task" );
     return -1;
   }
 

@@ -1,18 +1,17 @@
 /* DEFINITIONS SHARED BETWEEN USER SPACE AND KERNEL SPACE */
 
+// Whenever something in this file is modified, you need to call
+// "make" from linuxdevices/rtaicomedi to recompile the kernel modules
+// and the user space classes. And you need to reload the kernel
+// module with modul/reloadmodule.sh .
+
 #ifndef _MODULEDEF_H_
 #define _MODULEDEF_H_
 
 #include <linux/ioctl.h>
 
 
-// *** KERNEL LOGGING MODE ***
-
-#define RTMODULE_INFO
-#define RTMODULE_DEBUG
-
-
-// *** FEATURES ***
+// *** FEATURES *** 
 
   /*! Compute a model. */
 #define ENABLE_COMPUTATION
@@ -31,6 +30,12 @@
 
   /*! Measures mean and standard deviation of periodic task. */
 // #define ENABLE_STATISTICS
+
+
+// *** KERNEL LOGGING MODE ***
+
+#define RTMODULE_INFO
+#define RTMODULE_DEBUG
 
 
 // *** DEVICE LINUX CONFIGURATION ***
@@ -59,7 +64,7 @@
 
 //* Data buffering:
 
-#define FIFO_SIZE   640000 // bytes
+#define FIFO_SIZE   64000 // bytes
 
 //* DAQ-devices:
 
@@ -178,31 +183,30 @@ struct traceChannelIOCT {
 #define IOC_REQ_WRITE           _IOW(RTMODULE_MAJOR,  8, int)
 #define IOC_REQ_CLOSE           _IOW(RTMODULE_MAJOR,  9, int)
 #define IOC_STOP_SUBDEV         _IOW(RTMODULE_MAJOR, 10, int)
-#define IOC_RELEASE_SUBDEV      _IOW(RTMODULE_MAJOR, 11, int)
 
-#define IOC_DIO_CMD             _IOWR(RTMODULE_MAJOR, 12 ,int)
-#define IOC_SET_TRIGGER         _IOW(RTMODULE_MAJOR, 13, int)
-#define IOC_UNSET_TRIGGER       _IOW(RTMODULE_MAJOR, 14, int)
+#define IOC_DIO_CMD             _IOWR(RTMODULE_MAJOR, 11, int)
+#define IOC_SET_TRIGGER         _IOW(RTMODULE_MAJOR, 12, int)
+#define IOC_UNSET_TRIGGER       _IOW(RTMODULE_MAJOR, 13, int)
 
 // exchange info:
 
-#define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 15, int)
-#define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  16, int)
-#define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  17, int)
-#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  18, int)
-#define IOC_GETLOOPAVG          _IOR(RTMODULE_MAJOR,  19, int)
-#define IOC_GETLOOPSQAVG        _IOR(RTMODULE_MAJOR,  20, int)
-#define IOC_GETLOOPMIN          _IOR(RTMODULE_MAJOR,  21, int)
-#define IOC_GETLOOPMAX          _IOR(RTMODULE_MAJOR,  22, int)
-#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  23, int)
+#define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 14, int)
+#define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  15, int)
+#define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  16, int)
+#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  17, int)
+#define IOC_GETLOOPAVG          _IOR(RTMODULE_MAJOR,  18, int)
+#define IOC_GETLOOPSQAVG        _IOR(RTMODULE_MAJOR,  19, int)
+#define IOC_GETLOOPMIN          _IOR(RTMODULE_MAJOR,  20, int)
+#define IOC_GETLOOPMAX          _IOR(RTMODULE_MAJOR,  21, int)
+#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  22, int)
 
 // lookuptables:
-#define IOC_SET_LOOKUP_K        _IOW(RTMODULE_MAJOR,  24, int)
-#define IOC_SET_LOOKUP_N        _IOW(RTMODULE_MAJOR,  25, int)
-#define IOC_SET_LOOKUP_X        _IOW(RTMODULE_MAJOR,  26, int)
-#define IOC_SET_LOOKUP_Y        _IOW(RTMODULE_MAJOR,  27, int)
+#define IOC_SET_LOOKUP_K        _IOW(RTMODULE_MAJOR,  23, int)
+#define IOC_SET_LOOKUP_N        _IOW(RTMODULE_MAJOR,  24, int)
+#define IOC_SET_LOOKUP_X        _IOW(RTMODULE_MAJOR,  25, int)
+#define IOC_SET_LOOKUP_Y        _IOW(RTMODULE_MAJOR,  26, int)
 
-#define RTMODULE_IOC_MAXNR 28
+#define RTMODULE_IOC_MAXNR 27
 
 
 // *** KERNEL LOGGING STYLE ***
