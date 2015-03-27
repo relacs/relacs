@@ -46,7 +46,6 @@ namespace rtaicomedi {
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
   : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
 {
-  SubdeviceID = -1;
   ModuleDevice = "";
   ModuleFd = -1;
   FifoFd = -1;
@@ -69,7 +68,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
 					    const Options &opts ) 
   : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
 {
-  SubdeviceID = -1;
   ModuleDevice = "";
   ModuleFd = -1;
   FifoFd = -1;
@@ -250,17 +248,15 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
 
   // set device and subdevice:
   struct deviceIOCT deviceIOC;
-  deviceIOC.subdevID = 0;
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_OUT;
   deviceIOC.errorstr[0] = '\0';
   int retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
-  SubdeviceID = deviceIOC.subdevID;
   if ( retval < 0 ) {
     setErrorStr( "ioctl command IOC_OPEN_SUBDEV on device " + ModuleDevice + " failed: " +
 		 deviceIOC.errorstr );
-    ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
     ::close( ModuleFd );
     ModuleFd = -1;
     return -1;
@@ -351,7 +347,7 @@ void DynClampAnalogOutput::close( void )
   Calibration = 0;
 
   if ( ModuleFd >= 0 ) {
-    ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
     if ( FifoFd >= 0 )
       ::close( FifoFd );
     if ( ::close( ModuleFd ) < 0 )
@@ -616,7 +612,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 
     // set chanlist:
     struct chanlistIOCT chanlistIOC;
-    chanlistIOC.subdevID = SubdeviceID;
+    chanlistIOC.type = SUBDEV_OUT;
     for( int k = 0; k < ol.size(); k++ ){
       chanlistIOC.chanlist[k] = chanlist[k];
       if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
@@ -640,7 +636,6 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 	}
       }
     }
-    chanlistIOC.userDeviceIndex = ol[0].device();
     chanlistIOC.chanlistN = ol.size();
     int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
     if ( retval < 0 ) {
@@ -651,7 +646,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 
     // set up synchronous command:
     struct syncCmdIOCT syncCmdIOC;
-    syncCmdIOC.subdevID = SubdeviceID;
+    syncCmdIOC.type = SUBDEV_OUT;
     syncCmdIOC.frequency = 0;
     syncCmdIOC.delay = 0;
     syncCmdIOC.duration = 1;
@@ -693,7 +688,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
     return -1;
 
   // start subdevice:
-  retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
+  retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, SUBDEV_OUT );
   if ( retval < 0 ) {
     cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_START_SUBDEV on device "
 	 << ModuleDevice << " failed!\n";
@@ -817,7 +812,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
     // set chanlist:
     struct chanlistIOCT chanlistIOC;
-    chanlistIOC.subdevID = SubdeviceID;
+    chanlistIOC.type = SUBDEV_OUT;
     for( int k = 0; k < ol.size(); k++ ){
       chanlistIOC.chanlist[k] = chanlist[k];
       if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
@@ -841,7 +836,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 	}
       }
     }
-    chanlistIOC.userDeviceIndex = ol[0].device();
     chanlistIOC.chanlistN = ol.size();
     int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
     //  cerr << "prepareWrite(): IOC_CHANLIST done!\n"; /// TEST
@@ -853,7 +847,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
     // set up synchronous command:
     struct syncCmdIOCT syncCmdIOC;
-    syncCmdIOC.subdevID = SubdeviceID;
+    syncCmdIOC.type = SUBDEV_OUT;
     syncCmdIOC.frequency = (unsigned int)::rint( ol[0].sampleRate() );
     syncCmdIOC.delay = ol[0].indices( ol[0].delay() );
     syncCmdIOC.duration = ol[0].size();
@@ -918,7 +912,7 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 
 
   // start subdevice:
-  int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
+  int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, SUBDEV_OUT );
   if ( retval < 0 ) {
     int ern = errno;
     Sigs.addErrorStr( ern );
@@ -954,7 +948,7 @@ int DynClampAnalogOutput::writeData( void )
 
   // device stopped?
   if ( IsPrepared ) {
-    int running = SubdeviceID;
+    int running = SUBDEV_OUT;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
       //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
@@ -1058,7 +1052,7 @@ int DynClampAnalogOutput::stop( void )
     if ( !IsPrepared )
       return 0;
 
-    running = SubdeviceID;
+    running = SUBDEV_OUT;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
       //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
@@ -1070,7 +1064,7 @@ int DynClampAnalogOutput::stop( void )
   if ( running > 0 ) {
     stopWrite();
     QMutexLocker locker( mutex() );
-    int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
+    int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, SUBDEV_OUT );
     if ( retval < 0 ) {
       cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
 	   << ModuleDevice << " failed!\n";
@@ -1115,7 +1109,7 @@ AnalogOutput::Status DynClampAnalogOutput::status( void ) const
   if ( !IsPrepared )
     return Idle;
 
-  int running = SubdeviceID;
+  int running = SUBDEV_OUT;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if ( retval < 0 ) {
     cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
@@ -1194,7 +1188,6 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 	  cerr << "! DynClampAnalogOutput::matchTraces -> model input trace " << traces[k].traceName() << " requires as unit '" << traceInfo.unit << "', not '" << traces[k].unit() << "'\n";
 	  //	  traces[k].addErrorStr( "model input trace " + traces[k].traceName() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
 	}
-	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
 	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
 	  failed = true;

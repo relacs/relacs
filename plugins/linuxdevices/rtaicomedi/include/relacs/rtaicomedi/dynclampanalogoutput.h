@@ -185,9 +185,6 @@ private:
         DynClamp DAQ devices. */
   static const int DynClampAnalogIOType = 2;
 
-    /*! needed for assigning TraceInfo strings to channels. */
-  int SubdeviceID;
-
     /*! Name of the kernel module device file. */
   string ModuleDevice;
     /*! File descriptor for the kernel module. */

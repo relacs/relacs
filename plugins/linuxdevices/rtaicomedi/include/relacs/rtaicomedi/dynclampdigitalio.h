@@ -185,9 +185,6 @@ private:
     /*! The number of supported digital I/O lines */
   int MaxLines;
 
-    /*! Needed by for assigning TraceInfo strings to channels. */
-  int SubdeviceID;
-
     /*! Name of the kernel module device file. */
   string ModuleDevice;
     /*! File descriptor for the kernel module. */

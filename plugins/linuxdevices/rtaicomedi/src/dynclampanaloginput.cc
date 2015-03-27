@@ -41,7 +41,6 @@ namespace rtaicomedi {
 DynClampAnalogInput::DynClampAnalogInput( void ) 
   : AnalogInput( "DynClampAnalogInput", DynClampAnalogIOType )
 {
-  SubdeviceID = -1;
   ModuleDevice = "";
   ModuleFd = -1;
   FifoFd = -1;
@@ -67,7 +66,6 @@ DynClampAnalogInput::DynClampAnalogInput( void )
 DynClampAnalogInput::DynClampAnalogInput( const string &device, const Options &opts ) 
   : AnalogInput( "DynClampAnalogInput", DynClampAnalogIOType )
 {
-  SubdeviceID = -1;
   ModuleDevice = "";
   ModuleFd = -1;
   FifoFd = -1;
@@ -245,18 +243,16 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
 
   // set device and subdevice:
   struct deviceIOCT deviceIOC;
-  deviceIOC.subdevID = 0;
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_IN;
   deviceIOC.fifoSize = 0;
   deviceIOC.errorstr[0] = '\0';
   int retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
-  SubdeviceID = deviceIOC.subdevID;
   if ( retval < 0 ) {
     setErrorStr( "ioctl command IOC_OPEN_SUBDEV on device " + ModuleDevice + " failed: " +
 		 deviceIOC.errorstr );
-    ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
     ::close( ModuleFd );
     ModuleFd = -1;
     return -1;
@@ -307,7 +303,7 @@ void DynClampAnalogInput::close( void )
   reset();
 
   if ( ModuleFd >= 0 ) {
-    ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
     if ( FifoFd >= 0 ) {
       ::close( FifoFd );
       FifoFd = -1;
@@ -592,7 +588,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   setupChanList( traces, ChanList, MAXCHANLIST );
 
   struct chanlistIOCT chanlistIOC;
-  chanlistIOC.subdevID = SubdeviceID;
+  chanlistIOC.type = SUBDEV_IN;
   for( int k = 0; k < traces.size(); k++ ) {
     chanlistIOC.chanlist[k] = ChanList[k];
     if ( traces[k].channel() < PARAM_CHAN_OFFSET ) {
@@ -615,7 +611,6 @@ int DynClampAnalogInput::prepareRead( InList &traces )
       }
     }
   }
-  chanlistIOC.userDeviceIndex = traces[0].device();
   chanlistIOC.chanlistN = traces.size();
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
   //  cerr << "prepareRead(): IOC_CHANLIST done!\n"; /// TEST
@@ -627,7 +622,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 
   // set up synchronous command:
   struct syncCmdIOCT syncCmdIOC;
-  syncCmdIOC.subdevID = SubdeviceID;
+  syncCmdIOC.type = SUBDEV_IN;
   syncCmdIOC.frequency = (unsigned int)traces[0].sampleRate();
   syncCmdIOC.duration = traces[0].capacity() + traces[0].indices( traces[0].delay());
   syncCmdIOC.continuous = traces[0].continuous();
@@ -673,7 +668,7 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   }
 
   // start subdevice:
-  int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
+  int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, SUBDEV_IN );
   if ( retval < 0 ) {
     int ern = errno;
     Traces->addErrorStr( ern );
@@ -730,15 +725,6 @@ int DynClampAnalogInput::readData( void )
 
   // try to read twice
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
-/*
-    int retval = ioctl( ModuleFd, IOC_REQ_READ, &SubdeviceID );
-    if ( retval < 0 ) {
-      cerr << " DynClampAnalogInput::readData() -> ioctl command IOC_REQ_READ on device "
-	   << ModuleDevice << " failed!\n";
-      return -2;
-    }
-*/
-
     // read data:
     ssize_t m = read( FifoFd, Buffer + readn, maxn );
 
@@ -871,7 +857,7 @@ int DynClampAnalogInput::stop( void )
     if ( !IsPrepared )
       return 0;
 
-    running = SubdeviceID;
+    running = SUBDEV_IN;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
       cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
@@ -883,7 +869,7 @@ int DynClampAnalogInput::stop( void )
   if ( running  > 0 ) {
     stopRead();
     QMutexLocker locker( mutex() );
-    int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
+    int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, SUBDEV_IN );
     if ( retval < 0 ) {
       cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
 	   << ModuleDevice << " failed!\n";
@@ -906,14 +892,14 @@ int DynClampAnalogInput::reset( void )
 
   int retval = 0;
   if ( IsPrepared || IsRunning ) {
-    int running = SubdeviceID;
+    int running = SUBDEV_IN;
     retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
       addErrorStr( "ioctl command IOC_CHK_RUNNING on device " +
 		   ModuleDevice + " failed" );
     }
     if ( running > 0 ) {
-      retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
+      retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, SUBDEV_IN );
       if ( retval < 0 ) {
 	addErrorStr( "ioctl command IOC_STOP_SUBDEV on device " +
 		     ModuleDevice + " failed" );
@@ -948,11 +934,11 @@ bool DynClampAnalogInput::running( void ) const
   if ( !IsPrepared )
     return false;
 
-  int exchangeVal = SubdeviceID;
-  int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &exchangeVal );
+  int running = SUBDEV_IN;
+  int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
 
   //  cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-  //       << ModuleDevice << " " << exchangeVal << '\n';
+  //       << ModuleDevice << " " << running << '\n';
 
   if ( retval < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
@@ -960,7 +946,7 @@ bool DynClampAnalogInput::running( void ) const
     return false;
   }
 
-  return ( exchangeVal > 0 && AnalogInput::running() );
+  return ( running > 0 && AnalogInput::running() );
 }
 
 
@@ -1008,7 +994,6 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
 	tracefound[k] = true;
 	if ( traces[k].unit() != traceInfo.unit )
 	  traces[k].addErrorStr( "model input trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
-	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
 	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 )
 	  traces[k].addErrorStr( "failed to pass device and channel information to model input traces -> errno=" + Str( errno ) );

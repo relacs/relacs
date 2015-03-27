@@ -198,9 +198,6 @@ private:
     /*! The comedi subdevice number. */
   unsigned int SubDevice;
 
-    /*! Needed by for assigning TraceInfo strings to channels. */
-  int SubdeviceID;
-
     /*! Name of the kernel module device file. */
   string ModuleDevice;
     /*! File descriptor for the kernel module. */

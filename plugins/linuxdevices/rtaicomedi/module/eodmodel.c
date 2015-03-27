@@ -27,9 +27,8 @@ float loopRate;
       analog input traces in Relacs. */
 const char *inputNames[INPUT_N] = { "EOD" };
 const char *inputUnits[INPUT_N] = { "mV" };
-  /*! The \a inputChannels and \a inputDevices are set automatically. */
+  /*! The \a inputChannels are set automatically. */
 int inputChannels[INPUT_N];
-int inputDevices[INPUT_N];
   /*! \a input holds the current value that was read in from the DAQ board. */
 float input[INPUT_N] = { 0.0 };
 
@@ -38,7 +37,6 @@ float input[INPUT_N] = { 0.0 };
 const char *outputNames[OUTPUT_N] = { "GlobalEField" };
 const char *outputUnits[OUTPUT_N] = { "V" };
 int outputChannels[OUTPUT_N];
-int outputDevices[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
