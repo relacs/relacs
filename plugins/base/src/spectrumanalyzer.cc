@@ -115,14 +115,16 @@ void SpectrumAnalyzer::notify( void )
   Offset = number( "offset" );
   Duration = number( "duration" );
   Resolution = number( "resolution" );
-  SpecSize = nextPowerOfTwo( trace( InTrace ).indices( 1.0/Resolution ) );
   Overlap = boolean( "overlap" );
-  if ( Overlap && Duration < 1.5*trace( InTrace ).interval( SpecSize ) ) {
-    Duration = 1.5*trace( InTrace ).interval( SpecSize );
+  if ( InTrace >= 0 && InTrace < traces().size() ) {
+    SpecSize = nextPowerOfTwo( trace( InTrace ).indices( 1.0/Resolution ) );
+    if ( Overlap && Duration < 1.5*trace( InTrace ).interval( SpecSize ) )
+      Duration = 1.5*trace( InTrace ).interval( SpecSize );
+    else if ( ! Overlap && Duration < 2.0*trace( InTrace ).interval( SpecSize ) )
+      Duration = 2.0*trace( InTrace ).interval( SpecSize );
   }
-  else if ( ! Overlap && Duration < 2.0*trace( InTrace ).interval( SpecSize ) ) {
-    Duration = 2.0*trace( InTrace ).interval( SpecSize );
-  }
+  else
+    SpecSize = 0;
   int win = index( "window" );
   switch ( win ) {
   case 0: Window = bartlett; break;
@@ -145,7 +147,8 @@ void SpectrumAnalyzer::notify( void )
     P.setYRange( PMin, 0.0 );
   }
   else {
-    P.setYLabel( trace( InTrace ).ident() + " [" + trace( InTrace ).unit() + "]" );
+    if ( SpecSize > 0 )  // valid InTrace
+      P.setYLabel( trace( InTrace ).ident() + " [" + trace( InTrace ).unit() + "]" );
     P.setYRange( 0.0, Plot::AutoScale );
   }
   P.unlock();

@@ -40,10 +40,10 @@ int outputChannels[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
-#define PARAMINPUT_N 1
-const char *paramInputNames[PARAMINPUT_N] = { "EODSignal" };
-const char *paramInputUnits[PARAMINPUT_N] = { "V" };
-float paramInput[PARAMINPUT_N] = { 0.0 };
+#define PARAMINPUT_N 0
+const char *paramInputNames[PARAMINPUT_N];
+const char *paramInputUnits[PARAMINPUT_N];
+float paramInput[PARAMINPUT_N];
 
   /*! Parameter that are read by the model and are written to the model. */
 #define PARAMOUTPUT_N 2
@@ -74,11 +74,10 @@ void computeModel( void )
   // cosine from lookuptable:
   k = phase*lookupn[0];
   // eod:
-  paramInput[0] = paramOutput[0] * lookupy[0][k];
+  output[0] = paramOutput[0] * lookupy[0][k];
 #else
-  paramInput[0] = paramOutput[0] * cos( 2.0*M_PI*phase );
+  output[0] = paramOutput[0] * cos( 2.0*M_PI*phase );
 #endif
-  output[0] = paramInput[0];
 }
 
 #else

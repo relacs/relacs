@@ -78,9 +78,11 @@ void Histogram::notify( void )
   Origin = index( "origin" );
   Offset = number( "offset" );
   Duration = number( "duration" );
-  P.lock();
-  P.setXLabel( trace( InTrace ).ident() + " [" + trace( InTrace ).unit() + "]" );
-  P.unlock();
+  if ( InTrace >= 0 && InTrace < traces().size() ) {
+    P.lock();
+    P.setXLabel( trace( InTrace ).ident() + " [" + trace( InTrace ).unit() + "]" );
+    P.unlock();
+  }
 }
 
 

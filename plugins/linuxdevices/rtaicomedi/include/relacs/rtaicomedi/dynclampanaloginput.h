@@ -43,6 +43,29 @@ namespace rtaicomedi {
 \todo Error handling in readData()
 \bug fix errno usage
 
+\par Input traces 
+
+As usual, input traces can be assigned to channels
+of the analog input device. All the input traces the dynamic clamp
+model requires (its \c inputNames) must be available.
+
+Some additional input traces might be available. They can be accessed like
+normal analog input traces, but the channel nummber needs to be set to 1000 or larger.
+The following three types of additional inputs are supported:
+- additional inputs as defined by the dynamic clamp model via its \c paramInputNames.
+- timing measurements, if they are enabled in moduledef.h:
+  - \c Interval : the period of the dynamic clamp loop
+  - \c AI-time : the time required by the analog input part
+  - \c AI-acquisition-time : the time required by reading in a single analog input channel
+  - \c AI-conversion-time : the time required to convert the read in value
+  - \c AO-time : the time required by the analog output part
+  - \c Model-time : the time required for calling computModel()
+  all in seconds.
+- for each analog output trace the dynamic clamp model is using (its \c outputNames), 
+  - \c Model-xxx contains the value the model computed, and
+  - \c Total-xxx contains the total output for this channel.
+  The difference between the two is the stimulus that was written by a RePro to that channel.
+  \c xxx is the name of the analog output trace.
 
 \par Options:
 - \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its

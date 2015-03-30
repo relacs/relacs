@@ -46,6 +46,7 @@ struct chanT {
   unsigned int chan;
   int param;
   int modelIndex;
+  int statusIndex;
   int isUsed;
   int aref;
   int rangeIndex;
@@ -144,6 +145,9 @@ int aotimestatusinx = 0;
 #endif
 #ifdef ENABLE_MODELTIME
 int modeltimestatusinx = 0;
+#endif
+#ifdef ENABLE_COMPUTATION
+int outputstatusinx = 0;
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -255,11 +259,8 @@ int unsetAnalogTrigger( struct triggerIOCT *triggerIOC );
 
 void init_globals( void )
 {
-#ifdef ENABLE_COMPUTATION
-#ifdef ENABLE_LOOKUPTABLES
   int k;
-#endif
-#endif
+  char name[PARAM_NAME_MAXLEN];
 
   device = 0;
   memset( subdevices, 0, sizeof(subdevices) );
@@ -313,6 +314,21 @@ void init_globals( void )
   strcpy( statusInputNames[modeltimestatusinx], "Model-time" );
   strcpy( statusInputUnits[modeltimestatusinx], "s" );
   statusInput[modeltimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_COMPUTATION
+  outputstatusinx = statusInputN;
+  for ( k=0; k<OUTPUT_N; k++ ) {
+    sprintf( name, "Model-%s", outputNames[k] );
+    strcpy( statusInputNames[statusInputN], name );
+    strcpy( statusInputUnits[statusInputN], outputUnits[k] );
+    statusInput[statusInputN] = 0.0;
+    statusInputN++;
+    sprintf( name, "Total-%s", outputNames[k] );
+    strcpy( statusInputNames[statusInputN], name );
+    strcpy( statusInputUnits[statusInputN], outputUnits[k] );
+    statusInput[statusInputN] = 0.0;
+    statusInputN++;
+  }
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -667,6 +683,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
       memset( &subdev->chanlist[iC].insn, 0, sizeof(comedi_insn) );
       subdev->chanlist[iC].param = subdev->chanlist[iC].chan/PARAM_CHAN_OFFSET;
       subdev->chanlist[iC].modelIndex = -1;
+      subdev->chanlist[iC].statusIndex = -1;
       subdev->chanlist[iC].scale = chanlistIOC->scalelist[iC];
       subdev->chanlist[iC].isUsed = 1; 
       subdev->chanlist[iC].voltage = 0.0; 
@@ -701,8 +718,10 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	  subdev->chanlist[iC].insn.insn = INSN_WRITE;
 #ifdef ENABLE_COMPUTATION
 	  for ( i = 0; i < OUTPUT_N; i++ ) {
-	    if ( outputChannels[i] == subdev->chanlist[iC].chan )
+	    if ( outputChannels[i] == subdev->chanlist[iC].chan ) {
 	      subdev->chanlist[iC].modelIndex = i;
+	      subdev->chanlist[iC].statusIndex = outputstatusinx + 2*i;
+	    }
 	  }
 #endif
 	}
@@ -1297,8 +1316,11 @@ void dynclamp_loop( long dummy )
 	voltage = pChan->voltage;
 #ifdef ENABLE_COMPUTATION
 	// add model output to sample:
-	if ( pChan->modelIndex >= 0 )
+	if ( pChan->modelIndex >= 0 ) {
 	  voltage += output[pChan->modelIndex];
+	  statusInput[pChan->statusIndex] = output[pChan->modelIndex];
+	  statusInput[pChan->statusIndex+1] = voltage;
+	}
 #endif
 	// write out Sample:
 #ifdef ENABLE_SYNCSEC
