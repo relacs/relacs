@@ -20,7 +20,8 @@ pluginlib_LTLIBRARIES = \
     libbasesavetraces.la \
     libbasespectrogram.la \
     libbasesetinputgain.la \
-    libbasesetattenuatorgain.la
+    libbasesetattenuatorgain.la \
+    libbasehistogram.la
 
 
 if RELACS_COND_TML
@@ -606,6 +607,41 @@ libbasesetattenuatorgain_la_include_HEADERS = $(HEADER_PATH)/setattenuatorgain.h
 
 
 
+libbasehistogram_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libbasehistogram_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libbasehistogram_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libbasehistogram_la_OBJECTS) : moc_histogram.cc
+
+libbasehistogram_la_SOURCES = histogram.cc
+
+libbasehistogram_la_includedir = $(pkgincludedir)/base
+
+libbasehistogram_la_include_HEADERS = $(HEADER_PATH)/histogram.h
+
+
+
 check_PROGRAMS = \
     linktest_libbaselinearattenuate_la \
     linktest_libbasedecibelattenuate_la \
@@ -622,7 +658,8 @@ check_PROGRAMS = \
     linktest_libbasesavetraces_la \
     linktest_libbasespectrogram_la \
     linktest_libbasesetinputgain_la \
-    linktest_libbasesetattenuatorgain_la
+    linktest_libbasesetattenuatorgain_la \
+    linktest_libbasehistogram_la
 
 if RELACS_COND_TML
 check_PROGRAMS += \
@@ -681,5 +718,8 @@ linktest_libbasesetinputgain_la_LDADD = libbasesetinputgain.la
 
 linktest_libbasesetattenuatorgain_la_SOURCES = linktest.cc
 linktest_libbasesetattenuatorgain_la_LDADD = libbasesetattenuatorgain.la
+
+linktest_libbasehistogram_la_SOURCES = linktest.cc
+linktest_libbasehistogram_la_LDADD = libbasehistogram.la
 
 TESTS = $(check_PROGRAMS)

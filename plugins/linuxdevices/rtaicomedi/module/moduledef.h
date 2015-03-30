@@ -28,8 +28,8 @@
   /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
 // #define ENABLE_SYNCSEC
 
-  /*! Measures mean and standard deviation of periodic task. */
-// #define ENABLE_STATISTICS
+  /*! Measures intervals of periodic task. */
+#define ENABLE_TIMING
 
 
 // *** KERNEL LOGGING MODE ***
@@ -52,24 +52,19 @@
 #define DEV_NAME_MAXLEN   128
 #define DEV_ERROR_MAXLEN  128
 
-
 //* default waiting time for neuron to react to injected current
 //* #define INJECT_RECORD_DELAY 5000 //nsec 
 #define INJECT_RECORD_DELAY 1000 //nsec 
 
-
 //* maximum supported dynamic clamp frequency ensuring a stable system
 #define MAX_FREQUENCY 50000 //Hz
 
-
 //* Data buffering:
-
 #define FIFO_SIZE   64000 // bytes
 
 //* DAQ-devices:
-
 #define MAXSUBDEV    8
-#define MAXCHANLIST  128
+#define MAXCHANLIST  64
 #define MAXTTLPULSES 5
 #define MAXTTLPULSETYPES 6
 
@@ -150,7 +145,7 @@ struct triggerIOCT {
 
 
 //* Trace-data:
-enum traceTypes { TRACE_IN, TRACE_OUT, PARAM_IN, PARAM_OUT };
+enum traceTypes { TRACE_IN, TRACE_OUT, PARAM_IN, PARAM_OUT, STATUS_IN };
 
 struct traceInfoIOCT {
   enum traceTypes traceType;
@@ -188,19 +183,15 @@ struct traceChannelIOCT {
 #define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  12, int)
 #define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  13, int)
 #define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  14, int)
-#define IOC_GETLOOPAVG          _IOR(RTMODULE_MAJOR,  15, int)
-#define IOC_GETLOOPSQAVG        _IOR(RTMODULE_MAJOR,  16, int)
-#define IOC_GETLOOPMIN          _IOR(RTMODULE_MAJOR,  17, int)
-#define IOC_GETLOOPMAX          _IOR(RTMODULE_MAJOR,  18, int)
-#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  19, int)
+#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  15, int)
 
 // lookuptables:
-#define IOC_SET_LOOKUP_K        _IOW(RTMODULE_MAJOR,  20, int)
-#define IOC_SET_LOOKUP_N        _IOW(RTMODULE_MAJOR,  21, int)
-#define IOC_SET_LOOKUP_X        _IOW(RTMODULE_MAJOR,  22, int)
-#define IOC_SET_LOOKUP_Y        _IOW(RTMODULE_MAJOR,  23, int)
+#define IOC_SET_LOOKUP_K        _IOW(RTMODULE_MAJOR,  16, int)
+#define IOC_SET_LOOKUP_N        _IOW(RTMODULE_MAJOR,  17, int)
+#define IOC_SET_LOOKUP_X        _IOW(RTMODULE_MAJOR,  18, int)
+#define IOC_SET_LOOKUP_Y        _IOW(RTMODULE_MAJOR,  19, int)
 
-#define RTMODULE_IOC_MAXNR 24
+#define RTMODULE_IOC_MAXNR 20
 
 
 // *** KERNEL LOGGING STYLE ***

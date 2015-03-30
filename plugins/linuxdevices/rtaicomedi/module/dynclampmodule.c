@@ -5,7 +5,6 @@
 #include <asm/uaccess.h>
 #include <linux/mutex.h>
 #include <linux/slab.h>
-#include <linux/vmalloc.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
 
@@ -42,29 +41,10 @@ MODULE_AUTHOR( "Jan Benda <jan.benda@uni-tuebingen.de>" );
 
 // DAQ-DEVICES:
 
-struct subdeviceT {
-  int subdev;
-  enum subdevTypes type;
-  unsigned int fifo;
-  unsigned int sampleSize;
-  unsigned int chanN;
-  struct chanT *chanlist;
-  unsigned int frequency;
-  long delay;
-  long duration;           // => relative to index of dynclamp-Task
-  int continuous;
-  int startsource;
-  int used;
-  int prepared;
-  int running;
-  int pending;
-  int error;               // E_COMEDI, E_NODATA, ...
-};
-
 struct chanT {
   int subdev;
   unsigned int chan;
-  int isParamChan;
+  int param;
   int modelIndex;
   int isUsed;
   int aref;
@@ -80,6 +60,24 @@ struct chanT {
   float alevel;
 };
 
+struct subdeviceT {
+  int subdev;
+  enum subdevTypes type;
+  unsigned int fifo;
+  unsigned int sampleSize;
+  unsigned int frequency;
+  long delay;
+  long duration;           // => relative to index of dynclamp-Task
+  int continuous;
+  int startsource;
+  int used;
+  int prepared;
+  int running;
+  int pending;
+  int error;               // E_COMEDI, E_NODATA, ...
+  unsigned int chanN;
+  struct chanT chanlist[MAXCHANLIST];
+};
 
 struct triggerT {
   int enabled;
@@ -101,11 +99,6 @@ struct dynClampTaskT {
   int running;
   unsigned long loopCnt;
   long aoIndex;
-  RTIME currenttime;
-  RTIME sumperiod;
-  RTIME sumsqperiod;
-  RTIME minperiod;
-  RTIME maxperiod;
 };
 
 
@@ -130,6 +123,14 @@ int reqCloseSubdev = -1;
 
 struct triggerT trigger;
 
+char statusInputNames[MAXCHANLIST][PARAM_NAME_MAXLEN];
+char statusInputUnits[MAXCHANLIST][PARAM_NAME_MAXLEN];
+float statusInput[MAXCHANLIST];
+int statusInputN = 0;
+#ifdef ENABLE_TIMING
+int intervalstatusinx = 0;
+#endif
+
 #ifdef ENABLE_COMPUTATION
 int traceIndex = 0;
 int chanIndex = 0;
@@ -140,6 +141,7 @@ int lookupn[MAXLOOKUPTABLES];
 float* lookupx[MAXLOOKUPTABLES];
 float* lookupy[MAXLOOKUPTABLES];
 #endif
+
 #endif
 
 // RTAI TASK:
@@ -148,14 +150,14 @@ struct dynClampTaskT dynClampTask;
 
 // TTL pulse generation:
 #ifdef ENABLE_TTLPULSE
-comedi_insn *ttlStartWriteInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
-comedi_insn *ttlEndWriteInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
-comedi_insn *ttlStartReadInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
-comedi_insn *ttlEndReadInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
-comedi_insn *ttlStartAOInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
-comedi_insn *ttlEndAOInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_insn ttlStartWriteInsn[MAXTTLPULSES];
+comedi_insn ttlEndWriteInsn[MAXTTLPULSES];
+comedi_insn ttlStartReadInsn[MAXTTLPULSES];
+comedi_insn ttlEndReadInsn[MAXTTLPULSES];
+comedi_insn ttlStartAOInsn[MAXTTLPULSES];
+comedi_insn ttlEndAOInsn[MAXTTLPULSES];
 
-comedi_insn **ttlInsns[MAXTTLPULSETYPES];
+comedi_insn *ttlInsns[MAXTTLPULSETYPES];
 
 lsampl_t ttlLow = 0;
 lsampl_t ttlHigh = 1;
@@ -177,8 +179,7 @@ char *iocNames[RTMODULE_IOC_MAXNR] = {
   "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_SYNC_CMD",
   "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV",
   "IOC_DIO_CMD", "IOC_SET_TRIGGER", "IOC_UNSET_TRIGGER", "IOC_GET_TRACE_INFO",
-  "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT", "IOC_GETLOOPAVG",
-  "IOC_GETLOOPSQAVG", "IOC_GETLOOPMIN", "IOC_GETLOOPMAX", "IOC_GETAOINDEX",
+  "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT", "IOC_GETAOINDEX",
   "IOC_SET_LOOKUP_K", "IOC_SET_LOOKUP_N", "IOC_SET_LOOKUP_X", "IOC_SET_LOOKUP_Y"
 };
 
@@ -254,6 +255,16 @@ void init_globals( void )
   aosubdev.subdev = -1;
   reqCloseSubdev = -1;
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
+
+  statusInputN = 0;
+#ifdef ENABLE_TIMING
+  intervalstatusinx = statusInputN;
+  statusInputN++;
+  strcpy( statusInputNames[intervalstatusinx], "Intervals" );
+  strcpy( statusInputUnits[intervalstatusinx], "s" );
+  statusInput[intervalstatusinx] = 0.0;
+#endif
+
 #ifdef ENABLE_COMPUTATION
   traceIndex = 0;
   chanIndex = 0;
@@ -320,9 +331,8 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
     subdev->delay = -1; 
     subdev->duration = -1;
     subdev->startsource = 0;
-    subdev->chanN = 0;
-    subdev->chanlist = 0;
     subdev->running = 0;
+    subdev->chanN = 0;
 
     retval = openComediSubDevice( deviceIOC->devicename, deviceIOC->subdev, deviceIOC->errorstr );
     if ( retval < 0 )
@@ -439,7 +449,6 @@ void releaseSubdevice( int subdev )
   int pT;
   int iT;
   int k;
-  comedi_insn *insn;
   int retVal;
 #endif
 
@@ -479,22 +488,20 @@ void releaseSubdevice( int subdev )
 #ifdef ENABLE_TTLPULSE
   // remove ttl pulses:
   for ( pT = 0; pT < MAXTTLPULSETYPES; pT++ ) {
-    for ( iT = 0; iT < MAXTTLPULSES; ) {
-      if ( ttlInsns[pT][iT]->subdev == subdev ) {
-	/* remove from list: */
-	insn = ttlInsns[pT][iT];
-	for ( k = iT+1; k < MAXTTLPULSES; k++ )
-	  ttlInsns[pT][k-1] = ttlInsns[pT][k];
-	ttlInsns[pT][MAXTTLPULSES-1] = 0;
+    for ( iT = 0; iT < MAXTTLPULSES && ttlInsns[pT][iT].n > 0; ) {
+      if ( ttlInsns[pT][iT].subdev == subdev ) {
 	/* set low: */
-	insn->data = &ttlLow;
-	retVal = comedi_do_insn( device, insn );
+	ttlInsns[pT][iT].data = &ttlLow;
+	retVal = comedi_do_insn( device, &ttlInsns[pT][iT] );
 	if ( retVal < 1 ) {
 	  if ( retVal < 0 )
 	    comedi_perror( "dynclampmodule: releaseSubdevice() -> clearing ttl pulse: comedi_do_insn" );
 	  ERROR_MSG( "releaseSubdevice(): ERROR! failed to set TTL pulse %d low\n", iT );
 	}
-	vfree( insn );
+	/* remove from list: */
+	for ( k = iT+1; k < MAXTTLPULSES; k++ )
+	  ttlInsns[pT][k-1] = ttlInsns[pT][k];
+	ttlInsns[pT][MAXTTLPULSES-1].n = 0;
       }
       else
 	iT++;
@@ -528,11 +535,6 @@ void releaseAnalogSubdevice( struct subdeviceT *subdev )
   if ( subdev->running ) {
     DEBUG_MSG( "releaseAnalogSubdevice: stop and potentially kill subdevice %d\n", subdev->subdev );
     stopSubdevice( subdev, /*kill=*/1 );
-  }
-  // delete channels:
-  if ( subdev->chanlist ) {
-    vfree( subdev->chanlist );
-    subdev->chanlist = 0;
   }
   // delete FIFO:
   rtf_destroy( subdev->fifo );
@@ -574,12 +576,12 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
     DEBUG_MSG( "loadChanList: checked for trigger on subdevice %d: %d\n", subdev->subdev, trig );
   }
 
-  if ( subdev->chanlist ) {
+  if ( subdev->chanN > 0 ) {
     // subdev chanlist already exist
     for ( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
       for ( isC = 0; isC < subdev->chanN; isC++ ) {
         if ( CR_CHAN(chanlistIOC->chanlist[iC]) == 
-	     subdev->chanlist[isC].chan + PARAM_CHAN_OFFSET*subdev->chanlist[isC].isParamChan ) {
+	     subdev->chanlist[isC].chan + PARAM_CHAN_OFFSET*subdev->chanlist[isC].param ) {
 	  subdev->chanlist[isC].isUsed = 1;
 	  if ( trig && subdev->chanlist[iC].chan == trigger.chan ) {
 	    DEBUG_MSG( "loadChanList: set trigger for channel %d id %d on subdevice %d with level %d\n", subdev->chanlist[iC].chan, iC, subdev->subdev, (int)(100.0*trigger.alevel) );
@@ -590,12 +592,12 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	    subdev->chanlist[iC].trigger = 0;
 	    subdev->chanlist[iC].alevel = 0.0;
 	  }
-	  if ( ! subdev->chanlist[isC].isParamChan ) {
+	  subdev->chanlist[isC].scale = chanlistIOC->scalelist[iC];
+	  if ( subdev->chanlist[isC].param == 0 ) {
 	    subdev->chanlist[isC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
 	    subdev->chanlist[isC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
 	    subdev->chanlist[isC].insn.chanspec = chanlistIOC->chanlist[iC];
 	    memcpy( &subdev->chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
-	    subdev->chanlist[isC].scale = chanlistIOC->scalelist[iC];
 	  }
 	  break;
         }
@@ -605,22 +607,17 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
   else {
     
     // create and initialize chanlist for subdevice:
-    subdev->chanlist = vmalloc( chanlistIOC->chanlistN
-				   *sizeof(struct chanT) );
-    if ( !subdev->chanlist ) {
-      ERROR_MSG( "loadChanList ERROR: Memory allocation for Subdevice %i on device %s. Chanlist not loaded!\n",
-		 subdev->subdev, devname );
-      return -ENOMEM;
-    }
+    memset( subdev->chanlist, 0, sizeof(subdev->chanlist) );
     subdev->chanN = chanlistIOC->chanlistN;
     
-    for ( iC = 0; iC < subdev->chanN; iC++ ) {
+    for ( iC=0; iC < subdev->chanN; iC++ ) {
       subdev->chanlist[iC].subdev = subdev->subdev;
       subdev->chanlist[iC].chan = CR_CHAN( chanlistIOC->chanlist[iC] );
       subdev->chanlist[iC].lsample = 0;
       memset( &subdev->chanlist[iC].insn, 0, sizeof(comedi_insn) );
-      subdev->chanlist[iC].isParamChan = (subdev->chanlist[iC].chan >= PARAM_CHAN_OFFSET);
+      subdev->chanlist[iC].param = subdev->chanlist[iC].chan/PARAM_CHAN_OFFSET;
       subdev->chanlist[iC].modelIndex = -1;
+      subdev->chanlist[iC].scale = chanlistIOC->scalelist[iC];
       subdev->chanlist[iC].isUsed = 1; 
       subdev->chanlist[iC].voltage = 0.0; 
       subdev->chanlist[iC].prevvoltage = 0.0;
@@ -634,16 +631,13 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	subdev->chanlist[iC].trigger = 0;
 	subdev->chanlist[iC].alevel = 0.0;
       }
-#ifdef ENABLE_COMPUTATION
-      if ( subdev->chanlist[iC].isParamChan ) {
-	subdev->chanlist[iC].chan -= PARAM_CHAN_OFFSET;
+      if ( subdev->chanlist[iC].param > 0 ) {
+	subdev->chanlist[iC].chan %= PARAM_CHAN_OFFSET;
 	subdev->chanlist[iC].aref = 0;
 	subdev->chanlist[iC].rangeIndex = 0;
 	memset( &subdev->chanlist[iC].converter, 0, sizeof( struct converterT ) );
-	subdev->chanlist[iC].scale = 1.0;
       }
       else {
-#endif
 	if ( subdev->type == SUBDEV_IN ) {
 	  subdev->chanlist[iC].insn.insn = INSN_READ;
 #ifdef ENABLE_COMPUTATION
@@ -669,10 +663,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	subdev->chanlist[iC].insn.subdev = subdev->subdev;
 	subdev->chanlist[iC].insn.chanspec = chanlistIOC->chanlist[iC];
 	memcpy( &subdev->chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
-	subdev->chanlist[iC].scale = chanlistIOC->scalelist[iC];
-#ifdef ENABLE_COMPUTATION
       }
-#endif
     }
   }    
   return 0;
@@ -770,11 +761,6 @@ int stopSubdevice( struct subdeviceT *subdev, int kill )
 { 
   int i;
   int airunning = 0;
-#ifdef ENABLE_STATISTICS
-  long long mean;
-  long long sqmean;
-  long long var;
-#endif
 
   DEBUG_MSG( "stopSubdevice: subdevice %d with kill=%d\n", subdev->subdev, kill );
 
@@ -789,15 +775,6 @@ int stopSubdevice( struct subdeviceT *subdev, int kill )
   airunning = aisubdev.running;
 
   if ( kill && airunning == 0 ) {
-#ifdef ENABLE_STATISTICS
-    /*" XXX Unknown symbol __divdi3: use rtai_ulldiv() from include/asm-i386/rtai_hal.h !!! */
-    mean = dynClampTask.sumperiod/dynClampTask.loopCnt;
-    sqmean = dynClampTask.sumsqperiod/dynClampTask.loopCnt;
-    var = sqmean - mean*mean;
-    INFO_MSG( "average period %Lu ns, var=%Lu, min=%Lu, max=%Lu, count=%lu\n",
-	      mean, var, dynClampTask.minperiod, dynClampTask.maxperiod, dynClampTask.loopCnt );
-#endif
-
     DEBUG_MSG( "stopSubdevice: halt dynclamp task\n" );
     cleanup_dynclamp_loop();
   }
@@ -897,7 +874,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
   else if ( dioIOC->op == DIO_ADD_TTLPULSE ) {
     if ( pT < TTL_START_WRITE || pT >= MAXTTLPULSETYPES )
       return -EINVAL;
-    for ( iT = 0; iT < MAXTTLPULSES && ttlInsns[pT][iT] != 0; iT++ );
+    for ( iT = 0; iT < MAXTTLPULSES && ttlInsns[pT][iT].n > 0; iT++ );
     if ( iT >= MAXTTLPULSES )
       return -ENOMEM;
     if ( comedi_dio_write( device, subdevice, dioIOC->lines, dioIOC->output ) != 1 ) {
@@ -906,27 +883,26 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 		 devname, subdevice );
       return -EFAULT;
     }
-    ttlInsns[pT][iT] = vmalloc( sizeof(comedi_insn) );
-    memset( ttlInsns[pT][iT], 0, sizeof(comedi_insn) );
-    ttlInsns[pT][iT]->insn = INSN_WRITE;
-    ttlInsns[pT][iT]->n = 1;
-    ttlInsns[pT][iT]->data = ( dioIOC->output ? &ttlHigh : &ttlLow );
-    ttlInsns[pT][iT]->subdev = subdevice;
-    ttlInsns[pT][iT]->chanspec = CR_PACK( dioIOC->lines, 0, 0 );
-    DEBUG_MSG( "setDigitalIO: add pulse pT=%d  iT=%d  output=%d subdev=%d lines=%d\n", pT, iT, ttlInsns[pT][iT]->data[0], ttlInsns[pT][iT]->subdev, ttlInsns[pT][iT]->chanspec );
+    memset( &ttlInsns[pT][iT], 0, sizeof(comedi_insn) );
+    ttlInsns[pT][iT].insn = INSN_WRITE;
+    ttlInsns[pT][iT].n = 1;
+    ttlInsns[pT][iT].data = ( dioIOC->output ? &ttlHigh : &ttlLow );
+    ttlInsns[pT][iT].subdev = subdevice;
+    ttlInsns[pT][iT].chanspec = CR_PACK( dioIOC->lines, 0, 0 );
+    DEBUG_MSG( "setDigitalIO: add pulse pT=%d  iT=%d  output=%d subdev=%d lines=%d\n",
+	       pT, iT, ttlInsns[pT][iT].data[0], ttlInsns[pT][iT].subdev,
+	       ttlInsns[pT][iT].chanspec );
   }
   else if ( dioIOC->op == DIO_CLEAR_TTLPULSE ) {
     found = 0;
     for ( pT = 0; pT < MAXTTLPULSETYPES; pT++ ) {
-      for ( iT = 0; iT < MAXTTLPULSES && ttlInsns[pT][iT] != 0; ) {
-	if ( ttlInsns[pT][iT]->subdev == subdevice &&
-	     ttlInsns[pT][iT]->chanspec == CR_PACK( dioIOC->lines, 0, 0 ) ) {
+      for ( iT = 0; iT < MAXTTLPULSES && ttlInsns[pT][iT].n > 0; ) {
+	if ( ttlInsns[pT][iT].subdev == subdevice &&
+	     ttlInsns[pT][iT].chanspec == CR_PACK( dioIOC->lines, 0, 0 ) ) {
 	  found = 1;
-	  vfree( ttlInsns[pT][iT] );
-	  ttlInsns[pT][iT] = 0;
+	  ttlInsns[pT][iT].n = 0;
 	  for ( k = iT+1; k < MAXTTLPULSES; k++ )
 	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
-	  ttlInsns[pT][MAXTTLPULSES-1] = 0;
 	}
 	else
 	  iT++;
@@ -1031,7 +1007,7 @@ int setAnalogTrigger( struct triggerIOCT *triggerIOC )
 int unsetAnalogTrigger( struct triggerIOCT *triggerIOC )
 {
 #ifdef ENABLE_TRIGGER
-  int iS, iC;
+  int iC;
 
   // disable trigger:
   trigger.enabled = 0;
@@ -1092,7 +1068,8 @@ void dynclamp_loop( long dummy )
 #endif
   struct chanT *pChan;
   float voltage;
-#if defined(ENABLE_STATISTICS) || defined(ENABLE_SYNCSEC)
+#if defined(ENABLE_TIMING) || defined(ENABLE_SYNCSEC)
+  RTIME currenttime = 0;
   RTIME newtime = 0;
   int difftime = 0;   // to avoid __divdi3 issues we use an int here
 #endif
@@ -1108,16 +1085,11 @@ void dynclamp_loop( long dummy )
   dynClampTask.loopCnt = 0;
   dynClampTask.aoIndex = -1;
   dynClampTask.running = 1;
-#ifdef ENABLE_STATISTICS
-  dynClampTask.currenttime = rt_get_cpu_time_ns();
-  dynClampTask.sumperiod = 0;
-  dynClampTask.sumsqperiod = 0;
-  dynClampTask.minperiod = 10*dynClampTask.periodLengthNs;
-  dynClampTask.maxperiod = 0;
-#endif
 
-#ifdef ENABLE_SYNCSEC
+#if defined(ENABLE_TIMING) || defined(ENABLE_SYNCSEC)
+  currenttime = rt_get_cpu_time_ns();
   difftime = dynClampTask.periodLengthNs;
+  statusInput[intervalstatusinx] = 1e-9*difftime;
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -1134,8 +1106,8 @@ void dynclamp_loop( long dummy )
   while( aisubdev.running ) {
 
 #ifdef ENABLE_TTLPULSE
-    for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteInsn[iT] != 0; iT++ ) {
-      retVal = comedi_do_insn( device, ttlStartWriteInsn[iT] );
+    for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteInsn[iT].n > 0; iT++ ) {
+      retVal = comedi_do_insn( device, &ttlStartWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at start write: comedi_do_insn" );
@@ -1182,8 +1154,8 @@ void dynclamp_loop( long dummy )
 	  rtf_reset( aosubdev.fifo );
 	  stopSubdevice( &aosubdev, /*kill=*/0 );
 #ifdef ENABLE_TTLPULSE
-	  for ( iT = 0; iT < MAXTTLPULSES && ttlEndAOInsn[iT] != 0; iT++ ) {
-	    retVal = comedi_do_insn( device, ttlEndAOInsn[iT] );
+	  for ( iT = 0; iT < MAXTTLPULSES && ttlEndAOInsn[iT].n > 0; iT++ ) {
+	    retVal = comedi_do_insn( device, &ttlEndAOInsn[iT] );
 	    if ( retVal < 1 ) {
 	      if ( retVal < 0 )
 		comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at end ao: comedi_do_insn" );
@@ -1196,8 +1168,8 @@ void dynclamp_loop( long dummy )
 #ifdef ENABLE_TTLPULSE
 	  // start of stimulus:
 	  if ( dynClampTask.loopCnt == aosubdev.delay ) {
-	    for ( iT = 0; iT < MAXTTLPULSES && ttlStartAOInsn[iT] != 0; iT++ ) {
-	      retVal = comedi_do_insn( device, ttlStartAOInsn[iT] );
+	    for ( iT = 0; iT < MAXTTLPULSES && ttlStartAOInsn[iT].n > 0; iT++ ) {
+	      retVal = comedi_do_insn( device, &ttlStartAOInsn[iT] );
 	      if ( retVal < 1 ) {
 		if ( retVal < 0 )
 		  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at start ao: comedi_do_insn" );
@@ -1226,7 +1198,7 @@ void dynclamp_loop( long dummy )
 		continue;
 	      }
 #ifdef ENABLE_COMPUTATION
-	      if ( pChan->isParamChan ) {
+	      if ( pChan->param > 0 ) {
 		paramOutput[pChan->chan] = pChan->voltage;
 	      }
 #endif
@@ -1242,7 +1214,7 @@ void dynclamp_loop( long dummy )
       pChan = &aosubdev.chanlist[iC];
       // this is an output to the DAQ board:
 #ifdef ENABLE_COMPUTATION
-      if ( !pChan->isParamChan ) {
+      if ( pChan->param == 0 ) {
 #endif
 	voltage = pChan->voltage;
 #ifdef ENABLE_COMPUTATION
@@ -1275,8 +1247,8 @@ void dynclamp_loop( long dummy )
 
 
 #ifdef ENABLE_TTLPULSE
-    for ( iT = 0; iT < MAXTTLPULSES && ttlEndWriteInsn[iT] != 0; iT++ ) {
-      retVal = comedi_do_insn( device, ttlEndWriteInsn[iT] );
+    for ( iT = 0; iT < MAXTTLPULSES && ttlEndWriteInsn[iT].n > 0; iT++ ) {
+      retVal = comedi_do_insn( device, &ttlEndWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at end write: comedi_do_insn" );
@@ -1307,8 +1279,8 @@ void dynclamp_loop( long dummy )
 #endif
 
 #ifdef ENABLE_TTLPULSE
-    for ( iT = 0; iT < MAXTTLPULSES && ttlStartReadInsn[iT] != 0; iT++ ) {
-      retVal = comedi_do_insn( device, ttlStartReadInsn[iT] );
+    for ( iT = 0; iT < MAXTTLPULSES && ttlStartReadInsn[iT].n > 0; iT++ ) {
+      retVal = comedi_do_insn( device, &ttlStartReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at start read: comedi_do_insn" );
@@ -1346,9 +1318,7 @@ void dynclamp_loop( long dummy )
 	pChan->prevvoltage = pChan->voltage;
 
 	// acquire sample:
-#ifdef ENABLE_COMPUTATION
-	if ( !pChan->isParamChan ) {
-#endif
+	if ( pChan->param == 0 ) {
 	  retVal = comedi_do_insn( device, &pChan->insn );     
 	  if ( retVal < 1 ) {
 	    aisubdev.running = 0;
@@ -1365,15 +1335,15 @@ void dynclamp_loop( long dummy )
 	  }
 	  // convert to voltage:
 	  sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
-
-#ifdef ENABLE_COMPUTATION
 	  if ( pChan->modelIndex >= 0 )
 	    input[pChan->modelIndex] = pChan->voltage;
 	}
 	else {
-	  pChan->voltage = paramInput[pChan->chan];
+	  if ( pChan->param == 1 )
+	    pChan->voltage = paramInput[pChan->chan]*pChan->scale;
+	  else
+	    pChan->voltage = statusInput[pChan->chan]*pChan->scale;
 	}
-#endif
 	  
 #ifdef RTMODULE_DEBUG
 	if ( aisubdev.running == 0 )
@@ -1435,8 +1405,8 @@ void dynclamp_loop( long dummy )
 #endif
 
 #ifdef ENABLE_TTLPULSE
-    for ( iT = 0; iT < MAXTTLPULSES && ttlEndReadInsn[iT] != 0; iT++ ) {
-      retVal = comedi_do_insn( device, ttlEndReadInsn[iT] );
+    for ( iT = 0; iT < MAXTTLPULSES && ttlEndReadInsn[iT].n > 0; iT++ ) {
+      retVal = comedi_do_insn( device, &ttlEndReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
 	  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at end read: comedi_do_insn" );
@@ -1458,20 +1428,11 @@ void dynclamp_loop( long dummy )
     //    start = rt_get_cpu_time_ns();
     rt_task_wait_period();
 
-#if defined(ENABLE_STATISTICS) || defined(ENABLE_SYNCSEC)
+#if defined(ENABLE_TIMING) || defined(ENABLE_SYNCSEC)
     newtime = rt_get_cpu_time_ns();
-    difftime = newtime - dynClampTask.currenttime;
-    dynClampTask.currenttime = newtime;
-#endif
-
-#ifdef ENABLE_STATISTICS
-    /*" XXX Unknown symbol __divdi3: use rtai_ulldiv() from include/asm-i386/rtai_hal.h !!! */
-    dynClampTask.sumperiod += difftime;
-    dynClampTask.sumsqperiod += difftime*difftime;
-    if ( dynClampTask.minperiod > difftime )
-      dynClampTask.minperiod = difftime;
-    if ( dynClampTask.maxperiod < difftime )
-      dynClampTask.maxperiod = difftime;
+    difftime = newtime - currenttime;
+    currenttime = newtime;
+    statusInput[intervalstatusinx] = 1e-9*difftime;
 #endif
 
   } // END OF DYNCLAMP LOOP
@@ -1627,56 +1588,6 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     rc = retVal == 0 ? 0 : -EFAULT;
     break;
 
-#ifdef ENABLE_STATISTICS
-  case IOC_GETLOOPAVG:
-    if ( dynClampTask.loopCnt > 0 )
-      luTmp = dynClampTask.sumperiod/dynClampTask.loopCnt;
-      /*" XXX Unknown symbol __divdi3: use rtai_ulldiv() from include/asm-i386/rtai_hal.h !!! */
-    else
-      luTmp = -1;
-    if ( luTmp < 0 ) {
-      rc = -ENOSPC;
-      break;
-    }
-    retVal = put_user( luTmp, (unsigned long __user *)arg );
-    rc = retVal == 0 ? 0 : -EFAULT;
-    break;
-
-  case IOC_GETLOOPSQAVG:
-    if ( dynClampTask.loopCnt > 0 )
-      luTmp = dynClampTask.sumsqperiod/dynClampTask.loopCnt;
-      /*" XXX Unknown symbol __divdi3: use rtai_ulldiv() from include/asm-i386/rtai_hal.h !!! */
-    else
-      luTmp = -1;
-    if ( luTmp < 0 ) {
-      rc = -ENOSPC;
-      break;
-    }
-    retVal = put_user( luTmp, (unsigned long __user *)arg );
-    rc = retVal == 0 ? 0 : -EFAULT;
-    break;
-
-  case IOC_GETLOOPMIN:
-    luTmp = dynClampTask.minperiod;
-    if ( dynClampTask.loopCnt < 1 ) {
-      rc = -ENOSPC;
-      break;
-    }
-    retVal = put_user( luTmp, (unsigned long __user *)arg );
-    rc = retVal == 0 ? 0 : -EFAULT;
-    break;
-
-  case IOC_GETLOOPMAX:
-    luTmp = dynClampTask.maxperiod;
-    if ( dynClampTask.loopCnt < 1 ) {
-      rc = -ENOSPC;
-      break;
-    }
-    retVal = put_user( luTmp, (unsigned long __user *)arg );
-    rc = retVal == 0 ? 0 : -EFAULT;
-    break;
-#endif
-
     /******** SET UP COMEDI: ****************************************************/
 
   case IOC_OPEN_SUBDEV:
@@ -1738,7 +1649,6 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 
   case IOC_GET_TRACE_INFO:
-#ifdef ENABLE_COMPUTATION
     retVal = copy_from_user( &traceInfo, (void __user *)arg, sizeof(struct traceInfoIOCT) );
     if ( retVal ) {
       ERROR_MSG( "ioctl ERROR: invalid user pointer for traceInfoIOCT!\n" );
@@ -1747,6 +1657,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     }
     rc = 0;
     switch( traceInfo.traceType ) {
+#ifdef ENABLE_COMPUTATION
     case TRACE_IN:
       if ( traceIndex >= INPUT_N ) {
 	traceIndex = 0;
@@ -1755,6 +1666,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       }
       strncpy( traceInfo.name, inputNames[traceIndex], PARAM_NAME_MAXLEN );
       strncpy( traceInfo.unit, inputUnits[traceIndex], PARAM_NAME_MAXLEN );
+      DEBUG_MSG( "ioctl: input trace %s [%s]\n", traceInfo.name, traceInfo.unit );
       break;
     case TRACE_OUT:
       if ( traceIndex >= OUTPUT_N ) {
@@ -1764,6 +1676,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       }
       strncpy( traceInfo.name, outputNames[traceIndex], PARAM_NAME_MAXLEN );
       strncpy( traceInfo.unit, outputUnits[traceIndex], PARAM_NAME_MAXLEN );
+      DEBUG_MSG( "ioctl: output trace %s [%s]\n", traceInfo.name, traceInfo.unit );
       break;
     case PARAM_IN:
       if ( traceIndex >= PARAMINPUT_N ) {
@@ -1773,6 +1686,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       }
       strncpy( traceInfo.name, paramInputNames[traceIndex], PARAM_NAME_MAXLEN );
       strncpy( traceInfo.unit, paramInputUnits[traceIndex], PARAM_NAME_MAXLEN );
+      DEBUG_MSG( "ioctl: parameter input trace %s [%s]\n", traceInfo.name, traceInfo.unit );
       break;
     case PARAM_OUT:
       if ( traceIndex >= PARAMOUTPUT_N ) {
@@ -1782,8 +1696,21 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       }
       strncpy( traceInfo.name, paramOutputNames[traceIndex], PARAM_NAME_MAXLEN );
       strncpy( traceInfo.unit, paramOutputUnits[traceIndex], PARAM_NAME_MAXLEN );
+      DEBUG_MSG( "ioctl: parameter output trace %s [%s]\n", traceInfo.name, traceInfo.unit );
+      break;
+#endif
+    case STATUS_IN:
+      if ( traceIndex >= statusInputN ) {
+	traceIndex = 0;
+	rc = -ERANGE; // signal end of list
+	break;
+      }
+      strncpy( traceInfo.name, statusInputNames[traceIndex], PARAM_NAME_MAXLEN );
+      strncpy( traceInfo.unit, statusInputUnits[traceIndex], PARAM_NAME_MAXLEN );
+      DEBUG_MSG( "ioctl: status input trace %s [%s]\n", traceInfo.name, traceInfo.unit );
       break;
     default: ;
+      rc = -ERANGE; // signal end of list
     }
     if ( rc != 0 )
       break;
@@ -1796,10 +1723,6 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     traceIndex++;
     rc = 0;
     break;
-#else
-    rc = -ERANGE; // signal end of list
-    break;
-#endif
 
   case IOC_SET_TRACE_CHANNEL:
 #ifdef ENABLE_COMPUTATION
@@ -1812,9 +1735,11 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     switch( traceChannel.traceType ) {
     case TRACE_IN:
       inputChannels[chanIndex] = traceChannel.channel;
+      DEBUG_MSG( "ioctl: input channel set to %d\n", traceChannel.channel );
       break;
     case TRACE_OUT:
       outputChannels[chanIndex] = traceChannel.channel;
+      DEBUG_MSG( "ioctl: output channel set to %d\n", traceChannel.channel );
       break;
     default: ;
     }

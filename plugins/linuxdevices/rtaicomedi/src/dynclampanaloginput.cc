@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <QMutexLocker>
+#include <relacs/parameter.h>
 #include <relacs/rtaicomedi/dynclampanaloginput.h>
 #include <rtai_fifos.h>
 using namespace std;
@@ -591,6 +592,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   chanlistIOC.type = SUBDEV_IN;
   for( int k = 0; k < traces.size(); k++ ) {
     chanlistIOC.chanlist[k] = ChanList[k];
+    chanlistIOC.scalelist[k] = traces[k].scale();
     if ( traces[k].channel() < PARAM_CHAN_OFFSET ) {
       const comedi_polynomial_t* poly = 
 	(const comedi_polynomial_t *)traces[k].gainData();
@@ -600,7 +602,6 @@ int DynClampAnalogInput::prepareRead( InList &traces )
       chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
       for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
 	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
-      chanlistIOC.scalelist[k] = traces[k].scale();
       if ( Calibration != 0 ) {
 	unsigned int channel = CR_CHAN( ChanList[k] );
 	unsigned int range = CR_RANGE( ChanList[k] );
@@ -971,6 +972,16 @@ void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid )
   int ern = errno;
   if ( ern != ERANGE )
     cerr << "DynClampAnalogInput::addTraces() -> errno " << ern << '\n';
+
+  traceInfo.traceType = STATUS_IN;
+  channel = 2*PARAM_CHAN_OFFSET;
+  while ( 0 == ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) ) {
+    traces.push_back( TraceSpec( traces.size(), traceInfo.name,
+				 deviceid, channel++, 1.0, traceInfo.unit ) );
+  }
+  ern = errno;
+  if ( ern != ERANGE )
+    cerr << "DynClampAnalogInput::addTraces() -> errno " << ern << '\n';
 }
 
 
@@ -1030,50 +1041,32 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   ern = errno;
   if ( ern != ERANGE )
     traces.addErrorStr( "failure in getting model input parameter traces -> errno=" + Str( ern ) );
+
+  // status traces:
+  traceInfo.traceType = STATUS_IN;
+  for ( int pchan = 0; ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0; pchan++ ) {
+    for ( int k=0; k<traces.size(); k++ ) {
+      if ( traces[k].channel() >= PARAM_CHAN_OFFSET && traces[k].ident() == traceInfo.name ) {
+	tracefound[k] = true;
+	double scaleval = Parameter::changeUnit( 1.0, traceInfo.unit, traces[k].unit() );
+	if ( traces[k].unit() != traceInfo.unit && ::fabs( traces[k].scale() - scaleval ) > 1e-8 )
+	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
+	traces[k].setChannel( 2*PARAM_CHAN_OFFSET + pchan );
+	foundtraces++;
+	break;
+      }
+    }
+  }
+  ern = errno;
+  if ( ern != ERANGE )
+    traces.addErrorStr( "failure in getting status traces -> errno=" + Str( ern ) );
+
   for ( int k=0; k<traces.size(); k++ ) {
     if ( ! tracefound[k] && traces[k].channel() >= PARAM_CHAN_OFFSET )
       traces[k].addErrorStr( "no matching trace found for trace " + traces[k].ident() );
   }
+
   return traces.failed() ? -1 : foundtraces;
-}
-
-
-const Options &DynClampAnalogInput::settings( void ) const
-{
-#ifdef ENABLE_STATISTICS
-  long long loopcnt = 0;
-  double meanperiod = 0.0;
-  double stdevperiod = 0.0;
-  double minperiod = 0.0;
-  double maxperiod = 0.0;
-
-  if ( ModuleFd >= 0 ) {
-    long long val = 0;
-    int r = ::ioctl( ModuleFd, IOC_GETLOOPCNT, &val );
-    if ( r >= 0 )
-      loopcnt = val;
-    r = ::ioctl( ModuleFd, IOC_GETLOOPAVG, &val );
-    if ( r >= 0 )
-      meanperiod = 0.001*val;
-    r = ::ioctl( ModuleFd, IOC_GETLOOPSQAVG, &val );
-    if ( r >= 0 )
-      stdevperiod = sqrt( 0.001*0.001*val - meanperiod*meanperiod );
-    r = ::ioctl( ModuleFd, IOC_GETLOOPMIN, &val );
-    if ( r >= 0 )
-      minperiod = 0.001*val;
-    r = ::ioctl( ModuleFd, IOC_GETLOOPMAX, &val );
-    if ( r >= 0 )
-      maxperiod = 0.001*val;
-  }
-
-  Settings.setInteger( "number of periods", loopcnt );
-  Settings.setNumber( "average period", meanperiod, "us" );
-  Settings.setNumber( "stdev period", stdevperiod, "us" );
-  Settings.setNumber( "minimum period", minperiod, "us" );
-  Settings.setNumber( "maximum period", maxperiod, "us" );
-#endif
-
-  return Settings;
 }
 
 

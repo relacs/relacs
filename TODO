@@ -43,13 +43,12 @@ Dynamic clamp:
 - localmodconfig kernel make target might be very interesting for generating a rtai kernel:
   http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
 - autoconf script: check for presence of rtai-config and whether -r option is supported!
+- Input traces should not set gain index but a minimum value! Necessary for param and status input
 - matchTraces should set error string of device, and this should be used by relacswidget
 - restart in dynclamp mode is not properly processed??? (check inputrangecheck)
 - DynClamAnalogInput improve error checking in readData()
-- Always create a new channel list! And only have a single AO and AI subdevice!
-- Then we do not need to reset all the channels at startup (Aquire::writeReset() )
-- Is it smart to use vmalloc in dynclampmodule? No! Better would be
-  kmalloc or even avoid it completely.
+- Always create a new channel list!
+  Then we do not need to reset all the channels at startup (Aquire::writeReset() )
 - Is it really necessary that the dynclamp parameter are all set to zero by relacs initially?
   It shoud be sufficient to set the AOs to zero and the parameters to their initial vallues.
   For the latter we might need some support (saving the initial values to some array prior to starting, etc.)
