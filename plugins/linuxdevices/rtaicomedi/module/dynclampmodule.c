@@ -127,8 +127,23 @@ char statusInputNames[MAXCHANLIST][PARAM_NAME_MAXLEN];
 char statusInputUnits[MAXCHANLIST][PARAM_NAME_MAXLEN];
 float statusInput[MAXCHANLIST];
 int statusInputN = 0;
-#ifdef ENABLE_TIMING
+#ifdef ENABLE_INTERVALS
 int intervalstatusinx = 0;
+#endif
+#ifdef ENABLE_AITIME
+int aitimestatusinx = 0;
+#endif
+#ifdef ENABLE_AIACQUISITIONTIME
+int aiacquisitiontimestatusinx = 0;
+#endif
+#ifdef ENABLE_AICONVERSIONTIME
+int aiconversiontimestatusinx = 0;
+#endif
+#ifdef ENABLE_AOTIME
+int aotimestatusinx = 0;
+#endif
+#ifdef ENABLE_MODELTIME
+int modeltimestatusinx = 0;
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -257,12 +272,47 @@ void init_globals( void )
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
 
   statusInputN = 0;
-#ifdef ENABLE_TIMING
+#ifdef ENABLE_INTERVALS
   intervalstatusinx = statusInputN;
   statusInputN++;
-  strcpy( statusInputNames[intervalstatusinx], "Intervals" );
+  strcpy( statusInputNames[intervalstatusinx], "Interval" );
   strcpy( statusInputUnits[intervalstatusinx], "s" );
   statusInput[intervalstatusinx] = 0.0;
+#endif
+#ifdef ENABLE_AITIME
+  aitimestatusinx = statusInputN;
+  statusInputN++;
+  strcpy( statusInputNames[aitimestatusinx], "AI-time" );
+  strcpy( statusInputUnits[aitimestatusinx], "s" );
+  statusInput[aitimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_AIACQUISITIONTIME
+  aiacquisitiontimestatusinx = statusInputN;
+  statusInputN++;
+  strcpy( statusInputNames[aiacquisitiontimestatusinx], "AI-acquisition-time" );
+  strcpy( statusInputUnits[aiacquisitiontimestatusinx], "s" );
+  statusInput[aiacquisitiontimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_AICONVERSIONTIME
+  aiconversiontimestatusinx = statusInputN;
+  statusInputN++;
+  strcpy( statusInputNames[aiconversiontimestatusinx], "AI-conversion-time" );
+  strcpy( statusInputUnits[aiconversiontimestatusinx], "s" );
+  statusInput[aiconversiontimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_AOTIME
+  aotimestatusinx = statusInputN;
+  statusInputN++;
+  strcpy( statusInputNames[aotimestatusinx], "AO-time" );
+  strcpy( statusInputUnits[aotimestatusinx], "s" );
+  statusInput[aotimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_MODELTIME
+  modeltimestatusinx = statusInputN;
+  statusInputN++;
+  strcpy( statusInputNames[modeltimestatusinx], "Model-time" );
+  strcpy( statusInputUnits[modeltimestatusinx], "s" );
+  statusInput[modeltimestatusinx] = 0.0;
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -1068,10 +1118,20 @@ void dynclamp_loop( long dummy )
 #endif
   struct chanT *pChan;
   float voltage;
-#if defined(ENABLE_TIMING) || defined(ENABLE_SYNCSEC)
+#if defined(ENABLE_INTERVALS) || defined(ENABLE_SYNCSEC)
   RTIME currenttime = 0;
   RTIME newtime = 0;
   int difftime = 0;   // to avoid __divdi3 issues we use an int here
+#endif
+#if defined(ENABLE_AITIME) || defined(ENABLE_AOTIME) || defined(ENABLE_MODELTIME)
+  RTIME starttime = 0;
+  RTIME stoptime = 0;
+  int dtime = 0;   // to avoid __divdi3 issues we use an int here
+#endif
+#if defined(ENABLE_AIACQUISITIONTIME) || defined(ENABLE_AICONVERSIONTIME)
+  RTIME startsampletime = 0;
+  RTIME stopsampletime = 0;
+  int dsampletime = 0;   // to avoid __divdi3 issues we use an int here
 #endif
   int triggerevs[5] = { 1, 0, 0, 0, 0 };
   int prevtriggerevs[5] = { 0, 0, 0, 0, 0 };
@@ -1086,10 +1146,25 @@ void dynclamp_loop( long dummy )
   dynClampTask.aoIndex = -1;
   dynClampTask.running = 1;
 
-#if defined(ENABLE_TIMING) || defined(ENABLE_SYNCSEC)
+#if defined(ENABLE_INTERVALS) || defined(ENABLE_SYNCSEC)
   currenttime = rt_get_cpu_time_ns();
   difftime = dynClampTask.periodLengthNs;
   statusInput[intervalstatusinx] = 1e-9*difftime;
+#endif
+#ifdef ENABLE_AITIME
+  statusInput[aitimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_AIACQUISITIONTIME
+  statusInput[aiacquisitiontimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_AICONVERSIONTIME
+  statusInput[aiconversiontimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_AOTIME
+  statusInput[aotimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_MODELTIME
+  statusInput[modeltimestatusinx] = 0.0;
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -1125,6 +1200,9 @@ void dynclamp_loop( long dummy )
 
     /******** WRITE TO ANALOG OUTPUT: ******************************************/
     /****************************************************************************/
+#ifdef ENABLE_AOTIME
+    starttime = rt_get_cpu_time_ns();
+#endif
 
     if ( aosubdev.running ) {
 
@@ -1244,6 +1322,11 @@ void dynclamp_loop( long dummy )
       }
 #endif
     } // end of ao channel loop
+#ifdef ENABLE_AOTIME
+    stoptime = rt_get_cpu_time_ns();
+    dtime = stoptime - starttime;
+    statusInput[aotimestatusinx] = 1e-9*dtime;
+#endif
 
 
 #ifdef ENABLE_TTLPULSE
@@ -1291,6 +1374,9 @@ void dynclamp_loop( long dummy )
     
     /******** FROM ANALOG INPUT: **********************************************/
     /****************************************************************************/
+#ifdef ENABLE_AITIME
+    starttime = rt_get_cpu_time_ns();
+#endif
     // ai is always running!
     if ( aisubdev.pending ) {
       if ( triggerevs[aisubdev.startsource] &&
@@ -1319,7 +1405,15 @@ void dynclamp_loop( long dummy )
 
 	// acquire sample:
 	if ( pChan->param == 0 ) {
+#ifdef ENABLE_AIACQUISITIONTIME
+	  startsampletime = rt_get_cpu_time_ns();
+#endif
 	  retVal = comedi_do_insn( device, &pChan->insn );     
+#ifdef ENABLE_AIACQUISITIONTIME
+	  stopsampletime = rt_get_cpu_time_ns();
+	  dsampletime = stopsampletime - startsampletime;
+	  statusInput[aiacquisitiontimestatusinx] = 1e-9*dsampletime;
+#endif
 	  if ( retVal < 1 ) {
 	    aisubdev.running = 0;
 	    aisubdev.error = E_NODATA;
@@ -1334,9 +1428,17 @@ void dynclamp_loop( long dummy )
 	    }
 	  }
 	  // convert to voltage:
+#ifdef ENABLE_AICONVERSIONTIME
+	  startsampletime = rt_get_cpu_time_ns();
+#endif
 	  sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
 	  if ( pChan->modelIndex >= 0 )
 	    input[pChan->modelIndex] = pChan->voltage;
+#ifdef ENABLE_AICONVERSIONTIME
+	  stopsampletime = rt_get_cpu_time_ns();
+	  dsampletime = stopsampletime - startsampletime;
+	  statusInput[aiconversiontimestatusinx] = 1e-9*dsampletime;
+#endif
 	}
 	else {
 	  if ( pChan->param == 1 )
@@ -1392,6 +1494,11 @@ void dynclamp_loop( long dummy )
 	  
       } // end of channel loop
     } // ! pending
+#ifdef ENABLE_AITIME
+    stoptime = rt_get_cpu_time_ns();
+    dtime = stoptime - starttime;
+    statusInput[aitimestatusinx] = 1e-9*dtime;
+#endif
 
 #ifdef ENABLE_SYNCSEC
     if ( syncSECInsnLow.subdev >= 0 ) {
@@ -1417,8 +1524,16 @@ void dynclamp_loop( long dummy )
 
 
     /****************************************************************************/
+#ifdef ENABLE_MODELTIME
+    starttime = rt_get_cpu_time_ns();
+#endif
 #ifdef ENABLE_COMPUTATION
     computeModel();
+#endif
+#ifdef ENABLE_MODELTIME
+    stoptime = rt_get_cpu_time_ns();
+    dtime = stoptime - starttime;
+    statusInput[modeltimestatusinx] = 1e-9*dtime;
 #endif
 
     /******** WAIT FOR CALCULATION TASK TO COMPUTE RESULT: **********************/
@@ -1428,7 +1543,7 @@ void dynclamp_loop( long dummy )
     //    start = rt_get_cpu_time_ns();
     rt_task_wait_period();
 
-#if defined(ENABLE_TIMING) || defined(ENABLE_SYNCSEC)
+#if defined(ENABLE_INTERVALS) || defined(ENABLE_SYNCSEC)
     newtime = rt_get_cpu_time_ns();
     difftime = newtime - currenttime;
     currenttime = newtime;
