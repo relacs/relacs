@@ -1378,7 +1378,7 @@ int Acquire::maxVoltages( const InData &data, vector<double> &ranges ) const
   // fill in ranges:
   ranges.reserve( ai->maxRanges() );
   ranges.clear();
-  if ( data.channel() < AnalogInput::ParamChannel ) {
+  if ( data.channel() < InData::ParamChannel ) {
     if ( data.unipolar() ) {
       for ( int k=0; k<ai->maxRanges() && ai->unipolarRange( k ) > 0; k++ )
 	ranges.push_back( ai->unipolarRange( k ) );
@@ -1419,7 +1419,7 @@ int Acquire::maxValues( const InData &data, vector<double> &ranges ) const
   // fill in ranges:
   ranges.reserve( ai->maxRanges() );
   ranges.clear();
-  if ( data.channel() < AnalogInput::ParamChannel ) {
+  if ( data.channel() < InData::ParamChannel ) {
     if ( data.unipolar() ) {
       for ( int k=0; k<ai->maxRanges() && ai->unipolarRange( k ) > 0; k++ )
 	ranges.push_back( ai->unipolarRange( k ) * data.scale() );

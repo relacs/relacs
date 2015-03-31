@@ -753,7 +753,7 @@ void RELACSWidget::setupInTraces( void )
     }
     id.setMinValue( unipolar ? 0.0 : -maxval );
     id.setMaxValue( maxval );
-    if ( channel < AnalogInput::ParamChannel ) {
+    if ( channel < InData::ParamChannel ) {
       int gainindex = AQ->inputDevice( devi )->gainIndex( unipolar, maxval/scale );
       id.setGainIndex( gainindex );
     }

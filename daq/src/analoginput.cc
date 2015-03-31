@@ -332,7 +332,8 @@ int AnalogInput::testReadData( InList &traces )
       traces[k].addError( DaqError::InvalidChannel );
       traces[k].setChannel( 0 );
     }
-    else if( traces[k].channel() >= channels() && traces[k].channel() < ParamChannel ) {
+    else if( traces[k].channel() >= channels() &&
+	     traces[k].channel() < InData::ParamChannel ) {
       traces[k].addError( DaqError::InvalidChannel );
     }
     // check reference:
@@ -344,7 +345,7 @@ int AnalogInput::testReadData( InList &traces )
       traces[k].setReference( InData::RefGround );
     } 
     // check gain index:
-    if ( traces[k].channel() < ParamChannel ) {
+    if ( traces[k].channel() < InData::ParamChannel ) {
       if ( traces[k].gainIndex() < 0 ) {
 	traces[k].addError( DaqError::InvalidGain );
 	traces[k].setGainIndex( 0 );

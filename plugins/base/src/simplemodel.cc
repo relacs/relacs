@@ -67,7 +67,7 @@ void SimpleModel::main( void )
     v += noisegain * rnd.gaussian();
     v += sinegain * ::sin( 6.28318530717959*sinefreq*time( 0 ) );
     for ( int k=0; k<traces(); k++ ) {
-      if ( trace( k ).source() == 0 )
+      if ( trace( k ).source() == 0 && trace( k ).rawChannel() )
 	push( k, v );
     }
   }

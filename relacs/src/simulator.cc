@@ -214,7 +214,7 @@ int Simulator::read( InList &data )
 
   // set ranges:
   for ( int k=0; k<data.size(); k++ ) {
-    if ( data[k].device() >= 0 ) {
+    if ( data[k].rawChannel() && data[k].device() >= 0 ) {
       AIData &ai = AI[ data[k].device() ];
       if ( data[k].unipolar() ) {
 	double max = ai.AI->unipolarRange( data[k].gainIndex() );

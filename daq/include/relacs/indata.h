@@ -88,6 +88,10 @@ class InData : public CyclicSampleDataF, public DaqError
   
  public:
 
+    /*! Channel numbers larger or equal than this are additional
+        traces not acquired from the daq board. */
+  static const int ParamChannel = 1000;
+
     /*! Reference types for analog input lines. */
   enum RefType { 
       /*! Differential input. */
@@ -336,6 +340,12 @@ class InData : public CyclicSampleDataF, public DaqError
         and the device to \a device. 
         \sa channel(), device(), setDevice() */
   void setChannel( int channel, int device );
+    /*! \c true if this is a channel sampling from a acquisition device.
+        \sa paramChannel() */
+  bool rawChannel( void ) const;
+    /*! \c true if this is a channel sampling from model or status variables.
+        \sa rawChannel() */
+  bool paramChannel( void ) const;
     /*! The trace-number. */
   int trace( void ) const;
     /*! Set the trace number to \a trace. */
@@ -393,12 +403,12 @@ class InData : public CyclicSampleDataF, public DaqError
     /*! The scale factor used for scaling the voltage data 
         to a secondary unit.
         \sa setScale(), unit(), setUnit() */
-  double scale( void ) const;
+  float scale( void ) const;
     /*! Set the scale factor to \a scale.
 	The scale factor \a scale is used to scale the voltage data to
 	a secondary unit.
         \sa scale(), unit(), setUnit() */
-  void setScale( double scale );
+  void setScale( float scale );
     /*! The secondary unit.
         \sa setUnit(), scale(), setScale() */
   string unit( void ) const;
@@ -409,7 +419,7 @@ class InData : public CyclicSampleDataF, public DaqError
 	The voltage data are scaled by \a scale
 	to get the data in the secondary unit \a unit.
         \sa unit(), scale(), setScale() */
-  void setUnit( double scale, const string &unit );
+  void setUnit( float scale, const string &unit );
 
     /*! Returns 0 if the data are acquired,
         1 if the data are filtered from an InData, 
@@ -516,7 +526,7 @@ class InData : public CyclicSampleDataF, public DaqError
         voltage */
   char *GainData;
     /*! Scale from voltage to a secondary unit. */
-  double Scale;
+  float Scale;
     /*! The secondary unit. */
   string Unit;
     /*! The maximum time in seconds the hardware driver can buffer data. */

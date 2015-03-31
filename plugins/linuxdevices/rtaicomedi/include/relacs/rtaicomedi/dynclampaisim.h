@@ -22,8 +22,9 @@
 #ifndef _RELACS_DYNCLAMPAISIM_H_
 #define _RELACS_DYNCLAMPAISIM_H_ 1
 
-#include <relacs/rtaicomedi/moduledef.h>
+#include <vector>
 #include <relacs/aisim.h>
+#include <relacs/rtaicomedi/moduledef.h>
 
 namespace relacs {
 
@@ -90,6 +91,35 @@ protected:
         The channels in \a traces are not sorted.
         This function is called by testRead(). */
   virtual int testReadDevice( InList &traces );
+
+
+private:
+
+  vector<float> statusInput;
+  vector<string> statusInputNames;
+  vector<string> statusInputUnits;
+#ifdef ENABLE_INTERVALS
+  int intervalstatusinx;
+#endif
+#ifdef ENABLE_AITIME
+  int aitimestatusinx;
+#endif
+#ifdef ENABLE_AIACQUISITIONTIME
+  int aiacquisitiontimestatusinx;
+#endif
+#ifdef ENABLE_AICONVERSIONTIME
+  int aiconversiontimestatusinx;
+#endif
+#ifdef ENABLE_AOTIME
+  int aotimestatusinx;
+#endif
+#ifdef ENABLE_MODELTIME
+  int modeltimestatusinx;
+#endif
+#ifdef ENABLE_COMPUTATION
+  int outputstatusinx;
+#endif
+
 
 };
 

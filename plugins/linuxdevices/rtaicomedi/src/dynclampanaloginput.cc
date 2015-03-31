@@ -235,9 +235,9 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   }
 
   // parameter channel offset:
-  if ( PARAM_CHAN_OFFSET != ParamChannel ) {
+  if ( PARAM_CHAN_OFFSET != InData::ParamChannel ) {
     setErrorStr( "PARAM_CHAN_OFFSET=" + Str( PARAM_CHAN_OFFSET ) +
-		 " from moduledef.h does not equal ParamChannel=" + Str( ParamChannel ) +
+		 " from moduledef.h does not equal ParamChannel=" + Str( InData::ParamChannel ) +
 		 " from analoginput.h" );
     return -1;
   }
@@ -1028,7 +1028,9 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
 	tracefound[k] = true;
 	double scaleval = Parameter::changeUnit( 1.0, traceInfo.unit, traces[k].unit() );
 	if ( traces[k].unit() != traceInfo.unit && ::fabs( traces[k].scale() - scaleval ) > 1e-8 )
-	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
+	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() +
+				 " requires as unit '" + traceInfo.unit +
+				 "', not '" + traces[k].unit() + "'" );
 	traces[k].setChannel( 2*PARAM_CHAN_OFFSET + pchan );
 	foundtraces++;
 	break;

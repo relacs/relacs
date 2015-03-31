@@ -60,10 +60,6 @@ class AnalogInput : public Device, protected QThread
 
 public:
 
-    /*! Channel numbers larger or equal than this are additional
-        traces not acquired from the daq board. */
-  static const int ParamChannel = 1000;
-
     /*! Create a new AnalogInput without opening a device.
         Reimplement this constructor. */
   AnalogInput( void );

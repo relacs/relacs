@@ -29,6 +29,48 @@ namespace relacs {
 DynClampAISim::DynClampAISim( void )
   : AISim()
 {
+  statusInput.clear();
+  statusInputNames.clear();
+  statusInputUnits.clear();
+#ifdef ENABLE_INTERVALS
+  intervalstatusinx = statusInput.size();
+  statusInputNames.push_back( "Interval" );
+  statusInputUnits.push_back( "s" );
+  statusInput.push_back( 0.0 );
+#endif
+#ifdef ENABLE_AITIME
+  aitimestatusinx = statusInput.size();
+  statusInputNames.push_back( "AI-time" );
+  statusInputUnits.push_back( "s" );
+  statusInput.push_back( traces.size()*1.2e-6 );
+#endif
+#ifdef ENABLE_AIACQUISITIONTIME
+  aiacquisitiontimestatusinx = statusInput.size();
+  statusInputNames.push_back( "AI-acquisition-time" );
+  statusInputUnits.push_back( "s" );
+  statusInput.push_back( 1.0e-6 );
+#endif
+#ifdef ENABLE_AICONVERSIONTIME
+  aiconversiontimestatusinx = statusInput.size();
+  statusInputNames.push_back( "AI-conversion-time" );
+  statusInputUnits.push_back( "s" );
+  statusInput.push_back( 0.1e-6 );
+#endif
+#ifdef ENABLE_AOTIME
+  aotimestatusinx = statusInput.size();
+  statusInputNames.psuh_back( "AO-time" );
+  statusInputUnits.push_back( "s" );
+  statusInput.push_back( traces.size()*0.6e-6 );
+#endif
+#ifdef ENABLE_MODELTIME
+  modeltimestatusinx = statusInput.size();
+  statusInputNames.push_back( "Model-time" );
+  statusInputUnits.push_back("s" );
+  statusInput.push_back( 5e-6 );
+#endif
+#ifdef ENABLE_COMPUTATION
+  outputstatusinx = statusInput.size();
+#endif
 }
 
 
@@ -40,8 +82,13 @@ DynClampAISim::~DynClampAISim( void )
 int DynClampAISim::open( const string &device, const Options &opts )
 {
   AISim::open( device, opts );
+  string es = dynclampmodelsim::initStatus( statusInput, statusInputNames, statusInputUnits );
   setDeviceName( "Dynamic Clamp AI Simulation" );
   setInfo();
+  if ( ! es.empty() ) {
+    setErrorStr( es );
+    return -1;
+  }
   return 0;
 }
 
@@ -49,8 +96,13 @@ int DynClampAISim::open( const string &device, const Options &opts )
 int DynClampAISim::open( Device &device, const Options &opts )
 {
   AISim::open( device, opts );
+  string es = dynclampmodelsim::initStatus( statusInput, statusInputNames, statusInputUnits );
   setDeviceName( "Dynamic Clamp AI Simulation" );
   setInfo();
+  if ( ! es.empty() ) {
+    setErrorStr( es );
+    return -1;
+  }
   return 0;
 }
 
@@ -63,20 +115,6 @@ int DynClampAISim::testReadDevice( InList &traces )
   if ( traces[0].startSource() < 0 || traces[0].startSource() >= 5 ) {
     traces.setStartSource( 0 );
     traces.addError( DaqError::InvalidStartSource );
-  }
-
-  // channel configuration:
-  for ( int k=0; k<traces.size(); k++ ) {
-    traces[k].delError( DaqError::InvalidChannel );
-    // check channel number:
-    if ( traces[k].channel() < 0 ) {
-      traces[k].addError( DaqError::InvalidChannel );
-      traces[k].setChannel( 0 );
-    }
-    else if ( traces[k].channel() >= channels() && traces[k].channel() < PARAM_CHAN_OFFSET ) {
-      traces[k].addError( DaqError::InvalidChannel );
-      traces[k].setChannel( channels()-1 );
-    }
   }
 
   for( int k = 0; k < traces.size(); k++ ) {
@@ -99,7 +137,10 @@ int DynClampAISim::testReadDevice( InList &traces )
 
 int DynClampAISim::prepareRead( InList &traces )
 {
-  dynclampmodelsim::initialize( traces[0].stepsize() );
+  dynclampmodelsim::initModel( traces[0].stepsize() );
+#ifdef ENABLE_INTERVALS
+  statusInput[intervalstatusinx] = traces[0].sampleInterval();
+#endif
   return AISim::prepareRead( traces );
 }
 
@@ -107,19 +148,30 @@ int DynClampAISim::prepareRead( InList &traces )
 void DynClampAISim::model( InList &data,
 			   const vector< int > &aochannels, vector< float > &aovalues )
 {
-  dynclampmodelsim::computeModel( data, aochannels, aovalues );
+  dynclampmodelsim::computeModel( data, aochannels, aovalues,
+				  outputstatusinx, statusInput );
+  for ( int k=0; k<data.size(); k++ ) {
+    if ( data[k].channel() >= 2*PARAM_CHAN_OFFSET ) {
+      data[k].push( statusInput[ data[k].channel()-2*PARAM_CHAN_OFFSET ]*data[k].scale() );
+    }
+  }
 }
 
 
 void DynClampAISim::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 {
   dynclampmodelsim::addAITraces( traces, deviceid );
+  int channel = 2*PARAM_CHAN_OFFSET;
+  for ( unsigned int k=0; k<statusInput.size(); k++ ) {
+    traces.push_back( TraceSpec( traces.size(), statusInputNames[k],
+				 deviceid, channel++, 1.0, statusInputUnits[k] ) );
+  }
 }
 
 
 int DynClampAISim::matchTraces( InList &traces ) const
 {
-  return dynclampmodelsim::matchAITraces( traces );
+  return dynclampmodelsim::matchAITraces( traces, statusInputNames, statusInputUnits );
 }
 
 

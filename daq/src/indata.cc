@@ -658,6 +658,18 @@ void InData::setChannel( int channel )
 }
 
 
+bool InData::rawChannel( void ) const
+{
+  return ( Channel < ParamChannel );
+}
+
+
+bool InData::paramChannel( void ) const
+{
+  return ( Channel >= ParamChannel );
+}
+
+
 int InData::trace( void ) const
 {
   return Trace;
@@ -760,13 +772,13 @@ void InData::setGainData( char *data )
 }
 
 
-double InData::scale( void ) const
+float InData::scale( void ) const
 {
   return Scale;
 }
 
 
-void InData::setScale( double scale )
+void InData::setScale( float scale )
 {
   Scale = scale;
 }
@@ -784,7 +796,7 @@ void InData::setUnit( const string &unit )
 }
 
 
-void InData::setUnit( double scale, const string &unit )
+void InData::setUnit( float scale, const string &unit )
 {
   Scale = scale;
   Unit = unit;

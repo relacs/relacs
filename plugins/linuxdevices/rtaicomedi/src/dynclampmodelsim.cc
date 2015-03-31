@@ -20,6 +20,7 @@
 */
 
 #include <math.h>
+#include <relacs/parameter.h>
 #include <relacs/rtaicomedi/moduledef.h>
 #include <relacs/rtaicomedi/dynclampmodelsim.h>
 
@@ -65,18 +66,43 @@ void generateLookupTables( void )
 }
 
 
-void initialize( float stepsize )
+string initStatus( vector<float> &statusInput,
+		   vector<string> &statusInputNames, vector<string> &statusInputUnits )
+{
+  // parameter channel offset:
+  if ( PARAM_CHAN_OFFSET != InData::ParamChannel )
+    return "PARAM_CHAN_OFFSET=" + Str( PARAM_CHAN_OFFSET ) +
+           " from moduledef.h does not equal ParamChannel=" + Str( InData::ParamChannel ) +
+	   " from analoginput.h";
+
+#ifdef ENABLE_COMPUTATION
+  for ( int k=0; k<OUTPUT_N; k++ ) {
+    statusInputNames.push_back( string( "Model-" ) + outputNames[k] );
+    statusInputUnits.push_back( outputUnits[k] );
+    statusInput.push_back( 0.0 );
+    statusInputNames.push_back( string( "Total-" ) + outputNames[k] );
+    statusInputUnits.push_back( outputUnits[k] );
+    statusInput.push_back( 0.0 );
+  }
+#endif
+  return "";
+}
+
+
+void initModel( float stepsize )
 {
 #ifdef ENABLE_COMPUTATION
   loopInterval = stepsize;
   loopRate = 1.0/loopRate;
+
   initModel();
 #endif
 }
 
 
 void computeModel( InList &data,
-		   const vector< int > &aochannels, vector< float > &aovalues )
+		   const vector< int > &aochannels, vector< float > &aovalues,
+		   int outputstatusinx, vector<float> &statusInput )
 {
 #ifdef ENABLE_COMPUTATION
   for ( int k=0; k<data.size(); k++ ) {
@@ -91,8 +117,19 @@ void computeModel( InList &data,
 
   computeModel();
 
+  for ( int k=0; k<OUTPUT_N; k++ ) {
+    statusInput[outputstatusinx+2*k] = output[k];
+    statusInput[outputstatusinx+2*k+1] = output[k];
+    for ( unsigned int j=0; j<aochannels.size(); j++ ) {
+      if ( outputChannels[k] == aochannels[j] ) {
+	statusInput[outputstatusinx+2*k+1] += aovalues[j];
+	break;
+      }
+    }
+  }
   for ( int k=0; k<data.size(); k++ ) {
-    if ( data[k].channel() >= PARAM_CHAN_OFFSET )
+    if ( data[k].channel() >= PARAM_CHAN_OFFSET &&
+	 data[k].channel() < 2*PARAM_CHAN_OFFSET )
       data[k].push( paramInput[ data[k].channel()-PARAM_CHAN_OFFSET ] );
   }
   for ( unsigned int k=0; k<aochannels.size(); k++ ) {
@@ -132,9 +169,9 @@ void addAOTraces( vector< TraceSpec > &traces, int deviceid )
 }
 
 
-int matchAITraces( InList &traces )
+int matchAITraces( InList &traces, const vector<string> &statusInputNames,
+		   const vector<string> &statusInputUnits )
 {
-#ifdef ENABLE_COMPUTATION
   int foundtraces = 0;
   bool tracefound[ traces.size() ];
   for ( int k=0; k<traces.size(); k++ )
@@ -144,6 +181,7 @@ int matchAITraces( InList &traces )
   for ( unsigned int k=0; k<modelaitraces.size(); k++ )
     modelaitraces[k] = -1;
 
+#ifdef ENABLE_COMPUTATION
   string unknowntraces = "";
   for ( int j=0; j<INPUT_N; j++ ) {
     bool notfound = true;
@@ -180,14 +218,31 @@ int matchAITraces( InList &traces )
       }
     }
   }
+#endif
+
+  // status traces:
+  for ( unsigned int j=0; j<statusInputNames.size(); j++ ) {
+    for ( int k=0; k<traces.size(); k++ ) {
+      if ( traces[k].channel() >= PARAM_CHAN_OFFSET && traces[k].ident() == statusInputNames[j] ) {
+	tracefound[k] = true;
+	double scaleval = Parameter::changeUnit( 1.0, statusInputUnits[j], traces[k].unit() );
+	if ( traces[k].unit() != statusInputUnits[j] &&
+	     ::fabs( traces[k].scale() - scaleval ) > 1e-8 )
+	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() +
+				 " requires as unit '" + statusInputUnits[j] +
+				 "', not '" + traces[k].unit() + "'" );
+	traces[k].setChannel( 2*PARAM_CHAN_OFFSET + j );
+	foundtraces++;
+	break;
+      }
+    }
+  }
+
   for ( int k=0; k<traces.size(); k++ ) {
     if ( ! tracefound[k] && traces[k].channel() >= PARAM_CHAN_OFFSET )
       traces[k].addErrorStr( "no matching trace found for trace " + traces[k].ident() );
   }
   return traces.failed() ? -1 : foundtraces;
-#else
-  return 0;
-#endif
 }
 
 

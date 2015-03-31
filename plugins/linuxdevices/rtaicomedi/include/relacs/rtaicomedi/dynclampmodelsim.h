@@ -41,15 +41,20 @@ namespace dynclampmodelsim {
 
   void generateLookupTables( void );
 
-  void initialize( float stepsize );
+  string initStatus( vector<float> &statusInput,
+		     vector<string> &statusInputNames, vector<string> &statusInputUnits );
+
+  void initModel( float stepsize );
 
   void computeModel( InList &data,
-		     const vector< int > &aochannels, vector< float > &aovalues );
+		     const vector< int > &aochannels, vector< float > &aovalues,
+		     int outputstatusinx, vector<float> &statusInput );
 
   void addAITraces( vector< TraceSpec > &traces, int deviceid );
   void addAOTraces( vector< TraceSpec > &traces, int deviceid );
 
-  int matchAITraces( InList &traces );
+  int matchAITraces( InList &traces, const vector<string> &statusInputNames,
+		     const vector<string> &statusInputUnits );
   int matchAOTraces( vector< TraceSpec > &traces );
 
 

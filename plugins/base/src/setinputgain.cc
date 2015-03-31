@@ -22,7 +22,6 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
-#include <relacs/analoginput.h>
 #include <relacs/base/setinputgain.h>
 using namespace relacs;
 
@@ -119,7 +118,7 @@ void SetInputGain::notify( void )
 {
   int intrace = traceIndex( text( "intrace" ) );
   if ( intrace >= 0 && intrace < traces().size() &&
-       trace( intrace ).channel() < AnalogInput::ParamChannel ) {
+       trace( intrace ).channel() < InData::ParamChannel ) {
     vector<double> ranges;
     maxValues( trace( intrace ), ranges );
     setMinMax( "gainindex", 0, (int)ranges.size() );

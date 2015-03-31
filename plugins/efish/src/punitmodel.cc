@@ -166,7 +166,7 @@ void PUnitModel::main( void )
     if ( cs == maxs ) {
       voltage = VoltageScale*simx[sigdimension];
       for ( int k=0; k<traces(); k++ ) {
-	if ( trace( k ).source() == 0 )
+	if ( trace( k ).source() == 0 && trace( k ).rawChannel() )
 	  push( k, *val[k] );
       }
       cs = 0;

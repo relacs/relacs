@@ -125,7 +125,7 @@ void EODModel::main( void )
     else if ( eodtype == 3 )
       v = ( ::sin( phase ) + 0.25*::sin( 2.0*phase + 0.5*M_PI ) ) + 0.25;
     for ( int k=0; k<traces(); k++ ) {
-      if ( trace( k ).source() == 0 ) {
+      if ( trace( k ).source() == 0 && trace( k ).rawChannel() ) {
 	double x = v * amps[k]*ampfac;
 	x += stimgains[k] * signal( time( 0 ) );
 	push( k, x );

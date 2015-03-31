@@ -1,5 +1,8 @@
 Version 0.9.8
 
+March, 2015
+  Dynamic clamp module provides status traces with output and timing information.
+
 February, 2015
   Added dynamic clamp support to simulation mode.
 
