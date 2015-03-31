@@ -371,20 +371,6 @@ void DynClampAnalogOutput::close( void )
 }
 
 
-int DynClampAnalogOutput::setModuleName( string modulename )
-{
-  ModuleDevice = modulename;
-  // TODO: test opening here?
-  return 0;
-}
-
-
-string DynClampAnalogOutput::moduleName( void ) const
-{
-  return ModuleDevice;
-}
-
-
 int DynClampAnalogOutput::channels( void ) const
 { 
   return Channels;

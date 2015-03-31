@@ -1378,13 +1378,18 @@ int Acquire::maxVoltages( const InData &data, vector<double> &ranges ) const
   // fill in ranges:
   ranges.reserve( ai->maxRanges() );
   ranges.clear();
-  if ( data.unipolar() ) {
-    for ( int k=0; k<ai->maxRanges() && ai->unipolarRange( k ) > 0; k++ )
-      ranges.push_back( ai->unipolarRange( k ) );
+  if ( data.channel() < AnalogInput::ParamChannel ) {
+    if ( data.unipolar() ) {
+      for ( int k=0; k<ai->maxRanges() && ai->unipolarRange( k ) > 0; k++ )
+	ranges.push_back( ai->unipolarRange( k ) );
+    }
+    else {
+      for ( int k=0; k<ai->maxRanges() && ai->bipolarRange( k ) > 0; k++ )
+	ranges.push_back( ai->bipolarRange( k ) );
+    }
   }
   else {
-    for ( int k=0; k<ai->maxRanges() && ai->bipolarRange( k ) > 0; k++ )
-      ranges.push_back( ai->bipolarRange( k ) );
+    ranges.push_back( data.maxVoltage() );
   }
 
   return 0;
@@ -1414,13 +1419,18 @@ int Acquire::maxValues( const InData &data, vector<double> &ranges ) const
   // fill in ranges:
   ranges.reserve( ai->maxRanges() );
   ranges.clear();
-  if ( data.unipolar() ) {
-    for ( int k=0; k<ai->maxRanges() && ai->unipolarRange( k ) > 0; k++ )
-      ranges.push_back( ai->unipolarRange( k ) * data.scale() );
+  if ( data.channel() < AnalogInput::ParamChannel ) {
+    if ( data.unipolar() ) {
+      for ( int k=0; k<ai->maxRanges() && ai->unipolarRange( k ) > 0; k++ )
+	ranges.push_back( ai->unipolarRange( k ) * data.scale() );
+    }
+    else {
+      for ( int k=0; k<ai->maxRanges() && ai->bipolarRange( k ) > 0; k++ )
+	ranges.push_back( ai->bipolarRange( k ) * data.scale() );
+    }
   }
   else {
-    for ( int k=0; k<ai->maxRanges() && ai->bipolarRange( k ) > 0; k++ )
-      ranges.push_back( ai->bipolarRange( k ) * data.scale() );
+    ranges.push_back( data.maxValue() );
   }
 
   return 0;
@@ -1493,32 +1503,11 @@ int Acquire::adjustGain( const InData &data, double maxvalue )
   AIData &ai = AI[di];
 
   // find appropriate gain:
-  int minindex = -1;
-  int newindex = -1;
-  for ( int k = ai.AI->maxRanges() - 1; k >= 0; k-- ) {
-    // this gain exist?
-    if ( ( data.unipolar() && ai.AI->unipolarRange( k ) > 0 ) || 
-	 ( !data.unipolar() && ai.AI->bipolarRange( k ) > 0 ) ) {
-      minindex = k;
-      // check it:
-      if ( data.unipolar() ) {
-	if ( ai.AI->unipolarRange( k ) * data.scale() >= maxvalue ) {
-	  newindex = k;
-	  break;
-	}
-      }
-      else {
-	if ( ai.AI->bipolarRange( k ) * data.scale() >= maxvalue ) {
-	  newindex = k;
-	  break;
-	}
-      }
-    }
-  }
+  int newindex = ai.AI->gainIndex( data.unipolar(), maxvalue );
 
   // no gain:
   if ( newindex < 0 )
-    newindex = minindex;
+    newindex = ai.AI->minGainIndex( data.unipolar() );
   if ( newindex < 0 )
     return DaqError::InvalidGain;
 

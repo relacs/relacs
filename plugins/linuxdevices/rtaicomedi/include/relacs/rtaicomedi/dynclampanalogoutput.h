@@ -62,16 +62,6 @@ public:
     /*! Stop all activity and close the device. */
   virtual void close( void );
 
-    /*! Set the name of the dynamic clamp module file. This has to be done 
-        before performing prepareWrite() or  startWrite().
-        Returns zero on success, or InvalidDevice (or any other negative number
-	indicating the error).        
-	\sa moduleName() \sa setDeviceName() \sa deviceName()  */
-  int setModuleName( string modulename );
-    /*! Return the name of the dynamic clamp module file.
-      \sa setModuleName() \sa setDeviceName() \sa deviceName()  */
-  string moduleName( void ) const;
-
     /*! Number of analog output channels. */
   virtual int channels( void ) const;
     /*! Resolution in bits of analog output. */

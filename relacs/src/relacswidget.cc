@@ -132,7 +132,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addText( "inputtracedevice", "Input trace device", "ai-1" );
   addInteger( "inputtracechannel", "Input trace channel", 0 );
   addText( "inputtracereference", "Input trace reference", InData::referenceStr( InData::RefGround ) );
-  addInteger( "inputtracegain", "Input trace gain", 0 );
+  addNumber( "inputtracemaxvalue", "Input trace maximum value", 0 );
   addBoolean( "inputtracecenter", "Input trace center vertically", true );
   newSection( "output data" );
   addText( "outputtraceid", "Output trace identifier", "" );
@@ -715,7 +715,8 @@ void RELACSWidget::setupInTraces( void )
     id.setTrace( k );
     id.setSampleRate( number( "inputsamplerate", 1000.0 ) );
     id.setStartSource( 0 );
-    id.setUnipolar( boolean( "inputunipolar", false ) );
+    bool unipolar = boolean( "inputunipolar", false );
+    id.setUnipolar( unipolar );
     double scale = number( "inputtracescale", k, 1.0 );
     if ( fabs( scale ) < 1e-8 ) {
       Str ss = "inputtracescale for input trace <b>" + traceid + "</b> is zero, set to 1";
@@ -745,12 +746,19 @@ void RELACSWidget::setupInTraces( void )
       m |= PlotTraceCenterVertically;
     id.setMode( m );
     id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
-    int gain = integer( "inputtracegain", k, -1 );
-    if ( gain < 0 ) {
-      ws += ", invalid gain <b>" + Str( gain ) + "</b>";
+    double maxval = number( "inputtracemaxvalue", k, -1.0 );
+    if ( maxval <= 0.0 ) {
+      ws += ", invalid maximum value <b>" + Str( maxval ) + "</b>";
       failed = true;
     }
-    id.setGainIndex( gain );
+    id.setMinValue( unipolar ? 0.0 : -maxval );
+    id.setMaxValue( maxval );
+    if ( channel < AnalogInput::ParamChannel ) {
+      int gainindex = AQ->inputDevice( devi )->gainIndex( unipolar, maxval/scale );
+      id.setGainIndex( gainindex );
+    }
+    else
+      id.setGainIndex( 0 );
     if ( failed ) {
       ws.erase( 0, 2 );
       ws += " for input trace <b>" + traceid + "</b>!<br> Skipped this input trace.";

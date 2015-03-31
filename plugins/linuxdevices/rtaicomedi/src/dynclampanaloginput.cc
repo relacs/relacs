@@ -234,6 +234,14 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
     }
   }
 
+  // parameter channel offset:
+  if ( PARAM_CHAN_OFFSET != ParamChannel ) {
+    setErrorStr( "PARAM_CHAN_OFFSET=" + Str( PARAM_CHAN_OFFSET ) +
+		 " from moduledef.h does not equal ParamChannel=" + Str( ParamChannel ) +
+		 " from analoginput.h" );
+    return -1;
+  }
+
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
@@ -330,20 +338,6 @@ void DynClampAnalogInput::close( void )
   BipConverter = 0;
 
   Info.clear();
-}
-
-
-int DynClampAnalogInput::setModuleName( string modulename )
-{
-  ModuleDevice = modulename;
-  // TODO: test opening here?
-  return 0;
-}
-
-
-string DynClampAnalogInput::moduleName( void ) const
-{
-  return ModuleDevice;
 }
 
 
@@ -507,29 +501,13 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
     traces.addError( DaqError::InvalidStartSource );
   }
 
-  // channel configuration:
-  for ( int k=0; k<traces.size(); k++ ) {
-    traces[k].delError( DaqError::InvalidChannel );
-    // check channel number:
-    if ( traces[k].channel() < 0 ) {
-      traces[k].addError( DaqError::InvalidChannel );
-      traces[k].setChannel( 0 );
-    }
-    else if ( traces[k].channel() >= Channels && traces[k].channel() < PARAM_CHAN_OFFSET ) {
-      traces[k].addError( DaqError::InvalidChannel );
-      traces[k].setChannel( Channels-1 );
-    }
-  }
-
   for( int k = 0; k < traces.size(); k++ ) {
-
     // check delays:
     if ( traces[k].delay() > 0.0 ) {
       traces[k].addError( DaqError::InvalidDelay );
       traces[k].addErrorStr( "delays are not supported for analog input!" );
       traces[k].setDelay( 0.0 );
     }
-
   }
 
   unsigned int chanlist[MAXCHANLIST];

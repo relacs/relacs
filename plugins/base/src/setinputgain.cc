@@ -22,6 +22,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <relacs/analoginput.h>
 #include <relacs/base/setinputgain.h>
 using namespace relacs;
 
@@ -98,7 +99,7 @@ void SetInputGain::preConfig( void )
   for ( int k=0; k<traces().size(); k++ ) {
     if ( trace( k ).source() == 0 ) {
       vector<double> ranges;
-      maxVoltages( trace( k ), ranges );
+      maxValues( trace( k ), ranges );
       string rs = "";
       for ( unsigned int j=0; j<ranges.size(); j++ ) {
 	if ( j > 0 )
@@ -117,9 +118,10 @@ void SetInputGain::preConfig( void )
 void SetInputGain::notify( void )
 {
   int intrace = traceIndex( text( "intrace" ) );
-  if ( intrace >= 0 && intrace < traces().size() ) {
+  if ( intrace >= 0 && intrace < traces().size() &&
+       trace( intrace ).channel() < AnalogInput::ParamChannel ) {
     vector<double> ranges;
-    maxVoltages( trace( intrace ), ranges );
+    maxValues( trace( intrace ), ranges );
     setMinMax( "gainindex", 0, (int)ranges.size() );
   }
 }

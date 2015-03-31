@@ -68,11 +68,11 @@ private:
   void fillTable( void );
     /*! Fill in a row of the table. */
   void fillRow( int row, const string &name, const string &device, int channel,
-		const string &reference, double samplerate, int gainindex,
+		const string &reference, double samplerate, double maxvalue,
 		double scale, const string &unit, bool center );
     /*! Get content of a row of the table. */
   void getRow( int row, string &basename, int &nameinx, string &device, int &channel,
-	       string &reference, double &samplerate, int &gainindex,
+	       string &reference, double &samplerate, double &maxvalue,
 	       double &scale, string &unit, bool &center );
 
   QTableWidget *Table;

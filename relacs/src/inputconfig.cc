@@ -81,7 +81,7 @@ void InputConfig::fillTable( void )
 {
   Table->setColumnCount( 9 );
   QStringList list;
-  list << "Name" << "Device" << "Channel" << "Reference" << "Sampling rate" << "Gain index" << "Scale" << "Unit" << "Center";
+  list << "Name" << "Device" << "Channel" << "Reference" << "Sampling rate" << "Max. value" << "Scale" << "Unit" << "Center";
   Table->setHorizontalHeaderLabels( list );
 
   int nid = Opts.size( "inputtraceid" );
@@ -93,23 +93,21 @@ void InputConfig::fillTable( void )
     int channel = Opts.integer( "inputtracechannel", k, 0 );
     string reference = Opts.text( "inputtracereference", k, "ground" );
     double samplerate = Opts.number( "inputsamplerate", 1000.0 );
-    int gainindex = Opts.integer( "inputtracegain", k, -1 );
+    double maxvalue = Opts.number( "inputtracemaxvalue", k, 1.0 );
     double scale = Opts.number( "inputtracescale", k, 1.0 );
     if ( fabs( scale ) < 1e-8 )
       scale = 1.0;
     string unit = Opts.text( "inputtraceunit", k, "V" );
     bool center = Opts.boolean( "inputtracecenter", k, false );
-    if ( gainindex < 0 )
-      gainindex = 0;
 
     // add settings to table:
-    fillRow( k, traceid, device, channel, reference, samplerate, gainindex, scale, unit, center );
+    fillRow( k, traceid, device, channel, reference, samplerate, maxvalue, scale, unit, center );
   }
 }
 
 
 void InputConfig::fillRow( int row, const string &name, const string &device, int channel,
-			   const string &reference, double samplerate, int gainindex,
+			   const string &reference, double samplerate, double maxvalue,
 			   double scale, const string &unit, bool center )
 {
   Table->setItem( row, 0, new QTableWidgetItem( name.c_str() ) );
@@ -137,10 +135,11 @@ void InputConfig::fillRow( int row, const string &name, const string &device, in
   sampleratebox->setValue( 0.001*samplerate );
   sampleratebox->setSuffix( " kHz" );
   Table->setCellWidget( row, 4, sampleratebox );
-  QSpinBox *gainbox = new QSpinBox;
-  gainbox->setRange( 0, 20 );
-  gainbox->setValue( gainindex );
-  Table->setCellWidget( row, 5, gainbox );
+  DoubleSpinBox *maxvalbox = new DoubleSpinBox;
+  maxvalbox->setFormat( "%g" );
+  maxvalbox->setRange( 0.0, 1000000.0 );
+  maxvalbox->setValue( maxvalue );
+  Table->setCellWidget( row, 5, maxvalbox );
   DoubleSpinBox *scalebox = new DoubleSpinBox;
   scalebox->setFormat( "%g" );
   scalebox->setRange( 0.0, 1000000.0 );
@@ -167,7 +166,7 @@ void InputConfig::fillRow( int row, const string &name, const string &device, in
 
 
 void InputConfig::getRow( int row, string &basename, int &nameinx, string &device, int &channel,
-			  string &reference, double &samplerate, int &gainindex,
+			  string &reference, double &samplerate, double &maxvalue,
 			  double &scale, string &unit, bool &center )
 {
   basename = Table->item( row, 0 )->text().toStdString();
@@ -186,8 +185,8 @@ void InputConfig::getRow( int row, string &basename, int &nameinx, string &devic
   reference = rb->currentText().toStdString();
   DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( row, 4 );
   samplerate = 1000.0*srb->value();
-  QSpinBox *gb = (QSpinBox *)Table->cellWidget( row, 5 );
-  gainindex = gb->value();
+  DoubleSpinBox *mb = (DoubleSpinBox *)Table->cellWidget( row, 5 );
+  maxvalue = mb->value();
   DoubleSpinBox *sb = (DoubleSpinBox *)Table->cellWidget( row, 6 );
   scale = sb->value();
   QComboBox *ub = (QComboBox *)Table->cellWidget( row, 7 );
@@ -228,13 +227,13 @@ void InputConfig::insertRows( void )
   int channel = 0;
   string reference = InData::referenceStr( InData::RefGround );
   double samplerate = 20000.0;
-  int gainindex = 0;
+  double maxvalue = 1.0;
   double scale = 1.0;
   string unit = "V";
   bool center = true;
   if ( row > 0 ) {
     getRow( row-1, name, nameinx, device, channel,
-	    reference, samplerate, gainindex, scale, unit, center );
+	    reference, samplerate, maxvalue, scale, unit, center );
     if ( nameinx == 0 ) {
       nameinx = 1;
       // check for name doublets:
@@ -276,7 +275,7 @@ void InputConfig::insertRows( void )
     }
     // insert row:
     Table->insertRow( row+i );
-    fillRow( row+i, name+Str( nameinx ), device, channel, reference, samplerate, gainindex, scale, unit, center );
+    fillRow( row+i, name+Str( nameinx ), device, channel, reference, samplerate, maxvalue, scale, unit, center );
     nameinx++;
     channel++;
   }
@@ -322,12 +321,12 @@ void InputConfig::fillCells( void )
   int channel = 0;
   string reference = InData::referenceStr( InData::RefGround );
   double samplerate = 20000.0;
-  int gainindex = 0;
+  double maxvalue = 1.0;
   double scale = 1.0;
   string unit = "V";
   bool center = true;
   getRow( selection.front().topRow(), name, nameinx, device, channel,
-	  reference, samplerate, gainindex, scale, unit, center );
+	  reference, samplerate, maxvalue, scale, unit, center );
   if ( nameinx == 0 ) {
     nameinx = 1;
     // check for name doublets:
@@ -402,10 +401,10 @@ void InputConfig::fillCells( void )
       DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( row, 4 );
       srb->setValue( 0.001*samplerate );
     }
-    // gain index:
+    // max value:
     if ( selection.front().leftColumn() <= 5 && selection.front().rightColumn() >= 5 ) {
-      QSpinBox *gb = (QSpinBox *)Table->cellWidget( row, 5 );
-      gb->setValue( gainindex );
+      DoubleSpinBox *mb = (DoubleSpinBox *)Table->cellWidget( row, 5 );
+      mb->setValue( maxvalue );
     }
     // scale:
     if ( selection.front().leftColumn() <= 6 && selection.front().rightColumn() >= 6 ) {
@@ -494,12 +493,12 @@ void InputConfig::dialogClosed( int rv )
   DoubleSpinBox *srb = (DoubleSpinBox *)Table->cellWidget( 0, 4 );
   Opts.setNumber( "inputsamplerate", 1000.0*srb->value() );
 
-  // gain index:
-  QSpinBox *gb = (QSpinBox *)Table->cellWidget( 0, 5 );
-  Parameter &gp = Opts.setInteger( "inputtracegain", gb->value() );
+  // max value:
+  DoubleSpinBox *mb = (DoubleSpinBox *)Table->cellWidget( 0, 5 );
+  Parameter &mp = Opts.setNumber( "inputtracemaxvalue", mb->value() );
   for ( int r=1; r<Table->rowCount(); r++ ) {
-    gb = (QSpinBox *)Table->cellWidget( r, 5 );
-    gp.addInteger( gb->value() );
+    mb = (DoubleSpinBox *)Table->cellWidget( r, 5 );
+    mp.addInteger( mb->value() );
   }
 
   // scale:

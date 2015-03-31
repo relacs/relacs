@@ -44,9 +44,8 @@ Dynamic clamp:
   http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
 - autoconf script: check for presence of rtai-config and whether -r option is supported!
 - Add timing traces and status traces to dynamic clamp simulation!
-- Input traces should not set gain index but a minimum value! Necessary for param and status input
 - matchTraces should set error string of device, and this should be used by relacswidget
-- restart in dynclamp mode is not properly processed??? (check inputrangecheck)
+- restart in dynclamp mode is not properly processed??? (check inputrangecheck, follow up outputs seem to be changed)
 - DynClamAnalogInput improve error checking in readData()
 - Always create a new channel list!
   Then we do not need to reset all the channels at startup (Aquire::writeReset() )
@@ -57,7 +56,7 @@ Dynamic clamp:
 - CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.
-- write back real time loop frequency to InList and OutList samplerate.
+- write back real time loop frequency to InList and OutList samplerate, and check whether it is saved in stimuli.dat.
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul
   similar to the analog output part
 - shouldn't it be better if the model would get the parameter first,

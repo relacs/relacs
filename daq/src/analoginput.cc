@@ -161,6 +161,86 @@ void AnalogInput::setAnalogInputType( int aitype )
 }
 
 
+int AnalogInput::minGainIndex( bool unipolar ) const
+{
+  if ( ! isOpen() )
+    return -1;
+
+  int index = -1;
+  if ( unipolar ) {
+    for ( int k = 0; k<maxRanges(); k++ ) {
+      if ( unipolarRange( k ) > 0 ) {
+	index = k;
+	break;
+      }
+    }
+  }
+  else {
+    for ( int k = 0; k<maxRanges(); k++ ) {
+      if ( bipolarRange( k ) > 0 ) {
+	index = k;
+	break;
+      }
+    }
+  }
+  return index;
+}
+
+
+int AnalogInput::maxGainIndex( bool unipolar ) const
+{
+  if ( ! isOpen() )
+    return -1;
+
+  int index = -1;
+  if ( unipolar ) {
+    for ( int k = maxRanges()-1; k >= 0; k-- ) {
+      if ( unipolarRange( k ) > 0 ) {
+	index = k;
+	break;
+      }
+    }
+  }
+  else {
+    for ( int k = maxRanges()-1; k >= 0; k-- ) {
+      if ( bipolarRange( k ) > 0 ) {
+	index = k;
+	break;
+      }
+    }
+  }
+  return index;
+}
+
+
+int AnalogInput::gainIndex( bool unipolar, double maxvoltage ) const
+{
+  if ( ! isOpen() )
+    return -1;
+
+  // find appropriate gain:
+  int newindex = -1;
+  for ( int k = maxRanges()-1; k >= 0; k-- ) {
+    if ( unipolar ) {
+      if ( unipolarRange( k ) > 0 &&
+	   unipolarRange( k ) >= maxvoltage ) {
+	newindex = k;
+	break;
+      }
+    }
+    else {
+      if ( bipolarRange( k ) > 0 &&
+	   bipolarRange( k ) >= maxvoltage ) {
+	newindex = k;
+	break;
+      }
+    }
+  }
+
+  return newindex;
+}
+
+
 int AnalogInput::testRead( InList &traces )
 {
   traces.clearError();
@@ -252,7 +332,7 @@ int AnalogInput::testReadData( InList &traces )
       traces[k].addError( DaqError::InvalidChannel );
       traces[k].setChannel( 0 );
     }
-    else if( traces[k].channel() >= channels() ) {
+    else if( traces[k].channel() >= channels() && traces[k].channel() < ParamChannel ) {
       traces[k].addError( DaqError::InvalidChannel );
     }
     // check reference:
@@ -264,33 +344,35 @@ int AnalogInput::testReadData( InList &traces )
       traces[k].setReference( InData::RefGround );
     } 
     // check gain index:
-    if ( traces[k].gainIndex() < 0 ) {
-      traces[k].addError( DaqError::InvalidGain );
-      traces[k].setGainIndex( 0 );
-    } 
-    else if ( traces[k].gainIndex() >= maxRanges() ) {
-      traces[k].addError( DaqError::InvalidGain );
-      traces[k].setGainIndex( maxRanges()-1 );
-    }
-    // check and fix validity of gain index:
-    if ( ( traces[k].unipolar() && 
-	   unipolarRange( traces[k].gainIndex() ) < 0.0 ) ||
-	 ( ! traces[k].unipolar() && 
-	   bipolarRange( traces[k].gainIndex() ) < 0.0 ) ) {
-      traces[k].addError( DaqError::InvalidGain );
-      while ( ( ( traces[k].unipolar() && 
-		  unipolarRange( traces[k].gainIndex() ) < 0.0 ) ||
-		( ! traces[k].unipolar() && 
-		  bipolarRange( traces[k].gainIndex() ) < 0.0 ) ) &&
-	      traces[k].gainIndex()+1 < maxRanges() ) {
-	traces[k].setGainIndex( traces[k].gainIndex()+1 );
+    if ( traces[k].channel() < ParamChannel ) {
+      if ( traces[k].gainIndex() < 0 ) {
+	traces[k].addError( DaqError::InvalidGain );
+	traces[k].setGainIndex( 0 );
+      } 
+      else if ( traces[k].gainIndex() >= maxRanges() ) {
+	traces[k].addError( DaqError::InvalidGain );
+	traces[k].setGainIndex( maxRanges()-1 );
       }
-      while ( ( ( traces[k].unipolar() && 
-		  unipolarRange( traces[k].gainIndex() ) < 0.0 ) ||
-		( ! traces[k].unipolar() && 
-		  bipolarRange( traces[k].gainIndex() ) < 0.0 ) ) &&
-	      traces[k].gainIndex()-1 >= 0 ) {
-	traces[k].setGainIndex( traces[k].gainIndex()-1 );
+      // check and fix validity of gain index:
+      if ( ( traces[k].unipolar() && 
+	     unipolarRange( traces[k].gainIndex() ) < 0.0 ) ||
+	   ( ! traces[k].unipolar() && 
+	     bipolarRange( traces[k].gainIndex() ) < 0.0 ) ) {
+	traces[k].addError( DaqError::InvalidGain );
+	while ( ( ( traces[k].unipolar() && 
+		    unipolarRange( traces[k].gainIndex() ) < 0.0 ) ||
+		  ( ! traces[k].unipolar() && 
+		    bipolarRange( traces[k].gainIndex() ) < 0.0 ) ) &&
+		traces[k].gainIndex()+1 < maxRanges() ) {
+	  traces[k].setGainIndex( traces[k].gainIndex()+1 );
+	}
+	while ( ( ( traces[k].unipolar() && 
+		    unipolarRange( traces[k].gainIndex() ) < 0.0 ) ||
+		  ( ! traces[k].unipolar() && 
+		    bipolarRange( traces[k].gainIndex() ) < 0.0 ) ) &&
+		traces[k].gainIndex()-1 >= 0 ) {
+	  traces[k].setGainIndex( traces[k].gainIndex()-1 );
+	}
       }
     }
   }

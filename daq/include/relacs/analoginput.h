@@ -43,9 +43,7 @@ class AnalogOutput;
 \brief Interface for accessing analog input of a data-aquisition board.
 \author Marco Hackenberg
 \author Jan Benda
-\version 0.2
 \todo add probe function that returns a string of possible supported devices.
-\todo add wait function
 \todo add directread function for single point acquisition
 \todo add a flag for indicating whether device is capable of streaming input
 
@@ -61,6 +59,10 @@ class AnalogInput : public Device, protected QThread
 {
 
 public:
+
+    /*! Channel numbers larger or equal than this are additional
+        traces not acquired from the daq board. */
+  static const int ParamChannel = 1000;
 
     /*! Create a new AnalogInput without opening a device.
         Reimplement this constructor. */
@@ -107,6 +109,17 @@ public:
     /*! Voltage range \a index in Volt for bipolar mode.
         If -1 is returned this range is not supported. */
   virtual double bipolarRange( int index ) const = 0;
+
+    /*! \return the gain index for the minimum gain (largest range)
+        available for inputs of polarity \a unipolar. \sa maxGainIndex(), gainIndex() */
+  int minGainIndex( bool unipolar ) const;
+    /*! \return the gain index for the maximum gain (smallest range)
+        available for inputs of polarity \a unipolar. \sa minGainIndex(), gainIndex() */
+  int maxGainIndex( bool unipolar ) const;
+    /*! \return the gain index for the largest gain (smallest range)
+        available for inputs of polarity \a unipolar that just fits \a maxvoltage.
+        \sa minGainIndex(), maxGainIndex() */
+  int gainIndex( bool unipolar, double maxvoltage ) const;
 
     /*! Test settings for analog input on the device
         for each input channel in \a traces.
