@@ -631,6 +631,15 @@ double RangeLoop::currentIncrementValue( void ) const
 }
 
 
+int RangeLoop::totalCount( void ) const
+{ 
+  int c = 0;
+  for ( unsigned int k=0; k < Elements.size(); k++ )
+    c += Elements[k].Count;
+  return c;
+}
+
+
 int RangeLoop::maxCount( void ) const
 { 
   return Repeat*BlockRepeat*SingleRepeat;

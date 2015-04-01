@@ -223,10 +223,12 @@ int FICurve::main( void )
   dcsignal.constWave( dccurrent );
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
 
-  // write stimulus:
+  // initial pause:
   sleepWait( pause );
   if ( interrupt() )
     return Aborted;
+
+  // write stimulus:
   for ( Range.reset(); ! Range && softStop() == 0; ) {
 
     timeStamp();
@@ -294,7 +296,7 @@ int FICurve::main( void )
     // sleep:
     sleep( duration + 0.01 );
     if ( interrupt() ) {
-      if ( Range.count() < 1 )
+      if ( Range.totalCount() < 1 )
 	state = Aborted;
       directWrite( dcsignal );
       break;
@@ -351,7 +353,7 @@ int FICurve::main( void )
 
     sleepOn( duration + pause );
     if ( interrupt() ) {
-      if ( Range.count() < 1 )
+      if ( Range.totalCount() < 1 )
 	state = Aborted;
       directWrite( dcsignal );
       break;

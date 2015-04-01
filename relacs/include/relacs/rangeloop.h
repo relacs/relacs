@@ -33,7 +33,6 @@ namespace relacs {
 /*!
   \class RangeLoop
   \author Jan Benda
-  \version 1.2
   \brief A flexible and sophisticated way to loop trough a range of values.
   \todo set( string ): introduce control characters for controlling the addMode
 
@@ -324,15 +323,15 @@ class RangeLoop
         \sa singleRepeat(), setRepeat(), setBlockRepeat() */
   void setSingleRepeat( int repeat );
     /*! Return the number of executed repetitions for a single data element.
-        \sa signleRpeat(), finishedSingle(), lastSingle(),
+        \sa singleRpeat(), finishedSingle(), lastSingle(),
 	currentRepetition(), currentBlockRepetition() */
   int currentSingleRepetition( void ) const;
     /*! Returns true if the current single repetitions are completed,
         i.e. the next data element is to be started.
-        \sa signleRpeat(), currentSignelRepetition(), lastSingle(), finishedBlock() */
+        \sa singleRpeat(), currentSignelRepetition(), lastSingle(), finishedBlock() */
   bool finishedSingle( void ) const;
     /*! Returns true if this is the last single repetition.
-        \sa signleRpeat(), currentSignelRepetition(), finishedSingle() */
+        \sa singleRpeat(), currentSignelRepetition(), finishedSingle() */
   bool lastSingle( void ) const;
 
     /*! Set the initial increment to \a increment indices.
@@ -357,9 +356,11 @@ class RangeLoop
 	or zero otherwise. \sa currentIncrement() */
   double currentIncrementValue( void ) const;
 
+    /*! The sum of all counts of alle range elements. \sa count() */
+  int totalCount( void ) const;
     /*! The maximum possible number of repetitions of a single data element
         (repeat() * blockRepeat() * singleRepeat() ).
-         \sa maxBlockCount(), remainingCount() */
+         \sa totalCount(), maxBlockCount(), remainingCount() */
   int maxCount( void ) const;
     /*! The maximum possible number of repetitions of a single data element
         for the current block sequence. \sa maxCount(), remainingCount() */
@@ -451,7 +452,7 @@ class RangeLoop
   int pos( void ) const;
     /*! Return the current index of the sequence. */
   int index( void ) const;
-    /*! Return the count of the current data element. */
+    /*! Return the count of the current data element. \sa totalCount() */
   int count( void ) const;
     /*! Decrement the count of the current data element. 
         Use it before calling operator++() if you do not

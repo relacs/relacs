@@ -208,10 +208,12 @@ int VICurve::main( void )
   dcsignal.constWave( dccurrent );
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
 
-  // write stimulus:
+  // inital pause:
   sleepWait( pause );
   if ( interrupt() )
     return Aborted;
+
+  // write stimulus:
   for ( Range.reset(); ! Range && softStop() == 0; ) {
 
     if ( prevrepeat < Range.currentRepetition() ) {
@@ -275,7 +277,7 @@ int VICurve::main( void )
 
     sleep( duration + 0.01 );
     if ( interrupt() ) {
-      if ( Range.count() < 1 )
+      if ( Range.totalCount() < 1 )
 	state = Aborted;
       directWrite( dcsignal );
       break;
@@ -303,7 +305,7 @@ int VICurve::main( void )
     plot( duration, cinx );
     sleepOn( duration + pause );
     if ( interrupt() ) {
-      if ( Range.count() < 1 )
+      if ( Range.totalCount() < 1 )
 	state = Aborted;
       directWrite( dcsignal );
       break;
@@ -455,8 +457,9 @@ void VICurve::saveTrace( void )
   datakey.addNumber( "t", "ms", "%7.2f" );
   datakey.addNumber( "V", VUnit, "%6.2f" );
   datakey.addNumber( "s.d.", VUnit, "%6.2f" );
-  for ( unsigned int j=0; j<Results[0].TraceIndices.size();  j++ ) {
-    int i = Results[0].TraceIndices[j];
+  int rinx = Range.next( 0 );
+  for ( unsigned int j=0; j<Results[rinx].TraceIndices.size();  j++ ) {
+    int i = Results[rinx].TraceIndices[j];
     if ( i == CurrentTrace[0] ) {
       datakey.addNumber( "I", IUnit, "%6.3f" );
       datakey.addNumber( "s.d.", IUnit, "%6.3f" );

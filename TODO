@@ -43,6 +43,7 @@ Dynamic clamp:
 - localmodconfig kernel make target might be very interesting for generating a rtai kernel:
   http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
 - autoconf script: check for presence of rtai-config and whether -r option is supported!
+- patchclamp::singlestimulus and ficurve should save all traces!
 - Always create a new channel list!
   Then we do not need to reset all the channels at startup (Aquire::writeReset() )
 - Is it really necessary that the dynclamp parameter are all set to zero by relacs initially?

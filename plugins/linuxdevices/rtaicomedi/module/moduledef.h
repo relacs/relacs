@@ -17,7 +17,7 @@
 #define ENABLE_COMPUTATION
 
   /*! Generate lookup tables and do not use rtai_math module. */
-#define ENABLE_LOOKUPTABLES
+// #define ENABLE_LOOKUPTABLES
 
   /*! Generates internal trigger events on which analog output signals can be started. */
 // #define ENABLE_TRIGGER
@@ -34,7 +34,7 @@
   /*! Measure total duration of analog inputs per cycle and make it available as "AI-time". */
 // #define ENABLE_AITIME
   /*! Measure duration of analog input acquisition per cycle and make it available as "AI-acquisition-time". */
-// #define ENABLE_AIACQUISITIONTIME
+#define ENABLE_AIACQUISITIONTIME
   /*! Measure duration of analog input conversion per cycle and make it available as "AI-conversion-time". */
 // #define ENABLE_AICONVERSIONTIME
   /*! Measure total duration of analog outputs per cycle and make it available as "AO-time". */
