@@ -70,7 +70,7 @@ void NeuronModels::main( void )
       traceinx[0] = k;
     else if ( traceName( k ) == "Current-1" )
       traceinx[1] = k;
-    else
+    else if ( trace( k ).channel() < InData::ParamChannel )
       warning( "Input trace <b>" + traceName( k ) + "</b> not known to NeuronModels!" );
   }
 

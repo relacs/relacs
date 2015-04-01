@@ -56,7 +56,6 @@ Dynamic clamp:
 - CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.
-- write back real time loop frequency to InList and OutList samplerate, and check whether it is saved in stimuli.dat.
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul
   similar to the analog output part
 - shouldn't it be better if the model would get the parameter first,

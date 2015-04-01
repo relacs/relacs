@@ -401,6 +401,9 @@ void Acquire::addStimulusEvents( InList &data, EventList &events )
   e.setCyclic();
   e.setSource( 0 );
   e.setIdent( "Stimulus" );
+  e.setWidthName( "duration" );
+  e.setWidthUnit( "s" );
+  e.setWidthFormat( "%9.4f" );
   e.setWriteBufferCapacity( 1000 );
   QWriteLocker locker( &ReadMutex );
   events.push( e );

@@ -670,10 +670,11 @@ void SaveFiles::writeStimulus( void )
     for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
       if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.save( *SF, EventFiles[k].SignalEvent );
-	StimulusKey.save( *SF, EL[k].meanRate() );  // XXX adaptive Time!
+	if ( (EL[k].mode() & ( StimulusEventMode | RestartEventMode | RecordingEventMode ) ) == 0 )
+	  StimulusKey.save( *SF, EL[k].meanRate() );  // XXX adaptive Time!
 	if ( EL[k].sizeBuffer() )
 	  StimulusKey.save( *SF, EL[k].sizeScale() * EL[k].meanSize() );
-	if ( EL[k].widthBuffer() )
+	if ( EL[k].widthBuffer() && (EL[k].mode() & StimulusEventMode) == 0 )
 	  StimulusKey.save( *SF, EL[k].widthScale() * EL[k].meanWidth() );
 	if ( EventFiles[k].SaveMeanQuality )
 	  StimulusKey.save( *SF, 100.0*EL[k].meanQuality() );
@@ -1031,6 +1032,7 @@ void SaveFiles::createStimulusFile( void )
 	*SF << "#      identifier" + Str( k+1 ) + "     : " << IL[k].ident() << '\n';
 	*SF << "#      data file" + Str( k+1 ) + "      : " << TraceFiles[k].FileName << '\n';
 	*SF << "#      sample interval" + Str( k+1 ) + ": " << Str( 1000.0*IL[k].sampleInterval(), 0, 4, 'f' ) << "ms\n";
+	*SF << "#      sampling rate" + Str( k+1 ) + "  : " << Str( IL[k].sampleRate(), 0, 2, 'f' ) << "Hz\n";
 	*SF << "#      unit" + Str( k+1 ) + "           : " << IL[k].unit() << '\n';
       }
     }
@@ -1066,10 +1068,11 @@ void SaveFiles::createStimulusFile( void )
       if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.newSubSection( EL[k].ident() );
 	StimulusKey.addNumber( "index", "line", "%10.0f" );
-	StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
+	if ( (EL[k].mode() & ( StimulusEventMode | RestartEventMode | RecordingEventMode ) ) == 0 )
+	  StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
 	if ( EL[k].sizeBuffer() )
 	  StimulusKey.addNumber( EL[k].sizeName(), EL[k].sizeUnit(), EL[k].sizeFormat() );
-	if ( EL[k].widthBuffer() )
+	if ( EL[k].widthBuffer() && (EL[k].mode() & StimulusEventMode) == 0 )
 	  StimulusKey.addNumber( EL[k].widthName(), EL[k].widthUnit(), EL[k].widthFormat() );
 	EventFiles[k].SaveMeanQuality = ( EL[k].mode() & SaveMeanQuality );
 	if ( EventFiles[k].SaveMeanQuality )
