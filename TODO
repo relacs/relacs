@@ -37,11 +37,6 @@ Macros, flow control:
 - auditory::search does not exit cleanly upon ESC: should be solved, check it
 
 Dynamic clamp:
-- See http://mail.rtai.org/pipermail/rtai/2013-December/026198.html for the
-  -mpreferred-stack-boundary=3 issue
-- kernel boot parameter: libata.dma=0 disables all dma transfers
-- localmodconfig kernel make target might be very interesting for generating a rtai kernel:
-  http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
 - autoconf script: check for presence of rtai-config and whether -r option is supported!
 - patchclamp::singlestimulus and ficurve should save all traces!
 - Always create a new channel list!
@@ -54,8 +49,6 @@ Dynamic clamp:
 - DynClamAnalogInput improve error checking in readData()
 - Add a variable lastInterval that is set to the current period length in addition to loopInterval
 - CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
-- include of asm-offsets.h in src/Makefile.am could be made part of a
-   linux kernel source detection macro.
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul
   similar to the analog output part
 - shouldn't it be better if the model would get the parameter first,

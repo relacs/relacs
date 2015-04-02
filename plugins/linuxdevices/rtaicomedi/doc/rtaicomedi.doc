@@ -77,8 +77,7 @@ make mrproper
 \endcode
 -# Patch the kernel (use the patch file that matches the downloaded kernel)
 \code
-$ cd /usr/src/linux
-$ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.8.13-x86-4.patch
+patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.8.13-x86-4.patch
 \endcode
 -# Configure, compile, and install the kernel as described in the following section.
 
@@ -109,42 +108,44 @@ in step 9. below.
 make menuconfig
 \endcode
 In the kernel configuration dialog you should do the following settings:
-  - General setup: set "Local version" to "-rtai" or make sure it is empty in case you are using \c make-kpkg
+  - General setup: 
+    - Set "Local version" to "-rtai" or make sure it is empty in case you are using \c make-kpkg
     - Timers subsystem: 
-      - set "Timer tick handling" to "Periodic timer ticks" (no tickless system!)
-      - Timers subsystem: deselect "Old Idle dynticks config"
+      - Set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
+      - Deselect "Old Idle dynticks config"
       .
     .
-  - Enable loadable module support: 
-    - Select "Enable module support"
+  - Select "Enable loadable module support":
     - You may deselect "Module versioning support" 
       (if you select this option you have to copy the RTAI and comedi \c Module.symvers files around 
       as described below. This has the advantage that you get rid of annoying warnings
       regarding undefined functions during compilation)
+    .
   - Processor type and features: 
-    - Disable "Tickless System"
+    - Select "Symmetric multi-processing support"
     - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
       check \c "help" to find out, which Processor family you have to select)
-    - Select "Supported processor vendors" to fit your CPU
     - Disable "IBM Calgary IOMMU support"
     - Set the "Maximum numbers of CPUs" to the number of cores you have in your machine (see /proc/cpuinfo)
     - Disable "SMT (Hyperthreading) scheduler support"
     - Disable "Multi-core scheduler support"
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
-    - Disable “Use register arguments” - this option does not exist for newer kernels (version > 2.6.19)
     - Select "Interrupt pipeline"
     - Set "Timer frequency" to 1000 Hz
+    - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
+    - Disable "HPET Timer support" ?
   - Power management and ACPI options:
     - Disable "Suspend to RAM and standby"
     - Disable "Hibernation (aka 'suspend to disk')"
     - Disable "Run-time PM core functionality"
     - Enable "ACPI (Advanced Configuration and Power Interface) Support"
       - Disable everything execpt for:
-      - Select "Power Management Timer Suppport"
+      - Select "Power Management Timer Suppport" (if available)
       .
     - Disable "CPU Frequency scaling"
     - Disable "CPU idle PM support"
+    - Disable "APM (Advanced Power Management) BIOS support"
     - Disable whatever else there is
     .
   - Device Drivers:
@@ -153,6 +154,7 @@ In the kernel configuration dialog you should do the following settings:
       - Deselect "Data acquisition support (comedi)"
       .
     .
+  - (Disable "Virtualization")
   .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
 Select "Yes".
@@ -232,7 +234,8 @@ reboot
 If this fails:
 Try adding one or several of the advanced configuration and power interface (ACPI) or 
 advanced programmable interrupt controller (APIC) options,
-\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic ,
+\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic , or
+\c libata.dma=0 to disable all dma transfers
 to the kernel parameter in the \c kernel line of the
 \c grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable
 in \c /etc/defaults/grub . 
@@ -281,13 +284,14 @@ make menuconfig
 \endcode
 Check the following settings:
  - General
-   - Installation directory: should be set to \c /usr/realtime
-   - Linux source tree: must be set to \c /usr/src/linux
-   - RTAI Documentation: deselect all documentation (if you don't you might get an error)
-   - Build RTAI testsuite: select
+   - "Installation directory": should be set to \c /usr/realtime
+   - "Linux source tree": must be set to \c /usr/src/linux
+   - "RTAI Documentation": deselect all documentation (if you don't you might get an error)
+   - Select "Build RTAI testsuite"
+   - Disable "Enable source compatibility mode"
  - Machine
-    - Enable FPU support: select
-    - Number of CPUs: set to the right value.
+    - Select "Enable FPU support:
+    - "Number of CPUs": set to the right value.
       If in doubt, look into the file \c /proc/cpuinfo or run
       \code
 grep -c "^processor" /proc/cpuinfo
@@ -295,13 +299,13 @@ grep -c "^processor" /proc/cpuinfo
     .
  - Base system
    - Other features
-     - Mathfuns support in kernel: select
+     - Select "Mathfuns support in kernel"
      - 1 - NEWLIB (default), 2 - UCLIB, 3 - GLIBC: set to (1)
      - The installation directory of your chosen libm.a: set to "/usr/local/src/newlib/install/lib"
      .
    .
  - Add-ons
-   - Real Time COMEDI support in user space: leave unselected
+   - "Real Time COMEDI support in user space": leave unselected
  .
 Then exit and save configuration.
 Watch the output while RTAI is configured for possible warnings and errors.
@@ -482,7 +486,7 @@ make -j$(grep -c "^processor" /proc/cpuinfo)
 -# If you get an "-mpreferred-stack-boundary" error uncomment line 4 in \c plugins/linuxdevices/rtaicomedi/module/Makefile.in and run \c make again.
 -# Load the dynamic-clamp kernel module (as root):
 \code
-cd plugins/linuxdevices/comedi/module
+cd plugins/linuxdevices/rtaicomedi/module
 sudo ./loadmodules.sh
 cd -
 \endcode
@@ -506,7 +510,7 @@ cp relacs.cfg.dynclamp relacs.cfg
       \c /dev/comedi* devices. For a quick fix do
       as root
       \code
-$ chmod a+rw /dev/comedi*
+chmod a+rw /dev/comedi*
       \endcode
       See \ref udev below for a better solution.
     - The %comedi and rtai modules are not properly loaded.
@@ -517,6 +521,13 @@ $ chmod a+rw /dev/comedi*
       \c grub menu in \c /boot/grub/menu.lst .
     .
   .
+-# When developing model.c or even dynclampmodule.c, then
+\code
+cd plugins/linuxdevices/rtaicomedi
+# whenever you changed something, do:
+make
+sudo module/reloadmodule.sh
+\endcode
 
 \section udev Setting up udev permissions for comedi device files
 
@@ -578,13 +589,16 @@ restart rsyslog
 
 
 \section rtailinks Links
-- http://www.comedi.org
-- http://www.rtai.org
-- http://wiki.linuxcnc.org/cgi-bin/wiki.pl?TroubleShooting
-- http://wiki.linuxcnc.org/cgi-bin/emcinfo.pl?Debian_Lenny_Compile_RTAI
-- http://www.lara.unb.br/~phsantana/data/files/technotes/HowTo_RTAI_Linux.pdf
-- http://www.cyberciti.biz/faq/howto-install-kernel-headers-package/
+- comedi: http://www.comedi.org
+- rtai: http://www.rtai.org
+- Kernel testing und fixing: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?TroubleShooting
+- Installation instructions and kernel configuration: http://wiki.linuxcnc.org/cgi-bin/emcinfo.pl?Debian_Lenny_Compile_RTAI
+- Kernel configuration: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Ubuntu10.04Notes
+- Install kernel header package: http://www.cyberciti.biz/faq/howto-install-kernel-headers-package/
+- mpreferred-stack-boundary=3 issue: http://mail.rtai.org/pipermail/rtai/2013-December/026198.html
+- HPET timer kernel option: http://mail.rtai.org/pipermail/rtai/2013-April/025511.html
+- localmodconfig kernel make target: http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
 .
 - Linux kernel crash dump: https://help.ubuntu.com/12.04/serverguide/kernel-crash-dump.html
-- crash debugger: http://docs.oracle.com/cd/E52668_01/E54669/html/ol7-s4-sysdumpa.html
+- Crash debugger: http://docs.oracle.com/cd/E52668_01/E54669/html/ol7-s4-sysdumpa.html
 */
