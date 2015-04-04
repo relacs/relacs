@@ -55,53 +55,73 @@ or make sure that you get a matching source tree for your kernel image
 
 \subsubsection installkernelsources Install sources for an existing kernel
 
--# Get the soure that matches your kernel. 
-On Ubuntu/Debian you get the kernel source and header files
-matching your running kernel image by executing as root
-\code
-$ cd /usr/src
-$ apt-get install dpkg-dev
-$ apt-get source linux-image-`uname -r`
-$ apt-get install linux-headers-`uname -r`
-\endcode
-If \c apt-get \c source tells you "E: You must put some 'source' URIs in your sources.list"
-then you need to enable the source repositories for the package manager. For this
-open with your favorite editor \c /etc/apt/sources.list and the \c *.list files in 
-\c /etc/apt/sources.list.d/. Remove the comments in front of the lines
-that start with \c "deb-src". Then run
-\code
-$ apt-get update
-\endcode
-to resynchronize the package index files with the new repositories. Now 
-\c apt-get \c source should be able to download the kernel sources.
-After downloading the kernel source create a link to the kernel source:
-\code
-ln -s linux <kernel-source>
-\endcode
-where \c <kernel-source> is the kernel source installed by \c apt-get.
-Note that often the kernel source directory that you installed with \c apt-get
-has a different name than the name of the currently running kernel that \c uname -r
-returns. Use \c ls \c -rtl to list the directories in the \c /usr/src folder.
-The last one is the one that was added by \c apt-get \c source.
-Now you can \c cd into the kernel source directory
-\code
-$ cd linux
-\endcode
+-# Get the soure and headers that matches your kernel. 
+   On Ubuntu/Debian you get the kernel source and header files
+   matching your running kernel image by executing as root
+   \code
+cd /usr/src
+apt-get install dpkg-dev
+apt-get install linux-headers-`uname -r`
+apt-get source linux-image-`uname -r`
+   \endcode
+
+   If \c apt-get \c source tells you "E: You must put some 'source'
+   URIs in your sources.list" then you need to enable the source
+   repositories for the package manager. For this open with your
+   favorite editor \c /etc/apt/sources.list and the \c *.list files in
+   \c /etc/apt/sources.list.d/. Remove the comments in front of the
+   lines that start with \c "deb-src". Then run
+   \code
+apt-get update
+   \endcode
+   to resynchronize the package index files with the new repositories. Now 
+   \c apt-get \c source should be able to download the kernel sources.
+
+   If \c apt-get \c source tells you "E: Unable to find a source package"
+   then check which kernel sources are available:
+   \code
+apt-cache search linux-source
+uname -r
+   \endcode
+   choose the one that is closest to your installed kernel (\c uname -r),
+   install and unpack that one:
+   \code
+apt-get install linux-source-3.13.0
+tar xf linux-source-3.13.0.tar.bz2
+   \endcode
+
+-# After downloading the kernel source create a link to the kernel source:
+   \code
+ln -sfn <kernel-source> linux
+   \endcode
+   where \c <kernel-source> is the kernel source installed by \c apt-get,
+   e.g.	a directory with a name like \c linux-source-3.13.0
+
+   Note that often the kernel source directory that you installed with
+   \c apt-get has a different name than the name of the currently
+   running kernel that \c uname -r returns. Use \c ls \c -rtl to list
+   the directories in the \c /usr/src folder.  The last one is the one
+   that was added by \c apt-get \c source.  Now you can \c cd into the
+   kernel source directory
+   \code
+cd linux
+   \endcode
 -# Copy the kernel configuration file of your kernel image to the source:
-\code
-$ cp /boot/config-`uname -r` .config
-\endcode
+   \code
+cp /boot/config-`uname -r` .config
+   \endcode
 -# Make sure the file \c Module.symvers is also in your source. 
-On Ubuntu/Debian you find it in the corresponding \c linux-headers directory:
-\code
-$ cp ../linux-headers-`uname -r`/Module.symvers .
-\endcode
+   On Ubuntu/Debian you find it in the corresponding \c linux-headers directory:
+   \code
+cp ../linux-headers-`uname -r`/Module.symvers .
+   \endcode
 -# Run
 \code
-$ make oldconfig
-$ make prepare
-$ make scripts
+make silentoldconfig
+make prepare
+make scripts
 \endcode
+Hit 'enter' to all questions of \c make \ silentoldconfig.
 
 \subsubsection installvanillakernel Compile your own kernel
 
@@ -109,23 +129,23 @@ $ make scripts
 e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.38.8.tar.bz2,
 place the tar file in \c /usr/src and unpack it as root with
 \code
-$ cd /usr/src
-$ tar xjvf linux-2.6.38.8.tar.bz2
+cd /usr/src
+tar xjvf linux-2.6.38.8.tar.bz2
 \endcode
 (replace \c linux-2.6.38.8 by the directory name of your new kernel source).
 Create a softlink to your kernel source 
 \code
-$ ln -s linux-2.6.38.8 linux
-$ cd linux
+ln -sfn linux-2.6.38.8 linux
+cd linux
 \endcode
 and make sure the \c make, \c gcc, \c libncurses-dev, and \c zlib1g-dev packages are installed:
 \code
-$ apt-get install make gcc libncurses-dev zlib1g-dev
+apt-get install make gcc libncurses-dev zlib1g-dev
 \endcode
 -# Reuse your current configuration (replace \c XXX by the name of your running kernel):
 \code
-$ cp /boot/config-XXX .config
-$ make oldconfig
+cp /boot/config-XXX .config
+make oldconfig
 \endcode
 Hit \c enter to all the (probably many) questions.
 -# Steps 3. to 6. describe the normal way to compile a linux kernel.
@@ -133,7 +153,7 @@ On Debian systems there is an elegant alternative that is described
 in step 9. below.
 First, you configure your kernel by calling
 \code
-$ make menuconfig
+make menuconfig
 \endcode
 Possible settings you might want to change are:
   - Processor type and features: 
@@ -146,19 +166,19 @@ Leave the configuration dialog by pressing "Exit" until you are asked "Save kern
 Select "Yes".
 -# Then compile and install (as root) the kernel
 \code
-$ make && make modules && make modules_install && make install
+make && make modules && make modules_install && make install
 \endcode
 This takes quite a while.
 -# Finally you might need to create a RAM disk image file,
 if \c make \c install did not create a \c /boot/initrd-2.6.38.8 file already:
 \code
-$ cd /boot
-$ update-initramfs -c -k 2.6.38.8
+cd /boot
+update-initramfs -c -k 2.6.38.8
 \endcode
 -# Check the grub menu whether your new kernel was added. 
   - With \c grub \c v2 (default since Debian Lenny) simply run
     \code
-$ update-grub
+update-grub
 \endcode
     the output of \c update-grub should mention your new kernel image.
     You can configure \c grub \c v2 by editing the file \c /etc/default/grub .
@@ -190,7 +210,7 @@ initrd          /boot/initrd.img-2.6.28.9
   .
 -# Reboot the computer into the new kernel.
 \code
-$ reboot
+reboot
 \endcode
 -# Install third party kernel modules as well,
 like for example the ones for your graphics board.
@@ -198,11 +218,11 @@ For your nvidia graphics board, download the driver from
 http://www.nvidia.com/Download/index.aspx?lang=en-us.
 Install it by calling
 \code
-$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run
+sh NVIDIA-Linux-x86_64-190.42-pkg2.run
 \endcode
 If you want to install the nvidia driver for a second kernel, then call
 \code
-$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 2.6.28.9-rtai -K
+sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 2.6.28.9-rtai -K
 \endcode
 (replace 2.6.28.9-rtai by the name of the kernel where you want to install the nvidia driver,
 i.e. the string '\c uname \c -r' would return if that kernel is running).
@@ -211,20 +231,20 @@ i.e. the string '\c uname \c -r' would return if that kernel is running).
    Do as root:
    -# Get the kernel-package
    \code
-$ apt-get install kernel-package libncurses-dev
+apt-get install kernel-package libncurses-dev
    \endcode
    -# Configure and build the kernel:
    \code
-$ export CONCURRENCY_LEVEL=2  # set here the number of CPUs you have to speed things up!
-$ make-kpkg clean
-$ make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image kernel-headers kernel-source
+export CONCURRENCY_LEVEL=2  # set here the number of CPUs you have to speed things up!
+make-kpkg clean
+make-kpkg --initrd --revision 1.0 --config menuconfig kernel-image kernel-headers kernel-source
    \endcode
    You can also supply a \c -j option to tell make how many processes can be run in parallel.
    See step 3. for hints on the configuration options.
    -# Install the kernel
    \code
-$ cd ..
-$ dpkg -i linux-image-2.6.38.8_1.0_amd64.deb linux-headers-2.6.38.8_1.0_amd64.deb
+cd ..
+dpkg -i linux-image-2.6.38.8_1.0_amd64.deb linux-headers-2.6.38.8_1.0_amd64.deb
    \endcode
    -# continue with step 6.
 
@@ -283,41 +303,41 @@ In the following the necessary steps are described in detail:
 -# Download the current \c Comedi sources from the Git repository to \c /usr/local/src
 as root.
 \code
-$ apt-get install git
-$ cd /usr/local/src
-$ git clone git://comedi.org/git/comedi/comedi.git
-$ git clone git://comedi.org/git/comedi/comedilib.git
-$ git clone git://comedi.org/git/comedi/comedi_calibrate.git
+apt-get install git
+cd /usr/local/src
+git clone git://comedi.org/git/comedi/comedi.git
+git clone git://comedi.org/git/comedi/comedilib.git
+git clone git://comedi.org/git/comedi/comedi_calibrate.git
 \endcode
 Or download the current	Git snapshots from http://www.comedi.org/download.html 
 to \c /usr/local/src and unpack them
 \code
-$ cd /usr/local/src
-$ tar xzvf comedi-HEAD-*.tar.gz
-$ tar xzvf comedilib-HEAD-*.tar.gz
-$ tar xzvf comedi_calibrate-HEAD-*.tar.gz
+cd /usr/local/src
+tar xzvf comedi-HEAD-*.tar.gz
+tar xzvf comedilib-HEAD-*.tar.gz
+tar xzvf comedi_calibrate-HEAD-*.tar.gz
 \endcode
 -# You may need to install the packages: \c autoconf, \c libtool.
 \code
-$ apt-get install autoconf automake libtool
+apt-get install autoconf automake libtool
 \endcode
 -# Make sure that you are really running the kernel
   for which you want to install \c Comedi!
   You can check with
 \code
-$ uname -r
+uname -r
 \endcode
 -# Remove the Comedi staging modules to avoid conflicts:
 \code
-$ rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
+rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
 \endcode
 -# Change to the \c comedi directory:
 \code
-$ cd /usr/local/src/comedi
+cd /usr/local/src/comedi
 \endcode
 -# Generate the configuration script by calling
 \code
-$ ./autogen.sh
+./autogen.sh
 \endcode
 You may ignore warnings and reminders.
 -# Configure simply by calling
@@ -327,18 +347,18 @@ You may ignore warnings and reminders.
 in case you want to install \c Comedi into your currently running kernel.
 If \c /usr/src/linux is not your running kernel, then call
 \code
-$ ./configure --with-linuxsrcdir=/usr/src/linux
+./configure --with-linuxsrcdir=/usr/src/linux
 \endcode
 with \c /usr/src/linux replaced by the path to the sources of the kernel
 for which you want to install \c Comedi.
 -# Compile
 \code
-$ make -j$(grep -c "^processor" /proc/cpuinfo)
+make -j$(grep -c "^processor" /proc/cpuinfo)
 \endcode
-and install (as root)
+and install (as root) the comedi kernel modules to your kernel
 \code
-$ make install
-$ depmod -a
+make install
+depmod -a
 \endcode
 -# For some strange reason, the include files for kcomedilib \c linux/comedilib.h and 
 \c linux/comedi.h are not installed by \c Comedi to \c [prefix]/include/linux .
@@ -347,19 +367,19 @@ Also, RTAI expects \c Comedi include files in \c [prefix]/include/linux.
 Therefore you need to copy the \c Comedi include files 
 to \c [prefix]/include/linux yourself:
 \code
-$ cp include/linux/comedi.h /usr/include/linux/
-$ cp include/linux/comedilib.h /usr/include/linux/
+cp include/linux/comedi.h /usr/include/linux/
+cp include/linux/comedilib.h /usr/include/linux/
 \endcode
 -# Check loading the Comedi module:
 \code
-$ modprobe comedi
+modprobe comedi
 \endcode
 If you do not get any error message, then the Comedi kernel modules were
 successfully compiled and can be loaded into the kernel.
 -# Check autodetection of your data acquisition board:
 \code
-$ udevadm trigger
-$ ls /dev/comedi*
+udevadm trigger
+ls /dev/comedi*
 \endcode
 In case the \c ls command shows something like
 \code
@@ -368,7 +388,7 @@ In case the \c ls command shows something like
 \endcode
 i.e. some \c comedi* character device files, your board probably was detected. Run
 \code
-$ comedi_board_info /dev/comedi0
+comedi_board_info /dev/comedi0
 \endcode
 (or comedi_test -t info -f /dev/comedi0) to see more details about your data acquisition board 
 (note: both \c comedi_board_info and \c comedi_test are part of comedilib, see below).
@@ -376,7 +396,7 @@ In case no \c /dev/comedi* device file shows up
 or \c comedi_test reported an error (E: comedi_open("/dev/comedi0"): No such device),
 your data acquisition board needs to be configured manually, using something like
 \code
-$ comedi_config /dev/comedi0 ni_mio_cs
+comedi_config /dev/comedi0 ni_mio_cs
 \endcode
 that can be put into the \c /etc/init.d/boot.local file, so that
 the board is configured during startup of the system.
@@ -392,28 +412,28 @@ See also http://www.comedi.org/doc/install.html#cardconfiguration .
 \subsection installcomedilib Comedilib
 -# You may need to install the packages: \c autoconf, \c libtool, \c bison, \c flex.
 \code
-$ apt-get install bison flex
+apt-get install bison flex
 \endcode
 -# Change to the \c comedilib directory as root:
 \code
-$ cd /usr/local/src/comedilib
+cd /usr/local/src/comedilib
 \endcode
 -# Generate the configuration script by calling
 \code
-$ ./autogen.sh
+./autogen.sh
 \endcode
 You may ignore warnings and reminders.
 -# Configure comedilib to be installed in \c /usr/lib and \c /usr/include
 \code
-$ ./configure --prefix=/usr --sysconfdir=/etc
+./configure --prefix=/usr --sysconfdir=/etc
 \endcode
 If you want to have Comedlib to be installed somewhere else, specify another \c prefix.
 You may want to read \c ./configure \c --help as well.
 Pay attention to warnings and errors! You might need to install additional software first.
 -# Compile and install (as root)
 \code
-$ make -j$(grep -c "^processor" /proc/cpuinfo)
-$ make install
+make -j$(grep -c "^processor" /proc/cpuinfo)
+make install
 \endcode
 -# In case \c make fails with this error message:
 \code
@@ -433,11 +453,11 @@ libcomedi_la_LIBADD = -lm
 \endcode
 to \c lib/Makefile.am after the line \c libcomedi_la_LDFLAGS. Then run
 \code
-$ make clean
-$ ./autogen.sh
-$ ./configure --prefix=/usr --sysconfdir=/etc
-$ make -j$(grep -c "^processor" /proc/cpuinfo)
-$ make install
+make clean
+./autogen.sh
+./configure --prefix=/usr --sysconfdir=/etc
+make -j$(grep -c "^processor" /proc/cpuinfo)
+make install
 \endcode
 -# You might further test your board using
 \code
@@ -449,25 +469,25 @@ comedi_test -t cmd_continuous
 -# You may need to install the packages:  \c autoconf, \c libtool, 
    \c libgsl0-dev, \c libboost-program-options-dev.
 \code
-$ apt-get install libgsl0-dev libboost-program-options-dev
+apt-get install libgsl0-dev libboost-program-options-dev
 \endcode
 -# Change to the \c comedi_calibrate directory as root:
 \code
-$ cd /usr/local/src/comedi_calibrate
+cd /usr/local/src/comedi_calibrate
 \endcode
 -# Generate the configuration script by calling
 \code
-$ autoreconf -v -i
+autoreconf -v -i
 \endcode
 You may ignore warnings and reminders.
 -# Configure
 \code
-$ ./configure --prefix=/usr --sysconfdir=/etc
+./configure --prefix=/usr --sysconfdir=/etc
 \endcode
 -# Compile and install (as root)
 \code
-$ make
-$ make install
+make
+make install
 \endcode
 
 
@@ -482,20 +502,20 @@ new group and tell udev to add the comedi device files to this group.
 -# Login as root.
 -# Create a new group "iocard":
 \code
-$ addgroup --system iocard
+addgroup --system iocard
 \endcode
 -# Add udev rules to the /etc/udev/rules.d directory:
 \code
-$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
+echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
 \endcode
 -# Run
 \code
-$ udevadm trigger
+udevadm trigger
 \endcode
 to apply your new udev rules
 -# Add users to the "iocard" group:
 \code
-$ adduser \<username\> iocard
+adduser \<username\> iocard
 \endcode
 After the next login, \c \<username\> is a member of the \c iocard group
 and and has sufficient permissions to access the data acquisition boards through \c Comedi.
@@ -505,8 +525,8 @@ and and has sufficient permissions to access the data acquisition boards through
 
 To set the \c Comedi internal buffers to 640kB do as root:
 \code
-$ comedi_config -r /dev/comedi0
-$ comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi0 ni_pcimio
+comedi_config -r /dev/comedi0
+comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi0 ni_pcimio
 \endcode
 Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
 
@@ -520,12 +540,12 @@ calibration.
 
 For hardware calibrated boards (like NI E-Series boards) do
 \code
-$ comedi_calibrate --reset --calibrate -f /dev/comedi0
+comedi_calibrate --reset --calibrate -f /dev/comedi0
 \endcode
 
 For software calibrated boards (like NI M-Series boards) do
 \code
-$ comedi_soft_calibrate -f /dev/comedi0
+comedi_soft_calibrate -f /dev/comedi0
 \endcode
 
 You may want to read the man page of \c comedi_calibrate.

@@ -34,7 +34,7 @@ sections.
 
 \section installrtaikernel  Linux kernel and RTAI patch
 
-\subsection patchkernel Download RTAI, a linux kernel and patch the kernel
+\subsection patchkernel Download RTAI, a linux kernel, and patch the kernel
 
 -# Login as root and cd into \c /usr/local/src:
 \code
@@ -59,7 +59,7 @@ uname -m
 \endcode
 -# Check for available patches. Get a list of all patches for all architectures:
 \code
-find rtai/base/arch/ -name '*.patch' | sort
+find /usr/local/src/rtai/base/arch/ -name '*.patch' | sort
 \endcode
 The most recent patches for both intel and amd 32 and 64-bit systems (x86_64 and i386 architectures)
 are in the \c x86/ directory.
@@ -72,11 +72,10 @@ wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.8.13.tar.xz
 tar xf linux-3.8.13.tar.xz
 mv linux-3.8.13 linux-3.8.13-rtai
 ln -sfn linux-3.8.13-rtai linux
-cd linux
-make mrproper
 \endcode
 -# Patch the kernel (use the patch file that matches the downloaded kernel)
 \code
+cd /usr/src/linux
 patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.8.13-x86-4.patch
 \endcode
 -# Configure, compile, and install the kernel as described in the following section.
@@ -84,89 +83,157 @@ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.8.13-x86-4.pat
 
 \subsection compilekernel Compile the rtai-patched linux kernel
 
--# make sure the \c make, \c gcc, \c libncurses-dev, and \c zlib1g-dev packages are installed:
-\code
+-# Make sure the \c make, \c gcc, \c libncurses-dev, and \c zlib1g-dev packages are installed:
+   \code
 apt-get -y install make gcc libncurses-dev zlib1g-dev
-\endcode
--# There are (at least) two strategies for getting a good real-time kernel. The somewhat simpler approach
-that most likely gives a running kernel, but also might result in bad or not so good real-time performance
-is described here. Alternatively, I highly recommend to consider the approach described in 
-\c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL . For this you need more time to set the right kernel options,
-but the kernel will compile much faster.
--# So, be warned! Here is the beginners way to make a real-time kernel. Simply reuse your current kernel configuration:
-\code
+   \endcode
+   on a Debian system also install the kernel-package
+   \code
+apt-get -y install kernel-package
+   \endcode
+
+-# cd into your kernel source:
+   \code
 cd /usr/src/linux
+   \endcode
+
+-# Clean up the kernel:
+   \code
+make mrproper
+make-kpkg clean  # on Debian system only
+   \endcode
+
+-# There are several strategies for getting a good real-time
+   kernel. Two somewhat simpler approach that most likely give a
+   running kernel, but also might result in bad or not so good
+   real-time performance is described here. Alternatively, I highly
+   recommend to consider the approach described in \c
+   https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL . For
+   this you need more time to set the right kernel options, but the
+   kernel will compile much faster.
+
+   So, be warned! Here are two beginners ways to make a real-time kernel:
+   - Either reuse your current kernel configuration:
+     \code
 cp /boot/config-`uname -r` .config
-make oldconfig
-\endcode
-Hit \c enter to all the (probably many) questions.
--# Steps 5. to 8. describe the normal way to compile a linux kernel.
-On Debian systems there is an elegant alternative that is described
-in step 9. below.
--# First, you configure your kernel by calling
-\code
+make silentoldconfig
+     \endcode
+     Hit \c enter to all the (probably many) questions. If the
+     configuration file is from the default kernel of your
+     distribution this results in a large kernel that takes a long
+     time to compile, since all device drivers get compiled, of which
+     you only need a very few.
+   - Alternatively, start out with a default configuration, and only select device drivers
+     that are currently loaded:
+     \code
+make defconfig
+make localmodconfig
+     \endcode
+     This give a small kernel that is compiled quite quickly. However,
+     some device drivers might be missing. 
+   - See "make help" for more options to generate kernel config files.
+   .
+
+-# The following steps 5. to 7. describe the elegant way to compile a linux kernel 
+   on a Debian system using the kernel-package.
+   You get a nice \c .deb file with the compiled kernel
+   that you can install on other machines as well.
+   See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
+
+   The normal way to compile a linux kernel is described starting at step 8. below.
+
+-# Debian system: configure and build the kernel
+   \code
+export CONCURRENCY_LEVEL=$(grep -c "^processor" /proc/cpuinfo)  # the number of CPU cores you have
+make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image # kernel-headers kernel-source
+   \endcode
+   In the kernel configuration dialog you should check the following settings:
+   - General setup: 
+     - Set "Local version" to "-rtai" or make sure it is empty in case you are using \c make-kpkg
+     - Timers subsystem: 
+       - Set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
+       - Deselect "Old Idle dynticks config"
+       .
+     .
+   - Select "Enable loadable module support":
+     - You may deselect "Module versioning support" 
+       (if you select this option you have to copy the RTAI and comedi \c Module.symvers files around 
+       as described below. This has the advantage that you get rid of annoying warnings
+       regarding undefined functions during compilation)
+     .
+   - Processor type and features: 
+     - Select "Symmetric multi-processing support"
+     - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
+     - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
+       check \c "help" to find out, which Processor family you have to select)
+     - Disable "IBM Calgary IOMMU support"
+     - Set the "Maximum numbers of CPUs" to the number of cores you have in your machine (see /proc/cpuinfo)
+     - Disable "SMT (Hyperthreading) scheduler support"
+     - Disable "Multi-core scheduler support"
+     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
+     - Select "Interrupt pipeline"
+     - Disable "I-pipe legacy interface"
+     - Set "Timer frequency" to 1000 Hz
+     - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
+     - Disable "HPET Timer support" ?
+   - Power management and ACPI options:
+     - Disable "Suspend to RAM and standby"
+     - Disable "Hibernation (aka 'suspend to disk')"
+     - Disable "Run-time PM core functionality"
+     - Enable "ACPI (Advanced Configuration and Power Interface) Support"
+       - Disable everything execpt for:
+       - Select "Power Management Timer Suppport" (if available)
+       .
+     - Disable "CPU Frequency scaling"
+     - Disable "CPU idle PM support"
+     - Disable "APM (Advanced Power Management) BIOS support"
+     - Disable whatever else there is
+     .
+   - Device Drivers:
+     - Disable IOMMU Hardware Support
+     - Staging drivers:
+       - Deselect "Data acquisition support (comedi)"
+       .
+     .
+   - (Disable "Virtualization")
+   .
+   Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
+   Select "Yes".
+
+   Then the kernel is compiled - be patient.
+
+-# Install the kernel
+   \code
+cd ..
+dpkg -i linux-image-3.8.13-rtai_1.0_amd64.deb # linux-headers-3.8.13-rtai_1.0_amd64.deb
+   \endcode
+
+   Then modify the boot menu as described in step 10 if necessary and reboot (step 11).
+
+   Note: To uninstall the rtai kernel do 
+   \code
+apt-get remove linux-image-3.8.13-rtai
+   \endcode
+   This removes the files in \c /boot and the modules in \c /lib/modules .
+
+-# Non-Debian System: Here is the non-Debian way to compile a linux kernel.
+
+   First, you configure your kernel by calling
+   \code
 make menuconfig
-\endcode
-In the kernel configuration dialog you should do the following settings:
-  - General setup: 
-    - Set "Local version" to "-rtai" or make sure it is empty in case you are using \c make-kpkg
-    - Timers subsystem: 
-      - Set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
-      - Deselect "Old Idle dynticks config"
-      .
-    .
-  - Select "Enable loadable module support":
-    - You may deselect "Module versioning support" 
-      (if you select this option you have to copy the RTAI and comedi \c Module.symvers files around 
-      as described below. This has the advantage that you get rid of annoying warnings
-      regarding undefined functions during compilation)
-    .
-  - Processor type and features: 
-    - Select "Symmetric multi-processing support"
-    - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
-    - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
-      check \c "help" to find out, which Processor family you have to select)
-    - Disable "IBM Calgary IOMMU support"
-    - Set the "Maximum numbers of CPUs" to the number of cores you have in your machine (see /proc/cpuinfo)
-    - Disable "SMT (Hyperthreading) scheduler support"
-    - Disable "Multi-core scheduler support"
-    - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
-    - Select "Interrupt pipeline"
-    - Set "Timer frequency" to 1000 Hz
-    - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
-    - Disable "HPET Timer support" ?
-  - Power management and ACPI options:
-    - Disable "Suspend to RAM and standby"
-    - Disable "Hibernation (aka 'suspend to disk')"
-    - Disable "Run-time PM core functionality"
-    - Enable "ACPI (Advanced Configuration and Power Interface) Support"
-      - Disable everything execpt for:
-      - Select "Power Management Timer Suppport" (if available)
-      .
-    - Disable "CPU Frequency scaling"
-    - Disable "CPU idle PM support"
-    - Disable "APM (Advanced Power Management) BIOS support"
-    - Disable whatever else there is
-    .
-  - Device Drivers:
-    - Disable IOMMU Hardware Support
-    - Staging drivers:
-      - Deselect "Data acquisition support (comedi)"
-      .
-    .
-  - (Disable "Virtualization")
-  .
-Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
-Select "Yes".
--# Then compile and install the kernel
-\code
+   \endcode
+   Use the settings described in step 6.
+
+   Then compile and install the kernel
+   \code
 export MAKEFLAGS=" -j$(grep -c "^processor" /proc/cpuinfo)"
 make
 make modules
 make modules_install
 make install
-\endcode
-This takes quite a while.
+  \endcode
+  This takes quite a while.
+
 -# If necessary, install third party kernel modules as well,
 like for example the ones for your graphics board.
 (The following is probably outdated) For your nvidia graphics board, download the driver from
@@ -177,33 +244,7 @@ $ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 3.8.13-rtai -K
 \endcode
 (replace 3.8.13-rtai by the name of the kernel where you want to install the nvidia driver,
 i.e. the string '\c uname \c -r' would return if that kernel is running).
--# Finally you might need to create a RAM disk image file,
-if \c make \c install did not create a \c /boot/initrd-3.8.13-rtai file already:
-\code
-$ cd /boot
-$ update-initramfs -c -k 3.8.13-rtai
-\endcode
--# On a Debian system there is an alternative to steps 5. - 8. for compiling a linux kernel. 
-   You get a nice \c .deb file with the compiled kernel, that you can install also on other machines.
-   See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
-   Do as root:
-   -# Get the kernel-package
-   \code
-apt-get -y install kernel-package
-   \endcode
-   -# Configure and build the kernel:
-   \code
-export CONCURRENCY_LEVEL=$(grep -c "^processor" /proc/cpuinfo)  # the number of CPU cores you have
-make-kpkg clean
-make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image # kernel-headers kernel-source
-   \endcode
-   See step 5. for the necessary kernel configurations.
-   -# Install the kernel
-   \code
-cd ..
-dpkg -i linux-image-3.8.13-rtai_1.0_amd64.deb # linux-headers-3.8.13-rtai_1.0_amd64.deb
-   \endcode
-   -# continue with step 10 (only if you want to modify your grub configuration) or step 11.
+
 -# Update your boot loader:
 \code
 update-grub
@@ -227,6 +268,7 @@ GRUB_TIMEOUT=10
 #  fi
 \endcode
     After editing run \c update-grub to apply the changes.
+
 -# Reboot the computer into the new kernel:
 \code
 reboot
@@ -473,14 +515,20 @@ sudo adduser $USER iocard
 ./configure
 \endcode
 This should detect comedi and RTAI (see message towards the end of the output of \c configure).
--# Then clean and compile the dynamic clamp plugins and the kernel module:
+-# Then get rid of any previously compiled comedi and dynamic clamp modules:
 \code
 cd plugins/linuxdevices/comedi
 make clean
+make -j$(grep -c "^processor" /proc/cpuinfo)
 cd -
 cd plugins/linuxdevices/rtaicomedi
 make clean
-cd -
+\endcode
+-# Select features of the dynamic clamp module by commenting or uncommenting the defines
+at the top of the file \c plugins/linuxdevices/rtaicomedi/module/moduledef.h.
+-# Compile the dynamic clamp plugins and the kernel module in 
+\c plugins/linuxdevices/rtaicomedi:
+\code
 make -j$(grep -c "^processor" /proc/cpuinfo)
 \endcode
 -# If you get an "-mpreferred-stack-boundary" error uncomment line 4 in \c plugins/linuxdevices/rtaicomedi/module/Makefile.in and run \c make again.
