@@ -13,6 +13,7 @@ see http://www.comedi.org
 
 \section rtaicomedicontent Content
 - \ref rtaicomediintro
+- \ref quickinstall
 - \ref installrtaikernel
 - \ref installnewlib
 - \ref installrtai
@@ -30,6 +31,39 @@ implemented by the DynClampAnalogInput and DynClampAnalogOutput
 plugins, you need to install an RTAI-patched real-time linux
 kernel, RTAI kernel modules, and comedi, as described in the following
 sections.
+
+
+\section quickinstall Installation script
+
+The \c makertaikernel.sh script in \c scripts executes all the
+commands as explained in the following sections to download and built a rtai patched
+linux kernel, the newlib library, and the rtai and comedi kernel modules.
+
+-# Modify the variables at the top of the script to match the kernel
+version and rtai patch you want to use. 
+-# Then login as root
+-# and run
+   \code
+scripts/makertaikernel
+   \endcode
+-# You will get the menu for configuring the kernel. See \ref compilekernel
+   step 5 for instructions.
+-# Reboot into the new kernel and run some tests as described in
+   \ref installrtai step 6 and 7.
+-# Continue with \ref installrelacs .
+
+Clean the source trees of the kernel, rtai, newlib, and comedi by calling
+   \code
+scripts/makertaikernel clean
+   \endcode
+
+Remove the installed kernel and rtai modules by calling
+   \code
+scripts/makertaikernel remove
+   \endcode
+
+The following sections describe in detail how to compile and install
+an rtai-patched linux kernel, newlib, rtai, and comedi.
 
 
 \section installrtaikernel  Linux kernel and RTAI patch
@@ -453,13 +487,14 @@ cd /usr/realtime/testsuite/kern/latency
    \code
 RTAI Testsuite - KERNEL latency (all data in nanoseconds)
 RTH|    lat min|    ovl min|    lat avg|    lat max|    ovl max|   overruns
-RTD|         17|         17|         84|        367|        367|          0
-RTD|         69|         17|         82|       1054|       1054|          0
-RTD|         32|         17|         85|       7618|       7618|          0
-RTD|         44|         17|         86|       6336|       7618|          0
+RTD|         60|         60|        141|       1040|       1040|          0
+RTD|         61|         60|        126|        372|       1040|          0
+RTD|         66|         60|        127|        364|       1040|          0
+RTD|         66|         60|        128|        748|       1040|          0
+RTD|         92|         60|        129|        719|       1040|          0
    \endcode
    If you have overruns, or the maximum latencies "lat max" are too
-   high (<5000 ns is great, about 10000 is kind of ok, longer is really bad)
+   high (<5000 ns is great, about 10000 is still kind of ok, longer is really bad)
    then you need to improve you kernel by disabling some bad device drivers.
    See \c https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf
    and \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL for some hints. This is the art of creating a good real-time kernel...
