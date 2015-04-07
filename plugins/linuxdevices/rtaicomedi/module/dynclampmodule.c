@@ -1589,7 +1589,7 @@ void dynclamp_loop( long dummy )
 
 int init_dynclamp_loop( void )
 {
-  int stackSize = 16384;
+  int stackSize = 32768;
   int priority;
   int usesFPU = 1;   /* we need FPU support in any case! */
   void* signal = NULL;

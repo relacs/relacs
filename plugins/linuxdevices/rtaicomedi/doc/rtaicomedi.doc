@@ -42,16 +42,25 @@ sudo su  # or su
 cd /usr/local/src
 \endcode
 -# Download the latest RTAI (http://www.rtai.org) version into \c
-/usr/local/src. Either from the official RTAI cvs repository
-\code
+/usr/local/src :
+   - Either the latest RTAI release (check the RTAI homepage at http://www.rtai.org)
+     \code
+wget https://www.rtai.org/userfiles/downloads/RTAI/rtai-4.1.tar.bz2
+tar xf rtai-4.1.tar.bz2
+ln -sfn rtai-4.1 rtai
+     \endcode
+   - or the current development version from the official RTAI cvs repository
+     \code
 cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai co magma
 ln -sfn magma rtai
-\endcode
-or from Shahbaz Youssefi's rtai clone on github:
-\code
+     \endcode
+     (I got this running with the hal-linux-3.14.17-x86-6x.patch on an Intel i7 as of April 7, 2015)
+   - or from Shahbaz Youssefi's RTAI clone on github:
+     \code
 git clone https://github.com/ShabbyX/RTAI.git
 ln -sfn RTAI rtai
-\endcode
+    \endcode
+   .
 \note Read the \c rtai/README.INSTALL and \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL file!
 -# Find out your CPU architecture:
 \code
@@ -63,20 +72,21 @@ find /usr/local/src/rtai/base/arch/ -name '*.patch' | sort
 \endcode
 The most recent patches for both intel and amd 32 and 64-bit systems (x86_64 and i386 architectures)
 are in the \c x86/ directory.
-Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
+Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch .
+If you got RTAi from cvs then the patches with an "x" at the end should be preferred.
 -# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.xz from http://www.kernel.org
   to \c /usr/src and unpack the kernel:
 \code
 cd /usr/src
-wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.8.13.tar.xz
-tar xf linux-3.8.13.tar.xz
-mv linux-3.8.13 linux-3.8.13-rtai
-ln -sfn linux-3.8.13-rtai linux
+wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.14.17.tar.xz
+tar xf linux-3.14.17.tar.xz
+mv linux-3.14.17 linux-3.14.17-rtai
+ln -sfn linux-3.14.17-rtai linux
 \endcode
 -# Patch the kernel (use the patch file that matches the downloaded kernel)
 \code
 cd /usr/src/linux
-patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.8.13-x86-4.patch
+patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.14.17-x86-6x.patch
 \endcode
 -# Configure, compile, and install the kernel as described in the following section.
 
@@ -92,55 +102,55 @@ apt-get -y install make gcc libncurses-dev zlib1g-dev
 apt-get -y install kernel-package
    \endcode
 
--# cd into your kernel source:
-   \code
-cd /usr/src/linux
-   \endcode
-
 -# Clean up the kernel:
    \code
+cd /usr/src/linux
 make mrproper
 make-kpkg clean  # on Debian system only
    \endcode
 
 -# There are several strategies for getting a good real-time
-   kernel. Two somewhat simpler approach that most likely give a
+   kernel. One somewhat simpler approach that most likely gives a
    running kernel, but also might result in bad or not so good
-   real-time performance is described here. Alternatively, I highly
+   real-time performance is described here. Alternatively, I
    recommend to consider the approach described in \c
    https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL . For
-   this you need more time to set the right kernel options, but the
-   kernel will compile much faster.
+   this you need some time to select the right driver modules, but the
+   kernel will compile much faster and chances are good to get good performance.
 
-   So, be warned! Here are two beginners ways to make a real-time kernel:
-   - Either reuse your current kernel configuration:
-     \code
+   So, be warned! Here is the beginners way to make a real-time kernel:
+
+   Reuse your current kernel configuration:
+   \code
 cp /boot/config-`uname -r` .config
 make silentoldconfig
-     \endcode
-     Hit \c enter to all the (probably many) questions. If the
-     configuration file is from the default kernel of your
-     distribution this results in a large kernel that takes a long
-     time to compile, since all device drivers get compiled, of which
-     you only need a very few.
-   - Alternatively, start out with a default configuration, and only select device drivers
-     that are currently loaded:
+   \endcode
+   Hit \c enter to all the (probably many) questions. If the
+   configuration file is from the default kernel of your
+   distribution this results in a large kernel that takes a long
+   time to compile, since all device drivers get compiled, of which
+   you only need a very few.
+
+   Possible variations on this theme are:
+   - Use the kernels default configuration:
      \code
 make defconfig
-make localmodconfig
      \endcode
-     This give a small kernel that is compiled quite quickly. However,
-     some device drivers might be missing. 
-   - See "make help" for more options to generate kernel config files.
+   - Try to start out with the -rt or -lowlatency kernels and tak the \c .config file from there
    .
+   In addition you might want to disable kernel modules that you do not need on your machine:
+   \code
+make localmodconfig
+   \endcode
+   This gives a small kernel that is compiled quite quickly.
 
--# The following steps 5. to 7. describe the elegant way to compile a linux kernel 
+-# The following steps 4. to 6. describe the elegant way to compile a linux kernel 
    on a Debian system using the kernel-package.
    You get a nice \c .deb file with the compiled kernel
    that you can install on other machines as well.
    See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
 
-   The normal way to compile a linux kernel is described starting at step 8. below.
+   The normal way to compile a linux kernel is described starting at step 7. below.
 
 -# Debian system: configure and build the kernel
    \code
@@ -149,7 +159,8 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
    \endcode
    In the kernel configuration dialog you should check the following settings:
    - General setup: 
-     - Set "Local version" to "-rtai" or make sure it is empty in case you are using \c make-kpkg
+     - Make sure that "Local version" is empty in case you are using \c make-kpkg (Debian system).
+       Otherwise set "Local version" to "-rtai".
      - Timers subsystem: 
        - Set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
        - Deselect "Old Idle dynticks config"
@@ -157,9 +168,11 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      .
    - Select "Enable loadable module support":
      - You may deselect "Module versioning support" 
-       (if you select this option you have to copy the RTAI and comedi \c Module.symvers files around 
-       as described below. This has the advantage that you get rid of annoying warnings
-       regarding undefined functions during compilation)
+       (If you select this option you have to copy the RTAI and comedi
+       \c Module.symvers files around as described below. Selecting
+       "Module versioning support" then has the advantage that you get
+       rid of annoying warnings regarding undefined functions during
+       compilation)
      .
    - Processor type and features: 
      - Select "Symmetric multi-processing support"
@@ -172,7 +185,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      - Disable "Multi-core scheduler support"
      - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
      - Select "Interrupt pipeline"
-     - Disable "I-pipe legacy interface"
+     - "I-pipe legacy interface": enable for rtai-4.1 (and earlier?), disable for current cvs.
      - Set "Timer frequency" to 1000 Hz
      - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
      - Disable "HPET Timer support" ?
@@ -200,19 +213,18 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
    Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
    Select "Yes".
 
-   Then the kernel is compiled - be patient.
+   Then the new kernel is compiled - be patient.
 
 -# Install the kernel
    \code
-cd ..
-dpkg -i linux-image-3.8.13-rtai_1.0_amd64.deb # linux-headers-3.8.13-rtai_1.0_amd64.deb
+dpkg -i ../linux-image-3.14.17-rtai_1.0_amd64.deb # ../linux-headers-3.14.17-rtai_1.0_amd64.deb
    \endcode
 
-   Then modify the boot menu as described in step 10 if necessary and reboot (step 11).
+   Then modify the boot menu as described in step 9 if necessary and reboot (step 10).
 
    Note: To uninstall the rtai kernel do 
    \code
-apt-get remove linux-image-3.8.13-rtai
+apt-get remove linux-image-3.14.17-rtai
    \endcode
    This removes the files in \c /boot and the modules in \c /lib/modules .
 
@@ -222,7 +234,7 @@ apt-get remove linux-image-3.8.13-rtai
    \code
 make menuconfig
    \endcode
-   Use the settings described in step 6.
+   Use the settings described in step 5.
 
    Then compile and install the kernel
    \code
@@ -240,9 +252,9 @@ like for example the ones for your graphics board.
 http://www.nvidia.com/Download/index.aspx?lang=en-us.
 Install it by calling
 \code
-$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 3.8.13-rtai -K
+$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 3.14.17-rtai -K
 \endcode
-(replace 3.8.13-rtai by the name of the kernel where you want to install the nvidia driver,
+(replace 3.14.17-rtai by the name of the kernel where you want to install the nvidia driver,
 i.e. the string '\c uname \c -r' would return if that kernel is running).
 
 -# Update your boot loader:
@@ -307,126 +319,193 @@ make install
 
 -# Make sure that you are root and you are really running your RTAI kernel!
    You can check with
-\code
+   \code
 uname -r
-\endcode
+   \endcode
+
 -# Change to the RTAI directory
-\code
+   \code
 cd /usr/local/src/rtai
-\endcode
+   \endcode
 -# In case you downloaded RTAI from https://github.com/ShabbyX/RTAI,
-you need to generate the configure script and makefiles first:
-\code
+   you need to generate the configure script and makefiles first:
+   \code
 ./autogen.sh
-\endcode
-(do not call ./autogen.sh when using the original RTAI sources since it might fail).
+   \endcode
 -# Configure RTAI by calling
-\code
+   \code
 make menuconfig
-\endcode
-Check the following settings:
- - General
-   - "Installation directory": should be set to \c /usr/realtime
-   - "Linux source tree": must be set to \c /usr/src/linux
-   - "RTAI Documentation": deselect all documentation (if you don't you might get an error)
-   - Select "Build RTAI testsuite"
-   - Disable "Enable source compatibility mode"
- - Machine
-    - Select "Enable FPU support:
-    - "Number of CPUs": set to the right value.
-      If in doubt, look into the file \c /proc/cpuinfo or run
-      \code
+   \endcode
+   Check the following settings:
+   - General
+     - "Installation directory": should be set to \c /usr/realtime
+     - "Linux source tree": must be set to \c /usr/src/linux
+     - "RTAI Documentation": deselect all documentation (if you don't you might get an error)
+     - Select "Build RTAI testsuite"
+     - Disable "Enable source compatibility mode"
+     - "Inlining mode of user-space services": select "Eager inlining"
+   - Machine
+     - Select "Enable FPU support:
+     - "Number of CPUs": set to the right value.
+       If in doubt, look into the file \c /proc/cpuinfo or run
+       \code
 grep -c "^processor" /proc/cpuinfo
-\endcode
-    .
- - Base system
-   - Other features
-     - Select "Mathfuns support in kernel"
-     - 1 - NEWLIB (default), 2 - UCLIB, 3 - GLIBC: set to (1)
-     - The installation directory of your chosen libm.a: set to "/usr/local/src/newlib/install/lib"
+       \endcode
+     .
+   - Base system
+     - Other features
+       - Select "Mathfuns support in kernel"
+       - 1 - NEWLIB (default), 2 - UCLIB, 3 - GLIBC: set to (1)
+       - The installation directory of your chosen libm.a: set to "/usr/local/src/newlib/install/lib"
+       .
+     .
+   - Add-ons
+     - "Real Time COMEDI support in user space": leave unselected
      .
    .
- - Add-ons
-   - "Real Time COMEDI support in user space": leave unselected
- .
-Then exit and save configuration.
-Watch the output while RTAI is configured for possible warnings and errors.
-In case this fails, you should check and/or edit the file \c .rtai_config
-and run \c .configure manually.
+   Then exit and save configuration.
+   Watch the output while RTAI is configured for possible warnings and errors.
+   In case this fails, you should check and/or edit the file \c .rtai_config
+   and run \c .configure manually.
+
 -# Compile and install
-\code
+   \code
 make
 make install
-\endcode
-Known issues:
-  - In case you get an error like: "-mpreferred-stack-boundary=3 is not between 4 and 12"
-    Read http://mail.rtai.org/pipermail/rtai/2014-October/026542.html
-  - In case you get an error like "/usr/include/features.h:323:26: fatal error: bits/predefs.h: No such file or directory" install the gcc-multilib package
-  \code
+   \endcode
+   Known issues:
+     - In case you get an error like: "-mpreferred-stack-boundary=3 is not between 4 and 12"
+       Read http://mail.rtai.org/pipermail/rtai/2014-October/026542.html
+     - In case you get an error like "/usr/include/features.h:323:26:
+       fatal error: bits/predefs.h: No such file or directory" install
+       the gcc-multilib package
+       \code
 apt-get install gcc-multilib
-\endcode
-  - In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
-  then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
-  - (Old) rtai_lxrt errors:
-    - If you get error messages like 
-      "../../../base/sched/liblxrt/.libs/liblxrt.so: undefined reference to `pthread_create'",
-      i.e. undefined references to various pthread functions,
-      then open \c base/sched/liblxrt/GNUmakefile in you favourite editor,
-      find the line containing 'liblxrt_la_LIBADD' and add "-lpthread" to it so that this line looks like
-      \code
+       \endcode
+     - In case you get an error like
+       "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h:
+       No such file or directory" then delete the "#include
+       <asm/io.h>" line in the specified file and call \c make again.
+     - (Old) rtai_lxrt errors:
+
+       - If you get error messages like
+         "../../../base/sched/liblxrt/.libs/liblxrt.so: undefined
+         reference to `pthread_create'", i.e. undefined references to
+         various pthread functions, then open \c
+         base/sched/liblxrt/GNUmakefile in you favourite editor, find
+         the line containing 'liblxrt_la_LIBADD' and add "-lpthread"
+         to it so that this line looks like
+         \code
 liblxrt_la_LIBADD = -lpthread
-\endcode
-    - In case of an error message like
-      "../../../../base/include/rtai_lxrt.h:655:11: error: ‘CLONE_VM’ undeclared (first use in this function)"
-      open \c base/include/rtai_lxrt.h in you favorite editor and add the line
-      \code
+         \endcode
+
+       - In case of an error message like
+         "../../../../base/include/rtai_lxrt.h:655:11: error:
+         ‘CLONE_VM’ undeclared (first use in this function)" open \c
+         base/include/rtai_lxrt.h in you favorite editor and add the
+         line
+         \code
 #include <linux/sched.h>
-\endcode
-      right before the line "#include <rtai_sched.h>"
-    .
-    In both cases do
-    \code
+         \endcode
+         right before the line "#include <rtai_sched.h>"
+       .
+       In both cases do
+       \code
 cd base/sched/liblxrt
 make clean
 cd -
 make
-\endcode
-  - 
-  .
+       \endcode
+
 -# Test RTAI by loading some modules:
-\code
+   \code
 cd /usr/realtime/modules
 insmod rtai_hal.ko
 insmod rtai_sched.ko
 insmod rtai_fifos.ko
 insmod rtai_math.ko
-\endcode
-If this fails:
-Try adding one or several of the advanced configuration and power interface (ACPI) or 
-advanced programmable interrupt controller (APIC) options,
-\c acpi=off \c pci=noacpi \c noapic \c nolapic \c lapic ,
-to the kernel parameter in the \c kernel line of the
-\c grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable
-in \c /etc/defaults/grub . 
-Recompile and install RTAI (make clean && make && make install && depmod -a).
-After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
--# If you have a multi-core system you should reserve at least one CPU for RTAI. You can isolate CPUs by using    the kernel parameter
-   \code
-isolcpus=0,1,2
    \endcode
-  (for isolating the cores no. 0, 1, and 2) and by loading the rtai_hal kernel module the following way:
-  \code
-insmod rtai_hal.ko IsolCpusMask=0x07
-  \endcode
-  See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
+
+   If this fails:
+
+   First, check the output of
+   \code
+dmesg
+   \endcode
+   for some hints.
+
+   Try adding one or several of the advanced configuration and power
+   interface (ACPI) or advanced programmable interrupt controller
+   (APIC) options, \c acpi=off \c pci=noacpi \c noapic \c nolapic \c
+   lapic , to the kernel parameter in the \c kernel line of the \c
+   grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c
+   GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub .  Recompile
+   and install RTAI (make clean && make && make install && depmod -a).
+
+   After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
+
 -# Run the RTAI latency test
-\code
+   \code
 cd /usr/realtime/testsuite/kern/latency
 ./run
-\endcode
-Maybe this link is helpful to find good motherboards: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Latency-Test 
-(I am, however, not sure how this relates to RTAI).
+   \endcode
+   The output looks like this:
+   \code
+RTAI Testsuite - KERNEL latency (all data in nanoseconds)
+RTH|    lat min|    ovl min|    lat avg|    lat max|    ovl max|   overruns
+RTD|         17|         17|         84|        367|        367|          0
+RTD|         69|         17|         82|       1054|       1054|          0
+RTD|         32|         17|         85|       7618|       7618|          0
+RTD|         44|         17|         86|       6336|       7618|          0
+   \endcode
+   If you have overruns, or the maximum latencies "lat max" are too
+   high (<5000 ns is great, about 10000 is kind of ok, longer is really bad)
+   then you need to improve you kernel by disabling some bad device drivers.
+   See \c https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf
+   and \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL for some hints. This is the art of creating a good real-time kernel...
 
+   Also run the switch test:
+   \code
+cd /usr/realtime/testsuite/kern/switches
+./run
+   \endcode
+   The output looks like this:
+   \code
+Apr  7 16:08:45 knifefish kernel: [  178.940333] 
+Apr  7 16:08:45 knifefish kernel: [  178.940333] Wait for it ...
+Apr  7 16:08:45 knifefish kernel: [  178.959986] 
+Apr  7 16:08:45 knifefish kernel: [  178.959986] 
+Apr  7 16:08:45 knifefish kernel: [  178.959986] FOR 10 TASKS: TIME 5 (ms), SUSP/RES SWITCHES 40000, SWITCH TIME (INCLUDING FULL FP SUPPORT) 145 (ns)
+Apr  7 16:08:45 knifefish kernel: [  178.959988] 
+Apr  7 16:08:45 knifefish kernel: [  178.959988] FOR 10 TASKS: TIME 6 (ms), SEM SIG/WAIT SWITCHES 40000, SWITCH TIME (INCLUDING FULL FP SUPPORT) 158 (ns)
+Apr  7 16:08:45 knifefish kernel: [  178.959990] 
+Apr  7 16:08:45 knifefish kernel: [  178.959990] FOR 10 TASKS: TIME 7 (ms), RPC/RCV-RET SWITCHES 40000, SWITCH TIME (INCLUDING FULL FP SUPPORT) 186 (ns)
+   \endcode
+   The reported switching times should be well below 1000ns.
+
+   Finally, there is the "preempt" test:
+   \code
+cd /usr/realtime/testsuite/kern/preempt
+./run
+   \endcode
+
+   To really check out the performance of the kernel you should run the test 
+   under heavy load. That is, run some processes like
+   - at least one "ping -f somewhere";
+   - a "ping -f localhost";
+   - a "top" on alpha screen and one on an X screen;
+   - a "while "true"; do ls -lR / >list; done"
+   - a "while "true"; cat /proc/interrupts; done"
+   - dd if=/dev/hda2 of=/dev/hda3 bs=1000k &  # /dev/hda3 needs to be a free partition that is at least as large as /dev/hda2!!!
+   .
+
+-# For further improving the RTAI performance, you might want to reserve at least one CPU
+   for RTAIIf on a multi-core machine. You can isolate CPUs by using the kernel parameter
+   \code
+isolcpus=0,1
+   \endcode
+   (for isolating the cores no. 0 and 1).
+   See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
 
 \section installcomedi comedi data acquisition driver
 
@@ -646,7 +725,7 @@ restart rsyslog
 - mpreferred-stack-boundary=3 issue: http://mail.rtai.org/pipermail/rtai/2013-December/026198.html
 - HPET timer kernel option: http://mail.rtai.org/pipermail/rtai/2013-April/025511.html
 - localmodconfig kernel make target: http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
-.
+- Maybe this link is helpful to find good motherboards: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Latency-Test.
 - Linux kernel crash dump: https://help.ubuntu.com/12.04/serverguide/kernel-crash-dump.html
 - Crash debugger: http://docs.oracle.com/cd/E52668_01/E54669/html/ol7-s4-sysdumpa.html
 */

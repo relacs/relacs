@@ -1,7 +1,7 @@
 ifneq ($(KERNELRELEASE),)
 
 EXTRA_CFLAGS += @RTAI_CPPFLAGS@
-#EXTRA_CFLAGS += -mpreferred-stack-boundary=4
+EXTRA_CFLAGS += -mpreferred-stack-boundary=4
 EXTRA_CFLAGS += -Wall
 
 KBUILD_EXTRA_SYMBOLS := /lib/modules/$(shell uname -r)/comedi/Module.symvers
