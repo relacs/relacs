@@ -39,28 +39,46 @@ The \c makertaikernel.sh script in \c scripts executes all the
 commands as explained in the following sections to download and built a rtai patched
 linux kernel, the newlib library, and the rtai and comedi kernel modules.
 
+-# \code
+cd scripts
+   \endcode
+
 -# Modify the variables at the top of the script to match the kernel
 version and rtai patch you want to use. 
--# Then login as root
--# and run
+
+-# Then run
    \code
-scripts/makertaikernel
+sudo ./makertaikernel
    \endcode
+
 -# You will get the menu for configuring the kernel. See \ref compilekernel
    step 5 for instructions.
--# Reboot into the new kernel and run some tests as described in
-   \ref installrtai step 6 and 7.
--# Continue with \ref installrelacs .
 
-Clean the source trees of the kernel, rtai, newlib, and comedi by calling
+-# Reboot into the new kernel and run the latency test by invoking
    \code
-scripts/makertaikernel clean
+sudo ./makertaikernel test
    \endcode
+   The result of the test is written into the file latencies-3.14.17-rtai-XXX-DATE
+   and the corresponding kernel configuration is saved in config-3.14.17-rtai-XXX-DATE
+   in the current directory. XXX is replaced by a short string that you can enter during the test
+   and DATE is replaced by the current date and time.
 
-Remove the installed kernel and rtai modules by calling
+   See also \ref installrtai step 6 and 7 for more testing options and troubleshooting.
+
+-# If the results are not good, then reboot into your standard kernel, remove the rtai kernel,
+   and build a new version of the kernel with a different configuration:
    \code
-scripts/makertaikernel remove
+sudo ./makertaikernel remove
+sudo ./makertaikernel reconfigure
    \endcode
+   Continue with step 5.
+
+-# Once you are satisified, continue with \ref installrelacs .
+
+To clean the source trees of the kernel, rtai, newlib, and comedi call
+\code
+sudo ./makertaikernel clean
+\endcode
 
 The following sections describe in detail how to compile and install
 an rtai-patched linux kernel, newlib, rtai, and comedi.

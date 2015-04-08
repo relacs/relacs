@@ -4,6 +4,7 @@ LINUX_KERNEL="3.14.17"
 RTAI_PATCH="x86/patches/hal-linux-3.14.17-x86-6x.patch"
 KERNEL_PATH=/data/src
 RECONFIGURE_KERNEL=no
+NEW_KERNEL_CONFIG=yes
 
 # we need to be root:
 if test "x$(id -u)" != "x0"; then
@@ -12,12 +13,19 @@ if test "x$(id -u)" != "x0"; then
 fi
 
 ###########################################################################
+# reconfigure the kernel:
+if test "x$1" == "xreconfigure"; then
+    RECONFIGURE_KERNEL=yes
+    NEW_KERNEL_CONFIG=no
+
+###########################################################################
 # clean all source trees:
-if test "x$1" == "xclean"; then
+elif test "x$1" == "xclean"; then
     # clean all targets
     # kernel source tree:
     cd $KERNEL_PATH
     if test -d linux-${LINUX_KERNEL}-rtai; then
+	echo "removing kernel sources $KERNEL_PATH/linux-${LINUX_KERNEL}-rtai"
 	rm -r linux-${LINUX_KERNEL}-rtai
     fi
     # rtai:
@@ -54,13 +62,59 @@ elif test "x$1" == "xremove"; then
 	rm -r /usr/realtime
     fi
     # kernel:
-    apt-get remove linux-image-${LINUX_KERNEL}-rtai
+    apt-get -y remove linux-image-${LINUX_KERNEL}-rtai
     cd /usr/src/linux
     if test -f ../linux-image-${LINUX_KERNEL}-rtai_1.0_amd64.deb; then
 	rm ../linux-image-${LINUX_KERNEL}-rtai_1.0_amd64.deb
     fi
     exit 0
 
+###########################################################################
+# test running rtai kernel:
+elif test "x$1" == "xtest"; then
+    if test $(uname -r) != ${LINUX_KERNEL}-rtai; then
+	echo "Need a running rtai kernel!"
+	echo "First boot into the ${LINUX_KERNEL}-rtai kernel."
+	exit 1
+    fi
+    
+    # latency test:
+    TEST_DIR=/usr/realtime/testsuite/kern/latency
+    cd $TEST_DIR
+    rm -f latencies.dat
+    trap true SIGINT   # ^C should terminate ./run but not this script
+    ./run | tee latencies.dat
+    trap - SIGINT
+    cd -
+    read -p 'Please enter a short name for this kernel and test result (empty: delete): ' NAME
+    if test -n "$NAME"; then
+	NAME="${NAME}-"
+	REPORT="${LINUX_KERNEL}-rtai-${NAME}$(date '+%F-%R')"
+	{
+	    sed -e '/^\*/d' $TEST_DIR/latencies.dat
+	    echo
+	    echo
+	    echo rtai-info reports:
+	    echo
+	    /usr/realtime/bin/rtai-info
+	} > latencies-$REPORT
+	cp /boot/config-${LINUX_KERNEL}-rtai config-$REPORT
+    fi
+    rm $TEST_DIR/latencies.dat
+    exit 0
+
+###########################################################################
+# unknown:
+elif test -n "$1"; then
+    echo "unknown option \"$1\""
+    echo
+    echo "usage:"
+    echo "sudo makertaikernel"
+    echo "sudo makertaikernel reconfigure"
+    echo "sudo makertaikernel clean"
+    echo "sudo makertaikernel remove"
+    echo "sudo makertaikernel test"
+    exit 1
 fi
 
 
@@ -122,6 +176,8 @@ else
     echo "unpack kernel sources from archive"
     tar xf linux-$LINUX_KERNEL.tar.xz
     mv linux-$LINUX_KERNEL linux-${LINUX_KERNEL}-rtai
+    cd linux-${LINUX_KERNEL}-rtai
+    make mrproper
     NEW_RTAI_KERNEL=yes
 fi
 
@@ -138,13 +194,16 @@ fi
 
 if test "$NEW_RTAI_KERNEL" = "yes" -o "$RECONFIGURE_KERNEL" = "yes"; then
     # clean:
-    make mrproper
     make-kpkg clean
 
-    # kernel configuration:
-    cp /boot/config-`uname -r` .config
-    make silentoldconfig
-    make localmodconfig
+    if test "$NEW_KERNEL_CONFIG" = "yes"; then
+	# kernel configuration:
+	cp /boot/config-`uname -r` .config
+	make olddefconfig
+	yes "" | make localmodconfig
+    else
+	echo "keep already existing .configure file for linux-${LINUX_KERNEL}-rtai."
+    fi
 
     # build the kernel:
     export CONCURRENCY_LEVEL=$(grep -c "^processor" /proc/cpuinfo)
@@ -238,7 +297,8 @@ make
 make install
 
 # comedi:
-if test -f /lib/modules/${LINUX_KERNEL}-rtai/comedi/comedi.ko; then
+#if test -f /lib/modules/${LINUX_KERNEL}-rtai/comedi/comedi.ko; then
+if false; then
     echo "keep already installed comedi modules"
 else
     cd /usr/local/src/comedi

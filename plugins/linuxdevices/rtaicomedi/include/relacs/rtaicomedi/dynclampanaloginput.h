@@ -62,9 +62,10 @@ The following three types of additional inputs are supported:
   - \c Model-time : the time required for calling computModel()
   all in seconds.
 - for each analog output trace the dynamic clamp model is using (its \c outputNames), 
+  - \c Stimulus-xxx contains the stimulus a RePro wrote to this channel,
   - \c Model-xxx contains the value the model computed, and
   - \c Total-xxx contains the total output for this channel.
-  The difference between the two is the stimulus that was written by a RePro to that channel.
+  Stimulus-xxx plus Model-xxx equals Total-xxx.
   \c xxx is the name of the analog output trace.
 
 \par Options:

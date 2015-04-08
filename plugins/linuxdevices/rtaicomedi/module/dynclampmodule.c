@@ -318,6 +318,11 @@ void init_globals( void )
 #ifdef ENABLE_COMPUTATION
   outputstatusinx = statusInputN;
   for ( k=0; k<OUTPUT_N; k++ ) {
+    sprintf( name, "Stimulus-%s", outputNames[k] );
+    strcpy( statusInputNames[statusInputN], name );
+    strcpy( statusInputUnits[statusInputN], outputUnits[k] );
+    statusInput[statusInputN] = 0.0;
+    statusInputN++;
     sprintf( name, "Model-%s", outputNames[k] );
     strcpy( statusInputNames[statusInputN], name );
     strcpy( statusInputUnits[statusInputN], outputUnits[k] );
@@ -720,7 +725,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	  for ( i = 0; i < OUTPUT_N; i++ ) {
 	    if ( outputChannels[i] == subdev->chanlist[iC].chan ) {
 	      subdev->chanlist[iC].modelIndex = i;
-	      subdev->chanlist[iC].statusIndex = outputstatusinx + 2*i;
+	      subdev->chanlist[iC].statusIndex = outputstatusinx + 3*i;
 	    }
 	  }
 #endif
@@ -1317,9 +1322,10 @@ void dynclamp_loop( long dummy )
 #ifdef ENABLE_COMPUTATION
 	// add model output to sample:
 	if ( pChan->modelIndex >= 0 ) {
+	  statusInput[pChan->statusIndex] = voltage;
+	  statusInput[pChan->statusIndex+1] = output[pChan->modelIndex];
 	  voltage += output[pChan->modelIndex];
-	  statusInput[pChan->statusIndex] = output[pChan->modelIndex];
-	  statusInput[pChan->statusIndex+1] = voltage;
+	  statusInput[pChan->statusIndex+2] = voltage;
 	}
 #endif
 	// write out Sample:
