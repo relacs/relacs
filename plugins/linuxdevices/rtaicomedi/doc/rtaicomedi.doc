@@ -17,6 +17,7 @@ see http://www.comedi.org
 - \ref installrtaikernel
 - \ref installnewlib
 - \ref installrtai
+- \ref testrtai
 - \ref installcomedi
 - \ref installrelacs
 - \ref udev
@@ -65,19 +66,20 @@ sudo ./makertaikernel test
 
    See also \ref installrtai step 6 and 7 for more testing options and troubleshooting.
 
--# If the results are not good, then reboot into your standard kernel, remove the rtai kernel,
-   and build a new version of the kernel with a different configuration:
+-# If the results are not good, then reboot into your standard kernel,
+   uninstall the rtai kernel, and build a new version of the kernel
+   with a different configuration:
    \code
-sudo ./makertaikernel remove
+sudo ./makertaikernel uninstall
 sudo ./makertaikernel reconfigure
    \endcode
    Continue with step 5.
 
 -# Once you are satisified, continue with \ref installrelacs .
 
-To clean the source trees of the kernel, rtai, newlib, and comedi call
+For further options of the \c makertaikernel script see
 \code
-sudo ./makertaikernel clean
+./makertaikernel help
 \endcode
 
 The following sections describe in detail how to compile and install
@@ -175,7 +177,7 @@ make-kpkg clean  # on Debian system only
    Reuse your current kernel configuration:
    \code
 cp /boot/config-`uname -r` .config
-make silentoldconfig
+make olddefconfig
    \endcode
    Hit \c enter to all the (probably many) questions. If the
    configuration file is from the default kernel of your
@@ -192,7 +194,7 @@ make defconfig
    .
    In addition you might want to disable kernel modules that you do not need on your machine:
    \code
-make localmodconfig
+yes "" | make localmodconfig
    \endcode
    This gives a small kernel that is compiled quite quickly.
 
@@ -240,7 +242,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      - "I-pipe legacy interface": enable for rtai-4.1 (and earlier?), disable for current cvs.
      - Set "Timer frequency" to 1000 Hz
      - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
-     - Disable "HPET Timer support" ?
+     - Disable "Supervisor Mode Access Prevention", "EFI runtime service support", "Enable seccomp to safely compute untrusted bytecode"
    - Power management and ACPI options:
      - Disable "Suspend to RAM and standby"
      - Disable "Hibernation (aka 'suspend to disk')"
@@ -323,15 +325,52 @@ update-grub
 #GRUB_HIDDEN_TIMEOUT_QUIET=true
 GRUB_TIMEOUT=10
 \endcode
+
     Also, if you do not like that grub puts your rtai kernel into a subsection called
-    'Previous linux versions', then comment out the following lines in \c /etc/grub.d/10_linux
+    'Previous linux versions', then make sure in \c /etc/default/grub you have a line
+    \code
+GRUB_DISABLE_SUBMENU=y
+    \endcode
+    Run \c update-grub to apply the changes.
+
+    For older grub2 versions you need to comment out the following lines in \c /etc/grub.d/10_linux
     \code
 #  if [ "$list" ] && ! $in_submenu; then
 #    echo "submenu \"Previous Linux versions\" {"
 #    in_submenu=:
 #  fi
+done
+
+#if $in_submenu; then
+#  echo "}"
+#fi
 \endcode
+    Then copy this file to \c 11_linux and make \c 10_linux not executable.
+    Otherwise on reboot your changes in \c 10_linux will disappear. I have no idea why...
+    \code
+sudo cp 10_linux 11_linux
+sudo chmod a-x 10_linux
+    \endcode
     After editing run \c update-grub to apply the changes.
+
+    In \c /etc/default/grub you can set the GRUB_DEFAULT variable to
+    tell grub which kernel to boot by default. It can be a integer
+    number (first kernel is 0), or something like 2>0 if your kernel
+    is in a submenu, or, instead of the integers, you can put in the grub menu entry.
+    Check
+    \code
+sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
+    \endcode
+    for all available menu entries.
+
+    When testing rtai kernels it might be sensible to set the default kernel to one that
+    is working.
+
+    You can tell grub to use your new rtai kernel after the next reboot by calling
+    \code
+sudo grub-reboot "Linux Mint 17 KDE 64-bit, 3.14.17-rtai1 (/dev/sda1)"
+    \endcode
+    See http://statusq.org/archives/2012/10/24/4584/ for more interesting options.
 
 -# Reboot the computer into the new kernel:
 \code
@@ -469,6 +508,11 @@ cd -
 make
        \endcode
 
+
+\section testrtai Testing performance of RTAI kernel
+
+Testing your RTAI patched kernel is crucial for a good real-time performance!
+
 -# Test RTAI by loading some modules:
    \code
 cd /usr/realtime/modules
@@ -512,10 +556,8 @@ RTD|         66|         60|        128|        748|       1040|          0
 RTD|         92|         60|        129|        719|       1040|          0
    \endcode
    If you have overruns, or the maximum latencies "lat max" are too
-   high (<5000 ns is great, about 10000 is still kind of ok, longer is really bad)
+   high (<1000 ns is great, <3000 ns is good, <5000 is ok, longer than 10000 ns is really bad)
    then you need to improve you kernel by disabling some bad device drivers.
-   See \c https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf
-   and \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL for some hints. This is the art of creating a good real-time kernel...
 
    Also run the switch test:
    \code
@@ -542,7 +584,7 @@ cd /usr/realtime/testsuite/kern/preempt
 ./run
    \endcode
 
-   To really check out the performance of the kernel you should run the test 
+-# To really check out the performance of the kernel you should run the tests 
    under heavy load. That is, run some processes like
    - at least one "ping -f somewhere";
    - a "ping -f localhost";
@@ -552,6 +594,14 @@ cd /usr/realtime/testsuite/kern/preempt
    - dd if=/dev/hda2 of=/dev/hda3 bs=1000k &  # /dev/hda3 needs to be a free partition that is at least as large as /dev/hda2!!!
    .
 
+-# If your test results are not good, then you need to reconfigure
+   your kernel, probably disabling some devices, compile and install the kernel again,
+   and compile and install rtai again.
+
+   See \c https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf
+   and \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL for some hints. 
+   This is the art of creating a good real-time kernel...
+
 -# For further improving the RTAI performance, you might want to reserve at least one CPU
    for RTAIIf on a multi-core machine. You can isolate CPUs by using the kernel parameter
    \code
@@ -559,6 +609,7 @@ isolcpus=0,1
    \endcode
    (for isolating the cores no. 0 and 1).
    See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
+
 
 \section installcomedi comedi data acquisition driver
 
