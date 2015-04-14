@@ -1,24 +1,36 @@
 #!/bin/bash
 
-LINUX_KERNEL="3.14.17"      # linux vanilla kernel version
+###########################################################################
+# you should modify the following parameter according to your needs:
+
 KERNEL_PATH=/data/src       # where to put and compile the kernel
 LINUX_KERNEL="3.14.17"      # linux vanilla kernel version
 KERNEL_SOURCE_NAME="rtai"   # name for kernel source directory to be appended to LINUX_KERNEL
-KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL
+KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL (set with -n)
 
-RTAI_PATCH="x86/patches/hal-linux-3.14.17-x86-6x.patch" # rtai patch to be used
-RTAI_DIR="magma"          # name of the rtai source directory:
-                          # magma: current development version
-                          # rtai-4.1: rtai release version 4.1
-                          # RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
+RTAI_DIR="magma"            # name of the rtai source directory (set with -r):
+                            #   magma: current development version
+                            #   rtai-4.1: rtai release version 4.1
+                            #   RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
+RTAI_PATCH="hal-linux-3.14.17-x86-6x.patch" # rtai patch to be used
 
-RECONFIGURE_KERNEL=no
-NEW_KERNEL_CONFIG=yes
 
-NEW_KERNEL=no
-NEW_RTAI=no
-NEW_NEWLIB=no
-NEW_COMEDI=no
+###########################################################################
+# some global variables:
+
+RECONFIGURE_KERNEL=false
+NEW_KERNEL_CONFIG=true
+
+NEW_KERNEL=false
+NEW_RTAI=false
+NEW_NEWLIB=false
+NEW_COMEDI=false
+
+MACHINE=$(uname -m)
+if test "x$MACHINE" = "xx86_64"; then
+    MACHINE="x86"
+fi
+echo $MACHINE
 
 
 ###########################################################################
@@ -29,7 +41,8 @@ function print_usage {
     echo "usage:"
     echo "sudo makertaikernel [-n xxx] [-r xxx] [action [target1 [target2 ... ]]]"
     echo ""
-    echo "-n xxx: use xxx ase name of the new linux kernel (default rtai)"
+    echo "-n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})"
+    echo "-k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})"
     echo "-r xxx: the rtai source, one of"
     echo "        magma: current rtai development version (default)"
     echo "        rtai-4.1: rtai release version 4.1"
@@ -40,6 +53,7 @@ function print_usage {
     echo "  packages   : install required packages"
     echo "  download   : download missing sources of the specified targets"
     echo "  build      : compile and install the specified targets and the depending ones if needed"
+    echo "  install    : install the specified targets"
     echo "  clean      : clean the source trees the specified targets"
     echo "  uninstall  : uninstall the specified targets"
     echo "  remove     : remove the complete source trees of the specified targets"
@@ -92,9 +106,17 @@ function download_kernel {
     cd $KERNEL_PATH
     if test -f linux-$LINUX_KERNEL.tar.xz; then
 	echo "keep already downloaded linux kernel archive"
-    else
+    elif test -n "$LINUX_KERNEL"; then
 	echo "download linux kernel version $LINUX_KERNEL"
 	wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-$LINUX_KERNEL.tar.xz
+    else
+	echo
+	echo "you need to specify a linux kernel version!"
+	echo "choose one from the following list of available rtai patches (most recent one is a t the bottom)"
+	echo "and pass it to this script via the -k option:"
+	echo
+	ls -rt /usr/local/src/rtai/base/arch/$MACHINE/patches/*.patch | tail -n 10 | while read LINE; do echo ${LINE#/usr/local/src/rtai/base/arch/$MACHINE/patches/}; done
+	exit 0
     fi
 }
 
@@ -109,7 +131,7 @@ function unpack_kernel {
 	mv linux-$LINUX_KERNEL linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 	cd linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 	make mrproper
-	NEW_KERNEL=yes
+	NEW_KERNEL=true
     fi
 
     # standard softlink to kernel:
@@ -119,22 +141,38 @@ function unpack_kernel {
 
 function patch_kernel {
     cd /usr/src/linux
-    if test "$NEW_KERNEL" = "yes"; then
-	echo "apply rtai patch to kernel sources"
-	patch -p1 < /usr/local/src/rtai/base/arch/$RTAI_PATCH
+    if $NEW_KERNEL; then
+	if -z "$RTAI_PATCH"; then
+	    RTAI_PATCH="$(ls -rt /usr/local/src/rtai/base/arch/$MACHINE/patches/*-${LINUX_KERNEL}-*.patch | tail -n 1)"
+	    RTAI_PATCH="${RTAI_PATCH#/usr/local/src/rtai/base/arch/$MACHINE/patches/}"
+	fi
+	echo "apply rtai patch $RTAI_PATCH to kernel sources"
+	patch -p1 < /usr/local/src/rtai/base/arch/$MACHINE/patches/$RTAI_PATCH
+    fi
+}
+
+function install_kernel {
+    cd /usr/src/linux
+    if test -f ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb; then
+	dpkg -i ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb
+	GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep 3.14.17-rtai1 | head -n 1)"
+	grub-reboot "$GRUBMENU"
+    else
+	echo "no kernel to install"
+	return 1
     fi
 }
 
 function build_kernel {
     cd /usr/src/linux
-    if test "$NEW_KERNEL" = "yes" -o "$RECONFIGURE_KERNEL" = "yes"; then
+    if $NEW_KERNEL || $RECONFIGURE_KERNEL; then
 
-	if test "$RECONFIGURE_KERNEL" != "yes"; then
+	if ! $RECONFIGURE_KERNEL; then
 	    # clean:
 	    make-kpkg clean
 	fi
 
-	if test "$NEW_KERNEL_CONFIG" = "yes"; then
+	if $NEW_KERNEL_CONFIG; then
 	    # kernel configuration:
 	    cp /boot/config-`uname -r` .config
 	    make olddefconfig
@@ -148,14 +186,7 @@ function build_kernel {
 	make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
 
 	# install:
-	if test -f ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb; then
-	    dpkg -i ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb
-	    GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep 3.14.17-rtai1 | head -n 1)"
-	    grub-reboot "$GRUBMENU"
-	else
-	    echo "failed to build kernel"
-	    exit 1
-	fi
+	install_kernel
     else
 	echo "keep already compiled linux ${LINUX_KERNEL}-${KERNEL_NAME} kernel."
     fi
@@ -174,14 +205,11 @@ function uninstall_kernel {
     if test $(uname -r) = ${LINUX_KERNEL}-${KERNEL_NAME}; then
 	echo "Cannot uninstall a running kernel!"
 	echo "First boot into a different kernel."
-	exit 1
+	return 1
     fi
     echo "uninstall kernel ${LINUX_KERNEL}-${KERNEL_NAME}"
     apt-get -y remove linux-image-${LINUX_KERNEL}-${KERNEL_NAME}
     cd /usr/src/linux
-    if test -f ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb; then
-	rm ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb
-    fi
 }
 
 function remove_kernel {
@@ -190,21 +218,36 @@ function remove_kernel {
 	echo "remove kernel package $KERNEL_PATH/linux-$LINUX_KERNEL.tar.xz"
 	rm linux-$LINUX_KERNEL.tar.xz
     fi
+    if test -f ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb; then
+	rm ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb
+    fi
 }
 
 function test_kernel {
     if test $(uname -r) != ${LINUX_KERNEL}-${KERNEL_NAME}; then
 	echo "Need a running rtai kernel!"
 	echo "First boot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel."
-	exit 1
+	return 1
+    fi
+
+    # report number:
+    NUM=001
+    LASTREPORT="$(ls latencies-${LINUX_KERNEL}-${RTAI_DIR}-*-* | tail -n 1)"
+    if test -n "$LASTREPORT"; then
+	LASTREPORT="${LASTREPORT#latencies-${LINUX_KERNEL}-${RTAI_DIR}-}"
+	N="${LASTREPORT%-*}"
+	N=$(($N+1))
+	NUM="$(printf "%03d" $N)"
     fi
 
     # loading rtai kernel modules:
-    lsmod | grep -q rtai_hal || { insmod /usr/realtime/modules/rtai_hal.ko && echo "loaded rtai_hal"; }
-    lsmod | grep -q rtai_sched || { insmod /usr/realtime/modules/rtai_sched.ko && echo "loaded rtai_sched"; }
-    lsmod | grep -q rtai_fifos || { insmod /usr/realtime/modules/rtai_fifos.ko && echo "loaded rtai_fifos"; }
+    RTAIMOD_FAILED=false
+    RTAIMATH_FAILED=false
+    lsmod | grep -q rtai_hal || { insmod /usr/realtime/modules/rtai_hal.ko && echo "loaded rtai_hal" || RTAMOD_FAILED=true; }
+    lsmod | grep -q rtai_sched || { insmod /usr/realtime/modules/rtai_sched.ko && echo "loaded rtai_sched" || RTAMOD_FAILED=true; }
+    lsmod | grep -q rtai_fifos || { insmod /usr/realtime/modules/rtai_fifos.ko && echo "loaded rtai_fifos" || RTAMOD_FAILED=true; }
     if test -f /usr/realtime/modules/rtai_math.ko; then
-	lsmod | grep -q rtai_math || { insmod /usr/realtime/modules/rtai_math.ko && echo "loaded rtai_math"; }
+	lsmod | grep -q rtai_math || { insmod /usr/realtime/modules/rtai_math.ko && echo "loaded rtai_math" || RTAIMATH_FAILED=true; }
     else
 	echo "rtai_math is not available"
     fi
@@ -217,7 +260,34 @@ function test_kernel {
     lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed rtai_sched"; }
     lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed rtai_hal"; }
 
+    if $RTAIMOD_FAILED; then
+	REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-rtai-modules-failed"
+	{
+	    echo "failed to load rtai modules"
+	    echo
+	    echo "Revisions:"
+	    echo "  kernel: ${LINUX_KERNEL}"
+	    echo "  rtai  : ${RTAI_DIR} from $(cat /usr/local/src/${RTAI_DIR}/revision.txt)"
+	    echo "  newlib: cvs from $(cat /usr/local/src/newlib/revision.txt)"
+	    echo "  comedi: git from $(cat /usr/local/src/comedi/revision.txt)"
+	    echo
+	    echo
+	    echo "dmesg:"
+	    echo
+	    dmesg | tail -n 40 | grep RTAI
+	} > latencies-$REPORT
+	cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
+	chown --reference=. latencies-$REPORT
+	chown --reference=. config-$REPORT
+	echo
+	echo "saved kernel configureation in: config-$REPORT"
+	echo "saved test results in         : latencies-$REPORT"
+	return
+    fi
+    echo "successfully loaded and unloaded rtai modules"
+
     # latency test:
+    echo "running latency test"
     LATENCY_TEST_DIR=/usr/realtime/testsuite/kern/latency
     cd $LATENCY_TEST_DIR
     rm -f latencies.dat
@@ -227,6 +297,7 @@ function test_kernel {
     cd -
 
     # switch test:
+    echo "running switch test"
     if ! test -f /var/log/messages; then
 	echo "/var/log/messages does not exist!"
 	echo "enable it by modifying the file /etc/rsyslog.d/50-default.conf :"
@@ -240,7 +311,7 @@ function test_kernel {
 	echo "and run"
 	echo "$ restart rsyslog"
 	echo
-	exit 1
+	return 1
     fi
     SWITCHES_TEST_DIR=/usr/realtime/testsuite/kern/switches
     cd $SWITCHES_TEST_DIR
@@ -251,6 +322,7 @@ function test_kernel {
     cd -
 
     # preempt test:
+    echo "running preempt test"
     PREEMPT_TEST_DIR=/usr/realtime/testsuite/kern/preempt
     cd $PREEMPT_TEST_DIR
     rm -f preempt.dat
@@ -260,12 +332,14 @@ function test_kernel {
     cd -
 
     # report:
+    echo "finished all tests"
+    echo
     read -p 'Please enter a short name describing the configuration (empty: delete): ' NAME
     if test -n "$NAME"; then
 	read -p 'Please enter a short description of the test result (empty: delete): ' RESULT
     fi
     if test -n "$NAME" -a -n "$RESULT"; then
-	REPORT="${LINUX_KERNEL}-${KERNEL_NAME}-${NAME}-${RESULT}-$(date '+%F-%R')"
+	REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-${NAME}-${RESULT}"
 	{
 	    echo "Latency test:"
 	    sed -e '/^\*/d' $LATENCY_TEST_DIR/latencies.dat
@@ -279,23 +353,38 @@ function test_kernel {
 	    sed -e '/^\*/d' $PREEMPT_TEST_DIR/preempt.dat
 	    echo
 	    echo
-	    echo rtai-info reports:
+	    echo "Revisions:"
+	    echo "  kernel: ${LINUX_KERNEL}"
+	    echo "  rtai  : ${RTAI_DIR} from $(cat /usr/local/src/${RTAI_DIR}/revision.txt)"
+	    echo "  newlib: cvs from $(cat /usr/local/src/newlib/revision.txt)"
+	    echo "  comedi: git from $(cat /usr/local/src/comedi/revision.txt)"
+	    echo
+	    echo
+	    echo "rtai-info reports:"
 	    echo
 	    /usr/realtime/bin/rtai-info
 	    echo
 	    echo
-	    echo lsmod:
+	    echo "lsmod:"
 	    echo
 	    lsmod
 	    echo
 	    echo
-	    echo dmesg:
+	    if $RTAIMATH_FAILED; then
+		echo "Failed to load rtai_math module."
+		echo
+		echo
+	    fi
+	    echo "dmesg:"
 	    echo
 	    dmesg | tail -n 40 | grep RTAI
 	} > latencies-$REPORT
 	cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
 	chown --reference=. latencies-$REPORT
 	chown --reference=. config-$REPORT
+	echo
+	echo "saved kernel configuration to : config-$REPORT"
+	echo "saved test results to         : latencies-$REPORT"
     fi
     rm $LATENCY_TEST_DIR/latencies.dat
     rm $SWITCHES_TEST_DIR/switches.dat
@@ -312,12 +401,21 @@ function download_newlib {
 	echo "keep already downloaded newlib sources"
     else
 	echo "download newlib"
+	echo "  the password is \"anoncvs\""
 	mkdir newlib
 	cd newlib
 	cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src login  # password: anoncvs
 	cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src co newlib
+	date +"%F %H:%M" > revision.txt
 	mkdir install
     fi
+}
+
+function install_newlib {
+    cd /usr/local/src/newlib
+    cd src/newlib
+    make install
+    NEW_NEWLIB=true
 }
 
 function build_newlib {
@@ -329,7 +427,7 @@ function build_newlib {
 	./configure --prefix=/usr/local/src/newlib/install --disable-shared CFLAGS="-O2 -mcmodel=kernel"
 	make -j$(grep -c "^processor" /proc/cpuinfo)
 	make install
-	NEW_NEWLIB=yes
+	NEW_NEWLIB=true
     fi
 }
 
@@ -380,14 +478,21 @@ function download_rtai {
 	    wget https://www.rtai.org/userfiles/downloads/RTAI/${RTAI_DIR}.tar.bz2
 	    tar xf ${RTAI_DIR}.tar.bz2
 	fi
+	date +"%F %H:%M" > $RTAI_DIR/revision.txt
     fi
     ln -sfn $RTAI_DIR rtai
 }
 
+function install_rtai {
+    cd /usr/local/src/rtai
+    make install
+    NEW_RTAI=true
+}
+
 function build_rtai {
     cd /usr/local/src/rtai
-    if test $NEW_KERNEL || test $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko; then
-	cp base/arch/${RTAI_PATCH%/*/*}/defconfig .rtai_config
+    if $NEW_KERNEL || $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko; then
+	cp base/arch/${MACHINE}/defconfig .rtai_config
 	patch <<EOF
 --- .defconfig  	2015-04-07 23:36:27.879550619 +0200
 +++ .rtai_config	2015-04-07 23:41:44.834414279 +0200
@@ -448,7 +553,7 @@ EOF
         make oldconfig
 	make
 	make install
-	NEW_RTAI=yes
+	NEW_RTAI=true
     else
 	echo "keep already built rtai modules"
     fi
@@ -489,17 +594,28 @@ function download_comedi {
     else
 	echo "download comedi"
 	git clone git://comedi.org/git/comedi/comedi.git
+	date +"%F %H:%M" > comedi/revision.txt
     fi
 }
 
+function install_comedi {
+    cd /usr/local/src/comedi
+    make install
+    depmod -a
+    cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi/
+    cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
+    cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
+    NEW_COMEDI=true
+}
+
 function build_comedi {
-    if test $NEW_RTAI = yes || ! test -f /usr/local/src/comedi/comedi/comedi.o; then
+    if $NEW_RTAI || ! test -f /usr/local/src/comedi/comedi/comedi.o; then
 	cd /usr/local/src/comedi
 	cp /usr/realtime/modules/Module.symvers comedi/
 	./autogen.sh
 	PATH="$PATH:/usr/realtime/bin"
 	./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
-	if test $NEW_RTAI= yes; then
+	if $NEW_RTAI; then
 	    make clean
 	fi
 	make -j$(grep -c "^processor" /proc/cpuinfo)
@@ -508,7 +624,7 @@ function build_comedi {
 	cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi/
 	cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
 	cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
-	NEW_COMEDI=yes
+	NEW_COMEDI=true
     else
 	echo "keep already installed comedi modules"
     fi
@@ -549,6 +665,8 @@ function full_install {
 
     install_packages
 
+    uninstall_kernel
+
     download_rtai
     download_newlib
     download_comedi
@@ -568,14 +686,18 @@ function full_install {
 }
 
 function reconfigure {
-    RECONFIGURE_KERNEL=yes
-    NEW_KERNEL_CONFIG=no
+    RECONFIGURE_KERNEL=true
+    NEW_KERNEL_CONFIG=false
     check_root
+
+    uninstall_kernel
+    uninstall_newlib
+    uninstall_rtai
+    uninstall_comedi
 
     unpack_kernel
     patch_kernel
     build_kernel
-
     build_newlib
     build_rtai
     build_comedi
@@ -606,7 +728,7 @@ function download_all {
 
 function build_all {
     check_root
-    if test -z $1; then
+    if test -z "$1"; then
 	unpack_kernel
 	patch_kernel
 	build_kernel
@@ -633,9 +755,28 @@ function build_all {
     fi
 }
 
+function install_all {
+    check_root
+    if test -z "$1"; then
+	install_kernel
+	install_newlib
+	install_rtai
+	install_comedi
+    else
+	for TARGET; do
+	    case $TARGET in
+		kernel ) install_kernel ;;
+		newlib ) install_newlib ;;
+		rtai ) install_rtai ;;
+		comedi ) install_comedi ;;
+	    esac
+	done
+    fi
+}
+
 function clean_all {
     check_root
-    if test -z $1; then
+    if test -z "$1"; then
 	clean_kernel
 	clean_newlib
 	clean_rtai
@@ -654,7 +795,7 @@ function clean_all {
 
 function uninstall_all {
     check_root
-    if test -z $1; then
+    if test -z "$1"; then
 	uninstall_kernel
 	uninstall_newlib
 	uninstall_rtai
@@ -673,7 +814,7 @@ function uninstall_all {
 
 function remove_all {
     check_root
-    if test -z $1; then
+    if test -z "$1"; then
 	remove_kernel
 	remove_newlib
 	remove_rtai
@@ -713,6 +854,15 @@ elif test "x$1" = "x-r"; then
 	echo "you need to specify an rtai distribution after the -r option"
 	exit 1
     fi
+elif test "x$1" = "x-k"; then
+    shift
+    if test "x$1" != "xreconfigure"; then
+	LINUX_KERNEL=$1
+	shift
+    else
+	echo "you need to specify a linux kernel version after the -k option"
+	exit 1
+    fi
 fi
 
 ACTION=$1
@@ -728,6 +878,7 @@ case $ACTION in
     packages ) intall_packages ;;
     download ) download_all $@ ;;
     build ) build_all $@ ;;
+    install ) install_all $@ ;;
     clean ) clean_all $@ ;;
     uninstall ) uninstall_all $@ ;;
     remove ) remove_all $@ ;;
