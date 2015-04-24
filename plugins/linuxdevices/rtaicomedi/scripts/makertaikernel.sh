@@ -3,7 +3,7 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-KERNEL_PATH=/data/src       # where to put and compile the kernel
+KERNEL_PATH=/usr/src       # where to put and compile the kernel
 LINUX_KERNEL="3.14.17"      # linux vanilla kernel version
 KERNEL_SOURCE_NAME="rtai"   # name for kernel source directory to be appended to LINUX_KERNEL
 KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL (set with -n)
@@ -19,7 +19,8 @@ RTAI_PATCH="hal-linux-3.14.17-x86-6x.patch" # rtai patch to be used
 # some global variables:
 
 RECONFIGURE_KERNEL=false
-NEW_KERNEL_CONFIG=true
+NEW_KERNEL_CONFIG=false
+KERNEL_CONFIG="old" # for oldconfig from the running kernel, or "def" for the defconfig target.
 
 NEW_KERNEL=false
 NEW_RTAI=false
@@ -30,7 +31,6 @@ MACHINE=$(uname -m)
 if test "x$MACHINE" = "xx86_64"; then
     MACHINE="x86"
 fi
-echo $MACHINE
 
 
 ###########################################################################
@@ -39,7 +39,7 @@ function print_usage {
     echo "Download and build everything needed for an rtai-patched linux kernel with comedi and math support."
     echo ""
     echo "usage:"
-    echo "sudo makertaikernel [-n xxx] [-r xxx] [action [target1 [target2 ... ]]]"
+    echo "sudo makertaikernel [-n xxx] [-r xxx] [-k xxx] [-c xxx] [action [target1 [target2 ... ]]]"
     echo ""
     echo "-n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})"
     echo "-k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})"
@@ -47,6 +47,10 @@ function print_usage {
     echo "        magma: current rtai development version (default)"
     echo "        rtai-4.1: rtai release version 4.1"
     echo "        RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github"
+    echo "-c xxx: generate a new kernel configuration:"
+    echo "        old: use the kernel configuration of the currently running kernel"
+    echo "        /full/path/to/ config/file: provide a particular configuration file"
+    echo "        def: generate a kernel configuration using make defconfig"
     echo ""
     echo "action can be one of"
     echo "  help       : display this help message"
@@ -155,7 +159,7 @@ function install_kernel {
     cd /usr/src/linux
     if test -f ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb; then
 	dpkg -i ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb
-	GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep 3.14.17-rtai1 | head -n 1)"
+	GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep ${LINUX_KERNEL}-${KERNEL_NAME} | head -n 1)"
 	grub-reboot "$GRUBMENU"
     else
 	echo "no kernel to install"
@@ -174,8 +178,21 @@ function build_kernel {
 
 	if $NEW_KERNEL_CONFIG; then
 	    # kernel configuration:
-	    cp /boot/config-`uname -r` .config
-	    make olddefconfig
+	    if test "x$KERNEL_CONFIG" = "xdef"; then
+		echo "use default configuration"
+		make defconfig
+	    elif test "x$KERNEL_CONFIG" = "xold"; then
+		echo "use configuration from running kernel"
+		cp /boot/config-`uname -r` .config
+		make olddefconfig
+	    elif test -f "$KERNEL_CONFIG"; then
+		echo "use configuration from $KERNEL_CONFIG"
+		cp "$KERNEL_CONFIG" .config
+		make olddefconfig
+	    else
+		echo "unknown kernel configuration $KERNEL_CONFIG"
+		exit 0
+	    fi
 	    yes "" | make localmodconfig
 	else
 	    echo "keep already existing .configure file for linux-${LINUX_KERNEL}-${KERNEL_NAME}."
@@ -223,7 +240,7 @@ function remove_kernel {
     fi
 }
 
-function test_kernel {
+function test_rtaikernel {
     if test $(uname -r) != ${LINUX_KERNEL}-${KERNEL_NAME}; then
 	echo "Need a running rtai kernel!"
 	echo "First boot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel."
@@ -235,8 +252,8 @@ function test_kernel {
     LASTREPORT="$(ls latencies-${LINUX_KERNEL}-${RTAI_DIR}-*-* | tail -n 1)"
     if test -n "$LASTREPORT"; then
 	LASTREPORT="${LASTREPORT#latencies-${LINUX_KERNEL}-${RTAI_DIR}-}"
-	N="${LASTREPORT%-*}"
-	N=$(($N+1))
+	N="${LASTREPORT%-*-*}"
+	N=$(expr $N + 1)
 	NUM="$(printf "%03d" $N)"
     fi
 
@@ -251,8 +268,24 @@ function test_kernel {
     else
 	echo "rtai_math is not available"
     fi
-    #udevadm trigger  # for comedi
-    #lsmod | grep -q kcomedilib || { modprobe kcomedilib && echo "loaded kcomedilib"; }
+
+    # loading comedi:
+    echo -n "triggering comedi "
+    udevadm trigger
+    sleep 1
+    echo -n "."
+    sleep 1
+    echo -n "."
+    sleep 1
+    echo "."
+    modprobe kcomedilib && echo "loaded kcomedilib"
+
+    # remove comedi modules:
+    modprobe -r kcomedilib && echo "removed kcomedilib"
+    for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+	modprobe -r $i && echo "removed $i"
+    done
+    modprobe -r comedi && echo "removed comedi"
 
     # remove rtai modules:
     lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
@@ -274,7 +307,7 @@ function test_kernel {
 	    echo
 	    echo "dmesg:"
 	    echo
-	    dmesg | tail -n 40 | grep RTAI
+	    dmesg | tail -n 50
 	} > latencies-$REPORT
 	cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
 	chown --reference=. latencies-$REPORT
@@ -311,6 +344,7 @@ function test_kernel {
 	echo "and run"
 	echo "$ restart rsyslog"
 	echo
+	rm $LATENCY_TEST_DIR/latencies.dat
 	return 1
     fi
     SWITCHES_TEST_DIR=/usr/realtime/testsuite/kern/switches
@@ -377,7 +411,7 @@ function test_kernel {
 	    fi
 	    echo "dmesg:"
 	    echo
-	    dmesg | tail -n 40 | grep RTAI
+	    dmesg | tail -n 50
 	} > latencies-$REPORT
 	cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
 	chown --reference=. latencies-$REPORT
@@ -605,25 +639,27 @@ function install_comedi {
     cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi/
     cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
     cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
+    udevadm trigger
     NEW_COMEDI=true
 }
 
 function build_comedi {
     if $NEW_RTAI || ! test -f /usr/local/src/comedi/comedi/comedi.o; then
 	cd /usr/local/src/comedi
-	cp /usr/realtime/modules/Module.symvers comedi/
 	./autogen.sh
 	PATH="$PATH:/usr/realtime/bin"
 	./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
 	if $NEW_RTAI; then
 	    make clean
 	fi
+	cp /usr/realtime/modules/Module.symvers comedi/
 	make -j$(grep -c "^processor" /proc/cpuinfo)
 	make install
 	depmod -a
 	cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi/
 	cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
 	cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
+	udevadm trigger
 	NEW_COMEDI=true
     else
 	echo "keep already installed comedi modules"
@@ -661,6 +697,7 @@ function remove_comedi {
 # actions:
 
 function full_install {
+    NEW_KERNEL_CONFIG=true
     check_root
 
     install_packages
@@ -687,7 +724,6 @@ function full_install {
 
 function reconfigure {
     RECONFIGURE_KERNEL=true
-    NEW_KERNEL_CONFIG=false
     check_root
 
     uninstall_kernel
@@ -845,7 +881,8 @@ if test "x$1" = "x-n"; then
 	echo "you need to specify a name for the kernel after the -n option"
 	exit 1
     fi
-elif test "x$1" = "x-r"; then
+fi
+if test "x$1" = "x-r"; then
     shift
     if test -n "$1" && test "x$1" != "xreconfigure"; then
 	RTAI_DIR=$1
@@ -854,13 +891,25 @@ elif test "x$1" = "x-r"; then
 	echo "you need to specify an rtai distribution after the -r option"
 	exit 1
     fi
-elif test "x$1" = "x-k"; then
+fi
+if test "x$1" = "x-k"; then
     shift
-    if test "x$1" != "xreconfigure"; then
+    if test -n "$1" && test "x$1" != "xreconfigure"; then
 	LINUX_KERNEL=$1
 	shift
     else
 	echo "you need to specify a linux kernel version after the -k option"
+	exit 1
+    fi
+fi
+if test "x$1" = "x-c"; then
+    shift
+    if test -n "$1" && test "x$1" != "xreconfigure"; then
+	KERNEL_CONFIG=$1
+	NEW_KERNEL_CONFIG=true
+	shift
+    else
+	echo "you need to specify a kernel configuration after the -c option"
 	exit 1
     fi
 fi
@@ -873,7 +922,7 @@ case $ACTION in
 
     reconfigure ) reconfigure ;;
 
-    test ) test_kernel ;;
+    test ) test_rtaikernel ;;
 
     packages ) intall_packages ;;
     download ) download_all $@ ;;

@@ -59,22 +59,34 @@ sudo ./makertaikernel
    \code
 sudo ./makertaikernel test
    \endcode
-   The result of the test is written into the file latencies-3.14.17-rtai-XXX-DATE
-   and the corresponding kernel configuration is saved in config-3.14.17-rtai-XXX-DATE
-   in the current directory. XXX is replaced by a short string that you can enter during the test
-   and DATE is replaced by the current date and time.
+   The result of the test is written into the file
+   latencies-3.14.17-RTAI-XXX-NAME-QUALITY and the corresponding
+   kernel configuration is saved in
+   config-3.14.17-RTAI-XXX-NAME_QUALITY in the current directory. RTAI
+   is replaced by your choice of rtai source (e.g. magam, rtai-41., or
+   RTAI), XXX is replaced by number, NAME and QUALITY are short
+   strings describing your kernel configuration and the test
+   performance that you can enter during the test.
 
    See also \ref installrtai step 6 and 7 for more testing options and troubleshooting.
 
--# If the results are not good, then reboot into your standard kernel,
-   uninstall the rtai kernel, and build a new version of the kernel
+-# If the results are not good, then build a new version of the kernel
    with a different configuration:
    \code
-sudo ./makertaikernel uninstall
-sudo ./makertaikernel reconfigure
+sudo ./makertaikernel -n rtai1 reconfigure
    \endcode
-   Continue with step 5.
-
+   reboot into the rtai1 kernel, then uninstall the previous kernel (if you want), test the new kernel, reconfigure again yet another kernel (with a different name):
+   \code
+sudo ./makertaikernel -n rtai1 test
+sudo ./makertaikernel -n rtai uninstall
+sudo ./makertaikernel -n rtai2 reconfigure
+   \endcode
+   reboot, and do the sam e with the right kernel names:
+   \code
+sudo ./makertaikernel -n rtai2 test
+sudo ./makertaikernel -n rtai1 uninstall kernel
+sudo ./makertaikernel -n rtai1 reconfigure
+   \endcode
 -# Once you are satisified, continue with \ref installrelacs .
 
 For further options of the \c makertaikernel script see
@@ -301,39 +313,62 @@ make install
   This takes quite a while.
 
 -# If necessary, install third party kernel modules as well,
-like for example the ones for your graphics board.
-(The following is probably outdated) For your nvidia graphics board, download the driver from
-http://www.nvidia.com/Download/index.aspx?lang=en-us.
-Install it by calling
-\code
-$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 3.14.17-rtai -K
-\endcode
-(replace 3.14.17-rtai by the name of the kernel where you want to install the nvidia driver,
-i.e. the string '\c uname \c -r' would return if that kernel is running).
+   like for example the ones for your graphics board.
+   (The following is probably outdated) For your nvidia graphics board, download the driver from
+   http://www.nvidia.com/Download/index.aspx?lang=en-us.
+   Install it by calling
+   \code
+   sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 3.14.17-rtai -K
+   \endcode
+   (replace 3.14.17-rtai by the name of the kernel where you want to install the nvidia driver,
+   i.e. the string '\c uname \c -r' would return if that kernel is running).
 
--# Update your boot loader:
-\code
-update-grub
-\endcode
-    The output of \c update-grub should mention your new kernel image.
-    You can configure \c grub \c v2 by editing the file \c /etc/default/grub .
-    To get the boot menu that you need to select the kernel you want to boot
-    you should for example unset the \c GRUB_HIDDEN_TIMEOUT and set the
-    \c GRUB_TIMEOUT appropriately in that file. For example:
-    \code
+-# Configure your boot loader by editing the file \c /etc/default/grub (for \c grub \c v2):
+   - To get the boot menu that you need to select the kernel you want to boot
+     you should for example unset the \c GRUB_HIDDEN_TIMEOUT and set the
+     \c GRUB_TIMEOUT appropriately in that file. For example:
+     \code
 #GRUB_HIDDEN_TIMEOUT=0
 #GRUB_HIDDEN_TIMEOUT_QUIET=true
-GRUB_TIMEOUT=10
-\endcode
+GRUB_TIMEOUT=5
+     \endcode
 
-    Also, if you do not like that grub puts your rtai kernel into a subsection called
-    'Previous linux versions', then make sure in \c /etc/default/grub you have a line
-    \code
+   - If you do not like that grub puts your rtai kernel into a subsection called
+     'Previous linux versions', then make sure you have a line
+     \code
 GRUB_DISABLE_SUBMENU=y
+     \endcode
+     Older version do not support this option, for a workaround see below.
+
+   - With disabled acpi your rtai-patched linux kernel might not properly reboot. Try
+     \code
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash reboot=triple"
+     \endcode
+     See \c /usr/src/linux/Documentation/x86/x86_64/boot-options.txt
+     for more options for the reboot parameter.
+
+   - You can set the GRUB_DEFAULT variable to
+     tell grub which kernel to boot by default. It can be a integer
+     number (first kernel is 0), or something like 2>0 if your kernel
+     is in a submenu, or, instead of the integers, you can put in the grub menu entry.
+     Check
+     \code
+sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
+     \endcode
+     for all available menu entries.
+
+     When testing rtai kernels it might be sensible to set the default kernel to one that
+     is working.
+    .
+    After changing \c /etc/default/grub simply run
+    \code
+update-grub
     \endcode
-    Run \c update-grub to apply the changes.
+    to apply the changes.
+    The output of \c update-grub should mention your new kernel image.
 
     For older grub2 versions you need to comment out the following lines in \c /etc/grub.d/10_linux
+    to get rid of the submenu in grub:
     \code
 #  if [ "$list" ] && ! $in_submenu; then
 #    echo "submenu \"Previous Linux versions\" {"
@@ -352,19 +387,6 @@ sudo cp 10_linux 11_linux
 sudo chmod a-x 10_linux
     \endcode
     After editing run \c update-grub to apply the changes.
-
-    In \c /etc/default/grub you can set the GRUB_DEFAULT variable to
-    tell grub which kernel to boot by default. It can be a integer
-    number (first kernel is 0), or something like 2>0 if your kernel
-    is in a submenu, or, instead of the integers, you can put in the grub menu entry.
-    Check
-    \code
-sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
-    \endcode
-    for all available menu entries.
-
-    When testing rtai kernels it might be sensible to set the default kernel to one that
-    is working.
 
     You can tell grub to use your new rtai kernel after the next reboot by calling
     \code
@@ -602,6 +624,19 @@ cd /usr/realtime/testsuite/kern/preempt
    and \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL for some hints. 
    This is the art of creating a good real-time kernel...
 
+   Some hints:
+   - Device Drivers:
+     - Generic Thermal sysfs driver: Disable as much as possible. (great for latencies but no effect on periodic tasks...)
+     - "USB Support": Some USB modules might be bad. Disable USB completely. Use PS2 mouse and keyboard.
+     - Keep "Multiple devices driver support (RAID and LVM) -> Device mapper support" (somehow needed for grub)
+     - Keep "Real Time Clock"
+     - dvfs does not matter
+     - sound might be ok
+     .
+   - Disable all dma transfers by setting \c libata.dma=0 as a kernel parameter.
+   - Try to disable things in the BIOS.
+   .
+
 -# For further improving the RTAI performance, you might want to reserve at least one CPU
    for RTAIIf on a multi-core machine. You can isolate CPUs by using the kernel parameter
    \code
@@ -619,12 +654,9 @@ yourself according to the following instructions:
 -# Login as root
 -# Remove all comedi modules:
 \code
-IFSORG="$IFS"
-IFS=","
-for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ print $4}'); do
-  modprobe -r $i
+for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+    modprobe -r $i && echo "removed $i"
 done
-IFS="$IFSORG"
 \endcode
 -# Remove all installed comedi stuff:
 \code
@@ -709,26 +741,22 @@ make clean
 \endcode
 -# Select features of the dynamic clamp module by commenting or uncommenting the defines
 at the top of the file \c plugins/linuxdevices/rtaicomedi/module/moduledef.h.
--# Compile the dynamic clamp plugins and the kernel module in 
-\c plugins/linuxdevices/rtaicomedi:
+-# Implement your dynamic clamp model in the file \c plugins/linuxdevices/rtaicomedi/module/model.c .
+-# Compile the dynamic clamp plugins and the kernel module
 \code
+cd plugins/linuxdevices/rtaicomedi
 make -j$(grep -c "^processor" /proc/cpuinfo)
 \endcode
 -# If you get an "-mpreferred-stack-boundary" error uncomment line 4 in \c plugins/linuxdevices/rtaicomedi/module/Makefile.in and run \c make again.
 -# Load the dynamic-clamp kernel module (as root):
 \code
-cd plugins/linuxdevices/rtaicomedi/module
-sudo ./loadmodules.sh
-cd -
+sudo module/loadmodules.sh
 \endcode
--# If you want to load the dynamic-clamp kernel module automatically during 
-the boot process, then call the \c loadmodules.sh script from the script
-\c /etc/rc.local . Simply add a line like this
+-# Run RELACS in \c plugins/linuxdevices/rtaicomedi :
 \code
-/where/ever/the/script/is/located/loadmodules.sh
+./relacslocal
 \endcode
-to \c /etc/rc.local (as root).
--# Run RELACS
+or with the patchclamp plugins:
 \code
 cd plugins/patchclamp
 cp relacs.cfg.dynclamp relacs.cfg
@@ -739,26 +767,51 @@ cp relacs.cfg.dynclamp relacs.cfg
     - You might not have 
       sufficient permissions for reading and writing to the 
       \c /dev/comedi* devices. For a quick fix do
-      as root
       \code
-chmod a+rw /dev/comedi*
+sudo chmod a+rw /dev/comedi*
       \endcode
       See \ref udev below for a better solution.
-    - The %comedi and rtai modules are not properly loaded.
-    - The %comedi device is not configured yet.
+    - The %comedi and rtai modules are not properly loaded: check the output of \c module/loadmodules.sh and \c dmesg.
+    - The %comedi device is not configured yet (should not be a problem with a recent comedi version).
     .
-  - Performance is bad / RELACS regularly hangs for a few seconds / RELACS seems to be slowed down dramatically.
-    - Disable APM and ACPI by adding \c "apm=off" and \c acpi=off to the kernel parameter in the \c kernel line of the
+  - Performance is bad / RELACS regularly hangs for a few seconds / RELACS seems to be slowed down dramatically:
+    - Improve your rtai kernel! Recompile with "some" device modules disabled.
+    - You may also try to disable APM and ACPI by adding \c "apm=off" and \c acpi=off to the kernel parameter in the \c kernel line of the
       \c grub menu in \c /boot/grub/menu.lst .
     .
   .
--# When developing model.c or even dynclampmodule.c, then
+-# When developing your dynamic clamp model in \c model.c or if you dare to modify \c dynclampmodule.c, then
 \code
 cd plugins/linuxdevices/rtaicomedi
 # whenever you changed something, do:
 make
 sudo module/reloadmodule.sh
 \endcode
+Your \c model.c implementation can be tested without RTAI in the simulation mode of relacs. Make sure your \c relacs.cfg file hast the following device sections:
+\code
+*Analog Input Devices
+  Device1:
+      plugin: [ DynClampAnalogInput, DynClampAISim ]
+      device: /dev/comedi0
+      ident : ai-1
+
+*Analog Output Devices
+  Device1:
+      plugin: [ DynClampAnalogOutput, DynClampAOSim ]
+      device: /dev/comedi0
+      ident : ao-1
+\endcode
+Then call \c relacs with the \c -3 option:
+\code
+./relacslocal -3
+\endcode
+-# If you want to load the dynamic-clamp kernel module automatically during 
+the boot process, then call the \c loadmodules.sh script from the script
+\c /etc/rc.local . Simply add a line like this
+\code
+/where/ever/the/script/is/located/loadmodules.sh
+\endcode
+to \c /etc/rc.local (as root).
 
 \section udev Setting up udev permissions for comedi device files
 
