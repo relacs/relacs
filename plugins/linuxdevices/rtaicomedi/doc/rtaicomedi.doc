@@ -241,7 +241,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
        compilation)
      .
    - Processor type and features: 
-     - Select "Symmetric multi-processing support"
+     - Select "Symmetric multi-processing support" if you have a multiprocessor machine, otherwise deselect it
      - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
      - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
        check \c "help" to find out, which Processor family you have to select)

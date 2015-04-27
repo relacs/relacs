@@ -3,10 +3,11 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-KERNEL_PATH=/usr/src       # where to put and compile the kernel
-LINUX_KERNEL="3.14.17"      # linux vanilla kernel version
+KERNEL_PATH=/data/src       # where to put and compile the kernel
+LINUX_KERNEL="3.14.17"      # linux vanilla kernel version (set with -k)
 KERNEL_SOURCE_NAME="rtai"   # name for kernel source directory to be appended to LINUX_KERNEL
-KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL (set with -n)
+KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL 
+                            # (set with -n)
 
 RTAI_DIR="magma"            # name of the rtai source directory (set with -r):
                             #   magma: current development version
@@ -20,17 +21,27 @@ RTAI_PATCH="hal-linux-3.14.17-x86-6x.patch" # rtai patch to be used
 
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
-KERNEL_CONFIG="old" # for oldconfig from the running kernel, or "def" for the defconfig target.
+KERNEL_CONFIG="old" # for oldconfig from the running kernel,
+                    # "def" for the defconfig target,
+                    # or a full path to a config file.
+RTAI_MENU=false
 
 NEW_KERNEL=false
 NEW_RTAI=false
 NEW_NEWLIB=false
 NEW_COMEDI=false
 
+FULL_COMMAND_LINE="$@"
+
 MACHINE=$(uname -m)
-if test "x$MACHINE" = "xx86_64"; then
-    MACHINE="x86"
+RTAI_MACHINE=$MACHINE
+if test "x$RTAI_MACHINE" = "xx86_64"; then
+    RTAI_MACHINE="x86"
+elif test "x$RTAI_MACHINE" = "xi686"; then
+    RTAI_MACHINE="x86"
 fi
+
+CPU_NUM=$(grep -c "^processor" /proc/cpuinfo)
 
 
 ###########################################################################
@@ -39,7 +50,7 @@ function print_usage {
     echo "Download and build everything needed for an rtai-patched linux kernel with comedi and math support."
     echo ""
     echo "usage:"
-    echo "sudo makertaikernel [-n xxx] [-r xxx] [-k xxx] [-c xxx] [action [target1 [target2 ... ]]]"
+    echo "sudo makertaikernel [-n xxx] [-r xxx] [-k xxx] [-c xxx] [-m] [action [target1 [target2 ... ]]]"
     echo ""
     echo "-n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})"
     echo "-k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})"
@@ -51,12 +62,14 @@ function print_usage {
     echo "        old: use the kernel configuration of the currently running kernel"
     echo "        /full/path/to/ config/file: provide a particular configuration file"
     echo "        def: generate a kernel configuration using make defconfig"
+    echo "-m    : enter the RTAI configuration menu"
     echo ""
     echo "action can be one of"
     echo "  help       : display this help message"
     echo "  packages   : install required packages"
     echo "  download   : download missing sources of the specified targets"
-    echo "  build      : compile and install the specified targets and the depending ones if needed"
+    echo "  build      : compile and install the specified targets"
+    echo "               and the depending ones if needed"
     echo "  install    : install the specified targets"
     echo "  clean      : clean the source trees the specified targets"
     echo "  uninstall  : uninstall the specified targets"
@@ -75,7 +88,7 @@ function print_usage {
     echo "Common use cases:"
     echo ""
     echo "sudo makertaikernel"
-    echo "  download and build all targets. A new configuration for the kernel is generates"
+    echo "  download and build all targets. A new configuration for the kernel is generated"
     echo ""
     echo "sudo makertaikernel reconfigure"
     echo "  build all targets using the existing configuration of the kernel"
@@ -90,7 +103,9 @@ function print_usage {
 
 function check_root {
     if test "x$(id -u)" != "x0"; then
-	echo "you need to be root to run this script"
+	echo "You need to be root to run this script!"
+	echo "Try:"
+	echo "  sudo $0 ${FULL_COMMAND_LINE}"
 	exit 1
     fi
 }
@@ -100,7 +115,7 @@ function check_root {
 # packages:
 function install_packages {
     # required packages:
-    apt-get -y install make gcc libncurses-dev zlib1g-dev kernel-package g++ git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
+    apt-get -y install make gcc libncurses-dev zlib1g-dev kernel-package g++ cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
 }
 
 ###########################################################################
@@ -119,7 +134,7 @@ function download_kernel {
 	echo "choose one from the following list of available rtai patches (most recent one is a t the bottom)"
 	echo "and pass it to this script via the -k option:"
 	echo
-	ls -rt /usr/local/src/rtai/base/arch/$MACHINE/patches/*.patch | tail -n 10 | while read LINE; do echo ${LINE#/usr/local/src/rtai/base/arch/$MACHINE/patches/}; done
+	ls -rt /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/*.patch | tail -n 10 | while read LINE; do echo ${LINE#/usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/}; done
 	exit 0
     fi
 }
@@ -147,18 +162,19 @@ function patch_kernel {
     cd /usr/src/linux
     if $NEW_KERNEL; then
 	if -z "$RTAI_PATCH"; then
-	    RTAI_PATCH="$(ls -rt /usr/local/src/rtai/base/arch/$MACHINE/patches/*-${LINUX_KERNEL}-*.patch | tail -n 1)"
-	    RTAI_PATCH="${RTAI_PATCH#/usr/local/src/rtai/base/arch/$MACHINE/patches/}"
+	    RTAI_PATCH="$(ls -rt /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/*-${LINUX_KERNEL}-*.patch | tail -n 1)"
+	    RTAI_PATCH="${RTAI_PATCH#/usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/}"
 	fi
 	echo "apply rtai patch $RTAI_PATCH to kernel sources"
-	patch -p1 < /usr/local/src/rtai/base/arch/$MACHINE/patches/$RTAI_PATCH
+	patch -p1 < /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH
     fi
 }
 
 function install_kernel {
-    cd /usr/src/linux
-    if test -f ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb; then
-	dpkg -i ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb
+    cd "$KERNEL_PATH"
+    KERNEL_PACKAGE=$(ls linux-image-${LINUX_KERNEL}-${KERNEL_NAME}*.deb | tail -n 1)
+    if test -f "$KERNEL_PACKAGE"; then
+	dpkg -i "$KERNEL_PACKAGE"
 	GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep ${LINUX_KERNEL}-${KERNEL_NAME} | head -n 1)"
 	grub-reboot "$GRUBMENU"
     else
@@ -199,7 +215,7 @@ function build_kernel {
 	fi
 
 	# build the kernel:
-	export CONCURRENCY_LEVEL=$(grep -c "^processor" /proc/cpuinfo)
+	export CONCURRENCY_LEVEL=$CPU_NUM
 	make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
 
 	# install:
@@ -235,8 +251,9 @@ function remove_kernel {
 	echo "remove kernel package $KERNEL_PATH/linux-$LINUX_KERNEL.tar.xz"
 	rm linux-$LINUX_KERNEL.tar.xz
     fi
-    if test -f ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb; then
-	rm ../linux-image-${LINUX_KERNEL}-${KERNEL_NAME}_1.0_amd64.deb
+    KERNEL_PACKAGE=$(ls linux-image-${LINUX_KERNEL}-${KERNEL_NAME}*.deb | tail -n 1)
+    if test -f "$KERNEL_PACKAGE"; then
+	rm "$KERNEL_PACKAGE"
     fi
 }
 
@@ -269,23 +286,25 @@ function test_rtaikernel {
 	echo "rtai_math is not available"
     fi
 
-    # loading comedi:
-    echo -n "triggering comedi "
-    udevadm trigger
-    sleep 1
-    echo -n "."
-    sleep 1
-    echo -n "."
-    sleep 1
-    echo "."
-    modprobe kcomedilib && echo "loaded kcomedilib"
+    if ! $RTAIMOD_FAILED; then
+	# loading comedi:
+	echo -n "triggering comedi "
+	udevadm trigger
+	sleep 1
+	echo -n "."
+	sleep 1
+	echo -n "."
+	sleep 1
+	echo "."
+	modprobe kcomedilib && echo "loaded kcomedilib"
 
-    # remove comedi modules:
-    modprobe -r kcomedilib && echo "removed kcomedilib"
-    for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
-	modprobe -r $i && echo "removed $i"
-    done
-    modprobe -r comedi && echo "removed comedi"
+	# remove comedi modules:
+	modprobe -r kcomedilib && echo "removed kcomedilib"
+	for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+	    modprobe -r $i && echo "removed $i"
+	done
+	modprobe -r comedi && echo "removed comedi"
+    fi
 
     # remove rtai modules:
     lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
@@ -431,7 +450,7 @@ function test_rtaikernel {
 
 function download_newlib {
     cd /usr/local/src
-    if test -d newlib; then
+    if test -d newlib/src/newlib; then
 	echo "keep already downloaded newlib sources"
     else
 	echo "download newlib"
@@ -454,12 +473,16 @@ function install_newlib {
 
 function build_newlib {
     cd /usr/local/src/newlib
-    if test -f install/lib/libm.a; then
+    if test -f install/$MACHINE/lib/libm.a; then
 	echo "keep already installed newlib library"
     else
 	cd src/newlib
-	./configure --prefix=/usr/local/src/newlib/install --disable-shared CFLAGS="-O2 -mcmodel=kernel"
-	make -j$(grep -c "^processor" /proc/cpuinfo)
+	NEWLIB_CFLAGS="-O2"
+	if test "$(grep CONFIG_64BIT /usr/src/linux/.config)" = 'CONFIG_64BIT=y'; then
+	    NEWLIB_CFLAGS="-O2 -mcmodel=kernel"
+	fi
+	./configure --prefix=/usr/local/src/newlib/install --disable-shared --host="$MACHINE" CFLAGS="${NEWLIB_CFLAGS}"
+	make -j$CPU_NUM
 	make install
 	NEW_NEWLIB=true
     fi
@@ -526,7 +549,7 @@ function install_rtai {
 function build_rtai {
     cd /usr/local/src/rtai
     if $NEW_KERNEL || $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko; then
-	cp base/arch/${MACHINE}/defconfig .rtai_config
+	cp base/arch/${RTAI_MACHINE}/defconfig .rtai_config
 	patch <<EOF
 --- .defconfig  	2015-04-07 23:36:27.879550619 +0200
 +++ .rtai_config	2015-04-07 23:41:44.834414279 +0200
@@ -548,7 +571,7 @@ function build_rtai {
  #
  CONFIG_RTAI_FPU_SUPPORT=y
 -CONFIG_RTAI_CPUS="2"
-+CONFIG_RTAI_CPUS="$(grep -c "^processor" /proc/cpuinfo)"
++CONFIG_RTAI_CPUS="$CPU_NUM"
  # CONFIG_RTAI_DIAG_TSC_SYNC is not set
  
  #
@@ -568,7 +591,7 @@ function build_rtai {
 -# CONFIG_RTAI_MATH is not set
 +CONFIG_RTAI_MATH=y
 +CONFIG_RTAI_MATH_LIBM_TO_USE="1"
-+CONFIG_RTAI_MATH_LIBM_DIR="/usr/local/src/newlib/install/lib"
++CONFIG_RTAI_MATH_LIBM_DIR="/usr/local/src/newlib/install/$MACHINE/lib"
 +# CONFIG_RTAI_MATH_KCOMPLEX is not set
  CONFIG_RTAI_MALLOC=y
  # CONFIG_RTAI_USE_TLSF is not set
@@ -585,6 +608,9 @@ function build_rtai {
  # CONFIG_RTAI_RTDM is not set
 EOF
         make oldconfig
+	if $RTAI_MENU; then
+	    make menuconfig
+	fi
 	make
 	make install
 	NEW_RTAI=true
@@ -653,7 +679,7 @@ function build_comedi {
 	    make clean
 	fi
 	cp /usr/realtime/modules/Module.symvers comedi/
-	make -j$(grep -c "^processor" /proc/cpuinfo)
+	make -j$CPU_NUM
 	make install
 	depmod -a
 	cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi/
@@ -912,6 +938,10 @@ if test "x$1" = "x-c"; then
 	echo "you need to specify a kernel configuration after the -c option"
 	exit 1
     fi
+fi
+if test "x$1" = "x-m"; then
+    shift
+    RTAI_MENU=true
 fi
 
 ACTION=$1
