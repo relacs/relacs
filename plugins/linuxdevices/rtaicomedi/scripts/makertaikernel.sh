@@ -454,10 +454,9 @@ function download_newlib {
 	echo "keep already downloaded newlib sources"
     else
 	echo "download newlib"
-	echo "  the password is \"anoncvs\""
 	mkdir newlib
 	cd newlib
-	cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src login  # password: anoncvs
+	cvs -z 9 -d :pserver:anoncvs:anoncvs@sourceware.org:/cvs/src login  # password: anoncvs
 	cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src co newlib
 	date +"%F %H:%M" > revision.txt
 	mkdir install

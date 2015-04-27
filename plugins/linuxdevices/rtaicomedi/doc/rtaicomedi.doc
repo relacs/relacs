@@ -33,29 +33,42 @@ plugins, you need to install an RTAI-patched real-time linux
 kernel, RTAI kernel modules, and comedi, as described in the following
 sections.
 
+You can use a script for installing RTAI as explained in the next
+section \ref quickinstall.
+
+Alternatively, you can do the installation manually as explained in
+the sections \ref installrtaikernel, \ref installnewlib, \ref
+installrtai, \ref testrtai, and \ref installcomedi .
+
+In either case, continue with building the dynamic clamp module of
+relacs as explained in \ref installrelacs .
+
 
 \section quickinstall Installation script
 
 The \c makertaikernel.sh script in \c scripts executes all the
-commands as explained in the following sections to download and built a rtai patched
+commands as explained in the following sections to download and build an rtai patched
 linux kernel, the newlib library, and the rtai and comedi kernel modules.
 
--# \code
-cd scripts
+-# From the relacs source tree go to
+   \code
+cd plugins/linuxdevices/rtaicomedi/scripts
    \endcode
 
 -# Modify the variables at the top of the script to match the kernel
-version and rtai patch you want to use. 
+   version and rtai patch you want to use, and the directory where to
+   build the linux kernel (you need 5-10GB of space there).
 
 -# Then run
    \code
 sudo ./makertaikernel
    \endcode
+   This will download the required sources (takes a while...) and build the kernel.
 
 -# You will get the menu for configuring the kernel. See \ref compilekernel
    step 5 for instructions.
 
--# Reboot into the new kernel and run the latency test by invoking
+-# Reboot into the new kernel and run some tests by invoking
    \code
 sudo ./makertaikernel test
    \endcode
@@ -75,18 +88,23 @@ sudo ./makertaikernel test
    \code
 sudo ./makertaikernel -n rtai1 reconfigure
    \endcode
-   reboot into the rtai1 kernel, then uninstall the previous kernel (if you want), test the new kernel, reconfigure again yet another kernel (with a different name):
+   reboot into the rtai1 kernel, test the new kernel, reconfigure again yet another kernel (with a different name):
    \code
 sudo ./makertaikernel -n rtai1 test
-sudo ./makertaikernel -n rtai uninstall
 sudo ./makertaikernel -n rtai2 reconfigure
    \endcode
-   reboot, and do the sam e with the right kernel names:
+   reboot, and do the same with the right kernel names:
    \code
 sudo ./makertaikernel -n rtai2 test
-sudo ./makertaikernel -n rtai1 uninstall kernel
 sudo ./makertaikernel -n rtai1 reconfigure
    \endcode
+
+   Note that \c makertaikernel \c reconfigure will first uninstall an already existing kernel with the same name.
+   You can recreate this kernel by copying the kernel configuration file saved by  \c makertaikernel \c test to the kernel
+   \code
+sudo cp config-3.14.17-magma-001-noefi-ok /usr/src/linux/.config
+   \endcode
+   before running \c makertaikernel \c reconfigure .
 -# Once you are satisified, continue with \ref installrelacs .
 
 For further options of the \c makertaikernel script see
@@ -338,7 +356,29 @@ GRUB_TIMEOUT=5
      \code
 GRUB_DISABLE_SUBMENU=y
      \endcode
-     Older version do not support this option, for a workaround see below.
+
+     Older version do not support this option, for a workaround do
+     \code
+cd /etc/grub.d/
+sudo cp 10_linux 11_linux
+sudo chmod a-x 10_linux
+     \endcode
+     Then comment out the following lines in \c
+     /etc/grub.d/11_linux to get rid of the submenu in grub:
+     \code
+#  if [ "$list" ] && ! $in_submenu; then
+#    echo "submenu \"Previous Linux versions\" {"
+#    in_submenu=:
+#  fi
+done
+
+#if $in_submenu; then
+#  echo "}"
+#fi
+     \endcode
+     If you apply these changes to \c 10_linux directly, after
+     rebooting the changes in \c 10_linux will disappear. I have no
+     idea why...
 
    - With disabled acpi your rtai-patched linux kernel might not properly reboot. Try
      \code
@@ -359,34 +399,15 @@ sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
 
      When testing rtai kernels it might be sensible to set the default kernel to one that
      is working.
-    .
-    After changing \c /etc/default/grub simply run
-    \code
+
+     See also \c man \c grub-set-default .
+   .
+   After changing \c /etc/default/grub simply run
+   \code
 update-grub
-    \endcode
-    to apply the changes.
-    The output of \c update-grub should mention your new kernel image.
-
-    For older grub2 versions you need to comment out the following lines in \c /etc/grub.d/10_linux
-    to get rid of the submenu in grub:
-    \code
-#  if [ "$list" ] && ! $in_submenu; then
-#    echo "submenu \"Previous Linux versions\" {"
-#    in_submenu=:
-#  fi
-done
-
-#if $in_submenu; then
-#  echo "}"
-#fi
-\endcode
-    Then copy this file to \c 11_linux and make \c 10_linux not executable.
-    Otherwise on reboot your changes in \c 10_linux will disappear. I have no idea why...
-    \code
-sudo cp 10_linux 11_linux
-sudo chmod a-x 10_linux
-    \endcode
-    After editing run \c update-grub to apply the changes.
+   \endcode
+   to apply the changes.
+   The output of \c update-grub should mention your new kernel image.
 
     You can tell grub to use your new rtai kernel after the next reboot by calling
     \code
@@ -627,7 +648,8 @@ cd /usr/realtime/testsuite/kern/preempt
    Some hints:
    - Device Drivers:
      - Generic Thermal sysfs driver: Disable as much as possible. (great for latencies but no effect on periodic tasks...)
-     - "USB Support": Some USB modules might be bad. Disable USB completely. Use PS2 mouse and keyboard.
+     - "USB Support": Some USB modules might be bad. Disable USB completely, 
+       or at least USB 2 and USB 3. Use PS2 mouse and keyboard instead.
      - Keep "Multiple devices driver support (RAID and LVM) -> Device mapper support" (somehow needed for grub)
      - Keep "Real Time Clock"
      - dvfs does not matter
@@ -638,7 +660,7 @@ cd /usr/realtime/testsuite/kern/preempt
    .
 
 -# For further improving the RTAI performance, you might want to reserve at least one CPU
-   for RTAIIf on a multi-core machine. You can isolate CPUs by using the kernel parameter
+   for RTAI on a multi-core machine. You can isolate CPUs by using the kernel parameter
    \code
 isolcpus=0,1
    \endcode
