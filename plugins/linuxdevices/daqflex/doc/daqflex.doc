@@ -25,13 +25,12 @@ for accessing the DAQFlex USB devices. One elegant way to achieve this
 is to create a new group and tell udev to add the usb device files with
 a DAQFlex device to this group.
  
--# Login as root.
 -# Create a new group "iocard":
 \code
-$ addgroup --system iocard
+sudo addgroup --system iocard
 \endcode
 -# Add udev rules. On new (after mid 2012) Linux systems create the file
-\c /lib/udev/rules.d/98-daqflex.rules
+\c /lib/udev/rules.d/98-daqflex.rules (as root)
  and paste the following lines into that file:
 \include 98-daqflex-new.rules
 On older system (prior to mid 2012) create the file
@@ -40,20 +39,20 @@ On older system (prior to mid 2012) create the file
 Both files are also installed to \c \<prefix\>/lib/daqflex/ . So you can simply copy them to the
 right directory. New system:
 \code
-$ cp /usr/lib/daqflex/98-daqflex.rules /lib/udev/rules.d/
+sudo cp /usr/lib/daqflex/98-daqflex.rules /lib/udev/rules.d/
 \endcode Old system:
 \code
-$ cp /usr/lib/daqflex/98-daqflex-old.rules /etc/udev/rules.d/
+sudo cp /usr/lib/daqflex/98-daqflex-old.rules /etc/udev/rules.d/
 \endcode
-(replace \c /usr by whatever path you specified as the prefix for \c ./configure).
+(replace \c /usr by whatever path you specified as the prefix for \c ./configure, \c /usr is the default).
 -# Run
 \code
-$ udevadm trigger
+sudo udevadm trigger
 \endcode
 to apply your new udev rules
 -# Add users to the "iocard" group:
 \code
-$ adduser \<username\> iocard
+sudo adduser \<username\> iocard
 \endcode
 After the next login, \c \<username\> is a member of the \c iocard group
 and and has sufficient permissions to access the DAQFlex data acquisition boards.
@@ -62,11 +61,10 @@ and and has sufficient permissions to access the DAQFlex data acquisition boards
 \section test Testing acquisition
 
 Depending on your system the maximum possible sampling rates for
-analog input and out are lower than the ones the data acquisition
-boards suppports. If they are too high you get error messages (on
-console) about overflows and underruns.
-
-Play around with the sampling rates and the \c readinterval to figure
-out usefull values for stable acquisition.
+analog input and output might be lower than the ones the data
+acquisition boards suppports. This happens in particular with
+simultaneous analog input and output. In case you get error messages
+(also on console) about overflows and underruns you need to reduce the
+sampling rates.
 
 */

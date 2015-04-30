@@ -11,7 +11,7 @@ sudo make uninstall
 make clean
 ./bootstrap.sh
 ./configure
-make -j$(grep -c "^processor" /proc/cpuinfo)"
+make -j$(grep -c "^processor" /proc/cpuinfo)
 sudo make install
 
 
@@ -111,7 +111,7 @@ See ./configure --help and the instructions below for details.
 
 Run
 
-> make -j$(grep -c "^processor" /proc/cpuinfo)"
+> make -j$(grep -c "^processor" /proc/cpuinfo)
 
 That takes a while! The -j options runs as many processes as you have cpu cores in parallel.
 

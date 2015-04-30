@@ -5,16 +5,18 @@
 
 KERNEL_PATH=/data/src       # where to put and compile the kernel
 LINUX_KERNEL="3.14.17"      # linux vanilla kernel version (set with -k)
+#LINUX_KERNEL="3.14.33"      # linux vanilla kernel version (set with -k)
 KERNEL_SOURCE_NAME="rtai"   # name for kernel source directory to be appended to LINUX_KERNEL
 KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL 
                             # (set with -n)
 
 RTAI_DIR="magma"            # name of the rtai source directory (set with -r):
+#RTAI_DIR="rtai-4.1"         # name of the rtai source directory (set with -r):
                             #   magma: current development version
                             #   rtai-4.1: rtai release version 4.1
                             #   RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
 RTAI_PATCH="hal-linux-3.14.17-x86-6x.patch" # rtai patch to be used
-
+#RTAI_PATCH="hal-linux-3.14.33-x86-8.patch"
 
 ###########################################################################
 # some global variables:
@@ -46,6 +48,11 @@ CPU_NUM=$(grep -c "^processor" /proc/cpuinfo)
 
 ###########################################################################
 # general functions:
+
+function print_version {
+    echo "makertaikernel version 1.4 by Jan Benda, April 2015"
+}
+
 function print_usage {
     echo "Download and build everything needed for an rtai-patched linux kernel with comedi and math support."
     echo ""
@@ -161,7 +168,7 @@ function unpack_kernel {
 function patch_kernel {
     cd /usr/src/linux
     if $NEW_KERNEL; then
-	if -z "$RTAI_PATCH"; then
+	if test -z "$RTAI_PATCH"; then
 	    RTAI_PATCH="$(ls -rt /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/*-${LINUX_KERNEL}-*.patch | tail -n 1)"
 	    RTAI_PATCH="${RTAI_PATCH#/usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/}"
 	fi
@@ -640,6 +647,10 @@ function remove_rtai {
 	echo "remove rtai in /usr/local/src/$RTAI_DIR"
 	rm -r $RTAI_DIR
     fi
+    if test -f $RTAI_DIR.tar.*; then
+	echo "remove /usr/local/src/$RTAI_DIR.tar.*"
+	rm $RTAI_DIR.tar.*
+    fi
 }
 
 
@@ -948,6 +959,10 @@ shift
 case $ACTION in
 
     help ) print_usage ;;
+    --help ) print_usage ;;
+
+    version ) print_version ;;
+    --version ) print_version ;;
 
     reconfigure ) reconfigure ;;
 
