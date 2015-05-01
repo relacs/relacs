@@ -52,7 +52,7 @@
      inputtracedevice: 0
     inputtracechannel: 0
   inputtracereference: ground
-       inputtracegain: 2
+       inputtracemaxvalue: 100
   ----- output data ----------------------------------------------------
         maxoutputrate: 20kHz
         outputtraceid: Current-1

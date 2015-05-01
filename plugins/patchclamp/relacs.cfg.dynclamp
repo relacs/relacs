@@ -33,7 +33,7 @@
       inputtracedevice   : "0"
       inputtracechannel  : 0
       inputtracereference: ground
-      inputtracegain     : 2
+      inputtracemaxgain  : 100
       inputtracecenter   : true
   output data:
       maxoutputrate      : 20kHz
