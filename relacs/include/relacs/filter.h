@@ -304,7 +304,8 @@ public
 	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
-	whenever a new chunk of data is available. */
+	whenever a new chunk of data is available.
+	Your reimplementation should return 0. */
   virtual int filter( const InData &indata, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate filter.
         This function filters multiple traces of
@@ -313,7 +314,8 @@ public
 	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
-	whenever a new chunk of data is available. */
+	whenever a new chunk of data is available.
+	Your reimplementation should return 0. */
   virtual int filter( const InList &indata, InList &outdata ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate filter.
         This function filters the events \a inevents.
@@ -321,7 +323,8 @@ public
 	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
-	whenever a new chunk of data is available. */
+	whenever a new chunk of data is available.
+	Your reimplementation should return 0. */
   virtual int filter( const EventData &inevents, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate filter.
         This function filters multiple events \a inevents.
@@ -329,7 +332,8 @@ public
 	The filter and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
-	whenever a new chunk of data is available. */
+	whenever a new chunk of data is available.
+	Your reimplementation should return 0. */
   virtual int filter( const EventList &inevents, InList &outdata ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
         This function detects events in a single trace of
@@ -339,7 +343,8 @@ public
 	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
-	whenever a new chunk of data is available. */
+	whenever a new chunk of data is available.
+	Your reimplementation should return 0. */
   virtual int detect( const InData &data, EventData &outevents,
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
@@ -350,7 +355,8 @@ public
 	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
-	whenever a new chunk of data is available. */
+	whenever a new chunk of data is available.
+	Your reimplementation should return 0. */
   virtual int detect( const InList &data, EventList &outevents,
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
@@ -359,7 +365,8 @@ public
 	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
-	whenever a new chunk of data is available. */
+	whenever a new chunk of data is available.
+	Your reimplementation should return 0. */
   virtual int detect( const EventData &inevents, EventData &outevents,
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
@@ -368,7 +375,8 @@ public
 	The detector and the data are already locked during this function
 	by lock() and writeLockData(), respectively.
         This function is called periodically
-	whenever a new chunk of data is available. */
+	whenever a new chunk of data is available.
+	Your reimplementation should return 0. */
   virtual int detect( const EventList &inevents,
 		      EventList &outevents,
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };

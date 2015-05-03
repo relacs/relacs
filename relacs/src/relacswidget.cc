@@ -1650,15 +1650,6 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
     return;
   }
 
-  IData.assign();
-  PT->assignTracesEvents();
-  CW->assignTracesEvents();
-  RP->assignTracesEvents();
-  if ( simulation )
-    MD->assignTracesEvents();
-  AM->assignTraces();
-  AID->updateMenu();
-
   // check success:
   if ( simulation ) {
     // XXX why this here and why not return with startIdle() ?
@@ -1686,6 +1677,15 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
 
   DataRun = true;
   ReadLoop.start();
+
+  IData.assign();
+  PT->assignTracesEvents();
+  CW->assignTracesEvents();
+  RP->assignTracesEvents();
+  if ( simulation )
+    MD->assignTracesEvents();
+  AM->assignTraces();
+  AID->updateMenu();
 
   // reset analog output for dynamic clamp:
   r = AQ->writeReset();
