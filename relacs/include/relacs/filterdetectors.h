@@ -79,16 +79,16 @@ public:
   int events( void );
 
     /*! Further initialize the last event in \a events as stimulus events. */
-  void createStimulusEvents( EventList &events, deque< PlotTrace::EventStyle > &eventstyles );
+  void createStimulusEvents( EventList &events, deque< PlotEventStyle > &eventstyles );
     /*! Further initialize the last event in \a events as restart events. */
-  void createRestartEvents( EventList &events, deque< PlotTrace::EventStyle > &eventstyles );
+  void createRestartEvents( EventList &events, deque< PlotEventStyle > &eventstyles );
     /*! Initialize file recording events. */
   void createRecordingEvents( InList &data, EventList &events,
-			      deque< PlotTrace::EventStyle > &eventstyles );
+			      deque< PlotEventStyle > &eventstyles );
     /*! Initialize the traces and events and assign them to the Filter. */
   string createTracesEvents( InList &data, EventList &events,
-			     deque< PlotTrace::TraceStyle > &tracestyles,
-			     deque< PlotTrace::EventStyle > &eventstyles );
+			     deque< PlotTraceStyle > &tracestyles,
+			     deque< PlotEventStyle > &eventstyles );
 
     /*! Initialize the Filter.
         \return in case of errors (init() not implemented)
@@ -194,7 +194,7 @@ private:
     FilterData( Filter *filter, const string &pluginname,
 		const vector<string> &in,
 		const vector<string> &other,
-		long n, bool size, bool width );
+		long n, bool size, bool width, const string &panel );
     FilterData( const FilterData &fd );
     ~FilterData();
 
@@ -214,6 +214,7 @@ private:
     long NBuffer;
     bool SizeBuffer;
     bool WidthBuffer;
+    string PanelTrace;
     bool Init;
   };
 

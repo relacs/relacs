@@ -769,8 +769,7 @@ void RELACSWidget::setupInTraces( void )
     IRawData.push( id );
     IRawData[k].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
     IRawData[k].setWriteBufferCapacity( 100.0*id.indices( AQ->updateTime() ) );
-    TraceStyles.push_back( PlotTrace::TraceStyle() );
-    TraceStyles[k].PlotWindow = integer( "inputtraceplot", k, k );
+    PT->addTraceStyle( true, integer( "inputtraceplot", k, k ), Plot::Green );
   }
 }
 
@@ -1533,6 +1532,7 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
   }
 
   // analog input and output traces:
+  PT->clearStyles();
   double ptime = SS.number( "processinterval", 0.1 );
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
   AQ->setUpdateTime( ptime );
@@ -1558,15 +1558,16 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
   FD->clearIndices();
   SignalTime = -1.0;
   AQ->addStimulusEvents( IRawData, ERawData );
-  FD->createStimulusEvents( ERawData, EventStyles );
+  FD->createStimulusEvents( ERawData, PT->eventStyles() );
   AQ->addRestartEvents( IRawData, ERawData );
-  FD->createRestartEvents( ERawData, EventStyles );
-  FD->createRecordingEvents( IRawData, ERawData, EventStyles );
+  FD->createRestartEvents( ERawData, PT->eventStyles() );
+  FD->createRecordingEvents( IRawData, ERawData, PT->eventStyles() );
 
   // derived (filtered) traces and events:
   IData.assign( &IRawData );
   EData.assign( &ERawData );
-  Str fdw = FD->createTracesEvents( IData, EData, TraceStyles, EventStyles );
+  Str fdw = FD->createTracesEvents( IData, EData,
+				    PT->traceStyles(), PT->eventStyles() );
   if ( !fdw.empty() ) {
     printlog( "! error: " + fdw.erasedMarkup() );
     MessageBox::error( "RELACS Error !", fdw, this );

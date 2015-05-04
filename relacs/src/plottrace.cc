@@ -87,6 +87,9 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   PlotTraces.clear();
   PlotEvents.clear();
 
+  TraceStyle.clear();
+  EventStyle.clear();
+
   setWidget( &P );
 
   VP.clear();
@@ -194,6 +197,47 @@ PlotTrace::~PlotTrace( void )
 }
 
 
+void PlotTrace::clearStyles( void )
+{
+  P.lock();
+  for ( unsigned int k=0; k<TraceStyle.size(); k++ )
+    Menu->removeAction( TraceStyle[k].action() );
+  TraceStyle.clear();
+  EventStyle.clear();
+  P.unlock();
+}
+
+
+void PlotTrace::addTraceStyle( bool visible, int panel, int lcolor )
+{
+  TraceStyle.push_back( PlotTraceStyle( visible, panel, lcolor ) );
+}
+
+
+const deque< PlotTraceStyle > &PlotTrace::traceStyles( void ) const
+{
+  return TraceStyle;
+}
+
+
+deque< PlotTraceStyle > &PlotTrace::traceStyles( void )
+{
+  return TraceStyle;
+}
+
+
+const deque< PlotEventStyle > &PlotTrace::eventStyles( void ) const
+{
+  return EventStyle;
+}
+
+
+deque< PlotEventStyle > &PlotTrace::eventStyles( void )
+{
+  return EventStyle;
+}
+
+
 void PlotTrace::resizeLayout( void )
 {
   if ( VP.empty() )
@@ -243,24 +287,23 @@ void PlotTrace::resize( void )
   P.lock();
 
   // count active plots:
-  VP.clear();
-  for ( unsigned int c=0; c<TraceProps.size(); c++ ) {
-    TraceProps[c].Handle = -1;
-    TraceProps[c].PW = -1;
-    if ( TraceProps[c].Visible ) {
-      VP.push_back( c );
-      TraceProps[c].PW = c;
+  deque<int> pc;
+  pc.resize( P.size(), 0 );
+  for ( unsigned int c=0; c<TraceStyle.size(); c++ ) {
+    if ( TraceStyle[c].visible() &&
+	 TraceStyle[c].panel() >= 0 &&
+	 TraceStyle[c].panel() < P.size() ) {
+      pc[TraceStyle[c].panel()]++;
     }
   }
 
   // setup plots:
-  if ( P.size() != PlotTraces.size() )
-    P.resize( PlotTraces.size(), Plot::Pointer );
-  P.setDataMutex( mutex() );
-  P.setCommonXRange();
+  VP.clear();
   for ( int c=0; c<P.size(); c++ ) {
     P[c].clear();
-    P[c].setSkip( ! TraceProps[c].Visible );
+    P[c].setSkip( pc[c] == 0 );
+    if ( pc[c] > 0 )
+      VP.push_back( c );
   }
 
   if ( P.size() > 0 ) {
@@ -313,8 +356,8 @@ void PlotTrace::toggle( QAction *mtrace )
   // check for valid trace:
   bool nodata = true;
   unsigned int i=0;
-  for ( i=0; i<TraceProps.size(); i++ ) {
-    if ( TraceProps[i].Action == mtrace ) {
+  for ( i=0; i<TraceStyle.size(); i++ ) {
+    if ( TraceStyle[i].action() == mtrace ) {
       nodata = false;
       break;
     }
@@ -322,17 +365,17 @@ void PlotTrace::toggle( QAction *mtrace )
   if ( nodata )
     return;
 
-  if ( TraceProps[i].Visible ) {
-    for ( unsigned int k=0; k<TraceProps.size(); k++ ) {
-      if ( k != i && TraceProps[k].Visible ) {
-	TraceProps[i].Visible = false;
+  if ( TraceStyle[i].visible() ) {
+    for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
+      if ( k != i && TraceStyle[k].visible() ) {
+	TraceStyle[i].setVisible( false );
 	break;
       }
     }
   }
   else
-    TraceProps[i].Visible = true;
-  TraceProps[i].Action->setChecked( TraceProps[i].Visible );
+    TraceStyle[i].setVisible( true );
+  TraceStyle[i].action()->setChecked( TraceStyle[i].visible() );
   resize();
   plot();
 }
@@ -354,52 +397,30 @@ void PlotTrace::init( void )
     P[vp].clear();
 
     // y-label:
-    for ( unsigned int k=0; k<TraceProps.size(); k++ ) {
-      if ( TraceProps[k].PW == vp ) {
+    for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
+      if ( TraceStyle[k].panel() == vp ) {
 	string s = PlotTraces[k].ident() + " [" + PlotTraces[k].unit() + "]";
 	P[vp].setYLabel( s );
 	break;
       }
     }
-	
-    // plot stimulus events:
+
+    // plot stimulus, restart, and recording events:
     for ( int s=0; s<PlotEvents.size(); s++ ) {
       if ( (PlotEvents[s].mode() & PlotTraceMode) &&
-	   (PlotEvents[s].mode() & StimulusEventMode) ) {
+	   (PlotEvents[s].mode() & (StimulusEventMode+RestartEventMode+RecordingEventMode)) ) {
 	P[vp].plot( PlotEvents[s], origin, Offset, tfac,
-		   0.0, Plot::Graph, 2,
-		   Plot::StrokeUp, 1.0, Plot::GraphY,
-		   Plot::White );
-	break;
-      }
-    }
-    // plot restart events:
-    for ( int s=0; s<PlotEvents.size(); s++ ) {
-      if ( (PlotEvents[s].mode() & PlotTraceMode) &&
-	   (PlotEvents[s].mode() & RestartEventMode) ) {
-	P[vp].plot( PlotEvents[s], origin, Offset, tfac,
-		   1.0, Plot::Graph, 1,
-		   Plot::TriangleNorth, 0.07, Plot::GraphY,
-		   Plot::Orange, Plot::Orange );
-	break;
-      }
-    }
-    // plot recording events:
-    for ( int s=0; s<PlotEvents.size(); s++ ) {
-      if ( (PlotEvents[s].mode() & PlotTraceMode) &&
-	   (PlotEvents[s].mode() & RecordingEventMode) ) {
-	P[vp].plot( PlotEvents[s], origin, Offset, tfac,
-		   0.0, Plot::Graph, 4,
-		   Plot::StrokeUp, 1.0, Plot::GraphY,
-		   Plot::Red );
+		    EventStyle[s].yPos(), EventStyle[s].yCoor(), EventStyle[s].line().width(),
+		    EventStyle[s].point().type(), EventStyle[s].size(), EventStyle[s].sizeCoor(),
+		    EventStyle[s].point().color(), EventStyle[s].point().fillColor() );
 	break;
       }
     }
   }
 
-  for ( unsigned int k=0; k<TraceProps.size(); k++ ) {
-    if ( TraceProps[k].Visible ) {
-      int vp = TraceProps[k].PW;
+  for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
+    int vp = TraceStyle[k].panel();
+    if ( TraceStyle[k].visible() && vp >= 0 ) {
       // plot events:
       int sn = 0;
       for ( int s=0; s<PlotEvents.size(); s++ ) {
@@ -444,9 +465,10 @@ void PlotTrace::init( void )
 	}
       }
       // plot voltage trace:
-      TraceProps[k].Handle = P[vp].plot( PlotTraces[k], origin, Offset, tfac,
-					 Plot::Green, 1, Plot::Solid,
-					 Plot::Circle, 0, Plot::Green, Plot::Green );
+      int color = TraceStyle[k].line().color();
+      TraceStyle[k].setHandle( P[vp].plot( PlotTraces[k], origin, Offset, tfac,
+					   color, 1, Plot::Solid,
+					   Plot::Circle, 0, color, color ) );
     }
   }
 
@@ -548,14 +570,26 @@ void PlotTrace::plot( void )
   }
 
   // set xrange:
-  for ( unsigned int k=0; k<TraceProps.size(); k++ ) {
-    if ( TraceProps[k].Visible ) {
-      int vp = TraceProps[k].PW;
+  deque<bool> tsunset;
+  tsunset.resize( TraceStyle.size(), true );
+  for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
+    int vp = TraceStyle[k].panel();
+    if ( TraceStyle[k].visible() && vp >= 0 && tsunset[k] ) {
       P[vp].setXRange( leftwin, rightwin );
+      tsunset[k] = false;
+      double min = PlotTraces[k].minValue();
+      double max = PlotTraces[k].maxValue();
+      for ( unsigned int j=k+1; j<TraceStyle.size(); j++ ) {
+	if ( TraceStyle[j].visible() && TraceStyle[j].panel() == vp ) {
+	  if ( min > PlotTraces[j].minValue() )
+	    min = PlotTraces[j].minValue();
+	  if ( max < PlotTraces[j].maxValue() )
+	    max = PlotTraces[j].maxValue();
+	  tsunset[j] = false;
+	}
+      }
       if ( ! P[vp].zoomedYRange() )
-	P[vp].setYRange( PlotTraces[k].minValue(),
-			 PlotTraces[k].maxValue() );
-      // XXX needs merging in case of several plot traces in one plot!
+	P[vp].setYRange( min, max );
     }
   }
 
@@ -571,24 +605,26 @@ void PlotTrace::plot( void )
 void PlotTrace::updateStyle( void )
 {
   // line and pointstyle:
-  for ( unsigned int k=0; k<TraceProps.size(); k++ ) {
-    if ( TraceProps[k].Visible && TraceProps[k].PW >= 0 && TraceProps[k].Handle >= 0 ) {
-      int c = TraceProps[k].PW;
+  for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
+    int c = TraceStyle[k].panel();
+    int h = TraceStyle[k].handle();
+    if ( TraceStyle[k].visible() && c >= 0 && h >= 0 ) {
       double width = P[c].pixelPlotWidth();
       if ( width < 10.0 )
 	width = P[c].pixelScreenWidth();
       if ( width < 10.0 )
 	width = 10.0;
+      int color = TraceStyle[k].line().color();
       if ( PlotTraces[k].indices( TimeWindow )/width > 0.2 )
-	P[c][TraceProps[k].Handle].setPoint( Plot::Circle, 0, Plot::Green, Plot::Green );
+	P[c][h].setPoint( Plot::Circle, 0, color, color );
       else if ( PlotTraces[k].indices( TimeWindow )/width > 0.05 )
-	P[c][TraceProps[k].Handle].setPoint( Plot::Circle, 4, Plot::Green, Plot::Green );
+	P[c][h].setPoint( Plot::Circle, 4, color, color );
       else
-	P[c][TraceProps[k].Handle].setPoint( Plot::Circle, 8, Plot::Green, Plot::Green );
+	P[c][h].setPoint( Plot::Circle, 8, color, color );
       if ( PlotTraces[k].indices( TimeWindow )/width > 2.0 )
-	P[c][TraceProps[k].Handle].setLine( Plot::Green, 1, Plot::Solid );
+	P[c][h].setLine( color, 1, Plot::Solid );
       else
-	P[c][TraceProps[k].Handle].setLine( Plot::Green, 2, Plot::Solid );
+	P[c][h].setLine( color, 2, Plot::Solid );
     }
   }
 }
@@ -629,17 +665,8 @@ void PlotTrace::addMenu( QMenu *menu )
 
   Menu->addSeparator();
 
-  TraceProps.clear();
-  for ( int k=0; k<traces().size(); k++ ) {
-    string s = "&" + Str( k+1 );
-    s += " ";
-    s += trace(k).ident();
-    TraceProps.push_back( TraceProperties() );
-    TraceProps.back().Action = Menu->addAction( s.c_str() );
-    TraceProps.back().Action->setCheckable( true );
-    TraceProps.back().Visible = true;
-    TraceProps.back().Action->setChecked( TraceProps.back().Visible );
-  }
+  TraceStyle.clear();
+  EventStyle.clear();
   connect( Menu, SIGNAL( triggered( QAction* ) ),
 	   this, SLOT( toggle( QAction* ) ) );
 }
@@ -650,10 +677,6 @@ void PlotTrace::updateMenu( void )
   if ( Menu != 0 ) {
 
     P.lock();
-  
-    // remove old traces:
-    for ( unsigned int k=0; k<TraceProps.size(); k++ )
-      Menu->removeAction( TraceProps[k].Action );
 
     // get traces and events:
     PlotTraces.clear();
@@ -667,16 +690,21 @@ void PlotTrace::updateMenu( void )
       PlotEvents.add( events() );
     }
 
-    // add new traces:
-    TraceProps.resize( PlotTraces.size() );
+    // setup plots:
+    if ( P.size() != PlotTraces.size() )
+      P.resize( PlotTraces.size(), Plot::Pointer );
+    P.setDataMutex( mutex() );
+    P.setCommonXRange();
+
+    // add new traces to menu:
     for ( int k=0; k<PlotTraces.size(); k++ ) {
       string s = "&" + Str( k+1 );
       s += " ";
       s += PlotTraces[k].ident();
-      TraceProps[k].Action = Menu->addAction( s.c_str() );
-      TraceProps[k].Action->setCheckable( true );
-      TraceProps[k].Visible = true;
-      TraceProps[k].Action->setChecked( TraceProps[k].Visible );
+      TraceStyle[k].setAction( Menu->addAction( s.c_str() ) );
+      TraceStyle[k].action()->setCheckable( true );
+      TraceStyle[k].setVisible( true );
+      TraceStyle[k].action()->setChecked( TraceStyle[k].visible() );
     }
 
     P.unlock();
@@ -1092,12 +1120,13 @@ void PlotTrace::centerVertically( void )
 {
   P.lock();
   double tfac = 1000.0;
-  for ( unsigned int c=0; c<TraceProps.size(); c++ ) {
-    if ( TraceProps[c].Visible &&
-	 TraceProps[c].PW >= 0 &&
+  for ( unsigned int c=0; c<TraceStyle.size(); c++ ) {
+    if ( TraceStyle[c].visible() &&
+	 TraceStyle[c].panel() >= 0 &&
 	 PlotTraces[c].mode() & PlotTraceCenterVertically ) {
-      double xmin = P[TraceProps[c].PW].xminRange()/tfac + Offset;
-      double xmax = P[TraceProps[c].PW].xmaxRange()/tfac + Offset;
+      int vp = TraceStyle[c].panel();
+      double xmin = P[vp].xminRange()/tfac + Offset;
+      double xmax = P[vp].xmaxRange()/tfac + Offset;
       // make sure, there are enough data shown in the window:
       if ( PlotTraces[c].currentTime() < 0.5*(xmin+xmax) ) {
 	xmin = PlotTraces[c].currentTime() - (xmax-xmin);
@@ -1106,10 +1135,10 @@ void PlotTrace::centerVertically( void )
       float min = 0.0;
       float max = 0.0;
       PlotTraces[c].minMax( min, max, xmin, xmax );
-      if ( P[TraceProps[c].PW].ranges() == 0 )
-	P[TraceProps[c].PW].pushRanges();
+      if ( P[vp].ranges() == 0 )
+	P[vp].pushRanges();
       double center = 0.5*(min+max);
-      double range = 0.5*(P[TraceProps[c].PW].ymaxRange() - P[TraceProps[c].PW].yminRange());
+      double range = 0.5*(P[vp].ymaxRange() - P[vp].yminRange());
       double nmin = center-range;
       double nmax = center+range;
       if ( nmin < PlotTraces[c].minValue() ) {
@@ -1120,7 +1149,8 @@ void PlotTrace::centerVertically( void )
 	nmax = PlotTraces[c].maxValue();
 	nmin = nmax - 2.0*range;
       }
-      P[TraceProps[c].PW].setYRange( nmin, nmax );
+      P[vp].setYRange( nmin, nmax );
+      // XXX merge all traces in the plot
     }
   }
   P.unlock();
@@ -1131,12 +1161,13 @@ void PlotTrace::centerZoomVertically( void )
 {
   P.lock();
   double tfac = 1000.0;
-  for ( unsigned int c=0; c<TraceProps.size(); c++ ) {
-    if ( TraceProps[c].Visible &&
-	 TraceProps[c].PW >= 0 &&
+  for ( unsigned int c=0; c<TraceStyle.size(); c++ ) {
+    if ( TraceStyle[c].visible() &&
+	 TraceStyle[c].panel() >= 0 &&
 	 PlotTraces[c].mode() & PlotTraceCenterVertically ) {
-      double xmin = P[TraceProps[c].PW].xminRange()/tfac + Offset;
-      double xmax = P[TraceProps[c].PW].xmaxRange()/tfac + Offset;
+      int vp = TraceStyle[c].panel();
+      double xmin = P[vp].xminRange()/tfac + Offset;
+      double xmax = P[vp].xmaxRange()/tfac + Offset;
       // make sure, there are enough data shown in the window:
       if ( PlotTraces[c].currentTime() < 0.5*(xmin+xmax) ) {
 	xmin = PlotTraces[c].currentTime() - (xmax-xmin);
@@ -1145,8 +1176,8 @@ void PlotTrace::centerZoomVertically( void )
       float min = 0.0;
       float max = 0.0;
       PlotTraces[c].minMax( min, max, xmin, xmax );
-      if ( P[TraceProps[c].PW].ranges() == 0 )
-	P[TraceProps[c].PW].pushRanges();
+      if ( P[vp].ranges() == 0 )
+	P[vp].pushRanges();
       double center = 0.5*(min+max);
       double range = 0.6*(max-min);
       double nmin = center-range;
@@ -1159,7 +1190,8 @@ void PlotTrace::centerZoomVertically( void )
 	nmax = PlotTraces[c].maxValue();
 	nmin = nmax - 2.0*range;
       }
-      P[TraceProps[c].PW].setYRange( nmin, nmax );
+      P[vp].setYRange( nmin, nmax );
+      // XXX merge all traces in the plot
     }
   }
   P.unlock();
@@ -1396,8 +1428,8 @@ void PlotTrace::keyPressEvent( QKeyEvent *event )
   case Qt::Key_1: case Qt::Key_2: case Qt::Key_3: case Qt::Key_4: case Qt::Key_5: 
   case Qt::Key_6: case Qt::Key_7: case Qt::Key_8: case Qt::Key_9: {
     int n = event->key() - Qt::Key_1;
-    if ( n >=0 && n < (int)TraceProps.size() )
-      toggle( TraceProps[n].Action );
+    if ( n >=0 && n < (int)TraceStyle.size() )
+      toggle( TraceStyle[n].action() );
     break;
   }
 
@@ -1479,6 +1511,230 @@ void PlotTrace::customEvent( QEvent *qce )
   }
 }
 
+
+PlotTraceStyle::PlotTraceStyle( void )
+  : Action( 0 ),
+    Visible( true ),
+    Panel( -1 ),
+    Handle( -1 ),
+    Line( Plot::Green, 2, Plot::Solid )
+{
+}
+
+
+PlotTraceStyle::  PlotTraceStyle( const PlotTraceStyle &pts )
+  : Action( pts.Action ),
+    Visible( pts.Visible ),
+    Panel( pts.Panel ),
+    Handle( pts.Handle ),
+    Line( pts.Line )
+{
+}
+
+
+PlotTraceStyle::PlotTraceStyle( bool visible, int panel, int lcolor )
+  : Action( 0 ),
+    Visible( visible ),
+    Panel( panel ),
+    Handle( -1 ),
+    Line( lcolor, 2, Plot::Solid )
+{
+}
+
+
+bool PlotTraceStyle::visible( void ) const
+{
+  return Visible;
+}
+
+void PlotTraceStyle::setVisible( bool visible )
+{
+  Visible = visible;
+}
+
+
+int PlotTraceStyle::panel( void ) const
+{
+  return Panel;
+}
+
+
+void PlotTraceStyle::setPanel( int panel )
+{
+  Panel = panel;
+}
+
+
+int PlotTraceStyle::handle( void ) const
+{
+  return Handle;
+}
+
+
+void PlotTraceStyle::setHandle( int handle )
+{
+  Handle = handle;
+}
+
+
+void PlotTraceStyle::clearPanel( void )
+{
+  Panel = -1;
+  Handle = -1;
+}
+
+
+const QAction *PlotTraceStyle::action( void ) const
+{
+  return Action;
+}
+
+
+QAction *PlotTraceStyle::action( void )
+{
+  return Action;
+}
+
+
+void PlotTraceStyle::setAction( QAction *action )
+{
+  Action = action;
+}
+
+
+const Plot::LineStyle &PlotTraceStyle::line( void ) const
+{
+  return Line;
+}
+
+
+Plot::LineStyle &PlotTraceStyle::line( void )
+{
+  return Line;
+}
+
+
+void PlotTraceStyle::setLine( const Plot::LineStyle &style )
+{
+  Line = style;
+}
+
+
+void PlotTraceStyle::setLine( int lcolor, int lwidth, Plot::Dash ldash )
+{
+  setLine( Plot::LineStyle( lcolor, lwidth, ldash ) );
+}
+
+
+PlotEventStyle::PlotEventStyle( void )
+  : PlotTraceStyle(),
+    Point( Plot::Circle, 1, Plot::Yellow, Plot::Yellow ),
+    YPos( 0.1 ),
+    YCoor( Plot::Graph ),
+    YData( false ),
+    Size( 6.0 ),
+    SizeCoor( Plot::Pixel )
+{
+  setLine( Plot::Transparent, 0, Plot::Solid );
+}
+
+
+PlotEventStyle::PlotEventStyle( const PlotEventStyle &pes )
+  : PlotTraceStyle( pes ),
+    Point( pes.Point ),
+    YPos( pes.YPos ),
+    YCoor( pes.YCoor ),
+    YData( pes.YData ),
+    Size( pes.Size ),
+    SizeCoor( pes.SizeCoor )
+{
+}
+
+
+const Plot::PointStyle &PlotEventStyle::point( void ) const
+{
+  return Point;
+}
+
+
+Plot::PointStyle &PlotEventStyle::point( void )
+{
+  return Point;
+}
+
+
+void PlotEventStyle::setPoint( const Plot::PointStyle &style )
+{
+  Point = style;
+}
+
+
+void PlotEventStyle::setPoint( Plot::Points ptype, int psize, int pcolor, int pfill )
+{
+  setPoint( Plot::PointStyle( ptype, psize, pcolor, pfill ) );
+}
+
+
+void PlotEventStyle::setStyle( const Plot::LineStyle &lstyle, 
+			       const Plot::PointStyle &pstyle )
+{ 
+  Line = lstyle;
+  Point = pstyle;
+}
+
+
+void PlotEventStyle::setStyle( int lcolor, int lwidth, Plot::Dash ldash, 
+			       Plot::Points ptype, int psize, int pcolor, 
+			       int pfill )
+{
+  setLine( lcolor, lwidth, ldash );
+  setPoint( ptype, psize, pcolor, pfill );
+}
+
+
+double PlotEventStyle::yPos( void ) const
+{
+  return YPos;
+}
+
+
+Plot::Coordinates PlotEventStyle::yCoor( void ) const
+{
+  return YCoor;
+}
+
+
+void PlotEventStyle::setYPos( double ypos, Plot::Coordinates ycoor )
+{
+  YPos = ypos;
+  YCoor = ycoor;
+  YData = false;
+}
+
+
+void PlotEventStyle::setYData( void )
+{
+  YData = true;
+}
+
+
+double PlotEventStyle::size( void ) const
+{
+  return Size;
+}
+
+
+Plot::Coordinates PlotEventStyle::sizeCoor( void ) const
+{
+  return SizeCoor;
+}
+
+
+void PlotEventStyle::setSize( double size, Plot::Coordinates sizecoor )
+{
+  Size = size;
+  SizeCoor = sizecoor;
+}
 
 
 }; /* namespace relacs */

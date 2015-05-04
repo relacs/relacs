@@ -178,6 +178,7 @@ string FilterDetectors::createFilters( void )
     int buffersize = filteropts->integer( "buffersize", 0, 0 );
     bool storesize = filteropts->boolean( "storesize", false );
     bool storewidth = filteropts->boolean( "storewidth", false );
+    string panel = filteropts->text( "panel", "" );
 
     // check filter implementation:
     bool failed = false;
@@ -344,7 +345,7 @@ string FilterDetectors::createFilters( void )
 
     // insert detector in list:
     FL.push_back( FilterData( fp, filter, intrace, othertrace,
-			      buffersize, storesize, storewidth ) );
+			      buffersize, storesize, storewidth, panel ) );
 
 
     // add detector to widget:
@@ -392,20 +393,16 @@ int FilterDetectors::events( void )
 
 
 void FilterDetectors::createStimulusEvents( EventList &events,
-					    deque< PlotTrace::EventStyle > &eventstyles )
+					    deque< PlotEventStyle > &eventstyles )
 {
   events.back().setMode( events.back().mode() | SaveFiles::SaveTrace | PlotTraceMode );
 
-  eventstyles.push_back( PlotTrace::EventStyle() );
-  eventstyles.back().PlotWindow = -2;
-  eventstyles.back().Line.setColor( Plot::White );
-  eventstyles.back().Line.setWidth( 2 );
-  eventstyles.back().Point.setType( Plot::StrokeUp );
-  eventstyles.back().Point.setColor( Plot::White );
-  eventstyles.back().YPos = 0.0;
-  eventstyles.back().YCoor = Plot::Graph;
-  eventstyles.back().Size = 1.0;
-  eventstyles.back().SizeCoor = Plot::GraphY;
+  eventstyles.push_back( PlotEventStyle() );
+  eventstyles.back().setPanel( -1 );
+  eventstyles.back().setLine( Plot::White, 2 );
+  eventstyles.back().setPoint( Plot::StrokeUp, 1, Plot::White );
+  eventstyles.back().setYPos( 0.0 );
+  eventstyles.back().setSize( 1.0 );
 
   EventInputTrace.resize( EventInputTrace.size() + 1, -1 );
   EventInputEvent.resize( EventInputEvent.size() + 1, -1 );
@@ -413,22 +410,17 @@ void FilterDetectors::createStimulusEvents( EventList &events,
 
 
 void FilterDetectors::createRestartEvents( EventList &events,
-					   deque< PlotTrace::EventStyle > &eventstyles )
+					   deque< PlotEventStyle > &eventstyles )
 {
   events.back().setMode( events.back().mode() | SaveFiles::SaveTrace | PlotTraceMode );
   RestartEvents = &events.back();
   
-  eventstyles.push_back( PlotTrace::EventStyle() );
-  eventstyles.back().PlotWindow = -2;
-  eventstyles.back().Line.setColor( Plot::Orange );
-  eventstyles.back().Line.setWidth( 1 );
-  eventstyles.back().Point.setType( Plot::TriangleNorth );
-  eventstyles.back().Point.setColor( Plot::Orange );
-  eventstyles.back().Point.setFillColor( Plot::Orange );
-  eventstyles.back().YPos = 1.0;
-  eventstyles.back().YCoor = Plot::Graph;
-  eventstyles.back().Size = 0.07;
-  eventstyles.back().SizeCoor = Plot::GraphY;
+  eventstyles.push_back( PlotEventStyle() );
+  eventstyles.back().setPanel( -1 );
+  eventstyles.back().setLine( Plot::Orange, 1 );
+  eventstyles.back().setPoint( Plot::TriangleNorth, 1, Plot::Orange, Plot::Orange );
+  eventstyles.back().setYPos( 1.0 );
+  eventstyles.back().setSize( 0.07 );
 
   EventInputTrace.resize( EventInputTrace.size() + 1, -1 );
   EventInputEvent.resize( EventInputEvent.size() + 1, -1 );
@@ -436,7 +428,7 @@ void FilterDetectors::createRestartEvents( EventList &events,
 
 
 void FilterDetectors::createRecordingEvents( InList &data, EventList &events,
-					     deque< PlotTrace::EventStyle > &eventstyles )
+					     deque< PlotEventStyle > &eventstyles )
 {
   EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
 	       false, false );
@@ -447,16 +439,12 @@ void FilterDetectors::createRecordingEvents( InList &data, EventList &events,
   e.setWriteBufferCapacity( 1000 );
   events.push( e );
 
-  eventstyles.push_back( PlotTrace::EventStyle() );
-  eventstyles.back().PlotWindow = -2;
-  eventstyles.back().Line.setColor( Plot::Red );
-  eventstyles.back().Line.setWidth( 4 );
-  eventstyles.back().Point.setType( Plot::StrokeUp );
-  eventstyles.back().Point.setColor( Plot::Red );
-  eventstyles.back().YPos = 0.0;
-  eventstyles.back().YCoor = Plot::Graph;
-  eventstyles.back().Size = 1.0;
-  eventstyles.back().SizeCoor = Plot::GraphY;
+  eventstyles.push_back( PlotEventStyle() );
+  eventstyles.back().setPanel( -1 );
+  eventstyles.back().setLine( Plot::Red, 4 );
+  eventstyles.back().setPoint( Plot::StrokeUp, 1, Plot::Red );
+  eventstyles.back().setYPos( 0.0 );
+  eventstyles.back().setSize( 1.0 );
 
   EventInputTrace.resize( EventInputTrace.size() + 1, -1 );
   EventInputEvent.resize( EventInputEvent.size() + 1, -1 );
@@ -464,8 +452,8 @@ void FilterDetectors::createRecordingEvents( InList &data, EventList &events,
 
 
 string FilterDetectors::createTracesEvents( InList &data, EventList &events,
-					    deque< PlotTrace::TraceStyle > &tracestyles,
-					    deque< PlotTrace::EventStyle > &eventstyles )
+					    deque< PlotTraceStyle > &tracestyles,
+					    deque< PlotEventStyle > &eventstyles )
 {
   string warning = "";
 
@@ -476,6 +464,8 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 
   int dk = data.size();    // TraceInputTrace.size() and TraceInputEvent.size() was zero anyways.
   int ek = events.size();  // should be the same as EventInputTrace.size() and EventInputEvent.size() !!!
+
+  int maxpanel = data.size();
 
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
 
@@ -560,17 +550,13 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	d->OutEvents.add( &events[d->Out+j] );
 
 	// this is not really good yet...
-	eventstyles.push_back( PlotTrace::EventStyle() );
-	eventstyles.back().PlotWindow = eventInputTrace( d->Out+j );
-	eventstyles.back().Line.setColor( Plot::Red );
-	eventstyles.back().Line.setWidth( 1 );
-	eventstyles.back().Point.setType( Plot::TriangleUp );
-	eventstyles.back().Point.setColor( Plot::Red );
-	eventstyles.back().Point.setFillColor( Plot::Red );
-	eventstyles.back().YPos = 0.1;
-	eventstyles.back().YCoor = Plot::Graph;
-	eventstyles.back().Size = 6.0;
-	eventstyles.back().SizeCoor = Plot::Pixel;
+	eventstyles.push_back( PlotEventStyle() );
+	// eventstyles.back().setPanel( eventInputTrace( d->Out+j ) );
+	eventstyles.back().setPanel( -1 );  // default: to trace
+	eventstyles.back().setLine( Plot::Red, 1 );
+	eventstyles.back().setPoint( Plot::TriangleUp, 1, Plot::Red, Plot::Red );
+	eventstyles.back().setYPos( 0.1 );
+	eventstyles.back().setSize( 6.0, Plot::Pixel );
       }
 
       // assemble other events:
@@ -651,9 +637,33 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	data.push( dt );
 	d->OutTraces.add( &data[d->Out+j] );
 
-	tracestyles.push_back( PlotTrace::TraceStyle() );
-	tracestyles.back().PlotWindow = tracestyles[intrace].PlotWindow;
-	tracestyles.back().Line.setColor( Plot::Blue );
+	tracestyles.push_back( PlotTraceStyle() );
+	int p = -1;
+	if ( ! d->PanelTrace.empty() )
+	  p = data.index( d->PanelTrace );
+	if ( p >= 0 && p < (int)tracestyles.size()-1 ) {
+	  // add to existing panel:
+	  p = tracestyles[p].panel();
+	  // count traces in panel:
+	  int cp = 0;
+	  for ( unsigned int c=0; c<tracestyles.size(); c++ ) {
+	    if ( tracestyles[c].panel() == p )
+	      cp++;
+	  }
+	  tracestyles.back().setPanel( p );
+	  if ( cp == 0 )
+	    tracestyles.back().setLine( Plot::Green );
+	  else if ( cp == 1 )
+	    tracestyles.back().setLine( Plot::Blue );
+	  else
+	    tracestyles.back().setLine( Plot::Orange );
+	}
+	else {
+	  // extra panel:
+	  tracestyles.back().setPanel( maxpanel );
+	  tracestyles.back().setLine( Plot::Green );
+	  maxpanel++;
+	}
       }
 
       if ( d->FilterDetector->type() & Filter::EventInput ) {
@@ -1424,10 +1434,11 @@ FilterDetectors::FilterData::FilterData( Filter *filter,
 					 const string &pluginname,
 					 const vector<string> &in,
 					 const vector<string> &other,
-					 long n, bool size, bool width )
+					 long n, bool size, bool width,
+					 const string &panel)
   : PluginName( pluginname ), In( in ), Other( other ), 
     InTraces(), InEvents(), OutTraces(), OutEvents(), OtherEvents(),
-    NBuffer( n ), SizeBuffer( size ), WidthBuffer( width ), Init( true )
+    NBuffer( n ), SizeBuffer( size ), WidthBuffer( width ), PanelTrace( panel ), Init( true )
 {
   FilterDetector = filter;
   NOut = filter->outTraces();
@@ -1441,7 +1452,7 @@ FilterDetectors::FilterData::FilterData( const FilterData &fd )
     InTraces(), InEvents( fd.InEvents ), OutTraces( fd.OutTraces ),
     OutEvents( fd.OutEvents ), OtherEvents( fd.OtherEvents ),
     NBuffer( fd.NBuffer ), SizeBuffer( fd.SizeBuffer ),
-    WidthBuffer( fd.WidthBuffer ), Init( fd.Init )
+    WidthBuffer( fd.WidthBuffer ), PanelTrace( fd.PanelTrace ), Init( fd.Init )
 {
   FilterDetector = fd.FilterDetector;
   Out = fd.Out;
@@ -1476,6 +1487,7 @@ void FilterDetectors::FilterData::print( ostream &str ) const
       << "    nbuffer: " << NBuffer << '\n'
       << " sizebuffer: " << SizeBuffer << '\n'
       << "widthbuffer: " << WidthBuffer << '\n'
+      << " paneltrace: " << PanelTrace << '\n'
       << "       init: " << Init << '\n'
       << "   detector: " << FilterDetector << endl;
 }

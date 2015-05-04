@@ -174,7 +174,6 @@ public:
   /*! 
     \class RGBColor
     \author Jan Benda
-    \version 0.1
     \brief An RGB-Color. 
   */
   class RGBColor
@@ -201,7 +200,6 @@ public:
   /*! 
     \class LineStyle
     \author Jan Benda
-    \version 0.1
     \brief Style of a plotted line (color, width, and dash-type).
   */
   
@@ -237,7 +235,6 @@ public:
   /*! 
     \class PointStyle
     \author Jan Benda
-    \version 0.1
     \brief Style of a plotted point (point type, size, color, and fill color).
   */
 
@@ -279,7 +276,6 @@ public:
   /*! 
     \class Position
     \author Jan Benda
-    \version 0.1
     \brief Position of a point or a label.
   */
 

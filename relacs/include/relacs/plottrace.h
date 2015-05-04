@@ -34,6 +34,8 @@ namespace relacs {
 
 
 class RELACSWidget;
+class PlotTraceStyle;
+class PlotEventStyle;
 
 /*!
 \class PlotTrace
@@ -58,40 +60,6 @@ class PlotTrace : public RELACSPlugin
 
 public:
 
-  struct TraceStyle
-  {
-    TraceStyle( void )
-      : PlotWindow( 0 ),
-	Line( Plot::Green, 2, Plot::Solid ),
-	Point( Plot::Circle, 0, Plot::Green, Plot::Green )
-    {};
-    int PlotWindow;
-    Plot::LineStyle Line;
-    Plot::PointStyle Point;
-  };
-
-  struct EventStyle
-  {
-    EventStyle( void )
-      : PlotWindow( 0 ),
-	Line( Plot::Transparent, 0, Plot::Solid ),
-	Point( Plot::Circle, 1, Plot::Yellow, Plot::Yellow ),
-	YPos( 0.1 ),
-	YCoor( Plot::Graph ),
-	YData( false ),
-	Size( 6.0 ),
-	SizeCoor( Plot::Pixel )
-    {};
-    int PlotWindow;
-    Plot::LineStyle Line;
-    Plot::PointStyle Point;
-    double YPos;
-    Plot::Coordinates YCoor;
-    bool YData;
-    double Size;
-    Plot::Coordinates SizeCoor;
-  };
-
     /*! Construct a PlotTrace. */
   PlotTrace( RELACSWidget *rw, QWidget* parent=0 );
     /*! Destruct a PlotTrace. */
@@ -110,6 +78,19 @@ public:
   void setPlotContinuous( double length );
     /*! Plot raw traces continuously while leaving the window size unchanged. */
   void setPlotContinuous( void );
+
+    /*! Clear the trace and events styles. */
+  void clearStyles( void );
+    /*! Add a PlotTraceStyle */
+  void addTraceStyle( bool visible, int panel, int lcolor );
+    /*! The list of styles for each trace. */
+  const deque< PlotTraceStyle > &traceStyles( void ) const;
+    /*! The list of styles for each trace. */
+  deque< PlotTraceStyle > &traceStyles( void );
+    /*! The list of styles for each events. */
+  const deque< PlotEventStyle > &eventStyles( void ) const;
+    /*! The list of styles for each events. */
+  deque< PlotEventStyle > &eventStyles( void );
 
     /*! Set the number of plots necessary for the input traces and events. */
   void resize( void );
@@ -228,27 +209,10 @@ private:
   double AutoTime;
   double AutoOffs;
 
-  struct TraceProperties
-  {
-    TraceProperties( void )
-    : Action( 0 ),
-      Visible( true )
-    {};
-    TraceProperties( const TraceProperties &p )
-    : Action( p.Action ),
-      Visible( p.Visible ),
-      Handle( -1 ),
-      PW( -1 )
-    {};
-    QAction* Action;
-    bool Visible;
-    int Handle; // handle for updating plot styles
-    int PW;     // index to plot widget
-  };
-  deque< TraceProperties > TraceProps; // additional data for each trace
-
   deque< int > VP;  // the indices of visible plots
   MultiPlot P;
+  deque< PlotTraceStyle > TraceStyle; // additional data for each trace
+  deque< PlotEventStyle > EventStyle; // additional data for each events
 
   QMenu *Menu;
 
@@ -265,6 +229,103 @@ private:
 
   InList PlotTraces;
   EventList PlotEvents;
+
+};
+
+
+/*!
+\class PlotTraceStyle
+\author Jan Benda
+\brief Plot style and properties for a trace.
+*/
+
+class PlotTraceStyle
+{
+
+public:
+
+  PlotTraceStyle( void );
+  PlotTraceStyle( const PlotTraceStyle &pts );
+  PlotTraceStyle( bool visible, int panel, int lcolor );
+
+  bool visible( void ) const;
+  void setVisible( bool visible );
+
+  int panel( void ) const;
+  void setPanel( int panel );
+
+  int handle( void ) const;
+  void setHandle( int handle );
+
+  void clearPanel( void );
+
+  const QAction *action( void ) const;
+  QAction *action( void );
+  void setAction( QAction *action );
+
+  const Plot::LineStyle &line( void ) const;
+  Plot::LineStyle &line( void );
+  void setLine( const Plot::LineStyle &style );
+  void setLine( int lcolor=Plot::Transparent, int lwidth=1,
+		Plot::Dash ldash=Plot::Solid );
+
+
+protected:
+
+  QAction* Action;
+  bool Visible;
+  int Panel;   // index to plot widget
+  int Handle;  // handle for updating plot styles
+  Plot::LineStyle Line;
+
+};
+
+
+/*!
+\class PlotEventStyle
+\author Jan Benda
+\brief Plot style and properties for a events.
+*/
+
+class PlotEventStyle : public PlotTraceStyle
+{
+
+public:
+
+  PlotEventStyle( void );
+  PlotEventStyle( const PlotEventStyle &pes );
+
+  const Plot::PointStyle &point( void ) const;
+  Plot::PointStyle &point( void );
+  void setPoint( const Plot::PointStyle &style );
+  void setPoint( Plot::Points ptype=Plot::Circle, int psize=10,
+		 int pcolor=Plot::Transparent, int pfill=Plot::Transparent );
+
+  void setStyle( const Plot::LineStyle &lstyle, 
+		 const Plot::PointStyle &pstyle );
+  void setStyle( int lcolor=Plot::Transparent, int lwidth=1,
+		 Plot::Dash ldash=Plot::Solid, 
+		 Plot::Points ptype=Plot::Circle, int psize=10,
+		 int pcolor=Plot::Transparent, int pfill=Plot::Transparent );
+
+  double yPos( void ) const;
+  Plot::Coordinates yCoor( void ) const;
+  void setYPos( double ypos, Plot::Coordinates ycoor=Plot::Graph );
+  void setYData( void );
+
+  double size( void ) const;
+  Plot::Coordinates sizeCoor( void ) const;
+  void setSize( double size, Plot::Coordinates sizecoor=Plot::GraphY );
+
+
+protected:
+
+  Plot::PointStyle Point;
+  double YPos;
+  Plot::Coordinates YCoor;
+  bool YData;
+  double Size;
+  Plot::Coordinates SizeCoor;
 
 };
 

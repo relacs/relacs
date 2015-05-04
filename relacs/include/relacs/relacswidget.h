@@ -74,7 +74,6 @@ class Session;
 \brief Coordinates RePros, session, input, output, plotting, and saving.
 \author Jan Benda
 \author Christian Machens
-\version 2.0
 
 \todo make sure startFirstAcquisition() are only called from the GUI thread
       (because of MessageBox calls).
@@ -390,8 +389,6 @@ private:
   InList IData;  // Buffers point to IRawData but is in sync with filtered traces and events
   EventList ERawData;
   EventList EData;  // Buffers point to ED but is in sync with filtered traces and events
-  deque<PlotTrace::TraceStyle> TraceStyles;
-  deque<PlotTrace::EventStyle> EventStyles;
   deque<InList*> UpdateRawData;
   deque<EventList*> UpdateRawEvents;
 
