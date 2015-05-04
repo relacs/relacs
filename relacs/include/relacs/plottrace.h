@@ -228,28 +228,31 @@ private:
   double AutoTime;
   double AutoOffs;
 
-  struct PlotProperties
+  struct TraceProperties
   {
-    PlotProperties( void )
+    TraceProperties( void )
     : Action( 0 ),
       Visible( true )
     {};
-    PlotProperties( const PlotProperties &p )
+    TraceProperties( const TraceProperties &p )
     : Action( p.Action ),
-      Visible( p.Visible )
+      Visible( p.Visible ),
+      Handle( -1 ),
+      PW( -1 )
     {};
     QAction* Action;
     bool Visible;
+    int Handle; // handle for updating plot styles
+    int PW;     // index to plot widget
   };
-  deque< PlotProperties > PlotProps;
+  deque< TraceProperties > TraceProps; // additional data for each trace
+
+  deque< int > VP;  // the indices of visible plots
+  MultiPlot P;
 
   QMenu *Menu;
 
   QTimer PlotTimer;
-
-  MultiPlot P;
-  deque< int > VP;  // the indices of the visible plots
-  deque< int > PlotElements;
 
   bool FilePlot;
   string FilePath;
