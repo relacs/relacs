@@ -72,6 +72,8 @@ Settings::Settings( RELACSWidget* rw )
   addText( "elapsedformat", "Format for elapsed time", "%02H:%02M" );
   addText( "sessiontimeformat", "Format for session runtime", "%Hh%02Mmin%02Ssec" );
   addText( "reprotimeformat", "Format for repro runtime", "%Mmin%02Ssec" );
+  newSection( "Plotting" );
+  addText( "printcommand", "Command to be executed for printing traces", "" );
 
   addDialogStyle( OptWidget::Bold );
 

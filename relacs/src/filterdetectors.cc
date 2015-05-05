@@ -179,6 +179,7 @@ string FilterDetectors::createFilters( void )
     bool storesize = filteropts->boolean( "storesize", false );
     bool storewidth = filteropts->boolean( "storewidth", false );
     string panel = filteropts->text( "panel", "" );
+    int linewidth = filteropts->integer( "linewidth", 0, 1 );
 
     // check filter implementation:
     bool failed = false;
@@ -345,7 +346,7 @@ string FilterDetectors::createFilters( void )
 
     // insert detector in list:
     FL.push_back( FilterData( fp, filter, intrace, othertrace,
-			      buffersize, storesize, storewidth, panel ) );
+			      buffersize, storesize, storewidth, panel, linewidth ) );
 
 
     // add detector to widget:
@@ -652,16 +653,16 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	  }
 	  tracestyles.back().setPanel( p );
 	  if ( cp == 0 )
-	    tracestyles.back().setLine( Plot::Green );
+	    tracestyles.back().setLine( Plot::Green, d->LineWidth );
 	  else if ( cp == 1 )
-	    tracestyles.back().setLine( Plot::Blue );
+	    tracestyles.back().setLine( Plot::DarkOrange, d->LineWidth );
 	  else
-	    tracestyles.back().setLine( Plot::Orange );
+	    tracestyles.back().setLine( Plot::Cyan, d->LineWidth );
 	}
 	else {
 	  // extra panel:
 	  tracestyles.back().setPanel( maxpanel );
-	  tracestyles.back().setLine( Plot::Green );
+	  tracestyles.back().setLine( Plot::Green, d->LineWidth );
 	  maxpanel++;
 	}
       }
@@ -1435,10 +1436,11 @@ FilterDetectors::FilterData::FilterData( Filter *filter,
 					 const vector<string> &in,
 					 const vector<string> &other,
 					 long n, bool size, bool width,
-					 const string &panel)
+					 const string &panel, int linewidth )
   : PluginName( pluginname ), In( in ), Other( other ), 
     InTraces(), InEvents(), OutTraces(), OutEvents(), OtherEvents(),
-    NBuffer( n ), SizeBuffer( size ), WidthBuffer( width ), PanelTrace( panel ), Init( true )
+    NBuffer( n ), SizeBuffer( size ), WidthBuffer( width ),
+    PanelTrace( panel ), LineWidth( linewidth ), Init( true )
 {
   FilterDetector = filter;
   NOut = filter->outTraces();
@@ -1452,7 +1454,8 @@ FilterDetectors::FilterData::FilterData( const FilterData &fd )
     InTraces(), InEvents( fd.InEvents ), OutTraces( fd.OutTraces ),
     OutEvents( fd.OutEvents ), OtherEvents( fd.OtherEvents ),
     NBuffer( fd.NBuffer ), SizeBuffer( fd.SizeBuffer ),
-    WidthBuffer( fd.WidthBuffer ), PanelTrace( fd.PanelTrace ), Init( fd.Init )
+    WidthBuffer( fd.WidthBuffer ),
+    PanelTrace( fd.PanelTrace ), LineWidth( fd.LineWidth ), Init( fd.Init )
 {
   FilterDetector = fd.FilterDetector;
   Out = fd.Out;
@@ -1488,6 +1491,7 @@ void FilterDetectors::FilterData::print( ostream &str ) const
       << " sizebuffer: " << SizeBuffer << '\n'
       << "widthbuffer: " << WidthBuffer << '\n'
       << " paneltrace: " << PanelTrace << '\n'
+      << "  linewidth: " << LineWidth << '\n'
       << "       init: " << Init << '\n'
       << "   detector: " << FilterDetector << endl;
 }

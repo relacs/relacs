@@ -37,7 +37,6 @@ InstantaneousRate::InstantaneousRate( const string &ident, int mode )
 
 int InstantaneousRate::init( const EventData &inevents, InData &outdata )
 {
-  cerr << "INIT RATE\n";
   Index = inevents.size();
   double minrate = number( "minrate" );
   double maxrate = number( "maxrate" );

@@ -194,7 +194,8 @@ private:
     FilterData( Filter *filter, const string &pluginname,
 		const vector<string> &in,
 		const vector<string> &other,
-		long n, bool size, bool width, const string &panel );
+		long n, bool size, bool width,
+		const string &panel, int linewidth );
     FilterData( const FilterData &fd );
     ~FilterData();
 
@@ -215,6 +216,7 @@ private:
     bool SizeBuffer;
     bool WidthBuffer;
     string PanelTrace;
+    int LineWidth;
     bool Init;
   };
 

@@ -466,8 +466,9 @@ void PlotTrace::init( void )
       }
       // plot voltage trace:
       int color = TraceStyle[k].line().color();
+      int lwidth = TraceStyle[k].line().width();
       TraceStyle[k].setHandle( P[vp].plot( PlotTraces[k], origin, Offset, tfac,
-					   color, 1, Plot::Solid,
+					   color, lwidth, Plot::Solid,
 					   Plot::Circle, 0, color, color ) );
     }
   }
@@ -615,6 +616,7 @@ void PlotTrace::updateStyle( void )
       if ( width < 10.0 )
 	width = 10.0;
       int color = TraceStyle[k].line().color();
+      int lwidth = TraceStyle[k].line().width();
       if ( PlotTraces[k].indices( TimeWindow )/width > 0.2 )
 	P[c][h].setPoint( Plot::Circle, 0, color, color );
       else if ( PlotTraces[k].indices( TimeWindow )/width > 0.05 )
@@ -622,9 +624,9 @@ void PlotTrace::updateStyle( void )
       else
 	P[c][h].setPoint( Plot::Circle, 8, color, color );
       if ( PlotTraces[k].indices( TimeWindow )/width > 2.0 )
-	P[c][h].setLine( color, 1, Plot::Solid );
+	P[c][h].setLine( color, lwidth, Plot::Solid );
       else
-	P[c][h].setLine( color, 2, Plot::Solid );
+	P[c][h].setLine( color, 2*lwidth, Plot::Solid );
     }
   }
 }
@@ -662,6 +664,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ) );
   Menu->addAction( "&Zoom vertically", this, SLOT( centerZoomVertically() ) );
   Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
+  Menu->addAction( "&Print", this, SLOT( print() ), Qt::CTRL + Qt::Key_P );
 
   Menu->addSeparator();
 
@@ -1225,6 +1228,49 @@ void PlotTrace::setView( Views mode )
 }
 
 
+void PlotTrace::print( void )
+{
+  TableKey datakey;
+  datakey.addNumber( "Time", "ms", "%7.3f" );
+  for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
+    if ( TraceStyle[k].visible() )
+      datakey.addNumber( PlotTraces[k].ident(), PlotTraces[k].unit(), "%7.3f" );
+  }
+
+  ofstream df( "traces.dat" );
+  lockMetaData();
+  metaData().Options::save( df, "# ", 0, Options::FirstOnly );
+  unlockMetaData();
+  lockStimulusData();
+  stimulusData().save( df, "# " );
+  unlockStimulusData();
+  df << '\n';
+  datakey.saveKey( df );
+  for ( int j=PlotTraces[0].index( LeftTime );
+	j<PlotTraces[0].index( LeftTime + TimeWindow ) && j<PlotTraces[0].index( currentTime() );
+	j++ ) {
+    datakey.save( df, 1000.0*( PlotTraces[0].pos(j) - LeftTime ), 0 );
+    for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
+      if ( TraceStyle[k].visible() )
+	datakey.save( df, PlotTraces[k][j] );
+    }
+    df << '\n';
+  }
+  df << "\n\n";
+  df.close();
+
+  printlog( "saved currently visible traces to traces.dat" );
+
+  string printcommand = relacsSettings().text( "printcommand" );
+  if ( ! printcommand.empty() ) {
+    if ( system( printcommand.c_str() ) == 0 )
+      printlog( "executed " + printcommand );
+    else
+      printlog( "failed to execute " + printcommand );
+  }
+}
+
+
 void PlotTrace::displayIndex( const string &fpath, const deque<int> &traceindex,
 			      const deque<int> &eventsindex, double time )
 {
@@ -1517,7 +1563,7 @@ PlotTraceStyle::PlotTraceStyle( void )
     Visible( true ),
     Panel( -1 ),
     Handle( -1 ),
-    Line( Plot::Green, 2, Plot::Solid )
+    Line( Plot::Green, 1, Plot::Solid )
 {
 }
 
@@ -1537,7 +1583,7 @@ PlotTraceStyle::PlotTraceStyle( bool visible, int panel, int lcolor )
     Visible( visible ),
     Panel( panel ),
     Handle( -1 ),
-    Line( lcolor, 2, Plot::Solid )
+    Line( lcolor, 1, Plot::Solid )
 {
 }
 

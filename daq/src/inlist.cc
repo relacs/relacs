@@ -495,11 +495,14 @@ string InList::errorText( void ) const
   ostringstream ss;
 
   // common errors:
+  bool common = false;
   long long flags = 0xffffffffffffffffLL;
   for ( int k=0; k<size(); k++ )
     flags &= operator[]( k ).error();
-  if ( flags > 0 )
-    ss << DaqError::errorText( flags ) << ". ";
+  if ( flags > 0 ) {
+    ss << DaqError::errorText( flags );
+    common = true;
+  }
 
   // common error strings:
   bool commonstr = true;
@@ -507,8 +510,15 @@ string InList::errorText( void ) const
     if ( operator[]( k ).errorStr() != operator[]( 0 ).errorStr() )
       commonstr = false;
   }
-  if ( commonstr && ! operator[]( 0 ).errorStr().empty() )
-    ss << operator[]( 0 ).errorStr() << ". ";
+  if ( commonstr && ! operator[]( 0 ).errorStr().empty() ) {
+    if ( common )
+      ss << " ,";
+    ss << operator[]( 0 ).errorStr();
+    common = true;
+  }
+
+  if ( common )
+    ss << " (all channels). ";
 
   // individual errors:
   for ( int k=0; k<size(); k++ ) {

@@ -141,6 +141,8 @@ public slots:
   void viewToggle( void );
   void toggleManual( void );
 
+  void print( void );
+
   void displayIndex( const string &path, const deque<int> &traceindex,
 		     const deque<int> &eventsindex, double time );
   void displayData( void );
