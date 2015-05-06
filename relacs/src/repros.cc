@@ -413,7 +413,8 @@ void RePros::raise( RePro *repro )
 
 void RePros::raise( void )
 {
-  raise( PreviousView );
+  if ( PreviousView != 0 )
+    raise( PreviousView );
 }
 
 

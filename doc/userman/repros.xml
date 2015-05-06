@@ -8,6 +8,35 @@
 		own RePros to have RELACS doing the experiment on the click of a single button.
 		The following sections explain how to write your own RePro.</para>
 
+	<section xml:id='setupmakefile'><title>Preparations</title>
+
+		<para>In <filename>plugins/</filename> there are two shell scripts
+		that help you in setting up the Makefiles and other infra structure
+		needed for compiling RELACS plugins.</para>
+
+		<para>
+		  If you want to start a new plugin set, then call
+		  <programlisting>
+./newpluginset
+		  </programlisting>
+		  and answer all the questions. This creates a new
+		  directory with all the necessary
+		  <filename>Makefile.am</filename> and modifies
+		  <filename>configure.ac</filename> accordingly.
+		</para>
+
+		<para>
+		  To actually write a new RELACS plugin call
+		  <programlisting>
+./newplugin
+		  </programlisting>
+		  also from the <filename>plugins/</filename>
+		  directory and answer all the questions. This creates
+		  skeleton .cc and .h files and adds the necessary
+		  lines to <filename>Makefile.am</filename>.
+		</para>
+	</section>
+	
 	<section xml:id='createcode'><title>Writing the Code - Basic Concepts</title>
 	
 		<para>RePro's are C++ classes that inherit the RePro base class from <filename>repro.h.</filename>
@@ -334,14 +363,23 @@ addRePro( ExampleRePro3 );
 		</section>
 	</section>
 
-	<section xml:id='setupmakefile'><title>Setup a Makefile</title>
-
-		<para>To be written.</para>
-	</section>
-	
 	<section xml:id='compilerepro'><title>Compile your RePro</title>
-
-		<para>To be written. ... call make and make install ...</para>
+		<para>Simply call
+		<programlisting>
+make
+		</programlisting>
+		in the base directory of the plugin set (or below).
+		</para>
+		<para>Check your code by running RELACS locally:
+		<programlisting>
+./relacslocal -3
+		</programlisting>
+		</para>
+		<para>Once satisfied install the new plugin
+		<programlisting>
+sudo make install
+		</programlisting>
+		</para>
 	</section>
 	
 	<section xml:id='addrepro'><title>Adding a new RePro to RELACS</title>

@@ -384,7 +384,7 @@ void MetaData::customEvent( QEvent *qe )
 
 void MetaData::addActions( QMenu *menu )
 {
-  menu->addAction( "Session &Info...",
+  menu->addAction( "Session Info...",
 		   this, SLOT( presetDialog() ), Qt::ALT + Qt::Key_I );
 }
 

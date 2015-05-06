@@ -352,10 +352,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   AcquisitionAction = filemenu->addAction( "&Online (acquire)",
 					   (QWidget*)this, SLOT( startAcquisition() ),
 					   Qt::CTRL + Qt::SHIFT + Qt::Key_O );
-  SimulationAction = filemenu->addAction( "&Simulate",
+  SimulationAction = filemenu->addAction( "Sim&ulate",
 					  (QWidget*)this, SLOT( startSimulation() ),
 					  Qt::CTRL + Qt::SHIFT + Qt::Key_S );
-  IdleAction = filemenu->addAction( "&Idle (stop)",
+  IdleAction = filemenu->addAction( "Idle (sto&p)",
 				    (QWidget*)this, SLOT( stopActivity() ),
 				    Qt::CTRL + Qt::SHIFT + Qt::Key_I );
   filemenu->addSeparator();
@@ -363,10 +363,13 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MTDT.addActions( filemenu );
   filemenu->addSeparator();
   filemenu->addAction( "&Input traces...", this, SLOT( editInputTraces() ) );
-  //filemenu->addAction( "&Input traces...", this, SLOT( editInputTraces() ) );
   filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
-  filemenu->addAction( "Save Settings", (QWidget*)this, SLOT( saveConfig() ) );
-  filemenu->addAction( "&AudioMonitor...", AM, SLOT( dialog() ) );
+  filemenu->addAction( "&Save settings", (QWidget*)this, SLOT( saveConfig() ) );
+  filemenu->addSeparator();
+  MuteAction = filemenu->addAction( "&Mute audio monitor",
+				    (QWidget*)this, SLOT( muteAudioMonitor() ),
+				    Qt::Key_M );
+  filemenu->addAction( "&Audio monitor...", AM, SLOT( dialog() ) );
   filemenu->addAction( "&Quit", (QWidget*)this, SLOT( quit() ), Qt::ALT + Qt::Key_Q );
 
   // plugins:
@@ -378,7 +381,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   CW->addMenu( pluginmenu, doxydoc );
 
   // devices:
-  DeviceMenu = menuBar()->addMenu( "De&vices" );
+  DeviceMenu = menuBar()->addMenu( "Devi&ces" );
 
   // filters:
   QMenu *filtermenu = menuBar()->addMenu( "&Detectors/Filters" );
@@ -418,13 +421,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MaximizedAction = viewmenu->addAction( "&Maximize window",
 					 (QWidget*)this, SLOT( maximizeScreen() ),
 					 Qt::CTRL + Qt::SHIFT + Qt::Key_M );
-  FullscreenAction = viewmenu->addAction( "&Full-Screen Mode",
+  FullscreenAction = viewmenu->addAction( "&Fullscreen",
 					  (QWidget*)this, SLOT( fullScreen() ),
 					  Qt::CTRL + Qt::SHIFT + Qt::Key_F );
-  viewmenu->addSeparator();
-  MuteAction = viewmenu->addAction( "Mute audio &monitor",
-				    (QWidget*)this, SLOT( muteAudioMonitor() ),
-				    Qt::Key_M );
   viewmenu->addSeparator();
   PT->addMenu( viewmenu );
 
@@ -1976,12 +1975,12 @@ void RELACSWidget::fullScreen( void )
   if ( IsFullScreen ) {
     showNormal();
     IsFullScreen = false;
-    FullscreenAction->setText( "&Full-Screen Mode" );
+    FullscreenAction->setText( "&Fullscreen" );
   }
   else {
     showFullScreen();
     IsFullScreen = true;
-    FullscreenAction->setText( "Exit &Full-Screen Mode" );
+    FullscreenAction->setText( "Exit &fullscreen" );
   }
 }
 
@@ -1996,7 +1995,7 @@ void RELACSWidget::maximizeScreen( void )
   else {
     showMaximized();
     IsMaximized = true;
-    MaximizedAction->setText( "Exit &Maximize window" );
+    MaximizedAction->setText( "Exit &maximize window" );
   }
 }
 

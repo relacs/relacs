@@ -52,11 +52,13 @@
 
 	<para>There are four main widgets (from left to right, top to bottom)</para>
 	<para><itemizedlist>	
-	<listitem><para>Filters and Detectors</para></listitem>
-	<listitem><para>PlotTrace</para></listitem>
-	<listitem><para>Control</para></listitem>
-	<listitem><para>RePros</para></listitem>
+	<listitem><para>Filters and Detectors (<keycap>Ctrl + 1</keycap>)</para></listitem>
+	<listitem><para>PlotTrace (<keycap>Ctrl + 2</keycap>)</para></listitem>
+	<listitem><para>Control (<keycap>Ctrl + 3</keycap>)</para></listitem>
+	<listitem><para>RePros (<keycap>Ctrl + 4</keycap>)</para></listitem>
 	</itemizedlist></para>
+	<para>With <keycap>Ctrl + number</keycap> as indicated the widgets can be enlarged.
+	Press the key again to show all widgets.</para>
 
 	<para>The buttons at the bottom are the</para>
 	<para><itemizedlist>
@@ -89,6 +91,8 @@
 					</imageobject>
 			   </mediaobject>
 		  button.</para></listitem>
+		  <listitem><para><parameter class='command'>wrapped</parameter>: The time axis stays fixed while new data are displayed. Once the new data hit the right border of the plots the plots are cleared and data a re displayed starting from the left.
+		  This mode can be activated by pressing <keycap>Insert</keycap>.</para></listitem>
 		  <listitem><para><parameter class='command'>view</parameter>: The time axis is fixed and will not be shifted by a new stimulus
 		  (as it is the case for the "fixed" mode).
 		  This mode can be activated by pressing <keycap>PageUp</keycap>, <keycap>PageDown</keycap>,
@@ -105,14 +109,23 @@
 		<keycap>V</keycap> centers and zooms the y-range to make the current traces fully visible.</para>
 
 		<para>
-		The plots for each voltage trace can be closed by pressing <keycap>1</keycap>, <keycap>2</keycap>, ...
-		according to the number of the trace (<keycap>1</keycap> is the first, topmost trace).
-		A closed plot can be made visible again by pressing the number again.</para>
+		Visibility of each trace and the corresponding plot
+		panel can be toggled by pressing <keycap>1</keycap>,
+		<keycap>2</keycap>, ...  according to the number of
+		the trace (<keycap>1</keycap> is the first, topmost
+		trace).</para>
+
+		<para>The currently displayed traces can be printed by pressing <keycap>Ctrl+P</keycap>. This writes the data of the traces in addition with some meta data to the file <filename>traces.dat</filename>. The the script specified by printcommand in the settings is then executed.</para>
 		</section>
 
 		<section xml:id='filterdetectorswidget'><title>The FilterDetectors widget</title><para>
 		This widget in the upper left gives you access to the most important
 		parameters of the filters and event detectors.</para>
+		<para>Press <keycap>F</keycap> to put the keyboard
+		focus onto the active Filter widget. With
+		<keycap>Alt+RightArrow</keycap> and
+		<keycap>Alt+LeftArrow</keycap> the other Filter
+		widgets can be activated.</para>
 		</section>
 
 		<section xml:id='filterdetectorsdialog'><title>The Filter/Detector dialogs</title><para>
@@ -209,6 +222,11 @@
 		The optional Control widgets in the lower left display
 		some general information about the ongoing recording or
 		alllow you to control some hardware.</para>
+		<para>Press <keycap>C</keycap> to put the keyboard
+		focus onto the active Control widget. With
+		<keycap>Alt+RightArrow</keycap> and
+		<keycap>Alt+LeftArrow</keycap> the other Control
+		widgets can be activated.</para>
 		</section>
 
 
@@ -274,13 +292,15 @@
                     <listitem>
        	              <itemizedlist>
                         <listitem><para><keycap>Enter, Return</keycap>: Start/stop recording.</para></listitem>
+		        <listitem><para><keycap>Alt+I</keycap>: Meta-data dialog.</para></listitem>
+		        <listitem><para><keycap>Alt+Q</keycap>: Quit RELACS.</para></listitem>
+			<listitem><para><keycap>M</keycap>: Mute audio output.</para></listitem>
+			<listitem><para><keycap>Ctrl+1, Ctrl+2, Ctrl+3, Ctrl+4</keycap>: Show filters, traces, controls, or repros maximized.</para></listitem>
+		        <listitem><para><keycap>Shift+Ctrl+M</keycap>: Toggle maximize window.</para></listitem>
+		        <listitem><para><keycap>Shift+Ctrl+F</keycap>: Toggle full-screen mode.</para></listitem>
 		        <listitem><para><keycap>Shift+Ctrl+O</keycap>: Switch to online (data acquisition) mode.</para></listitem>
 		        <listitem><para><keycap>Shift+Ctrl+S</keycap>: Switch to simulation mode.</para></listitem>
 		        <listitem><para><keycap>Shift+Ctrl+I</keycap>: Stop all activity (idle mode).</para></listitem>
-		        <listitem><para><keycap>Alt+I</keycap>: Meta-data dialog.</para></listitem>
-		        <listitem><para><keycap>Alt+Q</keycap>: Quit RELACS.</para></listitem>
-		        <listitem><para><keycap>Shift+Ctrl+M</keycap>: Toggle maximize window.</para></listitem>
-		        <listitem><para><keycap>Shift+Ctrl+F</keycap>: Toggle full-screen mode.</para></listitem>
 	              </itemizedlist>
                     </listitem>
                   </varlistentry>
@@ -289,21 +309,54 @@
                     <term>Macros</term>
                     <listitem>
 			<itemizedlist>
-			<listitem><para><keycap>ESC</keycap>: Start the fall-back macro immediately.
-			 You can continue within the interrupted macro by hitting <keycap>R</keycap> or <keycap>N</keycap> (see below).
-			 If RELACS does not have the key focus, <keycap>ESC</keycap> transfers the key focus to RELACS.
-			 In this situation press <keycap>ESC</keycap> a second time to start the fall-back macro.
-			 The keyfocus is, however, automatically returned to RELACS within 15 seconds.</para></listitem>
-			<listitem><para><keycap>F1-F12</keycap>: Start a macro.</para></listitem>
-			<listitem><para><keycap>Shift+ESC</keycap>: Open menu of fall-back macro.</para></listitem>
-			<listitem><para><keycap>Shift+F1-F12</keycap>: Open macro menu.</para></listitem>
-			<listitem><para><keycap>Space</keycap>: Kindly request the current RePro to finish. The more often <keycap>Space</keycap> is pressed, the more urgent is the request. When exactly the RePro finishes depends on its implementation. Usually, a RePro stops after the current stimulus is delivered and analyzed.</para></listitem>
-			<listitem><para><keycap>S</keycap>: Skip current RePro (stop it immediately) and start the next RePro of the current macro.</para></listitem>
-			<listitem><para><keycap>B</keycap>: ("Break") Interrupt current macro by starting the fall-back macro after the current RePro finished (as by pressing <keycap>Space</keycap>).
-			    You can continue within the interrupted macro by hitting <keycap>R</keycap> or <keycap>N</keycap> (see below).</para></listitem>
-			<listitem><para><keycap>R</keycap>: ("Resume") Resume macro with the RePro where it was interrupted by either <keycap>ESC</keycap> or <keycap>B</keycap>.</para></listitem>
-			<listitem><para><keycap>N</keycap>: ("Resume Next") Resume macro with the RePro following the one where the macro was interrupted
-			by either <keycap>ESC</keycap> or <keycap>B</keycap>.</para></listitem>
+			<listitem><para><keycap>ESC</keycap>: Start
+			the fall-back macro immediately.  You can
+			continue within the interrupted macro by
+			hitting <keycap>R</keycap> or
+			<keycap>N</keycap> (see below).  If RELACS
+			does not have the key focus,
+			<keycap>ESC</keycap> transfers the key focus
+			to RELACS.  In this situation press
+			<keycap>ESC</keycap> a second time to start
+			the fall-back macro.  The keyfocus is,
+			however, automatically returned to RELACS
+			within 15 seconds.</para></listitem>
+			<listitem><para><keycap>F1-F12</keycap>: Start
+			a macro.</para></listitem>
+			<listitem><para><keycap>Shift+ESC</keycap>:
+			Open menu of fall-back
+			macro.</para></listitem>
+			<listitem><para><keycap>Shift+F1-F12</keycap>:
+			Open macro menu.</para></listitem>
+			<listitem><para><keycap>Space</keycap>: Kindly
+			request the current RePro to finish. The more
+			often <keycap>Space</keycap> is pressed, the
+			more urgent is the request. When exactly the
+			RePro finishes depends on its
+			implementation. Usually, a RePro stops after
+			the current stimulus is delivered and
+			analyzed.</para></listitem>
+			<listitem><para><keycap>S</keycap>: Skip
+			current RePro (stop it immediately) and start
+			the next RePro of the current
+			macro.</para></listitem>
+			<listitem><para><keycap>B</keycap>: ("Break")
+			Interrupt current macro by starting the
+			fall-back macro after the current RePro
+			finished (as by pressing
+			<keycap>Space</keycap>).  You can continue
+			within the interrupted macro by hitting
+			<keycap>R</keycap> or <keycap>N</keycap> (see
+			below).</para></listitem>
+			<listitem><para><keycap>R</keycap>: ("Resume")
+			Resume macro with the RePro where it was
+			interrupted by either <keycap>ESC</keycap> or
+			<keycap>B</keycap>.</para></listitem>
+			<listitem><para><keycap>N</keycap>: ("Resume
+			Next") Resume macro with the RePro following
+			the one where the macro was interrupted by
+			either <keycap>ESC</keycap> or
+			<keycap>B</keycap>.</para></listitem>
 			</itemizedlist>
                     </listitem>
                   </varlistentry>
@@ -312,12 +365,20 @@
                     <term>RePros</term>
                     <listitem>
 			<itemizedlist>
-			<listitem><para><keycap>Ctrl+O</keycap>: If the current RePro is not the fall-back RePro 
-					 of an explicitly marked fall-back macro
-					 then launch options dialog of the current RePro,
-				 otherwise launch options dialog of the previously run RePro.</para></listitem>
-			<listitem><para><keycap>Ctrl+V</keycap>: View previously shown RePro</para></listitem>
-			<listitem><para><keycap>Ctrl+H</keycap>: Show the help text of the currrently running RePro</para></listitem>
+			<listitem><para><keycap>Ctrl+O</keycap>: If
+			the current RePro is not the fall-back RePro
+			of an explicitly marked fall-back macro then
+			launch options dialog of the current RePro,
+			otherwise launch options dialog of the
+			previously run RePro.</para></listitem>
+			<listitem><para><keycap>Ctrl+V</keycap>: View
+			previously shown RePro</para></listitem>
+			<listitem><para><keycap>Ctrl+H</keycap>: Show
+			the help text of the currrently running
+			RePro</para></listitem>
+			<listitem><para><keycap>Ctrl+S</keycap>: Make
+			a screenshot of the widget of the currrently
+			running RePro</para></listitem>
 		        </itemizedlist>
                     </listitem>
                   </varlistentry>
@@ -328,8 +389,6 @@
 			<itemizedlist>
 			<listitem><para><keycap>+</keycap>: Zoom in by dividing time axis by a factor two.</para></listitem>
 			<listitem><para><keycap>-</keycap>: Zoom out by enlarging time axis by a factor two.</para></listitem>
-			<listitem><para><keycap>PageUp</keycap>: Move plot window to the left.</para></listitem>
-			<listitem><para><keycap>PageDown</keycap>: Move plot window to the right.</para></listitem>
 			<listitem><para><keycap>Home</keycap>: Fixed mode, show traces from the last stimulus on 
 			 (only if RELACS has the key focus, see <keycap>ESC</keycap>).</para></listitem>			
 			<listitem><para><keycap>Ctrl+F</keycap>: Fixed mode, show traces from the last stimulus on (independent of key focus).</para></listitem>
@@ -337,18 +396,24 @@
 			 (only if RELACS has the key focus, see <keycap>ESC</keycap>).</para></listitem>
 			<listitem><para><keycap>Ctrl+C</keycap>: Continuous mode, show always recent data to the very right of the plot window 
 			 (independent of key focus).</para></listitem>
+			<listitem><para><keycap>Insert</keycap>: Continuous mode, wrap the data through the plot window 
+			 (only if RELACS has the key focus, see <keycap>ESC</keycap>).</para></listitem>
+			<listitem><para><keycap>Ctrl+T</keycap>: Toggle trigger mode.</para></listitem>
 			<listitem><para><keycap>Ctrl+M</keycap>: Manual settings are not overidden by RePro settings.</para></listitem>
 			<listitem><para><keycap>Ctrl+A</keycap>: The RePro automatically sets a suitable range.</para></listitem>
-			<listitem><para><keycap>Ctrl+1, Ctrl+2, ..Ctrl+9</keycap>: Toggle plot of the corresponding trace number on or off 
-			 (independent of key focus, as long as no plugin is using these keys as well).</para></listitem>
 			<listitem><para><keycap>1, 2, ..9</keycap>: Toggle plot of the corresponding trace number on or off 
 			 (only if RELACS has the key focus, see <keycap>ESC</keycap>).</para></listitem>
+			<listitem><para><keycap>PageUp</keycap>: Move plot window to the left.</para></listitem>
+			<listitem><para><keycap>PageDown</keycap>: Move plot window to the right.</para></listitem>
 			<listitem><para><keycap>Ctrl+PageUp</keycap>: Move plot window to the first data</para></listitem>
 			<listitem><para><keycap>Ctrl+PageDown</keycap>: Move plot window to the most recent data.</para></listitem>
 			<listitem><para><keycap>Ctrl+Home</keycap>: Move plot window to the most recent stimulus.</para></listitem>
 			<listitem><para><keycap>Ctrl+End</keycap>: Move plot window to the most recent data.</para></listitem>
 			<listitem><para><keycap>Shift+PageUp</keycap>: Move plot window to the left relative to the current stimulus.</para></listitem>
 			<listitem><para><keycap>Shift+PageDown</keycap>: Move plot window to the right relative to the current stimulus.</para></listitem>
+			<listitem><para><keycap>V</keycap>: Center the traces vertically in the plot panels.</para></listitem>
+			<listitem><para><keycap>Shift+V</keycap>: Center and scale the traces vertically in the plot panels.</para></listitem>
+			<listitem><para><keycap>Ctrl+P</keycap>: Print the currenty visible traes. The data are saved to the file <filename>traces.dat</filename> and the shell command specified by printcommand in the settings is called to generate a plot from this file and print it.</para></listitem>
 		        </itemizedlist>
                     </listitem>
                   </varlistentry>
@@ -396,6 +461,11 @@
 			<listitem><para><guimenuitem>Stop Session</guimenuitem>: Stop a recording.</para></listitem>
 			<listitem><para><guimenuitem>Session Info</guimenuitem>: Show the dialog that is usually
 		   launched when stoppping a recording.</para></listitem>
+			<listitem><para><guimenuitem>Input traces</guimenuitem>: Launch a dialog for configuring analog input.</para></listitem>
+			<listitem><para><guimenuitem>Settings</guimenuitem>: Launch a dialog with general RELACS settings.</para></listitem>
+			<listitem><para><guimenuitem>Save settings</guimenuitem>: Write all configuration files with the current settings.</para></listitem>
+			<listitem><para><guimenuitem>Mute audio monitor</guimenuitem>: Mute/unmute the audio monitor.</para></listitem>
+			<listitem><para><guimenuitem>Audio monitor</guimenuitem>: Launch dialog for configuring the audio monitor.</para></listitem>
 			<listitem><para><guimenuitem>Quit</guimenuitem>: Quit RELACS.</para></listitem>		
 		    </itemizedlist>
                   </listitem>
@@ -404,10 +474,11 @@
                   <varlistentry><term><guimenu>Plugins</guimenu></term>
                   <listitem>
 		    <itemizedlist>
-			<listitem><para><guimenuitem>Control Dialog</guimenuitem>: Show the dialog to edit options of the Control widget.</para></listitem>
-			<listitem><para><guimenuitem>Control Help</guimenuitem>: Display help text for the Control widget.</para></listitem>
 			<listitem><para><guimenuitem>Model Dialog</guimenuitem>: Show the dialog to edit options of the Model.</para></listitem>
 			<listitem><para><guimenuitem>Model Help</guimenuitem>: Display help text for the Model.</para></listitem>
+			<listitem><para><guimenuitem>Control Dialog</guimenuitem>: Show the dialog to edit options of the Control widget.</para></listitem>
+			<listitem><para><guimenuitem>Control Help</guimenuitem>: Display help text for the Control widget.</para></listitem>
+			<listitem><para><guimenuitem>Control Screenshot</guimenuitem>: Make a screenshot of the control widget.</para></listitem>
 		    </itemizedlist>
                   </listitem>
                   </varlistentry>
@@ -438,6 +509,7 @@
 				 otherwise launch options dialog of the previously run RePro.</para></listitem>
 			<listitem><para><guimenuitem>View</guimenuitem>: View previously shown RePro.</para></listitem>
 			<listitem><para><guimenuitem>Help</guimenuitem>: Show the help text of the currently running RePro.</para></listitem>
+			<listitem><para><guimenuitem>Screenshot</guimenuitem>: Make a screenshot of the widget of the currently running RePro.</para></listitem>
                         <listitem>
 		        <para>
 		        Then there is list of all loaded RePros.
@@ -498,8 +570,13 @@
                   <varlistentry><term><guimenu>View</guimenu></term>
                   <listitem>
 		    <itemizedlist>
+			<listitem><para><guimenuitem>Show Filters:</guimenuitem>: Toggle maximized display of the filter widgets.</para></listitem>
+			<listitem><para><guimenuitem>Show Traces:</guimenuitem>: Toggle maximized display of the recorded traces.</para></listitem>
+			<listitem><para><guimenuitem>Show Controls:</guimenuitem>: Toggle maximized display of the control widgets.</para></listitem>
+			<listitem><para><guimenuitem>Show RePros:</guimenuitem>: Toggle maximized display of the RePro widgets.</para></listitem>
+			<listitem><para><guimenuitem>Maximize window:</guimenuitem>: Toggle maximize RELACS window.</para></listitem>
+			<listitem><para><guimenuitem>Fullscreen:</guimenuitem>: Toggle fullscreen mode.</para></listitem>
 			<listitem><para><emphasis>Traces</emphasis>: Various commands for customizing the PlotTrace widget. See <xref linkend='plotkeys' endterm='plotkeystitle'/> for details.</para></listitem>
-			<listitem><para><guimenuitem>Fullscreen Mode:</guimenuitem>: Toggle fullscreen mode.</para></listitem>
 		    </itemizedlist>	
                   </listitem>
                   </varlistentry>
