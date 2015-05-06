@@ -332,6 +332,28 @@ protected:
 };
 
 
+/*!
+\class PrintThread
+\author Jan Benda
+\brief Worker thread for printing traces.
+*/
+
+class PrintThread : public QThread
+{
+  Q_OBJECT
+
+public:
+  PrintThread( const string &printcommand );
+
+protected:
+  void run( void );
+
+private:
+  string PrintCommand;
+
+};
+
+
 }; /* namespace relacs */
 
 #endif /* ! _RELACS_PLOTTRACE_H_ */

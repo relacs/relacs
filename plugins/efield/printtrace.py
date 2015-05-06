@@ -41,8 +41,8 @@ data, key, header = loaddat( "traces.dat" )
 
 # plot data:
 ncols = len( key[-1] )-1
-fw = 18.0
-fh = 24.0
+fw = 21.0
+fh = 29.7
 if ncols == 1 :
     fh = 12.0
 fig = plt.figure( figsize=( fw/2.54, fh/2.54 ) )
@@ -51,11 +51,16 @@ for col in xrange( 1, ncols+1 ) :
     if col == 1 :
         ax.set_title( header['Species'] + ", EODf=" + header['EOD Rate'], fontsize=18 )
     ax.set_xlim( data[0,0], data[-1,0] )
+    # if col == ncols :
     ax.set_xlabel( key[0][0] + ' [' + key[1][0] + ']' )
+    # else :
+    #     plt.setp( ax.get_xticklabels(), visible=False)
     ax.set_ylabel( key[0][col] + ' [' + key[1][col] + ']' )
     ax.ticklabel_format(useOffset=False)
-    ax.plot( data[:,0], data[:,col] )
-plt.tight_layout()
+    ax.plot( data[:,0], data[:,col], lw=2 )
+# fig.subplots_adjust(left=0.2, hspace=0.0 )
+fig.subplots_adjust(left=0.2, right=0.9, bottom=0.13, top=0.87, hspace=0.18 )
+#plt.tight_layout()
 plt.savefig( 'traces.pdf', papertype="a4" )
 
 # fix pdf file and print:

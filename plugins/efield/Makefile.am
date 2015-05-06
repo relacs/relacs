@@ -7,6 +7,7 @@ dist_efieldcfg_DATA = \
     macros.cfg
 
 EXTRA_DIST = \
+    printtrace.py \
     doc/efield.doc
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old

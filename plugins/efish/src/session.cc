@@ -148,9 +148,11 @@ void Session::preConfig( void )
   // options that are written into the trigger file
   // the values are set in EFishSession::main()
   lockStimulusData();
-  stimulusData().addNumber( "EOD Rate", "", EODRate, 0, 100000, 5.0, "Hz", "Hz", "%4.0f" );
-  stimulusData().addNumber( "EOD Amplitude", "", EODAmplitude,
-			    0, 100000, 0.1, "mV", "mV", "%6.3f" );
+  if ( ! stimulusData().exist( "EOD Rate" ) ) {
+    stimulusData().addNumber( "EOD Rate", "", EODRate, 0, 100000, 5.0, "Hz", "Hz", "%4.0f" );
+    stimulusData().addNumber( "EOD Amplitude", "", EODAmplitude,
+			      0, 100000, 0.1, "mV", "mV", "%6.3f" );
+  }
   unlockStimulusData();
 
   // LCDs:
@@ -198,7 +200,8 @@ void Session::config( void )
     Options &mo = metaData().section( "Subject" );
     mo.clearSections();
     // following option is set by the BaselineActivity RePro:
-    mo.addNumber( "EOD Frequency", "EOD Frequency", 0.0, 0.0, 2000.0, 10.0, "Hz", "Hz", "%0.0f" );
+    if ( ! metaData().exist( "EOD Frequency" ) )
+      mo.addNumber( "EOD Frequency", "EOD Frequency", 0.0, 0.0, 2000.0, 10.0, "Hz", "Hz", "%0.0f" );
   }
 
   if ( EPhys ) {

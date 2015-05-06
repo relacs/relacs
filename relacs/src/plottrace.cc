@@ -1122,6 +1122,13 @@ void PlotTrace::autoRange( void )
 void PlotTrace::centerVertically( void )
 {
   P.lock();
+  vector<bool> pcenter( P.size(), false );
+  vector<double> pmin( P.size(), 0.0 );
+  vector<double> pmax( P.size(), 0.0 );
+  vector<double> pminrange( P.size(), 0.0 );
+  vector<double> pmaxrange( P.size(), 0.0 );
+
+  // get minimum and maximum values for each plot:
   double tfac = 1000.0;
   for ( unsigned int c=0; c<TraceStyle.size(); c++ ) {
     if ( TraceStyle[c].visible() &&
@@ -1138,24 +1145,47 @@ void PlotTrace::centerVertically( void )
       float min = 0.0;
       float max = 0.0;
       PlotTraces[c].minMax( min, max, xmin, xmax );
-      if ( P[vp].ranges() == 0 )
-	P[vp].pushRanges();
-      double center = 0.5*(min+max);
+      if ( pcenter[vp] ) {
+	if ( pmin[vp] > min )
+	  pmin[vp] = min;
+	if ( pmax[vp] < max )
+	  pmax[vp] = max;
+	if ( pminrange[vp] > PlotTraces[c].minValue() )
+	  pminrange[vp] = PlotTraces[c].minValue();
+	if ( pmaxrange[vp] < PlotTraces[c].maxValue() )
+	  pmaxrange[vp] = PlotTraces[c].maxValue();
+      }
+      else {
+	pcenter[vp] = true;
+	pmin[vp] = min;
+	pmax[vp] = max;
+	pminrange[vp] = PlotTraces[c].minValue();
+	pmaxrange[vp] = PlotTraces[c].maxValue();
+      }
+    }
+  }
+
+  // center each plot:
+  for ( int vp=0; vp<P.size(); vp++ ) {
+    if ( pcenter[vp] ) {
+      double center = 0.5*(pmin[vp]+pmax[vp]);
       double range = 0.5*(P[vp].ymaxRange() - P[vp].yminRange());
       double nmin = center-range;
       double nmax = center+range;
-      if ( nmin < PlotTraces[c].minValue() ) {
-	nmin = PlotTraces[c].minValue();
+      if ( nmin < pminrange[vp] ) {
+	nmin = pminrange[vp];
 	nmax = nmin + 2.0*range;
       }
-      if ( nmax > PlotTraces[c].maxValue() ) {
-	nmax = PlotTraces[c].maxValue();
+      if ( nmax > pmaxrange[vp] ) {
+	nmax = pmaxrange[vp];
 	nmin = nmax - 2.0*range;
       }
+      if ( P[vp].ranges() == 0 )
+	P[vp].pushRanges();
       P[vp].setYRange( nmin, nmax );
-      // XXX merge all traces in the plot
     }
   }
+
   P.unlock();
 }
 
@@ -1163,6 +1193,13 @@ void PlotTrace::centerVertically( void )
 void PlotTrace::centerZoomVertically( void )
 {
   P.lock();
+  vector<bool> pcenter( P.size(), false );
+  vector<double> pmin( P.size(), 0.0 );
+  vector<double> pmax( P.size(), 0.0 );
+  vector<double> pminrange( P.size(), 0.0 );
+  vector<double> pmaxrange( P.size(), 0.0 );
+
+  // get minimum and maximum values for each plot:
   double tfac = 1000.0;
   for ( unsigned int c=0; c<TraceStyle.size(); c++ ) {
     if ( TraceStyle[c].visible() &&
@@ -1179,24 +1216,47 @@ void PlotTrace::centerZoomVertically( void )
       float min = 0.0;
       float max = 0.0;
       PlotTraces[c].minMax( min, max, xmin, xmax );
-      if ( P[vp].ranges() == 0 )
-	P[vp].pushRanges();
-      double center = 0.5*(min+max);
-      double range = 0.6*(max-min);
-      double nmin = center-range;
-      double nmax = center+range;
-      if ( nmin < PlotTraces[c].minValue() ) {
-	nmin = PlotTraces[c].minValue();
-	nmax = nmin + 2.0*range;
+      if ( pcenter[vp] ) {
+	if ( pmin[vp] > min )
+	  pmin[vp] = min;
+	if ( pmax[vp] < max )
+	  pmax[vp] = max;
+	if ( pminrange[vp] > PlotTraces[c].minValue() )
+	  pminrange[vp] = PlotTraces[c].minValue();
+	if ( pmaxrange[vp] < PlotTraces[c].maxValue() )
+	  pmaxrange[vp] = PlotTraces[c].maxValue();
       }
-      if ( nmax > PlotTraces[c].maxValue() ) {
-	nmax = PlotTraces[c].maxValue();
-	nmin = nmax - 2.0*range;
+      else {
+	pcenter[vp] = true;
+	pmin[vp] = min;
+	pmax[vp] = max;
+	pminrange[vp] = PlotTraces[c].minValue();
+	pmaxrange[vp] = PlotTraces[c].maxValue();
       }
-      P[vp].setYRange( nmin, nmax );
-      // XXX merge all traces in the plot
     }
   }
+
+  // scale and center each plot:
+  for ( int vp=0; vp<P.size(); vp++ ) {
+    if ( pcenter[vp] ) {
+      double center = 0.5*(pmin[vp]+pmax[vp]);
+      double range = 0.6*(pmax[vp]-pmin[vp]);
+      double nmin = center-range;
+      double nmax = center+range;
+      if ( nmin < pminrange[vp] ) {
+	nmin = pminrange[vp];
+	nmax = nmin + 2.0*range;
+      }
+      if ( nmax > pmaxrange[vp] ) {
+	nmax = pmaxrange[vp];
+	nmin = nmax - 2.0*range;
+      }
+      if ( P[vp].ranges() == 0 )
+	P[vp].pushRanges();
+      P[vp].setYRange( nmin, nmax );
+    }
+  }
+
   P.unlock();
 }
 
@@ -1225,6 +1285,19 @@ void PlotTrace::setView( Views mode )
     PlotChanged = true;
     postCustomEvent( 12 );
   }
+}
+
+
+PrintThread::PrintThread( const string &printcommand )
+  : PrintCommand( printcommand )
+{
+}
+
+
+void PrintThread::run( void )
+{
+  if ( system( PrintCommand.c_str() ) != 0 )
+    cerr << "failed to execute " << PrintCommand << '\n';
 }
 
 
@@ -1263,10 +1336,10 @@ void PlotTrace::print( void )
 
   string printcommand = relacsSettings().text( "printcommand" );
   if ( ! printcommand.empty() ) {
-    if ( system( printcommand.c_str() ) == 0 )
-      printlog( "executed " + printcommand );
-    else
-      printlog( "failed to execute " + printcommand );
+    printlog( "execute " + printcommand );
+    PrintThread *printthread = new PrintThread( printcommand );
+    connect( printthread, SIGNAL( finished() ), printthread, SLOT( deleteLater() ) );
+    printthread->start();
   }
 }
 

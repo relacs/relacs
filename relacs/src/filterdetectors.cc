@@ -155,6 +155,8 @@ string FilterDetectors::createFilters( void )
       mode |= PlotTraceMode;
     if ( filteropts->boolean( "trigger", false ) )
       mode |= PlotTriggerMode;
+    if ( filteropts->boolean( "center", false ) )
+      mode |= PlotTraceCenterVertically;
     vector< string > intrace;
     Options::const_iterator ip = filteropts->find( "inputtrace" );
     if ( ip != filteropts->end() ) {
