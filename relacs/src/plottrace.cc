@@ -661,8 +661,8 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "&Trigger", this, SLOT( toggleTrigger() ), Qt::CTRL + Qt::Key_T );
   Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
-  Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ) );
-  Menu->addAction( "&Zoom vertically", this, SLOT( centerZoomVertically() ) );
+  Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ), Qt::Key_V );
+  Menu->addAction( "&Zoom vertically", this, SLOT( centerZoomVertically() ), Qt::SHIFT + Qt::Key_V );
   Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
   Menu->addAction( "&Print", this, SLOT( print() ), Qt::CTRL + Qt::Key_P );
 
@@ -1554,13 +1554,6 @@ void PlotTrace::keyPressEvent( QKeyEvent *event )
 
   case Qt::Key_Equal:
     zoomIn();
-    break;
-
-  case Qt::Key_V:
-    if ( event->modifiers() & Qt::ShiftModifier )
-      centerZoomVertically();
-    else
-      centerVertically();
     break;
 
   default: {

@@ -348,7 +348,7 @@ string FilterDetectors::createFilters( void )
 
     // insert detector in list:
     FL.push_back( FilterData( fp, filter, intrace, othertrace,
-			      buffersize, storesize, storewidth, panel, linewidth ) );
+    			      buffersize, storesize, storewidth, panel, linewidth ) );
 
 
     // add detector to widget:
@@ -897,51 +897,23 @@ void FilterDetectors::adjust( void )
 }
 
 
+void FilterDetectors::autoConfigure( void )
+{
+  autoConfigure( 1.0 );
+}
+
+
 void FilterDetectors::autoConfigure( double duration )
 {
-  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
-    d->FilterDetector->lock();
-    if ( d->FilterDetector->type() & Filter::EventInput ) {
-      double tend = d->InEvents[0].rangeBack();
-      double tbegin = tend - duration;
-      if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	d->FilterDetector->autoConfigure( d->InEvents, tbegin, tend );
-      else
-	d->FilterDetector->autoConfigure( d->InEvents[0], tbegin, tend );
-    }
-    else {
-      double tend = d->InTraces.currentTime();
-      double tbegin = tend - duration;
-      if ( tbegin < d->InTraces[0].minTime() )
-	tbegin = d->InTraces[0].minTime();
-      if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	d->FilterDetector->autoConfigure( d->InTraces, tbegin, tend );
-      else
-	d->FilterDetector->autoConfigure( d->InTraces[0], tbegin, tend );
-    }
-    d->FilterDetector->unlock();
-  }
+  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
+    d->autoConfigure( duration );
 }
 
 
 void FilterDetectors::autoConfigure( double tbegin, double tend )
 {
-  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
-    d->FilterDetector->lock();
-    if ( d->FilterDetector->type() & Filter::EventInput ) {
-      if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	d->FilterDetector->autoConfigure( d->InEvents, tbegin, tend );
-      else
-	d->FilterDetector->autoConfigure( d->InEvents[0], tbegin, tend );
-    }
-    else {
-      if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	d->FilterDetector->autoConfigure( d->InTraces, tbegin, tend );
-      else
-	d->FilterDetector->autoConfigure( d->InTraces[0], tbegin, tend );
-    }
-    d->FilterDetector->unlock();
-  }
+  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
+    d->autoConfigure( tbegin, tend );
 }
 
 
@@ -949,26 +921,7 @@ void FilterDetectors::autoConfigure( Filter *f, double duration )
 {
   for ( FilterList::iterator fp = FL.begin(); fp != FL.end(); ++fp ) {
     if ( fp->FilterDetector == f ) {
-      fp->FilterDetector->lock();
-      if ( fp->FilterDetector->type() & Filter::EventInput ) {
-	double tend = fp->InEvents[0].rangeBack();
-	double tbegin = tend - duration;
-	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
-	  fp->FilterDetector->autoConfigure( fp->InEvents, tbegin, tend );
-	else
-	  fp->FilterDetector->autoConfigure( fp->InEvents[0], tbegin, tend );
-      }
-      else {
-	double tend = fp->InTraces.currentTime();
-	double tbegin = tend - duration;
-	if ( tbegin < fp->InTraces[0].minTime() )
-	  tbegin = fp->InTraces[0].minTime();
-	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
-	  fp->FilterDetector->autoConfigure( fp->InTraces, tbegin, tend );
-	else
-	  fp->FilterDetector->autoConfigure( fp->InTraces[0], tbegin, tend );
-      }
-      fp->FilterDetector->unlock();
+      fp->autoConfigure( duration );
       break;
     }
   }
@@ -979,20 +932,7 @@ void FilterDetectors::autoConfigure( Filter *f, double tbegin, double tend )
 {
   for ( FilterList::iterator fp = FL.begin(); fp != FL.end(); ++fp ) {
     if ( fp->FilterDetector == f ) {
-      fp->FilterDetector->lock();
-      if ( fp->FilterDetector->type() & Filter::EventInput ) {
-	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
-	  fp->FilterDetector->autoConfigure( fp->InEvents, tbegin, tend );
-	else
-	  fp->FilterDetector->autoConfigure( fp->InEvents[0], tbegin, tend );
-      }
-      else {
-	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
-	  fp->FilterDetector->autoConfigure( fp->InTraces, tbegin, tend );
-	else
-	  fp->FilterDetector->autoConfigure( fp->InTraces[0], tbegin, tend );
-      }
-      fp->FilterDetector->unlock();
+      fp->autoConfigure( tbegin, tend );
       break;
     }
   }
@@ -1277,6 +1217,7 @@ void FilterDetectors::addMenu( QMenu *menu, bool doxydoc )
     Menu = menu;
   Menu->clear();
 
+  Menu->addAction( "&Autoconfigure", this, SLOT( autoConfigure() ), Qt::Key_A );
   for ( unsigned int k=0; k<FL.size(); k++ ) {
     string s = "&";
     if ( k == 0 )
@@ -1433,12 +1374,12 @@ void FilterDetectors::keyReleaseEvent( QKeyEvent *event )
 }
 
 
-FilterDetectors::FilterData::FilterData( Filter *filter,
-					 const string &pluginname,
-					 const vector<string> &in,
-					 const vector<string> &other,
-					 long n, bool size, bool width,
-					 const string &panel, int linewidth )
+FilterData::FilterData( Filter *filter,
+			const string &pluginname,
+			const vector<string> &in,
+			const vector<string> &other,
+			long n, bool size, bool width,
+			const string &panel, int linewidth )
   : PluginName( pluginname ), In( in ), Other( other ), 
     InTraces(), InEvents(), OutTraces(), OutEvents(), OtherEvents(),
     NBuffer( n ), SizeBuffer( size ), WidthBuffer( width ),
@@ -1451,7 +1392,7 @@ FilterDetectors::FilterData::FilterData( Filter *filter,
 }
 
 
-FilterDetectors::FilterData::FilterData( const FilterData &fd )
+FilterData::FilterData( const FilterData &fd )
   : PluginName( fd.PluginName ), In( fd.In ), Other( fd.Other ), 
     InTraces(), InEvents( fd.InEvents ), OutTraces( fd.OutTraces ),
     OutEvents( fd.OutEvents ), OtherEvents( fd.OtherEvents ),
@@ -1465,12 +1406,62 @@ FilterDetectors::FilterData::FilterData( const FilterData &fd )
 }
 
 
-FilterDetectors::FilterData::~FilterData( void )
+FilterData::~FilterData( void )
 {
 }
 
 
-void FilterDetectors::FilterData::print( ostream &str ) const
+void FilterData::autoConfigure( void )
+{
+  autoConfigure( 1.0 );
+}
+
+
+void FilterData::autoConfigure( double duration )
+{
+  FilterDetector->lock();
+  if ( FilterDetector->type() & Filter::EventInput ) {
+    double tend = InEvents[0].rangeBack();
+    double tbegin = tend - duration;
+    if ( FilterDetector->type() & Filter::MultipleTraces )
+      FilterDetector->autoConfigure( InEvents, tbegin, tend );
+    else
+      FilterDetector->autoConfigure( InEvents[0], tbegin, tend );
+  }
+  else {
+    double tend = InTraces.currentTime();
+    double tbegin = tend - duration;
+    if ( tbegin < InTraces[0].minTime() )
+      tbegin = InTraces[0].minTime();
+    if ( FilterDetector->type() & Filter::MultipleTraces )
+      FilterDetector->autoConfigure( InTraces, tbegin, tend );
+    else
+      FilterDetector->autoConfigure( InTraces[0], tbegin, tend );
+  }
+  FilterDetector->unlock();
+}
+
+
+void FilterData::autoConfigure( double tbegin, double tend )
+{
+  FilterDetector->lock();
+  if ( FilterDetector->type() & Filter::EventInput ) {
+    if ( FilterDetector->type() & Filter::MultipleTraces )
+      FilterDetector->autoConfigure( InEvents, tbegin, tend );
+    else
+      FilterDetector->autoConfigure( InEvents[0], tbegin, tend );
+  }
+  else {
+    if ( FilterDetector->type() & Filter::MultipleTraces )
+      FilterDetector->autoConfigure( InTraces, tbegin, tend );
+    else
+      FilterDetector->autoConfigure( InTraces[0], tbegin, tend );
+  }
+  FilterDetector->unlock();
+}
+
+
+void FilterData::print( ostream &str ) const
 {
   str << "      ident: " << FilterDetector->ident() << '\n'
       << " pluginname: " << PluginName << '\n'

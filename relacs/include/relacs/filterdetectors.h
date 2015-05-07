@@ -36,6 +36,7 @@
 namespace relacs {
 
 
+class FilterData;
 class RePros;
 class Session;
 class Filter;
@@ -43,13 +44,12 @@ class Devices;
 class AttInterfaces;
 class RELACSWidget;
 
+
 /*!
 \class FilterDetectors
 \author Jan Benda
-\version 1.0
 \brief Container organizing filter and event detectors.
 */
-
 
 class FilterDetectors : public PluginTabs, public ConfigClass
 {
@@ -180,6 +180,13 @@ public:
   friend ostream &operator<<( ostream &str, const FilterDetectors &DT );
 
 
+public slots :
+
+    /*! Call the Filter::autoConfigure() function for all filter
+        on the last second of data. */
+  void autoConfigure( void );
+
+
 protected:
 
   void keyPressEvent( QKeyEvent *event );
@@ -187,38 +194,6 @@ protected:
 
 
 private:
-
-  class FilterData
-  {
-  public:
-    FilterData( Filter *filter, const string &pluginname,
-		const vector<string> &in,
-		const vector<string> &other,
-		long n, bool size, bool width,
-		const string &panel, int linewidth );
-    FilterData( const FilterData &fd );
-    ~FilterData();
-
-    void print( ostream &str ) const;
-
-    Filter *FilterDetector;
-    string PluginName;
-    int Out;
-    int NOut;
-    vector<string> In;
-    vector<string> Other;
-    InList InTraces;
-    EventList InEvents;
-    InList OutTraces;
-    EventList OutEvents;
-    EventList OtherEvents;
-    long NBuffer;
-    bool SizeBuffer;
-    bool WidthBuffer;
-    string PanelTrace;
-    int LineWidth;
-    bool Init;
-  };
 
   typedef vector<FilterData> FilterList;
 
@@ -241,6 +216,57 @@ private:
   bool NeedAdjust;
   int AdjustFlag;
   QMutex AdjustMutex;
+
+};
+
+
+/*!
+\class FilterData
+\author Jan Benda
+\brief Additional data for each filter and detector.
+*/
+
+class FilterData : public QObject
+{
+  Q_OBJECT
+
+ public:
+
+  FilterData( Filter *filter, const string &pluginname,
+	      const vector<string> &in,
+	      const vector<string> &other,
+	      long n, bool size, bool width,
+	      const string &panel, int linewidth );
+  FilterData( const FilterData &fd );
+  ~FilterData();
+
+  void autoConfigure( double duration );
+  void autoConfigure( double tbegin, double tend );
+
+  void print( ostream &str ) const;
+
+  Filter *FilterDetector;
+  string PluginName;
+  int Out;
+  int NOut;
+  vector<string> In;
+  vector<string> Other;
+  InList InTraces;
+  EventList InEvents;
+  InList OutTraces;
+  EventList OutEvents;
+  EventList OtherEvents;
+  long NBuffer;
+  bool SizeBuffer;
+  bool WidthBuffer;
+  string PanelTrace;
+  int LineWidth;
+  bool Init;
+
+
+public slots:
+
+    void autoConfigure( void );
 
 };
 
