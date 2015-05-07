@@ -32,9 +32,10 @@ namespace base {
 \class InstantaneousRate
 \brief [Filter] Computes the instantaneous rate between succeeding events.
 \author Jan Benda
-\version 1.0 (May 03, 2015)
+\version 1.2 (May 07, 2015)
 
 \par Options
+- \c tau=0ms: Filter time constant (\c number)
 - \c minrate=0Hz: Minimum initial rate (\c number)
 - \c maxrate=1000Hz: Maximum initial rate (\c number)
 */
@@ -47,12 +48,20 @@ class InstantaneousRate : public Filter
 public:
 
   InstantaneousRate( const string &ident="", int mode=0 );
+  virtual void notify( void );
   virtual int init( const EventData &inevents, InData &outdata );
   virtual int filter( const EventData &inevents, InData &outdata );
 
 
 private:
 
+  OptWidget IRW;
+
+  double Tau;
+
+  double DeltaT;
+  double TFac;
+  float X;
   int Index;
 
 };

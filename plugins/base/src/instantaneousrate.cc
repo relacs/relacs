@@ -27,17 +27,38 @@ namespace base {
 
 InstantaneousRate::InstantaneousRate( const string &ident, int mode )
   : Filter( ident, mode, SingleEventFilter, 1,
-            "InstantaneousRate", "base", "Jan Benda", "1.0", "May 03, 2015" )
+            "InstantaneousRate", "base", "Jan Benda", "1.2", "May 07, 2015" )
 {
+  // parameter:
+  Tau = 0.0;
+
   // options:
-  addNumber( "minrate", "Minimum initial rate", 0.0, 0.0, 1000000.0, 10.0, "Hz" );
-  addNumber( "maxrate", "Maximum initial rate", 1000.0, 0.0, 1000000.0, 10.0, "Hz" );
+  newSection( "Instantaneous rate", 1, OptWidget::LabelBold );
+  addNumber( "tau", "Filter time constant", Tau, 0.0, 10000.0, 0.001, "s", "ms" ).setFlags( 1+2 );
+  addNumber( "minrate", "Minimum initial rate", 0.0, 0.0, 1000000.0, 10.0, "Hz" ).setFlags( 2 );
+  addNumber( "maxrate", "Maximum initial rate", 1000.0, 0.0, 1000000.0, 10.0, "Hz" ).setFlags( 2 );
+  setDialogSelectMask( 2 );
+
+  IRW.assign( ((Options*)this), 1, 0, true, 0, mutex() );
+  setWidget( &IRW );
+}
+
+
+void InstantaneousRate::notify( void )
+{
+  Tau = number( "tau" );
+  if ( Tau > 0.0 )
+    TFac = DeltaT/Tau;
+  IRW.updateValues( OptWidget::changedFlag() );
 }
 
 
 int InstantaneousRate::init( const EventData &inevents, InData &outdata )
 {
   Index = inevents.size();
+  X = 0.0;
+  DeltaT = outdata.sampleInterval();
+  TFac = DeltaT/Tau;
   double minrate = number( "minrate" );
   double maxrate = number( "maxrate" );
   if ( maxrate < minrate ) {
@@ -57,9 +78,19 @@ int InstantaneousRate::filter( const EventData &inevents, InData &outdata )
     float rate = 0.0;
     if ( Index > inevents.minEvent() )
       rate = 1.0/(inevents[Index] - inevents[Index-1]);
-    while ( outdata.currentTime() < inevents[Index] )
-      outdata.push( rate );
-    Index++;
+    if ( Tau > 0.0 ) {
+      while ( outdata.currentTime() < inevents[Index] ) {
+	X += TFac * ( rate - X );
+	outdata.push( X );
+      }
+    }
+    else {
+      while ( outdata.currentTime() < inevents[Index] ) {
+	X = rate;
+	outdata.push( X );
+      }
+    }
+    ++Index;
   }
   return 0;
 }
