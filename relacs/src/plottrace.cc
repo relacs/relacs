@@ -562,7 +562,10 @@ void PlotTrace::plot( void )
       if ( dt/TimeWindow > 0.02 )
 	ninx--;
       double nt = PlotEvents[TriggerSource][ninx];
-      if ( TimeWindow < dt || fabs( nt - LeftTime ) <= 2.0*dt ) {
+      double mindiff = 2.0*dt;
+      if ( mindiff > TimeWindow )
+	mindiff = TimeWindow;
+      if ( TimeWindow < dt || fabs( nt - LeftTime ) <= mindiff ) {
 	LeftTime = nt;
 	leftwin = (LeftTime - sigtime)*tfac;
 	rightwin = leftwin + tfac * TimeWindow;
@@ -663,7 +666,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
   Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ), Qt::Key_V );
   Menu->addAction( "&Zoom vertically", this, SLOT( centerZoomVertically() ), Qt::SHIFT + Qt::Key_V );
-  Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
+  Menu->addAction( "&Toggle plotting", this, SLOT( plotOnOff() ) );
   Menu->addAction( "Zoom back", this, SLOT( zoomBack() ), Qt::ALT + Qt::Key_Left );
   Menu->addAction( "Reset zoom", this, SLOT( resetZoom() ), Qt::ALT + Qt::Key_Right );
   Menu->addAction( "&Print", this, SLOT( print() ), Qt::CTRL + Qt::Key_P );
@@ -741,9 +744,9 @@ double PlotTrace::signalTime( void ) const
 double PlotTrace::currentTime( void ) const
 {
   if ( FilePlot && FileTraces.size() > 0 )
-    return FileTraces[0].currentTime();
+    return FileTraces.currentTimeRaw();
   else
-    return RELACSPlugin::currentTime();
+    return RELACSPlugin::currentTimeRaw();
 }
 
 

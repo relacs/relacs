@@ -118,6 +118,12 @@
 		</para>
 
 		<para>
+		  The left plot margins are aligned to nearby events
+		  (if enabled). This can be toggled by pressing
+		  <keycap>Ctrl+T</keycap>.
+		</para>
+
+		<para>
 		Visibility of each trace and the corresponding plot
 		panel can be toggled by pressing <keycap>1</keycap>,
 		<keycap>2</keycap>, ...  according to the number of

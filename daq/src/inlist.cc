@@ -336,6 +336,23 @@ double InList::currentTime( void ) const
 }
 
 
+double InList::currentTimeRaw( void ) const
+{
+  double t = -1.0;
+  for ( int k=0; k<size(); k++ ) {
+    if ( operator[]( k ).source() == 0 ) {
+      // skip empty traces in case a model does not simulate some traces:
+      if ( ! operator[]( k ).empty() ) {
+	double ct = operator[]( k ).currentTime();
+	if ( t < 0.0 || t > ct )  
+	  t = ct;
+      }
+    }
+  }
+  return t < 0.0 ? 0.0 : t;
+}
+
+
 void InList::setDevice( int device )
 {
   for ( int k=0; k<size(); k++ )

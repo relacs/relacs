@@ -460,6 +460,8 @@ int MyPlugin::main( void )
   double signalTime( void ) const;
     /*! \return the current recording time of the input buffers. */
   double currentTime( void ) const;
+    /*! \return the smallest recording time of all raw traces (source == 0). */
+  double currentTimeRaw( void ) const;
 
     /*! Add the local copies of the data buffers to \a data and \a events. */
   void addTracesEvents( deque<InList*> &data, deque<EventList*> &events );

@@ -459,6 +459,12 @@ double RELACSPlugin::currentTime( void ) const
 }
 
 
+double RELACSPlugin::currentTimeRaw( void ) const
+{
+  return IData.currentTimeRaw();
+}
+
+
 int RELACSPlugin::maxVoltages( const InData &data, vector<double> &ranges ) const
 {
   ranges.clear();
