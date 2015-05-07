@@ -506,6 +506,7 @@ unsigned char DAQFlexCore::getEndpointOutAddress( unsigned char* data, int n )
 int DAQFlexCore::initDevice( const string &path )
 {
   ErrorState = Success;
+  string fpgav = "";
 
   switch ( ProductID ) {
   case USB_1608_G:
@@ -532,6 +533,11 @@ int DAQFlexCore::initDevice( const string &path )
     }
     DIOLines = 8;
     uploadFPGAFirmware( path, "USB_1608G.rbf" );
+    if ( ErrorState != Success )
+      return ErrorState;
+    fpgav = sendMessage( "?DEV:FPGAV" );
+    if ( ! fpgav.empty() )
+      fpgav.erase( 0, 10 );
     if ( ErrorState != Success )
       return ErrorState;
     break;
@@ -695,11 +701,8 @@ int DAQFlexCore::initDevice( const string &path )
     Info.addText( "Firmware version", fwv );
   }
   // fpga firmware version:
-  string fpgav = sendMessage( "?DEV:FPGAV" );
-  if ( ! fpgav.empty() ) {
-    fpgav.erase( 0, 10 );
+  if ( ! fpgav.empty() )
     Info.addText( "FPGA version", fpgav );
-  }
 
   return ErrorState;
 }
