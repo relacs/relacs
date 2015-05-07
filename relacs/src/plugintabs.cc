@@ -95,6 +95,35 @@ bool PluginTabs::eventFilter( QObject *obj, QEvent *event )
       }
     }
   }
+  else if ( event->type() == QEvent::Shortcut ) {
+    QShortcutEvent *se = dynamic_cast<QShortcutEvent *>( event );
+    if ( se != 0 ) {
+      if ( se->key() == QKeySequence( Qt::ALT+Qt::Key_Left ) ||
+	   se->key() == QKeySequence( Qt::ALT+Qt::Key_Right ) ) {
+	// find out whether keyboard focus is within PluginTabs:
+	QWidget *w = qApp->focusWidget();
+	while ( w ) {
+	  if ( w == this ) {
+	    // yes! Let's change pages:
+	    int c = currentIndex();
+	    if ( se->key() == QKeySequence( Qt::ALT+Qt::Key_Left ) ) {
+	      c--;
+	      if ( c >= 0 )
+		setCurrentIndex( c );
+	    }
+	    else {
+	      c++;
+	      if ( c < count() )
+		setCurrentIndex( c );
+	    }
+	    return true;
+	  }
+	  w = w->parentWidget();
+	}
+	return false;
+      }
+    }
+  }
   return QTabWidget::eventFilter( obj, event );
 }
 

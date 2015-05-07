@@ -136,6 +136,8 @@ public slots:
   void autoRange( void );
   void centerVertically( void );
   void centerZoomVertically( void );
+  void zoomBack( void );
+  void resetZoom( void );
 
   void plotOnOff( void );
   void viewToggle( void );

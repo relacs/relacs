@@ -657,6 +657,26 @@ void MultiPlot::setRanges( int id )
 }
 
 
+void MultiPlot::popRanges( void )
+{
+  for ( PlotListType::iterator p = PlotList.begin(); 
+	p != PlotList.end(); 
+	++p ) {
+    (**p).popRanges();
+  }
+}
+
+
+void MultiPlot::resetRanges( void )
+{
+  for ( PlotListType::iterator p = PlotList.begin(); 
+	p != PlotList.end(); 
+	++p ) {
+    (**p).resetRanges();
+  }
+}
+
+
 void MultiPlot::enableMouse( void )
 {
   for ( PlotListType::iterator p = PlotList.begin(); 

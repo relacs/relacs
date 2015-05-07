@@ -163,6 +163,15 @@ signals:
   void resizePlots( QResizeEvent *qre );
 
 
+public slots:
+
+    /*! Set the ranges of all stacks according to the last zoom-stack
+        entry and remove it from the stack. */
+  void popRanges( void );
+    /*! Clears the zoom stack of all plots. */
+  void resetRanges( void );
+
+
 protected:
 
     /*! Paints the entire plot. */

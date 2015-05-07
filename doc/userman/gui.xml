@@ -67,8 +67,8 @@
 	
 		<section xml:id='plottracewidget'><title>The PlotTrace widget</title>
 		<para>This widget in the upper right
-		shows the recorded voltage traces (green solid lines)
-		together with the detected events (red vertical lines, all sorts of points).
+		shows the recorded voltage traces (solid lines)
+		together with the detected events (all sorts of points).
 		The vertical white lines mark the time of a stimulus output.
 		The time axis is in milliseconds relative to the last stimulus.
 		There are three display modes:
@@ -107,6 +107,15 @@
 		respectively.</para>
 		<para>Pressing <keycap>v</keycap> vertically centers the traces in the plots and 
 		<keycap>V</keycap> centers and zooms the y-range to make the current traces fully visible.</para>
+
+		<para>Clicking with the left mouse button on the axis
+		zooms into the axis.  Right clicking zooms out. Left
+		clicking into the plot zooms both axis in.  With the
+		left mouse button pressed down you can also draw a
+		zoom rectangle into the plot. <keycap>Alt+Left</keycap>
+		zooms out (back into zoom stack) and <keycap>Alt+Right</keycap>
+		resets the plot to its original axis ranges.
+		</para>
 
 		<para>
 		Visibility of each trace and the corresponding plot
@@ -413,6 +422,8 @@
 			<listitem><para><keycap>Shift+PageDown</keycap>: Move plot window to the right relative to the current stimulus.</para></listitem>
 			<listitem><para><keycap>V</keycap>: Center the traces vertically in the plot panels.</para></listitem>
 			<listitem><para><keycap>Shift+V</keycap>: Center and scale the traces vertically in the plot panels.</para></listitem>
+			<listitem><para><keycap>Alt+Left</keycap>: Go back in zoom stack.</para></listitem>
+			<listitem><para><keycap>Alt+Right</keycap>: Reset zoom stack.</para></listitem>
 			<listitem><para><keycap>Ctrl+P</keycap>: Print the currenty visible traes. The data are saved to the file <filename>traces.dat</filename> and the shell command specified by printcommand in the settings is called to generate a plot from this file and print it.</para></listitem>
 		        </itemizedlist>
                     </listitem>

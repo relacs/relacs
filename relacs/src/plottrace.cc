@@ -664,6 +664,8 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ), Qt::Key_V );
   Menu->addAction( "&Zoom vertically", this, SLOT( centerZoomVertically() ), Qt::SHIFT + Qt::Key_V );
   Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
+  Menu->addAction( "Zoom back", this, SLOT( zoomBack() ), Qt::ALT + Qt::Key_Left );
+  Menu->addAction( "Reset zoom", this, SLOT( resetZoom() ), Qt::ALT + Qt::Key_Right );
   Menu->addAction( "&Print", this, SLOT( print() ), Qt::CTRL + Qt::Key_P );
 
   Menu->addSeparator();
@@ -1257,6 +1259,22 @@ void PlotTrace::centerZoomVertically( void )
     }
   }
 
+  P.unlock();
+}
+
+
+void PlotTrace::zoomBack( void )
+{
+  P.lock();
+  P.popRanges();
+  P.unlock();
+}
+
+
+void PlotTrace::resetZoom( void )
+{
+  P.lock();
+  P.resetRanges();
   P.unlock();
 }
 
