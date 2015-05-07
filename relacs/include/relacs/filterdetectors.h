@@ -195,7 +195,7 @@ protected:
 
 private:
 
-  typedef vector<FilterData> FilterList;
+  typedef deque<FilterData*> FilterList;
 
   FilterList FL;
 
