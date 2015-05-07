@@ -422,6 +422,7 @@
                     <term>Filter/Detectors</term>
                     <listitem>
 			<itemizedlist>
+			<listitem><para><keycap>A</keycap>: Automatically adjusts thresholds etc. for all filters and detectors.</para></listitem>
 			<listitem><para><keycap>F</keycap>: Put keyboard focus on active filter/detector widget.</para></listitem>
 			<listitem><para><keycap>Alt+RightArrow</keycap>: Make the next filter/detector widget the active one (only if the keyboard focus is on the active filter/detector widget).</para></listitem>
 			<listitem><para><keycap>Alt+LeftArrow</keycap>: Make the previous filter/detector widget the active one (only if the keyboard focus is on the active filter/detector widget).</para></listitem>
@@ -493,9 +494,17 @@
                   <varlistentry><term><guimenu>Detectors/Filters</guimenu></term>
                   <listitem>
 		    <itemizedlist>
+			<listitem><para><guimenuitem>Autoconfigure</guimenuitem>: Automatically adjusts thresholds etc. for all filters and detectors.</para></listitem>
+			<listitem>
+			<para>Then there is a list of each filter and detector. Each has the following submenu:</para>
+		        <itemizedlist>
 			<listitem><para><guimenuitem>Options</guimenuitem>: Launch a dialog that allows you to 
 			 set parameters of the filter/detector.</para></listitem>
 			<listitem><para><guimenuitem>Help</guimenuitem>: Show the help text of the filter/detector (if available).</para></listitem>
+			<listitem><para><guimenuitem>Autoconfigure</guimenuitem>: Automatically adjusts thresholds etc..</para></listitem>
+			<listitem><para><guimenuitem>Screenshot</guimenuitem>: Make a screenshot of the widget of the filter.</para></listitem>
+		        </itemizedlist>
+			</listitem>
 		    </itemizedlist>
                   </listitem>
                   </varlistentry>
