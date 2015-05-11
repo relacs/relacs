@@ -93,11 +93,13 @@ void Model::push( int trace, float val )
     double t = Data[0].currentTime();
     if ( AIDevice != 0 ) {
       // compute dynamic clamp model:
+      SignalMutex.lock();
       for ( unsigned int k=0; k<SignalValues.size(); k++ )
 	SignalValues[k] = signal( t, k );
       AIDevice->model( Data, SignalChannels, SignalValues );
       for ( unsigned int k=0; k<SignalValues.size(); k++ )
 	Signals[k].ModelValue = SignalValues[k];
+      SignalMutex.unlock();
     }
     PushCount++;
     if ( PushCount >= MaxPush ) {

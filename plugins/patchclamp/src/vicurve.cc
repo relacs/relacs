@@ -312,7 +312,7 @@ int VICurve::main( void )
     }
   }
 
-  if ( state == Completed )
+  if ( state == Completed && Range.totalCount() > 0 )
     save();
 
   return state;

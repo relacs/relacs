@@ -501,7 +501,9 @@ void PlotTrace::plot( void )
     return;
 
   // get data:
+  lock();
   getData();
+  unlock();
 
   if ( PlotChanged ) {
     init();
@@ -608,6 +610,7 @@ void PlotTrace::plot( void )
 
 void PlotTrace::updateStyle( void )
 {
+  lock();
   // line and pointstyle:
   for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
     int c = TraceStyle[k].panel();
@@ -632,6 +635,7 @@ void PlotTrace::updateStyle( void )
 	P[c][h].setLine( color, 2*lwidth, Plot::Solid );
     }
   }
+  unlock();
 }
 
 
@@ -1198,6 +1202,7 @@ void PlotTrace::centerVertically( void )
 void PlotTrace::centerZoomVertically( void )
 {
   P.lock();
+  lock();
   vector<bool> pcenter( P.size(), false );
   vector<double> pmin( P.size(), 0.0 );
   vector<double> pmax( P.size(), 0.0 );
@@ -1262,6 +1267,7 @@ void PlotTrace::centerZoomVertically( void )
     }
   }
 
+  unlock();
   P.unlock();
 }
 
@@ -1340,13 +1346,19 @@ void PlotTrace::print( void )
   unlockStimulusData();
   df << '\n';
   datakey.saveKey( df );
+  bool validdata = true;
   for ( int j=PlotTraces[0].index( LeftTime );
-	j<PlotTraces[0].index( LeftTime + TimeWindow ) && j<PlotTraces[0].index( currentTime() );
+	j<PlotTraces[0].index( LeftTime + TimeWindow ) && validdata;
 	j++ ) {
     datakey.save( df, 1000.0*( PlotTraces[0].pos(j) - LeftTime ), 0 );
     for ( unsigned int k=0; k<TraceStyle.size(); k++ ) {
-      if ( TraceStyle[k].visible() )
+      if ( TraceStyle[k].visible() ) {
+	if ( j >= PlotTraces[k].size() ) {
+	  validdata = false;
+	  break;
+	}
 	datakey.save( df, PlotTraces[k][j] );
+      }
     }
     df << '\n';
   }

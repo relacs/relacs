@@ -4940,8 +4940,6 @@ long Plot::InDataElement::last( double x1, double y1, double x2, double y2 ) con
   long x2i = ID->index( t ) + 1;
   if ( x2i > ID->size() )
     return ID->size();
-  else if ( x2i < ID->minIndex() )
-    return ID->minIndex();
   else
     return x2i;
 }

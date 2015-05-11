@@ -503,8 +503,17 @@ void OptWidgetMultiText::get( void )
     bool cn = OO->notifying();
     OO->unsetNotify();
     Param->setText( EW->currentText().toStdString() );
-    for ( int k=0; k<EW->count(); k++ )
-      Param->addText( EW->itemText( k ).toStdString() );
+    for ( int k=0; k<EW->count(); k++ ) {
+      bool newitem = true;
+      for ( int j=0; j<k; j++ ) {
+	if ( EW->itemText( j ) == EW->itemText( k ) ) {
+	  newitem = false;
+	  break;
+	}
+      }
+      if ( newitem )
+	Param->addText( EW->itemText( k ).toStdString() );
+    }
     if ( Param->text( 0 ) != Value )
       Param->addFlags( OW->changedFlag() );
     Value = EW->itemText( 0 ).toStdString();
@@ -525,9 +534,18 @@ void OptWidgetMultiText::reset( void )
       int firstindex = 0;
       for ( int k=0; k<Param->size(); k++ ) {
 	string s = Param->text( k );
-	EW->addItem( s.c_str() );
-	if ( s == first )
-	  firstindex = k;
+	bool newitem = true;
+	for ( int j=0; j<k; j++ ) {
+	  if ( Param->text( j ) == s ) {
+	    newitem = false;
+	    break;
+	  }
+	}
+	if ( newitem ) {
+	  EW->addItem( s.c_str() );
+	  if ( s == first )
+	    firstindex = k;
+	}
       }
       if ( firstindex > 0 ) {
 	EW->removeItem( 0 );
@@ -580,8 +598,17 @@ void OptWidgetMultiText::textChanged( const QString &s )
       bool cn = OO->notifying();
       OO->unsetNotify();
       Param->setText( Value );
-      for ( int k=0; k<EW->count(); k++ )
-	Param->addText( EW->itemText( k ).toStdString() );
+      for ( int k=0; k<EW->count(); k++ ) {
+	bool newitem = true;
+	for ( int j=0; j<k; j++ ) {
+	  if ( EW->itemText( j ) == EW->itemText( k ) ) {
+	    newitem = false;
+	    break;
+	  }
+	}
+	if ( newitem )
+	  Param->addText( EW->itemText( k ).toStdString() );
+      }
       Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
@@ -617,8 +644,17 @@ void OptWidgetMultiText::doTextChanged( const QString &s )
   bool cn = OO->notifying();
   OO->unsetNotify();
   Param->setText( s.toStdString() );
-  for ( int k=0; k<EW->count(); k++ )
-    Param->addText( EW->itemText( k ).toStdString() );
+  for ( int k=0; k<EW->count(); k++ ) {
+    bool newitem = true;
+    for ( int j=0; j<k; j++ ) {
+      if ( EW->itemText( j ) == EW->itemText( k ) ) {
+	newitem = false;
+	break;
+      }
+    }
+    if ( newitem )
+      Param->addText( EW->itemText( k ).toStdString() );
+  }
   if ( Param->text( 0 ) != Value )
     Param->addFlags( OW->changedFlag() );
   Value = EW->itemText( 0 ).toStdString();

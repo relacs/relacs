@@ -361,7 +361,7 @@ int FICurve::main( void )
   }
 
   // save data:
-  if ( state == Completed )
+  if ( state == Completed && Range.totalCount() > 0 )
     save();
 
   return state;

@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cerrno>
 #include <iostream>
 #include <sstream>
 #include <cstdio>
@@ -524,6 +525,9 @@ int DynClampDigitalIO::clearSyncPulse( void )
   dioIOC.op = DIO_CLEAR_SYNCPULSE;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if ( retval < 0 ) {
+    int ern = errno;
+    if ( ern == ENOTTY )
+      return InvalidDevice;
     cerr << "! error: DynClampDigitalIO::clearSyncPulse() -> "
 	 << "Clearing sync pulse failed on subdevice " << SubDevice << '\n';
     return WriteError;

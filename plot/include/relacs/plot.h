@@ -1804,7 +1804,7 @@ long Plot::SampleDataElement<T>::first( double x1, double y1, double x2, double 
   long i = long( ::floor( (x1/XScale - SD->offset())/SD->stepsize() ) );
   if ( i<0 )
     i=0;
-  if ( i > SD->size() )
+  else if ( i > SD->size() )
     i = SD->size();
   return i;
 }

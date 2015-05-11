@@ -992,8 +992,8 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     }
   }
 #endif
-#ifdef ENABLE_SYNCSEC
   else if ( dioIOC->op == DIO_SET_SYNCPULSE ) {
+#ifdef ENABLE_SYNCSEC
     syncSECInsnLow.subdev = subdevice;
     syncSECInsnLow.chanspec = CR_PACK( dioIOC->lines, 0, 0 );
     syncSECInsnHigh.subdev = subdevice;
@@ -1020,8 +1020,12 @@ int setDigitalIO( struct dioIOCT *dioIOC )
       ERROR_MSG( "setDigitalIO: disabled syncSECPulse.\n" );
       return -EFAULT;
     }
+#else
+    return -ENOTTY;
+#endif
   }
   else if ( dioIOC->op == DIO_CLEAR_SYNCPULSE ) {
+#ifdef ENABLE_SYNCSEC
     if ( syncSECInsnLow.subdev >= 0 ) {
       if ( comedi_do_insn( device, &syncSECInsnLow ) != 1 ) {
 	comedi_perror( "setDigitalIO() -> DIO_SET_SYNCPULSE" );
@@ -1034,8 +1038,10 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     syncSECInsnLow.chanspec = 0;
     syncSECInsnHigh.subdev = -1;
     syncSECInsnHigh.chanspec = 0;
-  }
+#else
+    return -ENOTTY;
 #endif
+  }
   else
     return -EINVAL;
   return 0;

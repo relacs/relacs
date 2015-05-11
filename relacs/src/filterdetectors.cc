@@ -1239,7 +1239,7 @@ void FilterDetectors::addMenu( QMenu *menu, bool doxydoc )
     QMenu *pop = Menu->addMenu( s.c_str() );
     pop->addAction( "&Options...", FL[k]->FilterDetector, SLOT( dialog() ) );
     pop->addAction( "&Help...", FL[k]->FilterDetector, SLOT( help() ) );
-    pop->addAction( "&Autoconfigure...", FL[k]->FilterDetector, SLOT( autoConfigure() ) );
+    pop->addAction( "&Autoconfigure...", FL[k], SLOT( autoConfigure() ) );
     pop->addAction( "&Screenshot", FL[k]->FilterDetector, SLOT( saveWidget() ) );
     if ( doxydoc )
       pop->addAction( "&Doxygen", FL[k]->FilterDetector, SLOT( saveDoxygenOptions() ) );
