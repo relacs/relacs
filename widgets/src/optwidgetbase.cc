@@ -535,7 +535,7 @@ void OptWidgetMultiText::reset( void )
       for ( int k=0; k<Param->size(); k++ ) {
 	string s = Param->text( k );
 	bool newitem = true;
-	for ( int j=0; j<k; j++ ) {
+	for ( int j=1; j<k; j++ ) {
 	  if ( Param->text( j ) == s ) {
 	    newitem = false;
 	    break;

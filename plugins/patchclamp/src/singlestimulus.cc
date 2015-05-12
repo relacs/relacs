@@ -37,6 +37,7 @@ namespace patchclamp {
 SingleStimulus::SingleStimulus( void )
   : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.8", "Feb 26, 2015" )
 {
+  WaveForm = Sine;
   IUnit = "nA";
   Amplitude = 1.0;
 
@@ -650,7 +651,7 @@ int SingleStimulus::main( void )
     P[0].setYRange( Plot::AutoScale, Plot::AutoScale );
   }
   else {
-    P[0].setTitle( "Mean firing rate =    Hz" );
+    P[0].setTitle( "CV =    , Mean firing rate =    Hz" );
     P[0].setYLabel( "Firing rate [Hz]" );
     P[0].setYRange( 0.0, Plot::AutoScale );
   }
@@ -679,6 +680,7 @@ int SingleStimulus::main( void )
   // variables:
   EventList spikes;
   double meanrate = 0.0;
+  double cvrate = 0.0;
   SampleDataD rate( -before, duration+after, 0.001, 0.0 );
   SampleDataF voltage( -before, duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
   SampleDataF meanvoltage( -before, duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
@@ -737,9 +739,9 @@ int SingleStimulus::main( void )
 	meancurrent[k] += ( current[k] - meancurrent[k] )/(count+1);
     }
     
-    analyze( spikes, rate, meanrate, duration, skipwin, sigma );
+    analyze( spikes, rate, meanrate, cvrate, duration, skipwin, sigma );
     plotmode = index( "plot" );
-    plot( spikes, rate, signal, voltage, meanvoltage, meanrate, duration, repeats, plotmode );
+    plot( spikes, rate, signal, voltage, meanvoltage, meanrate, cvrate, duration, repeats, plotmode );
     if ( storevoltage ) {
       if ( count == 0 )
 	openTraceFile( tf, tracekey, header );
@@ -759,6 +761,9 @@ int SingleStimulus::main( void )
   directWrite( dcsignal );
   
   if ( state == Completed ) {
+    header.clearSections();
+    header.addNumber( "firing rate", meanrate, "Hz", "%.1f" );
+    header.addNumber( "CV", cvrate, "", "%.3f" );
     if ( storevoltage ) {
       tf << '\n';
       saveMeanTrace( header, tracekey, meanvoltage, meancurrent );
@@ -911,14 +916,21 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate, double 
 void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
 			   const OutData &signal, const SampleDataF &voltage,
 			   const SampleDataF &meanvoltage, double meanrate,
-			   double duration, int repeats, int plotmode )
+			   double cvrate, double duration, int repeats, int plotmode )
 {
   P.lock();
   P[0].clear();
   P[0].plotVLine( 0.0, Plot::White, 2 );
   P[0].plotVLine( 1000.0*duration, Plot::White, 2 );
   if ( plotmode < 3 ) {
-    P[0].setTitle( "" );
+    if ( meanrate > 0.0 ) {
+      if ( cvrate >= 0.0 )
+	P[0].setTitle( "CV = " + Str( cvrate, 0, 2, 'f' ) + ", Mean firing rate = " + Str( meanrate, 0, 0, 'f' ) + "Hz" );
+      else
+	P[0].setTitle( "Mean firing rate = " + Str( meanrate, 0, 0, 'f' ) + "Hz" );
+    }
+    else
+      P[0].setTitle( "" );
     P[0].setYLabel( "Voltage [" + VUnit + "]" );
     if ( ! P[0].zoomedYRange() )
       P[0].setYRange( Plot::AutoScale, Plot::AutoScale );
@@ -929,7 +941,10 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
   }
   else {
     // spikes and firing rate:
-    P[0].setTitle( "Mean firing rate = " + Str( meanrate, 0, 0, 'f' ) + "Hz" );
+    if ( cvrate >= 0.0 )
+      P[0].setTitle( "CV = " + Str( cvrate, 0, 2, 'f' ) + ", Mean firing rate = " + Str( meanrate, 0, 0, 'f' ) + "Hz" );
+    else
+      P[0].setTitle( "Mean firing rate = " + Str( meanrate, 0, 0, 'f' ) + "Hz" );
     P[0].setYLabel( "Firing rate [Hz]" );
     if ( ! P[0].zoomedYRange() )
       P[0].setYRange( 0.0, Plot::AutoScale );
@@ -974,7 +989,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
 
 
 void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate, double &meanrate,
-			      double duration, double skipwin, double sigma )
+			      double &cvrate, double duration, double skipwin, double sigma )
 {
   if ( SpikeEvents[0] < 0 )
     return;
@@ -985,6 +1000,12 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate, double &mean
   int trial = spikes.size()-1;
 
   meanrate = spikes.rate( skipwin, duration );
+  double stdisi = 0.0;
+  double meanisi = spikes.interval( skipwin, duration, stdisi );
+  if ( meanisi > 0.0 )
+    cvrate = stdisi/meanisi;
+  else
+    cvrate = -1.0;
   spikes.back().addRate( rate, trial, GaussKernel( sigma ) );
 }
 
