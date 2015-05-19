@@ -679,9 +679,6 @@ int DynClampAnalogInput::readData( void )
 
   QMutexLocker locker( mutex() );
 
-  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
-    return -1;
-
   bool failed = false;
   int readn = BufferN*BufferElemSize;
   int maxn = BufferSize - readn;
@@ -708,7 +705,7 @@ int DynClampAnalogInput::readData( void )
       BufferN = readn / BufferElemSize;
     }
   }
-
+  
   if ( failed ) {
     /*
     switch( ern ) {

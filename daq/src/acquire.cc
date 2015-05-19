@@ -1214,7 +1214,7 @@ int Acquire::waitForRead( void )
 {
   int nais = 0;
   {
-    // number of analog input devices used for writing:
+    // number of analog input devices used for reading:
     QReadLocker locker( &ReadMutex );
     for ( unsigned int i=0; i<AI.size(); i++ ) {
       if ( ! AI[i].Traces.empty() && AI[i].AI->running() )
