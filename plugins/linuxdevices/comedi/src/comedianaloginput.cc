@@ -885,7 +885,6 @@ int ComediAnalogInput::readData( void )
       Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
       Traces->addErrorStr( ern );
       failed = true;
-      cerr << " ComediAnalogInput::readData(): error\n";
       break;
     }
     else if ( m > 0 ) {

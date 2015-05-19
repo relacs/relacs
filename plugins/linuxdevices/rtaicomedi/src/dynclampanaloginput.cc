@@ -679,20 +679,9 @@ int DynClampAnalogInput::readData( void )
 
   QMutexLocker locker( mutex() );
 
-  //device stopped?
-    /* // AI does not have to run in order to push data
-  if ( !IsRunning ) {
-    traces.addErrorStr( "DynClampAnalogInput::readData: " +
-		      deviceFile() + " is not running!" );
-    cerr << "DynClampAnalogInput::readData: device is not running!"  << '\n';/////TEST/////
-    return 0;/////TEST/////
-  }
-    */
+  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
+    return -1;
 
-  /*  cerr << "DynClampAnalogInput::readData: size of device buffer: " 
-       << traces[0].deviceBufferSize() << " - size of indata: " 
-       << " - continuous: " << traces[0].continuous() << '\n';*/
-  int oldbuffern = BufferN;
   bool failed = false;
   int readn = BufferN*BufferElemSize;
   int maxn = BufferSize - readn;
@@ -703,28 +692,26 @@ int DynClampAnalogInput::readData( void )
 	 << " BufferSize=" << BufferSize << " readn=" << readn << " maxn=" << maxn << '\n';
 
   // try to read twice
-  for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
+  for ( int tryit = 0; tryit < 1 && ! failed && maxn > 0; tryit++ ) {
     // read data:
     ssize_t m = read( FifoFd, Buffer + readn, maxn );
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
+      Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
       Traces->addErrorStr( ern );
       failed = true;
-      cerr << "DynClampAnalogInput::readData(): error\n";
     }
     else if ( m > 0 ) {
       maxn -= m;
       readn += m;
+      BufferN = readn / BufferElemSize;
     }
-
   }
-
-  BufferN = readn / BufferElemSize;
 
   if ( failed ) {
     /*
-    switch( errnoSave ) {
+    switch( ern ) {
 
     case EPIPE: 
       cerr << " DynClampAnalogInput::readData(): buffer-overflow: "
@@ -732,7 +719,7 @@ int DynClampAnalogInput::readData( void )
       traces.addErrorStr( deviceFile() + " - buffer-underrun: "
 			+ strerror( errnoSave ) );
       traces.addError( DaqError::OverflowUnderrun );
-      return -2;
+      break;
 
     case EBUSY:
       cerr << " DynClampAnalogInput::readData(): device busy: "
@@ -740,7 +727,7 @@ int DynClampAnalogInput::readData( void )
       traces.addErrorStr( deviceFile() + " - device busy: "
 			+ strerror( errnoSave ) );
       traces.addError( DaqError::Busy );
-      return -2;
+      break;
 
     default:
       cerr << " DynClampAnalogInput::readData(): buffer-underrun: "
@@ -750,15 +737,11 @@ int DynClampAnalogInput::readData( void )
 //      traces.addErrorStr( "Error while reading from device-file: " + deviceFile()
 //			+ "  system: " + strerror( errnoSave ) );
       traces.addError( DaqError::Unknown );
-      return -2;
+      break;
     }
     */
+    return -2;
   }
-
-  // debug:
-  if ( BufferN < oldbuffern )
-    cerr << "DynClampAnalogInput::readData warning: buffer shrinking! BufferN=" << BufferN
-	 << " BufferSize=" << BufferSize << " readn=" << readn << " maxn=" << maxn << " oldbuffern=" << oldbuffern << '\n';
 
   // no more data to be read:
   if ( BufferN <= 0 && !IsRunning ) {

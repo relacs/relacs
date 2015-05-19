@@ -1494,17 +1494,18 @@ void dynclamp_loop( long dummy )
 
 	if ( retVal != sizeof(float) ) {
 	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
+	  aisubdev.running = 0;
+	  dynClampTask.running = 0;
+	  dynClampTask.duration = 0;
 	  if ( retVal == EINVAL ) {
 	    ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
 	    ERROR_MSG( "dynclamp_loop: stop dynClampTask." );
-	    dynClampTask.running = 0;
-	    dynClampTask.duration = 0;
 	    return;
 	  }
 	  aisubdev.error = E_OVERFLOW;
 	  ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
 		     dynClampTask.loopCnt );
-	  aisubdev.running = 0;
+	  ERROR_MSG( "dynclamp_loop: stop dynClampTask." );
 	  continue;
 	}
 
