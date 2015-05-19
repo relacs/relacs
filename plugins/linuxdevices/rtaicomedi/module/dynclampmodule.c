@@ -1636,17 +1636,17 @@ int init_dynclamp_loop( void )
 
     // START rt-task for dynamic clamp as periodic:
   periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.reqFreq ) );  
-  if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time(), periodTicks ) 
-      != 0 ) {
-    printk( "init_dynclamp_loop ERROR: failed to start periodic real-time task for data acquisition! loading of module failed!\n" );
-    return -3;
-  }
   dynClampTask.periodLengthNs = count2nano( periodTicks );
   dynClampTask.setFreq = 1000000000 / dynClampTask.periodLengthNs;
 #ifdef ENABLE_COMPUTATION
   loopInterval = 1.0e-9*dynClampTask.periodLengthNs;
   loopRate = 1.0e9/dynClampTask.periodLengthNs;
 #endif
+  if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time(), periodTicks ) 
+      != 0 ) {
+    printk( "init_dynclamp_loop ERROR: failed to start periodic real-time task for data acquisition! loading of module failed!\n" );
+    return -3;
+  }
   INFO_MSG( "init_dynclamp_loop: periodic task successfully started... requested freq: %d , accepted freq: ~%u (period=%uns)\n", 
 	    dynClampTask.reqFreq, dynClampTask.setFreq, dynClampTask.periodLengthNs );
 

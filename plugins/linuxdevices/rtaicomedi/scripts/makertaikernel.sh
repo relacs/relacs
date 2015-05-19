@@ -27,6 +27,7 @@ NEW_KERNEL_CONFIG=false
 KERNEL_CONFIG="old" # for oldconfig from the running kernel,
                     # "def" for the defconfig target,
                     # or a full path to a config file.
+KERNEL_DEBUG=false  # generate debugable kernel (see man crash)
 DEFAULT_RTAI_DIR="$RTAI_DIR"
 RTAI_DIR_CHANGED=false
 RTAI_PATCH_CHANGED=false
@@ -257,7 +258,11 @@ function install_kernel {
     if test -f "$KERNEL_PACKAGE"; then
 	echo "install kernel from debian package $KERNEL_PACKAGE"
 	if ! $DRYRUN; then
-	    dpkg -i "$KERNEL_PACKAGE"
+	    if $KERNEL_DEBUG; then
+		dpkg -i "$KERNEL_PACKAGE" + debug package
+	    else
+		dpkg -i "$KERNEL_PACKAGE"
+	    fi
 	    GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
 	    grub-reboot "$GRUBMENU"
 	fi
@@ -314,7 +319,13 @@ function build_kernel {
 	echo "build the kernel"
 	if ! $DRYRUN; then
 	    export CONCURRENCY_LEVEL=$CPU_NUM
-	    make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
+	    if $KERNEL_DEBUG; then
+		#add install_vmlinux=YES
+		#to /etc/kernel-pkg.conf or ~/.kernel-pkg.conf
+		make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel_image kernel_debug
+	    else
+		make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
+	    fi
 	    echo "kernel build returned $?"
 	    if test "x$?" != "x0"; then
 		echo
