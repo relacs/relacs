@@ -870,7 +870,7 @@ int RELACSWidget::getData( InList &data, EventList &events, double &signaltime,
 
 
 int RELACSWidget::updateData( void )
-// called continuously from ReadThread:run()
+// called continuously from ReadThread::run()
 {
   double signaltime = -1.0;
   int r = AQ->waitForData( signaltime );

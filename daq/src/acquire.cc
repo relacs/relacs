@@ -1284,10 +1284,18 @@ int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
 
 int Acquire::waitForData( double &signaltime )
 {
+  // check whether all threads are really running:
   ReadMutex.lockForWrite();
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( ! AI[i].Traces.empty() && ! AI[i].AI->running() ) {
+      stopRead();
+      ReadMutex.unlock();
+      return -1;
+    }
+  }
   ReadWait.wait( &ReadMutex );
   bool finished = ( InTraces.currentTime() <= PreviousTime );
-  // XXX the following contruct is needed, because ReadWait.wait() sometimes
+  // XXX the following construct is needed, because ReadWait.wait() sometimes
   // returns immediately, without being waken up. (with daqflex/relacs.cfg)
   // XXX Maybe we should figure out, why this happens...
   // From Qt doc: If mutex is not in a locked state, wait() returns immediately.

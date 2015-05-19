@@ -1506,7 +1506,7 @@ void dynclamp_loop( long dummy )
 	  ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
 		     dynClampTask.loopCnt );
 	  ERROR_MSG( "dynclamp_loop: stop dynClampTask." );
-	  continue;
+	  return;
 	}
 
 #ifdef RTMODULE_DEBUG

@@ -481,15 +481,15 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
 	 << ModuleDevice << " failed!\n";
     return -1;
   }
-  unsigned int reqrate = (unsigned int)traces[0].sampleRate();
-  if ( reqrate == 0 )
+  double reqrate = traces[0].sampleRate();
+  if ( ::fabs( reqrate ) < 1.0e-8 ) {
     if ( rate > 0 )
       traces.setSampleRate( (double)rate );
-    else
-      traces.addError( DaqError::InvalidSampleRate );
+    traces.addError( DaqError::InvalidSampleRate );
+  }
   else {
     if ( rate > 0 ) {
-      if ( ::abs( reqrate - rate ) > 5 )
+      if ( ::fabs( reqrate - (double)rate )/rate > 0.005 )  // less than 5 promille deviation
 	traces.addError( DaqError::InvalidSampleRate );
       traces.setSampleRate( (double)rate );
     }

@@ -68,7 +68,7 @@
 #define INJECT_RECORD_DELAY 1000 //nsec 
 
 //* maximum supported dynamic clamp frequency ensuring a stable system
-#define MAX_FREQUENCY 50000 //Hz
+#define MAX_FREQUENCY 90000 //Hz
 
 //* Data buffering:
 #define FIFO_SIZE   64000 // bytes

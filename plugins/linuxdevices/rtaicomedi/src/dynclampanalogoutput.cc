@@ -706,17 +706,15 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     return -1;
   }
 
-  unsigned int reqrate = (unsigned int)sigs[0].sampleRate();
-  if ( reqrate == 0 ) {
+  double reqrate = sigs[0].sampleRate();
+  if ( ::fabs( reqrate ) < 1.0e-8 ) {
     if ( rate > 0 )
       sigs.setSampleRate( (double)rate );
-    else
-      sigs.addError( DaqError::InvalidSampleRate );
+    sigs.addError( DaqError::InvalidSampleRate );
   }
   else {
-    if ( rate > 0) {
-      int dr = ::abs( reqrate - rate );
-      if ( dr > 0 && rate/dr < 200 )  /* less than 5 promille deviation */
+    if ( rate > 0 ) {
+      if ( ::fabs( reqrate - (double)rate )/rate > 0.005 )  // less than 5 promille deviation
 	sigs.addError( DaqError::InvalidSampleRate );
       sigs.setSampleRate( (double)rate );
     }
