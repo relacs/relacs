@@ -41,6 +41,7 @@ Settings::Settings( RELACSWidget* rw )
   newSection( "General" );
   addNumber( "readinterval", "Interval for periodic acquisition of data", 0.01, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
+  addNumber( "aitimeout", "Minimum time that has to pass between analog input errors", 10.0, 0.0, 100000.0, 1.0, "seconds" );
   newSection( "Plugins" );
   addText( "pluginpathes", "Plugin pathes", "" );
   addText( "pluginhelppathes", "Pathes to plugin help files", "" );

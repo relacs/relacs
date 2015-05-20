@@ -399,6 +399,7 @@ private:
   QMutex DataRunLock;
     /*! Controls the derived data of the primary input data buffer. */
   QReadWriteLock DerivedDataMutex;
+  QTime DataTime;
 
   // Research Program = RePros:
   RePro *CurrentRePro;      // always the current program

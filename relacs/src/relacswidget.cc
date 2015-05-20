@@ -875,14 +875,20 @@ int RELACSWidget::updateData( void )
   double signaltime = -1.0;
   int r = AQ->waitForData( signaltime );
   if ( r < 0 ) {
+    // error handling:
     AQ->lockRead();
     string es = IRawData.errorText();
     printlog( "! error in reading acquired data: " + es );
     QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in analog input: " + es ) );
     IRawData.clearError();
     AQ->unlockRead();
+    double aitimeout = SS.number( "aitimeout", 10.0 );
+    if ( DataTime.restart() < (int)(1000.0*aitimeout) ) {
+      QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+4 ) ) );
+      return -1;
+    }
+    // try to restart analog input:
     AQ->restartRead();
-    // check error and on failure switch to idle mode:
     AQ->lockRead();
     bool failed = IRawData.failed();
     es = IRawData.errorText();
@@ -890,7 +896,7 @@ int RELACSWidget::updateData( void )
     if ( failed ) {
       printlog( "! error in restarting analog input: " + es );
       QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in restarting analog input: " + es ) );
-      // XXX switch to idle mode!?!
+      QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+4 ) ) );
       return -1;
     }
     else {
@@ -958,6 +964,7 @@ void RELACSWidget::activateGains( void )
     printlog( "! error in restarting analog input for changing gains: " + IRawData.errorText() );
   else if ( ! ReadLoop.isRunning() ) {
     DataRun = true;
+    DataTime.restart();
     ReadLoop.start();
   }
   FD->scheduleAdjust();
@@ -974,6 +981,7 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
     FD->scheduleAdjust();
     if ( ! ReadLoop.isRunning() ) {
       DataRun = true;
+      DataTime.restart();
       ReadLoop.start();
     }
     // update device menu:
@@ -1002,6 +1010,7 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
     FD->scheduleAdjust();
     if ( ! ReadLoop.isRunning() ) {
       DataRun = true;
+      DataTime.restart();
       ReadLoop.start();
     }
     // update device menu:
@@ -1028,6 +1037,7 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
   if ( r == 0 ) {
     if ( ! ReadLoop.isRunning() ) {
       DataRun = true;
+      DataTime.restart();
       ReadLoop.start();
     }
     SF->save( signal );
@@ -1052,6 +1062,7 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
   if ( r == 0 ) {
     if ( ! ReadLoop.isRunning() ) {
       DataRun = true;
+      DataTime.restart();
       ReadLoop.start();
     }
     SF->save( signal );
@@ -1195,6 +1206,11 @@ void RELACSWidget::customEvent( QEvent *qce )
   case 3: {
     RelacsWidgetEvent *rwe = dynamic_cast<RelacsWidgetEvent*>( qce );
     MessageBox::warning( "RELACS Error !", rwe->text(), 10.0, this );
+    break;
+  }
+
+  case 4: {
+    stopActivity();
     break;
   }
 
@@ -1676,6 +1692,7 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
   }
 
   DataRun = true;
+  DataTime.start();
   ReadLoop.start();
 
   IData.assign();
