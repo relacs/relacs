@@ -48,7 +48,7 @@ DynClampAnalogInput::DynClampAnalogInput( void )
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
-  MaxRate = 50000.0;
+  MaxRate = 100000.0;
   IsPrepared = false;
   IsRunning = false;
   Calibration = 0;
@@ -73,7 +73,7 @@ DynClampAnalogInput::DynClampAnalogInput( const string &device, const Options &o
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
-  MaxRate = 50000.0;
+  MaxRate = 100000.0;
   IsPrepared = false;
   IsRunning = false;
   Calibration = 0;
@@ -267,7 +267,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
     return -1;
   }
 
-  // XXX Set the maximum possible sampling rate (of the rtai loop!):
+  // set the maximum possible sampling rate (of the rtai loop!):
   MaxRate = MAX_FREQUENCY;
 
   // initialize connection to RTAI-FIFO:

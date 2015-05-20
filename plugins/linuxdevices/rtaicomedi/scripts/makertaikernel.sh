@@ -16,6 +16,7 @@ RTAI_DIR="magma"            # name of the rtai source directory (set with -r):
                             #   rtai-x.x: rtai release version x.x
                             #   RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
 RTAI_PATCH="hal-linux-3.14.17-x86-6x.patch" # rtai patch to be used
+SHOWROOM_DIR=showroom       # target directory for rtai-showrom
 
 
 ###########################################################################
@@ -78,16 +79,17 @@ function print_usage {
     echo "-p xxx: use rtai patch file xxx"
     echo "-c xxx: generate a new kernel configuration:"
     echo "        old: use the kernel configuration of the currently running kernel"
-    echo "        /full/path/to/ config/file: provide a particular configuration file"
+    echo "        path/to/config/file: provide a particular configuration file"
     echo "        def: generate a kernel configuration using make defconfig"
     echo "-D    : generate kernel package with debug symbols in addition"
     echo "-m    : enter the RTAI configuration menu"
     echo ""
     echo "action can be one of"
     echo "  help       : display this help message"
-    echo "  info       : display some properties of your kernel, grub menu, and machine"
+    echo "  info       : display some properties of your kernel, machine, and grub menu"
     echo "  packages   : install required packages"
     echo "  download   : download missing sources of the specified targets"
+    echo "  update     : update sources of the specified targets (not for kernel)"
     echo "  patch      : patch the linux kernel with the rtai patch (no target required)"
     echo "  build      : compile and install the specified targets"
     echo "               and the depending ones if needed"
@@ -98,14 +100,16 @@ function print_usage {
     echo "  reconfigure: reconfigure the kernel and make a full build of all targets"
     echo "  test       : test the current kernel and write reports to the current working directory"
     echo ""
-    echo "If no action is specified, a full download and build is performed for all targets."
+    echo "If no action is specified, a full download and build is performed for all targets (except showroom)."
     echo ""
     echo "targets can be one or more of:"
-    echo "  kernel : rtai-patched linux kernel"
-    echo "  newlib : newlib library"
-    echo "  rtai   : rtai modules"
-    echo "  comedi : comedi data acquisition driver modules"
-    echo "if no target is specified, all targets are made."
+    echo "  kernel  : rtai-patched linux kernel"
+    echo "  newlib  : newlib library"
+    echo "  rtai    : rtai modules"
+    echo "  showroom: rtai showroom examples"
+    echo "            (supports only download, build, clean, remove)"
+    echo "  comedi  : comedi data acquisition driver modules"
+    echo "If no target is specified, all targets are made (except showroom)."
     echo ""
     echo "Common use cases:"
     echo ""
@@ -633,6 +637,18 @@ function download_newlib {
     fi
 }
 
+function update_newlib {
+    cd /usr/local/src
+    if test -d newlib/src/newlib; then
+	echo "update already downloaded newlib sources"
+	cd newlib
+	cvs -d :pserver:anoncvs@sourceware.org:/cvs/src update
+	clean_newlib
+    else
+	download_newlib
+    fi
+}
+
 function install_newlib {
     cd /usr/local/src/newlib
     cd src/newlib
@@ -734,6 +750,27 @@ function download_rtai {
 	fi
     fi
     ln -sfn $RTAI_DIR rtai
+}
+
+function update_rtai {
+    cd /usr/local/src
+    if test -d $RTAI_DIR; then
+	cd $RTAI_DIR
+	if test -d CVS; then
+	    echo "update already downloaded rtai sources"
+	    cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update
+	elif test -d .git; then
+	    echo "update already downloaded rtai sources"
+	    git pull
+	fi
+	echo "run make distclean on rtai sources"
+	if ! $DRYRUN; then
+	    make distclean
+	fi
+	cd -
+    else
+	download_rtai
+    fi
 }
 
 function build_rtai {
@@ -867,6 +904,77 @@ function remove_rtai {
 
 
 ###########################################################################
+# rtai showroom:
+
+function download_showroom {
+    cd /usr/local/src
+    if test -d $SHOWROOM_DIR; then
+	echo "keep already downloaded rtai-showroom sources"
+	cd $SHOWROOM_DIR/v3.x
+	echo "run make clean on rtai-showroom sources"
+	if ! $DRYRUN; then
+	    PATH="$PATH:/usr/realtime/bin"
+	    make clean
+	fi
+	cd -
+    else
+	echo "download rtai-showroom sources"
+	if ! $DRYRUN; then
+	    cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai co $SHOWROOM_DIR
+	    date +"%F %H:%M" > $SHOWROOM_DIR/revision.txt
+	fi
+    fi
+}
+
+function update_showroom {
+    cd /usr/local/src
+    if test -d $SHOWROOM_DIR; then
+	echo "update already downloaded rtai-showroom sources"
+	cd $SHOWROOM_DIR
+	cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update
+	clean_showroom
+    else
+	download_showroom
+    fi
+}
+
+function build_showroom {
+    cd /usr/local/src/$SHOWROOM_DIR/v3.x
+    echo "build rtai showroom"
+    if ! $DRYRUN; then
+	PATH="$PATH:/usr/realtime/bin"
+	make
+	if test "x$?" != "x0"; then
+	    echo "Failed to build rtai showroom!"
+	    exit 1
+	fi
+    fi
+}
+
+function clean_showroom {
+    cd /usr/local/src
+    if test -d $SHOWROOM_DIR; then
+	echo "clean rtai showroom"
+	if ! $DRYRUN; then
+	    cd $SHOWROOM_DIR/v3.x
+	    PATH="$PATH:/usr/realtime/bin"
+	    make clean
+	fi
+    fi
+}
+
+function remove_showroom {
+    cd /usr/local/src
+    if test -d $SHOWROOM_DIR; then
+	echo "remove rtai showroom in /usr/local/src/$SHOWROOM_DIR"
+	if ! $DRYRUN; then
+	    rm -r $SHOWROOM_DIR
+	fi
+    fi
+}
+
+
+###########################################################################
 # comedi:
 
 function download_comedi {
@@ -879,6 +987,18 @@ function download_comedi {
 	    git clone git://comedi.org/git/comedi/comedi.git
 	    date +"%F %H:%M" > comedi/revision.txt
 	fi
+    fi
+}
+
+function update_comedi {
+    cd /usr/local/src
+    if test -d comedi; then
+	echo "update already downloaded comedi sources"
+	cd comedi
+	git pull
+	clean_comedi
+    else
+	download_comedi
     fi
 }
 
@@ -1032,7 +1152,26 @@ function download_all {
 		kernel ) download_kernel ;;
 		newlib ) download_newlib ;;
 		rtai ) download_rtai ;;
+		showroom ) download_showroom ;;
 		comedi ) download_comedi ;;
+	    esac
+	done
+    fi
+}
+
+function update_all {
+    check_root
+    if test -z $1; then
+	update_newlib
+	update_rtai
+	update_comedi
+    else
+	for TARGET; do
+	    case $TARGET in
+		newlib ) update_newlib ;;
+		rtai ) update_rtai ;;
+		showroom ) update_showroom ;;
+		comedi ) update_comedi ;;
 	    esac
 	done
     fi
@@ -1061,6 +1200,7 @@ function build_all {
 		    build_comedi ;;
 		rtai ) build_rtai
 		    build_comedi ;;
+		showroom ) build_showroom ;;
 		comedi ) build_comedi ;;
 	    esac
 	done
@@ -1099,6 +1239,7 @@ function clean_all {
 		kernel ) clean_kernel ;;
 		newlib ) clean_newlib ;;
 		rtai ) clean_rtai ;;
+		showroom ) clean_showroom ;;
 		comedi ) clean_comedi ;;
 	    esac
 	done
@@ -1137,6 +1278,7 @@ function remove_all {
 		kernel ) remove_kernel ;;
 		newlib ) remove_newlib ;;
 		rtai ) remove_rtai ;;
+		showroom ) remove_showroom ;;
 		comedi ) remove_comedi ;;
 	    esac
 	done
@@ -1243,6 +1385,7 @@ case $ACTION in
 
     packages ) intall_packages ;;
     download ) download_all $@ ;;
+    update ) update_all $@ ;;
     patch ) patch_kernel ;;
     build ) build_all $@ ;;
     install ) install_all $@ ;;

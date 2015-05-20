@@ -71,7 +71,7 @@
 #define MAX_FREQUENCY 90000 //Hz
 
 //* Data buffering:
-#define FIFO_SIZE   64000*8 // bytes
+#define FIFO_SIZE   64000 // bytes
 
 //* DAQ-devices:
 #define MAXSUBDEV    8

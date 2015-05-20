@@ -52,7 +52,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
-  MaxRate = 50000.0;
+  MaxRate = 100000.0;
   IsPrepared = false;
   NoMoreData = true;
   IsRunning = false;
@@ -74,7 +74,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
-  MaxRate = 50000.0;
+  MaxRate = 100000.0;
   IsPrepared = false;
   NoMoreData = true;
   IsRunning = false;
@@ -272,7 +272,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
   }
   FIFOSize = deviceIOC.fifoSize;
 
-  // XXX Set the maximum possible sampling rate (of the rtai loop!):
+  // set the maximum possible sampling rate (of the rtai loop!):
   MaxRate = MAX_FREQUENCY;
 
   // compute lookup tables:
@@ -390,9 +390,6 @@ int DynClampAnalogOutput::bits( void ) const
 
 double DynClampAnalogOutput::maxRate( void ) const 
 { 
-  // TODO: 
-  //         return "maximum supported dyn-clamp Rate for model 
-  //                (provided by DynClamp class)"
   return MaxRate;
 }
 
