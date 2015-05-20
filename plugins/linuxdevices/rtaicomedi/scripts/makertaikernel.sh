@@ -21,13 +21,14 @@ RTAI_PATCH="hal-linux-3.14.17-x86-6x.patch" # rtai patch to be used
 ###########################################################################
 # some global variables:
 
+VERSION_STRING="makertaikernel version 1.6 by Jan Benda, May 2015"
 DRYRUN=false
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
 KERNEL_CONFIG="old" # for oldconfig from the running kernel,
                     # "def" for the defconfig target,
                     # or a full path to a config file.
-KERNEL_DEBUG=false  # generate debugable kernel (see man crash)
+KERNEL_DEBUG=false  # generate debuggable kernel (see man crash)
 DEFAULT_RTAI_DIR="$RTAI_DIR"
 RTAI_DIR_CHANGED=false
 RTAI_PATCH_CHANGED=false
@@ -56,14 +57,14 @@ CPU_NUM=$(grep -c "^processor" /proc/cpuinfo)
 # general functions:
 
 function print_version {
-    echo "makertaikernel version 1.4 by Jan Benda, April 2015"
+    echo $VERSION_STRING
 }
 
 function print_usage {
     echo "Download and build everything needed for an rtai-patched linux kernel with comedi and math support."
     echo ""
     echo "usage:"
-    echo "sudo makertaikernel [-d] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-m] [action [target1 [target2 ... ]]]"
+    echo "sudo makertaikernel [-d] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-D] [-m] [action [target1 [target2 ... ]]]"
     echo ""
     echo "-d    : dry run - only print out what the script would do, but do not execute any command"
     echo "-n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})"
@@ -79,10 +80,12 @@ function print_usage {
     echo "        old: use the kernel configuration of the currently running kernel"
     echo "        /full/path/to/ config/file: provide a particular configuration file"
     echo "        def: generate a kernel configuration using make defconfig"
+    echo "-D    : generate kernel package with debug symbols in addition"
     echo "-m    : enter the RTAI configuration menu"
     echo ""
     echo "action can be one of"
     echo "  help       : display this help message"
+    echo "  info       : display some properties of your kernel, grub menu, and machine"
     echo "  packages   : install required packages"
     echo "  download   : download missing sources of the specified targets"
     echo "  patch      : patch the linux kernel with the rtai patch (no target required)"
@@ -94,7 +97,8 @@ function print_usage {
     echo "  remove     : remove the complete source trees of the specified targets"
     echo "  reconfigure: reconfigure the kernel and make a full build of all targets"
     echo "  test       : test the current kernel and write reports to the current working directory"
-    echo "if no action is specified, a full download and build is performed for all targets."
+    echo ""
+    echo "If no action is specified, a full download and build is performed for all targets."
     echo ""
     echo "targets can be one or more of:"
     echo "  kernel : rtai-patched linux kernel"
@@ -126,6 +130,35 @@ function check_root {
 	echo "  sudo $0 ${FULL_COMMAND_LINE}"
 	exit 1
     fi
+}
+
+function print_info {
+    RTAI_PATCH=""
+    check_kernel_patch
+    echo
+    echo "distribution:"
+    lsb_release -a 2> /dev/null
+    echo
+    echo "running kernel:"
+    uname -r
+    echo
+    echo "CPU:"
+    grep "model name" /proc/cpuinfo | head -n 1
+    echo "$CPU_NUM cores"
+    echo "machine: $MACHINE"
+    echo "$(free -h | grep Mem | awk '{print $2}') RAM"
+    echo
+    echo "grub menu entries:"
+    sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
+    echo
+    echo "settings for makertaikernel:"
+    echo "KERNEL_PATH=$KERNEL_PATH"
+    echo "LINUX_KERNEL=$LINUX_KERNEL"
+    echo "KERNEL_SOURCE_NAME=$KERNEL_SOURCE_NAME"
+    echo "KERNEL_NAME=$KERNEL_NAME"
+    echo "RTAI_DIR=$RTAI_DIR"
+    echo "RTAI_PATCH=$RTAI_PATCH"
+
 }
 
 
@@ -175,12 +208,12 @@ function check_kernel_patch {
 	echo "RTAI_PATH=\"${RTAI_PATCH}\""
 	echo "LINUX_KERNEL=\"${LINUX_KERNEL}\""
 	echo
-	exit 0
+	return 1
     elif ! test -f /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH; then
 	echo
 	echo "Error: rtai patch file $RTAI_PATCH does not exist."
 	echo "Run again with -p \"\" to see list of available patches."
-	exit 1
+	return 2
     elif ! expr match $RTAI_PATCH ".*$LINUX_KERNEL" > /dev/null; then
 	echo
 	echo "Error: kernel version ${LINUX_KERNEL} does not match rtai patch ${RTAI_PATCH}."
@@ -194,13 +227,16 @@ function check_kernel_patch {
 	    echo "LINUX_KERNEL=\"${LINUX_KERNEL}\""
 	    echo
 	fi
-	exit 1
+	return 2
     fi
+    return 0
 }
 
 function download_kernel {
     cd $KERNEL_PATH
-    check_kernel_patch
+    if check_kernel_patch; then
+	exit 1
+    fi
     if test -f linux-$LINUX_KERNEL.tar.xz; then
 	echo "keep already downloaded linux kernel archive"
     elif test -n "$LINUX_KERNEL"; then
@@ -244,7 +280,9 @@ function unpack_kernel {
 function patch_kernel {
     cd /usr/src/linux
     if $NEW_KERNEL; then
-	check_kernel_patch
+	if check_kernel_patch; then
+	    exit 1
+	fi
 	echo "apply rtai patch $RTAI_PATCH to kernel sources"
 	if ! $DRYRUN; then
 	    patch -p1 < /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH
@@ -255,13 +293,13 @@ function patch_kernel {
 function install_kernel {
     cd "$KERNEL_PATH"
     KERNEL_PACKAGE=$(ls linux-image-${LINUX_KERNEL}*-${KERNEL_NAME}_*.deb | tail -n 1)
+    KERNEL_DEBUG_PACKAGE=$(ls linux-image-${LINUX_KERNEL}*-${KERNEL_NAME}-dbg_*.deb | tail -n 1)
     if test -f "$KERNEL_PACKAGE"; then
 	echo "install kernel from debian package $KERNEL_PACKAGE"
 	if ! $DRYRUN; then
+	    dpkg -i "$KERNEL_PACKAGE"
 	    if $KERNEL_DEBUG; then
-		dpkg -i "$KERNEL_PACKAGE" + debug package
-	    else
-		dpkg -i "$KERNEL_PACKAGE"
+		dpkg -i "$KERNEL_DEBUG_PACKAGE"
 	    fi
 	    GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
 	    grub-reboot "$GRUBMENU"
@@ -320,8 +358,6 @@ function build_kernel {
 	if ! $DRYRUN; then
 	    export CONCURRENCY_LEVEL=$CPU_NUM
 	    if $KERNEL_DEBUG; then
-		#add install_vmlinux=YES
-		#to /etc/kernel-pkg.conf or ~/.kernel-pkg.conf
 		make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel_image kernel_debug
 	    else
 		make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
@@ -1175,6 +1211,10 @@ if test "x$1" = "x-c"; then
 	exit 1
     fi
 fi
+if test "x$1" = "x-D"; then
+    shift
+    KERNEL_DEBUG=true
+fi
 if test "x$1" = "x-m"; then
     shift
     RTAI_MENU=true
@@ -1194,6 +1234,8 @@ case $ACTION in
 
     version ) print_version ;;
     --version ) print_version ;;
+
+    info ) print_info ;;
 
     reconfigure ) reconfigure ;;
 

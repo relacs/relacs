@@ -73,11 +73,11 @@ sudo ./makertaikernel
 sudo ./makertaikernel test
    \endcode
    The result of the test is written into the file
-   latencies-3.14.17-RTAI-XXX-NAME-QUALITY and the corresponding
+   latencies-3.14.17-rtai-XXX-NAME-QUALITY and the corresponding
    kernel configuration is saved in
-   config-3.14.17-RTAI-XXX-NAME_QUALITY in the current directory. RTAI
-   is replaced by your choice of rtai source (e.g. magam, rtai-41., or
-   RTAI), XXX is replaced by number, NAME and QUALITY are short
+   config-3.14.17-rtai-XXX-NAME_QUALITY in the current directory. RTAI
+   is replaced by your choice of rtai source (e.g. magma, rtai-4.1, etc), 
+   XXX is replaced by a number, NAME and QUALITY are short
    strings describing your kernel configuration and the test
    performance that you can enter during the test.
 
@@ -100,11 +100,10 @@ sudo ./makertaikernel -n rtai1 reconfigure
    \endcode
 
    Note that \c makertaikernel \c reconfigure will first uninstall an already existing kernel with the same name.
-   You can recreate this kernel by copying the kernel configuration file saved by  \c makertaikernel \c test to the kernel
+   You can recreate this kernel by specifying the kernel configuration file saved by  \c makertaikernel \c test using the -c option
    \code
-sudo cp config-3.14.17-magma-001-noefi-ok /usr/src/linux/.config
+sudo ./makertaikernel -n rtai1 -c config-3.14.17-rtai-002-nousb-good reconfigure
    \endcode
-   before running \c makertaikernel \c reconfigure .
 -# Once you are satisified, continue with \ref installrelacs .
 
 For further options of the \c makertaikernel script see
@@ -249,6 +248,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
        - Set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
        - Deselect "Old Idle dynticks config"
        .
+     - Disable "Configure standard kernel features (expert users)"
      .
    - Select "Enable loadable module support":
      - You may deselect "Module versioning support" 
@@ -292,6 +292,15 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
        - Deselect "Data acquisition support (comedi)"
        .
      .
+   - Kernel hacking:
+     - Compile-time checks and compiler options:
+       - Disable "Compile the kernel with debug info" unless you need to debug your kernel
+     .
+     - Disable "Magic SysRq key"
+     - Disable "Kernel debugging"
+     - Disable "Early printk via EHCI debug port"
+     - Disable "Allow gcc to uninline functions marked 'inline'"
+   .
    - (Disable "Virtualization")
    .
    Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
