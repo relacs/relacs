@@ -643,6 +643,7 @@ function update_newlib {
 	echo "update already downloaded newlib sources"
 	cd newlib
 	cvs -d :pserver:anoncvs@sourceware.org:/cvs/src update
+	date +"%F %H:%M" > revision.txt
 	clean_newlib
     else
 	download_newlib
@@ -759,9 +760,11 @@ function update_rtai {
 	if test -d CVS; then
 	    echo "update already downloaded rtai sources"
 	    cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update
+	    date +"%F %H:%M" > revision.txt
 	elif test -d .git; then
 	    echo "update already downloaded rtai sources"
 	    git pull
+	    date +"%F %H:%M" > revision.txt
 	fi
 	echo "run make distclean on rtai sources"
 	if ! $DRYRUN; then
@@ -932,6 +935,7 @@ function update_showroom {
 	echo "update already downloaded rtai-showroom sources"
 	cd $SHOWROOM_DIR
 	cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update
+	date +"%F %H:%M" > revision.txt
 	clean_showroom
     else
 	download_showroom
@@ -996,6 +1000,7 @@ function update_comedi {
 	echo "update already downloaded comedi sources"
 	cd comedi
 	git pull
+	date +"%F %H:%M" > revision.txt
 	clean_comedi
     else
 	download_comedi
