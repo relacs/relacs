@@ -110,6 +110,10 @@ For further options of the \c makertaikernel script see
 \code
 ./makertaikernel help
 \endcode
+To show some information about your machine, rtai patches, grub menue, etc. run
+\code
+./makertaikernel info
+\endcode
 
 The following sections describe in detail how to compile and install
 an rtai-patched linux kernel, newlib, rtai, and comedi.
@@ -192,16 +196,21 @@ make mrproper
 make-kpkg clean  # on Debian system only
    \endcode
 
--# There are several strategies for getting a good real-time
-   kernel. One somewhat simpler approach that most likely gives a
-   running kernel, but also might result in bad or not so good
-   real-time performance is described here. Alternatively, I
-   recommend to consider the approach described in \c
-   https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL . For
-   this you need some time to select the right driver modules, but the
-   kernel will compile much faster and chances are good to get good performance.
+-# There are basically two strategies for getting a good real-time
+   kernel. The initially simpler approach is to start out with the
+   configuration of your running default kernel and then disable what
+   you do not need and what might deteriorate the real-time
+   performance.  This approach most likely gives a running kernel, but
+   also might result in bad or not so good real-time
+   performance. Alternatively, I recommend to consider the approach
+   described in \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL . 
+   Here you start out with a minimalistic kernel configuration and add
+   the few (!) driver modules that you really need on your machine. The
+   kernel will compile much faster and chances are good to get good
+   real-time performance.
 
-   So, be warned! Here is the beginners way to make a real-time kernel:
+   In the following the first approach to configure a real-time kernel
+   is described:
 
    Reuse your current kernel configuration:
    \code
@@ -219,13 +228,16 @@ make olddefconfig
      \code
 make defconfig
      \endcode
-   - Try to start out with the -rt or -lowlatency kernels and tak the \c .config file from there
+   - Try to start out with the -rt or -lowlatency kernels and take the \c .config file from there
    .
-   In addition you might want to disable kernel modules that you do not need on your machine:
+
+   In addition you might want to disable kernel modules that are not
+   used on your machine. For this to work best you need to run in the
+   kernel from which you took the configuration:
    \code
 yes "" | make localmodconfig
    \endcode
-   This gives a small kernel that is compiled quite quickly.
+   This gives a smaller kernel that is compiled much faster.
 
 -# The following steps 4. to 6. describe the elegant way to compile a linux kernel 
    on a Debian system using the kernel-package.
@@ -301,7 +313,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      - Disable "Early printk via EHCI debug port"
      - Disable "Allow gcc to uninline functions marked 'inline'"
    .
-   - (Disable "Virtualization")
+   - Disable "Virtualization"
    .
    Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
    Select "Yes".

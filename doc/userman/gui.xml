@@ -307,7 +307,7 @@
                     <listitem>
        	              <itemizedlist>
                         <listitem><para><keycap>Enter, Return</keycap>: Start/stop recording.</para></listitem>
-		        <listitem><para><keycap>Alt+I</keycap>: Meta-data dialog.</para></listitem>
+		        <listitem><para><keycap>Ctrl+I</keycap>: Meta-data dialog.</para></listitem>
 		        <listitem><para><keycap>Alt+Q</keycap>: Quit RELACS.</para></listitem>
 			<listitem><para><keycap>M</keycap>: Mute audio output.</para></listitem>
 			<listitem><para><keycap>Ctrl+1, Ctrl+2, Ctrl+3, Ctrl+4</keycap>: Show filters, traces, controls, or repros maximized.</para></listitem>
@@ -473,11 +473,11 @@
 			<listitem><para><guimenuitem>Online</guimenuitem>: Switch to online (data acquisition) mode.</para></listitem>
 			<listitem><para><guimenuitem>Simulate</guimenuitem>: Switch to simulation mode.</para></listitem>
 			<listitem><para><guimenuitem>Idle</guimenuitem>: Stop all activity.</para></listitem>
-			<listitem><para><guimenuitem>Start Session</guimenuitem>: Start a recording, 
+			<listitem><para><guimenuitem>Start session</guimenuitem>: Start a recording, 
 		   i.e. recording data to disk, by executing the  startsession macro
 		   (see <xref linkend='macros' endterm='macrostitle'/> for details).</para></listitem>
-			<listitem><para><guimenuitem>Stop Session</guimenuitem>: Stop a recording.</para></listitem>
-			<listitem><para><guimenuitem>Session Info</guimenuitem>: Show the dialog that is usually
+			<listitem><para><guimenuitem>Stop session</guimenuitem>: Stop a recording.</para></listitem>
+			<listitem><para><guimenuitem>Session info</guimenuitem>: Show the dialog that is usually
 		   launched when stoppping a recording.</para></listitem>
 			<listitem><para><guimenuitem>Input traces</guimenuitem>: Launch a dialog for configuring analog input.</para></listitem>
 			<listitem><para><guimenuitem>Settings</guimenuitem>: Launch a dialog with general RELACS settings.</para></listitem>
@@ -492,11 +492,11 @@
                   <varlistentry><term><guimenu>Plugins</guimenu></term>
                   <listitem>
 		    <itemizedlist>
-			<listitem><para><guimenuitem>Model Dialog</guimenuitem>: Show the dialog to edit options of the Model.</para></listitem>
-			<listitem><para><guimenuitem>Model Help</guimenuitem>: Display help text for the Model.</para></listitem>
-			<listitem><para><guimenuitem>Control Dialog</guimenuitem>: Show the dialog to edit options of the Control widget.</para></listitem>
-			<listitem><para><guimenuitem>Control Help</guimenuitem>: Display help text for the Control widget.</para></listitem>
-			<listitem><para><guimenuitem>Control Screenshot</guimenuitem>: Make a screenshot of the control widget.</para></listitem>
+			<listitem><para><guimenuitem>Model dialog</guimenuitem>: Show the dialog to edit options of the Model.</para></listitem>
+			<listitem><para><guimenuitem>Model help</guimenuitem>: Display help text for the Model.</para></listitem>
+			<listitem><para><guimenuitem>Control dialog</guimenuitem>: Show the dialog to edit options of the Control widget.</para></listitem>
+			<listitem><para><guimenuitem>Control help</guimenuitem>: Display help text for the Control widget.</para></listitem>
+			<listitem><para><guimenuitem>Control screenshot</guimenuitem>: Make a screenshot of the control widget.</para></listitem>
 		    </itemizedlist>
                   </listitem>
                   </varlistentry>
@@ -511,14 +511,14 @@
                   <varlistentry><term><guimenu>Detectors/Filters</guimenu></term>
                   <listitem>
 		    <itemizedlist>
-			<listitem><para><guimenuitem>Autoconfigure</guimenuitem>: Automatically adjusts thresholds etc. for all filters and detectors.</para></listitem>
+			<listitem><para><guimenuitem>Auto configure</guimenuitem>: Automatically adjusts thresholds etc. for all filters and detectors.</para></listitem>
 			<listitem>
 			<para>Then there is a list of each filter and detector. Each has the following submenu:</para>
 		        <itemizedlist>
 			<listitem><para><guimenuitem>Options</guimenuitem>: Launch a dialog that allows you to 
 			 set parameters of the filter/detector.</para></listitem>
 			<listitem><para><guimenuitem>Help</guimenuitem>: Show the help text of the filter/detector (if available).</para></listitem>
-			<listitem><para><guimenuitem>Autoconfigure</guimenuitem>: Automatically adjusts thresholds etc..</para></listitem>
+			<listitem><para><guimenuitem>Auto configure</guimenuitem>: Automatically adjusts thresholds etc..</para></listitem>
 			<listitem><para><guimenuitem>Screenshot</guimenuitem>: Make a screenshot of the widget of the filter.</para></listitem>
 		        </itemizedlist>
 			</listitem>
@@ -546,6 +546,7 @@
 			  <listitem><para><guimenuitem>View</guimenuitem>: View the RePro.</para></listitem>
 			  <listitem><para><guimenuitem>Load</guimenuitem>: Reload the RePro.</para></listitem>
 			  <listitem><para><guimenuitem>Help</guimenuitem>: Show the help text.</para></listitem>
+			  <listitem><para><guimenuitem>Screenshot</guimenuitem>: Make a screenshot of the widget of the RePro.</para></listitem>
 		        </itemizedlist>
                       </listitem>
 		    </itemizedlist>
@@ -562,7 +563,7 @@
 			<listitem><para><guimenuitem>Break</guimenuitem>: Interrupt current macro by starting the fall-back macro after the current RePro finished (as by pressing <keycap>Space</keycap>).
 			    You can continue within the interrupted macro by selecting <guimenuitem>Resume</guimenuitem> or <guimenuitem>Resume Next</guimenuitem> (see below).</para></listitem>
 			<listitem><para><guimenuitem>Resume</guimenuitem>: Resume macro with the RePro where it was interrupted by either <keycap>ESC</keycap> or <keycap>B</keycap> (<guimenuitem>Break</guimenuitem>).</para></listitem>
-			<listitem><para><guimenuitem>Resume Next</guimenuitem>: Resume macro with the RePro following the one where the macro was interrupted
+			<listitem><para><guimenuitem>Resume next</guimenuitem>: Resume macro with the RePro following the one where the macro was interrupted
 			by either <keycap>ESC</keycap> or <keycap>B</keycap> (<guimenuitem>Break</guimenuitem>).</para></listitem>
                         <listitem>
 		    <para>These general commands are followed by a list of available macros
@@ -596,12 +597,12 @@
                   <varlistentry><term><guimenu>View</guimenu></term>
                   <listitem>
 		    <itemizedlist>
-			<listitem><para><guimenuitem>Show Filters:</guimenuitem>: Toggle maximized display of the filter widgets.</para></listitem>
-			<listitem><para><guimenuitem>Show Traces:</guimenuitem>: Toggle maximized display of the recorded traces.</para></listitem>
-			<listitem><para><guimenuitem>Show Controls:</guimenuitem>: Toggle maximized display of the control widgets.</para></listitem>
+			<listitem><para><guimenuitem>Show filters:</guimenuitem>: Toggle maximized display of the filter widgets.</para></listitem>
+			<listitem><para><guimenuitem>Show traces:</guimenuitem>: Toggle maximized display of the recorded traces.</para></listitem>
+			<listitem><para><guimenuitem>Show controls:</guimenuitem>: Toggle maximized display of the control widgets.</para></listitem>
 			<listitem><para><guimenuitem>Show RePros:</guimenuitem>: Toggle maximized display of the RePro widgets.</para></listitem>
 			<listitem><para><guimenuitem>Maximize window:</guimenuitem>: Toggle maximize RELACS window.</para></listitem>
-			<listitem><para><guimenuitem>Fullscreen:</guimenuitem>: Toggle fullscreen mode.</para></listitem>
+			<listitem><para><guimenuitem>Full screen:</guimenuitem>: Toggle fullscreen mode.</para></listitem>
 			<listitem><para><emphasis>Traces</emphasis>: Various commands for customizing the PlotTrace widget. See <xref linkend='plotkeys' endterm='plotkeystitle'/> for details.</para></listitem>
 		    </itemizedlist>	
                   </listitem>

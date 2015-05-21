@@ -140,16 +140,16 @@ function print_info {
     RTAI_PATCH=""
     check_kernel_patch
     echo
-    echo "distribution:"
+    echo "distribution (lsb_release -a):"
     lsb_release -a 2> /dev/null
     echo
-    echo "running kernel:"
+    echo "running kernel (uname -r):"
     uname -r
     echo
-    echo "CPU:"
+    echo "CPU (/proc/cpuinfo):"
     grep "model name" /proc/cpuinfo | head -n 1
     echo "$CPU_NUM cores"
-    echo "machine: $MACHINE"
+    echo "machine (uname -m): $MACHINE"
     echo "$(free -h | grep Mem | awk '{print $2}') RAM"
     echo
     echo "grub menu entries:"
@@ -237,6 +237,10 @@ function check_kernel_patch {
 }
 
 function download_kernel {
+    if ! test -d "$KERNEL_PATH"; then
+	echo "path to kernel sources $KERNEL_PATH does not exist!"
+	ecit 1
+    fi
     cd $KERNEL_PATH
     if check_kernel_patch; then
 	exit 1
@@ -261,6 +265,10 @@ function download_kernel {
 }
 
 function unpack_kernel {
+    if ! test -d "$KERNEL_PATH"; then
+	echo "path to kernel sources $KERNEL_PATH does not exist!"
+	ecit 1
+    fi
     cd $KERNEL_PATH
     if test -d linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}; then
 	echo "keep already existing linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME} directory."

@@ -143,7 +143,7 @@ void Session::startTheSession( bool startmacro )
   if ( Running )
     return;
 
-  StartSessionAction->setText( "Stop Session" );
+  StartSessionAction->setText( "Stop session" );
 
   SessionCounter++;
   StartSessionTime = ::time( 0 );
@@ -215,7 +215,7 @@ void Session::doStopTheSession( void )
 
   timeMessage();
 
-  StartSessionAction->setText( "Start Session" );
+  StartSessionAction->setText( "Start session" );
 
   RW->stopSession( SaveData );
 
@@ -254,7 +254,7 @@ void Session::timeMessage( void )
 
 void Session::addActions( QMenu *menu )
 {
-  StartSessionAction = menu->addAction( "Start Session",
+  StartSessionAction = menu->addAction( "Start session",
 					this, SLOT( toggleSession() ),
 					Qt::Key_Enter );
   new QShortcut( Qt::Key_Return, this, SLOT( toggleSession() ) );

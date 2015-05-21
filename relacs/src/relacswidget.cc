@@ -381,7 +381,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   CW->addMenu( pluginmenu, doxydoc );
 
   // devices:
-  DeviceMenu = menuBar()->addMenu( "Devi&ces" );
+  DeviceMenu = menuBar()->addMenu( "Dev&ices" );
 
   // filters:
   QMenu *filtermenu = menuBar()->addMenu( "&Detectors/Filters" );
@@ -406,13 +406,13 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // view:
   QMenu *viewmenu = menuBar()->addMenu( "&View" );
-  viewmenu->addAction( "Show &Filters",
+  viewmenu->addAction( "Show &filters",
 		       (QWidget*)this, SLOT( showFilters() ),
 		       Qt::CTRL + Qt::Key_1 );
-  viewmenu->addAction( "Show &Traces",
+  viewmenu->addAction( "Show &traces",
 		       (QWidget*)this, SLOT( showTraces() ),
 		       Qt::CTRL + Qt::Key_2 );
-  viewmenu->addAction( "Show &Controls",
+  viewmenu->addAction( "Show &controls",
 		       (QWidget*)this, SLOT( showControls() ),
 		       Qt::CTRL + Qt::Key_3 );
   viewmenu->addAction( "Show &RePros",
@@ -421,7 +421,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MaximizedAction = viewmenu->addAction( "&Maximize window",
 					 (QWidget*)this, SLOT( maximizeScreen() ),
 					 Qt::CTRL + Qt::SHIFT + Qt::Key_M );
-  FullscreenAction = viewmenu->addAction( "&Fullscreen",
+  FullscreenAction = viewmenu->addAction( "&Full screen",
 					  (QWidget*)this, SLOT( fullScreen() ),
 					  Qt::CTRL + Qt::SHIFT + Qt::Key_F );
   viewmenu->addSeparator();

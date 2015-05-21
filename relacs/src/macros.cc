@@ -493,7 +493,7 @@ void Macros::create( void )
 		   QKeySequence( Qt::Key_B ) );
   ResumeAction = Menu->addAction( "Resume", this, SLOT( resume( void ) ),
 				  QKeySequence( Qt::Key_R ) );
-  ResumeNextAction = Menu->addAction( "Resume Next", this,
+  ResumeNextAction = Menu->addAction( "Resume next", this,
 				      SLOT( resumeNext( void ) ),
 				      QKeySequence( Qt::Key_N ) );
   ResumeAction->setEnabled( false );

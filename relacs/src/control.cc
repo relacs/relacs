@@ -57,14 +57,14 @@ void Control::initDevices( void )
 
 void Control::addActions( QMenu *menu, bool doxydoc )
 {
-  menu->addAction( string( uniqueName() + " Dialog..." ).c_str(),
+  menu->addAction( string( uniqueName() + " dialog..." ).c_str(),
 		   this, SLOT( dialog() ) );
-  menu->addAction( string( uniqueName() + " Help..." ).c_str(),
+  menu->addAction( string( uniqueName() + " help..." ).c_str(),
 		   this, SLOT( help() ) );
-  menu->addAction( string( uniqueName() + " Screenshot" ).c_str(),
+  menu->addAction( string( uniqueName() + " screenshot" ).c_str(),
 		   this, SLOT( saveWidget() ) );
   if ( doxydoc )
-    menu->addAction( string( uniqueName() + " Doxygen" ).c_str(),
+    menu->addAction( string( uniqueName() + " doxygen" ).c_str(),
 		     this, SLOT( saveDoxygenOptions() ) );
 }
 
