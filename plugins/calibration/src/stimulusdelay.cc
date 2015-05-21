@@ -156,7 +156,7 @@ int StimulusDelay::analyze( const InData &data, double duration,
   double mdt = 1.2*maxdeltat;
   if ( mdt < 0.001 )
     mdt = 0.001;
-  SampleDataF d( -0.0001, mdt, data.sampleInterval() );
+  SampleDataF d( -5.0*data.sampleInterval(), mdt, data.sampleInterval() );
   data.copy( signalTime(), d );
 
   // plot:
