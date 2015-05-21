@@ -54,7 +54,6 @@ struct chanT {
   lsampl_t lsample;
   struct converterT converter;
   float scale;
-  unsigned int fifo;
   float voltage;
   float prevvoltage;
   int trigger;
@@ -627,7 +626,11 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
     ERROR_MSG( "loadChanList ERROR: First open an appropriate device and subdevice. Chanlist not loaded!\n" );
     return -EFAULT;
   }
-
+  if ( subdev->running ) {
+    ERROR_MSG( "loadChanList ERROR: subdevice %i on device %s already running.\n",
+	       subdev->subdev, devname );
+    return -EBUSY;
+  }
   if ( chanlistIOC->chanlistN > MAXCHANLIST ) {
     ERROR_MSG( "loadChanList ERROR: Invalid chanlist length for subdevice %i on device %s. Chanlist not loaded!\n",
 	       subdev->subdev, devname );
@@ -693,7 +696,6 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
       subdev->chanlist[iC].isUsed = 1; 
       subdev->chanlist[iC].voltage = 0.0; 
       subdev->chanlist[iC].prevvoltage = 0.0;
-      subdev->chanlist[iC].fifo = subdev->fifo;
       if ( trig && subdev->chanlist[iC].chan == trigger.chan ) {
 	DEBUG_MSG( "loadChanList: added trigger to channel %d id %d on subdevice %d with level %d\n", subdev->chanlist[iC].chan, iC, subdev->subdev, (int)(100.0*trigger.alevel) );
 	subdev->chanlist[iC].trigger = 1;
@@ -749,6 +751,11 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   if ( subdev->subdev < 0 || !subdev->used ) {
     ERROR_MSG( "loadSyncCmd ERROR: first open an appropriate device and subdevice. Sync-command not loaded!\n" );
     return -EFAULT;
+  }
+  if ( subdev->running ) {
+    ERROR_MSG( "startSubdevice ERROR: subdevice %i on device %s already running.\n",
+	       subdev->subdev, devname );
+    return -EBUSY;
   }
   if ( subdev->chanN <= 0 || !subdev->chanlist ) {
     ERROR_MSG( "loadSyncCmd ERROR: first load Chanlist for subdevice %i on device %s. Sync-command not loaded!\n",
@@ -1247,7 +1254,7 @@ void dynclamp_loop( long dummy )
 		     aosubdev.duration, dynClampTask.loopCnt );
 	  aosubdev.delay = dynClampTask.loopCnt + aosubdev.delay; 
 	  aosubdev.duration = aosubdev.delay + aosubdev.duration;
-	  dynClampTask.aoIndex = aosubdev.delay + 1;
+	  dynClampTask.aoIndex = aosubdev.delay;
 	  aosubdev.pending = 0;
 	  DEBUG_MSG( "dynclamp_loop: START PENDING AO duration=%lu delay=%lu, loopCnt=%lu\n",
 		     aosubdev.duration, aosubdev.delay, dynClampTask.loopCnt );
@@ -1291,7 +1298,7 @@ void dynclamp_loop( long dummy )
 	    pChan = &aosubdev.chanlist[iC];
 	    if ( pChan->isUsed ) {
 	      // get data from FIFO:
-	      retVal = rtf_get( pChan->fifo, &pChan->voltage, sizeof(float) );
+	      retVal = rtf_get( aosubdev.fifo, &pChan->voltage, sizeof(float) );
 	      if ( retVal != sizeof(float) ) {
 		if ( retVal == EINVAL ) {
 		  ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
@@ -1486,7 +1493,7 @@ void dynclamp_loop( long dummy )
 	  ERROR_MSG( "dynclamp_loop: ERROR! ai subdevice somehow not running\n" );
 #endif
 	// write to FIFO:
-	retVal = rtf_put( pChan->fifo, &pChan->voltage, sizeof(float) );
+	retVal = rtf_put( aisubdev.fifo, &pChan->voltage, sizeof(float) );
 #ifdef RTMODULE_DEBUG
 	if ( aisubdev.running == 0 )
 	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put turned ai subdevice not running\n" );
@@ -1494,6 +1501,7 @@ void dynclamp_loop( long dummy )
 
 	if ( retVal != sizeof(float) ) {
 	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
+	  rtf_reset( aisubdev.fifo );
 	  aisubdev.running = 0;
 	  dynClampTask.running = 0;
 	  dynClampTask.duration = 0;

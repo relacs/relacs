@@ -615,7 +615,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   }
 
   // init internal buffer:
-  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
+  BufferSize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
   Buffer = new char[BufferSize];
   BufferN = 0;
   
@@ -692,6 +692,7 @@ int DynClampAnalogInput::readData( void )
   for ( int tryit = 0; tryit < 1 && ! failed && maxn > 0; tryit++ ) {
     // read data:
     ssize_t m = read( FifoFd, Buffer + readn, maxn );
+    //ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 1000 );
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {

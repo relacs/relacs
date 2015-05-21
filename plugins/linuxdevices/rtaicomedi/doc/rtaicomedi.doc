@@ -239,6 +239,24 @@ yes "" | make localmodconfig
    \endcode
    This gives a smaller kernel that is compiled much faster.
 
+   Even better: run
+   \code
+lsmod
+   \endcode
+   and check for modules that are not used or that you do not need.
+   Unload them with
+   \code
+modprobe -r module1 module2 ...
+   \endcode
+   and run
+   \code
+yes "" | make localmodconfig
+   \endcode
+   again.
+   
+   The aim is to throw everything away that you do not really need and hope that
+   this improves the performance of your rtai kernel.
+
 -# The following steps 4. to 6. describe the elegant way to compile a linux kernel 
    on a Debian system using the kernel-package.
    You get a nice \c .deb file with the compiled kernel
