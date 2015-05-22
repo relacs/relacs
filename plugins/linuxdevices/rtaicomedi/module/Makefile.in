@@ -5,13 +5,13 @@ EXTRA_CFLAGS += -mpreferred-stack-boundary=4
 EXTRA_CFLAGS += -Wall
 
 KBUILD_EXTRA_SYMBOLS := /lib/modules/$(shell uname -r)/comedi/Module.symvers
+#KBUILD_EXTRA_SYMBOLS := $(shell rtai-config --module-dir)/Module.symvers
 
 obj-m := dynclampmodule.o # rtmodule.o
 
 else
 
-#KERNELDIR ?= /lib/modules/$(shell uname -r)/build
-KERNELDIR ?= /usr/src/linux
+KERNELDIR=/usr/src/linux
 
 all: module
 
