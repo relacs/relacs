@@ -506,6 +506,8 @@ int Beats::main( void )
 	  s += signal.errorText() + "</b>";
 	  warning( s, 2.0 );
 	  writeZero( FishEField[0] );
+	  if ( LEDOutput[0] >= 0 )
+	    writeZero( LEDOutput[0] );
 	  P.lock();
 	  P.clear();
 	  P.unlock();
@@ -518,6 +520,8 @@ int Beats::main( void )
 	  writeZero( "Amplitude" );
 	else
 	  writeZero( FishEField[0] );
+	if ( LEDOutput[0] >= 0 )
+	  writeZero( LEDOutput[0] );
 	P.lock();
 	P.clear();
 	P.unlock();
@@ -579,6 +583,8 @@ int Beats::main( void )
 	    s += sig.errorText() + "</b>";
 	    warning( s, 2.0 );
 	    writeZero( "Amplitude" );
+	    if ( LEDOutput[0] >= 0 )
+	      writeZero( LEDOutput[0] );
 	    P.lock();
 	    P.clear();
 	    P.unlock();
@@ -592,6 +598,8 @@ int Beats::main( void )
 	    writeZero( "Amplitude" );
 	  else
 	    writeZero( FishEField[0] );
+	  if ( LEDOutput[0] >= 0 )
+	    writeZero( LEDOutput[0] );
 	  P.lock();
 	  P.clear();
 	  P.unlock();
@@ -616,6 +624,8 @@ int Beats::main( void )
 	  s += sig.errorText() + "</b>";
 	  warning( s, 2.0 );
 	  writeZero( "Amplitude" );
+	  if ( LEDOutput[0] >= 0 )
+	    writeZero( LEDOutput[0] );
 	  P.lock();
 	  P.clear();
 	  P.unlock();
@@ -635,6 +645,8 @@ int Beats::main( void )
 	    writeZero( "Amplitude" );
 	  else
 	    writeZero( FishEField[0] );
+	  if ( LEDOutput[0] >= 0 )
+	    writeZero( LEDOutput[0] );
 	  P.lock();
 	  P.clear();
 	  P.unlock();
@@ -674,6 +686,8 @@ int Beats::main( void )
     writeZero( "Amplitude" );
   else
     writeZero( FishEField[0] );
+  if ( LEDOutput[0] >= 0 )
+    writeZero( LEDOutput[0] );
   P.lock();
   P.clear();
   P.unlock();

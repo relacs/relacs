@@ -332,6 +332,13 @@ void init_globals( void )
     strcpy( statusInputUnits[statusInputN], outputUnits[k] );
     statusInput[statusInputN] = 0.0;
     statusInputN++;
+#ifdef ENABLE_SYNCSEC
+    sprintf( name, "Injected-%s", outputNames[k] );
+    strcpy( statusInputNames[statusInputN], name );
+    strcpy( statusInputUnits[statusInputN], outputUnits[k] );
+    statusInput[statusInputN] = 0.0;
+    statusInputN++;
+#endif
   }
 #endif
 
@@ -727,7 +734,11 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	  for ( i = 0; i < OUTPUT_N; i++ ) {
 	    if ( outputChannels[i] == subdev->chanlist[iC].chan ) {
 	      subdev->chanlist[iC].modelIndex = i;
+#ifdef ENABLE_SYNCSEC
+	      subdev->chanlist[iC].statusIndex = outputstatusinx + 4*i;
+#else
 	      subdev->chanlist[iC].statusIndex = outputstatusinx + 3*i;
+#endif
 	    }
 	  }
 #endif
@@ -1332,6 +1343,7 @@ void dynclamp_loop( long dummy )
       if ( pChan->param == 0 ) {
 #endif
 	voltage = pChan->voltage;
+
 #ifdef ENABLE_COMPUTATION
 	// add model output to sample:
 	if ( pChan->modelIndex >= 0 ) {
@@ -1339,6 +1351,9 @@ void dynclamp_loop( long dummy )
 	  statusInput[pChan->statusIndex+1] = output[pChan->modelIndex];
 	  voltage += output[pChan->modelIndex];
 	  statusInput[pChan->statusIndex+2] = voltage;
+#ifdef ENABLE_SYNCSEC
+	  statusInput[pChan->statusIndex+3] = voltage * currentfac;
+#endif
 	}
 #endif
 	// write out Sample:

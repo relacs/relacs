@@ -137,14 +137,20 @@ function check_root {
 }
 
 function print_info {
-    RTAI_PATCH=""
-    check_kernel_patch
+    echo
+    echo "loaded modules (lsmod):"
+    lsmod
     echo
     echo "distribution (lsb_release -a):"
     lsb_release -a 2> /dev/null
     echo
     echo "running kernel (uname -r):"
     uname -r
+    echo
+    echo "Revisions:"
+    echo "  rtai  : ${RTAI_DIR} from $(cat /usr/local/src/${RTAI_DIR}/revision.txt)"
+    echo "  newlib: cvs from $(cat /usr/local/src/newlib/revision.txt)"
+    echo "  comedi: git from $(cat /usr/local/src/comedi/revision.txt)"
     echo
     echo "CPU (/proc/cpuinfo):"
     grep "model name" /proc/cpuinfo | head -n 1
@@ -163,6 +169,12 @@ function print_info {
     echo "RTAI_DIR=$RTAI_DIR"
     echo "RTAI_PATCH=$RTAI_PATCH"
 
+}
+
+function print_full_info {
+    RTAI_PATCH=""
+    check_kernel_patch
+    print_info
 }
 
 
@@ -585,29 +597,16 @@ function test_rtaikernel {
 	    echo "Preempt test:"
 	    sed -e '/^\*/d' $PREEMPT_TEST_DIR/preempt.dat
 	    echo
-	    echo
-	    echo "Revisions:"
-	    echo "  kernel: ${LINUX_KERNEL}"
-	    echo "  rtai  : ${RTAI_DIR} from $(cat /usr/local/src/${RTAI_DIR}/revision.txt)"
-	    echo "  newlib: cvs from $(cat /usr/local/src/newlib/revision.txt)"
-	    echo "  comedi: git from $(cat /usr/local/src/comedi/revision.txt)"
-	    echo
-	    echo
-	    echo "rtai-info reports:"
-	    echo
-	    /usr/realtime/bin/rtai-info
-	    echo
-	    echo
-	    echo "lsmod:"
-	    echo
-	    lsmod
-	    echo
-	    echo
 	    if $RTAIMATH_FAILED; then
 		echo "Failed to load rtai_math module."
 		echo
 		echo
 	    fi
+	    print_info
+	    echo
+	    echo "rtai-info reports:"
+	    /usr/realtime/bin/rtai-info
+	    echo
 	    echo "dmesg:"
 	    echo
 	    dmesg | tail -n 50
@@ -1390,7 +1389,7 @@ case $ACTION in
     version ) print_version ;;
     --version ) print_version ;;
 
-    info ) print_info ;;
+    info ) print_full_info ;;
 
     reconfigure ) reconfigure ;;
 

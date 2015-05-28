@@ -64,7 +64,10 @@ The following three types of additional inputs are supported:
 - for each analog output trace the dynamic clamp model is using (its \c outputNames), 
   - \c Stimulus-xxx contains the stimulus a RePro wrote to this channel,
   - \c Model-xxx contains the value the model computed, and
-  - \c Total-xxx contains the total output for this channel.
+  - \c Total-xxx contains the total requested output for this channel.
+  - \c Injected-xxx contains the total output for this channel as it is written to the analog output.
+    This equals \c Total-xxx multiplied by a possible correction factor and is only available with ENABLE_SYNCSEC
+  .
   Stimulus-xxx plus Model-xxx equals Total-xxx.
   \c xxx is the name of the analog output trace.
 
