@@ -882,6 +882,7 @@ ofstream *SaveFiles::openFile( const string &filename, int type )
   else {
     addRemoveFile( fs );
     // add to recording section:
+    RW->MTDT.lock();
     Options &opt = RW->MTDT.section( "Recording" );
     if ( opt.exist( "File" ) )
       opt.pushText( "File", filename );
@@ -889,6 +890,7 @@ ofstream *SaveFiles::openFile( const string &filename, int type )
       opt.insertText( "File", "Date", filename,
 		      MetaData::standardFlag(), Parameter::ListAlways );
     }
+    RW->MTDT.unlock();
   }
   return f;
 }

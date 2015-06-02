@@ -1736,6 +1736,7 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
 
 void RELACSWidget::startIdle( void )
 {
+  MTDT.clear();
   CFG.preConfigure( RELACSPlugin::Plugins );
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );

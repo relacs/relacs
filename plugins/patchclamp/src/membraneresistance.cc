@@ -102,9 +102,9 @@ int MembraneResistance::main( void )
     return Failed;
   }
   if ( userm ) {
-    unlockMetaData();
-    double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
     lockMetaData();
+    double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
+    unlockMetaData();
     if ( rm > 1.0e-8 ) {
       lockStimulusData();
       double g = stimulusData().number( "g", 0.0, "ns" );
