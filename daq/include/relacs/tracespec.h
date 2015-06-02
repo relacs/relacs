@@ -47,7 +47,7 @@ class TraceSpec
   TraceSpec( int index, const string &name,
 	     int device, int channel,
 	     double scale=1.0, const string &unit="",
-	     double maxrate=-1.0,
+	     double value=0.0, double maxrate=-1.0,
 	     const string &modality="" );
     /*! Copy constructor. */
   TraceSpec( const TraceSpec &trace );
@@ -104,6 +104,12 @@ class TraceSpec
 	that is put out by the analog output device.
         \sa unit(), scale(), setScale() */
   void setUnit( double scale, const string &unit );
+    /*! The initial value of the output trace.
+        \sa setValue() */
+  double value( void ) const;
+    /*! Set the initial value of the output trace to \a value.
+        \sa value() */
+  void setValue( double value );
 
     /*! The maximum or fixed sampling rate to be used in Hertz.
         \sa setMaxSampleRate(), setFixedSampleRate(), fixedSampleRate() */
@@ -153,6 +159,7 @@ class TraceSpec
   int Channel;
   double Scale;
   string Unit;
+  double Value;
   double MaxRate;
   bool FixedRate;
   string Modality;

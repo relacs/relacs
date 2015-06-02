@@ -48,8 +48,6 @@ struct chanT {
   int modelIndex;
   int statusIndex;
   int isUsed;
-  int aref;
-  int rangeIndex;
   comedi_insn insn;
   lsampl_t lsample;
   struct converterT converter;
@@ -675,8 +673,6 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	  }
 	  subdev->chanlist[isC].scale = chanlistIOC->scalelist[iC];
 	  if ( subdev->chanlist[isC].param == 0 ) {
-	    subdev->chanlist[isC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
-	    subdev->chanlist[isC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
 	    subdev->chanlist[isC].insn.chanspec = chanlistIOC->chanlist[iC];
 	    memcpy( &subdev->chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
 	  }
@@ -714,8 +710,6 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
       }
       if ( subdev->chanlist[iC].param > 0 ) {
 	subdev->chanlist[iC].chan %= PARAM_CHAN_OFFSET;
-	subdev->chanlist[iC].aref = 0;
-	subdev->chanlist[iC].rangeIndex = 0;
 	memset( &subdev->chanlist[iC].converter, 0, sizeof( struct converterT ) );
       }
       else {
@@ -743,8 +737,6 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	  }
 #endif
 	}
-	subdev->chanlist[iC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
-	subdev->chanlist[iC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
 	subdev->chanlist[iC].insn.n = 1;
 	subdev->chanlist[iC].insn.data = &subdev->chanlist[iC].lsample;
 	subdev->chanlist[iC].insn.subdev = subdev->subdev;
@@ -1828,6 +1820,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       rc = -EFAULT;
       break;
     }
+    traceInfo.value = 0.0;
     rc = 0;
     switch( traceInfo.traceType ) {
 #ifdef ENABLE_COMPUTATION
@@ -1849,6 +1842,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       }
       strncpy( traceInfo.name, outputNames[traceIndex], PARAM_NAME_MAXLEN );
       strncpy( traceInfo.unit, outputUnits[traceIndex], PARAM_NAME_MAXLEN );
+      traceInfo.value = output[traceIndex];
       DEBUG_MSG( "ioctl: output trace %s [%s]\n", traceInfo.name, traceInfo.unit );
       break;
     case PARAM_IN:
@@ -1869,6 +1863,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       }
       strncpy( traceInfo.name, paramOutputNames[traceIndex], PARAM_NAME_MAXLEN );
       strncpy( traceInfo.unit, paramOutputUnits[traceIndex], PARAM_NAME_MAXLEN );
+      traceInfo.value = paramOutput[traceIndex];
       DEBUG_MSG( "ioctl: parameter output trace %s [%s]\n", traceInfo.name, traceInfo.unit );
       break;
 #endif

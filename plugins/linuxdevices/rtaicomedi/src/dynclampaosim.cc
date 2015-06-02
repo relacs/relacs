@@ -42,7 +42,15 @@ int DynClampAOSim::open( const string &device, const Options &opts )
   AOSim::open( device, opts );
   dynclampmodelsim::generateLookupTables();
   setDeviceName( "Dynamic Clamp AO Simulation" );
+  // publish information about the analog input device:
   setInfo();
+  vector< TraceSpec > traces;
+  traces.clear();
+  addTraces( traces, 0 );
+  for ( unsigned int k=0; k<traces.size(); k++ ) {
+    if ( traces[k].channel() >= PARAM_CHAN_OFFSET )
+      Info.addText( "Model parameter", traces[k].traceName() );
+  }
   return 0;
 }
 

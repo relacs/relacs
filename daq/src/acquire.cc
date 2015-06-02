@@ -279,13 +279,13 @@ void Acquire::closeAttLines( void )
 
 void Acquire::addOutTrace( const string &name,
 			   int device, int channel, 
-			   double scale, const string &unit,
+			   double scale, const string &unit, double value,
 			   double maxrate, const string &modality )
 {
   if ( device >= 0 && device < (int)AO.size() && maxrate > AO[device].AO->maxRate() )
     maxrate = AO[device].AO->maxRate();
   OutTraces.push_back( TraceSpec( OutTraces.size(), name, device, channel,
-				  scale, unit, maxrate, modality ) );
+				  scale, unit, value, maxrate, modality ) );
 }
 
 

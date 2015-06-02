@@ -84,7 +84,13 @@ int DynClampAISim::open( const string &device, const Options &opts )
   AISim::open( device, opts );
   string es = dynclampmodelsim::initStatus( statusInput, statusInputNames, statusInputUnits );
   setDeviceName( "Dynamic Clamp AI Simulation" );
+  // publish information about the analog input device:
   setInfo();
+  vector< TraceSpec > traces;
+  traces.clear();
+  addTraces( traces, 0 );
+  for ( unsigned int k=0; k<traces.size(); k++ )
+    Info.addText( "Model output", traces[k].traceName() );
   if ( ! es.empty() ) {
     setErrorStr( es );
     return -1;

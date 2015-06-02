@@ -77,12 +77,20 @@ string initStatus( vector<float> &statusInput,
 
 #ifdef ENABLE_COMPUTATION
   for ( int k=0; k<OUTPUT_N; k++ ) {
+    statusInputNames.push_back( string( "Stimulus-" ) + outputNames[k] );
+    statusInputUnits.push_back( outputUnits[k] );
+    statusInput.push_back( 0.0 );
     statusInputNames.push_back( string( "Model-" ) + outputNames[k] );
     statusInputUnits.push_back( outputUnits[k] );
     statusInput.push_back( 0.0 );
     statusInputNames.push_back( string( "Total-" ) + outputNames[k] );
     statusInputUnits.push_back( outputUnits[k] );
     statusInput.push_back( 0.0 );
+#ifdef ENABLE_SYNCSEC
+    statusInputNames.push_back( string( "Injected-" ) + outputNames[k] );
+    statusInputUnits.push_back( outputUnits[k] );
+    statusInput.push_back( 0.0 );
+#endif
   }
 #endif
   return "";
@@ -118,14 +126,18 @@ void computeModel( InList &data,
   computeModel();
 
   for ( int k=0; k<OUTPUT_N; k++ ) {
-    statusInput[outputstatusinx+2*k] = output[k];
     statusInput[outputstatusinx+2*k+1] = output[k];
+    statusInput[outputstatusinx+2*k+2] = output[k];
     for ( unsigned int j=0; j<aochannels.size(); j++ ) {
       if ( outputChannels[k] == aochannels[j] ) {
-	statusInput[outputstatusinx+2*k+1] += aovalues[j];
+	statusInput[outputstatusinx+2*k] = aovalues[j];
+	statusInput[outputstatusinx+2*k+2] += aovalues[j];
 	break;
       }
     }
+#ifdef ENABLE_SYNCSEC
+    statusInput[outputstatusinx+2*k+3] = statusInput[outputstatusinx+2*k+2];
+#endif
   }
   for ( int k=0; k<data.size(); k++ ) {
     if ( data[k].channel() >= PARAM_CHAN_OFFSET &&
@@ -163,7 +175,8 @@ void addAOTraces( vector< TraceSpec > &traces, int deviceid )
   int channel = PARAM_CHAN_OFFSET;
   for ( int k=0; k<PARAMOUTPUT_N; k++ ) {
     traces.push_back( TraceSpec( traces.size(), paramOutputNames[k],
-				 deviceid, channel++, 1.0, paramOutputUnits[k] ) );
+				 deviceid, channel++, 1.0, paramOutputUnits[k],
+				 paramOutput[k] ) );
   }
 #endif
 }

@@ -162,6 +162,7 @@ struct traceInfoIOCT {
   enum traceTypes traceType;
   char name[PARAM_NAME_MAXLEN];
   char unit[PARAM_NAME_MAXLEN];
+  float value;
 };
 
 struct traceChannelIOCT {

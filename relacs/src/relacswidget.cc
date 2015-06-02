@@ -808,6 +808,7 @@ void RELACSWidget::setupOutTraces( void )
 		     integer( "outputtracechannel", k, chan ),
 		     scale,
 		     text( "outputtraceunit", k, "V" ),
+		     0.0,
 		     number( "outputtracemaxrate", k, 0.0 ),
 		     text( "outputtracemodality", k, "unknown" ) );
     chan++;
@@ -819,8 +820,9 @@ void RELACSWidget::setupOutTraces( void )
   SF->lock();
   SF->Options::erase( SF->TraceFlag );
   for ( int k=0; k<AQ->outTracesSize(); k++ )
-    SF->addNumber( AQ->outTraceName( k ), AQ->outTraceName( k ), 0.0,
-		   -1.0e10, 1.0e10, 0.0001, AQ->outTrace( k ).unit() ).setFormat( "%9.3f" ).setFlags( SF->TraceFlag );
+    SF->addNumber( AQ->outTraceName( k ), AQ->outTraceName( k ), 
+		   AQ->outTrace( k ).value(), -1.0e10, 1.0e10, 0.0001,
+		   AQ->outTrace( k ).unit() ).setFormat( "%9.3f" ).setFlags( SF->TraceFlag );
   SF->unlock();
 }
 

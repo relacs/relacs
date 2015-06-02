@@ -288,7 +288,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   traces.clear();
   addTraces( traces, 0 );
   for ( unsigned int k=0; k<traces.size(); k++ )
-    Info.addText( "Model input", traces[k].traceName() );
+    Info.addText( "Model output", traces[k].traceName() );
 
   return 0;
 }

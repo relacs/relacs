@@ -5,8 +5,6 @@
 
 New InData threading:
 - analog  outputs with delay might not deliver enough data: comedi output should not need to be canceled in prepareWrite, daqflex should not have an underrun condition
-- ManualJAR: if interrupted by another macro a segfault occurs in some event filtering in customEvent->RePro::customEvent (probably from RePro::disable())
-  might be fixed, but needs to be checked
 - check for XXX in RelacsWidget
 - check and improve AudioMonitor input data updates - are they locked? 
 - carefully check how signaltime is set in all the traces! (Consistency with stimulusdelay repro!)
@@ -37,18 +35,21 @@ Macros, flow control:
 - auditory::search does not exit cleanly upon ESC: should be solved, check it
 
 Dynamic clamp:
-- autoconf script: check for presence of rtai-config and whether -r option is supported!
+- autoconf script: check for presence of rtai-config and whether -r option is supported! Do we need to set PATH in order to be able to run rtai-config?
 - patchclamp::singlestimulus and ficurve should save all traces!
 - Always create a new channel list!
   Then we do not need to reset all the channels at startup (Aquire::writeReset() )
-- Is it really necessary that the dynclamp parameter are all set to zero by relacs initially?
-  It shoud be sufficient to set the AOs to zero and the parameters to their initial vallues.
+- It shoud be sufficient to initially set the AOs to zero and the parameters to their initial vallues.
   For the latter we might need some support (saving the initial values to some array prior to starting, etc.)
+- Analog output of the model's output channels should be available right from the start of the loop.
+  take/match should provide the necessary information (channel, aref=ground, rangeindex=firt available)
+  Additional output channels can be made temporary (with a flag) - we do not want to fiddle around with this list during the dynclamp-loop.
+  -> match/take needs to supply specs for ALL analog output traces.
 - matchTraces should set error string of device, and this should be used by relacswidget
 - restart in dynclamp mode is not properly processed??? (check inputrangecheck, follow up outputs seem to be changed)
 - DynClamAnalogInput improve error checking in readData()
 - Add a variable lastInterval that is set to the current period length in addition to loopInterval
-- CHECK IT! Both kernel modules, optional trigger, and DynClampAnalogOutput
+- check trigger, ttl-pulse and syncsec
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul
   similar to the analog output part
 - shouldn't it be better if the model would get the parameter first,

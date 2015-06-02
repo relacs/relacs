@@ -318,7 +318,15 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
   IsPrepared = false;
   NoMoreData = true;
 
+  // publish information about the analog input device:
   setInfo();
+  vector< TraceSpec > traces;
+  traces.clear();
+  addTraces( traces, 0 );
+  for ( unsigned int k=0; k<traces.size(); k++ ) {
+    if ( traces[k].channel() >= PARAM_CHAN_OFFSET )
+      Info.addText( "Model parameter", traces[k].traceName() );
+  }
 
   return 0;
 }
@@ -1143,7 +1151,7 @@ void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid 
   int channel = PARAM_CHAN_OFFSET;
   while ( 0 == ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     traces.push_back( TraceSpec( traces.size(), traceInfo.name,
-				 deviceid, channel++, 1.0, traceInfo.unit ) );
+				 deviceid, channel++, 1.0, traceInfo.unit, traceInfo.value ) );
   }
   int ern = errno;
   if ( ern != ERANGE )

@@ -33,6 +33,7 @@ TraceSpec::TraceSpec( void )
     Channel( 0 ),
     Scale( 1.0 ),
     Unit( "V" ),
+    Value( 0.0 ),
     MaxRate( 1000.0 ),
     FixedRate( false ),
     Modality( "" )
@@ -42,7 +43,7 @@ TraceSpec::TraceSpec( void )
 
 TraceSpec::TraceSpec( int index, const string &name,
 		      int device, int channel, 
-		      double scale, const string &unit,
+		      double scale, const string &unit, double value,
 		      double maxrate, const string &modality )
   : Trace( index ),
     TraceName( name ),
@@ -50,6 +51,7 @@ TraceSpec::TraceSpec( int index, const string &name,
     Channel( channel ),
     Scale( scale ),
     Unit( unit ),
+    Value( value ),
     MaxRate( maxrate ),
     FixedRate( false ),
     Modality( modality )
@@ -64,6 +66,7 @@ TraceSpec::TraceSpec( const TraceSpec &trace )
     Channel( trace.Channel ),
     Scale( trace.Scale ),
     Unit( trace.Unit ),
+    Value( trace.Value ),
     MaxRate( trace.MaxRate ),
     FixedRate( trace.FixedRate ),
     Modality( trace.Modality )
@@ -135,6 +138,18 @@ double TraceSpec::scale( void ) const
 void TraceSpec::setScale( double scale )
 {
   Scale = scale;
+}
+
+
+double TraceSpec::value( void ) const
+{
+  return Value;
+}
+
+
+void TraceSpec::setValue( double value )
+{
+  Value = value;
 }
 
 
