@@ -852,12 +852,12 @@ int RELACSWidget::getData( InList &data, EventList &events, double &signaltime,
     
     // do we need to wait for more data?
     while ( IData.success() &&
-	    IData.currentTime() < mintracetime+1.0e-8 &&
+	    IData.currentTimeRaw() < mintracetime+1.0e-8 &&
 	    AQ->isReadRunning() ) {
       UpdateDataWait.wait( &DerivedDataMutex );
     }
     
-    interrupted = ( IData.currentTime() < mintracetime || mintracetime == 0.0 );
+    interrupted = ( IData.currentTimeRaw() < mintracetime || mintracetime == 0.0 );
   }
 
   // update data:

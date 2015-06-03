@@ -1177,6 +1177,12 @@ ostream &TableKey::save( ostream &str, const TableData &table ) const
 }
 
 
+ostream &TableKey::save( ostream &str, const char *text, int c ) const
+{
+  return save( str, string( text ), c );
+}
+
+
 ostream &TableKey::save( ostream &str, const string &text, int c ) const
 {
   if ( c < 0 ) 

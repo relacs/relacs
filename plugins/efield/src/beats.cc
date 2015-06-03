@@ -871,11 +871,19 @@ void Beats::saveEODFreq( int trace, const string &es, const Options &header, con
   key.saveKey( df );
 
   // write data into file:
-  for ( int k=0; k<eodfrequency.size(); k++ ) {
-    key.save( df, eodfrequency.x(k), 0 );
-    key.save( df, eodfrequency.y(k) );
-    key.save( df, eodglobal.sizeScale() * eodamplitude.y(k) );
+  if ( eodfrequency.size() <= 0 ) {
+    key.save( df, "-0", 0 );
+    key.save( df, "-0" );
+    key.save( df, "-0" );
     df << '\n';
+  }
+  else {
+    for ( int k=0; k<eodfrequency.size(); k++ ) {
+      key.save( df, eodfrequency.x(k), 0 );
+      key.save( df, eodfrequency.y(k) );
+      key.save( df, eodglobal.sizeScale() * eodamplitude.y(k) );
+      df << '\n';
+    }
   }
   df << "\n\n";
 }
@@ -899,10 +907,14 @@ void Beats::saveMergedEODFreq( const Options &header, const MapD &eodfrequency, 
   key.saveKey( df );
 
   // write data into file:
-  for ( int k=0; k<eodfrequency.size(); k++ ) {
-    key.save( df, eodfrequency.x(k), 0 );
-    key.save( df, eodfrequency.y(k) );
-    df << '\n';
+  if ( eodfrequency.size() <= 0 )
+    df << "  -0\n";
+  else {
+    for ( int k=0; k<eodfrequency.size(); k++ ) {
+      key.save( df, eodfrequency.x(k), 0 );
+      key.save( df, eodfrequency.y(k) );
+      df << '\n';
+    }
   }
   df << "\n\n";
 }
