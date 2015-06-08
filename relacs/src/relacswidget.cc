@@ -134,14 +134,15 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addText( "inputtracereference", "Input trace reference", InData::referenceStr( InData::RefGround ) );
   addNumber( "inputtracemaxvalue", "Input trace maximum value", 0 );
   addBoolean( "inputtracecenter", "Input trace center vertically", true );
-  newSection( "output data" );
-  addText( "outputtraceid", "Output trace identifier", "" );
-  addInteger( "outputtracechannel", "Output trace channel", 0 );
-  addText( "outputtracedevice", "Output trace device", "ao-1" );
-  addNumber( "outputtracescale", "Output trace scale factor to Volt", 1.0, -10000000.0, 10000000.0, 0.1 );
-  addText( "outputtraceunit", "Output trace unit", "V" );
-  addNumber( "outputtracemaxrate", "Maximum output sampling rate", 0.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" );
-  addText( "outputtracemodality", "Output trace modality", "voltage" );
+
+  newSection( OutputConfig::OptionNames::GROUP_NAME );
+  addText   ( OutputConfig::OptionNames::ID, "Output trace identifier", "" );
+  addText   ( OutputConfig::OptionNames::DEVICE, "Output trace device", "ao-1" );
+  addInteger( OutputConfig::OptionNames::CHANNEL, "Output trace channel", 0 );
+  addNumber ( OutputConfig::OptionNames::SCALE, "Output trace scale factor to Volt", 1.0, -10000000.0, 10000000.0, 0.1 );
+  addText   ( OutputConfig::OptionNames::UNIT, "Output trace unit", "V" );
+  addNumber ( OutputConfig::OptionNames::MAX_RATE, "Maximum output sampling rate", 0.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" );
+  addText   ( OutputConfig::OptionNames::MODALITY, "Output trace modality", "voltage" );
 
   // main widget:
   setWindowTitle( "RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );
@@ -363,6 +364,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MTDT.addActions( filemenu );
   filemenu->addSeparator();
   filemenu->addAction( "&Input traces...", this, SLOT( editInputTraces() ) );
+  filemenu->addAction( "&Output traces...", this, SLOT( editOutputTraces() ) );
   filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
   filemenu->addAction( "&Save settings", (QWidget*)this, SLOT( saveConfig() ) );
   filemenu->addSeparator();
@@ -1438,9 +1440,15 @@ void RELACSWidget::editInputTraces( void )
 
 void RELACSWidget::editOutputTraces( void )
 {
-  OutputConfig *oc = new OutputConfig( this );
-  OptDialog *od = new OptDialog( false, this );
-  od->addWidget( oc );
+  OutputConfig* oc = new OutputConfig(section("output data"), this);
+  OptDialog* od = new OptDialog(false, this);
+  od->setCaption("Analog output traces");
+  od->addWidget(oc);
+  od->addButton( "&Ok", OptDialog::Accept, OutputConfig::CODE_OK );
+  od->addButton( "&Apply", OptDialog::Accept, OutputConfig::CODE_APPLY, false );
+  od->addButton( "&Cancel" );
+  QObject::connect( od, SIGNAL( buttonClicked( int ) ), oc, SLOT( dialogClosed( int ) ) );
+  QObject::connect( oc, SIGNAL( newOutputSettings() ), this, SLOT( restartAcquisition() ) );
   od->exec();
 }
 
