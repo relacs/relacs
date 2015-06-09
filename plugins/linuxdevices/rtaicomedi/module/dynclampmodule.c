@@ -248,6 +248,7 @@ int unsetAnalogTrigger( struct triggerIOCT *triggerIOC );
 ///////////////////////////////////////////////////////////////////////////////
 #ifdef ENABLE_COMPUTATION
 #include "model.c"
+float origParamOutput[PARAMOUTPUT_N];
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2151,6 +2152,10 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 int dynclampmodule_open( struct inode *devFile, struct file *fModule )
 {
   DEBUG_MSG( "================================================\n" );
+
+#ifdef ENABLE_COMPUTATION
+  memcpy( origParamOutput, paramOutput, sizeof(paramOutput) );
+#endif
   return 0;
 }
 
@@ -2213,6 +2218,7 @@ static int __init init_dynclampmodule( void )
   mutex_init( &mutex );
 
 #ifdef ENABLE_COMPUTATION
+  memcpy( paramOutput, origParamOutput, sizeof(origParamOutput) );
 #ifdef ENABLE_LOOKUPTABLES
   for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
     lookupn[k] = 0;
