@@ -809,7 +809,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 	  (const comedi_polynomial_t *)ol[k].gainData();
 	chanlistIOC.conversionlist[k].order = poly->order;
 	if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-	  cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in converion polynomial!\n";
+	  cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in conversion polynomial!\n";
 	chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
 	for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
 	  chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
@@ -1171,17 +1171,22 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
   while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
     bool notfound = true;
     for ( unsigned int k=0; k<traces.size(); k++ ) {
-      if ( traces[k].channel() < PARAM_CHAN_OFFSET && traces[k].traceName() == traceInfo.name ) {
+      if ( traces[k].traceName() == traceInfo.name ) {
+	if ( traces[k].channel() >= PARAM_CHAN_OFFSET ) {
+	  failed = true;
+	  cerr << "! DynClampAnalogOutput::matchTraces -> output trace " << traces[k].traceName() << " matches model output, but its channel number " << traces[k].channel() << " is to large\n";
+	  //	  traces[k].addErrorStr( "output trace " + traces[k].traceName() + " matches model output, but its channel number " << traces[k].channel() << " is to large" );
+	}
 	if ( traces[k].unit() != traceInfo.unit ) {
 	  failed = true;
-	  cerr << "! DynClampAnalogOutput::matchTraces -> model input trace " << traces[k].traceName() << " requires as unit '" << traceInfo.unit << "', not '" << traces[k].unit() << "'\n";
-	  //	  traces[k].addErrorStr( "model input trace " + traces[k].traceName() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
+	  cerr << "! DynClampAnalogOutput::matchTraces -> output trace " << traces[k].traceName() << " requires as unit '" << traceInfo.unit << "', not '" << traces[k].unit() << "'\n";
+	  //	  traces[k].addErrorStr( "output trace " + traces[k].traceName() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
 	}
 	traceChannel.channel = traces[k].channel();
 	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
 	  failed = true;
-	  cerr << "! DynClampAnalogOutput::matchTraces -> failed to pass device and channel information to model output trace -> errno=" << errno << '\n';
-	  //	  traces[k].addErrorStr( "failed to pass device and channel information to model output trace -> errno=" + Str( errno ) );
+	  cerr << "! DynClampAnalogOutput::matchTraces -> failed to pass channel information to model output trace -> errno=" << errno << '\n';
+	  //	  traces[k].addErrorStr( "failed to pass channel information to model output trace -> errno=" + Str( errno ) );
 	}
 	notfound = false;
 	foundtraces++;

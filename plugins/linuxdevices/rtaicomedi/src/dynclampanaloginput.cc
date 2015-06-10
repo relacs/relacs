@@ -960,8 +960,10 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
     bool notfound = true;
     for ( int k=0; k<traces.size(); k++ ) {
-      if ( traces[k].channel() < PARAM_CHAN_OFFSET && traces[k].ident() == traceInfo.name ) {
+      if (  traces[k].ident() == traceInfo.name ) {
 	tracefound[k] = true;
+	if ( traces[k].channel() >= PARAM_CHAN_OFFSET )
+	  traces[k].addErrorStr( "model input trace " + traces[k].ident() + " has a too large channel number " + Str( traces[k].channel() ) );
 	if ( traces[k].unit() != traceInfo.unit )
 	  traces[k].addErrorStr( "model input trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
 	traceChannel.channel = traces[k].channel();
@@ -987,8 +989,10 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   traceInfo.traceType = PARAM_IN;
   for ( int pchan = 0; ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0; pchan++ ) {
     for ( int k=0; k<traces.size(); k++ ) {
-      if ( traces[k].channel() >= PARAM_CHAN_OFFSET && traces[k].ident() == traceInfo.name ) {
+      if ( traces[k].ident() == traceInfo.name ) {
 	tracefound[k] = true;
+	if ( traces[k].channel() < PARAM_CHAN_OFFSET )
+	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() + " has a too small channel number " + Str( traces[k].channel() ) );
 	if ( traces[k].unit() != traceInfo.unit )
 	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
 	traces[k].setChannel( PARAM_CHAN_OFFSET + pchan );
@@ -1005,11 +1009,13 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   traceInfo.traceType = STATUS_IN;
   for ( int pchan = 0; ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0; pchan++ ) {
     for ( int k=0; k<traces.size(); k++ ) {
-      if ( traces[k].channel() >= PARAM_CHAN_OFFSET && traces[k].ident() == traceInfo.name ) {
+      if ( traces[k].ident() == traceInfo.name ) {
 	tracefound[k] = true;
-	double scaleval = Parameter::changeUnit( 1.0, traceInfo.unit, traces[k].unit() );
+	if ( traces[k].channel() < PARAM_CHAN_OFFSET )
+	  traces[k].addErrorStr( "status trace " + traces[k].ident() + " has a too small channel number " + Str( traces[k].channel() ) );
+ 	double scaleval = Parameter::changeUnit( 1.0, traceInfo.unit, traces[k].unit() );
 	if ( traces[k].unit() != traceInfo.unit && ::fabs( traces[k].scale() - scaleval ) > 1e-8 )
-	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() +
+	  traces[k].addErrorStr( "status trace " + traces[k].ident() +
 				 " requires as unit '" + traceInfo.unit +
 				 "', not '" + traces[k].unit() + "'" );
 	traces[k].setChannel( 2*PARAM_CHAN_OFFSET + pchan );

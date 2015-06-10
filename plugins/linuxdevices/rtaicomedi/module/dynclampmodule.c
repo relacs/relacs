@@ -149,7 +149,8 @@ int outputstatusinx = 0;
 
 #ifdef ENABLE_COMPUTATION
 int traceIndex = 0;
-int chanIndex = 0;
+int inputChanIndex = 0;
+int outputChanIndex = 0;
 
 #ifdef ENABLE_LOOKUPTABLES
 int lookupinx = 0;
@@ -343,7 +344,8 @@ void init_globals( void )
 
 #ifdef ENABLE_COMPUTATION
   traceIndex = 0;
-  chanIndex = 0;
+  inputChanIndex = 0;
+  outputChanIndex = 0;
 #ifdef ENABLE_LOOKUPTABLES
   lookupinx = 0;
   for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
@@ -657,7 +659,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
   }
 
   if ( subdev->chanN > 0 ) {
-    // subdev chanlist already exist
+    // subdev chanlist already exist:
     for ( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
       for ( isC = 0; isC < subdev->chanN; isC++ ) {
         if ( CR_CHAN(chanlistIOC->chanlist[iC]) == 
@@ -1895,6 +1897,7 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_SET_TRACE_CHANNEL:
 #ifdef ENABLE_COMPUTATION
+    rc = 0;
     retVal = copy_from_user( &traceChannel, (void __user *)arg, sizeof(struct traceChannelIOCT) );
     if ( retVal ) {
       ERROR_MSG( "ioctl ERROR: invalid user pointer for traceChannelIOCT!\n" );
@@ -1903,19 +1906,32 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     }
     switch( traceChannel.traceType ) {
     case TRACE_IN:
-      inputChannels[chanIndex] = traceChannel.channel;
+      if ( inputChanIndex >= INPUT_N ) {
+	ERROR_MSG( "ioctl ERROR: invalid inputChanIndex=%d!\n", inputChanIndex );
+	rc = -EFAULT;
+	break;
+      }
+      inputChannels[inputChanIndex] = traceChannel.channel;
       DEBUG_MSG( "ioctl: input channel set to %d\n", traceChannel.channel );
+      inputChanIndex++;
+      if ( inputChanIndex >= INPUT_N )
+	inputChanIndex = 0;
       break;
     case TRACE_OUT:
-      outputChannels[chanIndex] = traceChannel.channel;
+      if ( outputChanIndex >= OUTPUT_N ) {
+	ERROR_MSG( "ioctl ERROR: invalid outputChanIndex=%d!\n", inputChanIndex );
+	rc = -EFAULT;
+	break;
+      }
+      outputChannels[outputChanIndex] = traceChannel.channel;
+      outputChanIndex++;
+      if ( outputChanIndex >= OUTPUT_N )
+	outputChanIndex = 0;
       DEBUG_MSG( "ioctl: output channel set to %d\n", traceChannel.channel );
       break;
-    default: ;
+    default: 
+      rc = -EINVAL;
     }
-    chanIndex++;
-    if ( chanIndex >= INPUT_N )
-      chanIndex = 0;
-    rc = 0;
     break;
 #else
     rc = -EFAULT; // Nothing done

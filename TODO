@@ -35,20 +35,18 @@ Macros, flow control:
 - auditory::search does not exit cleanly upon ESC: should be solved, check it
 
 Dynamic clamp:
-- autoconf script: check for presence of rtai-config and whether -r option is supported! Do we need to set PATH in order to be able to run rtai-config?
-- patchclamp::singlestimulus and ficurve should save all traces!
-- Always create a new channel list!
-  Then we do not need to reset all the channels at startup (Aquire::writeReset() )
 - It shoud be sufficient to initially set the AOs to zero (the drive should do that?)
   and the parameters to their initial vallues (done).
-- Analog output of the model's output channels should be available right from the start of the loop.
+- All analog output channels should be available right from the start of the loop.
   take/match should provide the necessary information (channel, aref=ground, rangeindex=first available)
-  Additional output channels can be made temporary (with a flag)? But we do not want to fiddle around with this list during the dynclamp-loop.
-  -> match/take needs to supply specs for ALL analog output traces.
+  -> DynClampAnalogOutput::addTraces gets all analog outputs used and should populate the output traces of the dynclampmodule.
+     Also BipConverter is available as soon as the device is opened.
 - matchTraces should set error string of device, and this should be used by relacswidget
 - restart in dynclamp mode is not properly processed??? (check inputrangecheck, follow up outputs seem to be changed)
 - DynClamAnalogInput improve error checking in readData()
 - Add a variable lastInterval that is set to the current period length in addition to loopInterval
+- autoconf script: check for presence of rtai-config and whether -r option is supported! Do we need to set PATH in order to be able to run rtai-config?
+- patchclamp::singlestimulus and ficurve should save all traces!
 - check trigger, ttl-pulse and syncsec
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul
   similar to the analog output part
