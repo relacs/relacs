@@ -1,6 +1,6 @@
 /*
   calibration/inputrangecheck.cc
-  Checks calibration of each range (gain) of an analag input channel.
+  Checks calibration of each range (gain) of an analog input channel.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -28,12 +28,13 @@ namespace calibration {
 
 
 InputRangeCheck::InputRangeCheck( void )
-  : RePro( "InputRangeCheck", "calibration", "Jan Benda", "1.0", "Feb 18, 2014" )
+  : RePro( "InputRangeCheck", "calibration", "Jan Benda", "1.2", "Jun 11, 2015" )
 {
   // add some options:
   addSelection( "outtrace", "Output trace", "V-1" );
   addSelection( "intrace", "Input trace", "V-1" );
   addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "pause", "Pause between stimuli", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addInteger( "amplnum", "Number of amplitudes to be tested", 10, 0, 100000 );
 
   setWidget( &P );
@@ -71,6 +72,7 @@ int InputRangeCheck::main( void )
   int outtrace = index( "outtrace" );
   int intrace = index( "intrace" );
   double duration = number( "duration" );
+  double pause = number( "pause" );
   int amplnum = integer( "amplnum" );
 
   // don't print repro message:
@@ -103,7 +105,7 @@ int InputRangeCheck::main( void )
 
     setGain( trace( intrace ), r );
     activateGains();
-    sleep( 0.1 );
+    sleep( pause );
 
     RangeLoop amplrange( -ranges[r], ranges[r], amplnum, 1, 1, 1 );
     MapD ampls;
@@ -145,7 +147,7 @@ int InputRangeCheck::main( void )
       P.draw();
       P.unlock();
       
-      sleepWait( 0.1 );
+      sleep( pause );
     }
 
     // save data:

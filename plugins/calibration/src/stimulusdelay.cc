@@ -126,15 +126,12 @@ int StimulusDelay::analyze( const InData &data, double duration,
 			    double &mindeltat, double &maxdeltat )
 {
   // find transition:
-  double twin = duration;
-  if ( pause < twin )
-    twin = pause;
-  double max0 = data.max( signalTime()-twin, signalTime()-0.1*twin );
-  double max1 = data.max( signalTime(), signalTime()+twin );
+  double max0 = data.mean( signalTime()-0.5*pause, signalTime() );
+  double max1 = data.max( signalTime(), signalTime()+duration );
   double thresh = 0.5*(max0+max1);
   double dt = 0.0;
-  for ( int k=data.index( signalTime()-twin ); 
-	k<data.index( signalTime()+twin );
+  for ( int k=data.index( signalTime()-0.5*pause ); 
+	k<data.index( signalTime()+duration );
 	k++ ) {
     if ( data[k] > thresh ) {
       //      cerr << "thresh=" << thresh << " data1=" << data[k] << " data0=" << data[k-1] << " k=" << k-data.signalIndex() << '\n';

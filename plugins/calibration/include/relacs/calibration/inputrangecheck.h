@@ -1,6 +1,6 @@
 /*
   calibration/inputrangecheck.h
-  Checks calibration of each range (gain) of an analag input channel.
+  Checks calibration of each range (gain) of an analog input channel.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -31,9 +31,14 @@ namespace calibration {
 
 /*!
 \class InputRangeCheck
-\brief [RePro] Checks calibration of each range (gain) of an analag input channel.
+\brief [RePro] Checks calibration of each range (gain) of an analog input channel.
 \author Jan Benda
-\version 1.0 (Feb 18, 2014)
+\version 1.2 (Jun 11, 2015)
+\par Options
+- \c outtrace=V-1: Output trace (\c string)
+- \c intrace=V-1: Input trace (\c string)
+- \c duration=1000ms: Stimulus duration (\c number)
+- \c amplnum=10: Number of amplitudes to be tested (\c integer)
 */
 
 

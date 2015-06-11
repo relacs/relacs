@@ -42,7 +42,6 @@ Dynamic clamp:
   -> DynClampAnalogOutput::addTraces gets all analog outputs used and should populate the output traces of the dynclampmodule.
      Also BipConverter is available as soon as the device is opened.
 - matchTraces should set error string of device, and this should be used by relacswidget
-- restart in dynclamp mode is not properly processed??? (check inputrangecheck, follow up outputs seem to be changed)
 - DynClamAnalogInput improve error checking in readData()
 - Add a variable lastInterval that is set to the current period length in addition to loopInterval
 - autoconf script: check for presence of rtai-config and whether -r option is supported! Do we need to set PATH in order to be able to run rtai-config?

@@ -782,11 +782,10 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
   if ( ninsns != ilinx ) {
     success = false;
-    int cerror = comedi_errno();
-    cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist failed: "
-	 << comedi_strerror( cerror ) << endl;
-    Traces->addErrorStr( deviceFile() + " - execution of comedi_do_insnlist failed: "
-			 + comedi_strerror( cerror ) );
+    cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist executed "
+	 << ninsns << " from " << ilinx << " instructions\n";
+    Traces->addErrorStr( deviceFile() + " - comedi_do_insnlist executed " + Str( ninsns ) + " from " +
+			 Str( ilinx ) + " instructions" );
   }
   delete [] insnlist.insns;
 

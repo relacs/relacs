@@ -916,7 +916,7 @@ int Acquire::restartRead( void )
   }
   if ( m >= InTraces.size() )
     cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
-  PreviousTime = InTraces.currentTime();
+  PreviousTime = InTraces.currentTimeRaw();
   NumEmptyData = 0;
   InTraces.setRestart();
   if ( RestartEvents != 0 )
@@ -1029,7 +1029,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
   if ( m >= InTraces.size() )
     cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
-  PreviousTime = InTraces.currentTime();
+  PreviousTime = InTraces.currentTimeRaw();
   NumEmptyData = 0;
   InTraces.setRestart();
   if ( RestartEvents != 0 )
@@ -1111,6 +1111,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
     aos = 0;
   }
+
+  // no analog output:
+  if ( aod.size() == 0 )
+    aos = 0;
 
   // start reading from daq boards:
   vector< int > aistarted;
@@ -1284,17 +1288,22 @@ int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
 
 int Acquire::waitForData( double &signaltime )
 {
-  // check whether all threads are really running:
   ReadMutex.lockForWrite();
+  /*
+  // XXX We can only check this, when write() does not restart analog input!
+  // XXX For this we woud need an additional mutex, since stopRead cannot be within the ReadMutex lock.
+  // check whether all threads are really running:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( ! AI[i].Traces.empty() && ! AI[i].AI->running() ) {
-      stopRead();
       ReadMutex.unlock();
+      stopRead();
+      AI[i].Traces.setErrorStr( "analog input not running" );
       return -1;
     }
   }
+  */
   ReadWait.wait( &ReadMutex );
-  bool finished = ( InTraces.currentTime() <= PreviousTime );
+  bool finished = ( InTraces.currentTimeRaw() <= PreviousTime );
   // XXX the following construct is needed, because ReadWait.wait() sometimes
   // returns immediately, without being waken up. (with daqflex/relacs.cfg)
   // XXX Maybe we should figure out, why this happens...
@@ -1318,7 +1327,7 @@ int Acquire::waitForData( double &signaltime )
     if ( RestartEvents != 0 )
       RestartEvents->setSignalTime( SignalTime );
   }
-  PreviousTime = InTraces.currentTime();
+  PreviousTime = InTraces.currentTimeRaw();
   // check data:
   bool failed = InTraces.failed();
   ReadMutex.unlock();
@@ -1627,11 +1636,10 @@ bool Acquire::gainChanged( void ) const
 
 int Acquire::activateGains( void )
 {
-  {
-    // clear adjust-flags:
-    QWriteLocker locker( &ReadMutex );
-    InTraces.delMode( AdjustFlag );
-  }
+  // clear adjust-flags:
+  ReadMutex.lockForWrite();
+  InTraces.delMode( AdjustFlag );
+  ReadMutex.unlock();
 
   if ( ! gainChanged() )
     return 0;
