@@ -529,7 +529,7 @@ string InList::errorText( void ) const
   }
   if ( commonstr && ! operator[]( 0 ).errorStr().empty() ) {
     if ( common )
-      ss << " ,";
+      ss << ", ";
     ss << operator[]( 0 ).errorStr();
     common = true;
   }

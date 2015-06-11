@@ -454,6 +454,7 @@ int DAQFlexAnalogInput::readData( void )
       }
       else {
 	cerr << "DAQFlexAnalogInput::readData() -> analog input not running anymore\n";
+	// This error occurs on to fast sampling, but at lower sampling it looks like it can be ignored....
 	// Traces->addErrorStr( "analog input not running anymore" );
 	// Traces->addError( DaqError::Unknown );
       }
