@@ -33,7 +33,7 @@ AC_PREFIX_DEFAULT([/usr])
 #################################################
 RELACS_CHECK_CXX()
 
-CXXFLAGS="-Wall -g ${CXXFLAGS}"
+CXXFLAGS="-Wall -g -std=c++11 ${CXXFLAGS}"
 CFLAGS="-Wall $CFLAGS"
 
 AM_PROG_CC_C_O

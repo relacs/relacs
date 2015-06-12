@@ -1344,10 +1344,10 @@ class Edman : public SpikingNeuron
   double NaO, KO, ClO;
   double Vm, Vh, Vl, Vn, Vr;
   double Tmmax, Thmax, Tlmax, Tnmax, Trmax;
-  static const double Faraday = 96485.0;        // C/mol
-  static const double GasConst = 8.3144;        // J/K/mol
-  static const double eCharge = 1.60217653e-19; // C
-  static const double kBoltz = 1.3806505e-23;   // J/K
+  static constexpr double Faraday = 96485.0;        // C/mol
+  static constexpr double GasConst = 8.3144;        // J/K/mol
+  static constexpr double eCharge = 1.60217653e-19; // C
+  static constexpr double kBoltz = 1.3806505e-23;   // J/K
   double FRT, F2RT, ekT;
   double INa, IK, ILNa, ILK, ILCl, IP;
   double GNaGates, GKGates, GLNaA, GLKA, GLClA, GPA;

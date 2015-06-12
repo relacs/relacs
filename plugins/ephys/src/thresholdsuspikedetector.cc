@@ -271,7 +271,7 @@ void ThresholdSUSpikeDetector::notify( void )
     int pre = -1;
     do {
       pre++;
-      double f = pow( 10.0, -pre );
+      double f = ::pow( 10.0, -pre );
       resolution -= floor( 1.001*resolution/f ) * f;
     } while ( pre < 3 && fabs( resolution ) > 1.0e-3 );
     setFormat( "threshold", 4+pre, pre, 'f' );
