@@ -106,6 +106,24 @@ DataIndex::DataItem::DataItem( const string &name, const Options &data,
 
 
 DataIndex::DataItem::DataItem( const string &name, const Options &data,
+			       int ntraces, int nevents,
+			       int level, DataIndex::DataItem *parent )
+  : Level( level ),
+    Name( name ),
+    Data( data ),
+    Time( 0.0 ),
+    Parent( parent ),
+    OverviewModel( parent->overviewModel() )
+{
+  TraceIndex.clear();
+  TraceIndex.resize( ntraces, 0 );
+  EventsIndex.clear();
+  EventsIndex.resize( nevents, 0 );
+  Children.clear();
+}
+
+
+DataIndex::DataItem::DataItem( const string &name, const Options &data,
 			       const deque<int> &traceindex, const deque<int> &eventsindex,
 			       double time, int level, DataIndex::DataItem *parent )
   : Level( level ),
@@ -206,6 +224,15 @@ void DataIndex::DataItem::addChild( const string &name, const Options &data )
 }
 
 
+  void DataIndex::DataItem::addChild( const string &name, const Options &data,
+				      int ntraces, int nevents )
+{
+  OverviewModel->beginAddChild( this );
+  Children.push_back( DataItem( name, data, ntraces, nevents, level()+1, this ) );
+  OverviewModel->endAddChild( this );
+}
+
+
 void DataIndex::DataItem::addChild( const string &name, const Options &data,
 				    const deque<int> &traceindex,
 				    const deque<int> &eventsindex,
@@ -276,55 +303,57 @@ void DataIndex::DataItem::loadCell( void )
       }
     } while ( sf.readDataLine( 1 ) );
     // add stimuli:
-    for ( int j=0; j<sf.data().rows(); j++ ) {
-      // trace indices:
-      k1 = sf.key().column( "traces>" );
-      deque<int> traceindex;
-      for ( int k=k1; sf.key().sectionName( k, 2 ) == "traces"; k++ )
-	traceindex.push_back( sf.data( k, j ) );
-      // event indices:
-      k1 = sf.key().column( "events>" );
-      deque<int> eventsindex;
-      for ( int k=k1; sf.key().sectionName( k, 2 ) == "events"; k++ ) {
-	if ( sf.key().sectionName( k, 0 ) == "index" )
-	  eventsindex.push_back( sf.data( k, j ) );
-      }
-      // signal time:
-      double deltat = data().number( "sample interval1", "s" );
-      double signaltime = traceindex[0]*deltat;
-      // signal description:
-      int nstimuli = 0;
-      int firststimulus = -1;
-      for ( unsigned int k=0; k<stimnames.size(); k++ ) {
-	if ( stimnames[k][j] != "-" ) {
-	  nstimuli++;
-	  if ( firststimulus < 0 )
-	    firststimulus = k;
+    if ( sf.data().columns() > 0 ) {
+      for ( int j=0; j<sf.data().rows(); j++ ) {
+	// trace indices:
+	k1 = sf.key().column( "traces>" );
+	deque<int> traceindex;
+	for ( int k=k1; sf.key().sectionName( k, 2 ) == "traces"; k++ )
+	  traceindex.push_back( sf.data( k, j ) );
+	// event indices:
+	k1 = sf.key().column( "events>" );
+	deque<int> eventsindex;
+	for ( int k=k1; sf.key().sectionName( k, 2 ) == "events"; k++ ) {
+	  if ( sf.key().sectionName( k, 0 ) == "index" )
+	    eventsindex.push_back( sf.data( k, j ) );
 	}
-      }
-      Options description;
-      for ( unsigned int k=0; k<stimnames.size(); k++ ) {
-	if ( stimnames[k][j] != "-" ) {
-	  Options::const_section_iterator sp = stimuli.findSection( stimnames[k][j] );
-	  if ( sp != stimuli.sectionsEnd() ) {
-	    if ( nstimuli == 1 ) {
-	      description = **sp;
-	      break;
-	    }
-	    else
-	      description.newSection( **sp );
+	// signal time:
+	double deltat = data().number( "sample interval1", "s" );
+	double signaltime = traceindex[0]*deltat;
+	// signal description:
+	int nstimuli = 0;
+	int firststimulus = -1;
+	for ( unsigned int k=0; k<stimnames.size(); k++ ) {
+	  if ( stimnames[k][j] != "-" ) {
+	    nstimuli++;
+	    if ( firststimulus < 0 )
+	      firststimulus = k;
 	  }
 	}
-      }
-      if ( nstimuli > 1 )
-	description.setType( "stimulus" );
-      // add stimulus to tree:
-      OverviewModel->beginAddChild( parent );
-      parent->Children.push_back( DataItem( description.type(), description,
-					    traceindex, eventsindex,
-					    signaltime, level()+2, parent ) );
-      OverviewModel->endAddChild();
+	Options description;
+	for ( unsigned int k=0; k<stimnames.size(); k++ ) {
+	  if ( stimnames[k][j] != "-" ) {
+	    Options::const_section_iterator sp = stimuli.findSection( stimnames[k][j] );
+	    if ( sp != stimuli.sectionsEnd() ) {
+	      if ( nstimuli == 1 ) {
+		description = **sp;
+		break;
+	      }
+	      else
+		description.newSection( **sp );
+	    }
+	  }
+	}
+	if ( nstimuli > 1 )
+	  description.setType( "stimulus" );
+	// add stimulus to tree:
+	OverviewModel->beginAddChild( parent );
+	parent->Children.push_back( DataItem( description.type(), description,
+					      traceindex, eventsindex,
+					      signaltime, level()+2, parent ) );
+	OverviewModel->endAddChild();
 
+      }
     }
   } while ( sf.readMetaData() );
   sf.close();
@@ -365,7 +394,12 @@ string DataIndex::DataItem::fileName( void ) const
 {
   if ( level() == 3 )
     return Parent->Parent->name();
-  return "";
+  else if ( level() == 2 )
+    return Parent->name();
+  else if ( level() == 1 )
+    return name();
+  else
+    return "";
 }
 
 
@@ -452,9 +486,9 @@ void DataIndex::addRepro( const Options &repro )
 }
 
 
-void DataIndex::addSession( const string &path, const Options &data )
+void DataIndex::addSession( const string &path, const Options &data, int ntraces, int nevents )
 {
-  Cells.addChild( path, data );
+  Cells.addChild( path, data, ntraces, nevents );
   Session = true;
   print();
 }
@@ -498,8 +532,22 @@ void DataIndex::loadDirectory( const string &path )
 	// load data:
 	DataFile sf( file );
 	sf.read( 1 );
+	// number of traces:
+	int k1 = sf.key().column( "traces>" );
+	int ntraces = 0;
+	for ( int k=k1; sf.key().sectionName( k, 2 ) == "traces"; k++ )
+	  ntraces++;
+	// number of events:
+	k1 = sf.key().column( "events>" );
+	int nevents = 0;
+	for ( int k=k1; sf.key().sectionName( k, 2 ) == "events"; k++ ) {
+	  if ( sf.key().sectionName( k, 0 ) == "index" )
+	    nevents++;
+	}
+	// add cell:
 	Cells.addChild( file,
-			sf.metaDataOptions( sf.levels()>0 ? sf.levels()-1 : 0 ) );
+			sf.metaDataOptions( sf.levels()>0 ? sf.levels()-1 : 0 ),
+			ntraces, nevents );
       }
 
     }

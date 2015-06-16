@@ -1277,7 +1277,7 @@ void SaveFiles::openFiles( void )
   RW->printlog( "save in " + Path );
 
   // tell the data index:
-  DI.addSession( Path + "stimuli.dat", Options() );
+  DI.addSession( Path + "stimuli.dat", Options(), TraceFiles.size(), EventFiles.size() );
 
   // update widget:
   FileLabel->setFont( HighlightFont );

@@ -1290,6 +1290,8 @@ int Acquire::waitForData( double &signaltime )
 {
   ReadMutex.lockForWrite();
   /*
+  // XXX the writes restart are not a problem, as long as ai is really restarted.
+  // XXX The problem (waiting for ever) arises, when analog input fails.
   // XXX We can only check this, when write() does not restart analog input!
   // XXX For this we woud need an additional mutex, since stopRead cannot be within the ReadMutex lock.
   // check whether all threads are really running:

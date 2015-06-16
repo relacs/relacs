@@ -251,10 +251,10 @@ function check_kernel_patch {
 function download_kernel {
     if ! test -d "$KERNEL_PATH"; then
 	echo "path to kernel sources $KERNEL_PATH does not exist!"
-	ecit 1
+	exit 1
     fi
     cd $KERNEL_PATH
-    if check_kernel_patch; then
+    if ! check_kernel_patch; then
 	exit 1
     fi
     if test -f linux-$LINUX_KERNEL.tar.xz; then
@@ -279,7 +279,7 @@ function download_kernel {
 function unpack_kernel {
     if ! test -d "$KERNEL_PATH"; then
 	echo "path to kernel sources $KERNEL_PATH does not exist!"
-	ecit 1
+	exit 1
     fi
     cd $KERNEL_PATH
     if test -d linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}; then
@@ -304,7 +304,7 @@ function unpack_kernel {
 function patch_kernel {
     cd /usr/src/linux
     if $NEW_KERNEL; then
-	if check_kernel_patch; then
+	if ! check_kernel_patch; then
 	    exit 1
 	fi
 	echo "apply rtai patch $RTAI_PATCH to kernel sources"
