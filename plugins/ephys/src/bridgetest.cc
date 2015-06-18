@@ -35,7 +35,7 @@ BridgeTest::BridgeTest( void )
   addNumber( "duration", "Duration of stimulus", 0.01, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between pulses", 0.1, 0.01, 1.0, 0.01, "sec", "ms" );
   addInteger( "average", "Number of trials to be averaged", 10, 0, 1000000 );
-  addBoolean( "plottrace", "Plut current voltage trace", true );
+  addBoolean( "plottrace", "Plot current voltage trace", true );
 
   // plot:
   P.lock();

@@ -95,7 +95,7 @@ void Model::push( int trace, float val )
       // compute dynamic clamp model:
       SignalMutex.lock();
       for ( unsigned int k=0; k<SignalValues.size(); k++ )
-	SignalValues[k] = signal( t, k );
+	SignalValues[k] = signal( t, k ) - Signals[k].ModelValue;
       AIDevice->model( Data, SignalChannels, SignalValues );
       for ( unsigned int k=0; k<SignalValues.size(); k++ )
 	Signals[k].ModelValue = SignalValues[k];

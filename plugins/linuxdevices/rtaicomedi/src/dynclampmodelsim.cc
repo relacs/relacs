@@ -124,19 +124,24 @@ void computeModel( InList &data,
   }
 
   computeModel();
-
+  
+#ifdef ENABLE_SYNCSEC
+    #define NSTATUS 4
+#else
+    #define NSTATUS 3
+#endif
   for ( int k=0; k<OUTPUT_N; k++ ) {
-    statusInput[outputstatusinx+2*k+1] = output[k];
-    statusInput[outputstatusinx+2*k+2] = output[k];
+    statusInput[outputstatusinx+NSTATUS*k+1] = output[k];
+    statusInput[outputstatusinx+NSTATUS*k+2] = output[k];
     for ( unsigned int j=0; j<aochannels.size(); j++ ) {
       if ( outputChannels[k] == aochannels[j] ) {
-	statusInput[outputstatusinx+2*k] = aovalues[j];
-	statusInput[outputstatusinx+2*k+2] += aovalues[j];
+	statusInput[outputstatusinx+NSTATUS*k] = aovalues[j];
+	statusInput[outputstatusinx+NSTATUS*k+2] += aovalues[j];
 	break;
       }
     }
 #ifdef ENABLE_SYNCSEC
-    statusInput[outputstatusinx+2*k+3] = statusInput[outputstatusinx+2*k+2];
+    statusInput[outputstatusinx+NSTATUS*k+3] = statusInput[outputstatusinx+NSTATUS*k+2];
 #endif
   }
   for ( int k=0; k<data.size(); k++ ) {
