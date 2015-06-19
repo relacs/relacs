@@ -1,3 +1,24 @@
+/*
+  deviceselector.cc
+  Dialog to allow configuration of available and active devices
+
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+  Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  (at your option) any later version.
+
+  RELACS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <relacs/deviceselector.h>
 
 #include <iostream>
@@ -12,20 +33,21 @@ namespace relacs {
 
 namespace {
 
-static const int GROUP_COUNT = 5;
 /*! List of currently supported options
  * can be easily extended with further mappings, do not forget to pass the concrete DeviceList to the constructor
  */
-static const struct { const char* name; int deviceType; int pluginType; } GROUPS[GROUP_COUNT] =
+static const struct { const char* name; int deviceType; int pluginType; } GROUPS[] =
 {
-
   { "Analog Input",   Device::DeviceTypes::AnalogInputType,   RELACSPlugin::AnalogInputId },
   { "Analog Output",  Device::DeviceTypes::AnalogOutputType,  RELACSPlugin::AnalogOutputId },
   { "Digital I/O",    Device::DeviceTypes::DigitalIOType,     RELACSPlugin::DigitalIOId },
   { "Trigger",        Device::DeviceTypes::TriggerType,       RELACSPlugin::TriggerId },
   { "Attenuator",     Device::DeviceTypes::AttenuatorType,    RELACSPlugin::AttenuatorId },
 };
+/*! Number of different groups */
+static const int GROUP_COUNT = sizeof(GROUPS)/sizeof(decltype(GROUPS[0]));
 
+/*! converts a device type to the corresponding plugin id */
 int convertDeviceTypeToPluginId(int device)
 {
   for (int i = 0; i < GROUP_COUNT; ++i)
@@ -35,6 +57,7 @@ int convertDeviceTypeToPluginId(int device)
   return -1;
 }
 
+/*! converts a plugin id to the corresponding device type */
 int convertPluginIdToDeviceType(int plugin)
 {
   for (int i = 0; i < GROUP_COUNT; ++i)
@@ -46,9 +69,8 @@ int convertPluginIdToDeviceType(int plugin)
 
 }
 
-DeviceSelector::DeviceSelector(AllDevices *adv, std::map<int, ConfigClass*> deviceLists, QWidget *parent) :
+DeviceSelector::DeviceSelector(std::map<int, ConfigClass*> deviceLists, QWidget *parent) :
   QWidget(parent),
-  ADV(adv),
   DeviceLists(deviceLists)
 {
   QHBoxLayout* layout = new QHBoxLayout();
@@ -165,6 +187,7 @@ void DeviceSelector::deactivateDevice()
   if (!data)
     return;
 
+  /// confirmation box
   {
     QMessageBox msgBox;
     msgBox.setText("Are you sure?");
@@ -189,6 +212,7 @@ void DeviceSelector::deactivateDevice()
 
 void DeviceSelector::editDevice()
 {
+  //! single selection only
   QList<QTreeWidgetItem*> selection = TreeActive.widget->selectedItems();
   if (selection.empty())
     return;
@@ -344,7 +368,6 @@ void DeviceSelector::initActive()
   for (int i = 0; i < TreeActive.widget->columnCount(); ++i)
     TreeActive.widget->resizeColumnToContents(i);
 }
-
 
 void DeviceSelector::openEditDeviceDialog(Tree<ActiveData>::Group::Entry* entry)
 {

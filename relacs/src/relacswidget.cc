@@ -1466,7 +1466,7 @@ void RELACSWidget::editDevices()
   deviceLists.emplace(TRIGD->pluginId(), TRIGD);
   deviceLists.emplace(ATD->pluginId(), ATD);
 
-  DeviceSelector* oc = new DeviceSelector(ADV, deviceLists, this);
+  DeviceSelector* oc = new DeviceSelector(deviceLists, this);
   OptDialog* od = new OptDialog(false, this);
   od->setCaption("Active devices");
   od->addWidget(oc);
