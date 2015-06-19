@@ -47,6 +47,7 @@ LoudSpeaker::LoudSpeaker( void )
   CalibDate = "";
   CalibFile = "calib.dat";
 
+  initOptions();
   // add some parameter as options:
   addNumber( "defaultgain", "Default gain", DefaultGain, -10000.0, 10000.0, 0.5 );
   addNumber( "defaultoffset", "Default offset", DefaultOffset, -10000.0, 10000.0, 5.0, "dB SPL" );

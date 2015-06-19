@@ -45,7 +45,9 @@ two open() functions.
 
 In case you want to use a device within RELACS, your Device
 implementation needs to provide a void default constructor (i.e. with
-no parameters) that does not open the device.  Also, include the
+no parameters) that does not open the device. Make sure your constructor
+calls \c initOptions() once which registers configuation options, do not
+forget to also call the base class implementation. Also, include the
 header file \c <relacs/relacsplugin.h> and make the Device known to
 RELACS with the \c addDevice( ClassNameOfYourDeviceImplementation,
 PluginSetName ) macro or one of the derived macros for any specialized

@@ -34,14 +34,13 @@ namespace relacs {
 
 /*!
 \class DeviceSelector
-\author Philipp Kuhlmann
 \brief Dialog to allow configuration of available and active devices
+\author Philipp Kuhlmann
 
 All available devices are extracted through checking every loaded plugin for devices.
 Active devices are loaded directly from the configuration file.
-
 For adding/activating a new device and loading current active devices, a temporary device object
- is created to get information about all options. The temporary device is destroyed immediatly after its use.
+is created to get information about all options. The temporary device is destroyed immediatly after its use.
 */
 class DeviceSelector : public QWidget
 {

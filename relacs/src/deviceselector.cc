@@ -43,6 +43,8 @@ static const struct { const char* name; int deviceType; int pluginType; } GROUPS
   { "Digital I/O",    Device::DeviceTypes::DigitalIOType,     RELACSPlugin::DigitalIOId },
   { "Trigger",        Device::DeviceTypes::TriggerType,       RELACSPlugin::TriggerId },
   { "Attenuator",     Device::DeviceTypes::AttenuatorType,    RELACSPlugin::AttenuatorId },
+  { "Attenuator Interface", Device::DeviceTypes::AttenuateType, RELACSPlugin::AttenuateId },
+  { "Miscellaneous",  Device::DeviceTypes::MiscellaneousType, RELACSPlugin::DeviceId },
 };
 /*! Number of different groups */
 static const int GROUP_COUNT = sizeof(GROUPS)/sizeof(decltype(GROUPS[0]));

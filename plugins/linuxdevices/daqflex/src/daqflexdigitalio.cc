@@ -31,6 +31,7 @@ DAQFlexDigitalIO::DAQFlexDigitalIO( void )
   : DigitalIO( "DAQFlexDigitalIO" )
 {
   DAQFlexDevice = NULL;
+  initOptions();
 }
 
 

@@ -37,6 +37,7 @@ LinearAttenuate::LinearAttenuate( void )
   Gain = 1.0;
   Offset = 0.0;
 
+  initOptions();
   // add some parameter as options:
   addNumber( "gain", "Gain", Gain );
   addNumber( "offset", "Offset", Offset );

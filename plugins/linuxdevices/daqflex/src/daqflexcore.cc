@@ -82,6 +82,8 @@ DAQFlexCore::~DAQFlexCore( void )
 
 void DAQFlexCore::initOptions()
 {
+  Device::initOptions();
+
   addText("serialno", "dummy parameter", "");
   addInteger("devicenum", "dummy parameter", 1);
   addText("firmwarepath", "dummy parameter", "");

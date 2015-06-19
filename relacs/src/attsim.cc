@@ -38,6 +38,7 @@ double AttSim::Decibel[AttSim::MaxDevices] = { 0, 0 };
 AttSim::AttSim( void ) 
   : Attenuator( "Attenuator Simulation" )
 {
+  initOptions();
 }
 
 

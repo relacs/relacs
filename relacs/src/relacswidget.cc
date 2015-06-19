@@ -1456,15 +1456,14 @@ void RELACSWidget::editOutputTraces( void )
 
 void RELACSWidget::editDevices()
 {
-  /// DeviceLists are handled in a static way, so this is ugly but should be fine
-  /// Replace with c++11 initializer lists
-  /// Order taken from DeviceSelector
   std::map<int, ConfigClass*> deviceLists;
+  deviceLists.emplace(DV->pluginId(), DV);
   deviceLists.emplace(AID->pluginId(), AID);
   deviceLists.emplace(AOD->pluginId(), AOD);
   deviceLists.emplace(DIOD->pluginId(), DIOD);
   deviceLists.emplace(TRIGD->pluginId(), TRIGD);
   deviceLists.emplace(ATD->pluginId(), ATD);
+  deviceLists.emplace(ATI->pluginId(), ATI);
 
   DeviceSelector* oc = new DeviceSelector(deviceLists, this);
   OptDialog* od = new OptDialog(false, this);
