@@ -73,7 +73,7 @@ public:
 
     /*! Open the PFI subdevice. For each bit (0-9) that is set in \a mode
         the corresponding PFI pin is programmed for output. */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Return \a true if the PFU subdevice is open. */
   virtual bool isOpen( void ) const;
     /*! Close the PFI subdevice. */
@@ -84,6 +84,8 @@ public:
     /*! Programm PFI pin \a pin for output. */
   int pinOut( int pin );
 
+protected:
+  void initOptions() override;
 
 private:
 

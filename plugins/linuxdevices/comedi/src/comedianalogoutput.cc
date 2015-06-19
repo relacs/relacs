@@ -54,21 +54,17 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   Buffer = 0;
   NBuffer = 0;
   ChannelValues = 0;
+
+  initOptions();
 }
 
 
 ComediAnalogOutput::ComediAnalogOutput(  const string &device,
 					 const Options &opts ) 
-  : AnalogOutput( "Comedi Analog Output", ComediAnalogIOType )
+  : ComediAnalogOutput()
 {
-  DeviceP = NULL;
-  SubDevice = 0;
-  LongSampleType = false;
-  BufferElemSize = 0;
-  MaxRate = 1000.0;
-  ChannelValues = 0;
-  memset( &Cmd, 0, sizeof( comedi_cmd ) );
-  open( device, opts );
+  read(opts);
+  open( device );
   IsPrepared = false;
   IsRunning = false;
   NoMoreData = true;
@@ -84,8 +80,15 @@ ComediAnalogOutput::~ComediAnalogOutput( void )
   close();
 }
 
+void ComediAnalogOutput::initOptions()
+{
+  AnalogOutput::initOptions();
 
-int ComediAnalogOutput::open( const string &device, const Options &opts )
+  addNumber("extref", "dummy description", -1.0, "V");
+  addNumber("delays", "dummy description", 0, "s");
+}
+
+int ComediAnalogOutput::open( const string &device )
 { 
   clearError();
   if ( isOpen() )
@@ -153,7 +156,7 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   }
 
   // external reference:
-  double extr = opts.number( "extref", -1.0, "V" );
+  double extr = number( "extref", -1.0, "V" );
   setExternalReference( extr );
 
   // initialize ranges:
@@ -244,7 +247,7 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
 
   // delays:
   vector< double > delays;
-  opts.numbers( "delays", delays, "s" );
+  numbers( "delays", delays, "s" );
   setDelays( delays );
 
   // clear flags:

@@ -44,13 +44,15 @@ const string ComediNIPFI::PFISignals[PFISignalsMax] = {
 ComediNIPFI::ComediNIPFI( void ) 
   : ComediRouting( "ComediNIPFI" )
 {
+  initOptions();
 }
 
 
 ComediNIPFI::ComediNIPFI( const string &device, const Options &opts ) 
-  : ComediRouting( "ComediNIPFI" )
+  : ComediNIPFI()
 {
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
   
@@ -58,8 +60,17 @@ ComediNIPFI::~ComediNIPFI( void )
 {
 }
 
+void ComediNIPFI::initOptions()
+{
+  ComediRouting::initOptions();
 
-int ComediNIPFI::open( const string &device, const Options &opts )
+  addInteger("channel", "dummy description", -1);
+  addInteger("routing", "dummy description", -1);
+  addText("routing", "dummy description", "");
+}
+
+
+int ComediNIPFI::open( const string &device )
 { 
   clearError();
   Info.clear();
@@ -69,15 +80,15 @@ int ComediNIPFI::open( const string &device, const Options &opts )
   int subdev = 7;
 
   // get channel:
-  int channel = opts.integer( "channel", 0, -1 );
+  int channel = integer( "channel", 0, -1 );
   if ( channel < 0 ) {
     setErrorStr( "missing or invalid channel for device " + deviceIdent() );
     return WriteError;
   }
 
   // get routing:
-  int routing = opts.integer( "routing", 0, -1 );
-  string signal = opts.text( "routing", 0, "" );
+  int routing = integer( "routing", 0, -1 );
+  string signal = text( "routing", 0, "" );
   if ( routing < 0 && ! signal.empty() ) {
     for ( int k=0; k<PFISignalsMax; k++ ) {
       if ( signal == PFISignals[k] ) {

@@ -28,6 +28,7 @@ namespace relacs {
 AOSim::AOSim( void ) 
   : AnalogOutput( "Analog Output Simulation", SimAnalogOutputType )
 {
+  initOptions();
 }
 
 
@@ -35,8 +36,15 @@ AOSim::~AOSim( void )
 {
 }
 
+void AOSim::initOptions()
+{
+  AnalogOutput::initOptions();
 
-int AOSim::open( const string &device, const Options &opts )
+  addNumber("extref", "dummy description", -1.0);
+}
+
+
+int AOSim::open( const string &device )
 {
   Info.clear();
   Settings.clear();
@@ -44,14 +52,14 @@ int AOSim::open( const string &device, const Options &opts )
   setDeviceVendor( "RELACS" );
   setDeviceFile( device );
   // external reference:
-  double extr = opts.number( "extref", -1.0, "V" );
+  double extr = number( "extref", -1.0, "V" );
   setExternalReference( extr );
   setInfo();
   return 0;
 }
 
 
-int AOSim::open( Device &device, const Options &opts )
+int AOSim::open( Device &device )
 {
   Info.clear();
   Settings.clear();
@@ -59,7 +67,7 @@ int AOSim::open( Device &device, const Options &opts )
   setDeviceVendor( "RELACS" );
   setDeviceFile( device.deviceIdent() );
   // external reference:
-  double extr = opts.number( "extref", -1.0, "V" );
+  double extr = number( "extref", -1.0, "V" );
   setExternalReference( extr );
   setInfo();
   return 0;

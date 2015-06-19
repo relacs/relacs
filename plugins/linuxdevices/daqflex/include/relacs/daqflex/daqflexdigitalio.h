@@ -55,9 +55,9 @@ public:
  	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close() */
-  virtual int open( DAQFlexCore &daqflexdevice, const Options &opts );
+  virtual int open( DAQFlexCore &daqflexdevice );
     /*! Open a digital I/O device on DAQFlexCore device \a device. */
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( Device &device ) override;
     /*! Returns true if the device is open.
         \sa open(), close() */
   virtual bool isOpen( void ) const;

@@ -443,8 +443,8 @@ Mirob::Mirob( const string &device )
     Speed[k] = MaxSpeed;
     Acceleration[k] = MaxAcc;
   }
-  Options opts;
-  open( device, opts );
+
+  open( device );
 }
 
 Mirob::Mirob( void )
@@ -462,7 +462,7 @@ Mirob::~Mirob( void )
   close();
 }
 
-int Mirob::open( const string &device, const Options &opts )
+int Mirob::open( const string &device )
 {
   clearError();
   if ( Opened )

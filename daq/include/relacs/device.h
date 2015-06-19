@@ -93,7 +93,7 @@ lock() and unlock() for locking the device.
 */
 
 
-class Device
+class Device : public virtual Options
 {
 
 public:
@@ -145,7 +145,7 @@ public:
 	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close(), reset() */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device);
     /*! Open the device specified by \a device with options \a opts.
 	On success, in your implementation
 	\a device should be passed to setDeviceFile()
@@ -157,7 +157,7 @@ public:
 	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close(), reset() */
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( Device &device);
     /*! Returns true if the device is open.
         \sa open(), close(), reset() */
   virtual bool isOpen( void ) const = 0;
@@ -308,6 +308,9 @@ protected:
   void unlock( void ) const;
     /*! \return A pointer to the mutex of this device. \sa lock(), unlock() */
   QMutex *mutex( void ) const;
+
+  /*! Intializes available options */
+  virtual void initOptions();
 
   mutable Options Info;
   mutable Options Settings;

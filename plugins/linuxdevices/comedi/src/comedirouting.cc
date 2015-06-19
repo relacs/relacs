@@ -35,55 +35,59 @@ namespace comedi {
 
 
 ComediRouting::ComediRouting( void ) 
-  : Device( "ComediRouting" )
-{
-  DeviceP = NULL;
-}
+  : ComediRouting( "ComediRouting" )
+{}
 
+ComediRouting::ComediRouting( const string &device, const Options &opts ) 
+  : ComediRouting( "ComediRouting" )
+{
+  Options::read(opts);
+  open( device );
+}
 
 ComediRouting::ComediRouting( const string &deviceclass )
   : Device( deviceclass )
 {
   DeviceP = NULL;
+  initOptions();
 }
-
-
-ComediRouting::ComediRouting( const string &device, const Options &opts ) 
-  : Device( "ComediRouting" )
-{
-  DeviceP = NULL;
-  open( device, opts );
-}
-
   
 ComediRouting::~ComediRouting( void ) 
 {
   close();
 }
 
+void ComediRouting::initOptions()
+{
+  Device::initOptions();
 
-int ComediRouting::open( const string &device, const Options &opts )
+  addInteger("subdevice", "dummy description", -1);
+  addInteger("channel", "dummy description", -1);
+  addInteger("routing", "dummy description", -1);
+}
+
+int ComediRouting::open( const string &device )
 { 
   clearError();
   Info.clear();
   Settings.clear();
 
   // get subdevice:
-  int subdev = opts.integer( "subdevice", 0, -1 );
+  int subdev = integer( "subdevice", 0, -1 );
   if ( subdev < 0 ) {
     setErrorStr( "missing or invalid subdevice id for device " + deviceIdent() );
     return WriteError;
   }
 
   // get channel:
-  int channel = opts.integer( "channel", 0, -1 );
+  int channel = integer( "channel", 0, -1 );
   if ( channel < 0 ) {
     setErrorStr( "missing or invalid channel for device " + deviceIdent() );
     return WriteError;
   }
 
   // get routing:
-  int routing = opts.integer( "routing", 0, -1 );
+  int routing = integer( "routing", 0, -1 );
   if ( routing < 0 ) {
     setErrorStr( "Missing or invalid routing parameter for device " + deviceIdent() );
     return WriteError;

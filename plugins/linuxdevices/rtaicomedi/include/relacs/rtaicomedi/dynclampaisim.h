@@ -54,9 +54,9 @@ public:
   ~DynClampAISim( void );           
 
     /*! Open the analog input device simulation */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device) override;
     /*! Open the analog input device simulation. */
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( Device &device) override;
 
     /*! Initialize dynamic clamp model and prepare analog input of the input traces \a traces. */
   virtual int prepareRead( InList &traces );

@@ -48,7 +48,7 @@ public:
   Kleindiek( void );
   ~Kleindiek( void );
 
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device )  override;
   virtual bool isOpen( void ) const { return Handle >= 0; };
   virtual void close( void );
   virtual int reset( void );

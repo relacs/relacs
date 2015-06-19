@@ -56,7 +56,7 @@ class OpenCVStereoCamera : public Camera
 
   
 
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
   virtual bool isOpen( void ) const {return Opened; };
   virtual void close( void );
   virtual int reset( void );
@@ -75,7 +75,8 @@ class OpenCVStereoCamera : public Camera
 
   int calibrate(vector< vector<Point3f> > ObjectPoints, vector< vector<Point2f> > ImagePoints[], Size sz);
   
-
+protected:
+  void initOptions() override;
 
  protected:
   bool Opened, Calibrated;

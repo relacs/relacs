@@ -61,7 +61,7 @@ public:
  	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close() */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Returns true if the device is open.
         \sa open(), close() */
   virtual bool isOpen( void ) const;
@@ -117,6 +117,8 @@ public:
     /*! Comedi internal index of analog input subdevice. */
   int comediSubdevice( void ) const;
 
+protected:
+  virtual void initOptions() override;
 
 private:
 

@@ -56,7 +56,7 @@ public:
   virtual ~DynClampAnalogOutput( void );
 
     /*! Open the analog output device on device file \a device. */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Returns true if dynamic clamp module was succesfully opened. */
   virtual bool isOpen( void ) const;
     /*! Stop all activity and close the device. */
@@ -168,6 +168,7 @@ protected:
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
 
+  void initOptions() override;
 
 private:
 

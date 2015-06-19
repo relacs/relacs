@@ -43,16 +43,16 @@ TempDTM5080::TempDTM5080( void )
     Probe( 0 )
 {
   Settings.addInteger( "probe" );
+
+  initOptions();
 }
 
 
 TempDTM5080::TempDTM5080( const string &device, const Options &opts  )
-  : Temperature( "TempDTM5080" ),
-    Handle( -1 ),
-    Probe( 0 )
+  : TempDTM5080()
 {
-  Settings.addInteger( "probe" );
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -61,8 +61,15 @@ TempDTM5080::~TempDTM5080( void )
   close();
 }
 
+void TempDTM5080::initOptions()
+{
+  Temperature::initOptions();
 
-int TempDTM5080::open( const string &device, const Options &opts )
+  addInteger("probe", "dummy parameter", 1);
+}
+
+
+int TempDTM5080::open( const string &device )
 {
   clearError();
   if ( Handle >= 0 )
@@ -99,7 +106,7 @@ int TempDTM5080::open( const string &device, const Options &opts )
   tcflush( Handle, TCIFLUSH );
   tcsetattr( Handle, TCSANOW, &NewTIO );
 
-  int probe = opts.integer( "probe", 0, 1 );
+  int probe = integer( "probe", 0, 1 );
   setProbe( probe );
 
   setDeviceName( "DTM5080" );
@@ -115,19 +122,19 @@ int TempDTM5080::open( const string &device, const Options &opts )
 
   com = 't';
   int n = write( Handle, &com, 1 );
-  n = read( Handle, buf, 10 );
+  n = ::read( Handle, buf, 10 );
   buf[n] = '\0';
   Info.addText( "device type", buf );
   
   com = 'l';
   n = write( Handle, &com, 1 );
-  n = read( Handle, buf, 10 );
+  n = ::read( Handle, buf, 10 );
   buf[n] = '\0';
   Info.addText( "serial number", buf );
   
   com = 'a';
   n = write( Handle, &com, 1 );
-  n = read( Handle, buf, 10 );
+  n = ::read( Handle, buf, 10 );
   buf[n] = '\0';
   Info.addText( "resolution", buf );
 
@@ -166,7 +173,7 @@ double TempDTM5080::temperature( void )
     char com = 'd';
     write( Handle, &com, 1 );
     char buf[10];
-    int n = read( Handle, buf, 10 );
+    int n = ::read( Handle, buf, 10 );
     if ( n > 0 && buf[n-1] == ':' ) {
       buf[n-1] = '\0';
       char *ep = NULL;
@@ -193,7 +200,7 @@ void TempDTM5080::setProbe( int probe )
     sprintf( com, "b%d", probe );
     write( Handle, com, 2 );
     char buf[10];
-    int n = read( Handle, buf, 10 );
+    int n = ::read( Handle, buf, 10 );
     if ( n != 1 && buf[0] != ':' )
       cout << "failed to set probe: " << buf << endl;
     Probe = probe;

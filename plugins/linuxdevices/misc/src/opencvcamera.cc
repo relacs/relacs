@@ -152,6 +152,7 @@ namespace misc {
 
     EstimateDistortion = true;
 
+    initOptions();
   }
 
 
@@ -162,10 +163,18 @@ namespace misc {
     Opened = false;
   }
 
+  void OpenCVCamera::initOptions()
+  {
+    Camera::initOptions();
+
+    addText("device", "dummy description", "");
+    addText("framerate", "dummy description", "");
+    addText("buffernlen", "dummy description", "");
+    addText("parameters", "dummy description", "");
+  }
 
 
-
-  int OpenCVCamera::open( const string &device, const Options &opts )
+  int OpenCVCamera::open( const string &device )
   {
     clearError();
     Info.clear();
@@ -173,9 +182,9 @@ namespace misc {
 
     Opened = true;
     // load camera number and frame rate
-    CameraNo = atoi(opts.text("device").c_str());
-    FrameRate = atoi(opts.text("framerate").c_str());
-    int blen = atoi(opts.text("bufferlen").c_str());
+    CameraNo = atoi(text("device").c_str());
+    FrameRate = atoi(text("framerate").c_str());
+    int blen = atoi(text("bufferlen").c_str());
 
     Info.addInteger("device",CameraNo);
     Info.addInteger("framerate",FrameRate);
@@ -185,7 +194,7 @@ namespace misc {
     VidBuf = new VideoBuffer(CameraNo, FrameRate, blen);
     VidBuf ->Start();
 
-    ParamFile =  opts.text( "parameters" );
+    ParamFile =  text( "parameters" );
     Info.addText("parameters", ParamFile);
   
     FileStorage fs;

@@ -43,15 +43,15 @@ DynClampTrigger::DynClampTrigger( void )
     AIDevice( "" ),
     AIChannel( -1 )
 {
+  initOptions();
 }
 
 
 DynClampTrigger::DynClampTrigger( const string &device, const Options &opts ) 
-  : Trigger( "DynClampTrigger" ),
-    AIDevice( "" ),
-    AIChannel( -1 )
+  : DynClampTrigger()
 {
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -60,8 +60,15 @@ DynClampTrigger::~DynClampTrigger( void )
   close();
 }
 
+void DynClampTrigger::initOptions()
+{
+  Trigger::initOptions();
 
-int DynClampTrigger::open( const string &device, const Options &opts )
+  addText("aidevice", "dummy description", "");
+  addInteger("aichannel", "dummy parameter", 0);
+}
+
+int DynClampTrigger::open( const string &device )
 { 
   clearError();
   Info.clear();
@@ -84,8 +91,8 @@ int DynClampTrigger::open( const string &device, const Options &opts )
     return -1;
   }
 
-  AIDevice = opts.text( "aidevice" );
-  AIChannel = opts.integer( "aichannel" );
+  AIDevice = text( "aidevice" );
+  AIChannel = integer( "aichannel" );
 
   if ( set( opts ) > 0 )
     activate();

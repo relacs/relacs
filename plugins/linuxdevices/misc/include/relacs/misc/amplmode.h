@@ -53,8 +53,8 @@ public:
   AmplMode( void );
   virtual ~AmplMode( void );
 
-  virtual int open( DigitalIO &dio, const Options &opts );
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( DigitalIO &dio );
+  virtual int open( Device &device ) override;
   virtual bool isOpen( void ) const;
   virtual void close( void );
 
@@ -97,11 +97,13 @@ public:
 	\sa startBuzz() */
   int stopBuzz( void );
 
+protected:
+  void initOptions() override;
 
 private:
 
     /*! Initialize the amplifier. */
-  void open( const Options &opts );
+  void open();
 
     /*! The DigitalIO device for controlling the amplifier. */
   DigitalIO *DIO;

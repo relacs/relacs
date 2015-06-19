@@ -68,7 +68,7 @@ files are read in.
 
 class ConfigureClasses;
 
-class ConfigClass : public Options
+class ConfigClass : public virtual Options
 {
 
 public:

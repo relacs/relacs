@@ -45,18 +45,16 @@ DynClampDigitalIO::DynClampDigitalIO( void )
   MaxLines = 0;
   ModuleFd = -1;
   SyncLine = 0;
+
+  initOptions();
 }
 
 
 DynClampDigitalIO::DynClampDigitalIO( const string &device, const Options &opts ) 
-  : DigitalIO( "DynClampDigitalIO" )
+  : DynClampDigitalIO()
 {
-  CDIO = new comedi::ComediDigitalIO;
-  SubDevice = 0;
-  MaxLines = 0;
-  ModuleFd = -1;
-  SyncLine = 0;
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
   
@@ -66,21 +64,35 @@ DynClampDigitalIO::~DynClampDigitalIO( void )
   delete CDIO;
 }
 
+void DynClampDigitalIO::initOptions()
+{
+  DigitalIO::initOptions();
 
-int DynClampDigitalIO::open( const string &device, const Options &opts )
+  for (int i = 1; i < 5; ++i)
+  {
+    std::string idx = Str(i);
+    addInteger("ttlpulse" + idx + "line", "dummy description", -1);
+    addText("ttlpulse" + idx + "high", "dummy description", -1);
+    addText("ttlpulse" + idx + "low", "dummy description", -1);
+  }
+  addInteger("syncpulseline", "dummy description", -1);
+  addNumber("syncpulsewidth", "dummy description", 0.0, "s");
+}
+
+int DynClampDigitalIO::open( const string &device)
 { 
   clearError();
   if ( isOpen() )
     return -5;
 
-  DigitalIO::open( device, opts );
+  DigitalIO::open( device );
   for ( int k=0; k<MaxDIOLines;  k++ ) {
     TTLPulseHigh[k] = TTL_UNDEFINED;
     TTLPulseLow[k] = TTL_UNDEFINED;
   }
 
   // open user space coemdi:
-  int retval = CDIO->open( device, opts );
+  int retval = CDIO->open( device );
   if ( retval != 0 ) {
     return retval;
   }
@@ -129,13 +141,13 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   int id = -1;
   for ( int k=1; k<5; k++ ) {
     string ns = Str( k );
-    int line = opts.integer( "ttlpulse" + ns + "line", 0, -1 );
+    int line = integer( "ttlpulse" + ns + "line", 0, -1 );
     if ( line < 0 )
       continue;
-    string highcom = opts.text( "ttlpulse" + ns + "high", 0 );
+    string highcom = text( "ttlpulse" + ns + "high", 0 );
     int high = TTL_START_WRITE;
     for ( ; high != TTL_UNDEFINED && highcom != ttlcoms[high]; ++high );
-    string lowcom = opts.text( "ttlpulse" + ns + "low", 0 );
+    string lowcom = text( "ttlpulse" + ns + "low", 0 );
     int low = TTL_START_WRITE;
     for ( ; low != TTL_UNDEFINED && lowcom != ttlcoms[low]; ++low );
     if ( id < 0 ) {
@@ -154,9 +166,9 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
 
   // set up SEC synchronization:
   {
-    int line = opts.integer( "syncpulseline", 0, -1 );
+    int line = integer( "syncpulseline", 0, -1 );
     if ( line >= 0 ) {
-      double duration = opts.number( "syncpulsewidth", 0.0, "s" );
+      double duration = number( "syncpulsewidth", 0.0, "s" );
       int id = allocateLine( line );
       if ( id == WriteError )
 	setErrorStr( "failed to allocate line " + Str( line ) + " for sync pulse" );

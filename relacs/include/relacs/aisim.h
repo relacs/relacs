@@ -52,9 +52,9 @@ public:
   ~AISim( void );           
 
     /*! Open the analog input device simulation */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Open the analog input device simulation. */
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( Device &device ) override;
     /*! Returns true. */
   virtual bool isOpen( void ) const;
     /*! Close the device simulation. */
@@ -96,6 +96,9 @@ public:
 
     /*! get error status of the AI-device. */
   virtual int error( void ) const;
+
+protected:
+  void initOptions() override;
 
 
 private:

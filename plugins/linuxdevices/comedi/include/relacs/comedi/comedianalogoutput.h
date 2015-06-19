@@ -74,7 +74,7 @@ public:
         \todo  if a ranges is not supported but comedi thinks so: set max = -1.0,
         i.e. NI 6070E PCI: range #3&4 (-1..1V, 0..1V) not supported
         \todo maybe use an internal maximum buffer size (in case comedi max is way too much)? */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Returns true if driver was succesfully opened. */
   virtual bool isOpen( void ) const;
     /*! Stop all activity and close the device. */
@@ -170,6 +170,7 @@ protected:
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
 
+  virtual void initOptions() override;
 
 private:
   

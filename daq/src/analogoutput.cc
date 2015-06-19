@@ -64,7 +64,7 @@ AnalogOutput::~AnalogOutput( void )
 }
 
 
-int AnalogOutput::open( const string &device, const Options &opts )
+int AnalogOutput::open( const string &device )
 {
   Info.clear();
   Settings.clear();
@@ -73,7 +73,7 @@ int AnalogOutput::open( const string &device, const Options &opts )
 }
 
 
-int AnalogOutput::open( Device &device, const Options &opts )
+int AnalogOutput::open( Device &device )
 {
   Info.clear();
   Settings.clear();

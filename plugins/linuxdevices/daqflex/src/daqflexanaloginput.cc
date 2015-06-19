@@ -49,26 +49,16 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( void )
   CurrentSamples = 0;
   TakeAO = true;
   DAQFlexAO = 0;
+
+  initOptions();
 }
 
 
 DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts )
-  : AnalogInput( "DAQFlexAnalogInput", DAQFlexAnalogIOType )
+  : DAQFlexAnalogInput()
 {
-  IsPrepared = false;
-  IsRunning = false;
-  DAQFlexDevice = NULL;
-  Traces = 0;
-  ReadBufferSize = 0;
-  BufferSize = 0;
-  BufferN = 0;
-  Buffer = NULL;
-  TraceIndex = 0;
-  TotalSamples = 0;
-  CurrentSamples = 0;
-  TakeAO = true;
-  DAQFlexAO = 0;
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -77,8 +67,15 @@ DAQFlexAnalogInput::~DAQFlexAnalogInput( void )
   close();
 }
 
+void DAQFlexAnalogInput::initOptions()
+{
+  AnalogInput::initOptions();
 
-int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
+  addBoolean("takeao", "dummy description", true);
+}
+
+
+int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice )
 {
   if ( isOpen() )
     return -5;
@@ -148,7 +145,7 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
   ReadBufferSize = 2 * DAQFlexDevice->aiFIFOSize();
 
   // For debugging:
-  TakeAO = opts.boolean( "takeao", true );
+  TakeAO = boolean( "takeao", true );
   DAQFlexAO = 0;
 
   setInfo();
@@ -157,9 +154,9 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice, const Options &opts )
 }
 
 
-int DAQFlexAnalogInput::open( Device &device, const Options &opts )
+int DAQFlexAnalogInput::open( Device &device )
 {
-  return open( dynamic_cast<DAQFlexCore&>( device ), opts );
+  return open( dynamic_cast<DAQFlexCore&>( device ) );
 }
 
 

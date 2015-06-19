@@ -89,12 +89,12 @@ public:
 	following options from opts if provided:
 	- \c extref: the external reference voltage to be passed to setExternalReference().
         \sa isOpen(), close(), reset() */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device )  override;
     /*! Open the analog input device specified by \a device.
 	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close(), reset() */
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( Device &device )  override;
     /*! Returns true if the device is open.
         \sa open(), close(), reset() */
   virtual bool isOpen( void ) const = 0;

@@ -31,22 +31,16 @@ namespace attcs3310 {
 
 
 CS3310NIDIO::CS3310NIDIO( const string &device )
-  : Attenuator( "CS3310NIDIO" ),
-    DIO( 0 ),
-    Own( false )
+  : CS3310NIDIO()
 {
-  Options opts;
-  open( device, opts );
+  open( device );
 }
 
 
 CS3310NIDIO::CS3310NIDIO( NIDIO *nidio )
-  : Attenuator( "CS3310NIDIO" ),
-    DIO( 0 ),
-    Own( false )
+  : CS3310NIDIO()
 {
-  Options opts;
-  open( *nidio, opts );
+  open( *nidio );
 }
 
 
@@ -55,6 +49,7 @@ CS3310NIDIO::CS3310NIDIO( void )
     DIO( 0 ),
     Own( false )
 {
+  initOptions();
 }
 
 
@@ -65,7 +60,7 @@ CS3310NIDIO::~CS3310NIDIO( void )
 }
 
 
-int CS3310NIDIO::open( const string &device, const Options &opts )
+int CS3310NIDIO::open( const string &device )
 {
   clearError();
   Info.clear();
@@ -108,7 +103,7 @@ int CS3310NIDIO::open( const string &device, const Options &opts )
 }
 
 
-int CS3310NIDIO::open( NIDIO &nidio, const Options &opts )
+int CS3310NIDIO::open( NIDIO &nidio )
 {
   Info.clear();
 
@@ -144,9 +139,9 @@ int CS3310NIDIO::open( NIDIO &nidio, const Options &opts )
 }
 
 
-int CS3310NIDIO::open( Device &device, const Options &opts )
+int CS3310NIDIO::open( Device &device )
 {
-  return open( dynamic_cast<NIDIO&>( device ), opts );
+  return open( dynamic_cast<NIDIO&>( device ) );
 }
 
 

@@ -35,10 +35,10 @@ DAQFlexDigitalIO::DAQFlexDigitalIO( void )
 
 
 DAQFlexDigitalIO::DAQFlexDigitalIO( DAQFlexCore &daqflexdevice, const Options &opts ) 
-  : DigitalIO( "DAQFlexDigitalIO" )
+  : DAQFlexDigitalIO()
 {
-  DAQFlexDevice = NULL;
-  open( daqflexdevice, opts );
+  Options::read(opts);
+  open( daqflexdevice );
 }
 
   
@@ -48,7 +48,7 @@ DAQFlexDigitalIO::~DAQFlexDigitalIO( void )
 }
 
 
-int DAQFlexDigitalIO::open( DAQFlexCore &daqflexdevice, const Options &opts )
+int DAQFlexDigitalIO::open( DAQFlexCore &daqflexdevice)
 { 
   if ( isOpen() )
     return -5;
@@ -62,7 +62,7 @@ int DAQFlexDigitalIO::open( DAQFlexCore &daqflexdevice, const Options &opts )
     return NotOpen;
   }
 
-  DigitalIO::open( *this, opts );
+  DigitalIO::open( *this );
 
   // set basic device infos:
   setDeviceName( DAQFlexDevice->deviceName() );
@@ -75,9 +75,9 @@ int DAQFlexDigitalIO::open( DAQFlexCore &daqflexdevice, const Options &opts )
 }
 
 
-int DAQFlexDigitalIO::open( Device &device, const Options &opts )
+int DAQFlexDigitalIO::open( Device &device)
 {
-  return open( dynamic_cast<DAQFlexCore&>( device ), opts );
+  return open( dynamic_cast<DAQFlexCore&>( device ) );
 }
 
 

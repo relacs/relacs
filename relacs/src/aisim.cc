@@ -47,6 +47,8 @@ AISim::AISim( void )
   AIuniRanges[8] = -1.0;
   AIbiRanges[8] = -1.0;
   IsRunning = false;
+
+  initOptions();
 }
 
 
@@ -54,8 +56,14 @@ AISim::~AISim( void )
 {
 }
 
+void AISim::initOptions()
+{
+  AnalogInput::initOptions();
 
-int AISim::open( const string &device, const Options &opts )
+  addNumber("gainblacklist", "dummy description", 0);
+}
+
+int AISim::open( const string &device )
 {
   Info.clear();
   Settings.clear();
@@ -64,7 +72,7 @@ int AISim::open( const string &device, const Options &opts )
   setDeviceFile( device );
   setInfo();
   vector<double> gainblacklist;
-  opts.numbers( "gainblacklist", gainblacklist );
+  numbers( "gainblacklist", gainblacklist );
   for ( int j=0; j<MaxRanges; j++ ) {
     for ( unsigned int k=0; k<gainblacklist.size(); k++ ) {
       if ( ::fabs( AIbiRanges[j] - gainblacklist[k] ) < 1e-6 ) {
@@ -82,7 +90,7 @@ int AISim::open( const string &device, const Options &opts )
 }
 
 
-int AISim::open( Device &device, const Options &opts )
+int AISim::open( Device &device )
 {
   Info.clear();
   Settings.clear();
@@ -91,7 +99,7 @@ int AISim::open( Device &device, const Options &opts )
   setDeviceFile( device.deviceIdent() );
   setInfo();
   vector<double> gainblacklist;
-  opts.numbers( "gainblacklist", gainblacklist );
+  numbers( "gainblacklist", gainblacklist );
   for ( int j=0; j<MaxRanges; j++ ) {
     for ( unsigned int k=0; k<gainblacklist.size(); k++ ) {
       if ( ::fabs( AIbiRanges[j] - gainblacklist[k] ) < 1e-6 ) {

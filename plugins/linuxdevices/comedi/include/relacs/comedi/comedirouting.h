@@ -69,7 +69,7 @@ public:
  	\return zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close() */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device) override;
     /*! \return \c true if the device is open.
         \sa open(), close() */
   virtual bool isOpen( void ) const;
@@ -85,6 +85,8 @@ protected:
         signal is the optional name of the routing signal that is
         displayed in the devices informations. */
   int open( const string &device, int subdev, int channel, int routing, const string &signal="" );
+
+  virtual void initOptions() override;
 
     /*! Pointer to the comedi device. */
   comedi_t *DeviceP;

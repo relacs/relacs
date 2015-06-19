@@ -49,7 +49,7 @@ public:
   virtual ~DynClampTrigger( void );
 
     /*! Open the trigger device on device file \a device. */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Returns true if dynamic clamp module was succesfully opened. */
   virtual bool isOpen( void ) const;
     /*! Stop all triggering activity and close the device. */
@@ -64,6 +64,8 @@ public:
         \return 0 on success, negative numbers on failure. */
   virtual int disable( void );
 
+protected:
+  void initOptions() override;
 
  protected:
 

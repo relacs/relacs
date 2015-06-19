@@ -41,7 +41,7 @@ DigitalIO::~DigitalIO( void )
 }      
 
 
-int DigitalIO::open( const string &device, const Options &opts )
+int DigitalIO::open( const string &device )
 {
   freeLines();
   for ( int k=0; k<MaxDIOLines;  k++ )
@@ -53,7 +53,7 @@ int DigitalIO::open( const string &device, const Options &opts )
 }
 
 
-int DigitalIO::open( Device &device, const Options &opts )
+int DigitalIO::open( Device &device )
 {
   freeLines();
   for ( int k=0; k<MaxDIOLines;  k++ )

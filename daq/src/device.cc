@@ -33,13 +33,7 @@ const string Device::DeviceTypeStrs[Device::MaxDeviceTypeStrs] =
 
 
 Device::Device( int type )
-  : DeviceType( type ),
-    DeviceClass ( "" ),
-    DeviceIdent( "" ),
-    DeviceFile( "" ),
-    DeviceName( "" ),
-    DeviceVendor( "" ),
-    ErrorString( "" )
+  : Device("", type)
 {
 }
 
@@ -60,8 +54,15 @@ Device::~Device( void )
 {
 }
 
+void Device::initOptions()
+{
+  addText("plugin", "plugin", "");
+  addText("ident", "ident", "");
+  addText("device", "device", "");
+}
 
-int Device::open( const string &device, const Options &opts )
+
+int Device::open( const string &device)
 {
   clearError();
   setDeviceFile( device );
@@ -69,7 +70,7 @@ int Device::open( const string &device, const Options &opts )
 }
 
 
-int Device::open( Device &device, const Options &opts )
+int Device::open( Device &device)
 {
   clearError();
   setDeviceFile( device.deviceIdent() );

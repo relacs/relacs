@@ -39,8 +39,7 @@ Kleindiek::Kleindiek( const string &device )
   : Manipulator( "Kleindiek" )
 {
   construct();
-  Options opts;
-  open( device, opts );
+  open( device );
 }
 
 
@@ -70,7 +69,7 @@ void Kleindiek::construct( void )
 }
 
 
-int Kleindiek::open( const string &device, const Options &opts )
+int Kleindiek::open( const string &device )
 {
   clearError();
   if ( Handle >= 0 )
@@ -354,7 +353,7 @@ int Kleindiek::pause( int ms )
 
   usleep( 100000 );
   char buf[100];
-  int n = read( Handle, buf, 100 );
+  int n = ::read( Handle, buf, 100 );
   buf[n] = '\0';
   cout << buf << endl;
 
@@ -372,7 +371,7 @@ int Kleindiek::speed( int channel, int speed )
 
   usleep( 100000 );
   char buf[100];
-  int n = read( Handle, buf, 100 );
+  int n = ::read( Handle, buf, 100 );
   buf[n] = '\0';
   cout << buf << endl;
 
@@ -389,7 +388,7 @@ int Kleindiek::amplitudepos( int channel, int ampl )
   write( Handle, com, strlen( com ) );
 
   char buf[100];
-  int n = read( Handle, buf, 100 );
+  int n = ::read( Handle, buf, 100 );
   buf[n] = '\0';
 
   PosAmplitude[channel] = ampl;
@@ -407,7 +406,7 @@ int Kleindiek::amplitudeneg( int channel, int ampl )
   write( Handle, com, strlen( com ) );
 
   char buf[100];
-  int n = read( Handle, buf, 100 );
+  int n = ::read( Handle, buf, 100 );
   buf[n] = '\0';
 
   NegAmplitude[channel] = ampl;
@@ -426,7 +425,7 @@ int Kleindiek::countermode( int channel, long mode )
 
   usleep( 100000 );
   char buf[100];
-  int n = read( Handle, buf, 100 );
+  int n = ::read( Handle, buf, 100 );
   buf[n] = '\0';
   cout << buf << endl;
 
@@ -444,7 +443,7 @@ int Kleindiek::counterread( void )
 
   usleep( 100000 );
   char buf[100];
-  int n = read( Handle, buf, 100 );
+  int n = ::read( Handle, buf, 100 );
   buf[n] = '\0';
   cout << buf << endl;
 
@@ -462,7 +461,7 @@ int Kleindiek::counterreset( void )
 
   usleep( 100000 );
   char buf[100];
-  int n = read( Handle, buf, 100 );
+  int n = ::read( Handle, buf, 100 );
   buf[n] = '\0';
   cout << buf << endl;
 

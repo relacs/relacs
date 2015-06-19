@@ -61,32 +61,15 @@ DynClampAnalogInput::DynClampAnalogInput( void )
   Buffer = NULL;
   TraceIndex = 0;
 
+  initOptions();
 }
 
 
 DynClampAnalogInput::DynClampAnalogInput( const string &device, const Options &opts ) 
-  : AnalogInput( "DynClampAnalogInput", DynClampAnalogIOType )
+  : DynClampAnalogInput()
 {
-  ModuleDevice = "";
-  ModuleFd = -1;
-  FifoFd = -1;
-  SubDevice = -1;
-  BufferElemSize = sizeof(float);
-  Channels = 0;
-  MaxRate = 100000.0;
-  IsPrepared = false;
-  IsRunning = false;
-  Calibration = 0;
-  UnipConverter = 0;
-  BipConverter = 0;
-  Traces = 0;
-  ReadBufferSize = 0;
-  BufferSize = 0;
-  BufferN = 0;
-  Buffer = NULL;
-  TraceIndex = 0;
-
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -95,8 +78,14 @@ DynClampAnalogInput::~DynClampAnalogInput( void )
   close();
 }
 
+void DynClampAnalogInput::initOptions()
+{
+  AnalogInput::initOptions();
 
-int DynClampAnalogInput::open( const string &device, const Options &opts )
+  addNumber("gainblacklist", "dummy description", 0);
+}
+
+int DynClampAnalogInput::open( const string &device)
 { 
   clearError();
   if ( isOpen() )
@@ -149,7 +138,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   UnipolarRangeIndex.clear();
   BipolarRangeIndex.clear();
   vector<double> gainblacklist;
-  opts.numbers( "gainblacklist", gainblacklist );
+  numbers( "gainblacklist", gainblacklist );
   // XXX: if a ranges is not supported but comedi thinks so: add max gain to the blacklist.
   // i.e. NI 6070E PCI and DAQCard-6062E: range #8 (0..20V) not supported
   int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  

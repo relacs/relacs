@@ -44,6 +44,8 @@ namespace misc {
 OpenCVStereoCamera::OpenCVStereoCamera( void )
   : Camera( "OpenCVStereoCamera" ){
   Opened = false;
+
+  initOptions();
 }
 
 
@@ -55,9 +57,19 @@ OpenCVStereoCamera::~OpenCVStereoCamera( void )
 }
 
 
+void OpenCVStereoCamera::initOptions()
+{
+  Camera::initOptions();
+
+  addText("leftcam", "dummy description", "");
+  addText("rightcam", "dummy description", "");
+  addText("parameters", "dummy description", "");
+  addText("leftparam", "dummy description", "");
+  addText("rightparam", "dummy description", "");
+}
 
 
-int OpenCVStereoCamera::open( const string &device, const Options &opts )
+int OpenCVStereoCamera::open( const string &device )
 {
   clearError();
   Info.clear();
@@ -70,19 +82,19 @@ int OpenCVStereoCamera::open( const string &device, const Options &opts )
   
   // Info.addInteger("device",CameraNo);
  
-  LeftCamDevice =  opts.text( "leftcam" );
+  LeftCamDevice =  text( "leftcam" );
   Info.addText("leftcam", LeftCamDevice);
 
-  RightCamDevice =  opts.text( "rightcam" );
+  RightCamDevice =  text( "rightcam" );
   Info.addText("rightcam", RightCamDevice);
   
-  ParamFile = opts.text( "parameters" );
+  ParamFile = text( "parameters" );
   Info.addText("parameters", ParamFile);
 
-  LeftParamFile = opts.text("leftparam");
+  LeftParamFile = text("leftparam");
   Info.addText("leftparam", LeftParamFile);
 
-  RightParamFile = opts.text("rightparam");
+  RightParamFile = text("rightparam");
   Info.addText("rightparam", RightParamFile);
 
   // load all intrinsics and fundamental parameters 

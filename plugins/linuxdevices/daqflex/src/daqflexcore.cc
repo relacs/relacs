@@ -63,15 +63,15 @@ DAQFlexCore::DAQFlexCore( void )
     DeviceHandle( NULL ),
     ErrorState( Success )
 {
+  initOptions();
 }
 
 
 DAQFlexCore::DAQFlexCore( const string &device, const Options &opts  )
-  : Device( "DAQFlexCore" ),
-    DeviceHandle( NULL ),
-    ErrorState( Success )
+  : DAQFlexCore()
 {
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -80,8 +80,14 @@ DAQFlexCore::~DAQFlexCore( void )
   close();
 }
 
+void DAQFlexCore::initOptions()
+{
+  addText("serialno", "dummy parameter", "");
+  addInteger("devicenum", "dummy parameter", 1);
+  addText("firmwarepath", "dummy parameter", "");
+}
 
-int DAQFlexCore::open( const string &devicestr, const Options &opts )
+int DAQFlexCore::open( const string &devicestr )
 {
   clearError();
 
@@ -114,9 +120,9 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
   }
   */
 
-  string serialno = opts.text( "serialno", "" );
+  string serialno = text( "serialno", "" );
 
-  int mccdevicenum = opts.integer( "devicenum", 0, 1 );
+  int mccdevicenum = integer( "devicenum", 0, 1 );
 
   // initialize USB libraries:
   if ( libusb_init( NULL ) != 0 ) {
@@ -194,7 +200,7 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
     DeviceHandle = NULL;
   }
   else {
-    Str path = opts.text( "firmwarepath" );
+    Str path = text( "firmwarepath" );
     path.provideSlash();
     initDevice( path );
     if ( ErrorState != Success ) {

@@ -75,9 +75,9 @@ public:
   CS3310SerialNIDIO( void );
   virtual ~CS3310SerialNIDIO( void );
 
-  virtual int open( const string &device, const Options &opts );
-  virtual int open( NIDIO &nidio, const Options &opts );
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( const string &device ) override;
+  virtual int open( NIDIO &nidio ) override;
+  virtual int open( Device &device ) override;
   virtual bool isOpen( void ) const;
   virtual void close( void );
 

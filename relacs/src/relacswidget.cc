@@ -56,6 +56,7 @@
 #include <relacs/simulator.h>
 #include <relacs/optdialog.h>
 #include <relacs/relacswidget.h>
+#include <relacs/deviceselector.h>
 
 namespace relacs {
 
@@ -365,6 +366,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   filemenu->addSeparator();
   filemenu->addAction( "&Input traces...", this, SLOT( editInputTraces() ) );
   filemenu->addAction( "&Output traces...", this, SLOT( editOutputTraces() ) );
+  filemenu->addAction( "&Devices", this, SLOT(editDevices()));
   filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
   filemenu->addAction( "&Save settings", (QWidget*)this, SLOT( saveConfig() ) );
   filemenu->addSeparator();
@@ -1449,6 +1451,30 @@ void RELACSWidget::editOutputTraces( void )
   od->addButton( "&Cancel" );
   QObject::connect( od, SIGNAL( buttonClicked( int ) ), oc, SLOT( dialogClosed( int ) ) );
   QObject::connect( oc, SIGNAL( newOutputSettings() ), this, SLOT( restartAcquisition() ) );
+  od->exec();
+}
+
+void RELACSWidget::editDevices()
+{
+  /// DeviceLists are handled in a static way, so this is ugly but should be fine
+  /// Replace with c++11 initializer lists
+  /// Order taken from DeviceSelector
+  std::map<int, ConfigClass*> deviceLists;
+  deviceLists.emplace(AID->pluginId(), AID);
+  deviceLists.emplace(AOD->pluginId(), AOD);
+  deviceLists.emplace(DIOD->pluginId(), DIOD);
+  deviceLists.emplace(TRIGD->pluginId(), TRIGD);
+  deviceLists.emplace(ATD->pluginId(), ATD);
+
+  DeviceSelector* oc = new DeviceSelector(ADV, deviceLists, this);
+  OptDialog* od = new OptDialog(false, this);
+  od->setCaption("Active devices");
+  od->addWidget(oc);
+  od->addButton( "&Ok", OptDialog::Accept, DeviceSelector::CODE_OK );
+  od->addButton( "&Apply", OptDialog::Accept, DeviceSelector::CODE_APPLY, false );
+  od->addButton( "&Cancel" );
+  QObject::connect( od, SIGNAL( buttonClicked( int ) ), oc, SLOT( dialogClosed( int ) ) );
+  QObject::connect( oc, SIGNAL( newDeviceSettings() ), this, SLOT( restartAcquisition() ) );
   od->exec();
 }
 

@@ -58,32 +58,16 @@ ComediAnalogInput::ComediAnalogInput( void )
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
+
+  initOptions();
 }
 
 
 ComediAnalogInput::ComediAnalogInput( const string &device, const Options &opts ) 
-  : AnalogInput( "ComediAnalogInput", ComediAnalogIOType )
+  : ComediAnalogInput()
 {
-  DeviceP = NULL;
-  SubDevice = 0;
-  LongSampleType = false;
-  BufferElemSize = 0;
-  MaxRate = 1000.0;
-  TakeAO = true;
-  memset( &Cmd, 0, sizeof( comedi_cmd ) );
-  IsPrepared = false;
-  IsRunning = false;
-  AboutToStop = false;
-  Calibration = 0;
-  Traces = 0;
-  ReadBufferSize = 0;
-  BufferSize = 0;
-  BufferN = 0;
-  Buffer = NULL;
-  TraceIndex = 0;
-  TotalSamples = 0;
-  CurrentSamples = 0;
-  open( device, opts );
+  read(opts);
+  open( device );
 }
 
   
@@ -92,8 +76,15 @@ ComediAnalogInput::~ComediAnalogInput( void )
   close();
 }
 
+void ComediAnalogInput::initOptions()
+{
+  AnalogInput::initOptions();
 
-int ComediAnalogInput::open( const string &device, const Options &opts )
+  addNumber("gainblacklist", "dummy description", 0);
+  addBoolean("takeao", "dummy description", true);
+}
+
+int ComediAnalogInput::open( const string &device )
 { 
   clearError();
   if ( isOpen() )
@@ -167,7 +158,7 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
   UnipolarRangeIndex.clear();
   BipolarRangeIndex.clear();
   vector<double> gainblacklist;
-  opts.numbers( "gainblacklist", gainblacklist );
+  numbers( "gainblacklist", gainblacklist );
   // XXX: if a range is not supported but comedi thinks so: add max gain to the blacklist.
   // i.e. NI 6070E PCI and DAQCard-6062E: range #8 (0..20V) not supported
   int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  
@@ -240,7 +231,7 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
   // For debugging:
-  TakeAO = opts.boolean( "takeao", true );
+  TakeAO = boolean( "takeao", true );
 
   // clear flags:
   ComediAO = 0;
@@ -877,7 +868,7 @@ int ComediAnalogInput::readData( void )
     //      break;
     
     // read data:
-    ssize_t m = read( comedi_fileno( DeviceP ), Buffer + buffern, maxn );
+    ssize_t m = ::read( comedi_fileno( DeviceP ), Buffer + buffern, maxn );
 
     ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {

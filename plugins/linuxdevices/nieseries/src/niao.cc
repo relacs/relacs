@@ -42,15 +42,16 @@ NIAO::NIAO( void )
     Handle( -1 )
 {
   Sigs = 0;
+
+  initOptions();
 }
 
 
 NIAO::NIAO( const string &device, const Options &opts )
-  : AnalogOutput( "NI E-Series Analog Output", NIAnalogIOType ),
-    Handle( -1 )
+  : NIAO()
 {
-  Sigs = 0;
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -59,8 +60,14 @@ NIAO::~NIAO( void )
   close();
 }
 
+void NIAO::initOptions()
+{
+  AnalogInput::initOptions();
 
-int NIAO::open( const string &device, const Options &opts )
+  addNumber("extref", "dummy description", -1.0, "V");
+}
+
+int NIAO::open( const string &device )
 {
   clearError();
   Info.clear();
@@ -77,7 +84,7 @@ int NIAO::open( const string &device, const Options &opts )
     setDeviceVendor( "National Instruments" );
     setDeviceFile( device );
     // external reference:
-    double extr = opts.number( "extref", -1.0, "V" );
+    double extr = number( "extref", -1.0, "V" );
     setExternalReference( extr );
   }
 

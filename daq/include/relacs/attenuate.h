@@ -169,10 +169,10 @@ public:
     /*! Evaluates \a opts, calls open(Device&,int,const Options&),
         and sets name, unit, and format of intensity and frequency.
         You certainly do not need to reimplement this function. */
-  virtual int open( Device &att, const Options &opts );
+  virtual int open( Device &att )  override;
     /*! Does nothing (needed for compatibility to other devices).
         Do not reimplement this function. */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
      /*! True if the hardware driver is open and the device index is supported.
         \sa open() */
   virtual bool isOpen( void ) const;
@@ -511,7 +511,8 @@ protected:
     */
   virtual void intensity( double &intens, double frequency, double decibel ) const =0;
 
-
+  /*! Initzializes default Attenuate options */
+  virtual void initOptions() override;
 private:
 
     /*! The attenuator device. */

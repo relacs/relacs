@@ -137,7 +137,7 @@ public:
   Mirob( void );
   ~Mirob( void );
 
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device)  override;
   virtual bool isOpen( void ) const { return Opened; };
   virtual void close( void );
   virtual int reset( void );

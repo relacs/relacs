@@ -61,30 +61,17 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   BufferSize = 0;
   Buffer = 0;
   NBuffer = 0;
+
+  initOptions();
 }
 
 
 DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
 					    const Options &opts ) 
-  : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
+  : DynClampAnalogOutput()
 {
-  ModuleDevice = "";
-  ModuleFd = -1;
-  FifoFd = -1;
-  SubDevice = -1;
-  BufferElemSize = sizeof(float);
-  Channels = 0;
-  MaxRate = 100000.0;
-  IsPrepared = false;
-  NoMoreData = true;
-  IsRunning = false;
-  UnipConverter = 0;
-  BipConverter = 0;
-  BufferSize = 0;
-  Buffer = 0;
-  NBuffer = 0;
-
-  open( device, opts );
+  Options::read(opts)
+  open( device );
 }
 
 
@@ -93,8 +80,14 @@ DynClampAnalogOutput::~DynClampAnalogOutput( void )
   close();
 }
 
+void DynClampAnalogOutput::initOptions()
+{
+  AnalogOutput::initOptions();
 
-int DynClampAnalogOutput::open( const string &device, const Options &opts )
+  addNumber("extref", "dummy description", -1.0, "V");
+}
+
+int DynClampAnalogOutput::open( const string &device )
 { 
   clearError();
   if ( isOpen() )
@@ -141,7 +134,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
   }
 
   // external reference:
-  double extr = opts.number( "extref", -1.0, "V" );
+  double extr = number( "extref", -1.0, "V" );
   setExternalReference( extr );
 
   // initialize ranges:

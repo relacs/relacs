@@ -111,6 +111,8 @@ public:
   template < class TT, int PPluginID >
   friend ostream &operator<<( ostream &str, const DeviceList< TT, PPluginID > &d );
 
+  /*! Returns plugin id of contained devices */
+  int pluginId() const;
 
 protected:
 
@@ -345,20 +347,21 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
       // swap device to the end of the lists:
       swapBack( dv );
       if ( (void *)&devices != (void *)this )
-	devices.swapBack( dv );
+        devices.swapBack( dv );
     }
     // open device:
     Str ds = deviceopts->text( "device" );
     int ern = 0;
+    dv->Options::read( *deviceopts );
     dv->clearError();
     Device *d = devices.device( ds );
     if ( d != 0 ) {
-      ern = dv->open( *d, *deviceopts );
+      ern = dv->open( *d );
       if ( dv->isOpen() )
 	ds = "";
     }
     if ( ! ds.empty() )
-      ern = dv->open( ds, *deviceopts );
+      ern = dv->open( ds );
     if ( dv->isOpen() )
       n++;
     else {
@@ -494,6 +497,11 @@ void DeviceList<T,PluginID>::updateMenu( void )
   }
 }
 
+template< class T, int PluginID >
+int DeviceList<T, PluginID>::pluginId() const
+{
+  return PluginID;
+}
 
 template < class T, int PluginID >
 ostream &operator<<( ostream &str, const DeviceList<T,PluginID> &d )

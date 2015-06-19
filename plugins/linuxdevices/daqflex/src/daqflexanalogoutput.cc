@@ -42,20 +42,16 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   Buffer = 0;
   NBuffer = 0;
   ChannelValues = 0;
+
+  initOptions();
 }
 
 
 DAQFlexAnalogOutput::DAQFlexAnalogOutput( DAQFlexCore &device, const Options &opts ) 
-  : AnalogOutput( "DAQFlexAnalogOutput", DAQFlexAnalogIOType )
+  : DAQFlexAnalogOutput()
 {
-  IsPrepared = false;
-  NoMoreData = true;
-  DAQFlexDevice = NULL;
-  BufferSize = 0;
-  Buffer = 0;
-  NBuffer = 0;
-  ChannelValues = 0;
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -64,8 +60,14 @@ DAQFlexAnalogOutput::~DAQFlexAnalogOutput( void )
   close();
 }
 
+void DAQFlexAnalogOutput::initOptions()
+{
+  AnalogOutput::initOptions();
 
-int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
+  addNumber("delays", "dummy description", 0);
+}
+
+int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice )
 {
   if ( isOpen() )
     return -5;
@@ -128,7 +130,7 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
 
   // delays:
   vector< double > delays;
-  opts.numbers( "delays", delays, "s" );
+  numbers( "delays", delays, "s" );
   setDelays( delays );
 
   // clear flags:
@@ -141,9 +143,9 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice, const Options &opts )
 }
 
 
-int DAQFlexAnalogOutput::open( Device &device, const Options &opts )
+int DAQFlexAnalogOutput::open( Device &device )
 {
-  return open( dynamic_cast<DAQFlexCore&>( device ), opts );
+  return open( dynamic_cast<DAQFlexCore&>( device ) );
 }
 
 

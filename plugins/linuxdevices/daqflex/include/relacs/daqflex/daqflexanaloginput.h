@@ -54,9 +54,9 @@ public:
   virtual ~DAQFlexAnalogInput( void );
 
     /*! Open analog input on DAQFlexCore device \a device. */
-  virtual int open( DAQFlexCore &daqflexdevice, const Options &opts );
+  virtual int open( DAQFlexCore &daqflexdevice );
     /*! Open analog input on DAQFlexCore device \a device. */
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( Device &device ) override;
     /*! Returns true if driver was succesfully opened. */
   virtual bool isOpen( void ) const;
     /*! Stop all activity and close the device. */
@@ -145,6 +145,8 @@ protected:
         This function is called by testRead(). */
   int testReadDevice( InList &traces );
 
+
+  void initOptions() override;
 
 private:
 

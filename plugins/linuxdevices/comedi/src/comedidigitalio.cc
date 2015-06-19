@@ -40,16 +40,16 @@ ComediDigitalIO::ComediDigitalIO( void )
   DeviceP = NULL;
   SubDevice = 0;
   MaxLines = 0;
+
+  initOptions();
 }
 
 
 ComediDigitalIO::ComediDigitalIO( const string &device, const Options &opts ) 
-  : DigitalIO( "ComediDigitalIO" )
+  : ComediDigitalIO()
 {
-  DeviceP = NULL;
-  SubDevice = 0;
-  MaxLines = 0;
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
   
@@ -58,14 +58,21 @@ ComediDigitalIO::~ComediDigitalIO( void )
   close();
 }
 
+void ComediDigitalIO::initOptions()
+{
+  DigitalIO::initOptions();
 
-int ComediDigitalIO::open( const string &device, const Options &opts )
+  addInteger("subdevice", "dummy descritpion", -1);
+  addInteger("startsubdevice", "dummy description", 0);
+}
+
+int ComediDigitalIO::open( const string &device )
 { 
   clearError();
   if ( isOpen() )
     return -5;
 
-  DigitalIO::open( device, opts );
+  DigitalIO::open( device );
 
   // open comedi device:
   DeviceP = comedi_open( device.c_str() );
@@ -75,7 +82,7 @@ int ComediDigitalIO::open( const string &device, const Options &opts )
   }
 
   // get DIO subdevice:
-  int subdev = opts.integer( "subdevice", 0, -1 );
+  int subdev = integer( "subdevice", 0, -1 );
   if ( subdev >= 0 ) {
     int diotype = comedi_get_subdevice_type( DeviceP, subdev );
     if ( diotype != COMEDI_SUBD_DI &&
@@ -88,7 +95,7 @@ int ComediDigitalIO::open( const string &device, const Options &opts )
     }
   }
   if ( subdev < 0 ) {
-    int startsubdev = opts.integer( "startsubdevice", 0, 0 );
+    int startsubdev = integer( "startsubdevice", 0, 0 );
     subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_DIO,
 					    startsubdev );
     if ( subdev < 0 ) {

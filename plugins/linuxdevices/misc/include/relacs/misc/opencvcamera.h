@@ -87,7 +87,7 @@ class OpenCVCamera : public Camera
 
   
 
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
   virtual bool isOpen( void ) const {return Opened; };
   virtual void close( void );
   virtual int reset( void );
@@ -111,6 +111,9 @@ class OpenCVCamera : public Camera
   Mat grabRawFrame(void);
   Mat grabFrame(bool undistort);
   QImage grabQImage(void);
+
+protected:
+  void initOptions() override;
 
  protected:
   bool Opened, Calibrated;

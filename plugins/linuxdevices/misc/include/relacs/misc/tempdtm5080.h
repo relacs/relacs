@@ -51,7 +51,7 @@ public:
   TempDTM5080( const string &device, const Options &opts );
   ~TempDTM5080( void );
 
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device );
   virtual bool isOpen( void ) const;
   virtual void close( void );
   virtual int reset( void );
@@ -60,6 +60,8 @@ public:
 
   void setProbe( int probe );
 
+protected:
+  void initOptions() override;
 
 private:
 

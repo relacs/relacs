@@ -74,6 +74,20 @@ Attenuate::~Attenuate( void )
   close();
 }
 
+void Attenuate::initOptions()
+{
+  Device::initOptions();
+
+  addInteger("line", "dummy description", 0);
+  addText("aodevice", "dummy description", "ao-1");
+  addInteger("aochannel", "dummy description", 0);
+  addText("intensityname", "dummy description", "intensity");
+  addText("intensityunit", "dummy description", "dB");
+  addText("intensityformat", "dummy description", "%6.2f");
+  addText("frequencyname", "dummy description", "");
+  addText("frequencyunit", "dummy description", "Hz");
+  addText("frequencyformat", "dummy description", "%7.0f");
+}
 
 int Attenuate::open( Device &att, int line )
 {
@@ -93,29 +107,29 @@ int Attenuate::open( Device &att, int line )
 }
 
 
-int Attenuate::open( Device &att, const Options &opts )
+int Attenuate::open( Device &att )
 {
-  int line = opts.integer( "line", 0, 0 );
+  int line = integer( "line", 0, 0 );
   int r = open( att, line );
-  setAODevice( opts.text( "aodevice", "ao-1" ) );
-  setAOChannel( opts.integer( "aochannel", 0, 0 ) );
-  if ( opts.exist( "intensityname" ) )
-    setIntensityName( opts.text( "intensityname" ) );
-  if ( opts.exist( "intensityunit" ) )
-    setIntensityUnit( opts.text( "intensityunit" ) );
-  if ( opts.exist( "intensityformat" ) )
-    setIntensityFormat( opts.text( "intensityformat" ) );
-  if ( opts.exist( "frequencyname" ) )
-    setFrequencyName( opts.text( "frequencyname" ) );
-  if ( opts.exist( "frequencyunit" ) )
-    setFrequencyUnit( opts.text( "frequencyunit" ) );
-  if ( opts.exist( "frequencyformat" ) )
-    setFrequencyFormat( opts.text( "frequencyformat" ) );
+  setAODevice( text( "aodevice", "ao-1" ) );
+  setAOChannel( integer( "aochannel", 0, 0 ) );
+  if ( exist( "intensityname" ) )
+    setIntensityName( text( "intensityname" ) );
+  if ( exist( "intensityunit" ) )
+    setIntensityUnit( text( "intensityunit" ) );
+  if ( exist( "intensityformat" ) )
+    setIntensityFormat( text( "intensityformat" ) );
+  if ( exist( "frequencyname" ) )
+    setFrequencyName( text( "frequencyname" ) );
+  if ( exist( "frequencyunit" ) )
+    setFrequencyUnit( text( "frequencyunit" ) );
+  if ( exist( "frequencyformat" ) )
+    setFrequencyFormat( text( "frequencyformat" ) );
   return r;
 }
 
 
-int Attenuate::open( const string &device, const Options &opts )
+int Attenuate::open( const string &device )
 {
   Info.clear();
   Settings.clear();
@@ -124,25 +138,25 @@ int Attenuate::open( const string &device, const Options &opts )
     return InvalidDevice;
   }
 
-  int line = opts.integer( "line", 0, 0 );
+  int line = integer( "line", 0, 0 );
   Att = 0;
   NoAttenuator = true;
   Index = line;
   setDeviceFile( device );
-  setAODevice( opts.text( "aodevice", "ao-1" ) );
-  setAOChannel( opts.integer( "aochannel", 0, 0 ) );
-  if ( opts.exist( "intensityname" ) )
-    setIntensityName( opts.text( "intensityname" ) );
-  if ( opts.exist( "intensityunit" ) )
-    setIntensityUnit( opts.text( "intensityunit" ) );
-  if ( opts.exist( "intensityformat" ) )
-    setIntensityFormat( opts.text( "intensityformat" ) );
-  if ( opts.exist( "frequencyname" ) )
-    setFrequencyName( opts.text( "frequencyname" ) );
-  if ( opts.exist( "frequencyunit" ) )
-    setFrequencyUnit( opts.text( "frequencyunit" ) );
-  if ( opts.exist( "frequencyformat" ) )
-    setFrequencyFormat( opts.text( "frequencyformat" ) );
+  setAODevice( text( "aodevice", "ao-1" ) );
+  setAOChannel( integer( "aochannel", 0, 0 ) );
+  if ( exist( "intensityname" ) )
+    setIntensityName( text( "intensityname" ) );
+  if ( exist( "intensityunit" ) )
+    setIntensityUnit( text( "intensityunit" ) );
+  if ( exist( "intensityformat" ) )
+    setIntensityFormat( text( "intensityformat" ) );
+  if ( exist( "frequencyname" ) )
+    setFrequencyName( text( "frequencyname" ) );
+  if ( exist( "frequencyunit" ) )
+    setFrequencyUnit( text( "frequencyunit" ) );
+  if ( exist( "frequencyformat" ) )
+    setFrequencyFormat( text( "frequencyformat" ) );
   return 0;
 }
 

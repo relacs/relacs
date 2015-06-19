@@ -92,8 +92,10 @@ public:
  	\return zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close() */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
 
+protected:
+  void initOptions() override;
 
 protected:
 

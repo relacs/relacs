@@ -63,8 +63,8 @@ public:
   CS3310DIO( void );
   virtual ~CS3310DIO( void );
 
-  virtual int open( DigitalIO &dio, const Options &opts );
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( DigitalIO &dio );
+  virtual int open( Device &device ) override;
   virtual bool isOpen( void ) const;
   virtual void close( void );
 
@@ -89,6 +89,8 @@ public:
   int setMute( bool mute=true );
   int calibrate( void );
 
+protected:
+  virtual void initOptions() override;
 
 private:
 

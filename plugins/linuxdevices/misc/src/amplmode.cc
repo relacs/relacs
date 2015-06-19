@@ -27,27 +27,10 @@ namespace misc {
 
 
 AmplMode::AmplMode( DigitalIO &dio, const Options &opts )
-  : Device( "AmplMode" ),
-    DIO( 0 )
+  : AmplMode()
 {
-  BridgePin = 0;
-  CurrentClampPin = 1;
-  VoltageClampPin = 2;
-  ResistancePin = 3;
-  BuzzerPin = 4;
-
-  BridgeMask = 0;
-  CurrentClampMask = 0;
-  VoltageClampMask = 0;
-  ResistanceMask = 0;
-  BuzzerMask = 0;
-
-  ModeMask = 0;
-  Mask = 0;
-
-  CurrentMode = 0;
-
-  open( dio, opts );
+  Options::read(opts);
+  open( dio );
 }
 
 
@@ -71,6 +54,8 @@ AmplMode::AmplMode( void )
   Mask = 0;
 
   CurrentMode = 0;
+
+  initOptions();
 }
 
 
@@ -79,8 +64,19 @@ AmplMode::~AmplMode( void )
   close();
 }
 
+void AmplMode::initOptions()
+{
+  Device::initOptions();
 
-int AmplMode::open( DigitalIO &dio, const Options &opts )
+  addInteger("bridgepin", "dummy description", BridgePin);
+  addInteger("cclamppin", "dummy description", CurrentClampPin);
+  addInteger("vclamppin", "dummy description", VoltageClampPin);
+  addInteger("resistancepin", "dummy description", ResistancePin);
+  addInteger("buzzerpin", "dummy description", BuzzerPin);
+}
+
+
+int AmplMode::open( DigitalIO &dio )
 {
   clearError();
   Info.clear();
@@ -89,11 +85,11 @@ int AmplMode::open( DigitalIO &dio, const Options &opts )
   DIO = &dio;
 
   if ( isOpen() ) {
-    BridgePin = opts.integer( "bridgepin", 0, BridgePin );
-    CurrentClampPin = opts.integer( "cclamppin", 0, CurrentClampPin );
-    VoltageClampPin = opts.integer( "vclamppin", 0, VoltageClampPin );
-    ResistancePin = opts.integer( "resistancepin", 0, ResistancePin );
-    BuzzerPin = opts.integer( "buzzerpin", 0, BuzzerPin );
+    BridgePin = integer( "bridgepin", 0, BridgePin );
+    CurrentClampPin = integer( "cclamppin", 0, CurrentClampPin );
+    VoltageClampPin = integer( "vclamppin", 0, VoltageClampPin );
+    ResistancePin = integer( "resistancepin", 0, ResistancePin );
+    BuzzerPin = integer( "buzzerpin", 0, BuzzerPin );
 
     BridgeMask = 1 << BridgePin;
     CurrentClampMask = 1 << CurrentClampPin;
@@ -110,7 +106,7 @@ int AmplMode::open( DigitalIO &dio, const Options &opts )
       return InvalidDevice;
     }
     else {
-      open( opts );
+      open();
       setDeviceFile( DIO->deviceIdent() );
       return 0;
     }
@@ -125,13 +121,13 @@ int AmplMode::open( DigitalIO &dio, const Options &opts )
 }
 
 
-int AmplMode::open( Device &device, const Options &opts )
+int AmplMode::open( Device &device )
 {
-  return open( dynamic_cast<DigitalIO&>( device ), opts );
+  return open( dynamic_cast<DigitalIO&>( device ) );
 }
 
 
-void AmplMode::open( const Options &opts )
+void AmplMode::open()
 {
   if ( isOpen() ) {
 

@@ -241,6 +241,9 @@ public slots:
     /*! Opens a dialog for editing the analog output traces. */
   void editOutputTraces( void );
 
+    /*! Opens a dialog for editing acitve devices. */
+  void editDevices();
+
     /*! Save settings to configuration files. */
   void saveConfig( void );
 

@@ -37,9 +37,9 @@ DynClampAOSim::~DynClampAOSim( void )
 }
 
 
-int DynClampAOSim::open( const string &device, const Options &opts )
+int DynClampAOSim::open( const string &device )
 {
-  AOSim::open( device, opts );
+  AOSim::open( device );
   dynclampmodelsim::generateLookupTables();
   setDeviceName( "Dynamic Clamp AO Simulation" );
   // publish information about the analog input device:
@@ -55,9 +55,9 @@ int DynClampAOSim::open( const string &device, const Options &opts )
 }
 
 
-int DynClampAOSim::open( Device &device, const Options &opts )
+int DynClampAOSim::open( Device &device )
 {
-  AOSim::open( device, opts );
+  AOSim::open( device );
   dynclampmodelsim::generateLookupTables();
   setDeviceName( "Dynamic Clamp AO Simulation" );
   setInfo();

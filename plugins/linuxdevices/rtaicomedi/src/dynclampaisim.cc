@@ -78,10 +78,9 @@ DynClampAISim::~DynClampAISim( void )
 {
 }
 
-
-int DynClampAISim::open( const string &device, const Options &opts )
+int DynClampAISim::open( const string &device )
 {
-  AISim::open( device, opts );
+  AISim::open( device );
   string es = dynclampmodelsim::initStatus( statusInput, statusInputNames, statusInputUnits );
   setDeviceName( "Dynamic Clamp AI Simulation" );
   // publish information about the analog input device:
@@ -99,9 +98,9 @@ int DynClampAISim::open( const string &device, const Options &opts )
 }
 
 
-int DynClampAISim::open( Device &device, const Options &opts )
+int DynClampAISim::open( Device &device )
 {
-  AISim::open( device, opts );
+  AISim::open( device );
   string es = dynclampmodelsim::initStatus( statusInput, statusInputNames, statusInputUnits );
   setDeviceName( "Dynamic Clamp AI Simulation" );
   setInfo();

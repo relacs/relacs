@@ -37,8 +37,7 @@ NIDIO::NIDIO( const string &device )
     Handle( -1 ),
     Pins( 0 )
 {
-  Options opts;
-  open( device, opts );
+  open( device );
 }
 
 
@@ -56,7 +55,7 @@ NIDIO::~NIDIO( void )
 }
 
 
-int NIDIO::open( const string &device, const Options &opts )
+int NIDIO::open( const string &device )
 {
   clearError();
   if ( Handle >= 0 )

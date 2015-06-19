@@ -34,10 +34,10 @@ namespace nieseries {
 
 
 NIPFI::NIPFI( const string &device, const Options &opts )
-  : Device( "NIPFI" ),
-    Handle( -1 )
+  : NIPFI()
 {
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -45,6 +45,7 @@ NIPFI::NIPFI( void )
   : Device( "NIPFI" ),
     Handle( -1 )
 {
+  initOptions();
 }
 
 
@@ -53,8 +54,14 @@ NIPFI::~NIPFI( void )
   close();
 }
 
+void NIPFI::initOptions()
+{
+  Device::initOptions();
 
-int NIPFI::open( const string &device, const Options &opts )
+  addInteger("config", "dummy parameter", 0);
+}
+
+int NIPFI::open( const string &device )
 {
   clearError();
   if ( Handle >= 0 )
@@ -71,7 +78,7 @@ int NIPFI::open( const string &device, const Options &opts )
   }
 
   // programm PFI pins as given by "config":
-  int config = opts.integer( "config", 0, 0 );
+  int config = integer( "config", 0, 0 );
   for ( int pin=0; pin<10; pin++ ) {
     if ( config & (1<<pin) )
       pinOut( pin );

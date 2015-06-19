@@ -32,11 +32,9 @@ namespace attcs3310 {
 
 
 CS3310DIO::CS3310DIO( DigitalIO *dio )
-  : Attenuator( "CS3310DIO" ),
-    DIO( 0 )
+  : CS3310DIO()
 {
-  Options opts;
-  open( *dio, opts );
+  open( *dio );
 }
 
 
@@ -44,6 +42,7 @@ CS3310DIO::CS3310DIO( void )
   : Attenuator( "CS3310DIO" ),
     DIO( 0 )
 {
+  initOptions();
 }
 
 
@@ -51,8 +50,14 @@ CS3310DIO::~CS3310DIO( void )
 {
 }
 
+void CS3310DIO::initOptions()
+{
+  Attenuator::initOptions();
 
-int CS3310DIO::open( DigitalIO &dio, const Options &opts )
+  addBoolean("zerocrossing", "dummy descriptions", false);
+}
+
+int CS3310DIO::open( DigitalIO &dio)
 {
   clearError();
   DIO = &dio;
@@ -86,7 +91,7 @@ int CS3310DIO::open( DigitalIO &dio, const Options &opts )
       }
       else {
 	setDeviceFile( dio.deviceIdent() );
-	return open( opts.boolean( "zerocrossing", false ) );
+  return open( boolean( "zerocrossing", false ) );
       }
     }
   }
@@ -103,9 +108,9 @@ int CS3310DIO::open( DigitalIO &dio, const Options &opts )
 }
 
 
-int CS3310DIO::open( Device &device, const Options &opts )
+int CS3310DIO::open( Device &device )
 {
-  return open( dynamic_cast<DigitalIO&>( device ), opts );
+  return open( dynamic_cast<DigitalIO&>( device ) );
 }
 
 
@@ -136,7 +141,7 @@ int CS3310DIO::open( bool zerocrossing )
   // check if attenuator is working:
   int ar = 0;
   // get some random attenuation level:
-  srand ( time( NULL ) );
+  srand ( ::time( NULL ) );
   int rl = rand() % 20 - 10;
   // set attenuation:
   Level[0] = ZeroGain/2 + rl;

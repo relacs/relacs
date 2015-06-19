@@ -50,7 +50,7 @@ public:
   ~NIAI( void );           
 
     /*! Open the analog input on device file \a device. */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Returns true if the device is open. */
   virtual bool isOpen( void ) const;
     /*! Close the device. */

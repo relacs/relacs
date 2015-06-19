@@ -47,9 +47,9 @@ public:
   ~AOSim( void );           
 
     /*! Open the analog output device simulation */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Open the analog output device simulation. */
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( Device &device ) override;
     /*! Returns true. */
   virtual bool isOpen( void ) const;
     /*! Close the device simulation. */
@@ -96,6 +96,8 @@ public:
     /*! Test settings for analog output on the device
         for each output signal in \a sigs. */
   virtual int testWriteDevice( OutList &sigs );
+
+  void initOptions() override;
 
 };
 

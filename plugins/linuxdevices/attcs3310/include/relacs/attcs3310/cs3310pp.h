@@ -96,7 +96,7 @@ public:
   CS3310PP( void );
   virtual ~CS3310PP( void );
 
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
   virtual bool isOpen( void ) const;
   virtual void close( void );
 

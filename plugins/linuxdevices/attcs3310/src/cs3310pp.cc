@@ -36,11 +36,9 @@ namespace attcs3310 {
 
 
 CS3310PP::CS3310PP( const string &device )
-  : Attenuator( "CS3310PP" ),
-    Handle( -1 )
+  : CS3310PP()
 {
-  Options opts;
-  open( device, opts );
+  open( device );
 }
 
 
@@ -48,6 +46,7 @@ CS3310PP::CS3310PP( void )
   : Attenuator( "CS3310PP" ),
     Handle( -1 )
 {
+  initOptions();
 }
 
 
@@ -57,7 +56,7 @@ CS3310PP::~CS3310PP( void )
 }
 
 
-int CS3310PP::open( const string &device, const Options &opts )
+int CS3310PP::open( const string &device )
 {
   clearError();
   Info.clear();

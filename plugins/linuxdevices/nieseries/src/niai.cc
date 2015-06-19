@@ -57,7 +57,8 @@ NIAI::NIAI( const string &device, const Options &opts )
   BufferN = 0;
   Buffer = NULL;
   TraceIndex = 0;
-  open( device, opts );
+  Options::read(opts);
+  open( device );
 }
 
 
@@ -67,7 +68,7 @@ NIAI::~NIAI( void )
 }
 
 
-int NIAI::open( const string &device, const Options &opts )
+int NIAI::open( const string &device )
 {
   clearError();
   if ( isOpen() )

@@ -112,7 +112,7 @@ public:
   DAQFlexCore( const string &device, const Options &opts );
   ~DAQFlexCore( void );
 
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
   virtual bool isOpen( void ) const;
   virtual void close( void );
   virtual int reset( void );
@@ -193,6 +193,8 @@ public:
     /*! \return a descriptive string for \a error. */
   string daqflexErrorStr( DAQFlexError error ) const;
 
+protected:
+  void initOptions() override;
 
  private:
 

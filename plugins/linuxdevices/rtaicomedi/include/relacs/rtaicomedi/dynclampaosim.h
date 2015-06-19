@@ -48,9 +48,9 @@ public:
   ~DynClampAOSim( void );           
 
     /*! Open the analog output device simulation */
-  virtual int open( const string &device, const Options &opts );
+  virtual int open( const string &device ) override;
     /*! Open the analog output device simulation. */
-  virtual int open( Device &device, const Options &opts );
+  virtual int open( Device &device ) override;
 
     /*! Returns \c true to indicate that the analog output is required to have the
         same sampling rate as the analog input returned by getAISyncDevice(). */
