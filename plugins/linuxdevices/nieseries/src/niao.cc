@@ -64,7 +64,7 @@ void NIAO::initOptions()
 {
   AnalogInput::initOptions();
 
-  addNumber("extref", "dummy description", -1.0, "V");
+  addNumber( "extref", "Voltage of external reference", -1.0, -1.0, 100.0, 0.1, "V" );
 }
 
 int NIAO::open( const string &device )

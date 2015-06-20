@@ -58,7 +58,7 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts
   : DAQFlexAnalogInput()
 {
   Options::read(opts);
-  open( device );
+  addBoolean( "takeao", "Start analog output in a single instruction", true );
 }
 
 

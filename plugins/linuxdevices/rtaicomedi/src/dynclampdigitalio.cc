@@ -37,6 +37,9 @@ using namespace relacs;
 namespace rtaicomedi {
 
 
+  const string DynClampDigitalIO::TTLCommands[7] = { "startwrite", "endwrite", "startread", "endread", "startao", "endao", "none" };
+
+
 DynClampDigitalIO::DynClampDigitalIO( void ) 
   : DigitalIO( "DynClampDigitalIO" )
 {
@@ -68,18 +71,21 @@ void DynClampDigitalIO::initOptions()
 {
   DigitalIO::initOptions();
 
-  for (int i = 1; i < 5; ++i)
-  {
+  DigitalIO::initOptions();
+
+  addInteger( "subdevice", "Subdevice number of digital I/O device to be used", -1, -1, 100 );
+  addInteger( "startsubdevice", "Start searching for digital I/O device at subdevice number", 0, 0, 100 ).setActivation( "subdevice", "<0" );
+  for (int i = 1; i < 5; ++i) {
     std::string idx = Str(i);
-    addInteger("ttlpulse" + idx + "line", "dummy description", -1);
-    addText("ttlpulse" + idx + "high", "dummy description", -1);
-    addText("ttlpulse" + idx + "low", "dummy description", -1);
+    addInteger( "ttlpulse" + idx + "line", "DIO line for generating a TTL pulse", -1 );
+    addSelection( "ttlpulse" + idx + "high", "Event that sets TTL pulse high", -1 );
+    addSelection( "ttlpulse" + idx + "low", "Event that sets TTL pulse low", -1 );
   }
-  addInteger("syncpulseline", "dummy description", -1);
-  addNumber("syncpulsewidth", "dummy description", 0.0, "s");
+  addInteger( "syncpulseline", "DIO line for switch-cycle synchronization of amplifier", -1 );
+  addNumber( "syncpulsewidth", "Duration of current injection", 0.0, 0.0, 0.01, 0.000001, "s", "us" );
 }
 
-int DynClampDigitalIO::open( const string &device)
+int DynClampDigitalIO::open( const string &device )
 { 
   clearError();
   if ( isOpen() )
@@ -92,10 +98,10 @@ int DynClampDigitalIO::open( const string &device)
   }
 
   // open user space coemdi:
+  CDIO->Options::read( *this );
   int retval = CDIO->open( device );
-  if ( retval != 0 ) {
+  if ( retval != 0 )
     return retval;
-  }
 
   // copy information not available after CDIO->close()
   SubDevice = CDIO->comediSubdevice();
@@ -137,7 +143,6 @@ int DynClampDigitalIO::open( const string &device)
   setInfo();
 
   // set up TTL pulses:
-  const string ttlcoms[6] = { "startwrite", "endwrite", "startread", "endread", "startao", "endao" };
   int id = -1;
   for ( int k=1; k<5; k++ ) {
     string ns = Str( k );
@@ -146,10 +151,10 @@ int DynClampDigitalIO::open( const string &device)
       continue;
     string highcom = text( "ttlpulse" + ns + "high", 0 );
     int high = TTL_START_WRITE;
-    for ( ; high != TTL_UNDEFINED && highcom != ttlcoms[high]; ++high );
+    for ( ; high != TTL_UNDEFINED && highcom != TTLCommands[high]; ++high );
     string lowcom = text( "ttlpulse" + ns + "low", 0 );
     int low = TTL_START_WRITE;
-    for ( ; low != TTL_UNDEFINED && lowcom != ttlcoms[low]; ++low );
+    for ( ; low != TTL_UNDEFINED && lowcom != TTLCommands[low]; ++low );
     if ( id < 0 ) {
       id = allocateLine( line );
       if ( id == WriteError )
@@ -222,12 +227,11 @@ const Options &DynClampDigitalIO::settings( void ) const
 {
   DigitalIO::settings();
   
-  const string ttlcoms[7] = { "startwrite", "endwrite", "startread", "endread", "startao", "endao", "none" };
   for ( int k=0; k<MaxDIOLines; k++ ) {
     if ( TTLPulseHigh[k] != TTL_UNDEFINED || 
 	 TTLPulseLow[k] != TTL_UNDEFINED ) {
-      Settings.addText( "line"+Str(k)+"_ttlpulsehigh", ttlcoms[TTLPulseHigh[k]] );
-      Settings.addText( "line"+Str(k)+"_ttlpulselow", ttlcoms[TTLPulseLow[k]] );
+      Settings.addText( "line"+Str(k)+"_ttlpulsehigh", TTLCommands[TTLPulseHigh[k]] );
+      Settings.addText( "line"+Str(k)+"_ttlpulselow", TTLCommands[TTLPulseLow[k]] );
     }
   }
 

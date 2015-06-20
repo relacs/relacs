@@ -84,9 +84,9 @@ void DAQFlexCore::initOptions()
 {
   Device::initOptions();
 
-  addText("serialno", "dummy parameter", "");
-  addInteger("devicenum", "dummy parameter", 1);
-  addText("firmwarepath", "dummy parameter", "");
+  addText( "serialno", "Serial number of DAQFlex device", "" );
+  addInteger( "devicenum", "Take DAQFlex device number", 1 );
+  addText( "firmwarepath", "Path to firmware files", "" );
 }
 
 int DAQFlexCore::open( const string &devicestr )
@@ -203,6 +203,8 @@ int DAQFlexCore::open( const string &devicestr )
   }
   else {
     Str path = text( "firmwarepath" );
+    if ( path.empty() )
+      path = DefaultFirmwarePath;
     path.provideSlash();
     initDevice( path );
     if ( ErrorState != Success ) {

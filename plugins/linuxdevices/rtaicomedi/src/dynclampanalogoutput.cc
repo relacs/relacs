@@ -84,7 +84,7 @@ void DynClampAnalogOutput::initOptions()
 {
   AnalogOutput::initOptions();
 
-  addNumber("extref", "dummy description", -1.0, "V");
+  addNumber( "extref", "Voltage of external reference", -1.0, -1.0, 100.0, 0.1, "V" );
 }
 
 int DynClampAnalogOutput::open( const string &device )

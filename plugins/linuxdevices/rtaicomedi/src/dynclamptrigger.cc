@@ -60,13 +60,15 @@ DynClampTrigger::~DynClampTrigger( void )
   close();
 }
 
+
 void DynClampTrigger::initOptions()
 {
   Trigger::initOptions();
 
-  addText("aidevice", "dummy description", "");
-  addInteger("aichannel", "dummy parameter", 0);
+  addText( "aidevice", "Analog input device file", "" );
+  addInteger( "aichannel", "Analog input channel", 0, 0, 1000 );
 }
+
 
 int DynClampTrigger::open( const string &device )
 { 

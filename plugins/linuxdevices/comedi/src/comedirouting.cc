@@ -61,9 +61,9 @@ void ComediRouting::initOptions()
 {
   Device::initOptions();
 
-  addInteger("subdevice", "dummy description", -1);
-  addInteger("channel", "dummy description", -1);
-  addInteger("routing", "dummy description", -1);
+  addInteger( "subdevice", "Subdevice number", -1, -1, 100 );
+  addInteger( "channel", "Channel", -1, -1, 10000 );
+  addInteger( "routing", "Routed signal", -1, 0, 10000 );
 }
 
 int ComediRouting::open( const string &device )

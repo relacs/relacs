@@ -80,8 +80,8 @@ void ComediAnalogInput::initOptions()
 {
   AnalogInput::initOptions();
 
-  addNumber("gainblacklist", "dummy description", 0);
-  addBoolean("takeao", "dummy description", true);
+  addNumber( "gainblacklist", "Ranges not to be used", 0.0, 0.0, 100.0, 0.1, "V" );
+  addBoolean( "takeao", "Start analog output in a single instruction", true );
 }
 
 int ComediAnalogInput::open( const string &device )

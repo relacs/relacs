@@ -64,7 +64,7 @@ void DAQFlexAnalogOutput::initOptions()
 {
   AnalogOutput::initOptions();
 
-  addNumber("delays", "dummy description", 0);
+  addNumber( "delays", "Delay between analog input and output", 0.0, 0.0, 1.0, 0.0001, "s", "ms" );
 }
 
 int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice )

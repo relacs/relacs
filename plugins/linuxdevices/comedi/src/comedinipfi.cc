@@ -64,9 +64,14 @@ void ComediNIPFI::initOptions()
 {
   ComediRouting::initOptions();
 
-  addInteger("channel", "dummy description", -1);
-  addInteger("routing", "dummy description", -1);
-  addText("routing", "dummy description", "");
+  addInteger( "channel", "PFI channel", -1 );
+  string pfisignals = "";
+  for ( int k=0; k<PFISignalsMax; k++ ) {
+    if ( k > 0 )
+      pfisignals += "|";
+    pfisignals += PFISignals[k];
+   }
+  addSelection( "routing", "Signal to be routed", pfisignals );
 }
 
 

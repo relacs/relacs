@@ -62,8 +62,8 @@ void ComediDigitalIO::initOptions()
 {
   DigitalIO::initOptions();
 
-  addInteger("subdevice", "dummy descritpion", -1);
-  addInteger("startsubdevice", "dummy description", 0);
+  addInteger( "subdevice", "Subdevice number of digital I/O device to be used", -1, -1, 100 );
+  addInteger( "startsubdevice", "Start searching for digital I/O device at subdevice number", 0, 0, 100 ).setActivation( "subdevice", "<0" );
 }
 
 int ComediDigitalIO::open( const string &device )

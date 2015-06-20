@@ -82,7 +82,7 @@ void DynClampAnalogInput::initOptions()
 {
   AnalogInput::initOptions();
 
-  addNumber("gainblacklist", "dummy description", 0);
+  addNumber( "gainblacklist", "Ranges not to be used", 0.0, 0.0, 100.0, 0.1, "V" );
 }
 
 int DynClampAnalogInput::open( const string &device)

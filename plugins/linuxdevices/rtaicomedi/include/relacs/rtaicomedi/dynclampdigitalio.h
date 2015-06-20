@@ -174,8 +174,13 @@ public:
     /*! Disable TTL Pulse generation and current scaling. \sa setSyncPulse() */
   virtual int clearSyncPulse( void );
 
+
 protected:
+
   void initOptions() override;
+
+  static const string TTLCommands[7];
+
 
 private:
 
