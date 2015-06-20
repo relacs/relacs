@@ -94,7 +94,7 @@ int DynClampTrigger::open( const string &device )
   AIDevice = text( "aidevice" );
   AIChannel = integer( "aichannel" );
 
-  if ( set( opts ) > 0 )
+  if ( set() > 0 )
     activate();
 
   return 0;

@@ -52,6 +52,9 @@ public:
     /*! Open the analog output device simulation. */
   virtual int open( Device &device ) override;
 
+    /*! Prepare analog output of the output signals \a sigs on the device. */
+  virtual int prepareWrite( OutList &sigs );
+
     /*! Returns \c true to indicate that the analog output is required to have the
         same sampling rate as the analog input returned by getAISyncDevice(). */
   virtual bool useAIRate( void ) const;

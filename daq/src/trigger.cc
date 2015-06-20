@@ -152,19 +152,19 @@ void Trigger::setTrough( double threshold, double alevel, double blevel )
 }
 
 
-int Trigger::set( const Options &opts )
+int Trigger::set( void )
 {
   clear();
 
   // read parameter:
-  string ttype = opts.text( "type" );
+  string ttype = text( "type" );
   double alevel = 0.0;
-  if ( opts.exist( "level" ) )
-    alevel = opts.number( "level" );
+  if ( exist( "level" ) )
+    alevel = number( "level" );
   else
-    alevel = opts.number( "alevel" );
-  double blevel = opts.number( "blevel" );
-  double threshold = opts.number( "threshold" );
+    alevel = number( "alevel" );
+  double blevel = number( "blevel" );
+  double threshold = number( "threshold" );
 
   // setup trigger parameter:
   if ( ttype == "rising" )

@@ -1416,16 +1416,19 @@ void PlotTrace::displayIndex( const string &fpath, const deque<int> &traceindex,
 	FileHeader = header;
 
       // create traces:
+      const Options *aiopts = &FileHeader.section( "analog input traces" );
+      if ( aiopts->empty() )
+	aiopts = &FileHeader;
       for ( int k=1; ; k++ ) {
-	string tracename = FileHeader.text( "identifier" + Str( k ), "" );
+	string tracename = aiopts->text( "identifier" + Str( k ), "" );
 	if ( tracename.empty() )
 	  break;
-	string tracefile = FileHeader.text( "data file" + Str( k ) );
-	double tracestep = FileHeader.number( "sample interval" + Str( k ), "ms" );
+	string tracefile = aiopts->text( "data file" + Str( k ) );
+	double tracestep = aiopts->number( "sample interval" + Str( k ), "ms" );
 	// we need to guess the exact rate:
 	double rate = ::round( 1.0/tracestep );
 	tracestep = 0.001/rate;
-	string traceunit = FileHeader.text( "unit" + Str( k ) );
+	string traceunit = aiopts->text( "unit" + Str( k ) );
 
 	InData id;
 	id.setIdent( tracename );

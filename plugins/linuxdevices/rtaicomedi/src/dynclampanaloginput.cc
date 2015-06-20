@@ -680,7 +680,7 @@ int DynClampAnalogInput::readData( void )
   // try to read twice
   for ( int tryit = 0; tryit < 1 && ! failed && maxn > 0; tryit++ ) {
     // read data:
-    ssize_t m = read( FifoFd, Buffer + readn, maxn );
+    ssize_t m = ::read( FifoFd, Buffer + readn, maxn );
     //ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 1000 );
 
     int ern = errno;

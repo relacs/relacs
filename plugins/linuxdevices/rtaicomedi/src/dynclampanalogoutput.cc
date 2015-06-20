@@ -70,7 +70,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
 					    const Options &opts ) 
   : DynClampAnalogOutput()
 {
-  Options::read(opts)
+  Options::read(opts);
   open( device );
 }
 

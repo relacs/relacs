@@ -405,8 +405,20 @@ void MembraneResistance::plot( void )
     P.plot( MeanVoltage-StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
   }
   P.plot( MeanVoltage, 1000.0, Plot::Red, 3, Plot::Solid );
-  P.plot( ExpOn, 1000.0, Plot::Yellow, 2, Plot::Solid );
-  P.plot( ExpOff, 1000.0, Plot::Yellow, 2, Plot::Solid );
+  double minv = 0.0;
+  double maxv = 0.0;
+  minMax( minv, maxv, MeanVoltage );
+  double deltav = 5.0*(maxv - minv);
+  float minexpon = 0.0;
+  float maxexpon = 0.0;
+  minMax( minexpon, maxexpon, ExpOn );
+  if ( minexpon > minv - deltav && maxexpon < maxv + deltav )
+    P.plot( ExpOn, 1000.0, Plot::Yellow, 2, Plot::Solid );
+  float minexpoff = 0.0;
+  float maxexpoff = 0.0;
+  minMax( minexpoff, maxexpoff, ExpOff );
+  if ( minexpoff > minv - deltav && maxexpoff < maxv + deltav )
+    P.plot( ExpOff, 1000.0, Plot::Yellow, 2, Plot::Solid );
   P.draw();
   P.unlock();
 }
@@ -446,7 +458,7 @@ void MembraneResistance::save( void )
     // all outputs must be at 0:
     lockStimulusData();
     for ( int k=0; k<outTracesSize(); k++ ) {
-      if ( fabs( stimulusData().number( outTraceName( k ) ) ) > 1.0e-6 ) {
+      if ( fabs( stimulusData().number( outTraceName( k ) ) - stimulusData().defaultNumber( outTraceName( k ) ) ) > 1.0e-6 ) {
 	setdata = false;
 	break;
       }

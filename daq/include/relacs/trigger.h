@@ -247,10 +247,10 @@ public:
 	\return 1 if some trigger operation was defined by \a opts.
         This function should be used in open() like
         \code
-        if ( set( opts ) > 0 )
+        if ( set() > 0 )
           activate();
         \endcode */
-  int set( const Options &opts );
+  int set( void );
 
     /*! Add a new hoop to the trigger chain.
         All subsequent calls to the set* functions configure the new hoop.

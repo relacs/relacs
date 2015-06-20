@@ -199,6 +199,8 @@ protected:
     /*! True if analog input was prepared using testReadDevice() and prepareRead() */
   bool prepared( void ) const;
 
+  void initOptions() override;
+
 
 private:
 
