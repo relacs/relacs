@@ -115,6 +115,9 @@ private:
   /*! Edits options of a certain device */
   void openEditDeviceDialog(Tree<ActiveData>::Group::Entry* entry);
 
+  /*! Checks if there are conflicts with other options, returns true if there aren't any conflicts */
+  bool checkConflicts(Options* options);
+
 private slots:
   /*! Slot for activate button */
   void activateDevice();

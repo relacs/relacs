@@ -21,6 +21,7 @@
 
 #include <relacs/deviceselector.h>
 
+#include <memory>
 #include <iostream>
 #include <QPushButton>
 #include <QList>
@@ -373,14 +374,18 @@ void DeviceSelector::initActive()
 
 void DeviceSelector::openEditDeviceDialog(Tree<ActiveData>::Group::Entry* entry)
 {
-  OptDialog* od = new OptDialog(true, this);
-  od->setCaption("Device options");
-  od->addOptions(entry->data.options);
-  od->addButton( "&Ok", OptDialog::Accept, DeviceSelector::CODE_OK );
-  od->addButton( "&Cancel" );
-  int code = od->exec();
-  if (code != DeviceSelector::CODE_OK)
-    return;
+  do
+  {
+    OptDialog* od = new OptDialog(true, this);
+    od->setCaption("Device options");
+    od->addOptions(entry->data.options);
+    od->addButton( "&Ok", OptDialog::Accept, DeviceSelector::CODE_OK );
+    od->addButton( "&Cancel" );
+    int code = od->exec();
+    if (code != DeviceSelector::CODE_OK)
+      return;
+
+  } while (!checkConflicts(&entry->data.options));
 
   entry->item->setText(0, entry->data.options.text("plugin").c_str());
   entry->item->setText(1, entry->data.options.text("ident").c_str());
@@ -393,19 +398,49 @@ void DeviceSelector::openCreateDeviceDialog(int type, int pluginIndex, const std
 
   device->setText("plugin", pluginName);
 
-  OptDialog* dia = new OptDialog(true, this);
-  dia->setCaption("Create device");
-  dia->addOptions(*device);
-  dia->addButton( "&Ok", OptDialog::Accept, DeviceSelector::CODE_OK );
-  dia->addButton( "&Cancel" );
-  int code = dia->exec();
-  if (code != DeviceSelector::CODE_OK)
-    return;
+  do
+  {
+    OptDialog* dia = new OptDialog(true, this);
+    dia->setCaption("Create device");
+    dia->addOptions(*device);
+    dia->addButton( "&Ok", OptDialog::Accept, DeviceSelector::CODE_OK );
+    dia->addButton( "&Cancel" );
+    int code = dia->exec();
+    if (code != DeviceSelector::CODE_OK)
+    {
+      delete device;
+      Plugins::destroy(pluginIndex);
+      return;
+    }
+  } while (!checkConflicts(device));
 
   addActiveDevice(TreeActive.groups[convertPluginIdToDeviceType(type)], device);
 
   delete device;
   Plugins::destroy(pluginIndex);
+}
+
+bool DeviceSelector::checkConflicts(Options* options)
+{
+  /// ident must be unique
+  std::set<std::string> idents;
+  for (auto&& group : TreeActive.groups)
+    for (auto&& entry : group.second.entries)
+      if (&entry.second.data.options != options)
+        idents.insert(entry.second.data.options.text("ident"));
+
+  bool fail = false;
+  if (idents.find(options->text("ident")) != idents.end())
+  {
+    fail |= true;
+
+    QMessageBox::warning(this,
+                         "Duplicated Ident",
+                         QString::fromStdString("This ident is already in use: " + options->text("ident")),
+                         QMessageBox::StandardButton::Ok);
+  }
+
+  return !fail;
 }
 
 }
