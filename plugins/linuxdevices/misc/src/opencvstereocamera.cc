@@ -61,11 +61,11 @@ void OpenCVStereoCamera::initOptions()
 {
   Camera::initOptions();
 
-  addText("leftcam", "dummy description", "");
-  addText("rightcam", "dummy description", "");
-  addText("parameters", "dummy description", "");
-  addText("leftparam", "dummy description", "");
-  addText("rightparam", "dummy description", "");
+  addText("leftcam", "Left camera", "");
+  addText("rightcam", "Right camera", "");
+  addText("parameters", "Parameters", "");
+  addText("leftparam", "Left parameters", "");
+  addText("rightparam", "Right parameters", "");
 }
 
 

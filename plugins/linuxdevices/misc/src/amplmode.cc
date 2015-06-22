@@ -68,11 +68,11 @@ void AmplMode::initOptions()
 {
   Device::initOptions();
 
-  addInteger("bridgepin", "dummy description", BridgePin);
-  addInteger("cclamppin", "dummy description", CurrentClampPin);
-  addInteger("vclamppin", "dummy description", VoltageClampPin);
-  addInteger("resistancepin", "dummy description", ResistancePin);
-  addInteger("buzzerpin", "dummy description", BuzzerPin);
+  addInteger( "bridgepin", "DIO line for activating bridge mode", BridgePin );
+  addInteger( "cclamppin", "DIO line for activating current clamp mode", CurrentClampPin );
+  addInteger( "vclamppin", "DIO line for activating voltage clamp mode", VoltageClampPin );
+  addInteger( "resistancepin", "DIO line for activating resistance measurement", ResistancePin );
+  addInteger( "buzzerpin", "DIO line for activating buzzer", BuzzerPin );
 }
 
 

@@ -54,11 +54,12 @@ Device::~Device( void )
 {
 }
 
+
 void Device::initOptions()
 {
-  addText("plugin", "plugin", "");
-  addText("ident", "ident", "");
-  addText("device", "device", "");
+  addText( "plugin", "Plugin", "" );
+  addText( "ident", "Ident", "" );
+  addText( "device", "Device", "" );
 }
 
 

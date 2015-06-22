@@ -261,8 +261,9 @@ public:
 	\note Since most trigger devices do not have the concept of
 	several hoops, they might simply ignore any of the hoops
 	except for the first one.
+	\return 0 on success, -1 if there are already too many hoops defined
 	\sa setCrossing(), setPeakTrough() */
-  void addHoop( double delay, double width );
+  int addHoop( double delay, double width );
 
     /*! Clear all settings.
         The next call of a set* function will specify the first hoop.
@@ -301,6 +302,9 @@ public:
 
 protected:
 
+    /*! Intializes available options */
+  virtual void initOptions( void );
+
     /*! All parameter for a single trigger hoop. */
   struct HoopParams {
     int ACrossing;
@@ -315,8 +319,10 @@ protected:
     double Width;
     double Threshold;
   };
+    /*! Maximum number of supported trigger hoops. */
+  static const int MaxHoops = 5;
     /*! The parameter of the trigger hoops. */
-  HoopParams Hoop[5];
+  HoopParams Hoop[MaxHoops];
     /*! The number of hoops minus one. */
   int Hoops;
 

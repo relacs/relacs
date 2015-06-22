@@ -58,7 +58,7 @@ public:
 
   virtual double temperature( void );
 
-  void setProbe( int probe );
+  void setProbe( void );
 
 protected:
   void initOptions() override;

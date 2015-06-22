@@ -28,6 +28,7 @@ Trigger::Trigger( void )
   : Device( TriggerType ),
     Hoops( 0 )
 {
+  initOptions();
 }
 
 
@@ -35,6 +36,16 @@ Trigger::Trigger( const string &deviceclass )
   : Device( deviceclass, TriggerType ),
     Hoops( 0 )
 {
+  initOptions();
+}
+
+
+void Trigger::initOptions()
+{
+  addSelection( "type", "Trigger event", "rising|falling|risinghysteresis|fallinghysteresis|window|peak|trough|peakabove|troughbelow|peakwindow|troughwindow" );
+  addNumber( "alevel", "A level", 0.0, -10000.0, 10000.0, 0.1 );
+  addNumber( "blevel", "B level", 0.0, -10000.0, 10000.0, 0.1 );
+  addNumber( "threshold", "threshold", 0.0, -10000.0, 10000.0, 0.1 );
 }
 
 
@@ -158,11 +169,7 @@ int Trigger::set( void )
 
   // read parameter:
   string ttype = text( "type" );
-  double alevel = 0.0;
-  if ( exist( "level" ) )
-    alevel = number( "level" );
-  else
-    alevel = number( "alevel" );
+  double alevel = number( "alevel" );
   double blevel = number( "blevel" );
   double threshold = number( "threshold" );
 
@@ -196,8 +203,10 @@ int Trigger::set( void )
 }
 
 
-void Trigger::addHoop( double delay, double width )
+int Trigger::addHoop( double delay, double width )
 {
+  if ( Hoops+1 >= MaxHoops )
+    return -1;
   Hoops++;
   Hoop[Hoops].Delay = delay;
   Hoop[Hoops].Width = width;
@@ -210,6 +219,7 @@ void Trigger::addHoop( double delay, double width )
   Hoop[Hoops].ALevel = 0.0;
   Hoop[Hoops].BLevel = 0.0;
   Hoop[Hoops].Threshold = 0.0;
+  return 0;
 }
 
 

@@ -65,7 +65,7 @@ void TempDTM5080::initOptions()
 {
   Temperature::initOptions();
 
-  addInteger("probe", "dummy parameter", 1);
+  addSelection( "probe", "Type of temperature probe", "Pt100|Ni100|R380Ohm|Pt1000|Ni1000|R2.5kOhm" );
 }
 
 
@@ -106,8 +106,7 @@ int TempDTM5080::open( const string &device )
   tcflush( Handle, TCIFLUSH );
   tcsetattr( Handle, TCSANOW, &NewTIO );
 
-  int probe = integer( "probe", 0, 1 );
-  setProbe( probe );
+  setProbe();
 
   setDeviceName( "DTM5080" );
   setDeviceVendor( "LKM electronic GmbH (Geraberg, Germany)" );
@@ -171,9 +170,11 @@ double TempDTM5080::temperature( void )
   }
   else {
     char com = 'd';
-    write( Handle, &com, 1 );
+    int n = write( Handle, &com, 1 );
+    if ( n != 1 )
+      cerr << "failed to write temperature command\n";
     char buf[10];
-    int n = ::read( Handle, buf, 10 );
+    n = ::read( Handle, buf, 10 );
     if ( n > 0 && buf[n-1] == ':' ) {
       buf[n-1] = '\0';
       char *ep = NULL;
@@ -189,22 +190,25 @@ double TempDTM5080::temperature( void )
 }
 
 
-void TempDTM5080::setProbe( int probe )
+void TempDTM5080::setProbe( void )
 {
   if ( Handle < 0 ) {
     cout << "TempDTM5080 not opened!\n";
   }
   else {
+    int probe = index( "probe" ) + 1;
     // XXX check probe value!
     char com[10];
     sprintf( com, "b%d", probe );
-    write( Handle, com, 2 );
+    int n = write( Handle, com, 2 );
+    if ( n != 2 )
+      cerr << "failed to write probe value\n";
     char buf[10];
-    int n = ::read( Handle, buf, 10 );
+    n = ::read( Handle, buf, 10 );
     if ( n != 1 && buf[0] != ':' )
-      cout << "failed to set probe: " << buf << endl;
+      cerr << "failed to set probe: " << buf << '\n';
     Probe = probe;
-    Settings.setInteger( "probe", Probe );
+    Settings.setText( "probe", text( "probe" ) );
   }
 }
 

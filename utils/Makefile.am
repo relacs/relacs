@@ -5,6 +5,7 @@ dist_bin_SCRIPTS = \
 EXTRA_DIST = \
     relacsstats \
     bin2dat.doc \
+    raw2wav.py \
     remotebackup \
     scaninf scaninf.doc
 #    RELACS.desktop

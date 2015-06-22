@@ -54,7 +54,7 @@ void CS3310DIO::initOptions()
 {
   Attenuator::initOptions();
 
-  addBoolean("zerocrossing", "dummy descriptions", false);
+  addBoolean( "zerocrossing", "Set attenuation level only at a zero crossing of the input", false );
 }
 
 int CS3310DIO::open( DigitalIO &dio)
@@ -91,7 +91,7 @@ int CS3310DIO::open( DigitalIO &dio)
       }
       else {
 	setDeviceFile( dio.deviceIdent() );
-  return open( boolean( "zerocrossing", false ) );
+	return open( boolean( "zerocrossing", false ) );
       }
     }
   }

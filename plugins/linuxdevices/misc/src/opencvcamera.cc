@@ -167,10 +167,10 @@ namespace misc {
   {
     Camera::initOptions();
 
-    addText("device", "dummy description", "");
-    addText("framerate", "dummy description", "");
-    addText("buffernlen", "dummy description", "");
-    addText("parameters", "dummy description", "");
+    addInteger( "device", "Camera device number", 0, 0, 1000 );
+    addInteger( "framerate", "Frame rate", 20, 0, 10000 ).setUnit( "Hz" );
+    addInteger( "bufferlen", "Buffer len", 1000, 0, 10000000 );
+    addText( "parameters", "Parameter file", "" ).setStyle( OptWidget::BrowseExisting );
   }
 
 
@@ -182,20 +182,20 @@ namespace misc {
 
     Opened = true;
     // load camera number and frame rate
-    CameraNo = atoi(text("device").c_str());
-    FrameRate = atoi(text("framerate").c_str());
-    int blen = atoi(text("bufferlen").c_str());
+    CameraNo = integer("device");
+    FrameRate = integer("framerate");
+    int blen = integer("bufferlen");
 
-    Info.addInteger("device",CameraNo);
-    Info.addInteger("framerate",FrameRate);
-    Info.addInteger("bufferlen",blen);
+    Info.addInteger( "device", CameraNo );
+    Info.addInteger( "framerate", FrameRate );
+    Info.addInteger( "bufferlen", blen );
   
     //Source = VideoCapture(CameraNo);
     VidBuf = new VideoBuffer(CameraNo, FrameRate, blen);
     VidBuf ->Start();
 
     ParamFile =  text( "parameters" );
-    Info.addText("parameters", ParamFile);
+    Info.addText( "parameters", ParamFile );
   
     FileStorage fs;
     if (fs.open(ParamFile, FileStorage::READ)){
