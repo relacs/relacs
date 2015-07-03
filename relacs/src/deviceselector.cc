@@ -439,6 +439,15 @@ bool DeviceSelector::checkConflicts(Options* options)
                          QString::fromStdString("This ident is already in use: " + options->text("ident")),
                          QMessageBox::StandardButton::Ok);
   }
+  else if (options->text("ident").empty())
+  {
+    fail |= true;
+
+    QMessageBox::warning(this,
+                         "Ident is required",
+                         "Ident may not be empty",
+                         QMessageBox::StandardButton::Ok);
+  }
 
   return !fail;
 }
