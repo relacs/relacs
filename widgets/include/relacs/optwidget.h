@@ -503,6 +503,7 @@ private:
   friend class OptWidgetDate;
   friend class OptWidgetTime;
   friend class OptWidgetSection;
+  friend class OptWidgetMultipleValues;
   
   enum RoleType { 
       /*! Change Window and WindowText. */

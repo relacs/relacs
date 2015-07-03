@@ -1476,6 +1476,8 @@ OptWidgetMultipleValues::OptWidgetMultipleValues(Options::iterator param, QWidge
   ListWidget = new QListWidget();
   layout->addWidget(ListWidget);
 
+  connect(ListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(valueChanged(QListWidgetItem*)));
+
   if (Editable)
   {
     ListWidget->setDragDropMode(QAbstractItemView::DragDrop);
@@ -1499,6 +1501,29 @@ OptWidgetMultipleValues::OptWidgetMultipleValues(Options::iterator param, QWidge
   }
 
   reset();
+}
+
+void OptWidgetMultipleValues::addItem(const string &text, int row)
+{
+  QListWidgetItem* item = new QListWidgetItem(text.c_str());
+  if (Editable)
+  {
+    item->setFlags(item->flags() | Qt::ItemIsEditable);
+    item->setSizeHint(QSize(item->sizeHint().width(), 20));
+  }
+  ListWidget->insertItem(row < 0 ? ListWidget->count() : row, item);
+}
+
+void OptWidgetMultipleValues::addItem(double value, int row)
+{
+  QListWidgetItem* item = new QListWidgetItem();
+  item->setData(Qt::EditRole, QVariant(value));
+  if (Editable)
+  {
+    item->setFlags(item->flags() | Qt::ItemIsEditable);
+    item->setSizeHint(QSize(item->sizeHint().width(), 20));
+  }
+  ListWidget->insertItem(row < 0 ? ListWidget->count() : row, item);
 }
 
 void OptWidgetMultipleValues::get()
@@ -1541,27 +1566,81 @@ void OptWidgetMultipleValues::get()
 
 void OptWidgetMultipleValues::reset()
 {
+  InternChanged = true;
   ListWidget->clear();
 
   for (int i = 0; i < Param->size(); ++i)
   {
-    QListWidgetItem* item;
-
     if (Param->isText())
-      item = new QListWidgetItem(Param->text(i).c_str(), ListWidget);
+      addItem(Param->text(i));
     else
-    {
-      item = new QListWidgetItem(ListWidget);
-      item->setData(Qt::EditRole, QVariant(Param->isNumber() ? Param->number(i) : Param->integer(i)));
-    }
+      addItem(Param->number(i));
+  }
+  InternChanged = false;
+}
 
-    if (Editable)
-    {
-      item->setFlags(item->flags() | Qt::ItemIsEditable);
-      item->setSizeHint(QSize(item->sizeHint().width(), 20));
-    }
+void OptWidgetMultipleValues::resetDefault()
+{
+  if (!Editable)
+    return;
 
-    ListWidget->addItem(item);
+  InternChanged = true;
+
+  ListWidget->clear();
+  if (Param->isText())
+    addItem(Param->defaultText());
+  else
+    addItem(Param->defaultNumber());
+
+  InternChanged = false;
+}
+
+void OptWidgetMultipleValues::valueChanged(QListWidgetItem *item)
+{
+  if ( InternRead || OW->updateDisabled() )
+    return;
+
+  if ( ContUpdate && Editable ) {
+    if ( InternChanged ) {
+      get();
+      Param->delFlags( OW->changedFlag() );
+      Changed = false;
+    }
+    else
+      doValueChanged();
+  }
+}
+
+class OptWidgetMultipleValuesChangeEvent : public QEvent
+{
+public:
+  OptWidgetMultipleValuesChangeEvent()
+    : QEvent( QEvent::Type( QEvent::User+1 ) ){};
+};
+
+void OptWidgetMultipleValues::doValueChanged()
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetMultipleValuesChangeEvent() );
+    return;
+  }
+  bool cn = OO->notifying();
+  get();
+  Changed = false;
+  if ( cn )
+    OO->notify();
+  if ( ContUpdate )
+    Param->delFlags( OW->changedFlag() );
+
+  unlockMutex();
+}
+
+void OptWidgetMultipleValues::customEvent( QEvent *e )
+{
+  if ( e->type() == QEvent::User+1 ) {
+    doValueChanged();
   }
 }
 
@@ -1574,12 +1653,17 @@ void OptWidgetMultipleValues::addItem()
     row = ListWidget->row(selections.front());
 
   QListWidgetItem* item = new QListWidgetItem();
+  if (Param->isText())
+    item->setText(Param->defaultText().c_str());
+  else
+    item->setData(Qt::EditRole, QVariant(Param->defaultNumber()));
   item->setFlags(item->flags() | Qt::ItemIsEditable);
   item->setSizeHint(QSize(item->sizeHint().width(), 20));
   ListWidget->insertItem(row + 1, item);
   ListWidget->setItemSelected(item, true);
 
   Changed = true;
+  valueChanged(nullptr);
 }
 
 void OptWidgetMultipleValues::removeItem()
@@ -1594,6 +1678,7 @@ void OptWidgetMultipleValues::removeItem()
   }
 
   Changed = true;
+  valueChanged(nullptr);
 }
 
 NumberItemDelegate::NumberItemDelegate(Parameter &parameter)

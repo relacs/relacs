@@ -260,10 +260,18 @@ public:
 
   void get() override;
   void reset() override;
+  void resetDefault() override;
+
+private:
+  void addItem(const std::string& text, int row = -1);
+  void addItem(double value, int row = -1);
+  void doValueChanged();
+  void customEvent( QEvent *e );
 
 private slots:
   void addItem();
   void removeItem();
+  void valueChanged(QListWidgetItem* item);
 
 private:
   QWidget* Wrapper;
