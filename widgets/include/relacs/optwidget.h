@@ -254,6 +254,8 @@ public:
   static const int BoldSectionsStyle = 0x0040;
     /*! Hide inactivated options. */
   static const int HideStyle = 0x0080;
+    /*! Allow mutliple values */
+  static const int MultipleSelectionStyle = 0x0100;
 
 
     /*! Constructs an empty OptWidget.

@@ -57,6 +57,14 @@ MainWidget::MainWidget( void )
   Opt1.addText( "comment", "Comments", "no comment", testflag ).setStyle( teststyle );
   Opt1.addBoolean( "adjust", "Adjust input gain", true, testflag ).setStyle( teststyle );
 
+  Opt1.newSection("Multiple", 0, OptWidget::TabSection | teststyle);
+  Opt1.addText("multiple text", "allow multiple values", "test 1").setStyle(OptWidget::MultipleSelectionStyle)
+      .addText("test 4").addText("test 2").addText("test 3");
+  Opt1.addNumber("multiple double", "allow multiple values", 0).setStyle(OptWidget::MultipleSelectionStyle).setUnit("A")
+      .addNumber(1.1).addNumber(2.2).addNumber(3.3).addNumber(4.4);
+  Opt1.addInteger("multiple integer", "allow multiple values", 1).setStyle(OptWidget::MultipleSelectionStyle).setUnit("V")
+      .addInteger(1).addInteger(2).addInteger(3).addInteger(4);
+
   Opt1.newSection( "Analysis" ).setStyle( OptWidget::TabSection );
   Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.01, "seconds", "ms" );
   Opt1.addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", 0.001, 0.0, 1.0, 0.0001, "seconds", "ms" );

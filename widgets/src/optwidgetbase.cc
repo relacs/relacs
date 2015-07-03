@@ -25,6 +25,7 @@
 #include <QHBoxLayout>
 #include <QDir>
 #include <QFileDialog>
+#include <QList>
 #include <relacs/optwidgetbase.h>
 
 
@@ -1462,6 +1463,176 @@ OptWidgetSection::OptWidgetSection( Options::section_iterator sec,
   l->setAlignment( Qt::AlignLeft );
   l->setWordWrap( false );
   W = l;
+}
+
+
+OptWidgetMultipleValues::OptWidgetMultipleValues(Options::iterator param, QWidget *label,
+                                                 Options *oo, OptWidget *ow,
+                                                 QMutex *mutex, QWidget *parent )
+ : OptWidgetBase(param, label, oo, ow, mutex)
+{
+  W = Wrapper = new QWidget(parent);
+  QHBoxLayout* layout = new QHBoxLayout(Wrapper);
+  ListWidget = new QListWidget();
+  layout->addWidget(ListWidget);
+
+  if (Editable)
+  {
+    ListWidget->setDragDropMode(QAbstractItemView::DragDrop);
+    ListWidget->setDefaultDropAction(Qt::MoveAction);
+
+    QVBoxLayout* buttons = new QVBoxLayout();
+
+    QPushButton* button = new QPushButton("+", parent);
+    button->setFixedSize(25, 25);
+    connect(button, SIGNAL(clicked()), this, SLOT(addItem()));
+    buttons->addWidget(button);
+    button = new QPushButton("-", parent);
+    button->setFixedSize(25, 25);
+    connect(button, SIGNAL(clicked()), this, SLOT(removeItem()));
+    buttons->addWidget(button);
+
+    layout->addLayout(buttons);
+
+    if (Param->isAnyNumber())
+      ListWidget->setItemDelegate(new NumberItemDelegate(*Param));
+  }
+
+  reset();
+}
+
+void OptWidgetMultipleValues::get()
+{
+  if (!Editable)
+    return;
+  InternRead = true;
+  bool notifing = OO->notifying();
+  OO->unsetNotify();
+
+  if (Param->isText())
+  {
+    for (int i = 0; i < ListWidget->count(); ++i)
+      Param->addText(ListWidget->item(i)->text().toStdString(), i == 0);
+  }
+  else if (Param->isInteger())
+  {
+    for (int i = 0; i < ListWidget->count(); ++i)
+    {
+      Param->addNumber(ListWidget->item(i)->data(Qt::EditRole).toInt(), -1, std::string(Param->unit().c_str()), i == 0);
+    }
+  }
+  else if (Param->isNumber())
+  {
+    for (int i = 0; i < ListWidget->count(); ++i)
+    {
+      Param->addNumber(ListWidget->item(i)->data(Qt::EditRole).toDouble(), -1., std::string(Param->unit().c_str()), i == 0);
+    }
+  }
+
+  if (Changed)
+  {
+    Param->addFlags(OW->changedFlag());
+    Changed = false;
+  }
+
+  OO->setNotify(notifing);
+  InternRead = false;
+}
+
+void OptWidgetMultipleValues::reset()
+{
+  ListWidget->clear();
+
+  for (int i = 0; i < Param->size(); ++i)
+  {
+    QListWidgetItem* item;
+
+    if (Param->isText())
+      item = new QListWidgetItem(Param->text(i).c_str(), ListWidget);
+    else
+    {
+      item = new QListWidgetItem(ListWidget);
+      item->setData(Qt::EditRole, QVariant(Param->isNumber() ? Param->number(i) : Param->integer(i)));
+    }
+
+    if (Editable)
+    {
+      item->setFlags(item->flags() | Qt::ItemIsEditable);
+      item->setSizeHint(QSize(item->sizeHint().width(), 20));
+    }
+
+    ListWidget->addItem(item);
+  }
+}
+
+void OptWidgetMultipleValues::addItem()
+{
+  QList<QListWidgetItem*> selections = ListWidget->selectedItems();
+
+  int row = ListWidget->count();
+  if (!selections.empty())
+    row = ListWidget->row(selections.front());
+
+  QListWidgetItem* item = new QListWidgetItem();
+  item->setFlags(item->flags() | Qt::ItemIsEditable);
+  item->setSizeHint(QSize(item->sizeHint().width(), 20));
+  ListWidget->insertItem(row + 1, item);
+  ListWidget->setItemSelected(item, true);
+
+  Changed = true;
+}
+
+void OptWidgetMultipleValues::removeItem()
+{
+  QList<QListWidgetItem*> selections = ListWidget->selectedItems();
+  if (selections.empty())
+    return;
+
+  for (QListWidgetItem* item : selections)
+  {
+    delete ListWidget->takeItem(ListWidget->row(item));
+  }
+
+  Changed = true;
+}
+
+NumberItemDelegate::NumberItemDelegate(Parameter &parameter)
+ : Param(parameter)
+{
+
+}
+
+QWidget *NumberItemDelegate::createEditor(QWidget *parent,
+                      const QStyleOptionViewItem &option,
+                      const QModelIndex &index) const
+{
+  double min = Param.minimum( Param.outUnit() );
+  double max = Param.maximum( Param.outUnit() );
+  double step = Param.step( Param.outUnit() );
+  DoubleSpinBox* box = new DoubleSpinBox( parent );
+  box->setRange( min, max );
+  box->setSingleStep( step );
+  if ( Param.isNumber() )
+    box->setFormat( Param.format() );
+  else
+    box->setFormat( "%.0f" );
+  if ( Param.style() & OptWidget::SpecialInfinite )
+    box->setSpecialValueText( "infinite" );
+  else if ( Param.style() & OptWidget::SpecialNone )
+    box->setSpecialValueText( "none" );
+
+  return box;
+}
+
+void NumberItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+{
+  QVariant value = index.model()->data(index, Qt::EditRole);
+  static_cast<DoubleSpinBox*>(editor)->setValue(value.toDouble());
+}
+
+void NumberItemDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+  editor->setGeometry(option.rect);
 }
 
 

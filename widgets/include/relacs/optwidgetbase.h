@@ -33,6 +33,9 @@
 #include <QCheckBox>
 #include <QDateTimeEdit>
 #include <QPushButton>
+#include <QListWidget>
+#include <QItemDelegate>
+#include <QHBoxLayout>
 #include <relacs/options.h>
 #include <relacs/doublespinbox.h>
 #include <relacs/optwidget.h>
@@ -245,6 +248,43 @@ public:
 private:
   Options::section_iterator Sec;
 
+};
+
+class OptWidgetMultipleValues : public OptWidgetBase
+{
+  Q_OBJECT
+public:
+  OptWidgetMultipleValues( Options::iterator param, QWidget *label,
+                           Options *oo, OptWidget *ow,
+                           QMutex *mutex=0, QWidget *parent=0 );
+
+  void get() override;
+  void reset() override;
+
+private slots:
+  void addItem();
+  void removeItem();
+
+private:
+  QWidget* Wrapper;
+  QListWidget* ListWidget;
+  bool Changed;
+};
+
+class NumberItemDelegate : public QItemDelegate
+{
+  Q_OBJECT
+public:
+  NumberItemDelegate(Parameter& parameter);
+
+  QWidget *createEditor(QWidget *parent,
+                        const QStyleOptionViewItem &option,
+                        const QModelIndex &index) const;
+  void setEditorData(QWidget *editor, const QModelIndex &index) const;
+  void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+
+private:
+  Parameter& Param;
 };
 
 
