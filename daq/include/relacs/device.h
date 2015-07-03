@@ -311,7 +311,7 @@ protected:
     /*! \return A pointer to the mutex of this device. \sa lock(), unlock() */
   QMutex *mutex( void ) const;
 
-  /*! Intializes available options */
+    /*! Intializes available options */
   virtual void initOptions();
 
   mutable Options Info;

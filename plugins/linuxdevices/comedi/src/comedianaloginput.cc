@@ -80,7 +80,7 @@ void ComediAnalogInput::initOptions()
 {
   AnalogInput::initOptions();
 
-  addNumber( "gainblacklist", "Ranges not to be used", 0.0, 0.0, 100.0, 0.1, "V" );
+  addNumber( "gainblacklist", "Ranges not to be used", 0.0, 0.0, 100.0, 0.1, "V" ).setStyle( Parameter::MultipleSelection );
   addBoolean( "takeao", "Start analog output in a single instruction", true );
 }
 

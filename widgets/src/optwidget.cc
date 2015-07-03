@@ -181,7 +181,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
     }
 
     // NEW: multiple
-    if ( (pp->style() & MultipleSelectionStyle) && (pp->isText() || pp->isAnyNumber()))
+    if ( (pp->style() & MultipleSelection) && (pp->isText() || pp->isAnyNumber()))
     {
       l = new QLabel( rs.c_str() );
       setLabelStyle( l, pp->style() );

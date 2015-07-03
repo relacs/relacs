@@ -85,7 +85,7 @@ void ComediAnalogOutput::initOptions()
   AnalogOutput::initOptions();
 
   addNumber( "extref", "Voltage of external reference", -1.0, -1.0, 100.0, 0.1, "V" );
-  addNumber( "delays", "Delay between analog input and output", 0.0, 0.0, 1.0, 0.0001, "s", "ms" );
+  addNumber( "delays", "Delay between analog input and output", 0.0, 0.0, 1.0, 0.0001, "s", "ms" ).setStyle( Parameter::MultipleSelection );
 }
 
 int ComediAnalogOutput::open( const string &device )

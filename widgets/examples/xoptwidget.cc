@@ -58,11 +58,11 @@ MainWidget::MainWidget( void )
   Opt1.addBoolean( "adjust", "Adjust input gain", true, testflag ).setStyle( teststyle );
 
   Opt1.newSection("Multiple", 0, OptWidget::TabSection | teststyle);
-  Opt1.addText("multiple text", "allow multiple values", "test 1").setStyle(OptWidget::MultipleSelectionStyle)
+  Opt1.addText("multiple text", "allow multiple values", "test 1").setStyle(OptWidget::MultipleSelection)
       .addText("test 4").addText("test 2").addText("test 3");
-  Opt1.addNumber("multiple double", "allow multiple values", 0).setStyle(OptWidget::MultipleSelectionStyle).setUnit("A")
+  Opt1.addNumber("multiple double", "allow multiple values", 0).setStyle(OptWidget::MultipleSelection).setUnit("A")
       .addNumber(1.1).addNumber(2.2).addNumber(3.3).addNumber(4.4);
-  Opt1.addInteger("multiple integer", "allow multiple values", 1).setStyle(OptWidget::MultipleSelectionStyle).setUnit("V")
+  Opt1.addInteger("multiple integer", "allow multiple values", 1).setStyle(OptWidget::MultipleSelection).setUnit("V")
       .addInteger(1).addInteger(2).addInteger(3).addInteger(4);
 
   Opt1.newSection( "Analysis" ).setStyle( OptWidget::TabSection );

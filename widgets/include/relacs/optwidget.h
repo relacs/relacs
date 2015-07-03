@@ -214,6 +214,8 @@ public:
     /*! If set you can only select from text options with multiple values,
         but not add new values. */
   static const long SelectText = Parameter::SelectText; // 0x01000000
+    /*! Allow mutliple values to be selected. */
+  static const int MultipleSelection = Parameter::MultipleSelection; // 0x02000000;
     /*! Enables auto completion mode of editable combo boxes. */
   static const long ComboAutoCompletion = 0x04000000;
     /*! Browse for existing file. */
@@ -254,8 +256,6 @@ public:
   static const int BoldSectionsStyle = 0x0040;
     /*! Hide inactivated options. */
   static const int HideStyle = 0x0080;
-    /*! Allow mutliple values */
-  static const int MultipleSelectionStyle = 0x0100;
 
 
     /*! Constructs an empty OptWidget.
