@@ -96,7 +96,7 @@ public:
   static const long SelectText = 0x01000000;
     /*! If this bit is set in the Parameter's style
         you can select multiple values. */
-  static const long MultipleSelection = 0x02000000;
+  static const long MultipleSelection = 0x00800000;
     /*! If this bit is set in the Parameter's style
         all values of the parameter get saved
         even if only the first value is requested to be saved. */
