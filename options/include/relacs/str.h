@@ -322,11 +322,6 @@ public:
         string \a format and assign it to \a this. */
   const Str &assign( long long val, const string &format );
 
-  // append:
-  inline Str &operator+=( const string &s ) { return static_cast<Str &>( string::operator+=( s ) ); };
-  inline Str &operator+=( const char *s ) { return static_cast<Str &>( string::operator+=( s ) ); };
-  inline Str &operator+=( char c ) { return static_cast<Str &>( string::operator+=( c ) ); };
-
   const Str &append( const string &s, int width=Width, char pad=Pad );
   const Str &append( const char *s, int width=Width, char pad=Pad );
   const Str &append( char c, int len=CharRepeat );
@@ -386,22 +381,6 @@ public:
   const Str &append( long long val, const string &format )
     { Construct( val, format, true ); return *this; };
 
-
-  // add:
-  inline friend Str operator+( const Str &s1, const Str &s2 )
-    { return operator+( static_cast<const string &>(s1), static_cast<const string &>(s2) ); };
-  inline friend Str operator+( const Str &s1, const string &s2 )
-    { return operator+( static_cast<const string &>(s1), s2 ); };
-  inline friend Str operator+( const string &s1, const Str &s2 ) { 
-    return operator+( s1, static_cast<const string &>(s2) ); };
-  inline friend Str operator+( const Str &s1, const char *s2 )
-    { return operator+( static_cast<const string &>(s1), s2 ); };
-  inline friend Str operator+( const char *s1, const Str &s2 )
-    { return operator+( s1, static_cast<const string &>(s2) ); };
-  inline friend Str operator+( const Str &s, char c )
-    { return operator+( static_cast<const string &>(s), c ); };
-  inline friend Str operator+( char c, const Str &s )
-    { return operator+( c, static_cast<const string &>(s) ); };
 
     /*! The size of the string, i.e. the number of characters it contains. */
   inline int size( void ) const { return string::size(); };
