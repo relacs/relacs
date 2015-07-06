@@ -1498,6 +1498,8 @@ OptWidgetMultipleValues::OptWidgetMultipleValues(Options::iterator param, QWidge
 
     if (Param->isAnyNumber())
       ListWidget->setItemDelegate(new NumberItemDelegate(*Param));
+    else if (Param->style() & Parameter::Select)
+      ListWidget->setItemDelegate(new ComboItemDelegate(*Param));
   }
 
   reset();
@@ -1720,6 +1722,45 @@ void NumberItemDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptio
   editor->setGeometry(option.rect);
 }
 
+
+ComboItemDelegate::ComboItemDelegate(Parameter &parameter)
+ : Param(parameter)
+{
+
+}
+
+QWidget *ComboItemDelegate::createEditor(QWidget *parent,
+                      const QStyleOptionViewItem &option,
+                      const QModelIndex &index) const
+{
+  QComboBox* combo = new QComboBox(parent);
+
+  for (auto&& value : Param.selectOptions())
+    combo->addItem(value.c_str());
+
+  if ( (Param.style() & OptWidget::SelectText) > 0 )
+    OptWidget::setValueStyle( combo, Param.style(), OptWidget::Combo );
+  else
+    OptWidget::setValueStyle( combo, Param.style(), OptWidget::Text );
+  combo->setInsertPolicy( QComboBox::InsertAtTop );
+  combo->setDuplicatesEnabled( false );
+  if ( ( Param.style() & OptWidget::ComboAutoCompletion ) == 0 )
+    combo->setCompleter( 0 );
+
+  return combo;
+}
+
+void ComboItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+{
+  QVariant value = index.model()->data(index, Qt::EditRole);
+  auto box = static_cast<QComboBox*>(editor);
+  box->setCurrentIndex(box->findText(value.toString()));
+}
+
+void ComboItemDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+  editor->setGeometry(option.rect);
+}
 
 }; /* namespace relacs */
 

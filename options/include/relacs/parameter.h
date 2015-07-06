@@ -30,6 +30,7 @@
 #include <iostream>
 #include <vector>
 #include <deque>
+#include <set>
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 using namespace std;
@@ -101,6 +102,9 @@ public:
         all values of the parameter get saved
         even if only the first value is requested to be saved. */
   static const int ListAlways = 0x02000000;
+    /*! If this bit is set in the Parameter's style
+        it acts like a combo box in combination with MultipleSelection bit */
+  static const int Select = 0x00400000;
 
     /*! Construct a single Parameter. 
         Use setValueType() to define the type of the parameter,
@@ -1020,7 +1024,21 @@ public:
   static double changeUnit( double val, const Str &oldunit, 
 			    const Str &newunit );
 
-  
+
+    /*! Adds a selectable option */
+  Parameter& addSelectOption(const std::string& option);
+    /*! Removes a selectable option */
+  Parameter& removeSelectOption(const std::string& option);
+    /*! Clears selectable option list*/
+  Parameter& clearSelectOptions();
+    /*! Returns list of all selectable options */
+  const std::set<std::string>& selectOptions() const;
+    /*! Returns the selectable option at a cetain index */
+  std::string selectOption(int index) const;
+    /*! Returns number of selectable options */
+  int selectOptionsSize() const;
+
+
 private:
 
     /*! Add quotation marks around the string if necessary.
@@ -1114,6 +1132,10 @@ private:
 
     /*! Some warning messages. */
   mutable Str Warning;
+
+    /*! Values for selection */
+  std::set<std::string> SelectableValues;
+
 };
 
 

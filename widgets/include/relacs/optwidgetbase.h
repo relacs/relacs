@@ -295,6 +295,21 @@ private:
   Parameter& Param;
 };
 
+class ComboItemDelegate : public QItemDelegate
+{
+  Q_OBJECT
+public:
+  ComboItemDelegate(Parameter& parameter);
+
+  QWidget *createEditor(QWidget *parent,
+                        const QStyleOptionViewItem &option,
+                        const QModelIndex &index) const;
+  void setEditorData(QWidget *editor, const QModelIndex &index) const;
+  void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+
+private:
+  Parameter& Param;
+};
 
 }; /* namespace relacs */
 

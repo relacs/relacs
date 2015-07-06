@@ -335,6 +335,7 @@ Parameter &Parameter::clear( const string &name, const string &request,
   ActivationType.clear();
   ActivationStatus.clear();
   Warning = "";
+  clearSelectOptions();
   return *this;
 }
 
@@ -391,6 +392,8 @@ Parameter &Parameter::assign( const Parameter &p )
   ActivationType = p.ActivationType;
   ActivationStatus = p.ActivationStatus;
   Warning = "";
+
+  SelectableValues = p.SelectableValues;
 
   return *this;
 }
@@ -3633,6 +3636,43 @@ bool Parameter::read( const Parameter &p )
   else
     return false;
 }
+
+
+Parameter& Parameter::addSelectOption(const std::string& option)
+{
+  SelectableValues.insert(option);
+  return *this;
+}
+
+Parameter& Parameter::removeSelectOption(const std::string& option)
+{
+  SelectableValues.erase(option);
+  return *this;
+}
+
+Parameter& Parameter::clearSelectOptions()
+{
+  SelectableValues.clear();
+  return *this;
+}
+
+const std::set<std::string>& Parameter::selectOptions() const
+{
+  return SelectableValues;
+}
+
+std::string Parameter::selectOption(int index) const
+{
+  auto itr = SelectableValues.begin();
+  std::advance(itr, index);
+  return *itr;
+}
+
+int Parameter::selectOptionsSize() const
+{
+  return SelectableValues.size();
+}
+
 
 }; /* namespace relacs */
 

@@ -504,6 +504,7 @@ private:
   friend class OptWidgetTime;
   friend class OptWidgetSection;
   friend class OptWidgetMultipleValues;
+  friend class ComboItemDelegate;
   
   enum RoleType { 
       /*! Change Window and WindowText. */
