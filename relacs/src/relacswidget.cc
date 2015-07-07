@@ -1457,6 +1457,7 @@ void RELACSWidget::editOutputTraces( void )
 void RELACSWidget::editDevices()
 {
   std::map<int, ConfigClass*> deviceLists;
+  /* emplace is not well supported yet ... 
   deviceLists.emplace(DV->pluginId(), DV);
   deviceLists.emplace(AID->pluginId(), AID);
   deviceLists.emplace(AOD->pluginId(), AOD);
@@ -1464,6 +1465,14 @@ void RELACSWidget::editDevices()
   deviceLists.emplace(TRIGD->pluginId(), TRIGD);
   deviceLists.emplace(ATD->pluginId(), ATD);
   deviceLists.emplace(ATI->pluginId(), ATI);
+  */
+  deviceLists[DV->pluginId()] = DV;
+  deviceLists[AID->pluginId()] = AID;
+  deviceLists[AOD->pluginId()] = AOD;
+  deviceLists[DIOD->pluginId()] = DIOD;
+  deviceLists[TRIGD->pluginId()] = TRIGD;
+  deviceLists[ATD->pluginId()] = ATD;
+  deviceLists[ATI->pluginId()] = ATI;
 
   DeviceSelector* oc = new DeviceSelector(deviceLists, this);
   OptDialog* od = new OptDialog(false, this);
@@ -1740,6 +1749,7 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
   AID->updateMenu();
 
   // reset analog output for dynamic clamp:
+  /*
   r = AQ->writeReset();
   if ( r < 0 ) {
     printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed." );
@@ -1749,6 +1759,7 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
     startIdle();
     return;
   }
+  */
 
   CW->start();
   PT->start( ptime );
