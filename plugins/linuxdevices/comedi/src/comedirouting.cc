@@ -36,7 +36,9 @@ namespace comedi {
 
 ComediRouting::ComediRouting( void ) 
   : ComediRouting( "ComediRouting" )
-{}
+{
+}
+
 
 ComediRouting::ComediRouting( const string &device, const Options &opts ) 
   : ComediRouting( "ComediRouting" )
@@ -45,17 +47,20 @@ ComediRouting::ComediRouting( const string &device, const Options &opts )
   open( device );
 }
 
+
 ComediRouting::ComediRouting( const string &deviceclass )
   : Device( deviceclass )
 {
   DeviceP = NULL;
   initOptions();
 }
+
   
 ComediRouting::~ComediRouting( void ) 
 {
   close();
 }
+
 
 void ComediRouting::initOptions()
 {
@@ -65,6 +70,7 @@ void ComediRouting::initOptions()
   addInteger( "channel", "Channel", -1, -1, 10000 );
   addInteger( "routing", "Routed signal", -1, 0, 10000 );
 }
+
 
 int ComediRouting::open( const string &device )
 { 

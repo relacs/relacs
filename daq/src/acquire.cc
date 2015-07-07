@@ -34,11 +34,9 @@
 namespace relacs {
 
 
-const string Acquire::SyncModeStrs[5] = {
+const string Acquire::SyncModeStrs[3] = {
   "simple restart of analog input together with analog output",
   "quick restart of analog input together with analog output",
-  "analog input and analog output are started by common trigger signal",
-  "continuous analog input, counter device is used for time-stamping analog output",
   "continuous analog input, analog output reads out analog input counter" };
 
 const TraceSpec Acquire::DummyTrace;

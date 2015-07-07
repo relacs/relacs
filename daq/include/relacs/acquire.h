@@ -766,7 +766,7 @@ protected:
     /*! The currently used synchronization method. */
   SyncModes SyncMode;
     /*! Human readable strings describing the synchronization methods. */
-  static const string SyncModeStrs[5];
+  static const string SyncModeStrs[3];
 
   struct AttData {
     AttData( Attenuate *att )

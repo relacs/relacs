@@ -41,6 +41,33 @@ class ComediAnalogInput;
 \bug NI DAQCard cmd.stop_arg += 2048 needs to tested
 \bug unipolar support is not really working
 
+\par Options
+usenipfistart: Use as start source NI PFI channel
+
+\par Trigger to analog input
+You need to route the analog input start signal to pfi channel 0:
+\code
+*Devices
+  Device1:
+      plugin : ComediNIPFI
+      device : /dev/comedi0
+      ident  : pfi-1
+      channel: 0
+      routing: AI_START1
+\endcode
+and tell the ComediAnalogOutput that it will be triggered by this signal:
+\code
+*Analog Output Devices
+  Device1:
+      plugin       : ComediAnalogOutput
+      device       : /dev/comedi0
+      ident        : ao-1
+      usenipfistart: 0
+      delays       : 0ms
+\endcode
+
+
+\par Calibration:
 For hardware calibrated boards (like NI E-Series boards) do
 \code
 $ comedi_calibrate --reset --calibrate -f /dev/comedi0
@@ -164,6 +191,10 @@ protected:
     /*! Comedi internal index of analog output subdevice. */
   int comediSubdevice( void ) const;
 
+    /*! Return \c true if start trigger from analog input is used
+        for starting analog output. */
+  bool useAIStart( void ) const;
+
     /*! returns buffer-size of device in samples. */
   int bufferSize( void ) const;
 
@@ -205,6 +236,9 @@ private:
   vector< unsigned int > BipolarRangeIndex;
   int UnipolarExtRefRangeIndex;
   int BipolarExtRefRangeIndex;
+
+    /*! Use as start trigger for analog input this PFI channel: */
+  int UseNIPFIStart;
 
     /*! Comedi command for asynchronous acquisition. */
   comedi_cmd Cmd;

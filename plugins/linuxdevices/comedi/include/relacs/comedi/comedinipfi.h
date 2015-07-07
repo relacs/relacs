@@ -95,7 +95,9 @@ public:
   virtual int open( const string &device ) override;
 
 protected:
-  void initOptions() override;
+
+  virtual void initOptions( void ) override;
+
 
 protected:
 

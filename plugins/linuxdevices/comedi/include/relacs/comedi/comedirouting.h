@@ -86,7 +86,7 @@ protected:
         displayed in the devices informations. */
   int open( const string &device, int subdev, int channel, int routing, const string &signal="" );
 
-  virtual void initOptions() override;
+  virtual void initOptions( void ) override;
 
     /*! Pointer to the comedi device. */
   comedi_t *DeviceP;

@@ -312,7 +312,7 @@ protected:
   QMutex *mutex( void ) const;
 
     /*! Intializes available options */
-  virtual void initOptions();
+  virtual void initOptions( void );
 
   mutable Options Info;
   mutable Options Settings;

@@ -417,7 +417,7 @@ int Simulator::write( OutData &signal, bool setsignaltime )
   // start writing to daq board:
   if ( gainChanged() ||
        signal.restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+       SyncMode == NoSync || SyncMode == StartSync ) {
     vector< AOData* > aos( 1, &AO[di] );
     restartRead( aos, false, true );
   }
@@ -626,7 +626,7 @@ int Simulator::write( OutList &signal, bool setsignaltime )
   // start writing to daq boards:
   if ( gainChanged() ||
        signal[0].restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+       SyncMode == NoSync || SyncMode == StartSync ) {
     vector< AOData* > aod;
     aod.reserve( AO.size() );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
@@ -796,7 +796,7 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
   // start writing to daq board:
   if ( gainChanged() ||
        signal.restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+       SyncMode == NoSync || SyncMode == StartSync ) {
     vector< AOData* > aos( 1, &AO[di] );
     restartRead( aos, true, true );
   }
@@ -1002,7 +1002,7 @@ int Simulator::directWrite( OutList &signal, bool setsignaltime )
   if ( success ) {
     if ( gainChanged() ||
 	 signal[0].restart() ||
-	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+	 SyncMode == NoSync || SyncMode == StartSync ) {
       vector< AOData* > aod;
       aod.reserve( AO.size() );
       for ( unsigned int i=0; i<AO.size(); i++ ) {

@@ -45,6 +45,7 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
+  UseNIPFIStart = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   IsRunning = false;
@@ -84,6 +85,7 @@ void ComediAnalogOutput::initOptions()
 {
   AnalogOutput::initOptions();
 
+  addInteger( "usenipfistart", "Use as start source NI PFI channel", -1 );
   addNumber( "extref", "Voltage of external reference", -1.0, -1.0, 100.0, 0.1, "V" );
   addNumber( "delays", "Delay between analog input and output", 0.0, 0.0, 1.0, 0.0001, "s", "ms" ).setStyle( Parameter::MultipleSelection );
 }
@@ -244,6 +246,8 @@ int ComediAnalogOutput::open( const string &device )
   }
   else
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
+
+  UseNIPFIStart = integer( "usenipfistart" );
 
   // delays:
   vector< double > delays;
@@ -671,13 +675,28 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
   // adapt command to our purpose:
   comedi_cmd testCmd;
   comedi_get_cmd_src_mask( DeviceP, SubDevice, &testCmd );
-  if ( testCmd.start_src & TRIG_INT )
-    cmd.start_src = TRIG_INT;
+  if ( UseNIPFIStart >= 0 ) {
+    if ( testCmd.start_src & TRIG_EXT )
+      cmd.start_src = TRIG_EXT;
+    else {
+      sigs.addError( DaqError::InvalidStartSource );
+      sigs.addErrorStr( "External trigger not supported" );
+    }
+  }
   else {
-    sigs.addError( DaqError::InvalidStartSource );
-    sigs.addErrorStr( "Internal trigger not supported" );
+    if ( testCmd.start_src & TRIG_INT )
+      cmd.start_src = TRIG_INT;
+    else {
+      sigs.addError( DaqError::InvalidStartSource );
+      sigs.addErrorStr( "Internal trigger not supported" );
+    }
   }
   cmd.start_arg = 0;
+  if ( UseNIPFIStart >= 0 ) {
+    cmd.start_arg = CR_EDGE | NI_EXT_PFI( UseNIPFIStart );
+    // cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
+    cerr << "START_ARG = " << cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+  }
   cmd.scan_end_arg = sigs.size();
   
   // test if countinous-state is supported:
@@ -906,6 +925,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
     // execute command:
+    cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
     if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
       int cerror = comedi_errno();
       cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
@@ -915,6 +935,8 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     }
 
   } // unlock
+
+  msleep( 1 );
 
   // fill buffer with initial data:
   int r = writeData();
@@ -1146,6 +1168,12 @@ int ComediAnalogOutput::comediSubdevice( void ) const
   if ( DeviceP == NULL )
     return -1;
   return SubDevice;
+}
+
+
+bool ComediAnalogOutput::useAIStart( void ) const
+{
+  return ( UseNIPFIStart >= 0 );
 }
 
 

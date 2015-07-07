@@ -3605,7 +3605,10 @@ bool Parameter::read( const Parameter &p )
     else if  ( isText() && p.isText() ) {
       if ( ! String.empty() && ! p.String.empty() && String[0] != p.String[0] )
 	Flags |= ChangedFlag;
-      String = p.String;
+      if ( p.size() == 1 && ( size() > 1 || ( style() & Parameter::SelectText ) > 0 ) )
+	selectText( p.String[0] );
+      else
+	String = p.String;
     }
     else if ( isAnyNumber() && p.isAnyNumber() ) {
       if ( ! Value.empty() && ! p.Value.empty() && Value[0] != p.Value[0] )

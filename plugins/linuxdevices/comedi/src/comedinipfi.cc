@@ -44,6 +44,7 @@ const string ComediNIPFI::PFISignals[PFISignalsMax] = {
 ComediNIPFI::ComediNIPFI( void ) 
   : ComediRouting( "ComediNIPFI" )
 {
+  clear();
   initOptions();
 }
 
@@ -60,9 +61,10 @@ ComediNIPFI::~ComediNIPFI( void )
 {
 }
 
+
 void ComediNIPFI::initOptions()
 {
-  ComediRouting::initOptions();
+  Device::initOptions();
 
   addInteger( "channel", "PFI channel", -1 );
   string pfisignals = "";
@@ -92,16 +94,8 @@ int ComediNIPFI::open( const string &device )
   }
 
   // get routing:
-  int routing = integer( "routing", 0, -1 );
-  string signal = text( "routing", 0, "" );
-  if ( routing < 0 && ! signal.empty() ) {
-    for ( int k=0; k<PFISignalsMax; k++ ) {
-      if ( signal == PFISignals[k] ) {
-	routing = k;
-	break;
-      }
-    }
-  }
+  int routing = index( "routing" );
+  cerr << "ROUTING: " << routing << '\n';
   if ( routing < 0 ) {
     setErrorStr( "missing or invalid routing parameter for device " + deviceIdent() );
     return WriteError;

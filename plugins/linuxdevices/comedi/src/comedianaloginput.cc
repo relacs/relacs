@@ -765,7 +765,8 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     insnlist.insns[ilinx++].subdev = SubDevice;
   bool tookao = false;
   if ( TakeAO && aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
-    insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
+    if ( ! ComediAO->useAIStart() )
+      insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
     tookao = true;
   }
   insnlist.n_insns = ilinx;
@@ -778,6 +779,8 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     Traces->addErrorStr( deviceFile() + " - comedi_do_insnlist executed " + Str( ninsns ) + " from " +
 			 Str( ilinx ) + " instructions" );
   }
+  else
+    cerr << "INSN\n";
   delete [] insnlist.insns;
 
   bool finished = true;
@@ -789,6 +792,7 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     if ( tookao ) {
       ComediAO->startThread( aosp );
       finished = ComediAO->noMoreData();
+      cerr << "START AO THREAD " << finished << '\n';
     }
   }
 

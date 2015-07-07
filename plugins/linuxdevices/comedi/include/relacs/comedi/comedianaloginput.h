@@ -48,6 +48,20 @@ class ComediAnalogOutput;
   the analog output of the same device in a single instruction list.
   This option is provided for demonstration purposes only and should otherwise not be used/unset.
 
+\par Calibration:
+For hardware calibrated boards (like NI E-Series boards) do
+\code
+$ comedi_calibrate --reset --calibrate -f /dev/comedi0
+\endcode
+
+For software calibrated boards (like NI M-Series boards) do
+\code
+$ comedi_soft_calibrate -f /dev/comedi0
+\endcode
+
+You may want to read the man page of \c comedi_calibrate.
+
+\par Configuration:
 \code
 # for NI E-Series PCI daq boards
 modprobe ni_pcimio
@@ -55,10 +69,6 @@ comedi_config /dev/comedi0 ni_pcimio
 # for NI E-Series DaqCard
 modprobe ni_mio_cs
 comedi_config /dev/comedi0 ni_mio_cs
-
-# calibrate all ranges, references and channels:
-for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C; done; done; done
-\endcode
 */
 
 

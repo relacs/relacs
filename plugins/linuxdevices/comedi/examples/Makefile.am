@@ -5,6 +5,7 @@ noinst_PROGRAMS = \
     ai_nonblocking \
     ai_maxrate \
     ai_multiboard \
+    aitriggersao \
     dio_write \
     checkao
 
@@ -33,6 +34,10 @@ ai_maxrate_SOURCES = ai_maxrate.c common.c
 ai_multiboard_LDFLAGS = $(COMEDI_LDFLAGS)
 ai_multiboard_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
 ai_multiboard_SOURCES = ai_multiboard.c common.c
+
+aitriggersao_LDFLAGS = $(COMEDI_LDFLAGS)
+aitriggersao_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
+aitriggersao_SOURCES = aitriggersao.c common.c
 
 dio_write_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \

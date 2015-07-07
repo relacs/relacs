@@ -37,6 +37,11 @@ namespace daqflex {
 \bug reset() blocks for a long time at high analog input sampling rates!!!
 \bug Calibration is not yet implemented.
 \bug Analog output timing is not yet implemented for no-FIFO boards
+
+\par Options
+useaiclock: Use AI clock for starting AO.
+
+For this you need to connect AICKO with AOCKI .
 */
 
 
