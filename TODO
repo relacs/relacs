@@ -83,6 +83,7 @@ Devices:
 - Attenuate uses the configure mechanism, so it should inherit ConfigClass
 - Attenuate should also have a dialog
 - Once the Devices inherit options, AnalogOutput::setDelay() should set the corresponding option.
+- AnalogInput: getAISyncDevice and take() AIRate might be combined into a single thing
 - DAQFlex: See email on firmware update from 2012
 
 patchclamp::SingleStimulus:

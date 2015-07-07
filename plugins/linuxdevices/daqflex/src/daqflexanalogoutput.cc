@@ -35,6 +35,7 @@ namespace daqflex {
 DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   : AnalogOutput( "DAQFlexAnalogOutput", DAQFlexAnalogIOType )
 {
+  UseAIClock = false;
   IsPrepared = false;
   NoMoreData = true;
   DAQFlexDevice = NULL;
@@ -64,6 +65,7 @@ void DAQFlexAnalogOutput::initOptions()
 {
   AnalogOutput::initOptions();
 
+  addBoolean( "useaiclock", "Use AI clock", false );
   addNumber( "delays", "Delay between analog input and output", 0.0, 0.0, 1.0, 0.0001, "s", "ms" ).setStyle( Parameter::MultipleSelection );
 }
 
@@ -127,6 +129,9 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice )
   ChannelValues = new float[channels()];
   for ( int k=0; k<channels(); k++ )
     ChannelValues[k] = 0.0;
+
+  // ai clock:
+  UseAIClock = boolean( "useaiclock" );
 
   // delays:
   vector< double > delays;
@@ -489,6 +494,8 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       Samples = sigs.deviceBufferSize();
       DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=" + Str( Samples ) );
     }
+    if ( UseAIClock )
+      DAQFlexDevice->sendMessage( "AOSCAN:EXTPACER=ENABLE" );
 
     // set buffer size:
     if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
@@ -742,6 +749,12 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
   }
   unlock();
   return r;
+}
+
+
+bool DAQFlexAnalogOutput::useAIRate( void ) const
+{
+  return UseAIClock;
 }
 
 

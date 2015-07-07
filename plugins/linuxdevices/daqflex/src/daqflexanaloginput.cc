@@ -394,8 +394,14 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 
   bool tookao = ( TakeAO && aosp != 0 && DAQFlexAO != 0 && DAQFlexAO->prepared() );
 
-  if ( tookao )
-    DAQFlexDevice->sendCommands( "AISCAN:START", "AOSCAN:START" );
+  if ( tookao ) {
+    if ( DAQFlexAO->useAIRate() ) {
+      DAQFlexDevice->sendCommand( "AOSCAN:START" );
+      DAQFlexDevice->sendCommand( "AISCAN:START" );
+    }
+    else
+      DAQFlexDevice->sendCommands( "AISCAN:START", "AOSCAN:START" );
+  }
   else
     DAQFlexDevice->sendCommand( "AISCAN:START" );
 
@@ -649,9 +655,9 @@ void DAQFlexAnalogInput::take( const vector< AnalogInput* > &ais,
       if ( aos[k]->analogOutputType() == DAQFlexAnalogIOType &&
 	   aos[k]->deviceFile() == deviceFile() &&
 	   DAQFlexDevice->aoFIFOSize() > 0 ) {
-	aoinx.push_back( k );
-	aorate.push_back( false );
 	DAQFlexAO = dynamic_cast< DAQFlexAnalogOutput* >( aos[k] );
+	aoinx.push_back( k );
+	aorate.push_back( DAQFlexAO->useAIRate() );
 	TakeAO = true;
 	break;
       }

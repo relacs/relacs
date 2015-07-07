@@ -125,10 +125,6 @@ public:
     NoSync,
       /*! AI and AO are started simultaneously by the driver. */
     StartSync,
-      /*! Starting AI and AO is synchronized via trigger signals. */
-    TriggerSync,
-      /*! Continuous AI. Counter is used for synchronization. */
-    CounterSync,
       /*! Continuous AI. AO reads out AI counter. */
     AISync
   };

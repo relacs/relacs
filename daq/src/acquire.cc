@@ -1976,7 +1976,7 @@ int Acquire::write( OutData &signal, bool setsignaltime )
   // start writing to daq board:
   if ( gainChanged() ||
        signal.restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+       SyncMode == NoSync || SyncMode == StartSync ) {
     if ( SyncMode == AISync )
       cerr << "Acquire::startWrite() -> called restartRead() because of gainChanged="
 	   << gainChanged() << " or signal restart=" << signal.restart() << '\n';
@@ -2217,7 +2217,7 @@ int Acquire::write( OutList &signal, bool setsignaltime )
   // start writing to daq boards:
   if ( gainChanged() ||
        signal[0].restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+       SyncMode == NoSync || SyncMode == StartSync ) {
     if ( SyncMode == AISync )
       cerr << "Acquire::startWrite() -> called restartRead() because of gainChanged="
 	   << gainChanged() << " or signal restart=" << signal[0].restart() << '\n';
@@ -2424,7 +2424,7 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
   // start writing to daq board:
   if ( gainChanged() ||
        signal.restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+       SyncMode == NoSync || SyncMode == StartSync ) {
     if ( SyncMode == AISync )
       cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
 	   << gainChanged() << " or signal restart=" << signal.restart() << '\n';
@@ -2630,7 +2630,7 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
   // start writing to daq boards:
   if ( gainChanged() ||
        signal[0].restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+       SyncMode == NoSync || SyncMode == StartSync ) {
     if ( SyncMode == AISync )
       cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
 	   << gainChanged() << " or signal restart=" << signal[0].restart() << '\n';
@@ -2967,7 +2967,7 @@ double Acquire::getSignal( void )
 
   double signaltime = -1.0;
 
-  if ( SyncMode == CounterSync || SyncMode == AISync ) {
+  if ( SyncMode == AISync ) {
     if ( LastDevice < 0 )
       return -1.0;
     // get signal time:

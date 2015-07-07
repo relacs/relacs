@@ -116,6 +116,11 @@ public:
     /*! \return the status of the analog output. */
   virtual Status status( void ) const;
 
+    /*! Return \c true if the analog output is required to have the
+        same sampling rate as the analog input as 
+	determined by \a UseAIClock. */
+  virtual bool useAIRate( void ) const;
+
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
     /*! \return \c true if writeData() does not need to be called any more. */
@@ -136,8 +141,8 @@ protected:
         This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs );
 
-
   void initOptions() override;
+
 
 private:
   
@@ -156,6 +161,9 @@ private:
   vector< double > BipolarRange;
     /*! Holds the list of supported unipolar ranges. */
   vector< double > UnipolarRange;
+
+    /*! True if the analog input is to be used to drive the analog output operation. */
+  bool UseAIClock;
 
   struct Calibration {
     double Offset;
