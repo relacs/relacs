@@ -330,7 +330,7 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey )
   else
     tf.open( addPath( "findthreshold-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
-  Header.save( tf, "# " );
+  Header.save( tf, "# ", 0, FirstOnly );
   lockStimulusData();
   stimulusData().save( tf, "# ", 0, Options::FirstOnly );
   unlockStimulusData();

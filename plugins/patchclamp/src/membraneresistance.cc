@@ -533,7 +533,7 @@ void MembraneResistance::saveTrace( const Options &header )
   ofstream df( addPath( "membraneresistance-trace.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey datakey;
@@ -573,7 +573,7 @@ void MembraneResistance::saveExpFit( const Options &header )
   ofstream df( addPath( "membraneresistance-expfit.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey datakey;

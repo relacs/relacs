@@ -401,7 +401,7 @@ void VICurve::saveData( void )
   ofstream df( addPath( "vicurve-data.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey datakey;
@@ -450,7 +450,7 @@ void VICurve::saveTrace( void )
   ofstream df( addPath( "vicurve-trace.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey datakey;

@@ -447,7 +447,7 @@ void FICurve::saveData( void )
   ofstream df( addPath( "ficurve-data.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey datakey;
@@ -514,7 +514,7 @@ void FICurve::saveRate( void )
   ofstream df( addPath( "ficurve-rates.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey key;
@@ -555,7 +555,7 @@ void FICurve::saveSpikes( void )
   ofstream df( addPath( "ficurve-spikes.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey key;
@@ -590,7 +590,7 @@ void FICurve::saveTraces( void )
   ofstream df( addPath( "ficurve-traces.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  Header.save( df, "# " );
+  Header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey key;

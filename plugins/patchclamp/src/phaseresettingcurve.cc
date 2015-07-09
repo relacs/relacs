@@ -330,7 +330,7 @@ void PhaseResettingCurve::openTraceFile( ofstream &tf, TableKey &tracekey,
     tracekey.addNumber( "I", IUnit, "%6.3f" );
   tf.open( addPath( "phaseresettingcurve-traces.dat" ).c_str(),
 	   ofstream::out | ofstream::app );
-  header.save( tf, "# " );
+  header.save( tf, "# ", 0, FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
@@ -382,7 +382,7 @@ void PhaseResettingCurve::saveSpikes( const Options &header, const EventList &sp
   ofstream df( addPath( "phaseresettingcurve-spikes.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey key;
@@ -416,7 +416,7 @@ void PhaseResettingCurve::saveData( const Options &header,
   ofstream df( addPath( "phaseresettingcurve-data.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey datakey;
@@ -485,7 +485,7 @@ void PhaseResettingCurve::savePRC( const Options &header,
   ofstream df( addPath( "phaseresettingcurve-prc.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey datakey;

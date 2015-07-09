@@ -789,7 +789,7 @@ void SingleStimulus::openTraceFile( ofstream &tf, TableKey &tracekey,
   waveform.lower();
   tf.open( addPath( "stimulus-" + waveform + "-traces.dat" ).c_str(),
 	   ofstream::out | ofstream::app );
-  header.save( tf, "# " );
+  header.save( tf, "# ", 0, FirstOnly );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
@@ -834,7 +834,7 @@ void SingleStimulus::saveMeanTrace( Options &header, TableKey &tracekey,
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
   tracekey.saveKey( df, true, false );
 
@@ -871,7 +871,7 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -896,7 +896,7 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate, double 
     return;
 
   // write header and key:
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -1043,7 +1043,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   else if ( WaveForm >= Sine && WaveForm <= OUnoise ) {
     string waveforms[8] = { "Sine", "Rectangular", "Triangular", "Saw-up", "Saw-down", "Alpha", "Whitenoise", "OU-noise" };
     header.addText( "waveform", waveforms[WaveForm-2] );
-    header.addText( "frequency", Str( Frequency ) + "Hz" );
+    header.addNumber( "frequency", Frequency, "Hz" );
     if ( WaveForm == Sine || WaveForm == Alpha || WaveForm == Whitenoise || WaveForm == OUnoise ) {
       if ( WaveForm == Sine ) {
 	PeakAmplitudeFac = 1.0;
@@ -1052,7 +1052,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       else if ( WaveForm == Alpha ) {
 	PeakAmplitudeFac = 1.0;
 	signal.alphaWave( duration, deltat, 1.0/Frequency, Tau );
-	header.addNumber( "tau", 1000.0*Tau );
+	header.addNumber( "tau", 1000.0*Tau, "ms" );
       }
       else {
 	unsigned long seed = Seed;
@@ -1069,9 +1069,9 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       if ( WaveForm == Rectangular ) {
 	signal.rectangleWave( duration, deltat, 1.0/Frequency, PulseDuration, cycleramp );
 	if ( DutyCycle >= 0.0 )
-	  header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
+	  header.addNumber( "dutycycle", 100.0*DutyCycle, "%" );
 	else
-	  header.addText( "pulseduration", Str( 1000.0*PulseDuration ) + "ms" );
+	  header.addNumber( "pulseduration", 1000.0*PulseDuration, "ms" );
       }
       else if ( WaveForm == Triangular )
 	signal.triangleWave( duration, deltat, 1.0/Frequency );
@@ -1081,7 +1081,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 	signal.sawDownWave( duration, deltat, 1.0/Frequency, cycleramp );
       signal = 2.0*signal - 1.0;
       if ( WaveForm != Triangular )
-	header.addText( "cycleramp", Str( 1000.0*cycleramp ) + "ms" );
+	header.addNumber( "cycleramp", 1000.0*cycleramp, "ms" );
     }
 
     if ( StoreLevel == Noise && 
@@ -1093,8 +1093,8 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   else if ( WaveForm == Sweep ) {
     // frequency sweep:
     header.addText( "waveform", "Sweep" );
-    header.addText( "startfrequency", Str( StartFreq ) + "Hz" );
-    header.addText( "endfrequency", Str( EndFreq ) + "Hz" );
+    header.addNumber( "startfrequency", StartFreq, "Hz" );
+    header.addNumber( "endfrequency", EndFreq, "Hz" );
     PeakAmplitudeFac = 1.0;
     signal.sweepWave( duration, deltat, StartFreq, EndFreq );
     if ( StoreLevel == Generated ) 
@@ -1131,12 +1131,12 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 
   signal *= Amplitude;
   signal.ramp( ramp );
-  header.addText( "ramp", Str( 1000.0*ramp ) + "ms" );
+  header.addNumber( "ramp", 1000.0*ramp, "ms" );
   PeakAmplitude = Amplitude / PeakAmplitudeFac;
 
   signal.setIdent( "signal=" + wavename + ", amplitude=" + Str( Amplitude ) + IUnit );
-  header.addText( "amplitude", Str( Amplitude ) + IUnit );
-  header.addText( "amplitudefactor", Str( PeakAmplitude, 0, 3, 'g' ) );
+  header.addNumber( "amplitude", Amplitude, IUnit );
+  header.addNumber( "amplitudefactor", PeakAmplitude );
   if ( storesignal && store ) {
     Str filepattern = "$(waveform)$(filename)$(frequency)$(random seed)$(pulseduration)$(dutycycle)$(tau)r$(ramp)$(duration)$(amplitude)$(amplitudefactor).dat";
     StoreFile = StorePath + translate( filepattern, header );
@@ -1144,7 +1144,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     if ( ! cf ) {
       ofstream of( StoreFile.c_str() );
       header.erase( "filename" );
-      header.save( of, "# " );
+      header.save( of, "# ", 0, FirstOnly );
       of << '\n';
       of << "#Key\n";
       of << "# t   x\n";

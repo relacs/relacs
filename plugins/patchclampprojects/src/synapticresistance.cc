@@ -236,7 +236,7 @@ void SynapticResistance::save( const SampleDataF &meantrace, const SampleDataF &
   header.newSection( stimulusData() );
   unlockStimulusData();
   header.newSection( settings() );
-  header.save( df, "# " );
+  header.save( df, "# ", 0, FirstOnly );
   df << '\n';
 
   TableKey datakey;
