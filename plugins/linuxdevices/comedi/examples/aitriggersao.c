@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
   }
 
   /* Route AI_START1 TO PFI0: */
-  /*
   ret = comedi_set_routing( dev, pfisubdevice, 1, NI_PFI_OUTPUT_AI_START1 );
   if ( ret < 0 ) {
     comedi_perror("comedi_routing");
@@ -57,7 +56,6 @@ int main(int argc, char *argv[])
     comedi_perror("comedi_dio_config");
     exit(1);
   }
-  */
 
   /* Route AO_START1 TO PFI6: */
   /*
@@ -66,12 +64,12 @@ int main(int argc, char *argv[])
     comedi_perror("comedi_routing");
     exit(1);
   }
+  */
   ret = comedi_dio_config( dev, pfisubdevice, 6, INSN_CONFIG_DIO_INPUT );
   if ( ret < 0 ) {
     comedi_perror("comedi_dio_config");
     exit(1);
   }
-  */
 
   /* Analog Output: */
   printf( "init ao ...\n" );
@@ -87,7 +85,7 @@ int main(int argc, char *argv[])
     /*! Start on PFI0 trigger: */
     aocmd.start_src = TRIG_EXT;
     aocmd.start_arg = CR_EDGE | NI_EXT_PFI(6);
-    aocmd.start_arg = CR_EDGE | 18;
+    //    aocmd.start_arg = CR_EDGE | 18;
   }
   else {
     /*! Start on internal trigger: */
