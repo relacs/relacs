@@ -23,6 +23,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iomanip>
+#include <sstream>
+#include <iterator>
+#include <algorithm>
 #include <relacs/options.h>
 #include <relacs/parameter.h>
 
@@ -408,7 +411,75 @@ Parameter &Parameter::operator=( const string &value )
 Parameter &Parameter::assign( const string &value )
 {
   Warning = "";
-  if ( isText() && ( size() > 1 || ( style() & Parameter::SelectText ) > 0 ) ) {
+
+  // Multiple options style and combo box mode
+  if (isText() && ((style() & (Parameter::Select)) == Parameter::Select))
+  {
+    // trim helper function because there isn't any in the stl
+    static const auto trim = [](const std::string& val)
+    {
+      std::string s(val);
+      s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+      s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+      return s;
+    };
+
+    auto type = std::count(value.begin(), value.end(), '[');
+    // new style "[ [ selected1, ...,  selectedn], [ value1, ..., valuem ] ]"
+    if (type == 3)
+    {
+      auto find = value.find_first_of("[", 1);
+      std::string values = trim(value.substr(find, value.find_first_of("]", find) - find + 1));
+
+      find = value.find_first_of("[", find + 1) + 1;
+      std::string definitions = trim(value.substr(find, value.find_first_of("]", find) - find));
+
+      setText(values);
+
+      StrQueue sq;
+      sq.assign(definitions, ",");
+      clearSelectOptions();
+      for (int i = 0; i< sq.size(); ++i)
+      {
+        // transform special characters
+        std::string str = sq[i].strip();
+        if (str == "~")
+          str = "";
+        else if (str.empty())
+          continue;
+        else if (str[0] == '"' && str[str.size() - 1] == '"')
+        {
+          str.erase(0, 1);
+          str.erase(str.size() - 1, 1);
+        }
+
+        addSelectOption(str);
+      }
+    }
+    // fallback style "[ selected, [ value1, ..., valuen ] ]"
+    // fallback style "[ selected, value1, ..., valuen ] ]"
+    else if (type == 2 || type == 1)
+    {
+      std::string copy(value);
+
+      // remove additional backets
+      if (type == 2)
+      {
+        auto find = copy.find_first_of("[", 1);
+        copy.erase(find, 1);
+        find = copy.find_last_of("]");
+        copy.erase(find, 1);
+      }
+
+      // read everything and discard repeated values
+      setText(trim(copy));
+      for (int i = 1; i < String.size(); ++i)
+        addSelectOption(String[i]);
+
+      String.resize(1);
+    }
+  }
+  else if ( isText() && ( size() > 1 || ( style() & Parameter::SelectText ) > 0 ) ) {
     selectText( value );
   }
   else {
@@ -3320,82 +3391,9 @@ string Parameter::quoteString( string s, bool always, bool escape )
 
 string Parameter::save( int flags ) const
 {
-  string str;
-  bool escape = ( flags & Options::EscapeQuotes );
-  // name:
-  if ( name().find_first_of( ",{}[]:=" ) != string::npos ) {
-    if ( escape )
-      str = "\\\"" + name() + "\\\"";
-    else
-      str = '"' + name() + '"';
-  }
-  else
-    str = name();
-  if ( (flags & Options::PrintRequest) && name() != request() ) {
-    if ( request().find_first_of( ",{}[]:=" ) != string::npos ) {
-      if ( escape )
-	str += " (\\\"" + request() + "\\\")";
-      else
-	str += " (\"" + request() + "\")";
-    }
-    else
-      str += " (" + request() + ")";
-  }
-  str += ": ";
-
-  // value:
-  bool fulllist = ( size() > 1 &&
-		    ( (Style & ListAlways) ||
-		      (flags & Options::FirstOnly) == 0 ) );
-  bool always = ( flags & Options::AlwaysQuote );
-  if ( isNumber() || isInteger() ) {
-    if ( fulllist )
-      str += "[ ";
-    if ( error( 0 ) >= 0.0 )
-      str += text( 0, "(" + format() + "+-" + format().up() + ")" );
-    else
-      str += text( 0 );
-    if ( outUnit() != "1" )
-      str += outUnit();
-    if ( fulllist ) {
-      for ( int k=1; k<(int)Value.size(); k++ ) {
-	str += ", ";
-	if ( error( k ) >= 0.0 )
-	  str += text( k, "(" + format() + "+-" + format().up() + ")" );
-	else
-	  str += text( k );
-	if ( outUnit() != "1" )
-	  str += outUnit();
-      }
-      str += " ]";
-    }
-  }
-  else if ( isBoolean() ) {
-    if ( fulllist )
-      str += "[ ";
-    str += ( boolean( 0 ) ? "true" : "false" );
-    if ( fulllist ) {
-      for ( int k=1; k<(int)Value.size(); k++ ) {
-	str += ", ";
-	str += ( boolean( k ) ? "true" : "false" );
-      }
-      str += " ]";
-    }
-  }
-  else if ( isDate() || isTime() || isText() ) {
-    if ( fulllist )
-      str += "[ ";
-    str += quoteString( text( 0 ), always, escape );
-    if ( fulllist ) {
-      for ( int k=1; k<(int)String.size(); k++ ) {
-	str += ", ";
-	str += quoteString( text( k ), always, escape );
-      }
-      str += " ]";
-    }
-  }
-
-  return str;
+  std::ostringstream os;
+  save(os, 0, flags);
+  return os.str();
 }
 
 
@@ -3424,12 +3422,42 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
   }
   str << Str( is, -width ) << ": ";
 
-  // value:
   bool fulllist = ( size() > 1 &&
-		    ( (Style & ListAlways) ||
-		      (flags & Options::FirstOnly) == 0 ) );
+                   ( (Style & ListAlways) ||
+                     (flags & Options::FirstOnly) == 0 ) );
   bool always = ( flags & Options::AlwaysQuote );
-  if ( isNumber() || isInteger() ) {
+
+  // value:
+  if (isText() && (style() & Parameter::Select) == Parameter::Select)
+  {
+    if (flags & Options::FirstOnly)
+      str << quoteString(text(0), always, escape);
+    else
+    {
+      str << "[ ";
+      // values
+      {
+        str << "[ ";
+        str << quoteString(text(0), always, escape);
+        for (int i = 1 ; i < size(); ++i)
+          str << ", " << quoteString(text(i), always, escape);
+        str << " ]";
+      }
+      str << ", ";
+      {
+        str << "[ ";
+        if (!SelectableValues.empty())
+        {
+          str << quoteString(selectOption(0), always, escape);
+          for (int i = 1 ; i < SelectableValues.size(); ++i)
+            str << ", " << quoteString(selectOption(i), always, escape);
+        }
+        str << " ]";
+      }
+      str << " ]";
+    }
+  }
+  else if ( isNumber() || isInteger() ) {
     if ( fulllist )
       str << "[ ";
     if ( error( 0 ) >= 0.0 )

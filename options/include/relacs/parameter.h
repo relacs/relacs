@@ -104,7 +104,7 @@ public:
   static const int ListAlways = 0x02000000;
     /*! If this bit is set in the Parameter's style
         it acts like a combo box in combination with MultipleSelection bit */
-  static const int Select = 0x00400000;
+  static const int Select = 0x00400000 | MultipleSelection;
 
     /*! Construct a single Parameter. 
         Use setValueType() to define the type of the parameter,

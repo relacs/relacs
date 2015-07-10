@@ -65,7 +65,10 @@ MainWidget::MainWidget( void )
   Opt1.addInteger("multiple integer", "allow multiple values", 1).setStyle(OptWidget::MultipleSelection).setUnit("V")
       .addInteger(1).addInteger(2).addInteger(3).addInteger(4);
   Opt1.addText("combo text", "ComboBox multiple test", "value 1").setStyle(OptWidget::MultipleSelection | Parameter::Select)
-      .addSelectOption("value 1").addSelectOption("value 2").addSelectOption("value 3").addText("value 2");
+      //.assign("[ [ value 1, value 2 ], [ value 1, value 2, value 3 ] ]");
+      .assign("[ ~, ~, {value2}, value~3 ]");
+      //.assign("[ value 1, [ value 1, value 2, value 3 ] ]");
+      //.addSelectOption("value 1").addSelectOption("value 2").addSelectOption("value 3").addText("value 2");
 
   Opt1.newSection( "Analysis" ).setStyle( OptWidget::TabSection );
   Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.01, "seconds", "ms" );
@@ -127,7 +130,7 @@ void MainWidget::dialog( void )
   int r = d.exec();
   cerr << "dialog exec() returned " << r << '\n';
   cerr << "the values of the options are:\n";
-  //  cerr << Opt1 << Opt2 << '\n';
+  cerr << Opt1 << Opt2 << '\n';
 }
 
 

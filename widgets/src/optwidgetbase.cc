@@ -1498,7 +1498,7 @@ OptWidgetMultipleValues::OptWidgetMultipleValues(Options::iterator param, QWidge
 
     if (Param->isAnyNumber())
       ListWidget->setItemDelegate(new NumberItemDelegate(*Param));
-    else if (Param->style() & Parameter::Select)
+    else if ((Param->style() & Parameter::Select) == Parameter::Select)
       ListWidget->setItemDelegate(new ComboItemDelegate(*Param));
   }
 
