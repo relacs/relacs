@@ -1536,23 +1536,30 @@ void OptWidgetMultipleValues::get()
   bool notifing = OO->notifying();
   OO->unsetNotify();
 
-  if (Param->isText())
+  if (ListWidget->count() == 0)
   {
-    for (int i = 0; i < ListWidget->count(); ++i)
-      Param->addText(ListWidget->item(i)->text().toStdString(), i == 0);
+    Param->setText("");
   }
-  else if (Param->isInteger())
+  else
   {
-    for (int i = 0; i < ListWidget->count(); ++i)
+    if (Param->isText())
     {
-      Param->addNumber(ListWidget->item(i)->data(Qt::EditRole).toInt(), -1, std::string(Param->unit().c_str()), i == 0);
+      for (int i = 0; i < ListWidget->count(); ++i)
+        Param->addText(ListWidget->item(i)->text().toStdString(), i == 0);
     }
-  }
-  else if (Param->isNumber())
-  {
-    for (int i = 0; i < ListWidget->count(); ++i)
+    else if (Param->isInteger())
     {
-      Param->addNumber(ListWidget->item(i)->data(Qt::EditRole).toDouble(), -1., std::string(Param->unit().c_str()), i == 0);
+      for (int i = 0; i < ListWidget->count(); ++i)
+      {
+        Param->addNumber(ListWidget->item(i)->data(Qt::EditRole).toInt(), -1, std::string(Param->unit().c_str()), i == 0);
+      }
+    }
+    else if (Param->isNumber())
+    {
+      for (int i = 0; i < ListWidget->count(); ++i)
+      {
+        Param->addNumber(ListWidget->item(i)->data(Qt::EditRole).toDouble(), -1., std::string(Param->unit().c_str()), i == 0);
+      }
     }
   }
 
@@ -1571,13 +1578,15 @@ void OptWidgetMultipleValues::reset()
   InternChanged = true;
   ListWidget->clear();
 
-  for (int i = 0; i < Param->size(); ++i)
-  {
-    if (Param->isText())
-      addItem(Param->text(i));
-    else
-      addItem(Param->number(i));
-  }
+  if (Param->size() > 1 && !Param->text(0).empty())
+    for (int i = 0; i < Param->size(); ++i)
+    {
+      if (Param->isText())
+        addItem(Param->text(i));
+      else
+        addItem(Param->number(i));
+    }
+
   InternChanged = false;
 }
 
