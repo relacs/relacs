@@ -37,9 +37,8 @@ namespace auditory {
 /*! 
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
-\version 1.4 (Jul 19, 2014)
+\version 1.6 (Jul 11, 2015)
 \author Jan Benda
-
 \par Options
 - \c Waveform
     - \c type=Wave: Type of stimulus (\c string)
@@ -64,6 +63,8 @@ namespace auditory {
     - \c intensitybase=SPL: Stimulus intensity relative to (\c string)
     - \c repeats=10times: Number of stimulus presentations (\c number)
     - \c pause=1000ms: Duration of pause between stimuli (\c number)
+    - \c before=100ms: Time before stimulus to be analyzed (\c number)
+    - \c after=100ms: Time after stimulus to be analyzed (\c number)
     - \c side=left: Speaker (\c string)
     - \c Carrier
         - \c carrierfreq=5kHz: Carrier frequency (\c number)
@@ -86,8 +87,8 @@ namespace auditory {
     - \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
     - \c sigma1=2ms: Standard deviation of rate smoothing kernel 1 (\c number)
     - \c sigma2=20ms: Standard deviation of rate smoothing kernel 2 (\c number)
-    - \c before=100ms: Time before stimulus to be analyzed (\c number)
-    - \c after=100ms: Time after stimulus to be analyzed (\c number)
+    - \c storevoltage=false: Save voltage trace (\c boolean)
+    - \c plot=Current voltage trace: Plot shows (\c string)
     - \c adjust=true: Adjust input gain (\c boolean)
     - \c Save stimuli
         - \c storemode=session: Save stimuli in (\c string)
@@ -107,17 +108,21 @@ public:
     /*! Destructor. */
   ~SingleStimulus( void );
 
+  virtual void preConfig( void );
   virtual int main( void );
 
+  void openTraceFile( ofstream &tf, TableKey &tracekey, const Options &header );
+  void saveTrace( ofstream &tf, TableKey &tracekey, int index,
+		  const SampleDataF &voltage );
+  void saveMeanTrace( Options &header, const SampleDataF &meanvoltage );
   void saveSpikes( Options &header, const EventList &spikes );
   void saveRate( Options &header, const SampleDataD &rate1,
 		 const SampleDataD &rate2 );
-  void save( const EventList &spikes, const SampleDataD &rate1,
-	     const SampleDataD &rate2 );
 
     /*! Plot data. */
   void plot( const EventList &spikes, const SampleDataD &rate1,
-	     const SampleDataD &rate2 );
+	     const SampleDataD &rate2, const SampleDataF &voltage,
+	     const SampleDataF &meanvoltage );
     /*! Analyze data. */
   void analyze( EventList &spikes, SampleDataD &rate1, SampleDataD &rate2,
 		double before, double after );
@@ -165,6 +170,8 @@ protected:
   double MeanRate;
   SampleDataD Rate1;
   SampleDataD Rate2;
+
+  string VUnit;
 
   MultiPlot SP;
   MultiPlot P;

@@ -121,9 +121,9 @@ protected:
   void saveRate( Options &header, const SampleDataD &rate, double sigma );
   void plot( const EventList &spikes, const SampleDataD &rate, const OutData &signal,
 	     const SampleDataF &voltage, const SampleDataF &meanvoltage, double meanrate,
-	     double cvrate, double duration, int repeats, int plotmode );
+	     double cvrate, double duration, int repeats );
   void analyze( EventList &spikes, SampleDataD &rate, double &meanrate, double &cvrate,
-		double duration, double skipwin, double sigma );
+		double duration, double skipwin, double sigma, double before, double after );
 
   int createStimulus( OutData &signal, const Str &file, double &duration, double deltat,
 		      double ramp, double cycleramp, double skipwin, bool storesignal );

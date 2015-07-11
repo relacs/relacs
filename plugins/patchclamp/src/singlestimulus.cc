@@ -739,9 +739,8 @@ int SingleStimulus::main( void )
 	meancurrent[k] += ( current[k] - meancurrent[k] )/(count+1);
     }
     
-    analyze( spikes, rate, meanrate, cvrate, duration, skipwin, sigma );
-    plotmode = index( "plot" );
-    plot( spikes, rate, signal, voltage, meanvoltage, meanrate, cvrate, duration, repeats, plotmode );
+    analyze( spikes, rate, meanrate, cvrate, duration, skipwin, sigma, before, after );
+    plot( spikes, rate, signal, voltage, meanvoltage, meanrate, cvrate, duration, repeats );
     if ( storevoltage ) {
       if ( count == 0 )
 	openTraceFile( tf, tracekey, header );
@@ -783,7 +782,7 @@ void SingleStimulus::openTraceFile( ofstream &tf, TableKey &tracekey,
   tracekey.addNumber( "V", VUnit, "%6.1f" );
   if ( CurrentTrace[0] >= 0 )
     tracekey.addNumber( "I", IUnit, "%6.3f" );
-  Str waveform = text( "waveform" );
+  Str waveform = settings().text( "waveform" );
   if ( waveform == "From file" )
     waveform = "file";
   waveform.lower();
@@ -824,7 +823,7 @@ void SingleStimulus::saveMeanTrace( Options &header, TableKey &tracekey,
 				    const SampleDataF &meancurrent )
 {
   // create file:
-  Str waveform = text( "waveform" );
+  Str waveform = settings().text( "waveform" );
   if ( waveform == "From file" )
     waveform = "file";
   waveform.lower();
@@ -861,7 +860,7 @@ void SingleStimulus::saveMeanTrace( Options &header, TableKey &tracekey,
 void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 {
   // create file:
-  Str waveform = text( "waveform" );
+  Str waveform = settings().text( "waveform" );
   if ( waveform == "From file" )
     waveform = "file";
   waveform.lower();
@@ -886,7 +885,7 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 void SingleStimulus::saveRate( Options &header, const SampleDataD &rate, double sigma )
 {
   // create file:
-  Str waveform = text( "waveform" );
+  Str waveform = settings().text( "waveform" );
   if ( waveform == "From file" )
     waveform = "file";
   waveform.lower();
@@ -916,8 +915,9 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate, double 
 void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
 			   const OutData &signal, const SampleDataF &voltage,
 			   const SampleDataF &meanvoltage, double meanrate,
-			   double cvrate, double duration, int repeats, int plotmode )
+			   double cvrate, double duration, int repeats )
 {
+  int plotmode = index( "plot" );
   P.lock();
   P[0].clear();
   P[0].plotVLine( 0.0, Plot::White, 2 );
@@ -989,14 +989,15 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
 
 
 void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate, double &meanrate,
-			      double &cvrate, double duration, double skipwin, double sigma )
+			      double &cvrate, double duration, double skipwin, double sigma,
+			      double before, double after )
 {
   if ( SpikeEvents[0] < 0 )
     return;
 
   // spikes:
-  spikes.push( events( SpikeEvents[0] ), signalTime(),
-	       signalTime() + duration );
+  spikes.push( events( SpikeEvents[0] ), signalTime()-before,
+	       signalTime() + duration+after, signalTime() );
   int trial = spikes.size()-1;
 
   meanrate = spikes.rate( skipwin, duration );
