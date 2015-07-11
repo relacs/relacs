@@ -1,6 +1,6 @@
 /*
   acoustic/echotest.h
-  Check for echoes
+  Check for echoes.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -22,9 +22,10 @@
 #ifndef _RELACS_ACOUSTIC_ECHOTEST_H_
 #define _RELACS_ACOUSTIC_ECHOTEST_H_ 1
 
-#include <relacs/repro.h>
 #include <relacs/sampledata.h>
 #include <relacs/plot.h>
+#include <relacs/acoustic/traces.h>
+#include <relacs/repro.h>
 using namespace relacs;
 
 namespace acoustic {
@@ -32,24 +33,39 @@ namespace acoustic {
 
 /*!
 \class EchoTest
-\brief [RePro] Check for echoes
-\author Karin Fisch
-\version 1.0 (Jun 22, 2010)
+\brief [RePro] Check for echoes.
+\author Karin Fisch, Jan Benda
+\version 1.0 (Jul 11, 2015)
+\par Options
+- \c duration=10ms: Stimulus duration (\c number)
+- \c frequency=0kHz: Carrier frequency (\c number)
+- \c intensity=80dB: Stimulus intensity (\c number)
+- \c repeats=0: Repetitions of stimulus (\c integer)
+- \c pause=100ms: Duration of pause between stimuli (\c number)
+- \c outtrace=Left-Speaker: Output trace (\c string)
+- \c intrace=Sound-1: Input trace (\c string)
+- \c average=10: Number of trials to be averages (\c integer)
+- \c maxecho=10m: Maximum echo distance (\c number)
+- \c soundspeed=343m/s: Speed of sound (\c number)
 */
 
 
-class EchoTest : public RePro
+class EchoTest : public RePro, public Traces
 {
   Q_OBJECT
 
 public:
 
   EchoTest( void );
+
+  virtual void preConfig( void );
   virtual int main( void );
+
+  void plot( const SampleDataF &meanvoltage, double soundspeed );
   
+
 protected:
   
-  void plotMeanResponse(SampleDataF &mean);
   Plot P;
 
 };

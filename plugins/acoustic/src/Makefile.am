@@ -171,6 +171,7 @@ libacousticechotest_la_LIBADD = \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    libacoustictraces.la \
     $(QT4_LIBS) $(GSL_LIBS)
 
 $(libacousticechotest_la_OBJECTS) : moc_echotest.cc
