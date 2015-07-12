@@ -17,7 +17,9 @@ pluginlib_LTLIBRARIES = \
     libephysamplifiercontrol.la \
     libephyscapacitycompensation.la \
     libephysbridgetest.la \
-    libephysiontophoresis.la
+    libephysiontophoresis.la \
+    libephyssetvgate.la \
+    libephyssetleak.la
 
 
 
@@ -381,6 +383,78 @@ libephysiontophoresis_la_include_HEADERS = $(HEADER_PATH)/iontophoresis.h
 
 
 
+libephyssetvgate_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libephyssetvgate_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libephyssetvgate_la_LIBADD = \
+    $(builddir)/libephystraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libephyssetvgate_la_OBJECTS) : moc_setvgate.cc
+
+libephyssetvgate_la_SOURCES = setvgate.cc
+
+libephyssetvgate_la_includedir = $(pkgincludedir)/ephys
+
+libephyssetvgate_la_include_HEADERS = $(HEADER_PATH)/setvgate.h
+
+
+
+libephyssetleak_la_CPPFLAGS = \
+    $(builddir)/libephystraces.la \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libephyssetleak_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libephyssetleak_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libephyssetleak_la_OBJECTS) : moc_setleak.cc
+
+libephyssetleak_la_SOURCES = setleak.cc
+
+libephyssetleak_la_includedir = $(pkgincludedir)/ephys
+
+libephyssetleak_la_include_HEADERS = $(HEADER_PATH)/setleak.h
+
+
+
 check_PROGRAMS = \
     linktest_librelacsspikingneuron_la \
     linktest_libephystraces_la \
@@ -392,7 +466,9 @@ check_PROGRAMS = \
     linktest_libephysamplifiercontrol_la \
     linktest_libephyscapacitycompensation_la \
     linktest_libephysbridgetest_la \
-    linktest_libephysiontophoresis_la
+    linktest_libephysiontophoresis_la \
+    linktest_libephyssetvgate_la \
+    linktest_libephyssetleak_la
 
 linktest_librelacsspikingneuron_la_SOURCES = linktest.cc
 linktest_librelacsspikingneuron_la_LDADD = librelacsspikingneuron.la
@@ -426,5 +502,11 @@ linktest_libephysbridgetest_la_LDADD = libephysbridgetest.la
 
 linktest_libephysiontophoresis_la_SOURCES = linktest.cc
 linktest_libephysiontophoresis_la_LDADD = libephysiontophoresis.la
+
+linktest_libephyssetvgate_la_SOURCES = linktest.cc
+linktest_libephyssetvgate_la_LDADD = libephyssetvgate.la
+
+linktest_libephyssetleak_la_SOURCES = linktest.cc
+linktest_libephyssetleak_la_LDADD = libephyssetleak.la
 
 TESTS = $(check_PROGRAMS)

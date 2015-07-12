@@ -1,6 +1,6 @@
 /*
-  patchclampprojects/setleak.cc
-  Set leak resistance and reversal potential of a dynamic clamp model.
+  ephys/setvgate.cc
+  Set parameter of voltage gated channel for dynamic clamp.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -21,20 +21,23 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <relacs/patchclampprojects/setleak.h>
+#include <relacs/ephys/setvgate.h>
 using namespace relacs;
 
-namespace patchclampprojects {
+namespace ephys {
 
 
-SetLeak::SetLeak( void )
-  : RePro( "SetLeak", "patchclampprojects", "Jan Benda", "1.0", "Mar 21, 2009" )
+SetVGate::SetVGate( void )
+  : RePro( "SetVGate", "ephys", "Jan Benda", "1.0", "Jul 12, 2015" )
 {
   // add some options:
   addBoolean( "interactive", "Set values interactively", true ).setFlags( 1 );
   addSelection( "preset", "Set g and E to", "previous|zero|custom" ).setUnit( "values" ).setFlags( 1 );
-  addNumber( "g", "New value of leak conductance", 0.0, -100000.0, 100000.0, 0.1, "nS" ).setActivation( "preset", "custom" ).setFlags( 1 );
-  addNumber( "E", "New value of leak reversal-potential", 0.0, -10000.0, 10000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
+  addNumber( "g", "Maximum conductance", 0.0, -100000.0, 100000.0, 0.1, "nS" ).setActivation( "preset", "custom" ).setFlags( 1 );
+  addNumber( "E", "Reversal-potential", 0.0, -10000.0, 10000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
+  addNumber( "vmid", "Position of activation curve", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
+  addNumber( "width", "Width of activation curve", 0.0, -10000.0, 10000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
+  addNumber( "tau", "Activation time constant", 10.0, 0.0, 100000.0, 1.0, "ms" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addBoolean( "reversaltorest", "Set leak reversal-potential to resting potential", true ).setActivation( "preset", "zero", false ).setFlags( 1 );
   addSelection( "involtage", "Input voltage trace for measuring resting potential", "V-1" ).setFlags( 1 );
   addNumber( "duration", "Duration of resting potential measurement", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" ).setFlags( 1 );
@@ -45,22 +48,34 @@ SetLeak::SetLeak( void )
   newSection( "Passive membrane properties of the cell:" ).setFlags( 2 );
   addNumber( "Rm", "Resistance R_m", 0.0, 0.0, 1.0e8, 1.0, "MOhm", "MOhm", "%.1f" ).setFlags( 2+4 );
   addNumber( "Taum", "Time constant tau_m", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 2+4 );
-  newSection( "Injected current I=g(E-V):" ).setFlags( 2 );
-  addNumber( "gdc", "Additional leak conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 2 );
-  addNumber( "Edc", "Reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
+  newSection( "Injected current I=g m (E-V):" ).setFlags( 2 );
+  addNumber( "gvgate", "Conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 2 );
+  addNumber( "Evgate", "Reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
+  addNumber( "vgatevmid", "Position of activation curve Vmid", 0.0, -200.0, 200.0, 1.0, "mV" ).setFlags( 2 );
+  addNumber( "vgatewidth", "Width of activation curve k", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
+  addNumber( "vgatetau", "Time constant tau", 10.0, 0.0, 1000000.0, 1.0, "ms" ).setFlags( 2 );
   newSection( "Resulting membrane properties:" ).setFlags( 2 );
-  addNumber( "Rdc", "New membrane resistance 1/R=1/R_m+g", 0.0, 0.0, 1.0e8, 1.0, "MOhm" ).setFlags( 2 );
+  addNumber( "Rdc", "New membrane resistance", 0.0, 0.0, 1.0e8, 1.0, "MOhm" ).setFlags( 2 );
   addNumber( "taudc", "New membrane time constant", 0.0, 0.0, 1.0e6, 0.001, "s", "ms" ).setFlags( 2 );
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
   setLayout( vb );
+  QHBoxLayout *hb = new QHBoxLayout;
+  vb->addLayout( hb );
 
   // display values:
   STW.assign( (Options*)this, 2, 4, true, 0, mutex() );
   STW.setVerticalSpacing( 2 );
   STW.setMargins( 4 );
-  vb->addWidget( &STW );
+  hb->addWidget( &STW );
+
+  // plot activation curve:
+  P.setXLabel( "Membrane potential [mV]" );
+  P.setXRange( -100.0, 40.0 );
+  P.setYLabel( "Activation [%]" );
+  P.setYRange( 0.0, 100.0 );
+  hb->addWidget( &P );
 
   QHBoxLayout *bb = new QHBoxLayout;
   bb->setSpacing( 4 );
@@ -105,14 +120,14 @@ SetLeak::SetLeak( void )
 }
 
 
-void SetLeak::preConfig( void )
+void SetVGate::preConfig( void )
 {
   setText( "involtage", traceNames() );
   setToDefault( "involtage" );
 }
 
 
-void SetLeak::notify( void )
+void SetVGate::notify( void )
 {
   double rm = number( "Rm", 0.0, "MOhm" );
   if ( rm > 1.0e-6 ) {
@@ -120,15 +135,15 @@ void SetLeak::notify( void )
     lockMetaData();
     double cm = metaData().number( "Cell>cm", 0.0, "pF" );
     unlockMetaData();
-    if ( changed( "gdc" ) ) {
-      double rdc = 1.0/(0.001*number( "gdc" )+1.0/rm);
+    if ( changed( "gvgate" ) ) {
+      double rdc = 1.0/(0.001*number( "gvgate" )+1.0/rm);
       setNumber( "Rdc", rdc );
       setNumber( "taudc", 1.0e-6*rdc*cm );
     }
     else if ( changed( "Rdc" ) ) {
       double rdc = number( "Rdc" );
       if ( rdc > 1.0e-6 ) {
-	setNumber( "gdc", 1000.0/rdc-1000.0/rm );
+	setNumber( "gvgate", 1000.0/rdc-1000.0/rm );
 	setNumber( "taudc", 1.0e-6*rdc*cm );
       }
     }
@@ -137,7 +152,7 @@ void SetLeak::notify( void )
       if ( cm > 1.0e-6 ) {
 	double rdc = 1.0e6*taudc/cm;
 	setNumber( "Rdc", rdc );
-	setNumber( "gdc", 1000.0/rdc-1000.0/rm );
+	setNumber( "gvgate", 1000.0/rdc-1000.0/rm );
       }
     }
     else
@@ -147,10 +162,23 @@ void SetLeak::notify( void )
       STW.updateValues();
     }
   }
+  double vmid = number( "vgatevmid" );
+  double width = number( "vgatewidth" );
+  if ( ::fabs( width ) < 1e-6 )
+    width = width < 0.0 ? -1e-6 : 1e-6;
+  double slope = 1.0/width;
+  SampleDataD activation( -100.0, 40.0, 0.1 );
+  for ( int k=0; k<activation.size(); k++ )
+    activation[k] = 100.0/(1.0+::exp(-slope*(activation.pos(k)-vmid)));
+  P.lock();
+  P.clear();
+  P.plot( activation, 1.0, Plot::Green, 4, Plot::Solid );
+  P.draw();
+  P.unlock();
 }
 
 
-void SetLeak::setValues( void )
+void SetVGate::setValues( void )
 {
   Change = true;
   Reset = false;
@@ -159,7 +187,7 @@ void SetLeak::setValues( void )
 }
 
 
-void SetLeak::keepValues( void )
+void SetVGate::keepValues( void )
 {
   Change = false;
   Reset = false;
@@ -167,7 +195,7 @@ void SetLeak::keepValues( void )
 }
 
 
-void SetLeak::resetValues( void )
+void SetVGate::resetValues( void )
 {
   Change = true;
   Reset = true;
@@ -175,7 +203,7 @@ void SetLeak::resetValues( void )
 }
 
 
-void SetLeak::measureVRest( void )
+void SetVGate::measureVRest( void )
 {
   int involtage = traceIndex( settings().text( "involtage", 0 ) );
   if ( involtage < 0 ) 
@@ -184,13 +212,13 @@ void SetLeak::measureVRest( void )
   double duration = settings().number( "duration" );
   const InData &data = trace( involtage );
   double vrest = data.mean( currentTime()-duration, currentTime() );
-  setNumber( "Edc", vrest );
-  STW.updateValue( "Edc" );  
+  setNumber( "Evgate", vrest );
+  STW.updateValue( "Evgate" );  
   unlock();
 }
 
 
-int SetLeak::main( void )
+int SetVGate::main( void )
 {
   // get options:
   int preset = index( "preset" );
@@ -199,6 +227,12 @@ int SetLeak::main( void )
     preset = 2;
   double g = number( "g" );
   double E = number( "E" );
+  double vmid = number( "vmid" );
+  double width = number( "width" );
+  if ( ::fabs( width ) < 1e-6 )
+    width = width < 0.0 ? -1e-6 : 1e-6;
+  double slope = 1.0/width;
+  double tau = number( "tau" );
   bool reversaltorest = boolean( "reversaltorest" );
 
   noMessage();
@@ -206,8 +240,14 @@ int SetLeak::main( void )
   if ( preset == 0 ) {
     // previous values:
     lockStimulusData();
-    E = stimulusData().number( "E", 0.0, "mV" );
-    g = stimulusData().number( "g", 0.0, "nS" );
+    E = stimulusData().number( "Evgate", 0.0, "mV" );
+    g = stimulusData().number( "gvgate", 0.0, "nS" );
+    vmid = stimulusData().number( "vgatevmid", 0.0, "mV" );
+    slope = stimulusData().number( "vgateslope", 0.0, "1/mV" );
+    if ( ::fabs( slope ) < 1e-6 )
+      slope = slope < 0.0 ? -1e-6 : 1e-6;
+    width = 1.0/slope;
+    tau = stimulusData().number( "vgatetau", 0.0, "ms" );
     unlockStimulusData();
   }
   else if ( preset == 1 ) {
@@ -222,10 +262,13 @@ int SetLeak::main( void )
   unsetNotify();
   setNumber( "Rm", metaData().number( "Cell>rm", 0.0, "MOhm" ) );
   setNumber( "Taum", metaData().number( "Cell>taum", 0.0, "s" ) );
-  setNumber( "Edc", E );
-  setNumber( "gdc", g );
+  setNumber( "Evgate", E );
+  setNumber( "gvgate", g );
+  setNumber( "vgatevmid", vmid );
+  setNumber( "vgatewidth", width );
+  setNumber( "vgatetau", tau );
   delFlags( Parameter::changedFlag() );
-  addFlags( "gdc", Parameter::changedFlag() );
+  addFlags( "gvgate", Parameter::changedFlag() );
   unlockMetaData();
   notify();
   setNotify();
@@ -241,8 +284,14 @@ int SetLeak::main( void )
     postCustomEvent( 12 ); // clearFocus();
     // set new values:
     if ( Change ) {
-      g = Reset ? 0.0 : number( "gdc" );
-      E = Reset ? 0.0 : number( "Edc" );
+      g = Reset ? 0.0 : number( "gvgate" );
+      E = Reset ? 0.0 : number( "Evgate" );
+      vmid = number( "vgatevmid" );
+      width = number( "vgatewidth" );
+      if ( ::fabs( width ) < 1e-6 )
+	width = width < 0.0 ? -1e-6 : 1e-6;
+      slope = 1.0/width;
+      tau = number( "vgatetau" );
     }
     else {
       setDefaults();
@@ -252,22 +301,34 @@ int SetLeak::main( void )
   }
 
   // set the requested values:
-  message( "set g=" + Str( g ) + "nS and E=" + Str( E ) + "mV" );
+  message( "set g=" + Str( g ) + "nS, E=" + Str( E ) + "mV, Vmid=" + Str( vmid ) + "mV, slope=" + Str( slope ) + "/mV tau=" + Str( tau ) + "ms" );
   OutList signal;
-  signal.resize( 2 );
-  signal[0].setTraceName( "g" );
+  signal.resize( 5 );
+  signal[0].setTraceName( "gvgate" );
   signal[0].constWave( g );
-  signal[0].setIdent( "g=" + Str( g ) + "nS" );
-  signal[1].setTraceName( "E" );
+  signal[0].setIdent( "gvgate=" + Str( g ) + "nS" );
+  signal[1].setTraceName( "Evgate" );
   signal[1].constWave( E );
-  signal[1].setIdent( "E=" + Str( E ) + "mV" );
+  signal[1].setIdent( "Evgate=" + Str( E ) + "mV" );
+  signal[2].setTraceName( "vgatevmid" );
+  signal[2].constWave( vmid );
+  signal[2].setIdent( "vgatevmid=" + Str( vmid ) + "mV" );
+  signal[3].setTraceName( "vgateslope" );
+  signal[3].constWave( slope );
+  signal[3].setIdent( "vgateslope=" + Str( slope ) + "/mV" );
+  signal[4].setTraceName( "vgatetau" );
+  signal[4].constWave( tau );
+  signal[4].setIdent( "vgatetau=" + Str( tau ) + "ms" );
   directWrite( signal );
   if ( signal.failed() ) {
     warning( "Failed to write new values: " + signal.errorText() );
     return Failed;
   }
-  setNumber( "gdc", g );
-  setNumber( "Edc", E );
+  setNumber( "gvgate", g );
+  setNumber( "Evgate", E );
+  setNumber( "vgatevmid", vmid );
+  setNumber( "vgatewidth", width );
+  setNumber( "vgatetau", tau );
   setToDefaults();
   STW.updateValues();
   
@@ -276,7 +337,7 @@ int SetLeak::main( void )
 }
 
 
-void SetLeak::keyPressEvent( QKeyEvent *e )
+void SetVGate::keyPressEvent( QKeyEvent *e )
 {
   if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     OKButton->animateClick();
@@ -307,7 +368,7 @@ void SetLeak::keyPressEvent( QKeyEvent *e )
 }
 
 
-void SetLeak::customEvent( QEvent *qce )
+void SetVGate::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
   case 11: {
@@ -325,8 +386,8 @@ void SetLeak::customEvent( QEvent *qce )
 }
 
 
-addRePro( SetLeak, patchclampprojects );
+addRePro( SetVGate, ephys );
 
-}; /* namespace patchclampprojects */
+}; /* namespace ephys */
 
-#include "moc_setleak.cc"
+#include "moc_setvgate.cc"
