@@ -3455,7 +3455,7 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
         if (!SelectableValues.empty())
         {
           str << quoteString(selectOption(0), always, escape);
-          for (int i = 1 ; i < SelectableValues.size(); ++i)
+          for (unsigned int i = 1 ; i < SelectableValues.size(); ++i)
             str << ", " << quoteString(selectOption(i), always, escape);
         }
         str << " ]";
