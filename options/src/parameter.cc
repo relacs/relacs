@@ -3431,7 +3431,13 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
   if (isText() && (style() & Parameter::Select) == Parameter::Select)
   {
     if (flags & Options::FirstOnly)
+    {
+      str << "[ ";
       str << quoteString(text(0), always, escape);
+      for (int i = 1 ; i < size(); ++i)
+        str << ", " << quoteString(text(i), always, escape);
+      str << " ]";
+    }
     else
     {
       str << "[ ";
