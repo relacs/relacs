@@ -113,7 +113,7 @@ int CalibSpeakers::main( void )
     LAtt->clear();
 
   // plot trace:
-  tracePlotSignal( duration );
+  tracePlotSignal( 1.5*duration );
 
   // plot:
   P.lock();
@@ -199,7 +199,7 @@ int CalibSpeakers::main( void )
     for ( int gaintries = 0; gaintries < MaxGainTries; gaintries++ ) {
       // check signal amplitude:
       if ( max < 0.95 * trace( intrace ).maxValue() &&
-	   max > 0.3 * trace( intrace ).maxValue() )
+	   max > 0.1 * trace( intrace ).maxValue() )
 	break;
       adjustGain( trace( intrace ), 1.5 * max );
       // output signal again:
@@ -220,7 +220,7 @@ int CalibSpeakers::main( void )
       error = 1;
       printlog( "write() -> gain error: " + Str( error ) );
     }
-    else if ( max < 0.3 * trace( intrace ).maxValue() ) {
+    else if ( max < 0.1 * trace( intrace ).maxValue() ) {
       error = 2;
       printlog( "write() -> gain error: " + Str( error ) );
       nosignaltries++;
@@ -240,6 +240,11 @@ int CalibSpeakers::main( void )
       message( s );
       plot( minintensity, intensityrange, intensities, fitgain, fitoffset,
 	    oldoffsets, offsets );
+    }
+    else {
+      Str s = "Frequency <b>" + Str( frequency ) + " Hz</b>";
+      s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + "dB SPL</b>";
+      message( s );
     }
 
     // next stimulus:
@@ -422,9 +427,15 @@ void CalibSpeakers::plot( double minintensity, double intensityrange,
   double max = minintensity + intensityrange;
   P.lock();
   P[0].clear();
+  P[0].setXRange( min, max );
   //  P[0].setYRange( 0.0, max*fitgain+fitoffset );
-  P[0].plotLine( min, min, max, max, Plot::Blue, 4 );
-  P[0].plotLine( min, min*fitgain+fitoffset, max, max*fitgain+fitoffset, Plot::Yellow, 2 );
+  //  P[0].plotLine( min, min, max, max, Plot::Blue, 4 );
+  //  P[0].plotLine( min, min*fitgain+fitoffset, max, max*fitgain+fitoffset, Plot::Yellow, 2 );
+  SampleDataD x;
+  x.line( min, max, 1.0, 0.0, 1.0 );
+  P[0].plot( x, 1.0, Plot::Blue, 4 );
+  x.line( min, max, 1.0, fitoffset, fitgain );
+  P[0].plot( x, 1.0, Plot::Yellow, 2 );
   P[0].plot( intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
 
   P[1].clear();

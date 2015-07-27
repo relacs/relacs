@@ -272,6 +272,12 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
 	sigs[k].addError( DaqError::Overflow );
       else if ( v < -1.0-1.0e-8 )
 	sigs[k].addError( DaqError::Underflow );
+      if ( ::fabs( sigs[k].scale() ) < 1.0e-8 ) {
+	minval = sigs[k].minVoltage();
+	maxval = sigs[k].maxVoltage();
+	gain = DAQFlexDevice->maxAOData()/(maxval-minval);
+	v = 0.0;
+      }
     }
     if ( sigs[k].failed() )
       continue;
@@ -309,7 +315,13 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
     // calib[k] = (const Calibration *)Sigs[k].gainData();
     // XXX calibration?
     float v = ChannelValues[Sigs[k].channel()];
-    if ( v > maxval[k] )
+    if ( ::fabs( Sigs[k].scale() ) < 1.0e-8 ) {
+      minval[k] = Sigs[k].minVoltage();
+      maxval[k] = Sigs[k].maxVoltage();
+      gain[k] = DAQFlexDevice->maxAOData()/(maxval-minval);
+      v = 0.0;
+    }
+    else if ( v > maxval[k] )
       v = maxval[k];
     else if ( v < minval[k] ) 
       v = minval[k];
@@ -332,7 +344,9 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
       }
       else {
 	float v = Sigs[k].deviceValue();
-	if ( v > maxval[k] )
+	if ( ::fabs( Sigs[k].scale() ) < 1.0e-8 )
+	  v = 0.0;
+	else if ( v > maxval[k] )
 	  v = maxval[k];
 	else if ( v < minval[k] )
 	  v = minval[k];

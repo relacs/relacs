@@ -215,7 +215,7 @@ public:
         but not add new values. */
   static const long SelectText = Parameter::SelectText; // 0x01000000
     /*! Allow mutliple values to be selected. */
-  static const int MultipleSelection = Parameter::MultipleSelection; // 0x02000000;
+  static const int MultipleSelection = Parameter::MultipleSelection; // 0x00800000;
     /*! Enables auto completion mode of editable combo boxes. */
   static const long ComboAutoCompletion = 0x04000000;
     /*! Browse for existing file. */

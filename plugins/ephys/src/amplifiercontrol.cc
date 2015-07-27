@@ -39,6 +39,7 @@ AmplifierControl::AmplifierControl( void )
   ModeBox = 0;
   BridgeButton = 0;
   CCButton = 0;
+  DCButton = 0;
   VCButton = 0;
   ManualButton = 0;
   SyncCheckBox = 0;
@@ -54,13 +55,14 @@ AmplifierControl::AmplifierControl( void )
   BuzzPulse = 0.5;
   DoBuzz = false;
 
-  addSelection( "initmode", "Initial mode of the amplifier", "Bridge|Current-clamp|Voltage-clamp|Manual selection" );
+  addSelection( "initmode", "Initial mode of the amplifier", "Bridge|Current-clamp|Dynamic-clamp|Voltage-clamp|Manual selection" );
   addNumber( "resistancecurrent", "The average current of the amplifier used for measuring electrode resistance", ResistanceCurrent, 0.0, 100000.0, 0.01, "nA" );
   addBoolean( "adjust", "Adjust input gain for resistance measurement", false );
   addNumber( "maxresistance", "Maximum resistance to be expected for scaling voltage trace", MaxResistance, 0.0, 1000000.0, 10.0, "MOhm" ).setActivation( "adjust", "true" );
   addNumber( "buzzpulse", "Duration of buzz pulse", BuzzPulse, 0.0, 100.0, 0.1, "s", "ms" );
   addBoolean( "showbridge", "Make bridge mode for amplifier selectable", true );
-  addBoolean( "showcc", "Make currenct clamp mode for amplifier selectable", false );
+  addBoolean( "showcc", "Make current clamp mode for amplifier selectable", false );
+  addBoolean( "showdc", "Make dynamic clamp mode for amplifier selectable", false );
   addBoolean( "showvc", "Make voltage clamp mode for amplifier selectable", false );
   addBoolean( "showmanual", "Make manual mode for amplifier selectable", false );
 
@@ -76,9 +78,11 @@ void AmplifierControl::notify( void )
     switch ( initmode ) {
     case 1 : activateCurrentClampMode();
       break;
-    case 2 : activateVoltageClampMode();
+    case 2 : activateDynamicClampMode();
       break;
-    case 3 : manualSelection();
+    case 3 : activateVoltageClampMode();
+      break;
+    case 4 : manualSelection();
       break;
     default :
       activateBridgeMode();
@@ -96,6 +100,18 @@ void AmplifierControl::notify( void )
       CCButton->show();
     else
       CCButton->hide();
+  }
+  if ( DCButton != 0 ) {
+    if ( boolean( "showdc" ) )
+      DCButton->show();
+    else
+      DCButton->hide();
+  }
+  if ( SyncCheckBox != 0 ) {
+    if ( ! boolean( "showdc" ) )
+      SyncCheckBox->show();
+    else
+      SyncCheckBox->hide();
   }
   if ( VCButton != 0 ) {
     if ( boolean( "showvc" ) )
@@ -192,9 +208,11 @@ void AmplifierControl::initDevices( void )
       connect( BridgeButton, SIGNAL( clicked( bool ) ), this, SLOT( activateBridgeMode( bool ) ) );
       CCButton = new QRadioButton( "&Current-clamp" );
       connect( CCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateCurrentClampMode( bool ) ) );
+      DCButton = new QRadioButton( "D&ynamic-clamp" );
+      connect( DCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateDynamicClampMode( bool ) ) );
       VCButton = new QRadioButton( "&Voltage-clamp" );
       connect( VCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateVoltageClampMode( bool ) ) );
-      ManualButton = new QRadioButton( "&Manual selection" );
+      ManualButton = new QRadioButton( "M&anual selection" );
       connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
       vbox = new QVBoxLayout;
       vbox->addWidget( BridgeButton );
@@ -203,6 +221,9 @@ void AmplifierControl::initDevices( void )
       vbox->addWidget( CCButton );
       if ( ! boolean( "showcc" ) )
         CCButton->hide();
+      vbox->addWidget( DCButton );
+      if ( ! boolean( "showdc" ) )
+        DCButton->hide();
       vbox->addWidget( VCButton );
       if ( ! boolean( "showvc" ) )
         VCButton->hide();
@@ -233,6 +254,8 @@ void AmplifierControl::initDevices( void )
       connect( SyncCheckBox, SIGNAL( clicked( bool ) ), this, SLOT( activateSyncPulse( bool ) ) );
       SyncCheckBox->setChecked( SyncPulseEnabled );
       vbox->addWidget( SyncCheckBox );
+      if ( boolean( "showdc" ) )
+	SyncCheckBox->hide();
       QHBoxLayout *hbox = new QHBoxLayout;
       vbox->addLayout( hbox );
       QLabel *label = new QLabel( "Pulse duration" );
@@ -253,9 +276,11 @@ void AmplifierControl::initDevices( void )
     switch ( initmode ) {
     case 1 : activateCurrentClampMode();
       break;
-    case 2 : activateVoltageClampMode();
+    case 2 : activateDynamicClampMode();
       break;
-    case 3 : manualSelection();
+    case 3 : activateVoltageClampMode();
+      break;
+    case 4 : manualSelection();
       break;
     default :
       activateBridgeMode();
@@ -399,8 +424,22 @@ void AmplifierControl::activateCurrentClampMode( bool activate )
   if ( Ampl != 0 && activate ) {
     Ampl->setCurrentClampMode();
     CCButton->setChecked( true );
+    activateSyncPulse( false );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "CC" );
+    unlockStimulusData();
+  }
+}
+
+
+void AmplifierControl::activateDynamicClampMode( bool activate )
+{
+  if ( Ampl != 0 && activate ) {
+    Ampl->setDynamicClampMode();
+    DCButton->setChecked( true );
+    activateSyncPulse( activate );
+    lockStimulusData();
+    stimulusData().setText( "AmplifierMode", "DC" );
     unlockStimulusData();
   }
 }
@@ -437,7 +476,8 @@ void AmplifierControl::activateSyncPulse( bool activate )
   if ( DIO != 0 ) {
     if ( activate ) {
       if ( DIO->setSyncPulse( SyncPulseDuration ) == 0 ) {
-	activateCurrentClampMode( true );
+	if ( ! boolean( "showdc" ) )
+	  activateCurrentClampMode( true );
 	lockStimulusData();
 	stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
 	unlockStimulusData();
@@ -461,7 +501,7 @@ void AmplifierControl::setSyncPulse( double durationus )
   if ( DIO != 0 && SyncPulseEnabled ) {
     if ( DIO->setSyncPulse( syncpulseduration ) == 0 ) {
       SyncPulseDuration = syncpulseduration;
-      activateCurrentClampMode( true );
+      activateDynamicClampMode( true );
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
       unlockStimulusData();

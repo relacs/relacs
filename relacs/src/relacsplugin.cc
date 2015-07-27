@@ -494,8 +494,12 @@ void RELACSPlugin::setGain( const InData &data, int gainindex )
 
 void RELACSPlugin::adjustGain( const InData &data, double maxvalue )
 {
-  if ( RW->AQ != 0 )
-    RW->AQ->adjustGain( data, maxvalue );
+  if ( RW->AQ != 0 ) {
+    if ( data.source() > 0 )
+      RW->AQ->adjustGain( trace( RW->FD->traceInputTrace( data.ident() ) ), maxvalue );
+    else
+      RW->AQ->adjustGain( data, maxvalue );
+  }
 }
 
 

@@ -189,11 +189,6 @@ void SingleStimulus::preConfig( void )
 
 int SingleStimulus::main( void )
 {
-  if ( SpikeEvents[0] < 0 || SpikeTrace[0] < 0 ) {
-    warning( "No spike trace!" );
-    return Failed;
-  }
-
   // get options:
   WaveType = (WaveTypes)index( "type" );
   WaveForm = (WaveForms)index( "waveform" );
@@ -263,6 +258,9 @@ int SingleStimulus::main( void )
     StorePath = "";
   StoreLevel = (StoreLevels)index( "storelevel" );
   StoreFile = "";
+  if ( SpikeEvents[0] < 0 || SpikeTrace[0] < 0 ) {
+    userate = false;
+  }
 
   // stimulus frequency:
   if ( freqsel == 1 ) { // period
@@ -696,8 +694,12 @@ int SingleStimulus::main( void )
   MeanRate = 0.0;
   SampleDataD rate1( -before, Duration+after, 0.001, 0.0 );
   SampleDataD rate2( -before, Duration+after, 0.001, 0.0 );
-  SampleDataF voltage( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
-  SampleDataF meanvoltage( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+  SampleDataF voltage;
+  SampleDataF meanvoltage;
+  if ( SpikeEvents[0] >= 0 && SpikeTrace[0] >= 0 ) {
+    voltage.resize( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+    meanvoltage.resize( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+  }
   int state = Completed;
 
   timeStamp();
@@ -736,22 +738,24 @@ int SingleStimulus::main( void )
     }
 
     // voltage trace:
-    trace( SpikeTrace[0] ).copy( signalTime(), voltage );
-    for ( int k=0; k<voltage.size(); k++ )
-      meanvoltage[k] += ( voltage[k] - meanvoltage[k] )/(count+1);
+    if ( SpikeEvents[0] >= 0 && SpikeTrace[0] >= 0 ) {
+      trace( SpikeTrace[0] ).copy( signalTime(), voltage );
+      for ( int k=0; k<voltage.size(); k++ )
+	meanvoltage[k] += ( voltage[k] - meanvoltage[k] )/(count+1);
     
-    analyze( spikes, rate1, rate2, before, after );
-    plot( spikes, rate1, rate2, voltage, meanvoltage );
-    if ( storevoltage ) {
-      if ( count == 0 )
-	openTraceFile( tf, tracekey, header );
-      saveTrace( tf, tracekey, count, voltage );
-    }
+      analyze( spikes, rate1, rate2, before, after );
+      plot( spikes, rate1, rate2, voltage, meanvoltage );
+      if ( storevoltage ) {
+	if ( count == 0 )
+	  openTraceFile( tf, tracekey, header );
+	saveTrace( tf, tracekey, count, voltage );
+      }
    
-    // adjust gain of daq board:
-    if ( adjustgain ) {
-      adjust( trace( SpikeTrace[0] ), signalTime(),
-	      signalTime() + Duration, 0.8 );
+      // adjust gain of daq board:
+      if ( adjustgain ) {
+	adjust( trace( SpikeTrace[0] ), signalTime(),
+		signalTime() + Duration, 0.8 );
+      }
     }
 
     sleepOn( Duration + pause );
@@ -766,11 +770,13 @@ int SingleStimulus::main( void )
   
   writeZero( Speaker[ Side ] );
   if ( state == Completed ) {
-    saveSpikes( header, spikes );
-    saveRate( header, rate1, rate2 );
-    if ( storevoltage ) {
-      tf << '\n';
-      saveMeanTrace( header, meanvoltage );
+    if ( SpikeEvents[0] >= 0 && SpikeTrace[0] >= 0 ) {
+      saveSpikes( header, spikes );
+      saveRate( header, rate1, rate2 );
+      if ( storevoltage ) {
+	tf << '\n';
+	saveMeanTrace( header, meanvoltage );
+      }
     }
   }
 

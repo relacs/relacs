@@ -41,12 +41,14 @@ AmplMode::AmplMode( void )
   BridgePin = 0;
   CurrentClampPin = 1;
   VoltageClampPin = 2;
+  SyncPin = 5;
   ResistancePin = 3;
   BuzzerPin = 4;
 
   BridgeMask = 0;
   CurrentClampMask = 0;
   VoltageClampMask = 0;
+  SyncMask = 0;
   ResistanceMask = 0;
   BuzzerMask = 0;
 
@@ -71,6 +73,7 @@ void AmplMode::initOptions()
   addInteger( "bridgepin", "DIO line for activating bridge mode", BridgePin );
   addInteger( "cclamppin", "DIO line for activating current clamp mode", CurrentClampPin );
   addInteger( "vclamppin", "DIO line for activating voltage clamp mode", VoltageClampPin );
+  addInteger( "syncpin", "DIO line for activating external synchronization", SyncPin );
   addInteger( "resistancepin", "DIO line for activating resistance measurement", ResistancePin );
   addInteger( "buzzerpin", "DIO line for activating buzzer", BuzzerPin );
 }
@@ -88,16 +91,18 @@ int AmplMode::open( DigitalIO &dio )
     BridgePin = integer( "bridgepin", 0, BridgePin );
     CurrentClampPin = integer( "cclamppin", 0, CurrentClampPin );
     VoltageClampPin = integer( "vclamppin", 0, VoltageClampPin );
+    SyncPin = integer( "syncpin", 0, SyncPin );
     ResistancePin = integer( "resistancepin", 0, ResistancePin );
     BuzzerPin = integer( "buzzerpin", 0, BuzzerPin );
 
     BridgeMask = 1 << BridgePin;
     CurrentClampMask = 1 << CurrentClampPin;
     VoltageClampMask = 1 << VoltageClampPin;
+    SyncMask = 1 << SyncPin;
     ResistanceMask = 1 << ResistancePin;
     BuzzerMask = 1 << BuzzerPin;
 
-    ModeMask =  BridgeMask + CurrentClampMask + VoltageClampMask + ResistanceMask;
+    ModeMask =  BridgeMask + CurrentClampMask + VoltageClampMask + SyncMask + ResistanceMask;
     Mask = ModeMask + BuzzerMask;
     DIOId = DIO->allocateLines( Mask );
     if ( DIOId < 0 ) {
@@ -146,6 +151,7 @@ void AmplMode::open()
     Info.addInteger( "bridgepin", BridgePin );
     Info.addInteger( "cclamppin", CurrentClampPin );
     Info.addInteger( "vclamppin", VoltageClampPin );
+    Info.addInteger( "syncpin", SyncPin );
     Info.addInteger( "resistancepin", ResistancePin );
     Info.addInteger( "buzzerpin", BuzzerPin );
   }
@@ -180,7 +186,7 @@ int AmplMode::setBridgeMode( void )
     return NotOpen;
 
   CurrentMode = BridgeMask;
-  return DIO->writeLines( ModeMask, BridgeMask );
+  return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
@@ -190,7 +196,17 @@ int AmplMode::setCurrentClampMode( void )
     return NotOpen;
 
   CurrentMode = CurrentClampMask;
-  return DIO->writeLines( ModeMask, CurrentClampMask );
+  return DIO->writeLines( ModeMask, CurrentMode );
+}
+
+
+int AmplMode::setDynamicClampMode( void )
+{
+  if ( ! isOpen() )
+    return NotOpen;
+
+  CurrentMode = CurrentClampMask | SyncMask;
+  return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
@@ -200,7 +216,7 @@ int AmplMode::setVoltageClampMode( void )
     return NotOpen;
 
   CurrentMode = VoltageClampMask;
-  return DIO->writeLines( ModeMask, VoltageClampMask );
+  return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
@@ -210,7 +226,7 @@ int AmplMode::setManualSelection( void )
     return NotOpen;
 
   CurrentMode = 0x00;
-  int r = DIO->writeLines( ModeMask, 0x00 );    
+  int r = DIO->writeLines( ModeMask, CurrentMode );    
   return r;
 }
 

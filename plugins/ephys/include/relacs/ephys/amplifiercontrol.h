@@ -52,7 +52,8 @@ namespace ephys {
 - \c maxresistance=100MOhm: Maximum resistance to be expected for scaling voltage trace (\c number)
 - \c buzzpulse=500ms: Duration of buzz pulse (\c number)
 - \c showbridge=true: Make bridge mode for amplifier selectable (\c boolean)
-- \c showcc=false: Make currenct clamp mode for amplifier selectable (\c boolean)
+- \c showcc=false: Make current clamp mode for amplifier selectable (\c boolean)
+- \c showdc=false: Make dynamic clamp mode for amplifier selectable (\c boolean)
 - \c showvc=false: Make voltage clamp mode for amplifier selectable (\c boolean)
 - \c showmanual=false: Make manual mode for amplifier selectable (\c boolean)
 
@@ -62,8 +63,9 @@ namespace ephys {
 - \c O: Measure resistance ("O" is the shortcut of "Ohm"!)
 - \c ALT-B: Switch amplifier to bridge mode
 - \c ALT-C: Switch amplifier to current-clamp mode
+- \c ALT-D: Switch amplifier to dynamic-clamp mode
 - \c ALT-V: Switch amplifier to voltage-clamp mode
-- \c ALT-M: Switch to manual selection of amplifier mode
+- \c ALT-A: Switch to manual selection of amplifier mode
 
 \par Use a presenter to control RELACS
 You can map key presses of a presenter to keys RELACS understands as follows:
@@ -132,6 +134,9 @@ public slots:
   void activateBridgeMode( bool activate=true );
     /*! Activate/deactivate current-clamp mode of the amplifier. */
   void activateCurrentClampMode( bool activate=true );
+    /*! Activate/deactivate current-clamp mode 
+        with external synchronization of the amplifier. */
+  void activateDynamicClampMode( bool activate=true );
     /*! Activate/deactivate voltage-clamp mode of the amplifier. */
   void activateVoltageClampMode( bool activate=true );
     /*! Turn on manual selection of the amplifier. */
@@ -170,6 +175,7 @@ private:
   QGroupBox *ModeBox;
   QRadioButton *BridgeButton;
   QRadioButton *CCButton;
+  QRadioButton *DCButton;
   QRadioButton *VCButton;
   QRadioButton *ManualButton;
   QCheckBox *SyncCheckBox;

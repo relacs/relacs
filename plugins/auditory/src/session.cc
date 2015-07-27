@@ -218,6 +218,10 @@ void Session::initDevices( void )
   SW->assign( &stimulusData(), 16, 0, true, 
 	      OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	      stimulusDataMutex() );
+  if ( SpikeTraces <= 0 || SpikeEvents[0] < 0 || SpikeTrace[0] < 0 ) {
+    P.hide();
+    ASW->hide();
+  }
 }
 
 
@@ -317,7 +321,8 @@ void Session::notifyMetaData( void )
     mo.setNumber( "best maxrate", mo.number( ss + " maxrate" ), mo.error( ss + " maxrate" )  );
   }
   metaData().section( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
-  ASW->updateValues( MetaDataDisplay );
+  if ( SpikeEvents[0] < 0 || SpikeTrace[0] < 0 )
+    ASW->updateValues( MetaDataDisplay );
 }
 
 
@@ -567,6 +572,9 @@ void Session::updateBestSide( void )
 
 void Session::plot( void )
 {
+  if ( SpikeEvents[0] < 0 || SpikeTrace[0] < 0 )
+    return;
+
   lock();
   lockMetaData();
   P.lock();

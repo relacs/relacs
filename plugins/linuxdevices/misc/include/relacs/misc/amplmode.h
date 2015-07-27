@@ -32,7 +32,7 @@ namespace misc {
 /*!
 \class AmplMode
 \author Jan Benda
-\version 3.0 (June 19, 2014)
+\version 3.2 (Juli 21, 2015)
 \brief [Device] Control the mode of an amplifier via DigitalIO
 
 \par Options
@@ -41,6 +41,7 @@ namespace misc {
 - \c bridgepin: the dio line that switches the amplifier into bridge mode.
 - \c resistancepin: the dio line that activates resistance measurement of the amplifier.
 - \c buzzerpin: the dio line that activates the buzzer.
+- \c syncpin: the dio line that tells the amplifier to use externally produced switching pulses.
  */
 
 
@@ -60,23 +61,28 @@ public:
 
     /*! Activate the bridge mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
-	\sa setCurrentClampMode(), setVoltageClampMode(), setManualSelection(),
-	startResistance(), startBuzz() */
+	\sa setCurrentClampMode(), setVoltageClampMode(), setCurrentClampSyncMode(),
+	setManualSelection(), startResistance(), startBuzz() */
   int setBridgeMode( void );
     /*! Activate the current-clamp mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
-	\sa setBridgeMode(), setVoltageClampMode(), setManualSelection(),
-	startResistance(), startBuzz() */
+	\sa setBridgeMode(), setVoltageClampMode(), setCurrentClampSyncMode(),
+	setManualSelection(), startResistance(), startBuzz() */
   int setCurrentClampMode( void );
+    /*! Activate the current-clamp mode and external synchronization of the amplifier.
+        \return the return value of DigitalIO::writeLines()
+	\sa setBridgeMode(), setCurrentClampMode(), setVoltageClampMode(), setManualSelection(),
+	startResistance(), startBuzz() */
+  int setDynamicClampMode( void );
     /*! Activate the voltage-clamp mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
-	\sa setBridgeMode(), setCurrentClampMode(), setManualSelection(),
-	startResistance(), startBuzz() */
+	\sa setBridgeMode(), setCurrentClampMode(), setCurrentClampSyncMode(),
+	setManualSelection(), startResistance(), startBuzz() */
   int setVoltageClampMode( void );
     /*! Activate the manual mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
 	\sa setBridgeMode(), setCurrentClampMode(), setVoltageClampMode(),
-	startResistance(), startBuzz() */
+	setCurrentClampSyncMode(), startResistance(), startBuzz() */
   int setManualSelection( void );
 
     /*! Switch the amplifier into resitance measurement mode.
@@ -113,6 +119,7 @@ private:
   int BridgePin;
   int CurrentClampPin;
   int VoltageClampPin;
+  int SyncPin;
   int ResistancePin;
   int BuzzerPin;
 
@@ -120,6 +127,7 @@ private:
   int BridgeMask;
   int CurrentClampMask;
   int VoltageClampMask;
+  int SyncMask;
   int ResistanceMask;
   int BuzzerMask;
 
