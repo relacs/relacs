@@ -41,12 +41,12 @@ class DIOSim : public DigitalIO
 
 public:
 
-    /*! Constructs an %DIOSim with device class \a deviceclass. 
-        \sa setDeviceClass() */
-  DIOSim( const string &deviceclass );
-    /*! Close the daq driver.
-        Reimplement this destructor. */
-  virtual ~DIOSim( void );
+    /*! Create a new %DynClampDigitalIO without opening a device. */
+  DynClampDigitalIO( void );
+    /*! Open the digital I/O driver specified by its device file \a device. */
+  DynClampDigitalIO( const string &device, const Options &opts );
+    /*! Close the daq driver. */
+  virtual ~DynClampDigitalIO( void );
 
     /*! Open the digital I/O device specified by \a device.
  	\return zero on success, or InvalidDevice (or any other negative number

@@ -97,6 +97,9 @@ int CalibSpeakers::main( void )
 	     " does not exist!" );
     return Failed;
   }
+  int intracesource = intrace;
+  while ( trace( intracesource ).source() > 0 )
+    intracesource = traceInputTrace( intracesource );
 
   // attenuators:
   LoudSpeaker *LAtt = dynamic_cast<LoudSpeaker*>( attenuator( outtrace ) );
@@ -113,7 +116,7 @@ int CalibSpeakers::main( void )
     LAtt->clear();
 
   // plot trace:
-  tracePlotSignal( 1.5*duration );
+  tracePlotSignal( 1.6*duration, 0.1*duration );
 
   // plot:
   P.lock();
@@ -130,7 +133,7 @@ int CalibSpeakers::main( void )
     double freq = *frequencyrange;
     double g, o;
     LAtt->gain( g, o, freq );
-    oldoffsets.push( freq, o );
+    oldoffsets.push( *frequencyrange, o );
   }
 
   frequencyrange.reset();
@@ -195,13 +198,13 @@ int CalibSpeakers::main( void )
   while ( ! interrupt() && softStop() == 0 ) {
 
     // adjust analog input gains:
-    double max = trace( intrace ).maxAbs( signalTime(), signalTime()+duration );
+    double max = trace( intracesource ).maxAbs( signalTime(), signalTime()+duration );
     for ( int gaintries = 0; gaintries < MaxGainTries; gaintries++ ) {
       // check signal amplitude:
-      if ( max < 0.95 * trace( intrace ).maxValue() &&
-	   max > 0.1 * trace( intrace ).maxValue() )
+      if ( max < 0.95 * trace( intracesource ).maxValue() &&
+	   max > 0.1 * trace( intracesource ).maxValue() )
 	break;
-      adjustGain( trace( intrace ), 1.5 * max );
+      adjustGain( trace( intracesource ), 1.5 * max );
       // output signal again:
       write( signal );
       sleep( pause );
@@ -211,7 +214,7 @@ int CalibSpeakers::main( void )
 	writeZero( outtrace );
 	return Aborted;
       }
-      max = trace( intrace ).maxAbs( signalTime(), signalTime()+duration );
+      max = trace( intracesource ).maxAbs( signalTime(), signalTime()+duration );
     }
 
     // signal amplitude has proper range?
@@ -478,7 +481,47 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip,
 
   if ( intensities.size() > 1 ) {
     // fit straight line:
-    intensities.lineFit( fitoffset, fitgain );
+    double bu = 0.0;
+    double mu = 0.0;
+    double fitchisq = 0.0;
+    int l = 0;
+    int r = intensities.size();
+    intensities.lineFit( l, r, fitoffset, bu, fitgain, mu, fitchisq );
+    fitchisq /= intensities.size();
+    // improve fit by discarding measurements:
+    int minn = intensities.size()/2;
+    if ( minn < 2 )
+      minn = 2;
+    bool improved = true;
+    while ( r-l > minn && improved ) {
+      improved = false;
+      double offset = 0.0;
+      double gain = 0.0;
+      double chisq = 0.0;
+      l++;
+      intensities.lineFit( l, r, offset, bu, gain, mu, chisq );
+      chisq /= r-l;
+      if ( (chisq-fitchisq)/fitchisq > -0.1 )
+	l--;
+      else {
+	improved = true;
+	fitoffset = offset;
+	fitgain = gain;
+      }
+      if ( r-l > minn ) {
+	r--;
+	intensities.lineFit( l, r, offset, bu, gain, mu, chisq );
+	chisq /= r-l;
+	if ( (chisq-fitchisq)/fitchisq > -0.1 )
+	  r++;
+	else {
+	  improved = true;
+	  fitoffset = offset;
+	  fitgain = gain;
+	}
+      }
+    }
+    //    cerr << "size=" << intensities.size() << "  l=" << l << "  r=" << r << "  offs=" << fitoffset << "  gain=" << fitgain << '\n';
   }
 }
 

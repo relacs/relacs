@@ -21,6 +21,7 @@
 
 #include <deque>
 #include <relacs/outdata.h>
+#include <relacs/tablekey.h>
 #include <relacs/acoustic/echotest.h>
 using namespace relacs;
 
@@ -43,6 +44,7 @@ EchoTest::EchoTest( void )
   addNumber( "maxecho", "Maximum echo distance", 10.0, 0.0, 1000.0, 0.1, "m" );
   addNumber( "soundspeed", "Speed of sound", 343.0, 1.0, 100000.0, 1.0, "m/s" );
   // sound velocity : 343 m/s at 20 °C
+  addBoolean( "adjust", "Adjust input gains", true );
 
   P.lock();
   P.setYLabel( "Echo" );
@@ -75,6 +77,12 @@ int EchoTest::main( void )
   double maxecho = number( "maxecho" );
   double soundspeed = number( "soundspeed" );
   double maxtime = maxecho/soundspeed;
+  bool adjustgain = boolean( "adjust" );
+
+  if ( repeats < naverage && repeats > 0 ) {
+    repeats = naverage;
+    warning( "repeats (" + Str( repeats ) + ") < naverage (" + Str( naverage ) + ")" );
+  }
 
   // input trace:
   if ( intrace < 0 || intrace >= traces().size() ) {
@@ -83,6 +91,9 @@ int EchoTest::main( void )
     return Failed;
   }
   const InData &indata = trace( intrace );
+  int intracesource = intrace;
+  while ( trace( intracesource ).source() > 0 )
+    intracesource = traceInputTrace( intracesource );
 
   P.lock();
   P.setTitle( "Speed of sound: " + Str( soundspeed, 0, 0, 'f' ) + "m/s" );
@@ -104,9 +115,16 @@ int EchoTest::main( void )
   else
     signal = am;
   signal.setIntensity( intensity );
-  //  signal.save( "signal.dat" );
+
+  // message:
+  noMessage();
+  Str s = "Frequency <b>" + Str( 0.001*frequency ) + " kHz</b>";
+  s += ",  NAverage <b>" + Str( naverage ) + "</b>";
+  message( s );
   
+  // data:
   deque<SampleDataF> datatraces;
+  SampleDataF meanvoltage( -0.5*duration, maxtime, indata.stepsize(), 0.0F );
   int state = Completed;
 
   // output stimulus:  
@@ -135,7 +153,7 @@ int EchoTest::main( void )
     indata.copy( signalTime()+0.5*duration, voltage );
 
     // average:
-    SampleDataF meanvoltage( -0.5*duration, maxtime, indata.stepsize(), 0.0F );
+    meanvoltage = 0.0;
     datatraces.push_back( voltage );
     if ( datatraces.size() > naverage )
       datatraces.pop_front();
@@ -149,17 +167,24 @@ int EchoTest::main( void )
     if ( interrupt() ) {
       if ( count == 0 )
         state = Aborted;
-    break;
+      break;
+    }
+
+    if ( adjustgain ) {
+      double max = trace( intracesource ).maxAbs( signalTime()-duration, signalTime()+maxtime );
+      adjustGain( trace( intracesource ), 1.5 * max );
     }
 
   }
 
+  if ( datatraces.size() == naverage )
+    save( meanvoltage, soundspeed );
   writeZero( outtrace );
   return state;
 }
 
 
-  void EchoTest::plot( const SampleDataF &meanvoltage, double soundspeed )
+void EchoTest::plot( const SampleDataF &meanvoltage, double soundspeed )
 {
   P.lock();
   P.clear();
@@ -167,6 +192,36 @@ int EchoTest::main( void )
   P.plot( meanvoltage, soundspeed*100.0, Plot::Orange, 2, Plot::Solid );
   P.draw();
   P.unlock();
+}
+
+
+void EchoTest::save( const SampleDataF &meanvoltage, double soundspeed )
+{
+  // create file:
+  ofstream df( addPath( "echotest.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  Options header;
+  header.newSection( settings() );
+  header.save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "time", "ms", "%7.3f" );
+  key.addNumber( "distance", "cm", "%7.2f" );
+  key.addNumber( "signal", "V", "%9.5f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int k=0; k<meanvoltage.size(); k++ ) {
+    key.save( df, 1000.0*meanvoltage.pos(k), 0 );
+    key.save( df, soundspeed*100.0*meanvoltage.pos(k) );
+    key.save( df, meanvoltage[k] );
+    df << '\n';
+  }
+  df << '\n' << '\n';
 }
 
 

@@ -140,6 +140,7 @@ void LoudSpeaker::gain( double &gain, double &offset, double &frequency ) const
 	gain += ( Gain[k] - gain )/j;
 	offset += ( Offset[k] - offset )/j;
 	frequency += ( Frequency[k] - frequency )/j;
+	j++;
       }
     }
     else if ( r-l == 1 ) {

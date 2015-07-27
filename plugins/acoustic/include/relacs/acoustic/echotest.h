@@ -62,6 +62,7 @@ public:
   virtual int main( void );
 
   void plot( const SampleDataF &meanvoltage, double soundspeed );
+  void save( const SampleDataF &meanvoltage, double soundspeed );
   
 
 protected:
