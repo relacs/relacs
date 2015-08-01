@@ -980,6 +980,8 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
       maxdiffer = 1;
     if ( differ > maxdiffer ) // allow some columns without unit
       break;
+    if ( cn >= 2 ) // no more than two column lines (unit and identifier)
+      break;
   }
 
   // identify table lines:

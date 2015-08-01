@@ -738,13 +738,18 @@ int SingleStimulus::main( void )
     }
 
     // voltage trace:
-    if ( SpikeEvents[0] >= 0 && SpikeTrace[0] >= 0 ) {
+    if ( SpikeTrace[0] >= 0 ) {
       trace( SpikeTrace[0] ).copy( signalTime(), voltage );
       for ( int k=0; k<voltage.size(); k++ )
 	meanvoltage[k] += ( voltage[k] - meanvoltage[k] )/(count+1);
+    }
     
+    if ( SpikeEvents[0] >= 0 )
       analyze( spikes, rate1, rate2, before, after );
-      plot( spikes, rate1, rate2, voltage, meanvoltage );
+
+    plot( spikes, rate1, rate2, voltage, meanvoltage );
+
+    if ( SpikeTrace[0] >= 0 ) {
       if ( storevoltage ) {
 	if ( count == 0 )
 	  openTraceFile( tf, tracekey, header );

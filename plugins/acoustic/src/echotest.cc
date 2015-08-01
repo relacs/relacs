@@ -118,9 +118,6 @@ int EchoTest::main( void )
 
   // message:
   noMessage();
-  Str s = "Frequency <b>" + Str( 0.001*frequency ) + " kHz</b>";
-  s += ",  NAverage <b>" + Str( naverage ) + "</b>";
-  message( s );
   
   // data:
   deque<SampleDataF> datatraces;
@@ -161,6 +158,12 @@ int EchoTest::main( void )
       for ( unsigned int j=0; j<datatraces.size(); j++ )
 	meanvoltage[k] += ( datatraces[j][k] - meanvoltage[k] )/(j+1);
     }
+
+    // message:
+    Str s = "Frequency <b>" + Str( 0.001*frequency ) + " kHz</b>";
+    s += ",  average over <b>" + Str( datatraces.size() ) + "</b>";
+    s += " of <b>" + Str( naverage ) + "</b> trials";
+    message( s );
 
     plot( meanvoltage, soundspeed );
 

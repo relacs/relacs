@@ -51,6 +51,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   ContinuousView = WrapView;
   setView( WrapView );
   Manual = false;
+  ShowGrid = 3;
   Trigger = true;
   TriggerSource = -1;
   Plotting = true;
@@ -405,6 +406,16 @@ void PlotTrace::init( void )
       }
     }
 
+    // grid:
+    if ( ShowGrid & 1 )
+      P[vp].setXGrid();
+    else
+      P[vp].noXGrid();
+    if ( ShowGrid & 2 )
+      P[vp].setYGrid();
+    else
+      P[vp].noYGrid();
+
     // plot stimulus, restart, and recording events:
     for ( int s=0; s<PlotEvents.size(); s++ ) {
       if ( (PlotEvents[s].mode() & PlotTraceMode) &&
@@ -666,6 +677,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "&End view", this, SLOT( viewEnd() ), Qt::Key_End );
   Menu->addAction( "&Wrapped view", this, SLOT( viewWrapped() ), Qt::Key_Insert );
   Menu->addAction( "&Trigger", this, SLOT( toggleTrigger() ), Qt::CTRL + Qt::Key_T );
+  Menu->addAction( "Toggle &grid", this, SLOT( toggleGrid() ), Qt::CTRL + Qt::Key_G );
   Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
   Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ), Qt::Key_V );
@@ -1048,6 +1060,19 @@ void PlotTrace::viewWrapped( void )
 {
   P.lock();
   setView( WrapView );
+  P.unlock();
+  if ( RW->idle() )
+    plot();
+}
+
+
+void PlotTrace::toggleGrid( void )
+{
+  P.lock();
+  ShowGrid++;
+  if ( ShowGrid > 3 )
+    ShowGrid = 0;
+  PlotChanged = true;
   P.unlock();
   if ( RW->idle() )
     plot();

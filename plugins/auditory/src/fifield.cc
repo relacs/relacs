@@ -165,6 +165,7 @@ int FIField::main( void )
   SSWidth = number( "sswidth" );
   PlotOnSSRate = boolean( "plotonssrate" );
   MinRateFrac = number( "minratefrac" );
+  AdjustGain = boolean( "adjust" );
   SetBest = boolean( "setbest" );
   SetCurves = index( "setcurves" );
 

@@ -131,6 +131,7 @@ public slots:
   void moveSignalOffsRight( void );
   void viewEnd( void );
   void viewWrapped( void );
+  void toggleGrid( void );
   void toggleTrigger( void );
   void manualRange( void );
   void autoRange( void );
@@ -202,6 +203,7 @@ private:
   bool PlotChanged;
   double LeftTime;
   double Offset;
+  int ShowGrid;
   bool Trigger;
   int TriggerSource;
   bool Manual;

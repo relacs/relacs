@@ -131,6 +131,13 @@
 		trace).</para>
 
 		<para>The currently displayed traces can be printed by pressing <keycap>Ctrl+P</keycap>. This writes the data of the traces in addition with some meta data to the file <filename>traces.dat</filename>. The the script specified by printcommand in the settings is then executed.</para>
+
+		<para>
+		  The grid lines can be toggled by pressing <keycap>Ctrl+T</keycap>.
+		  This cycles through no grid lines, x-grid lines, y-grid lines, and
+		  x- and y-grid lines.
+		</para>
+
 		</section>
 
 		<section xml:id='filterdetectorswidget'><title>The FilterDetectors widget</title><para>
@@ -414,6 +421,7 @@
 			<listitem><para><keycap>Insert</keycap>: Continuous mode, wrap the data through the plot window 
 			 (only if RELACS has the key focus, see <keycap>ESC</keycap>).</para></listitem>
 			<listitem><para><keycap>Ctrl+T</keycap>: Toggle trigger mode.</para></listitem>
+			<listitem><para><keycap>Ctrl+G</keycap>: Toggle grid lines.</para></listitem>
 			<listitem><para><keycap>Ctrl+M</keycap>: Manual settings are not overidden by RePro settings.</para></listitem>
 			<listitem><para><keycap>Ctrl+A</keycap>: The RePro automatically sets a suitable range.</para></listitem>
 			<listitem><para><keycap>1, 2, ..9</keycap>: Toggle plot of the corresponding trace number on or off 
