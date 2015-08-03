@@ -69,6 +69,7 @@ MainWidget::MainWidget( void )
       .assign("[ ~, ~, {value2}, value~3 ]");
       //.assign("[ value 1, [ value 1, value 2, value 3 ] ]");
       //.addSelectOption("value 1").addSelectOption("value 2").addSelectOption("value 3").addText("value 2");
+  Opt1.addText("simple select").setStyle(OptWidget::MultipleSelection).assign("one");
 
   Opt1.newSection( "Analysis" ).setStyle( OptWidget::TabSection );
   Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.01, "seconds", "ms" );

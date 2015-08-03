@@ -52,7 +52,8 @@ $(librelacs_la_OBJECTS) : \
     moc_session.cc \
     moc_settings.cc \
     moc_spiketrace.cc \
-    moc_deviceselector.cc
+    moc_deviceselector.cc \
+    moc_filterselector.cc
 
 pkgincludedir = $(includedir)/relacs
 
@@ -91,7 +92,8 @@ pkginclude_HEADERS = \
     ../include/relacs/standardtraces.h \
     ../include/relacs/devicelist.h \
     ../include/relacs/relacsdevices.h \
-    ../include/relacs/deviceselector.h
+    ../include/relacs/deviceselector.h \
+    ../include/relacs/filterselector.h
 
 librelacs_la_SOURCES = \
     aisim.cc \
@@ -126,7 +128,8 @@ librelacs_la_SOURCES = \
     simulator.cc \
     spiketrace.cc \
     standardtraces.cc \
-    deviceselector.cc
+    deviceselector.cc \
+    filterselector.cc
 
 
 check_PROGRAMS = linktest_librelacs_la

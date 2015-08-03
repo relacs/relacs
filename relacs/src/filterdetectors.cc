@@ -30,6 +30,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/filterdetectors.h>
 
+#include <relacs/filterselector.h>
+
 namespace relacs {
 
 
@@ -135,6 +137,8 @@ string FilterDetectors::createFilters( void )
       n = k+5;
       taken = true;
     }
+
+    assignGeneralFilterOptions(filteropts);
 
     // create filter instance:
     string ident = filteropts->text( "name" );
@@ -356,7 +360,7 @@ string FilterDetectors::createFilters( void )
 
     // add filter to list:
     FilterData *fd = new FilterData( fp, filter, intrace, othertrace,
-				     buffersize, storesize, storewidth, panel, linewidth );
+             buffersize, storesize, storewidth, panel, linewidth, filteropts );
     FL.push_back( fd );
 
     // add detector to widget:
@@ -1388,11 +1392,13 @@ FilterData::FilterData( Filter *filter,
 			const vector<string> &in,
 			const vector<string> &other,
 			long n, bool size, bool width,
-			const string &panel, int linewidth )
+      const string &panel, int linewidth,
+      Options* generalOptions)
   : PluginName( pluginname ), In( in ), Other( other ), 
     InTraces(), InEvents(), OutTraces(), OutEvents(), OtherEvents(),
     NBuffer( n ), SizeBuffer( size ), WidthBuffer( width ),
-    PanelTrace( panel ), LineWidth( linewidth ), Init( true )
+    PanelTrace( panel ), LineWidth( linewidth ), Init( true ),
+    GeneralOptions(generalOptions)
 {
   FilterDetector = filter;
   NOut = filter->outTraces();
@@ -1407,7 +1413,8 @@ FilterData::FilterData( const FilterData &fd )
     OutEvents( fd.OutEvents ), OtherEvents( fd.OtherEvents ),
     NBuffer( fd.NBuffer ), SizeBuffer( fd.SizeBuffer ),
     WidthBuffer( fd.WidthBuffer ),
-    PanelTrace( fd.PanelTrace ), LineWidth( fd.LineWidth ), Init( fd.Init )
+    PanelTrace( fd.PanelTrace ), LineWidth( fd.LineWidth ), Init( fd.Init ),
+    GeneralOptions(fd.GeneralOptions)
 {
   FilterDetector = fd.FilterDetector;
   Out = fd.Out;

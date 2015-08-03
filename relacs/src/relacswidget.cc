@@ -57,6 +57,7 @@
 #include <relacs/optdialog.h>
 #include <relacs/relacswidget.h>
 #include <relacs/deviceselector.h>
+#include <relacs/filterselector.h>
 
 namespace relacs {
 
@@ -367,6 +368,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   filemenu->addAction( "&Input traces...", this, SLOT( editInputTraces() ) );
   filemenu->addAction( "&Output traces...", this, SLOT( editOutputTraces() ) );
   filemenu->addAction( "&Devices", this, SLOT(editDevices()));
+  filemenu->addAction( "&Filters", this, SLOT(editFilters()));
   filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
   filemenu->addAction( "&Save settings", (QWidget*)this, SLOT( saveConfig() ) );
   filemenu->addSeparator();
@@ -1483,6 +1485,24 @@ void RELACSWidget::editDevices()
   od->addButton( "&Cancel" );
   QObject::connect( od, SIGNAL( buttonClicked( int ) ), oc, SLOT( dialogClosed( int ) ) );
   QObject::connect( oc, SIGNAL( newDeviceSettings() ), this, SLOT( restartAcquisition() ) );
+  od->exec();
+}
+
+void RELACSWidget::editFilters()
+{
+  FilterSelector* fc = new FilterSelector(this);
+
+  fc->setInputTraces(Options::section("input data"));
+  fc->setFilters(FD);
+
+  OptDialog* od = new OptDialog(false, this);
+  od->setCaption("Filter configuration");
+  od->addWidget(fc);
+  od->addButton( "&Ok", OptDialog::Accept, 2 );
+  od->addButton( "&Apply", OptDialog::Accept, 1, false );
+  od->addButton( "&Cancel" );
+  QObject::connect( od, SIGNAL( buttonClicked( int ) ), fc, SLOT( dialogClosed( int ) ) );
+  QObject::connect( fc, SIGNAL( newFilterSettings() ), this, SLOT( restartAcquisition() ) );
   od->exec();
 }
 

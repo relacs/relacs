@@ -243,6 +243,8 @@ public slots:
 
     /*! Opens a dialog for editing acitve devices. */
   void editDevices();
+    /*! Opens a dialog for editing filters/detectectors */
+  void editFilters();
 
     /*! Save settings to configuration files. */
   void saveConfig( void );

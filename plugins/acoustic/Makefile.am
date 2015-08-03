@@ -4,9 +4,9 @@ acousticcfgdir = $(pkgdatadir)/configs/acoustic
 dist_acousticcfg_DATA = \
     relacs.cfg \
     relacsplugins.cfg \
-    macros.cfg \
-    calib0-0.cfg \
-    calib0-1.cfg
+    macros.cfg
+#    calib0-0.cfg
+#    calib0-1.cfg
 
 EXTRA_DIST = doc/acoustic.doc
 

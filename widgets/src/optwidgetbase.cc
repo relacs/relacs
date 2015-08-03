@@ -1578,7 +1578,7 @@ void OptWidgetMultipleValues::reset()
   InternChanged = true;
   ListWidget->clear();
 
-  if (Param->size() > 1 && !Param->text(0).empty())
+  if (Param->size() >= 1 && !Param->text(0).empty())
     for (int i = 0; i < Param->size(); ++i)
     {
       if (Param->isText())

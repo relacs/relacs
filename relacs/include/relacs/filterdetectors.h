@@ -179,6 +179,8 @@ public:
 
   friend ostream &operator<<( ostream &str, const FilterDetectors &DT );
 
+  typedef deque<FilterData*> FilterList;
+  const FilterList& filterList() const { return FL; }
 
 public slots :
 
@@ -195,7 +197,7 @@ protected:
 
 private:
 
-  typedef deque<FilterData*> FilterList;
+
 
   FilterList FL;
 
@@ -236,7 +238,8 @@ class FilterData : public QObject
 	      const vector<string> &in,
 	      const vector<string> &other,
 	      long n, bool size, bool width,
-	      const string &panel, int linewidth );
+        const string &panel, int linewidth,
+        Options* generalOptions );
   FilterData( const FilterData &fd );
   ~FilterData();
 
@@ -262,6 +265,7 @@ class FilterData : public QObject
   string PanelTrace;
   int LineWidth;
   bool Init;
+  Options* GeneralOptions;
 
 
 public slots:
