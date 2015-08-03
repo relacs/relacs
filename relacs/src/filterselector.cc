@@ -31,6 +31,7 @@ namespace relacs {
 
 namespace {
 
+/*! Defines all managed options */
 Options initTemplate()
 {
   Options opt;
@@ -54,18 +55,6 @@ Options initTemplate()
 static const Options OPTION_TEMPLATE = initTemplate();
 
 }
-
-void assignGeneralFilterOptions(Options* options)
-{
-  for (Options::const_iterator itr = OPTION_TEMPLATE.begin(); itr != OPTION_TEMPLATE.end(); ++itr)
-  {
-    bool found = options->find(itr->name()) != options->end();
-    std::cout << itr->name() << " " << (found ? options->find(itr->name())->text() : "") << " found: " << found << std::endl;
-    if (!found)
-      ;//options->add(Parameter(*itr));
-  }
-}
-
 
 FilterSelector::FilterSelector(QWidget *parent) :
   QWidget(parent),
@@ -108,7 +97,7 @@ FilterSelector::FilterSelector(QWidget *parent) :
     layout->addWidget(filterBox);
   }
   {
-    QGroupBox* inputBox = new QGroupBox("Input");
+    QGroupBox* inputBox = new QGroupBox("Inputs");
     QVBoxLayout* inputBoxLayout = new QVBoxLayout(inputBox);
 
     inputBoxLayout->addWidget(AvailableInputs.Widget);
@@ -136,6 +125,7 @@ void FilterSelector::setFilters(FilterDetectors *filters)
   {
     Filter* flt = filter->FilterDetector;
 
+    // read options into local object
     Options opts = OPTION_TEMPLATE;
     opts.read(*filter->GeneralOptions);
 
@@ -150,6 +140,7 @@ void FilterSelector::setAvailableFilters()
   for (int i = 0; i < Plugins::size(); ++i)
     if (Plugins::type(i) & RELACSPlugin::FilterId)
     {
+      // Structure: plugin[package]
       size_t idx = Plugins::ident(i).find('[');
       std::string name = Plugins::ident(i).substr(0, idx);
       std::string plugin = Plugins::ident(i).substr(idx + 1, Plugins::ident(i).size() - idx - 2);
@@ -224,6 +215,7 @@ void FilterSelector::deleteFilter()
   if (itr == ActiveFilters.Categories.end())
     return;
 
+  // save deleted id (e.g. Filter1 -> 1)
   if (itr->second.Data.Source)
     DeleteList.push_back(std::atoi(itr->second.Data.Source->name().substr(6).c_str()));
 
@@ -240,15 +232,14 @@ void FilterSelector::dialogClosed(int code)
     return;
   }
 
-  int count =  std::count_if(ActiveFilters.Categories.begin(), ActiveFilters.Categories.end(),
-                             [](const decltype(ActiveFilters.Categories)::value_type& cat) { return cat.second.Data.Source;});
+  int count =  0;
 
-  count = 0;
-
+  // save options, to allow sorted traversal
   std::vector<ActiveFilterData*> toSave;
   for (auto&& itr : ActiveFilters.Categories)
     toSave.push_back(&itr.second.Data);
 
+  // sort by old filter id, new entries are appendned at the end
   std::sort(toSave.begin(), toSave.end(), [](ActiveFilterData* a, ActiveFilterData* b) {
     if (!a->Source)
       return false;
@@ -260,25 +251,20 @@ void FilterSelector::dialogClosed(int code)
     return cmp < 0;
   });
 
+  for (int i : DeleteList)
+    FilterList->erase(FilterList->findSection("Filter" + Str(i)));
+
   for (ActiveFilterData* data : toSave)
   {
-    //std::cout << "Found: (" << count << ") " << data->Source->name() << " " << *data->Source << std::endl;
-
     if (data->Source)
     {
       data->Source->clear();
       data->Source->addSection(data->Current, "Filter" + Str(++count));
     }
-    else
+    else  // new item
     {
       FilterList->newSection(data->Current, "Filter" + Str(++count));
     }
-  }
-
-  for (int i : DeleteList)
-  {
-    FilterList->erase(FilterList->findSection("Filter" + Str(i)));
-    std::cout << "delete: " << i << std::endl;
   }
 
   emit newFilterSettings();

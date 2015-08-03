@@ -30,8 +30,6 @@
 #include <relacs/relacswidget.h>
 #include <relacs/filterdetectors.h>
 
-#include <relacs/filterselector.h>
-
 namespace relacs {
 
 
@@ -137,8 +135,6 @@ string FilterDetectors::createFilters( void )
       n = k+5;
       taken = true;
     }
-
-    assignGeneralFilterOptions(filteropts);
 
     // create filter instance:
     string ident = filteropts->text( "name" );

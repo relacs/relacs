@@ -31,13 +31,16 @@
 
 namespace relacs {
 
+/*! Helper class to allow easy control of tree views */
 template<typename T>
 class TreeWrapper
 {
 public:
+  /*! Represents a top level item in an tree*/
   class Category
   {
   public:
+    /*! adds a sub item */
     void add(const std::string& name)
     {
       auto w = new QTreeWidgetItem(Item);
@@ -45,11 +48,12 @@ public:
     }
 
   public:
-    QTreeWidgetItem* Item;
-    T Data;
+    QTreeWidgetItem* Item;  ///< tree widget item
+    T Data;                 ///< arbitrary data associated with this item
   };
 
 public:
+  /*! Constructs a new tree view with given headings */
   TreeWrapper(const std::initializer_list<QString>& headings)
   {
     Widget = new QTreeWidget();
@@ -57,6 +61,7 @@ public:
     Widget->setHeaderLabels(headings);
   }
 
+  /*! Adds a category with optionally data */
   Category& addCategory(const std::initializer_list<QString>& texts, const T& data = {})
   {
     Category category;
@@ -73,31 +78,48 @@ public:
   }
 
 public:
-  QTreeWidget* Widget;
-  std::map<QTreeWidgetItem*, Category> Categories;
+  QTreeWidget* Widget;                              ///< root widget
+  std::map<QTreeWidgetItem*, Category> Categories;  ///< stores interal structure
 };
 
+/*! Holds options for active filters */
 struct ActiveFilterData
 {
   Options* Source;
   Options Current;
 };
+/*! Dummy for no data in tree */
 struct DummyData {};
 
+/*!
+\class FilterSelector
+\brief Dialog to allow configuration of available and active filters/detectors
+\author Philipp Kuhlmann
+
+All available filters/detectors are extracted through loaded plugins.
+Active devices are loaded from FilterDetectors list (indirectely out of config).
+
+All configureable options are defined here, other options aren't displayed in the dialogs and aren't saved.
+*/
 class FilterSelector : public QWidget
 {
   Q_OBJECT
 public:
   FilterSelector(QWidget* parent = nullptr);
 
+  /*! Loads available input traces (analog/digital and events) */
   void setInputTraces(Options& inList);
+  /*! Loads active filters */
   void setFilters(FilterDetectors* filters);
+  /*! Loads available filters */
   void setAvailableFilters();
 
 public slots:
+  /*! Called when dialog is closed, triggers saving */
   void dialogClosed(int code);
 
 signals:
+  /*! Called when options were changed, allows reloading filters */
   void newFilterSettings();
 
 private slots:
@@ -117,9 +139,6 @@ private:
   FilterDetectors* FilterList;
   std::vector<int> DeleteList;
 };
-
-void assignGeneralFilterOptions(Options* options);
-
 }
 
 #endif // FILTERSELECTOR_H
