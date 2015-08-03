@@ -174,6 +174,11 @@ void FilterSelector::openEditFilterDialog(TreeWrapper<ActiveFilterData>::Categor
     return;
 
   category.Item->setText(0, category.Data.Current.text("name").c_str());
+  category.Item->takeChildren();
+  std::vector<std::string> traces;
+  category.Data.Current.texts("inputtrace", traces);
+  for (std::string& str : traces)
+    category.add(str);
 }
 
 void FilterSelector::addNewFilter()
@@ -201,8 +206,11 @@ void FilterSelector::openAddFilterDialog(TreeWrapper<DummyData>::Category &categ
   if (code != 1)
     return;
 
-  ActiveFilters.addCategory({copy.text("name").c_str(), copy.text("filter").c_str()}, {nullptr, copy});
-
+  auto cat = ActiveFilters.addCategory({copy.text("name").c_str(), copy.text("filter").c_str()}, {nullptr, copy});
+  std::vector<std::string> traces;
+  copy.texts("inputtrace", traces);
+  for (std::string& str : traces)
+    cat.add(str);
 }
 
 void FilterSelector::deleteFilter()

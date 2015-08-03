@@ -444,6 +444,7 @@ private:
   bool HandlingEvent;
   class KeyTimeOut *KeyTime;
 
+  bool Doxydoc;
 };
 
 

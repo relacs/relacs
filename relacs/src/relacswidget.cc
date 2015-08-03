@@ -108,7 +108,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     IsMaximized( false ),
     DeviceMenu( 0 ),
     Help( false ),
-    HandlingEvent( false )
+    HandlingEvent( false ),
+    Doxydoc(doxydoc)
 {
   printlog( "This is RELACS, version " + string( RELACSVERSION ) + ", compiled at " + string( __DATE__ ) );
 
@@ -1836,6 +1837,18 @@ void RELACSWidget::restartAcquisition( void )
   if ( ! idle() )
     stopActivity();
   clearActivity();
+
+  // reload filters
+  {
+    // Workaround XXX: Somehow the changed options are only available after a reload, so just do the reload
+    CFG.save();
+    CFG.read();
+
+    FD->clear();
+    FD->createFilters();
+    FD->addMenu(nullptr, Doxydoc);
+  }
+
   if ( mode == AcquisitionMode )
     startFirstAcquisition( false );
   else if ( mode == SimulationMode )
