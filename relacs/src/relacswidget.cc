@@ -1840,10 +1840,6 @@ void RELACSWidget::restartAcquisition( void )
 
   // reload filters
   {
-    // Workaround XXX: Somehow the changed options are only available after a reload, so just do the reload
-    CFG.save();
-    CFG.read();
-
     FD->clear();
     FD->createFilters();
     FD->addMenu(nullptr, Doxydoc);
