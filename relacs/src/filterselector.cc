@@ -49,6 +49,7 @@ Options initTemplate()
   opt.addBoolean("storewidth", false);
   opt.addText("panel");
   opt.addInteger("linewidth");
+
   return std::move(opt);
 }
 
@@ -164,6 +165,11 @@ void FilterSelector::editFilter()
 
 void FilterSelector::openEditFilterDialog(TreeWrapper<ActiveFilterData>::Category& category)
 {
+  Parameter& param = *category.Data.Current.find("inputtrace");
+  param.addStyle(Parameter::Select);
+  for (auto&& item : AvailableInputs.Categories)
+    param.addSelectOption(item.first->text(0).toStdString());
+
   OptDialog* od = new OptDialog(true, this);
   od->setCaption("Device options");
   od->addOptions(category.Data.Current);
@@ -172,6 +178,8 @@ void FilterSelector::openEditFilterDialog(TreeWrapper<ActiveFilterData>::Categor
   int code = od->exec();
   if (code != 1)
     return;
+
+  param.delStyle(Parameter::Select);
 
   category.Item->setText(0, category.Data.Current.text("name").c_str());
   category.Item->takeChildren();
@@ -196,6 +204,10 @@ void FilterSelector::openAddFilterDialog(TreeWrapper<DummyData>::Category &categ
 {
   Options copy = OPTION_TEMPLATE;
   copy.setText("filter", category.Item->text(0).toStdString());
+  Parameter& param = *copy.find("inputtrace");
+  param.addStyle(Parameter::Select);
+  for (auto&& item : AvailableInputs.Categories)
+    param.addSelectOption(item.first->text(0).toStdString());
 
   OptDialog* od = new OptDialog(true, this);
   od->setCaption("Device options");
@@ -205,6 +217,8 @@ void FilterSelector::openAddFilterDialog(TreeWrapper<DummyData>::Category &categ
   int code = od->exec();
   if (code != 1)
     return;
+
+  param.delStyle(Parameter::Select);
 
   auto cat = ActiveFilters.addCategory({copy.text("name").c_str(), copy.text("filter").c_str()}, {nullptr, copy});
   std::vector<std::string> traces;
