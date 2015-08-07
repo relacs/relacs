@@ -61,7 +61,7 @@ FilterSelector::FilterSelector(QWidget *parent) :
   QWidget(parent),
   AvailableFilters({"Name", "Plugin"}),
   ActiveFilters({"Name", "Plugin"}),
-  AvailableInputs({"Name"}),
+  AvailableInputs({"Name", "from"}),
   FilterList(nullptr)
 {
   QHBoxLayout* layout = new QHBoxLayout(parent);
@@ -111,11 +111,11 @@ FilterSelector::FilterSelector(QWidget *parent) :
   setMinimumSize(500,350);
 }
 
-void FilterSelector::setInputTraces(Options& inList)
+void FilterSelector::setInputTraces(Options& deviceIn)
 {
-  Parameter& param = *(inList.find("inputtraceid"));
+  Parameter& param = *(deviceIn.find("inputtraceid"));
   for (int i = 0; i < param.size(); ++i)
-    AvailableInputs.addCategory({param.text(i).c_str()});
+    AvailableInputs.addCategory({param.text(i).c_str(), "device"});
 }
 
 void FilterSelector::setFilters(FilterDetectors *filters)
@@ -133,6 +133,10 @@ void FilterSelector::setFilters(FilterDetectors *filters)
     TreeWrapper<ActiveFilterData>::Category& category = ActiveFilters.addCategory({flt->ident().c_str(), flt->name().c_str()}, {filter->GeneralOptions, opts});
     for (const std::string& name : filter->In)
       category.add(name);
+    for (const std::string& name : filter->Other)
+      category.add(name);
+
+    AvailableInputs.addCategory({flt->ident().c_str(), "filter"});
   }
 }
 
@@ -165,10 +169,17 @@ void FilterSelector::editFilter()
 
 void FilterSelector::openEditFilterDialog(TreeWrapper<ActiveFilterData>::Category& category)
 {
-  Parameter& param = *category.Data.Current.find("inputtrace");
-  param.addStyle(Parameter::Select);
+  Parameter& inTrace = *category.Data.Current.find("inputtrace");
+  Parameter& otTrace = *category.Data.Current.find("othertrace");
+  inTrace.addStyle(Parameter::Select);
+  otTrace.addStyle(Parameter::Select);
   for (auto&& item : AvailableInputs.Categories)
-    param.addSelectOption(item.first->text(0).toStdString());
+    if (item.first->text(1) == "device")
+      inTrace.addSelectOption(item.first->text(0).toStdString());
+    else
+      otTrace.addSelectOption(item.first->text(0).toStdString());
+
+  std::string oldname = category.Data.Current.text("name");
 
   OptDialog* od = new OptDialog(true, this);
   od->setCaption("Device options");
@@ -179,14 +190,24 @@ void FilterSelector::openEditFilterDialog(TreeWrapper<ActiveFilterData>::Categor
   if (code != 1)
     return;
 
-  param.delStyle(Parameter::Select);
+  inTrace.delStyle(Parameter::Select);
+  otTrace.delStyle(Parameter::Select);
 
   category.Item->setText(0, category.Data.Current.text("name").c_str());
   category.Item->takeChildren();
   std::vector<std::string> traces;
   category.Data.Current.texts("inputtrace", traces);
   for (std::string& str : traces)
-    category.add(str);
+    if (!str.empty())
+      category.add(str);
+  category.Data.Current.texts("othertrace", traces);
+  for (std::string& str : traces)
+    if (!str.empty())
+      category.add(str);
+
+  for (auto&& item : AvailableInputs.Categories)
+    if (item.first->text(1) == "filter" && item.first->text(0).toStdString() == oldname)
+      item.first->setText(0, category.Data.Current.text("name").c_str());
 }
 
 void FilterSelector::addNewFilter()
@@ -204,10 +225,15 @@ void FilterSelector::openAddFilterDialog(TreeWrapper<DummyData>::Category &categ
 {
   Options copy = OPTION_TEMPLATE;
   copy.setText("filter", category.Item->text(0).toStdString());
-  Parameter& param = *copy.find("inputtrace");
-  param.addStyle(Parameter::Select);
+  Parameter& inTrace = *copy.find("inputtrace");
+  Parameter& otTrace = *copy.find("othertrace");
+  inTrace.addStyle(Parameter::Select);
+  otTrace.addStyle(Parameter::Select);
   for (auto&& item : AvailableInputs.Categories)
-    param.addSelectOption(item.first->text(0).toStdString());
+    if (item.first->text(1) == "device")
+      inTrace.addSelectOption(item.first->text(0).toStdString());
+    else
+      otTrace.addSelectOption(item.first->text(0).toStdString());
 
   OptDialog* od = new OptDialog(true, this);
   od->setCaption("Device options");
@@ -218,13 +244,21 @@ void FilterSelector::openAddFilterDialog(TreeWrapper<DummyData>::Category &categ
   if (code != 1)
     return;
 
-  param.delStyle(Parameter::Select);
+  inTrace.delStyle(Parameter::Select);
+  otTrace.delStyle(Parameter::Select);
 
   auto cat = ActiveFilters.addCategory({copy.text("name").c_str(), copy.text("filter").c_str()}, {nullptr, copy});
   std::vector<std::string> traces;
   copy.texts("inputtrace", traces);
   for (std::string& str : traces)
-    cat.add(str);
+    if (!str.empty())
+      cat.add(str);
+  copy.texts("othertrace", traces);
+  for (std::string& str : traces)
+    if (!str.empty())
+      cat.add(str);
+
+  AvailableInputs.addCategory({copy.text("name").c_str(), "filter"});
 }
 
 void FilterSelector::deleteFilter()
@@ -240,6 +274,14 @@ void FilterSelector::deleteFilter()
   // save deleted id (e.g. Filter1 -> 1)
   if (itr->second.Data.Source)
     DeleteList.push_back(std::atoi(itr->second.Data.Source->name().substr(6).c_str()));
+
+  for (auto&& item : AvailableInputs.Categories)
+    if (item.first->text(1) == "filter" && item.first->text(0) == itr->first->text(0))
+    {
+      delete item.first;
+      AvailableInputs.Categories.erase(item.first);
+      break;
+    }
 
   delete items.front();
   ActiveFilters.Categories.erase(items.front());

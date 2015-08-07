@@ -108,7 +108,7 @@ public:
   FilterSelector(QWidget* parent = nullptr);
 
   /*! Loads available input traces (analog/digital and events) */
-  void setInputTraces(Options& inList);
+  void setInputTraces(Options& deviceIn);
   /*! Loads active filters */
   void setFilters(FilterDetectors* filters);
   /*! Loads available filters */
