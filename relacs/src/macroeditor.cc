@@ -67,6 +67,8 @@ public:
     gui.group->layout()->addWidget(new QLabel("Unit: "));
     gui.unit = new QLineEdit(param.unit().c_str());
     gui.group->layout()->addWidget(gui.unit);
+    QPushButton* del = new QPushButton("Delete");
+    gui.group->layout()->addWidget(del);
   }
 
   QWidget* widget() const { return gui.group; }
@@ -103,6 +105,7 @@ public:
 
   Type type;
   std::string name;
+  bool deactivated;
 
   void updateGUI()
   {
@@ -114,6 +117,9 @@ public:
       QLineEdit* edit = new QLineEdit(TYPE_TO_STRING.at(type).c_str());
       edit->setReadOnly(true);
       lay->addWidget(edit);
+      QCheckBox* deactive = new QCheckBox("Deactivated");
+      deactive->setCheckState(deactivated ? Qt::Checked : Qt::Unchecked);
+      lay->addWidget(deactive);
       QPushButton* del = new QPushButton("Delete");
       QPushButton* up = new QPushButton("Up");
       QPushButton* down = new QPushButton("Down");
@@ -352,15 +358,28 @@ public:
       gui.editType->addItem("Reference");
       gui.editType->addItem("Sequence");
       sub->addWidget(gui.editType);
+      QPushButton* del = new QPushButton("Delete");
+      sub->addWidget(del);
 
       layout->addLayout(sub);
     }
     {
       gui.stack = new QStackedWidget();
       {
-        gui.direct = new MacroParameter();
-        gui.direct->updateGUI();
-        gui.stack->addWidget(gui.direct->widget());
+        QWidget* sub = new QWidget;
+        QHBoxLayout* subsub = new QHBoxLayout();
+        sub->setLayout(subsub);
+        subsub->addWidget(new QLabel("Name: "));
+        gui.direct.name = new QLineEdit();
+        subsub->addWidget(gui.direct.name);
+        subsub->addWidget(new QLabel("Value: "));
+        gui.direct.value = new QLineEdit();
+        subsub->addWidget(gui.direct.value);
+        subsub->addWidget(new QLabel("Unit: "));
+        gui.direct.unit = new QLineEdit();
+        subsub->addWidget(gui.direct.unit);
+
+         gui.stack->addWidget(sub);
       }
       {
         QWidget* sub = new QWidget();
@@ -435,7 +454,12 @@ public:
     QWidget* widget;
     QComboBox* editType;
     QStackedWidget* stack;
-    MacroParameter* direct;
+    struct
+    {
+      QLineEdit* name;
+      QLineEdit* unit;
+      QLineEdit* value;
+    } direct;
     struct
     {
       QLineEdit* name;
@@ -548,6 +572,24 @@ public:
 class MacroInfoNew
 {
 public:
+  enum class Keyword
+  {
+    STARTUP, SHUTDOWN,STARTSESSION,STOPSESSION,FALLBACK, NOKEY, NOBUTTON, NOMENU, KEEP, OVERWRITE
+  };
+
+  const std::map<Keyword, std::string> KEYWORD_TO_STRING = {
+    {Keyword::STARTUP, "startup"},
+    {Keyword::SHUTDOWN, "shutdown"},
+    {Keyword::STARTSESSION, "startsession"},
+    {Keyword::STOPSESSION, "stopsession"},
+    {Keyword::FALLBACK, "fallback"},
+    {Keyword::NOKEY, "nokey"},
+    {Keyword::NOBUTTON, "nobutton"},
+    {Keyword::NOMENU, "nomenu"},
+    {Keyword::KEEP, "keep"},
+    {Keyword::OVERWRITE, "overwrite"},
+  };
+
   void updateGUI()
   {
     gui.group = new QGroupBox(("Macro: " + name).c_str());
@@ -569,8 +611,23 @@ public:
       gui.group->layout()->addWidget(gui.param);
     }
     {
+      QGroupBox* grp = new QGroupBox("Keywords");
+      QHBoxLayout* lay = new QHBoxLayout();
+      grp->setLayout(lay);
+      for (const std::pair<Keyword, std::string>& key : KEYWORD_TO_STRING)
+      {
+        QCheckBox* box = new QCheckBox(QString::fromStdString(key.second));
+        box->setCheckState((keywords.count(key.first) > 0) ? Qt::Checked : Qt::Unchecked);
+        lay->addWidget(box);
+      }
+      gui.group->layout()->addWidget(grp);
+    }
+    {
       gui.comm = new QGroupBox("Commands");
       gui.comm->setLayout(new QVBoxLayout());
+
+      QPushButton* add = new QPushButton("Add");
+      gui.comm->layout()->addWidget(add);
 
       QWidget* container = new QWidget();
       container->setLayout(new QVBoxLayout());
@@ -589,6 +646,7 @@ public:
   }
 
   std::string name;
+  std::set<Keyword> keywords;
   std::vector<MacroParameter> parameter;
   std::vector<MacroCommandInfo*> commands;
 
