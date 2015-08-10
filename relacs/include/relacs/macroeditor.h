@@ -23,10 +23,84 @@
 #include <QObject>
 #include <QWidget>
 #include <QComboBox>
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
 #include <QStackedWidget>
 #include <relacs/macros.h>
 
 namespace relacs {
+
+class MacroEditor;
+
+namespace MacroGUI
+{
+  class MacroParameter
+  {
+  public:
+    std::string name;
+    std::string value;
+    std::string unit;
+  };
+
+  class MacroCommandInfo
+  {
+  public:
+    enum class Type
+    {
+      FILTER, DETECTOR, MESSAGE, BROWSE, SHELL, SWITCH, START_SESSION, REPRO, MACRO
+    };
+
+  public:
+    Type type;
+    bool deactivated;
+  };
+
+  class MacroInfo
+  {
+  public:
+    enum class Keyword
+    {
+      STARTUP, SHUTDOWN,STARTSESSION,STOPSESSION,FALLBACK, NOKEY, NOBUTTON, NOMENU, KEEP, OVERWRITE
+    };
+
+  public:
+    std::string name;
+    std::set<Keyword> keywords;
+    std::vector<MacroParameter> parameter;
+    std::vector<MacroCommandInfo*> commands;
+
+  public:
+    void createGUI(MacroEditor* parent);
+    QTreeWidgetItem* treeItem() const { return gui.treeItem; }
+
+  private:
+    MacroEditor* parent;
+    struct
+    {
+      QTreeWidgetItem* treeItem;
+      QWidget* detailView;
+    } gui;
+  };
+
+  class MacroFile
+  {
+  public:
+    std::string name;
+    std::vector<MacroInfo> macros;
+
+  public:
+    void createGUI(MacroEditor* parent);
+    QTreeWidgetItem* treeItem() const { return gui.treeItem; }
+
+  private:
+    struct
+    {
+      QTreeWidgetItem* treeItem;
+    } gui;
+  };
+
+}
+
 
 class MacroEditor : public QWidget
 {
@@ -38,45 +112,24 @@ public:
 public slots:
   void dialogClosed( int code );
 
-private slots:
-  void addMacroFile();
-  void delMacroFile();
-  void setMacroFile(const QString& filename);
-
 signals:
   void macroDefinitionsChanged();
+
+private slots:
+  void currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*);
+
+private:
+  void populate(const std::vector<MacroGUI::MacroFile>& macrofiles);
+public:
+  int addDetailView(QWidget* view, QTreeWidgetItem* treeItem);
 
 private:
   Macros* InternalMacros;
 
-  QComboBox* FileSelector;
-  QComboBox* MacroSelector;
-  QStackedWidget* MacroInfoPages;
-};
-
-struct MacroInfo
-{
-  std::string name;
-  int keywords;
-  Options parameter;
-};
-
-class MacroFileLoader
-{
-public:
-  MacroFileLoader(const std::string& filename);
-
-  void load();
-
-  const std::vector<MacroInfo> macros() const { return Macros; }
-
-private:
-  Str readMacro(std::ifstream& file, const Str& line);
-
-private:
-  std::string Filename;
-
-  std::vector<MacroInfo> Macros;
+  std::vector<MacroGUI::MacroFile> MacroFiles;
+  QTreeWidget* MacroTree;
+  QStackedWidget* DetailViewContainer;
+  std::map<QTreeWidgetItem*, int> TreeToDetailMap;
 };
 
 }

@@ -31,24 +31,13 @@
 #include <QScrollArea>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QTreeWidgetItem>
+#include <QListWidget>
 
 namespace relacs {
 
 namespace {
-static const std::map<std::string, int> MACRO_KEYWORDS =
-{
-  {"startup", 0x01},
-  {"shutdown", 0x02},
-  {"startsession", 0x04},
-  {"stopsession", 0x08},
-  {"fallback", 0x10},
-  {"nokey", 0x20},
-  {"nobutton", 0x40},
-  {"nomenu", 0x80},
-  {"keep", 0x100},
-  {"overwrite",0x200}
-};
-
+/*
 class MacroParameter
 {
 public:
@@ -657,15 +646,217 @@ public:
     QGroupBox* comm = nullptr;
   } gui;
 };
+*/
 
+std::vector<MacroGUI::MacroFile> testdata()
+{
+  using namespace MacroGUI;
+
+  MacroFile file1;
+  file1.name = "macro_file_1.cfg";
+  {
+    MacroInfo macro1;
+    macro1.name = "Macro 1";
+    macro1.keywords.insert(MacroGUI::MacroInfo::Keyword::STARTUP);
+
+    {
+      MacroParameter p1;
+      p1.name = "param1";
+      p1.value = "10";
+      p1.unit = "V";
+      macro1.parameter.push_back(p1);
+    }
+    {
+      MacroParameter p1;
+      p1.name = "param2";
+      p1.value = "1";
+      p1.unit = "";
+      macro1.parameter.push_back(p1);
+    }
+
+    file1.macros.push_back(macro1);
+  }
+
+  MacroFile file2;
+  file2.name = "macro_file_2.cfg";
+  {
+    MacroInfo macro1;
+    macro1.name = "Macro 1";
+
+    file2.macros.push_back(macro1);
+  }
+  {
+    MacroInfo macro1;
+    macro1.name = "Macro 2";
+
+    file2.macros.push_back(macro1);
+  }
+
+
+  return {file1, file2};
 }
+}
+
+namespace MacroGUI
+{
+  void MacroFile::createGUI(MacroEditor* parent)
+  {
+    gui.treeItem = new QTreeWidgetItem();
+    gui.treeItem->setText(0, QString::fromStdString(name));
+
+    for (MacroInfo& macro : macros)
+    {
+      macro.createGUI(parent);
+      gui.treeItem->addChild(macro.treeItem());
+    }
+  }
+
+  struct KeywordInfo
+  {
+    MacroInfo::Keyword keyword;
+    std::string name;
+    std::string description;
+  };
+
+#define ADD_KEYWORD(KEY, NAME, DESC) \
+  { KEY, { KEY, NAME, DESC } },
+
+  static const std::map<MacroInfo::Keyword, KeywordInfo> KEYWORD_LIST = {
+    ADD_KEYWORD(MacroInfo::Keyword::STARTUP, "startup", "test")
+    ADD_KEYWORD(MacroInfo::Keyword::SHUTDOWN, "shutdown", "")
+    ADD_KEYWORD(MacroInfo::Keyword::STARTSESSION, "startsession", "")
+    ADD_KEYWORD(MacroInfo::Keyword::STOPSESSION, "stopsession", "")
+    ADD_KEYWORD(MacroInfo::Keyword::FALLBACK, "fallback", "")
+    ADD_KEYWORD(MacroInfo::Keyword::NOKEY, "nokey", "")
+    ADD_KEYWORD(MacroInfo::Keyword::NOBUTTON, "nobutton", "")
+    ADD_KEYWORD(MacroInfo::Keyword::NOMENU, "nomenu", "")
+    ADD_KEYWORD(MacroInfo::Keyword::KEEP, "keep", "")
+    ADD_KEYWORD(MacroInfo::Keyword::OVERWRITE, "overwrite", "")
+  };
+
+#undef ADD_KEYWORD
+
+  void MacroInfo::createGUI(MacroEditor* parent)
+  {
+    this->parent = parent;
+
+    gui.treeItem = new QTreeWidgetItem();
+    gui.treeItem->setText(0, QString::fromStdString(name));
+
+    for (MacroCommandInfo* command : commands)
+    {
+      //command.createGUI();
+      //gui.treeItem->addChild(command.treeItem());
+    }
+
+    gui.detailView = new QWidget();
+    gui.detailView->setLayout(new QVBoxLayout());
+    {
+      QGroupBox* group = new QGroupBox("Keywords");
+      group->setLayout(new QGridLayout());
+
+      for (const std::pair<MacroInfo::Keyword, KeywordInfo>& key : KEYWORD_LIST)
+      {
+        QCheckBox* box = new QCheckBox(QString::fromStdString(key.second.name));
+        box->setCheckState(keywords.count(key.first) ? Qt::Checked : Qt::Unchecked);
+        box->setToolTip(QString::fromStdString(key.second.description));
+        group->layout()->addWidget(box);
+      }
+
+      gui.detailView->layout()->addWidget(group);
+    }
+    {
+      QGroupBox* group = new QGroupBox("Parameter");
+      QVBoxLayout* layout = new QVBoxLayout();
+      group->setLayout(layout);
+
+      {
+        QHBoxLayout* hbox = new QHBoxLayout();
+        QListWidget* list = new QListWidget();
+
+        for (MacroParameter& param : parameter)
+          list->addItem(QString::fromStdString(param.name));
+
+        hbox->addWidget(list);
+        {
+          QVBoxLayout* vbox = new QVBoxLayout();
+          QPushButton* add = new QPushButton("+");
+          QPushButton* del = new QPushButton("-");
+          vbox->addWidget(add);
+          vbox->addWidget(del);
+          hbox->addLayout(vbox);
+        }
+        layout->addLayout(hbox);
+      }
+      {
+        QGroupBox* sub = new QGroupBox("Config");
+        QVBoxLayout* sublay = new QVBoxLayout();
+        sub->setLayout(sublay);
+        {
+          QHBoxLayout* hbox = new QHBoxLayout();
+          hbox->addWidget(new QLabel("Name:"));
+          hbox->addWidget(new QLineEdit());
+          sublay->addLayout(hbox);
+        }
+        {
+          QHBoxLayout* hbox = new QHBoxLayout();
+          hbox->addWidget(new QLabel("Value:"));
+          hbox->addWidget(new QLineEdit());
+          sublay->addLayout(hbox);
+        }
+        {
+          QHBoxLayout* hbox = new QHBoxLayout();
+          hbox->addWidget(new QLabel("Unit:"));
+          hbox->addWidget(new QLineEdit());
+          sublay->addLayout(hbox);
+        }
+        layout->addWidget(sub);
+        sub->setVisible(false);
+      }
+
+      gui.detailView->layout()->addWidget(group);
+    }
+
+    parent->addDetailView(gui.detailView, gui.treeItem);
+  }
+}
+
+
+
 
 MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
   QWidget(parent),
   InternalMacros(macros)
 {
-  setLayout(new QVBoxLayout());
+  setLayout(new QHBoxLayout());
 
+  {
+    QGroupBox* group = new QGroupBox("Macro list");
+    group->setLayout(new QVBoxLayout());
+
+    MacroTree = new QTreeWidget();
+    MacroTree->setHeaderLabels({"Macro", "Type"});
+
+    QObject::connect(MacroTree, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)));
+
+    group->layout()->addWidget(MacroTree);
+
+    this->layout()->addWidget(group);
+  }
+  {
+    QGroupBox* group = new QGroupBox("Options");
+    group->setLayout(new QVBoxLayout());
+
+    DetailViewContainer = new QStackedWidget();
+    DetailViewContainer->addWidget(new QWidget());
+    group->layout()->addWidget(DetailViewContainer);
+
+    this->layout()->addWidget(group);
+  }
+
+  populate(testdata());
+
+  /*
   {
     QGroupBox* group = new QGroupBox("Macro files", this);
     group->setLayout(new QHBoxLayout());
@@ -715,6 +906,37 @@ MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
   for (const std::string& filename : filenames)
     FileSelector->addItem(QString::fromStdString(filename));
   FileSelector->setCurrentIndex(FileSelector->findText("macros.cfg"));
+  */
+}
+
+void MacroEditor::populate(const std::vector<MacroGUI::MacroFile> &macrofiles)
+{
+  MacroFiles = macrofiles;
+  for (MacroGUI::MacroFile& file : MacroFiles)
+  {
+    file.createGUI(this);
+    MacroTree->addTopLevelItem(file.treeItem());
+    MacroTree->expandItem(file.treeItem());
+  }
+
+  for (int i = 0; i < MacroTree->columnCount(); ++i)
+    MacroTree->resizeColumnToContents(i);
+}
+
+int MacroEditor::addDetailView(QWidget *view, QTreeWidgetItem* treeItem)
+{
+  int index = DetailViewContainer->addWidget(view);
+  TreeToDetailMap[treeItem] = index;
+  return index;
+}
+
+void MacroEditor::currentItemChanged(QTreeWidgetItem* item,QTreeWidgetItem*)
+{
+  auto itr = TreeToDetailMap.find(item);
+  if (itr != TreeToDetailMap.end())
+    DetailViewContainer->setCurrentIndex(itr->second);
+  else
+    DetailViewContainer->setCurrentIndex(0);
 }
 
 void MacroEditor::dialogClosed(int code)
@@ -722,7 +944,7 @@ void MacroEditor::dialogClosed(int code)
   if (code != 1)
     delete this;
 }
-
+ /*
 void MacroEditor::delMacroFile()
 {
 
@@ -735,6 +957,7 @@ void MacroEditor::addMacroFile()
 
 void MacroEditor::setMacroFile(const QString& filename)
 {
+
   MacroInfoNew macro;
   macro.name = "Test";
   MacroParameter param;
@@ -812,164 +1035,8 @@ void MacroEditor::setMacroFile(const QString& filename)
   MacroSelector->addItem(macro.name.c_str());
   MacroInfoPages->addWidget(macro.gui.group);
 
-  /*
-  MacroFileLoader loader(filename.toStdString());
-  loader.load();
-
-  MacroSelector->clear();
-  while (MacroInfoPages->count())
-    MacroInfoPages->removeWidget(MacroInfoPages->widget(0));
-  for (const MacroInfo& macro : loader.macros())
-  {
-    MacroSelector->addItem(QString::fromStdString(macro.name));
-    {
-      QGroupBox* box = new QGroupBox(QString::fromStdString("Macro: " + macro.name));
-      box->setLayout(new QVBoxLayout());
-
-      {
-        QGroupBox* grpkey = new QGroupBox("Keywords");
-        grpkey->setLayout(new QHBoxLayout());
-
-        for (const std::pair<std::string, int> keyword : MACRO_KEYWORDS)
-        {
-          QCheckBox* check = new QCheckBox(QString::fromStdString(keyword.first));
-          check->setCheckState((macro.keywords & keyword.second) ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
-
-          grpkey->layout()->addWidget(check);
-        }
-
-        box->layout()->addWidget(grpkey);
-      }
-      {
-        QGroupBox* grpparam = new QGroupBox("Parameter");
-        grpparam->setLayout(new QVBoxLayout());
-
-        for (const Parameter& param : macro.parameter)
-        {
-          QHBoxLayout* lay = new QHBoxLayout();
-          lay->addWidget(new QLineEdit(param.name().c_str()));
-          lay->addWidget(new QLineEdit(param.text().c_str()));
-          lay->addWidget(new QLineEdit(param.unit().c_str()));
-          static_cast<QVBoxLayout*>(grpparam->layout())->addLayout(lay);
-        }
-
-        box->layout()->addWidget(grpparam);
-      }
-      {
-        QGroupBox* actions = new QGroupBox("Actions");
-        box->layout()->addWidget(actions);
-      }
-
-      MacroInfoPages->addWidget(box);
-    }
-  }
+}
   */
-}
-
-
-
-
-
-MacroFileLoader::MacroFileLoader(const string &filename) :
-  Filename(filename)
-{
-
-}
-
-void MacroFileLoader::load()
-{
-  std::ifstream in(Filename);
-
-  std::string tmp;
-
-  while (std::getline(in, tmp))
-  {
-    Str line = Str(tmp);
-    line.strip(Str::WhiteSpace, "#");
-
-    // line was a comment or empty
-    if (line.empty())
-      continue;
-
-    if (line.front() == '$')
-    {
-      //line = readMacro(in, line);
-      MacroInfo macro{};
-      int seperator = line.find_first_of(":");
-      Str nameandkeys = line.substr(1, seperator - 1);
-
-      for (const std::pair<std::string, int>& keyword : MACRO_KEYWORDS)
-        if (nameandkeys.erase(keyword.first, 0, false, 3, Str::WordSpace) > 0)
-          macro.keywords |= keyword.second;
-
-      macro.name = nameandkeys.strip();
-
-      if (seperator != std::string::npos)
-      {
-        Str params = line.substr(seperator + 1);
-        macro.parameter.load(params, "=", ";");
-      }
-
-      Macros.emplace_back(std::move(macro));
-    }
-
-    if (Str(line).contains('=') && !Str(line).contains(':'))
-    {
-      std::cout << "lol found ya:" << line << std::endl;
-      Macros.back().parameter.load( line, "=", ";" );
-    }
-
-  }
-}
-
-
-Str MacroFileLoader::readMacro(std::ifstream& file, const Str& line)
-{
-  MacroInfo macro{};
-
-  // extract definition
-  {
-    size_t seperator = line.find_first_of(":");
-    Str nameandkeys = line.substr(1, seperator - 1);
-
-    for (const std::pair<std::string, int>& keyword : MACRO_KEYWORDS)
-      if (nameandkeys.erase(keyword.first, 0, false, 3, Str::WordSpace) > 0)
-        macro.keywords |= keyword.second;
-
-    macro.name = nameandkeys.strip();
-
-    if (seperator != std::string::npos)
-    {
-      Str params = line.substr(seperator + 1);
-      macro.parameter.load(params, "=", ";");
-    }
-  }
-
-  // read contents
-  {
-    /*
-    std::string tmp;
-    while (std::getline(file, tmp))
-    {
-      line = Str(tmp);
-      line.strip(Str::WhiteSpace, "#");
-
-      if (line.empty())
-        continue;
-
-      if (line[0] == '$')
-        return line;
-
-      if (line.contains("=") && !line.contains(":"))
-        macro.parameter.load(line, "=", ";");
-
-
-    }
-    */
-  }
-
-}
-
 }
 
 #include <moc_macroeditor.cc>
