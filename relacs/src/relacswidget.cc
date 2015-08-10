@@ -58,6 +58,7 @@
 #include <relacs/relacswidget.h>
 #include <relacs/deviceselector.h>
 #include <relacs/filterselector.h>
+#include <relacs/macroeditor.h>
 
 namespace relacs {
 
@@ -370,6 +371,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   filemenu->addAction( "&Output traces...", this, SLOT( editOutputTraces() ) );
   filemenu->addAction( "&Devices", this, SLOT(editDevices()));
   filemenu->addAction( "&Filters", this, SLOT(editFilters()));
+  filemenu->addAction( "&Macros", this, SLOT(editMacros()));
   filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
   filemenu->addAction( "&Save settings", (QWidget*)this, SLOT( saveConfig() ) );
   filemenu->addSeparator();
@@ -1504,6 +1506,21 @@ void RELACSWidget::editFilters()
   od->addButton( "&Cancel" );
   QObject::connect( od, SIGNAL( buttonClicked( int ) ), fc, SLOT( dialogClosed( int ) ) );
   QObject::connect( fc, SIGNAL( newFilterSettings() ), this, SLOT( restartAcquisition() ) );
+  od->exec();
+}
+
+void RELACSWidget::editMacros()
+{
+  MacroEditor* mc = new MacroEditor(MC, this);
+
+  OptDialog* od = new OptDialog(false, this);
+  od->setCaption("Macro Editor");
+  od->addWidget(mc);
+  od->addButton("&Ok", OptDialog::Accept, 2);
+  od->addButton("&Apply", OptDialog::Accept, 1, false);
+  od->addButton("&Cancel");
+  QObject::connect(od, SIGNAL(buttonClicked(int)), mc, SLOT(dialogClosed(int)));
+  // QObject::connect(mc, SIGNAL(macroDefinitionsChanged()), this, SLOT(restartAcquisition());
   od->exec();
 }
 

@@ -245,6 +245,8 @@ public slots:
   void editDevices();
     /*! Opens a dialog for editing filters/detectectors */
   void editFilters();
+    /*! Opens a dialog for editing macros */
+  void editMacros();
 
     /*! Save settings to configuration files. */
   void saveConfig( void );
