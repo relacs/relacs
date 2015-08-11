@@ -29,6 +29,10 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QStackedWidget>
+#include <QTextEdit>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QDoubleSpinBox>
 #include <relacs/macros.h>
 
 namespace relacs {
@@ -102,17 +106,265 @@ namespace MacroGUI
     QLineEdit* UnitEdit;
   };
 
-  class MacroCommandInfo
+  class MacroCommandInfo : public QObject, public TreeElement<MacroEditor>, public DetailElement<MacroEditor>
   {
+    Q_OBJECT
   public:
-    enum class Type
+    enum class CommandType
     {
       FILTER, DETECTOR, MESSAGE, BROWSE, SHELL, SWITCH, START_SESSION, REPRO, MACRO
     };
 
+    void createGUI(MacroEditor*) override;
+
   public:
-    Type type;
-    bool deactivated;
+    void setDeactivated(bool state);
+    void setType(CommandType type);
+
+  private slots:
+    void updateDeactivated(int);
+    void updateType(QString);
+
+  protected:
+    CommandType Type;
+    bool Deactivated;
+
+  private:
+    std::map<CommandType, DetailElement<MacroCommandInfo>*> Commands;
+
+    QCheckBox* DeactivatedEdit;
+    QComboBox* TypeEdit;
+    QStackedWidget* CommandsEdit;
+  };
+
+  class MacroCommandShell : public QObject, public DetailElement<MacroCommandInfo>
+  {
+    Q_OBJECT
+  public:
+    void setCommand(const std::string& string);
+
+    void createGUI(MacroCommandInfo* info);
+
+  private slots:
+    void updatedCommand();
+
+  private:
+    std::string Command;
+
+    QTextEdit* CommandEdit;
+  };
+
+  class MacroCommandBrowse : public QObject, public DetailElement<MacroCommandInfo>
+  {
+    Q_OBJECT
+  public:
+    void setPath(const std::string& string);
+
+    void createGUI(MacroCommandInfo* info);
+
+  private slots:
+    void updatedPath(const QString& string);
+
+  private:
+    std::string Path;
+
+    QLineEdit* PathEdit;
+  };
+
+  class MacroCommandStartsession : public QObject, public DetailElement<MacroCommandInfo>
+  {
+    Q_OBJECT
+  public:
+    void createGUI(MacroCommandInfo* info);
+  };
+
+  class MacroCommandSwitch : public QObject, public DetailElement<MacroCommandInfo>
+  {
+    Q_OBJECT
+  public:
+    void setPath(const std::string& string);
+
+    void createGUI(MacroCommandInfo* info);
+
+  private slots:
+    void updatedPath(const QString& string);
+
+  private:
+    std::string Path;
+
+    QLineEdit* PathEdit;
+  };
+
+  class MacroCommandMessage : public QObject, public DetailElement<MacroCommandInfo>
+  {
+    Q_OBJECT
+  public:
+    void setTitle(const std::string& title);
+    void setText(const std::string& string);
+  public slots:
+    void setTimeout(int timeout);
+  public:
+    void createGUI(MacroCommandInfo* info);
+
+  private slots:
+    void updatedText();
+    void updatedTitle(const QString& text);
+
+  private:
+    std::string Title;
+    int Timeout;
+    std::string Text;
+
+    QTextEdit* TextEdit;
+    QLineEdit* TitleEdit;
+    QSpinBox* TimeoutEdit;
+  };
+
+  class MacroCommandFilterDetector : public QObject, public DetailElement<MacroCommandInfo>
+  {
+    Q_OBJECT
+  public:
+    enum class ModeType
+    {
+      SAVE, CONFIGURE
+    };
+
+    void setMode(ModeType mode);
+  public slots:
+    void setConfigure(double time);
+  public:
+    void setSave(const std::string& param);
+
+    void createGUI(MacroCommandInfo* info);
+
+  private slots:
+    void updatedMode(const QString& mode);
+    void updatedSave(const QString& param);
+
+  private:
+    ModeType Mode;
+    double Configure;
+    std::string Save;
+
+    QComboBox* ModeEdit;
+    QDoubleSpinBox* ConfigureEdit;
+    QLineEdit* SaveEdit;
+  };
+
+  class MacroCommandRepro;
+
+  class MacroCommandParameter : public QObject, public DetailElement<MacroCommandRepro>
+  {
+    Q_OBJECT
+  public:
+    enum class InputType
+    {
+      DIRECT, REFERENCE, SEQUENCE
+    };
+
+    enum class SequenceMode
+    {
+      UP, DOWN
+    };
+
+    void setName(const std::string& name);
+    void setType(InputType type);
+    void setValue(const std::string& value);
+    void setUnit(const std::string& unit);
+    void setAvailableReferences(const std::vector<std::string>& refs);
+    void setReference(const std::string& ref);
+  public slots:
+    void setMinimum(int min);
+    void setMaximum(int max);
+    void setStep(int step);
+    void setResolution(int resolution);
+  public:
+    //void setMode(SequenceMode mode);
+
+    void createGUI(MacroCommandRepro*);
+    QListWidgetItem* listItem() const { return ListItem; }
+
+  private slots:
+    void updatedName(const QString& name);
+    void updatedType(int type);
+    void updatedValue(const QString& value);
+    void updatedUnit(const QString& unit);
+    void updatedReference(const QString& reference);
+    //void updatedMode(const QString& mode);
+
+  private:
+    std::string Name;
+    InputType Type;
+    struct
+    {
+      std::string Value;
+      std::string Unit;
+    } Direct;
+    struct
+    {
+      std::vector<std::string> AvailableReferences;
+      std::string Reference;
+    } Reference;
+    struct
+    {
+      int Min;
+      int Max;
+      int Step;
+      int Resolution;
+      SequenceMode Mode;
+      std::string Unit;
+    } Sequence;
+
+
+    QListWidgetItem* ListItem;
+
+    QLineEdit* NameEdit;
+    QComboBox* TypeEdit;
+    QStackedWidget* TypeValues;
+    struct
+    {
+      QLineEdit* Value;
+      QLineEdit* Unit;
+    } DirectEdit;
+    struct
+    {
+      QComboBox* References;
+    } ReferenceEdit;
+    struct
+    {
+      QSpinBox* Min;
+      QSpinBox* Max;
+      QSpinBox* Step;
+      QSpinBox* Resolution;
+      QComboBox* Mode;
+      QLineEdit* Unit;
+    } SequenceEdit;
+  };
+
+  class MacroCommandRepro : public QObject, public DetailElement<MacroCommandInfo>
+  {
+    Q_OBJECT
+  public:
+    void setAvailableRepors(const std::vector<std::string>& repros);
+    void setRepro(const std::string& repro);
+    void addParameter(MacroCommandParameter* param);
+    void removeParameter(MacroCommandParameter* param);
+
+    void createGUI(MacroCommandInfo* info);
+
+  private slots:
+    void updatedRepro(const QString& name);
+    void addParameter();
+    void removeParameter();
+
+  private:
+    std::vector<std::string> AvailableRepros;
+    std::string Repro;
+    std::vector<MacroCommandParameter*> Parameter;
+
+    QComboBox* ReproEdit;
+    QListWidget* ParameterList;
+    QStackedWidget* ParameterValues;
   };
 
   class MacroInfo : public QObject, public TreeElement<MacroEditor>, public DetailElement<MacroEditor>
@@ -126,8 +378,13 @@ namespace MacroGUI
 
   public:
     void setName(const std::string& name);
+    void setKeyword(Keyword keyword);
+    void removeKeyword(Keyword keyword);
     void addParameter(MacroParameter* param);
     void removeParameter(MacroParameter* param);
+    void addCommand(MacroCommandInfo* command);
+    void removeCommand(MacroCommandInfo* command);
+    void removeCommand(QTreeWidgetItem* item);
 
     void createGUI(MacroEditor* parent) override;
 
@@ -151,6 +408,8 @@ namespace MacroGUI
 
   class MacroFile : public TreeElement<MacroEditor>
   {
+    friend class ::relacs::MacroEditor;
+
   public:
     void setName(const std::string& name);
     std::string name() const { return Name; }
