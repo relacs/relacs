@@ -34,6 +34,26 @@ class MacroEditor;
 
 namespace MacroGUI
 {
+  class GUIElement
+  {
+  public:
+    virtual void createGUI(MacroEditor*) = 0;
+
+  protected:
+    bool guiCreated = false;
+    MacroEditor* owner = nullptr;
+  };
+
+  class TreeElement : public virtual GUIElement
+  {
+  public:
+    QTreeWidgetItem* treeItem() const { return TreeItem; }
+
+  protected:
+    QTreeWidgetItem* TreeItem = nullptr;
+  };
+
+
   class MacroParameter
   {
   public:
@@ -82,21 +102,21 @@ namespace MacroGUI
     } gui;
   };
 
-  class MacroFile
+  class MacroFile : public TreeElement
   {
   public:
-    std::string name;
-    std::vector<MacroInfo> macros;
+    void setName(const std::string& name);
+    std::string name() const { return Name; }
+    void addMacro(const MacroInfo& macro);
+    void delMacro(const MacroInfo* macro);
+    void delMacro(QTreeWidgetItem* item);
+
+  private:
+    std::string Name;
+    std::vector<MacroInfo> Macros;
 
   public:
     void createGUI(MacroEditor* parent);
-    QTreeWidgetItem* treeItem() const { return gui.treeItem; }
-
-  private:
-    struct
-    {
-      QTreeWidgetItem* treeItem;
-    } gui;
   };
 
 }
@@ -117,6 +137,8 @@ signals:
 
 private slots:
   void currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*);
+  void clickedAdd();
+  void clickedDelete();
 
 private:
   void populate(const std::vector<MacroGUI::MacroFile>& macrofiles);
