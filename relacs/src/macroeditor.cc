@@ -648,48 +648,48 @@ public:
 };
 */
 
-std::vector<MacroGUI::MacroFile> testdata()
+std::vector<MacroGUI::MacroFile*> testdata()
 {
   using namespace MacroGUI;
 
-  MacroFile file1;
-  file1.setName("macro_file_1.cfg");
+  MacroFile* file1 = new MacroFile();
+  file1->setName("macro_file_1.cfg");
   {
-    MacroInfo macro1;
-    macro1.name = "Macro 1";
-    macro1.keywords.insert(MacroGUI::MacroInfo::Keyword::STARTUP);
+    MacroInfo* macro1 = new MacroInfo();
+    macro1->setName("Macro 1");
+//    macro1.keywords.insert(MacroGUI::MacroInfo::Keyword::STARTUP);
 
     {
-      MacroParameter p1;
-      p1.name = "param1";
-      p1.value = "10";
-      p1.unit = "V";
-      macro1.parameter.push_back(p1);
+      MacroParameter* p1 = new MacroParameter();
+      p1->setName("param1");
+      p1->setValue("10");
+      p1->setUnit("V");
+      macro1->addParameter(p1);
     }
     {
-      MacroParameter p1;
-      p1.name = "param2";
-      p1.value = "1";
-      p1.unit = "";
-      macro1.parameter.push_back(p1);
+      MacroParameter* p1 = new MacroParameter();
+      p1->setName("param2");
+      p1->setValue("1");
+      p1->setUnit("");
+      macro1->addParameter(p1);
     }
 
-    file1.addMacro(macro1);
+    file1->addMacro(macro1);
   }
 
-  MacroFile file2;
-  file2.setName("macro_file_2.cfg");
+  MacroFile* file2 = new MacroFile();
+  file2->setName("macro_file_2.cfg");
   {
-    MacroInfo macro1;
-    macro1.name = "Macro 1";
+    MacroInfo* macro1 = new MacroInfo();
+    macro1->setName("Macro 1");
 
-    file2.addMacro(macro1);
+    file2->addMacro(macro1);
   }
   {
-    MacroInfo macro2;
-    macro2.name = "Macro 2";
+    MacroInfo* macro2 = new MacroInfo();
+    macro2->setName("Macro 2");
 
-    file2.addMacro(macro2);
+    file2->addMacro(macro2);
   }
 
 
@@ -703,55 +703,53 @@ namespace MacroGUI
   {
     Name = name;
 
-    if (guiCreated)
+    if (GuiCreated)
     {
       treeItem()->setText(0, QString::fromStdString(name));
     }
   }
 
-  void MacroFile::addMacro(const MacroInfo &macro)
+  void MacroFile::addMacro(MacroInfo* macro)
   {
     Macros.push_back(macro);
 
-    MacroInfo& inserted = Macros.back();
-
-    if (guiCreated)
+    if (GuiCreated)
     {
-      inserted.createGUI(owner);
-      treeItem()->addChild(inserted.treeItem());
+      macro->createGUI(Owner);
+      treeItem()->addChild(macro->treeItem());
     }
   }
 
-  void MacroFile::delMacro(const MacroInfo* macro)
+  void MacroFile::delMacro(MacroInfo* macro)
   {
-    if (guiCreated)
+    if (GuiCreated)
     {
       treeItem()->removeChild(macro->treeItem());
     }
-    auto itr = std::find_if(Macros.begin(), Macros.end(), [&macro] (const MacroInfo& comp) { return &comp == macro; });
+    auto itr = std::find(Macros.begin(), Macros.end(), macro);
     Macros.erase(itr);
   }
 
   void MacroFile::delMacro(QTreeWidgetItem *item)
   {
     treeItem()->removeChild(item);
-    auto itr = std::find_if(Macros.begin(), Macros.end(), [&item] (const MacroInfo& comp) { return comp.treeItem() == item; });
+    auto itr = std::find_if(Macros.begin(), Macros.end(), [&item] (MacroInfo* comp) { return comp->treeItem() == item; });
     Macros.erase(itr);
   }
 
-  void MacroFile::createGUI(MacroEditor* parent)
+  void MacroFile::createGUI(MacroEditor* owner)
   {
     TreeItem = new QTreeWidgetItem();
     TreeItem->setText(0, QString::fromStdString(Name));
 
-    for (MacroInfo& macro : Macros)
+    for (MacroInfo* macro : Macros)
     {
-      macro.createGUI(parent);
-      TreeItem->addChild(macro.treeItem());
+      macro->createGUI(owner);
+      TreeItem->addChild(macro->treeItem());
     }
 
-    guiCreated = true;
-    owner = parent;
+    GuiCreated = true;
+    Owner = owner;
   }
 
   struct KeywordInfo
@@ -779,29 +777,98 @@ namespace MacroGUI
 
 #undef ADD_KEYWORD
 
-  void MacroInfo::createGUI(MacroEditor* parent)
+  void MacroInfo::addParameter(MacroParameter *param)
   {
-    this->parent = parent;
+    Parameter.push_back(param);
 
-    gui.treeItem = new QTreeWidgetItem();
-    gui.treeItem->setText(0, QString::fromStdString(name));
+    if (GuiCreated)
+    {
+      param->createGUI(this);
+      ParamList->addItem(param->listItem());
+      ParamEdit->addWidget(param->detailView());
+    }
+  }
 
-    for (MacroCommandInfo* command : commands)
+  void MacroInfo::removeParameter(MacroParameter *param)
+  {
+    auto itr = std::find(Parameter.begin(), Parameter.end(), param);
+    if (itr == Parameter.end())
+      return;
+
+    if (GuiCreated)
+    {
+      delete param->listItem();
+      ParamEdit->removeWidget(param->detailView());
+    }
+    delete param;
+    Parameter.erase(itr);
+  }
+
+  void MacroInfo::setName(const string &name)
+  {
+    Name = name;
+
+    if (GuiCreated)
+    {
+      TreeItem->setText(0, QString::fromStdString(name));
+      NameEdit->setText(QString::fromStdString(name));
+    }
+  }
+
+  void MacroInfo::updatedName(const QString &name)
+  {
+    setName(name.toStdString());
+  }
+
+  void MacroInfo::updatedKeywords(int)
+  {
+    Keywords.clear();
+
+    for (const std::pair<MacroInfo::Keyword, QCheckBox*>& pair : KeywordToCheckbox)
+      if (pair.second->checkState() == Qt::Checked)
+        Keywords.insert(pair.first);
+  }
+
+  void MacroInfo::addParameter()
+  {
+    MacroParameter* param = new MacroParameter();
+    param->setName("new parameter");
+    addParameter(param);
+  }
+
+  void MacroInfo::removeParameter()
+  {
+    QList<QListWidgetItem*> selections = ParamList->selectedItems();
+    if (selections.empty() || selections.size() > 1)
+      return;
+    QListWidgetItem* selection = selections.front();
+
+    auto itr = std::find_if(Parameter.begin(), Parameter.end(), [&selection](MacroParameter* param) { return param->listItem() == selection; });
+    removeParameter(*itr);
+  }
+
+  void MacroInfo::createGUI(MacroEditor* owner)
+  {
+    TreeItem = new QTreeWidgetItem();
+    TreeItem->setText(0, QString::fromStdString(Name));
+
+    for (MacroCommandInfo* command : Commands)
     {
       //command.createGUI();
       //gui.treeItem->addChild(command.treeItem());
     }
 
-    gui.detailView = new QWidget();
-    gui.detailView->setLayout(new QVBoxLayout());
+    DetailView = new QWidget();
+    DetailView->setLayout(new QVBoxLayout());
     {
       QGroupBox* group = new QGroupBox("Name");
       group->setLayout(new QHBoxLayout());
-      QLineEdit* name = new QLineEdit();
-      name->setText(QString::fromStdString(this->name));
-      group->layout()->addWidget(name);
+      NameEdit = new QLineEdit();
+      NameEdit->setText(QString::fromStdString(Name));
+      QObject::connect(NameEdit, SIGNAL(textEdited(QString)), this, SLOT(updatedName(QString)));
+      group->layout()->addWidget(NameEdit);
 
-      gui.detailView->layout()->addWidget(group);
+      DetailView->layout()->addWidget(group);
     }
     {
       QGroupBox* group = new QGroupBox("Keywords");
@@ -810,12 +877,16 @@ namespace MacroGUI
       for (const std::pair<MacroInfo::Keyword, KeywordInfo>& key : KEYWORD_LIST)
       {
         QCheckBox* box = new QCheckBox(QString::fromStdString(key.second.name));
-        box->setCheckState(keywords.count(key.first) ? Qt::Checked : Qt::Unchecked);
+        box->setCheckState(Keywords.count(key.first) ? Qt::Checked : Qt::Unchecked);
         box->setToolTip(QString::fromStdString(key.second.description));
+
+        QObject::connect(box, SIGNAL(stateChanged(int)), this, SLOT(updatedKeywords(int)));
+        KeywordToCheckbox[key.first] = box;
+
         group->layout()->addWidget(box);
       }
 
-      gui.detailView->layout()->addWidget(group);
+      DetailView->layout()->addWidget(group);
     }
     {
       QGroupBox* group = new QGroupBox("Parameter");
@@ -824,16 +895,15 @@ namespace MacroGUI
 
       {
         QHBoxLayout* hbox = new QHBoxLayout();
-        QListWidget* list = new QListWidget();
+        ParamList = new QListWidget();
 
-        for (MacroParameter& param : parameter)
-          list->addItem(QString::fromStdString(param.name));
-
-        hbox->addWidget(list);
+        hbox->addWidget(ParamList);
         {
           QVBoxLayout* vbox = new QVBoxLayout();
           QPushButton* add = new QPushButton("+");
+          QObject::connect(add, SIGNAL(clicked()), this, SLOT(addParameter()));
           QPushButton* del = new QPushButton("-");
+          QObject::connect(del, SIGNAL(clicked()), this, SLOT(removeParameter()));
           vbox->addWidget(add);
           vbox->addWidget(del);
           hbox->addLayout(vbox);
@@ -841,35 +911,96 @@ namespace MacroGUI
         layout->addLayout(hbox);
       }
       {
-        QGroupBox* sub = new QGroupBox("Config");
-        QVBoxLayout* sublay = new QVBoxLayout();
-        sub->setLayout(sublay);
-        {
-          QHBoxLayout* hbox = new QHBoxLayout();
-          hbox->addWidget(new QLabel("Name:"));
-          hbox->addWidget(new QLineEdit());
-          sublay->addLayout(hbox);
-        }
-        {
-          QHBoxLayout* hbox = new QHBoxLayout();
-          hbox->addWidget(new QLabel("Value:"));
-          hbox->addWidget(new QLineEdit());
-          sublay->addLayout(hbox);
-        }
-        {
-          QHBoxLayout* hbox = new QHBoxLayout();
-          hbox->addWidget(new QLabel("Unit:"));
-          hbox->addWidget(new QLineEdit());
-          sublay->addLayout(hbox);
-        }
-        layout->addWidget(sub);
-        sub->setVisible(false);
+        ParamEdit = new QStackedWidget();
+        layout->addWidget(ParamEdit);
       }
 
-      gui.detailView->layout()->addWidget(group);
+      DetailView->layout()->addWidget(group);
     }
 
-    parent->addDetailView(gui.detailView, gui.treeItem);
+    QObject::connect(ParamList, SIGNAL(currentRowChanged(int)), ParamEdit, SLOT(setCurrentIndex(int)));
+    for (MacroParameter* param : Parameter)
+    {
+      param->createGUI(this);
+      ParamList->addItem(param->listItem());
+      ParamEdit->addWidget(param->detailView());
+    }
+
+    owner->addDetailView(DetailView, TreeItem);
+
+    GuiCreated = true;
+    Owner = owner;
+  }
+
+
+  void MacroParameter::setName(const string &name)
+  {
+    Name = name;
+    if (GuiCreated)
+    {
+      NameEdit->setText(QString::fromStdString(name));
+      ListItem->setText(QString::fromStdString(name));
+    }
+  }
+  void MacroParameter::setUnit(const string &name)
+  {
+    Unit = name;
+    if (GuiCreated)
+    {
+      UnitEdit->setText(QString::fromStdString(name));
+    }
+  }
+  void MacroParameter::setValue(const string &name)
+  {
+    Value = name;
+    if (GuiCreated)
+    {
+      ValueEdit->setText(QString::fromStdString(name));
+    }
+  }
+
+  void MacroParameter::updatedName(const QString &name) { setName(name.toStdString()); }
+  void MacroParameter::updatedValue(const QString &name) { setValue(name.toStdString()); }
+  void MacroParameter::updatedUnit(const QString &name) { setUnit(name.toStdString()); }
+
+  void MacroParameter::createGUI(MacroInfo *)
+  {
+    ListItem = new QListWidgetItem();
+    ListItem->setText(QString::fromStdString(Name));
+
+    DetailView = new QWidget;
+    QVBoxLayout* layout = new QVBoxLayout();
+    DetailView->setLayout(layout);
+
+    {
+      QHBoxLayout* group = new QHBoxLayout();
+      group->addWidget(new QLabel("Name:"));
+      NameEdit = new QLineEdit(QString::fromStdString(Name));
+      QObject::connect(NameEdit, SIGNAL(textEdited(QString)), this, SLOT(updatedName(QString)));
+      group->addWidget(NameEdit);
+
+      layout->addLayout(group);
+    }
+    {
+      QHBoxLayout* group = new QHBoxLayout();
+      group->addWidget(new QLabel("Value:"));
+      ValueEdit = new QLineEdit(QString::fromStdString(Value));
+      QObject::connect(ValueEdit, SIGNAL(textEdited(QString)), this, SLOT(updatedValue(QString)));
+      group->addWidget(ValueEdit);
+
+      layout->addLayout(group);
+    }
+    {
+      QHBoxLayout* group = new QHBoxLayout();
+      group->addWidget(new QLabel("Unit:"));
+      UnitEdit = new QLineEdit(QString::fromStdString(Unit));
+      QObject::connect(UnitEdit, SIGNAL(textEdited(QString)), this, SLOT(updatedUnit(QString)));
+      group->addWidget(UnitEdit);
+
+      layout->addLayout(group);
+    }
+
+    GuiCreated = true;
   }
 }
 
@@ -974,14 +1105,14 @@ MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
   */
 }
 
-void MacroEditor::populate(const std::vector<MacroGUI::MacroFile> &macrofiles)
+void MacroEditor::populate(const std::vector<MacroGUI::MacroFile*> &macrofiles)
 {
   MacroFiles = macrofiles;
-  for (MacroGUI::MacroFile& file : MacroFiles)
+  for (MacroGUI::MacroFile* file : MacroFiles)
   {
-    file.createGUI(this);
-    MacroTree->addTopLevelItem(file.treeItem());
-    MacroTree->expandItem(file.treeItem());
+    file->createGUI(this);
+    MacroTree->addTopLevelItem(file->treeItem());
+    MacroTree->expandItem(file->treeItem());
   }
 
   for (int i = 0; i < MacroTree->columnCount(); ++i)
@@ -1011,12 +1142,12 @@ void MacroEditor::clickedAdd()
     return;
   QTreeWidgetItem* selection = selections.front();
 
-  auto itr = std::find_if(MacroFiles.begin(), MacroFiles.end(), [&selection](const MacroGUI::MacroFile& file) { return file.treeItem() == selection; });
+  auto itr = std::find_if(MacroFiles.begin(), MacroFiles.end(), [&selection](MacroGUI::MacroFile* file) { return file->treeItem() == selection; });
   if (itr != MacroFiles.end())
   {
-    MacroGUI::MacroInfo macro;
-    macro.name = "New Macro";
-    itr->addMacro(macro);
+    MacroGUI::MacroInfo* macro = new MacroGUI::MacroInfo();
+    macro->setName("New Macro");
+    (*itr)->addMacro(macro);
   }
 }
 
@@ -1028,9 +1159,9 @@ void MacroEditor::clickedDelete()
   QTreeWidgetItem* selection = selections.front();
   QTreeWidgetItem* parent = selection->parent();
 
-  auto itr = std::find_if(MacroFiles.begin(), MacroFiles.end(), [&parent](const MacroGUI::MacroFile& file) { return file.treeItem() == parent; });
+  auto itr = std::find_if(MacroFiles.begin(), MacroFiles.end(), [&parent](MacroGUI::MacroFile* file) { return file->treeItem() == parent; });
   if (itr != MacroFiles.end())
-    itr->delMacro(selection);
+    (*itr)->delMacro(selection);
 }
 
 void MacroEditor::dialogClosed(int code)

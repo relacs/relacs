@@ -23,8 +23,11 @@
 #include <QObject>
 #include <QWidget>
 #include <QComboBox>
+#include <QCheckBox>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
+#include <QListWidget>
+#include <QListWidgetItem>
 #include <QStackedWidget>
 #include <relacs/macros.h>
 
@@ -34,17 +37,19 @@ class MacroEditor;
 
 namespace MacroGUI
 {
+  template<typename T>
   class GUIElement
   {
   public:
-    virtual void createGUI(MacroEditor*) = 0;
+    virtual void createGUI(T*) = 0;
 
   protected:
-    bool guiCreated = false;
-    MacroEditor* owner = nullptr;
+    bool GuiCreated = false;
+    T* Owner = nullptr;
   };
 
-  class TreeElement : public virtual GUIElement
+  template<typename T>
+  class TreeElement : public virtual GUIElement<T>
   {
   public:
     QTreeWidgetItem* treeItem() const { return TreeItem; }
@@ -53,13 +58,48 @@ namespace MacroGUI
     QTreeWidgetItem* TreeItem = nullptr;
   };
 
-
-  class MacroParameter
+  template<typename T>
+  class DetailElement : public virtual GUIElement<T>
   {
   public:
-    std::string name;
-    std::string value;
-    std::string unit;
+    QWidget* detailView() const { return DetailView; }
+
+  protected:
+    QWidget* DetailView = nullptr;
+  };
+
+
+  class MacroInfo;
+
+
+  class MacroParameter : public QObject, public DetailElement<MacroInfo>
+  {
+    Q_OBJECT
+
+  public:
+    void setName(const std::string& name);
+    void setValue(const std::string& value);
+    void setUnit(const std::string& unit);
+
+  private slots:
+    void updatedName(const QString& name);
+    void updatedValue(const QString& value);
+    void updatedUnit(const QString& unit);
+
+  public:
+    void createGUI(MacroInfo*) override;
+
+    QListWidgetItem* listItem() const { return ListItem; }
+
+  private:
+    std::string Name;
+    std::string Value;
+    std::string Unit;
+
+    QListWidgetItem* ListItem;
+    QLineEdit* NameEdit;
+    QLineEdit* ValueEdit;
+    QLineEdit* UnitEdit;
   };
 
   class MacroCommandInfo
@@ -75,8 +115,9 @@ namespace MacroGUI
     bool deactivated;
   };
 
-  class MacroInfo
+  class MacroInfo : public QObject, public TreeElement<MacroEditor>, public DetailElement<MacroEditor>
   {
+    Q_OBJECT
   public:
     enum class Keyword
     {
@@ -84,39 +125,44 @@ namespace MacroGUI
     };
 
   public:
-    std::string name;
-    std::set<Keyword> keywords;
-    std::vector<MacroParameter> parameter;
-    std::vector<MacroCommandInfo*> commands;
+    void setName(const std::string& name);
+    void addParameter(MacroParameter* param);
+    void removeParameter(MacroParameter* param);
 
-  public:
-    void createGUI(MacroEditor* parent);
-    QTreeWidgetItem* treeItem() const { return gui.treeItem; }
+    void createGUI(MacroEditor* parent) override;
+
+  private slots:
+    void updatedName(const QString& name);
+    void updatedKeywords(int);
+    void addParameter();
+    void removeParameter();
 
   private:
-    MacroEditor* parent;
-    struct
-    {
-      QTreeWidgetItem* treeItem;
-      QWidget* detailView;
-    } gui;
+    std::string Name;
+    std::set<Keyword> Keywords;
+    std::vector<MacroParameter*> Parameter;
+    std::vector<MacroCommandInfo*> Commands;
+
+    std::map<Keyword, QCheckBox*> KeywordToCheckbox;
+    QLineEdit* NameEdit;
+    QListWidget* ParamList;
+    QStackedWidget* ParamEdit;
   };
 
-  class MacroFile : public TreeElement
+  class MacroFile : public TreeElement<MacroEditor>
   {
   public:
     void setName(const std::string& name);
     std::string name() const { return Name; }
-    void addMacro(const MacroInfo& macro);
-    void delMacro(const MacroInfo* macro);
+    void addMacro(MacroInfo* macro);
+    void delMacro(MacroInfo* macro);
     void delMacro(QTreeWidgetItem* item);
+
+    void createGUI(MacroEditor* parent) override;
 
   private:
     std::string Name;
-    std::vector<MacroInfo> Macros;
-
-  public:
-    void createGUI(MacroEditor* parent);
+    std::vector<MacroInfo*> Macros;
   };
 
 }
@@ -141,14 +187,14 @@ private slots:
   void clickedDelete();
 
 private:
-  void populate(const std::vector<MacroGUI::MacroFile>& macrofiles);
+  void populate(const std::vector<MacroGUI::MacroFile*>& macrofiles);
 public:
   int addDetailView(QWidget* view, QTreeWidgetItem* treeItem);
 
 private:
   Macros* InternalMacros;
 
-  std::vector<MacroGUI::MacroFile> MacroFiles;
+  std::vector<MacroGUI::MacroFile*> MacroFiles;
   QTreeWidget* MacroTree;
   QStackedWidget* DetailViewContainer;
   std::map<QTreeWidgetItem*, int> TreeToDetailMap;
