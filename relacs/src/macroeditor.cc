@@ -278,21 +278,21 @@ namespace MacroGUI
 
     if (GuiCreated)
     {
-      NameEdit->clear();
+      ActiveEdit->clear();
       for (const std::string& name : available)
-        NameEdit->addItem(QString::fromStdString(name));
+        ActiveEdit->addItem(QString::fromStdString(name));
 
-      NameEdit->setCurrentIndex(NameEdit->findText(QString::fromStdString(Name)));
+      ActiveEdit->setCurrentIndex(ActiveEdit->findText(QString::fromStdString(Active)));
     }
   }
 
-  void MacroCommandFilterDetector::updatedName(const QString &name) { setName(name.toStdString()); }
-  void MacroCommandFilterDetector::setName(const string &name)
+  void MacroCommandFilterDetector::updatedActive(const QString &name) { setActive(name.toStdString()); }
+  void MacroCommandFilterDetector::setActive(const string &name)
   {
-    Name = name;
+    Active = name;
 
     if (GuiCreated)
-      NameEdit->setCurrentIndex(NameEdit->findText(QString::fromStdString(name)));
+      ActiveEdit->setCurrentIndex(ActiveEdit->findText(QString::fromStdString(Active)));
   }
 
   void MacroCommandFilterDetector::updatedAll(int val) { setAll(val == Qt::Checked); }
@@ -312,12 +312,12 @@ namespace MacroGUI
     {
       QGroupBox* grp = new QGroupBox("Filter/Detector");
       grp->setLayout(new QHBoxLayout());
-      NameEdit = new QComboBox();
+      ActiveEdit = new QComboBox();
       for (const std::string& name : Available)
-        NameEdit->addItem(QString::fromStdString(name));
-      NameEdit->setCurrentIndex(NameEdit->findText(QString::fromStdString(Name)));
-      QObject::connect(NameEdit, SIGNAL(activated(QString)), this, SLOT(updatedName(QString)));
-      grp->layout()->addWidget(NameEdit);
+        ActiveEdit->addItem(QString::fromStdString(name));
+      ActiveEdit->setCurrentIndex(ActiveEdit->findText(QString::fromStdString(Active)));
+      QObject::connect(ActiveEdit, SIGNAL(activated(QString)), this, SLOT(updatedActive(QString)));
+      grp->layout()->addWidget(ActiveEdit);
       AllEdit = new QCheckBox("all");
       AllEdit->setCheckState(All ? Qt::Checked : Qt::Unchecked);
       QObject::connect(AllEdit, SIGNAL(stateChanged(int)), this, SLOT(updatedAll(int)));
@@ -371,28 +371,28 @@ namespace MacroGUI
   }
 
 
-  void MacroCommandRepro::setAvailableRepors(const std::vector<string> &repros)
+  void MacroCommandReproMacro::setAvailable(const std::vector<string> &available)
   {
-    AvailableRepros = repros;
+    Available = available;
     if (GuiCreated)
     {
-      ReproEdit->clear();
-      for (const std::string& repro : AvailableRepros)
-        ReproEdit->addItem(QString::fromStdString(repro));
-      setRepro(Repro);
+      ActiveEdit->clear();
+      for (const std::string& avail : Available)
+        ActiveEdit->addItem(QString::fromStdString(avail));
+      setActive(Active);
     }
   }
 
-  void MacroCommandRepro::updatedRepro(const QString &name) { setRepro(name.toStdString()); }
-  void MacroCommandRepro::setRepro(const string &repro)
+  void MacroCommandReproMacro::updatedActive(const QString &name) { setActive(name.toStdString()); }
+  void MacroCommandReproMacro::setActive(const string &active)
   {
-    Repro = repro;
+    Active = active;
     if (GuiCreated)
-      ReproEdit->setCurrentIndex(ReproEdit->findText(QString::fromStdString(repro)));
+      ActiveEdit->setCurrentIndex(ActiveEdit->findText(QString::fromStdString(active)));
   }
 
 
-  void MacroCommandRepro::addParameter(MacroCommandParameter *param)
+  void MacroCommandReproMacro::addParameter(MacroCommandParameter *param)
   {
     Parameter.push_back(param);
 
@@ -404,7 +404,7 @@ namespace MacroGUI
     }
   }
 
-  void MacroCommandRepro::removeParameter(MacroCommandParameter *param)
+  void MacroCommandReproMacro::removeParameter(MacroCommandParameter *param)
   {
     auto itr = std::find(Parameter.begin(), Parameter.end(), param);
     if (itr == Parameter.end())
@@ -419,14 +419,14 @@ namespace MacroGUI
     Parameter.erase(itr);
   }
 
-  void MacroCommandRepro::addParameter()
+  void MacroCommandReproMacro::addParameter()
   {
     MacroCommandParameter* param = new MacroCommandParameter();
     param->setName("new parameter");
     addParameter(param);
   }
 
-  void MacroCommandRepro::removeParameter()
+  void MacroCommandReproMacro::removeParameter()
   {
     QList<QListWidgetItem*> selections = ParameterList->selectedItems();
     if (selections.empty() || selections.size() > 1)
@@ -437,7 +437,7 @@ namespace MacroGUI
     removeParameter(*itr);
   }
 
-  void MacroCommandRepro::createGUI(MacroCommandInfo *info)
+  void MacroCommandReproMacro::createGUI(MacroCommandInfo *info)
   {
     DetailView = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout();
@@ -446,11 +446,11 @@ namespace MacroGUI
     {
       QHBoxLayout* sub = new QHBoxLayout();
       sub->addWidget(new QLabel("RePro: "));
-      ReproEdit = new QComboBox();
-      for (const std::string& repro : AvailableRepros)
-        ReproEdit->addItem(QString::fromStdString(repro));
-      QObject::connect(ReproEdit, SIGNAL(activated(QString)), this, SLOT(updatedRepro(QString)));
-      sub->addWidget(ReproEdit);
+      ActiveEdit = new QComboBox();
+      for (const std::string& avail : Available)
+        ActiveEdit->addItem(QString::fromStdString(avail));
+      QObject::connect(ActiveEdit, SIGNAL(activated(QString)), this, SLOT(updatedActive(QString)));
+      sub->addWidget(ActiveEdit);
 
       layout->addLayout(sub);
     }
@@ -600,7 +600,7 @@ namespace MacroGUI
       SequenceEdit.Resolution->setValue(value);
   }
 
-  void MacroCommandParameter::createGUI(MacroCommandRepro *)
+  void MacroCommandParameter::createGUI(MacroCommandReproMacro *)
   {
     ListItem = new QListWidgetItem();
     ListItem->setText(QString::fromStdString(Name));
@@ -1111,8 +1111,8 @@ namespace MacroGUI
     ADD_TYPE(MacroCommandInfo::CommandType::SHELL, "shell", MacroCommandShell)
     ADD_TYPE(MacroCommandInfo::CommandType::SWITCH, "switch", MacroCommandSwitch)
     ADD_TYPE(MacroCommandInfo::CommandType::START_SESSION, "startsession", MacroCommandStartsession)
-    ADD_TYPE(MacroCommandInfo::CommandType::REPRO, "repro", MacroCommandRepro)
-    ADD_TYPE(MacroCommandInfo::CommandType::MACRO, "macro", MacroCommandShell)
+    ADD_TYPE(MacroCommandInfo::CommandType::REPRO, "repro", MacroCommandReproMacro)
+    ADD_TYPE(MacroCommandInfo::CommandType::MACRO, "macro", MacroCommandReproMacro)
   };
 
 #undef ADD_TYPE
@@ -1489,7 +1489,7 @@ namespace MacroMgr
           if (info.name.empty())
             msg->setAll(true);
           else
-            msg->setName(info.name);
+            msg->setActive(info.name);
 
           if (info.params.eraseFirst("save", 0, false, 3, Str::WhiteSpace))
           {
@@ -1503,19 +1503,29 @@ namespace MacroMgr
           }
         }
         case CmdType::REPRO:
+        case CmdType::MACRO:
         {
-          MacroCommandRepro* msg = cmd->command<CmdType::REPRO>();
-          msg->setAvailableRepors({info.name}); // todo XXX tmp
-          msg->setRepro(info.name);
+          MacroCommandReproMacro* msg;
+          if (info.type == CmdType::REPRO)
+            msg = cmd->command<CmdType::REPRO>();
+          else
+            msg = cmd->command<CmdType::MACRO>();
+          msg->setAvailable({info.name}); // todo XXX tmp
+          msg->setActive(info.name);
 
           StrQueue sq(info.params.stripped().preventLast(";"), ";");
           for (Str& str : sq)
           {
-            MacroCommandParameter* param = new MacroCommandParameter();
-            msg->addParameter(param);
+            str.strip();
 
             std::string name = str.ident(0, "=", Str::WhiteSpace);
             std::string value = str.value();
+
+            if (name.empty())
+              continue;
+
+            MacroCommandParameter* param = new MacroCommandParameter();
+            msg->addParameter(param);
 
             param->setName(name);
 
@@ -1563,7 +1573,6 @@ namespace MacroMgr
             }
           }
         }
-        case CmdType::MACRO:
           break;
       }
 

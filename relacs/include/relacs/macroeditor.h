@@ -110,7 +110,7 @@ namespace MacroGUI
   class MacroCommandBrowse;
   class MacroCommandFilterDetector;
   class MacroCommandMessage;
-  class MacroCommandRepro;
+  class MacroCommandReproMacro;
   class MacroCommandShell;
   class MacroCommandStartsession;
   class MacroCommandSwitch;
@@ -150,8 +150,8 @@ namespace MacroGUI
     MAP_TYPE(CommandType::SHELL, MacroCommandShell)
     MAP_TYPE(CommandType::SWITCH, MacroCommandSwitch)
     MAP_TYPE(CommandType::START_SESSION, MacroCommandStartsession)
-    MAP_TYPE(CommandType::REPRO, MacroCommandRepro)
-    MAP_TYPE(CommandType::MACRO, MacroCommandRepro)
+    MAP_TYPE(CommandType::REPRO, MacroCommandReproMacro)
+    MAP_TYPE(CommandType::MACRO, MacroCommandReproMacro)
 
 
 #undef MAP_TYPE
@@ -266,7 +266,7 @@ namespace MacroGUI
     };
 
     void setAvailable(const std::vector<std::string>& available);
-    void setName(const std::string& name);
+    void setActive(const std::string& name);
     void setAll(bool all);
     void setMode(ModeType mode);
   public slots:
@@ -279,27 +279,25 @@ namespace MacroGUI
   private slots:
     void updatedMode(const QString& mode);
     void updatedSave(const QString& param);
-    void updatedName(const QString& name);
+    void updatedActive(const QString& name);
     void updatedAll(int);
 
   private:
     std::vector<std::string> Available;
-    std::string Name;
+    std::string Active;
     bool All;
     ModeType Mode;
     double Configure;
     std::string Save;
 
-    QComboBox* NameEdit;
+    QComboBox* ActiveEdit;
     QCheckBox* AllEdit;
     QComboBox* ModeEdit;
     QDoubleSpinBox* ConfigureEdit;
     QLineEdit* SaveEdit;
   };
 
-  class MacroCommandRepro;
-
-  class MacroCommandParameter : public QObject, public DetailElement<MacroCommandRepro>
+  class MacroCommandParameter : public QObject, public DetailElement<MacroCommandReproMacro>
   {
     Q_OBJECT
   public:
@@ -327,7 +325,7 @@ namespace MacroGUI
   public:
     //void setMode(SequenceMode mode);
 
-    void createGUI(MacroCommandRepro*);
+    void createGUI(MacroCommandReproMacro*);
     QListWidgetItem* listItem() const { return ListItem; }
 
   private slots:
@@ -387,28 +385,28 @@ namespace MacroGUI
     } SequenceEdit;
   };
 
-  class MacroCommandRepro : public QObject, public DetailElement<MacroCommandInfo>
+  class MacroCommandReproMacro : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
   public:
-    void setAvailableRepors(const std::vector<std::string>& repros);
-    void setRepro(const std::string& repro);
+    void setAvailable(const std::vector<std::string>& repros);
+    void setActive(const std::string& repro);
     void addParameter(MacroCommandParameter* param);
     void removeParameter(MacroCommandParameter* param);
 
     void createGUI(MacroCommandInfo* info);
 
   private slots:
-    void updatedRepro(const QString& name);
+    void updatedActive(const QString& name);
     void addParameter();
     void removeParameter();
 
   private:
-    std::vector<std::string> AvailableRepros;
-    std::string Repro;
+    std::vector<std::string> Available;
+    std::string Active;
     std::vector<MacroCommandParameter*> Parameter;
 
-    QComboBox* ReproEdit;
+    QComboBox* ActiveEdit;
     QListWidget* ParameterList;
     QStackedWidget* ParameterValues;
   };
