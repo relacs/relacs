@@ -20,6 +20,7 @@
 */
 
 #include <map>
+#include <type_traits>
 #include <QObject>
 #include <QWidget>
 #include <QComboBox>
@@ -106,20 +107,55 @@ namespace MacroGUI
     QLineEdit* UnitEdit;
   };
 
+  class MacroCommandBrowse;
+  class MacroCommandFilterDetector;
+  class MacroCommandMessage;
+  class MacroCommandRepro;
+  class MacroCommandShell;
+  class MacroCommandStartsession;
+  class MacroCommandSwitch;
+
   class MacroCommandInfo : public QObject, public TreeElement<MacroEditor>, public DetailElement<MacroEditor>
   {
     Q_OBJECT
   public:
     enum class CommandType
     {
+      UNKNOWN,
       FILTER, DETECTOR, MESSAGE, BROWSE, SHELL, SWITCH, START_SESSION, REPRO, MACRO
     };
+
+    MacroCommandInfo();
 
     void createGUI(MacroEditor*) override;
 
   public:
     void setDeactivated(bool state);
     void setType(CommandType type);
+
+    CommandType type() const { return Type; }
+
+#define MAP_TYPE(ENUM_VAL, CLASS_NAME) \
+  template<CommandType TYPE> \
+  typename std::enable_if<TYPE == ENUM_VAL, CLASS_NAME*>::type \
+  command() const \
+  { \
+    return dynamic_cast<CLASS_NAME*>(Commands.at(TYPE)); \
+  }
+
+    MAP_TYPE(CommandType::FILTER, MacroCommandFilterDetector)
+    MAP_TYPE(CommandType::DETECTOR, MacroCommandFilterDetector)
+    MAP_TYPE(CommandType::MESSAGE, MacroCommandMessage)
+    MAP_TYPE(CommandType::BROWSE, MacroCommandBrowse)
+    MAP_TYPE(CommandType::SHELL, MacroCommandShell)
+    MAP_TYPE(CommandType::SWITCH, MacroCommandSwitch)
+    MAP_TYPE(CommandType::START_SESSION, MacroCommandStartsession)
+    MAP_TYPE(CommandType::REPRO, MacroCommandRepro)
+    MAP_TYPE(CommandType::MACRO, MacroCommandRepro)
+
+
+#undef MAP_TYPE
+
 
   private slots:
     void updateDeactivated(int);
@@ -229,6 +265,9 @@ namespace MacroGUI
       SAVE, CONFIGURE
     };
 
+    void setAvailable(const std::vector<std::string>& available);
+    void setName(const std::string& name);
+    void setAll(bool all);
     void setMode(ModeType mode);
   public slots:
     void setConfigure(double time);
@@ -240,12 +279,19 @@ namespace MacroGUI
   private slots:
     void updatedMode(const QString& mode);
     void updatedSave(const QString& param);
+    void updatedName(const QString& name);
+    void updatedAll(int);
 
   private:
+    std::vector<std::string> Available;
+    std::string Name;
+    bool All;
     ModeType Mode;
     double Configure;
     std::string Save;
 
+    QComboBox* NameEdit;
+    QCheckBox* AllEdit;
     QComboBox* ModeEdit;
     QDoubleSpinBox* ConfigureEdit;
     QLineEdit* SaveEdit;
@@ -417,6 +463,8 @@ namespace MacroGUI
     void delMacro(MacroInfo* macro);
     void delMacro(QTreeWidgetItem* item);
 
+    const std::vector<MacroInfo*>& macros() const { return Macros; }
+
     void createGUI(MacroEditor* parent) override;
 
   private:
@@ -426,6 +474,36 @@ namespace MacroGUI
 
 }
 
+namespace MacroMgr
+{
+  class MacroFileReader
+  {
+    struct CommandInput
+    {
+      MacroGUI::MacroCommandInfo::CommandType type;
+      bool deactivated;
+      Str name;
+      Str params;
+    };
+
+  public:
+    void load(const std::string& filename);
+
+    MacroGUI::MacroFile* file() const { return MacroFile; }
+
+  private:
+    void loadMacro(Str realLine);
+    void loadMacroParameter(const Str& realLine);
+    Str loadMacroCommands(std::string& line, std::ifstream& file);
+    CommandInput loadMacroCommand(const std::string& line);
+    void addCommandsToMacro();
+
+  private:
+    MacroGUI::MacroFile* MacroFile;
+    std::vector<CommandInput> TempCommands;
+
+  };
+}
 
 class MacroEditor : public QWidget
 {
@@ -447,6 +525,7 @@ private slots:
 
 private:
   void populate(const std::vector<MacroGUI::MacroFile*>& macrofiles);
+  std::vector<MacroGUI::MacroFile*> readFiles();
 public:
   int addDetailView(QWidget* view, QTreeWidgetItem* treeItem);
 

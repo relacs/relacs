@@ -256,10 +256,12 @@ namespace MacroGUI
   {
     Mode = mode;
     if (GuiCreated)
+    {
       if (mode == ModeType::SAVE)
         ModeEdit->setCurrentIndex(ModeEdit->findText("Save"));
       else
         ModeEdit->setCurrentIndex(ModeEdit->findText("Configure"));
+    }
   }
 
   void MacroCommandFilterDetector::updatedSave(const QString &param) { setSave(param.toStdString()); }
@@ -270,16 +272,69 @@ namespace MacroGUI
       SaveEdit->setText(QString::fromStdString(param));
   }
 
+  void MacroCommandFilterDetector::setAvailable(const std::vector<string> &available)
+  {
+    Available = available;
+
+    if (GuiCreated)
+    {
+      NameEdit->clear();
+      for (const std::string& name : available)
+        NameEdit->addItem(QString::fromStdString(name));
+
+      NameEdit->setCurrentIndex(NameEdit->findText(QString::fromStdString(Name)));
+    }
+  }
+
+  void MacroCommandFilterDetector::updatedName(const QString &name) { setName(name.toStdString()); }
+  void MacroCommandFilterDetector::setName(const string &name)
+  {
+    Name = name;
+
+    if (GuiCreated)
+      NameEdit->setCurrentIndex(NameEdit->findText(QString::fromStdString(name)));
+  }
+
+  void MacroCommandFilterDetector::updatedAll(int val) { setAll(val == Qt::Checked); }
+  void MacroCommandFilterDetector::setAll(bool all)
+  {
+    All = all;
+
+    if (GuiCreated)
+      AllEdit->setCheckState(all ? Qt::Checked : Qt::Unchecked);
+  }
+
   void MacroCommandFilterDetector::createGUI(MacroCommandInfo *info)
   {
     DetailView = new QWidget();
     DetailView->setLayout(new QVBoxLayout());
 
-    ModeEdit = new QComboBox();
-    ModeEdit->addItem("Save");
-    ModeEdit->addItem("Configure");
+    {
+      QGroupBox* grp = new QGroupBox("Filter/Detector");
+      grp->setLayout(new QHBoxLayout());
+      NameEdit = new QComboBox();
+      for (const std::string& name : Available)
+        NameEdit->addItem(QString::fromStdString(name));
+      NameEdit->setCurrentIndex(NameEdit->findText(QString::fromStdString(Name)));
+      QObject::connect(NameEdit, SIGNAL(activated(QString)), this, SLOT(updatedName(QString)));
+      grp->layout()->addWidget(NameEdit);
+      AllEdit = new QCheckBox("all");
+      AllEdit->setCheckState(All ? Qt::Checked : Qt::Unchecked);
+      QObject::connect(AllEdit, SIGNAL(stateChanged(int)), this, SLOT(updatedAll(int)));
+      grp->layout()->addWidget(AllEdit);
 
-    DetailView->layout()->addWidget(ModeEdit);
+      DetailView->layout()->addWidget(grp);
+    }
+    {
+      QGroupBox* grp = new QGroupBox("Mode");
+      grp->setLayout(new QVBoxLayout());
+      ModeEdit = new QComboBox();
+      ModeEdit->addItem("Save");
+      ModeEdit->addItem("Configure");
+      grp->layout()->addWidget(ModeEdit);
+
+      DetailView->layout()->addWidget(grp);
+    }
 
     QStackedWidget* stack = new QStackedWidget();
     {
@@ -306,7 +361,11 @@ namespace MacroGUI
     }
     DetailView->layout()->addWidget(stack);
 
-    QObject::connect(ModeEdit, SIGNAL(activated(int)), stack, SLOT(setCurrentIndex(int)));
+    QObject::connect(ModeEdit, SIGNAL(currentIndexChanged(int)), stack, SLOT(setCurrentIndex(int)));
+    if (Mode == ModeType::SAVE)
+      ModeEdit->setCurrentIndex(ModeEdit->findText("Save"));
+    else
+      ModeEdit->setCurrentIndex(ModeEdit->findText("Configure"));
 
     GuiCreated = true;
   }
@@ -570,12 +629,6 @@ namespace MacroGUI
         TypeEdit->addItem("reference");
         TypeEdit->addItem("sequence");
         QObject::connect(TypeEdit, SIGNAL(activated(int)), this, SLOT(updatedType(int)));
-        switch (Type)
-        {
-          case InputType::DIRECT: TypeEdit->setCurrentIndex(0); break;
-          case InputType::REFERENCE: TypeEdit->setCurrentIndex(1); break;
-          case InputType::SEQUENCE: TypeEdit->setCurrentIndex(2); break;
-        }
         sub->addWidget(TypeEdit);
 
         layout->addLayout(sub);
@@ -624,18 +677,21 @@ namespace MacroGUI
 
           sub->addWidget(new QLabel("Min: "));
           SequenceEdit.Min = new QSpinBox();
+          SequenceEdit.Min->setRange(0, std::numeric_limits<int>::max());
           SequenceEdit.Min->setValue(Sequence.Min);
           QObject::connect(SequenceEdit.Min, SIGNAL(valueChanged(int)), this, SLOT(setMinimum(int)));
           sub->addWidget(SequenceEdit.Min);
 
           sub->addWidget(new QLabel("Max: "));
           SequenceEdit.Max = new QSpinBox();
+          SequenceEdit.Max->setRange(0, std::numeric_limits<int>::max());
           SequenceEdit.Max->setValue(Sequence.Max);
           QObject::connect(SequenceEdit.Max, SIGNAL(valueChanged(int)), this, SLOT(setMaximum(int)));
           sub->addWidget(SequenceEdit.Max);
 
           sub->addWidget(new QLabel("Step: "));
           SequenceEdit.Step = new QSpinBox();
+          SequenceEdit.Step->setRange(0, std::numeric_limits<int>::max());
           SequenceEdit.Step->setValue(Sequence.Step);
           QObject::connect(SequenceEdit.Step, SIGNAL(valueChanged(int)), this, SLOT(setStep(int)));
           sub->addWidget(SequenceEdit.Step);
@@ -673,6 +729,12 @@ namespace MacroGUI
     }
 
     QObject::connect(TypeEdit, SIGNAL(currentIndexChanged(int)), TypeValues, SLOT(setCurrentIndex(int)));
+    switch (Type)
+    {
+      case InputType::DIRECT: TypeEdit->setCurrentIndex(0); break;
+      case InputType::REFERENCE: TypeEdit->setCurrentIndex(1); break;
+      case InputType::SEQUENCE: TypeEdit->setCurrentIndex(2); break;
+    }
 
     GuiCreated = true;
   }
@@ -1055,6 +1117,15 @@ namespace MacroGUI
 
 #undef ADD_TYPE
 
+  MacroCommandInfo::MacroCommandInfo()
+  {
+    for (const std::pair<CommandType, CommandTypeInfo>& type : COMMANDTYPE_LIST)
+    {
+      DetailElement<MacroCommandInfo>* cmd = type.second.creator();
+      Commands[type.first] = cmd;
+    }
+  }
+
   void MacroCommandInfo::setDeactivated(bool state)
   {
     Deactivated = state;
@@ -1123,14 +1194,12 @@ namespace MacroGUI
     for (const std::pair<CommandType, CommandTypeInfo>& type : COMMANDTYPE_LIST)
     {
       TypeEdit->addItem(QString::fromStdString(type.second.name));
-      DetailElement<MacroCommandInfo>* cmd = type.second.creator();
+      DetailElement<MacroCommandInfo>* cmd =  Commands.at(type.first);
       cmd->createGUI(this);
-      Commands[type.first] = cmd;
       CommandsEdit->addWidget(cmd->detailView());
     }
-    TypeEdit->setCurrentIndex(TypeEdit->findText(QString::fromStdString(COMMANDTYPE_LIST.at(Type).name)));
-
     QObject::connect(TypeEdit, SIGNAL(currentIndexChanged(int)), CommandsEdit, SLOT(setCurrentIndex(int)));
+    TypeEdit->setCurrentIndex(TypeEdit->findText(QString::fromStdString(COMMANDTYPE_LIST.at(Type).name)));
 
     owner->addDetailView(DetailView, TreeItem);
 
@@ -1139,7 +1208,369 @@ namespace MacroGUI
   }
 }
 
+namespace MacroMgr
+{
+  void MacroFileReader::load(const string &filename)
+  {
+    MacroFile = new MacroGUI::MacroFile();
+    MacroFile->setName(filename);
 
+    std::ifstream file(filename);
+    std::string line = "";
+    Str realLine = "";
+    while (std::getline(file, line))
+    {
+      realLine = line;
+      realLine.strip( Str::WhiteSpace, "#" );
+      if (realLine.empty())
+        continue;
+
+      // first macro defintion;
+      if (realLine.front() == '$')
+        break;
+    }
+
+    while (!realLine.empty())
+    {
+      if (realLine.front() == '$')
+      {
+        realLine.erase(0, 1);
+        realLine.strip();
+        loadMacro(realLine);
+      }
+      else
+        loadMacroParameter(realLine);
+
+      realLine = loadMacroCommands(line, file);
+    }
+
+    if (!MacroFile->macros().empty() && !TempCommands.empty())
+      addCommandsToMacro();
+
+  }
+
+  void MacroFileReader::loadMacro(Str realLine)
+  {
+    if (!MacroFile->macros().empty() && !TempCommands.empty())
+      addCommandsToMacro();
+
+    MacroFile->addMacro(new MacroGUI::MacroInfo());
+    TempCommands.clear();
+
+    int index = realLine.find(':');
+    if (index > 0)
+    {
+      loadMacroParameter(realLine.substr(index + 1));
+      realLine.erase(index);
+    }
+
+    for (const std::pair<MacroGUI::MacroInfo::Keyword, MacroGUI::KeywordInfo> pair : MacroGUI::KEYWORD_LIST)
+    {
+      if (realLine.erase(pair.second.name, 0, false, 3, Str::WordSpace) > 0)
+        MacroFile->macros().back()->setKeyword(pair.first);
+    }
+
+    MacroFile->macros().back()->setName(realLine.stripped( Str::WordSpace ));
+  }
+
+  void MacroFileReader::loadMacroParameter(const Str& realLine)
+  {
+    Options vars;
+    vars.load( realLine, "=", ";" );
+    vars.setToDefaults();
+
+    for (Parameter& param : vars)
+    {
+      MacroGUI::MacroParameter* p = new MacroGUI::MacroParameter();
+      p->setName(param.name());
+      p->setUnit(param.unit());
+      p->setValue(param.text());
+
+      MacroFile->macros().back()->addParameter(p);
+    }
+  }
+
+  Str MacroFileReader::loadMacroCommands(std::string& line, ifstream &file)
+  {
+    using CmdType = MacroGUI::MacroCommandInfo::CommandType;
+
+    bool appendable = true;
+    bool appendmacro = true;
+    bool appendparam = true;
+
+    while (std::getline(file, line))
+    {
+      Str realLine = line;
+      realLine.strip(Str::WhiteSpace, "#");
+
+      if (realLine.empty())
+      {
+        appendable = false;
+        continue;
+      }
+
+      if (realLine.front() == '$')
+        return realLine;
+
+      CommandInput info = loadMacroCommand(realLine);
+
+      if (appendable &&
+          info.type == CmdType::UNKNOWN &&
+          info.params.empty() &&
+          ((appendparam && realLine.find('=') >= 0) ||
+           (!appendparam && line.find_first_not_of(Str::WhiteSpace) != std::string::npos)))
+      {
+        if (appendmacro)
+          return realLine;
+        else
+        {
+          Str& params = TempCommands.back().params;
+
+          if (appendparam && !params.empty())
+            params.provideLast(';');
+          params.provideLast(' ');
+          params += realLine;
+        }
+      }
+      else if (info.type != CmdType::START_SESSION &&
+               info.type != CmdType::SHELL &&
+               info.type != CmdType::FILTER &&
+               info.type != CmdType::DETECTOR &&
+               info.type != CmdType::MESSAGE &&
+               info.type != CmdType::BROWSE &&
+               info.name.empty())
+      {
+        appendable = false;
+      }
+      else
+      {
+        if (info.type  == CmdType::UNKNOWN &&
+            !info.name.empty())
+          info.type  = CmdType::REPRO;
+
+        if (info.type  == CmdType::UNKNOWN)
+        {
+          appendable = false;
+        }
+        else
+        {
+          TempCommands.push_back(info);
+
+          if (info.type  == CmdType::START_SESSION ||
+              info.type  == CmdType::BROWSE ||
+              info.type  == CmdType::SWITCH)
+            appendable = false;
+          else if (info.type  == CmdType::SHELL ||
+                   info.type  == CmdType::MESSAGE)
+          {
+            appendable = true;
+            appendmacro = false;
+            appendparam = false;
+          }
+          else
+          {
+            appendable = true;
+            appendmacro = false;
+            appendparam = true;
+          }
+        }
+      }
+    }
+    return "";
+  }
+
+  MacroFileReader::CommandInput MacroFileReader::loadMacroCommand(const std::string& line)
+  {
+    using CmdType = MacroGUI::MacroCommandInfo::CommandType;
+
+    CmdType type;
+    bool deactivated;
+    Str name;
+    Str params;
+
+    size_t pos = line.find_first_of(':');
+    if (pos != std::string::npos)
+    {
+      name = line.substr(0, pos);
+      params = line.substr(pos + 1);
+      params.strip();
+    }
+    else
+      name = line;
+
+    if (line.front() == '!')
+    {
+      deactivated = true;
+      name.erase(0, 1);
+    }
+    else
+      deactivated = false;
+
+    type = CmdType::UNKNOWN;
+    for (const std::pair<MacroGUI::MacroCommandInfo::CommandType, MacroGUI::CommandTypeInfo>& pair : MacroGUI::COMMANDTYPE_LIST)
+    {
+      if (name.eraseFirst(pair.second.name, 0, false, 3, Str::WhiteSpace))
+      {
+        type = pair.first;
+        break;
+      }
+    }
+
+    name.strip(Str::WhiteSpace);
+
+    return {type, deactivated, name, params};
+  }
+
+  void MacroFileReader::addCommandsToMacro()
+  {
+    using CmdType = MacroGUI::MacroCommandInfo::CommandType;
+    using namespace MacroGUI;
+
+    MacroInfo* macro = MacroFile->macros().back();
+
+    /*
+    for (const CommandInput& info : TempCommands)
+    {
+      std::cout << "type: " << (int)info.type << " deactive: " << info.deactivated
+                   << "name: " << info.name << " params: " << info.params << std::endl;
+    }
+    */
+
+    for (CommandInput& info : TempCommands)
+    {
+      MacroCommandInfo* cmd = new MacroCommandInfo();
+      macro->addCommand(cmd);
+
+      cmd->setDeactivated(info.deactivated);
+      cmd->setType(info.type);
+
+      switch (info.type)
+      {
+        case CmdType::MESSAGE:
+        {
+          MacroCommandMessage* msg = cmd->command<CmdType::MESSAGE>();
+          msg->setText(info.params);
+
+          int n = 0;
+          msg->setTimeout(info.name.number(0.0, 0, &n));
+          msg->setTitle(info.name.substr(n + 1).strip(Str::WhiteSpace));
+          break;
+        }
+        case CmdType::SHELL:
+        {
+          MacroCommandShell* msg = cmd->command<CmdType::SHELL>();
+          msg->setCommand(info.name);
+          break;
+        }
+        case CmdType::BROWSE:
+        {
+          MacroCommandBrowse* msg = cmd->command<CmdType::BROWSE>();
+          msg->setPath(info.name);
+          break;
+        }
+        case CmdType::START_SESSION:
+          break;
+        case CmdType::SWITCH:
+        {
+          MacroCommandSwitch* msg = cmd->command<CmdType::SWITCH>();
+          msg->setPath(info.name);
+          break;
+        }
+        case CmdType::FILTER:
+        case CmdType::DETECTOR:
+        {
+          MacroCommandFilterDetector* msg;
+
+          if (info.type == CmdType::FILTER)
+            msg = cmd->command<CmdType::FILTER>();
+          else
+            msg = cmd->command<CmdType::DETECTOR>();
+
+          if (info.name.empty())
+            msg->setAll(true);
+          else
+            msg->setName(info.name);
+
+          if (info.params.eraseFirst("save", 0, false, 3, Str::WhiteSpace))
+          {
+            msg->setMode(MacroCommandFilterDetector::ModeType::SAVE);
+            msg->setSave(info.params);
+          }
+          else if (info.params.eraseFirst("autoconf", 0, false, 3, Str::WhiteSpace))
+          {
+            msg->setMode(MacroCommandFilterDetector::ModeType::CONFIGURE);
+            msg->setConfigure(info.params.number(1.0));
+          }
+        }
+        case CmdType::REPRO:
+        {
+          MacroCommandRepro* msg = cmd->command<CmdType::REPRO>();
+          msg->setAvailableRepors({info.name}); // todo XXX tmp
+          msg->setRepro(info.name);
+
+          StrQueue sq(info.params.stripped().preventLast(";"), ";");
+          for (Str& str : sq)
+          {
+            MacroCommandParameter* param = new MacroCommandParameter();
+            msg->addParameter(param);
+
+            std::string name = str.ident(0, "=", Str::WhiteSpace);
+            std::string value = str.value();
+
+            param->setName(name);
+
+            if (value.front() == '$')
+            {
+              param->setType(MacroCommandParameter::InputType::REFERENCE);
+              param->setReference(value.substr(1));
+            }
+            else if (value.front() == '(')
+            {
+              param->setType(MacroCommandParameter::InputType::SEQUENCE);
+
+              value.erase(0, 1);
+              size_t idx = value.find(')');
+
+              param->setUnit(value.substr(idx + 1));
+
+              value = value.substr(0, idx);
+              StrQueue sq(value, ",");
+              for (Str& str : sq)
+              {
+                if (str.contains(".."))
+                {
+                  StrQueue sq2(str, "..");
+                  param->setMinimum(sq2[0].number());
+                  param->setMaximum(sq2[2].number());
+                  if (sq2.size() > 4)
+                    param->setStep(sq2[4].number());
+                }
+                else if(str.contains("r="))
+                {
+                  int val = static_cast<int>(str.substr(2).number());
+                  param->setResolution(val);
+                }
+                else
+                {
+                  // todo XXX read type
+                }
+              }
+            }
+            else
+            {
+              param->setType(MacroCommandParameter::InputType::DIRECT);
+              param->setValue(value);
+            }
+          }
+        }
+        case CmdType::MACRO:
+          break;
+      }
+
+
+    }
+  }
+}
 
 
 MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
@@ -1185,7 +1616,25 @@ MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
     this->layout()->addWidget(group);
   }
 
-  populate(testdata());
+  populate(readFiles());
+  //populate(testdata());
+}
+
+std::vector<MacroGUI::MacroFile*> MacroEditor::readFiles()
+{
+  std::vector<MacroGUI::MacroFile*> files;
+
+  std::vector<std::string> filenames;
+  InternalMacros->texts("file", filenames);
+
+  for (const std::string& filename : filenames)
+  {
+    MacroMgr::MacroFileReader reader;
+    reader.load(filename);
+    files.push_back(reader.file());
+  }
+
+  return files;
 }
 
 void MacroEditor::populate(const std::vector<MacroGUI::MacroFile*> &macrofiles)
