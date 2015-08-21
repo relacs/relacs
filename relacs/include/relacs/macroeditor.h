@@ -175,8 +175,8 @@ namespace MacroGUI
     void macroParameterRemoved(const std::string& name);
 
   protected:
-    CommandType Type;
-    bool Deactivated;
+    CommandType Type = CommandType::REPRO;
+    bool Deactivated = false;
 
   private:
     std::map<CommandType, DetailElement<MacroCommandInfo>*> Commands;
@@ -268,7 +268,7 @@ namespace MacroGUI
 
   private:
     std::string Title;
-    int Timeout;
+    int Timeout = 0;
     std::string Text;
 
     QTextEdit* TextEdit;
@@ -311,9 +311,9 @@ namespace MacroGUI
   private:
     std::vector<std::string> Available;
     std::string Active;
-    bool All;
-    ModeType Mode;
-    double Configure;
+    bool All = false;
+    ModeType Mode = ModeType::CONFIGURE;
+    double Configure = 0.0d;
     std::string Save;
 
     QComboBox* ActiveEdit;
@@ -380,7 +380,7 @@ namespace MacroGUI
 
   private:
     std::string Name;
-    InputType Type;
+    InputType Type = InputType::DIRECT;
     std::string Unit;
     struct
     {
@@ -393,11 +393,11 @@ namespace MacroGUI
     } Reference;
     struct
     {
-      int Min;
-      int Max;
-      int Step;
-      int Resolution;
-      SequenceMode Mode;
+      int Min = 0;
+      int Max = 100;
+      int Step = 1;
+      int Resolution = 1;
+      SequenceMode Mode = SequenceMode::UP;
     } Sequence;
     struct
     {

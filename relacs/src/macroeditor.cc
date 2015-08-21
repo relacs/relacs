@@ -1717,7 +1717,6 @@ namespace MacroMgr
                   }
                   else
                   {
-                    std::cout << str << std::endl;
                     for (const std::pair<MacroGUI::MacroCommandParameter::SequenceMode, SequenceTypeInfo>& pair : SEQUENCE_INFO)
                       if (pair.second.alias.count(str))
                         param->setMode(pair.first);
