@@ -1657,6 +1657,156 @@ namespace MacroMgr
 
     }
   }
+
+  MacroFileWriter::MacroFileWriter(MacroGUI::MacroFile *file, const string &filename) :
+    MacroFile(file),
+    Filename(filename),
+    File()
+  {
+
+  }
+
+  void MacroFileWriter::save()
+  {
+    File.open(Filename);
+
+    for (MacroGUI::MacroInfo* info : MacroFile->macros())
+      write(info);
+  }
+
+  void MacroFileWriter::write(MacroGUI::MacroInfo *macro)
+  {
+    File << "$" << macro->name();
+
+    for (MacroGUI::MacroInfo::Keyword keyword : macro->keywords())
+      File << " " << MacroGUI::KEYWORD_LIST.at(keyword).name;
+
+    if (!macro->parameter().empty())
+    {
+      File << ":";
+      for (MacroGUI::MacroParameter* param : macro->parameter())
+        File << " " << param->name() << "=" << param->value() << param->unit() << ";";
+    }
+
+    File << std::endl;
+
+    for (MacroGUI::MacroCommandInfo* cmd : macro->commands())
+      write(cmd);
+
+    File << std::endl;
+  }
+
+  void MacroFileWriter::write(MacroGUI::MacroCommandInfo *cmd)
+  {
+    using CmdType = MacroGUI::MacroCommandInfo::CommandType;
+
+    if (cmd->deactivated())
+      File << "!";
+
+    File << MacroGUI::COMMANDTYPE_LIST.at(cmd->type()).name << " ";
+
+    switch (cmd->type())
+    {
+      case CmdType::BROWSE:
+      {
+        MacroGUI::MacroCommandBrowse* browse = cmd->command<CmdType::BROWSE>();
+        File << browse->path();
+        break;
+      }
+      case CmdType::MESSAGE:
+      {
+        MacroGUI::MacroCommandMessage* message = cmd->command<CmdType::MESSAGE>();
+        if (message->timeout() != 0 || !message->title().empty())
+          File << message->timeout() << " " << message->title() << ":";
+        File << message->text();
+        break;
+      }
+      case CmdType::SHELL:
+      {
+        MacroGUI::MacroCommandShell* shell = cmd->command<CmdType::SHELL>();
+        File << shell->command();
+        break;
+      }
+      case CmdType::START_SESSION:
+        break;
+      case CmdType::SWITCH:
+      {
+        MacroGUI::MacroCommandSwitch* browse = cmd->command<CmdType::SWITCH>();
+        File << browse->path();
+        break;
+      }
+      case CmdType::DETECTOR:
+      case CmdType::FILTER:
+      {
+        MacroGUI::MacroCommandFilterDetector* flt;
+        if (cmd->type() == CmdType::DETECTOR)
+          flt = cmd->command<CmdType::DETECTOR>();
+        else
+          flt = cmd->command<CmdType::FILTER>();
+
+        if (!flt->all())
+          File << flt->active();
+        File << ": ";
+        if (flt->mode() == MacroGUI::MacroCommandFilterDetector::ModeType::SAVE)
+          File << "save" << " " << flt->save();
+        else
+          File << "autoconf" << " " << flt->configure();
+        break;
+      }
+      case CmdType::MACRO:
+      case CmdType::REPRO:
+      {
+        MacroGUI::MacroCommandReproMacro* re;
+        if (cmd->type() == CmdType::REPRO)
+          re = cmd->command<CmdType::REPRO>();
+        else
+          re = cmd->command<CmdType::MACRO>();
+
+        File << re->active();
+        if (!re->parameter().empty())
+        {
+          File << ":";
+          for (MacroGUI::MacroCommandParameter* param : re->parameter())
+            write(param);
+        }
+        break;
+      }
+    }
+
+    File << std::endl;
+  }
+
+  void MacroFileWriter::write(MacroGUI::MacroCommandParameter *param)
+  {
+    using InputType = MacroGUI::MacroCommandParameter::InputType;
+    using SequenceMode = MacroGUI::MacroCommandParameter::SequenceMode;
+
+    File << " ";
+    File << param->name();
+    File << "=";
+    switch (param->type())
+    {
+      case InputType::DIRECT:
+        File << param->value();
+        //File << param->unit();
+        break;
+      case InputType::REFERENCE:
+        File << "$";
+        File << param->reference();
+        break;
+      case InputType::SEQUENCE:
+        File << "(";
+        File << param->min() << ".." << param->max() << ".." << param->step();
+        File << ",";
+        File << (param->mode() == SequenceMode::UP ? "up" : "down");
+        File << ",";
+        File << "r=" << param->resolution();
+        File << ")";
+        File << param->unit();
+        break;
+    }
+    File << ";";
+  }
 }
 
 
@@ -1832,6 +1982,15 @@ void MacroEditor::setFilterDetectors(FilterDetectors *filters)
 
 void MacroEditor::dialogClosed(int code)
 {
+  if (code < 1)
+  {
+    delete this;
+    return;
+  }
+
+  for (MacroGUI::MacroFile* file : MacroFiles)
+    MacroMgr::MacroFileWriter(file, file->name()).save();
+
   if (code != 1)
     delete this;
 }

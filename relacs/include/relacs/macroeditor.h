@@ -99,6 +99,8 @@ namespace MacroGUI
     void createGUI(MacroInfo*) override;
 
     const std::string& name() const { return Name; }
+    const std::string& value() const { return Value; }
+    const std::string& unit() const { return Unit; }
 
     QListWidgetItem* listItem() const { return ListItem; }
 
@@ -139,6 +141,7 @@ namespace MacroGUI
     void setDeactivated(bool state);
     void setType(CommandType type);
 
+    bool deactivated() const { return Deactivated; }
     CommandType type() const { return Type; }
 
 #define MAP_TYPE(ENUM_VAL, CLASS_NAME) \
@@ -188,6 +191,7 @@ namespace MacroGUI
     Q_OBJECT
   public:
     void setCommand(const std::string& string);
+    const std::string& command() const { return Command; }
 
     void createGUI(MacroCommandInfo* info);
 
@@ -205,6 +209,7 @@ namespace MacroGUI
     Q_OBJECT
   public:
     void setPath(const std::string& string);
+    const std::string& path() const { return Path; }
 
     void createGUI(MacroCommandInfo* info);
 
@@ -229,6 +234,7 @@ namespace MacroGUI
     Q_OBJECT
   public:
     void setPath(const std::string& string);
+    const std::string& path() const { return Path; }
 
     void createGUI(MacroCommandInfo* info);
 
@@ -251,6 +257,10 @@ namespace MacroGUI
     void setTimeout(int timeout);
   public:
     void createGUI(MacroCommandInfo* info);
+
+    const std::string& title() const { return Title; }
+    const std::string& text() const { return Text; }
+    int timeout() const { return Timeout; }
 
   private slots:
     void updatedText();
@@ -285,6 +295,12 @@ namespace MacroGUI
     void setSave(const std::string& param);
 
     void createGUI(MacroCommandInfo* info);
+
+    const std::string& active() const { return Active; }
+    bool all() const { return All; }
+    ModeType mode() const { return Mode; }
+    double configure() const { return Configure; }
+    const std::string& save() const { return Save; }
 
   private slots:
     void updatedMode(const QString& mode);
@@ -339,6 +355,17 @@ namespace MacroGUI
     QListWidgetItem* listItem() const { return ListItem; }
 
     void updatedReferences(const std::string& name, bool added);
+
+    const std::string& name() const { return Name; }
+    InputType type() const { return Type; }
+    const std::string& value() const { return Direct.Value; }
+    const std::string& unit() const { return Direct.Unit; }
+    const std::string& reference() const { return Reference.Reference; }
+    int min() const { return Sequence.Min; }
+    int max() const { return Sequence.Max; }
+    int step() const { return Sequence.Step; }
+    int resolution() const { return Sequence.Resolution; }
+    SequenceMode mode() const { return Sequence.Mode; }
 
   private slots:
     void updatedName(const QString& name);
@@ -410,6 +437,9 @@ namespace MacroGUI
 
     void updateParameterReferences(const std::string& param, bool added);
 
+    const std::string& active() const { return Active; }
+    const std::vector<MacroCommandParameter*> parameter() const { return Parameter; }
+
   private slots:
     void updatedActive(const QString& name);
     void addParameter();
@@ -446,6 +476,9 @@ namespace MacroGUI
 
     void createGUI(MacroEditor* parent) override;
 
+    const std::string& name() const { return Name; }
+    const std::set<Keyword>& keywords() const { return Keywords; }
+    const std::vector<MacroCommandInfo*> commands() const { return Commands; }
     const std::vector<MacroParameter*>& parameter() const { return Parameter; }
 
   private slots:
@@ -523,6 +556,23 @@ namespace MacroMgr
     MacroGUI::MacroFile* MacroFile;
     std::vector<CommandInput> TempCommands;
 
+  };
+
+  class MacroFileWriter
+  {
+  public:
+    MacroFileWriter(MacroGUI::MacroFile* file, const std::string& filename);
+    void save();
+
+  private:
+    void write(MacroGUI::MacroInfo* macro);
+    void write(MacroGUI::MacroCommandInfo* cmd);
+    void write(MacroGUI::MacroCommandParameter* param);
+
+  private:
+    MacroGUI::MacroFile* MacroFile;
+    std::string Filename;
+    std::ofstream File;
   };
 }
 
