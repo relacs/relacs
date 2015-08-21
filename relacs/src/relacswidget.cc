@@ -1513,6 +1513,10 @@ void RELACSWidget::editMacros()
 {
   MacroEditor* mc = new MacroEditor(MC, this);
 
+  mc->setRepros(RP);
+  mc->setFilterDetectors(FD);
+  mc->load();
+
   OptDialog* od = new OptDialog(false, this);
   od->setCaption("Macro Editor");
   od->addWidget(mc);

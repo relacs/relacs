@@ -35,6 +35,7 @@
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <relacs/macros.h>
+#include <relacs/filterdetectors.h>
 
 namespace relacs {
 
@@ -91,8 +92,13 @@ namespace MacroGUI
     void updatedValue(const QString& value);
     void updatedUnit(const QString& unit);
 
+  signals:
+    void macroParameterChanged(const std::string& oldName, const std::string& newName);
+
   public:
     void createGUI(MacroInfo*) override;
+
+    const std::string& name() const { return Name; }
 
     QListWidgetItem* listItem() const { return ListItem; }
 
@@ -160,6 +166,10 @@ namespace MacroGUI
   private slots:
     void updateDeactivated(int);
     void updateType(QString);
+
+  public slots:
+    void macroParameterAdded(const std::string& name);
+    void macroParameterRemoved(const std::string& name);
 
   protected:
     CommandType Type;
@@ -328,6 +338,8 @@ namespace MacroGUI
     void createGUI(MacroCommandReproMacro*);
     QListWidgetItem* listItem() const { return ListItem; }
 
+    void updatedReferences(const std::string& name, bool added);
+
   private slots:
     void updatedName(const QString& name);
     void updatedType(int type);
@@ -396,6 +408,8 @@ namespace MacroGUI
 
     void createGUI(MacroCommandInfo* info);
 
+    void updateParameterReferences(const std::string& param, bool added);
+
   private slots:
     void updatedActive(const QString& name);
     void addParameter();
@@ -432,11 +446,20 @@ namespace MacroGUI
 
     void createGUI(MacroEditor* parent) override;
 
+    const std::vector<MacroParameter*>& parameter() const { return Parameter; }
+
   private slots:
     void updatedName(const QString& name);
     void updatedKeywords(int);
     void addParameter();
     void removeParameter();
+
+  signals:
+    void macroParameterAdded(const std::string& name);
+    void macroParameterRemoved(const std::string& name);
+
+  public slots:
+    void macroParameterChanged(const std::string& oldName, const std::string& newName);
 
   private:
     std::string Name;
@@ -510,6 +533,14 @@ class MacroEditor : public QWidget
 public:
   MacroEditor(Macros* macros, QWidget* parent = nullptr);
 
+  void load();
+
+  void setRepros(RePros* repros);
+  void setFilterDetectors(FilterDetectors* filters);
+  const std::vector<std::string>& repros() const { return Repros; }
+  const std::vector<std::string>& filters() const { return Filters; }
+  const std::vector<std::string>& detectors() const { return Detectors; }
+
 public slots:
   void dialogClosed( int code );
 
@@ -529,6 +560,9 @@ public:
 
 private:
   Macros* InternalMacros;
+  std::vector<std::string> Repros;
+  std::vector<std::string> Filters;
+  std::vector<std::string> Detectors;
 
   std::vector<MacroGUI::MacroFile*> MacroFiles;
   QTreeWidget* MacroTree;

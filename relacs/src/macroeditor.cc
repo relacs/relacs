@@ -20,6 +20,7 @@
 */
 
 #include <relacs/macroeditor.h>
+#include <relacs/repros.h>
 #include <functional>
 #include <QString>
 #include <QGroupBox>
@@ -374,6 +375,7 @@ namespace MacroGUI
   void MacroCommandReproMacro::setAvailable(const std::vector<string> &available)
   {
     Available = available;
+
     if (GuiCreated)
     {
       ActiveEdit->clear();
@@ -388,7 +390,20 @@ namespace MacroGUI
   {
     Active = active;
     if (GuiCreated)
-      ActiveEdit->setCurrentIndex(ActiveEdit->findText(QString::fromStdString(active)));
+    {
+      int idx = ActiveEdit->findText(QString::fromStdString(active));
+      if (idx != -1)
+        ActiveEdit->setCurrentIndex(idx);
+      else
+      {
+        for (idx = 0; idx < ActiveEdit->count(); ++idx)
+        {
+          std::string item = ActiveEdit->itemText(idx).toStdString();
+          if (item.substr(0, item.find_last_of('[')) == active)
+              ActiveEdit->setCurrentIndex(idx);
+        }
+      }
+    }
   }
 
 
@@ -437,6 +452,12 @@ namespace MacroGUI
     removeParameter(*itr);
   }
 
+  void MacroCommandReproMacro::updateParameterReferences(const string &name, bool added)
+  {
+    for (MacroCommandParameter* param : Parameter)
+      param->updatedReferences(name, added);
+  }
+
   void MacroCommandReproMacro::createGUI(MacroCommandInfo *info)
   {
     DetailView = new QWidget();
@@ -449,7 +470,7 @@ namespace MacroGUI
       ActiveEdit = new QComboBox();
       for (const std::string& avail : Available)
         ActiveEdit->addItem(QString::fromStdString(avail));
-      QObject::connect(ActiveEdit, SIGNAL(activated(QString)), this, SLOT(updatedActive(QString)));
+      QObject::connect(ActiveEdit, SIGNAL(currentIndexChanged(QString)), this, SLOT(updatedActive(QString)));
       sub->addWidget(ActiveEdit);
 
       layout->addLayout(sub);
@@ -493,6 +514,8 @@ namespace MacroGUI
     QObject::connect(ParameterList, SIGNAL(currentRowChanged(int)), ParameterValues, SLOT(setCurrentIndex(int)));
 
     GuiCreated = true;
+
+    setActive(Active);
   }
 
 
@@ -598,6 +621,24 @@ namespace MacroGUI
     Sequence.Resolution = value;
     if (GuiCreated)
       SequenceEdit.Resolution->setValue(value);
+  }
+
+  void MacroCommandParameter::updatedReferences(const string &name, bool added)
+  {
+    if (added)
+    {
+      Reference.AvailableReferences.push_back(name);
+      if (GuiCreated)
+        ReferenceEdit.References->addItem(QString::fromStdString(name));
+    }
+    else
+    {
+      auto itr = std::find(Reference.AvailableReferences.begin(), Reference.AvailableReferences.end(), name);
+      if (itr != Reference.AvailableReferences.end())
+        Reference.AvailableReferences.erase(itr);
+      if (GuiCreated)
+        ReferenceEdit.References->removeItem(ReferenceEdit.References->findText(QString::fromStdString(name)));
+    }
   }
 
   void MacroCommandParameter::createGUI(MacroCommandReproMacro *)
@@ -857,6 +898,8 @@ namespace MacroGUI
       ParamList->addItem(param->listItem());
       ParamEdit->addWidget(param->detailView());
     }
+
+    emit macroParameterAdded(param->name());
   }
 
   void MacroInfo::removeParameter(MacroParameter *param)
@@ -870,6 +913,9 @@ namespace MacroGUI
       delete param->listItem();
       ParamEdit->removeWidget(param->detailView());
     }
+
+    emit macroParameterRemoved(param->name());
+
     delete param;
     Parameter.erase(itr);
   }
@@ -935,6 +981,12 @@ namespace MacroGUI
 
     auto itr = std::find_if(Parameter.begin(), Parameter.end(), [&selection](MacroParameter* param) { return param->listItem() == selection; });
     removeParameter(*itr);
+  }
+
+  void MacroInfo::macroParameterChanged(const string &oldName, const std::string& newName)
+  {
+    emit macroParameterRemoved(oldName);
+    emit macroParameterAdded(newName);
   }
 
   void MacroInfo::createGUI(MacroEditor* owner)
@@ -1013,7 +1065,15 @@ namespace MacroGUI
     for (MacroCommandInfo* command : Commands)
     {
       command->createGUI(owner);
+      QObject::connect(this, SIGNAL(macroParameterAdded(std::string)), command, SLOT(macroParameterAdded(std::string)));
+      QObject::connect(this, SIGNAL(macroParameterRemoved(std::string)), command, SLOT(macroParameterRemoved(std::string)));
       TreeItem->addChild(command->treeItem());
+    }
+
+    for (MacroParameter* param : Parameter)
+    {
+      QObject::connect(param, SIGNAL(macroParameterChanged(std::string,std::string)), this, SLOT(macroParameterChanged(std::string,std::string)));
+      emit macroParameterAdded(param->name());
     }
 
     owner->addDetailView(DetailView, TreeItem);
@@ -1025,6 +1085,8 @@ namespace MacroGUI
 
   void MacroParameter::setName(const string &name)
   {
+    emit macroParameterChanged(Name, name);
+
     Name = name;
     if (GuiCreated)
     {
@@ -1157,6 +1219,17 @@ namespace MacroGUI
       }
   }
 
+  void MacroCommandInfo::macroParameterAdded(const string &name)
+  {
+    dynamic_cast<MacroCommandReproMacro*>(Commands[CommandType::REPRO])->updateParameterReferences(name, true);
+    dynamic_cast<MacroCommandReproMacro*>(Commands[CommandType::MACRO])->updateParameterReferences(name, true);
+  }
+  void MacroCommandInfo::macroParameterRemoved(const string &name)
+  {
+    dynamic_cast<MacroCommandReproMacro*>(Commands[CommandType::REPRO])->updateParameterReferences(name, false);
+    dynamic_cast<MacroCommandReproMacro*>(Commands[CommandType::MACRO])->updateParameterReferences(name, false);
+  }
+
   void MacroCommandInfo::createGUI(MacroEditor* owner)
   {
     TreeItem = new QTreeWidgetItem();
@@ -1195,6 +1268,12 @@ namespace MacroGUI
     {
       TypeEdit->addItem(QString::fromStdString(type.second.name));
       DetailElement<MacroCommandInfo>* cmd =  Commands.at(type.first);
+      if (type.first == CommandType::REPRO)
+        dynamic_cast<MacroCommandReproMacro*>(cmd)->setAvailable(owner->repros());
+      else if (type.first == CommandType::FILTER)
+        dynamic_cast<MacroCommandFilterDetector*>(cmd)->setAvailable(owner->filters());
+      else if (type.first == CommandType::DETECTOR)
+        dynamic_cast<MacroCommandFilterDetector*>(cmd)->setAvailable(owner->detectors());
       cmd->createGUI(this);
       CommandsEdit->addWidget(cmd->detailView());
     }
@@ -1510,7 +1589,6 @@ namespace MacroMgr
             msg = cmd->command<CmdType::REPRO>();
           else
             msg = cmd->command<CmdType::MACRO>();
-          msg->setAvailable({info.name}); // todo XXX tmp
           msg->setActive(info.name);
 
           StrQueue sq(info.params.stripped().preventLast(";"), ";");
@@ -1624,7 +1702,10 @@ MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
 
     this->layout()->addWidget(group);
   }
+}
 
+void MacroEditor::load()
+{
   populate(readFiles());
   //populate(testdata());
 }
@@ -1727,6 +1808,25 @@ void MacroEditor::clickedDelete()
         break;
       }
     }
+  }
+}
+
+void MacroEditor::setRepros(RePros *repros)
+{
+  Repros.clear();
+  for (const ReProData* data : repros->repros())
+    Repros.push_back(data->name());
+}
+
+void MacroEditor::setFilterDetectors(FilterDetectors *filters)
+{
+  Filters.clear();
+  Detectors.clear();
+  for (FilterData* data : filters->filterList())
+  {
+    // todo XXX distinguish between filter and detector
+    Filters.push_back(data->GeneralOptions->text("name"));
+    Detectors.push_back(data->GeneralOptions->text("name"));
   }
 }
 

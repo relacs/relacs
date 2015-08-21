@@ -122,6 +122,8 @@ public:
 
   friend ostream &operator<< ( ostream &str, const RePros &repros );
 
+  typedef vector<ReProData*> ReProsList;
+  const ReProsList& repros() const { return RPs; }
 
 public slots:
 
@@ -153,8 +155,7 @@ private slots:
 
 
 private:
-  
-  typedef vector<ReProData*> ReProsList;
+
   ReProsList RPs;
 
   int CurrentRePro;
