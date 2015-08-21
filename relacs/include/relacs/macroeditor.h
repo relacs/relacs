@@ -329,12 +329,12 @@ namespace MacroGUI
   public:
     enum class InputType
     {
-      DIRECT, REFERENCE, SEQUENCE
+      DIRECT, REFERENCE, SEQUENCE_SINGLE, SEQUENCE_LIST
     };
 
     enum class SequenceMode
     {
-      UP, DOWN
+      UP, DOWN, ALTERNATE_IN_UP, ALTERNATE_IN_DOWN, ALTERNATE_OUT_UP, ALTERNATE_OUT_DOWN, RANDOM, PSEUDO_RANDOM
     };
 
     void setName(const std::string& name);
@@ -349,7 +349,8 @@ namespace MacroGUI
     void setStep(int step);
     void setResolution(int resolution);
   public:
-    //void setMode(SequenceMode mode);
+    void setList(const std::string& list);
+    void setMode(SequenceMode mode);
 
     void createGUI(MacroCommandReproMacro*);
     QListWidgetItem* listItem() const { return ListItem; }
@@ -359,12 +360,13 @@ namespace MacroGUI
     const std::string& name() const { return Name; }
     InputType type() const { return Type; }
     const std::string& value() const { return Direct.Value; }
-    const std::string& unit() const { return Direct.Unit; }
+    const std::string& unit() const { return Unit; }
     const std::string& reference() const { return Reference.Reference; }
     int min() const { return Sequence.Min; }
     int max() const { return Sequence.Max; }
     int step() const { return Sequence.Step; }
     int resolution() const { return Sequence.Resolution; }
+    const std::string& list() const { return SequenceList.List; }
     SequenceMode mode() const { return Sequence.Mode; }
 
   private slots:
@@ -373,15 +375,16 @@ namespace MacroGUI
     void updatedValue(const QString& value);
     void updatedUnit(const QString& unit);
     void updatedReference(const QString& reference);
-    //void updatedMode(const QString& mode);
+    void updatedMode(const QString& mode);
+    void updatedList(const QString& list);
 
   private:
     std::string Name;
     InputType Type;
+    std::string Unit;
     struct
     {
       std::string Value;
-      std::string Unit;
     } Direct;
     struct
     {
@@ -395,8 +398,11 @@ namespace MacroGUI
       int Step;
       int Resolution;
       SequenceMode Mode;
-      std::string Unit;
     } Sequence;
+    struct
+    {
+      std::string List;
+    } SequenceList;
 
 
     QListWidgetItem* ListItem;
@@ -422,6 +428,11 @@ namespace MacroGUI
       QComboBox* Mode;
       QLineEdit* Unit;
     } SequenceEdit;
+    struct
+    {
+      QLineEdit* List;
+      QLineEdit* Unit;
+    } SequenceListEdit;
   };
 
   class MacroCommandReproMacro : public QObject, public DetailElement<MacroCommandInfo>

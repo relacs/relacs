@@ -518,6 +518,28 @@ namespace MacroGUI
     setActive(Active);
   }
 
+  struct SequenceTypeInfo
+  {
+    MacroCommandParameter::SequenceMode type;
+    std::string name;
+    std::set<std::string> alias;
+  };
+
+#define MAP_TYPE(TYPE, NAME, ...) \
+  { TYPE, { TYPE, NAME, { NAME, __VA_ARGS__} } },
+
+  std::map<MacroCommandParameter::SequenceMode, SequenceTypeInfo> SEQUENCE_INFO = {
+    MAP_TYPE(MacroCommandParameter::SequenceMode::UP, "up")
+    MAP_TYPE(MacroCommandParameter::SequenceMode::DOWN, "down")
+    MAP_TYPE(MacroCommandParameter::SequenceMode::ALTERNATE_IN_UP, "alternateinup", "alternate", "alternatein")
+    MAP_TYPE(MacroCommandParameter::SequenceMode::ALTERNATE_IN_DOWN, "alternateindown", "alternatedown")
+    MAP_TYPE(MacroCommandParameter::SequenceMode::ALTERNATE_OUT_UP, "alternateoutup", "alternateout")
+    MAP_TYPE(MacroCommandParameter::SequenceMode::ALTERNATE_OUT_DOWN, "alternateoutdown")
+    MAP_TYPE(MacroCommandParameter::SequenceMode::RANDOM, "random")
+    MAP_TYPE(MacroCommandParameter::SequenceMode::PSEUDO_RANDOM, "pseudorandom")
+  };
+
+#undef MAP_TYPE
 
   void MacroCommandParameter::updatedName(const QString &name) { setName(name.toStdString()); }
   void MacroCommandParameter::setName(const string &name)
@@ -533,11 +555,10 @@ namespace MacroGUI
   void MacroCommandParameter::updatedUnit(const QString &name) { setUnit(name.toStdString()); }
   void MacroCommandParameter::setUnit(const string &name)
   {
-    Direct.Unit = name;
-    Sequence.Unit = name;
+    Unit = name;
     if (GuiCreated)
     {
-      DirectEdit.Unit->setText(QString::fromStdString(name));
+      SequenceListEdit.Unit->setText(QString::fromStdString(name));
       SequenceEdit.Unit->setText(QString::fromStdString(name));
     }
   }
@@ -580,7 +601,8 @@ namespace MacroGUI
     {
       case 0: return setType(InputType::DIRECT);
       case 1: return setType(InputType::REFERENCE);
-      case 2: return setType(InputType::SEQUENCE);
+      case 2: return setType(InputType::SEQUENCE_SINGLE);
+      case 3: return setType(InputType::SEQUENCE_LIST);
     }
   }
 
@@ -593,7 +615,8 @@ namespace MacroGUI
       {
         case InputType::DIRECT: TypeEdit->setCurrentIndex(0); break;
         case InputType::REFERENCE: TypeEdit->setCurrentIndex(1); break;
-        case InputType::SEQUENCE: TypeEdit->setCurrentIndex(2); break;
+        case InputType::SEQUENCE_SINGLE: TypeEdit->setCurrentIndex(2); break;
+        case InputType::SEQUENCE_LIST: TypeEdit->setCurrentIndex(3); break;
       }
     }
   }
@@ -641,6 +664,27 @@ namespace MacroGUI
     }
   }
 
+  void MacroCommandParameter::updatedList(const QString &list) { setList(list.toStdString()); }
+  void MacroCommandParameter::setList(const string &list)
+  {
+    SequenceList.List = list;
+    if (GuiCreated)
+      SequenceListEdit.List->setText(QString::fromStdString(list));
+  }
+
+  void MacroCommandParameter::updatedMode(const QString &mode)
+  {
+    for (const std::pair<SequenceMode, SequenceTypeInfo>& pair : SEQUENCE_INFO)
+      if (pair.second.alias.count(mode.toStdString()))
+        return setMode(pair.first);
+  }
+  void MacroCommandParameter::setMode(SequenceMode mode)
+  {
+    Sequence.Mode = mode;
+    if (GuiCreated)
+      SequenceEdit.Mode->setCurrentIndex(SequenceEdit.Mode->findText(QString::fromStdString(SEQUENCE_INFO.at(mode).name)));
+  }
+
   void MacroCommandParameter::createGUI(MacroCommandReproMacro *)
   {
     ListItem = new QListWidgetItem();
@@ -668,7 +712,8 @@ namespace MacroGUI
         TypeEdit = new QComboBox();
         TypeEdit->addItem("direct");
         TypeEdit->addItem("reference");
-        TypeEdit->addItem("sequence");
+        TypeEdit->addItem("sequence (single)");
+        TypeEdit->addItem("sequence (list)");
         QObject::connect(TypeEdit, SIGNAL(activated(int)), this, SLOT(updatedType(int)));
         sub->addWidget(TypeEdit);
 
@@ -689,8 +734,8 @@ namespace MacroGUI
         lay->addWidget(DirectEdit.Value);
         lay->addWidget(new QLabel("Unit: "));
         DirectEdit.Unit = new QLineEdit();
-        DirectEdit.Unit->setText(QString::fromStdString(Direct.Unit));
-        QObject::connect(DirectEdit.Unit, SIGNAL(textChanged(QString)), this, SLOT(updatedUnit(QString)));
+        DirectEdit.Unit->setText("set in value field");
+        DirectEdit.Unit->setEnabled(false);
         lay->addWidget(DirectEdit.Unit);
 
         TypeValues->addWidget(widget);
@@ -750,14 +795,15 @@ namespace MacroGUI
 
           sub->addWidget(new QLabel("Mode: "));
           SequenceEdit.Mode = new QComboBox();
-          SequenceEdit.Mode->addItem("up");
-          SequenceEdit.Mode->addItem("down");
-          //
+          for (const std::pair<SequenceMode, SequenceTypeInfo>& pair : SEQUENCE_INFO)
+            SequenceEdit.Mode->addItem(QString::fromStdString(pair.second.name));
+          SequenceEdit.Mode->setCurrentIndex(SequenceEdit.Mode->findText(QString::fromStdString(SEQUENCE_INFO.at(Sequence.Mode).name)));
+          QObject::connect(SequenceEdit.Mode, SIGNAL(currentIndexChanged(QString)), this, SLOT(updatedMode(QString)));
           sub->addWidget(SequenceEdit.Mode);
 
           sub->addWidget(new QLabel("Unit: "));
           SequenceEdit.Unit = new QLineEdit();
-          SequenceEdit.Unit->setText(QString::fromStdString(Sequence.Unit));
+          SequenceEdit.Unit->setText(QString::fromStdString(Unit));
           QObject::connect(SequenceEdit.Unit, SIGNAL(textChanged(QString)), this, SLOT(updatedUnit(QString)));
           sub->addWidget(SequenceEdit.Unit);
 
@@ -765,6 +811,32 @@ namespace MacroGUI
         }
 
         TypeValues->addWidget(widget);
+      }
+      {
+        QWidget* widget = new QWidget();
+        QVBoxLayout* lay = new QVBoxLayout();
+        widget->setLayout(lay);
+        {
+          QHBoxLayout* sub = new QHBoxLayout();
+          sub->addWidget(new QLabel("Values: "));
+          SequenceListEdit.List = new QLineEdit();
+          SequenceListEdit.List->setText(QString::fromStdString(SequenceList.List));
+          QObject::connect(SequenceListEdit.List, SIGNAL(textChanged(QString)), this, SLOT(updatedList(QString)));
+          sub->addWidget(SequenceListEdit.List);
+          lay->addLayout(sub);
+        }
+        {
+          QHBoxLayout* sub = new QHBoxLayout();
+          sub->addWidget(new QLabel("Unit: "));
+          SequenceListEdit.Unit = new QLineEdit();
+          SequenceListEdit.Unit->setText(QString::fromStdString(Unit));
+          QObject::connect(SequenceListEdit.Unit, SIGNAL(textChanged(QString)), this, SLOT(updatedUnit(QString)));
+          sub->addWidget(SequenceListEdit.Unit);
+          lay->addLayout(sub);
+        }
+
+        TypeValues->addWidget(widget);
+
       }
       DetailView->layout()->addWidget(TypeValues);
     }
@@ -774,7 +846,8 @@ namespace MacroGUI
     {
       case InputType::DIRECT: TypeEdit->setCurrentIndex(0); break;
       case InputType::REFERENCE: TypeEdit->setCurrentIndex(1); break;
-      case InputType::SEQUENCE: TypeEdit->setCurrentIndex(2); break;
+      case InputType::SEQUENCE_SINGLE: TypeEdit->setCurrentIndex(2); break;
+      case InputType::SEQUENCE_LIST: TypeEdit->setCurrentIndex(3); break;
     }
 
     GuiCreated = true;
@@ -1614,7 +1687,7 @@ namespace MacroMgr
             }
             else if (value.front() == '(')
             {
-              param->setType(MacroCommandParameter::InputType::SEQUENCE);
+              //
 
               value.erase(0, 1);
               size_t idx = value.find(')');
@@ -1623,25 +1696,38 @@ namespace MacroMgr
 
               value = value.substr(0, idx);
               StrQueue sq(value, ",");
-              for (Str& str : sq)
+              if (sq.size() <= 3 && value.find("..") != std::string::npos)
               {
-                if (str.contains(".."))
+                param->setType(MacroCommandParameter::InputType::SEQUENCE_SINGLE);
+
+                for (Str& str : sq)
                 {
-                  StrQueue sq2(str, "..");
-                  param->setMinimum(sq2[0].number());
-                  param->setMaximum(sq2[2].number());
-                  if (sq2.size() > 4)
-                    param->setStep(sq2[4].number());
+                  if (str.contains(".."))
+                  {
+                    StrQueue sq2(str, "..");
+                    param->setMinimum(sq2[0].number());
+                    param->setMaximum(sq2[2].number());
+                    if (sq2.size() > 4)
+                      param->setStep(sq2[4].number());
+                  }
+                  else if(str.contains("r="))
+                  {
+                    int val = static_cast<int>(str.substr(2).number());
+                    param->setResolution(val);
+                  }
+                  else
+                  {
+                    std::cout << str << std::endl;
+                    for (const std::pair<MacroGUI::MacroCommandParameter::SequenceMode, SequenceTypeInfo>& pair : SEQUENCE_INFO)
+                      if (pair.second.alias.count(str))
+                        param->setMode(pair.first);
+                  }
                 }
-                else if(str.contains("r="))
-                {
-                  int val = static_cast<int>(str.substr(2).number());
-                  param->setResolution(val);
-                }
-                else
-                {
-                  // todo XXX read type
-                }
+              }
+              else
+              {
+                param->setType(MacroCommandParameter::InputType::SEQUENCE_LIST);
+                param->setList(value);
               }
             }
             else
@@ -1779,7 +1865,6 @@ namespace MacroMgr
   void MacroFileWriter::write(MacroGUI::MacroCommandParameter *param)
   {
     using InputType = MacroGUI::MacroCommandParameter::InputType;
-    using SequenceMode = MacroGUI::MacroCommandParameter::SequenceMode;
 
     File << " ";
     File << param->name();
@@ -1794,13 +1879,19 @@ namespace MacroMgr
         File << "$";
         File << param->reference();
         break;
-      case InputType::SEQUENCE:
+      case InputType::SEQUENCE_SINGLE:
         File << "(";
         File << param->min() << ".." << param->max() << ".." << param->step();
         File << ",";
-        File << (param->mode() == SequenceMode::UP ? "up" : "down");
+        File << MacroGUI::SEQUENCE_INFO.at(param->mode()).name;
         File << ",";
         File << "r=" << param->resolution();
+        File << ")";
+        File << param->unit();
+        break;
+      case InputType::SEQUENCE_LIST:
+        File << "(";
+        File << param->list();
         File << ")";
         File << param->unit();
         break;
