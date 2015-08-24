@@ -371,6 +371,14 @@ namespace MacroGUI
     GuiCreated = true;
   }
 
+  MacroCommandReproMacro::~MacroCommandReproMacro()
+  {
+    for (auto&& param : Parameter)
+      delete param;
+    Parameter.clear();
+
+    std::cout << "NOOOOOOO" << std::endl;
+  }
 
   void MacroCommandReproMacro::setAvailable(const std::vector<string> &available)
   {
@@ -877,6 +885,12 @@ namespace MacroGUI
   }
 
 
+  MacroFile::~MacroFile()
+  {
+    for (auto&& macro : Macros)
+      delete macro;
+    Macros.clear();
+  }
 
   void MacroFile::setName(const string &name)
   {
@@ -955,6 +969,16 @@ namespace MacroGUI
   };
 
 #undef ADD_KEYWORD
+
+  MacroInfo::~MacroInfo()
+  {
+    for (auto&& param : Parameter)
+      delete param;
+    Parameter.clear();
+    for (auto&& cmd : Commands)
+      delete cmd;
+    Commands.clear();
+  }
 
   void MacroInfo::addCommand(MacroCommandInfo *command)
   {
@@ -1286,6 +1310,13 @@ namespace MacroGUI
       DetailElement<MacroCommandInfo>* cmd = type.second.creator();
       Commands[type.first] = cmd;
     }
+  }
+
+  MacroCommandInfo::~MacroCommandInfo()
+  {
+    for (auto&& cmd : Commands)
+      delete cmd.second;
+    Commands.clear();
   }
 
   void MacroCommandInfo::setDeactivated(bool state)
@@ -1994,6 +2025,13 @@ MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
   }
 }
 
+MacroEditor::~MacroEditor()
+{
+  for (auto&& file : MacroFiles)
+    delete file;
+  MacroFiles.clear();
+}
+
 void MacroEditor::load()
 {
   populate(readFiles());
@@ -2189,6 +2227,7 @@ void MacroEditor::moveItem(MacroGUI::MacroCommandInfo *cmd, bool up)
 
 void MacroEditor::dialogClosed(int code)
 {
+  std::cout << "Code: " << code << std::endl;
   if (code < 1)
   {
     delete this;

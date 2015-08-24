@@ -47,6 +47,7 @@ namespace MacroGUI
   class GUIElement
   {
   public:
+    virtual ~GUIElement() {}
     virtual void createGUI(T*) = 0;
 
   protected:
@@ -134,6 +135,7 @@ namespace MacroGUI
     };
 
     MacroCommandInfo();
+    virtual ~MacroCommandInfo();
 
     void createGUI(MacroEditor*) override;
 
@@ -445,6 +447,8 @@ namespace MacroGUI
   {
     Q_OBJECT
   public:
+    virtual ~MacroCommandReproMacro();
+
     void setAvailable(const std::vector<std::string>& repros);
     void setActive(const std::string& repro);
     void addParameter(MacroCommandParameter* param);
@@ -485,6 +489,8 @@ namespace MacroGUI
     };
 
   public:
+    virtual ~MacroInfo();
+
     void setName(const std::string& name);
     void setKeyword(Keyword keyword);
     void removeKeyword(Keyword keyword);
@@ -535,6 +541,8 @@ namespace MacroGUI
     friend class ::relacs::MacroEditor;
 
   public:
+    virtual ~MacroFile();
+
     void setName(const std::string& name);
     std::string name() const { return Name; }
     void addMacro(MacroInfo* macro);
@@ -606,6 +614,7 @@ class MacroEditor : public QWidget
 
 public:
   MacroEditor(Macros* macros, QWidget* parent = nullptr);
+  virtual ~MacroEditor();
 
   void load();
 
