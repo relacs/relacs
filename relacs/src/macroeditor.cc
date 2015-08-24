@@ -452,6 +452,29 @@ namespace MacroGUI
     removeParameter(*itr);
   }
 
+  void MacroCommandReproMacro::updateMacroReferences(const string &added, const string &removed)
+  {
+    auto itr = Available.end();
+    if (!removed.empty())
+    {
+      itr = std::find(Available.begin(), Available.end(), removed);
+      itr = Available.erase(itr);
+    }
+    if (!added.empty())
+      itr = Available.insert(itr, added);
+
+    if (GuiCreated)
+    {
+      int idx = ActiveEdit->currentIndex();
+      ActiveEdit->clear();
+      for (const std::string& val : Available)
+        ActiveEdit->addItem(QString::fromStdString(val));
+
+      if (!added.empty() && !removed.empty())
+        ActiveEdit->setCurrentIndex(idx);
+    }
+  }
+
   void MacroCommandReproMacro::updateParameterReferences(const string &name, bool added)
   {
     for (MacroCommandParameter* param : Parameter)
@@ -995,6 +1018,8 @@ namespace MacroGUI
 
   void MacroInfo::setName(const string &name)
   {
+    emit macroNameChanged(name, Name);
+
     Name = name;
 
     if (GuiCreated)
@@ -1150,6 +1175,8 @@ namespace MacroGUI
     }
 
     owner->addDetailView(DetailView, TreeItem);
+
+    QObject::connect(this, SIGNAL(macroNameChanged(std::string,std::string)), owner, SIGNAL(macroChanged(std::string,std::string)));
 
     GuiCreated = true;
     Owner = owner;
@@ -1347,6 +1374,12 @@ namespace MacroGUI
         dynamic_cast<MacroCommandFilterDetector*>(cmd)->setAvailable(owner->filters());
       else if (type.first == CommandType::DETECTOR)
         dynamic_cast<MacroCommandFilterDetector*>(cmd)->setAvailable(owner->detectors());
+      else if (type.first == CommandType::MACRO)
+      {
+        MacroCommandReproMacro* macro = dynamic_cast<MacroCommandReproMacro*>(cmd);
+        macro->setAvailable(owner->macros());
+        QObject::connect(owner, SIGNAL(macroChanged(std::string,std::string)), macro, SLOT(updateMacroReferences(std::string,std::string)));
+      }
       cmd->createGUI(this);
       CommandsEdit->addWidget(cmd->detailView());
     }
@@ -1970,6 +2003,11 @@ std::vector<MacroGUI::MacroFile*> MacroEditor::readFiles()
 void MacroEditor::populate(const std::vector<MacroGUI::MacroFile*> &macrofiles)
 {
   MacroFiles = macrofiles;
+
+  for (MacroGUI::MacroFile* file : MacroFiles)
+    for (MacroGUI::MacroInfo* macro : file->macros())
+      MacroList.push_back(macro->name());
+
   for (MacroGUI::MacroFile* file : MacroFiles)
   {
     file->createGUI(this);
@@ -2009,6 +2047,8 @@ void MacroEditor::clickedAdd()
   {
     MacroGUI::MacroInfo* macro = new MacroGUI::MacroInfo();
     macro->setName("New Macro");
+    MacroList.push_back(macro->name());
+    emit macroChanged(macro->name(), {});
     (*itr)->addMacro(macro);
   }
   else
@@ -2036,7 +2076,11 @@ void MacroEditor::clickedDelete()
 
   auto itr = std::find_if(MacroFiles.begin(), MacroFiles.end(), [&parent](MacroGUI::MacroFile* file) { return file->treeItem() == parent; });
   if (itr != MacroFiles.end())
+  {
+    MacroList.erase(std::find(MacroList.begin(), MacroList.end(), selection->text(0).toStdString()));
+    emit macroChanged({}, selection->text(0).toStdString());
     (*itr)->delMacro(selection);
+  }
   else
   {
     for (MacroGUI::MacroFile* file : MacroFiles)

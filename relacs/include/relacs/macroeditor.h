@@ -451,6 +451,8 @@ namespace MacroGUI
     const std::string& active() const { return Active; }
     const std::vector<MacroCommandParameter*> parameter() const { return Parameter; }
 
+  public slots:
+    void updateMacroReferences(const std::string& added, const std::string& removed);
   private slots:
     void updatedActive(const QString& name);
     void addParameter();
@@ -501,6 +503,7 @@ namespace MacroGUI
   signals:
     void macroParameterAdded(const std::string& name);
     void macroParameterRemoved(const std::string& name);
+    void macroNameChanged(const std::string& newName, const std::string& oldName);
 
   public slots:
     void macroParameterChanged(const std::string& oldName, const std::string& newName);
@@ -601,12 +604,14 @@ public:
   const std::vector<std::string>& repros() const { return Repros; }
   const std::vector<std::string>& filters() const { return Filters; }
   const std::vector<std::string>& detectors() const { return Detectors; }
+  const std::vector<std::string>& macros() const { return MacroList; }
 
 public slots:
   void dialogClosed( int code );
 
 signals:
   void macroDefinitionsChanged();
+  void macroChanged(const std::string& added, const std::string& removed);
 
 private slots:
   void currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*);
@@ -624,6 +629,7 @@ private:
   std::vector<std::string> Repros;
   std::vector<std::string> Filters;
   std::vector<std::string> Detectors;
+  std::vector<std::string> MacroList;
 
   std::vector<MacroGUI::MacroFile*> MacroFiles;
   QTreeWidget* MacroTree;
