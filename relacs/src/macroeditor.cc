@@ -38,64 +38,6 @@
 
 namespace relacs {
 
-namespace {
-
-std::vector<MacroGUI::MacroFile*> testdata()
-{
-  using namespace MacroGUI;
-
-  MacroFile* file1 = new MacroFile();
-  file1->setName("macro_file_1.cfg");
-  {
-    MacroInfo* macro1 = new MacroInfo();
-    macro1->setName("Macro 1");
-    macro1->setKeyword(MacroGUI::MacroInfo::Keyword::STARTUP);
-
-    {
-      MacroParameter* p1 = new MacroParameter();
-      p1->setName("param1");
-      p1->setValue("10");
-      p1->setUnit("V");
-      macro1->addParameter(p1);
-    }
-    {
-      MacroParameter* p1 = new MacroParameter();
-      p1->setName("param2");
-      p1->setValue("1");
-      p1->setUnit("");
-      macro1->addParameter(p1);
-    }
-
-    {
-      MacroCommandInfo* c1 = new MacroCommandInfo();
-      c1->setType(MacroCommandInfo::CommandType::SHELL);
-      c1->setDeactivated(false);
-      macro1->addCommand(c1);
-    }
-
-    file1->addMacro(macro1);
-  }
-
-  MacroFile* file2 = new MacroFile();
-  file2->setName("macro_file_2.cfg");
-  {
-    MacroInfo* macro1 = new MacroInfo();
-    macro1->setName("Macro 1");
-
-    file2->addMacro(macro1);
-  }
-  {
-    MacroInfo* macro2 = new MacroInfo();
-    macro2->setName("Macro 2");
-
-    file2->addMacro(macro2);
-  }
-
-
-  return {file1, file2};
-}
-}
-
 namespace MacroGUI
 {
   void MacroCommandShell::updatedCommand() { setCommand(CommandEdit->toPlainText().toStdString()); }
@@ -376,8 +318,6 @@ namespace MacroGUI
     for (auto&& param : Parameter)
       delete param;
     Parameter.clear();
-
-    std::cout << "NOOOOOOO" << std::endl;
   }
 
   void MacroCommandReproMacro::setAvailable(const std::vector<string> &available)
@@ -2035,7 +1975,6 @@ MacroEditor::~MacroEditor()
 void MacroEditor::load()
 {
   populate(readFiles());
-  //populate(testdata());
 }
 
 std::vector<MacroGUI::MacroFile*> MacroEditor::readFiles()
@@ -2227,7 +2166,6 @@ void MacroEditor::moveItem(MacroGUI::MacroCommandInfo *cmd, bool up)
 
 void MacroEditor::dialogClosed(int code)
 {
-  std::cout << "Code: " << code << std::endl;
   if (code < 1)
   {
     delete this;

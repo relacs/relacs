@@ -43,18 +43,21 @@ class MacroEditor;
 
 namespace MacroGUI
 {
+  /*! Basic element of the GUI tree */
   template<typename T>
   class GUIElement
   {
   public:
     virtual ~GUIElement() {}
+    /*! Creates all GUI elements and set it's intial values */
     virtual void createGUI(T*) = 0;
 
   protected:
     bool GuiCreated = false;
-    T* Owner = nullptr;
+    T* Owner = nullptr;       //! Required if element needs direct access to one of its parents
   };
 
+  /*! Interface if element is represented in the tree */
   template<typename T>
   class TreeElement : public virtual GUIElement<T>
   {
@@ -65,6 +68,7 @@ namespace MacroGUI
     QTreeWidgetItem* TreeItem = nullptr;
   };
 
+  /*! Interface if element is represented in the detail view */
   template<typename T>
   class DetailElement : public virtual GUIElement<T>
   {
@@ -79,6 +83,11 @@ namespace MacroGUI
   class MacroInfo;
 
 
+  /*! Represents a parameter for a Macro
+   * A Parameter has a defined name, value and an optional unit
+   *
+   * Holds relations to Repro/Macro Commands due to referencial parameters
+   */
   class MacroParameter : public QObject, public DetailElement<MacroInfo>
   {
     Q_OBJECT
@@ -124,6 +133,10 @@ namespace MacroGUI
   class MacroCommandStartsession;
   class MacroCommandSwitch;
 
+  /*! Container class for a macro command
+   *
+   * Contains all available macro commands and manages selection and callbacks for them
+   */
   class MacroCommandInfo : public QObject, public TreeElement<MacroEditor>, public DetailElement<MacroEditor>
   {
     Q_OBJECT
@@ -194,6 +207,7 @@ namespace MacroGUI
     QStackedWidget* CommandsEdit;
   };
 
+  /*! Shell command element */
   class MacroCommandShell : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
@@ -212,6 +226,9 @@ namespace MacroGUI
     QTextEdit* CommandEdit;
   };
 
+  /*! Browse command element
+   * \todo Add QFileSelection support for file selection
+  */
   class MacroCommandBrowse : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
@@ -230,6 +247,7 @@ namespace MacroGUI
     QLineEdit* PathEdit;
   };
 
+  /*! Start session command element */
   class MacroCommandStartsession : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
@@ -237,6 +255,9 @@ namespace MacroGUI
     void createGUI(MacroCommandInfo* info);
   };
 
+  /*! Switch command element
+   * \todo Add selection of available command files
+   */
   class MacroCommandSwitch : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
@@ -255,6 +276,9 @@ namespace MacroGUI
     QLineEdit* PathEdit;
   };
 
+  /*! Message command element
+   * \todo Disable HTML Code highlighting
+   */
   class MacroCommandMessage : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
@@ -284,6 +308,11 @@ namespace MacroGUI
     QSpinBox* TimeoutEdit;
   };
 
+  /*! Filter or Detector command element
+   *
+   * Handles both types of commands.
+   * Available filters are filled on initial gui creation and is not updated dynamically.
+   */
   class MacroCommandFilterDetector : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
@@ -331,6 +360,14 @@ namespace MacroGUI
     QLineEdit* SaveEdit;
   };
 
+  /*! Represents a parameter for the Macro or Repro command
+   *
+   * May be one of the following types:
+   * - Direct: Tuple of name and value (plus unit)
+   * - Reference: One of the parameters from the surrounding macro
+   * - Sequence (single): One single sequence construct
+   * - Sequence (list): Allows free editing of the sequence parameter (for multiple sequences or a plain list)
+   */
   class MacroCommandParameter : public QObject, public DetailElement<MacroCommandReproMacro>
   {
     Q_OBJECT
@@ -443,6 +480,11 @@ namespace MacroGUI
     } SequenceListEdit;
   };
 
+  /*! Macro or Repro command element
+   *
+   * Repro list is filled on first gui creation
+   * Macro list is dynamically updated with tree changes
+   */
   class MacroCommandReproMacro : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
@@ -478,6 +520,10 @@ namespace MacroGUI
     QStackedWidget* ParameterValues;
   };
 
+  /*! Represents a single Macro
+   *
+   * Contains parameters, commands and manages flags
+   */
   class MacroInfo : public QObject, public TreeElement<MacroEditor>, public DetailElement<MacroEditor>
   {
     friend class ::relacs::MacroEditor;
@@ -536,6 +582,7 @@ namespace MacroGUI
     QStackedWidget* ParamEdit;
   };
 
+  /*! MacroFile containing the actual Macros */
   class MacroFile : public TreeElement<MacroEditor>
   {
     friend class ::relacs::MacroEditor;
@@ -562,6 +609,13 @@ namespace MacroGUI
 
 namespace MacroMgr
 {
+  /*! Helper class to read macro definitions from file
+   *
+   * Basic logic is extracted from Macro(|s|Command)::load functions.
+   * This code duplication is needed due to the heavy integration of theses classes into the UI,
+   *  which would perevent parsing multiple macro files at once since switching files in a running
+   *  application is not a good idea.
+   */
   class MacroFileReader
   {
     struct CommandInput
@@ -590,6 +644,13 @@ namespace MacroMgr
 
   };
 
+  /*! Helper class to write the configuration to file
+   *
+   * Writes macro configuration in its most verbose and unified configuration.
+   * - Parameters are specified on the same line
+   * - Every command has its keyword (no omitted "repro")
+   * - Repro names are fully qualified (with module name)
+   */
   class MacroFileWriter
   {
   public:
@@ -608,6 +669,7 @@ namespace MacroMgr
   };
 }
 
+/*! Configuration dialog for Macros */
 class MacroEditor : public QWidget
 {
   Q_OBJECT
@@ -616,6 +678,9 @@ public:
   MacroEditor(Macros* macros, QWidget* parent = nullptr);
   virtual ~MacroEditor();
 
+  /*! Loads the macro files into the gui
+   * Must be called after setRepros and setFilterDetectors
+   */
   void load();
 
   void setRepros(RePros* repros);
