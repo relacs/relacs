@@ -169,10 +169,16 @@ namespace MacroGUI
   private slots:
     void updateDeactivated(int);
     void updateType(QString);
+    void clickedUp();
+    void clickedDown();
 
   public slots:
     void macroParameterAdded(const std::string& name);
     void macroParameterRemoved(const std::string& name);
+
+  signals:
+    void clickedUp(MacroGUI::MacroCommandInfo*);
+    void clickedDown(MacroGUI::MacroCommandInfo*);
 
   protected:
     CommandType Type = CommandType::REPRO;
@@ -470,6 +476,7 @@ namespace MacroGUI
 
   class MacroInfo : public QObject, public TreeElement<MacroEditor>, public DetailElement<MacroEditor>
   {
+    friend class ::relacs::MacroEditor;
     Q_OBJECT
   public:
     enum class Keyword
@@ -491,8 +498,11 @@ namespace MacroGUI
 
     const std::string& name() const { return Name; }
     const std::set<Keyword>& keywords() const { return Keywords; }
-    const std::vector<MacroCommandInfo*> commands() const { return Commands; }
+    const std::vector<MacroCommandInfo*>& commands() const { return Commands; }
     const std::vector<MacroParameter*>& parameter() const { return Parameter; }
+
+  protected:
+    std::vector<MacroCommandInfo*>& commands() { return Commands; }
 
   private slots:
     void updatedName(const QString& name);
@@ -608,6 +618,8 @@ public:
 
 public slots:
   void dialogClosed( int code );
+  void clickedUp(MacroGUI::MacroCommandInfo* cmd);
+  void clickedDown(MacroGUI::MacroCommandInfo* cmd);
 
 signals:
   void macroDefinitionsChanged();
@@ -621,6 +633,9 @@ private slots:
 private:
   void populate(const std::vector<MacroGUI::MacroFile*>& macrofiles);
   std::vector<MacroGUI::MacroFile*> readFiles();
+
+  void moveItem(MacroGUI::MacroCommandInfo* cmd, bool up);
+
 public:
   int addDetailView(QWidget* view, QTreeWidgetItem* treeItem);
 

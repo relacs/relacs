@@ -1330,6 +1330,9 @@ namespace MacroGUI
     dynamic_cast<MacroCommandReproMacro*>(Commands[CommandType::MACRO])->updateParameterReferences(name, false);
   }
 
+  void MacroCommandInfo::clickedUp() { emit clickedUp(this); }
+  void MacroCommandInfo::clickedDown() { emit clickedDown(this); }
+
   void MacroCommandInfo::createGUI(MacroEditor* owner)
   {
     TreeItem = new QTreeWidgetItem();
@@ -1337,6 +1340,20 @@ namespace MacroGUI
 
     DetailView = new QWidget();
     DetailView->setLayout(new QVBoxLayout());
+    {
+      QGroupBox* group = new QGroupBox("Controls");
+      group->setLayout(new QHBoxLayout());
+      QPushButton* up = new QPushButton("Move up");
+      QObject::connect(up, SIGNAL(clicked()), this, SLOT(clickedUp()));
+      QObject::connect(this, SIGNAL(clickedUp(MacroGUI::MacroCommandInfo*)), owner, SLOT(clickedUp(MacroGUI::MacroCommandInfo*)));
+      QPushButton* down = new QPushButton("Move down");
+      QObject::connect(down, SIGNAL(clicked()), this, SLOT(clickedDown()));
+      QObject::connect(this, SIGNAL(clickedDown(MacroGUI::MacroCommandInfo*)), owner, SLOT(clickedDown(MacroGUI::MacroCommandInfo*)));
+      group->layout()->addWidget(up);
+      group->layout()->addWidget(down);
+
+      DetailView->layout()->addWidget(group);
+    }
     {
       QGroupBox* group = new QGroupBox("General");
       QVBoxLayout* layout = new QVBoxLayout();
@@ -1808,7 +1825,7 @@ namespace MacroMgr
 
     File << std::endl;
 
-    for (MacroGUI::MacroCommandInfo* cmd : macro->commands())
+    for (MacroGUI::MacroCommandInfo* cmd : const_cast<const MacroGUI::MacroInfo*>(macro)->commands())
       write(cmd);
 
     File << std::endl;
@@ -2112,6 +2129,62 @@ void MacroEditor::setFilterDetectors(FilterDetectors *filters)
     Filters.push_back(data->GeneralOptions->text("name"));
     Detectors.push_back(data->GeneralOptions->text("name"));
   }
+}
+
+void MacroEditor::clickedUp(MacroGUI::MacroCommandInfo *cmd)
+{
+  moveItem(cmd, true);
+}
+
+void MacroEditor::clickedDown(MacroGUI::MacroCommandInfo *cmd)
+{
+  moveItem(cmd, false);
+}
+
+void MacroEditor::moveItem(MacroGUI::MacroCommandInfo *cmd, bool up)
+{
+  typedef std::vector<MacroGUI::MacroCommandInfo*>::iterator Iterator;
+
+  MacroGUI::MacroInfo* macro = nullptr;
+  Iterator itr;
+  for (MacroGUI::MacroFile* file : MacroFiles)
+  {
+    for (MacroGUI::MacroInfo* mc : file->macros())
+    {
+      itr = std::find(mc->commands().begin(), mc->commands().end(), cmd);
+      if (itr != mc->commands().end())
+      {
+        macro = mc;
+        break;
+      }
+    }
+    if (macro)
+      break;
+  }
+
+  if (up)
+  {
+    if (itr == macro->commands().begin())
+      return;
+    std::iter_swap(itr, itr - 1);
+  }
+  else
+  {
+    if (itr + 1 == macro->commands().end())
+      return;
+    std::iter_swap(itr, itr + 1);
+  }
+
+  QList<QTreeWidgetItem*> items = macro->treeItem()->takeChildren();
+  std::sort(items.begin(), items.end(), [&macro](QTreeWidgetItem* a, QTreeWidgetItem* b)
+  {
+    auto aitr = std::find_if(macro->commands().begin(), macro->commands().end(), [&a](MacroGUI::MacroCommandInfo* cmd) { return cmd->treeItem() == a; });
+    auto bitr = std::find_if(macro->commands().begin(), macro->commands().end(), [&b](MacroGUI::MacroCommandInfo* cmd) { return cmd->treeItem() == b; });
+    return aitr < bitr;
+  });
+  for (QTreeWidgetItem* item : items)
+    macro->treeItem()->addChild(item);
+  MacroTree->setCurrentItem(cmd->treeItem());
 }
 
 void MacroEditor::dialogClosed(int code)
