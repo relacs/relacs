@@ -29,7 +29,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QScrollArea>
 #include <QCheckBox>
 #include <QSpinBox>
@@ -40,12 +40,12 @@ namespace relacs {
 
 namespace MacroGUI
 {
-  void MacroCommandShell::updatedCommand() { setCommand(CommandEdit->toPlainText().toStdString()); }
-  void MacroCommandShell::setCommand(const std::string& string)
+  void MacroCommandShell::updatedCommand() { setCommand(CommandEdit->toPlainText().toStdString(), true); }
+  void MacroCommandShell::setCommand(const std::string& string, bool internal)
   {
     Command = string;
-    if (GuiCreated)
-      CommandEdit->setText(QString::fromStdString(string));
+    if (GuiCreated && !internal)
+      CommandEdit->setPlainText(QString::fromStdString(string));
   }
 
   void MacroCommandShell::createGUI(MacroCommandInfo* info)
@@ -55,8 +55,8 @@ namespace MacroGUI
     {
       QGroupBox* group = new QGroupBox("Command:");
       group->setLayout(new QHBoxLayout());
-      CommandEdit = new QTextEdit();
-      CommandEdit->setText(QString::fromStdString(Command));
+      CommandEdit = new QPlainTextEdit();
+      CommandEdit->setPlainText(QString::fromStdString(Command));
       QObject::connect(CommandEdit, SIGNAL(textChanged()), this, SLOT(updatedCommand()));
       group->layout()->addWidget(CommandEdit);
 
@@ -124,12 +124,12 @@ namespace MacroGUI
     GuiCreated = true;
   }
 
-  void MacroCommandMessage::updatedText() { setText(TextEdit->toPlainText().toStdString()); }
-  void MacroCommandMessage::setText(const string &string)
+  void MacroCommandMessage::updatedText() { setText(TextEdit->toPlainText().toStdString(), true); }
+  void MacroCommandMessage::setText(const string &string, bool internal)
   {
     Text = string;
-    if (GuiCreated)
-      TextEdit->setText(QString::fromStdString(string));
+    if (GuiCreated && !internal)
+      TextEdit->setPlainText(QString::fromStdString(string));
   }
 
   void MacroCommandMessage::updatedTitle(const QString& text) { setTitle(text.toStdString()); }
@@ -176,8 +176,8 @@ namespace MacroGUI
     {
       QHBoxLayout* sub = new QHBoxLayout();
       sub->addWidget(new QLabel("Text:"));
-      TextEdit = new QTextEdit();
-      TextEdit->setText(QString::fromStdString(Text));
+      TextEdit = new QPlainTextEdit();
+      TextEdit->setPlainText(QString::fromStdString(Text));
       QObject::connect(TextEdit, SIGNAL(textChanged()), this, SLOT(updatedText()));
       sub->addWidget(TextEdit);
 
@@ -1601,14 +1601,6 @@ namespace MacroMgr
 
     MacroInfo* macro = MacroFile->macros().back();
 
-    /*
-    for (const CommandInput& info : TempCommands)
-    {
-      std::cout << "type: " << (int)info.type << " deactive: " << info.deactivated
-                   << "name: " << info.name << " params: " << info.params << std::endl;
-    }
-    */
-
     for (CommandInput& info : TempCommands)
     {
       MacroCommandInfo* cmd = new MacroCommandInfo();
@@ -1626,7 +1618,7 @@ namespace MacroMgr
 
           int n = 0;
           msg->setTimeout(info.name.number(0.0, 0, &n));
-          msg->setTitle(info.name.substr(n + 1).strip(Str::WhiteSpace));
+          msg->setTitle(info.name.substr(n).strip(Str::WhiteSpace));
           break;
         }
         case CmdType::SHELL:
@@ -2174,6 +2166,8 @@ void MacroEditor::dialogClosed(int code)
 
   for (MacroGUI::MacroFile* file : MacroFiles)
     MacroMgr::MacroFileWriter(file, file->name()).save();
+
+  emit macroDefinitionsChanged();
 
   if (code != 1)
     delete this;

@@ -30,7 +30,7 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QStackedWidget>
-#include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
@@ -212,7 +212,7 @@ namespace MacroGUI
   {
     Q_OBJECT
   public:
-    void setCommand(const std::string& string);
+    void setCommand(const std::string& string, bool internal = false);
     const std::string& command() const { return Command; }
 
     void createGUI(MacroCommandInfo* info);
@@ -223,7 +223,7 @@ namespace MacroGUI
   private:
     std::string Command;
 
-    QTextEdit* CommandEdit;
+    QPlainTextEdit* CommandEdit;
   };
 
   /*! Browse command element
@@ -284,7 +284,7 @@ namespace MacroGUI
     Q_OBJECT
   public:
     void setTitle(const std::string& title);
-    void setText(const std::string& string);
+    void setText(const std::string& string, bool internal = false);
   public slots:
     void setTimeout(int timeout);
   public:
@@ -303,7 +303,7 @@ namespace MacroGUI
     int Timeout = 0;
     std::string Text;
 
-    QTextEdit* TextEdit;
+    QPlainTextEdit* TextEdit;
     QLineEdit* TitleEdit;
     QSpinBox* TimeoutEdit;
   };
