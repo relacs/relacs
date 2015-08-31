@@ -180,7 +180,6 @@ namespace MacroGUI
 
 #undef MAP_TYPE
 
-
   private slots:
     void updateDeactivated(int);
     void updateType(QString);
@@ -190,16 +189,15 @@ namespace MacroGUI
   public slots:
     void macroParameterAdded(const std::string& name);
     void macroParameterRemoved(const std::string& name);
+    void updateTreeDescription();
 
   signals:
     void clickedUp(MacroGUI::MacroCommandInfo*);
     void clickedDown(MacroGUI::MacroCommandInfo*);
 
-  protected:
+  private:
     CommandType Type = CommandType::REPRO;
     bool Deactivated = false;
-
-  private:
     std::map<CommandType, DetailElement<MacroCommandInfo>*> Commands;
 
     QCheckBox* DeactivatedEdit;

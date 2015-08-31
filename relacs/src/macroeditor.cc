@@ -36,6 +36,13 @@
 #include <QTreeWidgetItem>
 #include <QListWidget>
 
+/*
+ * Todo:
+ * x Tree with Macro/Repro Name
+ * - Parameters lists with current value
+ * x Logically group keywords
+*/
+
 namespace relacs {
 
 namespace MacroGUI
@@ -226,6 +233,7 @@ namespace MacroGUI
         ActiveEdit->addItem(QString::fromStdString(name));
 
       ActiveEdit->setCurrentIndex(ActiveEdit->findText(QString::fromStdString(Active)));
+      Owner->updateTreeDescription();
     }
   }
 
@@ -235,7 +243,10 @@ namespace MacroGUI
     Active = name;
 
     if (GuiCreated)
+    {
       ActiveEdit->setCurrentIndex(ActiveEdit->findText(QString::fromStdString(Active)));
+      Owner->updateTreeDescription();
+    }
   }
 
   void MacroCommandFilterDetector::updatedAll(int val) { setAll(val == Qt::Checked); }
@@ -244,7 +255,10 @@ namespace MacroGUI
     All = all;
 
     if (GuiCreated)
+    {
       AllEdit->setCheckState(all ? Qt::Checked : Qt::Unchecked);
+      Owner->updateTreeDescription();
+    }
   }
 
   void MacroCommandFilterDetector::createGUI(MacroCommandInfo *info)
@@ -310,7 +324,10 @@ namespace MacroGUI
     else
       ModeEdit->setCurrentIndex(ModeEdit->findText("Configure"));
 
+    info->updateTreeDescription();
+
     GuiCreated = true;
+    Owner = info;
   }
 
   MacroCommandReproMacro::~MacroCommandReproMacro()
@@ -351,6 +368,7 @@ namespace MacroGUI
               ActiveEdit->setCurrentIndex(idx);
         }
       }
+      Owner->updateTreeDescription();
     }
   }
 
@@ -485,6 +503,7 @@ namespace MacroGUI
     QObject::connect(ParameterList, SIGNAL(currentRowChanged(int)), ParameterValues, SLOT(setCurrentIndex(int)));
 
     GuiCreated = true;
+    Owner = info;
 
     setActive(Active);
   }
@@ -888,24 +907,25 @@ namespace MacroGUI
   struct KeywordInfo
   {
     MacroInfo::Keyword keyword;
+    std::string group;
     std::string name;
     std::string description;
   };
 
-#define ADD_KEYWORD(KEY, NAME, DESC) \
-  { KEY, { KEY, NAME, DESC } },
+#define ADD_KEYWORD(KEY, MODE, NAME, DESC) \
+  { KEY, { KEY, MODE, NAME, DESC } },
 
   static const std::map<MacroInfo::Keyword, KeywordInfo> KEYWORD_LIST = {
-    ADD_KEYWORD(MacroInfo::Keyword::STARTUP, "startup", "test")
-    ADD_KEYWORD(MacroInfo::Keyword::SHUTDOWN, "shutdown", "")
-    ADD_KEYWORD(MacroInfo::Keyword::STARTSESSION, "startsession", "")
-    ADD_KEYWORD(MacroInfo::Keyword::STOPSESSION, "stopsession", "")
-    ADD_KEYWORD(MacroInfo::Keyword::FALLBACK, "fallback", "")
-    ADD_KEYWORD(MacroInfo::Keyword::NOKEY, "nokey", "")
-    ADD_KEYWORD(MacroInfo::Keyword::NOBUTTON, "nobutton", "")
-    ADD_KEYWORD(MacroInfo::Keyword::NOMENU, "nomenu", "")
-    ADD_KEYWORD(MacroInfo::Keyword::KEEP, "keep", "")
-    ADD_KEYWORD(MacroInfo::Keyword::OVERWRITE, "overwrite", "")
+    ADD_KEYWORD(MacroInfo::Keyword::STARTUP, "Execution mode", "startup", "test")
+    ADD_KEYWORD(MacroInfo::Keyword::SHUTDOWN, "Execution mode", "shutdown", "")
+    ADD_KEYWORD(MacroInfo::Keyword::STARTSESSION, "Execution mode", "startsession", "")
+    ADD_KEYWORD(MacroInfo::Keyword::STOPSESSION, "Execution mode", "stopsession", "")
+    ADD_KEYWORD(MacroInfo::Keyword::FALLBACK, "Execution mode", "fallback", "")
+    ADD_KEYWORD(MacroInfo::Keyword::NOKEY, "Display", "nokey", "")
+    ADD_KEYWORD(MacroInfo::Keyword::NOBUTTON, "Display", "nobutton", "")
+    ADD_KEYWORD(MacroInfo::Keyword::NOMENU, "Display", "nomenu", "")
+    ADD_KEYWORD(MacroInfo::Keyword::KEEP, "Misc", "keep", "")
+    ADD_KEYWORD(MacroInfo::Keyword::OVERWRITE, "Misc", "overwrite", "")
   };
 
 #undef ADD_KEYWORD
@@ -1070,10 +1090,20 @@ namespace MacroGUI
     }
     {
       QGroupBox* group = new QGroupBox("Keywords");
-      group->setLayout(new QGridLayout());
+      group->setLayout(new QVBoxLayout());
+
+      std::map<std::string, QGroupBox*> groupToWidget;
 
       for (const std::pair<MacroInfo::Keyword, KeywordInfo>& key : KEYWORD_LIST)
       {
+        if (groupToWidget.find(key.second.group) == groupToWidget.end())
+        {
+          QGroupBox* g = new QGroupBox(QString::fromStdString(key.second.group));
+          g->setLayout(new QHBoxLayout());
+          group->layout()->addWidget(g);
+          groupToWidget[key.second.group] = g;
+        }
+
         QCheckBox* box = new QCheckBox(QString::fromStdString(key.second.name));
         box->setCheckState(Keywords.count(key.first) ? Qt::Checked : Qt::Unchecked);
         box->setToolTip(QString::fromStdString(key.second.description));
@@ -1081,7 +1111,7 @@ namespace MacroGUI
         QObject::connect(box, SIGNAL(stateChanged(int)), this, SLOT(updatedKeywords(int)));
         KeywordToCheckbox[key.first] = box;
 
-        group->layout()->addWidget(box);
+        groupToWidget[key.second.group]->layout()->addWidget(box);
       }
 
       DetailView->layout()->addWidget(group);
@@ -1277,6 +1307,7 @@ namespace MacroGUI
       TypeEdit->setCurrentIndex(TypeEdit->findText(name));
       TreeItem->setText(0, name);
     }
+    updateTreeDescription();
   }
 
   void MacroCommandInfo::updateDeactivated(int) { setDeactivated(DeactivatedEdit->checkState() == Qt::Checked); }
@@ -1303,6 +1334,33 @@ namespace MacroGUI
 
   void MacroCommandInfo::clickedUp() { emit clickedUp(this); }
   void MacroCommandInfo::clickedDown() { emit clickedDown(this); }
+
+  void MacroCommandInfo::updateTreeDescription()
+  {
+    if (!GuiCreated)
+      return;
+
+    switch (Type)
+    {
+      case CommandType::REPRO:
+      case CommandType::MACRO:
+        TreeItem->setText(1, QString::fromStdString((Type == CommandType::REPRO ? command<CommandType::REPRO>() : command<CommandType::MACRO>())->active()));
+        break;
+      case CommandType::FILTER:
+      case CommandType::DETECTOR:
+      {
+        MacroCommandFilterDetector* cmd = Type == CommandType::FILTER ? command<CommandType::FILTER>() : command<CommandType::DETECTOR>();
+        if (cmd->all())
+          TreeItem->setText(1, "(all)");
+        else
+          TreeItem->setText(1, QString::fromStdString(cmd->active()));
+        break;
+      }
+      default:
+        TreeItem->setText(1, "");
+        break;
+    }
+  }
 
   void MacroCommandInfo::createGUI(MacroEditor* owner)
   {
@@ -1378,6 +1436,8 @@ namespace MacroGUI
 
     Owner = owner;
     GuiCreated = true;
+
+    updateTreeDescription();
   }
 }
 
@@ -1925,7 +1985,7 @@ MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
     group->setLayout(layout);
 
     MacroTree = new QTreeWidget();
-    MacroTree->setHeaderLabels({"Macro", "Type"});
+    MacroTree->setHeaderLabels({"Type", "Info"});
 
     QObject::connect(MacroTree, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)));
 
