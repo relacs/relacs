@@ -56,7 +56,9 @@ namespace MacroGUI
   void MacroCommandShell::createGUI(MacroCommandInfo* info)
   {
     DetailView = new QWidget();
-    DetailView->setLayout(new QVBoxLayout());
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->setContentsMargins( 0, 0, 0, 0 );
+    DetailView->setLayout(layout);
     {
       QGroupBox* group = new QGroupBox("Command:");
       group->setLayout(new QHBoxLayout());
@@ -65,7 +67,7 @@ namespace MacroGUI
       QObject::connect(CommandEdit, SIGNAL(textChanged()), this, SLOT(updatedCommand()));
       group->layout()->addWidget(CommandEdit);
 
-      DetailView->layout()->addWidget(group);
+      layout->addWidget(group);
     }
 
     GuiCreated = true;
@@ -87,7 +89,9 @@ namespace MacroGUI
   void MacroCommandBrowse::createGUI(MacroCommandInfo* info)
   {
     DetailView = new QWidget();
-    DetailView->setLayout(new QVBoxLayout());
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->setContentsMargins( 0, 0, 0, 0 );
+    DetailView->setLayout(layout);
     {
       QGroupBox* group = new QGroupBox("Path:");
       group->setLayout(new QHBoxLayout());
@@ -96,7 +100,7 @@ namespace MacroGUI
       QObject::connect(PathEdit, SIGNAL(textChanged(QString)), this, SLOT(updatedPath(QString)));
       group->layout()->addWidget(PathEdit);
 
-      DetailView->layout()->addWidget(group);
+      layout->addWidget(group);
     }
 
     GuiCreated = true;
@@ -118,7 +122,9 @@ namespace MacroGUI
   void MacroCommandSwitch::createGUI(MacroCommandInfo* info)
   {
     DetailView = new QWidget();
-    DetailView->setLayout(new QVBoxLayout());
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->setContentsMargins( 0, 0, 0, 0 );
+    DetailView->setLayout(layout);
     {
       QGroupBox* group = new QGroupBox("Path:");
       group->setLayout(new QHBoxLayout());
@@ -127,7 +133,7 @@ namespace MacroGUI
       QObject::connect(PathEdit, SIGNAL(textChanged(QString)), this, SLOT(updatedPath(QString)));
       group->layout()->addWidget(PathEdit);
 
-      DetailView->layout()->addWidget(group);
+      layout->addWidget(group);
     }
 
     GuiCreated = true;
@@ -173,8 +179,9 @@ namespace MacroGUI
   void MacroCommandMessage::createGUI(MacroCommandInfo *info)
   {
     DetailView = new QWidget();
-    QVBoxLayout* lay = new QVBoxLayout();
-    DetailView->setLayout(lay);
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->setContentsMargins( 0, 0, 0, 0 );
+    DetailView->setLayout(layout);
 
     {
       QHBoxLayout* sub = new QHBoxLayout();
@@ -184,7 +191,7 @@ namespace MacroGUI
       QObject::connect(TitleEdit, SIGNAL(textChanged(QString)), this, SLOT(updatedTitle(QString)));
       sub->addWidget(TitleEdit);
 
-      lay->addLayout(sub);
+      layout->addLayout(sub);
     }
     {
       QHBoxLayout* sub = new QHBoxLayout();
@@ -194,7 +201,7 @@ namespace MacroGUI
       QObject::connect(TimeoutEdit, SIGNAL(valueChanged(int)), this, SLOT(setTimeout(int)));
       sub->addWidget(TimeoutEdit);
 
-      lay->addLayout(sub);
+      layout->addLayout(sub);
     }
     {
       QHBoxLayout* sub = new QHBoxLayout();
@@ -204,7 +211,7 @@ namespace MacroGUI
       QObject::connect(TextEdit, SIGNAL(textChanged()), this, SLOT(updatedText()));
       sub->addWidget(TextEdit);
 
-      lay->addLayout(sub);
+      layout->addLayout(sub);
     }
 
     GuiCreated = true;
@@ -282,7 +289,9 @@ namespace MacroGUI
   void MacroCommandFilterDetector::createGUI(MacroCommandInfo *info)
   {
     DetailView = new QWidget();
-    DetailView->setLayout(new QVBoxLayout());
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->setContentsMargins( 0, 0, 0, 0 );
+    DetailView->setLayout(layout);
 
     {
       QGroupBox* grp = new QGroupBox("Filter/Detector");
@@ -298,7 +307,7 @@ namespace MacroGUI
       QObject::connect(AllEdit, SIGNAL(stateChanged(int)), this, SLOT(updatedAll(int)));
       grp->layout()->addWidget(AllEdit);
 
-      DetailView->layout()->addWidget(grp);
+      layout->addWidget(grp);
     }
     {
       QGroupBox* grp = new QGroupBox("Mode");
@@ -308,7 +317,7 @@ namespace MacroGUI
       ModeEdit->addItem("Configure");
       grp->layout()->addWidget(ModeEdit);
 
-      DetailView->layout()->addWidget(grp);
+      layout->addWidget(grp);
     }
 
     QStackedWidget* stack = new QStackedWidget();
@@ -334,7 +343,7 @@ namespace MacroGUI
 
       stack->addWidget(widget);
     }
-    DetailView->layout()->addWidget(stack);
+    layout->addWidget(stack);
 
     QObject::connect(ModeEdit, SIGNAL(currentIndexChanged(int)), stack, SLOT(setCurrentIndex(int)));
     if (Mode == ModeType::SAVE)
@@ -507,11 +516,12 @@ namespace MacroGUI
   {
     DetailView = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout();
+    layout->setContentsMargins( 0, 0, 0, 0 );
     DetailView->setLayout(layout);
 
     {
       QHBoxLayout* sub = new QHBoxLayout();
-      sub->addWidget(new QLabel("RePro/Macro: "));
+      sub->addWidget(new QLabel( IsRepro ? "RePro" : "Macro"));
       ActiveEdit = new QComboBox();
       for (const std::string& avail : Available)
         ActiveEdit->addItem(QString::fromStdString(avail));
@@ -529,6 +539,7 @@ namespace MacroGUI
         QHBoxLayout* lay = new QHBoxLayout();
         ParameterList = new QTreeWidget();
         ParameterList->setHeaderLabels({"Name", "Value"});
+	ParameterList->setRootIsDecorated( false );
         lay->addWidget(ParameterList);
         {
           QVBoxLayout* but = new QVBoxLayout();
@@ -776,35 +787,30 @@ namespace MacroGUI
     ListItem->setText(0, QString::fromStdString(Name));
 
     DetailView = new QWidget();
-    DetailView->setLayout(new QVBoxLayout());
+    QVBoxLayout* group = new QVBoxLayout();
+    DetailView->setLayout( group );
     {
-      QGroupBox* group = new QGroupBox("General");
-      QVBoxLayout* layout = new QVBoxLayout();
-      group->setLayout(layout);
-      {
-        QHBoxLayout* sub = new QHBoxLayout();
-        sub->addWidget(new QLabel("Name: "));
-        NameEdit = new QLineEdit();
-        NameEdit->setText(QString::fromStdString(Name));
-        QObject::connect(NameEdit, SIGNAL(textChanged(QString)), this, SLOT(updatedName(QString)));
-        sub->addWidget(NameEdit);
+      QHBoxLayout* sub = new QHBoxLayout();
+      sub->addWidget(new QLabel("Name: "));
+      NameEdit = new QLineEdit();
+      NameEdit->setText(QString::fromStdString(Name));
+      QObject::connect(NameEdit, SIGNAL(textChanged(QString)), this, SLOT(updatedName(QString)));
+      sub->addWidget(NameEdit);
 
-        layout->addLayout(sub);
-      }
-      {
-        QHBoxLayout* sub = new QHBoxLayout();
-        sub->addWidget(new QLabel("Type: "));
-        TypeEdit = new QComboBox();
-        TypeEdit->addItem("direct");
-        TypeEdit->addItem("reference");
-        TypeEdit->addItem("sequence (single)");
-        TypeEdit->addItem("sequence (list)");
-        QObject::connect(TypeEdit, SIGNAL(activated(int)), this, SLOT(updatedType(int)));
-        sub->addWidget(TypeEdit);
+      group->addLayout(sub);
+    }
+    {
+      QHBoxLayout* sub = new QHBoxLayout();
+      sub->addWidget(new QLabel("Type: "));
+      TypeEdit = new QComboBox();
+      TypeEdit->addItem("direct");
+      TypeEdit->addItem("reference");
+      TypeEdit->addItem("sequence (single)");
+      TypeEdit->addItem("sequence (list)");
+      QObject::connect(TypeEdit, SIGNAL(activated(int)), this, SLOT(updatedType(int)));
+      sub->addWidget(TypeEdit);
 
-        layout->addLayout(sub);
-      }
-      DetailView->layout()->addWidget(group);
+      group->addLayout(sub);
     }
     {
       TypeValues = new QStackedWidget();
@@ -923,7 +929,7 @@ namespace MacroGUI
         TypeValues->addWidget(widget);
 
       }
-      DetailView->layout()->addWidget(TypeValues);
+      group->addWidget(TypeValues);
     }
 
     QObject::connect(TypeEdit, SIGNAL(currentIndexChanged(int)), TypeValues, SLOT(setCurrentIndex(int)));
@@ -1148,6 +1154,8 @@ namespace MacroGUI
     MacroParameter* param = new MacroParameter();
     param->setName("new parameter");
     addParameter(param);
+    ParamEdit->setCurrentWidget(param->detailView());
+    param->setFocus();
   }
 
   void MacroInfo::removeParameter()
@@ -1182,7 +1190,7 @@ namespace MacroGUI
     DetailView = new QWidget();
     DetailView->setLayout(new QVBoxLayout());
     {
-      QGroupBox* group = new QGroupBox("Name");
+      QGroupBox* group = new QGroupBox("Macro name");
       group->setLayout(new QHBoxLayout());
       NameEdit = new QLineEdit();
       NameEdit->setText(QString::fromStdString(Name));
@@ -1192,8 +1200,9 @@ namespace MacroGUI
       DetailView->layout()->addWidget(group);
     }
     {
-      QGroupBox* group = new QGroupBox("Keywords");
+      QWidget* group = new QWidget;
       group->setLayout(new QVBoxLayout());
+      group->layout()->setContentsMargins( 0, 0, 0, 0 );
 
       std::map<std::string, QGroupBox*> groupToWidget;
 
@@ -1227,6 +1236,7 @@ namespace MacroGUI
       {
         QHBoxLayout* hbox = new QHBoxLayout();
         ParamList = new QTreeWidget();
+	ParamList->setRootIsDecorated( false );
         ParamList->setHeaderLabels({"Name", "Value"});
 
         hbox->addWidget(ParamList);
@@ -1311,6 +1321,12 @@ namespace MacroGUI
     }
   }
 
+  void MacroParameter::setFocus()
+  {
+    NameEdit->selectAll();
+    NameEdit->setFocus( Qt::OtherFocusReason );
+  }
+
   void MacroParameter::updateListItem()
   {
     if (!GuiCreated)
@@ -1329,35 +1345,26 @@ namespace MacroGUI
     ListItem->setText(0, QString::fromStdString(Name));
 
     DetailView = new QWidget;
-    QVBoxLayout* layout = new QVBoxLayout();
-    DetailView->setLayout(layout);
+    QGridLayout* group = new QGridLayout();
+    DetailView->setLayout(group);
 
     {
-      QHBoxLayout* group = new QHBoxLayout();
-      group->addWidget(new QLabel("Name:"));
+      group->addWidget(new QLabel("Name"), 0, 0 );
       NameEdit = new QLineEdit(QString::fromStdString(Name));
       QObject::connect(NameEdit, SIGNAL(textEdited(QString)), this, SLOT(updatedName(QString)));
-      group->addWidget(NameEdit);
-
-      layout->addLayout(group);
+      group->addWidget(NameEdit, 0, 1 );
     }
     {
-      QHBoxLayout* group = new QHBoxLayout();
-      group->addWidget(new QLabel("Value:"));
+      group->addWidget(new QLabel("Value"), 1, 0);
       ValueEdit = new QLineEdit(QString::fromStdString(Value));
       QObject::connect(ValueEdit, SIGNAL(textEdited(QString)), this, SLOT(updatedValue(QString)));
-      group->addWidget(ValueEdit);
-
-      layout->addLayout(group);
+      group->addWidget(ValueEdit, 1, 1);
     }
     {
-      QHBoxLayout* group = new QHBoxLayout();
-      group->addWidget(new QLabel("Unit:"));
+      group->addWidget(new QLabel("Unit"), 2, 0 );
       UnitEdit = new QLineEdit(QString::fromStdString(Unit));
       QObject::connect(UnitEdit, SIGNAL(textEdited(QString)), this, SLOT(updatedUnit(QString)));
-      group->addWidget(UnitEdit);
-
-      layout->addLayout(group);
+      group->addWidget(UnitEdit, 2, 1 );
     }
 
     GuiCreated = true;
@@ -1375,15 +1382,15 @@ namespace MacroGUI
   { KEY, { KEY, NAME, [] { return new TYPE(); } } },
 
   static const std::map<MacroCommandInfo::CommandType, CommandTypeInfo> COMMANDTYPE_LIST = {
-    ADD_TYPE(MacroCommandInfo::CommandType::BROWSE, "browse", MacroCommandBrowse)
-    ADD_TYPE(MacroCommandInfo::CommandType::DETECTOR, "detector", MacroCommandFilterDetector)
-    ADD_TYPE(MacroCommandInfo::CommandType::FILTER, "filter", MacroCommandFilterDetector)
-    ADD_TYPE(MacroCommandInfo::CommandType::MESSAGE, "message", MacroCommandMessage)
-    ADD_TYPE(MacroCommandInfo::CommandType::SHELL, "shell", MacroCommandShell)
-    ADD_TYPE(MacroCommandInfo::CommandType::SWITCH, "switch", MacroCommandSwitch)
-    ADD_TYPE(MacroCommandInfo::CommandType::START_SESSION, "startsession", MacroCommandStartsession)
     ADD_TYPE(MacroCommandInfo::CommandType::REPRO, "repro", MacroCommandReproMacro)
     ADD_TYPE(MacroCommandInfo::CommandType::MACRO, "macro", MacroCommandReproMacro)
+    ADD_TYPE(MacroCommandInfo::CommandType::FILTER, "filter", MacroCommandFilterDetector)
+    ADD_TYPE(MacroCommandInfo::CommandType::DETECTOR, "detector", MacroCommandFilterDetector)
+    ADD_TYPE(MacroCommandInfo::CommandType::SWITCH, "switch", MacroCommandSwitch)
+    ADD_TYPE(MacroCommandInfo::CommandType::START_SESSION, "startsession", MacroCommandStartsession)
+    ADD_TYPE(MacroCommandInfo::CommandType::MESSAGE, "message", MacroCommandMessage)
+    ADD_TYPE(MacroCommandInfo::CommandType::BROWSE, "browse", MacroCommandBrowse)
+    ADD_TYPE(MacroCommandInfo::CommandType::SHELL, "shell", MacroCommandShell)
   };
 
 #undef ADD_TYPE
@@ -1405,12 +1412,12 @@ namespace MacroGUI
     Commands.clear();
   }
 
-  void MacroCommandInfo::setDeactivated(bool state)
+  void MacroCommandInfo::setActivated(bool state)
   {
-    Deactivated = state;
+    Activated = state;
 
     if (GuiCreated)
-      DeactivatedEdit->setCheckState(state ? Qt::Checked : Qt::Unchecked);
+      ActivatedEdit->setCheckState(state ? Qt::Checked : Qt::Unchecked);
   }
 
   void MacroCommandInfo::setType(CommandType type)
@@ -1426,7 +1433,7 @@ namespace MacroGUI
     updateTreeDescription();
   }
 
-  void MacroCommandInfo::updateDeactivated(int) { setDeactivated(DeactivatedEdit->checkState() == Qt::Checked); }
+  void MacroCommandInfo::updateActivated(int) { setActivated(ActivatedEdit->checkState() == Qt::Checked); }
   void MacroCommandInfo::updateType(QString text)
   {
     for (const std::pair<CommandType, CommandTypeInfo>& type : COMMANDTYPE_LIST)
@@ -1504,32 +1511,26 @@ namespace MacroGUI
     TreeItem->setText(0, QString::fromStdString(COMMANDTYPE_LIST.at(Type).name));
 
     DetailView = new QWidget();
-    DetailView->setLayout(new QVBoxLayout());
+    QVBoxLayout* layout = new QVBoxLayout();
+    DetailView->setLayout( layout );
     {
-      QGroupBox* group = new QGroupBox("General");
-      QVBoxLayout* layout = new QVBoxLayout();
-      group->setLayout(layout);
+      QHBoxLayout* sub = new QHBoxLayout();
+      sub->addWidget(new QLabel("Type:"));
+      TypeEdit = new QComboBox();
+      QObject::connect(TypeEdit, SIGNAL(activated(QString)), this, SLOT(updateType(QString)));
+      sub->addWidget(TypeEdit);
 
-      DeactivatedEdit = new QCheckBox("deactivated");
-      DeactivatedEdit->setCheckState(Deactivated ? Qt::Checked : Qt::Unchecked);
-      QObject::connect(DeactivatedEdit, SIGNAL(stateChanged(int)), this, SLOT(updateDeactivated(int)));
-      layout->addWidget(DeactivatedEdit);
-
-      {
-        QHBoxLayout* sub = new QHBoxLayout();
-        sub->addWidget(new QLabel("Type:"));
-        TypeEdit = new QComboBox();
-        QObject::connect(TypeEdit, SIGNAL(activated(QString)), this, SLOT(updateType(QString)));
-        sub->addWidget(TypeEdit);
-
-        layout->addLayout(sub);
-      }
-
-      DetailView->layout()->addWidget(group);
+      layout->addLayout(sub);
     }
+
+    ActivatedEdit = new QCheckBox("enabled");
+    ActivatedEdit->setCheckState(Activated ? Qt::Checked : Qt::Unchecked);
+    QObject::connect(ActivatedEdit, SIGNAL(stateChanged(int)), this, SLOT(updateActivated(int)));
+    layout->addWidget(ActivatedEdit);
+
     {
       CommandsEdit = new QStackedWidget();
-      DetailView->layout()->addWidget(CommandsEdit);
+      layout->addWidget(CommandsEdit);
     }
 
     for (const std::pair<CommandType, CommandTypeInfo>& type : COMMANDTYPE_LIST)
@@ -1787,7 +1788,7 @@ namespace MacroMgr
       MacroCommandInfo* cmd = new MacroCommandInfo();
       macro->addCommand(cmd);
 
-      cmd->setDeactivated(info.deactivated);
+      cmd->setActivated(!info.deactivated);
       cmd->setType(info.type);
 
       switch (info.type)
@@ -1931,6 +1932,8 @@ namespace MacroMgr
           }
         }
           break;
+        case CmdType::UNKNOWN:
+	  break;
       }
 
 
@@ -1979,7 +1982,7 @@ namespace MacroMgr
   {
     using CmdType = MacroGUI::MacroCommandInfo::CommandType;
 
-    if (cmd->deactivated())
+    if (! cmd->activated())
       File << "!";
 
     File << MacroGUI::COMMANDTYPE_LIST.at(cmd->type()).name << " ";
@@ -2050,6 +2053,8 @@ namespace MacroMgr
         }
         break;
       }
+    case CmdType::UNKNOWN:
+      break;
     }
 
     File << std::endl;
@@ -2115,7 +2120,8 @@ MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
   setLayout(new QHBoxLayout());
 
   {
-    QGroupBox* group = new QGroupBox("Macro list");
+    //    QGroupBox* group = new QGroupBox("Macro list");
+    QWidget* group = new QWidget;
     QVBoxLayout* layout = new QVBoxLayout();
     group->setLayout(layout);
 
@@ -2156,7 +2162,8 @@ MacroEditor::MacroEditor(Macros* macros, QWidget *parent) :
     this->layout()->addWidget(group);
   }
   {
-    QGroupBox* group = new QGroupBox("Options");
+    // QGroupBox* group = new QGroupBox("Options");
+    QWidget* group = new QWidget;
     group->setLayout(new QVBoxLayout());
 
     DetailViewContainer = new QStackedWidget();
@@ -2299,11 +2306,11 @@ void MacroEditor::setRepros(RePros *repros)
     Repros.push_back(data->name());
 
     for (const Parameter& param : *data->RP)
-      ReproParameters[data->name()].push_back({param.name(), param.defaultText(), param.unit()});
+      ReproParameters[data->name()].push_back({param.name(), param.defaultText(), param.outUnit()});
 
     for (auto itr = data->RP->sectionsBegin(); itr != data->RP->sectionsEnd(); ++itr)
       for (const Parameter& param : **itr)
-        ReproParameters[data->name()].push_back({param.name(), param.defaultText(), param.unit()});
+        ReproParameters[data->name()].push_back({param.name(), param.defaultText(), param.outUnit()});
   }
 }
 

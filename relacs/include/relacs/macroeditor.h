@@ -114,6 +114,7 @@ namespace MacroGUI
     const std::string& name() const { return Name; }
     const std::string& value() const { return Value; }
     const std::string& unit() const { return Unit; }
+    void setFocus();
 
     QTreeWidgetItem* listItem() const { return ListItem; }
 
@@ -156,10 +157,10 @@ namespace MacroGUI
     void createGUI(MacroEditor*) override;
 
   public:
-    void setDeactivated(bool state);
+    void setActivated(bool state);
     void setType(CommandType type);
 
-    bool deactivated() const { return Deactivated; }
+    bool activated() const { return Activated; }
     CommandType type() const { return Type; }
 
 #define MAP_TYPE(ENUM_VAL, CLASS_NAME) \
@@ -184,7 +185,7 @@ namespace MacroGUI
 #undef MAP_TYPE
 
   private slots:
-    void updateDeactivated(int);
+    void updateActivated(int);
     void updateType(QString);
 
   public slots:
@@ -194,10 +195,10 @@ namespace MacroGUI
 
   private:
     CommandType Type = CommandType::REPRO;
-    bool Deactivated = false;
+    bool Activated = true;
     std::map<CommandType, DetailElement<MacroCommandInfo>*> Commands;
 
-    QCheckBox* DeactivatedEdit;
+    QCheckBox* ActivatedEdit;
     QComboBox* TypeEdit;
     QStackedWidget* CommandsEdit;
   };
@@ -528,6 +529,7 @@ namespace MacroGUI
     QStackedWidget* ParameterValues;
     QTreeWidget* AvailableParameterList;
   };
+
 
   /*! Represents a single Macro
    *
