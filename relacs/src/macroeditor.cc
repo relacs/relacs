@@ -2300,6 +2300,10 @@ void MacroEditor::setRepros(RePros *repros)
 
     for (const Parameter& param : *data->RP)
       ReproParameters[data->name()].push_back({param.name(), param.defaultText(), param.unit()});
+
+    for (auto itr = data->RP->sectionsBegin(); itr != data->RP->sectionsEnd(); ++itr)
+      for (const Parameter& param : **itr)
+        ReproParameters[data->name()].push_back({param.name(), param.defaultText(), param.unit()});
   }
 }
 
