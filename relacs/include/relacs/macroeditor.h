@@ -40,6 +40,7 @@
 namespace relacs {
 
 class MacroEditor;
+namespace MacroMgr { class MacroFileReader; }
 
 namespace MacroGUI
 {
@@ -184,17 +185,11 @@ namespace MacroGUI
   private slots:
     void updateDeactivated(int);
     void updateType(QString);
-    void clickedUp();
-    void clickedDown();
 
   public slots:
     void macroParameterAdded(const std::string& name);
     void macroParameterRemoved(const std::string& name);
     void updateTreeDescription();
-
-  signals:
-    void clickedUp(MacroGUI::MacroCommandInfo*);
-    void clickedDown(MacroGUI::MacroCommandInfo*);
 
   private:
     CommandType Type = CommandType::REPRO;
@@ -588,6 +583,7 @@ namespace MacroGUI
   class MacroFile : public TreeElement<MacroEditor>
   {
     friend class ::relacs::MacroEditor;
+    friend class ::relacs::MacroMgr::MacroFileReader;
 
   public:
     virtual ~MacroFile();
@@ -601,6 +597,9 @@ namespace MacroGUI
     const std::vector<MacroInfo*>& macros() const { return Macros; }
 
     void createGUI(MacroEditor* parent) override;
+
+  protected:
+    std::vector<MacroInfo*>& macros() { return Macros; }
 
   private:
     std::string Name;
@@ -698,8 +697,8 @@ public:
 
 public slots:
   void dialogClosed( int code );
-  void clickedUp(MacroGUI::MacroCommandInfo* cmd);
-  void clickedDown(MacroGUI::MacroCommandInfo* cmd);
+  void clickedUp();
+  void clickedDown();
 
 signals:
   void macroDefinitionsChanged();
@@ -714,7 +713,12 @@ private:
   void populate(const std::vector<MacroGUI::MacroFile*>& macrofiles);
   std::vector<MacroGUI::MacroFile*> readFiles();
 
-  void moveItem(MacroGUI::MacroCommandInfo* cmd, bool up);
+  std::pair<MacroGUI::MacroInfo*, MacroGUI::MacroFile*> getSelectedMacro();
+  std::pair<MacroGUI::MacroCommandInfo*, MacroGUI::MacroInfo*> getSelectedCommand();
+
+  void moveItem(bool up);
+  void moveItem(MacroGUI::MacroFile* file, MacroGUI::MacroInfo* macro, bool up);
+  void moveItem(MacroGUI::MacroInfo* macro, MacroGUI::MacroCommandInfo* cmd, bool up);
 
 public:
   int addDetailView(QWidget* view, QTreeWidgetItem* treeItem);
