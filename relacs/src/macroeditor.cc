@@ -21,6 +21,7 @@
 
 #include <relacs/macroeditor.h>
 #include <relacs/repros.h>
+#include <relacs/repro.h>
 #include <functional>
 #include <QString>
 #include <QGroupBox>
@@ -382,10 +383,26 @@ namespace MacroGUI
         {
           std::string item = ActiveEdit->itemText(idx).toStdString();
           if (item.substr(0, item.find_last_of('[')) == active)
-              ActiveEdit->setCurrentIndex(idx);
+          {
+            ActiveEdit->setCurrentIndex(idx);
+            Active = item;
+          }
         }
       }
       Owner->updateTreeDescription();
+
+      if (IsRepro)
+      {
+        AvailableParameterList->clear();
+        for (const MacroCommandParameter::MetaData& meta : owner()->owner()->reproParameter(Active))
+        {
+          QTreeWidgetItem* item = new QTreeWidgetItem();
+          item->setText(0, QString::fromStdString(meta.name));
+          item->setText(1, QString::fromStdString(meta.defaultValue));
+          item->setText(2, QString::fromStdString(meta.unit));
+          AvailableParameterList->addTopLevelItem(item);
+        }
+      }
     }
   }
 
@@ -420,7 +437,17 @@ namespace MacroGUI
   void MacroCommandReproMacro::addParameter()
   {
     MacroCommandParameter* param = new MacroCommandParameter();
-    param->setName("new parameter");
+    if (IsRepro && AvailableParameterList->topLevelItemCount() && !AvailableParameterList->selectedItems().empty())
+    {
+      QTreeWidgetItem* item = AvailableParameterList->selectedItems().front();
+      param->setName(item->text(0).toStdString());
+      param->setValue(item->text(1).toStdString());
+      param->setUnit(item->text(2).toStdString());
+    }
+    else
+    {
+      param->setName("new parameter");
+    }
     addParameter(param);
   }
 
@@ -464,11 +491,16 @@ namespace MacroGUI
       param->updatedReferences(name, added);
   }
 
-  void MacroCommandReproMacro::updatedParameterSelection(QTreeWidgetItem *item, int)
+  void MacroCommandReproMacro::updatedParameterSelection(QTreeWidgetItem *item, QTreeWidgetItem*)
   {
     for (int i = 0; i < ParameterList->topLevelItemCount(); ++i)
       if (ParameterList->topLevelItem(i) == item)
         ParameterValues->setCurrentIndex(i);
+  }
+
+  void MacroCommandReproMacro::setIsRepro()
+  {
+    IsRepro = true;
   }
 
   void MacroCommandReproMacro::createGUI(MacroCommandInfo *info)
@@ -479,7 +511,7 @@ namespace MacroGUI
 
     {
       QHBoxLayout* sub = new QHBoxLayout();
-      sub->addWidget(new QLabel("RePro: "));
+      sub->addWidget(new QLabel("RePro/Macro: "));
       ActiveEdit = new QComboBox();
       for (const std::string& avail : Available)
         ActiveEdit->addItem(QString::fromStdString(avail));
@@ -508,6 +540,12 @@ namespace MacroGUI
           but->addWidget(del);
           lay->addLayout(but);
         }
+        if (IsRepro)
+        {
+          AvailableParameterList = new QTreeWidget();
+          AvailableParameterList->setHeaderLabels({"Name", "Default", "Unit"});
+          lay->addWidget(AvailableParameterList);
+        }
         sublay->addLayout(lay);
       }
       {
@@ -525,7 +563,7 @@ namespace MacroGUI
       ParameterValues->addWidget(param->detailView());
     }
 
-    QObject::connect(ParameterList, SIGNAL(itemClicked(QTreeWidgetItem*,int)), this, SLOT(updatedParameterSelection(QTreeWidgetItem*, int)));
+    QObject::connect(ParameterList, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updatedParameterSelection(QTreeWidgetItem*, QTreeWidgetItem*)));
 
     GuiCreated = true;
     Owner = info;
@@ -1129,7 +1167,7 @@ namespace MacroGUI
     emit macroParameterAdded(newName);
   }
 
-  void MacroInfo::updatedParameterSelection(QTreeWidgetItem *item, int)
+  void MacroInfo::updatedParameterSelection(QTreeWidgetItem *item, QTreeWidgetItem*)
   {
     for (int i = 0; i < ParamList->topLevelItemCount(); ++i)
       if (ParamList->topLevelItem(i) == item)
@@ -1212,7 +1250,7 @@ namespace MacroGUI
       DetailView->layout()->addWidget(group);
     }
 
-    QObject::connect(ParamList, SIGNAL(itemClicked(QTreeWidgetItem*,int)), this, SLOT(updatedParameterSelection(QTreeWidgetItem*,int)));
+    QObject::connect(ParamList, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updatedParameterSelection(QTreeWidgetItem*,QTreeWidgetItem*)));
     for (MacroParameter* param : Parameter)
     {
       param->createGUI(this);
@@ -1357,6 +1395,7 @@ namespace MacroGUI
       DetailElement<MacroCommandInfo>* cmd = type.second.creator();
       Commands[type.first] = cmd;
     }
+    dynamic_cast<MacroCommandReproMacro*>(Commands[CommandType::REPRO])->setIsRepro();
   }
 
   MacroCommandInfo::~MacroCommandInfo()
@@ -1459,6 +1498,8 @@ namespace MacroGUI
 
   void MacroCommandInfo::createGUI(MacroEditor* owner)
   {
+    Owner = owner;
+
     TreeItem = new QTreeWidgetItem();
     TreeItem->setText(0, QString::fromStdString(COMMANDTYPE_LIST.at(Type).name));
 
@@ -1515,7 +1556,6 @@ namespace MacroGUI
 
     owner->addDetailView(DetailView, TreeItem);
 
-    Owner = owner;
     GuiCreated = true;
 
     updateTreeDescription();
@@ -2255,7 +2295,12 @@ void MacroEditor::setRepros(RePros *repros)
 {
   Repros.clear();
   for (const ReProData* data : repros->repros())
+  {
     Repros.push_back(data->name());
+
+    for (const Parameter& param : *data->RP)
+      ReproParameters[data->name()].push_back({param.name(), param.defaultText(), param.unit()});
+  }
 }
 
 void MacroEditor::setFilterDetectors(FilterDetectors *filters)
@@ -2420,6 +2465,17 @@ void MacroEditor::dialogClosed(int code)
 
   if (code != 1)
     delete this;
+}
+
+const std::vector<MacroGUI::MacroCommandParameter::MetaData>& MacroEditor::reproParameter(const std::string& key) const
+{
+  static const std::vector<MacroGUI::MacroCommandParameter::MetaData> EMPTY = {};
+
+  auto itr = ReproParameters.find(key);
+  if (itr != ReproParameters.end())
+    return itr->second;
+
+  return EMPTY;
 }
 
 }

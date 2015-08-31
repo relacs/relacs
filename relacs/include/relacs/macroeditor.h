@@ -52,6 +52,7 @@ namespace MacroGUI
     virtual ~GUIElement() {}
     /*! Creates all GUI elements and set it's intial values */
     virtual void createGUI(T*) = 0;
+    T* owner() const { return Owner; }
 
   protected:
     bool GuiCreated = false;
@@ -366,6 +367,13 @@ namespace MacroGUI
   {
     Q_OBJECT
   public:
+    struct MetaData
+    {
+      std::string name;
+      std::string defaultValue;
+      std::string unit;
+    };
+
     enum class InputType
     {
       DIRECT, REFERENCE, SEQUENCE_SINGLE, SEQUENCE_LIST
@@ -493,6 +501,8 @@ namespace MacroGUI
 
     void createGUI(MacroCommandInfo* info);
 
+    void setIsRepro();
+
     void updateParameterReferences(const std::string& param, bool added);
 
     const std::string& active() const { return Active; }
@@ -504,9 +514,11 @@ namespace MacroGUI
     void updatedActive(const QString& name);
     void addParameter();
     void removeParameter();
-    void updatedParameterSelection(QTreeWidgetItem* item, int);
+    void updatedParameterSelection(QTreeWidgetItem* item, QTreeWidgetItem*);
 
   private:
+    bool IsRepro = false;
+
     std::vector<std::string> Available;
     std::string Active;
     std::vector<MacroCommandParameter*> Parameter;
@@ -514,6 +526,7 @@ namespace MacroGUI
     QComboBox* ActiveEdit;
     QTreeWidget* ParameterList;
     QStackedWidget* ParameterValues;
+    QTreeWidget* AvailableParameterList;
   };
 
   /*! Represents a single Macro
@@ -557,7 +570,7 @@ namespace MacroGUI
     void updatedKeywords(int);
     void addParameter();
     void removeParameter();
-    void updatedParameterSelection(QTreeWidgetItem* item, int);
+    void updatedParameterSelection(QTreeWidgetItem* item, QTreeWidgetItem*);
 
   signals:
     void macroParameterAdded(const std::string& name);
@@ -691,6 +704,7 @@ public:
   void setRepros(RePros* repros);
   void setFilterDetectors(FilterDetectors* filters);
   const std::vector<std::string>& repros() const { return Repros; }
+  const std::vector<MacroGUI::MacroCommandParameter::MetaData>& reproParameter(const std::string& key) const;
   const std::vector<std::string>& filters() const { return Filters; }
   const std::vector<std::string>& detectors() const { return Detectors; }
   const std::vector<std::string>& macros() const { return MacroList; }
@@ -726,6 +740,7 @@ public:
 private:
   Macros* InternalMacros;
   std::vector<std::string> Repros;
+  std::map<std::string, std::vector<MacroGUI::MacroCommandParameter::MetaData>> ReproParameters;
   std::vector<std::string> Filters;
   std::vector<std::string> Detectors;
   std::vector<std::string> MacroList;

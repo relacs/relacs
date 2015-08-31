@@ -226,7 +226,7 @@ signals:
     /*! The repro \a name was reloaded. */
   void reloadRePro( const string &name );
 
- private:
+ public:
 
   string Name;
   RePro *RP;
