@@ -46,7 +46,10 @@ namespace MacroGUI
   {
     Command = string;
     if (GuiCreated && !internal)
+    {
       CommandEdit->setPlainText(QString::fromStdString(string));
+      Owner->updateTreeDescription();
+    }
   }
 
   void MacroCommandShell::createGUI(MacroCommandInfo* info)
@@ -65,6 +68,8 @@ namespace MacroGUI
     }
 
     GuiCreated = true;
+    Owner = info;
+    Owner->updateTreeDescription();
   }
 
   void MacroCommandBrowse::updatedPath(const QString& string) { setPath(string.toStdString()); }
@@ -72,7 +77,10 @@ namespace MacroGUI
   {
     Path = string;
     if (GuiCreated)
+    {
       PathEdit->setText(QString::fromStdString(string));
+      Owner->updateTreeDescription();
+    }
   }
 
   void MacroCommandBrowse::createGUI(MacroCommandInfo* info)
@@ -91,6 +99,8 @@ namespace MacroGUI
     }
 
     GuiCreated = true;
+    Owner = info;
+    Owner->updateTreeDescription();
   }
 
   void MacroCommandSwitch::updatedPath(const QString& string) { setPath(string.toStdString()); }
@@ -98,7 +108,10 @@ namespace MacroGUI
   {
     Path = string;
     if (GuiCreated)
+    {
       PathEdit->setText(QString::fromStdString(string));
+      Owner->updateTreeDescription();
+    }
   }
 
   void MacroCommandSwitch::createGUI(MacroCommandInfo* info)
@@ -117,6 +130,8 @@ namespace MacroGUI
     }
 
     GuiCreated = true;
+    Owner = info;
+    Owner->updateTreeDescription();
   }
 
   void MacroCommandStartsession::createGUI(MacroCommandInfo *info)
@@ -130,7 +145,10 @@ namespace MacroGUI
   {
     Text = string;
     if (GuiCreated && !internal)
+    {
       TextEdit->setPlainText(QString::fromStdString(string));
+      Owner->updateTreeDescription();
+    }
   }
 
   void MacroCommandMessage::updatedTitle(const QString& text) { setTitle(text.toStdString()); }
@@ -138,7 +156,10 @@ namespace MacroGUI
   {
     Title = string;
     if (GuiCreated)
+    {
       TitleEdit->setText(QString::fromStdString(string));
+      Owner->updateTreeDescription();
+    }
   }
 
   void MacroCommandMessage::setTimeout(int timeout)
@@ -186,6 +207,8 @@ namespace MacroGUI
     }
 
     GuiCreated = true;
+    Owner = info;
+    Owner->updateTreeDescription();
   }
 
   void MacroCommandFilterDetector::setConfigure(double time)
@@ -1405,6 +1428,27 @@ namespace MacroGUI
           TreeItem->setText(1, "(all)");
         else
           TreeItem->setText(1, QString::fromStdString(cmd->active()));
+        break;
+      }
+      case CommandType::SWITCH:
+        TreeItem->setText(1, QString::fromStdString(command<CommandType::SWITCH>()->path()));
+        break;
+      case CommandType::BROWSE:
+        TreeItem->setText(1, QString::fromStdString(command<CommandType::BROWSE>()->path()));
+        break;
+      case CommandType::MESSAGE:
+      {
+        MacroCommandMessage* cmd = command<CommandType::MESSAGE>();
+        if (!cmd->title().empty())
+          TreeItem->setText(1, QString::fromStdString(cmd->title()));
+        else
+          TreeItem->setText(1, QString::fromStdString(cmd->text().substr(0, std::min<std::size_t>(12, cmd->text().length())) + "..."));
+        break;
+      }
+      case CommandType::SHELL:
+      {
+        MacroCommandShell* cmd = command<CommandType::SHELL>();
+        TreeItem->setText(1, QString::fromStdString(cmd->command().substr(0, std::min<std::size_t>(12, cmd->command().length())) + "..."));
         break;
       }
       default:
