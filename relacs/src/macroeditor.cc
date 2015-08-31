@@ -36,12 +36,6 @@
 #include <QTreeWidgetItem>
 #include <QListWidget>
 
-/*
- * Todo:
- * x Tree with Macro/Repro Name
- * - Parameters lists with current value
- * x Logically group keywords
-*/
 
 namespace relacs {
 
@@ -380,7 +374,7 @@ namespace MacroGUI
     if (GuiCreated)
     {
       param->createGUI(nullptr);
-      ParameterList->addItem(param->listItem());
+      ParameterList->addTopLevelItem(param->listItem());
       ParameterValues->addWidget(param->detailView());
     }
   }
@@ -409,10 +403,10 @@ namespace MacroGUI
 
   void MacroCommandReproMacro::removeParameter()
   {
-    QList<QListWidgetItem*> selections = ParameterList->selectedItems();
+    QList<QTreeWidgetItem*> selections = ParameterList->selectedItems();
     if (selections.empty() || selections.size() > 1)
       return;
-    QListWidgetItem* selection = selections.front();
+    QTreeWidgetItem* selection = selections.front();
 
     auto itr = std::find_if(Parameter.begin(), Parameter.end(), [&selection](MacroCommandParameter* param) { return param->listItem() == selection; });
     removeParameter(*itr);
@@ -447,6 +441,13 @@ namespace MacroGUI
       param->updatedReferences(name, added);
   }
 
+  void MacroCommandReproMacro::updatedParameterSelection(QTreeWidgetItem *item, int)
+  {
+    for (int i = 0; i < ParameterList->topLevelItemCount(); ++i)
+      if (ParameterList->topLevelItem(i) == item)
+        ParameterValues->setCurrentIndex(i);
+  }
+
   void MacroCommandReproMacro::createGUI(MacroCommandInfo *info)
   {
     DetailView = new QWidget();
@@ -471,7 +472,8 @@ namespace MacroGUI
 
       {
         QHBoxLayout* lay = new QHBoxLayout();
-        ParameterList = new QListWidget();
+        ParameterList = new QTreeWidget();
+        ParameterList->setHeaderLabels({"Name", "Value"});
         lay->addWidget(ParameterList);
         {
           QVBoxLayout* but = new QVBoxLayout();
@@ -496,11 +498,11 @@ namespace MacroGUI
     for (MacroCommandParameter* param : Parameter)
     {
       param->createGUI(nullptr);
-      ParameterList->addItem(param->listItem());
+      ParameterList->addTopLevelItem(param->listItem());
       ParameterValues->addWidget(param->detailView());
     }
 
-    QObject::connect(ParameterList, SIGNAL(currentRowChanged(int)), ParameterValues, SLOT(setCurrentIndex(int)));
+    QObject::connect(ParameterList, SIGNAL(itemClicked(QTreeWidgetItem*,int)), this, SLOT(updatedParameterSelection(QTreeWidgetItem*, int)));
 
     GuiCreated = true;
     Owner = info;
@@ -537,7 +539,7 @@ namespace MacroGUI
     Name = name;
     if (GuiCreated)
     {
-      ListItem->setText(QString::fromStdString(name));
+      ListItem->setText(0, QString::fromStdString(name));
       NameEdit->setText(QString::fromStdString(name));
     }
   }
@@ -550,6 +552,7 @@ namespace MacroGUI
     {
       SequenceListEdit.Unit->setText(QString::fromStdString(name));
       SequenceEdit.Unit->setText(QString::fromStdString(name));
+      updateListItem();
     }
   }
 
@@ -560,6 +563,7 @@ namespace MacroGUI
     if (GuiCreated)
     {
       DirectEdit.Value->setText(QString::fromStdString(name));
+      updateListItem();
     }
   }
 
@@ -570,6 +574,7 @@ namespace MacroGUI
     if (GuiCreated)
     {
       ReferenceEdit.References->setCurrentIndex(ReferenceEdit.References->findText(QString::fromStdString(Reference.Reference)));
+      updateListItem();
     }
   }
 
@@ -582,6 +587,7 @@ namespace MacroGUI
       for (const std::string& str : Reference.AvailableReferences)
         ReferenceEdit.References->addItem(QString::fromStdString(str));
       ReferenceEdit.References->setCurrentIndex(ReferenceEdit.References->findText(QString::fromStdString(Reference.Reference)));
+      updateListItem();
     }
   }
 
@@ -608,6 +614,7 @@ namespace MacroGUI
         case InputType::SEQUENCE_SINGLE: TypeEdit->setCurrentIndex(2); break;
         case InputType::SEQUENCE_LIST: TypeEdit->setCurrentIndex(3); break;
       }
+      updateListItem();
     }
   }
 
@@ -615,25 +622,37 @@ namespace MacroGUI
   {
     Sequence.Min = value;
     if (GuiCreated)
+    {
       SequenceEdit.Min->setValue(value);
+      updateListItem();
+    }
   }
   void MacroCommandParameter::setMaximum(int value)
   {
     Sequence.Max = value;
     if (GuiCreated)
+    {
       SequenceEdit.Max->setValue(value);
+      updateListItem();
+    }
   }
   void MacroCommandParameter::setStep(int value)
   {
     Sequence.Step = value;
     if (GuiCreated)
+    {
       SequenceEdit.Step->setValue(value);
+      updateListItem();
+    }
   }
   void MacroCommandParameter::setResolution(int value)
   {
     Sequence.Resolution = value;
     if (GuiCreated)
+    {
       SequenceEdit.Resolution->setValue(value);
+      updateListItem();
+    }
   }
 
   void MacroCommandParameter::updatedReferences(const string &name, bool added)
@@ -652,6 +671,7 @@ namespace MacroGUI
       if (GuiCreated)
         ReferenceEdit.References->removeItem(ReferenceEdit.References->findText(QString::fromStdString(name)));
     }
+    updateListItem();
   }
 
   void MacroCommandParameter::updatedList(const QString &list) { setList(list.toStdString()); }
@@ -659,7 +679,10 @@ namespace MacroGUI
   {
     SequenceList.List = list;
     if (GuiCreated)
+    {
       SequenceListEdit.List->setText(QString::fromStdString(list));
+      updateListItem();
+    }
   }
 
   void MacroCommandParameter::updatedMode(const QString &mode)
@@ -672,13 +695,24 @@ namespace MacroGUI
   {
     Sequence.Mode = mode;
     if (GuiCreated)
+    {
       SequenceEdit.Mode->setCurrentIndex(SequenceEdit.Mode->findText(QString::fromStdString(SEQUENCE_INFO.at(mode).name)));
+      updateListItem();
+    }
+  }
+
+  void MacroCommandParameter::updateListItem()
+  {
+    if (!GuiCreated)
+      return;
+
+    ListItem->setText(1, QString::fromStdString(MacroMgr::MacroFileWriter::formatValue(this)));
   }
 
   void MacroCommandParameter::createGUI(MacroCommandReproMacro *)
   {
-    ListItem = new QListWidgetItem();
-    ListItem->setText(QString::fromStdString(Name));
+    ListItem = new QTreeWidgetItem();
+    ListItem->setText(0, QString::fromStdString(Name));
 
     DetailView = new QWidget();
     DetailView->setLayout(new QVBoxLayout());
@@ -841,6 +875,7 @@ namespace MacroGUI
     }
 
     GuiCreated = true;
+    updateListItem();
   }
 
 
@@ -975,7 +1010,7 @@ namespace MacroGUI
     if (GuiCreated)
     {
       param->createGUI(this);
-      ParamList->addItem(param->listItem());
+      ParamList->addTopLevelItem(param->listItem());
       ParamEdit->addWidget(param->detailView());
     }
 
@@ -1056,10 +1091,10 @@ namespace MacroGUI
 
   void MacroInfo::removeParameter()
   {
-    QList<QListWidgetItem*> selections = ParamList->selectedItems();
+    QList<QTreeWidgetItem*> selections = ParamList->selectedItems();
     if (selections.empty() || selections.size() > 1)
       return;
-    QListWidgetItem* selection = selections.front();
+    QTreeWidgetItem* selection = selections.front();
 
     auto itr = std::find_if(Parameter.begin(), Parameter.end(), [&selection](MacroParameter* param) { return param->listItem() == selection; });
     removeParameter(*itr);
@@ -1069,6 +1104,13 @@ namespace MacroGUI
   {
     emit macroParameterRemoved(oldName);
     emit macroParameterAdded(newName);
+  }
+
+  void MacroInfo::updatedParameterSelection(QTreeWidgetItem *item, int)
+  {
+    for (int i = 0; i < ParamList->topLevelItemCount(); ++i)
+      if (ParamList->topLevelItem(i) == item)
+        ParamEdit->setCurrentIndex(i);
   }
 
   void MacroInfo::createGUI(MacroEditor* owner)
@@ -1123,7 +1165,8 @@ namespace MacroGUI
 
       {
         QHBoxLayout* hbox = new QHBoxLayout();
-        ParamList = new QListWidget();
+        ParamList = new QTreeWidget();
+        ParamList->setHeaderLabels({"Name", "Value"});
 
         hbox->addWidget(ParamList);
         {
@@ -1146,11 +1189,11 @@ namespace MacroGUI
       DetailView->layout()->addWidget(group);
     }
 
-    QObject::connect(ParamList, SIGNAL(currentRowChanged(int)), ParamEdit, SLOT(setCurrentIndex(int)));
+    QObject::connect(ParamList, SIGNAL(itemClicked(QTreeWidgetItem*,int)), this, SLOT(updatedParameterSelection(QTreeWidgetItem*,int)));
     for (MacroParameter* param : Parameter)
     {
       param->createGUI(this);
-      ParamList->addItem(param->listItem());
+      ParamList->addTopLevelItem(param->listItem());
       ParamEdit->addWidget(param->detailView());
     }
 
@@ -1185,7 +1228,7 @@ namespace MacroGUI
     if (GuiCreated)
     {
       NameEdit->setText(QString::fromStdString(name));
-      ListItem->setText(QString::fromStdString(name));
+      ListItem->setText(0, QString::fromStdString(name));
     }
   }
   void MacroParameter::setUnit(const string &name)
@@ -1194,6 +1237,7 @@ namespace MacroGUI
     if (GuiCreated)
     {
       UnitEdit->setText(QString::fromStdString(name));
+      updateListItem();
     }
   }
   void MacroParameter::setValue(const string &name)
@@ -1202,7 +1246,16 @@ namespace MacroGUI
     if (GuiCreated)
     {
       ValueEdit->setText(QString::fromStdString(name));
+      updateListItem();
     }
+  }
+
+  void MacroParameter::updateListItem()
+  {
+    if (!GuiCreated)
+      return;
+
+    ListItem->setText(1, QString::fromStdString(MacroMgr::MacroFileWriter::formatValue(this)));
   }
 
   void MacroParameter::updatedName(const QString &name) { setName(name.toStdString()); }
@@ -1211,8 +1264,8 @@ namespace MacroGUI
 
   void MacroParameter::createGUI(MacroInfo *)
   {
-    ListItem = new QListWidgetItem();
-    ListItem->setText(QString::fromStdString(Name));
+    ListItem = new QTreeWidgetItem();
+    ListItem->setText(0, QString::fromStdString(Name));
 
     DetailView = new QWidget;
     QVBoxLayout* layout = new QVBoxLayout();
@@ -1247,6 +1300,7 @@ namespace MacroGUI
     }
 
     GuiCreated = true;
+    updateListItem();
   }
 
   struct CommandTypeInfo
@@ -1843,7 +1897,7 @@ namespace MacroMgr
     {
       File << ":";
       for (MacroGUI::MacroParameter* param : macro->parameter())
-        File << " " << param->name() << "=" << param->value() << param->unit() << ";";
+        File << " " << param->name() << "=" << formatValue(param) << ";";
     }
 
     File << std::endl;
@@ -1936,39 +1990,53 @@ namespace MacroMgr
 
   void MacroFileWriter::write(MacroGUI::MacroCommandParameter *param)
   {
-    using InputType = MacroGUI::MacroCommandParameter::InputType;
-
     File << " ";
     File << param->name();
     File << "=";
+    File << formatValue(param);
+    File << ";";
+  }
+
+  std::string MacroFileWriter::formatValue(MacroGUI::MacroParameter *param)
+  {
+    std::ostringstream os;
+    os << param->value() << param->unit();
+    return os.str();
+  }
+
+  std::string MacroFileWriter::formatValue(MacroGUI::MacroCommandParameter *param)
+  {
+    using InputType = MacroGUI::MacroCommandParameter::InputType;
+
+    std::ostringstream os;
     switch (param->type())
     {
       case InputType::DIRECT:
-        File << param->value();
+        os << param->value();
         //File << param->unit();
         break;
       case InputType::REFERENCE:
-        File << "$";
-        File << param->reference();
+        os << "$";
+        os << param->reference();
         break;
       case InputType::SEQUENCE_SINGLE:
-        File << "(";
-        File << param->min() << ".." << param->max() << ".." << param->step();
-        File << ",";
-        File << MacroGUI::SEQUENCE_INFO.at(param->mode()).name;
-        File << ",";
-        File << "r=" << param->resolution();
-        File << ")";
-        File << param->unit();
+        os << "(";
+        os << param->min() << ".." << param->max() << ".." << param->step();
+        os << ",";
+        os << MacroGUI::SEQUENCE_INFO.at(param->mode()).name;
+        os << ",";
+        os << "r=" << param->resolution();
+        os << ")";
+        os << param->unit();
         break;
       case InputType::SEQUENCE_LIST:
-        File << "(";
-        File << param->list();
-        File << ")";
-        File << param->unit();
+        os << "(";
+        os << param->list();
+        os << ")";
+        os << param->unit();
         break;
     }
-    File << ";";
+    return os.str();
   }
 }
 

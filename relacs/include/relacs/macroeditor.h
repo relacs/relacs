@@ -101,6 +101,7 @@ namespace MacroGUI
     void updatedName(const QString& name);
     void updatedValue(const QString& value);
     void updatedUnit(const QString& unit);
+    void updateListItem();
 
   signals:
     void macroParameterChanged(const std::string& oldName, const std::string& newName);
@@ -112,14 +113,14 @@ namespace MacroGUI
     const std::string& value() const { return Value; }
     const std::string& unit() const { return Unit; }
 
-    QListWidgetItem* listItem() const { return ListItem; }
+    QTreeWidgetItem* listItem() const { return ListItem; }
 
   private:
     std::string Name;
     std::string Value;
     std::string Unit;
 
-    QListWidgetItem* ListItem;
+    QTreeWidgetItem* ListItem;
     QLineEdit* NameEdit;
     QLineEdit* ValueEdit;
     QLineEdit* UnitEdit;
@@ -396,7 +397,7 @@ namespace MacroGUI
     void setMode(SequenceMode mode);
 
     void createGUI(MacroCommandReproMacro*);
-    QListWidgetItem* listItem() const { return ListItem; }
+    QTreeWidgetItem* listItem() const { return ListItem; }
 
     void updatedReferences(const std::string& name, bool added);
 
@@ -420,6 +421,7 @@ namespace MacroGUI
     void updatedReference(const QString& reference);
     void updatedMode(const QString& mode);
     void updatedList(const QString& list);
+    void updateListItem();
 
   private:
     std::string Name;
@@ -448,7 +450,7 @@ namespace MacroGUI
     } SequenceList;
 
 
-    QListWidgetItem* ListItem;
+    QTreeWidgetItem* ListItem;
 
     QLineEdit* NameEdit;
     QComboBox* TypeEdit;
@@ -507,6 +509,7 @@ namespace MacroGUI
     void updatedActive(const QString& name);
     void addParameter();
     void removeParameter();
+    void updatedParameterSelection(QTreeWidgetItem* item, int);
 
   private:
     std::vector<std::string> Available;
@@ -514,7 +517,7 @@ namespace MacroGUI
     std::vector<MacroCommandParameter*> Parameter;
 
     QComboBox* ActiveEdit;
-    QListWidget* ParameterList;
+    QTreeWidget* ParameterList;
     QStackedWidget* ParameterValues;
   };
 
@@ -559,6 +562,7 @@ namespace MacroGUI
     void updatedKeywords(int);
     void addParameter();
     void removeParameter();
+    void updatedParameterSelection(QTreeWidgetItem* item, int);
 
   signals:
     void macroParameterAdded(const std::string& name);
@@ -576,7 +580,7 @@ namespace MacroGUI
 
     std::map<Keyword, QCheckBox*> KeywordToCheckbox;
     QLineEdit* NameEdit;
-    QListWidget* ParamList;
+    QTreeWidget* ParamList;
     QStackedWidget* ParamEdit;
   };
 
@@ -654,6 +658,10 @@ namespace MacroMgr
   public:
     MacroFileWriter(MacroGUI::MacroFile* file, const std::string& filename);
     void save();
+
+  public:
+    static std::string formatValue(MacroGUI::MacroParameter* param);
+    static std::string formatValue(MacroGUI::MacroCommandParameter* param);
 
   private:
     void write(MacroGUI::MacroInfo* macro);
