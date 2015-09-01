@@ -1515,18 +1515,20 @@ namespace MacroGUI
     DetailView->setLayout( layout );
     {
       QHBoxLayout* sub = new QHBoxLayout();
-      sub->addWidget(new QLabel("Type:"));
+      sub->addWidget(new QLabel("Type"));
       TypeEdit = new QComboBox();
       QObject::connect(TypeEdit, SIGNAL(activated(QString)), this, SLOT(updateType(QString)));
       sub->addWidget(TypeEdit);
 
+      sub->addWidget(new QLabel(""));
+
+      ActivatedEdit = new QCheckBox("enabled");
+      ActivatedEdit->setCheckState(Activated ? Qt::Checked : Qt::Unchecked);
+      QObject::connect(ActivatedEdit, SIGNAL(stateChanged(int)), this, SLOT(updateActivated(int)));
+      sub->addWidget(ActivatedEdit);
+
       layout->addLayout(sub);
     }
-
-    ActivatedEdit = new QCheckBox("enabled");
-    ActivatedEdit->setCheckState(Activated ? Qt::Checked : Qt::Unchecked);
-    QObject::connect(ActivatedEdit, SIGNAL(stateChanged(int)), this, SLOT(updateActivated(int)));
-    layout->addWidget(ActivatedEdit);
 
     {
       CommandsEdit = new QStackedWidget();
