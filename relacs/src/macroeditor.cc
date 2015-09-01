@@ -274,7 +274,7 @@ namespace MacroGUI
     }
   }
 
-  void MacroCommandFilterDetector::updatedAll(int val) { setAll(val == Qt::Checked); }
+  void MacroCommandFilterDetector::updatedAll(bool val) { setAll(val); }
   void MacroCommandFilterDetector::setAll(bool all)
   {
     All = all;
@@ -304,7 +304,7 @@ namespace MacroGUI
       grp->layout()->addWidget(ActiveEdit);
       AllEdit = new QCheckBox("all");
       AllEdit->setCheckState(All ? Qt::Checked : Qt::Unchecked);
-      QObject::connect(AllEdit, SIGNAL(stateChanged(int)), this, SLOT(updatedAll(int)));
+      QObject::connect(AllEdit, SIGNAL(clicked(bool)), this, SLOT(updatedAll(bool)));
       grp->layout()->addWidget(AllEdit);
 
       layout->addWidget(grp);
@@ -1011,24 +1011,29 @@ namespace MacroGUI
     MacroInfo::Keyword keyword;
     std::string group;
     std::string name;
+    std::string ident;
     std::string description;
+    bool inverted;
   };
 
-#define ADD_KEYWORD(KEY, MODE, NAME, DESC) \
-  { KEY, { KEY, MODE, NAME, DESC } },
+#define ADD_KEYWORD(KEY, GROUP, NAME, IDENT, DESC, INVERT )	\
+  { KEY, { KEY, GROUP, NAME, IDENT, DESC, INVERT } },
 
   static const std::map<MacroInfo::Keyword, KeywordInfo> KEYWORD_LIST = {
-    ADD_KEYWORD(MacroInfo::Keyword::STARTUP, "Execution mode", "startup", "test")
-    ADD_KEYWORD(MacroInfo::Keyword::SHUTDOWN, "Execution mode", "shutdown", "")
-    ADD_KEYWORD(MacroInfo::Keyword::STARTSESSION, "Execution mode", "startsession", "")
-    ADD_KEYWORD(MacroInfo::Keyword::STOPSESSION, "Execution mode", "stopsession", "")
-    ADD_KEYWORD(MacroInfo::Keyword::FALLBACK, "Execution mode", "fallback", "")
-    ADD_KEYWORD(MacroInfo::Keyword::NOKEY, "Display", "nokey", "")
-    ADD_KEYWORD(MacroInfo::Keyword::NOBUTTON, "Display", "nobutton", "")
-    ADD_KEYWORD(MacroInfo::Keyword::NOMENU, "Display", "nomenu", "")
-    ADD_KEYWORD(MacroInfo::Keyword::KEEP, "Misc", "keep", "")
-    ADD_KEYWORD(MacroInfo::Keyword::OVERWRITE, "Misc", "overwrite", "")
+    ADD_KEYWORD(MacroInfo::Keyword::STARTUP, "Execute on", "startup", "startup", "test", false )
+    ADD_KEYWORD(MacroInfo::Keyword::SHUTDOWN, "Execute on", "shutdown", "shutdown", "", false)
+    ADD_KEYWORD(MacroInfo::Keyword::STARTSESSION, "Execute on", "startsession", "startsession", "", false)
+    ADD_KEYWORD(MacroInfo::Keyword::STOPSESSION, "Execute on", "stopsession", "stopsession", "", false)
+    ADD_KEYWORD(MacroInfo::Keyword::FALLBACK, "Execute on", "fallback", "fallback", "", false)
+    ADD_KEYWORD(MacroInfo::Keyword::NOKEY, "Assign", "hot-key", "nokey", "", true)
+    ADD_KEYWORD(MacroInfo::Keyword::NOBUTTON, "Assign", "macro button", "nobutton", "", true)
+    ADD_KEYWORD(MacroInfo::Keyword::NOMENU, "Assign", "menu entry", "nomenu", "", true)
+    ADD_KEYWORD(MacroInfo::Keyword::KEEP, "Misc", "keep", "keep", "", false)
+    ADD_KEYWORD(MacroInfo::Keyword::OVERWRITE, "Misc", "overwrite", "overwrite", "", false)
   };
+
+  static const std::set<MacroInfo::Keyword> INVERTED_KEYWORDS = { 
+    MacroInfo::Keyword::NOKEY, MacroInfo::Keyword::NOBUTTON, MacroInfo::Keyword::NOMENU };
 
 #undef ADD_KEYWORD
 
@@ -1121,7 +1126,16 @@ namespace MacroGUI
 
     if (GuiCreated)
     {
-      KeywordToCheckbox[keyword]->setCheckState(Qt::Checked);
+      if ( KEYWORD_LIST.at(keyword).inverted ) {
+	for (const std::pair<MacroInfo::Keyword, KeywordInfo>& key : KEYWORD_LIST)
+	  if ( key.second.inverted ) {
+	    if ( key.second.keyword < keyword )
+	      KeywordToCheckbox[key.second.keyword]->setCheckState(Qt::Unchecked);
+	  }
+	KeywordToCheckbox[keyword]->setCheckState(Qt::Unchecked);
+      }
+      else
+	KeywordToCheckbox[keyword]->setCheckState(Qt::Checked);
     }
   }
 
@@ -1131,7 +1145,12 @@ namespace MacroGUI
 
     if (GuiCreated)
     {
-      KeywordToCheckbox[keyword]->setCheckState(Qt::Unchecked);
+      if ( KEYWORD_LIST.at(keyword).inverted ) {
+	// XXX need to uncheck a few more inverted keywords...
+	KeywordToCheckbox[keyword]->setCheckState(Qt::Unchecked);
+      }
+      else
+	KeywordToCheckbox[keyword]->setCheckState(Qt::Checked);
     }
   }
 
@@ -1140,13 +1159,47 @@ namespace MacroGUI
     setName(name.toStdString());
   }
 
-  void MacroInfo::updatedKeywords(int)
+  void MacroInfo::updatedKeywords(bool)
   {
+    MacroInfo::Keyword oldinverted = MacroInfo::Keyword::STARTUP;
+    for ( const MacroInfo::Keyword &key : INVERTED_KEYWORDS )
+      if ( Keywords.count(key) > 0 )
+	oldinverted = key;
+    
     Keywords.clear();
-
-    for (const std::pair<MacroInfo::Keyword, QCheckBox*>& pair : KeywordToCheckbox)
-      if (pair.second->checkState() == Qt::Checked)
+    for (const std::pair<MacroInfo::Keyword, QCheckBox*>& pair : KeywordToCheckbox) {
+      if ( ! KEYWORD_LIST.at(pair.first).inverted && ( pair.second->checkState() == Qt::Checked ) )
         Keywords.insert(pair.first);
+    }
+
+    for ( const MacroInfo::Keyword &key : INVERTED_KEYWORDS ) {
+      bool unchecked = ( KeywordToCheckbox.at(key)->checkState() == Qt::Unchecked );
+      if ( oldinverted < key && unchecked ) {
+	MacroInfo::Keyword addkey = key;
+	for ( const MacroInfo::Keyword &key2 : INVERTED_KEYWORDS ) {
+	  if ( key2 < key || KeywordToCheckbox.at(key2)->checkState() == Qt::Unchecked ) {
+	    KeywordToCheckbox.at(key2)->setCheckState( Qt::Unchecked );
+	    addkey = key2;
+	  }
+	}
+	Keywords.insert( addkey );
+	break;
+      }
+      else if ( oldinverted >= key && ! unchecked ) {
+	MacroInfo::Keyword addkey = MacroInfo::Keyword::OVERWRITE;
+	for ( const MacroInfo::Keyword &key2 : INVERTED_KEYWORDS ) {
+	  if ( key2 < key ) {
+	    if ( KeywordToCheckbox.at(key2)->checkState() == Qt::Unchecked )
+	      addkey = key2;
+	  }
+	  else
+	    KeywordToCheckbox.at(key2)->setCheckState( Qt::Checked );
+	}
+	if ( addkey != MacroInfo::Keyword::OVERWRITE )
+	  Keywords.insert( addkey );
+	break;
+      }
+    }
   }
 
   void MacroInfo::addParameter()
@@ -1188,77 +1241,76 @@ namespace MacroGUI
     TreeItem->setText(0, QString::fromStdString(Name));
 
     DetailView = new QWidget();
-    DetailView->setLayout(new QVBoxLayout());
+    QGridLayout* grid = new QGridLayout();
+    DetailView->setLayout(grid);
     {
-      QGroupBox* group = new QGroupBox("Macro name");
-      group->setLayout(new QHBoxLayout());
+      grid->addWidget( new QLabel("Macro name"), 0, 0 );
       NameEdit = new QLineEdit();
       NameEdit->setText(QString::fromStdString(Name));
       QObject::connect(NameEdit, SIGNAL(textEdited(QString)), this, SLOT(updatedName(QString)));
-      group->layout()->addWidget(NameEdit);
-
-      DetailView->layout()->addWidget(group);
+      grid->addWidget(NameEdit, 0, 1, 1, 5 );
     }
+    int row = 1;
+    grid->addWidget( new QLabel( "" ), row, 0 );
     {
-      QWidget* group = new QWidget;
-      group->setLayout(new QVBoxLayout());
-      group->layout()->setContentsMargins( 0, 0, 0, 0 );
-
-      std::map<std::string, QGroupBox*> groupToWidget;
-
+      string group = "";
+      int col = 0;
+      MacroInfo::Keyword firstinverted = MacroInfo::Keyword::STARTUP;
+      for ( const MacroInfo::Keyword &key : INVERTED_KEYWORDS ) {
+	if ( Keywords.count(key) > 0 )
+	  firstinverted = key;
+      }
       for (const std::pair<MacroInfo::Keyword, KeywordInfo>& key : KEYWORD_LIST)
       {
-        if (groupToWidget.find(key.second.group) == groupToWidget.end())
+        if ( key.second.group != group )
         {
-          QGroupBox* g = new QGroupBox(QString::fromStdString(key.second.group));
-          g->setLayout(new QHBoxLayout());
-          group->layout()->addWidget(g);
-          groupToWidget[key.second.group] = g;
+	  row++;
+	  col = 0;
+	  grid->addWidget( new QLabel(QString::fromStdString(key.second.group)), row, col );
+	  col++;
+          group = key.second.group;
         }
 
         QCheckBox* box = new QCheckBox(QString::fromStdString(key.second.name));
-        box->setCheckState(Keywords.count(key.first) ? Qt::Checked : Qt::Unchecked);
+	if ( key.second.inverted )
+	  box->setCheckState( key.first <= firstinverted ? Qt::Unchecked : Qt::Checked);
+	else
+	  box->setCheckState(Keywords.count(key.first) ? Qt::Checked : Qt::Unchecked);
         box->setToolTip(QString::fromStdString(key.second.description));
-
-        QObject::connect(box, SIGNAL(stateChanged(int)), this, SLOT(updatedKeywords(int)));
+        QObject::connect(box, SIGNAL(clicked(bool)), this, SLOT(updatedKeywords(bool)));
         KeywordToCheckbox[key.first] = box;
 
-        groupToWidget[key.second.group]->layout()->addWidget(box);
+        grid->addWidget(box, row, col);
+	col++;
       }
-
-      DetailView->layout()->addWidget(group);
+      row++;
+      grid->addWidget( new QLabel( "" ), row, 0 );
+      row++;
     }
+
     {
-      QGroupBox* group = new QGroupBox("Parameter");
-      QVBoxLayout* layout = new QVBoxLayout();
-      group->setLayout(layout);
+      grid->addWidget( new QLabel( "Macro variables" ), row, 0 );
+      row++;
 
-      {
-        QHBoxLayout* hbox = new QHBoxLayout();
-        ParamList = new QTreeWidget();
-	ParamList->setRootIsDecorated( false );
-        ParamList->setHeaderLabels({"Name", "Value"});
+      ParamList = new QTreeWidget();
+      ParamList->setRootIsDecorated( false );
+      ParamList->setHeaderLabels({"Name", "Default value"});
+      grid->addWidget( ParamList, row, 1, 1, 4 );
 
-        hbox->addWidget(ParamList);
-        {
-          QVBoxLayout* vbox = new QVBoxLayout();
-          QPushButton* add = new QPushButton("+");
-          QObject::connect(add, SIGNAL(clicked()), this, SLOT(addParameter()));
-          QPushButton* del = new QPushButton("-");
-          QObject::connect(del, SIGNAL(clicked()), this, SLOT(removeParameter()));
-          vbox->addWidget(add);
-          vbox->addWidget(del);
-          hbox->addLayout(vbox);
-        }
-        layout->addLayout(hbox);
-      }
-      {
-        ParamEdit = new QStackedWidget();
-        layout->addWidget(ParamEdit);
-      }
-
-      DetailView->layout()->addWidget(group);
+      QVBoxLayout* vbox = new QVBoxLayout();
+      QPushButton* add = new QPushButton("+");
+      QObject::connect(add, SIGNAL(clicked()), this, SLOT(addParameter()));
+      QPushButton* del = new QPushButton("-");
+      QObject::connect(del, SIGNAL(clicked()), this, SLOT(removeParameter()));
+      vbox->addWidget(add);
+      vbox->addWidget(del);
+      grid->addLayout(vbox, row, 5 );
     }
+    row++;
+
+    ParamEdit = new QStackedWidget();
+    grid->addWidget(ParamEdit, row, 0, 1, 6 );
+    row++;
 
     QObject::connect(ParamList, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updatedParameterSelection(QTreeWidgetItem*,QTreeWidgetItem*)));
     for (MacroParameter* param : Parameter)
@@ -1433,7 +1485,7 @@ namespace MacroGUI
     updateTreeDescription();
   }
 
-  void MacroCommandInfo::updateActivated(int) { setActivated(ActivatedEdit->checkState() == Qt::Checked); }
+  void MacroCommandInfo::updateActivated(bool) { setActivated(ActivatedEdit->checkState() == Qt::Checked); }
   void MacroCommandInfo::updateType(QString text)
   {
     for (const std::pair<CommandType, CommandTypeInfo>& type : COMMANDTYPE_LIST)
@@ -1524,7 +1576,7 @@ namespace MacroGUI
 
       ActivatedEdit = new QCheckBox("enabled");
       ActivatedEdit->setCheckState(Activated ? Qt::Checked : Qt::Unchecked);
-      QObject::connect(ActivatedEdit, SIGNAL(stateChanged(int)), this, SLOT(updateActivated(int)));
+      QObject::connect(ActivatedEdit, SIGNAL(clicked(bool)), this, SLOT(updateActivated(bool)));
       sub->addWidget(ActivatedEdit);
 
       layout->addLayout(sub);
@@ -1623,7 +1675,7 @@ namespace MacroMgr
 
     for (const std::pair<MacroGUI::MacroInfo::Keyword, MacroGUI::KeywordInfo> pair : MacroGUI::KEYWORD_LIST)
     {
-      if (realLine.erase(pair.second.name, 0, false, 3, Str::WordSpace) > 0)
+      if (realLine.erase(pair.second.ident, 0, false, 3, Str::WordSpace) > 0)
         MacroFile->macros().back()->setKeyword(pair.first);
     }
 
@@ -1963,7 +2015,7 @@ namespace MacroMgr
     File << "$" << macro->name();
 
     for (MacroGUI::MacroInfo::Keyword keyword : macro->keywords())
-      File << " " << MacroGUI::KEYWORD_LIST.at(keyword).name;
+      File << " " << MacroGUI::KEYWORD_LIST.at(keyword).ident;
 
     if (!macro->parameter().empty())
     {

@@ -17,3 +17,6 @@ Also see files ChangeLog and THANKS
 
 * Sebastian Pipping:
   New build system using the GNU autotools.
+
+* Philipp Kuhlmann:
+  Configuration dialogs.

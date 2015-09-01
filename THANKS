@@ -9,18 +9,21 @@ exempt of errors.
 
 * Jan Benda <jan.benda@uni-tuebingen.de>
 
+* Philipp Kuhlmann <philipp.kuhlmann@student.uni-tuebingen.de> for
+  implementing the configuration dialogs.
+
 * Maxime Ambard and Armin Brandt (University of Freiburg) for
-their initial help on porting RELACS to Qt4.
+  their initial help on porting RELACS to Qt4.
 
 * Samuel Glauser <s.glauser@freemails.ch> for being a patient user
-during the multi-thread test phase.
+  during the multi-thread test phase.
 
 * Marco Hackenberg <marco.ha@gmx.net> for implementing
-the comedi and real-time linux support needed for his Dynamic Clamp routines.
+  the comedi and real-time linux support needed for his Dynamic Clamp routines.
 
 * Christian Machens <christian.machens@ens.fr>
 
 * Sebastian Pipping <http://www.hartwork.org> for autoconfiscating relacs.
 
 * Hartmut Schuetze <hartmut.schuetze@med.ovgu.de> for many suggestions
-and lots of enthusiam. And for the name "RELACS"! 
+  and lots of enthusiam. And for the name "RELACS"! 

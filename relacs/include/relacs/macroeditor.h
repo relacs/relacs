@@ -185,7 +185,7 @@ namespace MacroGUI
 #undef MAP_TYPE
 
   private slots:
-    void updateActivated(int);
+    void updateActivated(bool);
     void updateType(QString);
 
   public slots:
@@ -339,7 +339,7 @@ namespace MacroGUI
     void updatedMode(const QString& mode);
     void updatedSave(const QString& param);
     void updatedActive(const QString& name);
-    void updatedAll(int);
+    void updatedAll(bool);
 
   private:
     std::vector<std::string> Available;
@@ -569,7 +569,7 @@ namespace MacroGUI
 
   private slots:
     void updatedName(const QString& name);
-    void updatedKeywords(int);
+    void updatedKeywords(bool);
     void addParameter();
     void removeParameter();
     void updatedParameterSelection(QTreeWidgetItem* item, QTreeWidgetItem*);
