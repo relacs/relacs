@@ -312,6 +312,8 @@ protected:
 	of an implementation of AnalogOutput.
         \sa analogOutputType(), setDeviceType(), setDeviceName(), setIdent() */
   void setAnalogOutputType( int aotype );
+    /*! Set the time for sleeping between calls of writeData() to \a ms milliseconds. */
+  void setWriteSleep( unsigned long ms );
 
     /*! Set error string to \a strg. 
         \sa addErrorStr(), errorStr() */
@@ -367,6 +369,8 @@ private:
   bool Run;
     /*! A semaphore guarding analog output. */
   QSemaphore *Semaphore;
+    /*! Milliseconds to sleep between calls of writeData(). Defaults to 0. */
+  unsigned long WriteSleepMS;
 
 };
 

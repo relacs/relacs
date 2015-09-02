@@ -35,7 +35,8 @@ AnalogInput::AnalogInput( void )
     Run( false ),
     Semaphore( 0 ),
     DataMutex( 0 ),
-    DataWait( 0 )
+    DataWait( 0 ),
+    ReadSleepMS( 0 )
 {
 }
 
@@ -46,7 +47,8 @@ AnalogInput::AnalogInput( int aitype )
     Run( false ),
     Semaphore( 0 ),
     DataMutex( 0 ),
-    DataWait( 0 )
+    DataWait( 0 ),
+    ReadSleepMS( 0 )
 {
 }
 
@@ -57,7 +59,8 @@ AnalogInput::AnalogInput( const string &deviceclass, int aitype )
     Run( false ),
     Semaphore( 0 ),
     DataMutex( 0 ),
-    DataWait( 0 )
+    DataWait( 0 ),
+    ReadSleepMS( 0 )
 {
 }
 
@@ -158,6 +161,12 @@ int AnalogInput::analogInputType( void ) const
 void AnalogInput::setAnalogInputType( int aitype )
 {
   AnalogInputSubType = aitype;
+}
+
+
+void AnalogInput::setReadSleep( unsigned long ms )
+{
+  ReadSleepMS = ms;
 }
 
 
@@ -451,7 +460,7 @@ void AnalogInput::run( void )
 	DataWait->wakeAll();
     }
     // the sleep is needed to allow for other processes to wake up and acquire the lock!
-    QThread::sleep( 0 );
+    QThread::msleep( ReadSleepMS );
     lock();
     rd = Run;
     unlock();

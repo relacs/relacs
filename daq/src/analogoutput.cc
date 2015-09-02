@@ -34,7 +34,8 @@ AnalogOutput::AnalogOutput( void )
     AnalogOutputSubType( 0 ),
     ExternalReference( -1.0 ),
     Run( false ),
-    Semaphore( 0 )
+    Semaphore( 0 ),
+    WriteSleepMS( 0 )
 {
 }
 
@@ -44,7 +45,8 @@ AnalogOutput::AnalogOutput( int aotype )
     AnalogOutputSubType( aotype ),
     ExternalReference( -1.0 ),
     Run( false ),
-    Semaphore( 0 )
+    Semaphore( 0 ),
+    WriteSleepMS( 0 )
 {
 }
 
@@ -54,7 +56,8 @@ AnalogOutput::AnalogOutput( const string &deviceclass, int aotype )
     AnalogOutputSubType( aotype ),
     ExternalReference( -1.0 ),
     Run( false ),
-    Semaphore( 0 )
+    Semaphore( 0 ),
+    WriteSleepMS( 0 )
 {
 }
 
@@ -228,6 +231,12 @@ void AnalogOutput::setAnalogOutputType( int aotype )
 }
 
 
+void AnalogOutput::setWriteSleep( unsigned long ms )
+{
+  WriteSleepMS = ms;
+}
+
+
 double AnalogOutput::externalReference( void ) const
 {
   return ExternalReference;
@@ -392,7 +401,7 @@ void AnalogOutput::run( void )
     if ( r == 0 )
       break;
     // the sleep is needed to allow for other processes to wake up and to acquire the lock!
-    QThread::sleep( 0 );
+    QThread::sleep( WriteSleepMS );
     lock();
     rd = Run;
     unlock();
@@ -416,7 +425,7 @@ void AnalogOutput::run( void )
     if ( r != Running )
       break;
     // the sleep is needed to allow for other processes to wake up and to acquire the lock!
-    QThread::sleep( 0 );
+    QThread::msleep( 0 );
     lock();
     rd = Run;
     unlock();

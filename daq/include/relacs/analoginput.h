@@ -288,6 +288,8 @@ protected:
         \sa analogInputType(), setDeviceType(), setDeviceName(),
 	setDeviceFile(), setIdent() */
   void setAnalogInputType( int aitype );
+    /*! Set the time for sleeping between calls of readData() to \a ms milliseconds. */
+  void setReadSleep( unsigned long ms );
 
     /*! Set the device info().
         Call this function from open().
@@ -324,6 +326,8 @@ private:
   QReadWriteLock *DataMutex;
     /*! A waitcondition that is woken up whenever new data are written to the buffer. */
   QWaitCondition *DataWait;
+    /*! Milliseconds to sleep between calls of readData(). Defaults to 0. */
+  unsigned long ReadSleepMS;
 
 };
 
