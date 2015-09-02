@@ -120,6 +120,7 @@ void SetLeak::notify( void )
     lockMetaData();
     double cm = metaData().number( "Cell>cm", 0.0, "pF" );
     unlockMetaData();
+    bool sn = unsetNotify();
     if ( changed( "gdc" ) ) {
       double rdc = 1.0/(0.001*number( "gdc" )+1.0/rm);
       setNumber( "Rdc", rdc );
@@ -140,8 +141,9 @@ void SetLeak::notify( void )
 	setNumber( "gdc", 1000.0/rdc-1000.0/rm );
       }
     }
-    else
+    else if ( ! changed( "Edc" ) )
       update = false;
+    setNotify( sn );
     if ( update ) {
       delFlags( Parameter::changedFlag() );
       STW.updateValues();
@@ -227,9 +229,8 @@ int SetLeak::main( void )
   delFlags( Parameter::changedFlag() );
   addFlags( "gdc", Parameter::changedFlag() );
   unlockMetaData();
-  notify();
+  notify();  // calls already STW.updateValues()
   setNotify();
-  STW.updateValues();
 
   if ( interactive ) {
     keepFocus();
@@ -245,8 +246,7 @@ int SetLeak::main( void )
       E = Reset ? 0.0 : number( "Edc" );
     }
     else {
-      setDefaults();
-      STW.updateValues();
+      setDefaults();   // calls STW.updateValues() via notify
       return Aborted;
     }
   }
@@ -266,10 +266,12 @@ int SetLeak::main( void )
     warning( "Failed to write new values: " + signal.errorText() );
     return Failed;
   }
+  unsetNotify();
   setNumber( "gdc", g );
   setNumber( "Edc", E );
   setToDefaults();
-  STW.updateValues();
+  notify();  // calls already STW.updateValues()
+  setNotify();
   
   sleep( 0.01 );
   return Completed;

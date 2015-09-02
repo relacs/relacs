@@ -3117,21 +3117,33 @@ bool Parameter::empty( void ) const
 Parameter &Parameter::setDefault( void ) 
 {
   if ( isDate() ) {
+    if ( Year.size() > 0 && 
+	 ( Year[0] != DefaultYear[0] || Month[0] != DefaultMonth[0] || Day[0] != DefaultDay[0] ) )
+      Flags |= ChangedFlag;
     Year = DefaultYear;
     Month = DefaultMonth;
     Day = DefaultDay;
   }
   else if ( isTime() ) {
+    if ( Hour.size() > 0 &&
+	 ( Hour[0] != DefaultHour[0] || Minutes[0] != DefaultMinutes[0] || Seconds[0] != DefaultSeconds[0] || MilliSeconds[0] != DefaultMilliSeconds[0] ) )
+    Flags |= ChangedFlag;
     Hour = DefaultHour;
     Minutes = DefaultMinutes;
     Seconds = DefaultSeconds;
     MilliSeconds = DefaultMilliSeconds;
   }
   else {
+    if ( Value.size() != DefaultValue.size() ||
+	 ( Value.size() > 0 && DefaultValue.size() > 0 && Value[0] != DefaultValue[0] ) )
+      Flags |= ChangedFlag;
     Value = DefaultValue;
     Error.clear();
     Error.resize( Value.size(), -1 );
   }
+  if ( String.size() != DefaultString.size() ||
+       ( String.size() > 0 && DefaultString.size() > 0 && String[0] != DefaultString[0] ) )
+    Flags |= ChangedFlag;
   String = DefaultString;
   return *this;
 }

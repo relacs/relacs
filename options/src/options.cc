@@ -4121,8 +4121,11 @@ Parameter &Options::setDefault( const string &name )
     cerr << "!warning in Options::setDefault( " << name << " ) -> " << Warning << '\n';
   }
 #endif
-  if ( pp != end() )
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
     return *pp;
+  }
   else {
     Dummy = Parameter();
     return Dummy;
@@ -4144,6 +4147,8 @@ Options &Options::setDefaults( int flags )
 	++sp ) {
     (*sp)->setDefaults( flags );
   }
+  // notify the change:
+  callNotifies();
   return *this;
 }
 

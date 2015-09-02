@@ -258,9 +258,6 @@ int SetDC::main( void )
   // don't print repro message:
   noMessage();
 
-  // plot trace:
-  tracePlotContinuous( 1.0 );
-
   // init:
   lockStimulusData();
   OrgDCAmplitude = stimulusData().number( outTraceName( outcurrent ) );
@@ -278,6 +275,9 @@ int SetDC::main( void )
     DCAmplitude -= dcamplitudedecr;
 
   if ( interactive ) {
+    // plot trace:
+    tracePlotContinuous( 1.0 );
+
     // plot
     P.lock();
     P[0].setLMarg( 9.0 );
