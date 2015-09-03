@@ -89,6 +89,9 @@ void Histogram::notify( void )
 void Histogram::main( void )
 {
   sleep( Duration );
+  bool histinit = true;
+  double histmin = 0.0;
+  double histmax = 0.0;
 
   do {
 
@@ -116,11 +119,24 @@ void Histogram::main( void )
     int nbins = 100;
     SampleDataD hist( min, max, (max-min)/nbins );
     trace( InTrace ).hist( hist, offsinx, offsinx+n );
+    if ( histinit ) {
+      histinit = false;
+      histmin = hist.rangeFront();
+      histmax = hist.rangeBack();
+    }
+    else {
+      if ( histmin > hist.rangeFront() )
+	histmin = hist.rangeFront();
+      if ( histmax < hist.rangeBack() )
+	histmax = hist.rangeBack();
+    }
 
     P.lock();
     P.clear();
     P.setXYGrid();
     P.setLabel( 0, "" );
+    if ( ! P.zoomedXRange() )
+      P.setXRange( histmin, histmax );
     P.plot( hist, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Yellow, Plot::Yellow );
     P.draw();
     P.unlock();

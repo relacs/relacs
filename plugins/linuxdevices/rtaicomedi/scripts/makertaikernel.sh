@@ -147,6 +147,9 @@ function print_info {
     echo "running kernel (uname -r):"
     uname -r
     echo
+    echo "kernel parameter (/proc/cmdline):"
+    cat /proc/cmdline
+    echo
     echo "Revisions:"
     echo "  rtai  : ${RTAI_DIR} from $(cat /usr/local/src/${RTAI_DIR}/revision.txt)"
     echo "  newlib: cvs from $(cat /usr/local/src/newlib/revision.txt)"

@@ -315,6 +315,12 @@ void DynClampAnalogInput::close( void )
   if ( Calibration != 0 )
     comedi_cleanup_calibration( Calibration );
   Calibration = 0;
+  
+  // close comedi:
+  int error = comedi_close( DeviceP );
+  if ( error )
+    setErrorStr( "closing of AI subdevice on device " + deviceFile() + "failed" );
+  DeviceP = 0;
 
   // cleanup converters:
   for ( int c=0; c<Channels; c++ ) {
@@ -559,6 +565,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   chanlistIOC.type = SUBDEV_IN;
   for( int k = 0; k < traces.size(); k++ ) {
     chanlistIOC.chanlist[k] = ChanList[k];
+    chanlistIOC.isused[k] = 1;
     chanlistIOC.scalelist[k] = traces[k].scale();
     if ( traces[k].channel() < PARAM_CHAN_OFFSET ) {
       const comedi_polynomial_t* poly = 

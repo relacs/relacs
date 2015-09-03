@@ -163,7 +163,9 @@ protected:
   virtual int testWriteDevice( OutList &sigs );
 
     /*! Initializes the \a chanlist from \a sigs. */
-  void setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist, bool setscale );
+  void setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist, bool setscale ) const;
+    /*! Load channels from \a sigs to kernel module. */
+  int loadChanList( OutList &sigs, int isused ) const;
 
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;

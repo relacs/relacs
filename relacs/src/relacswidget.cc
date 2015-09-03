@@ -1790,8 +1790,10 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
   AM->assignTraces();
   AID->updateMenu();
 
-  // reset analog output for dynamic clamp:
   /*
+  // reset analog output for dynamic clamp:
+  // XXX no longer needed!!!!
+  // XXX Remove from acquire!
   r = AQ->writeReset();
   if ( r < 0 ) {
     printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed." );

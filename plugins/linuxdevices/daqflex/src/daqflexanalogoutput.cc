@@ -125,10 +125,19 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice )
     return InvalidDevice;
   }
 
-  // set default output values for channels:
-  ChannelValues = new float[channels()];
-  for ( int k=0; k<channels(); k++ )
-    ChannelValues[k] = 0.0;
+  // set and write default output values for channels:
+  {
+    ChannelValues = new float[channels()];
+    float minvolt = ( BipolarRange.size() > 0) ? -BipolarRange[0] : 0.0;
+    float maxvolt = ( BipolarRange.size() > 0) ? BipolarRange[0] : UnipolarRange[0];
+    float gain = DAQFlexDevice->maxAOData()/(maxvolt-minvolt);
+    float v = 0.0;
+    for ( int k=0; k<channels(); k++ ) {
+      unsigned short data = (unsigned short)( (v-minvolt)*gain );
+      string response = DAQFlexDevice->sendMessage( "AO{" + Str( k ) + "}:VALUE=" + Str( data ) );
+      ChannelValues[k] = 0.0;
+    }
+  }
 
   // ai clock:
   UseAIClock = boolean( "useaiclock" );

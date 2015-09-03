@@ -231,6 +231,28 @@ int DynClampAnalogOutput::open( const string &device )
     }
   }
 
+  // write zeros to all channels:
+  {
+    bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
+		       SDF_SOFT_CALIBRATED ) > 0 );
+    bool unipolar = ( BipolarRangeIndex.size() == 0 );
+    comedi_polynomial_t polynomial;
+    for ( int k=0; k<channels(); k++ ) {
+      int index = unipolar ? UnipolarRangeIndex[0] : BipolarRangeIndex[0];
+      if ( softcal && Calibration != 0 )
+	comedi_get_softcal_converter( SubDevice, k, index,
+				      COMEDI_FROM_PHYSICAL, Calibration, &polynomial );
+      else
+	comedi_get_hardcal_converter( DeviceP, SubDevice, k, index,
+				      COMEDI_FROM_PHYSICAL, &polynomial );
+      float v = 0.0;
+      lsampl_t data = comedi_from_physical( v, &polynomial );
+      int retval = comedi_data_write( DeviceP, SubDevice, k, index, AREF_GROUND, data );
+      if ( retval < 1 )
+	setErrorStr( string( "comedi_direct_write failed to write zero: " ) + comedi_strerror( comedi_errno() ) );
+    }
+  }
+
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
   ModuleFd = ::open( ModuleDevice.c_str(), O_WRONLY ); //O_RDONLY
@@ -346,6 +368,12 @@ void DynClampAnalogOutput::close( void )
   if ( Calibration != 0 )
     comedi_cleanup_calibration( Calibration );
   Calibration = 0;
+  
+  // close comedi:
+  int error = comedi_close( DeviceP );
+  if ( error )
+    setErrorStr( "closing of AO subdevice on device " + deviceFile() + "failed" );
+  DeviceP = 0;
 
   if ( ModuleFd >= 0 ) {
     ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
@@ -421,7 +449,7 @@ double DynClampAnalogOutput::bipolarRange( int index ) const
 void DynClampAnalogOutput::setupChanList( OutList &sigs,
 					  unsigned int *chanlist,
 					  int maxchanlist,
-					  bool setscale )
+					  bool setscale ) const
 {
   memset( chanlist, 0, maxchanlist * sizeof( unsigned int ) );
 
@@ -555,6 +583,56 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 }
 
 
+int DynClampAnalogOutput::loadChanList( OutList &sigs, int isused ) const
+{
+  unsigned int chanlist[MAXCHANLIST];
+  setupChanList( sigs, chanlist, MAXCHANLIST, true );
+
+  if ( sigs.failed() )
+    return -1;
+
+  // set chanlist:
+  struct chanlistIOCT chanlistIOC;
+  chanlistIOC.type = SUBDEV_OUT;
+  for( int k = 0; k < sigs.size(); k++ ){
+    chanlistIOC.chanlist[k] = chanlist[k];
+    chanlistIOC.isused[k] = isused;
+    if ( sigs[k].channel() < PARAM_CHAN_OFFSET ) {
+      const comedi_polynomial_t* poly = 
+	(const comedi_polynomial_t *)sigs[k].gainData();
+      chanlistIOC.conversionlist[k].order = poly->order;
+      if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
+	cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in conversion polynomial!\n";
+      chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
+      for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
+	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
+      chanlistIOC.scalelist[k] = sigs[k].scale();
+      // apply calibration:
+      if ( Calibration != 0 ) {
+	unsigned int channel = CR_CHAN( chanlist[k] );
+	unsigned int range = CR_RANGE( chanlist[k] );
+	unsigned int aref = CR_AREF( chanlist[k] );
+	if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+					      range, aref, Calibration ) < 0 )
+	  sigs[k].addError( DaqError::CalibrationFailed );
+      }
+    }
+  }
+  chanlistIOC.chanlistN = sigs.size();
+  int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
+  if ( retval < 0 ) {
+    if ( errno == EINVAL )
+      sigs.addErrorStr( "Channel unknown to kernel module." );
+    else
+      sigs.addErrorStr( "Failed to transfer channel list." );
+    cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
+	 << ModuleDevice << " failed!\n";
+    return -1;
+  }
+  return 0;
+}
+
+
 int DynClampAnalogOutput::directWrite( OutList &sigs )
 {
   // not open:
@@ -588,45 +666,9 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
     ol.add( sigs );
     ol.sortByChannel();
 
-    unsigned int chanlist[MAXCHANLIST];
-    setupChanList( ol, chanlist, MAXCHANLIST, true );
-
-    if ( ol.failed() )
+    int retval = loadChanList( ol, 1 );
+    if ( retval < 0 )
       return -1;
-
-    // set chanlist:
-    struct chanlistIOCT chanlistIOC;
-    chanlistIOC.type = SUBDEV_OUT;
-    for( int k = 0; k < ol.size(); k++ ){
-      chanlistIOC.chanlist[k] = chanlist[k];
-      if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
-	const comedi_polynomial_t* poly = 
-	  (const comedi_polynomial_t *)ol[k].gainData();
-	chanlistIOC.conversionlist[k].order = poly->order;
-	if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-	  cerr << "ERROR in DynClampAnalogOutput::directWrite -> order=" << poly->order << " in conversion polynomial too large!\n";
-	chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
-	for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
-	  chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
-	chanlistIOC.scalelist[k] = ol[k].scale();
-	// apply calibration:
-	if ( Calibration != 0 ) {
-	  unsigned int channel = CR_CHAN( chanlist[k] );
-	  unsigned int range = CR_RANGE( chanlist[k] );
-	  unsigned int aref = CR_AREF( chanlist[k] );
-	  if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
-						range, aref, Calibration ) < 0 )
-	    ol[k].addError( DaqError::CalibrationFailed );
-	}
-      }
-    }
-    chanlistIOC.chanlistN = ol.size();
-    int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
-    if ( retval < 0 ) {
-      cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_CHANLIST on device "
-	   << ModuleDevice << " failed!\n";
-      return -1;
-    }
 
     // set up synchronous command:
     struct syncCmdIOCT syncCmdIOC;
@@ -786,46 +828,9 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     ol.add( sigs );
     ol.sortByChannel();
 
-    unsigned int chanlist[MAXCHANLIST];
-    setupChanList( ol, chanlist, MAXCHANLIST, true );
-
-    if ( sigs.failed() )
+    int retval = loadChanList( ol, 1 );
+    if ( retval < 0 )
       return -1;
-
-    // set chanlist:
-    struct chanlistIOCT chanlistIOC;
-    chanlistIOC.type = SUBDEV_OUT;
-    for( int k = 0; k < ol.size(); k++ ){
-      chanlistIOC.chanlist[k] = chanlist[k];
-      if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
-	const comedi_polynomial_t* poly = 
-	  (const comedi_polynomial_t *)ol[k].gainData();
-	chanlistIOC.conversionlist[k].order = poly->order;
-	if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-	  cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in conversion polynomial!\n";
-	chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
-	for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
-	  chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
-	chanlistIOC.scalelist[k] = ol[k].scale();
-	// apply calibration:
-	if ( Calibration != 0 ) {
-	  unsigned int channel = CR_CHAN( chanlist[k] );
-	  unsigned int range = CR_RANGE( chanlist[k] );
-	  unsigned int aref = CR_AREF( chanlist[k] );
-	  if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
-						range, aref, Calibration ) < 0 )
-	    ol[k].addError( DaqError::CalibrationFailed );
-	}
-      }
-    }
-    chanlistIOC.chanlistN = ol.size();
-    int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
-    //  cerr << "prepareWrite(): IOC_CHANLIST done!\n"; /// TEST
-    if ( retval < 0 ) {
-      cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
-	   << ModuleDevice << " failed!\n";
-      return -1;
-    }
 
     // set up synchronous command:
     struct syncCmdIOCT syncCmdIOC;
@@ -1149,6 +1154,20 @@ void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid 
   int ern = errno;
   if ( ern != ERANGE )
     cerr << "DynClampAnalogOutput::addTraces() -> errno " << strerror( errno ) <<  '\n';
+
+  // load all channels to the kernel:
+  OutList sigs;
+  for ( unsigned int k=0; k<traces.size(); k++ ) {
+    if ( traces[k].device() == deviceid ) {
+      OutData signal;
+      signal.setTrace( traces[k].trace() );
+      traces[k].apply( signal );
+      signal.resize( 1, 0.0, signal.minSampleInterval() );
+      signal = 0.0;
+      sigs.push( signal );
+    }
+  }
+  loadChanList( sigs, 0 );
 }
 
 

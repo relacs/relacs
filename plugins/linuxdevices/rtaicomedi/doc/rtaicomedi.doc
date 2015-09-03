@@ -715,12 +715,19 @@ Some hints for the kernel configuration:
   .
 .
 
-In addition, there are several interesting  kernel parameter:
-- Disable all dma transfers by setting \c libata.dma=0.
+In addition, there are several interesting kernel parameter:
 - Turn off CPU power saving modes: \c processor.max_cstate=1 idle=poll .
   This is very effective on newer CPUs!
-  (or disable intel_idle module? For the intel_idle module also set intel_idle.max_cstate=0)
-  (see also Documentation/power/pm_qos_interface.txt)
+  Disable the intel_idle module. Alternatively you can set \c intel_idle.max_cstate=0 .
+  Check cpu idle driver with
+  \code
+cat /sys/devices/system/cpu/cpuidle/current_driver
+  \endcode
+  (see also Documentation/power/pm_qos_interface.txt, 
+  http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels )
+- Also check out "nohalt" kernel parameter (Documentation/kernel-parameters.txt).
+- For scheduling interrupts read Documentation/timers/NO_HZ.txt
+- Disable all dma transfers by setting \c libata.dma=0.
 - Advanced configuration and power interface (ACPI): \c acpi=off and/or \c pci=noacpi 
 - Advanced programmable interrupt controller (APIC): \c noapic and/or \c nolapic and/or \c lapic
 .

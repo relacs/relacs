@@ -779,8 +779,6 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     Traces->addErrorStr( deviceFile() + " - comedi_do_insnlist executed " + Str( ninsns ) + " from " +
 			 Str( ilinx ) + " instructions" );
   }
-  else
-    cerr << "INSN\n";
   delete [] insnlist.insns;
 
   bool finished = true;

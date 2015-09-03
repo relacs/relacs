@@ -626,6 +626,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 {
   int iC, isC;
   int trig = 0;
+  int notfound = 1;
 #ifdef ENABLE_COMPUTATION
   int i;
 #endif
@@ -661,6 +662,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
   if ( subdev->chanN > 0 ) {
     // subdev chanlist already exist:
     for ( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
+      notfound = 1;
       for ( isC = 0; isC < subdev->chanN; isC++ ) {
         if ( CR_CHAN(chanlistIOC->chanlist[iC]) == 
 	     subdev->chanlist[isC].chan + PARAM_CHAN_OFFSET*subdev->chanlist[isC].param ) {
@@ -679,8 +681,14 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 	    subdev->chanlist[isC].insn.chanspec = chanlistIOC->chanlist[iC];
 	    memcpy( &subdev->chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
 	  }
+	  notfound = 0;
 	  break;
         }
+      }
+      if ( notfound ) {
+	ERROR_MSG( "loadChanList ERROR: Channel %d not found on subdevice %i on device %s.\n",
+		   CR_CHAN(chanlistIOC->chanlist[iC]), subdev->subdev, devname );
+	return -EINVAL;
       }
     }
   }
@@ -699,7 +707,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
       subdev->chanlist[iC].modelIndex = -1;
       subdev->chanlist[iC].statusIndex = -1;
       subdev->chanlist[iC].scale = chanlistIOC->scalelist[iC];
-      subdev->chanlist[iC].isUsed = 1; 
+      subdev->chanlist[iC].isUsed = chanlistIOC->isused[iC]; 
       subdev->chanlist[iC].voltage = 0.0; 
       subdev->chanlist[iC].prevvoltage = 0.0;
       if ( trig && subdev->chanlist[iC].chan == trigger.chan ) {
@@ -1864,6 +1872,8 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       if ( traceIndex >= PARAMOUTPUT_N ) {
 	traceIndex = 0;
 	rc = -ERANGE; // signal end of list
+	// clear analog output traces:
+	aosubdev.chanN = 0;
 	break;
       }
       strncpy( traceInfo.name, paramOutputNames[traceIndex], PARAM_NAME_MAXLEN );

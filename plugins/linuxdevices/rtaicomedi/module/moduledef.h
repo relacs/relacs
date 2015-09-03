@@ -118,6 +118,7 @@ struct chanlistIOCT {
   enum subdevTypes type;
   unsigned int chanlistN;
   unsigned int chanlist[MAXCHANLIST];
+  int isused[MAXCHANLIST];
   float scalelist[MAXCHANLIST];
   struct converterT conversionlist[MAXCHANLIST];
 };
