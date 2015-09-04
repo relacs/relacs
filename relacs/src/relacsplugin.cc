@@ -527,9 +527,9 @@ void RELACSPlugin::adjust( const InData &data, double duration,
 }
 
 
-void RELACSPlugin::activateGains( void )
+int RELACSPlugin::activateGains( void )
 {
-  RW->activateGains();
+  return RW->activateGains();
 }
 
 

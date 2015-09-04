@@ -104,7 +104,8 @@ int InputRangeCheck::main( void )
     P.unlock();
 
     setGain( trace( intrace ), r );
-    activateGains();
+    if ( activateGains() < 0 )
+      return Failed;
     sleep( pause );
 
     RangeLoop amplrange( -ranges[r], ranges[r], amplnum, 1, 1, 1 );
@@ -178,7 +179,8 @@ int InputRangeCheck::main( void )
   }
 
   setGain( trace( intrace ), orggain );
-  activateGains();
+  if ( activateGains() < 0 )
+    return Failed;
   return Completed;
 }
 

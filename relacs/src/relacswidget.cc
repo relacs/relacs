@@ -968,17 +968,23 @@ void RELACSWidget::simLoadMessage( void )
 
 ////// RePros ///////////////////////////////////////////////////////////
 
-void RELACSWidget::activateGains( void )
+int RELACSWidget::activateGains( void )
 {
-  AQ->activateGains();
-  if ( IRawData.failed() )
+  int r = AQ->activateGains();
+  if ( r<0 || IRawData.failed() ) {
     printlog( "! error in restarting analog input for changing gains: " + IRawData.errorText() );
+    QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in restarting analog input for changing gains: " + IRawData.errorText() ) );
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+4 ) ) );
+    r = -1;
+  }
   else if ( ! ReadLoop.isRunning() ) {
     DataRun = true;
     DataTime.restart();
     ReadLoop.start();
+    r = 0;
   }
   FD->scheduleAdjust();
+  return r;
 }
 
 

@@ -220,8 +220,9 @@ public:
     /*! Activates the new gain settings for analog input
         set by the adjustGain() functions.
         activateGains() assumes the data traces and events not to be locked
-	and will write-lock the raw data. */
-  void activateGains( void );
+	and will write-lock the raw data.
+        \return -1 on failure. */
+  int activateGains( void );
 
 
 public slots:

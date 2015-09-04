@@ -790,7 +790,7 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     if ( tookao ) {
       ComediAO->startThread( aosp );
       finished = ComediAO->noMoreData();
-      cerr << "START AO THREAD " << finished << '\n';
+      //      cerr << "START AO THREAD " << finished << '\n';
     }
   }
 

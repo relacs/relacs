@@ -551,8 +551,9 @@ int MyPlugin::main( void )
         set by adjustGain().
         activateGains() assumes the data traces and events not to be locked
 	and will write-lock the raw data.
+	\return -1 on failure.
         \sa adjustGain( InData, double ), adjustGain( InData, double, double ), adjust() */
-  void activateGains( void );
+  int activateGains( void );
 
 
  public:

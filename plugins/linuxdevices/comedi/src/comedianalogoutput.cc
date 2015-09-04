@@ -944,7 +944,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
     // execute command:
-    cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+    //    cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
     if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
       int cerror = comedi_errno();
       cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;

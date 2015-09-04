@@ -1617,6 +1617,8 @@ void dynclamp_loop( long dummy )
     
   dynClampTask.running = 0;
   dynClampTask.duration = 0;
+  dynClampTask.reqFreq = 0;
+  dynClampTask.setFreq = 0;
 
   DEBUG_MSG( "dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
 	     dynClampTask.loopCnt );
