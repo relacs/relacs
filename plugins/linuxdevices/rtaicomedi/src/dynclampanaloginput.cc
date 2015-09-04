@@ -50,7 +50,6 @@ DynClampAnalogInput::DynClampAnalogInput( void )
   Channels = 0;
   MaxRate = 100000.0;
   IsPrepared = false;
-  IsRunning = false;
   Calibration = 0;
   UnipConverter = 0;
   BipConverter = 0;
@@ -262,7 +261,7 @@ int DynClampAnalogInput::open( const string &device)
   // initialize connection to RTAI-FIFO:
   ostringstream fifoname;
   fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
-  FifoFd = ::open( fifoname.str().c_str(), O_RDONLY );
+  FifoFd = ::open( fifoname.str().c_str(), O_RDONLY | O_NONBLOCK );
   if ( FifoFd < 0 ) {
     setErrorStr( "oping RTAI-FIFO " + fifoname.str() + " failed" );
     return -1;
@@ -614,7 +613,14 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   BufferSize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
   Buffer = new char[BufferSize];
   BufferN = 0;
-  
+
+  // set sleep duration:  
+  int rs = (int)( 0.1*1000.0*traces[0].interval( ReadBufferSize/traces.size()/sizeof(float) ) );
+  if ( rs > 10 )
+    rs = 10;
+  cerr << "SET READSLEEP TO " << rs << '\n';
+  setReadSleep( rs );
+
   if ( traces.success() ) {
     setSettings( traces, BufferSize, ReadBufferSize );
     Settings.addInteger( "number of periods", 0 );
@@ -675,7 +681,6 @@ int DynClampAnalogInput::readData( void )
 
   QMutexLocker locker( mutex() );
 
-  bool failed = false;
   int readn = BufferN*BufferElemSize;
   int maxn = BufferSize - readn;
 
@@ -684,66 +689,49 @@ int DynClampAnalogInput::readData( void )
     cerr << "DynClampAnalogInput::readData: buffer overflow! BufferN=" << BufferN
 	 << " BufferSize=" << BufferSize << " readn=" << readn << " maxn=" << maxn << '\n';
 
-  // try to read twice
-  for ( int tryit = 0; tryit < 1 && ! failed && maxn > 0; tryit++ ) {
-    // read data:
-    ssize_t m = ::read( FifoFd, Buffer + readn, maxn );
-    //ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 1000 );
+  // read data:
+  ssize_t m = ::read( FifoFd, Buffer + readn, maxn );
+  //ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 1000 );
 
-    int ern = errno;
-    if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
-      Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
-      Traces->addErrorStr( ern );
-      failed = true;
-    }
-    else if ( m > 0 ) {
+  int ern = errno;
+  cerr << "readData() " << m << " errno=" << ern << "\n";
+  if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
+    cerr << "fifo error\n";
+    Traces->addErrorStr( "Error while reading from RTAI-FIFO" );
+    Traces->addErrorStr( ern );
+    return -2;
+  }
+  else {
+    cerr << "the other way\n";
+    if ( m > 0 ) {
       maxn -= m;
       readn += m;
       BufferN = readn / BufferElemSize;
     }
-  }
-  
-  if ( failed ) {
-    /*
-    switch( ern ) {
-
-    case EPIPE: 
-      cerr << " DynClampAnalogInput::readData(): buffer-overflow: "
-      	   << strerror( errnoSave ) << '\n';/////TEST/////
-      traces.addErrorStr( deviceFile() + " - buffer-underrun: "
-			+ strerror( errnoSave ) );
-      traces.addError( DaqError::OverflowUnderrun );
-      break;
-
-    case EBUSY:
-      cerr << " DynClampAnalogInput::readData(): device busy: "
-	         << strerror( errnoSave ) << '\n';/////TEST/////
-      traces.addErrorStr( deviceFile() + " - device busy: "
-			+ strerror( errnoSave ) );
-      traces.addError( DaqError::Busy );
-      break;
-
-    default:
-      cerr << " DynClampAnalogInput::readData(): buffer-underrun: "
-	   << "  system: " << strerror( errnoSave )
-	   << " (device file descriptor " << ModuleFd
-	   << '\n';/////TEST/////
-//      traces.addErrorStr( "Error while reading from device-file: " + deviceFile()
-//			+ "  system: " + strerror( errnoSave ) );
-      traces.addError( DaqError::Unknown );
-      break;
-    }
-    */
-    return -2;
-  }
-
-  // no more data to be read:
-  if ( BufferN <= 0 && !IsRunning ) {
-    if ( Traces->front().continuous() ) {
+    cerr << "check running\n";
+    int running = SUBDEV_IN;
+    int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
+    cerr << "got " << retval << " r=" << running << "\n";
+    if ( retval < 0 ) {
+      cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
+	   << ModuleDevice << " failed!\n";
       Traces->addError( DaqError::Unknown );
-      return -2;
     }
-    return -1;
+    else if ( running == E_OVERFLOW ) {
+      cerr << "DynClampAnalogInput::readData(): buffer-overflow\n";
+      Traces->addError( DaqError::OverflowUnderrun );
+    }
+    else if ( running < 0 )
+      Traces->addError( DaqError::DeviceError );
+    else {
+      //	Traces->addErrorStr( "DynClampAnalogOutput::writeData: " + deviceFile() + " is not running!" );
+      // XXX What to do? Acquisition could be simply finished.
+      cerr << "return BufferN " << BufferN << '\n';
+      return BufferN;
+    }
+    cerr << "DynClampAnalogInput::readData: device is not running!"  << '\n';
+    cerr << "return -2";
+    return -2;
   }
 
   //  cerr << "Comedi::readData() end " << BufferN << "\n";
@@ -835,7 +823,6 @@ int DynClampAnalogInput::stop( void )
 
   lock();
   IsPrepared = false;
-  IsRunning = false;
   unlock();
 
   return 0;
@@ -847,7 +834,7 @@ int DynClampAnalogInput::reset( void )
   QMutexLocker locker( mutex() );
 
   int retval = 0;
-  if ( IsPrepared || IsRunning ) {
+  if ( IsPrepared ) {
     int running = SUBDEV_IN;
     retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
@@ -875,7 +862,6 @@ int DynClampAnalogInput::reset( void )
   BufferN = 0;
 
   IsPrepared = false;
-  IsRunning = false;
 
   Settings.clear();
 
@@ -892,10 +878,6 @@ bool DynClampAnalogInput::running( void ) const
 
   int running = SUBDEV_IN;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
-
-  //  cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-  //       << ModuleDevice << " " << running << '\n';
-
   if ( retval < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << ModuleDevice << " failed!\n";

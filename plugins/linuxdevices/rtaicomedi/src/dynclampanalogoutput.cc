@@ -871,6 +871,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
     Sigs = ol;
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+    rtf_reset( FifoFd );
 
   } //  unlock
 
@@ -942,9 +943,14 @@ int DynClampAnalogOutput::writeData( void )
       //	 << ModuleDevice << " failed!\n";
       return -1;
     }
-    if ( !running ) {
-      Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
-			deviceFile() + " is not running!" );
+    if ( running <= 0 ) {
+      if ( running == E_UNDERRUN )
+	Sigs.addError( DaqError::OverflowUnderrun );
+      else if ( running < 0 )
+	Sigs.addError( DaqError::DeviceError );
+      else
+	Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
+			  deviceFile() + " is not running!" );
       cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
       setErrorStr( Sigs );
       return -1;
@@ -1105,7 +1111,14 @@ AnalogOutput::Status DynClampAnalogOutput::status( void ) const
   }
   //  cerr << "DynClampAnalogOutput::running returned " << running << '\n';
 
-  return running>0 ? Running : Idle;
+  if ( running > 0 )
+    return Running;
+  else if ( running == 0 )
+    return Idle;
+  else if ( running == E_UNDERRUN )
+    return Idle;
+  else
+    return UnknownError;
 }
 
 

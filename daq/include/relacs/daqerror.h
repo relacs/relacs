@@ -86,9 +86,9 @@ class DaqError
   static const long long InvalidChannelSequence = 1LL<<34;
 
   static const long long Busy = 1LL<<35;
-  static const long long BufferOverflow = 1LL<<36;
+  static const long long DeviceError = 1LL<<36;
   static const long long OverflowUnderrun = 1LL<<37;
-  static const long long Unknown  = 1LL<<38;
+  static const long long Unknown = 1LL<<38;
 
   static const long long NoIntensity = 1LL<<39;
   static const long long AttNotOpen = 1LL<<40;

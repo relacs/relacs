@@ -71,7 +71,7 @@
 #define MAX_FREQUENCY 90000 //Hz
 
 //* Data buffering:
-#define FIFO_SIZE   64000 // bytes
+#define FIFO_SIZE   4*64000 // bytes
 
 //* DAQ-devices:
 #define MAXSUBDEV    8
@@ -80,6 +80,13 @@
 #define MAXTTLPULSETYPES 6
 
 #define PARAM_CHAN_OFFSET 1000
+
+// subdevice acquisition errors:
+#define E_COMEDI    -1
+#define E_NODATA    -2
+#define E_UNDERRUN  -3
+#define E_OVERFLOW  -4
+#define E_NOFIFO    -5
 
 //* Lookup tables:
 #define MAXLOOKUPTABLES 100
@@ -239,12 +246,6 @@ struct traceChannelIOCT {
 #  endif
 #else
 #  define DEBUG_MSG(msg, args...)
-#endif
-
-#ifdef __KERNEL__
-#  define SDEBUG_MSG(msg, args...) printk( "dynclampmodule: " msg, ## args )
-#else
-#  define SDEBUG_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #endif
 
 

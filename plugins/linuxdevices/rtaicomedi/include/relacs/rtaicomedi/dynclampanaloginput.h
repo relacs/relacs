@@ -242,7 +242,6 @@ private:
   
   unsigned int ChanList[MAXCHANLIST];
   bool IsPrepared;
-  mutable bool IsRunning;
 
     /*! Calibration info. */
   comedi_calibration_t *Calibration;
@@ -259,13 +258,6 @@ private:
   char *Buffer;
     /*! Index to the trace in the internal buffer. */
   int TraceIndex;
-
-  /*
-  vector< DynClampAnalogInput* > DynClampAIs;
-  vector< DynClampAnalogOutput* > DynClampAOs;
-  vector< int > ComediAIsLink;
-  vector< int > ComediAOsLink;
-  */
 
 };
 

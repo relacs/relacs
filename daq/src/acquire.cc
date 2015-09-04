@@ -875,6 +875,7 @@ int Acquire::stopRead( void )
   }
 
   // sleep for two sampleintervals:
+  cerr << "SLEEP FOR " << si << '\n';
   usleep( long( 2000000.0 * si ) );
 
   // wake up all jobs sleeping on AISemaphore:
