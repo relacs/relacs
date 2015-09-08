@@ -89,6 +89,9 @@ void Histogram::notify( void )
 void Histogram::main( void )
 {
   sleep( Duration );
+  if ( interrupt() )
+    return;
+
   bool histinit = true;
   double histmin = 0.0;
   double histmax = 0.0;

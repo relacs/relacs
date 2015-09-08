@@ -183,6 +183,7 @@ bool Control::sleepOn( double t )
 
 void Control::start( void )
 {
+  Interrupt = false;
   Thread->start();
 }
 

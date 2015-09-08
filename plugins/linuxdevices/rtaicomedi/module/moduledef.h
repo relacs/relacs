@@ -217,20 +217,20 @@ struct traceChannelIOCT {
 // *** KERNEL LOGGING STYLE ***
 
 #ifdef __KERNEL__
-#  define ERROR_MSG(msg, args...) printk( KERN_ERR "dynclampmodule: " msg, ## args )
+#  define ERROR_MSG(msg, args...) rt_printk( KERN_ERR "dynclampmodule: " msg, ## args )
 #else
 #  define ERROR_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #endif
 
 #ifdef __KERNEL__
-#  define WARN_MSG(msg, args...) printk( KERN_WARNING "dyclampmodule: " msg, ## args )
+#  define WARN_MSG(msg, args...) rt_printk( KERN_WARNING "dyclampmodule: " msg, ## args )
 #else
 #  define WARN_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #endif
 
 #ifdef RTMODULE_INFO
 #  ifdef __KERNEL__
-#    define INFO_MSG(msg, args...) printk( "dynclampmodule: " msg, ## args )
+#    define INFO_MSG(msg, args...) rt_printk( "dynclampmodule: " msg, ## args )
 #  else
 #    define INFO_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #  endif
@@ -240,7 +240,7 @@ struct traceChannelIOCT {
 
 #ifdef RTMODULE_DEBUG
 #  ifdef __KERNEL__
-#    define DEBUG_MSG(msg, args...) printk( "dynclampmodule: " msg, ## args )
+#    define DEBUG_MSG(msg, args...) rt_printk( "dynclampmodule: " msg, ## args )
 #  else
 #    define DEBUG_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #  endif

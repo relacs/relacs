@@ -4,7 +4,7 @@
 # you should modify the following parameter according to your needs:
 
 KERNEL_PATH=/data/src       # where to put and compile the kernel
-LINUX_KERNEL="3.14.17"      # linux vanilla kernel version (set with -k)
+LINUX_KERNEL="3.14.39"      # linux vanilla kernel version (set with -k)
 KERNEL_SOURCE_NAME="rtai"   # name for kernel source directory to be appended to LINUX_KERNEL
 KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL 
                             # (set with -n)
@@ -15,7 +15,7 @@ RTAI_DIR="magma"            # name of the rtai source directory (set with -r):
                             #   rtai-4.1: rtai release version 4.1
                             #   rtai-x.x: rtai release version x.x
                             #   RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
-RTAI_PATCH="hal-linux-3.14.17-x86-6x.patch" # rtai patch to be used
+RTAI_PATCH="hal-linux-3.14.39-x86-9x.patch" # rtai patch to be used
 SHOWROOM_DIR=showroom       # target directory for rtai-showrom
 
 
@@ -198,17 +198,20 @@ function install_packages {
 
 function check_kernel_patch {
     if test -z "$RTAI_PATCH"; then
+	cd /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/
 	echo
 	echo "Available patches for this machine ($RTAI_MACHINE):"
-	ls -rt /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/*.patch 2> /dev/null | while read LINE; do echo "  ${LINE#/usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/}"; done
+	ls -rt -1 *.patch 2> /dev/null
+	echo
+	LINUX_KERNEL_V=${LINUX_KERNEL%.*}
+	echo "Available patches for this kernel kernel version ($LINUX_KERNEL_V):"
+	ls -rtl -1 *${LINUX_KERNEL_V}*.patch 2> /dev/null
 	echo
 	echo "Available patches for this kernel ($LINUX_KERNEL):"
-	ls -rt /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/*${LINUX_KERNEL}*.patch 2> /dev/null | while read LINE; do echo "  ${LINE#/usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/}"; done
-	RTAI_PATCH="$(ls -rt /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/*-${LINUX_KERNEL}-*.patch 2> /dev/null | tail -n 1)"
-	RTAI_PATCH="${RTAI_PATCH#/usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/}"
+	ls -rtl -1 *${LINUX_KERNEL}*.patch 2> /dev/null
+	RTAI_PATCH="$(ls -rt *-${LINUX_KERNEL}-*.patch 2> /dev/null | tail -n 1)"
 	if test -z "$RTAI_PATCH"; then
-	    RTAI_PATCH="$(ls -rt /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/*.patch 2> /dev/null | tail -n 1)"
-	    RTAI_PATCH="${RTAI_PATCH#/usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/}"
+	    RTAI_PATCH="$(ls -rt *.patch 2> /dev/null | tail -n 1)"
 	fi
 	if ! expr match $RTAI_PATCH ".*$LINUX_KERNEL" > /dev/null; then
 	    if test "x${RTAI_PATCH:0:10}" = "xhal-linux-"; then
@@ -218,6 +221,7 @@ function check_kernel_patch {
 		LINUX_KERNEL="???"
 	    fi
 	fi
+	cd - &> /dev/null
 	echo
 	echo "Choose a patch and set the RTAI_PATCH variable at the top of the script"
 	echo "and the LINUX_KERNEL variable with the corresponding kernel version."

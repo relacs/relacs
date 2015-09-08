@@ -226,10 +226,9 @@ void releaseAnalogSubdevice( struct subdeviceT *subdev );
 int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev );
 int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev );
 int startSubdevice( struct subdeviceT *subdev );
-int stopSubdevice( struct subdeviceT *subdev );
+int stopSubdevice( struct subdeviceT *subdev, int kill );
 void dynclamp_loop( long dummy );
 int init_dynclamp_loop( void );
-void finish_dynclamp_loop( void );
 void cleanup_dynclamp_loop( void );
 
 int setDigitalIO( struct dioIOCT *dioIOC );
@@ -420,8 +419,8 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
       return -EFAULT;
     }
     else
-      DEBUG_MSG( "openComediDevice: Created FIFO with %d bytes buffer size for subdevice %i, device %s\n",
-		 FIFO_SIZE, deviceIOC->subdev, devname );
+      DEBUG_MSG( "openComediDevice: Created FIFO %d with %d bytes buffer size for subdevice %i, device %s\n",
+		 subdev->fifo, FIFO_SIZE, deviceIOC->subdev, devname );
 
     // pass FIFO properties to user:
     deviceIOC->fifoIndex = subdev->fifo;
@@ -591,7 +590,7 @@ void releaseSubdevice( int subdev )
   if ( subdevN > 0 )
     return;
 
-  // close comedi device:
+  // otherwise close comedi device:
   DEBUG_MSG( "releaseSubdevice: release comedi device for last subdev id %d\n", subdev );
   if ( device && comedi_close( device ) < 0 )
     WARN_MSG( "releaseSubdevice WARNING: failed to close comedi device %s!\n", devname );
@@ -605,20 +604,14 @@ void releaseSubdevice( int subdev )
 void releaseAnalogSubdevice( struct subdeviceT *subdev )
 {
   if ( subdev->running > 0 ) {
-    DEBUG_MSG( "releaseAnalogSubdevice: stop subdevice %d\n", subdev->subdev );
-    stopSubdevice( subdev );
+    DEBUG_MSG( "releaseAnalogSubdevice: stop and potentially kill subdevice %d\n", subdev->subdev );
+    stopSubdevice( subdev, /*kill=*/1 );
   }
-
-  // stop periodic task:
-  if ( subdev->type == SUBDEV_IN )
-    cleanup_dynclamp_loop();
-
   // delete FIFO:
   rtf_destroy( subdev->fifo );
   // reset subdevice structure:
   memset( subdev, 0, sizeof(struct subdeviceT) );
   subdev->subdev = -1;
-  DEBUG_MSG( "releaseAnalogSubdevice: released subdevice %d and fifo\n", subdev->subdev );
 }
 
 
@@ -793,9 +786,6 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d for subdevice %d\n",
 	     subdev->duration, subdev->startsource, subdev->subdev );
 
-  // reset fifo:
-  rtf_reset( subdev->fifo );
-
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.reqFreq ) {
     dynClampTask.reqFreq = subdev->frequency;
@@ -855,13 +845,22 @@ int startSubdevice( struct subdeviceT *subdev )
 }
 
 
-int stopSubdevice( struct subdeviceT *subdev )
+int stopSubdevice( struct subdeviceT *subdev, int kill )
 { 
   int i;
 
+  if ( kill && aisubdev.running <= 0 ) {
+    // this needs to be called BEFORE aisubdev.running is set to zero and the loop return!!!
+    DEBUG_MSG( "stopSubdevice: halt dynclamp task\n" );
+    cleanup_dynclamp_loop();
+  }
+
   // stopping ai stops also ao:
   if ( subdev->type == SUBDEV_IN )
-    stopSubdevice( &aosubdev );
+    stopSubdevice( &aosubdev, 0 );
+
+  if ( subdev->running <= 0 )
+    return 0;
 
   // stop subdevice:
   DEBUG_MSG( "stopSubdevice: subdevice %d\n", subdev->subdev );
@@ -1273,7 +1272,7 @@ void dynclamp_loop( long dummy )
 	     aosubdev.duration <= dynClampTask.loopCnt ) {
 	  DEBUG_MSG( "dynclamp_loop: finished ao subdevice at loop %lu\n", dynClampTask.loopCnt );
 	  rtf_reset( aosubdev.fifo );
-	  stopSubdevice( &aosubdev );
+	  stopSubdevice( &aosubdev, /*kill=*/0 );
 #ifdef ENABLE_TTLPULSE
 	  for ( iT = 0; iT < MAXTTLPULSES && ttlEndAOInsn[iT].n > 0; iT++ ) {
 	    retVal = comedi_do_insn( device, &ttlEndAOInsn[iT] );
@@ -1308,14 +1307,14 @@ void dynclamp_loop( long dummy )
 	      if ( retVal != sizeof(float) ) {
 		if ( retVal == EINVAL ) {
 		  ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-		  stopSubdevice( &aosubdev );
+		  ERROR_MSG( "dynclamp_loop: Stop dynClampTask." );
 		  aosubdev.running = E_NOFIFO;
-		  stopSubdevice( &aisubdev );
-		  finish_dynclamp_loop();
+		  dynClampTask.running = 0;
+		  dynClampTask.duration = 0;
 		  return;
 		}
 		aosubdev.running = E_UNDERRUN;
-		ERROR_MSG( "dynclamp_loop: ERROR! Data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+		ERROR_MSG( "dynclamp_loop: ERROR! rtf_get -> data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
 		break;
 	      }
 #ifdef ENABLE_COMPUTATION
@@ -1443,9 +1442,7 @@ void dynclamp_loop( long dummy )
       if ( !aisubdev.continuous &&
 	   aisubdev.chanN > 0 &&
 	   aisubdev.duration <= dynClampTask.loopCnt ) {
-	stopSubdevice( &aisubdev );
-	finish_dynclamp_loop();
-	return;
+	stopSubdevice( &aisubdev, /*kill=*/1 );
       }
 
       // for every ai channel:
@@ -1468,7 +1465,6 @@ void dynclamp_loop( long dummy )
 	  statusInput[aiacquisitiontimestatusinx] = 1e-9*dsampletime;
 #endif
 	  if ( retVal < 1 ) {
-	    stopSubdevice( &aisubdev );
 	    aisubdev.running = E_NODATA;
 	    ERROR_MSG( "dynclamp_loop: ERROR! failed to read data from AI subdevice channel %d at loopCnt %lu\n",
 		       iC, dynClampTask.loopCnt );
@@ -1477,9 +1473,8 @@ void dynclamp_loop( long dummy )
 	      aisubdev.running = E_COMEDI;
 	      ERROR_MSG( "dynclamp_loop: ERROR! failed to read from AI subdevice channel %d at loopCnt %lu\n",
 			 iC, dynClampTask.loopCnt );
+	      continue;
 	    }
-	    finish_dynclamp_loop();
-	    return;
 	  }
 	  // convert to voltage:
 #ifdef ENABLE_AICONVERSIONTIME
@@ -1500,21 +1495,13 @@ void dynclamp_loop( long dummy )
 	  else
 	    pChan->voltage = statusInput[pChan->chan]*pChan->scale;
 	}
-	  
-#ifdef RTMODULE_DEBUG
-	if ( aisubdev.running < 0 )
-	  ERROR_MSG( "dynclamp_loop: ERROR! ai subdevice somehow not running\n" );
-#endif
 	// write to FIFO:
 	retVal = rtf_put( aisubdev.fifo, &pChan->voltage, sizeof(float) );
-#ifdef RTMODULE_DEBUG
-	if ( aisubdev.running == 0 )
-	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put turned ai subdevice not running\n" );
-#endif
-
 	if ( retVal != sizeof(float) ) {
 	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
-	  stopSubdevice( &aisubdev );
+	  rtf_reset( aisubdev.fifo );
+	  dynClampTask.running = 0;
+	  dynClampTask.duration = 0;
 	  if ( retVal == EINVAL ) {
 	    aisubdev.running = E_NOFIFO;
 	    ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
@@ -1524,14 +1511,8 @@ void dynclamp_loop( long dummy )
 	    ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
 		       dynClampTask.loopCnt );
 	  }
-	  finish_dynclamp_loop();
 	  return;
 	}
-
-#ifdef RTMODULE_DEBUG
-	if ( aisubdev.running < 0 )
-	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put error handling turned ai subdevice not running\n" );
-#endif
 
 #ifdef ENABLE_TRIGGER
 	// trigger:
@@ -1605,9 +1586,14 @@ void dynclamp_loop( long dummy )
 #endif
 
   } // END OF DYNCLAMP LOOP
+    
+  dynClampTask.running = 0;
+  dynClampTask.duration = 0;
+  dynClampTask.reqFreq = 0;
+  dynClampTask.setFreq = 0;
 
-  stopSubdevice( &aisubdev );
-  finish_dynclamp_loop();
+  DEBUG_MSG( "dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
+	     dynClampTask.loopCnt );
 }
 
 
@@ -1626,8 +1612,6 @@ int init_dynclamp_loop( void )
   int retVal;
   RTIME periodTicks;
 
-  cleanup_dynclamp_loop();
-
   DEBUG_MSG( "init_dynclamp_loop: Trying to initialize dynamic clamp RTAI task...\n" );
 
 #ifndef CONFIG_RTAI_FPU_SUPPORT
@@ -1640,9 +1624,6 @@ int init_dynclamp_loop( void )
 	       dynClampTask.reqFreq, MAX_FREQUENCY );
     return -1;
   }
-
-  // we need periodic mode:
-  rt_set_periodic_mode();
 
   // initializing rt-task for dynamic clamp with high priority:
   priority = RT_SCHED_HIGHEST_PRIORITY;
@@ -1657,6 +1638,8 @@ int init_dynclamp_loop( void )
   dynClampTask.inuse = 1;
   DEBUG_MSG( "init_dynclamp_loop: initialized dynamic clamp RTAI task. Trying to make it periodic...\n" );
 
+  // DO NOT CALL rt_set_periodic_mode();
+  // periodic mode is the default. Calling this function hangs the computer...
   // compute periods:
   periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.reqFreq ) );  
   dynClampTask.periodLengthNanos = count2nano( periodTicks );
@@ -1669,7 +1652,8 @@ int init_dynclamp_loop( void )
   // START rt-task for dynamic clamp as periodic:
   if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time() + periodTicks, periodTicks ) 
       != 0 ) {
-    printk( "init_dynclamp_loop ERROR: failed to start periodic real-time task for data acquisition! loading of module failed!\n" );
+    ERROR_MSG( "init_dynclamp_loop ERROR: failed to make real-time task periodic!\n" );
+    cleanup_dynclamp_loop();
     return -3;
   }
   INFO_MSG( "init_dynclamp_loop: periodic task successfully started... requested freq: %d , accepted freq: ~%u (period=%uns)\n", 
@@ -1679,22 +1663,9 @@ int init_dynclamp_loop( void )
 }
 
 
-void finish_dynclamp_loop( void )
-{
-  dynClampTask.running = 0;
-  dynClampTask.duration = 0;
-  dynClampTask.reqFreq = 0;
-  dynClampTask.setFreq = 0;
-  DEBUG_MSG( "finish_dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
-	     dynClampTask.loopCnt );
-}
-
-
 void cleanup_dynclamp_loop( void )
 {
   if ( dynClampTask.inuse ) {
-    if (   dynClampTask.running )
-      stopSubdevice( &aisubdev );
     stop_rt_timer();
     rt_task_delete( &dynClampTask.rtTask );
     memset( &dynClampTask, 0, sizeof(struct dynClampTaskT) );
@@ -1739,10 +1710,9 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     return -ENOTTY;
   }
   /*
-  INFO_MSG( "dynclampmodule_ioctl: user triggered ioctl %d %s\n",
-	    _IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
+  DEBUG_MSG( "dynclampmodule_ioctl: user triggered ioctl %d %s\n",
+             _IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
   */
-
   mutex_lock( &mutex );
 
   switch( cmd ) {
@@ -1973,12 +1943,10 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_STOP_SUBDEV:
     subdevtype = (enum subdevTypes)arg;
-    if ( subdevtype == SUBDEV_IN ) {
-      rc = stopSubdevice( &aisubdev );
-      cleanup_dynclamp_loop();
-    }
+    if ( subdevtype == SUBDEV_IN )
+      rc = stopSubdevice( &aisubdev, /*kill=*/1 );
     else if ( subdevtype == SUBDEV_OUT )
-      rc = stopSubdevice( &aosubdev );
+      rc = stopSubdevice( &aosubdev, /*kill=*/1 );
     else
       rc = -EFAULT;
     break;

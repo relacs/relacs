@@ -618,6 +618,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   int rs = (int)( 0.1*1000.0*traces[0].interval( ReadBufferSize/traces.size()/sizeof(float) ) );
   if ( rs > 10 )
     rs = 10;
+  rs = 0; // XXX
   cerr << "SET READSLEEP TO " << rs << '\n';
   setReadSleep( rs );
 
@@ -694,40 +695,46 @@ int DynClampAnalogInput::readData( void )
   //ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 1000 );
 
   int ern = errno;
-  cerr << "readData() " << m << " errno=" << ern << "\n";
-  if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
-    cerr << "fifo error\n";
-    Traces->addErrorStr( "Error while reading from RTAI-FIFO" );
-    Traces->addErrorStr( ern );
-    return -2;
+  //cerr << "readData() " << m << " errno=" << ern << "\n";
+  if ( m < 0 ) {
+    if ( ern == EAGAIN || ern == EINTR ) {
+      // EINTR = 4
+      // EAGAIN = 11
+      //      cerr << "return EAGAIN BufferN " << BufferN << '\n';
+      return 0;
+    }
+    else {
+      cerr << "DynClampAnalogInput::readData() -> fifo error\n";
+      Traces->addErrorStr( "Error while reading from RTAI-FIFO" );
+      Traces->addErrorStr( ern );
+      return -2;
+    }
   }
   else {
-    cerr << "the other way\n";
     if ( m > 0 ) {
       maxn -= m;
       readn += m;
       BufferN = readn / BufferElemSize;
     }
-    cerr << "check running\n";
     int running = SUBDEV_IN;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
-    cerr << "got " << retval << " r=" << running << "\n";
+    //    cerr << "got " << retval << " r=" << running << "\n";
     if ( retval < 0 ) {
-      cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
+      cerr << "DynClampAnalogInput::readData() -> ioctl command IOC_CHK_RUNNING on device "
 	   << ModuleDevice << " failed!\n";
       Traces->addError( DaqError::Unknown );
     }
     else if ( running == E_OVERFLOW ) {
-      cerr << "DynClampAnalogInput::readData(): buffer-overflow\n";
+      cerr << "DynClampAnalogInput::readData() -> buffer-overflow\n";
       Traces->addError( DaqError::OverflowUnderrun );
     }
     else if ( running < 0 )
       Traces->addError( DaqError::DeviceError );
-    else {
+    else if ( running > 0 ) {
       //	Traces->addErrorStr( "DynClampAnalogOutput::writeData: " + deviceFile() + " is not running!" );
       // XXX What to do? Acquisition could be simply finished.
-      cerr << "return BufferN " << BufferN << '\n';
-      return BufferN;
+      // cerr << "return BufferN " << BufferN << '\n';
+      return m/BufferElemSize;
     }
     cerr << "DynClampAnalogInput::readData: device is not running!"  << '\n';
     cerr << "return -2";
@@ -736,7 +743,7 @@ int DynClampAnalogInput::readData( void )
 
   //  cerr << "Comedi::readData() end " << BufferN << "\n";
 
-  return BufferN;
+  return m/BufferElemSize;
 }
 
 
