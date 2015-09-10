@@ -616,9 +616,8 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 
   // set sleep duration:  
   int rs = (int)( 0.1*1000.0*traces[0].interval( ReadBufferSize/traces.size()/sizeof(float) ) );
-  if ( rs > 10 )
-    rs = 10;
-  rs = 0; // XXX
+  if ( rs > 5 )
+    rs = 5;
   cerr << "SET READSLEEP TO " << rs << '\n';
   setReadSleep( rs );
 

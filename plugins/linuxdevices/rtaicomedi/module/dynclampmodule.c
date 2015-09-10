@@ -7,6 +7,7 @@
 #include <linux/slab.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
+#include <linux/delay.h>
 
 #include <rtai.h>
 #include <rtai_fifos.h>
@@ -226,9 +227,10 @@ void releaseAnalogSubdevice( struct subdeviceT *subdev );
 int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev );
 int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev );
 int startSubdevice( struct subdeviceT *subdev );
-int stopSubdevice( struct subdeviceT *subdev, int kill );
+int stopSubdevice( struct subdeviceT *subdev );
 void dynclamp_loop( long dummy );
 int init_dynclamp_loop( void );
+void finish_dynclamp_loop( void );
 void cleanup_dynclamp_loop( void );
 
 int setDigitalIO( struct dioIOCT *dioIOC );
@@ -604,9 +606,15 @@ void releaseSubdevice( int subdev )
 void releaseAnalogSubdevice( struct subdeviceT *subdev )
 {
   if ( subdev->running > 0 ) {
-    DEBUG_MSG( "releaseAnalogSubdevice: stop and potentially kill subdevice %d\n", subdev->subdev );
-    stopSubdevice( subdev, /*kill=*/1 );
+    DEBUG_MSG( "releaseAnalogSubdevice: stop subdevice %d\n", subdev->subdev );
+    stopSubdevice( subdev );
   }
+
+  // stop periodic task:
+  if ( subdev->type == SUBDEV_IN )
+    cleanup_dynclamp_loop();
+
+  DEBUG_MSG( "releaseAnalogSubdevice: release subdevice %d and fifo %d\n", subdev->subdev, subdev->fifo );
   // delete FIFO:
   rtf_destroy( subdev->fifo );
   // reset subdevice structure:
@@ -786,6 +794,9 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d for subdevice %d\n",
 	     subdev->duration, subdev->startsource, subdev->subdev );
 
+  // reset fifo:
+  rtf_reset( subdev->fifo );
+
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.reqFreq ) {
     dynClampTask.reqFreq = subdev->frequency;
@@ -845,22 +856,13 @@ int startSubdevice( struct subdeviceT *subdev )
 }
 
 
-int stopSubdevice( struct subdeviceT *subdev, int kill )
+int stopSubdevice( struct subdeviceT *subdev )
 { 
   int i;
 
-  if ( kill && aisubdev.running <= 0 ) {
-    // this needs to be called BEFORE aisubdev.running is set to zero and the loop return!!!
-    DEBUG_MSG( "stopSubdevice: halt dynclamp task\n" );
-    cleanup_dynclamp_loop();
-  }
-
   // stopping ai stops also ao:
   if ( subdev->type == SUBDEV_IN )
-    stopSubdevice( &aosubdev, 0 );
-
-  if ( subdev->running <= 0 )
-    return 0;
+    stopSubdevice( &aosubdev );
 
   // stop subdevice:
   DEBUG_MSG( "stopSubdevice: subdevice %d\n", subdev->subdev );
@@ -1272,7 +1274,7 @@ void dynclamp_loop( long dummy )
 	     aosubdev.duration <= dynClampTask.loopCnt ) {
 	  DEBUG_MSG( "dynclamp_loop: finished ao subdevice at loop %lu\n", dynClampTask.loopCnt );
 	  rtf_reset( aosubdev.fifo );
-	  stopSubdevice( &aosubdev, /*kill=*/0 );
+	  stopSubdevice( &aosubdev );
 #ifdef ENABLE_TTLPULSE
 	  for ( iT = 0; iT < MAXTTLPULSES && ttlEndAOInsn[iT].n > 0; iT++ ) {
 	    retVal = comedi_do_insn( device, &ttlEndAOInsn[iT] );
@@ -1307,10 +1309,10 @@ void dynclamp_loop( long dummy )
 	      if ( retVal != sizeof(float) ) {
 		if ( retVal == EINVAL ) {
 		  ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-		  ERROR_MSG( "dynclamp_loop: Stop dynClampTask." );
+		  stopSubdevice( &aosubdev );
 		  aosubdev.running = E_NOFIFO;
-		  dynClampTask.running = 0;
-		  dynClampTask.duration = 0;
+		  stopSubdevice( &aisubdev );
+		  finish_dynclamp_loop();
 		  return;
 		}
 		aosubdev.running = E_UNDERRUN;
@@ -1442,7 +1444,9 @@ void dynclamp_loop( long dummy )
       if ( !aisubdev.continuous &&
 	   aisubdev.chanN > 0 &&
 	   aisubdev.duration <= dynClampTask.loopCnt ) {
-	stopSubdevice( &aisubdev, /*kill=*/1 );
+	stopSubdevice( &aisubdev );
+	finish_dynclamp_loop();
+	return;
       }
 
       // for every ai channel:
@@ -1465,6 +1469,7 @@ void dynclamp_loop( long dummy )
 	  statusInput[aiacquisitiontimestatusinx] = 1e-9*dsampletime;
 #endif
 	  if ( retVal < 1 ) {
+	    stopSubdevice( &aisubdev );
 	    aisubdev.running = E_NODATA;
 	    ERROR_MSG( "dynclamp_loop: ERROR! failed to read data from AI subdevice channel %d at loopCnt %lu\n",
 		       iC, dynClampTask.loopCnt );
@@ -1473,8 +1478,9 @@ void dynclamp_loop( long dummy )
 	      aisubdev.running = E_COMEDI;
 	      ERROR_MSG( "dynclamp_loop: ERROR! failed to read from AI subdevice channel %d at loopCnt %lu\n",
 			 iC, dynClampTask.loopCnt );
-	      continue;
 	    }
+	    finish_dynclamp_loop();
+	    return;
 	  }
 	  // convert to voltage:
 #ifdef ENABLE_AICONVERSIONTIME
@@ -1499,9 +1505,7 @@ void dynclamp_loop( long dummy )
 	retVal = rtf_put( aisubdev.fifo, &pChan->voltage, sizeof(float) );
 	if ( retVal != sizeof(float) ) {
 	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
-	  rtf_reset( aisubdev.fifo );
-	  dynClampTask.running = 0;
-	  dynClampTask.duration = 0;
+	  stopSubdevice( &aisubdev );
 	  if ( retVal == EINVAL ) {
 	    aisubdev.running = E_NOFIFO;
 	    ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
@@ -1511,6 +1515,7 @@ void dynclamp_loop( long dummy )
 	    ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
 		       dynClampTask.loopCnt );
 	  }
+	  finish_dynclamp_loop();
 	  return;
 	}
 
@@ -1586,14 +1591,9 @@ void dynclamp_loop( long dummy )
 #endif
 
   } // END OF DYNCLAMP LOOP
-    
-  dynClampTask.running = 0;
-  dynClampTask.duration = 0;
-  dynClampTask.reqFreq = 0;
-  dynClampTask.setFreq = 0;
 
-  DEBUG_MSG( "dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
-	     dynClampTask.loopCnt );
+  stopSubdevice( &aisubdev );
+  finish_dynclamp_loop();
 }
 
 
@@ -1611,6 +1611,8 @@ int init_dynclamp_loop( void )
   int dummy = 23;
   int retVal;
   RTIME periodTicks;
+
+  cleanup_dynclamp_loop();
 
   DEBUG_MSG( "init_dynclamp_loop: Trying to initialize dynamic clamp RTAI task...\n" );
 
@@ -1662,11 +1664,26 @@ int init_dynclamp_loop( void )
 }
 
 
+void finish_dynclamp_loop( void )
+{
+  dynClampTask.running = 0;
+  dynClampTask.duration = 0;
+  dynClampTask.reqFreq = 0;
+  dynClampTask.setFreq = 0;
+  DEBUG_MSG( "finish_dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
+	     dynClampTask.loopCnt );
+}
+
+
 void cleanup_dynclamp_loop( void )
 {
   if ( dynClampTask.inuse ) {
+    if ( dynClampTask.running )
+      stopSubdevice( &aisubdev );
+    msleep( 100 );
     rt_task_delete( &dynClampTask.rtTask );
     memset( &dynClampTask, 0, sizeof(struct dynClampTaskT) );
+    dynClampTask.inuse = 0;
     INFO_MSG( "cleanup_dynclamp_loop: stopped periodic task\n" );
   }
 }
@@ -1941,10 +1958,12 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_STOP_SUBDEV:
     subdevtype = (enum subdevTypes)arg;
-    if ( subdevtype == SUBDEV_IN )
-      rc = stopSubdevice( &aisubdev, /*kill=*/1 );
+    if ( subdevtype == SUBDEV_IN ) {
+      rc = stopSubdevice( &aisubdev );
+      cleanup_dynclamp_loop();
+    }
     else if ( subdevtype == SUBDEV_OUT )
-      rc = stopSubdevice( &aosubdev, /*kill=*/1 );
+      rc = stopSubdevice( &aosubdev );
     else
       rc = -EFAULT;
     break;
@@ -2176,20 +2195,24 @@ int dynclampmodule_close( struct inode *devFile, struct file *fModule )
     mutex_lock( &mutex );
     for ( iS = subdevN-1; iS>=0; iS-- )
       releaseSubdevice( subdevices[iS] );
+    cleanup_dynclamp_loop();
     init_globals();
     mutex_unlock( &mutex );
     return 0;
   }
-
-  // stop & close specified subdevice (and device):
-  mutex_lock( &mutex );
-  releaseSubdevice( reqCloseSubdev );
-  DEBUG_MSG( "dynclampmodule_close: closed subdevice %d\n", reqCloseSubdev );
-  if ( subdevN <= 0 )
-    init_globals();
-  reqCloseSubdev = -1;
-  mutex_unlock( &mutex );
-  return 0;
+  else {
+    // stop & close specified subdevice (and device):
+    mutex_lock( &mutex );
+    releaseSubdevice( reqCloseSubdev );
+    DEBUG_MSG( "dynclampmodule_close: closed subdevice %d\n", reqCloseSubdev );
+    if ( subdevN <= 0 ) {
+      cleanup_dynclamp_loop();
+      init_globals();
+    }
+    reqCloseSubdev = -1;
+    mutex_unlock( &mutex );
+    return 0;
+  }
 }
 
 
