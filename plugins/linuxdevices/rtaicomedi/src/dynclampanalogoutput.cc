@@ -963,8 +963,8 @@ int DynClampAnalogOutput::writeData( void )
     int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
     // XXX lets keep the number of transfered data small:
     // XXX this should be translated to the FIFO buffer size!!!
-    if ( maxn > Sigs[0].indices( 0.01 ) )
-      maxn = Sigs[0].indices( 0.01 );
+    if ( maxn > Sigs[0].indices( 0.1 ) )
+      maxn = Sigs[0].indices( 0.1 );
     int bytesConverted = 0;
     for ( int i=0; i<maxn && Sigs[0].deviceWriting(); i++ ) {
       for ( int k=0; k<Sigs.size(); k++ ) {

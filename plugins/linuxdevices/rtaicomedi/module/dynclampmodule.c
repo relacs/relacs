@@ -838,11 +838,11 @@ int startSubdevice( struct subdeviceT *subdev )
 
     // start dynamic clamp task: 
     retVal = init_dynclamp_loop();
-    if ( retVal < 0 ) {
-      ERROR_MSG( "startSubdevice: failed to start dynamic clamp loop for subdevice %d!\n",
-		 subdev->subdev );
+    if ( retVal != 0 ) {
+      ERROR_MSG( "startSubdevice: failed to start dynamic clamp loop for subdevice %d. error=%d!\n",
+		 subdev->subdev, retVal );
       subdev->running = 0;
-      return -ENOMEM;
+      return retVal;
     }
     DEBUG_MSG( "startSubdevice: successfully started dynclamp_loop!\n" );
   }
@@ -1624,7 +1624,7 @@ int init_dynclamp_loop( void )
   if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY ) {
     ERROR_MSG( "init_dynclamp_loop ERROR: %dHz -> invalid dynamic clamp frequency. Valid range is 1 .. %dHz\n", 
 	       dynClampTask.reqFreq, MAX_FREQUENCY );
-    return -1;
+    return -EINVAL;
   }
 
   // initializing rt-task for dynamic clamp with high priority:
@@ -1632,10 +1632,18 @@ int init_dynclamp_loop( void )
   rt_linux_use_fpu( usesFPU );      /* declare if we use the FPU */
   retVal = rt_task_init( &dynClampTask.rtTask, dynclamp_loop, dummy, stackSize, 
 			 priority, usesFPU, signal );
-  if ( retVal ) {
-    ERROR_MSG( "init_dynclamp_loop ERROR: failed to initialize real-time task for dynamic clamp! stacksize was set to %d bytes.\n", 
+  if ( retVal != 0 ) {
+    ERROR_MSG( "rt_task_init() failed with return value %d.\n", retVal );
+    if ( retVal == ENOMEM )
+      ERROR_MSG( "init_dynclamp_loop ERROR: failed to allocate stack! stacksize was set to %d bytes.\n", 
 	       stackSize );
-    return -1;
+    else if ( retVal == EINVAL ) {
+      ERROR_MSG( "init_dynclamp_loop ERROR: task already in use!\n" );
+      retVal = EBUSY;
+    }
+    else
+      ERROR_MSG( "init_dynclamp_loop ERROR: failed to initialize real-time task for dynamic clamp!\n" );
+    return -retVal;
   }
   dynClampTask.inuse = 1;
   DEBUG_MSG( "init_dynclamp_loop: initialized dynamic clamp RTAI task. Trying to make it periodic...\n" );
@@ -1668,7 +1676,6 @@ void finish_dynclamp_loop( void )
 {
   dynClampTask.running = 0;
   dynClampTask.duration = 0;
-  dynClampTask.reqFreq = 0;
   dynClampTask.setFreq = 0;
   DEBUG_MSG( "finish_dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
 	     dynClampTask.loopCnt );
@@ -1986,7 +1993,8 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       rc = -EFAULT;
       break;
     }
-    DEBUG_MSG( "ioctl: running = %d for subdev %s\n", running, tmp == SUBDEV_IN ? "AI" : "AO" );
+    if ( running != 1 )
+      DEBUG_MSG( "ioctl: running = %d for subdev %s\n", running, tmp == SUBDEV_IN ? "AI" : "AO" );
     retVal = put_user( running, (int __user *)arg );
     rc = retVal == 0 ? 0 : -EFAULT;
     break;
