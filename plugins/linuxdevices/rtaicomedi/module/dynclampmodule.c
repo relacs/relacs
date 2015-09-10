@@ -1638,10 +1638,9 @@ int init_dynclamp_loop( void )
   dynClampTask.inuse = 1;
   DEBUG_MSG( "init_dynclamp_loop: initialized dynamic clamp RTAI task. Trying to make it periodic...\n" );
 
-  // DO NOT CALL rt_set_periodic_mode();
-  // periodic mode is the default. Calling this function hangs the computer...
   // compute periods:
-  periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.reqFreq ) );  
+  //  periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.reqFreq ) );
+  periodTicks = nano2count( 1000000000/dynClampTask.reqFreq );
   dynClampTask.periodLengthNanos = count2nano( periodTicks );
   dynClampTask.setFreq = 1000000000 / dynClampTask.periodLengthNanos;
 #ifdef ENABLE_COMPUTATION
@@ -1666,7 +1665,6 @@ int init_dynclamp_loop( void )
 void cleanup_dynclamp_loop( void )
 {
   if ( dynClampTask.inuse ) {
-    stop_rt_timer();
     rt_task_delete( &dynClampTask.rtTask );
     memset( &dynClampTask, 0, sizeof(struct dynClampTaskT) );
     INFO_MSG( "cleanup_dynclamp_loop: stopped periodic task\n" );
@@ -2239,6 +2237,12 @@ static int __init init_dynclampmodule( void )
   // initialize global variables:
   init_globals();
 
+  // rt_set_periodic_mode();
+  // periodic mode is the default. Calling this function hangs the computer...
+
+  rt_set_oneshot_mode();
+  start_rt_timer(1);
+
   return retVal;
 }
 
@@ -2258,6 +2262,9 @@ static void __exit cleanup_dynclampmodule( void )
   mutex_unlock( &mutex );
 
   mutex_destroy( &mutex );
+
+  // stop rtai timer:
+  stop_rt_timer();
 
   // unregister module device file:
   cdev_del( rtcdev );

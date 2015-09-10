@@ -99,6 +99,7 @@ function print_usage {
     echo "  remove     : remove the complete source trees of the specified targets"
     echo "  reconfigure: reconfigure the kernel and make a full build of all targets"
     echo "  test       : test the current kernel and write reports to the current working directory"
+    echo "  test all   : test the current kernel/kthreads/user and write reports to the current working directory"
     echo ""
     echo "If no action is specified, a full download and build is performed for all targets (except showroom)."
     echo ""
@@ -451,6 +452,23 @@ function remove_kernel {
     fi
 }
 
+function run_test {
+    DIR=$1
+    TEST=$2
+    echo
+    echo "running $DIR/$TEST test"
+    TEST_RESULTS=results-$DIR-$TEST.dat
+    TEST_DIR=/usr/realtime/testsuite/$DIR/$TEST
+    rm -f $TEST_RESULTS
+    cd $TEST_DIR
+    rm -f $TEST_RESULTS
+    trap true SIGINT   # ^C should terminate ./run but not this script
+    ./run | tee results-$DIR-$TEST.dat
+    trap - SIGINT
+    cd -
+    mv $TEST_DIR/$TEST_RESULTS .
+}
+
 function test_rtaikernel {
     if test $(uname -r) != ${LINUX_KERNEL}-${KERNEL_NAME} -a $(uname -r) != ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
 	echo "Need a running rtai kernel!"
@@ -537,18 +555,7 @@ function test_rtaikernel {
     fi
     echo "successfully loaded and unloaded rtai modules"
 
-    # latency test:
-    echo "running latency test"
-    LATENCY_TEST_DIR=/usr/realtime/testsuite/kern/latency
-    cd $LATENCY_TEST_DIR
-    rm -f latencies.dat
-    trap true SIGINT   # ^C should terminate ./run but not this script
-    ./run | tee latencies.dat
-    trap - SIGINT
-    cd -
-
-    # switch test:
-    echo "running switch test"
+    # check for kernel log messages:
     if ! test -f /var/log/messages; then
 	echo "/var/log/messages does not exist!"
 	echo "enable it by modifying the file /etc/rsyslog.d/50-default.conf :"
@@ -562,26 +569,21 @@ function test_rtaikernel {
 	echo "and run"
 	echo "$ restart rsyslog"
 	echo
-	rm $LATENCY_TEST_DIR/latencies.dat
 	return 1
     fi
-    SWITCHES_TEST_DIR=/usr/realtime/testsuite/kern/switches
-    cd $SWITCHES_TEST_DIR
-    rm -f switches.dat
-    trap true SIGINT   # ^C should terminate ./run but not this script
-    ./run | tee switches.dat
-    trap - SIGINT
-    cd -
 
-    # preempt test:
-    echo "running preempt test"
-    PREEMPT_TEST_DIR=/usr/realtime/testsuite/kern/preempt
-    cd $PREEMPT_TEST_DIR
-    rm -f preempt.dat
-    trap true SIGINT   # ^C should terminate ./run but not this script
-    ./run | tee preempt.dat
-    trap - SIGINT
-    cd -
+    # kernel tests:
+    run_test kern latency
+    run_test kern switches
+    run_test kern preempt
+    if test "x$1" = "xall"; then
+	run_test kthreads latency
+	run_test kthreads switches
+	run_test kthreads preempt
+	run_test user latency
+	run_test user switches
+	run_test user preempt
+    fi
 
     # report:
     echo "finished all tests"
@@ -593,17 +595,18 @@ function test_rtaikernel {
     if test -n "$NAME" -a -n "$RESULT"; then
 	REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-${NAME}-${RESULT}"
 	{
-	    echo "Latency test:"
-	    sed -e '/^\*/d' $LATENCY_TEST_DIR/latencies.dat
-	    echo
-	    echo
-	    echo "Switches test:"
-	    sed -e '/^\*/d' $SWITCHES_TEST_DIR/switches.dat
-	    echo
-	    echo
-	    echo "Preempt test:"
-	    sed -e '/^\*/d' $PREEMPT_TEST_DIR/preempt.dat
-	    echo
+	    for TD in kern kthreads user; do
+		for TN in latency switches preempt; do
+		    TEST_RESULTS=results-$TD-$TN.dat
+		    if test -f "$TEST_RESULTS"; then
+			echo "$TD/$TN test:"
+			sed -e '/^\*/d' $TEST_RESULTS
+			rm $TEST_RESULTS
+			echo
+			echo
+		    fi
+		done
+	    done
 	    if $RTAIMATH_FAILED; then
 		echo "Failed to load rtai_math module."
 		echo
@@ -616,7 +619,11 @@ function test_rtaikernel {
 	    echo
 	    echo "dmesg:"
 	    echo
-	    dmesg | tail -n 50
+	    if test "x$1" = "xall"; then
+		dmesg
+	    else
+		dmesg | tail -n 50
+	    fi
 	} > latencies-$REPORT
 	cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
 	chown --reference=. latencies-$REPORT
@@ -625,9 +632,6 @@ function test_rtaikernel {
 	echo "saved kernel configuration to : config-$REPORT"
 	echo "saved test results to         : latencies-$REPORT"
     fi
-    rm $LATENCY_TEST_DIR/latencies.dat
-    rm $SWITCHES_TEST_DIR/switches.dat
-    rm $PREEMPT_TEST_DIR/preempt.dat
 }
 
 
@@ -795,10 +799,20 @@ function build_rtai {
     if $NEW_KERNEL || $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko; then
 	echo "build rtai"
 	if ! $DRYRUN; then
+	    # diff -u base/arch/${RTAI_MACHINE}/defconfig .rtai_config
 	    cp base/arch/${RTAI_MACHINE}/defconfig .rtai_config
 	    patch <<EOF
---- .defconfig  	2015-04-07 23:36:27.879550619 +0200
-+++ .rtai_config	2015-04-07 23:41:44.834414279 +0200
+--- base/arch/x86/defconfig	2015-03-09 11:42:51.000000000 +0100
++++ .rtai_config	2015-09-09 10:44:17.662656156 +0200
+@@ -2,7 +2,7 @@
+ # Automatically generated make config: don't edit
+ #
+ CONFIG_MODULES=y
+-CONFIG_RTAI_VERSION="4.0 (vulcano)"
++CONFIG_RTAI_VERSION="3.8 (vulcano)"
+ 
+ #
+ # General
 @@ -17,16 +17,17 @@
  # CONFIG_RTAI_DOC_LATEX_NONSTOP is not set
  # CONFIG_RTAI_DBX_DOC is not set
@@ -817,13 +831,16 @@ function build_rtai {
  #
  CONFIG_RTAI_FPU_SUPPORT=y
 -CONFIG_RTAI_CPUS="2"
-+CONFIG_RTAI_CPUS="$CPU_NUM"
++CONFIG_RTAI_CPUS="8"
  # CONFIG_RTAI_DIAG_TSC_SYNC is not set
  
  #
-@@ -40,6 +41,8 @@
+@@ -38,8 +39,10 @@
+ #
+ # CONFIG_RTAI_SCHED_ISR_LOCK is not set
  # CONFIG_RTAI_LONG_TIMED_LIST is not set
- CONFIG_RTAI_SCHED_LATENCY_SELFCALIBRATE=y
+-CONFIG_RTAI_SCHED_LATENCY_SELFCALIBRATE=y
++# CONFIG_RTAI_SCHED_LATENCY_SELFCALIBRATE is not set
  CONFIG_RTAI_SCHED_LATENCY="0"
 +CONFIG_RTAI_KERN_BUSY_ALIGN_RET_DELAY="0"
 +CONFIG_RTAI_USER_BUSY_ALIGN_RET_DELAY="0"
@@ -837,7 +854,7 @@ function build_rtai {
 -# CONFIG_RTAI_MATH is not set
 +CONFIG_RTAI_MATH=y
 +CONFIG_RTAI_MATH_LIBM_TO_USE="1"
-+CONFIG_RTAI_MATH_LIBM_DIR="/usr/local/src/newlib/install/$MACHINE/lib"
++CONFIG_RTAI_MATH_LIBM_DIR="/usr/local/src/newlib/install/x86_64/lib"
 +# CONFIG_RTAI_MATH_KCOMPLEX is not set
  CONFIG_RTAI_MALLOC=y
  # CONFIG_RTAI_USE_TLSF is not set
@@ -1400,7 +1417,7 @@ case $ACTION in
 
     reconfigure ) reconfigure ;;
 
-    test ) test_rtaikernel ;;
+    test ) test_rtaikernel $@ ;;
 
     packages ) intall_packages ;;
     download ) download_all $@ ;;

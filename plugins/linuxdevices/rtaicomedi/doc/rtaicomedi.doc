@@ -302,6 +302,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
      - Select "Interrupt pipeline"
      - "I-pipe legacy interface": enable for rtai-4.1 (and earlier?), disable for current cvs.
+     - Try disabling "Numa Memory Allocation and Scheduler Support"
      - Set "Timer frequency" to 1000 Hz
      - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
      - Disable "Supervisor Mode Access Prevention", "EFI runtime service support", "Enable seccomp to safely compute untrusted bytecode"
@@ -319,6 +320,9 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      - Disable whatever else there is
      .
    - Device Drivers:
+     - Character devices:
+       - Try disabling "HPET - High Precision Event Timer"
+       .
      - Disable IOMMU Hardware Support
      - Staging drivers:
        - Deselect "Data acquisition support (comedi)"
@@ -330,7 +334,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      .
      - Disable "Magic SysRq key"
      - Disable "Kernel debugging"
-     - Disable "Early printk via EHCI debug port"
+     - Disable "Early printk via EHCI debug port" (unless you still have EHCI USB 2.0 enabled)
      - Disable "Allow gcc to uninline functions marked 'inline'"
    .
    - Disable "Virtualization"
@@ -608,7 +612,7 @@ dmesg
 
    Try adding one or several of the advanced configuration and power
    interface (ACPI) or advanced programmable interrupt controller
-   (APIC) options, \c acpi=off \c pci=noacpi \c noapic \c nolapic \c
+   (APIC) options, \c acpi=off, \c pci=noacpi \c noapic \c nolapic \c
    lapic , to the kernel parameter in the \c kernel line of the \c
    grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c
    GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub .  Recompile
@@ -728,7 +732,7 @@ cat /sys/devices/system/cpu/cpuidle/current_driver
 - Also check out "nohalt" kernel parameter (Documentation/kernel-parameters.txt).
 - For scheduling interrupts read Documentation/timers/NO_HZ.txt
 - Disable all dma transfers by setting \c libata.dma=0.
-- Advanced configuration and power interface (ACPI): \c acpi=off and/or \c pci=noacpi 
+- Advanced configuration and power interface (ACPI): \c acpi=off and/or \c pci=noacpi .
 - Advanced programmable interrupt controller (APIC): \c noapic and/or \c nolapic and/or \c lapic
 .
 You can set them during startup by hitting 'e' in the \c grub menu and then add them to the
