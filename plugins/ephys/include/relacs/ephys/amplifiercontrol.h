@@ -56,6 +56,7 @@ namespace ephys {
 - \c showdc=false: Make dynamic clamp mode for amplifier selectable (\c boolean)
 - \c showvc=false: Make voltage clamp mode for amplifier selectable (\c boolean)
 - \c showmanual=false: Make manual mode for amplifier selectable (\c boolean)
+- \c syncpulse=10us: Duration of SEC current injection (\c number)
 
 \par Key shortcuts
 - \c Z: Buzz
@@ -63,7 +64,7 @@ namespace ephys {
 - \c O: Measure resistance ("O" is the shortcut of "Ohm"!)
 - \c ALT-B: Switch amplifier to bridge mode
 - \c ALT-C: Switch amplifier to current-clamp mode
-- \c ALT-D: Switch amplifier to dynamic-clamp mode
+- \c ALT-Y: Switch amplifier to dynamic-clamp mode
 - \c ALT-V: Switch amplifier to voltage-clamp mode
 - \c ALT-A: Switch to manual selection of amplifier mode
 

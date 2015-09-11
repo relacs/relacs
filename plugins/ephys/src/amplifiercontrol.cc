@@ -64,7 +64,7 @@ AmplifierControl::AmplifierControl( void )
   addBoolean( "showdc", "Make dynamic clamp mode for amplifier selectable", false );
   addBoolean( "showvc", "Make voltage clamp mode for amplifier selectable", false );
   addBoolean( "showmanual", "Make manual mode for amplifier selectable", false );
-  addNumber( "syncpulse", "Duration of SEC current injection", SyncPulseDuration, 0.0, 0.1, 0.0000001, "s", "us" );
+  addNumber( "syncpulse", "Duration of SEC current injection", SyncPulseDuration, 0.0, 0.1, 0.000001, "s", "us" );
 
   setGlobalKeyEvents();
 }
@@ -255,9 +255,9 @@ void AmplifierControl::initDevices( void )
       QLabel *label = new QLabel( "Pulse duration" );
       hbox->addWidget( label );
       SyncSpinBox = new DoubleSpinBox;
-      SyncSpinBox->setRange( 0.1, 1000.0 );
-      SyncSpinBox->setSingleStep( 0.1 );
-      SyncSpinBox->setPrecision( 1 );
+      SyncSpinBox->setRange( 1.0, 1000.0 );
+      SyncSpinBox->setSingleStep( 1.0 );
+      SyncSpinBox->setPrecision( 0 );
       SyncSpinBox->setKeyboardTracking( false );
       SyncSpinBox->setValue( 1.0e6 * SyncPulseDuration );
       connect( SyncSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
