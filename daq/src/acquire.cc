@@ -779,8 +779,11 @@ int Acquire::read( InList &data )
   // prepare reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 &&
-	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
+	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
       success = false;
+      if ( AI[i].Traces.success() )
+	AI[i].Traces.setError( DaqError::Unknown );
+    }
   }
 
   // error?
@@ -923,8 +926,11 @@ int Acquire::restartRead( void )
   // reset and prepare reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 &&
-	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
+	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
       success = false;
+      if ( AI[i].Traces.success() )
+	AI[i].Traces.setError( DaqError::Unknown );
+    }
   }
 
   // error?
@@ -1066,8 +1072,11 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   if ( gainchanged ) {
     for ( unsigned int i=0; i<AI.size(); i++ ) {
       if ( AI[i].Traces.size() > 0 &&
-	   AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
+	   AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
 	success = false;
+	if ( AI[i].Traces.success() )
+	  AI[i].Traces.setError( DaqError::Unknown );
+      }
     }
   }
 

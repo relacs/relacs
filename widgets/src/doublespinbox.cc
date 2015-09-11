@@ -71,6 +71,7 @@ int DoubleSpinBox::precision( void ) const
 
 void DoubleSpinBox::setPrecision( int p )
 {
+  FormatType = 'f';
   setDecimals( p );
 }
 

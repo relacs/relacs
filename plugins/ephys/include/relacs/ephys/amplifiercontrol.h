@@ -43,7 +43,7 @@ namespace ephys {
 \class AmplifierControl
 \brief [Control] Controls an amplifier: buzzer and resistance measurement.
 \author Jan Benda
-\version 2.2 (Nov 27, 2014)
+\version 2.4 (Sep 11, 2015)
 
 \par Options
 - \c initmode=Bridge: Initial mode of the amplifier (\c string)
@@ -178,7 +178,6 @@ private:
   QRadioButton *DCButton;
   QRadioButton *VCButton;
   QRadioButton *ManualButton;
-  QCheckBox *SyncCheckBox;
   DoubleSpinBox *SyncSpinBox;
   bool SyncPulseEnabled;
   double SyncPulseDuration;

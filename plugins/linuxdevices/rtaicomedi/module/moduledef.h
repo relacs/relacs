@@ -26,7 +26,7 @@
 // #define ENABLE_TTLPULSE
 
   /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
-// #define ENABLE_SYNCSEC
+#define ENABLE_SYNCSEC
 
   /*! Measure intervals of dynamic clamp loop and make them available as "Interval". */
 #define ENABLE_INTERVALS
@@ -70,9 +70,6 @@
 //* maximum supported dynamic clamp frequency ensuring a stable system
 #define MAX_FREQUENCY 90000 //Hz
 
-//* Data buffering:
-#define FIFO_SIZE   4*64000 // bytes
-
 //* DAQ-devices:
 #define MAXSUBDEV    8
 #define MAXCHANLIST  64
@@ -82,11 +79,12 @@
 #define PARAM_CHAN_OFFSET 1000
 
 // subdevice acquisition errors:
-#define E_COMEDI    -1
-#define E_NODATA    -2
-#define E_UNDERRUN  -3
-#define E_OVERFLOW  -4
-#define E_NOFIFO    -5
+#define E_COMEDI      -1
+#define E_NODATA      -2
+#define E_UNDERRUN    -3
+#define E_OVERFLOW    -4
+#define E_NOFIFO      -5
+#define E_STOPPEDBYAI -6
 
 //* Lookup tables:
 #define MAXLOOKUPTABLES 100
@@ -110,7 +108,6 @@ struct deviceIOCT {
   unsigned int subdev;
   enum subdevTypes subdevType;
   unsigned int fifoIndex;
-  unsigned int fifoSize;
   char errorstr[DEV_ERROR_MAXLEN+1];
 };
 
@@ -137,6 +134,7 @@ struct syncCmdIOCT {
   unsigned long duration;
   int startsource;
   int continuous;
+  int buffersize;
 };
 
 enum dioOps { DIO_CONFIGURE, DIO_READ, DIO_WRITE,

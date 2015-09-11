@@ -256,8 +256,10 @@ int DAQFlexAnalogInput::testReadDevice( InList &traces )
 
 int DAQFlexAnalogInput::prepareRead( InList &traces )
 {
-  if ( !isOpen() )
+  if ( !isOpen() ) {
+    traces.setError( DaqError::DeviceNotOpen );
     return -1;
+  }
 
   QMutexLocker locker( mutex() );
 
@@ -299,7 +301,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     // delay:
     if ( traces[k].delay() > 0.0 ) {
       traces[k].addError( DaqError::InvalidDelay );
-      traces[k].addErrorStr( "delays are not supported by DAQFlex!" );
+      traces[k].addErrorStr( "delays are not supported by DAQFlex analog input!" );
       traces[k].setDelay( 0.0 );
     }
 

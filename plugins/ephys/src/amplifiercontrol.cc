@@ -27,7 +27,7 @@ namespace ephys {
 
 
 AmplifierControl::AmplifierControl( void )
-  : Control( "AmplifierControl", "ephys", "Jan Benda", "2.2", "Nov 27, 2014" )
+  : Control( "AmplifierControl", "ephys", "Jan Benda", "2.4", "Sep 11, 2015" )
 {
   AmplBox = new QVBoxLayout;
   setLayout( AmplBox );
@@ -42,7 +42,6 @@ AmplifierControl::AmplifierControl( void )
   DCButton = 0;
   VCButton = 0;
   ManualButton = 0;
-  SyncCheckBox = 0;
   SyncSpinBox = 0;
 
   Ampl = 0;
@@ -65,6 +64,7 @@ AmplifierControl::AmplifierControl( void )
   addBoolean( "showdc", "Make dynamic clamp mode for amplifier selectable", false );
   addBoolean( "showvc", "Make voltage clamp mode for amplifier selectable", false );
   addBoolean( "showmanual", "Make manual mode for amplifier selectable", false );
+  addNumber( "syncpulse", "Duration of SEC current injection", SyncPulseDuration, 0.0, 0.1, 0.0000001, "s", "us" );
 
   setGlobalKeyEvents();
 }
@@ -72,6 +72,9 @@ AmplifierControl::AmplifierControl( void )
 
 void AmplifierControl::notify( void )
 {
+  SyncPulseDuration = number( "syncpulse" );
+  if ( SyncSpinBox != 0 )
+    SyncSpinBox->setValue( 1.0e6*SyncPulseDuration );
   // initial mode:
   if ( changed( "initmode" ) ) {
     int initmode = index( "initmode" );
@@ -106,12 +109,6 @@ void AmplifierControl::notify( void )
       DCButton->show();
     else
       DCButton->hide();
-  }
-  if ( SyncCheckBox != 0 ) {
-    if ( ! boolean( "showdc" ) )
-      SyncCheckBox->show();
-    else
-      SyncCheckBox->hide();
   }
   if ( VCButton != 0 ) {
     if ( boolean( "showvc" ) )
@@ -237,8 +234,9 @@ void AmplifierControl::initDevices( void )
     // add amplifier synchronization:
     DIO = digitalIO( "dio-1" );
     if ( DIO != 0 ) {
-      if ( DIO->clearSyncPulse() == Device::InvalidDevice )
+      if ( DIO->clearSyncPulse() == Device::InvalidDevice ) {
 	DIO = 0;
+      }
     }
     if ( DIO != 0 ) {
       lockStimulusData();
@@ -248,14 +246,10 @@ void AmplifierControl::initDevices( void )
       stimulusData().addNumber( "SyncPulse", "Synchronization pulse", spd, "us" );
       unlockStimulusData();
     }
-    if ( DIO != 0 && SyncCheckBox == 0 ) {
+    else
+      DCButton->hide();
+    if ( DIO != 0 && SyncSpinBox == 0 && vbox != 0 ) {
       vbox->addWidget( new QLabel );
-      SyncCheckBox = new QCheckBox( "&Synchronize amplifier" );
-      connect( SyncCheckBox, SIGNAL( clicked( bool ) ), this, SLOT( activateSyncPulse( bool ) ) );
-      SyncCheckBox->setChecked( SyncPulseEnabled );
-      vbox->addWidget( SyncCheckBox );
-      if ( boolean( "showdc" ) )
-	SyncCheckBox->hide();
       QHBoxLayout *hbox = new QHBoxLayout;
       vbox->addLayout( hbox );
       QLabel *label = new QLabel( "Pulse duration" );
@@ -263,6 +257,7 @@ void AmplifierControl::initDevices( void )
       SyncSpinBox = new DoubleSpinBox;
       SyncSpinBox->setRange( 0.1, 1000.0 );
       SyncSpinBox->setSingleStep( 0.1 );
+      SyncSpinBox->setPrecision( 1 );
       SyncSpinBox->setKeyboardTracking( false );
       SyncSpinBox->setValue( 1.0e6 * SyncPulseDuration );
       connect( SyncSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
@@ -476,12 +471,16 @@ void AmplifierControl::activateSyncPulse( bool activate )
   if ( DIO != 0 ) {
     if ( activate ) {
       if ( DIO->setSyncPulse( SyncPulseDuration ) == 0 ) {
-	if ( ! boolean( "showdc" ) )
-	  activateCurrentClampMode( true );
 	lockStimulusData();
 	stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
 	unlockStimulusData();
+	unsetNotify();
+	setNumber( "syncpulse", SyncPulseDuration );
+	setDefault( "syncpulse" );
+	setNotify();
       }
+      else
+	activateCurrentClampMode( true );
     }
     else {
       DIO->clearSyncPulse();
@@ -490,7 +489,6 @@ void AmplifierControl::activateSyncPulse( bool activate )
       unlockStimulusData();
     }
     SyncPulseEnabled = activate;
-    SyncCheckBox->setChecked( SyncPulseEnabled );
   }
 }
 
@@ -498,9 +496,13 @@ void AmplifierControl::activateSyncPulse( bool activate )
 void AmplifierControl::setSyncPulse( double durationus )
 {
   double syncpulseduration = 1.0e-6 * durationus;
+  SyncPulseDuration = syncpulseduration;
+  unsetNotify();
+  setNumber( "syncpulse", SyncPulseDuration );
+  setToDefault( "syncpulse" );
+  setNotify();
   if ( DIO != 0 && SyncPulseEnabled ) {
     if ( DIO->setSyncPulse( syncpulseduration ) == 0 ) {
-      SyncPulseDuration = syncpulseduration;
       activateDynamicClampMode( true );
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );

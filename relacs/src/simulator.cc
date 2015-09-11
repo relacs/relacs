@@ -179,8 +179,11 @@ int Simulator::read( InList &data )
   AnalogInput *aidevice = 0;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
-      if ( AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
+      if ( AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
 	success = false;
+	if ( AI[i].Traces.success() )
+	  AI[i].Traces.setError( DaqError::Unknown );
+      }
       else {
 	if ( aidevice == 0 )
 	  aidevice = AI[i].AI;

@@ -670,8 +670,10 @@ int ComediAnalogInput::testReadDevice( InList &traces )
 
 int ComediAnalogInput::prepareRead( InList &traces )
 {
-  if ( !isOpen() )
+  if ( !isOpen() ) {
+    traces.setError( DaqError::DeviceNotOpen );
     return -1;
+  }
 
   QMutexLocker locker( mutex() );
 

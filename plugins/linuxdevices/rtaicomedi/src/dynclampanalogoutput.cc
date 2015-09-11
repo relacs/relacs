@@ -285,7 +285,6 @@ int DynClampAnalogOutput::open( const string &device )
     setErrorStr( "oping RTAI-FIFO " + fifoname.str() + " failed" );
     return -1;
   }
-  FIFOSize = deviceIOC.fifoSize;
 
   // set the maximum possible sampling rate (of the rtai loop!):
   MaxRate = MAX_FREQUENCY;
@@ -625,7 +624,7 @@ int DynClampAnalogOutput::loadChanList( OutList &sigs, int isused ) const
       sigs.addErrorStr( "Channel unknown to kernel module." );
     else
       sigs.addErrorStr( "Failed to transfer channel list." );
-    cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
+    cerr << "DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
   }
@@ -678,9 +677,10 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
     syncCmdIOC.duration = 1;
     syncCmdIOC.continuous = 0;
     syncCmdIOC.startsource = 0;
+    syncCmdIOC.buffersize = ol.deviceBufferSize()*BufferElemSize;
     retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
     if ( retval < 0 ) {
-      cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_SYNC_CMD on device "
+      cerr << "DynClampAnalogOutput::directWrite -> ioctl command IOC_SYNC_CMD on device "
 	   << ModuleDevice << " failed!\n";
       if ( errno == EINVAL )
 	ol.addError( DaqError::InvalidSampleRate );
@@ -701,7 +701,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   } // unlock
 
   int retval = writeData();
-  //  cerr << " DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << '\n';
+  //  cerr << "DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << '\n';
 
   QMutexLocker locker( mutex() );
 
@@ -716,7 +716,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   // start subdevice:
   retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, SUBDEV_OUT );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_START_SUBDEV on device "
+    cerr << "DynClampAnalogOutput::directWrite -> ioctl command IOC_START_SUBDEV on device "
 	 << ModuleDevice << " failed!\n";
     int ern = errno;
     if ( ern == ENOMEM )
@@ -741,7 +741,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   unsigned int rate = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+    cerr << "DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
   }
@@ -788,10 +788,6 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   unsigned int chanlist[MAXCHANLIST];
   setupChanList( ol, chanlist, MAXCHANLIST, false );
 
-  double buffertime = sigs[0].interval( FIFOSize/BufferElemSize/sigs.size() );
-  if ( buffertime < 0.001 )
-    ol.addError( DaqError::InvalidBufferTime );
-
   if ( ol.failed() )
     return -1;
 
@@ -832,6 +828,12 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     if ( retval < 0 )
       return -1;
 
+    // set buffer size for one second:
+    BufferSize = sigs.deviceBufferSize()*BufferElemSize;
+    int maxbuffersize = sigs.size() * sigs[0].indices( 1.0 ) * BufferElemSize;
+    if ( BufferSize > maxbuffersize )
+      BufferSize = maxbuffersize;
+
     // set up synchronous command:
     struct syncCmdIOCT syncCmdIOC;
     syncCmdIOC.type = SUBDEV_OUT;
@@ -840,10 +842,11 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     syncCmdIOC.duration = ol[0].size();
     syncCmdIOC.continuous = ol[0].continuous();
     syncCmdIOC.startsource = ol[0].startSource();
+    syncCmdIOC.buffersize = BufferSize;
     retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
-    //  cerr << "prepareWrite(): IOC_SYNC_CMD done!\n"; /// TEST
+    //  cerr << "prepareWrite(): IOC_SYNC_CMD done!\n";
     if ( retval < 0 ) {
-      cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
+      cerr << "DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
 	   << ModuleDevice << " failed!\n";
       if ( errno == EINVAL )
 	ol.addError( DaqError::InvalidSampleRate );
@@ -858,12 +861,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     for ( int k=0; k<ol.size(); k++ )
       ol[k].deviceReset( 0 );
 
-    // set buffer size:
-    BufferSize = FIFOSize;
-    int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
-    if ( nbuffer < BufferSize )
-      BufferSize = nbuffer;
-
     setSettings( ol, BufferSize );
 
     if ( ! ol.success() )
@@ -871,7 +868,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
     Sigs = ol;
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
-    rtf_reset( FifoFd );
 
   } //  unlock
 
@@ -898,7 +894,6 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
     return -1;
   }
 
-
   // start subdevice:
   int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, SUBDEV_OUT );
   if ( retval < 0 ) {
@@ -913,7 +908,7 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
   unsigned int rate = 0;
   retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+    cerr << "DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
 	 << ModuleDevice << " failed!\n";
   }
   else
@@ -927,19 +922,19 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 
 int DynClampAnalogOutput::writeData( void )
 {
-  //  cerr << " DynClampAnalogOutput::writeData(): in\n";/////TEST/////
+  //  cerr << "DynClampAnalogOutput::writeData(): in\n";/////TEST/////
 
   QMutexLocker locker( mutex() );
 
   if ( Sigs.empty() )
     return -1;
 
-  // device stopped?
+  // device stopped or error?
   if ( IsPrepared ) {
     int running = SUBDEV_OUT;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
-      //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
+      //    cerr << "DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
       //	 << ModuleDevice << " failed!\n";
       return -1;
     }
@@ -951,7 +946,7 @@ int DynClampAnalogOutput::writeData( void )
       else
 	Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
 			  deviceFile() + " is not running!" );
-      cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
+      cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';
       setErrorStr( Sigs );
       return -1;
     }
@@ -961,10 +956,12 @@ int DynClampAnalogOutput::writeData( void )
     // multiplex data into buffer:
     float *bp = (float*)(Buffer+NBuffer);
     int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
+    /*
     // XXX lets keep the number of transfered data small:
     // XXX this should be translated to the FIFO buffer size!!!
     if ( maxn > Sigs[0].indices( 0.1 ) )
       maxn = Sigs[0].indices( 0.1 );
+    */
     int bytesConverted = 0;
     for ( int i=0; i<maxn && Sigs[0].deviceWriting(); i++ ) {
       for ( int k=0; k<Sigs.size(); k++ ) {
@@ -1048,7 +1045,7 @@ int DynClampAnalogOutput::stop( void )
     running = SUBDEV_OUT;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
-      //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
+      //    cerr << "DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
       //	 << ModuleDevice << " failed!\n";
       return -1;
     }
@@ -1059,7 +1056,7 @@ int DynClampAnalogOutput::stop( void )
     QMutexLocker locker( mutex() );
     int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, SUBDEV_OUT );
     if ( retval < 0 ) {
-      cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+      cerr << "DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
 	   << ModuleDevice << " failed!\n";
       return -1;
     }
@@ -1105,7 +1102,7 @@ AnalogOutput::Status DynClampAnalogOutput::status( void ) const
   int running = SUBDEV_OUT;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
+    cerr << "DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << ModuleDevice << " failed!\n";
     return UnknownError;
   }
@@ -1128,9 +1125,9 @@ long DynClampAnalogOutput::index( void ) const
 
   long index = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETAOINDEX, &index );
-  //    cerr << " DynClampAnalogOutput::index() -> " << index << '\n';
+  //    cerr << "DynClampAnalogOutput::index() -> " << index << '\n';
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::index() -> ioctl command IOC_GETLOOPCNT on device "
+    cerr << "DynClampAnalogOutput::index() -> ioctl command IOC_GETLOOPCNT on device "
 	   << ModuleDevice << " failed!\n";
     return -1;
   }

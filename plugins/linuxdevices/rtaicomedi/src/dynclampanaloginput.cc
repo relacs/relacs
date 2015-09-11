@@ -54,7 +54,6 @@ DynClampAnalogInput::DynClampAnalogInput( void )
   UnipConverter = 0;
   BipConverter = 0;
   Traces = 0;
-  ReadBufferSize = 0;
   BufferSize = 0;
   BufferN = 0;
   Buffer = NULL;
@@ -243,7 +242,6 @@ int DynClampAnalogInput::open( const string &device)
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_IN;
-  deviceIOC.fifoSize = 0;
   deviceIOC.errorstr[0] = '\0';
   int retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   if ( retval < 0 ) {
@@ -266,7 +264,6 @@ int DynClampAnalogInput::open( const string &device)
     setErrorStr( "oping RTAI-FIFO " + fifoname.str() + " failed" );
     return -1;
   }
-  ReadBufferSize = deviceIOC.fifoSize;
 
   IsPrepared = false;
 
@@ -464,14 +461,14 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
     return -1;
   }
   
-  //  cerr << " DynClampAnalogInput::testRead(): 1\n";////TEST////
+  //  cerr << "DynClampAnalogInput::testRead(): 1\n";////TEST////
   QMutexLocker locker( mutex() );
 
   // sampling rate must be the one of the running rt-loop:
   unsigned int rate = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+    cerr << "DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
   }
@@ -510,27 +507,15 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   if ( traces.failed() )
     return -1;
 
-  //  cerr << " DynClampAnalogInput::testRead(): success\n";/////TEST/////
+  //  cerr << "DynClampAnalogInput::testRead(): success\n";/////TEST/////
 
   retval = 0;
 
-  // check read buffer size:
-  int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() ) * BufferElemSize;
-  if ( readbufsize > ReadBufferSize ) {
-    traces.addError( DaqError::InvalidBufferTime );
-    traces.setReadTime( ReadBufferSize/traces.size()/BufferElemSize/traces[0].sampleRate() );
-    retval = -1;
-  }
-
   // check update buffer size:
+  int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() ) * BufferElemSize;
   int bufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
   if ( bufsize < readbufsize ) {
     traces.addError( DaqError::InvalidUpdateTime );
-    retval = -1;
-  }
-  if ( bufsize > FIFO_SIZE ) {
-    traces.addError( DaqError::InvalidUpdateTime );
-    cerr << "DynClampAnalogInput::testRead(): FIFO_SIZE is too small for update time.\n";
     retval = -1;
   }
 
@@ -540,11 +525,15 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
 
 int DynClampAnalogInput::prepareRead( InList &traces )
 {
-  if ( !isOpen() )
+  if ( !isOpen() ) {
+    traces.setError( DaqError::DeviceNotOpen );
     return -1;
+  }
 
-  if ( traces.size() <= 0 )
+  if ( traces.size() <= 0 ) {
+    traces.setError( DaqError::NoData );
     return -1;
+  }
 
   QMutexLocker locker( mutex() );
 
@@ -571,7 +560,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 	(const comedi_polynomial_t *)traces[k].gainData();
       chanlistIOC.conversionlist[k].order = poly->order;
       if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-	cerr << "ERROR in DynClampAnalogInput::prepareRead -> invalid order in converion polynomial!\n";
+	cerr << "ERROR in DynClampAnalogInput::prepareRead -> invalid order in conversion polynomial!\n";
       chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
       for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
 	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
@@ -589,10 +578,14 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
   //  cerr << "prepareRead(): IOC_CHANLIST done!\n"; /// TEST
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_CHANLIST on device "
+    traces.addError( DaqError::DeviceError );
+    cerr << "DynClampAnalogInput::prepareRead -> ioctl command IOC_CHANLIST on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
   }
+
+  // buffer size for one second:
+  BufferSize = traces.size() * traces[0].indices( 1.0 ) * BufferElemSize;
 
   // set up synchronous command:
   struct syncCmdIOCT syncCmdIOC;
@@ -601,28 +594,28 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   syncCmdIOC.duration = traces[0].capacity() + traces[0].indices( traces[0].delay());
   syncCmdIOC.continuous = traces[0].continuous();
   syncCmdIOC.startsource = traces[0].startSource();
+  syncCmdIOC.buffersize = BufferSize;
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   //  cerr << "prepareRead(): IOC_SYNC_CMD done!\n"; /// TEST
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_SYNC_CMD on device "
+    traces.addError( DaqError::DeviceError );
+    cerr << "DynClampAnalogInput::prepareRead -> ioctl command IOC_SYNC_CMD on device "
 	 << ModuleDevice << " failed!\n";
     return -1;
   }
 
   // init internal buffer:
-  BufferSize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
   Buffer = new char[BufferSize];
   BufferN = 0;
-
+  
   // set sleep duration:  
-  int rs = (int)( 0.1*1000.0*traces[0].interval( ReadBufferSize/traces.size()/sizeof(float) ) );
+  int rs = (int)( 0.1*1000.0*traces[0].interval( BufferSize/traces.size()/sizeof(float) ) );
   if ( rs > 5 )
     rs = 5;
-  cerr << "SET READSLEEP TO " << rs << '\n';
   setReadSleep( rs );
 
   if ( traces.success() ) {
-    setSettings( traces, BufferSize, ReadBufferSize );
+    setSettings( traces, BufferSize, BufferSize );
     Settings.addInteger( "number of periods", 0 );
     Settings.addNumber( "average period", 0.0, "us" );
     Settings.addNumber( "stdev period", 0.0, "us" );
@@ -640,7 +633,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				    QWaitCondition *datawait, QSemaphore *aosp )
 {
-  //  cerr << " DynClampAnalogInput::startRead(): 1\n";/////TEST/////
+  //  cerr << "DynClampAnalogInput::startRead(): 1\n";/////TEST/////
   QMutexLocker locker( mutex() );
 
   if ( !IsPrepared || Traces == 0 ) {
@@ -665,7 +658,7 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   unsigned int rate = 0;
   retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+    cerr << "DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
 	 << ModuleDevice << " failed!\n";
   }
   else
@@ -677,7 +670,7 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
  
 int DynClampAnalogInput::readData( void )
 {
-  //  cerr << " DynClampAnalogInput::readData(): begin\n";/////TEST/////
+  //  cerr << "DynClampAnalogInput::readData(): begin\n";/////TEST/////
 
   QMutexLocker locker( mutex() );
 
@@ -810,7 +803,7 @@ int DynClampAnalogInput::stop( void )
     running = SUBDEV_IN;
     int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
-      cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
+      cerr << "DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
 	   << ModuleDevice << " failed!\n";
       return -1;
     }
@@ -821,7 +814,7 @@ int DynClampAnalogInput::stop( void )
     QMutexLocker locker( mutex() );
     int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, SUBDEV_IN );
     if ( retval < 0 ) {
-      cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+      cerr << "DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
 	   << ModuleDevice << " failed!\n";
       return -1;
     }
@@ -857,8 +850,11 @@ int DynClampAnalogInput::reset( void )
   }
 
   // XXX clear buffers by flushing FIFO:
-  if ( FifoFd >= 0 )
-    rtf_reset( FifoFd );
+  if ( FifoFd >= 0 ) {
+    retval = rtf_reset( FifoFd );
+    if ( retval != 0 )
+      cerr <<  "WARNING: failed to reset FIFO. rtf_reset() returned " << retval << ".\n";
+  }
 
   // free internal buffer:
   if ( Buffer != 0 )
@@ -885,7 +881,7 @@ bool DynClampAnalogInput::running( void ) const
   int running = SUBDEV_IN;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if ( retval < 0 ) {
-    cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
+    cerr << "DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << ModuleDevice << " failed!\n";
     return false;
   }

@@ -128,7 +128,6 @@ int DynClampDigitalIO::open( const string &device )
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_DIO;
-  deviceIOC.fifoSize = 0;
   deviceIOC.errorstr[0] = '\0';
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   if ( retval < 0 ) {
@@ -520,6 +519,11 @@ int DynClampDigitalIO::setSyncPulse( int line, double duration )
     cerr << "! error: DynClampDigitalIO::setSyncPulse() -> "
 	 << "Setting pulse for DIO line " << line
 	 << " failed on subdevice " << SubDevice << '\n';
+    if ( errno == ENOTTY ) {
+      cerr << "! error: dynamic clamp module is not compiled with syncpulse support\n";
+      cerr << "! error: Enable syncpulse support by making sure ENABLE_SYNCSEC is defined in moduledef.h\n";
+      return InvalidDevice;
+    }
     return WriteError;
   }
   return 0;
@@ -542,8 +546,11 @@ int DynClampDigitalIO::clearSyncPulse( void )
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if ( retval < 0 ) {
     int ern = errno;
-    if ( ern == ENOTTY )
+    if ( ern == ENOTTY ) {
+      cerr << "! error: dynamic clamp module is not compiled with syncpulse support\n";
+      cerr << "! error: Enable syncpulse support by making sure ENABLE_SYNCSEC is defined in moduledef.h\n";
       return InvalidDevice;
+    }
     cerr << "! error: DynClampDigitalIO::clearSyncPulse() -> "
 	 << "Clearing sync pulse failed on subdevice " << SubDevice << '\n';
     return WriteError;
