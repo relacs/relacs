@@ -1673,8 +1673,11 @@ int init_dynclamp_loop( void )
 
   // compute periods:
   reqfreq = dynClampTask.frequency;
-  //  periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.frequency ) );
+#ifdef ONESHOT_MODE
   periodTicks = nano2count( 1000000000/dynClampTask.frequency );
+#else
+  periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.frequency ) );
+#endif
   dynClampTask.period = count2nano( periodTicks );
   dynClampTask.frequency = 1000000000 / dynClampTask.period;
 #ifdef ENABLE_COMPUTATION
@@ -2292,11 +2295,13 @@ static int __init init_dynclampmodule( void )
   // initialize global variables:
   init_globals();
 
-  // rt_set_periodic_mode();
-  // periodic mode is the default. Calling this function hangs the computer...
-
+#ifdef ONESHOT_MODE
   rt_set_oneshot_mode();
   start_rt_timer(1);
+#else
+  // rt_set_periodic_mode();
+  // periodic mode is the default. Calling this function hangs the computer...
+#endif
 
   return retVal;
 }

@@ -42,6 +42,9 @@
   /*! Measure duration of model computation per cycle and make it available as "Model-time". */
 // #define ENABLE_MODELTIME
 
+  /*! Use RTAI one-shot mode instead of periodic mode (more jitter but stable). */
+// #define ONESHOT_MODE
+
 
 // *** KERNEL LOGGING MODE ***
 
