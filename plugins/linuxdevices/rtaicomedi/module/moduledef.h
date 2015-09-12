@@ -154,6 +154,7 @@ struct dioIOCT {
   int output;
   enum ttlPulses pulseType; /* only for op == DIO_ADD_TTLPULSE or DIO_CLEAR_TTLPULSE */
   long pulsewidth;          /* only for op == DIO_SET_SYNCPULSE */
+  int intervalmode;          /* only for op == DIO_SET_SYNCPULSE: 0: fixed period, 1: each difftime, n>1: difftime averaged over n cycles */
 };
 
 struct triggerIOCT {

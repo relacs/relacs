@@ -514,6 +514,7 @@ int DynClampDigitalIO::setSyncPulse( int line, double duration )
   dioIOC.op = DIO_SET_SYNCPULSE;
   dioIOC.lines = line;
   dioIOC.pulsewidth = durationns;
+  dioIOC.intervalmode = 0;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::setSyncPulse() -> "
