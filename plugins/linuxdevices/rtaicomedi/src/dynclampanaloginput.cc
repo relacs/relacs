@@ -636,7 +636,7 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   //  cerr << "DynClampAnalogInput::startRead(): 1\n";/////TEST/////
   QMutexLocker locker( mutex() );
 
-  if ( !IsPrepared || Traces == 0 ) {
+  if ( ModuleFd < 0 || !IsPrepared || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
     return -1;
   }
@@ -797,7 +797,7 @@ int DynClampAnalogInput::stop( void )
   {
     QMutexLocker locker( mutex() );
 
-    if ( !IsPrepared )
+    if ( ModuleFd < 0 || !IsPrepared )
       return 0;
 
     running = SUBDEV_IN;
@@ -833,7 +833,7 @@ int DynClampAnalogInput::reset( void )
   QMutexLocker locker( mutex() );
 
   int retval = 0;
-  if ( IsPrepared ) {
+  if ( ModuleFd >= 0 && IsPrepared ) {
     int running = SUBDEV_IN;
     retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
     if ( retval < 0 ) {
@@ -875,7 +875,7 @@ bool DynClampAnalogInput::running( void ) const
 {
   QMutexLocker locker( mutex() );
 
-  if ( !IsPrepared )
+  if ( ModuleFd < 0 || !IsPrepared )
     return false;
 
   int running = SUBDEV_IN;
@@ -901,6 +901,9 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
 
 void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 {
+  if ( ModuleFd < 0 )
+    return;
+
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = PARAM_IN;
   int channel = PARAM_CHAN_OFFSET;
@@ -926,6 +929,11 @@ void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid )
 
 int DynClampAnalogInput::matchTraces( InList &traces ) const
 {
+  if ( ModuleFd < 0 ) {
+    traces.setError( InvalidDevice );
+    return -1;
+  }
+
   int foundtraces = 0;
   bool tracefound[ traces.size() ];
   for ( int k=0; k<traces.size(); k++ )

@@ -54,13 +54,15 @@ normal analog input traces, but the channel nummber needs to be set to 1000 or l
 The following three types of additional inputs are supported:
 - additional inputs as defined by the dynamic clamp model via its \c paramInputNames.
 - timing measurements, if they are enabled in moduledef.h:
-  - \c Interval : the period of the dynamic clamp loop
+  - \c Interval : the full period of the dynamic clamp loop
   - \c AI-time : the time required by the analog input part
   - \c AI-acquisition-time : the time required by reading in a single analog input channel
   - \c AI-conversion-time : the time required to convert the read in value
   - \c AO-time : the time required by the analog output part
   - \c Model-time : the time required for calling computModel()
-  all in seconds.
+  - \c Wait-time : the time rt_task_wait_period() waits for the net period
+  .
+  all times are measured in seconds.
 - for each analog output trace the dynamic clamp model is using (its \c outputNames), 
   - \c Stimulus-xxx contains the stimulus a RePro wrote to this channel,
   - \c Model-xxx contains the value the model computed, and

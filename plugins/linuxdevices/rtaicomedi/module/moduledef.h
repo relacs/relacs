@@ -28,19 +28,19 @@
   /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
 #define ENABLE_SYNCSEC
 
-  /*! Measure intervals of dynamic clamp loop and make them available as "Interval". */
-#define ENABLE_INTERVALS
-
+  /*! Intervals of the dynamic clamp loop are always measured and are available as "Interval". */
   /*! Measure total duration of analog inputs per cycle and make it available as "AI-time". */
 // #define ENABLE_AITIME
   /*! Measure duration of analog input acquisition per cycle and make it available as "AI-acquisition-time". */
-#define ENABLE_AIACQUISITIONTIME
+// #define ENABLE_AIACQUISITIONTIME
   /*! Measure duration of analog input conversion per cycle and make it available as "AI-conversion-time". */
 // #define ENABLE_AICONVERSIONTIME
   /*! Measure total duration of analog outputs per cycle and make it available as "AO-time". */
 // #define ENABLE_AOTIME
   /*! Measure duration of model computation per cycle and make it available as "Model-time". */
 // #define ENABLE_MODELTIME
+  /*! Measure duration of rt_task_wait_period() per cycle and make it available as "Wait-time". */
+// #define ENABLE_WAITTIME
 
   /*! Use RTAI one-shot mode instead of periodic mode (more jitter but stable). */
 // #define ONESHOT_MODE

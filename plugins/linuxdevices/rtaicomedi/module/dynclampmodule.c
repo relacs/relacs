@@ -118,9 +118,7 @@ char statusInputNames[MAXCHANLIST][PARAM_NAME_MAXLEN];
 char statusInputUnits[MAXCHANLIST][PARAM_NAME_MAXLEN];
 float statusInput[MAXCHANLIST];
 int statusInputN = 0;
-#ifdef ENABLE_INTERVALS
 int intervalstatusinx = 0;
-#endif
 #ifdef ENABLE_AITIME
 int aitimestatusinx = 0;
 #endif
@@ -135,6 +133,9 @@ int aotimestatusinx = 0;
 #endif
 #ifdef ENABLE_MODELTIME
 int modeltimestatusinx = 0;
+#endif
+#ifdef ENABLE_WAITTIME
+int waittimestatusinx = 0;
 #endif
 #ifdef ENABLE_COMPUTATION
 int outputstatusinx = 0;
@@ -266,13 +267,12 @@ void init_globals( void )
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
 
   statusInputN = 0;
-#ifdef ENABLE_INTERVALS
+
   intervalstatusinx = statusInputN;
   statusInputN++;
   strcpy( statusInputNames[intervalstatusinx], "Interval" );
   strcpy( statusInputUnits[intervalstatusinx], "s" );
   statusInput[intervalstatusinx] = 0.0;
-#endif
 #ifdef ENABLE_AITIME
   aitimestatusinx = statusInputN;
   statusInputN++;
@@ -307,6 +307,13 @@ void init_globals( void )
   strcpy( statusInputNames[modeltimestatusinx], "Model-time" );
   strcpy( statusInputUnits[modeltimestatusinx], "s" );
   statusInput[modeltimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_WAITTIME
+  waittimestatusinx = statusInputN;
+  statusInputN++;
+  strcpy( statusInputNames[waittimestatusinx], "Wait-time" );
+  strcpy( statusInputUnits[waittimestatusinx], "s" );
+  statusInput[waittimestatusinx] = 0.0;
 #endif
 #ifdef ENABLE_COMPUTATION
   outputstatusinx = statusInputN;
@@ -1181,12 +1188,10 @@ void dynclamp_loop( long dummy )
 #endif
   struct chanT *pChan;
   float voltage;
-#if defined(ENABLE_INTERVALS) || defined(ENABLE_SYNCSEC)
   RTIME currenttime = 0;
   RTIME newtime = 0;
   int difftime = 0;   // to avoid __divdi3 issues we use an int here
-#endif
-#if defined(ENABLE_AITIME) || defined(ENABLE_AOTIME) || defined(ENABLE_MODELTIME)
+#if defined(ENABLE_AITIME) || defined(ENABLE_AOTIME) || defined(ENABLE_MODELTIME) || defined(ENABLE_WAITTIME)
   RTIME starttime = 0;
   RTIME stoptime = 0;
   int dtime = 0;   // to avoid __divdi3 issues we use an int here
@@ -1209,11 +1214,9 @@ void dynclamp_loop( long dummy )
   dynClampTask.aoIndex = -1;
   dynClampTask.running = 1;
 
-#if defined(ENABLE_INTERVALS) || defined(ENABLE_SYNCSEC)
   currenttime = rt_get_cpu_time_ns();
   difftime = dynClampTask.period;
   statusInput[intervalstatusinx] = 1e-9*difftime;
-#endif
 #ifdef ENABLE_AITIME
   statusInput[aitimestatusinx] = 0.0;
 #endif
@@ -1228,6 +1231,9 @@ void dynclamp_loop( long dummy )
 #endif
 #ifdef ENABLE_MODELTIME
   statusInput[modeltimestatusinx] = 0.0;
+#endif
+#ifdef ENABLE_WAITTIME
+  statusInput[waittimestatusinx] = 0.0;
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -1599,15 +1605,21 @@ void dynclamp_loop( long dummy )
     /****************************************************************************/
     dynClampTask.loopCnt++;
 
+#ifdef ENABLE_WAITTIME
+    starttime = rt_get_cpu_time_ns();
+#endif
     //    start = rt_get_cpu_time_ns();
     rt_task_wait_period();
+#ifdef ENABLE_WAITTIME
+    stoptime = rt_get_cpu_time_ns();
+    dtime = stoptime - starttime;
+    statusInput[waittimestatusinx] = 1e-9*dtime;
+#endif
 
-#if defined(ENABLE_INTERVALS) || defined(ENABLE_SYNCSEC)
     newtime = rt_get_cpu_time_ns();
     difftime = newtime - currenttime;
     currenttime = newtime;
     statusInput[intervalstatusinx] = 1e-9*difftime;
-#endif
 
   } // END OF DYNCLAMP LOOP
 

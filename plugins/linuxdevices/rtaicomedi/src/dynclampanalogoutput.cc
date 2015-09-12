@@ -889,7 +889,7 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 {
   QMutexLocker locker( mutex() );
 
-  if ( !IsPrepared || Sigs.empty() ) {
+  if ( ModuleFd < 0 || !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     return -1;
   }
@@ -1039,7 +1039,7 @@ int DynClampAnalogOutput::stop( void )
   {
     QMutexLocker locker( mutex() );
 
-    if ( !IsPrepared )
+    if ( ModuleFd < 0 || !IsPrepared )
       return 0;
 
     running = SUBDEV_OUT;
@@ -1071,7 +1071,8 @@ int DynClampAnalogOutput::reset( void )
 { 
   lock();
 
-  rtf_reset( FifoFd );
+  if ( FifoFd >= 0 )
+    rtf_reset( FifoFd );
 
   Sigs.clear();
   if ( Buffer != 0 )
@@ -1096,7 +1097,7 @@ AnalogOutput::Status DynClampAnalogOutput::status( void ) const
 {
   QMutexLocker locker( mutex() );
 
-  if ( !IsPrepared )
+  if ( ModuleFd < 0 || !IsPrepared )
     return Idle;
 
   int running = SUBDEV_OUT;
@@ -1122,6 +1123,9 @@ AnalogOutput::Status DynClampAnalogOutput::status( void ) const
 long DynClampAnalogOutput::index( void ) const
 {
   QMutexLocker locker( mutex() );
+
+  if ( ModuleFd < 0 )
+    return -1;
 
   long index = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETAOINDEX, &index );
@@ -1154,6 +1158,9 @@ bool DynClampAnalogOutput::useAIRate( void ) const
 
 void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 {
+  if ( ModuleFd < 0 )
+    return;
+
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = PARAM_OUT;
   int channel = PARAM_CHAN_OFFSET;
@@ -1183,6 +1190,9 @@ void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid 
 
 int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 {
+  if ( ModuleFd < 0 )
+    return -1;
+
   int failed = false;
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = TRACE_OUT;
