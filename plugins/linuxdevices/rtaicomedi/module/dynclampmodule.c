@@ -141,8 +141,8 @@ int waittimestatusinx = 0;
 int outputstatusinx = 0;
 #endif
 
-#ifdef ENABLE_COMPUTATION
 int traceIndex = 0;
+#ifdef ENABLE_COMPUTATION
 int inputChanIndex = 0;
 int outputChanIndex = 0;
 
@@ -254,8 +254,10 @@ float origParamOutput[PARAMOUTPUT_N];
 
 void init_globals( void )
 {
+#ifdef ENABLE_COMPUTATION
   int k;
   char name[PARAM_NAME_MAXLEN];
+#endif
 
   device = 0;
   memset( subdevices, 0, sizeof(subdevices) );
@@ -907,7 +909,9 @@ int setDigitalIO( struct dioIOCT *dioIOC )
   unsigned int bit = 0;
   int channel = 0;
   int direction = 0;
+#ifdef ENABLE_SYNCSEC
   int retval;
+#endif
 #ifdef ENABLE_TTLPULSE
   int pT = dioIOC->pulseType;
   int iT = 0;
@@ -1448,6 +1452,9 @@ void dynclamp_loop( long dummy )
 	ERROR_MSG( "dynclamp_loop: ERROR! failed to set DIO high at start write for syncing SEC with return value %d\n", retVal );
       }
     }
+    else {
+      rt_busy_sleep( INJECT_RECORD_DELAY );
+    }
 
 #else
 
@@ -1533,8 +1540,10 @@ void dynclamp_loop( long dummy )
 	  startsampletime = rt_get_cpu_time_ns();
 #endif
 	  sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
+#ifdef ENABLE_COMPUTATION
 	  if ( pChan->modelIndex >= 0 )
 	    input[pChan->modelIndex] = pChan->voltage;
+#endif
 #ifdef ENABLE_AICONVERSIONTIME
 	  stopsampletime = rt_get_cpu_time_ns();
 	  dsampletime = stopsampletime - startsampletime;
@@ -1542,9 +1551,11 @@ void dynclamp_loop( long dummy )
 #endif
 	}
 	else {
+#ifdef ENABLE_COMPUTATION
 	  if ( pChan->param == 1 )
 	    pChan->voltage = paramInput[pChan->chan]*pChan->scale;
 	  else
+#endif
 	    pChan->voltage = statusInput[pChan->chan]*pChan->scale;
 	}
 	// write to FIFO:
@@ -1771,8 +1782,8 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
   static struct deviceIOCT deviceIOC;
   static struct chanlistIOCT chanlistIOC;
   static struct syncCmdIOCT syncCmdIOC;
-#ifdef ENABLE_COMPUTATION
   static struct traceInfoIOCT traceInfo;
+#ifdef ENABLE_COMPUTATION
   static struct traceChannelIOCT traceChannel;
 #endif
   static struct dioIOCT dioIOC;

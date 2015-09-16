@@ -42,7 +42,7 @@ DynClampAISim::DynClampAISim( void )
   aitimestatusinx = statusInput.size();
   statusInputNames.push_back( "AI-time" );
   statusInputUnits.push_back( "s" );
-  statusInput.push_back( traces.size()*1.2e-6 );
+  statusInput.push_back( 1.2e-6 );
 #endif
 #ifdef ENABLE_AIACQUISITIONTIME
   aiacquisitiontimestatusinx = statusInput.size();
@@ -58,9 +58,9 @@ DynClampAISim::DynClampAISim( void )
 #endif
 #ifdef ENABLE_AOTIME
   aotimestatusinx = statusInput.size();
-  statusInputNames.psuh_back( "AO-time" );
+  statusInputNames.push_back( "AO-time" );
   statusInputUnits.push_back( "s" );
-  statusInput.push_back( traces.size()*0.6e-6 );
+  statusInput.push_back( 0.6e-6 );
 #endif
 #ifdef ENABLE_MODELTIME
   modeltimestatusinx = statusInput.size();
@@ -146,6 +146,9 @@ int DynClampAISim::prepareRead( InList &traces )
 #ifdef ENABLE_INTERVALS
   statusInput[intervalstatusinx] = traces[0].sampleInterval();
 #endif
+#ifdef ENABLE_AITIME
+  statusInput[aitimestatusinx] = traces.size()*1.2e-6;
+#endif
   return AISim::prepareRead( traces );
 }
 
@@ -153,8 +156,13 @@ int DynClampAISim::prepareRead( InList &traces )
 void DynClampAISim::model( InList &data,
 			   const vector< int > &aochannels, vector< float > &aovalues )
 {
+#ifdef ENABLE_COMPUTATION
   dynclampmodelsim::computeModel( data, aochannels, aovalues,
 				  outputstatusinx, statusInput );
+#else
+  for ( unsigned int k=0; k<aochannels.size(); k++ )
+    aovalues[k] = 0.0;
+#endif
   for ( int k=0; k<data.size(); k++ ) {
     if ( data[k].channel() >= 2*PARAM_CHAN_OFFSET ) {
       data[k].push( statusInput[ data[k].channel()-2*PARAM_CHAN_OFFSET ]*data[k].scale() );
