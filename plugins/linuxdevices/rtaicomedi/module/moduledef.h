@@ -12,9 +12,11 @@
 
 
 // *** FEATURES *** 
+// You may use configure to select features, e.g. ./configure --enable-dynclamp-computation .
+// Or you enable the following defines by uncommenting them.
 
   /*! Compute a model. */
-#define ENABLE_COMPUTATION
+// #define ENABLE_COMPUTATION
 
   /*! Generate lookup tables and do not use rtai_math module. */
 // #define ENABLE_LOOKUPTABLES
@@ -26,15 +28,13 @@
 // #define ENABLE_TTLPULSE
 
   /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
-#define ENABLE_SYNCSEC
+// #define ENABLE_SYNCSEC
 
   /*! Intervals of the dynamic clamp loop are always measured and are available as "Interval". */
   /*! Measure total duration of analog inputs per cycle and make it available as "AI-time". */
 // #define ENABLE_AITIME
   /*! Measure duration of analog input acquisition per cycle and make it available as "AI-acquisition-time". */
 // #define ENABLE_AIACQUISITIONTIME
-  /*! Measure duration of analog input conversion per cycle and make it available as "AI-conversion-time". */
-// #define ENABLE_AICONVERSIONTIME
   /*! Measure total duration of analog outputs per cycle and make it available as "AO-time". */
 // #define ENABLE_AOTIME
   /*! Measure duration of model computation per cycle and make it available as "Model-time". */

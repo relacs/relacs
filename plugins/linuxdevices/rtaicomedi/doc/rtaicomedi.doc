@@ -73,6 +73,11 @@ sudo ./makertaikernel
    \code
 sudo ./makertaikernel test
    \endcode
+   to run the "kern" tests or
+   \code
+sudo ./makertaikernel test all
+   \endcode
+   to run the kern, kthreads, and user tests.
    The result of the test is written into the file
    latencies-3.14.17-rtai-XXX-NAME-QUALITY and the corresponding
    kernel configuration is saved in
@@ -80,7 +85,7 @@ sudo ./makertaikernel test
    is replaced by your choice of rtai source (e.g. magma, rtai-4.1, etc), 
    XXX is replaced by a number, NAME and QUALITY are short
    strings describing your kernel configuration and the test
-   performance that you can enter during the test.
+   performance that you can enter after the test.
 
    See also \ref installrtai step 6 and 7 for more testing options and troubleshooting.
 
@@ -839,7 +844,9 @@ cd plugins/linuxdevices/rtaicomedi
 make clean
 \endcode
 -# Select features of the dynamic clamp module by commenting or uncommenting the defines
-at the top of the file \c plugins/linuxdevices/rtaicomedi/module/moduledef.h.
+at the top of the file \c plugins/linuxdevices/rtaicomedi/module/moduledef.h
+or by enabling them by the --enable-dynclamp options for ./configure
+(see ./configure --help for a description of all available options).
 -# Implement your dynamic clamp model in the file \c plugins/linuxdevices/rtaicomedi/module/model.c .
 -# Compile the dynamic clamp plugins and the kernel module
 \code

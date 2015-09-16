@@ -125,9 +125,6 @@ int aitimestatusinx = 0;
 #ifdef ENABLE_AIACQUISITIONTIME
 int aiacquisitiontimestatusinx = 0;
 #endif
-#ifdef ENABLE_AICONVERSIONTIME
-int aiconversiontimestatusinx = 0;
-#endif
 #ifdef ENABLE_AOTIME
 int aotimestatusinx = 0;
 #endif
@@ -289,13 +286,6 @@ void init_globals( void )
   strcpy( statusInputNames[aiacquisitiontimestatusinx], "AI-acquisition-time" );
   strcpy( statusInputUnits[aiacquisitiontimestatusinx], "s" );
   statusInput[aiacquisitiontimestatusinx] = 0.0;
-#endif
-#ifdef ENABLE_AICONVERSIONTIME
-  aiconversiontimestatusinx = statusInputN;
-  statusInputN++;
-  strcpy( statusInputNames[aiconversiontimestatusinx], "AI-conversion-time" );
-  strcpy( statusInputUnits[aiconversiontimestatusinx], "s" );
-  statusInput[aiconversiontimestatusinx] = 0.0;
 #endif
 #ifdef ENABLE_AOTIME
   aotimestatusinx = statusInputN;
@@ -1208,7 +1198,7 @@ void dynclamp_loop( long dummy )
   RTIME stoptime = 0;
   int dtime = 0;   // to avoid __divdi3 issues we use an int here
 #endif
-#if defined(ENABLE_AIACQUISITIONTIME) || defined(ENABLE_AICONVERSIONTIME)
+#ifdef ENABLE_AIACQUISITIONTIME
   RTIME startsampletime = 0;
   RTIME stopsampletime = 0;
   int dsampletime = 0;   // to avoid __divdi3 issues we use an int here
@@ -1235,9 +1225,6 @@ void dynclamp_loop( long dummy )
 #endif
 #ifdef ENABLE_AIACQUISITIONTIME
   statusInput[aiacquisitiontimestatusinx] = 0.0;
-#endif
-#ifdef ENABLE_AICONVERSIONTIME
-  statusInput[aiconversiontimestatusinx] = 0.0;
 #endif
 #ifdef ENABLE_AOTIME
   statusInput[aotimestatusinx] = 0.0;
@@ -1536,18 +1523,10 @@ void dynclamp_loop( long dummy )
 	    return;
 	  }
 	  // convert to voltage:
-#ifdef ENABLE_AICONVERSIONTIME
-	  startsampletime = rt_get_cpu_time_ns();
-#endif
 	  sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
 #ifdef ENABLE_COMPUTATION
 	  if ( pChan->modelIndex >= 0 )
 	    input[pChan->modelIndex] = pChan->voltage;
-#endif
-#ifdef ENABLE_AICONVERSIONTIME
-	  stopsampletime = rt_get_cpu_time_ns();
-	  dsampletime = stopsampletime - startsampletime;
-	  statusInput[aiconversiontimestatusinx] = 1e-9*dsampletime;
 #endif
 	}
 	else {

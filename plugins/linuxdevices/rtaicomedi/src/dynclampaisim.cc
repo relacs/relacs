@@ -50,12 +50,6 @@ DynClampAISim::DynClampAISim( void )
   statusInputUnits.push_back( "s" );
   statusInput.push_back( 1.0e-6 );
 #endif
-#ifdef ENABLE_AICONVERSIONTIME
-  aiconversiontimestatusinx = statusInput.size();
-  statusInputNames.push_back( "AI-conversion-time" );
-  statusInputUnits.push_back( "s" );
-  statusInput.push_back( 0.1e-6 );
-#endif
 #ifdef ENABLE_AOTIME
   aotimestatusinx = statusInput.size();
   statusInputNames.push_back( "AO-time" );
