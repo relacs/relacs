@@ -109,9 +109,11 @@ RELACS_LIB_QT4()
 #################################################
 RELACS_LIB_COMEDI()
 AM_CONDITIONAL(RELACS_COND_COMEDIROUTING,[test "$COMEDI_SET_ROUTING" = yes])
+
 RELACS_HEADER_RTAI()
 AM_CONDITIONAL(RELACS_COND_RTAI,[test "$RELACS_COMEDI" != no -a  "$RELACS_RTAI" != no])
-#RELACS_DYNCLAMP()
+
+RELACS_DYNCLAMP()
 
 
 #################################################
