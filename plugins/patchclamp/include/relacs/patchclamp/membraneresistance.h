@@ -37,7 +37,7 @@ namespace patchclamp {
 \class MembraneResistance
 \brief [RePro] Measures membrane resistance, capacitance, and time constant with current pulses
 \author Jan Benda
-\version 1.2 (Sep 25, 2014)
+\version 1.4 (Sep 18, 2015)
 \par Screenshot
 \image html membraneresistance.png
 
@@ -50,6 +50,7 @@ namespace patchclamp {
 - \c pause=1000ms: Duration of pause bewteen outputs (\c number)
 - \c repeats=100: Repetitions of stimulus (\c integer)
 - Analysis
+- \c skipspikes=true: Skip trials with detected spikes (\c boolean)
 - \c sswidth=100ms: Window length for steady-state analysis (\c number)
 - \c nossfit=false: Fix steady-state potential for fit (\c boolean)
 - \c plotstdev=true: Plot standard deviation of membrane potential (\c boolean)

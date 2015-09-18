@@ -29,7 +29,7 @@ namespace patchclamp {
 
 
 MembraneResistance::MembraneResistance( void )
-  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.2", "Sep 25, 2014" ),
+  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.4", "Sep 18, 2015" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -45,6 +45,7 @@ MembraneResistance::MembraneResistance( void )
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Analysis" );
+  addBoolean( "skipspikes", "Skip trials with detected spikes", true );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
@@ -87,6 +88,7 @@ int MembraneResistance::main( void )
   Duration = number( "duration" );
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
+  bool skipspikes = boolean( "skipspikes" );
   double sswidth = number( "sswidth" );
   if ( pause < 2.0*Duration ) {
     warning( "Pause must be at least two times the stimulus duration!" );
@@ -158,8 +160,10 @@ int MembraneResistance::main( void )
 
   // plot:
   P.lock();
+  P.clear();
   P.setXRange( -500.0*Duration, 2000.0*Duration );
   P.setYLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]" );
+  P.draw();
   P.unlock();
 
   // signal:
@@ -206,8 +210,6 @@ int MembraneResistance::main( void )
       break;
     }
 
-    analyzeOn( Duration, sswidth, nossfit );
-
     sleep( Duration );
     if ( interrupt() ) {
       if ( Count < 1 )
@@ -216,8 +218,16 @@ int MembraneResistance::main( void )
       break;
     }
 
-    analyzeOff( Duration, sswidth, nossfit );
-    plot();
+    bool spikes = events( SpikeEvents[0] ).count( signalTime()+MeanVoltage.rangeFront(),
+						  signalTime()+MeanVoltage.rangeBack() );
+    if ( skipspikes && spikes )
+      Count--;
+    else {
+      analyzeOn( Duration, sswidth, nossfit );
+      analyzeOff( Duration, sswidth, nossfit );
+      plot();
+    }
+
     sleepOn( Duration+pause );
     if ( interrupt() ) {
       if ( Count < 1 )
@@ -241,11 +251,22 @@ void MembraneResistance::analyzeOn( double duration,
   // update averages:
   const InData &intrace = trace( SpikeTrace[0] );
   int inx = intrace.signalIndex() - MeanVoltage.index( 0.0 );
-  for ( int k=0; k<MeanVoltage.index( duration ) && inx+k<intrace.size(); k++ ) {
+  for ( int k=0; k<MeanVoltage.size() && inx+k<intrace.size(); k++ ) {
     double v = intrace[inx+k];
     MeanVoltage[k] += (v - MeanVoltage[k])/(Count+1);
     SquareVoltage[k] += (v*v - SquareVoltage[k])/(Count+1);
     StdevVoltage[k] = sqrt( SquareVoltage[k] - MeanVoltage[k]*MeanVoltage[k] );
+  }
+
+  for ( unsigned int j=0; j<TraceIndices.size(); j++ ) {
+    const InData &intrace2 = trace( TraceIndices[j] );
+    for ( int k=0; k<MeanTraces[j].size() && inx+k<intrace2.size(); k++ ) {
+      double v = intrace2[inx+k];
+      if ( TraceIndices[j] == CurrentTrace[0] )
+	v *= IInFac;
+      MeanTraces[j][k] += (v - MeanTraces[j][k])/(Count+1);
+      SquareTraces[j][k] += (v*v - SquareTraces[j][k])/(Count+1);
+    }
   }
 
   // resting potential:
@@ -323,29 +344,6 @@ void MembraneResistance::analyzeOn( double duration,
 void MembraneResistance::analyzeOff( double duration,
 				     double sswidth, bool nossfit )
 {
-  // update averages:
-  const InData &intrace = trace( SpikeTrace[0] );
-  int inx = intrace.signalIndex() - MeanVoltage.index( 0.0 );
-  for ( int k=MeanVoltage.index( duration );
-	k<MeanVoltage.size() && inx+k<intrace.size();
-	k++ ) {
-    double v = intrace[inx+k];
-    MeanVoltage[k] += (v - MeanVoltage[k])/(Count+1);
-    SquareVoltage[k] += (v*v - SquareVoltage[k])/(Count+1);
-    StdevVoltage[k] = sqrt( SquareVoltage[k] - MeanVoltage[k]*MeanVoltage[k] );
-  }
-
-  for ( unsigned int j=0; j<TraceIndices.size(); j++ ) {
-    const InData &intrace2 = trace( TraceIndices[j] );
-    for ( int k=0; k<MeanTraces[j].size() && inx+k<intrace2.size(); k++ ) {
-      double v = intrace2[inx+k];
-      if ( TraceIndices[j] == CurrentTrace[0] )
-	v *= IInFac;
-      MeanTraces[j][k] += (v - MeanTraces[j][k])/(Count+1);
-      SquareTraces[j][k] += (v*v - SquareTraces[j][k])/(Count+1);
-    }
-  }
-
   // fit exponential to offset:
   int inxon0 = MeanVoltage.index( 0.0 );
   int inxon1 = VPeakInx;
