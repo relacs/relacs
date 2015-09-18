@@ -88,6 +88,7 @@ struct dynClampTaskT {
   unsigned int frequency;
   unsigned long duration;
   int running;
+  int inloop;
   unsigned long loopCnt;
   long aoIndex;
 };
@@ -166,6 +167,15 @@ comedi_insn ttlStartAOInsn[MAXTTLPULSES];
 comedi_insn ttlEndAOInsn[MAXTTLPULSES];
 
 comedi_insn *ttlInsns[MAXTTLPULSETYPES];
+
+/*
+lsampl_t ttlStartWriteData[2];
+lsampl_t ttlEndWriteData[2];
+lsampl_t ttlStartReadData[2];
+lsampl_t ttlEndReadData[2];
+lsampl_t ttlStartAOData[2];
+lsampl_t ttlEndAOData[2];
+*/
 
 lsampl_t ttlLow = 0;
 lsampl_t ttlHigh = 1;
@@ -254,6 +264,10 @@ void init_globals( void )
 #ifdef ENABLE_COMPUTATION
   int k;
   char name[PARAM_NAME_MAXLEN];
+#endif
+#ifdef ENABLE_TTLPULSE
+  int i;
+  int j;
 #endif
 
   device = 0;
@@ -363,6 +377,23 @@ void init_globals( void )
   ttlInsns[3] = ttlEndReadInsn;
   ttlInsns[4] = ttlStartAOInsn;
   ttlInsns[5] = ttlEndAOInsn;
+  /*
+  for ( j=0; j<MAXTTLPULSETYPES; j++ ) {
+    memset( &ttlInsns[j], 0, sizeof(comedi_insn) );
+    ttlInsns[j].insn = INSN_BITS;
+    ttlInsns[j].n = 2;
+  }
+  ttlStartWriteInsn.data = ttlStartWriteData;
+  ttlEndWriteInsn.data = ttlEndWriteData;
+  ttlStartReadInsn.data = ttlStartReadData;
+  ttlEndReadInsn.data = ttlEndReadData;
+  ttlStartAOInsn.data = ttlStartAOData;
+  ttlEndAOInsn.data = ttlEndAOData;
+  for ( j=0; j<MAXTTLPULSETYPES; j++ ) {
+    for ( i=0; i<2; i++ )
+      ttlInsns[j].data[i] = 0;
+  }
+  */
 #endif
 #ifdef ENABLE_SYNCSEC
   memset( &syncSECInsnLow, 0, sizeof(comedi_insn) );
@@ -997,6 +1028,16 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     ttlInsns[pT][iT].data = ( dioIOC->output ? &ttlHigh : &ttlLow );
     ttlInsns[pT][iT].subdev = subdevice;
     ttlInsns[pT][iT].chanspec = CR_PACK( dioIOC->lines, 0, 0 );
+    /*
+    if ( ttlInsns[pT].data[0] != 0 && ttlInsns[pT].subdev != subdevice ) {
+      ERROR_MSG( "setDigitalIO: subdevice %d for ttl pulse does not match already used subdevice %d", subdevice, ttlInsns[pT].subdev );
+      return -EINVAL;
+    }
+    ttlInsns[pT].subdev = subdevice;
+    ttlInsns[pT].data[0] |= mask;
+    if ( dioIOC->output )
+      ttlInsns[pT].data[1] |= bits;
+     */
     DEBUG_MSG( "setDigitalIO: add pulse pT=%d  iT=%d  output=%d subdev=%u lines=%d\n",
 	       pT, iT, ttlInsns[pT][iT].data[0], ttlInsns[pT][iT].subdev,
 	       ttlInsns[pT][iT].chanspec );
@@ -1028,6 +1069,10 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 #endif
   else if ( dioIOC->op == DIO_SET_SYNCPULSE ) {
 #ifdef ENABLE_SYNCSEC
+    if ( dynClampTask.running ) {
+      while ( dynClampTask.inloop )
+        cpu_relax();
+    }
     syncSECPulse = 0;
     if ( dioIOC->pulsewidth <= 0 ) {
       ERROR_MSG( "setDigitalIO: syncSECPulse %d ns is not positive!\n", dioIOC->pulsewidth );
@@ -1248,6 +1293,8 @@ void dynclamp_loop( long dummy )
   /******** LOOP START: *****************************************************/
   /**************************************************************************/
   while( aisubdev.running > 0 ) {
+
+    dynClampTask.inloop = 1;
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteInsn[iT].n > 0; iT++ ) {
@@ -1619,7 +1666,7 @@ void dynclamp_loop( long dummy )
 #ifdef ENABLE_WAITTIME
     starttime = rt_get_cpu_time_ns();
 #endif
-    //    start = rt_get_cpu_time_ns();
+    dynClampTask.inloop = 0;
     rt_task_wait_period();
 #ifdef ENABLE_WAITTIME
     stoptime = rt_get_cpu_time_ns();
@@ -1725,6 +1772,7 @@ int init_dynclamp_loop( void )
 void finish_dynclamp_loop( void )
 {
   dynClampTask.running = 0;
+  dynClampTask.inloop = 0;
   dynClampTask.duration = 0;
   dynClampTask.frequency = 0;
   DEBUG_MSG( "finish_dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
