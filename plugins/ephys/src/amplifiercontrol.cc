@@ -42,6 +42,7 @@ AmplifierControl::AmplifierControl( void )
   DCButton = 0;
   VCButton = 0;
   ManualButton = 0;
+  DCPulseBox = 0;
   SyncSpinBox = 0;
 
   Ampl = 0;
@@ -105,10 +106,16 @@ void AmplifierControl::notify( void )
       CCButton->hide();
   }
   if ( DCButton != 0 ) {
-    if ( boolean( "showdc" ) )
+    if ( boolean( "showdc" ) && DIO != 0 )
       DCButton->show();
     else
       DCButton->hide();
+  }
+  if ( DCPulseBox != 0 ) {
+    if ( boolean( "showdc" ) && DIO != 0 )
+      DCPulseBox->show();
+    else
+      DCPulseBox->hide();
   }
   if ( VCButton != 0 ) {
     if ( boolean( "showvc" ) )
@@ -132,157 +139,162 @@ void AmplifierControl::notify( void )
 void AmplifierControl::initDevices( void )
 {
   Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
-  if ( Ampl != 0 ) {
-    // add meta data:
-    lockMetaData();
-    if ( ! metaData().existSection( "Electrode" ) )
-      metaData().newSection( "Electrode", "Electrode", metaData().saveFlags() );
-    Options &mo = metaData().section( "Electrode" );
-    mo.unsetNotify();
-    if ( ! mo.exist( "Resistance" ) )
-      mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" ).addFlags( metaData().saveFlags() );
-    mo.setNotify();
-    unlockMetaData();
-    // add buzzer and resistance widgets:
-    if ( BuzzBox == 0 ) {
-      AmplBox->addWidget( new QLabel );
-      BuzzBox = new QHBoxLayout;
-      AmplBox->addLayout( BuzzBox );
+  if ( Ampl == 0 ) {
+    widget()->hide();
+    return;
+  }
+
+  // add meta data:
+  lockMetaData();
+  if ( ! metaData().existSection( "Electrode" ) )
+    metaData().newSection( "Electrode", "Electrode", metaData().saveFlags() );
+  Options &mo = metaData().section( "Electrode" );
+  mo.unsetNotify();
+  if ( ! mo.exist( "Resistance" ) )
+    mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" ).addFlags( metaData().saveFlags() );
+  mo.setNotify();
+  unlockMetaData();
+  // add buzzer and resistance widgets:
+  if ( BuzzBox == 0 ) {
+    AmplBox->addWidget( new QLabel );
+    BuzzBox = new QHBoxLayout;
+    AmplBox->addLayout( BuzzBox );
     
-      BuzzBox->addWidget( new QLabel );
+    BuzzBox->addWidget( new QLabel );
 
-      BuzzerButton = new QPushButton( "Bu&zz" );
-      BuzzBox->addWidget( BuzzerButton );
-      connect( BuzzerButton, SIGNAL( clicked() ),
-	       this, SLOT( startBuzz() ) );
+    BuzzerButton = new QPushButton( "Bu&zz" );
+    BuzzBox->addWidget( BuzzerButton );
+    connect( BuzzerButton, SIGNAL( clicked() ),
+	     this, SLOT( startBuzz() ) );
 
-      BuzzBox->addWidget( new QLabel );
+    BuzzBox->addWidget( new QLabel );
 
-      ResistanceButton = new QPushButton( "R" );
-      BuzzBox->addWidget( ResistanceButton );
-      connect( ResistanceButton, SIGNAL( pressed() ),
-	       this, SLOT( startResistance() ) );
-      connect( ResistanceButton, SIGNAL( released() ),
-	       this, SLOT( stopResistance() ) );
+    ResistanceButton = new QPushButton( "R" );
+    BuzzBox->addWidget( ResistanceButton );
+    connect( ResistanceButton, SIGNAL( pressed() ),
+	     this, SLOT( startResistance() ) );
+    connect( ResistanceButton, SIGNAL( released() ),
+	     this, SLOT( stopResistance() ) );
     
-      QLabel *label = new QLabel( "=" );
-      label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-      BuzzBox->addWidget( label );
+    QLabel *label = new QLabel( "=" );
+    label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+    BuzzBox->addWidget( label );
 
-      ResistanceLabel = new QLabel( "000" );
-      ResistanceLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
-      ResistanceLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
-      ResistanceLabel->setLineWidth( 2 );
-      QFont nf( ResistanceLabel->font() );
-      nf.setPointSizeF( 1.6 * nf.pointSizeF() );
-      nf.setBold( true );
-      ResistanceLabel->setFont( nf );
-      ResistanceLabel->setAutoFillBackground( true );
-      QPalette qp( ResistanceLabel->palette() );
-      qp.setColor( QPalette::Window, Qt::black );
-      qp.setColor( QPalette::WindowText, Qt::green );
-      ResistanceLabel->setPalette( qp );
-      ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
-      ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
-      ResistanceLabel->setText( "0" );
-      BuzzBox->addWidget( ResistanceLabel );
+    ResistanceLabel = new QLabel( "000" );
+    ResistanceLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
+    ResistanceLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+    ResistanceLabel->setLineWidth( 2 );
+    QFont nf( ResistanceLabel->font() );
+    nf.setPointSizeF( 1.6 * nf.pointSizeF() );
+    nf.setBold( true );
+    ResistanceLabel->setFont( nf );
+    ResistanceLabel->setAutoFillBackground( true );
+    QPalette qp( ResistanceLabel->palette() );
+    qp.setColor( QPalette::Window, Qt::black );
+    qp.setColor( QPalette::WindowText, Qt::green );
+    ResistanceLabel->setPalette( qp );
+    ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
+    ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
+    ResistanceLabel->setText( "0" );
+    BuzzBox->addWidget( ResistanceLabel );
 
-      BuzzBox->addWidget( new QLabel( "M<u>O</u>hm" ) );
+    BuzzBox->addWidget( new QLabel( "M<u>O</u>hm" ) );
     
-      BuzzBox->addWidget( new QLabel );
-      AmplBox->addWidget( new QLabel );
-    }
-    // add stimulus data:
-    lockStimulusData();
-    stimulusData().addText( "AmplifierMode", "Amplifier mode", "Bridge" );
-    unlockStimulusData();
-    // add mode selection widgets:
-    QVBoxLayout *vbox = 0;
-    if ( ModeBox == 0 ) {
-      ModeBox = new QGroupBox( "Amplifier mode" );
-      BridgeButton = new QRadioButton( "&Bridge" );
-      BridgeButton->setChecked( true );
-      connect( BridgeButton, SIGNAL( clicked( bool ) ), this, SLOT( activateBridgeMode( bool ) ) );
-      CCButton = new QRadioButton( "&Current-clamp" );
-      connect( CCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateCurrentClampMode( bool ) ) );
-      DCButton = new QRadioButton( "D&ynamic-clamp" );
-      connect( DCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateDynamicClampMode( bool ) ) );
-      VCButton = new QRadioButton( "&Voltage-clamp" );
-      connect( VCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateVoltageClampMode( bool ) ) );
-      ManualButton = new QRadioButton( "M&anual selection" );
-      connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
-      vbox = new QVBoxLayout;
-      vbox->addWidget( BridgeButton );
-      if ( ! boolean( "showbridge" ) )
-	BridgeButton->hide();
-      vbox->addWidget( CCButton );
-      if ( ! boolean( "showcc" ) )
-        CCButton->hide();
-      vbox->addWidget( DCButton );
-      if ( ! boolean( "showdc" ) )
-        DCButton->hide();
-      vbox->addWidget( VCButton );
-      if ( ! boolean( "showvc" ) )
-        VCButton->hide();
-      vbox->addWidget( ManualButton );
-      if ( ! boolean( "showmanual" ) )
-        ManualButton->hide();
-      ModeBox->setLayout( vbox );
-      AmplBox->addWidget( ModeBox );
-      AmplBox->addWidget( new QLabel );
-    }
-    // add amplifier synchronization:
-    DIO = digitalIO( "dio-1" );
-    if ( DIO != 0 ) {
-      if ( DIO->clearSyncPulse() == Device::InvalidDevice ) {
-	DIO = 0;
-      }
-    }
-    if ( DIO != 0 ) {
-      lockStimulusData();
-      double spd = 0.0;
-      if ( SyncPulseEnabled )
-	spd = 1.0e6*SyncPulseDuration;
-      stimulusData().addNumber( "SyncPulse", "Synchronization pulse", spd, "us" );
-      unlockStimulusData();
-    }
-    else
+    BuzzBox->addWidget( new QLabel );
+    AmplBox->addWidget( new QLabel );
+  }
+  // add stimulus data:
+  lockStimulusData();
+  stimulusData().addText( "AmplifierMode", "Amplifier mode", "Bridge" );
+  unlockStimulusData();
+  // add mode selection widgets:
+  QVBoxLayout *vbox = 0;
+  if ( ModeBox == 0 ) {
+    ModeBox = new QGroupBox( "Amplifier mode" );
+    BridgeButton = new QRadioButton( "&Bridge" );
+    BridgeButton->setChecked( true );
+    connect( BridgeButton, SIGNAL( clicked( bool ) ), this, SLOT( activateBridgeMode( bool ) ) );
+    CCButton = new QRadioButton( "&Current-clamp" );
+    connect( CCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateCurrentClampMode( bool ) ) );
+    DCButton = new QRadioButton( "D&ynamic-clamp" );
+    connect( DCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateDynamicClampMode( bool ) ) );
+    VCButton = new QRadioButton( "&Voltage-clamp" );
+    connect( VCButton, SIGNAL( clicked( bool ) ), this, SLOT( activateVoltageClampMode( bool ) ) );
+    ManualButton = new QRadioButton( "M&anual selection" );
+    connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
+    vbox = new QVBoxLayout;
+    vbox->addWidget( BridgeButton );
+    if ( ! boolean( "showbridge" ) )
+      BridgeButton->hide();
+    vbox->addWidget( CCButton );
+    if ( ! boolean( "showcc" ) )
+      CCButton->hide();
+    vbox->addWidget( DCButton );
+    if ( ! boolean( "showdc" ) )
       DCButton->hide();
-    if ( DIO != 0 && SyncSpinBox == 0 && vbox != 0 ) {
-      vbox->addWidget( new QLabel );
-      QHBoxLayout *hbox = new QHBoxLayout;
-      vbox->addLayout( hbox );
-      QLabel *label = new QLabel( "Pulse duration" );
-      hbox->addWidget( label );
-      SyncSpinBox = new DoubleSpinBox;
-      SyncSpinBox->setRange( 1.0, 1000.0 );
-      SyncSpinBox->setSingleStep( 1.0 );
-      SyncSpinBox->setPrecision( 0 );
-      SyncSpinBox->setKeyboardTracking( false );
-      SyncSpinBox->setValue( 1.0e6 * SyncPulseDuration );
-      connect( SyncSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
-      hbox->addWidget( SyncSpinBox );
-      label = new QLabel( "microseconds" );
-      hbox->addWidget( label );
-    }
-    widget()->show();
-    // initial mode:
-    int initmode = index( "initmode" );
-    switch ( initmode ) {
-    case 1 : activateCurrentClampMode();
-      break;
-    case 2 : activateDynamicClampMode();
-      break;
-    case 3 : activateVoltageClampMode();
-      break;
-    case 4 : manualSelection();
-      break;
-    default :
-      activateBridgeMode();
+    vbox->addWidget( VCButton );
+    if ( ! boolean( "showvc" ) )
+      VCButton->hide();
+    vbox->addWidget( ManualButton );
+    if ( ! boolean( "showmanual" ) )
+      ManualButton->hide();
+    ModeBox->setLayout( vbox );
+    AmplBox->addWidget( ModeBox );
+    AmplBox->addWidget( new QLabel );
+  }
+  // add amplifier synchronization:
+  DIO = digitalIO( "dio-1" );
+  if ( DIO != 0 ) {
+    if ( DIO->clearSyncPulse() == Device::InvalidDevice ) {
+      DIO = 0;
     }
   }
-  else {
-    widget()->hide();
+  if ( DIO != 0 ) {
+    lockStimulusData();
+    double spd = 0.0;
+    if ( SyncPulseEnabled )
+      spd = 1.0e6*SyncPulseDuration;
+    stimulusData().addNumber( "SyncPulse", "Synchronization pulse", spd, "us" );
+    unlockStimulusData();
+  }
+  else
+    DCButton->hide();
+  if ( DIO != 0 && DCPulseBox == 0 && SyncSpinBox == 0 && vbox != 0 ) {
+    vbox->addWidget( new QLabel );
+    DCPulseBox = new QWidget;
+    vbox->addWidget( DCPulseBox );
+    QHBoxLayout *hbox = new QHBoxLayout;
+    hbox->setContentsMargins( 0, 0, 0, 0 );
+    DCPulseBox->setLayout( hbox );
+    QLabel *label = new QLabel( "Pulse duration" );
+    hbox->addWidget( label );
+    SyncSpinBox = new DoubleSpinBox;
+    SyncSpinBox->setRange( 1.0, 1000.0 );
+    SyncSpinBox->setSingleStep( 1.0 );
+    SyncSpinBox->setPrecision( 0 );
+    SyncSpinBox->setKeyboardTracking( false );
+    SyncSpinBox->setValue( 1.0e6 * SyncPulseDuration );
+    connect( SyncSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
+    hbox->addWidget( SyncSpinBox );
+    label = new QLabel( "microseconds" );
+    hbox->addWidget( label );
+    if ( ! boolean( "showdc" ) )
+      DCPulseBox->hide();
+  }
+  widget()->show();
+  // initial mode:
+  int initmode = index( "initmode" );
+  switch ( initmode ) {
+  case 1 : activateCurrentClampMode();
+    break;
+  case 2 : activateDynamicClampMode();
+    break;
+  case 3 : activateVoltageClampMode();
+    break;
+  case 4 : manualSelection();
+    break;
+  default :
+    activateBridgeMode();
   }
 }
 

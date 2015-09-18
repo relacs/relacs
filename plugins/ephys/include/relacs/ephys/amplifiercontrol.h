@@ -179,6 +179,7 @@ private:
   QRadioButton *DCButton;
   QRadioButton *VCButton;
   QRadioButton *ManualButton;
+  QWidget *DCPulseBox;
   DoubleSpinBox *SyncSpinBox;
   bool SyncPulseEnabled;
   double SyncPulseDuration;

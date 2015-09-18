@@ -16,7 +16,7 @@
 // Or you enable the following defines by uncommenting them.
 
   /*! Compute a model. */
-// #define ENABLE_COMPUTATION
+#define ENABLE_COMPUTATION
 
   /*! Generate lookup tables and do not use rtai_math module. */
 // #define ENABLE_LOOKUPTABLES
@@ -28,7 +28,7 @@
 // #define ENABLE_TTLPULSE
 
   /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
-// #define ENABLE_SYNCSEC
+#define ENABLE_SYNCSEC
 
   /*! Intervals of the dynamic clamp loop are always measured and are available as "Interval". */
   /*! Measure total duration of analog inputs per cycle and make it available as "AI-time". */
