@@ -1,5 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 
+EXTRA_CFLAGS += @DEFS@
 EXTRA_CFLAGS += @RTAI_CPPFLAGS@
 EXTRA_CFLAGS += -mpreferred-stack-boundary=4
 EXTRA_CFLAGS += -Wall

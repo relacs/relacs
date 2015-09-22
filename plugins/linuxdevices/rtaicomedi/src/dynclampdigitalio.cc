@@ -399,6 +399,11 @@ int DynClampDigitalIO::addTTLPulse( unsigned int line, enum ttlPulses high,
     cerr << "! error: DynClampDigitalIO::addTTLPulse() -> "
 	 << "Adding TTL pulse high to DIO line " << line
 	 << " failed on subdevice " << SubDevice << '\n';
+    if ( errno == ENOTTY ) {
+      cerr << "! error: dynamic clamp module is not compiled with ttl pulse support\n";
+      cerr << "! error: Enable ttl pulse support by making sure ENABLE_TTLPULSES is defined in moduledef.h\n";
+      return InvalidDevice;
+    }
     return WriteError;
   }
   if ( ! inithigh )
@@ -454,6 +459,11 @@ int DynClampDigitalIO::clearTTLPulse( unsigned int line, bool high )
     cerr << "! error: DynClampDigitalIO::clearTTLPulse() -> "
 	 << "Clearing TTL pulse at DIO line " << line
 	 << " failed on subdevice " << SubDevice << '\n';
+    if ( errno == ENOTTY ) {
+      cerr << "! error: dynamic clamp module is not compiled with ttl pulse support\n";
+      cerr << "! error: Enable ttl pulse support by making sure ENABLE_TTLPULSES is defined in moduledef.h\n";
+      return InvalidDevice;
+    }
     return WriteError;
   }
   TTLPulseHigh[line] = TTL_UNDEFINED;
@@ -462,7 +472,7 @@ int DynClampDigitalIO::clearTTLPulse( unsigned int line, bool high )
 }
 
 
-int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration )
+int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration, int mode )
 {
   if ( !isOpen() )
     return NotOpen;
@@ -471,7 +481,7 @@ int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration )
     cerr << "! error: DynClampDigitalIO::setSyncPulse() -> duration " << durationns << " ns not positive\n";
     return WriteError;
   }
-  if ( line < 0 || line >= MaxLines ) {
+  if ( line >= MaxLines ) {
     cerr << "! error: DynClampDigitalIO::setSyncPulse() -> invalid line " << line << '\n';
     return WriteError;
   }
@@ -487,8 +497,9 @@ int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration )
   dioIOC.subdev = SubDevice;
   dioIOC.op = DIO_SET_SYNCPULSE;
   dioIOC.mask = 1 << line;
+  dioIOC.bits = dioIOC.mask;
   dioIOC.pulsewidth = durationns;
-  dioIOC.intervalmode = 0;
+  dioIOC.intervalmode = mode;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if ( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::setSyncPulse() -> "
@@ -505,9 +516,9 @@ int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration )
 }
 
 
-int DynClampDigitalIO::setSyncPulse( double duration )
+int DynClampDigitalIO::setSyncPulse( double duration, int mode )
 {
-  return setSyncPulse( SyncLine, duration );
+  return setSyncPulse( SyncLine, duration, mode );
 }
 
 

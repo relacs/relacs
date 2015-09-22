@@ -215,9 +215,13 @@ public:
         dynamic-clamp loop. 
 	\param[in] duration the duration of the current injection of 
 	the amplifier in seconds.
+	\param[in] mode how the measured period is determined:
+          0: the fixed requested sampling interval,
+	  1: the current period,
+          > 1: the average over the \a mode last periods.
 	\return 0 on success, a Device error code on failure.
 	\sa clearSyncPulse() */
-  virtual int setSyncPulse( double duration );
+  virtual int setSyncPulse( double duration, int mode=0 );
     /*! Disable TTL Pulse generation and current scaling.
 	\return 0 on success, a Device error code on failure.
 	\sa setSyncPulse() */

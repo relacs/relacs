@@ -250,7 +250,7 @@ void DigitalIO::setInfo( void )
 }
 
 
-int DigitalIO::setSyncPulse( double duration )
+  int DigitalIO::setSyncPulse( double duration, int mode )
 {
   return InvalidDevice;
 }

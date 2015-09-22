@@ -43,13 +43,15 @@ AmplifierControl::AmplifierControl( void )
   VCButton = 0;
   ManualButton = 0;
   DCPulseBox = 0;
-  SyncSpinBox = 0;
+  SyncPulseSpinBox = 0;
+  SyncModeSpinBox = 0;
 
   Ampl = 0;
   DIO = 0;
   RMeasure = false;
   SyncPulseEnabled = false;
   SyncPulseDuration = 0.00001;
+  SyncMode = 0;
   MaxResistance = 100.0;
   ResistanceCurrent = 1.0;
   BuzzPulse = 0.5;
@@ -66,6 +68,7 @@ AmplifierControl::AmplifierControl( void )
   addBoolean( "showvc", "Make voltage clamp mode for amplifier selectable", false );
   addBoolean( "showmanual", "Make manual mode for amplifier selectable", false );
   addNumber( "syncpulse", "Duration of SEC current injection", SyncPulseDuration, 0.0, 0.1, 0.000001, "s", "us" );
+  addInteger( "syncmode", "Interval is average over", SyncMode, 0, 1000 ).setUnit( "samples" );
 
   setGlobalKeyEvents();
 }
@@ -74,8 +77,11 @@ AmplifierControl::AmplifierControl( void )
 void AmplifierControl::notify( void )
 {
   SyncPulseDuration = number( "syncpulse" );
-  if ( SyncSpinBox != 0 )
-    SyncSpinBox->setValue( 1.0e6*SyncPulseDuration );
+  if ( SyncPulseSpinBox != 0 )
+    SyncPulseSpinBox->setValue( 1.0e6*SyncPulseDuration );
+  SyncMode = integer( "syncmode" );
+  if ( SyncModeSpinBox != 0 )
+    SyncModeSpinBox->setValue( SyncMode );
   // initial mode:
   if ( changed( "initmode" ) ) {
     int initmode = index( "initmode" );
@@ -255,29 +261,43 @@ void AmplifierControl::initDevices( void )
     if ( SyncPulseEnabled )
       spd = 1.0e6*SyncPulseDuration;
     stimulusData().addNumber( "SyncPulse", "Synchronization pulse", spd, "us" );
+    stimulusData().addInteger( "SyncMode", "Synchronization average", SyncMode ).setUnit( "samples" );
     unlockStimulusData();
   }
   else
     DCButton->hide();
-  if ( DIO != 0 && DCPulseBox == 0 && SyncSpinBox == 0 && vbox != 0 ) {
+  if ( DIO != 0 && DCPulseBox == 0 && SyncPulseSpinBox == 0 && vbox != 0 ) {
     vbox->addWidget( new QLabel );
     DCPulseBox = new QWidget;
     vbox->addWidget( DCPulseBox );
-    QHBoxLayout *hbox = new QHBoxLayout;
-    hbox->setContentsMargins( 0, 0, 0, 0 );
-    DCPulseBox->setLayout( hbox );
+    QGridLayout *gbox = new QGridLayout;
+    gbox->setContentsMargins( 0, 0, 0, 0 );
+    DCPulseBox->setLayout( gbox );
     QLabel *label = new QLabel( "Pulse duration" );
-    hbox->addWidget( label );
-    SyncSpinBox = new DoubleSpinBox;
-    SyncSpinBox->setRange( 1.0, 1000.0 );
-    SyncSpinBox->setSingleStep( 1.0 );
-    SyncSpinBox->setPrecision( 0 );
-    SyncSpinBox->setKeyboardTracking( false );
-    SyncSpinBox->setValue( 1.0e6 * SyncPulseDuration );
-    connect( SyncSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
-    hbox->addWidget( SyncSpinBox );
+    gbox->addWidget( label, 0, 0 );
+    SyncPulseSpinBox = new DoubleSpinBox;
+    SyncPulseSpinBox->setRange( 1.0, 1000.0 );
+    SyncPulseSpinBox->setSingleStep( 1.0 );
+    SyncPulseSpinBox->setPrecision( 0 );
+    SyncPulseSpinBox->setKeyboardTracking( false );
+    SyncPulseSpinBox->setValue( 1.0e6 * SyncPulseDuration );
+    connect( SyncPulseSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
+    gbox->addWidget( SyncPulseSpinBox, 0, 1 );
     label = new QLabel( "microseconds" );
-    hbox->addWidget( label );
+    gbox->addWidget( label, 0, 2 );
+
+    label = new QLabel( "Average over" );
+    gbox->addWidget( label, 1, 0 );
+    SyncModeSpinBox = new QSpinBox;
+    SyncModeSpinBox->setRange( 0, 1000 );
+    SyncModeSpinBox->setSingleStep( 1 );
+    SyncModeSpinBox->setKeyboardTracking( false );
+    SyncModeSpinBox->setValue( SyncMode );
+    connect( SyncModeSpinBox, SIGNAL( valueChanged( int ) ), this, SLOT( setSyncMode( int ) ) );
+    gbox->addWidget( SyncModeSpinBox, 1, 1 );
+    label = new QLabel( "samples" );
+    gbox->addWidget( label, 1, 2 );
+
     if ( ! boolean( "showdc" ) )
       DCPulseBox->hide();
   }
@@ -482,13 +502,16 @@ void AmplifierControl::activateSyncPulse( bool activate )
 {
   if ( DIO != 0 ) {
     if ( activate ) {
-      if ( DIO->setSyncPulse( SyncPulseDuration ) == 0 ) {
+      if ( DIO->setSyncPulse( SyncPulseDuration, SyncMode ) == 0 ) {
 	lockStimulusData();
 	stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
+	stimulusData().setInteger( "SyncMode", SyncMode );
 	unlockStimulusData();
 	unsetNotify();
 	setNumber( "syncpulse", SyncPulseDuration );
 	setDefault( "syncpulse" );
+	setInteger( "syncmode", SyncMode );
+	setDefault( "syncmode" );
 	setNotify();
       }
       else
@@ -498,6 +521,7 @@ void AmplifierControl::activateSyncPulse( bool activate )
       DIO->clearSyncPulse();
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 0.0 );
+      stimulusData().setInteger( "SyncMode", 0 );
       unlockStimulusData();
     }
     SyncPulseEnabled = activate;
@@ -507,17 +531,36 @@ void AmplifierControl::activateSyncPulse( bool activate )
 
 void AmplifierControl::setSyncPulse( double durationus )
 {
-  double syncpulseduration = 1.0e-6 * durationus;
-  SyncPulseDuration = syncpulseduration;
+  SyncPulseDuration = 1.0e-6 * durationus;
   unsetNotify();
   setNumber( "syncpulse", SyncPulseDuration );
   setToDefault( "syncpulse" );
   setNotify();
   if ( DIO != 0 && SyncPulseEnabled ) {
-    if ( DIO->setSyncPulse( syncpulseduration ) == 0 ) {
+    if ( DIO->setSyncPulse( SyncPulseDuration, SyncMode ) == 0 ) {
       activateDynamicClampMode( true );
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
+      stimulusData().setInteger( "SyncMode", SyncMode );
+      unlockStimulusData();
+    }
+  }
+}
+
+
+void AmplifierControl::setSyncMode( int mode )
+{
+  SyncMode = mode;
+  unsetNotify();
+  setInteger( "syncmode", SyncMode );
+  setToDefault( "syncmode" );
+  setNotify();
+  if ( DIO != 0 && SyncPulseEnabled ) {
+    if ( DIO->setSyncPulse( SyncPulseDuration, SyncMode ) == 0 ) {
+      activateDynamicClampMode( true );
+      lockStimulusData();
+      stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
+      stimulusData().setInteger( "SyncMode", SyncMode );
       unlockStimulusData();
     }
   }

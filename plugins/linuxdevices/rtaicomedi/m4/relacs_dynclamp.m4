@@ -44,7 +44,7 @@ RELACS_DYNCLAMP_SUMMARY=""
         [AS_IF([test "x$enableval" != "xno"],[RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY model-t"; AC_DEFINE( ENABLE_MODELTIME )])], [])
 
     AC_ARG_ENABLE([dynclamp_],
-        [AS_HELP_STRING([--enable-dynclamp-WAITTIME],[Make time spent for waiting for the next period available as input trace Wait-time.])],
+        [AS_HELP_STRING([--enable-dynclamp-waittime],[Make time spent for waiting for the next period available as input trace Wait-time.])],
         [AS_IF([test "x$enableval" != "xno"],[RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY wait-t"; AC_DEFINE( ENABLE_WAITTIME )])], [])
 
     AC_ARG_ENABLE([dynclamp_oneshot],

@@ -145,6 +145,9 @@ enum dioOps { DIO_CONFIGURE, DIO_READ, DIO_WRITE,
 enum ttlPulses { TTL_START_WRITE=0, TTL_END_WRITE, TTL_START_READ, TTL_END_READ,
 		 TTL_START_AO, TTL_END_AO, TTL_UNDEFINED };
 
+#define SYNCSEC_HIGH TTL_END_WRITE
+#define SYNCSEC_LOW TTL_END_READ
+
 struct dioIOCT {
   int subdev;
   enum dioOps op;

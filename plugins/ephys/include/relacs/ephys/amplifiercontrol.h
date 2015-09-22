@@ -148,6 +148,9 @@ public slots:
     /*! Set duration of the synchronization pulse
         to \a durationus microseconds. */
   void setSyncPulse( double durationus );
+    /*! Set mode of the synchronization pulse
+        to \a mode. */
+  void setSyncMode( int mode );
 
 
 protected:
@@ -180,9 +183,11 @@ private:
   QRadioButton *VCButton;
   QRadioButton *ManualButton;
   QWidget *DCPulseBox;
-  DoubleSpinBox *SyncSpinBox;
+  DoubleSpinBox *SyncPulseSpinBox;
+  QSpinBox *SyncModeSpinBox;
   bool SyncPulseEnabled;
   double SyncPulseDuration;
+  int SyncMode;
   bool DoBuzz;
 
 };
