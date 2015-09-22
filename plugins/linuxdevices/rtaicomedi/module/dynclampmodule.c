@@ -157,28 +157,34 @@ float* lookupy[MAXLOOKUPTABLES];
 
 struct dynClampTaskT dynClampTask;
 
+// Digital IO
+#if defined(ENABLE_TTLPULSE) || defined(ENABLE_SYNCSEC)
+#define ENABLE_DIOINLOOP
+#endif
+#ifdef ENABLE_DIOINLOOP
+comedi_insn dioInsn;
+lsampl_t dioData[2];
+int diorunning;
+int dioerror;
+#endif
+
 // TTL pulse generation:
 #ifdef ENABLE_TTLPULSE
-comedi_insn ttlStartWriteInsn[MAXTTLPULSES];
-comedi_insn ttlEndWriteInsn[MAXTTLPULSES];
-comedi_insn ttlStartReadInsn[MAXTTLPULSES];
-comedi_insn ttlEndReadInsn[MAXTTLPULSES];
-comedi_insn ttlStartAOInsn[MAXTTLPULSES];
-comedi_insn ttlEndAOInsn[MAXTTLPULSES];
+comedi_insn ttlStartWriteInsn;
+comedi_insn ttlEndWriteInsn;
+comedi_insn ttlStartReadInsn;
+comedi_insn ttlEndReadInsn;
+comedi_insn ttlStartAOInsn;
+comedi_insn ttlEndAOInsn;
 
 comedi_insn *ttlInsns[MAXTTLPULSETYPES];
 
-/*
 lsampl_t ttlStartWriteData[2];
 lsampl_t ttlEndWriteData[2];
 lsampl_t ttlStartReadData[2];
 lsampl_t ttlEndReadData[2];
 lsampl_t ttlStartAOData[2];
 lsampl_t ttlEndAOData[2];
-*/
-
-lsampl_t ttlLow = 0;
-lsampl_t ttlHigh = 1;
 #endif
 
 #ifdef ENABLE_SYNCSEC
@@ -370,6 +376,17 @@ void init_globals( void )
 #endif
 #endif
 
+#ifdef ENABLE_DIOINLOOP
+  memset( &dioInsn, 0, sizeof(comedi_insn) );
+  dioInsn.insn = INSN_BITS;
+  dioInsn.n = 2;
+  dioInsn.data = dioData;
+  for ( i=0; i<2; i++ )
+    dioInsn.data[i] = 0;
+  diorunning = 0;
+  dioerror = 0;
+#endif
+
 #ifdef ENABLE_TTLPULSE
   ttlInsns[0] = ttlStartWriteInsn;
   ttlInsns[1] = ttlEndWriteInsn;
@@ -377,7 +394,6 @@ void init_globals( void )
   ttlInsns[3] = ttlEndReadInsn;
   ttlInsns[4] = ttlStartAOInsn;
   ttlInsns[5] = ttlEndAOInsn;
-  /*
   for ( j=0; j<MAXTTLPULSETYPES; j++ ) {
     memset( &ttlInsns[j], 0, sizeof(comedi_insn) );
     ttlInsns[j].insn = INSN_BITS;
@@ -393,7 +409,6 @@ void init_globals( void )
     for ( i=0; i<2; i++ )
       ttlInsns[j].data[i] = 0;
   }
-  */
 #endif
 #ifdef ENABLE_SYNCSEC
   memset( &syncSECInsnLow, 0, sizeof(comedi_insn) );
@@ -547,7 +562,6 @@ void releaseSubdevice( int subdev )
   int subdevinx;
 #ifdef ENABLE_TTLPULSE
   int pT;
-  int iT;
   int k;
   int retVal;
 #endif
@@ -924,6 +938,56 @@ int stopSubdevice( struct subdeviceT *subdev )
 }
 
 
+int writeDIO( struct dioIOCT *dioIOC )
+{
+  unsigned int bit = 0;
+
+#ifdef ENABLE_DIOINLOOP
+  if ( dynClampTask.running ) {
+    if ( diorunning ) {
+      ERROR_MSG( "setDigitalIO: ERROR digital output is busy" );
+      return -EBUSY;
+    }
+    dioInsn.subdev = dioIOC->subdev;
+    dioInsn.data[0] = dioIOC->mask;
+    dioInsn.data[1] = dioIOC->bits;
+    diorunning = 1;
+    while ( diorunning && dynClampTask.running )
+      cpu_relax();
+    if ( dioerror != 0 || ( ! dynClampTask.running ) ) {
+      dioIOC->bits = 0;
+      dioIOC->error = dioerror;
+      dioerror = 0;
+      diorunning = 0;
+      return -EFAULT;
+    }
+    else {
+      dioIOC->bits = dioInsn.data[1];
+      dioIOC->error = 0;
+      dioerror = 0;
+      diorunning = 0;
+    }
+  }
+  else {
+#endif
+    bit = dioIOC->bits;
+    if ( comedi_dio_bitfield( device, dioIOC->subdev, dioIOC->mask, &bit ) < 0 ) {
+      dioIOC->bits = 0;
+      dioIOC->error = comedi_errno();
+      comedi_perror( "dynclampmodule: ERROR! setDigitalIO() -> DIO_WRITE failed" );
+      return -EFAULT;
+    }
+    else {
+      dioIOC->bits = bit;
+      dioIOC->error = 0;
+    }
+#ifdef ENABLE_DIOINLOOP
+  }
+#endif
+  return 0;
+}
+
+
 int setDigitalIO( struct dioIOCT *dioIOC )
 {
   int subdevice = dioIOC->subdev;
@@ -935,113 +999,105 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 #endif
 #ifdef ENABLE_TTLPULSE
   int pT = dioIOC->pulseType;
-  int iT = 0;
   int k = 0;
   int found = 0;
 #endif
 
   if ( dioIOC->op == DIO_CONFIGURE ) {
-    if ( dioIOC->bitfield ) {
-      bit = 1;
-      for ( channel=0; channel<32; channel++ ) {
-	if ( ( dioIOC->lines & bit ) > 0 ) {
-	  direction = COMEDI_INPUT;
-	  if ( ( dioIOC->output & bit ) > 0 )
-	    direction = COMEDI_OUTPUT;
-	  if ( comedi_dio_config( device, subdevice, channel, direction ) < 0 ) {
-	    comedi_perror( "setDigitalIO() -> DIO_CONFIGURE" );
-	    ERROR_MSG( "setDigitalIO: comedi_dio_config bitfield on device %s, subdevice %d, channel %d, direction %d failed!\n",
-		       devname, subdevice, channel, direction );
-	    return -EFAULT;
-	  }
+    dioIOC->error = 0;
+#ifdef ENABLE_DIOINLOOP
+    if ( dynClampTask.running ) {
+      dioIOC->error = EBUSY;
+      ERROR_MSG( "setDigitalIO: comedi_dio_config on device %s, subdevice %d failed because realtime loop is running!\n",
+		     devname, subdevice );
+      return -EBUSY;
+    }
+#endif
+    bit = 1;
+    for ( channel=0; channel<dioIOC->maxlines; channel++ ) {
+      if ( ( dioIOC->mask & bit ) > 0 ) {
+	direction = COMEDI_INPUT;
+	if ( ( dioIOC->bits & bit ) > 0 )
+	  direction = COMEDI_OUTPUT;
+	if ( comedi_dio_config( device, subdevice, channel, direction ) < 0 ) {
+	  dioIOC->error = comedi_errno();
+	  comedi_perror( "dynclampmodule: ERROR setDigitalIO() -> DIO_CONFIGURE" );
+	  return -dioIOC->error;
 	}
-	bit *= 2;
       }
-    }
-    else {
-      direction = dioIOC->output ? COMEDI_OUTPUT : COMEDI_INPUT;
-      if ( comedi_dio_config( device, subdevice, dioIOC->lines, direction ) < 0 ) {
-	comedi_perror( "setDigitalIO() -> DIO_CONFIGURE" );
-	ERROR_MSG( "setDigitalIO: comedi_dio_config single channel on device %s, subdevice %d, channel %d, direction %d failed!\n",
-		   devname, subdevice, dioIOC->lines, direction );
-	return -EFAULT;
-      }
+      bit <<= 1;
     }
   }
-  else if ( dioIOC->op == DIO_READ ) {
-    if ( dioIOC->bitfield ) {
-      bit = 0;
-      if ( comedi_dio_bitfield( device, subdevice, dioIOC->lines, &bit ) < 0 ) {
-	comedi_perror( "setDigitalIO() -> DIO_READ" );
-	ERROR_MSG( "setDigitalIO: comedi_dio_read on device %s subdevice %d failed!\n",
-		  devname, subdevice );
-	return -EFAULT;
-      }
-      dioIOC->output = bit & dioIOC->lines;
-    }
-    else {
-      bit = 0;
-      if ( comedi_dio_read( device, subdevice, dioIOC->lines, &bit ) != 1 ) {
-	comedi_perror( "setDigitalIO() -> DIO_READ" );
-	ERROR_MSG( "setDigitalIO: comedi_dio_read on device %s subdevice %d failed!\n",
-		  devname, subdevice );
-	return -EFAULT;
-      }
-      dioIOC->output = bit;
-    }
-  }
+
   else if ( dioIOC->op == DIO_WRITE ) {
-    if ( dioIOC->bitfield ) {
-      bit = dioIOC->output;
-      if ( comedi_dio_bitfield( device, subdevice, dioIOC->lines, &bit ) < 0 ) {
-	comedi_perror( "setDigitalIO() -> DIO_WRITE" );
-	ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
-		  devname, subdevice );
+    writeDIO( dioIOC );
+  }
+
+  else if ( dioIOC->op == DIO_READ ) {
+#ifdef ENABLE_DIOINLOOP
+    if ( dynClampTask.running ) {
+      dioInsn.subdev = subdevice;
+      dioInsn.data[0] = 0;
+      dioInsn.data[1] = 0;
+      diorunning = 1;
+      while ( dioInsn.data[0] && dynClampTask.running )
+        cpu_relax();
+      if ( dioerror != 0 || ( ! dynClampTask.running ) ) {
+	dioIOC->bits = 0;
+	dioIOC->error = dioerror;
+	dioerror = 0;
+	diorunning = 0;
 	return -EFAULT;
+      }
+      else {
+	dioIOC->bits = dioInsn.data[1];
+	dioIOC->error = 0;
+	dioerror = 0;
+	diorunning = 0;
       }
     }
     else {
-      if ( comedi_dio_write( device, subdevice, dioIOC->lines, dioIOC->output ) != 1 ) {
-	comedi_perror( "setDigitalIO() -> DIO_WRITE" );
-	ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
-		  devname, subdevice );
-	return -EFAULT;
+#endif
+      bit = 0;
+      if ( comedi_dio_bitfield( device, subdevice, 0, &bit ) < 0 ) {
+	dioIOC->bits = 0;
+	dioIOC->error = comedi_errno();
+        comedi_perror( "dynclampmodule: ERROR! setDigitalIO() -> DIO_READ failed" );
+        return -EFAULT;
       }
+      else {
+	dioIOC->bits = bit;
+	dioIOC->error = 0;
+      }
+#ifdef ENABLE_DIOINLOOP
     }
+#endif
   }
+
 #ifdef ENABLE_TTLPULSE
   else if ( dioIOC->op == DIO_ADD_TTLPULSE ) {
     if ( pT < TTL_START_WRITE || pT >= MAXTTLPULSETYPES )
       return -EINVAL;
-    for ( iT = 0; iT < MAXTTLPULSES && ttlInsns[pT][iT].n > 0; iT++ );
-    if ( iT >= MAXTTLPULSES )
-      return -ENOMEM;
-    if ( comedi_dio_write( device, subdevice, dioIOC->lines, dioIOC->output ) != 1 ) {
-      comedi_perror( "setDigitalIO() -> DIO_ADD_TTLPULSE" );
-      ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %u failed!\n",
-		 devname, subdevice );
-      return -EFAULT;
-    }
-    memset( &ttlInsns[pT][iT], 0, sizeof(comedi_insn) );
-    ttlInsns[pT][iT].insn = INSN_WRITE;
-    ttlInsns[pT][iT].n = 1;
-    ttlInsns[pT][iT].data = ( dioIOC->output ? &ttlHigh : &ttlLow );
-    ttlInsns[pT][iT].subdev = subdevice;
-    ttlInsns[pT][iT].chanspec = CR_PACK( dioIOC->lines, 0, 0 );
-    /*
+
     if ( ttlInsns[pT].data[0] != 0 && ttlInsns[pT].subdev != subdevice ) {
       ERROR_MSG( "setDigitalIO: subdevice %d for ttl pulse does not match already used subdevice %d", subdevice, ttlInsns[pT].subdev );
       return -EINVAL;
     }
+
+    if ( writeDIO( dioIOC ) != 0 ) {
+      ERROR_MSG( "setDigitalIO: failed to write initial TTL pulse" );
+      return -EFAULT;
+    }
+
     ttlInsns[pT].subdev = subdevice;
-    ttlInsns[pT].data[0] |= mask;
-    if ( dioIOC->output )
-      ttlInsns[pT].data[1] |= bits;
-     */
-    DEBUG_MSG( "setDigitalIO: add pulse pT=%d  iT=%d  output=%d subdev=%u lines=%d\n",
-	       pT, iT, ttlInsns[pT][iT].data[0], ttlInsns[pT][iT].subdev,
-	       ttlInsns[pT][iT].chanspec );
+    ttlInsns[pT].data[1] |= bits;
+    ttlInsns[pT].data[0] |= dioIOC->mask;
+
+    DEBUG_MSG( "setDigitalIO: add pulse pT=%d subdev=%u lines=%u output=%u\n",
+	       pT, ttlInsns[pT].subdev, ttlInsns[pT].data[0],
+	       ttlInsns[pT].data[1] );
   }
+
   else if ( dioIOC->op == DIO_CLEAR_TTLPULSE ) {
     found = 0;
     for ( pT = 0; pT < MAXTTLPULSETYPES; pT++ ) {
@@ -1067,6 +1123,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     }
   }
 #endif
+
   else if ( dioIOC->op == DIO_SET_SYNCPULSE ) {
 #ifdef ENABLE_SYNCSEC
     if ( dynClampTask.running ) {
@@ -1108,6 +1165,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     return -ENOTTY;
 #endif
   }
+
   else if ( dioIOC->op == DIO_CLEAR_SYNCPULSE ) {
 #ifdef ENABLE_SYNCSEC
     DEBUG_MSG( "setDigitalIO: clear sync pulse with low.subdev=%u.\n",
@@ -1129,8 +1187,10 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     return -ENOTTY;
 #endif
   }
+
   else
     return -EINVAL;
+
   return 0;
 }
 
@@ -1646,28 +1706,47 @@ void dynclamp_loop( long dummy )
 #endif
 
 
-    /****************************************************************************/
+    /*********** COMPUTE MODEL: *************************************************/
 #ifdef ENABLE_MODELTIME
     starttime = rt_get_cpu_time_ns();
 #endif
+
 #ifdef ENABLE_COMPUTATION
     computeModel();
 #endif
+
 #ifdef ENABLE_MODELTIME
     stoptime = rt_get_cpu_time_ns();
     dtime = stoptime - starttime;
     statusInput[modeltimestatusinx] = 1e-9*dtime;
 #endif
 
-    /******** WAIT FOR CALCULATION TASK TO COMPUTE RESULT: **********************/
-    /****************************************************************************/
+    /*********** DIGITAL OUTPUT: ************************************************/
+#ifdef ENABLE_DIOINLOOP
+    if ( diorunning ) {
+      retVal = comedi_do_insn( device, &dioInsn );
+      if ( retVal < 0 ) {
+	dioerror = comedi_errno();
+	if ( dioerror == 0 )
+	  dioerror = -1;
+	comedi_perror( "dynclampmodule: ERROR! dynclamp_loop failed to write DIO lines" );
+      }
+      else
+	dioerror = 0;
+      diorunning = 0;
+    }
+#endif
+
+    /******** WAIT FOR PERIOD: **************************************************/
     dynClampTask.loopCnt++;
 
 #ifdef ENABLE_WAITTIME
     starttime = rt_get_cpu_time_ns();
 #endif
+
     dynClampTask.inloop = 0;
     rt_task_wait_period();
+
 #ifdef ENABLE_WAITTIME
     stoptime = rt_get_cpu_time_ns();
     dtime = stoptime - starttime;

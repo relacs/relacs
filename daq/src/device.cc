@@ -236,9 +236,9 @@ void Device::addErrorStr( const string &strg )
 void Device::setErrorStr( int errnum )
 {
   char buf[1000];
-  strerror_r( errnum, buf, 1000 );
-  if ( strlen( buf ) > 0 )
-    ErrorString = buf;
+  char *ep = strerror_r( errnum, buf, 1000 );
+  if ( strlen( ep ) > 0 )
+    ErrorString = ep;
   else
     ErrorString = "unknown error";
 }

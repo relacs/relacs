@@ -31,7 +31,7 @@ DigitalIO::DigitalIO( const string &deviceclass )
   : Device( deviceclass, DigitalIOType )
 {
   freeLines();
-  for ( int k=0; k<MaxDIOLines;  k++ )
+  for ( unsigned int k=0; k<MaxDIOLines;  k++ )
     DIOLineWriteable[k] = false;
 }
 
@@ -44,7 +44,7 @@ DigitalIO::~DigitalIO( void )
 int DigitalIO::open( const string &device )
 {
   freeLines();
-  for ( int k=0; k<MaxDIOLines;  k++ )
+  for ( unsigned int k=0; k<MaxDIOLines;  k++ )
     DIOLineWriteable[k] = false;
   Info.clear();
   Settings.clear();
@@ -56,7 +56,7 @@ int DigitalIO::open( const string &device )
 int DigitalIO::open( Device &device )
 {
   freeLines();
-  for ( int k=0; k<MaxDIOLines;  k++ )
+  for ( unsigned int k=0; k<MaxDIOLines;  k++ )
     DIOLineWriteable[k] = false;
   Info.clear();
   Settings.clear();
@@ -78,19 +78,19 @@ const Options &DigitalIO::settings( void ) const
 }
 
 
-int DigitalIO::configureLine( int line, bool output )
+int DigitalIO::configureLine( unsigned int line, bool output )
 {
-  if ( line < 0 || line >= MaxDIOLines )
+  if ( line >= MaxDIOLines )
     return WriteError;
   DIOLineWriteable[line] = output;
   return 0;
 }
 
 
-int DigitalIO::configureLines( int lines, int output )
+int DigitalIO::configureLines( unsigned int lines, unsigned int output )
 {
-  int bit = 1;
-  for ( int k=0; k<MaxDIOLines; k++ ) {
+  unsigned int bit = 1;
+  for ( unsigned int k=0; k<MaxDIOLines; k++ ) {
     if ( (lines & bit) > 0 )
       DIOLineWriteable[k] = ( (output & bit) > 0 );
     bit *= 2;
@@ -99,15 +99,15 @@ int DigitalIO::configureLines( int lines, int output )
 }
 
 
-bool DigitalIO::lineConfiguration( int line ) const
+bool DigitalIO::lineConfiguration( unsigned int line ) const
 {
-  if ( line < 0 || line >= MaxDIOLines )
+  if ( line >= MaxDIOLines )
     return false;
   return DIOLineWriteable[line];
 }
 
 
-int DigitalIO::allocateLines( int lines )
+int DigitalIO::allocateLines( unsigned int lines )
 {
   int errorlines = 0;
 
@@ -116,9 +116,9 @@ int DigitalIO::allocateLines( int lines )
   int id = 0;
   do {
     id++;
-    int bit = 1;
+    unsigned int bit = 1;
     foundid = false;
-    for ( int k=0; k<MaxDIOLines; k++ ) {
+    for ( unsigned int k=0; k<MaxDIOLines; k++ ) {
       if ( (lines & bit) > 0 && DIOLineIDs[k] > 0 )
 	errorlines |= bit;
       if ( DIOLineIDs[k] == id )
@@ -131,8 +131,8 @@ int DigitalIO::allocateLines( int lines )
     return -errorlines;
 
   // allocated lines:
-  int bit = 1;
-  for ( int k=0; k<MaxDIOLines;  k++ ) {
+  unsigned int bit = 1;
+  for ( unsigned int k=0; k<MaxDIOLines;  k++ ) {
     if ( (lines & bit) > 0 )
       DIOLineIDs[k] = id;
     bit *= 2;
@@ -142,14 +142,14 @@ int DigitalIO::allocateLines( int lines )
 }
 
 
-int DigitalIO::allocateLine( int line )
+int DigitalIO::allocateLine( unsigned int line )
 {
-  if ( line < 0 || line >= MaxDIOLines )
+  if ( line >= MaxDIOLines )
     return WriteError;
 
   // find unused id:
   int id = 0;
-  int k = 0;
+  unsigned int k = 0;
   do {
     id++;
     for ( k=0; k<MaxDIOLines; k++ ) {
@@ -167,9 +167,9 @@ int DigitalIO::allocateLine( int line )
 }
 
 
-int DigitalIO::allocateLine( int line, int id )
+int DigitalIO::allocateLine( unsigned int line, int id )
 {
-  if ( line < 0 || line >= MaxDIOLines )
+  if ( line >= MaxDIOLines )
     return WriteError;
 
   if ( DIOLineIDs[line] > 0 )
@@ -184,7 +184,7 @@ int DigitalIO::allocateLine( int line, int id )
 
 void DigitalIO::freeLines( int id )
 {
-  for ( int k=0; k<MaxDIOLines;  k++ ) {
+  for ( unsigned int k=0; k<MaxDIOLines;  k++ ) {
     if ( DIOLineIDs[k] == id )
       DIOLineIDs[k] = 0;
   }
@@ -193,15 +193,15 @@ void DigitalIO::freeLines( int id )
 
 void DigitalIO::freeLines( void )
 {
-  for ( int k=0; k<MaxDIOLines;  k++ )
+  for ( unsigned int k=0; k<MaxDIOLines;  k++ )
     DIOLineIDs[k] = 0;
 }
 
 
-bool DigitalIO::allocatedLines( int lines, int id )
+bool DigitalIO::allocatedLines( unsigned int lines, int id )
 {
-  int bit = 1;
-  for ( int k=0; k<MaxDIOLines;  k++ ) {
+  unsigned int bit = 1;
+  for ( unsigned int k=0; k<MaxDIOLines;  k++ ) {
     if ( (lines & bit) > 0 &&
 	 ( DIOLineIDs[k] <= 0 || DIOLineIDs[k] != id ) )
       return false;
@@ -211,10 +211,10 @@ bool DigitalIO::allocatedLines( int lines, int id )
 }
 
 
-bool DigitalIO::allocatedLines( int lines )
+bool DigitalIO::allocatedLines( unsigned int lines )
 {
-  int bit = 1;
-  for ( int k=0; k<MaxDIOLines;  k++ ) {
+  unsigned int bit = 1;
+  for ( unsigned int k=0; k<MaxDIOLines;  k++ ) {
     if ( (lines & bit) > 0 &&
 	 DIOLineIDs[k] <= 0 )
       return false;
@@ -224,18 +224,18 @@ bool DigitalIO::allocatedLines( int lines )
 }
 
 
-bool DigitalIO::allocatedLine( int line, int id )
+bool DigitalIO::allocatedLine( unsigned int line, int id )
 {
-  if ( line < 0 || line >= MaxDIOLines )
+  if ( line >= MaxDIOLines )
     return false;
 
   return ( DIOLineIDs[line] == id );
 }
 
 
-bool DigitalIO::allocatedLine( int line )
+bool DigitalIO::allocatedLine( unsigned int line )
 {
-  if ( line < 0 || line >= MaxDIOLines )
+  if ( line >= MaxDIOLines )
     return false;
 
   return ( DIOLineIDs[line] > 0 );

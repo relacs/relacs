@@ -76,7 +76,6 @@
 //* DAQ-devices:
 #define MAXSUBDEV    8
 #define MAXCHANLIST  64
-#define MAXTTLPULSES 5
 #define MAXTTLPULSETYPES 6
 
 #define PARAM_CHAN_OFFSET 1000
@@ -148,10 +147,11 @@ enum ttlPulses { TTL_START_WRITE=0, TTL_END_WRITE, TTL_START_READ, TTL_END_READ,
 
 struct dioIOCT {
   int subdev;
-  int bitfield;    /* if true, then treat lines and output as bit-fields. */
   enum dioOps op;
-  int lines;
-  int output;
+  unsigned int mask;
+  unsigned int bits;
+  unsigned int maxlines;
+  int error;                /* returns comedi error code. */
   enum ttlPulses pulseType; /* only for op == DIO_ADD_TTLPULSE or DIO_CLEAR_TTLPULSE */
   long pulsewidth;          /* only for op == DIO_SET_SYNCPULSE */
   int intervalmode;          /* only for op == DIO_SET_SYNCPULSE: 0: fixed period, 1: each difftime, n>1: difftime averaged over n cycles */

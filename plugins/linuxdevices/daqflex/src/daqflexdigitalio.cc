@@ -112,17 +112,17 @@ int DAQFlexDigitalIO::lines( void ) const
 }
 
 
-int DAQFlexDigitalIO::configureLine( int line, bool output )
+int DAQFlexDigitalIO::configureLine( unsigned int line, bool output )
 {
   string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:DIR=" + ( output ? "OUT" : "IN" ) );
   return r.empty() ? WriteError : 0;
 }
 
 
-int DAQFlexDigitalIO::configureLines( int lines, int output )
+int DAQFlexDigitalIO::configureLines( unsigned int lines, unsigned int output )
 {
-  int bit = 1;
-  for ( int channel=0; channel<32; channel++ ) {
+  unsigned int bit = 1;
+  for ( int channel=0; channel<DAQFlexDigitalIO::lines(); channel++ ) {
     if ( ( lines & bit ) > 0 ) {
       bool direction = false;
       if ( ( output & bit ) > 0 )
@@ -137,14 +137,14 @@ int DAQFlexDigitalIO::configureLines( int lines, int output )
 }
 
 
-int DAQFlexDigitalIO::write( int line, bool val )
+int DAQFlexDigitalIO::write( unsigned int line, bool val )
 {
   string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:VALUE=" + ( val ? "1" : "0" ) );
   return r.empty() ? WriteError : 0;
 }
 
 
-int DAQFlexDigitalIO::read( int line, bool &val ) const
+int DAQFlexDigitalIO::read( unsigned int line, bool &val )
 {
   string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:VALUE" );
   if ( r.empty() )
@@ -154,7 +154,7 @@ int DAQFlexDigitalIO::read( int line, bool &val ) const
 }
 
 
-int DAQFlexDigitalIO::writeLines( int lines, int val )
+int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
 {
   /*
   unsigned int ival = val;
@@ -169,7 +169,7 @@ int DAQFlexDigitalIO::writeLines( int lines, int val )
 }
 
 
-int DAQFlexDigitalIO::readLines( int lines, int &val ) const
+int DAQFlexDigitalIO::readLines( unsigned int lines, unsigned int &val )
 {
   /*
   unsigned int ival = 0;

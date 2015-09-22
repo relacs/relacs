@@ -172,7 +172,7 @@ int ComediDigitalIO::lines( void ) const
 }
 
 
-int ComediDigitalIO::configureLine( int line, bool output )
+int ComediDigitalIO::configureLine( unsigned int line, bool output )
 {
   int direction = output ? COMEDI_OUTPUT : COMEDI_INPUT;
   if ( comedi_dio_config( DeviceP, SubDevice, line, direction ) != 0 ) {
@@ -186,10 +186,10 @@ int ComediDigitalIO::configureLine( int line, bool output )
 }
 
 
-int ComediDigitalIO::configureLines( int lines, int output )
+int ComediDigitalIO::configureLines( unsigned int lines, unsigned int output )
 {
-  int bit = 1;
-  for ( int channel=0; channel<32; channel++ ) {
+  unsigned int bit = 1;
+  for ( int channel=0; channel<MaxLines; channel++ ) {
     if ( ( lines & bit ) > 0 ) {
       int direction = COMEDI_INPUT;
       if ( ( output & bit ) > 0 )
@@ -208,7 +208,7 @@ int ComediDigitalIO::configureLines( int lines, int output )
 }
 
 
-int ComediDigitalIO::write( int line, bool val )
+int ComediDigitalIO::write( unsigned int line, bool val )
 {
   if ( comedi_dio_write( DeviceP, SubDevice, line, val ) != 1 ) {
     comedi_perror( "ComediDigitalIO::write()" );
@@ -221,7 +221,7 @@ int ComediDigitalIO::write( int line, bool val )
 }
 
 
-int ComediDigitalIO::read( int line, bool &val ) const
+int ComediDigitalIO::read( unsigned int line, bool &val )
 {
   unsigned int bit = 0;
   if ( comedi_dio_read( DeviceP, SubDevice, line, &bit ) != 1 ) {
@@ -236,7 +236,7 @@ int ComediDigitalIO::read( int line, bool &val ) const
 }
 
 
-int ComediDigitalIO::writeLines( int lines, int val )
+int ComediDigitalIO::writeLines( unsigned int lines, unsigned int val )
 {
   unsigned int ival = val;
   if ( comedi_dio_bitfield2( DeviceP, SubDevice, lines, &ival, 0 ) < 0 ) {
@@ -249,7 +249,7 @@ int ComediDigitalIO::writeLines( int lines, int val )
 }
 
 
-int ComediDigitalIO::readLines( int lines, int &val ) const
+int ComediDigitalIO::readLines( unsigned int lines, unsigned int &val )
 {
   unsigned int ival = 0;
   if ( comedi_dio_bitfield2( DeviceP, SubDevice, lines, &ival, 0 ) < 0 ) {
