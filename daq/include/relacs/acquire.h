@@ -581,10 +581,6 @@ public:
         \sa testWrite(), write(), writeData(), stopWrite() */
   virtual int writeZero( const string &trace );
 
-    /*! Write a zero to all physical analog output channels. 
-        \return \c -1 on failure, \c 0 on success. */
-  virtual int writeReset( void );
-
     /*! \return the start time of the last output signal relative to the input data. */
   double signalTime( void ) const;
 
