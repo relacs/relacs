@@ -278,7 +278,7 @@ void AmplifierControl::initDevices( void )
     SyncPulseSpinBox = new DoubleSpinBox;
     SyncPulseSpinBox->setRange( 1.0, 1000.0 );
     SyncPulseSpinBox->setSingleStep( 1.0 );
-    SyncPulseSpinBox->setPrecision( 0 );
+    SyncPulseSpinBox->setPrecision( 2 );
     SyncPulseSpinBox->setKeyboardTracking( false );
     SyncPulseSpinBox->setValue( 1.0e6 * SyncPulseDuration );
     connect( SyncPulseSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );

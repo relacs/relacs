@@ -927,6 +927,7 @@ int stopSubdevice( struct subdeviceT *subdev )
 int writeDIO( struct dioIOCT *dioIOC )
 {
   unsigned int bit = 0;
+  int retval;
 
 #ifdef ENABLE_DIOINLOOP
   if ( dynClampTask.running ) {
@@ -942,14 +943,16 @@ int writeDIO( struct dioIOCT *dioIOC )
       cpu_relax();
     if ( dioerror != 0 || ( ! dynClampTask.running ) ) {
       dioIOC->bits = 0;
-      dioIOC->error = dioerror;
+      retval = dioerror;
       dioerror = 0;
       diorunning = 0;
-      return -EFAULT;
+      if ( retval == 0 )
+	return -EFAULT;
+      else
+	return retval;
     }
     else {
       dioIOC->bits = dioInsn.data[1];
-      dioIOC->error = 0;
       dioerror = 0;
       diorunning = 0;
     }
@@ -957,16 +960,14 @@ int writeDIO( struct dioIOCT *dioIOC )
   else {
 #endif
     bit = dioIOC->bits;
-    if ( comedi_dio_bitfield( device, dioIOC->subdev, dioIOC->mask, &bit ) < 0 ) {
+    retval = comedi_dio_bitfield( device, dioIOC->subdev, dioIOC->mask, &bit );
+    if ( retval < 0 ) {
       dioIOC->bits = 0;
-      dioIOC->error = comedi_errno();
       comedi_perror( "dynclampmodule: ERROR! writeDIO() -> comedi_dio_bitfield failed" );
-      return -EFAULT;
+      return retval;
     }
-    else {
+    else
       dioIOC->bits = bit;
-      dioIOC->error = 0;
-    }
 #ifdef ENABLE_DIOINLOOP
   }
 #endif
@@ -980,17 +981,15 @@ int setDigitalIO( struct dioIOCT *dioIOC )
   unsigned int bit = 0;
   int channel = 0;
   int direction = 0;
+  int retval;
 #ifdef ENABLE_TTLPULSE
   int pT = dioIOC->pulseType;
   int found = 0;
-  int retval;
 #endif
 
   if ( dioIOC->op == DIO_CONFIGURE ) {
-    dioIOC->error = 0;
 #ifdef ENABLE_DIOINLOOP
     if ( dynClampTask.running ) {
-      dioIOC->error = EBUSY;
       ERROR_MSG( "setDigitalIO: configuring of dio line failed because realtime loop is running!\n" );
       return -EBUSY;
     }
@@ -1001,10 +1000,10 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	direction = COMEDI_INPUT;
 	if ( ( dioIOC->bits & bit ) > 0 )
 	  direction = COMEDI_OUTPUT;
-	if ( comedi_dio_config( device, subdevice, channel, direction ) < 0 ) {
-	  dioIOC->error = comedi_errno();
+	retval = comedi_dio_config( device, subdevice, channel, direction );
+	if ( retval < 0 ) {
 	  comedi_perror( "dynclampmodule: ERROR setDigitalIO() -> DIO_CONFIGURE" );
-	  return -dioIOC->error;
+	  return retval;
 	}
       }
       bit <<= 1;
@@ -1026,14 +1025,16 @@ int setDigitalIO( struct dioIOCT *dioIOC )
         cpu_relax();
       if ( dioerror != 0 || ( ! dynClampTask.running ) ) {
 	dioIOC->bits = 0;
-	dioIOC->error = dioerror;
+	retval = dioerror;
 	dioerror = 0;
 	diorunning = 0;
-	return -EFAULT;
+	if ( retval == 0 )
+	  return -EFAULT;
+	else
+	  return retval;
       }
       else {
 	dioIOC->bits = dioInsn.data[1];
-	dioIOC->error = 0;
 	dioerror = 0;
 	diorunning = 0;
       }
@@ -1041,16 +1042,14 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     else {
 #endif
       bit = 0;
-      if ( comedi_dio_bitfield( device, subdevice, 0, &bit ) < 0 ) {
+      retval = comedi_dio_bitfield( device, subdevice, 0, &bit );
+      if ( retval < 0 ) {
 	dioIOC->bits = 0;
-	dioIOC->error = comedi_errno();
         comedi_perror( "dynclampmodule: ERROR! setDigitalIO() -> DIO_READ failed" );
-        return -EFAULT;
+        return retval;
       }
-      else {
+      else
 	dioIOC->bits = bit;
-	dioIOC->error = 0;
-      }
 #ifdef ENABLE_DIOINLOOP
     }
 #endif
@@ -1141,8 +1140,8 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     /* turn sync pulses on: */
     ttlInsns[SYNCSEC_LOW]->subdev = subdevice;
     ttlInsns[SYNCSEC_HIGH]->subdev = subdevice;
-    ttlInsns[SYNCSEC_LOW]->data[1] |= dioIOC->mask;
-    ttlInsns[SYNCSEC_HIGH]->data[1] |= dioIOC->mask;
+    ttlInsns[SYNCSEC_LOW]->data[1] &= ~dioIOC->mask;   /* low */
+    ttlInsns[SYNCSEC_HIGH]->data[1] |= dioIOC->mask;   /* high */
     ttlInsns[SYNCSEC_LOW]->data[0] |= dioIOC->mask;
     ttlInsns[SYNCSEC_HIGH]->data[0] |= dioIOC->mask;
     /* turn sync scaling on: */
@@ -1695,9 +1694,7 @@ void dynclamp_loop( long dummy )
     if ( diorunning ) {
       retVal = comedi_do_insn( device, &dioInsn );
       if ( retVal < 0 ) {
-	dioerror = comedi_errno();
-	if ( dioerror == 0 )
-	  dioerror = -1;
+	dioerror = retVal;
 	comedi_perror( "dynclampmodule: ERROR! dynclamp_loop failed to write DIO lines" );
       }
       else

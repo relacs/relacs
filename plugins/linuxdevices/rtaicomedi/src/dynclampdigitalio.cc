@@ -75,11 +75,14 @@ void DynClampDigitalIO::initOptions()
 
   addInteger( "subdevice", "Subdevice number of digital I/O device to be used", -1, -1, 100 );
   addInteger( "startsubdevice", "Start searching for digital I/O device at subdevice number", 0, 0, 100 ).setActivation( "subdevice", "<0" );
+  string ttlpulsestr = TTLCommands[TTL_UNDEFINED];
+  for ( int p = TTL_START_WRITE; p <= TTL_UNDEFINED; ++p )
+    ttlpulsestr += '|' + TTLCommands[p];
   for (int i = 1; i < 5; ++i) {
     std::string idx = Str(i);
     addInteger( "ttlpulse" + idx + "line", "DIO line for generating a TTL pulse", -1 );
-    addSelection( "ttlpulse" + idx + "high", "Event that sets TTL pulse high", -1 );
-    addSelection( "ttlpulse" + idx + "low", "Event that sets TTL pulse low", -1 );
+    addSelection( "ttlpulse" + idx + "high", "Event that sets TTL pulse high", ttlpulsestr );
+    addSelection( "ttlpulse" + idx + "low", "Event that sets TTL pulse low", ttlpulsestr );
   }
   addInteger( "syncpulseline", "DIO line for switch-cycle synchronization of amplifier", -1 );
   addNumber( "syncpulsewidth", "Duration of current injection", 0.0, 0.0, 0.01, 0.000001, "s", "us" );
@@ -148,12 +151,8 @@ int DynClampDigitalIO::open( const string &device )
     int line = integer( "ttlpulse" + ns + "line", 0, -1 );
     if ( line < 0 )
       continue;
-    string highcom = text( "ttlpulse" + ns + "high", 0 );
-    int high = TTL_START_WRITE;
-    for ( ; high != TTL_UNDEFINED && highcom != TTLCommands[high]; ++high );
-    string lowcom = text( "ttlpulse" + ns + "low", 0 );
-    int low = TTL_START_WRITE;
-    for ( ; low != TTL_UNDEFINED && lowcom != TTLCommands[low]; ++low );
+    int high = index( "ttlpulse" + ns + "high" );
+    int low = index( "ttlpulse" + ns + "low" );
     if ( id < 0 ) {
       id = allocateLine( line );
       if ( id == WriteError )
@@ -260,16 +259,13 @@ int DynClampDigitalIO::configureLines( unsigned int lines, unsigned int output )
   dioIOC.bits = output;
   dioIOC.maxlines = MaxLines;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if ( retval < 0 || dioIOC.error != 0 ) {
+  if ( retval < 0 ) {
     string es = "Configuring DIO lines " + Str( lines )
       + " failed on subdevice " + Str( SubDevice )
       + " for direction " + Str( output );
     cerr << "! error: DynClampDigitalIO::configureLines() -> " << es << '\n';
     setErrorStr( es + " with " );
-    if ( dioIOC.error != 0 )
-      addErrorStr( comedi_strerror( dioIOC.error ) );
-    else
-      addErrorStr( errno );
+    addErrorStr( comedi_strerror( errno ) );
     return WriteError;
   }
   return DigitalIO::configureLines( lines, output );
@@ -296,16 +292,13 @@ int DynClampDigitalIO::writeLines( unsigned int lines, unsigned int val )
   dioIOC.bits = val;
   dioIOC.maxlines = MaxLines;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if ( retval < 0 || dioIOC.error != 0 ) {
+  if ( retval < 0 ) {
     string es = "Writing to DIO lines " + Str( lines )
       + " with value " + Str( val )
       + " failed on subdevice " + Str( SubDevice );
     cerr << "! error: DynClampDigitalIO::writeLines() -> " << es << '\n';
     setErrorStr( es + " with " );
-    if ( dioIOC.error != 0 )
-      addErrorStr( comedi_strerror( dioIOC.error ) );
-    else
-      addErrorStr( errno );
+    addErrorStr( comedi_strerror( errno ) );
     return WriteError;
   }
   if ( (dioIOC.bits & lines ) != ( val & lines ) ) {
@@ -344,15 +337,12 @@ int DynClampDigitalIO::readLines( unsigned int lines, unsigned int &val )
   dioIOC.bits = 0;
   dioIOC.maxlines = MaxLines;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
-  if ( retval < 0 || dioIOC.error != 0 ) {
+  if ( retval < 0 ) {
     string es = "Reading from DIO lines " + Str( lines )
       + " failed on subdevice " + Str( SubDevice );
     cerr << "! error: DynClampDigitalIO::readLines() -> " << es << '\n';
     setErrorStr( es + " with " );
-    if ( dioIOC.error != 0 )
-      addErrorStr( comedi_strerror( dioIOC.error ) );
-    else
-      addErrorStr( errno );
+    addErrorStr( comedi_strerror( errno ) );
     return ReadError;
   }
   val = ( dioIOC.bits & lines );
