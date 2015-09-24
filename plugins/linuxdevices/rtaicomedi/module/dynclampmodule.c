@@ -88,7 +88,6 @@ struct dynClampTaskT {
   unsigned int frequency;
   unsigned long duration;
   int running;
-  int inloop;
   unsigned long loopCnt;
   long aoIndex;
 };
@@ -1347,8 +1346,6 @@ void dynclamp_loop( long dummy )
   /**************************************************************************/
   while( aisubdev.running > 0 ) {
 
-    dynClampTask.inloop = 1;
-
 #ifdef ENABLE_TTLPULSE
     if ( ttlStartWriteInsn.data[0] > 0 ) {
       retVal = comedi_do_insn( device, &ttlStartWriteInsn );
@@ -1710,7 +1707,6 @@ void dynclamp_loop( long dummy )
     starttime = rt_get_cpu_time_ns();
 #endif
 
-    dynClampTask.inloop = 0;
     rt_task_wait_period();
 
 #ifdef ENABLE_WAITTIME
@@ -1817,7 +1813,6 @@ int init_dynclamp_loop( void )
 void finish_dynclamp_loop( void )
 {
   dynClampTask.running = 0;
-  dynClampTask.inloop = 0;
   dynClampTask.duration = 0;
   dynClampTask.frequency = 0;
   DEBUG_MSG( "finish_dynclamp_loop: left dynamic clamp loop after %lu cycles\n",

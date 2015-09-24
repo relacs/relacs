@@ -525,11 +525,13 @@ void RELACSWidget::init ( void )
 
 int RELACSWidget::openHardware( int n, int errorlevel )
 {
+  Str errors = "";
   Str warnings = "";
   int error = 0;
 
   // activate devices:
   DV->create( *ADV, n );
+  errors += DV->errors();
   warnings += DV->warnings();
   if ( ! DV->ok() )
     error |= 1;
@@ -539,10 +541,11 @@ int RELACSWidget::openHardware( int n, int errorlevel )
     AID->create( *ADV, n );
   else
     AID->create( *ADV, 1, "AISim" );
+  errors += AID->errors();
   warnings += AID->warnings();
   if ( ! AID->ok() ) {
     error |= 3;
-    warnings += "No analog input device opened!\n";
+    errors += "No analog input device opened!\n";
   }
 
   // activate analog output devices:
@@ -550,20 +553,23 @@ int RELACSWidget::openHardware( int n, int errorlevel )
     AOD->create( *ADV, n );
   else
     AOD->create( *ADV, 1, "AOSim" );
+  errors += AOD->errors();
   warnings += AOD->warnings();
   if ( ! AOD->ok() ) {
     error |= 3;
-    warnings += "No analog output device opened!\n";
+    errors += "No analog output device opened!\n";
   }
 
   // activate digital I/O devices:
   DIOD->create( *ADV, n );
+  errors += DIOD->errors();
   warnings += DIOD->warnings();
   if ( ! DIOD->ok() )
     error |= 1;
 
   // activate trigger devices:
   TRIGD->create( *ADV, n );
+  errors += TRIGD->errors();
   warnings += TRIGD->warnings();
   if ( ! TRIGD->ok() )
     error |= 1;
@@ -573,37 +579,58 @@ int RELACSWidget::openHardware( int n, int errorlevel )
     ATD->create( *ADV, n );
   else
     ATD->create( *ADV, 1, "AttSim" );
+  errors += ATD->errors();
   warnings += ATD->warnings();
   if ( ! ATD->ok() )
     error |= 3;
 
   ATI->create( *ADV, 0 );
+  errors += ATI->errors();
   warnings += ATI->warnings();
   if ( ! ATI->ok() )
     error |= 3;
 
-  if ( errorlevel > 0 && !warnings.empty() ) {
-    Str ws = "Errors in activating devices:\n";
-    warnings.insert( 0, "<ul><li>" );
-    int p = warnings.find( "\n" );
-    while ( p >= 0 ) {
-      warnings.insert( p, "</li>" );
-      p += 6;
-      int n = warnings.find( "\n", p );
-      if ( n < 0 )
-	break;
-      warnings.insert( p, "<li>" );
-      p = n + 4;
+  if ( errorlevel > 0 ) {
+    if ( !errors.empty() ) {
+      Str ws = "Errors in activating devices:\n";
+      errors.insert( 0, "<ul><li>" );
+      int p = errors.find( "\n" );
+      while ( p >= 0 ) {
+	errors.insert( p, "</li>" );
+	p += 6;
+	int n = errors.find( "\n", p );
+	if ( n < 0 )
+	  break;
+	errors.insert( p, "<li>" );
+	p = n + 4;
+      }
+      ws += errors + "</ul>";
+      if ( errorlevel > 1 ) {
+	ws += "Can't switch to <b>" + modeStr() + "</b>-mode!";
+	printlog( "! warning: " + ws.erasedMarkup() );
+	MessageBox::error( "RELACS Warning !", ws, true, 0.0, this );
+      }
+      else {
+	printlog( ws.erasedMarkup() );
+	MessageBox::information( "RELACS Info !", ws, false, 0.0, this );
+      }
     }
-    ws += warnings + "</ul>";
-    if ( errorlevel > 1 ) {
-      ws += "Can't switch to <b>" + modeStr() + "</b>-mode!";
+    if ( !warnings.empty() ) {
+      Str ws = "Warnings in activating devices:\n";
+      warnings.insert( 0, "<ul><li>" );
+      int p = warnings.find( "\n" );
+      while ( p >= 0 ) {
+	warnings.insert( p, "</li>" );
+	p += 6;
+	int n = warnings.find( "\n", p );
+	if ( n < 0 )
+	  break;
+	warnings.insert( p, "<li>" );
+	p = n + 4;
+      }
+      ws += warnings + "</ul>";
       printlog( "! warning: " + ws.erasedMarkup() );
       MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
-    }
-    else {
-      printlog( ws.erasedMarkup() );
-      MessageBox::information( "RELACS Info !", ws, false, 0.0, this );
     }
   }
   return error;

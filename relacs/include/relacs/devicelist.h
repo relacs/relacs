@@ -85,7 +85,9 @@ public:
     int create( DD &devices, int n, const string &dflt="0" );
     /*! Returns the warning messages of the last call of create(). */
   Str warnings( void ) const;
-    /*! True if the last call of create() was succesfull, i.e. no warnings. */
+    /*! Returns the error messages of the last call of create(). */
+  Str errors( void ) const;
+    /*! True if the last call of create(), close(), reset() was succesfull, i.e. no errors. */
   bool ok( void ) const;
 
     /*! Return the device with identifier string \a ident.
@@ -124,6 +126,8 @@ protected:
   string Name;
     /*! Warning messages. */
   string Warnings;
+    /*! Error messages. */
+  string Errors;
 
 };
 
@@ -132,7 +136,8 @@ template < class T, int PluginID >
 DeviceList<T,PluginID>::DeviceList( const string &name, const string &title )
   : ConfigClass( title, RELACSPlugin::Core, ConfigClass::Save ),
     Name( name ),
-    Warnings( "" )
+    Warnings( "" ),
+    Errors( "" )
 {
   clear();
 }
@@ -176,6 +181,7 @@ template < class T, int PluginID >
 void DeviceList<T,PluginID>::close( void )
 {
   Warnings = "";
+  Errors = "";
   for ( int k=(int)DVs.size()-1; k >= 0; k-- ) {
     DVs[k]->clearError();
     DVs[k]->close();
@@ -193,6 +199,7 @@ template < class T, int PluginID >
 void DeviceList<T,PluginID>::reset( void )
 {
   Warnings = "";
+  Errors = "";
   for ( unsigned int k=0; k<DVs.size(); k++ ) {
     DVs[k]->clearError();
     int ern = DVs[k]->reset();
@@ -258,6 +265,7 @@ template < class T, int PluginID > template < class DD >
 int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 {
   Warnings = "";
+  Errors = "";
 
   int n = 0;
   int failed = 0;
@@ -297,19 +305,19 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
     if ( ms == "0" )
       continue;
     if ( ms.empty() ) {
-      Warnings += "a plugin name needs to be specified for " + Name + ".\n";
+      Errors += "a plugin name needs to be specified for " + Name + ".\n";
       continue;
     }
     int k = Plugins::index( ms, PluginID );
     if ( k < 0 ) {
-      Warnings += Name + " plugin <b>" + ms + "</b> not found! Check pluginpathes in relacs.cfg.\n";
+      Errors += Name + " plugin <b>" + ms + "</b> not found! Check pluginpathes in relacs.cfg.\n";
       continue;
     }
 
     // check plugin:
     string ident = deviceopts->text( "ident" );
     if ( ident.empty() ) {
-      Warnings += "You need to provide an identifier for the <b>" + ms
+      Errors += "You need to provide an identifier for the <b>" + ms
 	+ "</b> plugin !\n";
       continue;
     }
@@ -333,7 +341,7 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
     else
       mp = Plugins::create( k );
     if ( mp == 0 ) {
-      Warnings += "Failed to create " + Name + " plugin <b>" + ms + "</b> !\n";
+      Errors += "Failed to create " + Name + " plugin <b>" + ms + "</b> !\n";
       continue;
     }
 
@@ -362,13 +370,24 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
     }
     if ( ! ds.empty() )
       ern = dv->open( ds );
-    if ( dv->isOpen() )
+    if ( dv->isOpen() ) {
+      string es = dv->errorStr();
+      if ( ! es.empty() ) {
+	Warnings += "Opening " + Name + " plugin <b>" + ms
+	+ "</b> with identifier <b>" + ident + "</b>";
+	if ( ! ds.empty() )
+	  Warnings += " on device <b>" + ds;
+	if ( es[es.size()-1] != '.' )
+	  es += ".";
+	Warnings += " returned: " + es + '\n';
+      }
       n++;
+    }
     else {
-      Warnings += "Cannot open " + Name + " plugin <b>" + ms
+      Errors += "Cannot open " + Name + " plugin <b>" + ms
 	+ "</b> with identifier <b>" + ident + "</b>";
       if ( ! ds.empty() )
-	Warnings += " on device <b>" + ds;
+	Errors += " on device <b>" + ds;
       string en = dv->getErrorStr( ern );
       string es = dv->errorStr();
       if ( ! es.empty() ) {
@@ -382,9 +401,9 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	en += es;
       }
       if ( en.empty() )
-	Warnings += " !\n";
+	Errors += " !\n";
       else
-	Warnings += " ! " +  en + '\n';
+	Errors += " ! " +  en + '\n';
     }
   }
   return n;
@@ -399,9 +418,16 @@ Str DeviceList<T,PluginID>::warnings( void ) const
 
 
 template < class T, int PluginID >
+Str DeviceList<T,PluginID>::errors( void ) const
+{
+  return Errors;
+}
+
+
+template < class T, int PluginID >
 bool DeviceList<T,PluginID>::ok( void ) const
 {
-  return Warnings.empty();
+  return Errors.empty();
 }
 
 
