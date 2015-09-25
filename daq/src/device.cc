@@ -225,10 +225,13 @@ void Device::setErrorStr( const string &strg )
 
 void Device::addErrorStr( const string &strg )
 {
-  if ( strg == ErrorString || strg.empty() )
+  if ( strg.empty() )
     return;
-  if ( !ErrorString.empty() )
-    ErrorString += ", ";
+  if ( !ErrorString.empty() ) {
+    if ( ErrorString[ErrorString.size()-1] != '.' )
+      ErrorString += ".";
+    ErrorString += "<br> ";
+  }
   ErrorString += strg;
 }
 

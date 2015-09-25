@@ -376,10 +376,10 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	Warnings += "Opening " + Name + " plugin <b>" + ms
 	+ "</b> with identifier <b>" + ident + "</b>";
 	if ( ! ds.empty() )
-	  Warnings += " on device <b>" + ds;
+	  Warnings += " on device <b>" + ds + "</b>";
 	if ( es[es.size()-1] != '.' )
 	  es += ".";
-	Warnings += " returned: " + es + '\n';
+	Warnings += " returned: <br>" + es + '\n';
       }
       n++;
     }
@@ -387,7 +387,7 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
       Errors += "Cannot open " + Name + " plugin <b>" + ms
 	+ "</b> with identifier <b>" + ident + "</b>";
       if ( ! ds.empty() )
-	Errors += " on device <b>" + ds;
+	Errors += " on device <b>" + ds + "</b>";
       string en = dv->getErrorStr( ern );
       string es = dv->errorStr();
       if ( ! es.empty() ) {
@@ -403,7 +403,7 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
       if ( en.empty() )
 	Errors += " !\n";
       else
-	Errors += " ! " +  en + '\n';
+	Errors += " ! <br>" +  en + '\n';
     }
   }
   return n;

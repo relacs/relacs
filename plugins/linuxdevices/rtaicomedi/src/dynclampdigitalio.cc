@@ -174,9 +174,9 @@ int DynClampDigitalIO::open( const string &device )
       double duration = number( "syncpulsewidth", 0.0, "s" );
       int id = allocateLine( line );
       if ( id == WriteError )
-	setErrorStr( "failed to allocate line " + Str( line ) + " for sync pulse" );
+	addErrorStr( "failed to allocate line " + Str( line ) + " for sync pulse" );
       else if ( configureLine( line, true ) < 0 )
-	setErrorStr( "failed to configure line " + Str( line ) + " for sync pulse for writing" );
+	addErrorStr( "failed to configure line " + Str( line ) + " for sync pulse for writing" );
       else {
 	setSyncPulse( line, duration );
 	SyncLine = line;
@@ -357,34 +357,29 @@ int DynClampDigitalIO::addTTLPulse( unsigned int line, enum ttlPulses high,
     return NotOpen;
   string es = "Adding ttl pulse for DIO line " + Str( line ) + " failed on subdevice " + Str( SubDevice ) + ": ";
   if ( line >= MaxLines ) {
-    es += "Invalid line " + Str( line ) + ".";
-    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> " << es << '\n';
-    setErrorStr( es );
+    es += "Invalid line " + Str( line );
+    addErrorStr( es );
     return WriteError;
   }
   if ( high == TTL_UNDEFINED || low == TTL_UNDEFINED ) {
     es += "Unset high " + TTLCommands[high] + " or low " + TTLCommands[ low ] + " condition.";
-    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   if ( TTLPulseHigh[line] != TTL_UNDEFINED || 
        TTLPulseLow[line] != TTL_UNDEFINED ) {
-    es += "High " + TTLCommands[TTLPulseHigh[line]] + " or low "  + TTLCommands[TTLPulseLow[line]] + " condition already set for line " + Str( line ) + ".";
-    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> " << es << "\n";
-    setErrorStr( es );
+    es += "High " + TTLCommands[TTLPulseHigh[line]] + " or low "  + TTLCommands[TTLPulseLow[line]] + " condition already set for line " + Str( line );
+    addErrorStr( es );
     return WriteError;
   }
   if ( ! allocatedLine( line ) ) {
     es += "Line " + Str( line ) + " not allocated.";
-    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   if ( ! lineConfiguration( line ) ) {
     es += "Line " + Str( line ) + " not configured for writing.";
-    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
 
@@ -400,12 +395,10 @@ int DynClampDigitalIO::addTTLPulse( unsigned int line, enum ttlPulses high,
     es += "Adding high pulse failed. ";
     if ( errno == ENOTTY ) {
       es += "Dynamic clamp module is not compiled with ttl pulse support. Enable ttl pulse support by making sure ENABLE_TTLPULSES is defined in moduledef.h";
-      cerr << "! error: DynClampDigitalIO::addTTLPulse() -> " << es << '\n';
-      setErrorStr( es );
+      addErrorStr( es );
       return InvalidDevice;
     }
-    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   if ( ! inithigh )
@@ -413,9 +406,8 @@ int DynClampDigitalIO::addTTLPulse( unsigned int line, enum ttlPulses high,
   dioIOC.pulseType = low;
   retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if ( retval < 0 ) {
-    es += "Adding low pulse failed. ";
-    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> " << es << '\n';
-    setErrorStr( es );
+    es += "Adding low pulse failed.";
+    addErrorStr( es );
     dioIOC.op = DIO_CLEAR_TTLPULSE;
     dioIOC.pulseType = TTL_UNDEFINED;
     ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
@@ -434,15 +426,13 @@ int DynClampDigitalIO::clearTTLPulse( unsigned int line, bool high )
   string es = "Clearing ttl pulse for DIO line " + Str( line ) + " failed on subdevice " + Str( SubDevice ) + ": ";
   if ( line >= MaxLines ) {
     es += "Invalid line " + Str( line ) + ".";
-    cerr << "! error: DynClampDigitalIO::clearTTLPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   if ( TTLPulseHigh[line] == TTL_UNDEFINED || 
        TTLPulseLow[line] == TTL_UNDEFINED ) {
     es += "High " + TTLCommands[TTLPulseHigh[line]] + " or low "  + TTLCommands[TTLPulseLow[line]] + " condition is not set for line " + Str( line ) + ".";
-    cerr << "! error: DynClampDigitalIO::clearTTLPulse() -> " << es << "\n";
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
 
@@ -457,12 +447,10 @@ int DynClampDigitalIO::clearTTLPulse( unsigned int line, bool high )
   if ( retval < 0 ) {
     if ( errno == ENOTTY ) {
       es += "Dynamic clamp module is not compiled with ttl pulse support. Enable ttl pulse support by making sure ENABLE_TTLPULSES is defined in moduledef.h";
-      cerr << "! error: DynClampDigitalIO::clearTTLPulse() -> " << es << '\n';
-      setErrorStr( es );
+      addErrorStr( es );
       return InvalidDevice;
     }
-    cerr << "! error: DynClampDigitalIO::clearTTLPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   TTLPulseHigh[line] = TTL_UNDEFINED;
@@ -479,26 +467,22 @@ int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration, int mod
   long durationns = (long)::round( 1.0e9*duration );
   if ( durationns <= 0 ) {
     es += "Duration " + Str( durationns ) + " ns is not positive.";
-    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   if ( line >= MaxLines ) {
-    es += "Invalid line " + Str( line ) + ".";
-    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> " << es << '\n';
-    setErrorStr( es );
+    es += "Invalid line " + Str( line );
+    addErrorStr( es );
     return WriteError;
   }
   if ( ! allocatedLine( line ) ) {
     es += "Line " + Str( line ) + " not allocated.";
-    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   if ( ! lineConfiguration( line ) ) {
     es += "Line " + Str( line ) + " not configured for writing.";
-    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
 
@@ -513,12 +497,10 @@ int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration, int mod
   if ( retval < 0 ) {
     if ( errno == ENOTTY ) {
       es += "Dynamic clamp module is not compiled with syncpulse support. Enable syncpulse support by making sure ENABLE_SYNCSEC is defined in moduledef.h";
-      cerr << "! error: DynClampDigitalIO::setSyncPulse() -> " << es << '\n';
-      setErrorStr( es );
+      addErrorStr( es );
       return InvalidDevice;
     }
-    cerr << "! error: DynClampDigitalIO::setSyncPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   return 0;
@@ -527,6 +509,7 @@ int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration, int mod
 
 int DynClampDigitalIO::setSyncPulse( double duration, int mode )
 {
+  clearError();
   return setSyncPulse( SyncLine, duration, mode );
 }
 
@@ -544,12 +527,10 @@ int DynClampDigitalIO::clearSyncPulse( void )
     int ern = errno;
     if ( ern == ENOTTY ) {
       es += "Dynamic clamp module is not compiled with syncpulse support. Enable syncpulse support by making sure ENABLE_SYNCSEC is defined in moduledef.h";
-      cerr << "! error: DynClampDigitalIO::clearSyncPulse() -> " << es << '\n';
-      setErrorStr( es );
+      addErrorStr( es );
       return InvalidDevice;
     }
-    cerr << "! error: DynClampDigitalIO::clearSyncPulse() -> " << es << '\n';
-    setErrorStr( es );
+    addErrorStr( es );
     return WriteError;
   }
   return 0;

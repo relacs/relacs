@@ -590,6 +590,23 @@ int RELACSWidget::openHardware( int n, int errorlevel )
   if ( ! ATI->ok() )
     error |= 3;
 
+  if ( !warnings.empty() ) {
+    Str ws = "Warnings in activating devices:\n";
+    warnings.insert( 0, "<ul><li>" );
+    int p = warnings.find( "\n" );
+    while ( p >= 0 ) {
+      warnings.insert( p, "</li>" );
+      p += 6;
+      int n = warnings.find( "\n", p );
+      if ( n < 0 )
+	break;
+      warnings.insert( p, "<li>" );
+      p = n + 4;
+    }
+    ws += warnings + "</ul>";
+    printlog( "! warning: " + ws.erasedMarkup() );
+    MessageBox::warning( "RELACS Warning !", ws, false, 0.0, this );
+  }
   if ( errorlevel > 0 ) {
     if ( !errors.empty() ) {
       Str ws = "Errors in activating devices:\n";
@@ -614,23 +631,6 @@ int RELACSWidget::openHardware( int n, int errorlevel )
 	printlog( ws.erasedMarkup() );
 	MessageBox::information( "RELACS Info !", ws, false, 0.0, this );
       }
-    }
-    if ( !warnings.empty() ) {
-      Str ws = "Warnings in activating devices:\n";
-      warnings.insert( 0, "<ul><li>" );
-      int p = warnings.find( "\n" );
-      while ( p >= 0 ) {
-	warnings.insert( p, "</li>" );
-	p += 6;
-	int n = warnings.find( "\n", p );
-	if ( n < 0 )
-	  break;
-	warnings.insert( p, "<li>" );
-	p = n + 4;
-      }
-      ws += warnings + "</ul>";
-      printlog( "! warning: " + ws.erasedMarkup() );
-      MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
     }
   }
   return error;
