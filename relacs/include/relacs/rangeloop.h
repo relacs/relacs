@@ -495,24 +495,31 @@ class RangeLoop
         to \a skip.
         If \a skip is true (default) this data element will be skipped
         in future sequences. \sa skip(), setSkipBelow(), setSkipAbove(),
-	setSkipBetween() */
+	setSkipBetween(), setSkipNocount() */
   void setSkip( int pos, bool skip=true );
     /*! Set the skipping behavior of all data elements below position \a pos
         inclusively to \a skip.
         If \a skip is true (default) these data elements will be skipped
-        in future sequences. \sa setSkipAbove(), setSkipBetween(), setSkip() */
+        in future sequences. \sa setSkipAbove(), setSkipBetween(), setSkip(), setSkipNocount() */
   void setSkipBelow( int pos, bool skip=true );
     /*! Set the skipping behavior of all data elements above position \a pos
         inclusively to \a skip.
         If \a skip is true (default) these data elements will be skipped
-        in future sequences. \sa setSkipBelow(), setSkipBetween(), setSkip() */
+        in future sequences. \sa setSkipBelow(), setSkipBetween(), setSkip(), setSkipNocount() */
   void setSkipAbove( int pos, bool skip=true );
     /*! Set the skipping behavior of all data elements above position \a pos1 inclusively
         and below position \a pos2 inclusively
         to \a skip.
         If \a skip is true (default) these data elements will be skipped
-        in future sequences. */
+        in future sequences.
+        \sa setSkip(), setSkipBelow(), setSkipAbove(), setSkipNocount() */
   void setSkipBetween( int pos1, int pos2, bool skip=true );
+    /*! Set the skipping behavior of all data elements that have not been used yet,
+        i.e. with zero count(), to \a skip.
+        If \a skip is true (default) these data elements will be skipped
+        in future sequences.
+        \sa setSkip(), setSkipBelow(), setSkipAbove(), setSkipBetween() */
+  void setSkipNocount( bool skip=true );
 
     /*! Returns the position of the data element next or equal to position \a pos
         with count larger than zero.

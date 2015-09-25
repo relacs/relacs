@@ -1212,6 +1212,15 @@ void RangeLoop::setSkipBetween( int pos1, int pos2, bool skip )
 }
 
 
+void RangeLoop::setSkipNocount( bool skip )
+{
+  for ( int k=0; k<int(Elements.size()); k++ ) {
+    if ( Elements[k].Count <= 0 )
+      Elements[k].Skip = skip; 
+  }
+}
+
+
 int RangeLoop::next( int pos ) const
 {
   for ( ; pos<size() && count( pos ) <= 0; pos++ );

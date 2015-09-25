@@ -89,6 +89,9 @@ public:
 
 protected:
 
+    /*! Handle keyboard events. */
+  void keyPressEvent( QKeyEvent *qke );
+
   MultiPlot P;
   string VUnit;
   string IUnit;

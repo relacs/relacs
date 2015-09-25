@@ -744,6 +744,22 @@ void FICurve::Data::analyze( int count, const InData &intrace,
 }
 
 
+void FICurve::keyPressEvent( QKeyEvent *qke )
+{
+  switch ( qke->key()) {
+  case Qt::Key_X:
+    lock();
+    Range.setSkipNocount();
+    unlock();
+    break;
+
+  default:
+    RePro::keyPressEvent( qke );
+
+  }
+}
+
+
 addRePro( FICurve, patchclamp );
 
 }; /* namespace patchclamp */
