@@ -38,35 +38,34 @@ namespace patchclamp {
 \class FICurve
 \brief [RePro] F-I curve measured in current-clamp
 \author Jan Benda
-\version 1.4 (Feb 27, 2015)
+\version 1.6 (Sep 30, 2015)
 \par Screenshot
 \image html ficurve.png
 
 \par Options
-- Stimuli
-- \c ibase=zero: Currents are relative to (\c string)
-- \c imin=0nA: Minimum injected current (\c number)
-- \c imax=1nA: Maximum injected current (\c number)
-- \c istep=0.001nA: Minimum step-size of current (\c number)
-- \c userm=false: Use membrane resistance for estimating istep from vstep (\c boolean)
-- \c vstep=1mV: Minimum step-size of voltage (\c number)
-- \c optimizedimin=1000: Minimum current below firing threshold (\c number)
-- Timing
-- \c duration=100ms: Duration of current output (\c number)
-- \c delay=100ms: Delay before current pulses (\c number)
-- \c pause=400ms: Duration of pause between current pulses (\c number)
-- \c ishuffle=Up: Initial sequence of currents for first repetition (\c string)
-- \c shuffle=Up: Sequence of currents (\c string)
-- \c iincrement=-1: Initial increment for currents (\c integer)
-- \c singlerepeat=1: Number of immediate repetitions of a single stimulus (\c integer)
-- \c blockrepeat=10: Number of repetitions of a fixed intensity increment (\c integer)
-- \c repeat=1: Number of repetitions of the whole V-I curve measurement (\c integer)
-- Analysis
-- \c fmax=100Hz: Maximum firing rate (\c number)
-- \c vmax=-50mV: Maximum steady-state potential (\c number)
-- \c sswidth=50ms: Window length for steady-state analysis (\c number)
-- \c ratioincrement=0: Optimize range at current increments below (\c integer)
-- \c maxratediff=10Hz: Maximum difference between onset and steady-state firing rate for optimization (\c number)
+- \c Stimuli
+    - \c ibase=zero: Currents are relative to (\c string)
+    - \c imin=0nA: Minimum injected current (\c number)
+    - \c imax=1nA: Maximum injected current (\c number)
+    - \c istep=0.001nA: Minimum step-size of current (\c number)
+    - \c optimizedimin=1000nA: Minimum current below firing threshold (\c number)
+    - \c manualskip=false: Show buttons for manual selection of intensities (\c boolean)
+- \c Timing
+    - \c duration=100ms: Duration of current output (\c number)
+    - \c delay=100ms: Delay before current pulses (\c number)
+    - \c pause=400ms: Duration of pause between current pulses (\c number)
+    - \c ishuffle=Up: Initial sequence of currents for first repetition (\c string)
+    - \c shuffle=Up: Sequence of currents (\c string)
+    - \c iincrement=-1: Initial increment for currents (\c integer)
+    - \c singlerepeat=1: Number of immediate repetitions of a single stimulus (\c integer)
+    - \c blockrepeat=10: Number of repetitions of a fixed intensity increment (\c integer)
+    - \c repeats=1: Number of repetitions of the whole f-I curve measurement (\c integer)
+- \c Analysis
+    - \c fmax=100Hz: Maximum firing rate (\c number)
+    - \c vmax=-50mV: Maximum steady-state potential (\c number)
+    - \c sswidth=50ms: Window length for steady-state analysis (\c number)
+    - \c diffincrement=0: Optimize range at current increments below (\c integer)
+    - \c maxratediff=10Hz: Maximum difference between onset and steady-state firing rate for optimization (\c number)
 */
 
 
@@ -79,6 +78,7 @@ public:
   FICurve( void );
   virtual void preConfig( void );
   virtual int main( void );
+  void plotRangeSelection( void );
   void plot( double duration, int inx );
   void save( void );
   void saveData( void );
@@ -87,10 +87,17 @@ public:
   void saveTraces( void );
 
 
+protected slots:
+
+  void plotMouseEvent( Plot::MouseEvent &me );
+
+
 protected:
 
     /*! Handle keyboard events. */
   void keyPressEvent( QKeyEvent *qke );
+
+  virtual void customEvent( QEvent *qce );
 
   MultiPlot P;
   string VUnit;
@@ -98,6 +105,8 @@ protected:
   double VFac;
   double IFac;
   double IInFac;
+  double IStep;
+  bool PlotRangeSelection;
 
   struct Data
   {

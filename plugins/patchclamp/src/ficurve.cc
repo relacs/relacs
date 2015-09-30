@@ -28,22 +28,23 @@ namespace patchclamp {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.4", "Feb 27, 2015" ),
+  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.6", "Sep 30, 2015" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
     IFac( 1.0 ),
     IInFac( 1.0 )
 {
+  IStep = 0.001;
+
   // add some options:
   newSection( "Stimuli" );
   addSelection( "ibase", "Currents are relative to", "zero|DC|threshold" );
   addNumber( "imin", "Minimum injected current", 0.0, -1000.0, 1000.0, 0.001 );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
-  addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "false" );
-  addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
-  addNumber( "vstep", "Minimum step-size of voltage", 1.0, 0.001, 10000.0, 0.1 ).setActivation( "userm", "true" );
+  addNumber( "istep", "Minimum step-size of current", IStep, 0.001, 1000.0, 0.001 ).setActivation( "userm", "false" );
   addNumber( "optimizedimin", "Minimum current below firing threshold", 1000.0, 0.0, 1000.0, 0.001 );
+  addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
   newSection( "Timing" );
   addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 10.0, 0.001, "sec", "ms" );
@@ -61,6 +62,8 @@ FICurve::FICurve( void )
   addInteger( "diffincrement", "Optimize range at current increments below", 0, 0, 10000 );
   addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "diffincrement", ">0" );
 
+  PlotRangeSelection = false;
+
   P.lock();
   P.resize( 2, 2, true );
   P.unlock();
@@ -73,7 +76,6 @@ void FICurve::preConfig( void )
   if ( SpikeTrace[0] >= 0 ) {
     VUnit = trace( SpikeTrace[0] ).unit();
     VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
-    setUnit( "vstep", VUnit );
   }
 
   if ( CurrentOutput[0] >= 0 ) {
@@ -103,10 +105,9 @@ int FICurve::main( void )
   int ibase = index( "ibase" );
   double imin = number( "imin" );
   double imax = number( "imax" );
-  double istep = number( "istep" );
-  bool userm = boolean( "userm" );
-  double vstep = number( "vstep" );
+  IStep = number( "istep" );
   double optimizedimin = number( "optimizedimin" );
+  bool manualskip = boolean( "manualskip" );
   RangeLoop::Sequence shuffle = RangeLoop::Sequence( index( "shuffle" ) );
   RangeLoop::Sequence ishuffle = RangeLoop::Sequence( index( "ishuffle" ) );
   int iincrement = integer( "iincrement" );
@@ -162,23 +163,8 @@ int FICurve::main( void )
     warning( "Invalid output current trace!" );
     return Failed;
   }
-  if ( userm ) {
-    lockMetaData();
-    double rm = metaData().number( "Cell>rmss", "MOhm" );
-    if ( rm <= 0 )
-      rm = metaData().number( "Cell>rm", "MOhm" );
-    unlockMetaData();
-    if ( rm <= 0 )
-      warning( "Membrane resistance was not measured yet!" );
-    else {
-      Header.addNumber( "rm", rm, "MOhm" );
-      vstep = Parameter::changeUnit( vstep, VUnit, "mV" ); 
-      double ifac = Parameter::changeUnit( 1.0, "nA", IUnit ); 
-      istep = ifac*vstep/rm;
-    }
-  }
   Header.addNumber( "imin", imin, IUnit );
-  Header.addNumber( "istep", istep, IUnit );
+  Header.addNumber( "istep", IStep, IUnit );
 
   // don't print repro message:
   noMessage();
@@ -189,7 +175,7 @@ int FICurve::main( void )
   // init:
   DoneState state = Completed;
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
-  Range.set( imin, imax, istep, repeat, blockrepeat, singlerepeat );
+  Range.set( imin, imax, IStep, repeat, blockrepeat, singlerepeat );
   Range.setIncrement( iincrement );
   Range.setSequence( ishuffle );
   int prevrepeat = 0;
@@ -210,7 +196,13 @@ int FICurve::main( void )
   P[1].setYLabel( "Firing rate [Hz]" );
   P[1].setYFallBackRange( 0.0, 20.0 );
   P[1].setYRange( 0.0, Plot::AutoScale );
+  if ( manualskip ) {
+    P[1].setUserMouseTracking( true );
+    connect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+	     this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+  }
   P.unlock();
+  PlotRangeSelection = false;
 
   // signal:
   OutData signal( duration, 1.0/samplerate );
@@ -225,8 +217,16 @@ int FICurve::main( void )
 
   // initial pause:
   sleepWait( pause );
-  if ( interrupt() )
+  if ( interrupt() ) {
+    if ( manualskip ) {
+      P.lock();
+      P[1].setUserMouseTracking( false );
+      disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+		  this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+      P.unlock();
+    }
     return Aborted;
+  }
 
   // write stimulus:
   for ( Range.reset(); ! Range && softStop() == 0; ) {
@@ -289,6 +289,13 @@ int FICurve::main( void )
       else {
 	warning( signal.errorText() );
 	directWrite( dcsignal );
+	if ( manualskip ) {
+	  P.lock();
+	  P[1].setUserMouseTracking( false );
+	  disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+		      this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+	  P.unlock();
+	}
 	return Failed;
       }
     }
@@ -364,7 +371,36 @@ int FICurve::main( void )
   if ( state == Completed && Range.totalCount() > 0 )
     save();
 
+  if ( manualskip ) {
+    P.lock();
+    P[1].setUserMouseTracking( false );
+    disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+		this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+    P.unlock();
+  }
   return state;
+}
+
+
+void FICurve::plotRangeSelection( void )
+{
+  ArrayD sa; sa.reserve( Range.size() );
+  ArrayD ua; ua.reserve( Range.size() );
+  for ( int k=0; k<Range.size(); k++ ) {
+    double x = Range.value( k );
+    if ( k == 0 )
+      x += 0.01 * IStep;
+    if ( k == Range.size()-1 )
+      x -= 0.01 * IStep;
+    if ( Range.skip( k ) )
+      sa.push( x );
+    else
+      ua.push( x);
+  }
+  P[1].plot( ua, 1.0, 0.95, Plot::Graph, 0, Plot::Diamond,
+	     0.7*IStep, Plot::FirstX, Plot::Green, Plot::Green );
+  P[1].plot( sa, 1.0, 0.95, Plot::Graph, 0, Plot::Diamond,
+	     0.7*IStep, Plot::FirstX, Plot::Red, Plot::Red );
 }
 
 
@@ -419,6 +455,9 @@ void FICurve::plot( double duration, int inx )
   am.push( Results[inx].I, Results[inx].SSRate );
   am.push( Results[inx].I, Results[inx].MeanRate );
   P[1].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
+
+  if ( PlotRangeSelection )
+    plotRangeSelection();
 
   P.draw();
 
@@ -756,6 +795,74 @@ void FICurve::keyPressEvent( QKeyEvent *qke )
   default:
     RePro::keyPressEvent( qke );
 
+  }
+}
+
+
+class PlotMouseEvent : public QEvent
+{
+
+public:
+
+  PlotMouseEvent( const Plot::MouseEvent &me )
+    : QEvent( Type( User+11 ) ),
+      ME( me )
+  {
+  }
+
+  Plot::MouseEvent ME;
+};
+
+
+void FICurve::plotMouseEvent( Plot::MouseEvent &me )
+{
+  if ( ! tryLock( 5 ) ) {
+    QCoreApplication::postEvent( this, new PlotMouseEvent( me ) );
+    return;
+  }
+  P[1].lock();
+  if ( me.xCoor() == Plot::First && me.yCoor() == Plot::First &&
+       me.yPos() > P[1].yminRange() + 0.9*(P[1].ymaxRange() - P[1].yminRange()) ) {
+    bool changed = false;
+    if ( me.left() && me.released() ) {
+      int inx = (int)::round( ( me.xPos() - Range.front() ) / IStep );
+      if ( inx >= Range.size() )
+	inx = Range.size() - 1;
+      if ( inx < 0 )
+	inx = 0;
+      if ( me.shift() )
+	Range.setSkipBelow( inx, ! Range.skip( inx ) );
+      else if ( me.control() )
+	Range.setSkipAbove( inx, ! Range.skip( inx ) );
+      else
+	Range.setSkip( inx, ! Range.skip( inx ) );
+      Range.update();
+      changed = true;
+    }
+    if ( ! PlotRangeSelection || changed ) {
+      plotRangeSelection();
+      P.draw();
+    }
+    PlotRangeSelection = true;
+    me.setUsed();
+  }
+  else
+    PlotRangeSelection = false;
+  P[1].unlock();
+  unlock();
+}
+
+
+void FICurve::customEvent( QEvent *qce )
+{
+  switch ( qce->type() - QEvent::User ) {
+  case 11: {
+    PlotMouseEvent *pme = dynamic_cast<PlotMouseEvent*>( qce );
+    plotMouseEvent( pme->ME );
+    break;
+  }
+  default:
+    RePro::customEvent( qce );
   }
 }
 
