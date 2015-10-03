@@ -251,7 +251,6 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
 
   for ( int k=0; k<sigs.size(); k++ ) {
     // we use only the largest range:
-    sigs[k].setGainIndex( 0 );
     if ( BipolarRange.size() > 0 ) {
       sigs[k].setMinVoltage( -BipolarRange[0] );
       sigs[k].setMaxVoltage( BipolarRange[0] );
@@ -453,7 +452,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	  max = smax;
       }
       // we use only the largest range and there is only one range:
-      sigs[k].setGainIndex( 0 );
       if ( BipolarRange.size() > 0 ) {
 	sigs[k].setMinVoltage( -BipolarRange[0] );
 	sigs[k].setMaxVoltage( BipolarRange[0] );

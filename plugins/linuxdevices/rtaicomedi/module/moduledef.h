@@ -12,7 +12,8 @@
 
 
 // *** FEATURES *** 
-// You may use configure to select features, e.g. ./configure --enable-dynclamp-computation .
+// You may use configure to select features, e.g. ./configure --enable-dynclamp-computation 
+// For a list of all --enable-dynclamp-* options see ./configure --help
 // Or you enable the following defines by uncommenting them.
 
   /*! Compute a model. */
@@ -157,6 +158,8 @@ struct dioIOCT {
   enum ttlPulses pulseType; /* only for op == DIO_ADD_TTLPULSE or DIO_CLEAR_TTLPULSE */
   long pulsewidth;          /* only for op == DIO_SET_SYNCPULSE */
   int intervalmode;          /* only for op == DIO_SET_SYNCPULSE: 0: fixed period, 1: each difftime, n>1: difftime averaged over n cycles */
+  int modemask;          /* only for op == DIO_SET_SYNCPULSE: mask for lines setting modes of amplifer. */
+  int modebits;          /* only for op == DIO_SET_SYNCPULSE: bits to set high in amplifier mode. */
 };
 
 struct triggerIOCT {

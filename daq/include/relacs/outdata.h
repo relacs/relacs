@@ -345,7 +345,7 @@ class OutData : public SampleData< float >, public DaqError
 	signal trace should be used.
 	If ExtRef is returned, then the external reference should be used
 	regardless of the signal's minimum and maximum values.
-	\sa requestedMax(), request(), gainIndex() */
+	\sa requestedMax(), request() */
   double requestedMin( void ) const;
     /*! Returns the maximum value of the
         signal trace that should be used for determining the appropriate gain
@@ -354,7 +354,7 @@ class OutData : public SampleData< float >, public DaqError
 	signal trace should be used.
 	If ExtRef is returned, then the external reference should be used
 	regardless of the signal's minimum and maximum values.
-	\sa requestedMin(), request(), gainIndex() */
+	\sa requestedMin(), request() */
   double requestedMax( void ) const;
     /*! Set the minimum and maximum value of the
         signal trace that should be used for determining the appropriate gain
@@ -365,7 +365,7 @@ class OutData : public SampleData< float >, public DaqError
 	that the external reference should be used
 	regardless of the signal's minimum and maximum values.
 	In this case the value of \a min then still determines the polarity.
-	\sa setExtRef(), requestedMin(), requestedMax(), gainIndex() */
+	\sa setExtRef(), requestedMin(), requestedMax() */
   void request( double min, double max );
     /*! Force the hardware driver to use the external reference
         in bipolar output mode,
@@ -373,20 +373,15 @@ class OutData : public SampleData< float >, public DaqError
         Same as request( -1.0, ExtRef ). */
   void setExtRef( void );
 
-    /*! Returns an integer encoding the output gain, polarity, and reference. 
-        This function is internally used by the hardware driver class. */
-  int gainIndex( void ) const;
-    /*! Set the integer encoding the output gain, polarity, and reference
-        to \a index. 
-        This function is internally used by the hardware driver class. */
-  void setGainIndex( int index );
     /*! Returns the data to be used by AnalogOutput for converting
-        voltage to raw data.
-        \sa setGainData(), gainIndex() */
+        voltage to raw data. 
+        This function is internally used by the hardware driver class.
+        \sa setGainData() */
   char *gainData( void ) const;
     /*! Set the data to be used by AnalogOutput for converting
-        voltage to raw data to \a data.
-        \sa gainData(), setGainIndex() */
+        voltage to raw data to \a data. 
+        This function is internally used by the hardware driver class.
+        \sa gainData() */
   void setGainData( char *data );
 
     /*! Get the voltage of the \a index -th element in Volt.
@@ -855,8 +850,6 @@ class OutData : public SampleData< float >, public DaqError
   double RequestMinValue;
     /*! Maximum value for which a gain should be chosen. */
   double RequestMaxValue;
-    /*! Encodes gain, polarity, and reference. */
-  int GainIndex;
     /*! Some data used by AnalogOutput to convert voltage to
         raw integer data for the data acquisition board. */
   char *GainData;

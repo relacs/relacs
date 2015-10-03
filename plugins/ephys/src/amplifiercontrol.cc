@@ -251,7 +251,7 @@ void AmplifierControl::initDevices( void )
   // add amplifier synchronization:
   DIO = digitalIO( "dio-1" );
   if ( DIO != 0 ) {
-    if ( DIO->clearSyncPulse() == Device::InvalidDevice ) {
+    if ( DIO->clearSyncPulse( 0, 0 ) == Device::InvalidDevice ) { // XXX
       DIO = 0;
     }
   }
@@ -462,7 +462,7 @@ void AmplifierControl::activateCurrentClampMode( bool activate )
 void AmplifierControl::activateDynamicClampMode( bool activate )
 {
   if ( Ampl != 0 && activate ) {
-    Ampl->setDynamicClampMode();
+    Ampl->setDynamicClampMode( 0, 0 ); // XXX
     DCButton->setChecked( true );
     activateSyncPulse( activate );
     lockStimulusData();
@@ -502,7 +502,7 @@ void AmplifierControl::activateSyncPulse( bool activate )
 {
   if ( DIO != 0 ) {
     if ( activate ) {
-      if ( DIO->setSyncPulse( SyncPulseDuration, SyncMode ) == 0 ) {
+      if ( DIO->setSyncPulse( 0, 0, 0, SyncPulseDuration, SyncMode ) == 0 ) { // XXX
 	lockStimulusData();
 	stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
 	stimulusData().setInteger( "SyncMode", SyncMode );
@@ -518,7 +518,7 @@ void AmplifierControl::activateSyncPulse( bool activate )
 	activateCurrentClampMode( true );
     }
     else {
-      DIO->clearSyncPulse();
+      DIO->clearSyncPulse( 0, 0 ); // XXX
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 0.0 );
       stimulusData().setInteger( "SyncMode", 0 );
@@ -537,7 +537,7 @@ void AmplifierControl::setSyncPulse( double durationus )
   setToDefault( "syncpulse" );
   setNotify();
   if ( DIO != 0 && SyncPulseEnabled ) {
-    if ( DIO->setSyncPulse( SyncPulseDuration, SyncMode ) == 0 ) {
+    if ( DIO->setSyncPulse( 0, 0, 0, SyncPulseDuration, SyncMode ) == 0 ) { // XXX
       activateDynamicClampMode( true );
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
@@ -556,7 +556,7 @@ void AmplifierControl::setSyncMode( int mode )
   setToDefault( "syncmode" );
   setNotify();
   if ( DIO != 0 && SyncPulseEnabled ) {
-    if ( DIO->setSyncPulse( SyncPulseDuration, SyncMode ) == 0 ) {
+    if ( DIO->setSyncPulse( 0, 0, 0, SyncPulseDuration, SyncMode ) == 0 ) { // XXX
       activateDynamicClampMode( true );
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );

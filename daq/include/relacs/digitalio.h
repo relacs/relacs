@@ -207,12 +207,16 @@ public:
         \sa write() */
   virtual int readLines( unsigned int lines, unsigned int &val ) = 0;
 
-    /*! Enables generation of TTL Pulses on a previously defined DIO
-        line and the scaling of the current for analog output
+    /*! Enables generation of TTL Pulses on DIO line \a line
+        and the scaling of the current for analog output
         according to the measured period divided by the curent
         injection time of \a duration microseconds. This is used for
         synchronizing a discontinous current-clamp amplifier with an
         dynamic-clamp loop. 
+	\param[in] modemask the dio lines that switch the mode of the amplifier
+	\param[in] modebits the dio lines to be set high to switch the mode of the amplifier
+	into synchronized current clamp mode
+	\param[in] line the dio line where to put out the synchronizing pulses
 	\param[in] duration the duration of the current injection of 
 	the amplifier in seconds.
 	\param[in] mode how the measured period is determined:
@@ -221,11 +225,16 @@ public:
           > 1: the average over the \a mode last periods.
 	\return 0 on success, a Device error code on failure.
 	\sa clearSyncPulse() */
-  virtual int setSyncPulse( double duration, int mode=0 );
+  virtual int setSyncPulse( int modemask, int modebits, unsigned int line, 
+			    double duration, int mode=0 );
     /*! Disable TTL Pulse generation and current scaling.
+        Switch amplifier into a different mode.
+	\param[in] modemask the dio lines that switch the mode of the amplifier
+	\param[in] modebits the dio lines to be set high to switch into the desired non syncrhonizing mode
+	into synchronized current clamp mode
 	\return 0 on success, a Device error code on failure.
 	\sa setSyncPulse() */
-  virtual int clearSyncPulse( void );
+  virtual int clearSyncPulse( int modemask, int modebits );
 
 
 protected:

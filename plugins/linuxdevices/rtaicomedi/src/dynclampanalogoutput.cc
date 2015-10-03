@@ -196,6 +196,21 @@ int DynClampAnalogOutput::open( const string &device )
     }
   }
 
+  if ( BipolarRange.size() > 0 ) {
+    LargestRange = BipolarRange[0];
+    LargestRangeIndex = BipolarRangeIndex[0];
+    LargestRangeUnipolar = false;
+  }
+  else if ( UnipolarRange.size() > 0 ) {
+    LargestRange = UnipolarRange[0];
+    LargestRangeIndex = UnipolarRangeIndex[0];
+    LargestRangeUnipolar = true;
+  }
+  else {
+    addErrorStr( "No analog output range available." );
+    return WriteError;
+  }
+
   // get conversion polynomials:
   bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_SOFT_CALIBRATED ) > 0 );
   UnipConverter = new comedi_polynomial_t* [Channels];
@@ -478,19 +493,6 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
       if ( max == OutData::AutoRange )
 	max = smax;
     }
-    // reference and polarity:
-    bool unipolar = false;
-    /*
-    // whatever the following was ment to be, it ensures that unipolar never gets true!
-    // if it gets true, we get errors elsewhere.
-    bool unipolar = ( min >= 0.0 );
-    */
-    bool minislarger = false;
-    // maximum value:
-    if ( ::fabs( min ) > max ) {
-      max = ::fabs( min );
-      minislarger = true;
-    }
 
     // allocate gain factor:
     char *gaindata = sigs[k].gainData();
@@ -502,63 +504,25 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
 
     // set range:
     double maxvolt = sigs[k].getVoltage( max );
-    int index = -1;
+    double minvolt = sigs[k].getVoltage( min );
     if ( sigs[k].noLevel() ) {
-      // check for suitable range:
-      if ( unipolar ) {
-	for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
-	  if ( unipolarRange( index ) >= maxvolt )
-	    break;
-	}
-      }
-      else {
-	for( index = BipolarRange.size() - 1; index >= 0; index-- ) {
-	  if ( bipolarRange( index ) >= maxvolt )
-	    break;
-	}
-      }
-      if ( index < 0 ) {
-	if ( minislarger )
-	  sigs[k].addError( DaqError::Underflow );
-	else
-	  sigs[k].addError( DaqError::Overflow );
-      }
+      if ( minvolt < LargestRange.min )
+	sigs[k].addError( DaqError::Underflow );
+      if ( maxvolt > LargestRange.max )
+	sigs[k].addError( DaqError::Overflow );
     }
     else {
-      // use largest range:
-      index = 0;
-      if ( unipolar && index >= (int)UnipolarRange.size() )
-	index = -1;
-      if ( ! unipolar && index >= (int)BipolarRange.size() )
-	index = -1;
       // signal must be within -1 and 1:
       if ( max > 1.0+1.0e-8 )
 	sigs[k].addError( DaqError::Overflow );
-      else if ( min < -1.0-1.0e-8 )
+      if ( min < -1.0-1.0e-8 )
 	sigs[k].addError( DaqError::Underflow );
     }
 
-    // none of the available ranges contains the requested range:
-    if ( index < 0 ) {
-      sigs[k].addError( DaqError::InvalidGain );
-      break;
-    }
-
-    double maxboardvolt = unipolar ? UnipolarRange[index].max : BipolarRange[index].max;
-    double minboardvolt = unipolar ? UnipolarRange[index].min : BipolarRange[index].min;
+    double maxboardvolt = LargestRange.max;
+    double minboardvolt = LargestRange.min;
     if ( !sigs[k].noLevel() && setscale )
       sigs[k].multiplyScale( maxboardvolt );
-
-    int gainIndex = index;
-    // XXX Where the hack is the following used? Shouldn't we just use the plain index?
-    if ( unipolar )
-      gainIndex |= 1<<14;
-    /*
-    if ( extref )
-      gainIndex |= 1<<15;
-    */
-
-    sigs[k].setGainIndex( gainIndex );
     sigs[k].setMinVoltage( minboardvolt );
     sigs[k].setMaxVoltage( maxboardvolt );
 
@@ -566,13 +530,13 @@ void DynClampAnalogOutput::setupChanList( OutList &sigs,
     int aref = AREF_GROUND;
 
     // set up channel in chanlist:
-    int gi = unipolar ? UnipolarRangeIndex[ index ] : BipolarRangeIndex[ index ];
-    if ( unipolar ) {
-      memcpy( gainp, &UnipConverter[sigs[k].channel()][index], sizeof(comedi_polynomial_t) );
+    int gi = LargestRangeIndex;
+    if ( LargestRangeUnipolar ) {
+      memcpy( gainp, &UnipConverter[sigs[k].channel()][0], sizeof(comedi_polynomial_t) );
       chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
     }
     else {
-      memcpy( gainp, &BipConverter[sigs[k].channel()][index], sizeof(comedi_polynomial_t) );
+      memcpy( gainp, &BipConverter[sigs[k].channel()][0], sizeof(comedi_polynomial_t) );
       chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
     }
 

@@ -178,7 +178,7 @@ int DynClampDigitalIO::open( const string &device )
       else if ( configureLine( line, true ) < 0 )
 	addErrorStr( "failed to configure line " + Str( line ) + " for sync pulse for writing" );
       else {
-	setSyncPulse( line, duration );
+	// XXX setSyncPulse( line, duration );
 	SyncLine = line;
       }
     }
@@ -459,7 +459,8 @@ int DynClampDigitalIO::clearTTLPulse( unsigned int line, bool high )
 }
 
 
-int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration, int mode )
+int DynClampDigitalIO::setSyncPulse( int modemask, int modebits,
+				     unsigned int line, double duration, int mode )
 {
   if ( !isOpen() )
     return NotOpen;
@@ -493,6 +494,8 @@ int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration, int mod
   dioIOC.bits = dioIOC.mask;
   dioIOC.pulsewidth = durationns;
   dioIOC.intervalmode = mode;
+  dioIOC.modemask = modemask;
+  dioIOC.modebits = modebits;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if ( retval < 0 ) {
     if ( errno == ENOTTY ) {
@@ -507,14 +510,7 @@ int DynClampDigitalIO::setSyncPulse( unsigned int line, double duration, int mod
 }
 
 
-int DynClampDigitalIO::setSyncPulse( double duration, int mode )
-{
-  clearError();
-  return setSyncPulse( SyncLine, duration, mode );
-}
-
-
-int DynClampDigitalIO::clearSyncPulse( void )
+int DynClampDigitalIO::clearSyncPulse( int modemask, int modebits )
 {
   if ( !isOpen() )
     return NotOpen;
@@ -522,6 +518,8 @@ int DynClampDigitalIO::clearSyncPulse( void )
   struct dioIOCT dioIOC;
   dioIOC.subdev = SubDevice;
   dioIOC.op = DIO_CLEAR_SYNCPULSE;
+  dioIOC.modemask = modemask;
+  dioIOC.modebits = modebits;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if ( retval < 0 ) {
     int ern = errno;

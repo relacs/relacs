@@ -207,6 +207,12 @@ private:
   vector< unsigned int > BipolarRangeIndex;
   int UnipolarExtRefRangeIndex;
   int BipolarExtRefRangeIndex;
+    /*! The largest range that will be used for all analog outputs. */
+  comedi_range LargestRange;
+    /*! The index of the largest range that will be used for all analog outputs. */
+  int LargestRangeIndex;
+    /*! The polarity of the largest range that will be used for all analog outputs. */
+  int LargestRangeUnipolar;
 
     /*! Conversion polynomials for all channels and unipolar gains. */
   comedi_polynomial_t **UnipConverter;

@@ -122,6 +122,8 @@ public:
   static const int ReadError = -3;
     /*! Return code indicating a failure in writing to the device. */
   static const int WriteError = -4;
+    /*! Return code indicating an invalid parameter. */
+  static const int InvalidParam = -5;
 
     /*! Construct a Device of type \a type. This constructor is used by
         the more specific but still abstract device classes like AnalogInput,

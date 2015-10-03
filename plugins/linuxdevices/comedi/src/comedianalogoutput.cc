@@ -632,16 +632,6 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 				    unipolar ? UnipolarRangeIndex[ index ] : BipolarRangeIndex[ index ],
 				    COMEDI_FROM_PHYSICAL, gainp );
 
-    int gainIndex = index;
-    /*
-    // XXX Where the hack is the following used? Shouldn't we just use the plain index?
-    if ( unipolar )
-      gainIndex |= 1<<14;
-    if ( extref )
-      gainIndex |= 1<<15;
-    */
-
-    sigs[k].setGainIndex( gainIndex );
     sigs[k].setMinVoltage( minboardvolt );
     sigs[k].setMaxVoltage( maxboardvolt );
 
@@ -825,11 +815,6 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
 	      break;
 	    }
 	  }
-	}
-	// multiple references?
-	if ( ( sigs[k].gainIndex() & 1<<15 ) != ( sigs[0].gainIndex() & 1<<15 ) ) {
-	  sigs[k].addError( DaqError::MultipleReferences );
-	  sigs[k].setGainIndex( sigs[0].gainIndex() );
 	}
       }
       if ( sigs.success() )

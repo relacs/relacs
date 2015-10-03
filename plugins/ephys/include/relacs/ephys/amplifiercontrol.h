@@ -57,6 +57,7 @@ namespace ephys {
 - \c showvc=false: Make voltage clamp mode for amplifier selectable (\c boolean)
 - \c showmanual=false: Make manual mode for amplifier selectable (\c boolean)
 - \c syncpulse=10us: Duration of SEC current injection (\c number)
+- \c syncmode=0samples: Interval is average over (\c integer);
 
 \par Key shortcuts
 - \c Z: Buzz

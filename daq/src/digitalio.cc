@@ -250,13 +250,14 @@ void DigitalIO::setInfo( void )
 }
 
 
-  int DigitalIO::setSyncPulse( double duration, int mode )
+int DigitalIO::setSyncPulse( int modemask, int modebits, unsigned int line,
+			     double duration, int mode )
 {
   return InvalidDevice;
 }
 
 
-int DigitalIO::clearSyncPulse( void )
+int DigitalIO::clearSyncPulse( int modemask, int modebits )
 {
   return InvalidDevice;
 }

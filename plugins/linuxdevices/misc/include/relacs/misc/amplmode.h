@@ -70,10 +70,11 @@ public:
 	setManualSelection(), startResistance(), startBuzz() */
   int setCurrentClampMode( void );
     /*! Activate the current-clamp mode and external synchronization of the amplifier.
-        \return the return value of DigitalIO::writeLines()
+        \return the return value of DigitalIO::writeLines() or -1000
+	if synchronizing mode is not supported by the dynamic clamp kernel module.
 	\sa setBridgeMode(), setCurrentClampMode(), setVoltageClampMode(), setManualSelection(),
 	startResistance(), startBuzz() */
-  int setDynamicClampMode( void );
+  int setDynamicClampMode( double duration, double mode );
     /*! Activate the voltage-clamp mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
 	\sa setBridgeMode(), setCurrentClampMode(), setCurrentClampSyncMode(),
@@ -119,6 +120,7 @@ private:
   int BridgePin;
   int CurrentClampPin;
   int VoltageClampPin;
+  int DynamicClampPin;
   int SyncPin;
   int ResistancePin;
   int BuzzerPin;
@@ -127,6 +129,7 @@ private:
   int BridgeMask;
   int CurrentClampMask;
   int VoltageClampMask;
+  int DynamicClampMask;
   int SyncMask;
   int ResistanceMask;
   int BuzzerMask;

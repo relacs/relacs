@@ -82,7 +82,6 @@ OutData::OutData( const OutData  &od )
   Description = od.Description;
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
-  GainIndex = od.GainIndex;
   GainData = 0;
   Scale = od.Scale;
   Unit = od.Unit;
@@ -122,7 +121,6 @@ void OutData::construct( void )
   Description.clear();
   RequestMinValue = AutoRange;
   RequestMaxValue = AutoRange;
-  GainIndex = 0;
   GainData = 0;
   Scale = 1.0;
   Unit = "V";
@@ -369,7 +367,6 @@ OutData &OutData::assign( const OutData &od )
   Description = od.Description;
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
-  GainIndex = od.GainIndex;
   GainData = 0;
   Scale = od.Scale;
   Unit = od.Unit;
@@ -404,7 +401,6 @@ const OutData &OutData::copy( OutData &od ) const
   od.Description = Description;
   od.RequestMinValue = RequestMinValue;
   od.RequestMaxValue = RequestMaxValue;
-  od.GainIndex = GainIndex;
   od.GainData = 0;
   od.Scale = Scale;
   od.Unit = Unit;
@@ -788,18 +784,6 @@ void OutData::request( double min, double max )
 void OutData::setExtRef( void )
 {
   request( -1.0, ExtRef );
-}
-
-
-int OutData::gainIndex( void ) const
-{
-  return GainIndex;
-}
-
-
-void OutData::setGainIndex( int index )
-{
-  GainIndex = index;
 }
 
 
@@ -1610,7 +1594,6 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "Ident: " << od.Ident << '\n';
   str << "RequestMinValue: " << od.RequestMinValue << '\n';
   str << "RequestMaxValue: " << od.RequestMaxValue << '\n';
-  str << "GainIndex: " << od.GainIndex << '\n';
   //  str << "GainData: " << od.GainData << '\n';
   str << "Scale: " << od.Scale << '\n';
   str << "Unit: " << od.Unit << '\n';

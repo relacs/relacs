@@ -41,13 +41,15 @@ AmplMode::AmplMode( void )
   BridgePin = 0;
   CurrentClampPin = 1;
   VoltageClampPin = 2;
-  SyncPin = 5;
+  DynamicClampPin = 5;
+  SyncPin = 6;
   ResistancePin = 3;
   BuzzerPin = 4;
 
   BridgeMask = 0;
   CurrentClampMask = 0;
   VoltageClampMask = 0;
+  DynamicClampMask = 0;
   SyncMask = 0;
   ResistanceMask = 0;
   BuzzerMask = 0;
@@ -73,6 +75,7 @@ void AmplMode::initOptions()
   addInteger( "bridgepin", "DIO line for activating bridge mode", BridgePin );
   addInteger( "cclamppin", "DIO line for activating current clamp mode", CurrentClampPin );
   addInteger( "vclamppin", "DIO line for activating voltage clamp mode", VoltageClampPin );
+  addInteger( "dclamppin", "DIO line for activating dynamic clamp mode", DynamicClampPin );
   addInteger( "syncpin", "DIO line for activating external synchronization", SyncPin );
   addInteger( "resistancepin", "DIO line for activating resistance measurement", ResistancePin );
   addInteger( "buzzerpin", "DIO line for activating buzzer", BuzzerPin );
@@ -91,19 +94,21 @@ int AmplMode::open( DigitalIO &dio )
     BridgePin = integer( "bridgepin", 0, BridgePin );
     CurrentClampPin = integer( "cclamppin", 0, CurrentClampPin );
     VoltageClampPin = integer( "vclamppin", 0, VoltageClampPin );
+    DynamicClampPin = integer( "dclamppin", 0, DynamicClampPin );
     SyncPin = integer( "syncpin", 0, SyncPin );
     ResistancePin = integer( "resistancepin", 0, ResistancePin );
     BuzzerPin = integer( "buzzerpin", 0, BuzzerPin );
 
-    BridgeMask = 1 << BridgePin;
-    CurrentClampMask = 1 << CurrentClampPin;
-    VoltageClampMask = 1 << VoltageClampPin;
-    SyncMask = 1 << SyncPin;
-    ResistanceMask = 1 << ResistancePin;
-    BuzzerMask = 1 << BuzzerPin;
+    BridgeMask = BridgePin >= 0 ? 1 << BridgePin : 0;
+    CurrentClampMask = CurrentClampPin >= 0 ? 1 << CurrentClampPin : 0;
+    VoltageClampMask = VoltageClampPin >= 0 ? 1 << VoltageClampPin : 0;
+    DynamicClampMask = DynamicClampPin >= 0 ? 1 << DynamicClampPin : 0;
+    SyncMask = SyncPin >= 0 ? 1 << SyncPin : 0;
+    ResistanceMask = ResistancePin >= 0 ? 1 << ResistancePin : 0;
+    BuzzerMask = BuzzerPin >= 0 ? 1 << BuzzerPin : 0;
 
-    ModeMask =  BridgeMask + CurrentClampMask + VoltageClampMask + SyncMask + ResistanceMask;
-    Mask = ModeMask + BuzzerMask;
+    ModeMask =  BridgeMask + CurrentClampMask + VoltageClampMask + DynamicClampMask + ResistanceMask;
+    Mask = ModeMask + SyncMask + BuzzerMask;
     DIOId = DIO->allocateLines( Mask );
     if ( DIOId < 0 ) {
       setErrorStr( "cannot allocate pins on lines " + Str( -DIOId ) );
@@ -111,8 +116,8 @@ int AmplMode::open( DigitalIO &dio )
       return InvalidDevice;
     }
     else {
-      open();
       setDeviceFile( DIO->deviceIdent() );
+      open();
       return 0;
     }
   }
@@ -145,12 +150,26 @@ void AmplMode::open()
     DIO->writeLines( Mask, 0x00 );
     CurrentMode = 0x00;
 
+    // check for sync support:
+    if ( DynamicClampMask == 0 ) {
+      SyncPin = -1;
+      SyncMask = 0;
+    }
+    else {
+      int mode = CurrentClampMask | DynamicClampMask;
+      if ( DIO->clearSyncPulse( ModeMask, mode ) != 0 ) { // XXX
+	SyncPin = -1;
+	SyncMask = 0;
+      }
+    }
+
     setDeviceVendor( "npi electronic GmbH (Tamm, Germany)" );
     setDeviceName( "SEC-05LX" );
     addInfo();
     Info.addInteger( "bridgepin", BridgePin );
     Info.addInteger( "cclamppin", CurrentClampPin );
     Info.addInteger( "vclamppin", VoltageClampPin );
+    Info.addInteger( "dclamppin", DynamicClampPin );
     Info.addInteger( "syncpin", SyncPin );
     Info.addInteger( "resistancepin", ResistancePin );
     Info.addInteger( "buzzerpin", BuzzerPin );
@@ -185,6 +204,9 @@ int AmplMode::setBridgeMode( void )
   if ( ! isOpen() )
     return NotOpen;
 
+  if ( BridgeMask == 0 )
+    return InvalidParam;
+
   CurrentMode = BridgeMask;
   return DIO->writeLines( ModeMask, CurrentMode );
 }
@@ -195,18 +217,24 @@ int AmplMode::setCurrentClampMode( void )
   if ( ! isOpen() )
     return NotOpen;
 
+  if ( CurrentClampMask == 0 )
+    return InvalidParam;
+
   CurrentMode = CurrentClampMask;
   return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
-int AmplMode::setDynamicClampMode( void )
+int AmplMode::setDynamicClampMode( double duration, double mode )
 {
   if ( ! isOpen() )
     return NotOpen;
 
-  CurrentMode = CurrentClampMask | SyncMask;
-  return DIO->writeLines( ModeMask, CurrentMode );
+  if ( DynamicClampMask == 0 || SyncMask == 0 )
+    return InvalidParam;
+
+  CurrentMode = CurrentClampMask | DynamicClampMask;
+  return DIO->setSyncPulse( ModeMask, CurrentMode, SyncPin, duration, mode );
 }
 
 
@@ -214,6 +242,9 @@ int AmplMode::setVoltageClampMode( void )
 {
   if ( ! isOpen() )
     return NotOpen;
+
+  if ( VoltageClampMask == 0 )
+    return InvalidParam;
 
   CurrentMode = VoltageClampMask;
   return DIO->writeLines( ModeMask, CurrentMode );
@@ -236,6 +267,9 @@ int AmplMode::startResistance( void )
   if ( ! isOpen() )
     return NotOpen;
 
+  if ( ResistanceMask == 0 )
+    return InvalidParam;
+
   return DIO->writeLines( ModeMask, ResistanceMask );
 }
 
@@ -253,6 +287,9 @@ int AmplMode::startBuzz( void )
 {
   if ( ! isOpen() )
     return NotOpen;
+
+  if ( BuzzerPin < 0 )
+    return InvalidParam;
   
   return DIO->write( BuzzerPin, true );
 }
@@ -262,6 +299,9 @@ int AmplMode::stopBuzz( void )
 {
   if ( ! isOpen() )
     return NotOpen;
+
+  if ( BuzzerPin < 0 )
+    return InvalidParam;
 
   return DIO->write( BuzzerPin, false );
 }

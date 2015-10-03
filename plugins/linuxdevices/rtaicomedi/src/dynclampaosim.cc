@@ -119,7 +119,6 @@ int DynClampAOSim::testWriteDevice( OutList &sigs )
 	max = smax;
     }
     // we use only the largest range and there is only one range:
-    sigs[k].setGainIndex( 0 );
     sigs[k].setMinVoltage( -10.0 );
     sigs[k].setMaxVoltage( 10.0 );
     if ( ! sigs[k].noLevel() )
@@ -174,7 +173,6 @@ int DynClampAOSim::prepareWrite( OutList &sigs )
 	max = smax;
     }
     // we use only the largest range and there is only one range:
-    sigs[k].setGainIndex( 0 );
     sigs[k].setMinVoltage( -10.0 );
     sigs[k].setMaxVoltage( 10.0 );
     if ( ! sigs[k].noLevel() )
