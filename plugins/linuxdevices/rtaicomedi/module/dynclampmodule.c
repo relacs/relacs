@@ -1171,36 +1171,35 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 #ifdef ENABLE_SYNCSEC
     DEBUG_MSG( "setDigitalIO: clear sync pulse.\n" );
     if ( syncSECMode >= 0 ) {
-      /* turn sync scaling off: */
-      syncSECMode = -1;
-      syncSECPulse = 0.0;
-      /* switch amplifier into non-synchronized mode: */
-      if ( dioIOC->modemask > 0 ) {
-	dioIOC->mask = dioIOC->modemask;
-	dioIOC->bits = dioIOC->modebits;
-	retval = writeDIO( dioIOC );
-	if ( retval != 0 ) {
-	  ERROR_MSG( "setDigitalIO: failed to set switching TTL low" );
-	  return retval;
-	}
-      }
       /* turn sync pulses off: */
       ttlInsns[SYNCSEC_LOW]->data[1] &= ~syncSECMask;
       ttlInsns[SYNCSEC_HIGH]->data[1] &= ~syncSECMask;
+      msleep( 1 );
       ttlInsns[SYNCSEC_LOW]->data[0] &= ~syncSECMask;
       ttlInsns[SYNCSEC_HIGH]->data[0] &= ~syncSECMask;
       msleep( 1 );
+      /* write sync pulse line low: */
       dioIOC->mask = syncSECMask;
       dioIOC->bits = 0;
-      /* write sync pulse line low: */
       retval = writeDIO( dioIOC );
       if ( retval != 0 ) {
 	ERROR_MSG( "setDigitalIO: failed to write clearing sync pulse" );
 	return retval;
       }
     }
+    /* turn sync scaling off: */
     syncSECMode = -1;
     syncSECPulse = 0.0;
+    /* switch amplifier into non-synchronized mode: */
+    if ( dioIOC->modemask > 0 ) {
+      dioIOC->mask = dioIOC->modemask;
+      dioIOC->bits = dioIOC->modebits;
+      retval = writeDIO( dioIOC );
+      if ( retval != 0 ) {
+	ERROR_MSG( "setDigitalIO: failed to set switching TTL low" );
+	return retval;
+      }
+    }
 #else
     return -ENOTTY;
 #endif

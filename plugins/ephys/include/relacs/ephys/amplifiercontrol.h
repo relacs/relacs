@@ -43,7 +43,7 @@ namespace ephys {
 \class AmplifierControl
 \brief [Control] Controls an amplifier: buzzer and resistance measurement.
 \author Jan Benda
-\version 2.4 (Sep 11, 2015)
+\version 3.0 (Oct 5, 2015)
 
 \par Options
 - \c initmode=Bridge: Initial mode of the amplifier (\c string)
@@ -144,8 +144,6 @@ public slots:
     /*! Turn on manual selection of the amplifier. */
   void manualSelection( bool activate=true );
 
-    /*! Turn on synchronization of the amplifier. */
-  void activateSyncPulse( bool activate=true );
     /*! Set duration of the synchronization pulse
         to \a durationus microseconds. */
   void setSyncPulse( double durationus );
@@ -156,6 +154,9 @@ public slots:
 
 protected:
 
+    /*! Resets stimulus metadata regarding amplifier synchronization. */
+  void clearSyncPulse( void );
+
     /*! Measure electrode resistance. */
   void measureResistance( void );
 
@@ -165,7 +166,6 @@ protected:
 private:
 
   misc::AmplMode *Ampl;
-  DigitalIO *DIO;
   bool RMeasure;
   int DGain;
   bool Adjust;

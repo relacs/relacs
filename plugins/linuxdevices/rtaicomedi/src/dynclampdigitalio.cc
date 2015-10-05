@@ -47,7 +47,6 @@ DynClampDigitalIO::DynClampDigitalIO( void )
   SubDevice = 0;
   MaxLines = 0;
   ModuleFd = -1;
-  SyncLine = 0;
 
   initOptions();
 }
@@ -84,8 +83,6 @@ void DynClampDigitalIO::initOptions()
     addSelection( "ttlpulse" + idx + "high", "Event that sets TTL pulse high", ttlpulsestr );
     addSelection( "ttlpulse" + idx + "low", "Event that sets TTL pulse low", ttlpulsestr );
   }
-  addInteger( "syncpulseline", "DIO line for switch-cycle synchronization of amplifier", -1 );
-  addNumber( "syncpulsewidth", "Duration of current injection", 0.0, 0.0, 0.01, 0.000001, "s", "us" );
 }
 
 int DynClampDigitalIO::open( const string &device )
@@ -165,23 +162,6 @@ int DynClampDigitalIO::open( const string &device )
     if ( configureLine( line, true ) < 0 )
       continue;
     addTTLPulse( line, (enum ttlPulses)high, (enum ttlPulses)low );
-  }
-
-  // set up SEC synchronization:
-  {
-    int line = integer( "syncpulseline", 0, -1 );
-    if ( line >= 0 ) {
-      double duration = number( "syncpulsewidth", 0.0, "s" );
-      int id = allocateLine( line );
-      if ( id == WriteError )
-	addErrorStr( "failed to allocate line " + Str( line ) + " for sync pulse" );
-      else if ( configureLine( line, true ) < 0 )
-	addErrorStr( "failed to configure line " + Str( line ) + " for sync pulse for writing" );
-      else {
-	// XXX setSyncPulse( line, duration );
-	SyncLine = line;
-      }
-    }
   }
   
   return 0;

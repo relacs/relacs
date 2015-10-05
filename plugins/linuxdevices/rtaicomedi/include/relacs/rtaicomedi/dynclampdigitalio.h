@@ -43,8 +43,6 @@ namespace rtaicomedi {
 - \c ttlpulseNline: digital I/O line (channel) on which ttl pulse \a N should be generated.
 - \c ttlpulseNhigh: condition on which ttl pulse \a N is set high (startwrite, endwrite, startread, endread, startao, or endao).
 - \c ttlpulseNlow: condition on which ttl pulse \a N is set low (startwrite, endwrite, startread, endread, startao, or endao).
-- \c syncpulseline: digital I/O line (channel) on which ttl pulse for triggering SEC switching cycle should be generated.
-- \c syncpulsewidth: duration of the current injection of the SEC
 */
 
 
@@ -203,9 +201,6 @@ private:
   enum ttlPulses TTLPulseHigh[MaxDIOLines];
     /*! Memorizes activated TTL pulses. */
   enum ttlPulses TTLPulseLow[MaxDIOLines];
-
-    /*! Digitial IO line for syncing amplifier. */
-  int SyncLine;
 
 };
 

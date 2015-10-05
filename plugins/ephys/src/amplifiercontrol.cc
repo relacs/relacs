@@ -27,7 +27,7 @@ namespace ephys {
 
 
 AmplifierControl::AmplifierControl( void )
-  : Control( "AmplifierControl", "ephys", "Jan Benda", "2.4", "Sep 11, 2015" )
+  : Control( "AmplifierControl", "ephys", "Jan Benda", "3.0", "Oct 5, 2015" )
 {
   AmplBox = new QVBoxLayout;
   setLayout( AmplBox );
@@ -47,7 +47,6 @@ AmplifierControl::AmplifierControl( void )
   SyncModeSpinBox = 0;
 
   Ampl = 0;
-  DIO = 0;
   RMeasure = false;
   SyncPulseEnabled = false;
   SyncPulseDuration = 0.00001;
@@ -100,31 +99,31 @@ void AmplifierControl::notify( void )
   }
   // show mode selections:
   if ( BridgeButton != 0 ) {
-    if ( boolean( "showbridge" ) )
+    if ( boolean( "showbridge" ) && Ampl !=0 && Ampl->supportsBridgeMode() )
       BridgeButton->show();
     else
       BridgeButton->hide();
   }
   if ( CCButton != 0 ) {
-    if ( boolean( "showcc" ) )
+    if ( boolean( "showcc" ) && Ampl !=0 && Ampl->supportsCurrentClampMode() )
       CCButton->show();
     else
       CCButton->hide();
   }
   if ( DCButton != 0 ) {
-    if ( boolean( "showdc" ) && DIO != 0 )
+    if ( boolean( "showdc" ) && Ampl !=0 && Ampl->supportsDynamicClampMode() )
       DCButton->show();
     else
       DCButton->hide();
   }
   if ( DCPulseBox != 0 ) {
-    if ( boolean( "showdc" ) && DIO != 0 )
+    if ( boolean( "showdc" ) && Ampl !=0 && Ampl->supportsDynamicClampMode() )
       DCPulseBox->show();
     else
       DCPulseBox->hide();
   }
   if ( VCButton != 0 ) {
-    if ( boolean( "showvc" ) )
+    if ( boolean( "showvc" ) && Ampl !=0 && Ampl->supportsVoltageClampMode() )
       VCButton->show();
     else
       VCButton->hide();
@@ -230,16 +229,16 @@ void AmplifierControl::initDevices( void )
     connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
     vbox = new QVBoxLayout;
     vbox->addWidget( BridgeButton );
-    if ( ! boolean( "showbridge" ) )
+    if ( ! boolean( "showbridge" ) || ! Ampl->supportsBridgeMode() )
       BridgeButton->hide();
     vbox->addWidget( CCButton );
-    if ( ! boolean( "showcc" ) )
+    if ( ! boolean( "showcc" ) || ! Ampl->supportsCurrentClampMode() )
       CCButton->hide();
     vbox->addWidget( DCButton );
-    if ( ! boolean( "showdc" ) )
+    if ( ! boolean( "showdc" ) || ! Ampl->supportsDynamicClampMode() )
       DCButton->hide();
     vbox->addWidget( VCButton );
-    if ( ! boolean( "showvc" ) )
+    if ( ! boolean( "showvc" ) || ! Ampl->supportsVoltageClampMode() )
       VCButton->hide();
     vbox->addWidget( ManualButton );
     if ( ! boolean( "showmanual" ) )
@@ -248,14 +247,8 @@ void AmplifierControl::initDevices( void )
     AmplBox->addWidget( ModeBox );
     AmplBox->addWidget( new QLabel );
   }
-  // add amplifier synchronization:
-  DIO = digitalIO( "dio-1" );
-  if ( DIO != 0 ) {
-    if ( DIO->clearSyncPulse( 0, 0 ) == Device::InvalidDevice ) { // XXX
-      DIO = 0;
-    }
-  }
-  if ( DIO != 0 ) {
+  // add amplifier synchronization for dynamic clamp:
+  if ( Ampl->supportsDynamicClampMode() ) {
     lockStimulusData();
     double spd = 0.0;
     if ( SyncPulseEnabled )
@@ -266,7 +259,7 @@ void AmplifierControl::initDevices( void )
   }
   else
     DCButton->hide();
-  if ( DIO != 0 && DCPulseBox == 0 && SyncPulseSpinBox == 0 && vbox != 0 ) {
+  if ( Ampl->supportsDynamicClampMode() && DCPulseBox == 0 && SyncPulseSpinBox == 0 && vbox != 0 ) {
     vbox->addWidget( new QLabel );
     DCPulseBox = new QWidget;
     vbox->addWidget( DCPulseBox );
@@ -438,9 +431,9 @@ void AmplifierControl::activateBridgeMode( bool activate )
   if ( Ampl != 0 && activate ) {
     Ampl->setBridgeMode();
     BridgeButton->setChecked( true );
-    activateSyncPulse( false );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "Bridge" );
+    clearSyncPulse();
     unlockStimulusData();
   }
 }
@@ -451,9 +444,9 @@ void AmplifierControl::activateCurrentClampMode( bool activate )
   if ( Ampl != 0 && activate ) {
     Ampl->setCurrentClampMode();
     CCButton->setChecked( true );
-    activateSyncPulse( false );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "CC" );
+    clearSyncPulse();
     unlockStimulusData();
   }
 }
@@ -461,13 +454,24 @@ void AmplifierControl::activateCurrentClampMode( bool activate )
 
 void AmplifierControl::activateDynamicClampMode( bool activate )
 {
-  if ( Ampl != 0 && activate ) {
-    Ampl->setDynamicClampMode( 0, 0 ); // XXX
-    DCButton->setChecked( true );
-    activateSyncPulse( activate );
-    lockStimulusData();
-    stimulusData().setText( "AmplifierMode", "DC" );
-    unlockStimulusData();
+  if ( Ampl != 0 && Ampl->supportsDynamicClampMode() && activate ) {
+    if ( Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
+      lockStimulusData();
+      stimulusData().setText( "AmplifierMode", "DC" );
+      stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
+      stimulusData().setInteger( "SyncMode", SyncMode );
+      unlockStimulusData();
+      unsetNotify();
+      setNumber( "syncpulse", SyncPulseDuration );
+      setDefault( "syncpulse" );
+      setInteger( "syncmode", SyncMode );
+      setDefault( "syncmode" );
+      setNotify();
+      SyncPulseEnabled = true;
+      DCButton->setChecked( true );
+    }
+    else
+      activateCurrentClampMode( true );
   }
 }
 
@@ -477,9 +481,9 @@ void AmplifierControl::activateVoltageClampMode( bool activate )
   if ( Ampl != 0 && activate ) {
     Ampl->setVoltageClampMode();
     VCButton->setChecked( true );
-    activateSyncPulse( false );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "VC" );
+    clearSyncPulse();
     unlockStimulusData();
   }
 }
@@ -490,42 +494,21 @@ void AmplifierControl::manualSelection( bool activate )
   if ( Ampl != 0 && activate ) {
     Ampl->setManualSelection();
     ManualButton->setChecked( true );
-    activateSyncPulse( false );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "Manual" );
+    clearSyncPulse();
     unlockStimulusData();
   }
 }
 
 
-void AmplifierControl::activateSyncPulse( bool activate )
+void AmplifierControl::clearSyncPulse( void )
 {
-  if ( DIO != 0 ) {
-    if ( activate ) {
-      if ( DIO->setSyncPulse( 0, 0, 0, SyncPulseDuration, SyncMode ) == 0 ) { // XXX
-	lockStimulusData();
-	stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
-	stimulusData().setInteger( "SyncMode", SyncMode );
-	unlockStimulusData();
-	unsetNotify();
-	setNumber( "syncpulse", SyncPulseDuration );
-	setDefault( "syncpulse" );
-	setInteger( "syncmode", SyncMode );
-	setDefault( "syncmode" );
-	setNotify();
-      }
-      else
-	activateCurrentClampMode( true );
-    }
-    else {
-      DIO->clearSyncPulse( 0, 0 ); // XXX
-      lockStimulusData();
-      stimulusData().setNumber( "SyncPulse", 0.0 );
-      stimulusData().setInteger( "SyncMode", 0 );
-      unlockStimulusData();
-    }
-    SyncPulseEnabled = activate;
+  if ( Ampl->supportsDynamicClampMode() ) {
+    stimulusData().setNumber( "SyncPulse", 0.0 );
+    stimulusData().setInteger( "SyncMode", -1 );
   }
+  SyncPulseEnabled = false;
 }
 
 
@@ -536,9 +519,8 @@ void AmplifierControl::setSyncPulse( double durationus )
   setNumber( "syncpulse", SyncPulseDuration );
   setToDefault( "syncpulse" );
   setNotify();
-  if ( DIO != 0 && SyncPulseEnabled ) {
-    if ( DIO->setSyncPulse( 0, 0, 0, SyncPulseDuration, SyncMode ) == 0 ) { // XXX
-      activateDynamicClampMode( true );
+  if ( Ampl != 0 && Ampl->supportsDynamicClampMode() && SyncPulseEnabled ) {
+    if ( Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
       stimulusData().setInteger( "SyncMode", SyncMode );
@@ -555,9 +537,8 @@ void AmplifierControl::setSyncMode( int mode )
   setInteger( "syncmode", SyncMode );
   setToDefault( "syncmode" );
   setNotify();
-  if ( DIO != 0 && SyncPulseEnabled ) {
-    if ( DIO->setSyncPulse( 0, 0, 0, SyncPulseDuration, SyncMode ) == 0 ) { // XXX
-      activateDynamicClampMode( true );
+  if ( Ampl != 0 && Ampl->supportsDynamicClampMode() && SyncPulseEnabled ) {
+    if ( Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
       stimulusData().setInteger( "SyncMode", SyncMode );

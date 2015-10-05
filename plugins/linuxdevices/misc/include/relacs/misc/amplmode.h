@@ -32,16 +32,17 @@ namespace misc {
 /*!
 \class AmplMode
 \author Jan Benda
-\version 3.2 (Juli 21, 2015)
+\version 4.0 (Oct 5, 2015)
 \brief [Device] Control the mode of an amplifier via DigitalIO
 
 \par Options
-- \c vclamppin: the dio line that switches the amplifier into voltage clamp mode.
-- \c cclamppin: the dio line that switches the amplifier into current clamp mode.
 - \c bridgepin: the dio line that switches the amplifier into bridge mode.
+- \c cclamppin: the dio line that switches the amplifier into current clamp mode.
+- \c vclamppin: the dio line that switches the amplifier into voltage clamp mode.
+- \c dclamppin: the dio line that switches the amplifier into synchronized dynamic clamp mode.
+- \c syncpin: the dio line on which synchronizing pulses for the amplifier are generated.
 - \c resistancepin: the dio line that activates resistance measurement of the amplifier.
 - \c buzzerpin: the dio line that activates the buzzer.
-- \c syncpin: the dio line that tells the amplifier to use externally produced switching pulses.
  */
 
 
@@ -59,26 +60,42 @@ public:
   virtual bool isOpen( void ) const;
   virtual void close( void );
 
+    /*! In case of errors returns error string of last operation. */
+  string errorStr( void ) const;
+
+    /*! \return \c true if the amplifier supports a bridge mode. 
+        \sa setBridgeMode() */
+  bool supportsBridgeMode( void ) const;
+    /*! \return \c true if the amplifier supports a current-clamp mode.
+        \sa setCurrentClampMode() */
+  bool supportsCurrentClampMode( void ) const;
+    /*! \return \c true if the amplifier supports a voltage-clamp mode.
+        \sa setVoltageClampMode() */
+  bool supportsVoltageClampMode( void ) const;
+    /*! \return \c true if the amplifier supports a synchronized dynamic-clamp mode.
+        \sa setDynamicClampMode() */
+  bool supportsDynamicClampMode( void ) const;
+
     /*! Activate the bridge mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
-	\sa setCurrentClampMode(), setVoltageClampMode(), setCurrentClampSyncMode(),
-	setManualSelection(), startResistance(), startBuzz() */
+	\sa supportsBridgeMode(), setCurrentClampMode(), setVoltageClampMode(),
+	setCurrentClampSyncMode(), setManualSelection(), startResistance(), startBuzz() */
   int setBridgeMode( void );
     /*! Activate the current-clamp mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
-	\sa setBridgeMode(), setVoltageClampMode(), setCurrentClampSyncMode(),
-	setManualSelection(), startResistance(), startBuzz() */
+	\sa supportsCurrentClampMode(), setBridgeMode(), setVoltageClampMode(),
+	setCurrentClampSyncMode(), setManualSelection(), startResistance(), startBuzz() */
   int setCurrentClampMode( void );
     /*! Activate the current-clamp mode and external synchronization of the amplifier.
         \return the return value of DigitalIO::writeLines() or -1000
 	if synchronizing mode is not supported by the dynamic clamp kernel module.
-	\sa setBridgeMode(), setCurrentClampMode(), setVoltageClampMode(), setManualSelection(),
-	startResistance(), startBuzz() */
+	\sa supportsDynamicClampMode(), setBridgeMode(), setCurrentClampMode(),
+	setVoltageClampMode(), setManualSelection(), startResistance(), startBuzz() */
   int setDynamicClampMode( double duration, double mode );
     /*! Activate the voltage-clamp mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
-	\sa setBridgeMode(), setCurrentClampMode(), setCurrentClampSyncMode(),
-	setManualSelection(), startResistance(), startBuzz() */
+	\sa supportsVoltageClampMode(), setBridgeMode(), setCurrentClampMode(),
+	setCurrentClampSyncMode(), setManualSelection(), startResistance(), startBuzz() */
   int setVoltageClampMode( void );
     /*! Activate the manual mode of the amplifier.
         \return the return value of DigitalIO::writeLines()
@@ -104,8 +121,11 @@ public:
 	\sa startBuzz() */
   int stopBuzz( void );
 
+
 protected:
+
   void initOptions() override;
+
 
 private:
 

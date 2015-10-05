@@ -147,18 +147,16 @@ void AmplMode::open()
     // configure for parallel output: 
     DIO->configureLines( Mask, Mask );
     // manual mode selection, no buzz:
-    DIO->writeLines( Mask, 0x00 );
     CurrentMode = 0x00;
+    DIO->writeLines( Mask, CurrentMode );
 
     // check for sync support:
-    if ( DynamicClampMask == 0 ) {
-      SyncPin = -1;
+    if ( DynamicClampMask == 0 )
       SyncMask = 0;
-    }
     else {
-      int mode = CurrentClampMask | DynamicClampMask;
-      if ( DIO->clearSyncPulse( ModeMask, mode ) != 0 ) { // XXX
-	SyncPin = -1;
+      if ( DIO->clearSyncPulse( ModeMask, CurrentMode ) != 0 ) {
+	addErrorStr( DIO->errorStr() );
+	DynamicClampMask = 0;
 	SyncMask = 0;
       }
     }
@@ -166,13 +164,20 @@ void AmplMode::open()
     setDeviceVendor( "npi electronic GmbH (Tamm, Germany)" );
     setDeviceName( "SEC-05LX" );
     addInfo();
-    Info.addInteger( "bridgepin", BridgePin );
-    Info.addInteger( "cclamppin", CurrentClampPin );
-    Info.addInteger( "vclamppin", VoltageClampPin );
-    Info.addInteger( "dclamppin", DynamicClampPin );
-    Info.addInteger( "syncpin", SyncPin );
-    Info.addInteger( "resistancepin", ResistancePin );
-    Info.addInteger( "buzzerpin", BuzzerPin );
+    if ( BridgeMask > 0 )
+      Info.addInteger( "bridgepin", BridgePin );
+    if ( CurrentClampMask > 0 )
+      Info.addInteger( "cclamppin", CurrentClampPin );
+    if ( VoltageClampMask > 0 )
+      Info.addInteger( "vclamppin", VoltageClampPin );
+    if ( DynamicClampMask > 0 )
+      Info.addInteger( "dclamppin", DynamicClampPin );
+    if ( SyncMask > 0 )
+      Info.addInteger( "syncpin", SyncPin );
+    if ( ResistanceMask > 0 )
+      Info.addInteger( "resistancepin", ResistancePin );
+    if ( BuzzerMask > 0 )
+      Info.addInteger( "buzzerpin", BuzzerPin );
   }
 }
 
@@ -199,6 +204,38 @@ void AmplMode::close( void )
 }
 
 
+string AmplMode::errorStr( void ) const
+{
+  if ( DIO != 0 )
+    return DIO->errorStr();
+  return "";
+}
+
+
+bool AmplMode::supportsBridgeMode( void ) const
+{
+  return ( BridgeMask > 0 );
+}
+
+
+bool AmplMode::supportsCurrentClampMode( void ) const
+{
+  return ( CurrentClampMask > 0 );
+}
+
+
+bool AmplMode::supportsVoltageClampMode( void ) const
+{
+  return ( VoltageClampMask > 0 );
+}
+
+
+bool AmplMode::supportsDynamicClampMode( void ) const
+{
+  return ( CurrentClampMask > 0 && DynamicClampMask > 0 && SyncMask > 0 );
+}
+
+
 int AmplMode::setBridgeMode( void )
 {
   if ( ! isOpen() )
@@ -208,7 +245,10 @@ int AmplMode::setBridgeMode( void )
     return InvalidParam;
 
   CurrentMode = BridgeMask;
-  return DIO->writeLines( ModeMask, CurrentMode );
+  if ( supportsDynamicClampMode() )
+    return DIO->clearSyncPulse( ModeMask, CurrentMode );
+  else
+    return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
@@ -221,7 +261,10 @@ int AmplMode::setCurrentClampMode( void )
     return InvalidParam;
 
   CurrentMode = CurrentClampMask;
-  return DIO->writeLines( ModeMask, CurrentMode );
+  if ( supportsDynamicClampMode() )
+    return DIO->clearSyncPulse( ModeMask, CurrentMode );
+  else
+    return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
@@ -230,7 +273,7 @@ int AmplMode::setDynamicClampMode( double duration, double mode )
   if ( ! isOpen() )
     return NotOpen;
 
-  if ( DynamicClampMask == 0 || SyncMask == 0 )
+  if ( ! supportsDynamicClampMode() )
     return InvalidParam;
 
   CurrentMode = CurrentClampMask | DynamicClampMask;
@@ -247,7 +290,10 @@ int AmplMode::setVoltageClampMode( void )
     return InvalidParam;
 
   CurrentMode = VoltageClampMask;
-  return DIO->writeLines( ModeMask, CurrentMode );
+  if ( supportsDynamicClampMode() )
+    return DIO->clearSyncPulse( ModeMask, CurrentMode );
+  else
+    return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
@@ -257,8 +303,10 @@ int AmplMode::setManualSelection( void )
     return NotOpen;
 
   CurrentMode = 0x00;
-  int r = DIO->writeLines( ModeMask, CurrentMode );    
-  return r;
+  if ( supportsDynamicClampMode() )
+    return DIO->clearSyncPulse( ModeMask, CurrentMode );
+  else
+    return DIO->writeLines( ModeMask, CurrentMode );
 }
 
 
