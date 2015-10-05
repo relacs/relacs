@@ -220,7 +220,9 @@ private:
     /*! True if the sample type is lsampl_t. */
   bool LongSampleType;
     /*! The size of a single sample in bytes. */
-  unsigned int BufferElemSize;  
+  unsigned int BufferElemSize;
+    /*! The maximum valid data value. */
+  vector<lsampl_t> MaxData;
     /*! The maximum sampling rate supported by the DAQ board. */
   double MaxRate;
 

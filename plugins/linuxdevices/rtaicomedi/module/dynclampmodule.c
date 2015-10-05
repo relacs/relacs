@@ -45,6 +45,7 @@ struct chanT {
   int isUsed;
   comedi_insn insn;
   lsampl_t lsample;
+  lsampl_t maxdata;
   struct converterT converter;
   float scale;
   float voltage;
@@ -731,6 +732,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
       subdev->chanlist[iC].subdev = subdev->subdev;
       subdev->chanlist[iC].chan = CR_CHAN( chanlistIOC->chanlist[iC] );
       subdev->chanlist[iC].lsample = 0;
+      subdev->chanlist[iC].maxdata = chanlistIOC->maxdata[iC];
       memset( &subdev->chanlist[iC].insn, 0, sizeof(comedi_insn) );
       subdev->chanlist[iC].param = subdev->chanlist[iC].chan/PARAM_CHAN_OFFSET;
       subdev->chanlist[iC].modelIndex = -1;
@@ -1298,7 +1300,13 @@ static inline void value_to_sample( struct chanT *pChan, float value )
     sample += pChan->converter.coefficients[i] * term;
     term *= value;
   }
-  pChan->lsample = (lsampl_t)sample;
+  if ( sample < 0.0 )
+    pChan->lsample = 0;
+  else {
+    pChan->lsample = (lsampl_t)sample;  // nearbyint(sample)
+    if ( pChan->lsample > pChan->maxdata )
+      pChan->lsample = pChan->maxdata;
+  }
 }
 
 

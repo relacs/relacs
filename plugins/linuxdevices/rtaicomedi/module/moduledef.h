@@ -14,7 +14,7 @@
 // *** FEATURES *** 
 // You may use configure to select features, e.g. ./configure --enable-dynclamp-computation 
 // For a list of all --enable-dynclamp-* options see ./configure --help
-// Or you enable the following defines by uncommenting them.
+// Alternatively, you can enable the following defines by uncommenting them.
 
   /*! Compute a model. */
 // #define ENABLE_COMPUTATION
@@ -126,6 +126,7 @@ struct chanlistIOCT {
   unsigned int chanlistN;
   unsigned int chanlist[MAXCHANLIST];
   int isused[MAXCHANLIST];
+  unsigned int maxdata[MAXCHANLIST];
   float scalelist[MAXCHANLIST];
   struct converterT conversionlist[MAXCHANLIST];
 };

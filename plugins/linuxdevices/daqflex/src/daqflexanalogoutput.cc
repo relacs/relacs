@@ -290,6 +290,10 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     if ( sigs[k].failed() )
       continue;
     unsigned short data = (unsigned short)( (v-minval)*gain );
+    if ( data > DAQFlexDevice->maxAOData() ) {
+      sigs[k].addError( DaqError::Overflow );
+      continue;
+    }
 
     // write data:
     string response = DAQFlexDevice->sendMessage( "AO{" + Str( sigs[k].channel() ) + "}:VALUE=" + Str( data ) );
@@ -334,6 +338,8 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
     else if ( v < minval[k] ) 
       v = minval[k];
     zeros[k] = (unsigned short)( (v-minval[k])*gain[k] );
+    if ( zeros[k] > DAQFlexDevice->maxAOData() )
+      zeros[k] = DAQFlexDevice->maxAOData();
   }
 
   // buffer pointer:
@@ -359,7 +365,10 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
 	else if ( v < minval[k] )
 	  v = minval[k];
 	// XXX calibration?
-	*bp = (unsigned short)( (v-minval[k])*gain[k] );
+	T d = (unsigned short)( (v-minval[k])*gain[k] );
+	if ( d > DAQFlexDevice->maxAOData() )
+	  d = DAQFlexDevice->maxAOData();
+	*bp = d;
 	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
 	  Sigs[k].incrDeviceCount();
       }

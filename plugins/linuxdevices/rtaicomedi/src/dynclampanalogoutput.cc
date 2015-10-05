@@ -246,6 +246,11 @@ int DynClampAnalogOutput::open( const string &device )
     }
   }
 
+  // maximum data values:
+  MaxData.clear();
+  for ( int k=0; k<channels(); k++ )
+    MaxData.push_back( comedi_get_maxdata( DeviceP, SubDevice, k ) );
+
   // write zeros to all channels:
   {
     bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
@@ -559,8 +564,10 @@ int DynClampAnalogOutput::loadChanList( OutList &sigs, int isused ) const
   chanlistIOC.type = SUBDEV_OUT;
   for( int k = 0; k < sigs.size(); k++ ){
     chanlistIOC.chanlist[k] = chanlist[k];
+    chanlistIOC.maxdata[k] = 0;
     chanlistIOC.isused[k] = isused;
     if ( sigs[k].channel() < PARAM_CHAN_OFFSET ) {
+      chanlistIOC.maxdata[k] = MaxData[sigs[k].channel()];
       const comedi_polynomial_t* poly = 
 	(const comedi_polynomial_t *)sigs[k].gainData();
       chanlistIOC.conversionlist[k].order = poly->order;

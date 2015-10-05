@@ -554,6 +554,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   for( int k = 0; k < traces.size(); k++ ) {
     chanlistIOC.chanlist[k] = ChanList[k];
     chanlistIOC.isused[k] = 1;
+    chanlistIOC.maxdata[k] = 0;
     chanlistIOC.scalelist[k] = traces[k].scale();
     if ( traces[k].channel() < PARAM_CHAN_OFFSET ) {
       const comedi_polynomial_t* poly = 

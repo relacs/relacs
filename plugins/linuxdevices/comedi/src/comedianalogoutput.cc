@@ -44,6 +44,7 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   SubDevice = 0;
   LongSampleType = false;
   BufferElemSize = 0;
+  MaxData.clear();
   MaxRate = 1000.0;
   UseNIPFIStart = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
@@ -227,6 +228,9 @@ int ComediAnalogOutput::open( const string &device )
     BufferElemSize = sizeof( lsampl_t );
   else
     BufferElemSize = sizeof( sampl_t );
+  MaxData.clear();
+  for ( int k=0; k<channels(); k++ )
+    MaxData.push_back( comedi_get_maxdata( DeviceP, SubDevice, k ) );
 
   // set and write default output values for channels:
   {
@@ -422,6 +426,8 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
       v = minval;
     v *= scale;
     lsampl_t data = comedi_from_physical( v, polynomial );
+    if ( data > MaxData[sigs[k].channel()] )
+      data = MaxData[sigs[k].channel()];
 
     // write data:
     int retval = comedi_data_write( DeviceP, SubDevice, CR_CHAN( chanlist[k] ),
@@ -451,12 +457,14 @@ int ComediAnalogOutput::convert( char *cbuffer, int nbuffer )
   // conversion polynomials and scale factors:
   double minval[ Sigs.size() ];
   double maxval[ Sigs.size() ];
+  T maxdata[ Sigs.size() ];
   double scale[ Sigs.size() ];
   const comedi_polynomial_t* polynomial[Sigs.size()];
   T zeros[ Sigs.size() ];
   for ( int k=0; k<Sigs.size(); k++ ) {
     minval[k] = Sigs[k].minValue();
     maxval[k] = Sigs[k].maxValue();
+    maxdata[k] = MaxData[Sigs[k].channel()];
     scale[k] = Sigs[k].scale();
     polynomial[k] = (const comedi_polynomial_t *)Sigs[k].gainData();
     float v = ChannelValues[Sigs[k].channel()];
@@ -466,6 +474,8 @@ int ComediAnalogOutput::convert( char *cbuffer, int nbuffer )
       v = minval[k];
     v *= scale[k];
     zeros[k] = comedi_from_physical( v, polynomial[k] );
+    if ( zeros[k] > maxdata[k] )
+      zeros[k] = maxdata[k];
   }
 
   // buffer pointer:
@@ -489,7 +499,10 @@ int ComediAnalogOutput::convert( char *cbuffer, int nbuffer )
 	else if ( v < minval[k] ) 
 	  v = minval[k];
 	v *= scale[k];
-	*bp = comedi_from_physical( v, polynomial[k] );
+	T d = comedi_from_physical( v, polynomial[k] );
+	if ( d > maxdata[k] )
+	  d = maxdata[k];
+	*bp = d;	
 	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
 	  Sigs[k].incrDeviceCount();
       }

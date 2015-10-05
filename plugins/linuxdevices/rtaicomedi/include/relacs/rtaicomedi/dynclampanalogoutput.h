@@ -219,6 +219,9 @@ private:
     /*! Conversion polynomials for all channels and bipolar gains. */
   comedi_polynomial_t **BipConverter;
 
+    /*! Maximum valid data value for each channel. */
+  vector< lsampl_t > MaxData;
+
   bool IsPrepared;
     /*! True if no more data need to be written to the board. */
   bool NoMoreData;
