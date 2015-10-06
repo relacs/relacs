@@ -1147,7 +1147,6 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     ttlInsns[SYNCSEC_HIGH]->data[1] |= dioIOC->mask;   /* high */
     ttlInsns[SYNCSEC_LOW]->data[0] |= dioIOC->mask;
     ttlInsns[SYNCSEC_HIGH]->data[0] |= dioIOC->mask;
-    msleep( 1 );
     /* switch amplifier into synchronized mode: */
     if ( dioIOC->modemask > 0 ) {
       dioIOC->mask = dioIOC->modemask;
@@ -1157,6 +1156,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	ERROR_MSG( "setDigitalIO: failed to set switching TTL high" );
 	return retval;
       }
+      msleep( 3 );
     }
     /* turn sync scaling on: */
     syncSECPulse = dioIOC->pulsewidth;
@@ -1176,10 +1176,8 @@ int setDigitalIO( struct dioIOCT *dioIOC )
       /* turn sync pulses off: */
       ttlInsns[SYNCSEC_LOW]->data[1] &= ~syncSECMask;
       ttlInsns[SYNCSEC_HIGH]->data[1] &= ~syncSECMask;
-      msleep( 1 );
       ttlInsns[SYNCSEC_LOW]->data[0] &= ~syncSECMask;
       ttlInsns[SYNCSEC_HIGH]->data[0] &= ~syncSECMask;
-      msleep( 1 );
       /* write sync pulse line low: */
       dioIOC->mask = syncSECMask;
       dioIOC->bits = 0;
@@ -1189,9 +1187,6 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	return retval;
       }
     }
-    /* turn sync scaling off: */
-    syncSECMode = -1;
-    syncSECPulse = 0.0;
     /* switch amplifier into non-synchronized mode: */
     if ( dioIOC->modemask > 0 ) {
       dioIOC->mask = dioIOC->modemask;
@@ -1202,6 +1197,9 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	return retval;
       }
     }
+    /* turn sync scaling off: */
+    syncSECMode = -1;
+    syncSECPulse = 0.0;
 #else
     return -ENOTTY;
 #endif

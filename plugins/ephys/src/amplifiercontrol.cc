@@ -256,43 +256,41 @@ void AmplifierControl::initDevices( void )
     stimulusData().addNumber( "SyncPulse", "Synchronization pulse", spd, "us" );
     stimulusData().addInteger( "SyncMode", "Synchronization average", SyncMode ).setUnit( "samples" );
     unlockStimulusData();
-  }
-  else
-    DCButton->hide();
-  if ( Ampl->supportsDynamicClampMode() && DCPulseBox == 0 && SyncPulseSpinBox == 0 && vbox != 0 ) {
-    vbox->addWidget( new QLabel );
-    DCPulseBox = new QWidget;
-    vbox->addWidget( DCPulseBox );
-    QGridLayout *gbox = new QGridLayout;
-    gbox->setContentsMargins( 0, 0, 0, 0 );
-    DCPulseBox->setLayout( gbox );
-    QLabel *label = new QLabel( "Pulse duration" );
-    gbox->addWidget( label, 0, 0 );
-    SyncPulseSpinBox = new DoubleSpinBox;
-    SyncPulseSpinBox->setRange( 1.0, 1000.0 );
-    SyncPulseSpinBox->setSingleStep( 1.0 );
-    SyncPulseSpinBox->setPrecision( 2 );
-    SyncPulseSpinBox->setKeyboardTracking( false );
-    SyncPulseSpinBox->setValue( 1.0e6 * SyncPulseDuration );
-    connect( SyncPulseSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
-    gbox->addWidget( SyncPulseSpinBox, 0, 1 );
-    label = new QLabel( "microseconds" );
-    gbox->addWidget( label, 0, 2 );
+    if ( DCPulseBox == 0 && SyncPulseSpinBox == 0 && vbox != 0 ) {
+      vbox->addWidget( new QLabel );
+      DCPulseBox = new QWidget;
+      vbox->addWidget( DCPulseBox );
+      QGridLayout *gbox = new QGridLayout;
+      gbox->setContentsMargins( 0, 0, 0, 0 );
+      DCPulseBox->setLayout( gbox );
+      QLabel *label = new QLabel( "Pulse duration" );
+      gbox->addWidget( label, 0, 0 );
+      SyncPulseSpinBox = new DoubleSpinBox;
+      SyncPulseSpinBox->setRange( 1.0, 1000.0 );
+      SyncPulseSpinBox->setSingleStep( 1.0 );
+      SyncPulseSpinBox->setPrecision( 2 );
+      SyncPulseSpinBox->setKeyboardTracking( false );
+      SyncPulseSpinBox->setValue( 1.0e6 * SyncPulseDuration );
+      connect( SyncPulseSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setSyncPulse( double ) ) );
+      gbox->addWidget( SyncPulseSpinBox, 0, 1 );
+      label = new QLabel( "microseconds" );
+      gbox->addWidget( label, 0, 2 );
 
-    label = new QLabel( "Average over" );
-    gbox->addWidget( label, 1, 0 );
-    SyncModeSpinBox = new QSpinBox;
-    SyncModeSpinBox->setRange( 0, 1000 );
-    SyncModeSpinBox->setSingleStep( 1 );
-    SyncModeSpinBox->setKeyboardTracking( false );
-    SyncModeSpinBox->setValue( SyncMode );
-    connect( SyncModeSpinBox, SIGNAL( valueChanged( int ) ), this, SLOT( setSyncMode( int ) ) );
-    gbox->addWidget( SyncModeSpinBox, 1, 1 );
-    label = new QLabel( "samples" );
-    gbox->addWidget( label, 1, 2 );
+      label = new QLabel( "Average over" );
+      gbox->addWidget( label, 1, 0 );
+      SyncModeSpinBox = new QSpinBox;
+      SyncModeSpinBox->setRange( 0, 1000 );
+      SyncModeSpinBox->setSingleStep( 1 );
+      SyncModeSpinBox->setKeyboardTracking( false );
+      SyncModeSpinBox->setValue( SyncMode );
+      connect( SyncModeSpinBox, SIGNAL( valueChanged( int ) ), this, SLOT( setSyncMode( int ) ) );
+      gbox->addWidget( SyncModeSpinBox, 1, 1 );
+      label = new QLabel( "samples" );
+      gbox->addWidget( label, 1, 2 );
 
-    if ( ! boolean( "showdc" ) )
-      DCPulseBox->hide();
+      if ( ! boolean( "showdc" ) )
+	DCPulseBox->hide();
+    }
   }
   widget()->show();
   // initial mode:
