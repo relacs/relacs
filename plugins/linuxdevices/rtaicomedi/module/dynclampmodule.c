@@ -46,6 +46,8 @@ struct chanT {
   comedi_insn insn;
   lsampl_t lsample;
   lsampl_t maxdata;
+  float minvoltage;
+  float maxvoltage;
   struct converterT converter;
   float scale;
   float voltage;
@@ -733,6 +735,8 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
       subdev->chanlist[iC].chan = CR_CHAN( chanlistIOC->chanlist[iC] );
       subdev->chanlist[iC].lsample = 0;
       subdev->chanlist[iC].maxdata = chanlistIOC->maxdata[iC];
+      subdev->chanlist[iC].minvoltage = chanlistIOC->minvoltage[iC];
+      subdev->chanlist[iC].maxvoltage = chanlistIOC->maxvoltage[iC];
       memset( &subdev->chanlist[iC].insn, 0, sizeof(comedi_insn) );
       subdev->chanlist[iC].param = subdev->chanlist[iC].chan/PARAM_CHAN_OFFSET;
       subdev->chanlist[iC].modelIndex = -1;
@@ -1172,21 +1176,6 @@ int setDigitalIO( struct dioIOCT *dioIOC )
   else if ( dioIOC->op == DIO_CLEAR_SYNCPULSE ) {
 #ifdef ENABLE_SYNCSEC
     DEBUG_MSG( "setDigitalIO: clear sync pulse.\n" );
-    if ( syncSECMode >= 0 ) {
-      /* turn sync pulses off: */
-      ttlInsns[SYNCSEC_LOW]->data[1] &= ~syncSECMask;
-      ttlInsns[SYNCSEC_HIGH]->data[1] &= ~syncSECMask;
-      ttlInsns[SYNCSEC_LOW]->data[0] &= ~syncSECMask;
-      ttlInsns[SYNCSEC_HIGH]->data[0] &= ~syncSECMask;
-      /* write sync pulse line low: */
-      dioIOC->mask = syncSECMask;
-      dioIOC->bits = 0;
-      retval = writeDIO( dioIOC );
-      if ( retval != 0 ) {
-	ERROR_MSG( "setDigitalIO: failed to write clearing sync pulse" );
-	return retval;
-      }
-    }
     /* switch amplifier into non-synchronized mode: */
     if ( dioIOC->modemask > 0 ) {
       dioIOC->mask = dioIOC->modemask;
@@ -1200,6 +1189,22 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     /* turn sync scaling off: */
     syncSECMode = -1;
     syncSECPulse = 0.0;
+    if ( syncSECMask > 0 ) {
+      /* turn sync pulses off: */
+      ttlInsns[SYNCSEC_HIGH]->data[1] &= ~syncSECMask;
+      ttlInsns[SYNCSEC_HIGH]->data[0] &= ~syncSECMask;
+      msleep( 1 );
+      ttlInsns[SYNCSEC_LOW]->data[1] &= ~syncSECMask;
+      ttlInsns[SYNCSEC_LOW]->data[0] &= ~syncSECMask;
+      /* write sync pulse line low: */
+      dioIOC->mask = syncSECMask;
+      dioIOC->bits = 0;
+      retval = writeDIO( dioIOC );
+      if ( retval != 0 ) {
+	ERROR_MSG( "setDigitalIO: failed to write clearing sync pulse" );
+	return retval;
+      }
+    }
 #else
     return -ENOTTY;
 #endif
@@ -1287,8 +1292,9 @@ static inline void sample_to_value( struct chanT *pChan )
 }
 
 
-static inline void value_to_sample( struct chanT *pChan, float value )
+static inline float value_to_sample( struct chanT *pChan, float value )
 {
+  float voltage = value;
   double sample = 0.0;
   double term = 1.0;
   unsigned i;
@@ -1298,13 +1304,18 @@ static inline void value_to_sample( struct chanT *pChan, float value )
     sample += pChan->converter.coefficients[i] * term;
     term *= value;
   }
-  if ( sample < 0.0 )
+  if ( sample < 0.0 ) {
     pChan->lsample = 0;
+    voltage = pChan->minvoltage / pChan->scale;
+  }
   else {
     pChan->lsample = (lsampl_t)sample;  // nearbyint(sample)
-    if ( pChan->lsample > pChan->maxdata )
+    if ( pChan->lsample > pChan->maxdata ) {
       pChan->lsample = pChan->maxdata;
+      voltage = pChan->maxvoltage / pChan->scale;
+    }
   }
+  return voltage;
 }
 
 
@@ -1502,17 +1513,14 @@ void dynclamp_loop( long dummy )
 	  statusInput[pChan->statusIndex] = voltage;
 	  statusInput[pChan->statusIndex+1] = output[pChan->modelIndex];
 	  voltage += output[pChan->modelIndex];
-	  statusInput[pChan->statusIndex+2] = voltage;
-#ifdef ENABLE_SYNCSEC
-	  statusInput[pChan->statusIndex+3] = voltage * currentfac;
-#endif
 	}
 #endif
+
 	// write out Sample:
 #ifdef ENABLE_SYNCSEC
 	voltage *= currentfac;
 #endif
-	value_to_sample( pChan, voltage ); // sets pChan->lsample
+	voltage = value_to_sample( pChan, voltage ); // sets pChan->lsample
 	retVal = comedi_do_insn( device, &pChan->insn );
 	if ( retVal < 1 ) {
 	  aosubdev.running = E_NODATA;
@@ -1526,7 +1534,15 @@ void dynclamp_loop( long dummy )
 	  }
 	  break;
 	}
+
 #ifdef ENABLE_COMPUTATION
+	if ( pChan->modelIndex >= 0 ) {
+#ifdef ENABLE_SYNCSEC
+	  statusInput[pChan->statusIndex+3] = voltage;
+#endif
+	  statusInput[pChan->statusIndex+2] = voltage / currentfac;
+	}
+
       }
 #endif
     } // end of ao channel loop

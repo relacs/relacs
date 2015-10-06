@@ -127,6 +127,8 @@ struct chanlistIOCT {
   unsigned int chanlist[MAXCHANLIST];
   int isused[MAXCHANLIST];
   unsigned int maxdata[MAXCHANLIST];
+  float minvoltage[MAXCHANLIST];
+  float maxvoltage[MAXCHANLIST];
   float scalelist[MAXCHANLIST];
   struct converterT conversionlist[MAXCHANLIST];
 };

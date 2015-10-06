@@ -221,6 +221,10 @@ private:
 
     /*! Maximum valid data value for each channel. */
   vector< lsampl_t > MaxData;
+    /*! Minimum possible voltage of each channel. */
+  vector< float > MinVoltage;
+    /*! Maximum possible voltage of each channel. */
+  vector< float > MaxVoltage;
 
   bool IsPrepared;
     /*! True if no more data need to be written to the board. */

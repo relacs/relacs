@@ -248,8 +248,13 @@ int DynClampAnalogOutput::open( const string &device )
 
   // maximum data values:
   MaxData.clear();
-  for ( int k=0; k<channels(); k++ )
+  MinVoltage.clear();
+  MaxVoltage.clear();
+  for ( int k=0; k<channels(); k++ ) {
     MaxData.push_back( comedi_get_maxdata( DeviceP, SubDevice, k ) );
+    MinVoltage.push_back( LargestRange.min );
+    MaxVoltage.push_back( LargestRange.max );
+  }
 
   // write zeros to all channels:
   {
@@ -565,9 +570,13 @@ int DynClampAnalogOutput::loadChanList( OutList &sigs, int isused ) const
   for( int k = 0; k < sigs.size(); k++ ){
     chanlistIOC.chanlist[k] = chanlist[k];
     chanlistIOC.maxdata[k] = 0;
+    chanlistIOC.minvoltage[k] = 0;
+    chanlistIOC.maxvoltage[k] = 0;
     chanlistIOC.isused[k] = isused;
     if ( sigs[k].channel() < PARAM_CHAN_OFFSET ) {
       chanlistIOC.maxdata[k] = MaxData[sigs[k].channel()];
+      chanlistIOC.minvoltage[k] = MinVoltage[sigs[k].channel()];
+      chanlistIOC.maxvoltage[k] = MaxVoltage[sigs[k].channel()];
       const comedi_polynomial_t* poly = 
 	(const comedi_polynomial_t *)sigs[k].gainData();
       chanlistIOC.conversionlist[k].order = poly->order;
