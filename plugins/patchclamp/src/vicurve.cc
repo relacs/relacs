@@ -31,8 +31,6 @@ VICurve::VICurve( void )
   : RePro( "VICurve", "patchclamp", "Jan Benda", "1.2", "Sep 11, 2014" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
-    VFac( 1.0 ),
-    IFac( 1.0 ),
     IInFac( 1.0 )
 {
   // add some options:
@@ -70,7 +68,6 @@ void VICurve::preConfig( void )
 {
   if ( SpikeTrace[0] >= 0 ) {
     VUnit = trace( SpikeTrace[0] ).unit();
-    VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
     setUnit( "vstep", VUnit );
     setUnit( "vmin", VUnit );
   }
@@ -80,7 +77,6 @@ void VICurve::preConfig( void )
     setUnit( "imin", IUnit );
     setUnit( "imax", IUnit );
     setUnit( "istep", IUnit );
-    IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
   }
 
   if ( CurrentTrace[0] >= 0 ) {

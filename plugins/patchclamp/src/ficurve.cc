@@ -31,8 +31,6 @@ FICurve::FICurve( void )
   : RePro( "FICurve", "patchclamp", "Jan Benda", "1.6", "Sep 30, 2015" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
-    VFac( 1.0 ),
-    IFac( 1.0 ),
     IInFac( 1.0 )
 {
   IStep = 0.001;
@@ -75,7 +73,6 @@ void FICurve::preConfig( void )
 {
   if ( SpikeTrace[0] >= 0 ) {
     VUnit = trace( SpikeTrace[0] ).unit();
-    VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
   }
 
   if ( CurrentOutput[0] >= 0 ) {
@@ -84,7 +81,6 @@ void FICurve::preConfig( void )
     setUnit( "imax", IUnit );
     setUnit( "istep", IUnit );
     setUnit( "optimizedimin", IUnit );
-    IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
   }
 
   if ( CurrentTrace[0] >= 0 ) {

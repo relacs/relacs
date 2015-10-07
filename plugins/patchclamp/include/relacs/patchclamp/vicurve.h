@@ -87,8 +87,6 @@ protected:
   MultiPlot P;
   string VUnit;
   string IUnit;
-  double VFac;
-  double IFac;
   double IInFac;
 
   struct Data
