@@ -61,9 +61,9 @@ void CalibrateSyncPulse::preConfig( void )
 int CalibrateSyncPulse::main( void )
 {
   // get options:
-  double imin = number( "duration" );
-  double imax = number( "duration" );
-  double istep = number( "duration" );
+  double imin = number( "imin" );
+  double imax = number( "imax" );
+  double istep = number( "istep" );
   double skipwin = number( "skipwin" );
   double duration = number( "duration" );
 
@@ -99,10 +99,11 @@ int CalibrateSyncPulse::main( void )
 
   // plot:
   P.lock();
-  P.clear();
+  P[0].clear();
   P[0].setXRange( imin, imax );
   P[0].setXLabel( "Current [" + IUnit + "]" );
   P[0].setYLabel( intrace.ident() + " [" + intrace.unit() + "]" );
+  P[1].clear();
   P[1].setXLabel( "CC [" + intrace.unit() + "]" );
   P[1].setYLabel( "DC [" + intrace.unit() + "]" );
   P.draw();
@@ -110,7 +111,7 @@ int CalibrateSyncPulse::main( void )
 
   // write stimulus:
   RangeLoop range( imin, imax, istep );
-  for ( range.reset(); ! range && softStop() == 0; ) {
+  for ( range.reset(); ! range && softStop() == 0; ++range ) {
 
     ampl->activateCurrentClampMode();
 
@@ -118,7 +119,10 @@ int CalibrateSyncPulse::main( void )
     if ( fabs( amplitude ) < 1.0e-8 )
       amplitude = 0.0;
 
+    // message:
     Str s = "Current <b>" + Str( amplitude ) + " " + IUnit +"</b>";
+    if ( volt.size() > 1 )
+      s += ",  Slope <b>" + Str( slope, "%.3f" ) + "</b>";
     message( s );
 
     // signal:
@@ -153,15 +157,15 @@ int CalibrateSyncPulse::main( void )
     volt.push( ccvolt, dcvolt );
     if ( volt.size() > 1 ) {
       slope = volt.propFit();
-      line.line( cccur.front(), cccur.back(), 0.1, 0.0, slope );
+      line.line( cccur.front(), cccur.back(), 0.1*istep, 0.0, slope );
     }
 
     P.lock();
     P[0].clear();
-    P[0].plot( cccur, 1.0, Plot::Yellow, 3, Plot::Solid, Plot::Circle, 6, Plot::Yellow, Plot::Yellow );
-    P[0].plot( dccur, 1.0, Plot::Red, 3, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
+    P[0].plot( cccur, 1.0, Plot::Yellow, 4, Plot::Solid, Plot::Circle, 10, Plot::Yellow, Plot::Yellow );
+    P[0].plot( dccur, 1.0, Plot::Red, 2, Plot::Solid, Plot::Circle, 8, Plot::Red, Plot::Red );
     P[1].clear();
-    P[1].plot( volt, 1.0, Plot::Orange, 3, Plot::Solid, Plot::Circle, 6, Plot::Orange, Plot::Orange );
+    P[1].plot( volt, 1.0, Plot::Blue, 6, Plot::Solid, Plot::Circle, 10, Plot::Blue, Plot::Blue );
     P[1].plot( line, 1.0, Plot::Yellow, 3, Plot::Solid );
     P.draw();
     P.unlock();
@@ -201,6 +205,11 @@ int CalibrateSyncPulse::main( void )
   // set results:
   syncpulse /= slope;
   ampl->setNumber( "syncpulse", syncpulse );
+
+  // message:
+  Str s = "Slope <b>" + Str( slope, "%.3f" ) + "</b>";
+  s += ", New pulse width <b>" + Str( 1e6*syncpulse, "%.3f" ) + " us</b>";
+  message( s );
 
   sleep( duration );
 
