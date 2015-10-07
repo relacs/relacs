@@ -1340,7 +1340,7 @@ void RELACSWidget::resumeSession( void )
 }
 
 
-void RELACSWidget::stopSession( bool saved )
+  void RELACSWidget::stopSession( bool saved, bool stopmacro )
 {
   printlog( "Stop session" );
 
@@ -1375,7 +1375,7 @@ void RELACSWidget::stopSession( bool saved )
 
   SessionStopWait.wakeAll();
 
-  if ( saved )
+  if ( saved && stopmacro )
     MC->stopSession();
 
   SF->setPath( SF->defaultPath() );
@@ -1425,10 +1425,19 @@ void RELACSWidget::stopThreads( void )
 
 void RELACSWidget::stopActivity( void )
 {
+  doStopActivity( true );
+}
+
+
+void RELACSWidget::doStopActivity( bool sessiondialog )
+{
   printlog( "Stopping " + modeStr() + "-mode" );
 
   // finish session and repro:
-  SN->stopTheSession();
+  if ( sessiondialog )
+    SN->stopTheSession();
+  else
+    SN->doStopTheSession( false, false );
   // shutdown macros:
   MC->shutDown();
 
@@ -1450,6 +1459,16 @@ void RELACSWidget::quit( void )
 {
   if ( ! idle() )
     stopActivity();
+  clearActivity();
+  printlog( "Quitting RELACS" );
+  qApp->quit();
+}
+
+
+void RELACSWidget::shutdown( void )
+{
+  if ( ! idle() )
+    doStopActivity( false );
   clearActivity();
   printlog( "Quitting RELACS" );
   qApp->quit();

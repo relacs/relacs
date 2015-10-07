@@ -520,6 +520,10 @@ public:
     SwitchCom,
       /*! The command starts a session. */
     StartSessionCom,
+      /*! The command stops a session without launching the dialog. */
+    StopSessionCom,
+      /*! The command shuts down relacs. */
+    ShutdownCom,
       /*! The command executes a shell command. */
     ShellCom,
       /*! The command opens a message box with some text. */

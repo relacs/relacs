@@ -83,6 +83,8 @@ pause=260ms
 				<listitem><para>call another macro (<xref linkend='macrofileactionmacro' endterm='macrofileactionmacrotitle'/>)</para></listitem>
 				<listitem><para> switch to a different macro configuration (<xref linkend='macrofileactionswitch' endterm='macrofileactionswitchtitle'/>)</para></listitem>
 				<listitem><para>start a session (<xref linkend='macrofileactionstartsession' endterm='macrofileactionstartsessiontitle'/>)</para></listitem>
+				<listitem><para>stop a session (<xref linkend='macrofileactionstopsession' endterm='macrofileactionstopsessiontitle'/>)</para></listitem>
+				<listitem><para>shut down relacs (<xref linkend='macrofileactionshutdown' endterm='macrofileactionshutdowntitle'/>)</para></listitem>
 				</itemizedlist></para>
 			
 			<para>A macro can contain any number of actions.</para>
@@ -309,7 +311,7 @@ switch newmacros.cfg
 			</programlisting>
 			loads the macros defined in the file <filename>newmacros.cfg</filename>.</para>
 
-			<para>>By default, all current macros are removed when loading / switiching to a
+			<para>By default, all current macros are removed when loading / switiching to a
 			new macro configuration file.
 			However, individual macros can be excluded from being removed
 			by marking them with <token>keep</token> (see <xref linkend='macrofilemacro' endterm='macrofilemacrotitle'/>
@@ -319,12 +321,38 @@ switch newmacros.cfg
 		<section xml:id='macrofileactionstartsession'>
                         <title xml:id='macrofileactionstartsessiontitle'>Start Session</title>
 
-			<para>An action containing simply the keyword <token>startsession</token>
+			<para>An action containing simply the keyword
 			<programlisting>
 startsession
 			</programlisting>
 			starts a new session, but without calling the <token>startsession</token> - macro
 			(see <xref linkend='macrofilemacro' endterm='macrofilemacrotitle'/>).</para>
+		</section>
+
+		<section xml:id='macrofileactionstopsession'>
+                        <title xml:id='macrofileactionstopsessiontitle'>Stop Session</title>
+
+			<para>An action containing simply the keyword
+			<programlisting>
+stopsession
+			</programlisting>
+			stops a running session, but without calling the <token>stopsession</token> - macro
+			(see <xref linkend='macrofilemacro' endterm='macrofilemacrotitle'/>).
+			The metadata dialog is not launched and the preset values for the metadata are used
+			for saving a session.</para>
+		</section>
+
+		<section xml:id='macrofileactionshutdown'>
+                        <title xml:id='macrofileactionshutdowntitle'>Shut down relacs</title>
+
+			<para>An action containing simply the keyword
+			<programlisting>
+shutdown
+			</programlisting>
+			quits relacs. A running session is stopped without calling the <token>stopsession</token> - macro
+			(see <xref linkend='macrofilemacro' endterm='macrofilemacrotitle'/>)
+			and without launching the metadata dialog. The preset values for the metadata are used
+			for saving a session.</para>
 		</section>
 
 		</section>

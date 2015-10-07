@@ -170,15 +170,16 @@ public:
   void notifyMetaData( void );
 
     /*! Tells RELACSWidget that a new Session is started. Opens the files of
-        SaveFiles and starts the initial macro if \a startmacro is true. */
+        SaveFiles and starts the initial macro if \a startmacro is \c true. */
   void startSession( bool startmacro=true );
     /*! Tells RELACSWidget that the current session might be stopped.
         Starts the fallback macro. */
   void preStopSession( void );
     /*! Tells RELACSWidget that the current session is not stopped. */
   void resumeSession( void );
-    /*! Tells RELACSWidget that the current session is stopped. */
-  void stopSession( bool saved );
+    /*! Tells RELACSWidget that the current session is stopped.
+        Run the stop session macro is \a stopmacro is \c true. */
+  void stopSession( bool saved, bool stopmacro=true );
     /*! Returns pointer to the session. */
   Session *session( void );
 
@@ -256,6 +257,9 @@ public slots:
   void stopThreads( void );
     /*! Stop all activity and switch into idle mode. */
   void stopActivity( void );
+    /*! Stop all activity and switch into idle mode.
+        Launch dialog for stopSession only if \a sessiondialog equals \c true . */
+  void doStopActivity( bool sessiondialog );
     /*! Clear the state of stopped activity. */
   void clearActivity( void );
     /*! Start acquisition or simulation mode. */
@@ -271,6 +275,8 @@ public slots:
 
     /*! Stops all RELACSWidget activities and exits. */
   void quit( void );
+    /*! Stops all RELACSWidget activities and exits without launching a session dialog. */
+  void shutdown( void );
 
     /*! Tell PlotTrace to display currently recorded data. */
   void displayData( void );

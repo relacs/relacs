@@ -1432,7 +1432,7 @@ string Macro::load( ifstream &macrostream, string &line, int &linenum,
       return strippedline;
 
     // line error message:
-    Str lineerror = "in line <b>" + Str( linenum )
+    Str lineerror = " in line <b>" + Str( linenum )
       + "</b>: \"<b>" + line + "</b>\"";
 
     // create MacroCommand:
@@ -1449,6 +1449,8 @@ string Macro::load( ifstream &macrostream, string &line, int &linenum,
 	Commands.back()->addParameter( strippedline, appendparam );
     }
     else if ( mc->command() != MacroCommand::StartSessionCom &&
+	      mc->command() != MacroCommand::StopSessionCom &&
+	      mc->command() != MacroCommand::ShutdownCom &&
 	      mc->command() != MacroCommand::ShellCom &&
 	      mc->command() != MacroCommand::FilterCom &&
 	      mc->command() != MacroCommand::DetectorCom &&
@@ -1456,7 +1458,7 @@ string Macro::load( ifstream &macrostream, string &line, int &linenum,
 	      mc->command() != MacroCommand::BrowseCom &&
 	      mc->name().empty() ) {
       delete mc;
-      warnings += "Missing name of action " + lineerror + ".\n";
+      warnings += "Missing name of action" + lineerror + ".\n";
       appendable = false;
     }
     else {
@@ -1467,20 +1469,23 @@ string Macro::load( ifstream &macrostream, string &line, int &linenum,
       // still unknown command:
       if ( mc->command() == MacroCommand::UnknownCom ) {
 	delete mc;
-	warnings += "Unknown command type " + lineerror + ".\n";
+	warnings += "Unknown command type" + lineerror + ".\n";
 	appendable = false;
       }
-      else if ( !mc->command() == MacroCommand::StartSessionCom &&
-		( mc->name().empty() ||
-		  mc->parameter().empty() ) ) {
+      else if ( mc->command() != MacroCommand::StartSessionCom &&
+		mc->command() != MacroCommand::StopSessionCom &&
+		mc->command() != MacroCommand::ShutdownCom &&
+		mc->name().empty() && mc->parameter().empty() ) {
 	delete mc;
-	warnings += "Incomplete or empty specification of action "
+	warnings += "Incomplete or empty specification of action " + Str( mc->command() )
 	  + lineerror + ".\n";
 	appendable = false;
       }
       else {
 	Commands.push_back( mc );
 	if ( mc->command() == MacroCommand::StartSessionCom ||
+	     mc->command() == MacroCommand::StopSessionCom ||
+	     mc->command() == MacroCommand::ShutdownCom ||
 	     mc->command() == MacroCommand::BrowseCom ||
 	     mc->command() == MacroCommand::SwitchCom ) {
 	  // these commands get nothing appended:
@@ -1920,6 +1925,10 @@ MacroCommand::MacroCommand( const string &line, Macros *mcs, Macro *mc )
     Command = SwitchCom;
   else if ( Name.eraseFirst( "startsession", 0, false, 3, Str::WhiteSpace ) )
     Command = StartSessionCom;
+  else if ( Name.eraseFirst( "stopsession", 0, false, 3, Str::WhiteSpace ) )
+      Command = StopSessionCom;
+  else if ( Name.eraseFirst( "shutdown", 0, false, 3, Str::WhiteSpace ) )
+      Command = ShutdownCom;
   else if ( Name.eraseFirst( "shell", 0, false, 3, Str::WhiteSpace ) )
     Command = ShellCom;
   else if ( Name.eraseFirst( "message", 0, false, 3, Str::WhiteSpace ) ) {
@@ -2128,6 +2137,10 @@ void MacroCommand::addMenu( QMenu *menu )
     s += "Switch to " + Name;
   else if ( Command == StartSessionCom )
     s += "Start Session";
+  else if ( Command == StopSessionCom )
+    s += "Stop Session";
+  else if ( Command == ShutdownCom )
+    s += "Shut down";
   else if ( Command == MessageCom ) {
     s += "Message " + Name;
     if ( !Params.empty() ) {
@@ -2250,6 +2263,14 @@ bool MacroCommand::check( string &warnings )
   }
 
   else if ( Command == StartSessionCom ) {
+    return true;
+  }
+
+  else if ( Command == StopSessionCom ) {
+    return true;
+  }
+
+  else if ( Command == ShutdownCom ) {
     return true;
   }
 
@@ -2398,6 +2419,14 @@ bool MacroCommand::execute( bool saving )
   // start session:
   else if ( Command == StartSessionCom ) {
     MCs->RW->session()->startTheSession( false );
+  }
+  // stop session:
+  else if ( Command == StopSessionCom ) {
+    MCs->RW->session()->doStopTheSession( false, false );
+  }
+  // shut down:
+  else if ( Command == ShutdownCom ) {
+    MCs->RW->shutdown();
   }
   // message:
   else if ( Command == MessageCom ) {
@@ -2717,6 +2746,10 @@ ostream &operator<< ( ostream &str, const MacroCommand &command )
     str << "Switch";
   else if ( command.Command == MacroCommand::StartSessionCom )
     str << "StartSession";
+  else if ( command.Command == MacroCommand::StopSessionCom )
+    str << "StopSession";
+  else if ( command.Command == MacroCommand::ShutdownCom )
+    str << "Shutdown";
   else if ( command.Command == MacroCommand::MessageCom ) {
     str << "Message";
     if ( command.TimeOut > 0.0 )

@@ -107,13 +107,6 @@ public:
         to \a save. */
   void setSaveData( bool save );
 
-    /*! True if a dialog is started on stopping a session. */
-  bool saveDialog( void ) const;
-    /*! Set whether a dialog should be started on stopping a session
-        (\a dialog = true) or not (dialog=false).
-        CAUTION: If set to false, all data of this session get lost! */
-  void setSaveDialog( bool dialog=true );
-
     /*! Called whenever the mode is changed. */
   virtual void modeChanged( void );
 
@@ -128,9 +121,14 @@ public slots:
         and calls the startsession - macro.
 	\note This function must not be called from a non GUI thread! */
   void startTheSession( void );
-    /*! Stop a running session.
-	\note This function must not be called from a non GUI thread! */
+    /*! Stop a running session by callig the fallback macro first.
+	\note This function must not be called from a non GUI thread!
+        \sa doStopTheSession() */
   void stopTheSession( void );
+    /*! Stop a running session by launching the metadata dialog if 
+        \a savedialog is \c true. After the session is stopped the
+        stop session macro is called if \a stopmacro equals \a true . */
+  void doStopTheSession( bool savedialog=true, bool stopmacro=true );
     /*! Toggles the status of the session:
         stops a running session or start a new session
 	if no session is running.
@@ -145,15 +143,8 @@ protected:
 
 private:
 
-  void doStopTheSession( void );
-
     /*! True if data of this session should be saved. */
   bool SaveData;
-    /*! If true (default), the user will be
-        asked on stopTheSession() whether the data recorded should be saved.
-	IF SET TO FALSE, ALL DATA IS LOST ON STOPPING A SESSION.
-	Hence, this variable should be unset only when testing RELACS!!!. */
-  bool SaveDialog;
 
     /*! True if a session is runnning. */
   bool Running;

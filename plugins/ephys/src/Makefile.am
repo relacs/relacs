@@ -254,8 +254,9 @@ libephysamplifiercontrol_la_LDFLAGS = \
     $(QT4_LDFLAGS)
 
 libephysamplifiercontrol_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/libephystraces.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
@@ -383,42 +384,6 @@ libephysiontophoresis_la_include_HEADERS = $(HEADER_PATH)/iontophoresis.h
 
 
 
-libephyssetvgate_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/plot/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
-
-libephyssetvgate_la_LDFLAGS = \
-    -module -avoid-version \
-    $(QT4_LDFLAGS)
-
-libephyssetvgate_la_LIBADD = \
-    $(builddir)/libephystraces.la \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
-
-$(libephyssetvgate_la_OBJECTS) : moc_setvgate.cc
-
-libephyssetvgate_la_SOURCES = setvgate.cc
-
-libephyssetvgate_la_includedir = $(pkgincludedir)/ephys
-
-libephyssetvgate_la_include_HEADERS = $(HEADER_PATH)/setvgate.h
-
-
-
 libephyssetleak_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -435,7 +400,6 @@ libephyssetleak_la_LDFLAGS = \
     $(QT4_LDFLAGS)
 
 libephyssetleak_la_LIBADD = \
-    $(builddir)/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
@@ -455,6 +419,41 @@ libephyssetleak_la_include_HEADERS = $(HEADER_PATH)/setleak.h
 
 
 
+libephyssetvgate_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libephyssetvgate_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libephyssetvgate_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libephyssetvgate_la_OBJECTS) : moc_setvgate.cc
+
+libephyssetvgate_la_SOURCES = setvgate.cc
+
+libephyssetvgate_la_includedir = $(pkgincludedir)/ephys
+
+libephyssetvgate_la_include_HEADERS = $(HEADER_PATH)/setvgate.h
+
+
+
 libephyscalibratesyncpulse_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -463,6 +462,7 @@ libephyscalibratesyncpulse_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
 

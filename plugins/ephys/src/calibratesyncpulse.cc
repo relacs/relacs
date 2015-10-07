@@ -31,6 +31,7 @@ namespace ephys {
 
 CalibrateSyncPulse::CalibrateSyncPulse( void )
   : RePro( "CalibrateSyncPulse", "ephys", "Jan Benda", "1.0", "Oct 07, 2015" ),
+    Traces(),
     IUnit( "nA" )
 {
   // add some options:

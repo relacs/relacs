@@ -37,7 +37,6 @@ Session::Session( RELACSWidget *rw, int height, QWidget *parent )
     RW( rw )
 {
   SaveData = false;
-  SaveDialog = true;
   Running = false;
   SessionCounter = 0;
   SessionSeconds = 0.0;
@@ -177,16 +176,19 @@ void Session::stopTheSession( void )
 
   // the session might be stopped:
   RW->preStopSession();
-  Running = false;
 
-  doStopTheSession();
+  doStopTheSession( true, true );
 }
 
 
-void Session::doStopTheSession( void )
+void Session::doStopTheSession( bool savedialog, bool stopmacro )
 {
+  if ( !Running )
+    return;
+
   // launch dialog:
-  if ( SaveDialog ) {
+  SaveData = true;
+  if ( savedialog ) {
     int r = RW->MTDT.dialog();
     if ( r == -1000 ) {
       QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+11 ) ) );
@@ -199,9 +201,6 @@ void Session::doStopTheSession( void )
       return;
     }
     SaveData = ( r > 0 ); 
-  }
-  else {
-    SaveData = false;
   }
 
   // finish session:
@@ -217,7 +216,7 @@ void Session::doStopTheSession( void )
 
   StartSessionAction->setText( "Start session" );
 
-  RW->stopSession( SaveData );
+  RW->stopSession( SaveData, stopmacro );
 
   ReProCounter = 0;
   Running = false;
@@ -227,7 +226,7 @@ void Session::doStopTheSession( void )
 void Session::customEvent( QEvent *qe )
 {
   if ( qe->type() == QEvent::User+11 ) {
-    doStopTheSession();
+    doStopTheSession( true, true );
   }
   else
     QWidget::customEvent( qe );
@@ -270,18 +269,6 @@ bool Session::saveData( void ) const
 void Session::setSaveData( bool save )
 {
   SaveData = save;
-}
-
-
-bool Session::saveDialog( void ) const
-{
-  return SaveDialog;
-}
-
-
-void Session::setSaveDialog( bool dialog )
-{
-  SaveDialog = dialog;
 }
 
 

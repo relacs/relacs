@@ -147,6 +147,18 @@ namespace MacroGUI
     GuiCreated = true;
   }
 
+  void MacroCommandStopsession::createGUI(MacroCommandInfo *info)
+  {
+    DetailView = new QWidget();
+    GuiCreated = true;
+  }
+
+  void MacroCommandShutdown::createGUI(MacroCommandInfo *info)
+  {
+    DetailView = new QWidget();
+    GuiCreated = true;
+  }
+
   void MacroCommandMessage::updatedText() { setText(TextEdit->toPlainText().toStdString(), true); }
   void MacroCommandMessage::setText(const string &string, bool internal)
   {
@@ -1440,6 +1452,8 @@ namespace MacroGUI
     ADD_TYPE(MacroCommandInfo::CommandType::DETECTOR, "detector", MacroCommandFilterDetector)
     ADD_TYPE(MacroCommandInfo::CommandType::SWITCH, "switch", MacroCommandSwitch)
     ADD_TYPE(MacroCommandInfo::CommandType::START_SESSION, "startsession", MacroCommandStartsession)
+    ADD_TYPE(MacroCommandInfo::CommandType::STOP_SESSION, "stopsession", MacroCommandStopsession)
+    ADD_TYPE(MacroCommandInfo::CommandType::SHUTDOWN, "shutdown", MacroCommandShutdown)
     ADD_TYPE(MacroCommandInfo::CommandType::MESSAGE, "message", MacroCommandMessage)
     ADD_TYPE(MacroCommandInfo::CommandType::BROWSE, "browse", MacroCommandBrowse)
     ADD_TYPE(MacroCommandInfo::CommandType::SHELL, "shell", MacroCommandShell)
@@ -1871,6 +1885,10 @@ namespace MacroMgr
         }
         case CmdType::START_SESSION:
           break;
+        case CmdType::STOP_SESSION:
+          break;
+        case CmdType::SHUTDOWN:
+          break;
         case CmdType::SWITCH:
         {
           MacroCommandSwitch* msg = cmd->command<CmdType::SWITCH>();
@@ -2063,7 +2081,11 @@ namespace MacroMgr
         File << shell->command();
         break;
       }
+      case CmdType::STOP_SESSION:
+        break;
       case CmdType::START_SESSION:
+        break;
+      case CmdType::SHUTDOWN:
         break;
       case CmdType::SWITCH:
       {
