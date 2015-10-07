@@ -19,8 +19,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <relacs/rangeloop.h>
 #include <relacs/map.h>
+#include <relacs/tablekey.h>
+#include <relacs/rangeloop.h>
 #include <relacs/ephys/amplifiercontrol.h>
 #include <relacs/ephys/calibratesyncpulse.h>
 using namespace relacs;
@@ -38,6 +39,10 @@ CalibrateSyncPulse::CalibrateSyncPulse( void )
   addNumber( "istep", "Step-size of current increments", 0.001, 0.001, 1000.0, 0.001 );
   addNumber( "skipwin", "Initial portion of the response not used for analysis", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "duration", "Stimulus duration used for analysis", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+
+  // plot:
+  P.resize( 2, 2, true );
+  setWidget( &P );
 }
 
 
@@ -76,13 +81,31 @@ int CalibrateSyncPulse::main( void )
     return Failed;
   }
 
+  tracePlotContinuous( duration );
+
   // dc signal:
   OutData dcsignal;
   dcsignal.setTrace( outtrace );
   dcsignal.constWave( dccurrent );
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
 
+  // results:
+  MapD cccur;
+  MapD dccur;
   MapD volt;
+  double slope = 1.0;
+  SampleDataD line;
+
+  // plot:
+  P.lock();
+  P.clear();
+  P[0].setXRange( imin, imax );
+  P[0].setXLabel( "Current [" + IUnit + "]" );
+  P[0].setYLabel( intrace.ident() + " [" + intrace.unit() + "]" );
+  P[1].setXLabel( "CC [" + intrace.unit() + "]" );
+  P[1].setYLabel( "DC [" + intrace.unit() + "]" );
+  P.draw();
+  P.unlock();
 
   // write stimulus:
   RangeLoop range( imin, imax, istep );
@@ -120,21 +143,65 @@ int CalibrateSyncPulse::main( void )
     }
     sleep( skipwin + duration );
     double ccvolt = intrace.mean( currentTime()-duration, currentTime() );
+    cccur.push( amplitude, ccvolt );
 
     ampl->activateDynamicClampMode();
     sleep( skipwin + duration );
     double dcvolt = intrace.mean( currentTime()-duration, currentTime() );
-
+    dccur.push( amplitude, dcvolt );
     volt.push( ccvolt, dcvolt );
+    if ( volt.size() > 1 ) {
+      slope = volt.propFit();
+      line.line( cccur.front(), cccur.back(), 0.1, 0.0, slope );
+    }
 
-    // plot
-
+    P.lock();
+    P[0].clear();
+    P[0].plot( cccur, 1.0, Plot::Yellow, 3, Plot::Solid, Plot::Circle, 6, Plot::Yellow, Plot::Yellow );
+    P[0].plot( dccur, 1.0, Plot::Red, 3, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
+    P[1].clear();
+    P[1].plot( volt, 1.0, Plot::Orange, 3, Plot::Solid, Plot::Circle, 6, Plot::Orange, Plot::Orange );
+    P[1].plot( line, 1.0, Plot::Yellow, 3, Plot::Solid );
+    P.draw();
+    P.unlock();
   }
 
   directWrite( dcsignal );
-  sleep( duration );
 
-  // analyze and save
+  double syncpulse = ampl->number( "syncpulse" );
+
+  // save:
+  ofstream df( addPath( "calibratesyncpulse-data.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( df.good() ) {
+    // write header and key:
+    Options header;
+    header.addNumber( "slope", slope );
+    header.addNumber( "syncpulse", 1e6*syncpulse, "us" );
+    header.newSection( settings() );
+    header.save( df, "# ", 0, Options::FirstOnly );
+    df << '\n';
+    TableKey key;
+    key.addNumber( "current", IUnit, "%6.3f" );
+    key.addNumber( "ccvolt", "mV", "%6.2f" );
+    key.addNumber( "dcvolt", "mV", "%6.2f" );
+    key.saveKey( df, true, false );
+
+    // write data:
+    for ( int k=0; k<volt.size(); k++ ) {
+      key.save( df, cccur.x(k), 0 );
+      key.save( df, cccur.y(k) );
+      key.save( df, dccur.y(k) );
+      df << '\n';
+    }
+    df << '\n' << '\n';
+  }
+
+  // set results:
+  syncpulse /= slope;
+  ampl->setNumber( "syncpulse", syncpulse );
+
+  sleep( duration );
 
   return Completed;
 }

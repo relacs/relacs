@@ -508,7 +508,7 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. 
 	Returns the slope of the line. */
- double propFit( int first, int last ) const { double m, mu, ch; propFit( first, last, m, mu, ch ); return m; };
+ double propFit( int first=0, int last=-1 ) const { double m, mu, ch; propFit( first, last, m, mu, ch ); return m; };
 
     /*! Fit line y = b+m*x to the x-data and y-data array between
         indices \a first (inclusively) and \a last (exclusively). 

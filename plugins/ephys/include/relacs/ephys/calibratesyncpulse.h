@@ -22,6 +22,7 @@
 #ifndef _RELACS_EPHYS_CALIBRATESYNCPULSE_H_
 #define _RELACS_EPHYS_CALIBRATESYNCPULSE_H_ 1
 
+#include <relacs/multiplot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
 using namespace relacs;
@@ -50,6 +51,7 @@ public:
 
 protected :
 
+  MultiPlot P;
   string IUnit;
 
 };
