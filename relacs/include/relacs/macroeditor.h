@@ -133,6 +133,7 @@ namespace MacroGUI
   class MacroCommandFilterDetector;
   class MacroCommandMessage;
   class MacroCommandReproMacro;
+  class MacroCommandControl;
   class MacroCommandShell;
   class MacroCommandStartsession;
   class MacroCommandStopsession;
@@ -150,7 +151,7 @@ namespace MacroGUI
     enum class CommandType
     {
       UNKNOWN,
-	FILTER, DETECTOR, MESSAGE, BROWSE, SHELL, SWITCH, START_SESSION, STOP_SESSION, SHUTDOWN, REPRO, MACRO
+	FILTER, DETECTOR, CONTROL, MESSAGE, BROWSE, SHELL, SWITCH, START_SESSION, STOP_SESSION, SHUTDOWN, REPRO, MACRO
     };
 
     MacroCommandInfo();
@@ -175,6 +176,7 @@ namespace MacroGUI
 
     MAP_TYPE(CommandType::FILTER, MacroCommandFilterDetector)
     MAP_TYPE(CommandType::DETECTOR, MacroCommandFilterDetector)
+    MAP_TYPE(CommandType::CONTROL, MacroCommandControl)
     MAP_TYPE(CommandType::MESSAGE, MacroCommandMessage)
     MAP_TYPE(CommandType::BROWSE, MacroCommandBrowse)
     MAP_TYPE(CommandType::SHELL, MacroCommandShell)
@@ -265,6 +267,14 @@ namespace MacroGUI
 
   /*! Shutdown command element */
   class MacroCommandShutdown : public QObject, public DetailElement<MacroCommandInfo>
+  {
+    Q_OBJECT
+  public:
+    void createGUI(MacroCommandInfo* info);
+  };
+
+  /*! Control command element */
+  class MacroCommandControl : public QObject, public DetailElement<MacroCommandInfo>
   {
     Q_OBJECT
   public:

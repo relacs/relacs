@@ -21,8 +21,7 @@ New InData threading:
 - AnalogInput/Output check usage of IsPrepared and IsRunning! Yes, do it!
   AI->startRead() should work after AI->stop() without prepareRead()! (restartRead()!)
 - readData() several attemps only if maxn is too small
-- DAQFlex: does not like the initial writeReset() 
-  as well as normal writes at high sampling rates.
+- DAQFlex: does not like writes at high sampling rates.
   The startwrite message blocks forever, while new data are read in.
 - DAQFlex error handling needs to be improved, 
   e.g. invalid sampling rate and stall after write with high sampling rate.
@@ -39,7 +38,7 @@ Macros, flow control:
 Dynamic clamp:
 - It shoud be sufficient to initially set the AOs to zero (the driver should do that: done)
   and the parameters to their initial vallues (done - check!).
-- the system() call in macros.cc line 2342 hangs relacs on startup. Run it in the background?!
+- the system() call in macros.cc line 2342 hangs relacs on startup. Run it in the background?! Check it!
 - matchTraces should set error string of device, and this should be used by relacswidget
 - DynClamAnalogInput improve error checking in readData()
 - Add a variable lastInterval that is set to the current period length in addition to loopInterval
@@ -153,13 +152,12 @@ Macros:
 - The menu of a MacroCommand should have the options of the called Macro with
   overwritten Options colored blue (same as for the repros).
 - The menu of a MacroCommand should display overwritten values.
-- add stopSession macro command
 - add new macro command to set all sorts of internal Options (e.g. stimulusData!)
 - add dialog macro command for launching macro and repro dialogs, meta data dialog, etc.
 - Macro Options and Macro stack (B R N keys) do not work together
 - Add possibility to call shell command that returns a command line,
    e.g. RePro call, for the Macros
-- Possibility to quit a macro after  the current RePro finished normally
+- Possibility to quit a macro after the current RePro finished normally
   (similar to break, but without softStopRequest).
 
 Numerics:

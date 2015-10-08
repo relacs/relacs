@@ -77,6 +77,7 @@ pause=260ms
 			<para><itemizedlist>
 				<listitem><para>call a RePro (<xref linkend='macrofileactionrepro' endterm='macrofileactionreprotitle'/>)</para></listitem>
 				<listitem><para>auto-configure or save data of a filter or event detector (<xref linkend='macrofileactionfilter' endterm='macrofileactionfiltertitle'/>)</para></listitem>
+				<listitem><para>set parameter of a control widget (<xref linkend='macrofileactioncontrol' endterm='macrofileactioncontroltitle'/>)</para></listitem>
 				<listitem><para>display a message (<xref linkend='macrofileactionmessage' endterm='macrofileactionmessagetitle'/>)</para></listitem>
 				<listitem><para>open a text-browser (<xref linkend='macrofileactionbrowse' endterm='macrofileactionbrowsetitle'/>)</para></listitem>
 				<listitem><para>execute a shell command (<xref linkend='macrofileactionshell' endterm='macrofileactionshelltitle'/>)</para></listitem>
@@ -189,6 +190,19 @@ detector Spikes-1: save some-parameter
 			See the documentation of the Filter for more details.</para>
 		</section>
 
+
+		<section xml:id='macrofileactioncontrol'>
+                        <title xml:id='macrofileactioncontroltitle'>Control</title>
+			<para>A control command sets one or more parameter of a control widget.</para>
+			<para>For example
+			<programlisting>
+control Histogram: intrace=Interval
+			</programlisting>
+			sets the "intrace" parameter of the control "Histogram" to "Interval".</para>
+
+			<para>It depends on the implementation of the control widget how it
+			reacts to a changed parameter.</para>
+		</section>
 
 		<section xml:id='macrofileactionmessage'>
                         <title xml:id='macrofileactionmessagetitle'>Message</title>

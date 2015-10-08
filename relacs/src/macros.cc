@@ -33,6 +33,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/repro.h>
 #include <relacs/repros.h>
+#include <relacs/control.h>
+#include <relacs/controltabs.h>
 #include <relacs/session.h>
 #include <relacs/filter.h>
 #include <relacs/filterdetectors.h>
@@ -68,6 +70,7 @@ Macros::Macros( RELACSWidget *rw, QWidget *parent )
     ConfigClass( "Macros", RELACSPlugin::Core ),
     RW( rw ),
     RPs( 0 ),
+    CTs( 0 ),
     MCs(),
     CurrentMacro( -1 ),
     CurrentCommand( 0 ),
@@ -746,6 +749,12 @@ void Macros::saveConfig( ofstream &str )
 void Macros::setRePros( RePros *repros )
 {
   RPs = repros;
+}
+
+
+void Macros::setControls( ControlTabs *controls )
+{
+  CTs = controls;
 }
 
 
@@ -1842,6 +1851,7 @@ MacroCommand::MacroCommand( void )
     FilterCommand( 0 ),
     DetectorCommand( 0 ),
     AutoConfigureTime( 0.0 ),
+    CT( 0 ),
     TimeOut( 0.0 ),
     Enabled( true ),
     EnabledAction( 0 ),
@@ -1868,6 +1878,7 @@ MacroCommand::MacroCommand( const string &line, Macros *mcs, Macro *mc )
     FilterCommand( 0 ),
     DetectorCommand( 0 ),
     AutoConfigureTime( 0.0 ),
+    CT( 0 ),
     TimeOut( 0.0 ),
     Enabled( true ),
     EnabledAction( 0 ),
@@ -1921,6 +1932,8 @@ MacroCommand::MacroCommand( const string &line, Macros *mcs, Macro *mc )
       Params.clear();
     }
   }
+  else if ( Name.eraseFirst( "control", 0, false, 3, Str::WhiteSpace ) )
+    Command = ControlCom;
   else if ( Name.eraseFirst( "switch", 0, false, 3, Str::WhiteSpace ) )
     Command = SwitchCom;
   else if ( Name.eraseFirst( "startsession", 0, false, 3, Str::WhiteSpace ) )
@@ -1957,6 +1970,7 @@ MacroCommand::MacroCommand( RePro *repro, const string &params,
     FilterCommand( 0 ),
     DetectorCommand( 0 ),
     AutoConfigureTime( 0.0 ),
+    CT( 0 ),
     TimeOut( 0.0 ),
     Enabled( true ),
     EnabledAction( 0 ),
@@ -1983,6 +1997,7 @@ MacroCommand::MacroCommand( const MacroCommand &com )
     FilterCommand( com.FilterCommand ), 
     DetectorCommand( com.DetectorCommand ), 
     AutoConfigureTime( com.AutoConfigureTime ),
+    CT( com.CT ),
     TimeOut( com.TimeOut ),
     Enabled( com.Enabled ),
     EnabledAction( com.EnabledAction ),
@@ -2156,6 +2171,9 @@ void MacroCommand::addMenu( QMenu *menu )
   else if ( Command == BrowseCom ) {
     s += "Browse " + Params;
   }
+  else if ( Command == ControlCom ) {
+    s += "Control " + Name + ": " + Params;
+  }
   else {
     s += "RePro " + Name;
     if ( !Params.empty() ) {
@@ -2192,10 +2210,16 @@ void MacroCommand::addMenu( QMenu *menu )
 	    ! Params.empty() ) {
     SubMenu->addAction( "&Options...", this, SLOT( dialog() ) );
   }
+  /*
+  else if ( CT != 0 ) {
+    SubMenu->addAction( "&Options...", this, SLOT( dialog() ) );
+    SubMenu->addAction( "&Help...", this, SLOT( help() ) );
+  }
+  */
   EnabledAction = SubMenu->addAction( Enabled ? "&Disable" : "&Enable",
 				      this, SLOT( enable() ) );
 
-  if ( ( Command == MacroCom || Command == ReProCom ) &&
+  if ( ( Command == MacroCom || Command == ReProCom || Command == ControlCom ) &&
        !Params.empty() ) {
     SubMenu->addSeparator();
     SubMenu->addAction( "Parameter:" );
@@ -2305,14 +2329,33 @@ bool MacroCommand::check( string &warnings )
       warnings += "Removed unknown RePro \"<b>";
       warnings += name();
       warnings += "</b>\" in Macro \"<b>";
-	warnings += MC->name();
-	warnings += "</b>\".\n";
-	return false;
+      warnings += MC->name();
+      warnings += "</b>\".\n";
+      return false;
     }
     else {
       RP = repro;
       if ( repro != 0 )
 	Name = repro->uniqueName();
+    }
+
+  }
+
+  else if ( Command == ControlCom ) {
+    // find Control:
+    Control *control = MCs->CTs->control( name() );
+    if ( control == 0 ) {
+      warnings += "Removed unknown Control \"<b>";
+      warnings += name();
+      warnings += "</b>\" in Macro \"<b>";
+      warnings += MC->name();
+      warnings += "</b>\".\n";
+      return false;
+    }
+    else {
+      CT = control;
+      if ( control != 0 )
+	Name = control->uniqueName();
     }
 
   }
@@ -2345,6 +2388,11 @@ void MacroCommand::checkOptions( string &warnings )
       warnings += ".\n";
     }
   }
+
+  /*
+  else if ( Command == ControlCom ) {
+  }
+  */
 }
 
 
@@ -2490,6 +2538,11 @@ bool MacroCommand::execute( bool saving )
       od->addButton( "&Ok" );
       od->exec();
     }
+  }
+  else if ( CT != 0 ) {
+    // control:
+    MCs->RW->printlog( "control " + Name + ": " + Params );
+    CT->Options::read( Params );
   }
   else if ( RP != 0 ) {
     // start RePro:
@@ -2742,6 +2795,8 @@ ostream &operator<< ( ostream &str, const MacroCommand &command )
     str << "Filter " << ( command.FilterCom == 1 ? "save" : "auto-configure" );
   else if ( command.Command == MacroCommand::DetectorCom )
     str << "Detector " << ( command.DetectorCom == 1 ? "save" : "auto-configure" );
+  else if ( command.Command == MacroCommand::ControlCom )
+    str << "Control";
   else if ( command.Command == MacroCommand::SwitchCom )
     str << "Switch";
   else if ( command.Command == MacroCommand::StartSessionCom )

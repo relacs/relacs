@@ -45,6 +45,8 @@ class MacroCommand;
 class MacroButton;
 class RePro;
 class RePros;
+class Control;
+class ControlTabs;
 class RELACSWidget;
 
 
@@ -157,11 +159,15 @@ public:
 
     /*! Set the pointer to the RePros to \a repros. */
   void setRePros( RePros *repros );
+    /*! Set the pointer to the Controls to \a controls. */
+  void setControls( ControlTabs *controls );
 
     /*! Pointer to RELACSWidget. */
   RELACSWidget *RW;
     /*! Pointer to all RePros. */
   RePros *RPs;
+    /*! Pointer to all Controls. */
+  ControlTabs *CTs;
 
     /*! Write information of the Macros to \a str. */
   friend ostream &operator<< ( ostream &str, const Macros &macros );
@@ -516,6 +522,8 @@ public:
     FilterCom,
       /*! The command executes a function of a detector. */
     DetectorCom,
+      /*! The command sets a parameter of a control. */
+    ControlCom,
       /*! The command switches the macro file. */
     SwitchCom,
       /*! The command starts a session. */
@@ -629,9 +637,9 @@ public slots:
 
     /*! The type of the MacroCommand. */
   CommandType Command;
-    /*! The name of the requested repro, macro, or shell script. */
+    /*! The name of the requested repro, macro, control, or shell script. */
   Str Name;
-    /*! Parameters for the RePro. */
+    /*! Parameters for the RePro or Control. */
   Str Params;
     /*! The RePro (if it is a repro.). */
   RePro *RP;
@@ -650,6 +658,8 @@ public slots:
   int DetectorCommand;
     /*! Time for auto-configuring a filter or detector. */
   double AutoConfigureTime;
+    /*! The Control (if it is a control.). */
+  Control *CT;
     /*! Timeout for a message in seconds. */
   double TimeOut;
     /*! True if this command is enabled. */
@@ -658,7 +668,7 @@ public slots:
   QAction *EnabledAction;
     /*! The index of the macro this command belongs to. */
   int MacroNum;
-    /*! The index of this command withing its Macro. */
+    /*! The index of this command within its Macro. */
   int CommandNum;
     /*! Pointer to the parent Macro. */
   Macro *MC;

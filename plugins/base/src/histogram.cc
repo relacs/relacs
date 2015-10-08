@@ -95,12 +95,18 @@ void Histogram::main( void )
   bool histinit = true;
   double histmin = 0.0;
   double histmax = 0.0;
+  int previntrace = InTrace;
 
   do {
 
     if ( InTrace < 0 || InTrace >= traces().size() ) {
       warning( "Trace does not exist!", 4.0 );
       return;
+    }
+
+    if ( previntrace != InTrace ) {
+      histinit = true;
+      previntrace = InTrace;
     }
 
     int n = trace( InTrace ).indices( Duration );

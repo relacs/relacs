@@ -159,6 +159,12 @@ namespace MacroGUI
     GuiCreated = true;
   }
 
+  void MacroCommandControl::createGUI(MacroCommandInfo *info)
+  {
+    DetailView = new QLabel( "WARNING! Not implemented yet!" );
+    GuiCreated = true;
+  }
+
   void MacroCommandMessage::updatedText() { setText(TextEdit->toPlainText().toStdString(), true); }
   void MacroCommandMessage::setText(const string &string, bool internal)
   {
@@ -1448,6 +1454,7 @@ namespace MacroGUI
   static const std::map<MacroCommandInfo::CommandType, CommandTypeInfo> COMMANDTYPE_LIST = {
     ADD_TYPE(MacroCommandInfo::CommandType::REPRO, "repro", MacroCommandReproMacro)
     ADD_TYPE(MacroCommandInfo::CommandType::MACRO, "macro", MacroCommandReproMacro)
+    ADD_TYPE(MacroCommandInfo::CommandType::CONTROL, "control", MacroCommandControl)
     ADD_TYPE(MacroCommandInfo::CommandType::FILTER, "filter", MacroCommandFilterDetector)
     ADD_TYPE(MacroCommandInfo::CommandType::DETECTOR, "detector", MacroCommandFilterDetector)
     ADD_TYPE(MacroCommandInfo::CommandType::SWITCH, "switch", MacroCommandSwitch)
@@ -1889,6 +1896,8 @@ namespace MacroMgr
           break;
         case CmdType::SHUTDOWN:
           break;
+        case CmdType::CONTROL:
+          break;
         case CmdType::SWITCH:
         {
           MacroCommandSwitch* msg = cmd->command<CmdType::SWITCH>();
@@ -2086,6 +2095,8 @@ namespace MacroMgr
       case CmdType::START_SESSION:
         break;
       case CmdType::SHUTDOWN:
+        break;
+      case CmdType::CONTROL:
         break;
       case CmdType::SWITCH:
       {

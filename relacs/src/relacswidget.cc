@@ -404,6 +404,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   QMenu *macromenu = menuBar()->addMenu( "&Macros" );
   MC->setMenu( macromenu );
   MC->setRePros( RP );
+  MC->setControls( CW );
   MC->load( "", true );
   MC->load();
   MC->check();
