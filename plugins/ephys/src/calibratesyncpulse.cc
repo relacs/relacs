@@ -67,6 +67,9 @@ int CalibrateSyncPulse::main( void )
   double skipwin = number( "skipwin" );
   double duration = number( "duration" );
 
+  // don't print repro message:
+  noMessage();
+
   // in- and outtrace:
   const InData &intrace = trace( SpikeTrace[0] >= 0 ? SpikeTrace[0] : 0 );
   int outtrace = CurrentOutput[0] >= 0 ? CurrentOutput[0] : 0;
@@ -130,7 +133,7 @@ int CalibrateSyncPulse::main( void )
     signal.setTrace( outtrace );
     signal.constWave( amplitude );
     signal.setIdent( "DC=" + Str( amplitude ) + IUnit );
-    write( signal );
+    directWrite( signal );
     if ( signal.failed() ) {
       if ( signal.overflow() ) {
 	printlog( "Requested amplitude I=" + Str( amplitude ) + IUnit + "too high!" );
@@ -156,8 +159,9 @@ int CalibrateSyncPulse::main( void )
     dccur.push( amplitude, dcvolt );
     volt.push( ccvolt, dcvolt );
     if ( volt.size() > 1 ) {
-      slope = volt.propFit();
-      line.line( cccur.front(), cccur.back(), 0.1*istep, 0.0, slope );
+      double b = 0.0;
+      volt.lineFit( b, slope );
+      line.line( cccur.front(), cccur.back(), 0.1*istep, b, slope );
     }
 
     P.lock();
@@ -203,7 +207,7 @@ int CalibrateSyncPulse::main( void )
   }
 
   // set results:
-  syncpulse /= slope;
+  syncpulse *= slope;
   ampl->setNumber( "syncpulse", syncpulse );
 
   // message:

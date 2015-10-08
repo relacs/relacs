@@ -34,12 +34,13 @@ namespace ephys {
 \class BridgeTest
 \brief [RePro] Short current pulses for testing the bridge.
 \author Jan Benda
-\version 2.4 (Feb 17, 2015)
+\version 2.6 (Oct 7, 2015)
 \par Options
 - \c amplitude=1nA: Amplitude of stimulus (\c number)
 - \c duration=10ms: Duration of stimulus (\c number)
 - \c pause=100ms: Duration of pause between pulses (\c number)
 - \c average=10: Number of trials to be averaged (\c integer)
+- \c rate=0.01: Rate for adjusting plot ranges (\c number)
 - \c plottrace=true: Plut current voltage trace (\c boolean)
 */
 

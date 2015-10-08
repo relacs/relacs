@@ -461,9 +461,9 @@ void AmplifierControl::activateDynamicClampMode( bool activate )
       unlockStimulusData();
       unsetNotify();
       setNumber( "syncpulse", SyncPulseDuration );
-      setDefault( "syncpulse" );
+      setToDefault( "syncpulse" );
       setInteger( "syncmode", SyncMode );
-      setDefault( "syncmode" );
+      setToDefault( "syncmode" );
       setNotify();
       SyncPulseEnabled = true;
       DCButton->setChecked( true );

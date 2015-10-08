@@ -35,6 +35,12 @@ namespace ephys {
 \brief [RePro] Sets the width of the pulse for synchronizing an amplifier.
 \author Jan Benda
 \version 1.0 (Oct 07, 2015)
+\par Options
+- \c imin=0: Minimum injected current (\c number)
+- \c imax=1: Maximum injected current (\c number)
+- \c istep=0.01: Step-size of current increments (\c number)
+- \c skipwin=1000ms: Initial portion of the response not used for analysis (\c number)
+- \c duration=1000ms: Stimulus duration used for analysis (\c number)
 */
 
 

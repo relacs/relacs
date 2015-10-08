@@ -28,13 +28,14 @@ namespace ephys {
 
 
 BridgeTest::BridgeTest( void )
-  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.4", "Feb 17, 2015" )
+  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.6", "Oct 7, 2015" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of stimulus", 0.01, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between pulses", 0.1, 0.01, 1.0, 0.01, "sec", "ms" );
   addInteger( "average", "Number of trials to be averaged", 10, 0, 1000000 );
+  addNumber( "rate", "Rate for adjusting plot ranges", 0.01, 0.0001, 0.1, 0.001 );
   addBoolean( "plottrace", "Plot current voltage trace", true );
 
   // plot:
@@ -62,6 +63,7 @@ int BridgeTest::main( void )
   double duration = number( "duration" );
   double pause = number( "pause" );
   unsigned int naverage = integer( "average" );
+  double rate = number( "rate" );
   bool plottrace = boolean( "plottrace" );
 
   // don't print repro message:
@@ -149,7 +151,6 @@ int BridgeTest::main( void )
       ymax = max;
     }
     else {
-      double rate = 0.001;
       ymin += ( min - ymin )*rate;
       ymax += ( max - ymax )*rate;
       if ( ymax < max )
