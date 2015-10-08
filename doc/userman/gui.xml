@@ -105,7 +105,8 @@
 		
 		<para>In all modes, the <keycap>-</keycap> and <keycap>+</keycap> keys expand and shrink the visible time range,
 		respectively.</para>
-		<para>Pressing <keycap>v</keycap> vertically centers the traces in the plots and 
+		<para>Pressing <keycap>v</keycap> moves the traces in the plots vertically to 
+		the center, top, or bottom and 
 		<keycap>V</keycap> centers and zooms the y-range to make the current traces fully visible.</para>
 
 		<para>Clicking with the left mouse button on the axis
@@ -434,7 +435,7 @@
 			<listitem><para><keycap>Ctrl+End</keycap>: Move plot window to the most recent data.</para></listitem>
 			<listitem><para><keycap>Shift+PageUp</keycap>: Move plot window to the left relative to the current stimulus.</para></listitem>
 			<listitem><para><keycap>Shift+PageDown</keycap>: Move plot window to the right relative to the current stimulus.</para></listitem>
-			<listitem><para><keycap>V</keycap>: Center the traces vertically in the plot panels.</para></listitem>
+			<listitem><para><keycap>V</keycap>: Move the traces vertically in the plot panels to the center, top, or bottom (cycles by repeatedly pressing <keycap>V</keycap>.</para></listitem>
 			<listitem><para><keycap>Shift+V</keycap>: Center and scale the traces vertically in the plot panels.</para></listitem>
 			<listitem><para><keycap>Alt+Left</keycap>: Go back in zoom stack.</para></listitem>
 			<listitem><para><keycap>Alt+Right</keycap>: Reset zoom stack.</para></listitem>

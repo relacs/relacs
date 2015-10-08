@@ -25,6 +25,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QMenu>
+#include <QTime>
 #include <QTimer>
 #include <deque>
 #include <relacs/relacsplugin.h>
@@ -207,6 +208,9 @@ private:
   bool Trigger;
   int TriggerSource;
   bool Manual;
+
+  int CenterMode;
+  QTime CenterTime;
 
   bool Plotting;
 

@@ -77,6 +77,9 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   ManualButton = 0;
   OnOffButton = 0;
 
+  CenterMode = 0;
+  CenterTime.start();
+
   FilePlot = false;
   FilePath = "";
   FileTraces.clear();
@@ -489,6 +492,10 @@ void PlotTrace::init( void )
   // set xlabel:
   if ( VP.size() > 0 )
     P[VP.back()].setXLabel( tunit );
+
+  // center mode:
+  CenterMode = 0;
+  CenterTime.start();
 
   // trigger source:
   TriggerSource = -1;
@@ -1199,26 +1206,35 @@ void PlotTrace::centerVertically( void )
     }
   }
 
+  // reset center mode:
+  if ( CenterTime.restart() > 2000 )
+    CenterMode = 0;
+
   // center each plot:
   for ( int vp=0; vp<P.size(); vp++ ) {
     if ( pcenter[vp] ) {
       double center = 0.5*(pmin[vp]+pmax[vp]);
-      double range = 0.5*(P[vp].ymaxRange() - P[vp].yminRange());
-      double nmin = center-range;
-      double nmax = center+range;
+      double range = P[vp].ymaxRange() - P[vp].yminRange();
+      double nmin = center - (0.5+0.4*CenterMode)*range;
+      double nmax = center + (0.5-0.4*CenterMode)*range;
       if ( nmin < pminrange[vp] ) {
 	nmin = pminrange[vp];
-	nmax = nmin + 2.0*range;
+	nmax = nmin + range;
       }
       if ( nmax > pmaxrange[vp] ) {
 	nmax = pmaxrange[vp];
-	nmin = nmax - 2.0*range;
+	nmin = nmax - range;
       }
       if ( P[vp].ranges() == 0 )
 	P[vp].pushRanges();
       P[vp].setYRange( nmin, nmax );
     }
   }
+
+  // update center mode:
+  CenterMode++;
+  if ( CenterMode > 1 )
+    CenterMode = -1;
 
   P.unlock();
 }
