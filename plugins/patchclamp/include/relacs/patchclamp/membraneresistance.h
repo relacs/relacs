@@ -23,6 +23,7 @@
 #define _RELACS_PATCHCLAMP_MEMBRANERESISTANCE_H_ 1
 
 #include <deque>
+#include <vector>
 #include <relacs/sampledata.h>
 #include <relacs/plot.h>
 #include <relacs/repro.h>
@@ -37,24 +38,23 @@ namespace patchclamp {
 \class MembraneResistance
 \brief [RePro] Measures membrane resistance, capacitance, and time constant with current pulses
 \author Jan Benda
-\version 1.4 (Sep 18, 2015)
+\version 1.6 (Oct 9, 2015)
 \par Screenshot
 \image html membraneresistance.png
 
 \par Options
 - Stimulus
-- \c amplitude=-0.1nA: Amplitude of output signal (\c number)
-- \c userm=false: Compute amplitude from vstep and estimated membrane resistance (\c boolean)
-- \c vstep=-1mV: Steady-state voltage amplitude induced by output signal (\c number)
-- \c duration=500ms: Duration of output (\c number)
-- \c pause=1000ms: Duration of pause bewteen outputs (\c number)
-- \c repeats=100: Repetitions of stimulus (\c integer)
+    - \c amplitude=-0.1nA: Amplitude of output signal (\c number)
+    - \c duration=500ms: Duration of output (\c number)
+    - \c pause=1000ms: Duration of pause bewteen outputs (\c number)
+    - \c repeats=100: Repetitions of stimulus (\c integer)
 - Analysis
-- \c skipspikes=true: Skip trials with detected spikes (\c boolean)
-- \c sswidth=100ms: Window length for steady-state analysis (\c number)
-- \c nossfit=false: Fix steady-state potential for fit (\c boolean)
-- \c plotstdev=true: Plot standard deviation of membrane potential (\c boolean)
-- \c setdata=rest only: Set results to the session variables (\c string)
+    - \c skipspikes=true: Skip trials with detected spikes (\c boolean)
+    - \c sswidth=100ms: Window length for steady-state analysis (\c number)
+    - \c nossfit=false: Fix steady-state potential for fit (\c boolean)
+    - \c plotstdev=true: Plot standard deviation of membrane potential (\c boolean)
+    - \c setdata=rest only: Set results to the session variables (\c string)
+    - \c checkoutput=Current-1: Outputs that need to be at their default value (\c string)
 */
 
 
@@ -111,6 +111,7 @@ protected:
   SampleDataF ExpOn;
   SampleDataF ExpOff;
   int Count;
+  vector< string > OutParams;
 
 };
 

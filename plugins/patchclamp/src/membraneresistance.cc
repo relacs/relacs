@@ -29,7 +29,7 @@ namespace patchclamp {
 
 
 MembraneResistance::MembraneResistance( void )
-  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.4", "Sep 18, 2015" ),
+  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.6", "Oct 15, 2015" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -38,9 +38,7 @@ MembraneResistance::MembraneResistance( void )
 {
   // add some options:
   newSection( "Stimulus" );
-  addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 ).setActivation( "userm", "false" );
-  addBoolean( "userm", "Compute amplitude from vstep and estimated membrane resistance", false );
-  addNumber( "vstep", "Steady-state voltage amplitude induced by output signal", -1.0, -1000.0, 1000.0, 0.1, "mV" ).setActivation( "userm", "true" );
+  addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
@@ -50,6 +48,7 @@ MembraneResistance::MembraneResistance( void )
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
   addSelection( "setdata", "Set results to the session variables", "rest only|always|never" );
+  addText( "checkoutput", "Outputs that need to be at their default value", "Current-1" ).setActivation( "setdata", "rest only" );
 
   // plot:
   P.lock();
@@ -81,15 +80,16 @@ void MembraneResistance::preConfig( void )
 
 int MembraneResistance::main( void )
 {
+  OutParams.clear();
   // get options:
   Amplitude = number( "amplitude" );
-  bool userm = boolean( "userm" );
-  double vstep = number( "vstep" );
   Duration = number( "duration" );
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
   bool skipspikes = boolean( "skipspikes" );
   double sswidth = number( "sswidth" );
+  texts( "checkoutput", OutParams );
+
   if ( pause < 2.0*Duration ) {
     warning( "Pause must be at least two times the stimulus duration!" );
     return Failed;
@@ -102,18 +102,6 @@ int MembraneResistance::main( void )
   if ( CurrentOutput[0] < 0 ) {
     warning( "Invalid output current trace!" );
     return Failed;
-  }
-  if ( userm ) {
-    lockMetaData();
-    double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
-    unlockMetaData();
-    if ( rm > 1.0e-8 ) {
-      lockStimulusData();
-      double g = stimulusData().number( "g", 0.0, "ns" );
-      unlockStimulusData();
-      double r = 1.0/(0.001*g + 1.0/rm);
-      Amplitude = vstep/r/IFac;
-    }
   }
 
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
@@ -455,10 +443,21 @@ void MembraneResistance::save( void )
   if ( settings().index( "setdata" ) == 0 ) {
     // all outputs must be at 0:
     lockStimulusData();
-    for ( int k=0; k<outTracesSize(); k++ ) {
-      if ( fabs( stimulusData().number( outTraceName( k ) ) - stimulusData().defaultNumber( outTraceName( k ) ) ) > 1.0e-6 ) {
-	setdata = false;
-	break;
+    if ( OutParams.empty() ) {
+      for ( int k=0; k<outTracesSize(); k++ ) {
+	if ( fabs( stimulusData().number( outTraceName( k ) ) - stimulusData().defaultNumber( outTraceName( k ) ) ) > 1.0e-6 ) {
+	  setdata = false;
+	  break;
+	}
+      }
+    }
+    else {
+      for ( unsigned int k=0; k<OutParams.size(); k++ ) {
+	if ( stimulusData().exist( OutParams[k] ) &&
+	     fabs( stimulusData().number( OutParams[k] ) - stimulusData().defaultNumber( OutParams[k] ) ) > 1.0e-6 ) {
+	  setdata = false;
+	  break;
+	}
       }
     }
     unlockStimulusData();
