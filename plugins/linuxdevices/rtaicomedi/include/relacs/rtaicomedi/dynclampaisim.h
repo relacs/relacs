@@ -98,9 +98,7 @@ private:
   vector<float> statusInput;
   vector<string> statusInputNames;
   vector<string> statusInputUnits;
-#ifdef ENABLE_INTERVALS
   int intervalstatusinx;
-#endif
 #ifdef ENABLE_AITIME
   int aitimestatusinx;
 #endif

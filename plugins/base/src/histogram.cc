@@ -26,19 +26,21 @@ namespace base {
 
 
 Histogram::Histogram( void )
-  : Control( "Histogram", "base", "Jan Benda", "1.0", "Mar 30, 2015" )
+  : Control( "Histogram", "base", "Jan Benda", "1.2", "Oct 14, 2015" )
 {
   // parameter:
   InTrace = 0;
   Origin = 0;
   Offset = 0.0;
   Duration = 1.0;
+  UpdateRange = 0;
 
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" ).setFlags( 8 );
   addSelection( "origin", "Analysis window", "before end of data|before signal|after signal" );
   addNumber( "offset", "Offset of analysis window", Offset, -10000.0, 10000.0, 0.1, "s", "ms" );
   addNumber( "duration", "Width of analysis window", Duration, 0.0, 100.0, 0.1, "s", "ms" );
+  addSelection( "updaterange", "Update x-range to", "current range|maximum range" );
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -78,6 +80,7 @@ void Histogram::notify( void )
   Origin = index( "origin" );
   Offset = number( "offset" );
   Duration = number( "duration" );
+  UpdateRange = index( "updaterange" );
   if ( InTrace >= 0 && InTrace < traces().size() ) {
     P.lock();
     P.setXLabel( trace( InTrace ).ident() + " [" + trace( InTrace ).unit() + "]" );
@@ -107,6 +110,9 @@ void Histogram::main( void )
     if ( previntrace != InTrace ) {
       histinit = true;
       previntrace = InTrace;
+      P.lock();
+      P.resetRanges();
+      P.unlock();
     }
 
     int n = trace( InTrace ).indices( Duration );
@@ -125,10 +131,17 @@ void Histogram::main( void )
     float min = 0.0;
     float max = 0.0;
     trace( InTrace ).minMax( min, max, offsinx, offsinx+n );
-    int nbins = 100;
+    if ( ::fabs(max-min) < 1e-8 ) {
+      min -= 1.0;
+      max += 1.0;
+    }
+    
+    int nbins = n/500;
+    if ( n < 2 )
+      n = 2;
     SampleDataD hist( min, max, (max-min)/nbins );
     trace( InTrace ).hist( hist, offsinx, offsinx+n );
-    if ( histinit ) {
+    if ( histinit || UpdateRange == 0 ) {
       histinit = false;
       histmin = hist.rangeFront();
       histmax = hist.rangeBack();

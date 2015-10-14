@@ -34,7 +34,13 @@ namespace base {
 \class Histogram
 \brief [RePro] Displays histogram of a selected input trace.
 \author Jan Benda
-\version 1.0 (Mar 30, 2015)
+\version 1.2 (Oct 14, 2015)
+\par Options
+- \c intrace=V-1: Input trace (\c string)
+- \c origin=before end of data: Analysis window (\c string)
+- \c offset=0ms: Offset of analysis window (\c number)
+- \c duration=1000ms: Width of analysis window (\c number)
+- \c updaterange=current range: Update x-range to (\c string)
 */
 
 
@@ -57,6 +63,7 @@ private:
   int Origin;
   double Offset;
   double Duration;
+  int UpdateRange;
 
   OptWidget SW;
   Plot P;

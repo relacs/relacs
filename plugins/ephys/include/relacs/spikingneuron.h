@@ -244,6 +244,45 @@ class Stimulus : public SpikingNeuron
 
 
 /*! 
+\class PassiveMembrane
+\brief [ModelLib] A passive membrane (RC circuit)
+\author Jan Benda
+*/
+
+class PassiveMembrane : public SpikingNeuron
+{
+ public:
+  PassiveMembrane( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+  virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+  virtual void variables( vector< string > &varnames ) const;
+    /*! \copydoc SpikingNeuron::units() */
+  virtual void units( vector< string > &u ) const;
+    /*! Implementation of a passive membrane:
+        \f{eqnarray*}
+           C dV/dt & = & -R*V + I
+	\f} . */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
+
+ protected:
+
+  double C, R;
+
+};
+
+
+/*! 
 \class FitzhughNagumo
 \brief [ModelLib] The Fitzhugh-Nagumo model
 \author Jan Benda

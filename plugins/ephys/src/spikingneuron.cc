@@ -160,6 +160,73 @@ void Stimulus::init( double *x ) const
 
 
 
+PassiveMembrane::PassiveMembrane( void )
+  : SpikingNeuron()
+{
+  R = 50.0;
+  C = 25.0;
+}
+
+
+string PassiveMembrane::name( void ) const
+{
+  return "Passive membrane";
+}
+
+
+int PassiveMembrane::dimension( void ) const
+{
+  return 1;
+}
+
+
+void PassiveMembrane::variables( vector< string > &varnames ) const
+{
+  varnames.clear();
+  varnames.reserve( dimension() );
+  varnames.push_back( "V" );
+}
+
+
+void PassiveMembrane::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+}
+
+
+void PassiveMembrane::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  /* V */ dxdt[0] = (-x[0]/R + s)/C*1000.0;
+}
+
+
+void PassiveMembrane::init( double *x ) const
+{
+  x[0] = 0.0;
+}
+
+
+void PassiveMembrane::add( void )
+{
+  newSection( "Parameter", ModelFlag );
+  addNumber( "R", "R", R, 0.0, 100000.0, 1.0, "MOhm" ).setFlags( ModelFlag );
+  addNumber( "C", "C", C, 0.0, 100000.0, 1.0, "pF" ).setFlags( ModelFlag );
+
+  SpikingNeuron::add();
+}
+
+
+void PassiveMembrane::notify( void )
+{
+  SpikingNeuron::notify();
+  R = number( "R" );
+  C = number( "C" );
+}
+
+
+
 FitzhughNagumo::FitzhughNagumo( void )
   : SpikingNeuron()
 {

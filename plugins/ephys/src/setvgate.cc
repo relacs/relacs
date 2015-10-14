@@ -52,7 +52,7 @@ SetVGate::SetVGate( void )
   addNumber( "gvgate", "Conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 2 );
   addNumber( "Evgate", "Reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
   addNumber( "vgatevmid", "Position of activation curve Vmid", 0.0, -200.0, 200.0, 1.0, "mV" ).setFlags( 2 );
-  addNumber( "vgatewidth", "Width of activation curve k", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
+  addNumber( "vgatewidth", "Width of activation curve 1/k", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
   addNumber( "vgatetau", "Time constant tau", 10.0, 0.0, 1000000.0, 1.0, "ms" ).setFlags( 2 );
   newSection( "Resulting membrane properties:" ).setFlags( 2 );
   addNumber( "Rdc", "New membrane resistance", 0.0, 0.0, 1.0e8, 1.0, "MOhm" ).setFlags( 2 );

@@ -32,12 +32,10 @@ DynClampAISim::DynClampAISim( void )
   statusInput.clear();
   statusInputNames.clear();
   statusInputUnits.clear();
-#ifdef ENABLE_INTERVALS
   intervalstatusinx = statusInput.size();
   statusInputNames.push_back( "Interval" );
   statusInputUnits.push_back( "s" );
   statusInput.push_back( 0.0 );
-#endif
 #ifdef ENABLE_AITIME
   aitimestatusinx = statusInput.size();
   statusInputNames.push_back( "AI-time" );
@@ -137,9 +135,7 @@ int DynClampAISim::testReadDevice( InList &traces )
 int DynClampAISim::prepareRead( InList &traces )
 {
   dynclampmodelsim::initModel( traces[0].stepsize() );
-#ifdef ENABLE_INTERVALS
   statusInput[intervalstatusinx] = traces[0].sampleInterval();
-#endif
 #ifdef ENABLE_AITIME
   statusInput[aitimestatusinx] = traces.size()*1.2e-6;
 #endif

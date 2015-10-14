@@ -201,6 +201,7 @@ void NeuronModels::add( SpikingNeuron *model, const string &title )
 void NeuronModels::addModels( void )
 {
   add( new Stimulus() );
+  add( new PassiveMembrane() );
   add( new MorrisLecar() );
   add( new HodgkinHuxley() );
   add( new Connor() );

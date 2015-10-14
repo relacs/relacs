@@ -1539,8 +1539,10 @@ void dynclamp_loop( long dummy )
 	if ( pChan->modelIndex >= 0 ) {
 #ifdef ENABLE_SYNCSEC
 	  statusInput[pChan->statusIndex+3] = voltage;
-#endif
 	  statusInput[pChan->statusIndex+2] = voltage / currentfac;
+#else
+	  statusInput[pChan->statusIndex+2] = voltage;
+#endif
 	}
 
       }
