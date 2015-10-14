@@ -117,7 +117,6 @@ void RePro::run( void )
   SoftStopLock.unlock();
   GrabKeysAllowed = true;
   GrabKeysBaseSize = GrabKeys.size();
-  grabKeys();
   setSettings();
   InterruptLock.lock();
   Interrupt = 0;
@@ -143,7 +142,6 @@ void RePro::run( void )
 
   RW->KeyTime->unsetNoFocusWidget();
   GrabKeysAllowed = false;
-  releaseKeys();
   disable();
 
   // write message:
@@ -916,11 +914,13 @@ void RePro::customEvent( QEvent *qce )
   case 8: {
     if ( widget() != 0 )
       widget()->setEnabled( true );
+    grabKeys();
     break;
   }
   case 9: {
     if ( widget() != 0 )
       widget()->setEnabled( false );
+    releaseKeys();
     break;
   }
   default:

@@ -301,7 +301,7 @@ int SetVGate::main( void )
   }
 
   // set the requested values:
-  message( "set g=" + Str( g ) + "nS, E=" + Str( E ) + "mV, Vmid=" + Str( vmid ) + "mV, slope=" + Str( slope ) + "/mV tau=" + Str( tau ) + "ms" );
+  message( "set <b>g=" + Str( g ) + "nS</b>, <b>E=" + Str( E ) + "mV</b>, <b>Vmid=" + Str( vmid ) + "mV</b>, <b>slope=" + Str( slope ) + "/mV</b>, <b> tau=" + Str( tau ) + "ms</b>" );
   OutList signal;
   signal.resize( 5 );
   signal[0].setTraceName( "gvgate" );

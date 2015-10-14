@@ -238,11 +238,14 @@ int SetOutput::main( void )
     Interactive = false;
   }
   else {
+    //sleep( 0.5 );
     // set the single requested value:
     OutData signal;
     signal.setTrace( outtrace );
     signal.constWave( value );
     signal.setIntensity( intensity );
+    message( "<b>" + signal.traceName() + '=' + Str( value ) + signal.unit() + "</b>" );
+
     directWrite( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );
