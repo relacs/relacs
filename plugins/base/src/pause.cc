@@ -60,9 +60,9 @@ int Pause::main( void )
   do {
     sleepWait( 0.5 );
     if ( interrupt() )
-      return Aborted;
+      return duration <= 1e-8 ? Completed : Aborted;
   }  while ( softStop() == 0 &&
-	     ( duration <= 0 || currentTime() - starttime < duration ) );
+	     ( duration <= 1e-8 || currentTime() - starttime < duration ) );
 
   return Completed;
 }

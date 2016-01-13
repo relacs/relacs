@@ -165,9 +165,6 @@ int FICurve::main( void )
   // don't print repro message:
   noMessage();
 
-  // plot trace:
-  tracePlotSignal( 2.0*duration+delay, delay );
-
   // init:
   DoneState state = Completed;
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
@@ -223,6 +220,9 @@ int FICurve::main( void )
     }
     return Aborted;
   }
+
+  // plot trace:
+  tracePlotSignal( 2.0*duration+delay, delay );
 
   // write stimulus:
   for ( Range.reset(); ! Range && softStop() == 0; ) {
