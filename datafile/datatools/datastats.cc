@@ -281,7 +281,7 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
       rdata.push_back( rankdata( ydata[k], 1 ) );
     // rank:
     sort( rdata.begin(), rdata.end() );
-    rank( rdata );
+    ::relacs::rank( rdata );
     // sum of ranks:
     double R1 = 0.0;
     double R2 = 0.0;

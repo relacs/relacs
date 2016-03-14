@@ -38,7 +38,7 @@ bool fixempty = false;
 void fixData( DataFile &sf )
 {
   Options prevopt;
-  int prevemptylines;
+  int prevemptylines = 0;
 
   while ( sf.readMetaData() > 0 ) {
 
