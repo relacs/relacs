@@ -120,7 +120,7 @@ Metadata support of OutData:
 - OutData::repeat() with pause.
 - OutData::setSampleRate should update timing information in the descriptions? See efish::SAM for the recorded EOD stimulus.
 - Implement oprators =, +, etc. for OutData such that they take descriptions into account!
-  (i.e. in isoresponse, spikeprecision, efish::filestimulus, patchclamp::singlestimulus, OutData::maximize())
+  (i.e. in isoresponse, spikeprecision, efield::beats, efish::filestimulus, patchclamp::singlestimulus, OutData::maximize())
 - Remove most of the OutData constructors that resize the data? You should use *Wave() instead!
 - How should setIntensity() interact with amplitudes and intensities in signal descriptions?
 - Where does setIntensity() get its unit from for descriptions?

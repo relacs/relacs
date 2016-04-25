@@ -114,6 +114,7 @@ public:
 		 const MapD &eodfrequency, const EventData &fishchirps,
 		 bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
   void save( double deltaf, double amplitude, double duration, double pause,
+	     double amamplitude, double amfrequency,
 	     double fishrate, double stimulusrate, int nfft, double eodfreqprec,
 	     const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency,
 	     const EventData &fishchirps, const EventData &playedchirpevents,

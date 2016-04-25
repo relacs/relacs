@@ -44,17 +44,19 @@ Beats::Beats( void )
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addBoolean( "fixeddf", "Keep delta f fixed", false );
   addNumber( "amplitude", "Amplitude", 1.0, 0.1, 1000.0, 0.1, "mV/cm" );
+  addNumber( "amamplitude", "Amplitude of amplitude modulation", 0.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" );
+  addNumber( "amfreq", "Frequency of amplitude modulation", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amamplitude", ">0" );
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
   newSection( "Chirps" );
-  addBoolean( "generatechirps", "Generate chirps", false );
-  addNumber( "chirpsize", "Size of chirp", 100.0, 0.0, 1000.0, 10.0, "Hz" );
-  addNumber( "chirpwidth", "Width of chirp", 0.1, 0.002, 100.0, 0.001, "sec", "ms" );
-  addNumber( "chirpampl", "Amplitude reduction during chirp", 0.0, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
-  addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", 1.0, 0.01, 100.0, 0.01, "", "" );
-  addText( "chirpfrequencies", "Chirp frequencies for each delta f", "" ).setUnit( "Hz" );
-  addText( "chirptimesfile", "File with chirp times", "" ).setStyle( OptWidget::BrowseExisting );
-  addSelection( "chirptimeshuffle", "Order of chirp-time sequences", RangeLoop::sequenceStrings() );
+  addBoolean( "generatechirps", "Generate chirps", false ).setActivation( "amamplitude", "=0" );
+  addNumber( "chirpsize", "Size of chirp", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "amamplitude", "=0" );
+  addNumber( "chirpwidth", "Width of chirp", 0.1, 0.002, 100.0, 0.001, "sec", "ms" ).setActivation( "amamplitude", "=0" );
+  addNumber( "chirpampl", "Amplitude reduction during chirp", 0.0, 0.0, 1.0, 0.01, "1", "%", "%.0f" ).setActivation( "amamplitude", "=0" );
+  addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", 1.0, 0.01, 100.0, 0.01, "", "" ).setActivation( "amamplitude", "=0" );
+  addText( "chirpfrequencies", "Chirp frequencies for each delta f", "" ).setUnit( "Hz" ).setActivation( "amamplitude", "=0" );
+  addText( "chirptimesfile", "File with chirp times", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "amamplitude", "=0" );
+  addSelection( "chirptimeshuffle", "Order of chirp-time sequences", RangeLoop::sequenceStrings() ).setActivation( "amamplitude", "=0" );
   newSection( "Analysis" );
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
@@ -91,6 +93,8 @@ int Beats::main( void )
   double pause = number( "pause" );
   double ramp = number( "ramp" );
   double amplitude = number( "amplitude" );
+  double amamplitude = number( "amamplitude" );
+  double amfreq = number( "amfreq" );
   string deltafrange = text( "deltafrange" );
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
   bool fixeddf = boolean( "fixeddf" );
@@ -152,6 +156,8 @@ int Beats::main( void )
     warning( "Pause is smaller than averagetime. Set it to averagetime for now." );
   }
 
+  if ( amamplitude > 1e-8 )
+    generatechirps = false;
   EventList chirptimes;
   int maxchirptimes = 0;
   if ( generatechirps ) {
@@ -482,14 +488,29 @@ int Beats::main( void )
 	  int n = (int)::rint( duration / p );
 	  if ( n < 1 )
 	    n = 1;
-	  sig.sineWave( n*p, -1.0, stimulusrate, 0.0, 1.0, ramp );
-	  sig.setIdent( "sinewave" );
+	  if ( amamplitude < 1.0e-8 ) {
+	    sig.sineWave( n*p, -1.0, stimulusrate, 0.0, 1.0, ramp );
+	    sig.setIdent( "sinewave" );
+	    sig.setIntensity( amplitude );
+	  }
+	  else {
+	    OutData am;
+	    am.setTrace( FishEField[0] );
+	    am.sineWave( n*p, -1.0, amfreq, 0.75*2.0*M_PI, amamplitude, 0.0 );
+	    am += 1.0;
+	    am.description().setUnit( "Amplitude", "" );
+	    am.description().addNumber( "Intensity", 1.0, "" );
+	    am /= 1.0+amamplitude;
+	    sig.fill( am, stimulusrate );
+	    sig.ramp( ramp );
+	    sig.setIdent( "am-sinewave" );
+	    sig.setIntensity( amplitude*(1.0+amamplitude) );
+	  }
 	  if ( LEDOutput[0] >= 0 )
 	    led.pulseWave( sig.length(), sig.stepsize(), 5.0, 0.0 );
 	}
 	duration = sig.length();
 	sig.setDelay( before );
-	sig.setIntensity( amplitude );
 	signal.push( sig );
 	if ( LEDOutput[0] >= 0 ) {
 	  led.setDelay( before );
@@ -666,7 +687,8 @@ int Beats::main( void )
       else
 	fishchirps.clear();
       P.draw();
-      save( deltaf, amplitude, duration, pause, fishrate, stimulusrate, nfft, eodfreqprec,
+      save( deltaf, amplitude, duration, pause, amamplitude, amfreq,
+	    fishrate, stimulusrate, nfft, eodfreqprec,
 	    eodfrequencies, eodamplitudes, eodfrequency, fishchirps, playedchirptimes,
 	    stimfrequency, chirpheader, split, FileCount );
       FileCount++;
@@ -808,6 +830,7 @@ void Beats::initPlot( double deltaf, double amplitude, double duration,
 
 
 void Beats::save( double deltaf, double amplitude, double duration, double pause,
+		  double amamplitude, double amfrequency,
 		  double fishrate, double stimulusrate, int nfft, double eodfreqprec,
 		  const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency, 
 		  const EventData &fishchirps, const EventData &playedchirpevents,
@@ -819,6 +842,10 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
   header.addNumber( "Delta f", deltaf, "Hz", "%.1f" );
   header.addNumber( "StimulusFrequency", stimulusrate, "Hz", "%.1f" );
   header.addNumber( "Amplitude", amplitude, "mV/cm", "%.3f" );
+  if ( amamplitude > 1.0e-8 ) {
+    header.addNumber( "AMAmplitude", 100.0*amamplitude, "%", "%.0f" );
+    header.addNumber( "AMFrequency", amfrequency, "Hz", "%g" );
+  }
   header.addNumber( "Duration", duration, "sec", "%.3f" );
   header.addNumber( "Pause", pause, "sec", "%.3f" );
   if ( nfft > 0 ) {
