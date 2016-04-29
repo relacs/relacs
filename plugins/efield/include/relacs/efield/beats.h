@@ -39,7 +39,7 @@ namespace efield {
 \class Beats
 \brief [RePro] Play EOD mimicks with optional chirps from a range of automatically set difference frequencies and amplitudes.
 \author Jan Benda
-\version 2.3 (Feb 9, 2015)
+\version 2.4 (Apr 20, 2016)
 \par Options
 - \c Stimulation
     - \c duration=10seconds: Signal duration (\c number)
@@ -49,6 +49,9 @@ namespace efield {
     - \c deltafshuffle=Up: Order of delta f's (\c string)
     - \c fixeddf=false: Keep delta f fixed (\c boolean)
     - \c amplitude=1mV/cm: Amplitude (\c number)
+    - \c amtype=none: Amplitude modulation of signal (\c string)
+    - \c amamplitude=100%: Amplitude of amplitude modulation (\c number)
+    - \c amfreq=1Hz: Frequency of amplitude modulation (\c number)
     - \c repeats=10: Repeats (\c integer)
     - \c fakefish=0Hz: Assume a fish with frequency (\c number)
 - \c Chirps
