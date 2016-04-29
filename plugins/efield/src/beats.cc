@@ -43,7 +43,7 @@ Beats::Beats( void )
   addText( "deltafrange", "Range of delta f's", "10" ).setUnit( "Hz" );
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addBoolean( "fixeddf", "Keep delta f fixed", false );
-  addNumber( "amplitude", "Amplitude", 1.0, 0.1, 1000.0, 0.1, "mV/cm" );
+  addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV/cm" );
   addSelection( "amtype", "Amplitude modulation of signal", "none|sine|rectangular" );
   addNumber( "amamplitude", "Amplitude of amplitude modulation", 1.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amtype", "none", false );
   addNumber( "amfreq", "Frequency of amplitude modulation", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amtype", "none", false );
@@ -284,6 +284,8 @@ int Beats::main( void )
 	  // take EOD from largest peak:
 	  double bigeod = 0.0;
 	  double bigeodf = 0.0;
+	  if ( currentTime() < averagetime )
+	    sleep( averagetime );
 	  for ( int k=0; k<FishEODTraces[0]; k++ ) {
 	    SampleDataF data( 0.0, averagetime, trace( FishEODTrace[0][k] ).stepsize() );
 	    trace( FishEODTrace[0][k] ).copy( currentTime()-averagetime, data );
@@ -562,8 +564,18 @@ int Beats::main( void )
       double signaltime = signalTime();
 
       // meassage:
-      Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
+      Str s = "Delta F:  <b>" + Str( deltaf, "%g" ) + "Hz</b>";
       s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
+      if ( amtype > 0 ) {
+	s += "  <b>";
+	if ( amtype == 2 )
+	  s += "Rectangular";
+	else
+	  s += "Sine";
+	s += "</b> AM";
+	s += "  F:  <b>" + Str( amfreq, "%g" ) + "Hz</b>";
+	s += "  Amplitude: <b>" + Str( 100.0*amamplitude, "%g" ) + "%</b>";
+      }
       if ( generatechirps ) {
 	s += "  Chirps: <b>" + Str( chirpsize, "%g" ) + "Hz @ " + Str( chirpfrequency, "%.2f" ) + "Hz</b>";
 	if ( chirptimes.size() > 1 && chirpsequence >= 0 )
