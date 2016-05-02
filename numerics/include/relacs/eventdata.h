@@ -504,6 +504,11 @@ public:
     /*! Erases the last event. */
   void pop( void );
 
+    /*! Returns a pointer to the buffer with the event times. */
+  inline const double *data( void ) const { return TimeBuffer; };
+    /*! Returns a pointer to the buffer with the event times. */
+  inline double *data( void ) { return TimeBuffer; };
+
     /*! Return in \a all the event times merged (summed up)
         with the ones of \a e. */
   void sum( const EventData &e, EventData &all ) const;
@@ -649,6 +654,11 @@ public:
         between time \a tbegin and time \a tend seconds. */
   void sizeHist( double tbegin, double tend, SampleDataD &hist ) const;
 
+    /*! Returns a pointer to the buffer with the event sizes. */
+  inline const double *sizeData( void ) const { return SizeBuffer; };
+    /*! Returns a pointer to the buffer with the event sizes. */
+  inline double *sizeData( void ) { return SizeBuffer; };
+
     /*! The name for the event widths.
         \sa setWidthName(), widthBuffer(), sizeName(), widthScale(), widthUnit(),
 	widthFormat() */
@@ -720,6 +730,11 @@ public:
     /*! Compute a histogram \a hist over the event widths
         between time \a tbegin and time \a tend seconds. */
   void widthHist( double tbegin, double tend, SampleDataD &hist ) const;
+
+    /*! Returns a pointer to the buffer with the event widths. */
+  inline const double *widthData( void ) const { return WidthBuffer; };
+    /*! Returns a pointer to the buffer with the event sizes. */
+  inline double *widthData( void ) { return WidthBuffer; };
 
     /*! Mean rate of detected events in Hertz. */
   double meanRate( void ) const;
