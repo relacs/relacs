@@ -37,6 +37,7 @@ namespace efield {
 \brief [RePro] Calibrates an attenuator for electric field stimuli.
 \author Jan Benda
 \version 2.2 (Nov 30, 2013)
+\note Intensity for attenuation is interpreted as 0.5 * p-p amplitude
 \note Calibration non-sine EODs has an offset!
 \par Options
 - \c reset=false: Reset calibration? (\c boolean)

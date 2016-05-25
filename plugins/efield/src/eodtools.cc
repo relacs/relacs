@@ -300,7 +300,7 @@ double EODTools::eodAmplitude( const InData &eodd, double tbegin, double tend )
   double troughsize = 0.0;
   for ( int k = 0; k<troughs.size(); k++ )
     troughsize += ( troughs.eventSize( k ) - troughsize )/(k+1);
-  return 0.5*(peaksize - troughsize);
+  return 0.5*(peaksize - troughsize);  // 0.5 * p-p amplitude
 }
 
 
@@ -324,11 +324,11 @@ void EODTools::beatAmplitudes( const InData &eodd, double tbegin, double tend,
 
   upperampl = 0.0;
   uppermean = uppereod.meanSize( tbegin+offset, tend-offset, upperampl );
-  upperampl *= ::sqrt( 2.0 );
+  upperampl *= ::sqrt( 2.0 );  // 0.5 * p-p amplitude for sine wave
 
   lowerampl = 0.0;
   lowermean = lowereod.meanSize( tbegin+offset, tend-offset, lowerampl );
-  lowerampl *= ::sqrt( 2.0 );
+  lowerampl *= ::sqrt( 2.0 );  // 0.5 * p-p amplitude for sine wave
 }
 
 
@@ -354,7 +354,7 @@ double EODTools::beatAmplitude( const InData &eodd, double tbegin, double tend,
   double lowersd = 0.0;
   lowereod.meanSize( tbegin+offset, tend-offset, lowersd );
 
-  return ::sqrt( 2.0 )*0.5*(uppersd + lowersd);
+  return ::sqrt( 2.0 )*0.5*(uppersd + lowersd);  // 0.5 * p-p amplitude
 }
 
 

@@ -74,18 +74,19 @@ public:
     /*! Mean absolute size of eod troughs. */
   double meanTroughs( const InData &data, double tbegin, double tend,
 		      double threshold );
-    /*! Mean eod amplitude from an EOD without beat. */
+    /*! Mean eod amplitude from an EOD without beat (0.5 * p-p amplitude). */
   double eodAmplitude( const InData &data, double tbegin, double tend );
 
     /*! The mean EOD amplitude and beat amplitudes of the beat
         of period \a period and expected contrast \a contrast determined
-        from the standard deviation of the upper and lower EOD amplitudes. */
+        from the standard deviation of the upper and lower EOD amplitudes.
+        upperampl and lowerampl are 0.5*p-p amplitudes. */
   void beatAmplitudes( const InData &eodd, double tbegin, double tend,
 		       double period, double contrast,
 		       double &uppermean, double &upperampl,
 		       double &lowermean, double &lowerampl );
     /*! The amplitude of the beat of period \a period determined
-        from the standard deviation of EOD amplitudes. */
+        from the standard deviation of EOD amplitudes (0.5 * p-p amplitude). */
   double beatAmplitude( const InData &eodd, double tbegin, double tend,
 			double period, double contrast=0.2 );
     /*! The contrast of the beat of period \a period determined
