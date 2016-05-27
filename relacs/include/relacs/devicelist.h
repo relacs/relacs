@@ -363,12 +363,9 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
     dv->Options::read( *deviceopts );
     dv->clearError();
     Device *d = devices.device( ds );
-    if ( d != 0 ) {
+    if ( d != 0 )
       ern = dv->open( *d );
-      if ( dv->isOpen() )
-	ds = "";
-    }
-    if ( ! ds.empty() )
+    else if ( ! ds.empty() )
       ern = dv->open( ds );
     if ( dv->isOpen() ) {
       string es = dv->errorStr();

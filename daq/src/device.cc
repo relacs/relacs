@@ -63,17 +63,17 @@ void Device::initOptions()
 }
 
 
-int Device::open( const string &device)
+int Device::open( const string &device )
 {
-  clearError();
+  setErrorStr( "open(string) with string='" + device + "' not supported" );
   setDeviceFile( device );
   return InvalidDevice;
 }
 
 
-int Device::open( Device &device)
+int Device::open( Device &device )
 {
-  clearError();
+  setErrorStr( "open(device) with device='" + device.deviceClass() + "' not supported" );
   setDeviceFile( device.deviceIdent() );
   return InvalidDevice;
 }

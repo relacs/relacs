@@ -102,6 +102,7 @@ int CS3310DIO::open( DigitalIO &dio)
     }
     else {
       DIO = 0;
+      setErrorStr( "no DIO device assigned" );
       return InvalidDevice;
     }
   }
