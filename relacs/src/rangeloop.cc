@@ -1221,6 +1221,50 @@ void RangeLoop::setSkipNocount( bool skip )
 }
 
 
+void RangeLoop::setSkipNumber( int num )
+{
+  // first and last non-skipped data element:
+  int first = -1;
+  int last = -1;
+  for ( int k=0; k<int(Elements.size()); k++ ) {
+    if ( ! Elements[k].Skip ) {
+      if ( first < 0 )
+	first = k;
+      last = k+1;
+    }
+  }
+  if ( num > last - first )
+    num = last - first;
+
+  // mark used elements as non-skip:
+  int n = 0;
+  int firstnonskip = -1;
+  for ( int i=first; i<last; i++ ) {
+    Elements[i].Skip = ( Elements[i].Count== 0 );
+    if ( ! Elements[i].Skip ) {
+      n++;
+      if ( firstnonskip < 0 )
+	firstnonskip = i;
+    }
+  }
+
+  // fill up:
+  int incr = CurrentIncrement;
+  while ( n < num ) {
+    incr /= 2;
+    int f = firstnonskip;
+    while ( f - incr > first )
+      f -= incr;
+    for ( int k=f; k<last; k+=incr ) {
+      if ( Elements[k].Skip ) {
+	Elements[k].Skip = false;
+	n++;
+      }
+    }
+  }
+}
+
+
 int RangeLoop::next( int pos ) const
 {
   for ( ; pos<size() && count( pos ) <= 0; pos++ );

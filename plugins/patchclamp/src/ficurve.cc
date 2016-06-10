@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.6", "Sep 30, 2015" ),
+  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.7", "Jun 10, 2016" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     IInFac( 1.0 )
@@ -56,6 +56,7 @@ FICurve::FICurve( void )
   newSection( "Analysis" );
   addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
   addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
+  addInteger( "numpoints", "Number of points to measure below maximum firing rate", 0 );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "diffincrement", "Optimize range at current increments below", 0, 0, 10000 );
   addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "diffincrement", ">0" );
@@ -115,6 +116,7 @@ int FICurve::main( void )
   double pause = number( "pause" );
   double fmax = number( "fmax" );
   double vmax = number( "vmax" );
+  int numpoints = integer( "numpoints" );
   double sswidth = number( "sswidth" );
   int diffincrement = number( "diffincrement" );
   double maxratediff = number( "maxratediff" );
@@ -225,6 +227,8 @@ int FICurve::main( void )
   tracePlotSignal( 2.0*duration+delay, delay );
 
   // write stimulus:
+  bool gotmin = false;
+  bool gotmax = false;
   for ( Range.reset(); ! Range && softStop() == 0; ) {
 
     timeStamp();
@@ -316,18 +320,26 @@ int FICurve::main( void )
     // skip currents that evoke firing rates greater than fmax:
     if ( Results[Range.pos()].SSRate > fmax ) {
       Range.setSkipAbove( Range.pos() );
+      gotmax = true;
+      if ( gotmin && numpoints > 0 )
+	Range.setSkipNumber( numpoints );
       Range.noCount();
     }
     // skip currents causing depolarization block:
     if ( Results[Range.pos()].SSRate < 1.0/duration &&
 	 Results[Range.pos()].VSS > vmax ) {
       Range.setSkipAbove( Range.pos() );
+      if ( gotmin && numpoints > 0 )
+	Range.setSkipNumber( numpoints );
       Range.noCount();
     }
     // skip currents too low to make the neuron fire:
     else if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
       double maxcurrent = Range.value() - optimizedimin;
       Range.setSkipBelow( Range.pos( maxcurrent ) - 1 );
+      gotmin = true;
+      if ( gotmax && numpoints > 0 )
+	Range.setSkipNumber( numpoints );
     }
     // skip currents above large enough fon - fss differences:
     if ( Range.finishedBlock() &&

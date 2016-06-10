@@ -521,6 +521,12 @@ class RangeLoop
         \sa setSkip(), setSkipBelow(), setSkipAbove(), setSkipBetween() */
   void setSkipNocount( bool skip=true );
 
+    /*! Within the range o non-skipped data elements leave at minimum
+        \a num data elements non-skipped. Keep the ones that have a
+        count greater than zero, and respect the current increment
+        when selecting the not to be skipped elements. */
+  void setSkipNumber( int num );
+
     /*! Returns the position of the data element next or equal to position \a pos
         with count larger than zero.
         If there isn't any such element, size() is returned. \sa previous() */ 
