@@ -503,7 +503,6 @@ int Beats::main( void )
 	    if ( amtype == 2 ) {
 	      am.rectangleWave( n*p, -1.0, 1.0/amfreq, 0.5/amfreq, 0.0, 2.0*amamplitude );
 	      am -= amamplitude;
-
 	    }
 	    else
 	      am.sineWave( n*p, -1.0, amfreq, 0.75*2.0*M_PI, amamplitude, 0.0 );

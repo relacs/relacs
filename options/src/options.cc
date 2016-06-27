@@ -48,35 +48,18 @@ Options::Options( void )
 
 
 Options::Options( const Options &o )
-  : ParentSection( o.ParentSection ),
-    Name( o.Name ),
-    Type( o.Type ),
-    Include( o.Include ),
-    Flag( o.Flag ),
-    Style( o.Style ),
-    AddOpts( this ),
-    Warning( "" ),
-    Notified( false ),
-    CallNotify( o.CallNotify )
+  : Opt(),
+    Secs(),
+    OwnSecs()
 {
   assign( o );
 }
 
 
 Options::Options( const Options &o, int flags )
-  : ParentSection( 0 ),
-    Name( "" ),
-    Type( "" ),
-    Include( "" ),
-    Flag( 0 ),
-    Style( 0 ),
-    Opt(),
+  : Opt(),
     Secs(),
-    OwnSecs(),
-    AddOpts( this ),
-    Warning( "" ),
-    Notified( false ),
-    CallNotify( true )
+    OwnSecs()
 {
   assign( o, flags );
 }

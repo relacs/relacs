@@ -62,19 +62,19 @@ OutDataInfo::OutDataInfo( const OutDataInfo &signal )
 
 
 OutDataInfo::OutDataInfo( const OutData &signal )
+  : Device( signal.device() ),
+    Channel( signal.channel() ),
+    Trace( signal.trace() ),
+    TraceName( signal.traceName() ),
+    Delay( signal.delay() ),
+    SampleRate( signal.sampleRate() ),
+    Length( signal.length() ),
+    Intensity( signal.intensity() ),
+    Level( signal.level() ),
+    CarrierFreq( signal.carrierFreq() ),
+    Ident( signal.ident() ),
+    Description( signal.description() )
 {
-  Device = signal.device();
-  Channel = signal.channel();
-  Trace = signal.trace();
-  TraceName = signal.traceName();
-  Delay = signal.delay();
-  SampleRate = signal.sampleRate();
-  Length = signal.length();
-  Intensity = signal.intensity();
-  Level = signal.level();
-  CarrierFreq = signal.carrierFreq();
-  Ident = signal.ident();
-  Description = signal.description();
 }
 
 

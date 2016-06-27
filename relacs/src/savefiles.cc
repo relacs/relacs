@@ -551,7 +551,7 @@ void SaveFiles::writeStimulus( void )
   if ( SignalTime < 0.0 )
     return;
 
-  // add to data index:
+  // add to data index for browsing:
   deque<int> traceindex;
   for ( unsigned int k=0; k<TraceFiles.size(); k++ )
     traceindex.push_back( TraceFiles[k].SignalOffset );
@@ -584,6 +584,7 @@ void SaveFiles::writeStimulus( void )
 
   // generate names for all stimulus traces:
   // i.e reproname-type1-type2 ...
+  // where type1, type2 are the types of the stimulus descriptions with leading 'stimulus/' removed.
   deque< string > stimulinames( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
     string sn = StimuliRePro;  // (name of the RePro from which the stimulus was written)
@@ -616,36 +617,32 @@ void SaveFiles::writeStimulus( void )
   // track stimulus traces:
   deque< bool > newstimuli( Stimuli.size(), false );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    // get all stimulus descriptions for the stimulusname reproname-type1-type2:
+    // get all stimulus descriptions for the stimulusname reproname-type1-type2,
+    // i.e. get all stimuli of a given repro and type:
     map < Options, string > &rsd = ReProStimuli[ stimulinames[j] ];
-    // retrieve the corresponding unique identifier:
-    string &rsds = rsd[ Stimuli[j].description() ];   // XXX crash here twice
-    if ( rsds.empty() ) {
+    // retrieve the unique identifier for the specific stimulus description:
+    string &stimulusid = rsd[ Stimuli[j].description() ];   // XXX crash here twice, because of string assignment in Options::operator< (first line)
+    if ( stimulusid.empty() ) {
       // this stimulus description is new:
       newstimuli[j] = true;
       if ( ! Stimuli[j].description().name().empty() )
-	stimulinames[j] = Stimuli[j].description().name();
+	stimulusid = Stimuli[j].description().name();
       // append the number of stimuli in this category to make the name unique:
-      stimulinames[j] += '-' + Str( rsd.size() );
-      rsds = stimulinames[j];
-    }
-    else {
-      // this stimulus already exists, get its unique identifier:
-      stimulinames[j] = rsds;
+      stimulusid += '-' + Str( rsd.size() );
     }
     // set name, type, and some additional information for each stimulus trace:
-    Stimuli[j].description().setName( stimulinames[j] );
-    stimuliref[j].setName( stimulinames[j] );
+    Stimuli[j].description().setName( stimulusid );
+    stimuliref[j].setName( stimulusid );
     if ( Stimuli[j].description().type().empty() ) {
       Stimuli[j].description().setType( "stimulus" );
       stimuliref[j].setType( "stimulus" );
     }
     Stimuli[j].description().insertNumber( "SamplingRate", "", 0.001*Stimuli[j].sampleRate(), "kHz" );
     Stimuli[j].description().insertText( "Modality", "", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
-    stimuliref[j].setInclude( "stimulus-metadata.xml", stimulinames[j] );
+    stimuliref[j].setInclude( "stimulus-metadata.xml", stimulusid );
   }
 
-  // track stimulus name:
+  // track stimulus number per repro:
   int &rc = StimuliReProCount[ StimuliRePro ];
   rc++;
   string stimulirepro = StimuliRePro + "-" + Str( rc );
@@ -704,7 +701,7 @@ void SaveFiles::writeStimulus( void )
 	    if ( ! att->frequencyName().empty() )
 	      StimulusKey.save( *SF, Stimuli[j].carrierFreq() );
 	  }
-	  StimulusKey.save( *SF, stimulinames[j] );
+	  StimulusKey.save( *SF, stimuliref[j].name() );
 	  break;
 	}
       }
@@ -826,10 +823,10 @@ void SaveFiles::writeRePro( void )
 	*XF << "    </section>\n";
       }
       ReProInfo.saveXML( *XF, 0, Options::FirstOnly | Options::DontCloseSection, 1 );
-      StimuliReProCount[ StimuliRePro ] = 0;
       DatasetOpen = true;
     }
 
+    StimuliReProCount[ StimuliRePro ] = 0;
     ReProData = false;
   }
 }
