@@ -355,14 +355,18 @@ int EODDetector::checkEvent( InData::const_iterator first,
   }
 
   // peak:
+  double y1 = *(event-1);
   double y2 = *event;
   double y3 = *(event+1);
-  double y1 = *(event-1);
   double a = y3 - 4.0*y2 + 3.0*y1;
   double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
-  if ( fabs( b ) < 1.0e-5 )
+  if ( fabs( b ) < 1e-8 ) {
+#ifndef NDEBUG
+    printlog( "\"" + ident() + "\" peak discarded because of vanishing b=" + Str( b ) );
+#endif
     return 0;
-  double peakampl = fabs( b ) > 1e-8 ? y1 - 0.25*a*a/b : y1;
+  }
+  double peakampl = fabs( b ) > 1e-8 ? y1 - 0.25*a*a/b : y2;
   /*
   // peak time:
   --event;
@@ -390,6 +394,8 @@ int EODDetector::checkEvent( InData::const_iterator first,
 #ifndef NDEBUG
     printlog( "\"" + ident() + "\" peak discarded because of size=" + Str( size ) );
 #endif
+    if ( AdaptThresh )
+      threshold *= 1.1;
     return 0;
   }
 

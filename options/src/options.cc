@@ -500,11 +500,11 @@ bool operator==( const Options &o, const string &name )
 
 bool operator<( const Options &o1, const Options &o2 )
 {
-  int s1 = o1.size();
-  int s2 = o2.size();
-  if ( s1 < s2 )
+  int ps1 = o1.Opt.size();
+  int ps2 = o2.Opt.size();
+  if ( ps1 < ps2 )
     return true;
-  if ( s1 > s2 )
+  if ( ps1 > ps2 )
     return false;
   for ( Options::const_iterator p1 = o1.begin(), p2 = o2.begin();
 	p1 != o1.end() && p2 != o2.end();
@@ -518,6 +518,12 @@ bool operator<( const Options &o1, const Options &o2 )
     else if ( (*p1).text() > (*p2).text() )
       return false;
   }
+  int ss1 = o1.Secs.size();
+  int ss2 = o2.Secs.size();
+  if ( ss1 < ss2 )
+    return true;
+  if ( ss1 > ss2 )
+    return false;
   for ( Options::const_section_iterator sp1 = o1.sectionsBegin(),
 	  sp2 = o2.sectionsBegin();
 	sp1 != o1.sectionsEnd() && sp2 != o2.sectionsEnd();

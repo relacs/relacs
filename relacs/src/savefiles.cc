@@ -619,12 +619,13 @@ void SaveFiles::writeStimulus( void )
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
     // get all stimulus descriptions for the stimulusname reproname-type1-type2,
     // i.e. get all stimuli of a given repro and type:
-    map < Options, string > &rsd = ReProStimuli[ stimulinames[j] ];
+    map< Options, string > &rsd = ReProStimuli[ stimulinames[j] ];
     // retrieve the unique identifier for the specific stimulus description:
-    string &stimulusid = rsd[ Stimuli[j].description() ];   // XXX crash here twice, because of string assignment in Options::operator< (first line)
+    string &stimulusid = rsd[ Stimuli[j].description() ];
     if ( stimulusid.empty() ) {
       // this stimulus description is new:
       newstimuli[j] = true;
+      stimulusid = stimulinames[j];
       if ( ! Stimuli[j].description().name().empty() )
 	stimulusid = Stimuli[j].description().name();
       // append the number of stimuli in this category to make the name unique:
