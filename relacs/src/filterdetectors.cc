@@ -1433,22 +1433,26 @@ void FilterData::autoConfigure( double duration )
 {
   FilterDetector->lock();
   if ( FilterDetector->type() & Filter::EventInput ) {
-    double tend = InEvents[0].rangeBack();
-    double tbegin = tend - duration;
-    if ( FilterDetector->type() & Filter::MultipleTraces )
-      FilterDetector->autoConfigure( InEvents, tbegin, tend );
-    else
-      FilterDetector->autoConfigure( InEvents[0], tbegin, tend );
+    if ( InEvents.size() > 0 ) {
+      double tend = InEvents[0].rangeBack();
+      double tbegin = tend - duration;
+      if ( FilterDetector->type() & Filter::MultipleTraces )
+	FilterDetector->autoConfigure( InEvents, tbegin, tend );
+      else
+	FilterDetector->autoConfigure( InEvents[0], tbegin, tend );
+    }
   }
   else {
-    double tend = InTraces.currentTime();
-    double tbegin = tend - duration;
-    if ( tbegin < InTraces[0].minTime() )
-      tbegin = InTraces[0].minTime();
-    if ( FilterDetector->type() & Filter::MultipleTraces )
-      FilterDetector->autoConfigure( InTraces, tbegin, tend );
-    else
-      FilterDetector->autoConfigure( InTraces[0], tbegin, tend );
+    if ( InTraces.size() > 0 ) {
+      double tend = InTraces.currentTime();
+      double tbegin = tend - duration;
+      if ( tbegin < InTraces[0].minTime() )
+	tbegin = InTraces[0].minTime();
+      if ( FilterDetector->type() & Filter::MultipleTraces )
+	FilterDetector->autoConfigure( InTraces, tbegin, tend );
+      else
+	FilterDetector->autoConfigure( InTraces[0], tbegin, tend );
+    }
   }
   FilterDetector->unlock();
 }
@@ -1458,16 +1462,20 @@ void FilterData::autoConfigure( double tbegin, double tend )
 {
   FilterDetector->lock();
   if ( FilterDetector->type() & Filter::EventInput ) {
-    if ( FilterDetector->type() & Filter::MultipleTraces )
-      FilterDetector->autoConfigure( InEvents, tbegin, tend );
-    else
-      FilterDetector->autoConfigure( InEvents[0], tbegin, tend );
+    if ( InEvents.size() > 0 ) {
+      if ( FilterDetector->type() & Filter::MultipleTraces )
+	FilterDetector->autoConfigure( InEvents, tbegin, tend );
+      else
+	FilterDetector->autoConfigure( InEvents[0], tbegin, tend );
+    }
   }
   else {
-    if ( FilterDetector->type() & Filter::MultipleTraces )
-      FilterDetector->autoConfigure( InTraces, tbegin, tend );
-    else
-      FilterDetector->autoConfigure( InTraces[0], tbegin, tend );
+    if ( InTraces.size() > 0 ) {
+      if ( FilterDetector->type() & Filter::MultipleTraces )
+	FilterDetector->autoConfigure( InTraces, tbegin, tend );
+      else
+	FilterDetector->autoConfigure( InTraces[0], tbegin, tend );
+    }
   }
   FilterDetector->unlock();
 }

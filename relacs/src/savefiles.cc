@@ -538,7 +538,8 @@ void SaveFiles::save( const OutList &signal )
 
 void SaveFiles::writeStimulus( void )
 {
-  // only called by saveTraces().
+  // only called by saveTraces()
+  // with the SaveMutex locked.
 
   //  cerr << "SaveFiles::writeStimulus(): Stimuli.size()=" << Stimuli.size()
   //       << ", saving=" << isSaving() << "\n";
@@ -618,7 +619,7 @@ void SaveFiles::writeStimulus( void )
     // get all stimulus descriptions for the stimulusname reproname-type1-type2:
     map < Options, string > &rsd = ReProStimuli[ stimulinames[j] ];
     // retrieve the corresponding unique identifier:
-    string &rsds = rsd[ Stimuli[j].description() ];
+    string &rsds = rsd[ Stimuli[j].description() ];   // XXX crash here twice
     if ( rsds.empty() ) {
       // this stimulus description is new:
       newstimuli[j] = true;
