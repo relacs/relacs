@@ -67,6 +67,10 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   TimeOffs = 0.0;
   Offset = 0.0;
 
+  DoSignalLength = 0.0;
+  DoSignalOffset = 0.0;
+  DoSignalTime = -1.0;
+
   AutoOn = true;
   AutoFixed = false;
   AutoTime = 0.1;
@@ -521,7 +525,19 @@ void PlotTrace::plot( void )
   // get data:
   lock();
   getData();
+  double sigtime = signalTime();
+  if ( sigtime < 0.0 )
+    sigtime = 0.0;
   unlock();
+
+  // delayed setPlotSignal():
+  if ( DoSignalTime >= 0.0 && DoSignalTime <= currentTime() ) {
+    if ( DoSignalLength > 0.0 )
+      setPlotSignal( DoSignalLength, DoSignalOffset );
+    else
+      setPlotSignal();
+    DoSignalTime = -1.0;
+  }
 
   if ( PlotChanged ) {
     init();
@@ -534,9 +550,6 @@ void PlotTrace::plot( void )
   double tfac = 1000.0;
   double leftwin = 0.0;
   double rightwin = tfac * TimeWindow;
-  double sigtime = signalTime();
-  if ( sigtime < 0.0 )
-    sigtime = 0.0;
   if ( ViewMode == SignalView ) {
     // offset fixed at signalTime():
     leftwin = -tfac * TimeOffs;
@@ -795,6 +808,26 @@ void PlotTrace::setPlotOn( bool on )
 void PlotTrace::setPlotOff( void )
 {
   setPlotOn( false );
+}
+
+
+void PlotTrace::setPlotNextSignal( double length, double offs )
+{
+  DoSignalLength = length;
+  DoSignalOffset = offs;
+  lock();
+  DoSignalTime = currentTime();
+  unlock();
+}
+
+
+void PlotTrace::setPlotNextSignal( void )
+{
+  DoSignalLength = -1.0;
+  DoSignalOffset = -1.0;
+  lock();
+  DoSignalTime = currentTime();
+  unlock();
 }
 
 

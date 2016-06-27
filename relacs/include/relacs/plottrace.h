@@ -70,10 +70,19 @@ public:
   void setPlotOn( bool on=true );
     /*! Switch plotting of raw traces off. */
   void setPlotOff( void );
-    /*! Plot raw traces relative to signal in a window of width \a length seconds
-        and the start of the signal \a offs seconds from the left margin. */
+    /*! Starting with the next stimulus, plot raw traces relative to
+        signal in a window of width \a length seconds and the start of
+        the signal \a offs seconds from the left margin. */
+  void setPlotNextSignal( double length, double offs=0.0 );
+    /*! Starting with the next stimulus, plot raw traces relative to
+        signal while leaving the window size unchanged. */
+  void setPlotNextSignal( void );
+    /*! Starting immediately, plot raw traces relative to signal in a
+        window of width \a length seconds and the start of the signal
+        \a offs seconds from the left margin. */
   void setPlotSignal( double length, double offs=0.0 );
-    /*! Plot raw traces relative to signal while leaving the window size unchanged. */
+    /*! Starting immediately, plot raw traces relative to signal while
+        leaving the window size unchanged. */
   void setPlotSignal( void );
     /*! Plot raw traces continuously in a window of width \a length seconds. */
   void setPlotContinuous( double length );
@@ -213,6 +222,10 @@ private:
   QTime CenterTime;
 
   bool Plotting;
+
+  double DoSignalLength;
+  double DoSignalOffset;
+  double DoSignalTime;
 
   bool AutoOn;
   bool AutoFixed;

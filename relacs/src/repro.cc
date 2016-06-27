@@ -752,14 +752,14 @@ void RePro::tracePlotOff( void )
 
 void RePro::tracePlotSignal( double length, double offs )
 {
-  RW->PT->setPlotSignal( length, offs );
+  RW->PT->setPlotNextSignal( length, offs );
 }
 
 
 
 void RePro::tracePlotSignal( void )
 {
-  RW->PT->setPlotSignal();
+  RW->PT->setPlotNextSignal();
 }
 
 
