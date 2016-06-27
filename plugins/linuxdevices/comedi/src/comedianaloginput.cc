@@ -553,57 +553,56 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
     switch ( retVal ) {
     case 1: // unsupported trigger in *_src:
       if ( cmd.start_src != testCmd.start_src )
-	traces.addErrorStr( "unsupported trigger in start_src" );
+	traces.addErrorStr( "unsupported trigger " + Str(testCmd.start_src) + " in start_src" );
       if ( cmd.scan_begin_src != testCmd.scan_begin_src )
-	traces.addErrorStr( "unsupported trigger in scan_begin_src" );
+	traces.addErrorStr( "unsupported trigger " + Str(testCmd.scan_begin_src) + " in scan_begin_src" );
       if ( cmd.convert_src != testCmd.convert_src )
-	traces.addErrorStr( "unsupported trigger in convert_src" );
+	traces.addErrorStr( "unsupported trigger " + Str(testCmd.convert_src) + " in convert_src" );
       if ( cmd.scan_end_src != testCmd.scan_end_src )
-	traces.addErrorStr( "unsupported trigger in scan_end_src" );
+	traces.addErrorStr( "unsupported trigger " + Str(testCmd.scan_end_arg) + " in scan_end_src" );
       if ( cmd.stop_src != testCmd.stop_src )
-	traces.addErrorStr( "unsupported trigger in stop_src" );
+	traces.addErrorStr( "unsupported trigger " + Str(testCmd.stop_src) + " in stop_src" );
       break;
     case 2: // invalid trigger in *_src:
       if ( cmd.start_src != testCmd.start_src )
-	traces.addErrorStr( "invalid trigger in start_src" );
+	traces.addErrorStr( "invalid trigger " + Str(testCmd.start_src) + " in start_src" );
       if ( cmd.scan_begin_src != testCmd.scan_begin_src )
-	traces.addErrorStr( "invalid trigger in scan_begin_src" );
+	traces.addErrorStr( "invalid trigger " + Str(testCmd.scan_begin_src) + " in scan_begin_src" );
       if ( cmd.convert_src != testCmd.convert_src )
-	traces.addErrorStr( "invalid trigger in convert_src" );
+	traces.addErrorStr( "invalid trigger " + Str(testCmd.convert_src) + " in convert_src" );
       if ( cmd.scan_end_src != testCmd.scan_end_src )
-	traces.addErrorStr( "invalid trigger in scan_end_src" );
+	traces.addErrorStr( "invalid trigger " + Str(testCmd.scan_end_src) + " in scan_end_src" );
       if ( cmd.stop_src != testCmd.stop_src )
-	traces.addErrorStr( "invalid trigger in stop_src" );
+	traces.addErrorStr( "invalid trigger " + Str(testCmd.stop_src) + " in stop_src" );
       break;
     case 3: // *_arg out of range:
       if ( cmd.start_arg != testCmd.start_arg )
-	traces.addErrorStr( "start_arg out of range" );
+	traces.addErrorStr( "start_arg " + Str(testCmd.start_arg) + " out of range" );
       if ( cmd.scan_begin_arg != testCmd.scan_begin_arg ) {
-	cerr << "! warning in ComediAnalogInput::setupCommand() -> "
-	     << "requested sampling period of " << testCmd.scan_begin_arg
-	     << "ns smaller than supported! max " << cmd.scan_begin_arg
-	     << "ns sampling interval possible." << endl;
+	traces.addErrorStr( "requested sampling period of " + Str( testCmd.scan_begin_arg )
+			  + "ns smaller than supported! min " + Str( cmd.scan_begin_arg )
+			  + "ns sampling interval possible." );
 	traces.addError( DaqError::InvalidSampleRate );    
 	traces.setSampleRate( 1.0e9 / cmd.scan_begin_arg );
       }
       if ( cmd.convert_arg != testCmd.convert_arg )
-	traces.addErrorStr( "convert_arg out of range" );
+	traces.addErrorStr( "convert_arg " + Str(testCmd.convert_arg) + " out of range" );
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )
-	traces.addErrorStr( "scan_end_arg out of range" );
+	traces.addErrorStr( "scan_end_arg out " + Str(testCmd.scan_end_arg) + " of range" );
       if ( cmd.stop_arg != testCmd.stop_arg )
-	traces.addErrorStr( "stop_arg out of range" );
+	traces.addErrorStr( "stop_arg " + Str(testCmd.stop_arg) + " out of range" );
       break;
     case 4: // adjusted *_arg:
       if ( cmd.start_arg != testCmd.start_arg )
-	traces.addErrorStr( "start_arg adjusted" );
+	traces.addErrorStr( "start_arg adjusted to " + Str(cmd.start_arg) );
       if ( cmd.scan_begin_arg != testCmd.scan_begin_arg )
 	traces.setSampleRate( 1.0e9 / cmd.scan_begin_arg );
       if ( cmd.convert_arg != testCmd.convert_arg )
-	traces.addErrorStr( "convert_arg adjusted" );
+	traces.addErrorStr( "convert_arg adjusted to " + Str(cmd.convert_arg) );
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )
-	traces.addErrorStr( "scan_end_arg adjusted" );
+	traces.addErrorStr( "scan_end_arg adjusted to " + Str(cmd.scan_end_arg) );
       if ( cmd.stop_arg != testCmd.stop_arg )
-	traces.addErrorStr( "stop_arg adjusted" );
+	traces.addErrorStr( "stop_arg adjusted to " + Str(cmd.stop_arg) );
       break;
     case 5: // invalid chanlist:
       traces.addErrorStr( "invalid chanlist" );

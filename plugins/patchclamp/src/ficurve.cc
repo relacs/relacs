@@ -768,7 +768,7 @@ void FICurve::Data::analyze( int count, const InData &intrace,
   Spikes.push( spikes, sigtime-delay, sigtime+2.0*duration, sigtime );
 
   // firing frequency:
-  Spikes.frequency( Rate, RateSD );
+  Spikes.frequency( Rate, RateSD, 0.0 );
 
   PreRate = Spikes.rate( -delay, 0.0, &PreRateSD );
   SSRate = Spikes.frequency( duration-sswidth, duration, SSRateSD );

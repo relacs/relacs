@@ -762,57 +762,56 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
     switch ( retVal ) {
     case 1: // unsupported trigger in *_src:
       if ( cmd.start_src != testCmd.start_src )
-	sigs.addErrorStr( "unsupported trigger in start_src" );
+	sigs.addErrorStr( "unsupported trigger " + Str(testCmd.start_src) + " in start_src" );
       if ( cmd.scan_begin_src != testCmd.scan_begin_src )
-	sigs.addErrorStr( "unsupported trigger in scan_begin_src" );
+	sigs.addErrorStr( "unsupported trigger " + Str(testCmd.scan_begin_src) + " in scan_begin_src" );
       if ( cmd.convert_src != testCmd.convert_src )
-	sigs.addErrorStr( "unsupported trigger in convert_src" );
+	sigs.addErrorStr( "unsupported trigger " + Str(testCmd.convert_src) + " in convert_src" );
       if ( cmd.scan_end_src != testCmd.scan_end_src )
-	sigs.addErrorStr( "unsupported trigger in scan_end_src" );
+	sigs.addErrorStr( "unsupported trigger " + Str(testCmd.scan_end_arg) + " in scan_end_src" );
       if ( cmd.stop_src != testCmd.stop_src )
-	sigs.addErrorStr( "unsupported trigger in stop_src" );
+	sigs.addErrorStr( "unsupported trigger " + Str(testCmd.stop_src) + " in stop_src" );
       break;
     case 2: // invalid trigger in *_src:
       if ( cmd.start_src != testCmd.start_src )
-	sigs.addErrorStr( "invalid trigger in start_src" );
+	sigs.addErrorStr( "invalid trigger " + Str(testCmd.start_src) + " in start_src" );
       if ( cmd.scan_begin_src != testCmd.scan_begin_src )
-	sigs.addErrorStr( "invalid trigger in scan_begin_src" );
+	sigs.addErrorStr( "invalid trigger " + Str(testCmd.scan_begin_src) + " in scan_begin_src" );
       if ( cmd.convert_src != testCmd.convert_src )
-	sigs.addErrorStr( "invalid trigger in convert_src" );
+	sigs.addErrorStr( "invalid trigger " + Str(testCmd.convert_src) + " in convert_src" );
       if ( cmd.scan_end_src != testCmd.scan_end_src )
-	sigs.addErrorStr( "invalid trigger in scan_end_src" );
+	sigs.addErrorStr( "invalid trigger " + Str(testCmd.scan_end_src) + " in scan_end_src" );
       if ( cmd.stop_src != testCmd.stop_src )
-	sigs.addErrorStr( "invalid trigger in stop_src" );
+	sigs.addErrorStr( "invalid trigger " + Str(testCmd.stop_src) + " in stop_src" );
       break;
     case 3: // *_arg out of range:
       if ( cmd.start_arg != testCmd.start_arg )
-	sigs.addErrorStr( "start_arg out of range" );
+	sigs.addErrorStr( "start_arg " + Str(testCmd.start_arg) + " out of range" );
       if ( cmd.scan_begin_arg != testCmd.scan_begin_arg ) {
-	cerr << "! error in ComediAnalogOutput::setupCommand() -> "
-	     << "requested sampling period of " << testCmd.scan_begin_arg
-	     << "ns smaller than supported! max " << cmd.scan_begin_arg
-	     << "ns sampling interval possible." << endl;
+	sigs.addErrorStr( "requested sampling period of " + Str( testCmd.scan_begin_arg )
+			  + "ns smaller than supported! min " + Str( cmd.scan_begin_arg )
+			  + "ns sampling interval possible." );
 	sigs.addError( DaqError::InvalidSampleRate );    
 	sigs.setSampleRate( 1.0e9 / cmd.scan_begin_arg );
       }
       if ( cmd.convert_arg != testCmd.convert_arg )
-	sigs.addErrorStr( "convert_arg out of range" );
+	sigs.addErrorStr( "convert_arg " + Str(testCmd.convert_arg) + " out of range" );
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )
-	sigs.addErrorStr( "scan_end_arg out of range" );
+	sigs.addErrorStr( "scan_end_arg out " + Str(testCmd.scan_end_arg) + " of range" );
       if ( cmd.stop_arg != testCmd.stop_arg )
-	sigs.addErrorStr( "stop_arg out of range" );
+	sigs.addErrorStr( "stop_arg " + Str(testCmd.stop_arg) + " out of range" );
       break;
     case 4: // adjusted *_arg:
       if ( cmd.start_arg != testCmd.start_arg )
-	sigs.addErrorStr( "start_arg adjusted" );
+	sigs.addErrorStr( "start_arg adjusted to " + Str(cmd.start_arg) );
       if ( cmd.scan_begin_arg != testCmd.scan_begin_arg )
 	sigs.setSampleRate( 1.0e9 / cmd.scan_begin_arg );
       if ( cmd.convert_arg != testCmd.convert_arg )
-	sigs.addErrorStr( "convert_arg adjusted" );
+	sigs.addErrorStr( "convert_arg adjusted to " + Str(cmd.convert_arg) );
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )
-	sigs.addErrorStr( "scan_end_arg adjusted" );
+	sigs.addErrorStr( "scan_end_arg adjusted to " + Str(cmd.scan_end_arg) );
       if ( cmd.stop_arg != testCmd.stop_arg )
-	sigs.addErrorStr( "stop_arg adjusted" );
+	sigs.addErrorStr( "stop_arg adjusted to " + Str(cmd.stop_arg) );
       break;
     case 5: // invalid chanlist:
       for ( int k=0; k<sigs.size(); k++ ) {
