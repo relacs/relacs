@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.7", "Jun 10, 2016" ),
+  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.8", "Jun 27, 2016" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     IInFac( 1.0 )
@@ -58,6 +58,7 @@ FICurve::FICurve( void )
   addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
   addInteger( "numpoints", "Number of points to measure below maximum firing rate", 0 );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
+  addBoolean( "ignorenoresponse", "Do not include trials without response", true );
   addInteger( "diffincrement", "Optimize range at current increments below", 0, 0, 10000 );
   addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "diffincrement", ">0" );
 
@@ -118,6 +119,7 @@ int FICurve::main( void )
   double vmax = number( "vmax" );
   int numpoints = integer( "numpoints" );
   double sswidth = number( "sswidth" );
+  bool ignorenoresponse = boolean( "ignorenoresponse" );
   int diffincrement = number( "diffincrement" );
   double maxratediff = number( "maxratediff" );
 
@@ -315,7 +317,7 @@ int FICurve::main( void )
     Results[Range.pos()].analyze( Range.count(), trace( 0 ),
 				  events( SpikeEvents[0] ), 
 				  CurrentTrace[0] >= 0 ? &trace( CurrentTrace[0] ) : 0,
-				  IInFac, delay, duration, sswidth );
+				  IInFac, delay, duration, sswidth, ignorenoresponse );
 
     // skip currents that evoke firing rates greater than fmax:
     if ( Results[Range.pos()].SSRate > fmax ) {
@@ -724,7 +726,8 @@ FICurve::Data::Data( void )
 void FICurve::Data::analyze( int count, const InData &intrace,
 			     const EventData &spikes,
 			     const InData *incurrent, double iinfac,
-			     double delay, double duration, double sswidth )
+			     double delay, double duration, double sswidth,
+			     bool ignorenoresponse )
 {
   // initialize:
   if ( Rate.empty() ) {
@@ -768,10 +771,17 @@ void FICurve::Data::analyze( int count, const InData &intrace,
   Spikes.push( spikes, sigtime-delay, sigtime+2.0*duration, sigtime );
 
   // firing frequency:
-  Spikes.frequency( Rate, RateSD, 0.0 );
+  if ( ignorenoresponse ) {
+    Spikes.frequency( Rate, RateSD );
+    SSRate = Spikes.frequency( duration-sswidth, duration, SSRateSD );
+  }
+  else {
+    Spikes.frequency( Rate, RateSD, 0.0 );
+    SSRate = Rate.mean( duration-sswidth, duration );
+    SSRateSD = RateSD.mean( duration-sswidth, duration );
+  }
 
   PreRate = Spikes.rate( -delay, 0.0, &PreRateSD );
-  SSRate = Spikes.frequency( duration-sswidth, duration, SSRateSD );
   MeanRate = Spikes.rate( 0.0, duration, &MeanRateSD );
   SpikeCount = Spikes.count( 0.0, duration, &SpikeCountSD );
 

@@ -38,7 +38,7 @@ namespace patchclamp {
 \class FICurve
 \brief [RePro] F-I curve measured in current-clamp
 \author Jan Benda
-\version 1.7 (Jun 10, 2016)
+\version 1.8 (Jun 27, 2016)
 \par Screenshot
 \image html ficurve.png
 
@@ -65,6 +65,7 @@ namespace patchclamp {
     - \c vmax=-50mV: Maximum steady-state potential (\c number)
     - \c numpoints=0: Number of points to measure below maximum firing rate (\c integer)
     - \c sswidth=50ms: Window length for steady-state analysis (\c number)
+    - \c ignorenoresponse=true: Do not include trials without response (\c boolean)
     - \c diffincrement=0: Optimize range at current increments below (\c integer)
     - \c maxratediff=10Hz: Maximum difference between onset and steady-state firing rate for optimization (\c number)
 */
@@ -113,7 +114,7 @@ protected:
     void analyze( int count, const InData &intrace,
 		  const EventData &spikes, const InData *incurrent,
 		  double iinfac, double delay,
-		  double duration, double sswidth );
+		  double duration, double sswidth, bool ignorenoresponse );
     double DC;
     double I;
     double VRest;
