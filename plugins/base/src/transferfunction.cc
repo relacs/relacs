@@ -27,7 +27,7 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "base", "Jan Benda", "1.6", "Dec 1, 2014" )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.7", "Jun 28, 2016" )
 {
   // options:
   newSection( "Stimulus" );
@@ -37,6 +37,7 @@ TransferFunction::TransferFunction( void )
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 100000.0, 1.0, "", "" );
   addNumber( "clip", "Multiple of amplitude where to clip signal", 4.0, 1.0, 1000.0, 0.1, "", "" );
   addNumber( "intensity", "Intensity for an attenuator", 1.0, -10000.0, 10000.0, 0.1, "", "" );
+  addNumber( "fmin", "Minimum frequency", 0.0, 0.0, 10000000.0, 100.0, "Hz", "Hz" );
   addNumber( "fmax", "Maximum frequency", 1000.0, 0.0, 10000000.0, 100.0, "Hz", "Hz" );
   addNumber( "duration", "Duration of noise stimulus", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
   addNumber( "pause", "Length of pause inbetween successive stimuli", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
@@ -112,6 +113,7 @@ int TransferFunction::main( void )
   double amplitude = number( "amplitude" );
   double clip = number( "clip" );
   double intensity = number( "intensity" );
+  double fmin = number( "fmin" );
   double fmax = number( "fmax" );
   double duration = number( "duration" );
   double pause = number( "pause" );
@@ -144,9 +146,14 @@ int TransferFunction::main( void )
     return Failed;
   }
   if ( fmax > 0.5*trace( intrace ).sampleRate()+1.0e-8 ) {
-    warning( "Maximum frequency " + Str( fmax, 0, 10, 'g' ) +
+    warning( "Maximum frequency " + Str( fmax ) +
 	     "Hz must be less than or equal to half the sampling rate " +
-	     Str( trace( intrace ).sampleRate(), 0, 10, 'g' ) + "Hz!" );
+	     Str( trace( intrace ).sampleRate() ) + "Hz!" );
+    return Failed;
+  }
+  if ( fmin >= fmax ) {
+    warning( "Minimum frequency " + Str( fmin ) + 
+	     "Hz must be smaller than maximum frequency " + Str( fmax ) + "Hz" );
     return Failed;
   }
   if ( trace( intrace ).interval( SpecSize ) > 0.25*duration ) {
@@ -192,7 +199,7 @@ int TransferFunction::main( void )
 
   // signal:
   OutData signal;
-  signal.setIdent( "WhiteNoise, fmax=" + Str( fmax ) + "Hz" );
+  signal.setIdent( "WhiteNoise, " + Str( fmin ) + " - " + Str( fmax ) + "Hz" );
   signal.setTrace( outtrace );
   signal.setIntensity( intensity );
 
@@ -212,14 +219,14 @@ int TransferFunction::main( void )
 	count++ ) {
 
     Str s = "Amplitude <b>" + Str( amplitude ) + " " + outTrace( outtrace ).unit() +"</b>";
-    s += ",  Frequency <b>" + Str( fmax, "%.0f" ) + " Hz</b>";
+    s += ",  Frequency <b>" + Str( fmin, "%.0f" ) + " - " + Str( fmax, "%.0f" ) + " Hz</b>";
     s += ",  Loop <b>" + Str( count+1 ) + "</b>";
     if ( repeats > 0 )
       s += " of <b>" + Str( repeats ) + "</b>";
     message( s );
 
     signal.clear();
-    signal.noiseWave( duration, -1.0, fmax, amplitude );
+    signal.bandNoiseWave( duration, -1.0, fmin, fmax, amplitude );
     int c = ::relacs::clip( -clip*amplitude, clip*amplitude, signal );
     printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points." );
     signal.back() = 0.0;
@@ -255,7 +262,7 @@ int TransferFunction::main( void )
     P.lock();
     P[0].clear();
     if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
-      P[0].setXRange( 0.0, fmax );
+      P[0].setXRange( fmin, fmax );
     if ( plotcoherence ) {
       if ( plotstdevs ) {
 	P[0].plot( MeanCoherence+StdevCoherence, 1.0, Plot::Yellow, 1, Plot::Solid );
@@ -273,7 +280,7 @@ int TransferFunction::main( void )
     P[0].plot( MeanGain, 1.0, Plot::Red, 3, Plot::Solid );
     P[1].clear();
     if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
-      P[1].setXRange( 0.0, fmax );
+      P[1].setXRange( fmin, fmax );
     P[1].plotHLine( 0.0, Plot::White, 2 );
     if ( plotstdevs ) {
       P[1].plot( MeanPhase+StdevPhase, 1.0, Plot::Blue, 1, Plot::Solid );

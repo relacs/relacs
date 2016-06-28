@@ -31,9 +31,9 @@ namespace base {
 
 /*!
 \class TransferFunction
-\brief [RePro] Measures the transfer function with white-noise stimuli.
+\brief [RePro] Measures the transfer function with band-limited Gaussian white-noise stimuli.
 \author Jan Benda
-\version 1.6 (Dec 1, 2014)
+\version 1.7 (Jun 28, 2016)
 \par Screenshot
 \image html transferfunction.png
 
@@ -45,6 +45,7 @@ namespace base {
     - \c amplitude=1V: Amplitude (\c number)
     - \c clip=4: Multiple of amplitude where to clip signal (\c number)
     - \c intensity=1: Intensity for an attenuator (\c number)
+    - \c fmin=0Hz: Minimum frequency (\c number)
     - \c fmax=1000Hz: Maximum frequency (\c number)
     - \c duration=1000ms: Duration of noise stimulus (\c number)
     - \c pause=1000ms: Length of pause inbetween successive stimuli (\c number)
