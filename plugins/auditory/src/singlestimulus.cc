@@ -1024,9 +1024,9 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
 }
 
 
-void SingleStimulus::notifyDialog( const Parameter &p )
+void SingleStimulus::notifyDialog( const Options &opt )
 {
-  //  cerr << p << '\n';
+  //  cerr << "SIGNLESTIMULUS GOT\n" << opt << '\n';
 }
 
 

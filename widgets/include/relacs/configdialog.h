@@ -309,10 +309,11 @@ void ConfigDialog::dialog( void )
   virtual void help( void );
 
     /*! This slot is called whenever a value in the dialog is changed.
-        \a p contains the name of the corresponding Parameter and the
-	new value from the widget.
+        The values of all the options \a opt from the dialog are set to the
+	current values visible in the dialog.
+	The changed value has the Parameter::changedFlag() set.
 	The default implementation does nothing. */
-  virtual void notifyDialog( const Parameter &p );
+  virtual void notifyDialog( const Options &opt );
 
 signals:
 
@@ -335,8 +336,14 @@ protected:
 	to inform ConfigDialog about the status of the help window. */
   void setHelpOpen( bool open=true );
 
+  Options DialogOptions;
+
 
 protected slots:
+
+    /*! This slot is called whenever a value in the dialog is changed.
+        Read the value from \a p to \a DialogOptions and call notifyDialog(). */
+  void notificationFromDialog( const Parameter &p );
 
     /*! Informs the class that the dialog window is closed. */
   virtual void dClosed( int r );

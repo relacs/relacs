@@ -841,6 +841,7 @@ void RePro::dialog( void )
     Options::addStyles( OptWidget::LabelGreen, OverwriteFlag );
     Options::delStyles( OptWidget::LabelGreen, CurrentFlag );
     Options::addStyles( OptWidget::LabelRed, CurrentFlag );
+    DialogOptions = *this;
     string tabhotkeys = "oarc";
     if ( dialogHeader() )
       tabhotkeys += 'h';
@@ -848,7 +849,7 @@ void RePro::dialog( void )
 				       dialogReadOnlyMask(), dialogStyle(),
 				       mutex(), &tabhotkeys );
     connect( roptw, SIGNAL( valueChanged( const Parameter& ) ),
-	     this, SLOT( notifyDialog( const Parameter& ) ) );
+	     this, SLOT( notificationFromDialog( const Parameter& ) ) );
     if ( ! roptw->tabs() ) {
       roptw->setMargins( 2 );
       od->addSeparator();

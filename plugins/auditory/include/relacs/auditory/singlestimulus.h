@@ -131,9 +131,10 @@ public:
 public slots:
 
     /*! This slot is called whenever a value in the dialog is changed.
-        \a p contains the name of the corresponding Parameter and the
-	new value from the widget. */
-  virtual void notifyDialog( const Parameter &p );
+        The values of all the options \a opt from the dialog are set to the
+	current values visible in the dialog.
+	The changed value has the Parameter::changedFlag() set. */
+  virtual void notifyDialog( const Options &opt );
 
 
 protected:

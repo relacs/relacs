@@ -116,6 +116,7 @@ void ConfigDialog::setDate( const string &date )
 
 OptWidget *ConfigDialog::dialogOptions( OptDialog *od, string *tabhotkeys )
 {
+  DialogOptions = *this;
   if ( dialogHeader() && tabhotkeys != 0 )
     *tabhotkeys += 'h';
   OptWidget *ow = od->addOptions( *this, DialogSelectMask, DialogROMask,
@@ -454,7 +455,7 @@ void ConfigDialog::dialog( void )
     string tabhotkeys = "oatc";
     OptWidget *ow = dialogOptions( od, &tabhotkeys );
     connect( ow, SIGNAL( valueChanged( const Parameter& ) ),
-	     this, SLOT( notifyDialog( const Parameter& ) ) );
+	     this, SLOT( notificationFromDialog( const Parameter& ) ) );
     dialogButtons( od );
   }
   od->exec();
@@ -468,7 +469,15 @@ void ConfigDialog::dClosed( int r )
 }
 
 
-void ConfigDialog::notifyDialog( const Parameter &p )
+void ConfigDialog::notificationFromDialog( const Parameter &p )
+{
+  DialogOptions.read( p, Parameter::changedFlag() );
+  notifyDialog( DialogOptions );
+  DialogOptions.delFlags( Parameter::changedFlag() );
+}
+
+
+void ConfigDialog::notifyDialog( const Options &opt )
 {
 }
 
