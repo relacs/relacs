@@ -283,6 +283,10 @@ void OptWidgetText::textChanged( const QString &s )
   if ( InternRead || OW->updateDisabled() )
     return;
 
+  Parameter p( *Param );
+  p.setText( EW->text().toStdString() );
+  emit valueChanged( p );
+
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
       Value = EW->text().toStdString();
@@ -593,6 +597,10 @@ void OptWidgetMultiText::textChanged( const QString &s )
   if ( InternRead || OW->updateDisabled() )
     return;
 
+  Parameter p( *Param );
+  p.setText( EW->itemText( 0 ).toStdString() );
+  emit valueChanged( p );
+
   if ( ContUpdate && Editable && Update) {
     if ( InternChanged ) {
       Value = EW->itemText( 0 ).toStdString();
@@ -885,6 +893,10 @@ void OptWidgetNumber::valueChanged( double v )
   if ( InternRead || OW->updateDisabled() )
     return;
 
+  Parameter p( *Param );
+  p.setNumber( EW->value(), p.outUnit() );
+  emit valueChanged( p );
+
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
       Value = EW->value();
@@ -1052,6 +1064,10 @@ void OptWidgetBoolean::valueChanged( bool v )
   if ( InternRead || OW->updateDisabled() )
     return;
 
+  Parameter p( *Param );
+  p.setBoolean( EW->isChecked() );
+  emit valueChanged( p );
+
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
       Value = EW->isChecked();
@@ -1200,6 +1216,10 @@ void OptWidgetDate::valueChanged( const QDate &date )
 {
   if ( InternRead || OW->updateDisabled() )
     return;
+
+  Parameter p( *Param );
+  p.setDate( DE->date().year(), DE->date().month(), DE->date().day() );
+  emit valueChanged( p );
 
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
@@ -1363,6 +1383,10 @@ void OptWidgetTime::valueChanged( const QTime &time )
 {
   if ( InternRead || OW->updateDisabled() )
     return;
+
+  Parameter p( *Param );
+  p.setTime( TE->time().hour(), TE->time().minute(), TE->time().second() );
+  emit valueChanged( p );
 
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
@@ -1610,6 +1634,13 @@ void OptWidgetMultipleValues::valueChanged(QListWidgetItem *item)
 {
   if ( InternRead || OW->updateDisabled() )
     return;
+
+  /*
+    XXX Needs to be implemented!
+  Parameter p( *Param );
+  p.setTime( DE->date().hour(), DE->date().minute(), DE->date().second() );
+  emit valueChanged( p );
+  */
 
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {

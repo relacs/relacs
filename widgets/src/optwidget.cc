@@ -204,6 +204,10 @@ void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
       }
       OptWidgetMultipleValues* t = new OptWidgetMultipleValues(pp, l, Opt, this, OMutex);
       if ( t->editable() ) {
+	/* XXX
+	connect( n, SIGNAL( valueChanged( const Parameter& ) ),
+		 this, SIGNAL( valueChanged( const Parameter& ) ) );
+	*/
         if ( FirstWidget == 0 )
           FirstWidget = t->valueWidget();
         LastWidget = t->valueWidget();
@@ -244,6 +248,8 @@ void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
       if ( pp->size() <= 1 ) {
         OptWidgetText *t = new OptWidgetText( pp, l, Opt, this, OMutex );
         if ( t->editable() ) {
+	  connect( t, SIGNAL( valueChanged( const Parameter& ) ),
+		   this, SIGNAL( valueChanged( const Parameter& ) ) );
           if ( FirstWidget == 0 )
             FirstWidget = t->valueWidget();
           LastWidget = t->valueWidget();
@@ -270,6 +276,8 @@ void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
       else {
         OptWidgetMultiText *t = new OptWidgetMultiText( pp, l, Opt, this, OMutex );
         if ( t->editable() ) {
+	  connect( t, SIGNAL( valueChanged( const Parameter& ) ),
+		   this, SIGNAL( valueChanged( const Parameter& ) ) );
           if ( FirstWidget == 0 )
             FirstWidget = t->valueWidget();
           LastWidget = t->valueWidget();
@@ -298,6 +306,8 @@ void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
                                   Qt::AlignLeft | Qt::AlignVCenter );
       OptWidgetNumber *n = new OptWidgetNumber( pp, l, Opt, this, OMutex );
       if ( n->editable() ) {
+	connect( n, SIGNAL( valueChanged( const Parameter& ) ),
+		 this, SIGNAL( valueChanged( const Parameter& ) ) );
         if ( FirstWidget == 0 )
           FirstWidget = n->valueWidget();
         LastWidget = n->valueWidget();
@@ -322,6 +332,8 @@ void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
     else if ( pp->isBoolean() ) {
       OptWidgetBoolean *b = new OptWidgetBoolean( pp, Opt, this, rs, OMutex );
       if ( b->editable() ) {
+	connect( b, SIGNAL( valueChanged( const Parameter& ) ),
+		 this, SIGNAL( valueChanged( const Parameter& ) ) );
         if ( FirstWidget == 0 )
           FirstWidget = b->valueWidget();
         LastWidget = b->valueWidget();
@@ -350,6 +362,8 @@ void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
                                   Qt::AlignLeft | Qt::AlignVCenter );
       OptWidgetDate *d = new OptWidgetDate( pp, l, Opt, this, OMutex );
       if ( d->editable() ) {
+	connect( d, SIGNAL( valueChanged( const Parameter& ) ),
+		 this, SIGNAL( valueChanged( const Parameter& ) ) );
         if ( FirstWidget == 0 )
           FirstWidget = d->valueWidget();
         LastWidget = d->valueWidget();
@@ -373,6 +387,8 @@ void OptWidget::assignOptions( Options *o, bool tabs, int &row, int &level,
                                   Qt::AlignLeft | Qt::AlignVCenter );
       OptWidgetTime *t = new OptWidgetTime( pp, l, Opt, this, OMutex );
       if ( t->editable() ) {
+	connect( t, SIGNAL( valueChanged( const Parameter& ) ),
+		 this, SIGNAL( valueChanged( const Parameter& ) ) );
         if ( FirstWidget == 0 )
           FirstWidget = t->valueWidget();
         LastWidget = t->valueWidget();

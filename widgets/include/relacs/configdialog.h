@@ -127,7 +127,8 @@ public:
         \param od the dialog to which the options are added.
 	\param tabhotkeys a string with already taken hotkeys that
 	will be expanded by further hotkeys of the Options.
-	\return the widget editing the options.
+	\return the widget editing the options. Its valueChanged()
+	signal is connected to the notifyDialog() slot.
 	\sa dialog() */
   virtual OptWidget *dialogOptions( OptDialog *od, string *tabhotkeys=0 );
     /*! Add an \<Ok\>, \<Apply\>, \<Reset\>, and \<Close\> button to the dialog.
@@ -307,6 +308,11 @@ void ConfigDialog::dialog( void )
         \sa helpOpen(), setHelpOpen(), hClosed() */
   virtual void help( void );
 
+    /*! This slot is called whenever a value in the dialog is changed.
+        \a p contains the name of the corresponding Parameter and the
+	new value from the widget.
+	The default implementation does nothing. */
+  virtual void notifyDialog( const Parameter &p );
 
 signals:
 
@@ -359,6 +365,8 @@ private:
   string HelpCaption;
   bool Help;
   vector<string> HelpPathes;
+
+  OptWidget *OW;
 
   mutable QMutex CDMutex;
 

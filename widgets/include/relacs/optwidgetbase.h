@@ -36,6 +36,7 @@
 #include <QListWidget>
 #include <QItemDelegate>
 #include <QHBoxLayout>
+#include <relacs/parameter.h>
 #include <relacs/options.h>
 #include <relacs/doublespinbox.h>
 #include <relacs/optwidget.h>
@@ -47,7 +48,9 @@ namespace relacs {
 class OptWidgetBase : public QObject 
 {
   Q_OBJECT
+
 public:
+
   OptWidgetBase( Options::iterator param, QWidget *label,
 		 Options *oo, OptWidget *ow, QMutex *mutex );
   virtual ~OptWidgetBase( void );
@@ -66,7 +69,9 @@ public:
   Options::const_iterator param( void ) const;
   Options::iterator param( void );
   void setUnitLabel( QLabel *l );
- protected:
+
+protected:
+
   virtual void initActivation( void );
   Options::iterator Param;
   Options *OO;
@@ -101,6 +106,8 @@ public:
 public slots:
   void textChanged( const QString &s );
   void browse( void );
+signals:
+  void valueChanged( const Parameter &p );
 protected:
   void doTextChanged( const QString &s );
   void doBrowse( Str filename );
@@ -128,6 +135,8 @@ public:
 public slots:
   void textChanged( const QString &s );
   void insertText( const QString &text );
+signals:
+  void valueChanged( const Parameter &p );
 protected:
   void doTextChanged( const QString &s );
   void doInsertText( const QString &text );
@@ -156,6 +165,8 @@ public:
   void setUnitLabel( QLabel *l );
 public slots:
   void valueChanged( double v );
+signals:
+  void valueChanged( const Parameter &p );
 protected:
   void doValueChanged( double v );
   virtual void customEvent( QEvent *e );
@@ -179,6 +190,8 @@ public:
   virtual void initActivation( void );
 public slots:
   void valueChanged( bool t );
+signals:
+  void valueChanged( const Parameter &p );
 protected:
   void doValueChanged( bool t );
   virtual void customEvent( QEvent *e );
@@ -201,6 +214,8 @@ public:
   virtual void initActivation( void );
 public slots:
   void valueChanged( const QDate &date );
+signals:
+  void valueChanged( const Parameter &p );
 protected:
   void doValueChanged( const QDate &date );
   virtual void customEvent( QEvent *e );
@@ -226,6 +241,8 @@ public:
   virtual void initActivation( void );
 public slots:
   void valueChanged( const QTime &time );
+signals:
+  void valueChanged( const Parameter &p );
 protected:
   void doValueChanged( const QTime &time );
   virtual void customEvent( QEvent *e );

@@ -486,6 +486,10 @@ signals:
 
     /*! This signal is emitted by accept(). */
   void valuesChanged( void );
+    /*! This signal is emitted whenever a widget changes its value.
+        \a p contains the name of the corresponding Parameter and the
+        new value from the widget. */
+  void valueChanged( const Parameter &p );
 
 
 protected:
