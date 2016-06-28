@@ -246,7 +246,7 @@ public:
         The widget is deleted when the dialog is closed.
         \a tabhotkeys can point to a string that contains
         hotkey-characters that are already in use. This information is
-        used to choose a hotkeys for \a label. The new hotkey is added to
+        used to choose a hotkey for \a label. The new hotkey is added to
         the string.
         \sa addOptions(), addTabOptions(), addWidget(), addSeparator(), addButton() */
   void addTabWidget( const string &label, QWidget *widget, string *tabhotkeys=0 );

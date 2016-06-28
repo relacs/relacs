@@ -114,14 +114,14 @@ void ConfigDialog::setDate( const string &date )
 }
 
 
-void ConfigDialog::dialogOptions( OptDialog *od )
+OptWidget *ConfigDialog::dialogOptions( OptDialog *od, string *tabhotkeys )
 {
-  string tabhotkeys = "oatc";
-  if ( dialogHeader() )
-    tabhotkeys += 'h';
+  if ( dialogHeader() && tabhotkeys != 0 )
+    *tabhotkeys += 'h';
   OptWidget *ow = od->addOptions( *this, DialogSelectMask, DialogROMask,
-				  DialogStyle, mutex(), &tabhotkeys );
+				  DialogStyle, mutex(), tabhotkeys );
   od->setVerticalSpacing( (int)::floor(9.0*::exp(-double(ow->lines())/8.0))+1 );
+  return ow;
 }
 
 
@@ -451,7 +451,8 @@ void ConfigDialog::dialog( void )
   if ( Options::size( DialogSelectMask ) <= 0 )
     dialogEmptyMessage( od );
   else {
-    dialogOptions( od );
+    string tabhotkeys = "oatc";
+    dialogOptions( od, &tabhotkeys );
     dialogButtons( od );
   }
   od->exec();

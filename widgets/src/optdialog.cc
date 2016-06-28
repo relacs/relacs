@@ -143,7 +143,6 @@ OptWidget *OptDialog::addTabOptions( const string &label, Options &opt,
   Tabs->addTab( ow, tabname.c_str() );
 
   return ow;
-
 }
 
 

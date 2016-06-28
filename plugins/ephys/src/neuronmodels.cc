@@ -273,21 +273,23 @@ void NeuronModels::readOptions( void )
 }
 
 
-void NeuronModels::dialogModelOptions( OptDialog *od )
+void NeuronModels::dialogModelOptions( OptDialog *od, string *tabhotkeys )
 {
   for ( unsigned int k=0; k<Models.size(); k++ ) {
     od->addTabOptions( Titles[k], *Models[k], dialogSelectMask(),
-		       dialogReadOnlyMask(), dialogStyle(), mutex() );
+		       dialogReadOnlyMask(), dialogStyle(), mutex(), tabhotkeys );
   }
 }
 
 
-void NeuronModels::dialogOptions( OptDialog *od )
+OptWidget *NeuronModels::dialogOptions( OptDialog *od, string *tabhotkeys )
 {
-  od->addTabOptions( "General", *this, dialogSelectMask(),
-		     dialogReadOnlyMask(), dialogStyle(), mutex() );
-  dialogModelOptions( od );
+  OptWidget *ow = od->addTabOptions( "General", *this, dialogSelectMask(),
+				     dialogReadOnlyMask(), dialogStyle(), 
+				     mutex(), tabhotkeys );
+  dialogModelOptions( od, tabhotkeys );
   od->setVerticalSpacing( 1 );
+  return ow;
 }
 
 

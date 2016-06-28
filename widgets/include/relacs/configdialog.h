@@ -125,8 +125,11 @@ public:
     /*! Adds the options selected by dialogSelectMask() and configured by 
         dialogReadOnlyMask() and dialogStyle() to the dialog.
         \param od the dialog to which the options are added.
+	\param tabhotkeys a string with already taken hotkeys that
+	will be expanded by further hotkeys of the Options.
+	\return the widget editing the options.
 	\sa dialog() */
-  virtual void dialogOptions( OptDialog *od );
+  virtual OptWidget *dialogOptions( OptDialog *od, string *tabhotkeys=0 );
     /*! Add an \<Ok\>, \<Apply\>, \<Reset\>, and \<Close\> button to the dialog.
         \param od the dialog to which the buttons are added.
 	\sa dialog() */
@@ -288,7 +291,8 @@ void ConfigDialog::dialog( void )
   if ( Options::size( DialogSelectMask ) <= 0 )
     dialogEmptyMessage( od );
   else {
-    dialogOptions( od );
+    string tabhotkeys = "oatc";
+    dialogOptions( od, &tabhotkeys );
     dialogButtons( od );
   }
   od->exec();

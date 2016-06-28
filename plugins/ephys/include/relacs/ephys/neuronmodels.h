@@ -119,8 +119,8 @@ public:
 
     /*! Add the options of the models as tabs to the dialog \a od.
         To be used in dialogOptions(). */
-  void dialogModelOptions( OptDialog *od );
-  virtual void dialogOptions( OptDialog *od );
+  void dialogModelOptions( OptDialog *od, string *tabhotkeys );
+  virtual OptWidget *dialogOptions( OptDialog *od, string *tabhotkeys=0 );
 
   double CurrentInput;
 

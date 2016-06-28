@@ -374,15 +374,17 @@ double ReceptorModel::squareBoltzman( double x ) const
 }
 
 
-void ReceptorModel::dialogOptions( OptDialog *od )
+OptWidget *ReceptorModel::dialogOptions( OptDialog *od, string *tabhotkeys )
 {
-  od->addTabOptions( "General", *this, dialogSelectMask() | 1,
-		     dialogReadOnlyMask(), dialogStyle(), mutex() );
+  OptWidget *ow = od->addTabOptions( "General", *this, dialogSelectMask() | 1,
+				     dialogReadOnlyMask(), dialogStyle(), 
+				     mutex(), tabhotkeys );
   od->addTabOptions( "Nonlinearity", *this, dialogSelectMask() | 2,
-		     dialogReadOnlyMask(), dialogStyle(), mutex() );
-  dialogModelOptions( od );
+		     dialogReadOnlyMask(), dialogStyle(), mutex(), tabhotkeys );
+  dialogModelOptions( od, tabhotkeys );
   od->setVerticalSpacing( 1 );
   od->setMargins( 10 );
+  return ow;
 }
 
 

@@ -140,7 +140,7 @@ public:
   double squareBoltzman( double x ) const;
   double (ReceptorModel::*Nonlinearity)( double ) const;
 
-  virtual void dialogOptions( OptDialog *od );
+  virtual OptWidget *dialogOptions( OptDialog *od, string *tabhotkeys=0 );
 
   // tympanum:
   int TympanumModel;
