@@ -196,7 +196,7 @@ int DAQFlexCore::open( const string &devicestr )
 
   if ( !found ) {
     if ( ErrorState == Success ) {
-      setErrorStr( "did not find an USB device. Simply reconnect the USB DAQ board." );
+      setErrorStr( "did not find an USB device. Try to reconnect the USB DAQ board or exchange the USB cable." );
       ErrorState = ErrorNoDevice;
     }
     DeviceHandle = NULL;
