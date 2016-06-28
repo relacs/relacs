@@ -847,6 +847,8 @@ void RePro::dialog( void )
     OptWidget *roptw = od->addOptions( *this, dialogSelectMask(), 
 				       dialogReadOnlyMask(), dialogStyle(),
 				       mutex(), &tabhotkeys );
+    connect( roptw, SIGNAL( valueChanged( const Parameter& ) ),
+	     this, SLOT( notifyDialog( const Parameter& ) ) );
     if ( ! roptw->tabs() ) {
       roptw->setMargins( 2 );
       od->addSeparator();

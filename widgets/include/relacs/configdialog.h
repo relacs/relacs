@@ -366,8 +366,6 @@ private:
   bool Help;
   vector<string> HelpPathes;
 
-  OptWidget *OW;
-
   mutable QMutex CDMutex;
 
 };

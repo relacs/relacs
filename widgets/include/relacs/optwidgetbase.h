@@ -138,6 +138,7 @@ public slots:
 signals:
   void valueChanged( const Parameter &p );
 protected:
+  void setParameter( Parameter &p, const string &s );
   void doTextChanged( const QString &s );
   void doInsertText( const QString &text );
   virtual void customEvent( QEvent *e );
@@ -147,6 +148,7 @@ private:
   bool Inserted;
   bool Update;
   string Value;
+  string PrevValue;
   QLabel *LW;
 };
 

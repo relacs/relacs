@@ -40,7 +40,6 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
   : ConfigClass( configident, configgroup ),
     MainWidget( 0 ),
     HelpPathes( 0 ),
-    OW( 0 ),
     CDMutex()
 {
   Name = name.empty() ? configident : name;
@@ -453,9 +452,9 @@ void ConfigDialog::dialog( void )
     dialogEmptyMessage( od );
   else {
     string tabhotkeys = "oatc";
-    OW = dialogOptions( od, &tabhotkeys );
-    connect( OW, SIGNAL( valueChanged( const Parameter &p ) ),
-	     this, SLOT( notifyDialog( const Parameter &p ) ) );
+    OptWidget *ow = dialogOptions( od, &tabhotkeys );
+    connect( ow, SIGNAL( valueChanged( const Parameter& ) ),
+	     this, SLOT( notifyDialog( const Parameter& ) ) );
     dialogButtons( od );
   }
   od->exec();
@@ -465,9 +464,6 @@ void ConfigDialog::dialog( void )
 void ConfigDialog::dClosed( int r )
 {
   Dialog = false;
-  disconnect( OW, SIGNAL( valueChanged( const Parameter &p ) ),
-	      this, SLOT( notifyDialog( const Parameter &p ) ) );
-  OW = 0;
   emit dialogClosed( r );
 }
 

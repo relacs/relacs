@@ -128,6 +128,14 @@ public:
 		double before, double after );
 
 
+public slots:
+
+    /*! This slot is called whenever a value in the dialog is changed.
+        \a p contains the name of the corresponding Parameter and the
+	new value from the widget. */
+  virtual void notifyDialog( const Parameter &p );
+
+
 protected:
 
   int createStimulus( OutData &signal, const Str &file,

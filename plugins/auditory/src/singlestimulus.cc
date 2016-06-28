@@ -1024,6 +1024,12 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
 }
 
 
+void SingleStimulus::notifyDialog( const Parameter &p )
+{
+  //  cerr << p << '\n';
+}
+
+
 int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 				    double &duration, bool stoream )
 {

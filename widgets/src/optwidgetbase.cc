@@ -484,8 +484,9 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
       EW->setCompleter( 0 );
     reset();
     connect( EW, SIGNAL( editTextChanged( const QString& ) ),
-	     this, SLOT( insertText( const QString & ) ) );
-    Value = EW->itemText( 0 ).toStdString();
+	     this, SLOT( insertText( const QString& ) ) );
+    Value = EW->currentText().toStdString();
+    PrevValue = Value;
     connect( EW, SIGNAL( currentIndexChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
     connect( EW, SIGNAL( activated( const QString& ) ),
@@ -507,21 +508,10 @@ void OptWidgetMultiText::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    Param->setText( EW->currentText().toStdString() );
-    for ( int k=0; k<EW->count(); k++ ) {
-      bool newitem = true;
-      for ( int j=0; j<k; j++ ) {
-	if ( EW->itemText( j ) == EW->itemText( k ) ) {
-	  newitem = false;
-	  break;
-	}
-      }
-      if ( newitem )
-	Param->addText( EW->itemText( k ).toStdString() );
-    }
+    setParameter( *Param, EW->currentText().toStdString() );
     if ( Param->text( 0 ) != Value )
       Param->addFlags( OW->changedFlag() );
-    Value = EW->itemText( 0 ).toStdString();
+    Value = EW->currentText().toStdString();
     OO->setNotify( cn );
     InternRead = false;
   }
@@ -592,32 +582,41 @@ void OptWidgetMultiText::update( void )
 }
 
 
+void OptWidgetMultiText::setParameter( Parameter &p, const string &s )
+{
+  Param->setText( s );
+  for ( int k=0; k<EW->count(); k++ ) {
+    bool newitem = true;
+    for ( int j=0; j<k; j++ ) {
+      if ( EW->itemText( j ) == EW->itemText( k ) ) {
+	newitem = false;
+	break;
+      }
+    }
+    if ( newitem )
+      Param->addText( EW->itemText( k ).toStdString() );
+  }
+}
+
+
 void OptWidgetMultiText::textChanged( const QString &s )
 {
   if ( InternRead || OW->updateDisabled() )
     return;
 
   Parameter p( *Param );
-  p.setText( EW->itemText( 0 ).toStdString() );
-  emit valueChanged( p );
+  setParameter( p, s.toStdString() );
+  if ( p.text() != PrevValue ) {
+    PrevValue = p.text();
+    emit valueChanged( p );
+  }
 
   if ( ContUpdate && Editable && Update) {
     if ( InternChanged ) {
-      Value = EW->itemText( 0 ).toStdString();
+      Value = EW->currentText().toStdString();
       bool cn = OO->notifying();
       OO->unsetNotify();
-      Param->setText( Value );
-      for ( int k=0; k<EW->count(); k++ ) {
-	bool newitem = true;
-	for ( int j=0; j<k; j++ ) {
-	  if ( EW->itemText( j ) == EW->itemText( k ) ) {
-	    newitem = false;
-	    break;
-	  }
-	}
-	if ( newitem )
-	  Param->addText( EW->itemText( k ).toStdString() );
-      }
+      setParameter( *Param, Value );
       Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
@@ -652,21 +651,10 @@ void OptWidgetMultiText::doTextChanged( const QString &s )
   }
   bool cn = OO->notifying();
   OO->unsetNotify();
-  Param->setText( s.toStdString() );
-  for ( int k=0; k<EW->count(); k++ ) {
-    bool newitem = true;
-    for ( int j=0; j<k; j++ ) {
-      if ( EW->itemText( j ) == EW->itemText( k ) ) {
-	newitem = false;
-	break;
-      }
-    }
-    if ( newitem )
-      Param->addText( EW->itemText( k ).toStdString() );
-  }
+  setParameter( *Param, s.toStdString() );
   if ( Param->text( 0 ) != Value )
     Param->addFlags( OW->changedFlag() );
-  Value = EW->itemText( 0 ).toStdString();
+  Value = s.toStdString();
   if ( cn )
     OO->notify();
   if ( ContUpdate )
