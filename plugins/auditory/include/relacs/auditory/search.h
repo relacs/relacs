@@ -38,6 +38,7 @@ namespace auditory {
 \brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
+\version 2.3 (Jun 29, 2016)
 \todo check postCustomEvent usage!!!! user types+10 and event handling
 \todo Use mutex to protect stimulus creation.
 \bug sampling rate is only 10 kHz?!
@@ -50,6 +51,7 @@ namespace auditory {
 - \c pause=500ms: Duration of pause (\c number)
 - \c prepause=50ms: Part of pause before stimulus (\c number)
 - \c frequency=5kHz: Frequency of stimulus (\c number)
+- \c minfreq=2kHz: Minimum allowed frequency (\c number)
 - \c waveform=sine: Waveform of stimulus (\c string)
 - \c ramp=2ms: Ramp (\c number)
 - \c side=left: Speaker (\c string)
@@ -71,8 +73,6 @@ namespace auditory {
 - \c Alt+Down: Decrease frequency by 1kHz
 - \c Alt+Shift+Up: Increase frequency by 5kHz
 - \c Alt+Shift+Down: Decrease frequency by 5kHz
-
-\version 2.2 (Jan 10, 2008)
  */
 
 
@@ -164,6 +164,7 @@ protected:
 
   LCDRange *FLCD;
   double Frequency;    // in Hz
+  double MinFreq;      // in Hz
   static const double ShortFrequencyStep;
   static const double LongFrequencyStep;
   static const double MaxFrequency;
