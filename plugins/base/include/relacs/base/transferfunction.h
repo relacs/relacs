@@ -33,7 +33,7 @@ namespace base {
 \class TransferFunction
 \brief [RePro] Measures the transfer function with band-limited Gaussian white-noise stimuli.
 \author Jan Benda
-\version 1.7 (Jun 28, 2016)
+\version 1.8 (Jun 29, 2016)
 \par Screenshot
 \image html transferfunction.png
 
@@ -57,6 +57,7 @@ namespace base {
     - \c window=Hanning: FFT window function (\c string)
     - \c plotstdevs=true: Plot standard deviations (\c boolean)
     - \c plotcoherence=true: Plot coherence (\c boolean)
+    - \c plotdecibel=false: Plot gain in decibel (\c boolean)
 */
 
 

@@ -27,7 +27,7 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "base", "Jan Benda", "1.7", "Jun 28, 2016" )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.8", "Jun 29, 2016" )
 {
   // options:
   newSection( "Stimulus" );
@@ -49,6 +49,7 @@ TransferFunction::TransferFunction( void )
   addSelection( "window", "FFT window function", "Hanning|Bartlett|Blackman|Blackman-Harris|Hamming|Hanning|Parzen|Square|Welch" );
   addBoolean( "plotstdevs", "Plot standard deviations", true );
   addBoolean( "plotcoherence", "Plot coherence", true );
+  addBoolean( "plotdecibel", "Plot gain in decibel", false );
 
   // plot:
   P.lock();
@@ -61,7 +62,6 @@ TransferFunction::TransferFunction( void )
   P[0].setYLabel( "Gain" );
   P[0].setYLabelPos( 2.0, Plot::FirstMargin,
 		     0.5, Plot::Graph, Plot::Center, -90.0 );
-  P[0].setYRange( 0.0, Plot::AutoScale );
   P[0].setY2Label( "Coherence" );
   P[0].setY2Tics();
   P[0].setY2Range( 0.0, 1.0 );
@@ -184,7 +184,10 @@ int TransferFunction::main( void )
   P.lock();
   P[0].clearData();
   P[0].resetRanges();
-  P[0].setYLabel( "Gain [" + InUnit + "/" + OutUnit + "]" );
+  if ( boolean( "plotdecibel" ) )
+    P[0].setYLabel( "Gain [dB]" );
+  else
+    P[0].setYLabel( "Gain [" + InUnit + "/" + OutUnit + "]" );
   P[1].clearData();
   P[1].resetRanges();
   P.unlock();
@@ -259,6 +262,7 @@ int TransferFunction::main( void )
     // plot gain:
     bool plotstdevs = boolean( "plotstdevs" );
     bool plotcoherence = boolean( "plotcoherence" );
+    bool plotdecibel = boolean( "plotdecibel" );
     P.lock();
     P[0].clear();
     if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
@@ -273,11 +277,32 @@ int TransferFunction::main( void )
       P[0].plot( MeanCoherence, 1.0, Plot::Yellow, 3, Plot::Solid );
       P[0].back().setAxis( Plot::X1Y2 );
     }
-    if ( plotstdevs ) {
-      P[0].plot( MeanGain+StdevGain, 1.0, Plot::Red, 1, Plot::Solid );
-      P[0].plot( MeanGain-StdevGain, 1.0, Plot::Red, 1, Plot::Solid );
+    SampleDataD upper = MeanGain + StdevGain;
+    SampleDataD lower = MeanGain - StdevGain;
+    if ( plotdecibel ) {
+      P[0].setYLabel( "Gain [dB]" );
+      if ( ! P[0].zoomedYRange() )
+	P[0].setAutoScaleY();
+      if ( plotstdevs ) {
+	upper.decibel( 1.0 );
+	lower.decibel( 1.0 );
+	P[0].plot( upper, 1.0, Plot::Red, 1, Plot::Solid );
+	P[0].plot( lower, 1.0, Plot::Red, 1, Plot::Solid );
+      }
+      SampleDataD meangain = MeanGain;
+      meangain.decibel( 1.0 );
+      P[0].plot( meangain, 1.0, Plot::Red, 3, Plot::Solid );
     }
-    P[0].plot( MeanGain, 1.0, Plot::Red, 3, Plot::Solid );
+    else {
+      P[0].setYLabel( "Gain [" + InUnit + "/" + OutUnit + "]" );
+      if ( ! P[0].zoomedYRange() )
+	P[0].setYRange( 0.0, Plot::AutoScale );
+      if ( plotstdevs ) {
+	P[0].plot( upper, 1.0, Plot::Red, 1, Plot::Solid );
+	P[0].plot( lower, 1.0, Plot::Red, 1, Plot::Solid );
+      }
+      P[0].plot( MeanGain, 1.0, Plot::Red, 3, Plot::Solid );
+    }
     P[1].clear();
     if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
       P[1].setXRange( fmin, fmax );

@@ -1831,8 +1831,12 @@ Array<T> &Array<T>::decibel( double level )
   if ( level == 0.0 )
     level = max();
 
-  for ( int k=0; k<NSize; k++ )
-    Buffer[k] = 10.0 * ::log10( Buffer[k] / level );
+  for ( int k=0; k<NSize; k++ ) {
+    if ( Buffer[k] < 1e-12 )
+      Buffer[k] = -1000.0;
+    else
+      Buffer[k] = 10.0 * ::log10( Buffer[k] / level );
+  }
 
   return *this;
 }
