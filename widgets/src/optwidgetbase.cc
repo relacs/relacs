@@ -483,8 +483,9 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
     if ( ( Param->style() & OptWidget::ComboAutoCompletion ) == 0 )
       EW->setCompleter( 0 );
     reset();
-    connect( EW, SIGNAL( editTextChanged( const QString& ) ),
-	     this, SLOT( insertText( const QString& ) ) );
+    if ( EW->isEditable() )
+      connect( EW, SIGNAL( editTextChanged( const QString& ) ),
+	       this, SLOT( insertText( const QString& ) ) );
     Value = EW->currentText().toStdString();
     PrevValue = Value;
     connect( EW, SIGNAL( currentIndexChanged( const QString& ) ),
@@ -549,7 +550,7 @@ void OptWidgetMultiText::reset( void )
       else
 	EW->setCurrentIndex( 0 );
     }
-    CI = 0;
+    CI = EW->currentIndex();
     Inserted = false;
     Update = true;
   }
@@ -584,7 +585,7 @@ void OptWidgetMultiText::update( void )
 
 void OptWidgetMultiText::setParameter( Parameter &p, const string &s )
 {
-  Param->setText( s );
+  p.setText( s );
   for ( int k=0; k<EW->count(); k++ ) {
     bool newitem = true;
     for ( int j=0; j<k; j++ ) {
@@ -594,7 +595,7 @@ void OptWidgetMultiText::setParameter( Parameter &p, const string &s )
       }
     }
     if ( newitem )
-      Param->addText( EW->itemText( k ).toStdString() );
+      p.addText( EW->itemText( k ).toStdString() );
   }
 }
 
