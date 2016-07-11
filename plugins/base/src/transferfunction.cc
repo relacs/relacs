@@ -27,7 +27,7 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "base", "Jan Benda", "1.8", "Jun 29, 2016" )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.8", "Jul 11, 2016" )
 {
   // options:
   newSection( "Stimulus" );
@@ -39,8 +39,8 @@ TransferFunction::TransferFunction( void )
   addNumber( "intensity", "Intensity for an attenuator", 1.0, -10000.0, 10000.0, 0.1, "", "" );
   addNumber( "fmin", "Minimum frequency", 0.0, 0.0, 10000000.0, 100.0, "Hz", "Hz" );
   addNumber( "fmax", "Maximum frequency", 1000.0, 0.0, 10000000.0, 100.0, "Hz", "Hz" );
-  addNumber( "duration", "Duration of noise stimulus", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
-  addNumber( "pause", "Length of pause inbetween successive stimuli", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
+  addNumber( "duration", "Duration of noise stimulus", 1.0, 0.0, 10000.0, 0.1, "s" );
+  addNumber( "pause", "Length of pause inbetween successive stimuli", 1.0, 0.0, 10000.0, 0.1, "s" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Analysis" );
   addSelection( "intrace", "Input trace", "V-1" );

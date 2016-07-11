@@ -33,7 +33,7 @@ namespace base {
 \class TransferFunction
 \brief [RePro] Measures the transfer function with band-limited Gaussian white-noise stimuli.
 \author Jan Benda
-\version 1.8 (Jun 29, 2016)
+\version 1.8 (Jul 11, 2016)
 \par Screenshot
 \image html transferfunction.png
 

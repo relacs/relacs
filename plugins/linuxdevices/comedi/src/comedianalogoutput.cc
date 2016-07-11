@@ -56,7 +56,7 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   Buffer = 0;
   NBuffer = 0;
   ChannelValues = 0;
-
+  ExtendedData = 0;
   initOptions();
 }
 
@@ -743,11 +743,9 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
   if ( !sigs[0].continuous() ) {
     cmd.stop_src = TRIG_COUNT;
     // set length of acquisition as number of scans:
-    cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay() );
+    cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay() ) + ExtendedData;
     if ( deviceName() == "pci-6052e" )
       cmd.stop_arg -= 1; // XXX pci-6052e (all NI E Series ?) - comedi-bug? 
-    else if ( deviceVendor() == "ni_mio_cs" )
-      cmd.stop_arg += 2048; // XXX NI DAQCard - does not fix the problem!
   }
 
   cmd.chanlist = chanlist;
@@ -797,9 +795,16 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
       if ( cmd.convert_arg != testCmd.convert_arg )
 	sigs.addErrorStr( "convert_arg " + Str(testCmd.convert_arg) + " out of range" );
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )
-	sigs.addErrorStr( "scan_end_arg out " + Str(testCmd.scan_end_arg) + " of range" );
-      if ( cmd.stop_arg != testCmd.stop_arg )
-	sigs.addErrorStr( "stop_arg " + Str(testCmd.stop_arg) + " out of range" );
+	sigs.addErrorStr( "scan_end_arg " + Str(testCmd.scan_end_arg) + " out of range" );
+      if ( cmd.stop_arg != testCmd.stop_arg ) {
+	// sigs.addErrorStr( "stop_arg " + Str(testCmd.stop_arg) + " out of range" );
+	if ( setscale ) {
+	  cerr << "stop_arg=" << testCmd.stop_arg << " not supported, switch to continuous mode, extend data by " << ExtendedData << '\n';
+	  cmd.stop_src = TRIG_NONE;
+	  cmd.stop_arg = 0;
+	  ExtendedData = 4*2048;
+	}
+      }
       break;
     case 4: // adjusted *_arg:
       if ( cmd.start_arg != testCmd.start_arg )
@@ -810,8 +815,15 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
 	sigs.addErrorStr( "convert_arg adjusted to " + Str(cmd.convert_arg) );
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )
 	sigs.addErrorStr( "scan_end_arg adjusted to " + Str(cmd.scan_end_arg) );
-      if ( cmd.stop_arg != testCmd.stop_arg )
+      if ( cmd.stop_arg != testCmd.stop_arg ) {
 	sigs.addErrorStr( "stop_arg adjusted to " + Str(cmd.stop_arg) );
+	if ( setscale ) {
+	  cerr << "stop_arg=" << testCmd.stop_arg << " not supported, switch to continuous mode, extend data by " << ExtendedData << '\n';
+	  cmd.stop_src = TRIG_NONE;
+	  cmd.stop_arg = 0;
+	  ExtendedData = 4*2048;
+	}
+      }
       break;
     case 5: // invalid chanlist:
       for ( int k=0; k<sigs.size(); k++ ) {
@@ -882,22 +894,29 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   {
     QMutexLocker locker( mutex() );
 
+    ExtendedData = 0;
+
     // copy and sort signal pointers:
     OutList ol;
     ol.add( sigs );
     ol.sortByChannel();
 
     if ( deviceVendor() == "ni_mio_cs" ) {
-      // XXX Fix DAQCard bug: add 2k of zeros to the signals:
-      // cerr << "ADD SIGNAL\n";
-      for ( int k=0; k<ol.size(); k++ )
-	ol[k].SampleDataF::append( 0.0, 2048 );
+      // Fix DAQCard bug: add 2k of zeros to the signals:
+      ExtendedData = 2048;
     }
 
     if ( setupCommand( ol, Cmd, true ) < 0 ) {
+      ExtendedData = 0;
       if ( Cmd.chanlist != 0 )
 	delete [] Cmd.chanlist;
       return -1;
+    }
+
+    if ( ExtendedData > 0 ) {
+      // contiunous and DAQCard bug:
+      for ( int k=0; k<ol.size(); k++ )
+	ol[k].SampleDataF::append( ol[k].back(), ExtendedData );
     }
 
     // apply calibration:
@@ -1065,7 +1084,8 @@ int ComediAnalogOutput::writeData( void )
       ern = 0;
   }
   else if ( bytesWritten > 0 ) {
-    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+    if ( bytesWritten < NBuffer )
+      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
     NBuffer -= bytesWritten;
     elemWritten += bytesWritten / BufferElemSize;
   }
@@ -1073,11 +1093,10 @@ int ComediAnalogOutput::writeData( void )
   if ( ern == 0 ) {
     // no more data:
     if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      if ( deviceVendor() == "ni_mio_cs" ) {
-	// XXX Fix DAQCard bug: remove the 2k of zeros from the signals:
-	// cerr << "REMOVE SIGNAL\n";
+      if ( ExtendedData > 0 ) {
 	for ( int k=0; k<Sigs.size(); k++ )
-	  Sigs[k].resize( Sigs[k].size()-2048 );
+	  Sigs[k].resize( Sigs[k].size()-ExtendedData );
+	ExtendedData = 0;
       }
       if ( Buffer != 0 )
 	delete [] Buffer;
@@ -1120,7 +1139,7 @@ int ComediAnalogOutput::writeData( void )
 
 int ComediAnalogOutput::stop( void ) 
 { 
-  //  cerr << " ComediAnalogOutput::stop()" << endl;/////TEST/////
+  // cerr << " ComediAnalogOutput::stop()\n";
   {
     QMutexLocker locker( mutex() );
     
@@ -1130,15 +1149,28 @@ int ComediAnalogOutput::stop( void )
 
   stopWrite();
 
+  if ( ExtendedData > 0 ) {
+    for ( int k=0; k<Sigs.size(); k++ )
+      Sigs[k].resize( Sigs[k].size()-ExtendedData );
+    ExtendedData = 0;
+  }
+
   return 0;
 }
 
 
 int ComediAnalogOutput::reset( void ) 
 { 
+  // cerr << " ComediAnalogOutput::reset()\n";
   lock();
 
   comedi_cancel( DeviceP, SubDevice );
+
+  if ( ExtendedData > 0 ) {
+    for ( int k=0; k<Sigs.size(); k++ )
+      Sigs[k].resize( Sigs[k].size()-ExtendedData );
+    ExtendedData = 0;
+  }
 
   Sigs.clear();
   if ( Buffer != 0 )

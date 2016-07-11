@@ -264,6 +264,8 @@ private:
   int NBuffer;
     /*! Stores the last output value for each channel. */
   float *ChannelValues;
+    /*! Number of data elements added to the signals. */
+  int ExtendedData;
 
 };
 
