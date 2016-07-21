@@ -807,7 +807,7 @@ string InData::format( void ) const
 {
   double range = maxValue() - minValue();
   int mag = ::ceil(::log10(range)+1e-8);
-  int digits = 5 - mag;
+  int digits = 6 - mag;
   if ( digits < 0 )
     digits = 0;
   int width  = (mag<1?1:mag) + 2 + digits;
