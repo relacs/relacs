@@ -816,7 +816,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )
 	sigs.addErrorStr( "scan_end_arg adjusted to " + Str(cmd.scan_end_arg) );
       if ( cmd.stop_arg != testCmd.stop_arg ) {
-	sigs.addErrorStr( "stop_arg adjusted to " + Str(cmd.stop_arg) );
+	// sigs.addErrorStr( "stop_arg adjusted to " + Str(cmd.stop_arg) );
 	if ( setscale ) {
 	  cerr << "stop_arg=" << testCmd.stop_arg << " not supported, switch to continuous mode, extend data by " << ExtendedData << '\n';
 	  cmd.stop_src = TRIG_NONE;

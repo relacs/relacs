@@ -258,7 +258,7 @@ int SingleStimulus::main( void )
     StorePath = "";
   StoreLevel = (StoreLevels)index( "storelevel" );
   StoreFile = "";
-  if ( SpikeEvents[0] < 0 || SpikeTrace[0] < 0 ) {
+  if ( SpikeEvents[0] < 0 ) {
     userate = false;
   }
 
@@ -696,9 +696,17 @@ int SingleStimulus::main( void )
   SampleDataD rate2( -before, Duration+after, 0.001, 0.0 );
   SampleDataF voltage;
   SampleDataF meanvoltage;
-  if ( SpikeEvents[0] >= 0 && SpikeTrace[0] >= 0 ) {
+  string voltageformat = "%7.1f";
+  if ( SpikeTrace[0] >= 0 ) {
     voltage.resize( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
     meanvoltage.resize( -before, Duration+after, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+    double range = trace( SpikeTrace[0] ).maxValue() - trace( SpikeTrace[0] ).minValue();
+    int mag = ::ceil(::log10(range)+1e-8);
+    int digits = 5 - mag;
+    if ( digits < 0 )
+      digits = 0;
+    int width  = (mag<1?1:mag) + 2 + digits;
+    voltageformat = "%" + Str( width ) + "." + Str( digits ) + "f";
   }
   int state = Completed;
 
@@ -775,13 +783,13 @@ int SingleStimulus::main( void )
   
   writeZero( Speaker[ Side ] );
   if ( state == Completed ) {
-    if ( SpikeEvents[0] >= 0 && SpikeTrace[0] >= 0 ) {
+    if ( SpikeEvents[0] >= 0 ) {
       saveSpikes( header, spikes );
       saveRate( header, rate1, rate2 );
-      if ( storevoltage ) {
-	tf << '\n';
-	saveMeanTrace( header, meanvoltage );
-      }
+    }
+    if ( SpikeTrace[0] >= 0 && storevoltage ) {
+      tf << '\n';
+      saveMeanTrace( header, meanvoltage );
     }
   }
 
@@ -793,7 +801,7 @@ void SingleStimulus::openTraceFile( ofstream &tf, TableKey &tracekey,
 				    const Options &header )
 {
   tracekey.addNumber( "t", "ms", "%7.2f" );
-  tracekey.addNumber( "V", VUnit, "%6.1f" );
+  tracekey.addNumber( "V", VUnit, trace( SpikeTrace[0] ).format() );
   Str waveform = settings().text( "waveform" );
   if ( waveform == "From file" )
     waveform = "file";
@@ -837,7 +845,7 @@ void SingleStimulus::saveMeanTrace( Options &header, const SampleDataF &meanvolt
   df << '\n';
   TableKey tracekey;
   tracekey.addNumber( "t", "ms", "%7.2f" );
-  tracekey.addNumber( "V", VUnit, "%6.1f" );
+  tracekey.addNumber( "V", VUnit, trace( SpikeTrace[0] ).format() );
   tracekey.addNumber( "I", "dB SPL", "%7.2f" );
   tracekey.saveKey( df, true, false );
   tracekey.saveKey( df, true, false );
@@ -935,6 +943,8 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
   else
     P[0].setTitle( "" );
   if ( plotmode < 3 ) {
+    if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
+      P[0].setXRange( 1000.0*SkipWin, 1000.0*Duration );
     P[0].setYLabel( "Voltage [" + VUnit + "]" );
     if ( ! P[0].zoomedYRange() )
       P[0].setYRange( Plot::AutoScale, Plot::AutoScale );

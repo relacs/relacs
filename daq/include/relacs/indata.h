@@ -421,6 +421,9 @@ class InData : public CyclicSampleDataF, public DaqError
         \sa unit(), scale(), setScale() */
   void setUnit( float scale, const string &unit );
 
+    /*! Return a format string that is appropriate for writing out the data values. */
+  string format( void ) const;
+
     /*! Returns 0 if the data are acquired,
         1 if the data are filtered from an InData, 
         2 if the data are filtered from an EventData. 
