@@ -1036,7 +1036,7 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
 
 void SingleStimulus::notifyDialog( const Options &opt )
 {
-  //  cerr << "SIGNLESTIMULUS GOT\n" << opt << '\n';
+  //  cerr << "SINGLESTIMULUS GOT\n" << opt << '\n';
 }
 
 
@@ -1233,7 +1233,8 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   }
   else { // Wave
     // this should go into OutData::fixSample():
-    if ( wave.stepsize() < signal.minSampleInterval() )
+    if ( wave.stepsize() < signal.minSampleInterval() ||
+	 (signal.fixedSampleRate() && ::fabs(wave.sampleRate()-signal.maxSampleRate())>0.1) )
       signal.interpolate( wave, 0.0, signal.minSampleInterval() );
     else
       signal = wave;

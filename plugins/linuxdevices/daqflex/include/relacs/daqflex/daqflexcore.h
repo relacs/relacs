@@ -137,6 +137,11 @@ public:
         -1: no FIFO and no hardware paced AI. */
   int aiFIFOSize( void ) const;
 
+    /*! Set the currently used sampling rate of analog input to \a samplerate. */
+  void setAISampleRate( double samplerate );
+    /*! Return the currently used sampling rate of analog input. */
+  double aiSampleRate( void ) const;
+
     /*! \return the resolution of the D/A converter. */
   unsigned int maxAOData( void ) const;
     /*! \return the maximum scan rate of the D/A converter. */
@@ -234,6 +239,7 @@ protected:
   double MaxAIRate;
   int MaxAIChannels;
   int AIFIFOSize;  // 0: no FIFO but AISCAN, -1: no FIFO and no AISCAN
+  double AISampleRate;
   unsigned int MaxAOData;
   double MaxAORate;
   int MaxAOChannels;

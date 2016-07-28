@@ -282,6 +282,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   // setup acquisition:
   DAQFlexDevice->sendMessage( "AISCAN:XFRMODE=BLOCKIO" );
   DAQFlexDevice->sendMessage( "AISCAN:RATE=" + Str( traces[0].sampleRate(), "%g" ) );
+  DAQFlexDevice->setAISampleRate( traces[0].sampleRate() );
   if ( traces[0].continuous() ) {
     DAQFlexDevice->sendMessage( "AISCAN:SAMPLES=0" );
     TotalSamples = 0;

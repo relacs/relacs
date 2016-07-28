@@ -214,6 +214,8 @@ int DAQFlexCore::open( const string &devicestr )
     }
   }
 
+  AISampleRate = 0.0;
+
   return ErrorState;
 }
 
@@ -268,6 +270,18 @@ int DAQFlexCore::maxAIChannels( void ) const
 int DAQFlexCore::aiFIFOSize( void ) const
 {
   return AIFIFOSize;
+}
+
+
+void DAQFlexCore::setAISampleRate( double samplerate )
+{
+  AISampleRate = samplerate;
+}
+
+
+double DAQFlexCore::aiSampleRate( void ) const
+{
+  return AISampleRate;
 }
 
 

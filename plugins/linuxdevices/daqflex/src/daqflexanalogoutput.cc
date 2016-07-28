@@ -524,8 +524,16 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       Samples = sigs.deviceBufferSize();
       DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=" + Str( Samples ) );
     }
-    if ( UseAIClock )
+    if ( UseAIClock ) {
+      if ( ::fabs(sigs[0].sampleRate() - DAQFlexDevice->aiSampleRate()) > 0.1 ) {
+	sigs.addError( DaqError::InvalidSampleRate );
+	sigs.addErrorStr( "sampling rate " + Str( 0.001*sigs[0].sampleRate(), "%.1f" ) +
+			  "kHz does not match AI clock of " + 
+			  Str( 0.001*DAQFlexDevice->aiSampleRate(), "%.1f" ) + "kHz" );
+	return -1;
+      }
       DAQFlexDevice->sendMessage( "AOSCAN:EXTPACER=ENABLE" );
+    }
 
     // set buffer size:
     if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
