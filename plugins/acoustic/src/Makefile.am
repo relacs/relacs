@@ -8,7 +8,8 @@ pluginlib_LTLIBRARIES = \
     libacousticloudspeaker.la \
     libacousticcalibspeakers.la \
     libacousticcalibmicrophone.la \
-    libacousticechotest.la
+    libacousticechotest.la \
+    libacousticsoundlevel.la
 
 
 
@@ -184,12 +185,48 @@ libacousticechotest_la_include_HEADERS = $(HEADER_PATH)/echotest.h
 
 
 
+libacousticsoundlevel_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libacousticsoundlevel_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libacousticsoundlevel_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libacousticsoundlevel_la_OBJECTS) : moc_soundlevel.cc
+
+libacousticsoundlevel_la_SOURCES = soundlevel.cc
+
+libacousticsoundlevel_la_includedir = $(pkgincludedir)/acoustic
+
+libacousticsoundlevel_la_include_HEADERS = $(HEADER_PATH)/soundlevel.h
+
+
+
 check_PROGRAMS = \
     linktest_libacoustictraces_la \
     linktest_libacousticloudspeaker_la \
     linktest_libacousticcalibspeakers_la \
     linktest_libacousticcalibmicrophone_la \
-    linktest_libacousticechotest_la
+    linktest_libacousticechotest_la \
+    linktest_libacousticsoundlevel_la
 
 linktest_libacoustictraces_la_SOURCES = linktest.cc
 linktest_libacoustictraces_la_LDADD = libacoustictraces.la
@@ -205,6 +242,9 @@ linktest_libacousticcalibmicrophone_la_LDADD = libacousticcalibmicrophone.la
 
 linktest_libacousticechotest_la_SOURCES = linktest.cc
 linktest_libacousticechotest_la_LDADD = libacousticechotest.la
+
+linktest_libacousticsoundlevel_la_SOURCES = linktest.cc
+linktest_libacousticsoundlevel_la_LDADD = libacousticsoundlevel.la
 
 TESTS = $(check_PROGRAMS)
 
