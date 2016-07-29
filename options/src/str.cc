@@ -1616,45 +1616,43 @@ Str &Str::format( int year, int month, int day, int hour, int minute, int second
       case 'Z' : {
 	Str s = Str( millisecond, width, pad );
 	string::replace( pos, n, s );
-	pos += s.size();
+	pos += s.size() - 1;
 	break; }
       case 'S' : {
 	Str s = Str( second, width, pad );
 	string::replace( pos, n, s );
-	pos += s.size();
+	pos += s.size() - 1;
 	break; }
       case 'M' : {
 	Str s = Str( minute, width, pad );
 	string::replace( pos, n, s );
-	pos += s.size();
+	pos += s.size() - 1;
 	break; }
       case 'H' : {
 	Str s = Str( hour, width, pad );
 	string::replace( pos, n, s );
-	pos += s.size();
+	pos += s.size() - 1;
 	break; }
       case 'd' : {
 	Str s = Str( day, width, pad );
 	string::replace( pos, n, s );
-	pos += s.size();
+	pos += s.size() - 1;
 	break; }
       case 'm' : {
 	Str s = Str( month, width, pad );
 	string::replace( pos, n, s );
-	pos += s.size();
+	pos += s.size() - 1;
 	break; }
       case 'y' : {
 	Str s = Str( year%100, width, pad );
 	string::replace( pos, n, s );
-	pos += s.size();
+	pos += s.size() - 1;
 	break; }
       case 'Y' : {
 	Str s = Str( year, width, pad );
 	string::replace( pos, n, s );
-	pos += s.size();
+	pos += s.size() - 1;
 	break; }
-      default:
-	pos++;
       }
       continue;
     }
