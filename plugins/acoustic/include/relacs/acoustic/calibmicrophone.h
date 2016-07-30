@@ -46,7 +46,7 @@ namespace acoustic {
 - \c amplitudestdev=0V: rms amplitude stdev (\c number)
 - \c scale=0V/Pa: Scale factor (\c number)
 
-\version 1.0 (Aug 11 2008)
+\version 1.2 (Jul 30 2016)
 */
 
 
@@ -63,15 +63,13 @@ public:
 
   virtual void preConfig( void );
   virtual int main( void );
-  virtual void stop( void );
-  void save( void );
+  void save( const ArrayD &amplitudes, const InData &indata );
   void analyze( const InData &intrace, double frequency, double duration,
 		ArrayD &amplitudes );
 
  private:
 
   OptWidget MW;
-
 
 };
 

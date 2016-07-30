@@ -31,7 +31,7 @@ namespace acoustic {
 
 
 CalibMicrophone::CalibMicrophone( void )
-  : RePro( "CalibMicrophone", "acoustic", "Jan Benda", "1.0", "Aug 11 2008" ),
+  : RePro( "CalibMicrophone", "acoustic", "Jan Benda", "1.2", "Jul 30 2016" ),
     Traces()
 {
   // add some parameter as options:
@@ -42,9 +42,9 @@ CalibMicrophone::CalibMicrophone( void )
   addInteger( "repeats", "Number of measurements", 10, 1, 10000, 1 );
   Options::setFlags( 1 );
 
-  addNumber( "amplitude", "rms amplitude", 0.0, 0.0, 10000.0, 0.05, "V" ).setFlags( 2 );
-  addNumber( "amplitudestdev", "rms amplitude stdev", 0.0, 0.0, 10000.0, 0.05, "V" ).setFlags( 2 );
-  addNumber( "scale", "Scale factor", 0.0, 0.0, 10000.0, 0.05, "V/Pa" ).setFlags( 2 );
+  addNumber( "amplitude", "RMS Amplitude", 0.0, 0.0, 10000.0, 0.05, "V" ).setFlags( 2 ).setStyle( OptWidget::Huge + OptWidget::Bold );
+  addNumber( "amplitudestdev", "RMS Amplitude standard deviation", 0.0, 0.0, 10000.0, 0.05, "V" ).setFlags( 2 ).setStyle( OptWidget::Huge + OptWidget::Bold );
+  addNumber( "scale", "Scale factor", 0.0, 0.0, 10000.0, 0.05, "V/Pa" ).setFlags( 2 ).setStyle( OptWidget::Huge + OptWidget::Bold );
 
   MW.assign( ((Options*)this), 0, 1+2, true, 0, mutex() );
   MW.setVerticalSpacing( 4 );
@@ -83,6 +83,8 @@ int CalibMicrophone::main( void )
     return Failed;
   }
   const InData &indata = trace( intrace );
+  setFormat("amplitude", indata.format() );
+  setFormat("amplitudestdev", indata.format() );
 
   // plot trace:
   tracePlotContinuous( duration );
@@ -130,6 +132,10 @@ int CalibMicrophone::main( void )
     setNumber( "scale", scale );
     MW.updateValues( OptWidget::changedFlag() );
   }
+  setToDefault( "scale" );
+  setToDefault( "amplitude" );
+  setToDefault( "amplitudestdev" );
+  save( amplitudes, indata );
 
   // XXX write result to calibspeaker repro!!!
 
@@ -137,13 +143,26 @@ int CalibMicrophone::main( void )
 }
 
 
-void CalibMicrophone::stop( void )
+void CalibMicrophone::save( const ArrayD &amplitudes, const InData &indata )
 {
-}
+  ofstream df( addPath( "calibmicrophone.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
 
+  // write header and key:
+  settings().save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "amplitude", indata.unit(), indata.format() );
+  key.saveKey( df, true, false );
 
-void CalibMicrophone::save( void )
-{
+  // write data:
+  for ( int k=0; k<amplitudes.size(); k++ ) {
+    key.save( df, amplitudes[k], 0 );
+    df << '\n';
+  }
+  df << '\n' << '\n';
 }
 
 
