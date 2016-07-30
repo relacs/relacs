@@ -151,7 +151,7 @@ void CalibMicrophone::save( const ArrayD &amplitudes, const InData &indata )
     return;
 
   // write header and key:
-  settings().save( df, "# ", 0, Options::FirstOnly );
+  this->Options::save( df, "# ", 0, Options::FirstOnly );
   df << '\n';
   TableKey key;
   key.addNumber( "amplitude", indata.unit(), indata.format() );
