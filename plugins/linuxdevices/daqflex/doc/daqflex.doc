@@ -32,7 +32,7 @@ sudo addgroup --system iocard
 -# Add udev rules. On new (after mid 2012) Linux systems create the file
 \c /lib/udev/rules.d/98-daqflex.rules (as root)
  and paste the following lines into that file:
-\include 98-daqflex-new.rules
+\include 98-daqflex.rules
 On older system (prior to mid 2012) create the file
 \c /etc/udev/rules.d/98-daqflex.rules and paste the following lines into that file:
 \include 98-daqflex-old.rules
