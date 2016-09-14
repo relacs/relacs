@@ -40,6 +40,9 @@ using namespace std;
 
 namespace relacs {
 
+  template < typename T > class SampleData;
+  template < typename TT, typename RR >
+    SampleData< TT > convolve( const SampleData< TT > &x, const RR &y, int offs=0 );
 
 /*! 
 \class SampleData
@@ -970,7 +973,7 @@ class SampleData : public Array< T >
          \a y can be shifted by \a offs indices.
          If possible, y.size() should be smaller than x.size(). */
   template < typename TT, typename RR >
-  friend SampleData<TT> convolve( const SampleData<TT> &x, const RR &y, int offs=0 );
+  friend SampleData<TT> convolve( const SampleData<TT> &x, const RR &y, int offs );
   template < typename TT >
   friend SampleData<TT> convolve( const SampleData<TT> &x, const SampleData<TT> &y );
 

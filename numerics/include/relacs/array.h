@@ -44,6 +44,9 @@ using namespace std;
 
 namespace relacs {
 
+  template < typename T > class Array;
+  template < typename T, typename S >
+    Array<T> convolve( const Array<T> &x, const S &y, int offs=0 );
 
 /*! 
 \class Array
@@ -685,7 +688,7 @@ class Array
          \a y can be shifted by \a offs indices.
          If possible, y.size() should be smaller than x.size(). */
   template < typename TT, typename SS >
-  friend Array<TT> convolve( const Array<TT> &x, const SS &y, int offs=0 );
+  friend Array<TT> convolve( const Array<TT> &x, const SS &y, int offs );
 
     /*! Replace each element of the sorted array between
         indices \a first (inclusively) and \a last (exclusively)
