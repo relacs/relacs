@@ -144,6 +144,11 @@ DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSDAQ"
 AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
  [Define if relacs daq library exists.])
 
+#################################################
+## NIX IO Library
+#################################################
+RELACS_LIB_NIX()
+AM_CONDITIONAL(RELACS_COND_NIX, [test "$RELACS_NIX" != no])
 
 #################################################
 ## Examples
@@ -364,7 +369,7 @@ AC_OUTPUT
 #################################################
 
 cat <<SUMMARY
-
+    C++ language standard ........ ${CXXSTD}
     Use GSL ...................... ${RELACS_GSL}
     Use sndfile .................. ${RELACS_SNDFILE}
     Use portaudio ................ ${RELACS_PORTAUDIO}
@@ -373,6 +378,7 @@ cat <<SUMMARY
     Use libusb ................... ${RELACS_USB}
     Use TML_lib .................. ${RELACS_TML}
     Use OpenCV ................... ${RELACS_OPENCV}
+    Use NIX IO ................... ${RELACS_NIX}
     Generate user manual ......... ${RELACS_GENERATE_DOCBOOK}
     Generate API documentation ... ${DX_SUMMARY}
     Compile example programs ..... ${RELACS_COMPILE_EXAMPLES}

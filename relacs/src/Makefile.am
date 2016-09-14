@@ -13,11 +13,11 @@ librelacs_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 librelacs_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(QT4_LDFLAGS) $(GSL_LDFLAGS) $(SNDFILE_LDFLAGS) $(PORTAUDIO_LDFLAGS)
+    $(QT4_LDFLAGS) $(GSL_LDFLAGS) $(SNDFILE_LDFLAGS) $(PORTAUDIO_LDFLAGS) $(NIX_LDFLAGS)
 
 librelacs_la_LIBADD = \
     ../../plot/src/librelacsplot.la \
@@ -27,7 +27,7 @@ librelacs_la_LIBADD = \
     ../../daq/src/librelacsdaq.la \
     ../../numerics/src/librelacsnumerics.la \
     -ldl \
-    $(QT4_LIBS) $(GSL_LIBS) $(SNDFILE_LIBS) $(PORTAUDIO_LIBS)
+    $(QT4_LIBS) $(GSL_LIBS) $(SNDFILE_LIBS) $(PORTAUDIO_LIBS) $(NIX_LIBS)
 
 $(librelacs_la_OBJECTS) : \
     moc_control.cc \

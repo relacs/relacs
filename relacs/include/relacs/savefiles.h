@@ -39,11 +39,15 @@
 #include <relacs/spiketrace.h>
 #include <relacs/dataindex.h>
 
+#ifdef HAVE_NIX
+#include <nix.hpp>
+#endif
+
 namespace relacs {
 
 
 class RELACSWidget;
-
+class FilterDetectors;
 /*!
 \class SaveFiles
 \brief Save data to files
@@ -248,7 +252,10 @@ protected:
         contains all information.
         Call this *after* createEventFiles()! */
   void createXMLFile( void );
-
+  /*! Open and initialize the NIX file that
+        contains *all* information. */
+  void createNIXFile( void );
+  
   virtual void customEvent( QEvent *qce );
 
     /*! Are there any files open to save in? */
@@ -354,6 +361,50 @@ protected:
         to be saved. */
   deque<string> RemoveFiles;
 
+  #ifdef HAVE_NIX
+  struct NixTrace {
+    nix::DataArray data;
+    size_t         index;
+    nix::NDSize    offset;
+  };
+
+  struct NixEventData {
+    nix::DataArray data;
+    nix::MultiTag tag;
+    int input_trace;
+    size_t index;
+    nix::NDSize offset;
+    //we belong to the el_index of the EventList
+    size_t el_index;
+  };
+
+  struct NixFile {
+    nix::File    fd;
+    nix::Block   root_block;
+    nix::Section root_section;
+    nix::MultiTag event_tag;
+    nix::DataArray event_positions;
+    string create ( string path );
+    void close  ( void );
+    void saveMetadata ( const AllDevices *devices );
+    void saveMetadata ( const MetaData &mtdt );
+    void writeStimulus ( const InList &IL, string rp_name );
+    void initTraces ( const InList &IL );
+    void writeTraces ( const InList &IL );
+    void writeChunk ( NixTrace &trace, size_t to_read, const void *data);
+    void initEvents ( const EventList &EL, FilterDetectors *FD );
+    void writeEvents ( const EventList &EL, double offset );
+    void resetIndex ( const InList &IL );
+    void resetIndex ( const EventList &EL );
+
+    string rid; //recording id
+
+    vector<NixTrace> traces;
+    vector<NixEventData> events;
+  };
+  NixFile NIO;
+  #endif
+  
   RELACSWidget *RW;
 
   QLabel *FileLabel;

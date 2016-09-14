@@ -32,6 +32,7 @@
 #include <relacs/relacswidget.h>
 #include <relacs/session.h>
 #include <relacs/savefiles.h>
+#include <relacs/filterdetectors.h>
 
 namespace relacs {
 
@@ -344,6 +345,11 @@ void SaveFiles::writeToggle( void )
   if ( ToggleData && ! Hold ) {
 
     if ( ToggleOn && ! isSaving() ) {
+
+      #ifdef HAVE_NIX
+        NIO.resetIndex( IL );
+        NIO.resetIndex( EL );
+      #endif
       // RW->printlog( "SaveFiles::writeToggle(): switched saving on!" );
       // update offsets:
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
@@ -398,6 +404,22 @@ void SaveFiles::saveTraces( void )
   if ( isSaving() && ! TraceFiles.empty() )
     offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
   writeEvents( offs );
+  #ifdef HAVE_NIX
+  //writeStimulus will reset Stimuli, so we have to do our beforehand
+  if ( isSaving() ) {
+    NIO.writeTraces( IL );
+    // wait for availability of signal start time:
+    if (! ( !Stimuli.empty() && SignalTime < 0.0 ) ) {
+      offs = IL[0].interval( NIO.traces[0].index - NIO.traces[0].offset[0] );
+      NIO.writeEvents( EL, offs );
+    }
+    // there is a new stimulus:
+    bool have_stimulus = !Stimuli.empty() && SignalTime >= 0.0;
+    if ( have_stimulus ) {
+      NIO.writeStimulus (IL, StimuliRePro);
+    }
+  }
+  #endif
   writeStimulus();
 }
 
@@ -1163,6 +1185,21 @@ void SaveFiles::createXMLFile( void )
 }
 
 
+void SaveFiles::createNIXFile( void )
+{
+  #ifdef HAVE_NIX
+  string nix_path = NIO.create( Path );
+  if ( nix_path.empty() ) {
+    std::cerr << "Could not create NIX data file" << std::endl;
+    return;
+  }
+  addRemoveFile( nix_path );
+  NIO.initTraces( IL );
+  NIO.initEvents( EL, RW->FD );
+  #endif
+}
+
+
 string SaveFiles::pathName( void ) const
 {
   int az = ('z'-'a'+1);
@@ -1261,6 +1298,7 @@ void SaveFiles::openFiles( void )
   createEventFiles();
   createStimulusFile();
   createXMLFile();
+  createNIXFile();
   FilesOpen = true;
   Hold = false;
 
@@ -1339,6 +1377,13 @@ void SaveFiles::closeFiles( void )
     delete XSF;
   }
   XSF = 0;
+
+  #ifdef HAVE_NIX
+    if ( NIO.fd.isOpen() ) {
+      NIO.saveMetadata( RW->MTDT  );
+      NIO.close();
+    }
+  #endif
 
   if ( FilesOpen ) {
     RW->MTDT.section( "Recording" ).erase( "File" );
@@ -1455,6 +1500,389 @@ void SaveFiles::customEvent( QEvent *qce )
   }
 }
 
+#ifdef HAVE_NIX
+string SaveFiles::NixFile::create ( string path )
+{
+  rid = Str( path ).preventedSlash().name();
+  string nix_path = path + rid + ".nix.h5";
+  fd = nix::File::open(nix_path, nix::FileMode::Overwrite);
+  root_block = fd.createBlock(rid, "recording");
+  root_section = fd.createSection(rid, "recording");
+  root_block.metadata( root_section );
+  return nix_path;
+}
+
+
+void SaveFiles::NixFile::close ( )
+{
+  if ( fd.isOpen() ) {
+    std::cerr << "Closing NIX File" << std::endl;
+    root_block = nix::none;
+    root_section = nix::none;
+    event_tag = nix::none;
+    event_positions = nix::none;
+    traces.clear();
+    events.clear();
+    fd.close();
+  }
+}
+
+
+static void saveNIXParameter(const Parameter &param, nix::Section &section)
+{
+  vector<nix::Value> values;
+  for ( int i = 0; i < param.size(); i++ ) {
+    nix::Value val;
+    //have to check for number or integer, otherwise it doesn't work
+    if ( param.isNumber () || param.isInteger() ) {
+      if ( param.isInteger () ) {
+        val = nix::Value ( static_cast<int64_t>( param.number (i) ) );
+      }
+      else {
+        val = nix::Value ( param.number ( i ) );
+      }
+      val.uncertainty = param.error( i );
+    }
+    else if ( param.isDate() ) {
+      val = nix::Value( param.text( i, "%04Y-%02m-%02d" ) );
+    }
+    else if ( param.isTime() ) {
+      val = nix::Value (param.text( i, "%02H:%02M:%02S" ));
+    }
+    else if ( param.isText() ) {
+      val = nix::Value (param.text( i ));
+    }
+    else if ( param.isBoolean() ) {
+      val = nix::Value( param.boolean( i ) );
+    }
+    if ( val.type() != nix::DataType::Nothing ) {
+      values.push_back( std::move( val ) );
+    }
+  }
+  if ( values.empty() ) {
+    //property with no values, so we woudn't know the type
+    //just don't save anything
+    return;
+  }
+  string unit = nix::util::unitSanitizer( param.unit() );
+  if ( unit == "°C" || unit == "C" || unit == "F" || unit == "°F" ) {
+    std::for_each( values.begin(), values.end(), [&unit](nix::Value &v) {
+        switch (v.type()) {
+        case nix::DataType::Int64:
+	  v = nix::Value(nix::util::convertToKelvin(unit, v.get<int64_t>()));
+	  unit = "K";
+	  break;
+        case nix::DataType::Double:
+	  v = nix::Value(nix::util::convertToKelvin(unit, v.get<double>()));
+	  unit = "K";
+          break;
+        default:
+          std::cerr << "[nix] Warning: temperature value but unkown type" << std::endl;
+          unit = "";
+        }
+      });
+  } else if ( unit == "min" || unit == "sec" || unit == "h" ) {
+    std::for_each( values.begin(), values.end(), [&unit](nix::Value &v) {
+        switch (v.type()) {
+        case nix::DataType::Int64:
+          v = nix::Value(nix::util::convertToSeconds(unit, v.get<int64_t>()));
+	  unit = "s";
+          break;
+        case nix::DataType::Double:
+	  v = nix::Value(nix::util::convertToSeconds(unit, v.get<double>()));
+	  unit = "s";
+          break;
+        default:
+          std::cerr << "[nix] Warning: min value but unkown type" << std::endl;
+          unit = "";
+        }
+      });
+  } else if ( unit == "1" ) {
+    unit = "";
+  }
+
+  nix::Property prop = section.createProperty ( param.name(), values );
+  if ( !unit.empty() && ( nix::util::isSIUnit( unit ) ||
+	 nix::util::isCompoundSIUnit( unit ) ) ) {
+    prop.unit ( unit );
+  } else if ( !unit.empty() ) {
+    std::cerr << "\t unit: " << unit << " is no SI unit, not setting it!!!" << std::endl;
+  }
+}
+
+
+static void saveNIXOptions(const Options &opts, nix::Section section,
+                           Options::SaveFlags flags, int selectmask)
+{
+  using OFlags = Options::SaveFlags;
+  string ns = opts.name();
+  string ts = opts.type();
+  if ( ( flags & Options::SaveFlags::SwitchNameType ) ) {
+    std::swap(ts, ns);
+  }
+  bool have_name = ( ( ! ns.empty() ) && ( ( flags & OFlags::NoName ) == 0 ) );
+  bool have_type = ( ( ! ts.empty() ) && ( ( flags & OFlags::NoType ) == 0 ) );
+  bool mk_section = ( opts.flag( selectmask ) && ( have_name || have_type ) );
+  if ( mk_section ) {
+    section = section.createSection ( nix::util::nameSanitizer(ns),
+				      nix::util::nameSanitizer(ts) );
+  }
+  //save parameter
+  for ( auto pp = opts.begin(); pp != opts.end(); ++pp ) {
+    if ( pp->flags( selectmask ) ) {
+      saveNIXParameter(*pp, section);
+    }
+  }
+  //now the subsections
+  for ( auto sp = opts.sectionsBegin();
+        sp != opts.sectionsEnd();
+        ++sp ) {
+    if ( (*sp)->flag( selectmask ) ) {
+      const Options *cur_opt = *sp;
+      saveNIXOptions(*cur_opt, section, flags, selectmask);
+    }
+  }
+}
+
+
+void SaveFiles::NixFile::saveMetadata (const AllDevices *devices)
+{
+  string fnname = rid;
+  nix::Section hw = root_section.createSection("hardware-" + rid, "hardware");
+  for ( int k=0; k < devices->size(); k++ ) {
+    const Device &dev = (*devices)[k];
+    int dt = dev.deviceType();
+    if ( dt ==  Device::AttenuateType ) {
+      continue;
+    }
+    string dts;
+    switch(dt) {
+    case Device::AnalogInputType:
+      dts = "hardware/daq/analog_input";
+      break;
+    case Device::AnalogOutputType:
+      dts = "hardware/daq/analog_output";
+      break;
+    case Device::DigitalIOType:
+      dts = "DigitalIO";
+      break;
+    default:
+      dts = dev.deviceTypeStr();
+    }
+    string sec_name = "hardware-" + dts + "-" + fnname;
+    while (sec_name.find("/") != sec_name.npos) {
+      sec_name.replace(sec_name.find("/"), 1, "_");
+    }
+    nix::Section s = hw.createSection(sec_name, dts);
+    Options opts( dev.info() );
+    opts.erase( "type" );
+    saveNIXOptions(opts, s, Options::FirstOnly, 0);
+  }
+}
+
+
+void SaveFiles::NixFile::saveMetadata (const MetaData &mtdt)
+{
+  Options::SaveFlags flags = static_cast<Options::SaveFlags>(Options::SwitchNameType | Options::FirstOnly);
+  saveNIXOptions( mtdt, root_section, flags, mtdt.saveFlags() );
+}
+
+
+void SaveFiles::NixFile::initTraces ( const InList &IL )
+{
+  cerr << "INIT TRACES!!!" << endl;
+  for ( int k=0; k<IL.size(); k++ ) {
+    std::cerr << "Ident: " << IL[k].ident() << std::endl;
+    std::cerr << "Device: " << IL[k].device() << std::endl;
+    std::cerr << "Channel: " << IL[k].channel() << std::endl;
+    std::cerr << "Unit: " << IL[k].unit() << std::endl;
+    std::cerr << "Scale: " << IL[k].scale() << std::endl;
+    std::cerr << "SampleRate: " << IL[k].sampleRate() << std::endl;
+    NixTrace trace;
+    string data_type = "nix.data.sampled." + IL[k].ident();
+    std::cerr << IL[k].ident() << std::endl;
+    trace.data = root_block.createDataArray(IL[k].ident(), data_type, nix::DataType::Float, {4096});
+    trace.data.unit(IL[k].unit());
+    trace.data.label(IL[k].ident());
+    nix::SampledDimension dim;
+    dim = trace.data.appendSampledDimension(IL[k].sampleInterval());
+    dim.unit("s");
+    dim.label("time");
+    trace.index = IL[k].size();
+    trace.offset = {0};
+    //^ NB:size() is the all-time number of bytes written
+    //    string source_name = "device-" + nix::util::num2str(IL[k].device());
+    //nix::Source s = root_block.createSource();
+    traces.push_back(std::move(trace));
+  }
+}
+
+
+void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
+                                    size_t      to_read,
+                                    const void *data)
+{
+  typedef nix::NDSize::value_type value_type;
+  nix::NDSize count = { static_cast<value_type>(to_read) };
+  nix::NDSize size = trace.offset + count;
+  // std::cerr << "to write: " << to_read << "\n";
+  trace.data.dataExtent( size );
+  trace.data.setData( nix::DataType::Float, data, count, trace.offset );
+  trace.index += to_read;
+  trace.offset = size;
+}
+
+
+void SaveFiles::NixFile::writeStimulus( const InList &IL, string rp_name )
+{
+  cerr << "writeStimulus: " << rp_name << endl;
+  //todo: do not not only for the first trace, but for all of them
+  if ( IL[0].signalIndex() < 1 ) {
+    return;
+  }
+  double signal_time = IL[0].signalTime();
+  if ( !event_tag || event_tag.name() != rp_name  ) {
+    std::vector<nix::MultiTag> tags =
+      root_block.multiTags( nix::util::NameFilter<nix::MultiTag>( rp_name ) ) ;
+    if ( !tags.empty() ) {
+      event_tag = tags[0];
+      event_positions = event_tag.positions();
+      nix::NDSize size = event_positions.dataExtent();
+      event_positions.dataExtent( size + 1 );
+      event_positions.setData( nix::DataType::Double, &signal_time, {1}, size );
+    } else {
+      cerr << "writeStimulus2: " << rp_name << endl;
+      event_positions = root_block.createDataArray( rp_name + "_positions",
+						    "nix.event.positions", nix::DataType::Double, {1} );
+      cerr << "writeStimulus3: " << rp_name << endl;
+      event_positions.appendSetDimension();
+      cerr << "writeStimulus4: " << rp_name << endl;
+      event_positions.unit( "s" );
+      cerr << "writeStimulus5: " << rp_name << endl;
+      event_positions.label( "time" );
+      cerr << "writeStimulus6: " << rp_name << endl;
+      event_tag = root_block.createMultiTag( rp_name,
+					     "nix.event.stimulus",
+					     event_positions );
+      cerr << "writeStimulus7: " << rp_name << endl;
+      for ( auto &trace : traces ) {
+	event_tag.addReference( trace.data );
+      }
+      cerr << "writeStimulus8: " << rp_name << endl;
+      for ( auto &event : events ) {
+	if ( event.input_trace < 0 ) {
+	  continue;
+	}
+	
+	event_tag.addReference( event.data );
+      }
+      cerr << "writeStimulus9: " << endl;
+      event_positions.setData( nix::DataType::Double, &signal_time, {1}, {0} );
+    }
+  }
+  else {
+    nix::NDSize size = event_positions.dataExtent();
+    event_positions.dataExtent( size + 1 );
+    event_positions.setData( nix::DataType::Double, &signal_time, {1}, size );
+  }
+}
+
+
+void SaveFiles::NixFile::writeTraces( const InList &IL )
+{
+  for ( int k=0; k < IL.size(); k++ ) {
+    NixTrace &trace = traces[k];
+    if ( trace.index >= static_cast<size_t>( IL[k].size() ) ) {
+      //nothing to write
+      continue;
+    }
+    //position in the cyclic buffer
+    size_t buf_cap = IL[k].capacity();
+    size_t dat_pos = trace.index % buf_cap;
+    size_t buf_pos = IL[k].size() % buf_cap;
+    if ( buf_pos > dat_pos ) {
+      //   [.....|xxxxxxxx|......], x = filled buffer
+      // dat_pos ^ [data] ^ buf_pos
+      size_t to_read = buf_pos - dat_pos;
+      const float *data = &IL[k][dat_pos];
+      writeChunk( trace, to_read, data );
+    }
+    else {
+      //    [xxxx|........|xxxxxx], x = filled buffer
+      // buf_pos ^        ^ dat_pos
+      size_t to_read = buf_cap - dat_pos;
+      writeChunk( trace, to_read, &IL[k][dat_pos] );
+      writeChunk( trace, buf_pos, &IL[k][0] );
+    }
+  }
+}
+
+
+void SaveFiles::NixFile::initEvents( const EventList &EL, FilterDetectors *FD )
+{
+  for ( int i = 0; i < EL.size(); i++ ) {
+    if ( (EL[i].mode() & SaveTrace) == 0 ) {
+      //nothing to save
+      continue;
+    }
+    NixEventData ed;
+    ed.el_index = i;
+    ed.index = EL[i].size();
+    ed.offset = {0};
+    std::string ident = EL[i].ident();
+    std::string data_type = "nix.events.position." + ident;
+    ed.data = root_block.createDataArray( ident, data_type, nix::DataType::Double, {1} );
+    ed.data.unit( "s" );
+    ed.data.label( "time" );
+    ed.data.appendAliasRangeDimension();
+    ed.input_trace =  FD->eventInputTrace( i );
+    events.push_back(std::move(ed));
+  }
+}
+
+
+void SaveFiles::NixFile::writeEvents( const EventList &EL, double off )
+{
+  //  double st = EL[0].size() > 0 ? EL[0].back() : EL[0].rangeBack();
+  for(auto &ed : events ) {
+    int k = ed.el_index;
+    int len =  EL[k].size() - ed.index;
+    if ( len < 1 || !ed.data ) {
+      continue;
+    }
+    std::vector<double> ets ( len );
+    //ets.resize( len );
+    for( int i = 0; i < len; i++ ) {
+      int idx = ed.index + i;
+      ets[i] = EL[k][idx] - off;
+    }
+    ed.index += len;
+    typedef nix::NDSize::value_type ndsize_type;
+    nix::NDSize count = { static_cast<ndsize_type>(len) };
+    nix::NDSize size = ed.offset + count;
+    ed.data.dataExtent( size  );
+    ed.data.setData( nix::DataType::Double, ets.data(), count, ed.offset);
+    ed.offset = size;
+  }
+}
+
+
+void SaveFiles::NixFile::resetIndex( const InList &IL )
+{
+  for ( int k=0; k < IL.size(); k++ ) {
+    traces[k].index = IL[k].size();
+  }
+}
+
+
+void SaveFiles::NixFile::resetIndex( const EventList &EL )
+{
+  for ( auto &ed : events ) {
+    ed.index = EL[ed.el_index].size();
+  }
+}
+
+#endif
 
 }; /* namespace relacs */
 

@@ -21,5 +21,31 @@ if test "x${HAVE_CXX}" = "x" ; then
     AC_MSG_ERROR( [ $CXX_MISSING ] )
 fi
 
+# C++ language standard support
+#  (default to c++11 for now)
+AC_ARG_WITH([cxx_std],
+  [AS_HELP_STRING([--with-cxx-std],
+    [set the language standard to use @<:@default=c++11@:>@])],
+  [],
+  [with_cxx_std=c++11])
+
+CXXSTD=
+AS_IF([test "x$with_cxx_std" != xno], [
+  CXXFLAGS="${CXXFLAGS} -std=$with_cxx_std"
+  CXXSTD="$with_cxx_std"
+])
+
+#check for constexpr keyword support
+AC_TRY_COMPILE([
+constexpr int the_answer() { return 42; }
+               ], [],
+               have_constexpr=yes,
+	       have_constexpr=no)
+
+AS_IF([test "x$have_constexpr" != xno], [
+  AC_DEFINE([HAVE_CONSTEXPR], [1], [Define if the constexpr keyword is supported])
+  AC_MSG_NOTICE([cxx has constexpr support])
+])
+
 ])
 

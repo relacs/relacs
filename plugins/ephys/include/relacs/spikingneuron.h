@@ -1316,6 +1316,11 @@ class WangIKNa : public HodgkinHuxley
 
 };
 
+#ifdef HAVE_CONSTEXPR
+#define CONST_OR_CONSTEXPR constexpr
+#else
+#define CONST_OR_CONSTEXPR const
+#endif
 
 /*! 
 \class Edman
@@ -1383,10 +1388,10 @@ class Edman : public SpikingNeuron
   double NaO, KO, ClO;
   double Vm, Vh, Vl, Vn, Vr;
   double Tmmax, Thmax, Tlmax, Tnmax, Trmax;
-  static constexpr double Faraday = 96485.0;        // C/mol
-  static constexpr double GasConst = 8.3144;        // J/K/mol
-  static constexpr double eCharge = 1.60217653e-19; // C
-  static constexpr double kBoltz = 1.3806505e-23;   // J/K
+  static CONST_OR_CONSTEXPR double Faraday = 96485.0;        // C/mol
+  static CONST_OR_CONSTEXPR double GasConst = 8.3144;        // J/K/mol
+  static CONST_OR_CONSTEXPR double eCharge = 1.60217653e-19; // C
+  static CONST_OR_CONSTEXPR double kBoltz = 1.3806505e-23;   // J/K
   double FRT, F2RT, ekT;
   double INa, IK, ILNa, ILK, ILCl, IP;
   double GNaGates, GKGates, GLNaA, GLKA, GLClA, GPA;
