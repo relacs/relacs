@@ -28,15 +28,16 @@ namespace ephys {
 
 
 BridgeTest::BridgeTest( void )
-  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.6", "Oct 7, 2015" )
+  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.8", "Oct 5, 2016" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
-  addNumber( "duration", "Duration of stimulus", 0.01, 0.001, 1000.0, 0.001, "sec", "ms" );
-  addNumber( "pause", "Duration of pause between pulses", 0.1, 0.01, 1.0, 0.01, "sec", "ms" );
+  addNumber( "duration", "Duration of stimulus", 0.01, 0.002, 1000.0, 0.002, "sec", "ms" );
+  addNumber( "pause", "Duration of pause between pulses", 0.01, 0.0, 1.0, 0.01, "sec", "ms" );
   addInteger( "average", "Number of trials to be averaged", 10, 0, 1000000 );
-  addNumber( "rate", "Rate for adjusting plot ranges", 0.01, 0.0001, 0.1, 0.001 );
-  addBoolean( "plottrace", "Plot current voltage trace", true );
+  addBoolean( "dynamicrange", "Dynamically adjust plot range", false );
+  addNumber( "rate", "Rate for adjusting plot ranges", 0.01, 0.0001, 0.1, 0.001 ).setActivation( "dynamicrange", "true" );
+  addBoolean( "plottrace", "Plot current voltage trace", false  );
 
   // plot:
   P.lock();
@@ -63,6 +64,7 @@ int BridgeTest::main( void )
   double duration = number( "duration" );
   double pause = number( "pause" );
   unsigned int naverage = integer( "average" );
+  bool dynamicrange = boolean( "dynamicrange" );
   double rate = number( "rate" );
   bool plottrace = boolean( "plottrace" );
 
@@ -104,6 +106,7 @@ int BridgeTest::main( void )
   OutData signal;
   signal.setTrace( outtrace );
   signal.pulseWave( duration, 1.0/samplerate, amplitude+dccurrent, dccurrent );
+  signal.setDelay( pause );
 
   // message:
   Str s = "Amplitude <b>" + Str( amplitude ) + " nA</b>";
@@ -150,7 +153,7 @@ int BridgeTest::main( void )
       ymin = min;
       ymax = max;
     }
-    else {
+    else if ( dynamicrange ) {
       ymin += ( min - ymin )*rate;
       ymax += ( max - ymax )*rate;
       if ( ymax < max )
@@ -158,11 +161,18 @@ int BridgeTest::main( void )
       if ( ymin > min )
 	ymin = min;
     }
+    else {
+      if ( min < ymin )
+	ymin = min;      
+      if ( max > ymax )
+	ymax = max;      
+    }
 
     // plot:
     P.lock();
     P.clear();
-    P.setYRange( ymin, ymax );
+    if ( ! P.zoomedXRange() )
+      P.setYRange( ymin, ymax );
     P.plotVLine( 0.0, Plot::White, 2 );
     P.plotVLine( 1000.0*duration, Plot::White, 2 );
     if ( plottrace )

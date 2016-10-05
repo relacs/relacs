@@ -20,6 +20,7 @@
 */
 
 #include <relacs/sampledata.h>
+#include <relacs/stats.h>
 #include <relacs/str.h>
 #include <relacs/ephys/capacitycompensation.h>
 using namespace relacs;
@@ -28,15 +29,17 @@ namespace ephys {
 
 
 CapacityCompensation::CapacityCompensation( void )
-  : RePro( "CapacityCompensation", "ephys", "Jan Benda", "2.0", "Feb 27, 2015" )
+  : RePro( "CapacityCompensation", "ephys", "Jan Benda", "2.2", "Oct 5, 2017" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
-  addNumber( "duration", "Duration of stimulus", 0.1, 0.01, 10000.0, 0.01, "sec", "ms" );
+  addNumber( "duration", "Duration of stimulus", 0.01, 0.01, 10000.0, 0.01, "sec", "ms" );
   addNumber( "frequency", "Frequency of sine-wave stimulus", 1000.0, 1.0, 10000.0, 10.0, "Hz" );
   addInteger( "showcycles", "Number of cycles plotted", 10, 1, 10000, 1 );
-  addNumber( "pause", "Duration of pause between pulses", 0.1, 0.01, 10000.0, 0.01, "sec", "ms" );
+  addNumber( "pause", "Duration of pause between pulses", 0.01, 0.01, 10000.0, 0.01, "sec", "ms" );
   addInteger( "average", "Number of trials to be averaged", 10, 1, 1000000 );
+  addBoolean( "dynamicrange", "Dynamically adjust plot range", false );
+  addNumber( "rate", "Rate for adjusting plot ranges", 0.01, 0.0001, 0.1, 0.001 ).setActivation( "dynamicrange", "true" );
 
   // plot:
   setWidget( &P );
@@ -63,6 +66,8 @@ int CapacityCompensation::main( void )
   int showcycles = integer( "showcycles" );
   double pause = number( "pause" );
   unsigned int naverage = integer( "average" );
+  bool dynamicrange = boolean( "dynamicrange" );
+  double rate = number( "rate" );
 
   // don't print repro message:
   noMessage();
@@ -144,12 +149,12 @@ int CapacityCompensation::main( void )
     else {
       SampleDataF insine;
       insine.sin( 0.0, duration, intrace.stepsize(), frequency );
-      insine += dccurrent;
       insine *= amplitude;
+      insine += dccurrent;
       insine.copy( tmin, tmax, input );
     }
 
-    // average:
+    // current average:
     SampleDataF inaverage( tmin, tmax, intrace.stepsize(), 0.0F );
     indatatraces.push_back( input );
     if ( indatatraces.size() > naverage )
@@ -164,7 +169,7 @@ int CapacityCompensation::main( void )
     SampleDataF output( tmin, tmax, intrace.stepsize(), 0.0F );
     intrace.copy( signalTime(), output );
 
-    // average:
+    // voltage average:
     SampleDataF outaverage( tmin, tmax, intrace.stepsize(), 0.0F );
     outdatatraces.push_back( output );
     if ( outdatatraces.size() > naverage )
@@ -175,18 +180,26 @@ int CapacityCompensation::main( void )
     }
     outaverage -= mean( outaverage );
 
+    // linefit:
+    double b, bu, m, mu, chisq;
+    lineFit( inaverage.array(), outaverage.array(), b, bu, m, mu, chisq );
+    double x1 = -1.1*amplitude;
+    double y1 = m*x1+b;
+    double x2 = 1.1*amplitude;
+    double y2 = m*x2+b;
+    double rms = ::sqrt( chisq/inaverage.size() );
+
     // current and voltage range:
     float min = 0.0;
     float max = 0.0;
     minMax( min, max, inaverage );
-    double amplitude = max - min;
+    double camplitude = max - min;
     minMax( min, max, outaverage );
     if ( ymin == 0.0 && ymax == 0.0 ) {
       ymin = min;
       ymax = max;
     }
-    else {
-      double rate = 0.01;
+    else if ( dynamicrange ) {
       ymin += ( min - ymin )*rate;
       ymax += ( max - ymax )*rate;
       if ( ymax < max )
@@ -194,17 +207,27 @@ int CapacityCompensation::main( void )
       if ( ymin > min )
 	ymin = min;
     }
+    else {
+      if ( min < ymin )
+	ymin = min;      
+      if ( max > ymax )
+	ymax = max;      
+    }
 
     // plot:
     P.lock();
     P[0].clear();
-    P[0].setYRange( ymin, ymax );
-    double ampl = (ymax-ymin)/amplitude/1.1;
+    if ( ! P[0].zoomedYRange() )
+      P[0].setYRange( ymin, ymax );
+    double ampl = (ymax-ymin)/camplitude/1.1;
     P[0].plot( ampl*inaverage, 1000.0, Plot::Red, 2, Plot::Solid );
     P[0].plot( outaverage, 1000.0, Plot::Yellow, 2, Plot::Solid );
     P[1].clear();
-    P[1].setYRange( ymin, ymax );
+    P[1].setTitle( "RMS = " + Str( rms, 0, 1, 'f' ) + " mV" );
+    if ( ! P[1].zoomedYRange() )
+      P[1].setYRange( ymin, ymax );
     P[1].plot( inaverage.array(), outaverage.array(), Plot::Yellow, 3, Plot::Solid );
+    P[1].plotLine( x1, y1, x2, y2, Plot::Orange, 2 );
     P.draw();
     P.unlock();
   }
