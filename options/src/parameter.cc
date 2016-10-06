@@ -334,6 +334,7 @@ Parameter &Parameter::clear( const string &name, const string &request,
   ActivationName.clear();
   ActivationValues.clear();
   ActivationNumber.clear();
+  ActivationUnit.clear();
   ActivationComparison.clear();
   ActivationType.clear();
   ActivationStatus.clear();
@@ -391,6 +392,7 @@ Parameter &Parameter::assign( const Parameter &p )
   ActivationName = p.ActivationName;
   ActivationValues = p.ActivationValues;
   ActivationNumber = p.ActivationNumber;
+  ActivationUnit = p.ActivationUnit;
   ActivationComparison = p.ActivationComparison;
   ActivationType = p.ActivationType;
   ActivationStatus = p.ActivationStatus;
@@ -3182,6 +3184,8 @@ Parameter &Parameter::addActivation( const string &name, const string &value,
   ActivationName.push_back( name );
   ActivationValues.push_back( StrQueue() );
   ActivationValues.back().assign( value, "|" );
+  ActivationNumber.push_back( 0.0 );
+  ActivationUnit.push_back( "" );
   ActivationComparison.push_back( 0 );
   ActivationType.push_back( activate );
   ActivationStatus.push_back( true );
@@ -3206,8 +3210,8 @@ Parameter &Parameter::addActivation( const string &name, const string &value,
       inx=2;
     }
     Str vs( value );
-    string unit = vs.unit( InternUnit, inx );
-    ActivationNumber.push_back( changeUnit( vs.number( 0.0, inx ), unit, OutUnit ) );
+    ActivationNumber.back() = vs.number( 0.0, inx );
+    ActivationUnit.back() = vs.unit( "", inx );
   }
   return *this;
 }
@@ -3220,6 +3224,7 @@ Parameter &Parameter::clearActivation( void )
   ActivationComparison.clear();
   ActivationType.clear();
   ActivationNumber.clear();
+  ActivationUnit.clear();
   ActivationStatus.clear();
   return *this;
 }
@@ -3270,7 +3275,16 @@ double Parameter::activationNumber( int index ) const
   if ( index < 0 || index >= (int)ActivationNumber.size() )
     return 0.0;
   else
-    return ActivationNumber.back();
+    return ActivationNumber[index];
+}
+
+
+string Parameter::activationUnit( int index ) const
+{
+  if ( index < 0 || index >= (int)ActivationUnit.size() )
+    return "";
+  else
+    return ActivationUnit[index];
 }
 
 
@@ -3318,41 +3332,42 @@ bool Parameter::testActivation( int index, double value, double tol )
 {
   if ( index >= 0 && index < (int)ActivationComparison.size() ) {
     bool b = true;
+    double testvalue = changeUnit( ActivationNumber[index], ActivationUnit[index], OutUnit );
 
     switch ( ActivationComparison[index] ) {
 
     case 1:
-      b = ( ::fabs( ActivationNumber[index] - value ) < tol );
+      b = ( ::fabs( testvalue - value ) < tol );
       if ( ! ActivationType[index] )
 	b = !b;
       break;
 
     case 2:
-      b = ( value > ActivationNumber[index] );
+      b = ( value > testvalue );
       if ( ! ActivationType[index] )
 	b = !b;
       break;
 
     case 3:
-      b = ( value >= ActivationNumber[index]-tol );
+      b = ( value >= testvalue-tol );
       if ( ! ActivationType[index] )
 	b = !b;
       break;
 
     case 4:
-      b = ( value < ActivationNumber[index] );
+      b = ( value < testvalue );
       if ( ! ActivationType[index] )
 	b = !b;
       break;
 
     case 5:
-      b = ( value <= ActivationNumber[index]+tol );
+      b = ( value <= testvalue+tol );
       if ( ! ActivationType[index] )
 	b = !b;
       break;
 
     case 6:
-      b = ( ::fabs( ActivationNumber[index] - value ) >= tol );
+      b = ( ::fabs( testvalue - value ) >= tol );
       if ( ! ActivationType[index] )
 	b = !b;
       break;

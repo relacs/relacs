@@ -942,10 +942,16 @@ public:
   string activationValues( int index=0 ) const;
     /*! The numerical value of the \a index-th Parameter on which this Parameter is activated
         or inactivated according to activationComparison( index ).
-        \sa setActivation(), addActivation(), clearActivation(),
+        \sa activationUnit(), setActivation(), addActivation(), clearActivation(),
 	activations(), activationComparison(), activationValue(),
 	activationName(), activation() */
   double activationNumber( int index=0 ) const;
+    /*! The unit corresponding to the numerical value of the \a index-th Parameter
+        on which this Parameter is activated or inactivated according to activationComparison( index ).
+        \sa activationNumber(), setActivation(), addActivation(), clearActivation(),
+	activations(), activationComparison(), activationValue(),
+	activationName(), activation() */
+  string activationUnit( int index=0 ) const;
     /*! The type of numerical comparison used for activating
         or inactivating this Parameter by the \a index-th Parameter.
         \sa setActivation(), addActivation(), clearActivation(),
@@ -1113,13 +1119,14 @@ private:
     /*! The names of another Parameter. */
   deque< string > ActivationName;
     /*! The values the ActivationName Parameters need to have
-        in order to activate/inactivate this Parameter
-        (in a dialog). */
+        in order to activate/inactivate this Parameter in a dialog. */
   deque< StrQueue > ActivationValues;
     /*! The numbers against which value of the ActivationName Parameters
-        are compared in order to activate/inactivate this Parameter
-        (in a dialog). */
+        are compared in order to activate/inactivate this Parameter in a dialog. */
   deque< double > ActivationNumber;
+    /*! The units for the numbers against which value of the ActivationName Parameters
+        are compared in order to activate/inactivate this Parameter in a dialog. */
+  deque< string > ActivationUnit;
     /*! The types of numerical comparison used for activating/inactivating this Parameter
         (in a dialog). 0=none, 1: =, 2: >, 3: >=, 4: <, 5: <=, 6: '<>' */
   deque< int > ActivationComparison;

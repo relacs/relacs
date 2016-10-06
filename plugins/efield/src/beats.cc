@@ -44,11 +44,17 @@ Beats::Beats( void )
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addBoolean( "fixeddf", "Keep delta f fixed", false );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV/cm" );
-  addSelection( "amtype", "Amplitude modulation of signal", "none|sine|rectangular" );
-  addNumber( "amamplitude", "Amplitude of amplitude modulation", 1.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amtype", "none", false );
-  addNumber( "amfreq", "Frequency of amplitude modulation", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amtype", "none", false );
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
+  newSection( "Amplitude modulation" );
+  addSelection( "amtype", "Amplitude modulation of signal", "none|sine|rectangular" );
+  addInteger( "amnum", "Number of superimposed AM waveforms", 1, 1, 8, 1 ).setActivation( "amtype", "none", false );
+  addNumber( "amamplitude", "Amplitude of amplitude modulation", 1.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amtype", "none", false );
+  addNumber( "amfreq", "Frequency of amplitude modulation", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amtype", "none", false );
+  addNumber( "amamplitude2", "Amplitude of second AM waveform", 1.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amtype", "none", false ).addActivation( "amnum", ">1" );
+  addNumber( "amfreq2", "Frequency of second AM waveform", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amtype", "none", false ).addActivation( "amnum", ">1" );
+  addNumber( "amamplitude3", "Amplitude of third AM waveform", 1.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amtype", "none", false ).addActivation( "amnum", ">2" );
+  addNumber( "amfreq3", "Frequency of third AM waveform", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amtype", "none", false ).addActivation( "amnum", ">2" );
   newSection( "Chirps" );
   addBoolean( "generatechirps", "Generate chirps", false ).setActivation( "amtype", "none" );
   addNumber( "chirpsize", "Size of chirp", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "amtype", "none" );
@@ -447,6 +453,7 @@ int Beats::main( void )
 	    sig[k] = a * ::sin( 6.28318530717959 * p );
 	  }
 	  sig.back() = 0.0;
+	  sig.setIntensity( amplitude );
 	  currentchirptimes.resize( ck );
 	  chirpheader.clear();
 	  chirpheader.addNumber( "ChirpSize", chirpsize, "Hz" );

@@ -906,7 +906,7 @@ void OptWidgetNumber::valueChanged( double v )
   if ( Param->isNumber() )
     tol = 0.01*Param->step();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-     if ( Widgets[k]->param() != OO->end() )
+    if ( Widgets[k]->param() != OO->end() )
       Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], v, tol ) );
   }
 }
