@@ -33,7 +33,7 @@ namespace efield {
 
 
 Beats::Beats( void )
-  : RePro( "Beats", "efield", "Jan Benda", "2.4", "Apr 29, 2015" )
+  : RePro( "Beats", "efield", "Jan Benda", "2.6", "Oct 7, 2016" )
 {
   // add some parameter as options:
   newSection( "Stimulation" );
@@ -44,17 +44,11 @@ Beats::Beats( void )
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addBoolean( "fixeddf", "Keep delta f fixed", false );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV/cm" );
+  addSelection( "amtype", "Amplitude modulation of signal", "none|sine|rectangular" );
+  addText( "amfreq", "Frequencies of amplitude modulation", "1" ).setUnit( "Hz" ).setActivation( "amtype", "none", false );
+  addText( "amamplitude", "Corresponding amplitudes", "100" ).setUnit( "%" ).setActivation( "amtype", "none", false );
   addInteger( "repeats", "Repeats", 10, 0, 1000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
-  newSection( "Amplitude modulation" );
-  addSelection( "amtype", "Amplitude modulation of signal", "none|sine|rectangular" );
-  addInteger( "amnum", "Number of superimposed AM waveforms", 1, 1, 8, 1 ).setActivation( "amtype", "none", false );
-  addNumber( "amamplitude", "Amplitude of amplitude modulation", 1.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amtype", "none", false );
-  addNumber( "amfreq", "Frequency of amplitude modulation", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amtype", "none", false );
-  addNumber( "amamplitude2", "Amplitude of second AM waveform", 1.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amtype", "none", false ).addActivation( "amnum", ">1" );
-  addNumber( "amfreq2", "Frequency of second AM waveform", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amtype", "none", false ).addActivation( "amnum", ">1" );
-  addNumber( "amamplitude3", "Amplitude of third AM waveform", 1.0, 0.0, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amtype", "none", false ).addActivation( "amnum", ">2" );
-  addNumber( "amfreq3", "Frequency of third AM waveform", 1.0, 0.0, 1000.0, 0.1, "Hz" ).setActivation( "amtype", "none", false ).addActivation( "amnum", ">2" );
   newSection( "Chirps" );
   addBoolean( "generatechirps", "Generate chirps", false ).setActivation( "amtype", "none" );
   addNumber( "chirpsize", "Size of chirp", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "amtype", "none" );
@@ -101,8 +95,12 @@ int Beats::main( void )
   double ramp = number( "ramp" );
   double amplitude = number( "amplitude" );
   int amtype = index( "amtype" );
-  double amamplitude = number( "amamplitude" );
-  double amfreq = number( "amfreq" );
+  vector< double > amfreqs;
+  vector< double > amampls;
+  Str amfs = text( "amfreq" );
+  Str amas = text( "amamplitude" );
+  amfs.range( amfreqs );
+  amas.range( amampls );
   string deltafrange = text( "deltafrange" );
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
   bool fixeddf = boolean( "fixeddf" );
@@ -164,8 +162,27 @@ int Beats::main( void )
     warning( "Pause is smaller than averagetime. Set it to averagetime for now." );
   }
 
-  if ( amtype > 0 )
+  double amamplsum = 0.0;
+  if ( amtype > 0 ) {
+    if ( amfreqs.size() == 0 ) {
+      warning( "no AM frequency specified." );
+      return Failed;
+    }
+    if ( amfreqs.size() != amampls.size() ) {
+      warning( "You need to specify for each AM frequency a corresponding amplitude." );
+      return Failed;
+    }
+    for ( unsigned int k=0; k<amampls.size(); k++ ) {
+      amampls[k] *= 0.01;
+      amamplsum += amampls[k];
+    }
+    if ( amamplsum > 1.0 ) {
+      warning( "Sum of all AM amplitudes must be smaller than 100%." );
+      return Failed;
+    }
     generatechirps = false;
+  }
+
   EventList chirptimes;
   int maxchirptimes = 0;
   if ( generatechirps ) {
@@ -508,22 +525,36 @@ int Beats::main( void )
 	    OutData am;
 	    am.setTrace( FishEField[0] );
 	    if ( amtype == 2 ) {
-	      am.rectangleWave( n*p, -1.0, 1.0/amfreq, 0.5/amfreq, 0.0, 2.0*amamplitude );
-	      am -= amamplitude;
+	      am.rectangleWave( n*p, -1.0, 1.0/amfreqs[0], 0.5/amfreqs[0], 0.0, 2.0*amampls[0] );
+	      am -= amampls[0];
+	      for ( unsigned int k=1; k<amfreqs.size(); k++ ) {
+		OutData amk;
+		amk.setTrace( FishEField[0] );
+		amk.rectangleWave( n*p, -1.0, 1.0/amfreqs[k], 0.5/amfreqs[k], 0.0, 2.0*amampls[k] );
+		amk -= amampls[k];
+		am += amk;
+	      }
 	    }
-	    else
-	      am.sineWave( n*p, -1.0, amfreq, 0.75*2.0*M_PI, amamplitude, 0.0 );
+	    else {
+	      am.sineWave( n*p, -1.0, amfreqs[0], 0.75*2.0*M_PI, amampls[0], 0.0 );
+	      for ( unsigned int k=1; k<amfreqs.size(); k++ ) {
+		OutData amk;
+		amk.setTrace( FishEField[0] );
+		amk.sineWave( n*p, -1.0, amfreqs[k], 0.75*2.0*M_PI, amampls[k], 0.0 );
+		am += amk;
+	      }
+	    }
 	    am += 1.0;
 	    am.description().setUnit( "Amplitude", "" );
 	    am.description().addNumber( "Intensity", 1.0, "" );
-	    am /= 1.0+amamplitude;
+	    am /= 1.0+amamplsum;
 	    sig.fill( am, stimulusrate );
 	    sig.ramp( ramp );
 	    if ( amtype == 2 )
 	      sig.setIdent( "am-rectangularwave" );
 	    else
 	      sig.setIdent( "am-sinewave" );
-	    sig.setIntensity( amplitude*(1.0+amamplitude) );
+	    sig.setIntensity( amplitude*(1.0+amamplsum) );
 	  }
 	  if ( LEDOutput[0] >= 0 )
 	    led.pulseWave( sig.length(), sig.stepsize(), 5.0, 0.0 );
@@ -579,8 +610,11 @@ int Beats::main( void )
 	else
 	  s += "Sine";
 	s += "</b> AM";
-	s += "  F:  <b>" + Str( amfreq, "%g" ) + "Hz</b>";
-	s += "  Amplitude: <b>" + Str( 100.0*amamplitude, "%g" ) + "%</b>";
+	s += "  F:  <b>" + Str( amfreqs[0], "%g" );
+	for ( unsigned int k=1; k<amfreqs.size(); k++ )
+	  s += ", " + Str( amfreqs[k], "%g" );
+	s += "Hz</b>";
+	s += "  Amplitude: <b>" + Str( 100.0*amamplsum, "%g" ) + "%</b>";
       }
       if ( generatechirps ) {
 	s += "  Chirps: <b>" + Str( chirpsize, "%g" ) + "Hz @ " + Str( chirpfrequency, "%.2f" ) + "Hz</b>";
@@ -716,7 +750,7 @@ int Beats::main( void )
       else
 	fishchirps.clear();
       P.draw();
-      save( deltaf, amplitude, duration, pause, amamplitude, amfreq,
+      save( deltaf, amplitude, duration, pause, amtype, amampls, amfreqs,
 	    fishrate, stimulusrate, nfft, eodfreqprec,
 	    eodfrequencies, eodamplitudes, eodfrequency, fishchirps, playedchirptimes,
 	    stimfrequency, chirpheader, split, FileCount );
@@ -859,7 +893,7 @@ void Beats::initPlot( double deltaf, double amplitude, double duration,
 
 
 void Beats::save( double deltaf, double amplitude, double duration, double pause,
-		  double amamplitude, double amfrequency,
+		  int amtype, const vector<double> &amampls, const vector<double> &amfreqs,
 		  double fishrate, double stimulusrate, int nfft, double eodfreqprec,
 		  const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency, 
 		  const EventData &fishchirps, const EventData &playedchirpevents,
@@ -871,9 +905,16 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
   header.addNumber( "Delta f", deltaf, "Hz", "%.1f" );
   header.addNumber( "StimulusFrequency", stimulusrate, "Hz", "%.1f" );
   header.addNumber( "Amplitude", amplitude, "mV/cm", "%.3f" );
-  if ( amamplitude > 1.0e-8 ) {
-    header.addNumber( "AMAmplitude", 100.0*amamplitude, "%", "%.0f" );
-    header.addNumber( "AMFrequency", amfrequency, "Hz", "%g" );
+  if ( amtype > 0 ) {
+    header.addText( "AMType", amtype == 2? "Rectangular" : "Sine" );
+    Str fs = Str( amfreqs[0], "%g" );
+    Str as = Str( 100.0*amampls[0], "%.0f" );
+    for ( unsigned int k=1; k<amfreqs.size(); k++ ) {
+      fs += ", " + Str( amfreqs[k], "%g" );
+      as += ", " + Str( 100.0*amampls[k], "%0.1f" );
+    }
+    header.addText( "AMFrequency", fs + "Hz" );
+    header.addText( "AMAmplitude", as + "%" );
   }
   header.addNumber( "Duration", duration, "sec", "%.3f" );
   header.addNumber( "Pause", pause, "sec", "%.3f" );
