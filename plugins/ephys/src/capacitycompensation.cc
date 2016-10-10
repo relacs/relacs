@@ -223,7 +223,7 @@ int CapacityCompensation::main( void )
     P[0].plot( ampl*inaverage, 1000.0, Plot::Red, 2, Plot::Solid );
     P[0].plot( outaverage, 1000.0, Plot::Yellow, 2, Plot::Solid );
     P[1].clear();
-    P[1].setTitle( "RMS = " + Str( rms, 0, 1, 'f' ) + " mV" );
+    P[1].setTitle( "RMS = " + Str( rms, 0, 2, 'f' ) + " mV" );
     if ( ! P[1].zoomedYRange() )
       P[1].setYRange( ymin, ymax );
     P[1].plot( inaverage.array(), outaverage.array(), Plot::Yellow, 3, Plot::Solid );
