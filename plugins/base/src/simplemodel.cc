@@ -70,6 +70,7 @@ void SimpleModel::main( void )
       if ( trace( k ).source() == 0 && trace( k ).rawChannel() )
 	push( k, v );
     }
+    next();
   }
 }
 

@@ -50,9 +50,8 @@ namespace efield {
 */
 
 
-  class EODModel : public Model, public Traces
+class EODModel : public Model, public Traces
 {
-  Q_OBJECT
 
 public:
 

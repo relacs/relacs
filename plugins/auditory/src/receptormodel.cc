@@ -212,6 +212,7 @@ void ReceptorModel::main( void )
     cs++;
     if ( cs == maxs ) {
       push( 0, simx[sigdimension] );
+      next();
       cs = 0;
     }
 

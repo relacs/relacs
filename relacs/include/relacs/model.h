@@ -74,12 +74,12 @@ public:
         You can check the expected input traces using
 	traces(), traceName(), deltat(), and scale().
 	Eventually you should fill all input traces
-	using push() in an infinite loop that only terminates
+	using push() and next() in an infinite loop that only terminates
 	if interrupt() returns \c true..
         With signal() the current stimulus can be retrieved.
 	\note When parameter of the simulation are changed
 	the simulation thread is terminated by requesting main()
-	to terminate (see interrupt() )
+	to terminate via interrupt()
 	and restarted by calling main() again. The input traces
 	are, however, not cleared. Use time() to keep your simulation
 	time in sync with the buffer time (and thus the stimulus times
@@ -131,8 +131,13 @@ public:
   bool isRunning( void ) const;
 
     /*! Push the value \a val of trace \a trace to the data buffer.
-        \sa main() */
+        \sa main(), next() */
   void push( int trace, float val );
+    /*! Tell relacs that one cycle of model calculations is finished
+        and that the values for all traces have been pushed. 
+        This function computes the model of a dynamic clamp task
+        and waits if necessary to ensure real time behavior. */
+  void next( void );
 
     /*! The number of traces that need to be simulated. */
   int traces( void ) const;

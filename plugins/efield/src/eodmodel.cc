@@ -131,6 +131,7 @@ void EODModel::main( void )
 	push( k, x );
       }
     }
+    next();
   }
 }
 
@@ -174,5 +175,3 @@ void EODModel::process( const OutData &source, OutData &dest )
 addModel( EODModel, efield );
 
 }; /* namespace efield */
-
-#include "moc_eodmodel.cc"

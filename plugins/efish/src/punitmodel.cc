@@ -169,6 +169,7 @@ void PUnitModel::main( void )
 	if ( trace( k ).source() == 0 && trace( k ).rawChannel() )
 	  push( k, *val[k] );
       }
+      next();
       cs = 0;
     }
 

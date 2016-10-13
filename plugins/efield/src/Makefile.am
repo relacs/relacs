@@ -368,8 +368,6 @@ libefieldeodmodel_la_LIBADD = \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(GSL_LIBS)
 
-$(libefieldeodmodel_la_OBJECTS) : moc_eodmodel.cc
-
 libefieldeodmodel_la_SOURCES = eodmodel.cc
 
 libefieldeodmodel_la_includedir = $(pkgincludedir)/efield

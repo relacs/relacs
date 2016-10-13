@@ -89,44 +89,47 @@ double Model::load( void ) const
 
 void Model::push( int trace, float val )
 {
-  if ( trace == 0 ) {
-    double t = Data[0].currentTime();
-    if ( AIDevice != 0 ) {
-      // compute dynamic clamp model:
-      SignalMutex.lock();
-      for ( unsigned int k=0; k<SignalValues.size(); k++ )
-	SignalValues[k] = signal( t, k ) - Signals[k].ModelValue;
-      AIDevice->model( Data, SignalChannels, SignalValues );
-      for ( unsigned int k=0; k<SignalValues.size(); k++ )
-	Signals[k].ModelValue = SignalValues[k];
-      SignalMutex.unlock();
-    }
-    PushCount++;
-    if ( PushCount >= MaxPush ) {
-      PushCount = 0;
-      double dt = t - elapsed();
-      double l = 1.0 - dt / MaxPushTime;
-      AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
-      SignalMutex.lock();
-      bool released = false;
-      for ( unsigned int k=0; k<Signals.size(); k++ ) {
-	if ( ! Signals[k].Finished && t > Signals[k].Offset ) {
-	  Signals[k].Finished = true;
-	  if ( ! released ) {
-	    SignalsWait.release( 1 );
-	    released = true;
-	  }
+  Data[trace].push( val );
+}
+
+
+void Model::next( void )
+{
+  double t = Data[0].currentTime();
+  if ( AIDevice != 0 ) {
+    // compute dynamic clamp model:
+    SignalMutex.lock();
+    for ( unsigned int k=0; k<SignalValues.size(); k++ )
+      SignalValues[k] = signal( t, k ) - Signals[k].ModelValue;
+    AIDevice->model( Data, SignalChannels, SignalValues );
+    for ( unsigned int k=0; k<SignalValues.size(); k++ )
+      Signals[k].ModelValue = SignalValues[k];
+    SignalMutex.unlock();
+  }
+  PushCount++;
+  if ( PushCount >= MaxPush ) {
+    PushCount = 0;
+    double dt = t - elapsed();
+    double l = 1.0 - dt / MaxPushTime;
+    AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
+    SignalMutex.lock();
+    bool released = false;
+    for ( unsigned int k=0; k<Signals.size(); k++ ) {
+      if ( ! Signals[k].Finished && t > Signals[k].Offset ) {
+	Signals[k].Finished = true;
+	if ( ! released ) {
+	  SignalsWait.release( 1 );
+	  released = true;
 	}
       }
-      SignalMutex.unlock();
-      long st = (long)::rint( 1000.0 * dt );
-      if ( st <= 0 )
-	st = 1;
-      DataWait->wakeAll();
-      InputWait.wait( DataMutex, st );
     }
+    SignalMutex.unlock();
+    long st = (long)::rint( 1000.0 * dt );
+    if ( st <= 0 )
+      st = 1;
+    DataWait->wakeAll();
+    InputWait.wait( DataMutex, st );
   }
-  Data[trace].push( val );
 }
 
 

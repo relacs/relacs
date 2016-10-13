@@ -125,6 +125,7 @@ void NeuronModels::main( void )
       push( traceinx[0], simx[0] );
       if ( traceinx[1] >= 0 )
 	push( traceinx[1], CurrentInput );
+      next();
       cs = 0;
     }
 
