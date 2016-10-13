@@ -1,28 +1,24 @@
 /*!
 \mainpage RTAI-comedi Relacs Plugins
 
-\brief Plugins for dynamic clamp based on RTAI and comedi.
+Plugins for dynamic clamp based on RTAI and comedi.
 
-
-Comedi (linux control and measurement device interface) provides hardware drivers
-to many data acquisition boards with a common library interface.
-The RELACS comedi plugins access data acquisition boards by means of the comedi library.
-
-For general information about comedi and a list of supported devices
-see http://www.comedi.org
 
 \section rtaicomedicontent Content
 - \ref rtaicomediintro
-- \ref quickinstall
-- \ref installrtaikernel
-- \ref installnewlib
-- \ref installrtai
-- \ref testrtai
-- \ref configurekernel
-- \ref installcomedi
-- \ref installrelacs
-- \ref udev
-- \ref kernelmessages
+- \ref installation
+  - \ref quickinstall
+  - \ref installrtaikernel
+  - \ref installnewlib
+  - \ref installrtai
+  - \ref testrtai
+  - \ref configurekernel
+  - \ref installcomedi
+  - \ref udev
+  - \ref installrelacs
+  - \ref kernelmessages
+  .
+- \ref simulatedynclamp
 - \ref rtailinks
 
 
@@ -44,8 +40,13 @@ installrtai, \ref testrtai, and \ref installcomedi .
 In either case, continue with building the dynamic clamp module of
 relacs as explained in \ref installrelacs .
 
+If you only want to simulate a dynamic clamp, then go on and read
+\ref simulatedynclamp .
 
-\section quickinstall Installation script
+
+\section installation Installation
+
+\subsection quickinstall Installation script
 
 The \c makertaikernel.sh script in \c scripts executes all the
 commands as explained in the following sections to download and build an rtai patched
@@ -125,9 +126,9 @@ The following sections describe in detail how to compile and install
 an rtai-patched linux kernel, newlib, rtai, and comedi.
 
 
-\section installrtaikernel  Linux kernel and RTAI patch
+\subsection installrtaikernel  Linux kernel and RTAI patch
 
-\subsection patchkernel Download RTAI, a linux kernel, and patch the kernel
+\subsubsection patchkernel Download RTAI, a linux kernel, and patch the kernel
 
 -# Login as root and cd into \c /usr/local/src:
 \code
@@ -184,7 +185,7 @@ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-3.14.17-x86-6x.p
 -# Configure, compile, and install the kernel as described in the following section.
 
 
-\subsection compilekernel Compile the rtai-patched linux kernel
+\subsubsection compilekernel Compile the rtai-patched linux kernel
 
 -# Make sure the \c make, \c gcc, \c libncurses-dev, and \c zlib1g-dev packages are installed:
    \code
@@ -472,7 +473,7 @@ reboot
 If this fails you need to improve the configuration of the kernel. See \ref configurekernel for some hints.
 
 
-\section installnewlib Newlib library
+\subsection installnewlib Newlib library for mathematical functions
 
 For dynamic clamp having math functions available in the kernel is quite handy. For this RTAI needs
 on a 64-bit system the math library from the newlib library as a replacement for the standard \c libm.a .
@@ -491,7 +492,7 @@ make install
 \endcode
 
 
-\section installrtai RTAI kernel modules
+\subsection installrtai RTAI kernel modules
 
 -# Make sure that you are root and you are really running your RTAI kernel!
    You can check with
@@ -594,7 +595,7 @@ make
        \endcode
 
 
-\section testrtai Testing performance of RTAI kernel
+\subsection testrtai Testing performance of RTAI kernel
 
 Testing your RTAI patched kernel is crucial for a good real-time performance!
 
@@ -692,7 +693,7 @@ isolcpus=0,1
    See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
 
 
-\section configurekernel Improve the configuration of the RTAI-patched kernel
+\subsection configurekernel Improve the configuration of the RTAI-patched kernel
 
 To get a low latency kernel you usually need to improve your kernel
 configuration.  The main culprits are some devices and their
@@ -750,7 +751,14 @@ Sometimes it might also help to disable things in the BIOS.
 
 
 
-\section installcomedi comedi data acquisition driver
+\subsection installcomedi Comedi data acquisition driver
+
+Comedi (linux control and measurement device interface) provides
+hardware drivers to many data acquisition boards with a common library
+interface.  The RELACS rtaicomedi plugins access data acquisition
+boards by means of the comedi kernel library.  For general information
+about comedi and a list of supported devices see http://www.comedi.org
+.
 
 For an RTAI kernel you definitely have to install the comedi drivers 
 yourself according to the following instructions:
@@ -815,7 +823,37 @@ echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-com
 For details see the documentation for the comedi plugin set.
 
 
-\section installrelacs Setting up dynamic clamp for RELACS
+\subsection udev Setting up udev permissions for comedi device files
+
+Once comedi is installed you also need to make sure that you (the
+user) have appropriate permissions for accessing the comedi device
+files. That is you need to be able to have read and write access to
+the \c /dev/comedi* files. One elegant way to achieve this to create a
+new group and tell udev to add the comedi device files to this group.
+
+-# Login as root.
+-# Create a new group "iocard":
+\code
+addgroup --system iocard
+\endcode
+-# Add udev rules to the /etc/udev/rules.d directory:
+\code
+echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
+\endcode
+-# Run
+\code
+udevadm trigger
+\endcode
+to apply your new udev rules
+-# Add users to the "iocard" group:
+\code
+adduser \<username\> iocard
+\endcode
+After the next login, \c \<username\> is a member of the \c iocard group
+and and has sufficient permissions to access the data acquisition boards through \c comedi.
+
+
+\subsection installrelacs Setting up dynamic clamp for RELACS
 You should install \c RTAI and the \c comedi drivers and library prior to
 configuring RELACS, so that ./configure can detect the presence of the
 \c comedi library. If you install \c RTAI and \c comedi later, simply run \c
@@ -893,24 +931,7 @@ cd plugins/linuxdevices/rtaicomedi
 make
 sudo module/reloadmodule.sh
 \endcode
-Your \c model.c implementation can be tested without RTAI in the simulation mode of relacs. Make sure your \c relacs.cfg file hast the following device sections:
-\code
-*Analog Input Devices
-  Device1:
-      plugin: [ DynClampAnalogInput, DynClampAISim ]
-      device: /dev/comedi0
-      ident : ai-1
-
-*Analog Output Devices
-  Device1:
-      plugin: [ DynClampAnalogOutput, DynClampAOSim ]
-      device: /dev/comedi0
-      ident : ao-1
-\endcode
-Then call \c relacs with the \c -3 option:
-\code
-./relacslocal -3
-\endcode
+Your \c model.c implementation can be tested without RTAI in the simulation mode of relacs, see \ref simulatedynclamp below.
 -# If you want to load the dynamic-clamp kernel module automatically during 
 the boot process, then call the \c loadmodules.sh script from the script
 \c /etc/rc.local . Simply add a line like this
@@ -919,37 +940,8 @@ the boot process, then call the \c loadmodules.sh script from the script
 \endcode
 to \c /etc/rc.local (as root).
 
-\section udev Setting up udev permissions for comedi device files
 
-Once comedi is installed you also need to make sure that you (the
-user) have appropriate permissions for accessing the comedi device
-files. That is you need to be able to have read and write access to
-the \c /dev/comedi* files. One elegant way to achieve this to create a
-new group and tell udev to add the comedi device files to this group.
-
--# Login as root.
--# Create a new group "iocard":
-\code
-addgroup --system iocard
-\endcode
--# Add udev rules to the /etc/udev/rules.d directory:
-\code
-echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
-\endcode
--# Run
-\code
-udevadm trigger
-\endcode
-to apply your new udev rules
--# Add users to the "iocard" group:
-\code
-adduser \<username\> iocard
-\endcode
-After the next login, \c \<username\> is a member of the \c iocard group
-and and has sufficient permissions to access the data acquisition boards through \c comedi.
-
-
-\section kernelmessages Kernel messages
+\subsection kernelmessages Kernel messages
 When fiddling around with kernel modules you might want to have a look 
 at the kernel messages in \c /var/log/messages:
 \code
@@ -976,6 +968,40 @@ Then tell the system that you changed this file (still as root):
 \code
 restart rsyslog 
 \endcode
+
+
+\section simulatedynclamp Dynamic clamp simulation
+You can run the dynamic clamp in the relacs simulation mode as well.
+This is in particular handy when it comes to testing your
+\c model.c implementation without RTAI. Just make sure your \c relacs.cfg file has the following device sections:
+\code
+*Analog Input Devices
+  Device1:
+      plugin: [ DynClampAnalogInput, DynClampAISim ]
+      device: /dev/comedi0
+      ident : ai-1
+
+*Analog Output Devices
+  Device1:
+      plugin: [ DynClampAnalogOutput, DynClampAOSim ]
+      device: /dev/comedi0
+      ident : ao-1
+\endcode
+The \c DynClampAISim and \c DynClampAOSim modules do the trick.
+
+Whenever you change \c model.c you need to recompile the
+\c DynClampAISim and \c DynClampAOSim modules by calling \c make in the 
+\c plugins/linuxdevices/rtaicomedi directory.
+\code
+cd plugins/linuxdevices/rtaicomedi
+make
+\endcode
+
+Then call \c relacs with the \c -3 option
+\code
+./relacslocal -3
+\endcode
+and enjoy the simulation.
 
 
 \section rtailinks Links
