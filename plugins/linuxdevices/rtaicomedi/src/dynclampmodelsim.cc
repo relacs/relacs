@@ -46,8 +46,6 @@ float* lookupy[MAXLOOKUPTABLES];
 #include "../module/model.c"
 #undef DYNCLAMPMODEL
 
-#include "../module/model.c"
-
 #endif
 
 void generateLookupTables( void )

@@ -18,6 +18,7 @@ Plugins for dynamic clamp based on RTAI and comedi.
   - \ref installrelacs
   - \ref kernelmessages
   .
+- \ref configdynamicclamp
 - \ref simulatedynclamp
 - \ref rtailinks
 
@@ -970,10 +971,9 @@ restart rsyslog
 \endcode
 
 
-\section simulatedynclamp Dynamic clamp simulation
-You can run the dynamic clamp in the relacs simulation mode as well.
-This is in particular handy when it comes to testing your
-\c model.c implementation without RTAI. Just make sure your \c relacs.cfg file has the following device sections:
+\section configdynamicclamp Configure dynamic clamp in RELACS
+
+Just make sure your \c relacs.cfg file has the following device sections:
 \code
 *Analog Input Devices
   Device1:
@@ -987,7 +987,52 @@ This is in particular handy when it comes to testing your
       device: /dev/comedi0
       ident : ao-1
 \endcode
-The \c DynClampAISim and \c DynClampAOSim modules do the trick.
+
+\subsection inputtraces  Input traces 
+As usual, input traces can be assigned to channels
+of the analog input device. All the input traces the dynamic clamp
+model requires (its \c inputNames) must be available.
+
+Some additional input traces might be available. They can be accessed like
+normal analog input traces, but the channel nummber needs to be set to 1000 or larger.
+The following three types of additional inputs are supported:
+- additional inputs as defined by the dynamic clamp model via its \c paramInputNames.
+- timing measurements, if they are enabled in moduledef.h:
+  - \c Interval : the full period of the dynamic clamp loop
+  - \c AI-time : the time required by the analog input part
+  - \c AI-acquisition-time : the time required by reading in a single analog input channel
+  - \c AI-conversion-time : the time required to convert the read in value
+  - \c AO-time : the time required by the analog output part
+  - \c Model-time : the time required for calling computModel()
+  - \c Wait-time : the time rt_task_wait_period() waits for the next period
+  .
+  all times are measured in seconds.
+- for each analog output trace the dynamic clamp model is using (its \c outputNames), 
+  - \c Stimulus-xxx contains the stimulus a RePro wrote to this channel,
+  - \c Model-xxx contains the value the model computed, and
+  - \c Total-xxx contains the total requested output for this channel, i.e. Stimulus-xxx plus Model-xxx.
+  - \c Injected-xxx contains the total output for this channel as it is written to the analog output.
+    This equals \c Total-xxx multiplied by a possible correction factor and is only available with ENABLE_SYNCSEC
+  .
+  \c xxx is the name of the analog output trace. If the Injected or Total output exceeds the limits of the 
+  maximum range of the data acquisition board, they are clipped to the minimum or maximum possible values.
+
+\subsection outputtraces Output traces 
+As usual, output traces can be assigned to channels
+of the analog output device. All the output traces the dynamic clamp
+model requires (its \c outputNames) must be available.
+
+Additional output traces as defined by the dynamic clamp model via its
+\c paramOutputNames be accessed like normal analog output traces by
+their name.
+
+
+\section simulatedynclamp Dynamic clamp simulation 
+You can run the dynamic clamp in the relacs simulation mode as well.
+This is in particular handy when it comes to testing your \c model.c
+implementation without RTAI.
+
+The relacs::DynClampAISim and relacs::DynClampAOSim modules do the trick.
 
 Whenever you change \c model.c you need to recompile the
 \c DynClampAISim and \c DynClampAOSim modules by calling \c make in the 

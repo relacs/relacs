@@ -60,7 +60,7 @@ The following three types of additional inputs are supported:
   - \c AI-conversion-time : the time required to convert the read in value
   - \c AO-time : the time required by the analog output part
   - \c Model-time : the time required for calling computModel()
-  - \c Wait-time : the time rt_task_wait_period() waits for the net period
+  - \c Wait-time : the time rt_task_wait_period() waits for the next period
   .
   all times are measured in seconds.
 - for each analog output trace the dynamic clamp model is using (its \c outputNames), 

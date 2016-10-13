@@ -40,6 +40,16 @@ namespace rtaicomedi {
 \author Jan Benda
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via a dynamic clamp kernel module.
 \bug fix errno usage
+
+\par Output traces 
+
+As usual, output traces can be assigned to channels
+of the analog output device. All the output traces the dynamic clamp
+model requires (its \c outputNames) must be available.
+
+Additional output traces as defined by the dynamic clamp model via its
+\c paramOutputNames can be accessed like normal analog output traces
+by their name.
 */
 
 
