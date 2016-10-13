@@ -206,8 +206,11 @@ int MembraneResistance::main( void )
       break;
     }
 
-    bool spikes = events( SpikeEvents[0] ).count( signalTime()+MeanVoltage.rangeFront(),
-						  signalTime()+MeanVoltage.rangeBack() );
+    bool spikes = false;
+    if ( skipspikes && SpikeEvents[0] >= 0 ) {
+      spikes = events( SpikeEvents[0] ).count( signalTime()+MeanVoltage.rangeFront(),
+					       signalTime()+MeanVoltage.rangeBack() );
+    }
     if ( skipspikes && spikes )
       Count--;
     else {

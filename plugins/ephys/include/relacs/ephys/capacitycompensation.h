@@ -34,7 +34,7 @@ namespace ephys {
 \class CapacityCompensation
 \brief [RePro] Sine waves for checking the capacity compensation of the amplifier inside the cell.
 \author Jan Benda
-\version 2.2 (Oct 5, 2017)
+\version 2.3 (Oct 13, 2017)
 \par Options
 - \c amplitude=1nA: Amplitude of stimulus (\c number)
 - \c duration=10ms: Duration of stimulus (\c number)
@@ -42,6 +42,7 @@ namespace ephys {
 - \c showcycles=10: Number of cycles plotted (\c integer)
 - \c pause=10ms: Duration of pause between pulses (\c number)
 - \c average=10: Number of trials to be averaged (\c integer)
+- \c skipspikes=true: Skip trials with detected spikes (\c boolean)
 - \c dynamicrange=false: Dynamically adjust plot range (\c boolean)
 - \c rate=0.01: Rate for adjusting plot ranges (\c number)
 */

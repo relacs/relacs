@@ -29,7 +29,7 @@ namespace ephys {
 
 
 CapacityCompensation::CapacityCompensation( void )
-  : RePro( "CapacityCompensation", "ephys", "Jan Benda", "2.2", "Oct 5, 2017" )
+  : RePro( "CapacityCompensation", "ephys", "Jan Benda", "2.3", "Oct 13, 2017" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
@@ -38,6 +38,7 @@ CapacityCompensation::CapacityCompensation( void )
   addInteger( "showcycles", "Number of cycles plotted", 10, 1, 10000, 1 );
   addNumber( "pause", "Duration of pause between pulses", 0.01, 0.01, 10000.0, 0.01, "sec", "ms" );
   addInteger( "average", "Number of trials to be averaged", 10, 1, 1000000 );
+  addBoolean( "skipspikes", "Skip trials with detected spikes", true );
   addBoolean( "dynamicrange", "Dynamically adjust plot range", false );
   addNumber( "rate", "Rate for adjusting plot ranges", 0.01, 0.0001, 0.1, 0.001 ).setActivation( "dynamicrange", "true" );
 
@@ -66,6 +67,7 @@ int CapacityCompensation::main( void )
   int showcycles = integer( "showcycles" );
   double pause = number( "pause" );
   unsigned int naverage = integer( "average" );
+  bool skipspikes = boolean( "skipspikes" );
   bool dynamicrange = boolean( "dynamicrange" );
   double rate = number( "rate" );
 
@@ -136,6 +138,14 @@ int CapacityCompensation::main( void )
       break;
     sleep( pause );
 
+    // check for spikes:
+    if ( skipspikes && SpikeEvents[0] >= 0 ) {
+      bool spikes = events( SpikeEvents[0] ).count( signalTime()+tmin,
+						    signalTime()+tmax );
+      if ( spikes )
+	continue;
+    }
+
     // get input trace:
     SampleDataF input;
     if ( CurrentTrace[0] >=0 ) {
@@ -179,6 +189,17 @@ int CapacityCompensation::main( void )
 	outaverage[k] += ( outdatatraces[j][k] - outaverage[k] )/(j+1);
     }
     outaverage -= mean( outaverage );
+
+    // subtract running average:
+    int w = outaverage.indices( 1.0/frequency );
+    for ( int k=0; k<outaverage.size(); k++ ) {
+      int i = k - w/2;
+      if ( i < 0 )
+	i = 0;
+      else if ( i+w >= outaverage.size() )
+	i = outaverage.size() - w;
+      outaverage[k] -= mean( outaverage.begin()+i, outaverage.begin()+i+w );
+    }
 
     // linefit:
     double b, bu, m, mu, chisq;

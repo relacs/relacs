@@ -28,13 +28,14 @@ namespace ephys {
 
 
 BridgeTest::BridgeTest( void )
-  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.8", "Oct 5, 2016" )
+  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.9", "Oct 13, 2016" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of stimulus", 0.01, 0.002, 1000.0, 0.002, "sec", "ms" );
   addNumber( "pause", "Duration of pause between pulses", 0.01, 0.0, 1.0, 0.01, "sec", "ms" );
   addInteger( "average", "Number of trials to be averaged", 10, 0, 1000000 );
+  addBoolean( "skipspikes", "Skip trials with detected spikes", true );
   addBoolean( "dynamicrange", "Dynamically adjust plot range", false );
   addNumber( "rate", "Rate for adjusting plot ranges", 0.01, 0.0001, 0.1, 0.001 ).setActivation( "dynamicrange", "true" );
   addBoolean( "plottrace", "Plot current voltage trace", false  );
@@ -64,6 +65,7 @@ int BridgeTest::main( void )
   double duration = number( "duration" );
   double pause = number( "pause" );
   unsigned int naverage = integer( "average" );
+  bool skipspikes = boolean( "skipspikes" );
   bool dynamicrange = boolean( "dynamicrange" );
   double rate = number( "rate" );
   bool plottrace = boolean( "plottrace" );
@@ -124,6 +126,14 @@ int BridgeTest::main( void )
     if ( interrupt() )
       break;
     sleep( pause );
+
+    // check for spikes:
+    if ( skipspikes && SpikeEvents[0] >= 0 ) {
+      bool spikes = events( SpikeEvents[0] ).count( signalTime()+tmin,
+						    signalTime()+tmax );
+      if ( spikes )
+	continue;
+    }
 
     // get trace:
     SampleDataF output( tmin, tmax, intrace.stepsize(), 0.0F );

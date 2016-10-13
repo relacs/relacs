@@ -32,12 +32,13 @@ namespace ephys {
 
 /*!
 \author Jan Benda
-\version 2.8 (Oct 5, 2016)
-\par Options
+\version 2.9 (Oct 13, 2016)
+ \par Options
 - \c amplitude=1nA: Amplitude of stimulus (\c number)
 - \c duration=10ms: Duration of stimulus (\c number)
 - \c pause=10ms: Duration of pause between pulses (\c number)
 - \c average=10: Number of trials to be averaged (\c integer)
+- \c skipspikes=true: Skip trials with detected spikes (\c boolean)
 - \c dynamicrange=false: Dynamically adjust plot range (\c boolean)
 - \c rate=0.01: Rate for adjusting plot ranges (\c number)
 - \c plottrace=false: Plot current voltage trace (\c boolean)
