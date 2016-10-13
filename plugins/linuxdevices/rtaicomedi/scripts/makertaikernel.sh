@@ -1019,7 +1019,7 @@ function download_comedi {
     else
 	echo "download comedi"
 	if ! $DRYRUN; then
-	    git clone git://comedi.org/git/comedi/comedi.git
+	    git clone https://github.com/Linux-Comedi/comedi.git
 	    date +"%F %H:%M" > comedi/revision.txt
 	fi
     fi

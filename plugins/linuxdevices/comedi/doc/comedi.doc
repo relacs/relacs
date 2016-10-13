@@ -263,9 +263,9 @@ apt-get -y install gcc g++ git autoconf automake libtool bison flex libgsl0-dev 
 
 # download comedi sources:
 cd /usr/local/src
-git clone git://comedi.org/git/comedi/comedi.git
-git clone git://comedi.org/git/comedi/comedilib.git
-git clone git://comedi.org/git/comedi/comedi_calibrate.git
+git clone https://github.com/Linux-Comedi/comedi.git
+git clone https://github.com/Linux-Comedi/comedilib.git
+git clone https://github.com/Linux-Comedi/comedi_calibrate.git
 rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
 
 # comedi:
@@ -305,9 +305,9 @@ as root.
 \code
 apt-get install git
 cd /usr/local/src
-git clone git://comedi.org/git/comedi/comedi.git
-git clone git://comedi.org/git/comedi/comedilib.git
-git clone git://comedi.org/git/comedi/comedi_calibrate.git
+git clone https://github.com/Linux-Comedi/comedi.git
+git clone https://github.com/Linux-Comedi/comedilib.git
+git clone https://github.com/Linux-Comedi/comedi_calibrate.git
 \endcode
 Or download the current	Git snapshots from http://www.comedi.org/download.html 
 to \c /usr/local/src and unpack them
