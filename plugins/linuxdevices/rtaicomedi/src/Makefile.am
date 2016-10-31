@@ -96,9 +96,11 @@ if RELACS_COND_COMPILE_rtaicomedi
 endif
 
 linktest_libdynclampsim_la_SOURCES = linktest.cc
-linktest_libdynclampsim_la_LDADD = libdynclampsym.la
+linktest_libdynclampsim_la_LDADD = libdynclampsim.la
 
-linktest_librtaicomedidynclamp_la_SOURCES = linktest.cc
-linktest_librtaicomedidynclamp_la_LDADD = librtaicomedidynclamp.la
+if RELACS_COND_COMPILE_rtaicomedi
+    linktest_librtaicomedidynclamp_la_SOURCES = linktest.cc
+    linktest_librtaicomedidynclamp_la_LDADD = librtaicomedidynclamp.la
+endif
 
 TESTS = $(check_PROGRAMS)
