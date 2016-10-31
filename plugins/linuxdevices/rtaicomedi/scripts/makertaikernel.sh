@@ -4,12 +4,12 @@
 # you should modify the following parameter according to your needs:
 
 KERNEL_PATH=/data/src       # where to put and compile the kernel
-LINUX_KERNEL="3.14.39"      # linux vanilla kernel version (set with -k)
+LINUX_KERNEL="4.1.18"       # linux vanilla kernel version (set with -k)
 KERNEL_SOURCE_NAME="rtai"   # name for kernel source directory to be appended to LINUX_KERNEL
 KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL 
                             # (set with -n)
 
-RTAI_DIR="magma"            # name of the rtai source directory (set with -r):
+RTAI_DIR="rtai-5.0-test2"   # name of the rtai source directory (set with -r):
                             # official relases for download (www.rtai.org):
                             # - rtai-4.1: rtai release version 4.1
                             # - rtai-5.0-test2: rtai release version 5.0-test2
@@ -19,7 +19,7 @@ RTAI_DIR="magma"            # name of the rtai source directory (set with -r):
                             # - vulcano: stable development version
                             # Shahbaz Youssefi's RTAI clone on github:
                             # - RTAI: clone https://github.com/ShabbyX/RTAI.git
-RTAI_PATCH="hal-linux-3.14.39-x86-9x.patch" # rtai patch to be used
+RTAI_PATCH="hal-linux-4.1.18-x86-3.patch" # rtai patch to be used
 SHOWROOM_DIR=showroom       # target directory for rtai-showrom in /usr/local/src
 
 
@@ -286,7 +286,7 @@ function download_kernel {
     elif test -n "$LINUX_KERNEL"; then
 	echo "download linux kernel version $LINUX_KERNEL"
 	if ! $DRYRUN; then
-	    wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-$LINUX_KERNEL.tar.xz
+	    wget https://www.kernel.org/pub/linux/kernel/v${LINUX_KERNEL:0:1}.x/linux-$LINUX_KERNEL.tar.xz
 	fi
     else
 	echo
@@ -499,7 +499,7 @@ function test_rtaikernel {
 
     # report number:
     NUM=001
-    LASTREPORT="$(ls latencies-${LINUX_KERNEL}-${RTAI_DIR}-*-* | tail -n 1)"
+    LASTREPORT="$(ls latencies-${LINUX_KERNEL}-${RTAI_DIR}-*-* 2> /dev/null | tail -n 1)"
     if test -n "$LASTREPORT"; then
 	LASTREPORT="${LASTREPORT#latencies-${LINUX_KERNEL}-${RTAI_DIR}-}"
 	N="${LASTREPORT%-*-*}"
@@ -815,20 +815,14 @@ function build_rtai {
     if $NEW_KERNEL || $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko; then
 	echo "build rtai"
 	if ! $DRYRUN; then
+	    LIBM_PATH=$(find /usr/local/src/newlib/install/ -name 'libm.a')
 	    # diff -u base/arch/${RTAI_MACHINE}/defconfig .rtai_config
 	    cp base/arch/${RTAI_MACHINE}/defconfig .rtai_config
-	    patch <<EOF
---- base/arch/x86/defconfig	2015-03-09 11:42:51.000000000 +0100
-+++ .rtai_config	2015-09-09 10:44:17.662656156 +0200
-@@ -2,7 +2,7 @@
- # Automatically generated make config: don't edit
- #
- CONFIG_MODULES=y
--CONFIG_RTAI_VERSION="4.0 (vulcano)"
-+CONFIG_RTAI_VERSION="3.8 (vulcano)"
- 
- #
- # General
+	    if grep 'CONFIG_RTAI_VERSION="5' .rtai_config; then
+		# RTAI version 5:
+		patch <<EOF
+--- base/arch/x86/defconfig	2016-04-06 10:01:34.000000000 +0200
++++ .rtai_config	2016-10-31 23:01:04.736181057 +0100
 @@ -17,16 +17,17 @@
  # CONFIG_RTAI_DOC_LATEX_NONSTOP is not set
  # CONFIG_RTAI_DBX_DOC is not set
@@ -847,7 +841,58 @@ function build_rtai {
  #
  CONFIG_RTAI_FPU_SUPPORT=y
 -CONFIG_RTAI_CPUS="2"
-+CONFIG_RTAI_CPUS="8"
++CONFIG_RTAI_CPUS="$CPU_NUM"
+ # CONFIG_RTAI_DIAG_TSC_SYNC is not set
+ 
+ #
+@@ -38,8 +39,11 @@
+ #
+ # CONFIG_RTAI_SCHED_ISR_LOCK is not set
+ # CONFIG_RTAI_LONG_TIMED_LIST is not set
++CONFIG_RTAI_LATENCY_SELF_CALIBRATION_METRICS="1"
+ CONFIG_RTAI_LATENCY_SELF_CALIBRATION_FREQ="10000"
+ CONFIG_RTAI_LATENCY_SELF_CALIBRATION_CYCLES="10000"
++CONFIG_RTAI_KERN_BUSY_ALIGN_RET_DELAY="0"
++CONFIG_RTAI_USER_BUSY_ALIGN_RET_DELAY="0"
+ CONFIG_RTAI_SCHED_LXRT_NUMSLOTS="150"
+ CONFIG_RTAI_MONITOR_EXECTIME=y
+ CONFIG_RTAI_ALLOW_RR=y
+@@ -69,7 +73,10 @@
+ # Other features
+ #
+ CONFIG_RTAI_USE_NEWERR=y
+-# CONFIG_RTAI_MATH is not set
++CONFIG_RTAI_MATH=y
++CONFIG_RTAI_MATH_LIBM_TO_USE="1"
++CONFIG_RTAI_MATH_LIBM_DIR="${LIBM_PATH%/*}"
++# CONFIG_RTAI_MATH_KCOMPLEX is not set
+ CONFIG_RTAI_MALLOC=y
+ # CONFIG_RTAI_USE_TLSF is not set
+ CONFIG_RTAI_MALLOC_VMALLOC=y
+EOF
+	    else
+		patch <<EOF
+--- base/arch/x86/defconfig	2015-03-09 11:42:51.000000000 +0100
++++ .rtai_config	2015-09-09 10:44:17.662656156 +0200
+@@ -17,16 +17,17 @@
+ # CONFIG_RTAI_DOC_LATEX_NONSTOP is not set
+ # CONFIG_RTAI_DBX_DOC is not set
+ CONFIG_RTAI_TESTSUITE=y
+-CONFIG_RTAI_COMPAT=y
++# CONFIG_RTAI_COMPAT is not set
+ # CONFIG_RTAI_EXTENDED is not set
+-CONFIG_RTAI_LXRT_NO_INLINE=y
+-# CONFIG_RTAI_LXRT_STATIC_INLINE is not set
++# CONFIG_RTAI_LXRT_NO_INLINE is not set
++CONFIG_RTAI_LXRT_STATIC_INLINE=y
++CONFIG_RTAI_FORTIFY_SOURCE=""
+ 
+ #
+ # Machine (x86)
+ #
+ CONFIG_RTAI_FPU_SUPPORT=y
+-CONFIG_RTAI_CPUS="2"
++CONFIG_RTAI_CPUS="$CPU_NUM"
  # CONFIG_RTAI_DIAG_TSC_SYNC is not set
  
  #
@@ -870,7 +915,7 @@ function build_rtai {
 -# CONFIG_RTAI_MATH is not set
 +CONFIG_RTAI_MATH=y
 +CONFIG_RTAI_MATH_LIBM_TO_USE="1"
-+CONFIG_RTAI_MATH_LIBM_DIR="/usr/local/src/newlib/install/x86_64/lib"
++CONFIG_RTAI_MATH_LIBM_DIR="${LIBM_PATH%/*}"
 +# CONFIG_RTAI_MATH_KCOMPLEX is not set
  CONFIG_RTAI_MALLOC=y
  # CONFIG_RTAI_USE_TLSF is not set
@@ -886,6 +931,7 @@ function build_rtai {
  # CONFIG_RTAI_CPLUSPLUS is not set
  # CONFIG_RTAI_RTDM is not set
 EOF
+	    fi
             make oldconfig
 	    if $RTAI_MENU; then
 		make menuconfig

@@ -101,7 +101,8 @@ sudo ./makertaikernel test all
    strings describing your kernel configuration and the test
    performance that you can enter after the test.
 
-   See also \ref installrtai step 6 and 7 for more testing options and troubleshooting.
+   See \ref testrtai for details regarding the test results and \ref configurekernel
+   for and troubleshooting and how to improve the real time performance.
 
 -# If the results are not good, then build a new version of the kernel
    with a different configuration (see \ref configurekernel for details):
@@ -546,7 +547,10 @@ grep -c "^processor" /proc/cpuinfo
      - Other features
        - Select "Mathfuns support in kernel"
        - 1 - NEWLIB (default), 2 - UCLIB, 3 - GLIBC: set to (1)
-       - The installation directory of your chosen libm.a: set to "/usr/local/src/newlib/install/lib"
+       - The installation directory of your chosen libm.a: set to "/usr/local/src/newlib/install/lib" (old, pre Oct 2016) or "/usr/local/src/newlib/install/x86_64/lib" (new) - check it with
+         \code
+find /usr/local/src/newlib/install -name 'libm.a'
+         \endcode
        .
      .
    - Add-ons
@@ -759,7 +763,7 @@ You can set them during startup by hitting 'e' in the \c grub menu and then add 
 
 After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced in some cases!
 
-Sometimes it might also help to disable things in the BIOS.
+Sometimes it might also help to disable things in the BIOS...
 .
 
 
