@@ -10,13 +10,17 @@ KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KE
                             # (set with -n)
 
 RTAI_DIR="magma"            # name of the rtai source directory (set with -r):
-                            #   magma: current development version
-                            #   vulcano: stable development version
-                            #   rtai-4.1: rtai release version 4.1
-                            #   rtai-x.x: rtai release version x.x
-                            #   RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
+                            # official relases for download (www.rtai.org):
+                            # - rtai-4.1: rtai release version 4.1
+                            # - rtai-5.0-test2: rtai release version 5.0-test2
+                            # - rtai-x.x: rtai release version x.x
+                            # from cvs (http://cvs.gna.org/cvsweb/?cvsroot=rtai):
+                            # - magma: current development version
+                            # - vulcano: stable development version
+                            # Shahbaz Youssefi's RTAI clone on github:
+                            # - RTAI: clone https://github.com/ShabbyX/RTAI.git
 RTAI_PATCH="hal-linux-3.14.39-x86-9x.patch" # rtai patch to be used
-SHOWROOM_DIR=showroom       # target directory for rtai-showrom
+SHOWROOM_DIR=showroom       # target directory for rtai-showrom in /usr/local/src
 
 
 ###########################################################################
@@ -71,9 +75,9 @@ function print_usage {
     echo "-n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})"
     echo "-k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})"
     echo "-r xxx: the rtai source, one of"
-    echo "        magma: current rtai development version (default)"
-    echo "        vulcano: stable rtai development version"
-    echo "        rtai-4.1: rtai release version 4.1"
+    echo "        magma: current rtai development version from csv (default)"
+    echo "        vulcano: stable rtai development version from csv"
+    echo "        rtai-4.1: rtai release version 4.1 from www.rtai.org"
     echo "        rtai-x.x: rtai release version x.x"
     echo "        RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github"
     echo "-p xxx: use rtai patch file xxx"
@@ -86,7 +90,7 @@ function print_usage {
     echo ""
     echo "action can be one of"
     echo "  help       : display this help message"
-    echo "  info       : display some properties of your kernel, machine, and grub menu"
+    echo "  info       : display properties of your kernel, rtai patches, machine, and grub menu (no target required, info rtai lists available patches)"
     echo "  packages   : install required packages"
     echo "  download   : download missing sources of the specified targets"
     echo "  update     : update sources of the specified targets (not for kernel)"
@@ -94,7 +98,7 @@ function print_usage {
     echo "  build      : compile and install the specified targets"
     echo "               and the depending ones if needed"
     echo "  install    : install the specified targets"
-    echo "  clean      : clean the source trees the specified targets"
+    echo "  clean      : clean the source trees of the specified targets"
     echo "  uninstall  : uninstall the specified targets"
     echo "  remove     : remove the complete source trees of the specified targets"
     echo "  reconfigure: reconfigure the kernel and make a full build of all targets"
@@ -112,18 +116,28 @@ function print_usage {
     echo "  comedi  : comedi data acquisition driver modules"
     echo "If no target is specified, all targets are made (except showroom)."
     echo ""
+    echo "Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable):"
+    echo "$ sudo makertaikernel download rtai"
+    echo ""
+    echo "Check for available patches:"
+    echo "$ sudo makertaikernel info rtai"
+    echo ""
+    echo "Select a Linux kernel and a RTAI patch and"
+    echo "set the LINUX_KERNEL and RTAI_PATCH variables accordingly."
+    echo ""
+    echo ""
     echo "Common use cases:"
     echo ""
-    echo "sudo makertaikernel"
+    echo "$ sudo makertaikernel"
     echo "  download and build all targets. A new configuration for the kernel is generated"
     echo ""
-    echo "sudo makertaikernel reconfigure"
+    echo "$ sudo makertaikernel reconfigure"
     echo "  build all targets using the existing configuration of the kernel"
     echo ""
-    echo "sudo makertaikernel test"
+    echo "$ sudo makertaikernel test"
     echo "  test the currently running kernel"
     echo ""
-    echo "sudo makertaikernel uninstall"
+    echo "$ sudo makertaikernel uninstall"
     echo "  uninstall all targets"
     echo ""
 }
@@ -178,7 +192,9 @@ function print_info {
 function print_full_info {
     RTAI_PATCH=""
     check_kernel_patch
-    print_info
+    if test "x$1" != "xrtai"; then
+	print_info
+    fi
 }
 
 
@@ -205,10 +221,10 @@ function check_kernel_patch {
 	ls -rt -1 *.patch 2> /dev/null
 	echo
 	LINUX_KERNEL_V=${LINUX_KERNEL%.*}
-	echo "Available patches for this kernel kernel version ($LINUX_KERNEL_V):"
+	echo "Available patches for the selected kernel's kernel version ($LINUX_KERNEL_V):"
 	ls -rtl -1 *${LINUX_KERNEL_V}*.patch 2> /dev/null
 	echo
-	echo "Available patches for this kernel ($LINUX_KERNEL):"
+	echo "Available patches for the selected kernel ($LINUX_KERNEL):"
 	ls -rtl -1 *${LINUX_KERNEL}*.patch 2> /dev/null
 	RTAI_PATCH="$(ls -rt *-${LINUX_KERNEL}-*.patch 2> /dev/null | tail -n 1)"
 	if test -z "$RTAI_PATCH"; then
@@ -229,7 +245,7 @@ function check_kernel_patch {
 	echo
 	echo "Suggested values:"
 	echo
-	echo "RTAI_PATH=\"${RTAI_PATCH}\""
+	echo "RTAI_PATCH=\"${RTAI_PATCH}\""
 	echo "LINUX_KERNEL=\"${LINUX_KERNEL}\""
 	echo
 	return 1
@@ -1413,7 +1429,7 @@ case $ACTION in
     version ) print_version ;;
     --version ) print_version ;;
 
-    info ) print_full_info ;;
+    info ) print_full_info $@ ;;
 
     reconfigure ) reconfigure ;;
 

@@ -58,15 +58,27 @@ linux kernel, the newlib library, and the rtai and comedi kernel modules.
 cd plugins/linuxdevices/rtaicomedi/scripts
    \endcode
 
--# Modify the variables at the top of the script to match the kernel
-   version and rtai patch you want to use, and the directory where to
-   build the linux kernel (you need 5-10GB of space there).
+-# Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable, see \c makertaikernel \c --help for options):
+   \code
+sudo makertaikernel download rtai
+   \endcode
+
+-# Check for available RTAI patches:
+   \code
+sudo makertaikernel info rtai
+   \endcode
+   Select a Linux kernel and a rtai patch.
+
+-# Modify the variables at the top of the script, in particular the \c
+   LINUX_KERNEL, \c RTAI_PATCH, and \c KERNEL_PATH variables to match
+   the kernel version, rtai patch you want to use, and the directory
+   where to build the linux kernel (you need 5-10GB of space there).
 
 -# Then run
    \code
 sudo ./makertaikernel
    \endcode
-   This will download the required sources (takes a while...) and build the kernel.
+   This will download the required sources (takes a while...) and build the kernel (takes even more time...).
 
 -# You will get the menu for configuring the kernel. See \ref compilekernel
    step 5 for instructions.
