@@ -352,16 +352,16 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
        - Deselect "Data acquisition support (comedi)"
        .
      .
-   - Kernel hacking:
+   - Kernel hacking: disabling debugin makes the kernel smaller. So unless you need it disable it.
      - Compile-time checks and compiler options:
-       - Disable "Compile the kernel with debug info" unless you need to debug your kernel
+       - Disable "Compile the kernel with debug info"
      .
-     - Disable "Magic SysRq key"
      - Disable "Kernel debugging"
+     - Disable "Magic SysRq key"
      - Disable "Early printk via EHCI debug port" (unless you still have EHCI USB 2.0 enabled)
      - Disable "Allow gcc to uninline functions marked 'inline'"
    .
-   - Disable "Virtualization"
+   - Disable "Virtualization" if possible unless you know that you need it.
    .
    Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
    Select "Yes".
@@ -742,7 +742,7 @@ Some hints for the kernel configuration:
   - Keep "Real Time Clock"
   - dvfs does not matter
   - sound might be ok
-  - you do not need bluetooth!
+  - you do not need bluetooth! (in Networking support -> Bluetooth subsystem support)
   .
 .
 

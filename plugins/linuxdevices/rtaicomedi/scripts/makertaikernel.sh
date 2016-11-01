@@ -1259,7 +1259,6 @@ function reconfigure {
     uninstall_rtai
     uninstall_comedi
 
-    clean_kernel
     unpack_kernel
     patch_kernel
     build_kernel
