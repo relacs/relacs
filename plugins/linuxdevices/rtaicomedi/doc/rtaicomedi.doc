@@ -83,7 +83,11 @@ sudo ./makertaikernel
 -# You will get the menu for configuring the kernel. See \ref compilekernel
    step 5 for instructions.
 
--# Reboot into the new kernel and run some tests by invoking
+-# Reboot into the new kernel, e.g. by running
+   \code
+sudo ./makertaikernel reboot
+   \endcode
+   and run some tests by invoking
    \code
 sudo ./makertaikernel test
    \endcode
@@ -531,7 +535,7 @@ make menuconfig
    - General
      - "Installation directory": should be set to \c /usr/realtime
      - "Linux source tree": must be set to \c /usr/src/linux
-     - "RTAI Documentation": deselect all documentation (if you don't you might get an error)
+     - "RTAI Documentation": deselect all documentation. You nevertheless find api documentation in \c /usr/realtime/share/doc
      - Select "Build RTAI testsuite"
      - Disable "Enable source compatibility mode"
      - "Inlining mode of user-space services": select "Eager inlining"

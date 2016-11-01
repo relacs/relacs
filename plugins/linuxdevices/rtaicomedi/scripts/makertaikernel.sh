@@ -3,24 +3,25 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-KERNEL_PATH=/data/src       # where to put and compile the kernel
-LINUX_KERNEL="4.1.18"       # linux vanilla kernel version (set with -k)
-KERNEL_SOURCE_NAME="rtai"   # name for kernel source directory to be appended to LINUX_KERNEL
-KERNEL_NAME="rtai"          # name for name of kernel to be appended to LINUX_KERNEL 
-                            # (set with -n)
+KERNEL_PATH=/data/src         # where to put and compile the kernel
+LINUX_KERNEL="4.1.18"         # linux vanilla kernel version (set with -k)
+KERNEL_SOURCE_NAME="rtai"     # name for kernel source directory to be appended to LINUX_KERNEL
+KERNEL_NAME="rtai"            # name for name of kernel to be appended to LINUX_KERNEL 
+                              # (set with -n)
 
-RTAI_DIR="rtai-5.0-test2"   # name of the rtai source directory (set with -r):
-                            # official relases for download (www.rtai.org):
-                            # - rtai-4.1: rtai release version 4.1
-                            # - rtai-5.0-test2: rtai release version 5.0-test2
-                            # - rtai-x.x: rtai release version x.x
-                            # from cvs (http://cvs.gna.org/cvsweb/?cvsroot=rtai):
-                            # - magma: current development version
-                            # - vulcano: stable development version
-                            # Shahbaz Youssefi's RTAI clone on github:
-                            # - RTAI: clone https://github.com/ShabbyX/RTAI.git
-RTAI_PATCH="hal-linux-4.1.18-x86-3.patch" # rtai patch to be used
-SHOWROOM_DIR=showroom       # target directory for rtai-showrom in /usr/local/src
+RTAI_DIR="vulcano"            # name of the rtai source directory (set with -r):
+                              # official relases for download (www.rtai.org):
+                              # - rtai-4.1: rtai release version 4.1
+                              # - rtai-5.0-test2: rtai release version 5.0-test2
+                              # - rtai-x.x: rtai release version x.x
+                              # from cvs (http://cvs.gna.org/cvsweb/?cvsroot=rtai):
+                              # - magma: current development version
+                              # - vulcano: stable development version
+                              # Shahbaz Youssefi's RTAI clone on github:
+                              # - RTAI: clone https://github.com/ShabbyX/RTAI.git
+RTAI_PATCH="hal-linux-4.1.18-x86-7.patch" # rtai patch to be used
+LOCAL_SRC_PATH=/usr/local/src # directory for downloading and building rtai, newlib and comedi
+SHOWROOM_DIR=showroom         # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 
 ###########################################################################
@@ -94,7 +95,7 @@ function print_usage {
     echo "  packages   : install required packages"
     echo "  download   : download missing sources of the specified targets"
     echo "  update     : update sources of the specified targets (not for kernel)"
-    echo "  patch      : patch the linux kernel with the rtai patch (no target required)"
+    echo "  patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)"
     echo "  build      : compile and install the specified targets"
     echo "               and the depending ones if needed"
     echo "  install    : install the specified targets"
@@ -102,6 +103,7 @@ function print_usage {
     echo "  uninstall  : uninstall the specified targets"
     echo "  remove     : remove the complete source trees of the specified targets"
     echo "  reconfigure: reconfigure the kernel and make a full build of all targets"
+    echo "  reboot     : reboot into rtai kernel immediately"
     echo "  test       : test the current kernel and write reports to the current working directory"
     echo "  test all   : test the current kernel/kthreads/user and write reports to the current working directory"
     echo ""
@@ -166,9 +168,9 @@ function print_info {
     cat /proc/cmdline
     echo
     echo "Revisions:"
-    echo "  rtai  : ${RTAI_DIR} from $(cat /usr/local/src/${RTAI_DIR}/revision.txt)"
-    echo "  newlib: cvs from $(cat /usr/local/src/newlib/revision.txt)"
-    echo "  comedi: git from $(cat /usr/local/src/comedi/revision.txt)"
+    echo "  rtai  : ${RTAI_DIR} from $(cat ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt)"
+    echo "  newlib: cvs from $(cat ${LOCAL_SRC_PATH}/newlib/revision.txt)"
+    echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
     echo
     echo "CPU (/proc/cpuinfo):"
     grep "model name" /proc/cpuinfo | head -n 1
@@ -215,7 +217,7 @@ function install_packages {
 
 function check_kernel_patch {
     if test -z "$RTAI_PATCH"; then
-	cd /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/
+	cd ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/
 	echo
 	echo "Available patches for this machine ($RTAI_MACHINE):"
 	ls -rt -1 *.patch 2> /dev/null
@@ -249,7 +251,7 @@ function check_kernel_patch {
 	echo "LINUX_KERNEL=\"${LINUX_KERNEL}\""
 	echo
 	return 1
-    elif ! test -f /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH; then
+    elif ! test -f ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH; then
 	echo
 	echo "Error: rtai patch file $RTAI_PATCH does not exist."
 	echo "Run again with -p \"\" to see list of available patches."
@@ -291,7 +293,7 @@ function download_kernel {
     else
 	echo
 	echo "Available patches for this machine ($RTAI_MACHINE):"
-	ls -rt /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/*.patch | while read LINE; do echo "  ${LINE#/usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/}"; done
+	ls -rt ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/*.patch | while read LINE; do echo "  ${LINE#${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/}"; done
 	echo
 	echo "You need to specify a linux kernel version!"
 	echo "Choose one from the above list of available rtai patches (most recent one is at the bottom)"
@@ -308,7 +310,12 @@ function unpack_kernel {
     cd $KERNEL_PATH
     if test -d linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}; then
 	echo "keep already existing linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME} directory."
+	echo "remove it with $ makertaikernel clean kernel"
     else
+	if ! test -f linux-$LINUX_KERNEL.tar.xz; then
+	    echo "archive linux-$LINUX_KERNEL.tar.xz not found."
+	    echo "download it with $ makertaikernel download kernel."
+	fi
 	# unpack:
 	echo "unpack kernel sources from archive"
 	if ! $DRYRUN; then
@@ -333,7 +340,7 @@ function patch_kernel {
 	fi
 	echo "apply rtai patch $RTAI_PATCH to kernel sources"
 	if ! $DRYRUN; then
-	    patch -p1 < /usr/local/src/rtai/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH
+	    patch -p1 < ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH
 	fi
     fi
 }
@@ -355,6 +362,15 @@ function install_kernel {
     else
 	echo "no kernel to install"
 	return 1
+    fi
+}
+
+function reboot_kernel {
+    echo "reboot into ${LINUX_KERNEL}*-${KERNEL_NAME} kernel"
+    if ! $DRYRUN; then
+	GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
+	grub-reboot "$GRUBMENU"
+	reboot
     fi
 }
 
@@ -507,6 +523,13 @@ function test_rtaikernel {
 	NUM="$(printf "%03d" $N)"
     fi
 
+    # remove latency file to force calibration:
+    # XXX this is for rtai5, for rtai4 the calibration tools needs to be run manually
+    # see base/arch/x86/calibration/README
+    if test -f /usr/realtime/calibration/latencies; then
+	rm /usr/realtime/calibration/latencies
+    fi
+
     # loading rtai kernel modules:
     RTAIMOD_FAILED=false
     RTAIMATH_FAILED=false
@@ -552,9 +575,9 @@ function test_rtaikernel {
 	    echo
 	    echo "Revisions:"
 	    echo "  kernel: ${LINUX_KERNEL}"
-	    echo "  rtai  : ${RTAI_DIR} from $(cat /usr/local/src/${RTAI_DIR}/revision.txt)"
-	    echo "  newlib: cvs from $(cat /usr/local/src/newlib/revision.txt)"
-	    echo "  comedi: git from $(cat /usr/local/src/comedi/revision.txt)"
+	    echo "  rtai  : ${RTAI_DIR} from $(cat ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt)"
+	    echo "  newlib: cvs from $(cat ${LOCAL_SRC_PATH}/newlib/revision.txt)"
+	    echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
 	    echo
 	    echo
 	    echo "dmesg:"
@@ -655,7 +678,7 @@ function test_rtaikernel {
 # newlib:
 
 function download_newlib {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d newlib/src/newlib; then
 	echo "keep already downloaded newlib sources"
     else
@@ -672,7 +695,7 @@ function download_newlib {
 }
 
 function update_newlib {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d newlib/src/newlib; then
 	echo "update already downloaded newlib sources"
 	cd newlib
@@ -685,7 +708,7 @@ function update_newlib {
 }
 
 function install_newlib {
-    cd /usr/local/src/newlib
+    cd ${LOCAL_SRC_PATH}/newlib
     cd src/newlib
     echo "install newlib"
     if ! $DRYRUN; then
@@ -695,7 +718,7 @@ function install_newlib {
 }
 
 function build_newlib {
-    cd /usr/local/src/newlib
+    cd ${LOCAL_SRC_PATH}/newlib
     if test -f install/$MACHINE/lib/libm.a; then
 	echo "keep already installed newlib library"
     else
@@ -706,7 +729,7 @@ function build_newlib {
 	    if test "$(grep CONFIG_64BIT /usr/src/linux/.config)" = 'CONFIG_64BIT=y'; then
 		NEWLIB_CFLAGS="-O2 -mcmodel=kernel"
 	    fi
-	    ./configure --prefix=/usr/local/src/newlib/install --disable-shared --host="$MACHINE" CFLAGS="${NEWLIB_CFLAGS}"
+	    ./configure --prefix=${LOCAL_SRC_PATH}/newlib/install --disable-shared --host="$MACHINE" CFLAGS="${NEWLIB_CFLAGS}"
 	    make -j$CPU_NUM
 	    if test "x$?" != "x0"; then
 		echo "Failed to build newlib!"
@@ -723,7 +746,7 @@ function build_newlib {
 }
 
 function clean_newlib {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d newlib; then
 	echo "clean newlib"
 	if ! $DRYRUN; then
@@ -735,7 +758,7 @@ function clean_newlib {
 }
 
 function uninstall_newlib {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d newlib; then
 	echo "uninstall newlib"
 	if ! $DRYRUN; then
@@ -745,9 +768,9 @@ function uninstall_newlib {
 }
 
 function remove_newlib {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d newlib; then
-	echo "remove /usr/local/src/newlib"
+	echo "remove ${LOCAL_SRC_PATH}/newlib"
 	if ! $DRYRUN; then
 	    rm -r newlib
 	fi
@@ -759,7 +782,7 @@ function remove_newlib {
 # rtai:
 
 function download_rtai {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d $RTAI_DIR; then
 	echo "keep already downloaded rtai sources"
 	cd $RTAI_DIR
@@ -784,38 +807,49 @@ function download_rtai {
 	    date +"%F %H:%M" > $RTAI_DIR/revision.txt
 	fi
     fi
-    ln -sfn $RTAI_DIR rtai
+    echo "set soft link rtai -> $RTAI_DIR"
+    if ! $DRYRUN; then
+	ln -sfn $RTAI_DIR rtai
+    fi
 }
 
 function update_rtai {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d $RTAI_DIR; then
 	cd $RTAI_DIR
-	if test -d CVS; then
-	    echo "update already downloaded rtai sources"
-	    cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update
-	    date +"%F %H:%M" > revision.txt
-	elif test -d .git; then
-	    echo "update already downloaded rtai sources"
-	    git pull
-	    date +"%F %H:%M" > revision.txt
-	fi
 	echo "run make distclean on rtai sources"
 	if ! $DRYRUN; then
 	    make distclean
 	fi
+	if test -d CVS; then
+	    echo "update already downloaded rtai sources"
+	    if ! $DRYRUN; then
+		cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update
+		date +"%F %H:%M" > revision.txt
+	    fi
+	elif test -d .git; then
+	    echo "update already downloaded rtai sources"
+	    if ! $DRYRUN; then
+		git pull
+		date +"%F %H:%M" > revision.txt
+	    fi
+	fi
 	cd -
+	echo "set soft link rtai -> $RTAI_DIR"
+	if ! $DRYRUN; then
+	    ln -sfn $RTAI_DIR rtai
+	fi
     else
 	download_rtai
     fi
 }
 
 function build_rtai {
-    cd /usr/local/src/rtai
+    cd ${LOCAL_SRC_PATH}/${RTAI_DIR}
     if $NEW_KERNEL || $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko; then
 	echo "build rtai"
 	if ! $DRYRUN; then
-	    LIBM_PATH=$(find /usr/local/src/newlib/install/ -name 'libm.a')
+	    LIBM_PATH=$(find ${LOCAL_SRC_PATH}/newlib/install/ -name 'libm.a')
 	    # diff -u base/arch/${RTAI_MACHINE}/defconfig .rtai_config
 	    cp base/arch/${RTAI_MACHINE}/defconfig .rtai_config
 	    if grep 'CONFIG_RTAI_VERSION="5' .rtai_config; then
@@ -954,7 +988,7 @@ EOF
 }
 
 function clean_rtai {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d $RTAI_DIR; then
 	echo "clean rtai"
 	if ! $DRYRUN; then
@@ -965,7 +999,7 @@ function clean_rtai {
 }
 
 function install_rtai {
-    cd /usr/local/src/rtai
+    cd ${LOCAL_SRC_PATH}/${RTAI_DIR}
     echo "install rtai"
     if ! $DRYRUN; then
 	make install
@@ -983,15 +1017,15 @@ function uninstall_rtai {
 }
 
 function remove_rtai {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d $RTAI_DIR; then
-	echo "remove rtai in /usr/local/src/$RTAI_DIR"
+	echo "remove rtai in ${LOCAL_SRC_PATH}/$RTAI_DIR"
 	if ! $DRYRUN; then
 	    rm -r $RTAI_DIR
 	fi
     fi
     if test -f $RTAI_DIR.tar.*; then
-	echo "remove /usr/local/src/$RTAI_DIR.tar.*"
+	echo "remove ${LOCAL_SRC_PATH}/$RTAI_DIR.tar.*"
 	if ! $DRYRUN; then
 	    rm $RTAI_DIR.tar.*
 	fi
@@ -1003,7 +1037,7 @@ function remove_rtai {
 # rtai showroom:
 
 function download_showroom {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d $SHOWROOM_DIR; then
 	echo "keep already downloaded rtai-showroom sources"
 	cd $SHOWROOM_DIR/v3.x
@@ -1023,7 +1057,7 @@ function download_showroom {
 }
 
 function update_showroom {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d $SHOWROOM_DIR; then
 	echo "update already downloaded rtai-showroom sources"
 	cd $SHOWROOM_DIR
@@ -1036,7 +1070,7 @@ function update_showroom {
 }
 
 function build_showroom {
-    cd /usr/local/src/$SHOWROOM_DIR/v3.x
+    cd ${LOCAL_SRC_PATH}/$SHOWROOM_DIR/v3.x
     echo "build rtai showroom"
     if ! $DRYRUN; then
 	PATH="$PATH:/usr/realtime/bin"
@@ -1049,7 +1083,7 @@ function build_showroom {
 }
 
 function clean_showroom {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d $SHOWROOM_DIR; then
 	echo "clean rtai showroom"
 	if ! $DRYRUN; then
@@ -1061,9 +1095,9 @@ function clean_showroom {
 }
 
 function remove_showroom {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d $SHOWROOM_DIR; then
-	echo "remove rtai showroom in /usr/local/src/$SHOWROOM_DIR"
+	echo "remove rtai showroom in ${LOCAL_SRC_PATH}/$SHOWROOM_DIR"
 	if ! $DRYRUN; then
 	    rm -r $SHOWROOM_DIR
 	fi
@@ -1075,7 +1109,7 @@ function remove_showroom {
 # comedi:
 
 function download_comedi {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
 	echo "keep already downloaded comedi sources"
     else
@@ -1088,7 +1122,7 @@ function download_comedi {
 }
 
 function update_comedi {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
 	echo "update already downloaded comedi sources"
 	cd comedi
@@ -1101,7 +1135,7 @@ function update_comedi {
 }
 
 function install_comedi {
-    cd /usr/local/src/comedi
+    cd ${LOCAL_SRC_PATH}/comedi
     echo "install comedi"
     if ! $DRYRUN; then
 	make install
@@ -1111,17 +1145,17 @@ function install_comedi {
 	if ! test -d "$KERNEL_MODULES"; then
 	    KERNEL_MODULES=/lib/modules/${LINUX_KERNEL}.0-${KERNEL_NAME}
 	fi
-	cp /usr/local/src/comedi/comedi/Module.symvers ${KERNEL_MODULES}/comedi/
-	cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
-	cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
+	cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers ${KERNEL_MODULES}/comedi/
+	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
+	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
 	udevadm trigger
     fi
     NEW_COMEDI=true
 }
 
 function build_comedi {
-    if $NEW_RTAI || ! test -f /usr/local/src/comedi/comedi/comedi.o; then
-	cd /usr/local/src/comedi
+    if $NEW_RTAI || ! test -f ${LOCAL_SRC_PATH}/comedi/comedi/comedi.o; then
+	cd ${LOCAL_SRC_PATH}/comedi
 	echo "build comedi"
 	if ! $DRYRUN; then
 	    ./autogen.sh
@@ -1142,9 +1176,9 @@ function build_comedi {
 		exit 1
 	    fi
 	    depmod -a
-	    cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi/
-	    cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
-	    cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
+	    cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi/
+	    cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
+	    cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
 	    udevadm trigger
 	fi
 	NEW_COMEDI=true
@@ -1154,7 +1188,7 @@ function build_comedi {
 }
 
 function clean_comedi {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
 	echo "clean comedi"
 	cd comedi
@@ -1165,7 +1199,7 @@ function clean_comedi {
 }
 
 function uninstall_comedi {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
 	echo "uninstall comedi"
 	cd comedi
@@ -1176,9 +1210,9 @@ function uninstall_comedi {
 }
 
 function remove_comedi {
-    cd /usr/local/src
+    cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
-	echo "remove /usr/local/src/comedi"
+	echo "remove ${LOCAL_SRC_PATH}/comedi"
 	if ! $DRYRUN; then
 	    rm -r comedi
 	fi
@@ -1225,6 +1259,7 @@ function reconfigure {
     uninstall_rtai
     uninstall_comedi
 
+    clean_kernel
     unpack_kernel
     patch_kernel
     build_kernel
@@ -1384,6 +1419,13 @@ function remove_all {
 }
 
 
+function clean_unpack_patch_kernel {
+   check_root
+   clean_kernel
+   unpack_kernel
+   patch_kernel
+ }
+
 ###########################################################################
 ###########################################################################
 # main script:
@@ -1484,12 +1526,13 @@ case $ACTION in
     packages ) intall_packages ;;
     download ) download_all $@ ;;
     update ) update_all $@ ;;
-    patch ) patch_kernel ;;
+    patch ) clean_unpack_patch_kernel ;;
     build ) build_all $@ ;;
     install ) install_all $@ ;;
     clean ) clean_all $@ ;;
     uninstall ) uninstall_all $@ ;;
     remove ) remove_all $@ ;;
+    reboot ) reboot_kernel ;;
 
     * ) if test -n "$1"; then
 	    echo "unknown option \"$1\""
