@@ -108,6 +108,13 @@ sudo ./makertaikernel test all
    See \ref testrtai for details regarding the test results and \ref configurekernel
    for and troubleshooting and how to improve the real time performance.
 
+-# Before you go on with improving the kernel configuration run
+   \code
+sudo ./makertaikernel -c mod
+   \endcode
+   in order to deselect all unused kernel modules from compilation. 
+   This speeds up the following kernel builds dramatically!
+
 -# If the results are not good, then build a new version of the kernel
    with a different configuration (see \ref configurekernel for details):
    \code

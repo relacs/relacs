@@ -23,23 +23,30 @@ RTAI_PATCH="hal-linux-4.1.18-x86-7.patch" # rtai patch to be used
 LOCAL_SRC_PATH=/usr/local/src # directory for downloading and building rtai, newlib and comedi
 SHOWROOM_DIR=showroom         # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
+KERNEL_CONFIG="old" # whether and how to initialize the kernel configuration 
+                    # (set with -c) 
+                    # "old" for oldconfig from the running kernel,
+                    # "def" for the defconfig target,
+                    # "mod" for the localmodconfig target, (even if kernel do not match)
+                    # or a full path to a config file.
+                    # afterwards, the localmodconfig target is executed, 
+                    # if the running kernel matches LINUX_KERNEL
+RUN_LOCALMOD=true   # run make localmodconf after selecting a kernel configuration
+KERNEL_DEBUG=false  # generate debuggable kernel (see man crash), set with -D
+
 
 ###########################################################################
 # some global variables:
 
 VERSION_STRING="makertaikernel version 1.6 by Jan Benda, May 2015"
-DRYRUN=false
+DRYRUN=false        # set with -d
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
-KERNEL_CONFIG="old" # for oldconfig from the running kernel,
-                    # "def" for the defconfig target,
-                    # or a full path to a config file.
-KERNEL_DEBUG=false  # generate debuggable kernel (see man crash)
 DEFAULT_RTAI_DIR="$RTAI_DIR"
 RTAI_DIR_CHANGED=false
 RTAI_PATCH_CHANGED=false
 LINUX_KERNEL_CHANGED=false
-RTAI_MENU=false
+RTAI_MENU=false     # enter RTAI configuration menu (set with -m)
 
 NEW_KERNEL=false
 NEW_RTAI=false
@@ -47,6 +54,8 @@ NEW_NEWLIB=false
 NEW_COMEDI=false
 
 FULL_COMMAND_LINE="$@"
+
+CURRENT_KERNEL=$(uname -r)
 
 MACHINE=$(uname -m)
 RTAI_MACHINE=$MACHINE
@@ -67,81 +76,88 @@ function print_version {
 }
 
 function print_usage {
-    echo "Download and build everything needed for an rtai-patched linux kernel with comedi and math support."
-    echo ""
-    echo "usage:"
-    echo "sudo makertaikernel [-d] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-D] [-m] [action [target1 [target2 ... ]]]"
-    echo ""
-    echo "-d    : dry run - only print out what the script would do, but do not execute any command"
-    echo "-n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})"
-    echo "-k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})"
-    echo "-r xxx: the rtai source, one of"
-    echo "        magma: current rtai development version from csv (default)"
-    echo "        vulcano: stable rtai development version from csv"
-    echo "        rtai-4.1: rtai release version 4.1 from www.rtai.org"
-    echo "        rtai-x.x: rtai release version x.x"
-    echo "        RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github"
-    echo "-p xxx: use rtai patch file xxx"
-    echo "-c xxx: generate a new kernel configuration:"
-    echo "        old: use the kernel configuration of the currently running kernel"
-    echo "        path/to/config/file: provide a particular configuration file"
-    echo "        def: generate a kernel configuration using make defconfig"
-    echo "-D    : generate kernel package with debug symbols in addition"
-    echo "-m    : enter the RTAI configuration menu"
-    echo ""
-    echo "action can be one of"
-    echo "  help       : display this help message"
-    echo "  info       : display properties of your kernel, rtai patches, machine, and grub menu (no target required, info rtai lists available patches)"
-    echo "  packages   : install required packages"
-    echo "  download   : download missing sources of the specified targets"
-    echo "  update     : update sources of the specified targets (not for kernel)"
-    echo "  patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)"
-    echo "  build      : compile and install the specified targets"
-    echo "               and the depending ones if needed"
-    echo "  install    : install the specified targets"
-    echo "  clean      : clean the source trees of the specified targets"
-    echo "  uninstall  : uninstall the specified targets"
-    echo "  remove     : remove the complete source trees of the specified targets"
-    echo "  reconfigure: reconfigure the kernel and make a full build of all targets"
-    echo "  reboot     : reboot into rtai kernel immediately"
-    echo "  test       : test the current kernel and write reports to the current working directory"
-    echo "  test all   : test the current kernel/kthreads/user and write reports to the current working directory"
-    echo ""
-    echo "If no action is specified, a full download and build is performed for all targets (except showroom)."
-    echo ""
-    echo "targets can be one or more of:"
-    echo "  kernel  : rtai-patched linux kernel"
-    echo "  newlib  : newlib library"
-    echo "  rtai    : rtai modules"
-    echo "  showroom: rtai showroom examples"
-    echo "            (supports only download, build, clean, remove)"
-    echo "  comedi  : comedi data acquisition driver modules"
-    echo "If no target is specified, all targets are made (except showroom)."
-    echo ""
-    echo "Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable):"
-    echo "$ sudo makertaikernel download rtai"
-    echo ""
-    echo "Check for available patches:"
-    echo "$ sudo makertaikernel info rtai"
-    echo ""
-    echo "Select a Linux kernel and a RTAI patch and"
-    echo "set the LINUX_KERNEL and RTAI_PATCH variables accordingly."
-    echo ""
-    echo ""
-    echo "Common use cases:"
-    echo ""
-    echo "$ sudo makertaikernel"
-    echo "  download and build all targets. A new configuration for the kernel is generated"
-    echo ""
-    echo "$ sudo makertaikernel reconfigure"
-    echo "  build all targets using the existing configuration of the kernel"
-    echo ""
-    echo "$ sudo makertaikernel test"
-    echo "  test the currently running kernel"
-    echo ""
-    echo "$ sudo makertaikernel uninstall"
-    echo "  uninstall all targets"
-    echo ""
+    cat <<EOF
+Download and build everything needed for an rtai-patched linux kernel with comedi and math support.
+
+usage:
+sudo makertaikernel [-d] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-D] [-m] [action [target1 [target2 ... ]]]
+
+-d    : dry run - only print out what the script would do, but do not execute any command
+-n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})
+-k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})
+-r xxx: the rtai source, one of
+        magma: current rtai development version from csv (default)
+        vulcano: stable rtai development version from csv
+        rtai-5.0-test2: rtai release version 5.0-test2 from www.rtai.org
+        rtai-4.1: rtai release version 4.1 from www.rtai.org, or any other
+        rtai-x.x: rtai release version x.x from www.rtai.org
+        RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
+-p xxx: use rtai patch file xxx
+-c xxx: generate a new kernel configuration:
+        old: use the kernel configuration of the currently running kernel
+        def: generate a kernel configuration using make defconfig
+        mod: simplify existing kernel configuration using make localmodconfig
+             even if kernel do not match
+        path/to/config/file: provide a particular configuration file
+        afterwards (except for mod), make localmodconfig is executed to 
+        deselect compilation of unused modules, 
+        but only if the runnig kernel matches the selected kernel version.
+-D    : generate kernel package with debug symbols in addition
+-m    : enter the RTAI configuration menu
+
+action can be one of
+  help       : display this help message
+  info       : display properties of your kernel, rtai patches, machine, and grub menu (no target required, info rtai lists available patches)
+  packages   : install required packages
+  download   : download missing sources of the specified targets
+  update     : update sources of the specified targets (not for kernel)
+  patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
+  build      : compile and install the specified targets
+               and the depending ones if needed
+  install    : install the specified targets
+  clean      : clean the source trees of the specified targets
+  uninstall  : uninstall the specified targets
+  remove     : remove the complete source trees of the specified targets
+  reconfigure: reconfigure the kernel and make a full build of all targets
+  reboot     : reboot into rtai kernel immediately
+  test       : test the current kernel and write reports to the current working directory
+  test all   : test the current kernel/kthreads/user and write reports to the current working directory
+
+If no action is specified, a full download and build is performed for all targets (except showroom).
+
+targets can be one or more of:
+  kernel  : rtai-patched linux kernel
+  newlib  : newlib library
+  rtai    : rtai modules
+  showroom: rtai showroom examples
+            (supports only download, build, clean, remove)
+  comedi  : comedi data acquisition driver modules
+If no target is specified, all targets are made (except showroom).
+
+Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable):
+$ sudo makertaikernel download rtai
+
+Check for available patches:
+$ sudo makertaikernel info rtai
+
+Select a Linux kernel and a RTAI patch and
+set the LINUX_KERNEL and RTAI_PATCH variables accordingly.
+
+
+Common use cases:
+
+$ sudo makertaikernel
+  download and build all targets. A new configuration for the kernel is generated
+
+$ sudo makertaikernel reconfigure
+  build all targets using the existing configuration of the kernel
+
+$ sudo makertaikernel test
+  test the currently running kernel
+
+$ sudo makertaikernel uninstall
+  uninstall all targets
+EOF
 }
 
 function check_root {
@@ -394,11 +410,21 @@ function build_kernel {
 		    make defconfig
 		fi
 	    elif test "x$KERNEL_CONFIG" = "xold"; then
-		echo "use configuration from running kernel (/boot/config-`uname -r`)"
+		echo "use configuration from running kernel (/boot/config-${CURRENT_KERNEL})"
 		if ! $DRYRUN; then
-		    cp /boot/config-`uname -r` .config
+		    cp /boot/config-${CURRENT_KERNEL} .config
 		    make olddefconfig
 		fi
+	    elif test "x$KERNEL_CONFIG" = "xmod"; then
+		echo "run make localmodconfig"
+		if test ${CURRENT_KERNEL:0:${#LINUX_KERNEL}} != $LINUX_KERNEL ; then
+		    echo "warning: kernel versions do not match (selected kernel is $LINUX_KERNEL, running kernel is $CURRENT_KERNEL)!"
+		    echo "run make localmodconfig anyways"
+		fi
+		if ! $DRYRUN; then
+		    make localmodconfig
+		fi
+		RUN_LOCALMOD=false
 	    elif test -f "$KERNEL_CONFIG"; then
 		echo "use configuration from $KERNEL_CONFIG"
 		if ! $DRYRUN; then
@@ -409,9 +435,15 @@ function build_kernel {
 		echo "Unknown kernel configuration $KERNEL_CONFIG."
 		exit 0
 	    fi
-	    echo "run make localmodconfig"
-	    if ! $DRYRUN; then
-		yes "" | make localmodconfig
+	    if $RUN_LOCALMOD; then
+		if test ${CURRENT_KERNEL:0:${#LINUX_KERNEL}} = $LINUX_KERNEL ; then
+		    echo "run make localmodconfig"
+		    if ! $DRYRUN; then
+			yes "" | make localmodconfig
+		    fi
+		else
+		    echo "cannot run make localmodconfig, because kernel version does not match"
+		fi
 	    fi
 	else
 	    echo "keep already existing .configure file for linux-${LINUX_KERNEL}-${KERNEL_NAME}."
@@ -454,9 +486,10 @@ function clean_kernel {
 
 function uninstall_kernel {
     # kernel:
-    if test $(uname -r) = ${LINUX_KERNEL}-${KERNEL_NAME} -o $(uname -r) = ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
+    if test ${CURRENT_KERNEL} = ${LINUX_KERNEL}-${KERNEL_NAME} -o ${CURRENT_KERNEL} = ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
 	echo "Cannot uninstall a running kernel!"
-	echo "First boot into a different kernel."
+	echo "First boot into a different kernel. E.g. by executing"
+	echo "$ sudo ./makertaikernel reboot"
 	return 1
     fi
     echo "uninstall kernel ${LINUX_KERNEL}-${KERNEL_NAME}"
@@ -502,9 +535,10 @@ function run_test {
 }
 
 function test_rtaikernel {
-    if test $(uname -r) != ${LINUX_KERNEL}-${KERNEL_NAME} -a $(uname -r) != ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
+    if test ${CURRENT_KERNEL} != ${LINUX_KERNEL}-${KERNEL_NAME} -a ${CURRENT_KERNEL} != ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
 	echo "Need a running rtai kernel!"
-	echo "First boot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel."
+	echo "First boot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel. E.g. by executing"
+	echo "$ sudo ./makertaikernel reboot"
 	return 1
     fi
 
@@ -1482,7 +1516,7 @@ if test "x$1" = "x-c"; then
     shift
     if test -n "$1" && test "x$1" != "xreconfigure"; then
 	KERNEL_CONFIG="$1"
-	if test "x$KERNEL_CONFIG" != "xdef" -a "x$KERNEL_CONFIG" != "xold" -a "x${KERNEL_CONFIG:0:1}" != "x/"; then
+	if test "x$KERNEL_CONFIG" != "xdef" -a "x$KERNEL_CONFIG" != "xold" -a "x$KERNEL_CONFIG" != "xmod" -a "x${KERNEL_CONFIG:0:1}" != "x/"; then
 	    KERNEL_CONFIG="$PWD/$KERNEL_CONFIG"
 	fi
 	NEW_KERNEL_CONFIG=true
