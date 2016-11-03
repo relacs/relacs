@@ -343,7 +343,11 @@ const OutData &OutData::operator+=( const OutData &od )
     ++iter2;
   };
 
-  Description.append( od.Description );
+  if ( Description.type() != "stimulus/addition" ) {
+    Description.down();
+    Description.setType( "stimulus/addition" );
+  }
+  Description.newSection( od.Description );
 
   return *this;
 }

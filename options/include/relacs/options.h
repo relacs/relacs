@@ -1749,7 +1749,7 @@ public:
   Options &popSection( void );
     /*! Flatten the %Options, i.e. delete all sections and subsections
         and copy their Parameter to this. 
-	The Parameter a copied to \a root, which by default is this. */
+	The Parameter are copied to \a root, which by default is this. */
   Options &flatten( Options *root=0 );
     /*! Remove all Parameter and sections of Options.  If \a revert is
         set to \c true, also revert parentSection() of non-owned

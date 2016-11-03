@@ -150,16 +150,18 @@ int Beats::main( void )
   int nfft = 0;
   if ( usepsd ) {
     nfft = nextPowerOfTwo( (int)::ceil( 1.0/trace( FishEODTrace[0][0] ).stepsize()/eodfreqprec ) );
-    eodfreqprec = 1.0/trace( FishEODTrace[0][0] ).stepsize()/nfft;
-    if ( averagetime < 2.0/trace( FishEODTrace[0][0] ).stepsize()/nfft ) {
-      averagetime = 2.0/trace( FishEODTrace[0][0] ).stepsize()/nfft;
-      warning( "averagetime is too small for requested frequency resolution. Set it to " +
-	       Str( averagetime ) + "s for now." );
+    eodfreqprec = 1.0/trace( FishEODTrace[0][0] ).interval(nfft);
+    if ( averagetime < 1.0/eodfreqprec ) {
+      double newaveragetime = 1.0/eodfreqprec;
+      warning( "averagetime of " + Str( averagetime ) + 
+	       "s is too small for requested frequency resolution. Set it to " +
+	       Str( newaveragetime ) + "s for now." );
+      averagetime = newaveragetime;
     }
   }
   if ( averagetime > pause ) {
+    warning( "Pause of " + Str( pause ) + "s is smaller than averagetime of " + Str(averagetime ) + "s. Set it to averagetime for now." );
     pause = averagetime;
-    warning( "Pause is smaller than averagetime. Set it to averagetime for now." );
   }
 
   double amamplsum = 0.0;
@@ -524,12 +526,14 @@ int Beats::main( void )
 	  else {
 	    OutData am;
 	    am.setTrace( FishEField[0] );
+	    am.setUnit( "" );
 	    if ( amtype == 2 ) {
 	      am.rectangleWave( n*p, -1.0, 1.0/amfreqs[0], 0.5/amfreqs[0], 0.0, 2.0*amampls[0] );
 	      am -= amampls[0];
 	      for ( unsigned int k=1; k<amfreqs.size(); k++ ) {
 		OutData amk;
 		amk.setTrace( FishEField[0] );
+		amk.setUnit( "" );
 		amk.rectangleWave( n*p, -1.0, 1.0/amfreqs[k], 0.5/amfreqs[k], 0.0, 2.0*amampls[k] );
 		amk -= amampls[k];
 		am += amk;
@@ -540,12 +544,13 @@ int Beats::main( void )
 	      for ( unsigned int k=1; k<amfreqs.size(); k++ ) {
 		OutData amk;
 		amk.setTrace( FishEField[0] );
+		amk.setUnit( "" );
 		amk.sineWave( n*p, -1.0, amfreqs[k], 0.75*2.0*M_PI, amampls[k], 0.0 );
 		am += amk;
 	      }
 	    }
 	    am += 1.0;
-	    am.description().setUnit( "Amplitude", "" );
+	    am.description().clearSections();
 	    am.description().addNumber( "Intensity", 1.0, "" );
 	    am /= 1.0+amamplsum;
 	    sig.fill( am, stimulusrate );
@@ -601,7 +606,7 @@ int Beats::main( void )
       double signaltime = signalTime();
 
       // meassage:
-      Str s = "Delta F:  <b>" + Str( deltaf, "%g" ) + "Hz</b>";
+      Str s = "Delta f: <b>" + Str( deltaf, "%g" ) + "Hz</b>";
       s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
       if ( amtype > 0 ) {
 	s += "  <b>";
@@ -610,11 +615,11 @@ int Beats::main( void )
 	else
 	  s += "Sine";
 	s += "</b> AM";
-	s += "  F:  <b>" + Str( amfreqs[0], "%g" );
+	s += "  f:  <b>" + Str( amfreqs[0], "%g" );
 	for ( unsigned int k=1; k<amfreqs.size(); k++ )
 	  s += ", " + Str( amfreqs[k], "%g" );
 	s += "Hz</b>";
-	s += "  Amplitude: <b>" + Str( 100.0*amamplsum, "%g" ) + "%</b>";
+	s += "  A: <b>" + Str( 100.0*amamplsum, "%g" ) + "%</b>";
       }
       if ( generatechirps ) {
 	s += "  Chirps: <b>" + Str( chirpsize, "%g" ) + "Hz @ " + Str( chirpfrequency, "%.2f" ) + "Hz</b>";
@@ -629,7 +634,7 @@ int Beats::main( void )
       if ( repeats > 0 ) {
 	int rc = dfrange.remainingCount();
 	rc += dfrange.maxCount()*(repeats-count-1);
-	int rs = (duration + pause)*rc;
+	int rs = ::round((duration + pause)*rc);
 	double rm = floor( rs/60.0 );
 	rs -= rm*60.0;
 	double rh = floor( rm/60.0 );
