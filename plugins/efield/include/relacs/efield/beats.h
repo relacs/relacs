@@ -39,7 +39,7 @@ namespace efield {
 \class Beats
 \brief [RePro] Play EOD mimicks with optional chirps from a range of automatically set difference frequencies and amplitudes.
 \author Jan Benda
-\version 2.6 (Oct 7, 2016)
+\version 2.6 (Nov 4, 2016)
 \par Options
 - \c Stimulation
     - \c duration=10seconds: Signal duration (\c number)
@@ -113,7 +113,7 @@ public:
 		MapD eodfrequencies[], MapD eodamplitudes[],
 		int eodinx[], MapD &eodfrequency,
 		bool &initstimiter, EventFrequencyIterator &stimiter, MapD &stimfrequency );
-  void initPlot( double deltaf, double amplitude, double duration,
+  void initPlot( double deltaf, double amplitude, double duration, double eodf,
 		 const MapD &eodfrequency, const EventData &fishchirps,
 		 bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
   void save( double deltaf, double amplitude, double duration, double pause,

@@ -38,18 +38,22 @@ namespace efield {
 \class ManualJAR
 \brief [RePro] Apply sinewaves with manually set difference frequencies and amplitudes.
 \author Jan Benda
-\version 1.0 (Jan 29, 2013)
+\version 1.2 (Nov 4, 2016)
 \par Options
-- \c Stimulation
-    - \c duration=10seconds: Signal duration (\c number)
-    - \c ramp=0.5seconds: Duration of linear ramp (\c number)
-    - \c fakefish=0Hz: Assume a fish with frequency (\c number)
-- \c Analysis
-    - \c before=1seconds: Time before stimulation to be analyzed (\c number)
-    - \c after=1seconds: Time after stimulation to be analyzed (\c number)
-    - \c averagetime=1seconds: Time for computing EOD frequency (\c number)
-    - \c split=false: Save each run into a separate file (\c boolean)
-    - \c savetraces=false: Save traces during pause (\c boolean)
+- \c eodf=0Hz: Current EOD frequency (\c number)
+- \c deltaf=0Hz: Difference frequency (\c number)
+- \c lineardeltaf=false: Change difference frequency linearly (\c boolean)
+- \c deltaf2=0Hz: Difference frequency at end (\c number)
+- \c amplitude=1mV: Amplitude (\c number)
+- \c duration=10seconds: Signal duration (\c number)
+- \c ramp=0.5seconds: Duration of linear ramp (\c number)
+- \c fakefish=0Hz: Assume a fish with frequency (\c number)
+- \c showlineardeltaf=false: Show dialog for linearly changing deltaf (\c boolean)
+- \c before=1seconds: Time before stimulation to be analyzed (\c number)
+- \c after=1seconds: Time after stimulation to be analyzed (\c number)
+- \c averagetime=1seconds: Time for computing EOD frequency (\c number)
+- \c split=false: Save each run into a separate file (\c boolean)
+- \c savetraces=false: Save traces during pause (\c boolean)
 */
 
 
@@ -63,11 +67,11 @@ public:
   virtual int main( void );
   virtual void sessionStarted( void );
 
-  void initPlot( double deltaf, double amplitude, double duration,
-		 double before, double after,
+  void initPlot( double deltaf, bool lineardeltaf, double deltaf2, double amplitude, double duration,
+		 double before, double after, double eodf,
 		 const MapD &eodfrequency, const EventData &jarchirpevents );
-  void save( double deltaf, double amplitude, double duration, double pause,
-	     double fishrate, double stimulusrate,
+  void save( double deltaf, bool lineardeltaf, double deltaf2, double amplitude, 
+	     double duration, double pause, double fishrate, double stimulusrate,
 	     const MapD &eodfrequency, const MapD &eodamplitude, const EventData &jarchirpevents,
 	     bool split, int count );
   void saveEODFreq( const Options &header, const MapD &eodfrequency, const MapD &eodamplitude,

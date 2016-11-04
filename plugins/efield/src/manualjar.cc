@@ -32,11 +32,13 @@ namespace efield {
 
 
 ManualJAR::ManualJAR( void )
-  : RePro( "ManualJAR", "efield", "Jan Benda", "1.0", "Jan 29, 2013" )
+  : RePro( "ManualJAR", "efield", "Jan Benda", "1.2", "Nov 4, 2016" )
 {
   // dialog:
   addNumber( "eodf", "Current EOD frequency", 0.0, 0.0, 10000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+4 );
   addNumber( "deltaf", "Difference frequency", 0.0, -1000.0, 1000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+8 );
+  addBoolean( "lineardeltaf", "Change difference frequency linearly", false ).setFlags( 2+8 );
+  addNumber( "deltaf2", "Difference frequency at end", 0.0, -1000.0, 1000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+8 );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV", "mV", "%.1f" ).setFlags( 2+8 );
 
   // add some parameter as options:
@@ -45,6 +47,7 @@ ManualJAR::ManualJAR( void )
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" ).setFlags( 1 );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" ).setFlags( 1 );
   //  newSection( "Analysis" );
+  addBoolean( "showlineardeltaf", "Show dialog for linearly changing deltaf", false ).setFlags( 1 );
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" ).setFlags( 1 );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" ).setFlags( 1 );
   addNumber( "averagetime", "Time for computing EOD frequency", 1.0, 0.0, 100000.0, 1.0, "seconds" ).setFlags( 1 );
@@ -138,6 +141,7 @@ int ManualJAR::main( void )
   double before = number( "before" );
   double after = number( "after" );
   double averagetime = number( "averagetime" );
+  bool showlineardeltaf = boolean( "showlineardeltaf" );
   bool split = boolean( "split" );
   bool savetraces = boolean( "savetraces" );
   double fakefish = number( "fakefish" );
@@ -152,6 +156,15 @@ int ManualJAR::main( void )
   if ( EODEvents < 0 ) {
     warning( "need EOD events of the EOD Trace." );
     return Failed;
+  }
+
+  if ( showlineardeltaf ) {
+    setFlags( "lineardeltaf", 2+8 );
+    setFlags( "deltaf2", 2+8 );
+  }
+  else {
+    setFlags( "lineardeltaf", 0 );
+    setFlags( "deltaf2", 0 );
   }
 
   // check gain of attenuator:
@@ -203,6 +216,10 @@ int ManualJAR::main( void )
       break;
 
     double deltaf = number( "deltaf" );
+    bool lineardeltaf = boolean( "lineardeltaf" );
+    if ( !showlineardeltaf )
+      lineardeltaf = false;
+    double deltaf2 = number( "deltaf2" );
     double amplitude = number( "amplitude" );
     duration = number( "duration" );
     double pause = currentTime() - starttime;
@@ -217,16 +234,21 @@ int ManualJAR::main( void )
     OutData signal;
     signal.setTrace( GlobalEField );
     double stimulusrate = fishrate + deltaf;
-    double p = 1.0;
-    if ( fabs( deltaf ) > 0.01 )
-      p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
-    else
-      p = 1.0/stimulusrate;
-    int n = (int)::rint( duration / p );
-    if ( n < 1 )
-      n = 1;
-    signal.sineWave( n*p, -1.0, stimulusrate, 0.0, 1.0, ramp );
-    signal.setIdent( "sinewave" );
+    if ( lineardeltaf && fabs(deltaf - deltaf2) > 0.01 ) {
+      signal.sweepWave( duration, -1.0, stimulusrate,
+			fishrate + deltaf2, 1.0, 0.0 );
+    } 
+    else {
+      double p = 1.0;
+      if ( fabs( deltaf ) > 0.01 )
+	p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
+      else
+	p = 1.0/stimulusrate;
+      int n = (int)::rint( duration / p );
+      if ( n < 1 )
+	n = 1;
+      signal.sineWave( n*p, -1.0, stimulusrate, 0.0, 1.0, ramp );
+    }
     duration = signal.length();
     signal.setDelay( before );
     signal.setIntensity( amplitude );
@@ -249,6 +271,8 @@ int ManualJAR::main( void )
 
     // meassage:
     Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
+    if ( lineardeltaf )
+      s += "  Delta F2: <b>" + Str( deltaf2, 0, 1, 'f' ) + "Hz</b>";
     s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
     message( s );
 
@@ -271,7 +295,8 @@ int ManualJAR::main( void )
     EventIterator eoditer = eodglobal.begin( signalTime() - before );
 
     // plot:
-    initPlot( deltaf, amplitude, duration, before, after, eodfrequency, jarchirpevents );
+    initPlot( deltaf, lineardeltaf, deltaf2, amplitude, duration, before, after, fishrate, 
+	      eodfrequency, jarchirpevents );
 
     // stimulation loop:
     do {
@@ -340,7 +365,7 @@ int ManualJAR::main( void )
 			     signalTime() - before,
 			     signalTime() + duration + after, signalTime() );
     P.draw();
-    save( deltaf, amplitude, duration, pause, fishrate, stimulusrate,
+    save( deltaf, lineardeltaf, deltaf2, amplitude, duration, pause, fishrate, stimulusrate,
 	  eodfrequency, eodamplitude, jarchirpevents, split, Count );
     Count++;
 
@@ -364,8 +389,9 @@ void ManualJAR::sessionStarted( void )
 }
 
 
-void ManualJAR::initPlot( double deltaf, double amplitude, double duration,
-			  double before, double after,
+void ManualJAR::initPlot( double deltaf, bool lineardeltaf, double deltaf2, 
+			  double amplitude, double duration,
+			  double before, double after, double eodf,
 			  const MapD &eodfrequency, const EventData &jarchirpevents )
 {
   P.lock();
@@ -375,9 +401,13 @@ void ManualJAR::initPlot( double deltaf, double amplitude, double duration,
   P.clear();
   Str s;
   s = "Delta f = " + Str( deltaf, 0, 0, 'f' ) + "Hz";
+  if ( lineardeltaf )
+    s += "  Delta f2: " + Str( deltaf2, 0, 1, 'f' ) + "Hz";
   s += ", Amplitude = " + Str( amplitude ) + "mV/cm";
   P.setTitle( s );
   P.setXRange( -before, duration+after );
+  P.setYRange( Plot::AutoMinScale, Plot::AutoMinScale );
+  P.setYFallBackRange( eodf-10.0, eodf+10.0  );
   P.plotVLine( 0.0 );
   P.plotVLine( duration );
   P.plot( eodfrequency, 1.0, Plot::Green, 2, Plot::Solid );
@@ -388,8 +418,8 @@ void ManualJAR::initPlot( double deltaf, double amplitude, double duration,
 }
 
 
-void ManualJAR::save( double deltaf, double amplitude, double duration, double pause,
-		      double fishrate, double stimulusrate,
+void ManualJAR::save( double deltaf, bool lineardeltaf, double deltaf2, double amplitude, 
+		      double duration, double pause, double fishrate, double stimulusrate,
 		      const MapD &eodfrequency, const MapD &eodamplitude, const EventData &jarchirpevents,
 		      bool split, int count )
 {
@@ -397,6 +427,8 @@ void ManualJAR::save( double deltaf, double amplitude, double duration, double p
   header.addNumber( "Delta f", deltaf, "Hz", "%.1f" );
   header.addNumber( "EODf", fishrate, "Hz", "%.1f" );
   header.addNumber( "StimulusFrequency", stimulusrate, "Hz", "%.1f" );
+  if ( lineardeltaf )
+    header.addNumber( "Delta f2", deltaf2, "Hz", "%.1f" );
   header.addNumber( "Amplitude", amplitude, "mV/cm", "%.3f" );
   header.addNumber( "Duration", duration, "sec", "%.3f" );
   header.addNumber( "Pause", pause, "sec", "%.3f" );
@@ -498,7 +530,7 @@ void ManualJAR::customEvent( QEvent *qce )
   switch ( qce->type() - QEvent::User ) {
   case 11: {
     StartButton->setEnabled( true );
-    JW.updateValues();
+    JW.assign( (Options*)this, 2, 4, true, 0, mutex() );
     if ( JW.firstWidget() != 0 )
       JW.firstWidget()->setFocus( Qt::TabFocusReason );
     QFont nf( widget()->font() );

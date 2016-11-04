@@ -33,7 +33,7 @@ namespace efield {
 
 
 Beats::Beats( void )
-  : RePro( "Beats", "efield", "Jan Benda", "2.6", "Oct 7, 2016" )
+  : RePro( "Beats", "efield", "Jan Benda", "2.6", "Nov 4, 2016" )
 {
   // add some parameter as options:
   newSection( "Stimulation" );
@@ -363,7 +363,7 @@ int Beats::main( void )
       setSaving( true );
 
       // plot:
-      initPlot( deltaf, amplitude, duration, eodfrequency, fishchirps,
+      initPlot( deltaf, amplitude, duration, fishrate, eodfrequency, fishchirps,
 		showstimulus, stimfrequency, playedchirptimes );
 
       // create signal:
@@ -870,7 +870,7 @@ void Beats::analyze( double signaltime, double before, double fishrate,
 }
 
 
-void Beats::initPlot( double deltaf, double amplitude, double duration,
+void Beats::initPlot( double deltaf, double amplitude, double duration, double eodf,
 		      const MapD &eodfrequency, const EventData &fishchirps, 
 		      bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes )
 {
@@ -885,6 +885,8 @@ void Beats::initPlot( double deltaf, double amplitude, double duration,
   P.setTitle( s );
   P.plotVLine( 0.0 );
   P.plotVLine( duration );
+  P.setYRange( Plot::AutoMinScale, Plot::AutoMinScale );
+  P.setYFallBackRange( eodf-10.0, eodf+10.0  );
   if ( showstimulus )
     P.plot( stimfrequency, 1.0, Plot::Cyan, 2, Plot::Solid );
   P.plot( eodfrequency, 1.0, Plot::Green, 2, Plot::Solid );
