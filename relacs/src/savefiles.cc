@@ -404,22 +404,7 @@ void SaveFiles::saveTraces( void )
   if ( isSaving() && ! TraceFiles.empty() )
     offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
   writeEvents( offs );
-  #ifdef HAVE_NIX
-  //writeStimulus will reset Stimuli, so we have to do our beforehand
-  if ( isSaving() ) {
-    NIO.writeTraces( IL );
-    // wait for availability of signal start time:
-    if (! ( !Stimuli.empty() && SignalTime < 0.0 ) ) {
-      offs = IL[0].interval( NIO.traces[0].index - NIO.traces[0].offset[0] );
-      NIO.writeEvents( EL, offs );
-    }
-    // there is a new stimulus:
-    bool have_stimulus = !Stimuli.empty() && SignalTime >= 0.0;
-    if ( have_stimulus ) {
-      NIO.writeStimulus (IL, StimuliRePro);
-    }
-  }
-  #endif
+  
   writeStimulus();
 }
 
@@ -448,6 +433,11 @@ void SaveFiles::writeTraces( void )
     }
   }
 
+  #ifdef HAVE_NIX
+  //writeStimulus will reset Stimuli, so we have to do our beforehand
+  if ( NIO.fd )
+    NIO.writeTraces( IL );
+  #endif
 }
 
 
@@ -492,6 +482,13 @@ void SaveFiles::writeEvents( double offs )
 
   }
 
+  #ifdef HAVE_NIX
+  // wait for availability of signal start time:
+  if ( NIO.fd )  {
+    double noffs = IL[0].interval( NIO.traces[0].index - NIO.traces[0].offset[0] ) - SessionTime;
+    NIO.writeEvents( EL, offs );
+  }
+  #endif
 }
 
 
@@ -514,7 +511,7 @@ void SaveFiles::save( const OutData &signal )
   }
 
   // StimulusDataLock is already locked from within the RePro!
-  StimulusOptions = *this;
+  StimulusOptions = *this;  // values of all output traces before signal was written
 
   // store stimulus and update output channel setting:
   Stimuli.push_back( signal );
@@ -593,7 +590,7 @@ void SaveFiles::writeStimulus( void )
       does not get stored in stimuli.dat! Only metadata.xml stores it, but that
       file does not save the trace offsets (yet).
     Options::iterator pi = Stimuli[j].description().find( "Intensity" );
-    if ( pi != Stimuli[j].description().end() ) {
+    if ( pi != Stimuli[j].description().end ) {
       stimuliref[j].add( *pi );
       Stimuli[j].description().erase( pi );
     }
@@ -682,12 +679,13 @@ void SaveFiles::writeStimulus( void )
 	}
       }
     }
-
+    // write actual entry in stimuli.dat:
     StimulusKey.resetSaveColumn();
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 )
 	StimulusKey.save( *SF, TraceFiles[k].SignalOffset );
     }
+    // events:
     for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
       if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.save( *SF, EventFiles[k].SignalEvent );
@@ -701,7 +699,7 @@ void SaveFiles::writeStimulus( void )
 	  StimulusKey.save( *SF, 100.0*EL[k].meanQuality() );
       }
     }
-
+    // data:
     if ( !StimulusOptions.empty() ) {
       for( int k=0; k<StimulusOptions.size(); k++ ) {
 	StimulusKey.save( *SF, StimulusOptions[k] );
@@ -718,7 +716,7 @@ void SaveFiles::writeStimulus( void )
 	     Stimuli[j].channel() == RW->AQ->outTrace( k ).channel() ) {
 	  Stimuli[j].setTrace( k ); // needed for XML
 	  StimulusKey.save( *SF, 0.001*Stimuli[j].sampleRate() );
-	  StimulusKey.save( *SF, 1000.0*Stimuli[j].length() );
+	  StimulusKey.save( *SF, 1000.0*Stimuli[j].length() ); // duration, resp. extent
 	  if ( att != 0 ) {
 	    StimulusKey.save( *SF, Stimuli[j].intensity() );
 	    if ( ! att->frequencyName().empty() )
@@ -784,6 +782,12 @@ void SaveFiles::writeStimulus( void )
     sopt.saveXML( *XF, 0, Options::FirstOnly, 2 );
   }
 
+  #ifdef HAVE_NIX
+  // NIX file:
+  if ( NIO.fd && isSaving() )
+    NIO.writeStimulus (IL, Stimuli, StimuliRePro, SessionTime);
+  #endif
+
   Stimuli.clear();
 }
 
@@ -848,6 +852,9 @@ void SaveFiles::writeRePro( void )
       ReProInfo.saveXML( *XF, 0, Options::FirstOnly | Options::DontCloseSection, 1 );
       DatasetOpen = true;
     }
+
+    // nix file:
+    //    XXX write ReProInfo as odml tree
 
     StimuliReProCount[ StimuliRePro ] = 0;
     ReProData = false;
@@ -1558,6 +1565,7 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section)
     if ( val.type() != nix::DataType::Nothing ) {
       values.push_back( std::move( val ) );
     }
+    break; // for the time being, we only take the first entry
   }
   if ( values.empty() ) {
     //property with no values, so we woudn't know the type
@@ -1709,6 +1717,7 @@ void SaveFiles::NixFile::initTraces ( const InList &IL )
     dim.unit("s");
     dim.label("time");
     trace.index = IL[k].size();
+    trace.written = 0;
     trace.offset = {0};
     //^ NB:size() is the all-time number of bytes written
     //    string source_name = "device-" + nix::util::num2str(IL[k].device());
@@ -1729,46 +1738,58 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
   trace.data.dataExtent( size );
   trace.data.setData( nix::DataType::Float, data, count, trace.offset );
   trace.index += to_read;
+  trace.written += to_read; 
   trace.offset = size;
 }
 
 
-void SaveFiles::NixFile::writeStimulus( const InList &IL, string rp_name )
+void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataInfo > &stim_info,
+					string rp_name, double sessiontime )
 {
-  cerr << "writeStimulus: " << rp_name << endl;
   //todo: do not not only for the first trace, but for all of them
   if ( IL[0].signalIndex() < 1 ) {
     return;
   }
-  double signal_time = IL[0].signalTime();
+  stim_info[0].length(); // duration, resp. extent
+
+  NixTrace trace = traces[0];
+  double stimulus_on = (IL[0].signalIndex() - trace.index  + trace.written) * IL[0].stepsize();
+  double stimulus_duration = stim_info[0].length();
   if ( !event_tag || event_tag.name() != rp_name  ) {
-    std::vector<nix::MultiTag> tags =
+    std::vector<nix::MultiTag> tags = 
       root_block.multiTags( nix::util::NameFilter<nix::MultiTag>( rp_name ) ) ;
-    if ( !tags.empty() ) {
+    if ( !tags.empty() ) { // there is already a MultiTag with the repro name
       event_tag = tags[0];
       event_positions = event_tag.positions();
       nix::NDSize size = event_positions.dataExtent();
       event_positions.dataExtent( size + 1 );
-      event_positions.setData( nix::DataType::Double, &signal_time, {1}, size );
-    } else {
-      cerr << "writeStimulus2: " << rp_name << endl;
-      event_positions = root_block.createDataArray( rp_name + "_positions",
-						    "nix.event.positions", nix::DataType::Double, {1} );
-      cerr << "writeStimulus3: " << rp_name << endl;
+      event_positions.setData( nix::DataType::Double, &stimulus_on, {1}, size );
+      
+      event_extents = event_tag.extents();
+      if (event_extents) {
+	nix::NDSize extent_size = event_extents.dataExtent();
+	event_extents.dataExtent( extent_size + 1 );
+	event_extents.setData( nix::DataType::Double, &stimulus_duration, {1}, extent_size );
+      }
+    } else { // There is no such tag, we need to create a new one
+      event_positions = root_block.createDataArray( rp_name + " onset times", "nix.event.positions",
+						    nix::DataType::Double, {1} );
       event_positions.appendSetDimension();
-      cerr << "writeStimulus4: " << rp_name << endl;
       event_positions.unit( "s" );
-      cerr << "writeStimulus5: " << rp_name << endl;
       event_positions.label( "time" );
-      cerr << "writeStimulus6: " << rp_name << endl;
-      event_tag = root_block.createMultiTag( rp_name,
-					     "nix.event.stimulus",
-					     event_positions );
-      cerr << "writeStimulus7: " << rp_name << endl;
+      
+      event_extents = root_block.createDataArray( rp_name + " durations", "nix.event.extents",
+						  nix::DataType::Double, {1} );
+      event_extents.appendSetDimension();
+      event_extents.unit( "s" );
+      event_extents.label( "time" );
+
+      event_tag = root_block.createMultiTag( rp_name, "nix.event.stimulus", event_positions );
+      event_tag.extents(event_extents);
+      
       for ( auto &trace : traces ) {
 	event_tag.addReference( trace.data );
       }
-      cerr << "writeStimulus8: " << rp_name << endl;
       for ( auto &event : events ) {
 	if ( event.input_trace < 0 ) {
 	  continue;
@@ -1776,14 +1797,18 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, string rp_name )
 	
 	event_tag.addReference( event.data );
       }
-      cerr << "writeStimulus9: " << endl;
-      event_positions.setData( nix::DataType::Double, &signal_time, {1}, {0} );
+      // TODO add features here
+      event_positions.setData( nix::DataType::Double, &stimulus_on, {1}, {0} );
+      event_extents.setData( nix::DataType::Double, &stimulus_duration, {1}, {0} );
     }
   }
   else {
     nix::NDSize size = event_positions.dataExtent();
     event_positions.dataExtent( size + 1 );
-    event_positions.setData( nix::DataType::Double, &signal_time, {1}, size );
+    event_positions.setData( nix::DataType::Double, &stimulus_on, {1}, size );
+    nix::NDSize ext_size = event_extents.dataExtent();
+    event_extents.dataExtent( ext_size + 1 );
+    event_extents.setData( nix::DataType::Double, &stimulus_duration, {1}, ext_size );
   }
 }
 
@@ -1793,6 +1818,7 @@ void SaveFiles::NixFile::writeTraces( const InList &IL )
   for ( int k=0; k < IL.size(); k++ ) {
     NixTrace &trace = traces[k];
     if ( trace.index >= static_cast<size_t>( IL[k].size() ) ) {
+      std::cerr << "nothing to write in trace: " << k << std::endl;
       //nothing to write
       continue;
     }
@@ -1854,7 +1880,9 @@ void SaveFiles::NixFile::writeEvents( const EventList &EL, double off )
     //ets.resize( len );
     for( int i = 0; i < len; i++ ) {
       int idx = ed.index + i;
+      std::cerr << "Event: " << i << " value " << EL[k][idx] - off << std::endl;
       ets[i] = EL[k][idx] - off;
+      std::cerr << ets[i] << std::endl;
     }
     ed.index += len;
     typedef nix::NDSize::value_type ndsize_type;
