@@ -307,7 +307,7 @@ int DynClampAnalogOutput::open( const string &device )
   fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
   FifoFd = ::open( fifoname.str().c_str(), O_WRONLY );
   if ( FifoFd < 0 ) {
-    setErrorStr( "oping RTAI-FIFO " + fifoname.str() + " failed" );
+    setErrorStr( "opening RTAI-FIFO " + fifoname.str() + " failed" );
     return -1;
   }
 
@@ -657,7 +657,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
     syncCmdIOC.duration = 1;
     syncCmdIOC.continuous = 0;
     syncCmdIOC.startsource = 0;
-    syncCmdIOC.buffersize = ol.deviceBufferSize()*BufferElemSize;
+    syncCmdIOC.buffersize = ol.size()*BufferElemSize;
     retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
     if ( retval < 0 ) {
       cerr << "DynClampAnalogOutput::directWrite -> ioctl command IOC_SYNC_CMD on device "
@@ -937,7 +937,7 @@ int DynClampAnalogOutput::writeData( void )
     float *bp = (float*)(Buffer+NBuffer);
     int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
     /*
-    // XXX lets keep the number of transfered data small:
+    // XXX lets keep the number of transferred data small:
     // XXX this should be translated to the FIFO buffer size!!!
     if ( maxn > Sigs[0].indices( 0.1 ) )
       maxn = Sigs[0].indices( 0.1 );

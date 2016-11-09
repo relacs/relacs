@@ -42,7 +42,7 @@ struct chanT {
   int param;
   int modelIndex;
   int statusIndex;
-  int isUsed;
+  int isUsed;    // used by analog output to indicate channels that get data from user space
   comedi_insn insn;
   lsampl_t lsample;
   lsampl_t maxdata;
@@ -50,8 +50,8 @@ struct chanT {
   float maxvoltage;
   struct converterT converter;
   float scale;
-  float voltage;
-  float prevvoltage;
+  float value;
+  float prevvalue;
   int trigger;
   float alevel;
 };
@@ -60,6 +60,7 @@ struct subdeviceT {
   int subdev;
   enum subdevTypes type;
   unsigned int fifo;
+  unsigned int fifosize;
   unsigned int sampleSize;
   unsigned int frequency;
   long delay;
@@ -67,9 +68,9 @@ struct subdeviceT {
   int continuous;
   int startsource;
   int used;
-  int prepared;
+  int prepared;    // set to 1 by loadSyncCommand
   int running;     // 1 for running, 0 not running, or E_COMEDI, E_NODATA, ...
-  int pending;
+  int pending;     // set to 1 by startSubdevice(), dynclamp_loop sets it to 0
   unsigned int chanN;
   struct chanT chanlist[MAXCHANLIST];
 };
@@ -245,7 +246,6 @@ int startSubdevice( struct subdeviceT *subdev );
 int stopSubdevice( struct subdeviceT *subdev );
 void dynclamp_loop( long dummy );
 int init_dynclamp_loop( void );
-void finish_dynclamp_loop( void );
 void cleanup_dynclamp_loop( void );
 
 int writeDIO( struct dioIOCT *dioIOC );
@@ -427,7 +427,7 @@ void init_globals( void )
 
 int openComediDevice( struct deviceIOCT *deviceIOC )
 {
-  const int fifosize = 1024;
+  const int fifosize = 8*1024;
   struct subdeviceT *subdev;
   int retval;
 
@@ -443,6 +443,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
     subdev->subdev = deviceIOC->subdev;
     subdev->type = deviceIOC->subdevType;
     subdev->fifo = -1; 
+    subdev->fifosize = 0; 
     subdev->delay = -1; 
     subdev->duration = -1;
     subdev->startsource = 0;
@@ -455,16 +456,19 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
 
     // create FIFO for subdevice:
     subdev->fifo = deviceIOC->subdev;
+    subdev->fifosize = fifosize;
     retval = rtf_create( subdev->fifo, fifosize );
     if ( retval ) {
       sprintf( deviceIOC->errorstr, "failed to create fifo with %d bytes for subdevice %i, device %s.",
 	       fifosize, deviceIOC->subdev, devname );
       ERROR_MSG( "openComediDevice ERROR: %s\n", deviceIOC->errorstr );
+      subdev->fifo = -1; 
+      subdev->fifosize = 0; 
       return -EFAULT;
     }
     else
-      DEBUG_MSG( "openComediDevice: Created FIFO %d with %d bytes buffer size for subdevice %i, device %s\n",
-		 subdev->fifo, fifosize, deviceIOC->subdev, devname );
+      DEBUG_MSG( "openComediDevice: created FIFO %d for subdevice %i of device %s with %d bytes buffer size\n",
+		 subdev->fifo, deviceIOC->subdev, devname, fifosize );
 
     // pass FIFO device index to user:
     deviceIOC->fifoIndex = subdev->fifo;
@@ -743,8 +747,8 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
       subdev->chanlist[iC].statusIndex = -1;
       subdev->chanlist[iC].scale = chanlistIOC->scalelist[iC];
       subdev->chanlist[iC].isUsed = chanlistIOC->isused[iC]; 
-      subdev->chanlist[iC].voltage = 0.0; 
-      subdev->chanlist[iC].prevvoltage = 0.0;
+      subdev->chanlist[iC].value = 0.0; 
+      subdev->chanlist[iC].prevvalue = 0.0;
       if ( trig && subdev->chanlist[iC].chan == trigger.chan ) {
 	DEBUG_MSG( "loadChanList: added trigger to channel %d id %d on subdevice %d with level %d\n", subdev->chanlist[iC].chan, iC, subdev->subdev, (int)(100.0*trigger.alevel) );
 	subdev->chanlist[iC].trigger = 1;
@@ -798,14 +802,13 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
 {
   int retval = 0;
-  int fifosize = 0;
 
   if ( subdev->subdev < 0 || !subdev->used ) {
     ERROR_MSG( "loadSyncCmd ERROR: first open an appropriate device and subdevice. Sync-command not loaded!\n" );
     return -EFAULT;
   }
   if ( subdev->running > 0 ) {
-    ERROR_MSG( "startSubdevice ERROR: subdevice %i on device %s already running.\n",
+    ERROR_MSG( "loadSyncCmd ERROR: subdevice %i on device %s already running.\n",
 	       subdev->subdev, devname );
     return -EBUSY;
   }
@@ -831,15 +834,18 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   subdev->startsource = syncCmdIOC->startsource;
   subdev->pending = 0;
 
-  // resize and reset fifo:
-  retval = rtf_resize( subdev->fifo, syncCmdIOC->buffersize );
-  if ( retval < syncCmdIOC->buffersize ) {
-    ERROR_MSG( "loadSyncCmd: rtf_resize failed and returned %d\n", retval );
-    return -ENOMEM;
+  // resize fifo:
+  if ( syncCmdIOC->buffersize > subdev->fifosize ) {
+    retval = rtf_resize( subdev->fifo, syncCmdIOC->buffersize );
+    if ( retval < syncCmdIOC->buffersize ) {
+      ERROR_MSG( "loadSyncCmd: rtf_resize failed and returned %d\n", retval );
+      return -ENOMEM;
+    }
+    else
+      subdev->fifosize = retval;
   }
-  else
-    fifosize = retval;
 
+  // reset fifo:
   retval = rtf_reset( subdev->fifo );
   if ( retval != 0 ) {
     ERROR_MSG( "loadSyncCmd: rtf_reset failed and returned %d\n", retval );
@@ -858,8 +864,8 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
     }
   }
 
-  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d, fifo size %d, and frequency %d for subdevice %d\n",
-	     subdev->duration, subdev->startsource, fifosize, subdev->frequency, subdev->subdev );
+  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d, FIFO size %d, and frequency %d for subdevice %d\n",
+	     subdev->duration, subdev->startsource, subdev->fifosize, subdev->frequency, subdev->subdev );
 
   subdev->prepared = 1;
   return 0;
@@ -1283,18 +1289,18 @@ static inline void sample_to_value( struct chanT *pChan )
   double sample = pChan->lsample - pChan->converter.expansion_origin;
   unsigned i;
 
-  pChan->voltage = 0.0;
+  pChan->value = 0.0;
   for ( i=0; i <= pChan->converter.order; ++i ) {
-    pChan->voltage += pChan->converter.coefficients[i] * term;
+    pChan->value += pChan->converter.coefficients[i] * term;
     term *= sample;
   }
-  pChan->voltage *= pChan->scale;
+  pChan->value *= pChan->scale;
 }
 
 
 static inline float value_to_sample( struct chanT *pChan, float value )
 {
-  float voltage = value;
+  float outvalue = value;
   double sample = 0.0;
   double term = 1.0;
   unsigned i;
@@ -1306,16 +1312,16 @@ static inline float value_to_sample( struct chanT *pChan, float value )
   }
   if ( sample < 0.0 ) {
     pChan->lsample = 0;
-    voltage = pChan->minvoltage / pChan->scale;
+    outvalue = pChan->minvoltage / pChan->scale;
   }
   else {
     pChan->lsample = (lsampl_t)sample;  // nearbyint(sample)
     if ( pChan->lsample > pChan->maxdata ) {
       pChan->lsample = pChan->maxdata;
-      voltage = pChan->maxvoltage / pChan->scale;
+      outvalue = pChan->maxvoltage / pChan->scale;
     }
   }
-  return voltage;
+  return outvalue;
 }
 
 
@@ -1325,7 +1331,14 @@ void dynclamp_loop( long dummy )
   int retVal;
   int iC;
   struct chanT *pChan;
-  float voltage;
+  float outvalue;
+  float aovalues[MAXCHANLIST];
+  int aonum = 0;
+  int aoinx = 0;
+  int aobytes = 0;
+  float aivalues[MAXCHANLIST];
+  int aibytes;
+  int failed = 0;
   RTIME currenttime = 0;
   RTIME newtime = 0;
   int difftime = 0;   // to avoid __divdi3 issues we use an int here
@@ -1421,7 +1434,7 @@ void dynclamp_loop( long dummy )
       if ( aosubdev.pending ) {
 	DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO startsrc=%d, prevtriger1=%d, triger1=%d, pv=%d, v=%d\n",
 		   aosubdev.startsource, prevtriggerevs[1], triggerevs[1],
-		   (int)(100.0*aisubdev.chanlist[0].prevvoltage), (int)(100.0*aisubdev.chanlist[0].voltage) );
+		   (int)(100.0*aisubdev.chanlist[0].prevvalue), (int)(100.0*aisubdev.chanlist[0].value) );
 	if ( triggerevs[aosubdev.startsource] &&
 	     ! prevtriggerevs[aosubdev.startsource] ) {
 	  DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO SETUP duration=%lu, loopCnt=%lu\n",
@@ -1430,12 +1443,19 @@ void dynclamp_loop( long dummy )
 	  aosubdev.duration = aosubdev.delay + aosubdev.duration;
 	  dynClampTask.aoIndex = aosubdev.delay;
 	  aosubdev.pending = 0;
+	  // count numbers of channels used:
+	  aonum = 0;
+	  for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
+	    if ( aosubdev.chanlist[iC].isUsed )
+	      aonum++;
+	  }
+	  aobytes = aonum * sizeof( float );
 	  DEBUG_MSG( "dynclamp_loop: START PENDING AO duration=%lu delay=%lu, loopCnt=%lu\n",
 		     aosubdev.duration, aosubdev.delay, dynClampTask.loopCnt );
 	}
       }
 
-      if (  ! aosubdev.pending ) {
+      if ( ! aosubdev.pending ) {
 	// check end of stimulus:
 	if ( !aosubdev.continuous &&
 	     aosubdev.duration <= dynClampTask.loopCnt ) {
@@ -1467,28 +1487,27 @@ void dynclamp_loop( long dummy )
 	    }
 	  }
 #endif
-	  // read output from FIFO:
+	  // get data from FIFO:
+	  retVal = rtf_get( aosubdev.fifo, aovalues, aobytes );
+	  if ( retVal != aobytes ) {
+	    stopSubdevice( &aosubdev );
+	    if ( retVal == EINVAL ) {
+	      ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	      aosubdev.running = E_NOFIFO;
+	      break; // dynclamp loop
+	    }
+	    aosubdev.running = E_UNDERRUN;
+	    ERROR_MSG( "dynclamp_loop: ERROR! rtf_get -> data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	  }
+	  // read output from FIFO data:
+	  aoinx = 0;
 	  for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
 	    pChan = &aosubdev.chanlist[iC];
 	    if ( pChan->isUsed ) {
-	      // get data from FIFO:
-	      retVal = rtf_get( aosubdev.fifo, &pChan->voltage, sizeof(float) );
-	      if ( retVal != sizeof(float) ) {
-		stopSubdevice( &aosubdev );
-		if ( retVal == EINVAL ) {
-		  ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-		  aosubdev.running = E_NOFIFO;
-		  stopSubdevice( &aisubdev );
-		  finish_dynclamp_loop();
-		  return;
-		}
-		aosubdev.running = E_UNDERRUN;
-		ERROR_MSG( "dynclamp_loop: ERROR! rtf_get -> data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-		break;
-	      }
+	      pChan->value = aovalues[aoinx++];
 #ifdef ENABLE_COMPUTATION
 	      if ( pChan->param > 0 ) {
-		paramOutput[pChan->chan] = pChan->voltage;
+		paramOutput[pChan->chan] = pChan->value;
 	      }
 #endif
 	    }
@@ -1505,29 +1524,29 @@ void dynclamp_loop( long dummy )
 #ifdef ENABLE_COMPUTATION
       if ( pChan->param == 0 ) {
 #endif
-	voltage = pChan->voltage;
+	outvalue = pChan->value;
 
 #ifdef ENABLE_COMPUTATION
 	// add model output to sample:
 	if ( pChan->modelIndex >= 0 ) {
-	  statusInput[pChan->statusIndex] = voltage;
+	  statusInput[pChan->statusIndex] = outvalue;
 	  statusInput[pChan->statusIndex+1] = output[pChan->modelIndex];
-	  voltage += output[pChan->modelIndex];
+	  outvalue += output[pChan->modelIndex];
 	}
 #endif
 
 	// write out Sample:
 #ifdef ENABLE_SYNCSEC
-	voltage *= currentfac;
+	outvalue *= currentfac;
 #endif
-	voltage = value_to_sample( pChan, voltage ); // sets pChan->lsample
+	outvalue = value_to_sample( pChan, outvalue ); // sets pChan->lsample
 	retVal = comedi_do_insn( device, &pChan->insn );
 	if ( retVal < 1 ) {
 	  aosubdev.running = E_NODATA;
 	  ERROR_MSG( "dynclamp_loop: ERROR! failed to write data to AO subdevice channel %d at loopCnt %lu\n",
 		     iC, dynClampTask.loopCnt );
 	  if ( retVal < 0 ) {
-	    comedi_perror( "dynclampmodule: dynclamp_loop: comedi_data_write" );
+	    comedi_perror( "dynclamp_loop: comedi_data_write" );
 	    aosubdev.running = E_COMEDI;
 	    ERROR_MSG( "dynclamp_loop: ERROR! failed to write to AO subdevice channel %d at loopCnt %lu\n",
 		       iC, dynClampTask.loopCnt );
@@ -1538,10 +1557,10 @@ void dynclamp_loop( long dummy )
 #ifdef ENABLE_COMPUTATION
 	if ( pChan->modelIndex >= 0 ) {
 #ifdef ENABLE_SYNCSEC
-	  statusInput[pChan->statusIndex+3] = voltage;
-	  statusInput[pChan->statusIndex+2] = voltage / currentfac;
+	  statusInput[pChan->statusIndex+3] = outvalue;
+	  statusInput[pChan->statusIndex+2] = outvalue / currentfac;
 #else
-	  statusInput[pChan->statusIndex+2] = voltage;
+	  statusInput[pChan->statusIndex+2] = outvalue;
 #endif
 	}
 
@@ -1609,19 +1628,17 @@ void dynclamp_loop( long dummy )
       // check duration:
       if ( !aisubdev.continuous &&
 	   aisubdev.chanN > 0 &&
-	   aisubdev.duration <= dynClampTask.loopCnt ) {
-	stopSubdevice( &aisubdev );
-	finish_dynclamp_loop();
-	return;
-      }
+	   aisubdev.duration <= dynClampTask.loopCnt )
+	break; // dynclamp loop
 
       // for every ai channel:
+      failed = 0;
       for ( iC = 0; iC < aisubdev.chanN; iC++ ) {
 
 	pChan = &aisubdev.chanlist[iC];
 
 	// previous sample:
-	pChan->prevvoltage = pChan->voltage;
+	pChan->prevvalue = pChan->value;
 
 	// acquire sample:
 	if ( pChan->param == 0 ) {
@@ -1645,56 +1662,62 @@ void dynclamp_loop( long dummy )
 	      ERROR_MSG( "dynclamp_loop: ERROR! failed to read from AI subdevice channel %d at loopCnt %lu\n",
 			 iC, dynClampTask.loopCnt );
 	    }
-	    finish_dynclamp_loop();
-	    return;
+	    failed = 1;
+	    break;
 	  }
-	  // convert to voltage:
-	  sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
+	  // convert to value:
+	  sample_to_value( pChan ); // sets pChan->value from pChan->lsample
 #ifdef ENABLE_COMPUTATION
 	  if ( pChan->modelIndex >= 0 )
-	    input[pChan->modelIndex] = pChan->voltage;
+	    input[pChan->modelIndex] = pChan->value;
 #endif
 	}
 	else {
 #ifdef ENABLE_COMPUTATION
 	  if ( pChan->param == 1 )
-	    pChan->voltage = paramInput[pChan->chan]*pChan->scale;
+	    pChan->value = paramInput[pChan->chan]*pChan->scale;
 	  else
 #endif
-	    pChan->voltage = statusInput[pChan->chan]*pChan->scale;
+	    pChan->value = statusInput[pChan->chan]*pChan->scale;
 	}
-	// write to FIFO:
-	retVal = rtf_put( aisubdev.fifo, &pChan->voltage, sizeof(float) );
-	if ( retVal != sizeof(float) ) {
-	  ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
-	  stopSubdevice( &aisubdev );
-	  if ( retVal == EINVAL ) {
-	    aisubdev.running = E_NOFIFO;
-	    ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-	  }
-	  else {
-	    aisubdev.running = E_OVERFLOW;
-	    ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
-		       dynClampTask.loopCnt );
-	  }
-	  finish_dynclamp_loop();
-	  return;
-	}
+	// store channel value:
+	aivalues[iC] = pChan->value;
 
 #ifdef ENABLE_TRIGGER
 	// trigger:
 	if ( pChan->trigger ) {
 	  prevtriggerevs[1] = triggerevs[1];
-	  if ( pChan->voltage > pChan->alevel && pChan->prevvoltage <= pChan->alevel ) {
+	  if ( pChan->value > pChan->alevel && pChan->prevvalue <= pChan->alevel ) {
 	    triggerevs[1] = 1;
 	  }
-	  else if ( pChan->voltage < pChan->alevel && pChan->prevvoltage >= pChan->alevel ) {
+	  else if ( pChan->value < pChan->alevel && pChan->prevvalue >= pChan->alevel ) {
 	    triggerevs[1] = 0;
 	  }
 	}
 #endif
 	  
       } // end of channel loop
+      if ( failed )
+	break;
+
+      // write analog input values to FIFO:
+      aibytes = aisubdev.chanN * sizeof(float);
+      retVal = rtf_put( aisubdev.fifo, aivalues, aibytes );
+      if ( retVal != aibytes ) {
+	ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
+	stopSubdevice( &aisubdev );
+	if ( retVal == EINVAL ) {
+	  aisubdev.running = E_NOFIFO;
+	  ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	}
+	else {
+	  aisubdev.running = E_OVERFLOW;
+	  ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
+		     dynClampTask.loopCnt );
+	}
+	break; // dynclamp loop
+      }
+
     } // ! pending
 #ifdef ENABLE_AITIME
     stoptime = rt_get_cpu_time_ns();
@@ -1767,7 +1790,11 @@ void dynclamp_loop( long dummy )
   } // END OF DYNCLAMP LOOP
 
   stopSubdevice( &aisubdev );
-  finish_dynclamp_loop();
+  dynClampTask.running = 0;
+  dynClampTask.duration = 0;
+  dynClampTask.frequency = 0;
+  DEBUG_MSG( "dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
+	     dynClampTask.loopCnt );
 }
 
 
@@ -1854,22 +1881,16 @@ int init_dynclamp_loop( void )
 }
 
 
-void finish_dynclamp_loop( void )
-{
-  dynClampTask.running = 0;
-  dynClampTask.duration = 0;
-  dynClampTask.frequency = 0;
-  DEBUG_MSG( "finish_dynclamp_loop: left dynamic clamp loop after %lu cycles\n",
-	     dynClampTask.loopCnt );
-}
-
-
 void cleanup_dynclamp_loop( void )
 {
   if ( dynClampTask.inuse ) {
-    if ( dynClampTask.running )
+    if ( dynClampTask.running ) {
       stopSubdevice( &aisubdev );
-    msleep( 100 );
+      do {
+	msleep( 1 );
+      }	while ( dynClampTask.running );
+    }
+    msleep( 1 );
     rt_task_delete( &dynClampTask.rtTask );
     memset( &dynClampTask, 0, sizeof(struct dynClampTaskT) );
     dynClampTask.inuse = 0;

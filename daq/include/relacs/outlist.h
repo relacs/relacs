@@ -150,7 +150,7 @@ public:
     /*! Reset the device indices for a delay of \a delay indices. */
   void deviceReset( int delay=0 );
     /*! Returns the required size of the device buffer
-        (total number of data elements include delays). */
+        (total number of data elements including delays). */
   int deviceBufferSize( void );
 
     /*! Return string with an error message. */

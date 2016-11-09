@@ -749,7 +749,7 @@ int Acquire::read( InList &data )
     if ( AI[i].AI->running() &&
 	 AI[i].Traces.size() > 0 ) {
       if ( AI[i].Traces[0].priority() )
-	AI[i].AI->reset();
+	AI[i].AI->stop();
       else {
 	AI[i].Traces.addError( DaqError::Busy );
 	success = false;

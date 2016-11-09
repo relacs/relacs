@@ -261,7 +261,7 @@ int DynClampAnalogInput::open( const string &device)
   fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
   FifoFd = ::open( fifoname.str().c_str(), O_RDONLY | O_NONBLOCK );
   if ( FifoFd < 0 ) {
-    setErrorStr( "oping RTAI-FIFO " + fifoname.str() + " failed" );
+    setErrorStr( "opening RTAI-FIFO " + fifoname.str() + " failed" );
     return -1;
   }
 
@@ -610,7 +610,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   BufferN = 0;
   
   // set sleep duration:  
-  int rs = (int)( 0.1*1000.0*traces[0].interval( BufferSize/traces.size()/sizeof(float) ) );
+  int rs = (int)( 0.1*1000.0*traces[0].interval( BufferSize/traces.size()/BufferElemSize ) );
   if ( rs > 5 )
     rs = 5;
   setReadSleep( rs );
@@ -687,6 +687,9 @@ int DynClampAnalogInput::readData( void )
   ssize_t m = ::read( FifoFd, Buffer + readn, maxn );
   //ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 1000 );
 
+  // XXX can m ever be negative???? because of ssize_t ! Check whether m = -2 results m < 1 being true!
+  // XXX read man page of read
+
   int ern = errno;
   //cerr << "readData() " << m << " errno=" << ern << "\n";
   if ( m < 0 ) {
@@ -705,7 +708,6 @@ int DynClampAnalogInput::readData( void )
   }
   else {
     if ( m > 0 ) {
-      maxn -= m;
       readn += m;
       BufferN = readn / BufferElemSize;
     }
@@ -735,6 +737,8 @@ int DynClampAnalogInput::readData( void )
   }
 
   //  cerr << "Comedi::readData() end " << BufferN << "\n";
+
+  // XXX do we ever get here???
 
   return m/BufferElemSize;
 }
@@ -793,37 +797,11 @@ int DynClampAnalogInput::convertData( void )
 
 int DynClampAnalogInput::stop( void )
 { 
-  int running = 0;
-
-  {
-    QMutexLocker locker( mutex() );
-
-    if ( ModuleFd < 0 || !IsPrepared )
-      return 0;
-
-    running = SUBDEV_IN;
-    int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
-    if ( retval < 0 ) {
-      cerr << "DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-	   << ModuleDevice << " failed!\n";
-      return -1;
-    }
-  } // unlock
-
-  if ( running  > 0 ) {
+  // stop analog input thread:
+  if ( AnalogInput::running() )
     stopRead();
-    QMutexLocker locker( mutex() );
-    int retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, SUBDEV_IN );
-    if ( retval < 0 ) {
-      cerr << "DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	   << ModuleDevice << " failed!\n";
-      return -1;
-    }
-  }
 
-  lock();
-  IsPrepared = false;
-  unlock();
+  reset();
 
   return 0;
 }
@@ -835,22 +813,14 @@ int DynClampAnalogInput::reset( void )
 
   int retval = 0;
   if ( ModuleFd >= 0 && IsPrepared ) {
-    int running = SUBDEV_IN;
-    retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
+    retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, SUBDEV_IN );
     if ( retval < 0 ) {
-      addErrorStr( "ioctl command IOC_CHK_RUNNING on device " +
+      addErrorStr( "ioctl command IOC_STOP_SUBDEV on device " +
 		   ModuleDevice + " failed" );
-    }
-    if ( running > 0 ) {
-      retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, SUBDEV_IN );
-      if ( retval < 0 ) {
-	addErrorStr( "ioctl command IOC_STOP_SUBDEV on device " +
-		     ModuleDevice + " failed" );
-      }
     }
   }
 
-  // XXX clear buffers by flushing FIFO:
+  // clear buffers by flushing FIFO:
   if ( FifoFd >= 0 ) {
     retval = rtf_reset( FifoFd );
     if ( retval != 0 )
@@ -868,7 +838,7 @@ int DynClampAnalogInput::reset( void )
 
   Settings.clear();
 
-  return retval;
+  return 0;
 }
 
 
