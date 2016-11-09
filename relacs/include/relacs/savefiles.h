@@ -365,6 +365,7 @@ protected:
   struct NixTrace {
     nix::DataArray data;
     size_t         index;
+    size_t         written;
     nix::NDSize    offset;
   };
 
@@ -384,11 +385,13 @@ protected:
     nix::Section root_section;
     nix::MultiTag event_tag;
     nix::DataArray event_positions;
+    nix::DataArray event_extents;
     string create ( string path );
     void close  ( void );
     void saveMetadata ( const AllDevices *devices );
     void saveMetadata ( const MetaData &mtdt );
-    void writeStimulus ( const InList &IL, string rp_name );
+    void writeStimulus ( const InList &IL, const deque< OutDataInfo > &stim_info, 
+			 string rp_name, double sessiontime );
     void initTraces ( const InList &IL );
     void writeTraces ( const InList &IL );
     void writeChunk ( NixTrace &trace, size_t to_read, const void *data);
