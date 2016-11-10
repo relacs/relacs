@@ -386,12 +386,16 @@ protected:
     nix::MultiTag event_tag;
     nix::DataArray event_positions;
     nix::DataArray event_extents;
+    nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat;
+    std::vector<nix::DataArray> data_features;
+
     string create ( string path );
     void close  ( void );
     void saveMetadata ( const AllDevices *devices );
     void saveMetadata ( const MetaData &mtdt );
     void writeStimulus ( const InList &IL, const deque< OutDataInfo > &stim_info, 
-			 string rp_name, double sessiontime );
+			 string rp_name, double sessiontime, RELACSWidget *RW, 
+			 const Options &stim_options );
     void initTraces ( const InList &IL );
     void writeTraces ( const InList &IL );
     void writeChunk ( NixTrace &trace, size_t to_read, const void *data);
@@ -399,7 +403,11 @@ protected:
     void writeEvents ( const EventList &EL, double offset );
     void resetIndex ( const InList &IL );
     void resetIndex ( const EventList &EL );
-
+    void appendValue( nix::DataArray &array, double value ); 
+    nix::DataArray createFeature( nix::Block &block, nix::MultiTag &mtag,
+				  std::string name, std::string type,
+				  std::string unit, std::string label,
+				  nix::LinkType link_type=nix::LinkType::Indexed);
     string rid; //recording id
 
     vector<NixTrace> traces;
