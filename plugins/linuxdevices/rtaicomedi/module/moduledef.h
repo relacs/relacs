@@ -22,31 +22,45 @@
   /*! Include rtai_math.h . */
 // #define ENABLE_MATHH
 
-  /*! Generate lookup tables and do not use rtai_math module. */
+  /*! Generate lookup tables and do not use rtai_math module
+      (--enable-dynclamp-lookuptables). */
 // #define ENABLE_LOOKUPTABLES
 
-  /*! Generates internal trigger events on which analog output signals can be started. */
+  /*! Generates internal trigger events on which analog output signals
+      can be started (--enable-dynclamp-trigger). */
 // #define ENABLE_TRIGGER
 
-  /*! Sets digitial outputs high or low at various time points of the dynamic clamp loop. */
+  /*! Sets digitial outputs high or low at various time points of the
+      dynamic clamp loop (--enable-dynclamp-ttlpulse). */
 // #define ENABLE_TTLPULSE
 
-  /*! Generates TTL Pulses for synchronizing switch cycle of the npi SEC amplifier with dynamic clamp loop. */
+  /*! Generates TTL Pulses for synchronizing switch cycle of the npi
+      SEC amplifier with dynamic clamp loop
+      (--enable-dynclamp-syncsec). */
 // #define ENABLE_SYNCSEC
 
-  /*! Intervals of the dynamic clamp loop are always measured and are available as "Interval". */
-  /*! Measure total duration of analog inputs per cycle and make it available as "AI-time". */
+  /*! Intervals of the dynamic clamp loop are always measured and are
+      available as "Interval". */
+
+  /*! Measure total duration of analog inputs per cycle and make it
+      available as "AI-time" (--enable-dynclamp-aitime). */
 // #define ENABLE_AITIME
-  /*! Measure duration of analog input acquisition per cycle and make it available as "AI-acquisition-time". */
+  /*! Measure duration of analog input acquisition per cycle and make
+      it available as "AI-acquisition-time"
+      (--enable-dynclamp-aiacquisitiontime). */
 // #define ENABLE_AIACQUISITIONTIME
-  /*! Measure total duration of analog outputs per cycle and make it available as "AO-time". */
+  /*! Measure total duration of analog outputs per cycle and make it
+      available as "AO-time" (--enable-dynclamp-aotime). */
 // #define ENABLE_AOTIME
-  /*! Measure duration of model computation per cycle and make it available as "Model-time". */
+  /*! Measure duration of model computation per cycle and make it
+      available as "Model-time" (--enable-dynclamp-modeltime). */
 // #define ENABLE_MODELTIME
-  /*! Measure duration of rt_task_wait_period() per cycle and make it available as "Wait-time". */
+  /*! Measure duration of rt_task_wait_period() per cycle and make it
+      available as "Wait-time" (--enable-dynclamp-waittime). */
 // #define ENABLE_WAITTIME
 
-  /*! Use RTAI one-shot mode instead of periodic mode (more jitter but stable). */
+  /*! Use RTAI one-shot mode instead of periodic mode (more jitter but
+      stable, --enable-dynclamp-oneshot). */
 // #define ONESHOT_MODE
 
 

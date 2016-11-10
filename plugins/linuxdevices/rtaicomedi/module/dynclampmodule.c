@@ -59,7 +59,7 @@ struct chanT {
 struct subdeviceT {
   int subdev;
   enum subdevTypes type;
-  unsigned int fifo;
+  int fifo;
   unsigned int fifosize;
   unsigned int sampleSize;
   unsigned int frequency;
@@ -807,6 +807,10 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
     ERROR_MSG( "loadSyncCmd ERROR: first open an appropriate device and subdevice. Sync-command not loaded!\n" );
     return -EFAULT;
   }
+  if ( subdev->fifo < 0 ) {
+    ERROR_MSG( "loadSyncCmd ERROR: no FIFO opened yet!\n" );
+    return -EFAULT;
+  }
   if ( subdev->running > 0 ) {
     ERROR_MSG( "loadSyncCmd ERROR: subdevice %i on device %s already running.\n",
 	       subdev->subdev, devname );
@@ -826,6 +830,8 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   if ( subdev->type == SUBDEV_IN )
     cleanup_dynclamp_loop();
 
+  DEBUG_MSG( "loadSyncCmd: initialize\n" );
+
   // initialize sampling parameters for subdevice:
   subdev->frequency = syncCmdIOC->frequency > 0 ? syncCmdIOC->frequency : dynClampTask.frequency;
   subdev->delay = syncCmdIOC->delay;
@@ -841,8 +847,10 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
       ERROR_MSG( "loadSyncCmd: rtf_resize failed and returned %d\n", retval );
       return -ENOMEM;
     }
-    else
+    else {
       subdev->fifosize = retval;
+      DEBUG_MSG( "loadSyncCmd: resized FIFO to %d bytes\n", subdev->fifosize );
+    }
   }
 
   // reset fifo:

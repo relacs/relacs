@@ -83,8 +83,9 @@ void computeModel( void )
    output[0] = paramInput[0] + paramInput[1] + paramInput[2];
 }
 
-#else
+#endif
 
+#ifndef __KERNEL__
 #ifdef ENABLE_LOOKUPTABLES
 
 /*! This function is called from DynClampAnalogOutput in user

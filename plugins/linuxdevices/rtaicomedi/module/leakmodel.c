@@ -65,8 +65,9 @@ void computeModel( void )
   output[0] = paramInput[0];
 }
 
-#else
+#endif
 
+#ifndef __KERNEL__
 #ifdef ENABLE_LOOKUPTABLES
 
 /*! This function is called from DynClampAnalogOutput in user
@@ -85,5 +86,4 @@ int generateLookupTable( int k, float **x, float **y, int *n )
 }
 
 #endif
-
 #endif
