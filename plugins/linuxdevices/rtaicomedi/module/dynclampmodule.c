@@ -18,7 +18,7 @@
 #include "moduledef.h"
 
 #ifdef ENABLE_COMPUTATION
-#ifndef ENABLE_LOOKUPTABLES
+#ifdef ENABLE_MATHH
 #include <rtai_math.h>
 #endif
 #endif

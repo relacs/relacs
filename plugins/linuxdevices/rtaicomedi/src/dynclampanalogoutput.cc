@@ -336,20 +336,24 @@ int DynClampAnalogOutput::open( const string &device )
 		   ModuleDevice + " failed" );
       return -1;
     }
-    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_X, x );
-    if ( retval < 0 ) {
-      setErrorStr( "ioctl command IOC_SET_LOOKUP_X on device " +
-		   ModuleDevice + " failed" );
-      return -1;
+    if ( x != 0 ) {
+      retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_X, x );
+      if ( retval < 0 ) {
+	setErrorStr( "ioctl command IOC_SET_LOOKUP_X on device " +
+		     ModuleDevice + " failed" );
+	return -1;
+      }
+      delete [] x;
     }
-    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_Y, y );
-    if ( retval < 0 ) {
-      setErrorStr( "ioctl command IOC_SET_LOOKUP_Y on device " +
+    if ( y != 0 ) {
+      retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_Y, y );
+      if ( retval < 0 ) {
+	setErrorStr( "ioctl command IOC_SET_LOOKUP_Y on device " +
 		   ModuleDevice + " failed" );
-      return -1;
+	return -1;
+      }
+      delete [] y;
     }
-    delete [] x;
-    delete [] y;
   }
 #endif
 #endif

@@ -11,6 +11,12 @@ RELACS_DYNCLAMP_SUMMARY=""
     AC_DEFINE( ENABLE_COMPUTATION )
     RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY comp"
 
+#    AC_ARG_ENABLE([dynclamp_mathh],
+#        [AS_HELP_STRING([--enable-dynclamp-mathh],[include rtai_math.h])],
+#        [AS_IF([test "x$enableval" != "xno"],[AC_DEFINE( ENABLE_MATHH ); RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY mathh"])], [])
+    AC_DEFINE( ENABLE_MATHH )
+    RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY mathh"
+
     AC_ARG_ENABLE([dynclamp_lookuptables],
         [AS_HELP_STRING([--enable-dynclamp-lookuptables],[Use lookup tables instead of math library for the dynamic clamp model.])],
         [AS_IF([test "x$enableval" != "xno"],[RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY lookup"; AC_DEFINE( ENABLE_LOOKUPTABLES )])], [])

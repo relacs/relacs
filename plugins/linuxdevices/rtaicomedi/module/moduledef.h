@@ -19,6 +19,9 @@
   /*! Compute a model. */
 // #define ENABLE_COMPUTATION
 
+  /*! Include rtai_math.h . */
+// #define ENABLE_MATHH
+
   /*! Generate lookup tables and do not use rtai_math module. */
 // #define ENABLE_LOOKUPTABLES
 
