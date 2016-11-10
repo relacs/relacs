@@ -666,7 +666,7 @@ void SaveFiles::writeStimulus( void )
   int &rc = StimuliReProCount[ StimuliRePro ];
   rc++;
   string stimulirepro = StimuliRePro + "-" + Str( rc );
-
+  std::cerr << "\n\t Stimulirepro: " << stimulirepro << std::endl;
   // stimulus indices file:
   if ( SF != 0 && isSaving() ) {
 
@@ -675,11 +675,12 @@ void SaveFiles::writeStimulus( void )
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	if ( newstimuli[j] ) {
 	  Stimuli[j].description().save( *SDF, "  " );
+	  std::cerr << Stimuli[j].description() << std::endl;
 	  *SDF << '\n';
 	}
       }
     }
-    // write actual entry in stimuli.dat:
+    // Write actual entry in stimuli.dat:
     StimulusKey.resetSaveColumn();
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 )
@@ -1572,6 +1573,7 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section)
     //just don't save anything
     return;
   }
+
   string unit = nix::util::unitSanitizer( param.unit() );
   if ( unit == "°C" || unit == "C" || unit == "F" || unit == "°F" ) {
     std::for_each( values.begin(), values.end(), [&unit](nix::Value &v) {
@@ -1608,7 +1610,7 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section)
   } else if ( unit == "1" ) {
     unit = "";
   }
-
+  
   nix::Property prop = section.createProperty ( param.name(), values );
   if ( !unit.empty() && ( nix::util::isSIUnit( unit ) ||
 	 nix::util::isCompoundSIUnit( unit ) ) ) {
@@ -1628,9 +1630,19 @@ static void saveNIXOptions(const Options &opts, nix::Section section,
   if ( ( flags & Options::SaveFlags::SwitchNameType ) ) {
     std::swap(ts, ns);
   }
+  // This is a hack to fill in a valid name ... type-only
+  // sections in the options are invalid! e.g. (stimulus/sinwave) 
+  // should be fixed somewhere else...
+  if ( ns.empty() && !ts.empty() ) {
+    ns = ts;
+    std::vector<nix::Section> secs = section.sections( nix::util::NameFilter<nix::Section>( nix::util::nameSanitizer( ns ) ));
+    if (secs.size() > 0)
+      ns = ns + "_" + nix::util::numToStr(secs.size());
+  }
   bool have_name = ( ( ! ns.empty() ) && ( ( flags & OFlags::NoName ) == 0 ) );
   bool have_type = ( ( ! ts.empty() ) && ( ( flags & OFlags::NoType ) == 0 ) );
-  bool mk_section = ( opts.flag( selectmask ) && ( have_name || have_type ) );
+  bool mk_section = ( opts.flag( selectmask ) && ( have_name && have_type ) );
+  // FIXME the previous check has been have_name || have_type
   if ( mk_section ) {
     section = section.createSection ( nix::util::nameSanitizer(ns),
 				      nix::util::nameSanitizer(ts) );
@@ -1642,9 +1654,7 @@ static void saveNIXOptions(const Options &opts, nix::Section section,
     }
   }
   //now the subsections
-  for ( auto sp = opts.sectionsBegin();
-        sp != opts.sectionsEnd();
-        ++sp ) {
+  for ( auto sp = opts.sectionsBegin(); sp != opts.sectionsEnd(); ++sp ) {
     if ( (*sp)->flag( selectmask ) ) {
       const Options *cur_opt = *sp;
       saveNIXOptions(*cur_opt, section, flags, selectmask);
@@ -1746,18 +1756,18 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataInfo > &stim_info,
 					string rp_name, double sessiontime )
 {
-  //todo: do not not only for the first trace, but for all of them
+  // TODO: do not not only for the first trace, but for all of them
   if ( IL[0].signalIndex() < 1 ) {
     return;
   }
-  stim_info[0].length(); // duration, resp. extent
-
   NixTrace trace = traces[0];
   double stimulus_on = (IL[0].signalIndex() - trace.index  + trace.written) * IL[0].stepsize();
   double stimulus_duration = stim_info[0].length();
-  if ( !event_tag || event_tag.name() != rp_name  ) {
+  string repro_name = stim_info[0].description().name();
+  
+  if ( !event_tag || event_tag.name() != repro_name ) {
     std::vector<nix::MultiTag> tags = 
-      root_block.multiTags( nix::util::NameFilter<nix::MultiTag>( rp_name ) ) ;
+      root_block.multiTags( nix::util::NameFilter<nix::MultiTag>( repro_name ) ) ;
     if ( !tags.empty() ) { // there is already a MultiTag with the repro name
       event_tag = tags[0];
       event_positions = event_tag.positions();
@@ -1772,21 +1782,30 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
 	event_extents.setData( nix::DataType::Double, &stimulus_duration, {1}, extent_size );
       }
     } else { // There is no such tag, we need to create a new one
-      event_positions = root_block.createDataArray( rp_name + " onset times", "nix.event.positions",
+      // store metadata 
+      std::cerr << "store metadata: "<< repro_name  << std::endl;
+      nix::Section s;
+      if ( repro_name.size() > 0 ) {
+	s = fd.createSection( repro_name, "relacs.repro" );
+	Options opt = stim_info[0].description();
+	saveNIXOptions( opt, s, Options::FirstOnly, 0 );
+      }
+      // store data
+      event_positions = root_block.createDataArray( repro_name + " onset times", "nix.event.positions",
 						    nix::DataType::Double, {1} );
       event_positions.appendSetDimension();
       event_positions.unit( "s" );
       event_positions.label( "time" );
       
-      event_extents = root_block.createDataArray( rp_name + " durations", "nix.event.extents",
+      event_extents = root_block.createDataArray( repro_name + " durations", "nix.event.extents",
 						  nix::DataType::Double, {1} );
       event_extents.appendSetDimension();
       event_extents.unit( "s" );
       event_extents.label( "time" );
 
-      event_tag = root_block.createMultiTag( rp_name, "nix.event.stimulus", event_positions );
-      event_tag.extents(event_extents);
-      
+      event_tag = root_block.createMultiTag( repro_name, "nix.event.stimulus", event_positions );
+      event_tag.extents( event_extents );
+      event_tag.metadata( s );
       for ( auto &trace : traces ) {
 	event_tag.addReference( trace.data );
       }
@@ -1798,6 +1817,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
 	event_tag.addReference( event.data );
       }
       // TODO add features here
+
       event_positions.setData( nix::DataType::Double, &stimulus_on, {1}, {0} );
       event_extents.setData( nix::DataType::Double, &stimulus_duration, {1}, {0} );
     }
