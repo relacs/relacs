@@ -48,10 +48,10 @@ InputConfig::InputConfig( Options &opts, QWidget *parent )
   Table = new QTableWidget( this );
   Table->setSelectionMode( QAbstractItemView::ContiguousSelection );
   fillTable();
-  //  Table->resizeColumnsToContents();
-  int w = Table->verticalHeader()->width() + Table->frameWidth()*2+40;
+  // Table->resizeColumnsToContents();
+  int w = Table->verticalHeader()->width() + Table->frameWidth()*2 + 40;
   for ( int i = 0; i < Table->columnCount(); i++ )
-      w += Table->columnWidth( i ); 
+    w += Table->columnWidth( i ); 
   Table->setMinimumWidth( w );
   Table->setMinimumHeight( 16*Table->rowHeight( 0 ) );
   Table->horizontalHeader()->setResizeMode( QHeaderView::Stretch ); 
@@ -236,6 +236,8 @@ void InputConfig::insertRows( void )
 	    reference, samplerate, maxvalue, scale, unit, center );
     if ( nameinx == 0 ) {
       nameinx = 1;
+      /*
+      // rename non numbered names to a numbered name:
       // check for name doublets:
       for ( int j=0; j<Table->rowCount(); j++ ) {
 	string rowname = Table->item( j, 0 )->text().toStdString();
@@ -247,6 +249,7 @@ void InputConfig::insertRows( void )
 	}
       }
       Table->item( row-1, 0 )->setText( string( name+Str( nameinx ) ).c_str() );
+      */
     }
     else
       nameinx++;
