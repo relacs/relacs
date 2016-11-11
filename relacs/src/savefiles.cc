@@ -1964,6 +1964,8 @@ void SaveFiles::NixFile::initEvents( const EventList &EL, FilterDetectors *FD )
     ed.offset = {0};
     std::string ident = EL[i].ident();
     std::string data_type = "nix.events.position." + ident;
+    if ( root_block.hasDataArray(ident) )
+       ident = EL[i].ident() + "_events"; 
     ed.data = root_block.createDataArray( ident, data_type, nix::DataType::Double, {1} );
     ed.data.unit( "s" );
     ed.data.label( "time" );
