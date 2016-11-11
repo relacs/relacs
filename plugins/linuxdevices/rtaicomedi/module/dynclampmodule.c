@@ -836,7 +836,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   if ( subdev->type == SUBDEV_IN )
     cleanup_dynclamp_loop();
 
-  DEBUG_MSG( "loadSyncCmd: initialize\n" );
+  DEBUG_MSG( "loadSyncCmd: initialize sudevice %i\n", subdev->subdev );
 
   // initialize sampling parameters for subdevice:
   subdev->frequency = syncCmdIOC->frequency > 0 ? syncCmdIOC->frequency : dynClampTask.frequency;
@@ -1457,13 +1457,6 @@ void dynclamp_loop( long dummy )
 	  aosubdev.duration = aosubdev.delay + aosubdev.duration;
 	  dynClampTask.aoIndex = aosubdev.delay;
 	  aosubdev.pending = 0;
-	  // count numbers of channels used:
-	  aonum = 0;
-	  for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
-	    if ( aosubdev.chanlist[iC].isUsed )
-	      aonum++;
-	  }
-	  aobytes = aonum * sizeof( float );
 	  DEBUG_MSG( "dynclamp_loop: START PENDING AO duration=%lu delay=%lu, loopCnt=%lu\n",
 		     aosubdev.duration, aosubdev.delay, dynClampTask.loopCnt );
 	}
@@ -1501,31 +1494,40 @@ void dynclamp_loop( long dummy )
 	    }
 	  }
 #endif
-	  // get data from FIFO:
-	  retVal = rtf_get( aosubdev.fifo, aovalues, aobytes );
-	  if ( retVal != aobytes ) {
-	    stopSubdevice( &aosubdev );
-	    if ( retVal == EINVAL ) {
-	      ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-	      aosubdev.running = E_NOFIFO;
-	      break; // dynclamp loop
-	    }
-	    aosubdev.running = E_UNDERRUN;
-	    ERROR_MSG( "dynclamp_loop: ERROR! rtf_get -> data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-	  }
-	  // read output from FIFO data:
-	  aoinx = 0;
+	  // count numbers of channels used:
+	  aonum = 0;
 	  for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
-	    pChan = &aosubdev.chanlist[iC];
-	    if ( pChan->isUsed ) {
-	      pChan->value = aovalues[aoinx++];
-#ifdef ENABLE_COMPUTATION
-	      if ( pChan->param > 0 ) {
-		paramOutput[pChan->chan] = pChan->value;
-	      }
-#endif
-	    }
+	    if ( aosubdev.chanlist[iC].isUsed )
+	      aonum++;
 	  }
+	  // get data from FIFO:
+	  if ( aonum > 0 ) {
+	    aobytes = aonum * sizeof( float );
+	    retVal = rtf_get( aosubdev.fifo, aovalues, aobytes );
+	    if ( retVal != aobytes ) {
+	      stopSubdevice( &aosubdev );
+	      if ( retVal == EINVAL ) {
+		ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+		aosubdev.running = E_NOFIFO;
+		break; // dynclamp loop
+	      }
+	      aosubdev.running = E_UNDERRUN;
+	      ERROR_MSG( "dynclamp_loop: ERROR! rtf_get -> data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	    }
+	    // read output from FIFO data:
+	    aoinx = 0;
+	    for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
+	      pChan = &aosubdev.chanlist[iC];
+	      if ( pChan->isUsed ) {
+		pChan->value = aovalues[aoinx++];
+#ifdef ENABLE_COMPUTATION
+		if ( pChan->param > 0 ) {
+		  paramOutput[pChan->chan] = pChan->value;
+		}
+#endif
+	      }
+	    }
+	  } // get fifo data
 	}
 
       }  // ! aosubdev.pending
