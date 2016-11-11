@@ -585,8 +585,8 @@ int DynClampAnalogInput::prepareRead( InList &traces )
     return -1;
   }
 
-  // buffer size for one second:
-  BufferSize = traces.size() * traces[0].indices( 1.0 ) * BufferElemSize;
+  // buffer size for ten seconds:
+  BufferSize = traces.size() * traces[0].indices( 10.0 ) * BufferElemSize;
 
   // set up synchronous command:
   struct syncCmdIOCT syncCmdIOC;
