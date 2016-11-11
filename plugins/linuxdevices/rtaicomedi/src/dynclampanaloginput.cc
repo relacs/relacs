@@ -38,6 +38,9 @@ using namespace relacs;
 
 namespace rtaicomedi {
 
+#ifdef ENABLE_COMPUTATION
+#include "module/model.c"
+#endif
 
 DynClampAnalogInput::DynClampAnalogInput( void ) 
   : AnalogInput( "DynClampAnalogInput", DynClampAnalogIOType )
@@ -237,6 +240,58 @@ int DynClampAnalogInput::open( const string &device)
     return -1;
   }
 
+  // compute lookup tables:
+#ifdef ENABLE_COMPUTATION
+#ifdef ENABLE_LOOKUPTABLES
+  for ( int k=0; ; k++ ) {
+    float *x = 0;
+    float *y = 0;
+    int n = 0;
+    if ( generateLookupTable( k, &x, &y, &n ) < 0 ) 
+      break;
+    // transfer to kernel:
+    int retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_K, &k );
+    if ( retval < 0 ) {
+      setErrorStr( "ioctl command IOC_SET_LOOKUP_K on device " +
+		   ModuleDevice + " failed" );
+      ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+      ::close( ModuleFd );
+      return -1;
+    }
+    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_N, &n );
+    if ( retval < 0 ) {
+      setErrorStr( "ioctl command IOC_SET_LOOKUP_N on device " +
+		   ModuleDevice + " failed" );
+      ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+      ::close( ModuleFd );
+      return -1;
+    }
+    if ( x != 0 ) {
+      retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_X, x );
+      if ( retval < 0 ) {
+	setErrorStr( "ioctl command IOC_SET_LOOKUP_X on device " +
+		     ModuleDevice + " failed" );
+	::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+	::close( ModuleFd );
+	return -1;
+      }
+      delete [] x;
+    }
+    if ( y != 0 ) {
+      retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_Y, y );
+      if ( retval < 0 ) {
+	setErrorStr( "ioctl command IOC_SET_LOOKUP_Y on device " +
+		   ModuleDevice + " failed" );
+	::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+	::close( ModuleFd );
+	return -1;
+      }
+      delete [] y;
+    }
+  }
+#endif
+#endif
+
   // set device and subdevice:
   struct deviceIOCT deviceIOC;
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
@@ -262,6 +317,8 @@ int DynClampAnalogInput::open( const string &device)
   FifoFd = ::open( fifoname.str().c_str(), O_RDONLY | O_NONBLOCK );
   if ( FifoFd < 0 ) {
     setErrorStr( "opening RTAI-FIFO " + fifoname.str() + " failed" );
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+    ::close( ModuleFd );
     return -1;
   }
 

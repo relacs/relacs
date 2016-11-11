@@ -39,10 +39,6 @@ using namespace relacs;
 
 namespace rtaicomedi {
 
-#ifdef ENABLE_COMPUTATION
-#include "module/model.c"
-#endif
-
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
   : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
 {
@@ -313,50 +309,6 @@ int DynClampAnalogOutput::open( const string &device )
 
   // set the maximum possible sampling rate (of the rtai loop!):
   MaxRate = MAX_FREQUENCY;
-
-  // compute lookup tables:
-#ifdef ENABLE_COMPUTATION
-#ifdef ENABLE_LOOKUPTABLES
-  for ( int k=0; ; k++ ) {
-    float *x = 0;
-    float *y = 0;
-    int n = 0;
-    if ( generateLookupTable( k, &x, &y, &n ) < 0 ) 
-      break;
-    // transfer to kernel:
-    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_K, &k );
-    if ( retval < 0 ) {
-      setErrorStr( "ioctl command IOC_SET_LOOKUP_K on device " +
-		   ModuleDevice + " failed" );
-      return -1;
-    }
-    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_N, &n );
-    if ( retval < 0 ) {
-      setErrorStr( "ioctl command IOC_SET_LOOKUP_N on device " +
-		   ModuleDevice + " failed" );
-      return -1;
-    }
-    if ( x != 0 ) {
-      retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_X, x );
-      if ( retval < 0 ) {
-	setErrorStr( "ioctl command IOC_SET_LOOKUP_X on device " +
-		     ModuleDevice + " failed" );
-	return -1;
-      }
-      delete [] x;
-    }
-    if ( y != 0 ) {
-      retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_Y, y );
-      if ( retval < 0 ) {
-	setErrorStr( "ioctl command IOC_SET_LOOKUP_Y on device " +
-		   ModuleDevice + " failed" );
-	return -1;
-      }
-      delete [] y;
-    }
-  }
-#endif
-#endif
 
   IsPrepared = false;
   NoMoreData = true;
