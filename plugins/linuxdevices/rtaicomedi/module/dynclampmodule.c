@@ -433,8 +433,14 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
 
   if ( deviceIOC->subdevType == SUBDEV_IN || deviceIOC->subdevType == SUBDEV_OUT ) {
 
-    if ( deviceIOC->subdevType == SUBDEV_OUT )
+    if ( deviceIOC->subdevType == SUBDEV_OUT ) {
+      if ( aisubdev.used == 0 ) {
+	sprintf( deviceIOC->errorstr, "cannot open analog output subdevice on device %s because analog input is not opened yet.", devname );
+	ERROR_MSG( "openComediDevice ERROR: %s\n", deviceIOC->errorstr );
+	return -EFAULT;
+      }
       subdev = &aosubdev;
+    }
     else
       subdev = &aisubdev;
 
