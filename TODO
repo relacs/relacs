@@ -32,10 +32,15 @@ New InData threading:
   So maybe keep readTime. Make it an option for each device!
 
 Macros, flow control:
-- RELACS crashes after too many automatically called macros
 - auditory::search does not exit cleanly upon ESC: should be solved, check it
 
 Dynamic clamp:
+- Make lookup tables stronger! Add variables and function for linear
+  interpolation. Models can then have a define with a meaningful name
+  to return the interpolated value.
+- If a model requires lookup tables, but they are not enabled, it
+  should return an error. Not in initModel but somewhere in or close
+  to generateLookupTabel.
 - It shoud be sufficient to initially set the AOs to zero (the driver should do that: done)
   and the parameters to their initial vallues (done - check!).
 - the system() call in macros.cc line 2342 hangs relacs on startup. Run it in the background?! Check it!

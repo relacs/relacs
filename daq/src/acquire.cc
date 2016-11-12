@@ -1340,8 +1340,6 @@ int Acquire::waitForData( double &signaltime )
   // check data:
   bool failed = InTraces.failed();
   ReadMutex.unlock();
-  if ( failed )
-    stopRead();
   return failed ? -1 : ( finished ? 0 : 1 );
 }
 

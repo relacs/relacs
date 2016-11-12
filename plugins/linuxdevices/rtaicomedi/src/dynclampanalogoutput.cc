@@ -301,7 +301,7 @@ int DynClampAnalogOutput::open( const string &device )
   // initialize connection to RTAI-FIFO:
   ostringstream fifoname;
   fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
-  FifoFd = ::open( fifoname.str().c_str(), O_WRONLY );
+  FifoFd = ::open( fifoname.str().c_str(), O_WRONLY | O_NONBLOCK );
   if ( FifoFd < 0 ) {
     setErrorStr( "opening RTAI-FIFO " + fifoname.str() + " failed" );
     return -1;

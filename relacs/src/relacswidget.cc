@@ -915,6 +915,7 @@ int RELACSWidget::updateData( void )
   int r = AQ->waitForData( signaltime );
   if ( r < 0 ) {
     // error handling:
+    AQ->stopRead();
     AQ->lockRead();
     string es = IRawData.errorText();
     printlog( "! error in reading acquired data: " + es );
