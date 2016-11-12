@@ -804,6 +804,9 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
     Sigs = ol;
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+  
+    // set sleep duration to one millisecond:  
+    setWriteSleep( 1 );
 
   } //  unlock
 
