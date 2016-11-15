@@ -1933,11 +1933,11 @@ void SaveFiles::NixFile::writeTraces( const InList &IL )
     int to_read = 0;
     const float *data = IL[k].readBuffer( trace.index, to_read );
     if ( to_read > 0 ) {
-      writeChunk( trace, to_read, data );
+      writeChunk( trace, static_cast<size_t>(to_read), data );
       if ( to_read < ndata ) {
 	data = IL[k].readBuffer( trace.index, to_read );
 	if ( to_read > 0 )
-	  writeChunk( trace, to_read, data );
+	  writeChunk( trace, static_cast<size_t>(to_read), data );
       }
     }
     /*
