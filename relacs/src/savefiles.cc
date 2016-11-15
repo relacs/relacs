@@ -1929,6 +1929,19 @@ void SaveFiles::NixFile::writeTraces( const InList &IL )
       //nothing to write
       continue;
     }
+    int ndata = IL[k].size() - trace.index;
+    int to_read = 0;
+    const float *data = IL[k].readBuffer( trace.index, to_read );
+    if ( to_read > 0 ) {
+      writeChunk( trace, to_read, data );
+      if ( to_read < ndata ) {
+	data = IL[k].readBuffer( trace.index, to_read );
+	if ( to_read > 0 )
+	  writeChunk( trace, to_read, data );
+      }
+    }
+    /*
+    // the following does not work:
     //position in the cyclic buffer
     size_t buf_cap = IL[k].capacity();
     size_t dat_pos = trace.index % buf_cap;
@@ -1947,6 +1960,7 @@ void SaveFiles::NixFile::writeTraces( const InList &IL )
       writeChunk( trace, to_read, &IL[k][dat_pos] );
       writeChunk( trace, buf_pos, &IL[k][0] );
     }
+    */
   }
 }
 

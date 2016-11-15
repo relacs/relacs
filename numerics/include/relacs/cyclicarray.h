@@ -232,6 +232,11 @@ public:
   template< typename S >
   void hist( SampleData< S > &h ) const;
 
+    /*! \return pointer to a float array starting at data element \a
+        index.  In \a maxn the maximum number of consecutive data
+        elements in this buffer that can be read upto size() or the
+        end of the cicular buffer is returned. */
+  const T *readBuffer( int index, int &maxn ) const;
     /*! Save binary data to stream \a os starting at index \a index upto size().
         \return the number of saved data elements. */
   int saveBinary( ostream &os, int index ) const;
@@ -1024,6 +1029,26 @@ void CyclicArray<T>::hist( SampleData< S > &h ) const
     if ( b >= 0  && b < h.size() )
       h[b] += 1;
   }
+}
+
+
+template < typename T >
+const T* CyclicArray<T>::readBuffer( int index, int &maxn ) const
+{
+  maxn = 0;
+
+  // nothing to be saved:
+  if ( index >= size() )
+    return 0;
+
+  assert( index >= minIndex() );
+
+  int li = index % NBuffer;
+  if ( li < R )
+    maxn = R-li;
+  else
+    maxn = NBuffer-li;
+  return Buffer+li;
 }
 
 

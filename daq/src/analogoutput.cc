@@ -425,7 +425,7 @@ void AnalogOutput::run( void )
     if ( r != Running )
       break;
     // the sleep is needed to allow for other processes to wake up and to acquire the lock!
-    QThread::msleep( 0 );
+    QThread::msleep( WriteSleepMS );
     lock();
     rd = Run;
     unlock();

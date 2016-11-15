@@ -6,7 +6,7 @@ sudo apt-get -y remove libjack-dev libportaudio-dev libportaudio0
 sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portaudio19-dev
 
 # the main stuff:
-sudo apt-get -y install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto subversion
+sudo apt-get -y install autoconf automake libtool libtool-bin g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto subversion
 sudo make uninstall
 make clean
 ./bootstrap.sh
@@ -22,6 +22,7 @@ Here are the details:
    autoconf
    automake
    libtool
+   libtool-bin
    g++
    libc6-dev
    libqt4-dev
