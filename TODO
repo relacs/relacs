@@ -35,6 +35,8 @@ Macros, flow control:
 - auditory::search does not exit cleanly upon ESC: should be solved, check it
 
 Dynamic clamp:
+- AnalogOutput: needs fine grained transfers of data into fifo.
+  Why does WriteSleepMS = 0 kill detection of errors and their handling?
 - Make lookup tables stronger! Add variables and function for linear
   interpolation. Models can then have a define with a meaningful name
   to return the interpolated value.

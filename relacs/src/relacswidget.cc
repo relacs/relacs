@@ -1032,8 +1032,11 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
     }
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
-    if ( blocking )
+    if ( blocking ) {
       WriteLoop.run();
+      if ( WriteLoop.failed() )
+	r = -1;
+    }
     else
       WriteLoop.start();
   }
@@ -1061,8 +1064,11 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
     }
     // update device menu:
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
-    if ( blocking )
+    if ( blocking ) {
       WriteLoop.run();
+      if ( WriteLoop.failed() )
+	r = -1;
+    }
     else
       WriteLoop.start();
   }

@@ -643,7 +643,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   }
 
   // buffer size for ten seconds:
-  BufferSize = traces.size() * traces[0].indices( 10.0 ) * BufferElemSize;
+  BufferSize = traces.size() * traces[0].indices( 1.0 ) * BufferElemSize;
 
   // set up synchronous command:
   struct syncCmdIOCT syncCmdIOC;
@@ -728,7 +728,7 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
  
 int DynClampAnalogInput::readData( void )
 {
-  //  cerr << "DynClampAnalogInput::readData(): begin\n";/////TEST/////
+  // cerr << "DynClampAnalogInput::readData(): begin\n";/////TEST/////
 
   QMutexLocker locker( mutex() );
 
@@ -741,14 +741,10 @@ int DynClampAnalogInput::readData( void )
 	 << " BufferSize=" << BufferSize << " readn=" << readn << " maxn=" << maxn << '\n';
 
   // read data:
-  ssize_t m = ::read( FifoFd, Buffer + readn, maxn );
-  //ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 1000 );
-
-  // XXX can m ever be negative???? because of ssize_t ! Check whether m = -2 results m < 1 being true!
-  // XXX read man page of read
-
+  //  ssize_t m = ::read( FifoFd, Buffer + readn, maxn );
+  ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 10 );
   int ern = errno;
-  //cerr << "readData() " << m << " errno=" << ern << "\n";
+  // cerr << "readData() " << m << " errno=" << ern << "\n";
   if ( m < 0 ) {
     if ( ern == EAGAIN || ern == EINTR ) {
       // EINTR = 4
@@ -775,29 +771,28 @@ int DynClampAnalogInput::readData( void )
       cerr << "DynClampAnalogInput::readData() -> ioctl command IOC_CHK_RUNNING on device "
 	   << ModuleDevice << " failed!\n";
       Traces->addError( DaqError::Unknown );
+      return -2;
     }
-    else if ( running == E_OVERFLOW ) {
-      cerr << "DynClampAnalogInput::readData() -> buffer-overflow\n";
-      Traces->addError( DaqError::OverflowUnderrun );
-    }
-    else if ( running < 0 )
-      Traces->addError( DaqError::DeviceError );
-    else if ( running > 0 ) {
-      //	Traces->addErrorStr( "DynClampAnalogOutput::writeData: " + deviceFile() + " is not running!" );
-      // XXX What to do? Acquisition could be simply finished.
-      // cerr << "return BufferN " << BufferN << '\n';
-      return m/BufferElemSize;
-    }
-    cerr << "DynClampAnalogInput::readData: device is not running!"  << '\n';
-    cerr << "return -2";
-    return -2;
-  }
-
-  //  cerr << "Comedi::readData() end " << BufferN << "\n";
-
-  // XXX do we ever get here???
-
-  return m/BufferElemSize;
+    else {
+      if ( running > 0 ) {
+	//	Traces->addErrorStr( "DynClampAnalogOutput::writeData: " + deviceFile() + " is not running!" );
+	// XXX What to do? Acquisition could be simply finished.
+	// cerr << "return BufferN " << BufferN << '\n';
+	return m/BufferElemSize;
+      }
+      else {
+	cerr << "DynClampAnalogInput::readData: device is not running " << running << '\n';
+	cerr << "return -2\n";
+	if ( running == E_OVERFLOW ) {
+	  cerr << "DynClampAnalogInput::readData() -> buffer-overflow\n";
+	  Traces->addError( DaqError::OverflowUnderrun );
+	}
+	else
+	  Traces->addError( DaqError::DeviceError );
+	return -2;
+      }
+    } // successfully retrieved running
+  } // m >= 0
 }
 
 

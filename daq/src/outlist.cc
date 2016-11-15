@@ -349,6 +349,8 @@ string OutList::errorText( void ) const
 
   // common error strings:
   bool commonstr = true;
+  if ( size() > 0 && operator[]( 0 ).errorStr().empty() )
+    commonstr = false;
   for ( int k=1; k<size(); k++ ) {
     if ( operator[]( k ).errorStr() != operator[]( 0 ).errorStr() )
       commonstr = false;

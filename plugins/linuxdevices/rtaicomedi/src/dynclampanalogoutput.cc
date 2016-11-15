@@ -805,8 +805,8 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     Sigs = ol;
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
   
-    // set sleep duration to one millisecond:  
-    setWriteSleep( 1 );
+    // set sleep duration to zero milliseconds:  
+    setWriteSleep( 0 );
 
   } //  unlock
 
@@ -885,7 +885,6 @@ int DynClampAnalogOutput::writeData( void )
       else
 	Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
 			  deviceFile() + " is not running!" );
-      cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';
       setErrorStr( Sigs );
       return -1;
     }
@@ -894,7 +893,7 @@ int DynClampAnalogOutput::writeData( void )
   if ( Sigs[0].deviceWriting() ) {
     // multiplex data into buffer:
     float *bp = (float*)(Buffer+NBuffer);
-    int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
+    int maxn = (BufferSize-NBuffer)/BufferElemSize/Sigs.size();
     /*
     // XXX lets keep the number of transferred data small:
     // XXX this should be translated to the FIFO buffer size!!!
@@ -911,62 +910,66 @@ int DynClampAnalogOutput::writeData( void )
 	++bytesConverted;
       }
     }
-    bytesConverted *= sizeof( float );
+    bytesConverted *= BufferElemSize;
     NBuffer += bytesConverted;
   }
 
   if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
     return 0;
 
-  // transfer buffer to kernel modul:
-  int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
-
-  int ern = 0;
   int elemWritten = 0;
+  do {
+    // transfer buffer to kernel modul:
+    int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
+    // int bytesWritten = rtf_write_timed( FifoFd, Buffer, NBuffer, 10 );
+    
+    int ern = 0;
+    
+    if ( bytesWritten < 0 ) {
+      ern = errno;
+      if ( ern == EAGAIN || ern == EINTR )
+	ern = 0;
+  }
+    else if ( bytesWritten > 0 ) {
+      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+      NBuffer -= bytesWritten;
+      elemWritten += bytesWritten / BufferElemSize;
+    }
+
+    if ( ern == 0 ) {
+      // no more data:
+      if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
+	if ( Buffer != 0 )
+	  delete [] Buffer;
+	Buffer = 0;
+	BufferSize = 0;
+	NBuffer = 0;
+	return 0;
+      }
+    }
+    else {
+      // error:
+      switch( ern ) {
+	
+      case EPIPE: 
+	Sigs.addError( DaqError::OverflowUnderrun );
+	break;
+	
+      case EBUSY:
+	Sigs.addError( DaqError::Busy );
+	break;
+	
+      default:
+	Sigs.addErrorStr( ern );
+	Sigs.addError( DaqError::Unknown );
+	break;
+      }
       
-  if ( bytesWritten < 0 ) {
-    ern = errno;
-    if ( ern == EAGAIN || ern == EINTR )
-      ern = 0;
-  }
-  else if ( bytesWritten > 0 ) {
-    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-    NBuffer -= bytesWritten;
-    elemWritten += bytesWritten / BufferElemSize;
-  }
-
-  if ( ern == 0 ) {
-    // no more data:
-    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      if ( Buffer != 0 )
-	delete [] Buffer;
-      Buffer = 0;
-      BufferSize = 0;
-      NBuffer = 0;
-      return 0;
+      setErrorStr( Sigs );
+      return -1;
     }
-  }
-  else {
-    // error:
-    switch( ern ) {
-
-    case EPIPE: 
-      Sigs.addError( DaqError::OverflowUnderrun );
-      break;
-
-    case EBUSY:
-      Sigs.addError( DaqError::Busy );
-      break;
-
-    default:
-      Sigs.addErrorStr( ern );
-      Sigs.addError( DaqError::Unknown );
-      break;
-    }
-
-    setErrorStr( Sigs );
-    return -1;
-  }
+    break;
+  } while ( NBuffer > 0 );
 
   return elemWritten;
 }

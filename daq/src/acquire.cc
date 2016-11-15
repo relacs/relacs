@@ -1906,6 +1906,7 @@ int Acquire::write( OutData &signal, bool setsignaltime )
   for ( unsigned int i=0; i<AO.size(); i++ )
     AO[i].Signals.clear();
   AO[di].Signals.add( &signal );
+  AO[di].AO->clearError();
 
   // set intensity or level:
   for ( unsigned int a=0; a<Att.size(); a++ ) {
@@ -2092,8 +2093,10 @@ int Acquire::write( OutList &signal, bool setsignaltime )
     return -1;
 
   // add signals to devices:
-  for ( unsigned int i=0; i<AO.size(); i++ )
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
     AO[i].Signals.clear();
+    AO[i].AO->clearError();
+  }
   for ( int k=0; k<signal.size(); k++ )
     AO[signal[k].device()].Signals.add( &signal[k] );
 
@@ -2292,10 +2295,12 @@ int Acquire::waitForWrite( void )
   bool success = true;
   // check:
   for ( unsigned int i = 0; i<AO.size(); i++ ) {
-    if ( ! AO[i].Signals.empty() && AO[i].Signals.failed() )
+    if ( ! AO[i].Signals.empty() && 
+	 ( AO[i].AO->failed() || AO[i].Signals.failed() ) )
       success = false;
   }
   WriteMutex.unlock();
+
   if ( ! success ) {
     // error:
     stopWrite();
@@ -2378,6 +2383,7 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
   for ( unsigned int i=0; i<AO.size(); i++ )
     AO[i].Signals.clear();
   AO[di].Signals.add( &signal );
+  AO[di].AO->clearError();
 
   // set intensity or level:
   for ( unsigned int a=0; a<Att.size(); a++ ) {
@@ -2539,8 +2545,10 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
     return -1;
 
   // add signals to devices:
-  for ( unsigned int i=0; i<AO.size(); i++ )
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
     AO[i].Signals.clear();
+    AO[i].AO->clearError();
+  }
   for ( int k=0; k<signal.size(); k++ )
     AO[signal[k].device()].Signals.add( &signal[k] );
 
@@ -2741,11 +2749,13 @@ string Acquire::writeError( void ) const
   QReadLocker locker( &WriteMutex );
   string es = "";
   for ( unsigned int i = 0; i<AO.size(); i++ ) {
-    string aoes = AO[i].AO->errorStr();
-    if ( ! aoes.empty() ) {
-      if ( ! es.empty() )
-	es += ", ";
-      es += aoes;
+    if ( AO[i].AO->failed() ) {
+      string aoes = AO[i].AO->errorStr();
+      if ( ! aoes.empty() ) {
+	if ( ! es.empty() )
+	  es += ", ";
+	es += aoes;
+      }
     }
   }
   return es;

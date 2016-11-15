@@ -70,11 +70,13 @@ public:
   WriteThread( RELACSWidget *rw );
   void start( void );
   virtual void run( void );
+  bool failed( void ) const;
 
 
 private:
 
   RELACSWidget *RW;
+  bool Failed;
 
 };
 

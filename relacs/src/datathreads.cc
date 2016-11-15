@@ -55,24 +55,34 @@ void ReadThread::run( void )
 
 
 WriteThread::WriteThread( RELACSWidget *rw )
-  : RW( rw )
+  : RW( rw ),
+    Failed( false )
 {
 }
 
 
 void WriteThread::start( void )
 {
+  Failed = false;
   QThread::start( HighPriority );
 }
 
 
 void WriteThread::run( void )
 {
-  if ( RW->AQ->waitForWrite() < 0 ) {
+  Failed = false;
+  Failed = ( RW->AQ->waitForWrite() < 0 );
+  if ( Failed ) {
     string es = RW->AQ->writeError();
     RW->printlog( "! error in writing data: " + es );
     QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog output: " + es ) );
   }
+}
+
+
+bool WriteThread::failed( void ) const
+{
+  return Failed;
 }
 
 
