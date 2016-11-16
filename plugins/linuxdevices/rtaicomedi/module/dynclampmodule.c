@@ -3,6 +3,7 @@
 #include <linux/kernel.h>
 #include <linux/version.h>
 #include <asm/uaccess.h>
+#include <linux/spinlock.h>
 #include <linux/mutex.h>
 #include <linux/slab.h>
 #include <linux/fs.h>
@@ -65,6 +66,7 @@ struct subdeviceT {
   int buffersize;
   int readindex;
   int writeindex;
+  spinlock_t bufferlock;
   unsigned int frequency;
   long delay;
   long duration;           // => relative to index of dynclamp-Task
@@ -462,6 +464,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
     subdev->startsource = 0;
     subdev->running = 0;
     subdev->chanN = 0;
+    spin_lock_init( &subdev->bufferlock );
 
     retval = openComediSubDevice( deviceIOC->devicename, deviceIOC->subdev, deviceIOC->errorstr );
     if ( retval < 0 )
@@ -665,6 +668,11 @@ void releaseAnalogSubdevice( struct subdeviceT *subdev )
   DEBUG_MSG( "releaseAnalogSubdevice: release subdevice %d and fifo %d\n", subdev->subdev, subdev->fifo );
   // delete FIFO:
   rtf_destroy( subdev->fifo );
+  // free buffer:
+  /*
+  if ( subdev->buffer != 0 )
+    kfree( subdev->buffer );
+  */
   // reset subdevice structure:
   memset( subdev, 0, sizeof(struct subdeviceT) );
   subdev->subdev = -1;
@@ -872,6 +880,20 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
     ERROR_MSG( "loadSyncCmd: rtf_reset failed and returned %d\n", retval );
     return -EBUSY;
   }
+
+  // init buffer:
+  /*
+  if ( subdev->buffer != 0 ) {
+    kfree( subdev->buffer );
+    subdev->buffer = 0;
+  }
+  subdev->buffersize = syncCmdIOC->buffersize; // XXX CHECK WHETHER BYTES OR FLOATS
+  if ( subdev->buffersize > 0 )
+    subdev->buffer = kmalloc( subdev->buffersize * sizeof(float), GFP_KERNEL );
+  */
+  subdev->readindex = 0;
+  subdev->writeindex = 0;
+
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.running ) {
@@ -1670,6 +1692,22 @@ void dynclamp_loop( long dummy )
 	  }
 	  // get data from FIFO:
 	  if ( aonum > 0 ) {
+	    /*
+	    spin_lock( &aosubdev.bufferlock );
+	    if ( (aosubdev.readindex + aonum) % aosubdev.buffersize >= aosubdev.writeindex ) {
+	      ERROR_MSG( "dynclamp_loop: ERROR! buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	      stopSubdevice( &aosubdev );
+	      aosubdev.running = E_UNDERRUN;
+	    }
+	    else {
+	      for ( i=0; i < aonum; i++ ) {
+		aovalues[i] = aosubdev.buffer[aosubdev.readindex++];
+		if ( aosubdev.readindex >= aosubdev.buffersize )
+		  aosubdev.readindex = 0;
+	      }
+	    }
+	    spin_unlock( &aosubdev.bufferlock );
+	    */
 	    aobytes = aonum * sizeof( float );
 	    retVal = rtf_get( aosubdev.fifo, aovalues, aobytes );
 	    if ( retVal != aobytes ) {
@@ -2409,51 +2447,53 @@ ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_
 
 ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n, loff_t *pos )
 {
+  long maxbuffercopy;
   unsigned long maxcopy;
   unsigned long ncopy;
+  unsigned long ncopied;
   unsigned long totalcopy = 0;
-  unsigned long writeindex = 0;
+  unsigned long writeindex;
+  unsigned long readindex;
 
   maxcopy = n/sizeof(float);
-  // XXX missing buffer overlow checking! We are not allowed to write further than the readindex!
-  // use spinlocks for protecting readindex
-  // also spinlock the writeindex
+  spin_lock( &aosubdev.bufferlock );
   writeindex = aosubdev.writeindex;
-  if ( (writeindex + maxcopy) % aosubdev.buffersize >= aosubdev.readindex ) {
-    maxcopy = readindex - writeindex;
-    maxcopy = readindex - writeindex;
-  }
+  readindex = aosubdev.readindex;
+  spin_unlock( &aosubdev.bufferlock );
+  // check for maximum number of writeable data:
+  maxbuffercopy = readindex - writeindex;
+  if ( maxbuffercopy < 0 )
+    maxbuffercopy += aosubdev.buffersize;
+  if ( maxcopy > maxbuffercopy )
+    maxcopy = maxbuffercopy;
+  // no free buffer space:
+  if ( maxcopy <= 0 )
+    return 0;
+
+  // copy first part of the buffer:
   ncopy = maxcopy;
   if ( writeindex + ncopy > aosubdev.buffersize )
     ncopy = aosubdev.buffersize - writeindex;
-  if ( copy_from_user( aosubdev.buffer + writeindex, buffer, ncopy ) ) {
-    /*
-      Copy data from user space to kernel space.
-      Returns number of bytes that could not be copied. On success, this will be zero.
-      If some data could not be copied, this function will pad the copied data to the requested size using zero bytes. 
-     */
-    ERROR_MSG("dynclampmodule_write(): copy_from_user failed.")
-    return -EFAULT;
-  }
-  writeindex += ncopy;
+  ncopied = copy_from_user( aosubdev.buffer + writeindex, buffer, ncopy );
+  writeindex += ncopied;
   if ( writeindex >= aosubdev.buffersize )
-    writeindex = 0;
-  totalcopy += ncopy;
-  if ( ncopy < maxcopy ) {
-  ncopy = maxcopy;
-  if ( writeindex + ncopy > aosubdev.buffersize ) {
+    writeindex -= aosubdev.buffersize;
+  totalcopy += ncopied;
+
+  // copy second part of the buffer:
+  if ( ncopied == ncopy && ncopy < maxcopy ) {
     ncopy = maxcopy - totalcopy;
-    if ( copy_from_user( aosubdev.buffer + writeindex, buffer + totalcopy*sizeof( float ), ncopy ) ) {
-      ERROR_MSG("dynclampmodule_write(): copy_from_user failed.")
-	return -EFAULT;
-    }
-    writeindex += ncopy;
+    ncopied = copy_from_user( aosubdev.buffer + writeindex, buffer + totalcopy*sizeof( float ), ncopy );
+    writeindex += ncopied;
     if ( writeindex >= aosubdev.buffersize )
-      writeindex = 0;
-    totalcopy += ncopy;
+      writeindex -= aosubdev.buffersize;
+    totalcopy += ncopied;
   }
-  // xxx spinlock:
+
+  // set new write position:
+  spin_lock( &aosubdev.bufferlock );
   aosubdev.writeindex = writeindex;
+  spin_unlock( &aosubdev.bufferlock );
   return totalcopy;
 }
 
