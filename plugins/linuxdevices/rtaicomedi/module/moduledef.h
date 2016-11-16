@@ -84,10 +84,6 @@
 #define DEV_NAME_MAXLEN   128
 #define DEV_ERROR_MAXLEN  128
 
-//* default waiting time for neuron to react to injected current
-//* #define INJECT_RECORD_DELAY 5000 //nsec 
-#define INJECT_RECORD_DELAY 1000 //nsec 
-
 //* maximum supported dynamic clamp frequency ensuring a stable system
 #define MAX_FREQUENCY 90000 //Hz
 
@@ -103,8 +99,7 @@
 #define E_NODATA      -2
 #define E_UNDERRUN    -3
 #define E_OVERFLOW    -4
-#define E_NOFIFO      -5
-#define E_STOPPEDBYAI -6
+#define E_STOPPEDBYAI -5
 
 //* Lookup tables:
 #define MAXLOOKUPTABLES 100
@@ -127,7 +122,6 @@ struct deviceIOCT {
   char devicename[DEV_NAME_MAXLEN+1];
   unsigned int subdev;
   enum subdevTypes subdevType;
-  unsigned int fifoIndex;
   char errorstr[DEV_ERROR_MAXLEN+1];
 };
 

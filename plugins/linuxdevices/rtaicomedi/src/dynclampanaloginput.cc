@@ -32,7 +32,6 @@
 #include <QMutexLocker>
 #include <relacs/parameter.h>
 #include <relacs/rtaicomedi/dynclampanaloginput.h>
-#include <rtai_fifos.h>
 using namespace std;
 using namespace relacs;
 
@@ -47,7 +46,6 @@ DynClampAnalogInput::DynClampAnalogInput( void )
 {
   ModuleDevice = "";
   ModuleFd = -1;
-  FifoFd = -1;
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
@@ -234,7 +232,7 @@ int DynClampAnalogInput::open( const string &device)
 
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
-  ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
+  ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY | O_NONBLOCK );
   if ( ModuleFd == -1 ) {
     setErrorStr( "opening dynclamp-module " + ModuleDevice + " failed" );
     return -1;
@@ -311,17 +309,6 @@ int DynClampAnalogInput::open( const string &device)
   // set the maximum possible sampling rate (of the rtai loop!):
   MaxRate = MAX_FREQUENCY;
 
-  // initialize connection to RTAI-FIFO:
-  ostringstream fifoname;
-  fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
-  FifoFd = ::open( fifoname.str().c_str(), O_RDONLY | O_NONBLOCK );
-  if ( FifoFd < 0 ) {
-    setErrorStr( "opening RTAI-FIFO " + fifoname.str() + " failed" );
-    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
-    ::close( ModuleFd );
-    return -1;
-  }
-
   IsPrepared = false;
 
   // publish information about the analog input device:
@@ -355,10 +342,6 @@ void DynClampAnalogInput::close( void )
 
   if ( ModuleFd >= 0 ) {
     ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
-    if ( FifoFd >= 0 ) {
-      ::close( FifoFd );
-      FifoFd = -1;
-    }
     if ( ::close( ModuleFd ) < 0 )
       setErrorStr( "closing of module file failed" );
     ModuleFd = -1;
@@ -569,9 +552,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   retval = 0;
 
   // check update buffer size:
-  int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() ) * BufferElemSize;
-  int bufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
-  if ( bufsize < readbufsize ) {
+  if ( traces[0].updateTime() < traces[0].readTime() ) {
     traces.addError( DaqError::InvalidUpdateTime );
     retval = -1;
   }
@@ -642,7 +623,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
     return -1;
   }
 
-  // buffer size for ten seconds:
+  // buffer size for one seconds:
   BufferSize = traces.size() * traces[0].indices( 1.0 ) * BufferElemSize;
 
   // set up synchronous command:
@@ -667,10 +648,13 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   BufferN = 0;
   
   // set sleep duration:  
+  /*
   int rs = (int)( 0.1*1000.0*traces[0].interval( BufferSize/traces.size()/BufferElemSize ) );
   if ( rs > 5 )
     rs = 5;
   setReadSleep( rs );
+  */
+  setReadSleep( 5 );
 
   if ( traces.success() ) {
     setSettings( traces, BufferSize, BufferSize );
@@ -741,8 +725,7 @@ int DynClampAnalogInput::readData( void )
 	 << " BufferSize=" << BufferSize << " readn=" << readn << " maxn=" << maxn << '\n';
 
   // read data:
-  //  ssize_t m = ::read( FifoFd, Buffer + readn, maxn );
-  ssize_t m = rtf_read_timed( FifoFd, Buffer + readn, maxn, 10 );
+  ssize_t m = ::read( ModuleFd, Buffer + readn, maxn );
   int ern = errno;
   // cerr << "readData() " << m << " errno=" << ern << "\n";
   if ( m < 0 ) {
@@ -753,8 +736,8 @@ int DynClampAnalogInput::readData( void )
       return 0;
     }
     else {
-      cerr << "DynClampAnalogInput::readData() -> fifo error\n";
-      Traces->addErrorStr( "Error while reading from RTAI-FIFO" );
+      cerr << "DynClampAnalogInput::readData() -> read error\n";
+      Traces->addErrorStr( "Error while reading from kernel module" );
       Traces->addErrorStr( ern );
       return -2;
     }
@@ -870,13 +853,6 @@ int DynClampAnalogInput::reset( void )
       addErrorStr( "ioctl command IOC_STOP_SUBDEV on device " +
 		   ModuleDevice + " failed" );
     }
-  }
-
-  // clear buffers by flushing FIFO:
-  if ( FifoFd >= 0 ) {
-    retval = rtf_reset( FifoFd );
-    if ( retval != 0 )
-      cerr <<  "WARNING: failed to reset FIFO. rtf_reset() returned " << retval << ".\n";
   }
 
   // free internal buffer:

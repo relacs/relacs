@@ -4,7 +4,7 @@ if test "x$1" = "x--help"; then
     echo
     echo "loadmodules.sh"
     echo
-    echo "This script loads all the necessary kernal modules that are needed"
+    echo "This script loads all the necessary kernel modules that are needed"
     echo "for using relacs with dynamic clamp support."
     echo "This requires an RTAI patched linux kernel."
     echo "See ../doc/html/index.html or www.relacs.net/plugins/rtaicomedi/index.html for more information."
@@ -17,7 +17,7 @@ fi
 
 lsmod | grep -q rtai_hal || { insmod /usr/realtime/modules/rtai_hal.ko && echo "loaded rtai_hal"; }
 lsmod | grep -q rtai_sched || { insmod /usr/realtime/modules/rtai_sched.ko && echo "loaded rtai_sched"; }
-lsmod | grep -q rtai_fifos || { insmod /usr/realtime/modules/rtai_fifos.ko && echo "loaded rtai_fifos"; }
+#lsmod | grep -q rtai_fifos || { insmod /usr/realtime/modules/rtai_fifos.ko && echo "loaded rtai_fifos"; }
 if test -f /usr/realtime/modules/rtai_math.ko; then
   lsmod | grep -q rtai_math || { insmod /usr/realtime/modules/rtai_math.ko && echo "loaded rtai_math"; }
 else

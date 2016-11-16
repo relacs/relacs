@@ -11,7 +11,6 @@
 #include <linux/delay.h>
 
 #include <rtai.h>
-#include <rtai_fifos.h>
 #include <rtai_sched.h>
 
 #include <linux/comedilib.h>
@@ -60,8 +59,6 @@ struct chanT {
 struct subdeviceT {
   int subdev;
   enum subdevTypes type;
-  int fifo;
-  unsigned int fifosize;
   float *buffer;
   int buffersize;
   int readindex;
@@ -436,7 +433,6 @@ void init_globals( void )
 
 int openComediDevice( struct deviceIOCT *deviceIOC )
 {
-  const int fifosize = 8*1024;
   struct subdeviceT *subdev;
   int retval;
 
@@ -453,51 +449,27 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
     else
       subdev = &aisubdev;
 
+    if ( subdev->used ) {
+      sprintf( deviceIOC->errorstr, "cannot open subdevice %d on device %s because it is already in use.", deviceIOC->subdev, devname  );
+      ERROR_MSG( "openComediDevice ERROR: %s\n", deviceIOC->errorstr );
+      return -EBUSY;
+    }
+
     // initialize subdevice structure:
     subdev->used = 1;
     subdev->subdev = deviceIOC->subdev;
     subdev->type = deviceIOC->subdevType;
-    subdev->fifo = -1; 
-    subdev->fifosize = 0; 
     subdev->delay = -1; 
     subdev->duration = -1;
     subdev->startsource = 0;
     subdev->running = 0;
     subdev->chanN = 0;
     spin_lock_init( &subdev->bufferlock );
-
-    retval = openComediSubDevice( deviceIOC->devicename, deviceIOC->subdev, deviceIOC->errorstr );
-    if ( retval < 0 )
-      return -EFAULT;
-
-    // create FIFO for subdevice:
-    subdev->fifo = deviceIOC->subdev;
-    subdev->fifosize = fifosize;
-    retval = rtf_create( subdev->fifo, fifosize );
-    if ( retval ) {
-      sprintf( deviceIOC->errorstr, "failed to create fifo with %d bytes for subdevice %i, device %s.",
-	       fifosize, deviceIOC->subdev, devname );
-      ERROR_MSG( "openComediDevice ERROR: %s\n", deviceIOC->errorstr );
-      subdev->fifo = -1; 
-      subdev->fifosize = 0; 
-      return -EFAULT;
-    }
-    else
-      DEBUG_MSG( "openComediDevice: created FIFO %d for subdevice %i of device %s with %d bytes buffer size\n",
-		 subdev->fifo, deviceIOC->subdev, devname, fifosize );
-
-    // pass FIFO device index to user:
-    deviceIOC->fifoIndex = subdev->fifo;
-  }
-  else {
-    deviceIOC->fifoIndex = 0;
-
-    retval = openComediSubDevice( deviceIOC->devicename, deviceIOC->subdev, deviceIOC->errorstr );
-    if ( retval < 0 )
-      return retval;
   }
 
-  return 0;
+  retval = openComediSubDevice( deviceIOC->devicename, deviceIOC->subdev, deviceIOC->errorstr );
+
+  return retval;
 }
 
 
@@ -665,14 +637,11 @@ void releaseAnalogSubdevice( struct subdeviceT *subdev )
   if ( subdev->type == SUBDEV_IN )
     cleanup_dynclamp_loop();
 
-  DEBUG_MSG( "releaseAnalogSubdevice: release subdevice %d and fifo %d\n", subdev->subdev, subdev->fifo );
-  // delete FIFO:
-  rtf_destroy( subdev->fifo );
+  DEBUG_MSG( "releaseAnalogSubdevice: release subdevice %d\n", subdev->subdev );
+
   // free buffer:
-  /*
   if ( subdev->buffer != 0 )
     kfree( subdev->buffer );
-  */
   // reset subdevice structure:
   memset( subdev, 0, sizeof(struct subdeviceT) );
   subdev->subdev = -1;
@@ -822,14 +791,8 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 
 int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
 {
-  int retval = 0;
-
   if ( subdev->subdev < 0 || !subdev->used ) {
     ERROR_MSG( "loadSyncCmd ERROR: first open an appropriate device and subdevice. Sync-command not loaded!\n" );
-    return -EFAULT;
-  }
-  if ( subdev->fifo < 0 ) {
-    ERROR_MSG( "loadSyncCmd ERROR: no FIFO opened yet!\n" );
     return -EFAULT;
   }
   if ( subdev->running > 0 ) {
@@ -861,39 +824,16 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   subdev->startsource = syncCmdIOC->startsource;
   subdev->pending = 0;
 
-  // resize fifo:
-  if ( syncCmdIOC->buffersize > subdev->fifosize ) {
-    retval = rtf_resize( subdev->fifo, syncCmdIOC->buffersize );
-    if ( retval < syncCmdIOC->buffersize ) {
-      ERROR_MSG( "loadSyncCmd: rtf_resize failed and returned %d\n", retval );
-      return -ENOMEM;
-    }
-    else {
-      subdev->fifosize = retval;
-      DEBUG_MSG( "loadSyncCmd: resized FIFO to %d bytes\n", subdev->fifosize );
-    }
-  }
-
-  // reset fifo:
-  retval = rtf_reset( subdev->fifo );
-  if ( retval != 0 ) {
-    ERROR_MSG( "loadSyncCmd: rtf_reset failed and returned %d\n", retval );
-    return -EBUSY;
-  }
-
   // init buffer:
-  /*
   if ( subdev->buffer != 0 ) {
     kfree( subdev->buffer );
     subdev->buffer = 0;
   }
-  subdev->buffersize = syncCmdIOC->buffersize; // XXX CHECK WHETHER BYTES OR FLOATS
+  subdev->buffersize = syncCmdIOC->buffersize / sizeof( float );
   if ( subdev->buffersize > 0 )
-    subdev->buffer = kmalloc( subdev->buffersize * sizeof(float), GFP_KERNEL );
-  */
+    subdev->buffer = kmalloc( syncCmdIOC->buffersize, GFP_KERNEL );
   subdev->readindex = 0;
   subdev->writeindex = 0;
-
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.running ) {
@@ -907,8 +847,8 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
     }
   }
 
-  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d, FIFO size %d, and frequency %d for subdevice %d\n",
-	     subdev->duration, subdev->startsource, subdev->fifosize, subdev->frequency, subdev->subdev );
+  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d, buffer size %d, and frequency %d for subdevice %d\n",
+	     subdev->duration, subdev->startsource, subdev->buffersize, subdev->frequency, subdev->subdev );
 
   subdev->prepared = 1;
   return 0;
@@ -1378,9 +1318,7 @@ void dynclamp_loop( long dummy )
   float aovalues[MAXCHANLIST];
   int aonum = 0;
   int aoinx = 0;
-  int aobytes = 0;
   float aivalues[MAXCHANLIST];
-  int aibytes;
   int failed = 0;
   RTIME currenttime = 0;
   RTIME newtime = 0;
@@ -1544,23 +1482,22 @@ void dynclamp_loop( long dummy )
       if ( failed )
 	break;
 
-      // write analog input values to FIFO:
-      aibytes = aisubdev.chanN * sizeof(float);
-      retVal = rtf_put( aisubdev.fifo, aivalues, aibytes );
-      if ( retVal != aibytes ) {
-	ERROR_MSG( "dynclamp_loop: ERROR! rtf_put failed, return value=%d\n", retVal );
+      // write analog input values to buffer:
+      spin_lock( &aisubdev.bufferlock );
+      if ( (aisubdev.writeindex + aisubdev.chanN) % aisubdev.buffersize >= aisubdev.readindex ) {
+	ERROR_MSG( "dynclamp_loop: ERROR! buffer overflow for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
 	stopSubdevice( &aisubdev );
-	if ( retVal == EINVAL ) {
-	  aisubdev.running = E_NOFIFO;
-	  ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-	}
-	else {
-	  aisubdev.running = E_OVERFLOW;
-	  ERROR_MSG( "dynclamp_loop: ERROR! FIFO buffer overflow for AI subdevice at loopCnt %lu\n",
-		     dynClampTask.loopCnt );
-	}
+	aisubdev.running = E_OVERFLOW;
 	break; // dynclamp loop
       }
+      else {
+	for ( iC=0; iC < aisubdev.chanN; iC++ ) {
+	  aisubdev.buffer[aisubdev.writeindex++] = aivalues[iC];
+	  if ( aisubdev.writeindex >= aisubdev.buffersize )
+	    aisubdev.writeindex = 0;
+	}
+      }
+      spin_unlock( &aisubdev.bufferlock );
 
     } // ! pending
 #ifdef ENABLE_AITIME
@@ -1655,7 +1592,6 @@ void dynclamp_loop( long dummy )
 	if ( !aosubdev.continuous &&
 	     aosubdev.duration <= dynClampTask.loopCnt ) {
 	  DEBUG_MSG( "dynclamp_loop: finished ao subdevice at loop %lu\n", dynClampTask.loopCnt );
-	  rtf_reset( aosubdev.fifo );
 	  stopSubdevice( &aosubdev );
     /******** End AO TTL: *******************************************/
 #ifdef ENABLE_TTLPULSE
@@ -1690,9 +1626,8 @@ void dynclamp_loop( long dummy )
 	    if ( aosubdev.chanlist[iC].isUsed )
 	      aonum++;
 	  }
-	  // get data from FIFO:
+	  // get data from buffer:
 	  if ( aonum > 0 ) {
-	    /*
 	    spin_lock( &aosubdev.bufferlock );
 	    if ( (aosubdev.readindex + aonum) % aosubdev.buffersize >= aosubdev.writeindex ) {
 	      ERROR_MSG( "dynclamp_loop: ERROR! buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
@@ -1700,27 +1635,14 @@ void dynclamp_loop( long dummy )
 	      aosubdev.running = E_UNDERRUN;
 	    }
 	    else {
-	      for ( i=0; i < aonum; i++ ) {
-		aovalues[i] = aosubdev.buffer[aosubdev.readindex++];
+	      for ( iC=0; iC < aonum; iC++ ) {
+		aovalues[iC] = aosubdev.buffer[aosubdev.readindex++];
 		if ( aosubdev.readindex >= aosubdev.buffersize )
 		  aosubdev.readindex = 0;
 	      }
 	    }
 	    spin_unlock( &aosubdev.bufferlock );
-	    */
-	    aobytes = aonum * sizeof( float );
-	    retVal = rtf_get( aosubdev.fifo, aovalues, aobytes );
-	    if ( retVal != aobytes ) {
-	      stopSubdevice( &aosubdev );
-	      if ( retVal == EINVAL ) {
-		ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-		aosubdev.running = E_NOFIFO;
-		break; // dynclamp loop
-	      }
-	      aosubdev.running = E_UNDERRUN;
-	      ERROR_MSG( "dynclamp_loop: ERROR! rtf_get -> data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-	    }
-	    // read output from FIFO data:
+	    // read output from buffer data:
 	    aoinx = 0;
 	    for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
 	      pChan = &aosubdev.chanlist[iC];
@@ -1733,7 +1655,7 @@ void dynclamp_loop( long dummy )
 #endif
 	      }
 	    }
-	  } // get fifo data
+	  } // get buffer data
 	}
 
       }  // ! aosubdev.pending
@@ -2441,7 +2363,59 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_t *pos )
 {
-  return -EFAULT;
+  long maxbuffercopy;
+  unsigned long maxcopy;
+  unsigned long ncopy;
+  unsigned long ncopied;
+  unsigned long totalcopy = 0;
+  unsigned long writeindex;
+  unsigned long readindex;
+
+  maxcopy = n/sizeof(float);
+  spin_lock( &aisubdev.bufferlock );
+  writeindex = aisubdev.writeindex;
+  readindex = aisubdev.readindex;
+  spin_unlock( &aisubdev.bufferlock );
+
+  // check for maximum number of readable data:
+  maxbuffercopy = writeindex - readindex;
+  if ( maxbuffercopy < 0 )
+    maxbuffercopy += aisubdev.buffersize;
+  if ( maxcopy > maxbuffercopy )
+    maxcopy = maxbuffercopy;
+  // nothing to read:
+  if ( maxcopy <= 0 )
+    return 0;
+
+  // copy first part of the buffer:
+  ncopy = maxcopy;
+  if ( readindex + ncopy > aisubdev.buffersize )
+    ncopy = aisubdev.buffersize - readindex;
+  ncopied = copy_to_user( buffer, aisubdev.buffer + readindex, ncopy );
+  ncopied /= sizeof( float );
+  readindex += ncopied;
+  if ( readindex >= aisubdev.buffersize )
+    readindex -= aisubdev.buffersize;
+  totalcopy += ncopied;
+
+  // copy second part of the buffer:
+  if ( ncopied == ncopy && ncopy < maxcopy ) {
+    ncopy = maxcopy - totalcopy;
+    ncopied = copy_to_user( buffer + totalcopy*sizeof( float ), 
+			    aisubdev.buffer + readindex, ncopy );
+    ncopied /= sizeof( float );
+    readindex += ncopied;
+    if ( readindex >= aisubdev.buffersize )
+      readindex -= aisubdev.buffersize;
+    totalcopy += ncopied;
+  }
+
+  // set new read position:
+  spin_lock( &aisubdev.bufferlock );
+  aisubdev.readindex = readindex;
+  spin_unlock( &aisubdev.bufferlock );
+
+  return totalcopy;
 }
 
 
@@ -2460,6 +2434,7 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
   writeindex = aosubdev.writeindex;
   readindex = aosubdev.readindex;
   spin_unlock( &aosubdev.bufferlock );
+
   // check for maximum number of writeable data:
   maxbuffercopy = readindex - writeindex;
   if ( maxbuffercopy < 0 )
@@ -2475,6 +2450,7 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
   if ( writeindex + ncopy > aosubdev.buffersize )
     ncopy = aosubdev.buffersize - writeindex;
   ncopied = copy_from_user( aosubdev.buffer + writeindex, buffer, ncopy );
+  ncopied /= sizeof( float );
   writeindex += ncopied;
   if ( writeindex >= aosubdev.buffersize )
     writeindex -= aosubdev.buffersize;
@@ -2483,7 +2459,9 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
   // copy second part of the buffer:
   if ( ncopied == ncopy && ncopy < maxcopy ) {
     ncopy = maxcopy - totalcopy;
-    ncopied = copy_from_user( aosubdev.buffer + writeindex, buffer + totalcopy*sizeof( float ), ncopy );
+    ncopied = copy_from_user( aosubdev.buffer + writeindex, 
+			      buffer + totalcopy*sizeof( float ), ncopy );
+    ncopied /= sizeof( float );
     writeindex += ncopied;
     if ( writeindex >= aosubdev.buffersize )
       writeindex -= aosubdev.buffersize;

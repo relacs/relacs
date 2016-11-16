@@ -33,7 +33,6 @@
 #include <QMutexLocker>
 #include <relacs/analoginput.h>
 #include <relacs/rtaicomedi/dynclampanalogoutput.h>
-#include <rtai_fifos.h>
 using namespace std;
 using namespace relacs;
 
@@ -44,7 +43,6 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
 {
   ModuleDevice = "";
   ModuleFd = -1;
-  FifoFd = -1;
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
@@ -276,7 +274,7 @@ int DynClampAnalogOutput::open( const string &device )
 
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
-  ModuleFd = ::open( ModuleDevice.c_str(), O_WRONLY ); //O_RDONLY
+  ModuleFd = ::open( ModuleDevice.c_str(), O_WRONLY | O_NONBLOCK );
   if ( ModuleFd == -1 ) {
     setErrorStr( "opening dynclamp-module " + ModuleDevice + " failed" );
     return -1;
@@ -295,15 +293,6 @@ int DynClampAnalogOutput::open( const string &device )
     ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
     ::close( ModuleFd );
     ModuleFd = -1;
-    return -1;
-  }
-
-  // initialize connection to RTAI-FIFO:
-  ostringstream fifoname;
-  fifoname << "/dev/rtf" << deviceIOC.fifoIndex;
-  FifoFd = ::open( fifoname.str().c_str(), O_WRONLY | O_NONBLOCK );
-  if ( FifoFd < 0 ) {
-    setErrorStr( "opening RTAI-FIFO " + fifoname.str() + " failed" );
     return -1;
   }
 
@@ -357,10 +346,8 @@ void DynClampAnalogOutput::close( void )
 
   if ( ModuleFd >= 0 ) {
     ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
-    if ( FifoFd >= 0 )
-      ::close( FifoFd );
     if ( ::close( ModuleFd ) < 0 )
-      setErrorStr( "closing of module file failed" );
+      setErrorStr( "closing of module device file failed" );
     ModuleFd = -1;
   }
 
@@ -805,8 +792,8 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     Sigs = ol;
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
   
-    // set sleep duration to zero milliseconds:  
-    setWriteSleep( 1 );
+    // set sleep duration:
+    setWriteSleep( 5 );
 
   } //  unlock
 
@@ -894,12 +881,6 @@ int DynClampAnalogOutput::writeData( void )
     // multiplex data into buffer:
     float *bp = (float*)(Buffer+NBuffer);
     int maxn = (BufferSize-NBuffer)/BufferElemSize/Sigs.size();
-    /*
-    // XXX lets keep the number of transferred data small:
-    // XXX this should be translated to the FIFO buffer size!!!
-    if ( maxn > Sigs[0].indices( 0.1 ) )
-      maxn = Sigs[0].indices( 0.1 );
-    */
     int bytesConverted = 0;
     for ( int i=0; i<maxn && Sigs[0].deviceWriting(); i++ ) {
       for ( int k=0; k<Sigs.size(); k++ ) {
@@ -918,58 +899,55 @@ int DynClampAnalogOutput::writeData( void )
     return 0;
 
   int elemWritten = 0;
-  do {
-    // transfer buffer to kernel modul:
-    int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
-    // int bytesWritten = rtf_write_timed( FifoFd, Buffer, NBuffer, 10 );
-    
-    int ern = 0;
-    
-    if ( bytesWritten < 0 ) {
-      ern = errno;
-      if ( ern == EAGAIN || ern == EINTR )
-	ern = 0;
-  }
-    else if ( bytesWritten > 0 ) {
-      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-      NBuffer -= bytesWritten;
-      elemWritten += bytesWritten / BufferElemSize;
-    }
 
-    if ( ern == 0 ) {
-      // no more data:
-      if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-	if ( Buffer != 0 )
-	  delete [] Buffer;
-	Buffer = 0;
-	BufferSize = 0;
-	NBuffer = 0;
-	return 0;
-      }
+  // transfer buffer to kernel modul:
+  int bytesWritten = ::write( ModuleFd, Buffer, NBuffer );
+    
+  int ern = 0;
+    
+  if ( bytesWritten < 0 ) {
+    ern = errno;
+    if ( ern == EAGAIN || ern == EINTR )
+      ern = 0;
+  }
+  else if ( bytesWritten > 0 ) {
+    memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+    NBuffer -= bytesWritten;
+    elemWritten += bytesWritten / BufferElemSize;
+  }
+
+  if ( ern == 0 ) {
+    // no more data:
+    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
+      if ( Buffer != 0 )
+	delete [] Buffer;
+      Buffer = 0;
+      BufferSize = 0;
+      NBuffer = 0;
+      return 0;
     }
-    else {
-      // error:
-      switch( ern ) {
+  }
+  else {
+    // error:
+    switch( ern ) {
 	
-      case EPIPE: 
-	Sigs.addError( DaqError::OverflowUnderrun );
-	break;
+    case EPIPE: 
+      Sigs.addError( DaqError::OverflowUnderrun );
+      break;
 	
-      case EBUSY:
-	Sigs.addError( DaqError::Busy );
-	break;
+    case EBUSY:
+      Sigs.addError( DaqError::Busy );
+      break;
 	
-      default:
-	Sigs.addErrorStr( ern );
-	Sigs.addError( DaqError::Unknown );
-	break;
-      }
+    default:
+      Sigs.addErrorStr( ern );
+      Sigs.addError( DaqError::Unknown );
+      break;
+    }
       
-      setErrorStr( Sigs );
-      return -1;
-    }
-    break;
-  } while ( NBuffer > 0 );
+    setErrorStr( Sigs );
+    return -1;
+  }
 
   return elemWritten;
 }
@@ -1002,7 +980,6 @@ int DynClampAnalogOutput::stop( void )
 	   << ModuleDevice << " failed!\n";
       return -1;
     }
-    rtf_reset( FifoFd );
   }
 
   return 0;
@@ -1012,9 +989,6 @@ int DynClampAnalogOutput::stop( void )
 int DynClampAnalogOutput::reset( void )
 { 
   lock();
-
-  if ( FifoFd >= 0 )
-    rtf_reset( FifoFd );
 
   Sigs.clear();
   if ( Buffer != 0 )
