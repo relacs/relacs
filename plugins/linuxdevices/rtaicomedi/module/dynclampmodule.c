@@ -61,7 +61,10 @@ struct subdeviceT {
   enum subdevTypes type;
   int fifo;
   unsigned int fifosize;
-  unsigned int sampleSize;
+  float *buffer;
+  int buffersize;
+  int readindex;
+  int writeindex;
   unsigned int frequency;
   long delay;
   long duration;           // => relative to index of dynclamp-Task
@@ -217,6 +220,8 @@ char *iocNames[RTMODULE_IOC_MAXNR] = {
 
 int dynclampmodule_open( struct inode *devFile, struct file *fModule );
 int dynclampmodule_close( struct inode *devFile, struct file *fModule );
+ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_t *pos );
+ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n, loff_t *pos );
 #ifdef HAVE_UNLOCKED_IOCTL
 long dynclampmodule_unlocked_ioctl( struct file *fModule, unsigned int cmd,
 				    unsigned long arg );
@@ -226,6 +231,8 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 #endif
 static struct file_operations fops = {                     
   .owner = THIS_MODULE,
+  //  .read = dynclampmodule_read;
+  //  .write = dynclampmodule_write;
 #ifdef HAVE_UNLOCKED_IOCTL
   .unlocked_ioctl = dynclampmodule_unlocked_ioctl,
 #else
@@ -1412,208 +1419,7 @@ void dynclamp_loop( long dummy )
   /**************************************************************************/
   while( aisubdev.running > 0 ) {
 
-#ifdef ENABLE_TTLPULSE
-    if ( ttlStartWriteInsn.data[0] > 0 ) {
-      retVal = comedi_do_insn( device, &ttlStartWriteInsn );
-      if ( retVal < 1 ) {
-	if ( retVal < 0 )
-	  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at start write: comedi_do_insn" );
-	ERROR_MSG( "dynclamp_loop: ERROR! failed to write TTL pulses at start write\n" );
-      }
-    }
-#endif
-
-#ifdef ENABLE_SYNCSEC
-    if ( syncSECMode > 1 ) {
-      synctime += (difftime - synctime)/syncSECMode;
-      currentfac = synctime / syncSECPulse;
-    }
-    else if ( syncSECMode == 1 )
-      currentfac = difftime / syncSECPulse;
-    else if ( syncSECMode == 0 )
-	currentfac = dynClampTask.period / syncSECPulse;
-    else
-      currentfac = 1.0;
-#endif
-
-    /******** WRITE TO ANALOG OUTPUT: ******************************************/
-    /****************************************************************************/
-#ifdef ENABLE_AOTIME
-    starttime = rt_get_cpu_time_ns();
-#endif
-
-    if ( aosubdev.running > 0 ) {
-
-      // check for pending start trigger:
-      if ( aosubdev.pending ) {
-	DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO startsrc=%d, prevtriger1=%d, triger1=%d, pv=%d, v=%d\n",
-		   aosubdev.startsource, prevtriggerevs[1], triggerevs[1],
-		   (int)(100.0*aisubdev.chanlist[0].prevvalue), (int)(100.0*aisubdev.chanlist[0].value) );
-	if ( triggerevs[aosubdev.startsource] &&
-	     ! prevtriggerevs[aosubdev.startsource] ) {
-	  DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO SETUP duration=%lu, loopCnt=%lu\n",
-		     aosubdev.duration, dynClampTask.loopCnt );
-	  aosubdev.delay = dynClampTask.loopCnt + aosubdev.delay; 
-	  aosubdev.duration = aosubdev.delay + aosubdev.duration;
-	  dynClampTask.aoIndex = aosubdev.delay;
-	  aosubdev.pending = 0;
-	  DEBUG_MSG( "dynclamp_loop: START PENDING AO duration=%lu delay=%lu, loopCnt=%lu\n",
-		     aosubdev.duration, aosubdev.delay, dynClampTask.loopCnt );
-	}
-      }
-
-      if ( ! aosubdev.pending ) {
-	// check end of stimulus:
-	if ( !aosubdev.continuous &&
-	     aosubdev.duration <= dynClampTask.loopCnt ) {
-	  DEBUG_MSG( "dynclamp_loop: finished ao subdevice at loop %lu\n", dynClampTask.loopCnt );
-	  rtf_reset( aosubdev.fifo );
-	  stopSubdevice( &aosubdev );
-#ifdef ENABLE_TTLPULSE
-	  if ( ttlEndAOInsn.data[0] > 0 ) {
-	    retVal = comedi_do_insn( device, &ttlEndAOInsn );
-	    if ( retVal < 1 ) {
-	      if ( retVal < 0 )
-		comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at end ao: comedi_do_insn" );
-	      ERROR_MSG( "dynclamp_loop: ERROR! failed to write TTL pulses at end ao\n" );
-	    }
-	  }
-#endif
-	}
-	else if ( dynClampTask.loopCnt >= aosubdev.delay ) {
-#ifdef ENABLE_TTLPULSE
-	  // start of stimulus:
-	  if ( dynClampTask.loopCnt == aosubdev.delay ) {
-	    if ( ttlStartAOInsn.data[0] > 0 ) {
-	      retVal = comedi_do_insn( device, &ttlStartAOInsn );
-	      if ( retVal < 1 ) {
-		if ( retVal < 0 )
-		  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at start ao: comedi_do_insn" );
-		ERROR_MSG( "dynclamp_loop: ERROR! failed to write TTL pulses at start ao\n" );
-	      }
-	    }
-	  }
-#endif
-	  // count numbers of channels used:
-	  aonum = 0;
-	  for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
-	    if ( aosubdev.chanlist[iC].isUsed )
-	      aonum++;
-	  }
-	  // get data from FIFO:
-	  if ( aonum > 0 ) {
-	    aobytes = aonum * sizeof( float );
-	    retVal = rtf_get( aosubdev.fifo, aovalues, aobytes );
-	    if ( retVal != aobytes ) {
-	      stopSubdevice( &aosubdev );
-	      if ( retVal == EINVAL ) {
-		ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-		aosubdev.running = E_NOFIFO;
-		break; // dynclamp loop
-	      }
-	      aosubdev.running = E_UNDERRUN;
-	      ERROR_MSG( "dynclamp_loop: ERROR! rtf_get -> data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-	    }
-	    // read output from FIFO data:
-	    aoinx = 0;
-	    for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
-	      pChan = &aosubdev.chanlist[iC];
-	      if ( pChan->isUsed ) {
-		pChan->value = aovalues[aoinx++];
-#ifdef ENABLE_COMPUTATION
-		if ( pChan->param > 0 ) {
-		  paramOutput[pChan->chan] = pChan->value;
-		}
-#endif
-	      }
-	    }
-	  } // get fifo data
-	}
-
-      }  // ! aosubdev.pending
-    }  // aosubdev.running
-	
-    // write output to daq board:
-    for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
-      pChan = &aosubdev.chanlist[iC];
-      // this is an output to the DAQ board:
-#ifdef ENABLE_COMPUTATION
-      if ( pChan->param == 0 ) {
-#endif
-	outvalue = pChan->value;
-
-#ifdef ENABLE_COMPUTATION
-	// add model output to sample:
-	if ( pChan->modelIndex >= 0 ) {
-	  statusInput[pChan->statusIndex] = outvalue;
-	  statusInput[pChan->statusIndex+1] = output[pChan->modelIndex];
-	  outvalue += output[pChan->modelIndex];
-	}
-#endif
-
-	// write out Sample:
-#ifdef ENABLE_SYNCSEC
-	outvalue *= currentfac;
-#endif
-	outvalue = value_to_sample( pChan, outvalue ); // sets pChan->lsample
-	retVal = comedi_do_insn( device, &pChan->insn );
-	if ( retVal < 1 ) {
-	  aosubdev.running = E_NODATA;
-	  ERROR_MSG( "dynclamp_loop: ERROR! failed to write data to AO subdevice channel %d at loopCnt %lu\n",
-		     iC, dynClampTask.loopCnt );
-	  if ( retVal < 0 ) {
-	    comedi_perror( "dynclamp_loop: comedi_data_write" );
-	    aosubdev.running = E_COMEDI;
-	    ERROR_MSG( "dynclamp_loop: ERROR! failed to write to AO subdevice channel %d at loopCnt %lu\n",
-		       iC, dynClampTask.loopCnt );
-	  }
-	  break;
-	}
-
-#ifdef ENABLE_COMPUTATION
-	if ( pChan->modelIndex >= 0 ) {
-#ifdef ENABLE_SYNCSEC
-	  statusInput[pChan->statusIndex+3] = outvalue;
-	  statusInput[pChan->statusIndex+2] = outvalue / currentfac;
-#else
-	  statusInput[pChan->statusIndex+2] = outvalue;
-#endif
-	}
-
-      }
-#endif
-    } // end of ao channel loop
-#ifdef ENABLE_AOTIME
-    stoptime = rt_get_cpu_time_ns();
-    dtime = stoptime - starttime;
-    statusInput[aotimestatusinx] = 1e-9*dtime;
-#endif
-
-
-#ifdef ENABLE_TTLPULSE
-    if ( ttlEndWriteInsn.data[0] > 0 ) {
-      retVal = comedi_do_insn( device, &ttlEndWriteInsn );
-      if ( retVal < 1 ) {
-	if ( retVal < 0 )
-	  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at end write: comedi_do_insn" );
-	ERROR_MSG( "dynclamp_loop: ERROR! failed to write TTL pulses at end write\n" );
-      }
-    }
-#endif
-
-
-/******** SLEEP FOR NEURON TO REACT TO GIVEN OUTPUT: ************************/
-/****************************************************************************/
-#ifdef ENABLE_SYNCSEC
-    if ( syncSECMode < 0 )
-      rt_busy_sleep( INJECT_RECORD_DELAY );
-#else
-    // PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
-	// int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
-    rt_busy_sleep( INJECT_RECORD_DELAY );
-#endif
-
-
+    /******** Start read TTL: *******************************************/
 #ifdef ENABLE_TTLPULSE
     if ( ttlStartReadInsn.data[0] > 0 ) {
       retVal = comedi_do_insn( device, &ttlStartReadInsn );
@@ -1742,6 +1548,7 @@ void dynclamp_loop( long dummy )
 #endif
 
 
+    /******** End read TTL: *******************************************/
 #ifdef ENABLE_TTLPULSE
     if ( ttlEndReadInsn.data[0] > 0 ) {
       retVal = comedi_do_insn( device, &ttlEndReadInsn );
@@ -1769,6 +1576,200 @@ void dynclamp_loop( long dummy )
     statusInput[modeltimestatusinx] = 1e-9*dtime;
 #endif
 
+
+    /******** Start write TTL: *******************************************/
+#ifdef ENABLE_TTLPULSE
+    if ( ttlStartWriteInsn.data[0] > 0 ) {
+      retVal = comedi_do_insn( device, &ttlStartWriteInsn );
+      if ( retVal < 1 ) {
+	if ( retVal < 0 )
+	  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at start write: comedi_do_insn" );
+	ERROR_MSG( "dynclamp_loop: ERROR! failed to write TTL pulses at start write\n" );
+      }
+    }
+#endif
+
+#ifdef ENABLE_SYNCSEC
+    if ( syncSECMode > 1 ) {
+      synctime += (difftime - synctime)/syncSECMode;
+      currentfac = synctime / syncSECPulse;
+    }
+    else if ( syncSECMode == 1 )
+      currentfac = difftime / syncSECPulse;
+    else if ( syncSECMode == 0 )
+	currentfac = dynClampTask.period / syncSECPulse;
+    else
+      currentfac = 1.0;
+#endif
+
+    /******** WRITE TO ANALOG OUTPUT: ******************************************/
+    /****************************************************************************/
+#ifdef ENABLE_AOTIME
+    starttime = rt_get_cpu_time_ns();
+#endif
+
+    if ( aosubdev.running > 0 ) {
+
+      // check for pending start trigger:
+      if ( aosubdev.pending ) {
+	DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO startsrc=%d, prevtriger1=%d, triger1=%d, pv=%d, v=%d\n",
+		   aosubdev.startsource, prevtriggerevs[1], triggerevs[1],
+		   (int)(100.0*aisubdev.chanlist[0].prevvalue), (int)(100.0*aisubdev.chanlist[0].value) );
+	if ( triggerevs[aosubdev.startsource] &&
+	     ! prevtriggerevs[aosubdev.startsource] ) {
+	  DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO SETUP duration=%lu, loopCnt=%lu\n",
+		     aosubdev.duration, dynClampTask.loopCnt );
+	  aosubdev.delay = dynClampTask.loopCnt + aosubdev.delay; 
+	  aosubdev.duration = aosubdev.delay + aosubdev.duration;
+	  dynClampTask.aoIndex = aosubdev.delay;
+	  aosubdev.pending = 0;
+	  DEBUG_MSG( "dynclamp_loop: START PENDING AO duration=%lu delay=%lu, loopCnt=%lu\n",
+		     aosubdev.duration, aosubdev.delay, dynClampTask.loopCnt );
+	}
+      }
+
+      if ( ! aosubdev.pending ) {
+	// check end of stimulus:
+	if ( !aosubdev.continuous &&
+	     aosubdev.duration <= dynClampTask.loopCnt ) {
+	  DEBUG_MSG( "dynclamp_loop: finished ao subdevice at loop %lu\n", dynClampTask.loopCnt );
+	  rtf_reset( aosubdev.fifo );
+	  stopSubdevice( &aosubdev );
+    /******** End AO TTL: *******************************************/
+#ifdef ENABLE_TTLPULSE
+	  if ( ttlEndAOInsn.data[0] > 0 ) {
+	    retVal = comedi_do_insn( device, &ttlEndAOInsn );
+	    if ( retVal < 1 ) {
+	      if ( retVal < 0 )
+		comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at end ao: comedi_do_insn" );
+	      ERROR_MSG( "dynclamp_loop: ERROR! failed to write TTL pulses at end ao\n" );
+	    }
+	  }
+#endif
+	}
+	else if ( dynClampTask.loopCnt >= aosubdev.delay ) {
+    /******** Start AO TTL: *******************************************/
+#ifdef ENABLE_TTLPULSE
+	  // start of stimulus:
+	  if ( dynClampTask.loopCnt == aosubdev.delay ) {
+	    if ( ttlStartAOInsn.data[0] > 0 ) {
+	      retVal = comedi_do_insn( device, &ttlStartAOInsn );
+	      if ( retVal < 1 ) {
+		if ( retVal < 0 )
+		  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at start ao: comedi_do_insn" );
+		ERROR_MSG( "dynclamp_loop: ERROR! failed to write TTL pulses at start ao\n" );
+	      }
+	    }
+	  }
+#endif
+	  // count numbers of channels used:
+	  aonum = 0;
+	  for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
+	    if ( aosubdev.chanlist[iC].isUsed )
+	      aonum++;
+	  }
+	  // get data from FIFO:
+	  if ( aonum > 0 ) {
+	    aobytes = aonum * sizeof( float );
+	    retVal = rtf_get( aosubdev.fifo, aovalues, aobytes );
+	    if ( retVal != aobytes ) {
+	      stopSubdevice( &aosubdev );
+	      if ( retVal == EINVAL ) {
+		ERROR_MSG( "dynclamp_loop: ERROR! No open FIFO for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+		aosubdev.running = E_NOFIFO;
+		break; // dynclamp loop
+	      }
+	      aosubdev.running = E_UNDERRUN;
+	      ERROR_MSG( "dynclamp_loop: ERROR! rtf_get -> data buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	    }
+	    // read output from FIFO data:
+	    aoinx = 0;
+	    for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
+	      pChan = &aosubdev.chanlist[iC];
+	      if ( pChan->isUsed ) {
+		pChan->value = aovalues[aoinx++];
+#ifdef ENABLE_COMPUTATION
+		if ( pChan->param > 0 ) {
+		  paramOutput[pChan->chan] = pChan->value;
+		}
+#endif
+	      }
+	    }
+	  } // get fifo data
+	}
+
+      }  // ! aosubdev.pending
+    }  // aosubdev.running
+	
+    // write output to daq board:
+    for ( iC = 0; iC < aosubdev.chanN; iC++ ) {
+      pChan = &aosubdev.chanlist[iC];
+      // this is an output to the DAQ board:
+#ifdef ENABLE_COMPUTATION
+      if ( pChan->param == 0 ) {
+#endif
+	outvalue = pChan->value;
+
+#ifdef ENABLE_COMPUTATION
+	// add model output to sample:
+	if ( pChan->modelIndex >= 0 ) {
+	  statusInput[pChan->statusIndex] = outvalue;
+	  statusInput[pChan->statusIndex+1] = output[pChan->modelIndex];
+	  outvalue += output[pChan->modelIndex];
+	}
+#endif
+
+	// write out Sample:
+#ifdef ENABLE_SYNCSEC
+	outvalue *= currentfac;
+#endif
+	outvalue = value_to_sample( pChan, outvalue ); // sets pChan->lsample
+	retVal = comedi_do_insn( device, &pChan->insn );
+	if ( retVal < 1 ) {
+	  aosubdev.running = E_NODATA;
+	  ERROR_MSG( "dynclamp_loop: ERROR! failed to write data to AO subdevice channel %d at loopCnt %lu\n",
+		     iC, dynClampTask.loopCnt );
+	  if ( retVal < 0 ) {
+	    comedi_perror( "dynclamp_loop: comedi_data_write" );
+	    aosubdev.running = E_COMEDI;
+	    ERROR_MSG( "dynclamp_loop: ERROR! failed to write to AO subdevice channel %d at loopCnt %lu\n",
+		       iC, dynClampTask.loopCnt );
+	  }
+	  break;
+	}
+
+#ifdef ENABLE_COMPUTATION
+	if ( pChan->modelIndex >= 0 ) {
+#ifdef ENABLE_SYNCSEC
+	  statusInput[pChan->statusIndex+3] = outvalue;
+	  statusInput[pChan->statusIndex+2] = outvalue / currentfac;
+#else
+	  statusInput[pChan->statusIndex+2] = outvalue;
+#endif
+	}
+
+      }
+#endif
+    } // end of ao channel loop
+#ifdef ENABLE_AOTIME
+    stoptime = rt_get_cpu_time_ns();
+    dtime = stoptime - starttime;
+    statusInput[aotimestatusinx] = 1e-9*dtime;
+#endif
+
+
+    /******** End write TTL: *******************************************/
+#ifdef ENABLE_TTLPULSE
+    if ( ttlEndWriteInsn.data[0] > 0 ) {
+      retVal = comedi_do_insn( device, &ttlEndWriteInsn );
+      if ( retVal < 1 ) {
+	if ( retVal < 0 )
+	  comedi_perror( "dynclampmodule: dynclamp_loop ttl pulse at end write: comedi_do_insn" );
+	ERROR_MSG( "dynclamp_loop: ERROR! failed to write TTL pulses at end write\n" );
+      }
+    }
+#endif
+
     /*********** DIGITAL OUTPUT: ************************************************/
 #ifdef ENABLE_DIOINLOOP
     if ( diorunning ) {
@@ -1784,8 +1785,6 @@ void dynclamp_loop( long dummy )
 #endif
 
     /******** WAIT FOR PERIOD: **************************************************/
-    dynClampTask.loopCnt++;
-
 #ifdef ENABLE_WAITTIME
     starttime = rt_get_cpu_time_ns();
 #endif
@@ -1798,6 +1797,7 @@ void dynclamp_loop( long dummy )
     statusInput[waittimestatusinx] = 1e-9*dtime;
 #endif
 
+    dynClampTask.loopCnt++;
     newtime = rt_get_cpu_time_ns();
     difftime = newtime - currenttime;
     currenttime = newtime;
@@ -2400,6 +2400,63 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 ///////////////////////////////////////////////////////////////////////////////
 // *** DRIVER FUNCTIONS ***
 ///////////////////////////////////////////////////////////////////////////////
+
+ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_t *pos )
+{
+  return -EFAULT;
+}
+
+
+ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n, loff_t *pos )
+{
+  unsigned long maxcopy;
+  unsigned long ncopy;
+  unsigned long totalcopy = 0;
+  unsigned long writeindex = 0;
+
+  maxcopy = n/sizeof(float);
+  // XXX missing buffer overlow checking! We are not allowed to write further than the readindex!
+  // use spinlocks for protecting readindex
+  // also spinlock the writeindex
+  writeindex = aosubdev.writeindex;
+  if ( (writeindex + maxcopy) % aosubdev.buffersize >= aosubdev.readindex ) {
+    maxcopy = readindex - writeindex;
+    maxcopy = readindex - writeindex;
+  }
+  ncopy = maxcopy;
+  if ( writeindex + ncopy > aosubdev.buffersize )
+    ncopy = aosubdev.buffersize - writeindex;
+  if ( copy_from_user( aosubdev.buffer + writeindex, buffer, ncopy ) ) {
+    /*
+      Copy data from user space to kernel space.
+      Returns number of bytes that could not be copied. On success, this will be zero.
+      If some data could not be copied, this function will pad the copied data to the requested size using zero bytes. 
+     */
+    ERROR_MSG("dynclampmodule_write(): copy_from_user failed.")
+    return -EFAULT;
+  }
+  writeindex += ncopy;
+  if ( writeindex >= aosubdev.buffersize )
+    writeindex = 0;
+  totalcopy += ncopy;
+  if ( ncopy < maxcopy ) {
+  ncopy = maxcopy;
+  if ( writeindex + ncopy > aosubdev.buffersize ) {
+    ncopy = maxcopy - totalcopy;
+    if ( copy_from_user( aosubdev.buffer + writeindex, buffer + totalcopy*sizeof( float ), ncopy ) ) {
+      ERROR_MSG("dynclampmodule_write(): copy_from_user failed.")
+	return -EFAULT;
+    }
+    writeindex += ncopy;
+    if ( writeindex >= aosubdev.buffersize )
+      writeindex = 0;
+    totalcopy += ncopy;
+  }
+  // xxx spinlock:
+  aosubdev.writeindex = writeindex;
+  return totalcopy;
+}
+
 
 int dynclampmodule_open( struct inode *devFile, struct file *fModule )
 {

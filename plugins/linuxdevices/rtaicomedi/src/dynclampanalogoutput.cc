@@ -766,7 +766,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
     // set buffer size for one second:
     BufferSize = sigs.deviceBufferSize()*BufferElemSize;
-    int maxbuffersize = sigs.size() * sigs[0].indices( 1.0 ) * BufferElemSize;
+    int maxbuffersize = sigs.size() * sigs[0].indices( 2.0 ) * BufferElemSize;
     if ( BufferSize > maxbuffersize )
       BufferSize = maxbuffersize;
 
@@ -806,7 +806,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
   
     // set sleep duration to zero milliseconds:  
-    setWriteSleep( 0 );
+    setWriteSleep( 1 );
 
   } //  unlock
 
@@ -1064,8 +1064,6 @@ AnalogOutput::Status DynClampAnalogOutput::status( void ) const
 
 long DynClampAnalogOutput::index( void ) const
 {
-  QMutexLocker locker( mutex() );
-
   if ( ModuleFd < 0 )
     return -1;
 
