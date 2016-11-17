@@ -658,11 +658,6 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 
   if ( traces.success() ) {
     setSettings( traces, BufferSize, BufferSize );
-    Settings.addInteger( "number of periods", 0 );
-    Settings.addNumber( "average period", 0.0, "us" );
-    Settings.addNumber( "stdev period", 0.0, "us" );
-    Settings.addNumber( "minimum period", 0.0, "us" );
-    Settings.addNumber( "maximum period", 0.0, "us" );
     Traces = &traces;
     IsPrepared = true;
     return 0;
@@ -730,6 +725,7 @@ int DynClampAnalogInput::readData( void )
   cerr << "readData() " << m << " errno=" << ern << "\n";
   if ( m < 0 ) {
     if ( ern == EAGAIN || ern == EINTR ) {
+      // XXX this should not occur, only EFAULT.
       // EINTR = 4
       // EAGAIN = 11
       //      cerr << "return EAGAIN BufferN " << BufferN << '\n';
