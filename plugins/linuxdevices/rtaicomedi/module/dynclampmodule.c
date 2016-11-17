@@ -63,6 +63,7 @@ struct subdeviceT {
   int buffersize;
   int readindex;
   int writeindex;
+  int buffercontent;
   spinlock_t bufferlock;
   unsigned int frequency;
   long delay;
@@ -230,8 +231,8 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 #endif
 static struct file_operations fops = {                     
   .owner = THIS_MODULE,
-  //  .read = dynclampmodule_read;
-  //  .write = dynclampmodule_write;
+  .read = dynclampmodule_read,
+  .write = dynclampmodule_write,
 #ifdef HAVE_UNLOCKED_IOCTL
   .unlocked_ioctl = dynclampmodule_unlocked_ioctl,
 #else
@@ -640,8 +641,10 @@ void releaseAnalogSubdevice( struct subdeviceT *subdev )
   DEBUG_MSG( "releaseAnalogSubdevice: release subdevice %d\n", subdev->subdev );
 
   // free buffer:
-  if ( subdev->buffer != 0 )
+  if ( subdev->buffer != 0 ) {
+    DEBUG_MSG( "releaseAnalogSubdevice: free buffer\n" );
     kfree( subdev->buffer );
+  }
   // reset subdevice structure:
   memset( subdev, 0, sizeof(struct subdeviceT) );
   subdev->subdev = -1;
@@ -826,14 +829,18 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
 
   // init buffer:
   if ( subdev->buffer != 0 ) {
+    DEBUG_MSG( "loadSyncCmd: free buffer\n" );
     kfree( subdev->buffer );
     subdev->buffer = 0;
   }
   subdev->buffersize = syncCmdIOC->buffersize / sizeof( float );
-  if ( subdev->buffersize > 0 )
+  if ( subdev->buffersize > 0 ) {
+    DEBUG_MSG( "loadSyncCmd: allocate buffer for %d bytes\n", syncCmdIOC->buffersize );
     subdev->buffer = kmalloc( syncCmdIOC->buffersize, GFP_KERNEL );
+  }
   subdev->readindex = 0;
   subdev->writeindex = 0;
+  subdev->buffercontent = 0;
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.running ) {
@@ -1483,11 +1490,18 @@ void dynclamp_loop( long dummy )
 	break;
 
       // write analog input values to buffer:
+      if ( aisubdev.buffer == 0 ) {
+	ERROR_MSG( "dynclamp_loop: ERROR! no buffer for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	stopSubdevice( &aisubdev );
+	aisubdev.running = E_NOMEM;
+	break; // dynclamp loop
+      }
       spin_lock( &aisubdev.bufferlock );
-      if ( (aisubdev.writeindex + aisubdev.chanN) % aisubdev.buffersize >= aisubdev.readindex ) {
+      if ( aisubdev.buffercontent + aisubdev.chanN > aisubdev.buffersize ) {
 	ERROR_MSG( "dynclamp_loop: ERROR! buffer overflow for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
 	stopSubdevice( &aisubdev );
 	aisubdev.running = E_OVERFLOW;
+	spin_unlock( &aisubdev.bufferlock );
 	break; // dynclamp loop
       }
       else {
@@ -1495,6 +1509,7 @@ void dynclamp_loop( long dummy )
 	  aisubdev.buffer[aisubdev.writeindex++] = aivalues[iC];
 	  if ( aisubdev.writeindex >= aisubdev.buffersize )
 	    aisubdev.writeindex = 0;
+	  aisubdev.buffercontent++;
 	}
       }
       spin_unlock( &aisubdev.bufferlock );
@@ -1629,7 +1644,12 @@ void dynclamp_loop( long dummy )
 	  // get data from buffer:
 	  if ( aonum > 0 ) {
 	    spin_lock( &aosubdev.bufferlock );
-	    if ( (aosubdev.readindex + aonum) % aosubdev.buffersize >= aosubdev.writeindex ) {
+	    if ( aosubdev.buffer == 0 ) {
+	      ERROR_MSG( "dynclamp_loop: ERROR! no buffer for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	      stopSubdevice( &aosubdev );
+	      aosubdev.running = E_NOMEM;
+	    }
+	    if ( aonum > aosubdev.buffercontent ) {
 	      ERROR_MSG( "dynclamp_loop: ERROR! buffer underrun for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
 	      stopSubdevice( &aosubdev );
 	      aosubdev.running = E_UNDERRUN;
@@ -1639,6 +1659,7 @@ void dynclamp_loop( long dummy )
 		aovalues[iC] = aosubdev.buffer[aosubdev.readindex++];
 		if ( aosubdev.readindex >= aosubdev.buffersize )
 		  aosubdev.readindex = 0;
+		aosubdev.buffercontent--;
 	      }
 	    }
 	    spin_unlock( &aosubdev.bufferlock );
@@ -2363,7 +2384,6 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_t *pos )
 {
-  long maxbuffercopy;
   unsigned long maxcopy;
   unsigned long ncopy;
   unsigned long ncopied;
@@ -2371,18 +2391,21 @@ ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_
   unsigned long writeindex;
   unsigned long readindex;
 
+  if ( aisubdev.buffer == 0 ) {
+    DEBUG_MSG( "dynclampmodule_read: no buffer\n" );
+    return -ENOMEM;
+  }
+
+  DEBUG_MSG( "dynclampmodule_read: init\n" );
   maxcopy = n/sizeof(float);
   spin_lock( &aisubdev.bufferlock );
   writeindex = aisubdev.writeindex;
   readindex = aisubdev.readindex;
+  // check for maximum number of readable data:
+  if ( maxcopy > aisubdev.buffercontent )
+    maxcopy = aisubdev.buffercontent;
   spin_unlock( &aisubdev.bufferlock );
 
-  // check for maximum number of readable data:
-  maxbuffercopy = writeindex - readindex;
-  if ( maxbuffercopy < 0 )
-    maxbuffercopy += aisubdev.buffersize;
-  if ( maxcopy > maxbuffercopy )
-    maxcopy = maxbuffercopy;
   // nothing to read:
   if ( maxcopy <= 0 )
     return 0;
@@ -2391,7 +2414,8 @@ ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_
   ncopy = maxcopy;
   if ( readindex + ncopy > aisubdev.buffersize )
     ncopy = aisubdev.buffersize - readindex;
-  ncopied = copy_to_user( buffer, aisubdev.buffer + readindex, ncopy );
+  DEBUG_MSG( "dynclampmodule_read: copy 1 %d bytes\n", ncopy*sizeof( float ) );
+  ncopied = copy_to_user( buffer, aisubdev.buffer + readindex, ncopy*sizeof( float ) );
   ncopied /= sizeof( float );
   readindex += ncopied;
   if ( readindex >= aisubdev.buffersize )
@@ -2401,8 +2425,10 @@ ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_
   // copy second part of the buffer:
   if ( ncopied == ncopy && ncopy < maxcopy ) {
     ncopy = maxcopy - totalcopy;
+    DEBUG_MSG( "dynclampmodule_read: copy 2 %d bytes\n", ncopy*sizeof( float ) );
     ncopied = copy_to_user( buffer + totalcopy*sizeof( float ), 
-			    aisubdev.buffer + readindex, ncopy );
+			    aisubdev.buffer + readindex, 
+			    ncopy*sizeof( float ) );
     ncopied /= sizeof( float );
     readindex += ncopied;
     if ( readindex >= aisubdev.buffersize )
@@ -2411,8 +2437,10 @@ ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_
   }
 
   // set new read position:
+  DEBUG_MSG( "dynclampmodule_read: update indices\n" );
   spin_lock( &aisubdev.bufferlock );
   aisubdev.readindex = readindex;
+  aisubdev.buffercontent -= totalcopy;
   spin_unlock( &aisubdev.bufferlock );
 
   return totalcopy;
@@ -2421,7 +2449,6 @@ ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_
 
 ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n, loff_t *pos )
 {
-  long maxbuffercopy;
   unsigned long maxcopy;
   unsigned long ncopy;
   unsigned long ncopied;
@@ -2429,18 +2456,24 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
   unsigned long writeindex;
   unsigned long readindex;
 
+  DEBUG_MSG( "dynclampmodule_write: start\n" );
+  return -EFAULT;
+
+  if ( aosubdev.buffer == 0 ) {
+    ERROR_MSG( "dynclampmodule_write: no buffer\n" );
+    return -ENOMEM;
+  }
+
+  DEBUG_MSG( "dynclampmodule_write: init\n" );
   maxcopy = n/sizeof(float);
   spin_lock( &aosubdev.bufferlock );
   writeindex = aosubdev.writeindex;
   readindex = aosubdev.readindex;
+  // check for maximum number of writeable data:
+  if ( maxcopy > aosubdev.buffersize - aosubdev.buffercontent )
+    maxcopy = aosubdev.buffersize - aosubdev.buffercontent;
   spin_unlock( &aosubdev.bufferlock );
 
-  // check for maximum number of writeable data:
-  maxbuffercopy = readindex - writeindex;
-  if ( maxbuffercopy < 0 )
-    maxbuffercopy += aosubdev.buffersize;
-  if ( maxcopy > maxbuffercopy )
-    maxcopy = maxbuffercopy;
   // no free buffer space:
   if ( maxcopy <= 0 )
     return 0;
@@ -2449,7 +2482,9 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
   ncopy = maxcopy;
   if ( writeindex + ncopy > aosubdev.buffersize )
     ncopy = aosubdev.buffersize - writeindex;
-  ncopied = copy_from_user( aosubdev.buffer + writeindex, buffer, ncopy );
+  DEBUG_MSG( "dynclampmodule_write: copy 1 %d bytes\n", ncopy*sizeof( float ) );
+  ncopied = copy_from_user( aosubdev.buffer + writeindex, buffer, 
+			    ncopy*sizeof( float ) );
   ncopied /= sizeof( float );
   writeindex += ncopied;
   if ( writeindex >= aosubdev.buffersize )
@@ -2459,8 +2494,10 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
   // copy second part of the buffer:
   if ( ncopied == ncopy && ncopy < maxcopy ) {
     ncopy = maxcopy - totalcopy;
+    DEBUG_MSG( "dynclampmodule_write: copy 1 %d bytes\n", ncopy*sizeof( float ) );
     ncopied = copy_from_user( aosubdev.buffer + writeindex, 
-			      buffer + totalcopy*sizeof( float ), ncopy );
+			      buffer + totalcopy*sizeof( float ), 
+			      ncopy*sizeof( float ) );
     ncopied /= sizeof( float );
     writeindex += ncopied;
     if ( writeindex >= aosubdev.buffersize )
@@ -2469,9 +2506,12 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
   }
 
   // set new write position:
+  DEBUG_MSG( "dynclampmodule_write: update indices\n" );
   spin_lock( &aosubdev.bufferlock );
   aosubdev.writeindex = writeindex;
+  aosubdev.buffercontent += totalcopy;
   spin_unlock( &aosubdev.bufferlock );
+
   return totalcopy;
 }
 

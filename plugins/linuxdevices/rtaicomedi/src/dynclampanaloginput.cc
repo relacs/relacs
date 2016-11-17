@@ -727,7 +727,7 @@ int DynClampAnalogInput::readData( void )
   // read data:
   ssize_t m = ::read( ModuleFd, Buffer + readn, maxn );
   int ern = errno;
-  // cerr << "readData() " << m << " errno=" << ern << "\n";
+  cerr << "readData() " << m << " errno=" << ern << "\n";
   if ( m < 0 ) {
     if ( ern == EAGAIN || ern == EINTR ) {
       // EINTR = 4

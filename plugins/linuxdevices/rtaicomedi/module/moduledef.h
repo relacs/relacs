@@ -99,7 +99,8 @@
 #define E_NODATA      -2
 #define E_UNDERRUN    -3
 #define E_OVERFLOW    -4
-#define E_STOPPEDBYAI -5
+#define E_NOMEM       -5
+#define E_STOPPEDBYAI -6
 
 //* Lookup tables:
 #define MAXLOOKUPTABLES 100
