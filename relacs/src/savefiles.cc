@@ -1614,7 +1614,7 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section)
 	 nix::util::isCompoundSIUnit( unit ) ) ) {
     prop.unit ( unit );
   } else if ( !unit.empty() ) {
-    std::cerr << "\t unit: " << unit << " is no SI unit, not setting it!!!" << std::endl;
+    std::cerr << "\t [nix] Warning: " << unit << " is no SI unit, not setting it!!!" << std::endl;
   }
 }
 
@@ -1706,20 +1706,21 @@ void SaveFiles::NixFile::saveMetadata (const MetaData &mtdt)
 
 void SaveFiles::NixFile::initTraces ( const InList &IL )
 {
-  cerr << "INIT TRACES!!!" << endl;
+  // cerr << "INIT TRACES!!!" << endl;
   for ( int k=0; k<IL.size(); k++ ) {
-    std::cerr << "Ident: " << IL[k].ident() << std::endl;
-    std::cerr << "Device: " << IL[k].device() << std::endl;
-    std::cerr << "Channel: " << IL[k].channel() << std::endl;
-    std::cerr << "Unit: " << IL[k].unit() << std::endl;
-    std::cerr << "Scale: " << IL[k].scale() << std::endl;
-    std::cerr << "SampleRate: " << IL[k].sampleRate() << std::endl;
+    // std::cerr << "Ident: " << IL[k].ident() << std::endl;
+    // std::cerr << "Device: " << IL[k].device() << std::endl;
+    // std::cerr << "Channel: " << IL[k].channel() << std::endl;
+    // std::cerr << "Unit: " << IL[k].unit() << std::endl;
+    // std::cerr << "Scale: " << IL[k].scale() << std::endl;
+    // std::cerr << "SampleRate: " << IL[k].sampleRate() << std::endl;
     NixTrace trace;
     string data_type = "nix.data.sampled." + IL[k].ident();
-    std::cerr << IL[k].ident() << std::endl;
     trace.data = root_block.createDataArray(IL[k].ident(), data_type, nix::DataType::Float, {4096});
-    trace.data.unit(IL[k].unit());
-    trace.data.label(IL[k].ident());
+    if ( !IL[k].unit().empty() )
+      trace.data.unit(IL[k].unit() );
+    if ( !IL[k].ident().empty() ) 
+      trace.data.label(IL[k].ident() );
     nix::SampledDimension dim;
     dim = trace.data.appendSampledDimension(IL[k].sampleInterval());
     dim.unit("s");
