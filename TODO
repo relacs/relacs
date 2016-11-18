@@ -35,6 +35,9 @@ Macros, flow control:
 - auditory::search does not exit cleanly upon ESC: should be solved, check it
 
 Dynamic clamp:
+- Serial console debugging instructions:
+  https://www.av8n.com/computer/htm/kernel-lockup.htm
+- Hard Lockup RTAI Debuggig: http://segfaultsarecool.blogspot.de/2012/03/debugging-hard-lockup-with-rtai.html
 - Clarify what reset() and stop() should do.
 - Make lookup tables stronger! Add variables and function for linear
   interpolation. Models can then have a define with a meaningful name

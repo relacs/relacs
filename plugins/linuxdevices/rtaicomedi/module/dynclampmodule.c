@@ -822,17 +822,20 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   subdev->startsource = syncCmdIOC->startsource;
   subdev->pending = 0;
 
-  // free fifo:
-  kfifo_free( &subdev->fifo );
-  // init fifo:
   buffersize = syncCmdIOC->buffersize/sizeof( float );
-  if ( buffersize > 0 ) {
+  if ( kfifo_size( &subdev->fifo ) < buffersize ) { 
+    // init fifo:
+    kfifo_free( &subdev->fifo );
+    if ( buffersize < 1024 )
+      buffersize = 1024;
     DEBUG_MSG( "loadSyncCmd: allocate buffer for %d elements\n", buffersize );
     if ( kfifo_alloc( &subdev->fifo, buffersize, GFP_KERNEL ) ) {
       ERROR_MSG( "loadSyncCmd: failed to allocate fifo for %d elements\n", buffersize );
       return -ENOMEM;
     }
+    buffersize = kfifo_size( &subdev->fifo );
   }
+  kfifo_reset( &subdev->fifo );
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.running ) {
@@ -846,7 +849,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
     }
   }
 
-  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d, buffer size %d, and frequency %d for subdevice %d\n",
+  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d, buffer size %d elements, and frequency %d for subdevice %d\n",
 	     subdev->duration, subdev->startsource, buffersize, subdev->frequency, subdev->subdev );
 
   subdev->prepared = 1;
@@ -1490,7 +1493,7 @@ void dynclamp_loop( long dummy )
       }
       retVal = kfifo_in( &aisubdev.fifo, aivalues, aisubdev.chanN );
       if ( retVal < aisubdev.chanN ) {
-	ERROR_MSG( "dynclamp_loop: ERROR! fifo overflow for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	ERROR_MSG( "dynclamp_loop: ERROR! fifo overflow for AI subdevice at loopCnt %lu, fifo size=%d, available=%d\n", dynClampTask.loopCnt, kfifo_size( &aisubdev.fifo ), kfifo_avail( &aisubdev.fifo ) );
 	stopSubdevice( &aisubdev );
 	aisubdev.running = E_OVERFLOW;
 	break; // dynclamp loop
@@ -2365,15 +2368,15 @@ ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_
     return -ENOMEM;
   }
 
-  DEBUG_MSG( "dynclampmodule_read: copy %d elements\n", n/sizeof(float) );
-
-  retval = kfifo_to_user( &aisubdev.fifo, buffer, n/sizeof(float), &ncopied );
+  retval = kfifo_to_user( &aisubdev.fifo, buffer, n, &ncopied );
   if ( retval < 0 ) {
     ERROR_MSG( "dynclampmodule_read: kfifo_to_user failed\n" );
     return retval;
   }
 
-  return ncopied*sizeof(float);
+  // DEBUG_MSG( "dynclampmodule_read: copied %d from %d elements\n", ncopied/sizeof(float), n/sizeof(float) );
+
+  return ncopied;
 }
 
 
@@ -2387,15 +2390,15 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
     return -ENOMEM;
   }
 
-  DEBUG_MSG( "dynclampmodule_write: copy %d elements\n", n/sizeof(float) );
-
-  retval = kfifo_from_user( &aosubdev.fifo, buffer, n/sizeof(float), &ncopied );
+  retval = kfifo_from_user( &aosubdev.fifo, buffer, n, &ncopied );
   if ( retval < 0 ) {
     ERROR_MSG( "dynclampmodule_write: kfifo_to_user failed\n" );
     return retval;
   }
 
-  return ncopied*sizeof(float);
+  // DEBUG_MSG( "dynclampmodule_write: copied %d from %d elements\n", ncopied/sizeof(float), n/sizeof(float) );
+
+  return ncopied;
 }
 
 
@@ -2417,17 +2420,14 @@ int dynclampmodule_close( struct inode *devFile, struct file *fModule )
   // no subdevice specified? => stop & close all subdevices & comedi-devices:
   if ( reqCloseSubdev < 0 ) {
     DEBUG_MSG( "dynclampmodule_close: no IOC_REQ_CLOSE request received - closing all subdevices...\n" );
-    mutex_lock( &mutex );
     for ( iS = subdevN-1; iS>=0; iS-- )
       releaseSubdevice( subdevices[iS] );
     cleanup_dynclamp_loop();
     init_globals();
-    mutex_unlock( &mutex );
     return 0;
   }
   else {
     // stop & close specified subdevice (and device):
-    mutex_lock( &mutex );
     releaseSubdevice( reqCloseSubdev );
     DEBUG_MSG( "dynclampmodule_close: closed subdevice %d\n", reqCloseSubdev );
     if ( subdevN <= 0 ) {
@@ -2435,7 +2435,6 @@ int dynclampmodule_close( struct inode *devFile, struct file *fModule )
       init_globals();
     }
     reqCloseSubdev = -1;
-    mutex_unlock( &mutex );
     return 0;
   }
 }
@@ -2505,11 +2504,9 @@ static void __exit cleanup_dynclampmodule( void )
   INFO_MSG( "cleanup_dynclampmodule: dynamic clamp module unloaded\n" );
 
   // stop and release all subdevices & comedi-devices:
-  mutex_lock( &mutex );
   for ( iS = subdevN-1; iS>=0; iS-- )
     releaseSubdevice( subdevices[iS] );
   init_globals();
-  mutex_unlock( &mutex );
 
   mutex_destroy( &mutex );
 
