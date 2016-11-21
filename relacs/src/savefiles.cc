@@ -434,7 +434,6 @@ void SaveFiles::writeTraces( void )
   }
 
   #ifdef HAVE_NIX
-  //writeStimulus will reset Stimuli, so we have to do our beforehand
   if ( NIO.fd )
     NIO.writeTraces( IL );
   #endif
@@ -1717,8 +1716,13 @@ void SaveFiles::NixFile::initTraces ( const InList &IL )
     NixTrace trace;
     string data_type = "nix.data.sampled." + IL[k].ident();
     trace.data = root_block.createDataArray(IL[k].ident(), data_type, nix::DataType::Float, {4096});
-    if ( !IL[k].unit().empty() )
-      trace.data.unit(IL[k].unit() );
+    std::string unit = IL[k].unit();
+    nix::util::unitSanitizer(unit);
+    if ( !unit.empty() && nix::util::isSIUnit(unit) ) {
+      trace.data.unit( unit );
+    } else if ( !unit.empty() ) {
+      std::cerr << "NIX output Warning: Given unit " << unit << " is no valid SI unit, not saving it!" << std::endl;
+    }
     if ( !IL[k].ident().empty() ) 
       trace.data.label(IL[k].ident() );
     nix::SampledDimension dim;
@@ -1756,7 +1760,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
 					string rp_name, double sessiontime, RELACSWidget *RW,
 					const Options &stim_options)
 {
-  // TODO: do not not only for the first trace, but for all of them
+  // TODO: do this not only for the first trace, but for all of them
    if ( IL[0].signalIndex() < 1 ) {
     return;
   }
@@ -1864,10 +1868,14 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
       delay_feat = createFeature(root_block, event_tag, fname, ftype, funit, flabel);
       std::string unit = "";      
       for ( int k=0; k < RW->AQ->outTracesSize(); k++ ) {
-	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
 	if (stim_info[0].device() == RW->AQ->outTrace(k).device() && 
 	    stim_info[0].channel() == RW->AQ->outTrace(k).channel()) {
-	  unit = att->intensityUnit();
+	  const Attenuate *att = RW->AQ->outTraceAttenuate( k );
+	  if ( att != 0 ) {
+	    unit = att->intensityUnit();
+	  } else {
+	    unit = RW->AQ->outTrace(k).unit();
+	  }
 	}
       }
       amplitude_feat = createFeature(root_block, event_tag, event_tag.name() + "_amplitude",
@@ -1906,7 +1914,12 @@ nix::DataArray SaveFiles::NixFile::createFeature( nix::Block &block,
   nix::DataArray da = block.createDataArray(name, type, nix::DataType::Double, {1});
   da.appendSetDimension();
   da.label(label);
-  da.unit(unit);
+  nix::util::unitSanitizer(unit);
+  if ( !unit.empty() && nix::util::isSIUnit(unit)) {
+    da.unit(unit);
+  } else if ( !unit.empty() ) {
+    std::cerr << "NIX output Warning: Given unit " << unit << " is no valid SI unit, not saving it!" << std::endl;
+  }
   mtag.createFeature( da, nix::LinkType::Indexed);
   return da;
 }
