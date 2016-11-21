@@ -369,11 +369,11 @@ void init_globals( void )
   for ( k=0; k<MAXLOOKUPTABLES; k++ ) {
     lookupn[k] = 0;
     if ( lookupx[lookupinx] != NULL ) {
-      kfree( lookupx[lookupinx] );
+      vfree( lookupx[lookupinx] );
       lookupx[lookupinx] = NULL;
     }
     if ( lookupy[lookupinx] != NULL ) {
-      kfree( lookupy[lookupinx] );
+      vfree( lookupy[lookupinx] );
       lookupy[lookupinx] = NULL;
     }
   }
@@ -2241,9 +2241,9 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
     }
     lookupn[lookupinx] = 0;
     if ( lookupx[lookupinx] != NULL )
-      kfree( lookupx[lookupinx] );
+      vfree( lookupx[lookupinx] );
     if ( lookupy[lookupinx] != NULL )
-      kfree( lookupy[lookupinx] );
+      vfree( lookupy[lookupinx] );
     lookupx[lookupinx] = NULL;
     lookupy[lookupinx] = NULL;
     break;
@@ -2269,11 +2269,11 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       break;
     }
     if ( lookupx[lookupinx] != NULL ) {
-      kfree( lookupx[lookupinx] );
+      vfree( lookupx[lookupinx] );
       lookupx[lookupinx] = NULL;
     }
     if ( lookupn[lookupinx] > 0 ) {
-      lookupx[lookupinx] = kmalloc( lookupn[lookupinx]*sizeof(float), GFP_KERNEL );
+      lookupx[lookupinx] = vmalloc( lookupn[lookupinx]*sizeof(float) );
       if ( lookupx[lookupinx] == NULL ) {
 	ERROR_MSG( "ioctl ERROR: failed to allocate memory for x-array of lookup table!\n" );
 	rc = -ENOMEM;
@@ -2288,11 +2288,11 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       }
       if ( rc != 0 ) {
 	if ( lookupx[lookupinx] != NULL ) {
-	  kfree( lookupx[lookupinx] );
+	  vfree( lookupx[lookupinx] );
 	  lookupx[lookupinx] = NULL;
 	}
 	if ( lookupy[lookupinx] != NULL ) {
-	  kfree( lookupy[lookupinx] );
+	  vfree( lookupy[lookupinx] );
 	  lookupy[lookupinx] = NULL;
 	}
 	lookupn[lookupinx] = 0;
@@ -2307,11 +2307,11 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       break;
     }
     if ( lookupy[lookupinx] != NULL ) {
-      kfree( lookupy[lookupinx] );
+      vfree( lookupy[lookupinx] );
       lookupy[lookupinx] = NULL;
     }
     if ( lookupn[lookupinx] > 0 ) {
-      lookupy[lookupinx] = kmalloc( lookupn[lookupinx]*sizeof(float), GFP_KERNEL );
+      lookupy[lookupinx] = vmalloc( lookupn[lookupinx]*sizeof(float) );
       if ( lookupy[lookupinx] == NULL ) {
 	ERROR_MSG( "ioctl ERROR: failed to allocate memory for y-array of lookup table!\n" );
 	rc = -ENOMEM;
@@ -2326,11 +2326,11 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       }
       if ( rc != 0 ) {
 	if ( lookupx[lookupinx] != NULL ) {
-	  kfree( lookupx[lookupinx] );
+	  vfree( lookupx[lookupinx] );
 	  lookupx[lookupinx] = NULL;
 	}
 	if ( lookupy[lookupinx] != NULL ) {
-	  kfree( lookupy[lookupinx] );
+	  vfree( lookupy[lookupinx] );
 	  lookupy[lookupinx] = NULL;
 	}
 	lookupn[lookupinx] = 0;
