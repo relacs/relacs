@@ -777,6 +777,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 	ol.addErrorStr( errno );
       return -1;
     }
+    BufferSize = syncCmdIOC.buffersize;
 
     if ( ! ol.success() )
       return -1;

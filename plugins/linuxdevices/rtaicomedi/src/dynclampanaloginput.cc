@@ -642,6 +642,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 	 << ModuleDevice << " failed!\n";
     return -1;
   }
+  BufferSize = syncCmdIOC.buffersize;
 
   // init internal buffer:
   Buffer = new char[BufferSize];

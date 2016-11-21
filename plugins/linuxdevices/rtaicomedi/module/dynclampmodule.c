@@ -788,6 +788,7 @@ int loadChanList( struct chanlistIOCT *chanlistIOC, struct subdeviceT *subdev )
 int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
 {
   int buffersize;
+  int retval;
 
   if ( subdev->subdev < 0 || !subdev->used ) {
     ERROR_MSG( "loadSyncCmd ERROR: first open an appropriate device and subdevice. Sync-command not loaded!\n" );
@@ -828,12 +829,19 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
     kfifo_free( &subdev->fifo );
     if ( buffersize < 1024 )
       buffersize = 1024;
-    DEBUG_MSG( "loadSyncCmd: allocate buffer for %d elements\n", buffersize );
-    if ( kfifo_alloc( &subdev->fifo, buffersize, GFP_KERNEL ) ) {
-      ERROR_MSG( "loadSyncCmd: failed to allocate fifo for %d elements\n", buffersize );
-      return -ENOMEM;
-    }
+    DEBUG_MSG( "loadSyncCmd: allocate fifo buffer for %d elements\n", buffersize );
+    do {
+      retval = kfifo_alloc( &subdev->fifo, buffersize, GFP_KERNEL );
+      if ( retval == 0 )
+	break;
+      buffersize /= 2;
+      if ( buffersize < 1024 ) {
+	ERROR_MSG( "loadSyncCmd: failed to allocate fifo for %d elements\n", buffersize*2 );
+	return -ENOMEM;
+      }
+    } while ( 1 );
     buffersize = kfifo_size( &subdev->fifo );
+    syncCmdIOC->buffersize = buffersize*sizeof( float );
   }
   kfifo_reset( &subdev->fifo );
 
@@ -1999,8 +2007,16 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
       rc = loadSyncCmd( &syncCmdIOC, &aisubdev );
     else if ( syncCmdIOC.type == SUBDEV_OUT )
       rc = loadSyncCmd( &syncCmdIOC, &aosubdev );
-    else
+    else {
       rc = -EFAULT;
+      break;
+    }
+    retVal = copy_to_user( (void __user *)arg, &syncCmdIOC, sizeof(struct syncCmdIOCT) );
+    if ( retVal ) {
+      ERROR_MSG( "ioctl ERROR: invalid pointer to syncCmdIOCT-struct for writing!\n" );
+      rc = -EFAULT;
+      break;
+    }
     break;
 
 
