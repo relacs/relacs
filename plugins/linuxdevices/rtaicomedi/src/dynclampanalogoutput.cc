@@ -251,26 +251,7 @@ int DynClampAnalogOutput::open( const string &device )
   }
 
   // write zeros to all channels:
-  {
-    bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
-		       SDF_SOFT_CALIBRATED ) > 0 );
-    bool unipolar = ( BipolarRangeIndex.size() == 0 );
-    comedi_polynomial_t polynomial;
-    for ( int k=0; k<channels(); k++ ) {
-      int index = unipolar ? UnipolarRangeIndex[0] : BipolarRangeIndex[0];
-      if ( softcal && Calibration != 0 )
-	comedi_get_softcal_converter( SubDevice, k, index,
-				      COMEDI_FROM_PHYSICAL, Calibration, &polynomial );
-      else
-	comedi_get_hardcal_converter( DeviceP, SubDevice, k, index,
-				      COMEDI_FROM_PHYSICAL, &polynomial );
-      float v = 0.0;
-      lsampl_t data = comedi_from_physical( v, &polynomial );
-      int retval = comedi_data_write( DeviceP, SubDevice, k, index, AREF_GROUND, data );
-      if ( retval < 1 )
-	setErrorStr( string( "comedi_direct_write failed to write zero: " ) + comedi_strerror( comedi_errno() ) );
-    }
-  }
+  writeZeros();
 
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
@@ -333,6 +314,9 @@ void DynClampAnalogOutput::close( void )
 
   reset();
 
+  // write zeros to all channels:
+  writeZeros();
+
   // cleanup calibration:
   if ( Calibration != 0 )
     comedi_cleanup_calibration( Calibration );
@@ -364,6 +348,29 @@ void DynClampAnalogOutput::close( void )
   NoMoreData = true;
 
   Info.clear();
+}
+
+
+void DynClampAnalogOutput::writeZeros( void )
+{
+  bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
+		     SDF_SOFT_CALIBRATED ) > 0 );
+  bool unipolar = ( BipolarRangeIndex.size() == 0 );
+  comedi_polynomial_t polynomial;
+  for ( int k=0; k<channels(); k++ ) {
+    int index = unipolar ? UnipolarRangeIndex[0] : BipolarRangeIndex[0];
+    if ( softcal && Calibration != 0 )
+      comedi_get_softcal_converter( SubDevice, k, index,
+				    COMEDI_FROM_PHYSICAL, Calibration, &polynomial );
+    else
+      comedi_get_hardcal_converter( DeviceP, SubDevice, k, index,
+				    COMEDI_FROM_PHYSICAL, &polynomial );
+    float v = 0.0;
+    lsampl_t data = comedi_from_physical( v, &polynomial );
+    int retval = comedi_data_write( DeviceP, SubDevice, k, index, AREF_GROUND, data );
+    if ( retval < 1 )
+      setErrorStr( string( "comedi_direct_write failed to write zero: " ) + comedi_strerror( comedi_errno() ) );
+  }
 }
 
 

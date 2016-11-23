@@ -168,6 +168,8 @@ public:
 
 protected:
 
+    /*! Initialize all channels with zero. */
+  void writeZeros( void );
     /*! Initializes the \a chanlist from \a sigs. */
   void setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist, bool setscale );
     /*! Setup and test \a cmd according to \a sigs. */

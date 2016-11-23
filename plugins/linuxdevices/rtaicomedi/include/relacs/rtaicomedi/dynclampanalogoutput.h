@@ -172,6 +172,9 @@ protected:
         This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs );
 
+    /*! Initialize all channels with zero. */
+  void writeZeros( void );
+
     /*! Initializes the \a chanlist from \a sigs. */
   void setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist, bool setscale ) const;
     /*! Load channels from \a sigs to kernel module. */

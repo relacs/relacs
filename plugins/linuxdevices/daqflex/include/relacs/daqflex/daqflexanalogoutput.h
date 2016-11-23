@@ -146,6 +146,9 @@ protected:
         This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs );
 
+    /*! Initialize all channels with zero. */
+  void writeZeros( void );
+
   void initOptions() override;
 
 
