@@ -1557,14 +1557,27 @@ void dynclamp_loop( long dummy )
 #endif
 
 #ifdef ENABLE_SYNCSEC
-    if ( syncSECMode > 1 ) {
-      synctime += (difftime - synctime)/syncSECMode;
-      currentfac = synctime / syncSECPulse;
-    }
-    else if ( syncSECMode == 1 )
-      currentfac = difftime / syncSECPulse;
-    else if ( syncSECMode == 0 )
+synSECPulse > 0
+currentfac > 1.0
+
+    if ( synSECMode < 0 )
+      currentfac = 1.0;
+    else if ( syncSECPulse > 0.0 ) {
+      if ( syncSECMode == 0 )
 	currentfac = dynClampTask.period / syncSECPulse;
+      else {
+	if ( syncSECMode == 1 )
+	  currentfac = difftime / syncSECPulse;
+	else {          // syncSECMode > 1
+	  synctime += (difftime - synctime)/syncSECMode;
+	  currentfac = synctime / syncSECPulse;
+	}
+	if ( curentfac < 1.0 ) {
+	  DEBUG_MSG( "dynclamp_loop: currentfac=%d < 1! difftime=%d", (int)(100.0*currentfac), difftime );
+	  currentfac = dynClampTask.period / syncSECPulse;
+	}
+      }
+    }
     else
       currentfac = 1.0;
 #endif
@@ -1584,13 +1597,13 @@ void dynclamp_loop( long dummy )
 		   (int)(100.0*aisubdev.chanlist[0].prevvalue), (int)(100.0*aisubdev.chanlist[0].value) );
 	if ( triggerevs[aosubdev.startsource] &&
 	     ! prevtriggerevs[aosubdev.startsource] ) {
-	  DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO SETUP duration=%lu, loopCnt=%lu\n",
-		     aosubdev.duration, dynClampTask.loopCnt );
+	  DEBUG_MSG( "dynclamp_loop: REALTIMELOOP PENDING AO SETUP duration=%lu, delay=%lu, loopCnt=%lu\n",
+		     aosubdev.duration, aosubdev.delay, dynClampTask.loopCnt );
 	  aosubdev.delay = dynClampTask.loopCnt + aosubdev.delay; 
 	  aosubdev.duration = aosubdev.delay + aosubdev.duration;
 	  dynClampTask.aoIndex = aosubdev.delay;
 	  aosubdev.pending = 0;
-	  DEBUG_MSG( "dynclamp_loop: START PENDING AO duration=%lu delay=%lu, loopCnt=%lu\n",
+	  DEBUG_MSG( "dynclamp_loop: START PENDING AO stop=%lu start=%lu, loopCnt=%lu\n",
 		     aosubdev.duration, aosubdev.delay, dynClampTask.loopCnt );
 	}
       }
@@ -1842,6 +1855,11 @@ int init_dynclamp_loop( void )
   periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.frequency ) );
 #endif
   dynClampTask.period = count2nano( periodTicks );
+  if ( dynClampTask.period < 1 ) {
+    ERROR_MSG( "init_dynclamp_loop ERROR: period is zero!\n" );
+    cleanup_dynclamp_loop();
+    return -3;
+  }
   dynClampTask.frequency = 1000000000 / dynClampTask.period;
 #ifdef ENABLE_COMPUTATION
   loopInterval = 1.0e-9*dynClampTask.period;
