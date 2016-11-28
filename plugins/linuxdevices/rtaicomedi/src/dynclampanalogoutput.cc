@@ -314,6 +314,14 @@ void DynClampAnalogOutput::close( void )
 
   reset();
 
+  // close kernel module:
+  if ( ModuleFd >= 0 ) {
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+    if ( ::close( ModuleFd ) < 0 )
+      setErrorStr( "closing of module device file failed" );
+    ModuleFd = -1;
+  }
+
   // write zeros to all channels:
   writeZeros();
 
@@ -327,13 +335,6 @@ void DynClampAnalogOutput::close( void )
   if ( error )
     setErrorStr( "closing of AO subdevice on device " + deviceFile() + "failed" );
   DeviceP = 0;
-
-  if ( ModuleFd >= 0 ) {
-    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
-    if ( ::close( ModuleFd ) < 0 )
-      setErrorStr( "closing of module device file failed" );
-    ModuleFd = -1;
-  }
 
   for ( int c=0; c<Channels; c++ ) {
     delete [] UnipConverter[c];

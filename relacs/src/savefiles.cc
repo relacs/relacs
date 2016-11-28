@@ -668,7 +668,7 @@ void SaveFiles::writeStimulus( void )
   // stimulus indices file:
   if ( SF != 0 && isSaving() ) {
 
-    // stimulus description:
+    // write stimulus description:
     if ( SDF != 0 ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	if ( newstimuli[j] ) {
@@ -677,7 +677,7 @@ void SaveFiles::writeStimulus( void )
 	}
       }
     }
-    // Write actual entry in stimuli.dat:
+    // write entry in stimuli.dat:
     StimulusKey.resetSaveColumn();
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 )
