@@ -772,11 +772,8 @@ int SingleStimulus::main( void )
     }
 
     sleepOn( Duration + pause );
-    if ( interrupt() ) {
-      if ( count == 0 )
-	state = Aborted;
+    if ( interrupt() )
       break;
-    }
     timeStamp();
     
   }
