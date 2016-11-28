@@ -1526,6 +1526,12 @@ void SaveFiles::NixFile::close ( )
     root_section = nix::none;
     event_tag = nix::none;
     event_positions = nix::none;
+    event_extents = nix::none;
+    time_feat = nix::none;
+    delay_feat = nix::none;
+    amplitude_feat = nix::none;
+    carrier_feat = nix::none;
+    data_features.clear();
     traces.clear();
     events.clear();
     fd.close();
