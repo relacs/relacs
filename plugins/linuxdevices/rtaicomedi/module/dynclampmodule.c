@@ -813,7 +813,8 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   if ( subdev->type == SUBDEV_IN )
     cleanup_dynclamp_loop();
 
-  DEBUG_MSG( "loadSyncCmd: initialize sudevice %i\n", subdev->subdev );
+  DEBUG_MSG( "loadSyncCmd: initialize sudevice %i with fifo buffer size %i\n", 
+	     subdev->subdev, kfifo_size( &subdev->fifo ) );
 
   // initialize sampling parameters for subdevice:
   subdev->frequency = syncCmdIOC->frequency > 0 ? syncCmdIOC->frequency : dynClampTask.frequency;
@@ -824,11 +825,11 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   subdev->pending = 0;
 
   buffersize = syncCmdIOC->buffersize/sizeof( float );
+  if ( buffersize < 1024 )
+    buffersize = 1024;
   if ( kfifo_size( &subdev->fifo ) < buffersize ) { 
     // init fifo:
     kfifo_free( &subdev->fifo );
-    if ( buffersize < 1024 )
-      buffersize = 1024;
     DEBUG_MSG( "loadSyncCmd: allocate fifo buffer for %d elements\n", buffersize );
     do {
       retval = kfifo_alloc( &subdev->fifo, buffersize, GFP_KERNEL );
@@ -840,9 +841,9 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
 	return -ENOMEM;
       }
     } while ( 1 );
-    buffersize = kfifo_size( &subdev->fifo );
-    syncCmdIOC->buffersize = buffersize*sizeof( float );
   }
+  buffersize = kfifo_size( &subdev->fifo );
+  syncCmdIOC->buffersize = buffersize*sizeof( float );
   kfifo_reset( &subdev->fifo );
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
@@ -2426,7 +2427,7 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
 
   retval = kfifo_from_user( &aosubdev.fifo, buffer, n, &ncopied );
   if ( retval < 0 ) {
-    ERROR_MSG( "dynclampmodule_write: kfifo_to_user failed\n" );
+    ERROR_MSG( "dynclampmodule_write: kfifo_from_user failed\n" );
     return retval;
   }
 

@@ -904,7 +904,8 @@ int DynClampAnalogOutput::writeData( void )
     NBuffer += bytesConverted;
   }
 
-  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
+  //  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
+  if ( NBuffer == 0 )
     return 0;
 
   int elemWritten = 0;
