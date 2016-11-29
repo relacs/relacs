@@ -1494,7 +1494,8 @@ void dynclamp_loop( long dummy )
 	break;
 
       // write analog input values to fifo buffer:
-      if ( kfifo_size( &aisubdev.fifo ) == 0 ) {
+      if ( kfifo_size( &aisubdev.fifo ) <= 1 ) {
+	// for whatever reason, non-initialized kfifo has size 1!
 	ERROR_MSG( "dynclamp_loop: ERROR! no fifo buffer for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
 	stopSubdevice( &aisubdev );
 	aisubdev.running = E_NOMEM;
@@ -1650,7 +1651,8 @@ currentfac > 1.0
 	  }
 	  // get data from fifo buffer:
 	  if ( aonum > 0 ) {
-	    if ( kfifo_size( &aosubdev.fifo ) == 0 ) {
+	    if ( kfifo_size( &aosubdev.fifo ) <= 1 ) {
+	      // for whatever reason, non-initialized kfifo has size 1!
 	      ERROR_MSG( "dynclamp_loop: ERROR! no fifo buffer for AO subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
 	      stopSubdevice( &aosubdev );
 	      aosubdev.running = E_NOMEM;
@@ -2398,7 +2400,8 @@ ssize_t dynclampmodule_read( struct file *devFile, char *buffer, size_t n, loff_
   int retval;
   unsigned int ncopied;
 
-  if ( kfifo_size( &aisubdev.fifo ) == 0 ) {
+  // for whatever reason, non-initialized kfifo has size 1:
+  if ( kfifo_size( &aisubdev.fifo ) <= 1 ) {
     ERROR_MSG( "dynclampmodule_read: no fifo buffer\n" );
     return -ENOMEM;
   }
@@ -2420,7 +2423,8 @@ ssize_t dynclampmodule_write( struct file *devFile, const char *buffer, size_t n
   int retval;
   unsigned int ncopied;
 
-  if ( kfifo_size( &aosubdev.fifo ) == 0 ) {
+  // for whatever reason, non-initialized kfifo has size 1:
+  if ( kfifo_size( &aosubdev.fifo ) <= 1 ) {
     ERROR_MSG( "dynclampmodule_write: no fifo buffer\n" );
     return -ENOMEM;
   }
