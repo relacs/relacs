@@ -84,18 +84,10 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   Saving = false;
   Hold = false;
 
-  SF = 0;
-  SDF = 0;
-  XF = 0;
-  XSF = 0;
-  TraceFiles.clear();
-  EventFiles.clear();
-
   Stimuli.clear();
-  StimuliRePro = "";
-  StimuliReProCount.clear();
+  ReProName = "";
+  ReProStimulusCount.clear();
   ReProStimuli.clear();
-  StimulusKey.clear();
   SignalTime = -1.0;
   PrevSignalTime = -1.0;
 
@@ -107,7 +99,6 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   ReProInfo.clear();
   ReProFiles.clear();
   ReProData = false;
-  DatasetOpen = false;
 
   setFixedHeight( height );
 
@@ -150,10 +141,8 @@ SaveFiles::~SaveFiles()
 
   clearRemoveFiles();
 
-  EventFiles.clear();
-
   Stimuli.clear();
-  StimuliReProCount.clear();
+  ReProStimulusCount.clear();
   ReProStimuli.clear();
 }
 
@@ -345,22 +334,20 @@ void SaveFiles::writeToggle( void )
   if ( ToggleData && ! Hold ) {
 
     if ( ToggleOn && ! isSaving() ) {
+      // RW->printlog( "SaveFiles::writeToggle(): switched saving on!" );
+
+      RelacsIO.resetIndex( IL );
+      RelacsIO.resetIndex( EL );
 
       #ifdef HAVE_NIX
-        NIO.resetIndex( IL );
-        NIO.resetIndex( EL );
+        NixIO.resetIndex( IL );
+        NixIO.resetIndex( EL );
       #endif
-      // RW->printlog( "SaveFiles::writeToggle(): switched saving on!" );
-      // update offsets:
-      for ( unsigned int k=0; k<TraceFiles.size(); k++ )
-	TraceFiles[k].Index = IL[k].size();
-      for ( unsigned int k=0; k<EventFiles.size(); k++ )
-	EventFiles[k].Index = EL[k].size();
       
       // add recording event:
-      for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+      for ( int k=0; k<EL.size(); k++ ) {
 	if ( ( EL[k].mode() & RecordingEventMode ) > 0 ) {
-	  EL[k].push( IL[0].pos( TraceFiles[0].Index ) );
+	  EL[k].push( IL[0].pos( IL[0].size() ) );
 	  break;
 	}
       }
@@ -369,9 +356,7 @@ void SaveFiles::writeToggle( void )
     Saving = ToggleOn;
     SaveLabel->setPause( ! Saving );
     ToggleData = false;
-
   }
-
 }
 
 
@@ -400,10 +385,7 @@ void SaveFiles::saveTraces( void )
 
   writeRePro();
   writeTraces();
-  double offs = 0.0;
-  if ( isSaving() && ! TraceFiles.empty() )
-    offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
-  writeEvents( offs );
+  writeEvents();
   
   writeStimulus();
 }
@@ -418,29 +400,17 @@ void SaveFiles::writeTraces( void )
   if ( ! isSaving() )
     return;
 
-  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-    if ( TraceFiles[k].Stream != 0 ) {
-      int n = IL[k].saveBinary( *TraceFiles[k].Stream, TraceFiles[k].Index );
-      if ( n > 0 ) {
-	TraceFiles[k].Written += n;
-	TraceFiles[k].Index += n;
-      }
-      // there is a new stimulus:
-      if ( !Stimuli.empty() && SignalTime >= 0.0 &&
-	   IL[k].signalIndex() >= 0 )
-	TraceFiles[k].SignalOffset = IL[k].signalIndex() -
-	  TraceFiles[k].Index + TraceFiles[k].Written;
-    }
-  }
+  bool stimulus = !Stimuli.empty() && SignalTime >= 0.0;
+
+  RelacsIO.writeTraces( IL, stimulus );
 
   #ifdef HAVE_NIX
-  if ( NIO.fd )
-    NIO.writeTraces( IL );
+  NixIO.writeTraces( IL );
   #endif
 }
 
 
-void SaveFiles::writeEvents( double offs )
+void SaveFiles::writeEvents( void )
 {
   // only called by saveTraces().
 
@@ -454,39 +424,18 @@ void SaveFiles::writeEvents( double offs )
     return;
 
   // save event data:
-  double st = EL[0].size() > 0 ? EL[0].back() : EL[0].rangeBack();
-  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-
-    if ( EventFiles[k].Stream != 0 ) {
-      while ( EventFiles[k].Index < EL[k].size() ) {
-	double et = EL[k][EventFiles[k].Index];
-	if ( et < st )
-	  EventFiles[k].SignalEvent = EventFiles[k].Written;
-	else if ( EventFiles[k].Index == 0 || EL[k][EventFiles[k].Index-1] < st ) {
-	  EventFiles[k].SignalEvent = EventFiles[k].Written;
-	  *EventFiles[k].Stream << '\n';
-	}
-	EventFiles[k].Key.save( *EventFiles[k].Stream, et - offs, 0 );
-	if ( EL[k].sizeBuffer() )
-	  EventFiles[k].Key.save( *EventFiles[k].Stream,
-				  EL[k].sizeScale() * EL[k].eventSize( EventFiles[k].Index ) );
-	if ( EL[k].widthBuffer() )
-	  EventFiles[k].Key.save( *EventFiles[k].Stream,
-				  EL[k].widthScale() * EL[k].eventWidth( EventFiles[k].Index ) );
-	*EventFiles[k].Stream << '\n';
-	EventFiles[k].Written++;
-	EventFiles[k].Index++;
-      }
-    }
-
-  }
+  RelacsIO.writeEvents( IL, EL );
 
   #ifdef HAVE_NIX
-  // wait for availability of signal start time:
-  if ( NIO.fd )  {
-    // double noffs = IL[0].interval( NIO.traces[0].index - NIO.traces[0].offset[0] ) - SessionTime;
-    NIO.writeEvents( EL, offs );
-  }
+  // double noffs = IL[0].interval( NixIO.traces[0].index - NixIO.traces[0].offset[0] ) - SessionTime;
+
+  /*
+  double offs = 0.0;
+  if ( ! TraceFiles.empty() )
+    offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
+  */
+
+  NixIO.writeEvents( EL, offs );
   #endif
 }
 
@@ -510,7 +459,7 @@ void SaveFiles::save( const OutData &signal )
   }
 
   // StimulusDataLock is already locked from within the RePro!
-  StimulusOptions = *this;  // values of all output traces before signal was written
+  StimulusData = *this;  // values of all output traces before signal was written
 
   // store stimulus and update output channel setting:
   Stimuli.push_back( signal );
@@ -539,7 +488,7 @@ void SaveFiles::save( const OutList &signal )
   }
 
   // StimulusDataLock is already locked from within the RePro!
-  StimulusOptions = *this;
+  StimulusData = *this;
 
   // store stimulus and update output channel settings:
   for ( int k=0; k<signal.size(); k++ ) {
@@ -571,11 +520,9 @@ void SaveFiles::writeStimulus( void )
 
   // add to data index for browsing:
   deque<int> traceindex;
-  for ( unsigned int k=0; k<TraceFiles.size(); k++ )
-    traceindex.push_back( TraceFiles[k].SignalOffset );
+  RelacsIO.traceSignalIndices( traceindex );
   deque<int> eventsindex;
-  for ( unsigned int k=0; k<EventFiles.size(); k++ )
-    eventsindex.push_back( EventFiles[k].SignalEvent );
+  RelacsIO.traceSignalIndices( eventsindex );
   // add signal to data browser:
   QCoreApplication::postEvent( this, new StimuliEvent( Stimuli, traceindex, eventsindex,
 						       SignalTime ) );
@@ -605,7 +552,7 @@ void SaveFiles::writeStimulus( void )
   // where type1, type2 are the types of the stimulus descriptions with leading 'stimulus/' removed.
   deque< string > stimulinames( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    string sn = StimuliRePro;  // (name of the RePro from which the stimulus was written)
+    string sn = ReProName;  // (name of the RePro from which the stimulus was written)
     // add type of stimulus description:
     Str tn = Stimuli[j].description().type();
     if ( tn.empty() )
@@ -658,105 +605,24 @@ void SaveFiles::writeStimulus( void )
     }
     Stimuli[j].description().insertNumber( "SamplingRate", "", 0.001*Stimuli[j].sampleRate(), "kHz" );
     Stimuli[j].description().insertText( "Modality", "", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
-    stimuliref[j].setInclude( "stimulus-metadata.xml", stimulusid );
   }
 
   // track stimulus number per repro:
-  int &rc = StimuliReProCount[ StimuliRePro ];
+  int &rc = ReProStimulusCount[ ReProName ];
   rc++;
-  string stimulirepro = StimuliRePro + "-" + Str( rc );
-  // stimulus indices file:
-  if ( SF != 0 && isSaving() ) {
+  string repronamecount = ReProName + "-" + Str( rc );
 
-    // write stimulus description:
-    if ( SDF != 0 ) {
-      for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-	if ( newstimuli[j] ) {
-	  Stimuli[j].description().save( *SDF, "  " );
-	  *SDF << '\n';
-	}
-      }
-    }
-    // write entry in stimuli.dat:
-    StimulusKey.resetSaveColumn();
-    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-      if ( TraceFiles[k].Stream != 0 )
-	StimulusKey.save( *SF, TraceFiles[k].SignalOffset );
-    }
-    // events:
-    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-      if ( EventFiles[k].Stream != 0 ) {
-	StimulusKey.save( *SF, EventFiles[k].SignalEvent );
-	if ( (EL[k].mode() & ( StimulusEventMode | RestartEventMode | RecordingEventMode ) ) == 0 )
-	  StimulusKey.save( *SF, EL[k].meanRate() );  // XXX adaptive Time!
-	if ( EL[k].sizeBuffer() )
-	  StimulusKey.save( *SF, EL[k].sizeScale() * EL[k].meanSize() );
-	if ( EL[k].widthBuffer() && (EL[k].mode() & StimulusEventMode) == 0 )
-	  StimulusKey.save( *SF, EL[k].widthScale() * EL[k].meanWidth() );
-	if ( EventFiles[k].SaveMeanQuality )
-	  StimulusKey.save( *SF, 100.0*EL[k].meanQuality() );
-      }
-    }
-    // data:
-    if ( !StimulusOptions.empty() ) {
-      for( int k=0; k<StimulusOptions.size(); k++ ) {
-	StimulusKey.save( *SF, StimulusOptions[k] );
-      }
-    }
-    StimulusKey.save( *SF, IL[0].signalTime() - SessionTime );
-    // stimulus:
-    StimulusKey.save( *SF, 1000.0*Stimuli[0].delay() );
+  if ( isSaving() ) {
+
+    int stimulusindex[RW->AQ->outTracesSize()];
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
+      stimulusindex[k] = -1;
       const Attenuate *att = RW->AQ->outTraceAttenuate( k );
       unsigned int j=0;
       for ( j=0; j<Stimuli.size(); j++ ) {
 	if ( Stimuli[j].device() == RW->AQ->outTrace( k ).device() &&
 	     Stimuli[j].channel() == RW->AQ->outTrace( k ).channel() ) {
 	  Stimuli[j].setTrace( k ); // needed for XML
-	  StimulusKey.save( *SF, 0.001*Stimuli[j].sampleRate() );
-	  StimulusKey.save( *SF, 1000.0*Stimuli[j].length() ); // duration, resp. extent
-	  if ( att != 0 ) {
-	    StimulusKey.save( *SF, Stimuli[j].intensity() );
-	    if ( ! att->frequencyName().empty() )
-	      StimulusKey.save( *SF, Stimuli[j].carrierFreq() );
-	  }
-	  StimulusKey.save( *SF, stimuliref[j].name() );
-	  break;
-	}
-      }
-      if ( j >= Stimuli.size() ) {
-	StimulusKey.save( *SF, "" );
-	StimulusKey.save( *SF, "" );
-	if ( att != 0 ) {
-	  StimulusKey.save( *SF, "" );
-	  if ( ! att->frequencyName().empty() )
-	    StimulusKey.save( *SF, "" );
-	}
-	StimulusKey.save( *SF, "" );
-      }
-    }
-    *SF << endl;
-  }
-
-  // xml metadata file:
-  if ( XF != 0 && isSaving() ) {
-
-    // stimulus description:
-    if ( XSF != 0 ) {
-      for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-	if ( newstimuli[j] )
-	  Stimuli[j].description().saveXML( *XSF, 0, Options::FirstOnly, 1 );
-      }
-    }
-
-    // stimulus reference:
-    Options sopt( stimulirepro, "stimulus", 0, 0 );
-    sopt.append( StimulusOptions );
-    for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-      for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
-	if ( Stimuli[j].device() == RW->AQ->outTrace( k ).device() &&
-	     Stimuli[j].channel() == RW->AQ->outTrace( k ).channel() ) {
 	  if ( att != 0 ) {
 	    if ( ! att->frequencyName().empty() )
 	      stimuliref[j].insertNumber( att->frequencyName(), "",
@@ -772,19 +638,23 @@ void SaveFiles::writeStimulus( void )
 				    RW->AQ->outTraceName( Stimuli[j].trace() ) );
 	  stimuliref[j].insertNumber( "Delay", "", 1000.0*Stimuli[j].delay(), "ms" );
 	  stimuliref[j].insertNumber( "Time", "", IL[0].signalTime() - SessionTime, "s" );
-	  sopt.newSection( &stimuliref[j] );
+	  stimulusindex[k] = j;
 	  break;
 	}
       }
     }
-    sopt.saveXML( *XF, 0, Options::FirstOnly, 2 );
-  }
 
-  #ifdef HAVE_NIX
-  // NIX file:
-  if ( NIO.fd && isSaving() )
-    NIO.writeStimulus (IL, Stimuli, StimuliRePro, SessionTime, RW, StimulusOptions);
-  #endif
+    // stimuliref is an array of Options that contains the data
+    // written for each stimulus in the line in stimuli.dat .
+
+    RelacsIO.writeStimulus( IL, EL, Stimuli, newstimuli, StimulusData,
+			    stimuliref, stimulusindex,
+			    SessionTime, repronamecount, RW->AQ );
+
+    #ifdef HAVE_NIX
+    NixIO.writeStimulus( IL, Stimuli, ReProName, SessionTime, RW, StimulusData );
+    #endif
+  }
 
   Stimuli.clear();
 }
@@ -811,7 +681,7 @@ void SaveFiles::save( const RePro &rp )
   ReProInfo.addInteger( "Run", rp.allRuns() );
   ReProInfo.newSection( rp, 0, "dataset-settings-" + dataset, "settings" );
   DI.addRepro( ReProInfo );
-  StimuliRePro = rp.name();
+  ReProName = rp.name();
 }
 
 
@@ -824,38 +694,14 @@ void SaveFiles::writeRePro( void )
 
   if ( ReProData && isSaving() && ! Hold ) {
 
-    // stimulus indices file:
-    if ( SF != 0 ) {
-      // save RePro info:
-      *SF << "\n\n";
-      ReProInfo.save( *SF, "# ", 0, Options::FirstOnly );
-      // save StimulusKey:
-      *SF << '\n';
-      StimulusKey.saveKey( *SF );
-    }
-
-    // xml metadata file:
-    if ( XF != 0 ) {
-      if ( DatasetOpen ) {
-	if ( ReProFiles.size() > 0 ) {
-	  string files = ReProFiles[0];
-	  for ( unsigned int k=1; k<ReProFiles.size(); k++ )
-	    files += ", " + ReProFiles[k];
-	  Parameter p( "File", "", files );
-	  p.saveXML( *XF, 2, 4 );
-	}
-	ReProFiles.clear();
-	*XF << "    </section>\n";
-      }
-      ReProInfo.saveXML( *XF, 0, Options::FirstOnly | Options::DontCloseSection, 1 );
-      DatasetOpen = true;
-    }
+    RelacsIO.writeRePro( ReProInfo, ReProFiles );
 
     // nix file:
     //    XXX write ReProInfo as odml tree
 
-    StimuliReProCount[ StimuliRePro ] = 0;
     ReProData = false;
+    ReProStimulusCount[ ReProName ] = 0;
+    ReProFiles.clear();
   }
 }
 
@@ -897,310 +743,47 @@ void SaveFiles::removeFiles( void )
 }
 
 
+void SaveFiles::addFile( const string &filename )
+{
+  addRemoveFile( Path + filename );
+  // add to recording section:
+  RW->MTDT.lock();
+  Options &opt = RW->MTDT.section( "Recording" );
+  if ( opt.exist( "File" ) )
+    opt.pushText( "File", filename );
+  else {
+    opt.insertText( "File", "Date", filename,
+		    MetaData::standardFlag(), Parameter::ListAlways );
+  }
+  RW->MTDT.unlock();
+}
+
+
 ofstream *SaveFiles::openFile( const string &filename, int type )
 {
-  string fs = Path + filename;
-  ofstream *f = new ofstream( fs.c_str(), ofstream::openmode( type ) );
+  string filepath = Path + filename;
+  ofstream *f = new ofstream( filepath.c_str(), ofstream::openmode( type ) );
   if ( ! f->good() ) {
     f = 0;
-    RW->printlog( "! error in SaveFiles::openFile: can't open file '" + fs + "'!" );
+    RW->printlog( "! error in SaveFiles::openFile: can't open file '" + filepath + "'!" );
   }
-  else {
-    addRemoveFile( fs );
-    // add to recording section:
-    RW->MTDT.lock();
-    Options &opt = RW->MTDT.section( "Recording" );
-    if ( opt.exist( "File" ) )
-      opt.pushText( "File", filename );
-    else {
-      opt.insertText( "File", "Date", filename,
-		      MetaData::standardFlag(), Parameter::ListAlways );
-    }
-    RW->MTDT.unlock();
-  }
+  else
+    addFile( filename );
   return f;
-}
-
-
-void SaveFiles::createTraceFiles( void )
-{
-  SessionTime = IL.currentTime();
-
-  string format = "%d";
-  if ( IL.size() > 9 )
-    format = "%02d";
-  else if ( IL.size() > 99 )
-    format = "%03d";
-
-  TraceFiles.resize( IL.size() );
-
-  for ( int k=0; k<IL.size(); k++ ) {
-
-    // init trace variables:
-    TraceFiles[k].Index = IL[k].size();
-    TraceFiles[k].Written = 0;
-    TraceFiles[k].SignalOffset = -1;
-
-    // create file:
-    if ( IL[k].mode() & SaveTrace ) {
-      Str fn = IL[k].ident();
-      TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".raw";
-      // TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".au";
-      TraceFiles[k].Stream = openFile( TraceFiles[k].FileName, ios::out | ios::binary );
-      if ( ! TraceFiles[k].Stream->good() ) {
-	TraceFiles[k].FileName = "";
-	TraceFiles[k].Stream->close();
-	TraceFiles[k].Stream = 0;
-      }
-      /*
-      else {
-	// write .au header:
-	union {
-	  char buffer[4];
-	  unsigned long data;
-	} d;
-	d.data = 0x2e736e64;
-	for ( int j=3; j>=0; j-- )
-	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
-	// data offset:
-	d.data = 24;
-	for ( int j=3; j>=0; j-- )
-	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
-	// data size:
-	d.data = 0xffffffff;  // unknown
-	for ( int j=3; j>=0; j-- )
-	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
-	// encoding:
-	d.data = 6;  // float
-	for ( int j=3; j>=0; j-- )
-	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
-	// sampling rate:
-	d.data = (long)::rint( IL[k].sampleRate() );
-	for ( int j=3; j>=0; j-- )
-	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
-	// channels:
-	d.data = 1;
-	for ( int j=3; j>=0; j-- )
-	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
-      }
-      */
-    }
-    else {
-      TraceFiles[k].FileName = "";
-      TraceFiles[k].Stream = 0;
-    }
-  }
-
-}
-
-
-void SaveFiles::createEventFiles( void )
-{
-  EventFiles.resize( EL.size() );
-
-  for ( int k=0; k<EL.size(); k++ ) {
-
-    // init event variables:
-    EventFiles[k].Index = EL[k].size();
-    EventFiles[k].Written = 0;
-    EventFiles[k].SignalEvent = 0;
-
-    // create file:
-    if ( EL[k].mode() & SaveTrace ) {
-      Str fn = EL[k].ident();
-      EventFiles[k].FileName = fn.lower() + "-events.dat";
-      EventFiles[k].Stream = openFile( EventFiles[k].FileName, ios::out );
-      if ( EventFiles[k].Stream->good() ) {
-	// save header:
-	*EventFiles[k].Stream << "# events: " << EL[k].ident() << '\n';
-	*EventFiles[k].Stream << '\n';
-	// init key:
-	EventFiles[k].Key.clear();
-	EventFiles[k].Key.addNumber( "t", "sec", "%0.5f" );
-	if ( EL[k].sizeBuffer() )
-	  EventFiles[k].Key.addNumber( EL[k].sizeName(), EL[k].sizeUnit(),
-				       EL[k].sizeFormat() );
-	if ( EL[k].widthBuffer() )
-	  EventFiles[k].Key.addNumber( EL[k].widthName(), EL[k].widthUnit(),
-				       EL[k].widthFormat() );
-	// save key:
-	EventFiles[k].Key.saveKey( *EventFiles[k].Stream );
-      }
-      else {
-	EventFiles[k].FileName = "";
-	EventFiles[k].Stream->close();
-	EventFiles[k].Stream = 0;
-      }
-    }
-    else {
-      EventFiles[k].FileName = "";
-      EventFiles[k].Stream = 0;
-    }
-  }
-}
-
-
-void SaveFiles::createStimulusFile( void )
-{
-  // init stimulus variables:
-  Stimuli.clear();
-  StimuliReProCount.clear();
-  ReProStimuli.clear();
-  SignalTime = -1.0;
-  PrevSignalTime = -1.0;
-
-  // create file for stimuli:
-  SF = openFile( "stimuli.dat", ios::out );
-
-  if ( (*SF) ) {
-    // save header:
-    *SF << "# analog input traces:\n";
-    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-      if ( ! TraceFiles[k].FileName.empty() ) {
-	*SF << "#      identifier" + Str( k+1 ) + "     : " << IL[k].ident() << '\n';
-	*SF << "#      data file" + Str( k+1 ) + "      : " << TraceFiles[k].FileName << '\n';
-	*SF << "#      sample interval" + Str( k+1 ) + ": " << Str( 1000.0*IL[k].sampleInterval(), 0, 4, 'f' ) << "ms\n";
-	*SF << "#      sampling rate" + Str( k+1 ) + "  : " << Str( IL[k].sampleRate(), 0, 2, 'f' ) << "Hz\n";
-	*SF << "#      unit" + Str( k+1 ) + "           : " << IL[k].unit() << '\n';
-      }
-    }
-    *SF << "# event lists:\n";
-    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-      if ( ! EventFiles[k].FileName.empty() )
-	*SF << "#      event file" + Str( k+1 ) + ": " << EventFiles[k].FileName << '\n';
-    }
-    *SF << "# analog output traces:\n";
-    for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-      TraceSpec trace( RW->AQ->outTrace( k ) );
-      *SF << "#      identifier" + Str( k+1 ) + ": " << trace.traceName() << '\n';
-      *SF << "#      device" + Str( k+1 ) + "    : " << trace.device() << '\n';
-      *SF << "#      channel" + Str( k+1 ) + "   : " << trace.channel() << '\n';
-      /* Get the following infos from the devices:
-      *SF << "#      signal delay" + Str( k+1 ) + ": " << 1000.0*trace.signalDelay() << "ms\n";
-      *SF << "#      maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
-      */
-    }
-    *SF << "# stimulus descriptions file: stimulus-descriptions.dat\n";
-
-    // create key:
-    StimulusKey.clear();
-    StimulusKey.newSection( "traces" );
-    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-      if ( TraceFiles[k].Stream != 0 ) {
-	StimulusKey.newSubSection( IL[k].ident() );
-	StimulusKey.addNumber( "index", "float", "%10.0f" );
-      }
-    }
-    StimulusKey.newSection( "events" );
-    for ( unsigned int k=0; k<EventFiles.size(); k++ )
-      if ( EventFiles[k].Stream != 0 ) {
-	StimulusKey.newSubSection( EL[k].ident() );
-	StimulusKey.addNumber( "index", "line", "%10.0f" );
-	if ( (EL[k].mode() & ( StimulusEventMode | RestartEventMode | RecordingEventMode ) ) == 0 )
-	  StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
-	if ( EL[k].sizeBuffer() )
-	  StimulusKey.addNumber( EL[k].sizeName(), EL[k].sizeUnit(), EL[k].sizeFormat() );
-	if ( EL[k].widthBuffer() && (EL[k].mode() & StimulusEventMode) == 0 )
-	  StimulusKey.addNumber( EL[k].widthName(), EL[k].widthUnit(), EL[k].widthFormat() );
-	EventFiles[k].SaveMeanQuality = ( EL[k].mode() & SaveMeanQuality );
-	if ( EventFiles[k].SaveMeanQuality )
-	  StimulusKey.addNumber( "quality", "%", "%3.0f" );
-      }
-    lock();
-    if ( !Options::empty() ) {
-      StimulusKey.newSection( "data" );
-      const Options &data = *this;
-      for( int k=0; k<data.size(); k++ )
-	StimulusKey.addNumber( data[k].name(), data[k].outUnit(), data[k].format() );
-    }
-    unlock();
-    StimulusKey.newSection( "stimulus" );
-    StimulusKey.newSubSection( "timing" );
-    StimulusKey.addNumber( "time", "s", "%11.5f" );
-    StimulusKey.addNumber( "delay", "ms", "%5.1f" );
-    for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-      StimulusKey.newSubSection( RW->AQ->outTraceName( k ) );
-      StimulusKey.addNumber( "rate", "kHz", "%8.3f" );
-      StimulusKey.addNumber( "duration", "ms", "%8.0f" );
-      const Attenuate *att = RW->AQ->outTraceAttenuate( k );
-      if ( att != 0 ) {
-	StimulusKey.addNumber( att->intensityName(), att->intensityUnit(),
-			       att->intensityFormat() );
-	if ( ! att->frequencyName().empty() )
-	  StimulusKey.addNumber( att->frequencyName(), att->frequencyUnit(),
-				 att->frequencyFormat() );
-      }
-      StimulusKey.addText( "signal", -30 );
-    }
-  }
-
-
-  // create file for stimuli:
-  SDF = openFile( "stimulus-descriptions.dat", ios::out );
-}
-
-
-void SaveFiles::createXMLFile( void )
-{
-  // create xml file for all data:
-  XF = openFile( "metadata.xml", ios::out );
-
-  if ( (*XF) ) {
-    string name = Str( Path ).preventedSlash().name();
-    *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
-    *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
-    *XF << "<odML version=\"1\">\n";
-    *XF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
-    *XF << "    <section>\n";
-    *XF << "        <type>hardware</type>\n";
-    *XF << "        <name>hardware-" << name << "</name>\n";
-    for ( int k=0; k<RW->ADV->size(); k++ ) {
-      const Device &dev = (*RW->ADV)[k];
-      int dt = dev.deviceType();
-      if ( dt == Device::AttenuateType )
-	continue;
-      string dts = dev.deviceTypeStr();
-      if ( dt == Device::AnalogInputType )
-	dts = "DataAcquisition";
-      else if ( dt == Device::AnalogOutputType )
-	dts = "DataAcquisition";
-      else if ( dt == Device::DigitalIOType )
-	dts = "DigitialIO";
-      else if ( dt == Device::AttenuateType )
-	dts = "Attenuation";
-      Options opts( dev.info() );
-      opts.erase( "type" );
-      *XF << "        <section>\n";
-      *XF << "            <type>" << dts << "</type>\n";
-      *XF << "            <name>hardware-" << dts << "-" << name << "</name>\n";
-      opts.saveXML( *XF, 0, Options::FirstOnly, 3 );
-      *XF << "        </section>\n";
-    }
-    *XF << "    </section>\n";
-  }
-
-  // create xml file for stimulus metadata:
-  XSF = openFile( "stimulus-metadata.xml", ios::out );
-  if ( (*XSF) ) {
-    *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
-    *XSF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
-    *XSF << "<odML version=\"1\">\n";
-    *XSF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
-  }
 }
 
 
 void SaveFiles::createNIXFile( void )
 {
   #ifdef HAVE_NIX
-  string nix_path = NIO.create( Path );
+  string nix_path = NixIO.create( Path );
   if ( nix_path.empty() ) {
     std::cerr << "Could not create NIX data file" << std::endl;
     return;
   }
   addRemoveFile( nix_path );
-  NIO.initTraces( IL );
-  NIO.initEvents( EL, RW->FD );
+  NixIO.initTraces( IL );
+  NixIO.initEvents( EL, RW->FD );
   #endif
 }
 
@@ -1246,7 +829,14 @@ void SaveFiles::openFiles( void )
   ReProData = false;
   ReProInfo.clear();
   ReProFiles.clear();
-  DatasetOpen = false;
+  SessionTime = IL.currentTime();
+
+  // init stimulus variables:
+  Stimuli.clear();
+  ReProStimulusCount.clear();
+  ReProStimuli.clear();
+  SignalTime = -1.0;
+  PrevSignalTime = -1.0;
 
   setThePath( DefaultPath );
 
@@ -1299,11 +889,10 @@ void SaveFiles::openFiles( void )
   // anyways, we try to save what we can:
 
   // open files:
-  createTraceFiles();
-  createEventFiles();
-  createStimulusFile();
-  createXMLFile();
+  lock();
+  RelacsIO.open( IL, EL, *this, RW->AQ, Path, this, RW->ADV );
   createNIXFile();
+  unlock();
   FilesOpen = true;
   Hold = false;
 
@@ -1317,9 +906,6 @@ void SaveFiles::openFiles( void )
 
   // message:
   RW->printlog( "save in " + Path );
-
-  // tell the data index:
-  DI.addSession( Path + "stimuli.dat", Options(), TraceFiles.size(), EventFiles.size() );
 
   // update widget:
   FileLabel->setFont( HighlightFont );
@@ -1336,59 +922,16 @@ void SaveFiles::closeFiles( void )
   ToggleOn = false;
   Hold = false;
 
-  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-    if ( TraceFiles[k].Stream != 0 ) {
-      TraceFiles[k].Stream->close();
-      delete TraceFiles[k].Stream;
-    }
-  }
-  TraceFiles.clear();
-
-  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-    if ( EventFiles[k].Stream != 0 ) {
-      EventFiles[k].Stream->close();
-      delete EventFiles[k].Stream;
-    }
-  }
-  EventFiles.clear();
-
-  if ( SF != 0 )
-    delete SF;
-  SF = 0;
-  if ( SDF != 0 )
-    delete SDF;
-  SDF = 0;
-  if ( XF != 0 ) {
-    if ( DatasetOpen ) {
-      if ( ReProFiles.size() > 0 ) {
-	string files = ReProFiles[0];
-	for ( unsigned int k=1; k<ReProFiles.size(); k++ )
-	  files += ", " + ReProFiles[k];
-	Parameter p( "File", "", files );
-	p.saveXML( *XF, 2, 4 );
-      }
-      ReProFiles.clear();
-      *XF << "    </section>\n";
-      DatasetOpen = false;
-    }
-    string name = Str( Path ).preventedSlash().name();
-    RW->MTDT.saveXML( *XF, 1, name );
-    *XF << "</odML>\n";
-    delete XF;
-  }
-  XF = 0;
-  if ( XSF != 0 ) {
-    *XSF << "</odML>\n";
-    delete XSF;
-  }
-  XSF = 0;
+  RelacsIO.close( Path, ReProFiles, RW->MTDT );
 
   #ifdef HAVE_NIX
-    if ( NIO.fd.isOpen() ) {
-      NIO.saveMetadata( RW->MTDT  );
-      NIO.close();
-    }
+  if ( NixIO.fd.isOpen() ) {
+    NixIO.saveMetadata( RW->MTDT  );
+    NixIO.close();
+  }
   #endif
+
+  ReProFiles.clear();
 
   if ( FilesOpen ) {
     RW->MTDT.section( "Recording" ).erase( "File" );
@@ -1504,6 +1047,561 @@ void SaveFiles::customEvent( QEvent *qce )
 
   }
 }
+
+
+SaveFiles::RelacsFiles::RelacsFiles( void )
+{
+  SF = 0;
+  SDF = 0;
+  XF = 0;
+  XSF = 0;
+  DatasetOpen = false;
+  TraceFiles.clear();
+  EventFiles.clear();
+  StimulusKey.clear();
+}
+
+
+void SaveFiles::RelacsFiles::open( const InList &IL, const EventList &EL, 
+				   const Options &data, const Acquire *acquire, 
+				   const string &path, SaveFiles *save, 
+				   const AllDevices *devices )
+{
+  openTraceFiles( IL, save );
+  openEventFiles( EL, save );
+  openStimulusFiles( IL, EL, data, acquire, save );
+  openXMLFiles( path, save, devices );
+
+  // tell the data index:
+  save->DI.addSession( path + "stimuli.dat", Options(), TraceFiles.size(), EventFiles.size() );
+}
+
+
+void SaveFiles::RelacsFiles::openTraceFiles( const InList &IL, SaveFiles *save )
+{
+  string format = "%d";
+  if ( IL.size() > 9 )
+    format = "%02d";
+  else if ( IL.size() > 99 )
+    format = "%03d";
+
+  TraceFiles.resize( IL.size() );
+
+  for ( int k=0; k<IL.size(); k++ ) {
+
+    // init trace variables:
+    TraceFiles[k].Index = IL[k].size();
+    TraceFiles[k].Written = 0;
+    TraceFiles[k].SignalOffset = -1;
+
+    // create file:
+    if ( IL[k].mode() & SaveFiles::SaveTrace ) {
+      Str fn = IL[k].ident();
+      TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".raw";
+      // TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".au";
+      TraceFiles[k].Stream = save->openFile( TraceFiles[k].FileName, ios::out | ios::binary );
+      if ( ! TraceFiles[k].Stream->good() ) {
+	TraceFiles[k].FileName = "";
+	TraceFiles[k].Stream->close();
+	TraceFiles[k].Stream = 0;
+      }
+      /*
+      else {
+	// write .au header:
+	union {
+	  char buffer[4];
+	  unsigned long data;
+	} d;
+	d.data = 0x2e736e64;
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// data offset:
+	d.data = 24;
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// data size:
+	d.data = 0xffffffff;  // unknown
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// encoding:
+	d.data = 6;  // float
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// sampling rate:
+	d.data = (long)::rint( IL[k].sampleRate() );
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// channels:
+	d.data = 1;
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+      }
+      */
+    }
+    else {
+      TraceFiles[k].FileName = "";
+      TraceFiles[k].Stream = 0;
+    }
+  }
+
+}
+
+
+void SaveFiles::RelacsFiles::openEventFiles( const EventList &EL, SaveFiles *save )
+{
+  EventFiles.resize( EL.size() );
+
+  for ( int k=0; k<EL.size(); k++ ) {
+
+    // init event variables:
+    EventFiles[k].Index = EL[k].size();
+    EventFiles[k].Written = 0;
+    EventFiles[k].SignalEvent = 0;
+
+    // create file:
+    if ( EL[k].mode() & SaveFiles::SaveTrace ) {
+      Str fn = EL[k].ident();
+      EventFiles[k].FileName = fn.lower() + "-events.dat";
+      EventFiles[k].Stream = save->openFile( EventFiles[k].FileName, ios::out );
+      if ( EventFiles[k].Stream->good() ) {
+	// save header:
+	*EventFiles[k].Stream << "# events: " << EL[k].ident() << '\n';
+	*EventFiles[k].Stream << '\n';
+	// init key:
+	EventFiles[k].Key.clear();
+	EventFiles[k].Key.addNumber( "t", "sec", "%0.5f" );
+	if ( EL[k].sizeBuffer() )
+	  EventFiles[k].Key.addNumber( EL[k].sizeName(), EL[k].sizeUnit(),
+				       EL[k].sizeFormat() );
+	if ( EL[k].widthBuffer() )
+	  EventFiles[k].Key.addNumber( EL[k].widthName(), EL[k].widthUnit(),
+				       EL[k].widthFormat() );
+	// save key:
+	EventFiles[k].Key.saveKey( *EventFiles[k].Stream );
+      }
+      else {
+	EventFiles[k].FileName = "";
+	EventFiles[k].Stream->close();
+	EventFiles[k].Stream = 0;
+      }
+    }
+    else {
+      EventFiles[k].FileName = "";
+      EventFiles[k].Stream = 0;
+    }
+  }
+}
+
+
+void SaveFiles::RelacsFiles::openStimulusFiles( const InList &IL, const EventList &EL, 
+						const Options &data,
+						const Acquire *acquire, SaveFiles *save )
+{
+  // create file for stimuli:
+  SF = save->openFile( "stimuli.dat", ios::out );
+
+  if ( (*SF) ) {
+    // save header:
+    *SF << "# analog input traces:\n";
+    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
+      if ( ! TraceFiles[k].FileName.empty() ) {
+	*SF << "#      identifier" + Str( k+1 ) + "     : " << IL[k].ident() << '\n';
+	*SF << "#      data file" + Str( k+1 ) + "      : " << TraceFiles[k].FileName << '\n';
+	*SF << "#      sample interval" + Str( k+1 ) + ": " << Str( 1000.0*IL[k].sampleInterval(), 0, 4, 'f' ) << "ms\n";
+	*SF << "#      sampling rate" + Str( k+1 ) + "  : " << Str( IL[k].sampleRate(), 0, 2, 'f' ) << "Hz\n";
+	*SF << "#      unit" + Str( k+1 ) + "           : " << IL[k].unit() << '\n';
+      }
+    }
+    *SF << "# event lists:\n";
+    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+      if ( ! EventFiles[k].FileName.empty() )
+	*SF << "#      event file" + Str( k+1 ) + ": " << EventFiles[k].FileName << '\n';
+    }
+    *SF << "# analog output traces:\n";
+    for ( int k=0; k<acquire->outTracesSize(); k++ ) {
+      TraceSpec trace( acquire->outTrace( k ) );
+      *SF << "#      identifier" + Str( k+1 ) + ": " << trace.traceName() << '\n';
+      *SF << "#      device" + Str( k+1 ) + "    : " << trace.device() << '\n';
+      *SF << "#      channel" + Str( k+1 ) + "   : " << trace.channel() << '\n';
+      /* Get the following infos from the devices:
+      *SF << "#      signal delay" + Str( k+1 ) + ": " << 1000.0*trace.signalDelay() << "ms\n";
+      *SF << "#      maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
+      */
+    }
+    *SF << "# stimulus descriptions file: stimulus-descriptions.dat\n";
+
+    // create key:
+    StimulusKey.clear();
+    StimulusKey.newSection( "traces" );
+    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
+      if ( TraceFiles[k].Stream != 0 ) {
+	StimulusKey.newSubSection( IL[k].ident() );
+	StimulusKey.addNumber( "index", "float", "%10.0f" );
+      }
+    }
+    StimulusKey.newSection( "events" );
+    for ( unsigned int k=0; k<EventFiles.size(); k++ )
+      if ( EventFiles[k].Stream != 0 ) {
+	StimulusKey.newSubSection( EL[k].ident() );
+	StimulusKey.addNumber( "index", "line", "%10.0f" );
+	if ( (EL[k].mode() & ( StimulusEventMode | RestartEventMode | RecordingEventMode ) ) == 0 )
+	  StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
+	if ( EL[k].sizeBuffer() )
+	  StimulusKey.addNumber( EL[k].sizeName(), EL[k].sizeUnit(), EL[k].sizeFormat() );
+	if ( EL[k].widthBuffer() && (EL[k].mode() & StimulusEventMode) == 0 )
+	  StimulusKey.addNumber( EL[k].widthName(), EL[k].widthUnit(), EL[k].widthFormat() );
+	EventFiles[k].SaveMeanQuality = ( EL[k].mode() & SaveMeanQuality );
+	if ( EventFiles[k].SaveMeanQuality )
+	  StimulusKey.addNumber( "quality", "%", "%3.0f" );
+      }
+    if ( !data.empty() ) {
+      StimulusKey.newSection( "data" );
+      for( int k=0; k<data.size(); k++ )
+	StimulusKey.addNumber( data[k].name(), data[k].outUnit(), data[k].format() );
+    }
+    StimulusKey.newSection( "stimulus" );
+    StimulusKey.newSubSection( "timing" );
+    StimulusKey.addNumber( "time", "s", "%11.5f" );
+    StimulusKey.addNumber( "delay", "ms", "%5.1f" );
+    for ( int k=0; k<acquire->outTracesSize(); k++ ) {
+      StimulusKey.newSubSection( acquire->outTraceName( k ) );
+      StimulusKey.addNumber( "rate", "kHz", "%8.3f" );
+      StimulusKey.addNumber( "duration", "ms", "%8.0f" );
+      const Attenuate *att = acquire->outTraceAttenuate( k );
+      if ( att != 0 ) {
+	StimulusKey.addNumber( att->intensityName(), att->intensityUnit(),
+			       att->intensityFormat() );
+	if ( ! att->frequencyName().empty() )
+	  StimulusKey.addNumber( att->frequencyName(), att->frequencyUnit(),
+				 att->frequencyFormat() );
+      }
+      StimulusKey.addText( "signal", -30 );
+    }
+  }
+
+  // create file for stimuli:
+  SDF = save->openFile( "stimulus-descriptions.dat", ios::out );
+}
+
+
+void SaveFiles::RelacsFiles::openXMLFiles( const string &path, SaveFiles *save, 
+					   const AllDevices *devices )
+{
+  DatasetOpen = false;
+
+  // create xml file for all data:
+  XF = save->openFile( "metadata.xml", ios::out );
+
+  if ( (*XF) ) {
+    string name = Str( path ).preventedSlash().name();
+    *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
+    *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
+    *XF << "<odML version=\"1\">\n";
+    *XF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
+    *XF << "    <section>\n";
+    *XF << "        <type>hardware</type>\n";
+    *XF << "        <name>hardware-" << name << "</name>\n";
+    for ( int k=0; k<devices->size(); k++ ) {
+      const Device &dev = (*devices)[k];
+      int dt = dev.deviceType();
+      if ( dt == Device::AttenuateType )
+	continue;
+      string dts = dev.deviceTypeStr();
+      if ( dt == Device::AnalogInputType )
+	dts = "DataAcquisition";
+      else if ( dt == Device::AnalogOutputType )
+	dts = "DataAcquisition";
+      else if ( dt == Device::DigitalIOType )
+	dts = "DigitialIO";
+      else if ( dt == Device::AttenuateType )
+	dts = "Attenuation";
+      Options opts( dev.info() );
+      opts.erase( "type" );
+      *XF << "        <section>\n";
+      *XF << "            <type>" << dts << "</type>\n";
+      *XF << "            <name>hardware-" << dts << "-" << name << "</name>\n";
+      opts.saveXML( *XF, 0, Options::FirstOnly, 3 );
+      *XF << "        </section>\n";
+    }
+    *XF << "    </section>\n";
+  }
+
+  // create xml file for stimulus metadata:
+  XSF = save->openFile( "stimulus-metadata.xml", ios::out );
+  if ( (*XSF) ) {
+    *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
+    *XSF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
+    *XSF << "<odML version=\"1\">\n";
+    *XSF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
+  }
+}
+
+
+void SaveFiles::RelacsFiles::close( const string &path, const deque< string > &reprofiles,
+				    MetaData &metadata )
+{
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
+    if ( TraceFiles[k].Stream != 0 ) {
+      TraceFiles[k].Stream->close();
+      delete TraceFiles[k].Stream;
+    }
+  }
+  TraceFiles.clear();
+
+  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+    if ( EventFiles[k].Stream != 0 ) {
+      EventFiles[k].Stream->close();
+      delete EventFiles[k].Stream;
+    }
+  }
+  EventFiles.clear();
+
+  if ( SF != 0 )
+    delete SF;
+  SF = 0;
+  if ( SDF != 0 )
+    delete SDF;
+  SDF = 0;
+  if ( XF != 0 ) {
+    if ( DatasetOpen ) {
+      if ( reprofiles.size() > 0 ) {
+	string files = reprofiles[0];
+	for ( unsigned int k=1; k<reprofiles.size(); k++ )
+	  files += ", " + reprofiles[k];
+	Parameter p( "File", "", files );
+	p.saveXML( *XF, 2, 4 );
+      }
+      *XF << "    </section>\n";
+      DatasetOpen = false;
+    }
+    string name = Str( path ).preventedSlash().name();
+    metadata.saveXML( *XF, 1, name );
+    *XF << "</odML>\n";
+    delete XF;
+  }
+  XF = 0;
+  if ( XSF != 0 ) {
+    *XSF << "</odML>\n";
+    delete XSF;
+  }
+  XSF = 0;
+}
+
+
+void SaveFiles::RelacsFiles::resetIndex( const InList &IL )
+{
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ )
+    TraceFiles[k].Index = IL[k].size();
+}
+
+
+void SaveFiles::RelacsFiles::resetIndex( const EventList &EL )
+{
+  for ( unsigned int k=0; k<EventFiles.size(); k++ )
+    EventFiles[k].Index = EL[k].size();
+}
+
+
+void SaveFiles::RelacsFiles::writeTraces( const InList &IL, bool stimulus )
+{
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
+    if ( TraceFiles[k].Stream != 0 ) {
+      int n = IL[k].saveBinary( *TraceFiles[k].Stream, TraceFiles[k].Index );
+      if ( n > 0 ) {
+	TraceFiles[k].Written += n;
+	TraceFiles[k].Index += n;
+      }
+      // there is a new stimulus:
+      if ( stimulus && IL[k].signalIndex() >= 0 )
+	TraceFiles[k].SignalOffset = IL[k].signalIndex() -
+	  TraceFiles[k].Index + TraceFiles[k].Written;
+    }
+  }
+}
+
+
+void SaveFiles::RelacsFiles::writeEvents( const InList &IL, const EventList &EL )
+{
+  double offs = 0.0;
+  if ( ! TraceFiles.empty() )
+    offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
+
+  // save event data:
+  double st = EL[0].size() > 0 ? EL[0].back() : EL[0].rangeBack();
+  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+
+    if ( EventFiles[k].Stream != 0 ) {
+      while ( EventFiles[k].Index < EL[k].size() ) {
+	double et = EL[k][EventFiles[k].Index];
+	if ( et < st )
+	  EventFiles[k].SignalEvent = EventFiles[k].Written;
+	else if ( EventFiles[k].Index == 0 || EL[k][EventFiles[k].Index-1] < st ) {
+	  EventFiles[k].SignalEvent = EventFiles[k].Written;
+	  *EventFiles[k].Stream << '\n';
+	}
+	EventFiles[k].Key.save( *EventFiles[k].Stream, et - offs, 0 );
+	if ( EL[k].sizeBuffer() )
+	  EventFiles[k].Key.save( *EventFiles[k].Stream,
+				  EL[k].sizeScale() * EL[k].eventSize( EventFiles[k].Index ) );
+	if ( EL[k].widthBuffer() )
+	  EventFiles[k].Key.save( *EventFiles[k].Stream,
+				  EL[k].widthScale() * EL[k].eventWidth( EventFiles[k].Index ) );
+	*EventFiles[k].Stream << '\n';
+	EventFiles[k].Written++;
+	EventFiles[k].Index++;
+      }
+    }
+  }
+}
+
+
+void SaveFiles::RelacsFiles::writeStimulus( const InList &IL, const EventList &EL, 
+					    const deque< OutDataInfo > &stimuliinfo,
+					    const deque< bool > &newstimuli,
+					    const Options &data, 
+					    const deque< Options > &stimuliref, 
+					    int *stimulusindex,
+					    double sessiontime,
+					    const string &reproname,
+					    const Acquire *acquire )
+{
+  if ( SF != 0 ) {
+
+    // write stimulus description:
+    if ( SDF != 0 ) {
+      for ( unsigned int j=0; j<stimuliinfo.size(); j++ ) {
+	if ( newstimuli[j] ) {
+	  stimuliinfo[j].description().save( *SDF, "  " );
+	  *SDF << '\n';
+	}
+      }
+    }
+    // write entry in stimuli.dat:
+    StimulusKey.resetSaveColumn();
+    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
+      if ( TraceFiles[k].Stream != 0 )
+	StimulusKey.save( *SF, TraceFiles[k].SignalOffset );
+    }
+    // events:
+    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+      if ( EventFiles[k].Stream != 0 ) {
+	StimulusKey.save( *SF, EventFiles[k].SignalEvent );
+	if ( (EL[k].mode() & ( StimulusEventMode | RestartEventMode | RecordingEventMode ) ) == 0 )
+	  StimulusKey.save( *SF, EL[k].meanRate() );  // XXX adaptive Time!
+	if ( EL[k].sizeBuffer() )
+	  StimulusKey.save( *SF, EL[k].sizeScale() * EL[k].meanSize() );
+	if ( EL[k].widthBuffer() && (EL[k].mode() & StimulusEventMode) == 0 )
+	  StimulusKey.save( *SF, EL[k].widthScale() * EL[k].meanWidth() );
+	if ( EventFiles[k].SaveMeanQuality )
+	  StimulusKey.save( *SF, 100.0*EL[k].meanQuality() );
+      }
+    }
+    // data:
+    if ( !data.empty() ) {
+      for( int k=0; k<data.size(); k++ ) {
+	StimulusKey.save( *SF, data[k] );
+      }
+    }
+    StimulusKey.save( *SF, IL[0].signalTime() - sessiontime );
+    // stimulus:
+    StimulusKey.save( *SF, 1000.0*stimuliinfo[0].delay() );
+    for ( int k=0; k<acquire->outTracesSize(); k++ ) {
+      const Attenuate *att = acquire->outTraceAttenuate( k );
+      int j = stimulusindex[k];
+      if ( j >= 0 ) {
+	StimulusKey.save( *SF, 0.001*stimuliinfo[j].sampleRate() );
+	StimulusKey.save( *SF, 1000.0*stimuliinfo[j].length() ); // duration, resp. extent
+	if ( att != 0 ) {
+	  StimulusKey.save( *SF, stimuliinfo[j].intensity() );
+	  if ( ! att->frequencyName().empty() )
+	    StimulusKey.save( *SF, stimuliinfo[j].carrierFreq() );
+	}
+	StimulusKey.save( *SF, stimuliref[j].name() );
+      }
+      else {
+	StimulusKey.save( *SF, "" );
+	StimulusKey.save( *SF, "" );
+	if ( att != 0 ) {
+	  StimulusKey.save( *SF, "" );
+	  if ( ! att->frequencyName().empty() )
+	    StimulusKey.save( *SF, "" );
+	}
+	StimulusKey.save( *SF, "" );
+      }
+    }
+    *SF << endl;
+  }
+
+  // xml metadata file:
+  if ( XF != 0 ) {
+
+    // stimulus description:
+    if ( XSF != 0 ) {
+      for ( unsigned int j=0; j<stimuliinfo.size(); j++ ) {
+	if ( newstimuli[j] )
+	  stimuliinfo[j].description().saveXML( *XSF, 0, Options::FirstOnly, 1 );
+      }
+    }
+
+    // stimulus reference:
+    Options sopt( reproname, "stimulus", 0, 0 );
+    sopt.append( data );
+    for ( int k=0; k<acquire->outTracesSize(); k++ ) {
+      int j = stimulusindex[k];
+      if ( j >= 0 ) {
+	Options &ref = sopt.newSection( stimuliref[j] );
+	ref.setInclude( "stimulus-metadata.xml", stimuliref[j].name() );
+      }
+    }
+    sopt.saveXML( *XF, 0, Options::FirstOnly, 2 );
+  }
+}
+
+
+void SaveFiles::RelacsFiles::writeRePro( const Options &reproinfo, 
+					 const deque< string > &reprofiles )
+{
+  // stimulus indices file:
+  if ( SF != 0 ) {
+    // save RePro info:
+    *SF << "\n\n";
+    reproinfo.save( *SF, "# ", 0, Options::FirstOnly );
+    // save StimulusKey:
+    *SF << '\n';
+    StimulusKey.saveKey( *SF );
+  }
+
+  // xml metadata file:
+  if ( XF != 0 ) {
+    if ( DatasetOpen ) {
+      if ( reprofiles.size() > 0 ) {
+	string files = reprofiles[0];
+	for ( unsigned int k=1; k<reprofiles.size(); k++ )
+	  files += ", " + reprofiles[k];
+	Parameter p( "File", "", files );
+	p.saveXML( *XF, 2, 4 );
+      }
+      *XF << "    </section>\n";
+    }
+    reproinfo.saveXML( *XF, 0, Options::FirstOnly | Options::DontCloseSection, 1 );
+    DatasetOpen = true;
+  }
+}
+
+
+void SaveFiles::RelacsFiles::traceSignalIndices( deque<int> &traceindex )
+{
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ )
+    traceindex.push_back( TraceFiles[k].SignalOffset );
+}
+
+
+void SaveFiles::RelacsFiles::eventsSignalIndices( deque<int> &eventsindex )
+{
+  for ( unsigned int k=0; k<EventFiles.size(); k++ )
+    eventsindex.push_back( EventFiles[k].SignalEvent );
+}
+  
 
 #ifdef HAVE_NIX
 string SaveFiles::NixFile::create ( string path )
@@ -1766,6 +1864,9 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
 					string rp_name, double sessiontime, RELACSWidget *RW,
 					const Options &stim_options)
 {
+  if ( ! NixIO.fd )
+    return;
+
   // TODO: do this not only for the first trace, but for all of them
    if ( IL[0].signalIndex() < 1 ) {
     return;
@@ -1942,6 +2043,9 @@ void SaveFiles::NixFile::appendValue( nix::DataArray &array, double value ) {
 
 void SaveFiles::NixFile::writeTraces( const InList &IL )
 {
+  if ( ! NixIO.fd )
+    return;
+
   for ( int k=0; k < IL.size(); k++ ) {
     NixTrace &trace = traces[k];
     if ( trace.index >= static_cast<size_t>( IL[k].size() ) ) {
@@ -2012,6 +2116,9 @@ void SaveFiles::NixFile::initEvents( const EventList &EL, FilterDetectors *FD )
 
 void SaveFiles::NixFile::writeEvents( const EventList &EL, double off )
 {
+  if ( ! NixIO.fd )
+    return;
+
   //  double st = EL[0].size() > 0 ? EL[0].back() : EL[0].rangeBack();
   for(auto &ed : events ) {
     int k = ed.el_index;

@@ -277,6 +277,7 @@ public:
 	output trace, then 0 is returned.
         \sa outTraceName() */
   Attenuate *outTraceAttenuate( int index );
+  const Attenuate *outTraceAttenuate( int index ) const;
     /*! Return the output trace with index \a index.
         \sa addOutTrace(), outTracesSize(), outTraceIndex(),
 	outTraceName(), applyOutTrace(), clearOutTraces() */

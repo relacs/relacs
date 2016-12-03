@@ -210,8 +210,8 @@ protected:
   void writeToggle( void );
     /*! Write data traces to files. \sa saveTraces() */
   void writeTraces( void );
-    /*! Write events with \a offs subtracted to files. \sa saveTraces() */
-  void writeEvents( double offs );
+    /*! Write events to files. \sa saveTraces() */
+  void writeEvents( void );
     /*! Write pending stimuli to files. \sa save( const OutData& ), save( const OutList& ) */
   void writeStimulus( void );
     /*! Write information about a RePro to files. \sa save( const RePro& ) */
@@ -223,9 +223,11 @@ protected:
   bool removeDir( const QString &dirname );
     /*! Generate new pathname using PathTemplate, PathTime, and PathNumber. */
   string pathName( void ) const;
+    /*! Add the file \a filename to the list of files to be removed and to the metadata. */
+  void addFile( const string &filename );
     /*! Open the file path() + filename
         as specified by \a type (ios::out, ios::in, ios::binary, ...).
-	Add it to the list of files to be removed
+	Add it to the list of files to be removed and to the metadata
         and print an error message if opening of the file failed. */
   ofstream *openFile( const string &filename, int type );
 
@@ -239,19 +241,6 @@ protected:
         that have to be deleted if the session is not to be saved. */
   void removeFiles( void );
 
-    /*! Open and initialize the files holding the traces from the
-        analog input channels. */
-  void createTraceFiles( void );
-    /*! Open and initialize the files recording the event times. */
-  void createEventFiles( void );
-    /*! Open and initialize the stimulus file that
-        contains indices to he traces and event files.
-        Call this *after* createEventFiles()! */
-  void createStimulusFile( void );
-    /*! Open and initialize the XML file that
-        contains all information.
-        Call this *after* createEventFiles()! */
-  void createXMLFile( void );
   /*! Open and initialize the NIX file that
         contains *all* information. */
   void createNIXFile( void );
@@ -290,76 +279,140 @@ protected:
     /*! The local copy of all event traces. */
   EventList EL;
 
-    /*! File with stimuli and indices to traces and events. */
-  ofstream *SF;
-    /*! File with stimulus descriptions. */
-  ofstream *SDF;
-
-    /*! XML file containing all data. */
-  ofstream *XF;
-    /*! XML file containing stimulus descriptions. */
-  ofstream *XSF;
-
-  struct TraceFile {
-      /*! The name of the file for the trace. */
-    string FileName;
-      /*! The file stream. */
-    ofstream *Stream;
-      /*! Current index to trace data from where on to save data. */
-    long Index;
-      /*! Number of so far written trace data. */
-    long Written;
-      /*! Start of stimulus as an index to the written trace data. */
-    long SignalOffset;
-  };
-
-    /*! files for all voltage traces. */
-  deque< TraceFile > TraceFiles;
-
-
-  struct EventFile {
-      /*! The name of the file for the events. */
-    string FileName;
-      /*! The file stream. */
-    ofstream *Stream;
-      /*! Index to event data. */
-    long Index;
-      /*! Already written lines. */
-    long Written;
-      /*! Line index to the signal start in the events files. */
-    long SignalEvent;
-      /*! Save mean quality in the stimulus file. */
-    bool SaveMeanQuality;
-      /*! The key for the event file. */
-    TableKey Key;
-  };
-  deque< EventFile > EventFiles;
-
     /*! Start of current stimulus. */
   double SignalTime;
     /*! Start of previous stimulus. */
   double PrevSignalTime;
 
+    /*! The options of SaveFiles at the time of writing a stimulus. Contains
+        values of all output traces right before writing the new stimulus
+        and additional information. */
+  Options StimulusData;
+    /*! Properties and descriptions of all output traces of the current stimulus. */
   deque< OutDataInfo > Stimuli;
-  string StimuliRePro;
-  map< string, int > StimuliReProCount;
+    /*! All stimuli of a session used by a RePro. */
   map< string, map < Options, string > > ReProStimuli;
-  TableKey StimulusKey;
-  Options StimulusOptions;
 
+    /*! Name of the current RePro. */
+  string ReProName;
+    /*! Number of stimuli written by the current RePro, 
+        keys are the names of the RePros. */
+  map< string, int > ReProStimulusCount;
+    /*! The settings of the current RePro. */
   Options ReProInfo;
+    /*! List of file names opened by the current RePro. */
   mutable deque< string > ReProFiles;
+
   bool ReProData;
-  bool DatasetOpen;
 
   bool ToggleOn;
   bool ToggleData;
 
+    /*! The data browser. */
   DataIndex DI;
 
     /*! A list of files which have to be deleted if the session is not
         to be saved. */
   deque<string> RemoveFiles;
+
+  class RelacsFiles {
+
+  public:
+
+    RelacsFiles( void );
+
+      /*! Open all necessary files. */
+    void open( const InList &IL, const EventList &EL, 
+	       const Options &data, const Acquire *acquire, 
+	       const string &path, SaveFiles *save, const AllDevices *devices );
+
+      /*! Set index for traces to current size of each trace in \a IL. */
+    void resetIndex( const InList &IL );
+      /*! Set index for events to current size of each event list in \a EL. */
+    void resetIndex( const EventList &EL );
+      /*! Write data traces to files. */
+    void writeTraces( const InList &IL, bool stimulus );
+      /*! Write events with \a offs subtracted to files. \sa saveTraces() */
+    void writeEvents( const InList &IL, const EventList &EL );
+      /*! Write pending stimuli to files. \sa save( const OutData& ), save( const OutList& ) */
+    void writeStimulus( const InList &IL, const EventList &EL, 
+			const deque< OutDataInfo > &stimuliinfo, 
+			const deque< bool > &newstimuli, const Options &data, 
+			const deque< Options > &stimuliref, int *stimulusindex,
+			double sessiontime, const string &reproname, const Acquire *acquire );
+      /*! Write information about a RePro to files. \sa save( const RePro& ) */
+    void writeRePro( const Options &reproinfo, const deque< string > &reprofiles );
+
+    void traceSignalIndices( deque<int> &traceindex );
+    void eventsSignalIndices( deque<int> &eventsindex );
+
+      /*! Close all files. */
+    void close( const string &path, const deque< string > &reprofiles,
+		MetaData &metadata );
+
+
+  protected:
+
+      /*! Open and initialize the files holding the traces from the
+	  analog input channels. */
+    void openTraceFiles( const InList &IL, SaveFiles *save );
+      /*! Open and initialize the files recording the event times. */
+    void openEventFiles( const EventList &EL, SaveFiles *save );
+      /*! Open and initialize the stimulus file that
+          contains indices to he traces and event files. */
+    void openStimulusFiles( const InList &IL, const EventList &EL, 
+			    const Options &data, const Acquire *acquire, SaveFiles *save );
+      /*! Open and initialize the XML file that
+          contains all information. */
+    void openXMLFiles( const string &path, SaveFiles *save, const AllDevices *devices );
+
+      /*! File with stimuli and indices to traces and events. */
+    ofstream *SF;
+      /*! File with stimulus descriptions. */
+    ofstream *SDF;
+
+      /*! XML file containing all data. */
+    ofstream *XF;
+      /*! XML file containing stimulus descriptions. */
+    ofstream *XSF;
+    bool DatasetOpen;
+
+    struct TraceFile {
+        /*! The name of the file for the trace. */
+      string FileName;
+        /*! The file stream. */
+      ofstream *Stream;
+        /*! Current index to trace data from where on to save data. */
+      long Index;
+        /*! Number of so far written trace data. */
+      long Written;
+        /*! Start of stimulus as an index to the written trace data. */
+      long SignalOffset;
+    };
+      /*! files for all voltage traces. */
+    deque< TraceFile > TraceFiles;
+
+    struct EventFile {
+        /*! The name of the file for the events. */
+      string FileName;
+        /*! The file stream. */
+      ofstream *Stream;
+        /*! Index to event data. */
+      long Index;
+        /*! Already written lines. */
+      long Written;
+        /*! Line index to the signal start in the events files. */
+      long SignalEvent;
+        /*! Save mean quality in the stimulus file. */
+      bool SaveMeanQuality;
+        /*! The key for the event file. */
+      TableKey Key;
+    };
+    deque< EventFile > EventFiles;
+
+    TableKey StimulusKey;
+  };
+  RelacsFiles RelacsIO;
 
   #ifdef HAVE_NIX
   struct NixTrace {
@@ -413,7 +466,7 @@ protected:
     vector<NixTrace> traces;
     vector<NixEventData> events;
   };
-  NixFile NIO;
+  NixFile NixIO;
   #endif
   
   RELACSWidget *RW;

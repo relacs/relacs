@@ -1163,7 +1163,9 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     if ( StoreLevel == AMGenerated ) 
       store = true;
     PeakAmplitude = Amplitude / PeakAmplitudeFac;
-    AMDB = PeakAmplitude * ( wave - 1.0 );
+    AMDB = wave;
+    AMDB -= 1.0;
+    AMDB *= PeakAmplitude;
     OutData am( AMDB );
     for ( int k=0; k<am.size(); k++ )
       am[k] = ::pow (10.0, AMDB[k] / 20.0 );

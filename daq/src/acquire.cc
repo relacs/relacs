@@ -334,6 +334,19 @@ Attenuate *Acquire::outTraceAttenuate( int index )
 }
 
 
+const Attenuate *Acquire::outTraceAttenuate( int index ) const
+{
+  if ( index >= 0 && index < outTracesSize() ) {
+    for ( unsigned int a=0; a<Att.size(); a++ ) {
+      if ( ( Att[a].Id == OutTraces[index].device() ) && 
+	 ( Att[a].Att->aoChannel() == OutTraces[index].channel() ) )
+	return Att[a].Att;
+    }
+  }
+  return 0;
+}
+
+
 const TraceSpec &Acquire::outTrace( int index ) const
 {
   if ( index >= 0 && index < outTracesSize() )
