@@ -209,9 +209,9 @@ protected:
     /*! Switch saving to files on or off. \sa save( bool ) */
   void writeToggle( void );
     /*! Write data traces to files. \sa saveTraces() */
-  void writeTraces( void );
+  void writeTraces( bool stimulus );
     /*! Write events to files. \sa saveTraces() */
-  void writeEvents( void );
+  void writeEvents( bool stimulus );
     /*! Write pending stimuli to files. \sa save( const OutData& ), save( const OutList& ) */
   void writeStimulus( void );
     /*! Write information about a RePro to files. \sa save( const RePro& ) */
@@ -332,8 +332,8 @@ protected:
     void resetIndex( const EventList &EL );
       /*! Write data traces to files. */
     void writeTraces( const InList &IL, bool stimulus );
-      /*! Write events with \a offs subtracted to files. \sa saveTraces() */
-    void writeEvents( const InList &IL, const EventList &EL );
+      /*! Write events to files. \sa saveTraces() */
+    void writeEvents( const InList &IL, const EventList &EL, bool stimulus );
       /*! Write pending stimuli to files. \sa save( const OutData& ), save( const OutList& ) */
     void writeStimulus( const InList &IL, const EventList &EL, 
 			const deque< OutDataInfo > &stimuliinfo, 
@@ -341,7 +341,9 @@ protected:
 			const deque< Options > &stimuliref, int *stimulusindex,
 			double sessiontime, const string &reproname, const Acquire *acquire );
       /*! Write information about a RePro to files. \sa save( const RePro& ) */
-    void writeRePro( const Options &reproinfo, const deque< string > &reprofiles );
+    void writeRePro( const Options &reproinfo, const deque< string > &reprofiles,
+		     const InList &IL, const EventList &EL, const Options &data, 
+		     double sessiontime );
 
     void traceSignalIndices( deque<int> &traceindex );
     void eventsSignalIndices( deque<int> &eventsindex );
@@ -397,9 +399,9 @@ protected:
       string FileName;
         /*! The file stream. */
       ofstream *Stream;
-        /*! Index to event data. */
+        /*! Current index to event data from where on to save data. */
       long Index;
-        /*! Already written lines. */
+        /*! Already written lines of events. */
       long Written;
         /*! Line index to the signal start in the events files. */
       long SignalEvent;

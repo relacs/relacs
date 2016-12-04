@@ -63,7 +63,6 @@ SaveFiles:
 - check locking of dataindex in SaveFiles and DataBrowse.
 - where does stimulus intensity go, if there is no amplifier?
   (e.g. patchclamp::MembraneResistance)
-- RePros without stimuli should get their start into stimuli.dat
 - recording-events.dat: is that absolute time, or does this reflect pauses in recordings?
 - remove signalPending() and clearSignals() once the warning does not occur anymore.
 - combine the file lists from storeFile() and removeFiles() ?

@@ -244,6 +244,12 @@ public:
 	then the changedFlag() is set. */
   Parameter &assign( const string &value );
 
+    /*! Assing the value of \ap to \a this, but only if they have the same type.
+        The warning message is set if \a p is of different type.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setValue( const Parameter &p );
+
     /*! Returns true if the two Parameters \a p1 and \a p2 are equal,
         i.e. they have the same name. */
   friend bool operator==( const Parameter &p1, const Parameter &p2 );

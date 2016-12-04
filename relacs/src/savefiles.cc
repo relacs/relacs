@@ -382,16 +382,17 @@ void SaveFiles::saveTraces( void )
     if ( st > PrevSignalTime )
       SignalTime = st;
   }
+  bool stimulus = !Stimuli.empty() && SignalTime >= 0.0;
 
   writeRePro();
-  writeTraces();
-  writeEvents();
-  
-  writeStimulus();
+  writeTraces( stimulus );
+  writeEvents( stimulus );
+  if ( stimulus )
+    writeStimulus();
 }
 
 
-void SaveFiles::writeTraces( void )
+void SaveFiles::writeTraces( bool stimulus )
 {
   // only called by saveTraces().
 
@@ -399,8 +400,6 @@ void SaveFiles::writeTraces( void )
 
   if ( ! isSaving() )
     return;
-
-  bool stimulus = !Stimuli.empty() && SignalTime >= 0.0;
 
   RelacsIO.writeTraces( IL, stimulus );
 
@@ -410,7 +409,7 @@ void SaveFiles::writeTraces( void )
 }
 
 
-void SaveFiles::writeEvents( void )
+void SaveFiles::writeEvents( bool stimulus )
 {
   // only called by saveTraces().
 
@@ -419,12 +418,8 @@ void SaveFiles::writeEvents( void )
   if ( ! isSaving() )
     return;
 
-  // wait for availability of signal start time:
-  if ( !Stimuli.empty() && SignalTime < 0.0 )
-    return;
-
   // save event data:
-  RelacsIO.writeEvents( IL, EL );
+  RelacsIO.writeEvents( IL, EL, stimulus );
 
   #ifdef HAVE_NIX
   // double noffs = IL[0].interval( NixIO.traces[0].index - NixIO.traces[0].offset[0] ) - SessionTime;
@@ -510,13 +505,6 @@ void SaveFiles::writeStimulus( void )
 
   //  cerr << "SaveFiles::writeStimulus(): Stimuli.size()=" << Stimuli.size()
   //       << ", saving=" << isSaving() << "\n";
-
-  if ( Stimuli.empty() )
-    return;
-
-  // no stimulus yet:
-  if ( SignalTime < 0.0 )
-    return;
 
   // add to data index for browsing:
   deque<int> traceindex;
@@ -694,7 +682,7 @@ void SaveFiles::writeRePro( void )
 
   if ( ReProData && isSaving() && ! Hold ) {
 
-    RelacsIO.writeRePro( ReProInfo, ReProFiles );
+    RelacsIO.writeRePro( ReProInfo, ReProFiles, IL, EL, *this, SessionTime );
 
     // nix file:
     //    XXX write ReProInfo as odml tree
@@ -1420,26 +1408,24 @@ void SaveFiles::RelacsFiles::writeTraces( const InList &IL, bool stimulus )
 }
 
 
-void SaveFiles::RelacsFiles::writeEvents( const InList &IL, const EventList &EL )
+  void SaveFiles::RelacsFiles::writeEvents( const InList &IL, const EventList &EL, 
+					    bool stimulus )
 {
   double offs = 0.0;
   if ( ! TraceFiles.empty() )
     offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
 
   // save event data:
-  double st = EL[0].size() > 0 ? EL[0].back() : EL[0].rangeBack();
   for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-
     if ( EventFiles[k].Stream != 0 ) {
+      // set index of last signal:
+      if ( stimulus ) {
+	double st = EL[k].signalTime();
+	int index = EL[k].next( st );
+	EventFiles[k].SignalEvent = index - EventFiles[k].Index + EventFiles[k].Written;
+      }
       while ( EventFiles[k].Index < EL[k].size() ) {
-	double et = EL[k][EventFiles[k].Index];
-	if ( et < st )
-	  EventFiles[k].SignalEvent = EventFiles[k].Written;
-	else if ( EventFiles[k].Index == 0 || EL[k][EventFiles[k].Index-1] < st ) {
-	  EventFiles[k].SignalEvent = EventFiles[k].Written;
-	  *EventFiles[k].Stream << '\n';
-	}
-	EventFiles[k].Key.save( *EventFiles[k].Stream, et - offs, 0 );
+	EventFiles[k].Key.save( *EventFiles[k].Stream, EL[k][EventFiles[k].Index] - offs, 0 );
 	if ( EL[k].sizeBuffer() )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
 				  EL[k].sizeScale() * EL[k].eventSize( EventFiles[k].Index ) );
@@ -1559,7 +1545,9 @@ void SaveFiles::RelacsFiles::writeStimulus( const InList &IL, const EventList &E
 
 
 void SaveFiles::RelacsFiles::writeRePro( const Options &reproinfo, 
-					 const deque< string > &reprofiles )
+					 const deque< string > &reprofiles,
+					 const InList &IL, const EventList &EL,
+					 const Options &data, double sessiontime )
 {
   // stimulus indices file:
   if ( SF != 0 ) {
@@ -1569,6 +1557,55 @@ void SaveFiles::RelacsFiles::writeRePro( const Options &reproinfo,
     // save StimulusKey:
     *SF << '\n';
     StimulusKey.saveKey( *SF );
+    StimulusKey.resetSaveColumn();
+    // repro start indices:
+    Options &traces = StimulusKey.subSection( "traces", 2 );
+    int j = 0;
+    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
+      if ( TraceFiles[k].Stream != 0 )
+	traces.section(j++)[0].setInteger( TraceFiles[k].Written );
+    }
+    // events:
+    Options &events = StimulusKey.subSection( "events", 2 );
+    j = 0;
+    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+      if ( EventFiles[k].Stream != 0 ) {
+	Options &eventsec = events.section(j++);
+	int i = 0;
+	eventsec[i++].setInteger( EventFiles[k].Written );
+	if ( (EL[k].mode() & ( StimulusEventMode | RestartEventMode | RecordingEventMode ) ) == 0 )
+	  eventsec[i++].setNumber( EL[k].meanRate() );
+	if ( EL[k].sizeBuffer() )
+	  eventsec[i++].setNumber( EL[k].sizeScale() * EL[k].meanSize() );
+	if ( EL[k].widthBuffer() && (EL[k].mode() & StimulusEventMode) == 0 )
+	  eventsec[i++].setNumber( EL[k].widthScale() * EL[k].meanWidth() );
+	if ( EventFiles[k].SaveMeanQuality )
+	  eventsec[i++].setNumber( 100.0*EL[k].meanQuality() );
+      }
+    }
+    // data:
+    if ( !data.empty() ) {
+      Options &sdata = StimulusKey.subSection( "data", 1 );
+      for( int k=0; k<data.size(); k++ ) {
+	sdata[k].setValue( data[k] );
+      }
+    }
+    // stimuli:
+    Options &stimuli = StimulusKey.subSection( "stimulus>timing", 2 );
+    j = 0;
+    stimuli.section(0)[j++].setNumber( IL[0].currentTime() - sessiontime );
+    stimuli.section(0)[j++].setNumber( 0.0 );
+    for ( int k=1; k<stimuli.sectionsSize(); k++ ) {
+      for ( j=0; j<stimuli.section(k).parameterSize(); j++ ) {
+	if ( stimuli.section(k)[j].isNumber() )
+	  stimuli.section(k)[j].setNumber( NAN );
+	else
+	  stimuli.section(k)[j].setText( "" );
+      }
+    }
+    // save line to stimuli.dat:
+    StimulusKey.saveData( *SF );
+    SF->flush();
   }
 
   // xml metadata file:

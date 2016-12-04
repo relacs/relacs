@@ -505,22 +505,35 @@ void TableKey::setSectionName( const string &pattern, const string &name,
 }
 
 
-Options TableKey::subSection( int column, int level ) const
+const Options &TableKey::subSection( int column, int level ) const
 {
-  if ( column >= 0 && column < (int)Columns.size() ) {
-    if ( level <= 0 ) {
-      Options opts;
-      opts.add( *Columns[column] );
-      return opts;
-    }
-    else if ( level-1 < (int)Sections[column].size() )
-      return **Sections[column][level-1];
+  if ( level > 0 && level-1 < (int)Sections[column].size() && 
+       column >= 0 && column < (int)Columns.size() ) {
+    return **Sections[column][level-1];
   }
-  return Options();
+  DummySection.clear();
+  return DummySection;
 }
 
 
-Options TableKey::subSection( const string &pattern, int level ) const
+Options &TableKey::subSection( int column, int level )
+{
+  if ( level > 0 && level-1 < (int)Sections[column].size() && 
+       column >= 0 && column < (int)Columns.size() ) {
+    return **Sections[column][level-1];
+  }
+  DummySection.clear();
+  return DummySection;
+}
+
+
+const Options &TableKey::subSection( const string &pattern, int level ) const
+{
+  return subSection( column( pattern ), level );
+}
+
+
+Options &TableKey::subSection( const string &pattern, int level )
 {
   return subSection( column( pattern ), level );
 }
@@ -1027,12 +1040,12 @@ ostream &TableKey::saveData( ostream &str )
     if ( c > 0 )
       str << Separator;
     Str s = Columns[c]->text();
-    if ( s.empty() )
+    if ( s.empty() || ( Columns[c]->isNumber() && ::isnan( Columns[c]->number() ) ) )
       s = Missing;
     if ( s.size() >= Width[c] )
       str << s;
     else {
-      if ( Columns[c]->isText() )
+      if ( Columns[c]->isText() || s == Missing )
 	str << Str( s, -Width[c] );
       else
 	str << Str( s, Width[c] );

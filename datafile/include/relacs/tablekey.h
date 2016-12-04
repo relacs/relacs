@@ -308,12 +308,14 @@ public:
 
     /*! Returns the section at \a column column and level \a level
         with all its subsections and column labels.  \a level = 0
-        returns solely the column label. */
-  Options subSection( int column, int level=1 ) const;
+        returns an empty Options. */
+  const Options &subSection( int column, int level=1 ) const;
+  Options &subSection( int column, int level=1 );
     /*! Returns the section at the column specified by \a pattern and
         level \a level with all its subsections and column labels.  \a
-        level = 0 returns solely the column label. */
-  Options subSection( const string &pattern, int level=1 ) const;
+        level = 0 returns an empty Options. */
+  const Options &subSection( const string &pattern, int level=1 ) const;
+  Options &subSection( const string &pattern, int level=1 );
 
     /*! Get \a i-th column. */
   const Parameter &operator[]( int i ) const;
@@ -564,7 +566,8 @@ public:
   vector < int > Width;
   mutable int PrevCol;
 
-  Parameter Dummy;
+  mutable Parameter Dummy;
+  mutable Options DummySection;
 
   string Comment;
   string KeyStart;

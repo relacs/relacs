@@ -612,6 +612,35 @@ Parameter &Parameter::assign( const string &value )
 }
 
 
+Parameter &Parameter::setValue( const Parameter &p )
+{
+  Warning = "";
+
+  if ( valueType() != p.valueType() ) {
+    Warning = "Paramter differ in their type - cannot set value.";
+    return *this;
+  }
+
+  if ( ( ! String.empty() && ! p.String.empty() && String[0] != p.String[0] ) ||
+       ( ! Value.empty() && ! p.Value.empty() && Value[0] != p.Value[0] ) )
+    Flags |= ChangedFlag;
+
+  String = p.String;
+  Year = p.Year;
+  Month = p.Month;
+  Day = p.Day;
+  Hour = p.Hour;
+  Minutes = p.Minutes;
+  Seconds = p.Seconds;
+  MilliSeconds = p.MilliSeconds;
+  Value = p.Value;
+  Error = p.Error;
+  InternUnit = p.InternUnit;
+
+  return *this;
+}
+
+
 bool operator==( const Parameter &p1, const Parameter &p2 )
 {
   return ( p1.name() == p2.name() );
