@@ -356,16 +356,11 @@ void DataOverviewModel::displayIndex( const QModelIndex &index )
   if ( item == 0 )
     return;
 
-  if ( item->level() == 3 ) {
-    // display stimulus:
-    if ( Browser != 0 )
-      Browser->display( item->fileName(), item->traceIndex(), item->eventsIndex(), item->time() );
-  }
-  else if ( item->level() == 1 ) {
-    // display cell:
-    if ( Browser != 0 && item->traceIndex().size() > 0 )
-      Browser->display( item->fileName(), item->traceIndex(), item->eventsIndex(), item->time() );
-  }
+  if ( item->level() < 1 || item->level() > 3 )
+    return;
+
+  if ( Browser != 0 )
+    Browser->display( item->fileName(), item->traceIndex(), item->eventsIndex(), item->time() );
 }
 
 

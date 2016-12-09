@@ -245,7 +245,6 @@ void DataIndex::DataItem::addChild( const string &name, const Options &data,
 }
 
 
-
 void DataIndex::DataItem::loadCell( void )
 {
   if ( level() != 1 )
@@ -259,6 +258,7 @@ void DataIndex::DataItem::loadCell( void )
   // fix for the first stimulus descriptions implementation until 2014-06-21:
   if ( sd == "stimlus-descriptions.dat" )
     sd = "stimulus-descriptions.dat"; 
+  // load stimulus descriptions:
   Options stimuli;
   {
     string filename = Str( name() ).dir() + sd;
@@ -277,14 +277,10 @@ void DataIndex::DataItem::loadCell( void )
   deque< deque< string > > stimnames( stimcols.size() );
 
   do {
-    // add RePro:
-    Options &repro = sf.metaDataOptions( 0 );
-    OverviewModel->beginAddChild( this );
-    Children.push_back( DataItem( repro.text( "RePro" ), repro, level()+1, this ) );
-    DataItem *parent = &Children.back();
-    OverviewModel->endAddChild();
+    DataItem *parent = 0;
     // read in stimuli:
-    sf.initData();
+    if ( ! sf.initData() )
+      break;
     for ( unsigned int k=0; k<stimnames.size(); k++ )
       stimnames[k].clear();
     do {
@@ -322,13 +318,9 @@ void DataIndex::DataItem::loadCell( void )
 	double signaltime = traceindex[0]*deltat;
 	// signal description:
 	int nstimuli = 0;
-	int firststimulus = -1;
 	for ( unsigned int k=0; k<stimnames.size(); k++ ) {
-	  if ( stimnames[k][j] != "-" ) {
+	  if ( stimnames[k][j] != "-" )
 	    nstimuli++;
-	    if ( firststimulus < 0 )
-	      firststimulus = k;
-	  }
 	}
 	Options description;
 	for ( unsigned int k=0; k<stimnames.size(); k++ ) {
@@ -344,15 +336,26 @@ void DataIndex::DataItem::loadCell( void )
 	    }
 	  }
 	}
-	if ( nstimuli > 1 )
-	  description.setType( "stimulus" );
-	// add stimulus to tree:
-	OverviewModel->beginAddChild( parent );
-	parent->Children.push_back( DataItem( description.type(), description,
-					      traceindex, eventsindex,
-					      signaltime, level()+2, parent ) );
-	OverviewModel->endAddChild();
-
+	// add RePro:
+	if ( parent == 0 ) {
+	  Options &repro = sf.metaDataOptions( 0 );
+	  OverviewModel->beginAddChild( this );
+	  Children.push_back( DataItem( repro.text( "RePro" ), repro, traceindex, eventsindex,
+					signaltime, level()+1, this ) );
+	  parent = &Children.back();
+	  OverviewModel->endAddChild();
+	}
+	// add stimulus:
+	if ( nstimuli > 0 && parent != 0 ) {
+	  if ( nstimuli > 1 )
+	    description.setType( "stimulus" );
+	  // add stimulus to tree:
+	  OverviewModel->beginAddChild( parent );
+	  parent->Children.push_back( DataItem( description.type(), description,
+						traceindex, eventsindex,
+						signaltime, level()+2, parent ) );
+	  OverviewModel->endAddChild();
+	}
       }
     }
   } while ( sf.readMetaData() );
