@@ -56,6 +56,7 @@ void DataBrowser::keyPressEvent( QKeyEvent *qke )
 void DataBrowser::display( const string &path, const deque<int> &traceindex,
 			   const deque<int> &eventsindex, double time )
 {
+  emit dataView();
   emit displayIndex( path, traceindex, eventsindex, time );
 }
 

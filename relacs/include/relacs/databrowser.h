@@ -59,6 +59,8 @@ signals:
   void displayIndex( const string &path, const deque<int> &traceindex,
 		     const deque<int> &eventsindex, double time );
 
+  void dataView( void );
+
 
 protected:
 

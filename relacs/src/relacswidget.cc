@@ -101,6 +101,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     MTDT( this ),
     CW( 0 ),
     ShowFull( 0 ),
+    ShowTab( 0 ),
     ReadLoop( this ),
     WriteLoop( this ),
     DataRun( false ),
@@ -338,6 +339,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   DataBrowser *db = new DataBrowser( SF->dataIndex(), this );
   connect( db, SIGNAL( displayIndex( const string&, const deque<int>&, const deque<int>&, double ) ),
 	   PT, SLOT( displayIndex( const string&, const deque<int>&, const deque<int>&, double ) ) );
+  connect( db, SIGNAL( dataView() ), this, SLOT( showDataOnly() ) );
   CW->addTab( db, "Data-Browser" );
   statusBar()->addWidget( SF, 0 );
   // Simulation:
@@ -428,6 +430,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   viewmenu->addAction( "Show &RePros",
 		       (QWidget*)this, SLOT( showRePros() ),
 		       Qt::CTRL + Qt::Key_4 );
+  viewmenu->addAction( "Show &data",
+		       (QWidget*)this, SLOT( showData() ),
+		       Qt::CTRL + Qt::Key_5 );
   MaximizedAction = viewmenu->addAction( "&Maximize window",
 					 (QWidget*)this, SLOT( maximizeScreen() ),
 					 Qt::CTRL + Qt::SHIFT + Qt::Key_M );
@@ -1997,29 +2002,17 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
 
 void RELACSWidget::displayData( void )
 {
+  showFull();
   PT->displayData();
 }
 
 
 void RELACSWidget::showFilters( void )
 {
-  if ( ShowFull == 1 ) {
-    ShowFull = 0;
-    int wd = FD->sizeHint().width();
-    int wc = CW->sizeHint().width();
-    int w = wc > wd ? wc : wd;
-    FD->setMaximumWidth( w );
-    CW->setMaximumWidth( w );
-    MainLayout->setColumnStretch( 0, 1 );
-    MainLayout->setColumnStretch( 1, 100 );
-    MainLayout->setRowStretch( 0, 2 );
-    MainLayout->setRowStretch( 1, 3 );
-    FD->show();
-    PT->widget()->show();
-    CW->show();
-    RP->show();
-  }
+  if ( ShowFull == 1 )
+    showFull();
   else {
+    restoreWidgets();
     ShowFull = 1;
     MainLayout->setColumnStretch( 0, 0 );
     MainLayout->setColumnStretch( 1, 0 );
@@ -2036,23 +2029,10 @@ void RELACSWidget::showFilters( void )
 
 void RELACSWidget::showTraces( void )
 {
-  if ( ShowFull == 2 ) {
-    ShowFull = 0;
-    int wd = FD->sizeHint().width();
-    int wc = CW->sizeHint().width();
-    int w = wc > wd ? wc : wd;
-    FD->setMaximumWidth( w );
-    CW->setMaximumWidth( w );
-    MainLayout->setColumnStretch( 0, 1 );
-    MainLayout->setColumnStretch( 1, 100 );
-    MainLayout->setRowStretch( 0, 2 );
-    MainLayout->setRowStretch( 1, 3 );
-    FD->show();
-    PT->widget()->show();
-    CW->show();
-    RP->show();
-  }
+  if ( ShowFull == 2 )
+    showFull();
   else {
+    restoreWidgets();
     ShowFull = 2;
     MainLayout->setColumnStretch( 0, 0 );
     MainLayout->setColumnStretch( 1, 0 );
@@ -2068,23 +2048,10 @@ void RELACSWidget::showTraces( void )
 
 void RELACSWidget::showControls( void )
 {
-  if ( ShowFull == 3 ) {
-    ShowFull = 0;
-    int wd = FD->sizeHint().width();
-    int wc = CW->sizeHint().width();
-    int w = wc > wd ? wc : wd;
-    FD->setMaximumWidth( w );
-    CW->setMaximumWidth( w );
-    MainLayout->setColumnStretch( 0, 1 );
-    MainLayout->setColumnStretch( 1, 100 );
-    MainLayout->setRowStretch( 0, 2 );
-    MainLayout->setRowStretch( 1, 3 );
-    FD->show();
-    PT->widget()->show();
-    CW->show();
-    RP->show();
-  }
+  if ( ShowFull == 3 )
+    showFull();
   else {
+    restoreWidgets();
     ShowFull = 3;
     MainLayout->setColumnStretch( 0, 0 );
     MainLayout->setColumnStretch( 1, 0 );
@@ -2101,23 +2068,10 @@ void RELACSWidget::showControls( void )
 
 void RELACSWidget::showRePros( void )
 {
-  if ( ShowFull == 4 ) {
-    ShowFull = 0;
-    int wd = FD->sizeHint().width();
-    int wc = CW->sizeHint().width();
-    int w = wc > wd ? wc : wd;
-    FD->setMaximumWidth( w );
-    CW->setMaximumWidth( w );
-    MainLayout->setColumnStretch( 0, 1 );
-    MainLayout->setColumnStretch( 1, 100 );
-    MainLayout->setRowStretch( 0, 2 );
-    MainLayout->setRowStretch( 1, 3 );
-    FD->show();
-    PT->widget()->show();
-    CW->show();
-    RP->show();
-  }
+  if ( ShowFull == 4 )
+    showFull();
   else {
+    restoreWidgets();
     ShowFull = 4;
     MainLayout->setColumnStretch( 0, 0 );
     MainLayout->setColumnStretch( 1, 0 );
@@ -2127,6 +2081,68 @@ void RELACSWidget::showRePros( void )
     PT->widget()->hide();
     CW->hide();
     RP->show();
+  }
+}
+
+
+void RELACSWidget::showData( void )
+{
+  if ( ShowFull == 5 )
+    showFull();
+  else 
+    showDataOnly();
+}
+
+
+void RELACSWidget::showDataOnly( void )
+{
+  if ( ShowFull != 5 ) {
+    restoreWidgets();
+    ShowFull = 5;
+    MainLayout->setColumnStretch( 0, 1 );
+    MainLayout->setColumnStretch( 1, 100 );
+    MainLayout->setRowStretch( 0, 0 );
+    MainLayout->setRowStretch( 1, 0 );
+    FD->hide();
+    PT->widget()->show();
+    CW->show();
+    RP->hide();
+    MainLayout->removeWidget( CW );
+    MainLayout->removeWidget( FD );
+    MainLayout->addWidget( CW, 0, 0 );
+    ShowTab = CW->currentIndex();
+    CW->setCurrentIndex(CW->count()-1);
+  }
+}
+
+
+void RELACSWidget::showFull( void )
+{
+  restoreWidgets();
+  ShowFull = 0;
+  int wd = FD->sizeHint().width();
+  int wc = CW->sizeHint().width();
+  int w = wc > wd ? wc : wd;
+  FD->setMaximumWidth( w );
+  CW->setMaximumWidth( w );
+  MainLayout->setColumnStretch( 0, 1 );
+  MainLayout->setColumnStretch( 1, 100 );
+  MainLayout->setRowStretch( 0, 2 );
+  MainLayout->setRowStretch( 1, 3 );
+  FD->show();
+  PT->widget()->show();
+  CW->show();
+  RP->show();
+}
+
+
+void RELACSWidget::restoreWidgets( void )
+{
+  if ( ShowFull == 5 ) {
+    MainLayout->removeWidget( CW );
+    MainLayout->addWidget( FD, 0, 0 );
+    MainLayout->addWidget( CW, 1, 0 );
+    CW->setCurrentIndex( ShowTab );
   }
 }
 

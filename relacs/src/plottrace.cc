@@ -50,6 +50,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   ViewMode = SignalView;
   ContinuousView = WrapView;
   setView( WrapView );
+  DataView = NoView;
   Manual = false;
   ShowGrid = 3;
   Trigger = true;
@@ -1602,6 +1603,8 @@ void PlotTrace::displayIndex( const string &fpath, const deque<int> &traceindex,
     FilePlot = true;
   }
   if ( success ) {
+    if ( DataView == NoView )
+      DataView = ViewMode;
     if ( ViewMode != FixedView ) {
       TimeOffs = 0.0;
       setView( FixedView );
@@ -1636,7 +1639,11 @@ void PlotTrace::displayData( void )
     FileSizes.clear();
     FileEvents.clear();
     FileEventsNames.clear();
-    setView( WrapView );
+    if ( DataView == NoView )
+      setView( WrapView );
+    else
+      setView( DataView );
+    DataView = NoView;
     Offset = trace( 0 ).currentTime() - TimeWindow;
     LeftTime = Offset - TimeOffs;
     PlotChanged = true;

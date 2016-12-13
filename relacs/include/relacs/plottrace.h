@@ -199,12 +199,15 @@ private:
       /*! Show the traces either in EndView or WrapView according to
 	  the ContinuousView variable. */
     ContView,
+      /*! View needs to be initialized. */
+    NoView
   };
 
   void setView( Views mode );
   void updateStyle( void );
 
   Views ContinuousView;
+  Views DataView;
 
   double TimeWindow;
   double TimeOffs;

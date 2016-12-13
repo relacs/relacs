@@ -289,6 +289,10 @@ public slots:
   void showControls( void );
     /*! Toggle showing RePros in full window. */
   void showRePros( void );
+    /*! Toggle showing databrowser and traces in full window. */
+  void showData( void );
+    /*! Show databrowser and traces in full window. */
+  void showDataOnly( void );
     /*! Toggles full screen mode. */
   void fullScreen( void );
     /*! Toggles maximized screen mode. */
@@ -359,6 +363,11 @@ private:
         processes data. */    
   void run( void );
 
+    /*! Restore showing all widgets. */
+  void showFull( void );
+    /*! Restore widget ordering. */
+  void restoreWidgets( void );
+
   ModeTypes Mode;
   static const string ModeStr[5];
 
@@ -397,6 +406,7 @@ private:
   AudioMonitor *AM;
 
   int ShowFull;
+  int ShowTab;
 
   double SignalTime;
   InList IRawData;
