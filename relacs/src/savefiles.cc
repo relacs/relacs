@@ -132,6 +132,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   // load current directory:
   QDir dir;
   DI.loadDirectory( dir.currentPath().toStdString() );
+  std::cerr << NixIO.fd.isOpen() << std::endl;
 }
 
 
@@ -423,14 +424,12 @@ void SaveFiles::writeEvents( bool stimulus )
 
   #ifdef HAVE_NIX
   // double noffs = IL[0].interval( NixIO.traces[0].index - NixIO.traces[0].offset[0] ) - SessionTime;
-
   /*
   double offs = 0.0;
   if ( ! TraceFiles.empty() )
     offs = IL[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
   */
-
-  NixIO.writeEvents( EL, offs );
+  NixIO.writeEvents( IL, EL );
   #endif
 }
 
@@ -1901,7 +1900,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
 					string rp_name, double sessiontime, RELACSWidget *RW,
 					const Options &stim_options)
 {
-  if ( ! NixIO.fd )
+  if ( !fd )
     return;
 
   // TODO: do this not only for the first trace, but for all of them
@@ -2080,7 +2079,7 @@ void SaveFiles::NixFile::appendValue( nix::DataArray &array, double value ) {
 
 void SaveFiles::NixFile::writeTraces( const InList &IL )
 {
-  if ( ! NixIO.fd )
+  if ( ! fd )
     return;
 
   for ( int k=0; k < IL.size(); k++ ) {
@@ -2151,10 +2150,14 @@ void SaveFiles::NixFile::initEvents( const EventList &EL, FilterDetectors *FD )
 }
 
 
-void SaveFiles::NixFile::writeEvents( const EventList &EL, double off )
+void SaveFiles::NixFile::writeEvents( const InList &IL, const EventList &EL)
 {
-  if ( ! NixIO.fd )
+  if ( ! fd )
     return;
+  double off = 0.0;
+  if ( ! traces.empty() )
+    off = IL[0].interval( traces[0].index - traces[0].written );
+  
 
   //  double st = EL[0].size() > 0 ? EL[0].back() : EL[0].rangeBack();
   for(auto &ed : events ) {
