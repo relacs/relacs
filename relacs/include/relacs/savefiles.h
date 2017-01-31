@@ -417,6 +417,7 @@ protected:
   RelacsFiles RelacsIO;
 
   #ifdef HAVE_NIX
+  
   struct NixTrace {
     nix::DataArray data;
     size_t         index;
@@ -455,7 +456,7 @@ protected:
     void writeTraces ( const InList &IL );
     void writeChunk ( NixTrace &trace, size_t to_read, const void *data);
     void initEvents ( const EventList &EL, FilterDetectors *FD );
-    void writeEvents ( const EventList &EL, double offset );
+    void writeEvents ( const InList &IL, const EventList &EL );
     void resetIndex ( const InList &IL );
     void resetIndex ( const EventList &EL );
     void appendValue( nix::DataArray &array, double value ); 
@@ -470,7 +471,7 @@ protected:
   };
   NixFile NixIO;
   #endif
-  
+
   RELACSWidget *RW;
 
   QLabel *FileLabel;
