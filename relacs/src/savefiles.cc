@@ -132,7 +132,6 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   // load current directory:
   QDir dir;
   DI.loadDirectory( dir.currentPath().toStdString() );
-  std::cerr << NixIO.fd.isOpen() << std::endl;
 }
 
 
