@@ -85,10 +85,9 @@ int InstantaneousRate::filter( const EventData &inevents, InData &outdata )
       }
     }
     else {
-      while ( outdata.currentTime() < inevents[Index] ) {
-	X = rate;
+      X = rate;
+      while ( outdata.currentTime() < inevents[Index] )
 	outdata.push( X );
-      }
     }
     ++Index;
   }
