@@ -2045,7 +2045,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
     appendValue(delay_feat, delay);
     appendValue(amplitude_feat, intensity);
   }
-  NixIO.fd.flush();
+  fd.flush();
 }
 
 
