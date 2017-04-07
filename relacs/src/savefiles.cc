@@ -2045,6 +2045,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
     appendValue(delay_feat, delay);
     appendValue(amplitude_feat, intensity);
   }
+  NixIO.fd.flush();
 }
 
 
@@ -2139,7 +2140,7 @@ void SaveFiles::NixFile::initEvents( const EventList &EL, FilterDetectors *FD )
     std::string data_type = "nix.events.position." + ident;
     if ( root_block.hasDataArray(ident) )
        ident = EL[i].ident() + "_events"; 
-    ed.data = root_block.createDataArray( ident, data_type, nix::DataType::Double, {1} );
+    ed.data = root_block.createDataArray( ident, data_type, nix::DataType::Double, {256} );
     ed.data.unit( "s" );
     ed.data.label( "time" );
     ed.data.appendAliasRangeDimension();
