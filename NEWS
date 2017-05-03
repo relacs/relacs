@@ -1,5 +1,11 @@
 Version 0.9.8
 
+January, 2017
+  First workin support of NIX files.
+
+November, 2016
+  Dynamic clamp module runs smoothly...
+
 March, 2015
   Dynamic clamp module provides status traces with output and timing information.
 
