@@ -396,7 +396,7 @@ void Search::keyPressEvent( QKeyEvent *qke )
     break;
 
   case Qt::Key_Pause:
-  case Qt::Key_M:
+  case Qt::Key_N:
     toggleMute();
     break;
 

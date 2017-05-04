@@ -64,7 +64,7 @@ namespace auditory {
 \par Keyboard shortcuts:
 - \c Left: Left speaker
 - \c Right: Right speaker
-- \c M, \c %Pause: Toggle mute
+- \c N, \c %Pause: Toggle stimulus output
 - \c Up: Increase intensity by 1dB
 - \c Down: Decrease intensity by 1dB
 - \c Shift+Up: Increase intensity by 5dB
