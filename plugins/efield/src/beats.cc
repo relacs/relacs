@@ -147,6 +147,10 @@ int Beats::main( void )
       }
     }
   }
+  if ( ::fabs(amplitude) < 1e-8 ) {
+    warning( "amplitude needs to be larger than zero." );
+    return Failed;
+  }
   int nfft = 0;
   if ( usepsd ) {
     nfft = nextPowerOfTwo( (int)::ceil( 1.0/trace( FishEODTrace[0][0] ).stepsize()/eodfreqprec ) );
@@ -522,6 +526,8 @@ int Beats::main( void )
 	    sig.sineWave( n*p, -1.0, stimulusrate, 0.0, 1.0, ramp );
 	    sig.setIdent( "sinewave" );
 	    sig.setIntensity( amplitude );
+	    sig.description().setNumber( "Amplitude", amplitude );
+	    sig.description().setUnit( "Amplitude", "mV" );
 	  }
 	  else {
 	    OutData am;
@@ -554,6 +560,8 @@ int Beats::main( void )
 	    am.description().addNumber( "Intensity", 1.0, "" );
 	    am /= 1.0+amamplsum;
 	    sig.fill( am, stimulusrate );
+	    sig.description().clearSections();
+	    sig.description().addNumber( "Amplitude", amplitude, "mV" );
 	    sig.ramp( ramp );
 	    if ( amtype == 2 )
 	      sig.setIdent( "am-rectangularwave" );
