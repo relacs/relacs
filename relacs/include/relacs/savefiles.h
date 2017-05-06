@@ -148,6 +148,13 @@ public:
         \sa defaultPath() */
   string addDefaultPath( const string &file ) const;
 
+    /*! Should data be written in RELACS format? */
+  void setWriteRelacsFiles( bool write );
+    /*! Should metadata be written in ODML format? */
+  void setWriteODMLFiles( bool write );
+    /*! Should data be written in NIX format? */
+  void setWriteNIXFiles( bool write );
+
     /*! React to settings of the stimulus options.
         This function calls notifyStimulusData() in all RELACSPlugins. */
   virtual void notify( void );
@@ -241,12 +248,21 @@ protected:
         that have to be deleted if the session is not to be saved. */
   void removeFiles( void );
 
-  /*! Open and initialize the NIX file that
-        contains *all* information. */
+    /*! Open and initialize the native RELACS data files that contain *all* information. */
+  void createRelacsFiles( void );
+    /*! Open and initialize the ODML files that contain metadata only. */
+  void createODMLFiles( void );
+    /*! Open and initialize the NIX file that contains *all* information. */
   void createNIXFile( void );
   
   virtual void customEvent( QEvent *qce );
 
+    /*! Should data be written in RELACS format? */
+  bool WriteRelacsFiles;
+    /*! Should metadata be written in ODML format? */
+  bool WriteODMLFiles;
+    /*! Should data be written in NIX format? */
+  bool WriteNIXFiles;
     /*! Are there any files open to save in? */
   bool FilesOpen;
     /*! Should be saved into the files? */
@@ -315,6 +331,11 @@ protected:
         to be saved. */
   deque<string> RemoveFiles;
 
+
+  /*!
+    \class RelacsFiles
+    \brief Write recorded data and metadata in native RELACS format.
+  */
   class RelacsFiles {
 
   public:
@@ -322,7 +343,7 @@ protected:
     RelacsFiles( void );
 
       /*! Open all necessary files. */
-    void open( const InList &IL, const EventList &EL, 
+    bool open( const InList &IL, const EventList &EL, 
 	       const Options &data, const Acquire *acquire, 
 	       const string &path, SaveFiles *save, const AllDevices *devices );
 
@@ -364,20 +385,11 @@ protected:
           contains indices to he traces and event files. */
     void openStimulusFiles( const InList &IL, const EventList &EL, 
 			    const Options &data, const Acquire *acquire, SaveFiles *save );
-      /*! Open and initialize the XML file that
-          contains all information. */
-    void openXMLFiles( const string &path, SaveFiles *save, const AllDevices *devices );
 
       /*! File with stimuli and indices to traces and events. */
     ofstream *SF;
       /*! File with stimulus descriptions. */
     ofstream *SDF;
-
-      /*! XML file containing all data. */
-    ofstream *XF;
-      /*! XML file containing stimulus descriptions. */
-    ofstream *XSF;
-    bool DatasetOpen;
 
     struct TraceFile {
         /*! The name of the file for the trace. */
@@ -416,6 +428,50 @@ protected:
   };
   RelacsFiles RelacsIO;
 
+
+  /*!
+    \class ODMLFiles
+    \brief Write metadata into ODML files.
+  */
+  class ODMLFiles {
+
+  public:
+
+    ODMLFiles( void );
+
+      /*! Open all necessary files. */
+
+      /*! Open and initialize the XML file that
+          contains all information. */
+    bool open( const string &path, SaveFiles *save, const AllDevices *devices );
+
+      /*! Write pending stimuli to files. \sa save( const OutData& ), save( const OutList& ) */
+    void writeStimulus( const InList &IL, const EventList &EL, 
+			const deque< OutDataInfo > &stimuliinfo, 
+			const deque< bool > &newstimuli, const Options &data, 
+			const deque< Options > &stimuliref, int *stimulusindex,
+			double sessiontime, const string &reproname, const Acquire *acquire );
+      /*! Write information about a RePro to files. \sa save( const RePro& ) */
+    void writeRePro( const Options &reproinfo, const deque< string > &reprofiles,
+		     const InList &IL, const EventList &EL, const Options &data, 
+		     double sessiontime );
+
+      /*! Close all files. */
+    void close( const string &path, const deque< string > &reprofiles,
+		MetaData &metadata );
+
+
+  protected:
+
+      /*! XML file containing all data. */
+    ofstream *XF;
+      /*! XML file containing stimulus descriptions. */
+    ofstream *XSF;
+    bool DatasetOpen;
+  };
+  ODMLFiles OdmlIO;
+
+
   #ifdef HAVE_NIX
   
   struct NixTrace {
@@ -435,6 +491,10 @@ protected:
     size_t el_index;
   };
 
+  /*!
+    \class NixFiles
+    \brief Write recorded data and metadata in NIX format.
+  */
   struct NixFile {
     nix::File    fd;
     nix::Block   root_block;

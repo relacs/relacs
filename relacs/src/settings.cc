@@ -38,10 +38,6 @@ Settings::Settings( RELACSWidget* rw )
   : ConfigDialog( "Settings", RELACSPlugin::Core, "Settings" ),
     RW( rw )
 {
-  newSection( "General" );
-  addNumber( "readinterval", "Interval for periodic acquisition of data", 0.01, 0.001, 1000.0, 0.001, "seconds", "ms" );
-  addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
-  addNumber( "aitimeout", "Minimum time that has to pass between analog input errors", 10.0, 0.0, 100000.0, 1.0, "seconds" );
   newSection( "Plugins" );
   addText( "pluginpathes", "Plugin pathes", "" );
   addText( "pluginhelppathes", "Pathes to plugin help files", "" );
@@ -65,6 +61,11 @@ Settings::Settings( RELACSWidget* rw )
   addText( "repropath", "Base directory for RePros to store some general stuff", "reprodata" ).setStyle( OptWidget::BrowseDirectory );
   addText( "infofile", "Name of info file", "info.dat", 1 );
   newSection( "Save" );
+  addBoolean( "saverelacsfiles", "Save data and metadata in RELACS format", true );
+  addBoolean( "saveodmlfiles", "Save metadata in ODML format", false );
+#ifdef HAVE_NIX
+  addBoolean( "savenixfiles", "Save data nad metadata in NIX format", false );
+#endif
   addBoolean( "saverelacscore", "Save core configuration of RELACS to session", true );
   addBoolean( "saverelacsplugins", "Save configuration of RELACS-plugins to session", true );
   addBoolean( "saverelacslog", "Save log of RELACS to session", true );
@@ -75,6 +76,10 @@ Settings::Settings( RELACSWidget* rw )
   addText( "reprotimeformat", "Format for repro runtime", "%Mmin%02Ssec" );
   newSection( "Plotting" );
   addText( "printcommand", "Command to be executed for printing traces", "" );
+  newSection( "Data acquisition" );
+  addNumber( "readinterval", "Interval for periodic acquisition of data", 0.01, 0.001, 1000.0, 0.001, "seconds", "ms" );
+  addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
+  addNumber( "aitimeout", "Minimum time that has to pass between analog input errors", 10.0, 0.0, 100000.0, 1.0, "seconds" );
 
   addDialogStyle( OptWidget::Bold );
 
@@ -111,6 +116,11 @@ void Settings::notify( void )
     defaultpath.provideSlash();
     RW->SF->setDefaultPath( defaultpath );
 
+    RW->SF->setWriteRelacsFiles( boolean( "saverelacsfiles" ) );
+    RW->SF->setWriteODMLFiles( boolean( "saveodmlfiles" ) );
+#ifdef HAVE_NIX
+    RW->SF->setWriteNIXFiles( boolean( "savenixfiles" ) );
+#endif
   }
 
   Str rp = text( "repropath" );

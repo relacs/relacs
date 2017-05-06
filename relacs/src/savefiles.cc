@@ -80,6 +80,9 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   PathNumber = 0;
   PathTime = ::time( 0 );
 
+  WriteRelacsFiles = true;
+  WriteODMLFiles = true;
+  WriteNIXFiles = true;
   FilesOpen = false;
   Saving = false;
   Hold = false;
@@ -270,6 +273,24 @@ string SaveFiles::addDefaultPath( const string &file ) const
 {
   QMutexLocker locker( &SaveMutex );
   return DefaultPath + file;
+}
+
+
+void SaveFiles::setWriteRelacsFiles( bool write )
+{
+  WriteRelacsFiles = write;
+}
+
+
+void SaveFiles::setWriteODMLFiles( bool write )
+{
+  WriteODMLFiles = write;
+}
+
+
+void SaveFiles::setWriteNIXFiles( bool write )
+{
+  WriteNIXFiles = write;
 }
 
 
@@ -636,6 +657,9 @@ void SaveFiles::writeStimulus( void )
     RelacsIO.writeStimulus( IL, EL, Stimuli, newstimuli, StimulusData,
 			    stimuliref, stimulusindex,
 			    SessionTime, repronamecount, RW->AQ );
+    OdmlIO.writeStimulus( IL, EL, Stimuli, newstimuli, StimulusData,
+			    stimuliref, stimulusindex,
+			    SessionTime, repronamecount, RW->AQ );
 
     #ifdef HAVE_NIX
     NixIO.writeStimulus( IL, Stimuli, ReProName, SessionTime, RW, StimulusData );
@@ -681,6 +705,7 @@ void SaveFiles::writeRePro( void )
   if ( ReProData && isSaving() && ! Hold ) {
 
     RelacsIO.writeRePro( ReProInfo, ReProFiles, IL, EL, *this, SessionTime );
+    OdmlIO.writeRePro( ReProInfo, ReProFiles, IL, EL, *this, SessionTime );
 
     // nix file:
     //    XXX write ReProInfo as odml tree
@@ -759,17 +784,36 @@ ofstream *SaveFiles::openFile( const string &filename, int type )
 }
 
 
+void SaveFiles::createRelacsFiles( void )
+{
+  if ( WriteRelacsFiles &&
+       RelacsIO.open( IL, EL, *this, RW->AQ, Path, this, RW->ADV ) )
+    FilesOpen = true;
+}
+
+
+void SaveFiles::createODMLFiles( void )
+{
+  if ( WriteODMLFiles &&
+       OdmlIO.open( Path, this, RW->ADV ) )
+    FilesOpen = true;
+}
+
+
 void SaveFiles::createNIXFile( void )
 {
   #ifdef HAVE_NIX
-  string nix_path = NixIO.create( Path );
-  if ( nix_path.empty() ) {
-    std::cerr << "Could not create NIX data file" << std::endl;
-    return;
+  if ( WriteNIXFiles ) {
+    string nix_path = NixIO.create( Path );
+    if ( nix_path.empty() ) {
+      RW->printlog( "! warning in SaveFiles::createNIXFile: could not create NIX data file in '" + Path + "'" );
+      return;
+    }
+    addRemoveFile( nix_path );
+    NixIO.initTraces( IL );
+    NixIO.initEvents( EL, RW->FD );
+    FilesOpen = true;
   }
-  addRemoveFile( nix_path );
-  NixIO.initTraces( IL );
-  NixIO.initEvents( EL, RW->FD );
   #endif
 }
 
@@ -876,10 +920,10 @@ void SaveFiles::openFiles( void )
 
   // open files:
   lock();
-  RelacsIO.open( IL, EL, *this, RW->AQ, Path, this, RW->ADV );
+  createRelacsFiles();
+  createODMLFiles();
   createNIXFile();
   unlock();
-  FilesOpen = true;
   Hold = false;
 
   // add recording event:
@@ -909,6 +953,7 @@ void SaveFiles::closeFiles( void )
   Hold = false;
 
   RelacsIO.close( Path, ReProFiles, RW->MTDT );
+  OdmlIO.close( Path, ReProFiles, RW->MTDT );
 
   #ifdef HAVE_NIX
   if ( NixIO.fd.isOpen() ) {
@@ -1039,16 +1084,13 @@ SaveFiles::RelacsFiles::RelacsFiles( void )
 {
   SF = 0;
   SDF = 0;
-  XF = 0;
-  XSF = 0;
-  DatasetOpen = false;
   TraceFiles.clear();
   EventFiles.clear();
   StimulusKey.clear();
 }
 
 
-void SaveFiles::RelacsFiles::open( const InList &IL, const EventList &EL, 
+bool SaveFiles::RelacsFiles::open( const InList &IL, const EventList &EL, 
 				   const Options &data, const Acquire *acquire, 
 				   const string &path, SaveFiles *save, 
 				   const AllDevices *devices )
@@ -1056,10 +1098,11 @@ void SaveFiles::RelacsFiles::open( const InList &IL, const EventList &EL,
   openTraceFiles( IL, save );
   openEventFiles( EL, save );
   openStimulusFiles( IL, EL, data, acquire, save );
-  openXMLFiles( path, save, devices );
 
   // tell the data index:
   save->DI.addSession( path + "stimuli.dat", Options(), TraceFiles.size(), EventFiles.size() );
+
+  return (*SF);
 }
 
 
@@ -1270,59 +1313,6 @@ void SaveFiles::RelacsFiles::openStimulusFiles( const InList &IL, const EventLis
 }
 
 
-void SaveFiles::RelacsFiles::openXMLFiles( const string &path, SaveFiles *save, 
-					   const AllDevices *devices )
-{
-  DatasetOpen = false;
-
-  // create xml file for all data:
-  XF = save->openFile( "metadata.xml", ios::out );
-
-  if ( (*XF) ) {
-    string name = Str( path ).preventedSlash().name();
-    *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
-    *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
-    *XF << "<odML version=\"1\">\n";
-    *XF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
-    *XF << "    <section>\n";
-    *XF << "        <type>hardware</type>\n";
-    *XF << "        <name>hardware-" << name << "</name>\n";
-    for ( int k=0; k<devices->size(); k++ ) {
-      const Device &dev = (*devices)[k];
-      int dt = dev.deviceType();
-      if ( dt == Device::AttenuateType )
-	continue;
-      string dts = dev.deviceTypeStr();
-      if ( dt == Device::AnalogInputType )
-	dts = "DataAcquisition";
-      else if ( dt == Device::AnalogOutputType )
-	dts = "DataAcquisition";
-      else if ( dt == Device::DigitalIOType )
-	dts = "DigitialIO";
-      else if ( dt == Device::AttenuateType )
-	dts = "Attenuation";
-      Options opts( dev.info() );
-      opts.erase( "type" );
-      *XF << "        <section>\n";
-      *XF << "            <type>" << dts << "</type>\n";
-      *XF << "            <name>hardware-" << dts << "-" << name << "</name>\n";
-      opts.saveXML( *XF, 0, Options::FirstOnly, 3 );
-      *XF << "        </section>\n";
-    }
-    *XF << "    </section>\n";
-  }
-
-  // create xml file for stimulus metadata:
-  XSF = save->openFile( "stimulus-metadata.xml", ios::out );
-  if ( (*XSF) ) {
-    *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
-    *XSF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
-    *XSF << "<odML version=\"1\">\n";
-    *XSF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
-  }
-}
-
-
 void SaveFiles::RelacsFiles::close( const string &path, const deque< string > &reprofiles,
 				    MetaData &metadata )
 {
@@ -1348,29 +1338,6 @@ void SaveFiles::RelacsFiles::close( const string &path, const deque< string > &r
   if ( SDF != 0 )
     delete SDF;
   SDF = 0;
-  if ( XF != 0 ) {
-    if ( DatasetOpen ) {
-      if ( reprofiles.size() > 0 ) {
-	string files = reprofiles[0];
-	for ( unsigned int k=1; k<reprofiles.size(); k++ )
-	  files += ", " + reprofiles[k];
-	Parameter p( "File", "", files );
-	p.saveXML( *XF, 2, 4 );
-      }
-      *XF << "    </section>\n";
-      DatasetOpen = false;
-    }
-    string name = Str( path ).preventedSlash().name();
-    metadata.saveXML( *XF, 1, name );
-    *XF << "</odML>\n";
-    delete XF;
-  }
-  XF = 0;
-  if ( XSF != 0 ) {
-    *XSF << "</odML>\n";
-    delete XSF;
-  }
-  XSF = 0;
 }
 
 
@@ -1406,8 +1373,8 @@ void SaveFiles::RelacsFiles::writeTraces( const InList &IL, bool stimulus )
 }
 
 
-  void SaveFiles::RelacsFiles::writeEvents( const InList &IL, const EventList &EL, 
-					    bool stimulus )
+void SaveFiles::RelacsFiles::writeEvents( const InList &IL, const EventList &EL, 
+   				          bool stimulus )
 {
   double offs = 0.0;
   if ( ! TraceFiles.empty() )
@@ -1515,30 +1482,6 @@ void SaveFiles::RelacsFiles::writeStimulus( const InList &IL, const EventList &E
     }
     *SF << endl;
   }
-
-  // xml metadata file:
-  if ( XF != 0 ) {
-
-    // stimulus description:
-    if ( XSF != 0 ) {
-      for ( unsigned int j=0; j<stimuliinfo.size(); j++ ) {
-	if ( newstimuli[j] )
-	  stimuliinfo[j].description().saveXML( *XSF, 0, Options::FirstOnly, 1 );
-      }
-    }
-
-    // stimulus reference:
-    Options sopt( reproname, "stimulus", 0, 0 );
-    sopt.append( data );
-    for ( int k=0; k<acquire->outTracesSize(); k++ ) {
-      int j = stimulusindex[k];
-      if ( j >= 0 ) {
-	Options &ref = sopt.newSection( stimuliref[j] );
-	ref.setInclude( "stimulus-metadata.xml", stimuliref[j].name() );
-      }
-    }
-    sopt.saveXML( *XF, 0, Options::FirstOnly, 2 );
-  }
 }
 
 
@@ -1605,22 +1548,6 @@ void SaveFiles::RelacsFiles::writeRePro( const Options &reproinfo,
     StimulusKey.saveData( *SF );
     SF->flush();
   }
-
-  // xml metadata file:
-  if ( XF != 0 ) {
-    if ( DatasetOpen ) {
-      if ( reprofiles.size() > 0 ) {
-	string files = reprofiles[0];
-	for ( unsigned int k=1; k<reprofiles.size(); k++ )
-	  files += ", " + reprofiles[k];
-	Parameter p( "File", "", files );
-	p.saveXML( *XF, 2, 4 );
-      }
-      *XF << "    </section>\n";
-    }
-    reproinfo.saveXML( *XF, 0, Options::FirstOnly | Options::DontCloseSection, 1 );
-    DatasetOpen = true;
-  }
 }
 
 
@@ -1637,6 +1564,155 @@ void SaveFiles::RelacsFiles::eventsSignalIndices( deque<int> &eventsindex )
     eventsindex.push_back( EventFiles[k].SignalEvent );
 }
   
+
+SaveFiles::ODMLFiles::ODMLFiles( void )
+{
+  XF = 0;
+  XSF = 0;
+  DatasetOpen = false;
+}
+
+
+bool SaveFiles::ODMLFiles::open( const string &path, SaveFiles *save, 
+				 const AllDevices *devices )
+{
+  DatasetOpen = false;
+
+  // create xml file for all data:
+  XF = save->openFile( "metadata.xml", ios::out );
+
+  if ( (*XF) ) {
+    string name = Str( path ).preventedSlash().name();
+    *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
+    *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
+    *XF << "<odML version=\"1\">\n";
+    *XF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
+    *XF << "    <section>\n";
+    *XF << "        <type>hardware</type>\n";
+    *XF << "        <name>hardware-" << name << "</name>\n";
+    for ( int k=0; k<devices->size(); k++ ) {
+      const Device &dev = (*devices)[k];
+      int dt = dev.deviceType();
+      if ( dt == Device::AttenuateType )
+	continue;
+      string dts = dev.deviceTypeStr();
+      if ( dt == Device::AnalogInputType )
+	dts = "DataAcquisition";
+      else if ( dt == Device::AnalogOutputType )
+	dts = "DataAcquisition";
+      else if ( dt == Device::DigitalIOType )
+	dts = "DigitialIO";
+      else if ( dt == Device::AttenuateType )
+	dts = "Attenuation";
+      Options opts( dev.info() );
+      opts.erase( "type" );
+      *XF << "        <section>\n";
+      *XF << "            <type>" << dts << "</type>\n";
+      *XF << "            <name>hardware-" << dts << "-" << name << "</name>\n";
+      opts.saveXML( *XF, 0, Options::FirstOnly, 3 );
+      *XF << "        </section>\n";
+    }
+    *XF << "    </section>\n";
+  }
+
+  // create xml file for stimulus metadata:
+  XSF = save->openFile( "stimulus-metadata.xml", ios::out );
+  if ( (*XSF) ) {
+    *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
+    *XSF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
+    *XSF << "<odML version=\"1\">\n";
+    *XSF << "    <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
+  }
+
+  return ( (*XF) || (*XSF) );
+}
+
+
+void SaveFiles::ODMLFiles::close( const string &path, const deque< string > &reprofiles,
+				    MetaData &metadata )
+{
+  if ( XF != 0 ) {
+    if ( DatasetOpen ) {
+      if ( reprofiles.size() > 0 ) {
+	string files = reprofiles[0];
+	for ( unsigned int k=1; k<reprofiles.size(); k++ )
+	  files += ", " + reprofiles[k];
+	Parameter p( "File", "", files );
+	p.saveXML( *XF, 2, 4 );
+      }
+      *XF << "    </section>\n";
+      DatasetOpen = false;
+    }
+    string name = Str( path ).preventedSlash().name();
+    metadata.saveXML( *XF, 1, name );
+    *XF << "</odML>\n";
+    delete XF;
+  }
+  XF = 0;
+  if ( XSF != 0 ) {
+    *XSF << "</odML>\n";
+    delete XSF;
+  }
+  XSF = 0;
+}
+
+
+void SaveFiles::ODMLFiles::writeStimulus( const InList &IL, const EventList &EL, 
+					    const deque< OutDataInfo > &stimuliinfo,
+					    const deque< bool > &newstimuli,
+					    const Options &data, 
+					    const deque< Options > &stimuliref, 
+					    int *stimulusindex,
+					    double sessiontime,
+					    const string &reproname,
+					    const Acquire *acquire )
+{
+  if ( XF != 0 ) {
+
+    // stimulus description:
+    if ( XSF != 0 ) {
+      for ( unsigned int j=0; j<stimuliinfo.size(); j++ ) {
+	if ( newstimuli[j] )
+	  stimuliinfo[j].description().saveXML( *XSF, 0, Options::FirstOnly, 1 );
+      }
+    }
+
+    // stimulus reference:
+    Options sopt( reproname, "stimulus", 0, 0 );
+    sopt.append( data );
+    for ( int k=0; k<acquire->outTracesSize(); k++ ) {
+      int j = stimulusindex[k];
+      if ( j >= 0 ) {
+	Options &ref = sopt.newSection( stimuliref[j] );
+	ref.setInclude( "stimulus-metadata.xml", stimuliref[j].name() );
+      }
+    }
+    sopt.saveXML( *XF, 0, Options::FirstOnly, 2 );
+  }
+}
+
+
+void SaveFiles::ODMLFiles::writeRePro( const Options &reproinfo, 
+					 const deque< string > &reprofiles,
+					 const InList &IL, const EventList &EL,
+					 const Options &data, double sessiontime )
+{
+  if ( XF != 0 ) {
+    if ( DatasetOpen ) {
+      if ( reprofiles.size() > 0 ) {
+	string files = reprofiles[0];
+	for ( unsigned int k=1; k<reprofiles.size(); k++ )
+	  files += ", " + reprofiles[k];
+	Parameter p( "File", "", files );
+	p.saveXML( *XF, 2, 4 );
+      }
+      *XF << "    </section>\n";
+    }
+    reproinfo.saveXML( *XF, 0, Options::FirstOnly | Options::DontCloseSection, 1 );
+    DatasetOpen = true;
+  }
+}
+
 
 #ifdef HAVE_NIX
 string SaveFiles::NixFile::create ( string path )

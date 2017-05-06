@@ -1271,6 +1271,12 @@ void RELACSWidget::customEvent( QEvent *qce )
     break;
   }
 
+  case 5: {
+    RelacsWidgetEvent *rwe = dynamic_cast<RelacsWidgetEvent*>( qce );
+    MessageBox::warning( "RELACS Warning !", rwe->text(), 10.0, this );
+    break;
+  }
+
   }
 }
 
@@ -1296,6 +1302,8 @@ void RELACSWidget::startSession( bool startmacro )
 
   // open files:
   SF->openFiles();
+  if ( ! SF->filesOpen() )
+    QCoreApplication::postEvent( this, new RelacsWidgetEvent( 5, "No data are saved!" ) );
 
   QPalette p( palette() );
   p.setColor( QPalette::Window, QColor( 255, 96, 96 ) );
