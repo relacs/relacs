@@ -64,7 +64,7 @@ Settings::Settings( RELACSWidget* rw )
   addBoolean( "saverelacsfiles", "Save data and metadata in RELACS format", true );
   addBoolean( "saveodmlfiles", "Save metadata in ODML format", false );
 #ifdef HAVE_NIX
-  addBoolean( "savenixfiles", "Save data nad metadata in NIX format", false );
+  addBoolean( "savenixfiles", "Save data nad metadata in NIX format", true );
 #endif
   addBoolean( "saverelacscore", "Save core configuration of RELACS to session", true );
   addBoolean( "saverelacsplugins", "Save configuration of RELACS-plugins to session", true );

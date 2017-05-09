@@ -359,11 +359,14 @@ void SaveFiles::writeToggle( void )
 
       RelacsIO.resetIndex( IL );
       RelacsIO.resetIndex( EL );
-
+      std::cerr << "writeToggle " << std::endl;
       #ifdef HAVE_NIX
+      if ( WriteNIXFiles ) {
         NixIO.resetIndex( IL );
         NixIO.resetIndex( EL );
+      }
       #endif
+      std::cerr << "writeToggle " << std::endl;
       
       // add recording event:
       for ( int k=0; k<EL.size(); k++ ) {
@@ -425,7 +428,8 @@ void SaveFiles::writeTraces( bool stimulus )
   RelacsIO.writeTraces( IL, stimulus );
 
   #ifdef HAVE_NIX
-  NixIO.writeTraces( IL );
+  if ( WriteNIXFiles ) 
+    NixIO.writeTraces( IL );
   #endif
 }
 
@@ -660,9 +664,10 @@ void SaveFiles::writeStimulus( void )
     OdmlIO.writeStimulus( IL, EL, Stimuli, newstimuli, StimulusData,
 			    stimuliref, stimulusindex,
 			    SessionTime, repronamecount, RW->AQ );
-
+    
     #ifdef HAVE_NIX
-    NixIO.writeStimulus( IL, Stimuli, ReProName, SessionTime, RW, StimulusData );
+    if ( WriteNIXFiles )
+      NixIO.writeStimulus( IL, Stimuli, ReProName, SessionTime, RW, StimulusData );
     #endif
   }
 
@@ -706,7 +711,11 @@ void SaveFiles::writeRePro( void )
 
     RelacsIO.writeRePro( ReProInfo, ReProFiles, IL, EL, *this, SessionTime );
     OdmlIO.writeRePro( ReProInfo, ReProFiles, IL, EL, *this, SessionTime );
-
+    std::cerr << "SaveFiles::writeRePro" << std::endl; 
+    #ifdef HAVE_NIX
+    if ( WriteNIXFiles )
+      NixIO.writeRepro( ReProInfo, ReProFiles, IL, EL, *this, SessionTime );
+    #endif
     // nix file:
     //    XXX write ReProInfo as odml tree
 
@@ -922,7 +931,10 @@ void SaveFiles::openFiles( void )
   lock();
   createRelacsFiles();
   createODMLFiles();
-  createNIXFile();
+  #ifdef HAVE_NIX
+  if ( WriteNIXFiles )
+    createNIXFile();
+  #endif
   unlock();
   Hold = false;
 
@@ -956,7 +968,7 @@ void SaveFiles::closeFiles( void )
   OdmlIO.close( Path, ReProFiles, RW->MTDT );
 
   #ifdef HAVE_NIX
-  if ( NixIO.fd.isOpen() ) {
+  if ( WriteNIXFiles && NixIO.fd.isOpen() ) {
     NixIO.saveMetadata( RW->MTDT  );
     NixIO.close();
   }
@@ -1915,6 +1927,20 @@ void SaveFiles::NixFile::saveMetadata (const MetaData &mtdt)
 {
   Options::SaveFlags flags = static_cast<Options::SaveFlags>(Options::SwitchNameType | Options::FirstOnly);
   saveNIXOptions( mtdt, root_section, flags, mtdt.saveFlags() );
+}
+
+
+void SaveFiles::NixFile::writeRepro ( const Options &reproinfo, const deque< string > &reprofiles,
+				      const InList &IL, const EventList &EL, const Options &data, 
+				      double sessiontime ) 
+{
+  std::cerr << "SaveFiles::NixFile::writeRePro" << std::endl; 
+
+  /*for(auto f : reprofiles) {
+    std::cerr << f << std::endl;
+  }
+  */
+  
 }
 
 

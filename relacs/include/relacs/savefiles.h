@@ -513,6 +513,9 @@ protected:
 			 string rp_name, double sessiontime, RELACSWidget *RW, 
 			 const Options &stim_options );
     void initTraces ( const InList &IL );
+    void writeRepro ( const Options &reproinfo, const deque< string > &reprofiles,
+		      const InList &IL, const EventList &EL, const Options &data, 
+		      double sessiontime );
     void writeTraces ( const InList &IL );
     void writeChunk ( NixTrace &trace, size_t to_read, const void *data);
     void initEvents ( const EventList &EL, FilterDetectors *FD );
