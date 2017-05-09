@@ -1,7 +1,7 @@
 /*!
 \mainpage RTAI-comedi Relacs Plugins
 
-Plugins for dynamic clamp based on RTAI and comedi.
+\brief Plugins for dynamic clamp based on RTAI and comedi.
 
 
 \section rtaicomedicontent Content
