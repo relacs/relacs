@@ -89,7 +89,7 @@ for DOXYFILE in $SRCDIR/class*.html; do
 	echo "</head>"
 	echo "<body>"
 	echo "<h2>$CLASSNAME [$PLUGINTYPE]</h2>"
-	sed -n -e '/<p>\[.*\]/s/\[.*\]\s*//; /<a name="details"/,/<h2>/p' $DOXYFILE | sed "1d; \$s/<hr\/>.*//; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
+	sed -n -e '/<p>\[.*\]/s/\[.*\]\s*//; /<a name="details"/,/<h2/p' $DOXYFILE | sed "1d; \${s/<hr\/>.*//;s/<h2.*//}; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
 	echo "</body></html>"; 
     } > ${HELPDIR}/${PLUGINSET}${CLASSNAME}.html
     LASTFILE="$CLASSNAME"
