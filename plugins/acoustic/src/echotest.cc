@@ -29,7 +29,7 @@ namespace acoustic {
 
 
 EchoTest::EchoTest( void )
-  : RePro( "EchoTest", "acoustic", "Karin Fisch, Jan Benda", "1.0", "Jul 11, 2015" ),
+  : RePro( "EchoTest", "acoustic", "Karin Fisch, Jan Benda", "1.2", "May 10, 2017" ),
     Traces()
 {
   // add some options:
@@ -111,6 +111,7 @@ int EchoTest::main( void )
   OutData signal;
   signal.setTraceName( outtrace );
   if ( ::fabs( frequency ) > 0.1 )
+    // XXX Make sure the peak of the sine wave is in the peak of the triangle!
     signal.fill( am, frequency );
   else
     signal = am;
@@ -165,7 +166,7 @@ int EchoTest::main( void )
     s += " of <b>" + Str( naverage ) + "</b> trials";
     message( s );
 
-    plot( meanvoltage, soundspeed );
+    plot( meanvoltage, signal, soundspeed );
 
     if ( interrupt() ) {
       if ( count == 0 )
@@ -187,11 +188,19 @@ int EchoTest::main( void )
 }
 
 
-void EchoTest::plot( const SampleDataF &meanvoltage, double soundspeed )
+void EchoTest::plot( const SampleDataF &meanvoltage, const OutData &signal, double soundspeed )
 {
+  SampleDataF signalwave = signal;
+  signalwave.setOffset( -0.5*signalwave.length() );
+  int swindex = maxIndex( signalwave );
+  int mvindex = maxIndex( meanvoltage );
+  float mvamplitude = max( meanvoltage );
+  signalwave.setOffset( signalwave.offset() + meanvoltage.pos( mvindex ) - signalwave.pos( swindex ) );
+  signalwave *= mvamplitude;
   P.lock();
   P.clear();
   P.plotVLine( 0.0, Plot::White, 2 );
+  P.plot( signalwave, soundspeed*100.0, Plot::Yellow, 4, Plot::Solid );
   P.plot( meanvoltage, soundspeed*100.0, Plot::Orange, 2, Plot::Solid );
   P.draw();
   P.unlock();

@@ -35,7 +35,13 @@ namespace acoustic {
 \class EchoTest
 \brief [RePro] Check for echoes.
 \author Karin Fisch, Jan Benda
-\version 1.0 (Jul 11, 2015)
+\version 1.2 (May 10, 2017)
+
+Repeatedly play a signal with an triangular amplitude modulation and
+average the voltage output of a microphone. The averaged sound is then
+plotted as a function of distance the sound must have travelled. This
+way echos can be inspected.
+
 \par Options
 - \c duration=10ms: Stimulus duration (\c number)
 - \c frequency=0kHz: Carrier frequency (\c number)
@@ -47,6 +53,17 @@ namespace acoustic {
 - \c average=10: Number of trials to be averages (\c integer)
 - \c maxecho=10m: Maximum echo distance (\c number)
 - \c soundspeed=343m/s: Speed of sound (\c number)
+
+\par Plot 
+
+The plot shows the averaged sound (orange) recorded by the microphone
+as a function of distance the sound must have travelled. The x-axis is
+shifted such that the peak of the triangular sound pulse indicates the
+distances. Without any delays the peak amplitude of the recorded sound
+will sit at distance zero (not the beginning of the sound pulse).
+
+For orientation the original sound pulse is plotted in yellow at the
+position of the largest peak.
 */
 
 
@@ -61,7 +78,7 @@ public:
   virtual void preConfig( void );
   virtual int main( void );
 
-  void plot( const SampleDataF &meanvoltage, double soundspeed );
+  void plot( const SampleDataF &meanvoltage, const OutData &signal, double soundspeed );
   void save( const SampleDataF &meanvoltage, double soundspeed );
   
 
