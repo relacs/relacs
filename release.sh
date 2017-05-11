@@ -78,6 +78,7 @@ if test $DISTCHECKONLY = no; then
   ${MAKE} install || exit 1
   ${MAKE} installcheck || exit 1
 fi
+${MAKE} dist || exit 1
 echo ""
 echo "Successfully checked RELACS!"
 echo "Upload the release to sourceforge using"
