@@ -102,7 +102,8 @@ AS_IF( [ test $USE_RTAI == yes ],
         			    [ RELACS_RTAI="yes" ] ) ], 
      			   [ AC_MSG_NOTICE( "RTAI include files not found in path ${with_rtai}." )
       			     RELACS_RTAI=no
-			     USE_RTAI=no ] ) ] )
+			     USE_RTAI=no ] ) ],
+	[ RELACS_RTAI=no ] )
 
 # publish:
 AC_SUBST(RTAI_CPPFLAGS)
