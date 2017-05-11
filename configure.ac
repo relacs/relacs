@@ -374,14 +374,17 @@ cat <<SUMMARY
     Use sndfile .................. ${RELACS_SNDFILE}
     Use portaudio ................ ${RELACS_PORTAUDIO}
     Use comedi ................... ${RELACS_COMEDI}
-    Use RTAI ..................... ${RELACS_RTAI} ${RELACS_DYNCLAMP_SUMMARY}
+    Use RTAI ..................... ${RELACS_RTAI} ${RELACS_RTAI_VERSION}
     Use libusb ................... ${RELACS_USB}
     Use TML_lib .................. ${RELACS_TML}
     Use OpenCV ................... ${RELACS_OPENCV}
     Use NIX IO ................... ${RELACS_NIX}
+
+    Dynamic clamp configuration ..${RELACS_DYNCLAMP_SUMMARY}
     Generate user manual ......... ${RELACS_GENERATE_DOCBOOK}
     Generate API documentation ... ${DX_SUMMARY}
     Compile example programs ..... ${RELACS_COMPILE_EXAMPLES}
+
 SUMMARY
 
 if test "x${RELACS_PLUGINS_ENABLE}" != "x"; then
