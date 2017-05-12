@@ -496,12 +496,19 @@ protected:
     \brief Write recorded data and metadata in NIX format.
   */
   struct NixFile {
-    nix::File    fd;
-    nix::Block   root_block;
-    nix::Section root_section;
-    nix::MultiTag event_tag;
-    nix::DataArray event_positions;
-    nix::DataArray event_extents;
+    double         repro_start_time = 0.0;
+    double         stimulus_start_time = 0.0;
+    double         end_time = 0.0;
+    double         stepsize = 0.0;
+    bool           was_writing = false;
+    std::string    currentRePro;
+    nix::File      fd;
+    nix::Block     root_block;
+    nix::Section   root_section;
+    nix::MultiTag  stimulus_tag;
+    nix::Tag       repro_tag;
+    nix::DataArray stimulus_positions;
+    nix::DataArray stimulus_extents;
     nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat;
     std::vector<nix::DataArray> data_features;
 
@@ -513,9 +520,10 @@ protected:
 			 string rp_name, double sessiontime, RELACSWidget *RW, 
 			 const Options &stim_options );
     void initTraces ( const InList &IL );
-    void writeRepro ( const Options &reproinfo, const deque< string > &reprofiles,
+    void writeRePro ( const Options &reproinfo, const deque< string > &reprofiles,
 		      const InList &IL, const EventList &EL, const Options &data, 
 		      double sessiontime );
+    void endRePro ( double current_time );
     void writeTraces ( const InList &IL );
     void writeChunk ( NixTrace &trace, size_t to_read, const void *data);
     void initEvents ( const EventList &EL, FilterDetectors *FD );
