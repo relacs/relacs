@@ -494,6 +494,7 @@ int Beats::main( void )
 	    chirpheader.pushNumber( "ChirpTimes", currentchirptimes[j] );
 	  sig.description().setType( "stimulus/eod_chirps" );
 	  sig.description().addNumber( "Frequency", stimulusrate, "Hz" );
+	  sig.description().addNumber( "DeltaF", deltaf, "Hz" );
 	  sig.description().addNumber( "Amplitude", amplitude, "mV" );
 	  sig.description().addNumber( "TemporalOffset", 0.0, "s" );
 	  sig.description().addNumber( "Duration", duration, "s" );
@@ -569,6 +570,8 @@ int Beats::main( void )
 	      sig.setIdent( "am-sinewave" );
 	    sig.setIntensity( amplitude*(1.0+amamplsum) );
 	  }
+	  sig.description().clearSections();
+	  sig.description().addNumber( "DeltaF", deltaf, "Hz" );
 	  if ( LEDOutput[0] >= 0 )
 	    led.pulseWave( sig.length(), sig.stepsize(), 5.0, 0.0 );
 	}
