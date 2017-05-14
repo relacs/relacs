@@ -766,6 +766,24 @@ void OutData::setDescription( const Options &description )
 }
 
 
+Parameter &OutData::setMutable( const string &name )
+{
+  return Description.addFlags( name, Mutable );
+}
+
+
+Parameter &OutData::setMutable( const string &name, Options &opt )
+{
+  return opt.addFlags( name, Mutable );
+}
+
+
+Parameter &OutData::setMutable( Parameter &p )
+{
+  return p.addFlags( Mutable );
+}
+
+
 double OutData::requestedMin( void ) const
 {
   return RequestMinValue;

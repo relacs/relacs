@@ -4015,32 +4015,36 @@ Options &Options::newSections( Options *opt, bool newparent )
 }
 
 
-void Options::endSection( void )
+Options &Options::endSection( void )
 {
   Options *newaddopts = AddOpts->parentSection();
   if ( newaddopts != 0 )
     AddOpts = newaddopts;
+  return *AddOpts;
 }
 
 
-void Options::clearSections( void )
+Options &Options::clearSections( void )
 {
   AddOpts = this;
+  return *AddOpts;
 }
 
 
-void Options::setSection( Options &opt )
+Options &Options::setSection( Options &opt )
 {
   AddOpts = &opt;
+  return *AddOpts;
 }
 
 
-void Options::lastSection( void )
+Options &Options::lastSection( void )
 {
   if ( Secs.size() > 0 )
     AddOpts = Secs.back();
   else
     AddOpts = this;
+  return *AddOpts;
 }
 
 

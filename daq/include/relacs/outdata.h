@@ -92,6 +92,10 @@ class OutData : public SampleData< float >, public DaqError
     /*! Indicates that the external reference should be used.
         \sa requestedMin(), requestedMax(), request() */
   static const double ExtRef;
+
+    /*! This flag for the stimulus description marks stimulus properties 
+        that are likely to change. */
+  static const int Mutable = 8192;
   
     /*! Create an empty signal. */
   OutData( void );
@@ -337,6 +341,25 @@ class OutData : public SampleData< float >, public DaqError
   Options &description( void );
     /*! Set the description of the output signal to \a description. */
   void setDescription( const Options &description );
+
+    /*! Mark a stimulus property in the stimulus' description as
+        mutable, i.e.  that property is likely to change. This sets
+        the Mutable bit in the Parameters' flag.
+	\return The parameter.
+	\sa Options::addFlags() */
+  Parameter &setMutable( const string &name );
+    /*! Mark a stimulus property in \a opt as
+        mutable, i.e.  that property is likely to change. This sets
+        the Mutable bit in the Parameters' flag. 
+	\return The parameter.
+	\sa Options::addFlags() */
+  Parameter &setMutable( const string &name, Options &opt );
+    /*! Mark a stimulus property in the stimulus' description as
+        mutable, i.e.  that property is likely to change. This sets
+        the Mutable bit in the Parameters' flag. 
+	\return The parameter.
+	\sa Parameter::addFlags() */
+  Parameter &setMutable( Parameter &p );
 
     /*! Returns the minimum value of the
         signal trace that should be used for determining the appropriate gain

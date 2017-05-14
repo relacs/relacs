@@ -493,12 +493,16 @@ int Beats::main( void )
 	  for ( int j=1; j<ck; j++ )
 	    chirpheader.pushNumber( "ChirpTimes", currentchirptimes[j] );
 	  sig.description().setType( "stimulus/eod_chirps" );
-	  sig.description().addNumber( "Frequency", stimulusrate, "Hz" );
-	  sig.description().addNumber( "DeltaF", deltaf, "Hz" );
+	  Parameter &p1 = sig.description().addNumber( "Frequency", stimulusrate, "Hz" );
+	  Parameter &p2 = sig.description().addNumber( "DeltaF", deltaf, "Hz" );
 	  sig.description().addNumber( "Amplitude", amplitude, "mV" );
 	  sig.description().addNumber( "TemporalOffset", 0.0, "s" );
 	  sig.description().addNumber( "Duration", duration, "s" );
 	  sig.description().append( chirpheader );
+	  if ( dfrange.size() > 1 ) {
+	    sig.setMutable( p1 );
+	    sig.setMutable( p2 );
+	  }
 	  if ( LEDOutput[0] >= 0 ) {
 	    double von = 5.0;
 	    double vchirp = -5.0;
@@ -529,6 +533,8 @@ int Beats::main( void )
 	    sig.setIntensity( amplitude );
 	    sig.description().setNumber( "Amplitude", amplitude );
 	    sig.description().setUnit( "Amplitude", "mV" );
+	    if ( dfrange.size() > 1 )
+	      sig.setMutable( "Frequncy" );
 	  }
 	  else {
 	    OutData am;
@@ -561,6 +567,10 @@ int Beats::main( void )
 	    am.description().addNumber( "Intensity", 1.0, "" );
 	    am /= 1.0+amamplsum;
 	    sig.fill( am, stimulusrate );
+	    if ( dfrange.size() > 1 ) {
+	      Options &opt = sig.description().lastSection();
+	      sig.setMutable( "Frequency", opt );
+	    }
 	    sig.description().clearSections();
 	    sig.description().addNumber( "Amplitude", amplitude, "mV" );
 	    sig.ramp( ramp );
@@ -571,7 +581,9 @@ int Beats::main( void )
 	    sig.setIntensity( amplitude*(1.0+amamplsum) );
 	  }
 	  sig.description().clearSections();
-	  sig.description().addNumber( "DeltaF", deltaf, "Hz" );
+	  Parameter &p1 = sig.description().addNumber( "DeltaF", deltaf, "Hz" );
+	  if ( dfrange.size() > 1 )
+	    sig.setMutable( p1 );
 	  if ( LEDOutput[0] >= 0 )
 	    led.pulseWave( sig.length(), sig.stepsize(), 5.0, 0.0 );
 	}
