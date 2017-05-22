@@ -21,6 +21,7 @@
 
 #include <relacs/sampledata.h>
 #include <relacs/stats.h>
+#include <relacs/tablekey.h>
 #include <relacs/str.h>
 #include <relacs/ephys/capacitycompensation.h>
 using namespace relacs;
@@ -29,7 +30,7 @@ namespace ephys {
 
 
 CapacityCompensation::CapacityCompensation( void )
-  : RePro( "CapacityCompensation", "ephys", "Jan Benda", "2.3", "Oct 13, 2017" )
+  : RePro( "CapacityCompensation", "ephys", "Jan Benda", "2.4", "May 22, 2017" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
@@ -113,6 +114,15 @@ int CapacityCompensation::main( void )
   // plot trace:
   tracePlotSignal( duration, 0.0 );
 
+  // results:
+  SampleDataF inaverage( tmin, tmax, intrace.stepsize(), 0.0F );
+  SampleDataF outaverage( tmin, tmax, intrace.stepsize(), 0.0F );
+  double b = 0.0;
+  double bu = 0.0;
+  double m = 0.0;
+  double mu = 0.0;
+  double chisq = 0.0;
+    
   // signal:
   double samplerate = intrace.sampleRate();
   OutData signal;
@@ -148,7 +158,7 @@ int CapacityCompensation::main( void )
 
     // get input trace:
     SampleDataF input;
-    if ( CurrentTrace[0] >=0 ) {
+    if ( CurrentTrace[0] >= 0 ) {
       SampleDataF data( tmin, tmax, trace( CurrentTrace[0] ).stepsize(), 0.0F );
       trace( CurrentTrace[0] ).copy( signalTime(), data );
       if ( ::fabs( trace( CurrentTrace[0] ).stepsize() - intrace.stepsize() ) < 1e-6 )
@@ -165,7 +175,7 @@ int CapacityCompensation::main( void )
     }
 
     // current average:
-    SampleDataF inaverage( tmin, tmax, intrace.stepsize(), 0.0F );
+    inaverage = 0.0F;
     indatatraces.push_back( input );
     if ( indatatraces.size() > naverage )
       indatatraces.pop_front();
@@ -180,7 +190,7 @@ int CapacityCompensation::main( void )
     intrace.copy( signalTime(), output );
 
     // voltage average:
-    SampleDataF outaverage( tmin, tmax, intrace.stepsize(), 0.0F );
+    outaverage = 0.0F;
     outdatatraces.push_back( output );
     if ( outdatatraces.size() > naverage )
       outdatatraces.pop_front();
@@ -202,7 +212,6 @@ int CapacityCompensation::main( void )
     }
 
     // linefit:
-    double b, bu, m, mu, chisq;
     lineFit( inaverage.array(), outaverage.array(), b, bu, m, mu, chisq );
     double x1 = -1.1*amplitude;
     double y1 = m*x1+b;
@@ -254,7 +263,60 @@ int CapacityCompensation::main( void )
   }
 
   directWrite( dcsignal );
+
+  if ( outdatatraces.size() >= naverage )
+    save( inaverage, intrace.ident(), intrace.unit(), outaverage,
+	  b, bu, m, mu, chisq );
+
   return Completed;
+}
+
+
+void CapacityCompensation::save( const SampleDataF &inaverage, 
+				 const string &inname, const string &inunit,
+				 const SampleDataF &outaverage,
+				 double b, double bu, double m, double mu, 
+				 double chisq )
+{
+  string outname = "current";
+  string outunit = "nA";
+  if ( CurrentTrace[0] >= 0 ) {
+    outname = trace( CurrentTrace[0] ).ident();
+    outunit = trace( CurrentTrace[0] ).unit();
+  }
+  else if ( CurrentOutput[0] >= 0 ) {
+    outname = outTrace( CurrentOutput[0] ).traceName();
+    outunit = outTrace( CurrentOutput[0] ).unit();
+  }
+
+  ofstream df( addPath( "capacitycompensation-average.dat" ).c_str(),
+               ofstream::out | ofstream::app );
+
+  Options header;
+  header.addNumber( "slope", m, mu, inunit + "/" + outunit, "%g" );
+  header.addNumber( "intercept", b, bu, inunit, "%g" );
+  header.addNumber( "chisq", chisq, inunit + "^2", "%g" );
+  lockStimulusData();
+  header.newSection( stimulusData() );
+  unlockStimulusData();
+  header.newSection( settings() );
+  header.save( df, "# ", 0, FirstOnly );
+  df << '\n';
+
+  TableKey datakey;
+  datakey.addNumber( "t", "ms", "%7.2f" );
+  datakey.addNumber( inname, inunit, "%6.2f" );
+  datakey.addNumber( outname, outunit, "%6.2f" );
+  datakey.saveKey( df );
+
+  for ( int k=0; k<inaverage.size(); k++ ) {
+    datakey.save( df, 1000.0*inaverage.pos( k ), 0 );
+    datakey.save( df, inaverage[k] );
+    datakey.save( df, outaverage[k] );
+    df << '\n';
+  }
+  
+  df << "\n\n";
 }
 
 

@@ -20,6 +20,8 @@
 */
 
 #include <relacs/sampledata.h>
+#include <relacs/tablekey.h>
+#include <relacs/sampledata.h>
 #include <relacs/str.h>
 #include <relacs/ephys/bridgetest.h>
 using namespace relacs;
@@ -28,7 +30,7 @@ namespace ephys {
 
 
 BridgeTest::BridgeTest( void )
-  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "2.9", "Oct 13, 2016" )
+  : RePro( "BridgeTest", "patchclamp", "Jan Benda", "3.0", "May 22, 2017" )
 {
   // add some options:
   addNumber( "amplitude", "Amplitude of stimulus", 1.0, -1000.0, 1000.0, 0.1 );
@@ -76,7 +78,6 @@ int BridgeTest::main( void )
   // in- and outtrace:
   const InData &intrace = trace( SpikeTrace[0] >= 0 ? SpikeTrace[0] : 0 );
   int outtrace = CurrentOutput[0] >= 0 ? CurrentOutput[0] : 0;
-  deque< SampleDataF > datatraces;
 
   // dc current:
   double dccurrent = stimulusData().number( outTraceName( outtrace ) );
@@ -102,6 +103,10 @@ int BridgeTest::main( void )
 
   // plot trace:
   tracePlotSignal( 3.0*duration, 0.5*duration );
+
+  // results:
+  deque< SampleDataF > datatraces;
+  SampleDataF average( tmin, tmax, intrace.stepsize(), 0.0F );
 
   // signal:
   double samplerate = intrace.sampleRate();
@@ -140,7 +145,7 @@ int BridgeTest::main( void )
     intrace.copy( signalTime(), output );
 
     // average:
-    SampleDataF average( tmin, tmax, intrace.stepsize(), 0.0F );
+    average = 0.0F;
     if ( naverage > 1 ) {
       datatraces.push_back( output );
       if ( datatraces.size() > naverage )
@@ -194,7 +199,40 @@ int BridgeTest::main( void )
   }
 
   directWrite( dcsignal );
+
+  if ( datatraces.size() >= naverage )
+    save( average, intrace.ident(), intrace.unit() );
+
   return Completed;
+}
+
+
+void BridgeTest::save( const SampleDataF &average, 
+		       const string &name, const string &unit )
+{
+  ofstream df( addPath( "bridgetest-average.dat" ).c_str(),
+               ofstream::out | ofstream::app );
+
+  Options header;
+  lockStimulusData();
+  header.newSection( stimulusData() );
+  unlockStimulusData();
+  header.newSection( settings() );
+  header.save( df, "# ", 0, FirstOnly );
+  df << '\n';
+
+  TableKey datakey;
+  datakey.addNumber( "t", "ms", "%7.2f" );
+  datakey.addNumber( name, unit, "%6.2f" );
+  datakey.saveKey( df );
+
+  for ( int k=0; k<average.size(); k++ ) {
+    datakey.save( df, 1000.0*average.pos( k ), 0 );
+    datakey.save( df, average[k] );
+    df << '\n';
+  }
+  
+  df << "\n\n";
 }
 
 

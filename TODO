@@ -51,11 +51,8 @@ Dynamic clamp:
 - matchTraces should set error string of device, and this should be used by relacswidget
 - DynClamAnalogInput improve error checking in readData()
 - Add a variable lastInterval that is set to the current period length in addition to loopInterval
-- autoconf script: check for presence of rtai-config and whether -r option is supported! Do we need to set PATH in order to be able to run rtai-config?
 - patchclamp::singlestimulus and ficurve should save all traces!
 - check trigger
-- rewrite analog input part of the dynamic clamp loop in dynclampmodul
-  similar to the analog output part
 - shouldn't it be better if the model would get the parameter first,
   then computes, and then analog output takes place?
 

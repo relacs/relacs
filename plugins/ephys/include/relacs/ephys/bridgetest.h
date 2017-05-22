@@ -32,7 +32,7 @@ namespace ephys {
 
 /*!
 \author Jan Benda
-\version 2.9 (Oct 13, 2016)
+\version 3.0 (May 22, 2017)
  \par Options
 - \c amplitude=1nA: Amplitude of stimulus (\c number)
 - \c duration=10ms: Duration of stimulus (\c number)
@@ -54,6 +54,8 @@ public:
   BridgeTest( void );
   virtual void preConfig( void );
   virtual int main( void );
+  void save( const SampleDataF &average, 
+	     const string &name, const string &unit );
 
 
 protected:

@@ -34,7 +34,7 @@ namespace ephys {
 \class CapacityCompensation
 \brief [RePro] Sine waves for checking the capacity compensation of the amplifier inside the cell.
 \author Jan Benda
-\version 2.3 (Oct 13, 2017)
+\version 2.4 (May 22, 2017)
 \par Options
 - \c amplitude=1nA: Amplitude of stimulus (\c number)
 - \c duration=10ms: Duration of stimulus (\c number)
@@ -57,6 +57,10 @@ public:
   CapacityCompensation( void );
   virtual void preConfig( void );
   virtual int main( void );
+  void save( const SampleDataF &inaverage, 
+	     const string &inname, const string &inunit,
+	     const SampleDataF &outaverage,
+	     double b, double bu, double m, double mu, double chisq );
 
 
 protected:
