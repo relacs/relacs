@@ -38,11 +38,7 @@ namespace auditory {
 \brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
-\version 2.3 (Jun 29, 2016)
-\todo check postCustomEvent usage!!!! user types+10 and event handling
-\todo Use mutex to protect stimulus creation.
-\bug sampling rate is only 10 kHz?!
-\todo reanable manual convert of signal
+\version 2.4 (May 24, 2017)
 
 \par Options
 - \c intensity=80dB: Intensity (\c number)

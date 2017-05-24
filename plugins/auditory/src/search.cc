@@ -53,7 +53,7 @@ const double Search::MinFrequency = 2000.0;
 
 
 Search::Search( void )
-  : RePro( "Search", "auditory", "Jan Benda and Christian Machens", "2.3", "Jun 29, 2016" )
+  : RePro( "Search", "auditory", "Jan Benda and Christian Machens", "2.4", "May 24, 2017" )
 {
   // parameter:
   Intensity = 80.0;
@@ -96,7 +96,7 @@ Search::Search( void )
   ILCD->setRange( int(MinIntensity), int(MaxIntensity) );
   ILCD->setValue( int(Intensity) );
   ILCD->setSteps( int(ShortIntensityStep), int(LongIntensityStep) );
-  grid->addWidget( ILCD, 0, 0 );
+   grid->addWidget( ILCD, 0, 0 );
   connect( ILCD, SIGNAL( valueChanged( int ) ), 
 	   this, SLOT( setIntensity( int ) ) );
 
@@ -414,11 +414,13 @@ void Search::setIntensity( int i )
   if ( fabs(Intensity - intensity) < 1e-8 ) 
     return;
 
+  lock();
   Intensity = intensity;
   if ( Intensity < MinIntensity ) 
     Intensity = MinIntensity;
   if ( Intensity > MaxIntensity ) 
     Intensity = MaxIntensity;
+  unlock();
   setNumber( "intensity", Intensity );
 }
 
@@ -430,18 +432,18 @@ void Search::setDuration( int duration )
   if ( fabs(Duration - dur) < 1e-8 ) 
     return;
 
+  lock();
   Duration = dur;
   if ( Duration < MinDuration ) 
     Duration = MinDuration;
   if ( Duration > MaxDuration ) 
     Duration = MaxDuration;
+  NewSignal = true;
+  unlock();
   setNumber( "duration", Duration );
 
   // plot trace:
   tracePlotSignal( 1.25*Duration, 0.125*Duration );
-
-  // new stimulus:
-  NewSignal = true;
 }
 
 
@@ -452,11 +454,13 @@ void Search::setPause( int pause )
   if ( Pause == pdur ) 
     return;
 
+  lock();
   Pause = pdur;
   if ( Pause < MinPause ) 
     Pause = MinPause;
   if ( Pause > MaxPause ) 
     Pause = MaxPause;
+  unlock();
   setNumber( "pause", Pause );
 }
 
@@ -468,15 +472,15 @@ void Search::setFrequency( int freq )
   if ( fabs(Frequency - f) < 1e-8 ) 
     return;
 
+  lock();
   Frequency = f;
   if ( Frequency < MinFreq ) 
     Frequency = MinFreq;
   if ( Frequency > MaxFrequency ) 
     Frequency = MaxFrequency;
-  setNumber( "frequency", Frequency );
-
-  // new stimulus:
   NewSignal = true;
+  unlock();
+  setNumber( "frequency", Frequency );
 }
 
 
@@ -485,14 +489,14 @@ void Search::setWaveform( int wave )
   if ( Waveform == wave ) 
     return;
 
+  lock();
   Waveform = wave;
+  NewSignal = true;
+  unlock();
   if ( Waveform == 1 )
     selectText( "waveform", "noise" );
   else
     selectText( "waveform", "sine" );
-
-  // new stimulus:
-  NewSignal = true;
 }
 
 
@@ -518,7 +522,9 @@ void Search::setSpeaker( bool left )
 
 void Search::setSpeakerLeft( void )
 {
+  lock();
   SearchLeft = true;
+  unlock();
   if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 ) {
     lockMetaData();
     metaData().selectText( "Cell>best side", "left" );
@@ -532,7 +538,9 @@ void Search::setSpeakerLeft( void )
 
 void Search::setSpeakerRight( void )
 {
+  lock();
   SearchLeft = false;
+  unlock();
   if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 ) {
     lockMetaData();
     metaData().selectText( "Cell>best side", "right" );
@@ -554,14 +562,18 @@ void Search::setMute( bool mute )
 {
   if ( mute != Mute ) {
     if ( ! mute ) {
+      lock();
       Mute = false;
-      MuteButton->setDown( false );
       NewSignal = true;
+      unlock();
+      MuteButton->setDown( false );
     }
     else {
+      lock();
       Mute = true;
-      MuteButton->setDown( true );
       NewSignal = true;
+      unlock();
+      MuteButton->setDown( true );
     }
   }
 }
@@ -569,7 +581,6 @@ void Search::setMute( bool mute )
 
 void Search::dialogAccepted( void )
 {
-  cerr << "DIALOGACCEPTED\n";
   ILCD->setValue( int( number( "intensity" ) ) );
   DLCD->setValue( int( number( "duration", "ms" ) ) );
   PLCD->setValue( int( number( "pause", "ms" ) ) );
@@ -588,8 +599,8 @@ void Search::dialogAccepted( void )
 
 void Search::customEvent( QEvent *qce )
 {
-  ILCD->setValue( int(Intensity) );
-  if ( qce->type() - QEvent::User == 11  ) {
+  switch ( qce->type() - QEvent::User ) {
+  case 11: {
     DLCD->setValue( int(1000.0*Duration) );
     PLCD->setValue( int(1000.0*Pause) );
     FLCD->setRange( int(MinFreq), int(MaxFrequency) );
@@ -603,8 +614,12 @@ void Search::customEvent( QEvent *qce )
     }
     setSpeaker( ( side == 0 ) );
   }
-  else
+  case 12: {
+    ILCD->setValue( int(Intensity) );
+  }
+  default:
     RePro::customEvent( qce );
+  }
 }
 
 

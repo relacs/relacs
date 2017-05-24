@@ -102,7 +102,7 @@ int FindRate::main( void )
     warning( "Skipwin too large compared to duration!" );
     return Failed;
   }
-  if ( ratetolerance > 0.3*targetrate ) {
+  if ( ratetolerance > targetrate ) {
     warning( "Ratetolerance certainly too high!" );
     return Failed;
   }
