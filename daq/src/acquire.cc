@@ -1543,7 +1543,7 @@ int Acquire::adjustGain( const InData &data, double maxvalue )
   AIData &ai = AI[di];
 
   // find appropriate gain:
-  int newindex = ai.AI->gainIndex( data.unipolar(), maxvalue );
+  int newindex = ai.AI->gainIndex( data.unipolar(), data.getVoltage( maxvalue ) );
 
   // no gain:
   if ( newindex < 0 )

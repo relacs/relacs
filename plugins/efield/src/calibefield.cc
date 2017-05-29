@@ -32,7 +32,7 @@ namespace efield {
 
 CalibEField::CalibEField( void )
   : RePro( "CalibEField", "efield",
-	   "Jan Benda", "2.2", "Oct 30, 2013" )
+	   "Jan Benda", "2.4", "May 29, 2017" )
 {
   // add some parameter as options:
   newSection( "General" );
@@ -161,14 +161,16 @@ int CalibEField::main( void )
     }
   }
   EODUnit = eodtrace.unit();
-  if ( reset ) {
-    message( "reset gain to " + Str( resetval ) );
-    latt->setGain( resetval, 0.0 );
-  }
+
   double origgain = latt->gain();
   double origoffset = latt->offset();
   FitGain = 1.0;
   FitOffset = 0.0;
+
+  if ( reset ) {
+    message( "reset gain to " + Str( resetval ) );
+    latt->setGain( resetval, 0.0 );
+  }
 
   // plot trace:
   tracePlotSignal( duration );
@@ -180,7 +182,7 @@ int CalibEField::main( void )
       adjustGain( eodtrace, ( 1.0 + maxcontrast ) * val2 );
   }
   else
-    adjustGain( eodtrace, maxamplitude );
+    adjustGain( eodtrace, maxamplitude + fishamplitude );
 
   // plot:
   P.lock();
@@ -243,6 +245,7 @@ int CalibEField::main( void )
 
     sleep( pause );
     if ( interrupt() ) {
+      latt->setGain( origgain, origoffset );
       writeZero( outtrace );
       return Aborted;
     }
@@ -270,8 +273,10 @@ int CalibEField::main( void )
     message( s );
 
     if ( amplitude < 0.01 * eodtrace.maxValue() ) {
+      latt->setGain( origgain, origoffset );
       warning( "Did not record signal on measurement electrodes! Amplitude=" + Str( amplitude )
-	       + " < 0.01*" + Str( eodtrace.maxValue() ) );
+	       + " is smaller than 1% of the maximum range of the " + eodtrace.ident()
+	       + " trace (=" + Str( eodtrace.maxValue() ) + ").<br>Increase the input gain." );
       return Failed;
     }
 
@@ -286,6 +291,7 @@ int CalibEField::main( void )
       if ( amplitude > targetintensity || r == 2 ) {
 	// reduces gain:
 	if ( gain <= mingain ) {
+	  latt->setGain( origgain, origoffset );
 	  warning( "Cannot increase attenuator level any further!<br>Requested stimulus intensity is too low." );
 	  return Failed;
 	}
@@ -302,6 +308,7 @@ int CalibEField::main( void )
       }
       else {
 	if ( gain >= maxgain ) {
+	  latt->setGain( origgain, origoffset );
 	  warning( "Cannot decrease attenuator level any further!<br>Requested stimulus intensity is too high." );
 	  return Failed;
 	}
@@ -341,6 +348,7 @@ int CalibEField::main( void )
   if ( minintensity < minIntensity( outtrace ) )
     minintensity = minIntensity( outtrace );
   if ( maxintensity <= minintensity ) {
+    latt->setGain( origgain, origoffset );
     warning( "Requested intensity range not possible!" );
     writeZero( outtrace );
     return Failed;
@@ -454,7 +462,6 @@ int CalibEField::main( void )
       else if ( FitGain <= 0.0 ) {
 	warning( "Negative slope. <br>Exit." );
 	latt->setGain( origgain, origoffset );
-	saveData( intensities, latt );	
 	writeZero( outtrace );
 	return Failed;
       }
@@ -480,6 +487,7 @@ int CalibEField::main( void )
 	if ( minintensity < minIntensity( outtrace ) )
 	  minintensity = minIntensity( outtrace );
 	if ( maxintensity <= minintensity ) {
+	  latt->setGain( origgain, origoffset );
 	  warning( "Requested intensity range not possible!", 4.0 );
 	  writeZero( outtrace );
 	  return Failed;

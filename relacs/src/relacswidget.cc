@@ -795,7 +795,7 @@ void RELACSWidget::setupInTraces( void )
     id.setMinValue( unipolar ? 0.0 : -maxval );
     id.setMaxValue( maxval );
     if ( channel < InData::ParamChannel ) {
-      int gainindex = AQ->inputDevice( devi )->gainIndex( unipolar, maxval/scale );
+      int gainindex = AQ->inputDevice( devi )->gainIndex( unipolar, id.getVoltage( maxval ) );
       id.setGainIndex( gainindex );
     }
     else
@@ -1234,6 +1234,9 @@ void RELACSWidget::stopRePro( void )
   // XXX last stimulus still not saved?
   if ( SF->signalPending() )
     SF->clearSignal();
+
+  // update device menu:
+  QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
 
   // wake up controls waiting on RePros to finish:
   ReProAfterWait.wakeAll();
