@@ -473,7 +473,7 @@ protected:
 
 
   #ifdef HAVE_NIX
-  
+
   struct NixTrace {
     nix::DataArray data;
     size_t         index;
@@ -498,7 +498,7 @@ protected:
   struct NixFile {
     double         repro_start_time = 0.0;
     double         stimulus_start_time = 0.0;
-    double         end_time = 0.0;
+    double         stimulus_duration = 0.0;
     double         stepsize = 0.0;
     bool           was_writing = false;
     std::string    currentRePro;
@@ -513,15 +513,18 @@ protected:
     std::vector<nix::DataArray> data_features;
 
     string create ( string path );
-    void close  ( void );
+    void close ( void );
     void saveMetadata ( const AllDevices *devices );
     void saveMetadata ( const MetaData &mtdt );
-    void writeStimulus ( const InList &IL, const deque< OutDataInfo > &stim_info, 
-			 string rp_name, double sessiontime, RELACSWidget *RW, 
+    void createStimulusTag ( const std::string &repro_name, const Options &stimulus_options,
+                             const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
+                             RELACSWidget *RW );
+    void writeStimulus ( const InList &IL, const deque< OutDataInfo > &stim_info,
+			 string rp_name, double sessiontime, RELACSWidget *RW,
 			 const Options &stim_options );
     void initTraces ( const InList &IL );
     void writeRePro ( const Options &reproinfo, const deque< string > &reprofiles,
-		      const InList &IL, const EventList &EL, const Options &data, 
+		      const InList &IL, const EventList &EL, const Options &data,
 		      double sessiontime );
     void endRePro ( double current_time );
     void writeTraces ( const InList &IL );
@@ -530,7 +533,7 @@ protected:
     void writeEvents ( const InList &IL, const EventList &EL );
     void resetIndex ( const InList &IL );
     void resetIndex ( const EventList &EL );
-    void appendValue( nix::DataArray &array, double value ); 
+    void appendValue( nix::DataArray &array, double value );
     nix::DataArray createFeature( nix::Block &block, nix::MultiTag &mtag,
 				  std::string name, std::string type,
 				  std::string unit, std::string label,
