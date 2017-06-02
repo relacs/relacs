@@ -38,7 +38,7 @@ namespace auditory {
 \brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
-\version 2.4 (May 24, 2017)
+\version 2.6 (June 2, 2017)
 
 \par Options
 - \c intensity=80dB: Intensity (\c number)
@@ -60,15 +60,21 @@ namespace auditory {
 \par Keyboard shortcuts:
 - \c Left: Left speaker
 - \c Right: Right speaker
-- \c N, \c %Pause: Toggle stimulus output
+- \c X, \c %Pause: Toggle stimulus output
 - \c Up: Increase intensity by 1dB
 - \c Down: Decrease intensity by 1dB
 - \c Shift+Up: Increase intensity by 5dB
 - \c Shift+Down: Decrease intensity by 5dB
-- \c Alt+Up: Increase frequency by 1kHz
-- \c Alt+Down: Decrease frequency by 1kHz
-- \c Alt+Shift+Up: Increase frequency by 5kHz
-- \c Alt+Shift+Down: Decrease frequency by 5kHz
+- \c Ctrl+Up: Increase frequency by 1kHz
+- \c Ctrl+Down: Decrease frequency by 1kHz
+- \c Ctrl+Shift+Up: Increase frequency by 5kHz
+- \c Ctrl+Shift+Down: Decrease frequency by 5kHz
+- \c Ctrl+Left: Decrease duration of pause by 5ms
+- \c Ctrl+Right: Increase duration of pause by 5ms
+- \c Ctrl+Shift+Left: Decrease duration of pause by 50ms
+- \c Ctrl+Shift+Right: Increase duration of pause by 50ms
+- \c Alt+N: Band limited white noise
+- \c Alt+S: Sine wave (pure tone)
  */
 
 
