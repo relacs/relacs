@@ -4,22 +4,22 @@
 # you should modify the following parameter according to your needs:
 
 KERNEL_PATH=/data/src         # where to put and compile the kernel
-LINUX_KERNEL="4.1.18"         # linux vanilla kernel version (set with -k)
+LINUX_KERNEL="4.4.43"         # linux vanilla kernel version (set with -k)
 KERNEL_SOURCE_NAME="rtai"     # name for kernel source directory to be appended to LINUX_KERNEL
 KERNEL_NAME="rtai"            # name for name of kernel to be appended to LINUX_KERNEL 
                               # (set with -n)
 
-RTAI_DIR="vulcano"            # name of the rtai source directory (set with -r):
+RTAI_DIR="rtai-5.0.1"         # name of the rtai source directory (set with -r):
                               # official relases for download (www.rtai.org):
                               # - rtai-4.1: rtai release version 4.1
-                              # - rtai-5.0-test2: rtai release version 5.0-test2
+                              # - rtai-5.0.1: rtai release version 5.0.1
                               # - rtai-x.x: rtai release version x.x
                               # from cvs (http://cvs.gna.org/cvsweb/?cvsroot=rtai):
                               # - magma: current development version
                               # - vulcano: stable development version
                               # Shahbaz Youssefi's RTAI clone on github:
                               # - RTAI: clone https://github.com/ShabbyX/RTAI.git
-RTAI_PATCH="hal-linux-4.1.18-x86-7.patch" # rtai patch to be used
+RTAI_PATCH="hal-linux-4.4.43-x86-6.patch" # rtai patch to be used
 LOCAL_SRC_PATH=/usr/local/src # directory for downloading and building rtai, newlib and comedi
 SHOWROOM_DIR=showroom         # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
@@ -38,7 +38,10 @@ KERNEL_DEBUG=false  # generate debuggable kernel (see man crash), set with -D
 ###########################################################################
 # some global variables:
 
-VERSION_STRING="makertaikernel version 1.6 by Jan Benda, May 2015"
+FULL_COMMAND_LINE="$@"
+MAKE_RTAI_KERNEL="${0##*/}"
+
+VERSION_STRING="${MAKE_RTAI_KERNEL} version 1.7 by Jan Benda, June 2017"
 DRYRUN=false        # set with -d
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
@@ -52,8 +55,6 @@ NEW_KERNEL=false
 NEW_RTAI=false
 NEW_NEWLIB=false
 NEW_COMEDI=false
-
-FULL_COMMAND_LINE="$@"
 
 CURRENT_KERNEL=$(uname -r)
 
@@ -80,15 +81,15 @@ function print_usage {
 Download and build everything needed for an rtai-patched linux kernel with comedi and math support.
 
 usage:
-sudo makertaikernel [-d] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-D] [-m] [action [target1 [target2 ... ]]]
+sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-D] [-m] [action [target1 [target2 ... ]]]
 
 -d    : dry run - only print out what the script would do, but do not execute any command
 -n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})
 -k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})
--r xxx: the rtai source, one of
-        magma: current rtai development version from csv (default)
+-r xxx: the rtai source (default ${RTAI_DIR}), one of
+        magma: current rtai development version from csv
         vulcano: stable rtai development version from csv
-        rtai-5.0-test2: rtai release version 5.0-test2 from www.rtai.org
+        rtai-5.0.1: rtai release version 5.0.1 from www.rtai.org
         rtai-4.1: rtai release version 4.1 from www.rtai.org, or any other
         rtai-x.x: rtai release version x.x from www.rtai.org
         RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
@@ -107,10 +108,12 @@ sudo makertaikernel [-d] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-D] [-m] 
 
 action can be one of
   help       : display this help message
-  info       : display properties of your kernel, rtai patches, machine, and grub menu (no target required, info rtai lists available patches)
+  info       : display properties of rtai patches, loaded kernel modules, kernel, machine,
+               and grub menu (no target required)
+  info rtai  : list all available patches and suggest the one fitting to the kernel
   packages   : install required packages
   download   : download missing sources of the specified targets
-  update     : update sources of the specified targets (not for kernel)
+  update     : update sources of the specified targets (not for kernel target)
   patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
   build      : compile and install the specified targets
                and the depending ones if needed
@@ -118,8 +121,8 @@ action can be one of
   clean      : clean the source trees of the specified targets
   uninstall  : uninstall the specified targets
   remove     : remove the complete source trees of the specified targets
-  reconfigure: reconfigure the kernel and make a full build of all targets
-  reboot     : reboot into rtai kernel immediately
+  reconfigure: reconfigure the kernel and make a full build of all targets (without target)
+  reboot     : reboot into rtai kernel immediately (without target)
   test       : test the current kernel and write reports to the current working directory
   test all   : test the current kernel/kthreads/user and write reports to the current working directory
 
@@ -135,10 +138,10 @@ targets can be one or more of:
 If no target is specified, all targets are made (except showroom).
 
 Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable):
-$ sudo makertaikernel download rtai
+$ sudo ${MAKE_RTAI_KERNEL} download rtai
 
 Check for available patches:
-$ sudo makertaikernel info rtai
+$ sudo ${MAKE_RTAI_KERNEL} info rtai
 
 Select a Linux kernel and a RTAI patch and
 set the LINUX_KERNEL and RTAI_PATCH variables accordingly.
@@ -146,16 +149,16 @@ set the LINUX_KERNEL and RTAI_PATCH variables accordingly.
 
 Common use cases:
 
-$ sudo makertaikernel
+$ sudo ${MAKE_RTAI_KERNEL}
   download and build all targets. A new configuration for the kernel is generated
 
-$ sudo makertaikernel reconfigure
+$ sudo ${MAKE_RTAI_KERNEL} reconfigure
   build all targets using the existing configuration of the kernel
 
-$ sudo makertaikernel test
+$ sudo ${MAKE_RTAI_KERNEL} test
   test the currently running kernel
 
-$ sudo makertaikernel uninstall
+$ sudo ${MAKE_RTAI_KERNEL} uninstall
   uninstall all targets
 EOF
 }
@@ -197,7 +200,7 @@ function print_info {
     echo "grub menu entries:"
     sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
     echo
-    echo "settings for makertaikernel:"
+    echo "settings for ${MAKE_RTAI_KERNEL}:"
     echo "KERNEL_PATH=$KERNEL_PATH"
     echo "LINUX_KERNEL=$LINUX_KERNEL"
     echo "KERNEL_SOURCE_NAME=$KERNEL_SOURCE_NAME"
@@ -222,9 +225,9 @@ function install_packages {
     # required packages:
     echo "install packages:"
     if $DRYRUN; then
-	echo "apt-get -y install make gcc libncurses-dev zlib1g-dev kernel-package g++ cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
+	echo "apt-get -y install make gcc libncurses-dev zlib1g-dev kernel-package libssl-dev libpci-dev libsensors4-dev g++ cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
     else
-	apt-get -y install make gcc libncurses-dev zlib1g-dev kernel-package g++ cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
+	apt-get -y install make gcc libncurses-dev zlib1g-dev kernel-package libssl-dev libpci-dev libsensors4-dev g++ cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
     fi
 }
 
@@ -326,11 +329,11 @@ function unpack_kernel {
     cd $KERNEL_PATH
     if test -d linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}; then
 	echo "keep already existing linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME} directory."
-	echo "remove it with $ makertaikernel clean kernel"
+	echo "remove it with $ ${MAKE_RTAI_KERNEL} clean kernel"
     else
 	if ! test -f linux-$LINUX_KERNEL.tar.xz; then
 	    echo "archive linux-$LINUX_KERNEL.tar.xz not found."
-	    echo "download it with $ makertaikernel download kernel."
+	    echo "download it with $ ${MAKE_RTAI_KERNEL} download kernel."
 	fi
 	# unpack:
 	echo "unpack kernel sources from archive"
@@ -372,7 +375,7 @@ function install_kernel {
 	    if $KERNEL_DEBUG; then
 		dpkg -i "$KERNEL_DEBUG_PACKAGE"
 	    fi
-	    GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
+	    GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep "${LINUX_KERNEL}.*-${KERNEL_NAME}" | head -n 1)"
 	    grub-reboot "$GRUBMENU"
 	fi
     else
@@ -458,8 +461,7 @@ function build_kernel {
 	    else
 		make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
 	    fi
-	    echo "kernel build returned $?"
-	    if test "x$?" != "x0"; then
+ 	    if test "x$?" != "x0"; then
 		echo
 		echo "Error: failed to build the kernel!"
 		echo "Scroll up to see why."
@@ -489,7 +491,7 @@ function uninstall_kernel {
     if test ${CURRENT_KERNEL} = ${LINUX_KERNEL}-${KERNEL_NAME} -o ${CURRENT_KERNEL} = ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
 	echo "Cannot uninstall a running kernel!"
 	echo "First boot into a different kernel. E.g. by executing"
-	echo "$ sudo ./makertaikernel reboot"
+	echo "$ sudo ./${MAKE_RTAI_KERNEL} reboot"
 	return 1
     fi
     echo "uninstall kernel ${LINUX_KERNEL}-${KERNEL_NAME}"
@@ -538,7 +540,7 @@ function test_rtaikernel {
     if test ${CURRENT_KERNEL} != ${LINUX_KERNEL}-${KERNEL_NAME} -a ${CURRENT_KERNEL} != ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
 	echo "Need a running rtai kernel!"
 	echo "First boot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel. E.g. by executing"
-	echo "$ sudo ./makertaikernel reboot"
+	echo "$ sudo ./${MAKE_RTAI_KERNEL} reboot"
 	return 1
     fi
 
@@ -558,7 +560,7 @@ function test_rtaikernel {
     fi
 
     # remove latency file to force calibration:
-    # XXX this is for rtai5, for rtai4 the calibration tools needs to be run manually
+    # this is for rtai5, for rtai4 the calibration tools needs to be run manually
     # see base/arch/x86/calibration/README
     if test -f /usr/realtime/calibration/latencies; then
 	rm /usr/realtime/calibration/latencies
@@ -764,7 +766,7 @@ function build_newlib {
 		NEWLIB_CFLAGS="-O2 -mcmodel=kernel"
 	    fi
 	    ./configure --prefix=${LOCAL_SRC_PATH}/newlib/install --disable-shared --host="$MACHINE" CFLAGS="${NEWLIB_CFLAGS}"
-	    make -j$CPU_NUM
+	    make -j $CPU_NUM
 	    if test "x$?" != "x0"; then
 		echo "Failed to build newlib!"
 		exit 1
@@ -883,20 +885,29 @@ function build_rtai {
     if $NEW_KERNEL || $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko; then
 	echo "build rtai"
 	if ! $DRYRUN; then
+	    # path to newlib math library:
 	    LIBM_PATH=$(find ${LOCAL_SRC_PATH}/newlib/install/ -name 'libm.a')
-	    # diff -u base/arch/${RTAI_MACHINE}/defconfig .rtai_config
+	    # number of CPUs:
+	    CONFIG_NR_CPUS=$(grep CONFIG_NR_CPUS /usr/src/linux/.config)
+	    RTAI_NUM_CPUS=${CONFIG_NR_CPUS#*=}
+	    # check for configure script (no present in ShabbyX RTAI):
+	    if ! test -x configure; then
+		test -x autogen.sh && ./autogen.sh
+	    fi
+	    # start out with default configuration:
 	    cp base/arch/${RTAI_MACHINE}/defconfig .rtai_config
+	    # diff -u base/arch/${RTAI_MACHINE}/defconfig .rtai_config
+	    # configure:
 	    if grep 'CONFIG_RTAI_VERSION="5' .rtai_config; then
-		# RTAI version 5:
+		# ./configure script options seem to be very outdated (new libmath support)! 
+		# So, the following won't work:
+		# ./configure --enable-cpus=${RTAI_NUM_CPUS} --enable-fpu --with-math-libm-dir=$LIBM_PATH
 		patch <<EOF
 --- base/arch/x86/defconfig	2016-04-06 10:01:34.000000000 +0200
-+++ .rtai_config	2016-10-31 23:01:04.736181057 +0100
-@@ -17,16 +17,17 @@
- # CONFIG_RTAI_DOC_LATEX_NONSTOP is not set
- # CONFIG_RTAI_DBX_DOC is not set
++++ .rtai_config	2017-06-07 11:05:04.056936890 +0200
+@@ -19,14 +19,15 @@
  CONFIG_RTAI_TESTSUITE=y
--CONFIG_RTAI_COMPAT=y
-+# CONFIG_RTAI_COMPAT is not set
+ CONFIG_RTAI_COMPAT=y
  # CONFIG_RTAI_EXTENDED is not set
 -CONFIG_RTAI_LXRT_NO_INLINE=y
 -# CONFIG_RTAI_LXRT_STATIC_INLINE is not set
@@ -909,7 +920,7 @@ function build_rtai {
  #
  CONFIG_RTAI_FPU_SUPPORT=y
 -CONFIG_RTAI_CPUS="2"
-+CONFIG_RTAI_CPUS="$CPU_NUM"
++CONFIG_RTAI_CPUS="$RTAI_NUM_CPUS"
  # CONFIG_RTAI_DIAG_TSC_SYNC is not set
  
  #
@@ -960,7 +971,7 @@ EOF
  #
  CONFIG_RTAI_FPU_SUPPORT=y
 -CONFIG_RTAI_CPUS="2"
-+CONFIG_RTAI_CPUS="$CPU_NUM"
++CONFIG_RTAI_CPUS="$RTAI_NUM_CPUS"
  # CONFIG_RTAI_DIAG_TSC_SYNC is not set
  
  #
@@ -1000,11 +1011,11 @@ EOF
  # CONFIG_RTAI_RTDM is not set
 EOF
 	    fi
-            make oldconfig
+	    make -f makefile oldconfig
 	    if $RTAI_MENU; then
 		make menuconfig
 	    fi
-	    make
+	    make -j $CPU_NUM
 	    if test "x$?" != "x0"; then
 		echo "Failed to build rtai modules!"
 		exit 1
@@ -1199,7 +1210,7 @@ function build_comedi {
 		make clean
 	    fi
 	    cp /usr/realtime/modules/Module.symvers comedi/
-	    make -j$CPU_NUM
+	    make -j $CPU_NUM
 	    if test "x$?" != "x0"; then
 		echo "Failed to build comedi!"
 		exit 1
@@ -1556,7 +1567,7 @@ case $ACTION in
 
     test ) test_rtaikernel $@ ;;
 
-    packages ) intall_packages ;;
+    packages ) install_packages ;;
     download ) download_all $@ ;;
     update ) update_all $@ ;;
     patch ) clean_unpack_patch_kernel ;;

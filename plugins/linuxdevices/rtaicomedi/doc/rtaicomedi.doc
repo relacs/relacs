@@ -307,11 +307,12 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
    - General setup: 
      - Make sure that "Local version" is empty in case you are using \c make-kpkg (Debian system).
        Otherwise set "Local version" to "-rtai".
-     - Timers subsystem: 
-       - Set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
-       - Deselect "Old Idle dynticks config"
+     - Disable "Enable sytem-call auditing support"
+     - Timers subsystem:
+       - Try: set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
+       - Try: deselect "Old Idle dynticks config"
        .
-     - Disable "Configure standard kernel features (expert users)"
+     - Try: disable "Configure standard kernel features (expert users)"
      .
    - Select "Enable loadable module support":
      - You may deselect "Module versioning support" 
@@ -322,21 +323,21 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
        compilation)
      .
    - Processor type and features: 
-     - Select "Symmetric multi-processing support" if you have a multiprocessor machine, otherwise deselect it
+     - Select "Symmetric multi-processing support" (SMP) if you have a multiprocessor machine, otherwise (uniprocessor system, UP) deselect it
      - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
      - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
        check \c "help" to find out, which Processor family you have to select)
-     - Disable "IBM Calgary IOMMU support"
+     - Try: disable "IBM Calgary IOMMU support"
      - Set the "Maximum numbers of CPUs" to the number of cores you have in your machine (see /proc/cpuinfo)
      - Disable "SMT (Hyperthreading) scheduler support"
      - Disable "Multi-core scheduler support"
      - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
      - Select "Interrupt pipeline"
      - "I-pipe legacy interface": enable for rtai-4.1 (and earlier?), disable for current cvs.
-     - Try disabling "Numa Memory Allocation and Scheduler Support"
-     - Set "Timer frequency" to 1000 Hz
-     - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
-     - Disable "Supervisor Mode Access Prevention", "EFI runtime service support", "Enable seccomp to safely compute untrusted bytecode"
+     - Try: disable "Numa Memory Allocation and Scheduler Support"
+     - Try: set "Timer frequency" to 1000 Hz
+     - Try: disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
+     - Try: disable "Supervisor Mode Access Prevention", "EFI runtime service support", "Enable seccomp to safely compute untrusted bytecode"
    - Power management and ACPI options:
      - Disable "Suspend to RAM and standby"
      - Disable "Hibernation (aka 'suspend to disk')"
@@ -352,14 +353,14 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      .
    - Device Drivers:
      - Character devices:
-       - Try disabling "HPET - High Precision Event Timer"
+       - Try: disable "HPET - High Precision Event Timer"
        .
-     - Disable IOMMU Hardware Support
+     - Try: disable IOMMU Hardware Support
      - Staging drivers:
        - Deselect "Data acquisition support (comedi)"
        .
      .
-   - Kernel hacking: disabling debugin makes the kernel smaller. So unless you need it disable it.
+   - Kernel hacking: disabling debugging makes the kernel much smaller. So unless you know that you need it disable it.
      - Compile-time checks and compiler options:
        - Disable "Compile the kernel with debug info"
      .
@@ -373,7 +374,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
    Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
    Select "Yes".
 
-   Then the new kernel is compiled - be patient.
+   Then the new kernel is being compiled - be patient.
 
 -# Install the kernel
    \code
@@ -547,7 +548,7 @@ make menuconfig
      - Disable "Enable source compatibility mode"
      - "Inlining mode of user-space services": select "Eager inlining"
    - Machine
-     - Select "Enable FPU support:
+     - Select "Enable FPU support
      - "Number of CPUs": set to the right value.
        If in doubt, look into the file \c /proc/cpuinfo or run
        \code
@@ -671,7 +672,7 @@ RTD|         92|         60|        129|        719|       1040|          0
    \endcode
    If you have overruns, or the maximum latencies "lat max" are too
    high (<1000 ns is good, <5000 is kind of ok, longer than 10000 ns is really bad)
-   then you need to improve you kernel by disabling some bad device drivers.
+   then you need to improve you kernel by disabling some bad device drivers (see below).
 
    Also run the switch test:
    \code
@@ -727,8 +728,9 @@ To get a low latency kernel you usually need to improve your kernel
 configuration.  The main culprits are some devices and their
 drivers. Which ones are bad usually depends on your specific machine.
 
-See \c https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf
-and \c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL
+See \c https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf,
+\c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL, and
+\c /usr/local/src/rtai/README.CONF_RMRKS
 for some hints.  This is the art of creating a good real-time kernel...
 
 A good strategy is to disable as many as possible device drivers.
@@ -743,9 +745,12 @@ list of matching configuration parameters.
 Some hints for the kernel configuration:
 - Device Drivers:
   - Generic Thermal sysfs driver: Disable as much as possible. (great for latencies but no effect on periodic tasks ? ...)
-  - "USB Support": Some USB modules might be bad. Disable USB completely, 
-    or at least USB 2 and USB 3. Use PS2 mouse and keyboard instead.
+  - According to \c README.CONF_RMRKS:
+    "Do not disable USB, but just any legacy support, possibly in the
+    BIOS also. Once upon a time old USB was a source of high RTAI
+    latencies. Now that should be legacy support."
   - Keep "Multiple devices driver support (RAID and LVM) -> Device mapper support" (somehow needed for grub)
+  - Video cards and graphic acceleration
   - Keep "Real Time Clock"
   - dvfs does not matter
   - sound might be ok
@@ -772,9 +777,13 @@ cat /sys/devices/system/cpu/cpuidle/current_driver
 You can set them during startup by hitting 'e' in the \c grub menu and then add them to the
 \c kernel line. For applying the kernel parameter permanently add them in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub (and run \c update-grub). 
 
-After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced in some cases!
+After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced if you disabled too much ACPI!
 
-Sometimes it might also help to disable things in the BIOS...
+Sometimes it might also help to disable things in the BIOS:
+- Force all fans to run at full speed
+
+Finally, there are the evil SMIs. See \c
+/usr/local/src/rtai/base/arch/x86/calibration/README.SMI for details.
 .
 
 
