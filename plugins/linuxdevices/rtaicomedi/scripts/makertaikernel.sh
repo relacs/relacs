@@ -395,7 +395,7 @@ function reboot_kernel {
 
 function build_kernel {
     cd /usr/src/linux
-    if $NEW_KERNEL || $RECONFIGURE_KERNEL; then
+    if $NEW_KERNEL || $NEW_KERNEL_CONFIG || $RECONFIGURE_KERNEL; then
 
 	if ! $RECONFIGURE_KERNEL; then
 	    # clean:

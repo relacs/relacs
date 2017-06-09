@@ -58,14 +58,14 @@ linux kernel, the newlib library, and the rtai and comedi kernel modules.
 cd plugins/linuxdevices/rtaicomedi/scripts
    \endcode
 
--# Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable, see \c makertaikernel \c --help for options):
+-# Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable, see \c ./makertaikernel \c help for options):
    \code
-sudo makertaikernel download rtai
+sudo ./makertaikernel download rtai
    \endcode
 
 -# Check for available RTAI patches:
    \code
-sudo makertaikernel info rtai
+sudo ./makertaikernel.sh info rtai
    \endcode
    Select a Linux kernel and a rtai patch.
 
@@ -76,24 +76,31 @@ sudo makertaikernel info rtai
 
 -# Then run
    \code
-sudo ./makertaikernel
+sudo ./makertaikernel.sh
    \endcode
-   This will download the required sources (takes a while...) and build the kernel (takes even more time...).
+   This will download the required sources (takes a while...) and
+   build the kernel using the kernel configuration of the running
+   kernel (takes even more time...). With the \c-c flag you can
+   provide a different kernel configuration (see \c makertaikernel.sh
+   \c help for details). You may want to start with a kernel configuration
+   of a kernel image from your linux distribution
+   closest to the kernel version you selected. On a Debian-based system
+   \c sudo \c apt-get \c install \c linux-image-4.4.0-79-lowlatency, for example.
 
 -# You will get the menu for configuring the kernel. See \ref compilekernel
    step 5 for instructions.
 
 -# Reboot into the new kernel, e.g. by running
    \code
-sudo ./makertaikernel reboot
+sudo ./makertaikernel.sh reboot
    \endcode
    and run some tests by invoking
    \code
-sudo ./makertaikernel test
+sudo ./makertaikernel.sh test
    \endcode
    to run the "kern" tests or
    \code
-sudo ./makertaikernel test all
+sudo ./makertaikernel.sh test all
    \endcode
    to run the kern, kthreads, and user tests.
    The result of the test is written into the file
@@ -110,7 +117,7 @@ sudo ./makertaikernel test all
 
 -# Before you go on with improving the kernel configuration run
    \code
-sudo ./makertaikernel -c mod
+sudo ./makertaikernel.sh -c mod
    \endcode
    in order to deselect all unused kernel modules from compilation. 
    This speeds up the following kernel builds dramatically!
@@ -118,29 +125,29 @@ sudo ./makertaikernel -c mod
 -# If the results are not good, then build a new version of the kernel
    with a different configuration (see \ref configurekernel for details):
    \code
-sudo ./makertaikernel -n rtai1 reconfigure
+sudo ./makertaikernel.sh -n rtai1 reconfigure
    \endcode
    reboot into the rtai1 kernel, test the new kernel, reconfigure again yet another kernel (with a different name):
    \code
-sudo ./makertaikernel -n rtai1 test
-sudo ./makertaikernel -n rtai2 reconfigure
+sudo ./makertaikernel.sh -n rtai1 test
+sudo ./makertaikernel.sh -n rtai2 reconfigure
    \endcode
    reboot, and do the same with the right kernel names:
    \code
-sudo ./makertaikernel -n rtai2 test
-sudo ./makertaikernel -n rtai1 reconfigure
+sudo ./makertaikernel.sh -n rtai2 test
+sudo ./makertaikernel.sh -n rtai1 reconfigure
    \endcode
 
    Note that \c makertaikernel \c reconfigure will first uninstall an already existing kernel with the same name.
-   You can recreate this kernel by specifying the kernel configuration file saved by  \c makertaikernel \c test using the -c option
+   You can recreate this kernel by specifying the kernel configuration file saved by  \c makertaikernel \c test using the \c-c option
    \code
-sudo ./makertaikernel -n rtai1 -c config-3.14.17-rtai-002-nousb-good reconfigure
+sudo ./makertaikernel.sh -n rtai1 -c config-3.14.17-rtai-002-nousb-good reconfigure
    \endcode
 -# Once you are satisified, continue with \ref installrelacs .
 
 For further options of the \c makertaikernel script see
 \code
-./makertaikernel help
+./makertaikernel.sh help
 \endcode
 To show some information about your machine, rtai patches, grub menue, etc. run
 \code
@@ -312,7 +319,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
        - Try: set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
        - Try: deselect "Old Idle dynticks config"
        .
-     - Try: disable "Configure standard kernel features (expert users)"
+     - Disable "Configure standard kernel features (expert users)"
      .
    - Select "Enable loadable module support":
      - You may deselect "Module versioning support" 
@@ -760,14 +767,25 @@ Some hints for the kernel configuration:
 
 In addition, there are several interesting kernel parameter:
 - Turn off CPU power saving modes: \c processor.max_cstate=1 idle=poll .
-  This is very effective on newer CPUs!
+  This is very effective on newer CPUs! It interferes with
+  hyoerthreading - but we have that disabled anyways.
   Disable the intel_idle module. Alternatively you can set \c intel_idle.max_cstate=0 .
-  Check cpu idle driver with
+  Check cpu idle driver and intel max_cstate setting with
   \code
 cat /sys/devices/system/cpu/cpuidle/current_driver
+cat /sys/module/intel_idle/parameters/max_cstate
   \endcode
+  Run \c i7z or \c powertop (as root) to see cstates and CPU temperatures.
+
+  The cstates can also be dynamically controlled by writing the
+  maximum allowable latency in microseconds (as an 32-bit(?) \c int, not as
+  text) to the file \c /dev/cpu_dma_latency . Writing a zero keeps the
+  system in \c cstate=0.
+
   (see also Documentation/power/pm_qos_interface.txt, 
   http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels )
+- check out https://gitlab.eurecom.fr/oai/openairinterface5g/wikis/OpenAirKernelMainSetup for more hints on disabling power-management and frequncy scaling stuff
+- Check frequency scaling of CPUs with \a cpufreq-info from the \c cpufrequtils package.
 - Also check out "nohalt" kernel parameter (Documentation/kernel-parameters.txt).
 - For scheduling interrupts read Documentation/timers/NO_HZ.txt
 - Disable all dma transfers by setting \c libata.dma=0.
