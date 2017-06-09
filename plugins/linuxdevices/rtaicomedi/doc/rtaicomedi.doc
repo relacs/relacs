@@ -78,14 +78,18 @@ sudo ./makertaikernel.sh info rtai
    \code
 sudo ./makertaikernel.sh
    \endcode
+
    This will download the required sources (takes a while...) and
    build the kernel using the kernel configuration of the running
    kernel (takes even more time...). With the \c-c flag you can
    provide a different kernel configuration (see \c makertaikernel.sh
-   \c help for details). You may want to start with a kernel configuration
-   of a kernel image from your linux distribution
-   closest to the kernel version you selected. On a Debian-based system
-   \c sudo \c apt-get \c install \c linux-image-4.4.0-79-lowlatency, for example.
+   \c help for details). You may want to start with a kernel
+   configuration of a kernel image from your linux distribution
+   closest to the kernel version you selected. On a Debian-based
+   system \c sudo \c apt-get \c install \c
+   linux-image-4.4.0-79-lowlatency, for example, and boot into this
+   kernel. Then \c makertaikernel.sh will use this kernel's configuration
+   and deselect all kernel modules that are not used (localmodconfig).
 
 -# You will get the menu for configuring the kernel. See \ref compilekernel
    step 5 for instructions.
@@ -762,6 +766,16 @@ Some hints for the kernel configuration:
   - dvfs does not matter
   - sound might be ok
   - you do not need bluetooth! (in Networking support -> Bluetooth subsystem support)
+  .
+- The \c lowlatency kernel image has the following settings against the \c generic one:
+  - CONFIG_IRQ_FORCED_THREADING_DEFAULT=y
+  - CONFIG_PREEMPT_RCU=y
+  - deselect CONFIG_OPTPROBES=y
+  - Instead of CONFIG_INLINE_{SPIN|READ|WRITE}_UNLOCK{|_IRQ}=y only CONFIG_UNINLINE_SPIN_UNLOCK=y
+  - CONFIG_PREEMPT=y and CONFIG_PREEMPT_COUNT=y
+  - CONFIG_HZ_1000=y and CONFIG_HZ=1000
+  - deselect CONFIG_DRM_I810=m
+  - deselect CONFIG_DEBUG_PREEMPT and CONFIG_PREEMPT_TRACER
   .
 .
 
