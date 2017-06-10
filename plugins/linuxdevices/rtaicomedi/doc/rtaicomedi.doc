@@ -49,16 +49,16 @@ If you only want to simulate a dynamic clamp, then go on and read
 
 \subsection quickinstall Installation script
 
-The \c makertaikernel.sh script in \c scripts executes all the
-commands as explained in the following sections to download and build an rtai patched
-linux kernel, the newlib library, and the rtai and comedi kernel modules.
+The \c makertaikernel.sh script in \c scripts/ executes all the
+commands as explained in the following sections to download and build an RTAI-patched
+linux kernel, the newlib library, and the RTAI and comedi kernel modules.
 
 -# From the relacs source tree go to
    \code
 cd plugins/linuxdevices/rtaicomedi/scripts
    \endcode
 
--# Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable, see \c ./makertaikernel \c help for options):
+-# Start with selecting and downloading an RTAI source (-r option or RTAI_DIR variable, see \c ./makertaikernel \c help for options):
    \code
 sudo ./makertaikernel download rtai
    \endcode
@@ -67,12 +67,28 @@ sudo ./makertaikernel download rtai
    \code
 sudo ./makertaikernel.sh info rtai
    \endcode
-   Select a Linux kernel and a rtai patch.
+   Select a Linux kernel and the corresponding RTAI patch.
 
--# Modify the variables at the top of the script, in particular the \c
-   LINUX_KERNEL, \c RTAI_PATCH, and \c KERNEL_PATH variables to match
+-# Modify the variables at the top of the script or set them before executing makertaikernel.sh,
+   in particular the \c LINUX_KERNEL, \c RTAI_PATCH, and \c KERNEL_PATH variables to match
    the kernel version, rtai patch you want to use, and the directory
-   where to build the linux kernel (you need 5-10GB of space there).
+   where to build the linux kernel (you need up to 2 GB space there for a kernel 
+   with most device drivers disabled (e.g. via localmodconf) or 5-10GB for a full kernel).
+
+-# You may want to start out with a kernel
+   configuration of a kernel image from your linux distribution
+   closest to the kernel version you selected. On a Debian-based
+   system install a matching kernel by executing
+   \code
+sudo apt-get install linux-image-4.4.0-79-lowlatency
+   \endcode
+   for example, and boot into this kernel. Then \c makertaikernel.sh
+   will use this kernel's configuration and deselect all kernel
+   modules that are not used (localmodconfig).
+   If the version of the running kernel does not  match the one 
+   of the selected kernel (major or minor version number differ), 
+   localmodconfig is not applied, resulting
+   in a much larger kernel (takes much more time to compile).
 
 -# Then run
    \code
@@ -83,13 +99,7 @@ sudo ./makertaikernel.sh
    build the kernel using the kernel configuration of the running
    kernel (takes even more time...). With the \c-c flag you can
    provide a different kernel configuration (see \c makertaikernel.sh
-   \c help for details). You may want to start with a kernel
-   configuration of a kernel image from your linux distribution
-   closest to the kernel version you selected. On a Debian-based
-   system \c sudo \c apt-get \c install \c
-   linux-image-4.4.0-79-lowlatency, for example, and boot into this
-   kernel. Then \c makertaikernel.sh will use this kernel's configuration
-   and deselect all kernel modules that are not used (localmodconfig).
+   \c help for details).
 
 -# You will get the menu for configuring the kernel. See \ref compilekernel
    step 5 for instructions.
@@ -98,7 +108,7 @@ sudo ./makertaikernel.sh
    \code
 sudo ./makertaikernel.sh reboot
    \endcode
-   and run some tests by invoking
+   Once you rebooted in the RTAI kernel run some tests by invoking
    \code
 sudo ./makertaikernel.sh test
    \endcode
@@ -107,43 +117,48 @@ sudo ./makertaikernel.sh test
 sudo ./makertaikernel.sh test all
    \endcode
    to run the kern, kthreads, and user tests.
-   The result of the test is written into the file
+   The result of the tests is written into the file
    latencies-3.14.17-rtai-XXX-NAME-QUALITY and the corresponding
    kernel configuration is saved in
    config-3.14.17-rtai-XXX-NAME_QUALITY in the current directory. RTAI
-   is replaced by your choice of rtai source (e.g. magma, rtai-4.1, etc), 
+   is replaced by your choice of RTAI source (e.g. magma, rtai-4.1, etc), 
    XXX is replaced by a number, NAME and QUALITY are short
    strings describing your kernel configuration and the test
    performance that you can enter after the test.
 
    See \ref testrtai for details regarding the test results and \ref configurekernel
-   for and troubleshooting and how to improve the real time performance.
+   for troubleshooting and how to improve the real time performance.
 
--# Before you go on with improving the kernel configuration run
+-# If you did not start out with a kernel version matching the version
+   of your RTAI-patched kernel, then before you go on with improving
+   the kernel configuration run
    \code
 sudo ./makertaikernel.sh -c mod
    \endcode
    in order to deselect all unused kernel modules from compilation. 
    This speeds up the following kernel builds dramatically!
 
--# If the results are not good, then build a new version of the kernel
+-# If the test results are not good, then build a new version of the kernel
    with a different configuration (see \ref configurekernel for details):
    \code
-sudo ./makertaikernel.sh -n rtai1 reconfigure
-   \endcode
-   reboot into the rtai1 kernel, test the new kernel, reconfigure again yet another kernel (with a different name):
-   \code
-sudo ./makertaikernel.sh -n rtai1 test
 sudo ./makertaikernel.sh -n rtai2 reconfigure
    \endcode
-   reboot, and do the same with the right kernel names:
+   reboot into the \c rtai1 kernel, test the new kernel, reconfigure again yet another kernel (with a different name):
    \code
 sudo ./makertaikernel.sh -n rtai2 test
 sudo ./makertaikernel.sh -n rtai1 reconfigure
    \endcode
+   reboot, and do the same with the right kernel names:
+   \code
+sudo ./makertaikernel.sh -n rtai1 test
+sudo ./makertaikernel.sh -n rtai2 reconfigure
+   \endcode
 
    Note that \c makertaikernel \c reconfigure will first uninstall an already existing kernel with the same name.
-   You can recreate this kernel by specifying the kernel configuration file saved by  \c makertaikernel \c test using the \c-c option
+
+   You can recreate this kernel or use this kernel's configuration for
+   further modifications by specifying the kernel configuration file
+   saved by \c makertaikernel \c test using the \c-c option
    \code
 sudo ./makertaikernel.sh -n rtai1 -c config-3.14.17-rtai-002-nousb-good reconfigure
    \endcode
@@ -153,13 +168,14 @@ For further options of the \c makertaikernel script see
 \code
 ./makertaikernel.sh help
 \endcode
-To show some information about your machine, rtai patches, grub menue, etc. run
+To show some information about your machine, RTAI patches, grub menue, etc. run
 \code
 ./makertaikernel info
 \endcode
 
 The following sections describe in detail how to compile and install
-an rtai-patched linux kernel, newlib, rtai, and comedi.
+an RTAI-patched linux kernel, newlib, RTAI, and comedi, if you do not use
+the \c makertaikernel.sh script.
 
 
 \subsection installrtaikernel  Linux kernel and RTAI patch
@@ -319,54 +335,29 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      - Make sure that "Local version" is empty in case you are using \c make-kpkg (Debian system).
        Otherwise set "Local version" to "-rtai".
      - Disable "Enable sytem-call auditing support"
-     - Timers subsystem:
-       - Try: set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
-       - Try: deselect "Old Idle dynticks config"
-       .
      - Disable "Configure standard kernel features (expert users)"
-     .
-   - Select "Enable loadable module support":
-     - You may deselect "Module versioning support" 
-       (If you select this option you have to copy the RTAI and comedi
-       \c Module.symvers files around as described below. Selecting
-       "Module versioning support" then has the advantage that you get
-       rid of annoying warnings regarding undefined functions during
-       compilation)
      .
    - Processor type and features: 
      - Select "Symmetric multi-processing support" (SMP) if you have a multiprocessor machine, otherwise (uniprocessor system, UP) deselect it
      - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
      - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
        check \c "help" to find out, which Processor family you have to select)
-     - Try: disable "IBM Calgary IOMMU support"
      - Set the "Maximum numbers of CPUs" to the number of cores you have in your machine (see /proc/cpuinfo)
      - Disable "SMT (Hyperthreading) scheduler support"
      - Disable "Multi-core scheduler support"
      - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
      - Select "Interrupt pipeline"
      - "I-pipe legacy interface": enable for rtai-4.1 (and earlier?), disable for current cvs.
-     - Try: disable "Numa Memory Allocation and Scheduler Support"
-     - Try: set "Timer frequency" to 1000 Hz
-     - Try: disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
-     - Try: disable "Supervisor Mode Access Prevention", "EFI runtime service support", "Enable seccomp to safely compute untrusted bytecode"
    - Power management and ACPI options:
-     - Disable "Suspend to RAM and standby"
-     - Disable "Hibernation (aka 'suspend to disk')"
-     - Disable "Run-time PM core functionality"
+     - Disable everything except for:
      - Enable "ACPI (Advanced Configuration and Power Interface) Support"
        - Disable everything execpt for:
        - Select "Power Management Timer Suppport" (if available)
        .
-     - Disable "CPU Frequency scaling"
-     - Disable "CPU idle PM support"
-     - Disable "APM (Advanced Power Management) BIOS support"
-     - Disable whatever else there is
+     - Disable "CPU Frequency scaling" (\c CPU_FREQ)
+     - Disable "CPU idle PM support" (\c CPU_IDLE)
      .
    - Device Drivers:
-     - Character devices:
-       - Try: disable "HPET - High Precision Event Timer"
-       .
-     - Try: disable IOMMU Hardware Support
      - Staging drivers:
        - Deselect "Data acquisition support (comedi)"
        .
@@ -722,7 +713,7 @@ cd /usr/realtime/testsuite/kern/preempt
 
 -# If your test results are not good, then you need to reconfigure
    your kernel, probably disabling some devices, compile and install the kernel again,
-   and compile and install rtai again.
+   and compile and install rtai again. See \ref configurekernel below for hints.
 
 -# For further improving the RTAI performance, you might want to reserve at least one CPU
    for RTAI on a multi-core machine. You can isolate CPUs by using the kernel parameter
@@ -744,6 +735,32 @@ See \c https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_3
 \c /usr/local/src/rtai/README.CONF_RMRKS
 for some hints.  This is the art of creating a good real-time kernel...
 
+\subsubsection powersavingmodes Disable CPU power saving modes
+Most importantly, for newer CPUs like Intel i5 and Intel i7 CPUs,
+disabling CPU power saving modes, improves real-time performance dramatically:
+- Add the kernel parameters \c processor.max_cstate=1 idle=poll .
+- The cstates can also be dynamically controlled by writing the
+  maximum allowable latency in microseconds (as an 32-bit(?) \c int, not as
+  text) to the file \c /dev/cpu_dma_latency . Writing a zero keeps the
+  system in \c cstate=0.
+.
+Monitor cstates:
+- Check cpu idle driver and intel max_cstate setting with
+  \code
+cat /sys/devices/system/cpu/cpuidle/current_driver
+cat /sys/module/intel_idle/parameters/max_cstate
+  \endcode
+- Run \c i7z or \c powertop (as root) to see cstates and CPU temperatures.
+.
+See also \c Documentation/power/pm_qos_interface.txt in your kernel
+source tree in \c /usr/src/linux and
+http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels
+
+\subsubsection linuxdma Disable DMA
+Disable all DMA transfers by setting kernel parameter \c libata.dma=0.
+
+
+\subsubsection disabledevices Disable device drivers you do not need
 A good strategy is to disable as many as possible device drivers.
 See
 \code
@@ -753,20 +770,97 @@ for the currently loaded kernel modules. When configuring the kernel
 you can hit '\', enter a search term (the module name) and you get a 
 list of matching configuration parameters.
 
-Some hints for the kernel configuration:
-- Device Drivers:
-  - Generic Thermal sysfs driver: Disable as much as possible. (great for latencies but no effect on periodic tasks ? ...)
-  - According to \c README.CONF_RMRKS:
-    "Do not disable USB, but just any legacy support, possibly in the
-    BIOS also. Once upon a time old USB was a source of high RTAI
-    latencies. Now that should be legacy support."
-  - Keep "Multiple devices driver support (RAID and LVM) -> Device mapper support" (somehow needed for grub)
-  - Video cards and graphic acceleration
-  - Keep "Real Time Clock"
-  - dvfs does not matter
-  - sound might be ok
-  - you do not need bluetooth! (in Networking support -> Bluetooth subsystem support)
+Devices to look out are:
+- Disable DRM:
+  - Device Drivers:
+    - Graphics support:
+      - Disable "Direct Rendering Manager"
+      .
+    .
   .
+
+- Check video cards and graphic acceleration
+
+- Disabling the thermal sysfs driver is sometimes great for latencies
+  but has no effect on periodic tasks ? ...:
+  - Device Drivers:
+    - Graphics support:
+      - Disable "Backlight & LCD device support"
+      .
+    - Disable "Generic Thermal sysfs driver"
+    .
+  . 
+  
+- Device Drivers:
+  - Keep "Real Time Clock"
+  - "Generic Dynamic Voltage and Frequency Scaling (DVFS) support" does not matter
+  - sound might be ok
+  .
+
+- You probably do not need bluetooth or WLAN! (but as long as you do
+  not use it it might not hurt...):
+  - Device Drivers:
+    - Network device support:
+      - Disable "Wireless LAN"
+      .
+    .
+  - Networking support:
+    - Disable "Bluetooth subsystem support"
+    - Disable "Wireless"
+    .
+  .
+
+- According to \c README.CONF_RMRKS from rtai-5.0.1:
+  "Do not disable USB, but just any legacy support, possibly in the
+  BIOS also. Once upon a time old USB was a source of high RTAI
+  latencies. Now that should be legacy support."
+.
+
+\subsubsection otherconfigs Some more hints for kernel configuration parameters
+Here is a list of some kernel configuration parameter that you might try to improve your
+real-time perfomance (low latencies):
+
+- In "Device drivers" keep "Multiple devices driver support (RAID and LVM)" 
+  and in there keep "Device mapper support" (somehow needed for grub)
+
+- In "Processor type and features: the following seems to have an effect: 
+  - Disable "Supervisor Mode Access Prevention"
+  - Disable "EFI runtime service support"
+  - Disable "Enable seccomp to safely compute untrusted bytecode"
+  .
+
+- Disable dynamic ticks (this influences Linux performance but not RTAI...):
+  - General setup:
+    - Timers subsystem:
+      - Set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
+      - Deselect "Old Idle dynticks config"
+      .
+  - Processor type and features: 
+    - Set "Timer frequency" to 1000 Hz
+    - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
+    .
+  .
+
+- Disable IOMMU (no effect?):
+  - Processor type and features: 
+    - Disable "Old AMD GART IOMMU support"
+    - Disable "IBM Calgary IOMMU support"
+    .
+  - Device Drivers:
+    - Disable IOMMU Hardware Support
+    .
+
+- Processor type and features: 
+  - Disable "Numa Memory Allocation and Scheduler Support"
+  .
+
+- Device Drivers:
+  - Character devices:
+    - Try: disable "HPET - High Precision Event Timer"
+    .
+  .
+.
+
 - The \c lowlatency kernel image has the following settings against the \c generic one:
   - CONFIG_IRQ_FORCED_THREADING_DEFAULT=y
   - CONFIG_PREEMPT_RCU=y
@@ -779,44 +873,30 @@ Some hints for the kernel configuration:
   .
 .
 
+\subsubsection otherhints Kernel parameter
 In addition, there are several interesting kernel parameter:
-- Turn off CPU power saving modes: \c processor.max_cstate=1 idle=poll .
-  This is very effective on newer CPUs! It interferes with
-  hyoerthreading - but we have that disabled anyways.
-  Disable the intel_idle module. Alternatively you can set \c intel_idle.max_cstate=0 .
-  Check cpu idle driver and intel max_cstate setting with
-  \code
-cat /sys/devices/system/cpu/cpuidle/current_driver
-cat /sys/module/intel_idle/parameters/max_cstate
-  \endcode
-  Run \c i7z or \c powertop (as root) to see cstates and CPU temperatures.
-
-  The cstates can also be dynamically controlled by writing the
-  maximum allowable latency in microseconds (as an 32-bit(?) \c int, not as
-  text) to the file \c /dev/cpu_dma_latency . Writing a zero keeps the
-  system in \c cstate=0.
-
-  (see also Documentation/power/pm_qos_interface.txt, 
-  http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels )
-- check out https://gitlab.eurecom.fr/oai/openairinterface5g/wikis/OpenAirKernelMainSetup for more hints on disabling power-management and frequncy scaling stuff
+- check out https://gitlab.eurecom.fr/oai/openairinterface5g/wikis/OpenAirKernelMainSetup for more hints on disabling power-management and frequency scaling stuff
 - Check frequency scaling of CPUs with \a cpufreq-info from the \c cpufrequtils package.
 - Also check out "nohalt" kernel parameter (Documentation/kernel-parameters.txt).
 - For scheduling interrupts read Documentation/timers/NO_HZ.txt
-- Disable all dma transfers by setting \c libata.dma=0.
 - Advanced configuration and power interface (ACPI): \c acpi=off and/or \c pci=noacpi .
 - Advanced programmable interrupt controller (APIC): \c noapic and/or \c nolapic and/or \c lapic
+- Disable the intel_idle module. Alternatively you can set \c intel_idle.max_cstate=0 . This is taken care of by the disabled "CPU Idle" in "Power management and ACPI options".
 .
 You can set them during startup by hitting 'e' in the \c grub menu and then add them to the
 \c kernel line. For applying the kernel parameter permanently add them in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub (and run \c update-grub). 
 
 After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced if you disabled too much ACPI!
 
+\subsubsection biosparameter Check your BIOS
 Sometimes it might also help to disable things in the BIOS:
 - Force all fans to run at full speed
-
-Finally, there are the evil SMIs. See \c
-/usr/local/src/rtai/base/arch/x86/calibration/README.SMI for details.
+- Disable CPU power saving modes
 .
+
+\subsubsection disablesmi Disable SMI interrupts
+Finally, there are the evil SMIs. They periodically some long latencies. See \c
+/usr/local/src/rtai/base/arch/x86/calibration/README.SMI for details.
 
 
 
