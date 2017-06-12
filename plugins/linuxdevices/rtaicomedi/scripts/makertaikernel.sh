@@ -33,7 +33,7 @@
                            # or a full path to a config file.
                            # afterwards, the localmodconfig target is executed, 
                            # if the running kernel matches LINUX_KERNEL
-: ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration
+: ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debuggable kernel (see man crash), set with -D
 
 
@@ -89,7 +89,7 @@ function print_usage {
 Download and build everything needed for an rtai-patched linux kernel with comedi and math support.
 
 usage:
-sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-D] [-m] [action [target1 [target2 ... ]]]
+sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-l] [-D] [-m] [action [target1 [target2 ... ]]]
 
 -d    : dry run - only print out what the script would do, but do not execute any command
 -s xxx: use xxx as the base directory where to put the kernel sources (default ${KERNEL_PATH})
@@ -112,6 +112,8 @@ sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c x
         afterwards (except for mod), make localmodconfig is executed to 
         deselect compilation of unused modules, 
         but only if the runnig kernel matches the selected kernel version (major.minor only).
+-l    : disable call to make localmodconf after a kernel configuration 
+        has been selected via the -c switch
 -D    : generate kernel package with debug symbols in addition
 -m    : enter the RTAI configuration menu
 
@@ -1630,6 +1632,10 @@ if test "x$1" = "x-c"; then
 	echo "you need to specify a kernel configuration after the -c option"
 	exit 1
     fi
+fi
+if test "x$1" = "x-l"; then
+    shift
+    RUN_LOCALMOD=false
 fi
 if test "x$1" = "x-D"; then
     shift

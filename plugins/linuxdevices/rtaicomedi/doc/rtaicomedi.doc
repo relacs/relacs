@@ -82,13 +82,16 @@ sudo ./makertaikernel.sh info rtai
    \code
 sudo apt-get install linux-image-4.4.0-79-lowlatency
    \endcode
-   for example, and boot into this kernel. Then \c makertaikernel.sh
-   will use this kernel's configuration and deselect all kernel
-   modules that are not used (localmodconfig).
-   If the version of the running kernel does not  match the one 
-   of the selected kernel (major or minor version number differ), 
-   localmodconfig is not applied, resulting
-   in a much larger kernel (takes much more time to compile).
+   (modify it to the kernel version you want) and boot into this
+   kernel. Then \c makertaikernel.sh will use this kernel's
+   configuration and deselect all kernel modules
+   that are not used (localmodconfig).
+
+   If you use the \c -l switch or the version of the running
+   kernel does not match the one of the selected kernel (major or
+   minor version number differ), localmodconfig is not applied,
+   resulting in a much larger kernel (takes much more time to
+   compile).
 
 -# Then run
    \code
@@ -332,7 +335,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
    \endcode
    In the kernel configuration dialog you should check the following settings:
    - General setup: 
-     - Make sure that "Local version" is empty in case you are using \c make-kpkg (Debian system).
+     - Make sure that "Local version" is empty in case you are using the \c makertaikernel.sh script or \c make-kpkg (Debian system).
        Otherwise set "Local version" to "-rtai".
      - Disable "Enable sytem-call auditing support"
      - Disable "Configure standard kernel features (expert users)"
@@ -751,7 +754,12 @@ Monitor cstates:
 cat /sys/devices/system/cpu/cpuidle/current_driver
 cat /sys/module/intel_idle/parameters/max_cstate
   \endcode
-- Run \c i7z or \c powertop (as root) to see cstates and CPU temperatures.
+- Run \c i7z or \c powertop (as root) to see cstates and CPU
+  temperatures (they should be well below 100 degrees celsius).
+- For this to work, make sure that in the kernel configuration you
+  enabled "/dev/cpu/ * /msr - Model-specific register support" and
+  "/dev/cpu/ * /cpuid - CPU information support" in the "Processor type
+  and features" submenu.
 .
 See also \c Documentation/power/pm_qos_interface.txt in your kernel
 source tree in \c /usr/src/linux and
@@ -813,10 +821,15 @@ Devices to look out are:
     .
   .
 
-- According to \c README.CONF_RMRKS from rtai-5.0.1:
-  "Do not disable USB, but just any legacy support, possibly in the
-  BIOS also. Once upon a time old USB was a source of high RTAI
-  latencies. Now that should be legacy support."
+- USB: 
+  - According to \c README.CONF_RMRKS from rtai-5.0.1:
+    "Do not disable USB, but just any legacy support, possibly in the
+    BIOS also. Once upon a time old USB was a source of high RTAI
+    latencies. Now that should be legacy support."
+  - If you get the error "usb: device not accepting address" add 
+    \c noapic to the kernel parameter.
+  .
+  
 .
 
 \subsubsection otherconfigs Some more hints for kernel configuration parameters
