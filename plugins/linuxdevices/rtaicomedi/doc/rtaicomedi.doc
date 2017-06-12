@@ -737,8 +737,9 @@ for some hints.  This is the art of creating a good real-time kernel...
 
 \subsubsection powersavingmodes Disable CPU power saving modes
 Most importantly, for newer CPUs like Intel i5 and Intel i7 CPUs,
-disabling CPU power saving modes, improves real-time performance dramatically:
-- Add the kernel parameters \c processor.max_cstate=1 idle=poll .
+disabling CPU power saving modes improves real-time performance dramatically:
+- Add the kernel parameters \c processor.max_cstate=1 \c idle=poll .
+  See \ref kernelparamhints on how to set kernel parameter.
 - The cstates can also be dynamically controlled by writing the
   maximum allowable latency in microseconds (as an 32-bit(?) \c int, not as
   text) to the file \c /dev/cpu_dma_latency . Writing a zero keeps the
@@ -756,8 +757,10 @@ See also \c Documentation/power/pm_qos_interface.txt in your kernel
 source tree in \c /usr/src/linux and
 http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels
 
+
 \subsubsection linuxdma Disable DMA
 Disable all DMA transfers by setting kernel parameter \c libata.dma=0.
+See \ref kernelparamhints on how to set kernel parameter.
 
 
 \subsubsection disabledevices Disable device drivers you do not need
@@ -821,12 +824,28 @@ Here is a list of some kernel configuration parameter that you might try to impr
 real-time perfomance (low latencies):
 
 - In "Device drivers" keep "Multiple devices driver support (RAID and LVM)" 
-  and in there keep "Device mapper support" (somehow needed for grub)
+  and in there keep "Device mapper support" (somehow needed for grub).
 
-- In "Processor type and features: the following seems to have an effect: 
+- In "Processor type and features": disbling the following seems to have an effect: 
   - Disable "Supervisor Mode Access Prevention"
   - Disable "EFI runtime service support"
   - Disable "Enable seccomp to safely compute untrusted bytecode"
+  .
+
+- NUMA (disabling seems to improve maximum latencies):
+  - General setup:
+    - Disabel "Memory placement aware NUMA scheduler"
+  - Processor type and features: 
+    - Disable "Numa Memory Allocation and Scheduler Support"
+    .
+  .
+
+- HPET Timer (disabling it improves preempt jitter):
+  - Device Drivers:
+    - Character devices:
+      - Disable "HPET - High Precision Event Timer"
+      .
+    .
   .
 
 - Disable dynamic ticks (this influences Linux performance but not RTAI...):
@@ -850,17 +869,6 @@ real-time perfomance (low latencies):
     - Disable IOMMU Hardware Support
     .
 
-- Processor type and features: 
-  - Disable "Numa Memory Allocation and Scheduler Support"
-  .
-
-- Device Drivers:
-  - Character devices:
-    - Try: disable "HPET - High Precision Event Timer"
-    .
-  .
-.
-
 - The \c lowlatency kernel image has the following settings against the \c generic one:
   - CONFIG_IRQ_FORCED_THREADING_DEFAULT=y
   - CONFIG_PREEMPT_RCU=y
@@ -873,7 +881,7 @@ real-time perfomance (low latencies):
   .
 .
 
-\subsubsection otherhints Kernel parameter
+\subsubsection kernelparamhints Kernel parameter
 In addition, there are several interesting kernel parameter:
 - check out https://gitlab.eurecom.fr/oai/openairinterface5g/wikis/OpenAirKernelMainSetup for more hints on disabling power-management and frequency scaling stuff
 - Check frequency scaling of CPUs with \a cpufreq-info from the \c cpufrequtils package.
@@ -883,20 +891,23 @@ In addition, there are several interesting kernel parameter:
 - Advanced programmable interrupt controller (APIC): \c noapic and/or \c nolapic and/or \c lapic
 - Disable the intel_idle module. Alternatively you can set \c intel_idle.max_cstate=0 . This is taken care of by the disabled "CPU Idle" in "Power management and ACPI options".
 .
-You can set them during startup by hitting 'e' in the \c grub menu and then add them to the
-\c kernel line. For applying the kernel parameter permanently add them in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub (and run \c update-grub). 
+You can set kernel parameters during startup by hitting 'e' in the \c
+grub menu and then add them to the \c kernel line. For applying the
+kernel parameter permanently add them in \c /boot/grub/menu.lst (\c
+grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable in \c
+/etc/defaults/grub and run \c update-grub.
 
 After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced if you disabled too much ACPI!
 
 \subsubsection biosparameter Check your BIOS
-Sometimes it might also help to disable things in the BIOS:
+Sometimes it also helps to set/disable things in the BIOS:
 - Force all fans to run at full speed
 - Disable CPU power saving modes
 .
 
 \subsubsection disablesmi Disable SMI interrupts
-Finally, there are the evil SMIs. They periodically some long latencies. See \c
-/usr/local/src/rtai/base/arch/x86/calibration/README.SMI for details.
+Finally, there are the evil SMIs. They periodically produce some long latencies. See \c
+/usr/local/src/rtai/base/arch/x86/calibration/README.SMI and \c README.SMISPV for details.
 
 
 
