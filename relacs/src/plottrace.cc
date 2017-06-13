@@ -581,28 +581,40 @@ void PlotTrace::plot( void )
   // align to trigger:
   if ( ( ViewMode == EndView || ViewMode == WrapView ) &&
        Trigger && TriggerSource >= 0 ) {
-    int ninx = PlotEvents[TriggerSource].next( LeftTime );
-    int pinx = PlotEvents[TriggerSource].previous( LeftTime );      
-    if ( ninx >= PlotEvents[TriggerSource].size() ) {
-      ninx = pinx;
-      pinx--;
-    }
-    if ( ninx > 0 && pinx >= 0 ) {
-      // get average period:
-      pinx = ninx - 10;
-      if ( pinx < 0 ) 
-	pinx = 0;
-      double dt = (PlotEvents[TriggerSource][ninx] - PlotEvents[TriggerSource][pinx])/(ninx-pinx);
-      if ( dt/TimeWindow > 0.02 )
-	ninx--;
-      double nt = PlotEvents[TriggerSource][ninx];
-      double mindiff = 2.0*dt;
-      if ( mindiff > TimeWindow )
-	mindiff = TimeWindow;
-      if ( TimeWindow < dt || fabs( nt - LeftTime ) <= mindiff ) {
-	LeftTime = nt;
-	leftwin = (LeftTime - sigtime)*tfac;
-	rightwin = leftwin + tfac * TimeWindow;
+    int rinx = PlotEvents[TriggerSource].previous( LeftTime + TimeWindow );
+    if ( rinx < 0 )
+      rinx = 0;
+    int pinx = PlotEvents[TriggerSource].previous( LeftTime );
+    if ( pinx < 0 )
+      pinx = 0;
+    int nmin = 20;
+    if ( rinx > nmin ) {
+      int linx = pinx;
+      if ( rinx - linx < nmin )
+	linx = rinx - nmin;
+      if ( linx < 0 )
+	linx = 0;
+      // CV of event intervals:
+      ArrayD intervals;
+      for ( int k=0; k<rinx-linx-1; k++ )
+	intervals.push( PlotEvents[TriggerSource][linx+k+1] - PlotEvents[TriggerSource][linx+k] );
+      double std = 0.0;
+      double dt = meanStdev( std, intervals );
+      double cv = std/dt;
+      // we trigger only on sufficiently periodic events:
+      if ( cv < 0.5 ) {
+	// trigger time closest to LeftTime:
+	int inx = pinx;
+	int ninx = PlotEvents[TriggerSource].next( LeftTime );
+	if ( ninx < PlotEvents[TriggerSource].size() &&
+	     PlotEvents[TriggerSource][ninx] - LeftTime < LeftTime - PlotEvents[TriggerSource][pinx] )
+	  inx = ninx;
+	double tt = PlotEvents[TriggerSource][inx];
+	if ( fabs( tt - LeftTime ) <= 1.7*dt ) {
+	  LeftTime = tt;
+	  leftwin = (LeftTime - sigtime)*tfac;
+	  rightwin = leftwin + tfac * TimeWindow;
+	}
       }
     }
   }
