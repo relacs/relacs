@@ -36,10 +36,7 @@ namespace ephys {
 ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
 	    "ThresholdSUSpikeDetector", "ephys",
-	    "Jan Benda", "1.2", "Jul 20, 2014" ),
-    GoodSpikesHist( -2000.0, 2000.0, 0.5 ),
-    BadSpikesHist( -2000.0, 2000.0, 0.5 ),
-    AllSpikesHist( -2000.0, 2000.0, 0.5 )
+	    "Jan Benda", "1.2", "Jun 13, 2017" )
 {
   // parameter:
   Threshold = 1.0;
@@ -51,21 +48,20 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   MinSymmetry = -1.0;
   TestInterval = false;
   MinInterval = 0.001;
-  NoSpikeInterval = 0.1;
-  StimulusRequired = false;
-  SnippetsTime = 1.0;
+  NSnippets = 100;
   SnippetsWidth = 0.001;
-  SnippetsSymmetry = 0.1;
-  LogHistogram = false;
   UpdateTime = 1.0;
-  HistoryTime = 10.0;
   SizeResolution = 0.5;
+  ThreshFac = 6.0;
   Unit = "mV";
+  Data = 0;
 
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   newSection( "Detector", 8 );
   addNumber( "threshold", "Detection threshold", Threshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8 );
+  addNumber( "resolution", "Step size for threshold", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8 );
+  addNumber( "threshfac", "Factor for estimating detection threshold", ThreshFac, 0.5, 100.0, 0.5, "", "", "%.1f", 0+8 );
   addBoolean( "peaks", "Detect peaks", Peaks, 8 );
   addBoolean( "testmaxsize", "Use maximum size", TestMaxSize, 0+8 );
   addNumber( "maxsize", "Maximum size", MaxSize, 0.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", (TestMaxSize ? 2 : 0)+8 ).setActivation( "testmaxsize", "true" );
@@ -74,16 +70,10 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   addNumber( "minsymmetry", "Minimum symmetry", MinSymmetry, -1.0, 1.0, 0.05 ).setFlags( (TestSymmetry ? 2 : 0)+8 ).setActivation( "testsymmetry", "true" );
   addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8 );
   addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8 ).setActivation( "testisi", "true" );
-  newSection( "Indicators", 8 );
-  addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8 );
-  addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8 );
-  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8 );
-  addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8 );
+  newSection( "Analysis", 8 );
   addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
-  addNumber( "snippetstime", "Spike snippets shown from the last", SnippetsTime, 0, 10000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
+  addInteger( "nsnippets", "Number of spike snippets to be analyzed", NSnippets, 0, 100000, 50 ).setFlags( 0+8 );
   addNumber( "snippetswidth", "Width of spike snippet", SnippetsWidth, 0.0, 1.0, 0.0005, "sec", "ms", "%.1f", 0+8 );
-  addNumber( "snippetssymmetry", "Symmetry threshold for spike snippets", SnippetsSymmetry, 0.0, 1.0, 0.05 ).setFlags( 0+8 );
-  addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, Unit, Unit, "%.1f", 2+4, strongstyle );
 
@@ -109,7 +99,7 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   SP = new Plot( Plot::Copy );
   SP->lock();
   SP->noGrid();
-  SP->setTMarg( 1 );
+  SP->setTMarg( 4 );
   SP->setBMarg( 2.5 );
   SP->setLMarg( 5 );
   SP->setRMarg( 1 );
@@ -125,26 +115,18 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   HP = new Plot( Plot::Copy );
   HP->lock();
   HP->noGrid();
-  HP->setTMarg( 1 );
+  HP->setTMarg( 4 );
   HP->setBMarg( 2.5 );
   HP->setLMarg( 5 );
   HP->setRMarg( 1 );
-  /*
+  // HP->setXLabel( "L [" + Unit + "]" );
   HP->setXLabel( Unit );
   HP->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
   HP->setXTics();
-  HP->setYRange( 0.0, Plot::AutoScale );
-  HP->setYLabel( "" );
-  */
-  HP->setXLabel( "L [" + Unit + "]" );
-  HP->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
-  HP->setXTics();
-  //  HP->setYLabel( "R [" + Unit + "]" );
   HP->setYLabel( "Symmetry" );
   HP->unlock();
   gb->addWidget( HP, 1, 0 );
 
-  // key to histogram plot:  XXX provide a function in Plot!
   QGridLayout *gl = new QGridLayout;
   gl->setContentsMargins( 0, 0, 0, 0 );
   gl->setVerticalSpacing( 0 );
@@ -172,6 +154,7 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
 int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
 				    const EventList &other, const EventData &stimuli )
 {
+  Data = &data;
   Unit = data.unit();
   setOutUnit( "threshold", Unit );
   setOutUnit( "maxsize", Unit );
@@ -180,11 +163,13 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
   setMinMax( "resolution", 0.0, 1000.0, 0.01, Unit );
   setNotify();
   notify();
+  SP->lock();
+  SP->setYLabel( Unit );
+  SP->unlock();
   HP->lock();
-  //  HP->setXLabel( Unit );
-  HP->setXLabel( "L [" + Unit + "]" );
+  // HP->setXLabel( "L [" + Unit + "]" );
+  HP->setXLabel( Unit );
   //  HP->setYLabel( "R [" + Unit + "]" );
-  HP->setYLabel( "Symmetry" );
   HP->setYRange( -1.0, 1.0 );
   HP->unlock();
   outevents.setSizeScale( 1.0 );
@@ -193,7 +178,6 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
   outevents.setWidthScale( 1000.0 );
   outevents.setWidthUnit( "ms" );
   outevents.setWidthFormat( "%4.2f" );
-  D.setHistorySize( int( HistoryTime*1000.0 ) );
   LastTime = 0.0;
   StimulusEnd = 0.0;
   IntervalStart = 0.0;
@@ -244,21 +228,25 @@ void ThresholdSUSpikeDetector::notify( void )
   Peaks = boolean( "peaks" );
   TestInterval = boolean( "testinterval" );
   MinInterval = number( "minisi" );
-  NoSpikeInterval = number( "nospike" );
-  StimulusRequired = boolean( "considerstimulus" );
-  SnippetsTime = number( "snippetstime" );
+  NSnippets = integer( "nsnippets" );
+  SpikeTime.clear();
+  SpikeTime.reserve( NSnippets );
+  SpikeLeftSize.clear();
+  SpikeLeftSize.reserve( NSnippets );
+  SpikeRightSize.clear();
+  SpikeRightSize.reserve( NSnippets );
+  SpikeSize.clear();
+  SpikeSize.reserve( NSnippets );
+  SpikeSymmetry.clear();
+  SpikeSymmetry.reserve( NSnippets );
+  SpikeAccepted.clear();
+  SpikeAccepted.reserve( NSnippets );
   SnippetsWidth = number( "snippetswidth" );
-  SnippetsSymmetry = number( "snippetssymmetry" );
   SP->lock();
   SP->setXRange( -1000.0*SnippetsWidth, 1000.0*SnippetsWidth );
   SP->unlock();
-  LogHistogram = boolean( "log" );
-  Parameter &ht = Options::operator[]( "history" );
-  if ( ht.flags( OptWidget::changedFlag() ) ) {
-    HistoryTime = ht.number();
-    D.setHistorySize( int( HistoryTime*1000.0 ) );
-  }
   UpdateTime = number( "update" );
+  ThreshFac = number( "threshfac" );
   double resolution = number( "resolution", Unit );
 
   if ( changed( "resolution" ) && resolution > 0.0 ) {
@@ -279,10 +267,6 @@ void ThresholdSUSpikeDetector::notify( void )
     setFormat( "maxsize", 4+pre, pre, 'f' );
     setStep( "maxsize", SizeResolution, Unit );
     setFormat( "size", 4+pre, pre, 'f' );
-    double max = 1000.0*SizeResolution;
-    GoodSpikesHist = SampleDataD( -max, max, SizeResolution );
-    BadSpikesHist = SampleDataD( -max, max, SizeResolution );
-    AllSpikesHist = SampleDataD( -max, max, SizeResolution );
     SDW.updateSettings();
   }
   SDW.updateValues( OptWidget::changedFlag() );
@@ -291,37 +275,9 @@ void ThresholdSUSpikeDetector::notify( void )
 
 void ThresholdSUSpikeDetector::autoConfigure( void )
 {
-  // skip initial zeros:
-  int lp = 0;
-  for ( lp=0; lp<AllSpikesHist.size() && AllSpikesHist[lp] <= 0.0; lp++ );
-  // skip final zeros:
-  int rp = 0;
-  for ( rp=AllSpikesHist.size()-1; rp>=0 && AllSpikesHist[rp] <= 0.0; rp-- );
-  // no data in histogram:
-  if ( lp >= rp )
+  if ( Data == 0 )
     return;
-  // find longest stretch of zeros:
-  int zp = -1;
-  int zn = 0;
-  for ( int k=lp; k<=rp; k++ ) {
-    if ( AllSpikesHist[k] <= 0.0 ) {
-      int p = k;
-      int n = 0;
-      for ( n++, k++; k<=rp && AllSpikesHist[k] <= 0.0; n++, k++ );
-      if ( n >= zn ) {
-	zp = p;
-	zn = n;
-      }
-    }
-  }
-  // set threshold:
-  if ( zp < 0 ) {
-    // no zero stretch:
-    Threshold = Peaks ? AllSpikesHist.pos( rp+2 ) : AllSpikesHist.pos( lp-2 );
-  }
-  else {
-    Threshold = AllSpikesHist.pos( zp+zn/2 );
-  }
+  Threshold = ThreshFac * Data->stdev( Data->currentTime()-UpdateTime, Data->currentTime() );
   unsetNotify();
   setNumber( "threshold", Threshold, Unit );
   setNotify();
@@ -346,7 +302,7 @@ void ThresholdSUSpikeDetector::save( const string &param )
 void ThresholdSUSpikeDetector::save( void )
 {
   // create file:
-  ofstream df( addPath( Str( ident() ).lower() + "-distr.dat" ).c_str(),
+  ofstream df( addPath( Str( ident() ).lower() + "-properties.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -362,36 +318,29 @@ void ThresholdSUSpikeDetector::save( void )
   header.save( df, "# " );
   df << '\n';
   TableKey key;
-  key.addNumber( "ampl", Unit, "%5.1f" );
-  key.addNumber( "bad", "1", "%5.0f" );
-  key.addNumber( "good", "1", "%5.0f" );
+  key.addNumber( "time", "ms", "%6.2f" );
+  key.addNumber( "leftsize", Unit, "%6.1f" );
+  key.addNumber( "rightsize", Unit, "%6.1f" );
+  key.addNumber( "size", Unit, "%6.1f" );
+  key.addNumber( "symmetry", "1", "%5.3f" );
+  key.addNumber( "accepted", "1", "%1.0f" );
   key.saveKey( df, true, false );
 
-  // range:
-  int max = AllSpikesHist.size()-1;
-  for ( ; max >= 0; max-- )
-    if ( AllSpikesHist[max] > 0.0 )
-      break;
-
-  // write data:
-  if ( max > 0 ) {
-    for ( int n=0; n<max; n++ ) {
-      key.save( df, AllSpikesHist.pos( n ), 0 );
-      key.save( df, BadSpikesHist[n] );
-      key.save( df, GoodSpikesHist[n] );
-      df << '\n';
-    }
-  }
-  else {
-    key.save( df, 0.0, 0 );
-    key.save( df, 0.0 );
-    key.save( df, 0.0 );
+  double t0 = SpikeTime[SpikeTime.size() - SpikeTime.accessibleSize()];
+  for ( int k=0; k<SpikeTime.accessibleSize(); k++ ) {
+    int i = SpikeTime.size() - SpikeTime.accessibleSize() + k;
+    key.save( df, 1000.0*(SpikeTime[i] - t0), 0 );
+    key.save( df, SpikeLeftSize[i] );
+    key.save( df, SpikeRightSize[i] );
+    key.save( df, SpikeSize[i] );
+    key.save( df, SpikeSymmetry[i] );
+    double accepted = SpikeAccepted[i] ? 1.0 : 0.0;
+    key.save( df, accepted );
     df << '\n';
   }
   df << '\n' << '\n';
   
   unlock();
-
 }
 
 
@@ -399,41 +348,11 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
 				      const EventList &other, const EventData &stimuli )
 {
   if ( Peaks )
-    D.peakHist( data.minBegin(), data.end(), outevents,
-		Threshold, Threshold, Threshold, *this );
+    D.peak( data.minBegin(), data.end(), outevents,
+	    Threshold, Threshold, Threshold, *this );
   else
-    D.troughHist( data.minBegin(), data.end(), outevents,
-		  Threshold, Threshold, Threshold, *this );
-
-  // update mean spike size in case of no spikes:
-  if ( StimulusRequired && stimuli.size() > 0 ) {
-    double stimulusstart = stimuli.back();
-    if ( stimulusstart >= LastTime && stimulusstart < currentTime() ) {
-      IntervalWidth = stimuli.backWidth();
-      StimulusEnd = stimulusstart + IntervalWidth;
-      if ( IntervalWidth > NoSpikeInterval )
-	IntervalWidth = NoSpikeInterval;
-      IntervalStart = stimulusstart;
-      IntervalEnd = IntervalStart + IntervalWidth;
-    }
-    LastTime = currentTime();
-    while ( IntervalWidth > 0.0 &&
-	    IntervalEnd <= StimulusEnd &&
-	    IntervalEnd <= currentTime() ) {
-      if ( outevents.count( IntervalStart, IntervalEnd ) == 0 )
-	outevents.updateMean( (int)::rint(IntervalWidth/NoSpikeInterval + 0.5) );
-      IntervalStart = IntervalEnd;
-      IntervalEnd += IntervalWidth;
-    }
-  }
-  else {
-    if ( currentTime() > LastTime + NoSpikeInterval ) {
-      if ( outevents.size() - LastSize <= 0 )
-	outevents.updateMean( (int)::rint((currentTime() - LastTime)/NoSpikeInterval) );
-      LastTime = currentTime();
-      LastSize = outevents.size();
-    }
-  }
+    D.trough( data.minBegin(), data.end(), outevents,
+	      Threshold, Threshold, Threshold, *this );
 
   unsetNotify();
   setNumber( "rate", outevents.meanRate() );
@@ -448,129 +367,20 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   SDW.updateValues( OptWidget::changedFlag() );
 
   // snippets:
-  int nsnippets = (int)( ::ceil( outevents.meanRate() * SnippetsTime ) );
-  if ( nsnippets < 100 )
-    nsnippets = 100;
-  ArrayD snippetleftheight;
-  snippetleftheight.reserve( nsnippets );
-  ArrayD snippetrightheight;
-  snippetrightheight.reserve( nsnippets );
-  ArrayF snippetsymmetry;
-  snippetsymmetry.reserve( nsnippets );
-  ArrayD snippetwidth;
-  snippetwidth.reserve( nsnippets );
   SP->lock();
   SP->clear();
   SP->plotVLine( 0.0, Plot::White, 2 );
-  for ( int k=0; ; k++ ) {
+  for ( int k=0; k<NSnippets; k++ ) {
     if ( k >= outevents.size() )
       break;
     double st = outevents[outevents.size()-1-k];
-    if ( currentTime() - st > SnippetsTime )
-      break;
     if ( st - SnippetsWidth <= data.minTime() )
       break;
     SampleDataF snippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0.0f );
     data.copy( st, snippet );
     int k0 = snippet.index( 0.0 );
     snippet -= snippet[k0];
-
-    k0 = data.index( st );
-    float peakheight = data[ k0 ];
-    // find first right minimum:
-    int kr = -1;
-    double rightheight = 0.0;
-    if ( Peaks ) {
-      for ( int k=k0+1; k<data.size()-2; k++ ) {
-	if ( data[k-2] > data[k] && data[k] < data[k+2] ) {
-	  rightheight = peakheight - data[k];
-	  kr = k;
-	  break;
-	}
-      }
-    }
-    else {
-      for ( int k=k0+1; k<data.size()-2; k++ ) {
-	if ( data[k-2] < data[k] && data[k] > data[k+2] ) {
-	  rightheight = data[k] - peakheight;
-	  kr = k;
-	  break;
-	}
-      }
-    }
-    // find first left minimum:
-    int kl = -1;
-    double leftheight = 0.0;
-    if ( Peaks ) {
-      for ( int k=k0-1; k>data.minIndex()+1; k-- ) {
-	if ( data[k-2] > data[k] && data[k] < data[k+2] ) {
-	  leftheight = peakheight - data[k];
-	  kl = k;
-	  break;
-	}
-      }
-    }
-    else {
-      for ( int k=k0-1; k>data.minIndex()+1; k-- ) {
-	if ( data[k-2] < data[k] && data[k] > data[k+2] ) {
-	  leftheight = data[k] - peakheight;
-	  kl = k;
-	  break;
-	}
-      }
-    }
-
-    snippetrightheight.push( leftheight );
-    snippetleftheight.push( rightheight );
-
-    // width:
-    double minheight = snippetrightheight.back();
-    if ( minheight > snippetleftheight.back() )
-      minheight = snippetleftheight.back();
-    double rt = 0.0;
-    if ( Peaks ) {
-      for ( int k=k0; k<kr; k++ ) {
-	if ( data[k] < peakheight - minheight/2 ) {
-	  rt = data.pos( k );
-	  break;
-	}
-      }
-    }
-    else {
-      for ( int k=k0; k<kr; k++ ) {
-	if ( data[k] > peakheight + minheight/2 ) {
-	  rt = data.pos( k );
-	  break;
-	}
-      }
-    }
-    double lt = 0.0;
-    if ( Peaks ) {
-      for ( int k=k0; k>kl; k-- ) {
-	if ( data[k] < peakheight - minheight/2 ) {
-	  lt = data.pos( k );
-	  break;
-	}
-      }
-    }
-    else {
-      for ( int k=k0; k>kl; k-- ) {
-	if ( data[k] > peakheight + minheight/2 ) {
-	  lt = data.pos( k );
-	  break;
-	}
-      }
-    }
-    snippetwidth.push( rt - lt );
-    // plot snippet:
-    float symmetry = (snippetleftheight.back() - snippetrightheight.back())/(snippetleftheight.back() + snippetrightheight.back());
-    snippetsymmetry.push( symmetry );
-    if ( symmetry < -SnippetsSymmetry )
-      SP->plot( snippet, 1000.0, Plot::Red, 1, Plot::Solid );
-    else if ( symmetry > SnippetsSymmetry )
-      SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
-    else
-      SP->plot( snippet, 1000.0, Plot::Orange, 1, Plot::Solid );
+    SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
   }
   SP->draw();
   SP->unlock();
@@ -578,60 +388,17 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   // plot snippet properties:
   HP->lock();
   HP->clear();
-  HP->plot( snippetleftheight, snippetsymmetry, Plot::Transparent, 0, Plot::Solid, 
+  ArrayD leftsize;
+  ArrayD symmetry;
+  for ( int k=0; k<SpikeLeftSize.accessibleSize(); k++ ) {
+    int i = SpikeLeftSize.size() - SpikeLeftSize.accessibleSize() + k;
+    leftsize.push( SpikeLeftSize[i] );
+    symmetry.push( SpikeSymmetry[i] );
+  }
+  HP->plot( leftsize, symmetry, Plot::Transparent, 0, Plot::Solid, // 
 	    Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
   HP->draw();
   HP->unlock();
-
-  // histogramms:
-  D.goodEvents().sizeHist( currentTime() - HistoryTime, currentTime(), GoodSpikesHist );
-  D.badEvents().sizeHist( currentTime() - HistoryTime, currentTime(), BadSpikesHist );
-  AllSpikesHist = GoodSpikesHist + BadSpikesHist;
-
-  /*
-  // plot:
-  HP->lock();
-  HP->clear();
-  double xmin = -10.0;
-  for ( int k=0; k<AllSpikesHist.size(); k++ )
-    if ( AllSpikesHist[k] > 0.0 ) {
-      xmin = AllSpikesHist.pos( k );
-      break;
-    }
-  double xmax = 10.0;
-  for ( int k=AllSpikesHist.size()-1; k >= 0; k-- )
-    if ( AllSpikesHist[k] > 0.0 ) {
-      xmax = AllSpikesHist.pos( k+1 );
-      break;
-    }
-  if ( xmin > Threshold )
-    xmin = Threshold;
-  if ( xmax < MaxSize )
-    xmax = MaxSize;
-  if ( ! HP->zoomedXRange() )
-    HP->setXRange( xmin, xmax );
-  if ( LogHistogram ) {
-    SampleDataD bh( BadSpikesHist );
-    for ( int k=0; k<bh.size(); k++ )
-      bh[k] = bh[k] > 1.0 ? log( bh[k] ) : 0.0;
-    SampleDataD gh( GoodSpikesHist );
-    for ( int k=0; k<gh.size(); k++ )
-      gh[k] = gh[k] > 1.0 ? log( gh[k] ) : 0.0;
-    HP->plot( bh, 1.0, Plot::Red, 2, Plot::Solid );
-    HP->plot( gh, 1.0, Plot::Green, 2, Plot::Solid );
-    HP->noYTics();
-  }
-  else {
-    HP->plot( BadSpikesHist, 1.0, Plot::Red, 2, Plot::Solid );
-    HP->plot( GoodSpikesHist, 1.0, Plot::Green, 2, Plot::Solid );
-    HP->setYTics();
-  }
-  HP->plotVLine( Threshold, Plot::White, 2 );
-  if ( TestMaxSize )
-    HP->plotVLine( MaxSize, Plot::White, 2 );
-  HP->draw();
-  HP->unlock();
-  */
 
   return 0;
 }
@@ -701,18 +468,26 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   double symmetry = ( leftsize - rightsize )/( leftsize + rightsize );
 
   // check:
+  bool  accept = true;
   if ( rightsize < threshold || leftsize < threshold )
-    return 0;
+    accept = false;
   if ( TestMaxSize && ( rightsize > MaxSize || leftsize > MaxSize ) )
-    return 0;
+    accept = false;
   if ( TestSymmetry && ( symmetry > MaxSymmetry || symmetry < MinSymmetry ) )
-    return 0;
+    accept = false;
   if ( TestInterval && 
        outevents.size() > 0 && time - outevents.back() < MinInterval )
-    return 0;
+    accept = false;
 
-  // accept:
-  return 1; 
+  // store:
+  SpikeTime.push( time );
+  SpikeLeftSize.push( leftsize );
+  SpikeRightSize.push( rightsize );
+  SpikeSize.push( size );
+  SpikeSymmetry.push( symmetry );
+  SpikeAccepted.push( accept );
+
+  return accept; 
 }
 
 

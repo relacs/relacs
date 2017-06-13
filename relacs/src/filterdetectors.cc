@@ -947,6 +947,13 @@ void FilterDetectors::autoConfigure( Filter *f, double tbegin, double tend )
 }
 
 
+void FilterDetectors::save( void )
+{
+  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d )
+    (*d)->save();
+}
+
+
 string FilterDetectors::filter( double signaltime )
 {
   // adjust necessary?
@@ -1226,6 +1233,7 @@ void FilterDetectors::addMenu( QMenu *menu, bool doxydoc )
   Menu->clear();
 
   Menu->addAction( "&Auto configure", this, SLOT( autoConfigure() ), Qt::Key_A );
+  Menu->addAction( "&Save", this, SLOT( save() ) );
   for ( unsigned int k=0; k<FL.size(); k++ ) {
     string s = "&";
     if ( k == 0 )
@@ -1240,7 +1248,8 @@ void FilterDetectors::addMenu( QMenu *menu, bool doxydoc )
     pop->addAction( "&Options...", FL[k]->FilterDetector, SLOT( dialog() ) );
     pop->addAction( "&Help...", FL[k]->FilterDetector, SLOT( help() ) );
     pop->addAction( "&Auto configure...", FL[k], SLOT( autoConfigure() ) );
-    pop->addAction( "&Screenshot", FL[k]->FilterDetector, SLOT( saveWidget() ) );
+    pop->addAction( "&Save...", FL[k], SLOT( save() ) );
+    pop->addAction( "S&creenshot", FL[k]->FilterDetector, SLOT( saveWidget() ) );
     if ( doxydoc )
       pop->addAction( "&Doxygen", FL[k]->FilterDetector, SLOT( saveDoxygenOptions() ) );
   }
@@ -1478,6 +1487,12 @@ void FilterData::autoConfigure( double tbegin, double tend )
     }
   }
   FilterDetector->unlock();
+}
+
+
+void FilterData::save( void )
+{
+  FilterDetector->save();
 }
 
 

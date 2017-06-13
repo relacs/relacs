@@ -26,6 +26,7 @@
 #include <qlabel.h>
 #include <qdatetime.h>
 #include <relacs/optwidget.h>
+#include <relacs/cyclicarray.h>
 #include <relacs/sampledata.h>
 #include <relacs/plot.h>
 #include <relacs/detector.h>
@@ -39,28 +40,25 @@ namespace ephys {
 \class ThresholdSUSpikeDetector
 \brief [Detector] Spike detection based on an absolute voltage threshold.
 \author Jan Benda
-\version 1.2 (Jul 20, 2014)
+\version 1.4 (Jun 13, 2017)
 
 \par Options
 - \c Detector
     - \c threshold=1mV: Detection threshold (\c number)
+    - \c resolution=0.5mV: Step size for threshold (\c number)
+    - \c threshfac=6: Factor for estimating detection threshold (\c number)
     - \c peaks=true: Detect peaks (\c boolean)
     - \c testmaxsize=false: Use maximum size (\c boolean)
     - \c maxsize=1mV: Maximum size (\c number)
     - \c testmaxsymmetry=false: Use maximum symmetry (\c boolean)
     - \c maxsymmetry=1: Maximum symmetry (\c number)
+    - \c minsymmetry=-1: Minimum symmetry (\c number)
     - \c testisi=false: Test interspike interval (\c boolean)
     - \c minisi=1ms: Minimum interspike interval (\c number)
-- \c Indicators
-    - \c nospike=100ms: Interval for no spike (\c number)
-    - \c considerstimulus=false: Expect spikes during stimuli only (\c boolean)
-    - \c resolution=0.5mV: Resolution of spike size (\c number)
-    - \c log=false: Logarithmic histograms (\c boolean)
+- \c Analysis
     - \c update=1sec: Update time interval (\c number)
     - \c snippetstime=1sec: Spike snippets shown from the last (\c number)
     - \c snippetswidth=1ms: Width of spike snippet (\c number)
-    - \c snippetssymmetry=0.1: Symmetry threshold for spike snippets (\c number)
-    - \c history=10sec: Maximum history time (\c number)
     - \c rate=100Hz: Rate (\c number)
     - \c size=100mV: Spike size (\c number)
 */
@@ -130,24 +128,17 @@ public slots:
   bool TestInterval;
     /*! Minimum interspike interval. */
   double MinInterval;
-    /*! If no spikes are detected, update statistic assuming that
-        a single spike did not occur within \a NoSpikeInterval. */
-  double NoSpikeInterval;
-    /*! True if spikes are expected during stimuli only. */
-  bool StimulusRequired;
 
-    /*! Time from which spike snippets are plotted. */
-  double SnippetsTime;
+    /*! Number of spike snippets to be analyzed and plotted. */
+  double NSnippets;
     /*! Width of spike snippets. */
   double SnippetsWidth;
     /*! Threshold for symmetry of spike snippets. */
   double SnippetsSymmetry;
-    /*! Plot histogram logarithmically. */
-  bool LogHistogram;
     /*! Update time for histograms and indicators. */
   double UpdateTime;
-    /*! Maximum time for history spike events. */
-  double HistoryTime;
+    /*! The estimated threshold is the standard deviation of the data times ThreshFac. */
+  double ThreshFac;
 
     /*! Resolution of spike sizes and thresholds. */
   double SizeResolution;
@@ -155,18 +146,22 @@ public slots:
   OptWidget SDW;
   static const int UpdateFlag = 8192;
 
+  const InData *Data;
   long LastSize;
   double LastTime;
   double StimulusEnd;
   double IntervalStart;
   double IntervalEnd;
   double IntervalWidth;
+  CyclicArrayD SpikeTime;
+  CyclicArrayD SpikeLeftSize;
+  CyclicArrayD SpikeRightSize;
+  CyclicArrayD SpikeSize;
+  CyclicArrayD SpikeSymmetry;
+  CyclicArray<bool> SpikeAccepted;
   QTime Update;
   Plot *SP;
   Plot *HP;
-  SampleDataD GoodSpikesHist;
-  SampleDataD BadSpikesHist;
-  SampleDataD AllSpikesHist;
   string Unit;
 
 };

@@ -131,10 +131,16 @@
 		the trace (<keycap>1</keycap> is the first, topmost
 		trace).</para>
 
-		<para>The currently displayed traces can be printed by pressing <keycap>Ctrl+P</keycap>. This writes the data of the traces in addition with some meta data to the file <filename>traces.dat</filename>. The the script specified by printcommand in the settings is then executed.</para>
+		<para>
+		The currently displayed traces can be printed by
+		pressing <keycap>Ctrl+P</keycap>. This writes the data
+		of the traces in addition with some meta data to the
+		file <filename>traces.dat</filename>. The the script
+		specified by printcommand in the settings is then
+		executed.</para>
 
 		<para>
-		  The grid lines can be toggled by pressing <keycap>Ctrl+T</keycap>.
+		  The grid lines can be toggled by pressing <keycap>Ctrl+G</keycap>.
 		  This cycles through no grid lines, x-grid lines, y-grid lines, and
 		  x- and y-grid lines.
 		</para>
@@ -521,6 +527,7 @@
                   <listitem>
 		    <itemizedlist>
 			<listitem><para><guimenuitem>Auto configure</guimenuitem>: Automatically adjusts thresholds etc. for all filters and detectors.</para></listitem>
+			<listitem><para><guimenuitem>Save</guimenuitem>: Save status off all filters and detectors to file.</para></listitem>
 			<listitem>
 			<para>Then there is a list of each filter and detector. Each has the following submenu:</para>
 		        <itemizedlist>
@@ -528,6 +535,7 @@
 			 set parameters of the filter/detector.</para></listitem>
 			<listitem><para><guimenuitem>Help</guimenuitem>: Show the help text of the filter/detector (if available).</para></listitem>
 			<listitem><para><guimenuitem>Auto configure</guimenuitem>: Automatically adjusts thresholds etc..</para></listitem>
+			<listitem><para><guimenuitem>Save</guimenuitem>: Save status to file.</para></listitem>
 			<listitem><para><guimenuitem>Screenshot</guimenuitem>: Make a screenshot of the widget of the filter.</para></listitem>
 		        </itemizedlist>
 			</listitem>

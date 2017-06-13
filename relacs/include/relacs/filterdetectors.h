@@ -187,6 +187,8 @@ public slots :
     /*! Call the Filter::autoConfigure() function for all filter
         on the last second of data. */
   void autoConfigure( void );
+    /*! Call the Filter::save() function for all filter. */
+  void save( void );
 
 
 protected:
@@ -271,6 +273,7 @@ class FilterData : public QObject
 public slots:
 
     void autoConfigure( void );
+    void save( void );
 
 };
 
