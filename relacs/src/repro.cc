@@ -61,7 +61,6 @@ RePro::RePro( const string &name, const string &pluginset,
   GrabKeys.reserve( 20 );
   GrabKeysBaseSize = 0;
   GrabKeysInstalled = false;
-  GrabKeysAllowed = false;
 
   Thread = new ReProThread( this );
   Interrupt = 0;
@@ -115,12 +114,11 @@ void RePro::run( void )
   SoftStopLock.lock();
   SoftStop = 0;
   SoftStopLock.unlock();
-  GrabKeysAllowed = true;
-  GrabKeysBaseSize = GrabKeys.size();
   setSettings();
   InterruptLock.lock();
   Interrupt = 0;
   InterruptLock.unlock();
+  GrabKeysBaseSize = GrabKeys.size();
   enable();
   getData();
   lock();
@@ -141,7 +139,7 @@ void RePro::run( void )
   unlock();
 
   RW->KeyTime->unsetNoFocusWidget();
-  GrabKeysAllowed = false;
+  GrabKeys.resize( GrabKeysBaseSize );
   disable();
 
   // write message:
@@ -629,21 +627,16 @@ void RePro::grabKey( int key )
   GrabKeyLock.lock();
   GrabKeys.push_back( key );
   GrabKeyLock.unlock();
-  grabKeys();
 }
 
 
 void RePro::grabKeys( void )
 {
   GrabKeyLock.lock();
-  bool r = GrabKeys.empty() || GrabKeysInstalled || ! GrabKeysAllowed;
-  GrabKeyLock.unlock();
-  if ( r )
-    return;
-
-  GrabKeyLock.lock();
-  qApp->installEventFilter( (RELACSPlugin*)this );
-  GrabKeysInstalled = true;
+  if ( ! GrabKeysInstalled ) {
+    qApp->installEventFilter( this );
+    GrabKeysInstalled = true;
+  }
   GrabKeyLock.unlock();
 }
 
@@ -664,19 +657,15 @@ void RePro::releaseKey( int key )
       ++inx;
     }
   }
-  int empty = GrabKeys.empty();
   GrabKeyLock.unlock();
-  if ( empty )
-    releaseKeys();
 }
 
 
 void RePro::releaseKeys( void )
 {
   GrabKeyLock.lock();
-  GrabKeys.resize( GrabKeysBaseSize );
   if ( GrabKeysInstalled ) {
-    qApp->removeEventFilter( (RELACSPlugin*)this );
+    qApp->removeEventFilter( this );
     GrabKeysInstalled = false;
   }
   GrabKeyLock.unlock();
@@ -687,7 +676,7 @@ bool RePro::eventFilter( QObject *watched, QEvent *e )
 {
   if ( watched == widget() )
     return RELACSPlugin::eventFilter( watched, e );   // this passes the keyevents to the RePros...
-
+  
   if ( e->type() == QEvent::Shortcut ) {
     // check for grabbed keys:
     QShortcutEvent *se = dynamic_cast<QShortcutEvent *>(e);

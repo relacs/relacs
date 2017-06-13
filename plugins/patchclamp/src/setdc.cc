@@ -161,12 +161,12 @@ SetDC::SetDC( void )
   grabKey( Qt::Key_Escape );
   
   // Reset button:
-  ResetButton = new QPushButton( "&Reset" );
+  ResetButton = new QPushButton( "Re&set" );
   ResetButton->setFixedHeight( OKButton->sizeHint().height() );
   bb->addWidget( ResetButton );
   connect( ResetButton, SIGNAL( clicked() ),
 	   this, SLOT( resetDC() ) );
-  grabKey( Qt::ALT+Qt::Key_R );
+  grabKey( Qt::ALT+Qt::Key_S );
   
   // Zero button:
   ZeroButton = new QPushButton( "&Zero" );
@@ -517,7 +517,7 @@ void SetDC::keyPressEvent( QKeyEvent *e )
     CancelButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Qt::Key_R && ( e->modifiers() & Qt::AltModifier ) ) {
+  else if ( e->key() == Qt::Key_S && ( e->modifiers() & Qt::AltModifier ) ) {
     ResetButton->animateClick();
     e->accept();
   }

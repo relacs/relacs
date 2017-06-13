@@ -94,7 +94,7 @@ LinearRange::LinearRange( double r, double stepsize )
       Stepsize = 1;
   }
   else {
-    NSize = index( r );
+    NSize = index( r ) + 1;
   }
 }
 
@@ -113,7 +113,7 @@ LinearRange::LinearRange( double l, double r, double stepsize )
       Stepsize = 1.0;
   }
   else {
-    NSize = index( r );
+    NSize = index( r ) + 1;
   }
 }
 
@@ -203,7 +203,7 @@ const LinearRange &LinearRange::assign( double r, double stepsize )
       Stepsize = 1.0;
   }
   else {
-    NSize = index( r );
+    NSize = index( r ) + 1;
   }
   return *this;
 }
@@ -219,7 +219,7 @@ const LinearRange &LinearRange::assign( double l, double r, double stepsize )
       Stepsize = 1.0;
   }
   else {
-    NSize = index( r );
+    NSize = index( r ) + 1;
   }
   return *this;
 }
@@ -283,7 +283,7 @@ void LinearRange::setBack( double b )
   if ( b < front() )
     return;
 
-  long n = index( b );
+  long n = index( b ) + 1;
   resize( n );
 }
 

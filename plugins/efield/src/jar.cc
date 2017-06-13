@@ -245,11 +245,19 @@ int JAR::main( void )
     Contrasts.assign( LinearRange( ContrastMin, ContrastMax, ContrastStep ) );
   else
     Contrasts.assign( LinearRange( AmplMin, AmplMax, AmplStep ) );
+  if ( Contrasts.empty() ) {
+    warning( "List of stimulus contrasts/amplitudes is empty." );
+    return Failed;
+  }
   DeltaFRange.clear();
   if ( deltafrange.empty() )
     DeltaFRange.set( DeltaFMin, DeltaFMax, DeltaFStep );
   else
     DeltaFRange.set( deltafrange );
+  if ( DeltaFRange.empty() ) {
+    warning( "List of frequency differences is empty." );
+    return Failed;
+  }
   DeltaFRange.setSequence( deltafshuffle );
   OutData signal;
 
@@ -420,6 +428,11 @@ int JAR::main( void )
 
 	// output signal:
 	write( signal );
+	if ( interrupt() ) {
+	  writeZero( GlobalEField );
+	  save();
+	  return Aborted;
+	}
 
 	// signal failed?
 	if ( signal.failed() ) {
@@ -428,6 +441,11 @@ int JAR::main( void )
 	    signal.setStartSource( 0 );
 	    signal.setPriority();
 	    write( signal );
+	    if ( interrupt() ) {
+	      writeZero( GlobalEField );
+	      save();
+	      return Aborted;
+	    }
 	    // trigger:
 	    // setupTrigger( data, events );
 	  }

@@ -429,9 +429,6 @@ public:
     /*! Remove \a key from the list of keys that are forced to be passed
         to keyPressEvent(). */
   void releaseKey( int key );
-    /*! Empty the list of keys that are forced to be passed
-        to keyPressEvent(). */
-  void releaseKeys( void );
 
     /*! How many requests to stop the repro are there
         since the RePro was started?
@@ -550,6 +547,8 @@ private:
 
     /*! Install the event filter for grabbing keys. */
   void grabKeys( void );
+    /*! Uinstall the event filter for grabbing keys and reset list of grabbed keys. */
+  void releaseKeys( void );
 
   friend class ReProThread;
 
@@ -575,9 +574,7 @@ private:
 
   vector< int > GrabKeys;
   int GrabKeysBaseSize;
-  bool GrabKeysAlt;
   bool GrabKeysInstalled;
-  bool GrabKeysAllowed;
   mutable QMutex GrabKeyLock;
 
   int SoftStop;
