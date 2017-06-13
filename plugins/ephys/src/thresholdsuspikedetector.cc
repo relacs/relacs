@@ -62,7 +62,8 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   addNumber( "threshold", "Detection threshold", Threshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8 );
   addNumber( "resolution", "Step size for threshold", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8 );
   addNumber( "threshfac", "Factor for estimating detection threshold", ThreshFac, 0.5, 100.0, 0.5, "", "", "%.1f", 0+8 );
-  addBoolean( "peaks", "Detect peaks", Peaks, 8 );
+  addBoolean( "peaks", "Detect peaks (or troughs if unchecked)", Peaks, 8 );
+  newSection( "Tests", 8 );
   addBoolean( "testmaxsize", "Use maximum size", TestMaxSize, 0+8 );
   addNumber( "maxsize", "Maximum size", MaxSize, 0.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", (TestMaxSize ? 2 : 0)+8 ).setActivation( "testmaxsize", "true" );
   addBoolean( "testsymmetry", "Use symmetry thresholds", TestSymmetry, 0+8 );
@@ -86,11 +87,32 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   gb->setSpacing( 0 );
   setLayout( gb );
 
+  QVBoxLayout *vbox = new QVBoxLayout;
+  gb->addLayout( vbox, 0, 1 );
+
   // parameter widgets:
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   SDW.setMargins( 4, 2, 4, 0 );
   SDW.setVerticalSpacing( 1 );
-  gb->addWidget( &SDW, 0, 1, Qt::AlignHCenter );
+  vbox->addWidget( &SDW );
+
+  QHBoxLayout *hbox = new QHBoxLayout;
+  vbox->addLayout( hbox );
+  hbox->addWidget( new QLabel( "" ) );
+
+  // dialog button:
+  QPushButton *pb = new QPushButton( "Dialog" );
+  hbox->addWidget( pb );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
+  hbox->addWidget( new QLabel( "" ) );
+
+  // auto configure button:
+  pb = new QPushButton( "Auto" );
+  hbox->addWidget( pb );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
+  hbox->addWidget( new QLabel( "" ) );
 
   LastSize = 0;
   LastTime = 0.0;
@@ -110,44 +132,36 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   SP->setYRange( Plot::AutoScale, Plot::AutoScale );
   SP->setYLabel( Unit );
   SP->unlock();
-  gb->addWidget( SP, 0, 0 );
+  gb->addWidget( SP, 1, 1 );
 
-  HP = new Plot( Plot::Copy );
-  HP->lock();
-  HP->noGrid();
-  HP->setTMarg( 4 );
-  HP->setBMarg( 2.5 );
-  HP->setLMarg( 5 );
-  HP->setRMarg( 1 );
-  // HP->setXLabel( "L [" + Unit + "]" );
-  HP->setXLabel( Unit );
-  HP->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
-  HP->setXTics();
-  HP->setYLabel( "Symmetry" );
-  HP->unlock();
-  gb->addWidget( HP, 1, 0 );
+  PP1 = new Plot( Plot::Copy );
+  PP1->lock();
+  PP1->noGrid();
+  PP1->setTMarg( 4 );
+  PP1->setBMarg( 2.5 );
+  PP1->setLMarg( 5 );
+  PP1->setRMarg( 1 );
+  PP1->setXLabel( Unit );
+  PP1->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
+  PP1->setXTics();
+  PP1->setYLabel( "Spike symmetry" );
+  PP1->setYRange( -1.0, 1.0 );
+  PP1->unlock();
+  gb->addWidget( PP1, 0, 0 );
 
-  QGridLayout *gl = new QGridLayout;
-  gl->setContentsMargins( 0, 0, 0, 0 );
-  gl->setVerticalSpacing( 0 );
-  gl->setHorizontalSpacing( 4 );
-  gb->addLayout( gl, 1, 1 );
-
-  // dialog:
-  QPushButton *pb = new QPushButton( "Dialog" );
-  gl->addWidget( pb, 4, 1, Qt::AlignRight );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
-
-  // auto configure:
-  pb = new QPushButton( "Auto" );
-  gl->addWidget( pb, 5, 1, Qt::AlignRight );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
-
-  gl->setColumnStretch( 0, 1 );
-  gl->setColumnStretch( 1, 4 );
-
+  PP2 = new Plot( Plot::Copy );
+  PP2->lock();
+  PP2->noGrid();
+  PP2->setTMarg( 4 );
+  PP2->setBMarg( 2.5 );
+  PP2->setLMarg( 5 );
+  PP2->setRMarg( 1 );
+  PP2->setXLabel( Unit );
+  PP2->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
+  PP2->setXTics();
+  PP2->setYLabel( "Spike width [ms]" );
+  PP2->unlock();
+  gb->addWidget( PP2, 1, 0 );
 }
 
 
@@ -166,12 +180,12 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
   SP->lock();
   SP->setYLabel( Unit );
   SP->unlock();
-  HP->lock();
-  // HP->setXLabel( "L [" + Unit + "]" );
-  HP->setXLabel( Unit );
-  //  HP->setYLabel( "R [" + Unit + "]" );
-  HP->setYRange( -1.0, 1.0 );
-  HP->unlock();
+  PP1->lock();
+  PP1->setXLabel( Unit );
+  PP1->unlock();
+  PP2->lock();
+  PP2->setXLabel( Unit );
+  PP2->unlock();
   outevents.setSizeScale( 1.0 );
   outevents.setSizeUnit( Unit );
   outevents.setSizeFormat( "%5.1f" );
@@ -239,6 +253,8 @@ void ThresholdSUSpikeDetector::notify( void )
   SpikeSize.reserve( NSnippets );
   SpikeSymmetry.clear();
   SpikeSymmetry.reserve( NSnippets );
+  SpikeWidth.clear();
+  SpikeWidth.reserve( NSnippets );
   SpikeAccepted.clear();
   SpikeAccepted.reserve( NSnippets );
   SnippetsWidth = number( "snippetswidth" );
@@ -318,11 +334,12 @@ void ThresholdSUSpikeDetector::save( void )
   header.save( df, "# " );
   df << '\n';
   TableKey key;
-  key.addNumber( "time", "ms", "%6.2f" );
+  key.addNumber( "time", "ms", "%7.2f" );
   key.addNumber( "leftsize", Unit, "%6.1f" );
   key.addNumber( "rightsize", Unit, "%6.1f" );
   key.addNumber( "size", Unit, "%6.1f" );
   key.addNumber( "symmetry", "1", "%5.3f" );
+  key.addNumber( "width", "ms", "%6.3f" );
   key.addNumber( "accepted", "1", "%1.0f" );
   key.saveKey( df, true, false );
 
@@ -334,6 +351,7 @@ void ThresholdSUSpikeDetector::save( void )
     key.save( df, SpikeRightSize[i] );
     key.save( df, SpikeSize[i] );
     key.save( df, SpikeSymmetry[i] );
+    key.save( df, 1000.0*SpikeWidth[i] );
     double accepted = SpikeAccepted[i] ? 1.0 : 0.0;
     key.save( df, accepted );
     df << '\n';
@@ -386,19 +404,29 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   SP->unlock();
 
   // plot snippet properties:
-  HP->lock();
-  HP->clear();
   ArrayD leftsize;
   ArrayD symmetry;
+  ArrayD width;
   for ( int k=0; k<SpikeLeftSize.accessibleSize(); k++ ) {
     int i = SpikeLeftSize.size() - SpikeLeftSize.accessibleSize() + k;
     leftsize.push( SpikeLeftSize[i] );
     symmetry.push( SpikeSymmetry[i] );
+    width.push( 1000.0*SpikeWidth[i] );
   }
-  HP->plot( leftsize, symmetry, Plot::Transparent, 0, Plot::Solid, // 
+
+  PP1->lock();
+  PP1->clear();
+  PP1->plot( leftsize, symmetry, Plot::Transparent, 0, Plot::Solid,
 	    Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
-  HP->draw();
-  HP->unlock();
+  PP1->draw();
+  PP1->unlock();
+
+  PP2->lock();
+  PP2->clear();
+  PP2->plot( leftsize, width, Plot::Transparent, 0, Plot::Solid,
+	    Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
+  PP2->draw();
+  PP2->unlock();
 
   return 0;
 }
@@ -467,6 +495,40 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   // symmetry:
   double symmetry = ( leftsize - rightsize )/( leftsize + rightsize );
 
+  // width:
+  double thresh = Peaks ? *event - 0.5*size :  *event + 0.5*size;
+  // right width:
+  InData::const_iterator rightw = event;
+  double pv = *rightw;
+  for ( ++rightw; rightw < right; ++rightw ) {
+    if ( Peaks ) {
+      if ( *rightw < thresh )
+	break;
+    }
+    else {
+      if ( *rightw > thresh )
+	break;
+    }
+    pv = *rightw;
+  }
+  double rdt = Data->stepsize()*(thresh - *rightw)/(pv - *rightw);
+  // left width:
+  InData::const_iterator leftw = event;
+  pv = *leftw;
+  for ( --leftw; leftw > left; --leftw ) {
+    if ( Peaks ) {
+      if ( *leftw < thresh )
+	break;
+    }
+    else {
+      if ( *leftw > thresh )
+	break;
+    }
+    pv = *leftw;
+  }
+  double ldt = Data->stepsize()*(thresh - *leftw)/(pv - *leftw);
+  width = Data->interval( rightw - leftw ) - ldt - rdt;
+
   // check:
   bool  accept = true;
   if ( rightsize < threshold || leftsize < threshold )
@@ -485,6 +547,7 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   SpikeRightSize.push( rightsize );
   SpikeSize.push( size );
   SpikeSymmetry.push( symmetry );
+  SpikeWidth.push( width );
   SpikeAccepted.push( accept );
 
   return accept; 

@@ -158,10 +158,12 @@ public slots:
   CyclicArrayD SpikeRightSize;
   CyclicArrayD SpikeSize;
   CyclicArrayD SpikeSymmetry;
+  CyclicArrayD SpikeWidth;
   CyclicArray<bool> SpikeAccepted;
   QTime Update;
   Plot *SP;
-  Plot *HP;
+  Plot *PP1;
+  Plot *PP2;
   string Unit;
 
 };

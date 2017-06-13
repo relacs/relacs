@@ -33,7 +33,7 @@ SetAttenuatorGain::SetAttenuatorGain( void )
   Interactive = true;
 
   // add some options:
-  addSelection( "outrace", "Input trace", "V-1" );
+  addSelection( "outrace", "Output trace", "V-1" );
   addNumber( "gain", "attenuator gain to be set", 1.0, -1.0e6, 1.0e6, 0.001 );
   addBoolean( "interactive", "Set values interactively", Interactive );
 
