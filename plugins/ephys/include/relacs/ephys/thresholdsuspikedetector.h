@@ -47,20 +47,20 @@ namespace ephys {
     - \c threshold=1mV: Detection threshold (\c number)
     - \c resolution=0.5mV: Step size for threshold (\c number)
     - \c threshfac=6: Factor for estimating detection threshold (\c number)
-    - \c peaks=true: Detect peaks (\c boolean)
+    - \c detectpeaks=true: Detect peaks (or troughs if unchecked) (\c boolean)
+    - \c absthresh=false: Threshold is absolute voltage (or relative if unchecked) (\c boolean)
+- \c Tests
     - \c testmaxsize=false: Use maximum size (\c boolean)
     - \c maxsize=1mV: Maximum size (\c number)
-    - \c testmaxsymmetry=false: Use maximum symmetry (\c boolean)
+    - \c testsymmetry=false: Use symmetry thresholds (\c boolean)
     - \c maxsymmetry=1: Maximum symmetry (\c number)
     - \c minsymmetry=-1: Minimum symmetry (\c number)
     - \c testisi=false: Test interspike interval (\c boolean)
     - \c minisi=1ms: Minimum interspike interval (\c number)
 - \c Analysis
     - \c update=1sec: Update time interval (\c number)
-    - \c snippetstime=1sec: Spike snippets shown from the last (\c number)
+    - \c nsnippets=100: Number of spike snippets to be analyzed (\c integer)
     - \c snippetswidth=1ms: Width of spike snippet (\c number)
-    - \c rate=100Hz: Rate (\c number)
-    - \c size=100mV: Spike size (\c number)
 */
 
 
@@ -113,7 +113,9 @@ public slots:
     /*! The threshold for detecting peaks. */
   double Threshold;
     /*! Detect peaks (true) or troughs (false ). */
-  bool Peaks;
+  bool DetectPeaks;
+    /*! Detection threshold is absolute (true) or relative (false ). */
+  bool AbsThresh;
     /*! True if MaxSize is used. */
   bool TestMaxSize;
     /*! The maximum size of a spike. */

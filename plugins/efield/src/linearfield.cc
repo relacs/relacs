@@ -230,6 +230,7 @@ void LinearField::saveAmplitude( void )
 
 void LinearField::keyPressEvent( QKeyEvent *e )
 {
+  e->ignore();
   if ( e->key() == Qt::Key_M && ( e->modifiers() & Qt::AltModifier ) ) {
     MeasureButton->animateClick();
     e->accept();

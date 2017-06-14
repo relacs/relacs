@@ -268,6 +268,7 @@ const Options &SetOutput::outTraces( void ) const
 
 void SetOutput::keyPressEvent( QKeyEvent *e )
 {
+  e->ignore();
   if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     acceptValues();
     e->accept();

@@ -548,24 +548,23 @@ void AmplifierControl::setSyncMode( int mode )
 
 void AmplifierControl::keyPressEvent( QKeyEvent *e )
 {
+  e->ignore();
   switch ( e->key() ) {
 
   case Qt::Key_O:
     if ( Ampl != 0 && ResistanceButton != 0 ) {
       ResistanceButton->setDown( true );
       startResistance();
+      e->accept();
     }
-    else
-      e->ignore();
     break;
 
   case Qt::Key_Period:
   case Qt::Key_Z:
     if ( Ampl != 0 && BuzzerButton != 0 ) {
       BuzzerButton->animateClick();
+      e->accept();
     }
-    else
-      e->ignore();
     break;
 
   default:

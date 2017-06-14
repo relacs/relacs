@@ -235,36 +235,43 @@ void MotorControl::notify( void )
 
 void MotorControl::keyPressEvent( QKeyEvent *e )
 {
+  e->ignore();
   switch ( e->key() ) {
 
   case Qt::Key_Up:
     if ( MM.size() > 0 )
       MM[0]->keyUp( e->QInputEvent::modifiers() );
+    e->accept();
     break;
 
   case Qt::Key_Down:
     if ( MM.size() > 0 )
       MM[0]->keyDown( e->QInputEvent::modifiers() );
+    e->accept();
     break;
 
   case Qt::Key_Left:
     if ( MM.size() > 1 )
       MM[1]->keyUp( e->QInputEvent::modifiers() );
+    e->accept();
     break;
 
   case Qt::Key_Right:
     if ( MM.size() > 1 )
       MM[1]->keyDown( e->QInputEvent::modifiers() );
+    e->accept();
     break;
 
   case Qt::Key_G:
     if ( MM.size() > 0 )
       MM[0]->find();
+    e->accept();
     break;
 
   case Qt::Key_H:
     if ( MM.size() > 1 )
       MM[1]->find();
+    e->accept();
     break;
 
   default:

@@ -206,6 +206,7 @@ int SetAttenuatorGain::main( void )
 
 void SetAttenuatorGain::keyPressEvent( QKeyEvent *e )
 {
+  e->ignore();
   if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     acceptGains();
     e->accept();

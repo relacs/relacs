@@ -516,6 +516,7 @@ void ManualJAR::saveChirps( const Options &header, const EventData &jarchirpeven
 
 void ManualJAR::keyPressEvent( QKeyEvent *e )
 {
+  e->ignore();
   if ( e->key() == Qt::Key_S && ( e->modifiers() & Qt::AltModifier ) ) {
     StartButton->animateClick();
     e->accept();

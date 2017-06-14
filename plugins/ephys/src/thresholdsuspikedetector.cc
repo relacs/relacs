@@ -40,7 +40,8 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
 {
   // parameter:
   Threshold = 1.0;
-  Peaks = true;
+  DetectPeaks = true;
+  AbsThresh = false;
   TestMaxSize = false;
   MaxSize = 1.0;
   TestSymmetry = false;
@@ -62,7 +63,8 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   addNumber( "threshold", "Detection threshold", Threshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8 );
   addNumber( "resolution", "Step size for threshold", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8 );
   addNumber( "threshfac", "Factor for estimating detection threshold", ThreshFac, 0.5, 100.0, 0.5, "", "", "%.1f", 0+8 );
-  addBoolean( "peaks", "Detect peaks (or troughs if unchecked)", Peaks, 8 );
+  addBoolean( "detectpeaks", "Detect peaks (or troughs if unchecked)", DetectPeaks, 8 );
+  addBoolean( "absthresh", "Threshold is absolute voltage (or relative if unchecked)", AbsThresh, 8 );
   newSection( "Tests", 8 );
   addBoolean( "testmaxsize", "Use maximum size", TestMaxSize, 0+8 );
   addNumber( "maxsize", "Maximum size", MaxSize, 0.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", (TestMaxSize ? 2 : 0)+8 ).setActivation( "testmaxsize", "true" );
@@ -239,7 +241,8 @@ void ThresholdSUSpikeDetector::notify( void )
   MaxSize = number( "maxsize", Unit );
   MaxSymmetry = number( "maxsymmetry" );
   MinSymmetry = number( "minsymmetry" );
-  Peaks = boolean( "peaks" );
+  DetectPeaks = boolean( "detectpeaks" );
+  AbsThresh = boolean( "absthresh" );
   TestInterval = boolean( "testinterval" );
   MinInterval = number( "minisi" );
   NSnippets = integer( "nsnippets" );
@@ -365,12 +368,22 @@ void ThresholdSUSpikeDetector::save( void )
 int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
 				      const EventList &other, const EventData &stimuli )
 {
-  if ( Peaks )
-    D.peak( data.minBegin(), data.end(), outevents,
-	    Threshold, Threshold, Threshold, *this );
-  else
-    D.trough( data.minBegin(), data.end(), outevents,
+  if ( DetectPeaks ) {
+    if ( AbsThresh )
+      D.rising( data.minBegin(), data.end(), outevents,
+		Threshold, Threshold, Threshold, *this );
+    else
+      D.peak( data.minBegin(), data.end(), outevents,
 	      Threshold, Threshold, Threshold, *this );
+  }
+  else {
+    if ( AbsThresh )
+      D.falling( data.minBegin(), data.end(), outevents,
+		 Threshold, Threshold, Threshold, *this );
+    else
+      D.trough( data.minBegin(), data.end(), outevents,
+		Threshold, Threshold, Threshold, *this );
+  }
 
   unsetNotify();
   setNumber( "rate", outevents.meanRate() );
@@ -388,7 +401,7 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   SP->lock();
   SP->clear();
   SP->plotVLine( 0.0, Plot::White, 2 );
-  for ( int k=0; k<NSnippets; k++ ) {
+  for ( int k=0; k<SpikeTime.accessibleSize(); k++ ) {
     if ( k >= outevents.size() )
       break;
     double st = outevents[outevents.size()-1-k];
@@ -396,6 +409,8 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
       break;
     SampleDataF snippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0.0f );
     data.copy( st, snippet );
+    if ( ! DetectPeaks )
+      snippet *= -1.0;
     int k0 = snippet.index( 0.0 );
     snippet -= snippet[k0];
     SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
@@ -445,6 +460,28 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
 					  double &minthresh, double &maxthresh,
 					  double &time, double &size, double &width )
 { 
+  if ( AbsThresh ) {
+    if ( DetectPeaks ) {
+      // go the next local maximum:
+      for ( ; ; ++event, ++eventtime ) {
+	if ( event+2 >= last )
+	  return -1;
+	if ( *(event+2) < *event && *(event-2) < *event )
+	  break;
+      }
+    }
+    else {
+      // go the next local minimum:
+      for ( ; ; ++event, ++eventtime ) {
+	if ( event+2 >= last )
+	  return -1;
+	if ( *(event+2) > *event && *(event-2) > *event )
+	  break;
+      }
+    }
+  }
+
+  // time of spike:
   time = *eventtime;
   size = fabs( *event );
 
@@ -454,7 +491,7 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   for ( ++right; ; ++right ) {
     if ( right+2 >= last )
       return -1;
-    if ( Peaks ) {
+    if ( DetectPeaks ) {
       if ( *(right+2) > *right && *(right-2) > *right ) {
 	rightsize = *event - *right;
 	break;
@@ -473,7 +510,7 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   for ( --left; ; --left ) {
     if ( left <= first+2 )
       return 0;
-    if ( Peaks ) {
+    if ( DetectPeaks ) {
       if ( *(left+2) > *left && *(left-2) > *left ) {
 	leftsize = *event - *left;
 	break;
@@ -496,12 +533,12 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   double symmetry = ( leftsize - rightsize )/( leftsize + rightsize );
 
   // width:
-  double thresh = Peaks ? *event - 0.5*size :  *event + 0.5*size;
+  double thresh = DetectPeaks ? *event - 0.5*size :  *event + 0.5*size;
   // right width:
   InData::const_iterator rightw = event;
   double pv = *rightw;
   for ( ++rightw; rightw < right; ++rightw ) {
-    if ( Peaks ) {
+    if ( DetectPeaks ) {
       if ( *rightw < thresh )
 	break;
     }
@@ -516,7 +553,7 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   InData::const_iterator leftw = event;
   pv = *leftw;
   for ( --leftw; leftw > left; --leftw ) {
-    if ( Peaks ) {
+    if ( DetectPeaks ) {
       if ( *leftw < thresh )
 	break;
     }

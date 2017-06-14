@@ -354,6 +354,7 @@ void Search::saveEvents( const EventData &events, int count, Options &header )
 
 void Search::keyPressEvent( QKeyEvent *qke )
 {
+  qke->ignore();
   switch ( qke->key()) {
   case Qt::Key_Up:
     if ( qke->modifiers() & Qt::ControlModifier ) {
@@ -370,7 +371,9 @@ void Search::keyPressEvent( QKeyEvent *qke )
 	setIntensity( int(::round(Intensity + ShortIntensityStep)) );
       ILCD->setValue( int(::round(Intensity)) );
     }
+    qke->accept();
     break;
+
   case Qt::Key_Down:                // arrow down
     if ( qke->modifiers() & Qt::ControlModifier ) {
       if ( qke->modifiers() & Qt::ShiftModifier )
@@ -386,6 +389,7 @@ void Search::keyPressEvent( QKeyEvent *qke )
 	setIntensity( int(::round(Intensity - ShortIntensityStep)) );
       ILCD->setValue( int(::round(Intensity)) );
     }
+    qke->accept();
     break;
 
   case Qt::Key_Left:
@@ -398,6 +402,7 @@ void Search::keyPressEvent( QKeyEvent *qke )
     }
     else
       setSpeakerLeft();
+    qke->accept();
     break;
 
   case Qt::Key_Right:
@@ -410,11 +415,13 @@ void Search::keyPressEvent( QKeyEvent *qke )
     }
     else
       setSpeakerRight();
+    qke->accept();
     break;
 
   case Qt::Key_Pause:
   case Qt::Key_X:
     toggleMute();
+    qke->accept();
     break;
 
   default:

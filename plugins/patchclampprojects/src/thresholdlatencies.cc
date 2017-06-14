@@ -915,6 +915,7 @@ void ThresholdLatencies::plot( bool record, double preduration, double pre2durat
 
 void ThresholdLatencies::keyPressEvent( QKeyEvent *event )
 {
+  event->ignore();
   if ( event->key() == Qt::Key_M ) {
     lock();
     RecordNow = true;

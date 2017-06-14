@@ -803,11 +803,13 @@ void FICurve::Data::analyze( int count, const InData &intrace,
 
 void FICurve::keyPressEvent( QKeyEvent *qke )
 {
+  qke->ignore();
   switch ( qke->key()) {
   case Qt::Key_X:
     lock();
     Range.setSkipNocount();
     unlock();
+    qke->accept();
     break;
 
   default:

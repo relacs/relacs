@@ -280,6 +280,7 @@ int SetLeak::main( void )
 
 void SetLeak::keyPressEvent( QKeyEvent *e )
 {
+  e->ignore();
   if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     OKButton->animateClick();
     e->accept();

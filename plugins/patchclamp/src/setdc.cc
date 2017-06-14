@@ -493,6 +493,7 @@ void SetDC::setStep( int index )
 
 void SetDC::keyPressEvent( QKeyEvent *e )
 {
+  e->ignore();
   if ( e->key() == Qt::Key_Left && ( e->modifiers() & Qt::AltModifier ) ) {
     DCStepIndex++;
     if ( DCStepIndex >= NDCSteps )
@@ -500,6 +501,7 @@ void SetDC::keyPressEvent( QKeyEvent *e )
     DCStep = DCSteps[DCStepIndex];
     EW->setSingleStep( DCStep );
     CW->setCurrentIndex( DCStepIndex );
+    e->accept();
   }
   else if ( e->key() == Qt::Key_Right && ( e->modifiers() & Qt::AltModifier ) ) {
     DCStepIndex--;
@@ -508,6 +510,7 @@ void SetDC::keyPressEvent( QKeyEvent *e )
     DCStep = DCSteps[DCStepIndex];
     EW->setSingleStep( DCStep );
     CW->setCurrentIndex( DCStepIndex );
+    e->accept();
   }
   else if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     OKButton->animateClick();
