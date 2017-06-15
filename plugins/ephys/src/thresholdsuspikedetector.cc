@@ -36,7 +36,7 @@ namespace ephys {
 ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
 	    "ThresholdSUSpikeDetector", "ephys",
-	    "Jan Benda", "1.2", "Jun 13, 2017" )
+	    "Jan Benda", "1.4", "Jun 15, 2017" )
 {
   // parameter:
   Threshold = 1.0;
@@ -296,7 +296,16 @@ void ThresholdSUSpikeDetector::autoConfigure( void )
 {
   if ( Data == 0 )
     return;
-  Threshold = ThreshFac * Data->stdev( Data->currentTime()-UpdateTime, Data->currentTime() );
+  if ( AbsThresh ) {
+    double th = 0.5 * ThreshFac * Data->stdev( Data->currentTime()-UpdateTime, Data->currentTime() );
+    double a = Data->mean( Data->currentTime()-UpdateTime, Data->currentTime() );
+    if ( DetectPeaks )
+      Threshold = a + th;
+    else
+      Threshold = a - th;
+  }
+  else
+    Threshold = ThreshFac * Data->stdev( Data->currentTime()-UpdateTime, Data->currentTime() );
   unsetNotify();
   setNumber( "threshold", Threshold, Unit );
   setNotify();
@@ -401,6 +410,7 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   SP->lock();
   SP->clear();
   SP->plotVLine( 0.0, Plot::White, 2 );
+  SampleDataF meansnippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0.0f );
   for ( int k=0; k<SpikeTime.accessibleSize(); k++ ) {
     if ( k >= outevents.size() )
       break;
@@ -413,8 +423,10 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
       snippet *= -1.0;
     int k0 = snippet.index( 0.0 );
     snippet -= snippet[k0];
+    meansnippet += (snippet - meansnippet)/(k+1);
     SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
   }
+  SP->plot( meansnippet, 1000.0, Plot::Orange, 2, Plot::Solid );
   SP->draw();
   SP->unlock();
 
@@ -464,18 +476,18 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
     if ( DetectPeaks ) {
       // go the next local maximum:
       for ( ; ; ++event, ++eventtime ) {
-	if ( event+2 >= last )
+	if ( event+1 >= last )
 	  return -1;
-	if ( *(event+2) < *event && *(event-2) < *event )
+	if ( *(event+1) < *event && *(event-1) < *event )
 	  break;
       }
     }
     else {
       // go the next local minimum:
       for ( ; ; ++event, ++eventtime ) {
-	if ( event+2 >= last )
+	if ( event+1 >= last )
 	  return -1;
-	if ( *(event+2) > *event && *(event-2) > *event )
+	if ( *(event+1) > *event && *(event-1) > *event )
 	  break;
       }
     }
@@ -486,19 +498,20 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   size = fabs( *event );
 
   // right size:
+  int di = 1;
   double rightsize = 0.0;
   InData::const_iterator right = event;
   for ( ++right; ; ++right ) {
-    if ( right+2 >= last )
+    if ( right+di >= last )
       return -1;
     if ( DetectPeaks ) {
-      if ( *(right+2) > *right && *(right-2) > *right ) {
+      if ( *(right+di) > *right && *(right-di) > *right ) {
 	rightsize = *event - *right;
 	break;
       }
     }
     else {
-      if ( *(right+2) < *right && *(right-2) < *right ) {
+      if ( *(right+di) < *right && *(right-di) < *right ) {
 	rightsize = *right - *event;
 	break;
       }
@@ -508,16 +521,16 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   double leftsize = 0.0;
   InData::const_iterator left = event;
   for ( --left; ; --left ) {
-    if ( left <= first+2 )
+    if ( left <= first+di )
       return 0;
     if ( DetectPeaks ) {
-      if ( *(left+2) > *left && *(left-2) > *left ) {
+      if ( *(left+di) > *left && *(left-di) > *left ) {
 	leftsize = *event - *left;
 	break;
       }
     }
     else {
-      if ( *(left+2) < *left && *(left-2) < *left ) {
+      if ( *(left+di) < *left && *(left-di) < *left ) {
 	leftsize = *left - *event;
 	break;
       }
@@ -568,8 +581,6 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
 
   // check:
   bool  accept = true;
-  if ( rightsize < threshold || leftsize < threshold )
-    accept = false;
   if ( TestMaxSize && ( rightsize > MaxSize || leftsize > MaxSize ) )
     accept = false;
   if ( TestSymmetry && ( symmetry > MaxSymmetry || symmetry < MinSymmetry ) )

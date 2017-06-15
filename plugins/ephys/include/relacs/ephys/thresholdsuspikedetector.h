@@ -40,7 +40,7 @@ namespace ephys {
 \class ThresholdSUSpikeDetector
 \brief [Detector] Spike detection based on an absolute voltage threshold.
 \author Jan Benda
-\version 1.4 (Jun 13, 2017)
+\version 1.4 (Jun 15, 2017)
 
 \par Options
 - \c Detector

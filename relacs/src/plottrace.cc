@@ -703,7 +703,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "Move &right", this, SLOT( moveRight() ), Qt::Key_PageDown );
   Menu->addAction( "&Begin", this, SLOT( moveStart() ), Qt::CTRL + Qt::Key_PageUp );
   Menu->addAction( "&End", this, SLOT( moveEnd() ), Qt::CTRL + Qt::Key_PageDown );
-  Menu->addAction( "Move to signal", this, SLOT( moveToSignal() ), Qt::CTRL + Qt::Key_Home );
+  Menu->addAction( "Move to current signal", this, SLOT( moveToSignal() ), Qt::CTRL + Qt::Key_Home );
   Menu->addAction( "&Signal view", this, SLOT( viewSignal() ), Qt::Key_Home );
   Menu->addAction( "Move offset left", this, SLOT( moveSignalOffsLeft() ), Qt::SHIFT + Qt::Key_PageUp );
   Menu->addAction( "Move offset right", this, SLOT( moveSignalOffsRight() ), Qt::SHIFT + Qt::Key_PageDown );
@@ -1049,7 +1049,7 @@ void PlotTrace::moveToSignal( void )
     double sigtime = signalTime();
     if ( sigtime < 0.0 )
       sigtime = 0.0;
-    LeftTime = sigtime;
+    LeftTime = sigtime - TimeOffs;
   }
   P.unlock();
   if ( RW->idle() )

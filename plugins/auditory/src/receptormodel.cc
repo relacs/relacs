@@ -44,6 +44,9 @@ ReceptorModel::ReceptorModel( void )
   Slope2 = 600000;
 
   // options:
+  newSection( "Recording" );
+  addBoolean( "extracellular", "Extracellular", false );
+  addNumber( "extranoise", "Extracellular noise", 1.0, 0.0, 10000.0, 1.0, "mV" );
   newSection( "Transduction chain" );
   addSelection( "tymp", "Tympanum model", "Scaling|None|Scaling|Oscillator" );
   addNumber( "freq", "Eigenfrequency", 5.0, 0.5, 40.0, 0.1, "kHz" );
@@ -82,6 +85,9 @@ ReceptorModel::~ReceptorModel( void )
 
 void ReceptorModel::main( void )
 {
+  // recording:
+  bool extracellular = boolean( "extracellular" );
+  double extranoise = number( "extranoise" );
   // tympanum:
   TympanumModel = index( "tymp" );
   Omega = 2*M_PI*number( "freq" );
@@ -204,6 +210,8 @@ void ReceptorModel::main( void )
   }
 
   // integrate:
+  Random rand;
+  double pv = simx[sigdimension];
   double t = 1000.0*time( 0 );  // time must be syncrhonous to recorded trace!
   while ( ! interrupt() ) {
 
@@ -211,7 +219,11 @@ void ReceptorModel::main( void )
 
     cs++;
     if ( cs == maxs ) {
-      push( 0, simx[sigdimension] );
+      if ( extracellular )
+	push( 0, simx[sigdimension] - pv + extranoise*rand.gaussian() );
+      else
+	push( 0, simx[sigdimension] );
+      pv = simx[sigdimension];
       next();
       cs = 0;
     }
