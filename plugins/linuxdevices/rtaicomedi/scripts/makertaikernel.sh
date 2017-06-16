@@ -551,6 +551,10 @@ function uninstall_kernel {
 	echo_log "$ sudo ./${MAKE_RTAI_KERNEL} reboot"
 	return 1
     fi
+    echo_log "remove comedi kernel modules"
+    if ! $DRYRUN; then
+	rm -rf /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi
+    fi
     echo_log "uninstall kernel ${LINUX_KERNEL}-${KERNEL_NAME}"
     if ! $DRYRUN; then
 	apt-get -y remove linux-image-${LINUX_KERNEL}-${KERNEL_NAME}
@@ -1294,8 +1298,6 @@ function install_comedi {
 	    echo_log "Failed to install comedi!"
 	    return 1
 	fi
-	depmod -a
-	sleep 1
 	KERNEL_MODULES=/lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}
 	if ! test -d "$KERNEL_MODULES"; then
 	    KERNEL_MODULES=/lib/modules/${LINUX_KERNEL}.0-${KERNEL_NAME}
@@ -1303,6 +1305,8 @@ function install_comedi {
 	cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers ${KERNEL_MODULES}/comedi/
 	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
 	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
+	depmod -a
+	sleep 1
 	udevadm trigger
     fi
     NEW_COMEDI=true

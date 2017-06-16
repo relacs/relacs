@@ -73,7 +73,7 @@ AS_IF( [ test $USE_RTAI == yes && ! expr match `uname -r` `rtai-config ${RUNNING
 
 # get CPP flags from rtai-config if possible:
 AS_IF( [ test $USE_RTAI == yes ],
-       [ RTAI_CPPFLAGS="`rtai-config ${RUNNING_KERNEL} --module-cflags`"
+       [ RTAI_CPPFLAGS="-I /usr/include `rtai-config ${RUNNING_KERNEL} --module-cflags`"
        	 RTAI_CPPFLAGS=${RTAI_CPPFLAGS/-I. /}
 	 AS_IF( [ test "x$RTAI_CPPFLAGS" == x ], 
 	 	[ RTAI_CPPFLAGS="-I /usr/include -I /usr/realtime/include -D_FORTIFY_SOURCE=0 -ffast-math -mhard-float" ] ) 

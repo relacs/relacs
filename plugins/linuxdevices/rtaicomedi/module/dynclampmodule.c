@@ -1559,10 +1559,7 @@ void dynclamp_loop( long dummy )
 #endif
 
 #ifdef ENABLE_SYNCSEC
-synSECPulse > 0
-currentfac > 1.0
-
-    if ( synSECMode < 0 )
+    if ( syncSECMode < 0 )
       currentfac = 1.0;
     else if ( syncSECPulse > 0.0 ) {
       if ( syncSECMode == 0 )
