@@ -186,7 +186,12 @@ function check_root {
 function print_info {
     echo
     echo "loaded modules (lsmod):"
-    lsmod
+    if test -f lsmod.dat; then
+	cat lsmod.dat
+	rm -f lsmod.dat
+    else
+	lsmod
+    fi
     echo
     echo "distribution (lsb_release -a):"
     lsb_release -a 2> /dev/null
@@ -234,6 +239,7 @@ function print_full_info {
     fi
     if test "x$1" != "xrtai"; then
 	RTAI_PATCH="$ORIG_RTAI_PATCH"
+	rm -f lsmod.dat
 	print_info
     fi
 }
@@ -630,6 +636,7 @@ function test_rtaikernel {
     if test -f /usr/realtime/calibration/latencies; then
 	rm /usr/realtime/calibration/latencies
     fi
+    rm -f lsmod.dat
 
     # unload already loaded rtai kernel modules:
     lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed already loaded rtai_math"; }
@@ -658,6 +665,8 @@ function test_rtaikernel {
 	sleep 1
 	echo "."
 	modprobe kcomedilib && echo "loaded kcomedilib"
+
+	lsmod > lsmod.dat
 
 	# remove comedi modules:
 	modprobe -r kcomedilib && echo "removed kcomedilib"
@@ -712,7 +721,6 @@ function test_rtaikernel {
 	echo "and run"
 	echo "$ restart rsyslog"
 	echo
-	return 1
     fi
 
     # kernel tests:
@@ -962,7 +970,7 @@ function update_rtai {
 	elif test -d .git; then
 	    echo_log "update already downloaded rtai sources"
 	    if ! $DRYRUN; then
-		git pull
+		git pull origin master
 		date +"%F %H:%M" > revision.txt
 	    fi
 	fi
@@ -1267,7 +1275,7 @@ function update_comedi {
     if test -d comedi; then
 	echo_log "update already downloaded comedi sources"
 	cd comedi
-	git pull
+	git pull origin master
 	date +"%F %H:%M" > revision.txt
 	clean_comedi
     else
@@ -1409,11 +1417,10 @@ function reconfigure {
     check_root
 
     uninstall_kernel
-    uninstall_newlib
     uninstall_rtai
     uninstall_comedi
 
-    if ! ( unpack_kernel && patch_kernel && build_kernel && build_newlib && build_rtai && build_comedi ); then
+    if ! ( unpack_kernel && patch_kernel && build_kernel && build_rtai && build_comedi ); then
 	echo_log "Failed to reconfigure and build kernel, RTAI or comedi"
 	return 1
     fi
