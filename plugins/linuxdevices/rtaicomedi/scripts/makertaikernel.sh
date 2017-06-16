@@ -527,7 +527,7 @@ function build_kernel {
 	fi
 
 	# install:
-	install_kernel
+	install_kernel || return 1
     else
 	echo_log "keep already compiled linux ${LINUX_KERNEL}-${KERNEL_NAME} kernel."
     fi
@@ -838,6 +838,10 @@ function install_newlib {
     echo_log "install newlib"
     if ! $DRYRUN; then
 	make install
+	if test "x$?" != "x0"; then
+	    echo_log "Failed to install newlib!"
+	    return 1
+	fi
     fi
     NEW_NEWLIB=true
 }
@@ -860,11 +864,7 @@ function build_newlib {
 		echo_log "Failed to build newlib!"
 		return 1
 	    fi
-	    make install
-	    if test "x$?" != "x0"; then
-		echo_log "Failed to install newlib!"
-		return 1
-	    fi
+	    install_newlib || return 1
 	fi
 	NEW_NEWLIB=true
     fi
@@ -1112,11 +1112,7 @@ EOF
 		echo_log "Failed to build rtai modules!"
 		return 1
 	    fi
-	    make install
-	    if test "x$?" != "x0"; then
-		echo_log "Failed to install rtai modules!"
-		return 1
-	    fi
+	    install_rtai || return 1
 	fi
 	NEW_RTAI=true
     else
@@ -1140,6 +1136,10 @@ function install_rtai {
     echo_log "install rtai"
     if ! $DRYRUN; then
 	make install
+	if test "x$?" != "x0"; then
+	    echo_log "Failed to install rtai modules!"
+	    return 1
+	fi
     fi
     NEW_RTAI=true
 }
@@ -1272,10 +1272,28 @@ function update_comedi {
 }
 
 function install_comedi {
+    echo_log "remove all loaded comedi kernel modules"
+    if ! $DRYRUN; then
+	modprobe -r kcomedilib && echo_log "removed kcomedilib"
+	for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+	    modprobe -r $i && echo_log "removed $i"
+	done
+	modprobe -r comedi && echo_log "removed comedi"
+    fi
+
+    echo_log "remove comedi staging kernel modules"
+    if ! $DRYRUN; then
+	rm -rf /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/kernel/drivers/staging/comedi
+    fi
+
     cd ${LOCAL_SRC_PATH}/comedi
     echo_log "install comedi"
     if ! $DRYRUN; then
 	make install
+	if test "x$?" != "x0"; then
+	    echo_log "Failed to install comedi!"
+	    return 1
+	fi
 	depmod -a
 	sleep 1
 	KERNEL_MODULES=/lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}
@@ -1307,16 +1325,7 @@ function build_comedi {
 		echo_log "Failed to build comedi!"
 		return 1
 	    fi
-	    make install
-	    if test "x$?" != "x0"; then
-		echo_log "Failed to install comedi!"
-		return 1
-	    fi
-	    depmod -a
-	    cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi/
-	    cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
-	    cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
-	    udevadm trigger
+	    install_comedi || return 1
 	fi
 	NEW_COMEDI=true
     else

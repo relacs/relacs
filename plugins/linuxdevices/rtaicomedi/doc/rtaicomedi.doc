@@ -345,7 +345,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
      - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
        check \c "help" to find out, which Processor family you have to select)
-     - Set the "Maximum numbers of CPUs" to the number of cores you have in your machine (see /proc/cpuinfo)
+     - Set the "Maximum numbers of CPUs" to the number of physical cores you have in your machine (check in \c /proc/cpuinfo the \c "cpu cores")
      - Disable "SMT (Hyperthreading) scheduler support"
      - Disable "Multi-core scheduler support"
      - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"

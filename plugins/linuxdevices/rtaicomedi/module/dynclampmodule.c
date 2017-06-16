@@ -1574,7 +1574,7 @@ currentfac > 1.0
 	  synctime += (difftime - synctime)/syncSECMode;
 	  currentfac = synctime / syncSECPulse;
 	}
-	if ( curentfac < 1.0 ) {
+	if ( currentfac < 1.0 ) {
 	  DEBUG_MSG( "dynclamp_loop: currentfac=%d < 1! difftime=%d", (int)(100.0*currentfac), difftime );
 	  currentfac = dynClampTask.period / syncSECPulse;
 	}
