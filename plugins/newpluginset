@@ -62,6 +62,11 @@ while test -z "$PLUGINBRIEF"; do
     test -z "$PLUGINBRIEF" && echo "! Error! You need to provide a one line description for the plugin!"
 done
 
+# check if already existing:
+if test -e $PLUGINPATH; then
+    echo "directory $PLUGINPATH already exists."
+    exit 1
+fi
 
 # make directories:
 echo

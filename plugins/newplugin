@@ -130,11 +130,11 @@ lib${PLUGINLIB}_la_CPPFLAGS = \\
     -I\$(top_srcdir)/widgets/include \\
     -I\$(top_srcdir)/relacs/include \\
     -I\$(srcdir)/../include \\
-    \$(QT4_CPPFLAGS)
+    \$(QT4_CPPFLAGS) \$(NIX_CPPFLAGS)\$(GSL_CPPFLAGS)
 
 lib${PLUGINLIB}_la_LDFLAGS = \\
     -module -avoid-version \\
-    \$(QT4_LDFLAGS)
+    \$(QT4_LDFLAGS) \$(NIX_LDFLAGS) \$(GSL_LDFLAGS)
 
 lib${PLUGINLIB}_la_LIBADD = \\
     \$(top_builddir)/relacs/src/librelacs.la \\
@@ -144,7 +144,7 @@ lib${PLUGINLIB}_la_LIBADD = \\
     \$(top_builddir)/options/src/librelacsoptions.la \\
     \$(top_builddir)/numerics/src/librelacsnumerics.la \\
     \$(top_builddir)/widgets/src/librelacswidgets.la \\
-    \$(QT4_LIBS) \$(GSL_LIBS)
+    \$(QT4_LIBS) \$(NIX_LIBS) \$(GSL_LIBS)
 
 \$(lib${PLUGINLIB}_la_OBJECTS) : moc_${PLUGINFILE}.cc
 
@@ -189,8 +189,11 @@ mv tmp$$.am "$PLUGINSETPATH/src/Makefile.am"
 
 
 ################################################################################
-echo "create $PLUGINSETPATH/src/${PLUGINFILE}.cc ..."
-cat <<EOF > $PLUGINSETPATH/src/${PLUGINFILE}.cc
+if test -f $PLUGINSETPATH/src/${PLUGINFILE}.cc; then
+    echo "$PLUGINSETPATH/src/${PLUGINFILE}.cc already exists."
+else
+    echo "create $PLUGINSETPATH/src/${PLUGINFILE}.cc ..."
+    cat <<EOF > $PLUGINSETPATH/src/${PLUGINFILE}.cc
 /*
   ${PLUGINSET}/${PLUGINFILE}.cc
   $BRIEF
@@ -219,8 +222,8 @@ namespace ${PLUGINSET} {
 
 EOF
 
-if test "$TYPE" = "RePro"; then
-cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+    if test "$TYPE" = "RePro"; then
+	cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
 
 ${PLUGINNAME}::${PLUGINNAME}( void )
   : RePro( "${PLUGINNAME}", "${PLUGINSET}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
@@ -239,8 +242,8 @@ int ${PLUGINNAME}::main( void )
 
 EOF
 
-elif test "$TYPE" = "Control"; then
-cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+    elif test "$TYPE" = "Control"; then
+	cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
 
 ${PLUGINNAME}::${PLUGINNAME}( void )
   : Control( "${PLUGINNAME}", "${PLUGINSET}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
@@ -258,8 +261,8 @@ void ${PLUGINNAME}::main( void )
 
 EOF
 
-elif test "$TYPE" = "Filter"; then
-cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+    elif test "$TYPE" = "Filter"; then
+	cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
 
 ${PLUGINNAME}::${PLUGINNAME}( const string &ident, int mode )
   : Filter( ident, mode, TYPE, 1,
@@ -279,8 +282,8 @@ int ${PLUGINNAME}::filter( ... )
 
 EOF
 
-elif test "$TYPE" = "Detector"; then
-cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+    elif test "$TYPE" = "Detector"; then
+	cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
 
 ${PLUGINNAME}::${PLUGINNAME}( const string &ident, int mode )
   : Filter( ident, mode, TYPE, 1,
@@ -300,8 +303,8 @@ int ${PLUGINNAME}::detect( ... )
 
 EOF
 
-elif test "$TYPE" = "Model"; then
-cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+    elif test "$TYPE" = "Model"; then
+	cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
 
 ${PLUGINNAME}::${PLUGINNAME}( void )
   : Model( "${PLUGINNAME}", "${PLUGINSET}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
@@ -320,9 +323,9 @@ void ${PLUGINNAME}::process( const OutData &source, OutData &dest )
 }
 
 EOF
-fi
+    fi
 
-cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+    cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
 
 add${TYPE}( ${PLUGINNAME}, ${PLUGINSET} );
 
@@ -331,11 +334,15 @@ add${TYPE}( ${PLUGINNAME}, ${PLUGINSET} );
 #include "moc_${PLUGINFILE}.cc"
 EOF
 
+fi
 
 
 ################################################################################
-echo "create $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
-cat <<EOF > $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+if test -f $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h; then
+    echo "$PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h already exists."
+else
+    echo "create $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
+    cat <<EOF > $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
 /*
   ${PLUGINSET}/${PLUGINFILE}.h
   $BRIEF
@@ -382,41 +389,41 @@ public:
 
 EOF
 
-if test "$TYPE" = "RePro"; then
-cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+    if test "$TYPE" = "RePro"; then
+	cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
   ${PLUGINNAME}( void );
   virtual int main( void );
 EOF
 
-elif test "$TYPE" = "Control"; then
-cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+    elif test "$TYPE" = "Control"; then
+	cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
   ${PLUGINNAME}( void );
   virtual void main( void );
 EOF
 
-elif test "$TYPE" = "Filter"; then
-cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+    elif test "$TYPE" = "Filter"; then
+	cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
   ${PLUGINNAME}( const string &ident="", int mode=0 );
   virtual int init( ... );
   virtual int filter( ... );
 EOF
 
-elif test "$TYPE" = "Detector"; then
-cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+    elif test "$TYPE" = "Detector"; then
+	cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
   ${PLUGINNAME}( const string &ident="", int mode=0 );
   virtual int init( ... );
   virtual int detect( ... );
 EOF
 
-elif test "$TYPE" = "Model"; then
-cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+    elif test "$TYPE" = "Model"; then
+	cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
   ${PLUGINNAME}( void );
   virtual void main( void );
   virtual void process( const OutData &source, OutData &dest );
 EOF
-fi
+    fi
 
-cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+    cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
 
 };
 
@@ -425,6 +432,8 @@ cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
 
 #endif /* ! _RELACS_$(echo "$PLUGINSET" | tr [:lower:] [:upper:])_$(echo "$PLUGINFILE" | tr [:lower:] [:upper:])_H_ */
 EOF
+
+fi
 
 
 if test "$ADDTOSVN" = "-s"; then
