@@ -15,12 +15,12 @@ libdaqflex_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
     $(USB_CPPFLAGS) \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libdaqflex_la_LDFLAGS = \
     -module -avoid-version \
     $(USB_LDFLAGS) \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libdaqflex_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
@@ -28,7 +28,7 @@ libdaqflex_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(USB_LIBS) \
-    $(QT4_LIBS) \
+    $(QT4_LIBS) $(NIX_LIBS) \
     $(GSL_LIBS)
 
 libdaqflex_la_SOURCES = \

@@ -26,11 +26,11 @@ libpatchclampsession_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampsession_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampsession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -41,7 +41,7 @@ libpatchclampsession_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampsession_la_OBJECTS) : moc_session.cc
 
@@ -63,11 +63,11 @@ libpatchclampsimple_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampsimple_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampsimple_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
@@ -78,7 +78,7 @@ libpatchclampsimple_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampsimple_la_OBJECTS) : moc_simple.cc
 
@@ -100,11 +100,11 @@ libpatchclampsinglestimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampsinglestimulus_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampsinglestimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -115,7 +115,7 @@ libpatchclampsinglestimulus_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampsinglestimulus_la_OBJECTS) : moc_singlestimulus.cc
 
@@ -137,11 +137,11 @@ libpatchclampmembraneresistance_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampmembraneresistance_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampmembraneresistance_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -152,7 +152,7 @@ libpatchclampmembraneresistance_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampmembraneresistance_la_OBJECTS) : moc_membraneresistance.cc
 
@@ -174,11 +174,11 @@ libpatchclampvicurve_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampvicurve_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampvicurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -189,7 +189,7 @@ libpatchclampvicurve_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampvicurve_la_OBJECTS) : moc_vicurve.cc
 
@@ -211,11 +211,11 @@ libpatchclampficurve_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampficurve_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampficurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -226,7 +226,7 @@ libpatchclampficurve_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampficurve_la_OBJECTS) : moc_ficurve.cc
 
@@ -248,11 +248,11 @@ libpatchclampsetdc_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampsetdc_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampsetdc_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -263,7 +263,7 @@ libpatchclampsetdc_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampsetdc_la_OBJECTS) : moc_setdc.cc
 
@@ -285,11 +285,11 @@ libpatchclampfindrate_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampfindrate_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampfindrate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -300,7 +300,7 @@ libpatchclampfindrate_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampfindrate_la_OBJECTS) : moc_findrate.cc
 
@@ -322,11 +322,11 @@ libpatchclampphaseresettingcurve_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampphaseresettingcurve_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampphaseresettingcurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -337,7 +337,7 @@ libpatchclampphaseresettingcurve_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampphaseresettingcurve_la_OBJECTS) : moc_phaseresettingcurve.cc
 

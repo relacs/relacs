@@ -20,11 +20,11 @@ libacoustictraces_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libacoustictraces_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libacoustictraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -32,7 +32,7 @@ libacoustictraces_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libacoustictraces_la_SOURCES = traces.cc
 
@@ -50,11 +50,11 @@ libacousticloudspeaker_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libacousticloudspeaker_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libacousticloudspeaker_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -64,7 +64,7 @@ libacousticloudspeaker_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libacousticloudspeaker_la_SOURCES = loudspeaker.cc
 
@@ -83,11 +83,11 @@ libacousticcalibspeakers_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libacousticcalibspeakers_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libacousticcalibspeakers_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -100,7 +100,7 @@ libacousticcalibspeakers_la_LIBADD = \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libacousticcalibspeakers_la_OBJECTS) : moc_calibspeakers.cc
 
@@ -120,11 +120,11 @@ libacousticcalibmicrophone_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libacousticcalibmicrophone_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libacousticcalibmicrophone_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -136,7 +136,7 @@ libacousticcalibmicrophone_la_LIBADD = \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libacousticcalibmicrophone_la_OBJECTS) : moc_calibmicrophone.cc
 
@@ -157,11 +157,11 @@ libacousticechotest_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libacousticechotest_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libacousticechotest_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -173,7 +173,7 @@ libacousticechotest_la_LIBADD = \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(builddir)/libacoustictraces.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libacousticechotest_la_OBJECTS) : moc_echotest.cc
 
@@ -194,11 +194,11 @@ libacousticsoundlevel_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libacousticsoundlevel_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libacousticsoundlevel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -208,7 +208,7 @@ libacousticsoundlevel_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libacousticsoundlevel_la_OBJECTS) : moc_soundlevel.cc
 

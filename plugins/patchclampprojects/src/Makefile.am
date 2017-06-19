@@ -22,11 +22,11 @@ libpatchclampprojectsthresholdlatencies_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampprojectsthresholdlatencies_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampprojectsthresholdlatencies_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
@@ -37,7 +37,7 @@ libpatchclampprojectsthresholdlatencies_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 $(libpatchclampprojectsthresholdlatencies_la_OBJECTS) : moc_thresholdlatencies.cc
 
@@ -59,11 +59,11 @@ libpatchclampprojectsfindthreshold_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampprojectsfindthreshold_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampprojectsfindthreshold_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
@@ -74,7 +74,7 @@ libpatchclampprojectsfindthreshold_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 $(libpatchclampprojectsfindthreshold_la_OBJECTS) : moc_findthreshold.cc
 
@@ -96,11 +96,11 @@ libpatchclampprojectsvoltagereconstruction_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampprojectsvoltagereconstruction_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampprojectsvoltagereconstruction_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
@@ -111,7 +111,7 @@ libpatchclampprojectsvoltagereconstruction_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 $(libpatchclampprojectsvoltagereconstruction_la_OBJECTS) : moc_voltagereconstruction.cc
 
@@ -133,11 +133,11 @@ libpatchclampprojectsfeedforwardnetwork_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampprojectsfeedforwardnetwork_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampprojectsfeedforwardnetwork_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
@@ -148,7 +148,7 @@ libpatchclampprojectsfeedforwardnetwork_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 $(libpatchclampprojectsfeedforwardnetwork_la_OBJECTS) : moc_feedforwardnetwork.cc
 
@@ -170,11 +170,11 @@ libpatchclampprojectssynapticresistance_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libpatchclampprojectssynapticresistance_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libpatchclampprojectssynapticresistance_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
@@ -185,7 +185,7 @@ libpatchclampprojectssynapticresistance_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampprojectssynapticresistance_la_OBJECTS) : moc_synapticresistance.cc
 

@@ -18,15 +18,15 @@ libnieseriesniai_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libnieseriesniai_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libnieseriesniai_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 libnieseriesniai_la_SOURCES = niai.cc niaidevice.cc
 
@@ -46,15 +46,15 @@ libnieseriesniao_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libnieseriesniao_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libnieseriesniao_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 libnieseriesniao_la_SOURCES = niao.cc niaodevice.cc
 
@@ -74,15 +74,15 @@ libnieseriesnidio_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libnieseriesnidio_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libnieseriesnidio_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 libnieseriesnidio_la_SOURCES = nidio.cc nidiodevice.cc
 
@@ -102,15 +102,15 @@ libnieseriesnipfi_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libnieseriesnipfi_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libnieseriesnipfi_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 libnieseriesnipfi_la_SOURCES = nipfi.cc nipfidevice.cc
 

@@ -19,18 +19,18 @@ libattcs3310cs3310pp_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libattcs3310cs3310pp_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libattcs3310cs3310pp_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libattcs3310cs3310pp_la_SOURCES = cs3310pp.cc cs3310ppdevice.cc
 
@@ -47,18 +47,18 @@ libattcs3310cs3310dio_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libattcs3310cs3310dio_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libattcs3310cs3310dio_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libattcs3310cs3310dio_la_SOURCES = cs3310dio.cc cs3310diodevice.cc
 
@@ -76,16 +76,16 @@ libattcs3310cs3310nidio_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../../nieseries/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libattcs3310cs3310nidio_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libattcs3310cs3310nidio_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 libattcs3310cs3310nidio_la_SOURCES = cs3310nidio.cc cs3310nidiodevice.cc
 
@@ -103,16 +103,16 @@ libattcs3310cs3310serialnidio_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../../nieseries/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libattcs3310cs3310serialnidio_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libattcs3310cs3310serialnidio_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS)
 
 libattcs3310cs3310serialnidio_la_SOURCES = cs3310serialnidio.cc cs3310serialnidiodevice.cc
 

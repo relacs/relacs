@@ -24,12 +24,12 @@ libcameracameracontrol_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS) \
     $(OPENCV_CPPFLAGS)
 
 libcameracameracontrol_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) \
     $(OPENCV_LDFLAGS)
 
 libcameracameracontrol_la_LIBADD = \
@@ -39,7 +39,7 @@ libcameracameracontrol_la_LIBADD = \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
-    $(QT4_LIBS) \
+    $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
 
@@ -63,13 +63,13 @@ libcameraopencvcameracalibration_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)\
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)\
     $(OPENCV_CPPFLAGS)
 
 
 libcameraopencvcameracalibration_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) \
     $(OPENCV_LDFLAGS)
 
 libcameraopencvcameracalibration_la_LIBADD = \
@@ -80,7 +80,7 @@ libcameraopencvcameracalibration_la_LIBADD = \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
     $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
-    $(QT4_LIBS) \
+    $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
 
@@ -103,13 +103,13 @@ libcameraopencvstereocameracalibration_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)\
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)\
     $(OPENCV_CPPFLAGS)
 
 
 libcameraopencvstereocameracalibration_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) \
     $(OPENCV_LDFLAGS)
 
 libcameraopencvstereocameracalibration_la_LIBADD = \
@@ -120,7 +120,7 @@ libcameraopencvstereocameracalibration_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvstereocamera.la \
     $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
-    $(QT4_LIBS) \
+    $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
 
@@ -144,13 +144,13 @@ libcameraopencvcalibrationquality_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)\
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)\
     $(OPENCV_CPPFLAGS)
 
 
 libcameraopencvcalibrationquality_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) \
     $(OPENCV_LDFLAGS)
 
 libcameraopencvcalibrationquality_la_LIBADD = \
@@ -161,7 +161,7 @@ libcameraopencvcalibrationquality_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvstereocamera.la \
     $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
-    $(QT4_LIBS) \
+    $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
 

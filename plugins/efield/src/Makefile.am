@@ -27,11 +27,11 @@ libefieldeodtools_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldeodtools_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldeodtools_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -41,7 +41,7 @@ libefieldeodtools_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libefieldeodtools_la_SOURCES = eodtools.cc
 
@@ -60,11 +60,11 @@ libefieldlinearfield_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldlinearfield_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldlinearfield_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -74,7 +74,7 @@ libefieldlinearfield_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldlinearfield_la_OBJECTS) : moc_linearfield.cc
 
@@ -96,11 +96,11 @@ libefieldeoddetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldeoddetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldeoddetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -111,7 +111,7 @@ libefieldeoddetector_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldeoddetector_la_OBJECTS) : moc_eoddetector.cc
 
@@ -132,11 +132,11 @@ libefieldchirpdetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldchirpdetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldchirpdetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -146,7 +146,7 @@ libefieldchirpdetector_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldchirpdetector_la_OBJECTS) : moc_chirpdetector.cc
 
@@ -167,11 +167,11 @@ libefieldbeatdetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldbeatdetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldbeatdetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -181,7 +181,7 @@ libefieldbeatdetector_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldbeatdetector_la_OBJECTS) : moc_beatdetector.cc
 
@@ -202,11 +202,11 @@ libefieldtraces_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldtraces_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldtraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -216,7 +216,7 @@ libefieldtraces_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libefieldtraces_la_SOURCES = traces.cc
 
@@ -236,11 +236,11 @@ libefieldcalibefield_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../../base/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldcalibefield_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldcalibefield_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -253,7 +253,7 @@ libefieldcalibefield_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldcalibefield_la_OBJECTS) : moc_calibefield.cc
 
@@ -275,11 +275,11 @@ libefieldjar_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../../base/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldjar_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldjar_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -292,7 +292,7 @@ libefieldjar_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldjar_la_OBJECTS) : moc_jar.cc
 
@@ -314,11 +314,11 @@ libefieldmanualjar_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../../base/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldmanualjar_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldmanualjar_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -331,7 +331,7 @@ libefieldmanualjar_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldmanualjar_la_OBJECTS) : moc_manualjar.cc
 
@@ -352,11 +352,11 @@ libefieldeodmodel_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldeodmodel_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldeodmodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -366,7 +366,7 @@ libefieldeodmodel_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libefieldeodmodel_la_SOURCES = eodmodel.cc
 
@@ -386,11 +386,11 @@ libefieldbeats_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../../base/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefieldbeats_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefieldbeats_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -404,7 +404,7 @@ libefieldbeats_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldbeats_la_OBJECTS) : moc_beats.cc
 
