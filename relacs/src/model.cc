@@ -416,16 +416,14 @@ double Model::elapsed( void ) const
 
 void Model::addActions( QMenu *menu, bool doxydoc )
 {
-  menu->addAction( string( name() + " dialog..." ).c_str(),
-		   this, SLOT( dialog() ) );
-  menu->addAction( string( name() + " help..." ).c_str(),
-		   this, SLOT( help() ) );
+  QMenu *pop = menu->addMenu( string( "&" + name() ).c_str() );
+
+  pop->addAction( "&Options...", this, SLOT( dialog() ) );
+  pop->addAction( "&Help...", this, SLOT( help() ) );
   if ( widget() != 0 )
-    menu->addAction( string( name() + " screenshot" ).c_str(),
-		     this, SLOT( saveWidget() ) );
+    pop->addAction( "&Screenshot", this, SLOT( saveWidget() ) );
   if ( doxydoc )
-    menu->addAction( string( name() + " doxygen" ).c_str(),
-		     this, SLOT( saveDoxygenOptions() ) );
+    pop->addAction( "&Doxygen", this, SLOT( saveDoxygenOptions() ) );
 }
 
 
