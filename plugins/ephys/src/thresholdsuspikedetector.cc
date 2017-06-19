@@ -501,6 +501,10 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   time = *eventtime;
   size = fabs( *event );
 
+  // same as before:
+  if ( outevents.back() >= time - 1e-8 )
+    return 0;
+
   // right size:
   double rightsize = 0.0;
   InData::const_iterator right = event;
