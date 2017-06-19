@@ -57,7 +57,7 @@ Beats::Beats( void )
   addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", 1.0, 0.01, 100.0, 0.01, "", "" ).setActivation( "amtype", "none" ).addActivation( "generatechirps", "true" );
   addText( "chirpfrequencies", "Chirp frequencies for each delta f", "" ).setUnit( "Hz" ).setActivation( "amtype", "none" ).addActivation( "generatechirps", "true" );
   addText( "chirptimesfile", "File with chirp times", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "amtype", "none" ).addActivation( "generatechirps", "true" );
-  addSelection( "chirptimeshuffle", "Order of chirp-time sequences", RangeLoop::sequenceStrings() ).setActivation( "amtype", "none" ).addActivation( "generatechirps", "true" );
+  addSelection( "chirptimeshuffle", "Order of chirp-time sequences from file", RangeLoop::sequenceStrings() ).setActivation( "amtype", "none" ).addActivation( "generatechirps", "true" ).addActivation( "chirptimesfile", "", false );
   newSection( "Analysis" );
   addNumber( "before", "Time before stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", 1.0, 0.0, 100000.0, 1.0, "seconds" );
@@ -427,8 +427,8 @@ int Beats::main( void )
 	    chirpfrequency = chirpfrequencies[0];
 	  else if ( chirpfrequencies.size() > 1 )
 	    chirpfrequency = chirpfrequencies[dfrange.pos()];
-	  if ( chirpfrequency < 1e-8 ) {
-	    warning( "Chirp frequency too small or negative!" );
+	  if ( chirpfrequency < -1e-8 ) {
+	    warning( "Negative chirp frequency!" );
 	    P.lock();
 	    P.clear();
 	    P.unlock();
@@ -439,8 +439,12 @@ int Beats::main( void )
 	    chirpsequence = 0;
 	    printlog( "! ERROR: chirpsequence < 0" );
 	  }
-	  currentchirptimes = chirptimes[chirptimesrange.pos()];
-	  currentchirptimes *= 1.0/chirpfrequency;
+	  if ( chirpfrequency > 1e-8 ) {
+	    currentchirptimes = chirptimes[chirpsequence];
+	    currentchirptimes *= 1.0/chirpfrequency;
+	  }
+	  else
+	    currentchirptimes.clear();
 	  if ( ! chirptimesrange )
 	    ++chirptimesrange;
 	  else
@@ -462,16 +466,16 @@ int Beats::main( void )
 	      a = t/ramp;
 	    else if ( t > duration - ramp )
 	      a = (duration - t)/ramp;
-	    if ( ck<currentchirptimes.size() &&
-		 fabs( t - currentchirptimes[ck] ) < 2.0*chirpwidth ) {
-	      double x = t - currentchirptimes[ck];
-	      double g = exp( -0.5 * ::pow( (x/csig)*(x/csig), chirpkurtosis ) );
-	      f = chirpsize*g + stimulusrate;
-	      a *= 1.0 - chirpampl*g;
+	    if ( ck<currentchirptimes.size() ) {
+	      if ( fabs( t - currentchirptimes[ck] ) < 2.0*chirpwidth ) {
+		double x = t - currentchirptimes[ck];
+		double g = exp( -0.5 * ::pow( (x/csig)*(x/csig), chirpkurtosis ) );
+		f = chirpsize*g + stimulusrate;
+		a *= 1.0 - chirpampl*g;
+	      }
+	      else if ( t > currentchirptimes[ck] + 2.0*chirpwidth )
+		ck++;
 	    }
-	    else if ( ck<currentchirptimes.size() &&
-		      t > currentchirptimes[ck] + 2.0*chirpwidth )
-	      ck++;
 	    p += f * sig.stepsize();
 	    sig[k] = a * ::sin( 6.28318530717959 * p );
 	  }
@@ -489,9 +493,11 @@ int Beats::main( void )
 	    chirpheader.addInteger( "ChirpSequence", chirpsequence );
 	  }
 	  chirpheader.addInteger( "ChirpNumber", ck );
-	  chirpheader.addNumber( "ChirpTimes", currentchirptimes[0], "s" );
-	  for ( int j=1; j<ck; j++ )
-	    chirpheader.pushNumber( "ChirpTimes", currentchirptimes[j] );
+	  if ( ck > 0 ) {
+	    chirpheader.addNumber( "ChirpTimes", currentchirptimes[0], "s" );
+	    for ( int j=1; j<ck; j++ )
+	      chirpheader.pushNumber( "ChirpTimes", currentchirptimes[j] );
+	  }
 	  sig.description().setType( "stimulus/eod_chirps" );
 	  Parameter &p1 = sig.description().addNumber( "Frequency", stimulusrate, "Hz" );
 	  Parameter &p2 = sig.description().addNumber( "DeltaF", deltaf, "Hz" );
