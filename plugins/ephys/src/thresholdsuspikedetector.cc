@@ -473,21 +473,25 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
 					  double &time, double &size, double &width )
 { 
   if ( AbsThresh ) {
+    if ( event-2 < first )
+      return 0;
     if ( DetectPeaks ) {
-      // go the next local maximum:
+      // go to the next local maximum:
       for ( ; ; ++event, ++eventtime ) {
-	if ( event+1 >= last )
+	if ( event+2 >= last )
 	  return -1;
-	if ( *(event+1) < *event && *(event-1) < *event )
+	if ( *(event+2) < *event && *(event+1) < *event && 
+	     *(event-2) < *event && *(event-1) < *event )
 	  break;
       }
     }
     else {
-      // go the next local minimum:
+      // go to the next local minimum:
       for ( ; ; ++event, ++eventtime ) {
 	if ( event+1 >= last )
 	  return -1;
-	if ( *(event+1) > *event && *(event-1) > *event )
+	if ( *(event+2) > *event && *(event+1) > *event && 
+	     *(event-2) > *event && *(event-1) > *event )
 	  break;
       }
     }
@@ -498,20 +502,21 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   size = fabs( *event );
 
   // right size:
-  int di = 1;
   double rightsize = 0.0;
   InData::const_iterator right = event;
   for ( ++right; ; ++right ) {
-    if ( right+di >= last )
+    if ( right+2 >= last )
       return -1;
     if ( DetectPeaks ) {
-      if ( *(right+di) > *right && *(right-di) > *right ) {
+      if ( *(right+2) > *right && *(right+1) > *right &&
+	   *(right-2) > *right && *(right-1) > *right ) {
 	rightsize = *event - *right;
 	break;
       }
     }
     else {
-      if ( *(right+di) < *right && *(right-di) < *right ) {
+      if ( *(right+2) < *right && *(right+1) < *right &&
+	   *(right-2) < *right && *(right-1) < *right ) {
 	rightsize = *right - *event;
 	break;
       }
@@ -521,16 +526,18 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   double leftsize = 0.0;
   InData::const_iterator left = event;
   for ( --left; ; --left ) {
-    if ( left <= first+di )
+    if ( left-2 < first )
       return 0;
     if ( DetectPeaks ) {
-      if ( *(left+di) > *left && *(left-di) > *left ) {
+      if ( *(left+2) > *left && *(left+1) > *left &&
+	   *(left-2) > *left && *(left-1) > *left ) {
 	leftsize = *event - *left;
 	break;
       }
     }
     else {
-      if ( *(left+di) < *left && *(left-di) < *left ) {
+      if ( *(left+2) < *left && *(left+1) < *left &&
+	   *(left-2) < *left && *(left-1) < *left ) {
 	leftsize = *left - *event;
 	break;
       }
@@ -580,7 +587,7 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   width = Data->interval( rightw - leftw ) - ldt - rdt;
 
   // check:
-  bool  accept = true;
+  bool accept = true;
   if ( TestMaxSize && ( rightsize > MaxSize || leftsize > MaxSize ) )
     accept = false;
   if ( TestSymmetry && ( symmetry > MaxSymmetry || symmetry < MinSymmetry ) )
