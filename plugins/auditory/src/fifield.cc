@@ -211,13 +211,10 @@ int FIField::main( void )
   // plot:
   P.lock();
   P[0].clear();
-  P[0].setXFallBackRange( 0.001*FrequencyRange.minValue(), 0.001*FrequencyRange.maxValue() );
-  P[0].setXRange( Plot::AutoMinScale, Plot::AutoMinScale );
-  P[0].setYFallBackRange( MinIntensity, MaxIntensity );
-  P[0].setYRange( Plot::AutoMinScale, Plot::AutoMinScale );
+  P[0].setXRange( 0.001*FrequencyRange.minValue(), 0.001*FrequencyRange.maxValue() );
+  P[0].setYRange( MinIntensity, MaxIntensity );
   P[1].clear();
-  P[1].setXFallBackRange( MinIntensity, MaxIntensity );
-  P[1].setXRange( Plot::AutoMinScale, Plot::AutoMinScale );
+  P[1].setXRange( MinIntensity, MaxIntensity );
   P[1].setYFallBackRange( 0.0, 100.0 );
   P[1].setYRange( 0.0, Plot::AutoScale );
   P.unlock();

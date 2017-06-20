@@ -308,8 +308,7 @@ int FICurve::main( void )
   P[0].setYFallBackRange( 0.0, 100.0 );
   P[0].setYRange( 0.0, Plot::AutoScale );
   P[1].clear();
-  P[1].setXFallBackRange( MinIntensity, MaxIntensity );
-  P[1].setXRange( Plot::AutoMinScale, Plot::AutoMinScale );
+  P[1].setXRange( MinIntensity, MaxIntensity );
   P[1].setYFallBackRange( 0.0, 100.0 );
   P[1].setYRange( 0.0, Plot::AutoScale );
   if ( manualskip ) {
