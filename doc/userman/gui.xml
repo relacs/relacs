@@ -507,11 +507,25 @@
                   <varlistentry><term><guimenu>Plugins</guimenu></term>
                   <listitem>
 		    <itemizedlist>
-			<listitem><para><guimenuitem>Model dialog</guimenuitem>: Show the dialog to edit options of the Model.</para></listitem>
-			<listitem><para><guimenuitem>Model help</guimenuitem>: Display help text for the Model.</para></listitem>
-			<listitem><para><guimenuitem>Control dialog</guimenuitem>: Show the dialog to edit options of the Control widget.</para></listitem>
-			<listitem><para><guimenuitem>Control help</guimenuitem>: Display help text for the Control widget.</para></listitem>
-			<listitem><para><guimenuitem>Control screenshot</guimenuitem>: Make a screenshot of the control widget.</para></listitem>
+                      <listitem>
+		        <para>
+		          The model plugin that simulates data in dry mode:
+			</para>
+		        <itemizedlist>
+			  <listitem><para><guimenuitem>Options</guimenuitem>: Launch the options dialog.</para></listitem>
+			  <listitem><para><guimenuitem>Help</guimenuitem>: Show the help text.</para></listitem>
+		        </itemizedlist>
+                      </listitem>
+                      <listitem>
+		        <para>
+		          A list of all Control plugins. Each has the following submenu:
+			</para>
+		        <itemizedlist>
+			  <listitem><para><guimenuitem>Options</guimenuitem>: Launch the options dialog.</para></listitem>
+			  <listitem><para><guimenuitem>Help</guimenuitem>: Show the help text.</para></listitem>
+			  <listitem><para><guimenuitem>Screenshot</guimenuitem>: Make a screenshot of the widget of the Control plugin.</para></listitem>
+		        </itemizedlist>
+                      </listitem>
 		    </itemizedlist>
                   </listitem>
                   </varlistentry>

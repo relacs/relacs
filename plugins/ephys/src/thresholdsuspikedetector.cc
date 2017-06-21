@@ -67,7 +67,7 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   addBoolean( "absthresh", "Threshold is absolute voltage (or relative if unchecked)", AbsThresh, 8 );
   newSection( "Tests", 8 );
   addBoolean( "testmaxsize", "Use maximum size", TestMaxSize, 0+8 );
-  addNumber( "maxsize", "Maximum size", MaxSize, 0.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", (TestMaxSize ? 2 : 0)+8 ).setActivation( "testmaxsize", "true" );
+  addNumber( "maxsize", "Maximum size", MaxSize, -10000.0, 10000.0, SizeResolution, Unit, Unit, "%.1f", (TestMaxSize ? 2 : 0)+8 ).setActivation( "testmaxsize", "true" );
   addBoolean( "testsymmetry", "Use symmetry thresholds", TestSymmetry, 0+8 );
   addNumber( "maxsymmetry", "Maximum symmetry", MaxSymmetry, -1.0, 1.0, 0.05 ).setFlags( (TestSymmetry ? 2 : 0)+8 ).setActivation( "testsymmetry", "true" );
   addNumber( "minsymmetry", "Minimum symmetry", MinSymmetry, -1.0, 1.0, 0.05 ).setFlags( (TestSymmetry ? 2 : 0)+8 ).setActivation( "testsymmetry", "true" );
@@ -592,8 +592,16 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
 
   // check:
   bool accept = true;
-  if ( TestMaxSize && ( rightsize > MaxSize || leftsize > MaxSize ) )
-    accept = false;
+  if ( TestMaxSize ) {
+    if ( AbsThresh ) {
+      if ( *event > MaxSize )
+	accept = false;
+    }
+    else {
+      if ( ( rightsize > MaxSize || leftsize > MaxSize ) )
+	accept = false;
+    }
+  }
   if ( TestSymmetry && ( symmetry > MaxSymmetry || symmetry < MinSymmetry ) )
     accept = false;
   if ( TestInterval && 
