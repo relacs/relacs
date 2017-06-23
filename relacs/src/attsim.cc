@@ -123,10 +123,14 @@ int AttSim::attenuate( int di, double &decibel )
     return 0;
   }
 
-  if ( decibel < AttMin )
-    return Underflow;
-  if ( decibel > AttMax )
+  if ( decibel < AttMin ) {
+    decibel = AttMin;
     return Overflow;
+  }
+  if ( decibel > AttMax ) {
+    decibel = AttMax;
+    return Underflow;
+  }
 
   decibel = floor( (decibel+0.5*AttStep)/AttStep )*AttStep;
   Decibel[di] = decibel;
@@ -143,10 +147,14 @@ int AttSim::testAttenuate( int di, double &decibel )
     return 0;
   }
 
-  if ( decibel < AttMin )
-    return Underflow;
-  if ( decibel > AttMax )
+  if ( decibel < AttMin ) {
+    decibel = AttMin;
     return Overflow;
+  }
+  if ( decibel > AttMax ) {
+    decibel = AttMax;
+    return Underflow;
+  }
 
   decibel = floor( (decibel+0.5*AttStep)/AttStep )*AttStep;
   return 0;

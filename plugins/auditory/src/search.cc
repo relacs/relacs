@@ -33,7 +33,7 @@ namespace auditory {
 
 const double Search::ShortIntensityStep = 1.0;
 const double Search::LongIntensityStep = 5.0;
-const double Search::MaxIntensity = 100.0;
+const double Search::MaxIntensity = 120.0;
 const double Search::MinIntensity = 0.0;  
 
 const double Search::ShortDurationStep = 0.005;
@@ -53,10 +53,11 @@ const double Search::MinFrequency = 2000.0;
 
 
 Search::Search( void )
-  : RePro( "Search", "auditory", "Jan Benda and Christian Machens", "2.6", "June 2, 2017" )
+  : RePro( "Search", "auditory", "Jan Benda and Christian Machens", "2.7", "July 23, 2017" )
 {
   // parameter:
   Intensity = 80.0;
+  PrevIntensity = Intensity;
   Duration = 0.05;
   Pause = 0.5;
   PrePause = 0.05;
@@ -92,7 +93,7 @@ Search::Search( void )
   setLayout( grid );
 
   // Intensity Settings:
-  ILCD = new LCDRange( "Intensity (dB)", 3 );
+  ILCD = new LCDRange( "Intensity (dB SPL)", 3 );
   ILCD->setRange( int(MinIntensity), int(MaxIntensity) );
   ILCD->setValue( int(Intensity) );
   ILCD->setSteps( int(ShortIntensityStep), int(LongIntensityStep) );
@@ -181,6 +182,7 @@ int Search::main( void )
   if ( ! boolean( "saving" ) )
     noSaving();
   Intensity = number( "intensity" );
+  PrevIntensity = Intensity;
   Mute = boolean( "mute" );
   Duration = number( "duration" );
   Pause = number( "pause" );
@@ -255,7 +257,7 @@ int Search::main( void )
 	if ( Waveform == 1 ) {
 	  signal.bandNoiseWave( Duration, -1.0, MinFreq, Frequency, 0.3, 0, ramp );
 	  ::relacs::clip( -1.0, 1.0, signal );
-	  meanintensity = 6.0206; // stdev=0.5
+	  // meanintensity = 6.0206; // stdev=0.5
 	  meanintensity = 10.458; // stdev = 0.3
 	}
 	else {
@@ -276,12 +278,22 @@ int Search::main( void )
     if ( signal.error() ) {
       // Attenuator overflow or underflow.
       // Set intensity appropriately and write stimulus again.
-      if ( signal.underflow() )
-	setIntensity( int( ceil( signal.intensity() - meanintensity )) );
-      else
-	setIntensity( int( floor( signal.intensity() - meanintensity )) );
-      postCustomEvent( 12 );
-      write( signal );
+      if ( signal.underflow() || signal.overflow() ) {
+	if ( fabs( Intensity - PrevIntensity ) > 1e-8 )
+	  Intensity = PrevIntensity;
+	else if ( signal.underflow() )
+	  Intensity = ceil( signal.intensity() - meanintensity );
+	else
+	  Intensity = floor( signal.intensity() - meanintensity );
+	setNumber( "intensity", Intensity );
+	signal.setIntensity( Intensity > 0 ? Intensity + meanintensity : OutData::MuteIntensity );
+	postCustomEvent( 12 );
+	write( signal );
+	if ( signal.error() ) {
+	  writeZero( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0] );
+	  return Failed;
+	}
+      }
     }
 
     sleepOn( Duration + Pause );
@@ -439,6 +451,7 @@ void Search::setIntensity( int i )
     return;
 
   lock();
+  PrevIntensity = Intensity;
   Intensity = intensity;
   if ( Intensity < MinIntensity ) 
     Intensity = MinIntensity;

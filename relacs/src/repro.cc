@@ -28,7 +28,6 @@
 #include <QTextBrowser>
 #include <QApplication>
 #include <relacs/str.h>
-#include <relacs/optdialog.h>
 #include <relacs/acquire.h>
 #include <relacs/savefiles.h>
 #include <relacs/relacswidget.h>
@@ -812,6 +811,11 @@ string RePro::addReProPath( const string &file, bool v )
 }
 
 
+void RePro::modifyDialog( OptDialog *od )
+{
+}
+
+
 void RePro::dialog( void )
 { 
   if ( dialogOpen() )
@@ -843,6 +847,7 @@ void RePro::dialog( void )
       roptw->setMargins( 2 );
       od->addSeparator();
     }
+    modifyDialog( od );
     OptWidget *doptw = od->addOptions( reprosDialogOpts() );
     doptw->setMargins( 2 );
     doptw->setVerticalSpacing ( 4 );

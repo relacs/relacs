@@ -139,6 +139,9 @@ public slots:
 
 protected:
 
+    /*! Add a plot widget to the dialog. */
+  virtual void modifyDialog( OptDialog *od );
+
   int createStimulus( OutData &signal, const Str &file,
 		      double &duration, bool stoream );
 
@@ -185,6 +188,8 @@ protected:
   MultiPlot SP;
   MultiPlot P;
   QStackedLayout *Stack;
+
+  Plot *DP;
 
 };
 

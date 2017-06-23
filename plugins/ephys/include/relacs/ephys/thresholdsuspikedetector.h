@@ -40,7 +40,7 @@ namespace ephys {
 \class ThresholdSUSpikeDetector
 \brief [Detector] Spike detection based on an absolute voltage threshold.
 \author Jan Benda
-\version 1.4 (Jun 15, 2017)
+\version 1.6 (July 23, 2017)
 
 \par Options
 - \c Detector
@@ -52,6 +52,9 @@ namespace ephys {
 - \c Tests
     - \c testmaxsize=false: Use maximum size (\c boolean)
     - \c maxsize=1mV: Maximum size (\c number)
+    - \c testwidth=false: Use spike-width thresholds (\c boolean)
+    - \c maxwidth=1ms: Maximum width of spikes (\c number)
+    - \c minwidth=0ms: Minimum width of spikes (\c number)
     - \c testsymmetry=false: Use symmetry thresholds (\c boolean)
     - \c maxsymmetry=1: Maximum symmetry (\c number)
     - \c minsymmetry=-1: Minimum symmetry (\c number)
@@ -120,6 +123,12 @@ public slots:
   bool TestMaxSize;
     /*! The maximum size of a spike. */
   double MaxSize;
+    /*! True if MaxWidth and MinWidth are used. */
+  bool TestWidth;
+    /*! The maximum spike width. */
+  double MaxWidth;
+    /*! The minimum spike width. */
+  double MinWidth;
     /*! True if MaxSymmetry and MinSymmetry are used. */
   bool TestSymmetry;
     /*! The maximum symmetry. */

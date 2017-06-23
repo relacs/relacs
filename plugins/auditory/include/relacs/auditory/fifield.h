@@ -36,7 +36,7 @@ namespace auditory {
 /*!
 \class FIField
 \brief [RePro] Optimized measuring of f-I curves for a range of carrier frequencies.
-\version 1.6 (Jul 18, 2014)
+\version 1.7 (Jul 23, 2017)
 \author Jan Benda
 
 \par Options

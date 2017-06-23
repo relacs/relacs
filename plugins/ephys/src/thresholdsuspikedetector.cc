@@ -36,7 +36,7 @@ namespace ephys {
 ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
 	    "ThresholdSUSpikeDetector", "ephys",
-	    "Jan Benda", "1.4", "Jun 15, 2017" )
+	    "Jan Benda", "1.6", "July 23, 2017" )
 {
   // parameter:
   Threshold = 1.0;
@@ -44,6 +44,9 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   AbsThresh = false;
   TestMaxSize = false;
   MaxSize = 1.0;
+  TestWidth = false;
+  MaxWidth = 0.001;
+  MinWidth = 0.0;
   TestSymmetry = false;
   MaxSymmetry = 1.0;
   MinSymmetry = -1.0;
@@ -68,6 +71,9 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   newSection( "Tests", 8 );
   addBoolean( "testmaxsize", "Use maximum size", TestMaxSize, 0+8 );
   addNumber( "maxsize", "Maximum size", MaxSize, -10000.0, 10000.0, SizeResolution, Unit, Unit, "%.1f", (TestMaxSize ? 2 : 0)+8 ).setActivation( "testmaxsize", "true" );
+  addBoolean( "testwidth", "Use spike-width thresholds", TestWidth, 0+8 );
+  addNumber( "maxwidth", "Maximum width of spikes", MaxWidth, 0.0, 0.1, 0.0001, "s", "ms" ).setFlags( (TestWidth ? 2 : 0)+8 ).setActivation( "testwidth", "true" );
+  addNumber( "minwidth", "Minimum width of spikes", MinWidth, 0.0, 0.1, 0.0001, "s", "ms" ).setFlags( (TestWidth ? 2 : 0)+8 ).setActivation( "testwidth", "true" );
   addBoolean( "testsymmetry", "Use symmetry thresholds", TestSymmetry, 0+8 );
   addNumber( "maxsymmetry", "Maximum symmetry", MaxSymmetry, -1.0, 1.0, 0.05 ).setFlags( (TestSymmetry ? 2 : 0)+8 ).setActivation( "testsymmetry", "true" );
   addNumber( "minsymmetry", "Minimum symmetry", MinSymmetry, -1.0, 1.0, 0.05 ).setFlags( (TestSymmetry ? 2 : 0)+8 ).setActivation( "testsymmetry", "true" );
@@ -224,6 +230,19 @@ void ThresholdSUSpikeDetector::notify( void )
       delFlags( "maxsize", 2 );
     postCustomEvent( 12 );
   }
+  tms = boolean( "testwidth" );
+  if ( tms != TestWidth ) {
+    TestWidth = tms;
+    if ( TestWidth ) {
+      addFlags( "maxwidth", 2 );
+      addFlags( "minwidth", 2 );
+    }
+    else {
+      delFlags( "maxwidth", 2 );
+      delFlags( "minwidth", 2 );
+    }
+    postCustomEvent( 12 );
+  }
   tms = boolean( "testsymmetry" );
   if ( tms != TestSymmetry ) {
     TestSymmetry = tms;
@@ -239,6 +258,8 @@ void ThresholdSUSpikeDetector::notify( void )
   }
   Threshold = number( "threshold", Unit );
   MaxSize = number( "maxsize", Unit );
+  MaxWidth = number( "maxwidth" );
+  MinWidth = number( "minwidth" );
   MaxSymmetry = number( "maxsymmetry" );
   MinSymmetry = number( "minsymmetry" );
   DetectPeaks = boolean( "detectpeaks" );
@@ -602,6 +623,8 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
 	accept = false;
     }
   }
+  if ( TestWidth && ( width > MaxWidth || width < MinWidth ) )
+    accept = false;
   if ( TestSymmetry && ( symmetry > MaxSymmetry || symmetry < MinSymmetry ) )
     accept = false;
   if ( TestInterval && 

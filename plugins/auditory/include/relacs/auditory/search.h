@@ -38,7 +38,7 @@ namespace auditory {
 \brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
-\version 2.6 (June 2, 2017)
+\version 2.7 (July 23, 2017)
 
 \par Options
 - \c intensity=80dB: Intensity (\c number)
@@ -144,6 +144,7 @@ protected:
 
   LCDRange *ILCD;
   double Intensity;                       // (in dB)
+  double PrevIntensity;
   static const double ShortIntensityStep;
   static const double LongIntensityStep;
   static const double MaxIntensity;

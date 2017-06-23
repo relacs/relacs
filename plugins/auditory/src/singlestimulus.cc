@@ -172,6 +172,7 @@ SingleStimulus::SingleStimulus( void )
   Stack->addWidget( &P );
   Stack->setCurrentWidget( &P );
 
+  DP = 0;
 }
 
 
@@ -1031,9 +1032,187 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
 }
 
 
+void SingleStimulus::modifyDialog( OptDialog *od )
+{
+  DP = new Plot( Plot::Copy );
+  DP->setMinimumHeight( 160 );
+  DP->setXLabel( "Time [s]" );
+  DP->setYLabel( "Sound [dB SPL]" );
+  notifyDialog( *this );
+  od->addWidget( DP );
+}
+
+
 void SingleStimulus::notifyDialog( const Options &opt )
 {
-  //  cerr << "SINGLESTIMULUS GOT\n" << opt << '\n';
+  OutData wave;
+  int side = opt.index( "side" );
+  if ( side > 1 )
+    side = metaData().index( "Cell>best side" );
+  wave.setTrace( Speaker[ side ] );
+
+  int wavetype = (WaveTypes)opt.index( "type" );
+  int waveform = (WaveForms)opt.index( "waveform" );
+
+  double amplitude = opt.number( "amplitude" );
+  double duration = opt.number( "duration" );
+  double peakamplitudefac = opt.number( "stimampl" );
+  double intensity = opt.number( "intensity" );
+  int intensitybase = opt.index( "intensitybase" );
+  if ( intensitybase == 3 )
+    intensity = Intensity;
+  double ramp = opt.number( "ramp" );
+  double carrierfreq = opt.number( "carrierfreq" );
+  bool usebestfreq = opt.boolean( "usebestfreq" );
+  if ( usebestfreq ) {
+    string sidestr = side > 0 ? "right" :  "left";
+    double cf = metaData().number( "Cell>" + sidestr + " frequency" );
+    if ( cf > 0.0 )
+      carrierfreq += cf;
+  }
+
+  if ( waveform == File ) {
+    // load stimulus from file:
+    string stimfile = opt.text( "stimfile" );
+    wave.load( stimfile, stimfile );
+    if ( wave.empty() ) {
+      warning( "Unable to load stimulus from file " + stimfile );
+    }
+    if ( duration > 0.0 && wave.length() > duration )
+      wave.resize( wave.indices( duration ) );
+    duration = wave.length();
+    if ( opt.boolean( "stimscale" ) )
+      wave /= maxAbs( wave );
+    double stimhighcut = opt.number( "stimhighcut" );
+    if ( stimhighcut > 0.0 ) {
+      double fac = wave.stepsize()*stimhighcut;
+      double x = wave[0];
+      for ( int k=0; k<wave.size(); k++ ) {
+	x += ( wave[k] - x )*fac;
+	wave[k] -= x;
+      }
+    }
+    if ( peakamplitudefac <= 0.0 )
+      peakamplitudefac = ::relacs::rms( wave );
+  }
+  else if ( waveform >= Sine && waveform <= OUnoise ) {
+    int freqsel = opt.index( "freqsel" );
+    double frequency = opt.number( "freq" );
+    double period = opt.number( "period" );
+    double numperiods = opt.number( "numperiods" );
+    int pulsesel = opt.index( "pulsesel" );
+    double pulseduration = opt.number( "pulseduration" );
+    double dutycycle = opt.number( "dutycycle" );
+    unsigned long seed = opt.integer( "seed" );
+    if ( freqsel == 1 ) { // period
+      if ( period < 1.0e-8 ) {
+	warning( "The period must be greater than zero!" );
+      }
+      frequency = 1.0/period;
+    }
+    else if ( freqsel == 2 ) // number of periods
+      frequency = numperiods/duration;
+    if ( pulsesel == 1 )
+      pulseduration = dutycycle/frequency;
+
+    if ( waveform == Sine || waveform == Whitenoise || waveform == OUnoise ) {
+      if ( waveform == Sine ) {
+	peakamplitudefac = 1.0;
+	wave.sineWave( duration, -1.0, frequency );
+      }
+      else {
+	if ( waveform == Whitenoise )
+	  wave.noiseWave( duration, -1.0, frequency, 1.0, &seed );
+	else if ( waveform == OUnoise )
+	  wave.ouNoiseWave( duration, -1.0, 1.0/frequency, 1.0, &seed );
+	peakamplitudefac = 0.3;
+	wave *= peakamplitudefac;
+      }
+      if ( wavetype == Envelope )
+	wave = 0.5*(wave+1.0);
+    }
+    else {
+      peakamplitudefac = 1.0;
+      if ( waveform == Rectangular )
+	wave.rectangleWave( duration, -1.0, 1.0/frequency, pulseduration, ramp );
+      else if ( waveform == Triangular )
+	wave.triangleWave( duration, -1.0, 1.0/frequency );
+      else if ( waveform == Sawup )
+	wave.sawUpWave( duration, -1.0, 1.0/frequency, ramp );
+      else if ( waveform == Sawdown )
+	wave.sawDownWave( duration, -1.0, 1.0/frequency, ramp );
+      if ( wavetype != Envelope )
+	wave = 2.0*wave - 1.0;
+    }
+  }
+  else {
+    // constant:
+    wavetype = Envelope;
+    wave.pulseWave( duration, 0.001, 1.0, 0.0 );
+    peakamplitudefac = 1.0;
+  }
+
+  OutData amdb;
+  double peakamplitude = 0.0;
+  if ( wavetype == AM ) {
+    peakamplitude = amplitude / peakamplitudefac;
+    amdb = wave;
+    amdb -= 1.0;
+    amdb *= peakamplitude;
+    double maxam = -1000.0;
+    for ( int k=0; k<amdb.size(); k++ ) {
+      double am = ::pow (10.0, amdb[k] / 20.0 );
+      if ( maxam < ::fabs( am ) )
+	maxam = ::fabs( am );
+    }
+    double fac = 0.3/maxam;
+    peakamplitudefac *= fac;
+    peakamplitude += -20.0 * ::log10( fac );
+    amdb -= -20.0 * ::log10( fac );
+  }
+  else if ( wavetype == Envelope ) {
+    if ( ::relacs::min( wave ) < 0.0 ) {
+      warning( "This envelope contains negative values!" );
+    }
+    wave.ramp( ramp );
+    amplitude = 0.0;
+    amdb = wave;
+    double maxam = -1000.0;
+    for ( int k=0; k<amdb.size(); k++ ) {
+      amdb[k] = 20.0 * ::log10( wave[k] );
+      if ( amdb[k] < -60.0 )
+	amdb[k] = -60.0;
+      if ( maxam < ::fabs( wave[k] ) )
+	maxam = ::fabs( wave[k] );
+    }
+    double fac = 0.3/maxam;
+    peakamplitudefac *= fac;
+    peakamplitude = -20.0 * ::log10( peakamplitudefac );
+    amdb -= -20.0 * ::log10( fac );
+  }
+  else { // Wave
+    wave.ramp( ramp );
+    peakamplitude = -20.0 * ::log10( peakamplitudefac );
+    static const double EnvTau = 0.0002;
+    // compute envelope:
+    amdb = wave;
+    double x = wave[0]*wave[0];
+    for ( int k=0; k<amdb.size(); k++ ) {
+      double v = amdb[k];
+      x += ( v*v - x )*amdb.stepsize()/EnvTau;
+      amdb[k] = sqrt( 2.0*x );
+      amdb[k] = 20.0 * ::log10( amdb[k] );
+      if ( amdb[k] < -60.0 )
+	amdb[k] = -60.0;
+    }
+  }
+  amdb += intensity + peakamplitude;
+  DP->lock();
+  DP->clear();
+  DP->setXRange( 0.0, 1000.0*duration );
+  DP->plot( amdb, 1000.0, Plot::Green, 2 );
+  DP->unlock();
+  DP->draw();
 }
 
 

@@ -28,6 +28,7 @@
 #include <QThread>
 #include <QDateTime>
 #include <relacs/outlist.h>
+#include <relacs/optdialog.h>
 #include <relacs/relacsplugin.h>
 
 namespace relacs {
@@ -527,6 +528,10 @@ protected:
   virtual void keyPressEvent( QKeyEvent *event );
     /*! Reimplement this function to handle key-release events. */
   virtual void keyReleaseEvent( QKeyEvent *event );
+
+    /*! Reimplement this function to modify the Options dialog.
+        This function is called after the RePro Options have been added to the dialog. */
+  virtual void modifyDialog( OptDialog *od );
 
 
 protected slots:

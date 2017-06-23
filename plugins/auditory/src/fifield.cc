@@ -32,8 +32,8 @@ namespace auditory {
 FIField::FIField( void )
 {
   setName( "FIField" );
-  setVersion( "1.6" );
-  setDate( "Jul 18, 2014" );
+  setVersion( "1.7" );
+  setDate( "Jul 23, 2017" );
 
   // parameter:
   MinFreq = 2500.0;
@@ -50,10 +50,10 @@ FIField::FIField( void )
   // add some parameter as options:
   Options &fo = insertSection( "Frequencies", "Intensities" );
   fo.newSection( "Range" );
-  fo.addNumber( "freqmin", "Minimum stimulus frequency", MinFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
-  fo.addNumber( "freqmax", "Maximum stimulus frequency", MaxFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
-  fo.addNumber( "freqstep", "Frequency step", FreqStep, 0.0, 10000.0, 100.0, "Hz", "kHz" );
-  fo.addNumber( "freqfac", "Frequency factor", FreqFac, 0.0, 100.0, 0.01 ).setFormat( "%.9f" );
+  fo.addNumber( "freqmin", "Minimum stimulus frequency", MinFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" ).setActivation( "freqrange", "" ).addActivation( "freqfac", "=1.0" );
+  fo.addNumber( "freqmax", "Maximum stimulus frequency", MaxFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" ).setActivation( "freqrange", "" ).addActivation( "freqfac", "=1.0" );
+  fo.addNumber( "freqstep", "Frequency step", FreqStep, 0.0, 10000.0, 100.0, "Hz", "kHz" ).setActivation( "freqrange", "" ).addActivation( "freqfac", "=1.0" );
+  fo.addNumber( "freqfac", "Frequency factor", FreqFac, 1.0, 100.0, 0.01 ).setFormat( "%.9f" ).setActivation( "freqrange", "" );
   fo.addText( "freqrange", "Frequency range", FreqStr ).setUnit( "kHz" );
   fo.addSelection( "freqshuffle", "Order of frequencies", RangeLoop::sequenceStrings() );
   fo.addInteger( "freqincrement", "Initial increment for frequencies", FreqIncrement, -1000, 1000, 1 );
@@ -185,10 +185,17 @@ int FIField::main( void )
   // frequency:
   if ( ! FreqStr.empty() )
     FrequencyRange.set( FreqStr, 1000.0 );
-  else if ( FreqFac > 0.0 )
-    FrequencyRange.setLog( MinFreq, MaxFreq, FreqFac );
-  else
-    FrequencyRange.set( MinFreq, MaxFreq, FreqStep );
+  else {
+    if ( MinFreq > MaxFreq ) {
+      warning( "Minimum frequency " + Str(0.001*MinFreq) + 
+	       "kHz is larger than maximum frequency " + Str(0.001*MaxFreq) + "kHz !" );
+      return Failed;
+    }
+    if ( FreqFac > 1.0 + 1e-8 )
+      FrequencyRange.setLog( MinFreq, MaxFreq, FreqFac );
+    else
+      FrequencyRange.set( MinFreq, MaxFreq, FreqStep );
+  }
   FrequencyRange.setIncrement( FreqIncrement );
   FrequencyRange.setSequence( FreqShuffle );
   FrequencyRange.reset();
