@@ -1725,7 +1725,7 @@ void SaveFiles::ODMLFiles::writeRePro( const Options &reproinfo,
 string SaveFiles::NixFile::create ( string path )
 {
   rid = Str( path ).preventedSlash().name();
-  string nix_path = path + rid + ".nix.h5";
+  string nix_path = path + rid + ".nix";
   fd = nix::File::open(nix_path, nix::FileMode::Overwrite);
   root_block = fd.createBlock(rid, "recording");
   root_section = fd.createSection(rid, "recording");
@@ -1795,7 +1795,7 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
       values.push_back( std::move( val ) );
     }
     if ( param.size() > 1 &&
-	 ( (flags & Options::FirstOnly) != 0 && 
+	 ( (flags & Options::FirstOnly) != 0 &&
 	   !((param.style() & Parameter::ListAlways) == 0))) {
       // TODO this needs to be confirmed!
       break;
@@ -1826,7 +1826,7 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
       });
   } else if ( unit == "min" || unit == "sec" || unit == "h" || unit == "seconds" ) {
     std::for_each( values.begin(), values.end(), [&unit](nix::Value &v) {
-	if (unit == "seconds") 
+	if (unit == "seconds")
 	  unit = "sec";
         switch (v.type()) {
         case nix::DataType::Int64:
@@ -1845,7 +1845,7 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
   } else if ( unit == "1" ) {
     unit = "";
   }
-  
+
   nix::Property prop = section.createProperty ( param.name(), values );
   if ( !unit.empty() && ( nix::util::isSIUnit( unit ) ||
 	 nix::util::isCompoundSIUnit( unit ) ) ) {
@@ -1887,7 +1887,6 @@ static void saveNIXOptions(const Options &opts, nix::Section section,
     if ( pp->flags( selectmask ) ) {
       saveNIXParameter(*pp, section, flags);
       //std::cerr << "\t" << *pp << "\t is mutable: " << ((pp->flags() & OutData::Mutable) != 0 ) << std::endl;
-      
     }
   }
   //now the subsections
@@ -2043,7 +2042,7 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 
   void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const Options &stim_options,
                                               const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
-                                              RELACSWidget *RW ) {
+                                              RELACSWidget *RW, double start_time, double duration ) {
   nix::Section s;
   if ( repro_name.size() > 0 ) {
     s = fd.createSection( repro_name, "relacs.repro" );
@@ -2052,12 +2051,16 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
   }
   stimulus_positions = root_block.createDataArray( repro_name + " onset times", "nix.event.positions",
                                                    nix::DataType::Double, {1} );
+
+  stimulus_positions.setData( nix::DataType::Double, &start_time, {1}, {0} );
   stimulus_positions.appendSetDimension();
   stimulus_positions.unit( "s" );
   stimulus_positions.label( "time" );
 
   stimulus_extents = root_block.createDataArray( repro_name + " durations", "nix.event.extents",
                                                  nix::DataType::Double, {1} );
+  size = stimulus_extents.dataExtent();
+  stimulus_extents.setData( nix::DataType::Double, &duration, {1}, {0} );
   stimulus_extents.appendSetDimension();
   stimulus_extents.unit( "s" );
   stimulus_extents.label( "time" );
@@ -2155,9 +2158,11 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
 	  }
 	}
       }
+      appendValue(stimulus_positions, stimulus_start_time);
+      appendValue(stimulus_extents, stimulus_duration);
     }
     else { // There is no such tag, we need to create a new one
-      createStimulusTag(repro_name, stim_info[0].description(), stim_options, stim_info, RW);
+      createStimulusTag(repro_name, stim_info[0].description(), stim_options, stim_info, RW, stimulus_start_time, stimulus_duration);
     }
   }
 
@@ -2169,8 +2174,6 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
       }
     }
   }
-  appendValue(stimulus_positions, stimulus_start_time);
-  appendValue(stimulus_extents, stimulus_duration);
   appendValue(time_feat, abs_time);
   appendValue(delay_feat, delay);
   appendValue(amplitude_feat, intensity);

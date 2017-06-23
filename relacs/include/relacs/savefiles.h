@@ -518,7 +518,7 @@ protected:
     void saveMetadata ( const MetaData &mtdt );
     void createStimulusTag ( const std::string &repro_name, const Options &stimulus_options,
                              const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
-                             RELACSWidget *RW );
+                             RELACSWidget *RW, double start_time, double duration );
     void writeStimulus ( const InList &IL, const deque< OutDataInfo > &stim_info,
 			 string rp_name, double sessiontime, RELACSWidget *RW,
 			 const Options &stim_options );
