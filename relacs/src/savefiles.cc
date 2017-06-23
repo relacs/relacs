@@ -2059,7 +2059,6 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 
   stimulus_extents = root_block.createDataArray( repro_name + " durations", "nix.event.extents",
                                                  nix::DataType::Double, {1} );
-  size = stimulus_extents.dataExtent();
   stimulus_extents.setData( nix::DataType::Double, &duration, {1}, {0} );
   stimulus_extents.appendSetDimension();
   stimulus_extents.unit( "s" );
