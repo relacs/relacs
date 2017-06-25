@@ -36,7 +36,7 @@ namespace ephys {
 ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
 	    "ThresholdSUSpikeDetector", "ephys",
-	    "Jan Benda", "1.6", "July 23, 2017" )
+	    "Jan Benda", "1.6", "July 25, 2017" )
 {
   // parameter:
   Threshold = 1.0;
@@ -431,48 +431,69 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   SP->lock();
   SP->clear();
   SP->plotVLine( 0.0, Plot::White, 2 );
+  if ( AbsThresh && TestMaxSize )
+    SP->plotHLine( MaxSize, Plot::White, 2 );
   SampleDataF meansnippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0.0f );
-  for ( int k=0; k<SpikeTime.accessibleSize(); k++ ) {
-    if ( k >= outevents.size() )
-      break;
-    double st = outevents[outevents.size()-1-k];
+  int n = 0;
+  for ( int k=SpikeTime.minIndex(); k<SpikeTime.size(); k++ ) {
+    double st = SpikeTime[k];
     if ( st - SnippetsWidth <= data.minTime() )
+      continue;
+    if ( st + SnippetsWidth > data.currentTime() )
       break;
     SampleDataF snippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0.0f );
     data.copy( st, snippet );
     if ( ! DetectPeaks )
       snippet *= -1.0;
-    int k0 = snippet.index( 0.0 );
-    snippet -= snippet[k0];
-    meansnippet += (snippet - meansnippet)/(k+1);
-    SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
+    if ( ! AbsThresh ) {
+      int k0 = snippet.index( 0.0 );
+      snippet -= snippet[k0];
+    }
+    int color = Plot::Red;
+    if ( SpikeAccepted[k] ) {
+      meansnippet += (snippet - meansnippet)/(++n);
+      color = Plot::Yellow;
+    }
+    SP->plot( snippet, 1000.0, color, 1, Plot::Solid );
   }
   SP->plot( meansnippet, 1000.0, Plot::Orange, 2, Plot::Solid );
   SP->draw();
   SP->unlock();
 
   // plot snippet properties:
-  ArrayD leftsize;
+  ArrayD spikesize;
   ArrayD symmetry;
   ArrayD width;
-  for ( int k=0; k<SpikeLeftSize.accessibleSize(); k++ ) {
-    int i = SpikeLeftSize.size() - SpikeLeftSize.accessibleSize() + k;
-    leftsize.push( SpikeLeftSize[i] );
+  for ( int k=0; k<SpikeSize.accessibleSize(); k++ ) {
+    int i = SpikeSize.size() - SpikeSize.accessibleSize() + k;
+    spikesize.push( SpikeSize[i] );
     symmetry.push( SpikeSymmetry[i] );
     width.push( 1000.0*SpikeWidth[i] );
   }
 
   PP1->lock();
   PP1->clear();
-  PP1->plot( leftsize, symmetry, Plot::Transparent, 0, Plot::Solid,
+  if ( TestMaxSize )
+    PP1->plotVLine( MaxSize, Plot::White, 2, Plot::Solid );
+  if ( TestSymmetry ) {
+    PP1->plotHLine( MaxSymmetry, Plot::White, 2, Plot::Solid );
+    PP1->plotHLine( MinSymmetry, Plot::White, 2, Plot::Solid );
+  }
+  PP1->plot( spikesize, symmetry, Plot::Transparent, 0, Plot::Solid,
 	    Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
   PP1->draw();
   PP1->unlock();
 
   PP2->lock();
   PP2->clear();
-  PP2->plot( leftsize, width, Plot::Transparent, 0, Plot::Solid,
-	    Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
+  if ( TestMaxSize )
+    PP2->plotVLine( MaxSize, Plot::White, 2, Plot::Solid );
+  if ( TestWidth ) {
+    PP2->plotHLine( 1000.0*MaxWidth, Plot::White, 2, Plot::Solid );
+    PP2->plotHLine( 1000.0*MinWidth, Plot::White, 2, Plot::Solid );
+  }
+  PP2->plot( spikesize, width, Plot::Transparent, 0, Plot::Solid,
+	     Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
   PP2->draw();
   PP2->unlock();
 
@@ -570,9 +591,11 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   }
 
   // size:
-  size = leftsize;
-  if ( size > rightsize )
-    size = rightsize;
+  if ( ! AbsThresh ) {
+    size = leftsize;
+    if ( size > rightsize )
+      size = rightsize;
+  }
 
   // symmetry:
   double symmetry = ( leftsize - rightsize )/( leftsize + rightsize );
@@ -613,16 +636,8 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
 
   // check:
   bool accept = true;
-  if ( TestMaxSize ) {
-    if ( AbsThresh ) {
-      if ( *event > MaxSize )
-	accept = false;
-    }
-    else {
-      if ( ( rightsize > MaxSize || leftsize > MaxSize ) )
-	accept = false;
-    }
-  }
+  if ( TestMaxSize && size > MaxSize )
+    accept = false;
   if ( TestWidth && ( width > MaxWidth || width < MinWidth ) )
     accept = false;
   if ( TestSymmetry && ( symmetry > MaxSymmetry || symmetry < MinSymmetry ) )
