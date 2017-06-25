@@ -461,14 +461,24 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   SP->unlock();
 
   // plot snippet properties:
-  ArrayD spikesize;
-  ArrayD symmetry;
-  ArrayD width;
+  ArrayD spikesizeaccepted;
+  ArrayD spikesizediscarded;
+  ArrayD symmetryaccepted;
+  ArrayD symmetrydiscarded;
+  ArrayD widthaccepted;
+  ArrayD widthdiscarded;
   for ( int k=0; k<SpikeSize.accessibleSize(); k++ ) {
     int i = SpikeSize.size() - SpikeSize.accessibleSize() + k;
-    spikesize.push( SpikeSize[i] );
-    symmetry.push( SpikeSymmetry[i] );
-    width.push( 1000.0*SpikeWidth[i] );
+    if ( SpikeAccepted[i] ) {
+      spikesizeaccepted.push( SpikeSize[i] );
+      symmetryaccepted.push( SpikeSymmetry[i] );
+      widthaccepted.push( 1000.0*SpikeWidth[i] );
+    }
+    else {
+      spikesizediscarded.push( SpikeSize[i] );
+      symmetrydiscarded.push( SpikeSymmetry[i] );
+      widthdiscarded.push( 1000.0*SpikeWidth[i] );
+    }
   }
 
   PP1->lock();
@@ -479,8 +489,10 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     PP1->plotHLine( MaxSymmetry, Plot::White, 2, Plot::Solid );
     PP1->plotHLine( MinSymmetry, Plot::White, 2, Plot::Solid );
   }
-  PP1->plot( spikesize, symmetry, Plot::Transparent, 0, Plot::Solid,
-	    Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
+  PP1->plot( spikesizediscarded, symmetrydiscarded, Plot::Transparent, 0, Plot::Solid,
+	     Plot::Circle, 3, Plot::Red, Plot::Red );
+  PP1->plot( spikesizeaccepted, symmetryaccepted, Plot::Transparent, 0, Plot::Solid,
+	     Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
   PP1->draw();
   PP1->unlock();
 
@@ -492,7 +504,9 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     PP2->plotHLine( 1000.0*MaxWidth, Plot::White, 2, Plot::Solid );
     PP2->plotHLine( 1000.0*MinWidth, Plot::White, 2, Plot::Solid );
   }
-  PP2->plot( spikesize, width, Plot::Transparent, 0, Plot::Solid,
+  PP2->plot( spikesizediscarded, widthdiscarded, Plot::Transparent, 0, Plot::Solid,
+	     Plot::Circle, 3, Plot::Red, Plot::Red );
+  PP2->plot( spikesizeaccepted, widthaccepted, Plot::Transparent, 0, Plot::Solid,
 	     Plot::Circle, 3, Plot::Yellow, Plot::Yellow );
   PP2->draw();
   PP2->unlock();

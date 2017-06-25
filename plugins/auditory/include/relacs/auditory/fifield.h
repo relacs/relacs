@@ -151,6 +151,8 @@ protected:
 
   Options FIFieldHeader;
 
+  MapD Field;
+
 };
 
 

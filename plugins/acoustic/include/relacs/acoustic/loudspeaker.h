@@ -37,12 +37,13 @@ namespace acoustic {
 \brief [Attenuate] Direct conversion to attenuation level 
        depending on carrier frequency.
 \author Jan Benda
-\version 1.1
+\version 1.2 (Jul 25, 2017)
 
 \par Options
 - \c line: the line on the attenuator
 - \c aodevice: the identifier analog output device
 - \c aochannel: the channel of the analog output device
+- \c maxintensity: maximum allowed sound intensity
 */
 
 
@@ -125,6 +126,7 @@ private:
   string CalibFile;
   double DefaultGain;
   double DefaultOffset;
+  double MaxIntensity;
   double SamplingRate;
   mutable string CalibDate;
 

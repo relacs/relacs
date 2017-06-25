@@ -43,6 +43,7 @@ LoudSpeaker::LoudSpeaker( void )
   // parameter:
   DefaultGain = -1.0;
   DefaultOffset = 100.0;
+  MaxIntensity = 200.0;
   SamplingRate = -1.0;
   CalibDate = "";
   CalibFile = "calib.dat";
@@ -51,6 +52,7 @@ LoudSpeaker::LoudSpeaker( void )
   // add some parameter as options:
   addNumber( "defaultgain", "Default gain", DefaultGain, -10000.0, 10000.0, 0.5 );
   addNumber( "defaultoffset", "Default offset", DefaultOffset, -10000.0, 10000.0, 5.0, "dB SPL" );
+  addNumber( "maxintensity", "Maximum allowed sound intensity", MaxIntensity, 0.0, 200.0, 2.0, "dB SPL" );
 }
 
 
@@ -66,7 +68,12 @@ int LoudSpeaker::decibel( double intensity, double frequency, double &db ) const
   else {
     double g, o;
     gain( g, o, frequency );
-    db = intensity*g + o;
+    if ( intensity > MaxIntensity ) {
+      db = MaxIntensity*g + o;
+      return IntensityOverflow;
+    }
+    else
+      db = intensity*g + o;
   }
 
   return 0;
@@ -319,8 +326,12 @@ void LoudSpeaker::config( void )
   CalibFile = "calib" + Str( aoDevice() ) + "-" + Str( aoChannel() ) + ".dat";
   DefaultGain = number( "defaultgain" );
   DefaultOffset = number( "defaultoffset" );
+  MaxIntensity = number( "maxintensity" );
 
   load();
+
+  Attenuate::init();
+  Info.addNumber( "maximum allowed intensity", MaxIntensity, intensityUnit() );
 }
 
 

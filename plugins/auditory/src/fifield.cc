@@ -240,6 +240,8 @@ int FIField::main( void )
   for ( int k=0; k<FrequencyRange.size(); k++ )
     FieldData[k].Frequency = FrequencyRange.value( k );
   BestIndex = -1;
+  Field.clear();
+  Field.reserve( FrequencyRange.size() * IntensityRange.size() );
 
   // stimulus:
   Signal.setTrace( Speaker[ Side ] );
@@ -453,6 +455,10 @@ void FIField::plot( const vector< FIData > &results )
 
   // threshold
   P[0].clear();
+  P[0].plot( Field, 0.001, Plot::Transparent, 0, Plot::Solid, 
+	     Plot::Circle, 6, Plot::Gray, Plot::Gray );
+  P[0].plotPoint( 0.001*CarrierFrequency, Plot::First, Intensity, Plot::First,
+		  1, Plot::Circle, 6, Plot::Pixel, Plot::White, Plot::White );
   if ( BestIndex >= 0 && FieldData[BestIndex].Frequency >= FrequencyRange.minValue() )
     P[0].plotVLine( 0.001*FieldData[BestIndex].Frequency, Plot::White, 2 );
   if ( BestIndex >= 0 && FieldData[BestIndex].Threshold >= IntensityRange.minValue() )
@@ -643,13 +649,24 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
 	}
 	
       }
-
     }
     else {
       return Completed;
     }
 
   }
+
+  // add stimulus to measured filed points:
+  bool found = false;
+  for ( int k=0; k<Field.size(); k++ ) {
+    if ( ::fabs( Field.x(k) - CarrierFrequency ) < 1e-8 &&
+	 ::fabs( Field.y(k) - Intensity ) < 1e-8 ) {
+      found = true;
+      break;
+    }
+  }
+  if ( ! found )
+    Field.push( CarrierFrequency, Intensity );
 
   if ( msg ) {
     Str s = "Frequency <b>" + Str( *FrequencyRange * 0.001 ) + " kHz</b>";

@@ -38,16 +38,19 @@ namespace auditory {
 \brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
-\version 2.7 (July 23, 2017)
+\version 2.8 (July 25, 2017)
 
 \par Options
 - \c intensity=80dB: Intensity (\c number)
+- \c minintensity=0dB SPL: Minimum sound intensity (\c number)
+- \c maxintensity=100dB SPL: Maximum sound intensity (\c number)
 - \c mute=false: No stimulus (\c boolean)
 - \c duration=50ms: Duration of stimulus (\c number)
 - \c pause=500ms: Duration of pause (\c number)
 - \c prepause=50ms: Part of pause before stimulus (\c number)
 - \c frequency=5kHz: Frequency of stimulus (\c number)
 - \c minfreq=2kHz: Minimum allowed frequency (\c number)
+- \c maxfreq=50kHz: Maximum allowed frequency (\c number)
 - \c waveform=sine: Waveform of stimulus (\c string)
 - \c ramp=2ms: Ramp (\c number)
 - \c side=left: Speaker (\c string)
@@ -120,7 +123,7 @@ public slots:
   void setMute( bool mute );
 
     /*! Updates all input widgets to the values of the options. */
-  virtual void dialogAccepted( void );
+  virtual void notify( void );
 
 
 protected:
@@ -145,10 +148,10 @@ protected:
   LCDRange *ILCD;
   double Intensity;                       // (in dB)
   double PrevIntensity;
+  double MaxIntensity;
+  double MinIntensity;  
   static const double ShortIntensityStep;
   static const double LongIntensityStep;
-  static const double MaxIntensity;
-  static const double MinIntensity;  
 
   LCDRange *DLCD;
   double Duration;                         // in seconds
@@ -167,15 +170,16 @@ protected:
 
   LCDRange *FLCD;
   double Frequency;    // in Hz
-  double MinFreq;      // in Hz
+  double MinFrequency; // in Hz
+  double MaxFrequency; // in Hz
   static const double ShortFrequencyStep;
   static const double LongFrequencyStep;
-  static const double MaxFrequency;
-  static const double MinFrequency;
 
   int Waveform;
   QRadioButton *SineButton;
   QRadioButton *NoiseButton;
+
+  double Ramp;
 
 };
 

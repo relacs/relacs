@@ -513,6 +513,8 @@ protected:
 
   /*! Initzializes default Attenuate options */
   virtual void initOptions() override;
+
+
 private:
 
     /*! The attenuator device. */
