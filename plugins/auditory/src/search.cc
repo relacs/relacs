@@ -61,7 +61,7 @@ Search::Search( void )
   PrePause = 0.05;
   Frequency = 5000.0;
   MinFrequency = 0.0;
-  MaxFrequency = 30000.0;
+  MaxFrequency = 1000000.0;
   Waveform = 0;
   SearchLeft = false;
   SetBestSide = 1;
@@ -75,9 +75,9 @@ Search::Search( void )
   addNumber( "duration", "Duration of stimulus", Duration, MinDuration, MaxDuration, ShortDurationStep, "sec", "ms" );
   addNumber( "pause", "Duration of pause", Pause, MinPause, MaxPause, ShortPauseStep, "sec", "ms" );
   addNumber( "prepause", "Part of pause before stimulus", PrePause, 0.0, MaxPause, ShortPauseStep, "sec", "ms" );
-  addNumber( "frequency", "Frequency of stimulus", Frequency, 0.0, 30000.0, ShortFrequencyStep, "Hz", "kHz" );
-  addNumber( "minfreq", "Minimum allowed frequency", MinFrequency, 0.0, 30000.0, ShortFrequencyStep, "Hz", "kHz" );
-  addNumber( "maxfreq", "Maximum allowed frequency", MaxFrequency, 0.0, 30000.0, ShortFrequencyStep, "Hz", "kHz" );
+  addNumber( "frequency", "Frequency of stimulus", Frequency, 0.0, 1000000.0, ShortFrequencyStep, "Hz", "kHz" );
+  addNumber( "minfreq", "Minimum allowed frequency", MinFrequency, 0.0, 1000000.0, ShortFrequencyStep, "Hz", "kHz" );
+  addNumber( "maxfreq", "Maximum allowed frequency", MaxFrequency, 0.0, 1000000.0, ShortFrequencyStep, "Hz", "kHz" );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
   addNumber( "ramp", "Ramp", Ramp, 0.0, 10.0, 0.001, "sec", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
@@ -96,34 +96,34 @@ Search::Search( void )
   setLayout( grid );
 
   // Intensity Settings:
-  ILCD = new LCDRange( "Intensity (dB SPL)", 3 );
-  ILCD->setSteps( int(ShortIntensityStep), int(LongIntensityStep) );
-  ILCD->setRange( int(MinIntensity), int(MaxIntensity) );
-  ILCD->setValue( int(Intensity) );
-   grid->addWidget( ILCD, 0, 0 );
-  connect( ILCD, SIGNAL( valueChanged( int ) ), 
-	   this, SLOT( setIntensity( int ) ) );
+  ILCD = new LCDRange( "Intensity [dB SPL]", 3 );
+  ILCD->setRange( MinIntensity, MaxIntensity );
+  ILCD->setSteps( ShortIntensityStep, LongIntensityStep );
+  ILCD->setValue( Intensity );
+  grid->addWidget( ILCD, 0, 0 );
+  connect( ILCD, SIGNAL( valueChanged( double ) ), 
+	   this, SLOT( setIntensity( double ) ) );
 
   QGridLayout *sgrid = new QGridLayout;
   grid->addLayout( sgrid, 0, 1 );
 
   // Duration Settings:
-  DLCD = new LCDRange( "Stimulus (msec)", 4 );
-  DLCD->setSteps( int(1000.0*ShortDurationStep), int(1000.0*LongDurationStep) );
-  DLCD->setRange( int(1000.0*MinDuration), int(1000.0*MaxDuration) );
-  DLCD->setValue( int(1000.0*Duration) );
+  DLCD = new LCDRange( "Stimulus [msec]", 4 );
+  DLCD->setRange( 1000.0*MinDuration, 1000.0*MaxDuration );
+  DLCD->setSteps( 1000.0*ShortDurationStep, 1000.0*LongDurationStep );
+  DLCD->setValue( 1000.0*Duration );
   sgrid->addWidget( DLCD, 0, 0 );
-  connect( DLCD, SIGNAL( valueChanged( int ) ), 
-	   this, SLOT( setDuration( int ) ) );
+  connect( DLCD, SIGNAL( valueChanged( double ) ), 
+	   this, SLOT( setDuration( double ) ) );
 
   // Pause Settings:
-  PLCD = new LCDRange( "Pause (msec)", 4 );
-  PLCD->setSteps( int(1000.0*ShortPauseStep), int(1000.0*LongPauseStep) );
-  PLCD->setRange( int(1000.0*MinPause), int(1000.0*MaxPause) );
-  PLCD->setValue( int(1000.0*Pause) );
+  PLCD = new LCDRange( "Pause [msec]", 4 );
+  PLCD->setRange( 1000.0*MinPause, 1000.0*MaxPause );
+  PLCD->setSteps( 1000.0*ShortPauseStep, 1000.0*LongPauseStep );
+  PLCD->setValue( 1000.0*Pause );
   sgrid->addWidget( PLCD, 0, 1 );
-  connect( PLCD, SIGNAL( valueChanged( int ) ), 
-	   this, SLOT( setPause( int ) ) );
+  connect( PLCD, SIGNAL( valueChanged( double ) ), 
+	   this, SLOT( setPause( double ) ) );
 
   // Waveform:
   QGroupBox *gb = new QGroupBox( "Waveform" );
@@ -142,13 +142,13 @@ Search::Search( void )
 	   this, SLOT( setWaveform( int ) ) );
 
   // Frequency Settings:
-  FLCD = new LCDRange( "Frequency (Hz)", 5 );
-  FLCD->setSteps( int(ShortFrequencyStep), int(LongFrequencyStep) );
-  FLCD->setRange( int(MinFrequency), int(MaxFrequency) );
-  FLCD->setValue( int(Frequency) );
+  FLCD = new LCDRange( "Frequency [Hz]", 5 );
+  FLCD->setRange( MinFrequency, MaxFrequency );
+  FLCD->setSteps( ShortFrequencyStep, LongFrequencyStep );
+  FLCD->setValue( Frequency );
   sgrid->addWidget( FLCD, 1, 1 );
-  connect( FLCD, SIGNAL( valueChanged( int ) ), 
-	   this, SLOT( setFrequency( int ) ) );
+  connect( FLCD, SIGNAL( valueChanged( double ) ), 
+	   this, SLOT( setFrequency( double ) ) );
 
   // mute button:
   MuteButton = new QPushButton;
@@ -201,7 +201,7 @@ int Search::main( void )
   int repeats = integer( "repeats" );
   bool adjustgain = boolean( "adjust" );
   SetBestSide = index( "setbestside" );
-  bool keepchanges = boolean( "keep" );
+  KeepChanges = boolean( "keep" );
 
   if ( Intensity < MinIntensity )
     Intensity = MinIntensity;
@@ -294,13 +294,22 @@ int Search::main( void )
       // Attenuator overflow or underflow.
       // Set intensity appropriately and write stimulus again.
       if ( signal.underflow() || signal.overflow() ) {
-	if ( fabs( Intensity - PrevIntensity ) > 1e-8 )
-	  Intensity = PrevIntensity;
-	else if ( signal.underflow() )
+	if ( signal.underflow() ) {
 	  Intensity = ceil( signal.intensity() - meanintensity );
-	else
+	  if ( PrevIntensity > Intensity )
+	    Intensity = PrevIntensity;
+	}
+	else {
 	  Intensity = floor( signal.intensity() - meanintensity );
+	  if ( PrevIntensity < Intensity )
+	    Intensity = PrevIntensity;
+	}
+	PrevIntensity = Intensity;
+	unsetNotify();
 	setNumber( "intensity", Intensity );
+	if ( KeepChanges )
+	  setToDefault( "intensity" );
+	setNotify();
 	signal.setIntensity( Intensity > 0 ? Intensity + meanintensity : OutData::MuteIntensity );
 	postCustomEvent( 12 );
 	write( signal );
@@ -315,8 +324,6 @@ int Search::main( void )
     timeStamp();
     if ( interrupt() ) {
       writeZero( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0] );
-      if ( keepchanges )
-	setToDefaults();
       return Aborted;
     }
 
@@ -337,8 +344,6 @@ int Search::main( void )
 
   setMessage();
   writeZero( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0] );
-  if ( keepchanges )
-    setToDefaults();
   return Completed;
 }
 
@@ -386,17 +391,17 @@ void Search::keyPressEvent( QKeyEvent *qke )
   case Qt::Key_Up:
     if ( qke->modifiers() & Qt::ControlModifier ) {
       if ( qke->modifiers() & Qt::ShiftModifier )
-	setFrequency( int(::round(Frequency + LongFrequencyStep)) );
+	setFrequency( Frequency + LongFrequencyStep );
       else
-	setFrequency( int(::round(Frequency + ShortFrequencyStep)) );
-      FLCD->setValue( int(::round(Frequency)) );
+	setFrequency( Frequency + ShortFrequencyStep );
+      FLCD->setValue( Frequency );
     }
     else {
       if ( qke->modifiers() & Qt::ShiftModifier )
-	setIntensity( int(::round(Intensity + LongIntensityStep)) );
+	setIntensity( Intensity + LongIntensityStep );
       else
-	setIntensity( int(::round(Intensity + ShortIntensityStep)) );
-      ILCD->setValue( int(::round(Intensity)) );
+	setIntensity( Intensity + ShortIntensityStep );
+      ILCD->setValue( Intensity );
     }
     qke->accept();
     break;
@@ -404,17 +409,17 @@ void Search::keyPressEvent( QKeyEvent *qke )
   case Qt::Key_Down:                // arrow down
     if ( qke->modifiers() & Qt::ControlModifier ) {
       if ( qke->modifiers() & Qt::ShiftModifier )
-	setFrequency( int(::round(Frequency - LongFrequencyStep)) );
+	setFrequency( Frequency - LongFrequencyStep );
       else
-	setFrequency( int(::round(Frequency - ShortFrequencyStep)) );
-      FLCD->setValue( int(::round(Frequency)) );
+	setFrequency( Frequency - ShortFrequencyStep );
+      FLCD->setValue( Frequency );
     }
     else {
       if ( qke->modifiers() & Qt::ShiftModifier )
-	setIntensity( int(::round(Intensity - LongIntensityStep)) );
+	setIntensity( Intensity - LongIntensityStep );
       else
-	setIntensity( int(::round(Intensity - ShortIntensityStep)) );
-      ILCD->setValue( int(::round(Intensity)) );
+	setIntensity( Intensity - ShortIntensityStep );
+      ILCD->setValue( Intensity );
     }
     qke->accept();
     break;
@@ -422,10 +427,10 @@ void Search::keyPressEvent( QKeyEvent *qke )
   case Qt::Key_Left:
     if ( qke->modifiers() & Qt::ControlModifier ) {
       if ( qke->modifiers() & Qt::ShiftModifier )
-	setPause( int(::round(1000.0*(Pause - LongPauseStep))) );
+	setPause( 1000.0*(Pause - LongPauseStep) );
       else
-	setPause( int(::round(1000.0*(Pause - ShortPauseStep))) );
-      PLCD->setValue( int(::round(1000.0*Pause)) );
+	setPause( 1000.0*(Pause - ShortPauseStep) );
+      PLCD->setValue( 1000.0*Pause );
     }
     else
       setSpeakerLeft();
@@ -435,10 +440,10 @@ void Search::keyPressEvent( QKeyEvent *qke )
   case Qt::Key_Right:
     if ( qke->modifiers() & Qt::ControlModifier ) {
       if ( qke->modifiers() & Qt::ShiftModifier )
-	setPause( int(::round(1000.0*(Pause + LongPauseStep))) );
+	setPause( 1000.0*(Pause + LongPauseStep) );
       else
-	setPause( int(::round(1000.0*(Pause + ShortPauseStep))) );
-      PLCD->setValue( int(::round(1000.0*Pause)) );
+	setPause( 1000.0*(Pause + ShortPauseStep) );
+      PLCD->setValue( 1000.0*Pause );
     }
     else
       setSpeakerRight();
@@ -458,10 +463,8 @@ void Search::keyPressEvent( QKeyEvent *qke )
 }
 
 
-void Search::setIntensity( int i )
+void Search::setIntensity( double intensity )
 {
-  double intensity = i;
-
   if ( fabs(Intensity - intensity) < 1e-8 ) 
     return;
 
@@ -475,11 +478,13 @@ void Search::setIntensity( int i )
   unlock();
   unsetNotify();
   setNumber( "intensity", Intensity );
+  if ( KeepChanges )
+    setToDefault( "intensity" );
   setNotify();
 }
 
 
-void Search::setDuration( int duration )
+void Search::setDuration( double duration )
 {
   double dur = 0.001*duration; // change to sec
  
@@ -496,6 +501,8 @@ void Search::setDuration( int duration )
   unlock();
   unsetNotify();
   setNumber( "duration", Duration );
+  if ( KeepChanges )
+    setToDefault( "duration" );
   setNotify();
 
   // plot trace:
@@ -503,7 +510,7 @@ void Search::setDuration( int duration )
 }
 
 
-void Search::setPause( int pause )
+void Search::setPause( double pause )
 {
   double pdur = 0.001*pause; // change to sec
 
@@ -519,19 +526,19 @@ void Search::setPause( int pause )
   unlock();
   unsetNotify();
   setNumber( "pause", Pause );
+  if ( KeepChanges )
+    setToDefault( "pause" );
   setNotify();
 }
 
 
-void Search::setFrequency( int freq )
+void Search::setFrequency( double freq )
 {
-  double f = freq;
-
-  if ( fabs(Frequency - f) < 1e-8 ) 
+  if ( fabs(Frequency - freq) < 1e-8 ) 
     return;
 
   lock();
-  Frequency = f;
+  Frequency = freq;
   if ( Frequency < MinFrequency ) 
     Frequency = MinFrequency;
   if ( Frequency > MaxFrequency ) 
@@ -540,6 +547,8 @@ void Search::setFrequency( int freq )
   unlock();
   unsetNotify();
   setNumber( "frequency", Frequency );
+  if ( KeepChanges )
+    setToDefault( "frequency" );
   setNotify();
 }
 
@@ -558,6 +567,8 @@ void Search::setWaveform( int wave )
     selectText( "waveform", "noise" );
   else
     selectText( "waveform", "sine" );
+  if ( KeepChanges )
+    setToDefault( "waveform" );
   setNotify();
   // remove focus from waveform selection widget:
   widget()->window()->setFocus();
@@ -598,6 +609,8 @@ void Search::setSpeakerLeft( void )
   RightButton->setChecked( false );
   unsetNotify();
   selectText( "side", "left" );
+  if ( KeepChanges )
+    setToDefault( "side" );
   setNotify();
 }
 
@@ -616,6 +629,8 @@ void Search::setSpeakerRight( void )
   RightButton->setChecked( true );
   unsetNotify();
   selectText( "side", "right" );
+  if ( KeepChanges )
+    setToDefault( "side" );
   setNotify();
 }
 
@@ -652,6 +667,13 @@ void Search::notify( void )
   Intensity = number( "intensity" );
   MinIntensity = number( "minintensity" );
   MaxIntensity = number( "maxintensity" );
+  unsetNotify();
+  if ( Intensity < MinIntensity )
+    Intensity = MinIntensity;
+  if ( Intensity > MaxIntensity )
+    Intensity = MaxIntensity;
+  setNumber( "intensity", Intensity );
+  setNotify();
   PrevIntensity = Intensity;
   Mute = boolean( "mute" );
   Duration = number( "duration" );
@@ -660,6 +682,13 @@ void Search::notify( void )
   Frequency = number( "frequency" );
   MinFrequency = number( "minfreq" );
   MaxFrequency = number( "maxfreq" );
+  unsetNotify();
+  if ( Frequency < MinFrequency )
+    Frequency = MinFrequency;
+  if ( Frequency > MaxFrequency )
+    Frequency = MaxFrequency;
+  setNumber( "frequency", Frequency );
+  setNotify();
   Waveform = index( "waveform" );
   Ramp = number( "ramp" );
   int side = index( "side" );
@@ -679,17 +708,19 @@ void Search::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
   case 11: {
-    //    ILCD->setRange( int(::round(MinIntensity)), int(::round(MaxIntensity)) );
-    ILCD->setValue( int(::round(Intensity)) );
-    DLCD->setValue( int(::round(1000.0*Duration)) );
-    PLCD->setValue( int(::round(1000.0*Pause)) );
-    //    FLCD->setRange( int(::round(MinFrequency)), int(::round(MaxFrequency)) );
-    FLCD->setValue( int(::round(Frequency)) );
+    double intensity = Intensity;
+    ILCD->setRange( MinIntensity, MaxIntensity );
+    ILCD->setValue( intensity );
+    DLCD->setValue( 1000.0*Duration );
+    PLCD->setValue( 1000.0*Pause );
+    double frequency = Frequency;
+    FLCD->setRange( MinFrequency, MaxFrequency );
+    FLCD->setValue( frequency );
     setWaveformButton( Waveform );
     setSpeaker( SearchLeft );
   }
   case 12: {
-    ILCD->setValue( int(::round(Intensity)) );
+    ILCD->setValue( Intensity );
   }
   default:
     RePro::customEvent( qce );

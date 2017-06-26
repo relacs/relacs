@@ -100,13 +100,13 @@ public:
 public slots:
 
     /*! Set intensity of stimulus to \a dB dB and emit IntensityChanged. */
-  void setIntensity( int intensity );
+  void setIntensity( double intensity );
     /*! Set duration of stimulus to \a noise ms and emit DurationChanged.*/
-  void setDuration( int duration );
+  void setDuration( double duration );
     /*! Set duration of pause to \a pause ms and emit PauseChanged. */
-  void setPause( int pause );
+  void setPause( double pause );
     /*! Set frequency of stimulus to \a freq Hz and emit FrequencyChanged. */
-  void setFrequency( int freq );
+  void setFrequency( double freq );
     /*! Set waveform of stimulus and emit waveformChanged.*/
   void setWaveform( int wave );
     /*! Set the right waveform button.*/
@@ -180,6 +180,8 @@ protected:
   QRadioButton *NoiseButton;
 
   double Ramp;
+
+  bool KeepChanges;
 
 };
 

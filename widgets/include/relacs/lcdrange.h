@@ -37,8 +37,6 @@ namespace relacs {
 
 /*! 
 \class LCDRange
-\author Jan Benda
-\version 1.0
 \brief An LCD number with range.
 */
 
@@ -49,49 +47,60 @@ class LCDRange : public QWidget
 public:
 
   LCDRange( QWidget *parent=0,
-	    int nodigits=2, int minval=0, int maxval=99,
-	    int linestep=5, int pagestep=10, int initval=0 );
+	    int nodigits=2, double minval=0.0, double maxval=100.0,
+	    double linestep=5.0, double pagestep=10.0, double value=0 );
   LCDRange( const char *s, QWidget *parent,
-	    int nodigits=2, int minval=0, int maxval=99,
-	    int linestep=5, int pagestep=10, int initval=0 );
+	    int nodigits=2, double minval=0.0, double maxval=100.0,
+	    double linestep=5.0, double pagestep=10.0, double value=0 );
   LCDRange( const char *s,
-	    int nodigits=2, int minval=0, int maxval=99,
-	    int linestep=5, int pagestep=10, int initval=0,
+	    int nodigits=2, double minval=0.0, double maxval=100.0,
+	    double linestep=5.0, double pagestep=10.0, double value=0,
 	    QWidget *parent=0 );
   
-    /*! The (integer) value that is currently displayed. */
-  int value( void ) const;
     /*! The text that is displayed below the LCD display. */
   string text( void ) const;
+    /*! The value that is currently displayed. */
+  double value( void ) const;
 
   
 public slots:
 
-    /*! Set the (integer) value that is displayed to \a val . */
-  void setValue( int val );
-    /*! Set the maximum range of allowed values to \a minval to \a maxval . */
-  void setRange( int minval, int maxval );
     /*! Set the text that is displayed below the LCD display to \a text . */
   void setText( const string &text );
+    /*! Set the value that is displayed to \a value . */
+  void setValue( double value );
+    /*! Set the maximum range of allowed values to \a minvalue to \a maxvalue . */
+  void setRange( double minvalue, double maxvalue );
     /*! Set the step increments to \a linestep and \a pagestep. */
-  void setSteps( int linestep, int pagestep );
+  void setSteps( double linestep, double pagestep );
 
 
 signals:
 
     /*! This signal is emmited whenever a new value is displayed.
-        \a val is the new value. */
-  void valueChanged( int val );
+        \a value is the new value. */
+  void valueChanged( double value );
 
 
 private:
 
-  void init( int nodigits, int minval, int maxval,
-	     int linestep, int pagestep, int initval );
+  void init( int nodigits, double minvalue, double maxvalue,
+	     double linestep, double pagestep, double value );
   
   QScrollBar *SBar;
   QLCDNumber *LCD;
   QLabel *Label;
+  double MinValue;
+  double MaxValue;
+  double PageStep;
+  double LineStep;
+  double Factor;
+
+
+private slots:
+
+    /*! Transform the integer value from the scrollbar to the displayed value. */
+  void transformValue( int value );
 
 };
 

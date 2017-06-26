@@ -284,16 +284,15 @@ int Attenuate::write( double &intens, double frequency, double &level )
 
   // get attenuation level:
   double db = 0.0;
-  int r = decibel( intens, frequency, db );
-  if ( r < 0 )
-    return r;
+  int r1 = decibel( intens, frequency, db );
 
   // set attenuation level:
+  int r2 = 0;
   if ( ! NoAttenuator ) {
     if ( Att == 0 || !Att->isOpen() )
-      r = Attenuator::NotOpen;
+      r2 = Attenuator::NotOpen;
     else
-      r = Att->attenuate( Index, db );
+      r2 = Att->attenuate( Index, db );
   }
 
   // calculate intensity:
@@ -306,7 +305,7 @@ int Attenuate::write( double &intens, double frequency, double &level )
   if ( ! FrequencyName.empty() )
     Settings.addNumber( FrequencyName, frequency, FrequencyUnit, FrequencyFormat );
 
-  return r;
+  return r2 == 0 ? r1 : r2;
 }
 
 
@@ -316,33 +315,32 @@ int Attenuate::testWrite( double &intens, double frequency, double &level )
 
   // get attenuation level:
   double db = 0.0;
-  int r = decibel( intens, frequency, db );
-  if ( r < 0 )
-    return r;
+  int r1 = decibel( intens, frequency, db );
 
   // test attenuation level:
+  int r2 = 0;
   if ( NoAttenuator ) {
     if ( db < -100.0 ) {
-      r = Overflow;
+      r2 = Overflow;
       db = -100.0;
     }
     else if ( db > 200.0 ) {
-      r = Underflow;
+      r2 = Underflow;
       db = 200.0;
     }
   }
   else {
     if ( Att == 0 || !Att->isOpen() )
-      r = Attenuator::NotOpen;
+      r2 = Attenuator::NotOpen;
     else
-      r = Att->testAttenuate( Index, db );
+      r2 = Att->testAttenuate( Index, db );
   }
 
   // calculate intensity:
   intensity( intens, frequency, db );
   level = db;
 
-  return r;
+  return r2 == 0 ? r1 : r2;
 }
 
 

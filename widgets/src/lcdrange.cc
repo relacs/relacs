@@ -31,36 +31,40 @@ namespace relacs {
 
 
 LCDRange::LCDRange( QWidget *parent,
-		    int nodigits, int minval, int maxval,
-		    int linestep, int pagestep, int initval )
+		    int nodigits, double minvalue, double maxvalue,
+		    double linestep, double pagestep, double value )
   : QWidget( parent )
 {
-  init( nodigits, minval, maxval, linestep, pagestep, initval );
+  init( nodigits, minvalue, maxvalue, linestep, pagestep, value );
 }
 
 
 LCDRange::LCDRange( const char *s, QWidget *parent,
-		    int nodigits, int minval, int maxval,
-		    int linestep, int pagestep, int initval )
+		    int nodigits, double minvalue, double maxvalue,
+		    double linestep, double pagestep, double value )
   : QWidget( parent )
 {
-  init( nodigits, minval, maxval, linestep, pagestep, initval );
+  init( nodigits, minvalue, maxvalue, linestep, pagestep, value );
   setText( s );
 }
 
 
-LCDRange::LCDRange( const char *s, int nodigits, int minval, int maxval,
-		    int linestep, int pagestep, int initval, QWidget *parent )
+LCDRange::LCDRange( const char *s, int nodigits, double minvalue, double maxvalue,
+		    double linestep, double pagestep, double value, QWidget *parent )
   : QWidget( parent )
 {
-  init( nodigits, minval, maxval, linestep, pagestep, initval );
+  init( nodigits, minvalue, maxvalue, linestep, pagestep, value );
   setText( s );
 }
 
 
-void LCDRange::init( int nodigits, int minval, int maxval,
-		     int linestep, int pagestep, int initval )
+void LCDRange::init( int nodigits, double minvalue, double maxvalue,
+		     double linestep, double pagestep, double value )
 {
+  MinValue = minvalue;
+  MaxValue = maxvalue;
+  LineStep = linestep;
+  PageStep = pagestep;
   QVBoxLayout *bl = new QVBoxLayout;
   bl->setMargin( 0 );
   setLayout( bl );
@@ -68,24 +72,21 @@ void LCDRange::init( int nodigits, int minval, int maxval,
   LCD->setSegmentStyle( QLCDNumber::Filled );
   bl->addWidget( LCD );
   SBar = new QScrollBar( Qt::Horizontal );
-  SBar->setRange( minval, maxval );
-  SBar->setSingleStep( linestep );
-  SBar->setPageStep( pagestep );
-  SBar->setValue( initval );
+  // scrollbarindex = ( value - minvalue )/factor
+  // value = scrollbarindex*factor + minvalue
+  Factor = 0.1*LineStep;
+  SBar->setRange( 0, (int)::round(( MaxValue - MinValue )/Factor) );
+  SBar->setSingleStep( (int)::round(LineStep/Factor) );
+  SBar->setPageStep( (int)::round(PageStep/Factor) );
+  SBar->setValue( (int)::round((value - MinValue)/Factor) );
   SBar->setFixedHeight( SBar->sizeHint().height() );
   bl->addWidget( SBar );
-  Label  = new QLabel;
+  Label = new QLabel;
   Label->setAlignment( Qt::AlignCenter );
   Label->setFixedHeight( Label->sizeHint().height() );
   bl->addWidget( Label );
-  connect( SBar, SIGNAL(valueChanged(int)), LCD, SLOT(display(int)) );
-  connect( SBar, SIGNAL(valueChanged(int)), SIGNAL(valueChanged(int)) );
-}
-
-
-int LCDRange::value( void ) const
-{
-  return SBar->value();
+  connect( SBar, SIGNAL(valueChanged(int)), this, SLOT(transformValue(int)) );
+  connect( this, SIGNAL(valueChanged(double)), LCD, SLOT(display(double)) );
 }
 
 
@@ -95,34 +96,56 @@ string LCDRange::text( void ) const
 }
 
 
-void LCDRange::setValue( int value )
-{
-  SBar->setValue( value );
-}
-
-
-void LCDRange::setRange( int minval, int maxval )
-{
-  if ( minval < 0 || minval > maxval ) {
-    cerr << "LCDRange::setRange( " << minval << ", " << maxval << ")\n"
-	 << "\tRange must start with zero\n"
-	 << "\tand minVal must not be greater than maxVal\n";
-    return;
-  }
-  SBar->setRange( minval, maxval );
-}
-
-
 void LCDRange::setText( const string &s )
 {
   Label->setText( s.c_str() );
 }
 
 
-void LCDRange::setSteps( int lstep, int pstep )
+double LCDRange::value( void ) const
 {
-  SBar->setSingleStep( lstep );
-  SBar->setPageStep( pstep );
+  return SBar->value() * Factor + MinValue;
+}
+
+
+void LCDRange::setValue( double value )
+{
+  SBar->setValue( (int)::round(( value - MinValue )/Factor) );
+}
+
+
+void LCDRange::setRange( double minvalue, double maxvalue )
+{
+  if ( minvalue < 0 || minvalue > maxvalue ) {
+    cerr << "LCDRange::setRange( " << minvalue << ", " << maxvalue << ")\n"
+	 << "\tand minValue must not be greater than maxValue\n";
+    return;
+  }
+  double val = value();
+  MinValue = minvalue;
+  MaxValue = maxvalue;
+  SBar->setRange( 0, (int)::round(( MaxValue - MinValue )/Factor) );
+  SBar->setValue( (int)::round((val - MinValue)/Factor) );
+}
+
+
+void LCDRange::setSteps( double linestep, double pagestep )
+{
+  double val = value();
+  LineStep = linestep;
+  PageStep = pagestep;
+  Factor = 0.1*LineStep;
+  SBar->setRange( 0, (int)::round(( MaxValue - MinValue )/Factor) );
+  SBar->setSingleStep( (int)::round(LineStep/Factor) );
+  SBar->setPageStep( (int)::round(PageStep/Factor) );
+  SBar->setValue( (int)::round((val - MinValue)/Factor) );
+}
+
+
+void LCDRange::transformValue( int value )
+{
+  double dval = value*Factor + MinValue;
+  emit valueChanged( dval );
 }
 
 
