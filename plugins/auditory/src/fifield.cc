@@ -268,13 +268,15 @@ int FIField::main( void )
     testWrite( Signal );
 
     if ( Signal.underflow() ) {
-      printlog( "start() -> attenuator underflow: " + Str( Signal.intensity() ) );
+      printlog( "start() -> attenuator underflow: increased intensity from " +
+		Str( Intensity  ) + " to " + Str( Signal.intensity() ) );
       IntensityRange.setSkipBelow( IntensityRange.pos() );
       ++IntensityRange;
       Intensity = *IntensityRange;
     }
     else if ( Signal.overflow() ) {
-      printlog( "start() -> attenuator overflow: " + Str( Signal.intensity() ) );
+      printlog( "start() -> attenuator overflow: reduces intensity from " +
+		Str( Intensity  ) + " to " + Str( Signal.intensity() ) );
       IntensityRange.setSkipAbove( IntensityRange.pos() );
       ++IntensityRange;
       Intensity = *IntensityRange;
@@ -636,13 +638,15 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
 	testWrite( Signal );
 	
 	if ( Signal.underflow() ) {
-	  printlog( "next() -> attenuator underflow: " + Str( Signal.intensity() ) );
+	  printlog( "next() -> attenuator underflow: increased intensity from " +
+		    Str( Intensity  ) + " to " + Str( Signal.intensity() ) );
 	  IntensityRange.setSkipBelow( IntensityRange.pos() );
 	  ++IntensityRange;
 	  Intensity = *IntensityRange;
 	}
 	else if ( Signal.overflow() ) {
-	  printlog( "next() -> attenuator overflow: " + Str( Signal.intensity() ) );
+	  printlog( "next() -> attenuator overflow: reduces intensity from " +
+		    Str( Intensity  ) + " to " + Str( Signal.intensity() ) );
 	  IntensityRange.setSkipAbove( IntensityRange.pos() );
 	  ++IntensityRange;
 	  Intensity = *IntensityRange;

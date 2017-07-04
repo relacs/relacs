@@ -1395,6 +1395,7 @@ void PlotTrace::setView( Views mode )
       ContinuousView = mode;
     if ( mode == ContView )
       mode = ContinuousView;
+    DoSignalTime = -1.0;
     ViewMode = mode;
     PlotChanged = true;
     postCustomEvent( 12 );

@@ -641,11 +641,7 @@ int SingleStimulus::main( void )
     }
   }
   AMDB += Intensity + PeakAmplitude;
-
-  // check intensity:
   signal.setIntensity( Intensity + PeakAmplitude );
-  testWrite( signal );
-  Intensity = signal.intensity() - PeakAmplitude;
 
   // plot trace:
   if ( Duration < 2.0 )

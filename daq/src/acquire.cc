@@ -1723,6 +1723,9 @@ int Acquire::testWrite( OutData &signal )
     }
   }
 
+  if ( signal.failed() )
+    return -1;
+
   // write to daq board:
   OutList ol( &signal );  
   AO[di].AO->testWrite( ol );
@@ -1860,6 +1863,10 @@ int Acquire::testWrite( OutList &signal )
       }
     }
   }
+
+  // error?
+  if ( ! success )
+    return -1;
 
   // test writing to daq boards:
   for ( unsigned int i=0; i<dis.size(); i++ ) {

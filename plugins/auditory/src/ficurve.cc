@@ -359,14 +359,16 @@ int FICurve::main( void )
     testWrite( Signal );
 
     if ( Signal.underflow() ) {
-      printlog( "attenuator underflow: " + Str( Signal.intensity() ) );
+      printlog( "attenuator underflow: increased intensity from " +
+		Str( Intensity + MeanIntensity ) + " to " + Str( Signal.intensity() ) );
       IntensityRange.setSkipBelow( IntensityRange.pos() );
       IntensityRange.noCount();
       ++IntensityRange;
       Intensity = *IntensityRange;
     }
     else if ( Signal.overflow() ) {
-      printlog( "attenuator overflow: " + Str( Signal.intensity() ) );
+      printlog( "attenuator overflow: reduced intensity from " +
+		Str( Intensity + MeanIntensity ) + " to " + Str( Signal.intensity() ) );
       IntensityRange.setSkipAbove( IntensityRange.pos() );
       IntensityRange.noCount();
       ++IntensityRange;
@@ -1167,14 +1169,16 @@ RePro::DoneState FICurve::next( vector< FIData > &results, bool msg )
     testWrite( Signal );
 
     if ( Signal.underflow() ) {
-      printlog( "next() -> attenuator underflow: " + Str( Signal.intensity() ) );
+      printlog( "next() -> attenuator underflow: increased intensity from " +
+		Str( Intensity + MeanIntensity ) + " to " + Str( Signal.intensity() ) );
       IntensityRange.setSkipBelow( IntensityRange.pos() );
       IntensityRange.noCount();
       ++IntensityRange;
       Intensity = *IntensityRange;
     }
     else if ( Signal.overflow() ) {
-      printlog( "next() -> attenuator overflow: " + Str( Signal.intensity() ) );
+      printlog( "next() -> attenuator overflow: reduced intensity from " +
+		Str( Intensity + MeanIntensity ) + " to " + Str( Signal.intensity() ) );
       IntensityRange.setSkipAbove( IntensityRange.pos() );
       IntensityRange.noCount();
       ++IntensityRange;
