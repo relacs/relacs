@@ -1041,6 +1041,8 @@ void SingleStimulus::modifyDialog( OptDialog *od )
 
 void SingleStimulus::notifyDialog( const Options &opt )
 {
+  string message = "";
+
   OutData wave;
   int side = opt.index( "side" );
   if ( side > 1 )
@@ -1071,9 +1073,8 @@ void SingleStimulus::notifyDialog( const Options &opt )
     // load stimulus from file:
     string stimfile = opt.text( "stimfile" );
     wave.load( stimfile, stimfile );
-    if ( wave.empty() ) {
-      warning( "Unable to load stimulus from file " + stimfile );
-    }
+    if ( wave.empty() )
+      message = "Unable to load stimulus from file " + stimfile;
     if ( duration > 0.0 && wave.length() > duration )
       wave.resize( wave.indices( duration ) );
     duration = wave.length();
@@ -1102,7 +1103,8 @@ void SingleStimulus::notifyDialog( const Options &opt )
     unsigned long seed = opt.integer( "seed" );
     if ( freqsel == 1 ) { // period
       if ( period < 1.0e-8 ) {
-	warning( "The period must be greater than zero!" );
+	message = "The period must be greater than zero!";
+	period = 1.0;
       }
       frequency = 1.0/period;
     }
@@ -1167,9 +1169,8 @@ void SingleStimulus::notifyDialog( const Options &opt )
     amdb -= -20.0 * ::log10( fac );
   }
   else if ( wavetype == Envelope ) {
-    if ( ::relacs::min( wave ) < 0.0 ) {
-      warning( "This envelope contains negative values!" );
-    }
+    if ( ::relacs::min( wave ) < 0.0 )
+      message = "The envelope contains negative values!";
     wave.ramp( ramp );
     amplitude = 0.0;
     amdb = wave;
@@ -1192,21 +1193,26 @@ void SingleStimulus::notifyDialog( const Options &opt )
     static const double EnvTau = 0.0002;
     // compute envelope:
     amdb = wave;
-    double x = wave[0]*wave[0];
-    for ( int k=0; k<amdb.size(); k++ ) {
-      double v = amdb[k];
-      x += ( v*v - x )*amdb.stepsize()/EnvTau;
-      amdb[k] = sqrt( 2.0*x );
-      amdb[k] = 20.0 * ::log10( amdb[k] );
-      if ( amdb[k] < -60.0 )
-	amdb[k] = -60.0;
+    if ( wave.size() > 0 ) {
+      double x = wave[0]*wave[0];
+      for ( int k=0; k<amdb.size(); k++ ) {
+	double v = amdb[k];
+	x += ( v*v - x )*amdb.stepsize()/EnvTau;
+	amdb[k] = sqrt( 2.0*x );
+	amdb[k] = 20.0 * ::log10( amdb[k] );
+	if ( amdb[k] < -60.0 )
+	  amdb[k] = -60.0;
+      }
     }
   }
   amdb += intensity + peakamplitude;
   DP->lock();
   DP->clear();
   DP->setXRange( 0.0, 1000.0*duration );
-  DP->plot( amdb, 1000.0, Plot::Green, 2 );
+  if ( amdb.size() > 0 )
+    DP->plot( amdb, 1000.0, Plot::Green, 2 );
+  else if ( message.size() > 0.0 )
+    DP->setLabel( message, 0.5, Plot::Graph, 0.5, Plot::Graph, Plot::Center );
   DP->unlock();
   DP->draw();
 }
