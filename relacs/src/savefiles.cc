@@ -1738,7 +1738,7 @@ void SaveFiles::NixFile::close ( )
 {
   if ( fd.isOpen() ) {
     std::cerr << "Closing NIX File" << std::endl;
-    if ( repro_tag.extent().size() == 0 ) {
+    if ( repro_tag && repro_tag.extent().size() == 0 ) {
       endRePro(traces[0].written * stepsize);
     }
     repro_start_time = 0.0;
