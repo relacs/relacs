@@ -9,12 +9,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -41,6 +41,8 @@
 
 #ifdef HAVE_NIX
 #include <nix.hpp>
+#include <unordered_map>
+#include <sstream>
 #endif
 
 namespace relacs {
@@ -492,6 +494,26 @@ protected:
   };
 
   /*!
+    Helper class to keep track of the already run repros and compare repro configurations.
+  */
+  class ReproCall {
+  private:
+    std::deque<std::string> alias_names;
+    std::deque<std::string> mutables;
+    std::string tag_name;
+    Options options;
+
+    void scanOptions();
+  public:
+    ReproCall();
+    ReproCall(const std::string &tag_name, const std::string &repro_name, const Options &options);
+    std::string name() const;
+    void addAlias(const std::string &new_alias);
+    bool isSame(const Options &options);
+    bool isKnownAlias(const std::string &other);
+  };
+
+  /*!
     \class NixFiles
     \brief Write recorded data and metadata in NIX format.
   */
@@ -511,6 +533,7 @@ protected:
     nix::DataArray stimulus_extents;
     nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat;
     std::vector<nix::DataArray> data_features;
+    std::unordered_map<std::string, std::vector<ReproCall>> repro_calls;
 
     string create ( string path );
     void close ( void );
