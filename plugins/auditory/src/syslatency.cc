@@ -41,7 +41,7 @@ SysLatency::SysLatency( void )
   addInteger( "pwaves", "Number of cycles of pertubation", 10, 0, 1000, 1 );
   addNumber( "pintensity", "Intensity of pertubations", 10.0, 0.0, 100.0, 1.0, "dB" );
   addNumber( "minpintensity", "Minimum intensity of pertubations", 4.0, 0.0, 100.0, 0.5, "dB" );
-  addNumber( "carrierfreq", "Frequency of carrier", 0.0, -40000.0, 40000.0, 2000.0, "Hz", "kHz" );
+  addNumber( "carrierfreq", "Frequency of carrier", 0.0, -200000.0, 200000.0, 2000.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   addNumber( "duration", "Duration of stimulus", 0.6, 0.0, 10.0, 0.05, "seconds", "ms" );

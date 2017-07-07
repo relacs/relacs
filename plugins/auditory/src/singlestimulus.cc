@@ -75,7 +75,7 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
   newSubSection( "Carrier" );
-  addNumber( "carrierfreq", "Carrier frequency", CarrierFreq, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
+  addNumber( "carrierfreq", "Carrier frequency", CarrierFreq, -200000.0, 200000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   newSection( "Intensity - search" );
   addBoolean( "userate", "Search intensity for target firing rate", true );

@@ -45,7 +45,7 @@ AdaptedFICurves::AdaptedFICurves( void )
   addNumber( "duration", "Duration of test stimuli", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
   newSection( "General" );
   addSelection( "side", "Speaker", "left|right|best" );
-  addNumber( "carrierfreq", "Frequency of carrier", 0.0, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
+  addNumber( "carrierfreq", "Frequency of carrier", 0.0, -200000.0, 200000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addNumber( "ramp", "Duration of ramps for all intenisty transitions", 0.001, 0.001, 1000.0, 0.001, "s", "ms" );
   addNumber( "pause", "Pause between stimuli", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );

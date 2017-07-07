@@ -42,7 +42,7 @@ FIPhaseLocking::FIPhaseLocking( void )
 
 
   // add some options:
-  //addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, 0.0, 40000.0, 2000.0, "Hz", "kHz" ).setActivation( "usebestfreq", "false" );
+  //addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, 0.0, 200000.0, 2000.0, "Hz", "kHz" ).setActivation( "usebestfreq", "false" );
   // addBoolean( "usebestfreq", "Use the cell's best frequency", UseBestFreq );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   addNumber( "duration", "Duration of stimulus", Duration, 0.0, 10.0, 0.05, "seconds", "ms" );

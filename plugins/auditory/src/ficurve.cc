@@ -90,7 +90,7 @@ FICurve::FICurve( void )
   addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
   newSection( "Waveform" );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
-  addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
+  addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, -200000.0, 200000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", UseBestFreq );
   addNumber( "ramp", "Ramp of stimulus", Ramp, 0.0, 10.0, 0.001, "seconds", "ms" );
   addNumber( "duration", "Duration of stimulus", Duration, 0.0, 1000.0, 0.05, "seconds", "ms" );

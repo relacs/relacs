@@ -57,7 +57,7 @@ SpikePrecision::SpikePrecision( void )
   addNumber( "repeats", "Number of stimulus presentations", StimRepetition, 1, 100, 1, "times", "times" );
   addNumber( "duration", "Duration of stimulus", Duration, 0.01, 100.0, 0.01, "seconds", "ms" );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.01, 1000.0, 0.1, "seconds", "ms" );
-  addNumber( "carrierfreq", "Carrier frequency", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
+  addNumber( "carrierfreq", "Carrier frequency", CarrierFrequency, -200000.0, 200000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addSelection( "side", "Speaker", "left|right|best" );
   newSection( "Waveform" );
