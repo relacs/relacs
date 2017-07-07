@@ -249,6 +249,7 @@ int FIField::main( void )
   MeanIntensity = 3.0103;
   Signal.back() = 0;
   Signal.setDelay( 0.0 );
+  Signal.setMutable( "Frequency" );
   Signal.setError( OutData::Unknown );
 
   for ( int k=0; ! Signal.success(); k++ ) {
@@ -623,6 +624,7 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
       Signal.sineWave( Duration, -1.0, CarrierFrequency, 0.0, 1.0, Ramp );
       Signal.back() = 0;
       Signal.setDelay( 0.0 );
+      Signal.setMutable( "Frequency" );
       Signal.setError( OutData::Unknown );
 
       for ( int k=0; ! Signal.success() && ! Signal.busy(); k++ ) {
