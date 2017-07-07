@@ -487,7 +487,11 @@ int Beats::main( void )
 	  chirpheader.addNumber( "ChirpWidth", 1000.0*chirpwidth, "ms" );
 	  chirpheader.addNumber( "ChirpAmplitude", 100.0*(1.0-chirpampl), "%" );
 	  chirpheader.addNumber( "ChirpKurtosis", chirpkurtosis );
-	  chirpheader.addNumber( "ChirpFrequency", chirpfrequency, "Hz" );
+          // modified to add chripFreq as mutable
+	  Parameter & cfp = chirpheader.addNumber( "ChirpFrequency", chirpfrequency, "Hz" );
+          if ( cfs.size() > 1 ) {
+            cfp.addFlags(OutData::Mutable);
+          }
 	  if ( ! chirptimesfile.empty() && ! chirptimes.empty() ) {
 	    chirpheader.addText( "ChirpTimesFile", chirptimesfile );
 	    chirpheader.addInteger( "ChirpSequence", chirpsequence );
@@ -540,7 +544,7 @@ int Beats::main( void )
 	    sig.description().setNumber( "Amplitude", amplitude );
 	    sig.description().setUnit( "Amplitude", "mV" );
 	    if ( dfrange.size() > 1 )
-	      sig.setMutable( "Frequncy" );
+	      sig.setMutable( "Frequency" );
 	  }
 	  else {
 	    OutData am;
