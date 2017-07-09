@@ -515,6 +515,28 @@ void SaveFiles::save( const OutList &signal )
 }
 
 
+void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables ) const
+{
+  for ( Options::iterator pi = stimulusdescription.begin();
+	pi != stimulusdescription.end();
+	++pi ) {
+    if ( (pi->flags() & OutData::Mutable) == OutData::Mutable ) {
+      mutables.add( *pi );
+      // stimulusdescription.erase( *pi );
+      pi->setText( "" );
+      pi->setUnit( "" );
+      if ( pi->isNumber() )
+	pi->setNumber( 0.0 );
+    }
+  }
+  for ( Options::section_iterator si = stimulusdescription.sectionsBegin();
+	si != stimulusdescription.sectionsEnd();
+	++si ) {
+    extractMutables( *(*si), mutables );
+  }
+}
+
+
 void SaveFiles::writeStimulus( void )
 {
   // only called by saveTraces()
@@ -532,20 +554,12 @@ void SaveFiles::writeStimulus( void )
   QCoreApplication::postEvent( this, new StimuliEvent( Stimuli, traceindex, eventsindex,
 						       SignalTime ) );
 
-  // extract intensity from stimulus description:
-  // XXX there should be a flag indicating, which quantities to extract!
+  // extract mutable parameter from stimulus description to a subsection of stimuliref:
   deque< Options > stimuliref( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    /*
-      XXX This really reduces the number of stimuli, but the extracted intensity
-      does not get stored in stimuli.dat! Only metadata.xml stores it, but that
-      file does not save the trace offsets (yet).
-    Options::iterator pi = Stimuli[j].description().find( "Intensity" );
-    if ( pi != Stimuli[j].description().end ) {
-      stimuliref[j].add( *pi );
-      Stimuli[j].description().erase( pi );
-    }
-    */
+    Options &mutables = stimuliref[j].newSection( "parameter" );
+    extractMutables( Stimuli[j].description(), mutables );
+    stimuliref[j].clearSections();
     // XXX once OutData does not have idents any more, the following lines can be erased:
     if ( ! Stimuli[j].ident().empty() ) {
       stimuliref[j].addText( "Description", Stimuli[j].ident() );
@@ -906,10 +920,11 @@ void SaveFiles::openFiles( void )
     }
     else {
       // try to open files:
-      string fs = Path + "stimuli.dat";
-      ifstream f( fs.c_str() );
+      ifstream rf( string( pathname + "stimuli.dat" ).c_str() );
+      ifstream xf( string( pathname + "metadata.xml" ).c_str() );
+      ifstream nf( string( pathname + Str( pathname ).name() + ".nix" ).c_str() );
       // files do not exist?
-      if ( ! f.good() ) {
+      if ( ! rf.good() && ! xf.good() && ! nf.good() ) {
 	// valid base name found:
 	setThePath( pathname );
 	break;
@@ -1313,6 +1328,7 @@ void SaveFiles::RelacsFiles::openStimulusFiles( const InList &IL, const EventLis
 				 att->frequencyFormat() );
       }
       StimulusKey.addText( "signal", -30 );
+      StimulusKey.addText( "parameter", -30 );
     }
   }
 
@@ -1475,6 +1491,9 @@ void SaveFiles::RelacsFiles::writeStimulus( const InList &IL, const EventList &E
 	    StimulusKey.save( *SF, stimuliinfo[j].carrierFreq() );
 	}
 	StimulusKey.save( *SF, stimuliref[j].name() );
+	const Options &paramopts = stimuliref[j].section( "parameter" );
+	string mutablestring = paramopts.save( 0, Options::NoName + Options::FirstOnly );
+	StimulusKey.save( *SF, '"' + mutablestring + '"' );
       }
       else {
 	StimulusKey.save( *SF, "" );
@@ -1484,6 +1503,7 @@ void SaveFiles::RelacsFiles::writeStimulus( const InList &IL, const EventList &E
 	  if ( ! att->frequencyName().empty() )
 	    StimulusKey.save( *SF, "" );
 	}
+	StimulusKey.save( *SF, "" );
 	StimulusKey.save( *SF, "" );
       }
     }
@@ -1724,6 +1744,7 @@ void SaveFiles::ODMLFiles::writeRePro( const Options &reproinfo,
 #ifdef HAVE_NIX
 string SaveFiles::NixFile::create ( string path )
 {
+  // TODO: path can be a directory (with trailing slash) or a stem of a filename!
   rid = Str( path ).preventedSlash().name();
   string nix_path = path + rid + ".nix";
   fd = nix::File::open(nix_path, nix::FileMode::Overwrite);

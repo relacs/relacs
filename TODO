@@ -31,9 +31,6 @@ New InData threading:
   But we do not want to block on the input too long!
   So maybe keep readTime. Make it an option for each device!
 
-Macros, flow control:
-- auditory::search does not exit cleanly upon ESC: should be solved, check it
-
 Dynamic clamp:
 - Serial console debugging instructions:
   https://www.av8n.com/computer/htm/kernel-lockup.htm
@@ -92,8 +89,6 @@ patchclamp::SingleStimulus:
 - Add zero to noise stimuli (all stimuli?)
 - Check offset settings, are they relative to the previous last output value???
 
-auditory::Session plots do not work! Why???? It works on my laptop!
-
 General:
 - how to handle kernel modules:
   https://groups.google.com/forum/#!msg/comedi_list/MbcD6Ml-HDU/vf4X89V93PgJ
@@ -136,8 +131,6 @@ Metadata support of OutData:
 - Check whether OutData/List.desription() can be filled up in SaveFiles
   and then passed to DataIndex - YES!
 - ThresholdLatencies: check stimulus descriptions
-- There should be a flag for Parameter in OutData::description()
-  indicating, which quantities to extract in SaveFiles
 - Add ramp and appendRamp functions to OutData that set also the descriptions
 - Update odML terminologies accordingly.
 - Stimulus section needs a file (if available)!
