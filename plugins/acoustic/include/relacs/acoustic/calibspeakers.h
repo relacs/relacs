@@ -36,30 +36,33 @@ namespace acoustic {
 \class CalibSpeakers
 \brief [RePro] Calibrating attenuation for loudspeakers.
 \author Jan Benda
-\bug too many values pushed into Gains and Offsets?
+\version 1.2 (Jul 5, 2017)
 
 Calibrates attenuators such that a full amplitude sine wave
 is put out at an sound pressure level as requested by
 setIntensity().
-The sound pressure level is base on 
+The sound pressure level is based on 
 the root mean square of the sound waveform!
 
 \par Options
-- \c frequencyrange=2000..40000..1000: Frequency range (Hz) (\c string)
-- \c intmin=60dB SPL: Minimum sound intensity (\c number)
-- \c intrange=40dB SPL: Sound intensity range (\c number)
+- \c frequencyrange=2000..20000..500: Frequency range (Hz) (\c string)
+- \c intmin=45dB SPL: Minimum sound intensity (\c number)
+- \c intrange=35dB SPL: Sound intensity range (\c number)
 - \c intstep=5dB SPL: Sound intensity step (\c number)
-- \c outtrace=Speaker-1: Output trace (\c string)
+- \c outtrace=Left-Speaker: Output trace (\c string)
 - \c intrace=Sound-1: Input trace (\c string)
 - \c reset=false: Reset calibration for each frequency? (\c boolean)
-- \c clear=true: Clear calibration table? (\c boolean)
-- \c duration=400ms: Duration of stimulus (\c number)
-- \c skip=10ms: Skip initial stimulus (\c number)
-- \c pause=0ms: Pause (\c number)
-- \c scale=1: Scale for V/Pa (\c number)
+- \c clear=false: Clear calibration table? (\c boolean)
+- \c duration=80ms: Duration of stimulus (\c number)
+- \c skip=20ms: Initial time to skip for analysis (\c number)
+- \c win=1ms: Window for computing rms response (\c number)
+- \c ramp=1ms: Ramp time of stimulus (\c number)
+- \c pause=0ms: Pause between stimuli (\c number)
+- \c scale=3.16: Scale for V/Pa (\c number)
 
 \par Files
-\arg \b calibrate.dat : the calibration data (measured versus requested stimulus intensity).
+\arg \b calibspeakers-intensities.dat : the calibration data (measured versus requested stimulus intensity).
+\arg \b calibspeakers-offsets.dat : the calibration data (measured versus requested stimulus intensity).
 
 \par Plots
 The plot shows the measured versus the requested stimulus intensity (red circles).
@@ -67,9 +70,8 @@ The yellow line is a fit of a straight line to the data.
 This line should for a successful calibration coincide with the blue 1:1 line.
 
 \par Requirements
-\arg Transdermal EOD recording (\c EODTrace2) and events (\c EODEvents2).
-
-\version 1.1 (Aug 12, 2008)
+\arg The LoadSpeaker Attenuate class associated with output trace Speaker-Left or Speaker-Right
+\arg Microphone recording (e.g. a Sound-1 trace)
 */
 
 
@@ -96,8 +98,8 @@ public:
 	     const MapD &intensities, double fitgain, double fitoffset,
 	     const MapD &oldoffsets, const MapD &offsets );
     /*! Analyze data. */
-  void analyze( int intrace, double duration, double skip, double frequency,
-		double soundpressurescale,
+  void analyze( int intrace, double duration, double skip, double win,
+		double ramp, double frequency, double soundpressurescale,
 		double intensity, MapD &intensities,
 		double &fitgain, double &fitoffset );
 

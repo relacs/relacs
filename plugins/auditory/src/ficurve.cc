@@ -328,12 +328,11 @@ int FICurve::main( void )
   Signal.setTrace( Speaker[ Side ] );
   if ( Waveform == 1 ) {
     Signal.bandNoiseWave( Duration, -1.0, MinCarrierFrequency, CarrierFrequency, 0.3, 0, Ramp );
-    MeanIntensity = 6.0206; // stdev=0.5
-    MeanIntensity = 10.458; // stdev = 0.3
+    MeanIntensity = 10.458 - 3.0103;
   }
   else {
     Signal.sineWave( Duration, -1.0, CarrierFrequency, 0.0, 1.0, Ramp );
-    MeanIntensity = 3.0103;
+    MeanIntensity = 0.0;
   }
   Signal.back() = 0;
   Signal.setDelay( 0.0 );

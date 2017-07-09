@@ -313,7 +313,7 @@ int FIPhaseLocking::main( void )
     signal.setTrace( Speaker[ side ] );
     signal.sineWave( duration, -1.0, frequency, 0.0, 1.0, ramp );
     signal.back() = 0;
-    signal.setIntensity( decibel + 3.0103 );
+    signal.setIntensity( decibel );
 
     write( signal );
     if ( ! signal.success() ) {

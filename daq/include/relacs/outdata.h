@@ -653,17 +653,20 @@ class OutData : public SampleData< float >, public DaqError
 
     /*! Create a stimulus with description \a ident from the given amplitude 
         modulation \a am (in seconds) filled with a sine wave carrier
-	with frequency \a carrierfreq Hz.
-	In case the carrier frequency is negative, the aamplitude modulation is filled
-	with a Gaussian white noise from 0 to \a -carrierfreq Hz.
+	with frequency \a carrierfreq Hz. The root-mean-square amplitude of this
+	sine wave is 1/sqrt(2) = 0.7071 of the amplitude modulation \a am.
+	In case the carrier frequency is negative, the amplitude modulation is filled
+	with a Gaussian white noise with a flatpower spectrum from \a lowfreq to 
+	\a -carrierfreq Hz. The root-mean-square amplitude of this
+	noise is 0.3 of the amplitude modulation \a am.
 	The sampling rate is set using bestSampleRate( \a carrierfreq ).
 	The carrier frequency of the signal is set to \a carrierfreq.
         \a am must have values ranging from 0...1 and 
 	must contain at least 2 elements. 
-        \return 1.0 for positive carrier frequencies (sine waves)
-        or the factor that was used to scale the signal down to accomodate
-        a noise carrier. */
-  double fill( const OutData &am, double carrierfreq, 
+        \return 1.0 for positive carrier frequencies (sine waves) or
+        0.3 * sqrt( 2.0 ) for noise. With this factor the stimulus
+        intensity needs to be adjusted. */
+  double fill( const OutData &am, double carrierfreq, double lowfreq=0.0,
 	       const string &ident = "" );
 
     /*! Creates a constant stimulus consisting of a single data point

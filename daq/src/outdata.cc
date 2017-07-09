@@ -1156,7 +1156,7 @@ double OutData::minmaximize( double max )
 }
 
 
-double OutData::fill( const OutData &am, double carrierfreq,
+double OutData::fill( const OutData &am, double carrierfreq, double lowfreq,
 		      const string &ident )
 {
   clear();
@@ -1189,24 +1189,21 @@ double OutData::fill( const OutData &am, double carrierfreq,
   else {
     // create noise:
     SampleDataF noisebuf;
-    noisebuf.whiteNoise( size(), stepsize(), 0.0, -carrierfreq, rnd );
+    noisebuf.whiteNoise( size(), stepsize(), lowfreq, -carrierfreq, rnd );
     // fill am with carrier noise:
     double slope = (am[1]-am[0])/am.stepsize();
-    double maxam = ::fabs( am[0] );
     for ( int i=0, j=0, k=1; i<size() && j<noisebuf.size(); i++, j++ ) {
       double t = pos( i );
       while ( am.pos( k ) < t && k+1 < am.size() ) {
 	k++;
 	slope = (am[k]-am[k-1])/am.stepsize();
-	if ( maxam < ::fabs( am[k] ) )
-	  maxam = ::fabs( am[k] );
       }
       operator[]( i ) = noisebuf[j] * ( am[k-1] + slope * ( t - am.pos(k-1) ) );
     }
-    // scale it down to maximum 1:
-    fac = 0.3/maxam;
+    fac = 0.3;
     *this *= fac;
     ::relacs::clip( -1.0, 1.0, *this );
+    fac *= ::sqrt( 2.0 ); // for the 3 dB of the rms sine wave
   }
   back() = 0.0;
 

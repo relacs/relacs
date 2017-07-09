@@ -678,6 +678,7 @@ int SingleStimulus::main( void )
   header.addNumber( "intensity", Intensity, "dB SPL", "%.1f" );
   header.addNumber( "amplitude", Amplitude, "dB", "%.1f" );
   header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
+  header.addNumber( "intensitycorrection", PeakAmplitude, "dB", "%.3f" );
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
   header.addText( "session time", sessionTimeStr() ); 
@@ -1049,6 +1050,7 @@ void SingleStimulus::notifyDialog( const Options &opt )
     side = metaData().index( "Cell>best side" );
   wave.setTrace( Speaker[ side ] );
 
+  double wavepeakamplitudefac = 1.0;
   int wavetype = (WaveTypes)opt.index( "type" );
   int waveform = (WaveForms)opt.index( "waveform" );
 
@@ -1091,6 +1093,7 @@ void SingleStimulus::notifyDialog( const Options &opt )
     }
     if ( peakamplitudefac <= 0.0 )
       peakamplitudefac = ::relacs::rms( wave );
+    wavepeakamplitudefac = peakamplitudefac;
   }
   else if ( waveform >= Sine && waveform <= OUnoise ) {
     int freqsel = opt.index( "freqsel" );
@@ -1116,6 +1119,7 @@ void SingleStimulus::notifyDialog( const Options &opt )
     if ( waveform == Sine || waveform == Whitenoise || waveform == OUnoise ) {
       if ( waveform == Sine ) {
 	peakamplitudefac = 1.0;
+	wavepeakamplitudefac = ::sqrt( 1.0/2.0 );
 	wave.sineWave( duration, -1.0, frequency );
       }
       else {
@@ -1124,6 +1128,7 @@ void SingleStimulus::notifyDialog( const Options &opt )
 	else if ( waveform == OUnoise )
 	  wave.ouNoiseWave( duration, -1.0, 1.0/frequency, 1.0, &seed );
 	peakamplitudefac = 0.3;
+	wavepeakamplitudefac = peakamplitudefac;
 	wave *= peakamplitudefac;
       }
       if ( wavetype == Envelope )
@@ -1131,6 +1136,7 @@ void SingleStimulus::notifyDialog( const Options &opt )
     }
     else {
       peakamplitudefac = 1.0;
+      wavepeakamplitudefac = peakamplitudefac;
       if ( waveform == Rectangular )
 	wave.rectangleWave( duration, -1.0, 1.0/frequency, pulseduration, ramp );
       else if ( waveform == Triangular )
@@ -1148,6 +1154,7 @@ void SingleStimulus::notifyDialog( const Options &opt )
     wavetype = Envelope;
     wave.pulseWave( duration, 0.001, 1.0, 0.0 );
     peakamplitudefac = 1.0;
+    wavepeakamplitudefac = peakamplitudefac;
   }
 
   OutData amdb;
@@ -1189,6 +1196,7 @@ void SingleStimulus::notifyDialog( const Options &opt )
   }
   else { // Wave
     wave.ramp( ramp );
+    peakamplitudefac = wavepeakamplitudefac;
     peakamplitude = -20.0 * ::log10( peakamplitudefac );
     static const double EnvTau = 0.0002;
     // compute envelope:
@@ -1227,6 +1235,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   string wavename;
   bool store = false;
   Options header;
+  double wavepeakamplitudefac = 1.0;
 
   if ( WaveForm == File ) {
     // load stimulus from file:
@@ -1250,6 +1259,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     }
     if ( PeakAmplitudeFac <= 0.0 )
       PeakAmplitudeFac = ::relacs::rms( wave );
+    wavepeakamplitudefac = PeakAmplitudeFac;
     int c = ::relacs::clip( -1.0, 1.0, wave );
     double cp = 100.0*double(c)/wave.size();
     if ( cp > 0.0 )
@@ -1269,6 +1279,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     if ( WaveForm == Sine || WaveForm == Whitenoise || WaveForm == OUnoise ) {
       if ( WaveForm == Sine ) {
 	PeakAmplitudeFac = 1.0;
+	wavepeakamplitudefac = ::sqrt( 1.0/2.0 );
 	wave.sineWave( duration, -1.0, Frequency );
       }
       else {
@@ -1278,6 +1289,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 	else if ( WaveForm == OUnoise )
 	  wave.ouNoiseWave( duration, -1.0, 1.0/Frequency, 1.0, &seed );
 	PeakAmplitudeFac = 0.3;
+	wavepeakamplitudefac = PeakAmplitudeFac;
 	wave *= PeakAmplitudeFac;
 	int c = ::relacs::clip( -1.0, 1.0, wave );
 	double cp = 100.0*double(c)/wave.size();
@@ -1290,6 +1302,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     }
     else {
       PeakAmplitudeFac = 1.0;
+      wavepeakamplitudefac = PeakAmplitudeFac;
       if ( WaveForm == Rectangular ) {
 	wave.rectangleWave( duration, -1.0, 1.0/Frequency, PulseDuration, Ramp );
 	if ( DutyCycle >= 0.0 )
@@ -1318,6 +1331,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     WaveType = Envelope;
     wave.pulseWave( duration, 0.001, 1.0, 0.0 );
     PeakAmplitudeFac = 1.0;
+    wavepeakamplitudefac = PeakAmplitudeFac;
     header.addText( "waveform", "const" );
     if ( StoreLevel == AMGenerated || StoreLevel == Generated ) 
       store = true;
@@ -1421,6 +1435,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     signal.ramp( Ramp );
     signal.setCarrierFreq( CarrierFreq );
     signal.setIdent( "wave=" + wavename );
+    PeakAmplitudeFac = wavepeakamplitudefac;
     PeakAmplitude = -20.0 * ::log10( PeakAmplitudeFac );
     static const double EnvTau = 0.0002;
     // compute envelope:

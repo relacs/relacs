@@ -23,7 +23,7 @@
 #define _RELACS_ACOUSTIC_LOUDSPEAKER_H_ 1
 
 
-#include <vector>
+#include <relacs/array.h>
 #include <relacs/configclass.h>
 #include <relacs/attenuate.h>
 using namespace std;
@@ -34,16 +34,24 @@ namespace acoustic {
 
 /*!
 \class LoudSpeaker
-\brief [Attenuate] Direct conversion to attenuation level 
-       depending on carrier frequency.
+\brief [Attenuate] Converts intensities givenen in dB SPL to attenuation level 
+       in dependence on carrier frequency.
 \author Jan Benda
-\version 1.2 (Jul 25, 2017)
+\version 1.4 (Jul 5, 2017)
+
+\par Calibration
+The conversion is set by the CalibSpeaker RePro which defines stimulus intensity as
+dB SPL, i.e. root-mean-square amplitude of a full-amplitude sine wave.
+
+The calibration table is saved in the files \c calibD-C.dat where \c D
+is the device number of the data acquisition board and C is the analog
+output channel of that board.
 
 \par Options
 - \c line: the line on the attenuator
 - \c aodevice: the identifier analog output device
 - \c aochannel: the channel of the analog output device
-- \c maxintensity: maximum allowed sound intensity
+- \c maxvoltage: maximum allowed peak voltage to be put out by the attenuator.
 */
 
 
@@ -77,6 +85,11 @@ public:
         with carrier frequency \a frequency
 	to the default values. */
   void reset( double frequency );
+    /*! Clear the calibration table. */
+  void clear( void );
+
+    /*! Return the calibration table in \a freq, \a offs, \a gain */
+  void calibrationTable( ArrayD &freq, ArrayD &offs, ArrayD &gain ) const;
 
     /*! Set the sampling rate that was used while determining the gain()
         and offset() to \a rate. 
@@ -91,8 +104,6 @@ public:
   virtual void save( const string &path ) const;
     /*! Save the calibration data to the default file. */
   void save( void ) const;
-    /*! Clear the calibration table. */
-  void clear( void );
 
     /*! Set the device and the config identifier string to \a ident. */
   virtual void setDeviceIdent( const string &ident );
@@ -106,6 +117,10 @@ protected:
     /*! Transform the requested sound intensity \a intensity
         for the carrier frequency \a frequency of the signal into
         \a db decibel which are used to set the attenuation level.
+	A gain and an offset value are retrieved from the calibration table
+	according to the requested carrier frequency \a frequency.
+	The attenuation level is then calculated as the requested
+	intensity multiplied by gain plus the offset.
 	If \a intensity is set to MuteIntensity, the attenuator is muted. */
   virtual int decibel( double intensity, double frequency, double &db ) const;
     /*! Transform the attenuation level \a decibel
@@ -119,14 +134,14 @@ protected:
 
 private:
 
-  vector< double > Frequency;
-  vector< double > Gain;
-  vector< double > Offset;
+  ArrayD Frequency;
+  ArrayD Gain;
+  ArrayD Offset;
 
   string CalibFile;
   double DefaultGain;
   double DefaultOffset;
-  double MaxIntensity;
+  double MaxVoltage;
   double SamplingRate;
   mutable string CalibDate;
 

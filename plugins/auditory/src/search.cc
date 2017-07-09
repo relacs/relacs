@@ -272,12 +272,11 @@ int Search::main( void )
 	if ( Waveform == 1 ) {
 	  signal.bandNoiseWave( Duration, -1.0, MinFrequency, Frequency, 0.3, 0, Ramp );
 	  ::relacs::clip( -1.0, 1.0, signal );
-	  // meanintensity = 6.0206; // stdev=0.5
-	  meanintensity = 10.458; // stdev = 0.3
+	  meanintensity = 10.458 - 3.0103;
 	}
 	else {
 	  signal.sineWave( Duration, -1.0, Frequency, 0.0, 1.0, Ramp );
-	  meanintensity = 3.0103;
+	  meanintensity = 0.0;
 	}
       }
       signal.setIntensity( Intensity > 0 && ! Mute ? Intensity + meanintensity : OutData::MuteIntensity );

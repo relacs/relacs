@@ -178,7 +178,7 @@ void IsoResponse::createSignal( OutData &signal, double a1, double a2 )
 		    ",n2=" + Str( n2, 0, 3, 'f' ) + 
 		    "f1=" + Str( Frequency1, 0, 1, 'f' ) + 
 		    "Hz,f2=" + Str( Frequency2, 0, 1, 'f' ) + "Hz" );
-  IntCorrection =  10.0*log10( 2.0/(n1*n1+n2*n2) );
+  IntCorrection =  10.0*log10( 1.0/(n1*n1+n2*n2) );
   IsoResults[AmplitudeRelation.pos()].IntCor=IntCorrection;
   signal.setCarrierFreq( 0.5*(Frequency1+Frequency2) );
 }

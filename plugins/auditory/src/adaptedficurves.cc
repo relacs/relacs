@@ -147,9 +147,9 @@ int AdaptedFICurves::main( void )
   // stimulus:
   OutData signal;
   signal.setTrace( Speaker[ side ] );
-  signal.fill( am, carrierfrequency, "pulses" );
+  double fac = signal.fill( am, carrierfrequency, 0.0, "pulses" );
   signal.setDelay( delay );
-  signal.setIntensity( intmax );
+  signal.setIntensity( intmax - 20.0 * ::log10( fac ) );
 
   // amplitude modulation:
   am.decibel( 1.0 );

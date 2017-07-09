@@ -246,7 +246,7 @@ int FIField::main( void )
   // stimulus:
   Signal.setTrace( Speaker[ Side ] );
   Signal.sineWave( Duration, -1.0, CarrierFrequency, 0.0, 1.0, Ramp );
-  MeanIntensity = 3.0103;
+  MeanIntensity = 0.0;
   Signal.back() = 0;
   Signal.setDelay( 0.0 );
   Signal.setMutable( "Frequency" );

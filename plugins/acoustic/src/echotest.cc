@@ -108,14 +108,17 @@ int EchoTest::main( void )
   am.triangleWave( duration, -1, duration );
 
   // signal:
+  double intensitycorrection = 0.0;
   OutData signal;
   signal.setTraceName( outtrace );
-  if ( ::fabs( frequency ) > 0.1 )
+  if ( ::fabs( frequency ) > 0.1 ) {
     // XXX Make sure the peak of the sine wave is in the peak of the triangle!
-    signal.fill( am, frequency );
+    double fac = signal.fill( am, frequency );
+    intensitycorrection += -20.0 * ::log10( fac );
+  }
   else
     signal = am;
-  signal.setIntensity( intensity );
+  signal.setIntensity( intensity + intensitycorrection );
 
   // message:
   noMessage();

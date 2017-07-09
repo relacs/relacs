@@ -192,13 +192,12 @@ int SysLatency::main( void )
     signal.ramp( ramp );
     // stimulus parameter:
     signal.setIdent( "random pertubations " + Str( pwaves ) + "cycles, " + Str( pintensity ) + "dB" );
-    double peakintensity = intensity + pintensity;
-    signal.setIntensity( peakintensity );
+    signal.setIntensity( intensity + pintensity );
     testWrite( signal );
     if ( signal.overflow() ) {
       pintensity = signal.intensity() - intensity;
       if ( pintensity < minpintensity ) {
-	warning( "Maximum possible perturbation stimulus too small!<br> Maximum itensity: " 
+	warning( "Maximum possible perturbation stimulus too small!<br> Maximum intensity: " 
 		 + Str( signal.intensity(), 0, 1, 'f' ) + " dB SPL<br> Background intensity: "
 		 + Str( intensity, 0, 1, 'f' ) + " dB SPL" );
 	return Failed;
@@ -206,7 +205,7 @@ int SysLatency::main( void )
     }
     tries++;
     if ( tries > 10 ) {
-	warning( "Failed to output stimulus!<br> Maximum itensity: " 
+	warning( "Failed to output stimulus!<br> Maximum intensity: " 
 		 + Str( signal.intensity(), 0, 1, 'f' ) + " dB SPL<br> Background intensity: "
 		 + Str( intensity, 0, 1, 'f' ) + " dB SPL" );
 	return Failed;

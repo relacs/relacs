@@ -43,7 +43,7 @@ LoudSpeaker::LoudSpeaker( void )
   // parameter:
   DefaultGain = -1.0;
   DefaultOffset = 100.0;
-  MaxIntensity = 200.0;
+  MaxVoltage = 10.0;
   SamplingRate = -1.0;
   CalibDate = "";
   CalibFile = "calib.dat";
@@ -52,7 +52,7 @@ LoudSpeaker::LoudSpeaker( void )
   // add some parameter as options:
   addNumber( "defaultgain", "Default gain", DefaultGain, -10000.0, 10000.0, 0.5 );
   addNumber( "defaultoffset", "Default offset", DefaultOffset, -10000.0, 10000.0, 5.0, "dB SPL" );
-  addNumber( "maxintensity", "Maximum allowed sound intensity", MaxIntensity, 0.0, 200.0, 2.0, "dB SPL" );
+  addNumber( "maxvoltage", "Maximum allowed p-p voltage", MaxVoltage, 0.0, 10.0, 0.05, "V" );
 }
 
 
@@ -68,14 +68,13 @@ int LoudSpeaker::decibel( double intensity, double frequency, double &db ) const
   else {
     double g, o;
     gain( g, o, frequency );
-    if ( intensity > MaxIntensity ) {
-      db = MaxIntensity*g + o;
+    db = intensity*g + o;
+    double ppvolt = 10.0 * ::pow( 10.0, -db/20.0 );
+    if ( ppvolt > MaxVoltage ) {
+      db = -20.0*log10( MaxVoltage/10.0 );
       return IntensityOverflow;
     }
-    else
-      db = intensity*g + o;
   }
-
   return 0;
 }
 
@@ -112,80 +111,48 @@ double LoudSpeaker::offset( double frequency ) const
 
 void LoudSpeaker::gain( double &gain, double &offset, double &frequency ) const
 {
-  if ( Gain.empty() ) {
+  frequency = ::fabs( frequency );
+
+  if ( Frequency.empty() ) {
     // no calibration table:
     gain = DefaultGain;
     offset = DefaultOffset;
     frequency = 0.0;
   }
+  else if ( Frequency.size() == 1 ) {
+    // return the only available calibration:
+    gain = Gain[0];
+    offset = Offset[0];
+    frequency = Frequency[0];
+  }
+  else if ( frequency <= Frequency[0] ) {
+    gain = Gain[0];
+    offset = Offset[0];
+    frequency = Frequency[0];
+  }
+  else if ( frequency >= Frequency.size() ) {
+    gain = Gain.back();
+    offset = Offset.back();
+    frequency = Frequency.back();
+  }
   else {
-    // get value from calibration table:
-    int l = 0;
-    int r = Gain.size();
-    int lo = 0;
-    int ro = Gain.size();
-    int m = 0;
-    for ( m=0; m<r && Frequency[m] < 0.0; m++ );
-    if ( frequency >= 0.0 ) {
-      // sine wave:
-      l = m;
-      ro = m;
-    }
-    else {
-      // white noise:
-      r = m;
-      lo = m;
-    }
-    if ( r-l <= 0 ) {
-      // no calibration available
-      // take average of other frequencies:
-      gain = 0.0;
-      offset = 0.0;
-      frequency = 0.0;
-      int j = 1;
-      for ( int k=lo; k<ro; k++ ) {
-	gain += ( Gain[k] - gain )/j;
-	offset += ( Offset[k] - offset )/j;
-	frequency += ( Frequency[k] - frequency )/j;
-	j++;
-      }
-    }
-    else if ( r-l == 1 ) {
-      // return the only available calibration:
-      gain = Gain[l];
-      offset = Offset[l];
-      frequency = Frequency[l];
-    }
-    else if ( frequency <= Frequency[l] ) {
-      gain = Gain[l];
-      offset = Offset[l];
-      frequency = Frequency[l];
-    }
-    else if ( frequency >= Frequency[r-1] ) {
-      gain = Gain[r-1];
-      offset = Offset[r-1];
-      frequency = Frequency[r-1];
-    }
-    else {
-      // interpolate:
-      int k=0;
-      for ( k=l; k<r && Frequency[k] < frequency; k++ );
-      gain = (frequency-Frequency[k])*(Gain[k]-Gain[k-1])/(Frequency[k]-Frequency[k-1]) + Gain[k];
-      offset = (frequency-Frequency[k])*(Offset[k]-Offset[k-1])/(Frequency[k]-Frequency[k-1]) + Offset[k];
-      if ( Frequency[k] - frequency > frequency - Frequency[k-1] )
-	frequency = Frequency[k-1];
-      else
-	frequency = Frequency[k];
-    }
+    // interpolate:
+    int k=0;
+    for ( k=0; k<Frequency.size() && Frequency[k] < frequency; k++ );
+    gain = (frequency-Frequency[k])*(Gain[k]-Gain[k-1])/(Frequency[k]-Frequency[k-1]) + Gain[k];
+    offset = (frequency-Frequency[k])*(Offset[k]-Offset[k-1])/(Frequency[k]-Frequency[k-1]) + Offset[k];
   }
 }
 
 
 void LoudSpeaker::setGain( double gain, double offset, double frequency )
 {
-  vector<double>::iterator fp = Frequency.begin();
-  vector<double>::iterator gp = Gain.begin();
-  vector<double>::iterator op = Offset.begin();
+  if ( frequency <= 0.0 )
+    return;
+
+  ArrayD::iterator fp = Frequency.begin();
+  ArrayD::iterator gp = Gain.begin();
+  ArrayD::iterator op = Offset.begin();
 
   // search for frequency:
   while ( fp != Frequency.end() && *fp < frequency ) {
@@ -207,9 +174,9 @@ void LoudSpeaker::setGain( double gain, double offset, double frequency )
       Offset.insert( op, offset );
     }
     else {
-      Frequency.push_back( frequency );
-      Gain.push_back( gain );
-      Offset.push_back( offset );
+      Frequency.push( frequency );
+      Gain.push( gain );
+      Offset.push( offset );
     }
   }
 }
@@ -219,6 +186,22 @@ void LoudSpeaker::setGain( double gain, double offset, double frequency )
 void LoudSpeaker::reset( double frequency )
 {
   setGain( DefaultGain, DefaultOffset, frequency );
+}
+
+
+void LoudSpeaker::clear( void )
+{
+  Frequency.clear();
+  Gain.clear();
+  Offset.clear();
+}
+
+
+void LoudSpeaker::calibrationTable( ArrayD &freq, ArrayD &offs, ArrayD &gain ) const
+{
+  freq = Frequency;
+  offs = Offset;
+  gain = Gain;
 }
 
 
@@ -246,10 +229,10 @@ void LoudSpeaker::load( void )
       // gain and offset:
       o = line.number( nonum, inx, &inx );
       g = line.number( nonum, inx, &inx );
-      if ( f != nonum && g != nonum && o != nonum ) {
-	Frequency.push_back( f );
-	Gain.push_back( g );
-	Offset.push_back( o );
+      if ( f > 0.0 && f != nonum && g != nonum && o != nonum ) {
+	Frequency.push( f );
+	Gain.push( g );
+	Offset.push( o );
       }
     }
     else {
@@ -287,7 +270,7 @@ void LoudSpeaker::saveCalibration( const string &file,
   key.saveKey( df, true, false );
 
   // write data:
-  for ( unsigned int k=0; k<Frequency.size(); k++ ) {
+  for ( int k=0; k<Frequency.size(); k++ ) {
     key.save( df, Frequency[k], 0 );
     key.save( df, Offset[k], 1 );
     key.save( df, Gain[k], 2 );
@@ -313,25 +296,17 @@ void LoudSpeaker::save( const string &path ) const
 }
 
 
-void LoudSpeaker::clear( void )
-{
-  Frequency.clear();
-  Gain.clear();
-  Offset.clear();
-}
-
-
 void LoudSpeaker::config( void )
 {
   CalibFile = "calib" + Str( aoDevice() ) + "-" + Str( aoChannel() ) + ".dat";
   DefaultGain = number( "defaultgain" );
   DefaultOffset = number( "defaultoffset" );
-  MaxIntensity = number( "maxintensity" );
+  MaxVoltage = number( "maxvoltage" );
 
   load();
 
   Attenuate::init();
-  Info.addNumber( "maximum allowed intensity", MaxIntensity, intensityUnit() );
+  Info.addNumber( "maximum allowed voltage", MaxVoltage, "V" );
 }
 
 

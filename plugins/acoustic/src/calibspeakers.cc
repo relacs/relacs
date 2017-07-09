@@ -31,7 +31,7 @@ namespace acoustic {
 
 
 CalibSpeakers::CalibSpeakers( void )
-  : RePro( "CalibSpeakers", "acoustic", "Jan Benda", "1.1", "Aug 12, 2008" ),
+  : RePro( "CalibSpeakers", "acoustic", "Jan Benda", "1.2", "Jul 5, 2017" ),
     Traces()
 {
   // add some parameter as options:
@@ -43,9 +43,11 @@ CalibSpeakers::CalibSpeakers( void )
   addSelection( "intrace", "Input trace", "Sound-1" );
   addBoolean( "reset", "Reset calibration for each frequency?", false );
   addBoolean( "clear", "Clear calibration table?", true );
-  addNumber( "duration", "Duration of stimulus", 0.4, 0.0, 10.0, 0.05, "seconds", "ms" );
-  addNumber( "skip", "Skip initial stimulus", 0.01, 0.0, 10.0, 0.001, "seconds", "ms" );
-  addNumber( "pause", "Pause", 0.0, 0.0, 10.0, 0.05, "seconds", "ms" );
+  addNumber( "duration", "Duration of stimulus", 0.5, 0.0, 100.0, 0.05, "seconds", "ms" );
+  addNumber( "skip", "Initial time to skip for analysis", 0.01, 0.0, 100.0, 0.001, "seconds", "ms" );
+  addNumber( "win", "Window for computing rms response", 0.001, 0.001, 100.0, 0.001, "seconds", "ms" );
+  addNumber( "ramp", "Ramp time of stimulus", 0.001, 0.0, 10.0, 0.001, "seconds", "ms" );
+  addNumber( "pause", "Pause between stimuli", 0.0, 0.0, 100.0, 0.05, "seconds", "ms" );
   addNumber( "scale", "Scale for V/Pa", 1.0, 0.0, 10000.0, 0.05 );
 
   // plot:
@@ -87,9 +89,15 @@ int CalibSpeakers::main( void )
   bool reset = boolean( "reset" );
   bool clear = boolean( "clear" );
   double duration = number( "duration" );
+  double ramp = number( "ramp" );
   double pause = number( "pause" );
   double skip = number( "skip" );
+  double win = number( "win" );
   double soundpressurescale = number( "scale" );
+  if ( frequencyrange.minValue() < 0.0 ) {
+    warning( "Signal frequencies need to be positive!" );
+    return Failed;
+  }
 
   // input trace:
   if ( intrace < 0 || intrace >= traces().size() ) {
@@ -160,33 +168,29 @@ int CalibSpeakers::main( void )
   // stimulus:
   OutData signal;
   signal.setTraceName( outtrace );
-  signal.sineWave( duration, -1.0, frequency, 0.0, 1.0, 0.001 );
+  signal.sineWave( duration, -1.0, frequency, 0.0, 1.0, ramp );
   signal.setError( OutData::Unknown );
-
-  // try stimulus:
-  for ( int k=0; ! signal.success(); k++ ) {
-
-    if ( k > 40 ) {
-      warning( "Could not establish valid intensity for carrier frequency " +
-	       Str( frequency ) + " Hz !<br>" );
-      LAtt->setGain( origgain, origoffset, frequency );
-      return Failed;
-    }
-
-    signal.setIntensity( intensity );
-    testWrite( signal );
-
+  signal.setIntensity( intensity );
+  testWrite( signal );
+  if ( signal.underflow() || signal.overflow() ) {
     if ( signal.underflow() ) {
       printlog( "attenuator underflow: " + Str( signal.intensity() ) );
       minintensity += intensitystep;
       intensity = minintensity;
     }
-    else if ( signal.overflow() ) {
+    else {
       printlog( "attenuator overflow: " + Str( signal.intensity() ) );
       minintensity -= intensitystep;
       intensity = minintensity;
     }
-
+    signal.setIntensity( intensity );
+    testWrite( signal );
+  }
+  if ( signal.failed() ) {
+    warning( "Failed to prepare stimulus for carrier frequency " +
+	     Str( frequency ) + " Hz !<br>" );
+    LAtt->setGain( origgain, origoffset, frequency );
+    return Failed;
   }
 
   // output stimulus:
@@ -198,13 +202,16 @@ int CalibSpeakers::main( void )
   while ( ! interrupt() && softStop() == 0 ) {
 
     // adjust analog input gains:
-    double max = trace( intracesource ).maxAbs( signalTime(), signalTime()+duration );
+    double max = 0.0;
     for ( int gaintries = 0; gaintries < MaxGainTries; gaintries++ ) {
-      // check signal amplitude:
-      if ( max < 0.95 * trace( intracesource ).maxValue() &&
-	   max > 0.1 * trace( intracesource ).maxValue() )
-	break;
-      adjustGain( trace( intracesource ), 1.5 * max );
+      if ( signal.success() ) {
+	// check signal amplitude:
+	max = trace( intracesource ).maxAbs( signalTime(), signalTime()+duration );
+	if ( max < 0.95 * trace( intracesource ).maxValue() &&
+	     max > 0.1 * trace( intracesource ).maxValue() )
+	  break;
+	adjustGain( trace( intracesource ), 1.5 * max );
+      }
       // output signal again:
       write( signal );
       sleep( pause );
@@ -214,18 +221,18 @@ int CalibSpeakers::main( void )
 	writeZero( outtrace );
 	return Aborted;
       }
-      max = trace( intracesource ).maxAbs( signalTime(), signalTime()+duration );
     }
 
     // signal amplitude has proper range?
     int error = 0;
+    string errorstr = "";
     if ( max > 0.95 * trace( intrace ).maxValue() ) {
       error = 1;
-      printlog( "write() -> gain error: " + Str( error ) );
+      errorstr = "microphone signal too large";
     }
-    else if ( max < 0.1 * trace( intrace ).maxValue() ) {
+    else if ( max < 0.05 * trace( intrace ).maxValue() ) {
       error = 2;
-      printlog( "write() -> gain error: " + Str( error ) );
+      errorstr = "microphone signal too small";
       nosignaltries++;
       if ( nosignaltries > MaxNoSignalTries ) {
 	warning( "<b>No signal!</b><br>Stop now." );
@@ -235,8 +242,8 @@ int CalibSpeakers::main( void )
 
     if ( error == 0 ) {
       nosignaltries = 0;
-      analyze( intrace, duration, skip, frequency, soundpressurescale,
-	       intensity, intensities, fitgain, fitoffset );
+      analyze( intrace, duration, skip, win, ramp, frequency, soundpressurescale,
+	       signal.intensity(), intensities, fitgain, fitoffset );
       Str s = "Frequency <b>" + Str( frequency ) + " Hz</b>";
       s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + "dB SPL</b>";
       s += ",  Measured <b>" + Str( intensities.y().back(), 0, 3, 'g' ) + "dB SPL</b>";
@@ -247,6 +254,7 @@ int CalibSpeakers::main( void )
     else {
       Str s = "Frequency <b>" + Str( frequency ) + " Hz</b>";
       s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + "dB SPL</b>";
+      s += ", <b>" + errorstr + "</b>";
       message( s );
     }
 
@@ -257,7 +265,7 @@ int CalibSpeakers::main( void )
       if ( signal.underflow() ||
 	   error == 2 ) {
 	if ( signal.underflow() )
-	  printlog( "read() -> attenuator underflow: " + Str( signal.intensity() ) );
+	  printlog( "attenuator underflow: " + Str( signal.intensity() ) );
 	minintensity += intensitystep;
       }
 
@@ -266,7 +274,7 @@ int CalibSpeakers::main( void )
 	   signal.overflow() ||
 	   error == 1 ) {
 	if ( signal.overflow() )
-	  printlog( "read() -> attenuator overflow: " + Str( signal.intensity() ) );
+	  printlog( "attenuator overflow: " + Str( signal.intensity() ) );
 	saveIntensities( frequency, intensities, fitgain, fitoffset );
 	// set new gain and offset:
 	if ( intensities.size() > 2 ) {
@@ -276,7 +284,6 @@ int CalibSpeakers::main( void )
 	  offset = offset - fitoffset * gain / fitgain;
 	  gain = gain / fitgain;
 	  LAtt->setGain( gain, offset, frequency );
-	  // isn't this too much of a push? (intensities.size() > 2 )
 	  offsets.push( frequency, offset );
 	  gains.push( gain );
 	  Str s = "new gain = " + Str( gain );
@@ -291,7 +298,7 @@ int CalibSpeakers::main( void )
 	}
 
 	// next frequency:
-	minintensity = number( "intmin" );
+	minintensity = settings().number( "intmin" );
 	intensity = minintensity;
 	intensities.clear();
 	++frequencyrange;
@@ -313,7 +320,7 @@ int CalibSpeakers::main( void )
 	  // stimulus:
 	  signal.free();
 	  signal.setTraceName( outtrace );
-	  signal.sineWave( duration, -1.0, frequency, 0.0, 1.0, 0.001 );
+	  signal.sineWave( duration, -1.0, frequency, 0.0, 1.0, ramp );
 	  signal.ramp( 0.001 );
 	  signal.setDelay( 0.0 );
 	}
@@ -346,7 +353,7 @@ void CalibSpeakers::saveIntensities( double frequency, const MapD &intensities,
 				     double fitgain, double fitoffset )
 {
   // create file:
-  ofstream df( addPath( "calibintensities.dat" ).c_str(),
+  ofstream df( addPath( "calibspeakers-intensities.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -387,7 +394,7 @@ void CalibSpeakers::saveOffsets( const MapD &offsets, const ArrayD &gains )
     return;
 
   // create file:
-  ofstream df( addPath( "caliboffsets.dat" ).c_str(),
+  ofstream df( addPath( "calibspeakers-offsets.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -451,18 +458,18 @@ void CalibSpeakers::plot( double minintensity, double intensityrange,
 }
 
 
-void CalibSpeakers::analyze( int intrace, double duration, double skip,
-			     double frequency, double soundpressurescale,
+void CalibSpeakers::analyze( int intrace, double duration, double skip, double win,
+			     double ramp, double frequency, double soundpressurescale,
 			     double intensity, MapD &intensities,
 			     double &fitgain, double &fitoffset )
 {
   // signal amplitude:
   int si = trace( intrace ).index( signalTime() + skip );
-  double periods = floor( frequency * 0.001 );
+  double periods = floor( win * frequency );
   if ( periods < 1.0 )
     periods = 1.0;
   int wi = trace( intrace ).indices( periods/frequency );
-  int fi = trace( intrace ).index( signalTime() + duration - 0.004 ) - wi;
+  int fi = trace( intrace ).index( signalTime() + duration - 4*ramp ) - wi;
   double p = 0.0;
   for ( int n=1; si < fi; n++ ) {
     double sd = trace( intrace ).stdev( si, si+wi );
@@ -471,10 +478,11 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip,
   }
   //  p = trace( intrace ).stdev( si, fi );
 
+  const double hearingthreshold = 2.0e-5;
   // PEAK amplitude:
-  //  double amplitude = 20.0 * log10( p * sqrt( 2.0 ) / 2.0e-5 / soundpressurescale );
+  //  double amplitude = 20.0 * log10( p * sqrt( 2.0 ) / soundpressurescale / hearingthreshold );
   // RMS amplitude:
-  double amplitude = 20.0 * log10( p / 2.0e-5 / soundpressurescale );
+  double amplitude = 20.0 * log10( p / soundpressurescale / hearingthreshold );
 
   // store data:
   intensities.push( intensity, amplitude );
@@ -490,8 +498,8 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip,
     fitchisq /= intensities.size();
     // improve fit by discarding measurements:
     int minn = intensities.size()/2;
-    if ( minn < 2 )
-      minn = 2;
+    if ( minn < 4 )
+      minn = 4;
     bool improved = true;
     while ( r-l > minn && improved ) {
       improved = false;
