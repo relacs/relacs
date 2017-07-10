@@ -674,7 +674,9 @@ void SaveFiles::writeStimulus( void )
 			    SessionTime, repronamecount, RW->AQ );
     #ifdef HAVE_NIX
     if ( WriteNIXFiles ) {
-      NixIO.writeStimulus( IL, Stimuli, ReProName, SessionTime, RW, StimulusData );
+      NixIO.writeStimulus( IL, EL, Stimuli, newstimuli, StimulusData, stimuliref, stimulusindex,
+                           SessionTime, repronamecount, RW->AQ );
+      // NixIO.writeStimulus( IL, Stimuli, ReProName, SessionTime, RW, StimulusData );
     }
     #endif
   }
@@ -2066,7 +2068,7 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 
   void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const Options &stim_options,
                                               const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
-                                              RELACSWidget *RW, double start_time, double duration ) {
+                                              const Acquire *AQ, double start_time, double duration ) {
   nix::Section s;
   if ( repro_name.size() > 0 ) {
     s = fd.createSection( repro_name, "relacs.repro" );
@@ -2128,14 +2130,14 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
   flabel = "delay";
   delay_feat = createFeature(root_block, stimulus_tag, fname, ftype, funit, flabel);
   std::string unit = "";
-  for ( int k=0; k < RW->AQ->outTracesSize(); k++ ) {
-    if (stim_info[0].device() == RW->AQ->outTrace(k).device() &&
-        stim_info[0].channel() == RW->AQ->outTrace(k).channel()) {
-      const Attenuate *att = RW->AQ->outTraceAttenuate( k );
+  for ( int k=0; k < AQ->outTracesSize(); k++ ) {
+    if (stim_info[0].device() == AQ->outTrace(k).device() &&
+        stim_info[0].channel() == AQ->outTrace(k).channel()) {
+      const Attenuate *att = AQ->outTraceAttenuate( k );
       if ( att != 0 ) {
         unit = att->intensityUnit();
       } else {
-        unit = RW->AQ->outTrace(k).unit();
+        unit = AQ->outTrace(k).unit();
       }
     }
   }
@@ -2154,9 +2156,11 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 }
 
 
-void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataInfo > &stim_info,
-					string rp_name, double sessiontime, RELACSWidget *RW,
-					const Options &stim_options)
+void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
+                    const deque< OutDataInfo > &stim_info,
+                    const deque< bool > &newstimuli, const Options &stim_options,
+                    const deque< Options > &stimuliref, int *stimulusindex,
+                    double sessiontime, const string &reproname, const Acquire *acquire )
 {
   if ( !fd )
     return;
@@ -2170,46 +2174,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
   NixTrace trace = traces[0];
   stimulus_start_time = (IL[0].signalIndex() - trace.index  + trace.written) * stepsize;
   stimulus_duration = stim_info[0].length();
-  string repro_call_name = stim_info[0].description().name();
-  size_t idx = repro_call_name.find_last_of('-');
-  string repro_name = repro_call_name.substr(0, idx != std::string::npos ? idx : std::string::npos);
-  std::string tag_name;
-  ReproCall rpc;
-
-  if ( repro_calls.find(repro_name) == repro_calls.end() ) { // first time the repro has been called
-    // std::cerr << "Repro has never been called!!!" << std::endl;
-    std::stringstream stream;
-    stream << repro_name << "-" << 0;
-    ReproCall rp(stream.str(), repro_call_name, stim_info[0].description());
-    repro_calls[repro_name] = {rp};
-    rpc = rp;
-  } else { // has been called before, need to check the configurations
-    // std::cerr << "Repro was called before!!!" << std::endl;
-    for (ReproCall call : repro_calls[repro_name] ) {
-      if ( call.isKnownAlias(repro_call_name) ) { // repro_call_name is a known alias use it
-        // std::cerr << "repro_call_name is a known alias, use it" << std::endl;
-        rpc = call;
-        break;
-      } else {
-        // std::cerr << "repro_call_name is a not a known alias checking the options" << std::endl;
-        if ( call.isSame(stim_info[0].description()) ) {
-          // std::cerr << "options are the same, adding alias, using it" << std::endl;
-          call.addAlias(repro_call_name);
-          rpc = call;
-          break;
-        }
-      }
-    }
-    if (rpc.name().empty()) {
-      std::stringstream stream;
-      stream << repro_name << "-" << repro_calls[repro_name].size();
-      // std::cerr << "repro_call with this setting was not found, creating a new entry: " << stream.str() << std::endl;
-      ReproCall rp(stream.str(), repro_call_name, stim_info[0].description());
-      repro_calls[repro_name].push_back(rp);
-      rpc = rp;
-    }
-  }
-  tag_name = rpc.name();
+  string tag_name = stim_info[0].description().name();
 
   if ( stimulus_tag && stimulus_tag.name() != tag_name ) {
     stimulus_tag = root_block.getMultiTag(tag_name);
@@ -2238,7 +2203,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
     appendValue(stimulus_extents, stimulus_duration);
   }
   else { // There is no such tag, we need to create a new one
-    createStimulusTag(tag_name, stim_info[0].description(), stim_options, stim_info, RW, stimulus_start_time, stimulus_duration);
+    createStimulusTag(tag_name, stim_info[0].description(), stim_options, stim_info, acquire, stimulus_start_time, stimulus_duration);
   }
 
   for ( auto o : stim_options ) { //TODO check if this can be simplified
@@ -2249,13 +2214,13 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const deque< OutDataIn
       }
     }
   }
-  for ( auto p : stim_info[0].description() ) {
-    if ( ( p.flags() & OutData::Mutable ) > 0 ) {
-      double val = p.number();
+  Options mutables = stimuliref[0].section( "parameter" );
+  for (auto p : mutables) {
+    double val = p.number();
       nix::DataArray da =  root_block.getDataArray( tag_name + "_" + p.name() );
       appendValue( da, val );
-    }
   }
+
   appendValue( time_feat, abs_time);
   appendValue( delay_feat, delay);
   appendValue( amplitude_feat, intensity );
@@ -2408,59 +2373,6 @@ void SaveFiles::NixFile::resetIndex( const EventList &EL )
     ed.index = EL[ed.el_index].size();
   }
 }
-
-
-SaveFiles::ReproCall::ReproCall()
-{}
-
-
-SaveFiles::ReproCall::ReproCall(const std::string &tag_name, const std::string &repro_name,
-                                const Options &opt) : tag_name(tag_name), options(opt)
-{
-  alias_names.push_back(repro_name);
-  options.flatten();
-  scanOptions();
-}
-
-void SaveFiles::ReproCall::scanOptions() {
-  for (Parameter p : options) {
-    if ((p.flags() & OutData::Mutable) == OutData::Mutable ) {
-      mutables.push_back(p.name());
-    }
-  }
-}
-
-void SaveFiles::ReproCall::addAlias(const std::string &repro_name) {
-  if ( !isKnownAlias(repro_name) )
-    alias_names.push_back(repro_name);
-}
-
-std::string SaveFiles::ReproCall::name() const {
-  return tag_name;
-}
-
-bool SaveFiles::ReproCall::isKnownAlias( const std::string &other ) {
-  return std::find(alias_names.begin(), alias_names.end(), other) != alias_names.end();
-}
-
-bool SaveFiles::ReproCall::isSame(const Options &opt) {
-  Options temp(opt);
-  temp.flatten();
-  if (temp.size() != options.size()) {
-    return false;
-  }
-  bool same = true;
-  for (Parameter p1 : temp) {
-    if ((p1.flags() & OutData::Mutable) > 0)
-      continue;
-    Parameter p2 = options[p1.name()];
-    same = same & (p1 == p2);
-    if (!same)
-      return same;
-  }
-  return same;
-}
-
 #endif
 
 

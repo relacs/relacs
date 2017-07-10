@@ -495,25 +495,6 @@ protected:
     size_t el_index;
   };
 
-  /*!
-    Helper class to keep track of the already run repros and compare repro configurations.
-  */
-  class ReproCall {
-  private:
-    std::deque<std::string> alias_names;
-    std::deque<std::string> mutables;
-    std::string tag_name;
-    Options options;
-
-    void scanOptions();
-  public:
-    ReproCall();
-    ReproCall(const std::string &tag_name, const std::string &repro_name, const Options &options);
-    std::string name() const;
-    void addAlias(const std::string &new_alias);
-    bool isSame(const Options &options);
-    bool isKnownAlias(const std::string &other);
-  };
 
   /*!
     \class NixFiles
@@ -535,7 +516,6 @@ protected:
     nix::DataArray stimulus_extents;
     nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat;
     std::vector<nix::DataArray> data_features;
-    std::unordered_map<std::string, std::vector<ReproCall>> repro_calls;
 
     string create ( string path );
     void close ( void );
@@ -543,10 +523,12 @@ protected:
     void saveMetadata ( const MetaData &mtdt );
     void createStimulusTag ( const std::string &repro_name, const Options &stimulus_options,
                              const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
-                             RELACSWidget *RW, double start_time, double duration );
-    void writeStimulus ( const InList &IL, const deque< OutDataInfo > &stim_info,
-			 string rp_name, double sessiontime, RELACSWidget *RW,
-			 const Options &stim_options );
+                             const Acquire *AQ, double start_time, double duration );
+    void writeStimulus( const InList &IL, const EventList &EL,
+			const deque< OutDataInfo > &stimuliinfo,
+			const deque< bool > &newstimuli, const Options &data,
+			const deque< Options > &stimuliref, int *stimulusindex,
+			double sessiontime, const string &reproname, const Acquire *acquire );
     void initTraces ( const InList &IL );
     void writeRePro ( const Options &reproinfo, const deque< string > &reprofiles,
 		      const InList &IL, const EventList &EL, const Options &data,
