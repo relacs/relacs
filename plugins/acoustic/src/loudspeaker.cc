@@ -69,9 +69,9 @@ int LoudSpeaker::decibel( double intensity, double frequency, double &db ) const
     double g, o;
     gain( g, o, frequency );
     db = intensity*g + o;
-    double ppvolt = 10.0 * ::pow( 10.0, -db/20.0 );
+    double ppvolt = 1.0 * ::pow( 10.0, -db/20.0 );
     if ( ppvolt > MaxVoltage ) {
-      db = -20.0*log10( MaxVoltage/10.0 );
+      db = -20.0*log10( MaxVoltage/1.0 );
       return IntensityOverflow;
     }
   }
