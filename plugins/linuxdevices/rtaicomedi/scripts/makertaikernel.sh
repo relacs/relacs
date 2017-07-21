@@ -36,6 +36,10 @@
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debuggable kernel (see man crash), set with -D
 
+: ${NEWLIB_TAR:=newlib-2.5.0.20170720.tar.gz}  # tar file of current newlib version 
+                                               # at ftp://sourceware.org/pub/newlib/index.html
+                                               # in case git does not work
+
 
 ###########################################################################
 # some global variables:
@@ -249,7 +253,7 @@ function print_full_info {
 # packages:
 function install_packages {
     # required packages:
-    echo "install packages:"
+    echo_log "install packages:"
     if ! command -v apt-get; then
 	echo_log "Error: apt-get command not found!"
 	echo_log "You are probably not on a Debian based Linux distribution."
@@ -258,9 +262,10 @@ function install_packages {
 	return 1
     fi
     if $DRYRUN; then
-	echo "apt-get -y install make gcc libncurses-dev zlib1g-dev kernel-package libssl-dev libpci-dev libsensors4-dev g++ cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
+	echo_log "apt-get -y install make gcc libncurses-dev zlib1g-dev libssl-dev libpci-dev libsensors4-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
+	echo_log "apt-get -y install kernel-package"
     else
-	if ! apt-get -y install make gcc libncurses-dev zlib1g-dev kernel-package libssl-dev libpci-dev libsensors4-dev g++ cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev; then
+	if ! apt-get -y install make gcc libncurses-dev zlib1g-dev libssl-dev libpci-dev libsensors4-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev; then
 	    echo_log "Failed to install missing packages!"
 	    echo_log "Maybe some package names have changed..."
 	    echo_log "We need the following packes, try to install them manually:"
@@ -273,6 +278,7 @@ function install_packages {
 	    echo_log "  libpci-dev"
 	    echo_log "  libsensors4-dev"
 	    echo_log "  g++"
+	    echo_log "  bc"
 	    echo_log "  cvs"
 	    echo_log "  git"
 	    echo_log "  autoconf"
@@ -283,6 +289,9 @@ function install_packages {
 	    echo_log "  libgsl0-dev"
 	    echo_log "  libboost-program-options-dev"
 	    return 1
+	fi
+	if ! apt-get -y install kernel-package; then
+	    echo_log "Package kernel-package not availabel."
 	fi
     fi
 }
@@ -458,13 +467,23 @@ function reboot_kernel {
 
 function build_kernel {
     cd /usr/src/linux
+    echo_log "check for make-kpkg"
+    HAVE_MAKE_KPKG=false
+    if make-kpkg --help &> /dev/null; then
+	HAVE_MAKE_KPKG=true
+	echo_log "make-kpkg is available"
+    fi
     if $NEW_KERNEL || $NEW_KERNEL_CONFIG || $RECONFIGURE_KERNEL; then
 
 	if ! $RECONFIGURE_KERNEL; then
 	    # clean:
 	    echo_log "clean kernel sources"
 	    if ! $DRYRUN; then
-		make-kpkg clean
+		if $HAVE_MAKE_KPKG; then
+		    make-kpkg clean
+		else
+		    make clean
+		fi
 	    fi
 	fi
 
@@ -519,10 +538,15 @@ function build_kernel {
 	echo_log "build the kernel"
 	if ! $DRYRUN; then
 	    export CONCURRENCY_LEVEL=$CPU_NUM
-	    if $KERNEL_DEBUG; then
-		make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel_image kernel_debug
+	    if $HAVE_MAKE_KPKG; then
+		if $KERNEL_DEBUG; then
+		    make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel_image kernel_debug
+		else
+		    make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
+		fi
 	    else
-		make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
+		make menuconfig
+		make deb-pkg LOCALVERSION=-${KERNEL_NAME} KDEB_PKGVERSION=$(make kernelversion)-1
 	    fi
  	    if test "x$?" != "x0"; then
 		echo_log
@@ -823,23 +847,30 @@ function download_newlib {
 	if ! $DRYRUN; then
 	    mkdir newlib
 	    cd newlib
-	    cvs -z 9 -d :pserver:anoncvs:anoncvs@sourceware.org:/cvs/src login  # password: anoncvs
-	    cvs -z 9 -d :pserver:anoncvs@sourceware.org:/cvs/src co newlib
-	    date +"%F %H:%M" > revision.txt
-	    mkdir install
+	    if git clone git://sourceware.org/git/newlib-cygwin.git src; then
+		date +"%F %H:%M" > src/revision.txt
+		mkdir install
+	    elif wget ftp://sourceware.org/pub/newlib/$NEWLIB_TAR
+		tar xzvf $NEWLIB_TAR
+		NEWLIB_DIR=${NEWLIB_TAR%.tar.gz}
+		mv $NEWLIB_DIR src
+		echo ${NEWLIB_DIR#newlib-} > src/revision.txt
+		mkdir install
+	    fi
 	fi
     fi
 }
 
 function update_newlib {
     cd ${LOCAL_SRC_PATH}
-    if test -d newlib/src/newlib; then
+    if test -d newlib/src/.git; then
 	echo_log "update already downloaded newlib sources"
-	cd newlib
-	cvs -d :pserver:anoncvs@sourceware.org:/cvs/src update
+	cd newlib/src
+	git pull origin master
 	date +"%F %H:%M" > revision.txt
 	clean_newlib
     else
+	rm -r newlib
 	download_newlib
     fi
 }
@@ -943,7 +974,6 @@ function download_rtai {
 		tar xof ${RTAI_DIR}.tar.bz2
 		# -o option because we are root and want the files to be root!
 	    fi
-	    echo_log "write date of download to $RTAI_DIR/revision.txt"
 	    date +"%F %H:%M" > $RTAI_DIR/revision.txt
 	fi
     fi
