@@ -547,6 +547,7 @@ function build_kernel {
 	    else
 		make menuconfig
 		make deb-pkg LOCALVERSION=-${KERNEL_NAME} KDEB_PKGVERSION=$(make kernelversion)-1
+		# [TAR] creates a tar archive of the sources at the root of the kernel source tree
 	    fi
  	    if test "x$?" != "x0"; then
 		echo_log
@@ -848,10 +849,12 @@ function download_newlib {
 	    mkdir newlib
 	    cd newlib
 	    if git clone git://sourceware.org/git/newlib-cygwin.git src; then
+		echo_log "downloaded newlib from git repository"
 		date +"%F %H:%M" > src/revision.txt
 		mkdir install
-	    elif wget ftp://sourceware.org/pub/newlib/$NEWLIB_TAR
-		tar xzvf $NEWLIB_TAR
+	    elif wget ftp://sourceware.org/pub/newlib/$NEWLIB_TAR; then
+		echo_log "downloaded newlib snapshot $NEWLIB_TAR"
+		tar xzf $NEWLIB_TAR
 		NEWLIB_DIR=${NEWLIB_TAR%.tar.gz}
 		mv $NEWLIB_DIR src
 		echo ${NEWLIB_DIR#newlib-} > src/revision.txt
@@ -869,7 +872,7 @@ function update_newlib {
 	git pull origin master
 	date +"%F %H:%M" > revision.txt
 	clean_newlib
-    else
+    elif ! test -f newlib/$NEWLIB_TAR; then
 	rm -r newlib
 	download_newlib
     fi
@@ -897,9 +900,9 @@ function build_newlib {
 	cd src/newlib
 	echo_log "build newlib"
 	if ! $DRYRUN; then
-	    NEWLIB_CFLAGS="-O2"
+	    NEWLIB_CFLAGS="-O2 -fno-pie"
 	    if test "$(grep CONFIG_64BIT /usr/src/linux/.config)" = 'CONFIG_64BIT=y'; then
-		NEWLIB_CFLAGS="-O2 -mcmodel=kernel"
+		NEWLIB_CFLAGS="$NEWLIB_CFLAGS -mcmodel=kernel"
 	    fi
 	    ./configure --prefix=${LOCAL_SRC_PATH}/newlib/install --disable-shared --host="$MACHINE" CFLAGS="${NEWLIB_CFLAGS}"
 	    make -j $CPU_NUM
