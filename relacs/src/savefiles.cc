@@ -1127,7 +1127,7 @@ bool SaveFiles::RelacsFiles::open( const InList &IL, const EventList &EL,
   // tell the data index:
   save->DI.addSession( path + "stimuli.dat", Options(), TraceFiles.size(), EventFiles.size() );
 
-  return (*SF);
+  return ( SF != 0 && SF->good() );
 }
 
 

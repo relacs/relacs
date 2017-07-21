@@ -1040,7 +1040,7 @@ ostream &TableKey::saveData( ostream &str )
     if ( c > 0 )
       str << Separator;
     Str s = Columns[c]->text();
-    if ( s.empty() || ( Columns[c]->isNumber() && ::isnan( Columns[c]->number() ) ) )
+    if ( s.empty() || ( Columns[c]->isNumber() && std::isnan( Columns[c]->number() ) ) )
       s = Missing;
     if ( s.size() >= Width[c] )
       str << s;
