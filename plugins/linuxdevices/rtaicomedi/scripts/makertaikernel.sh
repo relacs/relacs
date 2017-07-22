@@ -218,7 +218,7 @@ function print_info {
     echo "$(free -h | grep Mem | awk '{print $2}') RAM"
     echo
     echo "grub menu entries:"
-    sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
+    grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2
     echo
     echo "settings for ${MAKE_RTAI_KERNEL}:"
     echo "KERNEL_PATH=$KERNEL_PATH"
@@ -447,7 +447,7 @@ function install_kernel {
 	    if $KERNEL_DEBUG; then
 		dpkg -i "$KERNEL_DEBUG_PACKAGE"
 	    fi
-	    GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep "${LINUX_KERNEL}.*-${KERNEL_NAME}" | head -n 1)"
+	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${KERNEL_NAME}" | head -n 1)"
 	    grub-reboot "$GRUBMENU"
 	fi
     else
@@ -459,7 +459,7 @@ function install_kernel {
 function reboot_kernel {
     echo_log "reboot into ${LINUX_KERNEL}*-${KERNEL_NAME} kernel"
     if ! $DRYRUN; then
-	GRUBMENU="$(sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
+	GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
 	grub-reboot "$GRUBMENU"
 	reboot
     fi
