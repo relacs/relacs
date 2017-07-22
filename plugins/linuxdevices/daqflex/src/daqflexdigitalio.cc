@@ -54,9 +54,6 @@ int DAQFlexDigitalIO::open( DAQFlexCore &daqflexdevice)
   if ( isOpen() )
     return -5;
 
-  if ( &daqflexdevice == NULL )
-    return InvalidDevice;
-
   DAQFlexDevice = &daqflexdevice;
   if ( !DAQFlexDevice->isOpen() ) {
     setErrorStr( "Daqflex core device " + DAQFlexDevice->deviceName() + " is not open." );

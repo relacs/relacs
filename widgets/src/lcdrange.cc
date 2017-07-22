@@ -20,6 +20,7 @@
 */
 
 
+#include <cmath>
 #include <iostream>
 #include <QScrollBar>
 #include <QLCDNumber>

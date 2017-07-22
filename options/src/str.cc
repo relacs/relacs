@@ -3771,7 +3771,7 @@ Str &Str::preventLast( const char* s )
 {
   size_type l = size();
   size_type sl = strlen( s );
-  if ( l > 0 && sl > 0 && string( *this, l-sl, sl ).compare( s ) == 0 )
+  if ( sl > 0 && l >= sl && string( *this, l-sl, sl ).compare( s ) == 0 )
     string::resize( l-sl );
 
   return *this;
@@ -3782,7 +3782,7 @@ Str Str::preventedLast( const char* s ) const
 {
   size_type l = size();
   size_type sl = strlen( s );
-  if ( sl > 0 && l >= l && string( *this, l-sl, sl ).compare( s ) == 0 )
+  if ( sl > 0 && l >= sl && string( *this, l-sl, sl ).compare( s ) == 0 )
     return string::substr( 0, l-sl );
   else
     return *this;

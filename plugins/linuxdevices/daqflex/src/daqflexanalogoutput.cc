@@ -76,8 +76,6 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice )
 
   Info.clear();
   Settings.clear();
-  if ( &daqflexdevice == NULL )
-    return InvalidDevice;
 
   DAQFlexDevice = &daqflexdevice;
   if ( !DAQFlexDevice->isOpen() ) {

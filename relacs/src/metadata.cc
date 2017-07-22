@@ -320,7 +320,7 @@ int MetaData::dialog( void )
 
   // create and exec dialog:
   Dialog = true;
-  OptDialog *od = new OptDialog( this );
+  OptDialog *od = new OptDialog( RW );
   string tabhotkeys = "sdotc";
   od->addOptions( *this, dialogFlag(), 0,
 		  OptWidget::BoldSectionsStyle, &MetaDataLock, &tabhotkeys );
@@ -357,7 +357,7 @@ void MetaData::presetDialog( void )
 
   // create and exec dialog:
   Dialog = true;
-  OptDialog *od = new OptDialog( this );
+  OptDialog *od = new OptDialog( RW );
   string tabhotkeys = "sdotc";
   od->addOptions( *this, dialogFlag()+presetDialogFlag(), 0,
 		  OptWidget::BoldSectionsStyle, &MetaDataLock, &tabhotkeys );
