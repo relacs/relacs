@@ -1868,7 +1868,11 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
   } else if ( unit == "1" ) {
     unit = "";
   }
-
+  if (section.hasProperty(param.name())) {
+    std::cerr << "NIX Warning! Failed to store property " << param.name()
+              << " A property with that name already exists!" << std::endl;
+    return;
+  }
   nix::Property prop = section.createProperty ( param.name(), values );
   if ( !unit.empty() && ( nix::util::isSIUnit( unit ) ||
 	 nix::util::isCompoundSIUnit( unit ) ) ) {
