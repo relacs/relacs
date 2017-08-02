@@ -120,6 +120,14 @@ int CalibSpeakers::main( void )
     return Failed;
   }
   LAtt->setSamplingRate( trace( intrace ).sampleRate() );
+  MapD oldoffsets;
+  oldoffsets.reserve( frequencyrange.size() );
+  for ( frequencyrange.reset(); ! frequencyrange; ++frequencyrange ) {
+    double freq = *frequencyrange;
+    double g, o;
+    LAtt->gain( g, o, freq );
+    oldoffsets.push( *frequencyrange, o );
+  }
   if ( clear )
     LAtt->clear();
 
@@ -134,15 +142,6 @@ int CalibSpeakers::main( void )
   P[1].setXRange( 0.001*frequencyrange.minValue(), 0.001*frequencyrange.maxValue() );
   P[1].setAutoScaleY();
   P.unlock();
-
-  MapD oldoffsets;
-  oldoffsets.reserve( frequencyrange.size() );
-  for ( frequencyrange.reset(); ! frequencyrange; ++frequencyrange ) {
-    double freq = *frequencyrange;
-    double g, o;
-    LAtt->gain( g, o, freq );
-    oldoffsets.push( *frequencyrange, o );
-  }
 
   frequencyrange.reset();
   double frequency = *frequencyrange;

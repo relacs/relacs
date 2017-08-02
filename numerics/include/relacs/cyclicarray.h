@@ -113,6 +113,11 @@ public:
 	In either case, size() is unchanged and the content
 	of the array is preserved. */
   virtual void reserve( int n );
+    /*! In contrast to the reserve() function, this function
+        frees or allocates memory, such that capacity()
+	equals exactly \a n.
+        The last \a n data elements are preserved. */
+  virtual void free( int n );
 
     /*! Copy the data indices from \a a to this. */
   void update( const CyclicArray<T> *a );
@@ -531,6 +536,53 @@ void CyclicArray<T>::reserve( int n )
       int j = ori;
       int k = R;
       for ( int i=0; i < NBuffer; i++ ) {
+	if ( j == 0 )
+	  j = NBuffer;
+	if ( k == 0 )
+	  k = n;
+	j--;
+	k--;
+	newbuf[k] = Buffer[j];
+      }
+      if ( Own )
+	delete [] Buffer;
+      int oln = LCycles*NBuffer + L;
+      LCycles = (oln-1) / n;
+      L = 1 + (oln-1) % n;
+    }
+    Buffer = newbuf;
+    NBuffer = n;
+    Own = true;
+  }
+}
+
+
+template < typename T >
+void CyclicArray<T>::free( int n )
+{
+  if ( n > NBuffer )
+    reserve( n );
+  else if ( n == 0 ) {
+    if ( Own )
+      delete [] Buffer;
+    Buffer = 0;
+    NBuffer = 0;
+    Own = true;
+    RCycles = 0;
+    R = 0;
+    LCycles = 0;
+    L = 0;
+  }
+  else {
+    T *newbuf = new T[ n ];
+    if ( Buffer != 0 && NBuffer > 0 ) {
+      int ori = R;
+      int on = size();
+      RCycles = (on-1) / n;
+      R = 1 + (on-1) % n;
+      int j = ori;
+      int k = R;
+      for ( int i=0; i < n; i++ ) {
 	if ( j == 0 )
 	  j = NBuffer;
 	if ( k == 0 )

@@ -268,19 +268,19 @@ void ThresholdSUSpikeDetector::notify( void )
   MinInterval = number( "minisi" );
   NSnippets = integer( "nsnippets" );
   SpikeTime.clear();
-  SpikeTime.reserve( NSnippets );
+  SpikeTime.free( NSnippets );
   SpikeLeftSize.clear();
-  SpikeLeftSize.reserve( NSnippets );
+  SpikeLeftSize.free( NSnippets );
   SpikeRightSize.clear();
-  SpikeRightSize.reserve( NSnippets );
+  SpikeRightSize.free( NSnippets );
   SpikeSize.clear();
-  SpikeSize.reserve( NSnippets );
+  SpikeSize.free( NSnippets );
   SpikeSymmetry.clear();
-  SpikeSymmetry.reserve( NSnippets );
+  SpikeSymmetry.free( NSnippets );
   SpikeWidth.clear();
-  SpikeWidth.reserve( NSnippets );
+  SpikeWidth.free( NSnippets );
   SpikeAccepted.clear();
-  SpikeAccepted.reserve( NSnippets );
+  SpikeAccepted.free( NSnippets );
   SnippetsWidth = number( "snippetswidth" );
   SP->lock();
   SP->setXRange( -1000.0*SnippetsWidth, 1000.0*SnippetsWidth );
@@ -544,7 +544,7 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
     else {
       // go to the next local minimum:
       for ( ; ; ++event, ++eventtime ) {
-	if ( event+1 >= last )
+	if ( event+2 >= last )
 	  return -1;
 	if ( *(event+2) > *event && *(event+1) > *event && 
 	     *(event-2) > *event && *(event-1) > *event )
