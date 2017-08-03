@@ -31,7 +31,7 @@ namespace acoustic {
 
 
 CalibSpeakers::CalibSpeakers( void )
-  : RePro( "CalibSpeakers", "acoustic", "Jan Benda", "1.2", "Jul 5, 2017" ),
+  : RePro( "CalibSpeakers", "acoustic", "Jan Benda", "1.4", "Aug 3, 2017" ),
     Traces()
 {
   // add some parameter as options:
@@ -46,6 +46,7 @@ CalibSpeakers::CalibSpeakers( void )
   addNumber( "duration", "Duration of stimulus", 0.5, 0.0, 100.0, 0.05, "seconds", "ms" );
   addNumber( "skip", "Initial time to skip for analysis", 0.01, 0.0, 100.0, 0.001, "seconds", "ms" );
   addNumber( "win", "Window for computing rms response", 0.001, 0.001, 100.0, 0.001, "seconds", "ms" );
+  addBoolean( "fitslope", "Fit slope in addition to offset", false );
   addNumber( "ramp", "Ramp time of stimulus", 0.001, 0.0, 10.0, 0.001, "seconds", "ms" );
   addNumber( "pause", "Pause between stimuli", 0.0, 0.0, 100.0, 0.05, "seconds", "ms" );
   addNumber( "scale", "Scale for V/Pa", 1.0, 0.0, 10000.0, 0.05 );
@@ -93,6 +94,7 @@ int CalibSpeakers::main( void )
   double pause = number( "pause" );
   double skip = number( "skip" );
   double win = number( "win" );
+  bool fitslope = boolean( "fitslope" );
   double soundpressurescale = number( "scale" );
   if ( frequencyrange.minValue() < 0.0 ) {
     warning( "Signal frequencies need to be positive!" );
@@ -124,9 +126,11 @@ int CalibSpeakers::main( void )
   oldoffsets.reserve( frequencyrange.size() );
   for ( frequencyrange.reset(); ! frequencyrange; ++frequencyrange ) {
     double freq = *frequencyrange;
+    double f = freq;
     double g, o;
-    LAtt->gain( g, o, freq );
-    oldoffsets.push( *frequencyrange, o );
+    LAtt->gain( g, o, f );
+    cerr << freq << "  " << g << "  " << o << '\n';
+    oldoffsets.push( freq, o );
   }
   if ( clear )
     LAtt->clear();
@@ -241,7 +245,7 @@ int CalibSpeakers::main( void )
 
     if ( error == 0 ) {
       nosignaltries = 0;
-      analyze( intrace, duration, skip, win, ramp, frequency, soundpressurescale,
+      analyze( intrace, duration, skip, win, fitslope, ramp, frequency, soundpressurescale,
 	       signal.intensity(), intensities, fitgain, fitoffset );
       Str s = "Frequency <b>" + Str( frequency ) + " Hz</b>";
       s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + "dB SPL</b>";
@@ -457,8 +461,9 @@ void CalibSpeakers::plot( double minintensity, double intensityrange,
 }
 
 
-void CalibSpeakers::analyze( int intrace, double duration, double skip, double win,
-			     double ramp, double frequency, double soundpressurescale,
+void CalibSpeakers::analyze( int intrace, double duration, double skip, double win, 
+			     bool fitslope, double ramp, double frequency, 
+			     double soundpressurescale,
 			     double intensity, MapD &intensities,
 			     double &fitgain, double &fitoffset )
 {
@@ -493,7 +498,12 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip, double w
     double fitchisq = 0.0;
     int l = 0;
     int r = intensities.size();
-    intensities.lineFit( l, r, fitoffset, bu, fitgain, mu, fitchisq );
+    if ( fitslope )
+      intensities.lineFit( l, r, fitoffset, bu, fitgain, mu, fitchisq );
+    else {
+      fitgain = 1.0;
+      intensities.offsetFit( l, r, fitoffset, bu, fitgain, fitchisq );
+    }
     fitchisq /= intensities.size();
     // improve fit by discarding measurements:
     int minn = intensities.size()/2;
@@ -506,7 +516,12 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip, double w
       double gain = 0.0;
       double chisq = 0.0;
       l++;
-      intensities.lineFit( l, r, offset, bu, gain, mu, chisq );
+      if ( fitslope )
+	intensities.lineFit( l, r, offset, bu, gain, mu, chisq );
+      else {
+	gain = 1.0;
+	intensities.offsetFit( l, r, offset, bu, gain, chisq );
+      }
       chisq /= r-l;
       if ( (chisq-fitchisq)/fitchisq > -0.1 )
 	l--;
@@ -517,7 +532,12 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip, double w
       }
       if ( r-l > minn ) {
 	r--;
-	intensities.lineFit( l, r, offset, bu, gain, mu, chisq );
+	if ( fitslope )
+	  intensities.lineFit( l, r, offset, bu, gain, mu, chisq );
+	else {
+	  gain = 1.0;
+	  intensities.offsetFit( l, r, offset, bu, gain, chisq );
+	}
 	chisq /= r-l;
 	if ( (chisq-fitchisq)/fitchisq > -0.1 )
 	  r++;

@@ -130,7 +130,7 @@ void LoudSpeaker::gain( double &gain, double &offset, double &frequency ) const
     offset = Offset[0];
     frequency = Frequency[0];
   }
-  else if ( frequency >= Frequency.size() ) {
+  else if ( frequency >= Frequency.back() ) {
     gain = Gain.back();
     offset = Offset.back();
     frequency = Frequency.back();

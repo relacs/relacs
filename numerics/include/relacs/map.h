@@ -510,22 +510,41 @@ class Map : public Array < T >
 	Returns the slope of the line. */
  double propFit( int first=0, int last=-1 ) const { double m, mu, ch; propFit( first, last, m, mu, ch ); return m; };
 
+    /*! Fit offset \a b of line y = b+m*x with given slope \a m
+        to the x-data and y-data array between
+        indices \a first (inclusively) and \a last (exclusively). 
+        If \a last is negative it is set behind the last data element. 
+ 	Returns in \a bu the uncertainty of the offset \a b,
+	and in \a chisq the chi squared. */
+ void offsetFit( int first, int last, double &b, double &bu, 
+		 double m, double &chisq ) const;
+    /*! Fit offset \a b of line y = b+m*x with given slope \a m
+        to the complete x-data and y-data array. 
+	Returns in \a bu the uncertainty of the offset \a b,
+	and in \a chisq the chi squared. */
+ void offsetFit( double &b, double &bu, double m, 
+		 double &chisq ) const { offsetFit( 0, -1, b, bu, m, chisq ); };
+    /*! Fit offset \a b of line y = b+m*x with given slope \a m
+        to the complete x-data and y-data array.
+	Returns the offset \a b of the line. */
+ void offsetFit( double &b, double m ) const { double bu, ch; offsetFit( 0, -1, b, bu, m, ch ); };
+
     /*! Fit line y = b+m*x to the x-data and y-data array between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
  	Returns in \a bu and \a mu the uncertainty
-	of the offset \a b und slope \a m,
+	of the offset \a b and slope \a m,
 	and in \a chisq the chi squared. */
  void lineFit( int first, int last, double &b, double &bu, 
 	       double &m, double &mu, double &chisq ) const;
     /*! Fit line y = b+m*x to the complete x-data and y-data array. 
 	Returns in \a bu and \a mu the uncertainty
-	of the offset \a b und slope \a m,
+	of the offset \a b and slope \a m,
 	and in \a chisq the chi squared. */
  void lineFit( double &b, double &bu, double &m, double &mu, 
 	       double &chisq ) const { lineFit( 0, -1, b, bu, m, mu, chisq ); };
     /*! Fit line y = b+m*x to the complete x-data and y-data array.
-	Returns the offset \a b und slope \a m of the line. */
+	Returns the offset \a b and slope \a m of the line. */
  void lineFit( double &b, double &m ) const { double bu, mu, ch; lineFit( 0, -1, b, bu, m, mu, ch ); };
 
     /*! Returns in \a meantrace the average over \a traces
@@ -1364,6 +1383,23 @@ void Map<T>::propFit( int first, int last,
     ::relacs::propFit( XData.begin()+first, XData.begin()+last, 
 		       begin()+first, begin()+last,
 		       m, mu, chisq );
+}
+
+
+template < typename T > 
+void Map<T>::offsetFit( int first, int last, double &b, double &bu,
+		        double m, double &chisq ) const
+{
+  if ( first < 0 )
+    first = 0;
+  if ( last < 0 )
+    ::relacs::offsetFit( XData.begin()+first, XData.end(), 
+			 begin()+first, end(),
+			 b, bu, m, chisq );
+  else
+    ::relacs::offsetFit( XData.begin()+first, XData.begin()+last, 
+			 begin()+first, begin()+last,
+			 b, bu, m, chisq );
 }
 
 

@@ -36,7 +36,7 @@ namespace acoustic {
 \class CalibSpeakers
 \brief [RePro] Calibrating attenuation for loudspeakers.
 \author Jan Benda
-\version 1.2 (Jul 5, 2017)
+\version 1.4 (Aug 3, 2017)
 
 Calibrates attenuators such that a full amplitude sine wave
 is put out at an sound pressure level as requested by
@@ -56,6 +56,7 @@ the root mean square of the sound waveform!
 - \c duration=80ms: Duration of stimulus (\c number)
 - \c skip=20ms: Initial time to skip for analysis (\c number)
 - \c win=1ms: Window for computing rms response (\c number)
+- \c fitslope=false: Fit slope in addition to offset (\c boolean)
 - \c ramp=1ms: Ramp time of stimulus (\c number)
 - \c pause=0ms: Pause between stimuli (\c number)
 - \c scale=3.16: Scale for V/Pa (\c number)
@@ -99,7 +100,7 @@ public:
 	     const MapD &oldoffsets, const MapD &offsets );
     /*! Analyze data. */
   void analyze( int intrace, double duration, double skip, double win,
-		double ramp, double frequency, double soundpressurescale,
+		bool fitslope, double ramp, double frequency, double soundpressurescale,
 		double intensity, MapD &intensities,
 		double &fitgain, double &fitoffset );
 

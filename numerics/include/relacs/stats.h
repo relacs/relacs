@@ -1111,6 +1111,57 @@ template < typename ContainerX, typename ContainerY, typename ContainerS >
 void propFit( const ContainerX &vecx, const ContainerY &vecy, const ContainerY &vecs,
 	      double &m, double &mu, double &chisq );
 
+  /*! Fit offset \a b of line y = b+m*x with given slope \a m
+      to the data of the two ranges 
+      \a firstx, \a lastx and \a firsty, \a lasty.
+      Returns in \a bu the uncertainty of the offset \a b,
+      and in \a chisq the chi squared.
+      \a ForwardIterX and \a ForwardIterY are forward iterators
+      that point to a number. */
+template < typename ForwardIterX, typename ForwardIterY >
+void offsetFit( ForwardIterX firstx, ForwardIterX lastx,
+	        ForwardIterY firsty, ForwardIterY lasty,
+	        double &b, double &bu, 
+	        double m, double &chisq );
+  /*! Fit offset \a b of line y = b+m*x with given slope \a m
+      to the data of the two container \a vecx and \a vecy.
+      Returns in \a bu the uncertainty of the offset \a b,
+      and in \a chisq the chi squared.
+      \a ContainerX and \a ContainerY each hold an array of numbers
+      that can be accessed via standard STL const_iterators. */
+template < typename ContainerX, typename ContainerY >
+void offsetFit( const ContainerX &vecx, const ContainerY &vecy,
+	        double &b, double &bu, 
+	        double m, double &chisq );
+  /*! Fit offset \a b of line y = b+m*x with given slope \a m
+      to the data of the three ranges 
+      \a firstx, \a lastx, \a firsty, \a lasty, and \a firsts, \a lasts,
+      corresponding to x, y, and the standard deviation.
+      Returns in \a bu the uncertainty of the offset \a b,
+      and in \a chisq the chi squared.
+      q=GammaQ(0.5*(n-2),chisq/2)>0.1 good, >0.001 fit may be acceptable, <0.001 bad fit.
+      \a ForwardIterX, \a ForwardIterY, and \a ForwardIterS are forward iterators
+      that point to a number. */
+template < typename ForwardIterX, typename ForwardIterY, typename ForwardIterS >
+void offsetFit( ForwardIterX firstx, ForwardIterX lastx,
+		ForwardIterY firsty, ForwardIterY lasty,
+		ForwardIterS firsts, ForwardIterS lasts,
+		double &b, double &bu, 
+		double m, double &chisq );
+  /*! Fit offset \a b of line y = b+m*x with given slope \a m
+      to the data of the three container 
+      \a vecx, \a vecy, and \a vecy,
+      corresponding to x, y, and the standard deviation.
+      Returns in \a bu the uncertainty of the offset \a b,
+      and in \a chisq the chi squared.
+      q=GammaQ(0.5*(n-2),chisq/2)>0.1 good, >0.001 fit may be acceptable, <0.001 bad fit.
+      \a ContainerX, \a ContainerY, and \a ContainerS each hold an array of numbers
+      that can be accessed via standard STL const_iterators. */
+template < typename ContainerX, typename ContainerY, typename ContainerS >
+void offsetFit( const ContainerX &vecx, const ContainerY &vecy, const ContainerS &vecs,
+		double &b, double &bu, 
+		double m, double &chisq );
+
   /*! Fit line y = b+m*x to the data of the two ranges 
       \a firstx, \a lastx and \a firsty, \a lasty.
       Returns in \a bu and \a mu the uncertainty
@@ -2945,6 +2996,146 @@ void propFit( const ContainerX &vecx, const ContainerY &vecy, const ContainerS &
 {
   propFit( vecx.begin(), vecx.end(), vecy.begin(), vecy.end(),
 	   vecs.begin(), vecs.end(), m, mu, chisq );
+}
+
+
+template < typename ForwardIterX, typename ForwardIterY >
+void offsetFit( ForwardIterX firstx, ForwardIterX lastx,
+	        ForwardIterY firsty, ForwardIterY lasty,
+	        double &b, double &bu, 
+	        double m, double &chisq )
+{
+  // init values:
+  b = 0.0;
+  bu = 0.0;
+  chisq = -1.0;
+
+  int nn = 0;
+  double sx=0.0, sy=0.0;
+  ForwardIterX iterx = firstx;
+  ForwardIterY itery = firsty;
+  while ( iterx != lastx && itery != lasty ) {
+    ++nn;
+    sx += ( *iterx - sx )/nn;
+    sy += ( *itery - sy )/nn;
+    ++iterx;
+    ++itery;
+  }
+
+  // not enough data points:
+  if ( nn < 1 )
+    return;
+
+  double st2=0.0;
+  iterx = firstx;
+  while ( iterx != lastx ) {
+    double t = (*iterx) - sx;
+    st2 += t * t;
+    ++iterx;
+  }
+  if ( st2 < 1.0e-20 ) {
+    b = 0.0;
+    return;
+  }
+  b = sy - sx*m;
+  bu = sqrt( 1.0/nn + sx*sx/st2 );
+
+  chisq = 0.0;
+  iterx = firstx;
+  itery = firsty;
+  while ( iterx != lastx && itery != lasty ) {
+    double v = *itery - b - m * (*iterx); 
+    chisq += v*v;
+    ++iterx;
+    ++itery;
+  }
+  
+  double sigdat = nn > 2 ? sqrt( chisq / (nn-2) ) : 0.0;
+  bu *= sigdat;
+}
+
+
+template < typename ContainerX, typename ContainerY >
+void offsetFit( const ContainerX &vecx, const ContainerY &vecy,
+	        double &b, double &bu, 
+	        double m, double &chisq )
+{
+  offsetFit( vecx.begin(), vecx.end(), vecy.begin(), vecy.end(),
+	     b, bu, m, chisq );
+}
+
+
+template < typename ForwardIterX, typename ForwardIterY, typename ForwardIterS >
+void offsetFit( ForwardIterX firstx, ForwardIterX lastx,
+		ForwardIterY firsty, ForwardIterY lasty,
+		ForwardIterS firsts, ForwardIterS lasts,
+		double &b, double &bu, 
+		double m, double &chisq )
+{
+  // init values:
+  b = 0.0;
+  bu = 0.0;
+  chisq = -1.0;
+
+  int nn = 0;
+  double ss=0.0, sx=0.0, sy=0.0;
+  ForwardIterX iterx = firstx;
+  ForwardIterY itery = firsty;
+  ForwardIterS iters = firsts;
+  while ( iterx != lastx && itery != lasty && iters != lasts ) {
+    ++nn;
+    double wt = 1.0 / ( (*iters) * (*iters) );
+    ss += wt;
+    sx += (*iterx)*wt;
+    sy += (*itery)*wt;
+    ++iterx;
+    ++itery;
+    ++iters;
+  }
+
+  // not enough data points:
+  if ( nn < 1 )
+    return;
+
+  double sxdss = sx/ss;
+  double st2=0.0;
+  iterx = firstx;
+  iters = firsts;
+  while ( iterx != lastx && iters != lasts ) {
+    double t = ( *iterx - sxdss ) / (*iters);
+    st2 += t*t;
+    ++iterx;
+    ++iters;
+  }
+
+  if ( st2 < 1.0e-20 ) {
+    b = 0.0;
+    return;
+  }
+  b = (sy - sx*m)/ss;
+  bu = sqrt( (1.0 + (sx/ss)*(sx/st2))/ss );
+
+  chisq = 0.0;
+  iterx = firstx;
+  itery = firsty;
+  iters = firsts;
+  while ( iterx != lastx && itery != lasty && iters != lasts ) {
+    double v = ( *itery - b - m * *iterx ) / *iters; 
+    chisq += v*v;
+    ++iterx;
+    ++itery;
+    ++iters;
+  }
+}
+
+
+template < typename ContainerX, typename ContainerY, typename ContainerS >
+void offsetFit( const ContainerX &vecx, const ContainerY &vecy, const ContainerS &vecs,
+		double &b, double &bu, 
+		double m, double &chisq )
+{
+  offsetFit( vecx.begin(), vecx.end(), vecy.begin(), vecy.end(),
+	     vecs.begin(), vecs.end(), b, bu, m, chisq );
 }
 
 
