@@ -1077,18 +1077,20 @@ void SingleStimulus::notifyDialog( const Options &opt )
     wave.load( stimfile, stimfile );
     if ( wave.empty() )
       message = "Unable to load stimulus from file " + stimfile;
-    if ( duration > 0.0 && wave.length() > duration )
-      wave.resize( wave.indices( duration ) );
-    duration = wave.length();
-    if ( opt.boolean( "stimscale" ) )
-      wave /= maxAbs( wave );
-    double stimhighcut = opt.number( "stimhighcut" );
-    if ( stimhighcut > 0.0 ) {
-      double fac = wave.stepsize()*stimhighcut;
-      double x = wave[0];
-      for ( int k=0; k<wave.size(); k++ ) {
-	x += ( wave[k] - x )*fac;
-	wave[k] -= x;
+    else {
+      if ( duration > 0.0 && wave.length() > duration )
+	wave.resize( wave.indices( duration ) );
+      duration = wave.length();
+      if ( opt.boolean( "stimscale" ) )
+	wave /= maxAbs( wave );
+      double stimhighcut = opt.number( "stimhighcut" );
+      if ( stimhighcut > 0.0 ) {
+	double fac = wave.stepsize()*stimhighcut;
+	double x = wave[0];
+	for ( int k=0; k<wave.size(); k++ ) {
+	  x += ( wave[k] - x )*fac;
+	  wave[k] -= x;
+	}
       }
     }
     if ( peakamplitudefac <= 0.0 )
