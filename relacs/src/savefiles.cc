@@ -2178,7 +2178,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
   NixTrace trace = traces[0];
   stimulus_start_time = (IL[0].signalIndex() - trace.index  + trace.written) * stepsize;
   stimulus_duration = stim_info[0].length();
-  string tag_name = stim_info[0].description().name();
+  string tag_name = nix::util::nameSanitizer(stim_info[0].description().name());
 
   if ( stimulus_tag && stimulus_tag.name() != tag_name ) {
     stimulus_tag = root_block.getMultiTag(tag_name);
