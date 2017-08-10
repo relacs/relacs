@@ -1,3 +1,9 @@
+- Actually used sampling rate will certianly differ from the one requested!!! How to deal with that??? In particular with high AO rates in case of auditory stimuli?
+
+- Zooming in trace window does not work properly. Easiest could be to kill the zoom stack.
+- auditory::singlestimulus and others: how to handle complicated file names? With +-() etc?
+
+
 - RELACSPlugin adjust*(): in case of source != 0 should find the physical trace
 - ! warning in write() -> previous signal still pending in SaveFiles ! happens after interruption of repros with a macros
 - Acquire::stopWrite() should check whether the AO is running

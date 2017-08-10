@@ -1448,7 +1448,7 @@ void SaveFiles::RelacsFiles::writeStimulus( const InList &IL, const EventList &E
       for ( unsigned int j=0; j<stimuliinfo.size(); j++ ) {
 	if ( newstimuli[j] ) {
 	  stimuliinfo[j].description().save( *SDF, "  " );
-	  *SDF << '\n';
+	  *SDF << endl;
 	}
       }
     }
