@@ -80,7 +80,8 @@ FICurve::FICurve( void )
   // header for files:
   Header.addInteger( "index" );
   Header.addInteger( "trace" );
-  Header.addNumber( "preintensity", "", "%.3f" );
+  Parameter & preInt = Header.addNumber( "preintensity", "", "%.3f" );
+  preInt.addFlags( OutData::Mutable );
   Header.addNumber( "EOD rate", "Hz", "%.1f" );
   Header.addNumber( "trans. amplitude", "", "%.2f" );
   Header.addText( "repro time" );
@@ -198,7 +199,7 @@ int FICurve::main( void )
       P[2*n].setYLabelPos( 1.5, Plot::FirstMargin, 0.5, Plot::Graph, Plot::Center, -90.0 );
       P[2*n].setAutoScaleY();
       P[2*n].setYTics( );
-      
+
       P[2*n+1].clear();
       P[2*n+1].setLMarg( 7 );
       P[2*n+1].setRMarg( 2 );
@@ -245,7 +246,18 @@ int FICurve::main( void )
   signal.setIdent( "rectangle" );
   signal.setCarrierFreq( FishRate );
 
-  // stimulus intensity:
+  Options opts;
+  Parameter &p1 = opts.addNumber( "Intensity", 0.0, EOD2Unit );
+  Parameter &p2 = opts.addNumber( "PreIntensity", 0.0, EOD2Unit );
+  Parameter &p3 = opts.addNumber( "Contrast", 0.0 );
+  Parameter &p4 = opts.addNumber( "PreContrast", 0.0 );
+
+  signal.setMutable( p1 );
+  signal.setMutable( p2 );
+  signal.setMutable( p3 );
+  signal.setMutable( p4 );
+
+  // Stimulus intensity:
   double maxintensity = FishAmplitude - IntensityRange.minValue();
   if ( IntensityRange.maxValue() - FishAmplitude > maxintensity )
     maxintensity = IntensityRange.maxValue() - FishAmplitude;
@@ -304,13 +316,23 @@ int FICurve::main( void )
       if ( PreDuration > 0.0 ) {
 	OutData presignal;
 	presignal.constWave( PreDuration, signal.stepsize(), y, "PreStimulus" );
+        Parameter & pi = presignal.description()["Intensity"];
+        pi.addFlags( OutData::Mutable );
 	signal.append( presignal );
       }
       OutData testsignal;
       testsignal.pulseWave( Duration, signal.stepsize(), x, 0.0, "TestStimulus" );
+      Parameter & pi = testsignal.description()["Intensity"];
+      pi.addFlags( OutData::Mutable );
       signal.append( testsignal );
 
-      // meassage: 
+      opts.setNumber( "Contrast",  100.0 * Contrast );
+      opts.setNumber( "PreContrast", 100.0 * PreContrast );
+      opts.setNumber( "Intensity", Intensity );
+      opts.setNumber( "PreIntensity", PreIntensity );
+      signal.setDescription( opts );
+
+      // meassage:
       Str s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
       s += "  Intensity: <b>" + Str( Intensity, 0, 3, 'f' ) + "mV/cm</b>";
       if ( PreDuration > 0.0 && fabs( PreIntensity - FishAmplitude ) > 1.0e-6 ) {

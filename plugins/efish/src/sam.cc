@@ -9,12 +9,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -49,14 +49,15 @@ SAM::SAM( void )
   RateN = 10;
   Before=0.0;
   After=0.0;
-
   // add some parameter as options:
   newSection( "Stimulus" );
   addNumber( "duration", "Duration of signal", Duration, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "freqsel", "Stimulus frequency is", "relative to EOD|absolute" );
-  addNumber( "deltaf", "Delta f (beat frequency)", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
-  addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" );
+  Parameter & p1 = addNumber( "deltaf", "Delta f (beat frequency)", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
+  p1.addFlags( OutData::Mutable );
+  Parameter & p2 = addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" );
+  p2.addFlags( OutData::Mutable );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
@@ -69,7 +70,7 @@ SAM::SAM( void )
   addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );
-  
+
   // variables:
   Signal = 0;
   FishAmplitude = 0.0;
@@ -81,7 +82,7 @@ SAM::SAM( void )
     AllSpikes[k].clear();
     SpikeRate[k] = 0;
     SpikeFrequency[k] = 0;
-    Trials[k] = 0; 
+    Trials[k] = 0;
   }
   Offset = 0;
   NerveAmplP.clear();
@@ -209,6 +210,8 @@ int SAM::createSignal( const InData &data, const EventData &events )
 	::relacs::minMax( minval, maxval, *Signal );
 	IntensityGain = 0.5*(maxval-minval);
       }
+      //Signal->description()["Frequency"].addFlags( OutData::Mutable );
+      //Signal->description()["Amplitude"].addFlags( OutData::Mutable );
       ident = "sinewave";
     }
     else {
@@ -221,8 +224,10 @@ int SAM::createSignal( const InData &data, const EventData &events )
       float maxval = 0.0;
       ::relacs::minMax( minval, maxval, *Signal );
       IntensityGain = 0.5*(maxval-minval);
-      Signal->description().insertNumber( "Amplitude", "SamplingRate", 1.0/IntensityGain, Signal->unit() );
+      Parameter & ap = Signal->description().insertNumber( "Amplitude", "SamplingRate", 1.0/IntensityGain, Signal->unit() );
+      ap.addFlags( OutData::Mutable );
       Signal->setSampleRate( data.sampleRate() * ( FishRate + DeltaF ) / FishRate );
+      Signal->description()["SamplingRate"].addFlags( OutData::Mutable );
       Signal->setCarrierFreq( FishRate + DeltaF );
       Signal->repeat( (int)rint( Duration/Signal->duration() ) );
       Signal->description().setNumber( "Frequency", FishRate + DeltaF );
@@ -230,6 +235,10 @@ int SAM::createSignal( const InData &data, const EventData &events )
     }
   }
   Duration = Signal->duration();
+  Signal->description()["Frequency"].addFlags( OutData::Mutable );
+  Signal->description()["Amplitude"].addFlags( OutData::Mutable );
+  Signal->description()["SamplingRate"].addFlags( OutData::Mutable );
+  Signal->description()["Duration"].addFlags( OutData::Mutable );
   Signal->setStartSource( 1 );
   Str s = ident + ", C=" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
@@ -443,7 +452,11 @@ int SAM::main( void )
     // stimulus intensity:
     Intensity = Contrast * FishAmplitude / IntensityGain;
     Signal->setIntensity( Intensity );
+    Signal->description().addNumber( "Contrast", Contrast );
+    Signal->description()["Contrast"].addFlags( OutData::Mutable );
     detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 1.5*Signal->intensity() );
+    if ( Signal->description().find("SamplingRate") != Signal->description().end() ) 
+      Signal->description()["SamplingRate"].addFlags( OutData::Mutable );
 
     // meassage: 
     Str s = AM ? "SAM" : ( FreqAbs ? "Direct" : "EOD" );
