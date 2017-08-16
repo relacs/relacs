@@ -54,10 +54,8 @@ SAM::SAM( void )
   addNumber( "duration", "Duration of signal", Duration, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "freqsel", "Stimulus frequency is", "relative to EOD|absolute" );
-  Parameter & p1 = addNumber( "deltaf", "Delta f (beat frequency)", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
-  p1.addFlags( OutData::Mutable );
-  Parameter & p2 = addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" );
-  p2.addFlags( OutData::Mutable );
+  addNumber( "deltaf", "Delta f (beat frequency)", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
+  addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
@@ -439,6 +437,14 @@ int SAM::main( void )
   if ( createSignal( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ) ) )
     return Failed;
 
+  // stimulus intensity:
+  Intensity = Contrast * FishAmplitude / IntensityGain;
+  Signal->setIntensity( Intensity );
+  Signal->description().addNumber( "Contrast", Contrast ).addFlags( OutData::Mutable );
+  detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 1.5*Signal->intensity() );
+  if ( Signal->description().find("SamplingRate") != Signal->description().end() ) 
+    Signal->description()["SamplingRate"].addFlags( OutData::Mutable );
+
   // clear output lines:
   writeZero( AM ? GlobalEField : GlobalAMEField );
   sleep( 0.01 );
@@ -448,15 +454,6 @@ int SAM::main( void )
   for ( Count=0;
 	( Repeats <= 0 || Count < Repeats ) && softStop() == 0; 
 	Count++ ) {
-
-    // stimulus intensity:
-    Intensity = Contrast * FishAmplitude / IntensityGain;
-    Signal->setIntensity( Intensity );
-    Signal->description().addNumber( "Contrast", Contrast );
-    Signal->description()["Contrast"].addFlags( OutData::Mutable );
-    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 1.5*Signal->intensity() );
-    if ( Signal->description().find("SamplingRate") != Signal->description().end() ) 
-      Signal->description()["SamplingRate"].addFlags( OutData::Mutable );
 
     // meassage: 
     Str s = AM ? "SAM" : ( FreqAbs ? "Direct" : "EOD" );

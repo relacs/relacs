@@ -3,6 +3,8 @@
 - Zooming in trace window does not work properly. Easiest could be to kill the zoom stack.
 - auditory::singlestimulus and others: how to handle complicated file names? With +-() etc?
 
+- add macro stack to repro metadata in stimuli.dat
+
 
 - RELACSPlugin adjust*(): in case of source != 0 should find the physical trace
 - ! warning in write() -> previous signal still pending in SaveFiles ! happens after interruption of repros with a macros
