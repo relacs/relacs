@@ -105,6 +105,11 @@
 		
 		<para>In all modes, the <keycap>-</keycap> and <keycap>+</keycap> keys expand and shrink the visible time range,
 		respectively.</para>
+
+		<para>The range of the y-axis is halfed by pressing <keycap>Y</keycap> 
+		(zoom in) and doubled with <keycap>y</keycap> (zoom out).
+		</para>
+
 		<para>Pressing <keycap>v</keycap> moves the traces in the plots vertically to 
 		the center, top, or bottom and 
 		<keycap>V</keycap> centers and zooms the y-range to make the current traces fully visible.</para>

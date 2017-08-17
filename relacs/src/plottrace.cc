@@ -715,6 +715,8 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
   Menu->addAction( "Center &vertically", this, SLOT( centerVertically() ), Qt::Key_V );
   Menu->addAction( "&Zoom vertically", this, SLOT( centerZoomVertically() ), Qt::SHIFT + Qt::Key_V );
+  Menu->addAction( "Zoom in &Y-axis", this, SLOT( zoomInVertically() ), Qt::SHIFT + Qt::Key_Y );
+  Menu->addAction( "Zoom out &Y-axis", this, SLOT( zoomOutVertically() ), Qt::Key_Y );
   Menu->addAction( "&Toggle plotting", this, SLOT( plotOnOff() ) );
   Menu->addAction( "Zoom back", this, SLOT( zoomBack() ), Qt::ALT + Qt::Key_Left );
   Menu->addAction( "Reset zoom", this, SLOT( resetZoom() ), Qt::ALT + Qt::Key_Right );
@@ -1347,6 +1349,74 @@ void PlotTrace::centerZoomVertically( void )
       if ( nmax > pmaxrange[vp] ) {
 	nmax = pmaxrange[vp];
 	nmin = nmax - 2.0*range;
+      }
+      if ( P[vp].ranges() == 0 )
+	P[vp].pushRanges();
+      P[vp].setYRange( nmin, nmax );
+    }
+  }
+
+  unlock();
+  P.unlock();
+}
+
+
+void PlotTrace::zoomInVertically( void )
+{
+  P.lock();
+  lock();
+
+  // zoom yaxis of each visible and enabled plot:
+  for ( unsigned int c=0; c<TraceStyle.size(); c++ ) {
+    if ( TraceStyle[c].visible() &&
+	 TraceStyle[c].panel() >= 0 &&
+	 PlotTraces[c].mode() & PlotTraceCenterVertically ) {
+      int vp = TraceStyle[c].panel();
+      double ymin = P[vp].yminRange();
+      double ymax = P[vp].ymaxRange();
+      double center = 0.5*(ymin+ymax);
+      double range = 0.25*(ymax-ymin);
+      double nmin = center-range;
+      double nmax = center+range;
+      if ( P[vp].ranges() == 0 )
+	P[vp].pushRanges();
+      P[vp].setYRange( nmin, nmax );
+    }
+  }
+
+  unlock();
+  P.unlock();
+}
+
+
+void PlotTrace::zoomOutVertically( void )
+{
+  P.lock();
+  lock();
+
+  // zoom yaxis of each visible and enabled plot:
+  for ( unsigned int c=0; c<TraceStyle.size(); c++ ) {
+    if ( TraceStyle[c].visible() &&
+	 TraceStyle[c].panel() >= 0 &&
+	 PlotTraces[c].mode() & PlotTraceCenterVertically ) {
+      int vp = TraceStyle[c].panel();
+      double ymin = P[vp].yminRange();
+      double ymax = P[vp].ymaxRange();
+      double center = 0.5*(ymin+ymax);
+      double range = ymax-ymin;
+      double nmin = center-range;
+      double nmax = center+range;
+      if ( nmin < PlotTraces[c].minValue() ) {
+	nmin = PlotTraces[c].minValue();
+	nmax = nmin + 2.0*range;
+	if ( nmax > PlotTraces[c].maxValue() )
+	  nmax = PlotTraces[c].maxValue();
+      }
+      if ( nmax > PlotTraces[c].maxValue() ) {
+	nmax = PlotTraces[c].maxValue();
+	nmin = nmax - 2.0*range;
+	if ( nmin < PlotTraces[c].minValue() )
+	  nmin = PlotTraces[c].minValue();
       }
       if ( P[vp].ranges() == 0 )
 	P[vp].pushRanges();

@@ -147,6 +147,8 @@ public slots:
   void autoRange( void );
   void centerVertically( void );
   void centerZoomVertically( void );
+  void zoomInVertically( void );
+  void zoomOutVertically( void );
   void zoomBack( void );
   void resetZoom( void );
 
