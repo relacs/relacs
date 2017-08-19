@@ -684,7 +684,7 @@ void SaveFiles::writeStimulus( void )
 }
 
 
-void SaveFiles::save( const RePro &rp )
+void SaveFiles::save( const RePro &rp, Options &macrostack )
 {
   //  cerr << "SaveFiles::save( const RePro &rp ): RePro=" << rp.name()
   //       << ", saving=" << saving() << "\n";
@@ -692,7 +692,7 @@ void SaveFiles::save( const RePro &rp )
   QMutexLocker locker( &SaveMutex );
 
   if ( ReProData && isSaving() )
-    RW->printlog( "! warning: SaveFiles::save( RePro & ) -> already RePro data there." );
+    RW->printlog( "! warning: SaveFiles::save( RePro& ) -> already RePro data there." );
   ReProData = true;
   string dataset = Str( Path ).preventedSlash().name()
     + "-" + rp.name() + "-" + Str( rp.allRuns() );
@@ -703,6 +703,14 @@ void SaveFiles::save( const RePro &rp )
   ReProInfo.addText( "Version", rp.version() );
   ReProInfo.addText( "Date", rp.date() );
   ReProInfo.addInteger( "Run", rp.allRuns() );
+  if ( macrostack.sectionsSize() > 0 ) {
+    ReProInfo.newSection( "dataset-macros-" + dataset, "macros" );
+    for ( Options::const_section_iterator sp=macrostack.sectionsBegin(); 
+	  sp != macrostack.sectionsEnd(); ++sp ) {
+      ReProInfo.addText( (*sp)->name(), (*sp)->save( 0, Options::NoName ) );
+    }
+    ReProInfo.clearSections();
+  }
   ReProInfo.newSection( rp, 0, "dataset-settings-" + dataset, "settings" );
   DI.addRepro( ReProInfo );
   ReProName = rp.name();

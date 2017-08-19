@@ -728,6 +728,17 @@ void Macros::setThisOnly( bool macro )
 }
 
 
+void Macros::macroStack( Options &stack )
+{
+  for ( int k = 0; k < (int)Stack.size(); k++ ) {
+    stack.newSection( Stack[k].MacroVariables, MCs[Stack[k].MacroID]->name() );
+    stack.clearSections();
+  }
+  stack.addSection( MCs[CurrentMacro]->variables(), MCs[CurrentMacro]->name() );
+  stack.clearSections();
+}
+
+
 void Macros::saveConfig( ofstream &str )
 {
   string sm = MacroFile;

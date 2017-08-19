@@ -1198,10 +1198,14 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   ReProRunning = true;
   SN->incrReProCount();
 
+  Options macrostack;
+  if ( (macroaction & Macro::NoMacro) == 0 )
+    MC->macroStack( macrostack );
+
   // XXX lock SF ?
   SF->holdOn();
   CurrentRePro->setSaving( saving );
-  SF->save( *CurrentRePro );
+  SF->save( *CurrentRePro, macrostack );
   // XXX unlock SF ?
   CurrentRePro->start( QThread::HighPriority );
 }

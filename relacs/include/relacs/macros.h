@@ -154,6 +154,9 @@ public:
         set \a ThisCommandOnly \c true. */
   void setThisOnly( bool macro );
 
+    /*! Returns the curren macro stack as macroname: macroparameters */
+  void macroStack( Options &stack );
+
     /*! Update the default macro file and save all options to the config file. */
   virtual void saveConfig( ofstream &str );
 

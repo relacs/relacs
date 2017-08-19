@@ -181,7 +181,7 @@ public:
     /*! Save output-meta-data to files. */
   void save( const OutList &signal );
     /*! Save RePro meta data to files. */
-  void save( const RePro &rp );
+  void save( const RePro &rp, Options &macrostack );
 
   /*! \return \c true if there is still a stimulus pending
         that needs to be written into the index files. */

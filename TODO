@@ -1,9 +1,9 @@
 - Actually used sampling rate will certianly differ from the one requested!!! How to deal with that??? In particular with high AO rates in case of auditory stimuli?
 
+- Mutable stimulus descriptions: ranges in RePro parameter should set MutableFlag in corresponding RePro Option. The RePro should then set the corresponding stimulus description as Mutable. We need to change the Command parameter from string to Options.
+
 - Zooming in trace window does not work properly. Easiest could be to kill the zoom stack.
 - auditory::singlestimulus and others: how to handle complicated file names? With +-() etc?
-
-- add macro stack to repro metadata in stimuli.dat
 
 
 - RELACSPlugin adjust*(): in case of source != 0 should find the physical trace

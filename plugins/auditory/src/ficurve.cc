@@ -238,11 +238,13 @@ int FICurve::main( void )
     auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
     if ( as == NULL ) {
       warning( "Can not get the neuron's threshold intensity. <br>No auditory::Session-plugin found." );
+      unlockMetaData();
       return Failed;
     }
     MapD thresh = as->threshCurve( Side );
     if ( thresh.empty() ) {
       warning( "Can not get the neuron's threshold intensity. <br>No threshold curve was measured so far.");
+      unlockMetaData();
       return Failed;
     }
     int k=0;
@@ -258,6 +260,7 @@ int FICurve::main( void )
       warning( "Can not get the neuron's threshold intensity. <br>Requested carrier frequency of " +
 	       Str( 0.001*CarrierFrequency ) +
 	       " kHz is outside the measured range of the threshold curve." );
+      unlockMetaData();
       return Failed;
     }
     else
