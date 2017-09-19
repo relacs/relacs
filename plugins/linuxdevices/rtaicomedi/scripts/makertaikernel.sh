@@ -208,7 +208,7 @@ function print_info {
     echo
     echo "Revisions:"
     echo "  rtai  : ${RTAI_DIR} from $(cat ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt)"
-    echo "  newlib: cvs from $(cat ${LOCAL_SRC_PATH}/newlib/revision.txt)"
+    echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/src/revision.txt)"
     echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
     echo
     echo "CPU (/proc/cpuinfo):"
@@ -714,7 +714,7 @@ function test_rtaikernel {
 	    echo "Revisions:"
 	    echo "  kernel: ${LINUX_KERNEL}"
 	    echo "  rtai  : ${RTAI_DIR} from $(cat ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt)"
-	    echo "  newlib: cvs from $(cat ${LOCAL_SRC_PATH}/newlib/revision.txt)"
+	    echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/src/revision.txt)"
 	    echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
 	    echo
 	    echo
@@ -895,7 +895,7 @@ function install_newlib {
 function build_newlib {
     cd ${LOCAL_SRC_PATH}/newlib
     if test -f install/$MACHINE/lib/libm.a; then
-	echo_log "keep already installed newlib library"
+	echo_log "keep already built and installed newlib library"
     else
 	cd src/newlib
 	echo_log "build newlib"
