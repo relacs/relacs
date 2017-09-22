@@ -1,12 +1,25 @@
-0. For the  unpatient, cd into the directory of the relacs source and
-paste the following into your shell:
+0. For the  unpatient, run the following commands:
 
-# the currently needed packages for portaudio. We need version 19!
+- for Debian based systems (using apt-get):
+
+# Make sure portaudio version 19 is installed (needed for audio monitor):
 sudo apt-get -y remove libjack-dev libportaudio-dev libportaudio0
 sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portaudio19-dev
 
-# the main stuff:
+# install packages:
 sudo apt-get -y install autoconf automake libtool libtool-bin g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto subversion
+
+- for Fedora based systems (using yum/dnf), login as superuser (su):
+
+# Make sure portaudio version 19 is installed (needed for audio monitor):
+dnf -y install jack-audio-connection-kit-devel portaudio-devel
+
+# install packages:
+dnf -y install autoconf automake libtool gcc-c++ qt4-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto subversion
+
+- after having installed the packages change into the directory of the
+  relacs source and execute:
+
 sudo make uninstall
 make clean
 ./bootstrap.sh
@@ -22,14 +35,14 @@ Here are the details:
    autoconf
    automake
    libtool
-   libtool-bin
-   g++
-   libc6-dev
-   libqt4-dev
-   libgsl0-dev
-   libsndfile1-dev 
-   libcomedi-dev
-   libusb-1.0.0-dev
+   libtool-bin (Debian only)
+   g++ (Debian) gcc-c++ (Fedora)
+   libc6-dev (Debian only)
+   libqt4-dev (Debian) qt4-devel (Fedora)
+   libgsl0-dev (Debian) gsl-devel (Fedora)
+   libsndfile1-dev (Debian) libsndfile-devel (Fedora)
+   libcomedi-dev (Debian) comedilib-devel (Fedora)
+   libusb-1.0.0-dev (Debian) libusb-devel (Fedora)
    doxygen
    xmlto
    subversion
@@ -38,8 +51,13 @@ On Debian or Ubuntu based systems execute:
 
 sudo apt-get install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto subversion
 
+On Fedora/RedHat based systems execute:
+
+dnf -y install autoconf automake libtool gcc-c++ qt4-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto subversion
+
 For the audio monitor we need libportaudio version 19. 
-On ubuntu based systems you first need to remove
+
+On Ubuntu based systems you first need to remove
 
 libjack-dev 
 libportaudio-dev 
@@ -52,9 +70,18 @@ libportaudio2
 libportaudiocpp0
 portaudio19-dev
 
-On Debian or Ubuntu based systems execute:
+That is, execute:
 sudo apt-get -y remove libjack-dev libportaudio-dev libportaudio0
 sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portaudio19-dev
+
+On new Fedora systems you simpy need to install
+
+jack-audio-connection-kit-devel
+portaudio-devel
+
+by executing
+
+sudo apt-get -y install jack-audio-connection-kit-devel portaudio-devel
 
 
 2. Change to the directory containing the relacs source code.
@@ -62,7 +89,7 @@ sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portau
 > cd relacs-x.x.x
 
 Note: if you have already installed an older version of RELACS it is best to
-uninstall it first, before you unpack a newer version.
+uninstall it first, before you install a newer version.
 For this, execute the following commands from the 
 root directory of the older version:
 
@@ -73,7 +100,7 @@ root directory of the older version:
 3. Create the configure script
 
 In case you downloaded the RELACS source code from the subversion
-repository then you need to run
+repository you need to run
 
 > ./bootstrap.sh
 

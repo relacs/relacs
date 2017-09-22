@@ -21,9 +21,13 @@ see http://www.comedi.org
 \section installcomedi Install comedi
 
 On recent linux distributions comedi modules are already in the Linux kernel.
-You only need to install the comedilib library
+You only need to install the comedilib library. On Debian:
 \code
 sudo apt-get install libcomedi-dev 
+\endcode
+On Fedora as root:
+\code
+dnf install comedilib-devel
 \endcode
 and to set the permissions as described in \ref udev.
 If your data acquisition board needs to be calibrated, you also need
@@ -293,10 +297,10 @@ make
 make install
 
 # setup udev permissions:
-addgroup --system iocard
+groupadd --system iocard
 echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
 udevadm trigger
-adduser $USER iocard
+usermod $USER -a -G iocard   # or: adduser $USER iocard
 \endcode
 In the following the necessary steps are described in detail:
 
@@ -502,7 +506,7 @@ new group and tell udev to add the comedi device files to this group.
 -# Login as root.
 -# Create a new group "iocard":
 \code
-addgroup --system iocard
+groupadd --system iocard
 \endcode
 -# Add udev rules to the /etc/udev/rules.d directory:
 \code
@@ -515,10 +519,12 @@ udevadm trigger
 to apply your new udev rules
 -# Add users to the "iocard" group:
 \code
-adduser \<username\> iocard
+usermod \<username\> -a -G iocard   # or: adduser \<username\> iocard
 \endcode
 After the next login, \c \<username\> is a member of the \c iocard group
 and and has sufficient permissions to access the data acquisition boards through \c Comedi.
+
+\note You need to log out and log in first to be member of the iocard group.
 
 
 \section buffer Resize Comedi buffer

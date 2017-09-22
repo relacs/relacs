@@ -27,24 +27,24 @@ a DAQFlex device to this group.
  
 -# Create a new group "iocard":
 \code
-sudo addgroup --system iocard
+sudo groupadd --system iocard
 \endcode
--# Add udev rules. On new (after mid 2012) Linux systems create the file
-\c /lib/udev/rules.d/98-daqflex.rules (as root)
+-# Add udev rules. Create the file
+\c /etc/udev/rules.d/98-daqflex.rules (as root)
  and paste the following lines into that file:
-\include 98-daqflex.rules
-On older system (prior to mid 2012) create the file
-\c /etc/udev/rules.d/98-daqflex.rules and paste the following lines into that file:
-\include 98-daqflex-old.rules
+ On new (after mid 2012) Linux systems:
+ \include 98-daqflex.rules
+ On older system (prior to mid 2012):
+ \include 98-daqflex-old.rules
 Both files are also installed to \c \<prefix\>/lib/daqflex/ . So you can simply copy them to the
 right directory. New system:
 \code
-sudo cp /usr/lib/daqflex/98-daqflex.rules /lib/udev/rules.d/
+sudo cp /usr/lib/daqflex/98-daqflex.rules /etc/udev/rules.d/
 \endcode Old system:
 \code
 sudo cp /usr/lib/daqflex/98-daqflex-old.rules /etc/udev/rules.d/
 \endcode
-(replace \c /usr by whatever path you specified as the prefix for \c ./configure, \c /usr is the default).
+(replace \c /usr by whatever path you specified as the prefix for \c ./configure, \c /usr is the default. Also, \c lib/ might be called \c lib64/).
 -# Run
 \code
 sudo udevadm trigger
@@ -52,10 +52,12 @@ sudo udevadm trigger
 to apply your new udev rules
 -# Add users to the "iocard" group:
 \code
-sudo adduser \<username\> iocard
+sudo usermod \<username\> -a -G iocard # or: sudo adduser \<username\> iocard
 \endcode
 After the next login, \c \<username\> is a member of the \c iocard group
 and and has sufficient permissions to access the DAQFlex data acquisition boards.
+
+\note You need to log out and log in first to be member of the iocard group.
 
 
 \section test Testing acquisition
