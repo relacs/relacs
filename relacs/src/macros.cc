@@ -19,12 +19,13 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <vector>
+#include <deque>
 #include <QApplication>
 #include <QPainter>
 #include <QBitmap>
 #include <QTextBrowser>
 #include <QFileDialog>
+#include <relacs/outdata.h>
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 #include <relacs/optdialog.h>
@@ -1543,9 +1544,9 @@ void Macro::check( string &warnings )
       if ( (*cp)->command() == MacroCommand::ReProCom ) {
 	// expand ranges:
 	Str ps = (*cp)->parameter();
-	vector <RangeLoop> rls;
-	vector <int> lb;
-	vector <int> rb;
+	deque <RangeLoop> rls;
+	deque <int> lb;
+	deque <int> rb;
 	// find ranges:
 	int o = ps.find( "(" );
 	if ( o > 0 && ps[o-1] == 'd' )
@@ -1572,9 +1573,17 @@ void Macro::check( string &warnings )
 	    rls[k].reset();
 	  while ( !rls[0] ) {
 	    // create parameter:
-	    string np = ps;
-	    for ( int j=int(rls.size())-1; j>=0; j-- )
+	    Str np = ps;
+	    for ( int j=int(rls.size())-1; j>=0; j-- ) {
+	      int ei = rb[j] + 1;
+	      int si = np.findFirstNot( Str::WhiteSpace, ei );
+	      if ( si > 0 )
+		si = np.findFirst( Str::WhiteSpace + ';', si );
+	      if ( si > 0 )
+		ei = si;
+	      np.insert( ei, 1, '*' );
 	      np.replace( lb[j], rb[j] - lb[j] + 1, Str( *rls[j] ) );
+	    }
 	    // add repro:
 	    omc.setParameter( np );
 	    if ( cp != Commands.end() ) {
@@ -2558,7 +2567,8 @@ bool MacroCommand::execute( bool saving )
   else if ( RP != 0 ) {
     // start RePro:
     RP->Options::setDefaults();
-    RP->Options::read( MC->expandParameter( Params ) );
+    RP->Options::delFlags( OutData::Mutable );
+    RP->Options::read( MC->expandParameter( Params ), 0, OutData::Mutable );
     RP->Options::read( RP->overwriteOptions() );
     RP->Options::read( CO );
     MCs->RW->startRePro( RP, MC->action(), saving );

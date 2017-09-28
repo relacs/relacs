@@ -4993,7 +4993,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int flags, int level,
 }
 
 
-Options &Options::read( const string &opttxt, int flag,
+Options &Options::read( const string &opttxt, int flag, int starflag,
 			const string &assignment, const string &separator,
 			int *indent )
 {
@@ -5096,7 +5096,12 @@ Options &Options::read( const string &opttxt, int flag,
       else {
 	// value:
 	next = s.findSeparator( index, separator, "[\"" );
+	bool star = ( next > 0 && next+1<s.size() && s[next+1] == '*' );
 	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1 );
+	if ( r > 0 && s[r] == '*' ) {
+	  star = true;
+	  r--;
+	}
 	string value = s.mid( index, r );
 	// set value for Parameter:
 	string error = Warning;
@@ -5104,6 +5109,8 @@ Options &Options::read( const string &opttxt, int flag,
 	// set flags:
 	if ( pp != 0 && flag != 0 )
 	  pp->addFlags( flag );
+	if ( pp != 0 && star && starflag != 0 )
+	  pp->addFlags( starflag );
 	Warning += error;
       }
       index = next<0 ? -1 : next+1;

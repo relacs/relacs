@@ -41,7 +41,7 @@ namespace efish {
 \class SAM
 \brief [RePro] Measures responses to sinusoidal amplitude modulations.
 \author Jan Benda
-\version 2.4 (Dec 10, 2014)
+\version 2.5 (Sep 28, 2017)
 
 \par Options
 \par Options

@@ -33,7 +33,7 @@ namespace efish {
 
 
 SAM::SAM( void )
-  : RePro( "SAM", "efish", "Jan Benda", "2.4", "Dec 10, 2014" )
+  : RePro( "SAM", "efish", "Jan Benda", "2.5", "Sep 28, 2017" )
 {
   // parameter:
   ReadCycles = 100;
@@ -208,8 +208,6 @@ int SAM::createSignal( const InData &data, const EventData &events )
 	::relacs::minMax( minval, maxval, *Signal );
 	IntensityGain = 0.5*(maxval-minval);
       }
-      //Signal->description()["Frequency"].addFlags( OutData::Mutable );
-      //Signal->description()["Amplitude"].addFlags( OutData::Mutable );
       ident = "sinewave";
     }
     else {
@@ -222,10 +220,8 @@ int SAM::createSignal( const InData &data, const EventData &events )
       float maxval = 0.0;
       ::relacs::minMax( minval, maxval, *Signal );
       IntensityGain = 0.5*(maxval-minval);
-      Parameter & ap = Signal->description().insertNumber( "Amplitude", "SamplingRate", 1.0/IntensityGain, Signal->unit() );
-      ap.addFlags( OutData::Mutable );
+      Signal->description().insertNumber( "Amplitude", "SamplingRate", 1.0/IntensityGain, Signal->unit() );
       Signal->setSampleRate( data.sampleRate() * ( FishRate + DeltaF ) / FishRate );
-      Signal->description()["SamplingRate"].addFlags( OutData::Mutable );
       Signal->setCarrierFreq( FishRate + DeltaF );
       Signal->repeat( (int)rint( Duration/Signal->duration() ) );
       Signal->description().setNumber( "Frequency", FishRate + DeltaF );
@@ -233,10 +229,16 @@ int SAM::createSignal( const InData &data, const EventData &events )
     }
   }
   Duration = Signal->duration();
-  Signal->description()["Frequency"].addFlags( OutData::Mutable );
-  Signal->description()["Amplitude"].addFlags( OutData::Mutable );
-  Signal->description()["SamplingRate"].addFlags( OutData::Mutable );
-  Signal->description()["Duration"].addFlags( OutData::Mutable );
+  Signal->description().insertNumber( "DeltaF", "Phase", DeltaF, "Hz" );
+  Signal->description().insertNumber( "Contrast", "Frequency", 100.0*Contrast, "%" );
+  if ( settings().flags( "deltaf", OutData::Mutable ) ) {
+    Signal->description()["Frequency"].addFlags( OutData::Mutable );
+    Signal->description()["DeltaF"].addFlags( OutData::Mutable );
+  }
+  if ( settings().flags( "contrast", OutData::Mutable ) )
+    Signal->description()["Contrast"].addFlags( OutData::Mutable );
+  if ( settings().flags( "duration", OutData::Mutable ) )
+    Signal->description()["Duration"].addFlags( OutData::Mutable );
   Signal->setStartSource( 1 );
   Str s = ident + ", C=" + Str( 100.0 * Contrast, 0, 5, 'g' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
@@ -440,10 +442,7 @@ int SAM::main( void )
   // stimulus intensity:
   Intensity = Contrast * FishAmplitude / IntensityGain;
   Signal->setIntensity( Intensity );
-  Signal->description().addNumber( "Contrast", Contrast ).addFlags( OutData::Mutable );
   detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 1.5*Signal->intensity() );
-  if ( Signal->description().find("SamplingRate") != Signal->description().end() ) 
-    Signal->description()["SamplingRate"].addFlags( OutData::Mutable );
 
   // clear output lines:
   writeZero( AM ? GlobalEField : GlobalAMEField );

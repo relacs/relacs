@@ -174,13 +174,17 @@ li p {
 }
 
 .section .titlepage h5 {
-  font-size: 100%;
+  font-size: 90%;
   text-shadow: none;
+  background: none;
+  border: none;
 }
 
 .section .titlepage h6 {
-  font-size: 100%;
+  font-size: 90%;
   text-shadow: none;
+  background: none;
+  border: none;
 }
 
 .programlisting

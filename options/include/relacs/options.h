@@ -1926,13 +1926,19 @@ public:
         If the parameters 'parameter1', 'parameter2', ... match the
         name of an option, its value is set to x, y, z, ... respectively,
 	and \a flag is added to its flags, if \a flag is not 0.
+	If the last character of an assigned value is '*', then \a starflag
+	is alos added to the Parameter's flags.
         \return the Options for which to continue to read. */
-  Options &read( const string &opttxt, int flag,
+  Options &read( const string &opttxt, int flag, int starflag,
 		 const string &assignment=":=", const string &separator=",;",
 		 int *indent=0 );
+  Options &read( const string &opttxt, int flag,
+		 const string &assignment=":=", const string &separator=",;",
+		 int *indent=0 )
+    { return read( opttxt, 0, 0, assignment, separator ); };
   Options &read( const string &opttxt, const string &assignment=":=",
 		 const string &separator=",;" )
-    { return read( opttxt, 0, assignment, separator ); };
+    { return read( opttxt, 0, 0, assignment, separator ); };
     /*! Read a single line from stream \a str and set options. */
   friend istream &operator>> ( istream &str, Options &o );
     /*! Read from stream \a str and set the values of existing

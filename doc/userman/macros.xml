@@ -115,6 +115,8 @@ parameter21=10ms
 parameter22=20; 
 			</programlisting></para>
 
+			<para>A parameter value followed by a <varname>*</varname> marks this parameter as <token>mutable</token>. With this you can indicate, that the following calls to this RePro will change this parameter.</para>
+
 			<para>You can use the Macro's variables for defining values of the RePro's options
 			like this:
                         <programlisting>
@@ -122,6 +124,21 @@ ResearchProgram1: parameter1=$duration
 			</programlisting>
 			where <varname>duration</varname> is a macro variable.</para>
 
+		<section>
+                        <title>Random parameter values</title>
+			<para><varname>rand</varname> is a special macro variable, that produces random values. You can either assign a random value between a minimum value and a maximum value:
+                        <programlisting>
+ResearchProgram1: parameter1=$rand 10..50
+			</programlisting>
+			or randomly choose from a list of values:
+                        <programlisting>
+ResearchProgram1: parameter1=$rand 10,20,30,40,50
+			</programlisting>
+			Whenever the RePro is called, <varname>parameter1</varname> is set to a new, random value.</para>
+		</section>
+			
+		<section>
+                        <title>Ranges of parameter values</title>
 			<para>You can define a whole range of values for a parameter in parenthesis.
 			For example
 			<programlisting>
@@ -153,6 +170,9 @@ ResearchProgram1: parameter1=(4..10..2,down)ms;
 ResearchProgram1: parameter1=(4..10..2,down,r:2)ms;
 			</programlisting>
 			produces the sequence 10, 6, 2, 8, 4.</para>
+
+			<para>Ranges automatically mark the respective parameter as <token>mutable</token>.</para>
+		</section>
 		</section>
 
 		<section xml:id='macrofileactionfilter'>
@@ -281,11 +301,11 @@ shell cp foo.dat foo.dat.bak
 
 			<para>The following environment variables can be used from within a shell command:
 			<itemizedlist>
-				<listitem><para><envar>RELACSDATAPATH</envar>The path where RELACS stores data.</para></listitem>
-				<listitem><para><envar>RELACSDEFAULTPATH</envar>The default path where RELACS stores data (inbetween sessions).</para></listitem>
-				<listitem><para><envar>RELACSSESSIONTIME</envar>The elapsed time of the current session formatted as a string.</para></listitem>
-				<listitem><para><envar>RELACSSESSIONSECONDS</envar>The elapsed time of the current session in seconds.</para></listitem>
-				<listitem><para><envar>RELACSSESSIONSAVED</envar>Equals "1" if the session gets saved.</para></listitem>
+				<listitem><para><envar>RELACSDATAPATH</envar> The path where RELACS stores data.</para></listitem>
+				<listitem><para><envar>RELACSDEFAULTPATH</envar> The default path where RELACS stores data (in between sessions).</para></listitem>
+				<listitem><para><envar>RELACSSESSIONTIME</envar> The elapsed time of the current session formatted as a string.</para></listitem>
+				<listitem><para><envar>RELACSSESSIONSECONDS</envar> The elapsed time of the current session in seconds.</para></listitem>
+				<listitem><para><envar>RELACSSESSIONSAVED</envar> Equals "1" if the session gets saved.</para></listitem>
 			</itemizedlist></para>
 
 			<para>The shell command may span several lines provided
@@ -390,7 +410,7 @@ message 4: You did it!
 			The macro calls subsequently twice the RePro SAM with the <varname>deltaf</varname> option
 			set to 5 and 10Hz and the <varname>repeats</varname> option set to the value of the macro's
 			<varname>repeat</varname> variable.
-			The the RePro FICurve is called with default parameter settings.
+			Then the RePro FICurve is called with default parameter settings.
 			After the FICurve RePro is finished the message "You did it!" is displayed
 			in a window that closes automatically after 4 seconds, and
 			the fallback Macro is called.</para>
