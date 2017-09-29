@@ -1136,6 +1136,9 @@ Parameter &Parameter::addText( const string &strg, bool clear )
   bool stringtype = false;
   for ( int k=0; k<sq.size(); k++ ) {
     sq[k].strip( ' ' );
+    if ( isText() && ! unit().empty() && sq[k].size() > unit().size() &&
+	 string( sq[k], sq[k].size()-unit().size(), unit().size() ).compare( unit() ) == 0 )
+      sq[k].resize( sq[k].size()-unit().size() );
     bool quotes = ( sq[k][0] == '"' && sq[k][sq[k].size()-1] == '"' );
     if ( quotes )
       stringtype = true;
@@ -3561,6 +3564,8 @@ ostream &Parameter::save( ostream &str, int width, int flags ) const
 	str << ", " << quoteString( text( k ), always, escape );
       str << " ]";
     }
+    if ( isText() && ! unit().empty() )
+      str << unit();
   }
   else if ( isNotype() )
     str << "! no type !";

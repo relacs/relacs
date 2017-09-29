@@ -35,7 +35,25 @@ namespace auditoryprojects {
 \class MothASongs
 \brief [RePro] Artificial songs of Arctiid moths
 \author Nils Brehm
-\version 1.0 (Sep 27, 2017)
+\version 1.0 (Sep 29, 2017)
+\par Options
+- \c Stimulus
+    - \c duration=110ms: Stimulus duration (\c number)
+    - \c intensity=80dB SPL: Intensity (\c number)
+    - \c repeats=1: Repeats (\c integer)
+    - \c pause=1000ms: Pause (\c number)
+    - \c side=left: Speaker (\c string)
+- \c Pulse settings
+    - \c tau=1ms: Damping time-scale (\c number)
+    - \c apulserange="0..40..10"ms: Active pulse times (\c string)
+    - \c ppulserange="60..100..10"ms: Passive pulse times (\c string)
+    - \c afreq=10kHz: Active pulse frequencies (\c string)
+    - \c pfreq=10kHz: Passive pulse Frequencies (\c string)
+    - \c samplingrate=200kHz: Sampling rate (\c number)
+- \c Analysis
+    - \c before=100ms: Time before stimulus to be analyzed (\c number)
+    - \c after=100ms: Time after stimulus to be analyzed (\c number)
+    - \c sigma=1ms: Standard deviation of rate smoothing kernel (\c number)
 */
 
 
@@ -48,8 +66,11 @@ public:
   MothASongs( void );
   virtual int main( void );
 
-
 protected:
+
+  void saveSpikes( const Options &header, const EventList &spikes );
+  void saveRate( const Options &header, const SampleDataD &rate );
+  void saveStimulus( const Options &header, const OutData &wave );
 
   MultiPlot P;
 

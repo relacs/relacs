@@ -23,6 +23,7 @@
 #include <relacs/kernel.h>
 #include <relacs/sampledata.h>
 #include <relacs/eventlist.h>
+#include <relacs/tablekey.h>
 #include <relacs/auditoryprojects/mothasongs.h>
 #include <relacs/rangeloop.h>
 using namespace relacs;
@@ -31,21 +32,21 @@ namespace auditoryprojects {
 
 
 MothASongs::MothASongs( void )
-  : RePro( "MothASongs", "auditoryprojects", "Nils Brehm", "1.0", "Sep 27, 2017" )
+  : RePro( "MothASongs", "auditoryprojects", "Nils Brehm", "1.0", "Sep 29, 2017" )
 {
   // add some options:
   newSection( "Stimulus" );
-  addNumber( "duration", "Stimulus duration", 50.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "duration", "Stimulus duration", 0.11, 0.001, 10000.0, 0.001, "s", "ms" );
   addNumber( "intensity", "Intensity",80,10,100,1, "dB SPL" );
-  addInteger( "repeats", "Repeats", 1, 0, 100,  1);
+  addInteger( "repeats", "Repeats", 10, 0, 100,  1);
   addNumber( "pause", "Pause", 1, 0.1, 100, 0.1, "s", "ms");
   addSelection( "side", "Speaker", "left|right|best" );
   newSection("Pulse settings");
   addNumber( "tau", "Damping time-scale", 0.001, 0.00001, 10, 0.0001, "s", "ms" );
-  addText( "apulserange", "Active pulse times", "" ).setUnit( "ms" );
-  addText( "ppulserange", "Passive pulse times", "" ).setUnit( "ms" );
-  addText( "afreq", "Active pulse frequencies", "" ).setUnit( "kHz" );
-  addText( "pfreq", "Passive pulse Frequencies", "" ).setUnit( "kHz" );
+  addText( "apulserange", "Active pulse times", "0..40..10" ).setUnit( "ms" );
+  addText( "ppulserange", "Passive pulse times", "60..100..10" ).setUnit( "ms" );
+  addText( "afreq", "Active pulse frequencies", "10" ).setUnit( "kHz" );
+  addText( "pfreq", "Passive pulse Frequencies", "10" ).setUnit( "kHz" );
   addNumber("samplingrate", "Sampling rate", 200000, 10000, 1000000, 1000, "Hz", "kHz");
   newSection( "Analysis" );
   addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "s", "ms" );
@@ -116,8 +117,20 @@ int MothASongs::main( void )
   double sigma = number( "sigma" );
 
   // check parameter:
-  if (atimeofpulse.maxValue() >= duration*1000  ) {
-    warning( "Pulse position exceeds stimulus length" );
+  if ( atimeofpulse.maxValue() >= duration ) {
+    warning( "Active pulse position exceeds stimulus duration!" );
+    return Failed;
+  }
+  if ( ptimeofpulse.maxValue() >= duration ) {
+    warning( "Passive pulse position exceeds stimulus duration!" );
+    return Failed;
+  }
+  if ( atimeofpulse.size() != apulsefreq.size() && apulsefreq.size() != 1 ) {
+    warning( "Need as many active pulse frequencies as times!" );
+    return Failed;
+  }
+  if ( ptimeofpulse.size() != ppulsefreq.size() && ppulsefreq.size() != 1 ) {
+    warning( "Need as many passive pulse frequencies as times!" );
     return Failed;
   }
   
@@ -143,11 +156,17 @@ int MothASongs::main( void )
   OutData pulse;
   pulse.setTrace( Speaker[ side ] );
   for ( int j=0; j<atimeofpulse.size(); j++ ) {
-    pulse.dampedOscillationWave( 5.0*tau, wave.stepsize(), tau, apulsefreq[j] );
+    double freq = apulsefreq[0];
+    if ( j < apulsefreq.size() )
+      freq = apulsefreq[j];
+    pulse.dampedOscillationWave( 5.0*tau, wave.stepsize(), tau, freq );
     wave += pulse.shift( atimeofpulse[j] ); 
   }
   for ( int j=0; j<ptimeofpulse.size(); j++ ) {
-    pulse.dampedOscillationWave( 5.0*tau, wave.stepsize(), tau, ppulsefreq[j], M_PI );
+    double freq = ppulsefreq[0];
+    if ( j < ppulsefreq.size() )
+      freq = ppulsefreq[j];
+    pulse.dampedOscillationWave( 5.0*tau, wave.stepsize(), tau, freq, M_PI );
     wave += pulse.shift( ptimeofpulse[j] );
   }
 
@@ -216,9 +235,100 @@ int MothASongs::main( void )
     P.unlock();
 
   }
+
+  // file header:
+  Options header;
+  header.addInteger( "index", completeRuns() );
+  header.addInteger( "repro index", reproCount() );
+  header.addNumber( "repro time", reproStartTime(), "s", "%0.3f" );
+  header.addNumber( "carrier frequency", 0.001*wave.carrierFreq(), "kHz", "%.3f" );
+  header.addInteger( "side", side );
+  header.addText( "session time", sessionTimeStr() ); 
+  lockStimulusData();
+  header.newSection( stimulusData() );
+  unlockStimulusData();
+  header.newSection( settings() );
+  saveSpikes( header, spikes );
+  saveRate( header, rate );
+  saveStimulus( header, wave );
   
   writeZero( Speaker[ side ] );
   return state;
+}
+
+
+void MothASongs::saveSpikes( const Options &header, const EventList &spikes )
+{
+  // create file:
+  ofstream df( addPath( "mothasong-spikes.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  header.save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "t", "ms", "%7.1f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  spikes.saveText( df, 1000.0, 7, 1, 'f', 1, "-0" );
+  df << '\n';
+}
+
+
+void MothASongs::saveRate( const Options &header, const SampleDataD &rate )
+{
+  // create file:
+  ofstream df( addPath( "mothasong-rate.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  header.save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "time", "ms", "%7.1f" );
+  key.addNumber( "rate", "Hz", "%5.1f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int k=0; k<rate.size(); k++ ) {
+    double t = rate.pos( k );
+    key.save( df, t * 1000.0, 0 );
+    key.save( df, rate[k] );
+    df << '\n';
+  }
+  df << "\n\n";
+}
+
+
+void MothASongs::saveStimulus( const Options &header, const OutData &wave )
+{
+  // create file:
+  ofstream df( addPath( "mothasong-stimulus.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  header.save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "time", "ms", "%8.3f" );
+  key.addNumber( "sound", "pressure", "%7.4f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int k=0; k<wave.size(); k++ ) {
+    double t = wave.pos( k );
+    key.save( df, t * 1000.0, 0 );
+    key.save( df, wave[k] );
+    df << '\n';
+  }
+  df << "\n\n";
 }
 
 
