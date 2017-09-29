@@ -329,11 +329,10 @@ OUTDATADIVIDESCALARDEF
 
 const OutData &OutData::operator+=( const OutData &od )
 {
-  if ( ::fabs( stepsize() - od.stepsize() ) > 1e-8 || 
-       size() != od.size() )
+  if ( ::fabs( stepsize() - od.stepsize() ) > 1e-8 )
     return *this;
 
-  iterator iter1 = begin();
+  iterator iter1 = begin() + index( od.offset() );
   iterator end1 = end();
   const_iterator iter2 = od.begin();
   const_iterator end2 = od.end();
@@ -343,10 +342,7 @@ const OutData &OutData::operator+=( const OutData &od )
     ++iter2;
   };
 
-  if ( Description.type() != "stimulus/addition" ) {
-    Description.down();
-    Description.setType( "stimulus/addition" );
-  }
+  Description.clearSections();
   Description.newSection( od.Description );
 
   return *this;
@@ -451,6 +447,14 @@ OutData &OutData::append( const OutData &od, const string &name )
     opt.insertNumber( "Duration", "", od.length(), "s" );
   if ( ! foundtstart )
     opt.insertNumber( "StartTime", "", tstart, "s" );
+  return *this;
+}
+
+
+OutData &OutData::shift( double time )
+{
+  SampleDataF::shift( time );
+  Description.setNumber( "StartTime", SampleDataF::offset() );
   return *this;
 }
 

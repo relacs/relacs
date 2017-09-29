@@ -71,9 +71,9 @@ RangeLoop::RangeLoop( double value, int size,
 }
 
 
-RangeLoop::RangeLoop( const string &range )
+RangeLoop::RangeLoop( const string &range, double scale )
 {
-  set( range );
+  set( range, scale );
 }
 
 

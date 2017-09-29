@@ -159,9 +159,9 @@ class RangeLoop
   RangeLoop( double value, int size=1, 
 	     int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	     int increment=1 );
-    /*! Construct a range from \a range.
+    /*! Construct a range from the string \a range.
         See set( const string& ) for details. */
-  RangeLoop( const string &range );
+  RangeLoop( const string &range, double scale=1.0 );
     /*! Destruct thre RangeLoop. */
   ~RangeLoop( void );
 

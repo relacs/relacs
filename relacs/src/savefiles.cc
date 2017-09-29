@@ -582,6 +582,8 @@ void SaveFiles::writeStimulus( void )
     }
     if ( ! tn.empty() )
       sn += '-' + tn;
+    string pn = "";
+    int pc = 0;
     for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
 	  si != Stimuli[j].description().sectionsEnd();
 	  ++si ) {
@@ -592,9 +594,21 @@ void SaveFiles::writeStimulus( void )
 	tn.eraseFirst( "stimulus" );
 	tn.preventFirst( '/' );
       }
-      if ( ! tn.empty() )
-	sn += '-' + tn;
+      if ( ! tn.empty() ) {
+	// sqeeze repetitive types:
+	if ( tn != pn ) {
+	  if ( pc > 1 )
+	    sn += '*' + Str( pc );
+	  sn += '-' + tn;
+	  pc = 1;
+	}
+	else
+	  pc++;
+	pn = tn;
+      }
     }
+    if ( pc > 1 )
+      sn += '*' + Str( pc );
     stimulinames[j] = sn;
   }
 

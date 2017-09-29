@@ -168,7 +168,10 @@ class OutData : public SampleData< float >, public DaqError
   OUTDATAOPS1SCALARDEC( operator/= );
 
     /*! Add the content and description of \a od to this
-        provided the sampling rates and the sizes are the same. */
+        provided the sampling rates are the same.
+	The signal \a od is added at the position of its \a offset()
+	to \a this.
+        The size of \a od can be smaller than the one of \a this. */
   const OutData &operator+=( const OutData &od );
 
     /*! Set the size() and capacity() of the OutData array to \a n,
@@ -207,6 +210,10 @@ class OutData : public SampleData< float >, public DaqError
         then \a od is resampled with linear interpolation.
 	\param[in] \a name the optional name can be used to functionally describe the resulting signal. */
   OutData &append( const OutData &od, const string &name="" );
+
+     /*! Add \a val to the temporal offset and adjust the \a StartTime 
+         in the OutData's description. */
+  OutData &shift( double time );
 
     /*! Repeat the current content of the OutData array \a n times.
 	\param[in] \a name the optional name can be used to functionally describe the resulting signal. */
@@ -857,7 +864,6 @@ class OutData : public SampleData< float >, public DaqError
   void construct( void );
     /*! We do not want an offset! */
   void setRange( const double &offset, const double &stepsize ) {};
-  void shift( const double &val ) {};
 
     /*! Delay in seconds from start trigger to start of aquisition. */
   double Delay;

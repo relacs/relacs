@@ -46,7 +46,7 @@ MothASongs::MothASongs( void )
   addText( "ppulserange", "Passive pulse times", "" ).setUnit( "ms" );
   addText( "afreq", "Active pulse frequencies", "" ).setUnit( "kHz" );
   addText( "pfreq", "Passive pulse Frequencies", "" ).setUnit( "kHz" );
-  addNumber("samplingrate", "Sampling rate",200000,10000,1000000,1000,"Hz","kHz");
+  addNumber("samplingrate", "Sampling rate", 200000, 10000, 1000000, 1000, "Hz", "kHz");
   newSection( "Analysis" );
   addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "s", "ms" );
   addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "s", "ms" );
@@ -74,7 +74,7 @@ MothASongs::MothASongs( void )
   P[1].setTMarg( 0.5 );
   P[1].setBMarg( 5.0 );
   P[1].setXLabel( "Time [ms]" );
-  P[1].setYLabel( "Stimulus [dB]" );
+  P[1].setYLabel( "Sound pressure" );
   P[1].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P.unlock();
@@ -96,16 +96,16 @@ int MothASongs::main( void )
   double samplingrate = number("samplingrate");
   
   string afreq = allText( "afreq" );
-  RangeLoop apulsefreq( afreq );
+  RangeLoop apulsefreq( afreq, 1000.0 );
 
   string pfreq = allText( "pfreq" );
-  RangeLoop ppulsefreq( pfreq );
+  RangeLoop ppulsefreq( pfreq, 1000.0 );
 
   string apulserange = allText( "apulserange" );
-  RangeLoop atimeofpulse( apulserange ); 
+  RangeLoop atimeofpulse( apulserange, 0.001 ); 
  
   string ppulserange = allText( "ppulserange" );
-  RangeLoop ptimeofpulse( ppulserange ); 
+  RangeLoop ptimeofpulse( ppulserange, 0.001 ); 
 
   double before = number( "before" );
   if ( before > pause )
@@ -130,55 +130,38 @@ int MothASongs::main( void )
   // plot trace:
   tracePlotSignal( duration, 0.0 );
 
-  // Make Stimulus Array
+  // make stimulus:
   OutData wave;
   wave.setTrace( Speaker[ side ] );
   wave.setSampleRate( samplingrate );
   wave.setIntensity( intensity );
   wave.setCarrierFreq( apulsefreq.front() );  // XXXX this needs to be improved!!!!
-  int n = duration*samplingrate;
+  int n = duration * wave.sampleRate();
   wave.resize( n );
-
-  // make pulses:
-
-  // compute and copy active pulses into stimulus:
-  SampleDataD Apulse( 0.0, 5.0*tau, wave.stepsize() );
-  for ( int j = 0; j<atimeofpulse.size(); j++ ) {
-    for ( int k=0; k<Apulse.size(); k++ ) {
-      Apulse[k] = sin( 2.0*M_PI*(apulsefreq[j]*1000)*Apulse.pos(k) )*exp(-Apulse.pos(k)/tau);
-    }
-    Apulse /= max( Apulse );
-    int k0 = wave.index( atimeofpulse[j]/1000);
-    for ( int k=0; k<Apulse.size() && k+k0<wave.size(); k++ ){
-      wave[k+k0] += Apulse[k];
-    }
+  wave.description().setType( "stimulus/moth_song" );
+  // add pulses:
+  OutData pulse;
+  pulse.setTrace( Speaker[ side ] );
+  for ( int j=0; j<atimeofpulse.size(); j++ ) {
+    pulse.dampedOscillationWave( 5.0*tau, wave.stepsize(), tau, apulsefreq[j] );
+    wave += pulse.shift( atimeofpulse[j] ); 
+  }
+  for ( int j=0; j<ptimeofpulse.size(); j++ ) {
+    pulse.dampedOscillationWave( 5.0*tau, wave.stepsize(), tau, ppulsefreq[j], M_PI );
+    wave += pulse.shift( ptimeofpulse[j] );
   }
 
-  // compute and copy passive pulses into stimulus:
-  SampleDataD Ppulse( 0.0, 5.0*tau, wave.stepsize() );   
-  for ( int j = 0; j<ptimeofpulse.size(); j++ ) {
-    for ( int k=0; k<Ppulse.size(); k++ ) {
-      Ppulse[k] = sin( 2.0*M_PI*(ppulsefreq[j]*1000)*Ppulse.pos(k) )*exp(-Ppulse.pos(k)/tau);
-    }   
-    Ppulse /= -max( Ppulse );
-    int k0 = wave.index( ptimeofpulse[j]/1000);
-    for ( int k=0; k<Ppulse.size() && k+k0<wave.size(); k++ ){
-      wave[k+k0] += Ppulse[k];
-    }
-  }
-
+  // results:
   EventList spikes;
   SampleDataD rate( -before, duration+after, 0.0001, 0.0 );
 
   // plot stimulus:
   P.lock();
   P.clearPlots();
-  P[0].setYLabel( "Firing rate [Hz]" );
   P[0].setXRange( 0.0, 1000.0*duration );
   P[0].setYRange( 0.0, Plot::AutoScale );
   P[1].setXRange( 0.0, 1000.0*duration );
   P[1].setXLabel( "Time [ms]" );
-  P[0].setYLabel( "Sound pressure" );
   P[1].plot( wave, 1000.0, Plot::Green, 2 );
   P.draw();
   P.unlock();
