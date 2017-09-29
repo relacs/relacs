@@ -1463,6 +1463,34 @@ void OutData::sweepWave( double duration, double stepsize,
 }
 
 
+void OutData::dampedOscillationWave( double duration, double stepsize, double tau,
+				     double freq, double phase, double ampl,
+				     const string &name )
+{
+  if ( fixedSampleRate() )
+    stepsize = minSampleInterval();
+  else if ( stepsize < minSampleInterval()  )
+    stepsize = bestSampleInterval( freq );
+  dampedOscillation( 0.0, duration, stepsize, tau, freq, phase );
+  double max = maxAbs( array() );
+  array() *= ampl/max;
+  back() = 0.0;
+
+  Description.clear();
+  Description.setType( "stimulus/damped_oscillation" );
+  Description.setName( name );
+  Description.addNumber( "StartTime", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "Tau", tau, "s" );
+  Description.addNumber( "Frequency", freq, "Hz" );
+  Description.addNumber( "Phase", phase );
+
+  setCarrierFreq( freq );
+  clearError();
+}
+
+
 void OutData::rampWave( double duration, double stepsize,
 			double first, double last, const string &name )
 {

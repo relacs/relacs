@@ -48,6 +48,9 @@ public:
   MothASongs( void );
   virtual int main( void );
 
+
+protected:
+
   MultiPlot P;
 
 };

@@ -780,6 +780,20 @@ class SampleData : public Array< T >
   SampleData< T > &sweep( double l,  double r, double stepsize, double startfreq, double endfreq )
   { return sweep( LinearRange( l, r, stepsize ), startfreq, endfreq ); };
 
+    /*! Returns exp(-x/tau)*sin(2*pi*f*x+p)
+        computed for each element \a x of the range \a r. */
+  friend SampleData<> dampedOscillation( const LinearRange &r, double tau, double f, double p );
+  friend SampleData<> dampedOscillation( int n, double offset, double stepsize, double tau, double f, double p );
+  friend SampleData<> dampedOscillation( double l, double r, double stepsize, double tau, double f, double p );
+    /*! Initializes the range  with \a r 
+        and the array with exp(-x/tau)*sin(2*pi*f*x+p)
+        computed for each element \a x of the range \a r. */
+  SampleData< T > &dampedOscillation( const LinearRange &r, double tau, double f, double p=0.0 );
+  SampleData< T > &dampedOscillation( int n, double offset, double stepsize, double tau, double f, double p=0.0 )
+  { return dampedOscillation( LinearRange( n, offset, stepsize ), tau, f, p ); };
+  SampleData< T > &dampedOscillation( double l,  double r, double stepsize, double tau, double f, double p=0.0 )
+  { return dampedOscillation( LinearRange( l, r, stepsize ), tau, f, p ); };
+
     /*! Returns the standard normal distribution exp( -0.5*x^2 )/sqrt(2*pi) 
         for each element \a x of the range \a r. */
   friend SampleData<> gauss( const LinearRange &r );
@@ -1517,6 +1531,12 @@ SampleData<> cos( double l, double r, double stepsize, double f, double p=0.0 );
 SampleData<> sweep( const LinearRange &r, double startfreq, double endfreq );
 SampleData<> sweep( int n, double offset, double stepsize, double startfreq, double endfreq );
 SampleData<> sweep( double l, double r, double stepsize, double startfreq, double endfreq );
+
+  /*! Returns exp(-x/tau)*sin(2*pi*f*x+p)
+      computed for each element \a x of the range \a r. */
+ SampleData<> dampedOscillation( const LinearRange &r, double tau, double f, double p=0.0 );
+SampleData<> dampedOscillation( int n, double offset, double stepsize, double tau, double f, double p=0.0 );
+SampleData<> dampedOscillation( double l, double r, double stepsize, double tau, double f, double p=0.0 );
 
   /*! Returns the standard normal distribution exp( -0.5*x^2 )/sqrt(2*pi) 
       for each element \a x of the range \a r. */
@@ -2891,6 +2911,25 @@ SampleData< T > &SampleData< T >::sweep( const LinearRange &r, double startfreq,
   ForwardIter2 iter2 = r.begin();
   while ( iter1 != end1 ) {
     *iter1 = ::sin( 6.28318530717959*(startfreq+df2*(*iter2))*(*iter2) );
+    ++iter1;
+    ++iter2;
+  }
+  return *this;
+}
+
+
+template < typename T >
+SampleData< T > &SampleData< T >::dampedOscillation( const LinearRange &r, double tau,
+						     double f, double p )
+{
+  Samples = r;
+  resize( r.size() );
+  typedef typename LinearRange::const_iterator ForwardIter2;
+  iterator iter1 = begin();
+  iterator end1 = end();
+  ForwardIter2 iter2 = r.begin();
+  while ( iter1 != end1 ) {
+    *iter1 = ::exp( -(*iter2)/tau )*::sin( 6.28318530717959*f*(*iter2) + p );
     ++iter1;
     ++iter2;
   }

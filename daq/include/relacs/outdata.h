@@ -764,6 +764,19 @@ class OutData : public SampleData< float >, public DaqError
 		  double startfreq, double endfreq,
 		  double ampl=1.0, double ramp=0.0, 
 		  const string &name="" );
+    /*! Create a damped sine wave exp(-t/tau)*sin(2*pi*freq*t + phase)
+        with time constant of decay \a tau, freqency \a freq Hz,
+	and phase shift \a phase (in rad) of \a duration seconds.
+	The waveform is scaled such that the larges peak or amplitude equals \a ampl.
+	If fixedSampleRate() the \a stepsize is set to minSampleInterval().
+	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a freq ).
+	The carrier frequency of the signal is set to \a freq.
+	\param[in] \a name the optional name can be used to functionally describe the signal.
+        \note specify an output trace using setTrace() or setTraceName()
+	before calling dampedOscillationWave()! */
+  void dampedOscillationWave( double duration, double stepsize, double tau,
+			      double freq, double phase=0.0, double ampl=1.0,
+			      const string &name="" );
     /*! Creates a ramp stimulus that starts at \a first and linearly
         ramps up to \a last for a duration of \a duration seconds
         sampled with \a stepsize. 

@@ -118,6 +118,37 @@ SampleData<> sweep( double l, double r, double stepsize,
 }
 
 
+  SampleData<> dampedOscillation( const LinearRange &r, double tau, double f, double p )
+{
+  SampleData<> y( r );
+  typedef SampleData<>::iterator ForwardIter1;
+  typedef LinearRange::const_iterator ForwardIter2;
+  ForwardIter1 iter1 = y.begin();
+  ForwardIter1 end1 = y.end();
+  ForwardIter2 iter2 = r.begin();
+  while ( iter1 != end1 ) {
+    *iter1 = ::exp( -(*iter2)/tau) * ::sin( 6.28318530717959*f*(*iter2) + p );
+    ++iter1;
+    ++iter2;
+  }
+  return y;
+}
+
+
+SampleData<> dampedOscillation( int n, double offset, double stepsize,
+				double tau, double f, double p )
+{
+  return dampedOscillation( LinearRange( n, offset, stepsize ), tau, f, p );
+}
+
+
+SampleData<> dampedOscillation( double l, double r, double stepsize,
+				double tau, double f, double p )
+{
+  return dampedOscillation( LinearRange( l, r, stepsize ), tau, f, p );
+}
+
+
 SampleData<> gauss( const LinearRange &r )
 {
   SampleData<> y( r );

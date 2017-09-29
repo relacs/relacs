@@ -34,23 +34,25 @@ MothASongs::MothASongs( void )
   : RePro( "MothASongs", "auditoryprojects", "Nils Brehm", "1.0", "Sep 27, 2017" )
 {
   // add some options:
-  newSection("Stimulus");
+  newSection( "Stimulus" );
   addNumber( "duration", "Stimulus duration", 50.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "intensity", "Intensity",80,10,100,1, "dB SPL" );
   addInteger( "repeats", "Repeats", 1, 0, 100,  1);
   addNumber( "pause", "Pause", 1, 0.1, 100, 0.1, "s", "ms");
   addSelection( "side", "Speaker", "left|right|best" );
-  newSection("Pulse Settings");
+  newSection("Pulse settings");
   addNumber( "tau", "Damping time-scale", 0.001, 0.00001, 10, 0.0001, "s", "ms" );
-  addText( "Apulserange", "Active Pulse range", "" ).setUnit( "ms" );
-  addText( "Ppulserange", "Passive Pulse range", "" ).setUnit( "ms" );
-  addText( "Afreq", "Active Pulse Frequency", "" ).setUnit( "kHz" );
-  addText( "Pfreq", "Passive Pulse Frequency", "" ).setUnit( "kHz" );
-  addNumber("samplingrate", "Sampling Rate",200000,10000,1000000,1000,"Hz","kHz");
-  newSection("Analysis");
-  addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
-  addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
+  addText( "apulserange", "Active pulse times", "" ).setUnit( "ms" );
+  addText( "ppulserange", "Passive pulse times", "" ).setUnit( "ms" );
+  addText( "afreq", "Active pulse frequencies", "" ).setUnit( "kHz" );
+  addText( "pfreq", "Passive pulse Frequencies", "" ).setUnit( "kHz" );
+  addNumber("samplingrate", "Sampling rate",200000,10000,1000000,1000,"Hz","kHz");
+  newSection( "Analysis" );
+  addNumber( "before", "Time before stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "s", "ms" );
+  addNumber( "after", "Time after stimulus to be analyzed", 0.1, 0.0, 100.0, 0.01, "s", "ms" );
   addNumber( "sigma", "Standard deviation of rate smoothing kernel", 0.001, 0.0, 1.0, 0.0001, "seconds", "ms" );
+
+  // plots:
   P.lock();
   P.resize( 2 );
   P.setCommonXRange( 0, 1 );
@@ -93,21 +95,17 @@ int MothASongs::main( void )
   int repeats = integer("repeats");
   double samplingrate = number("samplingrate");
   
-  string Afreq = allText("Afreq");
-  RangeLoop Apulsefreq;
-  Apulsefreq.set(Afreq);
+  string afreq = allText( "afreq" );
+  RangeLoop apulsefreq( afreq );
 
-  string Pfreq = allText("Pfreq");
-  RangeLoop Ppulsefreq;
-  Ppulsefreq.set(Pfreq);
+  string pfreq = allText( "pfreq" );
+  RangeLoop ppulsefreq( pfreq );
 
-  string  Apulserange = allText("Apulserange");
-  RangeLoop Atimeofpulse;
-  Atimeofpulse.set(Apulserange); 
+  string apulserange = allText( "apulserange" );
+  RangeLoop atimeofpulse( apulserange ); 
  
-  string  Ppulserange = allText("Ppulserange");
-  RangeLoop Ptimeofpulse;
-  Ptimeofpulse.set(Ppulserange); 
+  string ppulserange = allText( "ppulserange" );
+  RangeLoop ptimeofpulse( ppulserange ); 
 
   double before = number( "before" );
   if ( before > pause )
@@ -117,12 +115,9 @@ int MothASongs::main( void )
     after = pause;
   double sigma = number( "sigma" );
 
- // check parameter:
-
-  if (Atimeofpulse.maxValue() >= duration*1000  ) {
-    
-    warning( "Pulse Poistion exceeds stimulus length" );
-    
+  // check parameter:
+  if (atimeofpulse.maxValue() >= duration*1000  ) {
+    warning( "Pulse position exceeds stimulus length" );
     return Failed;
   }
   
@@ -132,8 +127,6 @@ int MothASongs::main( void )
     side = metaData().index( "Cell>best side" );
   unlockMetaData();
 
-  //  warning( "The duration is " + Str( duration ) + " seconds" );
-
   // plot trace:
   tracePlotSignal( duration, 0.0 );
 
@@ -142,33 +135,33 @@ int MothASongs::main( void )
   wave.setTrace( Speaker[ side ] );
   wave.setSampleRate( samplingrate );
   wave.setIntensity( intensity );
-  wave.setCarrierFreq( Apulsefreq.front() );  // XXXX this needs to be improved!!!!
+  wave.setCarrierFreq( apulsefreq.front() );  // XXXX this needs to be improved!!!!
   int n = duration*samplingrate;
   wave.resize( n );
 
   // make pulses:
 
-  // Compute and copy Active pulses into stimulus:
+  // compute and copy active pulses into stimulus:
   SampleDataD Apulse( 0.0, 5.0*tau, wave.stepsize() );
-  for ( int j = 0; j<Atimeofpulse.size(); j++ ) {
+  for ( int j = 0; j<atimeofpulse.size(); j++ ) {
     for ( int k=0; k<Apulse.size(); k++ ) {
-      Apulse[k] = sin( 2.0*M_PI*(Apulsefreq[j]*1000)*Apulse.pos(k) )*exp(-Apulse.pos(k)/tau);
+      Apulse[k] = sin( 2.0*M_PI*(apulsefreq[j]*1000)*Apulse.pos(k) )*exp(-Apulse.pos(k)/tau);
     }
     Apulse /= max( Apulse );
-    int k0 = wave.index( Atimeofpulse[j]/1000);
+    int k0 = wave.index( atimeofpulse[j]/1000);
     for ( int k=0; k<Apulse.size() && k+k0<wave.size(); k++ ){
       wave[k+k0] += Apulse[k];
     }
   }
 
-  // Compute and copy Passive pulses into stimulus:
+  // compute and copy passive pulses into stimulus:
   SampleDataD Ppulse( 0.0, 5.0*tau, wave.stepsize() );   
-  for ( int j = 0; j<Ptimeofpulse.size(); j++ ) {
+  for ( int j = 0; j<ptimeofpulse.size(); j++ ) {
     for ( int k=0; k<Ppulse.size(); k++ ) {
-      Ppulse[k] = sin( 2.0*M_PI*(Ppulsefreq[j]*1000)*Ppulse.pos(k) )*exp(-Ppulse.pos(k)/tau);
+      Ppulse[k] = sin( 2.0*M_PI*(ppulsefreq[j]*1000)*Ppulse.pos(k) )*exp(-Ppulse.pos(k)/tau);
     }   
     Ppulse /= -max( Ppulse );
-    int k0 = wave.index( Ptimeofpulse[j]/1000);
+    int k0 = wave.index( ptimeofpulse[j]/1000);
     for ( int k=0; k<Ppulse.size() && k+k0<wave.size(); k++ ){
       wave[k+k0] += Ppulse[k];
     }
@@ -177,7 +170,7 @@ int MothASongs::main( void )
   EventList spikes;
   SampleDataD rate( -before, duration+after, 0.0001, 0.0 );
 
-  // Plot Stimulus
+  // plot stimulus:
   P.lock();
   P.clearPlots();
   P[0].setYLabel( "Firing rate [Hz]" );
@@ -223,10 +216,9 @@ int MothASongs::main( void )
       spikes.back().addRate( rate, trial, GaussKernel( sigma ) );
     }
 
-    // plot:
+    // plot spikes and firing rate:
     P.lock();
     P[0].clear();
-    // spikes and firing rate:
     int maxspikes = (int)rint( 20.0 / SpikeTraces );
     if ( maxspikes < 4 )
       maxspikes = 4;
@@ -237,9 +229,7 @@ int MothASongs::main( void )
       P[0].plot( spikes[i], 0, 0.0, 1000.0, 1.0 - delta*(j-0.1), Plot::Graph, 2, Plot::StrokeUp, delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
     }
     P[0].plot( rate, 1000.0, Plot::Yellow, 2, Plot::Solid );
-
     P.draw();
-
     P.unlock();
 
   }
