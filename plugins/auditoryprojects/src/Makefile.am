@@ -7,7 +7,8 @@ pluginlib_LTLIBRARIES = \
     libauditoryprojectsspikeprecision.la \
     libauditoryprojectsisoresponse.la \
     libauditoryprojectsoneclick.la \
-    libauditoryprojectsfiphaselocking.la
+    libauditoryprojectsfiphaselocking.la \
+    libauditoryprojectsmothasongs.la
 
 
 
@@ -174,11 +175,50 @@ libauditoryprojectsfiphaselocking_la_include_HEADERS = $(HEADER_PATH)/fiphaseloc
 
 
 
+libauditoryprojectsmothasongs_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libauditoryprojectsmothasongs_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libauditoryprojectsmothasongs_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
+    $(builddir)/../../auditory/src/libauditorysession.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libauditoryprojectsmothasongs_la_OBJECTS) : moc_mothasongs.cc
+
+libauditoryprojectsmothasongs_la_SOURCES = mothasongs.cc
+
+libauditoryprojectsmothasongs_la_includedir = $(pkgincludedir)/auditoryprojects
+
+libauditoryprojectsmothasongs_la_include_HEADERS = $(HEADER_PATH)/mothasongs.h
+
+
+
 check_PROGRAMS = \
     linktest_libauditoryprojectsspikeprecision_la \
     linktest_libauditoryprojectsisoresponse_la \
     linktest_libauditoryprojectsoneclick_la \
-    linktest_libauditoryprojectsfiphaselocking_la
+    linktest_libauditoryprojectsfiphaselocking_la \
+    linktest_libauditoryprojectsmothasongs_la
 
 linktest_libauditoryprojectsspikeprecision_la_SOURCES = linktest.cc
 linktest_libauditoryprojectsspikeprecision_la_LDADD = libauditoryprojectsspikeprecision.la
@@ -191,5 +231,8 @@ linktest_libauditoryprojectsoneclick_la_LDADD = libauditoryprojectsoneclick.la
 
 linktest_libauditoryprojectsfiphaselocking_la_SOURCES = linktest.cc
 linktest_libauditoryprojectsfiphaselocking_la_LDADD = libauditoryprojectsfiphaselocking.la
+
+linktest_libauditoryprojectsmothasongs_la_SOURCES = linktest.cc
+linktest_libauditoryprojectsmothasongs_la_LDADD = libauditoryprojectsmothasongs.la
 
 TESTS = $(check_PROGRAMS)
