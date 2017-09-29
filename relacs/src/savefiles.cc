@@ -1797,8 +1797,8 @@ void SaveFiles::NixFile::close ( )
 static void saveNIXParameter(const Parameter &param, nix::Section &section, Options::SaveFlags flags)
 {
   vector<nix::Value> values;
-  //std::cerr << param.name() << "\t" << param.size() << "\t" << ((param.style() & Parameter::ListAlways) == 0) << "\t" << ((param.flags() == Options::FirstOnly) == 0) << std::endl;
-  for ( int i = 0; i < param.size(); i++ ) {
+  bool first_only = (param.flags() & Options::FirstOnly) > 0;
+  for ( int i = 0;  i < (first_only ? 1 : param.size()); i++ ) {
     nix::Value val;
     //have to check for number or integer, otherwise it doesn't work
     if ( param.isNumber () || param.isInteger() ) {
