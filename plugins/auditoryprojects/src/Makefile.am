@@ -183,6 +183,9 @@ libauditoryprojectsmothasongs_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
+    -I$(top_srcdir)/plugins/acoustic/include \
+    -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
