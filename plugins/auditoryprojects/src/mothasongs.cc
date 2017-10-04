@@ -160,6 +160,7 @@ int MothASongs::main( void )
     if ( j < apulsefreq.size() )
       freq = apulsefreq[j];
     pulse.dampedOscillationWave( 5.0*tau, wave.stepsize(), tau, freq );
+    pulse.description().setName( "Active pulse " + Str( j+1 ) );
     wave += pulse.shift( atimeofpulse[j] ); 
   }
   for ( int j=0; j<ptimeofpulse.size(); j++ ) {
@@ -167,6 +168,7 @@ int MothASongs::main( void )
     if ( j < ppulsefreq.size() )
       freq = ppulsefreq[j];
     pulse.dampedOscillationWave( 5.0*tau, wave.stepsize(), tau, freq, M_PI );
+    pulse.description().setName( "Passive pulse " + Str( j+1 ) );
     wave += pulse.shift( ptimeofpulse[j] );
   }
 
