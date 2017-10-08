@@ -113,7 +113,7 @@ int AdaptedFICurves::main( void )
   // amplitude modulation:
   MapD times;
   OutData am;
-  am.setSampleInterval( 0.0005 );
+  am.setStepsize( 0.0005 );
   am.clear();
   int rn = am.indices( ramp );
   double xb = ::pow( 10.0, 0.05*(adaptint - intmax) );

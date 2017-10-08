@@ -1,4 +1,12 @@
 - Actually used sampling rate will certianly differ from the one requested!!! How to deal with that??? In particular with high AO rates in case of auditory stimuli?
+  - OutData::setStepsize should set the stepsize as requested
+    AnalogOutput and children (linuxdevices and simulation) should then use setStepsize to avoid infinite loops!
+  - OutData::setSampleRate/Interval should check and return the rate that can really be set
+  - Maximum sampling rate should initially be adjusted for what can be supported!
+  - AnalogOutput devices need to set/return what sampling rate was really used.
+  - Then fix OutData::fill, OutData::load (interpolation might be required!)
+  - How should OutData Wave functions deal with stepsize requests? Remove it entirely?
+    But: when building ams a lower sampling rate migh suffice (a high one would not hurt either!)
 
 - RePros need to set stimulus descriptions as Mutable if a corresponding parameter is mutable.
 
@@ -116,17 +124,17 @@ Acquire:
 
 Metadata support of OutData:
 - The following RePros still need to be updated for an appropriate OutData::description:
-  auditory: adaptedficurve, syslatency
+  auditory: adaptedficurve!!!, syslatency
   auditoryprojects: spikeprecision
   efield: jar
-  efish: chirps
+  efish: chirps!!!
   patchclamp: simple
   patchclampprojects: thresholdlatencies, feedforwardnetwork
 - Remove OutData::ident()
 - Check loading of metadata descriptions from stimulus files in OutData::load(),
   check usage in auditory::singlestimulus, efield::jar, etc.
 - OutData::repeat() with pause.
-- OutData::setSampleRate should update timing information in the descriptions? See efish::SAM for the recorded EOD stimulus.
+- OutData::setSampleRate should update timing information in the descriptions? See efish::SAM for the recorded EOD stimulus. No this should be solved by interpolation.
 - Implement oprators =, +, etc. for OutData such that they take descriptions into account!
   (i.e. in isoresponse, spikeprecision, efield::beats, efish::filestimulus, patchclamp::singlestimulus, OutData::maximize())
 - Remove most of the OutData constructors that resize the data? You should use *Wave() instead!

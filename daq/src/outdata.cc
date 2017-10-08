@@ -1010,24 +1010,6 @@ void OutData::setDefaultMinSampleInterval( double minsample )
 }
 
 
-double OutData::bestSampleRate( double carrierfreq )
-{
-  double msr = maxSampleRate();
-  if ( fixedSampleRate() )
-    return msr;
-
-  if ( carrierfreq <= 1.0e-8 )
-    return msr;
-  else {
-    double rate = ::floor( msr/4.0/carrierfreq )*4.0*carrierfreq;
-    if ( rate <= 1.0e-8 )
-      return msr;
-    else
-      return rate;
-  }
-}
-
-
 double OutData::bestSampleInterval( double carrierfreq )
 {
   double msi = minSampleInterval();
@@ -1346,10 +1328,8 @@ void OutData::noiseWave( double duration, double stepsize,
 			 double cutofffreq, double stdev,
 			 unsigned long *seed, double r, const string &name )
 {
-  if ( fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
-  else if ( stepsize < minSampleInterval()  )
-    stepsize = bestSampleInterval( cutofffreq );
   Random rand;
   if ( seed != 0 )
     *seed = rand.setSeed( *seed );
@@ -1379,10 +1359,8 @@ void OutData::bandNoiseWave( double duration, double stepsize,
 			     double cutofffreqlow, double cutofffreqhigh, double stdev, 
 			     unsigned long *seed, double r, const string &name )
 {
-  if ( fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
-  else if ( stepsize < minSampleInterval()  )
-    stepsize = bestSampleInterval( cutofffreqhigh );
   Random rand;
   if ( seed != 0 )
     *seed = rand.setSeed( *seed );
@@ -1471,10 +1449,8 @@ void OutData::dampedOscillationWave( double duration, double stepsize, double ta
 				     double freq, double phase, double ampl,
 				     const string &name )
 {
-  if ( fixedSampleRate() )
+  if ( stepsize < minSampleInterval() || fixedSampleRate() )
     stepsize = minSampleInterval();
-  else if ( stepsize < minSampleInterval()  )
-    stepsize = bestSampleInterval( freq );
   dampedOscillation( 0.0, duration, stepsize, tau, freq, phase );
   double max = maxAbs( array() );
   array() *= ampl/max;

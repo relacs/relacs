@@ -584,20 +584,6 @@ class OutData : public SampleData< float >, public DaqError
         \sa setDefaultMaxSampleRate() */
   static void setDefaultMinSampleInterval( double minsample );
 
-    /*! Returns the optimal sampling rate (in Hertz) that should be used 
-        for a signal with carrier frequency \a carrierfreq Hz.
-	The optimal sampling rate is the largest possible rate that is
-	a multiple of four times the carrier frequency.
-	This ensures that a sine wave with frequency \a carrierfreq is sampled
-	exactly at the zero crossings, minima, and maxima,
-	which is important for a stable output of the amplitude of the sine wave.
-        The returned sampling rate is always smaller or equal to maxSampleRate().
-	If a fixed sampling rate has to be used, maxSampleRate() is returned.
-        If \a carrierfreq <= 0, then maxSampleRate() is returned.
-        \note specify an output trace using setTrace() or setTraceName()
-	before calling bestSampleInterval()!        
-        \sa bestSampleInterval(), setBestSample(), fixedRate()  */
-  double bestSampleRate( double carrierfreq );
     /*! Returns the optimal sampling interval (in seconds) that should be used 
         for a signal with carrier frequency \a carrierfreq Hz.
 	The optimal sampling interval is the smallest possible interval 

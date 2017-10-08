@@ -453,7 +453,7 @@ int Beats::main( void )
 	  if ( sig.fixedSampleRate() )
 	    sig.setSampleInterval( sig.minSampleInterval() );
 	  else
-	    sig.setSampleInterval( sig.bestSampleInterval( 2.0*stimulusrate ) );
+	    sig.setBestSample( 2.0*stimulusrate );
 	  sig.resize( sig.indices( duration ) );
 	  double csig = 0.5*chirpwidth / ::pow( 2.0*log(10.0), 0.5/chirpkurtosis );
 	  double p = 0.0;
