@@ -776,9 +776,14 @@ See
 \code
 lsmod
 \endcode
-for the currently loaded kernel modules. When configuring the kernel
-you can hit '\', enter a search term (the module name) and you get a 
-list of matching configuration parameters.
+for listing all the currently loaded kernel modules. Or
+\code
+lsmod -k
+\endcode
+for a list of PCI devices on your system and their associated kernel modules.
+
+When configuring the kernel you can hit '/', enter a search term (the
+module name) and you get a list of matching configuration parameters.
 
 Devices to look out are:
 - Disable DRM:

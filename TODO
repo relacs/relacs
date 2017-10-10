@@ -8,6 +8,8 @@
   - How should OutData Wave functions deal with stepsize requests? Remove it entirely?
     But: when building ams a lower sampling rate migh suffice (a high one would not hurt either!)
 
+- OutData::operator+=(&OutData): check if a section with the same name already exists. If yes we must give it a name.
+
 - RePros need to set stimulus descriptions as Mutable if a corresponding parameter is mutable.
 
 - Zooming in trace window does not work properly. Easiest could be to kill the zoom stack.
