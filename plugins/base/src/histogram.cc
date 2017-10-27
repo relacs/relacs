@@ -128,40 +128,42 @@ void Histogram::main( void )
     if ( offsinx + n > trace( InTrace ).currentIndex() )
       n = trace( InTrace ).currentIndex() - offsinx;
 
-    float min = 0.0;
-    float max = 0.0;
-    trace( InTrace ).minMax( min, max, offsinx, offsinx+n );
-    if ( ::fabs(max-min) < 1e-8 ) {
-      min -= 1.0;
-      max += 1.0;
-    }
+    if ( n > 0 ) {
+      float min = 0.0;
+      float max = 0.0;
+      trace( InTrace ).minMax( min, max, offsinx, offsinx+n );
+      if ( ::fabs(max-min) < 1e-8 ) {
+	min -= 1.0;
+	max += 1.0;
+      }
     
-    int nbins = n/500;
-    if ( n < 2 )
-      n = 2;
-    SampleDataD hist( min, max, (max-min)/nbins );
-    trace( InTrace ).hist( hist, offsinx, offsinx+n );
-    if ( histinit || UpdateRange == 0 ) {
-      histinit = false;
-      histmin = hist.rangeFront();
-      histmax = hist.rangeBack();
-    }
-    else {
-      if ( histmin > hist.rangeFront() )
+      int nbins = n/500;
+      if ( nbins < 2 )
+	nbins = 2;
+      SampleDataD hist( min, max, (max-min)/nbins );
+      trace( InTrace ).hist( hist, offsinx, offsinx+n );
+      if ( histinit || UpdateRange == 0 ) {
+	histinit = false;
 	histmin = hist.rangeFront();
-      if ( histmax < hist.rangeBack() )
 	histmax = hist.rangeBack();
-    }
+      }
+      else {
+	if ( histmin > hist.rangeFront() )
+	  histmin = hist.rangeFront();
+	if ( histmax < hist.rangeBack() )
+	  histmax = hist.rangeBack();
+      }
 
-    P.lock();
-    P.clear();
-    P.setXYGrid();
-    P.setLabel( 0, "" );
-    if ( ! P.zoomedXRange() )
-      P.setXRange( histmin, histmax );
-    P.plot( hist, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Yellow, Plot::Yellow );
-    P.draw();
-    P.unlock();
+      P.lock();
+      P.clear();
+      P.setXYGrid();
+      P.setLabel( 0, "" );
+      if ( ! P.zoomedXRange() )
+	P.setXRange( histmin, histmax );
+      P.plot( hist, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Yellow, Plot::Yellow );
+      P.draw();
+      P.unlock();
+    }
 
     if ( Origin > 0 )
       waitOnReProSleep();
