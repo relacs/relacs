@@ -20,3 +20,6 @@ Also see files ChangeLog and THANKS
 
 * Philipp Kuhlmann:
   Configuration dialogs.
+
+* Alexander Ott:
+  Mirob robot device, control, and repros.
