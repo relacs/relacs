@@ -43,8 +43,8 @@ pkginclude_HEADERS = \
     ../include/relacs/analogoutput.h \
     ../include/relacs/attenuate.h \
     ../include/relacs/attenuator.h \
-    ../include/relacs/daqerror.h \
     ../include/relacs/camera.h \
+    ../include/relacs/daqerror.h \
     ../include/relacs/device.h \
     ../include/relacs/digitalio.h \
     ../include/relacs/indata.h \
@@ -53,6 +53,8 @@ pkginclude_HEADERS = \
     ../include/relacs/outdatainfo.h \
     ../include/relacs/outdata.h \
     ../include/relacs/outlist.h \
+    ../include/relacs/point.h \
+    ../include/relacs/shape.h \
     ../include/relacs/temperature.h \
     ../include/relacs/tracespec.h \
     ../include/relacs/trigger.h \
@@ -74,6 +76,8 @@ librelacsdaq_la_SOURCES = \
     outdatainfo.cc \
     outdata.cc \
     outlist.cc \
+    point.cc \
+    shape.cc \
     temperature.cc \
     tracespec.cc \
     trigger.cc \
