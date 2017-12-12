@@ -269,6 +269,11 @@ public:
         This implementation returns pluginSet() + '-' + name() + \c ".html". */
   virtual string helpFileName( void ) const;
 
+    /*! Path to relacs icons (usually in \c /usr/share/relacs). */
+  string iconPath( void ) const;
+    /*! Path to the relacs documentation. */
+  string docPath( void ) const;
+
 
 protected:
 
