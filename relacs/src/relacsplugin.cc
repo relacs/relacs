@@ -194,13 +194,13 @@ string RELACSPlugin::helpFileName( void ) const
 
 string RELACSPlugin::iconPath( void ) const
 {
-  return RW->IconPath;
+  return RW != 0 ? RW->IconPath : "";
 }
 
 
 string RELACSPlugin::docPath( void ) const
 {
-  return RW->DocPath;
+  return RW != 0 ? RW->DocPath : "";
 }
 
 
