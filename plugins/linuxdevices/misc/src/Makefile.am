@@ -8,7 +8,8 @@ pluginlib_LTLIBRARIES = \
     libmiscamplmode.la
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
-    libmiscmirob.la
+    libmiscmirob.la \
+    libmiscxyzrobot.la
 endif 
 if RELACS_COND_OPENCV
 pluginlib_LTLIBRARIES += \
@@ -74,6 +75,36 @@ libmiscmirob_la_SOURCES = mirob.cc mirobdevice.cc
 libmiscmirob_la_includedir = $(pkgincludedir)/misc
 
 libmiscmirob_la_include_HEADERS = $(HEADER_PATH)/mirob.h
+
+
+
+libmiscxyzrobot_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../include \
+    $(TML_CPPFLAGS) \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+
+libmiscxyzrobot_la_LDFLAGS = \
+    -module -avoid-version \
+    $(TML_LDFLAGS) \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+
+libmiscxyzrobot_la_LIBADD = \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(TML_LIBS) \
+    $(QT4_LIBS) $(NIX_LIBS)
+
+libmiscxyzrobot_la_SOURCES = xyzrobot.cc xyzrobotdevice.cc
+
+libmiscxyzrobot_la_includedir = $(pkgincludedir)/misc
+
+libmiscxyzrobot_la_include_HEADERS = $(HEADER_PATH)/xyzrobot.h
 
 
 
@@ -203,7 +234,8 @@ check_PROGRAMS = \
     linktest_libmisctempdtm5080_la
 if RELACS_COND_TML
 check_PROGRAMS += \
-    linktest_libmiscmirob_la
+    linktest_libmiscmirob_la \
+    linktest_libmiscxyzrobot_la
 endif 
 if RELACS_COND_OPENCV
 check_PROGRAMS += \
@@ -216,6 +248,9 @@ linktest_libmiscamplmode_la_LDADD = libmiscamplmode.la
 
 linktest_libmiscmirob_la_SOURCES = linktest.cc
 linktest_libmiscmirob_la_LDADD = libmiscmirob.la
+
+linktest_libmiscxyzrobot_la_SOURCES = linktest.cc
+linktest_libmiscxyzrobot_la_LDADD = libmiscxyzrobot.la
 
 linktest_libmisckleindiek_la_SOURCES = linktest.cc
 linktest_libmisckleindiek_la_LDADD = libmisckleindiek.la

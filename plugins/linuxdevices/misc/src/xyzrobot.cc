@@ -1,0 +1,702 @@
+/*
+  misc/xyzrobot.cc
+  High level interface with object avoidance for the mirob robot.
+
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+  Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  (at your option) any later version.
+  
+  RELACS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+
+#include <iostream>
+#include <relacs/misc/xyzrobot.h>
+using namespace relacs;
+
+namespace misc {
+
+  //Constructors: 
+
+XYZRobot::XYZRobot( Mirob *robot )
+  : Device( "XYZRobot" )
+{
+  open( *robot );
+}
+
+
+XYZRobot::XYZRobot( void )
+  : Device( "XYZRobot" ),
+    Robot( 0 )
+{
+}
+
+
+XYZRobot::~XYZRobot( void )
+{
+}
+
+
+int XYZRobot::open( Mirob &robot )
+{
+  clearError();
+  Info.clear();
+
+  Robot = &robot;
+  if ( ! isOpen() )
+    return NotOpen;
+
+  setDeviceVendor( "Alexander Ott" );
+  setDeviceName( "XYZ Robot" );
+  return 0;
+}
+
+
+int XYZRobot::open( Device &device )
+{
+  return open( dynamic_cast<Mirob&>( device ) );
+}
+
+
+bool XYZRobot::isOpen( void ) const
+{
+  return ( Robot != 0 && Robot->isOpen() );
+}
+
+
+void XYZRobot::close( void )
+{
+  if ( isOpen() ) {
+  }
+
+  Info.clear();
+  Robot = 0;
+}
+
+
+bool XYZRobot::test_point(const Point &p)
+{
+  for(Shape* area : forbidden_areas) {
+    if(area->point_safe(p)) {
+     continue;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+bool XYZRobot::test_way(const Point &pos, const Point &newP)
+{
+  //test if both end points are safe (to test pos is prob not needed)
+  if(! test_point(newP) || ! test_point(pos)) {
+    return false;
+  }
+
+  //Rekursive test the way:
+  double dist = pos.distance(newP);
+  //if both points are safe look if the distance is too big.
+  if(dist < maxSafeDist) {
+    // if the dist is small enough the way is (prob.) safe.
+    return true;
+
+  } else {
+    //if it is too big get the midpoint
+    //and test the way from pos to mid and from mid to newP.
+    Point mid = pos.center(newP);
+
+    if(test_way(pos,mid) && test_way(mid,newP) ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
+
+bool XYZRobot::PF_up_and_over(const Point &p)
+{
+  // if there are no forbidden areas just move to the point.
+  if(forbidden_areas.size() == 0) {
+    go_to_point(p);
+    return true;
+  }
+
+
+  if( ! test_point(p)) {
+    std::cerr << "target point forbidden: " << p << std::endl;
+    return false;
+  }
+
+  Point position = Robot->get_position();
+  //std::cerr << "Internal position:" << position << "\n";
+
+  if(! test_point(position)) {
+    std::cerr << "inside a forbidden area moving up. " << std::endl;
+    position.z() -= 5;
+    go_to_point(position);
+    PF_up_and_over(p);
+    return false;
+  }
+
+
+  if(test_way(position,p)) {
+    // move mirob to p
+    std::cerr <<"Tested way and moved to: " << p
+	      << std::endl;
+    go_to_point(p);
+    return true;;
+
+    // if the way is blocked try to go over it.
+  } else {
+    int up = 2;
+    // Go higher and higher until you can get over the forbidden area.
+    Point pos_up = position;
+    Point p_up = p;
+
+    //first test which z is higher in space (lower value)
+    //and set the other points z to it.
+    if (pos_up.z() < p_up.z()) {
+      p_up.z() = pos_up.z();
+    } else {
+      pos_up.z() = p_up.z();
+    }
+
+    while(! test_way(pos_up,p_up)) {
+      //std::cerr <<"in while to move up? " << pos_up
+      //		<< std::endl;
+      pos_up.z() -= up;
+      p_up.z() -= up;
+    }
+
+
+    // new path found:
+    if(! test_way(position,pos_up)) {
+      std::cerr << "Error: The way up is blocked. This PF cannot handle that."
+		<< std::endl;
+      return false;
+    } else {
+      // move mirob to pos_up
+      std::cerr <<"Moving over obstacle pos_up is:" << pos_up
+		<< std::endl;
+      go_to_point(pos_up);
+      Robot->wait_motion_complete();
+
+    }
+
+    // move mirob to p_up
+    std::cerr <<"Moving over obstacle p_up is:" << p_up
+	      << std::endl;
+    go_to_point(p_up);
+    Robot->wait_motion_complete();
+
+
+    if(! test_way(p_up,p)) {
+      std::cerr <<"Error: The way down is blocked. This PF cannot handle that."
+		<< std::endl;
+      return false;
+    } else {
+      // move mirob to p
+      std::cerr <<"Moved over obstacle new pos is:" << p
+		<< std::endl;
+      go_to_point(p);
+      Robot->wait_motion_complete();
+      return true;
+    }
+
+  }
+}
+
+
+  //Init Robot: 
+
+bool XYZRobot::start_mirob()
+{
+  wasStarted = true;
+
+  return Robot->start();
+}
+
+
+bool XYZRobot::init_mirob()
+{
+  if (Robot->init_mirob() == -1) {
+    return false;
+  }else{
+    return true;
+  }
+}
+
+
+void XYZRobot::close_mirob()
+{
+    if(!wasStarted) {
+    std::cerr << "Mirob cannot be closed, is not started." << std::endl;
+    } else {
+      Robot->close();
+      wasStarted = false;
+    }
+}
+
+
+bool XYZRobot::has_area()
+{
+  if (area == NULL) {
+    return false;
+  }else{
+    return true;
+  }
+}
+
+  // General movement: 
+
+  void XYZRobot::go_home()
+{
+  PF_up_and_over(home);
+}
+
+
+void XYZRobot::search_reference(int firstAxis, int secondAxis, int thirdAxis)
+{
+    bool ref = false;
+
+    Robot->search_home(firstAxis,40,ref);
+    Robot->search_home(secondAxis,40,ref);
+    Robot->search_home(thirdAxis,40,ref);
+}
+  
+
+void XYZRobot::go_to_point(double posX, double posY, double posZ)
+{
+    Point point = Point(posX,posY,posZ);
+    go_to_point(point);
+}
+
+
+  // speed defaults to 40 if speed given is 0.
+void XYZRobot::go_to_point(const Point &coords, int speed)
+{
+  if(speed == 0)
+    speed = Robot->speed();
+
+  Point position = get_position();
+
+  int to_move = how_many_move(position, coords);
+
+  if(to_move == 0)
+    return;
+
+  Point dists = position.abs_diff(coords);
+  Point speeds = axis_speeds(speed);
+
+  if(to_move == 1) {
+    for(int axis=1; axis<4; axis++) {
+      if(dists[axis] > Robot->get_step_length(axis)/2) {
+	  Robot->move_axis_abs(axis,coords[axis],speeds[axis]);
+      }
+    }
+  }
+
+  Point times = calculate_times(speeds,dists);
+
+  double maxTime = get_max(times[1], times[2], times[3]);
+  double precision = 0.005;
+
+  if(to_move == 2 || to_move == 3) {
+    for(int axis=1; axis<4; axis++) {
+      if(times[axis] < maxTime) {
+	speeds[axis] = calc_speed(axis, speeds[axis],
+				  dists[axis], maxTime, precision);
+      }
+    }
+
+    Robot->move_axis_abs(1,coords.x(),speeds[1]);
+    Robot->move_axis_abs(2,coords.y(),speeds[2]);
+
+    if(speeds[3] > 450) {
+      speeds[3] = 450;
+    }
+    Robot->move_axis_abs(3,coords.z(),speeds[3]);
+  }
+  /*
+  std::cerr << "how many axis need to move :" << to_move << std::endl;
+
+  std::cerr << "distanceX is: " << dists[1] << std::endl;
+  std::cerr << "distanceY is: " << dists[2] << std::endl;
+  std::cerr << "distanceZ is: " << dists[3]<< std::endl;
+
+  std::cerr << "maxTime is: " << maxTime << std::endl;
+  std::cerr << "timeX is: " << times[1] << std::endl;
+  std::cerr << "timeY is: " << times[2] << std::endl;
+  std::cerr << "timeZ is: " << times[3] << std::endl;
+
+  std::cerr << "speedX is: " << speeds[1] << std::endl;
+  std::cerr << "speedY is: " << speeds[2] << std::endl;
+  std::cerr << "speedZ is: " << speeds[3] << std::endl;
+  */
+
+  return;
+}
+
+
+void XYZRobot::move_posX()
+{
+  Robot->move_axis_rel(1,2,40);
+}
+
+
+void XYZRobot::move_negX()
+{
+  Robot->move_axis_rel(1,-2,40);
+}
+
+
+void XYZRobot::move_posY()
+{
+  Robot->move_axis_rel(2,2,40);
+}
+
+
+void XYZRobot::move_negY()
+{
+  Robot->move_axis_rel(2,-2,40);
+}
+
+
+void XYZRobot::move_posZ()
+{
+  Robot->move_axis_rel(3,4,40);
+}
+
+
+void XYZRobot::move_negZ()
+{
+  Robot->move_axis_rel(3,-4,40);
+}
+
+void XYZRobot::stop_X()
+{
+  Robot->stop_axis(1);
+}
+
+
+void XYZRobot::stop_Y()
+{
+  Robot->stop_axis(2);
+}
+
+
+void XYZRobot::stop_Z()
+{
+  Robot->stop_axis(3);
+}
+
+
+void XYZRobot::stop_all()
+{
+  for(int i=1; i<=3; i++) {
+    Robot->stop_axis(i);
+  }
+}
+
+
+bool XYZRobot::modify_shape(bool area, int forb_index, int job, int change)
+{
+
+  /*Jobs: 0 and 1 modify x, 2 and 3 modify y, 4 and 5 modify z, 6 delete shape */
+
+  if(job > 6 or job < 0) {
+    cerr << "Unknown job in modify_shape:XYZRobot." << endl;
+    return false;
+  }
+
+  if(!area and (forb_index < 0 or (unsigned)forb_index > forbidden_areas.size())) {
+    cerr << "Wrong forb_index in modify_shape:XYZRobot." << endl;
+    return false;
+  }
+  // JOB 6: deleting a shape.
+  if(job == 6) {
+    if(area) {
+      this->area = NULL;
+      return true;
+    } else {
+      return del_forbidden_at_index(forb_index);
+    }
+  }
+
+  // JOB 0-5 Modifying the shapes ONLY FOR CUBOIDS
+  if(area) {
+    modify_cuboid(dynamic_cast<Cuboid*>(this->area), job, change);
+  } else {
+    modify_cuboid(dynamic_cast<Cuboid*>(forbidden_areas[forb_index]), job, change);
+  }
+  return true;
+}
+
+void XYZRobot::modify_cuboid(Cuboid* cuboid, int job, int change)
+{
+  /*Jobs: 0 and 1 modify x, 2 and 3 modify y, 4 and 5 modify z*/
+  switch(job) {
+  case 0:
+    {
+      int length = cuboid->length();
+      cuboid->setLength(length+change);
+      break;
+    }
+  case 1:
+    {
+      change = change * -1; // to make positive values increase the length and negative reduce it.
+      int length = cuboid->length();
+      Point start = cuboid->startPoint();
+      start.x() = start.x()+change;
+
+      cuboid->setStartPoint(start);
+      cuboid->setLength(length-change);
+      break;
+    }
+  case 2:
+    {
+      int width = cuboid->width();
+      cuboid->setWidth(width+change);
+      break;
+    }
+  case 3:
+    {
+      change = change * -1; // to make positive values increase the length and negative reduce it.
+      int width = cuboid->width();
+      Point start = cuboid->startPoint();
+      start.y() = start.y()+change;
+
+      cuboid->setStartPoint(start);
+      cuboid->setWidth(width-change);
+      break;
+    }
+  case 4:
+    {
+      int height = cuboid->height();
+      cuboid->setHeight(height+change);
+      break;
+    }
+  case 5:
+    {
+      change = change * -1; // to make positive values increase the length and negative reduce it.
+      int height = cuboid->height();
+      Point start = cuboid->startPoint();
+      start.z() = start.z()+change;
+
+      cuboid->setStartPoint(start);
+      cuboid->setHeight(height-change);
+      break;
+    }
+  }
+}
+
+
+// Setters: 
+void XYZRobot::set_Area(Shape *newArea)
+{
+  area = newArea;
+}
+
+
+void XYZRobot::add_forbidden(Shape *forbidden)
+{
+  forbidden_areas.push_back(forbidden);
+}
+
+
+bool XYZRobot::del_forbidden_at_index(int i)
+{
+  if(i<0)
+    return false;
+  
+  if(forbidden_areas.size() > (unsigned) i) {
+    forbidden_areas.erase(forbidden_areas.begin() + i);
+    return true;
+  }
+  else
+    return false;
+}
+
+  
+void XYZRobot::clear_forbidden()
+{
+  forbidden_areas.clear();
+}
+
+
+void XYZRobot::set_safe_distance(int dist)
+{
+  this->maxSafeDist = dist;
+}
+
+
+void XYZRobot::set_home(const Point &newHome)
+{
+  this->home = newHome;
+}
+
+
+void XYZRobot::set_fish_head(const Point &head)
+{
+  this->fish_head = head;
+}
+
+
+void XYZRobot::set_fish_tail(const Point &tail)
+{
+  this->fish_tail = tail;
+}
+
+// Getter:
+Point XYZRobot::get_fish_head()
+{
+  return fish_head;
+}
+
+Point XYZRobot::get_fish_tail()
+{
+  return fish_tail;
+}
+
+Point XYZRobot::get_position()
+{
+  return Robot->get_position();
+}
+
+bool XYZRobot::axis_in_pos_limit(int axis)
+{
+  return Robot->check_pos_limit(axis);
+}
+
+
+bool XYZRobot::axis_in_neg_limit(int axis)
+{
+  return Robot->check_neg_limit(axis);
+}
+
+
+Point XYZRobot::get_home()
+{
+    return home;
+}
+
+Shape* XYZRobot::get_area()
+{
+    return area;
+}
+
+int XYZRobot::get_axis_length(int axis)
+{
+  if(axis == 1) {
+    return length_x;
+  }else if(axis == 2) {
+    return length_y;
+  }else if(axis == 3) {
+    return length_z;
+  } else { // Error case:
+    std::cerr << "wrong access to get_axis_length() in controller.cc" << std::endl;
+    return 0;
+  }
+}
+  
+  //Private Helper: 
+
+
+double XYZRobot::calc_speed(int axis, double speed, double dist,
+			 double maxTime, double precision)
+{
+  if (dist <= 1)
+    return 1;
+  
+  double time = calculate_intern_time(axis,speed,dist);
+  
+  int Safetycount = 0;
+  int maxCount = speed/precision;
+
+  while(time < maxTime) {
+      speed -= precision;
+      time = calculate_intern_time(axis,speed,dist);
+
+      Safetycount++;
+      if (Safetycount > maxCount) {
+	std::cerr << "calc_speed broke for axis:" << axis  << " with maxCount:"
+		  << maxCount << std::endl;
+	return 1;
+      }
+
+    }
+  return speed;
+}
+
+
+double XYZRobot::calculate_intern_time(int axis, double axisSpeed, double distance)
+{
+  double axisAcc = Robot->acceleration() * Robot->get_axis_factor(axis);
+  double axisSteps = distance / Robot->get_step_length(axis);
+  
+  double time = ((2*axisSpeed/axisAcc +
+		  (axisSteps - (axisSpeed*axisSpeed/axisAcc))/axisSpeed));
+  return time;
+}
+
+
+Point XYZRobot::calculate_times(const Point &speeds, const Point &dists)
+{
+  Point times = Point();
+  
+  for(int axis=1; axis<4; axis++) {
+    times[axis] = calculate_intern_time(axis,speeds[axis],dists[axis]);
+  }
+  return times;
+}
+
+int XYZRobot::how_many_move(const Point &position, const Point &coords)
+{
+  int count = 0;
+
+  for(int i=1; i<4; i++) {
+    if(abs(position[i] - (double) coords[i]) > ((double) Robot->get_step_length(i)/2.0)) {
+      count++;
+    }
+  }
+  return count;
+}
+
+
+Point XYZRobot::axis_speeds(double speed)
+{
+  Point speeds = Point();
+
+  for(int axis=1; axis<4; axis++) {
+    speeds[axis] = speed*Robot->get_axis_factor(axis);
+  }
+  return speeds;
+}
+
+
+double XYZRobot::get_max(double a, double b, double c)
+{
+  double max;
+
+  max = (a > b)   ? a : b;
+  max = (c > max) ? c : max;
+
+  return max;
+}
+
+
+}; /* namespace misc */
+

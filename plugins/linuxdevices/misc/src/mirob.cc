@@ -128,11 +128,12 @@ void Mirob::close( void )
 //Getter and setter functions:
 //*********************************
 
-int Mirob::get_speed() {
+int Mirob::speed( void ) const
+{
   return Speed;
 }
 
-bool Mirob::set_speed(int speed) 
+bool Mirob::setSpeed( int speed ) 
 {
 
   //too high? (for x and y axis)
@@ -151,12 +152,14 @@ bool Mirob::set_speed(int speed)
 
 }
 
-double Mirob::get_acc() {
+double Mirob::acceleration( void ) const
+{
   return Acc;
 }
 
-bool Mirob::set_acc(double acc) {
 
+bool Mirob::setAcceleration( double acc )
+{
   if(acc <= 0) {
     Acc = 0.1;
     return false;
@@ -168,7 +171,6 @@ bool Mirob::set_acc(double acc) {
     Acc = acc;
     return true;
   }
-
 }
 
 

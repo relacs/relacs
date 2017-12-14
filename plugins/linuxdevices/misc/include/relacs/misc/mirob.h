@@ -60,11 +60,10 @@ class Mirob : public Device {
 
   // getter and setter:
 
-  int get_speed();
-  bool set_speed(int speed);
-  double get_acc();
-  bool set_acc(double acc);
-
+  int speed( void ) const;
+  bool setSpeed( int speed );
+  double acceleration( void ) const;
+  bool setAcceleration( double acc );
 
  // movement control:
 
