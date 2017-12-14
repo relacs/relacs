@@ -10,9 +10,10 @@ pluginlib_LTLIBRARIES = \
     libefishsam.la \
     libefishficurve.la \
     libefishfilestimulus.la \
-    libefishchirps.la
+    libefishchirps.la \
+    libefishreceptivefield.la
 
-
+dist_pkgdata_DATA = eigenmannia.jpg
 
 libefishbaselineactivity_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
@@ -295,6 +296,41 @@ libefishchirps_la_include_HEADERS = $(HEADER_PATH)/chirps.h
 
 
 
+libefishreceptivefield_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libefishreceptivefield_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libefishreceptivefield_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libefishreceptivefield_la_OBJECTS) : moc_receptivefield.cc
+
+libefishreceptivefield_la_SOURCES = receptivefield.cc
+
+libefishreceptivefield_la_includedir = $(pkgincludedir)/efish
+
+libefishreceptivefield_la_include_HEADERS = $(HEADER_PATH)/receptivefield.h
+
+
+
 check_PROGRAMS = \
     linktest_libefishbaselineactivity_la \
     linktest_libefishsession_la \
@@ -302,7 +338,8 @@ check_PROGRAMS = \
     linktest_libefishsam_la \
     linktest_libefishficurve_la \
     linktest_libefishfilestimulus_la \
-    linktest_libefishchirps_la
+    linktest_libefishchirps_la \
+    linktest_libefishreceptivefield_la
 
 linktest_libefishbaselineactivity_la_SOURCES = linktest.cc
 linktest_libefishbaselineactivity_la_LDADD = libefishbaselineactivity.la
@@ -324,5 +361,8 @@ linktest_libefishfilestimulus_la_LDADD = libefishfilestimulus.la
 
 linktest_libefishchirps_la_SOURCES = linktest.cc
 linktest_libefishchirps_la_LDADD = libefishchirps.la
+
+linktest_libefishreceptivefield_la_SOURCES = linktest.cc
+linktest_libefishreceptivefield_la_LDADD = libefishreceptivefield.la
 
 TESTS = $(check_PROGRAMS)
