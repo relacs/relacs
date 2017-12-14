@@ -202,6 +202,11 @@ void Session::config( void )
     // following option is set by the BaselineActivity RePro:
     if ( ! metaData().exist( "EOD Frequency" ) )
       mo.addNumber( "EOD Frequency", "EOD Frequency", 0.0, 0.0, 2000.0, 10.0, "Hz", "Hz", "%0.0f" );
+    // the following options are set by the ReceptiveField RePro:
+    if ( !metaData().exist("Snout Position") )
+      mo.addNumber("Snout Position", "Position of the snout tip.", 0.0, 0.0, 200.0, 10.0, "mm");
+    if ( !metaData().exist("Tail Position") )
+      mo.addNumber("Tail Position", "Position of the tail tip.", 0.0, 0.0, 200.0, 10.0, "mm");
   }
 
   if ( EPhys ) {
@@ -221,6 +226,11 @@ void Session::config( void )
 	mo.addNumber( "P-Value"+ns, "P-Value "+ns, 0.0, 0.0, 2.0, 0.1, "1", "1", "%0.2f" );
       }
     }
+    // the following options are set by the ReceptiveField RePro:
+    if ( !metaData().exist("X Position") )
+      mo.addNumber("X Position", "X position of the receptive field center.", 0.0, 0.0, 200.0, 10.0, "mm");
+    if ( !metaData().exist("Y Position") )
+      mo.addNumber("Y Position", "Y position of the receptive field center.", 0.0, 0.0, 200.0, 10.0, "mm"); 
   }
 
   metaData().setNotify();
