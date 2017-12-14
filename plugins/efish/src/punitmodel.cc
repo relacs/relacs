@@ -233,10 +233,14 @@ void PUnitModel::operator()( double t, double *x, double *dxdt, int n )
   EODGlobal = EODGlobalAmplitude * v;
   double sglobal = signal( 0.001 * t, GlobalEField );
   double sglobalam = signal( 0.001 * t, GlobalAMEField ) * EODGlobal;
+  LocalSignal = 0.0;
+  if ( LocalEField[0] >= 0 )
+    LocalSignal = signal( 0.001 * t, LocalEField[0] );
   Signal = sglobal + sglobalam;
-  EODLocal += LocalStimulusGain*Signal;
+  EODLocal += LocalStimulusGain*Signal + LocalSignal;
   EODGlobal += GlobalStimulusGain*Signal;
   Signal *= StimulusGain;
+  LocalSignal *= LocalStimulusGain;
   double s = EODLocal * neuron()->gain() + neuron()->offset();
   s += noiseFac() * rand.gaussian();
   if ( MMCInx >= 0 )

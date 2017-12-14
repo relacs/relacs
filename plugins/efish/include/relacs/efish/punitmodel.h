@@ -102,6 +102,7 @@ public:
   double VoltageScale;
 
   double Signal;
+  double LocalSignal;
   double EODLocal;
   double EODGlobal;
 
