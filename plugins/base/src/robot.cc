@@ -253,7 +253,7 @@ QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
 bool Robot::search_robot_control() {
 
   for(int i=0; i<5; i++) {
-    robot_control = dynamic_cast<misc::XYZRobot*>(control("robot-2"));
+    robot_control = dynamic_cast<misc::XYZRobot*>(device("robot-2"));
     if( robot_control == 0 ) {
       errorBox->append("Searching for XYZRobot (2 sec).");
       sleep(2);
@@ -271,7 +271,7 @@ void Robot::main( void )
   // get options:
   // double duration = number( "duration" );
 
-  robot_control = dynamic_cast<misc::XYZRobot*>(control("robot-2"));
+  robot_control = dynamic_cast<misc::XYZRobot*>(device("robot-2"));
 
   while(true) {
     if ( interrupt() ) {

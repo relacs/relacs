@@ -15,7 +15,8 @@ pluginlib_LTLIBRARIES = \
     libefieldmanualjar.la \
     libefieldeodmodel.la \
     libefieldbeats.la \
-    libefieldefieldgeometry.la
+    libefieldefieldgeometry.la \
+    libefieldcalibraterobot.la
 
 
 
@@ -454,6 +455,43 @@ libefieldefieldgeometry_la_include_HEADERS = $(HEADER_PATH)/efieldgeometry.h
 
 
 
+libefieldcalibraterobot_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libefieldcalibraterobot_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libefieldcalibraterobot_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libefieldcalibraterobot_la_OBJECTS) : moc_calibraterobot.cc
+
+libefieldcalibraterobot_la_SOURCES = calibraterobot.cc
+
+libefieldcalibraterobot_la_includedir = $(pkgincludedir)/efield
+
+libefieldcalibraterobot_la_include_HEADERS = $(HEADER_PATH)/calibraterobot.h
+
+
+
 check_PROGRAMS = \
     linktest_libefieldeodtools_la \
     linktest_libefieldlinearfield_la \
@@ -466,7 +504,8 @@ check_PROGRAMS = \
     linktest_libefieldmanualjar_la \
     linktest_libefieldeodmodel_la \
     linktest_libefieldbeats_la \
-    linktest_libefieldefieldgeometry_la
+    linktest_libefieldefieldgeometry_la \
+    linktest_libefieldcalibraterobot_la
 
 linktest_libefieldeodtools_la_SOURCES = linktest.cc
 linktest_libefieldeodtools_la_LDADD = libefieldeodtools.la
@@ -503,5 +542,8 @@ linktest_libefieldbeats_la_LDADD = libefieldbeats.la
 
 linktest_libefieldefieldgeometry_la_SOURCES = linktest.cc
 linktest_libefieldefieldgeometry_la_LDADD = libefieldefieldgeometry.la
+
+linktest_libefieldcalibraterobot_la_SOURCES = linktest.cc
+linktest_libefieldcalibraterobot_la_LDADD = libefieldcalibraterobot.la
 
 TESTS = $(check_PROGRAMS)

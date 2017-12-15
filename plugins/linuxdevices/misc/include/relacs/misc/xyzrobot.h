@@ -119,15 +119,14 @@ public:
   const int length_z = 250;
   deque<Shape*> forbidden_areas;
 
+  Mirob *Robot;
+
 
 protected:
 
   Shape* area = NULL;
   Point fish_head;
   Point fish_tail;
-
-
-  Mirob *Robot;
 
   bool wasStarted = false;
   int maxSafeDist = 10;
