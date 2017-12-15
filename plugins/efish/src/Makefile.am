@@ -13,8 +13,6 @@ pluginlib_LTLIBRARIES = \
     libefishchirps.la \
     libefishreceptivefield.la
 
-dist_pkgdata_DATA = eigenmannia.jpg
-
 libefishbaselineactivity_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
