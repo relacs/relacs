@@ -1,6 +1,6 @@
 /*
   base/robot.cc
-  Control a robot
+  Shows the state of a robot.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -9,433 +9,413 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+#include <QLabel>
+#include <QColor>
+#include <QString>
+// for RenderArea:
+#include <QPainter>
+#include <QBrush>
+#include <QPen>
+#include <relacs/shape.h>
 #include <relacs/base/robot.h>
 
 using namespace relacs;
-
-#define SPEED  50
-#define WAIT   true
-#define DONTWAIT false
 
 namespace base {
 
 
 Robot::Robot( void )
-  : Control( "Robot", "base", "Jan Benda", "1.0", "Mar 05, 2010" )
+  : Control( "Robot", "base", "Alexander Ott", "1.0", "Jun 02, 2017" )
 {
-  //  Mirob robot object
-  Rob = 0;
+  // add some options:
+  // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   
-
-
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
-  QHBoxLayout *bb;
+  QHBoxLayout *hb;
 
   setLayout( vb );
-  vb->setSpacing( 4 );
-  SW.setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Fixed );
-  vb->addWidget( &SW );
-
-
-  /************** Positions ***********************/
   // base layout
-  QGridLayout *Positions = new QGridLayout;
-  QLabel *label;
 
+  //QLabel *label;
   QColor fg( Qt::green );
   QColor bg( Qt::black );
   QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
 
-  Positions->setHorizontalSpacing( 2 );
-  Positions->setVerticalSpacing( 2 );
-  vb->addLayout( Positions );
+  vb->addWidget(new QLabel("I am the small Watchdog of mirob:"));
 
+  QFrame *line;
 
-  // position watch
-
-  label = new QLabel( "Mirob X-Position " );
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 0 );
- 
-  XPosLCD = new QLCDNumber( 8 );
-  XPosLCD->setSegmentStyle( QLCDNumber::Filled );
-  XPosLCD->setFixedHeight( label->sizeHint().height() );
-
-  XPosLCD->setPalette( qp );
-  XPosLCD->setAutoFillBackground( true );
-  Positions->addWidget( XPosLCD, 0, 1 );
-
-  label = new QLabel( "Mirob Y-Position " );
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 1, 0 );
- 
-  YPosLCD = new QLCDNumber( 8 );
-  YPosLCD->setSegmentStyle( QLCDNumber::Filled );
-  YPosLCD->setFixedHeight( label->sizeHint().height() );
-  YPosLCD->setPalette( qp );
-  YPosLCD->setAutoFillBackground( true );
-  Positions->addWidget( YPosLCD, 1, 1 );
-
-  label = new QLabel( "Mirob Z-Position " );
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 2, 0 );
- 
-  ZPosLCD = new QLCDNumber( 8 );
-  ZPosLCD->setSegmentStyle( QLCDNumber::Filled );
-  ZPosLCD->setFixedHeight( label->sizeHint().height() );
-  ZPosLCD->setPalette( qp );
-  ZPosLCD->setAutoFillBackground( true );
-  Positions->addWidget( ZPosLCD, 2, 1 );
-
-  // limit switch LEDs
-  // X
-  XLowLimLCD = new QLCDNumber( 1 );
-  XLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  XLowLimLCD->setFixedHeight( label->sizeHint().height() );
-  XLowLimLCD->setFixedWidth( 20);
-
-  XLowLimLCD->setPalette( qp );
-  XLowLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( XLowLimLCD,0,2 );
-  
-  XHiLimLCD = new QLCDNumber( 1 );
-  XHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  XHiLimLCD->setFixedHeight( label->sizeHint().height() );
-  XHiLimLCD->setFixedWidth( 20);
-
-  XHiLimLCD->setPalette( qp );
-  XHiLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( XHiLimLCD,0,3);
-
-  //Y
-  YLowLimLCD = new QLCDNumber( 1 );
-  YLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  YLowLimLCD->setFixedHeight( label->sizeHint().height() );
-  YLowLimLCD->setFixedWidth( 20);
-
-  YLowLimLCD->setPalette( qp );
-  YLowLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( YLowLimLCD,1,2 );
-  
-  YHiLimLCD = new QLCDNumber( 1 );
-  YHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  YHiLimLCD->setFixedHeight( label->sizeHint().height() );
-  YHiLimLCD->setFixedWidth( 20);
-
-  YHiLimLCD->setPalette( qp );
-  YHiLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( YHiLimLCD,1,3);
-
-  //Z
-  ZLowLimLCD = new QLCDNumber( 1 );
-  ZLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  ZLowLimLCD->setFixedHeight( label->sizeHint().height() );
-  ZLowLimLCD->setFixedWidth( 20);
-
-  ZLowLimLCD->setPalette( qp );
-  ZLowLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( ZLowLimLCD,2,2 );
-  
-  ZHiLimLCD = new QLCDNumber( 1 );
-  ZHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  ZHiLimLCD->setFixedHeight( label->sizeHint().height() );
-  ZHiLimLCD->setFixedWidth( 20);
-
-  ZHiLimLCD->setPalette( qp );
-  ZHiLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( ZHiLimLCD,2,3);
-
-
-
-  // buttons:
-  bb = new QHBoxLayout;
-  bb->setSpacing( 4 );
-  vb->addLayout( bb );
-
-  QFrame* line = new QFrame();
+  //Divider line:
+  line = new QFrame();
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
-
-  vb->addWidget(line);
- 
-
-
-  QPushButton *StopButton = new QPushButton( "Stop!" );
-  bb->addWidget( StopButton );
-  StopButton->setFixedHeight( StopButton->sizeHint().height() );
-  connect( StopButton, SIGNAL( clicked() ),
-	   this, SLOT( stopMirob() ) );
-
-
-
-
   vb->addWidget(line);
 
- 
-  bb = new QHBoxLayout;
-  bb->setSpacing( 4 );
-  vb->addLayout( bb );
-  otherActionsBox = new QComboBox;
-  bb->addWidget(otherActionsBox);
-  otherActionsBox->addItem("Go to -lim and set home");
-  otherActionsBox->addItem("Restart watchdog");
-  otherActionsBox->addItem("Go home");
+  hb = new QHBoxLayout;
 
-  otherActionsBox->addItem("Clamp  Tool");
-  otherActionsBox->addItem("Release Tool");
+  plot = new RenderArea();
+  hb->addWidget(plot,Qt::AlignCenter);
+  vb->addLayout(hb);
 
-  otherActionsBox->addItem("Start recording trajectory");
-  otherActionsBox->addItem("Stop recording trajectory");
+  hb = new QHBoxLayout;
+  vb->addLayout(hb);
 
-  otherActionsBox->addItem("Start recording forbidden zone");
-  otherActionsBox->addItem("Stop recording forbidden zone");
+  hb->addWidget(new QLabel("Height of grafic:"));
 
-  QPushButton *ApplyButton = new QPushButton( "Apply" );
-  bb->addWidget( ApplyButton );
-  ApplyButton->setFixedHeight( ApplyButton->sizeHint().height() );
-  connect( ApplyButton, SIGNAL( clicked() ),
-	   this, SLOT( apply() ) );
+  heightBox = new QComboBox();
+  heightBox->addItem("All objects");
+  heightBox->addItem("Height of robot");
+  hb->addWidget(heightBox);
 
 
-  bb = new QHBoxLayout;
-  bb->setSpacing( 4 );
-  vb->addLayout( bb );
+
+
+  line = new QFrame();
+  line->setFrameShape(QFrame::HLine);
+  line->setFrameShadow(QFrame::Sunken);
+  vb->addWidget(line);
+
+
+  vb->addWidget( new QLabel("Current Status:"));
+
+  hb = new QHBoxLayout;
+  hb->addWidget(new QLabel("X-Position:"));
+  hb->addWidget(new QLabel("Y-Position:"));
+  hb->addWidget(new QLabel("Z-Position:"));
+
+  hb = new QHBoxLayout;
+  xPos = new QLCDNumber();
+  xPos->setSegmentStyle(QLCDNumber::Flat);
+  hb->addWidget(xPos);
+
+  yPos = new QLCDNumber();
+  yPos->setSegmentStyle(QLCDNumber::Flat);
+  hb->addWidget(yPos);
+
+  zPos = new QLCDNumber();
+  zPos->setSegmentStyle(QLCDNumber::Flat);
+  hb->addWidget(zPos);
+
+  vb->addLayout(hb);
+
+
+    //Divider line:
+  line = new QFrame();
+  line->setFrameShape(QFrame::HLine);
+  line->setFrameShadow(QFrame::Sunken);
+  vb->addWidget(line);
 
   errorBox = new QTextEdit();
   errorBox->setFontPointSize(8);
-  bb->addWidget(errorBox);
+  vb->addWidget(errorBox);
+
+    //Divider line:
+  line = new QFrame();
+  line->setFrameShape(QFrame::HLine);
+  line->setFrameShadow(QFrame::Sunken);
+  vb->addWidget(line);
+
+  std::cerr << "Print size of plot end of watchdog constructor: width:" << plot->size().width() 
+	    << " and height: "<< plot->size().height() << endl;
+
 }
 
-Robot::~Robot(void){
-
-}
-
-void Robot::apply(void){
-  if (Rob != 0){
-    switch(otherActionsBox->currentIndex()){
-    case 0: // goto net limit and home
-      Rob->gotoNegLimitsAndSetHome();
-      break;
-    case 1: // restart watchdog
-      Rob->restartWatchdog();
-      break;
-    case 2: // goto home
-      Rob->absPos(0,0,0,50);
-      break;
-    case 3: // clamp Tool
-      Rob->clampTool();
-      break;
-    case 4: // release Tool
-      Rob->releaseTool();
-      break;
-    case 5: // start recording trajectory
-      Rob->startRecording( );
-      errorBox->append("Key k records new position");
-      break;
-    case 6: // stop recording trajectory
-      Rob->stopRecording( );
-      break;
-    case 7: // start recording forbidden zone
-      Rob->clearPositions();
-      errorBox->append("Move Mirob to the upper four corners of the forbidden zone");
-      errorBox->append("Key n records current corner");
-      break;
-    case 8: // stop recording forbidden zone
-      Rob->makePositionsForbiddenZone();
-      break;
-    default:
-      break;
-      
-    };
+  Robot::~Robot( void ) {
+    plot->~RenderArea();
 
   }
- 
-}
-  
 
-void Robot::stopMirob(void){
-  if (Rob != 0){
-    Rob->stop();
-  }
-}
-
-void Robot::initDevices( void )
+void Robot::customEvent( QEvent *qce )
 {
-  for ( unsigned int k=0; k<10; k++ ) {
-     Str ns( k+1, 0 );
-     //Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
-     Rob = dynamic_cast< ::misc::Mirob* >( device( "robot-" + ns ) );
-     if ( Rob != 0 ){
-       ::misc::GUICallback* gcb = new ::misc::GUICallback();
-       gcb->XPosLCD = XPosLCD;
-       gcb->YPosLCD = YPosLCD;
-       gcb->ZPosLCD = ZPosLCD;
-
-       gcb->XLowLimLCD = XLowLimLCD;
-       gcb->XHiLimLCD = XHiLimLCD;
-       gcb->YLowLimLCD = YLowLimLCD;
-       gcb->YHiLimLCD = YHiLimLCD;
-       gcb->ZLowLimLCD = ZLowLimLCD;
-       gcb->ZHiLimLCD = ZHiLimLCD;
-
-
-       gcb->logBox = errorBox;
-       Rob->setGUICallback(gcb);
-       break;
-     }
-       
+  switch (qce->type() - QEvent::User) {
+  case 21: {
+    Point p = robot_control->get_position();
+    xPos->display(int(p.x()));
+    yPos->display(int(p.y()));
+    zPos->display(int(p.z()));
+    break;
   }
-  
-}
+  case 22:
+    {
+      for(int i=1; i<=3; i++){
+	if(robot_control->axis_in_pos_limit(i)) {
 
+	  QString msg = QString("Axis").append(QString::number(i)).append(QString("is in the pos Limit!"));
+	  errorBox->setTextColor(Qt::darkRed);
+	  errorBox->append(msg);
+	}
 
-
-void Robot::keyReleaseEvent(QKeyEvent* e){
-  /* only accept the event if it is not from a autorepeat key */
-  if(e->isAutoRepeat() ) {    
-    e->ignore();   
-  } else {    
-    e->accept();
-  
-    switch ( e->key() ) {
-
-
-
-    case Qt::Key_U:
-      if ( Rob != 0 )
-	Rob->setVZ(0 );
-      break;
-
-    case Qt::Key_D:
-      if ( Rob != 0 ){
-	Rob->setVZ( 0 );
+	if(robot_control->axis_in_neg_limit(i)) {
+	  QString msg = QString("Axis").append(QString::number(i)).append(QString("is in the neg Limit!"));
+	  errorBox->setTextColor(Qt::darkRed);
+	  errorBox->append(msg);
+	}
       }
       break;
+    }
+  case 23:
+    {
 
-    case Qt::Key_Up:
-      if ( Rob != 0 )
-	Rob->setVX(0 );
-
-      break;
-
-    case Qt::Key_Down:
-      if ( Rob != 0 )
-	Rob->setVX(0);
-      break;
-
-    case Qt::Key_Left:
-      if ( Rob != 0 )
-	Rob->setVY( 0 );
-      break;
-
-    case Qt::Key_Right:
-      if ( Rob != 0 )
-	Rob->setVY( 0 );
-      break;
+      if(robot_control->has_area()) {
+	Cuboid* cuboid = dynamic_cast<Cuboid*>( robot_control->get_area());
+	// should it be drawn at the moment?
+	if(test_height(cuboid)) {
+	  QRect rect = prepare_cuboid_plot(cuboid);
+	  plot->setAllowed(rect);
+	} else {
+	  plot->setAllowed(QRect(0,0,0,0));
+	}
+      } else {
+	plot->setAllowed(QRect(0,0,0,0));
+      }
 
 
-    default:
-      Control::keyReleaseEvent( e );
+      plot->clearForbidden();
+      for(Shape* shape: robot_control->forbidden_areas) {
+
+	Cuboid* cuboid = dynamic_cast<Cuboid*>(shape);
+	// should it be drawn at the moment?
+	if(test_height(cuboid)) {
+	  QRect rect = prepare_cuboid_plot(cuboid);
+	  plot->addForbidden(rect);
+	}
+
+      }
+
+
+      double width_fac = double(plot->size().width())  / robot_control->length_x;
+      double height_fac= double(plot->size().height()) / robot_control->length_y;
+
+      Point p = robot_control->get_position();
+      plot->setPosition(Point(p.x()*width_fac, p.y()*height_fac, 0));
+
+      plot->update();
+    }
+  default:
+    Control::customEvent( qce );
+  }
+
+}
+
+bool Robot::test_height(Cuboid* cuboid) {
+  switch (heightBox->currentIndex()) {
+  case 0: { // generell no height important.
+    return true;
+    break;
+  }
+  case 1: { // is the cuboid on the same height as the robot.
+
+    Point start = cuboid->startPoint();
+    double height = cuboid->height();
+
+    double height_robot = robot_control->get_position().z();
+
+    if (start.z() <= height_robot and start.z() + height >= height_robot) {
+      return true;
+    } else {
+      return false;
+    }
+    break;
+  }
+  default: {
+    return false;
+  }
 
     }
-  }
-  
-} 
 
-
-
-void Robot::keyPressEvent( QKeyEvent *e )
-{
-  //  fprintf(stderr, " key pressed ");
-  /* only accept the event if it is not from a autorepeat key */
-  if(e->isAutoRepeat() ) {    
-    e->ignore();   
-  } else {    
-    e->accept();
-  
-  
-    switch ( e->key() ) {
-
-
-    case Qt::Key_N:
-      if ( Rob != 0 ){
-	Rob->recordPosition();
-      }
-      break;
-
-
-
-    case Qt::Key_P:
-      if ( Rob != 0 ){
-	fprintf(stderr,"ROBOT: Position %f, %f, %f\n",Rob->posX(), Rob->posY(),Rob->posZ());
-      }
-      break;
-
-    case Qt::Key_H:
-      if ( Rob != 0 )
-	Rob->gotoNegLimitsAndSetHome();
-	
-      break;
-
-
-    case Qt::Key_K:
-      if ( Rob != 0 )
-	Rob->recordStep( );
-      break;
-
-
-    case Qt::Key_U:
-      if ( Rob != 0 )
-	Rob->setVZ(-SPEED );
-      break;
-
-    case Qt::Key_D:
-      if ( Rob != 0 )
-	Rob->setVZ( SPEED );
-
-      break;
-
-    case Qt::Key_Up:
-      if ( Rob != 0 )
-	Rob->setVX(-SPEED );
-      break;
-
-    case Qt::Key_Down:
-      if ( Rob != 0 )
-	Rob->setVX(SPEED);
-      break;
-
-    case Qt::Key_Left:
-      if ( Rob != 0 )
-	Rob->setVY( SPEED );
-      break;
-
-    case Qt::Key_Right:
-      if ( Rob != 0 )
-	Rob->setVY( -SPEED );
-      break;
-
-
-    default:
-      Control::keyPressEvent( e );
-
-    }
-  }
 }
 
+QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
+  double width_fac = double(plot->size().width())  / robot_control->length_x;
+  double height_fac= double(plot->size().height()) / robot_control->length_y;
+
+  Point start = cuboid->startPoint();
+  int ploted_start_x = start.x()*width_fac;
+  int ploted_start_y = start.y()*height_fac;
+  int ploted_width = cuboid->length()*width_fac;
+  int ploted_height= cuboid->width()*height_fac;
+
+  return QRect(ploted_start_x, ploted_start_y, ploted_width, ploted_height);
+}
+
+bool Robot::search_robot_control() {
+
+  for(int i=0; i<5; i++) {
+    robot_control = dynamic_cast<misc::XYZRobot*>(control("robot-2"));
+    if( robot_control == 0 ) {
+      errorBox->append("Searching for XYZRobot (2 sec).");
+      sleep(2);
+    } else {
+      errorBox->append("Success now working.");
+      return true;
+    }
+  }
+  //Couldn't find the RobotController.
+  return false;
+}
+
+void Robot::main( void )
+{
+  // get options:
+  // double duration = number( "duration" );
+
+  robot_control = dynamic_cast<misc::XYZRobot*>(control("robot-2"));
+
+  while(true) {
+    if ( interrupt() ) {
+      return;
+    }
+    //Who exists first?
+    // Did it find the RobotController ? Else search for it. Probably overkill
+    if( robot_control == 0 ) {
+      if(! search_robot_control()) {
+	errorBox->append("Couldn't find the RobotController closing.");
+	return;
+      }
+    }
+
+    if(!init) {
+      robot_control->init_mirob();
+      init = true;
+    }
+
+
+    sleep(0.2);
+    postCustomEvent(21); // position LCDNumbers
+    postCustomEvent(23); // draw update
+    if ( interrupt() ) {
+      return;
+    }
+
+    sleep(0.2);
+    postCustomEvent(22); // Limit switch control
+    postCustomEvent(23); // draw update
+
+    if ( interrupt() ) {
+      return;
+    }
+
+  }
+
+}
 
 addControl( Robot, base );
+
+
+  /*-----Class RenderArea:-----*/
+
+  RenderArea::RenderArea(QWidget *parent)
+    : QWidget(parent)
+  {
+    setBackgroundRole(QPalette::Base);
+    setAutoFillBackground(true);
+    setMaximumSize(QSize(300,225));
+  }
+
+
+  QSize RenderArea::minimumSizeHint() const {
+    return QSize(150,113);
+  }
+
+  QSize RenderArea::sizeHint() const {
+    return QSize(300,225);
+  }
+
+  void RenderArea::setAllowed(QRect allowed) {
+    this->allowed = allowed;
+  }
+
+  void RenderArea::addForbidden(QRect forb) {
+    this->forbidden.push_back(forb);
+  }
+
+  void RenderArea::clearForbidden() {
+    this->forbidden.clear();
+  }
+
+  void RenderArea::setPosition(const Point &p) {
+    this->position = p;
+  }
+
+
+  void RenderArea::paintEvent(QPaintEvent *event) {
+
+    QPen pen = QPen(Qt::SolidLine);
+    pen.setColor(Qt::white);
+
+    QBrush brush = QBrush(Qt::Dense6Pattern);
+    brush.setColor(Qt::black);
+
+    bool antialiased = true;
+
+    QPainter painter(this);
+    painter.setPen(pen);
+    painter.setBrush(brush);
+    painter.setRenderHint(QPainter::Antialiasing, antialiased);
+
+    //Draw the whole space black (the space in which the robot COULD move)
+    painter.drawRect(0, 0, this->size().width(), this->size().height());
+
+
+    // Drawing the allowed area:
+    pen.setStyle(Qt::SolidLine);
+    pen.setColor(Qt::black);
+
+    brush.setStyle(Qt::SolidPattern);
+    brush.setColor(Qt::white);
+
+    painter.setPen(pen);
+    painter.setBrush(brush);
+
+    if(allowed.isValid()) {
+      painter.drawRect(allowed);
+    }
+
+
+    //Drawing forbidden areas:
+    pen.setStyle(Qt::SolidLine);
+    pen.setColor(Qt::darkRed);
+
+    brush.setStyle(Qt::Dense2Pattern);
+    brush.setColor(Qt::darkRed);
+
+    painter.setPen(pen);
+    painter.setBrush(brush);
+
+    for (QRect rect: forbidden) {
+      painter.drawRect(rect);
+    }
+
+    // Darwing the position of the robot.
+
+
+    pen.setStyle(Qt::SolidLine);
+    pen.setColor(Qt::black);
+
+    brush.setStyle(Qt::SolidPattern);
+    brush.setColor(Qt::black);
+
+    painter.setPen(pen);
+    painter.setBrush(brush);
+
+    int ellipseSize = 3;
+    painter.drawEllipse(position.x(), position.y(), ellipseSize, ellipseSize);
+
+  }
+
+
 
 }; /* namespace base */
 

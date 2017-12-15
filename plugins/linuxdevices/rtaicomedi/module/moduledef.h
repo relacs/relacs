@@ -206,7 +206,6 @@ struct traceChannelIOCT {
 // Give information to user space:
 
 // control devices:
-
 #define IOC_OPEN_SUBDEV         _IOWR(RTMODULE_MAJOR, 1, int)
 #define IOC_CHANLIST            _IOW(RTMODULE_MAJOR,  2, int)
 #define IOC_SYNC_CMD            _IOW(RTMODULE_MAJOR,  3, int)
@@ -220,7 +219,6 @@ struct traceChannelIOCT {
 #define IOC_UNSET_TRIGGER       _IOW(RTMODULE_MAJOR, 10, int)
 
 // exchange info:
-
 #define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 11, int)
 #define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  12, int)
 #define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  13, int)
@@ -233,7 +231,9 @@ struct traceChannelIOCT {
 #define IOC_SET_LOOKUP_X        _IOW(RTMODULE_MAJOR,  18, int)
 #define IOC_SET_LOOKUP_Y        _IOW(RTMODULE_MAJOR,  19, int)
 
-#define RTMODULE_IOC_MAXNR 20
+#define IOC_CHECK_FEATURES      _IOW(RTMODULE_MAJOR,  20, int)
+
+#define RTMODULE_IOC_MAXNR 21
 
 
 // *** KERNEL LOGGING STYLE ***

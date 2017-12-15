@@ -102,6 +102,7 @@ struct dynClampTaskT {
 
 struct cdev *rtcdev;
 struct mutex mutex;
+int features = 0;
 
 // DAQ-DEVICES:
 
@@ -205,9 +206,9 @@ char *iocNames[RTMODULE_IOC_MAXNR] = {
   "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV",
   "IOC_DIO_CMD", "IOC_SET_TRIGGER", "IOC_UNSET_TRIGGER", "IOC_GET_TRACE_INFO",
   "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT", "IOC_GETAOINDEX",
-  "IOC_SET_LOOKUP_K", "IOC_SET_LOOKUP_N", "IOC_SET_LOOKUP_X", "IOC_SET_LOOKUP_Y"
+  "IOC_SET_LOOKUP_K", "IOC_SET_LOOKUP_N", "IOC_SET_LOOKUP_X",
+  "IOC_SET_LOOKUP_Y", "IOC_CHECK_FEATURES"
 };
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // *** PROTOTYPES ***
@@ -805,7 +806,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
     return -EFAULT;
   }
   if ( syncCmdIOC->frequency > MAX_FREQUENCY ) {
-    ERROR_MSG( "loadSyncCmd ERROR: requested frequency is above MAX_FREQUENCY (%d Hz). Sync-command not loaded!\n",
+    ERROR_MSG( "loadSyncCmd ERROR: requested frequency is above MAX_FREQUENCY (%dHz). Sync-command not loaded!\n",
 	       MAX_FREQUENCY );
     return -EINVAL;
   }
@@ -852,13 +853,13 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   }
   else {
     if ( dynClampTask.frequency != subdev->frequency ) {
-      ERROR_MSG( "loadSyncCmd ERROR: requested frequency %u Hz of subdevice %i on device %s is inconsistent to frequency %u Hz of other subdevice. Sync-command not loaded!\n",
+      ERROR_MSG( "loadSyncCmd ERROR: requested frequency %uHz of subdevice %i on device %s is inconsistent to frequency %uHz of other subdevice. Sync-command not loaded!\n",
 		 subdev->frequency, subdev->subdev, devname, dynClampTask.frequency );
       return -EINVAL;
     }
   }
 
-  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d, buffer size %d elements, and frequency %d for subdevice %d\n",
+  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d, buffer size %d elements, and frequency %dHz for subdevice %d\n",
 	     subdev->duration, subdev->startsource, buffersize, subdev->frequency, subdev->subdev );
 
   subdev->prepared = 1;
@@ -1351,7 +1352,7 @@ void dynclamp_loop( long dummy )
   float currentfac = 1.0;
 #endif
 
-  DEBUG_MSG( "dynclamp_loop: starting dynamic clamp loop at %u Hz\n", 
+  DEBUG_MSG( "dynclamp_loop: starting dynamic clamp loop at %uHz\n", 
 	      1000000000/dynClampTask.period );
 
   dynClampTask.loopCnt = 0;
@@ -1802,7 +1803,7 @@ int init_dynclamp_loop( void )
   unsigned int reqfreq = 0;
   int stackSize = 32768;
   int priority;
-  int usesFPU = 1;   /* we need FPU support in any case! */
+  const int usesFPU = 1;   /* we need FPU support in any case! */
   void* signal = NULL;
   int dummy = 23;
   int retVal;
@@ -1873,7 +1874,7 @@ int init_dynclamp_loop( void )
     cleanup_dynclamp_loop();
     return -3;
   }
-  INFO_MSG( "init_dynclamp_loop: periodic task successfully started... requested freq: %d , accepted freq: ~%u (period=%uns)\n", 
+  INFO_MSG( "init_dynclamp_loop: periodic task successfully started... requested freq: %dHz, accepted freq: ~%uHz (period=%uns)\n", 
 	    reqfreq, dynClampTask.frequency, dynClampTask.period );
 
   return 0;
@@ -1926,7 +1927,6 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
   int tmp;
   int running;
   unsigned long luTmp;
-
 
   if ( _IOC_TYPE(cmd) != RTMODULE_MAJOR || _IOC_NR(cmd) > RTMODULE_IOC_MAXNR) {
     ERROR_MSG( "ioctl: Major wrong or ioctl %d bigger than max %d\n", 
@@ -2374,6 +2374,17 @@ int dynclampmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 #endif
 #endif
+  case IOC_CHECK_FEATURES:
+    retVal = get_user( tmp, (int __user *)arg );
+    if ( retVal ) {
+      ERROR_MSG( "ioctl ERROR: invalid pointer to user space features!" );
+      rc = -EFAULT;
+    }
+    if ( tmp != features ) {
+      ERROR_MSG( "ioctl ERROR: features of kernel module and user space differ!" );
+      rc = -EINVAL;
+    }    
+    break;
 
   default:
     ERROR_MSG( "ioctl: ERROR - invalid IOCTL!\n" );
@@ -2485,6 +2496,7 @@ static int __init init_dynclampmodule( void )
   int k;
 #endif
 #endif
+  char featurestr[256] = "";
 
   // register module device file:
   dev = MKDEV( RTMODULE_MAJOR, 0 );
@@ -2501,6 +2513,52 @@ static int __init init_dynclampmodule( void )
   if ( retVal )
     ERROR_MSG( "init_dynclampmodule: fail to register module with error %d\n", retVal );
   INFO_MSG( "init_dynclampmodule: dynamic clamp module loaded\n" );
+
+#ifdef ENABLE_COMPUTATION
+  strcat( featurestr, "COMPUTATION " );
+  features |= 0x0001;
+#endif
+#ifdef ENABLE_MATHH
+  strcat( featurestr, "MATHH " );
+  features |= 0x0002;
+#endif
+#ifdef ENABLE_LOOKUPTABLES
+  strcat( featurestr, "LOOKUPTABLES " );
+  features |= 0x0004;
+#endif
+#ifdef ENABLE_TRIGGER
+  strcat( featurestr, "TRIGGER" );
+  features |= 0x0008;
+#endif
+#ifdef ENABLE_TTLPULSE
+  strcat( featurestr, "TTLPULSE " );
+  features |= 0x0010;
+#endif
+#ifdef ENABLE_SYNCSEC
+  strcat( featurestr, "SYNCSEC " );
+  features |= 0x0020;
+#endif
+#ifdef ENABLE_AITIME
+  strcat( featurestr, "AITIME " );
+  features |= 0x0040;
+#endif
+#ifdef ENABLE_AIACQUISITIONTIME
+  strcat( featurestr, "AIACQUISITIONTIME " );
+  features |= 0x0080;
+#endif
+#ifdef ENABLE_AOTIME
+  strcat( featurestr, "AOTIME " );
+  features |= 0x0100;
+#endif
+#ifdef ENABLE_MODELTIME
+  strcat( featurestr, "MODELTIME " );
+  features |= 0x0200;
+#endif
+#ifdef ENABLE_WAITTIME
+  strcat( featurestr, "WAITTIME " );
+  features |= 0x0400;
+#endif
+  INFO_MSG( "supported features: %s\n", featurestr );
 
   comedi_loglevel( 3 ); 
 

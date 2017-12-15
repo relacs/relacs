@@ -230,11 +230,68 @@ int DynClampAnalogInput::open( const string &device)
     return -1;
   }
 
+  string featurestr = "";
+  int features = 0;
+#ifdef ENABLE_COMPUTATION
+  featurestr += "COMPUTATION ";
+  features |= 0x0001;
+#endif
+#ifdef ENABLE_MATHH
+  featurestr += "MATHH ";
+  features |= 0x0002;
+#endif
+#ifdef ENABLE_LOOKUPTABLES
+  featurestr += "LOOKUPTABLES ";
+  features |= 0x0004;
+#endif
+#ifdef ENABLE_TRIGGER
+  featurestr += "TRIGGER";
+  features |= 0x0008;
+#endif
+#ifdef ENABLE_TTLPULSE
+  featurestr += "TTLPULSE ";
+  features |= 0x0010;
+#endif
+#ifdef ENABLE_SYNCSEC
+  featurestr += "SYNCSEC ";
+  features |= 0x0020;
+#endif
+#ifdef ENABLE_AITIME
+  featurestr += "AITIME ";
+  features |= 0x0040;
+#endif
+#ifdef ENABLE_AIACQUISITIONTIME
+  featurestr += "AIACQUISITIONTIME ";
+  features |= 0x0080;
+#endif
+#ifdef ENABLE_AOTIME
+  featurestr += "AOTIME ";
+  features |= 0x0100;
+#endif
+#ifdef ENABLE_MODELTIME
+  featurestr += "MODELTIME ";
+  features |= 0x0200;
+#endif
+#ifdef ENABLE_WAITTIME
+  featurestr += "WAITTIME ";
+  features |= 0x0400;
+#endif
+  cerr << "DynClampAnalogInput supported features: " << featurestr << '\n';
+  
   // open kernel module:
   ModuleDevice = "/dev/dynclamp";
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY | O_NONBLOCK );
   if ( ModuleFd == -1 ) {
     setErrorStr( "opening dynclamp-module " + ModuleDevice + " failed" );
+    return -1;
+  }
+
+  // check features:
+  int retval = ::ioctl( ModuleFd, IOC_CHECK_FEATURES, &features );
+  if ( retval < 0 ) {
+    setErrorStr( "Supported features of kernel modules and user space do not match! Please recompile both in plugins/linuxdevices/rtaicomedi ." );
+    ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+    ::close( ModuleFd );
     return -1;
   }
 

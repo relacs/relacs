@@ -25,10 +25,10 @@ pluginlib_LTLIBRARIES = \
     libbaseinstantaneousrate.la
 
 
-#if RELACS_COND_TML
-#pluginlib_LTLIBRARIES += \
-#    libbaserobot.la
-#endif
+if RELACS_COND_TML
+pluginlib_LTLIBRARIES += \
+    libbaserobot.la
+endif
 
 
 
@@ -368,38 +368,38 @@ libbasetransferfunction_la_include_HEADERS = $(HEADER_PATH)/transferfunction.h
 
 
 
-#libbaserobot_la_CPPFLAGS = \
-#    -I$(top_srcdir)/daq/include \
-#    -I$(top_srcdir)/numerics/include \
-#    -I$(top_srcdir)/options/include \
-#    -I$(top_srcdir)/datafile/include \
-#    -I$(top_srcdir)/plot/include \
-#    -I$(top_srcdir)/widgets/include \
-#    -I$(top_srcdir)/relacs/include \
-#    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
-#    -I$(srcdir)/../include \
-#    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+libbaserobot_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
 
-#libbaserobot_la_LDFLAGS = \
-#    -module -avoid-version \
-#    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+libbaserobot_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
-#libbaserobot_la_LIBADD = \
-#    $(top_builddir)/relacs/src/librelacs.la \
-#    $(top_builddir)/daq/src/librelacsdaq.la \
-#    $(top_builddir)/numerics/src/librelacsnumerics.la \
-#    $(top_builddir)/options/src/librelacsoptions.la \
-#    $(top_builddir)/widgets/src/librelacswidgets.la \
-#    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscmirob.la \
-#    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+libbaserobot_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscmirob.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
-#$(libbaserobot_la_OBJECTS) : moc_robot.cc
+$(libbaserobot_la_OBJECTS) : moc_robot.cc
 
-#libbaserobot_la_SOURCES = robot.cc
+libbaserobot_la_SOURCES = robot.cc
 
-#libbaserobot_la_includedir = $(pkgincludedir)/base
+libbaserobot_la_includedir = $(pkgincludedir)/base
 
-#libbaserobot_la_include_HEADERS = $(HEADER_PATH)/robot.h
+libbaserobot_la_include_HEADERS = $(HEADER_PATH)/robot.h
 
 
 
@@ -698,10 +698,10 @@ check_PROGRAMS = \
     linktest_libbasehistogram_la \
     linktest_libbaseinstantaneousrate_la
 
-#if RELACS_COND_TML
-#check_PROGRAMS += \
-#    linktest_libbaserobot_la
-#endif
+if RELACS_COND_TML
+check_PROGRAMS += \
+    linktest_libbaserobot_la
+endif
 
 
 linktest_libbaselinearattenuate_la_SOURCES = linktest.cc
@@ -734,8 +734,8 @@ linktest_libbasesimplemodel_la_LDADD = libbasesimplemodel.la
 linktest_libbasetransferfunction_la_SOURCES = linktest.cc
 linktest_libbasetransferfunction_la_LDADD = libbasetransferfunction.la
 
-#linktest_libbaserobot_la_SOURCES = linktest.cc
-#linktest_libbaserobot_la_LDADD = libbaserobot.la
+linktest_libbaserobot_la_SOURCES = linktest.cc
+linktest_libbaserobot_la_LDADD = libbaserobot.la
 
 linktest_libbasewait_la_SOURCES = linktest.cc
 linktest_libbasewait_la_LDADD = libbasewait.la

@@ -23,7 +23,7 @@
 #define _RELACS_MISC_XYZROBOT_H_ 1
 
 
-#include <vector>
+#include <deque>
 #include <relacs/point.h>
 #include <relacs/shape.h>
 #include <relacs/misc/mirob.h>
@@ -114,11 +114,15 @@ public:
   Point axis_speeds(double speed);
   double get_max(double a, double b, double c);
 
+  const int length_x = 650;
+  const int length_y = 450;
+  const int length_z = 250;
+  deque<Shape*> forbidden_areas;
+
 
 protected:
 
   Shape* area = NULL;
-  vector<Shape*> forbidden_areas;
   Point fish_head;
   Point fish_tail;
 
@@ -128,10 +132,6 @@ protected:
   bool wasStarted = false;
   int maxSafeDist = 10;
   Point home = Point(0,0,0);
-
-  const int length_x = 650;
-  const int length_y = 450;
-  const int length_z = 250;
 
 };
 
