@@ -1084,7 +1084,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     ttlInsns[pT]->data[1] |= dioIOC->bits;
     ttlInsns[pT]->data[0] |= dioIOC->mask;
 
-    DEBUG_MSG( "setDigitalIO: add pulse pT=%d subdev=%u lines=%u output=%u\n",
+    INFO_MSG( "setDigitalIO: add pulse pT=%d subdev=%u lines=%04x output=%04x\n",
 	       pT, ttlInsns[pT]->subdev, ttlInsns[pT]->data[0],
 	       ttlInsns[pT]->data[1] );
 #else
@@ -1101,6 +1101,8 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	found = 1;
 	ttlInsns[pT]->data[0] &= ~dioIOC->mask;
 	ttlInsns[pT]->data[1] &= ~dioIOC->mask;
+	INFO_MSG( "setDigitalIO: cleared pulse pT=%d subdev=%u mask=%04x\n",
+		  pT, ttlInsns[pT]->subdev, dioIOC->mask );
       }
     }
     if ( found ) {
@@ -1148,10 +1150,10 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     /* turn sync pulses on: */
     ttlInsns[SYNCSEC_LOW]->subdev = subdevice;
     ttlInsns[SYNCSEC_HIGH]->subdev = subdevice;
-    ttlInsns[SYNCSEC_LOW]->data[1] &= ~dioIOC->mask;   /* low */
-    ttlInsns[SYNCSEC_HIGH]->data[1] |= dioIOC->mask;   /* high */
-    ttlInsns[SYNCSEC_LOW]->data[0] |= dioIOC->mask;
-    ttlInsns[SYNCSEC_HIGH]->data[0] |= dioIOC->mask;
+    ttlInsns[SYNCSEC_LOW]->data[1] &= ~syncSECMask;   /* low */
+    ttlInsns[SYNCSEC_HIGH]->data[1] |= syncSECMask;   /* high */
+    ttlInsns[SYNCSEC_LOW]->data[0] |= syncSECMask;
+    ttlInsns[SYNCSEC_HIGH]->data[0] |= syncSECMask;
     /* switch amplifier into synchronized mode: */
     if ( dioIOC->modemask > 0 ) {
       dioIOC->mask = dioIOC->modemask;
@@ -1167,8 +1169,8 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     syncSECPulse = dioIOC->pulsewidth;
     syncSECMode = dioIOC->intervalmode;
 
-    DEBUG_MSG( "setDigitalIO: initialized sync pulses on device %s subdevice %u. New pulse is %d us with mode %d\n",
-	       devname, subdevice, (int)syncSECPulse, syncSECMode );
+    INFO_MSG( "setDigitalIO: initialized sync pulses on device %s subdevice %u. New pulse is %d us with mode %d. High at %d, low at %d with mask %04x\n",
+	      devname, subdevice, (int)syncSECPulse, syncSECMode, SYNCSEC_LOW, SYNCSEC_HIGH, syncSECMask );
 #else
     return -ENOTTY;
 #endif
@@ -1176,7 +1178,6 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 
   else if ( dioIOC->op == DIO_CLEAR_SYNCPULSE ) {
 #ifdef ENABLE_SYNCSEC
-    DEBUG_MSG( "setDigitalIO: clear sync pulse.\n" );
     /* switch amplifier into non-synchronized mode: */
     if ( dioIOC->modemask > 0 ) {
       dioIOC->mask = dioIOC->modemask;
@@ -1205,6 +1206,9 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	ERROR_MSG( "setDigitalIO: failed to write clearing sync pulse" );
 	return retval;
       }
+      INFO_MSG( "setDigitalIO: cleared sync pulses on device %s subdevice %u with mask %04x\n",
+		devname, subdevice, syncSECMask );
+      syncSECMask = 0;
     }
 #else
     return -ENOTTY;

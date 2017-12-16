@@ -1,4 +1,6 @@
-- Actually used sampling rate will certianly differ from the one requested!!! How to deal with that??? In particular with high AO rates in case of auditory stimuli?
+- dynclamp syncmode: ttlpulse data contains more bits than the syncpulse. Why?
+
+- Actually used sampling rate will certainly differ from the one requested!!! How to deal with that??? In particular with high AO rates in case of auditory stimuli?
   - OutData::setStepsize should set the stepsize as requested
     AnalogOutput and children (linuxdevices and simulation) should then use setStepsize to avoid infinite loops!
   - OutData::setSampleRate/Interval should check and return the rate that can really be set
