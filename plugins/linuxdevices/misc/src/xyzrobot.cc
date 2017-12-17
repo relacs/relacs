@@ -298,7 +298,8 @@ void XYZRobot::go_to_point(const Point &coords, int speed)
   if(to_move == 0)
     return;
 
-  Point dists = position.abs_diff(coords);
+  //  Point dists = position.abs_diff(coords);
+  Point dists = abs(position - coords);
   Point speeds = axis_speeds(speed);
 
   if(to_move == 1) {

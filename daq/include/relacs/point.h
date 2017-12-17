@@ -32,7 +32,6 @@ namespace relacs {
 \class Point
 \brief A point in 3D space.
 \author Alexander Ott, Jan Benda
-\todo Add operators for addition and subtraction, etc.
  */
 
 class Point {
@@ -41,27 +40,71 @@ public:
 
     /*! Constructor. */
   Point( void );
+    /*! Copy constructor. */
   Point( const Point &p );
-  Point( double x, double y, double z);
+    /*! A point with coordinates \a x, \a y, \a z. */
+  Point( double x, double y, double z );
 
+    /*! The x-coordinate of the point. */
   double x( void ) const { return Coords[0]; }
+    /*! The x-coordinate of the point. */
   double &x( void ) { return Coords[0]; }
+    /*! The y-coordinate of the point. */
   double y( void ) const { return Coords[1]; }
+    /*! The y-coordinate of the point. */
   double &y( void ) { return Coords[1]; }
+    /*! The z-coordinate of the point. */
   double z( void ) const { return Coords[2]; }
+    /*! The z-coordinate of the point. */
   double &z( void ) { return Coords[2]; }
 
-  void set( double x, double y, double z);
-
+    /*! The coordinate of the point of the i-th dimension. */
   double operator[]( int i ) const { return Coords[i]; }
+    /*! The coordinate of the point of the i-th dimension. */
   double &operator[]( int i ) { return Coords[i]; }
 
+  void set( double x, double y, double z );
+
+    /*! Add coordinates of point \a p to this point. */
+  Point operator+( const Point &p ) const;
+    /*! Subtract coordinates of point \a p from this point. */
+  Point operator-( const Point &p ) const;
+
+    /*! Add coordinates of point \a p to this point. */
+  Point &operator+=( const Point &p );
+    /*! Subtract coordinates of point \a p from this point. */
+  Point &operator-=( const Point &p );
+
+    /*! Add \a \a to all coordinates of this point. */
+  Point operator+( double a ) const;
+    /*! Subtract \a \a from all coordinates of this point. */
+  Point operator-( double a ) const;
+    /*! Multiply all coordinates of this point with \a a. */
+  Point operator*( double a ) const;
+    /*! Divide all coordinates of this point by \a a. */
+  Point operator/( double a ) const;
+
+    /*! Add \a \a to all coordinates of this point. */
+  Point &operator+=( double a );
+    /*! Subtract \a \a from all coordinates of this point. */
+  Point &operator-=( double a );
+    /*! Multiply all coordinates of this point with \a a. */
+  Point &operator*=( double a );
+    /*! Divide all coordinates of this point by \a a. */
+  Point &operator/=( double a );
+
+    /*! Dot product between the coordinates this and point \a p. */
+  double operator*( const Point &p ) const;
+
+    /*! Distance between this point and \a p. */
   double distance( const Point &p ) const;
-
-  Point abs_diff( const Point &p ) const;
-
+    /*! The center between this point and \a p. */
   Point center( const Point &p ) const;
 
+    /*! The point with absolute coordinates. */
+  friend Point abs( Point p );
+
+    /*! Write the coordinates of the point to stream \a str. */
   friend ostream &operator<<( ostream &str, const Point &p );
 
 

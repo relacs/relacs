@@ -712,14 +712,14 @@ void  CalibrateRobot::test_point_distances() {
   Point e = Point(10,20,30);
   Point f = Point(50,50,50);
 
-  cerr << "Expected: 0, 0 , 0 actual:" << a.abs_diff(b) << endl;
-  cerr << "Expected: 10,0 , 0 actual:" << a.abs_diff(c) << endl;
-  cerr << "Expected: 10,20, 0 actual:" << a.abs_diff(d) << endl;
-  cerr << "Expected: 10,20,30 actual:" << a.abs_diff(e) << endl;
-  cerr << "Expected: 50,50,50 actual:" << a.abs_diff(f) << endl;
-  cerr << "Expected: 40,50,50 actual:" << c.abs_diff(f) << endl;
-  cerr << "Expected: 40,30,50 actual:" << d.abs_diff(f) << endl;
-  cerr << "Expected: 40,30,20 actual:" << e.abs_diff(f) << endl;
+  cerr << "Expected: 0, 0 , 0 actual:" << abs(a-b) << endl;
+  cerr << "Expected: 10,0 , 0 actual:" << abs(a-c) << endl;
+  cerr << "Expected: 10,20, 0 actual:" << abs(a-d) << endl;
+  cerr << "Expected: 10,20,30 actual:" << abs(a-e) << endl;
+  cerr << "Expected: 50,50,50 actual:" << abs(a-f) << endl;
+  cerr << "Expected: 40,50,50 actual:" << abs(c-f) << endl;
+  cerr << "Expected: 40,30,50 actual:" << abs(d-f) << endl;
+  cerr << "Expected: 40,30,20 actual:" << abs(e-f) << endl;
 }
 
 void  CalibrateRobot::test_go_to_point() {

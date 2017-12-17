@@ -56,21 +56,123 @@ void Point::set( double x, double y, double z )
 }
 
 
+Point Point::operator+( const Point &p ) const
+{
+  Point q( *this );
+  for ( int k=0; k<Dim; k++ )
+    q += p[k];
+  return q;
+}
+
+
+Point Point::operator-( const Point &p ) const
+{
+  Point q( *this );
+  for ( int k=0; k<Dim; k++ )
+    q -= p[k];
+  return q;
+}
+
+
+Point &Point::operator+=( const Point &p )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] += p[k];
+  return *this;
+}
+
+
+Point &Point::operator-=( const Point &p )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] -= p[k];
+  return *this;
+}
+
+
+Point Point::operator+( double a ) const
+{
+  Point p( *this );
+  for ( int k=0; k<Dim; k++ )
+    p[k] += a;
+  return p;
+}
+
+
+Point Point::operator-( double a ) const
+{
+  Point p( *this );
+  for ( int k=0; k<Dim; k++ )
+    p[k] -= a;
+  return p;
+}
+
+
+Point Point::operator*( double a ) const
+{
+  Point p( *this );
+  for ( int k=0; k<Dim; k++ )
+    p[k] *= a;
+  return p;
+}
+
+
+Point Point::operator/( double a ) const
+{
+  Point p( *this );
+  for ( int k=0; k<Dim; k++ )
+    p[k] /= a;
+  return p;
+}
+
+
+Point &Point::operator+=( double a )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] += a;
+  return *this;
+}
+
+
+Point &Point::operator-=( double a )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] -= a;
+  return *this;
+}
+
+
+Point &Point::operator*=( double a )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] *= a;
+  return *this;
+}
+
+
+Point &Point::operator/=( double a )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] /= a;
+  return *this;
+}
+
+
+double Point::operator*( const Point &p ) const
+{
+  double d;
+  for ( int k=0; k<Dim; k++ )
+    d += Coords[k]*p[k];
+  return d;
+}
+
+
 double Point::distance( const Point &p ) const
 {
   double d = 0.0;
   for ( int k=0; k<Dim; k++ )
     d += ::pow( Coords[k] - p[k], 2.0 );
   return ::sqrt( d );
-}
-
-
-Point Point::abs_diff( const Point &p ) const
-{
-  Point q;
-  for ( int k=0; k<Dim; k++ )
-    q[k] = ::abs(Coords[k] - p[k]);
-  return q;
 }
 
 
@@ -83,11 +185,19 @@ Point Point::center( const Point &p ) const
 }
 
 
+Point abs( Point p )
+{
+  for ( int k=0; k<p.Dim; k++ )
+    p[k] = ::abs( p[k] );
+  return p;
+}
+
+
 ostream &operator<<( ostream &str, const Point &p ) 
 {
-  str << "point: \t (x: " << p[0] << ", ";
-  str << "y: " << p[1] << ", ";
-  str << "z: " << p[2] << ")\n";
+  str << "point x=" << p[0] << ", ";
+  str << "y=" << p[1] << ", ";
+  str << "z=" << p[2] << "\n";
   return str;
 }
 
