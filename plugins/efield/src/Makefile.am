@@ -14,9 +14,14 @@ pluginlib_LTLIBRARIES = \
     libefieldjar.la \
     libefieldmanualjar.la \
     libefieldeodmodel.la \
-    libefieldbeats.la \
+    libefieldbeats.la
+
+
+if RELACS_COND_TML
+pluginlib_LTLIBRARIES += \
     libefieldefieldgeometry.la \
     libefieldcalibraterobot.la
+endif
 
 
 
@@ -503,9 +508,14 @@ check_PROGRAMS = \
     linktest_libefieldjar_la \
     linktest_libefieldmanualjar_la \
     linktest_libefieldeodmodel_la \
-    linktest_libefieldbeats_la \
+    linktest_libefieldbeats_la
+
+if RELACS_COND_TML
+check_PROGRAMS += \
     linktest_libefieldefieldgeometry_la \
     linktest_libefieldcalibraterobot_la
+endif
+
 
 linktest_libefieldeodtools_la_SOURCES = linktest.cc
 linktest_libefieldeodtools_la_LDADD = libefieldeodtools.la
