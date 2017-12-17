@@ -183,8 +183,7 @@ void Robot::customEvent( QEvent *qce )
 
 
       plot->clearForbidden();
-      for(Shape* shape: robot_control->forbidden_areas) {
-
+      for ( Shape* shape: robot_control->forbiddenAreas() ) {
 	Cuboid* cuboid = dynamic_cast<Cuboid*>(shape);
 	// should it be drawn at the moment?
 	if(test_height(cuboid)) {
@@ -195,8 +194,8 @@ void Robot::customEvent( QEvent *qce )
       }
 
 
-      double width_fac = double(plot->size().width())  / robot_control->length_x;
-      double height_fac= double(plot->size().height()) / robot_control->length_y;
+      double width_fac = double(plot->size().width())  / robot_control->xlength();
+      double height_fac= double(plot->size().height()) / robot_control->ylength();
 
       Point p = robot_control->get_position();
       plot->setPosition(Point(p.x()*width_fac, p.y()*height_fac, 0));
@@ -238,8 +237,8 @@ bool Robot::test_height(Cuboid* cuboid) {
 }
 
 QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
-  double width_fac = double(plot->size().width())  / robot_control->length_x;
-  double height_fac= double(plot->size().height()) / robot_control->length_y;
+  double width_fac = double(plot->size().width())  / robot_control->xlength();
+  double height_fac= double(plot->size().height()) / robot_control->ylength();
 
   Point start = cuboid->startPoint();
   int ploted_start_x = start.x()*width_fac;

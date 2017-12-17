@@ -34,7 +34,7 @@ namespace misc {
 
 
 /*!
-\class RobotController
+\class XYZRobot
 \brief [Device] High level interface with object avoidance for the mirob robot.
 \author Alexander Ott
 */
@@ -53,6 +53,10 @@ public:
   virtual int open( Device &device ) override;
   virtual bool isOpen( void ) const;
   virtual void close( void );
+
+  int xlength( void ) const { return XLength; };
+  int ylength( void ) const { return YLength; };
+  int zlength( void ) const { return ZLength; };
 
   bool test_point(const Point &p);
   bool test_way(const Point &pos, const Point &newP);
@@ -81,12 +85,20 @@ public:
 
   void stop_all();
 
+    /*! Sleep until motion completed. */
+  void wait( void );
+
+    /*! Moves all axis to the given limit(positive). */
+  void go_to_reference( bool positive, int speed )
+    { Robot->go_to_reference( positive, speed ); };
+
   bool modify_shape(bool area, int forb_index, int job, int change);
   void modify_cuboid(Cuboid* cuboid, int job, int change);
 
   bool has_area();
   void set_Area(Shape *area);
 
+  deque<Shape*> &forbiddenAreas( void ) const { return ForbiddenAreas; };
   void add_forbidden(Shape *forbidden);
   bool del_forbidden_at_index(int index);
   void clear_forbidden();
@@ -114,15 +126,16 @@ public:
   Point axis_speeds(double speed);
   double get_max(double a, double b, double c);
 
-  const int length_x = 650;
-  const int length_y = 450;
-  const int length_z = 250;
-  deque<Shape*> forbidden_areas;
+
+protected:
 
   Mirob *Robot;
 
+  const int XLength = 650;
+  const int YLength = 450;
+  const int ZLength = 250;
 
-protected:
+  deque<Shape*> ForbiddenAreas;
 
   Shape* area = NULL;
   Point fish_head;

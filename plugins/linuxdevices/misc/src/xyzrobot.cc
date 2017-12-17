@@ -87,7 +87,7 @@ void XYZRobot::close( void )
 
 bool XYZRobot::test_point(const Point &p)
 {
-  for(Shape* area : forbidden_areas) {
+  for(Shape* area : ForbiddenAreas) {
     if(area->point_safe(p)) {
      continue;
     } else {
@@ -129,7 +129,7 @@ bool XYZRobot::test_way(const Point &pos, const Point &newP)
 bool XYZRobot::PF_up_and_over(const Point &p)
 {
   // if there are no forbidden areas just move to the point.
-  if(forbidden_areas.size() == 0) {
+  if ( ForbiddenAreas.empty() ) {
     go_to_point(p);
     return true;
   }
@@ -412,6 +412,12 @@ void XYZRobot::stop_all()
 }
 
 
+void XYZRobot::wait( void )
+{
+  Robot->wait_motion_complete();
+}
+
+
 bool XYZRobot::modify_shape(bool area, int forb_index, int job, int change)
 {
 
@@ -422,7 +428,7 @@ bool XYZRobot::modify_shape(bool area, int forb_index, int job, int change)
     return false;
   }
 
-  if(!area and (forb_index < 0 or (unsigned)forb_index > forbidden_areas.size())) {
+  if ( !area and ( forb_index < 0 or (unsigned)forb_index > ForbiddenAreas.size() ) ) {
     cerr << "Wrong forb_index in modify_shape:XYZRobot." << endl;
     return false;
   }
@@ -440,7 +446,7 @@ bool XYZRobot::modify_shape(bool area, int forb_index, int job, int change)
   if(area) {
     modify_cuboid(dynamic_cast<Cuboid*>(this->area), job, change);
   } else {
-    modify_cuboid(dynamic_cast<Cuboid*>(forbidden_areas[forb_index]), job, change);
+    modify_cuboid(dynamic_cast<Cuboid*>(ForbiddenAreas[forb_index]), job, change);
   }
   return true;
 }
@@ -513,7 +519,7 @@ void XYZRobot::set_Area(Shape *newArea)
 
 void XYZRobot::add_forbidden(Shape *forbidden)
 {
-  forbidden_areas.push_back(forbidden);
+  ForbiddenAreas.push_back(forbidden);
 }
 
 
@@ -522,8 +528,8 @@ bool XYZRobot::del_forbidden_at_index(int i)
   if(i<0)
     return false;
   
-  if(forbidden_areas.size() > (unsigned) i) {
-    forbidden_areas.erase(forbidden_areas.begin() + i);
+  if ( ForbiddenAreas.size() > (unsigned) i ) {
+    ForbiddenAreas.erase( ForbiddenAreas.begin() + i );
     return true;
   }
   else
@@ -533,7 +539,7 @@ bool XYZRobot::del_forbidden_at_index(int i)
   
 void XYZRobot::clear_forbidden()
 {
-  forbidden_areas.clear();
+  ForbiddenAreas.clear();
 }
 
 
@@ -601,11 +607,11 @@ Shape* XYZRobot::get_area()
 int XYZRobot::get_axis_length(int axis)
 {
   if(axis == 1) {
-    return length_x;
+    return XLength;
   }else if(axis == 2) {
-    return length_y;
+    return YLength;
   }else if(axis == 3) {
-    return length_z;
+    return ZLength;
   } else { // Error case:
     std::cerr << "wrong access to get_axis_length() in controller.cc" << std::endl;
     return 0;

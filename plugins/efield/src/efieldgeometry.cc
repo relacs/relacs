@@ -429,7 +429,7 @@ int EFieldGeometry::main( void )
  for(Point p : grid) {
 
    robot_control->PF_up_and_over(p);
-   robot_control->Robot->wait_motion_complete();
+   robot_control->wait();
    std::cerr << "Time mirob stopt moving: " << currentTime() << endl;
    sleep(0.1);
    QCoreApplication::postEvent( this, new EFieldGeometryEvent(countTotal,size));
@@ -443,7 +443,7 @@ int EFieldGeometry::main( void )
 
    if ( interrupt() ) {
      robot_control->PF_up_and_over(Point(0,0,0));
-     robot_control->Robot->wait_motion_complete();
+     robot_control->wait();
      robot_control->close_mirob();
      return Aborted;
    }
@@ -471,7 +471,7 @@ int EFieldGeometry::main( void )
 
    if ( interrupt() ) {
      robot_control->PF_up_and_over(Point(0,0,0));
-     robot_control->Robot->wait_motion_complete();
+     robot_control->wait();
      robot_control->close_mirob();
      return Aborted;
    }
@@ -481,7 +481,7 @@ int EFieldGeometry::main( void )
  }
  
  robot_control->PF_up_and_over(Point(0,0,0));
- robot_control->Robot->wait_motion_complete();
+ robot_control->wait();
 
  robot_control->close_mirob();
  return Completed;

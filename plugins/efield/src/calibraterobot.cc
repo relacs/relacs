@@ -540,7 +540,7 @@ void CalibrateRobot::customEvent( QEvent *qce ) {
 	QString complete = part1 += part2 += part3 += part4;
 	modifyAreasBox->addItem(complete);
       }
-      for(Shape* shape: robot_control->forbidden_areas){
+      for ( Shape* shape: robot_control->forbiddenAreas() ) {
 	Cuboid *cuboid = dynamic_cast<Cuboid*>(shape);
 	Point start = cuboid->startPoint();
 
@@ -589,7 +589,7 @@ int CalibrateRobot::main( void )
   }
 
   if( robot_control->start_mirob()) {
-      robot_control->Robot->go_to_reference(false,30);
+      robot_control->go_to_reference(false,30);
   }
 
   
@@ -635,7 +635,7 @@ int CalibrateRobot::main( void )
       }
     }
 
-    if(cali_forb) {
+    if ( cali_forb ) {
       cali_forb = false;
       Shape* n = calibrate_area();
       if (n != NULL) {
@@ -673,7 +673,7 @@ int CalibrateRobot::main( void )
 
   robot_control->go_home();
 
-  robot_control->Robot->wait_motion_complete();
+  robot_control->wait();
 
   if ( interrupt() ) {
     robot_control->close_mirob();
