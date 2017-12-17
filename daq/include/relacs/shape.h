@@ -41,15 +41,17 @@ public:
     /*! Constructor. */
   Shape( void );
 
-  // functions for forbidden areas:
-  virtual bool point_inside( const Point &p ) const = 0;
-  virtual bool point_below( const Point &p ) const = 0;
-  virtual bool point_safe( const Point &p ) const = 0;
-
     /*! Minimum corner of bounding box. */
   virtual Point boundingBoxMin( void ) const = 0;
     /*! Maximum corner of bounding box. */
   virtual Point boundingBoxMax( void ) const = 0;
+
+    /*! Return \a\c true if point \a p is inside the shape.
+        This implementation checks whether the point is inside the bounding box. */
+  virtual bool inside( const Point & p ) const;
+    /*! Return \a\c true if point \a p is below the shape.
+      This implementation checks whether the point is inside or below the bounding box. */
+  virtual bool below( const Point & p ) const;
 
 };
 
@@ -99,11 +101,6 @@ class Cuboid : public Shape
   const Point &size( void ) { return Size; }
     /*! Set the size of the cuboid to \a size. */
   void setSize( const Point &size ) { Size = size; }
-
-    /*! Return \a\c true if point \a p is inside the cuboid. */
-  bool inside( const Point & p ) const;
-    /*! Return \a\c true if point \a p is below the cuboid. */
-  bool below( const Point & p ) const;
 
     /*! Minimum corner of bounding box. */
   virtual Point boundingBoxMin( void ) const;

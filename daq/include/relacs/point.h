@@ -96,6 +96,17 @@ public:
     /*! Dot product between the coordinates this and point \a p. */
   double operator*( const Point &p ) const;
 
+    /*! True if this point and \a p are the same. */
+  bool operator==( const Point &p ) const;
+    /*! True if all coordinates of \c this are smaller than the ones of \a p. */
+  bool operator<( const Point &p ) const;
+    /*! True if all coordinates of \c this are smaller or equal than the ones of \a p. */
+  bool operator<=( const Point &p ) const;
+    /*! True if all coordinates of \c this are greater than the ones of \a p. */
+  bool operator>( const Point &p ) const;
+    /*! True if all coordinates of \c this are greater or equal than the ones of \a p. */
+  bool operator>=( const Point &p ) const;
+
     /*! Distance between this point and \a p. */
   double distance( const Point &p ) const;
     /*! The center between this point and \a p. */

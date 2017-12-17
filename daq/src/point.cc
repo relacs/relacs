@@ -167,6 +167,56 @@ double Point::operator*( const Point &p ) const
 }
 
 
+bool Point::operator==( const Point &p ) const
+{
+  for ( int k=0; k<Dim; k++ ) {
+    if ( Coords[k] != p[k] )
+      return false;
+  }
+  return true;
+}
+
+
+bool Point::operator<( const Point &p ) const
+{
+  for ( int k=0; k<Dim; k++ ) {
+    if ( Coords[k] >= p[k] )
+      return false;
+  }
+  return true;
+}
+
+
+bool Point::operator<=( const Point &p ) const
+{
+  for ( int k=0; k<Dim; k++ ) {
+    if ( Coords[k] > p[k] )
+      return false;
+  }
+  return true;
+}
+
+
+bool Point::operator>( const Point &p ) const
+{
+  for ( int k=0; k<Dim; k++ ) {
+    if ( Coords[k] <= p[k] )
+      return false;
+  }
+  return true;
+}
+
+
+bool Point::operator>=( const Point &p ) const
+{
+  for ( int k=0; k<Dim; k++ ) {
+    if ( Coords[k] < p[k] )
+      return false;
+  }
+  return true;
+}
+
+
 double Point::distance( const Point &p ) const
 {
   double d = 0.0;
