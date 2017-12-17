@@ -179,7 +179,7 @@ bool Mirob::setAcceleration( double acc )
 //*********************************
 
 
-double Mirob::pos( int axis )
+double Mirob::pos( int axis ) const
 {
   int position = 0;
   TS_SelectAxis( axis+1 );
@@ -191,9 +191,9 @@ double Mirob::pos( int axis )
 Point Mirob::pos( void ) const 
 {
   Point pos;
-  for (int i = 1; i<=3; i++) {
+  for ( int i=0; i<3; i++ ) {
     int position = 0;
-    TS_SelectAxis(i);
+    TS_SelectAxis( i+1 );
     TS_GetLongVariable("APOS", position);
     //std::cerr << "read position from mirob:"<< position <<"(in steps)" << std::endl;
     //std::cerr << "position from mirob:"<< position*get_step_length(i) <<"(in mm)" << std::endl;
@@ -206,7 +206,7 @@ Point Mirob::pos( void ) const
     if(position * get_step_length(i) > 700) {
       pos_with_neg = (double) position - maxValue;
     }
-    pos[i-1] = pos_with_neg*get_step_length(i);
+    pos[i] = pos_with_neg*get_step_length( i );
 
   }
   return pos;
@@ -251,14 +251,14 @@ void Mirob::stop_axis(int axis) {
 int Mirob::move( int axis, double pos, double speed )
 {
   double ds;  // the step size in mm.
-  ds = get_step_length( axis+1 );
+  ds = get_step_length( axis );
 
   TS_SelectAxis( axis+1 );
 
   if ( target < 0.0 || ds <= 0.0 )
     return;
 
-  double usedacc = Acc*get_axis_factor( axis+1 );
+  double usedacc = Acc*get_axis_factor( axis );
   long target_steps = (long)round(target / ds);
 
   TS_MoveAbsolute( target_steps, speed, usedacc, UPDATE_IMMEDIATE, FROM_REFERENCE );
@@ -272,8 +272,8 @@ int Mirob::step( int axis, double s, double speed )
   if ( s <= 0.0 ) {
     return;
   }
-  long steps = (long) round(s/get_step_length(axis+1));
-  double Usedacc = Acc*get_axis_factor(axis+1);
+  long steps = (long) round( s / get_step_length( axis ) );
+  double Usedacc = Acc*get_axis_factor( axis );
   bool additive = false;
 
   TS_SelectAxis( axis+1 );
@@ -282,34 +282,34 @@ int Mirob::step( int axis, double s, double speed )
 }
 
 
-
-double Mirob::get_step_length(int axis) {
-   double ds;
-
-   if (axis < 1 || axis > 3) {
-     return -1;
-   } else {
-
-     if (axis == 1) {
-       ds = 10./10000.;
-	 }
-     if (axis == 2) {
-       ds = 10./8192.;
-	 }
-     if (axis == 3) {
-       ds = 2./8192.;
-	 }
-   }
-   return ds;
+double Mirob::get_step_length( int axis ) const
+{
+  double ds;
+  
+  if ( axis < 0 || axis > 2 )
+    return -1;
+  else {
+    if ( axis == 0 ) {
+      ds = 10./10000.;
+    }
+    if ( axis == 1 ) {
+      ds = 10./8192.;
+    }
+    if ( axis == 2 ) {
+      ds = 2./8192.;
+    }
+  }
+  return ds;
 }
 
-double Mirob::get_axis_factor(int axis) {
 
+double Mirob::get_axis_factor( int axis ) const
+{
   double offset = 1000.;
 
-  if (axis == 2) {
+  if ( axis == 1 ) {
     return ((8192./ 10.) / offset);
-  } else if (axis == 3) {
+  } else if (axis == 2) {
     return ((8192./2.)  / offset);
   } else {
     return ((10000./10.)/offset);

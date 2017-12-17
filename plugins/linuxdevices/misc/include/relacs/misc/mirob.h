@@ -122,10 +122,10 @@ class Mirob : public Device {
   
   
   //returns the step length of the given axis.
-  double get_step_length(int axis);
+  double get_step_length(int axis) const;
   
   //returns the factor between the given axis and the x-axis
-  double get_axis_factor(int axis);
+  double get_axis_factor(int axis) const;
   
   
  private:

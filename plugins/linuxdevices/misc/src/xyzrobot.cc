@@ -305,7 +305,7 @@ void XYZRobot::go_to_point(const Point &coords, int speed)
 
   if(to_move == 1) {
     for(int axis=0; axis<3; axis++) {
-      if(dists[axis] > Robot->get_step_length(axis+1)/2) {
+      if(dists[axis] > Robot->get_step_length(axis)/2) {
 	Robot->move(axis, coords[axis], speeds[axis] );
       }
     }
@@ -652,8 +652,8 @@ double XYZRobot::calc_speed(int axis, double speed, double dist,
 
 double XYZRobot::calculate_intern_time(int axis, double axisSpeed, double distance)
 {
-  double axisAcc = Robot->acceleration() * Robot->get_axis_factor(axis);
-  double axisSteps = distance / Robot->get_step_length(axis);
+  double axisAcc = Robot->acceleration() * Robot->get_axis_factor(axis-1);
+  double axisSteps = distance / Robot->get_step_length(axis-1);
   
   double time = ((2*axisSpeed/axisAcc +
 		  (axisSteps - (axisSpeed*axisSpeed/axisAcc))/axisSpeed));
@@ -674,11 +674,9 @@ Point XYZRobot::calculate_times(const Point &speeds, const Point &dists)
 int XYZRobot::how_many_move(const Point &position, const Point &coords)
 {
   int count = 0;
-
-  for(int i=1; i<4; i++) {
-    if(abs(position[i] - (double) coords[i]) > ((double) Robot->get_step_length(i)/2.0)) {
+  for ( int i=0; i<3; i++ ) {
+    if ( abs(position[i] - coords[i]) > 0.5*Robot->get_step_length(i) )
       count++;
-    }
   }
   return count;
 }
@@ -689,7 +687,7 @@ Point XYZRobot::axis_speeds(double speed)
   Point speeds = Point();
 
   for(int axis=1; axis<4; axis++) {
-    speeds[axis] = speed*Robot->get_axis_factor(axis);
+    speeds[axis] = speed*Robot->get_axis_factor(axis-1);
   }
   return speeds;
 }
