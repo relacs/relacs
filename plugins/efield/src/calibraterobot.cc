@@ -472,24 +472,24 @@ CalibrateRobot::~CalibrateRobot( void )
 
       switch(point_num) {
       case 0:
-	area_start = robot_control->get_position();
+	area_start = robot_control->pos();
 	errorBox->append("start point accepted.");
 	errorBox->append("Please use 'U' and 'O' to calibrate the depth.");
 
 	cerr<< "start point accepted." << endl;
 	break;
       case 1:
-	area_depth = robot_control->get_position();
+	area_depth = robot_control->pos();
 	cerr<< "depth point accepted." << endl;
 	errorBox->append("Please use 'J' and 'L' to calibrate the length.");
 	break;
       case 2:
-	area_length = robot_control->get_position();
+	area_length = robot_control->pos();
 	errorBox->append("Please use 'I' and 'K' to calibrate the width.");
 	cerr<< "length point accepted." << endl;
 	break;
       case 3:;
-	area_width = robot_control->get_position();
+	area_width = robot_control->pos();
 	cerr<< "width point accepted." << endl;
 	break;
       }
@@ -520,7 +520,7 @@ CalibrateRobot::~CalibrateRobot( void )
     }
     cont = false;
 
-    return robot_control->get_position();
+    return robot_control->pos();
   }
 
 
@@ -573,6 +573,7 @@ void CalibrateRobot::customEvent( QEvent *qce ) {
   //forward declaration it is below main.
   void test_go_to_point();
 
+
 int CalibrateRobot::main( void )
 {
   // get options:
@@ -623,7 +624,7 @@ int CalibrateRobot::main( void )
 
   while(true) {
     sleep(0.1);
-    //cerr << "Position in while main: " << robot_control->get_position() << endl;
+    //cerr << "Position in while main: " << robot_control->pos() << endl;
 
     if(cali_area) {
       cali_area = false;

@@ -55,6 +55,11 @@ class Mirob : public Device {
   virtual void close( void );
   virtual int reset( void );
 
+    /*! Return the position of the axis \a axis. */
+  virtual double pos( int axis ) const;
+    /*! Return the position of the x,y, and z-axis. */
+  virtual Point pos( void ) const;
+
   // inits the robot and the axes
   bool start();
 
@@ -65,81 +70,76 @@ class Mirob : public Device {
   double acceleration( void ) const;
   bool setAcceleration( double acc );
 
- // movement control:
+  // movement control:
+  
+    /*! Sleep until current movement finished. */
+  virtual int wait( void ) const;
 
- // returns the postion of the given axis:
- int get_axis_position(int axis);
+  void set_intern_position(int axis, long int pos);
 
- // returns the positions of all axis
- Point get_position();
+  void stop_axis(int axis);
 
- bool wait_motion_complete();
-
-
- void set_intern_position(int axis, long int pos);
-
- void stop_axis(int axis);
-
- // moves the given axis to the target with the given speed
- void move_axis_abs(int axis, double target, int speed);
+    /*! Absolute move of axis \a axis to position \a pos with speed \a speed.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int move( int axis, double pos, double speed=0.0 );
+    /*! Relative move of axis \a axis by \a s with speed \a speed.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int step( int axis, double s, double speed=0.0 );
 
 
- void move_axis_rel(int axis,  double length, int speed);
+  // init functions:
 
+  // Moves the given axis to the positive/negative limit and sets it position to 0
+  void search_home(int axis, int speed, bool positive);
 
- // init functions:
+  //Moves all axis to the given limit(positive)
+  void go_to_reference(bool positive, int speed);
 
- //Moves the given axis to the positive/negative limit and sets it position to 0
- void search_home(int axis, int speed, bool positive);
+  //Initialises the communication with the robot
+  int init_mirob();
 
- //Moves all axis to the given limit(positive)
- void go_to_reference(bool positive, int speed);
-
- //Initialises the communication with the robot
- int init_mirob();
-
- //Tries to read the setup file
- int read_setup();
-
- //Sets up and activates all 3 axis of the robot
- long setup_axes(int setupindex);
-
- //activates all 3 axis
- bool switch_on_power();
-
- //Limits:
-
- //Checks for active limits of the axis given in "limits" and updates them
- void check_limit_switch(axis_limits &limits);
-
- //returns true if the axis is in the positive limit:
- bool check_pos_limit(int axis);
-
- //returns true if the axis is in the negative limit:
- bool check_neg_limit(int axis);
-
- void check_all_reg(int axis);
-
-
- //returns the step length of the given axis.
- double get_step_length(int axis);
-
- //returns the factor between the given axis and the x-axis
- double get_axis_factor(int axis);
-
-
+  //Tries to read the setup file
+  int read_setup();
+  
+  //Sets up and activates all 3 axis of the robot
+  long setup_axes(int setupindex);
+  
+  //activates all 3 axis
+  bool switch_on_power();
+  
+  //Limits:
+  
+  //Checks for active limits of the axis given in "limits" and updates them
+  void check_limit_switch(axis_limits &limits);
+  
+  //returns true if the axis is in the positive limit:
+  bool check_pos_limit(int axis);
+  
+  //returns true if the axis is in the negative limit:
+  bool check_neg_limit(int axis);
+  
+  void check_all_reg(int axis);
+  
+  
+  //returns the step length of the given axis.
+  double get_step_length(int axis);
+  
+  //returns the factor between the given axis and the x-axis
+  double get_axis_factor(int axis);
+  
+  
  private:
 
   int Speed = 40;
   double Acc = 0.25;
-
+  
   bool Opened;
-
+  
   int FileDescr;
-
-
- //returns the max of the three given values.
- double get_max(double a, double b, double c);
+  
+  
+  //returns the max of the three given values.
+  double get_max(double a, double b, double c);
 
 };
 

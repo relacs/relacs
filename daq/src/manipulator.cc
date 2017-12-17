@@ -41,19 +41,103 @@ Manipulator::~Manipulator( void )
 }
 
 
-int Manipulator::stepX( double x )
+int Manipulator::stepX( double x, double speed )
+{
+  return step( 0, x, speed );
+}
+
+
+int Manipulator::stepY( double y, double speed )
+{
+  return step( 1, y, speed );
+}
+
+
+int Manipulator::stepZ( double z, double speed )
+{
+  return step( 2, z, speed );
+}
+
+
+int Manipulator::step( int axis, double s, double speed )
 {
   return 0;
 }
 
 
-int Manipulator::stepY( double y )
+int Manipulator::step( const Point &s, double speed )
+{
+  int r = 0;
+  for ( int k=0; k<3; k++ )
+    r |= step( k, s[k], speed );
+  return r;
+}
+
+
+int Manipulator::moveX( double x, double speed )
+{
+  return move( 0, x, speed );
+}
+
+
+int Manipulator::moveY( double y, double speed )
+{
+  return move( 1, y, speed );
+}
+
+
+int Manipulator::moveZ( double z, double speed )
+{
+  return move( 2, z, speed );
+}
+
+
+int Manipulator::move( int axis, double pos, double speed )
 {
   return 0;
 }
 
 
-int Manipulator::stepZ( double z )
+int Manipulator::move( const Point &pos, double speed )
+{
+  int r = 0;
+  for ( int k=0; k<3; k++ )
+    r |= move( k, pos[k], speed );
+  return r;
+}
+
+
+double Manipulator::posX( void ) const
+{
+  return pos( 0 );
+}
+
+
+double Manipulator::posY( void ) const
+{
+  return pos( 1 );
+}
+
+
+double Manipulator::posZ( void ) const
+{
+  return pos( 2 );
+}
+
+
+double Manipulator::pos( int axis ) const
+{
+  return 0.0;
+}
+
+
+Point Manipulator::pos( void ) const
+{
+  return Point( 0.0, 0.0, 0.0 );
+}
+
+
+int Manipulator::wait( void ) const
 {
   return 0;
 }
@@ -104,24 +188,6 @@ int Manipulator::homeZ( void )
 int Manipulator::home( void )
 {
   return homeX() + ( homeY() << 1 ) + ( homeZ() << 2 );
-}
-
-
-double Manipulator::posX( void ) const
-{
-  return 0.0;
-}
-
-
-double Manipulator::posY( void ) const
-{
-  return 0.0;
-}
-
-
-double Manipulator::posZ( void ) const
-{
-  return 0.0;
 }
 
 

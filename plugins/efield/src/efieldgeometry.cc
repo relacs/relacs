@@ -386,7 +386,7 @@ int EFieldGeometry::main( void )
   }
 
  if(! robot_control->has_area()) {
-   warning( "Robot has no area. Please calibrate it first with the Alexrobot repro." );
+   warning( "Robot has no area. Please calibrate it first with the CalibrateRobot repro." );
    return Aborted;
  }
  robot_control->start_mirob();

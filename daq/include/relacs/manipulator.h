@@ -23,6 +23,7 @@
 #define _RELACS_MANIPULATOR_H_ 1
 
 
+#include <relacs/point.h>
 #include <relacs/device.h>
 using namespace std;
 
@@ -31,7 +32,7 @@ namespace relacs {
 
 /*!
 \class Manipulator
-\brief Virtual class for controlling a Manipulator. 
+\brief Virtual class for controlling a manipulator - a robot with several linear axis. 
 \author Jan Benda
 \version 1.0
 \todo implement info() and settings()
@@ -41,7 +42,7 @@ The Manipulator class defines an interface for basic operations
 to control a manipulator. 
 
 In case you want to use a manipulator device within RELACS, your
-Attenuate implementation needs to provide a void default constructor
+Manipulator implementation needs to provide a void default constructor
 (i.e. with no parameters) that does not open the device.  Also,
 include the header file \c <relacs/relacsplugin.h> and make the
 Manipulator device known to RELACS with the \c addDevice(
@@ -62,18 +63,81 @@ public:
     /*! Destroy a Manipulator. In case it is open, close it. */
   virtual ~Manipulator( void );
 
-    /*! Move x-axis by \a x.
+    /*! Relative move of x-axis by \a x with speed \a speed.
         Depending on the implementation \a x can be raw steps
-	or a specific distance or angle. */
-  virtual int stepX( double x );
-    /*! Move y-axis by \a y.
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int stepX( double x, double speed=0.0 );
+    /*! Relative move of y-axis by \a y with speed \a speed.
         Depending on the implementation \a y can be raw steps
-	or a specific distance or angle. */
-  virtual int stepY( double y );
-    /*! Move z-axis by \a z.
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int stepY( double y, double speed=0.0 );
+    /*! Relative move of z-axis by \a z with speed \a speed.
         Depending on the implementation \a z can be raw steps
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int stepZ( double z, double speed=0.0 );
+    /*! Relative move of axis \a axis by \a s with speed \a speed.
+        Depending on the implementation \a z can be raw steps
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int step( int axis, double s, double speed=0.0 );
+    /*! Relative move of x, y, and z-axis by \a step with speed \a speed.
+        Depending on the implementation \a s can be raw steps
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int step( const Point &s, double speed=0.0 );
+
+    /*! Absolute move of x-axis to \a x with speed \a speed.
+        Depending on the implementation \a x can be raw steps
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int moveX( double x, double speed=0.0 );
+    /*! Absolute move of y-axis to \a y with speed \a speed.
+        Depending on the implementation \a y can be raw steps
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int moveY( double y, double speed=0.0 );
+    /*! Absolute move of z-axis to \a z with speed \a speed.
+        Depending on the implementation \a z can be raw steps
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int moveZ( double z, double speed=0.0 );
+    /*! Absolute move of axis \a axis to position \a pos with speed \a speed.
+        Depending on the implementation \a pos can be raw steps
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int move( int axis, double pos, double speed=0.0 );
+    /*! Absolute move of x, y, and z-axis to \a pos with speed \a speed.
+        Depending on the implementation \a step can be raw steps
+	or a specific distance or angle.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int move( const Point &pos, double speed=0.0 );
+
+    /*! Return the position of the x-axis.
+        Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
-  virtual int stepZ( double z );
+  virtual double posX( void ) const;
+    /*! Return the position of the y-axis.
+        Depending on the implementation this can be raw steps
+	or a specific distance or angle. */
+  virtual double posY( void ) const;
+    /*! Return the position of the z-axis.
+        Depending on the implementation this can be raw steps
+	or a specific distance or angle. */
+  virtual double posZ( void ) const;
+    /*! Return the position of the axis \a axis.
+        Depending on the implementation this can be raw steps
+	or a specific distance or angle. */
+  virtual double pos( int axis ) const;
+    /*! Return the position of the x,y, and z-axis.
+        Depending on the implementation this can be raw steps
+	or a specific distance or angle. */
+  virtual Point pos( void ) const;
+
+    /*! Sleep until current movement finished. Return 0 on success. */
+  virtual int wait( void ) const;
 
     /*! Defines the current position of the x axis as the home position. */
   virtual int clearX( void );
@@ -92,19 +156,6 @@ public:
   virtual int homeZ( void );
     /*! Move back to the home position. */
   virtual int home( void );
-
-    /*! Return the position of the x-axis.
-        Depending on the implementation this can be raw steps
-	or a specific distance or angle. */
-  virtual double posX( void ) const;
-    /*! Return the position of the y-axis.
-        Depending on the implementation this can be raw steps
-	or a specific distance or angle. */
-  virtual double posY( void ) const;
-    /*! Return the position of the z-axis.
-        Depending on the implementation this can be raw steps
-	or a specific distance or angle. */
-  virtual double posZ( void ) const;
 
     /*! Set the amplitude of a step of the x-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,

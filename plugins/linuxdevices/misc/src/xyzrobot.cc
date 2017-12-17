@@ -91,7 +91,7 @@ bool XYZRobot::test_point(const Point &p)
 {
   for( Shape* area : ForbiddenAreas ) {
     if ( area->inside(p) || area->below(p) )
-     continue;
+      continue;
     else
       return false;
   }
@@ -141,7 +141,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
     return false;
   }
 
-  Point position = Robot->get_position();
+  Point position = Robot->pos();
   //std::cerr << "Internal position:" << position << "\n";
 
   if(! test_point(position)) {
@@ -193,7 +193,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
       std::cerr <<"Moving over obstacle pos_up is:" << pos_up
 		<< std::endl;
       go_to_point(pos_up);
-      Robot->wait_motion_complete();
+      Robot->wait();
 
     }
 
@@ -201,7 +201,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
     std::cerr <<"Moving over obstacle p_up is:" << p_up
 	      << std::endl;
     go_to_point(p_up);
-    Robot->wait_motion_complete();
+    Robot->wait();
 
 
     if(! test_way(p_up,p)) {
@@ -213,7 +213,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
       std::cerr <<"Moved over obstacle new pos is:" << p
 		<< std::endl;
       go_to_point(p);
-      Robot->wait_motion_complete();
+      Robot->wait();
       return true;
     }
 
@@ -292,7 +292,7 @@ void XYZRobot::go_to_point(const Point &coords, int speed)
   if(speed == 0)
     speed = Robot->speed();
 
-  Point position = get_position();
+  Point position = Robot->pos();
 
   int to_move = how_many_move(position, coords);
 
@@ -304,49 +304,49 @@ void XYZRobot::go_to_point(const Point &coords, int speed)
   Point speeds = axis_speeds(speed);
 
   if(to_move == 1) {
-    for(int axis=1; axis<4; axis++) {
-      if(dists[axis] > Robot->get_step_length(axis)/2) {
-	  Robot->move_axis_abs(axis,coords[axis],speeds[axis]);
+    for(int axis=0; axis<3; axis++) {
+      if(dists[axis] > Robot->get_step_length(axis+1)/2) {
+	Robot->move(axis, coords[axis], speeds[axis] );
       }
     }
   }
+  
+  Point times = calculate_times( speeds, dists );
 
-  Point times = calculate_times(speeds,dists);
-
-  double maxTime = get_max(times[1], times[2], times[3]);
+  double maxTime = get_max(times[0], times[1], times[2]);
   double precision = 0.005;
 
   if(to_move == 2 || to_move == 3) {
-    for(int axis=1; axis<4; axis++) {
-      if(times[axis] < maxTime) {
-	speeds[axis] = calc_speed(axis, speeds[axis],
-				  dists[axis], maxTime, precision);
+    for ( int axis=0; axis<3; axis++ ) {
+      if( times[axis] < maxTime ) {
+	speeds[axis] = calc_speed( axis, speeds[axis],
+				   dists[axis], maxTime, precision );
       }
     }
 
-    Robot->move_axis_abs(1,coords.x(),speeds[1]);
-    Robot->move_axis_abs(2,coords.y(),speeds[2]);
+    Robot->move( 0, coords.x(), speeds[0] );
+    Robot->move( 1, coords.y(), speeds[1] );
 
-    if(speeds[3] > 450) {
-      speeds[3] = 450;
+    if ( speeds[2] > 450 ) {
+      speeds[2] = 450;
     }
-    Robot->move_axis_abs(3,coords.z(),speeds[3]);
+    Robot->move( 2, coords.z(), speeds[2] );
   }
   /*
   std::cerr << "how many axis need to move :" << to_move << std::endl;
 
-  std::cerr << "distanceX is: " << dists[1] << std::endl;
-  std::cerr << "distanceY is: " << dists[2] << std::endl;
-  std::cerr << "distanceZ is: " << dists[3]<< std::endl;
+  std::cerr << "distanceX is: " << dists[0] << std::endl;
+  std::cerr << "distanceY is: " << dists[1] << std::endl;
+  std::cerr << "distanceZ is: " << dists[2]<< std::endl;
 
   std::cerr << "maxTime is: " << maxTime << std::endl;
-  std::cerr << "timeX is: " << times[1] << std::endl;
-  std::cerr << "timeY is: " << times[2] << std::endl;
-  std::cerr << "timeZ is: " << times[3] << std::endl;
+  std::cerr << "timeX is: " << times[0] << std::endl;
+  std::cerr << "timeY is: " << times[1] << std::endl;
+  std::cerr << "timeZ is: " << times[2] << std::endl;
 
-  std::cerr << "speedX is: " << speeds[1] << std::endl;
-  std::cerr << "speedY is: " << speeds[2] << std::endl;
-  std::cerr << "speedZ is: " << speeds[3] << std::endl;
+  std::cerr << "speedX is: " << speeds[0] << std::endl;
+  std::cerr << "speedY is: " << speeds[1] << std::endl;
+  std::cerr << "speedZ is: " << speeds[2] << std::endl;
   */
 
   return;
@@ -355,37 +355,37 @@ void XYZRobot::go_to_point(const Point &coords, int speed)
 
 void XYZRobot::move_posX()
 {
-  Robot->move_axis_rel(1,2,40);
+  Robot->step( 0, 2, 40 );
 }
 
 
 void XYZRobot::move_negX()
 {
-  Robot->move_axis_rel(1,-2,40);
+  Robot->step( 0, -2, 40 );
 }
 
 
 void XYZRobot::move_posY()
 {
-  Robot->move_axis_rel(2,2,40);
+  Robot->step( 1, 2, 40 );
 }
 
 
 void XYZRobot::move_negY()
 {
-  Robot->move_axis_rel(2,-2,40);
+  Robot->step( 1, -2, 40 );
 }
 
 
 void XYZRobot::move_posZ()
 {
-  Robot->move_axis_rel(3,4,40);
+  Robot->step( 2, 4, 40 );
 }
 
 
 void XYZRobot::move_negZ()
 {
-  Robot->move_axis_rel(3,-4,40);
+  Robot->step( 2, -4, 40 );
 }
 
 void XYZRobot::stop_X()
@@ -416,7 +416,7 @@ void XYZRobot::stop_all()
 
 void XYZRobot::wait( void )
 {
-  Robot->wait_motion_complete();
+  Robot->wait();
 }
 
 
@@ -579,9 +579,9 @@ Point XYZRobot::get_fish_tail()
   return fish_tail;
 }
 
-Point XYZRobot::get_position()
+Point XYZRobot::pos( void ) const
 {
-  return Robot->get_position();
+  return Robot->pos();
 }
 
 bool XYZRobot::axis_in_pos_limit(int axis)

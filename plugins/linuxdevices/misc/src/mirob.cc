@@ -179,17 +179,18 @@ bool Mirob::setAcceleration( double acc )
 //*********************************
 
 
-int Mirob::get_axis_position(int axis) {
+double Mirob::pos( int axis )
+{
   int position = 0;
-  TS_SelectAxis(axis);
-  TS_GetLongVariable("APOS", position);
+  TS_SelectAxis( axis+1 );
+  TS_GetLongVariable( "APOS", position );
   return position;
 }
 
-Point Mirob::get_position() {
 
+Point Mirob::pos( void ) const 
+{
   Point pos;
-
   for (int i = 1; i<=3; i++) {
     int position = 0;
     TS_SelectAxis(i);
@@ -198,6 +199,7 @@ Point Mirob::get_position() {
     //std::cerr << "position from mirob:"<< position*get_step_length(i) <<"(in mm)" << std::endl;
     //std::cerr << "size of position: " << sizeof(position) << std::endl;
     //std::cerr << "MaxValue: " << std::numeric_limits<unsigned int>::max() << std::endl;
+    // XXX Why does this differ from pos(int)?
     double pos_with_neg = position;
     double maxValue = std::numeric_limits<unsigned int>::max();
 
@@ -210,22 +212,23 @@ Point Mirob::get_position() {
   return pos;
 }
 
-bool Mirob::wait_motion_complete() {
 
-  for(int axis=1; axis<4; axis++) {
-    TS_SelectAxis(axis);
-    if(!TS_SetEventOnMotionComplete(1, 0)) {
-      return false;
+int Mirob::wait( void ) const
+{
+  for( int axis=1; axis<=3; axis++ ) {
+    TS_SelectAxis( axis );
+    if ( ! TS_SetEventOnMotionComplete(1, 0) ) {
+      return 1;
     }
   }
-  return true;
+  return 0;
 }
 
-void Mirob::set_intern_position(int axis, long int pos) {
 
-  TS_SelectAxis(axis);
-  TS_SetPosition(pos);
-
+void Mirob::set_intern_position( int axis, long int pos )
+{
+  TS_SelectAxis( axis );
+  TS_SetPosition( pos );
 }
 
 void Mirob::stop_axis(int axis) {
@@ -239,43 +242,42 @@ void Mirob::stop_axis(int axis) {
    Move the given axis to an absolute position given in mm relative to the
    zero position.
 
-   axis: is the axis zou want to move
-   target: the position in mm
+   axis: is the axis you want to move
+   pos: the position in mm
    speed: the speed in steps per "unknown time"
-   ds: is the step size in mm.
 
  */
 
-void Mirob::move_axis_abs(int axis, double target, int speed) {
+int Mirob::move( int axis, double pos, double speed )
+{
+  double ds;  // the step size in mm.
+  ds = get_step_length( axis+1 );
 
-  double ds;
-  ds = get_step_length(axis);
+  TS_SelectAxis( axis+1 );
 
-  TS_SelectAxis(axis);
-
-  if (target < 0. || ds <= 0.)
+  if ( target < 0.0 || ds <= 0.0 )
     return;
 
-  double Usedacc = Acc*get_axis_factor(axis);
+  double usedacc = Acc*get_axis_factor( axis+1 );
   long target_steps = (long)round(target / ds);
 
-  TS_MoveAbsolute(target_steps, speed, Usedacc, UPDATE_IMMEDIATE, FROM_REFERENCE);
+  TS_MoveAbsolute( target_steps, speed, usedacc, UPDATE_IMMEDIATE, FROM_REFERENCE );
 
-  return;
+  return 0;
 }
 
-void Mirob::move_axis_rel(int axis, double length, int speed) {
 
-
-  if(length == 0) {
+int Mirob::step( int axis, double s, double speed )
+{
+  if ( s <= 0.0 ) {
     return;
   }
+  long steps = (long) round(s/get_step_length(axis+1));
+  double Usedacc = Acc*get_axis_factor(axis+1);
   bool additive = false;
-  long steps = (long) round(length/get_step_length(axis));
-  double Usedacc = Acc*get_axis_factor(axis);
 
-  TS_SelectAxis(axis);
-  TS_MoveRelative(steps, speed, Usedacc, additive, UPDATE_IMMEDIATE, FROM_REFERENCE);
+  TS_SelectAxis( axis+1 );
+  TS_MoveRelative( steps, speed, Usedacc, additive, UPDATE_IMMEDIATE, FROM_REFERENCE );
   return;
 }
 

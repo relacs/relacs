@@ -141,7 +141,7 @@ void Robot::customEvent( QEvent *qce )
 {
   switch (qce->type() - QEvent::User) {
   case 21: {
-    Point p = robot_control->get_position();
+    Point p = robot_control->pos();
     xPos->display(int(p.x()));
     yPos->display(int(p.y()));
     zPos->display(int(p.z()));
@@ -197,7 +197,7 @@ void Robot::customEvent( QEvent *qce )
       double width_fac = double(plot->size().width())  / robot_control->xlength();
       double height_fac= double(plot->size().height()) / robot_control->ylength();
 
-      Point p = robot_control->get_position();
+      Point p = robot_control->pos();
       plot->setPosition(Point(p.x()*width_fac, p.y()*height_fac, 0));
 
       plot->update();
@@ -219,7 +219,7 @@ bool Robot::test_height(Cuboid* cuboid) {
     Point start = cuboid->corner();
     double height = cuboid->height();
 
-    double height_robot = robot_control->get_position().z();
+    double height_robot = robot_control->posZ();
 
     if (start.z() <= height_robot and start.z() + height >= height_robot) {
       return true;

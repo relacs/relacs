@@ -109,7 +109,7 @@ public:
 
   Point get_fish_head();
   Point get_fish_tail();
-  Point get_position();
+  Point pos( void ) const;
   bool axis_in_pos_limit(int axis);
   bool axis_in_neg_limit(int axis);
 
