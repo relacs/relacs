@@ -219,7 +219,7 @@ bool Robot::test_height(Cuboid* cuboid) {
     Point start = cuboid->corner();
     double height = cuboid->height();
 
-    double height_robot = robot_control->posZ();
+    double height_robot = robot_control->pos().z();
 
     if (start.z() <= height_robot and start.z() + height >= height_robot) {
       return true;

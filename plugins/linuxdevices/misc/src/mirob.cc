@@ -255,13 +255,13 @@ int Mirob::move( int axis, double pos, double speed )
 
   TS_SelectAxis( axis+1 );
 
-  if ( target < 0.0 || ds <= 0.0 )
-    return;
+  if ( pos < 0.0 || ds <= 0.0 )
+    return -1;
 
   double usedacc = Acc*get_axis_factor( axis );
-  long target_steps = (long)round(target / ds);
+  long steps = (long)round(pos / ds);
 
-  TS_MoveAbsolute( target_steps, speed, usedacc, UPDATE_IMMEDIATE, FROM_REFERENCE );
+  TS_MoveAbsolute( steps, speed, usedacc, UPDATE_IMMEDIATE, FROM_REFERENCE );
 
   return 0;
 }
@@ -270,7 +270,7 @@ int Mirob::move( int axis, double pos, double speed )
 int Mirob::step( int axis, double s, double speed )
 {
   if ( s <= 0.0 ) {
-    return;
+    return -1;
   }
   long steps = (long) round( s / get_step_length( axis ) );
   double Usedacc = Acc*get_axis_factor( axis );
@@ -278,7 +278,7 @@ int Mirob::step( int axis, double s, double speed )
 
   TS_SelectAxis( axis+1 );
   TS_MoveRelative( steps, speed, Usedacc, additive, UPDATE_IMMEDIATE, FROM_REFERENCE );
-  return;
+  return 0;
 }
 
 
@@ -336,10 +336,8 @@ double Mirob::get_max(double a, double b, double c) {
  */
 void Mirob::search_home(int axis, int speed, bool positive) {
   axis_limits limits;
-  Point coords;
   limits.axis = axis;
   check_limit_switch(limits);
-  coords = get_position();
 
   long position;
   if (positive) {
