@@ -216,7 +216,7 @@ bool Robot::test_height(Cuboid* cuboid) {
   }
   case 1: { // is the cuboid on the same height as the robot.
 
-    Point start = cuboid->startPoint();
+    Point start = cuboid->corner();
     double height = cuboid->height();
 
     double height_robot = robot_control->get_position().z();
@@ -240,7 +240,7 @@ QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
   double width_fac = double(plot->size().width())  / robot_control->xlength();
   double height_fac= double(plot->size().height()) / robot_control->ylength();
 
-  Point start = cuboid->startPoint();
+  Point start = cuboid->corner();
   int ploted_start_x = start.x()*width_fac;
   int ploted_start_y = start.y()*height_fac;
   int ploted_width = cuboid->length()*width_fac;

@@ -39,106 +39,73 @@ Cuboid::Cuboid( void )
 
 
 Cuboid::Cuboid( const Cuboid &c )
-  : StartPoint( c.StartPoint ),
-    Length( c.Length ),
-    Width( c.Width ),
-    Height( c.Height )
+  : Corner( c.Corner ),
+    Size( c.Size )
 {
 }
 
 
 Cuboid::Cuboid( const Point &start, 
 		double length, double width, double height)
-  : Shape()
+  : Corner( start )
 {
-  StartPoint = start;
-  Length = length;
-  Width = width;
-  Height = height;
+  Size[0] = length;
+  Size[1] = width;
+  Size[2] = height;
 }
 
 
 Cuboid::Cuboid( const Point &start, const Point &end )
-  : Shape()
+  : Corner( start ),
+    Size( end - start )
 {
-  StartPoint = start;
-  Length = end.x() - start.x();
-  Width = end.y() - start.y();
-  Height = end.z() - start.z();
 }
 
 
-Cuboid::Cuboid( const Point &start, const Point &depth, const Point &length,
-		const Point &width) 
-  : Shape()
-{
-  StartPoint = start;
-  Height = depth.z() - start.z();
-  Width = width.y() - start.y();
-  Length = length.x() - start.x();
-}
-
-
-bool Cuboid::point_inside( const Point &p ) const
+bool Cuboid::inside( const Point &p ) const
 {
   // the point is outside the x range of the object:
-  if ( p.x() < StartPoint.x() || p.x() > StartPoint.x() + Length )
+  if ( p.x() < Corner.x() || p.x() > Corner.x() + Size.x() )
     return false;
 
   // the point is outside of the y range of the object:
-  if ( p.y() < StartPoint.y() || p.y() > StartPoint.y() + Width )
+  if ( p.y() < Corner.y() || p.y() > Corner.y() + Size.y() )
     return false;
 
   // the point is outside of the z range of the object:
-  if ( p.z() < StartPoint.z() || p.z() > StartPoint.z() + Height )
+  if ( p.z() < Corner.z() || p.z() > Corner.z() + Size.z() )
     return false;
 
   return true;
 }
 
-bool Cuboid::point_below( const Point &p ) const
+bool Cuboid::below( const Point &p ) const
 {
   // the point is outside the x range of the object:
-  if ( p.x() < StartPoint.x() || p.x() > StartPoint.x() + Length )
+  if ( p.x() < Corner.x() || p.x() > Corner.x() + Size.x() )
     return false;
 
   // the point is outside of the y range of the object:
-  if ( p.y() < StartPoint.y() || p.y() > StartPoint.y() + Width )
+  if ( p.y() < Corner.y() || p.y() > Corner.y() + Size.y() )
     return false;
 
   // the point is above the lowest z of the object:
-  if( p.z() < StartPoint.z() + Height )
+  if( p.z() < Corner.z() + Size.z() )
     return false;
 
   return true;
 }
 
 
-bool Cuboid::point_safe( const Point &p ) const
+Point Cuboid::boundingBoxMin( void ) const
 {
-  return ( point_inside( p ) || point_below( p ) );
+  return Corner;
 }
 
 
-bool Cuboid::extreme_x( double &biggest, double &lowest ) const
+Point Cuboid::boundingBoxMax( void ) const
 {
-  biggest = StartPoint.x() + Length;
-  lowest  = StartPoint.x();
-  return true;
-}
-
-bool Cuboid::extreme_y( double &biggest, double &lowest ) const
-{
-  biggest = StartPoint.y() + Width;
-  lowest  = StartPoint.y();
-  return true;
-}
-
-bool Cuboid::extreme_z( double &biggest, double &lowest ) const
-{
-  biggest = StartPoint.z() + Height;
-  lowest  = StartPoint.z();
-  return true;
+  return Corner + Size;
 }
 
 

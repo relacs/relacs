@@ -77,8 +77,10 @@ bool XYZRobot::isOpen( void ) const
 
 void XYZRobot::close( void )
 {
+  /*
   if ( isOpen() ) {
   }
+  */
 
   Info.clear();
   Robot = 0;
@@ -87,12 +89,11 @@ void XYZRobot::close( void )
 
 bool XYZRobot::test_point(const Point &p)
 {
-  for(Shape* area : ForbiddenAreas) {
-    if(area->point_safe(p)) {
+  for( Shape* area : ForbiddenAreas ) {
+    if ( area->inside(p) || area->below(p) )
      continue;
-    } else {
+    else
       return false;
-    }
   }
   return true;
 }
@@ -466,10 +467,10 @@ void XYZRobot::modify_cuboid(Cuboid* cuboid, int job, int change)
     {
       change = change * -1; // to make positive values increase the length and negative reduce it.
       int length = cuboid->length();
-      Point start = cuboid->startPoint();
+      Point start = cuboid->corner();
       start.x() = start.x()+change;
 
-      cuboid->setStartPoint(start);
+      cuboid->setCorner(start);
       cuboid->setLength(length-change);
       break;
     }
@@ -483,10 +484,10 @@ void XYZRobot::modify_cuboid(Cuboid* cuboid, int job, int change)
     {
       change = change * -1; // to make positive values increase the length and negative reduce it.
       int width = cuboid->width();
-      Point start = cuboid->startPoint();
+      Point start = cuboid->corner();
       start.y() = start.y()+change;
 
-      cuboid->setStartPoint(start);
+      cuboid->setCorner(start);
       cuboid->setWidth(width-change);
       break;
     }
@@ -500,10 +501,10 @@ void XYZRobot::modify_cuboid(Cuboid* cuboid, int job, int change)
     {
       change = change * -1; // to make positive values increase the length and negative reduce it.
       int height = cuboid->height();
-      Point start = cuboid->startPoint();
+      Point start = cuboid->corner();
       start.z() = start.z()+change;
 
-      cuboid->setStartPoint(start);
+      cuboid->setCorner(start);
       cuboid->setHeight(height-change);
       break;
     }

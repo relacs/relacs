@@ -46,11 +46,10 @@ public:
   virtual bool point_below( const Point &p ) const = 0;
   virtual bool point_safe( const Point &p ) const = 0;
 
-  // bounding box ??  return two points on corners diagonal from each other
-  // -> you can create the box from those two points.
-  virtual bool extreme_x( double &biggest, double &lowest ) const = 0;
-  virtual bool extreme_y( double &biggest, double &lowest ) const = 0;
-  virtual bool extreme_z( double &biggest, double &lowest ) const = 0;
+    /*! Minimum corner of bounding box. */
+  virtual Point boundingBoxMin( void ) const = 0;
+    /*! Maximum corner of bounding box. */
+  virtual Point boundingBoxMax( void ) const = 0;
 
 };
 
@@ -68,40 +67,54 @@ class Cuboid : public Shape
 
     /*! Constructor. */
   Cuboid( void );
+    /*! Copy constructor. */
   Cuboid( const Cuboid &c );
+    /*! Construct cuboid from minimum corner \a a and size defined by 
+        \a lenght, \a width, and \a height. */
   Cuboid( const Point &a, double length, double width, double height );
+    /*! Construct cuboid from minimum corner \a start and  
+        maximum corner \a end. */
   Cuboid( const Point &start, const Point &end );
-  Cuboid( const Point &start, const Point &depth, const Point &length,
-	  const Point &width );
 
-  double length( void ) const { return Length; }
-  double width( void ) const { return Width; }
-  double height( void ) const { return Height; }
+    /*! The minimum corner of the cuboid. */
+  const Point &corner( void ) { return Corner; }
+    /*! Set the minimum corner of the cuboid to \a corner. */
+  void setCorner( const Point &corner ) { Corner = corner; }
 
-  void setLength( double length ) { Length = length; }
-  void setWidth( double width ) { Width = width; }
-  void setHeight(double height) { Height = height; }
+    /*! The size of the cuboid in x-direction. */
+  double length( void ) const { return Size[0]; }
+    /*! The width of the cuboid in y-direction. */
+  double width( void ) const { return Size[1]; }
+    /*! The height of the cuboid in z-direction. */
+  double height( void ) const { return Size[2]; }
 
-  const Point &startPoint( void ) { return StartPoint; }
-  void setStartPoint( const Point &startpoint ) { StartPoint = startpoint; }
+    /*! Set the size of the cuboid in x-direction to \a lenght. */
+  void setLength( double length ) { Size[0] = length; }
+    /*! Set the size of the cuboid in y-direction to \a width. */
+  void setWidth( double width ) { Size[1] = width; }
+    /*! Set the size of the cuboid in z-direction to \a height. */
+  void setHeight(double height) { Size[2] = height; }
 
-  // functions for forbidden areas:
-  bool point_inside( const Point & p ) const;
-  bool point_below( const Point & p ) const;
-  bool point_safe( const Point & p ) const;
+    /*! The size of the cuboid. */
+  const Point &size( void ) { return Size; }
+    /*! Set the size of the cuboid to \a size. */
+  void setSize( const Point &size ) { Size = size; }
 
-  // bounding box:
-  bool extreme_x( double &biggest, double &lowest ) const;
-  bool extreme_y( double &biggest, double &lowest ) const;
-  bool extreme_z( double &biggest, double &lowest ) const;
+    /*! Return \a\c true if point \a p is inside the cuboid. */
+  bool inside( const Point & p ) const;
+    /*! Return \a\c true if point \a p is below the cuboid. */
+  bool below( const Point & p ) const;
+
+    /*! Minimum corner of bounding box. */
+  virtual Point boundingBoxMin( void ) const;
+    /*! Maximum corner of bounding box. */
+  virtual Point boundingBoxMax( void ) const;
 
 
 private:
 
-  Point StartPoint;
-  double Length;
-  double Width;
-  double Height;
+  Point Corner;
+  Point Size;
 
 };
 

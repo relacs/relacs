@@ -532,7 +532,7 @@ void CalibrateRobot::customEvent( QEvent *qce ) {
       modifyAreasBox->clear();
       if(robot_control->has_area()) {
 	Cuboid *cuboid = dynamic_cast<Cuboid*>(robot_control->get_area());
-	Point start = cuboid->startPoint();
+	Point start = cuboid->corner();
 	QString part1 = QString("Allowed Area ");
 	QString part2 = QString("start: (") += QString::number(int(start.x())) += QString(", ");
 	QString part3 = QString::number(int(start.y())) += QString(", ");
@@ -542,7 +542,7 @@ void CalibrateRobot::customEvent( QEvent *qce ) {
       }
       for ( Shape* shape: robot_control->forbiddenAreas() ) {
 	Cuboid *cuboid = dynamic_cast<Cuboid*>(shape);
-	Point start = cuboid->startPoint();
+	Point start = cuboid->corner();
 
 	QString part1 = QString("Forbidden Area ");
 	QString part2 = QString("start: (") += QString::number(int(start.x())) += QString(", ");
