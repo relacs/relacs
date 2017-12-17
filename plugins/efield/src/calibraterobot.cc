@@ -496,7 +496,7 @@ CalibrateRobot::~CalibrateRobot( void )
       point_num++;
     }
     
-    Shape *shape = new Cuboid(area_start, area_depth, area_length, area_width);
+    Shape *shape = new Cuboid(area_start, area_depth.x(), area_length.y(), area_width.z());
     cerr<<"Build Shape."<< endl;
     return shape;
   }
