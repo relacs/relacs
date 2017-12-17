@@ -98,7 +98,7 @@ public:
   bool has_area();
   void set_Area(Shape *area);
 
-  deque<Shape*> &forbiddenAreas( void ) const { return ForbiddenAreas; };
+  const deque<Shape*> &forbiddenAreas( void ) const { return ForbiddenAreas; };
   void add_forbidden(Shape *forbidden);
   bool del_forbidden_at_index(int index);
   void clear_forbidden();
