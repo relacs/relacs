@@ -120,6 +120,8 @@ public:
   int coarse( int channel, int steps );
   int pause( int ms );
 
+    /*! Set the speed for channle \a channel to \a speed.
+        Valid values are integers from 1 to 6. */
   int speed( int channel, int speed );
   int amplitudepos( int channel, int ampl );
   int amplitudeneg( int channel, int ampl );

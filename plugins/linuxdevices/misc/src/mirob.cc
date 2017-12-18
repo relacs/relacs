@@ -124,6 +124,12 @@ void Mirob::close( void )
 }
 
 
+int Mirob::reset( void ) 
+{
+  return 0;
+}
+
+
 /**
    Move the given axis to an absolute position given in mm relative to the
    zero position.
@@ -170,7 +176,7 @@ int Mirob::step( int axis, double s, double speed )
 
 double Mirob::pos( int axis ) const
 {
-  int position = 0;
+  int position = 0;  // XXX in old TML version should be long int!
   TS_SelectAxis( axis+1 );
   TS_GetLongVariable( "APOS", position );
   return position;
@@ -181,7 +187,7 @@ Point Mirob::pos( void ) const
 {
   Point pos;
   for ( int i=0; i<3; i++ ) {
-    int position = 0;
+    int position = 0;  // XXX in old TML version should be long int!
     TS_SelectAxis( i+1 );
     TS_GetLongVariable("APOS", position);
     //std::cerr << "read position from mirob:"<< position <<"(in steps)" << std::endl;
@@ -418,7 +424,7 @@ int Mirob::read_setup( void )
 
 long Mirob::setup_axes( int setupindex )
 {
-  int position;
+  int position;  // XXX in old TML version should be long int!
   for (int k = 1; k <= 3; k++) {
     if ( ! TS_SetupAxis( k, setupindex ) )  {
       std::cerr << "Failed to setup axis " << k << "! "

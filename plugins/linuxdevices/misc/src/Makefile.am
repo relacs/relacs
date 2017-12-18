@@ -97,6 +97,7 @@ libmiscxyzrobot_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/relacs/src/librelacs.la \
+    libmiscmirob.la \
     $(TML_LIBS) \
     $(QT4_LIBS) $(NIX_LIBS)
 

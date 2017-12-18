@@ -391,6 +391,7 @@ libbaserobot_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscmirob.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaserobot_la_OBJECTS) : moc_robot.cc
