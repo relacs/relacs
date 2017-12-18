@@ -105,15 +105,10 @@ public slots:
   bool stop_cali = false;
   bool start_test = false;
 
-
-
   void test_area();
   Point calibrate_point();
 
-  void  test_go_to_point();
   void  test_point_distances();
-  void  test_how_many_move();
-
 
 };
 

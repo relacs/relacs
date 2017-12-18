@@ -193,7 +193,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
       std::cerr <<"Moving over obstacle pos_up is:" << pos_up
 		<< std::endl;
       go_to_point(pos_up);
-      Robot->wait();
+      wait();
 
     }
 
@@ -201,7 +201,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
     std::cerr <<"Moving over obstacle p_up is:" << p_up
 	      << std::endl;
     go_to_point(p_up);
-    Robot->wait();
+    wait();
 
 
     if(! test_way(p_up,p)) {
@@ -213,7 +213,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
       std::cerr <<"Moved over obstacle new pos is:" << p
 		<< std::endl;
       go_to_point(p);
-      Robot->wait();
+      wait();
       return true;
     }
 
@@ -223,100 +223,92 @@ bool XYZRobot::PF_up_and_over(const Point &p)
 
   //Init Robot: 
 
-bool XYZRobot::start_mirob()
+bool XYZRobot::start_mirob( void )
 {
   wasStarted = true;
-
   return Robot->start();
 }
 
 
-bool XYZRobot::init_mirob()
+bool XYZRobot::init_mirob( void )
 {
-  if (Robot->init_mirob() == -1) {
-    return false;
-  }else{
-    return true;
-  }
+  return ( Robot->init_mirob() != -1 );
 }
 
 
-void XYZRobot::close_mirob()
+void XYZRobot::close_mirob( void )
 {
-    if(!wasStarted) {
+  if ( !wasStarted ) {
     std::cerr << "Mirob cannot be closed, is not started." << std::endl;
-    } else {
-      Robot->close();
-      wasStarted = false;
-    }
-}
-
-
-bool XYZRobot::has_area()
-{
-  if (area == NULL) {
-    return false;
-  }else{
-    return true;
+  } 
+  else {
+    Robot->close();
+    wasStarted = false;
   }
 }
 
-  // General movement: 
 
-  void XYZRobot::go_home()
+bool XYZRobot::has_area( void ) const
 {
-  PF_up_and_over(home);
+  return ( area != NULL );
 }
 
 
-void XYZRobot::search_reference(int firstAxis, int secondAxis, int thirdAxis)
-{
-    bool ref = false;
+// General movement: 
 
-    Robot->search_home(firstAxis,40,ref);
-    Robot->search_home(secondAxis,40,ref);
-    Robot->search_home(thirdAxis,40,ref);
+void XYZRobot::go_home( void )
+{
+  PF_up_and_over( Home );
+}
+
+
+void XYZRobot::search_reference( int firstmirobaxis, int secondmirobaxis, int thirdmirobaxis )
+{
+  bool ref = false;
+  Robot->search_home( firstmirobaxis, 40, ref );
+  Robot->search_home( secondmirobaxis, 40, ref );
+  Robot->search_home( thirdmirobaxis, 40, ref );
 }
   
 
-void XYZRobot::go_to_point(double posX, double posY, double posZ)
+void XYZRobot::go_to_point( double posX, double posY, double posZ )
 {
-    Point point = Point(posX,posY,posZ);
-    go_to_point(point);
+  Point point = Point( posX, posY, posZ );
+  go_to_point( point );
 }
 
 
   // speed defaults to 40 if speed given is 0.
-void XYZRobot::go_to_point(const Point &coords, int speed)
+void XYZRobot::go_to_point( const Point &coords, int speed )
 {
-  if(speed == 0)
+  if ( speed == 0 )
     speed = Robot->speed();
 
   Point position = Robot->pos();
 
-  int to_move = how_many_move(position, coords);
-
-  if(to_move == 0)
+  int to_move = how_many_move( position, coords );
+  if ( to_move == 0 )
     return;
 
   //  Point dists = position.abs_diff(coords);
   Point dists = abs(position - coords);
-  Point speeds = axis_speeds(speed);
+  Point speeds = Point( speed*Robot->get_axis_factor( 0 ),
+			speed*Robot->get_axis_factor( 1 ),
+			speed*Robot->get_axis_factor( 2 ) );
 
-  if(to_move == 1) {
-    for(int axis=0; axis<3; axis++) {
-      if(dists[axis] > Robot->get_step_length(axis)/2) {
-	Robot->move(axis, coords[axis], speeds[axis] );
-      }
+  if ( to_move == 1 ) {
+    for ( int axis=0; axis<3; axis++ ) {
+      if ( dists[axis] > Robot->get_step_length( axis )/2 )
+	Robot->move( axis, coords[axis], speeds[axis] );
     }
   }
   
   Point times = calculate_times( speeds, dists );
 
-  double maxTime = get_max(times[0], times[1], times[2]);
+  double maxTime = get_max( times[0], times[1], times[2] );
   double precision = 0.005;
 
-  if(to_move == 2 || to_move == 3) {
+  if ( to_move == 2 || to_move == 3 ) {
     for ( int axis=0; axis<3; axis++ ) {
       if( times[axis] < maxTime ) {
 	speeds[axis] = calc_speed( axis, speeds[axis],
@@ -327,9 +319,8 @@ void XYZRobot::go_to_point(const Point &coords, int speed)
     Robot->move( 0, coords.x(), speeds[0] );
     Robot->move( 1, coords.y(), speeds[1] );
 
-    if ( speeds[2] > 450 ) {
+    if ( speeds[2] > 450 )
       speeds[2] = 450;
-    }
     Robot->move( 2, coords.z(), speeds[2] );
   }
   /*
@@ -388,29 +379,16 @@ void XYZRobot::move_negZ()
   Robot->step( 2, -4, 40 );
 }
 
-void XYZRobot::stop_X()
+
+int XYZRobot::stop( int axis )
 {
-  Robot->stop_axis(1);
+  return Robot->stop( axis );
 }
 
 
-void XYZRobot::stop_Y()
+int XYZRobot::stop( void )
 {
-  Robot->stop_axis(2);
-}
-
-
-void XYZRobot::stop_Z()
-{
-  Robot->stop_axis(3);
-}
-
-
-void XYZRobot::stop_all()
-{
-  for(int i=1; i<=3; i++) {
-    Robot->stop_axis(i);
-  }
+  return Robot->stop();
 }
 
 
@@ -420,9 +398,8 @@ void XYZRobot::wait( void )
 }
 
 
-bool XYZRobot::modify_shape(bool area, int forb_index, int job, int change)
+bool XYZRobot::modify_shape( bool area, int forb_index, int job, int change )
 {
-
   /*Jobs: 0 and 1 modify x, 2 and 3 modify y, 4 and 5 modify z, 6 delete shape */
 
   if(job > 6 or job < 0) {
@@ -453,7 +430,7 @@ bool XYZRobot::modify_shape(bool area, int forb_index, int job, int change)
   return true;
 }
 
-void XYZRobot::modify_cuboid(Cuboid* cuboid, int job, int change)
+void XYZRobot::modify_cuboid( Cuboid* cuboid, int job, int change )
 {
   /*Jobs: 0 and 1 modify x, 2 and 3 modify y, 4 and 5 modify z*/
   switch(job) {
@@ -513,19 +490,19 @@ void XYZRobot::modify_cuboid(Cuboid* cuboid, int job, int change)
 
 
 // Setters: 
-void XYZRobot::set_Area(Shape *newArea)
+void XYZRobot::set_Area( Shape *newArea )
 {
   area = newArea;
 }
 
 
-void XYZRobot::add_forbidden(Shape *forbidden)
+void XYZRobot::add_forbidden( Shape *forbidden )
 {
   ForbiddenAreas.push_back(forbidden);
 }
 
 
-bool XYZRobot::del_forbidden_at_index(int i)
+bool XYZRobot::del_forbidden_at_index( int i )
 {
   if(i<0)
     return false;
@@ -551,9 +528,14 @@ void XYZRobot::set_safe_distance(int dist)
 }
 
 
-void XYZRobot::set_home(const Point &newHome)
+Point XYZRobot::home( void ) const
 {
-  this->home = newHome;
+  return Home;
+}
+
+void XYZRobot::setHome( const Point &newhome )
+{
+  Home = newhome;
 }
 
 
@@ -584,94 +566,25 @@ Point XYZRobot::pos( void ) const
   return Robot->pos();
 }
 
-bool XYZRobot::axis_in_pos_limit(int axis)
+bool XYZRobot::axis_in_pos_limit( int mirobaxis )
 {
-  return Robot->check_pos_limit(axis);
+  return Robot->check_pos_limit( mirobaxis );
 }
 
 
-bool XYZRobot::axis_in_neg_limit(int axis)
+bool XYZRobot::axis_in_neg_limit( int mirobaxis )
 {
-  return Robot->check_neg_limit(axis);
+  return Robot->check_neg_limit( mirobaxis );
 }
 
-
-Point XYZRobot::get_home()
-{
-    return home;
-}
 
 Shape* XYZRobot::get_area()
 {
-    return area;
-}
-
-int XYZRobot::get_axis_length(int axis)
-{
-  if(axis == 1) {
-    return XLength;
-  }else if(axis == 2) {
-    return YLength;
-  }else if(axis == 3) {
-    return ZLength;
-  } else { // Error case:
-    std::cerr << "wrong access to get_axis_length() in controller.cc" << std::endl;
-    return 0;
-  }
-}
-  
-  //Private Helper: 
-
-
-double XYZRobot::calc_speed(int axis, double speed, double dist,
-			 double maxTime, double precision)
-{
-  if (dist <= 1)
-    return 1;
-  
-  double time = calculate_intern_time(axis,speed,dist);
-  
-  int Safetycount = 0;
-  int maxCount = speed/precision;
-
-  while(time < maxTime) {
-      speed -= precision;
-      time = calculate_intern_time(axis,speed,dist);
-
-      Safetycount++;
-      if (Safetycount > maxCount) {
-	std::cerr << "calc_speed broke for axis:" << axis  << " with maxCount:"
-		  << maxCount << std::endl;
-	return 1;
-      }
-
-    }
-  return speed;
+  return area;
 }
 
 
-double XYZRobot::calculate_intern_time(int axis, double axisSpeed, double distance)
-{
-  double axisAcc = Robot->acceleration() * Robot->get_axis_factor(axis-1);
-  double axisSteps = distance / Robot->get_step_length(axis-1);
-  
-  double time = ((2*axisSpeed/axisAcc +
-		  (axisSteps - (axisSpeed*axisSpeed/axisAcc))/axisSpeed));
-  return time;
-}
-
-
-Point XYZRobot::calculate_times(const Point &speeds, const Point &dists)
-{
-  Point times = Point();
-  
-  for(int axis=1; axis<4; axis++) {
-    times[axis] = calculate_intern_time(axis,speeds[axis],dists[axis]);
-  }
-  return times;
-}
-
-int XYZRobot::how_many_move(const Point &position, const Point &coords)
+int XYZRobot::how_many_move( const Point &position, const Point &coords )
 {
   int count = 0;
   for ( int i=0; i<3; i++ ) {
@@ -682,14 +595,70 @@ int XYZRobot::how_many_move(const Point &position, const Point &coords)
 }
 
 
-Point XYZRobot::axis_speeds(double speed)
+void  XYZRobot::test_how_many_move()
 {
-  Point speeds = Point();
+  Point a = Point(0,0,0);
+  Point b = Point(0,0,0);
+  Point c = Point(10,0,0);
+  Point d = Point(10,20,0);
+  Point e = Point(10,20,30);
+  Point f = Point(50,50,50);
 
-  for(int axis=1; axis<4; axis++) {
-    speeds[axis] = speed*Robot->get_axis_factor(axis-1);
-  }
-  return speeds;
+  cerr << "Expected: 0 actual:" << how_many_move(a,b) << endl;
+  cerr << "Expected: 1 actual:" << how_many_move(a,c) << endl;
+  cerr << "Expected: 1 actual:" << how_many_move(d,e) << endl;
+  cerr << "Expected: 1 actual:" << how_many_move(c,d) << endl;
+  cerr << "Expected: 2 actual:" << how_many_move(a,d) << endl;
+  cerr << "Expected: 2 actual:" << how_many_move(c,e) << endl;
+  cerr << "Expected: 3 actual:" << how_many_move(a,e) << endl;
+  cerr << "Expected: 3 actual:" << how_many_move(e,f) << endl;
+}
+
+
+double XYZRobot::calc_speed( int axis, double speed, double dist,
+			     double maxTime, double precision )
+{
+  if (dist <= 1)
+    return 1;
+  
+  double time = calculate_intern_time( axis, speed, dist );
+  
+  int Safetycount = 0;
+  int maxCount = speed/precision;
+
+  while( time < maxTime ) {
+      speed -= precision;
+      time = calculate_intern_time( axis, speed, dist );
+
+      Safetycount++;
+      if ( Safetycount > maxCount ) {
+	std::cerr << "calc_speed broke for axis:" << axis  << " with maxCount:"
+		  << maxCount << std::endl;
+	return 1;
+      }
+
+    }
+  return speed;
+}
+
+
+double XYZRobot::calculate_intern_time( int axis, double axisSpeed, double distance )
+{
+  double axisAcc = Robot->acceleration() * Robot->get_axis_factor( axis );
+  double axisSteps = distance / Robot->get_step_length( axis );
+  
+  double time = ( (2*axisSpeed/axisAcc +
+		   (axisSteps - (axisSpeed*axisSpeed/axisAcc))/axisSpeed) );
+  return time;
+}
+
+
+Point XYZRobot::calculate_times( const Point &speeds, const Point &dists )
+{
+  Point times = Point();
+  for ( int k=0; k<3; k++ )
+    times[k] = calculate_intern_time( k, speeds[k], dists[k] );
+  return times;
 }
 
 

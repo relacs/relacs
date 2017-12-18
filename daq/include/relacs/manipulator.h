@@ -115,6 +115,17 @@ public:
         If \a speed is zero, a default value for the speed is used. */
   virtual int move( const Point &pos, double speed=0.0 );
 
+    /*! Immediately stop movement of x-axis. */
+  virtual int stopX( void );
+    /*! Immediately stop movement of y-axis. */
+  virtual int stopY( void );
+    /*! Immediately stop movement of z-axis. */
+  virtual int stopZ( void );
+    /*! Immediately stop movement of axis \a axis. */
+  virtual int stop( int axis );
+    /*! Immediately stop movement of all axes. */
+  virtual int stop( void );
+
     /*! Return the position of the x-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */

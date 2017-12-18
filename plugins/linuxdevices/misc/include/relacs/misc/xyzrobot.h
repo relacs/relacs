@@ -62,12 +62,12 @@ public:
   bool test_way(const Point &pos, const Point &newP);
   bool PF_up_and_over(const Point &p);
 
-  bool start_mirob();
-  bool init_mirob();
-  void close_mirob();
+  bool start_mirob( void );
+  bool init_mirob( void );
+  void close_mirob( void );
 
-  void go_home();
-  void search_reference(int firstAxis, int secondAxis, int thirdAxis);
+  void go_home( void );
+  void search_reference( int firstmirobaxis, int secondmirobaxis, int thirdmirobaxis );
 
   void go_to_point(double posX, double posY, double posZ);
   void go_to_point(const Point &coords, int speed = 0);
@@ -79,11 +79,8 @@ public:
   void move_posZ();
   void move_negZ();
 
-  void stop_X();
-  void stop_Y();
-  void stop_Z();
-
-  void stop_all();
+  int stop( int axis );
+  int stop( void );
 
     /*! Sleep until motion completed. */
   void wait( void );
@@ -95,7 +92,7 @@ public:
   bool modify_shape(bool area, int forb_index, int job, int change);
   void modify_cuboid(Cuboid* cuboid, int job, int change);
 
-  bool has_area();
+  bool has_area( void ) const;
   void set_Area(Shape *area);
 
   const deque<Shape*> &forbiddenAreas( void ) const { return ForbiddenAreas; };
@@ -103,28 +100,23 @@ public:
   bool del_forbidden_at_index(int index);
   void clear_forbidden();
   void set_safe_distance(int dist);
-  void set_home(const Point &newHome);
+
+    /*! XXX not used? */
+  Point home( void ) const;
+    /*! XXX not used? */
+  void setHome( const Point &newhome );
+
   void set_fish_head(const Point &head);
   void set_fish_tail(const Point &tail);
 
   Point get_fish_head();
   Point get_fish_tail();
   Point pos( void ) const;
-  bool axis_in_pos_limit(int axis);
-  bool axis_in_neg_limit(int axis);
 
-  Point get_home();
+  bool axis_in_pos_limit( int mirobaxis );
+  bool axis_in_neg_limit( int mirobaxis );
+
   Shape* get_area();
-  int get_axis_length(int axis);
-
-  double calc_speed(int axis, double speed, double dist,
-		    double maxTime, double precision);
-  double calculate_intern_time(int axis, double axisSpeed, double distance);
-
-  Point calculate_times(const Point &speeds, const Point &dists);
-  int how_many_move(const Point &position, const Point &coords);
-  Point axis_speeds(double speed);
-  double get_max(double a, double b, double c);
 
 
 protected:
@@ -143,7 +135,19 @@ protected:
 
   bool wasStarted = false;
   int maxSafeDist = 10;
-  Point home = Point(0,0,0);
+  Point Home = Point( 0, 0, 0 );
+
+    /*! Number of axis that need to be moved to get from \a position to \a coords. */
+  int how_many_move( const Point &position, const Point &coords );
+
+  void  test_how_many_move();
+
+  double calc_speed( int axis, double speed, double dist,
+		     double maxTime, double precision );
+  double calculate_intern_time( int axis, double axisSpeed, double distance );
+  Point calculate_times( const Point &speeds, const Point &dists );
+
+  double get_max(double a, double b, double c);
 
 };
 

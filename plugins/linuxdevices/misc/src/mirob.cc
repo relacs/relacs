@@ -1,6 +1,6 @@
 /*
   misc/mirob.cc
-  The Mirob module linear robot from MPH
+  The Mirob module linear robot from MPH.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -124,120 +124,6 @@ void Mirob::close( void )
 }
 
 
-//*********************************
-//Getter and setter functions:
-//*********************************
-
-int Mirob::speed( void ) const
-{
-  return Speed;
-}
-
-bool Mirob::setSpeed( int speed ) 
-{
-
-  //too high? (for x and y axis)
-  if(speed >= 250) {
-    Speed = 250;
-    return false;
-  // too low?
-  } else if (speed <=10) {
-    Speed = 10;
-    return false;
-
-  } else {
-    Speed = speed;
-    return true;
-  }
-
-}
-
-double Mirob::acceleration( void ) const
-{
-  return Acc;
-}
-
-
-bool Mirob::setAcceleration( double acc )
-{
-  if(acc <= 0) {
-    Acc = 0.1;
-    return false;
-  } else if (acc > 3) {
-    std::cerr << "Too high acc for z??" << std::endl;
-    Acc = acc;
-    return true;
-  } else {
-    Acc = acc;
-    return true;
-  }
-}
-
-
-//*********************************
-// Movement functions
-//*********************************
-
-
-double Mirob::pos( int axis ) const
-{
-  int position = 0;
-  TS_SelectAxis( axis+1 );
-  TS_GetLongVariable( "APOS", position );
-  return position;
-}
-
-
-Point Mirob::pos( void ) const 
-{
-  Point pos;
-  for ( int i=0; i<3; i++ ) {
-    int position = 0;
-    TS_SelectAxis( i+1 );
-    TS_GetLongVariable("APOS", position);
-    //std::cerr << "read position from mirob:"<< position <<"(in steps)" << std::endl;
-    //std::cerr << "position from mirob:"<< position*get_step_length(i) <<"(in mm)" << std::endl;
-    //std::cerr << "size of position: " << sizeof(position) << std::endl;
-    //std::cerr << "MaxValue: " << std::numeric_limits<unsigned int>::max() << std::endl;
-    // XXX Why does this differ from pos(int)?
-    double pos_with_neg = position;
-    double maxValue = std::numeric_limits<unsigned int>::max();
-
-    if(position * get_step_length(i) > 700) {
-      pos_with_neg = (double) position - maxValue;
-    }
-    pos[i] = pos_with_neg*get_step_length( i );
-
-  }
-  return pos;
-}
-
-
-int Mirob::wait( void ) const
-{
-  for( int axis=1; axis<=3; axis++ ) {
-    TS_SelectAxis( axis );
-    if ( ! TS_SetEventOnMotionComplete(1, 0) ) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-
-void Mirob::set_intern_position( int axis, long int pos )
-{
-  TS_SelectAxis( axis );
-  TS_SetPosition( pos );
-}
-
-void Mirob::stop_axis(int axis) {
-
-  TS_SelectAxis(axis);
-  TS_Stop();
-
-}
-
 /**
    Move the given axis to an absolute position given in mm relative to the
    zero position.
@@ -279,6 +165,125 @@ int Mirob::step( int axis, double s, double speed )
   TS_SelectAxis( axis+1 );
   TS_MoveRelative( steps, speed, Usedacc, additive, UPDATE_IMMEDIATE, FROM_REFERENCE );
   return 0;
+}
+
+
+double Mirob::pos( int axis ) const
+{
+  int position = 0;
+  TS_SelectAxis( axis+1 );
+  TS_GetLongVariable( "APOS", position );
+  return position;
+}
+
+
+Point Mirob::pos( void ) const 
+{
+  Point pos;
+  for ( int i=0; i<3; i++ ) {
+    int position = 0;
+    TS_SelectAxis( i+1 );
+    TS_GetLongVariable("APOS", position);
+    //std::cerr << "read position from mirob:"<< position <<"(in steps)" << std::endl;
+    //std::cerr << "position from mirob:"<< position*get_step_length(i) <<"(in mm)" << std::endl;
+    //std::cerr << "size of position: " << sizeof(position) << std::endl;
+    //std::cerr << "MaxValue: " << std::numeric_limits<unsigned int>::max() << std::endl;
+    // XXX Why does this differ from pos(int)?
+    double pos_with_neg = position;
+    double maxValue = std::numeric_limits<unsigned int>::max();
+
+    if ( position * get_step_length(i) > 700 ) {
+      pos_with_neg = (double) position - maxValue;
+    }
+    pos[i] = pos_with_neg*get_step_length( i );
+
+  }
+  return pos;
+}
+
+
+int Mirob::stop( int axis )
+{
+  TS_SelectAxis( axis+1 );
+  TS_Stop();
+  return 0;
+}
+
+
+int Mirob::stop( void )
+{
+  int r = 0;
+  for ( int k=0; k<3; k++ )
+    r |= stop( k );
+  return r;
+}
+
+
+int Mirob::wait( void ) const
+{
+  for( int axis=1; axis<=3; axis++ ) {
+    TS_SelectAxis( axis );
+    if ( ! TS_SetEventOnMotionComplete(1, 0) ) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
+//*********************************
+//Getter and setter functions:
+//*********************************
+
+int Mirob::speed( void ) const
+{
+  return Speed;
+}
+
+bool Mirob::setSpeed( int speed ) 
+{
+  //too high? (for x and y axis)
+  if(speed >= 250) {
+    Speed = 250;
+    return false;
+  // too low?
+  } else if (speed <=10) {
+    Speed = 10;
+    return false;
+
+  } else {
+    Speed = speed;
+    return true;
+  }
+}
+
+
+double Mirob::acceleration( void ) const
+{
+  return Acc;
+}
+
+
+bool Mirob::setAcceleration( double acc )
+{
+  if ( acc <= 0 ) {
+    Acc = 0.1;
+    return false;
+  } else if ( acc > 3 ) {
+    std::cerr << "Too high acc for z??" << std::endl;
+    Acc = acc;
+    return true;
+  } else {
+    Acc = acc;
+    return true;
+  }
+}
+
+
+void Mirob::set_intern_position( int mirobaxis, long int pos )
+{
+  TS_SelectAxis( mirobaxis );
+  TS_SetPosition( pos );
 }
 
 
@@ -334,41 +339,37 @@ double Mirob::get_max(double a, double b, double c) {
    speed: the speed te axis will use
    positive: true the positive limit/false the negative limit is used
  */
-void Mirob::search_home(int axis, int speed, bool positive) {
+void Mirob::search_home( int mirobaxis, int speed, bool positive )
+{
   axis_limits limits;
-  limits.axis = axis;
-  check_limit_switch(limits);
+  limits.mirobaxis = mirobaxis;
+  check_limit_switch( limits );
 
-  long position;
-  if (positive) {
-    position = 1000;
-  } else {
-    position = -1000;
-  }
-  TS_SelectAxis(axis);
+  long position = positive ? 1000 : -1000;
+  TS_SelectAxis( mirobaxis );
 
   //Move with the given speed towards the given limit until you reached it.
-  while(positive ? !limits.positive : !limits.negative) {
-    TS_MoveRelative(position, speed, 0.1, false, UPDATE_IMMEDIATE,
-		    FROM_REFERENCE);
-    check_limit_switch(limits);
+  while ( positive ? !limits.positive : !limits.negative ) {
+    TS_MoveRelative( position, speed, 0.1, false, UPDATE_IMMEDIATE,
+		     FROM_REFERENCE );
+    check_limit_switch( limits );
   }
   TS_Stop();
 
   //Move a tiny bit out of the given limit until it is not active anymore.
-  while(positive ? limits.positive : limits.negative) {
-    TS_MoveRelative(-1*position, speed/2, 0.1, false, UPDATE_IMMEDIATE,
-		    FROM_REFERENCE);
-    check_limit_switch(limits);
+  while ( positive ? limits.positive : limits.negative ) {
+    TS_MoveRelative( -1*position, speed/2, 0.1, false, UPDATE_IMMEDIATE,
+		     FROM_REFERENCE );
+    check_limit_switch( limits );
   }
   TS_Stop();
 
   // Set the position of the axis to 0:
-  TS_SetPosition(0);
+  TS_SetPosition( 0 );
 }
 
 
-void Mirob::go_to_reference(bool positive, int speed) {
+void Mirob::go_to_reference( bool positive, int speed ) {
   //all axis go to the given limit:
   // positive- true: the positive limit
   //         - false: the negative limit
@@ -376,8 +377,6 @@ void Mirob::go_to_reference(bool positive, int speed) {
   search_home(2, speed, positive);
   search_home(1, speed, positive);
   std::cerr << "went to reference position" << std::endl;
-
-
 }
 
 
@@ -385,7 +384,8 @@ void Mirob::go_to_reference(bool positive, int speed) {
 //Init functions:
 //*********************************
 
-int Mirob::init_mirob() {
+int Mirob::init_mirob( void )
+{
   BYTE channel = 1;
   BYTE cType = CHANNEL_RS232;
   std::string dev = "/dev/ttyS0";
@@ -401,7 +401,9 @@ int Mirob::init_mirob() {
   return FileDescr;
 }
 
-int Mirob::read_setup() {
+
+int Mirob::read_setup( void )
+{
   int setupindex = TS_LoadSetup( "mirob2.t.zip" );
   if ( setupindex < 0 ) {
     std::cerr << "Failed to load setup file! " << TS_GetLastErrorText()
@@ -414,7 +416,8 @@ int Mirob::read_setup() {
 }
 
 
-long Mirob::setup_axes(int setupindex) {
+long Mirob::setup_axes( int setupindex )
+{
   int position;
   for (int k = 1; k <= 3; k++) {
     if ( ! TS_SetupAxis( k, setupindex ) )  {
@@ -430,47 +433,57 @@ long Mirob::setup_axes(int setupindex) {
   return position;
 }
 
-bool Mirob::switch_on_power() {
+
+bool Mirob::switch_on_power( void )
+{
   WORD SRL_value = 0;
-  for (int k=1; k <=3; k++) {
-    TS_SelectAxis(k);
-    if (!TS_Power(POWER_ON))
+  for ( int k=1; k <=3; k++ ) {
+    TS_SelectAxis( k );
+    if ( ! TS_Power( POWER_ON ) )
       return false;
 
-    while (SRL_value == 0) {
-      if (!TS_ReadStatus(REG_SRL, SRL_value))
+    while ( SRL_value == 0 ) {
+      if ( ! TS_ReadStatus( REG_SRL, SRL_value ) )
 	return false;
-      SRL_value = ((SRL_value & 1<<15) != 0 ? 1 : 0);
+      SRL_value = ( ( SRL_value & 1<<15 ) != 0 ? 1 : 0 );
       //SRL.15 - signals the state of the power stage */
     }
   }
   return true;
 }
 
-void Mirob::check_limit_switch(axis_limits &limits) {
+
+void Mirob::check_limit_switch( axis_limits &limits )
+{
   WORD MER_value = 0;
-  TS_SelectAxis(limits.axis);
+  TS_SelectAxis( limits.mirobaxis );
   TS_ReadStatus(REG_MER, MER_value);
   limits.positive = (MER_value & 1<<6) != 0;
   limits.negative =(MER_value & 1<<7) != 0;
 }
 
-bool Mirob::check_pos_limit(int axis) {
+
+bool Mirob::check_pos_limit( int mirobaxis )
+{
   WORD MER_value = 0;
-  TS_SelectAxis(axis);
-  TS_ReadStatus(REG_MER, MER_value);
-  return (MER_value & 1<<6);
+  TS_SelectAxis( mirobaxis );
+  TS_ReadStatus( REG_MER, MER_value );
+  return ( MER_value & 1<<6 );
 }
 
-bool Mirob::check_neg_limit(int axis) {
+
+bool Mirob::check_neg_limit( int mirobaxis )
+{
   WORD MER_value = 0;
-  TS_SelectAxis(axis);
-  TS_ReadStatus(REG_MER, MER_value);
-  return (MER_value & 1<<7);
+  TS_SelectAxis( mirobaxis );
+  TS_ReadStatus( REG_MER, MER_value );
+  return ( MER_value & 1<<7 );
 }
 
-void Mirob::check_all_reg(int axis) {
-  TS_SelectAxis(axis);
+
+void Mirob::check_all_reg( int mirobaxis )
+{
+  TS_SelectAxis( mirobaxis );
   short unsigned int status;
 
   if(! TS_ReadStatus(REG_MCR, status)) {

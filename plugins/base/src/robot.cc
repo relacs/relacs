@@ -39,7 +39,7 @@ Robot::Robot( void )
   : Control( "Robot", "base", "Alexander Ott", "1.0", "Jun 02, 2017" )
 {
   // add some options:
-  // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addText( "robot", "Robot", "robot-1" );
   
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -132,10 +132,12 @@ Robot::Robot( void )
 
 }
 
-  Robot::~Robot( void ) {
-    plot->~RenderArea();
 
-  }
+Robot::~Robot( void )
+{
+  plot->~RenderArea();
+}
+
 
 void Robot::customEvent( QEvent *qce )
 {
@@ -208,7 +210,9 @@ void Robot::customEvent( QEvent *qce )
 
 }
 
-bool Robot::test_height(Cuboid* cuboid) {
+
+bool Robot::test_height(Cuboid* cuboid)
+{
   switch (heightBox->currentIndex()) {
   case 0: { // generell no height important.
     return true;
@@ -249,173 +253,141 @@ QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
   return QRect(ploted_start_x, ploted_start_y, ploted_width, ploted_height);
 }
 
-bool Robot::search_robot_control() {
-
-  for(int i=0; i<5; i++) {
-    robot_control = dynamic_cast<misc::XYZRobot*>(device("robot-2"));
-    if( robot_control == 0 ) {
-      errorBox->append("Searching for XYZRobot (2 sec).");
-      sleep(2);
-    } else {
-      errorBox->append("Success now working.");
-      return true;
-    }
-  }
-  //Couldn't find the RobotController.
-  return false;
-}
 
 void Robot::main( void )
 {
   // get options:
-  // double duration = number( "duration" );
+  string robotid = text( "robot" );
 
-  robot_control = dynamic_cast<misc::XYZRobot*>(device("robot-2"));
+  robot_control = dynamic_cast<misc::XYZRobot*>( device( robotid ) );
+  if( robot_control == 0 ) {
+    errorBox->append( "Couldn't find the RobotController. Closing." );
+    return;
+  }
+  robot_control->init_mirob();
 
-  while(true) {
-    if ( interrupt() ) {
+  while( ! interrupt() ) {
+    sleep( 0.2 );
+    postCustomEvent( 21 ); // position LCDNumbers
+    postCustomEvent( 23 ); // draw update
+
+    if ( interrupt() )
       return;
-    }
-    //Who exists first?
-    // Did it find the RobotController ? Else search for it. Probably overkill
-    if( robot_control == 0 ) {
-      if(! search_robot_control()) {
-	errorBox->append("Couldn't find the RobotController closing.");
-	return;
-      }
-    }
 
-    if(!init) {
-      robot_control->init_mirob();
-      init = true;
-    }
-
-
-    sleep(0.2);
-    postCustomEvent(21); // position LCDNumbers
-    postCustomEvent(23); // draw update
-    if ( interrupt() ) {
-      return;
-    }
-
-    sleep(0.2);
-    postCustomEvent(22); // Limit switch control
-    postCustomEvent(23); // draw update
-
-    if ( interrupt() ) {
-      return;
-    }
-
+    sleep( 0.2 );
+    postCustomEvent( 22 ); // Limit switch control
+    postCustomEvent( 23 ); // draw update
   }
 
 }
 
+
 addControl( Robot, base );
 
 
-  /*-----Class RenderArea:-----*/
+/*-----Class RenderArea:-----*/
 
-  RenderArea::RenderArea(QWidget *parent)
-    : QWidget(parent)
-  {
-    setBackgroundRole(QPalette::Base);
-    setAutoFillBackground(true);
-    setMaximumSize(QSize(300,225));
+RenderArea::RenderArea(QWidget *parent)
+  : QWidget(parent)
+{
+  setBackgroundRole(QPalette::Base);
+  setAutoFillBackground(true);
+  setMaximumSize(QSize(300,225));
+}
+
+
+QSize RenderArea::minimumSizeHint() const {
+  return QSize(150,113);
+}
+
+QSize RenderArea::sizeHint() const {
+  return QSize(300,225);
+}
+
+void RenderArea::setAllowed(QRect allowed) {
+  this->allowed = allowed;
+}
+
+void RenderArea::addForbidden(QRect forb) {
+  this->forbidden.push_back(forb);
+}
+
+void RenderArea::clearForbidden() {
+  this->forbidden.clear();
+}
+
+void RenderArea::setPosition(const Point &p) {
+  this->position = p;
+}
+
+
+void RenderArea::paintEvent(QPaintEvent *event) {
+
+  QPen pen = QPen(Qt::SolidLine);
+  pen.setColor(Qt::white);
+
+  QBrush brush = QBrush(Qt::Dense6Pattern);
+  brush.setColor(Qt::black);
+
+  bool antialiased = true;
+
+  QPainter painter(this);
+  painter.setPen(pen);
+  painter.setBrush(brush);
+  painter.setRenderHint(QPainter::Antialiasing, antialiased);
+
+  //Draw the whole space black (the space in which the robot COULD move)
+  painter.drawRect(0, 0, this->size().width(), this->size().height());
+
+
+  // Drawing the allowed area:
+  pen.setStyle(Qt::SolidLine);
+  pen.setColor(Qt::black);
+
+  brush.setStyle(Qt::SolidPattern);
+  brush.setColor(Qt::white);
+
+  painter.setPen(pen);
+  painter.setBrush(brush);
+
+  if(allowed.isValid()) {
+    painter.drawRect(allowed);
   }
 
 
-  QSize RenderArea::minimumSizeHint() const {
-    return QSize(150,113);
+  //Drawing forbidden areas:
+  pen.setStyle(Qt::SolidLine);
+  pen.setColor(Qt::darkRed);
+
+  brush.setStyle(Qt::Dense2Pattern);
+  brush.setColor(Qt::darkRed);
+
+  painter.setPen(pen);
+  painter.setBrush(brush);
+
+  for (QRect rect: forbidden) {
+    painter.drawRect(rect);
   }
 
-  QSize RenderArea::sizeHint() const {
-    return QSize(300,225);
-  }
-
-  void RenderArea::setAllowed(QRect allowed) {
-    this->allowed = allowed;
-  }
-
-  void RenderArea::addForbidden(QRect forb) {
-    this->forbidden.push_back(forb);
-  }
-
-  void RenderArea::clearForbidden() {
-    this->forbidden.clear();
-  }
-
-  void RenderArea::setPosition(const Point &p) {
-    this->position = p;
-  }
+  // Darwing the position of the robot.
 
 
-  void RenderArea::paintEvent(QPaintEvent *event) {
+  pen.setStyle(Qt::SolidLine);
+  pen.setColor(Qt::black);
 
-    QPen pen = QPen(Qt::SolidLine);
-    pen.setColor(Qt::white);
+  brush.setStyle(Qt::SolidPattern);
+  brush.setColor(Qt::black);
 
-    QBrush brush = QBrush(Qt::Dense6Pattern);
-    brush.setColor(Qt::black);
+  painter.setPen(pen);
+  painter.setBrush(brush);
 
-    bool antialiased = true;
+  int ellipseSize = 3;
+  painter.drawEllipse(position.x(), position.y(), ellipseSize, ellipseSize);
 
-    QPainter painter(this);
-    painter.setPen(pen);
-    painter.setBrush(brush);
-    painter.setRenderHint(QPainter::Antialiasing, antialiased);
-
-    //Draw the whole space black (the space in which the robot COULD move)
-    painter.drawRect(0, 0, this->size().width(), this->size().height());
-
-
-    // Drawing the allowed area:
-    pen.setStyle(Qt::SolidLine);
-    pen.setColor(Qt::black);
-
-    brush.setStyle(Qt::SolidPattern);
-    brush.setColor(Qt::white);
-
-    painter.setPen(pen);
-    painter.setBrush(brush);
-
-    if(allowed.isValid()) {
-      painter.drawRect(allowed);
-    }
-
-
-    //Drawing forbidden areas:
-    pen.setStyle(Qt::SolidLine);
-    pen.setColor(Qt::darkRed);
-
-    brush.setStyle(Qt::Dense2Pattern);
-    brush.setColor(Qt::darkRed);
-
-    painter.setPen(pen);
-    painter.setBrush(brush);
-
-    for (QRect rect: forbidden) {
-      painter.drawRect(rect);
-    }
-
-    // Darwing the position of the robot.
-
-
-    pen.setStyle(Qt::SolidLine);
-    pen.setColor(Qt::black);
-
-    brush.setStyle(Qt::SolidPattern);
-    brush.setColor(Qt::black);
-
-    painter.setPen(pen);
-    painter.setBrush(brush);
-
-    int ellipseSize = 3;
-    painter.drawEllipse(position.x(), position.y(), ellipseSize, ellipseSize);
-
-  }
-
+}
 
 
 }; /* namespace base */
+
 
 #include "moc_robot.cc"

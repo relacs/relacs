@@ -65,7 +65,6 @@ protected:
   void customEvent( QEvent *qce );
   QRect prepare_cuboid_plot(Cuboid* cuboid);
   bool test_height(Cuboid* cuboid);
-  bool search_robot_control();
 
   misc::XYZRobot *robot_control;
 
@@ -75,8 +74,6 @@ protected:
   QLCDNumber* yPos;
   QLCDNumber* zPos;
   QTextEdit* errorBox;
-
-  bool init = false;
 
 };
 

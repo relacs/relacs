@@ -38,13 +38,7 @@ namespace misc {
 
 class Mirob : public Device {
 
- public:
-
-  struct axis_limits {
-    int axis = 1;
-    bool positive = false;
-    bool negative = false;
-  };
+public:
 
   Mirob( const string &device );
   Mirob( void );
@@ -55,10 +49,25 @@ class Mirob : public Device {
   virtual void close( void );
   virtual int reset( void );
 
+    /*! Absolute move of axis \a axis to position \a pos with speed \a speed.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int move( int axis, double pos, double speed=0.0 );
+    /*! Relative move of axis \a axis by \a s with speed \a speed.
+        If \a speed is zero, a default value for the speed is used. */
+  virtual int step( int axis, double s, double speed=0.0 );
+
+    /*! Immediately stop movement of axis \a axis. */
+  virtual int stop( int axis );
+    /*! Immediately stop movement of all axes. */
+  virtual int stop( void );
+
     /*! Return the position of the axis \a axis. */
   virtual double pos( int axis ) const;
     /*! Return the position of the x,y, and z-axis. */
   virtual Point pos( void ) const;
+  
+    /*! Sleep until current movement finished. */
+  virtual int wait( void ) const;
 
   // inits the robot and the axes
   bool start();
@@ -70,55 +79,21 @@ class Mirob : public Device {
   double acceleration( void ) const;
   bool setAcceleration( double acc );
 
-  // movement control:
-  
-    /*! Sleep until current movement finished. */
-  virtual int wait( void ) const;
+    /*! Moves the given axis to the positive/negative limit and sets it position to 0. */
+  void search_home( int mirobaxis, int speed, bool positive );
 
-  void set_intern_position(int axis, long int pos);
-
-  void stop_axis(int axis);
-
-    /*! Absolute move of axis \a axis to position \a pos with speed \a speed.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int move( int axis, double pos, double speed=0.0 );
-    /*! Relative move of axis \a axis by \a s with speed \a speed.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int step( int axis, double s, double speed=0.0 );
-
-
-  // init functions:
-
-  // Moves the given axis to the positive/negative limit and sets it position to 0
-  void search_home(int axis, int speed, bool positive);
-
-  //Moves all axis to the given limit(positive)
+    /*! Moves all axis to the given limit(positive) */
   void go_to_reference(bool positive, int speed);
 
-  //Initialises the communication with the robot
-  int init_mirob();
-
-  //Tries to read the setup file
-  int read_setup();
-  
-  //Sets up and activates all 3 axis of the robot
-  long setup_axes(int setupindex);
-  
-  //activates all 3 axis
-  bool switch_on_power();
+    /*! Initialises the communication with the robot. XXX should be private!!! Why is it used by other classes? */
+  int init_mirob( void );
   
   //Limits:
   
-  //Checks for active limits of the axis given in "limits" and updates them
-  void check_limit_switch(axis_limits &limits);
-  
-  //returns true if the axis is in the positive limit:
-  bool check_pos_limit(int axis);
-  
-  //returns true if the axis is in the negative limit:
-  bool check_neg_limit(int axis);
-  
-  void check_all_reg(int axis);
+    /*! Returns true if the axis is in the positive limit. */
+  bool check_pos_limit( int mirobaxis );
+    /*! Returns true if the axis is in the negative limit. */
+  bool check_neg_limit( int mirobaxis );
   
   
   //returns the step length of the given axis.
@@ -128,7 +103,7 @@ class Mirob : public Device {
   double get_axis_factor(int axis) const;
   
   
- private:
+private:
 
   int Speed = 40;
   double Acc = 0.25;
@@ -136,9 +111,31 @@ class Mirob : public Device {
   bool Opened;
   
   int FileDescr;
+
+  void set_intern_position( int mirobaxis, long int pos );
+
+  struct axis_limits {
+    int mirobaxis = 1;
+    bool positive = false;
+    bool negative = false;
+  };
   
+    /*! Check for active limits of the axis given in \a limits and updates them. */
+  void check_limit_switch( axis_limits &limits );
+
+    /*! Read the setup file. */
+  int read_setup( void );
   
-  //returns the max of the three given values.
+    /*! Sets up and activates all 3 axis of the robot. */
+  long setup_axes( int setupindex );
+  
+    /*! Activates all 3 axis. XXX this function is never used. XXX */
+  bool switch_on_power( void );
+  
+    /*! Print out status bytes. XXX not used. */
+  void check_all_reg( int axis );
+  
+    /*! Returns the max of the three given values. */
   double get_max(double a, double b, double c);
 
 };

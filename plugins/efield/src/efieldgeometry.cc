@@ -38,6 +38,7 @@ EFieldGeometry::EFieldGeometry( void )
 
 
   newSection("Measurement data");
+  addText( "robot", "Robot", "robot-1" );
   addText( "type", "Type of measurement", "");
   addNumber( "distance", "Distance of the object", 0, 0, 100, 1, "mm", "mm");
 
@@ -153,122 +154,129 @@ EFieldGeometry::EFieldGeometry( void )
   */
 
 }
-  void EFieldGeometry::slot_pause() {
-    stopButton->setEnabled(true);
-    continueButton->setEnabled(true);
 
-    paused = true;
+
+void EFieldGeometry::slot_pause()
+{
+  stopButton->setEnabled(true);
+  continueButton->setEnabled(true);
+
+  paused = true;
+}
+
+
+void EFieldGeometry::slot_continue()
+{
+  stopButton->setEnabled(false);
+  continueButton->setEnabled(false);
+
+  paused = false;
+
+}
+
+
+void EFieldGeometry::slot_stop()
+{
+  stopButton->setEnabled(false);
+  continueButton->setEnabled(false);
+
+  requestStop();
+
+  paused = false;
+}
+
+
+class EFieldGeometryEvent : public QEvent
+{
+
+public:
+  EFieldGeometryEvent(int point, int max_number) :
+    QEvent( Type( User+21 )), Point(point), Max_Number(max_number)
+  {
   }
 
-  void EFieldGeometry::slot_continue() {
-    stopButton->setEnabled(false);
-    continueButton->setEnabled(false);
+  int Point;
+  int Max_Number;
+};
 
-    paused = false;
 
+void EFieldGeometry::customEvent( QEvent *qce )
+{
+  switch (qce->type() - QEvent::User) {
+
+  case 21: {
+    EFieldGeometryEvent *efg = dynamic_cast<EFieldGeometryEvent*>(qce);
+    int current = efg->Point;
+    int max = efg->Max_Number;
+
+    this->currentPoint->display(current);
+    this->totalPoints->display(max);
+    break;
   }
-
-  void EFieldGeometry::slot_stop() {
-    stopButton->setEnabled(false);
-    continueButton->setEnabled(false);
-
-    requestStop();
-
-    paused = false;
-
+  default: {
+    RePro::customEvent(qce);
   }
-
-  class EFieldGeometryEvent : public QEvent {
-  
-  public:
-    EFieldGeometryEvent(int point, int max_number) :
-      QEvent( Type( User+21 )), Point(point), Max_Number(max_number)
-    {
-    }
-
-    int Point;
-    int Max_Number;
-
-  };
-
-
-  void EFieldGeometry::customEvent( QEvent *qce ) {
-
-    switch (qce->type() - QEvent::User) {
-
-    case 21: {
-      EFieldGeometryEvent *efg = dynamic_cast<EFieldGeometryEvent*>(qce);
-      int current = efg->Point;
-      int max = efg->Max_Number;
-
-      this->currentPoint->display(current);
-      this->totalPoints->display(max);
-      break;
-    }
-    default: {
-      RePro::customEvent(qce);
-    }
-    }
   }
+}
 
 
-  void EFieldGeometry::keyPressEvent(QKeyEvent *e) {
-    /*
-     if(! keyboard_active) {
-       RePro::keyPressEvent( e );
-       return;
-     }
-    */
+void EFieldGeometry::keyPressEvent(QKeyEvent *e)
+{
+  /*
+   if(! keyboard_active) {
+     RePro::keyPressEvent( e );
+     return;
+   }
+  */
 
+  switch ( e->key() ) {
+
+  default:
+    RePro::keyPressEvent( e );
+    break;
+  }
+}
+
+
+void EFieldGeometry::keyReleaseEvent(QKeyEvent *e)
+{
+  /*
+  if(! keyboard_active) {
+     RePro::keyReleaseEvent( e );
+     return;
+   }
+  */
+
+/* only accept the event if it is not from a autorepeat key */
+  if(e->isAutoRepeat() ) {
+    e->ignore();
+  } else {
+    e->accept();
     switch ( e->key() ) {
 
     default:
-      RePro::keyPressEvent( e );
-      break;
-    }
-  }
-
-  void EFieldGeometry::keyReleaseEvent(QKeyEvent *e) {
-
-    /*
-    if(! keyboard_active) {
-       RePro::keyReleaseEvent( e );
-       return;
-     }
-    */
-
-  /* only accept the event if it is not from a autorepeat key */
-    if(e->isAutoRepeat() ) {
-      e->ignore();
-    } else {
-      e->accept();
-      switch ( e->key() ) {
-
-      default:
 	RePro::keyReleaseEvent( e );
 	break;
-      }
     }
   }
+}
 
 
+bool EFieldGeometry::build_grid()
+{
+  double head_length = number( "head_length" );
+  double tail_length = number( "tail_length" );
 
+  double width_posY = number( "width_posY" );
+  double width_negY = number( "width_negY" );
 
-bool EFieldGeometry::build_grid() {
+  double height = number( "height" );
+  double depth = number( "depth" );
 
-    double head_length = number( "head_length" );
-    double tail_length = number( "tail_length" );
+  Point head = robot_control->get_fish_head();
+  Point tail = robot_control->get_fish_tail();
 
-    double width_posY = number( "width_posY" );
-    double width_negY = number( "width_negY" );
-
-    double height = number( "height" );
-    double depth = number( "depth" );
-
-    Point head = robot_control->get_fish_head();
-    Point tail = robot_control->get_fish_tail();
-
-    /*
+  /*
     cerr<< "head length" << head_length << endl;
     cerr<< "tail length" << tail_length << endl;
 
@@ -280,211 +288,208 @@ bool EFieldGeometry::build_grid() {
 
     cerr<< "head" << head << endl;
     cerr<< "tail" << tail << endl;
-    */
+  */
 
-    double tiefe = height + depth;
-    double width = width_posY + width_negY;
-    double length = abs(tail.x()-head.x()) + head_length + tail_length;
+  double tiefe = height + depth;
+  double width = width_posY + width_negY;
+  double length = abs(tail.x()-head.x()) + head_length + tail_length;
 
-    double step_x = number("step_length_x");
-    double step_y = number("step_length_y");
-    double step_z = number("step_length_z");
+  double step_x = number("step_length_x");
+  double step_y = number("step_length_y");
+  double step_z = number("step_length_z");
 
-    Point start;
+  Point start;
 
-    if(head.x() < tail.x()) {
-      start = head;
-      start.x() -= (double) ((int) (head_length / step_x)) * step_x;
-      start.y() -= (double) ((int) (width_negY / step_y)) * step_y;
-      start.z() -= (double) ((int) (height / step_z)) * step_z;
-    } else {
-      start = head;
-      start.x() -= (double) ((int) ((length-head_length)) / step_x) * step_x;
-      start.y() -= (double) ((int) (width_negY / step_y)) * step_y;
-      start.z() -= (double) ((int) (height / step_z))  * step_z;
-    }
+  if(head.x() < tail.x()) {
+    start = head;
+    start.x() -= (double) ((int) (head_length / step_x)) * step_x;
+    start.y() -= (double) ((int) (width_negY / step_y)) * step_y;
+    start.z() -= (double) ((int) (height / step_z)) * step_z;
+  } else {
+    start = head;
+    start.x() -= (double) ((int) ((length-head_length)) / step_x) * step_x;
+    start.y() -= (double) ((int) (width_negY / step_y)) * step_y;
+    start.z() -= (double) ((int) (height / step_z))  * step_z;
+  }
 
-    cerr << "start point: " << start << endl;
+  cerr << "start point: " << start << endl;
 
 
 
-    grid.clear();
+  grid.clear();
 
-    double x=0;
+  double x=0;
 
-    for(double z=0; z<=tiefe; z+=step_z) {
-      for(double y=0; y<=width; y+=step_y) {
-	for(x=0; x<=length; x+=step_x) {
-	  Point next = start;
-	  next.x() += x;
-	  next.y() += y;
-	  next.z() += z;
-	  if(point_safe(next)) {
-	    grid.push_back(next);
-	  } else {
-	    //cerr << "wf point unsafe: " << next << endl;
-	  }
-	}
-
-	x-=step_x; // because it becomes one step too big after the first for-loop.
-
-	if(y+step_y <= width) {
-	  y+=step_y;
+  for(double z=0; z<=tiefe; z+=step_z) {
+    for(double y=0; y<=width; y+=step_y) {
+      for(x=0; x<=length; x+=step_x) {
+	Point next = start;
+	next.x() += x;
+	next.y() += y;
+	next.z() += z;
+	if(point_safe(next)) {
+	  grid.push_back(next);
 	} else {
-	  continue;
+	  //cerr << "wf point unsafe: " << next << endl;
 	}
-
-	for(x+=0; x>=0; x-=step_x) {
-	  Point next = start;
-	  next.x() += x;
-	  next.y() += y;
-	  next.z() += z;
-	  if(point_safe(next)) {
-	    grid.push_back(next);
-	  } else {
-	    //cerr << "wb point unsafe: " << next << endl;
-	  }
-	}
-
       }
+
+      x-=step_x; // because it becomes one step too big after the first for-loop.
+
+      if(y+step_y <= width) {
+	y+=step_y;
+      } else {
+	continue;
+      }
+
+      for(x+=0; x>=0; x-=step_x) {
+	Point next = start;
+	next.x() += x;
+	next.y() += y;
+	next.z() += z;
+	if(point_safe(next)) {
+	  grid.push_back(next);
+	} else {
+	  //cerr << "wb point unsafe: " << next << endl;
+	}
+      }
+
     }
-
-    grid.push_back(start);
-
-    if(grid.size() > 0) {
-      return true;
-    } else {
-      return false;
-    }
-
   }
 
+  grid.push_back(start);
 
-  bool EFieldGeometry::point_safe(const Point &p) {
-
-    //if the point is ouside of the area.
-    if(! (robot_control->get_area()->inside(p))) {
-      return false;
-    }
-    //if the point is inside or below a forbidden area.
-    if(! (robot_control->test_point(p)) ) {
-      return false;
-    }
-
+  if(grid.size() > 0) {
     return true;
-
+  } else {
+    return false;
   }
+
+}
+
+
+bool EFieldGeometry::point_safe(const Point &p)
+{
+  //if the point is ouside of the area.
+  if(! (robot_control->get_area()->inside(p))) {
+    return false;
+  }
+  //if the point is inside or below a forbidden area.
+  if(! (robot_control->test_point(p)) ) {
+    return false;
+  }
+
+  return true;
+}
+
 
 int EFieldGeometry::main( void )
 {
   // get options:
-  // double duration = number( "duration" );
-  robot_control = dynamic_cast<misc::XYZRobot*>(device( "robot-2" ));
- if ( robot_control == 0 ) {
-    warning( "No Robot! please add 'RobotController' to the controlplugins int he config file." );
+  string robotid = text( "robot" );
+
+  robot_control = dynamic_cast<misc::XYZRobot*>( device( robotid ) );
+  if ( robot_control == 0 ) {
+    warning( "No Robot! please add 'XYZRobot' to the controlplugins int he config file." );
     return Failed;
   }
+  
+  if(! robot_control->has_area()) {
+    warning( "Robot has no area. Please calibrate it first with the CalibrateRobot repro." );
+    return Aborted;
+  }
+  robot_control->start_mirob();
 
- if(! robot_control->has_area()) {
-   warning( "Robot has no area. Please calibrate it first with the CalibrateRobot repro." );
-   return Aborted;
- }
- robot_control->start_mirob();
+  if ( interrupt() ) {
+    robot_control->close_mirob();
+    return Aborted;
+  }
 
+  // add some more options to be saved:
+  Point head = robot_control->get_fish_head();
+  Point tail = robot_control->get_fish_tail();
 
- if ( interrupt() ) {
-   robot_control->close_mirob();
-   return Aborted;
- }
+  string head_text = "head-"+ to_string(head.x()) +"-" +
+    to_string(head.y()) +"-" + to_string(head.z());
 
- // add some more options to be saved:
- Point head = robot_control->get_fish_head();
- Point tail = robot_control->get_fish_tail();
+  string tail_text = "tail-"+ to_string(tail.x()) +"-" +
+    to_string(tail.y()) +"-" + to_string(tail.z());
 
- string head_text = "head-"+ to_string(head.x()) +"-" +
-   to_string(head.y()) +"-" + to_string(head.z());
+  // Measurement:
+  build_grid();
 
- string tail_text = "tail-"+ to_string(tail.x()) +"-" +
-   to_string(tail.y()) +"-" + to_string(tail.z());
+  int size = grid.size();
+  int countTotal = 1;
+  QCoreApplication::postEvent( this, new EFieldGeometryEvent(countTotal,size));
 
+  OutData signal;
+  signal.setTrace(0);
+  signal.constWave( 0.5, 0.01, 0.0, "x-y-z_coordinate" );
+  signal.setDelay( 0 );
+  signal.description().addNumber( "x-coord", 0., "mm" ).addFlags( OutData::Mutable );
+  signal.description().addNumber( "y-coord", 0., "mm" ).addFlags( OutData::Mutable );
+  signal.description().addNumber( "z-coord", 0., "mm" ).addFlags( OutData::Mutable );
+  signal.description().addText("head", head_text);
+  signal.description().addText("tail", tail_text);
 
- // Measurement:
- build_grid();
-
- int size = grid.size();
- int countTotal = 1;
- QCoreApplication::postEvent( this, new EFieldGeometryEvent(countTotal,size));
-
-
- OutData signal;  // daq/include/relacs/outdata.h
- signal.setTrace(0);
- signal.constWave( 0.5, 0.01, 0.0, "x-y-z_coordinate" );
- signal.setDelay( 0 );
- signal.description().addNumber( "x-coord", 0., "mm" ).addFlags( OutData::Mutable );
- signal.description().addNumber( "y-coord", 0., "mm" ).addFlags( OutData::Mutable );
- signal.description().addNumber( "z-coord", 0., "mm" ).addFlags( OutData::Mutable );
- signal.description().addText("head", head_text);
- signal.description().addText("tail", tail_text);
-
- for(Point p : grid) {
-
-   robot_control->PF_up_and_over(p);
-   robot_control->wait();
-   std::cerr << "Time mirob stopt moving: " << currentTime() << endl;
-   sleep(0.1);
-   QCoreApplication::postEvent( this, new EFieldGeometryEvent(countTotal,size));
-   cerr << "Point: " << countTotal++ << " of " << size << endl;
+  for ( Point p : grid ) {
+    robot_control->PF_up_and_over( p );
+    robot_control->wait();
+    std::cerr << "Time mirob stopped moving: " << currentTime() << endl;
+    sleep( 0.1 );
+    QCoreApplication::postEvent( this, new EFieldGeometryEvent(countTotal,size));
+    cerr << "Point: " << countTotal++ << " of " << size << endl;
 
 
-   // Pause
-   while(paused) {
-     sleep(0.5);
-   }
+    // Pause
+    while ( paused ) {
+      sleep(0.5);
+    }
 
-   if ( interrupt() ) {
-     robot_control->PF_up_and_over(Point(0,0,0));
-     robot_control->wait();
-     robot_control->close_mirob();
-     return Aborted;
-   }
+    if ( interrupt() ) {
+      robot_control->PF_up_and_over(Point(0,0,0));
+      robot_control->wait();
+      robot_control->close_mirob();
+      return Aborted;
+    }
 
-   // close mirob to avoid interference ?? power off
+    // close mirob to avoid interference ?? power off
 
-   signal.description().setNumber( "x-coord", p.x());
-   signal.description().setNumber( "y-coord", p.y());
-   signal.description().setNumber( "z-coord", p.z());
+    signal.description().setNumber( "x-coord", p.x());
+    signal.description().setNumber( "y-coord", p.y());
+    signal.description().setNumber( "z-coord", p.z());
  
-   //std::cerr << "***** Test Write: " << testWrite(signal) << " *****" << std::endl;
+    //std::cerr << "***** Test Write: " << testWrite(signal) << " *****" << std::endl;
 
 
-   std::cerr << "Time right before write: " << currentTime() << endl;
-   startWrite( signal );
-   sleep(0.6);
+    std::cerr << "Time right before write: " << currentTime() << endl;
+    startWrite( signal );
+    sleep(0.6);
 
 
-   // analysieren:
-   /*   const InData &data = trace( "V-1" );
-   SampleDataF input( 0.0, signal.length(), data.stepsize() ); // numerics/include/relacs/sampledata.h
-   data.copy( data.signalTime(), input );
-   */
+    // analysieren:
+    /*   const InData &data = trace( "V-1" );
+	 SampleDataF input( 0.0, signal.length(), data.stepsize() ); // numerics/include/relacs/sampledata.h
+	 data.copy( data.signalTime(), input );
+    */
 
 
-   if ( interrupt() ) {
-     robot_control->PF_up_and_over(Point(0,0,0));
-     robot_control->wait();
-     robot_control->close_mirob();
-     return Aborted;
-   }
+    if ( interrupt() ) {
+      robot_control->PF_up_and_over(Point(0,0,0));
+      robot_control->wait();
+      robot_control->close_mirob();
+      return Aborted;
+    }
 
-   // restart mirob after the avoidoidance of interference ?? power on ?
+    // restart mirob after the avoidoidance of interference ?? power on ?
 
- }
+  }
  
- robot_control->PF_up_and_over(Point(0,0,0));
- robot_control->wait();
+  robot_control->PF_up_and_over(Point(0,0,0));
+  robot_control->wait();
 
- robot_control->close_mirob();
- return Completed;
+  robot_control->close_mirob();
+  return Completed;
 }
 
 

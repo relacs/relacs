@@ -107,6 +107,39 @@ int Manipulator::move( const Point &pos, double speed )
 }
 
 
+int Manipulator::stopX( void )
+{
+  return stop( 0 );
+}
+
+
+int Manipulator::stopY( void )
+{
+  return stop( 1 );
+}
+
+
+int Manipulator::stopZ( void )
+{
+  return stop( 2 );
+}
+
+
+int Manipulator::stop( int axis )
+{
+  return 0;
+}
+
+
+int Manipulator::stop( void )
+{
+  int r = 0;
+  for ( int k=0; k<3; k++ )
+    r |= stop( k );
+  return r;
+}
+
+
 double Manipulator::posX( void ) const
 {
   return pos( 0 );
