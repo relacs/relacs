@@ -134,40 +134,29 @@ int Kleindiek::reset( void )
   return 0;
 }
 
-                             
-int Kleindiek::stepX( double x )
+
+int Kleindiek::stepBy( int axis, int steps, int speed, int acc )
 {
-  int step = int( rint( x ) );
-  if ( step != 0 ) {
-    coarse( 0, step );
-    return 0;
-  }
+  tcflush( Handle, TCIFLUSH );
+
+  char com[200];
+  sprintf( com, "coarse %c %+d;", 'A' + axis, steps );
+  write( Handle, com, strlen( com ) );
+
+  if ( steps > 0 )
+    Pos[axis] += double( steps*PosAmplitude[axis]*PosGain[axis] );
   else
-    return 1;
-}
+    Pos[axis] += double( steps*NegAmplitude[axis]*NegGain[axis] );
 
+  /*
+  usleep( 100000 );
+  char buf[100];
+  int n = read( Handle, buf, 100 );
+  buf[n] = '\0';
+  cout << buf << endl;
+  */
 
-int Kleindiek::stepY( double y )
-{
-  int step = int( rint( y ) );
-  if ( step != 0 ) {
-    coarse( 1, step );
-    return 0;
-  }
-  else
-    return 1;
-}
-
-
-int Kleindiek::stepZ( double z )
-{
-  int step = int( rint( z ) );
-  if ( step != 0 ) {
-    coarse( 2, step );
-    return 0;
-  }
-  else
-    return 1;
+  return 0;
 }
 
 
@@ -222,36 +211,36 @@ int Kleindiek::clear( void )
 int Kleindiek::homeX( void )
 {
   double dist = -Pos[0];
-  double steps = 0.0;
+  int steps = 0;
   if ( dist > 0.0 )
-    steps = dist / PosAmplitude[0] / PosGain[0];
+    steps = (int)::round( dist / PosAmplitude[0] / PosGain[0] );
   else
-    steps = dist / NegAmplitude[0] / NegGain[0];
-  return stepX( steps );
+    steps = (int)::round( dist / NegAmplitude[0] / NegGain[0] );
+  return stepByX( steps );
 }
 
 
 int Kleindiek::homeY( void )
 {
   double dist = -Pos[1];
-  double steps = 0.0;
+  int steps = 0;
   if ( dist > 0.0 )
-    steps = dist / PosAmplitude[1] / PosGain[1];
+    steps = (int)::round( dist / PosAmplitude[1] / PosGain[1] );
   else
-    steps = dist / NegAmplitude[1] / NegGain[1];
-  return stepY( steps );
+    steps = (int)::round( dist / NegAmplitude[1] / NegGain[1] );
+  return stepByY( steps );
 }
 
 
 int Kleindiek::homeZ( void )
 {
   double dist = -Pos[2];
-  double steps = 0.0;
+  int steps = 0;
   if ( dist > 0.0 )
-    steps = dist / PosAmplitude[2] / PosGain[2];
+    steps = (int)::round( dist / PosAmplitude[2] / PosGain[2] );
   else
-    steps = dist / NegAmplitude[2] / NegGain[2];
-  return stepZ( steps );
+    steps = (int)::round( dist / NegAmplitude[2] / NegGain[2] );
+  return stepByZ( steps );
 }
 
 
@@ -315,31 +304,6 @@ double Kleindiek::minAmplX( void ) const
 double Kleindiek::maxAmplX( void ) const
 {
   return 80.0;
-}
-
-
-int Kleindiek::coarse( int channel, int steps )
-{
-  tcflush( Handle, TCIFLUSH );
-
-  char com[200];
-  sprintf( com, "coarse %c %+d;", 'A' + channel, steps );
-  write( Handle, com, strlen( com ) );
-
-  if ( steps > 0 )
-    Pos[channel] += double( steps*PosAmplitude[channel]*PosGain[channel] );
-  else
-    Pos[channel] += double( steps*NegAmplitude[channel]*NegGain[channel] );
-
-  /*
-  usleep( 100000 );
-  char buf[100];
-  int n = read( Handle, buf, 100 );
-  buf[n] = '\0';
-  cout << buf << endl;
-  */
-
-  return 0;
 }
 
 

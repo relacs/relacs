@@ -27,12 +27,28 @@ namespace relacs {
 Manipulator::Manipulator( void ) 
   : Device( ManipulatorType )
 {
+  for ( int k=0; k<3; k++ ) {
+    PosAmpl[k] = 1.0;
+    NegAmpl[k] = 1.0;
+    SpeedFac[k] = 1.0;
+    AccFac[k] = 1.0;
+    DefaultSpeed[k] = 1;
+    DefaultAcc[k] = 1;
+  }
 }
 
 
 Manipulator::Manipulator( const string &deviceclass )
   : Device( deviceclass, ManipulatorType )
 {
+  for ( int k=0; k<3; k++ ) {
+    PosAmpl[k] = 1.0;
+    NegAmpl[k] = 1.0;
+    SpeedFac[k] = 1.0;
+    AccFac[k] = 1.0;
+    DefaultSpeed[k] = 1;
+    DefaultAcc[k] = 1;
+  }
 }
 
 
@@ -41,87 +57,70 @@ Manipulator::~Manipulator( void )
 }
 
 
-int Manipulator::stepX( double x, double speed )
-{
-  return step( 0, x, speed );
-}
-
-
-int Manipulator::stepY( double y, double speed )
-{
-  return step( 1, y, speed );
-}
-
-
-int Manipulator::stepZ( double z, double speed )
-{
-  return step( 2, z, speed );
-}
-
-
-int Manipulator::step( int axis, double s, double speed )
+int Manipulator::stepTo( int axis, int pos, int speed, int acc )
 {
   return 0;
 }
 
 
-int Manipulator::step( const Point &s, double speed )
+int Manipulator::stepTo( const Point &pos, const Point &speed, const Point &acc )
 {
   int r = 0;
   for ( int k=0; k<3; k++ )
-    r |= step( k, s[k], speed );
+    r |= stepTo( k, pos[k], speed[k], acc[k] );
   return r;
 }
 
 
-int Manipulator::moveX( double x, double speed )
-{
-  return move( 0, x, speed );
-}
-
-
-int Manipulator::moveY( double y, double speed )
-{
-  return move( 1, y, speed );
-}
-
-
-int Manipulator::moveZ( double z, double speed )
-{
-  return move( 2, z, speed );
-}
-
-
-int Manipulator::move( int axis, double pos, double speed )
+int Manipulator::stepBy( int axis, int steps, int speed, int acc )
 {
   return 0;
 }
 
 
-int Manipulator::move( const Point &pos, double speed )
+int Manipulator::stepBy( const Point &dist, const Point &speed, const Point &acc )
 {
   int r = 0;
   for ( int k=0; k<3; k++ )
-    r |= move( k, pos[k], speed );
+    r |= stepBy( k, dist[k], speed[k], acc[k] );
   return r;
 }
 
 
-int Manipulator::stopX( void )
+int Manipulator::moveBy( int axis, double dist, double speed, double acc )
 {
-  return stop( 0 );
+  int d = (int) ::round( dist/(dist>=0.0?PosAmpl[axis]:NegAmpl[axis]));
+  int s = (int) ::round( speed/SpeedFac[axis]);
+  int a = (int) ::round( acc/AccFac[axis]);
+  return stepBy( axis, d, s, a );
 }
 
 
-int Manipulator::stopY( void )
+int Manipulator::moveBy( const Point &dist, const Point &speed, const Point &acc )
 {
-  return stop( 1 );
+  int r = 0;
+  for ( int k=0; k<3; k++ )
+    r |= moveBy( k, dist[k], speed[k], acc[k] );
+  return r;
 }
 
 
-int Manipulator::stopZ( void )
+int Manipulator::moveTo( int axis, double pos, double speed, double acc )
 {
-  return stop( 2 );
+  // XXX positive or negative depends on current position of axis!
+  int p = (int) ::round( pos/(pos>=0.0?PosAmpl[axis]:NegAmpl[axis]));
+  int s = (int) ::round( speed/SpeedFac[axis]);
+  int a = (int) ::round( acc/AccFac[axis]);
+  return stepTo( axis, p, s, a );
+}
+
+
+int Manipulator::moveTo( const Point &pos, const Point &speed, const Point &acc )
+{
+  int r = 0;
+  for ( int k=0; k<3; k++ )
+    r |= moveTo( k, pos[k], speed[k], acc[k] );
+  return r;
 }
 
 

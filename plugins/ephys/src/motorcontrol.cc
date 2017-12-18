@@ -439,7 +439,7 @@ void MiMaPu::keyUp( int state )
   }
   else if ( 0.001*LastStep.elapsed() > Interval ) {
     stop();
-    M->stepZ( Steps );
+    M->stepByZ( Steps );
     setNumber( "pos", -M->posZ() );
     LastStep.start();
   }
@@ -477,7 +477,7 @@ void MiMaPu::keyDown( int state )
   }
   else if ( 0.001*LastStep.elapsed() > Interval ) {
     stop();
-    M->stepZ( -Steps );
+    M->stepByZ( -Steps );
     setNumber( "pos", -M->posZ() );
     LastStep.start();
   }
@@ -523,11 +523,11 @@ void MiMaPu::update( void )
       if ( ! spikes )
 	StartFind = false;
       if ( Dir ) {
-	M->stepZ( -Steps );
+	M->stepByZ( -Steps );
       }
       else {
 	if ( Back != 0 ) {
-	  M->stepZ( Back );
+	  M->stepByZ( Back );
 	}
       }
       if ( Back != 0 )

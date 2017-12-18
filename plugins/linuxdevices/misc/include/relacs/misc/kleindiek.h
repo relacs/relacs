@@ -53,18 +53,8 @@ public:
   virtual void close( void );
   virtual int reset( void );
 
-    /*! Move x-axis by \a x.
-        Depending on the implementation \a x can be raw steps
-	or a specific distance or angle. */
-  virtual int stepX( double x );
-    /*! Move y-axis by \a y.
-        Depending on the implementation \a y can be raw steps
-	or a specific distance or angle. */
-  virtual int stepY( double y );
-    /*! Move z-axis by \a z.
-        Depending on the implementation \a z can be raw steps
-	or a specific distance or angle. */
-  virtual int stepZ( double z );
+    /*! Step axis \a axis by \a steps spteps. */
+  int stepBy( int axis, int steps, int speed=0, int acc=0 );
 
     /*! Return the position of the z-axis.
         Depending on the implementation this can be raw steps
@@ -117,7 +107,6 @@ public:
 
   friend ostream &operator<<( ostream &str, const Kleindiek &k );
 
-  int coarse( int channel, int steps );
   int pause( int ms );
 
     /*! Set the speed for channle \a channel to \a speed.

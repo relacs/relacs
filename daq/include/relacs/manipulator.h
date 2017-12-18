@@ -34,7 +34,7 @@ namespace relacs {
 \class Manipulator
 \brief Virtual class for controlling a manipulator - a robot with several linear axis. 
 \author Jan Benda
-\version 1.0
+\version 2.0
 \todo implement info() and settings()
 \todo add something for indicating existing axis
 
@@ -63,68 +63,177 @@ public:
     /*! Destroy a Manipulator. In case it is open, close it. */
   virtual ~Manipulator( void );
 
-    /*! Relative move of x-axis by \a x with speed \a speed.
-        Depending on the implementation \a x can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int stepX( double x, double speed=0.0 );
-    /*! Relative move of y-axis by \a y with speed \a speed.
-        Depending on the implementation \a y can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int stepY( double y, double speed=0.0 );
-    /*! Relative move of z-axis by \a z with speed \a speed.
-        Depending on the implementation \a z can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int stepZ( double z, double speed=0.0 );
-    /*! Relative move of axis \a axis by \a s with speed \a speed.
-        Depending on the implementation \a z can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int step( int axis, double s, double speed=0.0 );
-    /*! Relative move of x, y, and z-axis by \a step with speed \a speed.
-        Depending on the implementation \a s can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int step( const Point &s, double speed=0.0 );
+    /*! Relative move of axis \a axis by \a steps steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepBy( int axis, int steps, int speed=0, int acc=0 );
+    /*! Relative move by \a step steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepBy( const Point &steps,
+		      const Point &speed=Point(), const Point &acc=Point() );
+    /*! Relative move of x-axis by \a steps steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepByX( int steps, int speed=0, int acc=0 )
+  { return stepBy( 0, steps, speed, acc ); };
+    /*! Relative move of y-axis by \a steps steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepByY( int steps, int speed=0, int acc=0 )
+  { return stepBy( 1, steps, speed, acc ); };
+    /*! Relative move of z-axis by \a steps steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepByZ( int steps, int speed=0, int acc=0 )
+  { return stepBy( 2, steps, speed, acc ); };
 
-    /*! Absolute move of x-axis to \a x with speed \a speed.
-        Depending on the implementation \a x can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int moveX( double x, double speed=0.0 );
-    /*! Absolute move of y-axis to \a y with speed \a speed.
-        Depending on the implementation \a y can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int moveY( double y, double speed=0.0 );
-    /*! Absolute move of z-axis to \a z with speed \a speed.
-        Depending on the implementation \a z can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int moveZ( double z, double speed=0.0 );
-    /*! Absolute move of axis \a axis to position \a pos with speed \a speed.
-        Depending on the implementation \a pos can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int move( int axis, double pos, double speed=0.0 );
-    /*! Absolute move of x, y, and z-axis to \a pos with speed \a speed.
-        Depending on the implementation \a step can be raw steps
-	or a specific distance or angle.
-        If \a speed is zero, a default value for the speed is used. */
-  virtual int move( const Point &pos, double speed=0.0 );
+    /*! Absolute move of axis \a axis to \a pos steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepTo( int axis, int pos, int speed=0, int acc=0 );
+    /*! Absolute move to \a pos steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepTo( const Point &pos,
+		      const Point &speed=Point(), const Point &acc=Point() );
+    /*! Absolute move of x-axis to \a pos steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepToX( int pos, int speed=0, int acc=0 )
+  { return stepTo( 0, pos, speed, acc ); };
+    /*! Absolute move of y-axis to \a pos steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepToY( int pos, int speed=0, int acc=0 )
+  { return stepTo( 1, pos, speed, acc ); };
+    /*! Absolute move of z-axis to \a pos steps with speed \a speed
+        and acceleration \a acc.
+	Steps, speed, and acceleration are given in raw values whose
+	meaning depend on the robot interface.
+        If \a speed or \a acc are zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int stepToZ( int pos, int speed=0, int acc=0 )
+  { return stepTo( 2, pos, speed, acc ); };
 
-    /*! Immediately stop movement of x-axis. */
-  virtual int stopX( void );
-    /*! Immediately stop movement of y-axis. */
-  virtual int stopY( void );
-    /*! Immediately stop movement of z-axis. */
-  virtual int stopZ( void );
+    /*! Relative move of axis \a axis by \a dist with speed \a speed
+        and acceleration \a acc.
+	The first axis has the index 0.
+	The distance is given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
+        If \a speed or \a acc is zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int moveBy( int axis, double dist, double speed=0.0, double acc=0.0 );
+    /*! Relative move of x, y, and z-axis by \a dist with speed \a speed
+        and acceleration \a acc.
+	The distance coordinates are given in meter, the speeds in meter per second
+	and the accelerations in meter per second squared.
+        If values in \a speed or \a acc are zero, a default value for 
+	the speed or acceleration of the corresponding axis is used. */
+  virtual int moveBy( const Point &dist,
+		      const Point &speed=Point(), const Point &acc=Point() );
+    /*! Relative move of x-axis by \a x with speed \a speed
+        and acceleration \a acc.
+	The position is given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
+        If \a speed or \a acc is zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int moveByX( double x, double speed=0.0, double acc=0.0 )
+  { return moveBy( 0, x, speed, acc ); };
+    /*! Relative move of y-axis by \a y with speed \a speed
+        and acceleration \a acc.
+	The position is given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
+        If \a speed or \a acc is zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int moveByY( double y, double speed=0.0, double acc=0.0 )
+  { return moveBy( 1, y, speed, acc ); };
+    /*! Relative move of z-axis by \a z with speed \a speed
+        and acceleration \a acc.
+	The position is given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
+        If \a speed or \a acc is zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int moveByZ( double z, double speed=0.0, double acc=0.0 )
+  { return moveBy( 2, z, speed, acc ); };
+
+    /*! Absolute move of axis \a axis to \a pos with speed \a speed
+        and acceleration \a acc.
+	The first axis has the index 0.
+	The position is given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
+        If \a speed or \a acc is zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int moveTo( int axis, double pos, double speed=0.0, double acc=0.0 );
+    /*! Absolute move of x, y, and z-axis to \a pos with speed \a speed
+        and acceleration \a acc.
+	The position coordinates are given in meter, the speeds in meter per second
+	and the accelerations in meter per second squared.
+        If values in \a speed or \a acc are zero, a default value for 
+	the speed or acceleration of the corresponding axis is used. */
+  virtual int moveTo( const Point &pos, const Point &speed=Point(), const Point &acc=Point() );
+    /*! Absolute move of x-axis to \a x with speed \a speed
+        and acceleration \a acc.
+	The position is given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
+        If \a speed or \a acc is zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int moveToX( double x, double speed=0.0, double acc=0.0 )
+  { return moveTo( 0, x, speed, acc ); };
+    /*! Absolute move of y-axis to \a y with speed \a speed
+        and acceleration \a acc.
+	The position is given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
+        If \a speed or \a acc is zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int moveToY( double y, double speed=0.0, double acc=0.0 )
+  { return moveTo( 1, y, speed, acc ); };
+    /*! Absolute move of z-axis to \a z with speed \a speed
+        and acceleration \a acc.
+	The position is given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
+        If \a speed or \a acc is zero, a default value for 
+	the speed or acceleration is used. */
+  virtual int moveToZ( double z, double speed=0.0, double acc=0.0 )
+  { return moveTo( 2, z, speed, acc ); };
+
     /*! Immediately stop movement of axis \a axis. */
   virtual int stop( int axis );
     /*! Immediately stop movement of all axes. */
   virtual int stop( void );
+    /*! Immediately stop movement of x-axis. */
+  virtual int stopX( void ) { return stop( 0 ); };
+    /*! Immediately stop movement of y-axis. */
+  virtual int stopY( void ) { return stop( 1 ); };
+    /*! Immediately stop movement of z-axis. */
+  virtual int stopZ( void ) { return stop( 2 ); };
 
     /*! Return the position of the x-axis.
         Depending on the implementation this can be raw steps
@@ -193,6 +302,24 @@ public:
   virtual double minAmplZ( void ) const;
     /*! The maximum possible amplitude for the z-axis. */
   virtual double maxAmplZ( void ) const;
+
+
+protected:
+
+    /*! The distance in meter of a single positive step for each axis. */
+  double PosAmpl[3];
+    /*! The distance in meter of a single negative step for each axis. */
+  double NegAmpl[3];
+    /*! The factors for scaling speed values to meter per seconds for each axis. */
+  double SpeedFac[3];
+    /*! The factors for scaling acceleration values to meter per
+        seconds squared for each axis. */
+  double AccFac[3];
+
+    /*! Default raw speed values. */
+  int DefaultSpeed[3];
+    /*! Default raw acceleration values. */
+  int DefaultAcc[3];
 
 };
 
