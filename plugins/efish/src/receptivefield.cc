@@ -22,6 +22,7 @@
 #include <relacs/efish/receptivefield.h>
 #include <relacs/relacswidget.h>
 #include <cmath>
+#define PI 3.14159265
 
 using namespace relacs;
 
@@ -157,57 +158,47 @@ bool bestXPos(std::vector<double> &averages, LinearRange &range, double &bestPos
   return true;
 }
 
-void ReceptiveField::xRangeSearch(LinearRange &range, double y_pos, double z_pos,
-                                  std::vector<double> &avg_rates, OutData &signal)
-{
+void ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_pos,
+                                  std::vector<double> &avg_rates, OutData &signal,
+                                  bool x_search ) {
   std::vector<double> rates(repeats);
-  double best_x = 50.; // just for fun
-  if ((int)avg_rates.size() != range.size()) {
-    avg_rates.resize(range.size());
-  }
-  for(int i =0; i < range.size(); i ++) {
-    plotRate(posPlot, range[i], y_pos);
-    // go, robi, go
-    // do the measurement
-    sleep(0.1);
-    for (int j = 0; j < repeats; j++) {
-      presentStimulus( range[i],y_pos, z_pos, j, signal );
-      rates[j] = ((range[range.size()-1] - range[0]) - std::abs(range[i] - best_x)) *
-        1.5 + fRand(0., 50.);
-      plotRate(xPlot, range[i], rates[j]);
-    }
-    double avg = 0.0;
-    for(double r : rates)
-      avg += (r/repeats);
-    plotAvgRate(xPlot, range[i], avg);
-    avg_rates[i] = avg;
-  }
-}
+  EventList spike_trains;
+  double period = 1./deltaf;
+  double best_y = 30.;
+  double best_x = 60.;
 
-void ReceptiveField::yRangeSearch(LinearRange &range, double x_pos, double z_pos,
-                                  std::vector<double> &avg_rates, OutData &signal)
-{
-  std::vector<double> rates(repeats);
-  double best_y = 20.;
   if ((int)avg_rates.size() != range.size()) {
     avg_rates.resize(range.size());
   }
   for(int i =0; i < range.size(); i ++) {
-    plotRate(posPlot, x_pos, range[i]);
+    double x = x_search ? range[i] : xy_pos;
+    double y = x_search ? xy_pos : range[i];
+    plotRate(posPlot, x, y);
     // go, robi, go
     // do the measurement
     sleep( 0.1 );
-
-    for (int j = 0; j < repeats; j++) {
-      presentStimulus( x_pos, range[i], z_pos, j, signal );
-      rates[j] = ((range[range.size()-1] - range[0]) - std::abs(range[i] - best_y)) *
-        1.5 + fRand( 0., 50. );
-      plotRate( yPlot, rates[j], range[i] );
+    spike_trains.clear();
+    for ( int j = 0; j < repeats; j++ ) {
+      int trial = 0;
+      presentStimulus( x, y, z_pos, j, signal );
+      getSpikes( spike_trains );
+      SampleDataD rate((int)(period/0.01), 0.0, 0.01);
+      getRate( rate, spike_trains.back(), trial, period, duration );
+      // only for the simulations
+      double best = x_search ? best_x : best_y;
+      double tuning_width = (range[range.size()-1] - range[0]);
+      double shift = 2* PI * best / tuning_width;
+      double modulator = std::cos(range[i] * PI * 1./tuning_width + shift ) + 1.;
+      rates[j] = modulator * rate.stdev( rate.rangeFront(), rate.rangeBack() );
+      // rates[j] = rate.stdev( rate.rangeFront(), rate.rangeBack() );
+      double x_val = x_search ? range[i] : rates[j];
+      double y_val = x_search ? rates[j] : range[i];
+      plotRate( x_search ? xPlot : yPlot, x_val, y_val );
     }
     double avg = 0.0;
     for(double r : rates)
       avg += (r/repeats);
-    plotAvgRate( yPlot, avg, range[i] );
+    plotAvgRate( x_search ? xPlot : yPlot, x_search ? range[i] : avg, x_search ? avg : range[i]);
     avg_rates[i] = avg;
   }
 }
@@ -240,6 +231,29 @@ int ReceptiveField::presentStimulus(double x_pos, double y_pos, double z_pos, in
   return 0;
 }
 
+void ReceptiveField::getRate( SampleDataD &rate, const EventData &spike_train, int &start_trial,
+              double period, double duration ) {
+  for ( int j = 0; j < (int)(duration/period); j++ ) {
+    spike_train.addRate( rate, start_trial, rate.stepsize(), j * period );
+  }
+}
+
+void ReceptiveField::getSpikes( EventList & spike_trains ) {
+  for ( int k=0; k<MaxTraces; k++ ) {
+    if ( SpikeEvents[k] >= 0 ) {
+      spike_trains.push( events( SpikeEvents[k] ), signalTime(), signalTime() + duration );
+      break;
+    }
+  }
+}
+
+void ReceptiveField::analyze( const EventList &spike_trains ) {
+  SampleDataD avgRate();
+  for ( int i=0; i<spike_trains.size(); i++ ) {
+    
+  }
+ }
+
 void plotBestX(Plot &p, double x) {
   p.lock();
   p.plotVLine(x, Plot::White, 2, Plot::Solid);
@@ -254,9 +268,9 @@ void plotBestY(Plot &p, double y) {
   p.unlock();
 }
 
-void ReceptiveField::setupStimulus( OutData &signal ) {
+void ReceptiveField::prepareStimulus( OutData &signal ) {
   double eodf = events( LocalEODEvents[0] ).frequency( currentTime() - 0.5, currentTime() );
-  signal.setTrace( LocalEField[0] );
+  signal.setTrace( GlobalEField ); //FIXME: will need to be switched to LocalEField[0]
   signal.sineWave( this->duration, 0.0, eodf + this->deltaf );
   signal.setIntensity( this->amplitude );
 
@@ -300,7 +314,7 @@ int ReceptiveField::main( void )
   this->pause = number( "pause" );
 
   OutData signal;
-  setupStimulus( signal );
+  prepareStimulus( signal );
 
   resetPlots( xmin, xmax, ymin, ymax );
 
@@ -309,17 +323,19 @@ int ReceptiveField::main( void )
   std::vector<double> avg_rates_x( xrange.size() );
   std::vector<double> avg_rates_y( yrange.size() );
 
-  xRangeSearch( xrange, ystart, z_pos, avg_rates_x, signal );
+  //xRangeSearch( xrange, ystart, z_pos, avg_rates_x, signal );
+  rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true);
   double bestX, bestY;
   if ( bestXPos( avg_rates_x, xrange, bestX ) ) {
     plotBestX( xPlot, bestX );
-    yRangeSearch( yrange, bestX, z_pos, avg_rates_y, signal );
+    rangeSearch( yrange, bestX, z_pos, avg_rates_y, signal, false);
+    //yRangeSearch( yrange, bestX, z_pos, avg_rates_y, signal );
     if (bestXPos( avg_rates_y, yrange, bestY )) {
       plotBestY( yPlot, bestY );
     }
   }
-  metaData().setNumber("Cell properties>x position", bestX);
-  metaData().setNumber("Cell properties>y position", bestY);
+  metaData().setNumber("Cell properties>X Position", bestX);
+  metaData().setNumber("Cell properties>Y Position", bestY);
   return Completed;
 }
 

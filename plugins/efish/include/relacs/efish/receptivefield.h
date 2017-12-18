@@ -56,10 +56,17 @@ class ReceptiveField : public RePro,
   int repeats;
 
   void resetPlots( double xmin, double xmax, double ymin, double ymax );
-  void xRangeSearch( LinearRange &range, double y_pos, double z_pos, std::vector<double> &rates, OutData &signal );
-  void yRangeSearch( LinearRange &range, double x_pos, double z_pos, std::vector<double> &rates, OutData &signal );
-  void setupStimulus( OutData &signal );
-  int presentStimulus( double x_pos, double y_pos, double z_pos, int repeat_num, OutData &signal );
+  void rangeSearch( LinearRange &range, double xy_pos, double z_pos,
+                    std::vector<double> &avg_rates, OutData &signal,
+                    bool x_search );
+  void prepareStimulus( OutData &signal );
+  int presentStimulus( double x_pos, double y_pos, double z_pos,
+                       int repeat_num, OutData &signal );
+  void getSpikes( EventList &spikeTrains );
+  void getRate( SampleDataD &rate, const EventData &spike_train, int &start_trial,
+                double period, double duration );
+  void analyze( const EventList &spikeTrains );
+
 };
 
 
