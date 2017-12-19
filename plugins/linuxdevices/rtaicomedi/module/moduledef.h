@@ -63,6 +63,12 @@
       stable, --enable-dynclamp-oneshot). */
 // #define ONESHOT_MODE
 
+// SYNCSEC requires TTLPULSE:
+#ifdef ENABLE_SYNCSEC
+#ifndef ENABLE_TTLPULSE
+#define ENABLE_TTLPULSE
+#endif
+#endif
 
 // *** KERNEL LOGGING MODE ***
 

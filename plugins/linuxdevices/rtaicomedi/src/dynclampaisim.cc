@@ -22,9 +22,9 @@
 #include <relacs/relacsplugin.h>
 #include <relacs/rtaicomedi/dynclampmodelsim.h>
 #include <relacs/rtaicomedi/dynclampaisim.h>
+#include "module/dynclampfeatures.h"
 
 namespace relacs {
-
 
 DynClampAISim::DynClampAISim( void )
   : AISim()
@@ -86,6 +86,11 @@ int DynClampAISim::open( const string &device )
     setErrorStr( es );
     return -1;
   }
+
+  char featurestr[255] = "";
+  get_feature_str( featurestr );
+  cerr << "DynClampAISim supported features: " << featurestr << '\n';
+
   return 0;
 }
 

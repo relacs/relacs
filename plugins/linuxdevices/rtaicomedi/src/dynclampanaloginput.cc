@@ -32,6 +32,7 @@
 #include <QMutexLocker>
 #include <relacs/parameter.h>
 #include <relacs/rtaicomedi/dynclampanaloginput.h>
+#include "module/dynclampfeatures.h"
 using namespace std;
 using namespace relacs;
 
@@ -230,52 +231,9 @@ int DynClampAnalogInput::open( const string &device)
     return -1;
   }
 
-  string featurestr = "";
-  int features = 0;
-#ifdef ENABLE_COMPUTATION
-  featurestr += "COMPUTATION ";
-  features |= 0x0001;
-#endif
-#ifdef ENABLE_MATHH
-  featurestr += "MATHH ";
-  features |= 0x0002;
-#endif
-#ifdef ENABLE_LOOKUPTABLES
-  featurestr += "LOOKUPTABLES ";
-  features |= 0x0004;
-#endif
-#ifdef ENABLE_TRIGGER
-  featurestr += "TRIGGER";
-  features |= 0x0008;
-#endif
-#ifdef ENABLE_TTLPULSE
-  featurestr += "TTLPULSE ";
-  features |= 0x0010;
-#endif
-#ifdef ENABLE_SYNCSEC
-  featurestr += "SYNCSEC ";
-  features |= 0x0020;
-#endif
-#ifdef ENABLE_AITIME
-  featurestr += "AITIME ";
-  features |= 0x0040;
-#endif
-#ifdef ENABLE_AIACQUISITIONTIME
-  featurestr += "AIACQUISITIONTIME ";
-  features |= 0x0080;
-#endif
-#ifdef ENABLE_AOTIME
-  featurestr += "AOTIME ";
-  features |= 0x0100;
-#endif
-#ifdef ENABLE_MODELTIME
-  featurestr += "MODELTIME ";
-  features |= 0x0200;
-#endif
-#ifdef ENABLE_WAITTIME
-  featurestr += "WAITTIME ";
-  features |= 0x0400;
-#endif
+  int features = get_features();
+  char featurestr[255] = "";
+  get_feature_str( featurestr );
   cerr << "DynClampAnalogInput supported features: " << featurestr << '\n';
   
   // open kernel module:
@@ -289,7 +247,7 @@ int DynClampAnalogInput::open( const string &device)
   // check features:
   int retval = ::ioctl( ModuleFd, IOC_CHECK_FEATURES, &features );
   if ( retval < 0 ) {
-    setErrorStr( "Supported features of kernel modules and user space do not match! Please recompile both in plugins/linuxdevices/rtaicomedi ." );
+    setErrorStr( "Supported features of dynamic-clamp kernel module and user space do not match! Please recompile both in plugins/linuxdevices/rtaicomedi ." );
     ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
     ::close( ModuleFd );
     return -1;
@@ -305,7 +263,7 @@ int DynClampAnalogInput::open( const string &device)
     if ( generateLookupTable( k, &x, &y, &n ) < 0 ) 
       break;
     // transfer to kernel:
-    int retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_K, &k );
+    retval = ::ioctl( ModuleFd, IOC_SET_LOOKUP_K, &k );
     if ( retval < 0 ) {
       setErrorStr( "ioctl command IOC_SET_LOOKUP_K on device " +
 		   ModuleDevice + " failed" );
@@ -353,7 +311,7 @@ int DynClampAnalogInput::open( const string &device)
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_IN;
   deviceIOC.errorstr[0] = '\0';
-  int retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
+  retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   if ( retval < 0 ) {
     setErrorStr( "ioctl command IOC_OPEN_SUBDEV on device " + ModuleDevice + " failed: " +
 		 deviceIOC.errorstr );
