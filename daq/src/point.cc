@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <relacs/point.h>
+#include <relacs/str.h>
 
 
 namespace relacs {
@@ -40,13 +41,28 @@ Point::Point( const Point &p )
 }
 
 
-Point::Point( double x, double y, double z ) 
+Point::Point( double x, double y, double z )
 {
   Coords[0] = x;
   Coords[1] = y;
   Coords[2] = z;
 }
 
+
+Point::Point( const string &position ) : Point( )
+{
+  if ( position.size() > 0 ) {
+    Str s = position;
+    int next;
+    int idx = 0;
+    for (int i = 0; i < Dim; i++) {
+      Coords[i] = s.number(0.0, idx, &next);
+      idx = next + 1;
+      if (next > position.size()-1)
+	break;
+    }
+  }
+}
 
 void Point::set( double x, double y, double z )
 {
@@ -240,6 +256,16 @@ Point abs( Point p )
   for ( int k=0; k<p.Dim; k++ )
     p[k] = ::abs( p[k] );
   return p;
+}
+
+
+string Point::toString( void ) const {
+  Str s = "(";
+  for ( int i = 0; i < Dim; i++ ) {
+    s += Str(Coords[i], 0, 3, 'f') + (i < Dim-1 ? "," : "");
+  }
+  s += ")";
+  return s;
 }
 
 

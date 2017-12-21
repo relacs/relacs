@@ -44,6 +44,8 @@ public:
   Point( const Point &p );
     /*! A point with coordinates \a x, \a y, \a z. */
   Point( double x, double y, double z );
+  /*! Construct a point from a string representation (x,y,z) mm */
+  Point( const string &position );
 
     /*! The x-coordinate of the point. */
   double x( void ) const { return Coords[0]; }
@@ -118,6 +120,8 @@ public:
     /*! Write the coordinates of the point to stream \a str. */
   friend ostream &operator<<( ostream &str, const Point &p );
 
+   /*! a string representation of the point (x,y,z) */
+  string toString( void ) const;
 
 protected:
 
