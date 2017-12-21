@@ -58,32 +58,34 @@ Manipulator::~Manipulator( void )
 }
 
 
-int Manipulator::stepTo( int axis, int pos, int speed, int acc )
-{
-  return 0;
-}
-
-
-int Manipulator::stepTo( const Point &pos, const Point &speed, const Point &acc )
-{
-  int r = 0;
-  for ( int k=0; k<3; k++ )
-    r |= stepTo( k, pos[k], speed[k], acc[k] );
-  return r;
-}
-
-
 int Manipulator::stepBy( int axis, int steps, int speed, int acc )
 {
   return 0;
 }
 
 
-int Manipulator::stepBy( const Point &dist, const Point &speed, const Point &acc )
+int Manipulator::stepBy( const Point &dist, int speed, int acc )
 {
+  // XXX we need a more fancy translation of speed onto the axis.
   int r = 0;
   for ( int k=0; k<3; k++ )
-    r |= stepBy( k, dist[k], speed[k], acc[k] );
+    r |= stepBy( k, dist[k], speed, acc );
+  return r;
+}
+
+
+int Manipulator::stepTo( int axis, int pos, int speed, int acc )
+{
+  return 0;
+}
+
+
+int Manipulator::stepTo( const Point &pos, int speed, int acc )
+{
+  // XXX we need a more fancy translation of speed onto the axis.
+  int r = 0;
+  for ( int k=0; k<3; k++ )
+    r |= stepTo( k, pos[k], speed, acc );
   return r;
 }
 
@@ -97,11 +99,11 @@ int Manipulator::moveBy( int axis, double dist, double speed, double acc )
 }
 
 
-int Manipulator::moveBy( const Point &dist, const Point &speed, const Point &acc )
+int Manipulator::moveBy( const Point &dist, double speed, double acc )
 {
   int r = 0;
   for ( int k=0; k<3; k++ )
-    r |= moveBy( k, dist[k], speed[k], acc[k] );
+    r |= moveBy( k, dist[k], speed, acc );
   return r;
 }
 
@@ -116,11 +118,11 @@ int Manipulator::moveTo( int axis, double pos, double speed, double acc )
 }
 
 
-int Manipulator::moveTo( const Point &pos, const Point &speed, const Point &acc )
+int Manipulator::moveTo( const Point &pos, double speed, double acc )
 {
   int r = 0;
   for ( int k=0; k<3; k++ )
-    r |= moveTo( k, pos[k], speed[k], acc[k] );
+    r |= moveTo( k, pos[k], speed, acc );
   return r;
 }
 

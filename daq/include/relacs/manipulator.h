@@ -76,8 +76,7 @@ public:
 	meaning depend on the robot interface.
         If \a speed or \a acc are zero, a default value for 
 	the speed or acceleration is used. */
-  virtual int stepBy( const Point &steps,
-		      const Point &speed=Point(), const Point &acc=Point() );
+  virtual int stepBy( const Point &steps, int speed=0, int acc=0 );
     /*! Relative move of x-axis by \a steps steps with speed \a speed
         and acceleration \a acc.
 	Steps, speed, and acceleration are given in raw values whose
@@ -116,8 +115,7 @@ public:
 	meaning depend on the robot interface.
         If \a speed or \a acc are zero, a default value for 
 	the speed or acceleration is used. */
-  virtual int stepTo( const Point &pos,
-		      const Point &speed=Point(), const Point &acc=Point() );
+  virtual int stepTo( const Point &pos, int speed=0, int acc=0 );
     /*! Absolute move of x-axis to \a pos steps with speed \a speed
         and acceleration \a acc.
 	Steps, speed, and acceleration are given in raw values whose
@@ -153,12 +151,11 @@ public:
   virtual int moveBy( int axis, double dist, double speed=0.0, double acc=0.0 );
     /*! Relative move of x, y, and z-axis by \a dist with speed \a speed
         and acceleration \a acc.
-	The distance coordinates are given in meter, the speeds in meter per second
-	and the accelerations in meter per second squared.
+	The distance coordinates are given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
         If values in \a speed or \a acc are zero, a default value for 
 	the speed or acceleration of the corresponding axis is used. */
-  virtual int moveBy( const Point &dist,
-		      const Point &speed=Point(), const Point &acc=Point() );
+  virtual int moveBy( const Point &dist, double speed=0.0, double acc=0.0 );
     /*! Relative move of x-axis by \a x with speed \a speed
         and acceleration \a acc.
 	The position is given in meter, the speed in meter per second
@@ -194,11 +191,11 @@ public:
   virtual int moveTo( int axis, double pos, double speed=0.0, double acc=0.0 );
     /*! Absolute move of x, y, and z-axis to \a pos with speed \a speed
         and acceleration \a acc.
-	The position coordinates are given in meter, the speeds in meter per second
-	and the accelerations in meter per second squared.
+	The position coordinates are given in meter, the speed in meter per second
+	and the acceleration in meter per second squared.
         If values in \a speed or \a acc are zero, a default value for 
 	the speed or acceleration of the corresponding axis is used. */
-  virtual int moveTo( const Point &pos, const Point &speed=Point(), const Point &acc=Point() );
+  virtual int moveTo( const Point &pos, double speed=0.0, double acc=0.0 );
     /*! Absolute move of x-axis to \a x with speed \a speed
         and acceleration \a acc.
 	The position is given in meter, the speed in meter per second
