@@ -59,6 +59,7 @@ public:
   Robot( void );
   ~Robot( void );
   virtual void main( void );
+  virtual void config( void );
   virtual void updateCalibration( void );
 
 protected:
@@ -75,6 +76,9 @@ protected:
   QLCDNumber* yPos;
   QLCDNumber* zPos;
   QTextEdit* errorBox;
+
+private:
+  void storePosition( const string &name, const Point &p );
 
 };
 

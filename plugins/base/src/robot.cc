@@ -29,6 +29,7 @@
 #include <QPen>
 #include <relacs/shape.h>
 #include <relacs/base/robot.h>
+#include <relacs/str.h>
 
 using namespace relacs;
 
@@ -40,7 +41,12 @@ Robot::Robot( void )
 {
   // add some options:
   addText( "robot", "Robot", "robot-1" );
-  
+  addText( "FishHeadPosition", "Position of fish head (x,y,z)mm", "(0,0,0)");
+  addText( "FishTailPosition", "Position of fish tail (x,y,z)mm", "(0,0,0)");
+  addText( "MovementAreaStart", "Start position of the movement area (x,y,z)mm", "(0,0,0)");
+  addText( "MovementAreaEnd", "End position of movement area (x,y,z)mm", "(0,0,0)");
+  addText( "ForbiddenAreaStart", "Start position of the forbidden area (x,y,z)mm", "(0,0,0)");
+  addText( "ForbiddenAreaEnd", "End position of the forbidden area (x,y,z)mm", "(0,0,0)");
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
   QHBoxLayout *hb;
@@ -121,10 +127,12 @@ Robot::Robot( void )
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
   vb->addWidget(line);
-
+  /*
   std::cerr << "Print size of plot end of watchdog constructor: width:"
 	    << plot->size().width() << " and height: "
 	    << plot->size().height() << endl;
+  */
+
 }
 
 
@@ -134,11 +142,57 @@ Robot::~Robot( void )
 }
 
 
+void Robot::storePosition( const string &name, const Point &p ) {
+  if ( !metaData().exist( name ))
+    metaData().addText( name, p.toString() );
+  else
+    metaData().setText( name, p.toString() );
+  if ( !exist( name ) )
+    addText( name, p.toString() );
+  else
+    setText( name, p.toString() );
+}
+
+
+void Robot::config( void ) {
+  cerr << "Robot config!" << endl;
+  robot = dynamic_cast<misc::XYZRobot*>( device( text( "robot" ) ) );
+  if ( exist( "FishHeadPosition" ) ) {
+    Point fish_start( text("FishHeadPosition") );
+    Point fish_end( text("FishTailPosition") );
+    if ( fish_start.distance( fish_end ) > 0.01 ) {
+      robot->set_fish_head(fish_start);
+      robot->set_fish_tail(fish_end);
+      storePosition( "FishHeadPosition", fish_start.toString() );
+      storePosition( "FishTailPosition", fish_end.toString() );
+    }
+  }
+  if ( exist( "MovementAreaStart" ) ) {
+    Point area_start( text( "MovementAreaStart" ) );
+    Point area_end( text( "MovementAreaEnd" ) );
+    if ( area_start.distance( area_end ) > 0.01 ) {
+      robot->set_Area( new Cuboid( area_start, area_end ) );
+      storePosition( "MovementAreaStart", area_start.toString() );
+      storePosition( "MovementAreaEnd", area_end.toString() );
+    }
+  }
+  if ( exist( "ForbiddenAreaStart" ) ) {
+    Point forbidden_start( text( "ForbiddenAreaStart" ) );
+    Point forbidden_end( text( "ForbiddenAreaEnd" ) );
+    if ( forbidden_start.distance( forbidden_end ) > 0.01 ) {
+      robot->add_forbidden( new Cuboid( forbidden_start, forbidden_end ) );
+      storePosition( "ForbiddenAreaStart", forbidden_start.toString() );
+      storePosition( "ForbiddenAreaEnd", forbidden_end.toString() );
+    }
+  }
+}
+
+
 void Robot::customEvent( QEvent *qce )
 {
   switch (qce->type() - QEvent::User) {
   case 21: {
-    Point p = robot->pos();
+     Point p = robot->pos();
     xPos->display(int(p.x()));
     yPos->display(int(p.y()));
     zPos->display(int(p.z()));
@@ -166,7 +220,6 @@ void Robot::customEvent( QEvent *qce )
     {
       if( robot->has_area() ) {
 	Cuboid* cuboid = dynamic_cast<Cuboid*>( robot->area());
-	// should it be drawn at the moment?
 	if(test_height(cuboid)) {
 	  QRect rect = prepare_cuboid_plot(cuboid);
 	  plot->setAllowed(rect);
@@ -180,7 +233,6 @@ void Robot::customEvent( QEvent *qce )
       plot->clearForbidden();
       for ( Shape* shape: robot->forbiddenAreas() ) {
 	Cuboid* cuboid = dynamic_cast<Cuboid*>(shape);
-	// should it be drawn at the moment?
 	if( test_height(cuboid) ) {
 	  QRect rect = prepare_cuboid_plot(cuboid);
 	  plot->addForbidden(rect);
@@ -243,10 +295,8 @@ QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
 
 void Robot::main( void )
 {
-  // get options:
-  string robotid = text( "robot" );
+  cerr << "Robot main!\n";
 
-  robot = dynamic_cast<misc::XYZRobot*>( device( robotid ) );
   if( robot == 0 ) {
     errorBox->append( "Couldn't find the RobotController. Closing." );
     return;
@@ -265,20 +315,22 @@ void Robot::main( void )
 void Robot::updateCalibration( void )
 {
   cerr << "update Calib\n";
+  storePosition( "FishHeadPosition", robot->get_fish_head() );
+  storePosition( "FishTailPosition", robot->get_fish_tail() );
+
   int count = 0;
   for ( Shape* s : robot->forbiddenAreas() ) {
-    if ( s == NULL )
+    Cuboid *c = dynamic_cast<Cuboid*>(s);
+    if ( c == NULL )
       continue;
-    Str name = "Shape_" + Str( count , 0, 1, 'i') + "_" + s->name();
-    cerr << name << endl;
-    // XXX metaData().setNumber("Snout x-position", p.x() )
-    // XXX metaData().setNumber("Snout y-position", p.y() )
-    // XXX metaData().setNumber("Snout z-position", p.z() )
-    //  metaData().setNumber()
+    Str name = "ForbiddenArea" + (count > 0 ? "_" + Str( count , 0, 1, 'i') : "" );
+    storePosition( name + "Start", c->boundingBoxMin() );
+    storePosition( name + "End", c->boundingBoxMax() );
     count++;
   }
   if ( robot->has_area() && robot->area() != NULL ) {
-    cerr << robot->area()->name() << endl;
+    storePosition( "MovementAreaStart", robot->area()->boundingBoxMin() );
+    storePosition( "MovementAreaEnd", robot->area()->boundingBoxMax() );
   }
 }
 
