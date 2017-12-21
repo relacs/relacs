@@ -89,7 +89,7 @@ public slots:
   QSpinBox *modifyLengthBox;
   QTextEdit *errorBox;
 
-  misc::XYZRobot *robot_control;
+  misc::XYZRobot *robot;
 
   // Flags: 
 

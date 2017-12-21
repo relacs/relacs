@@ -469,6 +469,7 @@ libefieldcalibraterobot_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
+    -I$(top_srcdir)/plugins/base/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -485,6 +486,7 @@ libefieldcalibraterobot_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
+    $(top_builddir)/plugins/base/src/libbaserobot.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldcalibraterobot_la_OBJECTS) : moc_calibraterobot.cc

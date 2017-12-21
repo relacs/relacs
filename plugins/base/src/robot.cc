@@ -1,4 +1,4 @@
-/*
+ /*
   base/robot.cc
   Shows the state of a robot.
 
@@ -72,23 +72,19 @@ Robot::Robot( void )
   hb = new QHBoxLayout;
   vb->addLayout(hb);
 
-  hb->addWidget(new QLabel("Height of grafic:"));
+  hb->addWidget(new QLabel("Height of graphic:"));
 
   heightBox = new QComboBox();
   heightBox->addItem("All objects");
   heightBox->addItem("Height of robot");
   hb->addWidget(heightBox);
 
-
-
-
   line = new QFrame();
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
   vb->addWidget(line);
 
-
-  vb->addWidget( new QLabel("Current Status:"));
+  vb->addWidget( new QLabel("Current Position:"));
 
   hb = new QHBoxLayout;
   hb->addWidget(new QLabel("X-Position:"));
@@ -110,8 +106,7 @@ Robot::Robot( void )
 
   vb->addLayout(hb);
 
-
-    //Divider line:
+  //Divider line:
   line = new QFrame();
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
@@ -121,15 +116,15 @@ Robot::Robot( void )
   errorBox->setFontPointSize(8);
   vb->addWidget(errorBox);
 
-    //Divider line:
+  //Divider line:
   line = new QFrame();
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
   vb->addWidget(line);
 
-  std::cerr << "Print size of plot end of watchdog constructor: width:" << plot->size().width() 
-	    << " and height: "<< plot->size().height() << endl;
-
+  std::cerr << "Print size of plot end of watchdog constructor: width:"
+	    << plot->size().width() << " and height: "
+	    << plot->size().height() << endl;
 }
 
 
@@ -143,7 +138,7 @@ void Robot::customEvent( QEvent *qce )
 {
   switch (qce->type() - QEvent::User) {
   case 21: {
-    Point p = robot_control->pos();
+    Point p = robot->pos();
     xPos->display(int(p.x()));
     yPos->display(int(p.y()));
     zPos->display(int(p.z()));
@@ -152,14 +147,14 @@ void Robot::customEvent( QEvent *qce )
   case 22:
     {
       for(int i=1; i<=3; i++){
-	if(robot_control->axis_in_pos_limit(i)) {
+	if(robot->axis_in_pos_limit(i)) {
 
 	  QString msg = QString("Axis").append(QString::number(i)).append(QString("is in the pos Limit!"));
 	  errorBox->setTextColor(Qt::darkRed);
 	  errorBox->append(msg);
 	}
 
-	if(robot_control->axis_in_neg_limit(i)) {
+	if(robot->axis_in_neg_limit(i)) {
 	  QString msg = QString("Axis").append(QString::number(i)).append(QString("is in the neg Limit!"));
 	  errorBox->setTextColor(Qt::darkRed);
 	  errorBox->append(msg);
@@ -169,9 +164,8 @@ void Robot::customEvent( QEvent *qce )
     }
   case 23:
     {
-
-      if(robot_control->has_area()) {
-	Cuboid* cuboid = dynamic_cast<Cuboid*>( robot_control->get_area());
+      if( robot->has_area() ) {
+	Cuboid* cuboid = dynamic_cast<Cuboid*>( robot->area());
 	// should it be drawn at the moment?
 	if(test_height(cuboid)) {
 	  QRect rect = prepare_cuboid_plot(cuboid);
@@ -183,23 +177,20 @@ void Robot::customEvent( QEvent *qce )
 	plot->setAllowed(QRect(0,0,0,0));
       }
 
-
       plot->clearForbidden();
-      for ( Shape* shape: robot_control->forbiddenAreas() ) {
+      for ( Shape* shape: robot->forbiddenAreas() ) {
 	Cuboid* cuboid = dynamic_cast<Cuboid*>(shape);
 	// should it be drawn at the moment?
-	if(test_height(cuboid)) {
+	if( test_height(cuboid) ) {
 	  QRect rect = prepare_cuboid_plot(cuboid);
 	  plot->addForbidden(rect);
 	}
-
       }
 
+      double width_fac = double(plot->size().width())  / robot->xlength();
+      double height_fac= double(plot->size().height()) / robot->ylength();
 
-      double width_fac = double(plot->size().width())  / robot_control->xlength();
-      double height_fac= double(plot->size().height()) / robot_control->ylength();
-
-      Point p = robot_control->pos();
+      Point p = robot->pos();
       plot->setPosition(Point(p.x()*width_fac, p.y()*height_fac, 0));
 
       plot->update();
@@ -207,23 +198,20 @@ void Robot::customEvent( QEvent *qce )
   default:
     Control::customEvent( qce );
   }
-
 }
 
 
 bool Robot::test_height(Cuboid* cuboid)
 {
   switch (heightBox->currentIndex()) {
-  case 0: { // generell no height important.
+  case 0: { // height is not important.
     return true;
     break;
   }
   case 1: { // is the cuboid on the same height as the robot.
-
     Point start = cuboid->corner();
     double height = cuboid->height();
-
-    double height_robot = robot_control->pos().z();
+    double height_robot = robot->pos().z();
 
     if (start.z() <= height_robot and start.z() + height >= height_robot) {
       return true;
@@ -235,14 +223,13 @@ bool Robot::test_height(Cuboid* cuboid)
   default: {
     return false;
   }
-
-    }
-
+  } //of switch
 }
 
+
 QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
-  double width_fac = double(plot->size().width())  / robot_control->xlength();
-  double height_fac= double(plot->size().height()) / robot_control->ylength();
+  double width_fac = double(plot->size().width())  / robot->xlength();
+  double height_fac= double(plot->size().height()) / robot->ylength();
 
   Point start = cuboid->corner();
   int ploted_start_x = start.x()*width_fac;
@@ -259,26 +246,40 @@ void Robot::main( void )
   // get options:
   string robotid = text( "robot" );
 
-  robot_control = dynamic_cast<misc::XYZRobot*>( device( robotid ) );
-  if( robot_control == 0 ) {
+  robot = dynamic_cast<misc::XYZRobot*>( device( robotid ) );
+  if( robot == 0 ) {
     errorBox->append( "Couldn't find the RobotController. Closing." );
     return;
   }
-  robot_control->init_mirob();
+  robot->init_mirob();
 
   while( ! interrupt() ) {
     sleep( 0.2 );
     postCustomEvent( 21 ); // position LCDNumbers
     postCustomEvent( 23 ); // draw update
-
-    if ( interrupt() )
-      return;
-
-    sleep( 0.2 );
     postCustomEvent( 22 ); // Limit switch control
-    postCustomEvent( 23 ); // draw update
   }
+}
 
+
+void Robot::updateCalibration( void )
+{
+  cerr << "update Calib\n";
+  int count = 0;
+  for ( Shape* s : robot->forbiddenAreas() ) {
+    if ( s == NULL )
+      continue;
+    Str name = "Shape_" + Str( count , 0, 1, 'i') + "_" + s->name();
+    cerr << name << endl;
+    // XXX metaData().setNumber("Snout x-position", p.x() )
+    // XXX metaData().setNumber("Snout y-position", p.y() )
+    // XXX metaData().setNumber("Snout z-position", p.z() )
+    //  metaData().setNumber()
+    count++;
+  }
+  if ( robot->has_area() && robot->area() != NULL ) {
+    cerr << robot->area()->name() << endl;
+  }
 }
 
 
@@ -321,8 +322,8 @@ void RenderArea::setPosition(const Point &p) {
 }
 
 
-void RenderArea::paintEvent(QPaintEvent *event) {
-
+void RenderArea::paintEvent(QPaintEvent *event)
+{
   QPen pen = QPen(Qt::SolidLine);
   pen.setColor(Qt::white);
 
@@ -339,7 +340,6 @@ void RenderArea::paintEvent(QPaintEvent *event) {
   //Draw the whole space black (the space in which the robot COULD move)
   painter.drawRect(0, 0, this->size().width(), this->size().height());
 
-
   // Drawing the allowed area:
   pen.setStyle(Qt::SolidLine);
   pen.setColor(Qt::black);
@@ -353,7 +353,6 @@ void RenderArea::paintEvent(QPaintEvent *event) {
   if(allowed.isValid()) {
     painter.drawRect(allowed);
   }
-
 
   //Drawing forbidden areas:
   pen.setStyle(Qt::SolidLine);
@@ -370,8 +369,6 @@ void RenderArea::paintEvent(QPaintEvent *event) {
   }
 
   // Darwing the position of the robot.
-
-
   pen.setStyle(Qt::SolidLine);
   pen.setColor(Qt::black);
 

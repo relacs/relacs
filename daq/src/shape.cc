@@ -26,10 +26,11 @@ namespace relacs {
 
 //******************************************
 
-Shape::Shape( void )
+Shape::Shape( void ): Name("shape")
 {
 }
 
+Shape::~Shape( void) {}
 
 bool Shape::inside( const Point &p ) const
 {
@@ -48,6 +49,7 @@ bool Shape::below( const Point &p ) const
 
 Cuboid::Cuboid( void )
 {
+  this->setName("Cuboid");
 }
 
 
@@ -55,6 +57,7 @@ Cuboid::Cuboid( const Cuboid &c )
   : Corner( c.Corner ),
     Size( c.Size )
 {
+  this->setName(c.name());
 }
 
 

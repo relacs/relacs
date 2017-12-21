@@ -19,9 +19,11 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <relacs/efish/receptivefield.h>
-#include <relacs/relacswidget.h>
 #include <cmath>
+#include <relacs/relacswidget.h>
+#include <relacs/misc/xyzrobot.h>
+#include <relacs/efish/receptivefield.h>
+
 #define PI 3.14159265
 
 using namespace relacs;
@@ -56,7 +58,7 @@ ReceptiveField::ReceptiveField( void )
   addBoolean( "xinvert", "Select to map 0 position in relacs to max position of the robot.", true);
   addSelection( "ymapping", "Mapping of y-axis to robot axis", "z|x|y");
   addBoolean( "yinvert", "Select to map 0 position in relacs to max position of the robot.", false);
-  
+
   QVBoxLayout *vb = new QVBoxLayout;
   QHBoxLayout *hb = new QHBoxLayout;
 
@@ -312,6 +314,14 @@ int ReceptiveField::main( void )
   this->duration = number( "duration" );
   this->deltaf = number( "deltaf" );
   this->pause = number( "pause" );
+
+  misc::XYZRobot *robot_control = dynamic_cast<misc::XYZRobot*>( device( "mirob" ) );
+  if ( robot_control == 0 ) {
+    warning( "No Robot! please add 'XYZRobot' to the controlplugins int he config file." );
+    return Failed;
+  }
+  Point head = robot_control->get_fish_head();
+  Point tail = robot_control->get_fish_tail();
 
   OutData signal;
   prepareStimulus( signal );

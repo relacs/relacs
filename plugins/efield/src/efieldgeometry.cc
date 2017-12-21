@@ -371,7 +371,7 @@ bool EFieldGeometry::build_grid()
 bool EFieldGeometry::point_safe(const Point &p)
 {
   //if the point is ouside of the area.
-  if(! (robot_control->get_area()->inside(p))) {
+  if(! (robot_control->area()->inside(p))) {
     return false;
   }
   //if the point is inside or below a forbidden area.

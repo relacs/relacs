@@ -45,6 +45,9 @@ XYZRobot::XYZRobot( void )
 
 XYZRobot::~XYZRobot( void )
 {
+  if ( this->Area != NULL)
+    delete this->Area;
+  clear_forbidden();
 }
 
 
@@ -89,8 +92,8 @@ void XYZRobot::close( void )
 
 bool XYZRobot::test_point(const Point &p)
 {
-  for( Shape* area : ForbiddenAreas ) {
-    if ( area->inside(p) || area->below(p) )
+  for( Shape* fa : ForbiddenAreas ) {
+    if ( fa->inside(p) || fa->below(p) )
       continue;
     else
       return false;
@@ -250,11 +253,11 @@ void XYZRobot::close_mirob( void )
 
 bool XYZRobot::has_area( void ) const
 {
-  return ( area != NULL );
+  return ( Area != NULL );
 }
 
 
-// General movement: 
+// General movement:
 
 void XYZRobot::go_home( void )
 {
@@ -414,7 +417,7 @@ bool XYZRobot::modify_shape( bool area, int forb_index, int job, int change )
   // JOB 6: deleting a shape.
   if(job == 6) {
     if(area) {
-      this->area = NULL;
+      this->Area = NULL;
       return true;
     } else {
       return del_forbidden_at_index(forb_index);
@@ -423,7 +426,7 @@ bool XYZRobot::modify_shape( bool area, int forb_index, int job, int change )
 
   // JOB 0-5 Modifying the shapes ONLY FOR CUBOIDS
   if(area) {
-    modify_cuboid(dynamic_cast<Cuboid*>(this->area), job, change);
+    modify_cuboid(dynamic_cast<Cuboid*>(this->Area), job, change);
   } else {
     modify_cuboid(dynamic_cast<Cuboid*>(ForbiddenAreas[forb_index]), job, change);
   }
@@ -489,10 +492,10 @@ void XYZRobot::modify_cuboid( Cuboid* cuboid, int job, int change )
 }
 
 
-// Setters: 
+// Setters:
 void XYZRobot::set_Area( Shape *newArea )
 {
-  area = newArea;
+  this->Area = newArea;
 }
 
 
@@ -504,20 +507,21 @@ void XYZRobot::add_forbidden( Shape *forbidden )
 
 bool XYZRobot::del_forbidden_at_index( int i )
 {
-  if(i<0)
+  cerr << "del forbidden at index\n";
+  if( i < 0 || i >= (int)ForbiddenAreas.size() )
     return false;
-  
-  if ( ForbiddenAreas.size() > (unsigned) i ) {
-    ForbiddenAreas.erase( ForbiddenAreas.begin() + i );
-    return true;
-  }
-  else
-    return false;
+  delete ForbiddenAreas[i];
+  ForbiddenAreas.erase( ForbiddenAreas.begin() + i );
+  return true;
 }
 
-  
+
 void XYZRobot::clear_forbidden()
 {
+  for ( Shape *s : ForbiddenAreas ) {
+    if (s != NULL)
+      delete s;
+  }
   ForbiddenAreas.clear();
 }
 
@@ -548,6 +552,11 @@ void XYZRobot::set_fish_head(const Point &head)
 void XYZRobot::set_fish_tail(const Point &tail)
 {
   this->fish_tail = tail;
+  Cuboid *cb = new Cuboid(this->fish_head, this->fish_tail);
+  if (cb != NULL) {
+    cb->setName( "Fish" );
+    this->add_forbidden( cb );
+  }
 }
 
 // Getter:
@@ -578,9 +587,9 @@ bool XYZRobot::axis_in_neg_limit( int mirobaxis )
 }
 
 
-Shape* XYZRobot::get_area()
+Shape* XYZRobot::area()
 {
-  return area;
+  return Area;
 }
 
 

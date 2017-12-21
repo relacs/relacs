@@ -53,12 +53,13 @@ class RenderArea;
 class Robot : public Control
 {
   Q_OBJECT
-
+ 
 public:
 
   Robot( void );
   ~Robot( void );
   virtual void main( void );
+  virtual void updateCalibration( void );
 
 protected:
 
@@ -66,7 +67,7 @@ protected:
   QRect prepare_cuboid_plot(Cuboid* cuboid);
   bool test_height(Cuboid* cuboid);
 
-  misc::XYZRobot *robot_control;
+  misc::XYZRobot *robot;
 
   RenderArea* plot;
   QComboBox* heightBox;

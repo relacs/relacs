@@ -94,6 +94,7 @@ public:
 
   bool has_area( void ) const;
   void set_Area(Shape *area);
+  Shape* area();
 
   const deque<Shape*> &forbiddenAreas( void ) const { return ForbiddenAreas; };
   void add_forbidden(Shape *forbidden);
@@ -116,7 +117,6 @@ public:
   bool axis_in_pos_limit( int mirobaxis );
   bool axis_in_neg_limit( int mirobaxis );
 
-  Shape* get_area();
 
 
 protected:
@@ -129,7 +129,7 @@ protected:
 
   deque<Shape*> ForbiddenAreas;
 
-  Shape* area = NULL;
+  Shape* Area = NULL;
   Point fish_head;
   Point fish_tail;
 

@@ -41,17 +41,38 @@ public:
     /*! Constructor. */
   Shape( void );
 
+  virtual ~Shape( void );
+
     /*! Minimum corner of bounding box. */
   virtual Point boundingBoxMin( void ) const = 0;
     /*! Maximum corner of bounding box. */
   virtual Point boundingBoxMax( void ) const = 0;
 
-    /*! Return \a\c true if point \a p is inside the shape.
-        This implementation checks whether the point is inside the bounding box. */
+    /*!
+      Return \a\c true if point \a p is inside the shape.
+      This implementation checks whether the point is inside the bounding box.
+    */
   virtual bool inside( const Point & p ) const;
-    /*! Return \a\c true if point \a p is below the shape.
-      This implementation checks whether the point is inside or below the bounding box. */
+    /*!
+      Return \a\c true if point \a p is below the shape.
+      This implementation checks whether the point is inside or below the bounding box.
+    */
   virtual bool below( const Point & p ) const;
+  /*!
+    Sets the name of the shape
+  */
+  void setName( const std::string &name ) {
+    Name = name;
+  }
+  /*!
+    Getter for the shape's name
+  */
+  std::string name( void ) const {
+    return Name;
+  }
+
+ private:
+  std::string Name;
 
 };
 

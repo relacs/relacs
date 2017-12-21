@@ -21,7 +21,9 @@
 
 
 #include <QString>
+
 #include <relacs/efield/calibraterobot.h>
+#include <relacs/base/robot.h>
 
 using namespace relacs;
 
@@ -45,8 +47,6 @@ CalibrateRobot::CalibrateRobot( void )
   QColor fg( Qt::green );
   QColor bg( Qt::black );
   QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
-
-
 
   //Buttons:
   //"GO Home" Button area: 
@@ -122,8 +122,7 @@ CalibrateRobot::CalibrateRobot( void )
   line->setFrameShadow(QFrame::Sunken);
   vb->addWidget(line);
 
-  //Calibrate Button: 
-
+  //Calibrate Button:
   vb->addWidget( new QLabel("Calibration start and stop:"));
 
   bb = new QHBoxLayout;
@@ -189,7 +188,6 @@ CalibrateRobot::CalibrateRobot( void )
   connect( ModifyButton, SIGNAL( clicked() ),
 	   this, SLOT( slot_modify() ) );
 
-
   //Divider line:
   line = new QFrame();
   line->setFrameShape(QFrame::HLine);
@@ -197,7 +195,6 @@ CalibrateRobot::CalibrateRobot( void )
   vb->addWidget(line);
 
   //STOP Button: 
-
   vb->addWidget( new QLabel("Quick Stop!"));
 
   QPushButton *StopButton = new QPushButton( "Stop!" );
@@ -222,7 +219,14 @@ CalibrateRobot::CalibrateRobot( void )
   errorBox->setFontPointSize(8);
   bb->addWidget(errorBox);
 
-
+  grabKey( Qt::Key_Q );
+  grabKey( Qt::Key_W );
+  grabKey( Qt::Key_E );
+  grabKey( Qt::Key_A );
+  grabKey( Qt::Key_S );
+  grabKey( Qt::Key_D );
+  grabKey( Qt::Key_Y );
+  grabKey( Qt::Key_N );
 }
 
 
@@ -239,16 +243,16 @@ void CalibrateRobot::home_apply()
   switch(homeBox->currentIndex() ) {
 
   case 0:
-    robot_control->search_reference(3,2,1);
+    robot->search_reference(3,2,1);
     break;
   case 1:
-    robot_control->search_reference(1,2,3);
+    robot->search_reference(1,2,3);
     break;
   case 2:
-    robot_control->search_reference(2,3,1);
+    robot->search_reference(2,3,1);
     break;
   case 3:
-    robot_control->go_home();
+    robot->go_home();
     break;
   default:
     break;
@@ -266,7 +270,7 @@ void CalibrateRobot::pos_apply()
   double posY = posYBox->value();
   double posZ = posZBox->value();
 
-  robot_control->PF_up_and_over( Point( posX, posY, posZ ) );
+  robot->PF_up_and_over( Point( posX, posY, posZ ) );
 }
 
 
@@ -319,9 +323,9 @@ void CalibrateRobot::slot_modify()
 
   // With an ASSUMPTION about the ORDER 
   // allowed area is always first if it exists:
-  if(areaIndex == 0 and robot_control->has_area()) {
+  if(areaIndex == 0 and robot->has_area()) {
     allowedAreaFlag = true;
-  } else if(robot_control->has_area()) {
+  } else if(robot->has_area()) {
     shapeIndex = areaIndex-1;
   } else {
     shapeIndex = areaIndex;
@@ -329,7 +333,7 @@ void CalibrateRobot::slot_modify()
 
   int job = modifyChoicesBox->currentIndex();
 
-  robot_control->modify_shape(allowedAreaFlag, shapeIndex, job, change);
+  robot->modify_shape(allowedAreaFlag, shapeIndex, job, change);
   postCustomEvent(21);
 }
 
@@ -339,7 +343,7 @@ void CalibrateRobot::slot_stop()
   if(false) {
     //re Init robot from this thread.TODO
   }
-  robot_control->stop();
+  robot->stop();
 }
 
 
@@ -351,9 +355,11 @@ void CalibrateRobot::keyReleaseEvent(QKeyEvent *e)
    }
 
   if(! gui_thread_init) {
-    robot_control->start_mirob();
+    robot->start_mirob();
     gui_thread_init = true;
   }
+
+  e->accept();
 
   /* only accept the event if it is not from a autorepeat key */
   if(e->isAutoRepeat() ) {
@@ -364,20 +370,27 @@ void CalibrateRobot::keyReleaseEvent(QKeyEvent *e)
 
     case Qt::Key_U:
     case Qt::Key_O:
-	robot_control->stop( 2 );
+    case Qt::Key_Q:
+    case Qt::Key_E:
+	robot->stop( 2 );
 	break;
 
     case Qt::Key_K:
     case Qt::Key_I:
-	robot_control->stop( 1 );
+    case Qt::Key_S:
+    case Qt::Key_W:
+	robot->stop( 1 );
 	break;
 
     case Qt::Key_J:
     case Qt::Key_L:
-	robot_control->stop( 0 );
+    case Qt::Key_A:
+    case Qt::Key_D:
+	robot->stop( 0 );
 	break;
 
     default:
+      e->ignore();
 	RePro::keyReleaseEvent( e );
 	break;
     }
@@ -393,45 +406,55 @@ void CalibrateRobot::keyPressEvent(QKeyEvent *e)
    }
 
    if(! gui_thread_init) {
-     robot_control->start_mirob();
+     robot->start_mirob();
      gui_thread_init = true;
    }
+
+   e->accept();
 
   switch ( e->key() ) {
 
   case Qt::Key_Y:
     cont = true;
     break;
+
   case Qt::Key_N:
     back = true;
     break;
 
   case Qt::Key_O:
-    robot_control->move_negZ();
+  case Qt::Key_E:
+    robot->move_negZ();
     break;
 
   case Qt::Key_U:
-    robot_control->move_posZ();
+  case Qt::Key_Q:
+    robot->move_posZ();
     break;
 
   case Qt::Key_I:
-    robot_control->move_posY();
+  case Qt::Key_W:
+    robot->move_posY();
     break;
 
   case Qt::Key_K:
-    robot_control->move_negY();
+  case Qt::Key_S:
+    robot->move_negY();
     break;
 
   case Qt::Key_J:
-    robot_control->move_posX();
+  case Qt::Key_A:
+    robot->move_posX();
     break;
 
   case Qt::Key_L:
-    robot_control->move_negX();
+  case Qt::Key_D:
+    robot->move_negX();
     break;
 
 
   default:
+    e->ignore();
     RePro::keyPressEvent( e );
     break;
   }
@@ -472,24 +495,24 @@ Shape* CalibrateRobot::calibrate_area()
 
     switch(point_num) {
     case 0:
-	area_start = robot_control->pos();
+	area_start = robot->pos();
 	errorBox->append("start point accepted.");
 	errorBox->append("Please use 'U' and 'O' to calibrate the depth.");
 
 	cerr<< "start point accepted." << endl;
 	break;
     case 1:
-	area_depth = robot_control->pos();
+	area_depth = robot->pos();
 	cerr<< "depth point accepted." << endl;
 	errorBox->append("Please use 'J' and 'L' to calibrate the length.");
 	break;
     case 2:
-	area_length = robot_control->pos();
+	area_length = robot->pos();
 	errorBox->append("Please use 'I' and 'K' to calibrate the width.");
 	cerr<< "length point accepted." << endl;
 	break;
     case 3:;
-	area_width = robot_control->pos();
+	area_width = robot->pos();
 	cerr<< "width point accepted." << endl;
 	break;
     }
@@ -497,6 +520,7 @@ Shape* CalibrateRobot::calibrate_area()
   }
   
   Shape *shape = new Cuboid(area_start, area_depth.x(), area_length.y(), area_width.z());
+  shape->setName("");
   cerr<<"Build Shape."<< endl;
   return shape;
 }
@@ -509,11 +533,9 @@ Point CalibrateRobot::calibrate_point()
   errorBox->append("X-Axis: 'J','L' Y-Axis: 'I','K' Z-Axis: 'U','O'");
   errorBox->append("Press 'Y' to accept the point.");
 
-
-  while(! cont) {
-
-    if(stop_cali) {
-	errorBox->append("Calibration aborted.");
+  while( !cont ) {
+    if( stop_cali ) {
+	errorBox->append( "Calibration aborted." );
 	stop_cali = false;
 	return Point(-1,-1,-1);
     }
@@ -521,7 +543,7 @@ Point CalibrateRobot::calibrate_point()
   }
   cont = false;
 
-  return robot_control->pos();
+  return robot->pos();
 }
 
 
@@ -531,8 +553,8 @@ void CalibrateRobot::customEvent( QEvent *qce )
 
   case 21: { // update modify list.
     modifyAreasBox->clear();
-    if(robot_control->has_area()) {
-      Cuboid *cuboid = dynamic_cast<Cuboid*>(robot_control->get_area());
+    if(robot->has_area()) {
+      Cuboid *cuboid = dynamic_cast<Cuboid*>(robot->area());
       Point start = cuboid->corner();
       QString part1 = QString("Allowed Area ");
       QString part2 = QString("start: (") += QString::number(int(start.x())) += QString(", ");
@@ -541,7 +563,7 @@ void CalibrateRobot::customEvent( QEvent *qce )
       QString complete = part1 += part2 += part3 += part4;
       modifyAreasBox->addItem(complete);
     }
-    for ( Shape* shape: robot_control->forbiddenAreas() ) {
+    for ( Shape* shape: robot->forbiddenAreas() ) {
       Cuboid *cuboid = dynamic_cast<Cuboid*>(shape);
       Point start = cuboid->corner();
 
@@ -576,55 +598,57 @@ int CalibrateRobot::main( void )
 {
   // get options:
   string robotid = text( "robot" );
-
-  robot_control = dynamic_cast<misc::XYZRobot*>( device( robotid ) );
-  if ( robot_control == 0 ) {
+  robot = dynamic_cast<misc::XYZRobot*>( device( robotid ) );
+  if ( robot == 0 ) {
     warning( "No Robot! please add 'RobotController' to the controlplugins int he config file." );
     return Failed;
   }
 
-  if( robot_control->start_mirob()) {
-    robot_control->go_to_reference( false, 30 );
+  if( robot->start_mirob()) {
+    robot->go_to_reference( false, 30 );
   }
 
   
   // PRECALIBRATION:
 
-  robot_control->clear_forbidden();
+  robot->clear_forbidden();
 
   Shape* area = new Cuboid(Point(5,5,55),Point(615,340,230));
-  robot_control->set_Area(area);
+  area->setName( "AllowedZone" );
+  robot->set_Area(area);
   
   Shape* forb1 = new Cuboid(Point(220,111,120),Point(281,199,195));
-  robot_control->add_forbidden(forb1);
+  forb1->setName("ForbiddenZone");
+  robot->add_forbidden(forb1);
 
   Shape* forb2 = new Cuboid(Point(280,136,120),Point(391,173,195));
-  robot_control->add_forbidden(forb2);
+  forb2->setName("ForbiddenZone");
+  robot->add_forbidden(forb2);
   
   Shape* forb3 = new Cuboid(Point(390,111,120),Point(443,199,195));
-  robot_control->add_forbidden(forb3);
+  forb3->setName("ForbiddenZone");
+  robot->add_forbidden(forb3);
   /*
   Shape* forb4 = new Cuboid(Point(275,120,195),Point(395,190,240));
-  robot_control->add_forbidden(forb4);
+  robot->add_forbidden(forb4);
   */
-  robot_control->set_fish_head(Point(215,155,155));
-  robot_control->set_fish_tail(Point(445,155,155));
+  robot->set_fish_head(Point(215,155,155));
+  robot->set_fish_tail(Point(445,155,155));
   
   postCustomEvent(21);
   errorBox->append("Mirob calibrated from hard coded.");
-
 
   keyboard_active = true;
 
   while(true) {
     sleep(0.1);
-    //cerr << "Position in while main: " << robot_control->pos() << endl;
-
+    //cerr << "Position in while main: " << robot->pos() << endl;
     if(cali_area) {
       cali_area = false;
       Shape* n = calibrate_area();
       if (n != NULL) {
-	robot_control->set_Area(n);
+	n->setName("MovementArea");
+	robot->set_Area(n);
 	errorBox->append("Area calibrated.");
 	postCustomEvent(21);
       }
@@ -634,7 +658,8 @@ int CalibrateRobot::main( void )
       cali_forb = false;
       Shape* n = calibrate_area();
       if (n != NULL) {
-	robot_control->add_forbidden(n);
+	n->setName("ForbiddenArea");
+	robot->add_forbidden(n);
 	errorBox->append("Forbidden zone added.");
 	postCustomEvent(21);
       }
@@ -642,39 +667,43 @@ int CalibrateRobot::main( void )
 
     if(cali_fish) {
       cali_fish = false;
-
       errorBox->append("Fish head:");
       Point p = calibrate_point();
       if(p.x() != -1) {
-	robot_control->set_fish_head(p);
+	robot->set_fish_head(p);
       }
 
       errorBox->append("Fish tail:");
       p = calibrate_point();
-      if(p.x() != -1)
-	robot_control->set_fish_tail(p);
+      if(p.x() != -1) {
+	std::cerr << " set fish tail " << endl;
+	robot->set_fish_tail(p);
+	std::cerr << " done setting fish tail " << endl;
+	// XXX metaData().setNumber("Snout x-position", p.x() )
+	// XXX metaData().setNumber("Snout y-position", p.y() )
+	// XXX metaData().setNumber("Snout z-position", p.z() )
+	// XXX add forbidden zone!
+      }
 
       errorBox->append("Fish calibrated.");
+      dynamic_cast<base::Robot*>(control( "Robot" ))->updateCalibration();
     }
 
     if ( interrupt() ) {
-      robot_control->close_mirob();
+      robot->close_mirob();
       return Aborted;
     }
   }
-
-
   keyboard_active = false;
 
-  robot_control->go_home();
-
-  robot_control->wait();
+  robot->go_home();
+  robot->wait();
 
   if ( interrupt() ) {
-    robot_control->close_mirob();
+    robot->close_mirob();
     return Aborted;
   }
-  robot_control->close_mirob();
+  robot->close_mirob();
   return Completed;
 }
 
