@@ -64,6 +64,7 @@ Point::Point( const string &position ) : Point( )
   }
 }
 
+
 void Point::set( double x, double y, double z )
 {
   Coords[0] = x;
@@ -76,7 +77,7 @@ Point Point::operator+( const Point &p ) const
 {
   Point q( *this );
   for ( int k=0; k<Dim; k++ )
-    q += p[k];
+    q[k] += p[k];
   return q;
 }
 
@@ -85,7 +86,7 @@ Point Point::operator-( const Point &p ) const
 {
   Point q( *this );
   for ( int k=0; k<Dim; k++ )
-    q -= p[k];
+    q[k] -= p[k];
   return q;
 }
 
