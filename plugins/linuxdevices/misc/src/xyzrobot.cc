@@ -552,11 +552,13 @@ void XYZRobot::set_fish_head(const Point &head)
 void XYZRobot::set_fish_tail(const Point &tail)
 {
   this->fish_tail = tail;
+  /*
   Cuboid *cb = new Cuboid(this->fish_head, this->fish_tail);
   if (cb != NULL) {
     cb->setName( "Fish" );
     this->add_forbidden( cb );
   }
+  */
 }
 
 // Getter:

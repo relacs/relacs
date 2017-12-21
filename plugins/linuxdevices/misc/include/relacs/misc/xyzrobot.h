@@ -117,8 +117,6 @@ public:
   bool axis_in_pos_limit( int mirobaxis );
   bool axis_in_neg_limit( int mirobaxis );
 
-
-
 protected:
 
   Mirob *Robot;
