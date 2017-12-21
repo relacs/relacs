@@ -21,7 +21,6 @@
 
 #include <cmath>
 #include <relacs/relacswidget.h>
-#include <relacs/misc/xyzrobot.h>
 #include <relacs/efish/receptivefield.h>
 
 #define PI 3.14159265
@@ -54,10 +53,12 @@ ReceptiveField::ReceptiveField( void )
   addNumber( "repeats", "Number of stimulus repeats at each position", 5.0, 1., 100., 1., "");
 
   newSection( "Axis mapping" );
-  addSelection( "xmapping", "Mapping of x-axis to robot axis", "x|y|z" );
+  addSelection( "xmapping", "Mapping of x-axis to robot axis", "y|z|x" );
   addBoolean( "xinvert", "Select to map 0 position in relacs to max position of the robot.", true);
   addSelection( "ymapping", "Mapping of y-axis to robot axis", "z|x|y");
   addBoolean( "yinvert", "Select to map 0 position in relacs to max position of the robot.", false);
+  addSelection( "zmapping", "Mapping of z-axis to robot axis", "x|y|z");
+  addBoolean( "zinvert", "Select to map 0 position in relacs to max position of the robot.", false);
 
   QVBoxLayout *vb = new QVBoxLayout;
   QHBoxLayout *hb = new QHBoxLayout;
@@ -134,6 +135,7 @@ double fRand(double fMin, double fMax)
   return fMin + f * (fMax - fMin);
 }
 
+
 void plotRate(Plot &p, double x, double y) {
   p.lock();
   p.plotPoint(x, Plot::First, y, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
@@ -142,6 +144,7 @@ void plotRate(Plot &p, double x, double y) {
   p.unlock();
 }
 
+
 void plotAvgRate(Plot &p, double x, double y) {
   p.lock();
   p.plotPoint(x, Plot::First, y, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
@@ -149,6 +152,7 @@ void plotAvgRate(Plot &p, double x, double y) {
   p.draw();
   p.unlock();
 }
+
 
 bool bestXPos(std::vector<double> &averages, LinearRange &range, double &bestPos) {
   if ( (int)averages.size() != range.size() )
@@ -159,6 +163,14 @@ bool bestXPos(std::vector<double> &averages, LinearRange &range, double &bestPos
   bestPos = range[pos];
   return true;
 }
+
+
+void ReceptiveField::moveToPosition( double x, double y, double z) {
+  
+  Point destination;
+  //destination[] = fish_head.x() +
+}
+
 
 void ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_pos,
                                   std::vector<double> &avg_rates, OutData &signal,
@@ -221,6 +233,7 @@ int ReceptiveField::presentStimulus(double x_pos, double y_pos, double z_pos, in
     warning( w, 4.0 );
     //save();
     //stop();
+    robot->close_mirob();
     return Failed;
   }
 
@@ -228,10 +241,12 @@ int ReceptiveField::presentStimulus(double x_pos, double y_pos, double z_pos, in
   if ( interrupt() ) {
     //save();
     //stop();
+    robot->close_mirob();
     return Aborted;
   }
   return 0;
 }
+
 
 void ReceptiveField::getRate( SampleDataD &rate, const EventData &spike_train, int &start_trial,
               double period, double duration ) {
@@ -239,6 +254,7 @@ void ReceptiveField::getRate( SampleDataD &rate, const EventData &spike_train, i
     spike_train.addRate( rate, start_trial, rate.stepsize(), j * period );
   }
 }
+
 
 void ReceptiveField::getSpikes( EventList & spike_trains ) {
   for ( int k=0; k<MaxTraces; k++ ) {
@@ -249,12 +265,14 @@ void ReceptiveField::getSpikes( EventList & spike_trains ) {
   }
 }
 
+
 void ReceptiveField::analyze( const EventList &spike_trains ) {
   SampleDataD avgRate();
   for ( int i=0; i<spike_trains.size(); i++ ) {
     
   }
  }
+
 
 void plotBestX(Plot &p, double x) {
   p.lock();
@@ -263,12 +281,14 @@ void plotBestX(Plot &p, double x) {
   p.unlock();
 }
 
+
 void plotBestY(Plot &p, double y) {
   p.lock();
   p.plotHLine(y, Plot::White, 2, Plot::Solid);
   p.draw();
   p.unlock();
 }
+
 
 void ReceptiveField::prepareStimulus( OutData &signal ) {
   double eodf = events( LocalEODEvents[0] ).frequency( currentTime() - 0.5, currentTime() );
@@ -296,6 +316,16 @@ void ReceptiveField::prepareStimulus( OutData &signal ) {
 }
 
 
+int map_axis( const string &s ){
+  vector<string> axes = {"x", "y", "z"};
+  for ( int i = 0; i < (int)axes.size(); i++ ) {
+    if ( axes[i].compare(s) == 0 )
+      return i;
+  }
+  return -1;
+}
+
+
 int ReceptiveField::main( void )
 {
   // grid settings
@@ -315,13 +345,33 @@ int ReceptiveField::main( void )
   this->deltaf = number( "deltaf" );
   this->pause = number( "pause" );
 
-  misc::XYZRobot *robot_control = dynamic_cast<misc::XYZRobot*>( device( "mirob" ) );
-  if ( robot_control == 0 ) {
+  robot = dynamic_cast<misc::XYZRobot*>( device( "robot-2" ) );
+  if ( robot == 0 ) {
     warning( "No Robot! please add 'XYZRobot' to the controlplugins int he config file." );
     return Failed;
   }
-  Point head = robot_control->get_fish_head();
-  Point tail = robot_control->get_fish_tail();
+  robot->start_mirob();
+
+  if ( interrupt() ) {
+    robot->close_mirob();
+    return Aborted;
+  }
+
+  fish_head = robot->get_fish_head();
+  fish_tail = robot->get_fish_tail();
+
+  // axis setup
+  axis_map = {0, 1, 2};
+  axis_invert = {1, 1, 1};
+  axis_map[0] = map_axis( text("xmapping") );
+  axis_map[1] = map_axis( text("ymapping") );
+  axis_map[2] = map_axis( text("zmapping") );
+  axis_invert[0] = boolean("xinvert") ? -1 : 1;
+  axis_invert[1] = boolean("yinvert") ? -1 : 1;
+  axis_invert[2] = boolean("zinvert") ? -1 : 1;
+
+  for (size_t i = 0; i < axis_map.size(); i++ )
+    cerr << axis_map[i] << "\t" << axis_invert[i] << std::endl;
 
   OutData signal;
   prepareStimulus( signal );
@@ -333,19 +383,19 @@ int ReceptiveField::main( void )
   std::vector<double> avg_rates_x( xrange.size() );
   std::vector<double> avg_rates_y( yrange.size() );
 
-  //xRangeSearch( xrange, ystart, z_pos, avg_rates_x, signal );
   rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true);
   double bestX, bestY;
   if ( bestXPos( avg_rates_x, xrange, bestX ) ) {
     plotBestX( xPlot, bestX );
     rangeSearch( yrange, bestX, z_pos, avg_rates_y, signal, false);
-    //yRangeSearch( yrange, bestX, z_pos, avg_rates_y, signal );
     if (bestXPos( avg_rates_y, yrange, bestY )) {
       plotBestY( yPlot, bestY );
     }
   }
   metaData().setNumber("Cell properties>X Position", bestX);
   metaData().setNumber("Cell properties>Y Position", bestY);
+
+  robot->close_mirob();
   return Completed;
 }
 

@@ -28,6 +28,9 @@
 #include <relacs/ephys/traces.h>
 #include <relacs/efield/traces.h>
 #include <relacs/outdata.h>
+#include <relacs/misc/xyzrobot.h>
+#include <relacs/point.h>
+
 using namespace relacs;
 
 namespace efish {
@@ -52,8 +55,12 @@ class ReceptiveField : public RePro,
 
  private:
   Plot xPlot, yPlot, posPlot;
+  Point fish_head, fish_tail;
   double duration, deltaf, amplitude, pause;
   int repeats;
+  misc::XYZRobot *robot = NULL;
+  std::vector<int> axis_map;
+  std::vector<int> axis_invert;
 
   void resetPlots( double xmin, double xmax, double ymin, double ymax );
   void rangeSearch( LinearRange &range, double xy_pos, double z_pos,
@@ -66,7 +73,7 @@ class ReceptiveField : public RePro,
   void getRate( SampleDataD &rate, const EventData &spike_train, int &start_trial,
                 double period, double duration );
   void analyze( const EventList &spikeTrains );
-
+  void moveToPosition( double x, double y, double z );
 };
 
 
