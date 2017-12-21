@@ -26,7 +26,7 @@ namespace relacs {
 
 //******************************************
 
-Shape::Shape( void ): Name("shape")
+Shape::Shape( void ): Name("shape"), Type(ShapeType::shape)
 {
 }
 
@@ -49,7 +49,8 @@ bool Shape::below( const Point &p ) const
 
 Cuboid::Cuboid( void )
 {
-  this->setName("Cuboid");
+  this->setName( "Cuboid" );
+  this->setType( ShapeType::cuboid );
 }
 
 
@@ -57,7 +58,8 @@ Cuboid::Cuboid( const Cuboid &c )
   : Corner( c.Corner ),
     Size( c.Size )
 {
-  this->setName(c.name());
+  this->setName( c.name() );
+  this->setType( c.type() );
 }
 
 
@@ -68,6 +70,7 @@ Cuboid::Cuboid( const Point &start,
   Size[0] = length;
   Size[1] = width;
   Size[2] = height;
+  this->setType( ShapeType::cuboid );
 }
 
 

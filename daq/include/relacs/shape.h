@@ -27,6 +27,11 @@
 
 namespace relacs {
 
+enum ShapeType {
+  shape = 0,
+  cuboid = 1,
+};
+
 /*!
 \class Shape
 \brief A shape in 3D space.
@@ -71,8 +76,20 @@ public:
     return Name;
   }
 
+  /*!
+    Get the type of shape.
+   */
+  ShapeType type( void ) const {
+    return Type;
+  }
+
+  void setType( ShapeType type ) {
+    Type = type;
+  }
+
  private:
   std::string Name;
+  ShapeType Type;
 
 };
 
