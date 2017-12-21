@@ -30,15 +30,15 @@
 #include <QComboBox>
 #include <QTextEdit>
 #include <QSpinBox>
+#include <relacs/repro.h>
 #include <relacs/point.h>
 #include <relacs/shape.h>
 #include <relacs/misc/xyzrobot.h>
-#include <relacs/repro.h>
+#include <relacs/base/robot.h>
 
 using namespace relacs;
 
 namespace efield {
-
 
 /*!
 \class CalibrateRobot
@@ -53,7 +53,6 @@ class CalibrateRobot : public RePro
   Q_OBJECT
 
 public:
-
   CalibrateRobot( void );
   ~CalibrateRobot( void );
 
@@ -63,9 +62,7 @@ public:
   void keyReleaseEvent(QKeyEvent *e);
   void customEvent(QEvent *qce);
 
-
 public slots:
-
   void home_apply();
   void pos_apply();
   void slot_stop();
@@ -73,9 +70,7 @@ public slots:
 
   void calibrate();
 
-
- private:
-
+private:
   bool toggle = true;
   Shape* calibrate_area();
 
@@ -90,8 +85,7 @@ public slots:
   QTextEdit *errorBox;
 
   misc::XYZRobot *robot;
-
-  // Flags: 
+  base::Robot *robot_control;
 
   bool gui_thread_init = false;
   bool main_thread_init = false;
@@ -107,11 +101,8 @@ public slots:
 
   void test_area();
   Point calibrate_point();
-
   void  test_point_distances();
-
 };
-
 
 }; /* namespace efield */
 

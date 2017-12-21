@@ -23,7 +23,6 @@
 #include <QString>
 
 #include <relacs/efield/calibraterobot.h>
-#include <relacs/base/robot.h>
 
 using namespace relacs;
 
@@ -519,7 +518,9 @@ Shape* CalibrateRobot::calibrate_area()
     point_num++;
   }
   
-  Shape *shape = new Cuboid(area_start, area_depth.x(), area_length.y(), area_width.z());
+  Shape *shape = new Cuboid( area_start, area_length.x() - area_start.x(),
+			     area_width.y() - area_start.y(),
+			     area_depth.z() -  area_start.z() );
   shape->setName("");
   cerr<<"Build Shape."<< endl;
   return shape;
@@ -599,6 +600,7 @@ int CalibrateRobot::main( void )
   // get options:
   string robotid = text( "robot" );
   robot = dynamic_cast<misc::XYZRobot*>( device( robotid ) );
+  robot_control = dynamic_cast<base::Robot*>( control( "Robot" ) );
   if ( robot == 0 ) {
     warning( "No Robot! please add 'RobotController' to the controlplugins int he config file." );
     return Failed;
@@ -612,9 +614,9 @@ int CalibrateRobot::main( void )
   // PRECALIBRATION:
 
   robot->clear_forbidden();
-
+  /*
   Shape* area = new Cuboid(Point(5,5,55),Point(615,340,230));
-  area->setName( "AllowedZone" );
+  area->setName( "MovementArea" );
   robot->set_Area(area);
   
   Shape* forb1 = new Cuboid(Point(220,111,120),Point(281,199,195));
@@ -628,15 +630,17 @@ int CalibrateRobot::main( void )
   Shape* forb3 = new Cuboid(Point(390,111,120),Point(443,199,195));
   forb3->setName("ForbiddenZone");
   robot->add_forbidden(forb3);
+  */
   /*
   Shape* forb4 = new Cuboid(Point(275,120,195),Point(395,190,240));
   robot->add_forbidden(forb4);
   */
+  /*
   robot->set_fish_head(Point(215,155,155));
   robot->set_fish_tail(Point(445,155,155));
-  
+  */
   postCustomEvent(21);
-  errorBox->append("Mirob calibrated from hard coded.");
+  //errorBox->append("Mirob calibrated from hard coded.");
 
   keyboard_active = true;
 
@@ -647,10 +651,12 @@ int CalibrateRobot::main( void )
       cali_area = false;
       Shape* n = calibrate_area();
       if (n != NULL) {
-	n->setName("MovementArea");
-	robot->set_Area(n);
-	errorBox->append("Area calibrated.");
-	postCustomEvent(21);
+	n->setName( "MovementArea" );
+	robot->set_Area( n );
+	errorBox->append( "Area calibrated." );
+	postCustomEvent( 21 );
+	cerr << n->boundingBoxMin() << n->boundingBoxMax();
+	robot_control->updateCalibration();
       }
     }
 
@@ -662,31 +668,22 @@ int CalibrateRobot::main( void )
 	robot->add_forbidden(n);
 	errorBox->append("Forbidden zone added.");
 	postCustomEvent(21);
+	robot_control->updateCalibration();
       }
     }
 
-    if(cali_fish) {
+    if( cali_fish ) {
       cali_fish = false;
-      errorBox->append("Fish head:");
-      Point p = calibrate_point();
-      if(p.x() != -1) {
-	robot->set_fish_head(p);
+      errorBox->append( "Fish head:" );
+      Point head = calibrate_point();
+      errorBox->append( "Fish tail:" );
+      Point tail = calibrate_point();
+      if( head.x() != -1 && tail.x() != -1 ) {
+	robot->set_fish_head( head );
+	robot->set_fish_tail( tail );
       }
-
-      errorBox->append("Fish tail:");
-      p = calibrate_point();
-      if(p.x() != -1) {
-	std::cerr << " set fish tail " << endl;
-	robot->set_fish_tail(p);
-	std::cerr << " done setting fish tail " << endl;
-	// XXX metaData().setNumber("Snout x-position", p.x() )
-	// XXX metaData().setNumber("Snout y-position", p.y() )
-	// XXX metaData().setNumber("Snout z-position", p.z() )
-	// XXX add forbidden zone!
-      }
-
       errorBox->append("Fish calibrated.");
-      dynamic_cast<base::Robot*>(control( "Robot" ))->updateCalibration();
+      robot_control->updateCalibration();
     }
 
     if ( interrupt() ) {
