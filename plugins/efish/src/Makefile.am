@@ -10,8 +10,13 @@ pluginlib_LTLIBRARIES = \
     libefishsam.la \
     libefishficurve.la \
     libefishfilestimulus.la \
-    libefishchirps.la \
+    libefishchirps.la
+
+if RELACS_COND_TML
+pluginlib_LTLIBRARIES += \
     libefishreceptivefield.la
+endif
+
 
 libefishbaselineactivity_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
@@ -338,8 +343,12 @@ check_PROGRAMS = \
     linktest_libefishsam_la \
     linktest_libefishficurve_la \
     linktest_libefishfilestimulus_la \
-    linktest_libefishchirps_la \
+    linktest_libefishchirps_la
+
+if RELACS_COND_TML
+check_PROGRAMS += \
     linktest_libefishreceptivefield_la
+endif
 
 linktest_libefishbaselineactivity_la_SOURCES = linktest.cc
 linktest_libefishbaselineactivity_la_LDADD = libefishbaselineactivity.la
