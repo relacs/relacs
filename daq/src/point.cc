@@ -49,16 +49,17 @@ Point::Point( double x, double y, double z )
 }
 
 
-Point::Point( const string &position ) : Point( )
+Point::Point( const string &position )
+  : Point()
 {
   if ( position.size() > 0 ) {
     Str s = position;
     int next;
     int idx = 0;
-    for (int i = 0; i < Dim; i++) {
-      Coords[i] = s.number(0.0, idx, &next);
+    for ( int i = 0; i<Dim; i++ ) {
+      Coords[i] = s.number( 0.0, idx, &next );
       idx = next + 1;
-      if (next > position.size()-1)
+      if ( next > (int)position.size()-1 )
 	break;
     }
   }
@@ -177,7 +178,7 @@ Point &Point::operator/=( double a )
 
 double Point::operator*( const Point &p ) const
 {
-  double d;
+  double d = 0.0;
   for ( int k=0; k<Dim; k++ )
     d += Coords[k]*p[k];
   return d;
