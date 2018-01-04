@@ -32,7 +32,7 @@ namespace attcs3310 {
 /*!
 \class CS3310DIO
 \author Jan Benda
-\version 1.1
+\version 2.0
 \brief [Attenuator] Control the cs3310 attenuator via a DigitalIO device
 
 \par Technicals by Hartmut Schuetze
@@ -108,6 +108,13 @@ private:
     /*! The attenuation levels for each of the two channels. */
   unsigned char Level[2];
 
+  int CS = 1;      // DIO1
+  int MUTE = 2;    // DIO2
+  int ZCEN = 3;    // DIO3
+  int DATAOUT = 0; // DIO0
+  int DATAIN = 4;  // DIO4
+  int STROBE = 5;  // DIO5
+
   static const int Tries = 5;
   static const int Delay = 10;
 
@@ -116,13 +123,6 @@ private:
   static const int MaxGain = ZeroGain;
   static const int MinGain = 1;
   static const int MuteGain = 0;
-
-  static const int CS = 1;      // DIO1
-  static const int MUTE = 2;    // DIO2
-  static const int ZCEN = 3;    // DIO3
-  static const int DATAOUT = 0; // DIO0
-  static const int DATAIN = 4;  // DIO4
-  static const int STROBE = 5;  // DIO5
 
 };
 

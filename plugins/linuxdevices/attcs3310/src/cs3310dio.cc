@@ -55,6 +55,12 @@ void CS3310DIO::initOptions()
   Attenuator::initOptions();
 
   addBoolean( "zerocrossing", "Set attenuation level only at a zero crossing of the input", false );
+  addInteger( "cspin", "DIO line for chip select (CS)", CS );
+  addInteger( "dataoutpin", "DIO line for writing data to the chip  (DATAOUT)", DATAOUT );
+  addInteger( "datainpin", "DIO line for reading data from the chip  (DATAIN)", DATAIN );
+  addInteger( "strobepin", "DIO line for strobing data (STROBE)", STROBE );
+  addInteger( "mutepin", "DIO line for MUTE", MUTE );
+  addInteger( "zcenpin", "DIO line for enabling zero crossing (ZCEN)", ZCEN );
 }
 
 int CS3310DIO::open( DigitalIO &dio)
@@ -65,6 +71,13 @@ int CS3310DIO::open( DigitalIO &dio)
   Info.clear();
   
   if ( isOpen() ) {
+    CS = integer( "cspin", 0, CS );
+    DATAOUT = integer( "dataoutpin", 0, DATAOUT );
+    DATAIN = integer( "datainpin", 0, DATAIN );
+    STROBE = integer( "strobepin", 0, STROBE );
+    MUTE = integer( "mutepin", 0, MUTE );
+    ZCEN = integer( "zcenpin", 0, ZCEN );
+
     DIOId = DIO->allocateLine( CS );
     if (DIOId <= 0 ) {
       setErrorStr( "cannot allocate CS pin" );
@@ -173,6 +186,12 @@ int CS3310DIO::open( bool zerocrossing )
     setDeviceName( "CS3310 stereo digital volume control" );
     setInfo();
     Info.addNumber( "resolution", 0.5, "dB" );
+    Info.addInteger( "cspin", CS );
+    Info.addInteger( "dataoutpin", DATAOUT );
+    Info.addInteger( "datainpin", DATAIN );
+    Info.addInteger( "strobepin", STROBE );
+    Info.addInteger( "mutepin", MUTE );
+    Info.addInteger( "zcenpin", ZCEN );
     return 0;
   }
 
