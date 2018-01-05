@@ -430,7 +430,7 @@ long Mirob::setup_axes( int setupindex )
     }
     TS_SelectAxis( k );
     TS_GetLongVariable("APOS", position);
-    printf("Position %i: %dx\n", k, position);
+    printf("Position %i: %dx\n", k, (int) position);
     TS_DriveInitialisation();
     TS_Power( POWER_ON );
   }
@@ -457,6 +457,42 @@ bool Mirob::switch_on_power( void )
 }
 
 
+bool Mirob::power_off( void ) {
+  for ( int k=1; k <=3; k++ ) {
+    TS_SelectAxis( k );
+    if ( ! TS_Power( POWER_OFF ) )
+      return false;
+  }
+  int count = 0;
+  while ( checkPowerState() && count < 10000 ) {
+    count++;
+  }
+  if ( count >= 10000 ) {
+    cerr << "Axis on timeout!" << endl;
+    return false;
+  }
+  return true;
+}
+
+
+bool Mirob::power_on( void ) {
+  for ( int k=1; k <=3; k++ ) {
+    TS_SelectAxis( k );
+    if ( ! TS_Power( POWER_ON ) )
+      return false;
+  }
+  int count = 0;
+  while (!checkPowerState() && count < 10000) {
+    count++;
+  }
+  if ( count >= 10000 ) {
+    cerr << "Axis on timeout!" << endl;
+    return false;
+  }
+  return true;
+}
+
+
 void Mirob::check_limit_switch( axis_limits &limits )
 {
   WORD MER_value = 0;
@@ -464,6 +500,26 @@ void Mirob::check_limit_switch( axis_limits &limits )
   TS_ReadStatus(REG_MER, MER_value);
   limits.positive = (MER_value & 1<<6) != 0;
   limits.negative =(MER_value & 1<<7) != 0;
+}
+
+
+bool Mirob::checkPowerState( int axis ) {
+  WORD msr = 0;
+  bool on = true;
+  if( axis > 2 )
+    axis = 2;
+  if( axis < 0 ) {
+    for (int i = 0; i < 3; i++) {
+      TS_SelectAxis( i );
+      TS_ReadStatus(REG_MSR, msr);
+      on &= ((msr & ( 1 << 13 )) != 0);
+    }
+  } else {
+    TS_SelectAxis( axis );
+    TS_ReadStatus(REG_MSR, msr);
+    return msr & ( 1 << 13 );
+  }
+  return on;
 }
 
 
@@ -533,5 +589,36 @@ void Mirob::check_all_reg( int mirobaxis )
   }
 }
 
+
+bool Mirob::toolClamped() {
+  TS_SelectAxis(3);
+  BYTE InValue;
+  TS_GetInput(36, InValue);
+  return InValue == 1;
+}
+
+bool Mirob::toolPresent() {
+  TS_SelectAxis(3);
+  BYTE InValue;
+  TS_GetInput(37, InValue);
+  return InValue == 1;
+}
+
+void Mirob::toolRelease() {
+  if (toolClamped()) {
+    TS_SelectAxis(3);
+    TS_SetOutput(30, 0);
+    TS_SetOutput(31, 4);
+  }
+}
+
+
+void Mirob::toolFix() {
+  if ( !toolClamped() ) {
+    TS_SelectAxis(3);
+    TS_SetOutput(30, 2);
+    TS_SetOutput(31, 0);
+  }
+}
 
 }; /* namespace misc */
