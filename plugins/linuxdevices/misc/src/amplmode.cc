@@ -95,6 +95,8 @@ int AmplMode::open( DigitalIO &dio )
     CurrentClampPin = integer( "cclamppin", 0, CurrentClampPin );
     VoltageClampPin = integer( "vclamppin", 0, VoltageClampPin );
     DynamicClampPin = integer( "dclamppin", 0, DynamicClampPin );
+    if ( DynamicClampPin < 0 )
+      SyncPin = -1;
     SyncPin = integer( "syncpin", 0, SyncPin );
     ResistancePin = integer( "resistancepin", 0, ResistancePin );
     BuzzerPin = integer( "buzzerpin", 0, BuzzerPin );
@@ -111,7 +113,14 @@ int AmplMode::open( DigitalIO &dio )
     Mask = ModeMask + SyncMask + BuzzerMask;
     DIOId = DIO->allocateLines( Mask );
     if ( DIOId < 0 ) {
-      setErrorStr( "cannot allocate pins on lines " + Str( -DIOId ) );
+      setErrorStr( "cannot allocate pins on lines #" + Str( -DIOId, "%04x" ) + '.' );
+      addErrorStr( "bridgepin=" + Str( BridgePin ) + '.' );
+      addErrorStr( "cclamppin=" + Str( CurrentClampPin ) + '.' );
+      addErrorStr( "vclamppin=" + Str( VoltageClampPin ) + '.' );
+      addErrorStr( "dclamppin=" + Str( DynamicClampPin ) + '.' );
+      addErrorStr( "syncpin=" + Str( SyncPin ) + '.' );
+      addErrorStr( "resistancepin=" + Str( ResistancePin ) + '.' );
+      addErrorStr( "buzzerpin=" + Str( BuzzerPin ) + '.' );
       DIO = 0;
       return InvalidDevice;
     }
@@ -155,7 +164,6 @@ void AmplMode::open()
       SyncMask = 0;
     else {
       if ( DIO->clearSyncPulse( ModeMask, CurrentMode ) != 0 ) {
-	addErrorStr( DIO->errorStr() );
 	DynamicClampMask = 0;
 	SyncMask = 0;
       }
@@ -206,9 +214,18 @@ void AmplMode::close( void )
 
 string AmplMode::errorStr( void ) const
 {
+  string es = "";
   if ( DIO != 0 )
-    return DIO->errorStr();
-  return "";
+    es = DIO->errorStr();
+  if ( ! Device::errorStr().empty() ) {
+    if ( ! es.empty() ) {
+      if ( es.back() != '.' )
+	es += '.';
+      es += ' ';
+    }
+    es += Device::errorStr();
+  }
+  return es;
 }
 
 
