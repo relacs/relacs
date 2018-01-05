@@ -1771,7 +1771,8 @@ string SaveFiles::NixFile::create ( string path )
   // TODO: path can be a directory (with trailing slash) or a stem of a filename!
   rid = Str( path ).preventedSlash().name();
   string nix_path = path + rid + ".nix";
-  fd = nix::File::open(nix_path, nix::FileMode::Overwrite);
+  fd = nix::File::open(nix_path, nix::FileMode::Overwrite, "hdf5", 
+		       nix::Compression::DeflateNormal);
   root_block = fd.createBlock(rid, "recording");
   root_section = fd.createSection(rid, "recording");
   root_block.metadata( root_section );
