@@ -277,6 +277,12 @@ string Device::getErrorStr( int ern )
   case WriteError :
     es = "write error";
     break;
+  case InvalidParam :
+    es = "invalid parameter";
+    break;
+  case NotSupported :
+    es = "requested feature is not supported";
+    break;
   }
   return es;
 }

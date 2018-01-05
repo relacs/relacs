@@ -70,8 +70,9 @@ const Options &DigitalIO::settings( void ) const
   Settings.clear();
   for ( int k=0; k<lines(); k++ ) {
     if ( DIOLineIDs[k] > 0 ) {
-      Settings.addInteger( "line"+Str(k)+"_id", DIOLineIDs[k] );
-      Settings.addText( "line"+Str(k)+"_config", DIOLineWriteable[k] ? "write" : "read" );
+      string ds = Str( DIOLineIDs[k] ) + " ";
+      ds += DIOLineWriteable[k] ? "write" : "read";
+      Settings.addText( "line"+Str(k), ds );
     }
   }
   return Settings;

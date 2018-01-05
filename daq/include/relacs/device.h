@@ -124,6 +124,8 @@ public:
   static const int WriteError = -4;
     /*! Return code indicating an invalid parameter. */
   static const int InvalidParam = -5;
+    /*! Return code indicating that a requested feature is not supported by the device. */
+  static const int NotSupported = -6;
 
     /*! Construct a Device of type \a type. This constructor is used by
         the more specific but still abstract device classes like AnalogInput,
