@@ -612,9 +612,8 @@ int CalibrateRobot::main( void )
 
   
   // PRECALIBRATION:
-
-  robot->clear_forbidden();
   /*
+  robot->clear_forbidden();
   Shape* area = new Cuboid(Point(5,5,55),Point(615,340,230));
   area->setName( "MovementArea" );
   robot->set_Area(area);
