@@ -43,6 +43,7 @@ ReceptiveField::ReceptiveField( void )
   addNumber( "ystep", "Desired step size of the y-grid", 1.0, 0.1, 1000., 0.1, "mm" );
   addNumber( "ystart", "Starting y-position for the xrange search", 0.0, -1000., 1000., 0.1, "mm");
   addNumber( "zposition", "Z-position, i.e. distance to fish, for the xrange search", 0.0, -1000., 1000., 0.1, "mm");
+  addBoolean( "followmidline", "Auto-adjust y to follow the fish midline.", true);
 
   newSection( "Stimulation" );
   addNumber( "deltaf", "Difference frequency of the local stimulus relative to the fish EODf.",
@@ -178,8 +179,8 @@ bool ReceptiveField::moveToPosition( double x, double y, double z) {
   }
   if ( robot->stopped() )
     return false;
-  robot->powerAxes( true );
-  sleep( 0.75 );
+  //robot->powerAxes( true );
+  //sleep( 0.75 );
   robot->PF_up_and_over( destination );
   robot->wait();
   sleep( 0.1 );
@@ -190,22 +191,28 @@ bool ReceptiveField::moveToPosition( double x, double y, double z) {
 
 bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_pos,
                                   std::vector<double> &avg_rates, OutData &signal,
-                                  bool x_search ) {
+				  bool x_search, bool adjust_y, bool simulation ) {
   std::vector<double> rates(repeats);
   EventList spike_trains;
   double period = 1./deltaf;
   double best_y = 30.;
   double best_x = 60.;
 
+  double y_slope = 0.0;
+  if ( adjust_y ) {
+    y_slope = (fish_tail[axis_map[1]] - fish_head[axis_map[1]]) /
+      (fish_tail[axis_map[0] - fish_head[axis_map[0]]]) * axis_invert[1];
+  }
   if ((int)avg_rates.size() != range.size()) {
     avg_rates.resize(range.size());
   }
   for(int i =0; i < range.size(); i ++) {
     double x = x_search ? range[i] : xy_pos;
     double y = x_search ? xy_pos : range[i];
+    double y_corrector = y_slope * x;
     plotRate(posPlot, x, y);
     // go, robi, go
-    if ( !moveToPosition(x, y, z_pos) )
+    if ( !moveToPosition(x, y + y_corrector, z_pos) )
       return false;
     // do the measurement
     //    sleep( 0.1 );
@@ -216,13 +223,15 @@ bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_po
       getSpikes( spike_trains );
       SampleDataD rate((int)(period/0.01), 0.0, 0.01);
       getRate( rate, spike_trains.back(), trial, period, duration );
-      // only for the simulations
-      double best = x_search ? best_x : best_y;
-      double tuning_width = (range[range.size()-1] - range[0]);
-      double shift = 2* PI * best / tuning_width;
-      double modulator = std::cos(range[i] * PI * 1./tuning_width + shift ) + 1.;
-      rates[j] = modulator * rate.stdev( rate.rangeFront(), rate.rangeBack() );
-      // rates[j] = rate.stdev( rate.rangeFront(), rate.rangeBack() );
+      if ( simulation ) {
+	double best = x_search ? best_x : best_y;
+	double tuning_width = (range[range.size()-1] - range[0]);
+	double shift = 2* PI * best / tuning_width;
+	double modulator = std::cos(range[i] * PI * 1./tuning_width + shift ) + 1.;
+	rates[j] = modulator * rate.stdev( rate.rangeFront(), rate.rangeBack() );
+      } else {
+	rates[j] = rate.stdev( rate.rangeFront(), rate.rangeBack() );
+      }
       double x_val = x_search ? range[i] : rates[j];
       double y_val = x_search ? rates[j] : range[i];
       plotRate( x_search ? xPlot : yPlot, x_val, y_val );
@@ -235,6 +244,7 @@ bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_po
   }
   return true;
 }
+
 
 int ReceptiveField::presentStimulus(double x_pos, double y_pos, double z_pos, int repeat, OutData &signal) {
   Str m = "x: <b>" + Str( x_pos, 0, 0, 'f' ) + "mm</b>";
@@ -359,6 +369,7 @@ int ReceptiveField::main( void )
   double safex = number( "safex" );
   double safey = number( "safey" );
   double safez = number( "safez" );
+  bool adjust_y = boolean( "followmidline" );
 
   // Stimulus settings
   this->amplitude = number( "amplitude" );
@@ -383,7 +394,6 @@ int ReceptiveField::main( void )
     return Failed;
   }
   robot->wait();
-  
   if ( interrupt() ) {
     // robot->PF_up_and_over( {safex, safey, safez } );
     // robot->wait();
@@ -418,13 +428,13 @@ int ReceptiveField::main( void )
 
   robot->PF_up_and_over( fish_head );
   robot->wait();
-  if (!rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true )) {
+  if (!rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true , adjust_y, true )) {
     return Failed;
   }
   double bestX, bestY;
   if ( bestXPos( avg_rates_x, xrange, bestX ) ) {
     plotBestX( xPlot, bestX );
-    if (!rangeSearch( yrange, bestX, z_pos, avg_rates_y, signal, false ) ) {
+    if (!rangeSearch( yrange, bestX, z_pos, avg_rates_y, signal, false, adjust_y, true ) ) {
       return Failed;
     }
     if (bestXPos( avg_rates_y, yrange, bestY )) {
@@ -433,7 +443,6 @@ int ReceptiveField::main( void )
   }
   metaData().setNumber("Cell properties>X Position", bestX);
   metaData().setNumber("Cell properties>Y Position", bestY);
-  robot->powerAxes( true );
   moveToPosition( bestX, bestY, z_pos );
   // TODO record a second of baseline at this point
   // sleep( 2.0 );

@@ -65,7 +65,7 @@ class ReceptiveField : public RePro,
   void resetPlots( double xmin, double xmax, double ymin, double ymax );
   bool rangeSearch( LinearRange &range, double xy_pos, double z_pos,
                     std::vector<double> &avg_rates, OutData &signal,
-                    bool x_search );
+		    bool x_search, bool adjust_y, bool simulation );
   void prepareStimulus( OutData &signal );
   int presentStimulus( double x_pos, double y_pos, double z_pos,
                        int repeat_num, OutData &signal );
