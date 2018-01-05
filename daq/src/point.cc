@@ -253,6 +253,28 @@ Point Point::center( const Point &p ) const
 }
 
 
+Point Point::min( const Point &p ) const
+{
+  Point minp( *this );
+  for ( int k=0; k<Dim; k++ ) {
+    if ( p[k] < minp[k] )
+      minp[k] = p[k];
+  }
+  return minp;
+}
+
+
+Point Point::max( const Point &p ) const
+{
+  Point maxp( *this );
+  for ( int k=0; k<Dim; k++ ) {
+    if ( p[k] > maxp[k] )
+      maxp[k] = p[k];
+  }
+  return maxp;
+}
+
+
 Point abs( Point p )
 {
   for ( int k=0; k<p.Dim; k++ )

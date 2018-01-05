@@ -113,6 +113,10 @@ public:
   double distance( const Point &p ) const;
     /*! The center between this point and \a p. */
   Point center( const Point &p ) const;
+    /*! The minimum coordinates of this point and \a p. */
+  Point min( const Point &p ) const;
+    /*! The maximum coordinates of this point and \a p. */
+  Point max( const Point &p ) const;
 
     /*! The point with absolute coordinates. */
   friend Point abs( Point p );
@@ -122,6 +126,7 @@ public:
 
    /*! a string representation of the point (x,y,z) */
   string toString( void ) const;
+
 
 protected:
 

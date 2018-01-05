@@ -26,11 +26,17 @@ namespace relacs {
 
 //******************************************
 
-Shape::Shape( void ): Name("shape"), Type(ShapeType::shape)
+Shape::Shape( Shape::ShapeType type, const string &name )
+  : Type( type ),
+    Name( name ) 
 {
 }
 
-Shape::~Shape( void) {}
+
+Shape::~Shape( void)
+{
+}
+
 
 bool Shape::inside( const Point &p ) const
 {
@@ -47,37 +53,271 @@ bool Shape::below( const Point &p ) const
 
 //******************************************
 
-Cuboid::Cuboid( void )
+Zone::Zone( void )
+  : Shape( Shape::Zone, "Zone" )
 {
-  this->setName( "Cuboid" );
-  this->setType( ShapeType::cuboid );
+  Shapes.clear();
+  Add.clear();
+}
+
+
+Zone::Zone( const Zone &z )
+  : Shape( z.type(), z.name() ),
+    Add( z.Add )
+{
+  Shapes.clear();
+  for ( auto si=z.Shapes.begin(); si != z.Shapes.end(); ++si )
+    Shapes.push_back( (*si)->copy() );
+}
+
+
+Zone::Zone( const Shape &s, const string &name )
+  : Shape( Shape::Zone, name )
+{
+  Shapes.clear();
+  Add.clear();
+  Shapes.push_back( s.copy() );
+  Add.push_back( true );
+}
+
+
+Zone::Zone( const deque<Shape*> &s, const string &name )
+  : Shape( Shape::Zone, name )
+{
+  Shapes.clear();
+  Add.clear();
+  for ( auto si=s.begin(); si != s.end(); ++si ) {
+    Shapes.push_back( (*si)->copy() );
+    Add.push_back( true );
+  }
+}
+
+
+Zone::~Zone( void )
+{
+  for ( auto si=Shapes.begin(); si != Shapes.end(); ++si )
+    delete *si;
+  Shapes.clear();
+  Add.clear();
+}
+
+
+Shape *Zone::copy( void ) const
+{
+  return new Zone( *this );
+}
+
+
+void Zone::add( const Shape &s )
+{
+  Shapes.push_back( s.copy() );
+  Add.push_back( true );
+}
+
+
+void Zone::subtract( const Shape &s )
+{
+  Shapes.push_back( s.copy() );
+  Add.push_back( false );
+}
+
+
+void Zone::operator+=( const Shape &s )
+{
+  Shapes.push_back( s.copy() );
+  Add.push_back( true );
+}
+
+
+void Zone::operator-=( const Shape &s )
+{
+  Shapes.push_back( s.copy() );
+  Add.push_back( false );
+}
+
+
+Zone Zone::operator+( const Shape &s ) const
+{
+  Zone z( *this );
+  z += s;
+  return z;
+}
+
+
+Zone Zone::operator-( const Shape &s ) const
+{
+  Zone z( *this );
+  z -= s;
+  return z;
+}
+
+
+Point Zone::boundingBoxMin( void ) const
+{
+  Point p( 0.0, 0.0, 0.0 );
+  if ( Shapes.empty() )
+    return p;
+
+  auto si = Shapes.begin();
+  auto ai = Add.begin();
+  for ( ; si != Shapes.end(); ++si, ++ai ) {
+    if ( *ai ) {
+      p = (*si)->boundingBoxMin();
+      break;
+    }
+  }
+  for ( ; si != Shapes.end(); ++si, ++ai ) {
+    if ( *ai )
+      p = p.min( (*si)->boundingBoxMin() );
+  }
+  return p;
+}
+
+
+Point Zone::boundingBoxMax( void ) const
+{
+  Point p( 0.0, 0.0, 0.0 );
+  if ( Shapes.empty() )
+    return p;
+
+  auto si = Shapes.begin();
+  auto ai = Add.begin();
+  for ( ; si != Shapes.end(); ++si, ++ai ) {
+    if ( *ai ) {
+      p = (*si)->boundingBoxMax();
+      break;
+    }
+  }
+  for ( ; si != Shapes.end(); ++si, ++ai ) {
+    if ( *ai )
+      p = p.max( (*si)->boundingBoxMax() );
+  }
+  return p;
+}
+
+
+bool Zone::inside( const Point &p ) const
+{
+  bool ins = false;
+  auto si = Shapes.begin();
+  auto ai = Add.begin();
+  for ( ; si != Shapes.end(); ++si, ++ai ) {
+    if ( (*si)->inside( p ) )
+      ins = *ai;
+  }
+  return ins;
+}
+
+
+bool Zone::below( const Point &p ) const
+{
+  bool bel = false;
+  auto si = Shapes.begin();
+  auto ai = Add.begin();
+  for ( ; si != Shapes.end(); ++si, ++ai ) {
+    if ( *ai && (*si)->below( p ) )
+      bel = true;
+  }
+  return bel;
+}
+
+
+//******************************************
+
+Sphere::Sphere( void )
+  : Shape( Shape::Sphere, "Sphere" )
+{
+}
+
+
+Sphere::Sphere( const Sphere &s )
+  : Shape( s.type(), s.name() ),
+    Center( s.Center ),
+    Radius( s.Radius )
+{
+}
+
+
+Sphere::Sphere( const Point &center, double radius, const string &name )
+  : Shape( Shape::Sphere, name ),
+    Center( center ),
+    Radius( radius )
+{
+}
+
+
+Shape *Sphere::copy( void ) const
+{
+  return new Sphere( *this );
+}
+
+
+Point Sphere::boundingBoxMin( void ) const
+{
+  return Center - Point( Radius, Radius, Radius );
+}
+
+
+Point Sphere::boundingBoxMax( void ) const
+{
+  return Center + Point( Radius, Radius, Radius );
+}
+
+
+bool Sphere::inside( const Point &p ) const
+{
+  return ( Center.distance( p ) <= Radius );
+}
+
+
+bool Sphere::below( const Point &p ) const
+{
+  Point a( Center );
+  a.z() = 0.0;
+  Point b( p );
+  b.z() = 0.0;
+  return ( inside( p ) || ( a.distance( b ) <= Radius && p.z() < Center.z() ) );
+}
+
+
+//******************************************
+
+Cuboid::Cuboid( void )
+  : Shape( Shape::Cuboid, "Cuboid" )
+{
 }
 
 
 Cuboid::Cuboid( const Cuboid &c )
-  : Corner( c.Corner ),
+  : Shape( c.type(), c.name() ),
+    Corner( c.Corner ),
     Size( c.Size )
 {
-  this->setName( c.name() );
-  this->setType( c.type() );
 }
 
 
 Cuboid::Cuboid( const Point &start, 
-		double length, double width, double height)
-  : Corner( start )
+		double length, double width, double height, const string &name )
+  : Shape( Shape::Cuboid, name ),
+    Corner( start )
 {
   Size[0] = length;
   Size[1] = width;
   Size[2] = height;
-  this->setType( ShapeType::cuboid );
 }
 
 
-Cuboid::Cuboid( const Point &start, const Point &end )
-  : Corner( start ),
+Cuboid::Cuboid( const Point &start, const Point &end, const string &name )
+  : Shape( Shape::Cuboid, name ),
+    Corner( start ),
     Size( end - start )
 {
+}
+
+
+Shape *Cuboid::copy( void ) const
+{
+  return new Cuboid( *this );
 }
 
 
