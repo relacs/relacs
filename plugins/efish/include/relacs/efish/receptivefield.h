@@ -55,7 +55,7 @@ class ReceptiveField : public RePro,
 
  private:
   Plot xPlot, yPlot, posPlot;
-  Point fish_head, fish_tail;
+  Point fish_head, fish_tail, reset_position;
   double duration, deltaf, amplitude, pause;
   int repeats;
   misc::XYZRobot *robot = NULL;
@@ -63,7 +63,7 @@ class ReceptiveField : public RePro,
   std::vector<int> axis_invert;
 
   void resetPlots( double xmin, double xmax, double ymin, double ymax );
-  void rangeSearch( LinearRange &range, double xy_pos, double z_pos,
+  bool rangeSearch( LinearRange &range, double xy_pos, double z_pos,
                     std::vector<double> &avg_rates, OutData &signal,
                     bool x_search );
   void prepareStimulus( OutData &signal );
@@ -73,7 +73,7 @@ class ReceptiveField : public RePro,
   void getRate( SampleDataD &rate, const EventData &spike_train, int &start_trial,
                 double period, double duration );
   void analyze( const EventList &spikeTrains );
-  void moveToPosition( double x, double y, double z );
+  bool moveToPosition( double x, double y, double z );
 };
 
 
