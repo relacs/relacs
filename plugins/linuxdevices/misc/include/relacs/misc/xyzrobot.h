@@ -82,10 +82,14 @@ public:
   int stop( int axis );
   int stop( void );
 
-    /*! Sleep until motion completed. */
+  void setStopped( void );
+  void setStopped( bool stopped );
+  bool stopped( void );
+
+  /*! Sleep until motion completed. */
   void wait( void );
 
-    /*! Moves all axis to the given limit(positive). */
+  /*! Moves all axis to the given limit(positive). */
   void go_to_reference( bool positive, int speed )
     { Robot->go_to_reference( positive, speed ); };
 
@@ -102,9 +106,9 @@ public:
   void clear_forbidden();
   void set_safe_distance(int dist);
 
-    /*! XXX not used? */
+  /*! XXX not used? */
   Point home( void ) const;
-    /*! XXX not used? */
+  /*! XXX not used? */
   void setHome( const Point &newhome );
 
   void set_fish_head(const Point &head);
@@ -117,8 +121,12 @@ public:
   bool axis_in_pos_limit( int mirobaxis );
   bool axis_in_neg_limit( int mirobaxis );
 
-protected:
+  void releaseTool( void );
+  void fixTool( void );
 
+  void powerAxes( bool on );
+
+protected:
   Mirob *Robot;
 
   const int XLength = 650;
@@ -132,19 +140,17 @@ protected:
   Point fish_tail;
 
   bool wasStarted = false;
+  bool Stopped = false;
   int maxSafeDist = 10;
   Point Home = Point( 0, 0, 0 );
 
-    /*! Number of axis that need to be moved to get from \a position to \a coords. */
+  /*! Number of axis that need to be moved to get from \a position to \a coords. */
   int how_many_move( const Point &position, const Point &coords );
-
-  void  test_how_many_move();
-
+  void test_how_many_move();
   double calc_speed( int axis, double speed, double dist,
 		     double maxTime, double precision );
   double calculate_intern_time( int axis, double axisSpeed, double distance );
   Point calculate_times( const Point &speeds, const Point &dists );
-
   double get_max(double a, double b, double c);
 
 };

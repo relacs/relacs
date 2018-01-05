@@ -132,13 +132,16 @@ bool XYZRobot::test_way(const Point &pos, const Point &newP)
 
 bool XYZRobot::PF_up_and_over(const Point &p)
 {
+  cerr << "PF up was called!!!\n";
+  if ( Stopped ) {
+    std::cerr << "Robot was stopped movement forbidden! " << p << std::endl;
+    return false;
+  }
   // if there are no forbidden areas just move to the point.
   if ( ForbiddenAreas.empty() ) {
     go_to_point(p);
     return true;
   }
-
-
   if( ! test_point(p)) {
     std::cerr << "target point forbidden: " << p << std::endl;
     return false;
@@ -243,7 +246,7 @@ void XYZRobot::close_mirob( void )
 {
   if ( !wasStarted ) {
     std::cerr << "Mirob cannot be closed, is not started." << std::endl;
-  } 
+  }
   else {
     Robot->close();
     wasStarted = false;
@@ -262,6 +265,8 @@ bool XYZRobot::has_area( void ) const
 void XYZRobot::go_home( void )
 {
   PF_up_and_over( Home );
+  wait();
+  powerAxes( false );
 }
 
 
@@ -272,7 +277,7 @@ void XYZRobot::search_reference( int firstmirobaxis, int secondmirobaxis, int th
   Robot->search_home( secondmirobaxis, 40, ref );
   Robot->search_home( thirdmirobaxis, 40, ref );
 }
-  
+
 
 void XYZRobot::go_to_point( double posX, double posY, double posZ )
 {
@@ -305,7 +310,7 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
 	Robot->move( axis, coords[axis], speeds[axis] );
     }
   }
-  
+
   Point times = calculate_times( speeds, dists );
 
   double maxTime = get_max( times[0], times[1], times[2] );
@@ -318,7 +323,8 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
 				   dists[axis], maxTime, precision );
       }
     }
-
+    if ( !Robot->checkPowerState() )
+      powerAxes( true );
     Robot->move( 0, coords.x(), speeds[0] );
     Robot->move( 1, coords.y(), speeds[1] );
 
@@ -395,9 +401,38 @@ int XYZRobot::stop( void )
 }
 
 
+void XYZRobot::setStopped( void )
+{
+  this->setStopped( true );
+}
+
+void XYZRobot::setStopped( bool stopped )
+{
+  this->Stopped = stopped;
+}
+
+
+bool XYZRobot::stopped( void )
+{
+  return this->Stopped;
+}
+
+
 void XYZRobot::wait( void )
 {
   Robot->wait();
+}
+
+
+void XYZRobot::releaseTool( void )
+{
+  Robot->toolRelease();
+}
+
+
+void XYZRobot::fixTool( void )
+{
+  Robot->toolFix();
 }
 
 
@@ -673,16 +708,23 @@ Point XYZRobot::calculate_times( const Point &speeds, const Point &dists )
 }
 
 
-double XYZRobot::get_max(double a, double b, double c)
-{
+double XYZRobot::get_max(double a, double b, double c) {
   double max;
-
   max = (a > b)   ? a : b;
   max = (c > max) ? c : max;
-
   return max;
 }
 
+
+void XYZRobot::powerAxes( bool on ) {
+  if ( on && !Robot->checkPowerState() ) {
+    Robot->power_on();
+    return;
+  }
+  if ( !on && Robot->checkPowerState() ) {
+    Robot->power_off();
+  }
+}
 
 }; /* namespace misc */
 
