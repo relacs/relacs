@@ -32,7 +32,7 @@ namespace attcs3310 {
 /*!
 \class CS3310DIO
 \author Jan Benda
-\version 2.0
+\version 2.0 (Jan 5, 2017)
 \brief [Attenuator] Control the cs3310 attenuator via a DigitalIO device
 
 \par Technicals by Hartmut Schuetze
@@ -51,6 +51,15 @@ If it is set, the chip waits for the next zero crossing of the signal
 before changing to the new attenuation. This reduces clicking (for 
 you HiFi-proffesionals out there...), and is a really elegant feature. 
 If there are no zero crossing, the setting changes are forced after 18 ms. 
+
+\par Options
+- \c zerocrossing: set attenuation level only at a zero crossing of the input.
+- \c cspin: dio line for chip select (CS).
+- \c dataoutpin: dio line for writing data to the chip  (DATAOUT).
+- \c datainpin: dio line for reading data from the chip  (DATAIN).
+- \c strobepin: dio line for strobing data (STROBE).
+- \c mutepin: dio line for MUTE.
+- \c zcenpin: dio line for enabling zero crossing (ZCEN).
 */
 
 

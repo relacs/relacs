@@ -40,9 +40,11 @@ namespace misc {
 - \c cclamppin: the dio line that switches the amplifier into current clamp mode.
 - \c vclamppin: the dio line that switches the amplifier into voltage clamp mode.
 - \c dclamppin: the dio line that switches the amplifier into synchronized dynamic clamp mode.
-- \c syncpin: the dio line on which synchronizing pulses for the amplifier are generated.
+- \c syncpin: the dio line on which synchronizing pulses for the amplifier are generated. This is only used if you specified a dio line for \a dclamppin.
 - \c resistancepin: the dio line that activates resistance measurement of the amplifier.
 - \c buzzerpin: the dio line that activates the buzzer.
+.
+If you do not want to control a function of the amplifier, then set the respective dio line to -1.
  */
 
 
