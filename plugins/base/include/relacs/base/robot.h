@@ -27,6 +27,7 @@
 #include <QLCDNumber>
 #include <QComboBox>
 #include <QTextEdit>
+#include <QPushButton>
 //additionally needed for RenderArea:
 #include <vector>
 #include <QRect>
@@ -34,14 +35,12 @@
 #include <relacs/misc/xyzrobot.h>
 #include <relacs/control.h>
 
-
 using namespace relacs;
 
 namespace base {
 
 
 class RenderArea;
-
 
 /*!
 \class Robot
@@ -53,9 +52,17 @@ class RenderArea;
 class Robot : public Control
 {
   Q_OBJECT
- 
-public:
 
+public slots:
+  void stop( void );
+  void resetRobot();
+  void goHome( void );
+  void storePos( void );
+  void returnToPos( void );
+  void toolRelease( void );
+  void toolFix( void );
+
+public:
   Robot( void );
   ~Robot( void );
   virtual void main( void );
@@ -63,7 +70,6 @@ public:
   virtual void updateCalibration( void );
 
 protected:
-
   void customEvent( QEvent *qce );
   QRect prepare_cuboid_plot(Cuboid* cuboid);
   bool test_height(Cuboid* cuboid);
@@ -76,10 +82,19 @@ protected:
   QLCDNumber* yPos;
   QLCDNumber* zPos;
   QTextEdit* errorBox;
+  QPushButton *StopButton;
+  QPushButton *ResetButton;
+  QPushButton *HomeButton;
+  QPushButton *StorePositionButton;
+  QPushButton *ReturnToPositionButton;
+  QPushButton *ToolReleaseButton;
+  QPushButton *ToolFixButton;
 
 private:
   void storePosition( const string &name, const Point &p );
-
+  Point customPosition;
+  double toolReleaseDelay, toolFixDelay;
+  bool autoclamp;
 };
 
 

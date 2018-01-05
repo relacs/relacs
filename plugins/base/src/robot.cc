@@ -39,37 +39,40 @@ namespace base {
 Robot::Robot( void )
   : Control( "Robot", "base", "Alexander Ott", "1.0", "Jun 02, 2017" )
 {
-  // add some options:
+  newSection("General");
   addText( "robot", "Robot", "robot-1" );
+
+  newSection("Stored positions");
   addText( "FishHeadPosition", "Position of fish head (x,y,z)mm", "(0,0,0)");
   addText( "FishTailPosition", "Position of fish tail (x,y,z)mm", "(0,0,0)");
   addText( "MovementAreaStart", "Start position of the movement area (x,y,z)mm", "(0,0,0)");
   addText( "MovementAreaEnd", "End position of movement area (x,y,z)mm", "(0,0,0)");
   addText( "ForbiddenAreaStart", "Start position of the forbidden area (x,y,z)mm", "(0,0,0)");
   addText( "ForbiddenAreaEnd", "End position of the forbidden area (x,y,z)mm", "(0,0,0)");
+  addText( "CustomPosition", "Stored custom position (x,y,z)mm", "(0,0,0)");
+
+  newSection("Tool clamp");
+  addNumber( "toolreleasedelay", "Delay before opening the tool clamp", 1.0, 0.0, 10.0, 0.25, "s");
+  addNumber( "toolfixdelay", "Delay before closing the tool clamp", 1.0, 0.0, 10.0, 0.25, "s");
+  addBoolean( "autoclamp", "Automatically close clamp after opening", false );
+
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
-  QHBoxLayout *hb;
-
   setLayout( vb );
-  // base layout
 
-  //QLabel *label;
   QColor fg( Qt::green );
   QColor bg( Qt::black );
   QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
 
   vb->addWidget(new QLabel("I am the small Watchdog of mirob:"));
-
   QFrame *line;
-
   //Divider line:
   line = new QFrame();
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
   vb->addWidget(line);
 
-  hb = new QHBoxLayout;
+  QHBoxLayout *hb = new QHBoxLayout;
 
   plot = new RenderArea();
   hb->addWidget(plot,Qt::AlignCenter);
@@ -90,24 +93,20 @@ Robot::Robot( void )
   line->setFrameShadow(QFrame::Sunken);
   vb->addWidget(line);
 
-  vb->addWidget( new QLabel("Current Position:"));
-
-  hb = new QHBoxLayout;
-  hb->addWidget(new QLabel("X-Position:"));
-  hb->addWidget(new QLabel("Y-Position:"));
-  hb->addWidget(new QLabel("Z-Position:"));
-
   hb = new QHBoxLayout;
   xPos = new QLCDNumber();
   xPos->setSegmentStyle(QLCDNumber::Flat);
+  hb->addWidget(new QLabel("x:"));
   hb->addWidget(xPos);
 
   yPos = new QLCDNumber();
   yPos->setSegmentStyle(QLCDNumber::Flat);
+  hb->addWidget(new QLabel("y:"));
   hb->addWidget(yPos);
 
   zPos = new QLCDNumber();
   zPos->setSegmentStyle(QLCDNumber::Flat);
+  hb->addWidget(new QLabel("z:"));
   hb->addWidget(zPos);
 
   vb->addLayout(hb);
@@ -119,26 +118,121 @@ Robot::Robot( void )
   vb->addWidget(line);
 
   errorBox = new QTextEdit();
-  errorBox->setFontPointSize(8);
-  vb->addWidget(errorBox);
+  errorBox->setFontPointSize( 8 );
+  errorBox->setMaximumHeight( 80 );
+  errorBox->setReadOnly( true );
+  vb->addWidget( errorBox );
 
   //Divider line:
   line = new QFrame();
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
   vb->addWidget(line);
-  /*
-  std::cerr << "Print size of plot end of watchdog constructor: width:"
-	    << plot->size().width() << " and height: "
-	    << plot->size().height() << endl;
-  */
 
+  QHBoxLayout *bb1 = new QHBoxLayout;
+
+  StopButton = new QPushButton( "Stop!" );
+  bb1->addWidget( StopButton );
+  connect( StopButton, SIGNAL( clicked() ),
+	   this, SLOT( stop() ) );
+  ResetButton = new QPushButton( "Reset" );
+  bb1->addWidget( ResetButton );
+  connect( ResetButton, SIGNAL( clicked() ),
+	   this, SLOT( resetRobot() ) );
+  vb->addLayout( bb1 );
+
+  QHBoxLayout *bb2 = new QHBoxLayout;
+
+  StorePositionButton = new QPushButton( "Store" );
+  bb2->addWidget( StorePositionButton );
+  connect( StorePositionButton, SIGNAL( clicked() ),
+	   this, SLOT( storePos() ) );
+
+  ReturnToPositionButton = new QPushButton( "Return" );
+  ReturnToPositionButton->setEnabled( false );
+  bb2->addWidget( ReturnToPositionButton );
+  connect( ReturnToPositionButton, SIGNAL( clicked() ),
+	   this, SLOT( returnToPos() ) );
+
+  HomeButton = new QPushButton( "Home" );
+  bb2->addWidget( HomeButton );
+  connect( HomeButton, SIGNAL( clicked() ),
+	   this, SLOT( goHome() ) );
+  vb->addLayout( bb2 );
+
+  QHBoxLayout *bb3 = new QHBoxLayout;
+  ToolReleaseButton = new QPushButton( "Release" );
+  ToolReleaseButton->setToolTip("Release Tool");
+  bb3->addWidget( ToolReleaseButton );
+  connect( ToolReleaseButton, SIGNAL( clicked() ),
+	   this, SLOT( toolRelease() ) );
+
+  ToolFixButton = new QPushButton( "Clamp" );
+  ToolFixButton->setToolTip( "Close the tool clamp" );
+  bb3->addWidget( ToolFixButton );
+  connect( ToolFixButton, SIGNAL( clicked() ),
+	   this, SLOT( toolFix() ) );
+  vb->addLayout( bb3 );
+  //grabKey( Qt::ALT+Qt::Key_S );
 }
 
 
-Robot::~Robot( void )
-{
+Robot::~Robot( void ) {
   plot->~RenderArea();
+}
+
+
+void Robot::stop( void ) {
+  robot->stop();
+  robot->setStopped();
+}
+
+
+void Robot::goHome( void ) {
+  postCustomEvent( 24 );
+  /*
+  robot->go_home();
+  robot->wait();
+  robot->powerAxes( false );
+  */
+}
+
+
+void Robot::resetRobot( void ) {
+  robot->setStopped( false );
+  robot->go_home();
+  robot->wait();
+  robot->powerAxes( false );
+}
+
+
+void Robot::storePos( void ) {
+  this->customPosition = robot->pos();
+  ReturnToPositionButton->setEnabled( true );
+  setText("CustomPosition", this->customPosition.toString() );
+}
+
+
+void Robot::returnToPos( void ) {
+  postCustomEvent( 25 );
+}
+
+
+void Robot::toolRelease( void ) {
+  robot->powerAxes( true );
+  sleep( toolReleaseDelay );
+  robot->releaseTool();
+  if (this->autoclamp)
+    toolFix();
+  robot->powerAxes( false );
+}
+
+
+void Robot::toolFix( void ) {
+  robot->powerAxes( true );
+  sleep( toolFixDelay );
+  robot->fixTool();
+  robot->powerAxes( false );
 }
 
 
@@ -155,7 +249,6 @@ void Robot::storePosition( const string &name, const Point &p ) {
 
 
 void Robot::config( void ) {
-  cerr << "Robot config!" << endl;
   robot = dynamic_cast<misc::XYZRobot*>( device( text( "robot" ) ) );
   if ( exist( "FishHeadPosition" ) ) {
     Point fish_start( text("FishHeadPosition") );
@@ -185,6 +278,13 @@ void Robot::config( void ) {
       storePosition( "ForbiddenAreaEnd", forbidden_end.toString() );
     }
   }
+  if ( exist( "CustomPosition" ) ) {
+    Point p( text("CustomPosition") );
+    if ( (p[0] + p[1] + p[2]) > 0.01 ) {
+      this->customPosition = p;
+      this->ReturnToPositionButton->setEnabled( true );
+    }
+  }
 }
 
 
@@ -192,7 +292,7 @@ void Robot::customEvent( QEvent *qce )
 {
   switch (qce->type() - QEvent::User) {
   case 21: {
-     Point p = robot->pos();
+    Point p = robot->pos();
     xPos->display(int(p.x()));
     yPos->display(int(p.y()));
     zPos->display(int(p.z()));
@@ -200,15 +300,12 @@ void Robot::customEvent( QEvent *qce )
   }
   case 22:
     {
-      for(int i=1; i<=3; i++){
-	if(robot->axis_in_pos_limit(i)) {
-
+      for( int i=1; i<=3; i++ ){
+	if( robot->axis_in_pos_limit(i) ) {
 	  QString msg = QString("Axis").append(QString::number(i)).append(QString("is in the pos Limit!"));
 	  errorBox->setTextColor(Qt::darkRed);
 	  errorBox->append(msg);
-	}
-
-	if(robot->axis_in_neg_limit(i)) {
+	} else if ( robot->axis_in_neg_limit(i) ) {
 	  QString msg = QString("Axis").append(QString::number(i)).append(QString("is in the neg Limit!"));
 	  errorBox->setTextColor(Qt::darkRed);
 	  errorBox->append(msg);
@@ -247,6 +344,20 @@ void Robot::customEvent( QEvent *qce )
 
       plot->update();
     }
+    break;
+  case 24: //go home robi!
+    {
+      robot->go_home();
+      break;
+    }
+  case 25: // go to stored position
+    {
+      robot->PF_up_and_over( this->customPosition );
+      robot->wait();
+      robot->powerAxes( false );
+      break;
+    }
+
   default:
     Control::customEvent( qce );
   }
@@ -295,26 +406,29 @@ QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
 
 void Robot::main( void )
 {
-  cerr << "Robot main!\n";
-
+  cerr << "robot main\n";
   if( robot == 0 ) {
     errorBox->append( "Couldn't find the RobotController. Closing." );
     return;
   }
+  this->customPosition = Point(text("CustomPosition"));
+  this->toolReleaseDelay = number("toolreleasedelay");
+  this->toolFixDelay = number("toolfixdelay");
+  this->autoclamp = boolean( "autoclamp" );
+
   robot->init_mirob();
 
   while( ! interrupt() ) {
     sleep( 0.2 );
-    postCustomEvent( 21 ); // position LCDNumbers
     postCustomEvent( 23 ); // draw update
     postCustomEvent( 22 ); // Limit switch control
+    postCustomEvent( 21 ); // position LCDNumbers
   }
 }
 
 
 void Robot::updateCalibration( void )
 {
-  cerr << "update Calib\n";
   storePosition( "FishHeadPosition", robot->get_fish_head() );
   storePosition( "FishTailPosition", robot->get_fish_tail() );
 
