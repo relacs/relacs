@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <math.h>
+#include <cmath>
 #include <relacs/point.h>
 #include <relacs/str.h>
 
@@ -71,6 +71,15 @@ void Point::set( double x, double y, double z )
   Coords[0] = x;
   Coords[1] = y;
   Coords[2] = z;
+}
+
+
+double Point::magnitude( void ) const
+{
+  double d = 0.0;
+  for ( int k=0; k<Dim; k++ )
+    d += Coords[k]*Coords[k];
+  return sqrt( d );
 }
 
 
@@ -185,6 +194,14 @@ double Point::operator*( const Point &p ) const
 }
 
 
+double Point::angle( const Point &p ) const
+{
+  double d = operator*( p );
+  d /= magnitude()*p.magnitude();
+  return acos( d );
+}
+
+
 bool Point::operator==( const Point &p ) const
 {
   for ( int k=0; k<Dim; k++ ) {
@@ -271,6 +288,28 @@ Point Point::max( const Point &p ) const
     if ( p[k] > maxp[k] )
       maxp[k] = p[k];
   }
+  return maxp;
+}
+
+
+Point min( const deque<Point> &pts )
+{
+  if ( pts.empty() )
+    return Point( 0.0, 0.0, 0.0 );
+  Point minp = pts.front();
+  for ( auto pi=pts.begin()+1; pi != pts.end(); ++pi )
+    minp = minp.min( *pi );
+  return minp;
+}
+
+
+Point max( const deque<Point> &pts )
+{
+  if ( pts.empty() )
+    return Point( 0.0, 0.0, 0.0 );
+  Point maxp = pts.front();
+  for ( auto pi=pts.begin()+1; pi != pts.end(); ++pi )
+    maxp = maxp.max( *pi );
   return maxp;
 }
 

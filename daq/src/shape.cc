@@ -19,6 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cmath>
+#include <relacs/str.h>
 #include <relacs/shape.h>
 
 namespace relacs {
@@ -26,9 +28,13 @@ namespace relacs {
 
 //******************************************
 
-Shape::Shape( Shape::ShapeType type, const string &name )
+Shape::Shape( Shape::ShapeType type, const string &name, const Point &anchor )
   : Type( type ),
-    Name( name ) 
+    Name( name ),
+    Anchor( anchor ),
+    Yaw( 0.0 ),
+    Pitch( 0.0 ),
+    Roll( 0.0 )
 {
 }
 
@@ -38,23 +44,46 @@ Shape::~Shape( void)
 }
 
 
-bool Shape::inside( const Point &p ) const
+Point Shape::transform( const Point &p ) const
 {
-  return ( p >= boundingBoxMin() && p <= boundingBoxMax() );
+  Point pp( cos(Pitch)*cos(Yaw)*p.x() +
+	    cos(Pitch)*sin(Yaw)*p.y() -
+	    sin(Pitch)*p.z(),
+	    (sin(Roll)*sin(Pitch)*cos(Yaw)-cos(Roll)*sin(Pitch))*p.x() +
+	    (sin(Roll)*sin(Pitch)*sin(Yaw)+cos(Roll)*cos(Pitch))*p.y() +
+	    sin(Roll)*cos(Pitch)*p.z(),
+	    (cos(Roll)*sin(Pitch)*cos(Yaw)+sin(Roll)*sin(Pitch))*p.x() +
+	    (cos(Roll)*sin(Pitch)*sin(Yaw)-sin(Roll)*cos(Pitch))*p.y() +
+	    cos(Roll)*cos(Pitch)*p.z() );
+  return pp + anchor();
 }
 
 
-bool Shape::below( const Point &p ) const
+Point Shape::inverseTransform( const Point &p ) const
 {
-  return ( ( p >= boundingBoxMin() && p <= boundingBoxMax() ) ||
-	   ( p.z() < boundingBoxMax().z() ) ); 
+  Point pp = p - anchor();
+  return Point( cos(Pitch)*cos(Yaw)*pp.x() +
+		(sin(Roll)*sin(Pitch)*cos(Yaw)-cos(Roll)*sin(Yaw))*pp.y() +
+		(cos(Roll)*sin(Pitch)*cos(Yaw)+sin(Roll)*sin(Yaw))*pp.z(),
+		cos(Pitch)*sin(Yaw)*pp.x() +
+		(sin(Roll)*sin(Pitch)*sin(Yaw)+cos(Roll)*cos(Yaw))*pp.y() +
+		(cos(Roll)*sin(Pitch)*sin(Yaw)-sin(Roll)*cos(Yaw))*pp.z(),
+		-sin(Pitch)*pp.x() +
+		sin(Roll)*cos(Pitch)*pp.y() +
+		cos(Roll)*cos(Pitch)*pp.z() );
+}
+
+
+ostream &operator<<( ostream &str, const Shape &s )
+{
+  return s.print( str );
 }
 
 
 //******************************************
 
 Zone::Zone( void )
-  : Shape( Shape::Zone, "Zone" )
+  : Shape( Shape::Zone, "zone" )
 {
   Shapes.clear();
   Add.clear();
@@ -62,9 +91,10 @@ Zone::Zone( void )
 
 
 Zone::Zone( const Zone &z )
-  : Shape( z.type(), z.name() ),
+  : Shape( z.type(), z.name(), z.anchor() ),
     Add( z.Add )
 {
+  setAngles( z.yaw(), z.pitch(), z.roll() );
   Shapes.clear();
   for ( auto si=z.Shapes.begin(); si != z.Shapes.end(); ++si )
     Shapes.push_back( (*si)->copy() );
@@ -154,7 +184,7 @@ Zone Zone::operator-( const Shape &s ) const
 
 Point Zone::boundingBoxMin( void ) const
 {
-  Point p( 0.0, 0.0, 0.0 );
+  Point p( anchor() );
   if ( Shapes.empty() )
     return p;
 
@@ -162,13 +192,13 @@ Point Zone::boundingBoxMin( void ) const
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     if ( *ai ) {
-      p = (*si)->boundingBoxMin();
+      p = transform( (*si)->boundingBoxMin() );
       break;
     }
   }
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     if ( *ai )
-      p = p.min( (*si)->boundingBoxMin() );
+      p = p.min( transform( (*si)->boundingBoxMin() ) );
   }
   return p;
 }
@@ -176,7 +206,7 @@ Point Zone::boundingBoxMin( void ) const
 
 Point Zone::boundingBoxMax( void ) const
 {
-  Point p( 0.0, 0.0, 0.0 );
+  Point p( anchor() );
   if ( Shapes.empty() )
     return p;
 
@@ -184,13 +214,13 @@ Point Zone::boundingBoxMax( void ) const
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     if ( *ai ) {
-      p = (*si)->boundingBoxMax();
+      p = transform( (*si)->boundingBoxMax() );
       break;
     }
   }
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     if ( *ai )
-      p = p.max( (*si)->boundingBoxMax() );
+      p = p.max( transform( (*si)->boundingBoxMax() ) );
   }
   return p;
 }
@@ -198,11 +228,12 @@ Point Zone::boundingBoxMax( void ) const
 
 bool Zone::inside( const Point &p ) const
 {
+  Point pp = inverseTransform( p );
   bool ins = false;
   auto si = Shapes.begin();
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
-    if ( (*si)->inside( p ) )
+    if ( (*si)->inside( pp ) )
       ins = *ai;
   }
   return ins;
@@ -211,36 +242,49 @@ bool Zone::inside( const Point &p ) const
 
 bool Zone::below( const Point &p ) const
 {
+  Point pp = inverseTransform( p );
   bool bel = false;
   auto si = Shapes.begin();
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
-    if ( *ai && (*si)->below( p ) )
+    if ( *ai && (*si)->below( pp ) )
       bel = true;
   }
   return bel;
 }
 
 
+ostream &Zone::print( ostream &str ) const
+{
+  str << "Zone \"" << name() << "\" at " << anchor().toString() 
+      << " consisting of\n";
+  auto si = Shapes.begin();
+  auto ai = Add.begin();
+  for ( ; si != Shapes.end(); ++si, ++ai )
+    str << " " << (*ai ? '+' : '-') << " " << *si;
+  return str;
+}
+
+
+
 //******************************************
 
 Sphere::Sphere( void )
-  : Shape( Shape::Sphere, "Sphere" )
+  : Shape( Shape::Sphere, "sphere" )
 {
 }
 
 
 Sphere::Sphere( const Sphere &s )
-  : Shape( s.type(), s.name() ),
-    Center( s.Center ),
+  : Shape( s.type(), s.name(), s.anchor() ),
     Radius( s.Radius )
 {
+  setAngles( s.yaw(), s.pitch(), s.roll() );
 }
 
 
 Sphere::Sphere( const Point &center, double radius, const string &name )
-  : Shape( Shape::Sphere, name ),
-    Center( center ),
+  : Shape( Shape::Sphere, name, center ),
     Radius( radius )
 {
 }
@@ -254,64 +298,82 @@ Shape *Sphere::copy( void ) const
 
 Point Sphere::boundingBoxMin( void ) const
 {
-  return Center - Point( Radius, Radius, Radius );
+  return anchor() - Point( Radius, Radius, Radius );
 }
 
 
 Point Sphere::boundingBoxMax( void ) const
 {
-  return Center + Point( Radius, Radius, Radius );
+  return anchor() + Point( Radius, Radius, Radius );
 }
 
 
 bool Sphere::inside( const Point &p ) const
 {
-  return ( Center.distance( p ) <= Radius );
+  return ( anchor().distance( p ) <= Radius );
 }
 
 
 bool Sphere::below( const Point &p ) const
 {
-  Point a( Center );
+  Point a( anchor() );
   a.z() = 0.0;
   Point b( p );
   b.z() = 0.0;
-  return ( inside( p ) || ( a.distance( b ) <= Radius && p.z() < Center.z() ) );
+  return ( inside( p ) || ( a.distance( b ) <= Radius && p.z() < anchor().z() ) );
+}
+
+
+ostream &Sphere::print( ostream &str ) const
+{
+  str << "Sphere \"" << name() << "\" at " << anchor().toString() 
+      << " of radius " << Str( Radius, 0, 3, 'f' ) << '\n';
+  return str;
 }
 
 
 //******************************************
 
 Cuboid::Cuboid( void )
-  : Shape( Shape::Cuboid, "Cuboid" )
+  : Shape( Shape::Cuboid, "cuboid" )
 {
 }
 
 
 Cuboid::Cuboid( const Cuboid &c )
-  : Shape( c.type(), c.name() ),
-    Corner( c.Corner ),
+  : Shape( c.type(), c.name(), c.anchor() ),
     Size( c.Size )
 {
+  setAngles( c.yaw(), c.pitch(), c.roll() );
 }
 
 
-Cuboid::Cuboid( const Point &start, 
+Cuboid::Cuboid( const Point &anchor, 
 		double length, double width, double height, const string &name )
-  : Shape( Shape::Cuboid, name ),
-    Corner( start )
+  : Shape( Shape::Cuboid, name, anchor ),
+    Size( length, width, height )
 {
-  Size[0] = length;
-  Size[1] = width;
-  Size[2] = height;
 }
 
 
-Cuboid::Cuboid( const Point &start, const Point &end, const string &name )
-  : Shape( Shape::Cuboid, name ),
-    Corner( start ),
-    Size( end - start )
+Cuboid::Cuboid( const Point &anchor, const Point &end, const string &name )
+  : Shape( Shape::Cuboid, name, anchor ),
+    Size( end - anchor )
 {
+}
+
+
+Cuboid::Cuboid( const Point &anchor, const Point &px, const Point &py, const Point &pz,
+		const string &name )
+  : Shape( Shape::Cuboid, name, anchor ),
+    Size( 0.0, 0.0, 0.0 )
+{
+  Size[0] = anchor.distance( px );
+  Size[1] = anchor.distance( py );
+  Size[2] = anchor.distance( pz );
+  setPitch( asin( px.z()/px.magnitude() ) );
+  setYaw( atan2( px.y(), px.x() ) );
+  setRoll( asin( py.z()/py.magnitude() ) );
 }
 
 
@@ -323,13 +385,53 @@ Shape *Cuboid::copy( void ) const
 
 Point Cuboid::boundingBoxMin( void ) const
 {
-  return Corner;
+  deque<Point> pts;
+  pts.push_back( transform( Point( 0.0, 0.0, 0.0 ) ) );
+  pts.push_back( transform( Point( Size.x(), 0.0, 0.0 ) ) );
+  pts.push_back( transform( Point( 0.0, Size.y(), 0.0 ) ) );
+  pts.push_back( transform( Point( Size.x(), Size.y(), 0.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 0.0, Size.z() ) ) );
+  pts.push_back( transform( Point( Size.x(), 0.0, Size.z() ) ) );
+  pts.push_back( transform( Point( 0.0, Size.y(), Size.z() ) ) );
+  pts.push_back( transform( Point( Size.x(), Size.y(), Size.z() ) ) );
+  return min( pts );
 }
 
 
 Point Cuboid::boundingBoxMax( void ) const
 {
-  return Corner + Size;
+  deque<Point> pts;
+  pts.push_back( transform( Point( 0.0, 0.0, 0.0 ) ) );
+  pts.push_back( transform( Point( Size.x(), 0.0, 0.0 ) ) );
+  pts.push_back( transform( Point( 0.0, Size.y(), 0.0 ) ) );
+  pts.push_back( transform( Point( Size.x(), Size.y(), 0.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 0.0, Size.z() ) ) );
+  pts.push_back( transform( Point( Size.x(), 0.0, Size.z() ) ) );
+  pts.push_back( transform( Point( 0.0, Size.y(), Size.z() ) ) );
+  pts.push_back( transform( Point( Size.x(), Size.y(), Size.z() ) ) );
+  return max( pts );
+}
+
+
+bool Cuboid::inside( const Point &p ) const
+{
+  Point pp = inverseTransform( p );
+  return ( pp >= Point( 0.0, 0.0, 0.0 ) && pp <= Size );
+}
+
+
+bool Cuboid::below( const Point &p ) const
+{
+  return ( ( p >= boundingBoxMin() && p <= boundingBoxMax() ) ||
+	   ( p.z() < boundingBoxMax().z() ) ); 
+}
+
+
+ostream &Cuboid::print( ostream &str ) const
+{
+  str << "Cuboid \"" << name() << "\" at " << anchor().toString() 
+      << " of size " << Size.toString() << '\n';
+  return str;
 }
 
 

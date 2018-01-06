@@ -22,6 +22,7 @@
 #ifndef _RELACS_POINT_H
 #define _RELACS_POINT_H 1
 
+#include <deque>
 #include <iostream>
 using namespace std;
 
@@ -67,6 +68,9 @@ public:
 
   void set( double x, double y, double z );
 
+    /*! The magnitude (length) of the vector. */
+  double magnitude( void ) const;
+
     /*! Add coordinates of point \a p to this point. */
   Point operator+( const Point &p ) const;
     /*! Subtract coordinates of point \a p from this point. */
@@ -97,6 +101,8 @@ public:
 
     /*! Dot product between the coordinates this and point \a p. */
   double operator*( const Point &p ) const;
+    /*! The angle between this vector and \a p in radians. */
+  double angle( const Point &p ) const;
 
     /*! True if this point and \a p are the same. */
   bool operator==( const Point &p ) const;
@@ -117,6 +123,10 @@ public:
   Point min( const Point &p ) const;
     /*! The maximum coordinates of this point and \a p. */
   Point max( const Point &p ) const;
+    /*! The minimum coordinates of the points in \a pts. */
+  friend Point min( const deque<Point> &pts );
+    /*! The maximum coordinates of the points in \a pts. */
+  friend Point max( const deque<Point> &pts );
 
     /*! The point with absolute coordinates. */
   friend Point abs( Point p );
