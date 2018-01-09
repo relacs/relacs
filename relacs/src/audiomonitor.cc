@@ -15,11 +15,7 @@ AudioMonitor::AudioMonitor( void )
     PrevMute( 0.0 ),
     MuteCount( 0 ),
     AudioRate( 44100.0 ),
-    AudioSize( 0 ),
-    DataStartTime( 0.0 ),
-    DataRefTime( 0.0 ),
-    DataCurrentTime( 0.0 ),
-    DataPackageTime( 0.0 ),
+    DataIndex( -1 ),
     DataMean( 0.0f ),
     LastOut( 0.0f )
 {
@@ -161,11 +157,7 @@ void AudioMonitor::start( void )
 
   int nbuffer = 256;
   Trace = 0;
-  AudioSize = 0;
-  DataStartTime = 0.0;
-  DataRefTime = 0.0;
-  DataCurrentTime = 0.0;
-  DataPackageTime = 0.0;
+  DataIndex = -1;
   DataMean = 0.0;
   LastOut = 0.0f;
   if ( Mute < 0.1 )
@@ -228,9 +220,7 @@ void AudioMonitor::start( void )
     cerr << "Started audio stream at " << AudioRate << " Hz\n";
 #endif
 
-  DataStartTime = Data[Trace].currentTime() - Data[Trace].interval( nbuffer );
-  DataRefTime = DataStartTime;
-  DataCurrentTime = Data[Trace].currentTime();
+  DataIndex = -1;
   if ( Data[Trace].size() > 0 )
     DataMean = Data[Trace].back();
 }
@@ -328,67 +318,48 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   const InData &trace = data->Data[data->Trace];
   float fac = data->Gain / trace.maxValue();
   double rate = 1.0/trace.stepsize();
+  double audiorate = data->AudioRate;
   int datasize = trace.size();
   int dataminsize = trace.minIndex();
-  int index = datasize;
-  float audiofilter = 1.0/data->AudioRate;
-  bool tuneaudiorate = ( trace.currentTime()-data->DataStartTime > 3.0 );
+  int dataindex = data->DataIndex;
+  int index = dataindex;
+  float audiofilter = 1.0/data->AudioRate/0.1; // dt/tau = 1.0/AudioRate/tau -> tau = 0.1sec
   float mute = data->PrevMute;
   float muteincr = (data->Mute - data->PrevMute)/(float)framesperbuffer;
 
+  // init index into trace:
+  if ( dataindex < 0 ||
+       datasize - dataindex > 2*trace.indices( framesperbuffer/audiorate ) ) {
+    dataindex = datasize - trace.indices( framesperbuffer/audiorate );
+    if ( dataindex < dataminsize )
+      dataindex = dataminsize;
+  }
+
   // write out data:
   unsigned long i=0;
-  for( ; i<framesperbuffer; i++, data->AudioSize++ ) {
-    double time = data->AudioSize/data->AudioRate + data->DataRefTime;
-    index = trace.index( time );
-    if ( index + 1 >= datasize )
+  for( ; i<framesperbuffer; i++ ) {
+    double time = i/audiorate;
+    int indices = trace.indices( time );
+    index = dataindex + indices;
+    if ( index+1 >= datasize )
       break;
-    if ( index >= dataminsize ) {
-      // linear interpolation:
-      double m = (trace[index+1]-trace[index])*rate;
-      data->LastOut = (m*(time-trace.pos(index))+trace[index])*fac;
-    }
+    // linear interpolation:
+    double m = (trace[index+1]-trace[index])*rate;
+    data->LastOut = (m*(time-trace.interval(indices))+trace[index])*fac;
     // subtract mean:
     mute += muteincr;
     data->DataMean += ( data->LastOut - data->DataMean )*audiofilter;
     *out++ = mute * (data->LastOut - data->DataMean);
   }
+  data->DataIndex = index - 1;
 
-  // data mising (e.g. because of restart of analog input!):
-  if ( i < framesperbuffer ) {
-    // cerr << "Audio skipped - missed " << framesperbuffer - i << " data points\n";
-    data->AudioSize -= framesperbuffer - i;
-    // data->AudioSize -= framesperbuffer;
-    // data->AudioSize -= data->DataPackageTime*rate;
-    tuneaudiorate = false;
-  }
   // fill up the audio buffer:
-  for( ; i<framesperbuffer; i++, data->AudioSize++ ) {
+  for( ; i<framesperbuffer; i++ ) {
     mute += muteincr;
     data->DataMean += ( data->LastOut - data->DataMean )*audiofilter;
     *out++ = mute * (data->LastOut - data->DataMean);
   }
 
-  // measure size increments of input data:
-  if ( trace.currentTime() > data->DataCurrentTime ) {
-    double packagetime = 1.5*(trace.currentTime() - data->DataCurrentTime);
-    if ( data->DataPackageTime == 0.0 )
-      data->DataPackageTime = packagetime;
-    else
-      data->DataPackageTime += ( packagetime - data->DataPackageTime )*0.01;
-  }
-  else
-    tuneaudiorate = false;
-
-  // adjust rate in order to align the ends of the data buffers:
-  if ( tuneaudiorate ) {
-    double newrate = data->AudioSize/(trace.currentTime()-data->DataStartTime-data->DataPackageTime);
-    data->AudioRate += ( newrate - data->AudioRate )*0.01;
-    data->DataRefTime = trace.pos( index+1 ) - data->AudioSize/data->AudioRate;
-    //    cerr << data->AudioRate << "  " << data->DataPackageTime << '\n';
-  }
-
-  data->DataCurrentTime = trace.currentTime();
   data->PrevMute = data->Mute;
 
   data->Mutex.unlock();

@@ -95,11 +95,7 @@ protected:
   mutable QMutex Mutex;
 
   double AudioRate;
-  int AudioSize;
-  double DataStartTime;
-  double DataRefTime;
-  double DataCurrentTime;
-  double DataPackageTime;
+  int DataIndex;
   float DataMean;
   float LastOut;
 };
