@@ -501,7 +501,7 @@ void InputConfig::dialogClosed( int rv )
   Parameter &mp = Opts.setNumber( "inputtracemaxvalue", mb->value() );
   for ( int r=1; r<Table->rowCount(); r++ ) {
     mb = (DoubleSpinBox *)Table->cellWidget( r, 5 );
-    mp.addInteger( mb->value() );
+    mp.addNumber( mb->value() );
   }
 
   // scale:

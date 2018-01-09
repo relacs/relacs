@@ -84,7 +84,7 @@ void EODTools::eodPeaks( const InData &data, double tbegin, double tend,
 			 double threshold, EventData &peaks )
 {
   peaks.clear();
-  if ( tend < tbegin )
+  if ( tend <= tbegin )
     return;
   InDataIterator first = data.begin() + tbegin;
   if ( first  < data.minBegin() )
@@ -146,7 +146,7 @@ void EODTools::eodTroughs( const InData &data, double tbegin, double tend,
 			   double threshold, EventData &troughs )
 {
   troughs.clear();
-  if ( tend < tbegin )
+  if ( tend <= tbegin )
     return;
   InDataIterator first = data.begin() + tbegin;
   if ( first < data.minBegin() )
@@ -241,7 +241,7 @@ void EODTools::eodPeaksTroughs( const InData &data, double tbegin, double tend,
 {
   peaks.clear();
   troughs.clear();
-  if ( tend < tbegin )
+  if ( tend <= tbegin )
     return;
   InDataIterator first = data.begin() + tbegin;
   if ( first < data.minBegin() )
@@ -310,7 +310,7 @@ void EODTools::beatAmplitudes( const InData &eodd, double tbegin, double tend,
 			       double &lowermean, double &lowerampl )
 {
   // duration as integer multiples of beat period:
-  double duration = tend - tend;
+  double duration = tend - tbegin;
   double window = floor( duration/period )*period;
   double offset = 0.5*(duration - window);
 
@@ -336,7 +336,7 @@ double EODTools::beatAmplitude( const InData &eodd, double tbegin, double tend,
 				double period, double contrast )
 {
   // duration as integer multiples of beat period:
-  double duration = tend - tend;
+  double duration = tend - tbegin;
   double window = floor( duration/period )*period;
   double offset = 0.5*(duration - window);
 
@@ -362,7 +362,7 @@ double EODTools::beatContrast( const InData &eodd, double tbegin, double tend,
 			       double period, double contrast )
 {
   // duration as integer multiples of beat period:
-  double duration = tend - tend;
+  double duration = tend - tbegin;
   double window = floor( duration/period )*period;
   double offset = 0.5*(duration - window);
 

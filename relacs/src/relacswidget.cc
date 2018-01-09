@@ -137,7 +137,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addText( "inputtracedevice", "Input trace device", "ai-1" );
   addInteger( "inputtracechannel", "Input trace channel", 0 );
   addText( "inputtracereference", "Input trace reference", InData::referenceStr( InData::RefGround ) );
-  addNumber( "inputtracemaxvalue", "Input trace maximum value", 0 );
+  addNumber( "inputtracemaxvalue", "Input trace maximum value", 10.0, 0.0, 10000000.0, 0.001 );
   addBoolean( "inputtracecenter", "Input trace center vertically", true );
 
   newSection( OutputConfig::OptionNames::GROUP_NAME );
@@ -744,6 +744,7 @@ void RELACSWidget::setupInTraces( void )
 {
   IRawData.clear();
   int nid = Options::size( "inputtraceid" );
+  int j = 0;
   for ( int k=0; k<nid; k++ ) {
     bool failed = false;
     string traceid = text( "inputtraceid", k, "" );
@@ -808,9 +809,10 @@ void RELACSWidget::setupInTraces( void )
       continue;
     }
     IRawData.push( id );
-    IRawData[k].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
-    IRawData[k].setWriteBufferCapacity( 100.0*id.indices( AQ->updateTime() ) );
-    PT->addTraceStyle( true, integer( "inputtraceplot", k, k ), Plot::Green );
+    IRawData[j].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
+    IRawData[j].setWriteBufferCapacity( 100.0*id.indices( AQ->updateTime() ) );
+    PT->addTraceStyle( true, integer( "inputtraceplot", j, j ), Plot::Green );
+    j++;
   }
 }
 
