@@ -447,8 +447,12 @@ void Session::plot( void )
 
 void Session::main( void )
 {
-  if ( EODEvents < 0 )
+  if ( EODEvents < 0 ) {
+    Str ets = eventNames();
+    ets.replace( "|", "</b></li><li><b>" );
+    warning( "Can not find EOD events!<br>efish::Session needs events named \"<b>EOD</b>\", \"<b>EOD-1</b>\", or \"<b>EOD-A-1</b>\".<br>Available event traces are <ul><li><b>" + ets + "</b></li><ul>" );
     return;
+  }
   const EventData &eode = events( EODEvents );
   int eodcount = 20;
 

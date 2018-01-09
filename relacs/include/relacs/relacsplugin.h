@@ -418,6 +418,8 @@ int MyPlugin::main( void )
     /*! \return the times where the recordings were started. 
         \sa stimulusEvents(), restartEvents(), events() */
   const EventData &recordingEvents( void ) const;
+    /*! Returns the names of all event traces separated by '|'. */
+  string eventNames( void ) const;
 
     /*! Return the index of the input trace that was filtered
         to obtain input trace with index \a trace.

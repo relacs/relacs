@@ -411,6 +411,18 @@ const EventData &RELACSPlugin::recordingEvents( void ) const
 }
 
 
+string RELACSPlugin::eventNames( void ) const
+{
+  string ets = "";
+  for ( int k=0; k<EData.size(); k++ ) {
+    if ( k > 0 )
+      ets += '|';
+    ets += EData[k].ident();
+  }
+  return ets;
+}
+
+
 int RELACSPlugin::traceInputTrace( int trace ) const
 {
   return RW->FD->traceInputTrace( trace );
