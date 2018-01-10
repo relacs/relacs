@@ -173,7 +173,9 @@ bool bestXPos(std::vector<double> &averages, LinearRange &range, double &bestPos
 
 bool ReceptiveField::moveToPosition( double x, double y, double z) {
   Point destination( fish_head );
+  cerr << "fish head: " << fish_head;
   Point temp_dest( x, y, z );
+  cerr << temp_dest;
   for (size_t i = 0; i < axis_map.size(); i++ ) {
     destination[axis_map[i]] +=  axis_invert[i] * temp_dest[i];
   }
@@ -181,6 +183,7 @@ bool ReceptiveField::moveToPosition( double x, double y, double z) {
     return false;
   //robot->powerAxes( true );
   //sleep( 0.75 );
+  cerr << destination;
   robot->PF_up_and_over( destination );
   robot->wait();
   sleep( 0.1 );
@@ -201,7 +204,7 @@ bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_po
   double y_slope = 0.0;
   if ( adjust_y ) {
     y_slope = (fish_tail[axis_map[1]] - fish_head[axis_map[1]]) /
-      (fish_tail[axis_map[0] - fish_head[axis_map[0]]]) * axis_invert[1];
+      (fish_tail[axis_map[0]] - fish_head[axis_map[0]]) * axis_invert[axis_map[1]];
   }
   if ((int)avg_rates.size() != range.size()) {
     avg_rates.resize(range.size());
@@ -212,6 +215,9 @@ bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_po
     double y_corrector = y_slope * x;
     plotRate(posPlot, x, y);
     // go, robi, go
+    cerr << x << "\t" << y << "\t" << z_pos << endl;
+    cerr << "y_corr:" << y_corrector << endl;
+
     if ( !moveToPosition(x, y + y_corrector, z_pos) )
       return false;
     // do the measurement
@@ -321,7 +327,7 @@ void plotBestY(Plot &p, double y) {
 
 void ReceptiveField::prepareStimulus( OutData &signal ) {
   double eodf = events( LocalEODEvents[0] ).frequency( currentTime() - 0.5, currentTime() );
-  signal.setTrace( GlobalEField ); //FIXME: will need to be switched to LocalEField[0]
+  signal.setTrace( LocalEField[0] ); //FIXME: will need to be switched to LocalEField[0]
   signal.sineWave( this->duration, 0.0, eodf + this->deltaf );
   signal.setIntensity( this->amplitude );
 
@@ -425,16 +431,17 @@ int ReceptiveField::main( void )
   LinearRange yrange( ymin, ymax, ystep );
   std::vector<double> avg_rates_x( xrange.size() );
   std::vector<double> avg_rates_y( yrange.size() );
-
-  robot->PF_up_and_over( fish_head );
-  robot->wait();
-  if (!rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true , adjust_y, true )) {
+  
+  moveToPosition( xmin, ystart, z_pos );
+  // robot->PF_up_and_over( fish_head );
+  // robot->wait();
+  if (!rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true , adjust_y, false )) {
     return Failed;
   }
   double bestX, bestY;
   if ( bestXPos( avg_rates_x, xrange, bestX ) ) {
     plotBestX( xPlot, bestX );
-    if (!rangeSearch( yrange, bestX, z_pos, avg_rates_y, signal, false, adjust_y, true ) ) {
+    if (!rangeSearch( yrange, bestX, z_pos, avg_rates_y, signal, false, adjust_y, false ) ) {
       return Failed;
     }
     if (bestXPos( avg_rates_y, yrange, bestY )) {
@@ -444,6 +451,7 @@ int ReceptiveField::main( void )
   metaData().setNumber("Cell properties>X Position", bestX);
   metaData().setNumber("Cell properties>Y Position", bestY);
   moveToPosition( bestX, bestY, z_pos );
+  cerr << "Best position x: " << bestX << "\t y:" << bestY << "\t z:" << z_pos << endl;
   // TODO record a second of baseline at this point
   // sleep( 2.0 );
   // robot->PF_up_and_over( { safex, safey, safez } );
