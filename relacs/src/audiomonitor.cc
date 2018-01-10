@@ -15,6 +15,7 @@ AudioMonitor::AudioMonitor( void )
     PrevMute( 0.0 ),
     MuteCount( 0 ),
     AudioRate( 44100.0 ),
+    RateFac( 1.0 ),
     DataIndex( -1 ),
     DataMean( 0.0f ),
     LastOut( 0.0f )
@@ -157,6 +158,7 @@ void AudioMonitor::start( void )
 
   int nbuffer = 256;
   Trace = 0;
+  RateFac = 1.0;
   DataIndex = -1;
   DataMean = 0.0;
   LastOut = 0.0f;
@@ -220,6 +222,7 @@ void AudioMonitor::start( void )
     cerr << "Started audio stream at " << AudioRate << " Hz\n";
 #endif
 
+  RateFac = 1.01;
   DataIndex = -1;
   if ( Data[Trace].size() > 0 )
     DataMean = Data[Trace].back();
@@ -317,7 +320,7 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   data->Mutex.lock();
   const InData &trace = data->Data[data->Trace];
   float fac = data->Gain / trace.maxValue();
-  double rate = 1.0/trace.stepsize();
+  double rate = data->RateFac/trace.stepsize();
   double audiorate = data->AudioRate;
   int datasize = trace.size();
   int dataminsize = trace.minIndex();
@@ -328,18 +331,19 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   float muteincr = (data->Mute - data->PrevMute)/(float)framesperbuffer;
 
   // init index into trace:
-  if ( dataindex < 0 ||
-       datasize - dataindex > 2*trace.indices( framesperbuffer/audiorate ) ) {
+  if ( dataindex < 0 ) {
     dataindex = datasize - trace.indices( framesperbuffer/audiorate );
     if ( dataindex < dataminsize )
       dataindex = dataminsize;
   }
 
+  //  cerr << datasize - dataindex << '\n';
+
   // write out data:
   unsigned long i=0;
-  for( ; i<framesperbuffer; i++ ) {
+  for ( ; i<framesperbuffer; i++ ) {
     double time = i/audiorate;
-    int indices = trace.indices( time );
+    int indices = ::floor(time*rate); // trace.indices( time );
     index = dataindex + indices;
     if ( index+1 >= datasize )
       break;
@@ -354,10 +358,18 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   data->DataIndex = index - 1;
 
   // fill up the audio buffer:
-  for( ; i<framesperbuffer; i++ ) {
-    mute += muteincr;
-    data->DataMean += ( data->LastOut - data->DataMean )*audiofilter;
-    *out++ = mute * (data->LastOut - data->DataMean);
+  if ( i<framesperbuffer ) {
+    //    cerr << "AUDIOMONITOR FILL " << framesperbuffer - i << '\n';
+    for ( ; i<framesperbuffer; i++ ) {
+      mute += muteincr;
+      data->DataMean += ( data->LastOut - data->DataMean )*audiofilter;
+      *out++ = mute * (data->LastOut - data->DataMean);
+    }
+    data->RateFac -= 0.001;
+  }
+  else if ( datasize - dataindex > 2*(long)framesperbuffer ) {
+    data->RateFac += 0.001;
+    //    cerr << "RATEFC = " << data->RateFac << '\n';
   }
 
   data->PrevMute = data->Mute;

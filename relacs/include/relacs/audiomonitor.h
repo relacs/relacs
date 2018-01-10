@@ -95,6 +95,7 @@ protected:
   mutable QMutex Mutex;
 
   double AudioRate;
+  double RateFac;
   int DataIndex;
   float DataMean;
   float LastOut;
