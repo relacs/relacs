@@ -192,6 +192,13 @@ bool ReceptiveField::moveToPosition( double x, double y, double z) {
 }
 
 
+double ReceptiveField::getYSlope( void ) {
+  double slope = (fish_tail[axis_map[1]] - fish_head[axis_map[1]]) /
+    (fish_tail[axis_map[0]] - fish_head[axis_map[0]]) * axis_invert[axis_map[1]];
+  return slope;
+}
+
+
 bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_pos,
                                   std::vector<double> &avg_rates, OutData &signal,
 				  bool x_search, bool adjust_y, bool simulation ) {
@@ -203,8 +210,7 @@ bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_po
 
   double y_slope = 0.0;
   if ( adjust_y ) {
-    y_slope = (fish_tail[axis_map[1]] - fish_head[axis_map[1]]) /
-      (fish_tail[axis_map[0]] - fish_head[axis_map[0]]) * axis_invert[axis_map[1]];
+    y_slope = getYSlope();
   }
   if ((int)avg_rates.size() != range.size()) {
     avg_rates.resize(range.size());
@@ -431,7 +437,7 @@ int ReceptiveField::main( void )
   LinearRange yrange( ymin, ymax, ystep );
   std::vector<double> avg_rates_x( xrange.size() );
   std::vector<double> avg_rates_y( yrange.size() );
-  
+
   moveToPosition( xmin, ystart, z_pos );
   // robot->PF_up_and_over( fish_head );
   // robot->wait();
@@ -450,8 +456,13 @@ int ReceptiveField::main( void )
   }
   metaData().setNumber("Cell properties>X Position", bestX);
   metaData().setNumber("Cell properties>Y Position", bestY);
-  moveToPosition( bestX, bestY, z_pos );
-  cerr << "Best position x: " << bestX << "\t y:" << bestY << "\t z:" << z_pos << endl;
+  double y_correction = 0.0;
+  if ( adjust_y ) {
+    double slope = getYSlope();
+    y_correction = slope * bestX;
+  }
+  moveToPosition( bestX, bestY + y_correction, z_pos );
+  cerr << "Best position x: " << bestX << "\t y:" << (bestY + y_correction) << "\t z:" << z_pos << endl;
   // TODO record a second of baseline at this point
   // sleep( 2.0 );
   // robot->PF_up_and_over( { safex, safey, safez } );

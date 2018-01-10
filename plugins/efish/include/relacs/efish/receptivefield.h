@@ -74,6 +74,7 @@ class ReceptiveField : public RePro,
                 double period, double duration );
   void analyze( const EventList &spikeTrains );
   bool moveToPosition( double x, double y, double z );
+  double getYSlope( void );
 };
 
 
