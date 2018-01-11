@@ -56,7 +56,7 @@ class ReceptiveField : public RePro,
  private:
   Plot xPlot, yPlot, posPlot;
   Point fish_head, fish_tail, reset_position;
-  double duration, deltaf, amplitude, pause;
+  double duration, deltaf, amplitude, pause, binwidth;
   int repeats;
   misc::XYZRobot *robot = NULL;
   std::vector<int> axis_map;

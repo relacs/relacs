@@ -53,7 +53,8 @@ ReceptiveField::ReceptiveField( void )
   addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "pause", "Pause between stimulus presentations", 1.0, 0.001, 1000.0, 0.001, "s", "ms" );
   addNumber( "repeats", "Number of stimulus repeats at each position", 5.0, 1., 100., 1., "");
-
+  addNumber( "binwidth", "Bin-width used to estimate the firing rate.", 0.01, 0.001, 1.0, 0.001, "s", "ms" );
+  
   newSection( "Robot setup" );
   addSelection( "xmapping", "Mapping of x-axis to robot axis", "y|z|x" );
   addBoolean( "xinvert", "Select to map 0 position in relacs to max position of the robot.", true);
@@ -221,19 +222,17 @@ bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_po
     double y_corrector = y_slope * x;
     plotRate(posPlot, x, y);
     // go, robi, go
-    cerr << x << "\t" << y << "\t" << z_pos << endl;
-    cerr << "y_corr:" << y_corrector << endl;
-
     if ( !moveToPosition(x, y + y_corrector, z_pos) )
       return false;
     // do the measurement
-    //    sleep( 0.1 );
     spike_trains.clear();
     for ( int j = 0; j < repeats; j++ ) {
       int trial = 0;
-      presentStimulus( x, y, z_pos, j, signal );
+      if ( presentStimulus( x, y, z_pos, j, signal ) != 0 ) {
+        return false;
+      }
       getSpikes( spike_trains );
-      SampleDataD rate((int)(period/0.01), 0.0, 0.01);
+      SampleDataD rate( (int)(period/this->binwidth), 0.0, this->binwidth );
       getRate( rate, spike_trains.back(), trial, period, duration );
       if ( simulation ) {
 	double best = x_search ? best_x : best_y;
@@ -272,17 +271,11 @@ int ReceptiveField::presentStimulus(double x_pos, double y_pos, double z_pos, in
     string w = "Output of stimulus failed!<br>Error code is <b>";
     w += Str( signal.error() ) + "</b>: <b>" + signal.errorText() + "</b>";
     warning( w, 4.0 );
-    //save();
-    //stop();
-    robot->close_mirob();
     return Failed;
   }
 
   sleep( this->pause );
   if ( interrupt() ) {
-    //save();
-    //stop();
-    robot->close_mirob();
     return Aborted;
   }
   return 0;
@@ -389,6 +382,7 @@ int ReceptiveField::main( void )
   this->duration = number( "duration" );
   this->deltaf = number( "deltaf" );
   this->pause = number( "pause" );
+  this->binwidth = number( "binwidth" );
 
   robot = dynamic_cast<misc::XYZRobot*>( device( "robot-2" ) );
   if ( robot == 0 ) {
@@ -407,11 +401,11 @@ int ReceptiveField::main( void )
   }
   robot->wait();
   if ( interrupt() ) {
-    // robot->PF_up_and_over( {safex, safey, safez } );
-    // robot->wait();
+    robot->PF_up_and_over( {safex, safey, safez } );
+    robot->wait();
     // robot->PF_up_and_over( {0., 0., 0. } );
     // robot->wait();
-    robot->close_mirob();
+    //    robot->close_mirob();
     return Aborted;
   }
 
@@ -442,12 +436,16 @@ int ReceptiveField::main( void )
   // robot->PF_up_and_over( fish_head );
   // robot->wait();
   if (!rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true , adjust_y, false )) {
+    robot->PF_up_and_over( {safex, safey, safez } );
+    robot->wait();
     return Failed;
   }
   double bestX, bestY;
   if ( bestXPos( avg_rates_x, xrange, bestX ) ) {
     plotBestX( xPlot, bestX );
     if (!rangeSearch( yrange, bestX, z_pos, avg_rates_y, signal, false, adjust_y, false ) ) {
+      robot->PF_up_and_over( {safex, safey, safez } );
+      robot->wait();
       return Failed;
     }
     if (bestXPos( avg_rates_y, yrange, bestY )) {
