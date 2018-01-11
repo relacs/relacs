@@ -174,9 +174,7 @@ bool bestXPos(std::vector<double> &averages, LinearRange &range, double &bestPos
 
 bool ReceptiveField::moveToPosition( double x, double y, double z) {
   Point destination( fish_head );
-  cerr << "fish head: " << fish_head;
   Point temp_dest( x, y, z );
-  cerr << temp_dest;
   for (size_t i = 0; i < axis_map.size(); i++ ) {
     destination[axis_map[i]] +=  axis_invert[i] * temp_dest[i];
   }
@@ -184,7 +182,6 @@ bool ReceptiveField::moveToPosition( double x, double y, double z) {
     return false;
   //robot->powerAxes( true );
   //sleep( 0.75 );
-  cerr << destination;
   robot->PF_up_and_over( destination );
   robot->wait();
   sleep( 0.1 );
@@ -222,8 +219,12 @@ bool ReceptiveField::rangeSearch( LinearRange &range, double xy_pos, double z_po
     double y_corrector = y_slope * x;
     plotRate(posPlot, x, y);
     // go, robi, go
-    if ( !moveToPosition(x, y + y_corrector, z_pos) )
+    if ( !moveToPosition(x, y, z_pos) )
       return false;
+    if ( adjust_y ) {
+      if ( !moveToPosition(x, y + y_corrector, z_pos) )
+        return false;
+    }
     // do the measurement
     spike_trains.clear();
     for ( int j = 0; j < repeats; j++ ) {
