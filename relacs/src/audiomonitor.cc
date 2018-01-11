@@ -222,7 +222,7 @@ void AudioMonitor::start( void )
     cerr << "Started audio stream at " << AudioRate << " Hz\n";
 #endif
 
-  RateFac = 1.01;
+  RateFac = 1.0;
   DataIndex = -1;
   if ( Data[Trace].size() > 0 )
     DataMean = Data[Trace].back();
@@ -343,23 +343,23 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   unsigned long i=0;
   for ( ; i<framesperbuffer; i++ ) {
     double time = i/audiorate;
-    int indices = ::floor(time*rate); // trace.indices( time );
+    int indices = ::floor(time*rate);
     index = dataindex + indices;
     if ( index+1 >= datasize )
       break;
     // linear interpolation:
     double m = (trace[index+1]-trace[index])*rate;
-    data->LastOut = (m*(time-trace.interval(indices))+trace[index])*fac;
+    data->LastOut = (m*(time-indices/rate)+trace[index])*fac;
     // subtract mean:
     mute += muteincr;
     data->DataMean += ( data->LastOut - data->DataMean )*audiofilter;
     *out++ = mute * (data->LastOut - data->DataMean);
   }
-  data->DataIndex = index - 1;
+  data->DataIndex = index+1;
 
   // fill up the audio buffer:
   if ( i<framesperbuffer ) {
-    //    cerr << "AUDIOMONITOR FILL " << framesperbuffer - i << '\n';
+    // cerr << "AUDIOMONITOR FILL " << framesperbuffer - i << '\n';
     for ( ; i<framesperbuffer; i++ ) {
       mute += muteincr;
       data->DataMean += ( data->LastOut - data->DataMean )*audiofilter;
@@ -369,7 +369,7 @@ int AudioMonitor::audioCallback( const void *input, void *output,
   }
   else if ( datasize - dataindex > 2*(long)framesperbuffer ) {
     data->RateFac += 0.001;
-    //    cerr << "RATEFC = " << data->RateFac << '\n';
+    // cerr << "RATEFC = " << data->RateFac << '\n';
   }
 
   data->PrevMute = data->Mute;
