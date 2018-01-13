@@ -75,11 +75,19 @@ public:
   Point operator+( const Point &p ) const;
     /*! Subtract coordinates of point \a p from this point. */
   Point operator-( const Point &p ) const;
+    /*! Multiply coordinates of point \a p elementwise with this point. */
+  Point operator*( const Point &p ) const;
+    /*! Divide coordinates of this point by the ones of \a p elementwise. */
+  Point operator/( const Point &p ) const;
 
     /*! Add coordinates of point \a p to this point. */
   Point &operator+=( const Point &p );
     /*! Subtract coordinates of point \a p from this point. */
   Point &operator-=( const Point &p );
+    /*! Multiply coordinates of point \a p to this point elementwise. */
+  Point &operator*=( const Point &p );
+    /*! Divide coordinates of this point by the ones of point \a p elementwise. */
+  Point &operator/=( const Point &p );
 
     /*! Add \a \a to all coordinates of this point. */
   Point operator+( double a ) const;
@@ -100,12 +108,14 @@ public:
   Point &operator/=( double a );
 
     /*! Dot product between the coordinates this and point \a p. */
-  double operator*( const Point &p ) const;
+  double dot( const Point &p ) const;
     /*! The angle between this vector and \a p in radians. */
   double angle( const Point &p ) const;
 
-    /*! True if this point and \a p are the same. */
+    /*! True if this point and \a p are the same, i.e. have the same coordinates. */
   bool operator==( const Point &p ) const;
+    /*! True if this point and \a p differ in at leas one element. */
+  bool operator!=( const Point &p ) const;
     /*! True if all coordinates of \c this are smaller than the ones of \a p. */
   bool operator<( const Point &p ) const;
     /*! True if all coordinates of \c this are smaller or equal than the ones of \a p. */

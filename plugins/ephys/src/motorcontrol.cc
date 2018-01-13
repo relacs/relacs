@@ -337,7 +337,7 @@ MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
     addInteger( "amplitude", "Amplitude", Amplitude, 1, 80, 5 ).setFlags( 1 );
     addNumber( "amplasymm", "Asymm", AmplAsymm, 0.0, 1.0, 0.01, "", "", "%4.2f", 0 );
     addNumber( "interval", "Interval", Interval, 0.0, 5.0, 0.05, "sec", "ms", "%.0f", 1 );
-    M->setAmplZ( Amplitude, AmplAsymm*Amplitude );
+    M->setStepAmplZ( Amplitude, AmplAsymm*Amplitude );
     QHBoxLayout *hbox = new QHBoxLayout;
     mbox->addLayout( hbox );
     OW = new OptWidget( (Options*)this, 1, 2, true, 0, 0 );
@@ -497,7 +497,7 @@ void MiMaPu::notify( void )
   int ampl = integer( "amplitude" );
   double asymm = number( "amplasymm" );
   if ( ampl != Amplitude || asymm != AmplAsymm ) {
-    if ( M->setAmplZ( ampl, asymm*ampl ) == 0 ) {
+    if ( M->setStepAmplZ( ampl, asymm*ampl ) == 0 ) {
       Amplitude = ampl;
       AmplAsymm = asymm;
     }

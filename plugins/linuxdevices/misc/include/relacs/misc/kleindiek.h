@@ -53,21 +53,8 @@ public:
   virtual void close( void );
   virtual int reset( void );
 
-    /*! Step axis \a axis by \a steps spteps. */
-  int stepBy( int axis, int steps, int speed=0, int acc=0 );
-
-    /*! Return the position of the z-axis.
-        Depending on the implementation this can be raw steps
-	or a specific distance or angle. */
-  virtual double posX( void ) const;
-    /*! Return the position of the z-axis.
-        Depending on the implementation this can be raw steps
-	or a specific distance or angle. */
-  virtual double posY( void ) const;
-    /*! Return the position of the z-axis.
-        Depending on the implementation this can be raw steps
-	or a specific distance or angle. */
-  virtual double posZ( void ) const;
+    /*! Immediately stop movement of axis \a axis. */
+  virtual int stop( int axis ) { return NotSupported; };
 
     /*! Defines the current position of the x axis as the home position. */
   virtual int clearX( void );
@@ -90,15 +77,15 @@ public:
     /*! Set the amplitude of a step of the x-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
-  virtual int setAmplX( double posampl, double negampl=-1.0 );
+  virtual int setStepAmplX( double posampl, double negampl=-1.0 );
     /*! Set the amplitude of a step of the y-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
-  virtual int setAmplY( double posampl, double negampl=-1.0 );
+  virtual int setStepAmplY( double posampl, double negampl=-1.0 );
     /*! Set the amplitude of a step of the z-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
-  virtual int setAmplZ( double posampl, double negampl=-1.0 );
+  virtual int setStepAmplZ( double posampl, double negampl=-1.0 );
 
     /*! The minimum possible amplitude for the x-axis. */
   virtual double minAmplX( void ) const;
@@ -106,6 +93,12 @@ public:
   virtual double maxAmplX( void ) const;
 
   friend ostream &operator<<( ostream &str, const Kleindiek &k );
+
+
+protected:
+
+    /*! Step axis \a axis by \a steps spteps. */
+  int doStepBy( int axis, int steps, double speed=0, double acc=0 );
 
   int pause( int ms );
 

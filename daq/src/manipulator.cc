@@ -28,28 +28,28 @@ namespace relacs {
 Manipulator::Manipulator( void ) 
   : Device( ManipulatorType )
 {
-  for ( int k=0; k<3; k++ ) {
-    PosAmpl[k] = 1.0;
-    NegAmpl[k] = 1.0;
-    SpeedFac[k] = 1.0;
-    AccFac[k] = 1.0;
-    DefaultSpeed[k] = 1;
-    DefaultAcc[k] = 1;
-  }
+  PosAmpl = Point( 1.0, 1.0, 1.0 );
+  NegAmpl = Point( 1.0, 1.0, 1.0 );
+  SpeedFac = Point( 1.0, 1.0, 1.0 );
+  AccFac = Point( 1.0, 1.0, 1.0 );
+  DefaultSpeed = Point( 1.0, 1.0, 1.0 );
+  DefaultAcc = Point( 1.0, 1.0, 1.0 );
+  CurrentSteps = Point( 0.0, 0.0, 0.0 );
+  CurrentPos = Point( 0.0, 0.0, 0.0 );
 }
 
 
 Manipulator::Manipulator( const string &deviceclass )
   : Device( deviceclass, ManipulatorType )
 {
-  for ( int k=0; k<3; k++ ) {
-    PosAmpl[k] = 1.0;
-    NegAmpl[k] = 1.0;
-    SpeedFac[k] = 1.0;
-    AccFac[k] = 1.0;
-    DefaultSpeed[k] = 1;
-    DefaultAcc[k] = 1;
-  }
+  PosAmpl = Point( 1.0, 1.0, 1.0 );
+  NegAmpl = Point( 1.0, 1.0, 1.0 );
+  SpeedFac = Point( 1.0, 1.0, 1.0 );
+  AccFac = Point( 1.0, 1.0, 1.0 );
+  DefaultSpeed = Point( 1.0, 1.0, 1.0 );
+  DefaultAcc = Point( 1.0, 1.0, 1.0 );
+  CurrentSteps = Point( 0.0, 0.0, 0.0 );
+  CurrentPos = Point( 0.0, 0.0, 0.0 );
 }
 
 
@@ -58,34 +58,36 @@ Manipulator::~Manipulator( void )
 }
 
 
-int Manipulator::stepBy( int axis, int steps, int speed, int acc )
+int Manipulator::stepBy( int axis, int steps, double speed, double acc )
 {
-  return 0;
-}
-
-
-int Manipulator::stepBy( const Point &dist, int speed, int acc )
-{
-  // XXX we need a more fancy translation of speed onto the axis.
-  int r = 0;
-  for ( int k=0; k<3; k++ )
-    r |= stepBy( k, dist[k], speed, acc );
+  if ( speed <= 0 )
+    speed = DefaultSpeed[axis];
+  if ( acc <= 0 )
+    acc = DefaultAcc[axis];
+  // TODO: implement obstacle avoidance if absolute coordinates are supported!
+  int r = doStepBy( axis, steps, speed, acc );
+  if ( r == 0 ) {
+    CurrentSteps[axis] += steps;
+    CurrentPos[axis] += steps*(steps>=0.0?PosAmpl[axis]:NegAmpl[axis]);
+  }
   return r;
 }
 
 
-int Manipulator::stepTo( int axis, int pos, int speed, int acc )
+int Manipulator::stepTo( int axis, int pos, double speed, double acc )
 {
-  return 0;
-}
-
-
-int Manipulator::stepTo( const Point &pos, int speed, int acc )
-{
-  // XXX we need a more fancy translation of speed onto the axis.
-  int r = 0;
-  for ( int k=0; k<3; k++ )
-    r |= stepTo( k, pos[k], speed, acc );
+  if ( PosAmpl[axis] != NegAmpl[axis] )
+    return NotSupported;
+  if ( speed <= 0 )
+    speed = DefaultSpeed[axis];
+  if ( acc <= 0 )
+    acc = DefaultAcc[axis];
+  // TODO: implement obstacle avoidance if absolute coordinates are supported!
+  int r = doStepTo( axis, pos, speed, acc );
+  if ( r == 0 ) {
+    CurrentSteps[axis] = pos;
+    CurrentPos[axis] = pos*PosAmpl[axis];
+  }
   return r;
 }
 
@@ -93,43 +95,47 @@ int Manipulator::stepTo( const Point &pos, int speed, int acc )
 int Manipulator::moveBy( int axis, double dist, double speed, double acc )
 {
   int d = (int) ::round( dist/(dist>=0.0?PosAmpl[axis]:NegAmpl[axis]));
-  int s = (int) ::round( speed/SpeedFac[axis]);
-  int a = (int) ::round( acc/AccFac[axis]);
+  double s = speed/SpeedFac[axis];
+  double a = acc/AccFac[axis];
   return stepBy( axis, d, s, a );
-}
-
-
-int Manipulator::moveBy( const Point &dist, double speed, double acc )
-{
-  int r = 0;
-  for ( int k=0; k<3; k++ )
-    r |= moveBy( k, dist[k], speed, acc );
-  return r;
 }
 
 
 int Manipulator::moveTo( int axis, double pos, double speed, double acc )
 {
-  // XXX positive or negative depends on current position of axis!
-  int p = (int) ::round( pos/(pos>=0.0?PosAmpl[axis]:NegAmpl[axis]));
-  int s = (int) ::round( speed/SpeedFac[axis]);
-  int a = (int) ::round( acc/AccFac[axis]);
+  if ( PosAmpl[axis] != NegAmpl[axis] )
+    return NotSupported;
+  int p = (int) ::round( pos/PosAmpl[axis] );
+  double s = speed/SpeedFac[axis];
+  double a = acc/AccFac[axis];
   return stepTo( axis, p, s, a );
+}
+
+
+int Manipulator::moveBy( const Point &dist, double speed, double acc )
+{
+  // TODO: implement obstacle avoidance if absolute coordinates are supported!
+  int r = doMoveBy( dist, speed, acc );
+  if ( r == 0 ) {
+    for ( int k=0; k<3; k++ )
+      CurrentSteps[k] += dist[k]/(dist[k]>0.0?PosAmpl[k]:NegAmpl[k]);
+    CurrentPos += dist;
+  }
+  return r;
 }
 
 
 int Manipulator::moveTo( const Point &pos, double speed, double acc )
 {
-  int r = 0;
-  for ( int k=0; k<3; k++ )
-    r |= moveTo( k, pos[k], speed, acc );
+  if ( PosAmpl != NegAmpl )
+    return NotSupported;
+  // TODO: implement obstacle avoidance if absolute coordinates are supported!
+  int r = doMoveTo( pos, speed, acc );
+  if ( r == 0 ) {
+    CurrentSteps = pos/PosAmpl;
+    CurrentPos = pos;
+  }
   return r;
-}
-
-
-int Manipulator::stop( int axis )
-{
-  return 0;
 }
 
 
@@ -139,36 +145,6 @@ int Manipulator::stop( void )
   for ( int k=0; k<3; k++ )
     r |= stop( k );
   return r;
-}
-
-
-double Manipulator::posX( void ) const
-{
-  return pos( 0 );
-}
-
-
-double Manipulator::posY( void ) const
-{
-  return pos( 1 );
-}
-
-
-double Manipulator::posZ( void ) const
-{
-  return pos( 2 );
-}
-
-
-double Manipulator::pos( int axis ) const
-{
-  return 0.0;
-}
-
-
-Point Manipulator::pos( void ) const
-{
-  return Point( 0.0, 0.0, 0.0 );
 }
 
 
@@ -226,20 +202,26 @@ int Manipulator::home( void )
 }
 
 
-int Manipulator::setAmplX( double posampl, double negampl )
+int Manipulator::setStepAmplX( double posampl, double negampl )
 {
+  PosAmpl[0] = posampl;
+  NegAmpl[0] = negampl >= 0.0 ? negampl : posampl;
   return 0;
 }
 
 
-int Manipulator::setAmplY( double posampl, double negampl )
+int Manipulator::setStepAmplY( double posampl, double negampl )
 {
+  PosAmpl[1] = posampl;
+  NegAmpl[1] = negampl >= 0.0 ? negampl : posampl;
   return 0;
 }
 
 
-int Manipulator::setAmplZ( double posampl, double negampl )
+int Manipulator::setStepAmplZ( double posampl, double negampl )
 {
+  PosAmpl[2] = posampl;
+  NegAmpl[2] = negampl >= 0.0 ? negampl : posampl;
   return 0;
 }
 

@@ -135,18 +135,13 @@ int Kleindiek::reset( void )
 }
 
 
-int Kleindiek::stepBy( int axis, int steps, int speed, int acc )
+int Kleindiek::doStepBy( int axis, int steps, double speed, double acc )
 {
   tcflush( Handle, TCIFLUSH );
 
   char com[200];
   sprintf( com, "coarse %c %+d;", 'A' + axis, steps );
   write( Handle, com, strlen( com ) );
-
-  if ( steps > 0 )
-    Pos[axis] += double( steps*PosAmplitude[axis]*PosGain[axis] );
-  else
-    Pos[axis] += double( steps*NegAmplitude[axis]*NegGain[axis] );
 
   /*
   usleep( 100000 );
@@ -160,41 +155,26 @@ int Kleindiek::stepBy( int axis, int steps, int speed, int acc )
 }
 
 
-double Kleindiek::posX( void ) const
-{
-  return Pos[0];
-}
-
-
-double Kleindiek::posY( void ) const
-{
-  return Pos[1];
-}
-
-
-double Kleindiek::posZ( void ) const
-{
-  return Pos[2];
-}
-
-
 int Kleindiek::clearX( void )
 {
-  Pos[0] = 0.0;
+  CurrentPos[0] = 0.0;
+  CurrentSteps[0] = 0;
   return 0;
 }
 
 
 int Kleindiek::clearY( void )
 {
-  Pos[1] = 0.0;
+  CurrentPos[1] = 0.0;
+  CurrentSteps[1] = 0;
   return 0;
 }
 
 
 int Kleindiek::clearZ( void )
 {
-  Pos[2] = 0.0;
+  CurrentPos[2] = 0.0;
+  CurrentSteps[2] = 0;
   return 0;
 }
 
@@ -210,7 +190,7 @@ int Kleindiek::clear( void )
 
 int Kleindiek::homeX( void )
 {
-  double dist = -Pos[0];
+  double dist = -CurrentPos[0];
   int steps = 0;
   if ( dist > 0.0 )
     steps = (int)::round( dist / PosAmplitude[0] / PosGain[0] );
@@ -222,7 +202,7 @@ int Kleindiek::homeX( void )
 
 int Kleindiek::homeY( void )
 {
-  double dist = -Pos[1];
+  double dist = -CurrentPos[1];
   int steps = 0;
   if ( dist > 0.0 )
     steps = (int)::round( dist / PosAmplitude[1] / PosGain[1] );
@@ -234,7 +214,7 @@ int Kleindiek::homeY( void )
 
 int Kleindiek::homeZ( void )
 {
-  double dist = -Pos[2];
+  double dist = -CurrentPos[2];
   int steps = 0;
   if ( dist > 0.0 )
     steps = (int)::round( dist / PosAmplitude[2] / PosGain[2] );
@@ -250,7 +230,7 @@ int Kleindiek::home( void )
 }
 
 
-int Kleindiek::setAmplX( double posampl, double negampl )
+int Kleindiek::setStepAmplX( double posampl, double negampl )
 {
   int pa = int( rint( posampl ) );
   int na = negampl < 0.0 ? pa : int( rint( negampl ) );
@@ -265,7 +245,7 @@ int Kleindiek::setAmplX( double posampl, double negampl )
 }
 
 
-int Kleindiek::setAmplY( double posampl, double negampl )
+int Kleindiek::setStepAmplY( double posampl, double negampl )
 {
   int pa = int( rint( posampl ) );
   int na = negampl < 0.0 ? pa : int( rint( negampl ) );
@@ -280,7 +260,7 @@ int Kleindiek::setAmplY( double posampl, double negampl )
 }
 
 
-int Kleindiek::setAmplZ( double posampl, double negampl )
+int Kleindiek::setStepAmplZ( double posampl, double negampl )
 {
   int pa = int( rint( posampl ) );
   int na = negampl < 0.0 ? pa : int( rint( negampl ) );
@@ -357,6 +337,8 @@ int Kleindiek::amplitudepos( int channel, int ampl )
 
   PosAmplitude[channel] = ampl;
 
+  PosAmpl[channel] = PosAmplitude[channel]*PosGain[channel];
+
   return 0;
 }
 
@@ -374,6 +356,8 @@ int Kleindiek::amplitudeneg( int channel, int ampl )
   buf[n] = '\0';
 
   NegAmplitude[channel] = ampl;
+
+  PosAmpl[channel] = NegAmplitude[channel]*NegGain[channel];
 
   return 0;
 }

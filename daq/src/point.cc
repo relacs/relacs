@@ -101,6 +101,24 @@ Point Point::operator-( const Point &p ) const
 }
 
 
+Point Point::operator*( const Point &p ) const
+{
+  Point q( *this );
+  for ( int k=0; k<Dim; k++ )
+    q[k] *= p[k];
+  return q;
+}
+
+
+Point Point::operator/( const Point &p ) const
+{
+  Point q( *this );
+  for ( int k=0; k<Dim; k++ )
+    q[k] /= p[k];
+  return q;
+}
+
+
 Point &Point::operator+=( const Point &p )
 {
   for ( int k=0; k<Dim; k++ )
@@ -113,6 +131,22 @@ Point &Point::operator-=( const Point &p )
 {
   for ( int k=0; k<Dim; k++ )
     Coords[k] -= p[k];
+  return *this;
+}
+
+
+Point &Point::operator*=( const Point &p )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] *= p[k];
+  return *this;
+}
+
+
+Point &Point::operator/=( const Point &p )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] /= p[k];
   return *this;
 }
 
@@ -185,7 +219,7 @@ Point &Point::operator/=( double a )
 }
 
 
-double Point::operator*( const Point &p ) const
+double Point::dot( const Point &p ) const
 {
   double d = 0.0;
   for ( int k=0; k<Dim; k++ )
@@ -196,7 +230,7 @@ double Point::operator*( const Point &p ) const
 
 double Point::angle( const Point &p ) const
 {
-  double d = operator*( p );
+  double d = dot( p );
   d /= magnitude()*p.magnitude();
   return acos( d );
 }
@@ -209,6 +243,16 @@ bool Point::operator==( const Point &p ) const
       return false;
   }
   return true;
+}
+
+
+bool Point::operator!=( const Point &p ) const
+{
+  for ( int k=0; k<Dim; k++ ) {
+    if ( Coords[k] != p[k] )
+      return true;
+  }
+  return false;
 }
 
 
