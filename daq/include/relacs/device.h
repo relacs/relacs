@@ -36,7 +36,6 @@ namespace relacs {
 \class Device
 \brief Basic interface for accessing a device.
 \author Jan Benda
-\todo Options as part of the device
 
 The Device class defines the interface for the basic operations open(),
 close(), and reset() of a device.

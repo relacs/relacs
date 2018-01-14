@@ -105,6 +105,12 @@ public:
   virtual bool inside( const Point &p ) const = 0;
     /*! Return \c true if point \a p is below the shape. */
   virtual bool below( const Point &p ) const = 0;
+    /*! Check whether the path connecting the two points \a pos1 and \a pos2
+        intersects a shape.
+	Pathes less than \a resolution long may intersect a shape without notice.
+        This implementation recursively checks whether points on the path
+        are inside a shape. */
+  virtual bool intersect( const Point &pos1, const Point &pos2, double resolution ) const;
 
     /*! Print some information about the shape into the stream \a str. */
   virtual ostream &print( ostream &str ) const = 0;
@@ -162,6 +168,9 @@ class Zone : public Shape
   void add( const Shape &s );
     /*! Subtract shape \a s from the zone. */
   void subtract( const Shape &s );
+    /*! Add (\a add \c = \c true) or subtract (\a add \c = \c false)
+        shape \a s to the zone. */
+  void push( const Shape &s, bool add=true );
 
     /*! Add shape \a s to the zone. */
   void operator+=( const Shape &s );
@@ -177,10 +186,19 @@ class Zone : public Shape
   int size( void ) const { return (int)Shapes.size(); };
     /*! Return \c true if no shapes are contained by the zone. */
   bool empty( void ) const { return Shapes.empty(); };
-    /*! The i-th shape. */
+    /*! Return the i-th shape. */
   const Shape *operator[]( int i ) const { return Shapes[i]; }
-    /*! The i-th shape. */
+    /*! Return the i-th shape. */
   Shape *operator[]( int i ) { return Shapes[i]; }
+    /*! Return the first shape with name \a name.
+        Return 0 if no shape with that name is found. */
+  const Shape *operator[]( const string &name ) const;
+    /*! Return the first shape with name \a name.
+        Return 0 if no shape with that name is found. */
+  Shape *operator[]( const string &name );
+
+    /*! Remove all shapes from the zone. */
+  void clear( void );
 
     /*! Approximation of the minimum corner of bounding boxes of all additive shapes. */
   virtual Point boundingBoxMin( void ) const;

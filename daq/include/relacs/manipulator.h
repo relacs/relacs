@@ -24,6 +24,7 @@
 
 
 #include <relacs/point.h>
+#include <relacs/shape.h>
 #include <relacs/device.h>
 using namespace std;
 
@@ -60,12 +61,14 @@ doStepBy( int, int, double, double ).
 You might want to implement the functions
 step( int ), 
 pos( int ), 
+wait(),
 doStepTo( int, int, double, double ),
 doMoveTo( const Point&, double, double ),
-doMoveBy( const Point&, double, double ).
+doMoveBy( const Point&, double, double ),
+setHome(), moveToHome().
 
 The constructor, initOptions(), or open() need to initialize the following variables:
-PosAmpl, NegAmpl, SpeedFac, AccFac, DefaultSpeed, DefaultAcc.
+PosAmpl, NegAmpl, SpeedFac, AccFac, DefaultSpeed, DefaultAcc, IntersectResolution.
 
 In case you want to use a manipulator device within RELACS, your
 Manipulator implementation needs to provide a void default constructor
@@ -81,6 +84,18 @@ class Manipulator : public Device
 
 public:
 
+  enum MoveModes {
+      /*! Move to target no matter whether it or the path is in a forbidden zone. */
+    AlwaysMove,
+      /*! Do not move if the target is in a forbidden zone. */
+    TargetOutside,
+      /*! Do not move if the target or parts of the movement path are in a forbidden zone. */
+    PathOutside,
+      /*! Do not move if the target is in a forbidden zone. Move
+          around any inbetwen forbidden zone. */
+    MoveAround
+  };
+
     /*! Construct a Manipulator. */
   Manipulator( void );
     /*! Construct a Manipulator with class name \a deviceclass.
@@ -88,6 +103,11 @@ public:
   Manipulator( const string &deviceclass );
     /*! Destroy a Manipulator. In case it is open, close it. */
   virtual ~Manipulator( void );
+
+    /*! Return the current movement mode. */
+  MoveModes moveMode( void ) const { return MoveMode; };
+    /*! Set the current movement mode to \a mode. */
+  void setMoveMode( MoveModes mode ) { MoveMode = mode; };
 
     /*! Relative move of axis \a axis by \a steps steps with speed \a speed
         and acceleration \a acc.
@@ -158,7 +178,10 @@ public:
   int stepToZ( int pos, double speed=0, double acc=0 )
   { return stepTo( 2, pos, speed, acc ); };
 
-    /*! Return the current position of the axis \a axis in raw steps. */
+    /*! Return the current position of the axis \a axis in raw steps.
+        This implementation simply returns the internally stored
+        position value.  You might want to reimplement this function
+        to query the absolute position from the robot. */
   virtual double step( int axis ) const { return CurrentSteps[axis]; };
     /*! Return the current position of the x-axis in raw steps. */
   double stepX( void ) const { return step( 0 ); };
@@ -255,7 +278,10 @@ public:
         Returns NotSupported, if no absolute positions are supported. */
   int moveTo( const Point &pos, double speed=0.0, double acc=0.0 );
 
-    /*! Return the current position of the axis \a axis in meter. */
+    /*! Return the current position of the axis \a axis in meter.
+        This implementation simply returns the internally stored position value.
+        For robots with absolute positioning you should reimplement this function
+        to query the absolute position from the robot. */
   virtual double pos( int axis ) const { return CurrentPos[axis]; };
     /*! Return the current position of the x-axis in meter. */
   double posX( void ) const { return pos( 0 ); };
@@ -274,30 +300,43 @@ public:
   int stopY( void ) { return stop( 1 ); };
     /*! Immediately stop movement of z-axis. */
   int stopZ( void ) { return stop( 2 ); };
-    /*! Immediately stop movement of all axes. */
-  int stop( void );
+    /*! Immediately stop movement of all axes.
+        This implementation simply calls stop( int ) for each axis. */
+  virtual int stop( void );
 
-    /*! Sleep until current movement finished. Return 0 on success. */
+    /*! Sleep until current movement finished.
+        This implementation simply returns NotSupported. */
   virtual int wait( void ) const;
 
 
-    /*! Defines the current position of the x axis as the home position. */
-  virtual int clearX( void );
-    /*! Defines the current position of the y axis as the home position. */
-  virtual int clearY( void );
-    /*! Defines the current position of the z axis as the home position. */
-  virtual int clearZ( void );
-    /*! Defines the current position of all axis as the home position. */
-  virtual int clear( void );
+    /*! Defines the current position of the x-axis as its home position. */
+  int setHomeX( void ) { return setHome( 0 ); };
+    /*! Defines the current position of the y-axis as its home position. */
+  int setHomeY( void ) { return setHome( 1 ); };
+    /*! Defines the current position of the z-axis as its home position. */
+  int setHomeZ( void ) { return setHome( 2 ); };
+    /*! Defines the current position of the axis \a axis as its home position.
+        This implementation sets the internally tracked position 
+	CurrentSteps and CurrentPos to zero. */
+  virtual int setHome( int axis );
+    /*! Defines the current position of all axes as the home position.
+        This implementation calls setHome( int ) on all axes. */
+  virtual int setHome( void );
 
-    /*! Move x axis back to its home position. */
-  virtual int homeX( void );
-    /*! Move y axis back to its home position. */
-  virtual int homeY( void );
-    /*! Move z axis back to its home position. */
-  virtual int homeZ( void );
-    /*! Move back to the home position. */
-  virtual int home( void );
+    /*! Move x-axis back to its home position. */
+  int moveToHomeX( double speed=0.0, double acc=0.0 ) { return moveToHome( 0, speed, acc ); };
+    /*! Move y-axis back to its home position. */
+  int moveToHomeY( double speed=0.0, double acc=0.0 ) { return moveToHome( 1, speed, acc ); };
+    /*! Move z-axis back to its home position. */
+  int moveToHomeZ( double speed=0.0, double acc=0.0 ) { return moveToHome( 2, speed, acc ); };
+    /*! Move axis \a axis back to the home position.
+        This implementation makes a relative move to the negative of the current position. */
+  virtual int moveToHome( int axis, double speed=0.0, double acc=0.0 ) 
+  { return moveBy( axis, -pos( axis ), speed, acc ); };
+    /*! Move back to the home position.
+        This implementation makes a relative move to the negative of the current position. */
+  virtual int moveToHome( double speed=0.0, double acc=0.0 )
+  { return moveBy( -pos(), speed, acc ); };
 
     /*! The distance in meter corresponding to \a steps raw steps of the x-axis. */
   double distanceX( int steps=1 ) const { return steps*PosAmpl[0]; };
@@ -305,6 +344,8 @@ public:
   double distanceY( int steps=1 ) const { return steps*PosAmpl[1]; };
     /*! The distance in meter corresponding to \a steps raw steps of the z-axis. */
   double distanceZ( int steps=1 ) const { return steps*PosAmpl[2]; };
+    /*! The distance in meter corresponding to \a steps raw steps of the axis \a axis. */
+  double distance( int axis, int steps=1 ) const { return steps*PosAmpl[axis]; };
 
     /*! The number of raw steps of the x-axis corresponding to a distance of \a dist
         in meter. */
@@ -315,25 +356,18 @@ public:
     /*! The number of raw steps of the x-axis corresponding to a distance of \a dist
         in meter. */
   int stepsZ( double dist ) const { return (int) ::round( dist/PosAmpl[2] ); };
+    /*! The number of raw steps of the axis \a axis corresponding to a distance of \a dist
+        in meter. */
+  int steps( int axis, double dist ) const { return (int) ::round( dist/PosAmpl[axis] ); };
 
-    /*! Set the amplitude in meter of a single raw step of the x-axis to \a posampl.
+    /*! Set the amplitude in meter of a single raw step of the axis \a axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl.
-        If \a negampl differs from \a posampl then absolute moves
-	on the x-axis are not supported. */
-  virtual int setStepAmplX( double posampl, double negampl=-1.0 );
-    /*! Set the amplitude in meter of a single raw step of the y-axis to \a posampl.
-        If \a negampl >= 0.0 set the negative amplitude to \a negampl,
-        otherwise set it equal to \a posampl.
-        If \a negampl differs from \a posampl then absolute moves
-	on the y-axis are not supported. */
-  virtual int setStepAmplY( double posampl, double negampl=-1.0 );
-    /*! Set the amplitude in meter of a single raw step of the z-axis to \a posampl.
-        If \a negampl >= 0.0 set the negative amplitude to \a negampl,
-        otherwise set it equal to \a posampl.
-        If \a negampl differs from \a posampl then absolute moves
-	on the z-axis are not supported. */
-  virtual int setStepAmplZ( double posampl, double negampl=-1.0 );
+        If \a negampl differs from \a posampl then absolute moves (stepTo(), moveTo())
+	on the x-axis are not supported.
+        This implementation simply stores the values in PosAmpl and NegAmpl that are used
+        to convert raw steps to meter. */
+  virtual int setStepAmpl( int axis, double posampl, double negampl=-1.0 );
 
     /*! The minimum possible amplitude for the x-axis in meter. */
   virtual double minAmplX( void ) const;
@@ -348,6 +382,21 @@ public:
     /*! The maximum possible amplitude for the z-axis in meter. */
   virtual double maxAmplZ( void ) const;
 
+    /*! List of forbidden zones. */
+  const Zone &forbiddenZones( void ) const { return ForbiddenZones; };
+    /*! List of forbidden zones. */
+  Zone &forbiddenZones( void ) { return ForbiddenZones; };
+    /*! Add shape to the list of forbidden zones. */
+  void addForbiddenZone( const Shape &s ) { ForbiddenZones.add( s ); };
+    /*! Clear list of forbidden zones. */
+  void clearForbiddenZone( void ) { ForbiddenZones.clear(); };
+    /*! Return \c true if point \a p is inside a forbidden zone. */
+  bool forbidden( const Point &p ) const { return ForbiddenZones.inside( p ); };
+    /*! Return \c true if the path from the current position to the
+        point \a p intersects a forbidden zone. */
+  bool intersect( const Point &p, double resolution ) const
+  { return ForbiddenZones.intersect( CurrentPos, p, resolution ); };
+
 
 protected:
 
@@ -361,7 +410,8 @@ protected:
         and acceleration \a acc.
 	Steps, speed, and acceleration are given in raw values whose
 	meaning depend on the robot interface.
-        If no absolute positions are supported return NotSupported. */
+        If no absolute positions are supported return NotSupported.
+        This implementation simply returns NotSupported. */
   virtual int doStepTo( int axis, int pos, double speed, double acc ) { return NotSupported; };
 
     /*! Implement this function for a relative move of x, y, and z-axis
@@ -369,7 +419,8 @@ protected:
 	The distance coordinates are given in meter, the speed in meter per second
 	and the acceleration in meter per second squared.
         If \a speed or \a acc is zero, a default value for 
-	the speed or acceleration is used. */
+	the speed or acceleration is used.
+        This implementation simply returns NotSupported. */
   virtual int doMoveBy( const Point &dist, double speed, double acc ) { return NotSupported; };
     /*! Implement this function for an absolute move of x, y, and z-axis 
         to \a pos with speed \a speed and acceleration \a acc.
@@ -377,7 +428,8 @@ protected:
 	and the acceleration in meter per second squared.
         If \a speed or \a acc is zero, a default value for 
 	the speed or acceleration is used.
-        If no absolute positions are supported return NotSupported. */
+        If no absolute positions are supported return NotSupported.
+        This implementation simply returns NotSupported. */
   virtual int doMoveTo( const Point &pos, double speed, double acc ) { return NotSupported; };
 
     /*! The distance in meter of a single positive step for each axis. */
@@ -399,6 +451,14 @@ protected:
   Point CurrentSteps;
     /*! The current position in meters for each axis. */
   Point CurrentPos;
+
+    /*! The current movement mode. */
+  MoveModes MoveMode;
+    /*! List of forbidden zones. */
+  Zone ForbiddenZones;
+    /*! Resolution for determining intersection in meter. */
+  double IntersectResolution;
+
 
 };
 

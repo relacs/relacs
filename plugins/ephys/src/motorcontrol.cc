@@ -337,7 +337,7 @@ MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
     addInteger( "amplitude", "Amplitude", Amplitude, 1, 80, 5 ).setFlags( 1 );
     addNumber( "amplasymm", "Asymm", AmplAsymm, 0.0, 1.0, 0.01, "", "", "%4.2f", 0 );
     addNumber( "interval", "Interval", Interval, 0.0, 5.0, 0.05, "sec", "ms", "%.0f", 1 );
-    M->setStepAmplZ( Amplitude, AmplAsymm*Amplitude );
+    M->setStepAmpl( 2, Amplitude, AmplAsymm*Amplitude );
     QHBoxLayout *hbox = new QHBoxLayout;
     mbox->addLayout( hbox );
     OW = new OptWidget( (Options*)this, 1, 2, true, 0, 0 );
@@ -345,13 +345,13 @@ MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
     QVBoxLayout *vbox = new QVBoxLayout;
     hbox->addLayout( vbox );
     QPushButton *b;
-    b = new QPushButton( "clear" );
+    b = new QPushButton( "set home" );
     vbox->addWidget( b );
-    connect( b, SIGNAL( clicked( void ) ), this, SLOT( clear( void ) ) );
-    clear();
-    b = new QPushButton( "home" );
+    connect( b, SIGNAL( clicked( void ) ), this, SLOT( setHome( void ) ) );
+    setHome();
+    b = new QPushButton( "go home" );
     vbox->addWidget( b );
-    connect( b, SIGNAL( clicked( void ) ), this, SLOT( home( void ) ) );
+    connect( b, SIGNAL( clicked( void ) ), this, SLOT( moveToHome( void ) ) );
     FindButton = new QPushButton( "go" );
     vbox->addWidget( b );
     connect( FindButton, SIGNAL( clicked( void ) ), this, SLOT( find( void ) ) );
@@ -497,7 +497,7 @@ void MiMaPu::notify( void )
   int ampl = integer( "amplitude" );
   double asymm = number( "amplasymm" );
   if ( ampl != Amplitude || asymm != AmplAsymm ) {
-    if ( M->setStepAmplZ( ampl, asymm*ampl ) == 0 ) {
+    if ( M->setStepAmpl( 2, ampl, asymm*ampl ) == 0 ) {
       Amplitude = ampl;
       AmplAsymm = asymm;
     }
@@ -543,24 +543,24 @@ void MiMaPu::update( void )
 }
 
 
-void MiMaPu::clear( void )
+void MiMaPu::setHome( void )
 {
   if ( M == 0 )
     return;
 
-  M->clearZ();
-  setNumber( "pos", -M->posZ() + 1.0e-8 );
+  M->setHomeZ();
+  setNumber( "pos", M->posZ() );
 }
 
 
-void MiMaPu::home( void )
+void MiMaPu::moveToHome( void )
 {
   if ( M == 0 )
     return;
 
   stop();
-  M->homeZ();
-  setNumber( "pos", -M->posZ() + 1.0e-8 );
+  M->moveToHomeZ();
+  setNumber( "pos", M->posZ() );
 }
 
 

@@ -59,7 +59,7 @@ Kleindiek::~Kleindiek( void )
 void Kleindiek::construct( void )
 {
   Handle = -1;
-  clear();
+  setHome();
   for ( int k=0; k<3; k++ ) {
     PosAmplitude[k] = 80;
     NegAmplitude[k] = 80;
@@ -122,7 +122,7 @@ void Kleindiek::close( void )
   if ( Handle >= 0 )
     tcsetattr( Handle, TCSANOW, &OldTIO );
   Handle = -1;
-  clear();
+  setHome();
   Info.clear();
   Settings.clear();
 }
@@ -155,123 +155,18 @@ int Kleindiek::doStepBy( int axis, int steps, double speed, double acc )
 }
 
 
-int Kleindiek::clearX( void )
-{
-  CurrentPos[0] = 0.0;
-  CurrentSteps[0] = 0;
-  return 0;
-}
-
-
-int Kleindiek::clearY( void )
-{
-  CurrentPos[1] = 0.0;
-  CurrentSteps[1] = 0;
-  return 0;
-}
-
-
-int Kleindiek::clearZ( void )
-{
-  CurrentPos[2] = 0.0;
-  CurrentSteps[2] = 0;
-  return 0;
-}
-
-
-int Kleindiek::clear( void )
-{
-  clearX();
-  clearY();
-  clearZ();
-  return 0;
-}
-
-
-int Kleindiek::homeX( void )
-{
-  double dist = -CurrentPos[0];
-  int steps = 0;
-  if ( dist > 0.0 )
-    steps = (int)::round( dist / PosAmplitude[0] / PosGain[0] );
-  else
-    steps = (int)::round( dist / NegAmplitude[0] / NegGain[0] );
-  return stepByX( steps );
-}
-
-
-int Kleindiek::homeY( void )
-{
-  double dist = -CurrentPos[1];
-  int steps = 0;
-  if ( dist > 0.0 )
-    steps = (int)::round( dist / PosAmplitude[1] / PosGain[1] );
-  else
-    steps = (int)::round( dist / NegAmplitude[1] / NegGain[1] );
-  return stepByY( steps );
-}
-
-
-int Kleindiek::homeZ( void )
-{
-  double dist = -CurrentPos[2];
-  int steps = 0;
-  if ( dist > 0.0 )
-    steps = (int)::round( dist / PosAmplitude[2] / PosGain[2] );
-  else
-    steps = (int)::round( dist / NegAmplitude[2] / NegGain[2] );
-  return stepByZ( steps );
-}
-
-
-int Kleindiek::home( void )
-{
-  return homeX() + ( homeY() << 1 ) + ( homeZ() << 2 );
-}
-
-
-int Kleindiek::setStepAmplX( double posampl, double negampl )
+int Kleindiek::setStepAmpl( int axis, double posampl, double negampl )
 {
   int pa = int( rint( posampl ) );
   int na = negampl < 0.0 ? pa : int( rint( negampl ) );
 
   if ( pa >= 1 && pa <= 80 && na >= 1 && na <= 80 ) {
-    amplitudepos( 0, pa );
-    amplitudeneg( 0, na );
+    amplitudepos( axis, pa );
+    amplitudeneg( axis, na );
     return 0;
   }
   else
-    return 1;
-}
-
-
-int Kleindiek::setStepAmplY( double posampl, double negampl )
-{
-  int pa = int( rint( posampl ) );
-  int na = negampl < 0.0 ? pa : int( rint( negampl ) );
-
-  if ( pa >= 1 && pa <= 80 && na >= 1 && na <= 80 ) {
-    amplitudepos( 1, pa );
-    amplitudeneg( 1, na );
-    return 0;
-  }
-  else
-    return 2;
-}
-
-
-int Kleindiek::setStepAmplZ( double posampl, double negampl )
-{
-  int pa = int( rint( posampl ) );
-  int na = negampl < 0.0 ? pa : int( rint( negampl ) );
-
-  if ( pa >= 1 && pa <= 80 && na >= 1 && na <= 80 ) {
-    amplitudepos( 2, pa );
-    amplitudeneg( 2, na );
-    return 0;
-  }
-  else
-    return 4;
+    return InvalidParam;
 }
 
 

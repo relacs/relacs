@@ -74,6 +74,25 @@ Point Shape::inverseTransform( const Point &p ) const
 }
 
 
+bool Shape::intersect( const Point &pos1, const Point &pos2, double resolution ) const
+{
+  // if one of the end points is inside, return:
+  if ( inside( pos1 ) || inside( pos2 ) )
+    return true;
+
+  double dist = pos1.distance( pos2 );
+  // if the distance of the points is smaller than resolution 
+  // we assume no intersection of the path:
+  if ( dist < resolution )
+    return false;
+  else {
+    // rekursively test the path between the two points:
+    Point mid = pos1.center( pos2 );
+    return ( intersect( pos1, mid, resolution ) || intersect( mid, pos2, resolution ) );
+  }
+}
+
+
 ostream &operator<<( ostream &str, const Shape &s )
 {
   return s.print( str );
@@ -152,6 +171,13 @@ void Zone::subtract( const Shape &s )
 }
 
 
+  void Zone::push( const Shape &s, bool add )
+{
+  Shapes.push_back( s.copy() );
+  Add.push_back( add );
+}
+
+
 void Zone::operator+=( const Shape &s )
 {
   Shapes.push_back( s.copy() );
@@ -179,6 +205,35 @@ Zone Zone::operator-( const Shape &s ) const
   Zone z( *this );
   z -= s;
   return z;
+}
+
+
+const Shape *Zone::operator[]( const string &name ) const
+{
+  for ( auto si = Shapes.begin(); si != Shapes.end(); ++si ) {
+    if ( (*si)->name() == name )
+      return *si;
+  }
+  return 0;
+}
+
+
+Shape *Zone::operator[]( const string &name )
+{
+  for ( auto si = Shapes.begin(); si != Shapes.end(); ++si ) {
+    if ( (*si)->name() == name )
+      return *si;
+  }
+  return 0;
+}
+
+
+void Zone::clear( void )
+{
+  for ( auto si = Shapes.begin(); si != Shapes.end(); ++si )
+    delete *si;
+  Shapes.clear();
+  Add.clear();
 }
 
 

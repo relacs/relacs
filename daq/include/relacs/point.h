@@ -68,8 +68,8 @@ public:
 
   void set( double x, double y, double z );
 
-    /*! The magnitude (length) of the vector. */
-  double magnitude( void ) const;
+    /*! Return the negative of all coordinates. */
+  Point operator-( void ) const;
 
     /*! Add coordinates of point \a p to this point. */
   Point operator+( const Point &p ) const;
@@ -109,6 +109,8 @@ public:
 
     /*! Dot product between the coordinates this and point \a p. */
   double dot( const Point &p ) const;
+    /*! The magnitude (length) of the vector. */
+  double magnitude( void ) const;
     /*! The angle between this vector and \a p in radians. */
   double angle( const Point &p ) const;
 

@@ -62,8 +62,8 @@ Parameter:
 .
 
 Buttons:
-- clear: The clear button resets the position to zero.
-- home: Move the manipulator back to position zero.
+- set home: Set the current position of the z-axis as the home position.
+- go home: Move the z-axis back to zero, i.e. back to its home position.
 - go: Advance the manipulator every \a interval ms by \a speed steps
          until a spiking neuron is encountered.
 - stop: Stop automatic advance.
@@ -166,8 +166,8 @@ public:
 
 public slots:
 
-  void clear( void );
-  void home( void );
+  void setHome( void );
+  void moveToHome( void );
   void find( void );
   void stop( void );
 

@@ -56,36 +56,10 @@ public:
     /*! Immediately stop movement of axis \a axis. */
   virtual int stop( int axis ) { return NotSupported; };
 
-    /*! Defines the current position of the x axis as the home position. */
-  virtual int clearX( void );
-    /*! Defines the current position of the y axis as the home position. */
-  virtual int clearY( void );
-    /*! Defines the current position of the z axis as the home position. */
-  virtual int clearZ( void );
-    /*! Defines the current position of all axis as the home position. */
-  virtual int clear( void );
-
-    /*! Move x axis back to its home position. */
-  virtual int homeX( void );
-    /*! Move y axis back to its home position. */
-  virtual int homeY( void );
-    /*! Move z axis back to its home position. */
-  virtual int homeZ( void );
-    /*! Move back to the home position. */
-  virtual int home( void );
-
-    /*! Set the amplitude of a step of the x-axis to \a posampl.
+    /*! Set the amplitude of a step of the axis \a axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
-  virtual int setStepAmplX( double posampl, double negampl=-1.0 );
-    /*! Set the amplitude of a step of the y-axis to \a posampl.
-        If \a negampl >= 0.0 set the negative amplitude to \a negampl,
-        otherwise set it equal to \a posampl. */
-  virtual int setStepAmplY( double posampl, double negampl=-1.0 );
-    /*! Set the amplitude of a step of the z-axis to \a posampl.
-        If \a negampl >= 0.0 set the negative amplitude to \a negampl,
-        otherwise set it equal to \a posampl. */
-  virtual int setStepAmplZ( double posampl, double negampl=-1.0 );
+  virtual int setStepAmpl( int axis, double posampl, double negampl=-1.0 );
 
     /*! The minimum possible amplitude for the x-axis. */
   virtual double minAmplX( void ) const;
@@ -121,7 +95,6 @@ private:
   struct termios OldTIO;
   struct termios NewTIO;
 
-  double Pos[3];
   int PosAmplitude[3];
   int NegAmplitude[3];
   double PosGain[3];  // distance of single, positive full amplitude step in um

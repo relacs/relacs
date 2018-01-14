@@ -83,6 +83,15 @@ double Point::magnitude( void ) const
 }
 
 
+Point Point::operator-( void ) const
+{
+  Point q( *this );
+  for ( int k=0; k<Dim; k++ )
+    q[k] = -q[k];
+  return q;
+}
+
+
 Point Point::operator+( const Point &p ) const
 {
   Point q( *this );
