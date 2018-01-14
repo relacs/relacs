@@ -135,6 +135,32 @@ class Attenuate : public Device
 
 public:
 
+    /*! Return code indicating that the device driver is not opened. */
+  static const int NotOpen = Attenuator::NotOpen;
+    /*! Return code indicating an invalid output line of the attenuator. */
+  static const int InvalidDevice = Attenuator::InvalidDevice;
+    /*! Return code indicating a failure in reading
+        the attenuation level from the device. */
+  static const int ReadError = Device::ReadError;
+    /*! Return code indicating a failure in writing
+        the attenuation level to the device. */
+  static const int WriteError = Device::WriteError;
+    /*! Return code indicating a too high requested attenuation level,
+        i.e. the requested signal amplitude is too small. */
+  static const int Underflow = Attenuator::Underflow;
+    /*! Return code indicating a too low requested attenuation level,
+        i.e. the requested signal amplitude is too large. */
+  static const int Overflow = Attenuator::Overflow;
+
+    /*! Return code indicating an underflow in calculating the level,
+        i.e. the requested intensity is too small. */
+  static const int IntensityUnderflow = -9;
+    /*! Return code indicating an overflow in calculating the level,
+        i.e. the requested intensity is too large. */
+  static const int IntensityOverflow = -10;
+    /*! Return code indicating an unspecific error in calculating the level. */
+  static const int IntensityError = -11;
+
     /*! The attenuation level for which an outputline is muted. */
   static const double MuteAttenuationLevel;
     /*! The intensity for which an outputline is muted. */
@@ -439,32 +465,6 @@ public:
   const Attenuator *attenuator( void ) const;
     /*! Returns \c true if no attenuator is actually used. */
   bool noAttenuator( void ) const;
-
-    /*! Return code indicating that the device driver is not opened. */
-  static const int NotOpen = Attenuator::NotOpen;
-    /*! Return code indicating an invalid output line of the attenuator. */
-  static const int InvalidDevice = Attenuator::InvalidDevice;
-    /*! Return code indicating a failure in reading
-        the attenuation level from the device. */
-  static const int ReadError = Device::ReadError;
-    /*! Return code indicating a failure in writing
-        the attenuation level to the device. */
-  static const int WriteError = Device::WriteError;
-    /*! Return code indicating a too high requested attenuation level,
-        i.e. the requested signal amplitude is too small. */
-  static const int Underflow = Attenuator::Underflow;
-    /*! Return code indicating a too low requested attenuation level,
-        i.e. the requested signal amplitude is too large. */
-  static const int Overflow = Attenuator::Overflow;
-
-    /*! Return code indicating an underflow in calculating the level,
-        i.e. the requested intensity is too small. */
-  static const int IntensityUnderflow = -7;
-    /*! Return code indicating an overflow in calculating the level,
-        i.e. the requested intensity is too large. */
-  static const int IntensityOverflow = -8;
-    /*! Return code indicating an unspecific error in calculating the level. */
-  static const int IntensityError = -9;
 
 
 protected:

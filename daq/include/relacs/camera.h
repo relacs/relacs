@@ -33,7 +33,6 @@ namespace relacs {
 \class Camera
 \brief Virtual class for controlling a Camera. 
 \author Fabian Sinz
-\version 1.0
 \todo implement info() and settings()
 \todo add something for indicating existing axis
 

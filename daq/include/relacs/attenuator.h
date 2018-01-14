@@ -96,6 +96,13 @@ class Attenuator : public Device
 
 public:
 
+    /*! Return code indicating a too high requested attenuation level,
+        i.e. the requested signal amplitude is too small. */
+  static const int Underflow = -7;
+    /*! Return code indicating a too low requested attenuation level,
+        i.e. the requested signal amplitude is too large. */
+  static const int Overflow = -8;
+
     /*! The attenuation level for which the outputline is muted. */
   static const double MuteAttenuationLevel;
 
@@ -194,13 +201,6 @@ public:
        \sa attenuate(), test(), mute()
      */
   virtual int testMute( int di );
-
-    /*! Return code indicating a too high requested attenuation level,
-        i.e. the requested signal amplitude is too small. */
-  static const int Underflow = -5;
-    /*! Return code indicating a too low requested attenuation level,
-        i.e. the requested signal amplitude is too large. */
-  static const int Overflow = -6;
 
 
  protected:
