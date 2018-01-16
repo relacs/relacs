@@ -32,7 +32,7 @@ namespace relacs {
 /*!
 \class Shape
 \brief An abstract shape in 3D space that has an inside.
-\author Alexander Ott, Jan Benda
+\author Jan Benda, Alexander Ott, Fabian Sinz
  */
 
 class Shape 
@@ -44,7 +44,8 @@ public:
     Unknown = 0,
     Zone = 1,
     Sphere = 2,
-    Cuboid = 3,
+    Cylinder = 3,
+    Cuboid = 4,
   };
 
     /*! Constructs a shape of a specific \a type, with name \a name
@@ -73,20 +74,23 @@ public:
 
     /*! The yaw angle of the shape in radians. */
   double yaw( void ) const { return Yaw; };
-    /*! Set the yaw angle of the shape to \a yaw in radians. */
-  void setYaw( double yaw ) { Yaw = yaw; };
+    /*! Set the yaw angle of the shape to \a yaw in radians and
+        recompute transformation matrices. */
+  void setYaw( double yaw );
     /*! The pitch angle of the shape in radians. */
   double pitch( void ) const { return Pitch; };
-    /*! Set the pitch angle of the shape to \a pitch in radians. */
-  void setPitch( double pitch ) { Pitch = pitch; };
+    /*! Set the pitch angle of the shape to \a pitch in radians and
+        recompute transformation matrices. */
+  void setPitch( double pitch );
     /*! The roll angle of the shape in radians. */
   double roll( void ) const { return Roll; };
-    /*! Set the roll angle of the shape to \a roll in radians. */
-  void setRoll( double roll ) { Roll = roll; };
+    /*! Set the roll angle of the shape to \a roll in radians and
+        recompute transformation matrices. */
+  void setRoll( double roll );
     /*! Set the yaw, pitch, and roll angles of the shape to 
-        \a yaw, \a pitch, \a roll in radians, respectively. */
-  void setAngles( double yaw, double pitch, double roll )
-    { Yaw = yaw; Pitch = pitch; Roll = roll; };
+        \a yaw, \a pitch, \a roll in radians, respectively, and
+        recompute transformation matrices. */
+  void setAngles( double yaw, double pitch, double roll );
 
     /*! Transform coordinates of point \a p from shape coordinates to world coordinates
         by rotation with the yaw, pitch, and roll angles and shifting to the anchor point. */
@@ -119,7 +123,16 @@ public:
   friend ostream &operator<<( ostream &str, const Shape &s );
 
 
+protected:
+
+    /*! The point (0, 0, 0). */
+  static const Point Origin;
+
+
 private:
+
+    /*! Recompute the transformation matrices from the three angles. */
+  void computeTrafos( void );
 
     /*! The type of the shape. */
   ShapeType Type;
@@ -133,6 +146,12 @@ private:
   double Pitch;
     /*! Rotation of standard shape around x-axis in radians. */
   double Roll;
+    /*! The transformation matrix for transfroming shape coordinates
+        to world coordinates. */
+  double Trafo[3][3];
+    /*! The inverse transformation matrix for transfroming world
+        coordinates to shape coordinates. */
+  double InvTrafo[3][3];
 
 };
 
@@ -140,7 +159,7 @@ private:
 /*!
 \class Zone
 \brief A shape made up of a collection of basic shapes.
-\author Fabian Sinz, Jan Benda
+\author Jan Benda, Fabian Sinz
  */
 
 class Zone : public Shape 
@@ -270,6 +289,60 @@ class Sphere : public Shape
 private:
 
   double Radius;
+
+};
+
+
+/*!
+\class Cylinder
+\brief A cylinder.
+\author Jan Benda
+ */
+
+class Cylinder : public Shape 
+{
+
+ public:
+
+    /*! Constructor. */
+  Cylinder( void );
+    /*! Copy constructor. */
+  Cylinder( const Cylinder &c );
+    /*! Construct a cylinder with name \a name from \a anchor, \a radius, and \a height.
+        The anchor point is the center of the bottom circle. */
+  Cylinder( const Point &anchor, double radius, double height, const string &name="cylinder" );
+
+    /*! Returns a pointer to a copy of the cylinder. */
+  virtual Shape *copy( void ) const;
+
+    /*! The radius of the cylinder. */
+  double radius( void ) const { return Radius; }
+    /*! Set the radius of the cylinder to \a radius. */
+  void setRadius( double radius ) { Radius = radius; }
+
+    /*! The height of the cylinder. */
+  double height( void ) const { return Height; }
+    /*! Set the height of the cylinder to \a height. */
+  void setHeight( double height ) { Height = height; }
+
+    /*! Minimum corner of bounding box. */
+  virtual Point boundingBoxMin( void ) const;
+    /*! Maximum corner of bounding box. */
+  virtual Point boundingBoxMax( void ) const;
+
+    /*! Return \c true if point \a p is inside the cylinder. */
+  virtual bool inside( const Point &p ) const;
+    /*! Return \c true if point \a p is below the cylinder. */
+  virtual bool below( const Point &p ) const;
+
+    /*! Print some information about the cylinder into the stream \a str. */
+  virtual ostream &print( ostream &str ) const;
+
+
+private:
+
+  double Radius;
+  double Height;
 
 };
 

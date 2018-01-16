@@ -26,6 +26,9 @@
 namespace relacs {
 
 
+const Point Shape::Origin = Point( 0.0, 0.0, 0.0 );
+
+
 //******************************************
 
 Shape::Shape( Shape::ShapeType type, const string &name, const Point &anchor )
@@ -36,6 +39,13 @@ Shape::Shape( Shape::ShapeType type, const string &name, const Point &anchor )
     Pitch( 0.0 ),
     Roll( 0.0 )
 {
+  Trafo[0][0] = 1.0; Trafo[0][1] = 0.0; Trafo[0][2] = 0.0;
+  Trafo[1][0] = 0.0; Trafo[1][1] = 1.0; Trafo[1][2] = 0.0;
+  Trafo[2][0] = 0.0; Trafo[2][1] = 0.0; Trafo[2][2] = 1.0;
+
+  InvTrafo[0][0] = 1.0; InvTrafo[0][1] = 0.0; InvTrafo[0][2] = 0.0;
+  InvTrafo[1][0] = 0.0; InvTrafo[1][1] = 1.0; InvTrafo[1][2] = 0.0;
+  InvTrafo[2][0] = 0.0; InvTrafo[2][1] = 0.0; InvTrafo[2][2] = 1.0;
 }
 
 
@@ -44,17 +54,72 @@ Shape::~Shape( void)
 }
 
 
+void Shape::setYaw( double yaw )
+{ 
+  Yaw = yaw;
+  computeTrafos();
+}
+
+
+void Shape::setPitch( double pitch )
+{
+  Pitch = pitch;
+  computeTrafos();
+}
+
+
+void Shape::setRoll( double roll )
+{
+  Roll = roll;
+  computeTrafos();
+}
+
+
+void Shape::setAngles( double yaw, double pitch, double roll )
+{
+  Yaw = yaw;
+  Pitch = pitch;
+  Roll = roll;
+  computeTrafos();
+}
+
+
+void Shape::computeTrafos( void )
+{
+  double sy = sin(Yaw);
+  double cy = cos(Yaw);
+  double sp = sin(Pitch);
+  double cp = cos(Pitch);
+  double sr = sin(Roll);
+  double cr = cos(Roll);
+
+  Trafo[0][0] = cp*cy;
+  Trafo[0][1] = cp*sy;
+  Trafo[0][2] = -sp;
+  Trafo[1][0] = sr*sp*cy-cr*sp;
+  Trafo[1][1] = sr*sp*sy+cr*cp;
+  Trafo[1][2] = sr*cp;
+  Trafo[2][0] = cr*sp*cy+sr*sp;
+  Trafo[2][1] = cr*sp*sy-sr*cp;
+  Trafo[2][2] = cr*cp;
+
+  InvTrafo[0][0] = cp*cy;
+  InvTrafo[0][1] = sr*sp*cy-cr*sy;
+  InvTrafo[0][2] = cr*sp*cy+sr*sy;
+  InvTrafo[1][0] = cp*sy;
+  InvTrafo[1][1] = sr*sp*sy+cr*cy;
+  InvTrafo[1][2] = cr*sp*sy-sr*cy;
+  InvTrafo[2][0] = -sp;
+  InvTrafo[2][1] = sr*cp;
+  InvTrafo[2][2] = cr*cp;
+}
+
+
 Point Shape::transform( const Point &p ) const
 {
-  Point pp( cos(Pitch)*cos(Yaw)*p.x() +
-	    cos(Pitch)*sin(Yaw)*p.y() -
-	    sin(Pitch)*p.z(),
-	    (sin(Roll)*sin(Pitch)*cos(Yaw)-cos(Roll)*sin(Pitch))*p.x() +
-	    (sin(Roll)*sin(Pitch)*sin(Yaw)+cos(Roll)*cos(Pitch))*p.y() +
-	    sin(Roll)*cos(Pitch)*p.z(),
-	    (cos(Roll)*sin(Pitch)*cos(Yaw)+sin(Roll)*sin(Pitch))*p.x() +
-	    (cos(Roll)*sin(Pitch)*sin(Yaw)-sin(Roll)*cos(Pitch))*p.y() +
-	    cos(Roll)*cos(Pitch)*p.z() );
+  Point pp( Trafo[0][0]*p.x() + Trafo[0][1]*p.y() + Trafo[0][2]*p.z(),
+	    Trafo[1][0]*p.x() + Trafo[1][1]*p.y() + Trafo[1][2]*p.z(),
+	    Trafo[2][0]*p.x() + Trafo[2][1]*p.y() + Trafo[2][2]*p.z() );
   return pp + anchor();
 }
 
@@ -62,15 +127,9 @@ Point Shape::transform( const Point &p ) const
 Point Shape::inverseTransform( const Point &p ) const
 {
   Point pp = p - anchor();
-  return Point( cos(Pitch)*cos(Yaw)*pp.x() +
-		(sin(Roll)*sin(Pitch)*cos(Yaw)-cos(Roll)*sin(Yaw))*pp.y() +
-		(cos(Roll)*sin(Pitch)*cos(Yaw)+sin(Roll)*sin(Yaw))*pp.z(),
-		cos(Pitch)*sin(Yaw)*pp.x() +
-		(sin(Roll)*sin(Pitch)*sin(Yaw)+cos(Roll)*cos(Yaw))*pp.y() +
-		(cos(Roll)*sin(Pitch)*sin(Yaw)-sin(Roll)*cos(Yaw))*pp.z(),
-		-sin(Pitch)*pp.x() +
-		sin(Roll)*cos(Pitch)*pp.y() +
-		cos(Roll)*cos(Pitch)*pp.z() );
+  return Point( InvTrafo[0][0]*pp.x() + InvTrafo[0][1]*pp.y() + InvTrafo[0][2]*pp.z(),
+		InvTrafo[1][0]*pp.x() + InvTrafo[1][1]*pp.y() + InvTrafo[1][2]*pp.z(),
+		InvTrafo[2][0]*pp.x() + InvTrafo[2][1]*pp.y() + InvTrafo[2][2]*pp.z() );
 }
 
 
@@ -171,7 +230,7 @@ void Zone::subtract( const Shape &s )
 }
 
 
-  void Zone::push( const Shape &s, bool add )
+void Zone::push( const Shape &s, bool add )
 {
   Shapes.push_back( s.copy() );
   Add.push_back( add );
@@ -325,7 +384,8 @@ ostream &Zone::print( ostream &str ) const
 //******************************************
 
 Sphere::Sphere( void )
-  : Shape( Shape::Sphere, "sphere" )
+  : Shape( Shape::Sphere, "sphere" ),
+    Radius( 0.0 )
 {
 }
 
@@ -383,6 +443,95 @@ ostream &Sphere::print( ostream &str ) const
 {
   str << "Sphere \"" << name() << "\" at " << anchor().toString() 
       << " of radius " << Str( Radius, 0, 3, 'f' ) << '\n';
+  return str;
+}
+
+
+//******************************************
+
+Cylinder::Cylinder( void )
+  : Shape( Shape::Cylinder, "cylinder" ),
+    Radius( 0.0 ),
+    Height( 0.0 )
+{
+}
+
+
+Cylinder::Cylinder( const Cylinder &c )
+  : Shape( c.type(), c.name(), c.anchor() ),
+    Radius( c.Radius ),
+    Height( c.Height )
+{
+  setAngles( c.yaw(), c.pitch(), c.roll() );
+}
+
+
+Cylinder::Cylinder( const Point &anchor, double radius, double height, const string &name )
+  : Shape( Shape::Cylinder, name, anchor ),
+    Radius( radius ),
+    Height( height )
+{
+}
+
+
+Shape *Cylinder::copy( void ) const
+{
+  return new Cylinder( *this );
+}
+
+
+Point Cylinder::boundingBoxMin( void ) const
+{
+  deque<Point> pts;
+  pts.push_back( transform( Point( Radius, Radius, 0.0 ) ) );
+  pts.push_back( transform( Point( -Radius, Radius, 0.0 ) ) );
+  pts.push_back( transform( Point( Radius, -Radius, 0.0 ) ) );
+  pts.push_back( transform( Point( -Radius, -Radius, 0.0 ) ) );
+  pts.push_back( transform( Point( Radius, Radius, Height ) ) );
+  pts.push_back( transform( Point( -Radius, Radius, Height ) ) );
+  pts.push_back( transform( Point( Radius, -Radius, Height ) ) );
+  pts.push_back( transform( Point( -Radius, -Radius, Height ) ) );
+  return min( pts );
+}
+
+
+Point Cylinder::boundingBoxMax( void ) const
+{
+  deque<Point> pts;
+  pts.push_back( transform( Point( Radius, Radius, 0.0 ) ) );
+  pts.push_back( transform( Point( -Radius, Radius, 0.0 ) ) );
+  pts.push_back( transform( Point( Radius, -Radius, 0.0 ) ) );
+  pts.push_back( transform( Point( -Radius, -Radius, 0.0 ) ) );
+  pts.push_back( transform( Point( Radius, Radius, Height ) ) );
+  pts.push_back( transform( Point( -Radius, Radius, Height ) ) );
+  pts.push_back( transform( Point( Radius, -Radius, Height ) ) );
+  pts.push_back( transform( Point( -Radius, -Radius, Height ) ) );
+  return max( pts );
+}
+
+
+bool Cylinder::inside( const Point &p ) const
+{
+  Point pp = inverseTransform( p );
+  Point pz( pp );
+  pz.z() = 0.0;
+  return ( Origin.distance( pz ) <= Radius &&
+	   pp.z() >= 0.0 && pp.z() <= height() );
+}
+
+
+bool Cylinder::below( const Point &p ) const
+{
+  return ( ( p >= boundingBoxMin() && p <= boundingBoxMax() ) ||
+	   ( p.z() < boundingBoxMax().z() ) ); 
+}
+
+
+ostream &Cylinder::print( ostream &str ) const
+{
+  str << "Cylinder \"" << name() << "\" at " << anchor().toString() 
+      << " of radius " << Str( Radius, 0, 3, 'f' )
+      << " and height " << Str( Height, 0, 3, 'f' ) << '\n';
   return str;
 }
 
@@ -471,7 +620,7 @@ Point Cuboid::boundingBoxMax( void ) const
 bool Cuboid::inside( const Point &p ) const
 {
   Point pp = inverseTransform( p );
-  return ( pp >= Point( 0.0, 0.0, 0.0 ) && pp <= Size );
+  return ( pp >= Origin && pp <= Size );
 }
 
 
