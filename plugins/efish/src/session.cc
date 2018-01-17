@@ -44,6 +44,7 @@ Session::Session( void )
   EODAmplitudes.reserve( 1000000 );  // should be enough for 24h!
   EODUnit = "";
   EODUpdate = 30;
+  TimeOffset = 0.0;
   WaterTemp = 0.0;
   WaterTemps.clear();
   WaterTemps.reserve( 1000000 );  // should be enough for 24h!
@@ -464,9 +465,14 @@ void Session::main( void )
     if ( eodcount >= EODUpdate ) {
       eodcount = 0;
 
+      // recording was restarted?
+      if ( EODRates.size() > 0 && 
+	   currentTime() + TimeOffset < EODRates.x().back() )
+	TimeOffset = EODRates.x().back() + 0.1;
+
       // EOD Rate:
       EODRate = eode.frequency( currentTime() - 0.5, currentTime() );
-      EODRates.push( currentTime(), EODRate );
+      EODRates.push( currentTime() + TimeOffset, EODRate );
       lockStimulusData();
       stimulusData().setNumber( "EOD Rate", EODRate );
       unlockStimulusData();
@@ -474,7 +480,7 @@ void Session::main( void )
 
       // EOD Amplitude:
       EODAmplitude = eodAmplitude( trace( EODTrace ), currentTime() - 0.5, currentTime() );
-      EODAmplitudes.push( currentTime(), EODAmplitude );
+      EODAmplitudes.push( currentTime() + TimeOffset, EODAmplitude );
       lockStimulusData();
       stimulusData().setNumber( "EOD Amplitude", EODAmplitude );
       stimulusData().setUnit( "EOD Amplitude", trace( EODTrace ).unit() );
@@ -483,7 +489,7 @@ void Session::main( void )
       // Temperature:
       if ( TempDev != 0 ) {
 	WaterTemp = TempDev->temperature();
-	WaterTemps.push( currentTime(), WaterTemp );
+	WaterTemps.push( currentTime() + TimeOffset, WaterTemp );
 	lockMetaData();
 	metaData().setNumber( "Recording>temp-1", WaterTemp );
 	unlockMetaData();

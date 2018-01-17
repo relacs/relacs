@@ -100,6 +100,7 @@ private:
   string EODUnit;
   int EODUpdate;
   long EODOffset;
+  double TimeOffset;
 
   Temperature *TempDev;
   double WaterTemp;
