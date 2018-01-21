@@ -29,10 +29,13 @@ using namespace std;
 namespace relacs {
 
 
+class Matrix;
+
+
 /*!
 \class Point
 \brief A point in 3D space.
-\author Alexander Ott, Jan Benda
+\author Jan Benda, Alexander Ott, Fabian Sinz
  */
 
 class Point {
@@ -45,6 +48,8 @@ public:
   Point( const Point &p );
     /*! A point with coordinates \a x, \a y, \a z. */
   Point( double x, double y, double z );
+    /*! A point with coordinates from c. */
+  Point( const double c[3] );
   /*! Construct a point from a string representation (x,y,z) mm */
   Point( const string &position );
 
@@ -66,7 +71,12 @@ public:
     /*! The coordinate of the point of the i-th dimension. */
   double &operator[]( int i ) { return Coords[i]; }
 
-  void set( double x, double y, double z );
+    /*! Assign the coordinates \a x, \a y, \a z to this point. */
+  Point &assign( double x, double y, double z );
+    /*! Assign coordinates of point \a p to this point. */
+  Point &assign( const Point &p );
+    /*! Assign coordinates of point \a p to this point. */
+  Point &operator=( const Point &p );
 
     /*! Return the negative of all coordinates. */
   Point operator-( void ) const;
@@ -89,18 +99,18 @@ public:
     /*! Divide coordinates of this point by the ones of point \a p elementwise. */
   Point &operator/=( const Point &p );
 
-    /*! Add \a \a to all coordinates of this point. */
+    /*! Add \a a to all coordinates of this point. */
   Point operator+( double a ) const;
-    /*! Subtract \a \a from all coordinates of this point. */
+    /*! Subtract \a a from all coordinates of this point. */
   Point operator-( double a ) const;
     /*! Multiply all coordinates of this point with \a a. */
   Point operator*( double a ) const;
     /*! Divide all coordinates of this point by \a a. */
   Point operator/( double a ) const;
 
-    /*! Add \a \a to all coordinates of this point. */
+    /*! Add \a a to all coordinates of this point. */
   Point &operator+=( double a );
-    /*! Subtract \a \a from all coordinates of this point. */
+    /*! Subtract \a a from all coordinates of this point. */
   Point &operator-=( double a );
     /*! Multiply all coordinates of this point with \a a. */
   Point &operator*=( double a );
@@ -142,6 +152,9 @@ public:
 
     /*! The point with absolute coordinates. */
   friend Point abs( Point p );
+
+    /*! Apply transformation matrix \a m to this point. */
+  Point &operator*=( const Matrix &m );
 
     /*! Write the coordinates of the point to stream \a str. */
   friend ostream &operator<<( ostream &str, const Point &p );

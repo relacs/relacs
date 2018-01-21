@@ -31,21 +31,34 @@ const Point Shape::Origin = Point( 0.0, 0.0, 0.0 );
 
 //******************************************
 
-Shape::Shape( Shape::ShapeType type, const string &name, const Point &anchor )
+Shape::Shape( Shape::ShapeType type, const string &name )
   : Type( type ),
     Name( name ),
-    Anchor( anchor ),
-    Yaw( 0.0 ),
-    Pitch( 0.0 ),
-    Roll( 0.0 )
+    Trans( Origin ),
+    Trafo(),
+    InvTrafo()
 {
-  Trafo[0][0] = 1.0; Trafo[0][1] = 0.0; Trafo[0][2] = 0.0;
-  Trafo[1][0] = 0.0; Trafo[1][1] = 1.0; Trafo[1][2] = 0.0;
-  Trafo[2][0] = 0.0; Trafo[2][1] = 0.0; Trafo[2][2] = 1.0;
+}
 
-  InvTrafo[0][0] = 1.0; InvTrafo[0][1] = 0.0; InvTrafo[0][2] = 0.0;
-  InvTrafo[1][0] = 0.0; InvTrafo[1][1] = 1.0; InvTrafo[1][2] = 0.0;
-  InvTrafo[2][0] = 0.0; InvTrafo[2][1] = 0.0; InvTrafo[2][2] = 1.0;
+
+Shape::Shape( Shape::ShapeType type, const string &name,
+	      const Matrix &trafo, const Point &trans  )
+  : Type( type ),
+    Name( name ),
+    Trans( trans ),
+    Trafo( trafo )
+{
+  InvTrafo = Trafo.inverse();
+}
+
+
+Shape::Shape( const Shape &s )
+  : Type( s.Type ),
+    Name( s.Name ),
+    Trans( s.Trans ),
+    Trafo( s.Trafo ),
+    InvTrafo( s.InvTrafo )
+{
 }
 
 
@@ -54,82 +67,138 @@ Shape::~Shape( void)
 }
 
 
-void Shape::setYaw( double yaw )
-{ 
-  Yaw = yaw;
-  computeTrafos();
+void Shape::translateX( double x )
+{
+  Trans.x() += x;
 }
 
 
-void Shape::setPitch( double pitch )
+void Shape::translateY( double y )
 {
-  Pitch = pitch;
-  computeTrafos();
+  Trans.y() += y;
 }
 
 
-void Shape::setRoll( double roll )
+void Shape::translateZ( double z )
 {
-  Roll = roll;
-  computeTrafos();
+  Trans.z() += z;
 }
 
 
-void Shape::setAngles( double yaw, double pitch, double roll )
+void Shape::translate( const Point &p )
 {
-  Yaw = yaw;
-  Pitch = pitch;
-  Roll = roll;
-  computeTrafos();
+  Trans += p;
 }
 
 
-void Shape::computeTrafos( void )
+void Shape::scaleX( double xscale )
 {
-  double sy = sin(Yaw);
-  double cy = cos(Yaw);
-  double sp = sin(Pitch);
-  double cp = cos(Pitch);
-  double sr = sin(Roll);
-  double cr = cos(Roll);
+  Trans.x() *= xscale;
+  Trafo *= Matrix::scaleX( xscale );
+  InvTrafo = Trafo.inverse();
+}
 
-  Trafo[0][0] = cp*cy;
-  Trafo[0][1] = cp*sy;
-  Trafo[0][2] = -sp;
-  Trafo[1][0] = sr*sp*cy-cr*sp;
-  Trafo[1][1] = sr*sp*sy+cr*cp;
-  Trafo[1][2] = sr*cp;
-  Trafo[2][0] = cr*sp*cy+sr*sp;
-  Trafo[2][1] = cr*sp*sy-sr*cp;
-  Trafo[2][2] = cr*cp;
 
-  InvTrafo[0][0] = cp*cy;
-  InvTrafo[0][1] = sr*sp*cy-cr*sy;
-  InvTrafo[0][2] = cr*sp*cy+sr*sy;
-  InvTrafo[1][0] = cp*sy;
-  InvTrafo[1][1] = sr*sp*sy+cr*cy;
-  InvTrafo[1][2] = cr*sp*sy-sr*cy;
-  InvTrafo[2][0] = -sp;
-  InvTrafo[2][1] = sr*cp;
-  InvTrafo[2][2] = cr*cp;
+void Shape::scaleY( double yscale )
+{
+  Trans.y() *= yscale;
+  Trafo *= Matrix::scaleY( yscale );
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::scaleZ( double zscale )
+{
+  Trans.z() *= zscale;
+  Trafo *= Matrix::scaleZ( zscale );
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::scale( double xscale, double yscale, double zscale )
+{
+  Trans.x() *= xscale;
+  Trans.y() *= yscale;
+  Trans.z() *= zscale;
+  Trafo *= Matrix::scale( xscale, yscale, zscale );
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::scale( const Point &scale )
+{
+  Trans *= scale;
+  Trafo *= Matrix::scale( scale );
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::scale( double scale )
+{
+  Trans *= scale;
+  Trafo *= Matrix::scale( scale );
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::rotateYaw( double yaw )
+{
+  Matrix m = Matrix::rotateYaw( yaw );
+  Trans *= m;
+  Trafo *= m;
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::rotatePitch( double pitch )
+{
+  Matrix m = Matrix::rotatePitch( pitch );
+  Trans *= m;
+  Trafo *= m;
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::rotateRoll( double roll )
+{
+  Matrix m = Matrix::rotateRoll( roll );
+  Trans *= m;
+  Trafo *= m;
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::rotate( double yaw, double pitch, double roll )
+{
+  Matrix m = Matrix::rotate( yaw, pitch, roll );
+  Trans *= m;
+  Trafo *= m;
+  InvTrafo = Trafo.inverse();
 }
 
 
 Point Shape::transform( const Point &p ) const
 {
-  Point pp( Trafo[0][0]*p.x() + Trafo[0][1]*p.y() + Trafo[0][2]*p.z(),
-	    Trafo[1][0]*p.x() + Trafo[1][1]*p.y() + Trafo[1][2]*p.z(),
-	    Trafo[2][0]*p.x() + Trafo[2][1]*p.y() + Trafo[2][2]*p.z() );
-  return pp + anchor();
+  return Trafo * p + Trans;
 }
 
 
 Point Shape::inverseTransform( const Point &p ) const
 {
-  Point pp = p - anchor();
-  return Point( InvTrafo[0][0]*pp.x() + InvTrafo[0][1]*pp.y() + InvTrafo[0][2]*pp.z(),
-		InvTrafo[1][0]*pp.x() + InvTrafo[1][1]*pp.y() + InvTrafo[1][2]*pp.z(),
-		InvTrafo[2][0]*pp.x() + InvTrafo[2][1]*pp.y() + InvTrafo[2][2]*pp.z() );
+  return InvTrafo * ( p - Trans );
+}
+
+
+bool Shape::inside( const Point &p ) const
+{
+  return insideShape( inverseTransform( p ) );
+}
+
+
+bool Shape::below( const Point &p ) const
+{
+  return ( ( p >= boundingBoxMin() && p <= boundingBoxMax() ) ||
+	   ( p.z() < boundingBoxMax().z() ) ); 
 }
 
 
@@ -152,6 +221,17 @@ bool Shape::intersect( const Point &pos1, const Point &pos2, double resolution )
 }
 
 
+void Shape::intersectionPoints( const Point &pos1, const Point &pos2,
+				Point &ip1, Point &ip2 ) const
+{
+  intersectionPointsShape( inverseTransform( pos1 ), inverseTransform( pos2 ), ip1, ip2 );
+  // XXX if ( ip1 != NonePoint )
+  ip1 = transform( ip1 );
+  // XXX if ( ip2 != NonePoint )
+  ip2 = transform( ip2 );
+}
+
+
 ostream &operator<<( ostream &str, const Shape &s )
 {
   return s.print( str );
@@ -169,10 +249,9 @@ Zone::Zone( void )
 
 
 Zone::Zone( const Zone &z )
-  : Shape( z.type(), z.name(), z.anchor() ),
+  : Shape( z ),
     Add( z.Add )
 {
-  setAngles( z.yaw(), z.pitch(), z.roll() );
   Shapes.clear();
   for ( auto si=z.Shapes.begin(); si != z.Shapes.end(); ++si )
     Shapes.push_back( (*si)->copy() );
@@ -298,7 +377,7 @@ void Zone::clear( void )
 
 Point Zone::boundingBoxMin( void ) const
 {
-  Point p( anchor() );
+  Point p( trans() );
   if ( Shapes.empty() )
     return p;
 
@@ -320,7 +399,7 @@ Point Zone::boundingBoxMin( void ) const
 
 Point Zone::boundingBoxMax( void ) const
 {
-  Point p( anchor() );
+  Point p( trans() );
   if ( Shapes.empty() )
     return p;
 
@@ -340,14 +419,13 @@ Point Zone::boundingBoxMax( void ) const
 }
 
 
-bool Zone::inside( const Point &p ) const
+bool Zone::insideShape( const Point &p ) const
 {
-  Point pp = inverseTransform( p );
   bool ins = false;
   auto si = Shapes.begin();
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
-    if ( (*si)->inside( pp ) )
+    if ( (*si)->inside( p ) )
       ins = *ai;
   }
   return ins;
@@ -368,9 +446,28 @@ bool Zone::below( const Point &p ) const
 }
 
 
+void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
+				    Point &ip1, Point &ip2 ) const
+{
+  //  ip1 = NonePoint;
+  //  ip2 = NonePoint;
+  /*
+  bool ins = false;
+  auto si = Shapes.begin();
+  auto ai = Add.begin();
+  for ( ; si != Shapes.end(); ++si, ++ai ) {
+    Point ipp1;
+    Point ipp2;
+    (*si)->intersectionPoints( pos1, pos2, ipp1, ipp2 );
+    // XXX do something 
+  }
+  */
+}
+
+
 ostream &Zone::print( ostream &str ) const
 {
-  str << "Zone \"" << name() << "\" at " << anchor().toString() 
+  str << "Zone \"" << name() << "\" at " << trans().toString() 
       << " consisting of\n";
   auto si = Shapes.begin();
   auto ai = Add.begin();
@@ -384,24 +481,22 @@ ostream &Zone::print( ostream &str ) const
 //******************************************
 
 Sphere::Sphere( void )
-  : Shape( Shape::Sphere, "sphere" ),
-    Radius( 0.0 )
+  : Shape( Shape::Sphere, "sphere" )
 {
 }
 
 
 Sphere::Sphere( const Sphere &s )
-  : Shape( s.type(), s.name(), s.anchor() ),
-    Radius( s.Radius )
+  : Shape( s )
 {
-  setAngles( s.yaw(), s.pitch(), s.roll() );
 }
 
 
 Sphere::Sphere( const Point &center, double radius, const string &name )
-  : Shape( Shape::Sphere, name, center ),
-    Radius( radius )
+  : Shape( Shape::Sphere, name )
 {
+  scale( radius );
+  translate( center );
 }
 
 
@@ -411,38 +506,62 @@ Shape *Sphere::copy( void ) const
 }
 
 
+double Sphere::radius( void ) const
+{
+  Point p0 = transform( Origin );
+  Point px = transform( Point( 1.0, 0.0, 0.0 ) );
+  return p0.distance( px );
+}
+
+
 Point Sphere::boundingBoxMin( void ) const
 {
-  return anchor() - Point( Radius, Radius, Radius );
+  deque<Point> pts;
+  pts.push_back( transform( Point( -1.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( -1.0, -1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( -1.0, 1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( -1.0, -1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, -1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, -1.0, -1.0 ) ) );
+  return min( pts );
 }
 
 
 Point Sphere::boundingBoxMax( void ) const
 {
-  return anchor() + Point( Radius, Radius, Radius );
+  deque<Point> pts;
+  pts.push_back( transform( Point( -1.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( -1.0, -1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( -1.0, 1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( -1.0, -1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, -1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, -1.0, -1.0 ) ) );
+  return max( pts );
 }
 
 
-bool Sphere::inside( const Point &p ) const
+bool Sphere::insideShape( const Point &p ) const
 {
-  return ( anchor().distance( p ) <= Radius );
+  return ( Origin.distance( p ) <= 1.0 );
 }
 
 
-bool Sphere::below( const Point &p ) const
+void Sphere::intersectionPointsShape( const Point &pos1, const Point &pos2,
+				      Point &ip1, Point &ip2 ) const
 {
-  Point a( anchor() );
-  a.z() = 0.0;
-  Point b( p );
-  b.z() = 0.0;
-  return ( inside( p ) || ( a.distance( b ) <= Radius && p.z() < anchor().z() ) );
+  //  ip1 = NonePoint;
+  //  ip2 = NonePoint;
 }
 
 
 ostream &Sphere::print( ostream &str ) const
 {
-  str << "Sphere \"" << name() << "\" at " << anchor().toString() 
-      << " of radius " << Str( Radius, 0, 3, 'f' ) << '\n';
+  str << "Sphere \"" << name() << "\" at " << trans().toString()
+      << " with radius " << Str( radius(), 0, 3, 'f' ) << '\n';
   return str;
 }
 
@@ -450,27 +569,22 @@ ostream &Sphere::print( ostream &str ) const
 //******************************************
 
 Cylinder::Cylinder( void )
-  : Shape( Shape::Cylinder, "cylinder" ),
-    Radius( 0.0 ),
-    Height( 0.0 )
+  : Shape( Shape::Cylinder, "cylinder" )
 {
 }
 
 
 Cylinder::Cylinder( const Cylinder &c )
-  : Shape( c.type(), c.name(), c.anchor() ),
-    Radius( c.Radius ),
-    Height( c.Height )
+  : Shape( c )
 {
-  setAngles( c.yaw(), c.pitch(), c.roll() );
 }
 
 
-Cylinder::Cylinder( const Point &anchor, double radius, double height, const string &name )
-  : Shape( Shape::Cylinder, name, anchor ),
-    Radius( radius ),
-    Height( height )
+Cylinder::Cylinder( const Point &anchor, double radius, double length, const string &name )
+  : Shape( Shape::Cylinder, name )
 {
+  scale( length, radius, radius );
+  translate( anchor );
 }
 
 
@@ -480,17 +594,33 @@ Shape *Cylinder::copy( void ) const
 }
 
 
+double Cylinder::radius( void ) const
+{
+  Point p0 = transform( Origin );
+  Point py = transform( Point( 0.0, 1.0, 0.0 ) );
+  return p0.distance( py );
+}
+
+
+double Cylinder::length( void ) const
+{
+  Point p0 = transform( Origin );
+  Point px = transform( Point( 1.0, 0.0, 0.0 ) );
+  return p0.distance( px );
+}
+
+
 Point Cylinder::boundingBoxMin( void ) const
 {
   deque<Point> pts;
-  pts.push_back( transform( Point( Radius, Radius, 0.0 ) ) );
-  pts.push_back( transform( Point( -Radius, Radius, 0.0 ) ) );
-  pts.push_back( transform( Point( Radius, -Radius, 0.0 ) ) );
-  pts.push_back( transform( Point( -Radius, -Radius, 0.0 ) ) );
-  pts.push_back( transform( Point( Radius, Radius, Height ) ) );
-  pts.push_back( transform( Point( -Radius, Radius, Height ) ) );
-  pts.push_back( transform( Point( Radius, -Radius, Height ) ) );
-  pts.push_back( transform( Point( -Radius, -Radius, Height ) ) );
+  pts.push_back( transform( Point( 0.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 0.0, -1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 0.0, -1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, -1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, -1.0, -1.0 ) ) );
   return min( pts );
 }
 
@@ -498,40 +628,39 @@ Point Cylinder::boundingBoxMin( void ) const
 Point Cylinder::boundingBoxMax( void ) const
 {
   deque<Point> pts;
-  pts.push_back( transform( Point( Radius, Radius, 0.0 ) ) );
-  pts.push_back( transform( Point( -Radius, Radius, 0.0 ) ) );
-  pts.push_back( transform( Point( Radius, -Radius, 0.0 ) ) );
-  pts.push_back( transform( Point( -Radius, -Radius, 0.0 ) ) );
-  pts.push_back( transform( Point( Radius, Radius, Height ) ) );
-  pts.push_back( transform( Point( -Radius, Radius, Height ) ) );
-  pts.push_back( transform( Point( Radius, -Radius, Height ) ) );
-  pts.push_back( transform( Point( -Radius, -Radius, Height ) ) );
+  pts.push_back( transform( Point( 0.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 0.0, -1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 0.0, -1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, -1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, -1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, -1.0, -1.0 ) ) );
   return max( pts );
 }
 
 
-bool Cylinder::inside( const Point &p ) const
+bool Cylinder::insideShape( const Point &p ) const
 {
-  Point pp = inverseTransform( p );
-  Point pz( pp );
-  pz.z() = 0.0;
-  return ( Origin.distance( pz ) <= Radius &&
-	   pp.z() >= 0.0 && pp.z() <= height() );
+  Point px( 0.0, p.y(), p.z() );
+  return ( Origin.distance( px ) <= 1.0 &&
+	   p.x() >= 0.0 && p.x() <= 1.0 );
 }
 
 
-bool Cylinder::below( const Point &p ) const
+void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
+					Point &ip1, Point &ip2 ) const
 {
-  return ( ( p >= boundingBoxMin() && p <= boundingBoxMax() ) ||
-	   ( p.z() < boundingBoxMax().z() ) ); 
+  //  ip1 = NonePoint;
+  //  ip2 = NonePoint;
 }
 
 
 ostream &Cylinder::print( ostream &str ) const
 {
-  str << "Cylinder \"" << name() << "\" at " << anchor().toString() 
-      << " of radius " << Str( Radius, 0, 3, 'f' )
-      << " and height " << Str( Height, 0, 3, 'f' ) << '\n';
+  str << "Cylinder \"" << name() << "\" at " << trans().toString()
+      << " with length " << Str( length(), 0, 3, 'f' )
+      << " and radius " << Str( radius(), 0, 3, 'f' ) << '\n';
   return str;
 }
 
@@ -545,39 +674,40 @@ Cuboid::Cuboid( void )
 
 
 Cuboid::Cuboid( const Cuboid &c )
-  : Shape( c.type(), c.name(), c.anchor() ),
-    Size( c.Size )
+  : Shape( c )
 {
-  setAngles( c.yaw(), c.pitch(), c.roll() );
 }
 
 
 Cuboid::Cuboid( const Point &anchor, 
 		double length, double width, double height, const string &name )
-  : Shape( Shape::Cuboid, name, anchor ),
-    Size( length, width, height )
+  : Shape( Shape::Cuboid, name )
 {
+  scale( length, width, height );
+  translate( anchor );
 }
 
 
 Cuboid::Cuboid( const Point &anchor, const Point &end, const string &name )
-  : Shape( Shape::Cuboid, name, anchor ),
-    Size( end - anchor )
+  : Shape( Shape::Cuboid, name )
 {
+  scale( end - anchor );
+  translate( anchor );
 }
 
 
 Cuboid::Cuboid( const Point &anchor, const Point &px, const Point &py, const Point &pz,
 		const string &name )
-  : Shape( Shape::Cuboid, name, anchor ),
-    Size( 0.0, 0.0, 0.0 )
+  : Shape( Shape::Cuboid, name )
 {
-  Size[0] = anchor.distance( px );
-  Size[1] = anchor.distance( py );
-  Size[2] = anchor.distance( pz );
-  setPitch( asin( px.z()/px.magnitude() ) );
-  setYaw( atan2( px.y(), px.x() ) );
-  setRoll( asin( py.z()/py.magnitude() ) );
+  Point ppx = px - anchor;
+  Point ppy = py - anchor;
+  Point ppz = pz - anchor;
+  scale( ppx.magnitude(), ppy.magnitude(), ppz.magnitude() );
+  rotatePitch( asin( ppx.z()/ppx.magnitude() ) );
+  rotateYaw( atan2( ppx.y(), ppx.x() ) );
+  rotateRoll( asin( ppy.z()/ppy.magnitude() ) );
+  translate( anchor );
 }
 
 
@@ -587,17 +717,41 @@ Shape *Cuboid::copy( void ) const
 }
 
 
+double Cuboid::length( void ) const
+{
+  Point p0 = transform( Origin );
+  Point px = transform( Point( 1.0, 0.0, 0.0 ) );
+  return p0.distance( px );
+}
+
+
+double Cuboid::width( void ) const
+{
+  Point p0 = transform( Origin );
+  Point py = transform( Point( 0.0, 1.0, 0.0 ) );
+  return p0.distance( py );
+}
+
+
+double Cuboid::height( void ) const
+{
+  Point p0 = transform( Origin );
+  Point pz = transform( Point( 0.0, 0.0, 1.0 ) );
+  return p0.distance( pz );
+}
+
+
 Point Cuboid::boundingBoxMin( void ) const
 {
   deque<Point> pts;
   pts.push_back( transform( Point( 0.0, 0.0, 0.0 ) ) );
-  pts.push_back( transform( Point( Size.x(), 0.0, 0.0 ) ) );
-  pts.push_back( transform( Point( 0.0, Size.y(), 0.0 ) ) );
-  pts.push_back( transform( Point( Size.x(), Size.y(), 0.0 ) ) );
-  pts.push_back( transform( Point( 0.0, 0.0, Size.z() ) ) );
-  pts.push_back( transform( Point( Size.x(), 0.0, Size.z() ) ) );
-  pts.push_back( transform( Point( 0.0, Size.y(), Size.z() ) ) );
-  pts.push_back( transform( Point( Size.x(), Size.y(), Size.z() ) ) );
+  pts.push_back( transform( Point( 1.0, 0.0, 0.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 1.0, 0.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, 0.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 0.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 0.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, 1.0 ) ) );
   return min( pts );
 }
 
@@ -606,35 +760,37 @@ Point Cuboid::boundingBoxMax( void ) const
 {
   deque<Point> pts;
   pts.push_back( transform( Point( 0.0, 0.0, 0.0 ) ) );
-  pts.push_back( transform( Point( Size.x(), 0.0, 0.0 ) ) );
-  pts.push_back( transform( Point( 0.0, Size.y(), 0.0 ) ) );
-  pts.push_back( transform( Point( Size.x(), Size.y(), 0.0 ) ) );
-  pts.push_back( transform( Point( 0.0, 0.0, Size.z() ) ) );
-  pts.push_back( transform( Point( Size.x(), 0.0, Size.z() ) ) );
-  pts.push_back( transform( Point( 0.0, Size.y(), Size.z() ) ) );
-  pts.push_back( transform( Point( Size.x(), Size.y(), Size.z() ) ) );
+  pts.push_back( transform( Point( 1.0, 0.0, 0.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 1.0, 0.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, 0.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 0.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 0.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 0.0, 1.0, 1.0 ) ) );
+  pts.push_back( transform( Point( 1.0, 1.0, 1.0 ) ) );
   return max( pts );
 }
 
 
-bool Cuboid::inside( const Point &p ) const
+bool Cuboid::insideShape( const Point &p ) const
 {
-  Point pp = inverseTransform( p );
-  return ( pp >= Origin && pp <= Size );
+  return ( p >= Origin && p <= Point( 1.0, 1.0, 1.0 ) );
 }
 
 
-bool Cuboid::below( const Point &p ) const
+void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
+				      Point &ip1, Point &ip2 ) const
 {
-  return ( ( p >= boundingBoxMin() && p <= boundingBoxMax() ) ||
-	   ( p.z() < boundingBoxMax().z() ) ); 
+  //  ip1 = NonePoint;
+  //  ip2 = NonePoint;
 }
 
 
 ostream &Cuboid::print( ostream &str ) const
 {
-  str << "Cuboid \"" << name() << "\" at " << anchor().toString() 
-      << " of size " << Size.toString() << '\n';
+  str << "Cuboid \"" << name() << "\" at " << trans().toString()
+      << " with size " << Str( length(), 0, 3, 'f' ) << ", "
+      << Str( width(), 0, 3, 'f' ) << ", "
+      << Str( height(), 0, 3, 'f' ) << '\n';
   return str;
 }
 

@@ -50,6 +50,7 @@ pkginclude_HEADERS = \
     ../include/relacs/indata.h \
     ../include/relacs/inlist.h \
     ../include/relacs/manipulator.h \
+    ../include/relacs/matrix.h \
     ../include/relacs/outdatainfo.h \
     ../include/relacs/outdata.h \
     ../include/relacs/outlist.h \
@@ -73,6 +74,7 @@ librelacsdaq_la_SOURCES = \
     indata.cc \
     inlist.cc \
     manipulator.cc \
+    matrix.cc \
     outdatainfo.cc \
     outdata.cc \
     outlist.cc \

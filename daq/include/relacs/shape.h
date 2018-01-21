@@ -24,6 +24,7 @@
 
 #include <deque>
 #include <relacs/point.h>
+#include <relacs/matrix.h>
 
 
 namespace relacs {
@@ -48,9 +49,13 @@ public:
     Cuboid = 4,
   };
 
-    /*! Constructs a shape of a specific \a type, with name \a name
-        and anchor point \a anchor. */
-  Shape( ShapeType type, const string &name="", const Point &anchor=Point( 0.0, 0.0, 0.0 ) );
+    /*! Constructs a shape of a specific \a type with name \a name. */
+  Shape( ShapeType type, const string &name="" );
+    /*! Constructs a shape of a specific \a type, with name \a name,
+        transformed by \a trafo and translated to \a trans. */
+  Shape( ShapeType type, const string &name, const Matrix &trafo, const Point &trans );
+    /*! Copy constructor. */
+  Shape( const Shape &s );
 
   virtual ~Shape( void );
 
@@ -67,37 +72,56 @@ public:
     /*! Set the name of the shape to \a name. */
   void setName( const string &name ) { Name = name; };
 
-    /*! The anchor point of the shape. */
-  const Point &anchor( void ) const { return Anchor; }
-    /*! Set the anchor point of the shape to \a anchor. */
-  void setAnchor( const Point &anchor ) { Anchor = anchor; }
+    /*! Translate the shape by \a x along the world x-axis. */
+  void translateX( double x );
+    /*! Translate the shape by \a y along the world y-axis. */
+  void translateY( double y );
+    /*! Translate the shape by \a z along the world z-axis. */
+  void translateZ( double z );
+    /*! Translate the shape by \a p in the world coordinate system. */
+  void translate( const Point &p );
 
-    /*! The yaw angle of the shape in radians. */
-  double yaw( void ) const { return Yaw; };
-    /*! Set the yaw angle of the shape to \a yaw in radians and
-        recompute transformation matrices. */
-  void setYaw( double yaw );
-    /*! The pitch angle of the shape in radians. */
-  double pitch( void ) const { return Pitch; };
-    /*! Set the pitch angle of the shape to \a pitch in radians and
-        recompute transformation matrices. */
-  void setPitch( double pitch );
-    /*! The roll angle of the shape in radians. */
-  double roll( void ) const { return Roll; };
-    /*! Set the roll angle of the shape to \a roll in radians and
-        recompute transformation matrices. */
-  void setRoll( double roll );
-    /*! Set the yaw, pitch, and roll angles of the shape to 
-        \a yaw, \a pitch, \a roll in radians, respectively, and
-        recompute transformation matrices. */
-  void setAngles( double yaw, double pitch, double roll );
+    /*! Scale the shape along the x-axis by the factor \a xscale. */
+  void scaleX( double xscale );
+    /*! Scale the shape along the y-axis by the factor \a yscale. */
+  void scaleY( double yscale );
+    /*! Scale the shape along the z-axis by the factor \a zscale. */
+  void scaleZ( double zscale );
+    /*! Scale the shape along the x-, y-, and z-axis 
+        by the factor \a xscale, \a yscale, \a zscale, respectively. */
+  void scale( double xscale, double yscale, double zscale );
+    /*! Scale the shape along the x-, y-, and z-axis by \a scale. */
+  void scale( const Point &scale );
+    /*! Uniformly scale the shape along the x-, y-, and z-axis 
+        by the factor \a scale. */
+  void scale( double scale );
+
+    /*! Rotate the shape around the z-axis by \a yaw radians. */
+  void rotateYaw( double yaw );
+    /*! Rotate the shape around the y-axis by \a pitch radians. */
+  void rotatePitch( double pitch );
+    /*! Rotate the shape around the x-axis by \a roll radians. */
+  void rotateRoll( double roll );
+    /*! Rotate the shape around the z-axis by \a yaw, then around the
+        new y-axis by \a pitch, and then around the resulting x-axis
+        by \a roll. All angles in radians. */
+  void rotate( double yaw, double pitch, double roll );
+
+    /*! The translation vector of the shape. */
+  const Point &trans( void ) const { return Trans; }
+    /*! The transformation matrix that transforms shape coordinates to
+        world coordinates. */
+  const Matrix &trafo( void ) const { return Trafo; };
+    /*! The inverse transformation matrix that transforms world coordinates to
+        shape coordinates. */
+  const Matrix &invTrafo( void ) const { return InvTrafo; };
 
     /*! Transform coordinates of point \a p from shape coordinates to world coordinates
-        by rotation with the yaw, pitch, and roll angles and shifting to the anchor point. */
+        by applying the transformation matrix and adding the translation vector. */
   Point transform( const Point &p ) const;
     /*! Transform coordinates of point \a p from world coordinates to shape coordinates
-        by shifting the anchor point to the origin and 
-	by rotation with the roll, pitch, and yaw angles. */
+        by translating by the negative translation vector and 
+	applying the inverse transformation matrix. */
   Point inverseTransform( const Point &p ) const;
 
     /*! Minimum corner of bounding box. */
@@ -105,16 +129,33 @@ public:
     /*! Maximum corner of bounding box. */
   virtual Point boundingBoxMax( void ) const = 0;
 
-    /*! Return \c true if point \a p is inside the shape. */
-  virtual bool inside( const Point &p ) const = 0;
-    /*! Return \c true if point \a p is below the shape. */
-  virtual bool below( const Point &p ) const = 0;
+    /*! Return \c true if point \a p in world coordinates is inside the shape.
+        The point is transformed into shape coordinates and then tested with insideShape(). */
+  bool inside( const Point &p ) const;
+    /*! Return \c true if point \a p in shape coordinates is inside the shape. */
+  virtual bool insideShape( const Point &p ) const = 0;
+    /*! Return \c true if point \a p is below the shape.
+        This impementation checks whether \a p is below the bounding box. 
+        XXX Replace this function by something more general....*/
+  virtual bool below( const Point &p ) const ;
+
     /*! Check whether the path connecting the two points \a pos1 and \a pos2
         intersects a shape.
 	Pathes less than \a resolution long may intersect a shape without notice.
         This implementation recursively checks whether points on the path
-        are inside a shape. */
+        are inside a shape.
+        XXX Once intersectionPoints() are implemented, remove this function. */
   virtual bool intersect( const Point &pos1, const Point &pos2, double resolution ) const;
+    /*! Return in \a ip1 and \a ip2 the intersection points of the
+        shape with the line connecting \a pos1 with \a pos2. \a ip1 or
+        \a ip2 can be NonePoint. All points in world coordinates. */
+  void intersectionPoints( const Point &pos1, const Point &pos2,
+			   Point &ip1, Point &ip2 ) const;
+    /*! Return in \a ip1 and \a ip2 the intersection points of the
+        shape with the line connecting \a pos1 with \a pos2. \a ip1 or
+        \a ip2 can be NonePoint. All points in shape coordinates. */
+  virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
+					Point &ip1, Point &ip2 ) const = 0;
 
     /*! Print some information about the shape into the stream \a str. */
   virtual ostream &print( ostream &str ) const = 0;
@@ -131,27 +172,18 @@ protected:
 
 private:
 
-    /*! Recompute the transformation matrices from the three angles. */
-  void computeTrafos( void );
-
     /*! The type of the shape. */
   ShapeType Type;
     /*! The name of the shape. */
   string Name;
-    /*! The location of the shape. */
-  Point Anchor;
-    /*! Rotation of standard shape around z-axis in radians. */
-  double Yaw;
-    /*! Rotation of standard shape around y-axis in radians. */
-  double Pitch;
-    /*! Rotation of standard shape around x-axis in radians. */
-  double Roll;
-    /*! The transformation matrix for transfroming shape coordinates
+    /*! The translation vector. */
+  Point Trans;
+    /*! The transformation matrix for transforming shape coordinates
         to world coordinates. */
-  double Trafo[3][3];
-    /*! The inverse transformation matrix for transfroming world
+  Matrix Trafo;
+    /*! The inverse transformation matrix for transforming world
         coordinates to shape coordinates. */
-  double InvTrafo[3][3];
+  Matrix InvTrafo;
 
 };
 
@@ -224,10 +256,17 @@ class Zone : public Shape
     /*! Approximation of the maximum corner of bounding boxes of all additive shapes. */
   virtual Point boundingBoxMax( void ) const;
 
-    /*! Return \c true if point \a p is inside the zone. */
-  virtual bool inside( const Point &p ) const;
+    /*! Return \c true if point \a p in shape coordinates is inside the zone. */
+  virtual bool insideShape( const Point &p ) const;
     /*! Return \c true if point \a p is below all additive shapes of the zone. */
   virtual bool below( const Point &p ) const;
+
+    /*! Return in \a ip1 and \a ip2 the intersection points of the
+        zone with the line connecting \a pos1 with \a pos2. \a ip1
+        or \a ip2 can be NonePoint. All points in shape
+        coordinates. */
+  virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
+					Point &ip1, Point &ip2 ) const;
 
     /*! Print some information about the zone into the stream \a str. */
   virtual ostream &print( ostream &str ) const;
@@ -262,33 +301,26 @@ class Sphere : public Shape
     /*! Returns a pointer to a copy of the sphere. */
   virtual Shape *copy( void ) const;
 
-    /*! Center of the sphere. This is the anchor point of the sphere. */
-  const Point &center( void ) const { return anchor(); }
-    /*! Set the center of the sphere (its anchor point) to \a center. */
-  void setCenter( const Point &center ) { setAnchor( center ); }
-
-    /*! The radius of the sphere. */
-  double radius( void ) const { return Radius; }
-    /*! Set the radius of the sphere to \a radius. */
-  void setRadius( double radius ) { Radius = radius; }
+    /*! The radius of the sphere in world coordinates. */
+  double radius( void ) const;
 
     /*! Minimum corner of bounding box. */
   virtual Point boundingBoxMin( void ) const;
     /*! Maximum corner of bounding box. */
   virtual Point boundingBoxMax( void ) const;
 
-    /*! Return \c true if point \a p is inside the sphere. */
-  virtual bool inside( const Point &p ) const;
-    /*! Return \c true if point \a p is below the sphere. */
-  virtual bool below( const Point &p ) const;
+    /*! Return \c true if point \a p in shape coordinates is inside the sphere. */
+  virtual bool insideShape( const Point &p ) const;
+
+    /*! Return in \a ip1 and \a ip2 the intersection points of the
+        sphere with the line connecting \a pos1 with \a pos2. \a ip1
+        or \a ip2 can be NonePoint. All points in shape
+        coordinates. */
+  virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
+					Point &ip1, Point &ip2 ) const;
 
     /*! Print some information about the sphere into the stream \a str. */
   virtual ostream &print( ostream &str ) const;
-
-
-private:
-
-  double Radius;
 
 };
 
@@ -308,41 +340,35 @@ class Cylinder : public Shape
   Cylinder( void );
     /*! Copy constructor. */
   Cylinder( const Cylinder &c );
-    /*! Construct a cylinder with name \a name from \a anchor, \a radius, and \a height.
-        The anchor point is the center of the bottom circle. */
-  Cylinder( const Point &anchor, double radius, double height, const string &name="cylinder" );
+    /*! Construct a cylinder with name \a name from \a anchor, \a radius, and \a length.
+        The anchor point is the center of the left circle. */
+  Cylinder( const Point &anchor, double radius, double length, const string &name="cylinder" );
 
     /*! Returns a pointer to a copy of the cylinder. */
   virtual Shape *copy( void ) const;
 
-    /*! The radius of the cylinder. */
-  double radius( void ) const { return Radius; }
-    /*! Set the radius of the cylinder to \a radius. */
-  void setRadius( double radius ) { Radius = radius; }
-
-    /*! The height of the cylinder. */
-  double height( void ) const { return Height; }
-    /*! Set the height of the cylinder to \a height. */
-  void setHeight( double height ) { Height = height; }
+    /*! The radius of the cylinder in world coordinates. */
+  double radius( void ) const;
+    /*! The length of the cylinder in world coordinates. */
+  double length( void ) const;
 
     /*! Minimum corner of bounding box. */
   virtual Point boundingBoxMin( void ) const;
     /*! Maximum corner of bounding box. */
   virtual Point boundingBoxMax( void ) const;
 
-    /*! Return \c true if point \a p is inside the cylinder. */
-  virtual bool inside( const Point &p ) const;
-    /*! Return \c true if point \a p is below the cylinder. */
-  virtual bool below( const Point &p ) const;
+    /*! Return \c true if point \a p in shape coordinates is inside the cylinder. */
+  virtual bool insideShape( const Point &p ) const;
+
+    /*! Return in \a ip1 and \a ip2 the intersection points of the
+        cylinder with the line connecting \a pos1 with \a pos2. \a ip1
+        or \a ip2 can be NonePoint. All points in shape
+        coordinates. */
+  virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
+					Point &ip1, Point &ip2 ) const;
 
     /*! Print some information about the cylinder into the stream \a str. */
   virtual ostream &print( ostream &str ) const;
-
-
-private:
-
-  double Radius;
-  double Height;
 
 };
 
@@ -379,47 +405,30 @@ class Cuboid : public Shape
     /*! Returns a pointer to a copy of the cuboid. */
   virtual Shape *copy( void ) const;
 
-    /*! The minimum corner of the cuboid. This is the anchor point of the cuboid. */
-  const Point &corner( void ) const { return anchor(); }
-    /*! Set the minimum corner (the anchor point) of the cuboid to \a corner. */
-  void setCorner( const Point &corner ) { setAnchor( corner ); }
-
-    /*! The size of the cuboid in x-direction. */
-  double length( void ) const { return Size[0]; }
-    /*! The width of the cuboid in y-direction. */
-  double width( void ) const { return Size[1]; }
-    /*! The height of the cuboid in z-direction. */
-  double height( void ) const { return Size[2]; }
-
-    /*! Set the size of the cuboid in x-direction to \a lenght. */
-  void setLength( double length ) { Size[0] = length; }
-    /*! Set the size of the cuboid in y-direction to \a width. */
-  void setWidth( double width ) { Size[1] = width; }
-    /*! Set the size of the cuboid in z-direction to \a height. */
-  void setHeight(double height) { Size[2] = height; }
-
-    /*! The size of the cuboid. */
-  const Point &size( void ) { return Size; }
-    /*! Set the size of the cuboid to \a size. */
-  void setSize( const Point &size ) { Size = size; }
-
-    /*! Return \c true if point \a p is inside the cuboid. */
-  virtual bool inside( const Point &p ) const;
-    /*! Return \c true if point \a p is below the cuboid. */
-  virtual bool below( const Point &p ) const;
+    /*! The length of the cuboid in world coordinates. */
+  double length( void ) const;
+    /*! The width of the cuboid in world coordinates. */
+  double width( void ) const;
+    /*! The height of the cuboid in world coordinates. */
+  double height( void ) const;
 
     /*! Minimum corner of bounding box. */
   virtual Point boundingBoxMin( void ) const;
     /*! Maximum corner of bounding box. */
   virtual Point boundingBoxMax( void ) const;
 
+    /*! Return \c true if point \a p in shape coordinates is inside the cuboid. */
+  virtual bool insideShape( const Point &p ) const;
+
+    /*! Return in \a ip1 and \a ip2 the intersection points of the
+        cuboid with the line connecting \a pos1 with \a pos2. \a ip1
+        or \a ip2 can be NonePoint. All points in shape
+        coordinates. */
+  virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
+					Point &ip1, Point &ip2 ) const;
+
     /*! Print some information about the cuboid into the stream \a str. */
   virtual ostream &print( ostream &str ) const;
-
-
-private:
-
-  Point Size;
 
 };
 

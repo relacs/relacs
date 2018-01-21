@@ -20,8 +20,9 @@
 */
 
 #include <cmath>
-#include <relacs/point.h>
 #include <relacs/str.h>
+#include <relacs/matrix.h>
+#include <relacs/point.h>
 
 
 namespace relacs {
@@ -49,6 +50,13 @@ Point::Point( double x, double y, double z )
 }
 
 
+Point::Point( const double c[3] )
+{
+  for ( int i=0; i<3; i++ )
+    Coords[i] = c[i];
+}
+
+
 Point::Point( const string &position )
   : Point()
 {
@@ -66,20 +74,28 @@ Point::Point( const string &position )
 }
 
 
-void Point::set( double x, double y, double z )
+Point &Point::assign( double x, double y, double z )
 {
   Coords[0] = x;
   Coords[1] = y;
   Coords[2] = z;
+  return *this;
 }
 
 
-double Point::magnitude( void ) const
+Point &Point::assign( const Point &p )
 {
-  double d = 0.0;
   for ( int k=0; k<Dim; k++ )
-    d += Coords[k]*Coords[k];
-  return sqrt( d );
+    Coords[k] = p[k];
+  return *this;
+}
+
+
+Point &Point::operator=( const Point &p )
+{
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] = p[k];
+  return *this;
 }
 
 
@@ -237,6 +253,15 @@ double Point::dot( const Point &p ) const
 }
 
 
+double Point::magnitude( void ) const
+{
+  double d = 0.0;
+  for ( int k=0; k<Dim; k++ )
+    d += Coords[k]*Coords[k];
+  return sqrt( d );
+}
+
+
 double Point::angle( const Point &p ) const
 {
   double d = dot( p );
@@ -372,6 +397,18 @@ Point abs( Point p )
   for ( int k=0; k<p.Dim; k++ )
     p[k] = ::abs( p[k] );
   return p;
+}
+
+
+Point &Point::operator*=( const Matrix &m )
+{
+  Point p( *this );
+  for ( int i=0; i<3; i++ ) {
+    Coords[i] = 0.0;
+    for ( int j=0; j<3; j++ )
+      Coords[i] += m(i, j) * p[j];
+  }
+  return *this;
 }
 
 
