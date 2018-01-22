@@ -68,7 +68,7 @@ doMoveBy( const Point&, double, double ),
 setHome(), moveToHome().
 
 The constructor, initOptions(), or open() need to initialize the following variables:
-PosAmpl, NegAmpl, SpeedFac, AccFac, DefaultSpeed, DefaultAcc, IntersectResolution.
+PosAmpl, NegAmpl, SpeedFac, AccFac, DefaultSpeed, DefaultAcc.
 
 In case you want to use a manipulator device within RELACS, your
 Manipulator implementation needs to provide a void default constructor
@@ -392,10 +392,10 @@ public:
   void clearForbiddenZone( void ) { ForbiddenZones.clear(); };
     /*! Return \c true if point \a p is inside a forbidden zone. */
   bool forbidden( const Point &p ) const { return ForbiddenZones.inside( p ); };
-    /*! Return \c true if the path from the current position to the
+    /*! Return the points \a ip1 and \a ip2 where the path from the current position to the
         point \a p intersects a forbidden zone. */
-  bool intersect( const Point &p, double resolution ) const
-  { return ForbiddenZones.intersect( CurrentPos, p, resolution ); };
+  void intersectionPoints( const Point &p, Point &ip1, Point &ip2 ) const
+  { return ForbiddenZones.intersectionPoints( CurrentPos, p, ip1, ip2 ); };
 
 
 protected:
@@ -456,9 +456,6 @@ protected:
   MoveModes MoveMode;
     /*! List of forbidden zones. */
   Zone ForbiddenZones;
-    /*! Resolution for determining intersection in meter. */
-  double IntersectResolution;
-
 
 };
 

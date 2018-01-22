@@ -28,6 +28,13 @@
 namespace relacs {
 
 
+const Point Point::None = Point( NAN, NAN, NAN );
+
+const Point Point::Origin = Point( 0.0, 0.0, 0.0 );
+
+const Point Point::Ones = Point( 1.0, 1.0, 1.0 );
+
+
 Point::Point( void )
 {
   for ( int k=0; k<Dim; k++ )
@@ -212,6 +219,42 @@ Point Point::operator/( double a ) const
 }
 
 
+Point operator+( double a, const Point &p )
+{
+  Point pp( p );
+  for ( int k=0; k<pp.Dim; k++ )
+    pp[k] += a;
+  return pp;
+}
+
+
+Point operator-( double a, const Point &p )
+{
+  Point pp( p );
+  for ( int k=0; k<pp.Dim; k++ )
+    pp[k] = a - pp[k];
+  return pp;
+}
+
+
+Point operator*( double a, const Point &p )
+{
+  Point pp( p );
+  for ( int k=0; k<pp.Dim; k++ )
+    pp[k] *= a;
+  return pp;
+}
+
+
+Point operator/( double a, const Point &p )
+{
+  Point pp( p );
+  for ( int k=0; k<pp.Dim; k++ )
+    pp[k] = a / pp[k];
+  return pp;
+}
+
+
 Point &Point::operator+=( double a )
 {
   for ( int k=0; k<Dim; k++ )
@@ -267,6 +310,16 @@ double Point::angle( const Point &p ) const
   double d = dot( p );
   d /= magnitude()*p.magnitude();
   return acos( d );
+}
+
+
+bool Point::isNone( void ) const
+{
+  for ( int k=0; k<Dim; k++ ) {
+    if ( ::isnan( Coords[k] ) )
+      return true;
+  }
+  return false;
 }
 
 

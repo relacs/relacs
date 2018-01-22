@@ -66,29 +66,30 @@ int Manipulator::stepBy( int axis, int steps, double speed, double acc )
     speed = DefaultSpeed[axis];
   if ( acc <= 0 )
     acc = DefaultAcc[axis];
-  if ( MoveMode <= PathOutside ) {
-    if ( MoveMode >= TargetOutside ) {
-      Point p = CurrentPos;
-      p[axis] += steps*(steps>=0.0?PosAmpl[axis]:NegAmpl[axis]);
-      if ( MoveMode == TargetOutside ) {
-	if ( forbidden( p ) )
-	  return WriteError;
-      }
-      else if ( MoveMode == PathOutside ) {
-	if ( intersect( p, IntersectResolution ) )
-	  return WriteError;
-      }
+  if ( MoveMode > AlwaysMove ) {
+    Point p = CurrentPos;
+    p[axis] += steps*(steps>=0.0?PosAmpl[axis]:NegAmpl[axis]);
+    if ( MoveMode == TargetOutside ) {
+      if ( forbidden( p ) )
+	return WriteError;
     }
-    int r = doStepBy( axis, steps, speed, acc );
-    if ( r == 0 ) {
-      CurrentSteps[axis] += steps;
-      CurrentPos[axis] += steps*(steps>=0.0?PosAmpl[axis]:NegAmpl[axis]);
+    Point ip1;
+    Point ip2;
+    intersectionPoints( p, ip1, ip2 );
+    if ( MoveMode == PathOutside ) {
+      if ( ! ip1.isNone() || ! ip2.isNone() )
+	return WriteError;
     }
-    return r;
+    else
+      return NotSupported;
+    // TODO: implement obstacle avoidance if absolute coordinates are supported!
   }
-  else
-    return NotSupported;
-  // TODO: implement obstacle avoidance if absolute coordinates are supported!
+  int r = doStepBy( axis, steps, speed, acc );
+  if ( r == 0 ) {
+    CurrentSteps[axis] += steps;
+    CurrentPos[axis] += steps*(steps>=0.0?PosAmpl[axis]:NegAmpl[axis]);
+  }
+  return r;
 }
 
 
@@ -100,29 +101,30 @@ int Manipulator::stepTo( int axis, int pos, double speed, double acc )
     speed = DefaultSpeed[axis];
   if ( acc <= 0 )
     acc = DefaultAcc[axis];
-  if ( MoveMode <= PathOutside ) {
-    if ( MoveMode >= TargetOutside ) {
-      Point p = CurrentPos;
-      p[axis] = pos*PosAmpl[axis];
-      if ( MoveMode == TargetOutside ) {
-	if ( forbidden( p ) )
-	  return WriteError;
-      }
-      else if ( MoveMode == PathOutside ) {
-	if ( intersect( p, IntersectResolution ) )
-	  return WriteError;
-      }
+  if ( MoveMode > AlwaysMove ) {
+    Point p = CurrentPos;
+    p[axis] = pos*PosAmpl[axis];
+    if ( MoveMode == TargetOutside ) {
+      if ( forbidden( p ) )
+	return WriteError;
     }
-    int r = doStepTo( axis, pos, speed, acc );
-    if ( r == 0 ) {
-      CurrentSteps[axis] = pos;
-      CurrentPos[axis] = pos*PosAmpl[axis];
+    Point ip1;
+    Point ip2;
+    intersectionPoints( p, ip1, ip2 );
+    if ( MoveMode == PathOutside ) {
+      if ( ! ip1.isNone() || ! ip2.isNone() )
+	return WriteError;
     }
-    return r;
+    else
+      return NotSupported;
+    // TODO: implement obstacle avoidance if absolute coordinates are supported!
   }
-  else
-    return NotSupported;
-  // TODO: implement obstacle avoidance if absolute coordinates are supported!
+  int r = doStepTo( axis, pos, speed, acc );
+  if ( r == 0 ) {
+    CurrentSteps[axis] = pos;
+    CurrentPos[axis] = pos*PosAmpl[axis];
+  }
+  return r;
 }
 
 
@@ -148,26 +150,30 @@ int Manipulator::moveTo( int axis, double pos, double speed, double acc )
 
 int Manipulator::moveBy( const Point &dist, double speed, double acc )
 {
-  if ( MoveMode <= PathOutside ) {
+  if ( MoveMode > AlwaysMove ) {
+    Point p = CurrentPos + dist;
     if ( MoveMode == TargetOutside ) {
-      if ( forbidden( CurrentPos + dist ) )
+      if ( forbidden( p ) )
 	return WriteError;
     }
-    else if ( MoveMode == PathOutside ) {
-      if ( intersect( CurrentPos + dist, IntersectResolution ) )
+    Point ip1;
+    Point ip2;
+    intersectionPoints( p, ip1, ip2 );
+    if ( MoveMode == PathOutside ) {
+      if ( ! ip1.isNone() || ! ip2.isNone() )
 	return WriteError;
     }
-    int r = doMoveBy( dist, speed, acc );
-    if ( r == 0 ) {
-      for ( int k=0; k<3; k++ )
-	CurrentSteps[k] += dist[k]/(dist[k]>0.0?PosAmpl[k]:NegAmpl[k]);
-      CurrentPos += dist;
-    }
-    return r;
+    else
+      return NotSupported;
+    // TODO: implement obstacle avoidance if absolute coordinates are supported!
   }
-  else
-    return NotSupported;
-  // TODO: implement obstacle avoidance if absolute coordinates are supported!
+  int r = doMoveBy( dist, speed, acc );
+  if ( r == 0 ) {
+    for ( int k=0; k<3; k++ )
+      CurrentSteps[k] += dist[k]/(dist[k]>0.0?PosAmpl[k]:NegAmpl[k]);
+    CurrentPos += dist;
+  }
+  return r;
 }
 
 
@@ -175,25 +181,29 @@ int Manipulator::moveTo( const Point &pos, double speed, double acc )
 {
   if ( PosAmpl != NegAmpl )
     return NotSupported;
-  if ( MoveMode <= PathOutside ) {
+
+  if ( MoveMode > AlwaysMove ) {
     if ( MoveMode == TargetOutside ) {
       if ( forbidden( pos ) )
 	return WriteError;
     }
-    else if ( MoveMode == PathOutside ) {
-      if ( intersect( pos, IntersectResolution ) )
+    Point ip1;
+    Point ip2;
+    intersectionPoints( pos, ip1, ip2 );
+    if ( MoveMode == PathOutside ) {
+      if ( ! ip1.isNone() || ! ip2.isNone() )
 	return WriteError;
     }
-    int r = doMoveTo( pos, speed, acc );
-    if ( r == 0 ) {
-      CurrentSteps = pos/PosAmpl;
-      CurrentPos = pos;
-    }
-    return r;
+    else
+      return NotSupported;
+    // TODO: implement obstacle avoidance if absolute coordinates are supported!
   }
-  else
-    return NotSupported;
-  // TODO: implement obstacle avoidance if absolute coordinates are supported!
+  int r = doMoveTo( pos, speed, acc );
+  if ( r == 0 ) {
+    CurrentSteps = pos/PosAmpl;
+    CurrentPos = pos;
+  }
+  return r;
 }
 
 

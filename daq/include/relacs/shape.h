@@ -139,21 +139,14 @@ public:
         XXX Replace this function by something more general....*/
   virtual bool below( const Point &p ) const ;
 
-    /*! Check whether the path connecting the two points \a pos1 and \a pos2
-        intersects a shape.
-	Pathes less than \a resolution long may intersect a shape without notice.
-        This implementation recursively checks whether points on the path
-        are inside a shape.
-        XXX Once intersectionPoints() are implemented, remove this function. */
-  virtual bool intersect( const Point &pos1, const Point &pos2, double resolution ) const;
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         shape with the line connecting \a pos1 with \a pos2. \a ip1 or
-        \a ip2 can be NonePoint. All points in world coordinates. */
+        \a ip2 can be Point::None. All points in world coordinates. */
   void intersectionPoints( const Point &pos1, const Point &pos2,
 			   Point &ip1, Point &ip2 ) const;
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         shape with the line connecting \a pos1 with \a pos2. \a ip1 or
-        \a ip2 can be NonePoint. All points in shape coordinates. */
+        \a ip2 can be Point::None. All points in shape coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const = 0;
 
@@ -162,12 +155,6 @@ public:
 
     /*! Print some information about the shape \a s into the stream \a str. */
   friend ostream &operator<<( ostream &str, const Shape &s );
-
-
-protected:
-
-    /*! The point (0, 0, 0). */
-  static const Point Origin;
 
 
 private:
@@ -263,7 +250,7 @@ class Zone : public Shape
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         zone with the line connecting \a pos1 with \a pos2. \a ip1
-        or \a ip2 can be NonePoint. All points in shape
+        or \a ip2 can be Point::None. All points in shape
         coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const;
@@ -314,7 +301,7 @@ class Sphere : public Shape
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         sphere with the line connecting \a pos1 with \a pos2. \a ip1
-        or \a ip2 can be NonePoint. All points in shape
+        or \a ip2 can be Point::None. All points in shape
         coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const;
@@ -362,7 +349,7 @@ class Cylinder : public Shape
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         cylinder with the line connecting \a pos1 with \a pos2. \a ip1
-        or \a ip2 can be NonePoint. All points in shape
+        or \a ip2 can be Point::None. All points in shape
         coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const;
@@ -422,7 +409,7 @@ class Cuboid : public Shape
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         cuboid with the line connecting \a pos1 with \a pos2. \a ip1
-        or \a ip2 can be NonePoint. All points in shape
+        or \a ip2 can be Point::None. All points in shape
         coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const;

@@ -26,15 +26,12 @@
 namespace relacs {
 
 
-const Point Shape::Origin = Point( 0.0, 0.0, 0.0 );
-
-
 //******************************************
 
 Shape::Shape( Shape::ShapeType type, const string &name )
   : Type( type ),
     Name( name ),
-    Trans( Origin ),
+    Trans( Point::Origin ),
     Trafo(),
     InvTrafo()
 {
@@ -202,33 +199,17 @@ bool Shape::below( const Point &p ) const
 }
 
 
-bool Shape::intersect( const Point &pos1, const Point &pos2, double resolution ) const
-{
-  // if one of the end points is inside, return:
-  if ( inside( pos1 ) || inside( pos2 ) )
-    return true;
-
-  double dist = pos1.distance( pos2 );
-  // if the distance of the points is smaller than resolution 
-  // we assume no intersection of the path:
-  if ( dist < resolution )
-    return false;
-  else {
-    // rekursively test the path between the two points:
-    Point mid = pos1.center( pos2 );
-    return ( intersect( pos1, mid, resolution ) || intersect( mid, pos2, resolution ) );
-  }
-}
-
-
 void Shape::intersectionPoints( const Point &pos1, const Point &pos2,
 				Point &ip1, Point &ip2 ) const
 {
+  ip1 = Point::None;
+  ip2 = Point::None;
+  // XXX make sure pos1 != pos2 ???
   intersectionPointsShape( inverseTransform( pos1 ), inverseTransform( pos2 ), ip1, ip2 );
-  // XXX if ( ip1 != NonePoint )
-  ip1 = transform( ip1 );
-  // XXX if ( ip2 != NonePoint )
-  ip2 = transform( ip2 );
+  if ( ! ip1.isNone() )
+    ip1 = transform( ip1 );
+  if ( ! ip2.isNone() )
+    ip2 = transform( ip2 );
 }
 
 
@@ -449,8 +430,6 @@ bool Zone::below( const Point &p ) const
 void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
 				    Point &ip1, Point &ip2 ) const
 {
-  //  ip1 = NonePoint;
-  //  ip2 = NonePoint;
   /*
   bool ins = false;
   auto si = Shapes.begin();
@@ -508,7 +487,7 @@ Shape *Sphere::copy( void ) const
 
 double Sphere::radius( void ) const
 {
-  Point p0 = transform( Origin );
+  Point p0 = transform( Point::Origin );
   Point px = transform( Point( 1.0, 0.0, 0.0 ) );
   return p0.distance( px );
 }
@@ -546,15 +525,25 @@ Point Sphere::boundingBoxMax( void ) const
 
 bool Sphere::insideShape( const Point &p ) const
 {
-  return ( Origin.distance( p ) <= 1.0 );
+  return ( Point::Origin.distance( p ) <= 1.0 );
 }
 
 
 void Sphere::intersectionPointsShape( const Point &pos1, const Point &pos2,
 				      Point &ip1, Point &ip2 ) const
 {
-  //  ip1 = NonePoint;
-  //  ip2 = NonePoint;
+  // distance of straight line from pos1 to pos2 must equal the radius 1.0:
+  double p1 = pos1.magnitude();
+  Point dpos = pos2 - pos1;
+  double dp = dpos.magnitude();
+  double dpp = pos1.dot( dpos );
+  double sq = ::sqrt( dpp*dpp - dp*dp*(p1*p1-1.0) );
+  double a1 = -dpp-sq;
+  double a2 = -dpp+sq;
+  if ( a1 >= 0 && a1 <= 1.0 )
+    ip1 = pos1 + a1 * dpos;
+  if ( a2 >= 0 && a2 <= 1.0 )
+    ip2 = pos1 + a2 * dpos;
 }
 
 
@@ -596,7 +585,7 @@ Shape *Cylinder::copy( void ) const
 
 double Cylinder::radius( void ) const
 {
-  Point p0 = transform( Origin );
+  Point p0 = transform( Point::Origin );
   Point py = transform( Point( 0.0, 1.0, 0.0 ) );
   return p0.distance( py );
 }
@@ -604,7 +593,7 @@ double Cylinder::radius( void ) const
 
 double Cylinder::length( void ) const
 {
-  Point p0 = transform( Origin );
+  Point p0 = transform( Point::Origin );
   Point px = transform( Point( 1.0, 0.0, 0.0 ) );
   return p0.distance( px );
 }
@@ -643,7 +632,7 @@ Point Cylinder::boundingBoxMax( void ) const
 bool Cylinder::insideShape( const Point &p ) const
 {
   Point px( 0.0, p.y(), p.z() );
-  return ( Origin.distance( px ) <= 1.0 &&
+  return ( Point::Origin.distance( px ) <= 1.0 &&
 	   p.x() >= 0.0 && p.x() <= 1.0 );
 }
 
@@ -651,8 +640,30 @@ bool Cylinder::insideShape( const Point &p ) const
 void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const
 {
-  //  ip1 = NonePoint;
-  //  ip2 = NonePoint;
+  // distance of straight line from pos1 to pos2 projected onto x = 0
+  // must equal the radius 1.0:
+  Point pp1( pos1 );
+  pp1.x() = 0.0;
+  Point pp2( pos2 );
+  pp2.x() = 0.0;
+  double p1 = pp1.magnitude();
+  Point dpos = pp2 - pp1;
+  double dp = dpos.magnitude();
+  double dpp = pp1.dot( dpos );
+  double sq = ::sqrt( dpp*dpp - dp*dp*(p1*p1-1.0) );
+  double a1 = -dpp-sq;
+  double a2 = -dpp+sq;
+  // check if intersections are in the right x-range:
+  if ( a1 >= 0 && a1 <= 1.0 ) {
+    ip1 = pp1 + a1 * dpos;
+    if ( ip1.x() < 0.0 || ip1.x() > 1.0 )
+      ip1 = Point::None;
+  }
+  if ( a2 >= 0 && a2 <= 1.0 ) {
+    ip2 = pp1 + a2 * dpos;
+    if ( ip2.x() < 0.0 || ip2.x() > 1.0 )
+      ip2 = Point::None;
+  }
 }
 
 
@@ -719,7 +730,7 @@ Shape *Cuboid::copy( void ) const
 
 double Cuboid::length( void ) const
 {
-  Point p0 = transform( Origin );
+  Point p0 = transform( Point::Origin );
   Point px = transform( Point( 1.0, 0.0, 0.0 ) );
   return p0.distance( px );
 }
@@ -727,7 +738,7 @@ double Cuboid::length( void ) const
 
 double Cuboid::width( void ) const
 {
-  Point p0 = transform( Origin );
+  Point p0 = transform( Point::Origin );
   Point py = transform( Point( 0.0, 1.0, 0.0 ) );
   return p0.distance( py );
 }
@@ -735,7 +746,7 @@ double Cuboid::width( void ) const
 
 double Cuboid::height( void ) const
 {
-  Point p0 = transform( Origin );
+  Point p0 = transform( Point::Origin );
   Point pz = transform( Point( 0.0, 0.0, 1.0 ) );
   return p0.distance( pz );
 }
@@ -773,15 +784,31 @@ Point Cuboid::boundingBoxMax( void ) const
 
 bool Cuboid::insideShape( const Point &p ) const
 {
-  return ( p >= Origin && p <= Point( 1.0, 1.0, 1.0 ) );
+  return ( p >= Point::Origin && p <= Point::Ones );
 }
 
 
 void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
 				      Point &ip1, Point &ip2 ) const
 {
-  //  ip1 = NonePoint;
-  //  ip2 = NonePoint;
+  // XXX make sure dpos is not zero!
+  Point dpos = pos2 - pos1;
+  Point a0 = - pos1 / dpos;
+  Point a1 = ( 1.0 - pos1) / dpos;
+  for ( int k=0; k<3; k++ ) {
+    if ( a0[k] >= 0 && a0[k] <= 1.0 ) {
+      Point ip = pos1 + a0[k] * dpos;
+      // XXX check whether ip1 was already set?
+      if ( ip[(k+1)%3] >= 0.0 && ip[(k+1)%3] <= 1.0 )
+	ip1 = ip;
+    }
+    if ( a1[k] >= 0 && a1[k] <= 1.0 ) {
+      Point ip = pos1 + a1[k] * dpos;
+      // XXX check whether ip1 was already set?
+      if ( ip[(k+1)%3] >= 0.0 && ip[(k+1)%3] <= 1.0 )
+	ip2 = ip;
+    }
+  }
 }
 
 

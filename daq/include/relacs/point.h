@@ -42,6 +42,13 @@ class Point {
 
 public:
 
+    /*! A non-defined point. */
+  static const Point None;
+    /*! The point (0, 0, 0). */
+  static const Point Origin;
+    /*! The point (1, 1, 1). */
+  static const Point Ones;
+
     /*! Constructor. */
   Point( void );
     /*! Copy constructor. */
@@ -108,6 +115,15 @@ public:
     /*! Divide all coordinates of this point by \a a. */
   Point operator/( double a ) const;
 
+    /*! Add \a to each element of \a p. */
+  friend Point operator+( double a, const Point &p );
+    /*! Subtract each element of \a p from \a a. */
+  friend Point operator-( double a, const Point &p );
+    /*! Multiply each element of \a p with \a a. */
+  friend Point operator*( double a, const Point &p );
+    /*! Divide \a a by each element of \a p. */
+  friend Point operator/( double a, const Point &p );
+
     /*! Add \a a to all coordinates of this point. */
   Point &operator+=( double a );
     /*! Subtract \a a from all coordinates of this point. */
@@ -124,9 +140,12 @@ public:
     /*! The angle between this vector and \a p in radians. */
   double angle( const Point &p ) const;
 
+    /*! True if this point is not defined. */
+  bool isNone( void ) const;
+
     /*! True if this point and \a p are the same, i.e. have the same coordinates. */
   bool operator==( const Point &p ) const;
-    /*! True if this point and \a p differ in at leas one element. */
+    /*! True if this point and \a p differ in at least one element. */
   bool operator!=( const Point &p ) const;
     /*! True if all coordinates of \c this are smaller than the ones of \a p. */
   bool operator<( const Point &p ) const;
