@@ -125,9 +125,15 @@ public:
   Point inverseTransform( const Point &p ) const;
 
     /*! Minimum corner of bounding box. */
-  virtual Point boundingBoxMin( void ) const = 0;
+  Point boundingBoxMin( void ) const;
     /*! Maximum corner of bounding box. */
-  virtual Point boundingBoxMax( void ) const = 0;
+  Point boundingBoxMax( void ) const;
+    /*! Minimum corner of bounding box for the transformation from
+        shape to world coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const = 0;
+    /*! Maximum corner of bounding box for the transformation from
+        shape to world coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const = 0;
 
     /*! Return \c true if point \a p in world coordinates is inside the shape.
         The point is transformed into shape coordinates and then tested with insideShape(). */
@@ -135,7 +141,7 @@ public:
     /*! Return \c true if point \a p in shape coordinates is inside the shape. */
   virtual bool insideShape( const Point &p ) const = 0;
     /*! Return \c true if point \a p is below the shape.
-        This impementation checks whether \a p is below the bounding box. 
+        This implementation checks whether \a p is below the bounding box. 
         XXX Replace this function by something more general....*/
   virtual bool below( const Point &p ) const ;
 
@@ -248,10 +254,14 @@ class Zone : public Shape
     /*! Remove all shapes from the zone. */
   void clear( void );
 
-    /*! Approximation of the minimum corner of bounding boxes of all additive shapes. */
-  virtual Point boundingBoxMin( void ) const;
-    /*! Approximation of the maximum corner of bounding boxes of all additive shapes. */
-  virtual Point boundingBoxMax( void ) const;
+    /*! Approximation of the minimum corner of bounding boxes of all
+        additive shapes for the transformation from shape to world
+        coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const;
+    /*! Approximation of the maximum corner of bounding boxes of all
+        additive shapes for the transformation from shape to world
+        coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const;
 
     /*! Return \c true if point \a p in shape coordinates is inside the zone. */
   virtual bool insideShape( const Point &p ) const;
@@ -305,10 +315,12 @@ class Sphere : public Shape
     /*! The radius of the sphere in world coordinates. */
   double radius( void ) const;
 
-    /*! Minimum corner of bounding box. */
-  virtual Point boundingBoxMin( void ) const;
-    /*! Maximum corner of bounding box. */
-  virtual Point boundingBoxMax( void ) const;
+    /*! Minimum corner of bounding box for the transformation from
+        shape to world coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const;
+    /*! Maximum corner of bounding box for the transformation from
+        shape to world coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const;
 
     /*! Return \c true if point \a p in shape coordinates is inside the sphere. */
   virtual bool insideShape( const Point &p ) const;
@@ -357,10 +369,12 @@ class Cylinder : public Shape
     /*! The length of the cylinder in world coordinates. */
   double length( void ) const;
 
-    /*! Minimum corner of bounding box. */
-  virtual Point boundingBoxMin( void ) const;
-    /*! Maximum corner of bounding box. */
-  virtual Point boundingBoxMax( void ) const;
+    /*! Minimum corner of bounding box for the transformation from
+        shape to world coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const;
+    /*! Maximum corner of bounding box for the transformation from
+        shape to world coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const;
 
     /*! Return \c true if point \a p in shape coordinates is inside the cylinder. */
   virtual bool insideShape( const Point &p ) const;
@@ -421,10 +435,12 @@ class Cuboid : public Shape
     /*! The height of the cuboid in world coordinates. */
   double height( void ) const;
 
-    /*! Minimum corner of bounding box. */
-  virtual Point boundingBoxMin( void ) const;
-    /*! Maximum corner of bounding box. */
-  virtual Point boundingBoxMax( void ) const;
+    /*! Minimum corner of bounding box for the transformation from
+        shape to world coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const;
+    /*! Maximum corner of bounding box for the transformation from
+        shape to world coordinates specified by \a trafo and \a trans. */
+  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const;
 
     /*! Return \c true if point \a p in shape coordinates is inside the cuboid. */
   virtual bool insideShape( const Point &p ) const;

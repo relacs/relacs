@@ -34,6 +34,12 @@ const Point Point::Origin = Point( 0.0, 0.0, 0.0 );
 
 const Point Point::Ones = Point( 1.0, 1.0, 1.0 );
 
+const Point Point::UnitX = Point( 1.0, 0.0, 0.0 );
+
+const Point Point::UnitY = Point( 0.0, 1.0, 0.0 );
+
+const Point Point::UnitZ = Point( 0.0, 0.0, 1.0 );
+
 
 Point::Point( void )
 {
@@ -296,6 +302,14 @@ double Point::dot( const Point &p ) const
 }
 
 
+Point Point::cross( const Point &p ) const
+{
+  return Point( Coords[1]*p.Coords[2] - Coords[2]*p.Coords[1],
+		Coords[2]*p.Coords[0] - Coords[0]*p.Coords[2],
+		Coords[0]*p.Coords[1] - Coords[1]*p.Coords[0] );
+}
+
+
 double Point::magnitude( void ) const
 {
   double d = 0.0;
@@ -310,6 +324,28 @@ double Point::angle( const Point &p ) const
   double d = dot( p );
   d /= magnitude()*p.magnitude();
   return acos( d );
+}
+
+
+Point &Point::normalize( void )
+{
+  double d = 0.0;
+  for ( int k=0; k<Dim; k++ )
+    d += Coords[k]*Coords[k];
+  double f = 1.0/sqrt( d );
+  for ( int k=0; k<Dim; k++ )
+    Coords[k] *= f;
+  return *this;
+}
+
+
+Point Point::normalized( void ) const
+{
+  double d = 0.0;
+  for ( int k=0; k<Dim; k++ )
+    d += Coords[k]*Coords[k];
+  double f = 1.0/sqrt( d );
+  return (*this) * f;
 }
 
 

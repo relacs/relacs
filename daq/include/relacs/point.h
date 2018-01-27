@@ -48,6 +48,12 @@ public:
   static const Point Origin;
     /*! The point (1, 1, 1). */
   static const Point Ones;
+    /*! The point (1, 0, 0). */
+  static const Point UnitX;
+    /*! The point (0, 1, 0). */
+  static const Point UnitY;
+    /*! The point (0, 0, 1). */
+  static const Point UnitZ;
 
     /*! Constructor. */
   Point( void );
@@ -133,12 +139,20 @@ public:
     /*! Divide all coordinates of this point by \a a. */
   Point &operator/=( double a );
 
-    /*! Dot product between the coordinates this and point \a p. */
+    /*! Dot product between the coordinates of this point and point \a p. */
   double dot( const Point &p ) const;
+    /*! Cross product between the coordinates of this point and point \a p. */
+  Point cross( const Point &p ) const;
+
     /*! The magnitude (length) of the vector. */
   double magnitude( void ) const;
     /*! The angle between this vector and \a p in radians. */
   double angle( const Point &p ) const;
+
+    /*! Normalize the lenght of the vector by its magnitude. */
+  Point &normalize( void );
+    /*! Return the normalized vector. */
+  Point normalized( void ) const;
 
     /*! True if this point is not defined. */
   bool isNone( void ) const;
