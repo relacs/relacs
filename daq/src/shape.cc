@@ -204,7 +204,11 @@ void Shape::intersectionPoints( const Point &pos1, const Point &pos2,
 {
   ip1 = Point::None;
   ip2 = Point::None;
-  // XXX make sure pos1 != pos2 ???
+  // check whether the two points are the same:
+  Point dpos = pos2 - pos1;
+  if ( dpos.magnitude() < 1e-16 )
+    return;
+  // find intersections:
   intersectionPointsShape( inverseTransform( pos1 ), inverseTransform( pos2 ), ip1, ip2 );
   if ( ! ip1.isNone() )
     ip1 = transform( ip1 );
@@ -430,17 +434,55 @@ bool Zone::below( const Point &p ) const
 void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
 				    Point &ip1, Point &ip2 ) const
 {
-  /*
-  bool ins = false;
+  Point dpos = pos2 - pos1;
+  // find dimension where dpos is not zero:
+  int k = 0;
+  for ( k=0; k<3; k++ ) {
+    if ( ::fabs( dpos[k] ) > 1e-16 )
+      break;
+  }
+  double a1 = NAN;
+  double a2 = NAN;
   auto si = Shapes.begin();
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     Point ipp1;
     Point ipp2;
     (*si)->intersectionPoints( pos1, pos2, ipp1, ipp2 );
-    // XXX do something 
+    // find position on path:
+    if ( ! ipp1.isNone() && ! ipp2.isNone() ) {
+      double aa1 = (ipp1[k] - pos1[k])/dpos[k];
+      double aa2 = (ipp2[k] - pos1[k])/dpos[k];
+      if ( *ai ) {
+	// expand intersection path:
+	if ( ::isnan( a1 ) || aa1 < a1 ) {
+	  a1 = aa1;
+	  ip1 = ipp1;
+	}
+	if ( ::isnan( a2 ) || aa2 > a2 ) {
+	  a2 = aa2;
+	  ip2 = ipp2;
+	}
+      }
+      else if ( ! ::isnan( a1 ) ) {
+	// shrink intersection path:
+	if ( aa1 <= a1 && aa2 >= a2 ) {
+	  a1 = NAN;
+	  a2 = NAN;
+	  ip1 = Point::None;
+	  ip2 = Point::None;
+	}
+	else if ( aa1 > a1 && aa2 > a2 ) {
+	  a1 = aa1;
+	  ip1 = ipp1;
+	}
+	else if ( aa1 < a1 && aa2 < a2 ) {
+	  a2 = aa2;
+	  ip2 = ipp2;
+	}
+      }
+    }
   }
-  */
 }
 
 
@@ -537,13 +579,14 @@ void Sphere::intersectionPointsShape( const Point &pos1, const Point &pos2,
   Point dpos = pos2 - pos1;
   double dp = dpos.magnitude();
   double dpp = pos1.dot( dpos );
-  double sq = ::sqrt( dpp*dpp - dp*dp*(p1*p1-1.0) );
+  double discr = dpp*dpp - dp*dp*(p1*p1-1.0);
+  if ( discr <= 0.0 )
+    return;
+  double sq = ::sqrt( discr );
   double a1 = -dpp-sq;
   double a2 = -dpp+sq;
-  if ( a1 >= 0 && a1 <= 1.0 )
-    ip1 = pos1 + a1 * dpos;
-  if ( a2 >= 0 && a2 <= 1.0 )
-    ip2 = pos1 + a2 * dpos;
+  ip1 = pos1 + a1 * dpos;
+  ip2 = pos1 + a2 * dpos;
 }
 
 
@@ -640,29 +683,67 @@ bool Cylinder::insideShape( const Point &p ) const
 void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const
 {
+  int ps = 0;
+  Point ips[2];
+  double as[2];
   // distance of straight line from pos1 to pos2 projected onto x = 0
   // must equal the radius 1.0:
-  Point pp1( pos1 );
-  pp1.x() = 0.0;
-  Point pp2( pos2 );
-  pp2.x() = 0.0;
-  double p1 = pp1.magnitude();
-  Point dpos = pp2 - pp1;
-  double dp = dpos.magnitude();
-  double dpp = pp1.dot( dpos );
-  double sq = ::sqrt( dpp*dpp - dp*dp*(p1*p1-1.0) );
-  double a1 = -dpp-sq;
-  double a2 = -dpp+sq;
+  Point dpos = pos2 - pos1;
+  Point pos1x( pos1 );
+  pos1x.x() = 0.0;
+  Point pos2x( pos2 );
+  pos2x.x() = 0.0;
+  double px1 = pos1x.magnitude();
+  Point dposx = pos2x - pos1x;
+  double dpx = dposx.magnitude();
+  double dppx = pos1x.dot( dposx );
+  double discr = dppx*dppx - dpx*dpx*(px1*px1-1.0);
+  if ( discr <= 0.0 )
+    return;
+  double sq = ::sqrt( discr );
+  double a1 = -dppx-sq;
+  double a2 = -dppx+sq;
+  Point ipa1 = pos1 + a1 * dpos;
+  Point ipa2 = pos1 + a2 * dpos;
   // check if intersections are in the right x-range:
-  if ( a1 >= 0 && a1 <= 1.0 ) {
-    ip1 = pp1 + a1 * dpos;
-    if ( ip1.x() < 0.0 || ip1.x() > 1.0 )
-      ip1 = Point::None;
+  if ( ipa1.x() >= 0.0 && ipa1.x() <= 1.0 ) {
+    ips[ps] = ipa1;
+    as[ps] = a1;
+    ps++;
   }
-  if ( a2 >= 0 && a2 <= 1.0 ) {
-    ip2 = pp1 + a2 * dpos;
-    if ( ip2.x() < 0.0 || ip2.x() > 1.0 )
-      ip2 = Point::None;
+  if ( ipa2.x() >= 0.0 && ipa2.x() <= 1.0 ) {
+    ips[ps] = ipa2;
+    as[ps] = a2;
+    ps++;
+  }
+  if ( ps < 2 ) {
+    // intersections with plane perpendicular to x-axis at x=0 and x=1:
+    double b1 = - pos1[0] / dpos[0];
+    double b2 = ( 1.0 - pos1[0]) / dpos[0];
+    Point ipb1 = pos1 + b1 * dpos;
+    Point ipb2 = pos1 + b2 * dpos;
+    if ( ipb1.distance( Point::Origin ) <= 1.0 ) {
+      ips[ps] = ipb1;
+      as[ps] = b1;
+      ps++;
+    }
+    if ( ps < 2  && ipb2.distance( Point( 1.0, 0.0, 0.0 ) ) <= 1.0 ) {
+      ips[ps] = ipb2;
+      as[ps] = b2;
+      ps++;
+    }
+  }
+  // no intersections:
+  if ( ps < 2 )
+    return;
+  // return intersections in the right order:
+  if ( as[0] < as[1] ) {
+    ip1 = ips[0];
+    ip2 = ips[1];
+  }
+  else {
+    ip1 = ips[1];
+    ip2 = ips[2];
   }
 }
 
@@ -791,23 +872,44 @@ bool Cuboid::insideShape( const Point &p ) const
 void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
 				      Point &ip1, Point &ip2 ) const
 {
-  // XXX make sure dpos is not zero!
+  int ps = 0;
+  Point ips[2];
+  double as[2];
   Point dpos = pos2 - pos1;
-  Point a0 = - pos1 / dpos;
-  Point a1 = ( 1.0 - pos1) / dpos;
   for ( int k=0; k<3; k++ ) {
-    if ( a0[k] >= 0 && a0[k] <= 1.0 ) {
-      Point ip = pos1 + a0[k] * dpos;
-      // XXX check whether ip1 was already set?
-      if ( ip[(k+1)%3] >= 0.0 && ip[(k+1)%3] <= 1.0 )
-	ip1 = ip;
+    // line not perpendicular to k-th dimension?
+    if ( ::fabs( dpos[k] ) > 1e-16 ) {
+      // intersection with plane perpendicular to k-th dimension at 0:
+      double a0 = - pos1[k] / dpos[k];
+      Point ipp0 = pos1 + a0 * dpos;
+      // intersection with plane perpendicular to k-th dimension at 1:
+      double a1 = ( 1.0 - pos1[k]) / dpos[k];
+      Point ipp1 = pos1 + a1 * dpos;
+      // check whether intersections are part of the cuboid surface,
+      // i.e. whether the other two coordinates are between 0 and 1:
+      if ( ps < 2 && ipp0[(k+1)%3] >= 0.0 && ipp0[(k+1)%3] <= 1.0 ) {
+	ips[ps] = ipp0;
+	as[ps] = a0;
+	ps++;
+      }
+      if ( ps < 2 && ipp1[(k+1)%3] >= 0.0 && ipp1[(k+1)%3] <= 1.0 ) {
+	ips[ps] = ipp1;
+	as[ps] = a1;
+	ps++;
+      }
     }
-    if ( a1[k] >= 0 && a1[k] <= 1.0 ) {
-      Point ip = pos1 + a1[k] * dpos;
-      // XXX check whether ip1 was already set?
-      if ( ip[(k+1)%3] >= 0.0 && ip[(k+1)%3] <= 1.0 )
-	ip2 = ip;
-    }
+  }
+  // no intersections:
+  if ( ps < 2 )
+    return;
+  // return intersections in the right order:
+  if ( as[0] < as[1] ) {
+    ip1 = ips[0];
+    ip2 = ips[1];
+  }
+  else {
+    ip1 = ips[1];
+    ip2 = ips[2];
   }
 }
 

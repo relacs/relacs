@@ -140,13 +140,23 @@ public:
   virtual bool below( const Point &p ) const ;
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
-        shape with the line connecting \a pos1 with \a pos2. \a ip1 or
-        \a ip2 can be Point::None. All points in world coordinates. */
+        shape with the line connecting \a pos1 with \a pos2. \a ip1
+        and \a ip2 can be Point::None if there is no intersection or
+        if \a pos1 and \a pos2 are the same. If \a pos1 and/or \a pos2
+        are already inside the shape, then \a ip1 and/or \a ip2 are
+        the intersection points on the line connecting \a pos1 and \a
+        pos2 but not between the two points. All points in world
+        coordinates. */
   void intersectionPoints( const Point &pos1, const Point &pos2,
 			   Point &ip1, Point &ip2 ) const;
     /*! Return in \a ip1 and \a ip2 the intersection points of the
-        shape with the line connecting \a pos1 with \a pos2. \a ip1 or
-        \a ip2 can be Point::None. All points in shape coordinates. */
+        shape with the line connecting \a pos1 with \a pos2. \a ip1
+        and \a ip2 can be Point::None if there is no intersection or
+        if \a pos1 and \a pos2 are the same. If \a pos1 and/or \a pos2
+        are already inside the shape, then \a ip1 and/or \a ip2 are
+        the intersection points on the line connecting \a pos1 and \a
+        pos2 but not between the two points. All points in shape
+        coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const = 0;
 
@@ -249,8 +259,12 @@ class Zone : public Shape
   virtual bool below( const Point &p ) const;
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
-        zone with the line connecting \a pos1 with \a pos2. \a ip1
-        or \a ip2 can be Point::None. All points in shape
+        zone with the line connecting \a pos1 with \a pos2. \a ip1 and
+        \a ip2 can be Point::None if there is no intersection or if \a
+        pos1 and \a pos2 are the same. If \a pos1 and/or \a pos2 are
+        already inside the shape, then \a ip1 and/or \a ip2 are the
+        intersection points on the line connecting \a pos1 and \a pos2
+        but not between the two points. All points in shape
         coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const;
@@ -301,7 +315,11 @@ class Sphere : public Shape
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         sphere with the line connecting \a pos1 with \a pos2. \a ip1
-        or \a ip2 can be Point::None. All points in shape
+        and \a ip2 can be Point::None if there is no intersection or
+        if \a pos1 and \a pos2 are the same. If \a pos1 and/or \a pos2
+        are already inside the shape, then \a ip1 and/or \a ip2 are
+        the intersection points on the line connecting \a pos1 and \a
+        pos2 but not between the two points. All points in shape
         coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const;
@@ -349,7 +367,11 @@ class Cylinder : public Shape
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         cylinder with the line connecting \a pos1 with \a pos2. \a ip1
-        or \a ip2 can be Point::None. All points in shape
+        and \a ip2 can be Point::None if there is no intersection or
+        if \a pos1 and \a pos2 are the same. If \a pos1 and/or \a pos2
+        are already inside the shape, then \a ip1 and/or \a ip2 are
+        the intersection points on the line connecting \a pos1 and \a
+        pos2 but not between the two points.. All points in shape
         coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const;
@@ -409,7 +431,11 @@ class Cuboid : public Shape
 
     /*! Return in \a ip1 and \a ip2 the intersection points of the
         cuboid with the line connecting \a pos1 with \a pos2. \a ip1
-        or \a ip2 can be Point::None. All points in shape
+        and \a ip2 can be Point::None if there is no intersection or
+        if \a pos1 and \a pos2 are the same. If \a pos1 and/or \a pos2
+        are already inside the shape, then \a ip1 and/or \a ip2 are
+        the intersection points on the line connecting \a pos1 and \a
+        pos2 but not between the two points. All points in shape
         coordinates. */
   virtual void intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const;
