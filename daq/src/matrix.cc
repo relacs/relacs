@@ -20,6 +20,7 @@
 */
 
 #include <cmath>
+#include <iomanip>
 #include <relacs/matrix.h>
 #include <relacs/str.h>
 
@@ -33,9 +34,9 @@ Matrix::Matrix( void )
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ ) {
       if ( i == j )
-	Elems[0][0] = 1.0;
+	Elems[i][j] = 1.0;
       else
-	Elems[0][0] = 0.0;
+	Elems[i][j] = 0.0;
     }
   }
 }
@@ -207,7 +208,7 @@ Matrix &Matrix::operator*=( const Matrix &m )
     for ( int j=0; j<3; j++ ) {
       Elems[i][j] = 0.0;
       for ( int k=0; k<3; k++ )
-	Elems[i][j] += a.Elems[i][k]*m.Elems[k][j];
+	Elems[i][j] += m.Elems[i][k]*a.Elems[k][j];
     }
   }
   return *this;
@@ -321,10 +322,10 @@ Matrix Matrix::rotateYaw( double yaw )
   double sy = sin( yaw );
   double cy = cos( yaw );
   Matrix m;
+  m.Elems[0][0] = cy;
+  m.Elems[0][1] = sy;
+  m.Elems[1][0] = -sy;
   m.Elems[1][1] = cy;
-  m.Elems[1][2] = sy;
-  m.Elems[2][1] = -sy;
-  m.Elems[2][2] = cy;
   return m;
 }
 
@@ -347,10 +348,10 @@ Matrix Matrix::rotateRoll( double roll )
   double sr = sin( roll );
   double cr = cos( roll );
   Matrix m;
-  m.Elems[0][0] = cr;
-  m.Elems[0][1] = sr;
-  m.Elems[1][0] = -sr;
   m.Elems[1][1] = cr;
+  m.Elems[1][2] = sr;
+  m.Elems[2][1] = -sr;
+  m.Elems[2][2] = cr;
   return m;
 }
 
@@ -366,14 +367,14 @@ Matrix Matrix::rotate( double yaw, double pitch, double roll )
 
 ostream &operator<<( ostream &str, const Matrix &m ) 
 {
-  str << "matrix (\t";
+  str << "matrix ( ";
   for ( int i=0; i<3; i++ ) {
     if ( i > 0 )
-      str << "       (\t";
+      str << "       ( ";
     for ( int j=0; j<3; j++ ) {
-      str << m.Elems[i][j];
+      str << setw( 10 ) << m.Elems[i][j];
       if ( j < 2 )
-	str << "\t";
+	str << " ";
     }
     str << " )\n";
   }

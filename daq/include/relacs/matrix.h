@@ -86,7 +86,9 @@ public:
   Point operator*( const Point &p ) const;
     /*! Matrix multiplication of this matrix with matrix \a m. */
   Matrix operator*( const Matrix &m ) const;
-    /*! Matrix multiplication of this matrix with matrix \a m. */
+    /*! Apply transformation matrix \a m to this matrix.
+        That is compute matrix \a m multiplied with this matrix.
+        \note \a m is multiplied from the left, not from the right! */
   Matrix &operator*=( const Matrix &m );
 
     /*! Return the determinant of the minor matrix for (i, j). */

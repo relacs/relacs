@@ -186,7 +186,8 @@ public:
     /*! The point with absolute coordinates. */
   friend Point abs( Point p );
 
-    /*! Apply transformation matrix \a m to this point. */
+    /*! Apply transformation matrix \a m to this point.
+        That is, compute m * p. */
   Point &operator*=( const Matrix &m );
 
     /*! Write the coordinates of the point to stream \a str. */
