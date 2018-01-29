@@ -10,6 +10,8 @@ using namespace relacs;
 
 const double epsilon = 1e-8;
 
+const int n = 1000;
+
 
 double urand( void )
 {
@@ -44,7 +46,6 @@ void check_identity( const Matrix &m )
 int main ( void )
 {
   cerr << "Test Matrix::inverse()\n";
-  int n = 1000;
   for ( int k=0; k<n; k++ ) {
     Matrix a = random_matrix();
     Matrix b = a.inverse();

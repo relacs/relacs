@@ -87,7 +87,8 @@ librelacsdaq_la_SOURCES = \
 
 
 check_PROGRAMS = linktest_librelacsdaq_la \
-    checkmatrix
+    checkmatrix \
+    checkshape
 
 linktest_librelacsdaq_la_SOURCES = linktest.cc
 linktest_librelacsdaq_la_LDADD = librelacsdaq.la
@@ -95,6 +96,10 @@ linktest_librelacsdaq_la_LDADD = librelacsdaq.la
 checkmatrix_SOURCES = checkmatrix.cc
 checkmatrix_CPPFLAGS = -I$(srcdir)/../include
 checkmatrix_LDADD = librelacsdaq.la
+
+checkshape_SOURCES = checkshape.cc
+checkshape_CPPFLAGS = -I$(srcdir)/../include
+checkshape_LDADD = librelacsdaq.la
 
 TESTS = $(check_PROGRAMS)
 

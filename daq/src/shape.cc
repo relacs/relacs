@@ -456,6 +456,8 @@ bool Zone::below( const Point &p ) const
 void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
 				    Point &ip1, Point &ip2 ) const
 {
+  ip1 = Point::None;
+  ip2 = Point::None;
   Point dpos = pos2 - pos1;
   // find dimension where dpos is not zero:
   int k = 0;
@@ -610,19 +612,24 @@ bool Sphere::insideShape( const Point &p ) const
 void Sphere::intersectionPointsShape( const Point &pos1, const Point &pos2,
 				      Point &ip1, Point &ip2 ) const
 {
+  ip1 = Point::None;
+  ip2 = Point::None;
   // distance of straight line from pos1 to pos2 must equal the radius 1.0:
-  double p1 = pos1.magnitude();
+  double p1 = pos1.dot( pos1 );
   Point dpos = pos2 - pos1;
-  double dp = dpos.magnitude();
+  double dp = dpos.dot( dpos );
   double dpp = pos1.dot( dpos );
-  double discr = dpp*dpp - dp*dp*(p1*p1-1.0);
+  double discr = dpp*dpp - dp*(p1-1.0);
   if ( discr <= 0.0 )
     return;
   double sq = ::sqrt( discr );
-  double a1 = -dpp-sq;
-  double a2 = -dpp+sq;
-  ip1 = pos1 + a1 * dpos;
-  ip2 = pos1 + a2 * dpos;
+  double a1 = (-dpp-sq)/dp;
+  double a2 = (-dpp+sq)/dp;
+  // check whether both pos1 and pos2 are not outside and at the same side (no intersection):
+  if ( a1 <= 1.0 && a2 >= 0.0 ) {
+    ip1 = pos1 + a1 * dpos;
+    ip2 = pos1 + a2 * dpos;
+  }
 }
 
 
@@ -745,9 +752,12 @@ bool Cylinder::insideShape( const Point &p ) const
 void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
 					Point &ip1, Point &ip2 ) const
 {
+  ip1 = Point::None;
+  ip2 = Point::None;
   int ps = 0;
   Point ips[2];
   double as[2];
+  // intersections with infinite cylinder:
   // distance of straight line from pos1 to pos2 projected onto x = 0
   // must equal the radius 1.0:
   Point dpos = pos2 - pos1;
@@ -755,30 +765,33 @@ void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
   pos1x.x() = 0.0;
   Point pos2x( pos2 );
   pos2x.x() = 0.0;
-  double px1 = pos1x.magnitude();
+  double px1 = pos1x.dot( pos1x );
   Point dposx = pos2x - pos1x;
-  double dpx = dposx.magnitude();
+  double dpx = dposx.dot( dposx );
   double dppx = pos1x.dot( dposx );
-  double discr = dppx*dppx - dpx*dpx*(px1*px1-1.0);
+  double discr = dppx*dppx - dpx*(px1-1.0);
   if ( discr <= 0.0 )
     return;
   double sq = ::sqrt( discr );
-  double a1 = -dppx-sq;
-  double a2 = -dppx+sq;
-  Point ipa1 = pos1 + a1 * dpos;
-  Point ipa2 = pos1 + a2 * dpos;
-  // check if intersections are in the right x-range:
-  if ( ipa1.x() >= 0.0 && ipa1.x() <= 1.0 ) {
-    ips[ps] = ipa1;
-    as[ps] = a1;
-    ps++;
+  double a1 = (-dppx-sq)/dpx;
+  double a2 = (-dppx+sq)/dpx;
+  // check whether both pos1 and pos2 are not outside and at the same side (no intersection):
+  if ( a1 <= 1.0 && a2 >= 0.0 ) {
+    Point ipa1 = pos1 + a1 * dpos;
+    Point ipa2 = pos1 + a2 * dpos;
+    // check if intersections are in the right x-range:
+    if ( ipa1.x() >= 0.0 && ipa1.x() <= 1.0 ) {
+      ips[ps] = ipa1;
+      as[ps] = a1;
+      ps++;
+    }
+    if ( ipa2.x() >= 0.0 && ipa2.x() <= 1.0 ) {
+      ips[ps] = ipa2;
+      as[ps] = a2;
+      ps++;
+    }
   }
-  if ( ipa2.x() >= 0.0 && ipa2.x() <= 1.0 ) {
-    ips[ps] = ipa2;
-    as[ps] = a2;
-    ps++;
-  }
-  if ( ps < 2 ) {
+  if ( ps < 2 && fabs( dpos[0] ) > 1e-8 ) {
     // intersections with plane perpendicular to x-axis at x=0 and x=1:
     double b1 = - pos1[0] / dpos[0];
     double b2 = ( 1.0 - pos1[0]) / dpos[0];
@@ -800,12 +813,16 @@ void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
     return;
   // return intersections in the right order:
   if ( as[0] < as[1] ) {
-    ip1 = ips[0];
-    ip2 = ips[1];
+    if ( as[0] <= 1.0 && as[1] >= 0.0 ) {
+      ip1 = ips[0];
+      ip2 = ips[1];
+    }
   }
   else {
-    ip1 = ips[1];
-    ip2 = ips[2];
+    if ( as[1] <= 1.0 && as[0] >= 0.0 ) {
+      ip1 = ips[1];
+      ip2 = ips[0];
+    }
   }
 }
 
@@ -934,6 +951,8 @@ bool Cuboid::insideShape( const Point &p ) const
 void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
 				      Point &ip1, Point &ip2 ) const
 {
+  ip1 = Point::None;
+  ip2 = Point::None;
   int ps = 0;
   Point ips[2];
   double as[2];
@@ -966,12 +985,16 @@ void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
     return;
   // return intersections in the right order:
   if ( as[0] < as[1] ) {
-    ip1 = ips[0];
-    ip2 = ips[1];
+    if ( as[0] <= 1.0 && as[1] >= 0.0 ) {
+      ip1 = ips[0];
+      ip2 = ips[1];
+    }
   }
   else {
-    ip1 = ips[1];
-    ip2 = ips[2];
+    if ( as[1] <= 1.0 && as[0] >= 0.0 ) {
+      ip1 = ips[1];
+      ip2 = ips[2];
+    }
   }
 }
 
