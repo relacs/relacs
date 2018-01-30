@@ -959,21 +959,23 @@ void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
   Point dpos = pos2 - pos1;
   for ( int k=0; k<3; k++ ) {
     // line not perpendicular to k-th dimension?
-    if ( ::fabs( dpos[k] ) > 1e-16 ) {
+    if ( ::fabs( dpos[k] ) > 1e-8 ) {
       // intersection with plane perpendicular to k-th dimension at 0:
       double a0 = - pos1[k] / dpos[k];
       Point ipp0 = pos1 + a0 * dpos;
+      ipp0[k] = 0.0;  // we need an exact zero here
       // intersection with plane perpendicular to k-th dimension at 1:
       double a1 = ( 1.0 - pos1[k]) / dpos[k];
       Point ipp1 = pos1 + a1 * dpos;
+      ipp1[k] = 1.0;  // we need an exact one here
       // check whether intersections are part of the cuboid surface,
       // i.e. whether the other two coordinates are between 0 and 1:
-      if ( ps < 2 && ipp0[(k+1)%3] >= 0.0 && ipp0[(k+1)%3] <= 1.0 ) {
+      if ( ps < 2 && ipp0 >= Point::Origin && ipp0 <= Point::Ones ) {
 	ips[ps] = ipp0;
 	as[ps] = a0;
 	ps++;
       }
-      if ( ps < 2 && ipp1[(k+1)%3] >= 0.0 && ipp1[(k+1)%3] <= 1.0 ) {
+      if ( ps < 2 && ipp1 >= Point::Origin && ipp1 <= Point::Ones ) {
 	ips[ps] = ipp1;
 	as[ps] = a1;
 	ps++;
@@ -993,7 +995,7 @@ void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
   else {
     if ( as[1] <= 1.0 && as[0] >= 0.0 ) {
       ip1 = ips[1];
-      ip2 = ips[2];
+      ip2 = ips[0];
     }
   }
 }

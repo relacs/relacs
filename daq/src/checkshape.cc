@@ -44,6 +44,8 @@ void check_intersections( const Shape &shp )
     assert( ip1.isNone() == ip2.isNone() );
     if ( ip1.isNone() ) {
       // no intersections:
+      cerr << p;
+      cerr << q;
       for ( int i=1; i<nlines; i++ ) {
 	Point ip = p + linefac*i * (q - p);
 	assert( ! shp.insideShape( ip ) );
@@ -134,7 +136,7 @@ int main ( void )
     bool inside = ( ( p >= Point::Origin ) && ( p <= Point::Ones ) );
     assert( inside == cbd.insideShape( p ) );
   }
-  // check_intersections( cbd );
+  check_intersections( cbd );
 
   return 0;
 }
