@@ -114,18 +114,19 @@ public:
         z-axis uniformly by \a scale. */
   static Matrix scale( double scale );
 
-    /*! Return the transformation matrix that rotates around the
-        z-axis by \a yaw radians. */
+    /*! Return the transformation matrix that rotates counterclockwise
+        around the z-axis by \a yaw radians. */
   static Matrix rotateYaw( double yaw );
-    /*! Return the transformation matrix that rotates around the
-        y-axis by \a pitch radians. */
+    /*! Return the transformation matrix that rotates counterclockwise
+        around the y-axis by \a pitch radians. */
   static Matrix rotatePitch( double pitch );
-    /*! Return the transformation matrix that rotates around the x-axis by \a roll radians. */
+    /*! Return the transformation matrix that rotates counterclockwise
+        around the x-axis by \a roll radians. */
   static Matrix rotateRoll( double roll );
-    /*! Return the transformation matrix that rotates around the
-        z-axis by \a yaw, then around the new y-axis by \a pitch, and
-        then around the resulting x-axis by \a roll. All angles in
-        radians. */
+    /*! Return the transformation matrix that rotates counterclockwise
+        around the z-axis by \a yaw, then around the new y-axis by \a
+        pitch, and then around the resulting x-axis by \a roll. All
+        angles in radians. */
   static Matrix rotate( double yaw, double pitch, double roll );
 
     /*! Write the elements of the matrix to stream \a str. */

@@ -51,6 +51,8 @@ int main ( void )
     Matrix b = a.inverse();
     Matrix c = a * b;
     check_identity( c );
+    Matrix d = b * a;
+    check_identity( d );
     a *= b;
     check_identity( a );
   }
@@ -128,6 +130,9 @@ int main ( void )
     Point q = Matrix::rotateYaw( yaw ) * p;
     assert( fabs( q.z() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
+    q = Matrix::rotateYaw( yaw ) * Point::UnitX;
+    double yawe = atan2( q.y(), q.x() );
+    assert( fabs( yaw - yawe ) < epsilon );
   }
 
   cerr << "Test Matrix::rotatePitch()\n";
@@ -143,6 +148,9 @@ int main ( void )
     Point q = Matrix::rotatePitch( pitch ) * p;
     assert( fabs( q.y() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
+    q = Matrix::rotatePitch( pitch ) * Point::UnitX;
+    double pitche = atan2( q.z(), q.x() );
+    assert( fabs( pitch - pitche ) < epsilon );
   }
 
   cerr << "Test Matrix::rotateRoll()\n";
@@ -158,6 +166,9 @@ int main ( void )
     Point q = Matrix::rotateRoll( roll ) * p;
     assert( fabs( q.x() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
+    q = Matrix::rotateRoll( roll ) * Point::UnitY;
+    double rolle = atan2( q.z(), q.y() );
+    assert( fabs( roll - rolle ) < epsilon );
   }
 
   return 0;

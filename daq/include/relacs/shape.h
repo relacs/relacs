@@ -96,15 +96,18 @@ public:
         by the factor \a scale. */
   void scale( double scale );
 
-    /*! Rotate the shape around the z-axis by \a yaw radians. */
+    /*! Rotate the shape counterclockwise around the z-axis by \a yaw
+        radians. */
   void rotateYaw( double yaw );
-    /*! Rotate the shape around the y-axis by \a pitch radians. */
+    /*! Rotate the shape counterclockwise around the y-axis by \a
+        pitch radians. */
   void rotatePitch( double pitch );
-    /*! Rotate the shape around the x-axis by \a roll radians. */
+    /*! Rotate the shape counterclockwise around the x-axis by \a roll
+        radians. */
   void rotateRoll( double roll );
-    /*! Rotate the shape around the z-axis by \a yaw, then around the
-        new y-axis by \a pitch, and then around the resulting x-axis
-        by \a roll. All angles in radians. */
+    /*! Rotate the shape counterclockwise around the z-axis by \a yaw,
+        then around the new y-axis by \a pitch, and then around the
+        resulting x-axis by \a roll. All angles in radians. */
   void rotate( double yaw, double pitch, double roll );
 
     /*! The translation vector of the shape. */

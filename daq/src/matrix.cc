@@ -323,8 +323,8 @@ Matrix Matrix::rotateYaw( double yaw )
   double cy = cos( yaw );
   Matrix m;
   m.Elems[0][0] = cy;
-  m.Elems[0][1] = sy;
-  m.Elems[1][0] = -sy;
+  m.Elems[0][1] = -sy;
+  m.Elems[1][0] = sy;
   m.Elems[1][1] = cy;
   return m;
 }
@@ -349,8 +349,8 @@ Matrix Matrix::rotateRoll( double roll )
   double cr = cos( roll );
   Matrix m;
   m.Elems[1][1] = cr;
-  m.Elems[1][2] = sr;
-  m.Elems[2][1] = -sr;
+  m.Elems[1][2] = -sr;
+  m.Elems[2][1] = sr;
   m.Elems[2][2] = cr;
   return m;
 }
