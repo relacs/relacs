@@ -265,6 +265,17 @@ Matrix Matrix::inverse( void ) const
 }
 
 
+Matrix Matrix::transpose( void ) const
+{
+  Matrix m;
+  for ( int i=0; i<3; i++ ) {
+    for ( int j=0; j<3; j++ )
+      m.Elems[i][j] = Elems[j][i];
+  }  
+  return m;
+}
+
+
 Matrix Matrix::scaleX( double xscale )
 {
   Matrix m;

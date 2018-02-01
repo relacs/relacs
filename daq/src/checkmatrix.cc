@@ -65,6 +65,10 @@ int main ( void )
     Matrix a = Matrix::scaleX( scale );
     Matrix b = Matrix::scaleX( 1.0/scale ) * a;
     check_identity( b );
+    b = a.inverse() * a;
+    check_identity( b );
+    b = a * a.inverse();
+    check_identity( b );
     a *= Matrix::scaleX( 1.0/scale );
     check_identity( a );
 
@@ -84,6 +88,10 @@ int main ( void )
       continue;
     Matrix a = Matrix::scaleY( scale );
     Matrix b = Matrix::scaleY( 1.0/scale ) * a;
+    check_identity( b );
+    b = a.inverse() * a;
+    check_identity( b );
+    b = a * a.inverse();
     check_identity( b );
     a *= Matrix::scaleY( 1.0/scale );
     check_identity( a );
@@ -105,6 +113,10 @@ int main ( void )
     Matrix a = Matrix::scaleZ( scale );
     Matrix b = Matrix::scaleZ( 1.0/scale ) * a;
     check_identity( b );
+    b = a.inverse() * a;
+    check_identity( b );
+    b = a * a.inverse();
+    check_identity( b );
     a *= Matrix::scaleZ( 1.0/scale );
     check_identity( a );
 
@@ -123,6 +135,10 @@ int main ( void )
     Matrix a = Matrix::rotateYaw( yaw );
     Matrix b = Matrix::rotateYaw( -yaw ) * a;
     check_identity( b );
+    Matrix c = a * a.inverse();
+    check_identity( c );
+    Matrix d = a * a.transpose();
+    check_identity( d );
     a *= Matrix::rotateYaw( -yaw );
     check_identity( a );
 
@@ -141,6 +157,10 @@ int main ( void )
     Matrix a = Matrix::rotatePitch( pitch );
     Matrix b = Matrix::rotatePitch( -pitch ) * a;
     check_identity( b );
+    Matrix c = a * a.inverse();
+    check_identity( c );
+    Matrix d = a * a.transpose();
+    check_identity( d );
     a *= Matrix::rotatePitch( -pitch );
     check_identity( a );
 
@@ -159,6 +179,10 @@ int main ( void )
     Matrix a = Matrix::rotateRoll( roll );
     Matrix b = Matrix::rotateRoll( -roll ) * a;
     check_identity( b );
+    Matrix c = a * a.inverse();
+    check_identity( c );
+    Matrix d = a * a.transpose();
+    check_identity( d );
     a *= Matrix::rotateRoll( -roll );
     check_identity( a );
 
@@ -171,5 +195,19 @@ int main ( void )
     assert( fabs( roll - rolle ) < epsilon );
   }
 
+  /*
+  Point p = Point::UnitX;
+  cerr << p;
+  //Point q = Matrix::rotateYaw( 0.25*M_PI ) * p;
+  //  Point q = Matrix::rotatePitch( 0.25*M_PI ) * p;
+  Point q = Matrix::rotateRoll( 0.25*M_PI ) * p;
+  cerr << q;
+  q = (  Matrix::rotateYaw( 0.25*M_PI ) * Matrix::rotatePitch( 0.25*M_PI ) * Matrix::rotateRoll( 0.25*M_PI ) ) * p;
+  cerr << q;
+  q = (  Matrix::rotateYaw( 0.25*M_PI ) * Matrix::scaleX( 2.0 ) * Matrix::rotateYaw( -0.25*M_PI ) * Matrix::scaleY( 1.0 ) ) * p;
+  cerr << q;
+
+  assert( 1 == 0 );
+  */
   return 0;
 }

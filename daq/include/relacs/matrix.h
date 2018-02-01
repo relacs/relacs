@@ -97,6 +97,8 @@ public:
   double det( void ) const;
     /*! Return the inverse matrix. */
   Matrix inverse( void ) const;
+    /*! Return the transposed matrix. */
+  Matrix transpose( void ) const;
 
     /*! Return the transformation matrix that scales the x-axis by \a xscale. */
   static Matrix scaleX( double xscale );
