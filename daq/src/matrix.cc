@@ -46,7 +46,7 @@ Matrix::Matrix( const Matrix &m )
 {
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ )
-      Elems[i][j] = m[i][j];
+      Elems[i][j] = m.Elems[i][j];
   }
 }
 
@@ -64,7 +64,7 @@ Matrix &Matrix::assign( const Matrix &m )
 {
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ )
-      Elems[i][j] = m[i][j];
+      Elems[i][j] = m.Elems[i][j];
   }
   return *this;
 }
@@ -74,7 +74,7 @@ Matrix &Matrix::operator=( const Matrix &m )
 {
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ )
-      Elems[i][j] = m[i][j];
+      Elems[i][j] = m.Elems[i][j];
   }
   return *this;
 }
@@ -192,9 +192,9 @@ Matrix Matrix::operator*( const Matrix &m ) const
   Matrix c;
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ ) {
-      c[i][j] = 0.0;
+      c.Elems[i][j] = 0.0;
       for ( int k=0; k<3; k++ )
-	c[i][j] += Elems[i][k]*m.Elems[k][j];
+	c.Elems[i][j] += Elems[i][k]*m.Elems[k][j];
     }
   }
   return c;

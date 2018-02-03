@@ -30,6 +30,15 @@ Matrix random_matrix( void )
 }
 
 
+void check_equality( const Matrix &a, const Matrix &b )
+{
+  for ( int i=0; i<3; i++ ) {
+    for ( int j=0; j<3; j++ )
+      assert( fabs( a( i, j ) - b( i, j ) ) < epsilon );
+  }
+}
+
+
 void check_identity( const Matrix &m )
 {
   for ( int i=0; i<3; i++ ) {
@@ -45,6 +54,40 @@ void check_identity( const Matrix &m )
 
 int main ( void )
 {
+  cerr << "Test assignments\n";
+  for ( int k=0; k<n; k++ ) {
+    Matrix a = random_matrix();
+    Matrix b( a );
+    check_equality( a, b );
+    Matrix c;
+    c = a;
+    check_equality( a, c );
+    Matrix d;
+    for ( int i=0; i<3; i++ ) {
+      for ( int j=0; j<3; j++ )
+	d( i, j ) = a( i, j );
+    }
+    check_equality( a, d );
+    Matrix e;
+    for ( int i=0; i<3; i++ ) {
+      for ( int j=0; j<3; j++ )
+	e[i][j] = a( i, j );
+    }
+    check_equality( a, e );
+    Matrix f;
+    for ( int i=0; i<3; i++ ) {
+      for ( int j=0; j<3; j++ )
+	f( i, j ) = a[i][j];
+    }
+    check_equality( a, f );
+    Matrix g;
+    for ( int i=0; i<3; i++ ) {
+      for ( int j=0; j<3; j++ )
+	g[i][j] = a[i][j];
+    }
+    check_equality( a, g );
+  }
+
   cerr << "Test Matrix::inverse()\n";
   for ( int k=0; k<n; k++ ) {
     Matrix a = random_matrix();
@@ -129,21 +172,40 @@ int main ( void )
     assert( fabs( p.z()*scale - q.z() ) < epsilon );
   }
 
-  /*
   cerr << "Test commutativity of the scale matrices:\n";
   for ( int k=0; k<n; k++ ) {
     Point p( urand(), urand(), urand() );
     p -= 0.5;
     p *= 20.0;
-    Point q = p;
     Matrix s[3] = { Matrix::scaleX( 4.0*urand() + 0.01 ),
 		    Matrix::scaleY( 4.0*urand() + 0.01 ),
 		    Matrix::scaleZ( 4.0*urand() + 0.01 ) };
-    for ( int k=0; k<3; k++ )
-      p *= s[k];
-    assert( p == q );
+    Point q0 = (s[0]*s[1]*s[2])*p;
+    for ( int k=0; k<3; k++ ) {
+      for ( int j=1; j<3; j++ ) {
+	int jj = (k+j)%3; 
+	for ( int i=0; i<3; i++ ) {
+	  if ( i != k && i != (k+j)%3 ) {
+	    Matrix t1 = s[k];
+	    t1 *= s[jj];
+	    t1 *= s[i];
+	    Point q1 = t1 * p;
+	    Matrix t2 = s[i];
+	    t2 *= s[jj];
+	    t2 *= s[k];
+	    Point q2 = t2 * p;
+	    Matrix t3 = s[k]*s[jj]*s[i];
+	    Point q3 = t3 * p;
+	    Point q4 = (s[k]*s[jj]*s[i])*p;
+	    assert( q0 == q1 );
+	    assert( q0 == q2 );
+	    assert( q0 == q3 );
+	    assert( q0 == q4 );
+	  }
+	}
+      }
+    }
   }
-  */
 
   cerr << "Test Matrix::rotateYaw()\n";
   Point p = Point::Ones;
@@ -233,21 +295,21 @@ int main ( void )
   }
 
   /*
-  p = Point::Ones;
-  //Point q = Matrix::rotateYaw( 0.25*M_PI ) * p;
-  //  Point q = Matrix::rotatePitch( 0.25*M_PI ) * p;
-  //  Point q = Matrix::rotateRoll( 0.25*M_PI ) * p;
-  Point q;
-  q = (  Matrix::scaleX( 2.0 ) * Matrix::scaleY( 3.0 ) * Matrix::scaleZ( 0.5 ) ) * p;
+  p = Point::UnitX;
+  cerr << p;
+  Point q = Matrix::rotateYaw( 0.25*M_PI ) * p;
   cerr << q;
-  q = (  Matrix::scaleX( 2.0 ) * Matrix::scaleZ( 0.5 ) * Matrix::scaleY( 3.0 ) ) * p;
+  q = (  Matrix::rotateYaw( 0.25*M_PI ) * Matrix::scaleX( 2.0 ) ) * p;  // scaleX by two then rotate
   cerr << q;
-  q = (  Matrix::scaleY( 3.0 ) * Matrix::scaleX( 2.0 ) * Matrix::scaleZ( 0.5 ) ) * p;
+  q = (  Matrix::scaleX( 2.0 ) * Matrix::rotateYaw( 0.25*M_PI ) ) * p; // rotate, then scale global X
   cerr << q;
-  q = (  Matrix::scaleZ( 0.5 ) * Matrix::scaleY( 3.0 ) * Matrix::scaleX( 2.0 ) ) * p;
+  q = p;  // scale first, then rotate
+  q *= Matrix::scaleX( 2.0 );
+  q *= Matrix::rotateYaw( 0.25*M_PI );
   cerr << q;
   */
   /*
+  //p = Point( urand(), urand(), urand() );
   q = (  Matrix::rotateYaw( 0.25*M_PI ) * Matrix::rotatePitch( 0.25*M_PI ) * Matrix::rotateRoll( 0.25*M_PI ) ) * p;
   cerr << q;
   q = (  Matrix::rotateYaw( 0.25*M_PI ) * Matrix::scaleX( 2.0 ) * Matrix::rotateYaw( -0.25*M_PI ) * Matrix::scaleY( 1.0 ) ) * p;
