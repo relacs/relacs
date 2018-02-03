@@ -20,7 +20,9 @@ const int nlines = 100;
 const double linefac = 0.01;
 
 const int ntrafos = 20;
-const double minscale = 1e-8;
+const double minscale = 0.001;
+
+const double offset = 0.1;
 
 
 double urand( void )
@@ -146,6 +148,51 @@ void check_transformed_intersections( Shape &shp )
 }
 
 
+void check_boundingbox( Shape &shp )
+{
+  Point bbmin = shp.boundingBoxMin();
+  Point bbmax = shp.boundingBoxMax();
+  for ( int k=0; k<npoints; k++ ) {
+    Point p( (bbmax.x() - bbmin.x())*urand() + bbmin.x(),
+	     (bbmax.y() - bbmin.y())*urand() + bbmin.y(),
+	     (bbmax.z() - bbmin.z())*urand() + bbmin.z() );
+    for ( int j=0; j<3; j++ ) {
+      Point q = p;
+      q[j] = bbmin[j] - offset;
+      assert( ! shp.inside( q ));
+      q[j] = bbmax[j] + offset;
+      assert( ! shp.inside( q ));
+    }
+  }
+}
+
+
+void check_transformed_boundingbox( Shape &shp )
+{
+  cerr << "  check transformed bounding box():\n";
+  for ( int k=0; k<ntrafos; k++ ) {
+    Shape *s = shp.copy();
+    for ( int j=0; j<6; j++ ) {
+      random_transformation( *s );
+      /*
+      Matrix itrafo = s->trafo().inverse();
+      Point px = itrafo * Point::UnitX;
+      px.normalize();
+      Point py = itrafo * Point::UnitY;
+      py.normalize();
+      Point pz = itrafo * Point::UnitZ;
+      pz.normalize();
+      Point qx = s->trafo() * px;
+      Point qy = s->trafo() * py;
+      Point qz = s->trafo() * pz;
+      cerr << qx.dot( qy) << " " << qx.dot( qz ) << " " << qy.dot( qz ) << '\n';
+      */
+      check_boundingbox( *s );
+    }
+  }
+}
+
+
 int main ( void )
 {
   cerr << "Test Sphere:\n";
@@ -158,6 +205,9 @@ int main ( void )
   }
   check_intersections( sphr );
   check_transformed_intersections( sphr );
+  cerr << "  check bounding box():\n";
+  check_boundingbox( sphr );
+  check_transformed_boundingbox( sphr );
 
   cerr << "Test Cylinder:\n";
   Cylinder cyln;
@@ -171,6 +221,9 @@ int main ( void )
   }
   check_intersections( cyln );
   check_transformed_intersections( cyln );
+  cerr << "  check bounding box():\n";
+  check_boundingbox( cyln );
+  check_transformed_boundingbox( cyln );
 
   cerr << "Test Cuboid:\n";
   Cuboid cbd;
@@ -182,6 +235,8 @@ int main ( void )
   }
   check_intersections( cbd );
   check_transformed_intersections( cbd );
+  check_boundingbox( cbd );
+  check_transformed_boundingbox( cbd );
 
   return 0;
 }

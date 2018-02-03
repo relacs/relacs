@@ -557,45 +557,55 @@ double Sphere::radius( void ) const
 
 Point Sphere::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
 {
+  /*
   Matrix itrafo = trafo.inverse();
   Point px = itrafo * Point::UnitX;
   px.normalize();
   Point py = itrafo * Point::UnitY;
-  px.normalize();
+  py.normalize();
   Point pz = itrafo * Point::UnitZ;
-  px.normalize();
+  pz.normalize();
+  */
+  Point px = Point::UnitX;
+  Point py = Point::UnitY;
+  Point pz = Point::UnitZ;
   deque<Point> pts;
-  pts.push_back( trafo*( px + py + pz )+trans );
-  pts.push_back( trafo*( px - py + pz )+trans );
-  pts.push_back( trafo*( px + py - pz )+trans );
-  pts.push_back( trafo*( px - py - pz )+trans );
-  pts.push_back( trafo*( - px + py + pz )+trans );
-  pts.push_back( trafo*( - px - py + pz )+trans );
-  pts.push_back( trafo*( - px + py - pz )+trans );
-  pts.push_back( trafo*( - px - py - pz )+trans );
-  return min( pts );
+  pts.push_back( trafo*( px + py + pz ) );
+  pts.push_back( trafo*( px - py + pz ) );
+  pts.push_back( trafo*( px + py - pz ) );
+  pts.push_back( trafo*( px - py - pz ) );
+  pts.push_back( trafo*( - px + py + pz ) );
+  pts.push_back( trafo*( - px - py + pz ) );
+  pts.push_back( trafo*( - px + py - pz ) );
+  pts.push_back( trafo*( - px - py - pz ) );
+  return min( pts ) + trans;
 }
 
 
 Point Sphere::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
 {
+  /*
   Matrix itrafo = trafo.inverse();
   Point px = itrafo * Point::UnitX;
   px.normalize();
   Point py = itrafo * Point::UnitY;
-  px.normalize();
+  py.normalize();
   Point pz = itrafo * Point::UnitZ;
-  px.normalize();
+  pz.normalize();
+  */
+  Point px = Point::UnitX;
+  Point py = Point::UnitY;
+  Point pz = Point::UnitZ;
   deque<Point> pts;
-  pts.push_back( trafo*( px + py + pz )+trans );
-  pts.push_back( trafo*( px - py + pz )+trans );
-  pts.push_back( trafo*( px + py - pz )+trans );
-  pts.push_back( trafo*( px - py - pz )+trans );
-  pts.push_back( trafo*( - px + py + pz )+trans );
-  pts.push_back( trafo*( - px - py + pz )+trans );
-  pts.push_back( trafo*( - px + py - pz )+trans );
-  pts.push_back( trafo*( - px - py - pz )+trans );
-  return max( pts );
+  pts.push_back( trafo*( px + py + pz ) );
+  pts.push_back( trafo*( px - py + pz ) );
+  pts.push_back( trafo*( px + py - pz ) );
+  pts.push_back( trafo*( px - py - pz ) );
+  pts.push_back( trafo*( - px + py + pz ) );
+  pts.push_back( trafo*( - px - py + pz ) );
+  pts.push_back( trafo*( - px + py - pz ) );
+  pts.push_back( trafo*( - px - py - pz ) );
+  return max( pts ) + trans;
 }
 
 
@@ -683,6 +693,7 @@ double Cylinder::length( void ) const
 
 Point Cylinder::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
 {
+  /*
   // transform base circle to world coordinates:
   Point py = trafo*Point::UnitY+trans;
   Point pz = trafo*Point::UnitZ+trans;
@@ -696,21 +707,25 @@ Point Cylinder::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
   Matrix itrafo = trafo.inverse();
   Point qqy = itrafo * qy;
   Point qqz = itrafo * qz;
+  */
+  Point qqy = Point::UnitY;
+  Point qqz = Point::UnitZ;
   deque<Point> pts;
-  pts.push_back( trafo*Point( 0.0, qqy.y(), qqz.z() )+trans );
-  pts.push_back( trafo*Point( 0.0, -qqy.y(), qqz.z() )+trans );
-  pts.push_back( trafo*Point( 0.0, qqy.y(), -qqz.z() )+trans );
-  pts.push_back( trafo*Point( 0.0, -qqy.y(), -qqz.z() )+trans );
-  pts.push_back( trafo*Point( 1.0, qqy.y(), qqz.z() )+trans );
-  pts.push_back( trafo*Point( 1.0, -qqy.y(), qqz.z() )+trans );
-  pts.push_back( trafo*Point( 1.0, qqy.y(), -qqz.z() )+trans );
-  pts.push_back( trafo*Point( 1.0, -qqy.y(), -qqz.z() )+trans );
-  return min( pts );
+  pts.push_back( trafo*Point( 0.0, qqy.y(), qqz.z() ) );
+  pts.push_back( trafo*Point( 0.0, -qqy.y(), qqz.z() ) );
+  pts.push_back( trafo*Point( 0.0, qqy.y(), -qqz.z() ) );
+  pts.push_back( trafo*Point( 0.0, -qqy.y(), -qqz.z() ) );
+  pts.push_back( trafo*Point( 1.0, qqy.y(), qqz.z() ) );
+  pts.push_back( trafo*Point( 1.0, -qqy.y(), qqz.z() ) );
+  pts.push_back( trafo*Point( 1.0, qqy.y(), -qqz.z() ) );
+  pts.push_back( trafo*Point( 1.0, -qqy.y(), -qqz.z() ) );
+  return min( pts ) + trans;
 }
 
 
 Point Cylinder::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
 {
+  /*
   // transform base circle to world coordinates:
   Point py = trafo*Point::UnitY+trans;
   Point pz = trafo*Point::UnitZ+trans;
@@ -724,16 +739,19 @@ Point Cylinder::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
   Matrix itrafo = trafo.inverse();
   Point qqy = itrafo * qy;
   Point qqz = itrafo * qz;
+  */
+  Point qqy = Point::UnitY;
+  Point qqz = Point::UnitZ;
   deque<Point> pts;
-  pts.push_back( trafo*Point( 0.0, qqy.y(), qqz.z() )+trans );
-  pts.push_back( trafo*Point( 0.0, -qqy.y(), qqz.z() )+trans );
-  pts.push_back( trafo*Point( 0.0, qqy.y(), -qqz.z() )+trans );
-  pts.push_back( trafo*Point( 0.0, -qqy.y(), -qqz.z() )+trans );
-  pts.push_back( trafo*Point( 1.0, qqy.y(), qqz.z() )+trans );
-  pts.push_back( trafo*Point( 1.0, -qqy.y(), qqz.z() )+trans );
-  pts.push_back( trafo*Point( 1.0, qqy.y(), -qqz.z() )+trans );
-  pts.push_back( trafo*Point( 1.0, -qqy.y(), -qqz.z() )+trans );
-  return max( pts );
+  pts.push_back( trafo*Point( 0.0, qqy.y(), qqz.z() ) );
+  pts.push_back( trafo*Point( 0.0, -qqy.y(), qqz.z() ) );
+  pts.push_back( trafo*Point( 0.0, qqy.y(), -qqz.z() ) );
+  pts.push_back( trafo*Point( 0.0, -qqy.y(), -qqz.z() ) );
+  pts.push_back( trafo*Point( 1.0, qqy.y(), qqz.z() ) );
+  pts.push_back( trafo*Point( 1.0, -qqy.y(), qqz.z() ) );
+  pts.push_back( trafo*Point( 1.0, qqy.y(), -qqz.z() ) );
+  pts.push_back( trafo*Point( 1.0, -qqy.y(), -qqz.z() ) );
+  return max( pts ) + trans;
 }
 
 

@@ -315,7 +315,7 @@ double Point::magnitude( void ) const
   double d = 0.0;
   for ( int k=0; k<Dim; k++ )
     d += Coords[k]*Coords[k];
-  return sqrt( d );
+  return ::sqrt( d );
 }
 
 
@@ -323,7 +323,7 @@ double Point::angle( const Point &p ) const
 {
   double d = dot( p );
   d /= magnitude()*p.magnitude();
-  return acos( d );
+  return ::acos( d );
 }
 
 
@@ -332,7 +332,7 @@ Point &Point::normalize( void )
   double d = 0.0;
   for ( int k=0; k<Dim; k++ )
     d += Coords[k]*Coords[k];
-  double f = 1.0/sqrt( d );
+  double f = 1.0/::sqrt( d );
   for ( int k=0; k<Dim; k++ )
     Coords[k] *= f;
   return *this;
@@ -344,7 +344,7 @@ Point Point::normalized( void ) const
   double d = 0.0;
   for ( int k=0; k<Dim; k++ )
     d += Coords[k]*Coords[k];
-  double f = 1.0/sqrt( d );
+  double f = 1.0/::sqrt( d );
   return (*this) * f;
 }
 
@@ -422,8 +422,10 @@ bool Point::operator>=( const Point &p ) const
 double Point::distance( const Point &p ) const
 {
   double d = 0.0;
-  for ( int k=0; k<Dim; k++ )
-    d += ::pow( Coords[k] - p[k], 2.0 );
+  for ( int k=0; k<Dim; k++ ) {
+    double c = Coords[k] - p[k];
+    d += c*c;
+  }
   return ::sqrt( d );
 }
 
