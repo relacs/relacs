@@ -328,10 +328,10 @@ Matrix Matrix::scale( double scale )
 }
 
 
-Matrix Matrix::rotateYaw( double yaw )
+Matrix Matrix::rotateZ( double angle )
 {
-  double sy = sin( yaw );
-  double cy = cos( yaw );
+  double sy = sin( angle );
+  double cy = cos( angle );
   Matrix m;
   m.Elems[0][0] = cy;
   m.Elems[0][1] = -sy;
@@ -341,10 +341,10 @@ Matrix Matrix::rotateYaw( double yaw )
 }
 
 
-Matrix Matrix::rotatePitch( double pitch )
+Matrix Matrix::rotateY( double angle )
 {
-  double sp = sin( pitch );
-  double cp = cos( pitch );
+  double sp = sin( angle );
+  double cp = cos( angle );
   Matrix m;
   m.Elems[0][0] = cp;
   m.Elems[0][2] = -sp;
@@ -354,10 +354,10 @@ Matrix Matrix::rotatePitch( double pitch )
 }
 
 
-Matrix Matrix::rotateRoll( double roll )
+Matrix Matrix::rotateX( double angle )
 {
-  double sr = sin( roll );
-  double cr = cos( roll );
+  double sr = sin( angle );
+  double cr = cos( angle );
   Matrix m;
   m.Elems[1][1] = cr;
   m.Elems[1][2] = -sr;
@@ -367,11 +367,11 @@ Matrix Matrix::rotateRoll( double roll )
 }
 
 
-Matrix Matrix::rotate( double yaw, double pitch, double roll )
+Matrix Matrix::rotate( double anglez, double angley, double anglex )
 {
-  Matrix m = rotateYaw( yaw );
-  m *= rotatePitch( pitch );
-  m *= rotateRoll( roll );
+  Matrix m = rotateZ( anglez );
+  m *= rotateY( angley );
+  m *= rotateZ( anglez );
   return m;
 }
 

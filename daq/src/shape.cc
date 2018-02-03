@@ -138,36 +138,36 @@ void Shape::scale( double scale )
 }
 
 
-void Shape::rotateYaw( double yaw )
+void Shape::rotateZ( double angle )
 {
-  Matrix m = Matrix::rotateYaw( yaw );
+  Matrix m = Matrix::rotateZ( angle );
   Trans *= m;
   Trafo *= m;
   InvTrafo = Trafo.inverse();
 }
 
 
-void Shape::rotatePitch( double pitch )
+void Shape::rotateY( double angle )
 {
-  Matrix m = Matrix::rotatePitch( pitch );
+  Matrix m = Matrix::rotateY( angle );
   Trans *= m;
   Trafo *= m;
   InvTrafo = Trafo.inverse();
 }
 
 
-void Shape::rotateRoll( double roll )
+void Shape::rotateX( double angle )
 {
-  Matrix m = Matrix::rotateRoll( roll );
+  Matrix m = Matrix::rotateX( angle );
   Trans *= m;
   Trafo *= m;
   InvTrafo = Trafo.inverse();
 }
 
 
-void Shape::rotate( double yaw, double pitch, double roll )
+void Shape::rotate( double anglez, double angley, double anglex )
 {
-  Matrix m = Matrix::rotate( yaw, pitch, roll );
+  Matrix m = Matrix::rotate( anglez, angley, anglex );
   Trans *= m;
   Trafo *= m;
   InvTrafo = Trafo.inverse();
@@ -459,12 +459,8 @@ void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
   ip1 = Point::None;
   ip2 = Point::None;
   Point dpos = pos2 - pos1;
-  // find dimension where dpos is not zero:
-  int k = 0;
-  for ( k=0; k<3; k++ ) {
-    if ( ::fabs( dpos[k] ) > 1e-16 )
-      break;
-  }
+  double dpmsq = dpos.magnitude();
+  dpmsq *= dpmsq;
   double a1 = NAN;
   double a2 = NAN;
   auto si = Shapes.begin();
@@ -475,8 +471,8 @@ void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
     (*si)->intersectionPoints( pos1, pos2, ipp1, ipp2 );
     // find position on path:
     if ( ! ipp1.isNone() && ! ipp2.isNone() ) {
-      double aa1 = (ipp1[k] - pos1[k])/dpos[k];
-      double aa2 = (ipp2[k] - pos1[k])/dpos[k];
+      double aa1 = dpos.dot( ipp1 - pos1 )/dpmsq;
+      double aa2 = dpos.dot( ipp2 - pos1 )/dpmsq;
       if ( *ai ) {
 	// expand intersection path:
 	if ( ::isnan( a1 ) || aa1 < a1 ) {
@@ -875,9 +871,9 @@ Cuboid::Cuboid( const Point &anchor, const Point &px, const Point &py, const Poi
   Point ppy = py - anchor;
   Point ppz = pz - anchor;
   scale( ppx.magnitude(), ppy.magnitude(), ppz.magnitude() );
-  rotatePitch( asin( ppx.z()/ppx.magnitude() ) );
-  rotateYaw( atan2( ppx.y(), ppx.x() ) );
-  rotateRoll( asin( ppy.z()/ppy.magnitude() ) );
+  rotateY( asin( ppx.z()/ppx.magnitude() ) );
+  rotateZ( atan2( ppx.y(), ppx.x() ) );
+  rotateX( asin( ppy.z()/ppy.magnitude() ) );
   translate( anchor );
 }
 

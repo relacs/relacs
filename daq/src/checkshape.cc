@@ -41,6 +41,31 @@ double arand( void )
 }
 
 
+void random_transformation( Shape &shp )
+{
+  int trafotype = rand()%6;
+  if ( trafotype < 3 ) {
+    double scale = 1.0;
+    do { scale = 4.0*(urand()-0.5); } while ( fabs(scale) < minscale );
+    if ( trafotype == 0 )
+      shp.scaleX( scale );
+    else if ( trafotype == 1 )
+      return shp.scaleY( scale );
+    else
+      return shp.scaleZ( scale );
+  }
+  else {
+    double angle = (2.0*urand()-1.0)*M_PI;
+    if ( trafotype == 4 )
+      return shp.rotateZ( angle );
+    else if ( trafotype == 5 )
+      return shp.rotateY( angle );
+    else
+      return shp.rotateX( angle );
+  }
+}
+
+
 void check_intersections( const Shape &shp )
 {
   cerr << "  check intersectionsPoints():\n";
@@ -65,25 +90,19 @@ void check_intersections( const Shape &shp )
     else {
       // intersection points are in the same direction:
       Point pq = q - p;
+      double pqm = pq.magnitude();
       Point ip21 = ip2 - ip1;
-      Point rp = ip21/pq;
-      rp /= rp.x();
-      rp -= 1.0;
-      assert( rp.magnitude() < epsilon );
+      assert( fabs( fabs( pq.dot(ip21) ) - pqm*ip21.magnitude() ) < epsilon );
 
       Point pip1 = ip1 - p;
-      rp = pip1/pq;
-      double a1 = rp.x();
-      rp /= rp.x();
-      rp -= 1.0;
-      assert( rp.magnitude() < epsilon );
+      double pqp1 = pq.dot(pip1);
+      assert( fabs( fabs( pqp1 ) - pqm*pip1.magnitude() ) < epsilon );
+      double a1 = pqp1/pqm/pqm;
 
       Point pip2 = ip2 - p;
-      rp = pip2/pq;
-      double a2 = rp.x();
-      rp /= rp.x();
-      rp -= 1.0;
-      assert( rp.magnitude() < epsilon );
+      double pqp2 = pq.dot(pip2);
+      assert( fabs( fabs( pqp2 ) - pqm*pip2.magnitude() ) < epsilon );
+      double a2 = pqp2/pqm/pqm;
 
       // intersection points are ordered:
       assert( a1 <= a2 );
@@ -117,30 +136,12 @@ void check_intersections( const Shape &shp )
 
 void check_transformed_intersections( Shape &shp )
 {
-  double scale = 1.0;
   for ( int k=0; k<ntrafos; k++ ) {
     Shape *s = shp.copy();
-    cerr << "  transform scaleX() ...\n";
-    do { scale = 4.0*(urand()-0.5); } while ( fabs(scale) < minscale );
-    s->scaleX( scale );
-    check_intersections( shp );
-    cerr << "  transform rotateYaw() ...\n";
-    s->rotateYaw( arand() );
-    check_intersections( shp );
-    cerr << "  transform scaleY() ...\n";
-    do { scale = 4.0*(urand()-0.5); } while ( fabs(scale) < minscale );
-    s->scaleY( scale );
-    check_intersections( shp );
-    cerr << "  transform rotatePitch() ...\n";
-    s->rotatePitch( arand() );
-    check_intersections( shp );
-    cerr << "  transform scaleZ() ...\n";
-    do { scale = 4.0*(urand()-0.5); } while ( fabs(scale) < minscale );
-    s->scaleZ( scale );
-    check_intersections( shp );
-    cerr << "  transform rotateRoll() ...\n";
-    s->rotateRoll( arand() );
-    check_intersections( shp );
+    for ( int j=0; j<6; j++ ) {
+      random_transformation( *s );
+      check_intersections( *s );
+    }
   }
 }
 

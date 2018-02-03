@@ -117,19 +117,19 @@ public:
   static Matrix scale( double scale );
 
     /*! Return the transformation matrix that rotates counterclockwise
-        around the z-axis by \a yaw radians. */
-  static Matrix rotateYaw( double yaw );
+        around the world z-axis by \a angle radians. */
+  static Matrix rotateZ( double angle );
     /*! Return the transformation matrix that rotates counterclockwise
-        around the y-axis by \a pitch radians. */
-  static Matrix rotatePitch( double pitch );
+        around the world y-axis by \a angle radians. */
+  static Matrix rotateY( double angle );
     /*! Return the transformation matrix that rotates counterclockwise
-        around the x-axis by \a roll radians. */
-  static Matrix rotateRoll( double roll );
+        around the world y-axis by \a angle radians. */
+  static Matrix rotateX( double angle );
     /*! Return the transformation matrix that rotates counterclockwise
-        around the z-axis by \a yaw, then around the new y-axis by \a
-        pitch, and then around the resulting x-axis by \a roll. All
+        around the world z-axis by \a anglez, then around the world y-axis by \a
+        angley, and then around the world x-axis by \a world x. All
         angles in radians. */
-  static Matrix rotate( double yaw, double pitch, double roll );
+  static Matrix rotate( double anglez, double angley, double anglex );
 
     /*! Write the elements of the matrix to stream \a str. */
   friend ostream &operator<<( ostream &str, const Matrix &m );

@@ -96,19 +96,19 @@ public:
         by the factor \a scale. */
   void scale( double scale );
 
-    /*! Rotate the shape counterclockwise around the z-axis by \a yaw
+    /*! Rotate the shape counterclockwise around the world z-axis by \a angle
         radians. */
-  void rotateYaw( double yaw );
-    /*! Rotate the shape counterclockwise around the y-axis by \a
-        pitch radians. */
-  void rotatePitch( double pitch );
-    /*! Rotate the shape counterclockwise around the x-axis by \a roll
+  void rotateZ( double angle );
+    /*! Rotate the shape counterclockwise around the world y-axis by \a
+        angle radians. */
+  void rotateY( double angle );
+    /*! Rotate the shape counterclockwise around the world x-axis by \a angle
         radians. */
-  void rotateRoll( double roll );
-    /*! Rotate the shape counterclockwise around the z-axis by \a yaw,
-        then around the new y-axis by \a pitch, and then around the
-        resulting x-axis by \a roll. All angles in radians. */
-  void rotate( double yaw, double pitch, double roll );
+  void rotateX( double angle );
+    /*! Rotate the shape counterclockwise around the world z-axis by \a anglez,
+        then around the world y-axis by \a angley, and then around the
+        world x-axis by \a anglex. All angles in radians. */
+  void rotate( double anglez, double angley, double anglex );
 
     /*! The translation vector of the shape. */
   const Point &trans( void ) const { return Trans; }

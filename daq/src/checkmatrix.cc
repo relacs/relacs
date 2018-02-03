@@ -12,6 +12,8 @@ const double epsilon = 1e-8;
 
 const int n = 1000;
 
+const double minscale = 1e-8;
+
 
 double urand( void )
 {
@@ -27,6 +29,31 @@ Matrix random_matrix( void )
       m( i, j ) = urand();
   }
   return m;
+}
+
+
+Matrix random_transformation( void )
+{
+  int trafotype = rand()%6;
+  if ( trafotype < 3 ) {
+    double scale = 1.0;
+    do { scale = 4.0*(urand()-0.5); } while ( fabs(scale) < minscale );
+    if ( trafotype == 0 )
+      return Matrix::scaleX( scale );
+    else if ( trafotype == 1 )
+      return Matrix::scaleY( scale );
+    else
+      return Matrix::scaleZ( scale );
+  }
+  else {
+    double angle = (2.0*urand()-1.0)*M_PI;
+    if ( trafotype == 4 )
+      return Matrix::rotateZ( angle );
+    else if ( trafotype == 5 )
+      return Matrix::rotateY( angle );
+    else
+      return Matrix::rotateX( angle );
+  }
 }
 
 
@@ -207,114 +234,162 @@ int main ( void )
     }
   }
 
-  cerr << "Test Matrix::rotateYaw()\n";
+  cerr << "Test Matrix::rotateZ()\n";
   Point p = Point::Ones;
   for ( int k = 0; k<=4; k++ ) {
-    Point q = Matrix::rotateYaw( 2.0*M_PI/4.0*k ) * p;
+    Point q = Matrix::rotateZ( 2.0*M_PI/4.0*k ) * p;
     assert( q.z() == 1.0 );
     assert( fabs( q.y() - (2*(((k+2)/2)%2)-1) ) < epsilon );
     assert( fabs( q.x() - (2*(((k+3)/2)%2)-1) ) < epsilon );
   }
   for ( int k=0; k<n; k++ ) {
-    double yaw = (2.0*urand()-1.0)*M_PI;
-    Matrix a = Matrix::rotateYaw( yaw );
-    Matrix b = Matrix::rotateYaw( -yaw ) * a;
+    double angle = (2.0*urand()-1.0)*M_PI;
+    Matrix a = Matrix::rotateZ( angle );
+    Matrix b = Matrix::rotateZ( -angle ) * a;
     check_identity( b );
     Matrix c = a * a.inverse();
     check_identity( c );
     Matrix d = a * a.transpose();
     check_identity( d );
-    a *= Matrix::rotateYaw( -yaw );
+    a *= Matrix::rotateZ( -angle );
     check_identity( a );
 
     Point p( urand(), urand(), 0.0 );
-    Point q = Matrix::rotateYaw( yaw ) * p;
+    Point q = Matrix::rotateZ( angle ) * p;
     assert( fabs( q.z() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
-    q = Matrix::rotateYaw( yaw ) * Point::UnitX;
-    double yawe = atan2( q.y(), q.x() );
-    assert( fabs( yaw - yawe ) < epsilon );
+    q = Matrix::rotateZ( angle ) * Point::UnitX;
+    double anglee = atan2( q.y(), q.x() );
+    assert( fabs( angle - anglee ) < epsilon );
   }
 
-  cerr << "Test Matrix::rotatePitch()\n";
+  cerr << "Test Matrix::rotateY()\n";
   p = Point::Ones;
   for ( int k = 0; k<=4; k++ ) {
-    Point q = Matrix::rotatePitch( 2.0*M_PI/4.0*k ) * p;
+    Point q = Matrix::rotateY( 2.0*M_PI/4.0*k ) * p;
     assert( q.y() == 1.0 );
     assert( fabs( q.x() - (2*(((k+3)/2)%2)-1) ) < epsilon );
     assert( fabs( q.z() - (2*(((k+2)/2)%2)-1) ) < epsilon );
   }
   for ( int k=0; k<n; k++ ) {
-    double pitch = (2.0*urand()-1.0)*M_PI;
-    Matrix a = Matrix::rotatePitch( pitch );
-    Matrix b = Matrix::rotatePitch( -pitch ) * a;
+    double angle = (2.0*urand()-1.0)*M_PI;
+    Matrix a = Matrix::rotateY( angle );
+    Matrix b = Matrix::rotateY( -angle ) * a;
     check_identity( b );
     Matrix c = a * a.inverse();
     check_identity( c );
     Matrix d = a * a.transpose();
     check_identity( d );
-    a *= Matrix::rotatePitch( -pitch );
+    a *= Matrix::rotateY( -angle );
     check_identity( a );
 
     Point p( urand(), 0.0, urand() );
-    Point q = Matrix::rotatePitch( pitch ) * p;
+    Point q = Matrix::rotateY( angle ) * p;
     assert( fabs( q.y() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
-    q = Matrix::rotatePitch( pitch ) * Point::UnitX;
-    double pitche = atan2( q.z(), q.x() );
-    assert( fabs( pitch - pitche ) < epsilon );
+    q = Matrix::rotateY( angle ) * Point::UnitX;
+    double anglee = atan2( q.z(), q.x() );
+    assert( fabs( angle - anglee ) < epsilon );
   }
 
-  cerr << "Test Matrix::rotateRoll()\n";
+  cerr << "Test Matrix::rotateX()\n";
   p = Point::Ones;
   for ( int k = 0; k<=4; k++ ) {
-    Point q = Matrix::rotateRoll( 2.0*M_PI/4.0*k ) * p;
+    Point q = Matrix::rotateX( 2.0*M_PI/4.0*k ) * p;
     assert( q.x() == 1.0 );
     assert( fabs( q.y() - (2*(((k+3)/2)%2)-1) ) < epsilon );
     assert( fabs( q.z() - (2*(((k+2)/2)%2)-1) ) < epsilon );
   }
   for ( int k=0; k<n; k++ ) {
-    double roll = (2.0*urand()-1.0)*M_PI;
-    Matrix a = Matrix::rotateRoll( roll );
-    Matrix b = Matrix::rotateRoll( -roll ) * a;
+    double angle = (2.0*urand()-1.0)*M_PI;
+    Matrix a = Matrix::rotateX( angle );
+    Matrix b = Matrix::rotateX( -angle ) * a;
     check_identity( b );
     Matrix c = a * a.inverse();
     check_identity( c );
     Matrix d = a * a.transpose();
     check_identity( d );
-    a *= Matrix::rotateRoll( -roll );
+    a *= Matrix::rotateX( -angle );
     check_identity( a );
 
     Point p( 0.0, urand(), urand() );
-    Point q = Matrix::rotateRoll( roll ) * p;
+    Point q = Matrix::rotateX( angle ) * p;
     assert( fabs( q.x() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
-    q = Matrix::rotateRoll( roll ) * Point::UnitY;
-    double rolle = atan2( q.z(), q.y() );
-    assert( fabs( roll - rolle ) < epsilon );
+    q = Matrix::rotateX( angle ) * Point::UnitY;
+    double anglee = atan2( q.z(), q.y() );
+    assert( fabs( angle - anglee ) < epsilon );
+  }
+
+  cerr << "Test two sequential transformations\n";
+  for ( int k=0; k<n; k++ ) {
+    p = Point( urand(), urand(), urand() );
+    Matrix t1 = random_transformation();
+    Matrix t2 = random_transformation();
+    Point q0 = t2 * t1 * p;
+    Point q1 = (t2 * t1)*p;
+    Point q2 = p;
+    q2 *= t1;
+    q2 *= t2;
+    Point q3 = p;
+    q3 *= t2 * t1;
+    assert( (q1 - q0).magnitude() < epsilon );
+    assert( (q2 - q0).magnitude() < epsilon );
+    assert( (q3 - q0).magnitude() < epsilon );
+  }
+
+  cerr << "Test three sequential transformations\n";
+  for ( int k=0; k<n; k++ ) {
+    p = Point( urand(), urand(), urand() );
+    Matrix t1 = random_transformation();
+    Matrix t2 = random_transformation();
+    Matrix t3 = random_transformation();
+    Point q0 = t3 * t2 * t1 * p;
+    Point q1 = (t3 * t2 * t1)*p;
+    Point q2 = p;
+    q2 *= t1;
+    q2 *= t2;
+    q2 *= t3;
+    Point q3 = p;
+    q3 *= t3 * t2 * t1;
+    assert( (q1 - q0).magnitude() < epsilon );
+    assert( (q2 - q0).magnitude() < epsilon );
+    assert( (q3 - q0).magnitude() < epsilon );
   }
 
   /*
   p = Point::UnitX;
   cerr << p;
-  Point q = Matrix::rotateYaw( 0.25*M_PI ) * p;
+
+  Point q = Matrix::rotateZ( 0.25*M_PI ) * p;
   cerr << q;
-  q = (  Matrix::rotateYaw( 0.25*M_PI ) * Matrix::scaleX( 2.0 ) ) * p;  // scaleX by two then rotate
+
+  q = Matrix::rotateY( 0.25*M_PI ) * p;
   cerr << q;
-  q = (  Matrix::scaleX( 2.0 ) * Matrix::rotateYaw( 0.25*M_PI ) ) * p; // rotate, then scale global X
+  cerr << '\n';
+
+  q = (  Matrix::rotateZ( 0.25*M_PI ) * Matrix::rotateY( 0.25*M_PI ) ) * p;  // scaleX by two then rotate
   cerr << q;
   q = p;  // scale first, then rotate
-  q *= Matrix::scaleX( 2.0 );
-  q *= Matrix::rotateYaw( 0.25*M_PI );
+  q *= Matrix::rotateY( 0.25*M_PI );
+  q *= Matrix::rotateZ( 0.25*M_PI );
   cerr << q;
-  */
-  /*
-  //p = Point( urand(), urand(), urand() );
-  q = (  Matrix::rotateYaw( 0.25*M_PI ) * Matrix::rotatePitch( 0.25*M_PI ) * Matrix::rotateRoll( 0.25*M_PI ) ) * p;
+
+  q = (  Matrix::rotateY( 0.25*M_PI ) * Matrix::rotateZ( 0.25*M_PI ) ) * p; // rotate, then scale global X
   cerr << q;
-  q = (  Matrix::rotateYaw( 0.25*M_PI ) * Matrix::scaleX( 2.0 ) * Matrix::rotateYaw( -0.25*M_PI ) * Matrix::scaleY( 1.0 ) ) * p;
-  cerr << q;
-  */
+  cerr << '\n';
 
   return 0;
+
+  q = ( Matrix::scaleY( 4.0 ) *  Matrix::rotateZ( 0.25*M_PI ) * Matrix::scaleX( 2.0 ) ) * p;  // scaleX by two then rotate then scaleY by four
+  cerr << q;
+  q = p;  // scale x first, then rotate, then scale Y
+  q *= Matrix::scaleX( 2.0 );
+  q *= Matrix::rotateZ( 0.25*M_PI );
+  q *= Matrix::scaleY( 4.0 );
+  cerr << q;
+
+  q = (  Matrix::scaleX( 2.0 ) * Matrix::rotateZ( 0.25*M_PI ) * Matrix::scaleY( 4.0 ) ) * p; // scale Y, rotate, then scale global X
+  cerr << q;
+  */
 }
