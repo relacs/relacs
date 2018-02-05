@@ -821,6 +821,57 @@ public:
         with name \a name to \a dflt. */
   Parameter &setDefaultNumber( const string &name, double dflt,
 			       const string &unit="" );
+
+    /*! Add a new number option holding 3 coordinates at the end of the options list.
+        Its request string for the options dialog is set to \a request,
+        its name string is set to \a name.
+        The option has the default coordinates \a p.
+	The coordinates have as a minimum value \a minimum
+        and as a maximum value \a maximum and are given in the unit \a unit.
+	Output coordinates are given in the unit \a outputunit and are formatted
+	according to the format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
+	since the coordinates are double numbers). */
+  Parameter &addPoint( const string &name, const string &request,
+		       const Point &p, double minimum=-MAXDOUBLE,
+			double maximum=MAXDOUBLE, double step=1.0,
+			const string &unit="", const string &outputunit="",
+			const string &format="", int flags=0, int style=0 );
+    /*! Insert a new number option at the beginning of the options list
+        (\a atname == "") or at the position of the option with
+        name \a atname. If the option with name \a atname
+        does not exist, the option is appended to the end of the list.
+        Its request string for the options dialog is set to \a request,
+        its name string is set to \a name.
+        The option has a default value \a dflt, minimum value \a minimum
+        and maximum value \a maximum, as well as a unit \a unit
+	and a format string \a format
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed,
+	since the number is a double). */
+  Parameter &insertPoint( const string &name, const string &atname,
+			  const string &request, const Point &p,
+			  double minimum=-MINDOUBLE, double maximum=MAXDOUBLE,
+			  double step=1.0,
+			  const string &unit="", const string &outputunit="",
+			  const string &format="", int flags=0, int style=0 );
+    /*! Set the coordinates of an existing number option
+        with name \a name to \a p. */
+  Parameter &setPoint( const string &name, const Point &p,
+		       const string &unit="" );
+    /*! Return the three coordinates of the option with name \a name.
+        If there is no option with name \a name, or the option is
+	neither a number nor an integer, Point::None is returned. */
+  Point point( const string &name, const string &unit="" ) const;
+    /*! Return the default coordinates of the option
+        with name \a name.
+        If there is no option with name \a name, or the option is
+	neither a number nor an integer, Point::None is returned. */
+  Point defaultPoint( const string &name, const string &unit="" ) const;
+    /*! Set the default coordinates of an existing point option
+        with name \a name to \a p. */
+  Parameter &setDefaultPoint( const string &name, const Point &p,
+			      const string &unit="" );
+
     /*! Return the minimum number of the option
         with name \a name.
         If there is no option with name \a name, or the option is

@@ -3,7 +3,8 @@ lib_LTLIBRARIES = \
 
 
 librelacsoptions_la_CPPFLAGS = \
-    -I$(srcdir)/../include
+    -I$(srcdir)/../include \
+    -I$(srcdir)/../../daq/include
 
 librelacsoptions_la_LDFLAGS = \
     -version-info 0:0:0

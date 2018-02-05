@@ -164,6 +164,32 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
+Parameter::Parameter( const string &name, const string &request,  
+		      const Point &p, double minimum,
+		      double maximum, double step,
+		      const string &internunit, const string &outputunit, 
+		      const string &format, int flags, int style,
+		      Options *parentsection )
+{
+  clear( name, request, Number );
+
+  string e;
+  setUnit( internunit, outputunit );
+  e += Warning;
+  setMinMax( minimum, maximum, step );
+  e += Warning;
+  setPoint( p );
+  e += Warning;
+  setDefaultPoint( p );
+  e += Warning;
+  setFormat( format );
+  e += Warning;
+  setFlags( flags );
+  setStyle( style );
+  Warning = e;
+}
+
+
 Parameter::Parameter( const string &name, const string &request,
 		      long number, long error,
 		      long minimum, long maximum, long step,
@@ -1909,6 +1935,81 @@ Parameter &Parameter::addNumber( const Str &s, const string &unit )
     }
   }
   return addNumber( v, e, u );
+}
+
+
+Point Parameter::point( const string &unit ) const
+{
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::point -> parameter '" + 
+      Name + "' is not of type number!";
+    return Point::None;
+  }
+  if ( Value.size() != 3 ) {
+    Warning = "Parameter::point -> 3 coordinates not available in parameter '" + Name + "' !";
+    return Point::None;
+  }
+  Point p;
+  for ( int k=0; k<3; k++ )
+    p[k] = changeUnit( Value[k], InternUnit, unit );
+  return p;
+}
+
+
+Point Parameter::defaultPoint( const string &unit ) const
+{
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::defaultPoint -> parameter '" + 
+      Name + "' is not of type number!";
+    return Point::None;
+  }
+  if ( DefaultValue.size() != 3 ) {
+    Warning = "Parameter::defaultPoint -> 3 default coordinates not available in parameter '" + Name + "' !";
+    return Point::None;
+  }
+  Point p;
+  for ( int k=0; k<3; k++ )
+    p[k] = changeUnit( DefaultValue[k], InternUnit, unit );
+  return p;
+}
+
+
+Parameter &Parameter::setPoint( const Point &p,
+				const string &unit )
+{
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::setPoint -> parameter '" + 
+      Name + "' is not of type number!";
+    return *this;
+  }
+  string e;
+  setNumber( p[0], -1.0, unit );
+  e += Warning;
+  for ( int k=1; k<3; k++ ) {
+    addNumber( p[k], -1.0, unit );
+    e += Warning;
+  }
+  Warning = e;
+  return *this;
+}
+
+
+Parameter &Parameter::setDefaultPoint( const Point &p, const string &unit )
+{
+  Warning = "";
+  if ( ! isAnyNumber() && ! isText() ) {
+    Warning = "Parameter::setDefaultNumber -> parameter '" + 
+      Name + "' is not of type number!";
+    return *this;
+  }
+  DefaultValue.clear();
+  DefaultString.clear();
+  for ( int k=0; k<3; k++ )
+    addDefaultNumber( p[k], unit );
+  return *this;
 }
 
 

@@ -105,6 +105,17 @@ int main( int argc, char *argv[] )
   np.setDefault();
   print( np );
 
+  Parameter pp( "pointid", "enter some coordinates", Point( 10.0, -20.0, 42.0 ), -100.0, 100.0, 0.5, "m", "mm", "%7.0f" );
+  cout << '\n';
+  cout << "Point-Parameter set to: " << "Point( 10.0, -20.0, 42.0 ), -100.0, 100.0, 0.5, \"m\", \"mm\", \"%7.0f\"" << '\n';
+  print( pp );
+
+  cout << '\n';
+  cout << "Point-Parameter set to: " << "Point( 234.0, 876.0, -928.0 ), \"mm\"" << '\n';
+  pp.setPoint( Point( 234.0, 876.0, -928.0 ), "mm" );
+  print( pp );
+
+
   Parameter cp( "percentageid", "enter percent", 0.3, -1.0, 0.0, 2.0, 0.01, "%", "1", "%5.1f" );
   cout << '\n';
   cout << "Percent-Parameter set to: " << "0.3, 0.0, 0.0, 2.0, 0.01, \"\", \"%\", \"%5.1f\"" << '\n';

@@ -31,6 +31,7 @@
 #include <vector>
 #include <deque>
 #include <set>
+#include <relacs/point.h>
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 using namespace std;
@@ -158,6 +159,19 @@ public:
 	     const vector<double> &numbers,
 	     const vector<double> &errors, 
 	     double minimum=-MAXDOUBLE, double maximum=MAXDOUBLE, double step=1.0,
+	     const string &internunit="", const string &outputunit="", 
+	     const string &format="", int flags=0, int style=0,
+	     Options *parentsection=0 );
+    /*! Construct and initialize a single Parameter of type Number
+        holding a 3D point, i.e. three coordinates. 
+        Its value and its default value are set to \a p.
+        The allowed range for its values is defined by
+	\a minimum and \a maximum. 
+        The unit of the coordinates is \a interunit. 
+	For output and dialogs \a outputunit is used as unit. */
+  Parameter( const string &name, const string &request,  
+	     const Point &p, double minimum=-MAXDOUBLE,
+	     double maximum=MAXDOUBLE, double step=1.0,
 	     const string &internunit="", const string &outputunit="", 
 	     const string &format="", int flags=0, int style=0,
 	     Options *parentsection=0 );
@@ -558,6 +572,30 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &addNumber( const Str &s, const string &unit="" );
+
+    /*! Returns the point coordinates in 
+        the unit \a unit or in the internal standard unit, 
+        if \a unit is an empty string.
+        If the Parameter is not a number, or does not contain three coordinates, 
+	Point::None is returned. */
+  Point point( const string &unit="" ) const;
+    /*! Returns the the default point coordinates in 
+        the unit \a unit or in the internal standard unit, 
+        if \a unit is an empty string.
+        If the Parameter is not a number, or does not contain three coordinates, 
+	Point::None is returned. */
+  Point defaultPoint( const string &unit="" ) const;
+    /*! Set point coordinates to \a p. 
+        The text values are set according to the specified format. 
+        The warning message is set if \a p is invalid.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setPoint( const Point &p,
+		       const string &unit="" );
+    /*! Set default point coordinates to \a p. 
+        The default text value is set according to the specified format.
+        The warning message is set if \a number is invalid. */
+  Parameter &setDefaultPoint( const Point &p, const string &unit="" );
   
     /*! True if parameter is of type Integer,
         i.e. its value is a integer number. */

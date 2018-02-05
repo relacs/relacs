@@ -2590,6 +2590,136 @@ Parameter &Options::setDefaultNumber( const string &name, double dflt,
 }
 
 
+Parameter &Options::addPoint( const string &name, const string &request,
+			      const Point &p, double minimum,
+			      double maximum, double step,
+			      const string &unit, const string &outputunit,
+			      const string &format, int flags, int style )
+{
+  // new parameter:
+  Parameter np( name, request, p, minimum, maximum,
+		step, unit, outputunit, format, flags, style, this );
+  // add option:
+  Parameter &pp = add( np );
+  // error?
+  Warning += np.warning();
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::addPoint( " << name << " ) -> " << Warning << '\n';
+#endif
+  return pp;
+}
+
+
+Parameter &Options::insertPoint( const string &name, const string &atname,
+				 const string &request, const Point &p,
+				 double minimum, double maximum,
+				 double step,
+				 const string &unit, const string &outputunit,
+				 const string &format, int flags, int style )
+{
+  // new parameter:
+  Parameter np( name, request, p, minimum, maximum,
+		step, unit, outputunit, format, flags, style, this );
+  // insert option:
+  Parameter &pp = insert( np, atname );
+  // error?
+  Warning += np.warning();
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::insertPoint( " << name << " ) -> " << Warning << '\n';
+#endif
+  return pp;
+}
+
+
+Parameter &Options::setPoint( const string &name, const Point &p,
+			      const string &unit )
+{
+  iterator pp = find( name );
+  // set value:
+  if ( pp != end() ) {
+    pp->setPoint( p, unit );
+    Warning += pp->warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setPoint( " << name << " ) -> " << Warning << '\n';
+  }
+#endif
+
+  if ( pp != end() ) {
+    // notify the change:
+    callNotifies();
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
+}
+
+
+Point Options::point( const string &name, const string &unit ) const
+{
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    Point v = pp->point( unit );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::point( " << name << " ) -> " << Warning << '\n';
+#endif
+    return v;
+  }
+  else
+    return Point::None;
+}
+
+
+Point Options::defaultPoint( const string &name, const string &unit ) const
+{
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    Point v = pp->defaultPoint( unit );
+    Warning += pp->warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::defaultPoint( " << name << " ) -> " << Warning << '\n';
+#endif
+    return v;
+  }
+  else
+    return Point::None;
+}
+
+
+Parameter &Options::setDefaultPoint( const string &name, const Point &p,
+				     const string &unit )
+{
+  iterator pp = find( name );
+  // set value:
+  if ( pp != end() ) {
+    pp->setDefaultPoint( p, unit );
+    Warning += pp->warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setDefaultPoint( " << name << " ) -> " << Warning << '\n';
+  }
+#endif
+
+  if ( pp != end() )
+    return *pp;
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
+}
+
+
 double Options::minimum( const string &name, const string &unit ) const
 {
   const_iterator pp = find( name );

@@ -47,6 +47,7 @@ int main( int argc, char *argv[] )
   opt.pushNumber( "win", 0.23 );
   opt.pushNumber( "win", 15.0, "ms" );
   opt.addBoolean( "type", "Full analysis", true );
+  opt.addPoint( "coordinates", "Target coordinates", Point( 12.0, 42.0, -32 ) ).setUnit( "mm" );
   opt.addText( "Nasty, a = |x|>1", "some special value" );
   opt.addText( "Nasty value", "a, b [c], {d}" );
   opt.addText( "comment", "a comment on the analysis" );
@@ -80,6 +81,7 @@ int main( int argc, char *argv[] )
   cout << "Value of parameter 'sinewave': " << opt.boolean( "||sinewave" ) << '\n';
   cout << "Value of parameter 'recordingtime': " << opt.text( "rec|Recording>time|recordingtime" ) << '\n';
   cout << "Value of parameter 'type': " << opt.boolean( "Analysis>type" ) << '\n';
+  cout << "Value of parameter 'coordinates': " << opt.point( "Analysis>coordinates" ) << '\n';
   cout << "Value of parameter 'Nasty, a = |x|<1': " << opt.text( "Nasty, a = |x|>1" ) << '\n';
   cout << "Value of parameter 'Analysis>numres': " << opt.integer( "Analysis>numres" ) << '\n';
   cout << "Value of parameter 'Analysis>win, 0': " << opt.number( "Analysis>win", 0 ) << '\n';
@@ -100,6 +102,7 @@ int main( int argc, char *argv[] )
   opt2.setBoolean( "type", false );
   opt2.setNumber( "duration", 0.31 );
   opt2.setNumber( "Analysis>win", 0.42 );
+  opt2.setPoint( "Analysis>coordinates", Point( -99.0, 88.0, -77.0 ) );
   opt2.setText( "Nasty, a = |x|>1", "some other value" );
   opt2.setText( "Nasty value", "d, [c] {b}, a" );
   opt2.setText( "Analysis>comment", "no analysis comment" );

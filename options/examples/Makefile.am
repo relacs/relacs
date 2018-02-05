@@ -8,30 +8,17 @@ noinst_PROGRAMS = \
 
 
 AM_CPPFLAGS = \
-    -I$(srcdir)/../include
+    -I$(srcdir)/../include \
+    -I$(srcdir)/../../daq/include
+
+LDADD = \
+    ../src/librelacsoptions.la \
+    ../../daq/src/librelacsdaq.la
 
 
-
-xoptions_LDADD = \
-    ../src/librelacsoptions.la
 xoptions_SOURCES = xoptions.cc
-
-xparameter_LDADD = \
-    ../src/librelacsoptions.la
 xparameter_SOURCES = xparameter.cc
-
-xstring_LDADD = \
-    ../src/librelacsoptions.la
 xstring_SOURCES = xstring.cc
-
-xstrnum_LDADD = \
-    ../src/librelacsoptions.la
 xstrnum_SOURCES = xstrnum.cc
-
-xstrdatetime_LDADD = \
-    ../src/librelacsoptions.la
 xstrdatetime_SOURCES = xstrdatetime.cc
-
-xunit_LDADD = \
-    ../src/librelacsoptions.la
 xunit_SOURCES = xunit.cc

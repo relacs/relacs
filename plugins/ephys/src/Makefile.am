@@ -25,12 +25,15 @@ pluginlib_LTLIBRARIES = \
 
 
 librelacsspikingneuron_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/options/include \
     -I$(srcdir)/../include
 
 librelacsspikingneuron_la_LDFLAGS = -version-info=0:0:0
 
-librelacsspikingneuron_la_LIBADD = $(top_builddir)/options/src/librelacsoptions.la
+librelacsspikingneuron_la_LIBADD = \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la
 
 librelacsspikingneuron_la_SOURCES = spikingneuron.cc
 
