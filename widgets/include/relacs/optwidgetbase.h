@@ -23,6 +23,7 @@
 #define _RELACS_OPTWIDGETBASE_H_ 1
 
 #include <deque>
+#include <vector>
 #include <QObject>
 #include <QWidget>
 #include <QMutex>
@@ -153,6 +154,20 @@ private:
 };
 
 
+class OptWidgetNumberSpinBox : public DoubleSpinBox
+{
+  Q_OBJECT
+public:
+  OptWidgetNumberSpinBox( QWidget *parent, int index );
+signals:
+  void valueChanged( double v, int index );
+private:
+  int Index;
+private slots:
+  void valueChanged( double v );
+};
+
+
 class OptWidgetNumber : public OptWidgetBase
 {
   Q_OBJECT
@@ -166,17 +181,17 @@ public:
   virtual void initActivation( void );
   void setUnitLabel( QLabel *l );
 public slots:
-  void valueChanged( double v );
+  void valueChanged( double v, int index );
 signals:
   void valueChanged( const Parameter &p );
 protected:
-  void doValueChanged( double v );
+  void doValueChanged( double v, int index );
   virtual void customEvent( QEvent *e );
 private:
-  DoubleSpinBox *EW;
-  double Value;
-  QLabel *LW;
-  QLCDNumber *LCDW;
+  deque< DoubleSpinBox* > EW;
+  vector< double > Value;
+  deque< QLabel* > LW;
+  deque< QLCDNumber* > LCDW;
 };
 
 

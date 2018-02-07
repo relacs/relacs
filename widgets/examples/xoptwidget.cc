@@ -34,12 +34,12 @@ using namespace relacs;
 MainWidget::MainWidget( void )
   : QWidget()
 {
-  //  int teststyle = OptWidget::BackBlack | OptWidget::Red;
+  // int teststyle = OptWidget::BackBlack | OptWidget::Red;
   int teststyle = OptWidget::ValueBackBlack | OptWidget::ValueGreen;
   int testflag = 0;
   Opt1.newSection( "Timing", 0, OptWidget::TabSection | teststyle );
   Opt1.addNumber( "duration", "Duration of Signal",
-		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setFlags( testflag ).setStyle( teststyle );
+		  0.3, 0.01, 1.0, 0.01, "seconds", "ms" ).setFlags( testflag ).setStyle( teststyle );
   // setStyle( OptWidget::Huge | OptWidget::Italic | OptWidget::Green | teststyle );
   Opt1.addNumber( "pause", "Pause between Signals",
 		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( teststyle | OptWidget::ValueLCD );
@@ -48,6 +48,8 @@ MainWidget::MainWidget( void )
 		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", testflag ).setStyle( teststyle );
   // .setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | teststyle );
   Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setFlags( testflag ).setStyle( teststyle | OptWidget::SpecialInfinite );
+  Opt1.addPoint( "origin", "Origin", Point( 0.12, -0.65, 0.042 ), -1.0, 1.0, 0.01, "m", "mm", "%g", 3 ).setStyle( teststyle | OptWidget::ValueLCD );
+  Opt1.addPoint( "target", "Target", Point( 0.12, -0.65, 0.042 ), -1.0, 1.0, 0.01, "m", "mm" ).setStyle( teststyle );
   
   Opt1.addDate( "date", "Date", 2009, 6, 20, testflag ).setStyle( teststyle );
   Opt1.newSection( "Settings", 0,  teststyle );
@@ -72,7 +74,7 @@ MainWidget::MainWidget( void )
   Opt1.addText("simple select").setStyle(OptWidget::MultipleSelection).assign("one");
 
   Opt1.newSection( "Analysis" ).setStyle( OptWidget::TabSection );
-  Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.01, "seconds", "ms" );
+  Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.00001, "seconds", "ms", "%.2f" );
   Opt1.addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", 0.001, 0.0, 1.0, 0.0001, "seconds", "ms" );
   Opt1.addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", 0.005, 0.0, 1.0, 0.001, "seconds", "ms" );
   Opt1.addNumber( "sigma3", "Standard deviation of rate smoothing kernel 3", 0.005, 0.0, 1.0, 0.001, "seconds", "ms" );
@@ -117,7 +119,8 @@ void MainWidget::dialog( void )
   OptDialog d( this );
   d.setCaption( "Example Dialog" );
   d.addWidget( l );
-  d.addOptions( Opt1, 0, 1, OptWidget::BreakLinesStyle + OptWidget::BoldSectionsStyle );
+  d.addOptions( Opt1, 0, 1, OptWidget::BoldSectionsStyle );
+  //  d.addOptions( Opt1, 0, 1, OptWidget::BreakLinesStyle + OptWidget::BoldSectionsStyle );
   d.addOptions( Opt2, 0, 0, OptWidget::BoldSectionsStyle );
   d.setVerticalSpacing( 4 );
   d.setMargins( 10 );

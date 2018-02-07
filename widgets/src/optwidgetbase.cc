@@ -742,62 +742,101 @@ void OptWidgetMultiText::setUnitLabel( QLabel *l )
 }
 
 
+OptWidgetNumberSpinBox::OptWidgetNumberSpinBox( QWidget *parent, int index )
+  : DoubleSpinBox( parent ),
+    Index( index )
+{ 
+  connect( this, SIGNAL( valueChanged( double ) ),
+	   this, SLOT( valueChanged( double ) ) );
+}
+
+
+void OptWidgetNumberSpinBox::valueChanged( double v )
+{ 
+  emit valueChanged( v, Index );
+}
+
+
 OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
 				  Options *oo, OptWidget *ow,
 				  QMutex *mutex, QWidget *parent )
-  : OptWidgetBase( param, label, oo, ow, mutex ),
-    EW( 0 ),
-    Value( 0.0 ),
-    LW( 0 ),
-    LCDW( 0 )
+  : OptWidgetBase( param, label, oo, ow, mutex )
 {
+  EW.clear();
+  Value.clear();
+  LW.clear();
+  LCDW.clear();
+  QHBoxLayout *hbox = 0;
+  if ( Param->size() > 1 ) {
+    W = new QWidget( parent );
+    hbox = new QHBoxLayout;
+    hbox->setContentsMargins( 0, 0, 0, 0 );
+    W->setLayout( hbox );
+    parent = W;
+  }
   if ( Editable ) {
-    double val = Param->number( Param->outUnit() );
     double min = Param->minimum( Param->outUnit() );
     double max = Param->maximum( Param->outUnit() );
     double step = Param->step( Param->outUnit() );
-    W = EW = new DoubleSpinBox( parent );
-    EW->setRange( min, max );
-    EW->setSingleStep( step );
-    if ( Param->isNumber() )
-      EW->setFormat( Param->format() );
-    else
-      EW->setFormat( "%.0f" );
-    if ( Param->style() & OptWidget::SpecialInfinite )
-      EW->setSpecialValueText( "infinite" );
-    else if ( Param->style() & OptWidget::SpecialNone )
-      EW->setSpecialValueText( "none" );
-    EW->setValue( val );
-    OptWidget::setValueStyle( W, Param->style(), OptWidget::Text );
-    Value = EW->value();
-    EW->setKeyboardTracking( false );
-    connect( EW, SIGNAL( valueChanged( double ) ),
-	     this, SLOT( valueChanged( double ) ) );
+    for ( int k=0; k<Param->size(); k++ ) {
+      EW.push_back( new OptWidgetNumberSpinBox( parent, k ) );
+      if ( hbox == 0 )
+	W = EW[k];
+      else
+	hbox->addWidget( EW[k] );
+      EW[k]->setRange( min, max );
+      EW[k]->setSingleStep( step );
+      if ( Param->isNumber() )
+	EW[k]->setFormat( Param->format() );
+      else
+	EW[k]->setFormat( "%.0f" );
+      if ( Param->style() & OptWidget::SpecialInfinite )
+	EW[k]->setSpecialValueText( "infinite" );
+      else if ( Param->style() & OptWidget::SpecialNone )
+	EW[k]->setSpecialValueText( "none" );
+      double val = Param->number( k, Param->outUnit() );
+      EW[k]->setValue( val );
+      OptWidget::setValueStyle( EW[k], Param->style(), OptWidget::Text );
+      Value.push_back( EW[k]->value() );
+      EW[k]->setKeyboardTracking( false );
+      connect( EW[k], SIGNAL( valueChanged( double, int ) ),
+	       this, SLOT( valueChanged( double, int ) ) );
+    }
   }
   else {
     if ( Param->style() & OptWidget::ValueLCD ) {
-      LCDW = new QLCDNumber( parent );
-      LCDW->setSegmentStyle( QLCDNumber::Filled );
-      LCDW->setSmallDecimalPoint( true );
-      LCDW->display( Param->text().c_str() );	
-      OptWidget::setValueStyle( LCDW, Param->style(), OptWidget::TextShade );
-      // size:
-      if ( ( Param->style() & OptWidget::ValueHuge ) == OptWidget::ValueHuge )
-	LCDW->setFixedHeight( 16 * LCDW->sizeHint().height() / 10 );
-      else if ( Param->style() & OptWidget::ValueLarge )
-	LCDW->setFixedHeight( 13 * LCDW->sizeHint().height() / 10 );
-      else if ( Param->style() & OptWidget::ValueSmall )
-	LCDW->setFixedHeight( 8 * LCDW->sizeHint().height() / 10 );
-      W = LCDW;
+      for ( int k=0; k<Param->size(); k++ ) {
+	LCDW.push_back( new QLCDNumber( parent ) );
+	LCDW[k]->setSegmentStyle( QLCDNumber::Filled );
+	LCDW[k]->setSmallDecimalPoint( true );
+	LCDW[k]->display( Param->text( k, "", Param->outUnit() ).c_str() );	
+	OptWidget::setValueStyle( LCDW[k], Param->style(), OptWidget::TextShade );
+	// size:
+	if ( ( Param->style() & OptWidget::ValueHuge ) == OptWidget::ValueHuge )
+	  LCDW[k]->setFixedHeight( 16 * LCDW[k]->sizeHint().height() / 10 );
+	else if ( Param->style() & OptWidget::ValueLarge )
+	  LCDW[k]->setFixedHeight( 13 * LCDW[k]->sizeHint().height() / 10 );
+	else if ( Param->style() & OptWidget::ValueSmall )
+	  LCDW[k]->setFixedHeight( 8 * LCDW[k]->sizeHint().height() / 10 );
+	if ( hbox == 0 )
+	  W = LCDW[k];
+	else
+	  hbox->addWidget( LCDW[k] );
+      }
     }
     else {
-      LW = new QLabel( Param->text().c_str(), parent );
-      LW->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
-      LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
-      LW->setLineWidth( 2 );
-      OptWidget::setValueStyle( LW, Param->style(), OptWidget::Window );
-      LW->setFixedHeight( LW->sizeHint().height() );
-      W = LW;
+      for ( int k=0; k<Param->size(); k++ ) {
+	LW.push_back( new QLabel( Param->text( k ).c_str(), parent ) );
+	LW[k]->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
+	LW[k]->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+	LW[k]->setLineWidth( 2 );
+	OptWidget::setValueStyle( LW[k], Param->style(), OptWidget::Window );
+	LW[k]->setFixedHeight( LW[k]->sizeHint().height() );
+	if ( hbox == 0 )
+	  W = LW[k];
+	else
+	  hbox->addWidget( LW[k] );
+      }
     }
   }
   if ( W->minimumWidth() < W->minimumSizeHint().width() )
@@ -811,10 +850,16 @@ void OptWidgetNumber::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    Param->setNumber( EW->value(), Param->outUnit() );
-    if ( fabs( Param->number( Param->outUnit() ) - Value ) > 0.0001*Param->step() )
-      Param->addFlags( OW->changedFlag() );
-    Value = EW->value();
+    vector<double> oldvalue = Value;
+    for ( unsigned int k=0; k<EW.size(); k++ )
+      Value[k] = EW[k]->value();
+    Param->setNumbers( Value, Param->outUnit() );
+    for ( unsigned int k=0; k<oldvalue.size(); k++ ) {
+      if ( fabs( Param->number( k, Param->outUnit() ) - oldvalue[k] ) > 0.0001*Param->step() ) {
+	Param->addFlags( OW->changedFlag() );
+	break;
+      }
+    }
     OO->setNotify( cn );
     InternRead = false;
   }
@@ -825,13 +870,18 @@ void OptWidgetNumber::reset( void )
 {
   InternChanged = true;
   if ( Editable ) {
-    EW->setValue( Param->number( Param->outUnit() ) );
+    for ( unsigned int k=0; k<EW.size(); k++ )
+      EW[k]->setValue( Param->number( k, Param->outUnit() ) );
   }
   else {
-    if ( Param->style() & OptWidget::ValueLCD )
-      LCDW->display( Param->text( "", Param->outUnit() ).c_str() );
-    else
-      LW->setText( Param->text( "", Param->outUnit() ).c_str() );
+    if ( Param->style() & OptWidget::ValueLCD ) {
+      for ( unsigned int k=0; k<LW.size(); k++ )
+	LCDW[k]->display( Param->text( k, "", Param->outUnit() ).c_str() );
+    }
+    else {
+      for ( unsigned int k=0; k<LW.size(); k++ )
+	LW[k]->setText( Param->text( k, "", Param->outUnit() ).c_str() );
+    }
   }
   if ( W->minimumWidth() < W->minimumSizeHint().width() )
     W->setMinimumWidth( W->minimumSizeHint().width() );
@@ -843,9 +893,11 @@ void OptWidgetNumber::resetDefault( void )
 {
   if ( Editable ) {
     InternChanged = true;
-    EW->setValue( Param->defaultNumber( Param->outUnit() ) );
-    if ( EW->minimumWidth() < EW->minimumSizeHint().width() )
-      EW->setMinimumWidth( EW->minimumSizeHint().width() );
+    for ( unsigned int k=0; k<EW.size(); k++ ) {
+      EW[k]->setValue( Param->defaultNumber( k, Param->outUnit() ) );
+      if ( EW[k]->minimumWidth() < EW[k]->minimumSizeHint().width() )
+	EW[k]->setMinimumWidth( EW[k]->minimumSizeHint().width() );
+    }
     InternChanged = false;
   }
 }
@@ -857,57 +909,63 @@ void OptWidgetNumber::update( void )
   if ( UnitLabel != 0 )
     UnitLabel->setText( Param->outUnit().htmlUnit().c_str() );
   if ( Editable ) {
-    double val = Param->number( Param->outUnit() );
     double min = Param->minimum( Param->outUnit() );
     double max = Param->maximum( Param->outUnit() );
     double step = Param->step( Param->outUnit() );
-    EW->setRange( min, max );
-    EW->setSingleStep( step );
-    if ( Param->isNumber() )
-      EW->setFormat( Param->format() );
-    else
-      EW->setFormat( "%.0f" );
-    InternRead = true;
-    EW->setValue( val );
-    if ( EW->minimumWidth() < EW->minimumSizeHint().width() )
-      EW->setMinimumWidth( EW->minimumSizeHint().width() );
+    for ( unsigned int k=0; k<EW.size(); k++ ) {
+      EW[k]->setRange( min, max );
+      EW[k]->setSingleStep( step );
+      if ( Param->isNumber() )
+	EW[k]->setFormat( Param->format() );
+      else
+	EW[k]->setFormat( "%.0f" );
+      InternRead = true;
+      double val = Param->number( Param->outUnit() );
+      EW[k]->setValue( val );
+      if ( EW[k]->minimumWidth() < EW[k]->minimumSizeHint().width() )
+	EW[k]->setMinimumWidth( EW[k]->minimumSizeHint().width() );
+    }
     InternRead = false;
   }
   InternChanged = false;
 }
 
 
-void OptWidgetNumber::valueChanged( double v )
+void OptWidgetNumber::valueChanged( double v, int index )
 {
   if ( InternRead || OW->updateDisabled() )
     return;
 
   Parameter p( *Param );
-  p.setNumber( EW->value(), p.outUnit() );
+  p.setNumber( EW[0]->value(), p.outUnit() );
+  for ( unsigned int k=1; k<EW.size(); k++ )
+    p.addNumber( EW[k]->value(), p.outUnit() );
   emit valueChanged( p );
 
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
-      Value = EW->value();
+      Value[index] = EW[index]->value();
       bool cn = OO->notifying();
       OO->unsetNotify();
-      Param->setNumber( Value, Param->outUnit() );
+      Param->setNumbers( Value, Param->outUnit() );
       Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
     else
-      doValueChanged( v );
+      doValueChanged( v, index );
   }
 
   if ( W->minimumWidth() < W->minimumSizeHint().width() )
     W->setMinimumWidth( W->minimumSizeHint().width() );
 
-  double tol = 0.2;
-  if ( Param->isNumber() )
-    tol = 0.01*Param->step();
-  for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    if ( Widgets[k]->param() != OO->end() )
-      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], v, tol ) );
+  if ( index == 0 ) {
+    double tol = 0.2;
+    if ( Param->isNumber() )
+      tol = 0.01*Param->step();
+    for ( unsigned int k=0; k<Widgets.size(); k++ ) {
+      if ( Widgets[k]->param() != OO->end() )
+	Widgets[k]->activateOption( Widgets[k]->param()->testActivation( Index[k], v, tol ) );
+    }
   }
 }
 
@@ -915,28 +973,31 @@ void OptWidgetNumber::valueChanged( double v )
 class OptWidgetNumberEvent : public QEvent
 {
 public:
-  OptWidgetNumberEvent( double value )
-    : QEvent( QEvent::Type( QEvent::User+1 ) ), Value( value ) {};
+  OptWidgetNumberEvent( double value, int index )
+    : QEvent( QEvent::Type( QEvent::User+1 ) ), Value( value ), Index( index ) {};
   double value( void ) const { return Value; };
+  int index( void ) const { return Index; };
 private:
   double Value;
+  int Index;
 };
 
 
-void OptWidgetNumber::doValueChanged( double v )
+void OptWidgetNumber::doValueChanged( double v, int index )
 {
   if ( ! tryLockMutex( 5 ) ) {
     // we do not get the lock for the data now,
     // so we repost the event to a later time.
-    QCoreApplication::postEvent( this, new OptWidgetNumberEvent( v ) );
+    QCoreApplication::postEvent( this, new OptWidgetNumberEvent( v, index ) );
     return;
   }
   bool cn = OO->notifying();
   OO->unsetNotify();
-  Param->setNumber( v, Param->outUnit() );
-  if ( fabs( v - Value ) > 0.0001*Param->step() )
+  bool changeflags = ( fabs( v - Value[index] ) > 0.0001*Param->step() );
+  Value[index] = EW[index]->value();
+  Param->setNumbers( Value, Param->outUnit() );
+  if ( changeflags )
     Param->addFlags( OW->changedFlag() );
-  Value = EW->value();
   if ( cn )
     OO->notify();
   if ( ContUpdate )
@@ -950,7 +1011,7 @@ void OptWidgetNumber::customEvent( QEvent *e )
 {
   if ( e->type() == QEvent::User+1 ) {
     OptWidgetNumberEvent *ne = dynamic_cast<OptWidgetNumberEvent*>( e );
-    doValueChanged( ne->value() );
+    doValueChanged( ne->value(), ne->index() );
   }
 }
 
@@ -958,13 +1019,17 @@ void OptWidgetNumber::customEvent( QEvent *e )
 void OptWidgetNumber::initActivation( void )
 {
   double v = 0.0;
-  if ( EW == 0 && LCDW == 0 )
+  if ( EW.empty() && LCDW.empty() && LW.empty() )
     v = Param->number( Param->outUnit() );
   else {
-    if ( EW != 0 )
-      v = EW->value();
-    else if ( LCDW != 0 )
-      v = LCDW->value();
+    if ( ! EW.empty() )
+      v = EW[0]->value();
+    else if ( ! LCDW.empty() )
+      v = LCDW[0]->value();
+    /*
+    else if ( ! LW.empty() )
+      v = LW[0]->value();
+    */
   }
   double tol = 0.2;
   if ( Param->isNumber() )
