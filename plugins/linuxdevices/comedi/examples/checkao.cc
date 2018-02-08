@@ -69,7 +69,9 @@ void RecordSignal( const char *aofile, const char *aifile )
   AQ.read( traces );
   AQ.write( signal );
   // XXX loop and fill up write buffer and read trace buffer?
-  AQ.readData();
+  //  AQ.readData();
+  double signaltime = -1.0;
+  int r = AQ.waitForData( signaltime );
 
   // save data:
   ofstream df( aifile );

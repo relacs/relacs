@@ -9,7 +9,7 @@ using namespace comedi;
 int main( int argc, char *argv[] )
 {
   DigitalIO *DIO = new ComediDigitalIO( "/dev/comedi0", Options() );
-  DIO->open( "/dev/comedi0", Options() );
+  DIO->open( "/dev/comedi0" );
   DIO->configureLine( 0, true );
   DIO->write( 0, false );
   sleep( 1.0 );

@@ -43,7 +43,7 @@ dio_write_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
-    -I$(srcdir)/../include
+    -I$(srcdir)/../include $(QT4_CPPFLAGS)
 dio_write_LDFLAGS = $(COMEDI_LDFLAGS)
 dio_write_LDADD = \
     $(COMEDI_LIBS) \
@@ -59,7 +59,7 @@ checkao_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
-    -I$(srcdir)/../include
+    -I$(srcdir)/../include $(QT4_CPPFLAGS)
 checkao_LDFLAGS = \
     $(QT3_LDFLAGS)
 checkao_LDADD = \

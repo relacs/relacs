@@ -46,7 +46,7 @@ int main( void )
   k.amplitudepos( 0, 80 );
   k.amplitudeneg( 0, 80 );
   cout << "coarse\n";
-  k.coarse( 0, 2000 );
+  k.doStepBy( 0, 2000 );
   /*
   cout << "counterread\n";
   k.counterread();

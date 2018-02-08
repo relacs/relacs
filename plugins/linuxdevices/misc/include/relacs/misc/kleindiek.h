@@ -68,14 +68,6 @@ public:
 
   friend ostream &operator<<( ostream &str, const Kleindiek &k );
 
-
-protected:
-
-    /*! Step axis \a axis by \a steps spteps. */
-  int doStepBy( int axis, int steps, double speed=0, double acc=0 );
-
-  int pause( int ms );
-
     /*! Set the speed for channle \a channel to \a speed.
         Valid values are integers from 1 to 6. */
   int speed( int channel, int speed );
@@ -85,6 +77,14 @@ protected:
   int countermode( int channel, long mode );
   int counterread( void );
   int counterreset( void );
+
+    /*! Step axis \a axis by \a steps spteps. */
+  int doStepBy( int axis, int steps, double speed=0, double acc=0 );
+
+
+protected:
+
+  int pause( int ms );
 
 
 private:

@@ -84,7 +84,7 @@ void testfunc( T &x, T &y )
 
   v = median( x );
   v = quantile( 0.25, x );
-  v = rank( x );
+  v = ::relacs::rank( x );
 }
 
 int main( int argc, char **argv )

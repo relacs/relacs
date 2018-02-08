@@ -9,6 +9,9 @@ librelacsoptions_la_CPPFLAGS = \
 librelacsoptions_la_LDFLAGS = \
     -version-info 0:0:0
 
+librelacsoptions_la_LIBADD = \
+    ../../daq/src/librelacsdaq.la
+
 pkgincludedir = $(includedir)/relacs
 
 pkginclude_HEADERS = \
