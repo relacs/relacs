@@ -4,8 +4,9 @@ noinst_PROGRAMS = \
 
 
 AM_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/options/include \
     -I$(srcdir)/../include $(QT4_CPPFLAGS)
 

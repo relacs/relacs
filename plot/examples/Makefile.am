@@ -5,8 +5,9 @@ noinst_PROGRAMS = \
 
 
 AM_CPPFLAGS = \
-    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
@@ -15,8 +16,9 @@ AM_LDFLAGS = \
     $(QT4_LDFLAGS)
 
 xplot_LDADD = \
-    ../../daq/src/librelacsdaq.la \
+    ../../shapes/src/librelacsshapes.la \
     ../../numerics/src/librelacsnumerics.la \
+    ../../daq/src/librelacsdaq.la \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsplot.la \
     $(QT4_LIBS) \
@@ -24,8 +26,9 @@ xplot_LDADD = \
 xplot_SOURCES = xplot.cc
 
 xplots_LDADD = \
-    ../../daq/src/librelacsdaq.la \
+    ../../shapes/src/librelacsshapes.la \
     ../../numerics/src/librelacsnumerics.la \
+    ../../daq/src/librelacsdaq.la \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsplot.la \
     $(QT4_LIBS) \
@@ -33,8 +36,9 @@ xplots_LDADD = \
 xplots_SOURCES = xplots.cc
 
 xsurfaceplot_LDADD = \
-    ../../daq/src/librelacsdaq.la \
+    ../../shapes/src/librelacsshapes.la \
     ../../numerics/src/librelacsnumerics.la \
+    ../../daq/src/librelacsdaq.la \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsplot.la \
     $(QT4_LIBS) \

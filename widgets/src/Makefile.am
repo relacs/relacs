@@ -7,7 +7,7 @@ lib_LTLIBRARIES = \
 
 if RELACS_TOP_BUILD
 librelacswidgets_la_CPPFLAGS = \
-    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
@@ -23,11 +23,12 @@ librelacswidgets_la_LDFLAGS = \
 
 if RELACS_TOP_BUILD
 librelacswidgets_la_LIBADD = \
-    ../../daq/src/librelacsdaq.la \
+    ../../shapes/src/librelacsshapes.la \
     ../../options/src/librelacsoptions.la \
     $(QT4_LIBS)
 else
 librelacswidgets_la_LIBADD = \
+    -lrelacsshapes \
     -lrelacsdaq \
     -lrelacsoptions \
     $(QT4_LIBS)

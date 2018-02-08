@@ -63,8 +63,6 @@ public:
   Point( double x, double y, double z );
     /*! A point with coordinates from c. */
   Point( const double c[3] );
-  /*! Construct a point from a string representation (x,y,z) mm */
-  Point( const string &position );
 
     /*! The x-coordinate of the point. */
   double x( void ) const { return Coords[0]; }
@@ -192,9 +190,6 @@ public:
 
     /*! Write the coordinates of the point to stream \a str. */
   friend ostream &operator<<( ostream &str, const Point &p );
-
-   /*! a string representation of the point (x,y,z) */
-  string toString( void ) const;
 
 
 protected:

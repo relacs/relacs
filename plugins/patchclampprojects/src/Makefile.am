@@ -13,6 +13,7 @@ pluginlib_LTLIBRARIES = \
 
 
 libpatchclampprojectsthresholdlatencies_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -31,12 +32,13 @@ libpatchclampprojectsthresholdlatencies_la_LDFLAGS = \
 libpatchclampprojectsthresholdlatencies_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS)
 
 $(libpatchclampprojectsthresholdlatencies_la_OBJECTS) : moc_thresholdlatencies.cc
@@ -50,6 +52,7 @@ libpatchclampprojectsthresholdlatencies_la_include_HEADERS = $(HEADER_PATH)/thre
 
 
 libpatchclampprojectsfindthreshold_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -68,12 +71,13 @@ libpatchclampprojectsfindthreshold_la_LDFLAGS = \
 libpatchclampprojectsfindthreshold_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS)
 
 $(libpatchclampprojectsfindthreshold_la_OBJECTS) : moc_findthreshold.cc
@@ -87,6 +91,7 @@ libpatchclampprojectsfindthreshold_la_include_HEADERS = $(HEADER_PATH)/findthres
 
 
 libpatchclampprojectsvoltagereconstruction_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -105,12 +110,13 @@ libpatchclampprojectsvoltagereconstruction_la_LDFLAGS = \
 libpatchclampprojectsvoltagereconstruction_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS)
 
 $(libpatchclampprojectsvoltagereconstruction_la_OBJECTS) : moc_voltagereconstruction.cc
@@ -124,6 +130,7 @@ libpatchclampprojectsvoltagereconstruction_la_include_HEADERS = $(HEADER_PATH)/v
 
 
 libpatchclampprojectsfeedforwardnetwork_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -142,12 +149,13 @@ libpatchclampprojectsfeedforwardnetwork_la_LDFLAGS = \
 libpatchclampprojectsfeedforwardnetwork_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS)
 
 $(libpatchclampprojectsfeedforwardnetwork_la_OBJECTS) : moc_feedforwardnetwork.cc
@@ -161,6 +169,7 @@ libpatchclampprojectsfeedforwardnetwork_la_include_HEADERS = $(HEADER_PATH)/feed
 
 
 libpatchclampprojectssynapticresistance_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -179,12 +188,13 @@ libpatchclampprojectssynapticresistance_la_LDFLAGS = \
 libpatchclampprojectssynapticresistance_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampprojectssynapticresistance_la_OBJECTS) : moc_synapticresistance.cc

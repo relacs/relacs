@@ -40,6 +40,7 @@ aitriggersao_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
 aitriggersao_SOURCES = aitriggersao.c common.c
 
 dio_write_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -50,12 +51,14 @@ dio_write_LDADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(GSL_LIBS) \
     ../src/libcomedistreaming.la
 dio_write_SOURCES = dio_write.cc
 
 checkao_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -66,6 +69,7 @@ checkao_LDADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(GSL_LIBS) \
     ../src/libcomedistreaming.la

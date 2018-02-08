@@ -20,7 +20,7 @@
 */
 
 #include <cmath>
-#include <relacs/str.h>
+#include <iomanip>
 #include <relacs/matrix.h>
 #include <relacs/point.h>
 
@@ -67,23 +67,6 @@ Point::Point( const double c[3] )
 {
   for ( int i=0; i<3; i++ )
     Coords[i] = c[i];
-}
-
-
-Point::Point( const string &position )
-  : Point()
-{
-  if ( position.size() > 0 ) {
-    Str s = position;
-    int next;
-    int idx = 0;
-    for ( int i = 0; i<Dim; i++ ) {
-      Coords[i] = s.number( 0.0, idx, &next );
-      idx = next + 1;
-      if ( next > (int)position.size()-1 )
-	break;
-    }
-  }
 }
 
 
@@ -503,21 +486,11 @@ Point &Point::operator*=( const Matrix &m )
 }
 
 
-string Point::toString( void ) const {
-  Str s = "(";
-  for ( int i = 0; i < Dim; i++ ) {
-    s += Str(Coords[i], 0, 3, 'f') + (i < Dim-1 ? "," : "");
-  }
-  s += ")";
-  return s;
-}
-
-
 ostream &operator<<( ostream &str, const Point &p ) 
 {
-  str << "point x=" << p[0] << ", ";
+  str << "x=" << p[0] << ", ";
   str << "y=" << p[1] << ", ";
-  str << "z=" << p[2] << "\n";
+  str << "z=" << p[2];
   return str;
 }
 

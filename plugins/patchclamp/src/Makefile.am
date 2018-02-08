@@ -17,6 +17,7 @@ pluginlib_LTLIBRARIES = \
 
 
 libpatchclampsession_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -35,12 +36,13 @@ libpatchclampsession_la_LDFLAGS = \
 libpatchclampsession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampsession_la_OBJECTS) : moc_session.cc
@@ -54,6 +56,7 @@ libpatchclampsession_la_include_HEADERS = $(HEADER_PATH)/session.h
 
 
 libpatchclampsimple_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -72,12 +75,13 @@ libpatchclampsimple_la_LDFLAGS = \
 libpatchclampsimple_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampsimple_la_OBJECTS) : moc_simple.cc
@@ -91,6 +95,7 @@ libpatchclampsimple_la_include_HEADERS = $(HEADER_PATH)/simple.h
 
 
 libpatchclampsinglestimulus_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -109,12 +114,13 @@ libpatchclampsinglestimulus_la_LDFLAGS = \
 libpatchclampsinglestimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampsinglestimulus_la_OBJECTS) : moc_singlestimulus.cc
@@ -128,6 +134,7 @@ libpatchclampsinglestimulus_la_include_HEADERS = $(HEADER_PATH)/singlestimulus.h
 
 
 libpatchclampmembraneresistance_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -146,12 +153,13 @@ libpatchclampmembraneresistance_la_LDFLAGS = \
 libpatchclampmembraneresistance_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampmembraneresistance_la_OBJECTS) : moc_membraneresistance.cc
@@ -165,6 +173,7 @@ libpatchclampmembraneresistance_la_include_HEADERS = $(HEADER_PATH)/membraneresi
 
 
 libpatchclampvicurve_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -183,12 +192,13 @@ libpatchclampvicurve_la_LDFLAGS = \
 libpatchclampvicurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampvicurve_la_OBJECTS) : moc_vicurve.cc
@@ -202,6 +212,7 @@ libpatchclampvicurve_la_include_HEADERS = $(HEADER_PATH)/vicurve.h
 
 
 libpatchclampficurve_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -220,12 +231,13 @@ libpatchclampficurve_la_LDFLAGS = \
 libpatchclampficurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampficurve_la_OBJECTS) : moc_ficurve.cc
@@ -239,6 +251,7 @@ libpatchclampficurve_la_include_HEADERS = $(HEADER_PATH)/ficurve.h
 
 
 libpatchclampsetdc_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -257,12 +270,13 @@ libpatchclampsetdc_la_LDFLAGS = \
 libpatchclampsetdc_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampsetdc_la_OBJECTS) : moc_setdc.cc
@@ -276,6 +290,7 @@ libpatchclampsetdc_la_include_HEADERS = $(HEADER_PATH)/setdc.h
 
 
 libpatchclampfindrate_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -294,12 +309,13 @@ libpatchclampfindrate_la_LDFLAGS = \
 libpatchclampfindrate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampfindrate_la_OBJECTS) : moc_findrate.cc
@@ -313,6 +329,7 @@ libpatchclampfindrate_la_include_HEADERS = $(HEADER_PATH)/findrate.h
 
 
 libpatchclampphaseresettingcurve_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -331,12 +348,13 @@ libpatchclampphaseresettingcurve_la_LDFLAGS = \
 libpatchclampphaseresettingcurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libpatchclampphaseresettingcurve_la_OBJECTS) : moc_phaseresettingcurve.cc

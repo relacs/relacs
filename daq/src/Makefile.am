@@ -6,6 +6,7 @@ if RELACS_TOP_BUILD
 librelacsdaq_la_CPPFLAGS = \
     $(QT4CORE_CPPFLAGS) \
     $(GSL_CPPFLAGS) \
+    -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include
@@ -23,12 +24,14 @@ librelacsdaq_la_LDFLAGS = \
 
 if RELACS_TOP_BUILD
 librelacsdaq_la_LIBADD = \
+    ../../shapes/src/librelacsshapes.la \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
     $(QT4CORE_LIBS) \
     $(GSL_LIBS)
 else
 librelacsdaq_la_LIBADD = \
+    -lrelacsshapes \
     -lrelacsnumerics \
     -lrelacsoptions \
     $(QT4CORE_LIBS) \
@@ -50,12 +53,9 @@ pkginclude_HEADERS = \
     ../include/relacs/indata.h \
     ../include/relacs/inlist.h \
     ../include/relacs/manipulator.h \
-    ../include/relacs/matrix.h \
     ../include/relacs/outdatainfo.h \
     ../include/relacs/outdata.h \
     ../include/relacs/outlist.h \
-    ../include/relacs/point.h \
-    ../include/relacs/shape.h \
     ../include/relacs/temperature.h \
     ../include/relacs/tracespec.h \
     ../include/relacs/trigger.h \
@@ -74,37 +74,19 @@ librelacsdaq_la_SOURCES = \
     indata.cc \
     inlist.cc \
     manipulator.cc \
-    matrix.cc \
     outdatainfo.cc \
     outdata.cc \
     outlist.cc \
-    point.cc \
-    shape.cc \
     temperature.cc \
     tracespec.cc \
     trigger.cc \
     zones.cc
 
 
-check_PROGRAMS = linktest_librelacsdaq_la \
-    checkpoint \
-    checkmatrix \
-    checkshape
+check_PROGRAMS = linktest_librelacsdaq_la
 
 linktest_librelacsdaq_la_SOURCES = linktest.cc
 linktest_librelacsdaq_la_LDADD = librelacsdaq.la
-
-checkpoint_SOURCES = checkpoint.cc
-checkpoint_CPPFLAGS = -I$(srcdir)/../include
-checkpoint_LDADD = librelacsdaq.la
-
-checkmatrix_SOURCES = checkmatrix.cc
-checkmatrix_CPPFLAGS = -I$(srcdir)/../include
-checkmatrix_LDADD = librelacsdaq.la
-
-checkshape_SOURCES = checkshape.cc
-checkshape_CPPFLAGS = -I$(srcdir)/../include
-checkshape_LDADD = librelacsdaq.la
 
 TESTS = $(check_PROGRAMS)
 

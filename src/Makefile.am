@@ -21,6 +21,7 @@ EXTRA_DIST = \
 
 # TODO
 relacsgui_CPPFLAGS = \
+    -I$(srcdir)/../shapes/include \
     -I$(srcdir)/../daq/include \
     -I$(srcdir)/../datafile/include \
     -I$(srcdir)/../plot/include \

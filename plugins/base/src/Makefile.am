@@ -33,6 +33,7 @@ endif
 
 
 libbasetraces_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -47,10 +48,11 @@ libbasetraces_la_LDFLAGS = \
 
 libbasetraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libbasetraces_la_SOURCES = traces.cc
@@ -62,6 +64,7 @@ libbasetraces_la_include_HEADERS = $(HEADER_PATH)/traces.h
 
 
 libbaselinearattenuate_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/numerics/include \
@@ -77,8 +80,9 @@ libbaselinearattenuate_la_LDFLAGS = \
 
 libbaselinearattenuate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -91,6 +95,7 @@ libbaselinearattenuate_la_include_HEADERS = $(HEADER_PATH)/linearattenuate.h
 
 
 libbasedecibelattenuate_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/numerics/include \
@@ -106,8 +111,9 @@ libbasedecibelattenuate_la_LDFLAGS = \
 
 libbasedecibelattenuate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -120,6 +126,7 @@ libbasedecibelattenuate_la_include_HEADERS = $(HEADER_PATH)/decibelattenuate.h
 
 
 libbasehighpass_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -134,10 +141,11 @@ libbasehighpass_la_LDFLAGS = \
 
 libbasehighpass_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasehighpass_la_OBJECTS) : moc_highpass.cc
@@ -151,6 +159,7 @@ libbasehighpass_la_include_HEADERS = $(HEADER_PATH)/highpass.h
 
 
 libbaselowpass_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -165,10 +174,11 @@ libbaselowpass_la_LDFLAGS = \
 
 libbaselowpass_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaselowpass_la_OBJECTS) : moc_lowpass.cc
@@ -182,6 +192,7 @@ libbaselowpass_la_include_HEADERS = $(HEADER_PATH)/lowpass.h
 
 
 libbasespectrumanalyzer_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/numerics/include \
@@ -197,11 +208,12 @@ libbasespectrumanalyzer_la_LDFLAGS = \
 
 libbasespectrumanalyzer_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasespectrumanalyzer_la_OBJECTS) : moc_spectrumanalyzer.cc
@@ -215,6 +227,7 @@ libbasespectrumanalyzer_la_include_HEADERS = $(HEADER_PATH)/spectrumanalyzer.h
 
 
 libbasepause_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -245,6 +258,7 @@ libbasepause_la_include_HEADERS = $(HEADER_PATH)/pause.h
 
 
 libbaserecord_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -275,6 +289,7 @@ libbaserecord_la_include_HEADERS = $(HEADER_PATH)/record.h
 
 
 libbasesetoutput_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -289,10 +304,11 @@ libbasesetoutput_la_LDFLAGS = \
 
 libbasesetoutput_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesetoutput_la_OBJECTS) : moc_setoutput.cc
@@ -306,6 +322,7 @@ libbasesetoutput_la_include_HEADERS = $(HEADER_PATH)/setoutput.h
 
 
 libbasesimplemodel_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -334,6 +351,7 @@ libbasesimplemodel_la_include_HEADERS = $(HEADER_PATH)/simplemodel.h
 
 
 libbasetransferfunction_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -350,12 +368,13 @@ libbasetransferfunction_la_LDFLAGS = \
 
 libbasetransferfunction_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasetransferfunction_la_OBJECTS) : moc_transferfunction.cc
@@ -369,6 +388,7 @@ libbasetransferfunction_la_include_HEADERS = $(HEADER_PATH)/transferfunction.h
 
 
 libbaserobot_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -385,13 +405,14 @@ libbaserobot_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libbaserobot_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscmirob.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaserobot_la_OBJECTS) : moc_robot.cc
@@ -405,6 +426,7 @@ libbaserobot_la_include_HEADERS = $(HEADER_PATH)/robot.h
 
 
 libbasewait_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -437,6 +459,7 @@ libbasewait_la_include_HEADERS = $(HEADER_PATH)/wait.h
 
 
 libbaseenvelope_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -455,8 +478,9 @@ libbaseenvelope_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaseenvelope_la_OBJECTS) : moc_envelope.cc
@@ -470,6 +494,7 @@ libbaseenvelope_la_include_HEADERS = $(HEADER_PATH)/envelope.h
 
 
 libbasesavetraces_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -486,12 +511,13 @@ libbasesavetraces_la_LDFLAGS = \
 
 libbasesavetraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesavetraces_la_OBJECTS) : moc_savetraces.cc
@@ -505,6 +531,7 @@ libbasesavetraces_la_include_HEADERS = $(HEADER_PATH)/savetraces.h
 
 
 libbasespectrogram_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -521,12 +548,13 @@ libbasespectrogram_la_LDFLAGS = \
 
 libbasespectrogram_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasespectrogram_la_OBJECTS) : moc_spectrogram.cc
@@ -540,6 +568,7 @@ libbasespectrogram_la_include_HEADERS = $(HEADER_PATH)/spectrogram.h
 
 
 libbasesetinputgain_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -556,12 +585,13 @@ libbasesetinputgain_la_LDFLAGS = \
 
 libbasesetinputgain_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesetinputgain_la_OBJECTS) : moc_setinputgain.cc
@@ -575,6 +605,7 @@ libbasesetinputgain_la_include_HEADERS = $(HEADER_PATH)/setinputgain.h
 
 
 libbasesetattenuatorgain_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -591,12 +622,13 @@ libbasesetattenuatorgain_la_LDFLAGS = \
 
 libbasesetattenuatorgain_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesetattenuatorgain_la_OBJECTS) : moc_setattenuatorgain.cc
@@ -610,6 +642,7 @@ libbasesetattenuatorgain_la_include_HEADERS = $(HEADER_PATH)/setattenuatorgain.h
 
 
 libbasehistogram_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -626,12 +659,13 @@ libbasehistogram_la_LDFLAGS = \
 
 libbasehistogram_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasehistogram_la_OBJECTS) : moc_histogram.cc
@@ -645,6 +679,7 @@ libbasehistogram_la_include_HEADERS = $(HEADER_PATH)/histogram.h
 
 
 libbaseinstantaneousrate_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -661,12 +696,13 @@ libbaseinstantaneousrate_la_LDFLAGS = \
 
 libbaseinstantaneousrate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaseinstantaneousrate_la_OBJECTS) : moc_instantaneousrate.cc

@@ -508,7 +508,7 @@ void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
 
 ostream &Zone::print( ostream &str ) const
 {
-  str << "Zone \"" << name() << "\" at " << trans().toString() 
+  str << "Zone \"" << name() << "\" at " << trans()
       << " consisting of\n";
   auto si = Shapes.begin();
   auto ai = Add.begin();
@@ -641,7 +641,7 @@ void Sphere::intersectionPointsShape( const Point &pos1, const Point &pos2,
 
 ostream &Sphere::print( ostream &str ) const
 {
-  str << "Sphere \"" << name() << "\" at " << trans().toString()
+  str << "Sphere \"" << name() << "\" at " << trans()
       << " with radius " << Str( radius(), 0, 3, 'f' ) << '\n';
   return str;
 }
@@ -843,7 +843,7 @@ void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
 
 ostream &Cylinder::print( ostream &str ) const
 {
-  str << "Cylinder \"" << name() << "\" at " << trans().toString()
+  str << "Cylinder \"" << name() << "\" at " << trans()
       << " with length " << Str( length(), 0, 3, 'f' )
       << " and radius " << Str( radius(), 0, 3, 'f' ) << '\n';
   return str;
@@ -1017,7 +1017,7 @@ void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
 
 ostream &Cuboid::print( ostream &str ) const
 {
-  str << "Cuboid \"" << name() << "\" at " << trans().toString()
+  str << "Cuboid \"" << name() << "\" at " << trans()
       << " with size " << Str( length(), 0, 3, 'f' ) << ", "
       << Str( width(), 0, 3, 'f' ) << ", "
       << Str( height(), 0, 3, 'f' ) << '\n';

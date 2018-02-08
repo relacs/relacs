@@ -9,6 +9,7 @@ pluginlib_LTLIBRARIES = \
 
 
 libmultielectrodemultista_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -39,6 +40,7 @@ libmultielectrodemultista_la_include_HEADERS = $(HEADER_PATH)/multista.h
 
 
 libmultielectrodemultitracesta_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \

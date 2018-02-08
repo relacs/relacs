@@ -15,6 +15,7 @@ endif
 
 
 libcameracameracontrol_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -33,12 +34,13 @@ libcameracameracontrol_la_LDFLAGS = \
     $(OPENCV_LDFLAGS)
 
 libcameracameracontrol_la_LIBADD = \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
     $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
@@ -54,6 +56,7 @@ libcameracameracontrol_la_include_HEADERS = $(HEADER_PATH)/cameracontrol.h
 
 
 libcameraopencvcameracalibration_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -73,13 +76,14 @@ libcameraopencvcameracalibration_la_LDFLAGS = \
     $(OPENCV_LDFLAGS)
 
 libcameraopencvcameracalibration_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
     $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
@@ -94,6 +98,7 @@ libcameraopencvcameracalibration_la_include_HEADERS = $(HEADER_PATH)/opencvcamer
 
 
 libcameraopencvstereocameracalibration_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -113,13 +118,14 @@ libcameraopencvstereocameracalibration_la_LDFLAGS = \
     $(OPENCV_LDFLAGS)
 
 libcameraopencvstereocameracalibration_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvstereocamera.la \
     $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
@@ -135,6 +141,7 @@ libcameraopencvstereocameracalibration_la_include_HEADERS = $(HEADER_PATH)/openc
 
 
 libcameraopencvcalibrationquality_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -154,13 +161,14 @@ libcameraopencvcalibrationquality_la_LDFLAGS = \
     $(OPENCV_LDFLAGS)
 
 libcameraopencvcalibrationquality_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvstereocamera.la \
     $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)

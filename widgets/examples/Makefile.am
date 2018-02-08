@@ -6,7 +6,7 @@ noinst_PROGRAMS = \
 
 
 AM_CPPFLAGS = \
-    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
@@ -17,7 +17,7 @@ AM_LDFLAGS = \
 LDADD = \
     ../src/librelacswidgets.la \
     ../../options/src/librelacsoptions.la \
-    ../../daq/src/librelacsdaq.la \
+    ../../shapes/src/librelacsshapes.la \
     $(QT4_LIBS) \
     $(MATH_LIBS)
 

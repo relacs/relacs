@@ -4,8 +4,8 @@ lib_LTLIBRARIES = \
 
 if RELACS_TOP_BUILD
 librelacsdatafile_la_CPPFLAGS = \
+    -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../numerics/include \
-    -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include
 else
@@ -19,13 +19,13 @@ librelacsdatafile_la_LDFLAGS = \
 
 if RELACS_TOP_BUILD
 librelacsdatafile_la_LIBADD = \
+    ../../shapes/src/librelacsshapes.la \
     ../../numerics/src/librelacsnumerics.la \
-    ../../daq/src/librelacsdaq.la \
     ../../options/src/librelacsoptions.la
 else
 librelacsdatafile_la_LIBADD = \
+    -lrelacsshapes \
     -lrelacsnumerics \
-    -lrelacsdaq \
     -lrelacsoptions
 endif
 

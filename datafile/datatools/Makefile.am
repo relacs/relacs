@@ -14,7 +14,7 @@ bin_PROGRAMS = \
 
 AM_CPPFLAGS = \
     -I$(srcdir)/../../numerics/include \
-    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
     $(GSL_CPPFLAGS) \
@@ -25,10 +25,10 @@ AM_LDFLAGS = \
     $(SNDFILE_LDFLAGS)
 
 LDADD = \
-    ../../numerics/src/librelacsnumerics.la \
-    ../../options/src/librelacsoptions.la \
-    ../../daq/src/librelacsdaq.la \
     ../src/librelacsdatafile.la \
+    ../../options/src/librelacsoptions.la \
+    ../../shapes/src/librelacsshapes.la \
+    ../../numerics/src/librelacsnumerics.la \
     $(GSL_LIBS) $(SNDFILE_LIBS)
 
 bindata_SOURCES = bindata.cc

@@ -9,15 +9,15 @@ noinst_PROGRAMS = \
 
 AM_CPPFLAGS = \
     -I$(srcdir)/../../numerics/include \
-    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include
 
 LDADD = \
     ../src/librelacsdatafile.la \
-    ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
-    ../../daq/src/librelacsdaq.la \
+    ../../shapes/src/librelacsshapes.la \
+    ../../numerics/src/librelacsnumerics.la \
     $(GSL_LIBS)
 
 copydata_SOURCES = copydata.cc

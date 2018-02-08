@@ -4,13 +4,13 @@ lib_LTLIBRARIES = \
 
 librelacsoptions_la_CPPFLAGS = \
     -I$(srcdir)/../include \
-    -I$(srcdir)/../../daq/include
+    -I$(srcdir)/../../shapes/include
 
 librelacsoptions_la_LDFLAGS = \
     -version-info 0:0:0
 
 librelacsoptions_la_LIBADD = \
-    ../../daq/src/librelacsdaq.la
+    ../../shapes/src/librelacsshapes.la
 
 pkgincludedir = $(includedir)/relacs
 

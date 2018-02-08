@@ -9,6 +9,7 @@ endif
 
 
 libdynclampsim_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -26,6 +27,7 @@ libdynclampsim_la_LDFLAGS = \
 libdynclampsim_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(COMEDI_LIBS) \
@@ -47,6 +49,7 @@ libdynclampsim_la_include_HEADERS = \
 
 
 librtaicomedidynclamp_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -66,6 +69,7 @@ librtaicomedidynclamp_la_LDFLAGS = \
 librtaicomedidynclamp_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/plugins/linuxdevices/comedi/src/libcomedistreaming.la \

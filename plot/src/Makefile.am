@@ -7,8 +7,9 @@ lib_LTLIBRARIES = \
 
 if RELACS_TOP_BUILD
 librelacsplot_la_CPPFLAGS = \
-    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
@@ -24,15 +25,17 @@ librelacsplot_la_LDFLAGS = \
 
 if RELACS_TOP_BUILD
 librelacsplot_la_LIBADD = \
-    ../../daq/src/librelacsdaq.la \
+    ../../shapes/src/librelacsshapes.la \
     ../../numerics/src/librelacsnumerics.la \
+    ../../daq/src/librelacsdaq.la \
     ../../options/src/librelacsoptions.la \
     $(QT4_LIBS) \
     $(MATH_LIBS)
 else
 librelacsplot_la_LIBADD = \
-    -lrelacsdaq \
+    -lrelacsshapes \
     -lrelacsnumerics \
+    -lrelacsdaq \
     -lrelacsoptions \
     $(QT4_LIBS) \
     $(MATH_LIBS)

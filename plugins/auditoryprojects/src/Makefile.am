@@ -13,6 +13,7 @@ pluginlib_LTLIBRARIES = \
 
 
 libauditoryprojectsspikeprecision_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -35,11 +36,12 @@ libauditoryprojectsspikeprecision_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -54,6 +56,7 @@ libauditoryprojectsspikeprecision_la_include_HEADERS = $(HEADER_PATH)/spikepreci
 
 
 libauditoryprojectsisoresponse_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -76,11 +79,12 @@ libauditoryprojectsisoresponse_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -95,6 +99,7 @@ libauditoryprojectsisoresponse_la_include_HEADERS = $(HEADER_PATH)/isoresponse.h
 
 
 libauditoryprojectsoneclick_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -117,11 +122,12 @@ libauditoryprojectsoneclick_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../acoustic/src/libacousticloudspeaker.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -135,6 +141,7 @@ libauditoryprojectsoneclick_la_include_HEADERS = $(HEADER_PATH)/oneclick.h
 
 
 libauditoryprojectsfiphaselocking_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -157,11 +164,12 @@ libauditoryprojectsfiphaselocking_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -176,6 +184,7 @@ libauditoryprojectsfiphaselocking_la_include_HEADERS = $(HEADER_PATH)/fiphaseloc
 
 
 libauditoryprojectsmothasongs_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -198,11 +207,12 @@ libauditoryprojectsmothasongs_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 

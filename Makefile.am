@@ -5,9 +5,10 @@ man_MANS = doc/relacs.1
 
 SUBDIRS = \
     numerics \
-    daq \
+    shapes \
     options \
     datafile \
+    daq \
     widgets \
     plot \
     \

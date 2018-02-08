@@ -9,11 +9,11 @@ noinst_PROGRAMS = \
 
 AM_CPPFLAGS = \
     -I$(srcdir)/../include \
-    -I$(srcdir)/../../daq/include
+    -I$(srcdir)/../../shapes/include
 
 LDADD = \
     ../src/librelacsoptions.la \
-    ../../daq/src/librelacsdaq.la
+    ../../shapes/src/librelacsshapes.la
 
 
 xoptions_SOURCES = xoptions.cc

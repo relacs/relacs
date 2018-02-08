@@ -25,6 +25,7 @@ pluginlib_LTLIBRARIES = \
 
 
 librelacsspikingneuron_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/options/include \
     -I$(srcdir)/../include
@@ -32,8 +33,9 @@ librelacsspikingneuron_la_CPPFLAGS = \
 librelacsspikingneuron_la_LDFLAGS = -version-info=0:0:0
 
 librelacsspikingneuron_la_LIBADD = \
+    $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/options/src/librelacsoptions.la
+    $(top_builddir)/shapes/src/librelacsshapes.la
 
 librelacsspikingneuron_la_SOURCES = spikingneuron.cc
 
@@ -44,6 +46,7 @@ librelacsspikingneuron_la_include_HEADERS = ../include/relacs/spikingneuron.h
 
 
 libephystraces_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -58,10 +61,11 @@ libephystraces_la_LDFLAGS = \
 
 libephystraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libephystraces_la_SOURCES = traces.cc
@@ -74,6 +78,7 @@ libephystraces_la_include_HEADERS = $(HEADER_PATH)/traces.h
 
 
 libephysneuronmodels_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -89,10 +94,11 @@ libephysneuronmodels_la_LDFLAGS = \
 libephysneuronmodels_la_LIBADD = \
     librelacsspikingneuron.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libephysneuronmodels_la_SOURCES = neuronmodels.cc
@@ -104,6 +110,7 @@ libephysneuronmodels_la_include_HEADERS = $(HEADER_PATH)/neuronmodels.h
 
 
 libephysintraspikedetector_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -120,12 +127,13 @@ libephysintraspikedetector_la_LDFLAGS = \
 
 libephysintraspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysintraspikedetector_la_OBJECTS) : moc_intraspikedetector.cc
@@ -139,6 +147,7 @@ libephysintraspikedetector_la_include_HEADERS = $(HEADER_PATH)/intraspikedetecto
 
 
 libephysdynamicsuspikedetector_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -155,12 +164,13 @@ libephysdynamicsuspikedetector_la_LDFLAGS = \
 
 libephysdynamicsuspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysdynamicsuspikedetector_la_OBJECTS) : moc_dynamicsuspikedetector.cc
@@ -174,6 +184,7 @@ libephysdynamicsuspikedetector_la_include_HEADERS = $(HEADER_PATH)/dynamicsuspik
 
 
 libephysthresholdsuspikedetector_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -190,12 +201,13 @@ libephysthresholdsuspikedetector_la_LDFLAGS = \
 
 libephysthresholdsuspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysthresholdsuspikedetector_la_OBJECTS) : moc_thresholdsuspikedetector.cc
@@ -209,6 +221,7 @@ libephysthresholdsuspikedetector_la_include_HEADERS = $(HEADER_PATH)/thresholdsu
 
 
 libephysmotorcontrol_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -223,11 +236,13 @@ libephysmotorcontrol_la_LDFLAGS = \
 
 libephysmotorcontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysmotorcontrol_la_OBJECTS) : moc_motorcontrol.cc
@@ -241,6 +256,7 @@ libephysmotorcontrol_la_include_HEADERS = $(HEADER_PATH)/motorcontrol.h
 
 
 libephysamplifiercontrol_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -260,12 +276,13 @@ libephysamplifiercontrol_la_LIBADD = \
     $(builddir)/libephystraces.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysamplifiercontrol_la_OBJECTS) : moc_amplifiercontrol.cc
@@ -280,6 +297,7 @@ libephysamplifiercontrol_la_include_HEADERS = $(HEADER_PATH)/amplifiercontrol.h
 
 
 libephyscapacitycompensation_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -297,12 +315,13 @@ libephyscapacitycompensation_la_LDFLAGS = \
 libephyscapacitycompensation_la_LIBADD = \
     $(builddir)/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephyscapacitycompensation_la_OBJECTS) : moc_capacitycompensation.cc
@@ -316,6 +335,7 @@ libephyscapacitycompensation_la_include_HEADERS = $(HEADER_PATH)/capacitycompens
 
 
 libephysbridgetest_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -333,12 +353,13 @@ libephysbridgetest_la_LDFLAGS = \
 libephysbridgetest_la_LIBADD = \
     $(builddir)/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysbridgetest_la_OBJECTS) : moc_bridgetest.cc
@@ -352,6 +373,7 @@ libephysbridgetest_la_include_HEADERS = $(HEADER_PATH)/bridgetest.h
 
 
 libephysiontophoresis_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -369,12 +391,13 @@ libephysiontophoresis_la_LDFLAGS = \
 libephysiontophoresis_la_LIBADD = \
     $(builddir)/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysiontophoresis_la_OBJECTS) : moc_iontophoresis.cc
@@ -388,6 +411,7 @@ libephysiontophoresis_la_include_HEADERS = $(HEADER_PATH)/iontophoresis.h
 
 
 libephyssetleak_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -404,12 +428,13 @@ libephyssetleak_la_LDFLAGS = \
 
 libephyssetleak_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephyssetleak_la_OBJECTS) : moc_setleak.cc
@@ -423,6 +448,7 @@ libephyssetleak_la_include_HEADERS = $(HEADER_PATH)/setleak.h
 
 
 libephyssetvgate_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -439,12 +465,13 @@ libephyssetvgate_la_LDFLAGS = \
 
 libephyssetvgate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephyssetvgate_la_OBJECTS) : moc_setvgate.cc
@@ -458,6 +485,7 @@ libephyssetvgate_la_include_HEADERS = $(HEADER_PATH)/setvgate.h
 
 
 libephyscalibratesyncpulse_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -477,12 +505,13 @@ libephyscalibratesyncpulse_la_LIBADD = \
     $(builddir)/libephystraces.la \
     $(builddir)/libephysamplifiercontrol.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephyscalibratesyncpulse_la_OBJECTS) : moc_calibratesyncpulse.cc

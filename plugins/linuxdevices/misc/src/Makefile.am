@@ -20,6 +20,7 @@ endif
 
 
 libmiscamplmode_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -37,8 +38,10 @@ libmiscamplmode_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
 
 libmiscamplmode_la_SOURCES = amplmode.cc amplmodedevice.cc
 
@@ -49,6 +52,7 @@ libmiscamplmode_la_include_HEADERS = $(HEADER_PATH)/amplmode.h
 
 
 libmiscmirob_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -66,6 +70,7 @@ libmiscmirob_la_LDFLAGS = \
 libmiscmirob_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(TML_LIBS) \
     $(QT4_LIBS) $(NIX_LIBS)
@@ -79,6 +84,7 @@ libmiscmirob_la_include_HEADERS = $(HEADER_PATH)/mirob.h
 
 
 libmiscxyzrobot_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -96,6 +102,7 @@ libmiscxyzrobot_la_LDFLAGS = \
 libmiscxyzrobot_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/relacs/src/librelacs.la \
     libmiscmirob.la \
     $(TML_LIBS) \
@@ -110,6 +117,7 @@ libmiscxyzrobot_la_include_HEADERS = $(HEADER_PATH)/xyzrobot.h
 
 
 libmiscopencvcamera_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -128,6 +136,7 @@ libmiscopencvcamera_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
@@ -142,6 +151,7 @@ libmiscopencvcamera_la_include_HEADERS = $(HEADER_PATH)/opencvcamera.h
 
 
 libmiscopencvstereocamera_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -161,6 +171,7 @@ libmiscopencvstereocamera_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsdshapes.la \
     $(QT4_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
@@ -174,6 +185,7 @@ libmiscopencvstereocamera_la_include_HEADERS = $(HEADER_PATH)/opencvstereocamera
 
 
 libmisckleindiek_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -189,6 +201,7 @@ libmisckleindiek_la_LDFLAGS = \
 libmisckleindiek_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
@@ -203,6 +216,7 @@ libmisckleindiek_la_include_HEADERS = $(HEADER_PATH)/kleindiek.h
 
 libmisctempdtm5080_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
@@ -218,6 +232,7 @@ libmisctempdtm5080_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 

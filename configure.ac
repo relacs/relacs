@@ -169,6 +169,7 @@ RELACS_DOCBOOK()
 # list of libraries that should go 
 # into the main documentation:
 RELACS_DOCLIBS="\
+shapes \
 daq \
 datafile \
 plot \
@@ -316,6 +317,10 @@ AC_CONFIG_FILES([
     numerics/Makefile
     numerics/src/Makefile
     numerics/examples/Makefile
+    
+    shapes/configure.ac
+    shapes/Makefile
+    shapes/src/Makefile
     
     daq/configure.ac
     daq/Makefile
