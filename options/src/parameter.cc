@@ -164,6 +164,7 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
 Parameter::Parameter( const string &name, const string &request,  
 		      const Point &p, double minimum,
 		      double maximum, double step,
@@ -188,6 +189,7 @@ Parameter::Parameter( const string &name, const string &request,
   setStyle( style );
   Warning = e;
 }
+#endif
 
 
 Parameter::Parameter( const string &name, const string &request,
@@ -1938,6 +1940,7 @@ Parameter &Parameter::addNumber( const Str &s, const string &unit )
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
 Point Parameter::point( const string &unit ) const
 {
   Warning = "";
@@ -2011,6 +2014,7 @@ Parameter &Parameter::setDefaultPoint( const Point &p, const string &unit )
     addDefaultNumber( p[k], unit );
   return *this;
 }
+#endif
 
 
 bool Parameter::isInteger( void ) const

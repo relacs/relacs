@@ -20,7 +20,6 @@
 */
 
 #include <cmath>
-#include <relacs/str.h>
 #include <relacs/shape.h>
 
 namespace relacs {
@@ -642,7 +641,7 @@ void Sphere::intersectionPointsShape( const Point &pos1, const Point &pos2,
 ostream &Sphere::print( ostream &str ) const
 {
   str << "Sphere \"" << name() << "\" at " << trans()
-      << " with radius " << Str( radius(), 0, 3, 'f' ) << '\n';
+      << " with radius " << radius() << '\n';
   return str;
 }
 
@@ -844,8 +843,8 @@ void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
 ostream &Cylinder::print( ostream &str ) const
 {
   str << "Cylinder \"" << name() << "\" at " << trans()
-      << " with length " << Str( length(), 0, 3, 'f' )
-      << " and radius " << Str( radius(), 0, 3, 'f' ) << '\n';
+      << " with length " << length()
+      << " and radius " << radius() << '\n';
   return str;
 }
 
@@ -1018,9 +1017,9 @@ void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
 ostream &Cuboid::print( ostream &str ) const
 {
   str << "Cuboid \"" << name() << "\" at " << trans()
-      << " with size " << Str( length(), 0, 3, 'f' ) << ", "
-      << Str( width(), 0, 3, 'f' ) << ", "
-      << Str( height(), 0, 3, 'f' ) << '\n';
+      << " with size " << length() << ", "
+      << width() << ", "
+      << height() << '\n';
   return str;
 }
 

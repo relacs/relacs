@@ -138,17 +138,27 @@ AM_CONDITIONAL(RELACS_COND_OPENCV,[test "$RELACS_OPENCV" != no])
 
 
 #################################################
+## NIX IO Library
+#################################################
+RELACS_LIB_NIX()
+AM_CONDITIONAL(RELACS_COND_NIX, [test "$RELACS_NIX" != no])
+
+
+#################################################
+## RELACSSHAPES (for Str, Options)
+#################################################
+DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSSHAPES"
+AC_DEFINE([HAVE_LIBRELACSSHAPES], [1],
+ [Define if relacs shapes library exists.])
+
+
+#################################################
 ## RELACSDAQ (for Plot)
 #################################################
 DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSDAQ"
 AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
  [Define if relacs daq library exists.])
 
-#################################################
-## NIX IO Library
-#################################################
-RELACS_LIB_NIX()
-AM_CONDITIONAL(RELACS_COND_NIX, [test "$RELACS_NIX" != no])
 
 #################################################
 ## Examples

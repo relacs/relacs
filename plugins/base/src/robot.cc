@@ -209,7 +209,7 @@ void Robot::resetRobot( void ) {
 void Robot::storePos( void ) {
   this->customPosition = robot->pos();
   ReturnToPositionButton->setEnabled( true );
-  setText("CustomPosition", this->customPosition.toString() );
+  setPoint("CustomPosition", this->customPosition );
 }
 
 

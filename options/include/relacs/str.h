@@ -26,6 +26,9 @@
 #include <vector>
 #include <ctime>
 #include <cstdlib>
+#ifdef HAVE_LIBRELACSSHAPES
+#include <relacs/point.h>
+#endif
 using namespace std;
 
 namespace relacs {
@@ -118,6 +121,13 @@ public:
         otherwise the resulting string is left justified. */
   Str( bool b, int width=Width, char format=BoolFormat, 
        char pad=Pad );
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Convert each coordinate of point \a p into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
+  Str( const Point &p, int width=Width, int precision=Precision, 
+       char format=DoubleFormat, char pad=Pad );
+#endif
 
     /*! Constructs a string containing \a s according to the
         C-printf-style format string \a format. */
@@ -152,6 +162,11 @@ public:
     /*! Converts \a val to this string according to the
         C-printf-style format string \a format. */
   Str( long long val, const char *format );
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Convert each coordinate of \a p to this string according to the
+        C-printf-style format string \a format. */
+  Str( const Point &p, const char *format );
+#endif
 
     /*! Constructs a string containing \a s according to the
         C-printf-style format string \a format. */
@@ -186,6 +201,11 @@ public:
     /*! Converts \a val to this string according to the
         C-printf-style format string \a format. */
   Str( long long val, const string &format );
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Convert each coordinate of \a p to this string according to the
+        C-printf-style format string \a format. */
+  Str( const Point &p, const string &format );
+#endif
 
   // assign:
     /*! Assign \a s to \a this. */
@@ -253,6 +273,13 @@ public:
         otherwise the resulting string is left justified. */
   const Str &assign( bool b, int width=Width, char format=BoolFormat, 
 		     char pad=Pad );
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Convert each coordinate of \a p into a string of size \a width
+        and assign it to \a this.  If \a width is positive, the number
+        is right justified, otherwise the number is left justified. */
+  const Str &assign( const Point &p, int width=Width, int precision=Precision, 
+		     char format=DoubleFormat, char pad=Pad );
+#endif
 
     /*! Assigns a string containing \a s according to the
         C-printf-style format string \a format to \a this. */
@@ -287,6 +314,11 @@ public:
     /*! Converts \a val to a string according to the C-printf-style format
         string \a format and assign it to \a this. */
   const Str &assign( long long val, const char *format );
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Convert each coordinate of \a p to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( const Point &p, const char *format );
+#endif
 
     /*! Assigns a string containing \a s according to the
         C-printf-style format string \a format to \a this. */
@@ -321,6 +353,11 @@ public:
     /*! Converts \a val to a string according to the C-printf-style format
         string \a format and assign it to \a this. */
   const Str &assign( long long val, const string &format );
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Convert each coordinate of \a p to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( const Point &p, const string &format );
+#endif
 
   const Str &append( const string &s, int width=Width, char pad=Pad );
   const Str &append( const char *s, int width=Width, char pad=Pad );
@@ -336,6 +373,10 @@ public:
   const Str &append( long long val, int width=Width, char pad=Pad );
   const Str &append( bool b, int width=Width, char format=BoolFormat, 
 		     char pad=Pad );
+#ifdef HAVE_LIBRELACSSHAPES
+  const Str &append( const Point &p, int width=Width, int precision=Precision, 
+		     char format=DoubleFormat, char pad=Pad );
+#endif
 
   const Str &append( const string &s, const char *format );
   const Str &append( const char *s, const char *format )
@@ -358,6 +399,10 @@ public:
     { Construct( long( val ), format, true ); return *this; };
   const Str &append( long long val, const char *format )
     { Construct( val, format, true ); return *this; };
+#ifdef HAVE_LIBRELACSSHAPES
+  const Str &append( const Point &p, const char *format )
+    { Construct( p, format, true ); return *this; };
+#endif
 
   const Str &append( const string &s, const string &format );
   const Str &append( const char *s, const string &format )
@@ -380,6 +425,10 @@ public:
     { Construct( long( val ), format, true ); return *this; };
   const Str &append( long long val, const string &format )
     { Construct( val, format, true ); return *this; };
+#ifdef HAVE_LIBRELACSSHAPES
+  const Str &append( const Point &p, const string &format )
+    { Construct( p, format, true ); return *this; };
+#endif
 
 
     /*! The size of the string, i.e. the number of characters it contains. */
@@ -553,6 +602,18 @@ public:
   Str unit( const string &dflt="", int index=0, int *next=0,
 	    const string &space=Space ) const;
 
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Returns the three point coordinates read from the string.
+        The number may be preceeded by white space and a single opening bracket.
+        If there is no number or an error occured during conversion,
+        \a dflt is returned and \a next is set to \a index.
+        Search for coordinates is started at the \a index -th character.
+        The index of the character following the coordinates is retuned in \a next
+        if \a next is not 0. */
+  Point point( const Point &dflt=Point::None, int index=0, int *next=0,
+	       const string &space=Space ) const;
+#endif
+
     /*! Returns the stripped() string befor the first occurence of one
         of the characters specified in \a a after position \a index. */
   Str ident( int index=0, const string &a=":=",
@@ -639,6 +700,14 @@ public:
 	ident() is used for searching. */
   Str unit( const string &search, const string &dflt="",
 	    const string &space=Space ) const;
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Returns the three point coordinates following the first ':' or '='
+	after the found search string \a search
+	or \a dflt if \a search wasn't found or there aren't any point coordinates.
+	ident() is used for searching. */
+  Point point( const string &search, const Point &dflt=Point::None,
+	       const string &space=Space ) const;
+#endif
 
   // range:
     /*! Extracts a list of integer numbers from the content of the string.
@@ -1335,6 +1404,10 @@ private:
   void Construct( long long val, int width, char pad, bool append=false );
   void Construct( bool b, int width, char format, 
 		  char pad, bool append=false );
+#ifdef HAVE_LIBRELACSSHAPES
+  void Construct( const Point &p, int width, int precision, char format, 
+		  char pad, bool append=false );
+#endif
 
   void Construct( const string &s, const char *format, bool append=false );
   void Construct( const char *s, const char *format, bool append=false );
@@ -1342,6 +1415,9 @@ private:
   void Construct( double val, const char *format, bool append=false );
   void Construct( long val, const char *format, bool append=false );
   void Construct( long long val, const char *format, bool append=false );
+#ifdef HAVE_LIBRELACSSHAPES
+  void Construct( const Point &p, const char *format, bool append=false );
+#endif
 
   void Construct( const string &s, const string &format, bool append=false );
   void Construct( const char *s, const string &format, bool append=false );
@@ -1349,7 +1425,9 @@ private:
   void Construct( double val, const string &format, bool append=false );
   void Construct( long val, const string &format, bool append=false );
   void Construct( long long val, const string &format, bool append=false );
-
+#ifdef HAVE_LIBRELACSSHAPES
+  void Construct( const Point &p, const string &format, bool append=false );
+#endif
   void ReadFormat( const char *format, int &width, int &findex );
 };
 

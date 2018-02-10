@@ -31,7 +31,9 @@
 #include <vector>
 #include <deque>
 #include <set>
+#ifdef HAVE_LIBRELACSSHAPES
 #include <relacs/point.h>
+#endif
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 using namespace std;
@@ -162,6 +164,7 @@ public:
 	     const string &internunit="", const string &outputunit="", 
 	     const string &format="", int flags=0, int style=0,
 	     Options *parentsection=0 );
+#ifdef HAVE_LIBRELACSSHAPES
     /*! Construct and initialize a single Parameter of type Number
         holding a 3D point, i.e. three coordinates. 
         Its value and its default value are set to \a p.
@@ -175,6 +178,7 @@ public:
 	     const string &internunit="", const string &outputunit="", 
 	     const string &format="", int flags=0, int style=0,
 	     Options *parentsection=0 );
+#endif
     /*! Construct and initialize a single Parameter of type Integer.
         Its value an its default value are set to \a number,
 	its standard deviation to \a error.
@@ -573,6 +577,7 @@ public:
 	then the changedFlag() is set. */
   Parameter &addNumber( const Str &s, const string &unit="" );
 
+#ifdef HAVE_LIBRELACSSHAPES
     /*! Returns the point coordinates in 
         the unit \a unit or in the internal standard unit, 
         if \a unit is an empty string.
@@ -596,6 +601,7 @@ public:
         The default text value is set according to the specified format.
         The warning message is set if \a number is invalid. */
   Parameter &setDefaultPoint( const Point &p, const string &unit="" );
+#endif
   
     /*! True if parameter is of type Integer,
         i.e. its value is a integer number. */

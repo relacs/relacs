@@ -2590,6 +2590,7 @@ Parameter &Options::setDefaultNumber( const string &name, double dflt,
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
 Parameter &Options::addPoint( const string &name, const string &request,
 			      const Point &p, double minimum,
 			      double maximum, double step,
@@ -2718,6 +2719,7 @@ Parameter &Options::setDefaultPoint( const string &name, const Point &p,
     return Dummy;
   }
 }
+#endif
 
 
 double Options::minimum( const string &name, const string &unit ) const

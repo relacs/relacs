@@ -822,6 +822,7 @@ public:
   Parameter &setDefaultNumber( const string &name, double dflt,
 			       const string &unit="" );
 
+#ifdef HAVE_LIBRELACSSHAPES
     /*! Add a new number option holding 3 coordinates at the end of the options list.
         Its request string for the options dialog is set to \a request,
         its name string is set to \a name.
@@ -871,6 +872,7 @@ public:
         with name \a name to \a p. */
   Parameter &setDefaultPoint( const string &name, const Point &p,
 			      const string &unit="" );
+#endif
 
     /*! Return the minimum number of the option
         with name \a name.

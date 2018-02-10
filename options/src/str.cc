@@ -224,6 +224,14 @@ Str::Str( bool b, int width, char format, char pad )
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+Str::Str( const Point &p, int width, int precision, char format, char pad )
+{
+  Construct( p, width, precision, format, pad );
+}
+#endif
+
+
 void Str::Construct( double val, int width, int precision, char format, 
 		     char pad, bool append )
 {
@@ -300,7 +308,7 @@ void Str::Construct( long long val, int width, char pad, bool append )
 
 
 void Str::Construct( bool b, int width, char format, 
-			char pad, bool app )
+		     char pad, bool app )
 {
   string ss;
 
@@ -316,6 +324,22 @@ void Str::Construct( bool b, int width, char format,
   else
     assign( ss, width, pad );
 }
+
+
+#ifdef HAVE_LIBRELACSSHAPES
+void Str::Construct( const Point &p, int width, int precision, char format, 
+		     char pad, bool append )
+{
+  string ss = "(";
+  for ( int k=0; k<3; k++ ) {
+    ss += Str( p[k], width, precision, format, pad );
+    if ( k<2 )
+      ss += ", ";
+  }
+  ss += ")";
+  append ? string::append( ss ) : string::assign( ss );
+}
+#endif
 
 
 ///// char format constructors: //////////////////////////////////////////////
@@ -535,6 +559,21 @@ void Str::Construct( long long val, const char *format, bool append )
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+void Str::Construct( const Point &p, const char *format, bool append )
+{
+  string ss = "(";
+  for ( int k=0; k<3; k++ ) {
+    ss += Str( p[k], format );
+    if ( k<2 )
+      ss += ", ";
+  }
+  ss += ")";
+  append ? string::append( ss ) : string::assign( ss );
+}
+#endif
+
+
 Str::Str( const string &s, const char *format )
 {
   Construct( s, format );
@@ -599,6 +638,14 @@ Str::Str( long long val, const char *format )
 {
   Construct( val, format );
 }
+
+
+#ifdef HAVE_LIBRELACSSHAPES
+Str::Str( const Point &p, const char *format )
+{
+  Construct( p, format );
+}
+#endif
 
 
 ///// string format constructors: ////////////////////////////////////////////
@@ -820,6 +867,21 @@ void Str::Construct( long long val, const string &format, bool append )
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+void Str::Construct( const Point &p, const string &format, bool append )
+{
+  string ss = "(";
+  for ( int k=0; k<3; k++ ) {
+    ss += Str( p[k], format );
+    if ( k<2 )
+      ss += ", ";
+  }
+  ss += ")";
+  append ? string::append( ss ) : string::assign( ss );
+}
+#endif
+
+
 Str::Str( const string &s, const string &format )
 {
   Construct( s, format );
@@ -886,6 +948,14 @@ Str::Str( long long val, const string &format )
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+Str::Str( const Point &p, const string &format )
+{
+  Construct( p, format );
+}
+#endif
+
+
 ///// assignment /////////////////////////////////////////////////////////////
 
 Str &Str::operator=( const string &s )
@@ -931,7 +1001,7 @@ const Str &Str::assign( char c, int len )
 
 
 const Str &Str::assign( double val, int width, int precision, 
-			      char format, char pad )
+			char format, char pad )
 {
   Construct( val, width, precision, format, pad );
   return *this;
@@ -992,6 +1062,16 @@ const Str &Str::assign( bool b, int width, char format, char pad )
   Construct( b, width, format, pad );
   return *this;
 }
+
+
+#ifdef HAVE_LIBRELACSSHAPES
+const Str &Str::assign( const Point &p, int width, int precision, 
+			char format, char pad )
+{
+  Construct( p, width, precision, format, pad );
+  return *this;
+}
+#endif
 
 
 const Str &Str::assign( const string &s, const char *format )
@@ -1074,6 +1154,15 @@ const Str &Str::assign( long long val, const char *format )
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+const Str &Str::assign( const Point &p, const char *format )
+{
+  Construct( p, format );
+  return *this;
+}
+#endif
+
+
 const Str &Str::assign( const string &s, const string &format )
 {
   if ( &s == this )
@@ -1154,6 +1243,15 @@ const Str &Str::assign( long long val, const string &format )
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+const Str &Str::assign( const Point &p, const string &format )
+{
+  Construct( p, format );
+  return *this;
+}
+#endif
+
+
 ///// append //////////////////////////////////////////////////////////
 
 const Str &Str::append( const string &s, int width, char pad )
@@ -1181,7 +1279,7 @@ const Str &Str::append( char c, int len )
 
 
 const Str &Str::append( double val, int width, int precision, 
-			      char format, char pad )
+			char format, char pad )
 {
   Construct( val, width, precision, format, pad, true );
   return *this;
@@ -1243,6 +1341,16 @@ const Str &Str::append( bool b, int width, char format,
   Construct( b, width, format, pad, true );
   return *this;
 }
+
+
+#ifdef HAVE_LIBRELACSSHAPES
+const Str &Str::append( const Point &p, int width, int precision, 
+			char format, char pad )
+{
+  Construct( p, width, precision, format, pad, true );
+  return *this;
+}
+#endif
 
 
 const Str &Str::append( const string &s, const char *format )
@@ -2221,6 +2329,50 @@ Str Str::unit( const string &dflt, int index, int *next,
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+Point Str::point( const Point &dflt, int index, int *next,
+		  const string &space ) const
+{
+  // preset next:
+  if ( next != 0 )
+    *next = index;
+
+  // skip leading white space:
+  int n = findFirstNot( space, index );
+
+  // nothing:
+  if ( n < index )
+    return dflt;
+
+  // bracket?
+  int bi = LeftBracket.find( operator[]( n ) );
+  if ( bi >= 0 )
+    n++;
+
+  Point p;
+  for ( int k=0; k<3; k++ ) {
+    int nnext = n;
+    p[k] = number( 0.0, n, &nnext );
+    if ( nnext - n <= 0 )
+      return dflt;
+    n = nnext + 1;
+  }
+
+  // skip trailing white space:
+  n = findFirstNot( space, n );
+
+  // skip over closing bracket:
+  if ( n >= 0 && n < size() &&
+       bi >= 0 && operator[]( n ) != RightBracket[bi] )
+    n++;
+
+  if ( next != 0 )
+    *next = n;
+  return p;
+}
+#endif
+
+
 ///// read date/time ////////////////////////////////////////////////////////
 
 int Str::date( int &year, int &month, int &day ) const
@@ -2569,6 +2721,20 @@ Str Str::unit( const string &search, const string &dflt,
 
   return unit( dflt, i, 0, space );  
 }
+
+
+#ifdef HAVE_LIBRELACSSHAPES
+Point Str::point( const string &search, const Point &dflt,
+		  const string &space ) const
+{
+  int i = value( search, space );
+
+  if ( i < 0 )
+    return dflt;
+
+  return point( dflt, i, 0, space );  
+}
+#endif
 
 
 Str Str::ident( int index, const string &a,

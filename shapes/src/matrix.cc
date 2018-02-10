@@ -22,7 +22,6 @@
 #include <cmath>
 #include <iomanip>
 #include <relacs/matrix.h>
-#include <relacs/str.h>
 
 
 namespace relacs {
