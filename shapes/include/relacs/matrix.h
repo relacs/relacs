@@ -39,12 +39,30 @@ class Matrix {
 
 public:
 
+    /*! Identity matrix. */
+  static const Matrix Identity;
+    /*! Matrix with all elements zero. */
+  static const Matrix Zeros;
+    /*! Matrix with all elements ones. */
+  static const Matrix Ones;
+
+    /*! Projection matrix that projects onto the x-y plane. */
+  static const Matrix ProjectXY;
+    /*! Projection matrix that projects onto the x-z plane. */
+  static const Matrix ProjectXZ;
+    /*! Projection matrix that projects onto the y-z plane. */
+  static const Matrix ProjectYZ;
+
     /*! Constructor. */
   Matrix( void );
     /*! Copy constructor. */
   Matrix( const Matrix &p );
     /*! A matrix with elements copied from \a m. */
   Matrix( const double m[3][3] );
+    /*! A matrix defined by its elements \a a_i,j. */
+  Matrix( double a11, double a12, double a13,
+	  double a21, double a22, double a23,
+	  double a31, double a32, double a33 );
 
     /*! The element (i, j) of the matrix. */
   double operator()( int i, int j ) const { return Elems[i][j]; }

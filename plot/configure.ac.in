@@ -21,6 +21,15 @@ AC_RELACS_CHECK_MATH()
 
 
 #################################################
+## RELACSSHAPES
+#################################################
+DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSSHAPES"
+AC_DEFINE([HAVE_LIBRELACSSHAPES], [1],
+ [Define if relacs shapes library exists.])
+# XXX needs to be implemented as a test!?
+
+
+#################################################
 ## RELACSDAQ
 #################################################
 DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSDAQ"

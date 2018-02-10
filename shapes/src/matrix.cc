@@ -27,6 +27,30 @@
 namespace relacs {
 
 
+const Matrix Matrix::Identity = Matrix( 1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0 );
+
+const Matrix Matrix::Zeros = Matrix( 0.0, 0.0, 0.0,
+				     0.0, 0.0, 0.0,
+				     0.0, 0.0, 0.0 );
+
+const Matrix Matrix::Ones = Matrix( 1.0, 1.0, 1.0,
+				    1.0, 1.0, 1.0,
+				    1.0, 1.0, 1.0 );
+
+const Matrix Matrix::ProjectXY = Matrix( 1.0, 0.0, 0.0,
+					 0.0, 1.0, 0.0,
+					 0.0, 0.0, 0.0 );
+  
+const Matrix Matrix::ProjectXZ = Matrix( 1.0, 0.0, 0.0,
+					 0.0, 0.0, 1.0,
+					 0.0, 0.0, 0.0 );
+  
+const Matrix Matrix::ProjectYZ = Matrix( 0.0, 0.0, 1.0,
+					 0.0, 1.0, 0.0,
+					 0.0, 0.0, 0.0 );
+
 Matrix::Matrix( void )
 {
   // identity matrix:
@@ -56,6 +80,21 @@ Matrix::Matrix( const double m[3][3] )
     for ( int j=0; j<3; j++ )
       Elems[i][j] = m[i][j];
   }
+}
+
+Matrix::Matrix( double a11, double a12, double a13,
+		double a21, double a22, double a23,
+		double a31, double a32, double a33 )
+{
+  Elems[0][0] = a11;
+  Elems[0][1] = a12;
+  Elems[0][2] = a13;
+  Elems[1][0] = a21;
+  Elems[1][1] = a22;
+  Elems[1][2] = a23;
+  Elems[2][0] = a31;
+  Elems[2][1] = a32;
+  Elems[2][2] = a33;
 }
 
 

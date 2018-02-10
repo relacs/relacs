@@ -5301,6 +5301,41 @@ int Plot::plot( const SampleData<SampleDataD> &data, double xscale, int gradient
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+void Plot::addCuboidSide( const deque< Point > &pts, const int idx[], int n,
+			  const Matrix &proj, const LineStyle &line )
+{
+  MapD m;
+  for ( int k=0; k<n; k++ ) {
+    Point p = proj * pts[idx[k]];
+    m.push( p.x(), p.y() );
+  }
+  VectorElement< ArrayD, ArrayD > *DE = 
+    new VectorElement< ArrayD, ArrayD >( m.x(), m.y(),
+					 1.0, Keep == Copy );
+  DE->setLine( line );
+  addData( DE );
+}
+
+
+int Plot::plot( const Cuboid &cbd, const Matrix &proj, const LineStyle &line )
+{
+  deque< Point > pts;
+  cbd.corners( pts );
+  int idxs1[5] = { 0, 1, 2, 3, 0 };
+  addCuboidSide( pts, idxs1, 5, proj, line );
+  int idxs2[5] = { 4, 5, 6, 7, 4 };
+  addCuboidSide( pts, idxs2, 5, proj, line );
+  int idxs3[2];
+  for ( int k=0; k<4; k++ ) {
+    idxs3[0] = k;
+    idxs3[1] = k+4;
+    addCuboidSide( pts, idxs3, 2, proj, line );
+  }
+  return 0;
+}
+#endif
+
 void Plot::clearData( void )
 {
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )

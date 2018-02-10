@@ -431,6 +431,13 @@ class Cuboid : public Shape
     /*! Returns a pointer to a copy of the cuboid. */
   virtual Shape *copy( void ) const;
 
+    /*! Return in \a pts the corners of the cuboid transformed
+        according to \a trafo and \a trans. */
+  void corners( deque< Point > &pts,
+		const Matrix &trafo, const Point &trans ) const;
+    /*! Return in \a pts the corners of the cuboid in world coordinates. */
+  void corners( deque< Point > &pts ) const;
+
     /*! The length of the cuboid in world coordinates. */
   double length( void ) const;
     /*! The width of the cuboid in world coordinates. */

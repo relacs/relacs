@@ -42,6 +42,11 @@
 #include <relacs/indata.h>
 #endif
 
+#ifdef HAVE_LIBRELACSSHAPES
+#include <relacs/matrix.h>
+#include <relacs/shape.h>
+#endif
+
 namespace relacs {
 
 
@@ -56,8 +61,6 @@ namespace relacs {
 \todo logarithmic axis
 \todo add axis as an own plot object in addition to border
 \todo more colors and gradients (index is index to either a color, a gradient? or a picture!
-\todo matrix plot (contour colors)
-\todo create an update command to redraw shifted data.
 */
 
 
@@ -912,6 +915,14 @@ public:
   const DataElement &front( void ) const { return *PData.front(); };
 
   int plot( const SampleData<SampleDataD> &data, double xscale, int gradient=0 );
+
+#ifdef HAVE_LIBRELACSSHAPES
+  void addCuboidSide( const deque< Point > &pts, const int idx[], int n,
+		      const Matrix &proj, const LineStyle &line );
+    /*! Plot the Cuboid \a cbd using the projection matrix \a proj.
+        The projection matrix transforms 3-D points to (x, y) points.  */
+  int plot( const Cuboid &cbd, const Matrix &proj, const LineStyle &line );
+#endif
 
     /*! Remove all 2-D plot data from the plot. */
   void clearData( void );

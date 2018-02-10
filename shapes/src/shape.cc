@@ -901,6 +901,27 @@ Shape *Cuboid::copy( void ) const
 }
 
 
+void Cuboid::corners( deque< Point > &pts,
+		      const Matrix &trafo, const Point &trans ) const
+{
+  pts.clear();
+  pts.push_back( trafo*Point::Origin+trans );
+  pts.push_back( trafo*Point::UnitX+trans );
+  pts.push_back( trafo*(Point::UnitX+Point::UnitY)+trans );
+  pts.push_back( trafo*Point::UnitY+trans );
+  pts.push_back( trafo*Point::UnitZ+trans );
+  pts.push_back( trafo*(Point::UnitX+Point::UnitZ)+trans );
+  pts.push_back( trafo*Point::Ones+trans );
+  pts.push_back( trafo*(Point::UnitY+Point::UnitZ)+trans );
+}
+
+
+void Cuboid::corners( deque< Point > &pts ) const
+{
+  corners( pts, trafo(), trans() );
+}
+
+
 double Cuboid::length( void ) const
 {
   Point p0 = transform( Point::Origin );
@@ -928,14 +949,7 @@ double Cuboid::height( void ) const
 Point Cuboid::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
 {
   deque<Point> pts;
-  pts.push_back( trafo*Point::Origin+trans );
-  pts.push_back( trafo*Point::UnitX+trans );
-  pts.push_back( trafo*Point::UnitY+trans );
-  pts.push_back( trafo*Point::UnitZ+trans );
-  pts.push_back( trafo*(Point::UnitX+Point::UnitY)+trans );
-  pts.push_back( trafo*(Point::UnitX+Point::UnitZ)+trans );
-  pts.push_back( trafo*(Point::UnitY+Point::UnitZ)+trans );
-  pts.push_back( trafo*Point::Ones+trans );
+  corners( pts, trafo, trans );
   return min( pts );
 }
 
@@ -943,14 +957,7 @@ Point Cuboid::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
 Point Cuboid::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
 {
   deque<Point> pts;
-  pts.push_back( trafo*Point::Origin+trans );
-  pts.push_back( trafo*Point::UnitX+trans );
-  pts.push_back( trafo*Point::UnitY+trans );
-  pts.push_back( trafo*Point::UnitZ+trans );
-  pts.push_back( trafo*(Point::UnitX+Point::UnitY)+trans );
-  pts.push_back( trafo*(Point::UnitX+Point::UnitZ)+trans );
-  pts.push_back( trafo*(Point::UnitY+Point::UnitZ)+trans );
-  pts.push_back( trafo*Point::Ones+trans );
+  corners( pts, trafo, trans );
   return max( pts );
 }
 
