@@ -5487,6 +5487,7 @@ void Plot::ShapeElement::yminmax( double xmin, double xmax, double &ymin, double
 
 int Plot::addShape( ShapeElement *s )
 {
+  // XXX if normal vector points to the viewer, then add!
   NewData = true;
   ShapeData.push_back( s );
   return ShapeData.size() - 1;
@@ -5578,6 +5579,51 @@ int Plot::plot( const Cylinder &clnd, const Transform &proj, const LineStyle &li
     SE = new ShapeElement( xr, yr );
     SE->setLine( l );
     addShape( SE );
+  }
+  return 0;
+}
+
+
+int Plot::plot( const Sphere &sphr, const Transform &proj, const LineStyle &line )
+{
+  int m = 10;
+  int n = 20;
+  for ( int j=0; j<m; j++ ) {
+    for ( int k=0; k<n; k++ ) {
+      vector<double> xr;
+      vector<double> yr;
+      double ck0 = ::cos( 2.0*M_PI*k/n );
+      double sk0 = ::sin( 2.0*M_PI*k/n );
+      double ck1 = ::cos( 2.0*M_PI*(k+1)/n );
+      double sk1 = ::sin( 2.0*M_PI*(k+1)/n );
+      double cj0 = ::cos( (1.0*j/m-0.5)*M_PI );
+      double sj0 = ::sin( (1.0*j/m-0.5)*M_PI );
+      double cj1 = ::cos( (1.0*(j+1)/m-0.5)*M_PI );
+      double sj1 = ::sin( (1.0*(j+1)/m-0.5)*M_PI );
+      Point p = Point( ck0*cj0, sk0*cj0, sj0 );
+      Point q = proj * sphr.trafo() * p;
+      q.homDivide();
+      xr.push_back( q.x() );
+      yr.push_back( q.y() );
+      p = Point( ck1*cj0, sk1*cj0, sj0 );
+      q = proj * sphr.trafo() * p;
+      q.homDivide();
+      xr.push_back( q.x() );
+      yr.push_back( q.y() );
+      p = Point( ck1*cj1, sk1*cj1, sj1 );
+      q = proj * sphr.trafo() * p;
+      q.homDivide();
+      xr.push_back( q.x() );
+      yr.push_back( q.y() );
+      p = Point( ck0*cj1, sk0*cj1, sj1 );
+      q = proj * sphr.trafo() * p;
+      q.homDivide();
+      xr.push_back( q.x() );
+      yr.push_back( q.y() );
+      ShapeElement *SE = new ShapeElement( xr, yr );
+      SE->setLine( line );
+      addShape( SE );
+    }
   }
   return 0;
 }

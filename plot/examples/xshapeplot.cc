@@ -92,6 +92,22 @@ void PlotShapes::update( void )
   clnd.rotateX( C );
   clnd.translateX( 2.0 * ::sin(X) );
 
+  Sphere sphr1;
+  sphr1.scale( 0.5 );
+  sphr1.translateY( 1.5 );
+  sphr1.rotateZ( A );
+  sphr1.rotateY( B );
+  sphr1.rotateX( C );
+  sphr1.translateX( 2.0 * ::sin(X) );
+
+  Sphere sphr2;
+  sphr2.scale( 0.5, 1.0, 0.5 );
+  sphr2.translateZ( 1.5 );
+  sphr2.rotateZ( A );
+  sphr2.rotateY( B );
+  sphr2.rotateX( C );
+  sphr2.translateX( 2.0 * ::sin(X) );
+
   Transform projxy = Transform::ProjectXY;
   projxy(3, 2) = 0.2;
 
@@ -102,10 +118,14 @@ void PlotShapes::update( void )
   (*this)[0].plot( cbd1, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   (*this)[0].plot( cbd2, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   (*this)[0].plot( clnd, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[0].plot( sphr1, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[0].plot( sphr2, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   (*this)[1].clearShapes();
   (*this)[1].plot( cbd1, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   (*this)[1].plot( cbd2, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   (*this)[1].plot( clnd, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[1].plot( sphr1, projxz, Plot::LineStyle( Plot::Red, 0, Plot::Solid ) );
+  (*this)[1].plot( sphr2, projxz, Plot::LineStyle( Plot::Red, 0, Plot::Solid ) );
   draw();
 }
 

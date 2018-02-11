@@ -973,6 +973,9 @@ public:
     /*! Plot the Cylinder \a clnd using the projection matrix \a proj.
         The projection matrix transforms 3-D points to (x, y) points.  */
   int plot( const Cylinder &clnd, const Transform &proj, const LineStyle &line );
+    /*! Plot the Sphere \a sphr using the projection matrix \a proj.
+        The projection matrix transforms 3-D points to (x, y) points.  */
+  int plot( const Sphere &sphere, const Transform &proj, const LineStyle &line );
 #endif
 
     /*! Remove all 2-D plot data from the plot. */
