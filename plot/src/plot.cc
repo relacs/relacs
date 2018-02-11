@@ -1496,6 +1496,27 @@ void Plot::initXRange( int axis )
       ymin[k] = YMinRange[k] >= AnyScale ? -MAXDOUBLE : YMinRange[k];
       ymax[k] = YMaxRange[k] >= AnyScale ? MAXDOUBLE : YMaxRange[k];
     }
+    ShapeDataType::iterator sd;
+    for ( sd = ShapeData.begin(); sd != ShapeData.end(); ++sd ) {
+      if ( (*sd)->XAxis == axis ) {
+	double nxmin, nxmax;
+	(*sd)->xminmax( nxmin, nxmax, ymin[(*sd)->YAxis], ymax[(*sd)->YAxis] );
+	if ( nxmin < AnyScale && nxmax < AnyScale ) {
+	  xmin = nxmin;
+	  xmax = nxmax;
+	  for ( ++sd; sd != ShapeData.end(); ++sd ) {
+	    if ( (*sd)->XAxis == axis ) {
+	      (*sd)->xminmax( nxmin, nxmax, ymin[(*sd)->YAxis], ymax[(*sd)->YAxis] );
+	      if ( nxmin < AnyScale && nxmin < xmin )
+		xmin = nxmin;
+	      if ( nxmax < AnyScale && nxmax > xmax )
+		xmax = nxmax;
+	    }
+	  }
+	  break;
+	}
+      }
+    }
     PDataType::iterator d;
     for ( d = PData.begin(); d != PData.end(); ++d ) {
       if ( (*d)->XAxis == axis ) {
@@ -1586,6 +1607,27 @@ void Plot::initYRange( int axis )
     // xmin and xmax has been already set by initXRange()!
     double ymin = YMinFB[axis];
     double ymax = YMaxFB[axis];
+    ShapeDataType::iterator sd;
+    for ( sd = ShapeData.begin(); sd != ShapeData.end(); ++sd ) {
+      if ( (*sd)->YAxis == axis ) {
+	double nymin, nymax;
+	(*sd)->yminmax( XMin[(*sd)->XAxis], XMax[(*sd)->XAxis], nymin, nymax );
+	if ( nymin < AnyScale && nymax < AnyScale ) {
+	  ymin = nymin;
+	  ymax = nymax;
+	  for ( ++sd; sd != ShapeData.end(); ++sd ) {
+	    if ( (*sd)->YAxis == axis ) {
+	      (*sd)->yminmax( XMin[(*sd)->XAxis], XMax[(*sd)->XAxis], nymin, nymax );
+	      if ( nymin < AnyScale && nymin < ymin )
+		ymin = nymin;
+	      if ( nymax < AnyScale && nymax > ymax )
+		ymax = nymax;
+	    }
+	  }
+	  break;
+	}
+      }
+    }
     PDataType::iterator d;
     for ( d = PData.begin(); d != PData.end(); ++d ) {
       if ( (*d)->YAxis == axis ) {
@@ -2469,6 +2511,40 @@ void Plot::drawSurface( QPainter &paint )
 }
 
 
+void Plot::drawShape( QPainter &paint, ShapeElement *d )
+{
+  //  if ( d->Line.color() != Transparent && d->Line.width() > 0 ) {
+  if ( d->Line.color() != Transparent ) {
+    // set pen:
+    RGBColor c = color( d->Line.color() );
+    QColor qcolor( c.red(), c.green(), c.blue() );
+    Qt::PenStyle dash = QtDash.find( d->Line.dash() )->second;
+    if ( d->Line.width() == 0 )
+      dash = Qt::NoPen;
+    paint.setPen( QPen( qcolor, d->Line.width(), dash ) );
+    // no brush:
+    //paint.setBrush( QBrush( Qt::black, Qt::NoBrush ) );
+    paint.setBrush( QBrush( QColor( c.red(), c.green(), c.blue(), 127) ) );
+
+    // axis:
+    int xaxis = d->XAxis;
+    int yaxis = d->YAxis;
+
+    QPointF points[d->X.size()];
+    auto xi=d->X.begin();
+    auto yi=d->Y.begin();
+    for ( int pi = 0; xi != d->X.end() && yi != d->Y.end(); ++xi, ++yi ) {
+      qreal xp = PlotX1 + double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(*xi-XMin[xaxis]);
+      qreal yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(*yi-YMin[yaxis]);
+      points[pi++] = QPointF( xp, yp );
+    }
+    paint.setClipRect( PlotX1, PlotY1, PlotX2-PlotX1, PlotY2-PlotY1 );
+    paint.drawPolygon( points, d->X.size() );
+    paint.setClipping( false );
+  }
+}
+
+
 void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
 {
   if ( d->Line.color() != Transparent && d->Line.width() > 0 ) {
@@ -3159,6 +3235,9 @@ int Plot::drawPoints( QPainter &paint, DataElement *d )
 void Plot::drawData( QPainter &paint )
 {
   drawSurface( paint );
+  for ( ShapeDataType::iterator d = ShapeData.begin(); d != ShapeData.end(); ++d ) {
+    drawShape( paint, *d );
+  }
   int addpx = 0;
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
     drawLine( paint, *d, addpx );
@@ -5301,21 +5380,135 @@ int Plot::plot( const SampleData<SampleDataD> &data, double xscale, int gradient
 }
 
 
+Plot::ShapeElement::ShapeElement( const vector<double> &x, const vector<double> &y )
+  : XAxis( 0 ),
+    YAxis( 0 ),
+    Line(),
+    Point(),
+    X( x ),
+    Y( y )
+{
+}
+
+
+Plot::ShapeElement::~ShapeElement( void )
+{
+  X.clear();
+  Y.clear();
+}
+
+
+void Plot::ShapeElement::setAxis( Plot::Axis axis )
+{
+  XAxis = axis & 2 ? 1 : 0;
+  YAxis = axis & 1 ? 1 : 0;
+}
+
+
+void Plot::ShapeElement::setAxis( int xaxis, int yaxis )
+{
+  XAxis = xaxis;
+  YAxis = yaxis;
+}
+
+
+void Plot::ShapeElement::setLine( const Plot::LineStyle &style )
+{
+  Line = style;
+}
+
+
+void Plot::ShapeElement::setLine( int lcolor, int lwidth, Plot::Dash ldash )
+{
+  setLine( LineStyle( lcolor, lwidth, ldash ) );
+}
+
+
+void Plot::ShapeElement::setPoint( const Plot::PointStyle &style )
+{
+  Point = style;
+}
+
+
+void Plot::ShapeElement::setPoint( Points ptype, int psize, int pcolor, int pfill )
+{
+  setPoint( PointStyle( ptype, psize, pcolor, pfill ) );
+}
+
+
+void Plot::ShapeElement::setStyle( const Plot::LineStyle &lstyle, 
+				   const Plot::PointStyle &pstyle )
+{ 
+  Line = lstyle;
+  Point = pstyle;
+}
+
+
+void Plot::ShapeElement::setStyle( int lcolor, int lwidth, Plot::Dash ldash, 
+				   Plot::Points ptype, int psize, int pcolor, 
+				   int pfill )
+{
+  Line = LineStyle( lcolor, lwidth, ldash );
+  Point = PointStyle( ptype, psize, pcolor, pfill );
+}
+
+
+void Plot::ShapeElement::xminmax( double &xmin, double &xmax, double ymin, double ymax ) const
+{
+  if ( X.size() == 0 ) {
+    xmin = AnyScale;
+    xmax = AnyScale;
+  }
+  xmin = xmax = X[0];
+  for ( auto x : X ) {
+    if ( x < xmin )
+      xmin = x;
+    if ( x > xmax )
+      xmax = x;
+  }
+}
+
+
+void Plot::ShapeElement::yminmax( double xmin, double xmax, double &ymin, double &ymax ) const
+{
+  if ( Y.size() == 0 ) {
+    ymin = AnyScale;
+    ymax = AnyScale;
+  }
+  ymin = ymax = Y[0];
+  for ( auto y : Y ) {
+    if ( y < ymin )
+      ymin = y;
+    if ( y > ymax )
+      ymax = y;
+  }
+}
+
+
+int Plot::addShape( ShapeElement *s )
+{
+  NewData = true;
+  ShapeData.push_back( s );
+  return ShapeData.size() - 1;
+}
+
+
 #ifdef HAVE_LIBRELACSSHAPES
+
 void Plot::addCuboidSide( const deque< Point > &pts, const int idx[], int n,
 			  const Transform &proj, const LineStyle &line )
 {
-  MapD m;
+  vector<double> x;
+  vector<double> y;
   for ( int k=0; k<n; k++ ) {
     Point p = proj * pts[idx[k]];
     p.homDivide();
-    m.push( p.x(), p.y() );
+    x.push_back( p.x() );
+    y.push_back( p.y() );
   }
-  VectorElement< ArrayD, ArrayD > *DE = 
-    new VectorElement< ArrayD, ArrayD >( m.x(), m.y(),
-					 1.0, Keep == Copy );
-  DE->setLine( line );
-  addData( DE );
+  ShapeElement *SE = new ShapeElement( x, y );
+  SE->setLine( line );
+  addShape( SE );
 }
 
 
@@ -5323,19 +5516,74 @@ int Plot::plot( const Cuboid &cbd, const Transform &proj, const LineStyle &line 
 {
   deque< Point > pts;
   cbd.corners( pts );
-  int idxs1[5] = { 0, 1, 2, 3, 0 };
-  addCuboidSide( pts, idxs1, 5, proj, line );
-  int idxs2[5] = { 4, 5, 6, 7, 4 };
-  addCuboidSide( pts, idxs2, 5, proj, line );
-  int idxs3[2];
+  int idxs1[4] = { 0, 1, 2, 3 };
+  addCuboidSide( pts, idxs1, 4, proj, line );
+  int idxs2[4] = { 4, 5, 6, 7 };
+  addCuboidSide( pts, idxs2, 4, proj, line );
+  int idxs3[4];
   for ( int k=0; k<4; k++ ) {
     idxs3[0] = k;
-    idxs3[1] = k+4;
-    addCuboidSide( pts, idxs3, 2, proj, line );
+    idxs3[1] = (k+1)%4;
+    idxs3[2] = idxs3[1]+4;
+    idxs3[3] = idxs3[0]+4;
+    addCuboidSide( pts, idxs3, 4, proj, line );
   }
   return 0;
 }
+
+
+int Plot::plot( const Cylinder &clnd, const Transform &proj, const LineStyle &line )
+{
+  int n = 50;
+  vector<double> x0;
+  vector<double> y0;
+  x0.reserve( n );
+  y0.reserve( n );
+  vector<double> x1;
+  vector<double> y1;
+  x1.reserve( n );
+  y1.reserve( n );
+  for ( int k=0; k<n; k++ ) {
+    Point p0( 0.0, ::cos( 2.0*M_PI*k/n ), ::sin( 2.0*M_PI*k/n ) );
+    Point q0 = proj * clnd.trafo() * p0;
+    q0.homDivide();
+    x0.push_back( q0.x() );
+    y0.push_back( q0.y() );
+    Point p1( 1.0, ::cos( 2.0*M_PI*k/n ), ::sin( 2.0*M_PI*k/n ) );
+    Point q1 = proj * clnd.trafo() * p1;
+    q1.homDivide();
+    x1.push_back( q1.x() );
+    y1.push_back( q1.y() );
+  }
+  ShapeElement *SE = new ShapeElement( x0, y0 );
+  SE->setLine( line );
+  addShape( SE );
+  SE = new ShapeElement( x1, y1 );
+  SE->setLine( line );
+  addShape( SE );
+  LineStyle l( line );
+  if ( n > 10 )
+    l.setWidth( 0 );
+  for ( int k=0; k<n; k++ ) {
+    vector<double> xr;
+    vector<double> yr;
+    xr.push_back( x0[k] );
+    yr.push_back( y0[k] );
+    xr.push_back( x0[(k+1)%n] );
+    yr.push_back( y0[(k+1)%n] );
+    xr.push_back( x1[(k+1)%n] );
+    yr.push_back( y1[(k+1)%n] );
+    xr.push_back( x1[k] );
+    yr.push_back( y1[k] );
+    SE = new ShapeElement( xr, yr );
+    SE->setLine( l );
+    addShape( SE );
+  }
+  return 0;
+}
+
 #endif
+
 
 void Plot::clearData( void )
 {
@@ -5359,6 +5607,15 @@ void Plot::clearData( int index )
 }
 
 
+void Plot::clearShapes( void )
+{
+  for ( ShapeDataType::iterator d = ShapeData.begin(); d != ShapeData.end(); ++d )
+    delete (*d);
+  ShapeData.clear();
+  NewData = true;
+}
+
+
 void Plot::clearSurfaceData( void )
 {
   if ( SData != 0 )
@@ -5374,6 +5631,7 @@ void Plot::clearSurfaceData( void )
 void Plot::clear( void )
 {
   clearSurfaceData();
+  clearShapes();
   clearData();
   clearLabels();
 }

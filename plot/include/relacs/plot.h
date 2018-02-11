@@ -453,6 +453,54 @@ public:
   };
 
 
+  /*! 
+    \class ShapeElement
+    \author Jan Benda
+    \brief Manages a single closed polygon that can be stroked and filled.
+  */
+
+  class ShapeElement
+  {
+    friend class Plot;
+
+  public:
+
+    ShapeElement( const vector<double> &x, const vector<double> &y );
+    ~ShapeElement( void );
+
+    void setAxis( Plot::Axis axis );
+    void setAxis( int xaxis, int yaxis );
+    void setLine( const Plot::LineStyle &style );
+    void setLine( int lcolor=Transparent, int lwidth=1,
+		  Plot::Dash ldash=Solid );
+    void setPoint( const Plot::PointStyle &style );
+    void setPoint( Points ptype=Circle, int psize=10,
+		   int pcolor=Transparent, int pfill=Transparent );
+    void setStyle( const Plot::LineStyle &lstyle, 
+		   const Plot::PointStyle &pstyle );
+    void setStyle( int lcolor=Transparent, int lwidth=1,
+		   Plot::Dash ldash=Solid, 
+		   Points ptype=Circle, int psize=10,
+		   int pcolor=Transparent, int pfill=Transparent );
+      /*! Returns a sensible x-range \a xmin and \a xmax for
+	  a given y-range \a ymin, \a ymax. */
+    void xminmax( double &xmin, double &xmax, double ymin, double ymax ) const;
+      /*! Returns a sensible y-range \a ymin and \a ymax for a given
+	  x-range \a xmin, \a xmax. */
+    void yminmax( double xmin, double xmax, double &ymin, double &ymax ) const;
+
+  protected:
+
+    int XAxis;
+    int YAxis;
+    Plot::LineStyle Line;
+    Plot::PointStyle Point;
+    vector<double> X;
+    vector<double> Y;
+
+  };
+
+
     /*! Constructs a plot with KeepMode \a keep.
         If you set \a keep to Plot::Pointer and
 	you are using multible threads, then
@@ -922,16 +970,21 @@ public:
     /*! Plot the Cuboid \a cbd using the projection matrix \a proj.
         The projection matrix transforms 3-D points to (x, y) points.  */
   int plot( const Cuboid &cbd, const Transform &proj, const LineStyle &line );
+    /*! Plot the Cylinder \a clnd using the projection matrix \a proj.
+        The projection matrix transforms 3-D points to (x, y) points.  */
+  int plot( const Cylinder &clnd, const Transform &proj, const LineStyle &line );
 #endif
 
     /*! Remove all 2-D plot data from the plot. */
   void clearData( void );
     /*! Remove 2-D plot data with index \a index from the plot. */
   void clearData( int index );
+    /*! Remove all shapes from the plot. */
+  void clearShapes( void );
     /*! Remove surface plot data from the plot. */
   void clearSurfaceData( void );
 
-    /*!  Remove all 2-D and 3-D (surface) plot data and labels from the plot. */
+    /*!  Remove all 2-D, 3-D (surface), and shape plot data and labels from the plot. */
   void clear( void );
 
     /*! Give a hint for the prefered size of this widget. */
@@ -1620,6 +1673,8 @@ private:
 
   SurfaceElement* SData;
   uchar* SurfaceData;
+  typedef deque<ShapeElement*> ShapeDataType;
+  ShapeDataType ShapeData;
   typedef deque<DataElement*> PDataType;
   PDataType PData;
   bool DrawData;
@@ -1634,7 +1689,9 @@ private:
 
   int addData( DataElement *d );
   int setSurface( SurfaceElement *s );
+  int addShape( ShapeElement *s );
   void drawSurface( QPainter &paint );
+  void drawShape( QPainter &paint, ShapeElement *d );
   void drawLine( QPainter &paint, DataElement *d, int addpx );
   int drawPoints( QPainter &paint, DataElement *d );
 

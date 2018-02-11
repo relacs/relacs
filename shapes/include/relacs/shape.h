@@ -78,6 +78,9 @@ public:
   void translateY( double y );
     /*! Translate the shape by \a z along the world z-axis. */
   void translateZ( double z );
+    /*! Translate the shape along the x-, y-, and z-axis by \a x, \a
+        y, \a z, respectively. */
+  void translate( double x, double y, double z );
     /*! Translate the shape by \a p in the world coordinate system. */
   void translate( const Point &p );
 

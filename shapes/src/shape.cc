@@ -81,6 +81,13 @@ void Shape::translateZ( double z )
 }
 
 
+void Shape::translate( double x, double y, double z )
+{
+  Trafo.translate( x, y, z );
+  InvTrafo = Trafo.inverse();
+}
+
+
 void Shape::translate( const Point &p )
 {
   Trafo.translate( p );

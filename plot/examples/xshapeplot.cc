@@ -25,21 +25,21 @@
 using namespace relacs;
 
 PlotShapes::PlotShapes( int n )
-  : MultiPlot( n )
+  : MultiPlot( n, 2 )
 {
   A = 0.0;
   B = 0.0;
   C = 0.0;
   X = 0.0;
 
-  setMinimumSize( QSize(800, 800) );
+  setMinimumSize( QSize(1400, 800) );
   (*this)[0].setXLabel( "x-coord" );
   (*this)[0].setXLabelPos( 1.0, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Right, 0.0 );
   (*this)[0].setXRange( -4.0, 4.0 );
   (*this)[0].setXTics( 1.0 );
   (*this)[0].setYLabel( "y-coord" );
   (*this)[0].setYLabelPos( -0.6, Plot::FirstAxis, 0.5, Plot::Graph, Plot::Center, -90.0 );
-  (*this)[0].setYRange( -2.0, 2.0 );
+  (*this)[0].setYRange( -4.0, 4.0 );
   (*this)[0].setYTics( 1.0 );
   (*this)[0].noGrid();
 
@@ -49,28 +49,48 @@ PlotShapes::PlotShapes( int n )
   (*this)[1].setXTics( 1.0 );
   (*this)[1].setYLabel( "z-coord" );
   (*this)[1].setYLabelPos( -0.6, Plot::FirstAxis, 0.5, Plot::Graph, Plot::Center, -90.0 );
-  (*this)[1].setYRange( -2.0, 2.0 );
+  (*this)[1].setYRange( -4.0, 4.0 );
   (*this)[1].setYTics( 1.0 );
   (*this)[1].noGrid();
 
   QTimer *timer = new QTimer(this);
   connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-  timer->start(50);
+  timer->start(30);
 }
 
 void PlotShapes::update( void )
 {
-  Cuboid cbd;
-  A += 0.01 * 2.0 * M_PI;
-  B += 0.003 * 2.0 * M_PI;
-  C += 0.001 * 2.0 * M_PI;
-  X += 0.002 * 2.0 * M_PI;
-  cbd.scaleX( 2.0 );
-  cbd.scaleZ( 0.5 );
-  cbd.rotateZ( A );
-  cbd.rotateY( B );
-  cbd.rotateX( C );
-  cbd.translateX( 2.0 * ::sin(X) );
+  A += 0.005 * 2.0 * M_PI;
+  B += 0.0015 * 2.0 * M_PI;
+  C += 0.0005 * 2.0 * M_PI;
+  X += 0.001 * 2.0 * M_PI;
+
+  Cuboid cbd1;
+  cbd1.translate( 0.0, -0.5, -0.5 );
+  cbd1.scaleX( 2.0 );
+  cbd1.scaleZ( 0.5 );
+  cbd1.rotateZ( A );
+  cbd1.rotateY( B );
+  cbd1.rotateX( C );
+  cbd1.translateX( 2.0 * ::sin(X) );
+
+  Cuboid cbd2;
+  cbd2.translate( 0.0, -0.5, -0.5 );
+  cbd2.scaleX( -0.5 );
+  cbd2.scaleY( 1.6 );
+  cbd2.scaleZ( 1.6 );
+  cbd2.rotateZ( A );
+  cbd2.rotateY( B );
+  cbd2.rotateX( C );
+  cbd2.translateX( 2.0 * ::sin(X) );
+
+  Cylinder clnd;
+  clnd.scale( 0.5, 1.0, 1.0 );
+  clnd.translateX( 2.0 );
+  clnd.rotateZ( A );
+  clnd.rotateY( B );
+  clnd.rotateX( C );
+  clnd.translateX( 2.0 * ::sin(X) );
 
   Transform projxy = Transform::ProjectXY;
   projxy(3, 2) = 0.2;
@@ -78,10 +98,14 @@ void PlotShapes::update( void )
   Transform projxz = Transform::ProjectXZ;
   projxz(3, 1) = 0.2;
 
-  (*this)[0].clearData();
-  (*this)[0].plot( cbd, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[1].clearData();
-  (*this)[1].plot( cbd, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[0].clearShapes();
+  (*this)[0].plot( cbd1, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[0].plot( cbd2, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[0].plot( clnd, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[1].clearShapes();
+  (*this)[1].plot( cbd1, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[1].plot( cbd2, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[1].plot( clnd, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   draw();
 }
 
