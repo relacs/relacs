@@ -43,7 +43,7 @@
 #endif
 
 #ifdef HAVE_LIBRELACSSHAPES
-#include <relacs/matrix.h>
+#include <relacs/transform.h>
 #include <relacs/shape.h>
 #endif
 
@@ -918,10 +918,10 @@ public:
 
 #ifdef HAVE_LIBRELACSSHAPES
   void addCuboidSide( const deque< Point > &pts, const int idx[], int n,
-		      const Matrix &proj, const LineStyle &line );
+		      const Transform &proj, const LineStyle &line );
     /*! Plot the Cuboid \a cbd using the projection matrix \a proj.
         The projection matrix transforms 3-D points to (x, y) points.  */
-  int plot( const Cuboid &cbd, const Matrix &proj, const LineStyle &line );
+  int plot( const Cuboid &cbd, const Transform &proj, const LineStyle &line );
 #endif
 
     /*! Remove all 2-D plot data from the plot. */

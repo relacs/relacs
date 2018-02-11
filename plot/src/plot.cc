@@ -5303,11 +5303,12 @@ int Plot::plot( const SampleData<SampleDataD> &data, double xscale, int gradient
 
 #ifdef HAVE_LIBRELACSSHAPES
 void Plot::addCuboidSide( const deque< Point > &pts, const int idx[], int n,
-			  const Matrix &proj, const LineStyle &line )
+			  const Transform &proj, const LineStyle &line )
 {
   MapD m;
   for ( int k=0; k<n; k++ ) {
     Point p = proj * pts[idx[k]];
+    p.homDivide();
     m.push( p.x(), p.y() );
   }
   VectorElement< ArrayD, ArrayD > *DE = 
@@ -5318,7 +5319,7 @@ void Plot::addCuboidSide( const deque< Point > &pts, const int idx[], int n,
 }
 
 
-int Plot::plot( const Cuboid &cbd, const Matrix &proj, const LineStyle &line )
+int Plot::plot( const Cuboid &cbd, const Transform &proj, const LineStyle &line )
 {
   deque< Point > pts;
   cbd.corners( pts );

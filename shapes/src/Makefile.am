@@ -11,18 +11,18 @@ pkgincludedir = $(includedir)/relacs
 
 pkginclude_HEADERS = \
     ../include/relacs/point.h \
-    ../include/relacs/matrix.h \
+    ../include/relacs/transform.h \
     ../include/relacs/shape.h
 
 librelacsshapes_la_SOURCES = \
     point.cc \
-    matrix.cc \
+    transform.cc \
     shape.cc
 
 
 check_PROGRAMS = linktest_librelacsshapes_la \
     checkpoint \
-    checkmatrix \
+    checktransform \
     checkshape
 
 linktest_librelacsshapes_la_SOURCES = linktest.cc
@@ -32,9 +32,9 @@ checkpoint_SOURCES = checkpoint.cc
 checkpoint_CPPFLAGS = -I$(srcdir)/../include
 checkpoint_LDADD = librelacsshapes.la
 
-checkmatrix_SOURCES = checkmatrix.cc
-checkmatrix_CPPFLAGS = -I$(srcdir)/../include
-checkmatrix_LDADD = librelacsshapes.la
+checktransform_SOURCES = checktransform.cc
+checktransform_CPPFLAGS = -I$(srcdir)/../include
+checktransform_LDADD = librelacsshapes.la
 
 checkshape_SOURCES = checkshape.cc
 checkshape_CPPFLAGS = -I$(srcdir)/../include

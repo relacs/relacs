@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <relacs/point.h>
-#include <relacs/matrix.h>
+#include <relacs/transform.h>
 #include <relacs/shape.h>
 
 using namespace relacs;
@@ -45,18 +45,18 @@ double arand( void )
 
 void random_transformation( Shape &shp )
 {
-  int trafotype = rand()%6;
+  int trafotype = rand()%9;
   if ( trafotype < 3 ) {
     double scale = 1.0;
     do { scale = 4.0*(urand()-0.5); } while ( fabs(scale) < minscale );
     if ( trafotype == 0 )
-      shp.scaleX( scale );
+      return shp.scaleX( scale );
     else if ( trafotype == 1 )
       return shp.scaleY( scale );
     else
       return shp.scaleZ( scale );
   }
-  else {
+  else if ( trafotype < 6 ) {
     double angle = (2.0*urand()-1.0)*M_PI;
     if ( trafotype == 4 )
       return shp.rotateZ( angle );
@@ -64,6 +64,15 @@ void random_transformation( Shape &shp )
       return shp.rotateY( angle );
     else
       return shp.rotateX( angle );
+  }
+  else {
+    double shift = 4.0*(urand()-0.5);
+    if ( trafotype == 7 )
+      return shp.translateX( shift );
+    else if ( trafotype == 8 )
+      return shp.translateY( shift );
+    else
+      return shp.translateZ( shift );
   }
 }
 

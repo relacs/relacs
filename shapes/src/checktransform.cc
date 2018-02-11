@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <relacs/point.h>
-#include <relacs/matrix.h>
+#include <relacs/transform.h>
 
 using namespace relacs;
 
@@ -21,9 +21,9 @@ double urand( void )
 }
 
 
-Matrix random_matrix( void )
+Transform random_matrix( void )
 {
-  Matrix m;
+  Transform m;
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ )
       m( i, j ) = urand();
@@ -32,41 +32,42 @@ Matrix random_matrix( void )
 }
 
 
-Matrix random_transformation( void )
+Transform random_transformation( void )
 {
+  Transform m;
   int trafotype = rand()%9;
   if ( trafotype < 3 ) {
     double scale = 1.0;
     do { scale = 4.0*(urand()-0.5); } while ( fabs(scale) < minscale );
     if ( trafotype == 0 )
-      return Matrix::scaleX( scale );
+      return m.scaleX( scale );
     else if ( trafotype == 1 )
-      return Matrix::scaleY( scale );
+      return m.scaleY( scale );
     else
-      return Matrix::scaleZ( scale );
+      return m.scaleZ( scale );
   }
   else if ( trafotype < 6 ) {
     double angle = (2.0*urand()-1.0)*M_PI;
     if ( trafotype == 4 )
-      return Matrix::rotateZ( angle );
+      return m.rotateZ( angle );
     else if ( trafotype == 5 )
-      return Matrix::rotateY( angle );
+      return m.rotateY( angle );
     else
-      return Matrix::rotateX( angle );
+      return m.rotateX( angle );
   }
   else {
     double shift = 4.0*(urand()-0.5);
     if ( trafotype == 7 )
-      return Matrix::translateX( shift );
+      return m.translateX( shift );
     else if ( trafotype == 8 )
-      return Matrix::translateY( shift );
+      return m.translateY( shift );
     else
-      return Matrix::translateZ( shift );
+      return m.translateZ( shift );
   }
 }
 
 
-void check_equality( const Matrix &a, const Matrix &b )
+void check_equality( const Transform &a, const Transform &b )
 {
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ )
@@ -75,7 +76,7 @@ void check_equality( const Matrix &a, const Matrix &b )
 }
 
 
-void check_identity( const Matrix &m )
+void check_identity( const Transform &m )
 {
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ ) {
@@ -92,31 +93,31 @@ int main ( void )
 {
   cerr << "Test assignments\n";
   for ( int k=0; k<n; k++ ) {
-    Matrix a = random_matrix();
-    Matrix b( a );
+    Transform a = random_matrix();
+    Transform b( a );
     check_equality( a, b );
-    Matrix c;
+    Transform c;
     c = a;
     check_equality( a, c );
-    Matrix d;
+    Transform d;
     for ( int i=0; i<3; i++ ) {
       for ( int j=0; j<3; j++ )
 	d( i, j ) = a( i, j );
     }
     check_equality( a, d );
-    Matrix e;
+    Transform e;
     for ( int i=0; i<3; i++ ) {
       for ( int j=0; j<3; j++ )
 	e[i][j] = a( i, j );
     }
     check_equality( a, e );
-    Matrix f;
+    Transform f;
     for ( int i=0; i<3; i++ ) {
       for ( int j=0; j<3; j++ )
 	f( i, j ) = a[i][j];
     }
     check_equality( a, f );
-    Matrix g;
+    Transform g;
     for ( int i=0; i<3; i++ ) {
       for ( int j=0; j<3; j++ )
 	g[i][j] = a[i][j];
@@ -124,155 +125,179 @@ int main ( void )
     check_equality( a, g );
   }
 
-  cerr << "Test Matrix::inverse()\n";
+  cerr << "Test Transform::inverse()\n";
   for ( int k=0; k<n; k++ ) {
-    Matrix a = random_matrix();
-    Matrix b = a.inverse();
+    Transform a = random_matrix();
+    Transform b = a.inverse();
     Point p( urand(), urand(), urand() );
     Point q = a * p;
     q *= b;
     assert( (p-q).magnitude() < epsilon );
-    Matrix c = a * b;
+    Transform c = a * b;
     check_identity( c );
-    Matrix d = b * a;
+    Transform d = b * a;
     check_identity( d );
     a *= b;
     check_identity( a );
   }
 
-  cerr << "Test Matrix::translateX()\n";
+  cerr << "Test Transform::translateX()\n";
   for ( int k=0; k<n; k++ ) {
     double shift = 10.0*(urand()-0.5);
-    Matrix a = Matrix::translateX( shift );
-    Matrix b = Matrix::translateX( -shift ) * a;
+    Transform a;
+    a.translateX( shift );
+    Transform b;
+    b.translateX( -shift ) * a;
     check_identity( b );
     b = a.inverse() * a;
     check_identity( b );
     b = a * a.inverse();
     check_identity( b );
-    a *= Matrix::translateX( -shift );
+    Transform c;
+    a *= c.translateX( -shift );
     check_identity( a );
 
     Point p( urand(), urand(), urand() );
     p -= 0.5;
     p *= 20.0;
-    Point q = Matrix::translateX( shift ) * p;
+    Transform d;
+    Point q = d.translateX( shift ) * p;
     assert( fabs( p.x()+shift - q.x() ) < epsilon );
     assert( fabs( p.y() - q.y() ) < epsilon );
     assert( fabs( p.z() - q.z() ) < epsilon );
   }
 
-  cerr << "Test Matrix::translateY()\n";
+  cerr << "Test Transform::translateY()\n";
   for ( int k=0; k<n; k++ ) {
     double shift = 10.0*(urand()-0.5);
-    Matrix a = Matrix::translateY( shift );
-    Matrix b = Matrix::translateY( -shift ) * a;
+    Transform a;
+    a.translateY( shift );
+    Transform b;
+    b.translateY( -shift ) * a;
     check_identity( b );
     b = a.inverse() * a;
     check_identity( b );
     b = a * a.inverse();
     check_identity( b );
-    a *= Matrix::translateY( -shift );
+    Transform c;
+    a *= c.translateY( -shift );
     check_identity( a );
 
     Point p( urand(), urand(), urand() );
     p -= 0.5;
     p *= 20.0;
-    Point q = Matrix::translateY( shift ) * p;
+    Transform d;
+    Point q = d.translateY( shift ) * p;
     assert( fabs( p.x() - q.x() ) < epsilon );
     assert( fabs( p.y()+shift - q.y() ) < epsilon );
     assert( fabs( p.z() - q.z() ) < epsilon );
   }
 
-  cerr << "Test Matrix::translateZ()\n";
+  cerr << "Test Transform::translateZ()\n";
   for ( int k=0; k<n; k++ ) {
     double shift = 10.0*(urand()-0.5);
-    Matrix a = Matrix::translateZ( shift );
-    Matrix b = Matrix::translateZ( -shift ) * a;
+    Transform a;
+    a.translateZ( shift );
+    Transform b;
+    b.translateZ( -shift ) * a;
     check_identity( b );
     b = a.inverse() * a;
     check_identity( b );
     b = a * a.inverse();
     check_identity( b );
-    a *= Matrix::translateZ( -shift );
+    Transform c;
+    a *= c.translateZ( -shift );
     check_identity( a );
 
     Point p( urand(), urand(), urand() );
     p -= 0.5;
     p *= 20.0;
-    Point q = Matrix::translateZ( shift ) * p;
+    Transform d;
+    Point q = d.translateZ( shift ) * p;
     assert( fabs( p.x() - q.x() ) < epsilon );
     assert( fabs( p.y() - q.y() ) < epsilon );
     assert( fabs( p.z()+shift - q.z() ) < epsilon );
   }
 
-  cerr << "Test Matrix::scaleX()\n";
+  cerr << "Test Transform::scaleX()\n";
   for ( int k=0; k<n; k++ ) {
     double scale = 10.0*(urand()-0.5);
     if ( fabs( scale ) < epsilon )
       continue;
-    Matrix a = Matrix::scaleX( scale );
-    Matrix b = Matrix::scaleX( 1.0/scale ) * a;
+    Transform a;
+    a.scaleX( scale );
+    Transform b;
+    b = b.scaleX( 1.0/scale ) * a;
     check_identity( b );
     b = a.inverse() * a;
     check_identity( b );
     b = a * a.inverse();
     check_identity( b );
-    a *= Matrix::scaleX( 1.0/scale );
+    Transform c;
+    a *= c.scaleX( 1.0/scale );
     check_identity( a );
 
     Point p( urand(), urand(), urand() );
     p -= 0.5;
     p *= 20.0;
-    Point q = Matrix::scaleX( scale ) * p;
+    Transform d;
+    Point q = d.scaleX( scale ) * p;
     assert( fabs( p.x()*scale - q.x() ) < epsilon );
     assert( fabs( p.y() - q.y() ) < epsilon );
     assert( fabs( p.z() - q.z() ) < epsilon );
   }
 
-  cerr << "Test Matrix::scaleY()\n";
+  cerr << "Test Transform::scaleY()\n";
   for ( int k=0; k<n; k++ ) {
     double scale = 10.0*(urand()-0.5);
     if ( fabs( scale ) < epsilon )
       continue;
-    Matrix a = Matrix::scaleY( scale );
-    Matrix b = Matrix::scaleY( 1.0/scale ) * a;
+    Transform a;
+    a.scaleY( scale );
+    Transform b;
+    b = b.scaleY( 1.0/scale ) * a;
     check_identity( b );
     b = a.inverse() * a;
     check_identity( b );
     b = a * a.inverse();
     check_identity( b );
-    a *= Matrix::scaleY( 1.0/scale );
+    Transform c;
+    a *= c.scaleY( 1.0/scale );
     check_identity( a );
 
     Point p( urand(), urand(), urand() );
     p -= 0.5;
     p *= 20.0;
-    Point q = Matrix::scaleY( scale ) * p;
+    Transform d;
+    Point q = d.scaleY( scale ) * p;
     assert( fabs( p.x() - q.x() ) < epsilon );
     assert( fabs( p.y()*scale - q.y() ) < epsilon );
     assert( fabs( p.z() - q.z() ) < epsilon );
   }
 
-  cerr << "Test Matrix::scaleZ()\n";
+  cerr << "Test Transform::scaleZ()\n";
   for ( int k=0; k<n; k++ ) {
     double scale = 10.0*(urand()-0.5);
     if ( fabs( scale ) < epsilon )
       continue;
-    Matrix a = Matrix::scaleZ( scale );
-    Matrix b = Matrix::scaleZ( 1.0/scale ) * a;
+    Transform a;
+    a.scaleZ( scale );
+    Transform b;
+    b = b.scaleZ( 1.0/scale ) * a;
     check_identity( b );
     b = a.inverse() * a;
     check_identity( b );
     b = a * a.inverse();
     check_identity( b );
-    a *= Matrix::scaleZ( 1.0/scale );
+    Transform c;
+    a *= c.scaleZ( 1.0/scale );
     check_identity( a );
 
     Point p( urand(), urand(), urand() );
     p -= 0.5;
     p *= 20.0;
-    Point q = Matrix::scaleZ( scale ) * p;
+    Transform d;
+    Point q = d.scaleZ( scale ) * p;
     assert( fabs( p.x() - q.x() ) < epsilon );
     assert( fabs( p.y() - q.y() ) < epsilon );
     assert( fabs( p.z()*scale - q.z() ) < epsilon );
@@ -283,24 +308,25 @@ int main ( void )
     Point p( urand(), urand(), urand() );
     p -= 0.5;
     p *= 20.0;
-    Matrix s[3] = { Matrix::scaleX( 4.0*urand() + 0.01 ),
-		    Matrix::scaleY( 4.0*urand() + 0.01 ),
-		    Matrix::scaleZ( 4.0*urand() + 0.01 ) };
+    Transform s[3];
+    s[0].scaleX( 4.0*urand() + 0.01 );
+    s[1].scaleY( 4.0*urand() + 0.01 );
+    s[2].scaleZ( 4.0*urand() + 0.01 );
     Point q0 = (s[0]*s[1]*s[2])*p;
     for ( int k=0; k<3; k++ ) {
       for ( int j=1; j<3; j++ ) {
 	int jj = (k+j)%3; 
 	for ( int i=0; i<3; i++ ) {
 	  if ( i != k && i != (k+j)%3 ) {
-	    Matrix t1 = s[k];
+	    Transform t1 = s[k];
 	    t1 *= s[jj];
 	    t1 *= s[i];
 	    Point q1 = t1 * p;
-	    Matrix t2 = s[i];
+	    Transform t2 = s[i];
 	    t2 *= s[jj];
 	    t2 *= s[k];
 	    Point q2 = t2 * p;
-	    Matrix t3 = s[k]*s[jj]*s[i];
+	    Transform t3 = s[k]*s[jj]*s[i];
 	    Point q3 = t3 * p;
 	    Point q4 = (s[k]*s[jj]*s[i])*p;
 	    assert( q0 == q1 );
@@ -313,89 +339,107 @@ int main ( void )
     }
   }
 
-  cerr << "Test Matrix::rotateZ()\n";
+  cerr << "Test Transform::rotateZ()\n";
   Point p = Point::Ones;
   for ( int k = 0; k<=4; k++ ) {
-    Point q = Matrix::rotateZ( 2.0*M_PI/4.0*k ) * p;
+    Transform a;
+    Point q = a.rotateZ( 2.0*M_PI/4.0*k ) * p;
     assert( q.z() == 1.0 );
     assert( fabs( q.y() - (2*(((k+2)/2)%2)-1) ) < epsilon );
     assert( fabs( q.x() - (2*(((k+3)/2)%2)-1) ) < epsilon );
   }
   for ( int k=0; k<n; k++ ) {
     double angle = (2.0*urand()-1.0)*M_PI;
-    Matrix a = Matrix::rotateZ( angle );
-    Matrix b = Matrix::rotateZ( -angle ) * a;
+    Transform a;
+    a.rotateZ( angle );
+    Transform b;
+    b = b.rotateZ( -angle ) * a;
     check_identity( b );
-    Matrix c = a * a.inverse();
+    Transform c = a * a.inverse();
     check_identity( c );
-    Matrix d = a * a.transpose();
+    Transform d = a * a.transpose();
     check_identity( d );
-    a *= Matrix::rotateZ( -angle );
+    Transform e;
+    a *= e.rotateZ( -angle );
     check_identity( a );
 
     Point p( urand(), urand(), 0.0 );
-    Point q = Matrix::rotateZ( angle ) * p;
+    Transform f;
+    Point q = f.rotateZ( angle ) * p;
     assert( fabs( q.z() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
-    q = Matrix::rotateZ( angle ) * Point::UnitX;
+    Transform g;
+    q = g.rotateZ( angle ) * Point::UnitX;
     double anglee = atan2( q.y(), q.x() );
     assert( fabs( angle - anglee ) < epsilon );
   }
 
-  cerr << "Test Matrix::rotateY()\n";
+  cerr << "Test Transform::rotateY()\n";
   p = Point::Ones;
   for ( int k = 0; k<=4; k++ ) {
-    Point q = Matrix::rotateY( 2.0*M_PI/4.0*k ) * p;
+    Transform a;
+    Point q = a.rotateY( 2.0*M_PI/4.0*k ) * p;
     assert( q.y() == 1.0 );
     assert( fabs( q.x() - (2*(((k+3)/2)%2)-1) ) < epsilon );
     assert( fabs( q.z() - (2*(((k+2)/2)%2)-1) ) < epsilon );
   }
   for ( int k=0; k<n; k++ ) {
     double angle = (2.0*urand()-1.0)*M_PI;
-    Matrix a = Matrix::rotateY( angle );
-    Matrix b = Matrix::rotateY( -angle ) * a;
+    Transform a;
+    a.rotateY( angle );
+    Transform b;
+    b = b.rotateY( -angle ) * a;
     check_identity( b );
-    Matrix c = a * a.inverse();
+    Transform c = a * a.inverse();
     check_identity( c );
-    Matrix d = a * a.transpose();
+    Transform d = a * a.transpose();
     check_identity( d );
-    a *= Matrix::rotateY( -angle );
+    Transform e;
+    a *= e.rotateY( -angle );
     check_identity( a );
 
     Point p( urand(), 0.0, urand() );
-    Point q = Matrix::rotateY( angle ) * p;
+    Transform f;
+    Point q = f.rotateY( angle ) * p;
     assert( fabs( q.y() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
-    q = Matrix::rotateY( angle ) * Point::UnitX;
+    Transform g;
+    q = g.rotateY( angle ) * Point::UnitX;
     double anglee = atan2( q.z(), q.x() );
     assert( fabs( angle - anglee ) < epsilon );
   }
 
-  cerr << "Test Matrix::rotateX()\n";
+  cerr << "Test Transform::rotateX()\n";
   p = Point::Ones;
   for ( int k = 0; k<=4; k++ ) {
-    Point q = Matrix::rotateX( 2.0*M_PI/4.0*k ) * p;
+    Transform a;
+    Point q = a.rotateX( 2.0*M_PI/4.0*k ) * p;
     assert( q.x() == 1.0 );
     assert( fabs( q.y() - (2*(((k+3)/2)%2)-1) ) < epsilon );
     assert( fabs( q.z() - (2*(((k+2)/2)%2)-1) ) < epsilon );
   }
   for ( int k=0; k<n; k++ ) {
     double angle = (2.0*urand()-1.0)*M_PI;
-    Matrix a = Matrix::rotateX( angle );
-    Matrix b = Matrix::rotateX( -angle ) * a;
+    Transform a;
+    a.rotateX( angle );
+    Transform b;
+    b = b.rotateX( -angle ) * a;
     check_identity( b );
-    Matrix c = a * a.inverse();
+    Transform c = a * a.inverse();
     check_identity( c );
-    Matrix d = a * a.transpose();
+    Transform d = a * a.transpose();
     check_identity( d );
-    a *= Matrix::rotateX( -angle );
+    Transform e;
+    a *= e.rotateX( -angle );
     check_identity( a );
 
     Point p( 0.0, urand(), urand() );
-    Point q = Matrix::rotateX( angle ) * p;
+    Transform f;
+    Point q = f.rotateX( angle ) * p;
     assert( fabs( q.x() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
-    q = Matrix::rotateX( angle ) * Point::UnitY;
+    Transform g;
+    q = g.rotateX( angle ) * Point::UnitY;
     double anglee = atan2( q.z(), q.y() );
     assert( fabs( angle - anglee ) < epsilon );
   }
@@ -403,8 +447,8 @@ int main ( void )
   cerr << "Test two sequential transformations\n";
   for ( int k=0; k<n; k++ ) {
     p = Point( urand(), urand(), urand() );
-    Matrix t1 = random_transformation();
-    Matrix t2 = random_transformation();
+    Transform t1 = random_transformation();
+    Transform t2 = random_transformation();
     Point q0 = t2 * t1 * p;
     Point q1 = (t2 * t1)*p;
     Point q2 = p;
@@ -420,9 +464,9 @@ int main ( void )
   cerr << "Test three sequential transformations\n";
   for ( int k=0; k<n; k++ ) {
     p = Point( urand(), urand(), urand() );
-    Matrix t1 = random_transformation();
-    Matrix t2 = random_transformation();
-    Matrix t3 = random_transformation();
+    Transform t1 = random_transformation();
+    Transform t2 = random_transformation();
+    Transform t3 = random_transformation();
     Point q0 = t3 * t2 * t1 * p;
     Point q1 = (t3 * t2 * t1)*p;
     Point q2 = p;
@@ -440,35 +484,35 @@ int main ( void )
   p = Point::UnitX;
   cerr << p;
 
-  Point q = Matrix::rotateZ( 0.25*M_PI ) * p;
+  Point q = Transform::rotateZ( 0.25*M_PI ) * p;
   cerr << q;
 
-  q = Matrix::rotateY( 0.25*M_PI ) * p;
+  q = Transform::rotateY( 0.25*M_PI ) * p;
   cerr << q;
   cerr << '\n';
 
-  q = (  Matrix::rotateZ( 0.25*M_PI ) * Matrix::rotateY( 0.25*M_PI ) ) * p;  // scaleX by two then rotate
+  q = (  Transform::rotateZ( 0.25*M_PI ) * Transform::rotateY( 0.25*M_PI ) ) * p;  // scaleX by two then rotate
   cerr << q;
   q = p;  // scale first, then rotate
-  q *= Matrix::rotateY( 0.25*M_PI );
-  q *= Matrix::rotateZ( 0.25*M_PI );
+  q *= Transform::rotateY( 0.25*M_PI );
+  q *= Transform::rotateZ( 0.25*M_PI );
   cerr << q;
 
-  q = (  Matrix::rotateY( 0.25*M_PI ) * Matrix::rotateZ( 0.25*M_PI ) ) * p; // rotate, then scale global X
+  q = (  Transform::rotateY( 0.25*M_PI ) * Transform::rotateZ( 0.25*M_PI ) ) * p; // rotate, then scale global X
   cerr << q;
   cerr << '\n';
 
   return 0;
 
-  q = ( Matrix::scaleY( 4.0 ) *  Matrix::rotateZ( 0.25*M_PI ) * Matrix::scaleX( 2.0 ) ) * p;  // scaleX by two then rotate then scaleY by four
+  q = ( Transform::scaleY( 4.0 ) *  Transform::rotateZ( 0.25*M_PI ) * Transform::scaleX( 2.0 ) ) * p;  // scaleX by two then rotate then scaleY by four
   cerr << q;
   q = p;  // scale x first, then rotate, then scale Y
-  q *= Matrix::scaleX( 2.0 );
-  q *= Matrix::rotateZ( 0.25*M_PI );
-  q *= Matrix::scaleY( 4.0 );
+  q *= Transform::scaleX( 2.0 );
+  q *= Transform::rotateZ( 0.25*M_PI );
+  q *= Transform::scaleY( 4.0 );
   cerr << q;
 
-  q = (  Matrix::scaleX( 2.0 ) * Matrix::rotateZ( 0.25*M_PI ) * Matrix::scaleY( 4.0 ) ) * p; // scale Y, rotate, then scale global X
+  q = (  Transform::scaleX( 2.0 ) * Transform::rotateZ( 0.25*M_PI ) * Transform::scaleY( 4.0 ) ) * p; // scale Y, rotate, then scale global X
   cerr << q;
   */
 }

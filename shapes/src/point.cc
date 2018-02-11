@@ -21,7 +21,7 @@
 
 #include <cmath>
 #include <iomanip>
-#include <relacs/matrix.h>
+#include <relacs/transform.h>
 #include <relacs/point.h>
 
 
@@ -502,13 +502,13 @@ Point abs( Point p )
 }
 
 
-Point &Point::operator*=( const Matrix &m )
+Point &Point::operator*=( const Transform &trafo )
 {
   Point p( *this );
   for ( int i=0; i<4; i++ ) {
     Coords[i] = 0.0;
     for ( int j=0; j<4; j++ )
-      Coords[i] += m(i, j) * p[j];
+      Coords[i] += trafo(i, j) * p[j];
   }
   return *this;
 }

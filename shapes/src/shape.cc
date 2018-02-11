@@ -30,7 +30,6 @@ namespace relacs {
 Shape::Shape( Shape::ShapeType type, const string &name )
   : Type( type ),
     Name( name ),
-    Trans( Point::Origin ),
     Trafo(),
     InvTrafo()
 {
@@ -38,10 +37,9 @@ Shape::Shape( Shape::ShapeType type, const string &name )
 
 
 Shape::Shape( Shape::ShapeType type, const string &name,
-	      const Matrix &trafo, const Point &trans  )
+	      const Transform &trafo  )
   : Type( type ),
     Name( name ),
-    Trans( trans ),
     Trafo( trafo )
 {
   InvTrafo = Trafo.inverse();
@@ -51,7 +49,6 @@ Shape::Shape( Shape::ShapeType type, const string &name,
 Shape::Shape( const Shape &s )
   : Type( s.Type ),
     Name( s.Name ),
-    Trans( s.Trans ),
     Trafo( s.Trafo ),
     InvTrafo( s.InvTrafo )
 {
@@ -65,135 +62,123 @@ Shape::~Shape( void)
 
 void Shape::translateX( double x )
 {
-  Trans.x() += x;
+  Trafo.translateX( x );
+  InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::translateY( double y )
 {
-  Trans.y() += y;
+  Trafo.translateY( y );
+  InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::translateZ( double z )
 {
-  Trans.z() += z;
+  Trafo.translateZ( z );
+  InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::translate( const Point &p )
 {
-  Trans += p;
+  Trafo.translate( p );
+  InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::scaleX( double xscale )
 {
-  Trans.x() *= xscale;
-  Trafo *= Matrix::scaleX( xscale );
+  Trafo.scaleX( xscale );
   InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::scaleY( double yscale )
 {
-  Trans.y() *= yscale;
-  Trafo *= Matrix::scaleY( yscale );
+  Trafo.scaleY( yscale );
   InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::scaleZ( double zscale )
 {
-  Trans.z() *= zscale;
-  Trafo *= Matrix::scaleZ( zscale );
+  Trafo.scaleZ( zscale );
   InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::scale( double xscale, double yscale, double zscale )
 {
-  Trans.x() *= xscale;
-  Trans.y() *= yscale;
-  Trans.z() *= zscale;
-  Trafo *= Matrix::scale( xscale, yscale, zscale );
+  Trafo.scale( xscale, yscale, zscale );
   InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::scale( const Point &scale )
 {
-  Trans *= scale;
-  Trafo *= Matrix::scale( scale );
+  Trafo.scale( scale );
   InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::scale( double scale )
 {
-  Trans *= scale;
-  Trafo *= Matrix::scale( scale );
-  InvTrafo = Trafo.inverse();
-}
-
-
-void Shape::rotateZ( double angle )
-{
-  Matrix m = Matrix::rotateZ( angle );
-  Trans *= m;
-  Trafo *= m;
-  InvTrafo = Trafo.inverse();
-}
-
-
-void Shape::rotateY( double angle )
-{
-  Matrix m = Matrix::rotateY( angle );
-  Trans *= m;
-  Trafo *= m;
+  Trafo.scale( scale );
   InvTrafo = Trafo.inverse();
 }
 
 
 void Shape::rotateX( double angle )
 {
-  Matrix m = Matrix::rotateX( angle );
-  Trans *= m;
-  Trafo *= m;
+  Trafo.rotateX( angle );
   InvTrafo = Trafo.inverse();
 }
 
 
-void Shape::rotate( double anglez, double angley, double anglex )
+void Shape::rotateY( double angle )
 {
-  Matrix m = Matrix::rotate( anglez, angley, anglex );
-  Trans *= m;
-  Trafo *= m;
+  Trafo.rotateY( angle );
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::rotateZ( double angle )
+{
+  Trafo.rotateZ( angle );
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::rotate( double anglex, double angley, double anglez )
+{
+  Trafo.rotate( anglex, angley, anglez );
   InvTrafo = Trafo.inverse();
 }
 
 
 Point Shape::transform( const Point &p ) const
 {
-  return Trafo * p + Trans;
+  return Trafo * p;
 }
 
 
 Point Shape::inverseTransform( const Point &p ) const
 {
-  return InvTrafo * ( p - Trans );
+  return InvTrafo * p;
 }
 
 
 Point Shape::boundingBoxMin( void ) const
 {
-  return boundingBoxMin( Trafo, Trans );
+  return boundingBoxMin( Trafo );
 }
 
 
 Point Shape::boundingBoxMax( void ) const
 {
-  return boundingBoxMax( Trafo, Trans );
+  return boundingBoxMax( Trafo );
 }
 
 
@@ -371,7 +356,7 @@ void Zone::clear( void )
 }
 
 
-Point Zone::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
+Point Zone::boundingBoxMin( const Transform &trafo ) const
 {
   Point p( Point::None );
   if ( Shapes.empty() )
@@ -381,24 +366,22 @@ Point Zone::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     if ( *ai ) {
-      Matrix m = trafo * (*si)->trafo();
-      Point t = trafo * (*si)->trans() + trans;
-      p = (*si)->boundingBoxMin( m, t );
+      Transform m = trafo * (*si)->trafo();
+      p = (*si)->boundingBoxMin( m );
       break;
     }
   }
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     if ( *ai ) {
-      Matrix m = trafo * (*si)->trafo();
-      Point t = trafo * (*si)->trans() + trans;
-      p = p.min( (*si)->boundingBoxMin( m, t ) );
+      Transform m = trafo * (*si)->trafo();
+      p = p.min( (*si)->boundingBoxMin( m ) );
     }
   }
   return p;
 }
 
 
-Point Zone::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
+Point Zone::boundingBoxMax( const Transform &trafo ) const
 {
   Point p( Point::None );
   if ( Shapes.empty() )
@@ -408,17 +391,15 @@ Point Zone::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     if ( *ai ) {
-      Matrix m = trafo * (*si)->trafo();
-      Point t = trafo * (*si)->trans() + trans;
-      p = (*si)->boundingBoxMax( m, t );
+      Transform m = trafo * (*si)->trafo();
+      p = (*si)->boundingBoxMax( m );
       break;
     }
   }
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     if ( *ai ) {
-      Matrix m = trafo * (*si)->trafo();
-      Point t = trafo * (*si)->trans() + trans;
-      p = p.max( (*si)->boundingBoxMax( m, t ) );
+      Transform m = trafo * (*si)->trafo();
+      p = p.max( (*si)->boundingBoxMax( m ) );
     }
   }
   return p;
@@ -507,8 +488,7 @@ void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
 
 ostream &Zone::print( ostream &str ) const
 {
-  str << "Zone \"" << name() << "\" at " << trans()
-      << " consisting of\n";
+  str << "Zone \"" << name() << "\" consisting of\n";
   auto si = Shapes.begin();
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai )
@@ -554,10 +534,10 @@ double Sphere::radius( void ) const
 }
 
 
-Point Sphere::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
+Point Sphere::boundingBoxMin( const Transform &trafo ) const
 {
   /*
-  Matrix itrafo = trafo.inverse();
+  Transform itrafo = trafo.inverse();
   Point px = itrafo * Point::UnitX;
   px.normalize();
   Point py = itrafo * Point::UnitY;
@@ -577,14 +557,14 @@ Point Sphere::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
   pts.push_back( trafo*( - px - py + pz ) );
   pts.push_back( trafo*( - px + py - pz ) );
   pts.push_back( trafo*( - px - py - pz ) );
-  return min( pts ) + trans;
+  return min( pts );
 }
 
 
-Point Sphere::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
+Point Sphere::boundingBoxMax( const Transform &trafo ) const
 {
   /*
-  Matrix itrafo = trafo.inverse();
+  Transform itrafo = trafo.inverse();
   Point px = itrafo * Point::UnitX;
   px.normalize();
   Point py = itrafo * Point::UnitY;
@@ -604,7 +584,7 @@ Point Sphere::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
   pts.push_back( trafo*( - px - py + pz ) );
   pts.push_back( trafo*( - px + py - pz ) );
   pts.push_back( trafo*( - px - py - pz ) );
-  return max( pts ) + trans;
+  return max( pts );
 }
 
 
@@ -640,8 +620,7 @@ void Sphere::intersectionPointsShape( const Point &pos1, const Point &pos2,
 
 ostream &Sphere::print( ostream &str ) const
 {
-  str << "Sphere \"" << name() << "\" at " << trans()
-      << " with radius " << radius() << '\n';
+  str << "Sphere \"" << name() << "\" with radius " << radius() << '\n';
   return str;
 }
 
@@ -690,7 +669,7 @@ double Cylinder::length( void ) const
 }
 
 
-Point Cylinder::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
+Point Cylinder::boundingBoxMin( const Transform &trafo ) const
 {
   /*
   // transform base circle to world coordinates:
@@ -703,7 +682,7 @@ Point Cylinder::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
   // vector perpendicular to nv and qy:
   Point qz = nv.cross( qy ).normalized();
   // transform qy and qz back to shape coordinates:
-  Matrix itrafo = trafo.inverse();
+  Transform itrafo = trafo.inverse();
   Point qqy = itrafo * qy;
   Point qqz = itrafo * qz;
   */
@@ -718,11 +697,11 @@ Point Cylinder::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
   pts.push_back( trafo*Point( 1.0, -qqy.y(), qqz.z() ) );
   pts.push_back( trafo*Point( 1.0, qqy.y(), -qqz.z() ) );
   pts.push_back( trafo*Point( 1.0, -qqy.y(), -qqz.z() ) );
-  return min( pts ) + trans;
+  return min( pts );
 }
 
 
-Point Cylinder::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
+Point Cylinder::boundingBoxMax( const Transform &trafo ) const
 {
   /*
   // transform base circle to world coordinates:
@@ -735,7 +714,7 @@ Point Cylinder::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
   // vector perpendicular to nv and qy:
   Point qz = nv.cross( qy ).normalized();
   // transform qy and qz back to shape coordinates:
-  Matrix itrafo = trafo.inverse();
+  Transform itrafo = trafo.inverse();
   Point qqy = itrafo * qy;
   Point qqz = itrafo * qz;
   */
@@ -750,7 +729,7 @@ Point Cylinder::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
   pts.push_back( trafo*Point( 1.0, -qqy.y(), qqz.z() ) );
   pts.push_back( trafo*Point( 1.0, qqy.y(), -qqz.z() ) );
   pts.push_back( trafo*Point( 1.0, -qqy.y(), -qqz.z() ) );
-  return max( pts ) + trans;
+  return max( pts );
 }
 
 
@@ -842,9 +821,8 @@ void Cylinder::intersectionPointsShape( const Point &pos1, const Point &pos2,
 
 ostream &Cylinder::print( ostream &str ) const
 {
-  str << "Cylinder \"" << name() << "\" at " << trans()
-      << " with length " << length()
-      << " and radius " << radius() << '\n';
+  str << "Cylinder \"" << name() << "\" with length "
+      << length() << " and radius " << radius() << '\n';
   return str;
 }
 
@@ -902,23 +880,23 @@ Shape *Cuboid::copy( void ) const
 
 
 void Cuboid::corners( deque< Point > &pts,
-		      const Matrix &trafo, const Point &trans ) const
+		      const Transform &trafo ) const
 {
   pts.clear();
-  pts.push_back( trafo*Point::Origin+trans );
-  pts.push_back( trafo*Point::UnitX+trans );
-  pts.push_back( trafo*(Point::UnitX+Point::UnitY)+trans );
-  pts.push_back( trafo*Point::UnitY+trans );
-  pts.push_back( trafo*Point::UnitZ+trans );
-  pts.push_back( trafo*(Point::UnitX+Point::UnitZ)+trans );
-  pts.push_back( trafo*Point::Ones+trans );
-  pts.push_back( trafo*(Point::UnitY+Point::UnitZ)+trans );
+  pts.push_back( trafo*Point::Origin );
+  pts.push_back( trafo*Point::UnitX );
+  pts.push_back( trafo*(Point::UnitX+Point::UnitY) );
+  pts.push_back( trafo*Point::UnitY );
+  pts.push_back( trafo*Point::UnitZ );
+  pts.push_back( trafo*(Point::UnitX+Point::UnitZ) );
+  pts.push_back( trafo*Point::Ones );
+  pts.push_back( trafo*(Point::UnitY+Point::UnitZ) );
 }
 
 
 void Cuboid::corners( deque< Point > &pts ) const
 {
-  corners( pts, trafo(), trans() );
+  corners( pts, trafo() );
 }
 
 
@@ -946,18 +924,18 @@ double Cuboid::height( void ) const
 }
 
 
-Point Cuboid::boundingBoxMin( const Matrix &trafo, const Point &trans ) const
+Point Cuboid::boundingBoxMin( const Transform &trafo ) const
 {
   deque<Point> pts;
-  corners( pts, trafo, trans );
+  corners( pts, trafo );
   return min( pts );
 }
 
 
-Point Cuboid::boundingBoxMax( const Matrix &trafo, const Point &trans ) const
+Point Cuboid::boundingBoxMax( const Transform &trafo ) const
 {
   deque<Point> pts;
-  corners( pts, trafo, trans );
+  corners( pts, trafo );
   return max( pts );
 }
 
@@ -1023,8 +1001,8 @@ void Cuboid::intersectionPointsShape( const Point &pos1, const Point &pos2,
 
 ostream &Cuboid::print( ostream &str ) const
 {
-  str << "Cuboid \"" << name() << "\" at " << trans()
-      << " with size " << length() << ", "
+  str << "Cuboid \"" << name() << "\" with size "
+      << length() << ", "
       << width() << ", "
       << height() << '\n';
   return str;

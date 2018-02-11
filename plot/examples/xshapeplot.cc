@@ -20,7 +20,7 @@
 */
 
 #include <QApplication>
-#include <relacs/matrix.h>
+#include <relacs/transform.h>
 #include <xshapeplot.h>
 using namespace relacs;
 
@@ -41,6 +41,7 @@ PlotShapes::PlotShapes( int n )
   (*this)[0].setYLabelPos( -0.6, Plot::FirstAxis, 0.5, Plot::Graph, Plot::Center, -90.0 );
   (*this)[0].setYRange( -2.0, 2.0 );
   (*this)[0].setYTics( 1.0 );
+  (*this)[0].noGrid();
 
   (*this)[1].setXLabel( "x-coord" );
   (*this)[1].setXLabelPos( 1.0, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Right, 0.0 );
@@ -50,6 +51,7 @@ PlotShapes::PlotShapes( int n )
   (*this)[1].setYLabelPos( -0.6, Plot::FirstAxis, 0.5, Plot::Graph, Plot::Center, -90.0 );
   (*this)[1].setYRange( -2.0, 2.0 );
   (*this)[1].setYTics( 1.0 );
+  (*this)[1].noGrid();
 
   QTimer *timer = new QTimer(this);
   connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -68,12 +70,18 @@ void PlotShapes::update( void )
   cbd.rotateZ( A );
   cbd.rotateY( B );
   cbd.rotateX( C );
-  //  cbd.translateX( ::sin(X) );
+  cbd.translateX( 2.0 * ::sin(X) );
+
+  Transform projxy = Transform::ProjectXY;
+  projxy(3, 2) = 0.2;
+
+  Transform projxz = Transform::ProjectXZ;
+  projxz(3, 1) = 0.2;
 
   (*this)[0].clearData();
-  (*this)[0].plot( cbd, Matrix::ProjectXY, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[0].plot( cbd, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   (*this)[1].clearData();
-  (*this)[1].plot( cbd, Matrix::ProjectXZ, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[1].plot( cbd, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   draw();
 }
 

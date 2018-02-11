@@ -1,5 +1,5 @@
 /*
-  matrix.cc
+  transform.cc
   A 4-D matrix used for affine transformations of 3D points.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -21,39 +21,39 @@
 
 #include <cmath>
 #include <iomanip>
-#include <relacs/matrix.h>
+#include <relacs/transform.h>
 
 
 namespace relacs {
 
 
-const Matrix Matrix::Identity = Matrix( 1.0, 0.0, 0.0,
+const Transform Transform::Identity = Transform( 1.0, 0.0, 0.0,
 					0.0, 1.0, 0.0,
 					0.0, 0.0, 1.0 );
 
-const Matrix Matrix::Zeros = Matrix( 0.0, 0.0, 0.0,
+const Transform Transform::Zeros = Transform( 0.0, 0.0, 0.0,
 				     0.0, 0.0, 0.0,
 				     0.0, 0.0, 0.0 );
 
-const Matrix Matrix::Ones = Matrix( 1.0, 1.0, 1.0,
+const Transform Transform::Ones = Transform( 1.0, 1.0, 1.0,
 				    1.0, 1.0, 1.0,
 				    1.0, 1.0, 1.0 );
 
-const Matrix Matrix::ProjectXY = Matrix( 1.0, 0.0, 0.0,
+const Transform Transform::ProjectXY = Transform( 1.0, 0.0, 0.0,
 					 0.0, 1.0, 0.0,
 					 0.0, 0.0, 0.0 );
   
-const Matrix Matrix::ProjectXZ = Matrix( 1.0, 0.0, 0.0,
+const Transform Transform::ProjectXZ = Transform( 1.0, 0.0, 0.0,
 					 0.0, 0.0, 1.0,
 					 0.0, 0.0, 0.0 );
   
-const Matrix Matrix::ProjectYZ = Matrix( 0.0, 0.0, 1.0,
+const Transform Transform::ProjectYZ = Transform( 0.0, 0.0, 1.0,
 					 0.0, 1.0, 0.0,
 					 0.0, 0.0, 0.0 );
 
-Matrix::Matrix( void )
+Transform::Transform( void )
 {
-  // identity matrix:
+  // identity transform:
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ ) {
       if ( i == j )
@@ -65,7 +65,7 @@ Matrix::Matrix( void )
 }
 
 
-Matrix::Matrix( const Matrix &m )
+Transform::Transform( const Transform &m )
 {
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
@@ -74,8 +74,8 @@ Matrix::Matrix( const Matrix &m )
 }
 
 
-Matrix::Matrix( const double m[3][3] )
-  : Matrix()
+Transform::Transform( const double m[3][3] )
+  : Transform()
 {
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ )
@@ -83,10 +83,10 @@ Matrix::Matrix( const double m[3][3] )
   }
 }
 
-Matrix::Matrix( double a11, double a12, double a13,
+Transform::Transform( double a11, double a12, double a13,
 		double a21, double a22, double a23,
 		double a31, double a32, double a33 )
-  : Matrix()
+  : Transform()
 {
   Elems[0][0] = a11;
   Elems[0][1] = a12;
@@ -100,7 +100,7 @@ Matrix::Matrix( double a11, double a12, double a13,
 }
 
 
-Matrix &Matrix::assign( const Matrix &m )
+Transform &Transform::assign( const Transform &m )
 {
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
@@ -110,7 +110,7 @@ Matrix &Matrix::assign( const Matrix &m )
 }
 
 
-Matrix &Matrix::operator=( const Matrix &m )
+Transform &Transform::operator=( const Transform &m )
 {
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
@@ -120,9 +120,9 @@ Matrix &Matrix::operator=( const Matrix &m )
 }
 
 
-Matrix Matrix::operator-( void ) const
+Transform Transform::operator-( void ) const
 {
-  Matrix q( *this );
+  Transform q( *this );
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
       q.Elems[i][j] = Elems[i][j];
@@ -131,9 +131,9 @@ Matrix Matrix::operator-( void ) const
 }
 
 
-Matrix Matrix::operator+( double a ) const
+Transform Transform::operator+( double a ) const
 {
-  Matrix p( *this );
+  Transform p( *this );
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
       p.Elems[i][j] += a;
@@ -142,9 +142,9 @@ Matrix Matrix::operator+( double a ) const
 }
 
 
-Matrix Matrix::operator-( double a ) const
+Transform Transform::operator-( double a ) const
 {
-  Matrix p( *this );
+  Transform p( *this );
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
       p.Elems[i][j] -= a;
@@ -153,9 +153,9 @@ Matrix Matrix::operator-( double a ) const
 }
 
 
-Matrix Matrix::operator*( double a ) const
+Transform Transform::operator*( double a ) const
 {
-  Matrix p( *this );
+  Transform p( *this );
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
       p.Elems[i][j] *= a;
@@ -164,9 +164,9 @@ Matrix Matrix::operator*( double a ) const
 }
 
 
-Matrix Matrix::operator/( double a ) const
+Transform Transform::operator/( double a ) const
 {
-  Matrix p( *this );
+  Transform p( *this );
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
       p.Elems[i][j] /= a;
@@ -175,7 +175,7 @@ Matrix Matrix::operator/( double a ) const
 }
 
 
-Matrix &Matrix::operator+=( double a )
+Transform &Transform::operator+=( double a )
 {
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
@@ -185,7 +185,7 @@ Matrix &Matrix::operator+=( double a )
 }
 
 
-Matrix &Matrix::operator-=( double a )
+Transform &Transform::operator-=( double a )
 {
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
@@ -195,7 +195,7 @@ Matrix &Matrix::operator-=( double a )
 }
 
 
-Matrix &Matrix::operator*=( double a )
+Transform &Transform::operator*=( double a )
 {
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
@@ -205,7 +205,7 @@ Matrix &Matrix::operator*=( double a )
 }
 
 
-Matrix &Matrix::operator/=( double a )
+Transform &Transform::operator/=( double a )
 {
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
@@ -215,7 +215,7 @@ Matrix &Matrix::operator/=( double a )
 }
 
 
-Point Matrix::operator*( const Point &p ) const
+Point Transform::operator*( const Point &p ) const
 {
   Point c;
   for ( int i=0; i<4; i++ ) {
@@ -227,9 +227,9 @@ Point Matrix::operator*( const Point &p ) const
 }
 
 
-Matrix Matrix::operator*( const Matrix &m ) const
+Transform Transform::operator*( const Transform &m ) const
 {
-  Matrix c;
+  Transform c;
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ ) {
       c.Elems[i][j] = 0.0;
@@ -241,9 +241,9 @@ Matrix Matrix::operator*( const Matrix &m ) const
 }
 
 
-Matrix &Matrix::operator*=( const Matrix &m )
+Transform &Transform::operator*=( const Transform &m )
 {
-  Matrix a( *this );
+  Transform a( *this );
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ ) {
       Elems[i][j] = 0.0;
@@ -255,9 +255,9 @@ Matrix &Matrix::operator*=( const Matrix &m )
 }
 
 
-double Matrix::detMinor( double m[3][3], int j ) const
+double Transform::detMinor( double m[3][3], int j ) const
 {
-  // determinant of minor of 3D matrix for row 0 and col j:
+  // determinant of minor of 3D transform for row 0 and col j:
   int j0 = 0;
   if ( j == 0 )
     j0 = 1;
@@ -268,9 +268,9 @@ double Matrix::detMinor( double m[3][3], int j ) const
 }
 
 
-double Matrix::detMinor( int i, int j ) const
+double Transform::detMinor( int i, int j ) const
 {
-  // minor matrix for row i, col j:
+  // minor transform for row i, col j:
   double m[3][3];
   int iidx = 0;
   for ( int ki=0; ki<4; ki++ ) {
@@ -283,14 +283,14 @@ double Matrix::detMinor( int i, int j ) const
       iidx++;
     }
   }
-  // determinant of minor matrix:
+  // determinant of minor transform:
   return m[0][0]*detMinor(m, 0)
     - m[0][1]*detMinor(m, 1)
     + m[0][2]*detMinor(m, 2);
 }
 
 
-double Matrix::det( void ) const
+double Transform::det( void ) const
 {
   double d = Elems[0][0]*detMinor( 0, 0 );
   d -= Elems[0][1]*detMinor( 0, 1 );
@@ -300,9 +300,9 @@ double Matrix::det( void ) const
 }
 
 
-Matrix Matrix::inverse( void ) const
+Transform Transform::inverse( void ) const
 {
-  Matrix m;
+  Transform m;
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ ) {
       m.Elems[i][j] = detMinor( j, i );
@@ -314,9 +314,9 @@ Matrix Matrix::inverse( void ) const
 }
 
 
-Matrix Matrix::transpose( void ) const
+Transform Transform::transpose( void ) const
 {
-  Matrix m;
+  Transform m;
   for ( int i=0; i<4; i++ ) {
     for ( int j=0; j<4; j++ )
       m.Elems[i][j] = Elems[j][i];
@@ -325,156 +325,156 @@ Matrix Matrix::transpose( void ) const
 }
 
 
-Matrix Matrix::translateX( double x )
+Transform &Transform::translateX( double x )
 {
-  Matrix m;
+  Transform m;
   m.Elems[0][3] = x;
-  return m;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::translateY( double y )
+Transform &Transform::translateY( double y )
 {
-  Matrix m;
+  Transform m;
   m.Elems[1][3] = y;
-  return m;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::translateZ( double z )
+Transform &Transform::translateZ( double z )
 {
-  Matrix m;
+  Transform m;
   m.Elems[2][3] = z;
-  return m;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::translate( double x, double y, double z )
+Transform &Transform::translate( double x, double y, double z )
 {
-  Matrix m;
+  Transform m;
   m.Elems[0][3] = x;
   m.Elems[1][3] = y;
   m.Elems[2][3] = z;
-  return m;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::translate( const Point &trans )
+Transform &Transform::translate( const Point &trans )
 {
-  Matrix m;
+  Transform m;
   m.Elems[0][3] = trans.x();
   m.Elems[1][3] = trans.y();
   m.Elems[2][3] = trans.z();
-  return m;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::scaleX( double xscale )
+Transform &Transform::scaleX( double xscale )
 {
-  Matrix m;
-  m.Elems[0][0] *= xscale;
-  return m;
+  Transform m;
+  m.Elems[0][0] = xscale;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::scaleY( double yscale )
+Transform &Transform::scaleY( double yscale )
 {
-  Matrix m;
-  m.Elems[1][1] *= yscale;
-  return m;
+  Transform m;
+  m.Elems[1][1] = yscale;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::scaleZ( double zscale )
+Transform &Transform::scaleZ( double zscale )
 {
-  Matrix m;
-  m.Elems[2][2] *= zscale;
-  return m;
+  Transform m;
+  m.Elems[2][2] = zscale;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::scale( double xscale, double yscale, double zscale )
+Transform &Transform::scale( double xscale, double yscale, double zscale )
 {
-  Matrix m;
-  m.Elems[0][0] *= xscale;
-  m.Elems[1][1] *= yscale;
-  m.Elems[2][2] *= zscale;
-  return m;
+  Transform m;
+  m.Elems[0][0] = xscale;
+  m.Elems[1][1] = yscale;
+  m.Elems[2][2] = zscale;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::scale( const Point &scale )
+Transform &Transform::scale( const Point &scale )
 {
-  Matrix m;
+  Transform m;
   for ( int k=0; k<3; k++ )
-    m.Elems[k][k] *= scale[k];
-  return m;
+    m.Elems[k][k] = scale[k];
+  return operator*=( m );
 }
 
 
-Matrix Matrix::scale( double scale )
+Transform &Transform::scale( double scale )
 {
-  Matrix m;
+  Transform m;
   for ( int k=0; k<3; k++ )
-    m.Elems[k][k] *= scale;
-  return m;
+    m.Elems[k][k] = scale;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::rotateZ( double angle )
-{
-  double sy = sin( angle );
-  double cy = cos( angle );
-  Matrix m;
-  m.Elems[0][0] = cy;
-  m.Elems[0][1] = -sy;
-  m.Elems[1][0] = sy;
-  m.Elems[1][1] = cy;
-  return m;
-}
-
-
-Matrix Matrix::rotateY( double angle )
-{
-  double sp = sin( angle );
-  double cp = cos( angle );
-  Matrix m;
-  m.Elems[0][0] = cp;
-  m.Elems[0][2] = -sp;
-  m.Elems[2][0] = sp;
-  m.Elems[2][2] = cp;
-  return m;
-}
-
-
-Matrix Matrix::rotateX( double angle )
+Transform &Transform::rotateX( double angle )
 {
   double sr = sin( angle );
   double cr = cos( angle );
-  Matrix m;
+  Transform m;
   m.Elems[1][1] = cr;
   m.Elems[1][2] = -sr;
   m.Elems[2][1] = sr;
   m.Elems[2][2] = cr;
-  return m;
+  return operator*=( m );
 }
 
 
-Matrix Matrix::rotate( double anglez, double angley, double anglex )
+Transform &Transform::rotateY( double angle )
 {
-  Matrix m = rotateZ( anglez );
+  double sp = sin( angle );
+  double cp = cos( angle );
+  Transform m;
+  m.Elems[0][0] = cp;
+  m.Elems[0][2] = -sp;
+  m.Elems[2][0] = sp;
+  m.Elems[2][2] = cp;
+  return operator*=( m );
+}
+
+
+Transform &Transform::rotateZ( double angle )
+{
+  double sy = sin( angle );
+  double cy = cos( angle );
+  Transform m;
+  m.Elems[0][0] = cy;
+  m.Elems[0][1] = -sy;
+  m.Elems[1][0] = sy;
+  m.Elems[1][1] = cy;
+  return operator*=( m );
+}
+
+
+Transform &Transform::rotate( double anglex, double angley, double anglez )
+{
+  Transform m = rotateX( anglex );
   m *= rotateY( angley );
   m *= rotateZ( anglez );
-  return m;
+  return operator*=( m );
 }
 
 
-ostream &operator<<( ostream &str, const Matrix &m ) 
+ostream &operator<<( ostream &str, const Transform &m ) 
 {
-  str << "matrix ( ";
+  str << "transform ( ";
   for ( int i=0; i<4; i++ ) {
     if ( i > 0 )
-      str << "       ( ";
+      str << "          ( ";
     for ( int j=0; j<4; j++ ) {
       str << setw( 10 ) << m.Elems[i][j];
       if ( j < 3 )

@@ -24,7 +24,7 @@
 
 #include <deque>
 #include <relacs/point.h>
-#include <relacs/matrix.h>
+#include <relacs/transform.h>
 
 
 namespace relacs {
@@ -52,8 +52,8 @@ public:
     /*! Constructs a shape of a specific \a type with name \a name. */
   Shape( ShapeType type, const string &name="" );
     /*! Constructs a shape of a specific \a type, with name \a name,
-        transformed by \a trafo and translated to \a trans. */
-  Shape( ShapeType type, const string &name, const Matrix &trafo, const Point &trans );
+        and transformed by \a trafo. */
+  Shape( ShapeType type, const string &name, const Transform &trafo );
     /*! Copy constructor. */
   Shape( const Shape &s );
 
@@ -96,35 +96,33 @@ public:
         by the factor \a scale. */
   void scale( double scale );
 
-    /*! Rotate the shape counterclockwise around the world z-axis by \a angle
-        radians. */
-  void rotateZ( double angle );
-    /*! Rotate the shape counterclockwise around the world y-axis by \a
-        angle radians. */
-  void rotateY( double angle );
     /*! Rotate the shape counterclockwise around the world x-axis by \a angle
         radians. */
   void rotateX( double angle );
-    /*! Rotate the shape counterclockwise around the world z-axis by \a anglez,
+    /*! Rotate the shape counterclockwise around the world y-axis by \a
+        angle radians. */
+  void rotateY( double angle );
+    /*! Rotate the shape counterclockwise around the world z-axis by \a angle
+        radians. */
+  void rotateZ( double angle );
+    /*! Rotate the shape counterclockwise around the world x-axis by \a anglex,
         then around the world y-axis by \a angley, and then around the
-        world x-axis by \a anglex. All angles in radians. */
-  void rotate( double anglez, double angley, double anglex );
+        world z-axis by \a anglez. All angles in radians. */
+  void rotate( double anglex, double angley, double anglez );
 
-    /*! The translation vector of the shape. */
-  const Point &trans( void ) const { return Trans; }
     /*! The transformation matrix that transforms shape coordinates to
         world coordinates. */
-  const Matrix &trafo( void ) const { return Trafo; };
+  const Transform &trafo( void ) const { return Trafo; };
     /*! The inverse transformation matrix that transforms world coordinates to
         shape coordinates. */
-  const Matrix &invTrafo( void ) const { return InvTrafo; };
+  const Transform &invTrafo( void ) const { return InvTrafo; };
 
-    /*! Transform coordinates of point \a p from shape coordinates to world coordinates
-        by applying the transformation matrix and adding the translation vector. */
+    /*! Transform coordinates of point \a p from shape coordinates to
+        world coordinates by applying the transformation matrix. */
   Point transform( const Point &p ) const;
-    /*! Transform coordinates of point \a p from world coordinates to shape coordinates
-        by translating by the negative translation vector and 
-	applying the inverse transformation matrix. */
+    /*! Transform coordinates of point \a p from world coordinates to
+        shape coordinates by applying the inverse transformation
+        matrix. */
   Point inverseTransform( const Point &p ) const;
 
     /*! Minimum corner of bounding box. */
@@ -132,11 +130,11 @@ public:
     /*! Maximum corner of bounding box. */
   Point boundingBoxMax( void ) const;
     /*! Minimum corner of bounding box for the transformation from
-        shape to world coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const = 0;
+        shape to world coordinates specified by \a trafo. */
+  virtual Point boundingBoxMin( const Transform &trafo ) const = 0;
     /*! Maximum corner of bounding box for the transformation from
-        shape to world coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const = 0;
+        shape to world coordinates specified by \a trafo. */
+  virtual Point boundingBoxMax( const Transform &trafo ) const = 0;
 
     /*! Return \c true if point \a p in world coordinates is inside the shape.
         The point is transformed into shape coordinates and then tested with insideShape(). */
@@ -182,14 +180,12 @@ private:
   ShapeType Type;
     /*! The name of the shape. */
   string Name;
-    /*! The translation vector. */
-  Point Trans;
     /*! The transformation matrix for transforming shape coordinates
         to world coordinates. */
-  Matrix Trafo;
+  Transform Trafo;
     /*! The inverse transformation matrix for transforming world
         coordinates to shape coordinates. */
-  Matrix InvTrafo;
+  Transform InvTrafo;
 
 };
 
@@ -259,12 +255,12 @@ class Zone : public Shape
 
     /*! Approximation of the minimum corner of bounding boxes of all
         additive shapes for the transformation from shape to world
-        coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const;
+        coordinates specified by \a trafo. */
+  virtual Point boundingBoxMin( const Transform &trafo ) const;
     /*! Approximation of the maximum corner of bounding boxes of all
         additive shapes for the transformation from shape to world
-        coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const;
+        coordinates specified by \a trafo. */
+  virtual Point boundingBoxMax( const Transform &trafo ) const;
 
     /*! Return \c true if point \a p in shape coordinates is inside the zone. */
   virtual bool insideShape( const Point &p ) const;
@@ -319,11 +315,11 @@ class Sphere : public Shape
   double radius( void ) const;
 
     /*! Minimum corner of bounding box for the transformation from
-        shape to world coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const;
+        shape to world coordinates specified by \a trafo. */
+  virtual Point boundingBoxMin( const Transform &trafo ) const;
     /*! Maximum corner of bounding box for the transformation from
-        shape to world coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const;
+        shape to world coordinates specified by \a trafo. */
+  virtual Point boundingBoxMax( const Transform &trafo ) const;
 
     /*! Return \c true if point \a p in shape coordinates is inside the sphere. */
   virtual bool insideShape( const Point &p ) const;
@@ -373,11 +369,11 @@ class Cylinder : public Shape
   double length( void ) const;
 
     /*! Minimum corner of bounding box for the transformation from
-        shape to world coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const;
+        shape to world coordinates specified by \a trafo. */
+  virtual Point boundingBoxMin( const Transform &trafo ) const;
     /*! Maximum corner of bounding box for the transformation from
-        shape to world coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const;
+        shape to world coordinates specified by \a trafo. */
+  virtual Point boundingBoxMax( const Transform &trafo ) const;
 
     /*! Return \c true if point \a p in shape coordinates is inside the cylinder. */
   virtual bool insideShape( const Point &p ) const;
@@ -432,9 +428,9 @@ class Cuboid : public Shape
   virtual Shape *copy( void ) const;
 
     /*! Return in \a pts the corners of the cuboid transformed
-        according to \a trafo and \a trans. */
+        according to \a trafo. */
   void corners( deque< Point > &pts,
-		const Matrix &trafo, const Point &trans ) const;
+		const Transform &trafo ) const;
     /*! Return in \a pts the corners of the cuboid in world coordinates. */
   void corners( deque< Point > &pts ) const;
 
@@ -446,11 +442,11 @@ class Cuboid : public Shape
   double height( void ) const;
 
     /*! Minimum corner of bounding box for the transformation from
-        shape to world coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMin( const Matrix &trafo, const Point &trans ) const;
+        shape to world coordinates specified by \a trafo. */
+  virtual Point boundingBoxMin( const Transform &trafo ) const;
     /*! Maximum corner of bounding box for the transformation from
-        shape to world coordinates specified by \a trafo and \a trans. */
-  virtual Point boundingBoxMax( const Matrix &trafo, const Point &trans ) const;
+        shape to world coordinates specified by \a trafo. */
+  virtual Point boundingBoxMax( const Transform &trafo ) const;
 
     /*! Return \c true if point \a p in shape coordinates is inside the cuboid. */
   virtual bool insideShape( const Point &p ) const;
