@@ -1,6 +1,6 @@
 /*
   matrix.cc
-  A matrix in 3D space.
+  A 4-D matrix used for affine transformations of 3D points.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -54,8 +54,8 @@ const Matrix Matrix::ProjectYZ = Matrix( 0.0, 0.0, 1.0,
 Matrix::Matrix( void )
 {
   // identity matrix:
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ ) {
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ ) {
       if ( i == j )
 	Elems[i][j] = 1.0;
       else
@@ -67,14 +67,15 @@ Matrix::Matrix( void )
 
 Matrix::Matrix( const Matrix &m )
 {
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       Elems[i][j] = m.Elems[i][j];
   }
 }
 
 
 Matrix::Matrix( const double m[3][3] )
+  : Matrix()
 {
   for ( int i=0; i<3; i++ ) {
     for ( int j=0; j<3; j++ )
@@ -85,6 +86,7 @@ Matrix::Matrix( const double m[3][3] )
 Matrix::Matrix( double a11, double a12, double a13,
 		double a21, double a22, double a23,
 		double a31, double a32, double a33 )
+  : Matrix()
 {
   Elems[0][0] = a11;
   Elems[0][1] = a12;
@@ -100,8 +102,8 @@ Matrix::Matrix( double a11, double a12, double a13,
 
 Matrix &Matrix::assign( const Matrix &m )
 {
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       Elems[i][j] = m.Elems[i][j];
   }
   return *this;
@@ -110,8 +112,8 @@ Matrix &Matrix::assign( const Matrix &m )
 
 Matrix &Matrix::operator=( const Matrix &m )
 {
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       Elems[i][j] = m.Elems[i][j];
   }
   return *this;
@@ -121,8 +123,8 @@ Matrix &Matrix::operator=( const Matrix &m )
 Matrix Matrix::operator-( void ) const
 {
   Matrix q( *this );
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       q.Elems[i][j] = Elems[i][j];
   }
   return q;
@@ -132,8 +134,8 @@ Matrix Matrix::operator-( void ) const
 Matrix Matrix::operator+( double a ) const
 {
   Matrix p( *this );
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       p.Elems[i][j] += a;
   }
   return p;
@@ -143,8 +145,8 @@ Matrix Matrix::operator+( double a ) const
 Matrix Matrix::operator-( double a ) const
 {
   Matrix p( *this );
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       p.Elems[i][j] -= a;
   }
   return p;
@@ -154,8 +156,8 @@ Matrix Matrix::operator-( double a ) const
 Matrix Matrix::operator*( double a ) const
 {
   Matrix p( *this );
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       p.Elems[i][j] *= a;
   }
   return p;
@@ -165,8 +167,8 @@ Matrix Matrix::operator*( double a ) const
 Matrix Matrix::operator/( double a ) const
 {
   Matrix p( *this );
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       p.Elems[i][j] /= a;
   }
   return p;
@@ -175,8 +177,8 @@ Matrix Matrix::operator/( double a ) const
 
 Matrix &Matrix::operator+=( double a )
 {
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       Elems[i][j] += a;
   }
   return *this;
@@ -185,8 +187,8 @@ Matrix &Matrix::operator+=( double a )
 
 Matrix &Matrix::operator-=( double a )
 {
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       Elems[i][j] -= a;
   }
   return *this;
@@ -195,8 +197,8 @@ Matrix &Matrix::operator-=( double a )
 
 Matrix &Matrix::operator*=( double a )
 {
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       Elems[i][j] *= a;
   }
   return *this;
@@ -205,8 +207,8 @@ Matrix &Matrix::operator*=( double a )
 
 Matrix &Matrix::operator/=( double a )
 {
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       Elems[i][j] /= a;
   }
   return *this;
@@ -216,9 +218,9 @@ Matrix &Matrix::operator/=( double a )
 Point Matrix::operator*( const Point &p ) const
 {
   Point c;
-  for ( int i=0; i<3; i++ ) {
+  for ( int i=0; i<4; i++ ) {
     c[i] = 0.0;
-    for ( int j=0; j<3; j++ )
+    for ( int j=0; j<4; j++ )
       c[i] += Elems[i][j]*p[j];
   }
   return c;
@@ -228,10 +230,10 @@ Point Matrix::operator*( const Point &p ) const
 Matrix Matrix::operator*( const Matrix &m ) const
 {
   Matrix c;
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ ) {
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ ) {
       c.Elems[i][j] = 0.0;
-      for ( int k=0; k<3; k++ )
+      for ( int k=0; k<4; k++ )
 	c.Elems[i][j] += Elems[i][k]*m.Elems[k][j];
     }
   }
@@ -242,10 +244,10 @@ Matrix Matrix::operator*( const Matrix &m ) const
 Matrix &Matrix::operator*=( const Matrix &m )
 {
   Matrix a( *this );
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ ) {
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ ) {
       Elems[i][j] = 0.0;
-      for ( int k=0; k<3; k++ )
+      for ( int k=0; k<4; k++ )
 	Elems[i][j] += m.Elems[i][k]*a.Elems[k][j];
     }
   }
@@ -253,38 +255,47 @@ Matrix &Matrix::operator*=( const Matrix &m )
 }
 
 
+double Matrix::detMinor( double m[3][3], int j ) const
+{
+  // determinant of minor of 3D matrix for row 0 and col j:
+  int j0 = 0;
+  if ( j == 0 )
+    j0 = 1;
+  int j1 = 2;
+  if ( j == 2 )
+    j1 = 1;
+  return m[1][j0]*m[2][j1] - m[2][j0]*m[1][j1];
+}
+
+
 double Matrix::detMinor( int i, int j ) const
 {
-  // rows and cols of minors:
-  int ii[2] = { i+1, i+2 };
-  int jj[2] = { j+1, j+2 };
-  for ( int k=0; k<2; k++ ) {
-    if ( ii[k] >= 3 )
-      ii[k] -= 3;
-    if ( jj[k] >= 3 )
-      jj[k] -= 3;
+  // minor matrix for row i, col j:
+  double m[3][3];
+  int iidx = 0;
+  for ( int ki=0; ki<4; ki++ ) {
+    if ( ki != i ) {
+      int jidx = 0;
+      for ( int kj=0; kj<4; kj++ ) {
+	if ( kj != j )
+	  m[iidx][jidx++] = Elems[ki][kj];
+      }
+      iidx++;
+    }
   }
-  // order them:
-  if ( ii[0] > ii[1] ) {
-    int s = ii[0];
-    ii[0] = ii[1];
-    ii[1] = s;
-  }
-  if ( jj[0] > jj[1] ) {
-    int s = jj[0];
-    jj[0] = jj[1];
-    jj[1] = s;
-  }
-  // determinant of 2-D minor:
-  return Elems[ii[0]][jj[0]]*Elems[ii[1]][jj[1]] - Elems[ii[0]][jj[1]]*Elems[ii[1]][jj[0]];
+  // determinant of minor matrix:
+  return m[0][0]*detMinor(m, 0)
+    - m[0][1]*detMinor(m, 1)
+    + m[0][2]*detMinor(m, 2);
 }
 
 
 double Matrix::det( void ) const
 {
-  double d = Elems[0][0]*detMinor(0, 0);
-  d -= Elems[0][1]*detMinor(0, 1);
-  d += Elems[0][2]*detMinor(0, 2);
+  double d = Elems[0][0]*detMinor( 0, 0 );
+  d -= Elems[0][1]*detMinor( 0, 1 );
+  d += Elems[0][2]*detMinor( 0, 2 );
+  d -= Elems[0][3]*detMinor( 0, 3 );
   return d;
 }
 
@@ -292,8 +303,8 @@ double Matrix::det( void ) const
 Matrix Matrix::inverse( void ) const
 {
   Matrix m;
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ ) {
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ ) {
       m.Elems[i][j] = detMinor( j, i );
       if ( (i+j)%2 == 1 )
 	m.Elems[i][j] *= -1.0;
@@ -306,10 +317,54 @@ Matrix Matrix::inverse( void ) const
 Matrix Matrix::transpose( void ) const
 {
   Matrix m;
-  for ( int i=0; i<3; i++ ) {
-    for ( int j=0; j<3; j++ )
+  for ( int i=0; i<4; i++ ) {
+    for ( int j=0; j<4; j++ )
       m.Elems[i][j] = Elems[j][i];
   }  
+  return m;
+}
+
+
+Matrix Matrix::translateX( double x )
+{
+  Matrix m;
+  m.Elems[0][3] = x;
+  return m;
+}
+
+
+Matrix Matrix::translateY( double y )
+{
+  Matrix m;
+  m.Elems[1][3] = y;
+  return m;
+}
+
+
+Matrix Matrix::translateZ( double z )
+{
+  Matrix m;
+  m.Elems[2][3] = z;
+  return m;
+}
+
+
+Matrix Matrix::translate( double x, double y, double z )
+{
+  Matrix m;
+  m.Elems[0][3] = x;
+  m.Elems[1][3] = y;
+  m.Elems[2][3] = z;
+  return m;
+}
+
+
+Matrix Matrix::translate( const Point &trans )
+{
+  Matrix m;
+  m.Elems[0][3] = trans.x();
+  m.Elems[1][3] = trans.y();
+  m.Elems[2][3] = trans.z();
   return m;
 }
 
@@ -417,12 +472,12 @@ Matrix Matrix::rotate( double anglez, double angley, double anglex )
 ostream &operator<<( ostream &str, const Matrix &m ) 
 {
   str << "matrix ( ";
-  for ( int i=0; i<3; i++ ) {
+  for ( int i=0; i<4; i++ ) {
     if ( i > 0 )
       str << "       ( ";
-    for ( int j=0; j<3; j++ ) {
+    for ( int j=0; j<4; j++ ) {
       str << setw( 10 ) << m.Elems[i][j];
-      if ( j < 2 )
+      if ( j < 3 )
 	str << " ";
     }
     str << " )\n";

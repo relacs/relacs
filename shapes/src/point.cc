@@ -44,22 +44,24 @@ const Point Point::UnitZ = Point( 0.0, 0.0, 1.0 );
 Point::Point( void )
 {
   for ( int k=0; k<Dim; k++ )
-    Coords[k] = 0;
+    Coords[k] = 0.0;
+  Coords[3] = 1.0;
 }
 
 
 Point::Point( const Point &p )
 {
-  for ( int k=0; k<Dim; k++ )
+  for ( int k=0; k<=Dim; k++ )
     Coords[k] = p.Coords[k];
 }
 
 
-Point::Point( double x, double y, double z )
+  Point::Point( double x, double y, double z, double h )
 {
   Coords[0] = x;
   Coords[1] = y;
   Coords[2] = z;
+  Coords[3] = h;
 }
 
 
@@ -67,21 +69,23 @@ Point::Point( const double c[3] )
 {
   for ( int i=0; i<3; i++ )
     Coords[i] = c[i];
+  Coords[3] = 1.0;
 }
 
 
-Point &Point::assign( double x, double y, double z )
+Point &Point::assign( double x, double y, double z, double h )
 {
   Coords[0] = x;
   Coords[1] = y;
   Coords[2] = z;
+  Coords[3] = h;
   return *this;
 }
 
 
 Point &Point::assign( const Point &p )
 {
-  for ( int k=0; k<Dim; k++ )
+  for ( int k=0; k<=Dim; k++ )
     Coords[k] = p[k];
   return *this;
 }
@@ -89,7 +93,7 @@ Point &Point::assign( const Point &p )
 
 Point &Point::operator=( const Point &p )
 {
-  for ( int k=0; k<Dim; k++ )
+  for ( int k=0; k<=Dim; k++ )
     Coords[k] = p[k];
   return *this;
 }
@@ -332,6 +336,30 @@ Point Point::normalized( void ) const
 }
 
 
+Point &Point::homDivide( void )
+{
+  if ( ::fabs( Coords[3] ) < 1e-8 ) {
+    for ( int k=0; k<Dim; k++ )
+      Coords[k] = NAN;
+    Coords[3] = 1.0;
+  }
+  else {
+    for ( int k=0; k<=Dim; k++ )
+      Coords[k] /= Coords[3];
+  }
+  return *this;
+}
+
+
+Point Point::homDivided( void ) const
+{
+  if ( ::fabs( Coords[3] ) < 1e-8 )
+    return None;
+  else
+    return (*this) / Coords[3];
+}
+
+
 bool Point::isNone( void ) const
 {
   for ( int k=0; k<Dim; k++ ) {
@@ -447,7 +475,7 @@ Point Point::max( const Point &p ) const
 Point min( const deque<Point> &pts )
 {
   if ( pts.empty() )
-    return Point( 0.0, 0.0, 0.0 );
+    return Point::None;
   Point minp = pts.front();
   for ( auto pi=pts.begin()+1; pi != pts.end(); ++pi )
     minp = minp.min( *pi );
@@ -458,7 +486,7 @@ Point min( const deque<Point> &pts )
 Point max( const deque<Point> &pts )
 {
   if ( pts.empty() )
-    return Point( 0.0, 0.0, 0.0 );
+    return Point::None;
   Point maxp = pts.front();
   for ( auto pi=pts.begin()+1; pi != pts.end(); ++pi )
     maxp = maxp.max( *pi );
@@ -477,9 +505,9 @@ Point abs( Point p )
 Point &Point::operator*=( const Matrix &m )
 {
   Point p( *this );
-  for ( int i=0; i<3; i++ ) {
+  for ( int i=0; i<4; i++ ) {
     Coords[i] = 0.0;
-    for ( int j=0; j<3; j++ )
+    for ( int j=0; j<4; j++ )
       Coords[i] += m(i, j) * p[j];
   }
   return *this;
@@ -488,9 +516,9 @@ Point &Point::operator*=( const Matrix &m )
 
 ostream &operator<<( ostream &str, const Point &p ) 
 {
-  str << "x=" << p[0] << ", ";
-  str << "y=" << p[1] << ", ";
-  str << "z=" << p[2];
+  str << "( " << p[0] << ", ";
+  str << p[1] << ", ";
+  str << p[2] << " )";
   return str;
 }
 

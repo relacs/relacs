@@ -30,6 +30,7 @@ PlotShapes::PlotShapes( int n )
   A = 0.0;
   B = 0.0;
   C = 0.0;
+  X = 0.0;
 
   setMinimumSize( QSize(800, 800) );
   (*this)[0].setXLabel( "x-coord" );
@@ -61,11 +62,13 @@ void PlotShapes::update( void )
   A += 0.01 * 2.0 * M_PI;
   B += 0.003 * 2.0 * M_PI;
   C += 0.001 * 2.0 * M_PI;
+  X += 0.002 * 2.0 * M_PI;
   cbd.scaleX( 2.0 );
   cbd.scaleZ( 0.5 );
   cbd.rotateZ( A );
   cbd.rotateY( B );
   cbd.rotateX( C );
+  //  cbd.translateX( ::sin(X) );
 
   (*this)[0].clearData();
   (*this)[0].plot( cbd, Matrix::ProjectXY, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );

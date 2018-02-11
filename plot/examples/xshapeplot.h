@@ -25,6 +25,7 @@ public slots:
 private:
 
   double A, B, C;
+  double X;
 
 };
 

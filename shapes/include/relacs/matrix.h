@@ -1,6 +1,6 @@
 /*
   matrix.h
-  A 3-D matrix.
+  A 4-D matrix used for affine transformations of 3D points.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -31,7 +31,7 @@ namespace relacs {
 
 /*!
 \class Matrix
-\brief A 3-D matrix.
+\brief A 4-D matrix used for affine transformations of 3D points.
 \author Jan Benda, Fabian Sinz
  */
 
@@ -57,9 +57,11 @@ public:
   Matrix( void );
     /*! Copy constructor. */
   Matrix( const Matrix &p );
-    /*! A matrix with elements copied from \a m. */
+    /*! A matrix with elements copied from \a m. All other elements
+        are set to 0 and a44 is set ot 1. */
   Matrix( const double m[3][3] );
-    /*! A matrix defined by its elements \a a_i,j. */
+    /*! A matrix defined by its elements \a a_i,j. All other elements
+        are set to 0 and a44 is set ot 1. */
   Matrix( double a11, double a12, double a13,
 	  double a21, double a22, double a23,
 	  double a31, double a32, double a33 );
@@ -109,14 +111,25 @@ public:
         \note \a m is multiplied from the left, not from the right! */
   Matrix &operator*=( const Matrix &m );
 
-    /*! Return the determinant of the minor matrix for (i, j). */
-  double detMinor( int i, int j ) const;
     /*! Return the determinant of the matrix. */
   double det( void ) const;
     /*! Return the inverse matrix. */
   Matrix inverse( void ) const;
     /*! Return the transposed matrix. */
   Matrix transpose( void ) const;
+
+    /*! Return the transformation matrix that translates along the x-axis by \a x. */
+  static Matrix translateX( double x );
+    /*! Return the transformation matrix that translates along the y-axis by \a y. */
+  static Matrix translateY( double y );
+    /*! Return the transformation matrix that translates along the z-axis by \a z. */
+  static Matrix translateZ( double z );
+    /*! Return the transformation matrix that translates along the x-, y-, and
+        z-axis by \a x, \a y, \a z, respectively. */
+  static Matrix translate( double x, double y, double z );
+    /*! Return the transformation matrix that translates the x-, y-, and
+        z-axis by \a trans. */
+  static Matrix translate( const Point &trans );
 
     /*! Return the transformation matrix that scales the x-axis by \a xscale. */
   static Matrix scaleX( double xscale );
@@ -155,7 +168,13 @@ public:
 
 protected:
 
-  double Elems[3][3];
+    /*! Comput determinant of minor of 3D matrix for row 0 and column \a j. */
+  double detMinor( double m[3][3], int j ) const;
+    /*! Return the determinant of the minor matrix for (i, j). */
+  double detMinor( int i, int j ) const;
+
+    /*! The the matrix elements. */
+  double Elems[4][4];
 
 };
 

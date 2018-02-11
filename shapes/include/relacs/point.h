@@ -36,6 +36,13 @@ class Matrix;
 \class Point
 \brief A point in 3D space.
 \author Jan Benda, Alexander Ott, Fabian Sinz
+
+A point is specified in 4D homogeneous coordinates that hold the x, y,
+and z coordinate and the perspective scaling factor w. w is by default
+set to 1, and all mathematical operations only apply to the x, y, and
+z coordinates, leaving w untouched. w is only changed when applying a
+transformation matrix to the point. Use homDiv() to divide all 4
+coordinates by w.
  */
 
 class Point {
@@ -59,8 +66,8 @@ public:
   Point( void );
     /*! Copy constructor. */
   Point( const Point &p );
-    /*! A point with coordinates \a x, \a y, \a z. */
-  Point( double x, double y, double z );
+    /*! A point with coordinates \a x, \a y, \a z and homogeneity \a h. */
+  Point( double x, double y, double z, double h=1.0 );
     /*! A point with coordinates from c. */
   Point( const double c[3] );
 
@@ -76,14 +83,18 @@ public:
   double z( void ) const { return Coords[2]; }
     /*! The z-coordinate of the point. */
   double &z( void ) { return Coords[2]; }
+    /*! The homogeneity of the point. */
+  double w( void ) const { return Coords[3]; }
+    /*! The homogeneity of the point. */
+  double &w( void ) { return Coords[3]; }
 
-    /*! The coordinate of the point of the i-th dimension. */
+    /*! The coordinate of the point of the i-th dimension (0-3). */
   double operator[]( int i ) const { return Coords[i]; }
     /*! The coordinate of the point of the i-th dimension. */
   double &operator[]( int i ) { return Coords[i]; }
 
-    /*! Assign the coordinates \a x, \a y, \a z to this point. */
-  Point &assign( double x, double y, double z );
+    /*! Assign the coordinates \a x, \a y, \a z, \a h to this point. */
+  Point &assign( double x, double y, double z, double h=1.0 );
     /*! Assign coordinates of point \a p to this point. */
   Point &assign( const Point &p );
     /*! Assign coordinates of point \a p to this point. */
@@ -152,6 +163,11 @@ public:
     /*! Return the normalized vector. */
   Point normalized( void ) const;
 
+    /*! Divide all 4 coordinates by the w coordinate. */
+  Point &homDivide( void );
+    /*! Return the normalized vector. */
+  Point homDivided( void ) const;
+
     /*! True if this point is not defined. */
   bool isNone( void ) const;
 
@@ -195,7 +211,7 @@ public:
 protected:
 
   static const int Dim = 3;
-  double Coords[Dim];
+  double Coords[Dim+1];
 
 };
 
