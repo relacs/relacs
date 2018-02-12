@@ -454,19 +454,19 @@ public:
 
 
   /*! 
-    \class ShapeElement
+    \class PolygonElement
     \author Jan Benda
     \brief Manages a single closed polygon that can be stroked and filled.
   */
 
-  class ShapeElement
+  class PolygonElement
   {
     friend class Plot;
 
   public:
 
-    ShapeElement( const vector<double> &x, const vector<double> &y );
-    ~ShapeElement( void );
+    PolygonElement( const vector<double> &x, const vector<double> &y );
+    ~PolygonElement( void );
 
     void setAxis( Plot::Axis axis );
     void setAxis( int xaxis, int yaxis );
@@ -950,40 +950,43 @@ public:
 #endif
 
     /*! Reference to the data element \a i. */
-  DataElement &operator[]( int i ) { return *PData[i]; };
+  DataElement &operator[]( int i ) { return *LineData[i]; };
     /*! Const reference to the data element \a i. */
-  const DataElement &operator[]( int i ) const { return *PData[i]; };
+  const DataElement &operator[]( int i ) const { return *LineData[i]; };
     /*! Reference to the last data element in the list. */
-  DataElement &back( void ) { return *PData.back(); };
+  DataElement &back( void ) { return *LineData.back(); };
     /*! Const reference to the last data element in the list. */
-  const DataElement &back( void ) const { return *PData.back(); };
+  const DataElement &back( void ) const { return *LineData.back(); };
     /*! Reference to the first data element in the list. */
-  DataElement &front( void ) { return *PData.front(); };
+  DataElement &front( void ) { return *LineData.front(); };
     /*! Const reference to the first data element in the list. */
-  const DataElement &front( void ) const { return *PData.front(); };
+  const DataElement &front( void ) const { return *LineData.front(); };
 
   int plot( const SampleData<SampleDataD> &data, double xscale, int gradient=0 );
 
 #ifdef HAVE_LIBRELACSSHAPES
-  void addCuboidSide( const deque< Point > &pts, const int idx[], int n,
-		      const Transform &proj, const LineStyle &line );
-    /*! Plot the Cuboid \a cbd using the projection matrix \a proj.
-        The projection matrix transforms 3-D points to (x, y) points.  */
-  int plot( const Cuboid &cbd, const Transform &proj, const LineStyle &line );
-    /*! Plot the Cylinder \a clnd using the projection matrix \a proj.
-        The projection matrix transforms 3-D points to (x, y) points.  */
-  int plot( const Cylinder &clnd, const Transform &proj, const LineStyle &line );
-    /*! Plot the Sphere \a sphr using the projection matrix \a proj.
-        The projection matrix transforms 3-D points to (x, y) points.  */
-  int plot( const Sphere &sphere, const Transform &proj, const LineStyle &line );
+    /*! Return the transformation matrix that defines the (perspective) projection
+        onto the x-y plane. */
+  Transform projection( void ) const;
+    /*! Set the transformation matrix that defines the (perspective) projection
+        onto the x-y plane to \a proj. */
+  void setProjection( const Transform &proj );
+    /*! Plot the Zone \a zone using the current projection matrix.  */
+  void plot( const Zone &zone, const LineStyle &line );
+    /*! Plot the Sphere \a sphr using the  current projection matrix.  */
+  void plot( const Sphere &sphere, const LineStyle &line );
+    /*! Plot the Cylinder \a clnd using the current projection matrix.  */
+  void plot( const Cylinder &clnd, const LineStyle &line );
+    /*! Plot the Cuboid \a cbd using the current projection matrix.  */
+  void plot( const Cuboid &cbd, const LineStyle &line );
 #endif
 
     /*! Remove all 2-D plot data from the plot. */
   void clearData( void );
     /*! Remove 2-D plot data with index \a index from the plot. */
   void clearData( int index );
-    /*! Remove all shapes from the plot. */
-  void clearShapes( void );
+    /*! Remove all polygons from the plot. */
+  void clearPolygons( void );
     /*! Remove surface plot data from the plot. */
   void clearSurfaceData( void );
 
@@ -1263,6 +1266,33 @@ private:
   void drawLabels( QPainter &paint );
   void drawData( QPainter &paint );
   void drawMouse( QPainter &paint );
+
+
+#ifdef HAVE_LIBRELACSSHAPES
+    /*! Add a polygon of points \a pts for plotting. The normal vector
+        on the polygon is \a normal. The transformation \a trafo is
+        the transformation of the 3D points onto the x-y plotting
+        plane, i.e. it includes the projection() matrix. \a invtrafo
+        is the inverse transformation matrix. */
+  void addPolygon( const deque< Point > &pts, const Point &normal,
+		   const Transform &trafo, const Transform &invtrafo,
+		   const LineStyle &line );
+    /*! Plot the zone using the transformation matrix \a trafo. */
+  void plotZone( const Zone &zone, const Transform &trafo,
+		 const LineStyle &line );
+    /*! Plot a Sphere using the transformation matrix \a trafo and its
+        inverse \a invtrafo. */
+  void plotSphere( const Transform &trafo, const Transform &invtrafo,
+		   const LineStyle &line );
+    /*! Plot a Cylinder using the transformation matrix \a trafo and
+        its inverse \a invtrafo. */
+  void plotCylinder( const Transform &trafo, const Transform &invtrafo,
+		     const LineStyle &line );
+    /*! Plot a Cuboid using the transformation matrix \a trafo and its
+        inverse \a invtrafo. */
+  void plotCuboid( const Transform &trafo, const Transform &invtrafo,
+		   const LineStyle &line );
+#endif
 
     /*! Keep-mode for data to be plotted. */
   KeepMode Keep;
@@ -1676,10 +1706,14 @@ private:
 
   SurfaceElement* SData;
   uchar* SurfaceData;
-  typedef deque<ShapeElement*> ShapeDataType;
-  ShapeDataType ShapeData;
-  typedef deque<DataElement*> PDataType;
-  PDataType PData;
+#ifdef HAVE_LIBRELACSSHAPES
+  Transform Projection;
+  Point View;
+#endif
+  typedef deque<PolygonElement*> PolygonDataType;
+  PolygonDataType PolygonData;
+  typedef deque<DataElement*> LineDataType;
+  LineDataType LineData;
   bool DrawData;
   bool NewData;
   bool ShiftData;
@@ -1692,9 +1726,9 @@ private:
 
   int addData( DataElement *d );
   int setSurface( SurfaceElement *s );
-  int addShape( ShapeElement *s );
+  int addShape( PolygonElement *s );
   void drawSurface( QPainter &paint );
-  void drawShape( QPainter &paint, ShapeElement *d );
+  void drawShape( QPainter &paint, PolygonElement *d );
   void drawLine( QPainter &paint, DataElement *d, int addpx );
   int drawPoints( QPainter &paint, DataElement *d );
 

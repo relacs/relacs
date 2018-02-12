@@ -42,6 +42,9 @@ PlotShapes::PlotShapes( int n )
   (*this)[0].setYRange( -4.0, 4.0 );
   (*this)[0].setYTics( 1.0 );
   (*this)[0].noGrid();
+  Transform projxy = Transform::ProjectXY;
+  projxy(3, 2) = 0.2;
+  (*this)[0].setProjection( projxy );
 
   (*this)[1].setXLabel( "x-coord" );
   (*this)[1].setXLabelPos( 1.0, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Right, 0.0 );
@@ -52,6 +55,9 @@ PlotShapes::PlotShapes( int n )
   (*this)[1].setYRange( -4.0, 4.0 );
   (*this)[1].setYTics( 1.0 );
   (*this)[1].noGrid();
+  Transform projxz = Transform::ProjectXZ;
+  projxz(3, 1) = 0.2;
+  (*this)[1].setProjection( projxz );
 
   QTimer *timer = new QTimer(this);
   connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -65,6 +71,8 @@ void PlotShapes::update( void )
   C += 0.0005 * 2.0 * M_PI;
   X += 0.001 * 2.0 * M_PI;
 
+  Zone z;
+
   Cuboid cbd1;
   cbd1.translate( 0.0, -0.5, -0.5 );
   cbd1.scaleX( 2.0 );
@@ -73,6 +81,7 @@ void PlotShapes::update( void )
   cbd1.rotateY( B );
   cbd1.rotateX( C );
   cbd1.translateX( 2.0 * ::sin(X) );
+  z.add( cbd1 );
 
   Cuboid cbd2;
   cbd2.translate( 0.0, -0.5, -0.5 );
@@ -83,6 +92,7 @@ void PlotShapes::update( void )
   cbd2.rotateY( B );
   cbd2.rotateX( C );
   cbd2.translateX( 2.0 * ::sin(X) );
+  z.add( cbd2 );
 
   Cylinder clnd;
   clnd.scale( 0.5, 1.0, 1.0 );
@@ -91,6 +101,7 @@ void PlotShapes::update( void )
   clnd.rotateY( B );
   clnd.rotateX( C );
   clnd.translateX( 2.0 * ::sin(X) );
+  z.add( clnd );
 
   Sphere sphr1;
   sphr1.scale( 0.5 );
@@ -99,6 +110,7 @@ void PlotShapes::update( void )
   sphr1.rotateY( B );
   sphr1.rotateX( C );
   sphr1.translateX( 2.0 * ::sin(X) );
+  z.add( sphr1 );
 
   Sphere sphr2;
   sphr2.scale( 0.5, 1.0, 0.5 );
@@ -107,25 +119,12 @@ void PlotShapes::update( void )
   sphr2.rotateY( B );
   sphr2.rotateX( C );
   sphr2.translateX( 2.0 * ::sin(X) );
+  z.add( sphr2 );
 
-  Transform projxy = Transform::ProjectXY;
-  projxy(3, 2) = 0.2;
-
-  Transform projxz = Transform::ProjectXZ;
-  projxz(3, 1) = 0.2;
-
-  (*this)[0].clearShapes();
-  (*this)[0].plot( cbd1, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[0].plot( cbd2, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[0].plot( clnd, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[0].plot( sphr1, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[0].plot( sphr2, projxy, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[1].clearShapes();
-  (*this)[1].plot( cbd1, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[1].plot( cbd2, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[1].plot( clnd, projxz, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
-  (*this)[1].plot( sphr1, projxz, Plot::LineStyle( Plot::Red, 0, Plot::Solid ) );
-  (*this)[1].plot( sphr2, projxz, Plot::LineStyle( Plot::Red, 0, Plot::Solid ) );
+  (*this)[0].clearPolygons();
+  (*this)[0].plot( z, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
+  (*this)[1].clearPolygons();
+  (*this)[1].plot( z, Plot::LineStyle( Plot::Red, 2, Plot::Solid ) );
   draw();
 }
 

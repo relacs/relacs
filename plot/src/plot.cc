@@ -1476,7 +1476,7 @@ void Plot::init( void )
     if( SData->init() )
       NewData = true;
   }
-  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+  for ( LineDataType::iterator d = LineData.begin(); d != LineData.end(); ++d ) {
     if ( (*d)->init() )
       NewData = true;
   }
@@ -1496,17 +1496,17 @@ void Plot::initXRange( int axis )
       ymin[k] = YMinRange[k] >= AnyScale ? -MAXDOUBLE : YMinRange[k];
       ymax[k] = YMaxRange[k] >= AnyScale ? MAXDOUBLE : YMaxRange[k];
     }
-    ShapeDataType::iterator sd;
-    for ( sd = ShapeData.begin(); sd != ShapeData.end(); ++sd ) {
-      if ( (*sd)->XAxis == axis ) {
+    PolygonDataType::iterator pd;
+    for ( pd = PolygonData.begin(); pd != PolygonData.end(); ++pd ) {
+      if ( (*pd)->XAxis == axis ) {
 	double nxmin, nxmax;
-	(*sd)->xminmax( nxmin, nxmax, ymin[(*sd)->YAxis], ymax[(*sd)->YAxis] );
+	(*pd)->xminmax( nxmin, nxmax, ymin[(*pd)->YAxis], ymax[(*pd)->YAxis] );
 	if ( nxmin < AnyScale && nxmax < AnyScale ) {
 	  xmin = nxmin;
 	  xmax = nxmax;
-	  for ( ++sd; sd != ShapeData.end(); ++sd ) {
-	    if ( (*sd)->XAxis == axis ) {
-	      (*sd)->xminmax( nxmin, nxmax, ymin[(*sd)->YAxis], ymax[(*sd)->YAxis] );
+	  for ( ++pd; pd != PolygonData.end(); ++pd ) {
+	    if ( (*pd)->XAxis == axis ) {
+	      (*pd)->xminmax( nxmin, nxmax, ymin[(*pd)->YAxis], ymax[(*pd)->YAxis] );
 	      if ( nxmin < AnyScale && nxmin < xmin )
 		xmin = nxmin;
 	      if ( nxmax < AnyScale && nxmax > xmax )
@@ -1517,15 +1517,15 @@ void Plot::initXRange( int axis )
 	}
       }
     }
-    PDataType::iterator d;
-    for ( d = PData.begin(); d != PData.end(); ++d ) {
+    LineDataType::iterator d;
+    for ( d = LineData.begin(); d != LineData.end(); ++d ) {
       if ( (*d)->XAxis == axis ) {
 	double nxmin, nxmax;
 	(*d)->xminmax( nxmin, nxmax, ymin[(*d)->YAxis], ymax[(*d)->YAxis] );
 	if ( nxmin < AnyScale && nxmax < AnyScale ) {
 	  xmin = nxmin;
 	  xmax = nxmax;
-	  for ( ++d; d != PData.end(); ++d ) {
+	  for ( ++d; d != LineData.end(); ++d ) {
 	    if ( (*d)->XAxis == axis ) {
 	      (*d)->xminmax( nxmin, nxmax, ymin[(*d)->YAxis], ymax[(*d)->YAxis] );
 	      if ( nxmin < AnyScale && nxmin < xmin )
@@ -1607,17 +1607,17 @@ void Plot::initYRange( int axis )
     // xmin and xmax has been already set by initXRange()!
     double ymin = YMinFB[axis];
     double ymax = YMaxFB[axis];
-    ShapeDataType::iterator sd;
-    for ( sd = ShapeData.begin(); sd != ShapeData.end(); ++sd ) {
-      if ( (*sd)->YAxis == axis ) {
+    PolygonDataType::iterator pd;
+    for ( pd = PolygonData.begin(); pd != PolygonData.end(); ++pd ) {
+      if ( (*pd)->YAxis == axis ) {
 	double nymin, nymax;
-	(*sd)->yminmax( XMin[(*sd)->XAxis], XMax[(*sd)->XAxis], nymin, nymax );
+	(*pd)->yminmax( XMin[(*pd)->XAxis], XMax[(*pd)->XAxis], nymin, nymax );
 	if ( nymin < AnyScale && nymax < AnyScale ) {
 	  ymin = nymin;
 	  ymax = nymax;
-	  for ( ++sd; sd != ShapeData.end(); ++sd ) {
-	    if ( (*sd)->YAxis == axis ) {
-	      (*sd)->yminmax( XMin[(*sd)->XAxis], XMax[(*sd)->XAxis], nymin, nymax );
+	  for ( ++pd; pd != PolygonData.end(); ++pd ) {
+	    if ( (*pd)->YAxis == axis ) {
+	      (*pd)->yminmax( XMin[(*pd)->XAxis], XMax[(*pd)->XAxis], nymin, nymax );
 	      if ( nymin < AnyScale && nymin < ymin )
 		ymin = nymin;
 	      if ( nymax < AnyScale && nymax > ymax )
@@ -1628,15 +1628,15 @@ void Plot::initYRange( int axis )
 	}
       }
     }
-    PDataType::iterator d;
-    for ( d = PData.begin(); d != PData.end(); ++d ) {
+    LineDataType::iterator d;
+    for ( d = LineData.begin(); d != LineData.end(); ++d ) {
       if ( (*d)->YAxis == axis ) {
 	double nymin, nymax;
 	(*d)->yminmax( XMin[(*d)->XAxis], XMax[(*d)->XAxis], nymin, nymax );
 	if ( nymin < AnyScale && nymax < AnyScale ) {
 	  ymin = nymin;
 	  ymax = nymax;
-	  for ( ++d; d != PData.end(); ++d ) {
+	  for ( ++d; d != LineData.end(); ++d ) {
 	    if ( (*d)->YAxis == axis ) {
 	      (*d)->yminmax( XMin[(*d)->XAxis], XMax[(*d)->XAxis], nymin, nymax );
 	      if ( nymin < AnyScale && nymin < ymin )
@@ -2011,7 +2011,7 @@ void Plot::initBorder( void )
 
 void Plot::initLines( void )
 {
-  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )
+  for ( LineDataType::iterator d = LineData.begin(); d != LineData.end(); ++d )
     (*d)->setRange( XMin, XMax, YMin, YMax, PlotX1, PlotX2, PlotY1, PlotY2 );
 }
 
@@ -2511,7 +2511,7 @@ void Plot::drawSurface( QPainter &paint )
 }
 
 
-void Plot::drawShape( QPainter &paint, ShapeElement *d )
+void Plot::drawShape( QPainter &paint, PolygonElement *d )
 {
   //  if ( d->Line.color() != Transparent && d->Line.width() > 0 ) {
   if ( d->Line.color() != Transparent ) {
@@ -3235,11 +3235,11 @@ int Plot::drawPoints( QPainter &paint, DataElement *d )
 void Plot::drawData( QPainter &paint )
 {
   drawSurface( paint );
-  for ( ShapeDataType::iterator d = ShapeData.begin(); d != ShapeData.end(); ++d ) {
+  for ( PolygonDataType::iterator d = PolygonData.begin(); d != PolygonData.end(); ++d ) {
     drawShape( paint, *d );
   }
   int addpx = 0;
-  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+  for ( LineDataType::iterator d = LineData.begin(); d != LineData.end(); ++d ) {
     drawLine( paint, *d, addpx );
     int apx = drawPoints( paint, *d );
     if ( apx > addpx )
@@ -3294,16 +3294,16 @@ void Plot::drawMouse( QPainter &paint )
       int yaxis = 0;
       if ( xpos[k] == AutoScale || ypos[k] == AutoScale ) {
 	if ( MouseDInx[k] < 0 ||
-	     MouseDInx[k] >= (int)PData.size() )
+	     MouseDInx[k] >= (int)LineData.size() )
 	  continue;
-	int xdaxis = PData[MouseDInx[k]]->XAxis;
-	int ydaxis = PData[MouseDInx[k]]->YAxis;
+	int xdaxis = LineData[MouseDInx[k]]->XAxis;
+	int ydaxis = LineData[MouseDInx[k]]->YAxis;
 	if ( MousePInx[k] < 0 ||
-	     MousePInx[k] >= PData[MouseDInx[k]]->last( XMin[xdaxis], YMin[ydaxis],
+	     MousePInx[k] >= LineData[MouseDInx[k]]->last( XMin[xdaxis], YMin[ydaxis],
 							XMax[xdaxis], YMax[ydaxis] ) )
 	  continue;
 	double x, y;
-	PData[MouseDInx[k]]->point( MousePInx[k], x, y );
+	LineData[MouseDInx[k]]->point( MousePInx[k], x, y );
 	if ( xpos[k] == AutoScale ) {
 	  xpos[k] = x;
 	  xaxis = xdaxis;
@@ -3403,7 +3403,7 @@ void Plot::draw( QPaintDevice *qpm, bool drawdata )
       // check whether axis is in use:
       bool havexaxis = false;
       bool haveyaxis = false;
-      for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+      for ( LineDataType::iterator d = LineData.begin(); d != LineData.end(); ++d ) {
 	if ( (*d)->XAxis == k ) {
 	  havexaxis = true;
 	  if ( haveyaxis )
@@ -4368,18 +4368,18 @@ void Plot::mouseAnalyse( MouseEvent &me )
     if ( ! me.alt() && ( ! me.control() || ! me.shift() ) ) {
       // find data set:
       double mindd = ( PlotX2 - PlotX1 + 1 ) + ( PlotY1 - PlotY2 + 1 );
-      for ( unsigned int k=0; k<PData.size(); k++ ) {
+      for ( unsigned int k=0; k<LineData.size(); k++ ) {
         // axis:
-	int xaxis = PData[k]->XAxis;
-	int yaxis = PData[k]->YAxis;
+	int xaxis = LineData[k]->XAxis;
+	int yaxis = LineData[k]->YAxis;
 	// find the closest data point:
-	int f = PData[k]->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-	int l = PData[k]->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	int f = LineData[k]->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	int l = LineData[k]->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
 	if ( f >= l )
 	  continue;
 	double x = 0.0;
 	double y = 0.0;
-	PData[k]->point( f, x, y );
+	LineData[k]->point( f, x, y );
 	int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]) );
 	int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]) );
 	double dx = ::fabs( xp - me.xPixel() );
@@ -4387,7 +4387,7 @@ void Plot::mouseAnalyse( MouseEvent &me )
 	double mind = ::sqrt( dx*dx + dy*dy );
 	int minpinx = 0;
 	for ( int j=f+1; j<l; j++ ) {
-	  PData[k]->point( j, x, y );
+	  LineData[k]->point( j, x, y );
 	  xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]) );
 	  yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]) );
 	  dx = ::fabs( xp - me.xPixel() );
@@ -4640,8 +4640,8 @@ void Plot::setYShrinkFactor( double f )
 int Plot::addData( DataElement *d )
 {
   NewData = true;
-  PData.push_back( d );
-  return PData.size() - 1;
+  LineData.push_back( d );
+  return LineData.size() - 1;
 }
 
 
@@ -5380,7 +5380,7 @@ int Plot::plot( const SampleData<SampleDataD> &data, double xscale, int gradient
 }
 
 
-Plot::ShapeElement::ShapeElement( const vector<double> &x, const vector<double> &y )
+Plot::PolygonElement::PolygonElement( const vector<double> &x, const vector<double> &y )
   : XAxis( 0 ),
     YAxis( 0 ),
     Line(),
@@ -5391,52 +5391,52 @@ Plot::ShapeElement::ShapeElement( const vector<double> &x, const vector<double> 
 }
 
 
-Plot::ShapeElement::~ShapeElement( void )
+Plot::PolygonElement::~PolygonElement( void )
 {
   X.clear();
   Y.clear();
 }
 
 
-void Plot::ShapeElement::setAxis( Plot::Axis axis )
+void Plot::PolygonElement::setAxis( Plot::Axis axis )
 {
   XAxis = axis & 2 ? 1 : 0;
   YAxis = axis & 1 ? 1 : 0;
 }
 
 
-void Plot::ShapeElement::setAxis( int xaxis, int yaxis )
+void Plot::PolygonElement::setAxis( int xaxis, int yaxis )
 {
   XAxis = xaxis;
   YAxis = yaxis;
 }
 
 
-void Plot::ShapeElement::setLine( const Plot::LineStyle &style )
+void Plot::PolygonElement::setLine( const Plot::LineStyle &style )
 {
   Line = style;
 }
 
 
-void Plot::ShapeElement::setLine( int lcolor, int lwidth, Plot::Dash ldash )
+void Plot::PolygonElement::setLine( int lcolor, int lwidth, Plot::Dash ldash )
 {
   setLine( LineStyle( lcolor, lwidth, ldash ) );
 }
 
 
-void Plot::ShapeElement::setPoint( const Plot::PointStyle &style )
+void Plot::PolygonElement::setPoint( const Plot::PointStyle &style )
 {
   Point = style;
 }
 
 
-void Plot::ShapeElement::setPoint( Points ptype, int psize, int pcolor, int pfill )
+void Plot::PolygonElement::setPoint( Points ptype, int psize, int pcolor, int pfill )
 {
   setPoint( PointStyle( ptype, psize, pcolor, pfill ) );
 }
 
 
-void Plot::ShapeElement::setStyle( const Plot::LineStyle &lstyle, 
+void Plot::PolygonElement::setStyle( const Plot::LineStyle &lstyle, 
 				   const Plot::PointStyle &pstyle )
 { 
   Line = lstyle;
@@ -5444,7 +5444,7 @@ void Plot::ShapeElement::setStyle( const Plot::LineStyle &lstyle,
 }
 
 
-void Plot::ShapeElement::setStyle( int lcolor, int lwidth, Plot::Dash ldash, 
+void Plot::PolygonElement::setStyle( int lcolor, int lwidth, Plot::Dash ldash, 
 				   Plot::Points ptype, int psize, int pcolor, 
 				   int pfill )
 {
@@ -5453,7 +5453,7 @@ void Plot::ShapeElement::setStyle( int lcolor, int lwidth, Plot::Dash ldash,
 }
 
 
-void Plot::ShapeElement::xminmax( double &xmin, double &xmax, double ymin, double ymax ) const
+void Plot::PolygonElement::xminmax( double &xmin, double &xmax, double ymin, double ymax ) const
 {
   if ( X.size() == 0 ) {
     xmin = AnyScale;
@@ -5469,7 +5469,7 @@ void Plot::ShapeElement::xminmax( double &xmin, double &xmax, double ymin, doubl
 }
 
 
-void Plot::ShapeElement::yminmax( double xmin, double xmax, double &ymin, double &ymax ) const
+void Plot::PolygonElement::yminmax( double xmin, double xmax, double &ymin, double &ymax ) const
 {
   if ( Y.size() == 0 ) {
     ymin = AnyScale;
@@ -5485,113 +5485,83 @@ void Plot::ShapeElement::yminmax( double xmin, double xmax, double &ymin, double
 }
 
 
-int Plot::addShape( ShapeElement *s )
+int Plot::addShape( PolygonElement *s )
 {
   // XXX if normal vector points to the viewer, then add!
   NewData = true;
-  ShapeData.push_back( s );
-  return ShapeData.size() - 1;
+  PolygonData.push_back( s );
+  return PolygonData.size() - 1;
 }
 
 
 #ifdef HAVE_LIBRELACSSHAPES
 
-void Plot::addCuboidSide( const deque< Point > &pts, const int idx[], int n,
-			  const Transform &proj, const LineStyle &line )
+Transform Plot::projection( void ) const
+{
+  return Projection;
+}
+
+
+void Plot::setProjection( const Transform &proj )
+{
+  Projection = proj;
+  View = Point::UnitZ; // XXX this needs to be computed from the matrix!
+}
+
+
+void Plot::addPolygon( const deque< Point > &pts, const Point &normal,
+		       const Transform &trafo, const Transform &invtrafo,
+		       const LineStyle &line )
 {
   vector<double> x;
   vector<double> y;
-  for ( int k=0; k<n; k++ ) {
-    Point p = proj * pts[idx[k]];
+  for ( unsigned int k=0; k<pts.size(); k++ ) {
+    Point p = trafo * pts[k];
     p.homDivide();
     x.push_back( p.x() );
     y.push_back( p.y() );
   }
-  ShapeElement *SE = new ShapeElement( x, y );
-  SE->setLine( line );
-  addShape( SE );
+  PolygonElement *PE = new PolygonElement( x, y );
+  PE->setLine( line );
+  addShape( PE );
 }
 
 
-int Plot::plot( const Cuboid &cbd, const Transform &proj, const LineStyle &line )
+void Plot::plotZone( const Zone &zone, const Transform &trafo,
+		     const LineStyle &line )
 {
-  deque< Point > pts;
-  cbd.corners( pts );
-  int idxs1[4] = { 0, 1, 2, 3 };
-  addCuboidSide( pts, idxs1, 4, proj, line );
-  int idxs2[4] = { 4, 5, 6, 7 };
-  addCuboidSide( pts, idxs2, 4, proj, line );
-  int idxs3[4];
-  for ( int k=0; k<4; k++ ) {
-    idxs3[0] = k;
-    idxs3[1] = (k+1)%4;
-    idxs3[2] = idxs3[1]+4;
-    idxs3[3] = idxs3[0]+4;
-    addCuboidSide( pts, idxs3, 4, proj, line );
+  for ( int k=0; k<zone.size(); k++ ) {
+    Transform trafoz = trafo * zone[k]->trafo();
+    if ( zone[k]->type() == Shape::Zone )
+      plotZone( *zone[k], trafoz, line );
+    else {
+      Transform invtrafoz = trafoz.inverse();
+      if ( zone[k]->type() == Shape::Sphere )
+	plotSphere( trafoz, invtrafoz, line );
+      else if ( zone[k]->type() == Shape::Cylinder )
+	plotCylinder( trafoz, invtrafoz, line );
+      else if ( zone[k]->type() == Shape::Cuboid )
+	plotCuboid( trafoz, invtrafoz, line );
+    }
   }
-  return 0;
 }
 
 
-int Plot::plot( const Cylinder &clnd, const Transform &proj, const LineStyle &line )
+void Plot::plot( const Zone &zone, const LineStyle &line )
 {
-  int n = 50;
-  vector<double> x0;
-  vector<double> y0;
-  x0.reserve( n );
-  y0.reserve( n );
-  vector<double> x1;
-  vector<double> y1;
-  x1.reserve( n );
-  y1.reserve( n );
-  for ( int k=0; k<n; k++ ) {
-    Point p0( 0.0, ::cos( 2.0*M_PI*k/n ), ::sin( 2.0*M_PI*k/n ) );
-    Point q0 = proj * clnd.trafo() * p0;
-    q0.homDivide();
-    x0.push_back( q0.x() );
-    y0.push_back( q0.y() );
-    Point p1( 1.0, ::cos( 2.0*M_PI*k/n ), ::sin( 2.0*M_PI*k/n ) );
-    Point q1 = proj * clnd.trafo() * p1;
-    q1.homDivide();
-    x1.push_back( q1.x() );
-    y1.push_back( q1.y() );
-  }
-  ShapeElement *SE = new ShapeElement( x0, y0 );
-  SE->setLine( line );
-  addShape( SE );
-  SE = new ShapeElement( x1, y1 );
-  SE->setLine( line );
-  addShape( SE );
-  LineStyle l( line );
-  if ( n > 10 )
-    l.setWidth( 0 );
-  for ( int k=0; k<n; k++ ) {
-    vector<double> xr;
-    vector<double> yr;
-    xr.push_back( x0[k] );
-    yr.push_back( y0[k] );
-    xr.push_back( x0[(k+1)%n] );
-    yr.push_back( y0[(k+1)%n] );
-    xr.push_back( x1[(k+1)%n] );
-    yr.push_back( y1[(k+1)%n] );
-    xr.push_back( x1[k] );
-    yr.push_back( y1[k] );
-    SE = new ShapeElement( xr, yr );
-    SE->setLine( l );
-    addShape( SE );
-  }
-  return 0;
+  Transform trafo = Projection * zone.trafo();
+  plotZone( zone, trafo, line );
 }
 
 
-int Plot::plot( const Sphere &sphr, const Transform &proj, const LineStyle &line )
+void Plot::plotSphere( const Transform &trafo, const Transform &invtrafo,
+		       const LineStyle &line )
 {
   int m = 10;
   int n = 20;
   for ( int j=0; j<m; j++ ) {
     for ( int k=0; k<n; k++ ) {
-      vector<double> xr;
-      vector<double> yr;
+      deque<Point> pts;
       double ck0 = ::cos( 2.0*M_PI*k/n );
       double sk0 = ::sin( 2.0*M_PI*k/n );
       double ck1 = ::cos( 2.0*M_PI*(k+1)/n );
@@ -5600,42 +5570,131 @@ int Plot::plot( const Sphere &sphr, const Transform &proj, const LineStyle &line
       double sj0 = ::sin( (1.0*j/m-0.5)*M_PI );
       double cj1 = ::cos( (1.0*(j+1)/m-0.5)*M_PI );
       double sj1 = ::sin( (1.0*(j+1)/m-0.5)*M_PI );
-      Point p = Point( ck0*cj0, sk0*cj0, sj0 );
-      Point q = proj * sphr.trafo() * p;
-      q.homDivide();
-      xr.push_back( q.x() );
-      yr.push_back( q.y() );
-      p = Point( ck1*cj0, sk1*cj0, sj0 );
-      q = proj * sphr.trafo() * p;
-      q.homDivide();
-      xr.push_back( q.x() );
-      yr.push_back( q.y() );
-      p = Point( ck1*cj1, sk1*cj1, sj1 );
-      q = proj * sphr.trafo() * p;
-      q.homDivide();
-      xr.push_back( q.x() );
-      yr.push_back( q.y() );
-      p = Point( ck0*cj1, sk0*cj1, sj1 );
-      q = proj * sphr.trafo() * p;
-      q.homDivide();
-      xr.push_back( q.x() );
-      yr.push_back( q.y() );
-      ShapeElement *SE = new ShapeElement( xr, yr );
-      SE->setLine( line );
-      addShape( SE );
+      pts.push_back( Point( ck0*cj0, sk0*cj0, sj0 ) );
+      Point normal = pts.back();
+      pts.push_back( Point( ck1*cj0, sk1*cj0, sj0 ) );
+      pts.push_back( Point( ck1*cj1, sk1*cj1, sj1 ) );
+      pts.push_back( Point( ck0*cj1, sk0*cj1, sj1 ) );
+      addPolygon( pts, normal, trafo, invtrafo, line );
     }
   }
-  return 0;
 }
+
+
+void Plot::plot( const Sphere &sphr, const LineStyle &line )
+{
+  Transform trafo = Projection * sphr.trafo();
+  Transform invtrafo = trafo.inverse();
+  plotSphere( trafo, invtrafo, line );
+}
+
+
+void Plot::plotCylinder( const Transform &trafo, const Transform &invtrafo,
+			 const LineStyle &line )
+{
+  int n = 50;
+  deque<Point> pts0;
+  deque<Point> pts1;
+  for ( int k=0; k<n; k++ ) {
+    pts0.push_back( Point( 0.0, ::cos( 2.0*M_PI*k/n ), ::sin( 2.0*M_PI*k/n ) ) );
+    pts1.push_back( Point( 1.0, ::cos( 2.0*M_PI*k/n ), ::sin( 2.0*M_PI*k/n ) ) );
+  }
+  Point normal( -1.0, 0.0, 0.0 );
+  addPolygon( pts0, normal, trafo, invtrafo, line );
+  normal = Point( 1.0, 0.0, 0.0 );
+  addPolygon( pts1, normal, trafo, invtrafo, line );
+  LineStyle l( line );
+  if ( n > 10 )
+    l.setWidth( 0 );
+  for ( int k=0; k<n; k++ ) {
+    deque<Point> pts;
+    pts.push_back( pts0[k] );
+    pts.push_back( pts0[(k+1)%n] );
+    pts.push_back( pts1[(k+1)%n] );
+    pts.push_back( pts1[k] );
+    normal = pts0[k];
+    addPolygon( pts, normal, trafo, invtrafo, l );
+  }
+}
+
+
+void Plot::plot( const Cylinder &clnd, const LineStyle &line )
+{
+  Transform trafo = Projection * clnd.trafo();
+  Transform invtrafo = trafo.inverse();
+  plotCylinder( trafo, invtrafo, line );
+}
+
+
+void Plot::plotCuboid( const Transform &trafo, const Transform &invtrafo,
+		       const LineStyle &line )
+{
+  deque< Point > pts;
+  pts.push_back( Point::Origin );
+  pts.push_back( Point::UnitX );
+  pts.push_back( Point::UnitX + Point::UnitY );
+  pts.push_back( Point::UnitY );
+  Point normal( 0.0, 0.0, -1.0 );
+  addPolygon( pts, normal, trafo, invtrafo, line );
+
+  pts.clear();
+  pts.push_back( Point::UnitZ + Point::Origin );
+  pts.push_back( Point::UnitZ + Point::UnitX );
+  pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
+  pts.push_back( Point::UnitZ + Point::UnitY );
+  normal = Point( 0.0, 0.0, 1.0 );
+  addPolygon( pts, normal, trafo, invtrafo, line );
+
+  pts.clear();
+  pts.push_back( Point::Origin );
+  pts.push_back( Point::UnitX );
+  pts.push_back( Point::UnitZ + Point::UnitX );
+  pts.push_back( Point::UnitZ + Point::Origin );
+  normal = Point( 0.0, -1.0, 0.0 );
+  addPolygon( pts, normal, trafo, invtrafo, line );
+
+  pts.clear();
+  pts.push_back( Point::UnitX );
+  pts.push_back( Point::UnitX + Point::UnitY );
+  pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
+  pts.push_back( Point::UnitZ + Point::UnitX );
+  normal = Point( 1.0, 0.0, 0.0 );
+  addPolygon( pts, normal, trafo, invtrafo, line );
+
+  pts.clear();
+  pts.push_back( Point::UnitX + Point::UnitY );
+  pts.push_back( Point::UnitY );
+  pts.push_back( Point::UnitZ + Point::UnitY );
+  pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
+  normal = Point( 0.0, 1.0, 0.0 );
+  addPolygon( pts, normal, trafo, invtrafo, line );
+
+  pts.clear();
+  pts.push_back( Point::UnitY );
+  pts.push_back( Point::Origin );
+  pts.push_back( Point::UnitZ + Point::Origin );
+  pts.push_back( Point::UnitZ + Point::UnitY );
+  normal = Point( -1.0, 0.0, 0.0 );
+  addPolygon( pts, normal, trafo, invtrafo, line );
+}
+
+
+void Plot::plot( const Cuboid &cbd, const LineStyle &line )
+{
+  Transform trafo = Projection * cbd.trafo();
+  Transform invtrafo = trafo.inverse();
+  plotCuboid( trafo, invtrafo, line );
+}
+
 
 #endif
 
 
 void Plot::clearData( void )
 {
-  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )
+  for ( LineDataType::iterator d = LineData.begin(); d != LineData.end(); ++d )
     delete (*d);
-  PData.clear();
+  LineData.clear();
   NewData = true;
 }
 
@@ -5643,21 +5702,21 @@ void Plot::clearData( void )
 void Plot::clearData( int index )
 {
   int k;
-  PDataType::iterator d;
-  for ( k=0, d = PData.begin(); k<index && d != PData.end(); ++d, ++k );
-  if ( k == index && d != PData.end() ) {
+  LineDataType::iterator d;
+  for ( k=0, d = LineData.begin(); k<index && d != LineData.end(); ++d, ++k );
+  if ( k == index && d != LineData.end() ) {
     delete (*d);
-    PData.erase( d );
+    LineData.erase( d );
   }
   NewData = true;
 }
 
 
-void Plot::clearShapes( void )
+void Plot::clearPolygons( void )
 {
-  for ( ShapeDataType::iterator d = ShapeData.begin(); d != ShapeData.end(); ++d )
+  for ( PolygonDataType::iterator d = PolygonData.begin(); d != PolygonData.end(); ++d )
     delete (*d);
-  ShapeData.clear();
+  PolygonData.clear();
   NewData = true;
 }
 
@@ -5677,7 +5736,7 @@ void Plot::clearSurfaceData( void )
 void Plot::clear( void )
 {
   clearSurfaceData();
-  clearShapes();
+  clearPolygons();
   clearData();
   clearLabels();
 }
