@@ -165,6 +165,20 @@ void Shape::rotate( double anglex, double angley, double anglez )
 }
 
 
+void Shape::rotate( const Point &axis, double angle )
+{
+  Trafo.rotate( axis, angle );
+  InvTrafo = Trafo.inverse();
+}
+
+
+void Shape::transform( const Transform &trafo )
+{
+  Trafo *= trafo;
+  InvTrafo = Trafo.inverse();
+}
+
+
 Point Shape::transform( const Point &p ) const
 {
   return Trafo * p;

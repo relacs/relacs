@@ -1,6 +1,6 @@
 /*
   transform.h
-  A 4-D matrix used for affine transformations of 3D points.
+  A 4-D matrix used for affine and perspective transformations of 3D points.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -31,7 +31,7 @@ namespace relacs {
 
 /*!
 \class Transform
-\brief A 4-D matrix used for affine transformations of 3D points.
+\brief A 4-D matrix used for affine and perspective transformations of 3D points.
 \author Jan Benda, Fabian Sinz
  */
 
@@ -45,13 +45,6 @@ public:
   static const Transform Zeros;
     /*! Transformation with all elements ones. */
   static const Transform Ones;
-
-    /*! Projection that projects onto the x-y plane. */
-  static const Transform ProjectXY;
-    /*! Projection that projects onto the x-z plane. */
-  static const Transform ProjectXZ;
-    /*! Projection that projects onto the y-z plane. */
-  static const Transform ProjectYZ;
 
     /*! Constructor. */
   Transform( void );
@@ -121,6 +114,9 @@ public:
     /*! Return the transposed transformation matrix. */
   Transform transpose( void ) const;
 
+    /*! Set the translation and projection to zeor. */
+  void clearTransProj( void );
+
     /*! Apply the transformation that translates along the x-axis by \a x. */
   Transform &translateX( double x );
     /*! Apply the transformation that translates along the y-axis by \a y. */
@@ -164,6 +160,26 @@ public:
         angley, and then around the world z-axis by \a world z. All
         angles in radians. */
   Transform &rotate( double anglex, double angley, double anglez );
+    /*! Apply the transformation that rotates counterclockwise
+        around the given axis \a axis by \a angle radians.
+	\a axis does not need to be normalized. */
+  Transform &rotate( const Point &axis, double angle );
+    /*! Apply the transformation that rotates vector \a from into
+        vector \a to. */
+  Transform &rotate( const Point &from, const Point &to );
+
+    /*! Apply the transformation that adds perspective scaling for a
+        view point at a distance \a distance along the x-axis,
+        i.e. set a41 to 1/distance. */
+  Transform &perspectiveX( double distance );
+    /*! Apply the transformation that adds perspective scaling for a
+        view point at a distance \a distance along the y-axis,
+        i.e. set a42 to 1/distance. */
+  Transform &perspectiveY( double distance );
+    /*! Apply the transformation that adds perspective scaling for a
+        view point at a distance \a distance along the z-axis,
+        i.e. set a43 to 1/distance. */
+  Transform &perspectiveZ( double distance );
 
     /*! Write the elements of the transformation matrix to stream \a str. */
   friend ostream &operator<<( ostream &str, const Transform &m );

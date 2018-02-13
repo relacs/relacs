@@ -465,7 +465,8 @@ public:
 
   public:
 
-    PolygonElement( const vector<double> &x, const vector<double> &y );
+    PolygonElement( const vector<double> &x, const vector<double> &y,
+		    double distance, double diffusion );
     ~PolygonElement( void );
 
     void setAxis( Plot::Axis axis );
@@ -497,7 +498,8 @@ public:
     Plot::PointStyle Point;
     vector<double> X;
     vector<double> Y;
-
+    double Distance;
+    double Diffusion;
   };
 
 
@@ -968,9 +970,13 @@ public:
     /*! Return the transformation matrix that defines the (perspective) projection
         onto the x-y plane. */
   Transform projection( void ) const;
-    /*! Set the transformation matrix that defines the (perspective) projection
-        onto the x-y plane to \a proj. */
-  void setProjection( const Transform &proj );
+    /*! Put the view point (camera) at position \a view.
+        Computes the corresponding projection matrix (rotation and perspective). */
+  void setViewPoint( const Point &view );
+    /*! Return the position (direction) of the light source. */
+  Point lightSource( void ) const;
+    /*! Set the position (direction) of the lightsource to \a lightsource. */
+  void setLightSource( const Point &lightsource );
     /*! Plot the Zone \a zone using the current projection matrix.  */
   void plot( const Zone &zone, const LineStyle &line );
     /*! Plot the Sphere \a sphr using the  current projection matrix.  */
@@ -1271,27 +1277,19 @@ private:
 #ifdef HAVE_LIBRELACSSHAPES
     /*! Add a polygon of points \a pts for plotting. The normal vector
         on the polygon is \a normal. The transformation \a trafo is
-        the transformation of the 3D points onto the x-y plotting
-        plane, i.e. it includes the projection() matrix. \a invtrafo
-        is the inverse transformation matrix. */
+        the transformation of the 3D points into world coordinates,
+        but it does not include the projection() matrix. */
   void addPolygon( const deque< Point > &pts, const Point &normal,
-		   const Transform &trafo, const Transform &invtrafo,
-		   const LineStyle &line );
+		   const Transform &trafo, const LineStyle &line );
     /*! Plot the zone using the transformation matrix \a trafo. */
   void plotZone( const Zone &zone, const Transform &trafo,
 		 const LineStyle &line );
-    /*! Plot a Sphere using the transformation matrix \a trafo and its
-        inverse \a invtrafo. */
-  void plotSphere( const Transform &trafo, const Transform &invtrafo,
-		   const LineStyle &line );
-    /*! Plot a Cylinder using the transformation matrix \a trafo and
-        its inverse \a invtrafo. */
-  void plotCylinder( const Transform &trafo, const Transform &invtrafo,
-		     const LineStyle &line );
-    /*! Plot a Cuboid using the transformation matrix \a trafo and its
-        inverse \a invtrafo. */
-  void plotCuboid( const Transform &trafo, const Transform &invtrafo,
-		   const LineStyle &line );
+    /*! Plot a Sphere using the transformation matrix \a trafo. */
+  void plotSphere( const Transform &trafo, const LineStyle &line );
+    /*! Plot a Cylinder using the transformation matrix \a trafo. */
+  void plotCylinder( const Transform &trafo, const LineStyle &line );
+    /*! Plot a Cuboid using the transformation matrix \a trafo. */
+  void plotCuboid( const Transform &trafo, const LineStyle &line );
 #endif
 
     /*! Keep-mode for data to be plotted. */
@@ -1708,7 +1706,8 @@ private:
   uchar* SurfaceData;
 #ifdef HAVE_LIBRELACSSHAPES
   Transform Projection;
-  Point View;
+  Point ViewPoint;
+  Point LightSource;
 #endif
   typedef deque<PolygonElement*> PolygonDataType;
   PolygonDataType PolygonData;
@@ -1726,9 +1725,8 @@ private:
 
   int addData( DataElement *d );
   int setSurface( SurfaceElement *s );
-  int addShape( PolygonElement *s );
   void drawSurface( QPainter &paint );
-  void drawShape( QPainter &paint, PolygonElement *d );
+  void drawPolygon( QPainter &paint, PolygonElement *d );
   void drawLine( QPainter &paint, DataElement *d, int addpx );
   int drawPoints( QPainter &paint, DataElement *d );
 

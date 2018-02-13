@@ -2511,7 +2511,7 @@ void Plot::drawSurface( QPainter &paint )
 }
 
 
-void Plot::drawShape( QPainter &paint, PolygonElement *d )
+void Plot::drawPolygon( QPainter &paint, PolygonElement *d )
 {
   //  if ( d->Line.color() != Transparent && d->Line.width() > 0 ) {
   if ( d->Line.color() != Transparent ) {
@@ -2522,9 +2522,11 @@ void Plot::drawShape( QPainter &paint, PolygonElement *d )
     if ( d->Line.width() == 0 )
       dash = Qt::NoPen;
     paint.setPen( QPen( qcolor, d->Line.width(), dash ) );
-    // no brush:
-    //paint.setBrush( QBrush( Qt::black, Qt::NoBrush ) );
-    paint.setBrush( QBrush( QColor( c.red(), c.green(), c.blue(), 127) ) );
+    double diffusion = d->Diffusion;
+    if ( diffusion < 0.0 )
+      diffusion = 0.0;
+    QColor fcolor = qcolor.darker( 100 + int(::round(300*(1.0 - diffusion))) );
+    paint.setBrush( QBrush( fcolor ) );
 
     // axis:
     int xaxis = d->XAxis;
@@ -3236,7 +3238,7 @@ void Plot::drawData( QPainter &paint )
 {
   drawSurface( paint );
   for ( PolygonDataType::iterator d = PolygonData.begin(); d != PolygonData.end(); ++d ) {
-    drawShape( paint, *d );
+    drawPolygon( paint, *d );
   }
   int addpx = 0;
   for ( LineDataType::iterator d = LineData.begin(); d != LineData.end(); ++d ) {
@@ -5380,13 +5382,16 @@ int Plot::plot( const SampleData<SampleDataD> &data, double xscale, int gradient
 }
 
 
-Plot::PolygonElement::PolygonElement( const vector<double> &x, const vector<double> &y )
+Plot::PolygonElement::PolygonElement( const vector<double> &x, const vector<double> &y,
+				      double distance, double diffusion )
   : XAxis( 0 ),
     YAxis( 0 ),
     Line(),
     Point(),
     X( x ),
-    Y( y )
+    Y( y ),
+    Distance( distance ),
+    Diffusion( diffusion )
 {
 }
 
@@ -5485,15 +5490,6 @@ void Plot::PolygonElement::yminmax( double xmin, double xmax, double &ymin, doub
 }
 
 
-int Plot::addShape( PolygonElement *s )
-{
-  // XXX if normal vector points to the viewer, then add!
-  NewData = true;
-  PolygonData.push_back( s );
-  return PolygonData.size() - 1;
-}
-
-
 #ifdef HAVE_LIBRELACSSHAPES
 
 Transform Plot::projection( void ) const
@@ -5502,28 +5498,63 @@ Transform Plot::projection( void ) const
 }
 
 
-void Plot::setProjection( const Transform &proj )
+void Plot::setViewPoint( const Point &view )
 {
-  Projection = proj;
-  View = Point::UnitZ; // XXX this needs to be computed from the matrix!
+  ViewPoint = view;
+  Projection = Transform::Identity;
+  Projection.rotate( view, Point::UnitZ );
+  Projection.perspectiveZ( -view.magnitude() );
+}
+
+
+Point Plot::lightSource( void ) const
+{
+  return LightSource;
+}
+
+
+void Plot::setLightSource( const Point &lightsource )
+{
+  LightSource = lightsource.normalized();
 }
 
 
 void Plot::addPolygon( const deque< Point > &pts, const Point &normal,
-		       const Transform &trafo, const Transform &invtrafo,
-		       const LineStyle &line )
+		       const Transform &trafo, const LineStyle &line )
 {
   vector<double> x;
   vector<double> y;
+  Point c = Point::Origin;
   for ( unsigned int k=0; k<pts.size(); k++ ) {
     Point p = trafo * pts[k];
+    c += p;
+    p *= Projection;
     p.homDivide();
     x.push_back( p.x() );
     y.push_back( p.y() );
   }
-  PolygonElement *PE = new PolygonElement( x, y );
-  PE->setLine( line );
-  addShape( PE );
+  c /= pts.size();
+  double distance = c.distance( ViewPoint );
+
+  Transform invtrafo = trafo.inverse().transpose();
+  Point n = invtrafo * normal;
+  double diffusion = n.dot( LightSource )/n.magnitude();
+
+  if ( ViewPoint.dot( n ) >= -0.1 ) {
+    PolygonElement *PE = new PolygonElement( x, y, distance, diffusion );
+    PE->setLine( line );
+    bool found = false;
+    for ( auto pdi=PolygonData.begin(); pdi != PolygonData.end(); ++pdi ) {
+      if ( (*pdi)->Distance < distance ) {
+	PolygonData.insert( pdi, PE );
+	found = true;
+	break;
+      }
+    }
+    if ( ! found )
+      PolygonData.push_back( PE );
+    NewData = true;
+  }
 }
 
 
@@ -5535,13 +5566,12 @@ void Plot::plotZone( const Zone &zone, const Transform &trafo,
     if ( zone[k]->type() == Shape::Zone )
       plotZone( *zone[k], trafoz, line );
     else {
-      Transform invtrafoz = trafoz.inverse();
       if ( zone[k]->type() == Shape::Sphere )
-	plotSphere( trafoz, invtrafoz, line );
+	plotSphere( trafoz, line );
       else if ( zone[k]->type() == Shape::Cylinder )
-	plotCylinder( trafoz, invtrafoz, line );
+	plotCylinder( trafoz, line );
       else if ( zone[k]->type() == Shape::Cuboid )
-	plotCuboid( trafoz, invtrafoz, line );
+	plotCuboid( trafoz, line );
     }
   }
 }
@@ -5549,16 +5579,14 @@ void Plot::plotZone( const Zone &zone, const Transform &trafo,
 
 void Plot::plot( const Zone &zone, const LineStyle &line )
 {
-  Transform trafo = Projection * zone.trafo();
-  plotZone( zone, trafo, line );
+  plotZone( zone, zone.trafo(), line );
 }
 
 
-void Plot::plotSphere( const Transform &trafo, const Transform &invtrafo,
-		       const LineStyle &line )
+void Plot::plotSphere( const Transform &trafo, const LineStyle &line )
 {
-  int m = 10;
-  int n = 20;
+  int m = 30;
+  int n = 60;
   for ( int j=0; j<m; j++ ) {
     for ( int k=0; k<n; k++ ) {
       deque<Point> pts;
@@ -5575,7 +5603,7 @@ void Plot::plotSphere( const Transform &trafo, const Transform &invtrafo,
       pts.push_back( Point( ck1*cj0, sk1*cj0, sj0 ) );
       pts.push_back( Point( ck1*cj1, sk1*cj1, sj1 ) );
       pts.push_back( Point( ck0*cj1, sk0*cj1, sj1 ) );
-      addPolygon( pts, normal, trafo, invtrafo, line );
+      addPolygon( pts, normal, trafo, line );
     }
   }
 }
@@ -5583,14 +5611,11 @@ void Plot::plotSphere( const Transform &trafo, const Transform &invtrafo,
 
 void Plot::plot( const Sphere &sphr, const LineStyle &line )
 {
-  Transform trafo = Projection * sphr.trafo();
-  Transform invtrafo = trafo.inverse();
-  plotSphere( trafo, invtrafo, line );
+  plotSphere( sphr.trafo(), line );
 }
 
 
-void Plot::plotCylinder( const Transform &trafo, const Transform &invtrafo,
-			 const LineStyle &line )
+void Plot::plotCylinder( const Transform &trafo, const LineStyle &line )
 {
   int n = 50;
   deque<Point> pts0;
@@ -5600,9 +5625,9 @@ void Plot::plotCylinder( const Transform &trafo, const Transform &invtrafo,
     pts1.push_back( Point( 1.0, ::cos( 2.0*M_PI*k/n ), ::sin( 2.0*M_PI*k/n ) ) );
   }
   Point normal( -1.0, 0.0, 0.0 );
-  addPolygon( pts0, normal, trafo, invtrafo, line );
+  addPolygon( pts0, normal, trafo, line );
   normal = Point( 1.0, 0.0, 0.0 );
-  addPolygon( pts1, normal, trafo, invtrafo, line );
+  addPolygon( pts1, normal, trafo, line );
   LineStyle l( line );
   if ( n > 10 )
     l.setWidth( 0 );
@@ -5613,21 +5638,18 @@ void Plot::plotCylinder( const Transform &trafo, const Transform &invtrafo,
     pts.push_back( pts1[(k+1)%n] );
     pts.push_back( pts1[k] );
     normal = pts0[k];
-    addPolygon( pts, normal, trafo, invtrafo, l );
+    addPolygon( pts, normal, trafo, l );
   }
 }
 
 
 void Plot::plot( const Cylinder &clnd, const LineStyle &line )
 {
-  Transform trafo = Projection * clnd.trafo();
-  Transform invtrafo = trafo.inverse();
-  plotCylinder( trafo, invtrafo, line );
+  plotCylinder( clnd.trafo(), line );
 }
 
 
-void Plot::plotCuboid( const Transform &trafo, const Transform &invtrafo,
-		       const LineStyle &line )
+void Plot::plotCuboid( const Transform &trafo, const LineStyle &line )
 {
   deque< Point > pts;
   pts.push_back( Point::Origin );
@@ -5635,7 +5657,7 @@ void Plot::plotCuboid( const Transform &trafo, const Transform &invtrafo,
   pts.push_back( Point::UnitX + Point::UnitY );
   pts.push_back( Point::UnitY );
   Point normal( 0.0, 0.0, -1.0 );
-  addPolygon( pts, normal, trafo, invtrafo, line );
+  addPolygon( pts, normal, trafo, line );
 
   pts.clear();
   pts.push_back( Point::UnitZ + Point::Origin );
@@ -5643,7 +5665,7 @@ void Plot::plotCuboid( const Transform &trafo, const Transform &invtrafo,
   pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
   pts.push_back( Point::UnitZ + Point::UnitY );
   normal = Point( 0.0, 0.0, 1.0 );
-  addPolygon( pts, normal, trafo, invtrafo, line );
+  addPolygon( pts, normal, trafo, line );
 
   pts.clear();
   pts.push_back( Point::Origin );
@@ -5651,7 +5673,7 @@ void Plot::plotCuboid( const Transform &trafo, const Transform &invtrafo,
   pts.push_back( Point::UnitZ + Point::UnitX );
   pts.push_back( Point::UnitZ + Point::Origin );
   normal = Point( 0.0, -1.0, 0.0 );
-  addPolygon( pts, normal, trafo, invtrafo, line );
+  addPolygon( pts, normal, trafo, line );
 
   pts.clear();
   pts.push_back( Point::UnitX );
@@ -5659,7 +5681,7 @@ void Plot::plotCuboid( const Transform &trafo, const Transform &invtrafo,
   pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
   pts.push_back( Point::UnitZ + Point::UnitX );
   normal = Point( 1.0, 0.0, 0.0 );
-  addPolygon( pts, normal, trafo, invtrafo, line );
+  addPolygon( pts, normal, trafo, line );
 
   pts.clear();
   pts.push_back( Point::UnitX + Point::UnitY );
@@ -5667,7 +5689,7 @@ void Plot::plotCuboid( const Transform &trafo, const Transform &invtrafo,
   pts.push_back( Point::UnitZ + Point::UnitY );
   pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
   normal = Point( 0.0, 1.0, 0.0 );
-  addPolygon( pts, normal, trafo, invtrafo, line );
+  addPolygon( pts, normal, trafo, line );
 
   pts.clear();
   pts.push_back( Point::UnitY );
@@ -5675,15 +5697,13 @@ void Plot::plotCuboid( const Transform &trafo, const Transform &invtrafo,
   pts.push_back( Point::UnitZ + Point::Origin );
   pts.push_back( Point::UnitZ + Point::UnitY );
   normal = Point( -1.0, 0.0, 0.0 );
-  addPolygon( pts, normal, trafo, invtrafo, line );
+  addPolygon( pts, normal, trafo, line );
 }
 
 
 void Plot::plot( const Cuboid &cbd, const LineStyle &line )
 {
-  Transform trafo = Projection * cbd.trafo();
-  Transform invtrafo = trafo.inverse();
-  plotCuboid( trafo, invtrafo, line );
+  plotCuboid( cbd.trafo(), line );
 }
 
 

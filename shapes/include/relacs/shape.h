@@ -112,6 +112,12 @@ public:
         then around the world y-axis by \a angley, and then around the
         world z-axis by \a anglez. All angles in radians. */
   void rotate( double anglex, double angley, double anglez );
+    /*! Rotate the shape counterclockwise around the given axis \a axis
+        by \a angle radians. */
+  void rotate( const Point &axis, double angle );
+
+    /*! Apply the transformation \a trafo to the shape. */
+  void transform( const Transform &trafo );
 
     /*! The transformation matrix that transforms shape coordinates to
         world coordinates. */

@@ -141,6 +141,20 @@ int main ( void )
     check_identity( a );
   }
 
+  cerr << "Test Transform::transpose()\n";
+  for ( int k=0; k<n; k++ ) {
+    Transform a = random_matrix();
+    Transform b = a.transpose();
+    Transform c = b.transpose();
+    check_equality( a, c );
+    c = b.inverse();
+    b = a.inverse();
+    Transform d = b.transpose();
+    check_equality( c, d );
+    check_equality( a, a.transpose().transpose() );
+    check_equality( a.inverse().transpose(), a.transpose().inverse() );
+  }
+
   cerr << "Test Transform::translateX()\n";
   for ( int k=0; k<n; k++ ) {
     double shift = 10.0*(urand()-0.5);
@@ -339,38 +353,39 @@ int main ( void )
     }
   }
 
-  cerr << "Test Transform::rotateZ()\n";
+  cerr << "Test Transform::rotateX()\n";
   Point p = Point::Ones;
   for ( int k = 0; k<=4; k++ ) {
     Transform a;
-    Point q = a.rotateZ( 2.0*M_PI/4.0*k ) * p;
-    assert( q.z() == 1.0 );
-    assert( fabs( q.y() - (2*(((k+2)/2)%2)-1) ) < epsilon );
-    assert( fabs( q.x() - (2*(((k+3)/2)%2)-1) ) < epsilon );
+    Point q = a.rotateX( 2.0*M_PI/4.0*k ) * p;
+    assert( q.x() == 1.0 );
+    assert( fabs( q.y() - (2*(((k+3)/2)%2)-1) ) < epsilon );
+    assert( fabs( q.z() - (2*(((k+2)/2)%2)-1) ) < epsilon );
   }
   for ( int k=0; k<n; k++ ) {
     double angle = (2.0*urand()-1.0)*M_PI;
     Transform a;
-    a.rotateZ( angle );
+    a.rotateX( angle );
+    assert( fabs( fabs( a.det() ) - 1.0 ) < epsilon );
     Transform b;
-    b = b.rotateZ( -angle ) * a;
+    b = b.rotateX( -angle ) * a;
     check_identity( b );
     Transform c = a * a.inverse();
     check_identity( c );
     Transform d = a * a.transpose();
     check_identity( d );
     Transform e;
-    a *= e.rotateZ( -angle );
+    a *= e.rotateX( -angle );
     check_identity( a );
 
-    Point p( urand(), urand(), 0.0 );
+    Point p( 0.0, urand(), urand() );
     Transform f;
-    Point q = f.rotateZ( angle ) * p;
-    assert( fabs( q.z() ) < epsilon );
+    Point q = f.rotateX( angle ) * p;
+    assert( fabs( q.x() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
     Transform g;
-    q = g.rotateZ( angle ) * Point::UnitX;
-    double anglee = atan2( q.y(), q.x() );
+    q = g.rotateX( angle ) * Point::UnitY;
+    double anglee = atan2( q.z(), q.y() );
     assert( fabs( angle - anglee ) < epsilon );
   }
 
@@ -387,6 +402,7 @@ int main ( void )
     double angle = (2.0*urand()-1.0)*M_PI;
     Transform a;
     a.rotateY( angle );
+    assert( fabs( fabs( a.det() ) - 1.0 ) < epsilon );
     Transform b;
     b = b.rotateY( -angle ) * a;
     check_identity( b );
@@ -409,38 +425,73 @@ int main ( void )
     assert( fabs( angle - anglee ) < epsilon );
   }
 
-  cerr << "Test Transform::rotateX()\n";
+  cerr << "Test Transform::rotateZ()\n";
   p = Point::Ones;
   for ( int k = 0; k<=4; k++ ) {
     Transform a;
-    Point q = a.rotateX( 2.0*M_PI/4.0*k ) * p;
-    assert( q.x() == 1.0 );
-    assert( fabs( q.y() - (2*(((k+3)/2)%2)-1) ) < epsilon );
-    assert( fabs( q.z() - (2*(((k+2)/2)%2)-1) ) < epsilon );
+    Point q = a.rotateZ( 2.0*M_PI/4.0*k ) * p;
+    assert( q.z() == 1.0 );
+    assert( fabs( q.y() - (2*(((k+2)/2)%2)-1) ) < epsilon );
+    assert( fabs( q.x() - (2*(((k+3)/2)%2)-1) ) < epsilon );
   }
   for ( int k=0; k<n; k++ ) {
     double angle = (2.0*urand()-1.0)*M_PI;
     Transform a;
-    a.rotateX( angle );
+    a.rotateZ( angle );
+    assert( fabs( fabs( a.det() ) - 1.0 ) < epsilon );
     Transform b;
-    b = b.rotateX( -angle ) * a;
+    b = b.rotateZ( -angle ) * a;
     check_identity( b );
     Transform c = a * a.inverse();
     check_identity( c );
     Transform d = a * a.transpose();
     check_identity( d );
     Transform e;
-    a *= e.rotateX( -angle );
+    a *= e.rotateZ( -angle );
     check_identity( a );
 
-    Point p( 0.0, urand(), urand() );
+    Point p( urand(), urand(), 0.0 );
     Transform f;
-    Point q = f.rotateX( angle ) * p;
-    assert( fabs( q.x() ) < epsilon );
+    Point q = f.rotateZ( angle ) * p;
+    assert( fabs( q.z() ) < epsilon );
     assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
     Transform g;
-    q = g.rotateX( angle ) * Point::UnitY;
-    double anglee = atan2( q.z(), q.y() );
+    q = g.rotateZ( angle ) * Point::UnitX;
+    double anglee = atan2( q.y(), q.x() );
+    assert( fabs( angle - anglee ) < epsilon );
+  }
+
+  cerr << "Test Transform::rotate(axis, angle)\n";
+  for ( int k=0; k<n; k++ ) {
+    double angle = 2.0*urand()*M_PI;
+    Point axis( urand(), urand(), urand() );
+    Transform a;
+    a.rotate( axis, angle );
+    assert( fabs( fabs( a.det() ) - 1.0 ) < epsilon );
+    Transform b;
+    b = b.rotate( axis, -angle ) * a;
+    check_identity( b );
+    Transform b1;
+    b1 = b1.rotate( -axis, angle ) * a;
+    check_identity( b );
+    Transform c = a * a.inverse();
+    check_identity( c );
+    Transform d = a * a.transpose();
+    check_identity( d );
+    Transform e;
+    a *= e.rotate( axis, -angle );
+    check_identity( a );
+
+    Point p( urand(), urand(), urand() );
+    Transform f;
+    Point q = f.rotate( axis, angle ) * p;
+    assert( fabs( p.magnitude() - q.magnitude() ) < epsilon );
+    Point pa = axis + p;
+    Point pb = axis.cross( pa );
+    Point pc = f * pb;
+    double anglee = acos( pb.dot( pc )/pb.magnitude()/pc.magnitude() );
+    if ( angle > M_PI )
+      angle = 2*M_PI - angle;
     assert( fabs( angle - anglee ) < epsilon );
   }
 
@@ -478,6 +529,23 @@ int main ( void )
     assert( (q1 - q0).magnitude() < epsilon );
     assert( (q2 - q0).magnitude() < epsilon );
     assert( (q3 - q0).magnitude() < epsilon );
+  }
+
+  cerr << "Test transformation of planes and their normals\n";
+  for ( int k=0; k<n; k++ ) {
+    Point p1 = Point( urand(), urand(), urand() );
+    Point p2 = Point( urand(), urand(), urand() );
+    Point n = p1.cross( p2 );
+    assert( ::fabs( n.dot( p1 ) ) < epsilon );
+    assert( ::fabs( n.dot( p2 ) ) < epsilon );
+    Transform t1 = random_transformation();
+    t1.clearTransProj();
+    Transform t2 = t1.inverse().transpose();
+    Point tp1 = t1 * p1;
+    Point tp2 = t1 * p2;
+    Point tn = t2 * n;
+    assert( ::fabs( tn.dot( tp1 ) ) < epsilon );
+    assert( ::fabs( tn.dot( tp2 ) ) < epsilon );
   }
 
   /*

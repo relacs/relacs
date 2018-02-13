@@ -1,6 +1,6 @@
 /*
   transform.cc
-  A 4-D matrix used for affine transformations of 3D points.
+  A 4-D matrix used for affine and perspective transformations of 3D points.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -28,28 +28,17 @@ namespace relacs {
 
 
 const Transform Transform::Identity = Transform( 1.0, 0.0, 0.0,
-					0.0, 1.0, 0.0,
-					0.0, 0.0, 1.0 );
+						 0.0, 1.0, 0.0,
+						 0.0, 0.0, 1.0 );
 
 const Transform Transform::Zeros = Transform( 0.0, 0.0, 0.0,
-				     0.0, 0.0, 0.0,
-				     0.0, 0.0, 0.0 );
+					      0.0, 0.0, 0.0,
+					      0.0, 0.0, 0.0 );
 
 const Transform Transform::Ones = Transform( 1.0, 1.0, 1.0,
-				    1.0, 1.0, 1.0,
-				    1.0, 1.0, 1.0 );
+					     1.0, 1.0, 1.0,
+					     1.0, 1.0, 1.0 );
 
-const Transform Transform::ProjectXY = Transform( 1.0, 0.0, 0.0,
-					 0.0, 1.0, 0.0,
-					 0.0, 0.0, 0.0 );
-  
-const Transform Transform::ProjectXZ = Transform( 1.0, 0.0, 0.0,
-					 0.0, 0.0, 1.0,
-					 0.0, 0.0, 0.0 );
-  
-const Transform Transform::ProjectYZ = Transform( 0.0, 0.0, 1.0,
-					 0.0, 1.0, 0.0,
-					 0.0, 0.0, 0.0 );
 
 Transform::Transform( void )
 {
@@ -84,8 +73,8 @@ Transform::Transform( const double m[3][3] )
 }
 
 Transform::Transform( double a11, double a12, double a13,
-		double a21, double a22, double a23,
-		double a31, double a32, double a33 )
+		      double a21, double a22, double a23,
+		      double a31, double a32, double a33 )
   : Transform()
 {
   Elems[0][0] = a11;
@@ -325,6 +314,16 @@ Transform Transform::transpose( void ) const
 }
 
 
+void Transform::clearTransProj( void )
+{
+  for ( int i=0; i<3; i++ ) {
+    Elems[i][3] = 0.0;
+    Elems[3][i] = 0.0;
+  }
+  Elems[3][3] = 1.0;
+}
+
+
 Transform &Transform::translateX( double x )
 {
   Transform m;
@@ -465,6 +464,58 @@ Transform &Transform::rotate( double anglex, double angley, double anglez )
   Transform m = rotateX( anglex );
   m *= rotateY( angley );
   m *= rotateZ( anglez );
+  return operator*=( m );
+}
+
+
+Transform &Transform::rotate( const Point &axis, double angle )
+{
+  double m = axis.magnitude();
+  double x = axis.x()/m;
+  double y = axis.y()/m;
+  double z = axis.z()/m;
+  double s = sin( angle );
+  double c = cos( angle );
+  double c1 = 1.0 - c;
+  Transform t( c+x*x*c1, x*y*c1-z*s, x*z*c1+y*s,
+	       x*y*c1+z*s, c+y*y*c1, y*z*c1-x*s,
+	       x*z*c1-y*s, y*z*c1+x*s, c+z*z*c1 );
+  return operator*=( t );
+}
+
+
+Transform &Transform::rotate( const Point &from, const Point &to )
+{
+  double angle = ::acos( from.dot( to ) / from.magnitude() / to.magnitude() );
+  if ( ::fabs( angle ) < 1e-8 )
+    return *this;
+  else {
+    Point axis = from.cross( to );
+    return rotate( axis, angle );
+  }
+}
+
+
+Transform &Transform::perspectiveX( double distance )
+{
+  Transform m;
+  m.Elems[3][0] = 1.0/distance;
+  return operator*=( m );
+}
+
+
+Transform &Transform::perspectiveY( double distance )
+{
+  Transform m;
+  m.Elems[3][1] = 1.0/distance;
+  return operator*=( m );
+}
+
+
+Transform &Transform::perspectiveZ( double distance )
+{
+  Transform m;
+  m.Elems[3][2] = 1.0/distance;
   return operator*=( m );
 }
 
