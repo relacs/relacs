@@ -5485,11 +5485,11 @@ void Plot::addPolygon( const deque< Point > &pts, const Point &normal, double su
   for ( auto ptsi=pts.begin(); ptsi != pts.end(); ++ptsi )
     tpts.push_back( trafo * (*ptsi) );
 
-  /*
+  // remove polygons of subtractive shapes that are completely outside:
   if ( subtr < 0.0 ) {
     bool outside = true;
     for ( auto ptsi=tpts.begin(); ptsi != tpts.end(); ++ptsi ) {
-      if ( zones.inside( *ptsi ) ) { // XXX Zone::inside() seems not to work!
+      if ( zones.inside( *ptsi ) ) {
 	outside = false;
 	break;
       }
@@ -5497,7 +5497,6 @@ void Plot::addPolygon( const deque< Point > &pts, const Point &normal, double su
     if ( outside )
       return;
   }
-  */
 
   vector<double> x;
   vector<double> y;
@@ -5534,17 +5533,6 @@ void Plot::addPolygon( const deque< Point > &pts, const Point &normal, double su
   QPen pen( lcolor, width, qdash );
 
   if ( alpha < 1.0 || ViewPoint.dot( n ) >= -0.1 ) {
-    /*
-    int start = 0;
-    if ( subtr < 0.0 ) {
-      for ( int k=PolygonData.size()-1; k >= 0; k-- ) {
-	if ( PolygonData[k]->ShapeId != shapeid ) {
-	  start = k;
-	  break;
-	}
-      }
-    }
-    */
     PolygonElement *PE = new PolygonElement( x, y, id, shapeid, distance, pen, brush );
     bool found = false;
     for ( auto pdi=PolygonData.begin(); pdi != PolygonData.end(); ++pdi ) {
@@ -5594,6 +5582,7 @@ int Plot::plot( const Zone &zone, int resolution, Color fillcolor, double alpha,
   if ( id < 0 )
     id = MaxPolygonId++;
   Zone zones;
+  zones.transform( zone.trafo() );
   return plotZone( zone, zone.trafo(), 1.0, id, zones, resolution,
 		   fillcolor, alpha, linecolor, width, dash );
 }

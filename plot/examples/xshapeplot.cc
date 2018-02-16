@@ -85,8 +85,9 @@ void PlotShapes::update( void )
   z.add( cbd2 );
 
   Cuboid cbd3;
-  cbd3.translate( -1.2, -0.5, -0.5 );
-  // z.subtract( cbd3 );
+  cbd3.scaleX( 0.5 );
+  cbd3.translate( -0.6, -0.5, -0.5 );
+  z.subtract( cbd3 );
 
   Cylinder clnd;
   clnd.scale( 0.5, 1.0, 1.0 );
@@ -96,6 +97,7 @@ void PlotShapes::update( void )
   Sphere sphr0;
   sphr0.scale( 0.5 );
   sphr0.translateX( 2.5 );
+  //  sphr0.translateY( 1 );
   //  z.subtract( sphr0 );
 
   Sphere sphr1;
