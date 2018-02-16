@@ -33,6 +33,8 @@
 #include <QReadWriteLock>
 #include <QAction>
 #include <QMenu>
+#include <QPen>
+#include <QBrush>
 #include <relacs/array.h>
 #include <relacs/map.h>
 #include <relacs/sampledata.h>
@@ -466,23 +468,12 @@ public:
   public:
 
     PolygonElement( const vector<double> &x, const vector<double> &y,
-		    double distance, double diffusion );
+		    int id, int shapeid, double distance,
+		    const QPen &pen, const QBrush &brush );
     ~PolygonElement( void );
 
     void setAxis( Plot::Axis axis );
     void setAxis( int xaxis, int yaxis );
-    void setLine( const Plot::LineStyle &style );
-    void setLine( int lcolor=Transparent, int lwidth=1,
-		  Plot::Dash ldash=Solid );
-    void setPoint( const Plot::PointStyle &style );
-    void setPoint( Points ptype=Circle, int psize=10,
-		   int pcolor=Transparent, int pfill=Transparent );
-    void setStyle( const Plot::LineStyle &lstyle, 
-		   const Plot::PointStyle &pstyle );
-    void setStyle( int lcolor=Transparent, int lwidth=1,
-		   Plot::Dash ldash=Solid, 
-		   Points ptype=Circle, int psize=10,
-		   int pcolor=Transparent, int pfill=Transparent );
       /*! Returns a sensible x-range \a xmin and \a xmax for
 	  a given y-range \a ymin, \a ymax. */
     void xminmax( double &xmin, double &xmax, double ymin, double ymax ) const;
@@ -492,14 +483,15 @@ public:
 
   protected:
 
+    int Id;
+    int ShapeId;
     int XAxis;
     int YAxis;
-    Plot::LineStyle Line;
-    Plot::PointStyle Point;
     vector<double> X;
     vector<double> Y;
     double Distance;
-    double Diffusion;
+    QPen Pen;
+    QBrush Brush;
   };
 
 
@@ -849,7 +841,7 @@ public:
     { return plot( x, y, line, point ); };
   template< typename T, typename R >
   int plot( const T &x, const R &y, 
-	    int lcolor=Transparent, int lwidth=1, Dash ldash=Solid, 
+	    int lcolor, int lwidth=1, Dash ldash=Solid, 
 	    Points ptype=Circle, int psize=10, int pcolor=Transparent, int pfill=Transparent )
     { return plot( x, y, LineStyle( lcolor, lwidth, ldash ), 
 		   PointStyle( ptype, psize, pcolor, pfill ) ); };
@@ -865,7 +857,7 @@ public:
     { return plot( x, xscale, y, line, point ); };
   template< typename T, typename R >
   int plot( const T &x, const R &y, double xscale, 
-	    int lcolor=Transparent, int lwidth=1, Dash ldash=Solid, 
+	    int lcolor, int lwidth=1, Dash ldash=Solid, 
 	    Points ptype=Circle, int psize=10, int pcolor=Transparent, int pfill=Transparent )
     { return plot( x, xscale, y, LineStyle( lcolor, lwidth, ldash ), 
 		   PointStyle( ptype, psize, pcolor, pfill ) ); };
@@ -880,8 +872,8 @@ public:
 	    const PointStyle &point, const LineStyle &line=LineStyle() )
     { return plot( data, xscale, line, point ); };
   template< typename T >
-  int plot( const Map<T> &data, double xscale=1.0,
-	    int lcolor=Transparent, int lwidth=1, Dash ldash=Solid, 
+  int plot( const Map<T> &data, double xscale,
+	    int lcolor, int lwidth=1, Dash ldash=Solid, 
 	    Points ptype=Circle, int psize=10, int pcolor=Transparent, int pfill=Transparent )
     { return plot( data, xscale, 
 		   LineStyle( lcolor, lwidth, ldash ), 
@@ -898,7 +890,7 @@ public:
     { return plot( data, xscale, line, point ); };
   template< typename T >
   int plot( const SampleData<T> &data, double xscale,
-	    int lcolor=Transparent, int lwidth=1, Dash ldash=Solid, 
+	    int lcolor, int lwidth=1, Dash ldash=Solid, 
 	    Points ptype=Circle, int psize=10, int pcolor=Transparent, int pfill=Transparent )
     { return plot( data, xscale, 
 		   LineStyle( lcolor, lwidth, ldash ), 
@@ -926,7 +918,7 @@ public:
 	    const PointStyle &point, const LineStyle &line=LineStyle() )
     { return plot( data, origin, offset, tscale, line, point ); };
   int plot( const InData &data, int origin, double offset, double tscale,
-	    int lcolor=Transparent, int lwidth=1, Dash ldash=Solid, 
+	    int lcolor, int lwidth=1, Dash ldash=Solid, 
 	    Points ptype=Circle, int psize=10, int pcolor=Transparent, int pfill=Transparent )
     { return plot( data, origin, offset, tscale, 
 		   LineStyle( lcolor, lwidth, ldash ), 
@@ -944,7 +936,7 @@ public:
 	    const PointStyle &point, const LineStyle &line=LineStyle() )
     { return plot( data, xscale, line, point ); };
   int plot( const OutData &data, double xscale,
-	    int lcolor=Transparent, int lwidth=1, Dash ldash=Solid, 
+	    int lcolor, int lwidth=1, Dash ldash=Solid, 
 	    Points ptype=Circle, int psize=10, int pcolor=Transparent, int pfill=Transparent )
     { return plot( data, xscale, 
 		   LineStyle( lcolor, lwidth, ldash ), 
@@ -971,20 +963,33 @@ public:
         onto the x-y plane. */
   Transform projection( void ) const;
     /*! Put the view point (camera) at position \a view.
-        Computes the corresponding projection matrix (rotation and perspective). */
+        Computes the corresponding projection matrix (rotation and perspective).
+        The viewpoint needs to be set before plotting shapes. */
   void setViewPoint( const Point &view );
     /*! Return the position (direction) of the light source. */
   Point lightSource( void ) const;
-    /*! Set the position (direction) of the lightsource to \a lightsource. */
-  void setLightSource( const Point &lightsource );
-    /*! Plot the Zone \a zone using the current projection matrix.  */
-  void plot( const Zone &zone, const LineStyle &line );
-    /*! Plot the Sphere \a sphr using the  current projection matrix.  */
-  void plot( const Sphere &sphere, const LineStyle &line );
-    /*! Plot the Cylinder \a clnd using the current projection matrix.  */
-  void plot( const Cylinder &clnd, const LineStyle &line );
-    /*! Plot the Cuboid \a cbd using the current projection matrix.  */
-  void plot( const Cuboid &cbd, const LineStyle &line );
+    /*! Set the position (direction) of the light source to \a lightsource.
+        The contrast defines how much the color is modulated (0: none, 1: maximal).
+        The light source and contrast needs to be set before plotting shapes. */
+  void setLightSource( const Point &lightsource, double contrast=0.5 );
+    /*! Plot the Zone \a zone using the current projection matrix.
+        \a resolution is the number of polygons used for approximating
+        spheres and cylinders. */
+  int plot( const Zone &zone, int resolution, Color fillcolor, double alpha=1.0,
+	    int linecolor=Transparent, int width=1, Dash dash=Solid, int id=-1 );
+    /*! Plot the Sphere \a sphr using the current projection matrix.
+        The sphere is approximated by polygons. \a resolution defines
+        how many are used for the circumference. */
+  int plot( const Sphere &sphere, int resolution, Color fillcolor, double alpha=1.0,
+	    int linecolor=Transparent, int width=1, Dash dash=Solid, int id=-1 );
+    /*! Plot the Cylinder \a clnd using the current projection matrix.
+        The cylinder wall is approximated by polygons. \a resolution defines
+        how many are used for the circumference. */
+  int plot( const Cylinder &clnd, int resolution, Color fillcolor, double alpha=1.0,
+	    int linecolor=Transparent, int width=1, Dash dash=Solid, int id=-1 );
+    /*! Plot the Cuboid \a cbd using the current projection matrix. */
+  int plot( const Cuboid &cbd, Color fillcolor, double alpha=1.0,
+	    int linecolor=Transparent, int width=1, Dash dash=Solid, int id=-1 );
 #endif
 
     /*! Remove all 2-D plot data from the plot. */
@@ -993,6 +998,8 @@ public:
   void clearData( int index );
     /*! Remove all polygons from the plot. */
   void clearPolygons( void );
+    /*! Remove all polygons with id \a id from the plot. */
+  void clearPolygons( int id );
     /*! Remove surface plot data from the plot. */
   void clearSurfaceData( void );
 
@@ -1279,17 +1286,32 @@ private:
         on the polygon is \a normal. The transformation \a trafo is
         the transformation of the 3D points into world coordinates,
         but it does not include the projection() matrix. */
-  void addPolygon( const deque< Point > &pts, const Point &normal,
-		   const Transform &trafo, const LineStyle &line );
-    /*! Plot the zone using the transformation matrix \a trafo. */
-  void plotZone( const Zone &zone, const Transform &trafo,
-		 const LineStyle &line );
-    /*! Plot a Sphere using the transformation matrix \a trafo. */
-  void plotSphere( const Transform &trafo, const LineStyle &line );
-    /*! Plot a Cylinder using the transformation matrix \a trafo. */
-  void plotCylinder( const Transform &trafo, const LineStyle &line );
+  void addPolygon( const deque< Point > &pts, const Point &normal, double subtr,
+		   const Transform &trafo, int id, int shapeid, const Zone &zones,
+		   Color fillcolor, double alpha,
+		   int linecolor, int width, Dash dash );
+    /*! Plot the zone using the transformation matrix \a trafo.
+        \a resolution is the number of polygons used for approximating
+        spheres and cylinders. */
+  int plotZone( const Zone &zone, const Transform &trafo, double subtr, int id,
+		Zone &zones, int resolution, Color fillcolor, double alpha,
+		int linecolor, int width, Dash dash );
+    /*! Plot a Sphere using the transformation matrix \a trafo.
+        The sphere is approximated by polygons. \a resolution defines
+        how many are used for the circumference. */
+  int plotSphere( const Transform &trafo, double subtr, int id,
+		  const Zone &zones, int resolution, Color fillcolor, double alpha,
+		  int linecolor, int width, Dash dash );
+    /*! Plot a Cylinder using the transformation matrix \a trafo.
+        The cylinder wall is approximated by polygons. \a resolution defines
+        how many are used for the circumference. */
+  int plotCylinder( const Transform &trafo, double subtr, int id,
+		    const Zone &zones, int resolution, Color fillcolor, double alpha,
+		    int linecolor, int width, Dash dash );
     /*! Plot a Cuboid using the transformation matrix \a trafo. */
-  void plotCuboid( const Transform &trafo, const LineStyle &line );
+  int plotCuboid( const Transform &trafo, double subtr, int id,
+		  const Zone &zones, Color fillcolor, double alpha,
+		  int linecolor, int width, Dash dash );
 #endif
 
     /*! Keep-mode for data to be plotted. */
@@ -1708,9 +1730,12 @@ private:
   Transform Projection;
   Point ViewPoint;
   Point LightSource;
+  double Contrast;
 #endif
   typedef deque<PolygonElement*> PolygonDataType;
   PolygonDataType PolygonData;
+  int MaxPolygonId;
+  int MaxShapeId;
   typedef deque<DataElement*> LineDataType;
   LineDataType LineData;
   bool DrawData;

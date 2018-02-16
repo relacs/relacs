@@ -368,6 +368,40 @@ Shape *Zone::operator[]( const string &name )
 }
 
 
+bool Zone::added( int i ) const
+{
+  return Add[i];
+}
+
+
+bool Zone::added( const string &name ) const
+{
+  auto ai = Add.begin();
+  for ( auto si = Shapes.begin(); si != Shapes.end(); ++si, ++ai ) {
+    if ( (*si)->name() == name )
+      return *ai;
+  }
+  return true;
+}
+
+
+bool Zone::subtracted( int i ) const
+{
+  return ! Add[i];
+}
+
+
+bool Zone::subtracted( const string &name ) const
+{
+  auto ai = Add.begin();
+  for ( auto si = Shapes.begin(); si != Shapes.end(); ++si, ++ai ) {
+    if ( (*si)->name() == name )
+      return ! *ai;
+  }
+  return false;
+}
+
+
 void Zone::clear( void )
 {
   for ( auto si = Shapes.begin(); si != Shapes.end(); ++si )

@@ -44,7 +44,7 @@ PlotShapes::PlotShapes( int n )
   (*this)[0].setYRange( -4.0, 4.0 );
   (*this)[0].setYTics( 1.0 );
   (*this)[0].noGrid();
-  (*this)[0].setLightSource( lightsource );
+  (*this)[0].setLightSource( lightsource, 0.5 );
 
   (*this)[1].setXLabel( "x-coord" );
   (*this)[1].setXLabelPos( 1.0, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Right, 0.0 );
@@ -55,7 +55,7 @@ PlotShapes::PlotShapes( int n )
   (*this)[1].setYRange( -4.0, 4.0 );
   (*this)[1].setYTics( 1.0 );
   (*this)[1].noGrid();
-  (*this)[1].setLightSource( lightsource );
+  (*this)[1].setLightSource( lightsource, 0.7 );
 
   QTimer *timer = new QTimer(this);
   connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -78,16 +78,25 @@ void PlotShapes::update( void )
   z.add( cbd1 );
 
   Cuboid cbd2;
-  cbd2.translate( 0.0, -0.5, -0.5 );
-  cbd2.scaleX( -0.5 );
+  cbd2.scaleX( 0.5 );
+  cbd2.translate( -0.5, -0.5, -0.5 );
   cbd2.scaleY( 1.6 );
   cbd2.scaleZ( 1.6 );
   z.add( cbd2 );
+
+  Cuboid cbd3;
+  cbd3.translate( -1.2, -0.5, -0.5 );
+  // z.subtract( cbd3 );
 
   Cylinder clnd;
   clnd.scale( 0.5, 1.0, 1.0 );
   clnd.translateX( 2.0 );
   z.add( clnd );
+
+  Sphere sphr0;
+  sphr0.scale( 0.5 );
+  sphr0.translateX( 2.5 );
+  //  z.subtract( sphr0 );
 
   Sphere sphr1;
   sphr1.scale( 0.5 );
@@ -111,11 +120,11 @@ void PlotShapes::update( void )
 
   (*this)[0].clearPolygons();
   (*this)[0].setViewPoint( viewxy );
-  (*this)[0].plot( z, Plot::LineStyle( Plot::Red, 0, Plot::Solid ) );
+  (*this)[0].plot( z, 30, Plot::Red, 0.8, Plot::Red, 1 );
 
   (*this)[1].clearPolygons();
-  (*this)[1].plot( z, Plot::LineStyle( Plot::Red, 0, Plot::Solid ) );
   (*this)[1].setViewPoint( viewxz );
+  (*this)[1].plot( z, 60, Plot::Orange );
   draw();
 }
 

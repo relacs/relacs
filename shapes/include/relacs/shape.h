@@ -259,6 +259,15 @@ class Zone : public Shape
         Return 0 if no shape with that name is found. */
   Shape *operator[]( const string &name );
 
+    /*! True if the \a i-th shape is added to the zone. */
+  bool added( int i ) const;
+    /*! True if the shape with name \a name is added to the zone. */
+  bool added( const string &name ) const;
+    /*! True if the \a i-th shape is subtracted from the zone. */
+  bool subtracted( int i ) const;
+    /*! True if the shape with name \a name is subtracted from the zone. */
+  bool subtracted( const string &name ) const;
+
     /*! Remove all shapes from the zone. */
   void clear( void );
 
