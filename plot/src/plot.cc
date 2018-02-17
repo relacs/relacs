@@ -5374,6 +5374,7 @@ int Plot::plot( const SampleData<SampleDataD> &data, double xscale, int gradient
 
 
 Plot::PolygonElement::PolygonElement( const vector<double> &x, const vector<double> &y,
+				      const deque<Point> points, 
 				      int id, int shapeid, double distance,
 				      const QPen &pen, const QBrush &brush )
   : Id( id ),
@@ -5382,6 +5383,7 @@ Plot::PolygonElement::PolygonElement( const vector<double> &x, const vector<doub
     YAxis( 0 ),
     X( x ),
     Y( y ),
+    Points( points ),
     Distance( distance ),
     Pen( pen ),
     Brush( brush )
@@ -5393,6 +5395,7 @@ Plot::PolygonElement::~PolygonElement( void )
 {
   X.clear();
   Y.clear();
+  Points.clear();
 }
 
 
@@ -5533,7 +5536,7 @@ void Plot::addPolygon( const deque< Point > &pts, const Point &normal, double su
   QPen pen( lcolor, width, qdash );
 
   if ( alpha < 1.0 || ViewPoint.dot( n ) >= -0.1 ) {
-    PolygonElement *PE = new PolygonElement( x, y, id, shapeid, distance, pen, brush );
+    PolygonElement *PE = new PolygonElement( x, y, tpts, id, shapeid, distance, pen, brush );
     bool found = false;
     for ( auto pdi=PolygonData.begin(); pdi != PolygonData.end(); ++pdi ) {
       if ( (*pdi)->Distance < distance ) {
@@ -5549,11 +5552,35 @@ void Plot::addPolygon( const deque< Point > &pts, const Point &normal, double su
 }
 
 
+void Plot::subtractPolygons( const Shape &shp, const Transform &trafo )
+{
+  Shape *s = shp.copy();
+  s->transform( trafo );
+  for ( auto pdi=PolygonData.begin(); pdi != PolygonData.end(); ) {
+    bool inside = true;
+    for ( auto pi=(*pdi)->Points.begin(); pi != (*pdi)->Points.end(); ++pi ) {
+      if ( ! s->inside( *pi ) ) {
+	inside = false;
+	break;
+      }
+    }
+    if ( inside ) {
+      delete (*pdi);
+      pdi = PolygonData.erase( pdi );
+    }
+    else
+      ++pdi;
+  }
+  delete s;
+}
+
+
 int Plot::plotZone( const Zone &zone, const Transform &trafo, double subtr, int id,
 		    Zone &zones, int resolution, Color fillcolor, double alpha,
 		    int linecolor, int width, Dash dash )
 {
   for ( int k=0; k<zone.size(); k++ ) {
+    subtractPolygons( *zone[k], trafo );
     Transform trafoz = trafo * zone[k]->trafo();
     double subtrf = subtr * zone.added( k ) ? 1.0 : -1.0;
     if ( zone[k]->type() == Shape::Zone )
@@ -5582,7 +5609,7 @@ int Plot::plot( const Zone &zone, int resolution, Color fillcolor, double alpha,
   if ( id < 0 )
     id = MaxPolygonId++;
   Zone zones;
-  zones.transform( zone.trafo() );
+  zones.setTransform( zone.trafo() );
   return plotZone( zone, zone.trafo(), 1.0, id, zones, resolution,
 		   fillcolor, alpha, linecolor, width, dash );
 }
@@ -5776,7 +5803,7 @@ void Plot::clearData( int index )
 
 void Plot::clearPolygons( void )
 {
-  for ( PolygonDataType::iterator d = PolygonData.begin(); d != PolygonData.end(); ++d )
+  for ( auto d = PolygonData.begin(); d != PolygonData.end(); ++d )
     delete (*d);
   PolygonData.clear();
   MaxPolygonId = 0;
@@ -5787,7 +5814,7 @@ void Plot::clearPolygons( void )
 
 void Plot::clearPolygons( int id )
 {
-  for ( PolygonDataType::iterator d = PolygonData.begin(); d != PolygonData.end(); ) {
+  for ( auto d = PolygonData.begin(); d != PolygonData.end(); ) {
     if ( (*d)->Id == id ) {
       delete (*d);
       d = PolygonData.erase( d );

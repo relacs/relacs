@@ -5,7 +5,8 @@ noinst_PROGRAMS = \
     xplot \
     xplots \
     xsurfaceplot \
-    xshapeplot
+    xshapeplot \
+    xzoneplot
 
 AM_CPPFLAGS = \
     -I$(srcdir)/../../shapes/include \
@@ -37,3 +38,8 @@ xshapeplot_SOURCES = xshapeplot.cc xshapeplot.h
 
 $(xshapeplot_OBJECTS) : \
     moc_xshapeplot.cc
+
+xzoneplot_SOURCES = xzoneplot.cc xzoneplot.h
+
+$(xzoneplot_OBJECTS) : \
+    moc_xzoneplot.cc

@@ -1,5 +1,5 @@
-#ifndef _SHAPEPLOT_H_
-#define _SHAPEPLOT_H_
+#ifndef _XSHAPEPLOT_H_
+#define _XSHAPEPLOT_H_
 
 
 #include <cmath>
@@ -7,7 +7,6 @@
 #include <QTimer>
 #include <relacs/shape.h>
 #include <relacs/multiplot.h>
-#include <xshapeplot.h>
 using namespace relacs;
 
 

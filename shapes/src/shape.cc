@@ -185,6 +185,13 @@ Point Shape::transform( const Point &p ) const
 }
 
 
+void Shape::setTransform( const Transform &trafo )
+{
+  Trafo = trafo;
+  InvTrafo = Trafo.inverse();
+}
+
+
 Point Shape::inverseTransform( const Point &p ) const
 {
   return InvTrafo * p;
@@ -257,6 +264,12 @@ Zone::Zone( const Zone &z )
   Shapes.clear();
   for ( auto si=z.Shapes.begin(); si != z.Shapes.end(); ++si )
     Shapes.push_back( (*si)->copy() );
+}
+
+
+Zone::Zone( const string &name )
+  : Shape( Shape::Zone, name )
+{
 }
 
 
@@ -567,6 +580,12 @@ Sphere::Sphere( const Sphere &s )
 }
 
 
+Sphere::Sphere( const string &name )
+  : Shape( Shape::Sphere, name )
+{
+}
+
+
 Sphere::Sphere( const Point &center, double radius, const string &name )
   : Shape( Shape::Sphere, name )
 {
@@ -690,6 +709,12 @@ Cylinder::Cylinder( void )
 
 Cylinder::Cylinder( const Cylinder &c )
   : Shape( c )
+{
+}
+
+
+Cylinder::Cylinder( const string &name )
+  : Shape( Shape::Cylinder, name )
 {
 }
 
@@ -892,6 +917,12 @@ Cuboid::Cuboid( void )
 
 Cuboid::Cuboid( const Cuboid &c )
   : Shape( c )
+{
+}
+
+
+Cuboid::Cuboid( const string &name )
+  : Shape( Shape::Cuboid, name )
 {
 }
 

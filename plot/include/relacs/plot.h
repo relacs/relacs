@@ -468,7 +468,7 @@ public:
   public:
 
     PolygonElement( const vector<double> &x, const vector<double> &y,
-		    int id, int shapeid, double distance,
+		    const deque<Point> points, int id, int shapeid, double distance,
 		    const QPen &pen, const QBrush &brush );
     ~PolygonElement( void );
 
@@ -489,6 +489,7 @@ public:
     int YAxis;
     vector<double> X;
     vector<double> Y;
+    deque<Point> Points;
     double Distance;
     QPen Pen;
     QBrush Brush;
@@ -1290,6 +1291,8 @@ private:
 		   const Transform &trafo, int id, int shapeid, const Zone &zones,
 		   Color fillcolor, double alpha,
 		   int linecolor, int width, Dash dash );
+    /*! Subtract all polygons that are completely contained in \a shp. */
+  void subtractPolygons( const Shape &shp, const Transform &trafo );
     /*! Plot the zone using the transformation matrix \a trafo.
         \a resolution is the number of polygons used for approximating
         spheres and cylinders. */

@@ -122,6 +122,8 @@ public:
     /*! The transformation matrix that transforms shape coordinates to
         world coordinates. */
   const Transform &trafo( void ) const { return Trafo; };
+    /*! Set the transformation matrix of the shape to \a trafo. */
+  void setTransform( const Transform &trafo );
     /*! The inverse transformation matrix that transforms world coordinates to
         shape coordinates. */
   const Transform &invTrafo( void ) const { return InvTrafo; };
@@ -214,6 +216,8 @@ class Zone : public Shape
   Zone( void );
     /*! Copy constructor. */
   Zone( const Zone &z );
+    /*! Construct an empty zone with name \a name. */
+  Zone( const string &name );
     /*! Construct zone with name \a name from a single shape \a s. */
   Zone( const Shape &s, const string &name="zone" );
     /*! Construct zone with name \a name from a list of shapes \a s.
@@ -323,6 +327,8 @@ class Sphere : public Shape
   Sphere( void );
     /*! Copy constructor. */
   Sphere( const Sphere &s );
+    /*! Construct a default sphere with name \a name. */
+  Sphere( const string &name );
     /*! Construct a sphere with name \a name from \a center and \a radius. */
   Sphere( const Point &center, double radius, const string &name="sphere" );
 
@@ -374,6 +380,8 @@ class Cylinder : public Shape
   Cylinder( void );
     /*! Copy constructor. */
   Cylinder( const Cylinder &c );
+    /*! Construct a default cylinder with name \a name. */
+  Cylinder( const string &name );
     /*! Construct a cylinder with name \a name from \a anchor, \a radius, and \a length.
         The anchor point is the center of the left circle. */
   Cylinder( const Point &anchor, double radius, double length, const string &name="cylinder" );
@@ -428,6 +436,8 @@ class Cuboid : public Shape
   Cuboid( void );
     /*! Copy constructor. */
   Cuboid( const Cuboid &c );
+    /*! Construct a default cuboid with name \a name. */
+  Cuboid( const string &name );
     /*! Construct a cuboid with name \a name from minimum corner \a anchor and size defined by 
         \a lenght, \a width, and \a height. All angles are zero. */
   Cuboid( const Point &anchor, double length, double width, double height,
