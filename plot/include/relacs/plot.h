@@ -977,29 +977,35 @@ public:
         \a resolution is the number of polygons used for approximating
         spheres and cylinders. */
   int plot( const Zone &zone, int resolution, Color fillcolor, double alpha=1.0,
-	    int linecolor=Transparent, int width=1, Dash dash=Solid, int id=-1 );
+	    int linecolor=Transparent, int width=1, Dash dash=Solid );
     /*! Plot the Sphere \a sphr using the current projection matrix.
         The sphere is approximated by polygons. \a resolution defines
         how many are used for the circumference. */
   int plot( const Sphere &sphere, int resolution, Color fillcolor, double alpha=1.0,
-	    int linecolor=Transparent, int width=1, Dash dash=Solid, int id=-1 );
+	    int linecolor=Transparent, int width=1, Dash dash=Solid );
     /*! Plot the Cylinder \a clnd using the current projection matrix.
         The cylinder wall is approximated by polygons. \a resolution defines
         how many are used for the circumference. */
   int plot( const Cylinder &clnd, int resolution, Color fillcolor, double alpha=1.0,
-	    int linecolor=Transparent, int width=1, Dash dash=Solid, int id=-1 );
+	    int linecolor=Transparent, int width=1, Dash dash=Solid );
     /*! Plot the Cuboid \a cbd using the current projection matrix. */
   int plot( const Cuboid &cbd, Color fillcolor, double alpha=1.0,
-	    int linecolor=Transparent, int width=1, Dash dash=Solid, int id=-1 );
+	    int linecolor=Transparent, int width=1, Dash dash=Solid );
+    /*! Plot the polygon defined by \a points using the current projection matrix. */
+  int plot( const deque<Point> &points, Color fillcolor, double alpha=1.0,
+	    int linecolor=Transparent, int width=1, Dash dash=Solid );
+    /*! Plot the line from point \a x1 to point \a x2 using the current projection matrix. */
+  int plot( const Point &x1, const Point &x2,
+	    int linecolor=Transparent, int width=1, Dash dash=Solid );
 #endif
 
     /*! Remove all 2-D plot data from the plot. */
   void clearData( void );
     /*! Remove 2-D plot data with index \a index from the plot. */
   void clearData( int index );
-    /*! Remove all polygons from the plot. */
+    /*! Remove all 3-D polygons from the plot. */
   void clearPolygons( void );
-    /*! Remove all polygons with id \a id from the plot. */
+    /*! Remove all 3-D polygons with id \a id from the plot. */
   void clearPolygons( int id );
     /*! Remove surface plot data from the plot. */
   void clearSurfaceData( void );

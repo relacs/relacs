@@ -38,10 +38,10 @@ PlotShapes::PlotShapes( int n )
 
   setMinimumSize( QSize(1500, 800) );
   (*this)[0].setXLabel( "x-coord" );
-  (*this)[0].setXLabelPos( 1.0, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Right, 0.0 );
+  (*this)[0].setXLabelPos( 0.5, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Center, 0.0 );
   (*this)[0].setXRange( -range, range );
   (*this)[0].setXTics( 1.0 );
-  (*this)[0].setYLabel( "y-coord" );
+  (*this)[0].setYLabel( "z-coord" );
   (*this)[0].setYLabelPos( -0.6, Plot::FirstAxis, 0.5, Plot::Graph, Plot::Center, -90.0 );
   (*this)[0].setYRange( -range, range );
   (*this)[0].setYTics( 1.0 );
@@ -49,7 +49,7 @@ PlotShapes::PlotShapes( int n )
   (*this)[0].setLightSource( lightsource, 0.5 );
 
   (*this)[1].setXLabel( "x-coord" );
-  (*this)[1].setXLabelPos( 1.0, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Right, 0.0 );
+  (*this)[1].setXLabelPos( 0.5, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Center, 0.0 );
   (*this)[1].setXRange( -range, range );
   (*this)[1].setXTics( 1.0 );
   (*this)[1].setYLabel( "z-coord" );
@@ -108,6 +108,14 @@ void PlotShapes::update( void )
 
   (*this)[1].clearPolygons();
   (*this)[1].setViewPoint( viewxz );
+  (*this)[1].plot( Point( -4.0, -3.0, -4.0 ), Point( 4.0, -3.0, -4.0 ), Plot::Blue, 4 );
+  (*this)[1].plot( Point( -3.0, -4.0, -4.0 ), Point( -3.0, 4.0, -4.0 ), Plot::Red, 4 );
+  deque<Point> pts;
+  pts.push_back( Point( -3.0, -3.0, -4.0 ) );
+  pts.push_back( Point( +3.0, -3.0, -4.0 ) );
+  pts.push_back( Point( +3.0, +3.0, -4.0 ) );
+  pts.push_back( Point( -3.0, +3.0, -4.0 ) );
+  (*this)[1].plot( pts, Plot::White );
   (*this)[1].plot( z, 60, Plot::Orange );
   draw();
 }
