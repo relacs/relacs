@@ -11,11 +11,13 @@ pkgincludedir = $(includedir)/relacs
 
 pkginclude_HEADERS = \
     ../include/relacs/point.h \
+    ../include/relacs/polygon.h \
     ../include/relacs/transform.h \
     ../include/relacs/shape.h
 
 librelacsshapes_la_SOURCES = \
     point.cc \
+    polygon.cc \
     transform.cc \
     shape.cc
 

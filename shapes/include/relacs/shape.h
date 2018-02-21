@@ -24,10 +24,14 @@
 
 #include <deque>
 #include <relacs/point.h>
+#include <relacs/polygon.h>
 #include <relacs/transform.h>
 
 
 namespace relacs {
+
+
+class Zone;
 
 
 /*!
@@ -43,17 +47,19 @@ public:
 
   enum ShapeType {
     Unknown = 0,
-    Zone = 1,
+    ZoneShape = 1,
     Sphere = 2,
     Cylinder = 3,
     Cuboid = 4,
   };
 
-    /*! Constructs a shape of a specific \a type with name \a name. */
-  Shape( ShapeType type, const string &name="" );
+    /*! Constructs a shape of a specific \a type with name \a name.
+        The resolution for approximating the shape is set to \a resolution. */
+  Shape( ShapeType type, const string &name, int resolution );
     /*! Constructs a shape of a specific \a type, with name \a name,
-        and transformed by \a trafo. */
-  Shape( ShapeType type, const string &name, const Transform &trafo );
+        and transformed by \a trafo.
+        The resolution for approximating the shape is set to \a resolution. */
+  Shape( ShapeType type, const string &name, int resolution, const Transform &trafo );
     /*! Copy constructor. */
   Shape( const Shape &s );
 
@@ -136,6 +142,25 @@ public:
         matrix. */
   Point inverseTransform( const Point &p ) const;
 
+    /*! The number of polygons used to approximate the shape. */
+  int resolution( void ) const { return Resolution; };
+    /*! Set the number of polygons used to approximate the shape to \a resolution. */
+  void setResolution( int resolution ) { Resolution = resolution; };
+
+    /*! Return the list of polygons that make up the shape. 
+        \sa updatePolygons() */
+  const deque<Polygon> &polygons( void ) const { return Polygons; };
+    /*! Return the list of polygons that make up the shape. 
+        \sa updatePolygons() */
+  deque<Polygon> &polygons( void ) { return Polygons; };
+    /*! Reset the polygons making up the shape to the ones in shape coordinates. */
+  virtual void resetPolygons( void ) const = 0;
+    /*! Update the polygons making up the shape.  If \a flipnormal is
+        \c true, then the directions of the normal vectors of the
+        polygons are flipped. */
+  virtual void updatePolygons( const Transform &trafo, bool flipnormal,
+			       Zone &zones ) const;
+
     /*! Minimum corner of bounding box. */
   Point boundingBoxMin( void ) const;
     /*! Maximum corner of bounding box. */
@@ -185,6 +210,12 @@ public:
   friend ostream &operator<<( ostream &str, const Shape &s );
 
 
+protected:
+
+    /*! List of polygons that make up the shape. */
+  mutable deque<Polygon> Polygons;
+
+
 private:
 
     /*! The type of the shape. */
@@ -197,6 +228,8 @@ private:
     /*! The inverse transformation matrix for transforming world
         coordinates to shape coordinates. */
   Transform InvTrafo;
+    /*! Number of polygons used to approximate the shape. */
+  int Resolution;
 
 };
 
@@ -275,6 +308,14 @@ class Zone : public Shape
     /*! Remove all shapes from the zone. */
   void clear( void );
 
+    /*! Reset the polygons making up the zone to the ones in shape coordinates. */
+  virtual void resetPolygons( void ) const;
+    /*! Update the polygons making up the shapes of the zone.  If \a flipnormal is
+        \c true, then the directions of the normal vectors of the
+        polygons are flipped. */
+  virtual void updatePolygons( const Transform &trafo, bool flipnormal,
+			       Zone &zones ) const;
+
     /*! Approximation of the minimum corner of bounding boxes of all
         additive shapes for the transformation from shape to world
         coordinates specified by \a trafo. */
@@ -327,16 +368,22 @@ class Sphere : public Shape
   Sphere( void );
     /*! Copy constructor. */
   Sphere( const Sphere &s );
-    /*! Construct a default sphere with name \a name. */
-  Sphere( const string &name );
-    /*! Construct a sphere with name \a name from \a center and \a radius. */
-  Sphere( const Point &center, double radius, const string &name="sphere" );
+    /*! Construct a default sphere with name \a name.
+        The resolution for approximating the sphere is set to \a resolution. */
+  Sphere( const string &name, int resolution=20 );
+    /*! Construct a sphere with name \a name from \a center and \a radius.
+        The resolution for approximating the sphere is set to \a resolution. */
+  Sphere( const Point &center, double radius,
+	  const string &name="sphere", int resolution=20 );
 
     /*! Returns a pointer to a copy of the sphere. */
   virtual Shape *copy( void ) const;
 
     /*! The radius of the sphere in world coordinates. */
   double radius( void ) const;
+
+    /*! Reset the polygons making up the sphere to the ones in shape coordinates. */
+  virtual void resetPolygons( void ) const;
 
     /*! Minimum corner of bounding box for the transformation from
         shape to world coordinates specified by \a trafo. */
@@ -380,11 +427,14 @@ class Cylinder : public Shape
   Cylinder( void );
     /*! Copy constructor. */
   Cylinder( const Cylinder &c );
-    /*! Construct a default cylinder with name \a name. */
-  Cylinder( const string &name );
+    /*! Construct a default cylinder with name \a name.
+        The resolution for approximating the cylinder is set to \a resolution. */
+  Cylinder( const string &name, int resolution=20 );
     /*! Construct a cylinder with name \a name from \a anchor, \a radius, and \a length.
-        The anchor point is the center of the left circle. */
-  Cylinder( const Point &anchor, double radius, double length, const string &name="cylinder" );
+        The anchor point is the center of the left circle.
+        The resolution for approximating the cylinder is set to \a resolution. */
+  Cylinder( const Point &anchor, double radius, double length,
+	    const string &name="cylinder", int resolution=20 );
 
     /*! Returns a pointer to a copy of the cylinder. */
   virtual Shape *copy( void ) const;
@@ -393,6 +443,9 @@ class Cylinder : public Shape
   double radius( void ) const;
     /*! The length of the cylinder in world coordinates. */
   double length( void ) const;
+
+    /*! Reset the polygons making up the cylinder to the ones in shape coordinates. */
+  virtual void resetPolygons( void ) const;
 
     /*! Minimum corner of bounding box for the transformation from
         shape to world coordinates specified by \a trafo. */
@@ -468,6 +521,9 @@ class Cuboid : public Shape
   double width( void ) const;
     /*! The height of the cuboid in world coordinates. */
   double height( void ) const;
+
+    /*! Reset the polygons making up the cuboid to the ones in shape coordinates. */
+  virtual void resetPolygons( void ) const;
 
     /*! Minimum corner of bounding box for the transformation from
         shape to world coordinates specified by \a trafo. */

@@ -45,6 +45,7 @@
 #endif
 
 #ifdef HAVE_LIBRELACSSHAPES
+#include <relacs/polygon.h>
 #include <relacs/transform.h>
 #include <relacs/shape.h>
 #endif
@@ -455,6 +456,7 @@ public:
   };
 
 
+#ifdef HAVE_LIBRELACSSHAPES
   /*! 
     \class PolygonElement
     \author Jan Benda
@@ -468,7 +470,7 @@ public:
   public:
 
     PolygonElement( const vector<double> &x, const vector<double> &y,
-		    const deque<Point> points, int id, int shapeid, double distance,
+		    const Polygon &poly, int id, double distance,
 		    const QPen &pen, const QBrush &brush );
     ~PolygonElement( void );
 
@@ -484,16 +486,16 @@ public:
   protected:
 
     int Id;
-    int ShapeId;
     int XAxis;
     int YAxis;
     vector<double> X;
     vector<double> Y;
-    deque<Point> Points;
+    Polygon Poly;
     double Distance;
     QPen Pen;
     QBrush Brush;
   };
+#endif
 
 
     /*! Constructs a plot with KeepMode \a keep.
@@ -973,40 +975,29 @@ public:
         The contrast defines how much the color is modulated (0: none, 1: maximal).
         The light source and contrast needs to be set before plotting shapes. */
   void setLightSource( const Point &lightsource, double contrast=0.5 );
-    /*! Plot the Zone \a zone using the current projection matrix.
-        \a resolution is the number of polygons used for approximating
-        spheres and cylinders. */
-  int plot( const Zone &zone, int resolution, Color fillcolor, double alpha=1.0,
+    /*! Plot the Zone \a zone using the current projection matrix. */
+  int plot( const Zone &zone, Color fillcolor, double alpha=1.0,
 	    int linecolor=Transparent, int width=1, Dash dash=Solid );
-    /*! Plot the Sphere \a sphr using the current projection matrix.
-        The sphere is approximated by polygons. \a resolution defines
-        how many are used for the circumference. */
-  int plot( const Sphere &sphere, int resolution, Color fillcolor, double alpha=1.0,
+    /*! Plot the Shape \a shape using the current projection matrix. */
+  int plot( const Shape &shape, Color fillcolor, double alpha=1.0,
 	    int linecolor=Transparent, int width=1, Dash dash=Solid );
-    /*! Plot the Cylinder \a clnd using the current projection matrix.
-        The cylinder wall is approximated by polygons. \a resolution defines
-        how many are used for the circumference. */
-  int plot( const Cylinder &clnd, int resolution, Color fillcolor, double alpha=1.0,
-	    int linecolor=Transparent, int width=1, Dash dash=Solid );
-    /*! Plot the Cuboid \a cbd using the current projection matrix. */
-  int plot( const Cuboid &cbd, Color fillcolor, double alpha=1.0,
-	    int linecolor=Transparent, int width=1, Dash dash=Solid );
-    /*! Plot the polygon defined by \a points using the current projection matrix. */
-  int plot( const deque<Point> &points, Color fillcolor, double alpha=1.0,
+    /*! Plot the polygon \a polygon using the current projection matrix. */
+  int plot( const Polygon &poly, Color fillcolor, double alpha=1.0,
 	    int linecolor=Transparent, int width=1, Dash dash=Solid );
     /*! Plot the line from point \a x1 to point \a x2 using the current projection matrix. */
   int plot( const Point &x1, const Point &x2,
 	    int linecolor=Transparent, int width=1, Dash dash=Solid );
+
+    /*! Remove all 3-D polygons from the plot. */
+  void clearPolygons( void );
+    /*! Remove all 3-D polygons with id \a id from the plot. */
+  void clearPolygons( int id );
 #endif
 
     /*! Remove all 2-D plot data from the plot. */
   void clearData( void );
     /*! Remove 2-D plot data with index \a index from the plot. */
   void clearData( int index );
-    /*! Remove all 3-D polygons from the plot. */
-  void clearPolygons( void );
-    /*! Remove all 3-D polygons with id \a id from the plot. */
-  void clearPolygons( int id );
     /*! Remove surface plot data from the plot. */
   void clearSurfaceData( void );
 
@@ -1289,38 +1280,14 @@ private:
 
 
 #ifdef HAVE_LIBRELACSSHAPES
-    /*! Add a polygon of points \a pts for plotting. The normal vector
-        on the polygon is \a normal. The transformation \a trafo is
-        the transformation of the 3D points into world coordinates,
-        but it does not include the projection() matrix. */
-  void addPolygon( const deque< Point > &pts, const Point &normal, double subtr,
-		   const Transform &trafo, int id, int shapeid, const Zone &zones,
-		   Color fillcolor, double alpha,
+    /*! Add a polygon \a poly for plotting. */
+  void addPolygon( const Polygon &poly, int id, Color fillcolor, double alpha,
 		   int linecolor, int width, Dash dash );
-    /*! Subtract all polygons that are completely contained in \a shp. */
-  void subtractPolygons( const Shape &shp, const Transform &trafo );
     /*! Plot the zone using the transformation matrix \a trafo.
         \a resolution is the number of polygons used for approximating
         spheres and cylinders. */
-  int plotZone( const Zone &zone, const Transform &trafo, double subtr, int id,
-		Zone &zones, int resolution, Color fillcolor, double alpha,
+  int plotZone( const Zone &zone, int id, Color fillcolor, double alpha,
 		int linecolor, int width, Dash dash );
-    /*! Plot a Sphere using the transformation matrix \a trafo.
-        The sphere is approximated by polygons. \a resolution defines
-        how many are used for the circumference. */
-  int plotSphere( const Transform &trafo, double subtr, int id,
-		  const Zone &zones, int resolution, Color fillcolor, double alpha,
-		  int linecolor, int width, Dash dash );
-    /*! Plot a Cylinder using the transformation matrix \a trafo.
-        The cylinder wall is approximated by polygons. \a resolution defines
-        how many are used for the circumference. */
-  int plotCylinder( const Transform &trafo, double subtr, int id,
-		    const Zone &zones, int resolution, Color fillcolor, double alpha,
-		    int linecolor, int width, Dash dash );
-    /*! Plot a Cuboid using the transformation matrix \a trafo. */
-  int plotCuboid( const Transform &trafo, double subtr, int id,
-		  const Zone &zones, Color fillcolor, double alpha,
-		  int linecolor, int width, Dash dash );
 #endif
 
     /*! Keep-mode for data to be plotted. */
@@ -1740,11 +1707,10 @@ private:
   Point ViewPoint;
   Point LightSource;
   double Contrast;
-#endif
   typedef deque<PolygonElement*> PolygonDataType;
   PolygonDataType PolygonData;
   int MaxPolygonId;
-  int MaxShapeId;
+#endif
   typedef deque<DataElement*> LineDataType;
   LineDataType LineData;
   bool DrawData;
@@ -1760,7 +1726,9 @@ private:
   int addData( DataElement *d );
   int setSurface( SurfaceElement *s );
   void drawSurface( QPainter &paint );
+#ifdef HAVE_LIBRELACSSHAPES
   void drawPolygon( QPainter &paint, PolygonElement *d );
+#endif
   void drawLine( QPainter &paint, DataElement *d, int addpx );
   int drawPoints( QPainter &paint, DataElement *d );
 

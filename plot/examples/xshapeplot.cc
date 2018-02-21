@@ -71,41 +71,30 @@ void PlotShapes::update( void )
 
   Zone z;
 
-  Cuboid cbd1;
+  Cuboid cbd1( "cuboid 1" );
   cbd1.translate( 0.0, -0.5, -0.5 );
   cbd1.scaleX( 2.0 );
   cbd1.scaleZ( 0.5 );
   z.add( cbd1 );
 
-  Cuboid cbd2;
+  Cuboid cbd2( "cuboid 1" );
   cbd2.scaleX( 0.5 );
   cbd2.translate( -0.5, -0.5, -0.5 );
   cbd2.scaleY( 1.6 );
   cbd2.scaleZ( 1.6 );
   z.add( cbd2 );
 
-  Cuboid cbd3;
-  cbd3.scaleX( 0.5 );
-  cbd3.translate( -0.6, -0.5, -0.5 );
-  z.subtract( cbd3 );
-
-  Cylinder clnd;
+  Cylinder clnd( "cylinder", 40 );
   clnd.scale( 0.5, 1.0, 1.0 );
   clnd.translateX( 2.0 );
   z.add( clnd );
 
-  Sphere sphr0;
-  sphr0.scale( 0.5 );
-  sphr0.translateX( 2.5 );
-  //  sphr0.translateY( 1 );
-  //  z.subtract( sphr0 );
-
-  Sphere sphr1;
+  Sphere sphr1( "sphere 1", 40 );
   sphr1.scale( 0.5 );
   sphr1.translateY( 1.5 );
   z.add( sphr1 );
 
-  Sphere sphr2;
+  Sphere sphr2( "sphere 2", 40 );
   sphr2.scale( 0.5, 1.0, 0.5 );
   //  sphr2.scale( 0.5 );
   sphr2.translateZ( 1.5 );
@@ -122,11 +111,11 @@ void PlotShapes::update( void )
 
   (*this)[0].clearPolygons();
   (*this)[0].setViewPoint( viewxy );
-  (*this)[0].plot( z, 30, Plot::Red, 0.8, Plot::Red, 1 );
+  (*this)[0].plot( z, Plot::Red, 0.8, Plot::Red, 1 );
 
   (*this)[1].clearPolygons();
   (*this)[1].setViewPoint( viewxz );
-  (*this)[1].plot( z, 60, Plot::Orange );
+  (*this)[1].plot( z, Plot::Orange );
   draw();
 }
 

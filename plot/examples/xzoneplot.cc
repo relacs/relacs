@@ -104,19 +104,19 @@ void PlotShapes::update( void )
 
   (*this)[0].clearPolygons();
   (*this)[0].setViewPoint( viewxz );
-  (*this)[0].plot( z, 30, Plot::Red, 0.8, Plot::Red, 1 );
+  (*this)[0].plot( z, Plot::Red, 0.8, Plot::Red, 1 );
 
   (*this)[1].clearPolygons();
   (*this)[1].setViewPoint( viewxz );
   (*this)[1].plot( Point( -4.0, -3.0, -4.0 ), Point( 4.0, -3.0, -4.0 ), Plot::Blue, 4 );
   (*this)[1].plot( Point( -3.0, -4.0, -4.0 ), Point( -3.0, 4.0, -4.0 ), Plot::Red, 4 );
-  deque<Point> pts;
-  pts.push_back( Point( -3.0, -3.0, -4.0 ) );
-  pts.push_back( Point( +3.0, -3.0, -4.0 ) );
-  pts.push_back( Point( +3.0, +3.0, -4.0 ) );
-  pts.push_back( Point( -3.0, +3.0, -4.0 ) );
-  (*this)[1].plot( pts, Plot::White );
-  (*this)[1].plot( z, 60, Plot::Orange );
+  Polygon poly;
+  poly.push( Point( -3.0, -3.0, -4.0 ) );
+  poly.push( Point( +3.0, -3.0, -4.0 ) );
+  poly.push( Point( +3.0, +3.0, -4.0 ) );
+  poly.push( Point( -3.0, +3.0, -4.0 ) );
+  (*this)[1].plot( poly, Plot::White );
+  (*this)[1].plot( z, Plot::Orange );
   draw();
 }
 

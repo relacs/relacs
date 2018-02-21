@@ -330,10 +330,11 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 
   SData = 0;
   SurfaceData = 0;
+#ifdef HAVE_LIBRELACSSHAPES
   MaxPolygonId = 0;
-  MaxShapeId = 0;
   setViewPoint( -Point::UnitY*100.0 );
   setLightSource( Point( -0.5, -1.0, 1.0 ), 0.8 );
+#endif
   DrawData = false;
   NewData = true;
   ShiftData = false;
@@ -1500,6 +1501,7 @@ void Plot::initXRange( int axis )
       ymin[k] = YMinRange[k] >= AnyScale ? -MAXDOUBLE : YMinRange[k];
       ymax[k] = YMaxRange[k] >= AnyScale ? MAXDOUBLE : YMaxRange[k];
     }
+#ifdef HAVE_LIBRELACSSHAPES
     PolygonDataType::iterator pd;
     for ( pd = PolygonData.begin(); pd != PolygonData.end(); ++pd ) {
       if ( (*pd)->XAxis == axis ) {
@@ -1521,6 +1523,7 @@ void Plot::initXRange( int axis )
 	}
       }
     }
+#endif
     LineDataType::iterator d;
     for ( d = LineData.begin(); d != LineData.end(); ++d ) {
       if ( (*d)->XAxis == axis ) {
@@ -1611,6 +1614,7 @@ void Plot::initYRange( int axis )
     // xmin and xmax has been already set by initXRange()!
     double ymin = YMinFB[axis];
     double ymax = YMaxFB[axis];
+#ifdef HAVE_LIBRELACSSHAPES
     PolygonDataType::iterator pd;
     for ( pd = PolygonData.begin(); pd != PolygonData.end(); ++pd ) {
       if ( (*pd)->YAxis == axis ) {
@@ -1632,6 +1636,7 @@ void Plot::initYRange( int axis )
 	}
       }
     }
+#endif
     LineDataType::iterator d;
     for ( d = LineData.begin(); d != LineData.end(); ++d ) {
       if ( (*d)->YAxis == axis ) {
@@ -2515,6 +2520,8 @@ void Plot::drawSurface( QPainter &paint )
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+
 void Plot::drawPolygon( QPainter &paint, PolygonElement *d )
 {
   paint.setPen( d->Pen );
@@ -2540,6 +2547,7 @@ void Plot::drawPolygon( QPainter &paint, PolygonElement *d )
   paint.setClipping( false );
 }
 
+#endif
 
 void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
 {
@@ -3231,9 +3239,10 @@ int Plot::drawPoints( QPainter &paint, DataElement *d )
 void Plot::drawData( QPainter &paint )
 {
   drawSurface( paint );
-  for ( PolygonDataType::iterator d = PolygonData.begin(); d != PolygonData.end(); ++d ) {
+#ifdef HAVE_LIBRELACSSHAPES
+  for ( PolygonDataType::iterator d = PolygonData.begin(); d != PolygonData.end(); ++d )
     drawPolygon( paint, *d );
-  }
+#endif
   int addpx = 0;
   for ( LineDataType::iterator d = LineData.begin(); d != LineData.end(); ++d ) {
     drawLine( paint, *d, addpx );
@@ -5376,17 +5385,18 @@ int Plot::plot( const SampleData<SampleDataD> &data, double xscale, int gradient
 }
 
 
+#ifdef HAVE_LIBRELACSSHAPES
+
 Plot::PolygonElement::PolygonElement( const vector<double> &x, const vector<double> &y,
-				      const deque<Point> points, 
-				      int id, int shapeid, double distance,
+				      const Polygon &poly, 
+				      int id, double distance,
 				      const QPen &pen, const QBrush &brush )
   : Id( id ),
-    ShapeId( shapeid ),
     XAxis( 0 ),
     YAxis( 0 ),
     X( x ),
     Y( y ),
-    Points( points ),
+    Poly( poly ),
     Distance( distance ),
     Pen( pen ),
     Brush( brush )
@@ -5398,7 +5408,7 @@ Plot::PolygonElement::~PolygonElement( void )
 {
   X.clear();
   Y.clear();
-  Points.clear();
+  Poly.clear();
 }
 
 
@@ -5448,8 +5458,6 @@ void Plot::PolygonElement::yminmax( double xmin, double xmax, double &ymin, doub
 }
 
 
-#ifdef HAVE_LIBRELACSSHAPES
-
 Transform Plot::projection( void ) const
 {
   return Projection;
@@ -5471,59 +5479,32 @@ Point Plot::lightSource( void ) const
 }
 
 
-  void Plot::setLightSource( const Point &lightsource, double contrast )
+void Plot::setLightSource( const Point &lightsource, double contrast )
 {
   LightSource = lightsource.normalized();
   Contrast = contrast;
 }
 
 
-void Plot::addPolygon( const deque< Point > &pts, const Point &normal, double subtr,
-		       const Transform &trafo, int id, int shapeid, const Zone &zones,
+void Plot::addPolygon( const Polygon &poly, int id,
 		       Color fillcolor, double alpha,
 		       int linecolor, int width, Plot::Dash dash )
 {
+  if ( poly.empty() )
+    return;
+
   if ( ( width == 0 || linecolor == Transparent ) && fillcolor == Transparent )
     return;
 
-  // apply tansformation:
-  deque< Point > tpts;
-  for ( auto ptsi=pts.begin(); ptsi != pts.end(); ++ptsi )
-    tpts.push_back( trafo * (*ptsi) );
-
-  // remove polygons of subtractive shapes that are completely outside:
-  if ( subtr < 0.0 && zones.size() > 0 ) {
-    bool outside = true;
-    for ( auto ptsi=tpts.begin(); ptsi != tpts.end(); ++ptsi ) {
-      if ( zones.inside( *ptsi ) ) {
-	outside = false;
-	break;
-      }
-    }
-    if ( outside )
-      return;
-  }
-
   vector<double> x;
   vector<double> y;
-  Point c = Point::Origin;
-  for ( auto ptsi=tpts.begin(); ptsi != tpts.end(); ++ptsi ) {
-    Point p = *ptsi;
-    c += p;
-    p *= Projection;
-    p.homDivide();
-    x.push_back( p.x() );
-    y.push_back( p.y() );
-  }
-  c /= pts.size();
-  double distance = c.distance( ViewPoint );
+  poly.project( Projection, x, y );
 
-  Transform invtrafo = trafo.inverse().transpose();
-  Point n = Point::None;
+  double distance = poly.center().distance( ViewPoint );
+
   QBrush brush;
-  if ( fillcolor != Transparent && ! normal.isNone() ) {
-    n = invtrafo * normal * subtr;
-    double diffusion = n.dot( LightSource )/n.magnitude();
+  if ( fillcolor != Transparent && ! poly.normal().isNone() ) {
+    double diffusion = poly.normal().dot( LightSource )/poly.normal().magnitude();
 
     // set brush:
     if ( diffusion < 1.0-Contrast )
@@ -5542,8 +5523,8 @@ void Plot::addPolygon( const deque< Point > &pts, const Point &normal, double su
     qdash = Qt::NoPen;
   QPen pen( lcolor, width, qdash );
 
-  if ( alpha < 1.0 || n.isNone() || ViewPoint.dot( n ) >= -0.1 ) {
-    PolygonElement *PE = new PolygonElement( x, y, tpts, id, shapeid, distance, pen, brush );
+  if ( alpha < 1.0 || poly.normal().isNone() || ViewPoint.dot( poly.normal() ) >= -0.1 ) {
+    PolygonElement *PE = new PolygonElement( x, y, poly, id, distance, pen, brush );
     bool found = false;
     for ( auto pdi=PolygonData.begin(); pdi != PolygonData.end(); ++pdi ) {
       if ( (*pdi)->Distance < distance ) {
@@ -5559,238 +5540,57 @@ void Plot::addPolygon( const deque< Point > &pts, const Point &normal, double su
 }
 
 
-void Plot::subtractPolygons( const Shape &shp, const Transform &trafo )
-{
-  Shape *s = shp.copy();
-  s->transform( trafo );
-  for ( auto pdi=PolygonData.begin(); pdi != PolygonData.end(); ) {
-    bool inside = true;
-    for ( auto pi=(*pdi)->Points.begin(); pi != (*pdi)->Points.end(); ++pi ) {
-      if ( ! s->inside( *pi ) ) {
-	inside = false;
-	break;
-      }
-    }
-    if ( inside ) {
-      delete (*pdi);
-      pdi = PolygonData.erase( pdi );
-    }
-    else
-      ++pdi;
-  }
-  delete s;
-}
-
-
-int Plot::plotZone( const Zone &zone, const Transform &trafo, double subtr, int id,
-		    Zone &zones, int resolution, Color fillcolor, double alpha,
+int Plot::plotZone( const Zone &zone, int id,
+		    Color fillcolor, double alpha,
 		    int linecolor, int width, Dash dash )
 {
   for ( int k=0; k<zone.size(); k++ ) {
-    subtractPolygons( *zone[k], trafo );
-    Transform trafoz = trafo * zone[k]->trafo();
-    double subtrf = subtr * zone.added( k ) ? 1.0 : -1.0;
-    if ( zone[k]->type() == Shape::Zone )
-      plotZone( *zone[k], trafoz, subtrf, id, zones, resolution,
-		fillcolor, alpha, linecolor, width, dash );
+    if ( zone[k]->type() == Shape::ZoneShape )
+      plotZone( *zone[k], id, fillcolor, alpha, linecolor, width, dash );
     else {
-      if ( zone[k]->type() == Shape::Sphere )
-	plotSphere( trafoz, subtrf, id, zones, resolution,
-		    fillcolor, alpha, linecolor, width, dash );
-      else if ( zone[k]->type() == Shape::Cylinder )
-	plotCylinder( trafoz, subtrf, id, zones, resolution,
-		      fillcolor, alpha, linecolor, width, dash );
-      else if ( zone[k]->type() == Shape::Cuboid )
-	plotCuboid( trafoz, subtrf, id, zones,
-		    fillcolor, alpha, linecolor, width, dash );
+      for ( auto pi = zone[k]->polygons().begin(); pi != zone[k]->polygons().end(); ++pi )
+	addPolygon( *pi, id, fillcolor, alpha, linecolor, width, dash );
     }
-    zones.push( *zone[k], zone.added( k ) );
   }
   return id;
 }
 
 
-int Plot::plot( const Zone &zone, int resolution, Color fillcolor, double alpha,
+int Plot::plot( const Zone &zone, Color fillcolor, double alpha,
 		int linecolor, int width, Dash dash )
 {
   int id = MaxPolygonId++;
   Zone zones;
   zones.setTransform( zone.trafo() );
-  return plotZone( zone, zone.trafo(), 1.0, id, zones, resolution,
-		   fillcolor, alpha, linecolor, width, dash );
+  zone.updatePolygons( Transform::Identity, false, zones );
+  plotZone( zone, id, fillcolor, alpha, linecolor, width, dash );
+  return id;
 }
 
 
-int Plot::plotSphere( const Transform &trafo, double subtr, int id,
-		      const Zone &zones, int resolution, Color fillcolor, double alpha,
-		      int linecolor, int width, Dash dash )
+int Plot::plot( const Shape &shape, Color fillcolor, double alpha,
+		int linecolor, int width, Dash dash )
 {
-  int shapeid = MaxShapeId++;
-
-  int n = resolution;
-  int m = resolution/2;
-  for ( int j=0; j<m; j++ ) {
-    for ( int k=0; k<n; k++ ) {
-      deque<Point> pts;
-      double ck0 = ::cos( 2.0*M_PI*k/n );
-      double sk0 = ::sin( 2.0*M_PI*k/n );
-      double ck1 = ::cos( 2.0*M_PI*(k+1)/n );
-      double sk1 = ::sin( 2.0*M_PI*(k+1)/n );
-      double cj0 = ::cos( (1.0*j/m-0.5)*M_PI );
-      double sj0 = ::sin( (1.0*j/m-0.5)*M_PI );
-      double cj1 = ::cos( (1.0*(j+1)/m-0.5)*M_PI );
-      double sj1 = ::sin( (1.0*(j+1)/m-0.5)*M_PI );
-      pts.push_back( Point( ck0*cj0, sk0*cj0, sj0 ) );
-      Point normal = pts.back();
-      pts.push_back( Point( ck1*cj0, sk1*cj0, sj0 ) );
-      pts.push_back( Point( ck1*cj1, sk1*cj1, sj1 ) );
-      pts.push_back( Point( ck0*cj1, sk0*cj1, sj1 ) );
-      addPolygon( pts, normal, subtr, trafo, id, shapeid, zones,
-		  fillcolor, alpha, linecolor, width, dash );
-    }
+  int id = MaxPolygonId++;
+  Zone zones;
+  shape.updatePolygons( Transform::Identity, false, zones );
+  if ( shape.type() == Shape::ZoneShape )
+    plotZone( shape, id, fillcolor, alpha, linecolor, width, dash );
+  else {
+    for ( auto pi = shape.polygons().begin(); pi != shape.polygons().end(); ++pi )
+      addPolygon( *pi, id, fillcolor, alpha, linecolor, width, dash );
   }
   return id;
 }
 
 
-int Plot::plot( const Sphere &sphr, int resolution, Color fillcolor, double alpha,
+int Plot::plot( const Polygon &poly, Color fillcolor, double alpha,
 		int linecolor, int width, Dash dash )
 {
-  int id = MaxPolygonId++;
-  Zone zones;
-  return plotSphere( sphr.trafo(), 1.0, id, zones,
-		     resolution, fillcolor, alpha, linecolor, width, dash );
-}
-
-
-int Plot::plotCylinder( const Transform &trafo, double subtr, int id,
-			const Zone &zones, int resolution, Color fillcolor, double alpha,
-			int linecolor, int width, Dash dash )
-{
-  int shapeid = MaxShapeId++;
-
-  deque<Point> pts0;
-  deque<Point> pts1;
-  for ( int k=0; k<resolution; k++ ) {
-    pts0.push_back( Point( 0.0, ::cos( 2.0*M_PI*k/resolution ),
-			   ::sin( 2.0*M_PI*k/resolution ) ) );
-    pts1.push_back( Point( 1.0, ::cos( 2.0*M_PI*k/resolution ),
-			   ::sin( 2.0*M_PI*k/resolution ) ) );
-  }
-  Point normal = Point( -1.0, 0.0, 0.0 );
-  addPolygon( pts0, normal, subtr, trafo, id, shapeid, zones,
-	      fillcolor, alpha, linecolor, width, dash );
-  normal = Point( 1.0, 0.0, 0.0 );
-  addPolygon( pts1, normal, subtr, trafo, id, shapeid, zones,
-	      fillcolor, alpha, linecolor, width, dash );
-  for ( int k=0; k<resolution; k++ ) {
-    deque<Point> pts;
-    pts.push_back( pts0[k] );
-    pts.push_back( pts0[(k+1)%resolution] );
-    pts.push_back( pts1[(k+1)%resolution] );
-    pts.push_back( pts1[k] );
-    normal = pts0[k];
-    addPolygon( pts, normal, subtr, trafo, id, shapeid, zones,
-		fillcolor, alpha, linecolor, width, dash );
-  }
-  return id;
-}
-
-
-int Plot::plot( const Cylinder &clnd, int resolution, Color fillcolor, double alpha,
-		int linecolor, int width, Dash dash )
-{
-  int id = MaxPolygonId++;
-  Zone zones;
-  return plotCylinder( clnd.trafo(), 1.0, id, zones,
-		       resolution, fillcolor, alpha, linecolor, width, dash );
-}
-
-
-int Plot::plotCuboid( const Transform &trafo, double subtr, int id,
-		      const Zone &zones, Color fillcolor, double alpha,
-		      int linecolor, int width, Dash dash )
-{
-  int shapeid = MaxShapeId++;
-
-  deque< Point > pts;
-  pts.push_back( Point::Origin );
-  pts.push_back( Point::UnitX );
-  pts.push_back( Point::UnitX + Point::UnitY );
-  pts.push_back( Point::UnitY );
-  Point normal( 0.0, 0.0, -1.0 );
-  addPolygon( pts, normal, subtr, trafo, id, shapeid, zones,
-	      fillcolor, alpha, linecolor, width, dash );
-
-  pts.clear();
-  pts.push_back( Point::UnitZ + Point::Origin );
-  pts.push_back( Point::UnitZ + Point::UnitX );
-  pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
-  pts.push_back( Point::UnitZ + Point::UnitY );
-  normal = Point( 0.0, 0.0, 1.0 );
-  addPolygon( pts, normal, subtr, trafo, id, shapeid, zones,
-	      fillcolor, alpha, linecolor, width, dash );
-
-  pts.clear();
-  pts.push_back( Point::Origin );
-  pts.push_back( Point::UnitX );
-  pts.push_back( Point::UnitZ + Point::UnitX );
-  pts.push_back( Point::UnitZ + Point::Origin );
-  normal = Point( 0.0, -1.0, 0.0 );
-  addPolygon( pts, normal, subtr, trafo, id, shapeid, zones,
-	      fillcolor, alpha, linecolor, width, dash );
-
-  pts.clear();
-  pts.push_back( Point::UnitX );
-  pts.push_back( Point::UnitX + Point::UnitY );
-  pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
-  pts.push_back( Point::UnitZ + Point::UnitX );
-  normal = Point( 1.0, 0.0, 0.0 );
-  addPolygon( pts, normal, subtr, trafo, id, shapeid, zones,
-	      fillcolor, alpha, linecolor, width, dash );
-
-  pts.clear();
-  pts.push_back( Point::UnitX + Point::UnitY );
-  pts.push_back( Point::UnitY );
-  pts.push_back( Point::UnitZ + Point::UnitY );
-  pts.push_back( Point::UnitZ + Point::UnitX + Point::UnitY );
-  normal = Point( 0.0, 1.0, 0.0 );
-  addPolygon( pts, normal, subtr, trafo, id, shapeid, zones,
-	      fillcolor, alpha, linecolor, width, dash );
-
-  pts.clear();
-  pts.push_back( Point::UnitY );
-  pts.push_back( Point::Origin );
-  pts.push_back( Point::UnitZ + Point::Origin );
-  pts.push_back( Point::UnitZ + Point::UnitY );
-  normal = Point( -1.0, 0.0, 0.0 );
-  addPolygon( pts, normal, subtr, trafo, id, shapeid, zones,
-	      fillcolor, alpha, linecolor, width, dash );
-  return id;
-}
-
-
-int Plot::plot( const Cuboid &cbd, Color fillcolor, double alpha,
-		int linecolor, int width, Dash dash )
-{
-  int id = MaxPolygonId++;
-  Zone zones;
-  return plotCuboid( cbd.trafo(), 1.0, id, zones, fillcolor, alpha, linecolor, width, dash );
-}
-
-
-int Plot::plot( const deque<Point> &points, Color fillcolor, double alpha,
-		int linecolor, int width, Dash dash )
-{
-  if ( points.size() == 2 )
-    return plot( points[0], points[1], linecolor, width, dash );
-  if ( points.size() < 3 )
+  if ( poly.size() < 3 )
     return -1;
   int id = MaxPolygonId++;
-  int shapeid = MaxShapeId++;
-  Point normal = (points[1] - points[0]).cross( points.back() - points.front() );
-  addPolygon( points, normal.normalized(), 1.0, Transform::Identity, id, shapeid, Zone(),
-	      fillcolor, alpha, linecolor, width, dash );
+  addPolygon( poly, id, fillcolor, alpha, linecolor, width, dash );
   return id;
 }
 
@@ -5799,14 +5599,36 @@ int Plot::plot( const Point &x1, const Point &x2,
 		int linecolor, int width, Dash dash )
 {
   int id = MaxPolygonId++;
-  int shapeid = MaxShapeId++;
-  deque<Point> pts;
-  pts.push_back( x1 );
-  pts.push_back( x2 );
-  Point normal = Point::None;
-  addPolygon( pts, normal, 1.0, Transform::Identity, id, shapeid, Zone(),
-	      Transparent, 1.0, linecolor, width, dash );
+  Polygon poly;
+  poly.push( x1 );
+  poly.push( x2 );
+  poly.setNormal( Point::None );
+  addPolygon( poly, id, Transparent, 1.0, linecolor, width, dash );
   return id;
+}
+
+
+void Plot::clearPolygons( void )
+{
+  for ( auto d = PolygonData.begin(); d != PolygonData.end(); ++d )
+    delete (*d);
+  PolygonData.clear();
+  MaxPolygonId = 0;
+  NewData = true;
+}
+
+
+void Plot::clearPolygons( int id )
+{
+  for ( auto d = PolygonData.begin(); d != PolygonData.end(); ) {
+    if ( (*d)->Id == id ) {
+      delete (*d);
+      d = PolygonData.erase( d );
+    }
+    else
+      ++d;
+  }
+  NewData = true;
 }
 
 #endif
@@ -5834,31 +5656,6 @@ void Plot::clearData( int index )
 }
 
 
-void Plot::clearPolygons( void )
-{
-  for ( auto d = PolygonData.begin(); d != PolygonData.end(); ++d )
-    delete (*d);
-  PolygonData.clear();
-  MaxPolygonId = 0;
-  MaxShapeId = 0;
-  NewData = true;
-}
-
-
-void Plot::clearPolygons( int id )
-{
-  for ( auto d = PolygonData.begin(); d != PolygonData.end(); ) {
-    if ( (*d)->Id == id ) {
-      delete (*d);
-      d = PolygonData.erase( d );
-    }
-    else
-      ++d;
-  }
-  NewData = true;
-}
-
-
 void Plot::clearSurfaceData( void )
 {
   if ( SData != 0 )
@@ -5874,7 +5671,9 @@ void Plot::clearSurfaceData( void )
 void Plot::clear( void )
 {
   clearSurfaceData();
+#ifdef HAVE_LIBRELACSSHAPES
   clearPolygons();
+#endif
   clearData();
   clearLabels();
 }

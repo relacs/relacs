@@ -27,30 +27,36 @@ namespace relacs {
 
 //******************************************
 
-Shape::Shape( Shape::ShapeType type, const string &name )
+Shape::Shape( Shape::ShapeType type, const string &name, int resolution )
   : Type( type ),
     Name( name ),
     Trafo(),
-    InvTrafo()
+    InvTrafo(),
+    Resolution( resolution )
 {
+  Polygons.clear();
 }
 
 
 Shape::Shape( Shape::ShapeType type, const string &name,
-	      const Transform &trafo  )
+	      int resolution, const Transform &trafo  )
   : Type( type ),
     Name( name ),
-    Trafo( trafo )
+    Trafo( trafo ),
+    Resolution( resolution )
 {
   InvTrafo = Trafo.inverse();
+  Polygons.clear();
 }
 
 
 Shape::Shape( const Shape &s )
-  : Type( s.Type ),
+  : Polygons( s.Polygons ),
+    Type( s.Type ),
     Name( s.Name ),
     Trafo( s.Trafo ),
-    InvTrafo( s.InvTrafo )
+    InvTrafo( s.InvTrafo ),
+    Resolution( s.Resolution )
 {
 }
 
@@ -198,6 +204,24 @@ Point Shape::inverseTransform( const Point &p ) const
 }
 
 
+void Shape::updatePolygons( const Transform &trafo, bool flipnormal,
+			    Zone &zones ) const
+{
+  resetPolygons();
+  Transform t = trafo * Trafo;
+  Transform it = t.inverse().transpose();
+  for ( auto pi = Polygons.begin(); pi != Polygons.end(); ) {
+    // remove polygons of subtractive shapes that are completely outside:
+    if ( flipnormal && pi->outside( zones ) )
+      pi = Polygons.erase( pi );
+    else {
+      pi->apply( t, it, flipnormal );
+      ++pi;
+    }
+  }
+}
+
+
 Point Shape::boundingBoxMin( void ) const
 {
   return boundingBoxMin( Trafo );
@@ -250,7 +274,7 @@ ostream &operator<<( ostream &str, const Shape &s )
 //******************************************
 
 Zone::Zone( void )
-  : Shape( Shape::Zone, "zone" )
+  : Shape( Shape::ZoneShape, "zone", 0 )
 {
   Shapes.clear();
   Add.clear();
@@ -268,13 +292,13 @@ Zone::Zone( const Zone &z )
 
 
 Zone::Zone( const string &name )
-  : Shape( Shape::Zone, name )
+  : Shape( Shape::ZoneShape, name, 0 )
 {
 }
 
 
 Zone::Zone( const Shape &s, const string &name )
-  : Shape( Shape::Zone, name )
+  : Shape( Shape::ZoneShape, name, 0 )
 {
   Shapes.clear();
   Add.clear();
@@ -284,7 +308,7 @@ Zone::Zone( const Shape &s, const string &name )
 
 
 Zone::Zone( const deque<Shape*> &s, const string &name )
-  : Shape( Shape::Zone, name )
+  : Shape( Shape::ZoneShape, name, 0 )
 {
   Shapes.clear();
   Add.clear();
@@ -421,6 +445,76 @@ void Zone::clear( void )
     delete *si;
   Shapes.clear();
   Add.clear();
+}
+
+
+void Zone::resetPolygons( void ) const
+{
+  Polygons.clear();
+  for ( auto si = Shapes.begin(); si != Shapes.end(); ++si )
+    (*si)->resetPolygons();
+}
+
+
+void Zone::updatePolygons( const Transform &ttrafo, bool flipnormal,
+			   Zone &zones ) const
+{
+  Transform t = ttrafo * trafo();
+  auto si = Shapes.begin();
+  auto ai = Add.begin();
+  for ( ; si != Shapes.end(); ++si, ++ai ) {
+    /*
+XXX zones should be an internal parent or root pointer!!! 
+XXX From which we traverse the shapes until the previous one.
+
+ void Plot::subtractPolygons( const Shape &shp, const Transform &trafo )
+{
+  Shape *s = shp.copy();
+  s->transform( trafo );
+  for ( auto pdi= all polygons accumulated so far ) {
+    if ( pdi->inside( so far accumulated zone ) ) {
+      delete (*pdi);
+      pdi = PolygonData.erase( pdi );
+    }
+    else
+      ++pdi;
+  }
+  delete s;
+}
+
+int Plot::plotZone( const Zone &zone, const Transform &trafo, double subtr, int id,
+		    Zone &zones, int resolution, Color fillcolor, double alpha,
+		    int linecolor, int width, Dash dash )
+{
+  for ( int k=0; k<zone.size(); k++ ) {
+    subtractPolygons( *zone[k], trafo );
+    Transform trafoz = trafo * zone[k]->trafo();
+    double subtrf = subtr * zone.added( k ) ? 1.0 : -1.0;
+    if ( zone[k]->type() == Shape::Zone )
+      plotZone( *zone[k], trafoz, subtrf, id, zones, resolution,
+		fillcolor, alpha, linecolor, width, dash );
+    else {
+      if ( zone[k]->type() == Shape::Sphere )
+	plotSphere( trafoz, subtrf, id, zones, resolution,
+		    fillcolor, alpha, linecolor, width, dash );
+      else if ( zone[k]->type() == Shape::Cylinder )
+	plotCylinder( trafoz, subtrf, id, zones, resolution,
+		      fillcolor, alpha, linecolor, width, dash );
+      else if ( zone[k]->type() == Shape::Cuboid )
+	plotCuboid( trafoz, subtrf, id, zones,
+		    fillcolor, alpha, linecolor, width, dash );
+    }
+    zones.push( *zone[k], zone.added( k ) );
+  }
+  return id;
+}
+    */
+    bool fn = flipnormal;
+    if ( ! *ai )
+      fn = ~fn;
+    (*si)->updatePolygons( t, fn, zones );
+    zones.push( *(*si), *ai ); // XXX push it without sub shapes!
+  }
 }
 
 
@@ -569,7 +663,7 @@ ostream &Zone::print( ostream &str ) const
 //******************************************
 
 Sphere::Sphere( void )
-  : Shape( Shape::Sphere, "sphere" )
+  : Shape( Shape::Sphere, "sphere", 20 )
 {
 }
 
@@ -580,14 +674,15 @@ Sphere::Sphere( const Sphere &s )
 }
 
 
-Sphere::Sphere( const string &name )
-  : Shape( Shape::Sphere, name )
+Sphere::Sphere( const string &name, int resolution )
+  : Shape( Shape::Sphere, name, resolution )
 {
 }
 
 
-Sphere::Sphere( const Point &center, double radius, const string &name )
-  : Shape( Shape::Sphere, name )
+Sphere::Sphere( const Point &center, double radius,
+		const string &name, int resolution )
+  : Shape( Shape::Sphere, name, resolution )
 {
   scale( radius );
   translate( center );
@@ -605,6 +700,34 @@ double Sphere::radius( void ) const
   Point p0 = transform( Point::Origin );
   Point px = transform( Point::UnitX );
   return p0.distance( px );
+}
+
+
+void Sphere::resetPolygons( void ) const
+{
+  Polygons.clear();
+
+  int n = resolution();
+  int m = resolution()/2;
+  for ( int j=0; j<m; j++ ) {
+    for ( int k=0; k<n; k++ ) {
+      Polygon poly;
+      double ck0 = ::cos( 2.0*M_PI*k/n );
+      double sk0 = ::sin( 2.0*M_PI*k/n );
+      double ck1 = ::cos( 2.0*M_PI*(k+1)/n );
+      double sk1 = ::sin( 2.0*M_PI*(k+1)/n );
+      double cj0 = ::cos( (1.0*j/m-0.5)*M_PI );
+      double sj0 = ::sin( (1.0*j/m-0.5)*M_PI );
+      double cj1 = ::cos( (1.0*(j+1)/m-0.5)*M_PI );
+      double sj1 = ::sin( (1.0*(j+1)/m-0.5)*M_PI );
+      poly.push( Point( ck0*cj0, sk0*cj0, sj0 ) );
+      poly.setNormal( poly.back() );
+      poly.push( Point( ck1*cj0, sk1*cj0, sj0 ) );
+      poly.push( Point( ck1*cj1, sk1*cj1, sj1 ) );
+      poly.push( Point( ck0*cj1, sk0*cj1, sj1 ) );
+      Polygons.push_back( poly );
+    }
+  }
 }
 
 
@@ -702,7 +825,7 @@ ostream &Sphere::print( ostream &str ) const
 //******************************************
 
 Cylinder::Cylinder( void )
-  : Shape( Shape::Cylinder, "cylinder" )
+  : Shape( Shape::Cylinder, "cylinder", 20 )
 {
 }
 
@@ -713,14 +836,15 @@ Cylinder::Cylinder( const Cylinder &c )
 }
 
 
-Cylinder::Cylinder( const string &name )
-  : Shape( Shape::Cylinder, name )
+Cylinder::Cylinder( const string &name, int resolution )
+  : Shape( Shape::Cylinder, name, resolution )
 {
 }
 
 
-Cylinder::Cylinder( const Point &anchor, double radius, double length, const string &name )
-  : Shape( Shape::Cylinder, name )
+Cylinder::Cylinder( const Point &anchor, double radius, double length,
+		    const string &name, int resolution )
+  : Shape( Shape::Cylinder, name, resolution )
 {
   scale( length, radius, radius );
   translate( anchor );
@@ -746,6 +870,34 @@ double Cylinder::length( void ) const
   Point p0 = transform( Point::Origin );
   Point px = transform( Point::UnitX );
   return p0.distance( px );
+}
+
+
+void Cylinder::resetPolygons( void ) const
+{
+  Polygons.clear();
+
+  Polygon poly0;
+  Polygon poly1;
+  for ( int k=0; k<resolution(); k++ ) {
+    double c = ::cos( 2.0*M_PI*k/resolution() );
+    double s = ::sin( 2.0*M_PI*k/resolution() );
+    poly0.push( Point( 0.0, c, s ) );
+    poly1.push( Point( 1.0, c, s ) );
+  }
+  poly0.setNormal( Point( -1.0, 0.0, 0.0 ) );
+  poly1.setNormal( Point( +1.0, 0.0, 0.0 ) );
+  Polygons.push_back( poly0 );
+  Polygons.push_back( poly1 );
+  for ( int k=0; k<resolution(); k++ ) {
+    Polygon poly;
+    poly.push( poly0[k] );
+    poly.push( poly0[(k+1)%resolution()] );
+    poly.push( poly1[(k+1)%resolution()] );
+    poly.push( poly1[k] );
+    poly.setNormal( poly0[k] );
+    Polygons.push_back( poly );
+  }
 }
 
 
@@ -910,7 +1062,7 @@ ostream &Cylinder::print( ostream &str ) const
 //******************************************
 
 Cuboid::Cuboid( void )
-  : Shape( Shape::Cuboid, "cuboid" )
+  : Shape( Shape::Cuboid, "cuboid", 0 )
 {
 }
 
@@ -922,14 +1074,14 @@ Cuboid::Cuboid( const Cuboid &c )
 
 
 Cuboid::Cuboid( const string &name )
-  : Shape( Shape::Cuboid, name )
+  : Shape( Shape::Cuboid, name, 0 )
 {
 }
 
 
 Cuboid::Cuboid( const Point &anchor, 
 		double length, double width, double height, const string &name )
-  : Shape( Shape::Cuboid, name )
+  : Shape( Shape::Cuboid, name, 0 )
 {
   scale( length, width, height );
   translate( anchor );
@@ -937,7 +1089,7 @@ Cuboid::Cuboid( const Point &anchor,
 
 
 Cuboid::Cuboid( const Point &anchor, const Point &end, const string &name )
-  : Shape( Shape::Cuboid, name )
+  : Shape( Shape::Cuboid, name, 0 )
 {
   scale( end - anchor );
   translate( anchor );
@@ -946,7 +1098,7 @@ Cuboid::Cuboid( const Point &anchor, const Point &end, const string &name )
 
 Cuboid::Cuboid( const Point &anchor, const Point &px, const Point &py, const Point &pz,
 		const string &name )
-  : Shape( Shape::Cuboid, name )
+  : Shape( Shape::Cuboid, name, 0 )
 {
   Point ppx = px - anchor;
   Point ppy = py - anchor;
@@ -1007,6 +1159,60 @@ double Cuboid::height( void ) const
   Point p0 = transform( Point::Origin );
   Point pz = transform( Point::UnitZ );
   return p0.distance( pz );
+}
+
+
+void Cuboid::resetPolygons( void ) const
+{
+  Polygons.clear();
+
+  Polygon poly;
+  poly.push( Point::Origin );
+  poly.push( Point::UnitX );
+  poly.push( Point::UnitX + Point::UnitY );
+  poly.push( Point::UnitY );
+  poly.setNormal( Point( 0.0, 0.0, -1.0 ) );
+  Polygons.push_back( poly );
+
+  poly.clear();
+  poly.push( Point::UnitZ + Point::Origin );
+  poly.push( Point::UnitZ + Point::UnitX );
+  poly.push( Point::UnitZ + Point::UnitX + Point::UnitY );
+  poly.push( Point::UnitZ + Point::UnitY );
+  poly.setNormal( Point( 0.0, 0.0, 1.0 ) );
+  Polygons.push_back( poly );
+
+  poly.clear();
+  poly.push( Point::Origin );
+  poly.push( Point::UnitX );
+  poly.push( Point::UnitZ + Point::UnitX );
+  poly.push( Point::UnitZ + Point::Origin );
+  poly.setNormal( Point( 0.0, -1.0, 0.0 ) );
+  Polygons.push_back( poly );
+
+  poly.clear();
+  poly.push( Point::UnitX );
+  poly.push( Point::UnitX + Point::UnitY );
+  poly.push( Point::UnitZ + Point::UnitX + Point::UnitY );
+  poly.push( Point::UnitZ + Point::UnitX );
+  poly.setNormal( Point( 1.0, 0.0, 0.0 ) );
+  Polygons.push_back( poly );
+
+  poly.clear();
+  poly.push( Point::UnitX + Point::UnitY );
+  poly.push( Point::UnitY );
+  poly.push( Point::UnitZ + Point::UnitY );
+  poly.push( Point::UnitZ + Point::UnitX + Point::UnitY );
+  poly.setNormal( Point( 0.0, 1.0, 0.0 ) );
+  Polygons.push_back( poly );
+
+  poly.clear();
+  poly.push( Point::UnitY );
+  poly.push( Point::Origin );
+  poly.push( Point::UnitZ + Point::Origin );
+  poly.push( Point::UnitZ + Point::UnitY );
+  poly.setNormal( Point( -1.0, 0.0, 0.0 ) );
+  Polygons.push_back( poly );
 }
 
 
