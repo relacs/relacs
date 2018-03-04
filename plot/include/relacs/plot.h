@@ -977,7 +977,7 @@ public:
   void setLightSource( const Point &lightsource, double contrast=0.5 );
     /*! Plot the Zone \a zone using the current projection matrix. */
   int plot( const Zone &zone, Color fillcolor, double alpha=1.0,
-	    int linecolor=Transparent, int width=1, Dash dash=Solid );
+  	    int linecolor=Transparent, int width=1, Dash dash=Solid );
     /*! Plot the Shape \a shape using the current projection matrix. */
   int plot( const Shape &shape, Color fillcolor, double alpha=1.0,
 	    int linecolor=Transparent, int width=1, Dash dash=Solid );
@@ -1283,11 +1283,6 @@ private:
     /*! Add a polygon \a poly for plotting. */
   void addPolygon( const Polygon &poly, int id, Color fillcolor, double alpha,
 		   int linecolor, int width, Dash dash );
-    /*! Plot the zone using the transformation matrix \a trafo.
-        \a resolution is the number of polygons used for approximating
-        spheres and cylinders. */
-  int plotZone( const Zone &zone, int id, Color fillcolor, double alpha,
-		int linecolor, int width, Dash dash );
 #endif
 
     /*! Keep-mode for data to be plotted. */

@@ -84,17 +84,17 @@ void PlotShapes::update( void )
   cbd2.scaleZ( 1.6 );
   z.add( cbd2 );
 
-  Cylinder clnd( "cylinder", 40 );
+  Cylinder clnd( "cylinder" );
   clnd.scale( 0.5, 1.0, 1.0 );
   clnd.translateX( 2.0 );
   z.add( clnd );
 
-  Sphere sphr1( "sphere 1", 40 );
+  Sphere sphr1( "sphere 1" );
   sphr1.scale( 0.5 );
   sphr1.translateY( 1.5 );
   z.add( sphr1 );
 
-  Sphere sphr2( "sphere 2", 40 );
+  Sphere sphr2( "sphere 2" );
   sphr2.scale( 0.5, 1.0, 0.5 );
   //  sphr2.scale( 0.5 );
   sphr2.translateZ( 1.5 );
@@ -109,10 +109,12 @@ void PlotShapes::update( void )
   Point viewxy = Point::UnitZ*20.0;
   Point viewxz = -Point::UnitY*20.0;
 
+  z.setResolution( 20 );
   (*this)[0].clearPolygons();
   (*this)[0].setViewPoint( viewxy );
   (*this)[0].plot( z, Plot::Red, 0.8, Plot::Red, 1 );
 
+  z.setResolution( 60 );
   (*this)[1].clearPolygons();
   (*this)[1].setViewPoint( viewxz );
   (*this)[1].plot( z, Plot::Orange );

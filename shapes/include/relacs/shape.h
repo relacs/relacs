@@ -78,6 +78,11 @@ public:
     /*! Set the name of the shape to \a name. */
   void setName( const string &name ) { Name = name; };
 
+    /*! The parent Zone. */
+  const Zone *parent( void ) const { return Parent; };
+    /*! Set the parent zone to \a parent. */
+  void setParent( const Zone *parent ) { Parent = parent; };
+
     /*! Translate the shape by \a x along the world x-axis. */
   void translateX( double x );
     /*! Translate the shape by \a y along the world y-axis. */
@@ -142,8 +147,9 @@ public:
         matrix. */
   Point inverseTransform( const Point &p ) const;
 
-    /*! The number of polygons used to approximate the shape. */
-  int resolution( void ) const { return Resolution; };
+    /*! The number of polygons used to approximate the shape.
+        If no resultion is set for this shape, check for the parant's resolution. */
+  int resolution( void ) const;
     /*! Set the number of polygons used to approximate the shape to \a resolution. */
   void setResolution( int resolution ) { Resolution = resolution; };
 
@@ -155,11 +161,8 @@ public:
   deque<Polygon> &polygons( void ) { return Polygons; };
     /*! Reset the polygons making up the shape to the ones in shape coordinates. */
   virtual void resetPolygons( void ) const = 0;
-    /*! Update the polygons making up the shape.  If \a flipnormal is
-        \c true, then the directions of the normal vectors of the
-        polygons are flipped. */
-  virtual void updatePolygons( const Transform &trafo, bool flipnormal,
-			       Zone &zones ) const;
+    /*! Update the polygons making up the shape in world coordinates. */
+  virtual void updatePolygons( void ) const;
 
     /*! Minimum corner of bounding box. */
   Point boundingBoxMin( void ) const;
@@ -222,6 +225,8 @@ private:
   ShapeType Type;
     /*! The name of the shape. */
   string Name;
+    /*! Pointer to the parent zone. */
+  const Zone *Parent;
     /*! The transformation matrix for transforming shape coordinates
         to world coordinates. */
   Transform Trafo;
@@ -271,16 +276,6 @@ class Zone : public Shape
         shape \a s to the zone. */
   void push( const Shape &s, bool add=true );
 
-    /*! Add shape \a s to the zone. */
-  void operator+=( const Shape &s );
-    /*! Subtract shape \a s from the zone. */
-  void operator-=( const Shape &s );
-
-    /*! Return the zone with shape \a s added to it. */
-  Zone operator+( const Shape &s ) const;
-    /*! Return the zone with shape \a s subtracted from it. */
-  Zone operator-( const Shape &s ) const;
-
     /*! The number of shapes contained by the zone. */
   int size( void ) const { return (int)Shapes.size(); };
     /*! Return \c true if no shapes are contained by the zone. */
@@ -310,11 +305,8 @@ class Zone : public Shape
 
     /*! Reset the polygons making up the zone to the ones in shape coordinates. */
   virtual void resetPolygons( void ) const;
-    /*! Update the polygons making up the shapes of the zone.  If \a flipnormal is
-        \c true, then the directions of the normal vectors of the
-        polygons are flipped. */
-  virtual void updatePolygons( const Transform &trafo, bool flipnormal,
-			       Zone &zones ) const;
+    /*! Update the polygons making up the shapes of the zone in world coordinates. */
+  virtual void updatePolygons( void ) const;
 
     /*! Approximation of the minimum corner of bounding boxes of all
         additive shapes for the transformation from shape to world
@@ -370,11 +362,11 @@ class Sphere : public Shape
   Sphere( const Sphere &s );
     /*! Construct a default sphere with name \a name.
         The resolution for approximating the sphere is set to \a resolution. */
-  Sphere( const string &name, int resolution=20 );
+  Sphere( const string &name, int resolution=0 );
     /*! Construct a sphere with name \a name from \a center and \a radius.
         The resolution for approximating the sphere is set to \a resolution. */
   Sphere( const Point &center, double radius,
-	  const string &name="sphere", int resolution=20 );
+	  const string &name="sphere", int resolution=0 );
 
     /*! Returns a pointer to a copy of the sphere. */
   virtual Shape *copy( void ) const;
@@ -429,12 +421,12 @@ class Cylinder : public Shape
   Cylinder( const Cylinder &c );
     /*! Construct a default cylinder with name \a name.
         The resolution for approximating the cylinder is set to \a resolution. */
-  Cylinder( const string &name, int resolution=20 );
+  Cylinder( const string &name, int resolution=0 );
     /*! Construct a cylinder with name \a name from \a anchor, \a radius, and \a length.
         The anchor point is the center of the left circle.
         The resolution for approximating the cylinder is set to \a resolution. */
   Cylinder( const Point &anchor, double radius, double length,
-	    const string &name="cylinder", int resolution=20 );
+	    const string &name="cylinder", int resolution=0 );
 
     /*! Returns a pointer to a copy of the cylinder. */
   virtual Shape *copy( void ) const;

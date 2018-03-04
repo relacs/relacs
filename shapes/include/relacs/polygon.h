@@ -1,6 +1,6 @@
 /*
   polygon.h
-  A polygon in 3D space.
+  A planar polygon in 3D space.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -32,12 +32,12 @@ namespace relacs {
 
 
 class Transform;
-class Zone;
+class Shape;
 
 
 /*!
 \class Polygon
-\brief A polygon in 3D space.
+\brief A planar polygon in 3D space.
 \author Jan Benda
 
 A polygon contains a list of its corner points and a normal vector
@@ -83,6 +83,8 @@ public:
   Point normal( void ) const;
     /*! Set the normal vector of the polygon to \a normal. */
   void setNormal( const Point &normal ) { Normal = normal; };
+    /*! Flip the direction of the normal vector of the polygon. */
+  void flipNormal( void );
 
     /*! Assign the properties of polygon \a p to this polygon. */
   Polygon &assign( const Polygon &p );
@@ -90,11 +92,8 @@ public:
   Polygon &operator=( const Polygon &p );
 
   /*! Apply the transformation matrix \a trafo on all the corner
-      points and \a invtransptrafo to the normal of the polygon.  If
-      \a flipnormal is \c true, then the directions of the normal
-      vectors of the polygons are flipped. */
-  void apply( const Transform &trafo, const Transform &invtransptrafo,
-	      bool flipnormal );
+      points and \a invtransptrafo to the normal of the polygon. */
+  void apply( const Transform &trafo, const Transform &invtransptrafo );
 
     /*! Return the center of gravity of the polygon points. */
   Point center( void ) const;
@@ -102,10 +101,18 @@ public:
         and return the resulting x- and y-coordinates. */
   void project( const Transform &trafo, vector<double> &x, vector<double> &y ) const;
 
-    /*! True if all corner points of the polygon are inside the zone \a zones. */
-  bool inside( const Zone &zones ) const;
-    /*! True if all corner points of the polygon are outside the zone \a zones. */
-  bool outside( const Zone &zones ) const;
+    /*! True if all corner points of the polygon in world coordinates
+        are inside the shape \a shape. */
+  bool inside( const Shape &shape ) const;
+    /*! True if all corner points of the polygon in shape coordinates
+        are inside the shape \a shape. */
+  bool insideShape( const Shape &shape ) const;
+    /*! True if all corner points of the polygon in world coordinates
+        are outside the shape \a shape. */
+  bool outside( const Shape &shape ) const;
+    /*! True if all corner points of the polygon in shape coordinates
+        are outside the shape \a shape. */
+  bool outsideShape( const Shape &shape ) const;
 
     /*! Write the coordinates of corner points of the polygon to stream \a str. */
   friend ostream &operator<<( ostream &str, const Polygon &p );

@@ -5540,18 +5540,13 @@ void Plot::addPolygon( const Polygon &poly, int id,
 }
 
 
-int Plot::plotZone( const Zone &zone, int id,
-		    Color fillcolor, double alpha,
-		    int linecolor, int width, Dash dash )
+int Plot::plot( const Shape &shape, Color fillcolor, double alpha,
+		int linecolor, int width, Dash dash )
 {
-  for ( int k=0; k<zone.size(); k++ ) {
-    if ( zone[k]->type() == Shape::ZoneShape )
-      plotZone( *zone[k], id, fillcolor, alpha, linecolor, width, dash );
-    else {
-      for ( auto pi = zone[k]->polygons().begin(); pi != zone[k]->polygons().end(); ++pi )
-	addPolygon( *pi, id, fillcolor, alpha, linecolor, width, dash );
-    }
-  }
+  int id = MaxPolygonId++;
+  shape.updatePolygons();
+  for ( auto pi = shape.polygons().begin(); pi != shape.polygons().end(); ++pi )
+    addPolygon( *pi, id, fillcolor, alpha, linecolor, width, dash );
   return id;
 }
 
@@ -5560,26 +5555,9 @@ int Plot::plot( const Zone &zone, Color fillcolor, double alpha,
 		int linecolor, int width, Dash dash )
 {
   int id = MaxPolygonId++;
-  Zone zones;
-  zones.setTransform( zone.trafo() );
-  zone.updatePolygons( Transform::Identity, false, zones );
-  plotZone( zone, id, fillcolor, alpha, linecolor, width, dash );
-  return id;
-}
-
-
-int Plot::plot( const Shape &shape, Color fillcolor, double alpha,
-		int linecolor, int width, Dash dash )
-{
-  int id = MaxPolygonId++;
-  Zone zones;
-  shape.updatePolygons( Transform::Identity, false, zones );
-  if ( shape.type() == Shape::ZoneShape )
-    plotZone( shape, id, fillcolor, alpha, linecolor, width, dash );
-  else {
-    for ( auto pi = shape.polygons().begin(); pi != shape.polygons().end(); ++pi )
-      addPolygon( *pi, id, fillcolor, alpha, linecolor, width, dash );
-  }
+  zone.updatePolygons();
+  for ( auto pi = zone.polygons().begin(); pi != zone.polygons().end(); ++pi )
+    addPolygon( *pi, id, fillcolor, alpha, linecolor, width, dash );
   return id;
 }
 

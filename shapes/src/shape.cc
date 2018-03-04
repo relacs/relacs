@@ -30,6 +30,7 @@ namespace relacs {
 Shape::Shape( Shape::ShapeType type, const string &name, int resolution )
   : Type( type ),
     Name( name ),
+    Parent( 0 ),
     Trafo(),
     InvTrafo(),
     Resolution( resolution )
@@ -42,6 +43,7 @@ Shape::Shape( Shape::ShapeType type, const string &name,
 	      int resolution, const Transform &trafo  )
   : Type( type ),
     Name( name ),
+    Parent( 0 ),
     Trafo( trafo ),
     Resolution( resolution )
 {
@@ -54,6 +56,7 @@ Shape::Shape( const Shape &s )
   : Polygons( s.Polygons ),
     Type( s.Type ),
     Name( s.Name ),
+    Parent( s.Parent ),
     Trafo( s.Trafo ),
     InvTrafo( s.InvTrafo ),
     Resolution( s.Resolution )
@@ -204,21 +207,23 @@ Point Shape::inverseTransform( const Point &p ) const
 }
 
 
-void Shape::updatePolygons( const Transform &trafo, bool flipnormal,
-			    Zone &zones ) const
+int Shape::resolution( void ) const
 {
+  if ( Resolution <= 0 && Parent != 0 )
+    return Parent->resolution();
+  else
+    return Resolution;
+}
+
+
+void Shape::updatePolygons( void ) const
+{
+  // generate polygons:
   resetPolygons();
-  Transform t = trafo * Trafo;
-  Transform it = t.inverse().transpose();
-  for ( auto pi = Polygons.begin(); pi != Polygons.end(); ) {
-    // remove polygons of subtractive shapes that are completely outside:
-    if ( flipnormal && pi->outside( zones ) )
-      pi = Polygons.erase( pi );
-    else {
-      pi->apply( t, it, flipnormal );
-      ++pi;
-    }
-  }
+  // transform polygons to world coordinates:
+  Transform it = Trafo.inverse().transpose();
+  for ( auto pi = Polygons.begin(); pi != Polygons.end(); ++pi )
+    pi->apply( Trafo, it );
 }
 
 
@@ -338,6 +343,7 @@ void Zone::add( const Shape &s )
 {
   Shapes.push_back( s.copy() );
   Add.push_back( true );
+  Shapes.back()->setParent( this );
 }
 
 
@@ -345,6 +351,7 @@ void Zone::subtract( const Shape &s )
 {
   Shapes.push_back( s.copy() );
   Add.push_back( false );
+  Shapes.back()->setParent( this );
 }
 
 
@@ -352,36 +359,7 @@ void Zone::push( const Shape &s, bool add )
 {
   Shapes.push_back( s.copy() );
   Add.push_back( add );
-}
-
-
-void Zone::operator+=( const Shape &s )
-{
-  Shapes.push_back( s.copy() );
-  Add.push_back( true );
-}
-
-
-void Zone::operator-=( const Shape &s )
-{
-  Shapes.push_back( s.copy() );
-  Add.push_back( false );
-}
-
-
-Zone Zone::operator+( const Shape &s ) const
-{
-  Zone z( *this );
-  z += s;
-  return z;
-}
-
-
-Zone Zone::operator-( const Shape &s ) const
-{
-  Zone z( *this );
-  z -= s;
-  return z;
+  Shapes.back()->setParent( this );
 }
 
 
@@ -451,70 +429,55 @@ void Zone::clear( void )
 void Zone::resetPolygons( void ) const
 {
   Polygons.clear();
-  for ( auto si = Shapes.begin(); si != Shapes.end(); ++si )
-    (*si)->resetPolygons();
 }
 
 
-void Zone::updatePolygons( const Transform &ttrafo, bool flipnormal,
-			   Zone &zones ) const
+void Zone::updatePolygons( void ) const
 {
-  Transform t = ttrafo * trafo();
+  Polygons.clear();
+  // assemble polygons from shapes:
   auto si = Shapes.begin();
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
-    /*
-XXX zones should be an internal parent or root pointer!!! 
-XXX From which we traverse the shapes until the previous one.
-
- void Plot::subtractPolygons( const Shape &shp, const Transform &trafo )
-{
-  Shape *s = shp.copy();
-  s->transform( trafo );
-  for ( auto pdi= all polygons accumulated so far ) {
-    if ( pdi->inside( so far accumulated zone ) ) {
-      delete (*pdi);
-      pdi = PolygonData.erase( pdi );
+    (*si)->updatePolygons();
+    for ( auto pi=(*si)->polygons().begin(); pi != (*si)->polygons().end(); ++pi ) {
+      // do not include polygons that are inside the zone:
+      if ( *ai ) {
+	bool inside = false;
+	auto ssi = Shapes.begin();
+	auto aai = Add.begin();
+	for ( ; ssi != Shapes.end(); ++ssi, ++aai ) {
+	  if ( ssi != si && pi->inside( **ssi ) )
+	    inside = true;
+	}
+	if ( inside )
+	  continue;
+	// add polygon:
+	Polygons.push_back( *pi );
+      }
+      else {
+	// do not include polygons from subtractive shapes that are outside:
+	bool outside = true;
+	auto ssi = Shapes.begin();
+	auto aai = Add.begin();
+	for ( ; ssi != si; ++ssi, ++aai ) {
+	  if ( *aai && ! pi->outside( **ssi ) ) {
+	    outside = false;
+	    break;
+	  }
+	}
+	if ( ! outside ) {
+	  Polygons.push_back( *pi );
+	  Polygons.back().flipNormal();
+	}
+      }
     }
-    else
-      ++pdi;
   }
-  delete s;
-}
 
-int Plot::plotZone( const Zone &zone, const Transform &trafo, double subtr, int id,
-		    Zone &zones, int resolution, Color fillcolor, double alpha,
-		    int linecolor, int width, Dash dash )
-{
-  for ( int k=0; k<zone.size(); k++ ) {
-    subtractPolygons( *zone[k], trafo );
-    Transform trafoz = trafo * zone[k]->trafo();
-    double subtrf = subtr * zone.added( k ) ? 1.0 : -1.0;
-    if ( zone[k]->type() == Shape::Zone )
-      plotZone( *zone[k], trafoz, subtrf, id, zones, resolution,
-		fillcolor, alpha, linecolor, width, dash );
-    else {
-      if ( zone[k]->type() == Shape::Sphere )
-	plotSphere( trafoz, subtrf, id, zones, resolution,
-		    fillcolor, alpha, linecolor, width, dash );
-      else if ( zone[k]->type() == Shape::Cylinder )
-	plotCylinder( trafoz, subtrf, id, zones, resolution,
-		      fillcolor, alpha, linecolor, width, dash );
-      else if ( zone[k]->type() == Shape::Cuboid )
-	plotCuboid( trafoz, subtrf, id, zones,
-		    fillcolor, alpha, linecolor, width, dash );
-    }
-    zones.push( *zone[k], zone.added( k ) );
-  }
-  return id;
-}
-    */
-    bool fn = flipnormal;
-    if ( ! *ai )
-      fn = ~fn;
-    (*si)->updatePolygons( t, fn, zones );
-    zones.push( *(*si), *ai ); // XXX push it without sub shapes!
-  }
+  // transform polygons to world coordinates:
+  Transform it = trafo().inverse().transpose();
+  for ( auto pi = Polygons.begin(); pi != Polygons.end(); ++pi )
+    pi->apply( trafo(), it );
 }
 
 
@@ -708,7 +671,9 @@ void Sphere::resetPolygons( void ) const
   Polygons.clear();
 
   int n = resolution();
-  int m = resolution()/2;
+  if ( n <= 0 )
+    n = 20;
+  int m = n/2;
   for ( int j=0; j<m; j++ ) {
     for ( int k=0; k<n; k++ ) {
       Polygon poly;
@@ -877,11 +842,14 @@ void Cylinder::resetPolygons( void ) const
 {
   Polygons.clear();
 
+  int n = resolution();
+  if ( n <= 0 )
+    n = 20;
   Polygon poly0;
   Polygon poly1;
-  for ( int k=0; k<resolution(); k++ ) {
-    double c = ::cos( 2.0*M_PI*k/resolution() );
-    double s = ::sin( 2.0*M_PI*k/resolution() );
+  for ( int k=0; k<n; k++ ) {
+    double c = ::cos( 2.0*M_PI*k/n );
+    double s = ::sin( 2.0*M_PI*k/n );
     poly0.push( Point( 0.0, c, s ) );
     poly1.push( Point( 1.0, c, s ) );
   }
@@ -889,11 +857,11 @@ void Cylinder::resetPolygons( void ) const
   poly1.setNormal( Point( +1.0, 0.0, 0.0 ) );
   Polygons.push_back( poly0 );
   Polygons.push_back( poly1 );
-  for ( int k=0; k<resolution(); k++ ) {
+  for ( int k=0; k<n; k++ ) {
     Polygon poly;
     poly.push( poly0[k] );
-    poly.push( poly0[(k+1)%resolution()] );
-    poly.push( poly1[(k+1)%resolution()] );
+    poly.push( poly0[(k+1)%n] );
+    poly.push( poly1[(k+1)%n] );
     poly.push( poly1[k] );
     poly.setNormal( poly0[k] );
     Polygons.push_back( poly );

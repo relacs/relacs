@@ -99,6 +99,7 @@ void PlotShapes::update( void )
   z.rotateZ( A );
   z.rotateY( B );
   z.rotateX( C );
+  z.setResolution( 50 );
 
   Point viewxz = -Point::UnitY*20.0;
 

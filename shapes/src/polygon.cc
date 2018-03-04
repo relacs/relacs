@@ -69,13 +69,16 @@ Polygon &Polygon::operator=( const Polygon &p )
 }
 
 
-void Polygon::apply( const Transform &trafo, const Transform &invtransptrafo,
-		     bool flipnormal )
+void Polygon::flipNormal( void )
+{
+  Normal *= -1.0;
+}
+
+
+void Polygon::apply( const Transform &trafo, const Transform &invtransptrafo )
 {
   for ( auto pi = Points.begin(); pi != Points.end(); ++pi )
     *pi *= trafo;
-  if ( flipnormal )
-    Normal *= -1.0;
   Normal *= invtransptrafo;
 }
 
@@ -107,35 +110,49 @@ void Polygon::project( const Transform &trafo, vector<double> &x, vector<double>
 }
 
 
-bool Polygon::inside( const Zone &zones ) const
+bool Polygon::inside( const Shape &shape ) const
 {
-  if ( Points.empty() || zones.size() == 0 )
-    return true;
+  if ( Points.empty() )
+    return false;
 
-  bool inside = true;
   for ( auto pi = Points.begin(); pi != Points.end(); ++pi ) {
-    if ( ! zones.inside( *pi ) ) {
-      inside = false;
-      break;
-    }
+    if ( ! shape.inside( *pi ) )
+      return false;
   }
-  return inside;
+  return true;
 }
 
 
-bool Polygon::outside( const Zone &zones ) const
+bool Polygon::insideShape( const Shape &shape ) const
 {
-  if ( Points.empty() || zones.size() == 0 )
-    return true;
+  if ( Points.empty() )
+    return false;
 
-  bool outside = true;
   for ( auto pi = Points.begin(); pi != Points.end(); ++pi ) {
-    if ( zones.inside( *pi ) ) {
-      outside = false;
-      break;
-    }
+    if ( ! shape.insideShape( *pi ) )
+      return false;
   }
-  return outside;
+  return true;
+}
+
+
+bool Polygon::outside( const Shape &shape ) const
+{
+  for ( auto pi = Points.begin(); pi != Points.end(); ++pi ) {
+    if ( shape.inside( *pi ) )
+      return false;
+  }
+  return true;
+}
+
+
+bool Polygon::outsideShape( const Shape &shape ) const
+{
+  for ( auto pi = Points.begin(); pi != Points.end(); ++pi ) {
+    if ( shape.insideShape( *pi ) )
+      return false;
+  }
+  return true;
 }
 
 
