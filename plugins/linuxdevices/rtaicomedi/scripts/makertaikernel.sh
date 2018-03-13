@@ -4,7 +4,7 @@
 # you should modify the following parameter according to your needs:
 
 : ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
-: ${LINUX_KERNEL:="4.4.43"}      # linux vanilla kernel version (set with -k)
+: ${LINUX_KERNEL:="4.4.115"}      # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NAME:="rtai1"}        # name for name of kernel to be appended to LINUX_KERNEL 
                                  # (set with -n)
@@ -12,17 +12,17 @@
 : ${LOCAL_SRC_PATH:=/usr/local/src} # directory for downloading and building 
                               # rtai, newlib and comedi
 
-: ${RTAI_DIR="rtai-5.0.1"}    # name of the rtai source directory (set with -r):
+: ${RTAI_DIR="rtai-5.1"}      # name of the rtai source directory (set with -r):
                               # official relases for download (www.rtai.org):
                               # - rtai-4.1: rtai release version 4.1
-                              # - rtai-5.0.1: rtai release version 5.0.1
+                              # - rtai-5.1: rtai release version 5.1
                               # - rtai-x.x: rtai release version x.x
                               # from cvs (http://cvs.gna.org/cvsweb/?cvsroot=rtai):
                               # - magma: current development version
                               # - vulcano: stable development version
                               # Shahbaz Youssefi's RTAI clone on github:
                               # - RTAI: clone https://github.com/ShabbyX/RTAI.git
-: ${RTAI_PATCH:="hal-linux-4.4.43-x86-6.patch"} # rtai patch to be used
+: ${RTAI_PATCH:="hal-linux-4.4.115-x86-10.patch"} # rtai patch to be used
 : ${SHOWROOM_DIR:=showroom}     # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 : ${KERNEL_CONFIG:="old"}  # whether and how to initialize the kernel configuration 
@@ -126,6 +126,7 @@ action can be one of
   info       : display properties of rtai patches, loaded kernel modules, kernel, machine,
                and grub menu (no target required)
   info rtai  : list all available patches and suggest the one fitting to the kernel
+  info grub  : show grub boot menu entries
   packages   : install required packages
   download   : download missing sources of the specified targets
   update     : update sources of the specified targets (not for kernel target)
@@ -138,6 +139,7 @@ action can be one of
   remove     : remove the complete source trees of the specified targets
   reconfigure: reconfigure the kernel and make a full build of all targets (without target)
   reboot     : reboot into rtai kernel immediately (without target)
+  reboot X   : reboot into kernel specified by grub menu entry X
   test       : test the current kernel and write reports to the current working directory
   test all   : test the current kernel/kthreads/user and write reports to the current working directory
 
@@ -187,6 +189,18 @@ function check_root {
     fi
 }
 
+function print_grub {
+    echo "grub menu entries:"
+    IFSORG="$IFS"
+    IFS=$'\n'
+    N=0
+    for gm in $(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2); do
+	echo "$N) $gm"
+	let N+=1
+    done
+    IFS="$IFSORG"
+}
+
 function print_info {
     echo
     echo "loaded modules (lsmod):"
@@ -208,8 +222,16 @@ function print_info {
     echo
     echo "Revisions:"
     echo "  rtai  : ${RTAI_DIR} from $(cat ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt)"
-    echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/src/revision.txt)"
-    echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
+    if test -f ${LOCAL_SRC_PATH}/newlib/src/revision.txt; then
+	echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/src/revision.txt)"
+    else
+	echo "  newlib: source or revision not available"
+    fi
+    if test -f ${LOCAL_SRC_PATH}/comedi/revision.txt; then
+	echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
+    else
+	echo "  comedi: source or revision not available"
+    fi
     echo
     echo "CPU (/proc/cpuinfo):"
     grep "model name" /proc/cpuinfo | head -n 1
@@ -217,10 +239,9 @@ function print_info {
     echo "machine (uname -m): $MACHINE"
     echo "$(free -h | grep Mem | awk '{print $2}') RAM"
     echo
-    echo "grub menu entries:"
-    grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2
+    print_grub
     echo
-    echo "settings for ${MAKE_RTAI_KERNEL}:"
+    echo "settings of ${MAKE_RTAI_KERNEL}:"
     echo "KERNEL_PATH=$KERNEL_PATH"
     echo "LINUX_KERNEL=$LINUX_KERNEL"
     echo "KERNEL_SOURCE_NAME=$KERNEL_SOURCE_NAME"
@@ -315,10 +336,10 @@ function check_kernel_patch {
 	echo_log
 	LINUX_KERNEL_V=${LINUX_KERNEL%.*}
 	echo_log "Available patches for the selected kernel's kernel version ($LINUX_KERNEL_V):"
-	ls -rtl -1 *${LINUX_KERNEL_V}*.patch 2> /dev/null | tee -a "$LOG_FILE"
+	ls -rt -1 *-${LINUX_KERNEL_V}*.patch 2> /dev/null | tee -a "$LOG_FILE"
 	echo_log
 	echo_log "Available patches for the selected kernel ($LINUX_KERNEL):"
-	ls -rtl -1 *${LINUX_KERNEL}*.patch 2> /dev/null | tee -a "$LOG_FILE"
+	ls -rt -1 *-${LINUX_KERNEL}*.patch 2> /dev/null | tee -a "$LOG_FILE"
 	RTAI_PATCH="$(ls -rt *-${LINUX_KERNEL}-*.patch 2> /dev/null | tail -n 1)"
 	if test -z "$RTAI_PATCH"; then
 	    RTAI_PATCH="$(ls -rt *.patch 2> /dev/null | tail -n 1)"
@@ -332,6 +353,9 @@ function check_kernel_patch {
 	    fi
 	fi
 	cd - &> /dev/null
+	echo_log
+	echo_log "Currently running kernel:"
+	echo_log $(uname -r)
 	echo_log
 	echo_log "Choose a patch and set the RTAI_PATCH variable at the top of the script"
 	echo_log "and the LINUX_KERNEL variable with the corresponding kernel version."
@@ -457,11 +481,19 @@ function install_kernel {
 }
 
 function reboot_kernel {
-    echo_log "reboot into ${LINUX_KERNEL}*-${KERNEL_NAME} kernel"
-    if ! $DRYRUN; then
-	GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
-	grub-reboot "$GRUBMENU"
-	reboot
+    if test -z "$1"; then
+	echo_log "reboot into ${LINUX_KERNEL}*-${KERNEL_NAME} kernel"
+	if ! $DRYRUN; then
+	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
+	    grub-reboot "$GRUBMENU"
+	    reboot
+	fi
+    else
+	echo_log "reboot into grub menu $1"
+	if ! $DRYRUN; then
+	    grub-reboot "$@"
+	    reboot
+	fi
     fi
 }
 
@@ -1714,9 +1746,13 @@ case $ACTION in
     version ) print_version ;;
     --version ) print_version ;;
 
-    info ) print_full_info $@ 
-	if test "x$1" == "xrtai"; then
-	    rm -f "$LOG_FILE"
+    info ) if test "$1" == "grub"; then
+	    print_grub
+	else
+	    print_full_info $@ 
+	    if test "x$1" == "xrtai"; then
+		rm -f "$LOG_FILE"
+	    fi 
 	fi ;;
 
     reconfigure ) reconfigure ;;
@@ -1734,7 +1770,7 @@ case $ACTION in
     clean ) clean_all $@ ;;
     uninstall ) uninstall_all $@ ;;
     remove ) remove_all $@ ;;
-    reboot ) reboot_kernel ;;
+    reboot ) reboot_kernel $@;;
 
     * ) if test -n "$1"; then
 	    echo "unknown option \"$1\""

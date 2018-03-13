@@ -58,9 +58,9 @@ linux kernel, the newlib library, and the RTAI and comedi kernel modules.
 cd plugins/linuxdevices/rtaicomedi/scripts
    \endcode
 
--# Start with selecting and downloading an RTAI source (-r option or RTAI_DIR variable, see \c ./makertaikernel \c help for options):
+-# Start with selecting and downloading an RTAI source (-r option or RTAI_DIR variable, see \c ./makertaikernel.sh \c help for options):
    \code
-sudo ./makertaikernel download rtai
+sudo ./makertaikernel.sh download rtai
    \endcode
 
 -# Check for available RTAI patches:
@@ -93,6 +93,15 @@ sudo apt-get install linux-image-4.4.0-79-lowlatency
    resulting in a much larger kernel (takes much more time to
    compile).
 
+   For rebooting you may check the grub menu with
+   \code
+sudo ./makertaikernel.sh info grub
+   \endcode
+   and reboot by supplying the menu entry number to
+   \code
+sudo ./makertaikernel.sh reboot 3
+   \endcode
+
 -# Then run
    \code
 sudo ./makertaikernel.sh
@@ -104,8 +113,8 @@ sudo ./makertaikernel.sh
    provide a different kernel configuration (see \c makertaikernel.sh
    \c help for details).
 
--# You will get the menu for configuring the kernel. See \ref compilekernel
-   step 5 for instructions.
+-# You will get the menu for configuring the kernel. This is the most
+   important step! See \ref compilekernel step 5 for instructions.
 
 -# Reboot into the new kernel, e.g. by running
    \code
@@ -157,23 +166,23 @@ sudo ./makertaikernel.sh -n rtai1 test
 sudo ./makertaikernel.sh -n rtai2 reconfigure
    \endcode
 
-   Note that \c makertaikernel \c reconfigure will first uninstall an already existing kernel with the same name.
+   Note that \c makertaikernel.sh \c reconfigure will first uninstall an already existing kernel with the same name.
 
    You can recreate this kernel or use this kernel's configuration for
    further modifications by specifying the kernel configuration file
-   saved by \c makertaikernel \c test using the \c-c option
+   saved by \c makertaikernel.sh \c test using the \c-c option
    \code
 sudo ./makertaikernel.sh -n rtai1 -c config-3.14.17-rtai-002-nousb-good reconfigure
    \endcode
 -# Once you are satisified, continue with \ref installrelacs .
 
-For further options of the \c makertaikernel script see
+For further options of the \c makertaikernel.sh script see
 \code
 ./makertaikernel.sh help
 \endcode
 To show some information about your machine, RTAI patches, grub menue, etc. run
 \code
-./makertaikernel info
+./makertaikernel.sh info
 \endcode
 
 The following sections describe in detail how to compile and install
