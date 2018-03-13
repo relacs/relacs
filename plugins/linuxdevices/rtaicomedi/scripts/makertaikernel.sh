@@ -4,7 +4,7 @@
 # you should modify the following parameter according to your needs:
 
 : ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
-: ${LINUX_KERNEL:="4.4.43"}      # linux vanilla kernel version (set with -k)
+: ${LINUX_KERNEL:="4.4.115"}      # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NAME:="rtai1"}        # name for name of kernel to be appended to LINUX_KERNEL 
                                  # (set with -n)
@@ -12,7 +12,7 @@
 : ${LOCAL_SRC_PATH:=/usr/local/src} # directory for downloading and building 
                               # rtai, newlib and comedi
 
-: ${RTAI_DIR="rtai-5.0.1"}      # name of the rtai source directory (set with -r):
+: ${RTAI_DIR="rtai-5.1"}      # name of the rtai source directory (set with -r):
                               # official relases for download (www.rtai.org):
                               # - rtai-4.1: rtai release version 4.1
                               # - rtai-5.1: rtai release version 5.1
@@ -22,7 +22,7 @@
                               # - vulcano: stable development version
                               # Shahbaz Youssefi's RTAI clone on github:
                               # - RTAI: clone https://github.com/ShabbyX/RTAI.git
-: ${RTAI_PATCH:="hal-linux-4.4.43-x86-6.patch"} # rtai patch to be used
+: ${RTAI_PATCH:="hal-linux-4.4.115-x86-10.patch"} # rtai patch to be used
 : ${SHOWROOM_DIR:=showroom}     # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 : ${KERNEL_CONFIG:="old"}  # whether and how to initialize the kernel configuration 
@@ -39,6 +39,10 @@
 : ${NEWLIB_TAR:=newlib-2.5.0.20170720.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
                                                # in case git does not work
+
+: ${MAKE_NEWLIB:=true}       # for automatic targets make newlib library
+: ${MAKE_RTAI:=true}         # for automatic targets make rtai library
+: ${MAKE_COMEDI:=true}       # for automatic targets make comedi library
 
 
 ###########################################################################
@@ -1458,7 +1462,7 @@ function full_install {
 
     uninstall_kernel
 
-    if ! ( download_rtai && download_newlib && download_comedi && download_kernel ); then
+    if ! ( ( ${MAKE_RTAI} && download_rtai || true ) && ( ${MAKE_NEWLIB} && download_newlib || true ) && ( ${MAKE_COMEDI} && download_comedi || true ) && download_kernel ); then
 	echo_log "Failed to download some of the sources"
 	return 1
     fi
@@ -1468,8 +1472,8 @@ function full_install {
 	return 1
     fi
 
-    if ! ( build_newlib && build_rtai && build_comedi ); then
-	echo_log "Failed to build newlib, RTAI or comedi"
+    if ! ( ( ${MAKE_NEWLIB} && build_newlib || true ) && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ); then
+	echo_log "Failed to build newlib, RTAI, or comedi"
 	return 1
     fi
 
@@ -1484,11 +1488,11 @@ function reconfigure {
     check_root
 
     uninstall_kernel
-    uninstall_rtai
-    uninstall_comedi
+    ${MAKE_RTAI} && uninstall_rtai
+    ${MAKE_COMEDI} && uninstall_comedi
 
-    if ! ( unpack_kernel && patch_kernel && build_kernel && build_rtai && build_comedi ); then
-	echo_log "Failed to reconfigure and build kernel, RTAI or comedi"
+    if ! ( unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ); then
+	echo_log "Failed to reconfigure and build kernel, RTAI, or comedi"
 	return 1
     fi
 
@@ -1501,9 +1505,9 @@ function download_all {
     check_root
     if test -z $1; then
 	download_kernel
-	download_newlib
-	download_rtai
-	download_comedi
+	${MAKE_NEWLIB} && download_newlib
+	${MAKE_RTAI} && download_rtai
+	${MAKE_COMEDI} && download_comedi
     else
 	for TARGET; do
 	    case $TARGET in
@@ -1520,9 +1524,9 @@ function download_all {
 function update_all {
     check_root
     if test -z $1; then
-	update_newlib
-	update_rtai
-	update_comedi
+	${MAKE_NEWLIB} && update_newlib
+	${MAKE_RTAI} && update_rtai
+	${MAKE_COMEDI} && update_comedi
     else
 	for TARGET; do
 	    case $TARGET in
@@ -1538,16 +1542,16 @@ function update_all {
 function build_all {
     check_root
     if test -z "$1"; then
-	unpack_kernel && patch_kernel && build_kernel && build_newlib && build_rtai && build_comedi
+	unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || true ) && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true )
     else
 	for TARGET; do
 	    case $TARGET in
 		kernel ) 
-		    unpack_kernel && patch_kernel && build_kernel && build_newlib && build_rtai && build_comedi ;;
+		    unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || true ) && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ;;
 		newlib )
-		    build_newlib && build_rtai && build_comedi ;;
+		    build_newlib && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ;;
 		rtai ) 
-		    build_rtai && build_comedi ;;
+		    build_rtai && ( ${MAKE_COMEDI} && build_comedi || true ) ;;
 		showroom ) 
 		    build_showroom ;;
 		comedi ) 
@@ -1561,9 +1565,9 @@ function install_all {
     check_root
     if test -z "$1"; then
 	install_kernel
-	install_newlib
-	install_rtai
-	install_comedi
+	${MAKE_NEWLIB} && install_newlib
+	${MAKE_RTAI} && install_rtai
+	${MAKE_COMEDI} && install_comedi
     else
 	for TARGET; do
 	    case $TARGET in
@@ -1580,9 +1584,9 @@ function clean_all {
     check_root
     if test -z "$1"; then
 	clean_kernel
-	clean_newlib
-	clean_rtai
-	clean_comedi
+	${MAKE_NEWLIB} && clean_newlib
+	${MAKE_RTAI} && clean_rtai
+	${MAKE_COMEDI} && clean_comedi
     else
 	for TARGET; do
 	    case $TARGET in
@@ -1600,9 +1604,9 @@ function uninstall_all {
     check_root
     if test -z "$1"; then
 	uninstall_kernel
-	uninstall_newlib
-	uninstall_rtai
-	uninstall_comedi
+	${MAKE_NEWLIB} && uninstall_newlib
+	${MAKE_RTAI} && uninstall_rtai
+	${MAKE_COMEDI} && uninstall_comedi
     else
 	for TARGET; do
 	    case $TARGET in
@@ -1619,9 +1623,9 @@ function remove_all {
     check_root
     if test -z "$1"; then
 	remove_kernel
-	remove_newlib
-	remove_rtai
-	remove_comedi
+	${MAKE_NEWLIB} && remove_newlib
+	${MAKE_RTAI} && remove_rtai
+	${MAKE_COMEDI} && remove_comedi
     else
 	for TARGET; do
 	    case $TARGET in
