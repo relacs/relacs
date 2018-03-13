@@ -4,7 +4,7 @@
 # you should modify the following parameter according to your needs:
 
 : ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
-: ${LINUX_KERNEL:="4.4.115"}      # linux vanilla kernel version (set with -k)
+: ${LINUX_KERNEL:="4.4.43"}      # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NAME:="rtai1"}        # name for name of kernel to be appended to LINUX_KERNEL 
                                  # (set with -n)
@@ -12,7 +12,7 @@
 : ${LOCAL_SRC_PATH:=/usr/local/src} # directory for downloading and building 
                               # rtai, newlib and comedi
 
-: ${RTAI_DIR="rtai-5.1"}      # name of the rtai source directory (set with -r):
+: ${RTAI_DIR="rtai-5.0.1"}      # name of the rtai source directory (set with -r):
                               # official relases for download (www.rtai.org):
                               # - rtai-4.1: rtai release version 4.1
                               # - rtai-5.1: rtai release version 5.1
@@ -22,7 +22,7 @@
                               # - vulcano: stable development version
                               # Shahbaz Youssefi's RTAI clone on github:
                               # - RTAI: clone https://github.com/ShabbyX/RTAI.git
-: ${RTAI_PATCH:="hal-linux-4.4.115-x86-10.patch"} # rtai patch to be used
+: ${RTAI_PATCH:="hal-linux-4.4.43-x86-6.patch"} # rtai patch to be used
 : ${SHOWROOM_DIR:=showroom}     # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 : ${KERNEL_CONFIG:="old"}  # whether and how to initialize the kernel configuration 
@@ -202,6 +202,35 @@ function print_grub {
     IFS="$IFSORG"
 }
 
+function print_versions {
+    echo "Versions:"
+    echo "  kernel: ${LINUX_KERNEL}"
+    echo "  gcc   : $(gcc --version | head -n 1)"
+    if test -f ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt; then
+	echo "  rtai  : ${RTAI_DIR} from $(cat ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt)"
+	echo "  patch : ${RTAI_PATCH}"
+    elif test -d ${LOCAL_SRC_PATH}/${RTAI_DIR}; then
+	echo "  rtai  : ${RTAI_DIR} revision not available"
+	echo "  patch : ${RTAI_PATCH}"
+    else
+	echo "  rtai  : not available"
+    fi
+    if test -f ${LOCAL_SRC_PATH}/newlib/src/revision.txt; then
+	echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/src/revision.txt)"
+    elif test -d ${LOCAL_SRC_PATH}/newlib; then
+	echo "  newlib: revision not available"
+    else
+	echo "  newlib: not available"
+    fi
+    if test -f ${LOCAL_SRC_PATH}/comedi/revision.txt; then
+	echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
+    elif test -d ${LOCAL_SRC_PATH}/comedi; then
+	echo "  comedi: revision not available"
+    else
+	echo "  comedi: not available"
+    fi
+}
+
 function print_info {
     echo
     echo "loaded modules (lsmod):"
@@ -221,18 +250,7 @@ function print_info {
     echo "kernel parameter (/proc/cmdline):"
     cat /proc/cmdline
     echo
-    echo "Revisions:"
-    echo "  rtai  : ${RTAI_DIR} from $(cat ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt)"
-    if test -f ${LOCAL_SRC_PATH}/newlib/src/revision.txt; then
-	echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/src/revision.txt)"
-    else
-	echo "  newlib: source or revision not available"
-    fi
-    if test -f ${LOCAL_SRC_PATH}/comedi/revision.txt; then
-	echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
-    else
-	echo "  comedi: source or revision not available"
-    fi
+    print_versions
     echo
     echo "CPU (/proc/cpuinfo):"
     grep "model name" /proc/cpuinfo | head -n 1
@@ -332,7 +350,7 @@ function check_kernel_patch {
 	fi
 	cd ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/
 	echo_log
-	echo_log "Available patches for this machine ($RTAI_MACHINE):"
+	echo_log "Available patches for this machine ($RTAI_MACHINE), most latest last:"
 	ls -rt -1 *.patch 2> /dev/null | tee -a "$LOG_FILE"
 	echo_log
 	LINUX_KERNEL_V=${LINUX_KERNEL%.*}
@@ -744,11 +762,7 @@ function test_rtaikernel {
 	{
 	    echo "failed to load rtai modules"
 	    echo
-	    echo "Revisions:"
-	    echo "  kernel: ${LINUX_KERNEL}"
-	    echo "  rtai  : ${RTAI_DIR} from $(cat ${LOCAL_SRC_PATH}/${RTAI_DIR}/revision.txt)"
-	    echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/src/revision.txt)"
-	    echo "  comedi: git from $(cat ${LOCAL_SRC_PATH}/comedi/revision.txt)"
+	    print_versions
 	    echo
 	    echo
 	    echo "dmesg:"
