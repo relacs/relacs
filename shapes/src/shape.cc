@@ -580,16 +580,16 @@ void Zone::intersectionPointsShape( const Point &pos1, const Point &pos2,
       double aa2 = dpos.dot( ipp2 - pos1 )/dpmsq;
       if ( *ai ) {
 	// expand intersection path:
-	if ( ::isnan( a1 ) || aa1 < a1 ) {
+	if ( std::isnan( a1 ) || aa1 < a1 ) {
 	  a1 = aa1;
 	  ip1 = ipp1;
 	}
-	if ( ::isnan( a2 ) || aa2 > a2 ) {
+	if ( std::isnan( a2 ) || aa2 > a2 ) {
 	  a2 = aa2;
 	  ip2 = ipp2;
 	}
       }
-      else if ( ! ::isnan( a1 ) ) {
+      else if ( ! std::isnan( a1 ) ) {
 	// shrink intersection path:
 	if ( aa1 <= a1 && aa2 >= a2 ) {
 	  a1 = NAN;

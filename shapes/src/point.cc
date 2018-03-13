@@ -363,7 +363,7 @@ Point Point::homDivided( void ) const
 bool Point::isNone( void ) const
 {
   for ( int k=0; k<Dim; k++ ) {
-    if ( ::isnan( Coords[k] ) )
+    if ( std::isnan( Coords[k] ) )
       return true;
   }
   return false;
