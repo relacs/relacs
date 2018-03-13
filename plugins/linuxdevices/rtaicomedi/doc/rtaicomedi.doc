@@ -1129,31 +1129,16 @@ to \c /etc/rc.local (as root).
 
 \subsection kernelmessages Kernel messages
 When fiddling around with kernel modules you might want to have a look 
-at the kernel messages in \c /var/log/messages:
+at the kernel messages in \c /var/log/kern.log:
 \code
-tail -f /var/log/messages
+tail -f /var/log/kern.log
 \endcode
 alternatively use
 \code
-less /var/log/messages
+less /var/log/kern.log
 \endcode
 and hit 'F'. Both commands will then show what was added 
 to the messages immediately. Interrupt this by hitting \c ctrl-c.
-
-In case you do not have a \c /var/log/messages file
-(unfortunately the default in modern ubuntu based systems),
-you have to enable it. As root open the file \c /etc/rsyslog.d/50-default.conf
-in an editor. Remove the hash marks in front of the following lines and add '*.=err;':
-\code
-*.=info;*.=notice;*.=warn;*.=err;\\
-        auth,authpriv.none;\\
-        cron,daemon.none;\\
-        mail,news.none          -/var/log/messages
-\endcode
-Then tell the system that you changed this file (still as root):
-\code
-restart rsyslog 
-\endcode
 
 
 \section configdynamicclamp Configure dynamic clamp in RELACS

@@ -142,6 +142,7 @@ action can be one of
   reboot X   : reboot into kernel specified by grub menu entry X
   test       : test the current kernel and write reports to the current working directory
   test all   : test the current kernel/kthreads/user and write reports to the current working directory
+  test none   : test loading and unloading of rtai kernel modules and do not run any tests
 
 If no action is specified, a full download and build is performed for all targets (except showroom).
 
@@ -646,7 +647,6 @@ function remove_kernel {
 function run_test {
     DIR=$1
     TEST=$2
-    echo
     echo "running $DIR/$TEST test"
     TEST_RESULTS=results-$DIR-$TEST.dat
     TEST_DIR=/usr/realtime/testsuite/$DIR/$TEST
@@ -658,6 +658,7 @@ function run_test {
     trap - SIGINT
     cd -
     mv $TEST_DIR/$TEST_RESULTS .
+    echo
 }
 
 function test_rtaikernel {
@@ -690,9 +691,9 @@ function test_rtaikernel {
     # remove latency file to force calibration:
     # this is for rtai5, for rtai4 the calibration tools needs to be run manually
     # see base/arch/x86/calibration/README
-    if test -f /usr/realtime/calibration/latencies; then
-	rm /usr/realtime/calibration/latencies
-    fi
+    #if test -f /usr/realtime/calibration/latencies; then
+    #    rm /usr/realtime/calibration/latencies
+    #fi
     rm -f lsmod.dat
 
     # unload already loaded rtai kernel modules:
@@ -763,104 +764,91 @@ function test_rtaikernel {
 	return
     fi
     echo "successfully loaded and unloaded rtai modules"
-
-    # check for kernel log messages:
-    if ! test -f /var/log/messages; then
-	echo "/var/log/messages does not exist!"
-	echo "enable it by modifying the file /etc/rsyslog.d/50-default.conf :"
-	echo "uncomment the lines:"
-	echo
-	echo "  .=info;*.=notice;*.=warn;\\"
-	echo "  auth,authpriv.none;\\"
-	echo "  cron,daemon.none;\\"
-	echo "  mail,news.none          -/var/log/messages"
-	echo
-	echo "and run"
-	echo "$ restart rsyslog"
-	echo
-    fi
+    echo
 
     # kernel tests:
-    run_test kern latency
-    run_test kern switches
-    run_test kern preempt
-    if test "x$1" = "xall"; then
-	run_test kthreads latency
-	run_test kthreads switches
-	run_test kthreads preempt
-	run_test user latency
-	run_test user switches
-	run_test user preempt
-    fi
-
-    # report:
-    echo "finished all tests"
-    echo
-    read -p 'Please enter a short name describing the configuration (empty: delete): ' NAME
-    if test -n "$NAME"; then
-	TEST_RESULT=""
-	TEST_DATA=$(grep RTD results-kern-latency.dat | tail -n 1)
-	OVERRUNS=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $7}')
-	if test "$OVERRUNS" -gt "0"; then
-	    TEST_RESULT="bad"
-	else
-	    LAT_MIN=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $3}')
-	    LAT_MAX=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $6}')
-	    LATENCY=$(( $LAT_MAX - $LAT_MIN ))
-	    if test "$LATENCY" -gt 15000; then
-		TEST_RESULT="bad"
-	    elif test "$LATENCY" -gt 5000; then
-		TEST_RESULT="ok"
-	    elif test "$LATENCY" -gt 1000; then
-		TEST_RESULT="good"
-	    else
-		TEST_RESULT="perfect"
-	    fi
+    if test "x$1" != "xnone"; then
+	run_test kern latency
+	run_test kern switches
+	run_test kern preempt
+	if test "x$1" = "xall"; then
+	    run_test kthreads latency
+	    run_test kthreads switches
+	    run_test kthreads preempt
+	    run_test user latency
+	    run_test user switches
+	    run_test user preempt
 	fi
-	read -p "Please enter a short description of the test result (empty: $TEST_RESULT): " RESULT
-	if test -z "$RESULT"; then
-	    RESULT="$TEST_RESULT"
-	fi
-    fi
-    if test -n "$NAME" -a -n "$RESULT"; then
-	REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-${NAME}-${RESULT}"
-	{
-	    for TD in kern kthreads user; do
-		for TN in latency switches preempt; do
-		    TEST_RESULTS=results-$TD-$TN.dat
-		    if test -f "$TEST_RESULTS"; then
-			echo "$TD/$TN test:"
-			sed -e '/^\*/d' $TEST_RESULTS
-			rm $TEST_RESULTS
-			echo
-			echo
-		    fi
-		done
-	    done
-	    if $RTAIMATH_FAILED; then
-		echo "Failed to load rtai_math module."
-		echo
-		echo
-	    fi
-	    print_info
-	    echo
-	    echo "rtai-info reports:"
-	    /usr/realtime/bin/rtai-info
-	    echo
-	    echo "dmesg:"
-	    echo
-	    if test "x$1" = "xall"; then
-		dmesg
-	    else
-		dmesg | tail -n 50
-	    fi
-	} > latencies-$REPORT
-	cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
-	chown --reference=. latencies-$REPORT
-	chown --reference=. config-$REPORT
+	echo "finished all tests"
 	echo
-	echo "saved kernel configuration to : config-$REPORT"
-	echo "saved test results to         : latencies-$REPORT"
+
+	# report:
+	read -p 'Please enter a short name describing the configuration (empty: delete): ' NAME
+	if test -n "$NAME"; then
+	    TEST_RESULT=""
+	    TEST_DATA=$(grep RTD results-kern-latency.dat | tail -n 1)
+	    OVERRUNS=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $7}')
+	    if test "$OVERRUNS" -gt "0"; then
+		TEST_RESULT="bad"
+	    else
+		LAT_MIN=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $3}')
+		LAT_MAX=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $6}')
+		LATENCY=$(( $LAT_MAX - $LAT_MIN ))
+		if test "$LATENCY" -gt 15000; then
+		    TEST_RESULT="bad"
+		elif test "$LATENCY" -gt 5000; then
+		    TEST_RESULT="ok"
+		elif test "$LATENCY" -gt 1000; then
+		    TEST_RESULT="good"
+		else
+		    TEST_RESULT="perfect"
+		fi
+	    fi
+	    read -p "Please enter a short description of the test result (empty: $TEST_RESULT): " RESULT
+	    if test -z "$RESULT"; then
+		RESULT="$TEST_RESULT"
+	    fi
+	fi
+	if test -n "$NAME" -a -n "$RESULT"; then
+	    REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-${NAME}-${RESULT}"
+	    {
+		for TD in kern kthreads user; do
+		    for TN in latency switches preempt; do
+			TEST_RESULTS=results-$TD-$TN.dat
+			if test -f "$TEST_RESULTS"; then
+			    echo "$TD/$TN test:"
+			    sed -e '/^\*/d' $TEST_RESULTS
+			    rm $TEST_RESULTS
+			    echo
+			    echo
+			fi
+		    done
+		done
+		if $RTAIMATH_FAILED; then
+		    echo "Failed to load rtai_math module."
+		    echo
+		    echo
+		fi
+		print_info
+		echo
+		echo "rtai-info reports:"
+		/usr/realtime/bin/rtai-info
+		echo
+		echo "dmesg:"
+		echo
+		if test "x$1" = "xall"; then
+		    dmesg
+		else
+		    dmesg | tail -n 50
+		fi
+	    } > latencies-$REPORT
+	    cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
+	    chown --reference=. latencies-$REPORT
+	    chown --reference=. config-$REPORT
+	    echo
+	    echo "saved kernel configuration to : config-$REPORT"
+	    echo "saved test results to         : latencies-$REPORT"
+	fi
     else
 	echo
 	echo "test results not saved"
@@ -1746,11 +1734,11 @@ case $ACTION in
     version ) print_version ;;
     --version ) print_version ;;
 
-    info ) if test "$1" == "grub"; then
+    info ) if test "x$1" = "xgrub"; then
 	    print_grub
 	else
 	    print_full_info $@ 
-	    if test "x$1" == "xrtai"; then
+	    if test "x$1" = "xrtai"; then
 		rm -f "$LOG_FILE"
 	    fi 
 	fi ;;
