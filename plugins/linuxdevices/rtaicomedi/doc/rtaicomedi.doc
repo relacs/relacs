@@ -524,8 +524,8 @@ mkdir newlib
 cd newlib
 git clone git://sourceware.org/git/newlib-cygwin.git src
 mkdir install
-cd src/newlib
-./configure --prefix=/usr/local/src/newlib/install --disable-shared CFLAGS="-O2 -fno-pie -mcmodel=kernel"
+cd install
+/usr/local/src/newlib/src/newlib/configure --prefix=/usr/local/src/newlib/install --disable-shared --disable-multilib CFLAGS="-mcmodel=kernel"
 make
 make install
 \endcode
@@ -572,7 +572,7 @@ grep -c "^processor" /proc/cpuinfo
      - Other features
        - Select "Mathfuns support in kernel"
        - 1 - NEWLIB (default), 2 - UCLIB, 3 - GLIBC: set to (1)
-       - The installation directory of your chosen libm.a: set to "/usr/local/src/newlib/install/lib" (old, pre Oct 2016) or "/usr/local/src/newlib/install/x86_64/lib" (new) - check it with
+       - The installation directory of your chosen libm.a: set to "/usr/local/src/newlib/install/lib" (old, pre Oct 2016 and new), or "/usr/local/src/newlib/install/x86_64/lib" (pre March 2018) - check it with
          \code
 find /usr/local/src/newlib/install -name 'libm.a'
          \endcode

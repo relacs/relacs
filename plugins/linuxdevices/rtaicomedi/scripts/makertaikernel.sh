@@ -36,7 +36,7 @@
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debuggable kernel (see man crash), set with -D
 
-: ${NEWLIB_TAR:=newlib-2.5.0.20170720.tar.gz}  # tar file of current newlib version 
+: ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
                                                # in case git does not work
 
@@ -705,7 +705,7 @@ function test_rtaikernel {
     LASTREPORT="$(ls latencies-${LINUX_KERNEL}-${RTAI_DIR}-*-* 2> /dev/null | tail -n 1)"
     if test -n "$LASTREPORT"; then
 	LASTREPORT="${LASTREPORT#latencies-${LINUX_KERNEL}-${RTAI_DIR}-}"
-	N="${LASTREPORT%-*-*}"
+	N="${LASTREPORT%%-*}"
 	N=$(expr $N + 1)
 	NUM="$(printf "%03d" $N)"
     fi
@@ -726,8 +726,8 @@ function test_rtaikernel {
     # loading rtai kernel modules:
     RTAIMOD_FAILED=false
     RTAIMATH_FAILED=false
-    lsmod | grep -q rtai_hal || { insmod /usr/realtime/modules/rtai_hal.ko && echo "loaded rtai_hal" || RTAMOD_FAILED=true; }
-    lsmod | grep -q rtai_sched || { insmod /usr/realtime/modules/rtai_sched.ko && echo "loaded rtai_sched" || RTAMOD_FAILED=true; }
+    lsmod | grep -q rtai_hal || { insmod /usr/realtime/modules/rtai_hal.ko && echo "loaded rtai_hal" || RTAIMOD_FAILED=true; }
+    lsmod | grep -q rtai_sched || { insmod /usr/realtime/modules/rtai_sched.ko && echo "loaded rtai_sched" || RTAIMOD_FAILED=true; }
     if test -f /usr/realtime/modules/rtai_math.ko; then
 	lsmod | grep -q rtai_math || { insmod /usr/realtime/modules/rtai_math.ko && echo "loaded rtai_math" || RTAIMATH_FAILED=true; }
     else
@@ -777,8 +777,8 @@ function test_rtaikernel {
 	chown --reference=. latencies-$REPORT
 	chown --reference=. config-$REPORT
 	echo
-	echo "saved kernel configureation in: config-$REPORT"
-	echo "saved test results in         : latencies-$REPORT"
+	echo "saved kernel configuration in: config-$REPORT"
+	echo "saved test results in        : latencies-$REPORT"
 	return
     fi
     echo "successfully loaded and unloaded rtai modules"
@@ -864,8 +864,8 @@ function test_rtaikernel {
 	    chown --reference=. latencies-$REPORT
 	    chown --reference=. config-$REPORT
 	    echo
-	    echo "saved kernel configuration to : config-$REPORT"
-	    echo "saved test results to         : latencies-$REPORT"
+	    echo "saved kernel configuration in : config-$REPORT"
+	    echo "saved test results in         : latencies-$REPORT"
 	fi
     else
 	echo
@@ -918,7 +918,7 @@ function update_newlib {
 
 function install_newlib {
     cd ${LOCAL_SRC_PATH}/newlib
-    cd src/newlib
+    cd install
     echo_log "install newlib"
     if ! $DRYRUN; then
 	make install
@@ -931,18 +931,17 @@ function install_newlib {
 }
 
 function build_newlib {
-    cd ${LOCAL_SRC_PATH}/newlib
-    if test -f install/$MACHINE/lib/libm.a; then
+    cd ${LOCAL_SRC_PATH}/newlib/install
+    if test -f $MACHINE/lib/libm.a; then
 	echo_log "keep already built and installed newlib library"
     else
-	cd src/newlib
 	echo_log "build newlib"
 	if ! $DRYRUN; then
-	    NEWLIB_CFLAGS="-O2 -fno-pie"
+	    NEWLIB_CFLAGS=""
 	    if test "$(grep CONFIG_64BIT /usr/src/linux/.config)" = 'CONFIG_64BIT=y'; then
 		NEWLIB_CFLAGS="$NEWLIB_CFLAGS -mcmodel=kernel"
 	    fi
-	    ./configure --prefix=${LOCAL_SRC_PATH}/newlib/install --disable-shared --host="$MACHINE" CFLAGS="${NEWLIB_CFLAGS}"
+	    ${LOCAL_SRC_PATH}/newlib/src/newlib/configure --prefix=${LOCAL_SRC_PATH}/newlib/install --disable-shared --disable-multilib --target="$MACHINE" CFLAGS="${NEWLIB_CFLAGS}"
 	    make -j $CPU_NUM
 	    if test "x$?" != "x0"; then
 		echo_log "Failed to build newlib!"
@@ -959,9 +958,9 @@ function clean_newlib {
     if test -d newlib; then
 	echo_log "clean newlib"
 	if ! $DRYRUN; then
-	    rm -r newlib/install/*
+	    rm -rf newlib/install/*
 	    cd newlib/src/newlib
-	    make clean
+	    make distclean
 	fi
     fi
 }
@@ -1044,6 +1043,11 @@ function update_rtai {
 		git pull origin master
 		date +"%F %H:%M" > revision.txt
 	    fi
+	elif test -f ../${RTAI_DIR}.tar.bz2; then
+	    cd -
+	    echo_log "unpack ${RTAI_DIR}.tar.bz2"
+	    tar xof ${RTAI_DIR}.tar.bz2
+	    cd -
 	fi
 	cd -
 	echo_log "set soft link rtai -> $RTAI_DIR"
@@ -1061,7 +1065,7 @@ function build_rtai {
 	echo_log "build rtai"
 	if ! $DRYRUN; then
 	    # path to newlib math library:
-	    LIBM_PATH=$(find ${LOCAL_SRC_PATH}/newlib/install/ -name 'libm.a')
+	    LIBM_PATH=$(find ${LOCAL_SRC_PATH}/newlib/install/ -name 'libm.a' | head -n 1)
 	    # number of CPUs:
 	    CONFIG_NR_CPUS=$(grep CONFIG_NR_CPUS /usr/src/linux/.config)
 	    RTAI_NUM_CPUS=${CONFIG_NR_CPUS#*=}
@@ -1073,13 +1077,13 @@ function build_rtai {
 	    cp base/arch/${RTAI_MACHINE}/defconfig .rtai_config
 	    # diff -u base/arch/${RTAI_MACHINE}/defconfig .rtai_config
 	    # configure:
-	    if grep 'CONFIG_RTAI_VERSION="5' .rtai_config; then
+	    if grep -q 'CONFIG_RTAI_VERSION="5' .rtai_config; then
 		# ./configure script options seem to be very outdated (new libmath support)! 
 		# So, the following won't work:
 		# ./configure --enable-cpus=${RTAI_NUM_CPUS} --enable-fpu --with-math-libm-dir=$LIBM_PATH
 		patch <<EOF
---- base/arch/x86/defconfig	2016-04-06 10:01:34.000000000 +0200
-+++ .rtai_config	2017-06-07 11:05:04.056936890 +0200
+--- base/arch/x86/defconfig     2017-11-17 16:20:00.000000000 +0100
++++ .rtai_config        2018-03-14 18:03:41.700624880 +0100
 @@ -19,14 +19,15 @@
  CONFIG_RTAI_TESTSUITE=y
  CONFIG_RTAI_COMPAT=y
@@ -1089,7 +1093,7 @@ function build_rtai {
 +# CONFIG_RTAI_LXRT_NO_INLINE is not set
 +CONFIG_RTAI_LXRT_STATIC_INLINE=y
 +CONFIG_RTAI_FORTIFY_SOURCE=""
- 
+
  #
  # Machine (x86)
  #
@@ -1097,21 +1101,24 @@ function build_rtai {
 -CONFIG_RTAI_CPUS="2"
 +CONFIG_RTAI_CPUS="$RTAI_NUM_CPUS"
  # CONFIG_RTAI_DIAG_TSC_SYNC is not set
- 
+
  #
-@@ -38,8 +39,11 @@
+@@ -38,8 +39,12 @@
  #
  # CONFIG_RTAI_SCHED_ISR_LOCK is not set
  # CONFIG_RTAI_LONG_TIMED_LIST is not set
+-CONFIG_RTAI_LATENCY_SELF_CALIBRATION_FREQ="10000"
+-CONFIG_RTAI_LATENCY_SELF_CALIBRATION_CYCLES="10000"
++# CONFIG_RTAI_USE_STACK_ARGS is not set
 +CONFIG_RTAI_LATENCY_SELF_CALIBRATION_METRICS="1"
- CONFIG_RTAI_LATENCY_SELF_CALIBRATION_FREQ="10000"
- CONFIG_RTAI_LATENCY_SELF_CALIBRATION_CYCLES="10000"
++CONFIG_RTAI_LATENCY_SELF_CALIBRATION_FREQ="10000"
++CONFIG_RTAI_LATENCY_SELF_CALIBRATION_CYCLES="10000"
 +CONFIG_RTAI_KERN_BUSY_ALIGN_RET_DELAY="0"
 +CONFIG_RTAI_USER_BUSY_ALIGN_RET_DELAY="0"
  CONFIG_RTAI_SCHED_LXRT_NUMSLOTS="150"
  CONFIG_RTAI_MONITOR_EXECTIME=y
  CONFIG_RTAI_ALLOW_RR=y
-@@ -69,7 +73,10 @@
+@@ -69,7 +74,10 @@
  # Other features
  #
  CONFIG_RTAI_USE_NEWERR=y
@@ -1184,6 +1191,24 @@ EOF
 +# CONFIG_RTAI_COMEDI_LXRT is not set
  # CONFIG_RTAI_CPLUSPLUS is not set
  # CONFIG_RTAI_RTDM is not set
+EOF
+	    fi
+	    if ! ${MAKE_NEWLIB}; then
+		patch <<EOF
+--- .rtai_config_math   2018-03-14 16:29:57.156483235 +0100
++++ .rtai_config        2018-03-14 16:30:24.116483914 +0100
+@@ -74,10 +74,7 @@
+ # Other features
+ #
+ CONFIG_RTAI_USE_NEWERR=y
+-CONFIG_RTAI_MATH=y
+-CONFIG_RTAI_MATH_LIBM_TO_USE="1"
+-CONFIG_RTAI_MATH_LIBM_DIR=""
+-# CONFIG_RTAI_MATH_KCOMPLEX is not set
++# CONFIG_RTAI_MATH is not set
+ CONFIG_RTAI_MALLOC=y
+ # CONFIG_RTAI_USE_TLSF is not set
+ CONFIG_RTAI_MALLOC_VMALLOC=y
 EOF
 	    fi
 	    make -f makefile oldconfig
@@ -1472,7 +1497,7 @@ function full_install {
 	return 1
     fi
 
-    if ! ( ( ${MAKE_NEWLIB} && build_newlib || true ) && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ); then
+    if ! ( ( ${MAKE_NEWLIB} && build_newlib || MAKE_NEWLIB=false ) && ( ${MAKE_RTAI} && build_rtai || MAKE_RTAI=false ) && ( ${MAKE_COMEDI} && build_comedi || MAKE_COMEDI=false ) ); then
 	echo_log "Failed to build newlib, RTAI, or comedi"
 	return 1
     fi
@@ -1491,7 +1516,7 @@ function reconfigure {
     ${MAKE_RTAI} && uninstall_rtai
     ${MAKE_COMEDI} && uninstall_comedi
 
-    if ! ( unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ); then
+    if ! ( unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || MAKE_NEWLIB=false ) && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ); then
 	echo_log "Failed to reconfigure and build kernel, RTAI, or comedi"
 	return 1
     fi
@@ -1542,7 +1567,7 @@ function update_all {
 function build_all {
     check_root
     if test -z "$1"; then
-	unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || true ) && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true )
+	unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || MAKE_NEWLIB=false ) && ( ${MAKE_RTAI} && build_rtai || MAKE_RTAI=false ) && ( ${MAKE_COMEDI} && build_comedi || MAKE_COMEDI=false )
     else
 	for TARGET; do
 	    case $TARGET in
