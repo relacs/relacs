@@ -131,7 +131,6 @@ action can be one of
                and grub menu (no target required)
   info rtai  : list all available patches and suggest the one fitting to the kernel
   info grub  : show grub boot menu entries
-  packages   : install required packages
   download   : download missing sources of the specified targets
   update     : update sources of the specified targets (not for kernel target)
   patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
@@ -151,6 +150,7 @@ action can be one of
 If no action is specified, a full download and build is performed for all targets (except showroom).
 
 targets can be one or more of:
+  packages: required packages (install only)
   kernel  : rtai-patched linux kernel
   newlib  : newlib library
   rtai    : rtai modules
@@ -256,6 +256,9 @@ function print_info {
     echo
     print_versions
     echo
+    echo "Hostname:"
+    hostname
+    echo
     echo "CPU (/proc/cpuinfo):"
     grep "model name" /proc/cpuinfo | head -n 1
     echo "$CPU_NUM cores"
@@ -305,33 +308,21 @@ function install_packages {
 	echo_log "Exit"
 	return 1
     fi
+    PACKAGES="make gcc libncurses-dev zlib1g-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
+    if test ${LINUX_KERNEL:0:1} -gt 3; then
+	PACKAGES="$PACKAGES libssl-dev libpci-dev libsensors4-dev"
+    fi
     if $DRYRUN; then
-	echo_log "apt-get -y install make gcc libncurses-dev zlib1g-dev libssl-dev libpci-dev libsensors4-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
+	echo_log "apt-get -y install $PACKAGES"
 	echo_log "apt-get -y install kernel-package"
     else
-	if ! apt-get -y install make gcc libncurses-dev zlib1g-dev libssl-dev libpci-dev libsensors4-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev; then
+	if ! apt-get -y install $PACKAGES; then
 	    echo_log "Failed to install missing packages!"
 	    echo_log "Maybe some package names have changed..."
 	    echo_log "We need the following packes, try to install them manually:"
-	    echo_log "  make"
-	    echo_log "  gcc"
-	    echo_log "  libncurses-dev"
-	    echo_log "  zlib1g-dev"
-	    echo_log "  kernel-package"
-	    echo_log "  libssl-dev"
-	    echo_log "  libpci-dev"
-	    echo_log "  libsensors4-dev"
-	    echo_log "  g++"
-	    echo_log "  bc"
-	    echo_log "  cvs"
-	    echo_log "  git"
-	    echo_log "  autoconf"
-	    echo_log "  automake"
-	    echo_log "  libtool"
-	    echo_log "  bison"
-	    echo_log "  flex"
-	    echo_log "  libgsl0-dev"
-	    echo_log "  libboost-program-options-dev"
+	    for p in $PACKAGES; do
+		echo_log "  $p"
+	    done
 	    return 1
 	fi
 	if ! apt-get -y install kernel-package; then
@@ -762,23 +753,28 @@ function test_rtaikernel {
     lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed rtai_hal"; }
 
     if $RTAIMOD_FAILED; then
-	REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-rtai-modules-failed"
-	{
-	    echo "failed to load rtai modules"
-	    echo
-	    print_versions
-	    echo
-	    echo
-	    echo "dmesg:"
-	    echo
-	    dmesg | tail -n 50
-	} > latencies-$REPORT
-	cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
-	chown --reference=. latencies-$REPORT
-	chown --reference=. config-$REPORT
+	echo "Failed to load RTAI modules."
 	echo
-	echo "saved kernel configuration in: config-$REPORT"
-	echo "saved test results in        : latencies-$REPORT"
+	read -p 'Please enter a short name describing the configuration (empty: delete): ' NAME
+	if test -n "$NAME"; then
+	    REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-${NAME}-rtai-modules-failed"
+	    {
+		echo "failed to load rtai modules"
+		echo
+		print_versions
+		echo
+		echo
+		echo "dmesg:"
+		echo
+		dmesg | tail -n 50
+	    } > latencies-$REPORT
+	    cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
+	    chown --reference=. latencies-$REPORT
+	    chown --reference=. config-$REPORT
+	    echo
+	    echo "saved kernel configuration in: config-$REPORT"
+	    echo "saved test results in        : latencies-$REPORT"
+	fi
 	return
     fi
     echo "successfully loaded and unloaded rtai modules"
@@ -1589,6 +1585,7 @@ function build_all {
 function install_all {
     check_root
     if test -z "$1"; then
+	install_packages
 	install_kernel
 	${MAKE_NEWLIB} && install_newlib
 	${MAKE_RTAI} && install_rtai
@@ -1596,6 +1593,7 @@ function install_all {
     else
 	for TARGET; do
 	    case $TARGET in
+		packages ) install_packages ;;
 		kernel ) install_kernel ;;
 		newlib ) install_newlib ;;
 		rtai ) install_rtai ;;
@@ -1792,7 +1790,6 @@ case $ACTION in
 	test_rtaikernel $@
 	exit ;;
 
-    packages ) install_packages ;;
     download ) download_all $@ ;;
     update ) update_all $@ ;;
     patch ) clean_unpack_patch_kernel ;;
