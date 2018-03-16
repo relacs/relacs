@@ -78,6 +78,9 @@ fi
 
 CPU_NUM=$(grep -c "^processor" /proc/cpuinfo)
 
+REALTIME_DIR="/usr/realtime"   
+# this will be reset after reading in command line parameter!
+
 LOG_FILE="${PWD}/${MAKE_RTAI_KERNEL%.*}.log"
 
 
@@ -106,7 +109,7 @@ sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c x
 -r xxx: the rtai source (default ${RTAI_DIR}), one of
         magma: current rtai development version from csv
         vulcano: stable rtai development version from csv
-        rtai-5.0.1: rtai release version 5.0.1 from www.rtai.org
+        rtai-5.1: rtai release version 5.1 from www.rtai.org
         rtai-4.1: rtai release version 4.1 from www.rtai.org, or any other
         rtai-x.x: rtai release version x.x from www.rtai.org
         RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
@@ -462,7 +465,7 @@ function unpack_kernel {
 }
 
 function patch_kernel {
-    cd /usr/src/linux
+    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
     if $NEW_KERNEL; then
 	if ! check_kernel_patch; then
 	    return 1
@@ -512,7 +515,7 @@ function reboot_kernel {
 }
 
 function build_kernel {
-    cd /usr/src/linux
+    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
     echo_log "check for make-kpkg"
     HAVE_MAKE_KPKG=false
     if make-kpkg --help &> /dev/null; then
@@ -616,6 +619,7 @@ function clean_kernel {
 	echo_log "remove kernel sources $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}"
 	if ! $DRYRUN; then
 	    rm -r linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+	    rm linux
 	fi
     fi
 }
@@ -637,7 +641,6 @@ function uninstall_kernel {
 	apt-get -y remove linux-image-${LINUX_KERNEL}-${KERNEL_NAME}
 	apt-get -y remove linux-image-${LINUX_KERNEL}.0-${KERNEL_NAME}
     fi
-    cd /usr/src/linux
 }
 
 function remove_kernel {
@@ -650,9 +653,9 @@ function remove_kernel {
     fi
     KERNEL_PACKAGE=$(ls linux-image-${LINUX_KERNEL}-${KERNEL_NAME}*.deb | tail -n 1)
     if test -f "$KERNEL_PACKAGE"; then
-	echo_log "remove kernel package $KERNEL_PACKAGE"
+	echo_log "remove kernel package(s) " linux-image-${LINUX_KERNEL}-${KERNEL_NAME}*.deb
 	if ! $DRYRUN; then
-	    rm "$KERNEL_PACKAGE"
+	    rm linux-image-${LINUX_KERNEL}-${KERNEL_NAME}*.deb
 	fi
     fi
 }
@@ -662,7 +665,7 @@ function run_test {
     TEST=$2
     echo "running $DIR/$TEST test"
     TEST_RESULTS=results-$DIR-$TEST.dat
-    TEST_DIR=/usr/realtime/testsuite/$DIR/$TEST
+    TEST_DIR=${REALTIME_DIR}/testsuite/$DIR/$TEST
     rm -f $TEST_RESULTS
     cd $TEST_DIR
     rm -f $TEST_RESULTS
@@ -682,7 +685,10 @@ function test_rtaikernel {
 	echo "$ sudo ./${MAKE_RTAI_KERNEL} reboot"
 	echo "or supply the right parameter to ${MAKE_RTAI_KERNEL}."
 	echo
-	echo "Info: your running kernel is: ${CURRENT_KERNEL}"
+	echo "Info:"
+	echo "Your running kernel is: ${CURRENT_KERNEL}"
+	echo "LINUX_KERNEL is set to $LINUX_KERNEL"
+	echo "KERNEL_NAME is set to $KERNEL_NAME"
 	return 1
     fi
 
@@ -704,8 +710,8 @@ function test_rtaikernel {
     # remove latency file to force calibration:
     # this is for rtai5, for rtai4 the calibration tools needs to be run manually
     # see base/arch/x86/calibration/README
-    #if test -f /usr/realtime/calibration/latencies; then
-    #    rm /usr/realtime/calibration/latencies
+    #if test -f ${REALTIME_DIR}/calibration/latencies; then
+    #    rm ${REALTIME_DIR}/calibration/latencies
     #fi
     rm -f lsmod.dat
 
@@ -717,10 +723,10 @@ function test_rtaikernel {
     # loading rtai kernel modules:
     RTAIMOD_FAILED=false
     RTAIMATH_FAILED=false
-    lsmod | grep -q rtai_hal || { insmod /usr/realtime/modules/rtai_hal.ko && echo "loaded rtai_hal" || RTAIMOD_FAILED=true; }
-    lsmod | grep -q rtai_sched || { insmod /usr/realtime/modules/rtai_sched.ko && echo "loaded rtai_sched" || RTAIMOD_FAILED=true; }
-    if test -f /usr/realtime/modules/rtai_math.ko; then
-	lsmod | grep -q rtai_math || { insmod /usr/realtime/modules/rtai_math.ko && echo "loaded rtai_math" || RTAIMATH_FAILED=true; }
+    lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko && echo "loaded rtai_hal" || RTAIMOD_FAILED=true; }
+    lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko && echo "loaded rtai_sched" || RTAIMOD_FAILED=true; }
+    if test -f ${REALTIME_DIR}/modules/rtai_math.ko; then
+	lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded rtai_math" || RTAIMATH_FAILED=true; }
     else
 	echo "rtai_math is not available"
     fi
@@ -846,7 +852,7 @@ function test_rtaikernel {
 		print_info
 		echo
 		echo "rtai-info reports:"
-		/usr/realtime/bin/rtai-info
+		${REALTIME_DIR}/bin/rtai-info
 		echo
 		echo "dmesg:"
 		echo
@@ -1080,6 +1086,17 @@ function build_rtai {
 		patch <<EOF
 --- base/arch/x86/defconfig     2017-11-17 16:20:00.000000000 +0100
 +++ .rtai_config        2018-03-14 18:03:41.700624880 +0100
+@@ -7,8 +7,8 @@
+ #
+ # General
+ #
+-CONFIG_RTAI_INSTALLDIR="/usr/realtime"
+-CONFIG_RTAI_LINUXDIR="/usr/src/linux"
++CONFIG_RTAI_INSTALLDIR="${REALTIME_DIR}"
++CONFIG_RTAI_LINUXDIR="$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}"
+ 
+ #
+ # RTAI Documentation
 @@ -19,14 +19,15 @@
  CONFIG_RTAI_TESTSUITE=y
  CONFIG_RTAI_COMPAT=y
@@ -1249,10 +1266,10 @@ function install_rtai {
 }
 
 function uninstall_rtai {
-    if test -d /usr/realtime; then
+    if test -d ${REALTIME_DIR}; then
 	echo_log "uninstall rtai"
 	if ! $DRYRUN; then
-	    rm -r /usr/realtime
+	    rm -r ${REALTIME_DIR}
 	fi
     fi
 }
@@ -1284,7 +1301,7 @@ function download_showroom {
 	cd $SHOWROOM_DIR/v3.x
 	echo_log "run make clean on rtai-showroom sources"
 	if ! $DRYRUN; then
-	    PATH="$PATH:/usr/realtime/bin"
+	    PATH="$PATH:${REALTIME_DIR}/bin"
 	    make clean
 	fi
 	cd -
@@ -1314,7 +1331,7 @@ function build_showroom {
     cd ${LOCAL_SRC_PATH}/$SHOWROOM_DIR/v3.x
     echo_log "build rtai showroom"
     if ! $DRYRUN; then
-	PATH="$PATH:/usr/realtime/bin"
+	PATH="$PATH:${REALTIME_DIR}/bin"
 	make
 	if test "x$?" != "x0"; then
 	    echo_log "Failed to build rtai showroom!"
@@ -1329,7 +1346,7 @@ function clean_showroom {
 	echo_log "clean rtai showroom"
 	if ! $DRYRUN; then
 	    cd $SHOWROOM_DIR/v3.x
-	    PATH="$PATH:/usr/realtime/bin"
+	    PATH="$PATH:${REALTIME_DIR}/bin"
 	    make clean
 	fi
     fi
@@ -1418,12 +1435,12 @@ function build_comedi {
 	echo_log "build comedi"
 	if ! $DRYRUN; then
 	    ./autogen.sh
-	    PATH="$PATH:/usr/realtime/bin"
-	    ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
+	    PATH="$PATH:${REALTIME_DIR}/bin"
+	    ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=${REALTIME_DIR}
 	    if $NEW_RTAI; then
 		make clean
 	    fi
-	    cp /usr/realtime/modules/Module.symvers comedi/
+	    cp ${REALTIME_DIR}/modules/Module.symvers comedi/
 	    make -j $CPU_NUM
 	    if test "x$?" != "x0"; then
 		echo_log "Failed to build comedi!"
@@ -1500,7 +1517,8 @@ function full_install {
 
     echo_log
     echo_log "Done!"
-    echo_log "Please reboot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel"
+    echo_log "Please reboot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel by executing"
+    echo_log "$ {MAKE_RTAI_KERNEL} reboot"
     echo_log
 }
 
@@ -1520,6 +1538,9 @@ function reconfigure {
     echo_log
     echo_log "Done!"
     echo_log "Please reboot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel"
+    echo_log "Please reboot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel by executing"
+    echo_log "$ {MAKE_RTAI_KERNEL} reboot"
+    echo_log
 }
 
 function download_all {
@@ -1674,96 +1695,105 @@ function clean_unpack_patch_kernel {
 
 rm -f "$LOG_FILE"
 
-if test "x$1" = "x-d"; then
-    shift
-    DRYRUN=true
-fi
-if test "x$1" = "x-s"; then
-    shift
-    if test -n "$1" && test "x$1" != "xreconfigure"; then
-	KERNEL_PATH=$1
-	shift
-    else
-	echo "you need to specify a path for the kernel sources after the -s option"
-	exit 1
-    fi
-fi
-if test "x$1" = "x-n"; then
-    shift
-    if test -n "$1" && test "x$1" != "xreconfigure"; then
-	KERNEL_NAME=$1
-	shift
-    else
-	echo "you need to specify a name for the kernel after the -n option"
-	exit 1
-    fi
-fi
-if test "x$1" = "x-r"; then
-    shift
-    if test -n "$1" && test "x$1" != "xreconfigure"; then
-	RTAI_DIR=$1
-	shift
-	if test "xRTAI_DIR" != "x$DEFAULT_RTAI_DIR"; then
-	    RTAI_DIR_CHANGED=true
-	fi
-    else
-	echo "you need to specify an rtai distribution after the -r option"
-	exit 1
-    fi
-fi
-if test "x$1" = "x-p"; then
-    shift
-    if test "x$1" != "xreconfigure"; then
-	RTAI_PATCH=$1
-	shift
-	RTAI_PATCH_CHANGED=true
-    else
-	echo "you need to specify an rtai patch file after the -p option"
-	exit 1
-    fi
-fi
-if test "x$1" = "x-k"; then
-    shift
-    if test -n "$1" && test "x$1" != "xreconfigure"; then
-	LINUX_KERNEL=$1
-	shift
-	LINUX_KERNEL_CHANGED=true
-    else
-	echo "you need to specify a linux kernel version after the -k option"
-	exit 1
-    fi
-fi
-if test "x$1" = "x-c"; then
-    shift
-    if test -n "$1" && test "x$1" != "xreconfigure"; then
-	KERNEL_CONFIG="$1"
-	if test "x$KERNEL_CONFIG" != "xdef" -a "x$KERNEL_CONFIG" != "xold" -a "x$KERNEL_CONFIG" != "xmod" -a "x${KERNEL_CONFIG:0:1}" != "x/"; then
-	    KERNEL_CONFIG="$PWD/$KERNEL_CONFIG"
-	fi
-	NEW_KERNEL_CONFIG=true
-	shift
-    else
-	echo "you need to specify a kernel configuration after the -c option"
-	exit 1
-    fi
-fi
-if test "x$1" = "x-l"; then
-    shift
-    RUN_LOCALMOD=false
-fi
-if test "x$1" = "x-D"; then
-    shift
-    KERNEL_DEBUG=true
-fi
-if test "x$1" = "x-m"; then
-    shift
-    RTAI_MENU=true
-fi
+while test "x${1:0:1}" = "x-"; do
+    case $1 in
+	-d)
+	    shift
+	    DRYRUN=true
+	    ;;
+	-s)
+	    shift
+	    if test -n "$1" && test "x$1" != "xreconfigure"; then
+		KERNEL_PATH=$1
+		shift
+	    else
+		echo "you need to specify a path for the kernel sources after the -s option"
+		exit 1
+	    fi
+	    ;;
+	-n)
+	    shift
+	    if test -n "$1" && test "x$1" != "xreconfigure"; then
+		KERNEL_NAME=$1
+		shift
+	    else
+		echo "you need to specify a name for the kernel after the -n option"
+		exit 1
+	    fi
+	    ;;
+	-r)
+	    shift
+	    if test -n "$1" && test "x$1" != "xreconfigure"; then
+		RTAI_DIR=$1
+		shift
+		if test "xRTAI_DIR" != "x$DEFAULT_RTAI_DIR"; then
+		    RTAI_DIR_CHANGED=true
+		fi
+	    else
+		echo "you need to specify an rtai distribution after the -r option"
+		exit 1
+	    fi
+	    ;;
+	-p)
+	    shift
+	    if test "x$1" != "xreconfigure"; then
+		RTAI_PATCH=$1
+		shift
+		RTAI_PATCH_CHANGED=true
+	    else
+		echo "you need to specify an rtai patch file after the -p option"
+		exit 1
+	    fi
+	    ;;
+	-k)
+	    shift
+	    if test -n "$1" && test "x$1" != "xreconfigure"; then
+		LINUX_KERNEL=$1
+		shift
+		LINUX_KERNEL_CHANGED=true
+	    else
+		echo "you need to specify a linux kernel version after the -k option"
+		exit 1
+	    fi
+	    ;;
+	-c)
+	    shift
+	    if test -n "$1" && test "x$1" != "xreconfigure"; then
+		KERNEL_CONFIG="$1"
+		if test "x$KERNEL_CONFIG" != "xdef" -a "x$KERNEL_CONFIG" != "xold" -a "x$KERNEL_CONFIG" != "xmod" -a "x${KERNEL_CONFIG:0:1}" != "x/"; then
+		    KERNEL_CONFIG="$PWD/$KERNEL_CONFIG"
+		fi
+		NEW_KERNEL_CONFIG=true
+		shift
+	    else
+		echo "you need to specify a kernel configuration after the -c option"
+		exit 1
+	    fi
+	    ;;
+	-l)
+	    shift
+	    RUN_LOCALMOD=false
+	    ;;
+	-D)
+	    shift
+	    KERNEL_DEBUG=true
+	    ;;
+	-m)
+	    shift
+	    RTAI_MENU=true
+	    ;;
+	-*)
+	    echo "unknown options $1"
+	    exit 1
+    esac
+done
 
 if $RTAI_DIR_CHANGED && ! $RTAI_PATCH_CHANGED && ! $LINUX_KERNEL_CHANGED; then
     echo_log "Warning: you changed rtai sources and you might need to adapt the linux kernel version and rtai patch file to it."
     sleep 2
 fi
+
+REALTIME_DIR="/usr/realtime/${LINUX_KERNEL}-${RTAI_DIR}-${KERNEL_NAME}"
 
 ACTION=$1
 shift
@@ -1801,7 +1831,7 @@ case $ACTION in
     reboot ) reboot_kernel $@;;
 
     * ) if test -n "$1"; then
-	    echo "unknown option \"$1\""
+	    echo "unknown action \"$1\""
 	    echo
 	    print_usage
 	    exit 1
