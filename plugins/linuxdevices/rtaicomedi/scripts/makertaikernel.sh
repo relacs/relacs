@@ -6,7 +6,7 @@
 : ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
 : ${LINUX_KERNEL:="4.4.115"}      # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
-: ${KERNEL_NAME:="rtai1"}        # name for name of kernel to be appended to LINUX_KERNEL 
+: ${KERNEL_NUM:="-1"}            # name of the linux kernel is $LINUX_KERNEL-$RTAI_DIR$KERNEL_NUM
                                  # (set with -n)
 
 : ${LOCAL_SRC_PATH:=/usr/local/src} # directory for downloading and building 
@@ -78,6 +78,8 @@ fi
 
 CPU_NUM=$(grep -c "^processor" /proc/cpuinfo)
 
+KERNEL_NAME=${LINUX_KERNEL}-${RTAI_DIR}${KERNEL_NUM}
+KERNEL_ALT_NAME=${LINUX_KERNEL}.0-${RTAI_DIR}${KERNEL_NUM}
 REALTIME_DIR="/usr/realtime"   
 # this will be reset after reading in command line parameter!
 
@@ -104,7 +106,7 @@ sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c x
 
 -d    : dry run - only print out what the script would do, but do not execute any command
 -s xxx: use xxx as the base directory where to put the kernel sources (default ${KERNEL_PATH})
--n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NAME})
+-n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NUM})
 -k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})
 -r xxx: the rtai source (default ${RTAI_DIR}), one of
         magma: current rtai development version from csv
@@ -120,9 +122,9 @@ sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c x
         mod: simplify existing kernel configuration using make localmodconfig
              even if kernel do not match
         path/to/config/file: provide a particular configuration file
-        afterwards (except for mod), make localmodconfig is executed to 
-        deselect compilation of unused modules, 
-        but only if the runnig kernel matches the selected kernel version (major.minor only).
+        After setting the configuration (except for mod), make localmodconfig
+        is executed to deselect compilation of unused modules, but only if the
+        runnig kernel matches the selected kernel version (major.minor only).
 -l    : disable call to make localmodconf after a kernel configuration 
         has been selected via the -c switch
 -D    : generate kernel package with debug symbols in addition
@@ -137,8 +139,8 @@ action can be one of
   download   : download missing sources of the specified targets
   update     : update sources of the specified targets (not for kernel target)
   patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
-  build      : compile and install the specified targets
-               and the depending ones if needed
+  build      : compile and install the specified targets and the depending ones if needed
+  buildplain : compile and install the kernel without the rtai patch (no target required)
   install    : install the specified targets
   clean      : clean the source trees of the specified targets
   uninstall  : uninstall the specified targets
@@ -149,6 +151,8 @@ action can be one of
   test       : test the current kernel and write reports to the current working directory
   test all   : test the current kernel/kthreads/user and write reports to the current working directory
   test none   : test loading and unloading of rtai kernel modules and do not run any tests
+  test hal    : test loading and unloading of rtai_hal kernel module only
+  test none 1 : pass "1" to the rtai_sched parameter kernel_latency and user_latency in order to bypass calibration
 
 If no action is specified, a full download and build is performed for all targets (except showroom).
 
@@ -157,10 +161,12 @@ targets can be one or more of:
   kernel  : rtai-patched linux kernel
   newlib  : newlib library
   rtai    : rtai modules
-  showroom: rtai showroom examples
-            (supports only download, build, clean, remove)
+  showroom: rtai showroom examples (supports only download, build, clean, remove)
   comedi  : comedi data acquisition driver modules
 If no target is specified, all targets are made (except showroom).
+
+
+Common use cases:
 
 Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable):
 $ sudo ${MAKE_RTAI_KERNEL} download rtai
@@ -171,20 +177,17 @@ $ sudo ${MAKE_RTAI_KERNEL} info rtai
 Select a Linux kernel and a RTAI patch and
 set the LINUX_KERNEL and RTAI_PATCH variables accordingly.
 
-
-Common use cases:
-
 $ sudo ${MAKE_RTAI_KERNEL}
-  download and build all targets. A new configuration for the kernel is generated
+  download and build all targets. A new configuration for the kernel is generated.
 
 $ sudo ${MAKE_RTAI_KERNEL} reconfigure
-  build all targets using the existing configuration of the kernel
+  build all targets using the existing configuration of the kernel.
 
 $ sudo ${MAKE_RTAI_KERNEL} test
-  test the currently running kernel
+  test the currently running kernel.
 
 $ sudo ${MAKE_RTAI_KERNEL} uninstall
-  uninstall all targets
+  uninstall all targets.
 EOF
 }
 
@@ -274,7 +277,7 @@ function print_info {
     echo "KERNEL_PATH=$KERNEL_PATH"
     echo "LINUX_KERNEL=$LINUX_KERNEL"
     echo "KERNEL_SOURCE_NAME=$KERNEL_SOURCE_NAME"
-    echo "KERNEL_NAME=$KERNEL_NAME"
+    echo "KERNEL_NUM=$KERNEL_NUM"
     echo "LOCAL_SRC_PATH=$LOCAL_SRC_PATH"
     echo "RTAI_DIR=$RTAI_DIR"
     echo "RTAI_PATCH=$RTAI_PATCH"
@@ -479,8 +482,10 @@ function patch_kernel {
 
 function install_kernel {
     cd "$KERNEL_PATH"
-    KERNEL_PACKAGE=$(ls linux-image-${LINUX_KERNEL}*-${KERNEL_NAME}_*.deb | tail -n 1)
-    KERNEL_DEBUG_PACKAGE=$(ls linux-image-${LINUX_KERNEL}*-${KERNEL_NAME}-dbg_*.deb | tail -n 1)
+    KERNEL_PACKAGE=$(ls linux-image-${KERNEL_NAME}*.deb | tail -n 1)
+    test -f "$KERNEL_PACKAGE" || KERNEL_PACKAGE=$(ls linux-image-${KERNEL_ALT_NAME}*.deb | tail -n 1)
+    KERNEL_DEBUG_PACKAGE=$(ls linux-image-${KERNEL_NAME}-dbg_*.deb | tail -n 1)
+    test -f "$KERNEL_DEBUG_PACKAGE" || KERNEL_DEBUG_PACKAGE=$(ls linux-image-${KERNEL_ALT_NAME}-dbg_*.deb | tail -n 1)
     if test -f "$KERNEL_PACKAGE"; then
 	echo_log "install kernel from debian package $KERNEL_PACKAGE"
 	if ! $DRYRUN; then
@@ -488,7 +493,7 @@ function install_kernel {
 	    if $KERNEL_DEBUG; then
 		dpkg -i "$KERNEL_DEBUG_PACKAGE"
 	    fi
-	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${KERNEL_NAME}" | head -n 1)"
+	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
 	    grub-reboot "$GRUBMENU"
 	fi
     else
@@ -497,19 +502,25 @@ function install_kernel {
     fi
 }
 
+function reboot_cmd {
+    if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
+	reboot
+    fi
+}
+
 function reboot_kernel {
     if test -z "$1"; then
-	echo_log "reboot into ${LINUX_KERNEL}*-${KERNEL_NAME} kernel"
+	echo_log "reboot into ${KERNEL_NAME} kernel"
 	if ! $DRYRUN; then
-	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${KERNEL_NAME} " | head -n 1)"
+	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM} " | head -n 1)"
 	    grub-reboot "$GRUBMENU"
-	    reboot
+	    reboot_cmd
 	fi
     else
 	echo_log "reboot into grub menu $1"
 	if ! $DRYRUN; then
 	    grub-reboot "$@"
-	    reboot
+	    reboot_cmd
 	fi
     fi
 }
@@ -580,7 +591,7 @@ function build_kernel {
 		fi
 	    fi
 	else
-	    echo_log "keep already existing .configure file for linux-${LINUX_KERNEL}-${KERNEL_NAME}."
+	    echo_log "keep already existing .configure file for linux-${KERNEL_NAME}."
 	fi
 
 	# build the kernel:
@@ -589,13 +600,13 @@ function build_kernel {
 	    export CONCURRENCY_LEVEL=$CPU_NUM
 	    if $HAVE_MAKE_KPKG; then
 		if $KERNEL_DEBUG; then
-		    make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel_image kernel_debug
+		    make-kpkg --initrd --append-to-version -${RTAI_DIR}${KERNEL_NUM} --revision 1.0 --config menuconfig kernel_image kernel_debug
 		else
-		    make-kpkg --initrd --append-to-version -${KERNEL_NAME} --revision 1.0 --config menuconfig kernel-image
+		    make-kpkg --initrd --append-to-version -${RTAI_DIR}${KERNEL_NUM} --revision 1.0 --config menuconfig kernel-image
 		fi
 	    else
 		make menuconfig
-		make deb-pkg LOCALVERSION=-${KERNEL_NAME} KDEB_PKGVERSION=$(make kernelversion)-1
+		make deb-pkg LOCALVERSION=-${RTAI_DIR}${KERNEL_NUM} KDEB_PKGVERSION=$(make kernelversion)-1
 		# [TAR] creates a tar archive of the sources at the root of the kernel source tree
 	    fi
  	    if test "x$?" != "x0"; then
@@ -609,7 +620,7 @@ function build_kernel {
 	# install:
 	install_kernel || return 1
     else
-	echo_log "keep already compiled linux ${LINUX_KERNEL}-${KERNEL_NAME} kernel."
+	echo_log "keep already compiled linux ${KERNEL_NAME} kernel."
     fi
 }
 
@@ -626,7 +637,7 @@ function clean_kernel {
 
 function uninstall_kernel {
     # kernel:
-    if test ${CURRENT_KERNEL} = ${LINUX_KERNEL}-${KERNEL_NAME} -o ${CURRENT_KERNEL} = ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
+    if test ${CURRENT_KERNEL} = ${KERNEL_NAME} -o ${CURRENT_KERNEL} = ${KERNEL_ALT_NAME}; then
 	echo_log "Cannot uninstall a running kernel!"
 	echo_log "First boot into a different kernel. E.g. by executing"
 	echo_log "$ sudo ./${MAKE_RTAI_KERNEL} reboot"
@@ -634,12 +645,13 @@ function uninstall_kernel {
     fi
     echo_log "remove comedi kernel modules"
     if ! $DRYRUN; then
-	rm -rf /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/comedi
+	rm -rf /lib/modules/${KERNEL_NAME}/comedi
+	rm -rf /lib/modules/${KERNEL_ALT_NAME}/comedi
     fi
-    echo_log "uninstall kernel ${LINUX_KERNEL}-${KERNEL_NAME}"
+    echo_log "uninstall kernel ${KERNEL_NAME}"
     if ! $DRYRUN; then
-	apt-get -y remove linux-image-${LINUX_KERNEL}-${KERNEL_NAME}
-	apt-get -y remove linux-image-${LINUX_KERNEL}.0-${KERNEL_NAME}
+	apt-get -y remove linux-image-${KERNEL_NAME}
+	apt-get -y remove linux-image-${KERNEL_ALT_NAME}
     fi
 }
 
@@ -651,12 +663,10 @@ function remove_kernel {
 	    rm linux-$LINUX_KERNEL.tar.xz
 	fi
     fi
-    KERNEL_PACKAGE=$(ls linux-image-${LINUX_KERNEL}-${KERNEL_NAME}*.deb | tail -n 1)
-    if test -f "$KERNEL_PACKAGE"; then
-	echo_log "remove kernel package(s) " linux-image-${LINUX_KERNEL}-${KERNEL_NAME}*.deb
-	if ! $DRYRUN; then
-	    rm linux-image-${LINUX_KERNEL}-${KERNEL_NAME}*.deb
-	fi
+    KERNEL_PACKAGES=$(ls linux-image-${KERNEL_NAME}*.deb linux-image-${KERNEL_ALT_NAME}*.deb)
+    echo_log "remove kernel package(s) " $KERNEL_PACKAGES
+    if ! $DRYRUN; then
+	rm $KERNEL_PACKAGES
     fi
 }
 
@@ -678,22 +688,31 @@ function run_test {
 }
 
 function test_rtaikernel {
-    if test ${CURRENT_KERNEL} != ${LINUX_KERNEL}-${KERNEL_NAME} -a ${CURRENT_KERNEL} != ${LINUX_KERNEL}.0-${KERNEL_NAME}; then
+    if test ${CURRENT_KERNEL} != ${KERNEL_NAME} -a ${CURRENT_KERNEL} != ${KERNEL_ALT_NAME}; then
 	echo "Need a running rtai kernel that matches the configuration of ${MAKE_RTAI_KERNEL}!"
 	echo
-	echo "Either boot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel, e.g. by executing"
+	echo "Either boot into the ${KERNEL_NAME} kernel, e.g. by executing"
 	echo "$ sudo ./${MAKE_RTAI_KERNEL} reboot"
 	echo "or supply the right parameter to ${MAKE_RTAI_KERNEL}."
 	echo
 	echo "Info:"
 	echo "Your running kernel is: ${CURRENT_KERNEL}"
-	echo "LINUX_KERNEL is set to $LINUX_KERNEL"
-	echo "KERNEL_NAME is set to $KERNEL_NAME"
+	echo "LINUX_KERNEL is set to ${LINUX_KERNEL}"
+	echo "RTAI_DIR is set to ${RTAI_DIR}"
+	echo "KERNEL_NUM is set to $KERNEL_NUM"
 	return 1
     fi
 
+    check_root
+
+    TESTMODE=$1
+    shift
+    test -z "$TESTMODE" && TESTMODE="kern"
+
     if $DRYRUN; then
-	echo "run some tests on currently running kernel ${LINUX_KERNEL}-${KERNEL_NAME}"
+	echo "run some tests on currently running kernel ${KERNEL_NAME}"
+	echo "test mode: $TESTMODE"
+	test -z "$1" && echo "with parameter" $@
 	return 0
     fi
 
@@ -724,33 +743,38 @@ function test_rtaikernel {
     RTAIMOD_FAILED=false
     RTAIMATH_FAILED=false
     lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko && echo "loaded rtai_hal" || RTAIMOD_FAILED=true; }
-    lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko && echo "loaded rtai_sched" || RTAIMOD_FAILED=true; }
-    if test -f ${REALTIME_DIR}/modules/rtai_math.ko; then
-	lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded rtai_math" || RTAIMATH_FAILED=true; }
-    else
-	echo "rtai_math is not available"
-    fi
+    if test "$TESTMODE" != "hal"; then
+	SCHEDPARAM=""
+	test -n "$1" && SCHEDPARAM="kernel_latency=$1 user_latency=$1"
+	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $SCHEDPARAM && echo "loaded rtai_sched" || RTAIMOD_FAILED=true; }
+	if test -f ${REALTIME_DIR}/modules/rtai_math.ko; then
+	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded rtai_math" || RTAIMATH_FAILED=true; }
+	else
+	    echo "rtai_math is not available"
+	fi
 
-    if ! $RTAIMOD_FAILED; then
-	# loading comedi:
-	echo -n "triggering comedi "
-	udevadm trigger
-	sleep 1
-	echo -n "."
-	sleep 1
-	echo -n "."
-	sleep 1
-	echo "."
-	modprobe kcomedilib && echo "loaded kcomedilib"
+	if ! $RTAIMOD_FAILED; then
+	    # loading comedi:
+	    echo -n "triggering comedi "
+	    udevadm trigger
+	    sleep 1
+	    echo -n "."
+	    sleep 1
+	    echo -n "."
+	    sleep 1
+	    echo "."
+	    modprobe kcomedilib && echo "loaded kcomedilib"
+	    
+	    lsmod > lsmod.dat
+	    
+	    # remove comedi modules:
+	    modprobe -r kcomedilib && echo "removed kcomedilib"
+	    for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+		modprobe -r $i && echo "removed $i"
+	    done
+	    modprobe -r comedi && echo "removed comedi"
+	fi
 
-	lsmod > lsmod.dat
-
-	# remove comedi modules:
-	modprobe -r kcomedilib && echo "removed kcomedilib"
-	for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
-	    modprobe -r $i && echo "removed $i"
-	done
-	modprobe -r comedi && echo "removed comedi"
     fi
 
     # remove rtai modules:
@@ -774,7 +798,7 @@ function test_rtaikernel {
 		echo
 		dmesg | tail -n 50
 	    } > latencies-$REPORT
-	    cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
+	    cp /boot/config-${KERNEL_NAME} config-$REPORT
 	    chown --reference=. latencies-$REPORT
 	    chown --reference=. config-$REPORT
 	    echo
@@ -787,11 +811,11 @@ function test_rtaikernel {
     echo
 
     # kernel tests:
-    if test "x$1" != "xnone"; then
+    if test "$TESTMODE" = "kern" -o "$TESTMODE" = "all"; then
 	run_test kern latency
 	run_test kern switches
 	run_test kern preempt
-	if test "x$1" = "xall"; then
+	if test "$TESTMODE" = "all"; then
 	    run_test kthreads latency
 	    run_test kthreads switches
 	    run_test kthreads preempt
@@ -856,13 +880,13 @@ function test_rtaikernel {
 		echo
 		echo "dmesg:"
 		echo
-		if test "x$1" = "xall"; then
-		    dmesg
+		if test "$TESTMODE" = "all"; then
+		    dmesg | tail -n 200
 		else
 		    dmesg | tail -n 50
 		fi
 	    } > latencies-$REPORT
-	    cp /boot/config-${LINUX_KERNEL}-${KERNEL_NAME} config-$REPORT
+	    cp /boot/config-${KERNEL_NAME} config-$REPORT
 	    chown --reference=. latencies-$REPORT
 	    chown --reference=. config-$REPORT
 	    echo
@@ -1404,7 +1428,8 @@ function install_comedi {
 
     echo_log "remove comedi staging kernel modules"
     if ! $DRYRUN; then
-	rm -rf /lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}/kernel/drivers/staging/comedi
+	rm -rf /lib/modules/${KERNEL_NAME}/kernel/drivers/staging/comedi
+	rm -rf /lib/modules/${KERNEL_ALT_NAME}/kernel/drivers/staging/comedi
     fi
 
     cd ${LOCAL_SRC_PATH}/comedi
@@ -1415,10 +1440,8 @@ function install_comedi {
 	    echo_log "Failed to install comedi!"
 	    return 1
 	fi
-	KERNEL_MODULES=/lib/modules/${LINUX_KERNEL}-${KERNEL_NAME}
-	if ! test -d "$KERNEL_MODULES"; then
-	    KERNEL_MODULES=/lib/modules/${LINUX_KERNEL}.0-${KERNEL_NAME}
-	fi
+	KERNEL_MODULES=/lib/modules/${KERNEL_NAME}
+	test -d "$KERNEL_MODULES" || KERNEL_MODULES=/lib/modules/${KERNEL_ALT_NAME}
 	cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers ${KERNEL_MODULES}/comedi/
 	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
 	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
@@ -1517,7 +1540,7 @@ function full_install {
 
     echo_log
     echo_log "Done!"
-    echo_log "Please reboot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel by executing"
+    echo_log "Please reboot into the ${KERNEL_NAME} kernel by executing"
     echo_log "$ {MAKE_RTAI_KERNEL} reboot"
     echo_log
 }
@@ -1537,8 +1560,7 @@ function reconfigure {
 
     echo_log
     echo_log "Done!"
-    echo_log "Please reboot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel"
-    echo_log "Please reboot into the ${LINUX_KERNEL}-${KERNEL_NAME} kernel by executing"
+    echo_log "Please reboot into the ${KERNEL_NAME} kernel by executing"
     echo_log "$ {MAKE_RTAI_KERNEL} reboot"
     echo_log
 }
@@ -1601,6 +1623,11 @@ function build_all {
 	    esac
 	done
     fi
+}
+
+function buildplain_kernel {
+    check_root
+    unpack_kernel && build_kernel
 }
 
 function install_all {
@@ -1714,7 +1741,7 @@ while test "x${1:0:1}" = "x-"; do
 	-n)
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
-		KERNEL_NAME=$1
+		KERNEL_NUM=$1
 		shift
 	    else
 		echo "you need to specify a name for the kernel after the -n option"
@@ -1793,7 +1820,9 @@ if $RTAI_DIR_CHANGED && ! $RTAI_PATCH_CHANGED && ! $LINUX_KERNEL_CHANGED; then
     sleep 2
 fi
 
-REALTIME_DIR="/usr/realtime/${LINUX_KERNEL}-${RTAI_DIR}-${KERNEL_NAME}"
+KERNEL_NAME=${LINUX_KERNEL}-${RTAI_DIR}${KERNEL_NUM}
+KERNEL_ALT_NAME=${LINUX_KERNEL}.0-${RTAI_DIR}${KERNEL_NUM}
+REALTIME_DIR="/usr/realtime/${KERNEL_NAME}"
 
 ACTION=$1
 shift
@@ -1824,6 +1853,7 @@ case $ACTION in
     update ) update_all $@ ;;
     patch ) clean_unpack_patch_kernel ;;
     build ) build_all $@ ;;
+    buildplain ) buildplain_kernel $@ ;;
     install ) install_all $@ ;;
     clean ) clean_all $@ ;;
     uninstall ) uninstall_all $@ ;;

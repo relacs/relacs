@@ -15,15 +15,15 @@ if test "x$1" = "x--help"; then
 fi
 
 
-MODULEPATH="${0%/*}"
+MODULE_PATH="${0%/*}"
 
 FULLRELOAD=true
 
 if $FULLRELOAD; then
     # completely remove rtai modules and reload them again:
 
-    $MODULEPATH/killmodules.sh
-    $MODULEPATH/loadmodules.sh
+    $MODULE_PATH/killmodules.sh
+    $MODULE_PATH/loadmodules.sh
 
 else
     # reload the dynclampmodule only:
@@ -32,20 +32,18 @@ else
 
     if lsmod | fgrep -q "rtmodule "; then
 	rmmod rtmodule && echo "removed old rtmodule"
-	insmod $MODULEPATH/rtmodule.ko && echo "loaded $MODULEPATH/rtmodule.ko"
+	insmod $MODULE_PATH/rtmodule.ko && echo "loaded $MODULE_PATH/rtmodule.ko"
 	LOADED=true
     fi
     
     if lsmod | fgrep -q "dynclampmodule "; then
 	rmmod dynclampmodule && echo "removed old dynclampmodule"
-	insmod $MODULEPATH/dynclampmodule.ko && echo "loaded $MODULEPATH/dynclampmodule.ko"
+	insmod $MODULE_PATH/dynclampmodule.ko && echo "loaded $MODULE_PATH/dynclampmodule.ko"
 	LOADED=true
     fi
     
-    if $LOADED; then
-	$MODULEPATH/loadmodules.sh
+    if ! $LOADED; then
+	$MODULE_PATH/loadmodules.sh
     fi
 
 fi
-
-

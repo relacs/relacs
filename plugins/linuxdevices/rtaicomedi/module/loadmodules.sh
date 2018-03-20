@@ -15,10 +15,23 @@ if test "x$1" = "x--help"; then
     exit 0
 fi
 
-lsmod | grep -q rtai_hal || { insmod /usr/realtime/modules/rtai_hal.ko && echo "loaded rtai_hal"; }
-lsmod | grep -q rtai_sched || { insmod /usr/realtime/modules/rtai_sched.ko && echo "loaded rtai_sched"; }
-if test -f /usr/realtime/modules/rtai_math.ko; then
-  lsmod | grep -q rtai_math || { insmod /usr/realtime/modules/rtai_math.ko && echo "loaded rtai_math"; }
+RTAI_MODULE_PATH=""
+MP=$(find /usr/realtime -name "$(uname -r)*" | tail -n 1)
+if test -d /usr/realtime/$(uname -r)/modules; then
+    RTAI_MODULE_PATH=/usr/realtime/$(uname -r)/modules
+elif test -d /usr/realtime/modules; then
+    RTAI_MODULE_PATH=/usr/realtime/modules
+else
+    echo "did not find RTAI modules in /usr/realtime"
+    exit 1
+fi
+
+echo "use RTAI modules from $RTAI_MODULE_PATH"
+
+lsmod | grep -q rtai_hal || { insmod $RTAI_MODULE_PATH/rtai_hal.ko && echo "loaded rtai_hal"; }
+lsmod | grep -q rtai_sched || { insmod $RTAI_MODULE_PATH/rtai_sched.ko && echo "loaded rtai_sched"; }
+if test -f $RTAI_MODULE_PATH/rtai_math.ko; then
+  lsmod | grep -q rtai_math || { insmod $RTAI_MODULE_PATH/rtai_math.ko && echo "loaded rtai_math"; }
 else
   echo "rtai_math is not available"
 fi
@@ -28,10 +41,10 @@ lsmod | grep -q kcomedilib || { modprobe kcomedilib && echo "loaded kcomedilib";
 
 test -c /dev/dynclamp || mknod -m 666 /dev/dynclamp c 227 0
 
-MODULEPATH="${0%/*}"
+MODULE_PATH="${0%/*}"
 
 lsmod | grep -q rtmodule && rmmod rtmodule && echo "removed rtmodule"
 lsmod | grep -q dynclampmodule && rmmod dynclampmodule && echo "removed dynclampmodule"
 
-#insmod $MODULEPATH/rtmodule.ko && echo "loaded $MODULEPATH/rtmodule.ko"
-insmod $MODULEPATH/dynclampmodule.ko && echo "loaded $MODULEPATH/dynclampmodule.ko"
+#insmod $MODULE_PATH/rtmodule.ko && echo "loaded $MODULE_PATH/rtmodule.ko"
+insmod $MODULE_PATH/dynclampmodule.ko && echo "loaded $MODULE_PATH/dynclampmodule.ko"

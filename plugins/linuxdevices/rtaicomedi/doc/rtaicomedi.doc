@@ -353,7 +353,8 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
      - Select "Symmetric multi-processing support" (SMP) if you have a multiprocessor machine, otherwise (uniprocessor system, UP) deselect it
      - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
      - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
-       check \c "help" to find out, which Processor family you have to select)
+       check \c "help" to find out, which Processor family you have to select.
+       Intel i5/i7 with "cpu family : 6" are "Core 2/newer Xeon")
      - Set the "Maximum numbers of CPUs" to the number of physical cores you have in your machine (check in \c /proc/cpuinfo the \c "cpu cores")
      - Disable "SMT (Hyperthreading) scheduler support"
      - Disable "Multi-core scheduler support"
@@ -363,7 +364,8 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
    - Power management and ACPI options:
      - Disable everything except for:
      - Enable "ACPI (Advanced Configuration and Power Interface) Support"
-       - Disable everything execpt for:
+       - Disable "Processor" (\c ACPI_PROCESSOR)
+       - Disable everything except for:
        - Select "Power Management Timer Suppport" (if available)
        .
      - Disable "CPU Frequency scaling" (\c CPU_FREQ)
@@ -379,9 +381,7 @@ make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig 
        - Disable "Compile the kernel with debug info"
      .
      - Disable "Kernel debugging"
-     - Disable "Magic SysRq key"
-     - Disable "Early printk via EHCI debug port" (unless you still have EHCI USB 2.0 enabled)
-     - Disable "Allow gcc to uninline functions marked 'inline'"
+     - Disable "Tracers"
    .
    - Disable "Virtualization" if possible unless you know that you need it.
    .
@@ -749,7 +749,7 @@ for some hints.  This is the art of creating a good real-time kernel...
 \subsubsection powersavingmodes Disable CPU power saving modes
 Most importantly, for newer CPUs like Intel i5 and Intel i7 CPUs,
 disabling CPU power saving modes improves real-time performance dramatically:
-- Add the kernel parameters \c processor.max_cstate=1 \c idle=poll .
+- Add the kernel parameters \c processor.max_cstate=0 \c idle=poll .
   See \ref kernelparamhints on how to set kernel parameter.
 - The cstates can also be dynamically controlled by writing the
   maximum allowable latency in microseconds (as an 32-bit(?) \c int, not as
