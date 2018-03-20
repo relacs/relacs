@@ -22,7 +22,7 @@
                               # - vulcano: stable development version
                               # Shahbaz Youssefi's RTAI clone on github:
                               # - RTAI: clone https://github.com/ShabbyX/RTAI.git
-: ${RTAI_PATCH:="hal-linux-4.4.115-x86-10.patch"} # rtai patch to be used
+: ${RTAI_PATCH:="hal-linux-4.4.115-x86-10.patch"} # rtai patch to be used (set with -p)
 : ${SHOWROOM_DIR:=showroom}     # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 : ${KERNEL_CONFIG:="old"}  # whether and how to initialize the kernel configuration 
@@ -34,7 +34,7 @@
                            # afterwards, the localmodconfig target is executed, 
                            # if the running kernel matches LINUX_KERNEL
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
-: ${KERNEL_DEBUG:=false}   # generate debuggable kernel (see man crash), set with -D
+: ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -102,7 +102,8 @@ function print_usage {
 Download and build everything needed for an rtai-patched linux kernel with comedi and math support.
 
 usage:
-sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-l] [-D] [-m] [action [target1 [target2 ... ]]]
+sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-l] [-D] [-m] 
+     [action [target1 [target2 ... ]]]
 
 -d    : dry run - only print out what the script would do, but do not execute any command
 -s xxx: use xxx as the base directory where to put the kernel sources (default ${KERNEL_PATH})
@@ -131,28 +132,24 @@ sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c x
 -m    : enter the RTAI configuration menu
 
 action can be one of
-  help       : display this help message
-  info       : display properties of rtai patches, loaded kernel modules, kernel, machine,
-               and grub menu (no target required)
-  info rtai  : list all available patches and suggest the one fitting to the kernel
-  info grub  : show grub boot menu entries
-  download   : download missing sources of the specified targets
-  update     : update sources of the specified targets (not for kernel target)
-  patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
-  build      : compile and install the specified targets and the depending ones if needed
-  buildplain : compile and install the kernel without the rtai patch (no target required)
-  install    : install the specified targets
-  clean      : clean the source trees of the specified targets
-  uninstall  : uninstall the specified targets
-  remove     : remove the complete source trees of the specified targets
-  reconfigure: reconfigure the kernel and make a full build of all targets (without target)
-  reboot     : reboot into rtai kernel immediately (without target)
-  reboot X   : reboot into kernel specified by grub menu entry X
-  test       : test the current kernel and write reports to the current working directory
-  test all   : test the current kernel/kthreads/user and write reports to the current working directory
-  test none   : test loading and unloading of rtai kernel modules and do not run any tests
-  test hal    : test loading and unloading of rtai_hal kernel module only
-  test none 1 : pass "1" to the rtai_sched parameter kernel_latency and user_latency in order to bypass calibration
+  help         : display this help message
+  info         : display properties of rtai patches, loaded kernel modules, kernel, machine,
+                 and grub menu (no target required)
+  info rtai    : list all available patches and suggest the one fitting to the kernel
+  info grub    : show grub boot menu entries
+  download     : download missing sources of the specified targets
+  update       : update sources of the specified targets (not for kernel target)
+  patch        : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
+  build        : compile and install the specified targets and the depending ones if needed
+  buildplain   : compile and install the kernel without the rtai patch (no target required)
+  install      : install the specified targets
+  clean        : clean the source trees of the specified targets
+  uninstall    : uninstall the specified targets
+  remove       : remove the complete source trees of the specified targets
+  reconfigure  : reconfigure the kernel and make a full build of all targets (without target)
+  reboot       : reboot into rtai kernel immediately (without target)
+  reboot X     : reboot into kernel specified by grub menu entry X
+  test         : test the current kernel and write reports to the current working directory
 
 If no action is specified, a full download and build is performed for all targets (except showroom).
 
@@ -164,6 +161,22 @@ targets can be one or more of:
   showroom: rtai showroom examples (supports only download, build, clean, remove)
   comedi  : comedi data acquisition driver modules
 If no target is specified, all targets are made (except showroom).
+
+For the test-action, the following targets are provided:
+As the optional first target:
+  hal      : test loading and unloading of rtai_hal kernel module only
+  sched    : test loading and unloading of rtai_hal and rtai_sched kernel modules only
+  math     : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module only
+  comedi   : test loading and unloading of rtai and comedi kernel modules only
+... followed by an optional number:
+  10       : this number is passed to the rtai_sched parameter
+             kernel_latency and user_latency to bypass calibration
+... optionally followed by one or more of:
+  kern     : run the kern tests (default)
+  kthreads : run the kthreads tests
+  user     : run the user tests
+  all      : run the kernel, kthreads, and user tests
+  none     : test loading and unloading of kernel modules and do not run any tests
 
 
 Common use cases:
@@ -274,17 +287,17 @@ function print_info {
     print_grub
     echo
     echo "settings of ${MAKE_RTAI_KERNEL}:"
-    echo "KERNEL_PATH=$KERNEL_PATH"
-    echo "LINUX_KERNEL=$LINUX_KERNEL"
-    echo "KERNEL_SOURCE_NAME=$KERNEL_SOURCE_NAME"
-    echo "KERNEL_NUM=$KERNEL_NUM"
-    echo "LOCAL_SRC_PATH=$LOCAL_SRC_PATH"
-    echo "RTAI_DIR=$RTAI_DIR"
-    echo "RTAI_PATCH=$RTAI_PATCH"
-    echo "SHOWROOM_DIR=$SHOWROOM_DIR"
-    echo "KERNEL_CONFIG=$KERNEL_CONFIG"
-    echo "RUN_LOCALMOD=$RUN_LOCALMOD"
-    echo "KERNEL_DEBUG=$KERNEL_DEBUG"
+    echo "KERNEL_PATH   (-s) = $KERNEL_PATH"
+    echo "LINUX_KERNEL  (-k) = $LINUX_KERNEL"
+    echo "KERNEL_SOURCE_NAME = $KERNEL_SOURCE_NAME"
+    echo "KERNEL_NUM    (-n) = $KERNEL_NUM"
+    echo "LOCAL_SRC_PATH     = $LOCAL_SRC_PATH"
+    echo "RTAI_DIR      (-r) = $RTAI_DIR"
+    echo "RTAI_PATCH    (-p) = $RTAI_PATCH"
+    echo "SHOWROOM_DIR       = $SHOWROOM_DIR"
+    echo "KERNEL_CONFIG (-c) = $KERNEL_CONFIG"
+    echo "RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
+    echo "KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
 }
 
 function print_full_info {
@@ -677,14 +690,16 @@ function run_test {
     TEST_RESULTS=results-$DIR-$TEST.dat
     TEST_DIR=${REALTIME_DIR}/testsuite/$DIR/$TEST
     rm -f $TEST_RESULTS
-    cd $TEST_DIR
-    rm -f $TEST_RESULTS
-    trap true SIGINT   # ^C should terminate ./run but not this script
-    ./run | tee results-$DIR-$TEST.dat
-    trap - SIGINT
-    cd -
-    mv $TEST_DIR/$TEST_RESULTS .
-    echo
+    if test -d $TEST_DIR; then
+	cd $TEST_DIR
+	rm -f $TEST_RESULTS
+	trap true SIGINT   # ^C should terminate ./run but not this script
+	./run | tee results-$DIR-$TEST.dat
+	trap - SIGINT
+	cd -
+	mv $TEST_DIR/$TEST_RESULTS .
+	echo
+    fi
 }
 
 function test_rtaikernel {
@@ -705,22 +720,57 @@ function test_rtaikernel {
 
     check_root
 
-    TESTMODE=$1
-    shift
+    # test targets:
+    TESTMODE=""
+    MAXMODULE="4"
+    SCHEDPARAM=""
+    if test -n "$1"; then
+	case $1 in
+	    kern) TESTMODE="kern" ;;
+	    kthreads) TESTMODE="kthreads" ;;
+	    user) TESTMODE="user" ;;
+	    all) TESTMODE="kern kthreads user" ;;
+	    none) TESTMODE="none" ;;
+	    hal) MAXMODULE="1" ;;
+	    sched) MAXMODULE="2" ;;
+	    math) MAXMODULE="3" ;;
+	    comedi) MAXMODULE="4" ;;
+            [0-9]*) SCHEDPARAM=$1 ;;
+	    *) echo "test $1 is invalid"
+		exit 1 ;;
+	esac
+	shift
+	while test -n "$1"; do
+	    case $1 in
+		kern) TESTMODE="$TESTMODE kern" ;;
+		kthreads) TESTMODE="$TESTMODE kthreads" ;;
+		user) TESTMODE="$TESTMODE user" ;;
+		all) TESTMODE="kern kthreads user" ;;
+		none) TESTMODE="none" ;;
+		[0-9]*) SCHEDPARAM=$1 ;;
+		*) echo "test $1 is invalid"
+		    exit 1 ;;
+	    esac
+	    shift
+	done
+    fi
     test -z "$TESTMODE" && TESTMODE="kern"
+    test -n "$SCHEDPARAM" && SCHEDPARAM="kernel_latency=$SCHEDPARAM user_latency=$SCHEDPARAM"
 
     if $DRYRUN; then
 	echo "run some tests on currently running kernel ${KERNEL_NAME}"
-	echo "test mode: $TESTMODE"
-	test -z "$1" && echo "with parameter" $@
+	echo "test mode(s): $TESTMODE"
+	echo "max module to load: $MAXMODULE"
+	echo "rtai_sched parameter: $SCHEDPARAM"
 	return 0
     fi
 
     # report number:
+    REPORT_NAME=${LINUX_KERNEL}-${RTAI_DIR}
     NUM=001
-    LASTREPORT="$(ls latencies-${LINUX_KERNEL}-${RTAI_DIR}-*-* 2> /dev/null | tail -n 1)"
+    LASTREPORT="$(ls latencies-${REPORT_NAME}-*-* 2> /dev/null | tail -n 1)"
     if test -n "$LASTREPORT"; then
-	LASTREPORT="${LASTREPORT#latencies-${LINUX_KERNEL}-${RTAI_DIR}-}"
+	LASTREPORT="${LASTREPORT#latencies-${REPORT_NAME}-}"
 	N="${LASTREPORT%%-*}"
 	N=$(expr $N + 1)
 	NUM="$(printf "%03d" $N)"
@@ -742,44 +792,47 @@ function test_rtaikernel {
     # loading rtai kernel modules:
     RTAIMOD_FAILED=false
     RTAIMATH_FAILED=false
-    lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko && echo "loaded rtai_hal" || RTAIMOD_FAILED=true; }
-    if test "$TESTMODE" != "hal"; then
-	SCHEDPARAM=""
-	test -n "$1" && SCHEDPARAM="kernel_latency=$1 user_latency=$1"
-	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $SCHEDPARAM && echo "loaded rtai_sched" || RTAIMOD_FAILED=true; }
+    lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko && echo "loaded  rtai_hal" || RTAIMOD_FAILED=true; }
+    if test $MAXMODULE -ge 2; then
+	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $SCHEDPARAM && echo "loaded  rtai_sched $SCHEDPARAM" || RTAIMOD_FAILED=true; }
+    fi
+    if test $MAXMODULE -ge 3; then
 	if test -f ${REALTIME_DIR}/modules/rtai_math.ko; then
-	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded rtai_math" || RTAIMATH_FAILED=true; }
+	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded  rtai_math" || RTAIMATH_FAILED=true; }
 	else
 	    echo "rtai_math is not available"
 	fi
-
-	if ! $RTAIMOD_FAILED; then
-	    # loading comedi:
-	    echo -n "triggering comedi "
-	    udevadm trigger
-	    sleep 1
-	    echo -n "."
-	    sleep 1
-	    echo -n "."
-	    sleep 1
-	    echo "."
-	    modprobe kcomedilib && echo "loaded kcomedilib"
-	    
-	    lsmod > lsmod.dat
-	    
-	    # remove comedi modules:
-	    modprobe -r kcomedilib && echo "removed kcomedilib"
-	    for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
-		modprobe -r $i && echo "removed $i"
-	    done
-	    modprobe -r comedi && echo "removed comedi"
-	fi
-
     fi
-
+    
+    if test $MAXMODULE -ge 4 && $MAKE_COMEDI && ! $RTAIMOD_FAILED; then
+	# loading comedi:
+	echo -n "triggering comedi "
+	udevadm trigger
+	sleep 1
+	echo -n "."
+	sleep 1
+	echo -n "."
+	sleep 1
+	echo "."
+	modprobe kcomedilib && echo "loaded  kcomedilib"
+	
+	lsmod > lsmod.dat
+	
+	# remove comedi modules:
+	modprobe -r kcomedilib && echo "removed kcomedilib"
+	for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+	    modprobe -r $i && echo "removed $i"
+	done
+	modprobe -r comedi && echo "removed comedi"
+    fi
+    
     # remove rtai modules:
-    lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
-    lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed rtai_sched"; }
+    if test $MAXMODULE -ge 3; then
+	lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
+    fi
+    if test $MAXMODULE -ge 2; then
+	lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed rtai_sched"; }
+    fi
     lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed rtai_hal"; }
 
     if $RTAIMOD_FAILED; then
@@ -787,7 +840,7 @@ function test_rtaikernel {
 	echo
 	read -p 'Please enter a short name describing the configuration (empty: delete): ' NAME
 	if test -n "$NAME"; then
-	    REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-${NAME}-rtai-modules-failed"
+	    REPORT="${REPORT_NAME}-${NUM}-${NAME}-rtai-modules-failed"
 	    {
 		echo "failed to load rtai modules"
 		echo
@@ -811,18 +864,12 @@ function test_rtaikernel {
     echo
 
     # kernel tests:
-    if test "$TESTMODE" = "kern" -o "$TESTMODE" = "all"; then
-	run_test kern latency
-	run_test kern switches
-	run_test kern preempt
-	if test "$TESTMODE" = "all"; then
-	    run_test kthreads latency
-	    run_test kthreads switches
-	    run_test kthreads preempt
-	    run_test user latency
-	    run_test user switches
-	    run_test user preempt
-	fi
+    if test "$TESTMODE" != none; then
+	for DIR in $TESTMODE; do
+	    run_test $DIR latency
+	    run_test $DIR switches
+	    run_test $DIR preempt
+	done
 	echo "finished all tests"
 	echo
 
@@ -830,10 +877,10 @@ function test_rtaikernel {
 	read -p 'Please enter a short name describing the configuration (empty: delete): ' NAME
 	if test -n "$NAME"; then
 	    TEST_RESULT=""
-	    TEST_DATA=$(grep RTD results-kern-latency.dat | tail -n 1)
+	    TEST_DATA=$(grep RTD results-${TESTMODE%% *}-latency.dat | tail -n 1)
 	    OVERRUNS=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $7}')
 	    if test "$OVERRUNS" -gt "0"; then
-		TEST_RESULT="bad"
+		TEST_RESULT="failed"
 	    else
 		LAT_MIN=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $3}')
 		LAT_MAX=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $6}')
@@ -854,9 +901,9 @@ function test_rtaikernel {
 	    fi
 	fi
 	if test -n "$NAME" -a -n "$RESULT"; then
-	    REPORT="${LINUX_KERNEL}-${RTAI_DIR}-${NUM}-${NAME}-${RESULT}"
+	    REPORT="${REPORT_NAME}-${NUM}-${NAME}-${RESULT}"
 	    {
-		for TD in kern kthreads user; do
+		for TD in $TESTMODE; do
 		    for TN in latency switches preempt; do
 			TEST_RESULTS=results-$TD-$TN.dat
 			if test -f "$TEST_RESULTS"; then
@@ -870,7 +917,6 @@ function test_rtaikernel {
 		done
 		if $RTAIMATH_FAILED; then
 		    echo "Failed to load rtai_math module."
-		    echo
 		    echo
 		fi
 		print_info
@@ -892,9 +938,16 @@ function test_rtaikernel {
 	    echo
 	    echo "saved kernel configuration in : config-$REPORT"
 	    echo "saved test results in         : latencies-$REPORT"
+	else
+	    # remove test results:
+	    for TD in $TESTMODE; do
+		for TN in latency switches preempt; do
+		    TEST_RESULTS=results-$TD-$TN.dat
+		    rm -f $TEST_RESULTS
+		done
+	    done
 	fi
     else
-	echo
 	echo "test results not saved"
     fi
 }
@@ -1724,11 +1777,21 @@ rm -f "$LOG_FILE"
 
 while test "x${1:0:1}" = "x-"; do
     case $1 in
-	-d)
+	--help )
+	    print_usage
+	    exit 0
+	    ;;
+
+	--version )
+	    print_version
+	    exit 0
+	    ;;
+
+	-d )
 	    shift
 	    DRYRUN=true
 	    ;;
-	-s)
+	-s )
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		KERNEL_PATH=$1
@@ -1738,7 +1801,7 @@ while test "x${1:0:1}" = "x-"; do
 		exit 1
 	    fi
 	    ;;
-	-n)
+	-n )
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		KERNEL_NUM=$1
@@ -1748,7 +1811,7 @@ while test "x${1:0:1}" = "x-"; do
 		exit 1
 	    fi
 	    ;;
-	-r)
+	-r )
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		RTAI_DIR=$1
@@ -1761,7 +1824,7 @@ while test "x${1:0:1}" = "x-"; do
 		exit 1
 	    fi
 	    ;;
-	-p)
+	-p )
 	    shift
 	    if test "x$1" != "xreconfigure"; then
 		RTAI_PATCH=$1
@@ -1772,7 +1835,7 @@ while test "x${1:0:1}" = "x-"; do
 		exit 1
 	    fi
 	    ;;
-	-k)
+	-k )
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		LINUX_KERNEL=$1
@@ -1783,7 +1846,7 @@ while test "x${1:0:1}" = "x-"; do
 		exit 1
 	    fi
 	    ;;
-	-c)
+	-c )
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		KERNEL_CONFIG="$1"
@@ -1797,19 +1860,19 @@ while test "x${1:0:1}" = "x-"; do
 		exit 1
 	    fi
 	    ;;
-	-l)
+	-l )
 	    shift
 	    RUN_LOCALMOD=false
 	    ;;
-	-D)
+	-D )
 	    shift
 	    KERNEL_DEBUG=true
 	    ;;
-	-m)
+	-m )
 	    shift
 	    RTAI_MENU=true
 	    ;;
-	-*)
+	-* )
 	    echo "unknown options $1"
 	    exit 1
     esac
@@ -1820,6 +1883,7 @@ if $RTAI_DIR_CHANGED && ! $RTAI_PATCH_CHANGED && ! $LINUX_KERNEL_CHANGED; then
     sleep 2
 fi
 
+test -n "$KERNEL_NUM" -a "x${KERNEL_NUM:0:1}" != "x-" && KERNEL_NUM="-$KERNEL_NUM"
 KERNEL_NAME=${LINUX_KERNEL}-${RTAI_DIR}${KERNEL_NUM}
 KERNEL_ALT_NAME=${LINUX_KERNEL}.0-${RTAI_DIR}${KERNEL_NUM}
 REALTIME_DIR="/usr/realtime/${KERNEL_NAME}"
@@ -1828,11 +1892,15 @@ ACTION=$1
 shift
 case $ACTION in
 
-    help ) print_usage ;;
-    --help ) print_usage ;;
+    help ) 
+	print_usage 
+	exit 0
+	;;
 
-    version ) print_version ;;
-    --version ) print_version ;;
+    version ) 
+	print_version
+	exit 0
+	;;
 
     info ) if test "x$1" = "xgrub"; then
 	    print_grub

@@ -124,16 +124,23 @@ sudo ./makertaikernel.sh reboot
    \code
 sudo ./makertaikernel.sh test
    \endcode
-   to run the "kern" tests or
+   to run the "kern" tests.
+   See 
+   \code
+sudo ./makertaikernel.sh help
+   \endcode
+   for possible options of the test action.
+   For example, execute
    \code
 sudo ./makertaikernel.sh test all
    \endcode
    to run the kern, kthreads, and user tests.
+
    The result of the tests is written into the file
-   latencies-3.14.17-rtai-XXX-NAME-QUALITY and the corresponding
+   latencies-3.14.17-RTAI-XXX-NAME-QUALITY and the corresponding
    kernel configuration is saved in
-   config-3.14.17-rtai-XXX-NAME_QUALITY in the current directory. RTAI
-   is replaced by your choice of RTAI source (e.g. magma, rtai-4.1, etc), 
+   config-3.14.17-RTAI-XXX-NAME_QUALITY in the current directory. RTAI
+   is replaced by your choice of an RTAI source (e.g. magma, rtai-5.1, etc.), 
    XXX is replaced by a number, NAME and QUALITY are short
    strings describing your kernel configuration and the test
    performance that you can enter after the test.
@@ -153,17 +160,17 @@ sudo ./makertaikernel.sh -c mod
 -# If the test results are not good, then build a new version of the kernel
    with a different configuration (see \ref configurekernel for details):
    \code
-sudo ./makertaikernel.sh -n rtai2 reconfigure
+sudo ./makertaikernel.sh -n 2 reconfigure
    \endcode
    reboot into the \c rtai1 kernel, test the new kernel, reconfigure again yet another kernel (with a different name):
    \code
-sudo ./makertaikernel.sh -n rtai2 test
-sudo ./makertaikernel.sh -n rtai1 reconfigure
+sudo ./makertaikernel.sh -n 2 test
+sudo ./makertaikernel.sh -n 1 reconfigure
    \endcode
    reboot, and do the same with the right kernel names:
    \code
-sudo ./makertaikernel.sh -n rtai1 test
-sudo ./makertaikernel.sh -n rtai2 reconfigure
+sudo ./makertaikernel.sh -n 1 test
+sudo ./makertaikernel.sh -n 2 reconfigure
    \endcode
 
    Note that \c makertaikernel.sh \c reconfigure will first uninstall an already existing kernel with the same name.
@@ -172,7 +179,7 @@ sudo ./makertaikernel.sh -n rtai2 reconfigure
    further modifications by specifying the kernel configuration file
    saved by \c makertaikernel.sh \c test using the \c-c option
    \code
-sudo ./makertaikernel.sh -n rtai1 -c config-3.14.17-rtai-002-nousb-good reconfigure
+sudo ./makertaikernel.sh -n 1 -c config-3.14.17-rtai-4.1-002-nousb-good reconfigure
    \endcode
 -# Once you are satisified, continue with \ref installrelacs .
 
@@ -1112,6 +1119,7 @@ sudo chmod a+rw /dev/comedi*
   .
 -# When developing your dynamic clamp model in \c model.c or if you dare to modify \c dynclampmodule.c, then
 \code
+# cd to rtaicomedi, not rtaicomedi/module !
 cd plugins/linuxdevices/rtaicomedi
 # whenever you changed something, do:
 make
