@@ -2,12 +2,16 @@
 
 if test "x$1" = "x--help"; then
     echo
-    echo "loadmodules.sh"
+    echo "loadmodules.sh [LATENCY]"
     echo
     echo "This script loads all the necessary kernel modules that are needed"
     echo "for using relacs with dynamic clamp support."
     echo "This requires an RTAI patched linux kernel."
     echo "See ../doc/html/index.html or www.relacs.net/plugins/rtaicomedi/index.html for more information."
+    echo
+    echo "The optional LATENCY parameter is a latency in ns that is passed"
+    echo "as the kernel_latency and user_latency paameter to the rtai_sched module"
+    echo "to avoid self calibration."
     echo
     echo "If you want to load the kernel modules automatically by the boot"
     echo "process of your linux system, simply call this script from /etc/rc.local"
@@ -28,8 +32,12 @@ fi
 
 echo "use RTAI modules from $RTAI_MODULE_PATH"
 
+# set parameter for rtai_sched from command line:
+SCHEDPARAM=""
+test -n "$1" && SCHEDPARAM="kernel_latency=$1 user_latency=$1"
+
 lsmod | grep -q rtai_hal || { insmod $RTAI_MODULE_PATH/rtai_hal.ko && echo "loaded rtai_hal"; }
-lsmod | grep -q rtai_sched || { insmod $RTAI_MODULE_PATH/rtai_sched.ko && echo "loaded rtai_sched"; }
+lsmod | grep -q rtai_sched || { insmod $RTAI_MODULE_PATH/rtai_sched.ko $SCHEDPARAM && echo "loaded rtai_sched $SCHEDPARAM"; }
 if test -f $RTAI_MODULE_PATH/rtai_math.ko; then
   lsmod | grep -q rtai_math || { insmod $RTAI_MODULE_PATH/rtai_math.ko && echo "loaded rtai_math"; }
 else

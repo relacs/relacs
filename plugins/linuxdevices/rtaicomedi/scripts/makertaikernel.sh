@@ -784,10 +784,13 @@ function test_rtaikernel {
     #fi
     rm -f lsmod.dat
 
+    # unload already loaded comedi kernel modules:
+    remove_comedi_modules
     # unload already loaded rtai kernel modules:
     lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed already loaded rtai_math"; }
     lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed already loaded rtai_sched"; }
     lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed already loaded rtai_hal"; }
+    echo
 
     # loading rtai kernel modules:
     RTAIMOD_FAILED=false
@@ -818,12 +821,7 @@ function test_rtaikernel {
 	
 	lsmod > lsmod.dat
 	
-	# remove comedi modules:
-	modprobe -r kcomedilib && echo "removed kcomedilib"
-	for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
-	    modprobe -r $i && echo "removed $i"
-	done
-	modprobe -r comedi && echo "removed comedi"
+	remove_comedi_modules
     fi
     
     # remove rtai modules:
@@ -1471,13 +1469,7 @@ function update_comedi {
 
 function install_comedi {
     echo_log "remove all loaded comedi kernel modules"
-    if ! $DRYRUN; then
-	modprobe -r kcomedilib && echo_log "removed kcomedilib"
-	for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
-	    modprobe -r $i && echo_log "removed $i"
-	done
-	modprobe -r comedi && echo_log "removed comedi"
-    fi
+    remove_comedi_modules
 
     echo_log "remove comedi staging kernel modules"
     if ! $DRYRUN; then
@@ -1512,7 +1504,7 @@ function build_comedi {
 	if ! $DRYRUN; then
 	    ./autogen.sh
 	    PATH="$PATH:${REALTIME_DIR}/bin"
-	    ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=${REALTIME_DIR}
+	    ./configure --with-linuxdir=$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME} --with-rtaidir=${REALTIME_DIR}
 	    if $NEW_RTAI; then
 		make clean
 	    fi
@@ -1562,6 +1554,13 @@ function remove_comedi {
     fi
 }
 
+function remove_comedi_modules {
+    modprobe -r kcomedilib && echo "removed kcomedilib"
+    for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+	modprobe -r $i && echo "removed $i"
+    done
+    modprobe -r comedi && echo "removed comedi"
+}
 
 ###########################################################################
 # actions:
@@ -1594,7 +1593,7 @@ function full_install {
     echo_log
     echo_log "Done!"
     echo_log "Please reboot into the ${KERNEL_NAME} kernel by executing"
-    echo_log "$ {MAKE_RTAI_KERNEL} reboot"
+    echo_log "${MAKE_RTAI_KERNEL} reboot"
     echo_log
 }
 
@@ -1614,7 +1613,7 @@ function reconfigure {
     echo_log
     echo_log "Done!"
     echo_log "Please reboot into the ${KERNEL_NAME} kernel by executing"
-    echo_log "$ {MAKE_RTAI_KERNEL} reboot"
+    echo_log "${MAKE_RTAI_KERNEL} reboot"
     echo_log
 }
 
