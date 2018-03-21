@@ -525,7 +525,7 @@ function reboot_kernel {
     if test -z "$1"; then
 	echo_log "reboot into ${KERNEL_NAME} kernel"
 	if ! $DRYRUN; then
-	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM} " | head -n 1)"
+	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
 	    grub-reboot "$GRUBMENU"
 	    reboot_cmd
 	fi
@@ -755,6 +755,7 @@ function test_rtaikernel {
 	done
     fi
     test -z "$TESTMODE" && TESTMODE="kern"
+    TESTMODE=$(echo $TESTMODE)  # strip whitespace
     test -n "$SCHEDPARAM" && SCHEDPARAM="kernel_latency=$SCHEDPARAM user_latency=$SCHEDPARAM"
 
     if $DRYRUN; then
