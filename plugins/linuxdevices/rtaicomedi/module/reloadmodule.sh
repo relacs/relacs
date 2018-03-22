@@ -2,7 +2,7 @@
 
 if test "x$1" = "x--help"; then
     echo
-    echo "reloadmodule.sh"
+    echo "reloadmodule.sh [LATENCY]"
     echo
     echo "This script reloads the dynclampmodule and/or rtmodule."
     echo "You need to execute this script whenever these modules have been recompiled."
@@ -23,7 +23,7 @@ if $FULLRELOAD; then
     # completely remove rtai modules and reload them again:
 
     $MODULE_PATH/killmodules.sh
-    $MODULE_PATH/loadmodules.sh
+    $MODULE_PATH/loadmodules.sh $@
 
 else
     # reload the dynclampmodule only:

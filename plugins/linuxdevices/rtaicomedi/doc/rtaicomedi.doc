@@ -114,7 +114,7 @@ sudo ./makertaikernel.sh
    \c help for details).
 
 -# You will get the menu for configuring the kernel. This is the most
-   important step! See \ref compilekernel step 5 for instructions.
+   important step! See \ref compilekernel step 6 for instructions.
 
 -# Reboot into the new kernel, e.g. by running
    \code
@@ -336,25 +336,28 @@ yes "" | make localmodconfig
    this improves the performance of your rtai kernel. See \ref configurekernel
    for some hints.
 
--# The following steps 4. to 6. describe the elegant way to compile a linux kernel 
+-# The following steps 5. to 7. describe the elegant way to compile a linux kernel 
    on a Debian system using the kernel-package.
    You get a nice \c .deb file with the compiled kernel
    that you can install on other machines as well.
    See http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Debian_Lenny_Compile_RTAI for more details.
 
-   The normal way to compile a linux kernel is described starting at step 7. below.
+   The normal way to compile a linux kernel is described at step 8. below.
 
 -# Debian system: configure and build the kernel
    \code
 export CONCURRENCY_LEVEL=$(grep -c "^processor" /proc/cpuinfo)  # the number of CPU cores you have
 make-kpkg --initrd --append-to-version -rtai --revision 1.0 --config menuconfig kernel-image # kernel-headers kernel-source
    \endcode
-   In the kernel configuration dialog you should check the following settings:
+
+-# In the kernel configuration dialog you should check the following settings
+   (also read /usr/local/src/rtai/README.CONF_RMRKS !):
    - General setup: 
      - Make sure that "Local version" is empty in case you are using the \c makertaikernel.sh script or \c make-kpkg (Debian system).
        Otherwise set "Local version" to "-rtai".
      - Disable "Enable sytem-call auditing support"
      - Disable "Configure standard kernel features (expert users)"
+     - Set "Stack Protector buffer overflow detection" to "Regular" or even "None" if the latency test crashes.
      .
    - Processor type and features: 
      - Select "Symmetric multi-processing support" (SMP) if you have a multiprocessor machine, otherwise (uniprocessor system, UP) deselect it

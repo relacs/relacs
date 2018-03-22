@@ -493,51 +493,6 @@ function patch_kernel {
     fi
 }
 
-function install_kernel {
-    cd "$KERNEL_PATH"
-    KERNEL_PACKAGE=$(ls linux-image-${KERNEL_NAME}*.deb | tail -n 1)
-    test -f "$KERNEL_PACKAGE" || KERNEL_PACKAGE=$(ls linux-image-${KERNEL_ALT_NAME}*.deb | tail -n 1)
-    KERNEL_DEBUG_PACKAGE=$(ls linux-image-${KERNEL_NAME}-dbg_*.deb | tail -n 1)
-    test -f "$KERNEL_DEBUG_PACKAGE" || KERNEL_DEBUG_PACKAGE=$(ls linux-image-${KERNEL_ALT_NAME}-dbg_*.deb | tail -n 1)
-    if test -f "$KERNEL_PACKAGE"; then
-	echo_log "install kernel from debian package $KERNEL_PACKAGE"
-	if ! $DRYRUN; then
-	    dpkg -i "$KERNEL_PACKAGE"
-	    if $KERNEL_DEBUG; then
-		dpkg -i "$KERNEL_DEBUG_PACKAGE"
-	    fi
-	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
-	    grub-reboot "$GRUBMENU"
-	fi
-    else
-	echo_log "no kernel to install"
-	return 1
-    fi
-}
-
-function reboot_cmd {
-    if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
-	reboot
-    fi
-}
-
-function reboot_kernel {
-    if test -z "$1"; then
-	echo_log "reboot into ${KERNEL_NAME} kernel"
-	if ! $DRYRUN; then
-	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
-	    grub-reboot "$GRUBMENU"
-	    reboot_cmd
-	fi
-    else
-	echo_log "reboot into grub menu $1"
-	if ! $DRYRUN; then
-	    grub-reboot "$@"
-	    reboot_cmd
-	fi
-    fi
-}
-
 function build_kernel {
     cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
     echo_log "check for make-kpkg"
@@ -648,6 +603,28 @@ function clean_kernel {
     fi
 }
 
+function install_kernel {
+    cd "$KERNEL_PATH"
+    KERNEL_PACKAGE=$(ls linux-image-${KERNEL_NAME}*.deb | tail -n 1)
+    test -f "$KERNEL_PACKAGE" || KERNEL_PACKAGE=$(ls linux-image-${KERNEL_ALT_NAME}*.deb | tail -n 1)
+    KERNEL_DEBUG_PACKAGE=$(ls linux-image-${KERNEL_NAME}-dbg_*.deb | tail -n 1)
+    test -f "$KERNEL_DEBUG_PACKAGE" || KERNEL_DEBUG_PACKAGE=$(ls linux-image-${KERNEL_ALT_NAME}-dbg_*.deb | tail -n 1)
+    if test -f "$KERNEL_PACKAGE"; then
+	echo_log "install kernel from debian package $KERNEL_PACKAGE"
+	if ! $DRYRUN; then
+	    dpkg -i "$KERNEL_PACKAGE"
+	    if $KERNEL_DEBUG; then
+		dpkg -i "$KERNEL_DEBUG_PACKAGE"
+	    fi
+	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
+	    grub-reboot "$GRUBMENU"
+	fi
+    else
+	echo_log "no kernel to install"
+	return 1
+    fi
+}
+
 function uninstall_kernel {
     # kernel:
     if test ${CURRENT_KERNEL} = ${KERNEL_NAME} -o ${CURRENT_KERNEL} = ${KERNEL_ALT_NAME}; then
@@ -680,6 +657,29 @@ function remove_kernel {
     echo_log "remove kernel package(s) " $KERNEL_PACKAGES
     if ! $DRYRUN; then
 	rm $KERNEL_PACKAGES
+    fi
+}
+
+function reboot_cmd {
+    if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
+	reboot
+    fi
+}
+
+function reboot_kernel {
+    if test -z "$1"; then
+	echo_log "reboot into ${KERNEL_NAME} kernel"
+	if ! $DRYRUN; then
+	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
+	    grub-reboot "$GRUBMENU"
+	    reboot_cmd
+	fi
+    else
+	echo_log "reboot into grub menu $1"
+	if ! $DRYRUN; then
+	    grub-reboot "$@"
+	    reboot_cmd
+	fi
     fi
 }
 
@@ -994,23 +994,10 @@ function update_newlib {
     fi
 }
 
-function install_newlib {
-    cd ${LOCAL_SRC_PATH}/newlib
-    cd install
-    echo_log "install newlib"
-    if ! $DRYRUN; then
-	make install
-	if test "x$?" != "x0"; then
-	    echo_log "Failed to install newlib!"
-	    return 1
-	fi
-    fi
-    NEW_NEWLIB=true
-}
-
 function build_newlib {
     cd ${LOCAL_SRC_PATH}/newlib/install
-    if test -f $MACHINE/lib/libm.a; then
+    LIBM_PATH=$(find ${LOCAL_SRC_PATH}/newlib/install/ -name 'libm.a' | head -n 1)
+    if test -f "$LIBM_PATH"; then
 	echo_log "keep already built and installed newlib library"
     else
 	echo_log "build newlib"
@@ -1041,6 +1028,20 @@ function clean_newlib {
 	    make distclean
 	fi
     fi
+}
+
+function install_newlib {
+    cd ${LOCAL_SRC_PATH}/newlib
+    cd install
+    echo_log "install newlib"
+    if ! $DRYRUN; then
+	make install
+	if test "x$?" != "x0"; then
+	    echo_log "Failed to install newlib!"
+	    return 1
+	fi
+    fi
+    NEW_NEWLIB=true
 }
 
 function uninstall_newlib {
@@ -1139,11 +1140,12 @@ function update_rtai {
 
 function build_rtai {
     cd ${LOCAL_SRC_PATH}/${RTAI_DIR}
-    if $NEW_KERNEL || $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko; then
+    if $NEW_KERNEL || $NEW_NEWLIB || ! test -f base/sched/rtai_sched.ko || ! test -f ${REALTIME_DIR}/modules/rtai_hal.ko; then
 	echo_log "build rtai"
 	if ! $DRYRUN; then
 	    # path to newlib math library:
 	    LIBM_PATH=$(find ${LOCAL_SRC_PATH}/newlib/install/ -name 'libm.a' | head -n 1)
+	    test -z "$LIBM_PATH" && MAKE_NEWLIB=false
 	    # number of CPUs:
 	    CONFIG_NR_CPUS=$(grep CONFIG_NR_CPUS /usr/src/linux/.config)
 	    RTAI_NUM_CPUS=${CONFIG_NR_CPUS#*=}
@@ -1313,12 +1315,12 @@ EOF
 	fi
 	NEW_RTAI=true
     else
-	echo_log "keep already built rtai modules"
+	echo_log "keep already built and installed rtai modules"
     fi
 }
 
-function clean_rtai {
-    cd ${LOCAL_SRC_PATH}
+function clean_rtai { 
+   cd ${LOCAL_SRC_PATH}
     if test -d $RTAI_DIR; then
 	echo_log "clean rtai"
 	if ! $DRYRUN; then
@@ -1468,36 +1470,6 @@ function update_comedi {
     fi
 }
 
-function install_comedi {
-    echo_log "remove all loaded comedi kernel modules"
-    remove_comedi_modules
-
-    echo_log "remove comedi staging kernel modules"
-    if ! $DRYRUN; then
-	rm -rf /lib/modules/${KERNEL_NAME}/kernel/drivers/staging/comedi
-	rm -rf /lib/modules/${KERNEL_ALT_NAME}/kernel/drivers/staging/comedi
-    fi
-
-    cd ${LOCAL_SRC_PATH}/comedi
-    echo_log "install comedi"
-    if ! $DRYRUN; then
-	make install
-	if test "x$?" != "x0"; then
-	    echo_log "Failed to install comedi!"
-	    return 1
-	fi
-	KERNEL_MODULES=/lib/modules/${KERNEL_NAME}
-	test -d "$KERNEL_MODULES" || KERNEL_MODULES=/lib/modules/${KERNEL_ALT_NAME}
-	cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers ${KERNEL_MODULES}/comedi/
-	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
-	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
-	depmod -a
-	sleep 1
-	udevadm trigger
-    fi
-    NEW_COMEDI=true
-}
-
 function build_comedi {
     if $NEW_RTAI || ! test -f ${LOCAL_SRC_PATH}/comedi/comedi/comedi.o; then
 	cd ${LOCAL_SRC_PATH}/comedi
@@ -1532,6 +1504,36 @@ function clean_comedi {
 	    make clean
 	fi
     fi
+}
+
+function install_comedi {
+    echo_log "remove all loaded comedi kernel modules"
+    remove_comedi_modules
+
+    echo_log "remove comedi staging kernel modules"
+    if ! $DRYRUN; then
+	rm -rf /lib/modules/${KERNEL_NAME}/kernel/drivers/staging/comedi
+	rm -rf /lib/modules/${KERNEL_ALT_NAME}/kernel/drivers/staging/comedi
+    fi
+
+    cd ${LOCAL_SRC_PATH}/comedi
+    echo_log "install comedi"
+    if ! $DRYRUN; then
+	make install
+	if test "x$?" != "x0"; then
+	    echo_log "Failed to install comedi!"
+	    return 1
+	fi
+	KERNEL_MODULES=/lib/modules/${KERNEL_NAME}
+	test -d "$KERNEL_MODULES" || KERNEL_MODULES=/lib/modules/${KERNEL_ALT_NAME}
+	cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers ${KERNEL_MODULES}/comedi/
+	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
+	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
+	depmod -a
+	sleep 1
+	udevadm trigger
+    fi
+    NEW_COMEDI=true
 }
 
 function uninstall_comedi {
@@ -1683,6 +1685,26 @@ function buildplain_kernel {
     unpack_kernel && build_kernel
 }
 
+function clean_all {
+    check_root
+    if test -z "$1"; then
+	clean_kernel
+	${MAKE_NEWLIB} && clean_newlib
+	${MAKE_RTAI} && clean_rtai
+	${MAKE_COMEDI} && clean_comedi
+    else
+	for TARGET; do
+	    case $TARGET in
+		kernel ) clean_kernel ;;
+		newlib ) clean_newlib ;;
+		rtai ) clean_rtai ;;
+		showroom ) clean_showroom ;;
+		comedi ) clean_comedi ;;
+	    esac
+	done
+    fi
+}
+
 function install_all {
     check_root
     if test -z "$1"; then
@@ -1699,26 +1721,6 @@ function install_all {
 		newlib ) install_newlib ;;
 		rtai ) install_rtai ;;
 		comedi ) install_comedi ;;
-	    esac
-	done
-    fi
-}
-
-function clean_all {
-    check_root
-    if test -z "$1"; then
-	clean_kernel
-	${MAKE_NEWLIB} && clean_newlib
-	${MAKE_RTAI} && clean_rtai
-	${MAKE_COMEDI} && clean_comedi
-    else
-	for TARGET; do
-	    case $TARGET in
-		kernel ) clean_kernel ;;
-		newlib ) clean_newlib ;;
-		rtai ) clean_rtai ;;
-		showroom ) clean_showroom ;;
-		comedi ) clean_comedi ;;
 	    esac
 	done
     fi

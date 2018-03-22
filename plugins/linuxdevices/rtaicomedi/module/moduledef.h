@@ -91,7 +91,7 @@
 #define DEV_ERROR_MAXLEN  128
 
 //* maximum supported dynamic clamp frequency ensuring a stable system
-#define MAX_FREQUENCY 90000 //Hz
+#define MAX_FREQUENCY 200000 //Hz
 
 //* DAQ-devices:
 #define MAXSUBDEV    8

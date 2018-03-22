@@ -50,7 +50,7 @@ DynClampAnalogInput::DynClampAnalogInput( void )
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
-  MaxRate = 100000.0;
+  MaxRate = MAX_FREQUENCY;
   IsPrepared = false;
   Calibration = 0;
   UnipConverter = 0;
