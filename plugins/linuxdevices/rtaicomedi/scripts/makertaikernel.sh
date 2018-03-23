@@ -51,7 +51,7 @@
 FULL_COMMAND_LINE="$@"
 MAKE_RTAI_KERNEL="${0##*/}"
 
-VERSION_STRING="${MAKE_RTAI_KERNEL} version 1.8 by Jan Benda, June 2017"
+VERSION_STRING="${MAKE_RTAI_KERNEL} version 2.0 by Jan Benda, March 2018"
 DRYRUN=false        # set with -d
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
@@ -132,24 +132,26 @@ sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c x
 -m    : enter the RTAI configuration menu
 
 action can be one of
-  help         : display this help message
-  info         : display properties of rtai patches, loaded kernel modules, kernel, machine,
-                 and grub menu (no target required)
-  info rtai    : list all available patches and suggest the one fitting to the kernel
-  info grub    : show grub boot menu entries
-  download     : download missing sources of the specified targets
-  update       : update sources of the specified targets (not for kernel target)
-  patch        : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
-  build        : compile and install the specified targets and the depending ones if needed
-  buildplain   : compile and install the kernel without the rtai patch (no target required)
-  install      : install the specified targets
-  clean        : clean the source trees of the specified targets
-  uninstall    : uninstall the specified targets
-  remove       : remove the complete source trees of the specified targets
-  reconfigure  : reconfigure the kernel and make a full build of all targets (without target)
-  reboot       : reboot into rtai kernel immediately (without target)
-  reboot X     : reboot into kernel specified by grub menu entry X
-  test         : test the current kernel and write reports to the current working directory
+  help           : display this help message
+  info           : display properties of rtai patches, loaded kernel modules, kernel, machine,
+                   and grub menu (no target required)
+  info rtai      : list all available patches and suggest the one fitting to the kernel
+  info grub      : show grub boot menu entries
+  setup messages : enable /var/log/messages needed for RTAI tests in rsyslog settings
+  recover messages : recover the original rsyslog settings
+  download       : download missing sources of the specified targets
+  update         : update sources of the specified targets (not for kernel target)
+  patch          : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
+  build          : compile and install the specified targets and the depending ones if needed
+  buildplain     : compile and install the kernel without the rtai patch (no target required)
+  clean          : clean the source trees of the specified targets
+  install        : install the specified targets
+  uninstall      : uninstall the specified targets
+  remove         : remove the complete source trees of the specified targets
+  reconfigure    : reconfigure the kernel and make a full build of all targets (without target)
+  reboot         : reboot into rtai kernel immediately (without target)
+  reboot X       : reboot into kernel specified by grub menu entry X
+  test           : test the current kernel and write reports to the current working directory
 
 If no action is specified, a full download and build is performed for all targets (except showroom).
 
@@ -165,9 +167,9 @@ If no target is specified, all targets are made (except showroom).
 For the test-action, the following targets are provided:
 As the optional first target:
   hal      : test loading and unloading of rtai_hal kernel module only
-  sched    : test loading and unloading of rtai_hal and rtai_sched kernel modules only
-  math     : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module only
-  comedi   : test loading and unloading of rtai and comedi kernel modules only
+  sched    : test loading and unloading of rtai_hal and rtai_sched kernel modules
+  math     : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module
+  comedi   : test loading and unloading of rtai and comedi kernel modules
 ... followed by an optional number:
   10       : this number is passed to the rtai_sched parameter
              kernel_latency and user_latency to bypass calibration
@@ -240,6 +242,8 @@ function print_versions {
     fi
     if test -f ${LOCAL_SRC_PATH}/newlib/src/revision.txt; then
 	echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/src/revision.txt)"
+    elif test -f ${LOCAL_SRC_PATH}/newlib/revision.txt; then
+	echo "  newlib: git from $(cat ${LOCAL_SRC_PATH}/newlib/revision.txt)"
     elif test -d ${LOCAL_SRC_PATH}/newlib; then
 	echo "  newlib: revision not available"
     else
@@ -780,9 +784,9 @@ function test_rtaikernel {
     # remove latency file to force calibration:
     # this is for rtai5, for rtai4 the calibration tools needs to be run manually
     # see base/arch/x86/calibration/README
-    #if test -f ${REALTIME_DIR}/calibration/latencies; then
-    #    rm ${REALTIME_DIR}/calibration/latencies
-    #fi
+    if test -f ${REALTIME_DIR}/calibration/latencies; then
+        rm ${REALTIME_DIR}/calibration/latencies
+    fi
     rm -f lsmod.dat
 
     # unload already loaded comedi kernel modules:
@@ -810,14 +814,14 @@ function test_rtaikernel {
     
     if test $MAXMODULE -ge 4 && $MAKE_COMEDI && ! $RTAIMOD_FAILED; then
 	# loading comedi:
-	echo -n "triggering comedi "
+	echo "triggering comedi "
 	udevadm trigger
 	sleep 1
-	echo -n "."
-	sleep 1
-	echo -n "."
-	sleep 1
-	echo "."
+	# echo -n "."
+	# sleep 1
+	# echo -n "."
+	# sleep 1
+	# echo "."
 	modprobe kcomedilib && echo "loaded  kcomedilib"
 	
 	lsmod > lsmod.dat
@@ -861,6 +865,14 @@ function test_rtaikernel {
     fi
     echo "successfully loaded and unloaded rtai modules"
     echo
+
+    # check for kernel log messages:
+    if ! test -f /var/log/messages; then
+	echo_log "/var/log/messages does not exist!"
+	echo_log "enable it by running:"
+	echo_log "${MAKE_RTAI_KERNEL} setup messages"
+	echo_log
+    fi
 
     # kernel tests:
     if test "$TESTMODE" != none; then
@@ -1471,16 +1483,18 @@ function update_comedi {
 }
 
 function build_comedi {
-    if $NEW_RTAI || ! test -f ${LOCAL_SRC_PATH}/comedi/comedi/comedi.o; then
+    BUILT_COMEDI=false
+    $NEW_RTAI && BUILT_COMEDI=true
+    ! test -f ${LOCAL_SRC_PATH}/comedi/comedi/comedi.o && BUILT_COMEDI=true
+    test -f /usr/local/src/comedi/config.status && ! grep -q modules/${KERNEL_NAME} /usr/local/src/comedi/config.status && BUILT_COMEDI=true
+    if $BUILT_COMEDI; then
 	cd ${LOCAL_SRC_PATH}/comedi
 	echo_log "build comedi"
 	if ! $DRYRUN; then
 	    ./autogen.sh
 	    PATH="$PATH:${REALTIME_DIR}/bin"
 	    ./configure --with-linuxdir=$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME} --with-rtaidir=${REALTIME_DIR}
-	    if $NEW_RTAI; then
-		make clean
-	    fi
+	    make clean
 	    cp ${REALTIME_DIR}/modules/Module.symvers comedi/
 	    make -j $CPU_NUM
 	    if test "x$?" != "x0"; then
@@ -1490,8 +1504,6 @@ function build_comedi {
 	    install_comedi || return 1
 	fi
 	NEW_COMEDI=true
-    else
-	echo_log "keep already installed comedi modules"
     fi
 }
 
@@ -1565,8 +1577,65 @@ function remove_comedi_modules {
     modprobe -r comedi && echo "removed comedi"
 }
 
+
+###########################################################################
+# /var/log/messages:
+
+function setup_messages {
+    if ! test -f /var/log/messages; then
+	cd /etc/rsyslog.d
+	if test -f 50-default.conf; then
+	    echo_log "patch /etc/rsyslog.d/50-default.conf to enable /var/log/messages"
+	    if ! $DRYRUN; then
+		cp 50-default.conf 50-default.conf.orgmrk
+		sed -e '/info.*notice.*warn/,/messages/s/#//' 50-default.conf.orgmrk > 50-default.conf
+		restart rsyslog
+	    fi
+	else
+	    echo_log "/etc/rsyslog.d/50-default.conf not found: cannot enable /var/log/messages"
+	fi
+    fi
+}
+
+function recover_messages {
+    echo_log "recover original /etc/rsyslog.d/50-default.conf"
+    if ! $DRYRUN; then
+	mv 50-default.conf.orgmrk 50-default.conf
+	restart rsyslog
+    fi
+}
+
+
 ###########################################################################
 # actions:
+
+function setup_features {
+    check_root
+    if test -z $1; then
+	setup_messages
+    else
+	for TARGET; do
+	    case $TARGET in
+		messages ) setup_messages ;;
+		* ) echo "unknown target $TARGET" ;;
+	    esac
+	done
+    fi
+}
+
+function recover_features {
+    check_root
+    if test -z $1; then
+	recover_messages
+    else
+	for TARGET; do
+	    case $TARGET in
+		messages ) recover_messages ;;
+		* ) echo "unknown target $TARGET" ;;
+	    esac
+	done
+    fi
+}
 
 function full_install {
     NEW_KERNEL_CONFIG=true
@@ -1606,10 +1675,16 @@ function reconfigure {
 
     uninstall_kernel
     ${MAKE_RTAI} && uninstall_rtai
+
+    if ! ( unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || MAKE_NEWLIB=false ) && ( ${MAKE_RTAI} && build_rtai || true ) ); then
+	echo_log "Failed to reconfigure and build kernel or RTAI"
+	return 1
+    fi
+
     ${MAKE_COMEDI} && uninstall_comedi
 
-    if ! ( unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || MAKE_NEWLIB=false ) && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ); then
-	echo_log "Failed to reconfigure and build kernel, RTAI, or comedi"
+    if ! ( ${MAKE_COMEDI} && build_comedi || true ); then
+	echo_log "Failed to build comedi"
 	return 1
     fi
 
@@ -1635,6 +1710,7 @@ function download_all {
 		rtai ) download_rtai ;;
 		showroom ) download_showroom ;;
 		comedi ) download_comedi ;;
+		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
@@ -1653,6 +1729,7 @@ function update_all {
 		rtai ) update_rtai ;;
 		showroom ) update_showroom ;;
 		comedi ) update_comedi ;;
+		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
@@ -1675,6 +1752,7 @@ function build_all {
 		    build_showroom ;;
 		comedi ) 
 		    build_comedi ;;
+		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
@@ -1700,6 +1778,7 @@ function clean_all {
 		rtai ) clean_rtai ;;
 		showroom ) clean_showroom ;;
 		comedi ) clean_comedi ;;
+		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
@@ -1721,6 +1800,7 @@ function install_all {
 		newlib ) install_newlib ;;
 		rtai ) install_rtai ;;
 		comedi ) install_comedi ;;
+		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
@@ -1740,6 +1820,7 @@ function uninstall_all {
 		newlib ) uninstall_newlib ;;
 		rtai ) uninstall_rtai ;;
 		comedi ) uninstall_comedi ;;
+		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
@@ -1760,6 +1841,7 @@ function remove_all {
 		rtai ) remove_rtai ;;
 		showroom ) remove_showroom ;;
 		comedi ) remove_comedi ;;
+		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
@@ -1919,6 +2001,8 @@ case $ACTION in
 	test_rtaikernel $@
 	exit ;;
 
+    setup ) setup_features $@ ;;
+    recover ) recover_features $@ ;;
     download ) download_all $@ ;;
     update ) update_all $@ ;;
     patch ) clean_unpack_patch_kernel ;;
@@ -1948,6 +2032,7 @@ if test -f "$LOG_FILE"; then
     echo "Summary of log messages"
     echo "-----------------------"
     cat "$LOG_FILE"
+    rm "$LOG_FILE"
 fi
 
 exit $STATUS
