@@ -1582,14 +1582,18 @@ function remove_comedi_modules {
 # /var/log/messages:
 
 function setup_messages {
-    if ! test -f /var/log/messages; then
+    if test -f /etc/rsyslog.d/50-default.conf.origmrk; then
+	echo_log "/etc/rsyslog.d/50-default.conf has already been modified to enable /var/log/messages"
+    elif ! test -f /var/log/messages || test /var/log/messages -ot /var/log/$(ls -rt /var/log | tail -n 1); then
 	cd /etc/rsyslog.d
 	if test -f 50-default.conf; then
 	    echo_log "patch /etc/rsyslog.d/50-default.conf to enable /var/log/messages"
 	    if ! $DRYRUN; then
-		cp 50-default.conf 50-default.conf.orgmrk
-		sed -e '/info.*notice.*warn/,/messages/s/#//' 50-default.conf.orgmrk > 50-default.conf
-		restart rsyslog
+		cp 50-default.conf 50-default.conf.origmrk
+		sed -e '/info.*notice.*warn/,/messages/s/#//' 50-default.conf.origmrk > 50-default.conf
+		service rsyslog restart
+		sleep 1
+		test -f /var/log/messages || echo_log "failed to enable /var/log/messages"
 	    fi
 	else
 	    echo_log "/etc/rsyslog.d/50-default.conf not found: cannot enable /var/log/messages"
@@ -1600,8 +1604,11 @@ function setup_messages {
 function recover_messages {
     echo_log "recover original /etc/rsyslog.d/50-default.conf"
     if ! $DRYRUN; then
-	mv 50-default.conf.orgmrk 50-default.conf
-	restart rsyslog
+	cd /etc/rsyslog.d
+	if test -f 50-default.conf.origmrk; then
+	    mv 50-default.conf.origmrk 50-default.conf
+	    service rsyslog restart
+	fi
     fi
 }
 

@@ -58,6 +58,11 @@ linux kernel, the newlib library, and the RTAI and comedi kernel modules.
 cd plugins/linuxdevices/rtaicomedi/scripts
    \endcode
 
+-# Make sure you have \c /var/log/messages (needed for RTAI switch tests) by executing
+   \code
+sudo ./makertaikernel.sh setup messages
+   \endcode
+
 -# Start with selecting and downloading an RTAI source (-r option or RTAI_DIR variable, see \c ./makertaikernel.sh \c help for options):
    \code
 sudo ./makertaikernel.sh download rtai
@@ -1164,7 +1169,7 @@ in an editor. Remove the hash marks in front of the following lines:
 \endcode
 Then tell the system that you changed this file (still as root):
 \code
-restart rsyslog 
+service rsyslog restart
 \endcode
 
 The \c makertaikernel.sh script can do all this for you:
