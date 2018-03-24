@@ -23,7 +23,6 @@
                               # Shahbaz Youssefi's RTAI clone on github:
                               # - RTAI: clone https://github.com/ShabbyX/RTAI.git
 : ${RTAI_PATCH:="hal-linux-4.4.115-x86-10.patch"} # rtai patch to be used (set with -p)
-: ${SHOWROOM_DIR:=showroom}     # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 : ${KERNEL_CONFIG:="old"}  # whether and how to initialize the kernel configuration 
                            # (set with -c) 
@@ -43,6 +42,11 @@
 : ${MAKE_NEWLIB:=true}       # for automatic targets make newlib library
 : ${MAKE_RTAI:=true}         # for automatic targets make rtai library
 : ${MAKE_COMEDI:=true}       # for automatic targets make comedi library
+
+: ${RTAI_HAL_PARAM:=""}      # parameter for the rtai_hal module used for testing
+: ${RTAI_SCHED_PARAM:=""}    # parameter for the rtai_sched module used for testing
+
+: ${SHOWROOM_DIR:=showroom}  # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 
 ###########################################################################
@@ -131,38 +135,44 @@ sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c x
 -D    : generate kernel package with debug symbols in addition
 -m    : enter the RTAI configuration menu
 
-action can be one of
-  help           : display this help message
-  info           : display properties of rtai patches, loaded kernel modules, kernel, machine,
-                   and grub menu (no target required)
-  info rtai      : list all available patches and suggest the one fitting to the kernel
-  info grub      : show grub boot menu entries
-  setup messages : enable /var/log/messages needed for RTAI tests in rsyslog settings
-  recover messages : recover the original rsyslog settings
-  download       : download missing sources of the specified targets
-  update         : update sources of the specified targets (not for kernel target)
-  patch          : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
-  build          : compile and install the specified targets and the depending ones if needed
-  buildplain     : compile and install the kernel without the rtai patch (no target required)
-  clean          : clean the source trees of the specified targets
-  install        : install the specified targets
-  uninstall      : uninstall the specified targets
-  remove         : remove the complete source trees of the specified targets
-  reconfigure    : reconfigure the kernel and make a full build of all targets (without target)
-  reboot         : reboot into rtai kernel immediately (without target)
-  reboot X       : reboot into kernel specified by grub menu entry X
-  test           : test the current kernel and write reports to the current working directory
-
 If no action is specified, a full download and build is performed for all targets (except showroom).
 
-targets can be one or more of:
-  packages: required packages (install only)
-  kernel  : rtai-patched linux kernel
-  newlib  : newlib library
-  rtai    : rtai modules
-  showroom: rtai showroom examples (supports only download, build, clean, remove)
-  comedi  : comedi data acquisition driver modules
+For the targets one or more of:
+  packages   : required packages (install only)
+  kernel     : rtai-patched linux kernel
+  newlib     : newlib library
+  rtai       : rtai modules
+  showroom   : rtai showroom examples (supports only download, build, clean, remove)
+  comedi     : comedi data acquisition driver modules
+action can be one of:
+  download   : download missing sources of the specified targets
+  update     : update sources of the specified targets (not for kernel target)
+  patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
+  build      : compile and install the specified targets and the depending ones if needed
+  buildplain : compile and install the kernel without the rtai patch (no target required)
+  clean      : clean the source trees of the specified targets
+  install    : install the specified targets
+  uninstall  : uninstall the specified targets
+  remove     : remove the complete source trees of the specified targets.
 If no target is specified, all targets are made (except showroom).
+
+Action can be also one of
+  help              : display this help message
+  info              : display properties of rtai patches, loaded kernel modules, kernel, machine,
+                      and grub menu (no target required)
+    info rtai       : list all available patches and suggest the one fitting to the kernel
+    info grub       : show grub boot menu entries
+  reconfigure       : reconfigure the kernel and make a full build of all targets (without target)
+  reboot            : reboot into rtai kernel immediately (without target)
+    reboot X        : reboot into kernel specified by grub menu entry X
+  test              : test the current kernel and write reports to the current working directory 
+                      (see below for details)
+  setup             : setup some basic configurations of your (debian based) system
+    setup messages  : enable /var/log/messages needed for RTAI tests in rsyslog settings
+    setup grub      : configure the grub boot menu (not hidden, no submenus)
+  recover           : recover the original system settings
+    recover messages: recover the original rsyslog settings
+    recover grub    : recover the original grub boot menu settings
 
 For the test-action, the following targets are provided:
 As the optional first target:
@@ -170,10 +180,7 @@ As the optional first target:
   sched    : test loading and unloading of rtai_hal and rtai_sched kernel modules
   math     : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module
   comedi   : test loading and unloading of rtai and comedi kernel modules
-... followed by an optional number:
-  10       : this number is passed to the rtai_sched parameter
-             kernel_latency and user_latency to bypass calibration
-... optionally followed by one or more of:
+optionally followed by one or more of:
   kern     : run the kern tests (default)
   kthreads : run the kthreads tests
   user     : run the user tests
@@ -183,17 +190,21 @@ As the optional first target:
 
 Common use cases:
 
-Start with selecting and downloading an rtai source (-r option or RTAI_DIR variable):
-$ sudo ${MAKE_RTAI_KERNEL} download rtai
+Start with setting up /var/log/messages, the grub boot menu, and
+downloading an rtai source (-r option or RTAI_DIR variable):
+$ sudo ${MAKE_RTAI_KERNEL} init
 
-Check for available patches:
+Select a Linux kernel and a RTAI patch from the displayed list and set
+the LINUX_KERNEL and RTAI_PATCH variables in the makertaikernel.sh
+script accordingly.
+
+Check again for available patches:
 $ sudo ${MAKE_RTAI_KERNEL} info rtai
 
-Select a Linux kernel and a RTAI patch and
-set the LINUX_KERNEL and RTAI_PATCH variables accordingly.
-
+Once you have decided on a patch and you have set LINUX_KERNEL and
+RTAI_PATCH variables accrdingly run
 $ sudo ${MAKE_RTAI_KERNEL}
-  download and build all targets. A new configuration for the kernel is generated.
+to download and build all targets. A new configuration for the kernel is generated.
 
 $ sudo ${MAKE_RTAI_KERNEL} reconfigure
   build all targets using the existing configuration of the kernel.
@@ -291,17 +302,18 @@ function print_info {
     print_grub
     echo
     echo "settings of ${MAKE_RTAI_KERNEL}:"
-    echo "KERNEL_PATH   (-s) = $KERNEL_PATH"
-    echo "LINUX_KERNEL  (-k) = $LINUX_KERNEL"
-    echo "KERNEL_SOURCE_NAME = $KERNEL_SOURCE_NAME"
-    echo "KERNEL_NUM    (-n) = $KERNEL_NUM"
-    echo "LOCAL_SRC_PATH     = $LOCAL_SRC_PATH"
-    echo "RTAI_DIR      (-r) = $RTAI_DIR"
-    echo "RTAI_PATCH    (-p) = $RTAI_PATCH"
-    echo "SHOWROOM_DIR       = $SHOWROOM_DIR"
-    echo "KERNEL_CONFIG (-c) = $KERNEL_CONFIG"
-    echo "RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
-    echo "KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
+    echo "  KERNEL_PATH   (-s) = $KERNEL_PATH"
+    echo "  LINUX_KERNEL  (-k) = $LINUX_KERNEL"
+    echo "  KERNEL_SOURCE_NAME = $KERNEL_SOURCE_NAME"
+    echo "  KERNEL_NUM    (-n) = $KERNEL_NUM"
+    echo "  LOCAL_SRC_PATH     = $LOCAL_SRC_PATH"
+    echo "  RTAI_DIR      (-r) = $RTAI_DIR"
+    echo "  RTAI_PATCH    (-p) = $RTAI_PATCH"
+    echo "  KERNEL_CONFIG (-c) = $KERNEL_CONFIG"
+    echo "  RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
+    echo "  KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
+    echo "  RTAI_HAL_PARAM     = $RTAI_HAL_PARAM"
+    echo "  RTAI_SCHED_PARAM   = $RTAI_SCHED_PARAM"
 }
 
 function print_full_info {
@@ -727,7 +739,6 @@ function test_rtaikernel {
     # test targets:
     TESTMODE=""
     MAXMODULE="4"
-    SCHEDPARAM=""
     if test -n "$1"; then
 	case $1 in
 	    kern) TESTMODE="kern" ;;
@@ -739,7 +750,6 @@ function test_rtaikernel {
 	    sched) MAXMODULE="2" ;;
 	    math) MAXMODULE="3" ;;
 	    comedi) MAXMODULE="4" ;;
-            [0-9]*) SCHEDPARAM=$1 ;;
 	    *) echo "test $1 is invalid"
 		exit 1 ;;
 	esac
@@ -751,7 +761,6 @@ function test_rtaikernel {
 		user) TESTMODE="$TESTMODE user" ;;
 		all) TESTMODE="kern kthreads user" ;;
 		none) TESTMODE="none" ;;
-		[0-9]*) SCHEDPARAM=$1 ;;
 		*) echo "test $1 is invalid"
 		    exit 1 ;;
 	    esac
@@ -760,13 +769,12 @@ function test_rtaikernel {
     fi
     test -z "$TESTMODE" && TESTMODE="kern"
     TESTMODE=$(echo $TESTMODE)  # strip whitespace
-    test -n "$SCHEDPARAM" && SCHEDPARAM="kernel_latency=$SCHEDPARAM user_latency=$SCHEDPARAM"
 
     if $DRYRUN; then
 	echo "run some tests on currently running kernel ${KERNEL_NAME}"
 	echo "test mode(s): $TESTMODE"
 	echo "max module to load: $MAXMODULE"
-	echo "rtai_sched parameter: $SCHEDPARAM"
+	echo "rtai_sched parameter: $RTAI_SCHED_PARAM"
 	return 0
     fi
 
@@ -800,9 +808,9 @@ function test_rtaikernel {
     # loading rtai kernel modules:
     RTAIMOD_FAILED=false
     RTAIMATH_FAILED=false
-    lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko && echo "loaded  rtai_hal" || RTAIMOD_FAILED=true; }
+    lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM && echo "loaded  rtai_hal $RTAI_HAL_PARAM" || RTAIMOD_FAILED=true; }
     if test $MAXMODULE -ge 2; then
-	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $SCHEDPARAM && echo "loaded  rtai_sched $SCHEDPARAM" || RTAIMOD_FAILED=true; }
+	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM && echo "loaded  rtai_sched $RTAI_SCHED_PARAM" || RTAIMOD_FAILED=true; }
     fi
     if test $MAXMODULE -ge 3; then
 	if test -f ${REALTIME_DIR}/modules/rtai_math.ko; then
@@ -1614,16 +1622,50 @@ function recover_messages {
 
 
 ###########################################################################
+# grub menu:
+
+function setup_grub {
+    if test -f /etc/default/grub.origmrk; then
+	echo_log "grub menu has already been configured"
+    elif test -f /etc/default/grub; then
+	cd /etc/default
+	echo_log "configure grub menu"
+	if ! $DRYRUN; then
+	    cp grub grub.origmrk
+	    sed -e 's/GRUB_HIDDEN/#GRUB_HIDDEN/; s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/' grub.origmrk > grub
+	    ( echo; echo "GRUB_DISABLE_SUBMENU=y" ) >> grub
+	    update-grub
+	fi
+    else
+	echo_log "/etc/default/grub not found: cannot configure grub menu"
+    fi
+}
+
+function recover_grub {
+    echo_log "recover original grub boot menu"
+    if ! $DRYRUN; then
+	cd /etc/default
+	if test -f grub.origmrk; then
+	    mv grub.origmrk grub
+	    update-grub
+	fi
+    fi
+}
+
+
+###########################################################################
 # actions:
 
 function setup_features {
     check_root
     if test -z $1; then
 	setup_messages
+	setup_grub
     else
 	for TARGET; do
 	    case $TARGET in
 		messages ) setup_messages ;;
+		grub ) setup_grub ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -1634,14 +1676,23 @@ function recover_features {
     check_root
     if test -z $1; then
 	recover_messages
+	recover_grub
     else
 	for TARGET; do
 	    case $TARGET in
 		messages ) recover_messages ;;
+		grub ) recover_grub ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
+}
+
+function init_installation {
+    setup_messages
+    setup_grub
+    download_rtai
+    print_full_info rtai
 }
 
 function full_install {
@@ -2008,6 +2059,7 @@ case $ACTION in
 	test_rtaikernel $@
 	exit ;;
 
+    init) init_installation ;;
     setup ) setup_features $@ ;;
     recover ) recover_features $@ ;;
     download ) download_all $@ ;;

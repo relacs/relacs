@@ -16,6 +16,7 @@
   - \ref installcomedi
   - \ref udev
   - \ref installrelacs
+  - \ref configuregrub
   - \ref kernelmessages
   .
 - \ref configdynamicclamp
@@ -31,8 +32,8 @@ plugins, you need to install an RTAI-patched real-time linux
 kernel, RTAI kernel modules, and comedi, as described in the following
 sections.
 
-You can use a script for installing RTAI as explained in the next
-section \ref quickinstall.
+You can use a script provided by relacs for installing RTAI as
+explained in the next section \ref quickinstall.
 
 Alternatively, you can do the installation manually as explained in
 the sections \ref installrtaikernel, \ref installnewlib, \ref
@@ -41,44 +42,45 @@ installrtai, \ref testrtai, and \ref installcomedi .
 In either case, continue with building the dynamic clamp module of
 relacs as explained in \ref installrelacs .
 
-If you only want to simulate a dynamic clamp, then go on and read
-\ref simulatedynclamp .
+If you only want to simulate a dynamic clamp, then skip all
+installation procedures and just read \ref simulatedynclamp .
 
 
 \section installation Installation
 
 \subsection quickinstall Installation script
 
-The \c makertaikernel.sh script in \c scripts/ executes all the
-commands as explained in the following sections to download and build an RTAI-patched
-linux kernel, the newlib library, and the RTAI and comedi kernel modules.
+The \c makertaikernel.sh script in \c
+plugins/linuxdevices/rtaicomedi/scripts/ executes all the commands as
+explained in the following sections to download and build an
+RTAI-patched linux kernel, the newlib library, and the RTAI and comedi
+kernel modules.
 
 -# From the relacs source tree go to
    \code
 cd plugins/linuxdevices/rtaicomedi/scripts
    \endcode
 
--# Make sure you have \c /var/log/messages (needed for RTAI switch tests) by executing
+-# Select an RTAI source (-r option or RTAI_DIR variable, see \c
+   ./makertaikernel.sh \c help for options, usually the default should be fine) and run
    \code
-sudo ./makertaikernel.sh setup messages
+sudo ./makertaikernel.sh init
    \endcode
+   to make sure you have \c /var/log/messages (needed for RTAI switch tests),
+   you get a visible boot menu, and have the RTAI sources downloaded.
 
--# Start with selecting and downloading an RTAI source (-r option or RTAI_DIR variable, see \c ./makertaikernel.sh \c help for options):
-   \code
-sudo ./makertaikernel.sh download rtai
-   \endcode
+-# Select a Linux kernel and the corresponding RTAI patch from the displayed list.
 
--# Check for available RTAI patches:
-   \code
-sudo ./makertaikernel.sh info rtai
-   \endcode
-   Select a Linux kernel and the corresponding RTAI patch.
-
--# Modify the variables at the top of the script or set them before executing makertaikernel.sh,
+   Modify the variables at the top of the script or set them before executing makertaikernel.sh,
    in particular the \c LINUX_KERNEL, \c RTAI_PATCH, and \c KERNEL_PATH variables to match
    the kernel version, rtai patch you want to use, and the directory
    where to build the linux kernel (you need up to 2 GB space there for a kernel 
    with most device drivers disabled (e.g. via localmodconf) or 5-10GB for a full kernel).
+
+   Recheck for available RTAI patches and linux kernels:
+   \code
+sudo ./makertaikernel.sh info rtai
+   \endcode
 
 -# You may want to start out with a kernel
    configuration of a kernel image from your linux distribution
@@ -102,10 +104,11 @@ sudo apt-get install linux-image-4.4.0-79-lowlatency
    \code
 sudo ./makertaikernel.sh info grub
    \endcode
-   and reboot by supplying the menu entry number to
+   and reboot using
    \code
 sudo ./makertaikernel.sh reboot 3
    \endcode
+   replace '3' by the index or the full title of the appropriate menu entry.
 
 -# Then run
    \code
@@ -160,9 +163,9 @@ sudo ./makertaikernel.sh test all
 sudo ./makertaikernel.sh -c mod
    \endcode
    in order to deselect all unused kernel modules from compilation. 
-   This speeds up the following kernel builds dramatically!
+   This speeds up the following kernel builds dramatically! Then reboot and test.
 
--# If the test results are not good, then build a new version of the kernel
+-# If the test results do not satisfy you, then build a new version of the kernel
    with a different configuration (see \ref configurekernel for details):
    \code
 sudo ./makertaikernel.sh -n 2 reconfigure
@@ -178,13 +181,14 @@ sudo ./makertaikernel.sh -n 1 test
 sudo ./makertaikernel.sh -n 2 reconfigure
    \endcode
 
-   Note that \c makertaikernel.sh \c reconfigure will first uninstall an already existing kernel with the same name.
+   Note that \c makertaikernel.sh \c reconfigure will first uninstall
+   an already existing kernel with the same name.
 
    You can recreate this kernel or use this kernel's configuration for
    further modifications by specifying the kernel configuration file
    saved by \c makertaikernel.sh \c test using the \c-c option
    \code
-sudo ./makertaikernel.sh -n 1 -c config-3.14.17-rtai-4.1-002-nousb-good reconfigure
+sudo ./makertaikernel.sh -n 1 -c config-3.14.17-rtai-4.1-002-basic-good reconfigure
    \endcode
 -# Once you are satisified, continue with \ref installrelacs .
 
@@ -447,79 +451,7 @@ make install
    (replace 3.14.17-rtai by the name of the kernel where you want to install the nvidia driver,
    i.e. the string '\c uname \c -r' would return if that kernel is running).
 
--# Configure your boot loader by editing the file \c /etc/default/grub (for \c grub \c v2):
-   - To get the boot menu that you need to select the kernel you want to boot
-     you should for example unset the \c GRUB_HIDDEN_TIMEOUT and set the
-     \c GRUB_TIMEOUT appropriately in that file. For example:
-     \code
-#GRUB_HIDDEN_TIMEOUT=0
-#GRUB_HIDDEN_TIMEOUT_QUIET=true
-GRUB_TIMEOUT=5
-     \endcode
-
-   - If you do not like that grub puts your rtai kernel into a subsection called
-     'Previous linux versions', then make sure you have a line
-     \code
-GRUB_DISABLE_SUBMENU=y
-     \endcode
-
-     Older version do not support this option, for a workaround do
-     \code
-cd /etc/grub.d/
-sudo cp 10_linux 11_linux
-sudo chmod a-x 10_linux
-     \endcode
-     Then comment out the following lines in \c
-     /etc/grub.d/11_linux to get rid of the submenu in grub:
-     \code
-#  if [ "$list" ] && ! $in_submenu; then
-#    echo "submenu \"Previous Linux versions\" {"
-#    in_submenu=:
-#  fi
-done
-
-#if $in_submenu; then
-#  echo "}"
-#fi
-     \endcode
-     If you apply these changes to \c 10_linux directly, after
-     rebooting the changes in \c 10_linux will disappear. I have no
-     idea why...
-
-   - With disabled acpi your rtai-patched linux kernel might not properly reboot. Try
-     \code
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash reboot=triple"
-     \endcode
-     See \c /usr/src/linux/Documentation/x86/x86_64/boot-options.txt
-     for more options for the reboot parameter.
-
-   - You can set the GRUB_DEFAULT variable to
-     tell grub which kernel to boot by default. It can be a integer
-     number (first kernel is 0), or something like 2>0 if your kernel
-     is in a submenu, or, instead of the integers, you can put in the grub menu entry.
-     Check
-     \code
-sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
-     \endcode
-     for all available menu entries.
-
-     When testing rtai kernels it might be sensible to set the default kernel to one that
-     is working.
-
-     See also \c man \c grub-set-default .
-   .
-   After changing \c /etc/default/grub simply run
-   \code
-update-grub
-   \endcode
-   to apply the changes.
-   The output of \c update-grub should mention your new kernel image.
-
-    You can tell grub to use your new rtai kernel after the next reboot by calling
-    \code
-sudo grub-reboot "Linux Mint 17 KDE 64-bit, 3.14.17-rtai1 (/dev/sda1)"
-    \endcode
-    See http://statusq.org/archives/2012/10/24/4584/ for more interesting options.
+-# Configure your boot loader as described in \ref configuregrub
 
 -# Reboot the computer into the new kernel:
 \code
@@ -932,11 +864,18 @@ In addition, there are several interesting kernel parameter:
 - Advanced programmable interrupt controller (APIC): \c noapic and/or \c nolapic and/or \c lapic
 - Disable the intel_idle module. Alternatively you can set \c intel_idle.max_cstate=0 . This is taken care of by the disabled "CPU Idle" in "Power management and ACPI options".
 .
+
+With disabled acpi your rtai-patched linux kernel might not properly
+halt or reboot. Try \c reboot=triple as a kernel parameter.  See \c
+/usr/src/linux/Documentation/x86/x86_64/boot-options.txt for more
+options for the reboot parameter.
+
 You can set kernel parameters during startup by hitting 'e' in the \c
-grub menu and then add them to the \c kernel line. For applying the
-kernel parameter permanently add them in \c /boot/grub/menu.lst (\c
-grub \c v1) or to the \c GRUB_CMDLINE_LINUX variable in \c
-/etc/defaults/grub and run \c update-grub.
+grub menu and then add them to the \c kernel line.
+
+For applying the kernel parameter permanently add them in \c
+/boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX
+variable in \c /etc/defaults/grub and run \c update-grub.
 
 After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced if you disabled too much ACPI!
 
@@ -1141,6 +1080,80 @@ the boot process, then call the \c loadmodules.sh script from the script
 /where/ever/the/script/is/located/loadmodules.sh
 \endcode
 to \c /etc/rc.local (as root).
+
+
+\subsection configuregrub Configure the grub bootmenu
+Configure your boot loader by editing the file \c /etc/default/grub (for \c grub \c v2):
+- To get the boot menu that you need to select the kernel you want to boot
+  you should unset the \c GRUB_HIDDEN_TIMEOUT and set the
+  \c GRUB_TIMEOUT appropriately in that file. For example:
+  \code
+#GRUB_HIDDEN_TIMEOUT=0
+#GRUB_HIDDEN_TIMEOUT_QUIET=true
+GRUB_TIMEOUT=5
+  \endcode
+  This is done by \c makertaikernel.sh \c setup \c grub .
+
+- If you do not like that grub puts your rtai kernel into a subsection called
+  'Previous linux versions', then make sure you have a line
+  \code
+GRUB_DISABLE_SUBMENU=y
+  \endcode
+  This is done by \c makertaikernel.sh \c setup \c grub .
+
+  Older version do not support this option, for a workaround do
+  \code
+cd /etc/grub.d/
+sudo cp 10_linux 11_linux
+sudo chmod a-x 10_linux
+  \endcode
+  Then comment out the following lines in \c
+  /etc/grub.d/11_linux to get rid of the submenu in grub:
+  \code
+#  if [ "$list" ] && ! $in_submenu; then
+#    echo "submenu \"Previous Linux versions\" {"
+#    in_submenu=:
+#  fi
+done
+
+#if $in_submenu; then
+#  echo "}"
+#fi
+  \endcode
+  If you apply these changes to \c 10_linux directly, after
+  rebooting the changes in \c 10_linux will disappear. I have no
+  idea why ...
+
+- You can set the GRUB_DEFAULT variable to
+  tell grub which kernel to boot by default. It can be a integer
+  number (first kernel is 0), or something like 2>0 if your kernel
+  is in a submenu, or, instead of the integers, you can put in the grub menu entry.
+  Check
+  \code
+sed -n -e "/menuentry '/{s/.*'\\(.*\\)'.*/\\1/;p}" /boot/grub/grub.cfg
+  \endcode
+  for all available menu entries.
+
+  When testing rtai kernels it might be sensible to set the default
+  kernel to one that is working. Read
+  http://statusq.org/archives/2012/10/24/4584/ for a way to
+  automatically boot into a default kernel if another kernel panics.
+
+  See also \c man \c grub-set-default .
+.
+
+After changing \c /etc/default/grub simply run
+\code
+update-grub
+\endcode
+to apply the changes.
+The output of \c update-grub should mention your new kernel image.
+
+You can tell grub to use your new rtai kernel after the next reboot by calling
+\code
+sudo grub-reboot "Linux Mint 17 KDE 64-bit, 3.14.17-rtai1 (/dev/sda1)"
+\endcode
+See http://statusq.org/archives/2012/10/24/4584/ for more interesting grub booting options.
 
 
 \subsection kernelmessages Kernel messages
