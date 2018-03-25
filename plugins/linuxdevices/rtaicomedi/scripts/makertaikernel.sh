@@ -169,8 +169,9 @@ Action can be also one of
   reboot            : reboot into rtai kernel immediately (without target)
     reboot XXX      : reboot into rtai kernel with XXX added to the kernel parameter
     reboot N        : reboot into kernel specified by grub menu entry  index N
-  test              : test the current kernel and write reports to the current working directory 
-                      (see below for details)
+  test              : test the current kernel and write reports to the current working directory                      (see below for details)
+  report FILES      : summarize test results from latencies* files given in FILES
+
   setup             : setup some basic configurations of your (debian based) system
     setup messages  : enable /var/log/messages needed for RTAI tests in rsyslog settings
     setup grub      : configure the grub boot menu (not hidden, no submenus)
@@ -953,6 +954,49 @@ function test_rtaikernel {
 	if test -n "$NAME" -a -n "$RESULT"; then
 	    REPORT="${REPORT_NAME}-${NUM}-${NAME}-${RESULT}"
 	    {
+		# summary analysis of test results:
+		echo "Test summary (in nanoseconds):"
+		echo
+		# header 1:
+		printf "RTH| %-20s| " "description"
+		for TD in kern kthreads user; do
+		    printf "%-41s| %-19s| %-25s| " "$TD latencies" "$TD switches" "$TD preempt"
+		done
+		printf "%s\n" "kernel"
+		# header 2:
+		printf "RTH| %-20s| " ""
+		for TD in kern kthreads user; do
+		    printf "%7s| %7s| %7s| %5s| %7s| %5s| %5s| %5s| %7s| %7s| %7s| " "max" "avg" "std" "n" "maxover" "susp" "sem" "rpc" "max" "jitfast" "jitslow"
+		done
+		printf "%s\n" "configuration"
+		# data:
+		printf "RTD| %-20s| " "$NAME"
+		for TD in kern kthreads user; do
+		    TN=latency
+		    TEST_RESULTS=results-$TD-$TN.dat
+		    if test -f "$TEST_RESULTS"; then
+			awk '{if ($1 == "RTD|") { d=$5-$2; sum+=d; sumsq+=d*d; n++; maxd=$6-$3; if (ors<$7) ors=$7}} END {if (n>0) printf( "%7.0f| %7.0f| %7.0f| %5d| %7d| ", maxd, sum/n, sqrt(sumsq/n-(sum/n)*(sum/n)), n, ors ) }' "$TEST_RESULTS"
+		    else
+			printf "%7s| %7s| %7s| %5s| %7s| " "-" "-" "-" "-" "-"
+		    fi
+		    TN=switches
+		    TEST_RESULTS=results-$TD-$TN.dat
+		    if test -f "$TEST_RESULTS"; then
+			grep 'SWITCH TIME' "$TEST_RESULTS" | awk '{ printf( "%5.0f| ", $(NF-1) ); }'
+		    else
+			printf "%5s| %5s| %5s| " "-" "-" "-"
+		    fi
+		    TN=preempt
+		    TEST_RESULTS=results-$TD-$TN.dat
+		    if test -f "$TEST_RESULTS"; then
+			awk '{if ($1 == "RTD|") { maxd=$4-$2; jfast=$5; jslow=$6; }} END { printf( "%7.0f| %7.0f| %7.0f| ", maxd, jfast, jslow ) }' "$TEST_RESULTS"
+		    else
+			printf "%7s| %7s| %7s| " "-" "-" "-"
+		    fi
+		done
+		printf "%s\n" "config-$REPORT"
+		echo
+		# original test results:
 		for TD in $TESTMODE; do
 		    for TN in latency switches preempt; do
 			TEST_RESULTS=results-$TD-$TN.dat
@@ -1000,6 +1044,28 @@ function test_rtaikernel {
     else
 	echo "test results not saved"
     fi
+}
+
+function test_report {
+    FILES="latencies*"
+    test -n "$1" && FILES="$*"
+    FIRST=true
+    rm -f header.txt data.txt dataoverrun.txt
+    for TEST in $FILES; do
+	if $FIRST; then
+	    head -n 6 $TEST | fgrep 'RTH|' > header.txt
+	    FIRST=false
+	fi
+	if test $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 7) -gt 0; then
+	    head -n 6 $TEST | fgrep 'RTD|' >> dataoverrun.txt
+	else
+	    head -n 6 $TEST | fgrep 'RTD|' >> data.txt
+	fi
+    done
+    cat header.txt
+    test -f data.txt && sort -t '|' -k 3 -n data.txt
+    test -f dataoverrun.txt && sort -t '|' -k 3 -n dataoverrun.txt
+    rm -f header.txt data.txt dataoverrun.txt
 }
 
 
@@ -2089,7 +2155,11 @@ case $ACTION in
 
     test ) 
 	test_rtaikernel $@
-	exit ;;
+	exit 0 ;;
+
+    report ) 
+	test_report $@
+	exit 0 ;;
 
     init) init_installation ;;
     setup ) setup_features $@ ;;

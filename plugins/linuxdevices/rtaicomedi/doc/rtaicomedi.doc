@@ -197,6 +197,10 @@ sudo ./makertaikernel.sh -n 2 reconfigure
    \code
 sudo ./makertaikernel.sh -n 1 -c config-3.14.17-rtai-4.1-002-basic-good reconfigure
    \endcode
+-# You can generate a summary report from all your tested kernels via
+   \code
+./makertaikernel.sh report
+   \endcode
 -# Once you are satisified, continue with \ref installrelacs .
 
 For further options of the \c makertaikernel.sh script see

@@ -19,11 +19,11 @@ lsmod | grep -q dynclampmodule && rmmod dynclampmodule && echo "removed dynclamp
 lsmod | grep -q rtmodule && rmmod rtmodule && echo "removed rtmodule"
 
 # remove all comedi modules:
-modprobe -r kcomedilib && echo "removed kcomedilib"
+lsmod | grep -q kcomedilib || ( modprobe -r kcomedilib && echo "removed kcomedilib" )
 for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
     modprobe -r $i && echo "removed $i"
 done
-modprobe -r comedi && echo "removed comedi"
+lsmod | grep -q comedi || ( modprobe -r comedi && echo "removed comedi" )
 
 # remove rtai modules:
 lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
