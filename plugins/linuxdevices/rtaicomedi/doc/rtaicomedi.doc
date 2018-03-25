@@ -108,7 +108,7 @@ sudo ./makertaikernel.sh info grub
    \code
 sudo ./makertaikernel.sh reboot 3
    \endcode
-   replace '3' by the index or the full title of the appropriate menu entry.
+   replace '3' by the index of the appropriate menu entry.
 
 -# Then run
    \code
@@ -126,8 +126,15 @@ sudo ./makertaikernel.sh
 
 -# Reboot into the new kernel, e.g. by running
    \code
-sudo ./makertaikernel.sh reboot
+sudo ./makertaikernel.sh reboot XXX
    \endcode
+
+   The optional XXX are kernel parameter to be used for booting the
+   kernel (they are added permanently to the \c
+   GRUB_CMDLINE_LINUX_DEFAULT variable in \c /etc/default/grub. The
+   original settings are recovered when calling \c reboot without
+   additional parameter).
+
    Once you rebooted in the RTAI kernel run some tests by invoking
    \code
 sudo ./makertaikernel.sh test
@@ -608,12 +615,16 @@ dmesg
    Try adding one or several of the advanced configuration and power
    interface (ACPI) or advanced programmable interrupt controller
    (APIC) options, \c acpi=off, \c pci=noacpi \c noapic \c nolapic \c
-   lapic , to the kernel parameter in the \c kernel line of the \c
-   grub menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c
+   lapic , to the kernel parameter.
+
+   Either provide them to \c makertaikernel.sh \c reboot \c param1=xxx
+   \c param2=yyy, or add them to the \c kernel line of the \c grub
+   menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c
    GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub .  Recompile
    and install RTAI (make clean && make && make install && depmod -a).
 
-   After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced by these parameters!
+   After restart, check for the number of CPUs in \c /proc/cpuinfo -
+   they might be reduced by these parameters!
 
 -# Run the RTAI latency test
    \code
@@ -870,11 +881,16 @@ halt or reboot. Try \c reboot=triple as a kernel parameter.  See \c
 /usr/src/linux/Documentation/x86/x86_64/boot-options.txt for more
 options for the reboot parameter.
 
-You can set kernel parameters during startup by hitting 'e' in the \c
+Supply the kernel parameter to the \c reboot action of \c makertaikernel.sh:
+\code
+$ makertaikernel.sh reboot param1=xxx param2=yyy ...
+\endcode
+
+Alternatively, you can set kernel parameters during startup by hitting 'e' in the \c
 grub menu and then add them to the \c kernel line.
 
 For applying the kernel parameter permanently add them in \c
-/boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX
+/boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX_DEFAULT
 variable in \c /etc/defaults/grub and run \c update-grub.
 
 After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced if you disabled too much ACPI!

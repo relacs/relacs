@@ -34,6 +34,7 @@
                            # if the running kernel matches LINUX_KERNEL
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
+: ${KERNEL_PARAM:=""}      # kernel parameter to be passed to grub
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -158,13 +159,16 @@ If no target is specified, all targets are made (except showroom).
 
 Action can be also one of
   help              : display this help message
+  init              : should be executed the first time you use ${MAKE_RTAI_KERNEL} -
+                      equivalent to setup, download rtai, info rtai.
   info              : display properties of rtai patches, loaded kernel modules, kernel, machine,
                       and grub menu (no target required)
     info rtai       : list all available patches and suggest the one fitting to the kernel
     info grub       : show grub boot menu entries
   reconfigure       : reconfigure the kernel and make a full build of all targets (without target)
   reboot            : reboot into rtai kernel immediately (without target)
-    reboot X        : reboot into kernel specified by grub menu entry X
+    reboot XXX      : reboot into rtai kernel with XXX added to the kernel parameter
+    reboot N        : reboot into kernel specified by grub menu entry  index N
   test              : test the current kernel and write reports to the current working directory 
                       (see below for details)
   setup             : setup some basic configurations of your (debian based) system
@@ -286,7 +290,9 @@ function print_info {
     uname -r
     echo
     echo "kernel parameter (/proc/cmdline):"
-    cat /proc/cmdline
+    for param in $(cat /proc/cmdline); do
+	echo "  $param"
+    done
     echo
     print_versions
     echo
@@ -310,6 +316,7 @@ function print_info {
     echo "  RTAI_DIR      (-r) = $RTAI_DIR"
     echo "  RTAI_PATCH    (-p) = $RTAI_PATCH"
     echo "  KERNEL_CONFIG (-c) = $KERNEL_CONFIG"
+    echo "  KERNEL_PARAM       = $KERNEL_PARAM"
     echo "  RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
     echo "  KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
     echo "  RTAI_HAL_PARAM     = $RTAI_HAL_PARAM"
@@ -683,20 +690,44 @@ function reboot_cmd {
 }
 
 function reboot_kernel {
-    if test -z "$1"; then
-	echo_log "reboot into ${KERNEL_NAME} kernel"
-	if ! $DRYRUN; then
-	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
-	    grub-reboot "$GRUBMENU"
-	    reboot_cmd
-	fi
-    else
-	echo_log "reboot into grub menu $1"
-	if ! $DRYRUN; then
-	    grub-reboot "$@"
-	    reboot_cmd
-	fi
-    fi
+    case $1 in
+	[0-9])
+	    echo_log "reboot into grub menu $1"
+	    if ! $DRYRUN; then
+		grub-reboot "$@"
+		reboot_cmd
+	    fi
+	    ;;
+
+	*)
+	    test -n "$1" && KERNEL_PARAM="$*"
+	    if test -n "$KERNEL_PARAM"; then
+		if ! $DRYRUN; then
+		    cd /etc/default
+		    test -f grub.origkp && mv grub.origkp grub
+		    cp grub grub.origkp
+		    sed -i -e '/GRUB_CMDLINE_LINUX_DEFAULT/s/="\(.*\)"/="'"$KERNEL_PARAM"' \1"/' grub
+		    update-grub
+		fi
+		echo_log ""
+		echo_log "added \"$KERNEL_PARAM\" to the kernel parameter"
+	    elif test -f /etc/default/grub.origkp; then
+		echo_log "recover original kernel parameter"
+		if ! $DRYRUN; then
+		    cd /etc/default
+		    mv grub.origkp grub
+		    update-grub
+		fi
+	    fi
+	    echo_log "reboot into ${KERNEL_NAME} kernel"
+	    sleep 2
+	    if ! $DRYRUN; then
+		GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
+		grub-reboot "$GRUBMENU"
+		reboot_cmd
+	    fi
+	    ;;
+    esac
 }
 
 function run_test {
@@ -728,9 +759,9 @@ function test_rtaikernel {
 	echo
 	echo "Info:"
 	echo "Your running kernel is: ${CURRENT_KERNEL}"
-	echo "LINUX_KERNEL is set to ${LINUX_KERNEL}"
-	echo "RTAI_DIR is set to ${RTAI_DIR}"
-	echo "KERNEL_NUM is set to $KERNEL_NUM"
+	echo "LINUX_KERNEL is set to ${LINUX_KERNEL}, set with -k"
+	echo "RTAI_DIR is set to ${RTAI_DIR}, set with -r"
+	echo "KERNEL_NUM is set to $KERNEL_NUM, set with -n"
 	return 1
     fi
 
@@ -1578,11 +1609,13 @@ function remove_comedi {
 }
 
 function remove_comedi_modules {
-    modprobe -r kcomedilib && echo "removed kcomedilib"
-    for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
-	modprobe -r $i && echo "removed $i"
-    done
-    modprobe -r comedi && echo "removed comedi"
+    if lsmod | grep -q kcomedilib; then
+	modprobe -r kcomedilib && echo "removed kcomedilib"
+	for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+	    modprobe -r $i && echo "removed $i"
+	done
+	modprobe -r comedi && echo "removed comedi"
+    fi
 }
 
 
@@ -1633,7 +1666,7 @@ function setup_grub {
 	if ! $DRYRUN; then
 	    cp grub grub.origmrk
 	    sed -e 's/GRUB_HIDDEN/#GRUB_HIDDEN/; s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/' grub.origmrk > grub
-	    ( echo; echo "GRUB_DISABLE_SUBMENU=y" ) >> grub
+	    ( echo; echo "GRUB_DISABLE_SUBMENU=y"; echo; echo "GRUB_DISABLE_RECOVERY=true" ) >> grub
 	    update-grub
 	fi
     else
@@ -1645,10 +1678,9 @@ function recover_grub {
     echo_log "recover original grub boot menu"
     if ! $DRYRUN; then
 	cd /etc/default
-	if test -f grub.origmrk; then
-	    mv grub.origmrk grub
-	    update-grub
-	fi
+	test -f grub.origkp && mv grub.origkp grub
+	test -f grub.origmrk && mv grub.origmrk grub
+	update-grub
     fi
 }
 
