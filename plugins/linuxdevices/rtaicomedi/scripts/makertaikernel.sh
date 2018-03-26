@@ -46,6 +46,7 @@
 
 : ${RTAI_HAL_PARAM:=""}      # parameter for the rtai_hal module used for testing
 : ${RTAI_SCHED_PARAM:=""}    # parameter for the rtai_sched module used for testing
+: ${TEST_TIME:=""}           # time in seconds used for latency test
 
 : ${SHOWROOM_DIR:=showroom}  # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
@@ -237,7 +238,7 @@ function print_grub {
     IFS=$'\n'
     N=0
     for gm in $(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2); do
-	echo "$N) $gm"
+	echo "  $N) $gm"
 	let N+=1
     done
     IFS="$IFSORG"
@@ -278,17 +279,17 @@ function print_info {
     echo
     echo "loaded modules (lsmod):"
     if test -f lsmod.dat; then
-	cat lsmod.dat
+	cat lsmod.dat | while read LINE; do echo "  $LINE"; done
 	rm -f lsmod.dat
     else
-	lsmod
+	lsmod | while read LINE; do echo "  $LINE"; done
     fi
     echo
     echo "distribution (lsb_release -a):"
-    lsb_release -a 2> /dev/null
+    lsb_release -a 2> /dev/null | while read LINE; do echo "  $LINE"; done
     echo
     echo "running kernel (uname -r):"
-    uname -r
+    echo "  $(uname -r)"
     echo
     echo "kernel parameter (/proc/cmdline):"
     for param in $(cat /proc/cmdline); do
@@ -298,13 +299,13 @@ function print_info {
     print_versions
     echo
     echo "Hostname:"
-    hostname
+    echo "  $(hostname)"
     echo
     echo "CPU (/proc/cpuinfo):"
-    grep "model name" /proc/cpuinfo | head -n 1
-    echo "$CPU_NUM cores"
-    echo "machine (uname -m): $MACHINE"
-    echo "$(free -h | grep Mem | awk '{print $2}') RAM"
+    echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
+    echo "  $CPU_NUM cores"
+    echo "  machine (uname -m): $MACHINE"
+    echo "  $(free -h | grep Mem | awk '{print $2}') RAM"
     echo
     print_grub
     echo
@@ -313,13 +314,13 @@ function print_info {
     echo "  LINUX_KERNEL  (-k) = $LINUX_KERNEL"
     echo "  KERNEL_SOURCE_NAME = $KERNEL_SOURCE_NAME"
     echo "  KERNEL_NUM    (-n) = $KERNEL_NUM"
+    echo "  KERNEL_CONFIG (-c) = $KERNEL_CONFIG"
+    echo "  RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
+    echo "  KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
+    echo "  KERNEL_PARAM       = $KERNEL_PARAM"
     echo "  LOCAL_SRC_PATH     = $LOCAL_SRC_PATH"
     echo "  RTAI_DIR      (-r) = $RTAI_DIR"
     echo "  RTAI_PATCH    (-p) = $RTAI_PATCH"
-    echo "  KERNEL_CONFIG (-c) = $KERNEL_CONFIG"
-    echo "  KERNEL_PARAM       = $KERNEL_PARAM"
-    echo "  RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
-    echo "  KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
     echo "  RTAI_HAL_PARAM     = $RTAI_HAL_PARAM"
     echo "  RTAI_SCHED_PARAM   = $RTAI_SCHED_PARAM"
 }
@@ -389,14 +390,14 @@ function check_kernel_patch {
 	cd ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/
 	echo_log
 	echo_log "Available patches for this machine ($RTAI_MACHINE), most latest last:"
-	ls -rt -1 *.patch 2> /dev/null | tee -a "$LOG_FILE"
+	ls -rt -1 *.patch 2> /dev/null | tee -a "$LOG_FILE" | while read LINE; do echo "  $LINE"; done
 	echo_log
 	LINUX_KERNEL_V=${LINUX_KERNEL%.*}
 	echo_log "Available patches for the selected kernel's kernel version ($LINUX_KERNEL_V):"
-	ls -rt -1 *-${LINUX_KERNEL_V}*.patch 2> /dev/null | tee -a "$LOG_FILE"
+	ls -rt -1 *-${LINUX_KERNEL_V}*.patch 2> /dev/null | tee -a "$LOG_FILE" | while read LINE; do echo "  $LINE"; done
 	echo_log
 	echo_log "Available patches for the selected kernel ($LINUX_KERNEL):"
-	ls -rt -1 *-${LINUX_KERNEL}*.patch 2> /dev/null | tee -a "$LOG_FILE"
+	ls -rt -1 *-${LINUX_KERNEL}*.patch 2> /dev/null | tee -a "$LOG_FILE" | while read LINE; do echo "  $LINE"; done
 	RTAI_PATCH="$(ls -rt *-${LINUX_KERNEL}-*.patch 2> /dev/null | tail -n 1)"
 	if test -z "$RTAI_PATCH"; then
 	    RTAI_PATCH="$(ls -rt *.patch 2> /dev/null | tail -n 1)"
@@ -412,15 +413,15 @@ function check_kernel_patch {
 	cd - &> /dev/null
 	echo_log
 	echo_log "Currently running kernel:"
-	echo_log $(uname -r)
+	echo_log "  $(uname -r)"
 	echo_log
 	echo_log "Choose a patch and set the RTAI_PATCH variable at the top of the script"
 	echo_log "and the LINUX_KERNEL variable with the corresponding kernel version."
 	echo_log
 	echo_log "Suggested values:"
 	echo_log
-	echo_log "RTAI_PATCH=\"${RTAI_PATCH}\""
-	echo_log "LINUX_KERNEL=\"${LINUX_KERNEL}\""
+	echo_log "  RTAI_PATCH=\"${RTAI_PATCH}\""
+	echo_log "  LINUX_KERNEL=\"${LINUX_KERNEL}\""
 	echo_log
 	return 1
     elif ! test -f ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH; then
@@ -438,7 +439,7 @@ function check_kernel_patch {
 	    LINUX_KERNEL=${LINUX_KERNEL%%-*}
 	    echo_log "Suggested value:"
 	    echo_log
-	    echo_log "LINUX_KERNEL=\"${LINUX_KERNEL}\""
+	    echo_log "  LINUX_KERNEL=\"${LINUX_KERNEL}\""
 	    echo_log
 	fi
 	return 2
@@ -734,17 +735,26 @@ function reboot_kernel {
 function run_test {
     DIR=$1
     TEST=$2
-    echo "running $DIR/$TEST test"
     TEST_RESULTS=results-$DIR-$TEST.dat
     TEST_DIR=${REALTIME_DIR}/testsuite/$DIR/$TEST
     rm -f $TEST_RESULTS
     if test -d $TEST_DIR; then
+	echo "running $DIR/$TEST test"
 	cd $TEST_DIR
 	rm -f $TEST_RESULTS
+	TTIME=$TEST_TIME
+	if test -n "$TEST_TIME" -a $TEST = switches; then
+	    TTIME=2
+	    test $DIR = user && TTIME=""
+	fi
 	trap true SIGINT   # ^C should terminate ./run but not this script
-	./run | tee results-$DIR-$TEST.dat
+	if test -n "$TTIME"; then
+	    timeout -s SIGINT -k 1 $TTIME ./run | tee results-$DIR-$TEST.dat
+	else
+	    ./run | tee results-$DIR-$TEST.dat
+	fi
 	trap - SIGINT
-	cd -
+	cd - > /dev/null
 	mv $TEST_DIR/$TEST_RESULTS .
 	echo
     fi
@@ -782,6 +792,7 @@ function test_rtaikernel {
 	    sched) MAXMODULE="2" ;;
 	    math) MAXMODULE="3" ;;
 	    comedi) MAXMODULE="4" ;;
+	    [0-9]*) TEST_TIME="$1" ;;
 	    *) echo "test $1 is invalid"
 		exit 1 ;;
 	esac
@@ -793,6 +804,7 @@ function test_rtaikernel {
 		user) TESTMODE="$TESTMODE user" ;;
 		all) TESTMODE="kern kthreads user" ;;
 		none) TESTMODE="none" ;;
+		[0-9]*) TEST_TIME="$1" ;;
 		*) echo "test $1 is invalid"
 		    exit 1 ;;
 	    esac
