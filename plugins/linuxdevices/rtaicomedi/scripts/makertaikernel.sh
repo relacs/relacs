@@ -192,6 +192,8 @@ optionally followed by one or more of:
   user     : run the user tests
   all      : run the kernel, kthreads, and user tests
   none     : test loading and unloading of kernel modules and do not run any tests
+  NNN      : the number of seconds after which the test are automatically aborted
+  XXX      : a one-word description of the kernel configuration (no user interaction).
 
 
 Common use cases:
@@ -216,7 +218,10 @@ $ sudo ${MAKE_RTAI_KERNEL} reconfigure
   build all targets using the existing configuration of the kernel.
 
 $ sudo ${MAKE_RTAI_KERNEL} test
-  test the currently running kernel.
+  manually test the currently running kernel.
+
+$ sudo ${MAKE_RTAI_KERNEL} test 30 auto basic
+  automaticlly test the currently running kernel for 30 seconds and name it "basic".
 
 $ sudo ${MAKE_RTAI_KERNEL} uninstall
   uninstall all targets.
@@ -685,6 +690,10 @@ function remove_kernel {
     fi
 }
 
+
+###########################################################################
+# reboot:
+
 function reboot_cmd {
     if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
 	reboot
@@ -732,6 +741,137 @@ function reboot_kernel {
     esac
 }
 
+
+###########################################################################
+# tests:
+
+function test_result {
+    TESTMODE="$1"
+    TEST_RESULT=""
+    if test -n "$TESTMODE" -a -f "results-${TESTMODE}-latency.dat"; then
+	TEST_DATA=$(grep RTD results-${TESTMODE}-latency.dat | tail -n 1)
+	OVERRUNS=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $7}')
+	if test "$OVERRUNS" -gt "0"; then
+	    TEST_RESULT="failed"
+	else
+	    LAT_MIN=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $3}')
+	    LAT_MAX=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $6}')
+	    LATENCY=$(( $LAT_MAX - $LAT_MIN ))
+	    if test "$LATENCY" -gt 20000; then
+		TEST_RESULT="bad"
+	    elif test "$LATENCY" -gt 10000; then
+		TEST_RESULT="ok"
+	    elif test "$LATENCY" -gt 2000; then
+		TEST_RESULT="good"
+	    else
+		TEST_RESULT="perfect"
+	    fi
+	fi
+    else
+	TEST_RESULT="missing"
+    fi
+    echo $TEST_RESULT
+}
+
+function save_test {
+    NAME="$1"
+    REPORT="$2"
+    TESTED="$3"
+    PROGRESS="$4"
+    {
+	# summary analysis of test results:
+	echo "Test summary (in nanoseconds):"
+	echo
+	# header 1:
+	printf "RTH| %-30s| " "general"
+	for TD in kern kthreads user; do
+	    printf "%-41s| %-19s| %-25s| " "$TD latencies" "$TD switches" "$TD preempt"
+	done
+	printf "%s\n" "kernel"
+	# header 2:
+	printf "RTH| %-20s| %-8s| " "description" "progress"
+	for TD in kern kthreads user; do
+	    printf "%7s| %7s| %7s| %5s| %7s| %5s| %5s| %5s| %7s| %7s| %7s| " "max" "avg" "std" "n" "maxover" "susp" "sem" "rpc" "max" "jitfast" "jitslow"
+	done
+	printf "%s\n" "configuration"
+	# data:
+	printf "RTD| %-20s| %-8s| " "$NAME" "$PROGRESS"
+	for TD in kern kthreads user; do
+	    T=${TD:0:1}
+	    test "$TD" = "kthreads" && T="t"
+	    TN=latency
+	    TEST_RESULTS=results-$TD-$TN.dat
+	    if test -f "$TEST_RESULTS"; then
+		awk '{if ($1 == "RTD|") { d=$5-$2; sum+=d; sumsq+=d*d; n++; maxd=$6-$3; if (ors<$7) ors=$7}} END {if (n>0) printf( "%7.0f| %7.0f| %7.0f| %5d| %7d| ", maxd, sum/n, sqrt(sumsq/n-(sum/n)*(sum/n)), n, ors ) }' "$TEST_RESULTS"
+	    elif [[ $TESTED == *${T}* ]]; then
+		printf "%7s| %7s| %7s| %5s| %7s| " "o" "o" "o" "o" "o"
+	    else
+		printf "%7s| %7s| %7s| %5s| %7s| " "-" "-" "-" "-" "-"
+	    fi
+	    TN=switches
+	    TEST_RESULTS=results-$TD-$TN.dat
+	    if test -f "$TEST_RESULTS"; then
+		grep 'SWITCH TIME' "$TEST_RESULTS" | awk '{ printf( "%5.0f| ", $(NF-1) ); }'
+	    elif [[ $TESTED == *${T}* ]]; then
+		printf "%5s| %5s| %5s| " "o" "o" "o"
+	    else
+		printf "%5s| %5s| %5s| " "-" "-" "-"
+	    fi
+	    TN=preempt
+	    TEST_RESULTS=results-$TD-$TN.dat
+	    if test -f "$TEST_RESULTS"; then
+		awk '{if ($1 == "RTD|") { maxd=$4-$2; jfast=$5; jslow=$6; }} END { printf( "%7.0f| %7.0f| %7.0f| ", maxd, jfast, jslow ) }' "$TEST_RESULTS"
+	    elif [[ $TESTED == *${T}* ]]; then
+		printf "%7s| %7s| %7s| " "o" "o" "o"
+	    else
+		printf "%7s| %7s| %7s| " "-" "-" "-"
+	    fi
+	done
+	printf "%s\n" "config-$REPORT"
+	echo
+	# failed modules:
+	if [[ $TESTED == *h* ]] && [[ $PROGRESS != *h* ]]; then
+	    echo "Failed to load rtai_hal module"
+	    echo
+	fi
+	if [[ $TESTED == *s* ]] && [[ $PROGRESS != *s* ]]; then
+	    echo "Failed to load rtai_sched module"
+	    echo
+	fi
+	if [[ $TESTED == *m* ]] && [[ $PROGRESS != *m* ]]; then
+	    echo "Failed to load rtai_math module"
+	    echo
+	fi
+	if [[ $TESTED == *c* ]] && [[ $PROGRESS != *c* ]]; then
+	    echo "Failed to load kcomedilib module"
+	    echo
+	fi
+	# original test results:
+	for TD in kern kthreads user; do
+	    for TN in latency switches preempt; do
+		TEST_RESULTS=results-$TD-$TN.dat
+		if test -f "$TEST_RESULTS"; then
+		    echo "$TD/$TN test:"
+		    sed -e '/^\*/d' $TEST_RESULTS
+		    echo
+		    echo
+		fi
+	    done
+	done
+	print_info
+	echo
+	echo "rtai-info reports:"
+	${REALTIME_DIR}/bin/rtai-info
+	echo
+	echo "dmesg:"
+	echo
+	dmesg | tac | sed '/MAKERTAIKERNEL.SH.*START/q' | tac | sed -n '/MAKERTAIKERNEL.SH.*START/,/MAKERTAIKERNEL.SH.*DONE/p'
+    } > latencies-$REPORT
+    cp /boot/config-${KERNEL_NAME} config-$REPORT
+    chown --reference=. latencies-$REPORT
+    chown --reference=. config-$REPORT
+}
+
 function run_test {
     DIR=$1
     TEST=$2
@@ -740,6 +880,7 @@ function run_test {
     rm -f $TEST_RESULTS
     if test -d $TEST_DIR; then
 	echo "running $DIR/$TEST test"
+	echo "#### MAKERTAIKERNEL.SH: RUN $DIR/$TEST test" > /dev/kmsg
 	cd $TEST_DIR
 	rm -f $TEST_RESULTS
 	TTIME=$TEST_TIME
@@ -749,9 +890,9 @@ function run_test {
 	fi
 	trap true SIGINT   # ^C should terminate ./run but not this script
 	if test -n "$TTIME"; then
-	    timeout -s SIGINT -k 1 $TTIME ./run | tee results-$DIR-$TEST.dat
+	    timeout -s SIGINT -k 1 $TTIME ./run | tee $TEST_RESULTS
 	else
-	    ./run | tee results-$DIR-$TEST.dat
+	    ./run | tee $TEST_RESULTS
 	fi
 	trap - SIGINT
 	cd - > /dev/null
@@ -761,6 +902,8 @@ function run_test {
 }
 
 function test_rtaikernel {
+    check_root
+
     if test ${CURRENT_KERNEL} != ${KERNEL_NAME} -a ${CURRENT_KERNEL} != ${KERNEL_ALT_NAME}; then
 	echo "Need a running rtai kernel that matches the configuration of ${MAKE_RTAI_KERNEL}!"
 	echo
@@ -769,18 +912,25 @@ function test_rtaikernel {
 	echo "or supply the right parameter to ${MAKE_RTAI_KERNEL}."
 	echo
 	echo "Info:"
-	echo "Your running kernel is: ${CURRENT_KERNEL}"
-	echo "LINUX_KERNEL is set to ${LINUX_KERNEL}, set with -k"
-	echo "RTAI_DIR is set to ${RTAI_DIR}, set with -r"
-	echo "KERNEL_NUM is set to $KERNEL_NUM, set with -n"
+	echo "  Your running kernel is: ${CURRENT_KERNEL}"
+	echo "  LINUX_KERNEL is set to ${LINUX_KERNEL}, set with -k"
+	echo "  RTAI_DIR is set to ${RTAI_DIR}, set with -r"
+	echo "  KERNEL_NUM is set to $KERNEL_NUM, set with -n"
 	return 1
     fi
 
-    check_root
+    # check for kernel log messages:
+    if ! test -f /var/log/messages; then
+	echo_log "/var/log/messages does not exist!"
+	echo_log "enable it by running:"
+	echo_log "${MAKE_RTAI_KERNEL} setup messages"
+	echo_log
+    fi
 
     # test targets:
     TESTMODE=""
     MAXMODULE="4"
+    DESCRIPTION=""
     if test -n "$1"; then
 	case $1 in
 	    kern) TESTMODE="kern" ;;
@@ -793,6 +943,7 @@ function test_rtaikernel {
 	    math) MAXMODULE="3" ;;
 	    comedi) MAXMODULE="4" ;;
 	    [0-9]*) TEST_TIME="$1" ;;
+	    auto) shift; test -n "$1" && DESCRIPTION="$1" ;;
 	    *) echo "test $1 is invalid"
 		exit 1 ;;
 	esac
@@ -804,6 +955,7 @@ function test_rtaikernel {
 		user) TESTMODE="$TESTMODE user" ;;
 		all) TESTMODE="kern kthreads user" ;;
 		none) TESTMODE="none" ;;
+		auto) shift; test -n "$1" && DESCRIPTION="$1" ;;
 		[0-9]*) TEST_TIME="$1" ;;
 		*) echo "test $1 is invalid"
 		    exit 1 ;;
@@ -816,11 +968,23 @@ function test_rtaikernel {
 
     if $DRYRUN; then
 	echo "run some tests on currently running kernel ${KERNEL_NAME}"
-	echo "test mode(s): $TESTMODE"
-	echo "max module to load: $MAXMODULE"
-	echo "rtai_sched parameter: $RTAI_SCHED_PARAM"
+	echo "  test mode(s)        : $TESTMODE"
+	echo "  max module to load  : $MAXMODULE"
+	echo "  rtai_sched parameter: $RTAI_SCHED_PARAM"
+	echo "  rtai_hal parameter  : $RTAI_HAL_PARAM"
+	echo "  description         : $DESCRIPTION"
 	return 0
     fi
+
+    # remove old test results:
+    for TD in kern kthreads user; do
+	for TN in latency switches preempt; do
+	    TEST_RESULTS=results-$TD-$TN.dat
+	    rm -f $TEST_RESULTS
+	done
+    done
+
+    rm -f lsmod.dat
 
     # report number:
     REPORT_NAME=${LINUX_KERNEL}-${RTAI_DIR}
@@ -839,7 +1003,15 @@ function test_rtaikernel {
     if test -f ${REALTIME_DIR}/calibration/latencies; then
         rm ${REALTIME_DIR}/calibration/latencies
     fi
-    rm -f lsmod.dat
+
+    # description of kernel configuration:
+    if test -z "$DESCRIPTION"; then
+	read -p 'Please enter a short name describing the kernel configuration (empty: abort tests): ' NAME
+	test -z "$NAME" && return
+    else
+	NAME="$DESCRIPTION"
+    fi
+    REPORT="${REPORT_NAME}-${NUM}-$(date '+%F')-${NAME}-failed"	    
 
     # unload already loaded comedi kernel modules:
     remove_comedi_modules
@@ -849,213 +1021,152 @@ function test_rtaikernel {
     lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed already loaded rtai_hal"; }
     echo
 
+    TESTED=""
+    PROGRESS=""
+    echo "######## MAKERTAIKERNEL.SH: START TESTS" > /dev/kmsg
+
     # loading rtai kernel modules:
     RTAIMOD_FAILED=false
-    RTAIMATH_FAILED=false
-    lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM && echo "loaded  rtai_hal $RTAI_HAL_PARAM" || RTAIMOD_FAILED=true; }
-    if test $MAXMODULE -ge 2; then
-	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM && echo "loaded  rtai_sched $RTAI_SCHED_PARAM" || RTAIMOD_FAILED=true; }
+
+    # rtai_hal:
+    if test $MAXMODULE -ge 1; then
+	TESTED="${TESTED}h"
+	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	echo "#### MAKERTAIKERNEL.SH: INSMOD ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM" > /dev/kmsg
+	lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM && echo "loaded  rtai_hal $RTAI_HAL_PARAM" || RTAIMOD_FAILED=true; }
+	$RTAIMOD_FAILED || PROGRESS="${PROGRESS}h"
     fi
+
+    # rtai_sched:
+    if test $MAXMODULE -ge 2; then
+	TESTED="${TESTED}s"
+	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	echo "#### MAKERTAIKERNEL.SH: INSMOD ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM" > /dev/kmsg
+	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM && echo "loaded  rtai_sched $RTAI_SCHED_PARAM" || RTAIMOD_FAILED=true; }
+	$RTAIMOD_FAILED || PROGRESS="${PROGRESS}s"
+    fi
+
+    # rtai_math:
     if test $MAXMODULE -ge 3; then
 	if test -f ${REALTIME_DIR}/modules/rtai_math.ko; then
-	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded  rtai_math" || RTAIMATH_FAILED=true; }
+	    TESTED="${TESTED}m"
+	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	    echo "#### MAKERTAIKERNEL.SH: INSMOD ${REALTIME_DIR}/modules/rtai_math.ko" > /dev/kmsg
+	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded  rtai_math" && PROGRESS="${PROGRESS}m"; }
 	else
 	    echo "rtai_math is not available"
 	fi
     fi
     
     if test $MAXMODULE -ge 4 && $MAKE_COMEDI && ! $RTAIMOD_FAILED; then
+	TESTED="${TESTED}c"
+	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	# loading comedi:
+	echo "#### MAKERTAIKERNEL.SH: LOAD COMEDI MODULES" > /dev/kmsg
 	echo "triggering comedi "
 	udevadm trigger
 	sleep 1
-	# echo -n "."
-	# sleep 1
-	# echo -n "."
-	# sleep 1
-	# echo "."
 	modprobe kcomedilib && echo "loaded  kcomedilib"
+
+	lsmod | grep -q kcomedilib && PROGRESS="${PROGRESS}c"
 	
 	lsmod > lsmod.dat
 	
+	echo "#### MAKERTAIKERNEL.SH: REMOVE COMEDI MODULES" > /dev/kmsg
 	remove_comedi_modules
     fi
+    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
     
     # remove rtai modules:
     if test $MAXMODULE -ge 3; then
+	echo "#### MAKERTAIKERNEL.SH: RMMOD rtai_math" > /dev/kmsg
 	lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
     fi
     if test $MAXMODULE -ge 2; then
+	echo "#### MAKERTAIKERNEL.SH: RMMOD rtai_sched" > /dev/kmsg
 	lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed rtai_sched"; }
     fi
-    lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed rtai_hal"; }
+    if test $MAXMODULE -ge 1; then
+	echo "#### MAKERTAIKERNEL.SH: RMMOD rtai_hal" > /dev/kmsg
+	lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed rtai_hal"; }
+    fi
 
+    # loading modules failed:
     if $RTAIMOD_FAILED; then
 	echo "Failed to load RTAI modules."
 	echo
-	read -p 'Please enter a short name describing the configuration (empty: delete): ' NAME
-	if test -n "$NAME"; then
-	    REPORT="${REPORT_NAME}-${NUM}-${NAME}-rtai-modules-failed"
-	    {
-		echo "failed to load rtai modules"
+	if test -z "$DESCRIPTION"; then
+	    read -p 'Save configuration? (y/N): ' SAVE
+	    if test "$SAVE" = "y"; then
 		echo
-		print_versions
-		echo
-		echo
-		echo "dmesg:"
-		echo
-		dmesg | tail -n 50
-	    } > latencies-$REPORT
-	    cp /boot/config-${KERNEL_NAME} config-$REPORT
-	    chown --reference=. latencies-$REPORT
-	    chown --reference=. config-$REPORT
-	    echo
-	    echo "saved kernel configuration in: config-$REPORT"
-	    echo "saved test results in        : latencies-$REPORT"
+		echo "saved kernel configuration in: config-$REPORT"
+		echo "saved test results in        : latencies-$REPORT"
+	    else
+		rm -f config-$REPORT
+		rm -f latencies-$REPORT
+	    fi
 	fi
 	return
     fi
     echo "successfully loaded and unloaded rtai modules"
     echo
 
-    # check for kernel log messages:
-    if ! test -f /var/log/messages; then
-	echo_log "/var/log/messages does not exist!"
-	echo_log "enable it by running:"
-	echo_log "${MAKE_RTAI_KERNEL} setup messages"
-	echo_log
-    fi
-
     # kernel tests:
     if test "$TESTMODE" != none; then
 	for DIR in $TESTMODE; do
+	    TT=${DIR:0:1}
+	    test "$DIR" = "kthreads" && TT="t"
+	    TESTED="${TESTED}${TT}"
+	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+
 	    run_test $DIR latency
+	    if test $DIR = ${TESTMODE%% *}; then
+		rm -f config-$REPORT
+		rm -f latencies-$REPORT
+		TEST_RESULT="$(test_result ${TESTMODE%% *})"
+		REPORT="${REPORT_NAME}-${NUM}-$(date '+%F')-${NAME}-${TEST_RESULT}"
+	    fi
+	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+
 	    run_test $DIR switches
+	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+
 	    run_test $DIR preempt
+	    PROGRESS="${PROGRESS}${TT}"
+	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	done
+	echo "#### MAKERTAIKERNEL.SH: DONE" > /dev/kmsg
 	echo "finished all tests"
 	echo
+    fi
 
-	# report:
-	read -p 'Please enter a short name describing the configuration (empty: delete): ' NAME
-	if test -n "$NAME"; then
-	    TEST_RESULT=""
-	    TEST_DATA=$(grep RTD results-${TESTMODE%% *}-latency.dat | tail -n 1)
-	    OVERRUNS=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $7}')
-	    if test "$OVERRUNS" -gt "0"; then
-		TEST_RESULT="failed"
-	    else
-		LAT_MIN=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $3}')
-		LAT_MAX=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $6}')
-		LATENCY=$(( $LAT_MAX - $LAT_MIN ))
-		if test "$LATENCY" -gt 15000; then
-		    TEST_RESULT="bad"
-		elif test "$LATENCY" -gt 5000; then
-		    TEST_RESULT="ok"
-		elif test "$LATENCY" -gt 1000; then
-		    TEST_RESULT="good"
-		else
-		    TEST_RESULT="perfect"
-		fi
-	    fi
-	    read -p "Please enter a short description of the test result (empty: $TEST_RESULT): " RESULT
-	    if test -z "$RESULT"; then
-		RESULT="$TEST_RESULT"
-	    fi
-	fi
-	if test -n "$NAME" -a -n "$RESULT"; then
-	    REPORT="${REPORT_NAME}-${NUM}-${NAME}-${RESULT}"
-	    {
-		# summary analysis of test results:
-		echo "Test summary (in nanoseconds):"
-		echo
-		# header 1:
-		printf "RTH| %-20s| " "description"
-		for TD in kern kthreads user; do
-		    printf "%-41s| %-19s| %-25s| " "$TD latencies" "$TD switches" "$TD preempt"
-		done
-		printf "%s\n" "kernel"
-		# header 2:
-		printf "RTH| %-20s| " ""
-		for TD in kern kthreads user; do
-		    printf "%7s| %7s| %7s| %5s| %7s| %5s| %5s| %5s| %7s| %7s| %7s| " "max" "avg" "std" "n" "maxover" "susp" "sem" "rpc" "max" "jitfast" "jitslow"
-		done
-		printf "%s\n" "configuration"
-		# data:
-		printf "RTD| %-20s| " "$NAME"
-		for TD in kern kthreads user; do
-		    TN=latency
-		    TEST_RESULTS=results-$TD-$TN.dat
-		    if test -f "$TEST_RESULTS"; then
-			awk '{if ($1 == "RTD|") { d=$5-$2; sum+=d; sumsq+=d*d; n++; maxd=$6-$3; if (ors<$7) ors=$7}} END {if (n>0) printf( "%7.0f| %7.0f| %7.0f| %5d| %7d| ", maxd, sum/n, sqrt(sumsq/n-(sum/n)*(sum/n)), n, ors ) }' "$TEST_RESULTS"
-		    else
-			printf "%7s| %7s| %7s| %5s| %7s| " "-" "-" "-" "-" "-"
-		    fi
-		    TN=switches
-		    TEST_RESULTS=results-$TD-$TN.dat
-		    if test -f "$TEST_RESULTS"; then
-			grep 'SWITCH TIME' "$TEST_RESULTS" | awk '{ printf( "%5.0f| ", $(NF-1) ); }'
-		    else
-			printf "%5s| %5s| %5s| " "-" "-" "-"
-		    fi
-		    TN=preempt
-		    TEST_RESULTS=results-$TD-$TN.dat
-		    if test -f "$TEST_RESULTS"; then
-			awk '{if ($1 == "RTD|") { maxd=$4-$2; jfast=$5; jslow=$6; }} END { printf( "%7.0f| %7.0f| %7.0f| ", maxd, jfast, jslow ) }' "$TEST_RESULTS"
-		    else
-			printf "%7s| %7s| %7s| " "-" "-" "-"
-		    fi
-		done
-		printf "%s\n" "config-$REPORT"
-		echo
-		# original test results:
-		for TD in $TESTMODE; do
-		    for TN in latency switches preempt; do
-			TEST_RESULTS=results-$TD-$TN.dat
-			if test -f "$TEST_RESULTS"; then
-			    echo "$TD/$TN test:"
-			    sed -e '/^\*/d' $TEST_RESULTS
-			    rm $TEST_RESULTS
-			    echo
-			    echo
-			fi
-		    done
-		done
-		if $RTAIMATH_FAILED; then
-		    echo "Failed to load rtai_math module."
-		    echo
-		fi
-		print_info
-		echo
-		echo "rtai-info reports:"
-		${REALTIME_DIR}/bin/rtai-info
-		echo
-		echo "dmesg:"
-		echo
-		if test "$TESTMODE" = "all"; then
-		    dmesg | tail -n 200
-		else
-		    dmesg | tail -n 50
-		fi
-	    } > latencies-$REPORT
-	    cp /boot/config-${KERNEL_NAME} config-$REPORT
-	    chown --reference=. latencies-$REPORT
-	    chown --reference=. config-$REPORT
-	    echo
-	    echo "saved kernel configuration in : config-$REPORT"
-	    echo "saved test results in         : latencies-$REPORT"
-	else
-	    # remove test results:
-	    for TD in $TESTMODE; do
-		for TN in latency switches preempt; do
-		    TEST_RESULTS=results-$TD-$TN.dat
-		    rm -f $TEST_RESULTS
-		done
-	    done
-	fi
+    # report:
+    rm -f config-$REPORT
+    rm -f latencies-$REPORT
+    TEST_RESULT="$(test_result ${TESTMODE%% *})"
+    if test -z "$DESCRIPTION"; then
+	read -p "Please enter a short description of the test result (empty: $TEST_RESULT, n: don't save): " RESULT
+	test -z "$RESULT" && RESULT="$TEST_RESULT"
+    else
+	RESULT="$TEST_RESULT"
+    fi
+    if test "$RESULT" != n; then
+	REPORT="${REPORT_NAME}-${NUM}-$(date '+%F')-${NAME}-${RESULT}"
+	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	echo
+	echo "saved kernel configuration in : config-$REPORT"
+	echo "saved test results in         : latencies-$REPORT"
     else
 	echo "test results not saved"
     fi
+
+    # remove test results:
+    for TD in kern kthreads user; do
+	for TN in latency switches preempt; do
+	    TEST_RESULTS=results-$TD-$TN.dat
+	    rm -f $TEST_RESULTS
+	done
+    done
 }
 
 function test_report {

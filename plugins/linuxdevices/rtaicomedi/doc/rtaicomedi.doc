@@ -151,14 +151,21 @@ sudo ./makertaikernel.sh test all
    \endcode
    to run the kern, kthreads, and user tests.
 
+   Or run the test without user interaction for 30 seconds and name
+   the test results "basic":
+   \code
+sudo ./makertaikernel.sh test 30 auto basic
+   \endcode
+
    The result of the tests is written into the file
-   latencies-3.14.17-RTAI-XXX-NAME-QUALITY and the corresponding
+   latencies-KERNEL-RTAI-XXX-DATE-NAME-QUALITY and the corresponding
    kernel configuration is saved in
-   config-3.14.17-RTAI-XXX-NAME_QUALITY in the current directory. RTAI
-   is replaced by your choice of an RTAI source (e.g. magma, rtai-5.1, etc.), 
-   XXX is replaced by a number, NAME and QUALITY are short
-   strings describing your kernel configuration and the test
-   performance that you can enter after the test.
+   config-KERNEL-RTAI-XXX-DATE-NAME_QUALITY in the current
+   directory. KERNEL is replaced by the kernel version, RTAI by your
+   choice of an RTAI source (e.g. magma, rtai-5.1, etc.), XXX is
+   replaced by a consecutive number, DATE is the current data, NAME
+   and QUALITY are short strings describing your kernel configuration
+   and the test performance that you can enter before and after the test.
 
    See \ref testrtai for details regarding the test results and \ref configurekernel
    for troubleshooting and how to improve the real time performance.
@@ -604,7 +611,6 @@ Testing your RTAI patched kernel is crucial for a good real-time performance!
 cd /usr/realtime/modules
 insmod rtai_hal.ko
 insmod rtai_sched.ko
-insmod rtai_fifos.ko
 insmod rtai_math.ko
    \endcode
 
@@ -646,7 +652,7 @@ RTD|         66|         60|        128|        748|       1040|          0
 RTD|         92|         60|        129|        719|       1040|          0
    \endcode
    If you have overruns, or the maximum latencies "lat max" are too
-   high (<1000 ns is good, <5000 is kind of ok, longer than 10000 ns is really bad)
+   high (<2000 ns is awesome, <10000 is good, <20000 is kind of ok, longer than 20000 ns is bad)
    then you need to improve you kernel by disabling some bad device drivers (see below).
 
    Also run the switch test:
