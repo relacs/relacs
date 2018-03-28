@@ -2079,7 +2079,7 @@ function recover_features {
 	    case $TARGET in
 		messages ) recover_messages ;;
 		grub ) recover_grub ;;
-		kernel ) recover_kernel_param
+		kernel ) recover_kernel_param ;;
 		testbatch ) recover_test_batch ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
