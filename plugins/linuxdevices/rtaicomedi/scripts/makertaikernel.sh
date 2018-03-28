@@ -50,6 +50,8 @@
 
 : ${SHOWROOM_DIR:=showroom}  # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
+: ${STARTUP_TIME:=60}        # time to wait after boot to run a batch test in seconds
+
 
 ###########################################################################
 # some global variables:
@@ -159,26 +161,29 @@ action can be one of:
 If no target is specified, all targets are made (except showroom).
 
 Action can be also one of
-  help              : display this help message
-  init              : should be executed the first time you use ${MAKE_RTAI_KERNEL} -
-                      equivalent to setup, download rtai, info rtai.
-  info              : display properties of rtai patches, loaded kernel modules, kernel, machine,
-                      and grub menu (no target required)
-    info rtai       : list all available patches and suggest the one fitting to the kernel
-    info grub       : show grub boot menu entries
-  reconfigure       : reconfigure the kernel and make a full build of all targets (without target)
-  reboot            : reboot into rtai kernel immediately (without target)
-    reboot XXX      : reboot into rtai kernel with XXX added to the kernel parameter
-    reboot N        : reboot into kernel specified by grub menu entry  index N
-  test              : test the current kernel and write reports to the current working directory                      (see below for details)
-  report FILES      : summarize test results from latencies* files given in FILES
+  help               : display this help message
+  init               : should be executed the first time you use ${MAKE_RTAI_KERNEL} -
+                       equivalent to setup, download rtai, info rtai.
+  info               : display properties of rtai patches, loaded kernel modules, kernel, machine,
+                       and grub menu (no target required)
+    info rtai        : list all available patches and suggest the one fitting to the kernel
+    info grub        : show grub boot menu entries
+  reconfigure        : reconfigure the kernel and make a full build of all targets (without target)
+  reboot             : reboot into rtai kernel immediately (without target)
+    reboot XXX       : reboot into rtai kernel with XXX added to the kernel parameter
+    reboot N         : reboot into kernel specified by grub menu entry  index N
+  test               : test the current kernel and write reports to the current working directory                       (see below for details)
+  report FILES       : summarize test results from latencies* files given in FILES
 
-  setup             : setup some basic configurations of your (debian based) system
-    setup messages  : enable /var/log/messages needed for RTAI tests in rsyslog settings
-    setup grub      : configure the grub boot menu (not hidden, no submenus)
-  recover           : recover the original system settings
-    recover messages: recover the original rsyslog settings
-    recover grub    : recover the original grub boot menu settings
+  setup              : setup some basic configurations of your (debian based) system
+    setup messages   : enable /var/log/messages needed for RTAI tests in rsyslog settings
+    setup grub       : configure the grub boot menu (not hidden, no submenus)
+    setup kernel     : set kernel parameter for the grub boot menu
+  recover            : recover the original system settings
+    recover messages : recover the original rsyslog settings
+    recover grub     : recover the original grub boot menu settings
+    recover kernel   : recover default kernel parameter for the grub boot menu
+    recover testbatch: uninstall the automatic test script from crontab (see test batch)
 
 For the test-action, the following targets are provided:
 As the optional first target:
@@ -193,7 +198,8 @@ optionally followed by one or more of:
   all      : run the kernel, kthreads, and user tests
   none     : test loading and unloading of kernel modules and do not run any tests
   NNN      : the number of seconds after which the test are automatically aborted
-  XXX      : a one-word description of the kernel configuration (no user interaction).
+  auto XXX : a one-word description of the kernel configuration (no user interaction)
+  batch XXX: automatically run tests with various kernel parameter as specified in file XXX.
 
 
 Common use cases:
@@ -694,9 +700,54 @@ function remove_kernel {
 ###########################################################################
 # reboot:
 
+function setup_kernel_param {
+    if test -f /etc/default/grub; then
+	test -n "$1" && KERNEL_PARAM="$*"
+	if test -n "$KERNEL_PARAM"; then
+	    if ! $DRYRUN; then
+		cd /etc/default
+		test -f grub.origkp && mv grub.origkp grub
+		cp grub grub.origkp
+		sed -i -e '/GRUB_CMDLINE_LINUX_DEFAULT/s/="\(.*\)"/="'"$KERNEL_PARAM"' \1"/' grub
+		update-grub
+	    fi
+	    echo_log ""
+	    echo_log "added \"$KERNEL_PARAM\" to the kernel parameter"
+	elif test -f /etc/default/grub.origkp; then
+	    echo_log "recover original kernel parameter"
+	    if ! $DRYRUN; then
+		cd /etc/default
+		mv grub.origkp grub
+		update-grub
+	    fi
+	fi
+    else
+	echo_log "/etc/default/grub not found: cannot configure kernel parameter"
+    fi
+}
+
+function recover_kernel_param {
+    echo_log "recover original kernel parameter"
+    if ! $DRYRUN; then
+	cd /etc/default
+	test -f grub.origkp && mv grub.origkp grub
+	update-grub
+    fi
+}
+
 function reboot_cmd {
-    if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
-	reboot
+    if ! $DRYRUN; then
+	echo "#### MAKERTAIKERNEL.SH: REBOOT INTO $GRUBMENU" > /dev/kmsg
+	if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
+	    reboot
+	fi
+    fi
+}
+
+function set_reboot_kernel {
+    if ! $DRYRUN; then
+	GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
+	grub-reboot "$GRUBMENU"
     fi
 }
 
@@ -711,32 +762,11 @@ function reboot_kernel {
 	    ;;
 
 	*)
-	    test -n "$1" && KERNEL_PARAM="$*"
-	    if test -n "$KERNEL_PARAM"; then
-		if ! $DRYRUN; then
-		    cd /etc/default
-		    test -f grub.origkp && mv grub.origkp grub
-		    cp grub grub.origkp
-		    sed -i -e '/GRUB_CMDLINE_LINUX_DEFAULT/s/="\(.*\)"/="'"$KERNEL_PARAM"' \1"/' grub
-		    update-grub
-		fi
-		echo_log ""
-		echo_log "added \"$KERNEL_PARAM\" to the kernel parameter"
-	    elif test -f /etc/default/grub.origkp; then
-		echo_log "recover original kernel parameter"
-		if ! $DRYRUN; then
-		    cd /etc/default
-		    mv grub.origkp grub
-		    update-grub
-		fi
-	    fi
+	    setup_kernel_param
 	    echo_log "reboot into ${KERNEL_NAME} kernel"
 	    sleep 2
-	    if ! $DRYRUN; then
-		GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
-		grub-reboot "$GRUBMENU"
-		reboot_cmd
-	    fi
+	    set_reboot_kernel
+	    reboot_cmd
 	    ;;
     esac
 }
@@ -810,7 +840,7 @@ function save_test {
 	    fi
 	    TN=switches
 	    TEST_RESULTS=results-$TD-$TN.dat
-	    if test -f "$TEST_RESULTS"; then
+	    if test -f "$TEST_RESULTS" -a "$(grep -c 'SWITCH TIME' "$TEST_RESULTS")" -eq 3; then
 		grep 'SWITCH TIME' "$TEST_RESULTS" | awk '{ printf( "%5.0f| ", $(NF-1) ); }'
 	    elif [[ $TESTED == *${T}* ]]; then
 		printf "%5s| %5s| %5s| " "o" "o" "o"
@@ -888,6 +918,9 @@ function run_test {
 	    TTIME=2
 	    test $DIR = user && TTIME=""
 	fi
+	if test -n "$TEST_TIME" -a $TEST = preempt; then
+	    TTIME=10
+	fi
 	trap true SIGINT   # ^C should terminate ./run but not this script
 	if test -n "$TTIME"; then
 	    timeout -s SIGINT -k 1 $TTIME ./run | tee $TEST_RESULTS
@@ -904,6 +937,60 @@ function run_test {
 function test_rtaikernel {
     check_root
 
+    # check for kernel log messages:
+    if ! test -f /var/log/messages; then
+	echo_log "/var/log/messages does not exist!"
+	echo_log "enable it by running:"
+	echo_log "${MAKE_RTAI_KERNEL} setup messages"
+	echo_log
+	exit 1
+    fi
+
+    # test targets:
+    TESTMODE=""
+    MAXMODULE="4"
+    DESCRIPTION=""
+    TESTSPECS=""
+    if test -n "$1"; then
+	TESTSPECS="$TESTSPECS $1"
+	case $1 in
+	    kern) TESTMODE="kern" ;;
+	    kthreads) TESTMODE="kthreads" ;;
+	    user) TESTMODE="user" ;;
+	    all) TESTMODE="kern kthreads user" ;;
+	    none) TESTMODE="none" ;;
+	    hal) MAXMODULE="1" ;;
+	    sched) MAXMODULE="2" ;;
+	    math) MAXMODULE="3" ;;
+	    comedi) MAXMODULE="4" ;;
+	    [0-9]*) TEST_TIME="$1" ;;
+	    auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
+	    batch) shift; test_batch "$1" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
+	    batchscript) shift; test_batch_script ;;
+	    *) echo "test $1 is invalid"
+		exit 1 ;;
+	esac
+	shift
+	while test -n "$1"; do
+	    TESTSPECS="$TESTSPECS $1"
+	    case $1 in
+		kern) TESTMODE="$TESTMODE kern" ;;
+		kthreads) TESTMODE="$TESTMODE kthreads" ;;
+		user) TESTMODE="$TESTMODE user" ;;
+		all) TESTMODE="kern kthreads user" ;;
+		none) TESTMODE="none" ;;
+		auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
+		batch) shift; test_batch "$1" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
+		[0-9]*) TEST_TIME="$1" ;;
+		*) echo "test $1 is invalid"
+		    exit 1 ;;
+	    esac
+	    shift
+	done
+    fi
+    test -z "$TESTMODE" && TESTMODE="kern"
+    TESTMODE=$(echo $TESTMODE)  # strip whitespace
+
     if test ${CURRENT_KERNEL} != ${KERNEL_NAME} -a ${CURRENT_KERNEL} != ${KERNEL_ALT_NAME}; then
 	echo "Need a running rtai kernel that matches the configuration of ${MAKE_RTAI_KERNEL}!"
 	echo
@@ -918,53 +1005,6 @@ function test_rtaikernel {
 	echo "  KERNEL_NUM is set to $KERNEL_NUM, set with -n"
 	return 1
     fi
-
-    # check for kernel log messages:
-    if ! test -f /var/log/messages; then
-	echo_log "/var/log/messages does not exist!"
-	echo_log "enable it by running:"
-	echo_log "${MAKE_RTAI_KERNEL} setup messages"
-	echo_log
-    fi
-
-    # test targets:
-    TESTMODE=""
-    MAXMODULE="4"
-    DESCRIPTION=""
-    if test -n "$1"; then
-	case $1 in
-	    kern) TESTMODE="kern" ;;
-	    kthreads) TESTMODE="kthreads" ;;
-	    user) TESTMODE="user" ;;
-	    all) TESTMODE="kern kthreads user" ;;
-	    none) TESTMODE="none" ;;
-	    hal) MAXMODULE="1" ;;
-	    sched) MAXMODULE="2" ;;
-	    math) MAXMODULE="3" ;;
-	    comedi) MAXMODULE="4" ;;
-	    [0-9]*) TEST_TIME="$1" ;;
-	    auto) shift; test -n "$1" && DESCRIPTION="$1" ;;
-	    *) echo "test $1 is invalid"
-		exit 1 ;;
-	esac
-	shift
-	while test -n "$1"; do
-	    case $1 in
-		kern) TESTMODE="$TESTMODE kern" ;;
-		kthreads) TESTMODE="$TESTMODE kthreads" ;;
-		user) TESTMODE="$TESTMODE user" ;;
-		all) TESTMODE="kern kthreads user" ;;
-		none) TESTMODE="none" ;;
-		auto) shift; test -n "$1" && DESCRIPTION="$1" ;;
-		[0-9]*) TEST_TIME="$1" ;;
-		*) echo "test $1 is invalid"
-		    exit 1 ;;
-	    esac
-	    shift
-	done
-    fi
-    test -z "$TESTMODE" && TESTMODE="kern"
-    TESTMODE=$(echo $TESTMODE)  # strip whitespace
 
     if $DRYRUN; then
 	echo "run some tests on currently running kernel ${KERNEL_NAME}"
@@ -1111,6 +1151,8 @@ function test_rtaikernel {
     echo "successfully loaded and unloaded rtai modules"
     echo
 
+    echo "TESTMODE: $TESTMODE"
+
     # kernel tests:
     if test "$TESTMODE" != none; then
 	for DIR in $TESTMODE; do
@@ -1169,6 +1211,136 @@ function test_rtaikernel {
     done
 }
 
+function test_batch {
+    # setup automatic testing of kernel parameter
+
+    BATCH_FILE="$1"
+    if test -z "$BATCH_FILE"; then
+	echo "You need the specify a file that lists the kernel parameter to be tested:"
+	echo "${MAKE_RTAI_KERNEL} batch FILE"
+	exit 1
+    fi
+    if ! test -f "$BATCH_FILE"; then
+	echo "File \"$BATCH_FILE\" does not exist!"
+	exit 1
+    fi
+    N_TESTS=$(grep -v '#' $BATCH_FILE | grep -c ':')
+    if test "$N_TESTS" -ne "$(grep -v '#' $BATCH_FILE | wc -l)"; then
+	echo "File \"$BATCH_FILE\" contains invalid specifications of kernel parameter!"
+	exit 1
+    fi
+
+    shift
+    TEST_TIME="$1"
+    shift
+    TESTMODE="$1"
+    shift
+    TEST_SPECS="$@"
+
+    if test -z "$TEST_TIME"; then
+	TEST_TIME="30"
+	TEST_SPECS="$TEST_SPECS $TEST_TIME"
+    fi
+    TEST_TOTAL_TIME=$TEST_TIME
+    let TEST_TOTAL_TIME+=30
+    for TM in ${TESTMODE#* }; do
+	let TEST_TOTAL_TIME+=$TEST_TOTAL_TIME
+    done
+
+    echo "run \"test $TEST_SPECS\" on batch file \"$BATCH_FILE\" with content:"
+    grep -v '#' $BATCH_FILE | while read LINE; do echo "  $LINE"; done
+    echo
+
+    # read first line from configuration file:
+    INDEX=1
+    IFS=':' read DESCRIPTION KERNEL_PARAM < <(grep -v '#' $BATCH_FILE | sed -n -e ${INDEX}p)
+    echo "Reboot into configuration \"$(echo $DESCRIPTION)\" with kernel parameter \"$KERNEL_PARAM\""
+    echo
+
+    # confirm:
+    read -p "Do you want to proceed testing with $N_TESTS reboots (Y/n)? " PROCEED
+    if test "x$PROCEED" != "xn"; then
+	echo
+
+	recover_test_batch
+	# install crontab:
+	MRK_DIR="$(cd "$(dirname "$0")" && pwd)"
+	(crontab -l 2>/dev/null; echo "@reboot ${MRK_DIR}/${MAKE_RTAI_KERNEL} test batchscript > ${TEST_DIR}/kernel.log") | crontab -
+	echo "Installed crontab for automatic testing after reboot."
+	echo "  Uninstall by calling"
+	echo "  $ ${MAKE_RTAI_KERNEL} recover testbatch"
+
+	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
+	echo "#### MAKERTAIKERNEL.SH: NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$TEST_TOTAL_TIME|$TEST_SPECS" > /dev/kmsg
+
+	echo "Rebooting ..."
+	sleep 1
+	reboot_kernel
+    else
+	echo
+	echo "Test batch aborted"
+    fi
+
+    exit 0
+}
+
+function test_batch_script {
+    # run automatic testing of kernel parameter.
+    # this function is called automatically after reboot from cron.
+
+    PATH="$PATH:/usr/sbin:/usr/bin:/sbin:/bin"
+
+    # wait:
+    sleep $STARTUP_TIME
+
+    # get test BATCH_FILE, INDEX, TEST_TOTAL_TIME and TEST_SPECS from /var/log/messages:
+    IFS='|' read ID BATCH_FILE INDEX TEST_TOTAL_TIME TEST_SPECS < <(grep "#### MAKERTAIKERNEL.SH: NEXT TEST BATCH" /var/log/messages | tail -n 1)
+
+    N_TESTS=$(grep -v '#' $BATCH_FILE | grep -c ':')
+
+    # read current DESCRIPTION from configuration file:
+    IFS=':' read DESCRIPTION KERNEL_PARAM < <(grep -v '#' $BATCH_FILE | sed -n -e ${INDEX}p)
+    let INDEX+=1
+
+    if test "$INDEX" -gt "$N_TESTS"; then
+	# no further tests:
+	echo "#### MAKERTAIKERNEL.SH: LAST TEST BATCH" > /dev/kmsg
+	# clean up:
+	recover_test_batch > /dev/null
+	KERNEL_PARAM=""
+	setup_kernel_param
+	# at TEST_TOTAL_TIME seconds later reboot into default kernel:
+	{ sleep $TEST_TOTAL_TIME; reboot; } &
+    else
+	# read and set next KERNEL_PARAM:
+	IFS=':' read DESCR KERNEL_PARAM < <(grep -v '#' $BATCH_FILE | sed -n -e ${INDEX}p)
+	echo "#### MAKERTAIKERNEL.SH: NEXT TEST BATCH |$BATCH_FILE|$INDEX|$TEST_TOTAL_TIME|$TEST_SPECS" > /dev/kmsg
+	setup_kernel_param
+	set_reboot_kernel
+	# at TEST_TOTAL_TIME seconds later reboot:
+	{ sleep $TEST_TOTAL_TIME; reboot; } &
+    fi
+
+    # run tests:
+    cd $(dirname $BATCH_FILE)
+    test_rtaikernel $TEST_SPECS auto $DESCRIPTION
+
+    if test "$INDEX" -gt "$N_TESTS"; then
+	echo "#### MAKERTAIKERNEL.SH: FINISHED TEST BATCH" > /dev/kmsg
+    fi
+
+    exit 0
+}
+
+function recover_test_batch {
+    if crontab -l | grep -q "${MAKE_RTAI_KERNEL}"; then
+	echo_log "recover original crontab"
+	if ! $DRYRUN; then
+	    (crontab -l | grep -v "${MAKE_RTAI_KERNEL}") | crontab -
+	fi
+    fi
+}
+
 function test_report {
     FILES="latencies*"
     test -n "$1" && FILES="$*"
@@ -1179,15 +1351,15 @@ function test_report {
 	    head -n 6 $TEST | fgrep 'RTH|' > header.txt
 	    FIRST=false
 	fi
-	if test $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 7) -gt 0; then
+	if test $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8) -gt 0; then
 	    head -n 6 $TEST | fgrep 'RTD|' >> dataoverrun.txt
 	else
 	    head -n 6 $TEST | fgrep 'RTD|' >> data.txt
 	fi
     done
     cat header.txt
-    test -f data.txt && sort -t '|' -k 3 -n data.txt
-    test -f dataoverrun.txt && sort -t '|' -k 3 -n dataoverrun.txt
+    test -f data.txt && sort -t '|' -k 4 -n data.txt
+    test -f dataoverrun.txt && sort -t '|' -k 4 -n dataoverrun.txt
     rm -f header.txt data.txt dataoverrun.txt
 }
 
@@ -1882,11 +2054,13 @@ function setup_features {
     if test -z $1; then
 	setup_messages
 	setup_grub
+	setup_kernel_param
     else
 	for TARGET; do
 	    case $TARGET in
 		messages ) setup_messages ;;
 		grub ) setup_grub ;;
+		kernel ) setup_kernel_param ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -1898,11 +2072,15 @@ function recover_features {
     if test -z $1; then
 	recover_messages
 	recover_grub
+	recover_kernel_param
+	recover_test_batch
     else
 	for TARGET; do
 	    case $TARGET in
 		messages ) recover_messages ;;
 		grub ) recover_grub ;;
+		kernel ) recover_kernel_param
+		testbatch ) recover_test_batch ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
