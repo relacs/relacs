@@ -815,13 +815,13 @@ function save_test {
 	# header 1:
 	printf "RTH| %-30s| " "general"
 	for TD in kern kthreads user; do
-	    printf "%-41s| %-19s| %-25s| " "$TD latencies" "$TD switches" "$TD preempt"
+	    printf "%-41s| %-19s| %-31s| " "$TD latencies" "$TD switches" "$TD preempt"
 	done
 	printf "%s\n" "kernel"
 	# header 2:
 	printf "RTH| %-20s| %-8s| " "description" "progress"
 	for TD in kern kthreads user; do
-	    printf "%7s| %7s| %7s| %5s| %7s| %5s| %5s| %5s| %7s| %7s| %7s| " "max" "avg" "std" "n" "maxover" "susp" "sem" "rpc" "max" "jitfast" "jitslow"
+	    printf "%7s| %7s| %7s| %5s| %7s| %5s| %5s| %5s| %9s| %9s| %9s| " "ovlmax" "avg" "std" "n" "maxover" "susp" "sem" "rpc" "max" "jitfast" "jitslow"
 	done
 	printf "%s\n" "configuration"
 	# data:
@@ -850,11 +850,11 @@ function save_test {
 	    TN=preempt
 	    TEST_RESULTS=results-$TD-$TN.dat
 	    if test -f "$TEST_RESULTS"; then
-		awk '{if ($1 == "RTD|") { maxd=$4-$2; jfast=$5; jslow=$6; }} END { printf( "%7.0f| %7.0f| %7.0f| ", maxd, jfast, jslow ) }' "$TEST_RESULTS"
+		awk '{if ($1 == "RTD|") { maxd=$4-$2; jfast=$5; jslow=$6; }} END { printf( "%9.0f| %9.0f| %9.0f| ", maxd, jfast, jslow ) }' "$TEST_RESULTS"
 	    elif [[ $TESTED == *${T}* ]]; then
-		printf "%7s| %7s| %7s| " "o" "o" "o"
+		printf "%9s| %9s| %9s| " "o" "o" "o"
 	    else
-		printf "%7s| %7s| %7s| " "-" "-" "-"
+		printf "%9s| %9s| %9s| " "-" "-" "-"
 	    fi
 	done
 	printf "%s\n" "config-$REPORT"
@@ -1351,15 +1351,19 @@ function test_report {
 	    head -n 6 $TEST | fgrep 'RTH|' > header.txt
 	    FIRST=false
 	fi
-	if test $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8) -gt 0; then
+	if test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "-"; then
+	    head -n 6 $TEST | fgrep 'RTD|' >> dataoverrun.txt
+	elif test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "o"; then
+	    head -n 6 $TEST | fgrep 'RTD|' >> dataoverrun.txt
+	elif test $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8) -gt 0; then
 	    head -n 6 $TEST | fgrep 'RTD|' >> dataoverrun.txt
 	else
 	    head -n 6 $TEST | fgrep 'RTD|' >> data.txt
 	fi
     done
     cat header.txt
-    test -f data.txt && sort -t '|' -k 4 -n data.txt
-    test -f dataoverrun.txt && sort -t '|' -k 4 -n dataoverrun.txt
+    test -f data.txt && sort -t '|' -k 5 -n data.txt
+    test -f dataoverrun.txt && sort -t '|' -k 5 -n dataoverrun.txt
     rm -f header.txt data.txt dataoverrun.txt
 }
 
