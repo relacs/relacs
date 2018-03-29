@@ -101,6 +101,14 @@ function echo_log {
     echo "$@" | tee -a "$LOG_FILE"
 }
 
+function echo_kmsg {
+    # this is for dmesg:
+    echo "#### MAKERTAIKERNEL.SH: $@" > /dev/kmsg
+    # this goes into the logger files: 
+    # (on some systems kmsg does not end up in logger files)
+    logger -p user.info "#### MAKERTAIKERNEL.SH: $@"
+}
+
 function print_version {
     echo $VERSION_STRING
 }
@@ -737,7 +745,7 @@ function recover_kernel_param {
 
 function reboot_cmd {
     if ! $DRYRUN; then
-	echo "#### MAKERTAIKERNEL.SH: REBOOT INTO $GRUBMENU" > /dev/kmsg
+	echo_kmsg "REBOOT INTO $GRUBMENU"
 	if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
 	    reboot
 	fi
@@ -778,7 +786,7 @@ function reboot_kernel {
 function test_result {
     TESTMODE="$1"
     TEST_RESULT=""
-    if test -n "$TESTMODE" -a -f "results-${TESTMODE}-latency.dat"; then
+    if test -n "$TESTMODE" && test -f "results-${TESTMODE}-latency.dat"; then
 	TEST_DATA=$(grep RTD results-${TESTMODE}-latency.dat | tail -n 1)
 	OVERRUNS=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $7}')
 	if test "$OVERRUNS" -gt "0"; then
@@ -840,7 +848,7 @@ function save_test {
 	    fi
 	    TN=switches
 	    TEST_RESULTS=results-$TD-$TN.dat
-	    if test -f "$TEST_RESULTS" -a "$(grep -c 'SWITCH TIME' "$TEST_RESULTS")" -eq 3; then
+	    if test -f "$TEST_RESULTS" && test "$(grep -c 'SWITCH TIME' "$TEST_RESULTS")" -eq 3; then
 		grep 'SWITCH TIME' "$TEST_RESULTS" | awk '{ printf( "%5.0f| ", $(NF-1) ); }'
 	    elif [[ $TESTED == *${T}* ]]; then
 		printf "%5s| %5s| %5s| " "o" "o" "o"
@@ -910,15 +918,15 @@ function run_test {
     rm -f $TEST_RESULTS
     if test -d $TEST_DIR; then
 	echo "running $DIR/$TEST test"
-	echo "#### MAKERTAIKERNEL.SH: RUN $DIR/$TEST test" > /dev/kmsg
+	echo_kmsg "RUN $DIR/$TEST test"
 	cd $TEST_DIR
 	rm -f $TEST_RESULTS
 	TTIME=$TEST_TIME
-	if test -n "$TEST_TIME" -a $TEST = switches; then
+	if test -n "$TEST_TIME" && test $TEST = switches; then
 	    TTIME=2
 	    test $DIR = user && TTIME=""
 	fi
-	if test -n "$TEST_TIME" -a $TEST = preempt; then
+	if test -n "$TEST_TIME" && test $TEST = preempt; then
 	    TTIME=10
 	fi
 	trap true SIGINT   # ^C should terminate ./run but not this script
@@ -991,7 +999,7 @@ function test_rtaikernel {
     test -z "$TESTMODE" && TESTMODE="kern"
     TESTMODE=$(echo $TESTMODE)  # strip whitespace
 
-    if test ${CURRENT_KERNEL} != ${KERNEL_NAME} -a ${CURRENT_KERNEL} != ${KERNEL_ALT_NAME}; then
+    if test ${CURRENT_KERNEL} != ${KERNEL_NAME} && test ${CURRENT_KERNEL} != ${KERNEL_ALT_NAME}; then
 	echo "Need a running rtai kernel that matches the configuration of ${MAKE_RTAI_KERNEL}!"
 	echo
 	echo "Either boot into the ${KERNEL_NAME} kernel, e.g. by executing"
@@ -1063,7 +1071,7 @@ function test_rtaikernel {
 
     TESTED=""
     PROGRESS=""
-    echo "######## MAKERTAIKERNEL.SH: START TESTS" > /dev/kmsg
+    echo_kmsg "START TESTS"
 
     # loading rtai kernel modules:
     RTAIMOD_FAILED=false
@@ -1072,7 +1080,7 @@ function test_rtaikernel {
     if test $MAXMODULE -ge 1; then
 	TESTED="${TESTED}h"
 	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
-	echo "#### MAKERTAIKERNEL.SH: INSMOD ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM" > /dev/kmsg
+	echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM"
 	lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM && echo "loaded  rtai_hal $RTAI_HAL_PARAM" || RTAIMOD_FAILED=true; }
 	$RTAIMOD_FAILED || PROGRESS="${PROGRESS}h"
     fi
@@ -1081,7 +1089,7 @@ function test_rtaikernel {
     if test $MAXMODULE -ge 2; then
 	TESTED="${TESTED}s"
 	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
-	echo "#### MAKERTAIKERNEL.SH: INSMOD ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM" > /dev/kmsg
+	echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM"
 	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM && echo "loaded  rtai_sched $RTAI_SCHED_PARAM" || RTAIMOD_FAILED=true; }
 	$RTAIMOD_FAILED || PROGRESS="${PROGRESS}s"
     fi
@@ -1091,7 +1099,7 @@ function test_rtaikernel {
 	if test -f ${REALTIME_DIR}/modules/rtai_math.ko; then
 	    TESTED="${TESTED}m"
 	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
-	    echo "#### MAKERTAIKERNEL.SH: INSMOD ${REALTIME_DIR}/modules/rtai_math.ko" > /dev/kmsg
+	    echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_math.ko"
 	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded  rtai_math" && PROGRESS="${PROGRESS}m"; }
 	else
 	    echo "rtai_math is not available"
@@ -1102,7 +1110,7 @@ function test_rtaikernel {
 	TESTED="${TESTED}c"
 	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	# loading comedi:
-	echo "#### MAKERTAIKERNEL.SH: LOAD COMEDI MODULES" > /dev/kmsg
+	echo_kmsg "LOAD COMEDI MODULES"
 	echo "triggering comedi "
 	udevadm trigger
 	sleep 1
@@ -1112,22 +1120,22 @@ function test_rtaikernel {
 	
 	lsmod > lsmod.dat
 	
-	echo "#### MAKERTAIKERNEL.SH: REMOVE COMEDI MODULES" > /dev/kmsg
+	echo_kmsg "REMOVE COMEDI MODULES"
 	remove_comedi_modules
     fi
     save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
     
     # remove rtai modules:
     if test $MAXMODULE -ge 3; then
-	echo "#### MAKERTAIKERNEL.SH: RMMOD rtai_math" > /dev/kmsg
+	echo_kmsg "RMMOD rtai_math"
 	lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
     fi
     if test $MAXMODULE -ge 2; then
-	echo "#### MAKERTAIKERNEL.SH: RMMOD rtai_sched" > /dev/kmsg
+	echo_kmsg "RMMOD rtai_sched"
 	lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed rtai_sched"; }
     fi
     if test $MAXMODULE -ge 1; then
-	echo "#### MAKERTAIKERNEL.SH: RMMOD rtai_hal" > /dev/kmsg
+	echo_kmsg "RMMOD rtai_hal"
 	lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed rtai_hal"; }
     fi
 
@@ -1177,7 +1185,7 @@ function test_rtaikernel {
 	    PROGRESS="${PROGRESS}${TT}"
 	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	done
-	echo "#### MAKERTAIKERNEL.SH: DONE" > /dev/kmsg
+	echo_kmsg "TESTS DONE"
 	echo "finished all tests"
 	echo
     fi
@@ -1271,7 +1279,7 @@ function test_batch {
 	echo "  $ ${MAKE_RTAI_KERNEL} recover testbatch"
 
 	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
-	echo "#### MAKERTAIKERNEL.SH: NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$TEST_TOTAL_TIME|$TEST_SPECS" > /dev/kmsg
+	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$TEST_TOTAL_TIME|$TEST_SPECS"
 
 	echo "Rebooting ..."
 	sleep 1
@@ -1294,7 +1302,7 @@ function test_batch_script {
     sleep $STARTUP_TIME
 
     # get test BATCH_FILE, INDEX, TEST_TOTAL_TIME and TEST_SPECS from /var/log/messages:
-    IFS='|' read ID BATCH_FILE INDEX TEST_TOTAL_TIME TEST_SPECS < <(grep "#### MAKERTAIKERNEL.SH: NEXT TEST BATCH" /var/log/messages | tail -n 1)
+    IFS='|' read ID BATCH_FILE INDEX TEST_TOTAL_TIME TEST_SPECS < <(grep "NEXT TEST BATCH" /var/log/messages | tail -n 1)
 
     N_TESTS=$(grep -v '#' $BATCH_FILE | grep -c ':')
 
@@ -1304,7 +1312,7 @@ function test_batch_script {
 
     if test "$INDEX" -gt "$N_TESTS"; then
 	# no further tests:
-	echo "#### MAKERTAIKERNEL.SH: LAST TEST BATCH" > /dev/kmsg
+	echo_kmsg "LAST TEST BATCH"
 	# clean up:
 	recover_test_batch > /dev/null
 	KERNEL_PARAM=""
@@ -1314,7 +1322,7 @@ function test_batch_script {
     else
 	# read and set next KERNEL_PARAM:
 	IFS=':' read DESCR KERNEL_PARAM < <(grep -v '#' $BATCH_FILE | sed -n -e ${INDEX}p)
-	echo "#### MAKERTAIKERNEL.SH: NEXT TEST BATCH |$BATCH_FILE|$INDEX|$TEST_TOTAL_TIME|$TEST_SPECS" > /dev/kmsg
+	echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$TEST_TOTAL_TIME|$TEST_SPECS"
 	setup_kernel_param
 	set_reboot_kernel
 	# at TEST_TOTAL_TIME seconds later reboot:
@@ -1326,7 +1334,7 @@ function test_batch_script {
     test_rtaikernel $TEST_SPECS auto $DESCRIPTION
 
     if test "$INDEX" -gt "$N_TESTS"; then
-	echo "#### MAKERTAIKERNEL.SH: FINISHED TEST BATCH" > /dev/kmsg
+	echo_kmsg "FINISHED TEST BATCH"
     fi
 
     exit 0
@@ -2395,7 +2403,7 @@ while test "x${1:0:1}" = "x-"; do
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		KERNEL_CONFIG="$1"
-		if test "x$KERNEL_CONFIG" != "xdef" -a "x$KERNEL_CONFIG" != "xold" -a "x$KERNEL_CONFIG" != "xmod" -a "x${KERNEL_CONFIG:0:1}" != "x/"; then
+		if test "x$KERNEL_CONFIG" != "xdef" && test "x$KERNEL_CONFIG" != "xold" && test "x$KERNEL_CONFIG" != "xmod" && test "x${KERNEL_CONFIG:0:1}" != "x/"; then
 		    KERNEL_CONFIG="$PWD/$KERNEL_CONFIG"
 		fi
 		NEW_KERNEL_CONFIG=true
@@ -2428,7 +2436,7 @@ if $RTAI_DIR_CHANGED && ! $RTAI_PATCH_CHANGED && ! $LINUX_KERNEL_CHANGED; then
     sleep 2
 fi
 
-test -n "$KERNEL_NUM" -a "x${KERNEL_NUM:0:1}" != "x-" && KERNEL_NUM="-$KERNEL_NUM"
+test -n "$KERNEL_NUM" && test "x${KERNEL_NUM:0:1}" != "x-" && KERNEL_NUM="-$KERNEL_NUM"
 KERNEL_NAME=${LINUX_KERNEL}-${RTAI_DIR}${KERNEL_NUM}
 KERNEL_ALT_NAME=${LINUX_KERNEL}.0-${RTAI_DIR}${KERNEL_NUM}
 REALTIME_DIR="/usr/realtime/${KERNEL_NAME}"
