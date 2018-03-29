@@ -69,13 +69,17 @@ sudo ./makertaikernel.sh init
    to make sure you have \c /var/log/messages (needed for RTAI switch tests),
    you get a visible boot menu, and have the RTAI sources downloaded.
 
+   This command then shows you the RTAI kernel patches available for your machine. 
+
 -# Select a Linux kernel and the corresponding RTAI patch from the displayed list.
 
-   Modify the variables at the top of the script or set them before executing makertaikernel.sh,
-   in particular the \c LINUX_KERNEL, \c RTAI_PATCH, and \c KERNEL_PATH variables to match
-   the kernel version, rtai patch you want to use, and the directory
-   where to build the linux kernel (you need up to 2 GB space there for a kernel 
-   with most device drivers disabled (e.g. via localmodconf) or 5-10GB for a full kernel).
+   Modify the variables at the top of the \c makertaikernel.sh script
+   or set them before executing makertaikernel.sh, in particular the
+   \c LINUX_KERNEL, \c RTAI_PATCH, and \c KERNEL_PATH variables to
+   match the kernel version, rtai patch you want to use, and the
+   directory where to build the linux kernel (you need up to 2 GB
+   space there for a kernel with most device drivers disabled
+   (e.g. via localmodconf) or 5-10GB for a full kernel).
 
    Recheck for available RTAI patches and linux kernels:
    \code
@@ -89,10 +93,10 @@ sudo ./makertaikernel.sh info rtai
    \code
 sudo apt-get install linux-image-4.4.0-79-lowlatency
    \endcode
-   (modify it to the kernel version you want) and boot into this
-   kernel. Then \c makertaikernel.sh will use this kernel's
-   configuration and deselect all kernel modules
-   that are not used (localmodconfig).
+   (modify it to the kernel version you want, use the tab-key for
+   autocompletion) and boot into this kernel. Then \c
+   makertaikernel.sh will use this kernel's configuration and deselect
+   all kernel modules that are not used (localmodconfig).
 
    If you use the \c -l switch or the version of the running
    kernel does not match the one of the selected kernel (major or
@@ -110,7 +114,8 @@ sudo ./makertaikernel.sh reboot 3
    \endcode
    replace '3' by the index of the appropriate menu entry.
 
--# Then run
+-# Once you booted into the kernel on which you want to base your RTAI
+   kernel run
    \code
 sudo ./makertaikernel.sh
    \endcode
@@ -118,8 +123,9 @@ sudo ./makertaikernel.sh
    This will download the required sources (takes a while...) and
    build the kernel using the kernel configuration of the running
    kernel (takes even more time...). With the \c-c flag you can
-   provide a different kernel configuration (see \c makertaikernel.sh
-   \c help for details).
+   provide a different kernel configuration on which the kernel
+   configuration should be based (see \c makertaikernel.sh \c help for
+   details).
 
 -# You will get the menu for configuring the kernel. This is the most
    important step! See \ref compilekernel step 6 for instructions.
@@ -135,7 +141,7 @@ sudo ./makertaikernel.sh reboot XXX
    original settings are recovered when calling \c reboot without
    additional parameter).
 
-   Once you rebooted in the RTAI kernel run some tests by invoking
+   Once you rebooted into the RTAI kernel run some tests by invoking
    \code
 sudo ./makertaikernel.sh test
    \endcode
@@ -158,14 +164,15 @@ sudo ./makertaikernel.sh test 30 auto basic
    \endcode
 
    The result of the tests is written into the file
-   latencies-KERNEL-RTAI-XXX-DATE-NAME-QUALITY and the corresponding
-   kernel configuration is saved in
-   config-KERNEL-RTAI-XXX-DATE-NAME_QUALITY in the current
+   latencies-KERNEL-RTAI-HOST-XXX-DATE-NAME-QUALITY and the
+   corresponding kernel configuration is saved in
+   config-KERNEL-RTAI-HOST-XXX-DATE-NAME_QUALITY in the current
    directory. KERNEL is replaced by the kernel version, RTAI by your
-   choice of an RTAI source (e.g. magma, rtai-5.1, etc.), XXX is
-   replaced by a consecutive number, DATE is the current data, NAME
-   and QUALITY are short strings describing your kernel configuration
-   and the test performance that you can enter before and after the test.
+   choice of an RTAI source (e.g. magma, rtai-5.1, etc.), HOST is the
+   hostname of your machine, XXX is replaced by a consecutive number,
+   DATE is the current data, NAME and QUALITY are short strings
+   describing your kernel configuration and the test performance that
+   is retrieved from the latency test.
 
    See \ref testrtai for details regarding the test results and \ref configurekernel
    for troubleshooting and how to improve the real time performance.
@@ -179,13 +186,18 @@ sudo ./makertaikernel.sh -c mod
    in order to deselect all unused kernel modules from compilation. 
    This speeds up the following kernel builds dramatically! Then reboot and test.
 
--# If the test results do not satisfy you, then build a new version of the kernel
-   with a different configuration (see \ref configurekernel for details):
+-# If the test results do not satisfy you, then build a new version of
+   the kernel with a different configuration (see \ref configurekernel
+   for details) and a different name (\c -n option). The name can be
+   any string without whitespace - a simple number or a string
+   describing the configuration of the kernel:
    \code
 sudo ./makertaikernel.sh -n 2 reconfigure
    \endcode
-   reboot into the \c rtai1 kernel, test the new kernel, reconfigure again yet another kernel (with a different name):
+   reboot into the new kernel, test the new kernel, reconfigure again yet another kernel (with a different name):
    \code
+sudo ./makertaikernel.sh -n 2 reboot
+...
 sudo ./makertaikernel.sh -n 2 test
 sudo ./makertaikernel.sh -n 1 reconfigure
    \endcode
@@ -196,17 +208,14 @@ sudo ./makertaikernel.sh -n 2 reconfigure
    \endcode
 
    Note that \c makertaikernel.sh \c reconfigure will first uninstall
-   an already existing kernel with the same name.
+   an already existing kernel with the same name (this is why we need
+   to work with at least two different kernel names).
 
    You can recreate this kernel or use this kernel's configuration for
    further modifications by specifying the kernel configuration file
    saved by \c makertaikernel.sh \c test using the \c-c option
    \code
 sudo ./makertaikernel.sh -n 1 -c config-3.14.17-rtai-4.1-002-basic-good reconfigure
-   \endcode
--# You can generate a summary report from all your tested kernels via
-   \code
-./makertaikernel.sh report
    \endcode
 -# Once you are satisified, continue with \ref installrelacs .
 
@@ -606,6 +615,13 @@ make
 
 Testing your RTAI patched kernel is crucial for a good real-time performance!
 
+-# The \c makertaikernel.sh can also be used for testing with the advantage that it writes
+   the test results and the kernel configuration into files.
+
+   The script will first ask for a short description of your kernel
+   configuration and parameter. This string is then used for naming
+   the files for the test results.
+
 -# Test RTAI by loading some modules:
    \code
 cd /usr/realtime/modules
@@ -613,6 +629,16 @@ insmod rtai_hal.ko
 insmod rtai_sched.ko
 insmod rtai_math.ko
    \endcode
+
+   This is done by
+   \code
+sudo ./makertaikernel.sh test none
+   \endcode
+If you only want to check insmodding \c rtai_hal then call
+   \code
+sudo ./makertaikernel.sh test hal none
+   \endcode
+Equivalently, you can use the \c sched and \c math option.
 
    If this fails:
 
@@ -624,17 +650,52 @@ dmesg
 
    Try adding one or several of the advanced configuration and power
    interface (ACPI) or advanced programmable interrupt controller
-   (APIC) options, \c acpi=off, \c pci=noacpi \c noapic \c nolapic \c
-   lapic , to the kernel parameter.
+   (APIC) options, \c acpi=off, \c pci=noacpi, \c noapic, \c nolapic,
+   or \c lapic, to the kernel parameter.
 
-   Either provide them to \c makertaikernel.sh \c reboot \c param1=xxx
-   \c param2=yyy, or add them to the \c kernel line of the \c grub
-   menu in \c /boot/grub/menu.lst (\c grub \c v1) or to the \c
-   GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub .  Recompile
-   and install RTAI (make clean && make && make install && depmod -a).
+   Either provide the kernel parameter to \c makertaikernel.sh:
+   \code
+sudo ./makertaikernel.sh reboot param1=xxx param2=yyy
+   \endcode
+   or add them to the \c kernel
+   line of the \c grub menu in \c /boot/grub/menu.lst (\c grub \c v1)
+   or to the \c GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub .
 
    After restart, check for the number of CPUs in \c /proc/cpuinfo -
-   they might be reduced by these parameters!
+   they might be reduced by these parameters! Or:
+   \code
+sudo ./makertaikernel.sh info | grep cores
+   \endcode
+
+-# Then run the tests from the RTAI test suite by calling
+   \code
+sudo ./makertaikernel.sh test          # runs the kern tests
+sudo ./makertaikernel.sh test kern     # runs the kern tests
+sudo ./makertaikernel.sh test kthreads # runs the kthreads tests
+sudo ./makertaikernel.sh test user     # runs the user tests
+sudo ./makertaikernel.sh test all      # runs all tests
+   \endcode
+
+   The tests need to be manually terminated by pressing \c CTRL-\c C.
+
+   For automatic termination of the tests provide the duration for the
+   latency test as a simple number (seconds):
+   \code
+sudo ./makertaikernel.sh test 60       # runs the kern latency test for 60 seconds
+   \endcode
+   For preventing any user interaction you can also provide the test
+   description after the "auto" keyword (here "basic"):
+   \code
+sudo ./makertaikernel.sh test 60 auto basic
+   \endcode
+
+   The test results are saved into the latencies-* files. View them with a text editor or
+   \code
+less -S latencies-4.4.115-rtai-5.1-aeshna-004-2018-03-29-regularnohz-good
+   \endcode
+
+   The following sections explain how to manually run the tests and
+   how to interpret the test results:
 
 -# Run the RTAI latency test
    \code
@@ -653,7 +714,7 @@ RTD|         92|         60|        129|        719|       1040|          0
    \endcode
    If you have overruns, or the maximum latencies "lat max" are too
    high (<2000 ns is awesome, <10000 is good, <20000 is kind of ok, longer than 20000 ns is bad)
-   then you need to improve you kernel by disabling some bad device drivers (see below).
+   then you need to improve your kernel configuration (\ref configurekernel).
 
    Also run the switch test:
    \code
@@ -690,36 +751,43 @@ cd /usr/realtime/testsuite/kern/preempt
    - dd if=/dev/hda2 of=/dev/hda3 bs=1000k &  # /dev/hda3 needs to be a free partition that is at least as large as /dev/hda2!!!
    .
 
--# If your test results are not good, then you need to reconfigure
-   your kernel, probably disabling some devices, compile and install the kernel again,
-   and compile and install rtai again. See \ref configurekernel below for hints.
+-# If your test results are not satisfactory, then you need to pass
+   kernel parameters to the RTAI kernel or reconfigure the kernel,
+   probably disabling some devices, compile and install the kernel
+   again, and compile and install rtai again. See \ref configurekernel
+   below for hints.
 
--# For further improving the RTAI performance, you might want to reserve at least one CPU
-   for RTAI on a multi-core machine. You can isolate CPUs by using the kernel parameter
+-# You can generate a summary report from all your tested kernels via
    \code
-isolcpus=0,1
+./makertaikernel.sh report | less -S                    # report of all latencies-* files
+./makertaikernel.sh report tests/latencies-* | less -S  # report of all latencies-* files in tests/
    \endcode
-   (for isolating the cores no. 0 and 1).
-   See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
 
 
-\subsection configurekernel Improve the configuration of the RTAI-patched kernel
+\subsection configurekernel Improve the performance of the RTAI-patched kernel
 
 To get a low latency kernel you usually need to improve your kernel
-configuration.  The main culprits are some devices and their
+configuration.  The main culprits are interrupts, some devices and their
 drivers. Which ones are bad usually depends on your specific machine.
 
-See \c https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf,
-\c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL, and
-\c /usr/local/src/rtai/README.CONF_RMRKS
-for some hints.  This is the art of creating a good real-time kernel...
+Read the file \c /usr/local/src/rtai/README.CONF_RMRKS for some hints.
+
+More information can be found at \c
+https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf,
+\c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL, and the
+internet.
 
 \subsubsection powersavingmodes Disable CPU power saving modes
 Most importantly, for newer CPUs like Intel i5 and Intel i7 CPUs,
-disabling CPU power saving modes improves real-time performance dramatically:
-- Add the kernel parameters \c processor.max_cstate=0 \c idle=poll .
+disabling CPU power saving modes improves real-time performance
+dramatically. Before you try anything else do:
+- Add the kernel parameter \c idle=poll . This is usually sufficient.
   See \ref kernelparamhints on how to set kernel parameter.
-- The cstates can also be dynamically controlled by writing the
+- For older RTAI (<5.0) or kernels (<4.0?) adding both \c
+  processor.max_cstate=0 \c idle=poll is helpful. In more recent
+  contexts, however, \c processor.max_cstate=0 seems to make things
+  worse.
+- Just a note: the cstates can also be dynamically controlled by writing the
   maximum allowable latency in microseconds (as an 32-bit(?) \c int, not as
   text) to the file \c /dev/cpu_dma_latency . Writing a zero keeps the
   system in \c cstate=0.
@@ -741,10 +809,98 @@ See also \c Documentation/power/pm_qos_interface.txt in your kernel
 source tree in \c /usr/src/linux and
 http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels
 
+\subsubsection kernelparamhints Kernel parameter
 
-\subsubsection linuxdma Disable DMA
-Disable all DMA transfers by setting kernel parameter \c libata.dma=0.
-See \ref kernelparamhints on how to set kernel parameter.
+There are several interesting kernel parameter that influence the
+real-time performance.
+
+See the file \c Documentation/kernel-parameters.txt in your linux
+kernel source tree (in \c /usr/src) for a documentation of all kernel
+parameter.
+
+CPU frequency scaling and power control:
+- \c idle=poll
+- Disable the intel_idle module. Alternatively you can set \c
+  intel_idle.max_cstate=0 . This is taken care of by the disabled "CPU
+  Idle" in "Power management and ACPI options".
+- check out
+  https://gitlab.eurecom.fr/oai/openairinterface5g/wikis/OpenAirKernelMainSetup
+  for more hints on disabling power-management and frequency scaling
+  stuff
+- Check frequency scaling of CPUs with \a cpufreq-info from the \c cpufrequtils package.
+.
+
+Clocks and timers:
+- \c nohz=off
+- \c tsc=reliable
+- \c highres=off
+- \c hpet=disable
+- For scheduling interrupts read \c Documentation/timers/NO_HZ.txt
+- Also check out "nohalt" kernel parameter.
+.
+
+Advanced configuration and power interface (ACPI):
+- \c acpi=off , althoug effective this may results in an unstable system
+- \c pci=noacpi .
+- With disabled acpi your rtai-patched linux kernel might not properly
+  halt or reboot. Try \c reboot=triple as a kernel parameter.  See \c
+  /usr/src/linux/Documentation/x86/x86_64/boot-options.txt for more
+  options for the reboot parameter.
+.
+
+Advanced programmable interrupt controller (APIC):
+- \c noapic
+- \c nolapic , usually not a good idea, becaus RTAI uses the lapic timer. 
+- \c lapic
+.
+
+Others:
+- disable all DMA transfers by setting kernel parameter \c libata.dma=0.
+.
+
+Supply the kernel parameter to the \c reboot action of \c makertaikernel.sh:
+\code
+$ makertaikernel.sh reboot param1=xxx param2=yyy ...
+\endcode
+
+If you want to test many kernel parameter you can completely
+automatize this with the \c makertaikernel.sh script. Create a file in
+which each line contains a description of the kernel parameters, a
+colon ':', and the kernel parameters as they sould be passed to the
+kernel. You may start out with the \c testkernelparams.mrk file that
+you get by calling 
+\code 
+$ makertaikernel.sh test batch default
+\endcode
+Modify this file according to your needs or create your own one. Then calling
+\code 
+$ makertaikernel.sh test 90 batch testkernelparams.mrk
+\endcode
+will reboot with the first set of kernel parameter, automatically run
+the test, save the results using the description of the parameter,
+reboot with the next kernel parameters, and so on until all kernel
+parameter have been tested (or the system hangs). After the last test
+the default kernel is booted with its original kernel parameter. In
+the directory where you executed the script you will find all the test
+results. Analyse them with
+\code 
+$ makertaikernel.sh report latencies-*
+\endcode
+
+If you want to stop automatic rebooting before all configurations have been tested run
+\code 
+$ makertaikernel.sh recover testbatch
+\endcode
+
+Alternatively, you can set kernel parameters during startup by hitting 'e' in the \c
+grub menu and then add them to the \c kernel line.
+
+For applying the kernel parameter permanently add them in \c
+/boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX_DEFAULT
+variable in \c /etc/defaults/grub and run \c update-grub.
+
+After restart, check for the number of CPUs in \c /proc/cpuinfo - they
+might be reduced if you disabled too much ACPI!
 
 
 \subsubsection disabledevices Disable device drivers you do not need
@@ -875,35 +1031,20 @@ real-time perfomance (low latencies):
   .
 .
 
-\subsubsection kernelparamhints Kernel parameter
-In addition, there are several interesting kernel parameter:
-- check out https://gitlab.eurecom.fr/oai/openairinterface5g/wikis/OpenAirKernelMainSetup for more hints on disabling power-management and frequency scaling stuff
-- Check frequency scaling of CPUs with \a cpufreq-info from the \c cpufrequtils package.
-- Also check out "nohalt" kernel parameter (Documentation/kernel-parameters.txt).
-- For scheduling interrupts read Documentation/timers/NO_HZ.txt
-- Advanced configuration and power interface (ACPI): \c acpi=off and/or \c pci=noacpi .
-- Advanced programmable interrupt controller (APIC): \c noapic and/or \c nolapic and/or \c lapic
-- Disable the intel_idle module. Alternatively you can set \c intel_idle.max_cstate=0 . This is taken care of by the disabled "CPU Idle" in "Power management and ACPI options".
-.
 
-With disabled acpi your rtai-patched linux kernel might not properly
-halt or reboot. Try \c reboot=triple as a kernel parameter.  See \c
-/usr/src/linux/Documentation/x86/x86_64/boot-options.txt for more
-options for the reboot parameter.
-
-Supply the kernel parameter to the \c reboot action of \c makertaikernel.sh:
+\subsubsection rtaiisolcpus Isolate CPUs for real time tasks For
+further improving the RTAI performance, you might want to reserve at
+least one CPU for RTAI on a multi-core machine. You can isolate CPUs
+by using the kernel parameter
 \code
-$ makertaikernel.sh reboot param1=xxx param2=yyy ...
+isolcpus=0,1
 \endcode
+(for isolating the cores no. 0 and 1). Additional parameters are
+\code
+isolcpus=0,1 nohz_full=0,1 rcu_nocbs=0,1
+\endcode
+See the file \c /usr/local/src/rtai/README.ISOLCPUS for more details.
 
-Alternatively, you can set kernel parameters during startup by hitting 'e' in the \c
-grub menu and then add them to the \c kernel line.
-
-For applying the kernel parameter permanently add them in \c
-/boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX_DEFAULT
-variable in \c /etc/defaults/grub and run \c update-grub.
-
-After restart, check for the number of CPUs in \c /proc/cpuinfo - they might be reduced if you disabled too much ACPI!
 
 \subsubsection biosparameter Check your BIOS
 Sometimes it also helps to set/disable things in the BIOS:
@@ -914,7 +1055,6 @@ Sometimes it also helps to set/disable things in the BIOS:
 \subsubsection disablesmi Disable SMI interrupts
 Finally, there are the evil SMIs. They periodically produce some long latencies. See \c
 /usr/local/src/rtai/base/arch/x86/calibration/README.SMI and \c README.SMISPV for details.
-
 
 
 \subsection installcomedi Comedi data acquisition driver
