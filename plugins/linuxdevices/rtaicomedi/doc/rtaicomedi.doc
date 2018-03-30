@@ -137,9 +137,8 @@ sudo ./makertaikernel.sh reboot XXX
 
    The optional XXX are kernel parameter to be used for booting the
    kernel (they are added permanently to the \c
-   GRUB_CMDLINE_LINUX_DEFAULT variable in \c /etc/default/grub. The
-   original settings are recovered when calling \c reboot without
-   additional parameter).
+   GRUB_CMDLINE_LINUX_DEFAULT variable in \c /etc/default/grub). The
+   original settings are recovered when calling \c reboot \c default).
 
    Once you rebooted into the RTAI kernel run some tests by invoking
    \code
@@ -889,7 +888,7 @@ $ makertaikernel.sh report latencies-*
 
 If you want to stop automatic rebooting before all configurations have been tested run
 \code 
-$ makertaikernel.sh recover testbatch
+$ makertaikernel.sh restore testbatch
 \endcode
 
 Alternatively, you can set kernel parameters during startup by hitting 'e' in the \c

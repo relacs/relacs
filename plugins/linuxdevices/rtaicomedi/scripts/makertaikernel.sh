@@ -4,7 +4,7 @@
 # you should modify the following parameter according to your needs:
 
 : ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
-: ${LINUX_KERNEL:="4.4.115"}      # linux vanilla kernel version (set with -k)
+: ${LINUX_KERNEL:="4.4.115"}     # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NUM:="-1"}            # name of the linux kernel is $LINUX_KERNEL-$RTAI_DIR$KERNEL_NUM
                                  # (set with -n)
@@ -34,7 +34,7 @@
                            # if the running kernel matches LINUX_KERNEL
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
-: ${KERNEL_PARAM:=""}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -59,7 +59,7 @@
 FULL_COMMAND_LINE="$@"
 MAKE_RTAI_KERNEL="${0##*/}"
 
-VERSION_STRING="${MAKE_RTAI_KERNEL} version 2.0 by Jan Benda, March 2018"
+VERSION_STRING="${MAKE_RTAI_KERNEL} version 3.0 by Jan Benda, March 2018"
 DRYRUN=false        # set with -d
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
@@ -113,27 +113,173 @@ function print_version {
     echo $VERSION_STRING
 }
 
-function print_usage {
+function help_kernel_options {
     cat <<EOF
-Download and build everything needed for an rtai-patched linux kernel with comedi and math support.
-
-usage:
-sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-l] [-D] [-m] 
-     [action [target1 [target2 ... ]]]
-
 -d    : dry run - only print out what the script would do, but do not execute any command
--s xxx: use xxx as the base directory where to put the kernel sources (default ${KERNEL_PATH})
--n xxx: use xxx as the name of the new linux kernel (default ${KERNEL_NUM})
--k xxx: use linux kernel version xxx (default ${LINUX_KERNEL})
--r xxx: the rtai source (default ${RTAI_DIR}), one of
+-k xxx: use linux kernel version xxx (LINUX_KERNEL=${LINUX_KERNEL})
+-r xxx: the rtai source (RTAI_DIR=${RTAI_DIR}), one of
         magma: current rtai development version from csv
         vulcano: stable rtai development version from csv
         rtai-5.1: rtai release version 5.1 from www.rtai.org
         rtai-4.1: rtai release version 4.1 from www.rtai.org, or any other
         rtai-x.x: rtai release version x.x from www.rtai.org
         RTAI: snapshot from Shahbaz Youssefi's RTAI clone on github
--p xxx: use rtai patch file xxx
--c xxx: generate a new kernel configuration:
+-n xxx: append xxx to the name of the linux kernel (KERNEL_NUM=${KERNEL_NUM})
+EOF
+}
+
+function help_info {
+    cat <<EOF
+$VERSION_STRING
+
+Print some information about your system.
+
+Usage:
+
+sudo ${MAKE_RTAI_KERNEL} info [rtai|grub|setup]
+
+info         : display properties of rtai patches, loaded kernel modules, kernel, machine,
+               and grub menu
+info rtai    : list all available patches and suggest the one fitting to the kernel
+info settings: print the values of all configuration variables of the ${MAKE_RTAI_KERNEL} script
+info grub    : show grub boot menu entries
+info setup   : show modifikations of your system made by ${MAKE_RTAI_KERNEL} (run as root)
+
+EOF
+}
+
+function help_setup {
+    cat <<EOF
+$VERSION_STRING
+
+Setup and restore syslog daemon, grub menu, and kernel parameter.
+
+Usage:
+
+sudo ${MAKE_RTAI_KERNEL} setup [messages|grub|kernel]
+
+sudo ${MAKE_RTAI_KERNEL} restore [messages|grub|kernel|testbatch]
+
+setup            : setup messages, grub, and kernel
+setup messages   : enable /var/log/messages needed for RTAI tests in rsyslog settings
+setup grub       : configure the grub boot menu (not hidden, no submenus)
+setup kernel     : set kernel parameter for the grub boot menu to "$KERNEL_PARAMETER"
+
+restore          : restore the original system settings (messages, grub, kernel, and testbatch)
+restore messages : restore the original rsyslog settings
+restore grub     : restore the original grub boot menu settings
+restore kernel   : restore default kernel parameter for the grub boot menu
+restore testbatch: uninstall the automatic test script from crontab (see help test)
+
+EOF
+}
+
+function help_reboot {
+    cat <<EOF
+$VERSION_STRING
+
+Reboot and set kernel parameter.
+
+Usage:
+
+sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] reboot [keep|default|<XXX>|<N>]
+
+EOF
+    help_kernel_options
+    cat <<EOF
+
+reboot        : reboot into the rtai kernel ${MAKE_RTAI_KERNEL} is configured for
+                with kernel parameter as specified by KERNEL_PARAM
+                (currently set to "$KERNEL_PARAM")
+reboot XXX    : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
+                with XXX passed on as kernel parameter
+reboot keep   : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
+                and keep previously set kernel parameter
+reboot default: reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
+                without additional kernel parameter
+reboot N      : reboot into a kernel as specified by grub menu entry index N
+                without additional kernel parameter,
+                see "${MAKE_RTAI_KERNEL} info grub" for the grub menu.
+
+EOF
+}
+
+function help_test {
+    cat <<EOF
+$VERSION_STRING
+
+Test and report the performance of the rtai-patched linux kernel.
+
+Usage:
+
+sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] test [[hal|sched|math|comedi] 
+     [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch default|<FILE>|<FILE> <DSCR>]]
+
+${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] report [<FILES>]
+
+EOF
+    help_kernel_options
+    cat <<EOF
+
+Tests are only performed if the running kernel matches the one
+${MAKE_RTAI_KERNEL} is configured for.
+
+Action is one of:
+  test         : test the current kernel and write reports to the current working directory 
+                 (see below for details)
+  report FILES : write summary of test results from latencies* files given in FILES to stout
+
+For the test-action, the following targets are provided:
+As the optional first target:
+  hal            : test loading and unloading of rtai_hal kernel module only
+  sched          : test loading and unloading of rtai_hal and rtai_sched kernel modules
+  math           : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module
+  comedi         : test loading and unloading of rtai and comedi kernel modules
+optionally followed by one or more of:
+  kern           : run the kern tests (default)
+  kthreads       : run the kthreads tests
+  user           : run the user tests
+  all            : run the kernel, kthreads, and user tests
+  none           : test loading and unloading of kernel modules and do not run any tests
+  NNN            : the number of seconds after which the latency test is automatically aborted
+  auto XXX       : a one-word description of the kernel configuration (no user interaction)
+
+As the last arguments you may add:
+  batch FILE     : automatically run tests with various kernel parameter as specified in FILE
+  batch default  : write a default file with kernel parameters to be tested
+  batch FILE DSCR: prepend description of configuration from FILE by DSCR.
+This successively reboots into the RTAI kernel with the kernel parameter 
+set to the ones specified by the KERNEL_PARAM variable and as specified in FILE,
+and runs the tests as specified by the previous commands (without the "auto" command).
+
+Each line of the batch FILE can be
+- a one-word descriptive string describing the kernel parameter, followed by a colon (':')
+  and a list of kernel parameter to be used: e.g. "idlenohz : idle=poll nohz=off"
+- an empty line (ignored).
+- Comments are introduced by a hash ('#') and run to the end of the line
+See the file written by batch default for suggestions, and the file
+$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/Documentation/kernel-parameters.txt
+for a documentation of all kernel parameter.
+
+EOF
+}
+
+function help_usage {
+    cat <<EOF
+$VERSION_STRING
+
+Download, build, install and test everything needed for an rtai-patched linux kernel with math and comedi support.
+
+usage:
+sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-l] [-D] [-m] 
+     [action [target1 [target2 ... ]]]
+
+EOF
+    help_kernel_options
+    cat <<EOF
+-s xxx: use xxx as the base directory where to put the kernel sources (KERNEL_PATH=${KERNEL_PATH})
+-p xxx: use rtai patch file xxx (RTAI_PATCH=${RTAI_PATCH})
+-c xxx: generate a new kernel configuration (KERNEL_CONFIG=${KERNEL_CONFIG}):
         old: use the kernel configuration of the currently running kernel
         def: generate a kernel configuration using make defconfig
         mod: simplify existing kernel configuration using make localmodconfig
@@ -143,8 +289,8 @@ sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c x
         is executed to deselect compilation of unused modules, but only if the
         runnig kernel matches the selected kernel version (major.minor only).
 -l    : disable call to make localmodconf after a kernel configuration 
-        has been selected via the -c switch
--D    : generate kernel package with debug symbols in addition
+        has been selected via the -c switch (RUN_LOCALMOD=${RUN_LOCALMOD})
+-D    : generate kernel package with debug symbols in addition (KERNEL_DEBUG=${KERNEL_DEBUG})
 -m    : enter the RTAI configuration menu
 
 If no action is specified, a full download and build is performed for all targets (except showroom).
@@ -170,47 +316,23 @@ If no target is specified, all targets are made (except showroom).
 
 Action can be also one of
   help               : display this help message
+  help XXX           : display help message for action XXX
+  info               : display properties of rtai patches, loaded kernel modules,
+                       kernel, machine, and grub menu
+                       (run "${MAKE_RTAI_KERNEL} help info" for details)
   init               : should be executed the first time you use ${MAKE_RTAI_KERNEL} -
                        equivalent to setup, download rtai, info rtai.
-  info               : display properties of rtai patches, loaded kernel modules, kernel, machine,
-                       and grub menu (no target required)
-    info rtai        : list all available patches and suggest the one fitting to the kernel
-    info grub        : show grub boot menu entries
   reconfigure        : reconfigure the kernel and make a full build of all targets (without target)
-  reboot             : reboot into rtai kernel immediately (without target)
-    reboot XXX       : reboot into rtai kernel with XXX added to the kernel parameter
-    reboot N         : reboot into kernel specified by grub menu entry  index N
-  test               : test the current kernel and write reports to the current working directory                       (see below for details)
-  report FILES       : summarize test results from latencies* files given in FILES
-
+  reboot             : reboot and set kernel parameter
+                       (run "${MAKE_RTAI_KERNEL} help reboot" for details)
   setup              : setup some basic configurations of your (debian based) system
-    setup messages   : enable /var/log/messages needed for RTAI tests in rsyslog settings
-    setup grub       : configure the grub boot menu (not hidden, no submenus)
-    setup kernel     : set kernel parameter for the grub boot menu
-  recover            : recover the original system settings
-    recover messages : recover the original rsyslog settings
-    recover grub     : recover the original grub boot menu settings
-    recover kernel   : recover default kernel parameter for the grub boot menu
-    recover testbatch: uninstall the automatic test script from crontab (see test batch)
-
-For the test-action, the following targets are provided:
-As the optional first target:
-  hal            : test loading and unloading of rtai_hal kernel module only
-  sched          : test loading and unloading of rtai_hal and rtai_sched kernel modules
-  math           : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module
-  comedi         : test loading and unloading of rtai and comedi kernel modules
-optionally followed by one or more of:
-  kern           : run the kern tests (default)
-  kthreads       : run the kthreads tests
-  user           : run the user tests
-  all            : run the kernel, kthreads, and user tests
-  none           : test loading and unloading of kernel modules and do not run any tests
-  NNN            : the number of seconds after which the test are automatically aborted
-  auto XXX       : a one-word description of the kernel configuration (no user interaction)
-  batch FILE     : automatically run tests with various kernel parameter as specified in FILE
-  batch default  : write a default file with kernel parameters to be tested
-  batch FILE DSCR: prepend description of configuration from FILE by DSCR.
-
+                       (run "${MAKE_RTAI_KERNEL} help setup" for details)
+  restore            : restore the original system settings
+                       (run "${MAKE_RTAI_KERNEL} help restore" for details)
+  test               : test the current kernel and write reports to the current working directory 
+                       (run "${MAKE_RTAI_KERNEL} help test" for details)
+  report FILES       : summarize test results from latencies* files given in FILES
+                       (run "${MAKE_RTAI_KERNEL} help test" for details)
 
 Common use cases:
 
@@ -251,6 +373,46 @@ function check_root {
 	echo "  sudo $0 ${FULL_COMMAND_LINE}"
 	exit 1
     fi
+}
+
+function print_setup {
+    check_root
+
+    echo
+    echo "System modifications of ${MAKE_RTAI_KERNEL}:"
+    echo
+    # messages:
+    if test -f /etc/rsyslog.d/50-default.conf.origmrk; then
+	echo "messages : /etc/rsyslog.d/50-default.conf is modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} restore messages\" to restore"
+    else
+	echo "messages : /etc/rsyslog.d/50-default.conf is not modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} setup messages\" for setting up"
+    fi
+    # grub:
+    if test -f /etc/default/grub.origmrk; then
+	echo "grub     : /etc/default/grub is modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} restore grub\" to restore"
+    else
+	echo "grub     : /etc/default/grub is not modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} setup grub\" for setting up"
+    fi
+    # kernel parameter:
+    if test -f /etc/default/grub.origkp; then
+	echo "kernel   : /etc/default/grub is modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} restore kernel\" to restore"
+    else
+	echo "kernel   : /etc/default/grub is not modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up"
+    fi
+    # test batch:
+    if crontab -l 2> /dev/null | grep -q "${MAKE_RTAI_KERNEL}"; then
+	echo "testbatch: crontab is modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} restore testbatch\" to restore"
+    else
+	echo "testbatch: crontab is not modified"
+    fi
+    echo
 }
 
 function print_grub {
@@ -296,41 +458,17 @@ function print_versions {
     fi
 }
 
-function print_info {
-    echo
-    echo "loaded modules (lsmod):"
-    if test -f lsmod.dat; then
-	cat lsmod.dat | while read LINE; do echo "  $LINE"; done
-	rm -f lsmod.dat
+function print_distribution {
+    if lsb_release &> /dev/null; then
+	echo "distribution (lsb_release -a):"
+	lsb_release -a 2> /dev/null | while read LINE; do echo "  $LINE"; done
     else
-	lsmod | while read LINE; do echo "  $LINE"; done
+	echo "distribution: unknown"
     fi
-    echo
-    echo "distribution (lsb_release -a):"
-    lsb_release -a 2> /dev/null | while read LINE; do echo "  $LINE"; done
-    echo
-    echo "running kernel (uname -r):"
-    echo "  $(uname -r)"
-    echo
-    echo "kernel parameter (/proc/cmdline):"
-    for param in $(cat /proc/cmdline); do
-	echo "  $param"
-    done
-    echo
-    print_versions
-    echo
-    echo "Hostname:"
-    echo "  $(hostname)"
-    echo
-    echo "CPU (/proc/cpuinfo):"
-    echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
-    echo "  $CPU_NUM cores"
-    echo "  machine (uname -m): $MACHINE"
-    echo "  $(free -h | grep Mem | awk '{print $2}') RAM"
-    echo
-    print_grub
-    echo
-    echo "settings of ${MAKE_RTAI_KERNEL}:"
+}
+
+function print_settings {
+    echo "settings of ${VERSION_STRING}:"
     echo "  KERNEL_PATH   (-s) = $KERNEL_PATH"
     echo "  LINUX_KERNEL  (-k) = $LINUX_KERNEL"
     echo "  KERNEL_SOURCE_NAME = $KERNEL_SOURCE_NAME"
@@ -346,6 +484,40 @@ function print_info {
     echo "  RTAI_SCHED_PARAM   = $RTAI_SCHED_PARAM"
 }
 
+function print_kernel_info {
+    echo
+    echo "loaded modules (lsmod):"
+    if test -f lsmod.dat; then
+	cat lsmod.dat | while read LINE; do echo "  $LINE"; done
+	rm -f lsmod.dat
+    else
+	lsmod | while read LINE; do echo "  $LINE"; done
+    fi
+    echo
+    print_distribution
+    echo
+    echo "hostname: $(hostname)"
+    echo
+    echo "running kernel (uname -r): $(uname -r)"
+    echo
+    echo "kernel parameter (/proc/cmdline):"
+    for param in $(cat /proc/cmdline); do
+	echo "  $param"
+    done
+    echo
+    print_versions
+    echo
+    echo "CPU (/proc/cpuinfo):"
+    echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
+    echo "  number of cores: $CPU_NUM"
+    echo "  machine (uname -m): $MACHINE"
+    echo "  memory: $(free -h | grep Mem | awk '{print $2}') RAM"
+    echo
+    print_grub
+    echo
+    print_settings
+}
+
 function print_full_info {
     ORIG_RTAI_PATCH="$RTAI_PATCH"
     RTAI_PATCH=""
@@ -356,7 +528,7 @@ function print_full_info {
     if test "x$1" != "xrtai"; then
 	RTAI_PATCH="$ORIG_RTAI_PATCH"
 	rm -f lsmod.dat
-	print_info
+	print_kernel_info
     fi
 }
 
@@ -712,31 +884,32 @@ function remove_kernel {
 
 function setup_kernel_param {
     if test -f /etc/default/grub; then
-	if test -n "$KERNEL_PARAM"; then
-	    if ! $DRYRUN; then
-		cd /etc/default
-		test -f grub.origkp && mv grub.origkp grub
-		cp grub grub.origkp
-		sed -i -e '/GRUB_CMDLINE_LINUX_DEFAULT/s/="\(.*\)"/="'"$KERNEL_PARAM"' \1"/' grub
-		update-grub
-	    fi
-	    echo_log ""
-	    echo_log "added \"$KERNEL_PARAM\" to the kernel parameter"
-	elif test -f /etc/default/grub.origkp; then
-	    echo_log "recover original kernel parameter"
-	    if ! $DRYRUN; then
-		cd /etc/default
+	if ! $DRYRUN; then
+	    cd /etc/default
+	    RUNGRUB=false
+	    if test -f grub.origkp; then
 		mv grub.origkp grub
-		update-grub
+		RUNGRUB=true
 	    fi
+	    if test -n "$*"; then
+		cp grub grub.origkp
+		sed -i -e '/GRUB_CMDLINE_LINUX_DEFAULT/s/="\(.*\)"/="'"$*"' \1"/' grub
+		RUNGRUB=true
+	    fi
+	    $RUNGRUB && update-grub
 	fi
-    else
+	if test -n "$*"; then
+	    echo_log ""
+	    echo_log "added \"$*\" to the kernel parameter"
+	fi
+    elif test -n "$*"; then
+	echo_log ""
 	echo_log "/etc/default/grub not found: cannot configure kernel parameter"
     fi
 }
 
-function recover_kernel_param {
-    echo_log "recover original kernel parameter"
+function restore_kernel_param {
+    echo_log "restore original kernel parameter"
     if ! $DRYRUN; then
 	cd /etc/default
 	test -f grub.origkp && mv grub.origkp grub
@@ -744,42 +917,69 @@ function recover_kernel_param {
     fi
 }
 
-function reboot_cmd {
+function set_reboot_kernel {
+# tell grub to reboot into a specific kernel
+# if no grub menu entry is specified boot into the rtai kernel
     if ! $DRYRUN; then
-	echo_kmsg "REBOOT INTO $GRUBMENU"
-	if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
+	GRUBMENU="$1"
+	if test -z "$GRUBMENU"; then
+	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
+	fi
+	grub-reboot "$GRUBMENU"
+    fi
+    echo_log "reboot into grub menu $GRUBMENU"
+}
+
+function reboot_cmd {
+# reboot the computer
+    echo_log "reboot now"
+    if ! $DRYRUN; then
+	echo_kmsg "REBOOT"
+	if test "x$1" = "xroot"; then
 	    reboot
+	else
+	    #if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
+	    reboot
+	    #fi
 	fi
     fi
 }
 
-function set_reboot_kernel {
-    if ! $DRYRUN; then
-	GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
-	grub-reboot "$GRUBMENU"
-    fi
-}
-
 function reboot_kernel {
+# N      : boot into Nth kernel
+# keep   : boot into rtai kernel and keep previous set kernel parameter 
+# default: boot into rtai kernel without additional kernel parameter
+# ""     : boot into rtai kernel with additional kernel parameter as specified by KERNEL_PARAM
+# XXX    : boot into rtai kernel with additional kernel parameter
     case $1 in
-	[0-9])
-	    echo_log "reboot into grub menu $1"
-	    if ! $DRYRUN; then
-		grub-reboot "$@"
-		reboot_cmd
-	    fi
+	[0-9]*)
+	    restore_kernel_param
+	    set_reboot_kernel "$1"
+	    sleep 2
+	    reboot_cmd
+	    ;;
+
+	keep)
+	    set_reboot_kernel
+	    sleep 2
+	    reboot_cmd
+	    ;;
+
+	default)
+	    setup_kernel_param ""
+	    set_reboot_kernel
+	    sleep 2
+	    reboot_cmd
 	    ;;
 
 	*)
-	    KERNEL_PARAM="$*"
-	    setup_kernel_param
-	    if test -n "$KERNEL_PARAM"; then
-		echo_log "reboot into ${KERNEL_NAME} kernel with parameter \"$KERNEL_PARAM\""
+	    if test -z "$*"; then
+		setup_kernel_param $KERNEL_PARAM
 	    else
-		echo_log "reboot into ${KERNEL_NAME} kernel"
+		setup_kernel_param $*
 	    fi
-	    sleep 2
 	    set_reboot_kernel
+	    sleep 2
 	    reboot_cmd
 	    ;;
     esac
@@ -902,7 +1102,7 @@ function save_test {
 		fi
 	    done
 	done
-	print_info
+	print_kernel_info
 	echo
 	echo "rtai-info reports:"
 	${REALTIME_DIR}/bin/rtai-info
@@ -1241,42 +1441,61 @@ function test_batch {
 		exit 1
 	    fi
 	    cat <<EOF > testkernelparams.mrk
-# description : kernel parameter
+# $VERSION_STRING
+# batch file for testing RTAI kernel with various kernel parameter.
+#
+# Each line has the format:
+# <description> : <kernel parameter>
+# where <description> is a brief one-word description of the kernel configuration 
+# and the kernel parameter.
+# The <kernel parameter> are added to the ones defined in the KERNEL_PARAM variable.
+#
+# Edit this file according to your needs.
+# Then run
+#
+# $ ./$MAKE_RTAI_KERNEL test math 121 batch testkernelparams.mrk
+#
+# for testing all the kernel parameter. Have a cup of tea and come back
+# (each configuration needs about 5 minutes for booting, testing and shutdown).
+# The test results are recorded in the latencies-${LINUX_KERNEL}-${RTAI_DIR}-$(hostname)* files.
+# Generate a summary table by calling
+#
+# $ ./$MAKE_RTAI_KERNEL report
 
 # test two times to see variability of results:
-idle1 : idle=poll
-idle2 : idle=poll
+idle1 :
+idle2 :
 
 # isolcpus parameter:
-isolcpus : idle=poll isolcpus=2-3
-nohzfull : idle=poll isolcpus=2-3 nohz_full=2-3
-rcu : idle=poll isolcpus=2-3 nohz_full=2-3 rcu_nocbs=2-3
+isolcpus : isolcpus=0-1
+nohzfull : isolcpus=0-1 nohz_full=0-1
+rcu : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
 
 # clocks and timers:
-nohz : idle=poll nohz=off
-tscreliable : idle=poll tsc=reliable
-tscnoirqtime : idle=poll tsc=noirqtime
-nolapictimer: idle=poll nolapic_timer
-clocksourcehpet: idle=poll clocksource=hpet
-highresoff: idle=poll highres=off
-hpetdisable: idle=poll hpet=disable
-skewtick: idle=poll skew_tick=1
+nohz : nohz=off
+tscreliable : tsc=reliable
+tscnoirqtime : tsc=noirqtime
+nolapictimer: nolapic_timer
+clocksourcehpet: clocksource=hpet
+highresoff: highres=off
+hpetdisable: hpet=disable
+skewtick: skew_tick=1
 
 # devices:
-dma : idle=poll libata.dma=0
+dma : libata.dma=0
 
 # acpi:
-#acpioff: idle=poll acpi=off    # often very effective, but weired system behavior
-acpinoirq: idle=poll acpi=noirq
-pcinoacpi: idle=poll pci=noacpi
-pcinomsi: idle=poll pci=nomsi
+#acpioff: acpi=off    # often very effective, but weired system behavior
+acpinoirq: acpi=noirq
+pcinoacpi: pci=noacpi
+pcinomsi: pci=nomsi
 
 # apic:
-noapic: idle=poll noapic
-nox2apic: idle=poll nox2apic
-x2apicphys: idle=poll x2apic_phys
-#nolapic: idle=poll nolapic    # we need the lapic timer!
-lapicnotscdeadl: idle=poll lapic=notscdeadline
+noapic: noapic
+nox2apic: nox2apic
+x2apicphys: x2apic_phys
+#nolapic: nolapic    # we need the lapic timer!
+lapicnotscdeadl: lapic=notscdeadline
 EOF
 	    chown --reference=. testkernelparams.mrk
 	    echo "Wrote default kernel parameter to be tested into file \"testkernelparams.mrk\"."
@@ -1315,8 +1534,8 @@ EOF
 
     # read first line from configuration file:
     INDEX=1
-    IFS=':' read DESCRIPTION KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
-    echo "Reboot into configuration \"${BATCH_DESCRIPTION}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $KERNEL_PARAM)\""
+    IFS=':' read DESCRIPTION NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
+    echo "Reboot into configuration \"${BATCH_DESCRIPTION}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     echo
 
     # confirm:
@@ -1324,20 +1543,18 @@ EOF
     if test "x$PROCEED" != "xn"; then
 	echo
 
-	recover_test_batch
+	restore_test_batch
 	# install crontab:
 	MRK_DIR="$(cd "$(dirname "$0")" && pwd)"
 	(crontab -l 2>/dev/null; echo "@reboot ${MRK_DIR}/${MAKE_RTAI_KERNEL} test batchscript > ${TEST_DIR}/kernel.log") | crontab -
 	echo "Installed crontab for automatic testing after reboot."
 	echo "  Uninstall by calling"
-	echo "  $ ./${MAKE_RTAI_KERNEL} recover testbatch"
+	echo "  $ ./${MAKE_RTAI_KERNEL} restore testbatch"
 
 	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
 	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$BATCH_DESCRIPTION|$TEST_TOTAL_TIME|$TEST_SPECS"
 
-	echo "Rebooting ..."
-	sleep 1
-	reboot_kernel $KERNEL_PARAM
+	reboot_kernel $KERNEL_PARAM $NEW_KERNEL_PARAM
     else
 	echo
 	echo "Test batch aborted"
@@ -1361,26 +1578,25 @@ function test_batch_script {
     N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':')
 
     # read current DESCRIPTION from configuration file:
-    IFS=':' read DESCRIPTION KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
+    IFS=':' read DESCRIPTION NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
     let INDEX+=1
 
     if test "$INDEX" -gt "$N_TESTS"; then
 	# no further tests:
 	echo_kmsg "LAST TEST BATCH"
 	# clean up:
-	recover_test_batch > /dev/null
-	KERNEL_PARAM=""
-	setup_kernel_param
+	restore_test_batch > /dev/null
+	restore_kernel_param
 	# at TEST_TOTAL_TIME seconds later reboot into default kernel:
-	{ sleep $TEST_TOTAL_TIME; reboot; } &
+	{ sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
     else
-	# read and set next KERNEL_PARAM:
-	IFS=':' read DESCR KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
+	# read and set next NEW_KERNEL_PARAM:
+	IFS=':' read DESCR NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
 	echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$BATCH_DESCRIPTION|$TEST_TOTAL_TIME|$TEST_SPECS"
-	setup_kernel_param
+	setup_kernel_param $KERNEL_PARAM $NEW_KERNEL_PARAM
 	set_reboot_kernel
 	# at TEST_TOTAL_TIME seconds later reboot:
-	{ sleep $TEST_TOTAL_TIME; reboot; } &
+	{ sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
     fi
 
     # run tests:
@@ -1394,9 +1610,9 @@ function test_batch_script {
     exit 0
 }
 
-function recover_test_batch {
+function restore_test_batch {
     if crontab -l | grep -q "${MAKE_RTAI_KERNEL}"; then
-	echo_log "recover original crontab"
+	echo_log "restore original crontab"
 	if ! $DRYRUN; then
 	    (crontab -l | grep -v "${MAKE_RTAI_KERNEL}") | crontab -
 	fi
@@ -2072,8 +2288,8 @@ function setup_messages {
     fi
 }
 
-function recover_messages {
-    echo_log "recover original /etc/rsyslog.d/50-default.conf"
+function restore_messages {
+    echo_log "restore original /etc/rsyslog.d/50-default.conf"
     if ! $DRYRUN; then
 	cd /etc/rsyslog.d
 	if test -f 50-default.conf.origmrk; then
@@ -2104,8 +2320,8 @@ function setup_grub {
     fi
 }
 
-function recover_grub {
-    echo_log "recover original grub boot menu"
+function restore_grub {
+    echo_log "restore original grub boot menu"
     if ! $DRYRUN; then
 	cd /etc/default
 	test -f grub.origkp && mv grub.origkp grub
@@ -2123,33 +2339,33 @@ function setup_features {
     if test -z $1; then
 	setup_messages
 	setup_grub
-	setup_kernel_param
+	setup_kernel_param $KERNEL_PARAM
     else
 	for TARGET; do
 	    case $TARGET in
 		messages ) setup_messages ;;
 		grub ) setup_grub ;;
-		kernel ) setup_kernel_param ;;
+		kernel ) setup_kernel_param $KERNEL_PARAM ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
     fi
 }
 
-function recover_features {
+function restore_features {
     check_root
     if test -z $1; then
-	recover_messages
-	recover_grub
-	recover_kernel_param
-	recover_test_batch
+	restore_messages
+	restore_grub
+	restore_kernel_param
+	restore_test_batch
     else
 	for TARGET; do
 	    case $TARGET in
-		messages ) recover_messages ;;
-		grub ) recover_grub ;;
-		kernel ) recover_kernel_param ;;
-		testbatch ) recover_test_batch ;;
+		messages ) restore_messages ;;
+		grub ) restore_grub ;;
+		kernel ) restore_kernel_param ;;
+		testbatch ) restore_test_batch ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -2373,11 +2589,26 @@ function remove_all {
     fi
 }
 
-
 function clean_unpack_patch_kernel {
    check_root && clean_kernel && unpack_kernel && patch_kernel
  }
 
+function print_help {
+    if test -z "$1"; then
+	help_usage
+    else
+	for TARGET; do
+	    case $TARGET in
+		info) help_info ;;
+		setup) help_setup ;;
+		restore) help_setup ;;
+		reboot) help_reboot ;;
+		test) help_test ;;
+		* ) echo "sorry, no help available for $TARGET" ;;
+	    esac
+	done
+    fi
+}
 
 ###########################################################################
 ###########################################################################
@@ -2388,7 +2619,7 @@ rm -f "$LOG_FILE"
 while test "x${1:0:1}" = "x-"; do
     case $1 in
 	--help )
-	    print_usage
+	    help_usage
 	    exit 0
 	    ;;
 
@@ -2436,7 +2667,7 @@ while test "x${1:0:1}" = "x-"; do
 	    ;;
 	-p )
 	    shift
-	    if test "x$1" != "xreconfigure"; then
+	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		RTAI_PATCH=$1
 		shift
 		RTAI_PATCH_CHANGED=true
@@ -2503,7 +2734,7 @@ shift
 case $ACTION in
 
     help ) 
-	print_usage 
+	print_help $@ 
 	exit 0
 	;;
 
@@ -2514,11 +2745,16 @@ case $ACTION in
 
     info ) if test "x$1" = "xgrub"; then
 	    print_grub
+	elif test "x$1" = "xsettings"; then
+	    print_settings
+	    echo
+	    echo "You may modify the settings by the respective options, or"
+	    echo "by editing the variables directly in the ${MAKE_RTAI_KERNEL} script."
+	elif test "x$1" = "xsetup"; then
+	    print_setup
 	else
 	    print_full_info $@ 
-	    if test "x$1" = "xrtai"; then
-		rm -f "$LOG_FILE"
-	    fi 
+	    test "x$1" = "xrtai" && rm -f "$LOG_FILE"
 	fi ;;
 
     reconfigure ) reconfigure ;;
@@ -2533,7 +2769,7 @@ case $ACTION in
 
     init) init_installation ;;
     setup ) setup_features $@ ;;
-    recover ) recover_features $@ ;;
+    restore ) restore_features $@ ;;
     download ) download_all $@ ;;
     update ) update_all $@ ;;
     patch ) clean_unpack_patch_kernel ;;
@@ -2543,12 +2779,12 @@ case $ACTION in
     clean ) clean_all $@ ;;
     uninstall ) uninstall_all $@ ;;
     remove ) remove_all $@ ;;
-    reboot ) reboot_kernel $@ ;;
+    reboot ) check_root; reboot_kernel $@ ;;
 
     * ) if test -n "$1"; then
 	    echo "unknown action \"$1\""
 	    echo
-	    print_usage
+	    help_usage
 	    exit 1
 	else
 	    full_install
