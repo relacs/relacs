@@ -34,7 +34,7 @@
                            # if the running kernel matches LINUX_KERNEL
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
-: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM:="idle=poll tsc=reliable"}     # kernel parameter to be passed to grub
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -1027,19 +1027,19 @@ function save_test {
 	echo "Test summary (in nanoseconds):"
 	echo
 	# header 1:
-	printf "RTH| %-30s| " "general"
+	printf "RTH| %-50s| " "general"
 	for TD in kern kthreads user; do
 	    printf "%-41s| %-19s| %-31s| " "$TD latencies" "$TD switches" "$TD preempt"
 	done
 	printf "%s\n" "kernel"
 	# header 2:
-	printf "RTH| %-20s| %-8s| " "description" "progress"
+	printf "RTH| %-40s| %-8s| " "description" "progress"
 	for TD in kern kthreads user; do
 	    printf "%7s| %7s| %7s| %5s| %7s| %5s| %5s| %5s| %9s| %9s| %9s| " "ovlmax" "avg" "std" "n" "maxover" "susp" "sem" "rpc" "max" "jitfast" "jitslow"
 	done
 	printf "%s\n" "configuration"
 	# data:
-	printf "RTD| %-20s| %-8s| " "$NAME" "$PROGRESS"
+	printf "RTD| %-40s| %-8s| " "$NAME" "$PROGRESS"
 	for TD in kern kthreads user; do
 	    T=${TD:0:1}
 	    test "$TD" = "kthreads" && T="t"
@@ -1463,19 +1463,20 @@ function test_batch {
 # $ ./$MAKE_RTAI_KERNEL report
 
 # test two times to see variability of results:
-idle1 :
-idle2 :
+plain1 :
+plain2 :
 
 # isolcpus parameter:
 isolcpus : isolcpus=0-1
-nohzfull : isolcpus=0-1 nohz_full=0-1
-rcu : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
+isolcpusnohzfull : isolcpus=0-1 nohz_full=0-1
+isolcpusrcu : isolcpus=0-1 rcu_nocbs=0-1
+isolcpusnohzfullrcu : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
 
 # clocks and timers:
 nohz : nohz=off
 tscreliable : tsc=reliable
 tscnoirqtime : tsc=noirqtime
-nolapictimer: nolapic_timer
+nolapictimer: nolapic_timer  # no good
 clocksourcehpet: clocksource=hpet
 highresoff: highres=off
 hpetdisable: hpet=disable
@@ -1496,6 +1497,9 @@ nox2apic: nox2apic
 x2apicphys: x2apic_phys
 #nolapic: nolapic    # we need the lapic timer!
 lapicnotscdeadl: lapic=notscdeadline
+
+# test yet again to see variability of results:
+plain3 :
 EOF
 	    chown --reference=. testkernelparams.mrk
 	    echo "Wrote default kernel parameter to be tested into file \"testkernelparams.mrk\"."
@@ -1622,24 +1626,111 @@ function restore_test_batch {
 function test_report {
     FILES="latencies-${LINUX_KERNEL}-${RTAI_DIR}-*"
     test -n "$1" && FILES="$*"
-    FIRST=true
     rm -f header.txt data.txt dataoverrun.txt
+    # column widths:
+    COLWS=()
+    INIT=true
     for TEST in $FILES; do
 	test -f "$TEST" || continue
-	if $FIRST; then
-	    head -n 6 $TEST | fgrep 'RTH|' > header.txt
-	    FIRST=false
-	fi
-	if test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "-"; then
-	    head -n 6 $TEST | fgrep 'RTD|' >> dataoverrun.txt
-	elif test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "o"; then
-	    head -n 6 $TEST | fgrep 'RTD|' >> dataoverrun.txt
-	elif test $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8) -gt 0; then
-	    head -n 6 $TEST | fgrep 'RTD|' >> dataoverrun.txt
-	else
-	    head -n 6 $TEST | fgrep 'RTD|' >> data.txt
-	fi
+	LINEMARKS="RTD|"
+	$INIT && LINEMARKS="$LINEMARKS RTH|"
+	for LINEMARK in $LINEMARKS; do
+	    ORGIFS="$IFS"
+	    IFS=" | "
+	    INDEX=0
+	    for COL in $(head -n 6 $TEST | fgrep "$LINEMARK" | tail -n 1); do
+		# strip spaces:
+		C=$(echo $COL)
+		WIDTH=${#C}
+		#if test "x$C" = "x-" || test "x$C" = "xo"; then
+		#    WIDTH=0
+		#fi
+		if $INIT; then
+		    COLWS+=($WIDTH)
+		else
+		    test "${COLWS[$INDEX]}" -lt "$WIDTH" && COLWS[$INDEX]=$WIDTH
+		fi
+		let INDEX+=1
+	    done
+	    IFS="$ORGIFS"
+	    INIT=false
+	done
     done
+    # column width for first line of header:
+    INDEX=0
+    HCOLWS=()
+    WIDTH=0; for IDX in $(seq 1); do let WIDTH+=${COLWS[$INDEX]}; let INDEX+=1; done
+    HCOLWS+=($WIDTH)
+    WIDTH=2; for IDX in $(seq 2); do let WIDTH+=${COLWS[$INDEX]}; let INDEX+=1; done
+    HCOLWS+=($WIDTH)
+    for TD in $(seq 3); do
+	WIDTH=8; for IDX in $(seq 5); do let WIDTH+=${COLWS[$INDEX]}; let INDEX+=1; done
+	HCOLWS+=($WIDTH)
+	WIDTH=4; for IDX in $(seq 3); do let WIDTH+=${COLWS[$INDEX]}; let INDEX+=1; done
+	HCOLWS+=($WIDTH)
+	WIDTH=4; for IDX in $(seq 3); do let WIDTH+=${COLWS[$INDEX]}; let INDEX+=1; done
+	HCOLWS+=($WIDTH)
+    done
+    HCOLWS+=(${COLWS[$INDEX]})
+    # reformat output to the calculated column widths:
+    FIRST=true
+    for TEST in $FILES; do
+	test -f "$TEST" || continue
+	LINEMARKS="RTD|"
+	$FIRST && LINEMARKS="RTH| $LINEMARKS"
+	FIRST=false
+	for LINEMARK in $LINEMARKS; do
+	    DEST=""
+	    if test $LINEMARK = "RTH|"; then
+		DEST="header.txt"
+		# first line of header:
+		ORGIFS="$IFS"
+		IFS="|"
+		MAXINDEX=${#HCOLWS[*]}
+		let MAXINDEX-=1
+		INDEX=0
+		for COL in $(head -n 6 $TEST | fgrep "$LINEMARK" | head -n 1); do
+		    IFS=" "
+		    C=$(echo $COL)
+		    IFS="|"
+		    if test $INDEX -ge $MAXINDEX; then
+			printf "%s\n" $C >> $DEST
+		    else
+			printf "%-${HCOLWS[$INDEX]}s| " ${C:0:${HCOLWS[$INDEX]}} >> $DEST
+		    fi
+		    let INDEX+=1
+		done
+		IFS="$ORGIFS"
+	    else
+		if test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "-"; then
+		    DEST="dataoverrun.txt"
+		elif test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "o"; then
+		    DEST="dataoverrun.txt"
+		elif test $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8) -gt 0; then
+		    DEST="dataoverrun.txt"
+		else
+		    DEST="data.txt"
+		fi
+	    fi
+	    ORGIFS="$IFS"
+	    IFS=" | "
+	    INDEX=0
+	    MAXINDEX=${#COLWS[*]}
+	    let MAXINDEX-=1
+	    for COL in $(head -n 6 $TEST | fgrep "$LINEMARK" | tail -n 1); do
+		if test $INDEX -ge $MAXINDEX; then
+		    printf "%s\n" $COL >> $DEST
+		elif test $INDEX -lt 3; then
+		    printf "%-${COLWS[$INDEX]}s| " $COL >> $DEST
+		else
+		    printf "%${COLWS[$INDEX]}s| " $COL >> $DEST
+		fi
+		let INDEX+=1
+	    done
+	    IFS="$ORGIFS"
+	done
+    done
+    # sort results with respect to average kern latency:
     if ! $FIRST; then
 	cat header.txt
 	test -f data.txt && sort -t '|' -k 5 -n data.txt
