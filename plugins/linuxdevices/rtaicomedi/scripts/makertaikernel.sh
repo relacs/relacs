@@ -1468,9 +1468,9 @@ plain2 :
 
 # isolcpus parameter:
 isolcpus : isolcpus=0-1
-isolcpusnohzfull : isolcpus=0-1 nohz_full=0-1
-isolcpusrcu : isolcpus=0-1 rcu_nocbs=0-1
-isolcpusnohzfullrcu : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
+isolcpus-nohzfull : isolcpus=0-1 nohz_full=0-1
+isolcpus-rcu : isolcpus=0-1 rcu_nocbs=0-1
+isolcpus-nohzfull-rcu : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
 
 # clocks and timers:
 nohz : nohz=off
@@ -1601,6 +1601,10 @@ function test_batch_script {
 	set_reboot_kernel
 	# at TEST_TOTAL_TIME seconds later reboot:
 	{ sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
+    fi
+
+    if test -n "$BATCH_DESCRIPTION" && test "${BATCH_DESCRIPTION:-1:1}" != "-"; then
+	BATCH_DESCRIPTION="${BATCH_DESCRIPTION}-"
     fi
 
     # run tests:
