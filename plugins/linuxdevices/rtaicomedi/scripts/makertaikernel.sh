@@ -34,7 +34,7 @@
                            # if the running kernel matches LINUX_KERNEL
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
-: ${KERNEL_PARAM:="idle=poll tsc=reliable"}     # kernel parameter to be passed to grub
+: ${KERNEL_PARAM:=""}      # kernel parameter to be passed to grub
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -1476,27 +1476,27 @@ isolcpus-nohzfull-rcu : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
 nohz : nohz=off
 tscreliable : tsc=reliable
 tscnoirqtime : tsc=noirqtime
-nolapictimer: nolapic_timer  # no good
-clocksourcehpet: clocksource=hpet
-highresoff: highres=off
-hpetdisable: hpet=disable
-skewtick: skew_tick=1
+nolapictimer : nolapic_timer  # no good
+clocksourcehpet : clocksource=hpet
+highresoff : highres=off
+hpetdisable : hpet=disable
+skewtick : skew_tick=1
 
 # devices:
 dma : libata.dma=0
 
 # acpi:
-#acpioff: acpi=off    # often very effective, but weired system behavior
-acpinoirq: acpi=noirq
-pcinoacpi: pci=noacpi
-pcinomsi: pci=nomsi
+#acpioff : acpi=off    # often very effective, but weired system behavior
+acpinoirq : acpi=noirq
+pcinoacpi : pci=noacpi
+pcinomsi : pci=nomsi
 
 # apic:
-noapic: noapic
-nox2apic: nox2apic
-x2apicphys: x2apic_phys
-#nolapic: nolapic    # we need the lapic timer!
-lapicnotscdeadl: lapic=notscdeadline
+noapic : noapic
+nox2apic : nox2apic
+x2apicphys : x2apic_phys
+#nolapic : nolapic    # we need the lapic timer!
+lapicnotscdeadl : lapic=notscdeadline
 
 # test yet again to see variability of results:
 plain3 :
@@ -1523,7 +1523,7 @@ EOF
     TEST_SPECS="$@"
 
     if test -z "$TEST_TIME"; then
-	TEST_TIME="30"
+	TEST_TIME="300"
 	TEST_SPECS="$TEST_SPECS $TEST_TIME"
     fi
     TEST_TOTAL_TIME=$TEST_TIME
@@ -1630,6 +1630,7 @@ function restore_test_batch {
 function test_report {
     FILES="latencies-${LINUX_KERNEL}-${RTAI_DIR}-*"
     test -n "$1" && FILES="$*"
+    test -d "$FILES" && FILES="$FILES/latencies-${LINUX_KERNEL}-${RTAI_DIR}-*"
     rm -f header.txt data.txt dataoverrun.txt
     # column widths:
     COLWS=()
@@ -1660,6 +1661,14 @@ function test_report {
 	    INIT=false
 	done
     done
+    # nothing found:
+    if test ${#COLWS[*]} -le 2; then
+	echo "You need to specify exisitng files or a directory with test result files!"
+	echo
+	echo "Usage:"
+	echo "${MAKE_RTAI_KERNEL} report <FILES>"
+	exit 1
+    fi
     # column width for first line of header:
     INDEX=0
     HCOLWS=()
