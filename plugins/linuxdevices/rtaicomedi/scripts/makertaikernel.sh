@@ -34,7 +34,7 @@
                            # if the running kernel matches LINUX_KERNEL
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
-: ${KERNEL_PARAM:=""}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
 : ${BATCH_KERNEL_PARAM:="panic=10"}     # additional kernel parameter passed to grub for test batch
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
@@ -1004,12 +1004,12 @@ function test_result {
     TEST_RESULT=""
     if test -n "$TESTMODE" && test -f "results-${TESTMODE}-latency.dat"; then
 	TEST_DATA=$(grep RTD results-${TESTMODE}-latency.dat | tail -n 1)
-	OVERRUNS=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $7}')
+	OVERRUNS=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{printf("%d", $7)}')
 	if test "$OVERRUNS" -gt "0"; then
 	    TEST_RESULT="failed"
 	else
-	    LAT_MIN=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $3}')
-	    LAT_MAX=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{print $6}')
+	    LAT_MIN=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{printf("%d", $3)}')
+	    LAT_MAX=$(echo "$TEST_DATA" | awk -F '\\|[ ]*' '{printf("%d", $6)}')
 	    LATENCY=$(( $LAT_MAX - $LAT_MIN ))
 	    if test "$LATENCY" -gt 20000; then
 		TEST_RESULT="bad"
@@ -1155,8 +1155,10 @@ function test_run {
 	# run the test:
 	trap true SIGINT   # ^C should terminate ./run but not this script
 	$TIMEOUTCMD ./run | tee $TEST_RESULTS
+	#script -c "$TIMEOUTCMD ./run" results.dat
 	trap - SIGINT
-
+	#sed -e '1d; $d; s/\^C//' results.dat > $TEST_RESULTS
+	#rm results.dat
 	cd - > /dev/null
 	mv $TEST_DIR/$TEST_RESULTS .
 	echo
@@ -1296,9 +1298,9 @@ function test_rtaikernel {
     # unload already loaded comedi kernel modules:
     remove_comedi_modules
     # unload already loaded rtai kernel modules:
-    lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed already loaded rtai_math"; }
-    lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed already loaded rtai_sched"; }
-    lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed already loaded rtai_hal"; }
+    for MOD in msg mbx sem math sched hal; do
+	lsmod | grep -q rtai_$MOD && { rmmod rtai_$MOD && echo "removed already loaded rtai_$MOD"; }
+    done
     echo
 
     TESTED=""
@@ -1420,6 +1422,11 @@ function test_rtaikernel {
 	echo
     fi
 
+    # clean up:
+    for MOD in msg mbx sem math sched hal; do
+	lsmod | grep -q rtai_$MOD && { rmmod rtai_$MOD && echo "removed loaded rtai_$MOD"; }
+    done
+    
     # report:
     rm -f config-$REPORT
     rm -f latencies-$REPORT
@@ -1544,6 +1551,8 @@ EOF
     TEST_TIME="$1"
     shift
     TESTMODE="$1"
+    test -z "$TESTMODE" && TESTMODE="kern"
+    TESTMODE=$(echo $TESTMODE)  # strip whitespace
     shift
     TEST_SPECS="$@"
 
@@ -1551,10 +1560,10 @@ EOF
 	TEST_TIME="600"
 	TEST_SPECS="$TEST_SPECS $TEST_TIME"
     fi
-    TEST_TOTAL_TIME=0
+    TEST_TOTAL_TIME=5
     for TM in $TESTMODE; do
-	let TEST_TOTAL_TIME+=30
 	let TEST_TOTAL_TIME+=$TEST_TIME
+	let TEST_TOTAL_TIME+=20
     done
 
     echo "run \"test $TEST_SPECS\" on batch file \"$BATCH_FILE\" with content:"
@@ -1569,7 +1578,7 @@ EOF
     if test -n "$BD" && test "${BD:-1:1}" != "-"; then
 	BD="${BD}-"
     fi
-    echo "Reboot into configuration \"${BD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
+    echo "Reboot into first configuration: \"${BD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     echo
 
     # confirm:
