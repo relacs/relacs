@@ -35,6 +35,7 @@
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 : ${KERNEL_PARAM:=""}      # kernel parameter to be passed to grub
+: ${BATCH_KERNEL_PARAM:="panic=10"}     # additional kernel parameter passed to grub for test batch
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -212,7 +213,7 @@ Test and report the performance of the rtai-patched linux kernel.
 
 Usage:
 
-sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] test [[hal|sched|math|comedi] 
+sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] test [[hal|sched|math|comedi] [calib]
      [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch default|<FILE>|<FILE> <DSCR>]]
 
 ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] report [<FILES>]
@@ -236,6 +237,7 @@ As the optional first target:
   math           : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module
   comedi         : test loading and unloading of rtai and comedi kernel modules
 optionally followed by one or more of:
+  calib          : force calibration of scheduling latencies (default is no calibration)
   kern           : run the kern tests (default)
   kthreads       : run the kthreads tests
   user           : run the user tests
@@ -936,11 +938,19 @@ function reboot_cmd {
     if ! $DRYRUN; then
 	echo_kmsg "REBOOT"
 	if test "x$1" = "xroot"; then
-	    reboot
+	    shutdown -r now
+	    sleep 180
+	    reboot -f
+	    # reboot -f   # cold start!
+	    # reboot      # calls shutdown -r !
+	    # shutdown brings the system into the reuested runlevel (init 0/6)
+	    # shutdown -r # reboot in a minute   
+	    # shutdown -r now
+	    # shutdown -r +<minutes>
 	else
-	    #if ! qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1; then
-	    reboot
-	    #fi
+	    # qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1
+	    # gnome-session-quit --reboot --force
+	    shutdown -r now
 	fi
     fi
 }
@@ -1017,7 +1027,7 @@ function test_result {
     echo $TEST_RESULT
 }
 
-function save_test {
+function test_save {
     NAME="$1"
     REPORT="$2"
     TESTED="$3"
@@ -1035,7 +1045,7 @@ function save_test {
 	# header 2:
 	printf "RTH| %-40s| %-8s| " "description" "progress"
 	for TD in kern kthreads user; do
-	    printf "%7s| %7s| %7s| %5s| %7s| %5s| %5s| %5s| %9s| %9s| %9s| " "ovlmax" "avg" "std" "n" "maxover" "susp" "sem" "rpc" "max" "jitfast" "jitslow"
+	    printf "%7s| %7s| %7s| %5s| %7s| %5s| %5s| %5s| %9s| %9s| %9s| " "ovlmax" "avgmax" "std" "n" "maxover" "susp" "sem" "rpc" "max" "jitfast" "jitslow"
 	done
 	printf "%s\n" "configuration"
 	# data:
@@ -1116,7 +1126,7 @@ function save_test {
     chown --reference=. config-$REPORT
 }
 
-function run_test {
+function test_run {
     DIR=$1
     TEST=$2
     TEST_RESULTS=results-$DIR-$TEST.dat
@@ -1127,21 +1137,26 @@ function run_test {
 	echo_kmsg "RUN $DIR/$TEST test"
 	cd $TEST_DIR
 	rm -f $TEST_RESULTS
+
+	# setup automatic test duration:
 	TTIME=$TEST_TIME
 	if test -n "$TEST_TIME" && test $TEST = switches; then
 	    TTIME=2
 	    test $DIR = user && TTIME=""
 	fi
-	if test -n "$TEST_TIME" && test $TEST = preempt; then
+	if test -n "$TEST_TIME" && test $TEST = preempt && test $TEST_TIME -gt 10; then
 	    TTIME=10
 	fi
-	trap true SIGINT   # ^C should terminate ./run but not this script
+	TIMEOUTCMD=""
 	if test -n "$TTIME"; then
-	    timeout -s SIGINT -k 1 $TTIME ./run | tee $TEST_RESULTS
-	else
-	    ./run | tee $TEST_RESULTS
+	    TIMEOUTCMD="timeout -s SIGINT -k 1 $TTIME"
 	fi
+
+	# run the test:
+	trap true SIGINT   # ^C should terminate ./run but not this script
+	$TIMEOUTCMD ./run | tee $TEST_RESULTS
 	trap - SIGINT
+
 	cd - > /dev/null
 	mv $TEST_DIR/$TEST_RESULTS .
 	echo
@@ -1163,6 +1178,7 @@ function test_rtaikernel {
     # test targets:
     TESTMODE=""
     MAXMODULE="4"
+    CALIBRATE="false"
     DESCRIPTION=""
     TESTSPECS=""
     if test -n "$1"; then
@@ -1177,6 +1193,7 @@ function test_rtaikernel {
 	    sched) MAXMODULE="2" ;;
 	    math) MAXMODULE="3" ;;
 	    comedi) MAXMODULE="4" ;;
+	    calib) CALIBRATE="true" ;;
 	    [0-9]*) TEST_TIME="$1" ;;
 	    auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
 	    batch) shift; test_batch "$1" "$2" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
@@ -1193,9 +1210,10 @@ function test_rtaikernel {
 		user) TESTMODE="$TESTMODE user" ;;
 		all) TESTMODE="kern kthreads user" ;;
 		none) TESTMODE="none" ;;
+		calib) CALIBRATE="true" ;;
+		[0-9]*) TEST_TIME="$1" ;;
 		auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
 		batch) shift; test_batch "$1" "$2" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
-		[0-9]*) TEST_TIME="$1" ;;
 		*) echo "test $1 is invalid"
 		    exit 1 ;;
 	    esac
@@ -1251,11 +1269,18 @@ function test_rtaikernel {
 	NUM="$(printf "%03d" $N)"
     fi
 
-    # remove latency file to force calibration:
-    # this is for rtai5, for rtai4 the calibration tools needs to be run manually
-    # see base/arch/x86/calibration/README
-    if test -f ${REALTIME_DIR}/calibration/latencies; then
-        rm ${REALTIME_DIR}/calibration/latencies
+    if $CALIBRATE; then
+	# remove latency file to force calibration:
+	# this is for rtai5, for rtai4 the calibration tools needs to be run manually
+	# see base/arch/x86/calibration/README
+	if test -f ${REALTIME_DIR}/calibration/latencies; then
+	    rm ${REALTIME_DIR}/calibration/latencies
+	fi
+    else
+	# if not calibrated yet, provide default latencies:
+	if ! test -f ${REALTIME_DIR}/calibration/latencies; then
+	    RTAI_SCHED_PARAM="$RTAI_SCHED_PARAM kernel_latency=0 user_latency=0"
+	fi
     fi
 
     # description of kernel configuration:
@@ -1286,7 +1311,7 @@ function test_rtaikernel {
     # rtai_hal:
     if test $MAXMODULE -ge 1; then
 	TESTED="${TESTED}h"
-	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM"
 	lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM && echo "loaded  rtai_hal $RTAI_HAL_PARAM" || RTAIMOD_FAILED=true; }
 	$RTAIMOD_FAILED || PROGRESS="${PROGRESS}h"
@@ -1295,7 +1320,7 @@ function test_rtaikernel {
     # rtai_sched:
     if test $MAXMODULE -ge 2; then
 	TESTED="${TESTED}s"
-	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM"
 	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM && echo "loaded  rtai_sched $RTAI_SCHED_PARAM" || RTAIMOD_FAILED=true; }
 	$RTAIMOD_FAILED || PROGRESS="${PROGRESS}s"
@@ -1305,7 +1330,7 @@ function test_rtaikernel {
     if test $MAXMODULE -ge 3; then
 	if test -f ${REALTIME_DIR}/modules/rtai_math.ko; then
 	    TESTED="${TESTED}m"
-	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	    echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_math.ko"
 	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded  rtai_math" && PROGRESS="${PROGRESS}m"; }
 	else
@@ -1315,7 +1340,7 @@ function test_rtaikernel {
     
     if test $MAXMODULE -ge 4 && $MAKE_COMEDI && ! $RTAIMOD_FAILED; then
 	TESTED="${TESTED}c"
-	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	# loading comedi:
 	echo_kmsg "LOAD COMEDI MODULES"
 	echo "triggering comedi "
@@ -1330,7 +1355,7 @@ function test_rtaikernel {
 	echo_kmsg "REMOVE COMEDI MODULES"
 	remove_comedi_modules
     fi
-    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
     
     # remove rtai modules:
     if test $MAXMODULE -ge 3; then
@@ -1366,29 +1391,29 @@ function test_rtaikernel {
     echo "successfully loaded and unloaded rtai modules"
     echo
 
-    # kernel tests:
+    # RTAI tests:
     if test "$TESTMODE" != none; then
 	for DIR in $TESTMODE; do
 	    TT=${DIR:0:1}
 	    test "$DIR" = "kthreads" && TT="t"
 	    TESTED="${TESTED}${TT}"
-	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 
-	    run_test $DIR latency
+	    test_run $DIR latency
 	    if test $DIR = ${TESTMODE%% *}; then
 		rm -f config-$REPORT
 		rm -f latencies-$REPORT
 		TEST_RESULT="$(test_result ${TESTMODE%% *})"
 		REPORT="${REPORT_NAME}-${TEST_RESULT}"
 	    fi
-	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 
-	    run_test $DIR switches
-	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	    test_run $DIR switches
+	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 
-	    run_test $DIR preempt
+	    test_run $DIR preempt
 	    PROGRESS="${PROGRESS}${TT}"
-	    save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	done
 	echo_kmsg "TESTS DONE"
 	echo "finished all tests"
@@ -1407,7 +1432,7 @@ function test_rtaikernel {
     fi
     if test "$RESULT" != n; then
 	REPORT="${REPORT_NAME}-${RESULT}"
-	save_test "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
+	test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	echo
 	echo "saved kernel configuration in : config-$REPORT"
 	echo "saved test results in         : latencies-$REPORT"
@@ -1523,23 +1548,28 @@ EOF
     TEST_SPECS="$@"
 
     if test -z "$TEST_TIME"; then
-	TEST_TIME="300"
+	TEST_TIME="600"
 	TEST_SPECS="$TEST_SPECS $TEST_TIME"
     fi
-    TEST_TOTAL_TIME=$TEST_TIME
-    let TEST_TOTAL_TIME+=30
-    for TM in ${TESTMODE#* }; do
-	let TEST_TOTAL_TIME+=$TEST_TOTAL_TIME
+    TEST_TOTAL_TIME=0
+    for TM in $TESTMODE; do
+	let TEST_TOTAL_TIME+=30
+	let TEST_TOTAL_TIME+=$TEST_TIME
     done
 
     echo "run \"test $TEST_SPECS\" on batch file \"$BATCH_FILE\" with content:"
     sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | while read LINE; do echo "  $LINE"; done
     echo
 
+
     # read first line from configuration file:
     INDEX=1
     IFS=':' read DESCRIPTION NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
-    echo "Reboot into configuration \"${BATCH_DESCRIPTION}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
+    BD="$BATCH_DESCRIPTION"
+    if test -n "$BD" && test "${BD:-1:1}" != "-"; then
+	BD="${BD}-"
+    fi
+    echo "Reboot into configuration \"${BD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     echo
 
     # confirm:
@@ -1558,7 +1588,7 @@ EOF
 	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
 	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$BATCH_DESCRIPTION|$TEST_TOTAL_TIME|$TEST_SPECS"
 
-	reboot_kernel $KERNEL_PARAM $NEW_KERNEL_PARAM
+	reboot_kernel $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM
     else
 	echo
 	echo "Test batch aborted"
@@ -1597,7 +1627,7 @@ function test_batch_script {
 	# read and set next NEW_KERNEL_PARAM:
 	IFS=':' read DESCR NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
 	echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$BATCH_DESCRIPTION|$TEST_TOTAL_TIME|$TEST_SPECS"
-	setup_kernel_param $KERNEL_PARAM $NEW_KERNEL_PARAM
+	setup_kernel_param $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM
 	set_reboot_kernel
 	# at TEST_TOTAL_TIME seconds later reboot:
 	{ sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
@@ -1614,6 +1644,10 @@ function test_batch_script {
     if test "$INDEX" -gt "$N_TESTS"; then
 	echo_kmsg "FINISHED TEST BATCH"
     fi
+
+    # reboot:
+    sleep 1
+    reboot_cmd root
 
     exit 0
 }
