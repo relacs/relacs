@@ -53,6 +53,7 @@
 
 : ${STARTUP_TIME:=60}        # time to wait after boot to run a batch test in seconds
 
+: ${REMOTE_MACHINE:=}        # ip adress of a remote machine for ping flood
 
 ###########################################################################
 # some global variables:
@@ -60,7 +61,7 @@
 FULL_COMMAND_LINE="$@"
 MAKE_RTAI_KERNEL="${0##*/}"
 
-VERSION_STRING="${MAKE_RTAI_KERNEL} version 3.0 by Jan Benda, March 2018"
+VERSION_STRING="${MAKE_RTAI_KERNEL} version 4.0 by Jan Benda, April 2018"
 DRYRUN=false        # set with -d
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
@@ -228,25 +229,43 @@ ${MAKE_RTAI_KERNEL} is configured for.
 Action is one of:
   test         : test the current kernel and write reports to the current working directory 
                  (see below for details)
-  report FILES : write summary of test results from latencies* files given in FILES to stout
+  report FILES : write summary of test results from latencies* files given in FILES to stdout
 
 For the test-action, the following targets are provided:
-As the optional first target:
-  hal            : test loading and unloading of rtai_hal kernel module only
-  sched          : test loading and unloading of rtai_hal and rtai_sched kernel modules
-  math           : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module
-  comedi         : test loading and unloading of rtai and comedi kernel modules
-optionally followed by one or more of:
-  calib          : force calibration of scheduling latencies (default is no calibration)
-  kern           : run the kern tests (default)
-  kthreads       : run the kthreads tests
-  user           : run the user tests
-  all            : run the kernel, kthreads, and user tests
-  none           : test loading and unloading of kernel modules and do not run any tests
-  NNN            : the number of seconds after which the latency test is automatically aborted
-  auto XXX       : a one-word description of the kernel configuration (no user interaction)
 
-As the last arguments you may add:
+First, loading and unloading of rtai and comedi modules is tested. 
+This can be controlled by the following key-words of which one can be specified:
+  hal     : test loading and unloading of rtai_hal kernel module only
+  sched   : test loading and unloading of rtai_hal and rtai_sched kernel modules
+  math    : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module
+  comedi  : test loading and unloading of rtai and comedi kernel modules
+Additionally, you may specify:
+  calib          : force calibration of scheduling latencies (default is no calibration)
+
+Then the rtai tests (latency, switch, and preempt) are executed. You can
+select what to test by specifying one or more of the following key-words:
+  kern     : run the kern tests (default)
+  kthreads : run the kthreads tests
+  user     : run the user tests
+  all      : run the kernel, kthreads, and user tests
+  none     : test loading and unloading of kernel modules and do not run any tests
+
+You may want to run some load on you system to really test the RTAI
+performance. This can be controlled by the following key-words:
+  cpu      : run some heavy computations
+  io       : do some heavy file reading and writing
+  net      : produce network traffic
+  snd      : use the sound card
+  full     : all of the above
+
+The rtai tests need to be terminated by pressing ^C and a string
+describing the test scenario needs to be provided. This can be
+automized by the following two options:
+  NNN      : the number of seconds after which the latency test is automatically aborted
+  auto XXX : a one-word description of the kernel configuration (no user interaction)
+
+For a completely automized series of test of various kernel parameteres you may
+add as the last arguments:
   batch FILE     : automatically run tests with various kernel parameter as specified in FILE
   batch default  : write a default file with kernel parameters to be tested
   batch FILE DSCR: prepend description of configuration from FILE by DSCR.
@@ -1179,23 +1198,29 @@ function test_rtaikernel {
 
     # test targets:
     TESTMODE=""
+    LOADMODE=""
     MAXMODULE="4"
     CALIBRATE="false"
     DESCRIPTION=""
     TESTSPECS=""
-    if test -n "$1"; then
+    while test -n "$1"; do
 	TESTSPECS="$TESTSPECS $1"
 	case $1 in
-	    kern) TESTMODE="kern" ;;
-	    kthreads) TESTMODE="kthreads" ;;
-	    user) TESTMODE="user" ;;
-	    all) TESTMODE="kern kthreads user" ;;
-	    none) TESTMODE="none" ;;
 	    hal) MAXMODULE="1" ;;
 	    sched) MAXMODULE="2" ;;
 	    math) MAXMODULE="3" ;;
 	    comedi) MAXMODULE="4" ;;
+	    kern) TESTMODE="$TESTMODE kern" ;;
+	    kthreads) TESTMODE="$TESTMODE kthreads" ;;
+	    user) TESTMODE="$TESTMODE user" ;;
+	    all) TESTMODE="kern kthreads user" ;;
+	    none) TESTMODE="none" ;;
 	    calib) CALIBRATE="true" ;;
+	    cpu) LOADMODE="$LOADMODE cpu" ;;
+	    io) LOADMODE="$LOADMODE io" ;;
+	    net) LOADMODE="$LOADMODE net" ;;
+	    snd) LOADMODE="$LOADMODE snd" ;;
+	    full) LOADMODE="cpu io net snd" ;;
 	    [0-9]*) TEST_TIME="$1" ;;
 	    auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
 	    batch) shift; test_batch "$1" "$2" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
@@ -1204,26 +1229,10 @@ function test_rtaikernel {
 		exit 1 ;;
 	esac
 	shift
-	while test -n "$1"; do
-	    TESTSPECS="$TESTSPECS $1"
-	    case $1 in
-		kern) TESTMODE="$TESTMODE kern" ;;
-		kthreads) TESTMODE="$TESTMODE kthreads" ;;
-		user) TESTMODE="$TESTMODE user" ;;
-		all) TESTMODE="kern kthreads user" ;;
-		none) TESTMODE="none" ;;
-		calib) CALIBRATE="true" ;;
-		[0-9]*) TEST_TIME="$1" ;;
-		auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
-		batch) shift; test_batch "$1" "$2" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
-		*) echo "test $1 is invalid"
-		    exit 1 ;;
-	    esac
-	    shift
-	done
-    fi
+    done
     test -z "$TESTMODE" && TESTMODE="kern"
     TESTMODE=$(echo $TESTMODE)  # strip whitespace
+    LOADMODE=$(echo $LOADMODE)  # strip whitespace
 
     if test ${CURRENT_KERNEL} != ${KERNEL_NAME} && test ${CURRENT_KERNEL} != ${KERNEL_ALT_NAME}; then
 	echo "Need a running rtai kernel that matches the configuration of ${MAKE_RTAI_KERNEL}!"
@@ -1395,6 +1404,40 @@ function test_rtaikernel {
 
     # RTAI tests:
     if test "$TESTMODE" != none; then
+	# produce load:
+	LOAD_PIDS=()
+	LOAD_FILES=()
+	test -n "$LOADMODE" && echo "start some jobs to produce load:"
+	for LOAD in $LOADMODE; do
+	    case $LOAD in
+		cpu) echo "  load cpu: cat /proc/interrupts"
+		    while true; do cat /proc/interrupts; done & 
+		    LOAD_PIDS+=( $! )
+		    ;;
+		io) echo "  load io: ls -lR"
+		    while true; do ls -lR / &> load-lsr; done & 
+		    LOAD_PIDS+=( $! )
+		    LOAD_FILES+=( load-lsr )
+		    echo "  load io: find"
+		    while true; do find / -name '*.so' &> load-find; done & 
+		    LOAD_PIDS+=( $! )
+		    LOAD_FILES+=( load-find )
+		    ;;
+		net) echo "  load net: start ping floods on localhost"
+		    ping -f localhost > /dev/null &
+		    LOAD_PIDS+=( $! )
+		    if test -n "$REMOTE_MACHINE"; then
+			echo "  load net: start ping floods on $REMOTE_MACHINE"
+			ping -f $REMOTE_MACHINE > /dev/null & 
+			LOAD_PIDS+=( $! )
+		    fi 
+		    ;;
+		snd) echo "  load snd: not implemented yet!" ;;
+	    esac
+	done
+	test -n "$LOADMODE" && echo
+
+	# run tests:
 	for DIR in $TESTMODE; do
 	    TT=${DIR:0:1}
 	    test "$DIR" = "kthreads" && TT="t"
@@ -1422,6 +1465,13 @@ function test_rtaikernel {
 	echo
     fi
 
+    # clean up load:
+    for PID in ${LOAD_PIDS[@]}; do
+	kill -KILL $PID
+    done
+    for FILE in ${LOAD_FILES[@]}; do
+	rm -f $FILE
+    done
     # clean up:
     for MOD in msg mbx sem math sched hal; do
 	lsmod | grep -q rtai_$MOD && { rmmod rtai_$MOD && echo "removed loaded rtai_$MOD"; }
