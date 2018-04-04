@@ -34,8 +34,11 @@
                            # if the running kernel matches LINUX_KERNEL
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
+
 : ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
-: ${BATCH_KERNEL_PARAM:="panic=10"}     # additional kernel parameter passed to grub for test batch
+: ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
+                                    # used for naming test resutls
+: ${BATCH_KERNEL_PARAM:="panic=10"} # additional kernel parameter passed to grub for test batch
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -215,7 +218,7 @@ Test and report the performance of the rtai-patched linux kernel.
 Usage:
 
 sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] test [[hal|sched|math|comedi] [calib]
-     [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch default|<FILE>|<FILE> <DSCR>]]
+     [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch basic|isolcpus|<FILE>]]
 
 ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] report [<FILES>]
 
@@ -255,7 +258,6 @@ performance. This can be controlled by the following key-words:
   cpu      : run some heavy computations
   io       : do some heavy file reading and writing
   net      : produce network traffic
-  snd      : use the sound card
   full     : all of the above
 
 The rtai tests need to be terminated by pressing ^C and a string
@@ -264,21 +266,30 @@ automized by the following two options:
   NNN      : the number of seconds after which the latency test is automatically aborted
   auto XXX : a one-word description of the kernel configuration (no user interaction)
 
-For a completely automized series of test of various kernel parameteres you may
-add as the last arguments:
+For a completely automized series of tests of various kernel
+parameteres under different loads you may add as the last arguments:
   batch FILE     : automatically run tests with various kernel parameter as specified in FILE
-  batch default  : write a default file with kernel parameters to be tested
-  batch FILE DSCR: prepend description of configuration from FILE by DSCR.
+  batch basic    : write a default file with kernel parameters to be tested
+  batch isolcpus : write a default file with load settings and 
+                   isolcpus kernel parameters to be tested
 This successively reboots into the RTAI kernel with the kernel parameter 
 set to the ones specified by the KERNEL_PARAM variable and as specified in FILE,
 and runs the tests as specified by the previous commands (without the "auto" command).
 
-Each line of the batch FILE can be
-- a one-word descriptive string describing the kernel parameter, followed by a colon (':')
-  and a list of kernel parameter to be used: e.g. "idlenohz : idle=poll nohz=off"
-- an empty line (ignored).
-- Comments are introduced by a hash ('#') and run to the end of the line
-See the file written by batch default for suggestions, and the file
+In a batch FILE
+- everything behind a hash ('#') is a comment that is completely ignored
+- empty lines are ignored
+- a line of the format
+  <descr> : <load> : <params>
+  describes a configuration to be tested:
+  <descr> is a one-word string describing the kernel parameter 
+      (the load settings are added automatically to the description)
+  <load> defines the load processes to be started before testing (cpu io net full, see above)
+  <param> is a list of kernel parameter to be used.
+Example lines:
+  idlenohz : : idle=poll nohz=off
+  idleisol : cpu io : idle=poll isolcpus=0-1
+See the file written by "batch default" for suggestions, and the file
 $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/Documentation/kernel-parameters.txt
 for a documentation of all kernel parameter.
 
@@ -498,6 +509,7 @@ function print_settings {
     echo "  RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
     echo "  KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
     echo "  KERNEL_PARAM       = $KERNEL_PARAM"
+    echo "  KERNEL_PARAM_DESCR = $KERNEL_PARAM_DESCR"
     echo "  LOCAL_SRC_PATH     = $LOCAL_SRC_PATH"
     echo "  RTAI_DIR      (-r) = $RTAI_DIR"
     echo "  RTAI_PATCH    (-p) = $RTAI_PATCH"
@@ -1119,6 +1131,14 @@ function test_save {
 	    echo "Failed to load kcomedilib module"
 	    echo
 	fi
+	# load processes:
+	if test -f load.dat; then
+	    echo "Load:"
+	    sed -e 's/^[ ]*load[ ]*/  /' load.dat
+	else
+	    echo "Load: none"
+	fi
+	echo
 	# original test results:
 	for TD in kern kthreads user; do
 	    for TN in latency switches preempt; do
@@ -1223,7 +1243,7 @@ function test_rtaikernel {
 	    full) LOADMODE="cpu io net snd" ;;
 	    [0-9]*) TEST_TIME="$1" ;;
 	    auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
-	    batch) shift; test_batch "$1" "$2" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
+	    batch) shift; test_batch "$1" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
 	    batchscript) shift; test_batch_script ;;
 	    *) echo "test $1 is invalid"
 		exit 1 ;;
@@ -1266,7 +1286,7 @@ function test_rtaikernel {
 	    rm -f $TEST_RESULTS
 	done
     done
-
+    rm -f load.dat
     rm -f lsmod.dat
 
     # report number:
@@ -1300,6 +1320,13 @@ function test_rtaikernel {
 	test -z "$NAME" && return
     else
 	NAME="$DESCRIPTION"
+    fi
+    # add load information to description:
+    if test -n "$LOADMODE"; then
+	NAME="${NAME}-"
+	for LOAD in $LOADMODE; do
+	    NAME="${NAME}${LOAD:0:1}"
+	done
     fi
     REPORT_NAME="${REPORT_NAME}-${NUM}-$(date '+%F')-${NAME}"
     REPORT="${REPORT_NAME}-failed"
@@ -1410,24 +1437,24 @@ function test_rtaikernel {
 	test -n "$LOADMODE" && echo "start some jobs to produce load:"
 	for LOAD in $LOADMODE; do
 	    case $LOAD in
-		cpu) echo "  load cpu: cat /proc/interrupts"
-		    while true; do cat /proc/interrupts; done & 
+		cpu) echo "  load cpu: cat /proc/interrupts" | tee -a load.dat
+		    while true; do cat /proc/interrupts &> /dev/null; done & 
 		    LOAD_PIDS+=( $! )
 		    ;;
-		io) echo "  load io: ls -lR"
+		io) echo "  load io: ls -lR" | tee -a load.dat
 		    while true; do ls -lR / &> load-lsr; done & 
 		    LOAD_PIDS+=( $! )
 		    LOAD_FILES+=( load-lsr )
-		    echo "  load io: find"
+		    echo "  load io: find" | tee -a load.dat
 		    while true; do find / -name '*.so' &> load-find; done & 
 		    LOAD_PIDS+=( $! )
 		    LOAD_FILES+=( load-find )
 		    ;;
-		net) echo "  load net: start ping floods on localhost"
+		net) echo "  load net: ping -f localhost" | tee -a load.dat
 		    ping -f localhost > /dev/null &
 		    LOAD_PIDS+=( $! )
 		    if test -n "$REMOTE_MACHINE"; then
-			echo "  load net: start ping floods on $REMOTE_MACHINE"
+			echo "  load net: ping -f $REMOTE_MACHINE" | tee -a load.dat
 			ping -f $REMOTE_MACHINE > /dev/null & 
 			LOAD_PIDS+=( $! )
 		    fi 
@@ -1504,6 +1531,8 @@ function test_rtaikernel {
 	    rm -f $TEST_RESULTS
 	done
     done
+    rm -f load.dat
+    rm -f lsmod.dat
 }
 
 function test_batch {
@@ -1516,87 +1545,114 @@ function test_batch {
 	exit 1
     fi
     if ! test -f "$BATCH_FILE"; then
-	if test "$BATCH_FILE" = "default"; then
-	    if test -f testkernelparams.mrk; then
-		echo "File \"testkernelparams.mrk\" already exists."
-		echo "Cannot write default kernel parameter."
+	if test "$BATCH_FILE" = "basic"; then
+	    BATCH_FILE=testbasic.mrk
+	    if test -f $BATCH_FILE; then
+		echo "File \"$BATCH_FILE\" already exists."
+		echo "Cannot write basic kernel parameter."
 		exit 1
 	    fi
-	    cat <<EOF > testkernelparams.mrk
+	    cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
 # batch file for testing RTAI kernel with various kernel parameter.
 #
 # Each line has the format:
-# <description> : <kernel parameter>
-# where <description> is a brief one-word description of the kernel configuration 
-# and the kernel parameter.
-# The <kernel parameter> are added to the ones defined in the KERNEL_PARAM variable.
+# <description> : <load specification> : <kernel parameter>
+# where <description> is a brief one-word description of the kernel
+# configuration and the kernel parameter that is added to the
+# KERNEL_PARAM_DESCR variable.  The <kernel parameter> are added to
+# the ones defined in the KERNEL_PARAM variable.
 #
 # Edit this file according to your needs.
+#
 # Then run
 #
-# $ ./$MAKE_RTAI_KERNEL test math 121 batch testkernelparams.mrk
+# $ ./$MAKE_RTAI_KERNEL test math 121 batch $BATCH_FILE
 #
 # for testing all the kernel parameter. Have a cup of tea and come back
 # (each configuration needs about 5 minutes for booting, testing and shutdown).
 # The test results are recorded in the latencies-${LINUX_KERNEL}-${RTAI_DIR}-$(hostname)* files.
 # Generate a summary table by calling
 #
-# $ ./$MAKE_RTAI_KERNEL report
+# $ ./$MAKE_RTAI_KERNEL report | less -S
 
 # test two times to see variability of results:
-plain1 :
-plain2 :
-
-# isolcpus parameter:
-isolcpus : isolcpus=0-1
-isolcpus-nohzfull : isolcpus=0-1 nohz_full=0-1
-isolcpus-rcu : isolcpus=0-1 rcu_nocbs=0-1
-isolcpus-nohzfull-rcu : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
+plain1 : :
+plain2 : :
 
 # clocks and timers:
-nohz : nohz=off
-tscreliable : tsc=reliable
-tscnoirqtime : tsc=noirqtime
-nolapictimer : nolapic_timer  # no good
-clocksourcehpet : clocksource=hpet
-highresoff : highres=off
-hpetdisable : hpet=disable
-skewtick : skew_tick=1
-
-# devices:
-dma : libata.dma=0
+nohz : : nohz=off
+tscreliable : : tsc=reliable
+tscnoirqtime : : tsc=noirqtime
+nolapictimer : : nolapic_timer  # no good
+clocksourcehpet : : clocksource=hpet
+highresoff : : highres=off
+hpetdisable : : hpet=disable
+skewtick : : skew_tick=1
 
 # acpi:
-#acpioff : acpi=off    # often very effective, but weired system behavior
-acpinoirq : acpi=noirq
-pcinoacpi : pci=noacpi
-pcinomsi : pci=nomsi
+#acpioff : : acpi=off    # often very effective, but weired system behavior
+acpinoirq : : acpi=noirq
+pcinoacpi : : pci=noacpi
+pcinomsi : : pci=nomsi
 
 # apic:
-noapic : noapic
-nox2apic : nox2apic
-x2apicphys : x2apic_phys
-#nolapic : nolapic    # we need the lapic timer!
-lapicnotscdeadl : lapic=notscdeadline
+noapic : : noapic
+nox2apic : : nox2apic
+x2apicphys : : x2apic_phys
+#nolapic : : nolapic    # we need the lapic timer!
+lapicnotscdeadl : : lapic=notscdeadline
 
 # test yet again to see variability of results:
-plain3 :
+plain3 : :
 EOF
-	    chown --reference=. testkernelparams.mrk
-	    echo "Wrote default kernel parameter to be tested into file \"testkernelparams.mrk\"."
+	    chown --reference=. $BATCH_FILE
+	    echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
 	    echo ""
 	    echo "Call test batch again with something like"
-	    echo "$ ./${MAKE_RTAI_KERNEL} test 90 batch testkernelparams.mrk"
+	    echo "$ ./${MAKE_RTAI_KERNEL} test 90 batch $BATCH_FILE"
+	    exit 0
+	elif test "$BATCH_FILE" = "isolcpus"; then
+	    BATCH_FILE=testisolcpus.mrk
+	    if test -f $BATCH_FILE; then
+		echo "File \"$BATCH_FILE\" already exists."
+		echo "Cannot write isolcpus kernel parameter."
+		exit 1
+	    fi
+	    cat <<EOF > $BATCH_FILE
+# $VERSION_STRING
+# batch file for testing RTAI kernel with cpu isolation
+
+plain : :
+plain : full :
+
+# isolcpus:
+isolcpus : : isolcpus=0-1
+isolcpus : full : isolcpus=0-1
+isolcpus-nohzfull : full : isolcpus=0-1 nohz_full=0-1
+isolcpus-rcu : full : isolcpus=0-1 rcu_nocbs=0-1
+isolcpus-nohzfull-rcu : full : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
+
+# devices:
+dma : : libata.dma=0
+dma : full : libata.dma=0
+EOF
+	    chown --reference=. $BATCH_FILE
+	    echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
+	    echo ""
+	    echo "Call test batch again with something like"
+	    echo "$ ./${MAKE_RTAI_KERNEL} test 90 batch $BATCH_FILE"
 	    exit 0
 	fi
 	echo "File \"$BATCH_FILE\" does not exist!"
 	exit 1
     fi
-    N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':')
+    N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
+    if test $N_TESTS -eq 0; then
+	echo "No valid configurations specified in file \"$BATCH_FILE\"!"
+	exit 1
+    fi
 
-    shift
-    BATCH_DESCRIPTION="$1"
     shift
     TEST_TIME="$1"
     shift
@@ -1617,16 +1673,16 @@ EOF
     done
 
     echo "run \"test $TEST_SPECS\" on batch file \"$BATCH_FILE\" with content:"
-    sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | while read LINE; do echo "  $LINE"; done
+    sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | while read LINE; do echo "  $LINE"; done
     echo
 
 
     # read first line from configuration file:
     INDEX=1
-    IFS=':' read DESCRIPTION NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
-    BD="$BATCH_DESCRIPTION"
-    if test -n "$BD" && test "${BD:-1:1}" != "-"; then
-	BD="${BD}-"
+    IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
+    KPD="$KERNEL_PARAM_DESCR"
+    if test -n "$KPD" && test "${KPD:-1:1}" != "-"; then
+	KPD="${KPD}-"
     fi
     echo "Reboot into first configuration: \"${BD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     echo
@@ -1639,13 +1695,13 @@ EOF
 	restore_test_batch
 	# install crontab:
 	MRK_DIR="$(cd "$(dirname "$0")" && pwd)"
-	(crontab -l 2>/dev/null; echo "@reboot ${MRK_DIR}/${MAKE_RTAI_KERNEL} test batchscript > ${TEST_DIR}/kernel.log") | crontab -
+	(crontab -l 2>/dev/null; echo "@reboot ${MRK_DIR}/${MAKE_RTAI_KERNEL} test batchscript > ${TEST_DIR}/testbatch.log") | crontab -
 	echo "Installed crontab for automatic testing after reboot."
 	echo "  Uninstall by calling"
 	echo "  $ ./${MAKE_RTAI_KERNEL} restore testbatch"
 
 	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
-	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$BATCH_DESCRIPTION|$TEST_TOTAL_TIME|$TEST_SPECS"
+	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
 
 	reboot_kernel $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM
     else
@@ -1668,10 +1724,10 @@ function test_batch_script {
     # get test BATCH_FILE, INDEX, BATCH_DESCRIPTION, TEST_TOTAL_TIME and TEST_SPECS from /var/log/messages:
     IFS='|' read ID BATCH_FILE INDEX BATCH_DESCRIPTION TEST_TOTAL_TIME TEST_SPECS < <(grep "NEXT TEST BATCH" /var/log/messages | tail -n 1)
 
-    N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':')
+    N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
 
-    # read current DESCRIPTION from configuration file:
-    IFS=':' read DESCRIPTION NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
+    # read current DESCRIPTION and LOAD_MODE from configuration file:
+    IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
     let INDEX+=1
 
     if test "$INDEX" -gt "$N_TESTS"; then
@@ -1684,7 +1740,7 @@ function test_batch_script {
 	{ sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
     else
 	# read and set next NEW_KERNEL_PARAM:
-	IFS=':' read DESCR NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':' | sed -n -e ${INDEX}p)
+	IFS=':' read DESCR LM NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
 	echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$BATCH_DESCRIPTION|$TEST_TOTAL_TIME|$TEST_SPECS"
 	setup_kernel_param $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM
 	set_reboot_kernel
@@ -1698,7 +1754,7 @@ function test_batch_script {
 
     # run tests:
     cd $(dirname $BATCH_FILE)
-    test_rtaikernel $TEST_SPECS auto "$(echo $BATCH_DESCRIPTION)$(echo $DESCRIPTION)"
+    test_rtaikernel $TEST_SPECS $LOAD_MODE auto "$(echo $BATCH_DESCRIPTION)$(echo $DESCRIPTION)"
 
     if test "$INDEX" -gt "$N_TESTS"; then
 	echo_kmsg "FINISHED TEST BATCH"
