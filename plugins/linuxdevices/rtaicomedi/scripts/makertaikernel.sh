@@ -35,8 +35,8 @@
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 
-: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
-: ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
+: ${KERNEL_PARAM:="idle=poll nohz=off"}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM_DESCR:="idle-nohz"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
 : ${BATCH_KERNEL_PARAM:="panic=10"} # additional kernel parameter passed to grub for test batch
 
@@ -54,7 +54,7 @@
 
 : ${SHOWROOM_DIR:=showroom}  # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
-: ${STARTUP_TIME:=60}        # time to wait after boot to run a batch test in seconds
+: ${STARTUP_TIME:=180}       # time to wait after boot to run a batch test in seconds
 
 : ${REMOTE_MACHINE:=}        # ip adress of a remote machine for ping flood
 
@@ -187,7 +187,7 @@ Reboot and set kernel parameter.
 
 Usage:
 
-sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] reboot [keep|default|<XXX>|<N>]
+sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] reboot [keep|default|<XXX>|<FILE>|<N>]
 
 EOF
     help_kernel_options
@@ -198,6 +198,8 @@ reboot        : reboot into the rtai kernel ${MAKE_RTAI_KERNEL} is configured fo
                 (currently set to "$KERNEL_PARAM")
 reboot XXX    : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
                 with XXX passed on as kernel parameter
+reboot FILE   : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
+                with kernel parameter taken from test results file FILE
 reboot keep   : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
                 and keep previously set kernel parameter
 reboot default: reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
@@ -213,28 +215,23 @@ function help_test {
     cat <<EOF
 $VERSION_STRING
 
-Test and report the performance of the rtai-patched linux kernel.
+Test the performance of the rtai-patched linux kernel.
 
 Usage:
 
 sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] test [[hal|sched|math|comedi] [calib]
-     [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch basic|isolcpus|<FILE>]]
-
-${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] report [<FILES>]
+     [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch basic|acpi|isolcpus|<FILE>]]
 
 EOF
     help_kernel_options
     cat <<EOF
 
-Tests are only performed if the running kernel matches the one
+Tests are performed only if the running kernel matches the one
 ${MAKE_RTAI_KERNEL} is configured for.
 
-Action is one of:
-  test         : test the current kernel and write reports to the current working directory 
-                 (see below for details)
-  report FILES : write summary of test results from latencies* files given in FILES to stdout
-
-For the test-action, the following targets are provided:
+Test resluts are saved in latencies-* files in the current working
+directory. The corresponding kernel configuration is saved in the
+respective config-* files.
 
 First, loading and unloading of rtai and comedi modules is tested. 
 This can be controlled by the following key-words of which one can be specified:
@@ -243,7 +240,7 @@ This can be controlled by the following key-words of which one can be specified:
   math    : test loading and unloading of rtai_hal, rtai_sched, and rtai_math kernel module
   comedi  : test loading and unloading of rtai and comedi kernel modules
 Additionally, you may specify:
-  calib          : force calibration of scheduling latencies (default is no calibration)
+  calib   : force calibration of scheduling latencies (default is no calibration)
 
 Then the rtai tests (latency, switch, and preempt) are executed. You can
 select what to test by specifying one or more of the following key-words:
@@ -263,15 +260,16 @@ performance. This can be controlled by the following key-words:
 The rtai tests need to be terminated by pressing ^C and a string
 describing the test scenario needs to be provided. This can be
 automized by the following two options:
-  NNN      : the number of seconds after which the latency test is automatically aborted
+  NNN      : the number of seconds after which the latency test is automatically aborted,
+             the preempt test will be aborted after 10 seconds.
   auto XXX : a one-word description of the kernel configuration (no user interaction)
 
-For a completely automized series of tests of various kernel
-parameteres under different loads you may add as the last arguments:
+For a completely automized series of tests of various kernel parameters
+under different loads you may add as the last arguments:
   batch FILE     : automatically run tests with various kernel parameter as specified in FILE
-  batch basic    : write a default file with kernel parameters to be tested
-  batch isolcpus : write a default file with load settings and 
-                   isolcpus kernel parameters to be tested
+  batch basic    : write a default file with clock and timer related kernel parameters to be tested
+  batch acpi     : write a default file with acpi and apic related kernel parameters to be tested
+  batch isolcpus : write a default file with load settings and isolcpus kernel parameters to be tested
 This successively reboots into the RTAI kernel with the kernel parameter 
 set to the ones specified by the KERNEL_PARAM variable and as specified in FILE,
 and runs the tests as specified by the previous commands (without the "auto" command).
@@ -292,6 +290,37 @@ Example lines:
 See the file written by "batch default" for suggestions, and the file
 $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/Documentation/kernel-parameters.txt
 for a documentation of all kernel parameter.
+
+EOF
+}
+
+function help_report {
+    cat <<EOF
+$VERSION_STRING
+
+Generate summary tables of test results.
+
+Usage:
+
+${MAKE_RTAI_KERNEL} report [avg|max] [<FILES>]
+
+The summary is written to standard out. For example, redirect the
+output into a file to save the summary:
+
+${MAKE_RTAI_KERNEL} report > testsummary.dat 
+
+or pipe it into less to view the results:
+
+${MAKE_RTAI_KERNEL} report | less -S
+
+The tests can be sorted by providing the avg or max key-word:
+report     : do not sort
+report avg : sort the tests according to the avgmax field of the kern latency test
+report max : sort the tests according to the ovlmax field of the kern latency test
+
+The remaining arguments specify files to be included in the summary,
+or a directory containing latency-* files. If no file is specified,
+all latency-* files in the current directory are used.
 
 EOF
 }
@@ -347,24 +376,24 @@ action can be one of:
 If no target is specified, all targets are made (except showroom).
 
 Action can be also one of
-  help               : display this help message
-  help XXX           : display help message for action XXX
-  info               : display properties of rtai patches, loaded kernel modules,
-                       kernel, machine, and grub menu
-                       (run "${MAKE_RTAI_KERNEL} help info" for details)
-  init               : should be executed the first time you use ${MAKE_RTAI_KERNEL} -
-                       equivalent to setup, download rtai, info rtai.
-  reconfigure        : reconfigure the kernel and make a full build of all targets (without target)
-  reboot             : reboot and set kernel parameter
-                       (run "${MAKE_RTAI_KERNEL} help reboot" for details)
-  setup              : setup some basic configurations of your (debian based) system
-                       (run "${MAKE_RTAI_KERNEL} help setup" for details)
-  restore            : restore the original system settings
-                       (run "${MAKE_RTAI_KERNEL} help restore" for details)
-  test               : test the current kernel and write reports to the current working directory 
-                       (run "${MAKE_RTAI_KERNEL} help test" for details)
-  report FILES       : summarize test results from latencies* files given in FILES
-                       (run "${MAKE_RTAI_KERNEL} help test" for details)
+  help       : display this help message
+  help XXX   : display help message for action XXX
+  info       : display properties of rtai patches, loaded kernel modules,
+               kernel, machine, and grub menu
+               (run "${MAKE_RTAI_KERNEL} help info" for details)
+  init       : should be executed the first time you use ${MAKE_RTAI_KERNEL} -
+               equivalent to setup, download rtai, info rtai.
+  reconfigure: reconfigure the kernel and make a full build of all targets (without target)
+  reboot     : reboot and set kernel parameter
+               (run "${MAKE_RTAI_KERNEL} help reboot" for details)
+  setup      : setup some basic configurations of your (debian based) system
+               (run "${MAKE_RTAI_KERNEL} help setup" for details)
+  restore    : restore the original system settings
+               (run "${MAKE_RTAI_KERNEL} help restore" for details)
+  test       : test the current kernel and write reports to the current working directory 
+               (run "${MAKE_RTAI_KERNEL} help test" for details)
+  report     : summarize test results from latencies* files given in FILES
+               (run "${MAKE_RTAI_KERNEL} help report" for details)
 
 Common use cases:
 
@@ -384,14 +413,20 @@ RTAI_PATCH variables accrdingly run
 $ sudo ${MAKE_RTAI_KERNEL}
 to download and build all targets. A new configuration for the kernel is generated.
 
-$ sudo ${MAKE_RTAI_KERNEL} reconfigure
-  build all targets using the existing configuration of the kernel.
-
 $ sudo ${MAKE_RTAI_KERNEL} test
   manually test the currently running kernel.
 
 $ sudo ${MAKE_RTAI_KERNEL} test 30 auto basic
   automaticlly test the currently running kernel for 30 seconds and name it "basic".
+
+$ sudo ${MAKE_RTAI_KERNEL} test 600 batch testbasic.mrk
+  automaticlly test all the kernel paramete rspecified in the file testbasic.mrk.
+
+$ ${MAKE_RTAI_KERNEL} report avg | less -S
+  view test results sorted with respect to the averaged maximum latency. 
+
+$ sudo ${MAKE_RTAI_KERNEL} reconfigure
+  build all targets using the existing configuration of the kernel.
 
 $ sudo ${MAKE_RTAI_KERNEL} uninstall
   uninstall all targets.
@@ -992,6 +1027,7 @@ function reboot_kernel {
 # default: boot into rtai kernel without additional kernel parameter
 # ""     : boot into rtai kernel with additional kernel parameter as specified by KERNEL_PARAM
 # XXX    : boot into rtai kernel with additional kernel parameter
+# FILE   : boot into rtai kernel with kernel parameter taken from test results file FILE
     case $1 in
 	[0-9]*)
 	    restore_kernel_param
@@ -1016,6 +1052,11 @@ function reboot_kernel {
 	*)
 	    if test -z "$*"; then
 		setup_kernel_param $KERNEL_PARAM
+	    elif test -f "$1"; then
+		setup_kernel_param $(sed -n -e '/kernel parameter/,/Versions/p' "$1" | \
+		    sed -e '1d; $d; s/^  //;' | \
+		    sed -e '/BOOT/d; /^root/d; /^ro$/d; /^quiet/d; /^splash/d; /^vt.handoff/d;')
+		exit 1
 	    else
 		setup_kernel_param $*
 	    fi
@@ -1239,9 +1280,8 @@ function test_rtaikernel {
 	    cpu) LOADMODE="$LOADMODE cpu" ;;
 	    io) LOADMODE="$LOADMODE io" ;;
 	    net) LOADMODE="$LOADMODE net" ;;
-	    snd) LOADMODE="$LOADMODE snd" ;;
-	    full) LOADMODE="cpu io net snd" ;;
-	    [0-9]*) TEST_TIME="$1" ;;
+	    full) LOADMODE="cpu io net" ;;
+	    [0-9]*) TEST_TIME="$((10#$1))" ;;
 	    auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
 	    batch) shift; test_batch "$1" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
 	    batchscript) shift; test_batch_script ;;
@@ -1590,6 +1630,28 @@ highresoff : : highres=off
 hpetdisable : : hpet=disable
 skewtick : : skew_tick=1
 
+# test yet again to see variability of results:
+plain3 : :
+EOF
+	    chown --reference=. $BATCH_FILE
+	    echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
+	    echo ""
+	    echo "Call test batch again with something like"
+	    echo "$ ./${MAKE_RTAI_KERNEL} test 90 batch $BATCH_FILE"
+	    exit 0
+	elif test "$BATCH_FILE" = "acpi" || test "$BATCH_FILE" = "apic"; then
+	    BATCH_FILE=testacpi.mrk
+	    if test -f $BATCH_FILE; then
+		echo "File \"$BATCH_FILE\" already exists."
+		echo "Cannot write basic kernel parameter."
+		exit 1
+	    fi
+	    cat <<EOF > $BATCH_FILE
+# $VERSION_STRING
+# batch file for testing RTAI kernel with various kernel parameter.
+
+plain : :
+
 # acpi:
 #acpioff : : acpi=off    # often very effective, but weired system behavior
 acpinoirq : : acpi=noirq
@@ -1602,9 +1664,6 @@ nox2apic : : nox2apic
 x2apicphys : : x2apic_phys
 #nolapic : : nolapic    # we need the lapic timer!
 lapicnotscdeadl : : lapic=notscdeadline
-
-# test yet again to see variability of results:
-plain3 : :
 EOF
 	    chown --reference=. $BATCH_FILE
 	    echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
@@ -1654,7 +1713,7 @@ EOF
     fi
 
     shift
-    TEST_TIME="$1"
+    TEST_TIME="$((10#$1))"
     shift
     TESTMODE="$1"
     test -z "$TESTMODE" && TESTMODE="kern"
@@ -1662,6 +1721,7 @@ EOF
     shift
     TEST_SPECS="$@"
 
+    # compute total time needed for the tests:
     if test -z "$TEST_TIME"; then
 	TEST_TIME="600"
 	TEST_SPECS="$TEST_SPECS $TEST_TIME"
@@ -1777,6 +1837,17 @@ function restore_test_batch {
 }
 
 function test_report {
+    SORT=false
+    SORTCOL=5
+    if test "x$1" = "xavg"; then
+	SORT=true
+	SORTCOL=5
+	shift
+    elif test "x$1" = "xmax"; then
+	SORT=true
+	SORTCOL=4
+	shift
+    fi
     FILES="latencies-${LINUX_KERNEL}-${RTAI_DIR}-*"
     test -n "$1" && FILES="$*"
     test -d "$FILES" && FILES="$FILES/latencies-${LINUX_KERNEL}-${RTAI_DIR}-*"
@@ -1864,7 +1935,9 @@ function test_report {
 		done
 		IFS="$ORGIFS"
 	    else
-		if test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "-"; then
+		if ! $SORT; then
+		    DEST="data.txt"
+		elif test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "-"; then
 		    DEST="dataoverrun.txt"
 		elif test $(echo $(head -n 6 $TEST | fgrep 'RTD|' | cut -d '|' -f 8)) = "o"; then
 		    DEST="dataoverrun.txt"
@@ -1895,8 +1968,12 @@ function test_report {
     # sort results with respect to average kern latency:
     if ! $FIRST; then
 	cat header.txt
-	test -f data.txt && sort -t '|' -k 5 -n data.txt
-	test -f dataoverrun.txt && sort -t '|' -k 5 -n dataoverrun.txt
+	if $SORT; then
+	    test -f data.txt && sort -t '|' -k $SORTCOL -n data.txt
+	    test -f dataoverrun.txt && sort -t '|' -k $SORTCOL -n dataoverrun.txt
+	else
+	    test -f data.txt && cat data.txt
+	fi
     fi
     rm -f header.txt data.txt dataoverrun.txt
 }
@@ -2857,6 +2934,7 @@ function print_help {
 		restore) help_setup ;;
 		reboot) help_reboot ;;
 		test) help_test ;;
+		report) help_report ;;
 		* ) echo "sorry, no help available for $TARGET" ;;
 	    esac
 	done

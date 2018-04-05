@@ -12,6 +12,7 @@ dist_rtaicomedicfg_DATA = \
 
 EXTRA_DIST = \
     doc/rtaicomedi.doc \
+    doc/manualinstall.doc \
     module/Makefile \
     module/model.c \
     module/rtmodule.c \
