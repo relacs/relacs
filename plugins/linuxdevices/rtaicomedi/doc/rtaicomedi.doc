@@ -8,13 +8,9 @@
 - \ref quickinstall
 - \ref testrtai
 - \ref configurekernel
-- \ref udev
 - \ref installrelacs
 - \ref configdynamicclamp
 - \ref simulatedynclamp
-
-See \ref manualinstall for a in depth account on how to install an
-RTAI-patched linux kernel, RTAI, and comedi.
 
 \section rtaicomediintro Introduction
 
@@ -29,7 +25,7 @@ script should work on debian based systems, but is has not been tested
 on other Linux distributions.
 
 Alternatively, you can do the installation manually as explained in
-\ref manualinstallation .
+\ref manualinstall .
 
 In either case, continue with building the dynamic clamp module of
 RELACS as explained in \ref installrelacs and configuring RELACS
@@ -61,10 +57,12 @@ cd plugins/linuxdevices/rtaicomedi/scripts
    \code
 sudo ./makertaikernel.sh init
    \endcode
-   to make sure you have \c /var/log/messages (needed for RTAI switch tests),
-   you get a visible boot menu, and have the RTAI sources downloaded.
+   to make sure you have \c /var/log/messages (needed for RTAI switch
+   tests), you get a visible boot menu, have comedi devices assigned
+   to the \c iocard group, and have the RTAI sources downloaded.
 
-   This command ends with showing you the RTAI kernel patches available for your machine. 
+   This command ends with showing you the RTAI kernel patches
+   available for your machine.
 
 -# Select a Linux kernel and the corresponding RTAI patch from the displayed list.
 
@@ -81,7 +79,7 @@ sudo ./makertaikernel.sh init
 sudo ./makertaikernel.sh info rtai
    \endcode
 
--# You may want to start out with a kernel
+-# You should start out with a kernel
    configuration of a kernel image from your linux distribution
    closest to the kernel version you selected. On a Debian-based
    system install a matching kernel by executing
@@ -98,7 +96,8 @@ sudo ./makertaikernel.sh info grub
    \code
 sudo ./makertaikernel.sh reboot 3
    \endcode
-   replace '3' by the index of the appropriate menu entry.
+   replace '3' by the index of the appropriate menu entry. The latter
+   has the advantage that it doesn't matter to miss the boot menu.
 
    Starting out with a kernel matching the one from the selected RTAI
    patch ensures that makertaikernel.sh will use this kernel's
@@ -426,47 +425,48 @@ cd /usr/realtime/testsuite/kern/preempt
 \section configurekernel Improve the performance of the RTAI-patched kernel
 
 To get a low latency kernel you usually need to improve your kernel
-configuration.  The main culprits are interrupts, some devices and their
-drivers. Which ones are bad usually depends on your specific machine.
+configuration.  The main culprits are power saving modes, frequency
+scaling, interrupts, some devices and their drivers. Which ones are
+bad usually depends on your specific machine.
 
-Read the file \c /usr/local/src/rtai/README.CONF_RMRKS for some hints.
+Read the file `/usr/local/src/rtai/README.CONF_RMRKS` for some hints.
 
-More information can be found at \c
-https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf,
-\c https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL, and the
-internet.
+More information can be found at
+`https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf`,
+`https://github.com/ShabbyX/RTAI/blob/master/README.INSTALL`, and the
+internet (\ref rtailinks).
 
 \subsection powersavingmodes Disable CPU power saving modes
 Most importantly, for newer CPUs like Intel i5 and Intel i7 CPUs,
 disabling CPU power saving modes improves real-time performance
 dramatically. Before you try anything else do:
-- Add the kernel parameter \c idle=poll . This is usually sufficient.
+- Add the kernel parameter `idle=poll` . This is usually sufficient.
   See \ref kernelparamhints on how to set kernel parameter.
-- For older RTAI (<5.0) or kernels (<4.0?) adding both \c
-  processor.max_cstate=0 \c idle=poll is helpful. In more recent
-  contexts, however, \c processor.max_cstate=0 seems to make things
+- For older RTAI (<5.0) or kernels (<4.0?) adding both
+  `processor.max_cstate=0 idle=poll` is helpful. In more recent
+  contexts, however, `processor.max_cstate=0` seems to make things
   worse.
 - Just a note: the cstates can also be dynamically controlled by writing the
   maximum allowable latency in microseconds (as an 32-bit(?) \c int, not as
-  text) to the file \c /dev/cpu_dma_latency . Writing a zero keeps the
-  system in \c cstate=0.
-.
-Monitor cstates:
-- Check cpu idle driver and intel max_cstate setting with
-  \code
+  text) to the file `/dev/cpu_dma_latency` . Writing a zero keeps the
+  system in `cstate=0`.
+- A second note: monitor cstates
+  - Check cpu idle driver and intel max_cstate setting with
+    \code
 cat /sys/devices/system/cpu/cpuidle/current_driver
 cat /sys/module/intel_idle/parameters/max_cstate
-  \endcode
-- Run \c i7z or \c powertop (as root) to see cstates and CPU
-  temperatures (they should be well below 100 degrees celsius).
-- For this to work, make sure that in the kernel configuration you
-  enabled "/dev/cpu/ * /msr - Model-specific register support" and
-  "/dev/cpu/ * /cpuid - CPU information support" in the "Processor type
-  and features" submenu.
+    \endcode
+  - Run \c i7z or \c powertop (as root) to see cstates and CPU
+    temperatures (they should be well below 100 degrees celsius).
+  - For this to work, make sure that in the kernel configuration you
+    enabled "/dev/cpu/ * /msr - Model-specific register support" and
+    "/dev/cpu/ * /cpuid - CPU information support" in the "Processor type
+    and features" submenu.
+  .
+  See also \c Documentation/power/pm_qos_interface.txt in your kernel
+  source tree in \c /usr/src/linux and
+  http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels
 .
-See also \c Documentation/power/pm_qos_interface.txt in your kernel
-source tree in \c /usr/src/linux and
-http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels
 
 
 \subsection kernelparamhints Kernel parameter
@@ -653,7 +653,7 @@ real-time perfomance (low latencies):
 - In "Device drivers" keep "Multiple devices driver support (RAID and LVM)" 
   and in there keep "Device mapper support" (somehow needed for grub).
 
-- In "Processor type and features": disbling the following seems to have an effect: 
+- In "Processor type and features": disabling the following seems to have an effect: 
   - Disable "Supervisor Mode Access Prevention"
   - Disable "EFI runtime service support"
   - Disable "Enable seccomp to safely compute untrusted bytecode"
@@ -734,36 +734,6 @@ Finally, there are the evil SMIs. They periodically produce some long latencies.
 /usr/local/src/rtai/base/arch/x86/calibration/README.SMI and \c README.SMISPV for details.
 
 
-\section udev Setting up udev permissions for comedi device files
-
-Once comedi is installed you also need to make sure that you (the
-user) have appropriate permissions for accessing the comedi device
-files. That is you need to be able to have read and write access to
-the \c /dev/comedi* files. One elegant way to achieve this is to create a
-new group and tell udev to add the comedi device files to this group.
-
--# Login as root.
--# Create a new group "iocard":
-\code
-addgroup --system iocard
-\endcode
--# Add udev rules to the /etc/udev/rules.d directory:
-\code
-echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
-\endcode
--# Run
-\code
-udevadm trigger
-\endcode
-to apply your new udev rules
--# Add users to the "iocard" group:
-\code
-adduser <username> iocard
-\endcode
-After the next login, \c \<username\> is a member of the \c iocard group
-and and has sufficient permissions to access the data acquisition boards through \c comedi.
-
-
 \section installrelacs Setting up dynamic clamp for RELACS
 You should install \c RTAI and the \c comedi drivers and library prior to
 configuring RELACS, so that ./configure can detect the presence of the
@@ -777,7 +747,7 @@ corresponding plugins for RELACS.
    \code
 sudo adduser $USER iocard
    \endcode
-   \note You need to log out and log in again to actually be member of that group (maybe it is enough just to open a new shell, though).
+   \note You need to log out and log in again to actually be member of that group.
 -# \c cd into the RELACS top-level directory and run
    \code
 ./configure

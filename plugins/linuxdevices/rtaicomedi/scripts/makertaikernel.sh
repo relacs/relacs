@@ -161,18 +161,20 @@ Setup and restore syslog daemon, grub menu, and kernel parameter.
 
 Usage:
 
-sudo ${MAKE_RTAI_KERNEL} setup [messages|grub|kernel]
+sudo ${MAKE_RTAI_KERNEL} setup [messages|grub|comedi|kernel]
 
-sudo ${MAKE_RTAI_KERNEL} restore [messages|grub|kernel|testbatch]
+sudo ${MAKE_RTAI_KERNEL} restore [messages|grub|comedi|kernel|testbatch]
 
-setup            : setup messages, grub, and kernel
+setup            : setup messages, grub, comedi, and kernel
 setup messages   : enable /var/log/messages needed for RTAI tests in rsyslog settings
 setup grub       : configure the grub boot menu (not hidden, no submenus)
+setup comedi     : create "iocard" group and assign comedi devices to this group
 setup kernel     : set kernel parameter for the grub boot menu to "$KERNEL_PARAMETER"
 
-restore          : restore the original system settings (messages, grub, kernel, and testbatch)
+restore          : restore the original system settings (messages, grub, comedi, kernel, and testbatch)
 restore messages : restore the original rsyslog settings
 restore grub     : restore the original grub boot menu settings
+restore comedi   : do not assign comedi devices to the iocard group
 restore kernel   : restore default kernel parameter for the grub boot menu
 restore testbatch: uninstall the automatic test script from crontab (see help test)
 
@@ -2604,7 +2606,7 @@ function setup_messages {
     elif ! test -f /var/log/messages || test /var/log/messages -ot /var/log/$(ls -rt /var/log | tail -n 1); then
 	cd /etc/rsyslog.d
 	if test -f 50-default.conf; then
-	    echo_log "patch /etc/rsyslog.d/50-default.conf to enable /var/log/messages"
+	    echo_log "Patch /etc/rsyslog.d/50-default.conf to enable /var/log/messages"
 	    if ! $DRYRUN; then
 		cp 50-default.conf 50-default.conf.origmrk
 		sed -e '/info.*notice.*warn/,/messages/s/#//' 50-default.conf.origmrk > 50-default.conf
@@ -2619,10 +2621,10 @@ function setup_messages {
 }
 
 function restore_messages {
-    echo_log "restore original /etc/rsyslog.d/50-default.conf"
-    if ! $DRYRUN; then
-	cd /etc/rsyslog.d
-	if test -f 50-default.conf.origmrk; then
+    cd /etc/rsyslog.d
+    if test -f 50-default.conf.origmrk; then
+	echo_log "Restore original /etc/rsyslog.d/50-default.conf"
+	if ! $DRYRUN; then
 	    mv 50-default.conf.origmrk 50-default.conf
 	    service rsyslog restart
 	fi
@@ -2635,10 +2637,10 @@ function restore_messages {
 
 function setup_grub {
     if test -f /etc/default/grub.origmrk; then
-	echo_log "grub menu has already been configured"
+	echo_log "Grub menu has already been configured."
     elif test -f /etc/default/grub; then
 	cd /etc/default
-	echo_log "configure grub menu"
+	echo_log "Configure grub menu."
 	if ! $DRYRUN; then
 	    cp grub grub.origmrk
 	    sed -e 's/GRUB_HIDDEN/#GRUB_HIDDEN/; s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/' grub.origmrk > grub
@@ -2651,12 +2653,59 @@ function setup_grub {
 }
 
 function restore_grub {
-    echo_log "restore original grub boot menu"
+    echo_log "Restore original grub boot menu"
     if ! $DRYRUN; then
 	cd /etc/default
 	test -f grub.origkp && mv grub.origkp grub
 	test -f grub.origmrk && mv grub.origmrk grub
 	update-grub
+    fi
+}
+
+
+###########################################################################
+# udev permissions for comedi:
+
+function setup_comedi {
+    if getent group iocard > /dev/null; then
+	echo_log "Group \"iocard\" already exist."
+    else
+	echo_log "Add group \"iocard\"."
+	if ! $DRYRUN; then
+	    addgroup --system iocard
+	fi
+    fi
+    if test -d /etc/udev/rules.d; then
+	if test -f /etc/udev/rules.d/95-comedi.rules; then
+	    echo_log "File /etc/udev/rules.d/95-comedi.rules already exist."
+	else
+	    echo_log "Assign comedi modules to \"iocard\" group via udev rule in \"/etc/udev/rules.d\"."
+	    if ! $DRYRUN; then
+		{
+		    echo "# Add comedi DAQ boards to iocard group."
+		    echo "# This file has been created by ${MAKE_RTAI_KERNEL}."
+		    echo
+		    echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"'
+		} > /etc/udev/rules.d/95-comedi.rules
+		udevadm trigger
+	    fi
+	    echo_log ""
+	    echo_log "You still need to assign users to the \"iocard\" group! Run"
+	    echo_log "$ sudo adduser <username> iocard"
+	    echo_log "for each user <username> that needs access to the data acquisition boards."
+	fi
+    else
+	echo_log "Directory \"/etc/udev/rules.d\" does not exist - cannot assign comedi modules to iocard group."
+    fi
+}
+
+function restore_comedi {
+    if test -f /etc/udev/rules.d/95-comedi.rules && grep -q "${MAKE_RTAI_KERNEL}" /etc/udev/rules.d/95-comedi.rules; then
+	echo_log "Remove comedi device drivers from \"iocard\" group."
+	if ! $DRYRUN; then
+	    rm /etc/udev/rules.d/95-comedi.rules
+	    udevadm trigger
+	fi
     fi
 }
 
@@ -2669,12 +2718,14 @@ function setup_features {
     if test -z $1; then
 	setup_messages
 	setup_grub
+	setup_comedi
 	setup_kernel_param $KERNEL_PARAM
     else
 	for TARGET; do
 	    case $TARGET in
 		messages ) setup_messages ;;
 		grub ) setup_grub ;;
+		comedi ) setup_comedi ;;
 		kernel ) setup_kernel_param $KERNEL_PARAM ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
@@ -2687,6 +2738,7 @@ function restore_features {
     if test -z $1; then
 	restore_messages
 	restore_grub
+	restore_comedi
 	restore_kernel_param
 	restore_test_batch
     else
@@ -2694,6 +2746,7 @@ function restore_features {
 	    case $TARGET in
 		messages ) restore_messages ;;
 		grub ) restore_grub ;;
+		comedi ) restore_comedi ;;
 		kernel ) restore_kernel_param ;;
 		testbatch ) restore_test_batch ;;
 		* ) echo "unknown target $TARGET" ;;
@@ -2705,6 +2758,7 @@ function restore_features {
 function init_installation {
     setup_messages
     setup_grub
+    setup_comedi
     download_rtai
     print_full_info rtai
 }

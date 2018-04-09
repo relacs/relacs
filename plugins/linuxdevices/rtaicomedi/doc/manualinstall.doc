@@ -7,6 +7,7 @@
 - \ref installnewlib
 - \ref installrtai
 - \ref installcomedi
+- \ref udev
 - \ref configuregrub
 - \ref kernelmessages
 - \ref rtailinks
@@ -418,6 +419,42 @@ addgroup --system iocard
 echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
 \endcode
 For details see the documentation for the comedi plugin set.
+
+
+\section udev Setting up udev permissions for comedi device files
+
+Once comedi is installed you also need to make sure that you (the
+user) have appropriate permissions for accessing the comedi device
+files. That is you need to be able to have read and write access to
+the \c /dev/comedi* files. One elegant way to achieve this is to create a
+new group and tell udev to add the comedi device files to this group.
+
+This is accomplished by
+\code
+sudo ./makertaikernel.sh setup comedi
+\endcode
+
+Here are the details:
+-# Login as root.
+-# Create a new group "iocard":
+\code
+addgroup --system iocard
+\endcode
+-# Add udev rules to the /etc/udev/rules.d directory:
+\code
+echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
+\endcode
+-# Run
+\code
+udevadm trigger
+\endcode
+to apply your new udev rules
+-# Add users to the "iocard" group:
+\code
+adduser <username> iocard
+\endcode
+After the next login, \c \<username\> is a member of the \c iocard group
+and and has sufficient permissions to access the data acquisition boards through \c comedi.
 
 
 \section configuregrub Configure the grub bootmenu
