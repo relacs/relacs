@@ -33,6 +33,8 @@
                            # afterwards, the localmodconfig target is executed, 
                            # if the running kernel matches LINUX_KERNEL
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
+: ${KERNEL_MENU:="menuconfig"} # the menu for editing the kernel configuration
+                               # (menuconfig, gconfig, xconfig)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 
 : ${KERNEL_PARAM:="idle=poll nohz=off"}      # kernel parameter to be passed to grub
@@ -167,7 +169,8 @@ sudo ${MAKE_RTAI_KERNEL} restore [messages|grub|comedi|kernel|testbatch]
 
 setup            : setup messages, grub, comedi, and kernel
 setup messages   : enable /var/log/messages needed for RTAI tests in rsyslog settings
-setup grub       : configure the grub boot menu (not hidden, no submenus)
+setup grub       : configure the grub boot menu (not hidden, no submenus, 
+                   extra RTAI kernel parameter, user can reboot)
 setup comedi     : create "iocard" group and assign comedi devices to this group
 setup kernel     : set kernel parameter for the grub boot menu to "$KERNEL_PARAMETER"
 
@@ -254,8 +257,9 @@ select what to test by specifying one or more of the following key-words:
 
 You may want to run some load on you system to really test the RTAI
 performance. This can be controlled by the following key-words:
-  cpu      : run some heavy computations
+  cpu      : run heavy computations on each core
   io       : do some heavy file reading and writing
+  mem      : do some heavy memory access
   net      : produce network traffic
   full     : all of the above
 
@@ -284,7 +288,7 @@ In a batch FILE
   describes a configuration to be tested:
   <descr> is a one-word string describing the kernel parameter 
       (the load settings are added automatically to the description)
-  <load> defines the load processes to be started before testing (cpu io net full, see above)
+  <load> defines the load processes to be started before testing (cpu io mem net full, see above)
   <param> is a list of kernel parameter to be used.
 Example lines:
   idlenohz : : idle=poll nohz=off
@@ -369,6 +373,7 @@ action can be one of:
   download   : download missing sources of the specified targets
   update     : update sources of the specified targets (not for kernel target)
   patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
+  prepare    : prepare kernel configs for a test batch (no target required)
   build      : compile and install the specified targets and the depending ones if needed
   buildplain : compile and install the kernel without the rtai patch (no target required)
   clean      : clean the source trees of the specified targets
@@ -466,6 +471,13 @@ function print_setup {
 	echo "grub     : /etc/default/grub is not modified"
 	echo "           run \"${MAKE_RTAI_KERNEL} setup grub\" for setting up"
     fi
+    if test -f /etc/grub.d/10_linux.origmrk; then
+	echo "grub     : /etc/grub.d/10_linux is modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} restore grub\" to restore"
+    else
+	echo "grub     : /etc/grub.d/10_linux is not modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} setup grub\" for setting up"
+    fi
     # kernel parameter:
     if test -f /etc/default/grub.origkp; then
 	echo "kernel   : /etc/default/grub is modified"
@@ -489,7 +501,7 @@ function print_grub {
     IFSORG="$IFS"
     IFS=$'\n'
     N=0
-    for gm in $(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2); do
+    for gm in $(grep '^\s*menuentry ' /boot/grub/grub.cfg | cut -d "'" -f 2); do
 	echo "  $N) $gm"
 	let N+=1
     done
@@ -543,6 +555,7 @@ function print_settings {
     echo "  KERNEL_SOURCE_NAME = $KERNEL_SOURCE_NAME"
     echo "  KERNEL_NUM    (-n) = $KERNEL_NUM"
     echo "  KERNEL_CONFIG (-c) = $KERNEL_CONFIG"
+    echo "  KERNEL_MENU         = $KERNEL_MENU"
     echo "  RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
     echo "  KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
     echo "  KERNEL_PARAM       = $KERNEL_PARAM"
@@ -615,7 +628,7 @@ function install_packages {
 	echo_log "Exit"
 	return 1
     fi
-    PACKAGES="make gcc libncurses-dev zlib1g-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
+    PACKAGES="make gcc libncurses-dev zlib1g-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev stress"
     if test ${LINUX_KERNEL:0:1} -gt 3; then
 	PACKAGES="$PACKAGES libssl-dev libpci-dev libsensors4-dev"
     fi
@@ -781,6 +794,71 @@ function patch_kernel {
     fi
 }
 
+function prepare_kernel_configs {
+    check_root
+    echo "Prepare kernel configurations to be tested."
+    echo
+    echo "Step 1: save the original kernel configuration."
+    KERNEL_CONFIG_FILE="kernelconfigs.mrk"
+    if ! $DRYRUN; then
+	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+	cp .config .config.origmrk
+	cd - > /dev/null
+	rm -f "$KERNEL_CONFIG_FILE"
+    fi
+    N=0
+    echo
+    echo "Step 2: modify and store the kernel configurations."
+    read -p "  hit enter to continue ... "
+    if ! $DRYRUN; then
+	while true; do
+	    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+	    cp .config .config.mrk
+	    make menuconfig
+	    DESCRIPTION=""
+	    if ! diff -q .config.mrk .config > /dev/null; then
+		echo "  store patch of new configuration"
+		diff -u .config.mrk .config > config.patch
+		read -p "  short description of the kernel configuration (empty: finish) " DESCRIPTION
+		echo
+	    else
+		break
+	    fi
+	    if test -z "$DESCRIPTION"; then
+		break
+	    else
+		cd - > /dev/null
+		let N+=1
+		{
+		    echo "#### START CONFIG $N $DESCRIPTION"
+		    cat $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/config.patch
+		    echo "#### END CONFIG $N $DESCRIPTION"
+		    echo
+		    echo
+		} >> "$KERNEL_CONFIG_FILE"
+	    fi
+	done
+	cd - > /dev/null
+	# clean up:
+	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+	rm -f .config.mrk config.patch
+	mv .config.origmrk .config
+	cd - > /dev/null
+    fi
+    echo
+    echo "Step 3: saved $N kernel configuration(s) in file \""$KERNEL_CONFIG_FILE"\"."
+    echo
+    if test $N -gt 0; then
+	echo "Step 4: go on and use the kernel configurations"
+	echo "        by adding the following lines to a test batch file:"
+	if test -f "$KERNEL_CONFIG_FILE"; then
+	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \(.*\) \(.*\)/\2 : : CONFIG \1 '"$KERNEL_CONFIG_FILE"'/; p;}' "$KERNEL_CONFIG_FILE"
+	fi
+	echo
+    fi
+    exit 0
+}
+
 function build_kernel {
     cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
     echo_log "check for make-kpkg"
@@ -855,13 +933,19 @@ function build_kernel {
 	if ! $DRYRUN; then
 	    export CONCURRENCY_LEVEL=$CPU_NUM
 	    if $HAVE_MAKE_KPKG; then
+		KM=""
+		test -n "$KERNEL_MENU" && KM="--config $KERNEL_MENU"
 		if $KERNEL_DEBUG; then
-		    make-kpkg --initrd --append-to-version -${RTAI_DIR}${KERNEL_NUM} --revision 1.0 --config menuconfig kernel_image kernel_debug
+		    make-kpkg --initrd --append-to-version -${RTAI_DIR}${KERNEL_NUM} --revision 1.0 $KM kernel_image kernel_debug
 		else
-		    make-kpkg --initrd --append-to-version -${RTAI_DIR}${KERNEL_NUM} --revision 1.0 --config menuconfig kernel-image
+		    make-kpkg --initrd --append-to-version -${RTAI_DIR}${KERNEL_NUM} --revision 1.0 $KM kernel-image
 		fi
 	    else
-		make menuconfig
+		if test "$KERNEL_MENU" = "old"; then
+		    make olddefconfig
+		else
+		    make $KERNEL_MENU
+		fi
 		make deb-pkg LOCALVERSION=-${RTAI_DIR}${KERNEL_NUM} KDEB_PKGVERSION=$(make kernelversion)-1
 		# [TAR] creates a tar archive of the sources at the root of the kernel source tree
 	    fi
@@ -904,8 +988,7 @@ function install_kernel {
 	    if $KERNEL_DEBUG; then
 		dpkg -i "$KERNEL_DEBUG_PACKAGE"
 	    fi
-	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
-	    grub-reboot "$GRUBMENU"
+	    reboot_set_kernel
 	fi
     else
 	echo_log "no kernel to install"
@@ -954,46 +1037,42 @@ function remove_kernel {
 
 function setup_kernel_param {
     if test -f /etc/default/grub; then
+	check_root
 	if ! $DRYRUN; then
 	    cd /etc/default
-	    RUNGRUB=false
-	    if test -f grub.origkp; then
-		mv grub.origkp grub
-		RUNGRUB=true
-	    fi
-	    if test -n "$*"; then
-		cp grub grub.origkp
-		sed -i -e '/GRUB_CMDLINE_LINUX_DEFAULT/s/="\(.*\)"/="'"$*"' \1"/' grub
-		RUNGRUB=true
-	    fi
-	    $RUNGRUB && update-grub
+	    test -f grub.origkp && mv grub.origkp grub
+	    cp grub grub.origkp
+	    sed -e '/GRUB_CMDLINE_RTAI/s/=".*"/="'"$*"'"/' grub.origkp > grub
+	    update-grub
 	fi
 	if test -n "$*"; then
 	    echo_log ""
-	    echo_log "added \"$*\" to the kernel parameter"
+	    echo_log "Set RTAI kernel parameter to \"$*\"."
 	fi
-    elif test -n "$*"; then
+    else
 	echo_log ""
 	echo_log "/etc/default/grub not found: cannot configure kernel parameter"
     fi
 }
 
 function restore_kernel_param {
-    echo_log "restore original kernel parameter"
-    if ! $DRYRUN; then
-	cd /etc/default
-	test -f grub.origkp && mv grub.origkp grub
-	update-grub
+    if test -f /etc/default/grub.origkp; then
+	echo_log "Restore original RTAI kernel parameter."
+	if ! $DRYRUN; then
+	    cd /etc/default
+	    mv grub.origkp grub
+	    update-grub
+	fi
     fi
 }
 
-function set_reboot_kernel {
+function reboot_set_kernel {
 # tell grub to reboot into a specific kernel
 # if no grub menu entry is specified boot into the rtai kernel
     if ! $DRYRUN; then
 	GRUBMENU="$1"
 	if test -z "$GRUBMENU"; then
-	    GRUBMENU="$(grep '^menuentry' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
+	    GRUBMENU="$(grep '^\s*menuentry ' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
 	fi
 	grub-reboot "$GRUBMENU"
     fi
@@ -1004,20 +1083,27 @@ function reboot_cmd {
 # reboot the computer
     echo_log "reboot now"
     if ! $DRYRUN; then
-	echo_kmsg "REBOOT"
 	if test "x$1" = "xroot"; then
+	    echo_kmsg "REBOOT"
 	    shutdown -r now
 	    sleep 180
 	    reboot -f
-	    # reboot -f   # cold start!
-	    # reboot      # calls shutdown -r !
+	    # reboot -f   # cold start
+	    # reboot      # calls shutdown -r
 	    # shutdown brings the system into the reuested runlevel (init 0/6)
 	    # shutdown -r # reboot in a minute   
 	    # shutdown -r now
 	    # shutdown -r +<minutes>
+	elif test "x$(id -u)" != "x0"; then
+	    if qdbus --version &> /dev/null; then
+		qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 1 2
+	    elif gnome-session-quit --version &> /dev/null; then
+		gnome-session-quit --reboot --force
+	    else
+		shutdown -r now
+	    fi
 	else
-	    # qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 1
-	    # gnome-session-quit --reboot --force
+	    echo_kmsg "REBOOT"
 	    shutdown -r now
 	fi
     fi
@@ -1032,21 +1118,20 @@ function reboot_kernel {
 # FILE   : boot into rtai kernel with kernel parameter taken from test results file FILE
     case $1 in
 	[0-9]*)
-	    restore_kernel_param
-	    set_reboot_kernel "$1"
+	    reboot_set_kernel "$1"
 	    sleep 2
 	    reboot_cmd
 	    ;;
 
 	keep)
-	    set_reboot_kernel
+	    reboot_set_kernel
 	    sleep 2
 	    reboot_cmd
 	    ;;
 
 	default)
 	    setup_kernel_param ""
-	    set_reboot_kernel
+	    reboot_set_kernel
 	    sleep 2
 	    reboot_cmd
 	    ;;
@@ -1058,11 +1143,10 @@ function reboot_kernel {
 		setup_kernel_param $(sed -n -e '/kernel parameter/,/Versions/p' "$1" | \
 		    sed -e '1d; $d; s/^  //;' | \
 		    sed -e '/BOOT/d; /^root/d; /^ro$/d; /^quiet/d; /^splash/d; /^vt.handoff/d;')
-		exit 1
 	    else
 		setup_kernel_param $*
 	    fi
-	    set_reboot_kernel
+	    reboot_set_kernel
 	    sleep 2
 	    reboot_cmd
 	    ;;
@@ -1247,7 +1331,7 @@ function test_run {
     fi
 }
 
-function test_rtaikernel {
+function test_kernel {
     check_root
 
     # check for kernel log messages:
@@ -1282,7 +1366,7 @@ function test_rtaikernel {
 	    cpu) LOADMODE="$LOADMODE cpu" ;;
 	    io) LOADMODE="$LOADMODE io" ;;
 	    net) LOADMODE="$LOADMODE net" ;;
-	    full) LOADMODE="cpu io net" ;;
+	    full) LOADMODE="cpu io mem net" ;;
 	    [0-9]*) TEST_TIME="$((10#$1))" ;;
 	    auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
 	    batch) shift; test_batch "$1" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
@@ -1473,24 +1557,44 @@ function test_rtaikernel {
 
     # RTAI tests:
     if test "$TESTMODE" != none; then
+	# stress program available?
+	STRESS=false
+	stress --version &> /dev/null && STRESS=true
 	# produce load:
 	LOAD_PIDS=()
 	LOAD_FILES=()
 	test -n "$LOADMODE" && echo "start some jobs to produce load:"
 	for LOAD in $LOADMODE; do
 	    case $LOAD in
-		cpu) echo "  load cpu: cat /proc/interrupts" | tee -a load.dat
-		    while true; do cat /proc/interrupts &> /dev/null; done & 
-		    LOAD_PIDS+=( $! )
+		cpu) if $STRESS; then
+	                echo "  load cpu: stress -c $CPU_NUM" | tee -a load.dat
+			stress -c $CPU_NUM &> /dev/null
+                    else
+	                echo "  load cpu: seq $CPU_NUM | xargs -P0 -n1 md5sum /dev/urandom" | tee -a load.dat
+			seq $CPU_NUM | xargs -P0 -n1 md5sum /dev/urandom 
+                    fi
+                    LOAD_PIDS+=( $! )
 		    ;;
-		io) echo "  load io: ls -lR" | tee -a load.dat
-		    while true; do ls -lR / &> load-lsr; done & 
-		    LOAD_PIDS+=( $! )
-		    LOAD_FILES+=( load-lsr )
-		    echo "  load io: find" | tee -a load.dat
-		    while true; do find / -name '*.so' &> load-find; done & 
-		    LOAD_PIDS+=( $! )
-		    LOAD_FILES+=( load-find )
+		io) if $STRESS; then
+	                echo "  load io: stress --hdd-bytes 128M -d $CPU_NUM" | tee -a load.dat
+			stress --hdd-bytes 128M -d $CPU_NUM &> /dev/null
+		    else
+		        echo "  load io: ls -lR" | tee -a load.dat
+			while true; do ls -lR / &> load-lsr; done & 
+			LOAD_PIDS+=( $! )
+			LOAD_FILES+=( load-lsr )
+			echo "  load io: find" | tee -a load.dat
+			while true; do find / -name '*.so' &> load-find; done & 
+			LOAD_PIDS+=( $! )
+			LOAD_FILES+=( load-find )
+		    fi
+		    ;;
+		mem) if $STRESS; then
+	                echo "  load mem: stress -m $CPU_NUM" | tee -a load.dat
+			stress -m $CPU_NUM &> /dev/null
+		    else
+		        echo "  load mem: no test available"
+		    fi
 		    ;;
 		net) echo "  load net: ping -f localhost" | tee -a load.dat
 		    ping -f localhost > /dev/null &
@@ -1790,7 +1894,12 @@ function test_batch_script {
 
     # read current DESCRIPTION and LOAD_MODE from configuration file:
     IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
+    # compile new kernel:
+    COMPILE=false
+    test "x${NEW_KERNEL_PARAM:0:6}" != "xCONFIG" && COMPILE=true
+    # next:
     let INDEX+=1
+
 
     if test "$INDEX" -gt "$N_TESTS"; then
 	# no further tests:
@@ -1798,28 +1907,44 @@ function test_batch_script {
 	# clean up:
 	restore_test_batch > /dev/null
 	restore_kernel_param
-	# at TEST_TOTAL_TIME seconds later reboot into default kernel:
-	{ sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
+	if ! $COMPILE; then
+	    # at TEST_TOTAL_TIME seconds later reboot into default kernel:
+	    { sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
+	fi
     else
-	# read and set next NEW_KERNEL_PARAM:
-	IFS=':' read DESCR LM NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
+	# read and set next NEXT_KERNEL_PARAM:
+	IFS=':' read DESCR LM NEXT_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
 	echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$BATCH_DESCRIPTION|$TEST_TOTAL_TIME|$TEST_SPECS"
-	setup_kernel_param $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM
-	set_reboot_kernel
-	# at TEST_TOTAL_TIME seconds later reboot:
-	{ sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
+	if test "x${NEXT_KERNEL_PARAM:0:6}" != "xCONFIG"; then
+	    setup_kernel_param $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEXT_KERNEL_PARAM
+	    reboot_set_kernel
+	fi
+	if ! $COMPILE; then
+	    # at TEST_TOTAL_TIME seconds later reboot:
+	    { sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
+	fi
     fi
 
-    if test -n "$BATCH_DESCRIPTION" && test "${BATCH_DESCRIPTION:-1:1}" != "-"; then
-	BATCH_DESCRIPTION="${BATCH_DESCRIPTION}-"
-    fi
+    if $COMPILE; then
+	# compile new kernel:
+	echo_kmsg "START COMPILE NEW KERNEL"
+	CONFIG_NUM="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 2)"
+	CONFIG_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 3)"
+	sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_FILE | sed -e '1d; $d;' | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+	KERNEL_MENU=old
+	reconfigure
+	echo_kmsg "END COMPILE NEW KERNEL"
+    else
+	# run tests:
+	if test -n "$BATCH_DESCRIPTION" && test "${BATCH_DESCRIPTION:-1:1}" != "-"; then
+	    BATCH_DESCRIPTION="${BATCH_DESCRIPTION}-"
+	fi
+	cd $(dirname $BATCH_FILE)
+	test_kernel $TEST_SPECS $LOAD_MODE auto "$(echo $BATCH_DESCRIPTION)$(echo $DESCRIPTION)"
 
-    # run tests:
-    cd $(dirname $BATCH_FILE)
-    test_rtaikernel $TEST_SPECS $LOAD_MODE auto "$(echo $BATCH_DESCRIPTION)$(echo $DESCRIPTION)"
-
-    if test "$INDEX" -gt "$N_TESTS"; then
-	echo_kmsg "FINISHED TEST BATCH"
+	if test "$INDEX" -gt "$N_TESTS"; then
+	    echo_kmsg "FINISHED TEST BATCH"
+	fi
     fi
 
     # reboot:
@@ -2636,6 +2761,7 @@ function restore_messages {
 # grub menu:
 
 function setup_grub {
+    RUN_UPDATE=false
     if test -f /etc/default/grub.origmrk; then
 	echo_log "Grub menu has already been configured."
     elif test -f /etc/default/grub; then
@@ -2643,21 +2769,77 @@ function setup_grub {
 	echo_log "Configure grub menu."
 	if ! $DRYRUN; then
 	    cp grub grub.origmrk
-	    sed -e 's/GRUB_HIDDEN/#GRUB_HIDDEN/; s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/' grub.origmrk > grub
+	    sed -e "s/GRUB_HIDDEN/#GRUB_HIDDEN/; s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/; /GRUB_CMDLINE_LINUX=/aexport GRUB_CMDLINE_RTAI=\"$KERNEL_PARAM\"" grub.origmrk > grub
 	    ( echo; echo "GRUB_DISABLE_SUBMENU=y"; echo; echo "GRUB_DISABLE_RECOVERY=true" ) >> grub
-	    update-grub
+	    RUN_UPDATE=true
 	fi
     else
-	echo_log "/etc/default/grub not found: cannot configure grub menu"
+	echo_log "/etc/default/grub not found: cannot configure grub menu."
+    fi
+    if test -f /etc/grub.d/10_linux.origmrk; then
+	echo_log "Grub linux script has already been configured."
+    elif test -f /etc/grub.d/10_linux; then
+	cd /etc/grub.d
+	echo_log "Configure grub linux entries."
+	if ! $DRYRUN; then
+	    mv 10_linux 10_linux.origmrk
+	    sed -e '/SUPPORTED_INITS/{s/ systemd.*systemd//; s/ upstart.*upstart//;}' -e '/\${GRUB_CMDLINE_LINUX}.*\${GRUB_CMDLINE_LINUX_DEFAULT}/s/\(${GRUB_CMDLINE_LINUX}.*\)\(${GRUB_CMDLINE_LINUX_DEFAULT}\)/\1${CMDLINE_RTAI} \2/' -e '/initramfs=$/i # check for RTAI kernel:\
+  CMDLINE_RTAI=""\
+  if grep -q "CONFIG_IPIPE=y" "${config}"; then\
+    CMDLINE_RTAI="${GRUB_CMDLINE_RTAI}"\
+  fi' 10_linux.origmrk > 10_linux
+	    chmod a-x 10_linux.origmrk
+	    chmod a+x 10_linux
+	    RUN_UPDATE=true
+	fi
+    else
+	echo_log "/etc/grub.d/10_linux not found: cannot configure grub linux entries."
+    fi
+    if test -f /boot/grub/grubenv; then
+	echo_log "Enable reboot requests for normal user."
+	if ! $DRYRUN; then
+	    chmod a+w /boot/grub/grubenv
+	fi
+    else
+	echo_log "/boot/grub/grubenv not found: cannot enable reboot request for normal user."
+    fi
+    if $RUN_UPDATE && ! $DRYRUN; then
+	update-grub
     fi
 }
 
 function restore_grub {
-    echo_log "Restore original grub boot menu"
-    if ! $DRYRUN; then
-	cd /etc/default
-	test -f grub.origkp && mv grub.origkp grub
-	test -f grub.origmrk && mv grub.origmrk grub
+    cd /etc/default
+    if test -f grub.origkp; then
+	echo_log "Restore original grub kernel parameter"
+	if ! $DRYRUN; then
+	    mv grub.origkp grub
+	    RUN_UPDATE=true
+	fi
+    fi
+    if test -f grub.origmrk; then
+	echo_log "Restore original grub boot menu"
+	if ! $DRYRUN; then
+	    mv grub.origmrk grub
+	    RUN_UPDATE=true
+	fi
+    fi
+    cd /etc/grub.d
+    if test -f 10_linux.origmrk; then
+	echo_log "Restore original grub linux script"
+	if ! $DRYRUN; then
+	    mv 10_linux.origmrk 10_linux
+	    chmod a+x 10_linux
+	    RUN_UPDATE=true
+	fi
+    fi
+    if test -f /boot/grub/grubenv; then
+	echo_log "Disable reboot requests for normal user."
+	if ! $DRYRUN; then
+	    chmod go-w /boot/grub/grubenv
+	fi
+    fi
+    if $RUN_UPDATE && ! $DRYRUN; then
 	update-grub
     fi
 }
@@ -2756,6 +2938,7 @@ function restore_features {
 }
 
 function init_installation {
+    check_root
     setup_messages
     setup_grub
     setup_comedi
@@ -3145,7 +3328,7 @@ case $ACTION in
     reconfigure ) reconfigure ;;
 
     test ) 
-	test_rtaikernel $@
+	test_kernel $@
 	exit 0 ;;
 
     report ) 
@@ -3158,13 +3341,14 @@ case $ACTION in
     download ) download_all $@ ;;
     update ) update_all $@ ;;
     patch ) clean_unpack_patch_kernel ;;
+    prepare ) prepare_kernel_configs ;;
     build ) build_all $@ ;;
     buildplain ) buildplain_kernel $@ ;;
     install ) install_all $@ ;;
     clean ) clean_all $@ ;;
     uninstall ) uninstall_all $@ ;;
     remove ) remove_all $@ ;;
-    reboot ) check_root; reboot_kernel $@ ;;
+    reboot ) reboot_kernel $@ ;;
 
     * ) if test -n "$1"; then
 	    echo "unknown action \"$1\""
