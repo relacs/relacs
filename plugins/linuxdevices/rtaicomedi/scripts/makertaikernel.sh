@@ -37,8 +37,8 @@
                                # (menuconfig, gconfig, xconfig)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 
-: ${KERNEL_PARAM:="idle=poll nohz=off"}      # kernel parameter to be passed to grub
-: ${KERNEL_PARAM_DESCR:="idle-nohz"}     # one-word description of KERNEL_PARAM 
+: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
 : ${BATCH_KERNEL_PARAM:="panic=10"} # additional kernel parameter passed to grub for test batch
 
@@ -151,6 +151,7 @@ info rtai    : list all available patches and suggest the one fitting to the ker
 info settings: print the values of all configuration variables of the ${MAKE_RTAI_KERNEL} script
 info grub    : show grub boot menu entries
 info setup   : show modifikations of your system made by ${MAKE_RTAI_KERNEL} (run as root)
+info log     : show the content of the log file if available - useful after test batch.
 
 EOF
 }
@@ -192,6 +193,7 @@ Reboot and set kernel parameter.
 
 Usage:
 
+${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] reboot [keep|default|<XXX>|<FILE>|<N>]
 sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] reboot [keep|default|<XXX>|<FILE>|<N>]
 
 EOF
@@ -202,16 +204,20 @@ reboot        : reboot into the rtai kernel ${MAKE_RTAI_KERNEL} is configured fo
                 with kernel parameter as specified by KERNEL_PARAM
                 (currently set to "$KERNEL_PARAM")
 reboot XXX    : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
-                with XXX passed on as kernel parameter
+                with XXX passed on as kernel parameter (sudo required)
 reboot FILE   : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
-                with kernel parameter taken from test results file FILE
+                with kernel parameter taken from test results file FILE (sudo required)
 reboot keep   : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
                 and keep previously set kernel parameter
 reboot default: reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
-                without additional kernel parameter
+                without additional kernel parameter (sudo required)
 reboot N      : reboot into a kernel as specified by grub menu entry index N
                 without additional kernel parameter,
                 see "${MAKE_RTAI_KERNEL} info grub" for the grub menu.
+
+Rebooting as a regular user (without sudo) has the advantage to store
+the session of your window manager. This is possible whenever the kernel
+parameter do not need to be changed.
 
 EOF
 }
@@ -270,15 +276,17 @@ automized by the following two options:
              the preempt test will be aborted after 10 seconds.
   auto XXX : a one-word description of the kernel configuration (no user interaction)
 
-For a completely automized series of tests of various kernel parameters
+For a completely automized series of tests of various kernel parameters and kernel configurations
 under different loads you may add as the last arguments:
-  batch FILE     : automatically run tests with various kernel parameter as specified in FILE
+  batch FILE     : automatically run tests with various kernel parameter and configurations as specified in FILE
   batch basic    : write a default file with clock and timer related kernel parameters to be tested
   batch acpi     : write a default file with acpi and apic related kernel parameters to be tested
   batch isolcpus : write a default file with load settings and isolcpus kernel parameters to be tested
 This successively reboots into the RTAI kernel with the kernel parameter 
 set to the ones specified by the KERNEL_PARAM variable and as specified in FILE,
 and runs the tests as specified by the previous commands (without the "auto" command).
+Special lines in FILE cause reboots into the default kernel and building an RTAI-patched kernel
+with a new configuration.
 
 In a batch FILE
 - everything behind a hash ('#') is a comment that is completely ignored
@@ -290,8 +298,23 @@ In a batch FILE
       (the load settings are added automatically to the description)
   <load> defines the load processes to be started before testing (cpu io mem net full, see above)
   <param> is a list of kernel parameter to be used.
+If the first word in <param> equals CONFIG, then the line specifies a new kernel configuration:
+- the first line  of the file can be just
+  <descr> : : CONFIG
+  this sets <descr> as the description of the already existing RTAI kernel for the following tests.
+- other lines can be of the format
+  <descr> : : CONFIG <n> <config-file>
+  denoting the <n>-th patch for the kernel configuration in file
+  <config-file>. <descr> is a one-word description of the new kernel
+  configuration that is used for the following tests.
+- Use 
+  ${MAKE_RTAI_KERNEL} prepare
+  to generate a file with patches for the kernel configuration.
+
 Example lines:
+  lowlatency : : CONFIG
   idlenohz : : idle=poll nohz=off
+  nodyntics : : CONFIG 1 kernelconfigs.mrk
   idleisol : cpu io : idle=poll isolcpus=0-1
 See the file written by "batch default" for suggestions, and the file
 $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/Documentation/kernel-parameters.txt
@@ -373,7 +396,7 @@ action can be one of:
   download   : download missing sources of the specified targets
   update     : update sources of the specified targets (not for kernel target)
   patch      : clean, unpack, and patch the linux kernel with the rtai patch (no target required)
-  prepare    : prepare kernel configs for a test batch (no target required)
+  prepare    : prepare patches of kernel configurations for a test batch (no target required)
   build      : compile and install the specified targets and the depending ones if needed
   buildplain : compile and install the kernel without the rtai patch (no target required)
   clean      : clean the source trees of the specified targets
@@ -386,7 +409,7 @@ Action can be also one of
   help       : display this help message
   help XXX   : display help message for action XXX
   info       : display properties of rtai patches, loaded kernel modules,
-               kernel, machine, and grub menu
+               kernel, machine, log file, and grub menu
                (run "${MAKE_RTAI_KERNEL} help info" for details)
   init       : should be executed the first time you use ${MAKE_RTAI_KERNEL} -
                equivalent to setup, download rtai, info rtai.
@@ -427,7 +450,7 @@ $ sudo ${MAKE_RTAI_KERNEL} test 30 auto basic
   automaticlly test the currently running kernel for 30 seconds and name it "basic".
 
 $ sudo ${MAKE_RTAI_KERNEL} test 600 batch testbasic.mrk
-  automaticlly test all the kernel paramete rspecified in the file testbasic.mrk.
+  automaticlly test all the kernel parameter and kernel configurations specified in the file testbasic.mrk.
 
 $ ${MAKE_RTAI_KERNEL} report avg | less -S
   view test results sorted with respect to the averaged maximum latency. 
@@ -453,7 +476,7 @@ function print_setup {
     check_root
 
     echo
-    echo "System modifications of ${MAKE_RTAI_KERNEL}:"
+    echo "System modifications made by ${MAKE_RTAI_KERNEL}:"
     echo
     # messages:
     if test -f /etc/rsyslog.d/50-default.conf.origmrk; then
@@ -484,7 +507,7 @@ function print_setup {
 	echo "           run \"${MAKE_RTAI_KERNEL} restore kernel\" to restore"
     else
 	echo "kernel   : /etc/default/grub is not modified"
-	echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up"
+	echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up default kernel parameter"
     fi
     # test batch:
     if crontab -l 2> /dev/null | grep -q "${MAKE_RTAI_KERNEL}"; then
@@ -494,6 +517,15 @@ function print_setup {
 	echo "testbatch: crontab is not modified"
     fi
     echo
+}
+
+function print_log {
+    if test -f "${LOG_FILE}"; then
+	echo "Content of the log-file \"${LOG_FILE}\":"
+	cat "$LOG_FILE"
+    else
+	echo "Log-file \"${LOG_FILE}\" not available."
+    fi
 }
 
 function print_grub {
@@ -555,11 +587,12 @@ function print_settings {
     echo "  KERNEL_SOURCE_NAME = $KERNEL_SOURCE_NAME"
     echo "  KERNEL_NUM    (-n) = $KERNEL_NUM"
     echo "  KERNEL_CONFIG (-c) = $KERNEL_CONFIG"
-    echo "  KERNEL_MENU         = $KERNEL_MENU"
+    echo "  KERNEL_MENU        = $KERNEL_MENU"
     echo "  RUN_LOCALMOD  (-l) = $RUN_LOCALMOD"
     echo "  KERNEL_DEBUG  (-D) = $KERNEL_DEBUG"
     echo "  KERNEL_PARAM       = $KERNEL_PARAM"
     echo "  KERNEL_PARAM_DESCR = $KERNEL_PARAM_DESCR"
+    echo "  BATCH_KERNEL_PARAM = $BATCH_KERNEL_PARAM"
     echo "  LOCAL_SRC_PATH     = $LOCAL_SRC_PATH"
     echo "  RTAI_DIR      (-r) = $RTAI_DIR"
     echo "  RTAI_PATCH    (-p) = $RTAI_PATCH"
@@ -583,6 +616,11 @@ function print_kernel_info {
     echo
     echo "running kernel (uname -r): $(uname -r)"
     echo
+    if test -f config.patch; then
+	echo "kernel configuration:"
+	cat config.patch | while read LINE; do echo "  $LINE"; done
+	echo
+    fi
     echo "kernel parameter (/proc/cmdline):"
     for param in $(cat /proc/cmdline); do
 	echo "  $param"
@@ -796,6 +834,11 @@ function patch_kernel {
 
 function prepare_kernel_configs {
     check_root
+    if ! test -d $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}; then
+	echo "Linux kernel path \"$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}\" does not exist."
+	echo "Please specify an existing directory with a linux kernel source."
+	exit 1
+    fi
     echo "Prepare kernel configurations to be tested."
     echo
     echo "Step 1: save the original kernel configuration."
@@ -860,6 +903,11 @@ function prepare_kernel_configs {
 }
 
 function build_kernel {
+    # clean up:
+    if test "$KERNEL_MENU" != "old"; then
+	$DRYRUN || rm -f config.patch
+    fi
+
     cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
     echo_log "check for make-kpkg"
     HAVE_MAKE_KPKG=false
@@ -1082,6 +1130,7 @@ function reboot_set_kernel {
 function reboot_cmd {
 # reboot the computer
     echo_log "reboot now"
+    echo_log "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     if ! $DRYRUN; then
 	if test "x$1" = "xroot"; then
 	    echo_kmsg "REBOOT"
@@ -1299,7 +1348,7 @@ function test_run {
     TEST_DIR=${REALTIME_DIR}/testsuite/$DIR/$TEST
     rm -f $TEST_RESULTS
     if test -d $TEST_DIR; then
-	echo "running $DIR/$TEST test"
+	echo_log "running $DIR/$TEST test"
 	echo_kmsg "RUN $DIR/$TEST test"
 	cd $TEST_DIR
 	rm -f $TEST_RESULTS
@@ -1371,7 +1420,7 @@ function test_kernel {
 	    auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
 	    batch) shift; test_batch "$1" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
 	    batchscript) shift; test_batch_script ;;
-	    *) echo "test $1 is invalid"
+	    *) echo_log "test $1 is invalid"
 		exit 1 ;;
 	esac
 	shift
@@ -1461,9 +1510,9 @@ function test_kernel {
     remove_comedi_modules
     # unload already loaded rtai kernel modules:
     for MOD in msg mbx sem math sched hal; do
-	lsmod | grep -q rtai_$MOD && { rmmod rtai_$MOD && echo "removed already loaded rtai_$MOD"; }
+	lsmod | grep -q rtai_$MOD && { rmmod rtai_$MOD && echo_log "removed already loaded rtai_$MOD"; }
     done
-    echo
+    echo_log
 
     TESTED=""
     PROGRESS=""
@@ -1477,7 +1526,7 @@ function test_kernel {
 	TESTED="${TESTED}h"
 	test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM"
-	lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM && echo "loaded  rtai_hal $RTAI_HAL_PARAM" || RTAIMOD_FAILED=true; }
+	lsmod | grep -q rtai_hal || { insmod ${REALTIME_DIR}/modules/rtai_hal.ko $RTAI_HAL_PARAM && echo_log "loaded  rtai_hal $RTAI_HAL_PARAM" || RTAIMOD_FAILED=true; }
 	$RTAIMOD_FAILED || PROGRESS="${PROGRESS}h"
     fi
 
@@ -1486,7 +1535,7 @@ function test_kernel {
 	TESTED="${TESTED}s"
 	test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM"
-	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM && echo "loaded  rtai_sched $RTAI_SCHED_PARAM" || RTAIMOD_FAILED=true; }
+	lsmod | grep -q rtai_sched || { insmod ${REALTIME_DIR}/modules/rtai_sched.ko $RTAI_SCHED_PARAM && echo_log "loaded  rtai_sched $RTAI_SCHED_PARAM" || RTAIMOD_FAILED=true; }
 	$RTAIMOD_FAILED || PROGRESS="${PROGRESS}s"
     fi
 
@@ -1496,9 +1545,9 @@ function test_kernel {
 	    TESTED="${TESTED}m"
 	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	    echo_kmsg "INSMOD ${REALTIME_DIR}/modules/rtai_math.ko"
-	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo "loaded  rtai_math" && PROGRESS="${PROGRESS}m"; }
+	    lsmod | grep -q rtai_math || { insmod ${REALTIME_DIR}/modules/rtai_math.ko && echo_log "loaded  rtai_math" && PROGRESS="${PROGRESS}m"; }
 	else
-	    echo "rtai_math is not available"
+	    echo_log "rtai_math is not available"
 	fi
     fi
     
@@ -1507,10 +1556,10 @@ function test_kernel {
 	test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	# loading comedi:
 	echo_kmsg "LOAD COMEDI MODULES"
-	echo "triggering comedi "
+	echo_log "triggering comedi "
 	udevadm trigger
 	sleep 1
-	modprobe kcomedilib && echo "loaded  kcomedilib"
+	modprobe kcomedilib && echo_log "loaded  kcomedilib"
 
 	lsmod | grep -q kcomedilib && PROGRESS="${PROGRESS}c"
 	
@@ -1524,27 +1573,27 @@ function test_kernel {
     # remove rtai modules:
     if test $MAXMODULE -ge 3; then
 	echo_kmsg "RMMOD rtai_math"
-	lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
+	lsmod | grep -q rtai_math && { rmmod rtai_math && echo_log "removed rtai_math"; }
     fi
     if test $MAXMODULE -ge 2; then
 	echo_kmsg "RMMOD rtai_sched"
-	lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed rtai_sched"; }
+	lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo_log "removed rtai_sched"; }
     fi
     if test $MAXMODULE -ge 1; then
 	echo_kmsg "RMMOD rtai_hal"
-	lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed rtai_hal"; }
+	lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo_log "removed rtai_hal"; }
     fi
 
     # loading modules failed:
     if $RTAIMOD_FAILED; then
-	echo "Failed to load RTAI modules."
-	echo
+	echo_log "Failed to load RTAI modules."
+	echo_log
 	if test -z "$DESCRIPTION"; then
 	    read -p 'Save configuration? (y/N): ' SAVE
 	    if test "$SAVE" = "y"; then
-		echo
-		echo "saved kernel configuration in: config-$REPORT"
-		echo "saved test results in        : latencies-$REPORT"
+		echo_log
+		echo_log "saved kernel configuration in: config-$REPORT"
+		echo_log "saved test results in        : latencies-$REPORT"
 	    else
 		rm -f config-$REPORT
 		rm -f latencies-$REPORT
@@ -1552,8 +1601,8 @@ function test_kernel {
 	fi
 	return
     fi
-    echo "successfully loaded and unloaded rtai modules"
-    echo
+    echo_log "successfully loaded and unloaded rtai modules"
+    echo_log
 
     # RTAI tests:
     if test "$TESTMODE" != none; then
@@ -1563,52 +1612,54 @@ function test_kernel {
 	# produce load:
 	LOAD_PIDS=()
 	LOAD_FILES=()
-	test -n "$LOADMODE" && echo "start some jobs to produce load:"
+	test -n "$LOADMODE" && echo_log "start some jobs to produce load:"
 	for LOAD in $LOADMODE; do
 	    case $LOAD in
 		cpu) if $STRESS; then
-	                echo "  load cpu: stress -c $CPU_NUM" | tee -a load.dat
-			stress -c $CPU_NUM &> /dev/null
+	                echo_log "  load cpu: stress -c $CPU_NUM" | tee -a load.dat
+			stress -c $CPU_NUM &> /dev/null &
+			LOAD_PIDS+=( $! )
                     else
-	                echo "  load cpu: seq $CPU_NUM | xargs -P0 -n1 md5sum /dev/urandom" | tee -a load.dat
-			seq $CPU_NUM | xargs -P0 -n1 md5sum /dev/urandom 
+	                echo_log "  load cpu: seq $CPU_NUM | xargs -P0 -n1 md5sum /dev/urandom" | tee -a load.dat
+			seq $CPU_NUM | xargs -P0 -n1 md5sum /dev/urandom & 
+			LOAD_PIDS+=( $! )
                     fi
-                    LOAD_PIDS+=( $! )
 		    ;;
 		io) if $STRESS; then
-	                echo "  load io: stress --hdd-bytes 128M -d $CPU_NUM" | tee -a load.dat
-			stress --hdd-bytes 128M -d $CPU_NUM &> /dev/null
+	                echo_log "  load io : stress --hdd-bytes 128M -d $CPU_NUM" | tee -a load.dat
+			stress --hdd-bytes 128M -d $CPU_NUM &> /dev/null &
+			LOAD_PIDS+=( $! )
 		    else
-		        echo "  load io: ls -lR" | tee -a load.dat
+		        echo_log "  load io : ls -lR" | tee -a load.dat
 			while true; do ls -lR / &> load-lsr; done & 
 			LOAD_PIDS+=( $! )
 			LOAD_FILES+=( load-lsr )
-			echo "  load io: find" | tee -a load.dat
+			echo_log "  load io : find" | tee -a load.dat
 			while true; do find / -name '*.so' &> load-find; done & 
 			LOAD_PIDS+=( $! )
 			LOAD_FILES+=( load-find )
 		    fi
 		    ;;
 		mem) if $STRESS; then
-	                echo "  load mem: stress -m $CPU_NUM" | tee -a load.dat
-			stress -m $CPU_NUM &> /dev/null
+	                echo_log "  load mem: stress -m $CPU_NUM" | tee -a load.dat
+			stress -m $CPU_NUM &> /dev/null &
 		    else
-		        echo "  load mem: no test available"
+		        echo_log "  load mem: no test available"
 		    fi
 		    ;;
-		net) echo "  load net: ping -f localhost" | tee -a load.dat
+		net) echo_log "  load net: ping -f localhost" | tee -a load.dat
 		    ping -f localhost > /dev/null &
 		    LOAD_PIDS+=( $! )
 		    if test -n "$REMOTE_MACHINE"; then
-			echo "  load net: ping -f $REMOTE_MACHINE" | tee -a load.dat
+			echo_log "  load net: ping -f $REMOTE_MACHINE" | tee -a load.dat
 			ping -f $REMOTE_MACHINE > /dev/null & 
 			LOAD_PIDS+=( $! )
 		    fi 
 		    ;;
-		snd) echo "  load snd: not implemented yet!" ;;
+		snd) echo_log "  load snd: not implemented yet!" ;;
 	    esac
 	done
-	test -n "$LOADMODE" && echo
+	test -n "$LOADMODE" && echo_log
 
 	# run tests:
 	for DIR in $TESTMODE; do
@@ -1634,8 +1685,8 @@ function test_kernel {
 	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	done
 	echo_kmsg "TESTS DONE"
-	echo "finished all tests"
-	echo
+	echo_log "finished all tests"
+	echo_log
     fi
 
     # clean up load:
@@ -1647,7 +1698,7 @@ function test_kernel {
     done
     # clean up:
     for MOD in msg mbx sem math sched hal; do
-	lsmod | grep -q rtai_$MOD && { rmmod rtai_$MOD && echo "removed loaded rtai_$MOD"; }
+	lsmod | grep -q rtai_$MOD && { rmmod rtai_$MOD && echo_log "removed loaded rtai_$MOD"; }
     done
     
     # report:
@@ -1663,11 +1714,11 @@ function test_kernel {
     if test "$RESULT" != n; then
 	REPORT="${REPORT_NAME}-${RESULT}"
 	test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
-	echo
-	echo "saved kernel configuration in : config-$REPORT"
-	echo "saved test results in         : latencies-$REPORT"
+	echo_log
+	echo_log "saved kernel configuration in : config-$REPORT"
+	echo_log "saved test results in         : latencies-$REPORT"
     else
-	echo "test results not saved"
+	echo_log "test results not saved"
     fi
 
     # remove test results:
@@ -1705,8 +1756,8 @@ function test_batch {
 # Each line has the format:
 # <description> : <load specification> : <kernel parameter>
 # where <description> is a brief one-word description of the kernel
-# configuration and the kernel parameter that is added to the
-# KERNEL_PARAM_DESCR variable.  The <kernel parameter> are added to
+# parameter that is added to the KERNEL_PARAM_DESCR variable.  
+# The <kernel parameter> are added to
 # the ones defined in the KERNEL_PARAM variable.
 #
 # Edit this file according to your needs.
@@ -1814,7 +1865,7 @@ EOF
     fi
     N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
     if test $N_TESTS -eq 0; then
-	echo "No valid configurations specified in file \"$BATCH_FILE\"!"
+	echo_log "No valid configurations specified in file \"$BATCH_FILE\"!"
 	exit 1
     fi
 
@@ -1838,41 +1889,54 @@ EOF
 	let TEST_TOTAL_TIME+=20
     done
 
-    echo "run \"test $TEST_SPECS\" on batch file \"$BATCH_FILE\" with content:"
+    echo_log "run \"test $TEST_SPECS\" on batch file \"$BATCH_FILE\" with content:"
     sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | while read LINE; do echo "  $LINE"; done
-    echo
+    echo_log
 
 
     # read first line from configuration file:
     INDEX=1
     IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
-    KPD="$KERNEL_PARAM_DESCR"
-    if test -n "$KPD" && test "${KPD:-1:1}" != "-"; then
-	KPD="${KPD}-"
+    DESCRIPTION="$(echo $DESCRIPTION)"
+    NEW_KERNEL_PARAM=$(echo $NEW_KERNEL_PARAM)
+    # in case of a config line, this sets the description of the actual kernel configuration:
+    KERNEL_DESCR=""
+    if test "x${NEW_KERNEL_PARAM:0:6}" = "xCONFIG"; then
+	KERNEL_DESCR="$DESCRIPTION"
+	# read next line from configuration file:
+	let INDEX+=1
+	IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
+	DESCRIPTION="$(echo $DESCRIPTION)"
     fi
-    echo "Reboot into first configuration: \"${BD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
-    echo
 
-    # confirm:
+    # assemble overall description:
+    KD="${KERNEL_DESCR}"
+    test -n "$KD" && test "${KD:-1:1}" != "-" && KD="${KD}-"
+    KD="${KD}${KERNEL_PARAM_DESCR}"
+    test -n "$KD" && test "${KD:-1:1}" != "-" && KD="${KD}-"
+
+    # confirm batch testing:
+    echo_log "Reboot into first configuration: \"${KD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
+    echo_log
     read -p "Do you want to proceed testing with $N_TESTS reboots (Y/n)? " PROCEED
     if test "x$PROCEED" != "xn"; then
-	echo
+	echo_log
 
 	restore_test_batch
 	# install crontab:
 	MRK_DIR="$(cd "$(dirname "$0")" && pwd)"
 	(crontab -l 2>/dev/null; echo "@reboot ${MRK_DIR}/${MAKE_RTAI_KERNEL} test batchscript > ${TEST_DIR}/testbatch.log") | crontab -
-	echo "Installed crontab for automatic testing after reboot."
-	echo "  Uninstall by calling"
-	echo "  $ ./${MAKE_RTAI_KERNEL} restore testbatch"
+	echo_log "Installed crontab for automatic testing after reboot."
+	echo_log "  Uninstall by calling"
+	echo_log "  $ ./${MAKE_RTAI_KERNEL} restore testbatch"
 
 	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
-	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
+	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$KERNEL_DESCR|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
 
 	reboot_kernel $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM
     else
-	echo
-	echo "Test batch aborted"
+	echo_log
+	echo_log "Test batch aborted"
     fi
 
     exit 0
@@ -1882,31 +1946,45 @@ function test_batch_script {
     # run automatic testing of kernel parameter.
     # this function is called automatically after reboot from cron.
 
-    PATH="$PATH:/usr/sbin:/usr/bin:/sbin:/bin"
+    PATH="$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
     # wait:
     sleep $STARTUP_TIME
 
-    # get test BATCH_FILE, INDEX, BATCH_DESCRIPTION, TEST_TOTAL_TIME and TEST_SPECS from /var/log/messages:
-    IFS='|' read ID BATCH_FILE INDEX BATCH_DESCRIPTION TEST_TOTAL_TIME TEST_SPECS < <(grep "NEXT TEST BATCH" /var/log/messages | tail -n 1)
+    # get paramter for current test/compile:
+    IFS='|' read ID BATCH_FILE INDEX KERNEL_DESCR BATCH_DESCR TEST_TOTAL_TIME TEST_SPECS < <(grep "NEXT TEST BATCH" /var/log/messages | tail -n 1)
+    KERNEL_DESCR="$(echo $KERNEL_DESCR)"
+    BATCH_DESCR="$(echo $BATCH_DESCR)"
+
+    # enable logs:
+    LOG_FILE="$(dirname $BATCH_FILE)/${MAKE_RTAI_KERNEL%.*}.log"
+    echo_log
+    echo_log "Automatically start test $INDEX in file \"$BATCH_FILE\"."
+    echo_log
 
     N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
 
     # read current DESCRIPTION and LOAD_MODE from configuration file:
     IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
+    DESCRIPTION="$(echo $DESCRIPTION)"
+    NEW_KERNEL_PARAM=$(echo $NEW_KERNEL_PARAM)
     # compile new kernel:
     COMPILE=false
-    test "x${NEW_KERNEL_PARAM:0:6}" != "xCONFIG" && COMPILE=true
+    if test "x${NEW_KERNEL_PARAM:0:6}" = "xCONFIG"; then
+	COMPILE=true
+	KERNEL_DESCR="$DESCRIPTION"
+    fi
     # next:
     let INDEX+=1
-
 
     if test "$INDEX" -gt "$N_TESTS"; then
 	# no further tests:
 	echo_kmsg "LAST TEST BATCH"
+	echo_log "final test -> clean up test batch:"
 	# clean up:
 	restore_test_batch > /dev/null
 	restore_kernel_param
+	echo_log
 	if ! $COMPILE; then
 	    # at TEST_TOTAL_TIME seconds later reboot into default kernel:
 	    { sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
@@ -1914,10 +1992,13 @@ function test_batch_script {
     else
 	# read and set next NEXT_KERNEL_PARAM:
 	IFS=':' read DESCR LM NEXT_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
-	echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$BATCH_DESCRIPTION|$TEST_TOTAL_TIME|$TEST_SPECS"
+	echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$KERNEL_DESCR|$BATCH_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
+	NEXT_KERNEL_PARAM=$(echo $NEXT_KERNEL_PARAM)
 	if test "x${NEXT_KERNEL_PARAM:0:6}" != "xCONFIG"; then
+	    echo_log "prepare next reboot:"
 	    setup_kernel_param $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEXT_KERNEL_PARAM
 	    reboot_set_kernel
+	    echo_log
 	fi
 	if ! $COMPILE; then
 	    # at TEST_TOTAL_TIME seconds later reboot:
@@ -1925,25 +2006,34 @@ function test_batch_script {
 	fi
     fi
 
+    # working directory:
+    cd $(dirname $BATCH_FILE)
+
     if $COMPILE; then
 	# compile new kernel:
+	echo_log "compile new kernel:"
 	echo_kmsg "START COMPILE NEW KERNEL"
 	CONFIG_NUM="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 2)"
 	CONFIG_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 3)"
-	sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_FILE | sed -e '1d; $d;' | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+	sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_FILE > config.patch
+	echo_log "use patch $CONFIG_NUM from file $CONFIG_FILE:"
+	sed -e '1d; $d;' config.patch | while read LINE; do echo_log "  $LINE"; done
+	sed -e '1d; $d;' config.patch | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	KERNEL_MENU=old
 	reconfigure
 	echo_kmsg "END COMPILE NEW KERNEL"
     else
+	# assemble description:
+	test -n "$KERNEL_DESCR" && test "${KERNEL_DESCR:-1:1}" != "-" && KERNEL_DESCR="${KERNEL_DESCR}-"
+	test -n "$BATCH_DESCR" && test "${BATCH_DESCR:-1:1}" != "-" && BATCH_DESCR="${BATCH_DESCR}-"
 	# run tests:
-	if test -n "$BATCH_DESCRIPTION" && test "${BATCH_DESCRIPTION:-1:1}" != "-"; then
-	    BATCH_DESCRIPTION="${BATCH_DESCRIPTION}-"
-	fi
-	cd $(dirname $BATCH_FILE)
-	test_kernel $TEST_SPECS $LOAD_MODE auto "$(echo $BATCH_DESCRIPTION)$(echo $DESCRIPTION)"
+	echo_log "test kernel ${KERNEL_DESCR}${BATCH_DESCR}${DESCRIPTION}:"
+	test_kernel $TEST_SPECS $LOAD_MODE auto "${KERNEL_DESCR}${BATCH_DESCR}${DESCRIPTION}"
+	echo_log
 
 	if test "$INDEX" -gt "$N_TESTS"; then
 	    echo_kmsg "FINISHED TEST BATCH"
+	    echo_log "finisehd test batch"
 	fi
     fi
 
@@ -2713,11 +2803,11 @@ function remove_comedi {
 
 function remove_comedi_modules {
     if lsmod | grep -q kcomedilib; then
-	modprobe -r kcomedilib && echo "removed kcomedilib"
+	modprobe -r kcomedilib && echo_log "removed kcomedilib"
 	for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
-	    modprobe -r $i && echo "removed $i"
+	    modprobe -r $i && echo_log "removed $i"
 	done
-	modprobe -r comedi && echo "removed comedi"
+	modprobe -r comedi && echo_log "removed comedi"
     fi
 }
 
@@ -3182,8 +3272,6 @@ function print_help {
 ###########################################################################
 # main script:
 
-rm -f "$LOG_FILE"
-
 while test "x${1:0:1}" = "x-"; do
     case $1 in
 	--help )
@@ -3297,6 +3385,10 @@ KERNEL_NAME=${LINUX_KERNEL}-${RTAI_DIR}${KERNEL_NUM}
 KERNEL_ALT_NAME=${LINUX_KERNEL}.0-${RTAI_DIR}${KERNEL_NUM}
 REALTIME_DIR="/usr/realtime/${KERNEL_NAME}"
 
+if test "x$1" != "xinfo" &&  ! ( test "x$1" = "xtest" && test "x$2" = "xbatchscript" ); then
+    rm -f "$LOG_FILE"
+fi
+
 ACTION=$1
 shift
 case $ACTION in
@@ -3320,6 +3412,8 @@ case $ACTION in
 	    echo "by editing the variables directly in the ${MAKE_RTAI_KERNEL} script."
 	elif test "x$1" = "xsetup"; then
 	    print_setup
+	elif test "x$1" = "xlog"; then
+	    print_log
 	else
 	    print_full_info $@ 
 	    test "x$1" = "xrtai" && rm -f "$LOG_FILE"
