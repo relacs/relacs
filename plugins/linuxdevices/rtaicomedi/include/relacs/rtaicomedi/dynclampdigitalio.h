@@ -167,6 +167,11 @@ public:
 	\param[in] line the dio line where to put out the synchronizing pulses
 	\param[in] duration the duration of the current injection 
 	of the amplifier in seconds.
+	\param[in] mode determines how the injected current is scaled:
+	  -1: no scaling,
+	  0: use fixed period of dynamic clamp loop (the requested sampling rate),
+          1: use the actual duration of the previous cycle,
+          n: use the period averaged over the last `n` cycles.
 	\return 0 on success, a Device error code on failure.
 	\sa clearSyncPulse() */
   virtual int setSyncPulse( int modemask, int modebits, unsigned int line,
