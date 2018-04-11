@@ -1633,24 +1633,26 @@ function test_kernel {
 	STRESS=false
 	stress --version &> /dev/null && STRESS=true
 	# produce load:
+	let JOB_NUM=$CPU_NUM/$(echo $LOADMODE | wc -w)
+	test $JOB_NUM -eq 0 && JOB_NUM=1
 	LOAD_PIDS=()
 	LOAD_FILES=()
 	test -n "$LOADMODE" && echo_log "start some jobs to produce load:"
 	for LOAD in $LOADMODE; do
 	    case $LOAD in
 		cpu) if $STRESS; then
-	                echo_log "  load cpu: stress -c $CPU_NUM" | tee -a load.dat
-			stress -c $CPU_NUM &> /dev/null &
+	                echo_log "  load cpu: stress -c $JOB_NUM" | tee -a load.dat
+			stress -c $JOB_NUM &> /dev/null &
 			LOAD_PIDS+=( $! )
                     else
-	                echo_log "  load cpu: seq $CPU_NUM | xargs -P0 -n1 md5sum /dev/urandom" | tee -a load.dat
-			seq $CPU_NUM | xargs -P0 -n1 md5sum /dev/urandom & 
+	                echo_log "  load cpu: seq $JOB_NUM | xargs -P0 -n1 md5sum /dev/urandom" | tee -a load.dat
+			seq $JOB_NUM | xargs -P0 -n1 md5sum /dev/urandom & 
 			LOAD_PIDS+=( $! )
                     fi
 		    ;;
 		io) if $STRESS; then
-	                echo_log "  load io : stress --hdd-bytes 128M -d $CPU_NUM" | tee -a load.dat
-			stress --hdd-bytes 128M -d $CPU_NUM &> /dev/null &
+	                echo_log "  load io : stress --hdd-bytes 128M -d $JOB_NUM" | tee -a load.dat
+			stress --hdd-bytes 128M -d $JOB_NUM &> /dev/null &
 			LOAD_PIDS+=( $! )
 		    else
 		        echo_log "  load io : ls -lR" | tee -a load.dat
@@ -1664,8 +1666,8 @@ function test_kernel {
 		    fi
 		    ;;
 		mem) if $STRESS; then
-	                echo_log "  load mem: stress -m $CPU_NUM" | tee -a load.dat
-			stress -m $CPU_NUM &> /dev/null &
+	                echo_log "  load mem: stress -m $JOB_NUM" | tee -a load.dat
+			stress -m $JOB_NUM &> /dev/null &
 		    else
 		        echo_log "  load mem: no test available"
 		    fi
@@ -1906,7 +1908,7 @@ EOF
 	TEST_TIME="600"
 	TEST_SPECS="$TEST_SPECS $TEST_TIME"
     fi
-    TEST_TOTAL_TIME=5
+    TEST_TOTAL_TIME=20
     for TM in $TESTMODE; do
 	let TEST_TOTAL_TIME+=$TEST_TIME
 	let TEST_TOTAL_TIME+=20
@@ -3414,7 +3416,7 @@ KERNEL_NAME=${LINUX_KERNEL}-${RTAI_DIR}${KERNEL_NUM}
 KERNEL_ALT_NAME=${LINUX_KERNEL}.0-${RTAI_DIR}${KERNEL_NUM}
 REALTIME_DIR="/usr/realtime/${KERNEL_NAME}"
 
-if test "x$1" != "xinfo" &&  ! ( test "x$1" = "xtest" && test "x$2" = "xbatchscript" ); then
+if test "x$1" != "xinfo" && test "x$1" != "xreport" && ! ( test "x$1" = "xtest" && test "x$2" = "xbatchscript" ); then
     rm -f "$LOG_FILE"
 fi
 
