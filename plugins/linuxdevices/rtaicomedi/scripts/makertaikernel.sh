@@ -41,6 +41,7 @@
 : ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
 : ${BATCH_KERNEL_PARAM:="panic=10"} # additional kernel parameter passed to grub for test batch
+: ${KERNEL_CONFIG_FILE:="kernelconfigs.mrk"}   # file where patches from prepare_kernel_config go in
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -143,15 +144,17 @@ Print some information about your system.
 
 Usage:
 
-sudo ${MAKE_RTAI_KERNEL} info [rtai|grub|setup]
+sudo ${MAKE_RTAI_KERNEL} info [rtai|settings|grub|setup|log|config [<FILE>]]
 
-info         : display properties of rtai patches, loaded kernel modules, kernel, machine,
-               and grub menu
-info rtai    : list all available patches and suggest the one fitting to the kernel
-info settings: print the values of all configuration variables of the ${MAKE_RTAI_KERNEL} script
-info grub    : show grub boot menu entries
-info setup   : show modifikations of your system made by ${MAKE_RTAI_KERNEL} (run as root)
-info log     : show the content of the log file if available - useful after test batch.
+info               : display properties of rtai patches, loaded kernel modules, kernel, machine,
+                     and grub menu (only info configs is excluded)
+info rtai          : list all available patches and suggest the one fitting to the kernel
+info settings      : print the values of all configuration variables of the ${MAKE_RTAI_KERNEL} script
+info grub          : show grub boot menu entries
+info setup         : show modifikations of your system made by ${MAKE_RTAI_KERNEL} (run as root)
+info log           : show the content of the log file if available - useful after test batch
+info configs       : show patches for kernel configurations in file ${KERNEL_CONFIG_FILE}
+info configs <FILE>: show patches for kernel configurations in file <FILE>
 
 EOF
 }
@@ -528,6 +531,20 @@ function print_log {
     fi
 }
 
+function print_configs {
+    KCF="$KERNEL_CONFIG_FILE"
+    test -n "$1" && KCF="$1"
+    if test -f "$KCF"; then
+	echo "Available kernel configurations from file \"$KCF\""
+	echo "- add them to a test batch file:"
+	echo
+	sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \(.*\) \(.*\)/\2 : : CONFIG \1 '"$KERNEL_CONFIG_FILE"'/; p;}' "$KCF"
+    else
+	echo "File \"$KCF\" does not exist."
+    fi
+    echo
+}
+
 function print_grub {
     echo "grub menu entries:"
     IFSORG="$IFS"
@@ -593,6 +610,7 @@ function print_settings {
     echo "  KERNEL_PARAM       = $KERNEL_PARAM"
     echo "  KERNEL_PARAM_DESCR = $KERNEL_PARAM_DESCR"
     echo "  BATCH_KERNEL_PARAM = $BATCH_KERNEL_PARAM"
+    echo "  KERNEL_CONFIG_FILE = $KERNEL_CONFIG_FILE"
     echo "  LOCAL_SRC_PATH     = $LOCAL_SRC_PATH"
     echo "  RTAI_DIR      (-r) = $RTAI_DIR"
     echo "  RTAI_PATCH    (-p) = $RTAI_PATCH"
@@ -666,13 +684,14 @@ function install_packages {
 	echo_log "Exit"
 	return 1
     fi
-    PACKAGES="make gcc libncurses-dev zlib1g-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev stress"
+    PACKAGES="make gcc libncurses-dev zlib1g-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
     if test ${LINUX_KERNEL:0:1} -gt 3; then
 	PACKAGES="$PACKAGES libssl-dev libpci-dev libsensors4-dev"
     fi
     if $DRYRUN; then
 	echo_log "apt-get -y install $PACKAGES"
 	echo_log "apt-get -y install kernel-package"
+	echo_log "apt-get -y install stress"
     else
 	if ! apt-get -y install $PACKAGES; then
 	    echo_log "Failed to install missing packages!"
@@ -684,7 +703,10 @@ function install_packages {
 	    return 1
 	fi
 	if ! apt-get -y install kernel-package; then
-	    echo_log "Package kernel-package not availabel."
+	    echo_log "Package \"kernel-package\" not available."
+	fi
+	if ! apt-get -y install stress; then
+	    echo_log "Package \"stress\" not available."
 	fi
     fi
 }
@@ -842,7 +864,6 @@ function prepare_kernel_configs {
     echo "Prepare kernel configurations to be tested."
     echo
     echo "Step 1: save the original kernel configuration."
-    KERNEL_CONFIG_FILE="kernelconfigs.mrk"
     if ! $DRYRUN; then
 	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 	cp .config .config.origmrk
@@ -852,7 +873,6 @@ function prepare_kernel_configs {
     N=0
     echo
     echo "Step 2: modify and store the kernel configurations."
-    read -p "  hit enter to continue ... "
     if ! $DRYRUN; then
 	while true; do
 	    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
@@ -889,14 +909,17 @@ function prepare_kernel_configs {
 	cd - > /dev/null
     fi
     echo
-    echo "Step 3: saved $N kernel configuration(s) in file \""$KERNEL_CONFIG_FILE"\"."
-    echo
     if test $N -gt 0; then
+	echo "Step 3: saved $N kernel configuration(s) in file \""$KERNEL_CONFIG_FILE"\"."
+	echo
 	echo "Step 4: go on and use the kernel configurations"
 	echo "        by adding the following lines to a test batch file:"
 	if test -f "$KERNEL_CONFIG_FILE"; then
 	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \(.*\) \(.*\)/\2 : : CONFIG \1 '"$KERNEL_CONFIG_FILE"'/; p;}' "$KERNEL_CONFIG_FILE"
 	fi
+	echo
+    else
+	echo "Step 3: did not save any kernel configurations."
 	echo
     fi
     exit 0
@@ -1890,7 +1913,7 @@ EOF
     done
 
     echo_log "run \"test $TEST_SPECS\" on batch file \"$BATCH_FILE\" with content:"
-    sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | while read LINE; do echo "  $LINE"; done
+    sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | while read LINE; do echo_log "  $LINE"; done
     echo_log
 
 
@@ -1948,21 +1971,23 @@ function test_batch_script {
 
     PATH="$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-    # wait:
-    sleep $STARTUP_TIME
-
     # get paramter for current test/compile:
-    IFS='|' read ID BATCH_FILE INDEX KERNEL_DESCR BATCH_DESCR TEST_TOTAL_TIME TEST_SPECS < <(grep "NEXT TEST BATCH" /var/log/messages | tail -n 1)
+    IFS='|' read ID BATCH_FILE INDEX KERNEL_DESCR BATCH_DESCR TEST_TOTAL_TIME TEST_SPECS < <(grep -a -F "NEXT TEST BATCH" /var/log/messages | tail -n 1)
     KERNEL_DESCR="$(echo $KERNEL_DESCR)"
     BATCH_DESCR="$(echo $BATCH_DESCR)"
+
+    N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
 
     # enable logs:
     LOG_FILE="$(dirname $BATCH_FILE)/${MAKE_RTAI_KERNEL%.*}.log"
     echo_log
-    echo_log "Automatically start test $INDEX in file \"$BATCH_FILE\"."
+    echo_log "Automatically start test $INDEX from $N_TESTS in file \"$BATCH_FILE\"."
     echo_log
 
-    N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
+    # wait:
+    sleep $STARTUP_TIME
+    echo_log "."
+    echo_log
 
     # read current DESCRIPTION and LOAD_MODE from configuration file:
     IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
@@ -3418,6 +3443,9 @@ case $ACTION in
 	    print_setup
 	elif test "x$1" = "xlog"; then
 	    print_log
+	elif test "x$1" = "xconfigs"; then
+	    shift
+	    print_configs
 	else
 	    print_full_info $@ 
 	    test "x$1" = "xrtai" && rm -f "$LOG_FILE"
