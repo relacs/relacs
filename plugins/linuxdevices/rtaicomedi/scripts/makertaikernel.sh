@@ -2877,9 +2877,12 @@ function setup_grub {
   CMDLINE_RTAI=""\
   if grep -q "CONFIG_IPIPE=y" "${config}"; then\
     CMDLINE_RTAI="${GRUB_CMDLINE_RTAI}"\
-  fi' 10_linux.origmrk > 10_linux
+  fi' 10_linux.origmrk > 11_linux
+	    if ! grep -q GRUB_DISABLE_SUBMENU 11_linux > /dev/null; then
+		sed -i -e '/if .*$in_submenu.*; then/,/fi$/s/^/#/' 11_linux
+	    fi
 	    chmod a-x 10_linux.origmrk
-	    chmod a+x 10_linux
+	    chmod a+x 11_linux
 	    RUN_UPDATE=true
 	fi
     else
@@ -2920,6 +2923,7 @@ function restore_grub {
 	if ! $DRYRUN; then
 	    mv 10_linux.origmrk 10_linux
 	    chmod a+x 10_linux
+	    rm -f 11_linux
 	    RUN_UPDATE=true
 	fi
     fi
