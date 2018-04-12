@@ -700,25 +700,46 @@ function install_packages {
     if test ${LINUX_KERNEL:0:1} -gt 3; then
 	PACKAGES="$PACKAGES libssl-dev libpci-dev libsensors4-dev"
     fi
+    OPT_PACKAGES="kernel-package stress lm-sensors"
     if $DRYRUN; then
 	echo_log "apt-get -y install $PACKAGES"
-	echo_log "apt-get -y install kernel-package"
-	echo_log "apt-get -y install stress"
+	for PKG in $OPT_PACKAGES; do
+	    echo_log "apt-get -y install $PKG"
+	done
     else
 	if ! apt-get -y install $PACKAGES; then
-	    echo_log "Failed to install missing packages!"
-	    echo_log "Maybe some package names have changed..."
-	    echo_log "We need the following packes, try to install them manually:"
-	    for p in $PACKAGES; do
-		echo_log "  $p"
+	    FAILEDPKGS=""
+	    for PKG in $PACKAGES; do
+		if ! apt-get -y install $PKG; then
+		    FAILEDPKGS="$FAILEDPKGS $PKG"
+		fi
 	    done
-	    return 1
+	    if test -n "$FAILEDPKGS"; then
+		echo_log "Failed to install missing packages!"
+		echo_log "Maybe package names have changed ..."
+		echo_log "We need the following packes, try to install them manually:"
+		for PKG in $FAILEDPKGS; do
+		    echo_log "  $PKG"
+		done
+		return 1
+	    fi
 	fi
-	if ! apt-get -y install kernel-package; then
-	    echo_log "Package \"kernel-package\" not available."
-	fi
-	if ! apt-get -y install stress; then
-	    echo_log "Package \"stress\" not available."
+	if ! apt-get -y install $OPT_PACKAGES; then
+	    FAILEDPKGS=""
+	    for PKG in $OPT_PACKAGES; do
+		if ! apt-get -y install $PKG; then
+		    FAILEDPKGS="$FAILEDPKGS $PKG"
+		fi
+	    done
+	    if test -n "$FAILEDPKGS"; then
+		echo_log "Failed to install optional packages!"
+		echo_log "Maybe package names have changed ..."
+		echo_log "Try to install them manually:"
+		for PKG in $FAILEDPKGS; do
+		    echo_log "  $PKG"
+		done
+		return 1
+	    fi
 	fi
     fi
 }
@@ -797,7 +818,7 @@ function check_kernel_patch {
 
 function download_kernel {
     if ! test -d "$KERNEL_PATH"; then
-	echo_log "path to kernel sources $KERNEL_PATH does not exist!"
+	echo_log "Path to kernel sources $KERNEL_PATH does not exist!"
 	return 1
     fi
     cd $KERNEL_PATH
@@ -809,7 +830,10 @@ function download_kernel {
     elif test -n "$LINUX_KERNEL"; then
 	echo_log "download linux kernel version $LINUX_KERNEL"
 	if ! $DRYRUN; then
-	    wget https://www.kernel.org/pub/linux/kernel/v${LINUX_KERNEL:0:1}.x/linux-$LINUX_KERNEL.tar.xz
+	    if ! wget https://www.kernel.org/pub/linux/kernel/v${LINUX_KERNEL:0:1}.x/linux-$LINUX_KERNEL.tar.xz; then
+		echo_log "Failed to download linux kernel \"https://www.kernel.org/pub/linux/kernel/v${LINUX_KERNEL:0:1}.x/linux-$LINUX_KERNEL.tar.xz\"!"
+		return 1
+	    fi
 	fi
     else
 	echo_log
@@ -836,6 +860,7 @@ function unpack_kernel {
 	if ! test -f linux-$LINUX_KERNEL.tar.xz; then
 	    echo_log "archive linux-$LINUX_KERNEL.tar.xz not found."
 	    echo_log "download it with $ ./${MAKE_RTAI_KERNEL} download kernel."
+	    return 1
 	fi
 	# unpack:
 	echo_log "unpack kernel sources from archive"
@@ -861,7 +886,10 @@ function patch_kernel {
 	fi
 	echo_log "apply rtai patch $RTAI_PATCH to kernel sources"
 	if ! $DRYRUN; then
-	    patch -p1 < ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH
+	    if ! patch -p1 < ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH; then
+		echo_log "Failed to patch the linux kernel \"$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}\"!"
+		return 1
+	    fi
 	fi
     fi
 }
@@ -1067,9 +1095,15 @@ function install_kernel {
     if test -f "$KERNEL_PACKAGE"; then
 	echo_log "install kernel from debian package $KERNEL_PACKAGE"
 	if ! $DRYRUN; then
-	    dpkg -i "$KERNEL_PACKAGE"
+	    if ! dpkg -i "$KERNEL_PACKAGE"; then
+		echo_log "Failed to install linux kernel from $KERNEL_PACKAGE !"
+		return 1
+	    fi
 	    if $KERNEL_DEBUG; then
-		dpkg -i "$KERNEL_DEBUG_PACKAGE"
+		if ! dpkg -i "$KERNEL_DEBUG_PACKAGE"; then
+		    echo_log "Failed to install linux kernel from $KERNEL_DEBUG_PACKAGE !"
+		    return 1
+		fi
 	    fi
 	    reboot_set_kernel
 	fi
@@ -1094,8 +1128,12 @@ function uninstall_kernel {
     fi
     echo_log "uninstall kernel ${KERNEL_NAME}"
     if ! $DRYRUN; then
-	apt-get -y remove linux-image-${KERNEL_NAME}
-	apt-get -y remove linux-image-${KERNEL_ALT_NAME}
+	if ! apt-get -y remove linux-image-${KERNEL_NAME}; then
+	    if ! apt-get -y remove linux-image-${KERNEL_ALT_NAME}; then
+		echo_log "Failed to uninstall linux kernel package \"linux-image-${KERNEL_NAME}\"!"
+		return 1
+	    fi
+	fi
     fi
 }
 
@@ -2258,6 +2296,9 @@ function download_newlib {
 		mv $NEWLIB_DIR src
 		echo ${NEWLIB_DIR#newlib-} > src/revision.txt
 		mkdir install
+	    else
+		echo_log "Failed to download newlib!"
+		return 1
 	    fi
 	fi
     fi
@@ -2268,12 +2309,16 @@ function update_newlib {
     if test -d newlib/src/.git; then
 	echo_log "update already downloaded newlib sources"
 	cd newlib/src
-	git pull origin master
-	date +"%F %H:%M" > revision.txt
-	clean_newlib
+	if git pull origin master; then
+	    date +"%F %H:%M" > revision.txt
+	    clean_newlib
+	else
+	    echo_log "Failed to update newlib!"
+	    return 1
+	fi
     elif ! test -f newlib/$NEWLIB_TAR; then
 	rm -r newlib
-	download_newlib
+	download_newlib || return 1
     fi
 }
 
@@ -2371,12 +2416,21 @@ function download_rtai {
 	    elif test "x$RTAI_DIR" = "xRTAI"; then
 		git clone https://github.com/ShabbyX/RTAI.git
 	    else
-		wget https://www.rtai.org/userfiles/downloads/RTAI/${RTAI_DIR}.tar.bz2
-		echo_log "unpack ${RTAI_DIR}.tar.bz2"
-		tar xof ${RTAI_DIR}.tar.bz2
-		# -o option because we are root and want the files to be root!
+		if wget https://www.rtai.org/userfiles/downloads/RTAI/${RTAI_DIR}.tar.bz2; then
+		    echo_log "unpack ${RTAI_DIR}.tar.bz2"
+		    tar xof ${RTAI_DIR}.tar.bz2
+		    # -o option because we are root and want the files to be root!
+		else
+		    echo_log "Failed to download RTAI from \"https://www.rtai.org/userfiles/downloads/RTAI/${RTAI_DIR}.tar.bz2\"!"
+		    return 1
+		fi
 	    fi
-	    date +"%F %H:%M" > $RTAI_DIR/revision.txt
+	    if test "x$?" != "x0"; then
+		echo_log "Failed to download RTAI!"
+		return 1
+	    else
+		date +"%F %H:%M" > $RTAI_DIR/revision.txt
+	    fi
 	fi
     fi
     echo_log "set soft link rtai -> $RTAI_DIR"
@@ -2396,14 +2450,12 @@ function update_rtai {
 	if test -d CVS; then
 	    echo_log "update already downloaded rtai sources"
 	    if ! $DRYRUN; then
-		cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update
-		date +"%F %H:%M" > revision.txt
+		cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update && date +"%F %H:%M" > revision.txt
 	    fi
 	elif test -d .git; then
 	    echo_log "update already downloaded rtai sources"
 	    if ! $DRYRUN; then
-		git pull origin master
-		date +"%F %H:%M" > revision.txt
+		git pull origin master && date +"%F %H:%M" > revision.txt
 	    fi
 	elif test -f ../${RTAI_DIR}.tar.bz2; then
 	    cd -
@@ -2412,12 +2464,16 @@ function update_rtai {
 	    cd -
 	fi
 	cd -
+	if test "x$?" != "x0"; then
+	    echo_log "Failed to update RTAI!"
+	    return 1
+	fi
 	echo_log "set soft link rtai -> $RTAI_DIR"
 	if ! $DRYRUN; then
 	    ln -sfn $RTAI_DIR rtai
 	fi
     else
-	download_rtai
+	download_rtai || return 1
     fi
 }
 
@@ -2567,6 +2623,10 @@ EOF
  # CONFIG_RTAI_RTDM is not set
 EOF
 	    fi
+	    if test "x$?" != "x0"; then
+		echo_log "Failed to patch RTAI configuration!"
+		return 1
+	    fi
 	    if ! ${MAKE_NEWLIB}; then
 		patch <<EOF
 --- .rtai_config_math   2018-03-14 16:29:57.156483235 +0100
@@ -2584,8 +2644,16 @@ EOF
  # CONFIG_RTAI_USE_TLSF is not set
  CONFIG_RTAI_MALLOC_VMALLOC=y
 EOF
+		if test "x$?" != "x0"; then
+		    echo_log "Failed to patch RTAI configuration for math support!"
+		    return 1
+		fi
 	    fi
 	    make -f makefile oldconfig
+	    if test "x$?" != "x0"; then
+		echo_log "Failed to clean RTAI configuration (make oldconfig)!"
+		return 1
+	    fi
 	    if $RTAI_MENU; then
 		make menuconfig
 	    fi
@@ -2669,7 +2737,10 @@ function download_showroom {
     else
 	echo_log "download rtai-showroom sources"
 	if ! $DRYRUN; then
-	    cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai co $SHOWROOM_DIR
+	    if ! cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai co $SHOWROOM_DIR; then
+		echo_log "Failed to download showroom!"
+		return 1
+	    fi
 	    date +"%F %H:%M" > $SHOWROOM_DIR/revision.txt
 	fi
     fi
@@ -2680,11 +2751,14 @@ function update_showroom {
     if test -d $SHOWROOM_DIR; then
 	echo_log "update already downloaded rtai-showroom sources"
 	cd $SHOWROOM_DIR
-	cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update
+	if ! cvs -d:pserver:anonymous@cvs.gna.org:/cvs/rtai update; then
+	    echo_log "Failed to update showroom!"
+	    return 1
+	fi
 	date +"%F %H:%M" > revision.txt
 	clean_showroom
     else
-	download_showroom
+	download_showroom || return 1
     fi
 }
 
@@ -2734,7 +2808,10 @@ function download_comedi {
     else
 	echo_log "download comedi"
 	if ! $DRYRUN; then
-	    git clone https://github.com/Linux-Comedi/comedi.git
+	    if ! git clone https://github.com/Linux-Comedi/comedi.git; then
+		echo_log "Failed to download comedi from \"git clone https://github.com/Linux-Comedi/comedi.git\"!"
+		return 1
+	    fi
 	    date +"%F %H:%M" > comedi/revision.txt
 	fi
     fi
@@ -2745,7 +2822,10 @@ function update_comedi {
     if test -d comedi; then
 	echo_log "update already downloaded comedi sources"
 	cd comedi
-	git pull origin master
+	if ! git pull origin master; then
+	    echo_log "Failed to update comedi!"
+	    return 1
+	fi
 	date +"%F %H:%M" > revision.txt
 	clean_comedi
     else
@@ -3088,21 +3168,20 @@ function full_install {
     fi
 
     uninstall_kernel
+    ${MAKE_NEWLIB} && uninstall_newlib
+    ${MAKE_RTAI} && uninstall_rtai
+    ${MAKE_COMEDI} && uninstall_comedi
 
-    if ! ( ( ${MAKE_RTAI} && download_rtai || true ) && ( ${MAKE_NEWLIB} && download_newlib || true ) && ( ${MAKE_COMEDI} && download_comedi || true ) && download_kernel ); then
-	echo_log "Failed to download some of the sources"
-	return 1
-    fi
+    ${MAKE_RTAI} && { download_rtai || return 1; }
+    ${MAKE_NEWLIB} && { download_newlib || MAKE_NEWLIB=false; }
+    ${MAKE_COMEDI} && { download_comedi || MAKE_COMEDI=false; }
+    download_kernel || return 1
 
-    if ! ( unpack_kernel && patch_kernel && build_kernel ); then
-	echo_log "Failed to patch and build the kernel"
-	return 1
-    fi
+    unpack_kernel && patch_kernel && build_kernel || return 1
 
-    if ! ( ( ${MAKE_NEWLIB} && build_newlib || MAKE_NEWLIB=false ) && ( ${MAKE_RTAI} && build_rtai || MAKE_RTAI=false ) && ( ${MAKE_COMEDI} && build_comedi || MAKE_COMEDI=false ) ); then
-	echo_log "Failed to build newlib, RTAI, or comedi"
-	return 1
-    fi
+    ${MAKE_NEWLIB} && { build_newlib || MAKE_NEWLIB=false; }
+    ${MAKE_RTAI} && { build_rtai || return 1; }
+    ${MAKE_COMEDI} && { build_comedi || MAKE_COMEDI=false; }
 
     echo_log
     echo_log "Done!"
@@ -3116,19 +3195,15 @@ function reconfigure {
     check_root
 
     uninstall_kernel
-    ${MAKE_RTAI} && uninstall_rtai
+    unpack_kernel && patch_kernel && build_kernel || return 1
 
-    if ! ( unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || MAKE_NEWLIB=false ) && ( ${MAKE_RTAI} && build_rtai || true ) ); then
-	echo_log "Failed to reconfigure and build kernel or RTAI"
-	return 1
-    fi
+    ${MAKE_NEWLIB} && { build_newlib || MAKE_NEWLIB=false; }
+
+    ${MAKE_RTAI} && uninstall_rtai
+    ${MAKE_RTAI} && { build_rtai || return 1; }
 
     ${MAKE_COMEDI} && uninstall_comedi
-
-    if ! ( ${MAKE_COMEDI} && build_comedi || true ); then
-	echo_log "Failed to build comedi"
-	return 1
-    fi
+    ${MAKE_COMEDI} && build_comedi
 
     echo_log
     echo_log "Done!"
@@ -3180,16 +3255,28 @@ function update_all {
 function build_all {
     check_root
     if test -z "$1"; then
-	unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || MAKE_NEWLIB=false ) && ( ${MAKE_RTAI} && build_rtai || MAKE_RTAI=false ) && ( ${MAKE_COMEDI} && build_comedi || MAKE_COMEDI=false )
+	unpack_kernel && patch_kernel && build_kernel || return 1
+	${MAKE_NEWLIB} && { build_newlib || MAKE_NEWLIB=false; }
+	${MAKE_RTAI} && { build_rtai || return 1; }
+	${MAKE_COMEDI} && build_comedi
     else
 	for TARGET; do
 	    case $TARGET in
 		kernel ) 
-		    unpack_kernel && patch_kernel && build_kernel && ( ${MAKE_NEWLIB} && build_newlib || true ) && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ;;
+		    unpack_kernel && patch_kernel && build_kernel || return 1
+		    ${MAKE_NEWLIB} && { build_newlib || MAKE_NEWLIB=false; }
+		    ${MAKE_RTAI} && { build_rtai || return 1; }
+		    ${MAKE_COMEDI} && build_comedi
+		    ;;
 		newlib )
-		    build_newlib && ( ${MAKE_RTAI} && build_rtai || true ) && ( ${MAKE_COMEDI} && build_comedi || true ) ;;
+		    build_newlib || return 1
+		    ${MAKE_RTAI} && { build_rtai || return 1; }
+		    ${MAKE_COMEDI} && build_comedi
+		    ;;
 		rtai ) 
-		    build_rtai && ( ${MAKE_COMEDI} && build_comedi || true ) ;;
+		    build_rtai || return 1
+		    ${MAKE_COMEDI} && build_comedi
+		    ;;
 		showroom ) 
 		    build_showroom ;;
 		comedi ) 
@@ -3428,7 +3515,7 @@ KERNEL_NAME=${LINUX_KERNEL}-${RTAI_DIR}${KERNEL_NUM}
 KERNEL_ALT_NAME=${LINUX_KERNEL}.0-${RTAI_DIR}${KERNEL_NUM}
 REALTIME_DIR="/usr/realtime/${KERNEL_NAME}"
 
-if test "x$1" != "xinfo" && test "x$1" != "xreport" && ! ( test "x$1" = "xtest" && test "x$2" = "xbatchscript" ); then
+if test "x$1" != "xhelp" && test "x$1" != "xversion" && test "x$1" != "xinfo" && test "x$1" != "xreport" && ! ( test "x$1" = "xtest" && test "x$2" = "xbatchscript" ); then
     rm -f "$LOG_FILE"
 fi
 
