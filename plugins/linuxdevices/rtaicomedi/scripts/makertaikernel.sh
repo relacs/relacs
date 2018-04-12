@@ -1688,7 +1688,7 @@ function test_kernel {
 	stress --version &> /dev/null && STRESS=true
 	# produce load:
 	let JOB_NUM=$CPU_NUM/$(echo $LOADMODE | wc -w)
-	test $JOB_NUM -eq 0 && JOB_NUM=1
+	test $JOB_NUM -le 1 && JOB_NUM=2
 	LOAD_PIDS=()
 	LOAD_FILES=()
 	test -n "$LOADMODE" && echo_log "start some jobs to produce load:"
@@ -1948,6 +1948,7 @@ EOF
 	echo_log "No valid configurations specified in file \"$BATCH_FILE\"!"
 	exit 1
     fi
+    N_COMPILE=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | grep -c CONFIG)
 
     shift
     TEST_TIME="$((10#$1))"
@@ -1969,10 +1970,20 @@ EOF
 	let TEST_TOTAL_TIME+=60
     done
 
+    # overall time:
+    let N=$N_TESTS-$N_COMPILE
+    let TOTAL_TIME=$STARTUP_TIME+4000
+    let OVERALL_TIME=${TOTAL_TIME}*${N_COMPILE}
+    let TOTAL_TIME=$STARTUP_TIME+$TEST_TOTAL_TIME
+    let OVERALL_TIME+=$TOTAL_TIME*$N
+    let OVERALL_MIN=$OVERALL_TIME/60
+    let OVERALL_HOURS=$OVERALL_MIN/60
+    let OVERALL_MIN=$OVERALL_MIN%60
+    OVERALL_TIME=$(printf "%dh%02dmin" $OVERALL_HOURS $OVERALL_MIN)
+
     echo_log "run \"test $TEST_SPECS\" on batch file \"$BATCH_FILE\" with content:"
     sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | while read LINE; do echo_log "  $LINE"; done
     echo_log
-
 
     # read first line from configuration file:
     INDEX=1
@@ -1998,7 +2009,7 @@ EOF
     # confirm batch testing:
     echo_log "Reboot into first configuration: \"${KD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     echo_log
-    read -p "Do you want to proceed testing with $N_TESTS reboots (Y/n)? " PROCEED
+    read -p "Do you want to proceed testing with $N_TESTS reboots (approx. ${OVERALL_TIME}) (Y/n)? " PROCEED
     if test "x$PROCEED" != "xn"; then
 	echo_log
 	cp $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config $CONFIG_BACKUP_FILE
