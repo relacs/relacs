@@ -222,14 +222,13 @@ Also read /usr/local/src/rtai/README.CONF_RMRKS !
 
 - General setup: 
   - Make sure that "Local version" is empty in case you are using the \c makertaikernel.sh script or \c make-kpkg (Debian system).
-    Otherwise set "Local version" to "-rtai".
+    Otherwise set "Local version" to "-rtai" or something else indicating that this is a RTAI patched kernel.
   - Disable "Enable sytem-call auditing support"
   - Disable "Configure standard kernel features (expert users)"
   - Set "Stack Protector buffer overflow detection" to "Regular" or even "None" if the latency test crashes.
   .
 - Processor type and features: 
   - Select "Symmetric multi-processing support" (SMP) if you have a multiprocessor machine, otherwise (uniprocessor system, UP) deselect it
-  - Select your "Subarchitecture Type" (PC-Compatible) - this option does not exist for newer kernels
   - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
     check \c "help" to find out, which Processor family you have to select.
     Intel i5/i7 with "cpu family : 6" are "Core 2/newer Xeon")
@@ -237,17 +236,16 @@ Also read /usr/local/src/rtai/README.CONF_RMRKS !
   - Disable "SMT (Hyperthreading) scheduler support"
   - Disable "Multi-core scheduler support"
   - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
-  - Select "Interrupt pipeline"
-  - "I-pipe legacy interface": enable for rtai-4.1 (and earlier?), disable for current cvs.
+  - Keep "Interrupt pipeline" selected
+  - "I-pipe legacy interface": kee disabled for RTAI 5.x, enable for rtai-4.1 (and earlier?)
 - Power management and ACPI options:
   - Disable everything except for:
   - Enable "ACPI (Advanced Configuration and Power Interface) Support"
-    - Disable "Processor" (\c ACPI_PROCESSOR)
     - Disable everything except for:
     - Select "Power Management Timer Suppport" (if available)
     .
-  - Disable "CPU Frequency scaling" (\c CPU_FREQ)
-  - Disable "CPU idle PM support" (\c CPU_IDLE)
+  - In particular disable "CPU Frequency scaling" (\c CPU_FREQ)
+  - In particular disable "CPU idle PM support" (\c CPU_IDLE)
   .
 - Device Drivers:
   - Staging drivers:
@@ -517,7 +515,7 @@ Clocks and timers:
 .
 
 Advanced configuration and power interface (ACPI):
-- \c acpi=off , althoug effective this may results in an unstable system
+- \c acpi=off , although effective this may results in an unstable system
 - \c pci=noacpi .
 - With disabled acpi your rtai-patched linux kernel might not properly
   halt or reboot. Try \c reboot=triple as a kernel parameter.  See \c
