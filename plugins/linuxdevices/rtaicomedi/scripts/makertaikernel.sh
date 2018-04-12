@@ -117,6 +117,10 @@ function echo_kmsg {
     logger -p user.info "#### MAKERTAIKERNEL.SH: $@"
 }
 
+function indent {
+    awk '{print "  " $0}'
+}
+
 function print_version {
     echo $VERSION_STRING
 }
@@ -591,7 +595,7 @@ function print_versions {
 function print_distribution {
     if lsb_release &> /dev/null; then
 	echo "distribution (lsb_release -a):"
-	lsb_release -a 2> /dev/null | while read LINE; do echo "  $LINE"; done
+	lsb_release -a 2> /dev/null | indent
     else
 	echo "distribution: unknown"
     fi
@@ -622,11 +626,14 @@ function print_kernel_info {
     echo
     echo "loaded modules (lsmod):"
     if test -f lsmod.dat; then
-	cat lsmod.dat | while read LINE; do echo "  $LINE"; done
+	cat lsmod.dat | indent
 	rm -f lsmod.dat
     else
-	lsmod | while read LINE; do echo "  $LINE"; done
+	lsmod | indent
     fi
+    echo
+    echo "interrupts (/proc/interrupts):"
+	cat /proc/interrupts | indent
     echo
     print_distribution
     echo
@@ -636,7 +643,7 @@ function print_kernel_info {
     echo
     if test -f config.patch; then
 	echo "kernel configuration:"
-	cat config.patch | while read LINE; do echo "  $LINE"; done
+	cat config.patch | indent
 	echo
     fi
     echo "kernel parameter (/proc/cmdline):"
@@ -652,6 +659,11 @@ function print_kernel_info {
     echo "  machine (uname -m): $MACHINE"
     echo "  memory: $(free -h | grep Mem | awk '{print $2}') RAM"
     echo
+    if sensors --version &> /dev/null; then
+	echo "CPU core temperatures:"
+	sensors | grep Core | indent
+	echo
+    fi
     print_grub
     echo
     print_settings
@@ -726,14 +738,14 @@ function check_kernel_patch {
 	cd ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/
 	echo_log
 	echo_log "Available patches for this machine ($RTAI_MACHINE), most latest last:"
-	ls -rt -1 *.patch 2> /dev/null | tee -a "$LOG_FILE" | while read LINE; do echo "  $LINE"; done
+	ls -rt -1 *.patch 2> /dev/null | tee -a "$LOG_FILE" | indent
 	echo_log
 	LINUX_KERNEL_V=${LINUX_KERNEL%.*}
 	echo_log "Available patches for the selected kernel's kernel version ($LINUX_KERNEL_V):"
-	ls -rt -1 *-${LINUX_KERNEL_V}*.patch 2> /dev/null | tee -a "$LOG_FILE" | while read LINE; do echo "  $LINE"; done
+	ls -rt -1 *-${LINUX_KERNEL_V}*.patch 2> /dev/null | tee -a "$LOG_FILE" | indent
 	echo_log
 	echo_log "Available patches for the selected kernel ($LINUX_KERNEL):"
-	ls -rt -1 *-${LINUX_KERNEL}*.patch 2> /dev/null | tee -a "$LOG_FILE" | while read LINE; do echo "  $LINE"; done
+	ls -rt -1 *-${LINUX_KERNEL}*.patch 2> /dev/null | tee -a "$LOG_FILE" | indent
 	RTAI_PATCH="$(ls -rt *-${LINUX_KERNEL}-*.patch 2> /dev/null | tail -n 1)"
 	if test -z "$RTAI_PATCH"; then
 	    RTAI_PATCH="$(ls -rt *.patch 2> /dev/null | tail -n 1)"
