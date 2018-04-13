@@ -224,15 +224,21 @@ Also read /usr/local/src/rtai/README.CONF_RMRKS !
   - Make sure that "Local version" is empty in case you are using the \c makertaikernel.sh script or \c make-kpkg (Debian system).
     Otherwise set "Local version" to "-rtai" or something else indicating that this is a RTAI patched kernel.
   - Disable "Enable sytem-call auditing support"
-  - Disable "Configure standard kernel features (expert users)"
-  - Set "Stack Protector buffer overflow detection" to "Regular" or even "None" if the latency test crashes.
+  - Disable "Configure standard kernel features (expert users)" just to be on the safe side
+  - Important: set "Stack Protector buffer overflow detection" to
+    "Regular" or even "None" if the latency test crashes.
   .
 - Processor type and features: 
-  - Select "Symmetric multi-processing support" (SMP) if you have a multiprocessor machine, otherwise (uniprocessor system, UP) deselect it
-  - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
-    check \c "help" to find out, which Processor family you have to select.
+  - Keep "Symmetric multi-processing support" (SMP) selected if you
+    have a multiprocessor machine, otherwise (uniprocessor system, UP)
+    deselect it
+  - You may want to select the right "Processor family" (you find the
+    name of your processor by looking at \c /proc/cpuinfo, check \c
+    "help" to find out, which Processor family you have to select.
     Intel i5/i7 with "cpu family : 6" are "Core 2/newer Xeon")
-  - Set the "Maximum numbers of CPUs" to the number of physical cores you have in your machine (check in \c /proc/cpuinfo the \c "cpu cores")
+  - Set the "Maximum numbers of CPUs" to the number of physical cores
+    you have in your machine (check in \c /proc/cpuinfo the \c "cpu
+    cores")
   - Disable "SMT (Hyperthreading) scheduler support"
   - Disable "Multi-core scheduler support"
   - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
@@ -252,14 +258,15 @@ Also read /usr/local/src/rtai/README.CONF_RMRKS !
     - Deselect "Data acquisition support (comedi)"
     .
   .
-- Kernel hacking: disabling debugging makes the kernel much smaller. So unless you know that you need it disable it.
+- Kernel hacking: disabling debugging makes the kernel much
+  smaller. So unless you know that you need it disable it.
   - Compile-time checks and compiler options:
     - Disable "Compile the kernel with debug info"
   .
   - Disable "Kernel debugging"
   - Disable "Tracers"
 .
-- Disable "Virtualization" if possible unless you know that you need it.
+- You may disable "Virtualization" if possible unless you know that you need it.
 .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
 Select "Yes".

@@ -59,6 +59,8 @@
 : ${SHOWROOM_DIR:=showroom}  # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 : ${STARTUP_TIME:=180}       # time to wait after boot to run a batch test in seconds
+: ${COMPILE_TIME:=600}       # time needed for building a kernel with reconfigure
+                             # (this is only used for estimating the duration of a test batch)
 
 : ${REMOTE_MACHINE:=}        # ip adress of a remote machine for ping flood
 
@@ -619,6 +621,8 @@ function print_settings {
     echo "  KERNEL_PARAM_DESCR  = $KERNEL_PARAM_DESCR"
     echo "  BATCH_KERNEL_PARAM  = $BATCH_KERNEL_PARAM"
     echo "  CONFIG_PATCHES_FILE = $CONFIG_PATCHES_FILE"
+    echo "  STARTUP_TIME        = $STARTUP_TIME"
+    echo "  COMPILE_TIME        = $COMPILE_TIME"
     echo "  LOCAL_SRC_PATH      = $LOCAL_SRC_PATH"
     echo "  RTAI_DIR       (-r) = $RTAI_DIR"
     echo "  RTAI_PATCH     (-p) = $RTAI_PATCH"
@@ -1020,13 +1024,13 @@ function build_kernel {
 		fi
 		RUN_LOCALMOD=false
 	    elif test -f "$KERNEL_CONFIG"; then
-		echo_log "use configuration from $KERNEL_CONFIG"
+		echo_log "use configuration from \"$KERNEL_CONFIG\""
 		if ! $DRYRUN; then
 		    cp "$KERNEL_CONFIG" .config
 		    make olddefconfig
 		fi
 	    else
-		echo_log "Unknown kernel configuration $KERNEL_CONFIG."
+		echo_log "Unknown kernel configuration \"$KERNEL_CONFIG\"."
 		return 0
 	    fi
 	    if $RUN_LOCALMOD; then
@@ -1109,7 +1113,6 @@ function install_kernel {
 		    return 1
 		fi
 	    fi
-	    reboot_set_kernel
 	fi
     else
 	echo_log "no kernel to install"
@@ -1491,6 +1494,7 @@ function test_kernel {
 	    calib) CALIBRATE="true" ;;
 	    cpu) LOADMODE="$LOADMODE cpu" ;;
 	    io) LOADMODE="$LOADMODE io" ;;
+	    mem) LOADMODE="$LOADMODE mem" ;;
 	    net) LOADMODE="$LOADMODE net" ;;
 	    full) LOADMODE="cpu io mem net" ;;
 	    [0-9]*) TEST_TIME="$((10#$1))" ;;
@@ -1687,8 +1691,12 @@ function test_kernel {
 	STRESS=false
 	stress --version &> /dev/null && STRESS=true
 	# produce load:
-	let JOB_NUM=$CPU_NUM/$(echo $LOADMODE | wc -w)
-	test $JOB_NUM -le 1 && JOB_NUM=2
+	JOB_NUM=$CPU_NUM
+	LOAD_JOBS=$(echo $LOADMODE | wc -w)
+	if test $LOAD_JOBS -gt 1; then
+	    let JOB_NUM=$CPU_NUM/$LOAD_JOBS
+	    test $JOB_NUM -le 1 && JOB_NUM=2
+	fi
 	LOAD_PIDS=()
 	LOAD_FILES=()
 	test -n "$LOADMODE" && echo_log "start some jobs to produce load:"
@@ -1722,6 +1730,7 @@ function test_kernel {
 		mem) if $STRESS; then
 	                echo_log "  load mem: stress -m $JOB_NUM" | tee -a load.dat
 			stress -m $JOB_NUM &> /dev/null &
+			LOAD_PIDS+=( $! )
 		    else
 		        echo_log "  load mem: no test available"
 		    fi
@@ -1770,7 +1779,7 @@ function test_kernel {
 
     # clean up load:
     for PID in ${LOAD_PIDS[@]}; do
-	kill -KILL $PID
+	kill -KILL $PID $(ps -o pid= --ppid $PID)
     done
     for FILE in ${LOAD_FILES[@]}; do
 	rm -f $FILE
@@ -1972,10 +1981,10 @@ EOF
 
     # overall time:
     let N=$N_TESTS-$N_COMPILE
-    let TOTAL_TIME=$STARTUP_TIME+4000
+    let TOTAL_TIME=$STARTUP_TIME+$COMPILE_TIME
     let OVERALL_TIME=${TOTAL_TIME}*${N_COMPILE}
     let TOTAL_TIME=$STARTUP_TIME+$TEST_TOTAL_TIME
-    let OVERALL_TIME+=$TOTAL_TIME*$N
+    let OVERALL_TIME+=${TOTAL_TIME}*${N}
     let OVERALL_MIN=$OVERALL_TIME/60
     let OVERALL_HOURS=$OVERALL_MIN/60
     let OVERALL_MIN=$OVERALL_MIN%60
@@ -3217,6 +3226,8 @@ function reconfigure {
     RECONFIGURE_KERNEL=true
     check_root
 
+    SECONDS=0
+
     uninstall_kernel
     unpack_kernel && patch_kernel && build_kernel || return 1
 
@@ -3228,8 +3239,14 @@ function reconfigure {
     ${MAKE_COMEDI} && uninstall_comedi
     ${MAKE_COMEDI} && build_comedi
 
+    SEC=$SECONDS
+    let MIN=$SECONDS/60
+    let HOURS=$MIN/60
+    let MIN=$MIN%60
+
     echo_log
     echo_log "Done!"
+    echo_log "Complete rebuild took ${SECONDS} seconds ($(printf "%dh%02dmin" $HOUR $MIN))."
     echo_log "Please reboot into the ${KERNEL_NAME} kernel by executing"
     echo_log "$ ./${MAKE_RTAI_KERNEL} reboot"
     echo_log
