@@ -48,21 +48,19 @@
                                                # at ftp://sourceware.org/pub/newlib/index.html
                                                # in case git does not work
 
-: ${MAKE_NEWLIB:=true}       # for automatic targets make newlib library
-: ${MAKE_RTAI:=true}         # for automatic targets make rtai library
-: ${MAKE_COMEDI:=true}       # for automatic targets make comedi library
+: ${MAKE_NEWLIB:=true}        # for automatic targets make newlib library
+: ${MAKE_RTAI:=true}          # for automatic targets make rtai library
+: ${MAKE_COMEDI:=true}        # for automatic targets make comedi library
 
-: ${RTAI_HAL_PARAM:=""}      # parameter for the rtai_hal module used for testing
-: ${RTAI_SCHED_PARAM:=""}    # parameter for the rtai_sched module used for testing
-: ${TEST_TIME:=""}           # time in seconds used for latency test
+: ${RTAI_HAL_PARAM:=""}       # parameter for the rtai_hal module used for testing
+: ${RTAI_SCHED_PARAM:=""}     # parameter for the rtai_sched module used for testing
+: ${TEST_TIME:=""}            # time in seconds used for latency test
+: ${TEST_TIME_DEFAULT:="600"} # default time in seconds used for latency test
+: ${STARTUP_TIME:=180}        # time to wait after boot to run a batch test in seconds
+: ${COMPILE_TIME:=800}        # time needed for building a kernel with reconfigure
+                              # (this is only used for estimating the duration of a test batch)
 
-: ${SHOWROOM_DIR:=showroom}  # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
-
-: ${STARTUP_TIME:=180}       # time to wait after boot to run a batch test in seconds
-: ${COMPILE_TIME:=600}       # time needed for building a kernel with reconfigure
-                             # (this is only used for estimating the duration of a test batch)
-
-: ${REMOTE_MACHINE:=}        # ip adress of a remote machine for ping flood
+: ${SHOWROOM_DIR:=showroom}   # target directory for rtai-showrom in ${LOCAL_SRC_PATH}
 
 ###########################################################################
 # some global variables:
@@ -71,14 +69,14 @@ FULL_COMMAND_LINE="$@"
 MAKE_RTAI_KERNEL="${0##*/}"
 
 VERSION_STRING="${MAKE_RTAI_KERNEL} version 4.0 by Jan Benda, April 2018"
-DRYRUN=false        # set with -d
+DRYRUN=false                 # only show what is being done (set with -d)
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
 DEFAULT_RTAI_DIR="$RTAI_DIR"
 RTAI_DIR_CHANGED=false
 RTAI_PATCH_CHANGED=false
 LINUX_KERNEL_CHANGED=false
-RTAI_MENU=false     # enter RTAI configuration menu (set with -m)
+RTAI_MENU=false              # enter RTAI configuration menu (set with -m)
 
 NEW_KERNEL=false
 NEW_RTAI=false
@@ -154,14 +152,16 @@ Usage:
 sudo ${MAKE_RTAI_KERNEL} info [rtai|settings|grub|setup|log|config [<FILE>]]
 
 info               : display properties of rtai patches, loaded kernel modules, kernel, machine,
-                     and grub menu (only info configs is excluded)
+                     and grub menu (configs and menu targets are excluded)
 info rtai          : list all available patches and suggest the one fitting to the kernel
-info settings      : print the values of all configuration variables of the ${MAKE_RTAI_KERNEL} script
+info settings      : show the values of all configuration variables
 info grub          : show grub boot menu entries
 info setup         : show modifikations of your system made by ${MAKE_RTAI_KERNEL} (run as root)
 info log           : show the content of the log file if available - useful after test batch
 info configs       : show patches for kernel configurations in file ${CONFIG_PATCHES_FILE}
 info configs <FILE>: show patches for kernel configurations in file <FILE>
+info menu          : show kernel configuration menu of the specified (-c) kernel configuration
+info params        : show kernel parameter of the currently running kernel
 
 EOF
 }
@@ -289,9 +289,11 @@ automized by the following two options:
 For a completely automized series of tests of various kernel parameters and kernel configurations
 under different loads you may add as the last arguments:
   batch FILE     : automatically run tests with various kernel parameter and configurations as specified in FILE
-  batch basic    : write a default file with clock and timer related kernel parameters to be tested
-  batch acpi     : write a default file with acpi and apic related kernel parameters to be tested
-  batch isolcpus : write a default file with load settings and isolcpus kernel parameters to be tested
+  batch basic    : write a default batch file with clock and timer related kernel parameters to be tested
+  batch acpi     : write a default batch file with acpi related kernel parameters to be tested
+  batch apic     : write a default batch file with apic related kernel parameters to be tested
+  batch isolcpus : write a default batch file with load settings and isolcpus kernel parameters to be tested
+  batch dma      : write a default batch file with io load, dma, and isolcpus kernel parameters to be tested
 This successively reboots into the RTAI kernel with the kernel parameter 
 set to the ones specified by the KERNEL_PARAM variable and as specified in FILE,
 and runs the tests as specified by the previous commands (without the "auto" command).
@@ -462,7 +464,7 @@ $ sudo ${MAKE_RTAI_KERNEL} test
 $ sudo ${MAKE_RTAI_KERNEL} test 30 auto basic
   automaticlly test the currently running kernel for 30 seconds and name it "basic".
 
-$ sudo ${MAKE_RTAI_KERNEL} test 600 batch testbasic.mrk
+$ sudo ${MAKE_RTAI_KERNEL} test ${TEST_TIME_DEFAULT} batch testbasic.mrk
   automaticlly test all the kernel parameter and kernel configurations specified in the file testbasic.mrk.
 
 $ ${MAKE_RTAI_KERNEL} report avg | less -S
@@ -598,6 +600,14 @@ function print_versions {
     fi
 }
 
+function print_kernel_params {
+    echo "kernel parameter (/proc/cmdline):"
+    for param in $(cat /proc/cmdline); do
+	echo "  $param"
+    done
+    echo
+}
+
 function print_distribution {
     if lsb_release &> /dev/null; then
 	echo "distribution (lsb_release -a):"
@@ -626,6 +636,7 @@ function print_settings {
     echo "  LOCAL_SRC_PATH      = $LOCAL_SRC_PATH"
     echo "  RTAI_DIR       (-r) = $RTAI_DIR"
     echo "  RTAI_PATCH     (-p) = $RTAI_PATCH"
+    echo "  RTAI_MENU      (-m) = $RTAI_MENU"
     echo "  RTAI_HAL_PARAM      = $RTAI_HAL_PARAM"
     echo "  RTAI_SCHED_PARAM    = $RTAI_SCHED_PARAM"
 }
@@ -654,11 +665,7 @@ function print_kernel_info {
 	cat config.patch | indent
 	echo
     fi
-    echo "kernel parameter (/proc/cmdline):"
-    for param in $(cat /proc/cmdline); do
-	echo "  $param"
-    done
-    echo
+    print_kernel_params
     print_versions
     echo
     echo "CPU (/proc/cpuinfo):"
@@ -973,6 +980,72 @@ function prepare_kernel_configs {
     exit 0
 }
 
+function config_kernel {
+    if $NEW_KERNEL_CONFIG; then
+	# kernel configuration:
+	if test "x$KERNEL_CONFIG" = "xdef"; then
+	    echo_log "Use default configuration of kernel (defconfig)."
+	    if ! $DRYRUN; then
+		make defconfig
+	    fi
+	elif test "x$KERNEL_CONFIG" = "xold"; then
+	    CF="/boot/config-${CURRENT_KERNEL}"
+	    test -f "$CF" || CF="/lib/modules/$(uname -r)/build/.config"
+	    echo_log "Use configuration from running kernel ($CF)."
+	    if ! $DRYRUN; then
+		cp $CF .config
+		make olddefconfig
+	    fi
+	elif test "x$KERNEL_CONFIG" = "xmod"; then
+	    echo_log "Run make localmodconfig."
+	    if test ${CURRENT_KERNEL:0:${#LINUX_KERNEL}} != $LINUX_KERNEL ; then
+		echo_log "Warning: kernel versions do not match (selected kernel is $LINUX_KERNEL, running kernel is $CURRENT_KERNEL)!"
+		echo_log "Run make localmodconfig anyways"
+	    fi
+	    if ! $DRYRUN; then
+		make localmodconfig
+	    fi
+	    RUN_LOCALMOD=false
+	elif test -f "$KERNEL_CONFIG"; then
+	    echo_log "Use configuration from \"$KERNEL_CONFIG\"."
+	    if ! $DRYRUN; then
+		cp "$KERNEL_CONFIG" .config
+		make olddefconfig
+	    fi
+	else
+	    echo_log "Unknown kernel configuration \"$KERNEL_CONFIG\"."
+	    return 0
+	fi
+	if $RUN_LOCALMOD; then
+	    if test ${CURRENT_KERNEL%.*} = ${LINUX_KERNEL%.*} ; then
+		echo_log "run make localmodconfig"
+		if ! $DRYRUN; then
+		    yes "" | make localmodconfig
+		fi
+	    else
+		echo_log "Cannot run make localmodconfig, because kernel version does not match (running kernel: ${CURRENT_KERNEL}, selected kernel: ${LINUX_KERNEL})"
+	    fi
+	fi
+    else
+	echo_log "Keep already existing .config file for linux-${KERNEL_NAME}."
+    fi
+}
+
+function menu_kernel {
+    check_root
+    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+    KF=$KERNEL_CONFIG
+    $NEW_KERNEL_CONFIG || KF=".config"
+    echo_log "Show kernel configuration menu for configuration \"$KF\"."
+    $DRYRUN || cp .config .config.origmrk
+    config_kernel
+    if ! $DRYRUN; then
+	make $KERNEL_MENU
+	cp .config.origmrk .config
+    fi
+    echo_log "Restored original kernel configuration."
+}
+
 function build_kernel {
     # clean up:
     if test "$KERNEL_MENU" != "old"; then
@@ -1000,52 +1073,7 @@ function build_kernel {
 	    fi
 	fi
 
-	if $NEW_KERNEL_CONFIG; then
-	    # kernel configuration:
-	    if test "x$KERNEL_CONFIG" = "xdef"; then
-		echo_log "use default configuration"
-		if ! $DRYRUN; then
-		    make defconfig
-		fi
-	    elif test "x$KERNEL_CONFIG" = "xold"; then
-		echo_log "use configuration from running kernel (/boot/config-${CURRENT_KERNEL})"
-		if ! $DRYRUN; then
-		    cp /boot/config-${CURRENT_KERNEL} .config
-		    make olddefconfig
-		fi
-	    elif test "x$KERNEL_CONFIG" = "xmod"; then
-		echo_log "run make localmodconfig"
-		if test ${CURRENT_KERNEL:0:${#LINUX_KERNEL}} != $LINUX_KERNEL ; then
-		    echo_log "warning: kernel versions do not match (selected kernel is $LINUX_KERNEL, running kernel is $CURRENT_KERNEL)!"
-		    echo_log "run make localmodconfig anyways"
-		fi
-		if ! $DRYRUN; then
-		    make localmodconfig
-		fi
-		RUN_LOCALMOD=false
-	    elif test -f "$KERNEL_CONFIG"; then
-		echo_log "use configuration from \"$KERNEL_CONFIG\""
-		if ! $DRYRUN; then
-		    cp "$KERNEL_CONFIG" .config
-		    make olddefconfig
-		fi
-	    else
-		echo_log "Unknown kernel configuration \"$KERNEL_CONFIG\"."
-		return 0
-	    fi
-	    if $RUN_LOCALMOD; then
-		if test ${CURRENT_KERNEL%.*} = ${LINUX_KERNEL%.*} ; then
-		    echo_log "run make localmodconfig"
-		    if ! $DRYRUN; then
-			yes "" | make localmodconfig
-		    fi
-		else
-		    echo_log "cannot run make localmodconfig, because kernel version does not match (running kernel: ${CURRENT_KERNEL}, selected kernel: ${LINUX_KERNEL})"
-		fi
-	    fi
-	else
-	    echo_log "keep already existing .configure file for linux-${KERNEL_NAME}."
-	fi
+	config_kernel
 
 	# build the kernel:
 	echo_log "build the kernel"
@@ -1079,7 +1107,7 @@ function build_kernel {
 	# install:
 	install_kernel || return 1
     else
-	echo_log "keep already compiled linux ${KERNEL_NAME} kernel."
+	echo_log "Keep already compiled linux ${KERNEL_NAME} kernel."
     fi
 }
 
@@ -1388,11 +1416,9 @@ function test_save {
 	    echo
 	fi
 	# load processes:
+	echo "Load: $(cut -d ' ' -f 1-3 /proc/loadavg)"
 	if test -f load.dat; then
-	    echo "Load:"
 	    sed -e 's/^[ ]*load[ ]*/  /' load.dat
-	else
-	    echo "Load: none"
 	fi
 	echo
 	# original test results:
@@ -1738,11 +1764,6 @@ function test_kernel {
 		net) echo_log "  load net: ping -f localhost" | tee -a load.dat
 		    ping -f localhost > /dev/null &
 		    LOAD_PIDS+=( $! )
-		    if test -n "$REMOTE_MACHINE"; then
-			echo_log "  load net: ping -f $REMOTE_MACHINE" | tee -a load.dat
-			ping -f $REMOTE_MACHINE > /dev/null & 
-			LOAD_PIDS+=( $! )
-		    fi 
 		    ;;
 		snd) echo_log "  load snd: not implemented yet!" ;;
 	    esac
@@ -1829,71 +1850,66 @@ function test_batch {
 	echo "$ ./${MAKE_RTAI_KERNEL} batch FILE"
 	exit 1
     fi
+
+    # write default batch files:
     if ! test -f "$BATCH_FILE"; then
-	if test "$BATCH_FILE" = "basic"; then
-	    BATCH_FILE=testbasic.mrk
-	    if test -f $BATCH_FILE; then
-		echo "File \"$BATCH_FILE\" already exists."
-		echo "Cannot write basic kernel parameter."
-		exit 1
-	    fi
-	    cat <<EOF > $BATCH_FILE
+	DEFAULT_BATCHES="basic acpi apic isolcpus dma"
+	for DEFAULT_BATCH in $DEFAULT_BATCHES; do
+	    if test "$BATCH_FILE" = "$DEFAULT_BATCH"; then
+		BATCH_FILE=test${DEFAULT_BATCH}.mrk
+		if test -f $BATCH_FILE; then
+		    echo "File \"$BATCH_FILE\" already exists."
+		    echo "Cannot write batch file for ${DEAFULT_BATCH} kernel parameter."
+		    exit 1
+		fi
+
+		case $DEFAULT_BATCH in
+		    basic) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
-# batch file for testing RTAI kernel with various kernel parameter.
+# Batch file for testing RTAI kernel with various kernel parameter.
 #
 # Each line has the format:
 # <description> : <load specification> : <kernel parameter>
 # where <description> is a brief one-word description of the kernel
-# parameter that is added to the KERNEL_PARAM_DESCR variable.  
-# The <kernel parameter> are added to
-# the ones defined in the KERNEL_PARAM variable.
+# parameters that is added to the KERNEL_PARAM_DESCR variable.  
+# The <kernel parameter> are added to the ones defined in the KERNEL_PARAM variable.
 #
 # Edit this file according to your needs.
 #
 # Then run
 #
-# $ ./$MAKE_RTAI_KERNEL test math 121 batch $BATCH_FILE
+# $ ./$MAKE_RTAI_KERNEL test math ${DEAFULT_BATCH} batch $BATCH_FILE
 #
-# for testing all the kernel parameter. Have a cup of tea and come back
-# (each configuration needs about 5 minutes for booting, testing and shutdown).
+# for testing all the kernel parameter.
+#
 # The test results are recorded in the latencies-${LINUX_KERNEL}-${RTAI_DIR}-$(hostname)* files.
-# Generate a summary table by calling
+#
+# Generate and view a summary table of the test results by calling
 #
 # $ ./$MAKE_RTAI_KERNEL report | less -S
 
-# test two times to see variability of results:
+# without additional kernel parameter:
 plain1 : :
-plain2 : :
 
 # clocks and timers:
 nohz : : nohz=off
 tscreliable : : tsc=reliable
 tscnoirqtime : : tsc=noirqtime
-nolapictimer : : nolapic_timer  # no good
-clocksourcehpet : : clocksource=hpet
 highresoff : : highres=off
+#nolapictimer : : nolapic_timer  # no good
+clocksourcehpet : : clocksource=hpet
+clocksourcetsc : : clocksource=tsc
 hpetdisable : : hpet=disable
 skewtick : : skew_tick=1
 
-# test yet again to see variability of results:
-plain3 : :
+# test again to see variability of results:
+plain2 : :
 EOF
-	    chown --reference=. $BATCH_FILE
-	    echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
-	    echo ""
-	    echo "Call test batch again with something like"
-	    echo "$ ./${MAKE_RTAI_KERNEL} test 90 batch $BATCH_FILE"
-	    exit 0
-	elif test "$BATCH_FILE" = "acpi" || test "$BATCH_FILE" = "apic"; then
-	    BATCH_FILE=testacpi.mrk
-	    if test -f $BATCH_FILE; then
-		echo "File \"$BATCH_FILE\" already exists."
-		echo "Cannot write basic kernel parameter."
-		exit 1
-	    fi
-	    cat <<EOF > $BATCH_FILE
+			;;
+
+		    acpi) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
-# batch file for testing RTAI kernel with various kernel parameter.
+# Batch file for testing RTAI kernel with various kernel parameter.
 
 plain : :
 
@@ -1902,28 +1918,27 @@ plain : :
 acpinoirq : : acpi=noirq
 pcinoacpi : : pci=noacpi
 pcinomsi : : pci=nomsi
+EOF
+			;;
+
+		    apic) cat <<EOF > $BATCH_FILE
+# $VERSION_STRING
+# Batch file for testing RTAI kernel with various kernel parameter.
+
+plain : :
 
 # apic:
 noapic : : noapic
 nox2apic : : nox2apic
 x2apicphys : : x2apic_phys
+lapic : : lapic
 #nolapic : : nolapic    # we need the lapic timer!
+#nolapic_timer : : nolapic_timer    # we need the lapic timer!
 lapicnotscdeadl : : lapic=notscdeadline
 EOF
-	    chown --reference=. $BATCH_FILE
-	    echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
-	    echo ""
-	    echo "Call test batch again with something like"
-	    echo "$ ./${MAKE_RTAI_KERNEL} test 90 batch $BATCH_FILE"
-	    exit 0
-	elif test "$BATCH_FILE" = "isolcpus"; then
-	    BATCH_FILE=testisolcpus.mrk
-	    if test -f $BATCH_FILE; then
-		echo "File \"$BATCH_FILE\" already exists."
-		echo "Cannot write isolcpus kernel parameter."
-		exit 1
-	    fi
-	    cat <<EOF > $BATCH_FILE
+			;;
+
+		    isolcpus) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
 # batch file for testing RTAI kernel with cpu isolation
 
@@ -1931,27 +1946,54 @@ plain : :
 plain : full :
 
 # isolcpus:
-isolcpus : : isolcpus=0-1
-isolcpus : full : isolcpus=0-1
+isolcpus : : isolcpus=1
+isolcpus : full : isolcpus=1
 
 # isolcpus + nohz_full
-isolcpus-nohz : : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
-isolcpus-nohz : full : isolcpus=0-1 nohz_full=0-1 rcu_nocbs=0-1
+isolcpus-nohz : : isolcpus=1 nohz_full=1
+isolcpus-nohz : full : isolcpus=1 nohz_full=1
 
-# devices:
-dma : : libata.dma=0
-dma : full : libata.dma=0
+# isolcpus + nohz_full +  rcu_nocbs
+isolcpus-nohz-rcu : : isolcpus=1 nohz_full=1 rcu_nocbs=1
+isolcpus-nohz-rcu : full : isolcpus=1 nohz_full=1 rcu_nocbs=1
 EOF
-	    chown --reference=. $BATCH_FILE
-	    echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
-	    echo ""
-	    echo "Call test batch again with something like"
-	    echo "$ ./${MAKE_RTAI_KERNEL} test 90 batch $BATCH_FILE"
-	    exit 0
-	fi
+			;;
+
+		    dma) cat <<EOF > $BATCH_FILE
+# $VERSION_STRING
+# batch file for testing RTAI kernel with cpu isolation
+
+plain : io :
+dma : io : libata.dma=0
+
+# isolcpus:
+isolcpus : io : isolcpus=1
+dma-isolcpus : io : libata.dma=0 isolcpus=1
+
+# isolcpus + nohz_full
+isolcpus-nohz : io : isolcpus=1 nohz_full=1
+dma-isolcpus-nohz : io : libata.dma=0 isolcpus=1 nohz_full=1
+
+# isolcpus + nohz_full +  rcu_nocbs
+isolcpus-nohz : io : isolcpus=1 nohz_full=1 rcu_nocbs=1
+dma-isolcpus-nohz : io : libata.dma=0 isolcpus=1 nohz_full=1 rcu_nocbs=1
+EOF
+			;;
+		esac
+
+		chown --reference=. $BATCH_FILE
+		echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
+		echo ""
+		echo "Call test batch again with something like"
+		echo "$ ./${MAKE_RTAI_KERNEL} test ${TEST_TIME_DEFAULT} batch $BATCH_FILE"
+		exit 0
+	    fi
+	done
 	echo "File \"$BATCH_FILE\" does not exist!"
 	exit 1
     fi
+
+    # run batch file:
     N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
     if test $N_TESTS -eq 0; then
 	echo_log "No valid configurations specified in file \"$BATCH_FILE\"!"
@@ -1970,7 +2012,7 @@ EOF
 
     # compute total time needed for the tests:
     if test -z "$TEST_TIME"; then
-	TEST_TIME="600"
+	TEST_TIME="${TEST_TIME_DEFAULT}"
 	TEST_SPECS="$TEST_SPECS $TEST_TIME"
     fi
     TEST_TOTAL_TIME=30
@@ -2120,7 +2162,8 @@ function test_batch_script {
 	CONFIG_NUM="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 2)"
 	CONFIG_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 3)"
 	if test "x$CONFIG_NUM" = "xBACKUP"; then
-	    cp $CONFIG_BACKUP_FILE $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+	    rm -f config.patch
+	    mv $CONFIG_BACKUP_FILE $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	    echo_log "use \"$CONFIG_BACKUP_FILE\" for the kernel configuration."
 	else
 	    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_FILE > config.patch
@@ -3587,12 +3630,16 @@ case $ACTION in
 	elif test "x$1" = "xconfigs"; then
 	    shift
 	    print_configs
+	elif test "x$1" = "xmenu"; then
+	    menu_kernel
+	elif test "x$1" = "xparams"; then
+	    print_kernel_params
 	else
 	    print_full_info $@ 
 	    test "x$1" = "xrtai" && rm -f "$LOG_FILE"
-	fi ;;
-
-    reconfigure ) reconfigure ;;
+	fi
+	exit 0
+	;;
 
     test ) 
 	test_kernel $@
@@ -3616,6 +3663,8 @@ case $ACTION in
     uninstall ) uninstall_all $@ ;;
     remove ) remove_all $@ ;;
     reboot ) reboot_kernel $@ ;;
+
+    reconfigure ) reconfigure ;;
 
     * ) if test -n "$1"; then
 	    echo "unknown action \"$1\""
