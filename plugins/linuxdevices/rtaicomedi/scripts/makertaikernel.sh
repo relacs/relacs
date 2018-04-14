@@ -916,21 +916,69 @@ function prepare_kernel_configs {
 	echo "Please specify an existing directory with a linux kernel source."
 	exit 1
     fi
-    echo "Prepare kernel configurations to be tested."
+    test -n "$1" && CONFIG_PATCHES_FILE="$1"
+    echo "Prepare kernel configurations to be tested in a test batch."
     echo
-    echo "Step 1: save the original kernel configuration."
+
+    STEP=1
+    echo "Step $STEP: save the original kernel configuration."
     if ! $DRYRUN; then
 	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 	cp .config .config.origmrk
 	cd - > /dev/null
-	rm -f "$CONFIG_PATCHES_FILE"
     fi
-    N=0
     echo
-    echo "Step 2: modify and store the kernel configurations."
+    N=0
+
+    if test -f "$CONFIG_PATCHES_FILE"; then
+	let STEP+=1
+	echo "Step $STEP: prepare kernel configuration."
+	echo "        File \"$CONFIG_PATCHES_FILE\" already exists."
+	read -p "        Append more configurations, Overwrite existing configurations, or Cancel? (a/o/C) " ACTION
+	if test "x$ACTION" = "xa"; then
+	    N=$(grep -c '#### START CONFIG' "$CONFIG_PATCHES_FILE")
+	    for NP in $(seq $N); do
+		echo_log "Apply patch $(sed -n -e "/^#### START CONFIG $NP/{s/^#### START CONFIG //; p;}" "$CONFIG_PATCHES_FILE")"
+		if ! $DRYRUN; then
+		    sed -n -e "/^#### START CONFIG $NP/,/^#### END CONFIG $NP/p" "$CONFIG_PATCHES_FILE" | sed -e '1d; $d;' | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+		fi
+	    done
+	elif test "x$ACTION" = "xo"; then
+	    if ! $DRYRUN; then
+		rm -f "$CONFIG_PATCHES_FILE"
+	    fi
+	    echo_log "Removed existing \"$CONFIG_PATCHES_FILE\" file."
+	else
+	    if ! $DRYRUN; then
+		cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+		rm .config.origmrk
+		cd - > /dev/null
+	    fi
+	    echo_log "Aborted."
+	    exit 0
+	fi
+	echo
+    fi
+
+    let STEP+=1
+    echo "Step $STEP: decide on a patch mode:"
+    read -p "        Incremental or Absolute patches? (I/a) " MODE
+    ABSOLUTE=false
+    case $MODE in
+	i) ABSOLUTE=false ;;
+	a) ABSOLUTE=true ;;
+	'') ABSOLUTE=false ;;
+	*) echo_log "Aborted"; exit 0 ;;
+    esac
+    ABS=""
+    $ABSOLUTE && ABS="ABSOLUTE"
+
+    let STEP+=1
+    echo "Step $STEP: modify and store the kernel configurations."
     if ! $DRYRUN; then
 	while true; do
 	    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+	    $ABSOLUTE && cp .config.origmrk .config
 	    cp .config .config.mrk
 	    make menuconfig
 	    DESCRIPTION=""
@@ -948,7 +996,7 @@ function prepare_kernel_configs {
 		cd - > /dev/null
 		let N+=1
 		{
-		    echo "#### START CONFIG $N $DESCRIPTION"
+		    echo "#### START CONFIG $N $DESCRIPTION $ABS"
 		    cat $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/config.patch
 		    echo "#### END CONFIG $N $DESCRIPTION"
 		    echo
@@ -964,17 +1012,20 @@ function prepare_kernel_configs {
 	cd - > /dev/null
     fi
     echo
+    let STEP+=1
     if test $N -gt 0; then
-	echo "Step 3: saved $N kernel configuration(s) in file \""$CONFIG_PATCHES_FILE"\"."
+	echo "Step $STEP: saved $N kernel configuration(s) in file \""$CONFIG_PATCHES_FILE"\"."
 	echo
-	echo "Step 4: go on and use the kernel configurations"
+	let STEP+=1
+	echo "Step $STEP: go on and use the kernel configurations"
 	echo "        by adding the following lines to a test batch file:"
+	echo
 	if test -f "$CONFIG_PATCHES_FILE"; then
 	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \(.*\) \(.*\)/\2 : : CONFIG \1 '"$CONFIG_PATCHES_FILE"'/; p;}' "$CONFIG_PATCHES_FILE"
 	fi
 	echo
     else
-	echo "Step 3: did not save any kernel configurations."
+	echo "Step $STEP: did not save any kernel configurations."
 	echo
     fi
     exit 0
@@ -2167,8 +2218,15 @@ function test_batch_script {
 	    echo_log "use \"$CONFIG_BACKUP_FILE\" for the kernel configuration."
 	else
 	    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_FILE > config.patch
-	    echo_log "use patch $CONFIG_NUM from file $CONFIG_FILE:"
-	    sed -e '1d; $d;' config.patch | while read LINE; do echo_log "  $LINE"; done
+	    ABSOLUTE=false
+	    ABS="incremental"
+	    if grep -q ABSOLUTE config.patch; then
+		ABSOLUTE=true
+		ABS="absolute"
+	    fi
+	    echo_log "use $ABS patch $CONFIG_NUM from file $CONFIG_FILE:"
+	    cat config.patch | while read LINE; do echo_log "  $LINE"; done
+	    $ABSOLUTE && cp $CONFIG_BACKUP_FILE $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	    sed -e '1d; $d;' config.patch | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	fi
 	KERNEL_MENU=old
@@ -3655,7 +3713,7 @@ case $ACTION in
     download ) download_all $@ ;;
     update ) update_all $@ ;;
     patch ) clean_unpack_patch_kernel ;;
-    prepare ) prepare_kernel_configs ;;
+    prepare ) prepare_kernel_configs $@ ;;
     build ) build_all $@ ;;
     buildplain ) buildplain_kernel $@ ;;
     install ) install_all $@ ;;
