@@ -3,7 +3,7 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-: ${KERNEL_PATH:=/data/src}       # where to put and compile the kernel (set with -s)
+: ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
 : ${LINUX_KERNEL:="4.4.115"}     # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NUM:="-1"}            # name of the linux kernel is $LINUX_KERNEL-$RTAI_DIR$KERNEL_NUM
@@ -37,8 +37,8 @@
                                # (menuconfig, gconfig, xconfig)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 
-: ${KERNEL_PARAM:="idle=poll highres=off"}      # kernel parameter to be passed to grub
-: ${KERNEL_PARAM_DESCR:="idle-highres"}     # one-word description of KERNEL_PARAM 
+: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
 : ${BATCH_KERNEL_PARAM:="panic=10"} # additional kernel parameter passed to grub for test batch
 : ${CONFIG_PATCHES_FILE:="kernelconfigs.mrk"}  # file where patches from prepare_kernel_config go in
@@ -181,13 +181,13 @@ sudo ${MAKE_RTAI_KERNEL} restore [messages|grub|comedi|kernel|testbatch]
 setup            : setup messages, grub, comedi, and kernel
 setup messages   : enable /var/log/messages needed for RTAI tests in rsyslog settings
 setup grub       : configure the grub boot menu (not hidden, no submenus, 
-                   extra RTAI kernel parameter, user can reboot)
+                   extra RTAI kernel parameter, user can reboot and set rtai kernel parameter)
 setup comedi     : create "iocard" group and assign comedi devices to this group
 setup kernel     : set kernel parameter for the grub boot menu to "$KERNEL_PARAMETER"
 
 restore          : restore the original system settings (messages, grub, comedi, kernel, and testbatch)
 restore messages : restore the original rsyslog settings
-restore grub     : restore the original grub boot menu settings
+restore grub     : restore the original grub boot menu settings and user access
 restore comedi   : do not assign comedi devices to the iocard group
 restore kernel   : restore default kernel parameter for the grub boot menu
 restore testbatch: uninstall the automatic test script from crontab (see help test)
@@ -203,8 +203,7 @@ Reboot and set kernel parameter.
 
 Usage:
 
-${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] reboot [keep|default|<XXX>|<FILE>|<N>]
-sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] reboot [keep|default|<XXX>|<FILE>|<N>]
+${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] reboot [keep|none|<XXX>|<FILE>|<N>|default]
 
 EOF
     help_kernel_options
@@ -214,20 +213,21 @@ reboot        : reboot into the rtai kernel ${MAKE_RTAI_KERNEL} is configured fo
                 with kernel parameter as specified by KERNEL_PARAM
                 (currently set to "$KERNEL_PARAM")
 reboot XXX    : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
-                with XXX passed on as kernel parameter (sudo required)
+                with XXX passed on as kernel parameter
 reboot FILE   : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
-                with kernel parameter taken from test results file FILE (sudo required)
+                with kernel parameter taken from test results file FILE
 reboot keep   : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
                 and keep previously set kernel parameter
-reboot default: reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
-                without additional kernel parameter (sudo required)
+reboot none   : reboot into rtai kernel ${MAKE_RTAI_KERNEL} is configured for
+                without any additional kernel parameter
 reboot N      : reboot into a kernel as specified by grub menu entry index N
                 without additional kernel parameter,
                 see "${MAKE_RTAI_KERNEL} info grub" for the grub menu.
+reboot default: reboot into the default kernel of the grub menu.
 
 Rebooting as a regular user (without sudo) has the advantage to store
-the session of your window manager. This is possible whenever the kernel
-parameter do not need to be changed.
+the session of your window manager. With the grub environment available
+(/boot/grub/grubenv) this should be possible (after an "setup grub").
 
 EOF
 }
@@ -517,12 +517,19 @@ function print_setup {
 	echo "           run \"${MAKE_RTAI_KERNEL} setup grub\" for setting up"
     fi
     # kernel parameter:
+    if test -f /boot/grub/grubenv && grub-editenv - list | grep -q "rtai_cmdline"; then
+	echo "kernel   : /boot/grub/grubenv is modified ($(grub-editenv - list | grep "rtai_cmdline"))"
+	echo "           run \"${MAKE_RTAI_KERNEL} restore kernel\" to restore"
+    else
+	echo "kernel   : /boot/grub/grubenv is not modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up RTAI kernel parameter"
+    fi
     if test -f /etc/default/grub.origkp; then
 	echo "kernel   : /etc/default/grub is modified"
 	echo "           run \"${MAKE_RTAI_KERNEL} restore kernel\" to restore"
     else
 	echo "kernel   : /etc/default/grub is not modified"
-	echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up default kernel parameter"
+	echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up default RTAI kernel parameter"
     fi
     # test batch:
     if crontab -l 2> /dev/null | grep -q "${MAKE_RTAI_KERNEL}"; then
@@ -558,6 +565,11 @@ function print_configs {
 }
 
 function print_grub {
+    if test "x$1" = "xenv" && test -f /boot/grub/grubenv; then
+	echo "grub environment:"
+	grub-editenv - list | indent
+	echo
+    fi
     echo "grub menu entries:"
     IFSORG="$IFS"
     IFS=$'\n'
@@ -1097,17 +1109,21 @@ function config_kernel {
 
 function menu_kernel {
     check_root
-    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
-    KF=$KERNEL_CONFIG
-    $NEW_KERNEL_CONFIG || KF=".config"
-    echo_log "Show kernel configuration menu for configuration \"$KF\"."
-    $DRYRUN || cp .config .config.origmrk
-    config_kernel
-    if ! $DRYRUN; then
-	make $KERNEL_MENU
-	cp .config.origmrk .config
+    if test -d "$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}"; then
+	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+	KF=$KERNEL_CONFIG
+	$NEW_KERNEL_CONFIG || KF=".config"
+	echo_log "Show kernel configuration menu for configuration \"$KF\"."
+	$DRYRUN || cp .config .config.origmrk
+	config_kernel
+	if ! $DRYRUN; then
+	    make $KERNEL_MENU
+	    cp .config.origmrk .config
+	fi
+	echo_log "Restored original kernel configuration."
+    else
+	echo_log "Directory $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME} does not exist."
     fi
-    echo_log "Restored original kernel configuration."
 }
 
 function build_kernel {
@@ -1256,7 +1272,16 @@ function remove_kernel {
 # reboot:
 
 function setup_kernel_param {
-    if test -f /etc/default/grub; then
+    if test -f /boot/grub/grubenv; then
+	if ! $DRYRUN; then
+	    grub-editenv - set rtai_cmdline="$*"
+	fi
+	if test -n "$*"; then
+	    echo_log ""
+	    echo_log "Set RTAI kernel parameter to \"$*\"."
+	fi
+    elif test -f /etc/default/grub; then
+	echo_log "/boot/grub/grubenv not found: try /etc/default/grub"
 	check_root
 	if ! $DRYRUN; then
 	    cd /etc/default
@@ -1271,13 +1296,19 @@ function setup_kernel_param {
 	fi
     else
 	echo_log ""
-	echo_log "/etc/default/grub not found: cannot configure kernel parameter"
+	echo_log "/boot/grub/grubenv and /etc/default/grub not found: cannot set RTAI kernel parameter"
     fi
 }
 
 function restore_kernel_param {
+    if test -f /boot/grub/grubenv; then
+	echo_log "Remove RTAI kernel parameter from grubenv."
+	if ! $DRYRUN; then
+	    grub-editenv - unset rtai_cmdline
+	fi
+    fi
     if test -f /etc/default/grub.origkp; then
-	echo_log "Restore original RTAI kernel parameter."
+	echo_log "Restore original RTAI kernel parameter in /etc/default/grub."
 	if ! $DRYRUN; then
 	    cd /etc/default
 	    mv grub.origkp grub
@@ -1299,22 +1330,37 @@ function reboot_set_kernel {
     echo_log "reboot into grub menu $GRUBMENU"
 }
 
+function reboot_unset_kernel {
+    # make sure to boot into default kernel:
+    if test -f /boot/grub/grubenv; then
+	if grub-editenv - list | grep -q next_entry; then
+	    if ! $DRYRUN; then
+		grub-editenv - unset next_entry
+		echo_log "unset next_entry from grubenv file"
+	    fi
+	fi
+	echo_log "reboot into default grub menu entry"
+    else
+	echo_log "failed to reset default boot kernel (/boot/grub/grubenv not available)"
+    fi
+}
+
 function reboot_cmd {
 # reboot the computer
+
+# reboot -f   # cold start
+# reboot      # calls shutdown -r
+# shutdown brings the system into the reuested runlevel (init 0/6)
+# shutdown -r # reboot in a minute   
+# shutdown -r now
+# shutdown -r +<minutes>
+
     echo_log "reboot now"
     echo_log "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     if ! $DRYRUN; then
-	if test "x$1" = "xroot"; then
-	    echo_kmsg "REBOOT"
-	    shutdown -r now
-	    sleep 180
+	if test "x$1" = "xcold"; then
+	    echo_kmsg "REBOOT (reboot -f)"
 	    reboot -f
-	    # reboot -f   # cold start
-	    # reboot      # calls shutdown -r
-	    # shutdown brings the system into the reuested runlevel (init 0/6)
-	    # shutdown -r # reboot in a minute   
-	    # shutdown -r now
-	    # shutdown -r +<minutes>
 	elif test "x$(id -u)" != "x0"; then
 	    if qdbus --version &> /dev/null; then
 		qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 1 2
@@ -1324,20 +1370,27 @@ function reboot_cmd {
 		shutdown -r now
 	    fi
 	else
-	    echo_kmsg "REBOOT"
+	    echo_kmsg "REBOOT (shutdown -r now)"
 	    shutdown -r now
 	fi
     fi
 }
 
 function reboot_kernel {
+# default: boot into default kernel
 # N      : boot into Nth kernel
 # keep   : boot into rtai kernel and keep previous set kernel parameter 
-# default: boot into rtai kernel without additional kernel parameter
+# none   : boot into rtai kernel without additional kernel parameter
 # ""     : boot into rtai kernel with additional kernel parameter as specified by KERNEL_PARAM
-# XXX    : boot into rtai kernel with additional kernel parameter
+# XXX    : boot into rtai kernel with additional kernel parameter XXX
 # FILE   : boot into rtai kernel with kernel parameter taken from test results file FILE
     case $1 in
+	default)
+	    reboot_unset_kernel "$1"
+	    sleep 2
+	    reboot_cmd
+	    ;;
+
 	[0-9]*)
 	    reboot_set_kernel "$1"
 	    sleep 2
@@ -1350,7 +1403,7 @@ function reboot_kernel {
 	    reboot_cmd
 	    ;;
 
-	default)
+	none)
 	    setup_kernel_param ""
 	    reboot_set_kernel
 	    sleep 2
@@ -2107,7 +2160,7 @@ EOF
     NEW_KERNEL_PARAM=$(echo $NEW_KERNEL_PARAM)
     # in case of a config line, this sets the description of the actual kernel configuration:
     KERNEL_DESCR=""
-    if test "x${NEW_KERNEL_PARAM:0:6}" = "xCONFIG"; then
+    if test "x${NEW_KERNEL_PARAM}" = "xCONFIG"; then
 	KERNEL_DESCR="$DESCRIPTION"
 	# read next line from configuration file:
 	let INDEX+=1
@@ -2115,14 +2168,23 @@ EOF
 	DESCRIPTION="$(echo $DESCRIPTION)"
     fi
 
-    # assemble overall description:
-    KD="${KERNEL_DESCR}"
-    test -n "$KD" && test "${KD:-1:1}" != "-" && KD="${KD}-"
-    KD="${KD}${KERNEL_PARAM_DESCR}"
-    test -n "$KD" && test "${KD:-1:1}" != "-" && KD="${KD}-"
+    # report first batch entry:
+    COMPILE=false
+    if test "x${NEW_KERNEL_PARAM:0:6}" = "xCONFIG"; then
+	COMPILE=true
+	echo_log "Reboot into default kernel to compile kernel with \"$DESCRIPTION\" configuration."
+    else
+	COMPILE=false
+	# assemble overall description:
+	KD="${KERNEL_DESCR}"
+	test -n "$KD" && test "${KD:-1:1}" != "-" && KD="${KD}-"
+	KD="${KD}${KERNEL_PARAM_DESCR}"
+	test -n "$KD" && test "${KD:-1:1}" != "-" && KD="${KD}-"
+	# report next kernel parameter settings:
+	echo_log "Reboot into first configuration: \"${KD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
+    fi
 
     # confirm batch testing:
-    echo_log "Reboot into first configuration: \"${KD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     echo_log
     read -p "Do you want to proceed testing with $N_TESTS reboots (approx. ${OVERALL_TIME}) (Y/n)? " PROCEED
     if test "x$PROCEED" != "xn"; then
@@ -2140,7 +2202,11 @@ EOF
 	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
 	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$KERNEL_DESCR|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
 
-	reboot_kernel $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM
+	if $COMPILE; then
+	    reboot_kernel default
+	else
+	    reboot_kernel $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM
+	fi
     else
 	echo_log
 	echo_log "Test batch aborted"
@@ -2195,10 +2261,6 @@ function test_batch_script {
 	restore_test_batch > /dev/null
 	restore_kernel_param
 	echo_log
-	if ! $COMPILE; then
-	    # at TEST_TOTAL_TIME seconds later reboot into default kernel:
-	    { sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
-	fi
     else
 	# read and set next NEXT_KERNEL_PARAM:
 	IFS=':' read DESCR LM NEXT_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
@@ -2210,10 +2272,12 @@ function test_batch_script {
 	    reboot_set_kernel
 	    echo_log
 	fi
-	if ! $COMPILE; then
-	    # at TEST_TOTAL_TIME seconds later reboot:
-	    { sleep $TEST_TOTAL_TIME; reboot_cmd root; } &
-	fi
+    fi
+    if ! $COMPILE; then
+	# in case everything fails do a cold start:
+	{ sleep $(( $TEST_TOTAL_TIME + 180 )); reboot_cmd cold; } &
+	# at TEST_TOTAL_TIME seconds later reboot:
+	{ sleep $TEST_TOTAL_TIME; reboot_cmd; } &
     fi
 
     # working directory:
@@ -2262,7 +2326,9 @@ function test_batch_script {
 
     # reboot:
     sleep 1
-    reboot_cmd root
+    reboot_cmd
+    sleep 300
+    reboot_cmd cold
 
     exit 0
 }
@@ -3120,6 +3186,8 @@ function restore_messages {
 
 function setup_grub {
     RUN_UPDATE=false
+
+    # grub configuration file:
     if test -f /etc/default/grub.origmrk; then
 	echo_log "Grub menu has already been configured."
     elif test -f /etc/default/grub; then
@@ -3127,13 +3195,15 @@ function setup_grub {
 	echo_log "Configure grub menu."
 	if ! $DRYRUN; then
 	    cp grub grub.origmrk
-	    sed -e "s/GRUB_HIDDEN/#GRUB_HIDDEN/; s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/; /GRUB_CMDLINE_LINUX=/aexport GRUB_CMDLINE_RTAI=\"$KERNEL_PARAM\"" grub.origmrk > grub
+	    sed -e 's/GRUB_HIDDEN/#GRUB_HIDDEN/; s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/; /GRUB_CMDLINE_LINUX=/aexport GRUB_CMDLINE_RTAI=""' grub.origmrk > grub
 	    ( echo; echo "GRUB_DISABLE_SUBMENU=y"; echo; echo "GRUB_DISABLE_RECOVERY=true" ) >> grub
 	    RUN_UPDATE=true
 	fi
     else
 	echo_log "/etc/default/grub not found: cannot configure grub menu."
     fi
+
+    # grub linux kernel script:
     if test -f /etc/grub.d/10_linux.origmrk; then
 	echo_log "Grub linux script has already been configured."
     elif test -f /etc/grub.d/10_linux; then
@@ -3141,11 +3211,25 @@ function setup_grub {
 	echo_log "Configure grub linux entries."
 	if ! $DRYRUN; then
 	    mv 10_linux 10_linux.origmrk
-	    sed -e '/SUPPORTED_INITS/{s/ systemd.*systemd//; s/ upstart.*upstart//;}' -e '/\${GRUB_CMDLINE_LINUX}.*\${GRUB_CMDLINE_LINUX_DEFAULT}/s/\(${GRUB_CMDLINE_LINUX}.*\)\(${GRUB_CMDLINE_LINUX_DEFAULT}\)/\1${CMDLINE_RTAI} \2/' -e '/initramfs=$/i # check for RTAI kernel:\
-  CMDLINE_RTAI=""\
-  if grep -q "CONFIG_IPIPE=y" "${config}"; then\
-    CMDLINE_RTAI="${GRUB_CMDLINE_RTAI}"\
-  fi' 10_linux.origmrk > 11_linux
+	    awk '{
+                if ( /export linux_gfx/ ) {
+                    ++level 
+                }
+                if ( level > 0 && /EOF/ ) {
+                    print
+                    print "\ncat << EOF\nload_env rtai_cmdline\nEOF"
+                    next
+                }
+                if ( /initramfs=$/ ) {
+                    print "  # check for RTAI kernel:"
+                    print "  CMDLINE_RTAI=\"\""
+                    print "  if grep -q \"CONFIG_IPIPE=y\" \"\${config}\"; then"
+                    print "      CMDLINE_RTAI=\"\${GRUB_CMDLINE_RTAI} \\\$rtai_cmdline\""
+                    print "  fi"
+                    print ""
+                }
+            }1' /etc/grub.d/10_linux.origmrk | \
+	    sed -e '/SUPPORTED_INITS/{s/ systemd.*systemd//; s/ upstart.*upstart//;}' -e '/\${GRUB_CMDLINE_LINUX}.*\${GRUB_CMDLINE_LINUX_DEFAULT}/s/\(${GRUB_CMDLINE_LINUX}.*\)\(${GRUB_CMDLINE_LINUX_DEFAULT}\)/\1${CMDLINE_RTAI} \2/' > 11_linux
 	    if ! grep -q GRUB_DISABLE_SUBMENU 11_linux > /dev/null; then
 		sed -i -e '/if .*$in_submenu.*; then/,/fi$/s/^/#/' 11_linux
 	    fi
@@ -3162,7 +3246,7 @@ function setup_grub {
 	    chmod a+w /boot/grub/grubenv
 	fi
     else
-	echo_log "/boot/grub/grubenv not found: cannot enable reboot request for normal user."
+	echo_log "/boot/grub/grubenv not found: cannot enable reboot requests for normal user."
     fi
     if $RUN_UPDATE && ! $DRYRUN; then
 	update-grub
@@ -3196,6 +3280,11 @@ function restore_grub {
 	fi
     fi
     if test -f /boot/grub/grubenv; then
+	echo_log "Remove grub environment variables."
+	if ! $DRYRUN; then
+	    grub-editenv - unset rtai_cmdline
+	    grub-editenv - unset next_entry
+	fi
 	echo_log "Disable reboot requests for normal user."
 	if ! $DRYRUN; then
 	    chmod go-w /boot/grub/grubenv
@@ -3281,9 +3370,9 @@ function restore_features {
     check_root
     if test -z $1; then
 	restore_messages
+	restore_kernel_param
 	restore_grub
 	restore_comedi
-	restore_kernel_param
 	restore_test_batch
     else
 	for TARGET; do
@@ -3697,7 +3786,7 @@ case $ACTION in
 	;;
 
     info ) if test "x$1" = "xgrub"; then
-	    print_grub
+	    print_grub env
 	elif test "x$1" = "xsettings"; then
 	    print_settings
 	    echo
