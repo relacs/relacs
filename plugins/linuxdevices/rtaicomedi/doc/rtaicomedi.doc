@@ -6,6 +6,7 @@
 \section rtaicomedicontent Content
 - \ref rtaicomediintro
 - \ref quickinstall
+- \ref basickernelconfiguration
 - \ref testrtai
 - \ref configurekernel
 - \ref installrelacs
@@ -474,6 +475,62 @@ cat /sys/module/intel_idle/parameters/max_cstate
 .
 
 
+\subsection hyperthreading Hyperthreading
+
+README.CONF_RMRKS: 
+
+- Under SMP set the number of CPUs equal to the real
+  ones and have it matched in RTAI, no hyperthreading intended.
+- Even if RTAI can work with hyperthreading enabled, such an option is deprecated
+  as a possible cause of latency; in any case try and verify if it is acceptable,
+  with your hardware and for your applications.
+
+Switch off hyperthreading? 
+https://serverfault.com/questions/235825/disable-hyperthreading-from-within-linux-no-access-to-bios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+https://unix.stackexchange.com/questions/33450/checking-if-hyperthreading-is-enabled-or-not
+
+Compiling with CONFIG_NR_CPUS set to the physical number of CPUs does
+not work since it disables the second core (core id) and runs two CPUs
+on the first core.
+
+Switch off CPUs:
+\code
+echo 0 > /sys/devices/system/cpu/cpuX/online
+\endcode
+This crashes when inserting rtai_hal (even if CONFIG_RTAI_CPUS is adapted to the lower cpucount).
+
+Actually, the number of CPUs (CONFIG_NR_CPUS) do not seem to matter
+(less or more than the actually available cores).
+
+
+\subsection cachedmemory Cached memory disruption 
+
+README.CONF_RMRKS: Cached memory disruption can add significant
+latencies, till the cache becomes hot again, experienced first hand
+after a far jump in the code and data in a digital controller.
+
+???
+
+\subsection acpi ACPI
+
+README.CONF_RMRKS:
+- Power management, see CONFIG_CPU_FREQ and CONFIG_CPU_IDLE below; on portables 
+  battery management too.
+- Recent Intel SpeedStepping and Boosting.
+- Disable AUDITSYSCALLS.
+- Disable CPU_FREQ.
+- Disable CPU_IDLE and INTEL_IDLE, or boot with "intel_idle.max_cstate=0". If you
+  want to be sure to have a never sleeping CPU execute, at the lowest priority, 
+  your own, per cpu, idle task, i.e. one just doing "while(1);".
+- Disable APM and CONFIG_ACPI_PROCESSOR, but not everything related to power management.
+  Take also into account that without ACPI enabled you might not see more than 
+  a single CPU.
+.
+
+Turn of frequency scaling on a specific CPU:
+https://wiki.archlinux.org/index.php/CPU_frequency_scaling
+
+
 \subsection kernelparamhints Kernel parameter
 
 There are several interesting kernel parameter that influence the
@@ -521,6 +578,11 @@ Clocks and timers:
 - Also check out "nohalt" kernel parameter.
 .
 
+README.CONF_RMRKS: If unsure on the CPU to choose, care of setting one
+  featuring the Time Stamp Clock (TSC), which means no 486 and "false"
+  i586, since generic INTEL i586 compatibles often do not have a TSC,
+  while true INTEL ones do have it.
+
 Advanced configuration and power interface (ACPI):
 - \c acpi=off , although effective this may results in an unstable system
 - \c pci=noacpi .
@@ -538,6 +600,10 @@ Advanced programmable interrupt controller (APIC):
 
 Others:
 - disable all DMA transfers by setting kernel parameter \c libata.dma=0.
+
+  README.CONF_RMRKS: LINUX use of DMA can add latency, especially when
+  it is supported in burst mode.
+
 .
 
 Supply the kernel parameter to the \c reboot action of \c makertaikernel.sh:
@@ -610,6 +676,21 @@ Devices to look out are:
   .
 
 - Check video cards and graphic acceleration
+  
+  README.CONF_RMRKS: 
+  - Some peripherals, e.g. video cards, may stall CPUs attempting to
+    access IO space.  Verify "what ifs" related to graphic
+    acceleration, likely better if disabled.  Consider also if X term
+    usage is really needed. If possible avoid it, especially in
+    production work.
+  - Any initialization of the device drivers, or anything related to
+    the hardware, may lead to high latencies, e.g., but not
+    always. doing "startx &" while a real time application is
+    running. Once it is started there should be no major problems.  If
+    the truoble persists and you really need X, concurrently with your
+    RTAI tasks, try disabling hardware graphic acceleration. The best
+    latencies usually come with no graphic application running.
+  .
 
 - Disabling the thermal sysfs driver is sometimes great for latencies
   but has no effect on periodic tasks ? ...:

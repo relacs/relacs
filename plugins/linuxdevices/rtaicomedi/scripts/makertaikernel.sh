@@ -3,7 +3,7 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-: ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
+: ${KERNEL_PATH:=/data/src}       # where to put and compile the kernel (set with -s)
 : ${LINUX_KERNEL:="4.4.115"}     # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NUM:="-1"}            # name of the linux kernel is $LINUX_KERNEL-$RTAI_DIR$KERNEL_NUM
@@ -37,8 +37,8 @@
                                # (menuconfig, gconfig, xconfig)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 
-: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
-: ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
+: ${KERNEL_PARAM:="idle=poll highres=off"}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM_DESCR:="idle-highres"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
 : ${BATCH_KERNEL_PARAM:="panic=10"} # additional kernel parameter passed to grub for test batch
 : ${CONFIG_PATCHES_FILE:="kernelconfigs.mrk"}  # file where patches from prepare_kernel_config go in
@@ -937,11 +937,24 @@ function prepare_kernel_configs {
 	read -p "        Append more configurations, Overwrite existing configurations, or Cancel? (a/o/C) " ACTION
 	if test "x$ACTION" = "xa"; then
 	    N=$(grep -c '#### START CONFIG' "$CONFIG_PATCHES_FILE")
-	    for NP in $(seq $N); do
-		echo_log "Apply patch $(sed -n -e "/^#### START CONFIG $NP/{s/^#### START CONFIG //; p;}" "$CONFIG_PATCHES_FILE")"
-		if ! $DRYRUN; then
-		    sed -n -e "/^#### START CONFIG $NP/,/^#### END CONFIG $NP/p" "$CONFIG_PATCHES_FILE" | sed -e '1d; $d;' | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+	    for CONFIG_NUM in $(seq $N); do
+		sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_FILE > config.patch
+		ABSOLUTE=false
+		ABS="incremental"
+		if grep -q ABSOLUTE config.patch; then
+		    ABSOLUTE=true
+		    ABS="absolute"
 		fi
+		echo_log "Apply $ABS patch $(sed -n -e "1{s/^#### START CONFIG //; p;}" config.patch)"
+		if ! $DRYRUN; then
+		    if $ABSOLUTE; then
+			cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+			cp .config.origmrk .config
+			cd - > /dev/null
+		    fi
+		    sed -e '1d; $d;' config.patch | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+		fi
+		rm config.patch
 	    done
 	elif test "x$ACTION" = "xo"; then
 	    if ! $DRYRUN; then
@@ -1168,7 +1181,7 @@ function clean_kernel {
 	echo_log "remove kernel sources $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}"
 	if ! $DRYRUN; then
 	    rm -r linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
-	    rm linux
+	    rm -f linux
 	fi
     fi
 }
@@ -2335,7 +2348,10 @@ function test_report {
     # reformat output to the calculated column widths:
     FIRST=true
     for TEST in $FILES; do
+	# skip noexisting files:
 	test -f "$TEST" || continue
+	# skip empty files: (better would be to list them as failed)
+	test "$(wc -l $TEST | cut -d ' ' -f 1)" -lt 4 && continue
 	LINEMARKS="RTD|"
 	$FIRST && LINEMARKS="RTH| $LINEMARKS"
 	FIRST=false
@@ -3296,6 +3312,8 @@ function full_install {
     NEW_KERNEL_CONFIG=true
     check_root
 
+    SECONDS=0
+
     if ! install_packages; then
 	return 1
     fi
@@ -3316,8 +3334,13 @@ function full_install {
     ${MAKE_RTAI} && { build_rtai || return 1; }
     ${MAKE_COMEDI} && { build_comedi || MAKE_COMEDI=false; }
 
+    SECS=$SECONDS
+    let MIN=${SECS}/60
+    let SEC=${SECS}%60
+
     echo_log
     echo_log "Done!"
+    echo_log "Full build took ${SECS} seconds ($(printf "%02d:%02d" $MIN $SEC))."
     echo_log "Please reboot into the ${KERNEL_NAME} kernel by executing"
     echo_log "$ ./${MAKE_RTAI_KERNEL} reboot"
     echo_log
@@ -3340,14 +3363,13 @@ function reconfigure {
     ${MAKE_COMEDI} && uninstall_comedi
     ${MAKE_COMEDI} && build_comedi
 
-    SEC=$SECONDS
-    let MIN=$SECONDS/60
-    let HOURS=$MIN/60
-    let MIN=$MIN%60
+    SECS=$SECONDS
+    let MIN=${SECS}/60
+    let SEC=${SECS}%60
 
     echo_log
     echo_log "Done!"
-    echo_log "Complete rebuild took ${SECONDS} seconds ($(printf "%dh%02dmin" $HOUR $MIN))."
+    echo_log "Build took ${SECS} seconds ($(printf "%02d:%02d" $MIN $SEC))."
     echo_log "Please reboot into the ${KERNEL_NAME} kernel by executing"
     echo_log "$ ./${MAKE_RTAI_KERNEL} reboot"
     echo_log
