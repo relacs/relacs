@@ -3,7 +3,7 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-: ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
+: ${KERNEL_PATH:=/data/src}       # where to put and compile the kernel (set with -s)
 : ${LINUX_KERNEL:="4.4.115"}     # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NUM:="-1"}            # name of the linux kernel is $LINUX_KERNEL-$RTAI_DIR$KERNEL_NUM
@@ -149,7 +149,8 @@ Print some information about your system.
 
 Usage:
 
-sudo ${MAKE_RTAI_KERNEL} info [rtai|settings|grub|setup|log|config [<FILE>]]
+sudo ${MAKE_RTAI_KERNEL} info [rtai|settings|grub|setup|log|config [<FILE>]|kernel]
+sudo ${MAKE_RTAI_KERNEL} [-c xxx] info menu
 
 info               : display properties of rtai patches, loaded kernel modules, kernel, machine,
                      and grub menu (configs and menu targets are excluded)
@@ -160,8 +161,18 @@ info setup         : show modifikations of your system made by ${MAKE_RTAI_KERNE
 info log           : show the content of the log file if available - useful after test batch
 info configs       : show patches for kernel configurations in file ${CONFIG_PATCHES_FILE}
 info configs <FILE>: show patches for kernel configurations in file <FILE>
+info kernel        : show name and kernel parameter of the currently running kernel
 info menu          : show kernel configuration menu of the specified (-c) kernel configuration
-info params        : show kernel parameter of the currently running kernel
+
+-c xxx: specify a kernel configuration:
+        old: use the kernel configuration of the currently running kernel
+        def: generate a kernel configuration using make defconfig
+        mod: simplify existing kernel configuration using make localmodconfig
+             even if kernel do not match
+        path/to/config/file: provide a particular configuration file
+        After setting the configuration (except for mod), make localmodconfig
+        is executed to deselect compilation of unused modules, but only if the
+        runnig kernel matches the selected kernel version (major.minor only).
 
 EOF
 }
@@ -557,7 +568,7 @@ function print_configs {
 	echo "Available kernel configurations from file \"$KCF\""
 	echo "- add them to a test batch file:"
 	echo
-	sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \(.*\) \(.*\)/\2 : : CONFIG \1 '"$KCF"'/; p;}' "$KCF"
+	sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$KCF"'/; p;}' "$KCF"
     else
 	echo "File \"$KCF\" does not exist."
     fi
@@ -612,12 +623,22 @@ function print_versions {
     fi
 }
 
-function print_kernel_params {
+function print_kernel {
+    echo "running kernel (uname -r): $(uname -r)"
+    echo
     echo "kernel parameter (/proc/cmdline):"
     for param in $(cat /proc/cmdline); do
 	echo "  $param"
     done
     echo
+    echo "cpu topology (/sys/devices/system/cpu/*):"
+    printf "         core_id  phys_id  online  core_sibl  thread_sibl\n"
+    for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
+	CPUT="$CPU/topology"
+	ONLINE=1
+	test -f $CPU/online && ONLINE=$(cat $CPU/online)
+	printf "  cpu%-2d  %7d  %7d  %6d  %9s  %11s\n" ${CPU#/sys/devices/system/cpu/cpu} $(cat $CPUT/core_id) $(cat $CPUT/physical_package_id) $ONLINE $(cat $CPUT/core_siblings_list) $(cat $CPUT/thread_siblings_list)
+    done
 }
 
 function print_distribution {
@@ -670,14 +691,12 @@ function print_kernel_info {
     echo
     echo "hostname: $(hostname)"
     echo
-    echo "running kernel (uname -r): $(uname -r)"
-    echo
+    print_kernel
     if test -f config.patch; then
 	echo "kernel configuration:"
 	cat config.patch | indent
 	echo
     fi
-    print_kernel_params
     print_versions
     echo
     echo "CPU (/proc/cpuinfo):"
@@ -1046,7 +1065,7 @@ function prepare_kernel_configs {
 	echo "        by adding the following lines to a test batch file:"
 	echo
 	if test -f "$CONFIG_PATCHES_FILE"; then
-	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \(.*\) \(.*\)/\2 : : CONFIG \1 '"$CONFIG_PATCHES_FILE"'/; p;}' "$CONFIG_PATCHES_FILE"
+	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$CONFIG_PATCHES_FILE"'/; p;}' "$CONFIG_PATCHES_FILE"
 	fi
 	echo
     else
@@ -3801,8 +3820,8 @@ case $ACTION in
 	    print_configs
 	elif test "x$1" = "xmenu"; then
 	    menu_kernel
-	elif test "x$1" = "xparams"; then
-	    print_kernel_params
+	elif test "x$1" = "xkernel"; then
+	    print_kernel
 	else
 	    print_full_info $@ 
 	    test "x$1" = "xrtai" && rm -f "$LOG_FILE"
