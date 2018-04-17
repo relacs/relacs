@@ -41,7 +41,7 @@
 : ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
 : ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
-: ${BATCH_KERNEL_PARAM:="panic=10"} # additional kernel parameter passed to grub for test batch
+: ${BATCH_KERNEL_PARAM:="oops=panic panic=10"} # additional kernel parameter passed to grub for test batch
 : ${CONFIG_PATCHES_FILE:="kernelconfigs.mrk"}  # file where patches from prepare_kernel_config go in
 : ${CONFIG_BACKUP_FILE:="kernelconfig.orig"}   # stores initial kernel configuration for test batches
 
@@ -636,13 +636,14 @@ function print_kernel {
     done
     echo
     echo "cpu topology (/sys/devices/system/cpu/*):"
-    printf "         core_id  phys_id  online  core_sibl  thread_sibl\n"
+    printf "         online  physical_id  core_id  thread_siblings\n"
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	CPUT="$CPU/topology"
 	ONLINE=1
 	test -f $CPU/online && ONLINE=$(cat $CPU/online)
-	printf "  cpu%-2d  %7d  %7d  %6d  %9s  %11s\n" ${CPU#/sys/devices/system/cpu/cpu} $(cat $CPUT/core_id) $(cat $CPUT/physical_package_id) $ONLINE $(cat $CPUT/core_siblings_list) $(cat $CPUT/thread_siblings_list)
+	printf "  cpu%-2d  %6d  %11d  %7d  %15s\n" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(cat $CPUT/thread_siblings_list)
     done
+    echo
 }
 
 function print_distribution {
