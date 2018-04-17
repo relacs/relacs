@@ -3,7 +3,7 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-: ${KERNEL_PATH:=/data/src}       # where to put and compile the kernel (set with -s)
+: ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
 : ${LINUX_KERNEL:="4.4.115"}     # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NUM:="-1"}            # name of the linux kernel is $LINUX_KERNEL-$RTAI_DIR$KERNEL_NUM
@@ -29,6 +29,7 @@
                            # "old" for oldconfig from the running kernel,
                            # "def" for the defconfig target,
                            # "mod" for the localmodconfig target, (even if kernel do not match)
+                           # "backup" for the backed up kernel configuration from the last test batch.
                            # or a full path to a config file.
                            # afterwards, the localmodconfig target is executed, 
                            # if the running kernel matches LINUX_KERNEL
@@ -169,6 +170,7 @@ info menu          : show kernel configuration menu of the specified (-c) kernel
         def: generate a kernel configuration using make defconfig
         mod: simplify existing kernel configuration using make localmodconfig
              even if kernel do not match
+        backup: use the backed up kernel configuration from the last test batch.
         path/to/config/file: provide a particular configuration file
         After setting the configuration (except for mod), make localmodconfig
         is executed to deselect compilation of unused modules, but only if the
@@ -201,7 +203,8 @@ restore messages : restore the original rsyslog settings
 restore grub     : restore the original grub boot menu settings and user access
 restore comedi   : do not assign comedi devices to the iocard group
 restore kernel   : restore default kernel parameter for the grub boot menu
-restore testbatch: uninstall the automatic test script from crontab (see help test)
+restore testbatch: uninstall the automatic test script from crontab and
+                   remove variables from the grub environment (see help test)
 
 EOF
 }
@@ -400,6 +403,7 @@ EOF
         def: generate a kernel configuration using make defconfig
         mod: simplify existing kernel configuration using make localmodconfig
              even if kernel do not match
+        backup: use the backed up kernel configuration from the last test batch.
         path/to/config/file: provide a particular configuration file
         After setting the configuration (except for mod), make localmodconfig
         is executed to deselect compilation of unused modules, but only if the
@@ -692,11 +696,6 @@ function print_kernel_info {
     echo "hostname: $(hostname)"
     echo
     print_kernel
-    if test -f config.patch; then
-	echo "kernel configuration:"
-	cat config.patch | indent
-	echo
-    fi
     print_versions
     echo
     echo "CPU (/proc/cpuinfo):"
@@ -969,21 +968,13 @@ function prepare_kernel_configs {
 	if test "x$ACTION" = "xa"; then
 	    N=$(grep -c '#### START CONFIG' "$CONFIG_PATCHES_FILE")
 	    for CONFIG_NUM in $(seq $N); do
-		sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_FILE > config.patch
-		ABSOLUTE=false
-		ABS="incremental"
-		if grep -q ABSOLUTE config.patch; then
-		    ABSOLUTE=true
-		    ABS="absolute"
-		fi
-		echo_log "Apply $ABS patch $(sed -n -e "1{s/^#### START CONFIG //; p;}" config.patch)"
+		sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_PATCHES_FILE > config.patch
+		echo_log "        Apply patch $(sed -n -e "1{s/^#### START CONFIG //; p;}" config.patch)"
 		if ! $DRYRUN; then
-		    if $ABSOLUTE; then
-			cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
-			cp .config.origmrk .config
-			cd - > /dev/null
-		    fi
-		    sed -e '1d; $d;' config.patch | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+		    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+		    cp .config.origmrk .config
+		    cd - > /dev/null
+		    sed -e '1d; $d;' config.patch | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config > /dev/null
 		fi
 		rm config.patch
 	    done
@@ -1014,8 +1005,6 @@ function prepare_kernel_configs {
 	'') ABSOLUTE=false ;;
 	*) echo_log "Aborted"; exit 0 ;;
     esac
-    ABS=""
-    $ABSOLUTE && ABS="ABSOLUTE"
 
     let STEP+=1
     echo "Step $STEP: modify and store the kernel configurations."
@@ -1028,7 +1017,7 @@ function prepare_kernel_configs {
 	    DESCRIPTION=""
 	    if ! diff -q .config.mrk .config > /dev/null; then
 		echo "  store patch of new configuration"
-		diff -u .config.mrk .config > config.patch
+		diff -u .config.origmrk .config > config.patch
 		read -p "  short description of the kernel configuration (empty: finish) " DESCRIPTION
 		echo
 	    else
@@ -1040,7 +1029,7 @@ function prepare_kernel_configs {
 		cd - > /dev/null
 		let N+=1
 		{
-		    echo "#### START CONFIG $N $DESCRIPTION $ABS"
+		    echo "#### START CONFIG $N $DESCRIPTION"
 		    cat $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/config.patch
 		    echo "#### END CONFIG $N $DESCRIPTION"
 		    echo
@@ -1101,10 +1090,24 @@ function config_kernel {
 		make localmodconfig
 	    fi
 	    RUN_LOCALMOD=false
+	elif test "x$KERNEL_CONFIG" = "xbackup"; then
+	    echo_log "Use backup configuration from \"$CONFIG_BACKUP_FILE\"."
+	    KCF="$CONFIG_BACKUP_FILE"
+	    if test "x${KCF:0:1}" != "x/"; then
+		KCF="$1/$KERNEL_CONFIG"
+	    fi
+	    if ! $DRYRUN; then
+		cp "$KCF" .config
+		make olddefconfig
+	    fi
 	elif test -f "$KERNEL_CONFIG"; then
 	    echo_log "Use configuration from \"$KERNEL_CONFIG\"."
+	    KCF="$KERNEL_CONFIG"
+	    if test "x${KCF:0:1}" != "x/"; then
+		KCF="$1/$KERNEL_CONFIG"
+	    fi
 	    if ! $DRYRUN; then
-		cp "$KERNEL_CONFIG" .config
+		cp "$KCF" .config
 		make olddefconfig
 	    fi
 	else
@@ -1113,7 +1116,7 @@ function config_kernel {
 	fi
 	if $RUN_LOCALMOD; then
 	    if test ${CURRENT_KERNEL%.*} = ${LINUX_KERNEL%.*} ; then
-		echo_log "run make localmodconfig"
+		echo_log "Run make localmodconfig"
 		if ! $DRYRUN; then
 		    yes "" | make localmodconfig
 		fi
@@ -1129,12 +1132,13 @@ function config_kernel {
 function menu_kernel {
     check_root
     if test -d "$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}"; then
+	WORING_DIR="$PWD"
 	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 	KF=$KERNEL_CONFIG
 	$NEW_KERNEL_CONFIG || KF=".config"
 	echo_log "Show kernel configuration menu for configuration \"$KF\"."
 	$DRYRUN || cp .config .config.origmrk
-	config_kernel
+	config_kernel "$WORKING_DIR"
 	if ! $DRYRUN; then
 	    make $KERNEL_MENU
 	    cp .config.origmrk .config
@@ -1146,11 +1150,7 @@ function menu_kernel {
 }
 
 function build_kernel {
-    # clean up:
-    if test "$KERNEL_MENU" != "old"; then
-	$DRYRUN || rm -f config.patch
-    fi
-
+    WORING_DIR="$PWD"
     cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
     echo_log "check for make-kpkg"
     HAVE_MAKE_KPKG=false
@@ -1172,7 +1172,7 @@ function build_kernel {
 	    fi
 	fi
 
-	config_kernel
+	config_kernel "$WORKING_DIR"
 
 	# build the kernel:
 	echo_log "build the kernel"
@@ -1296,7 +1296,6 @@ function setup_kernel_param {
 	    grub-editenv - set rtai_cmdline="$*"
 	fi
 	if test -n "$*"; then
-	    echo_log ""
 	    echo_log "Set RTAI kernel parameter to \"$*\"."
 	fi
     elif test -f /etc/default/grub; then
@@ -1310,11 +1309,9 @@ function setup_kernel_param {
 	    update-grub
 	fi
 	if test -n "$*"; then
-	    echo_log ""
 	    echo_log "Set RTAI kernel parameter to \"$*\"."
 	fi
     else
-	echo_log ""
 	echo_log "/boot/grub/grubenv and /etc/default/grub not found: cannot set RTAI kernel parameter"
     fi
 }
@@ -1403,6 +1400,7 @@ function reboot_kernel {
 # ""     : boot into rtai kernel with additional kernel parameter as specified by KERNEL_PARAM
 # XXX    : boot into rtai kernel with additional kernel parameter XXX
 # FILE   : boot into rtai kernel with kernel parameter taken from test results file FILE
+    echo_log ""
     case $1 in
 	default)
 	    reboot_unset_kernel "$1"
@@ -1444,6 +1442,7 @@ function reboot_kernel {
 	    reboot_cmd
 	    ;;
     esac
+    exit 0
 }
 
 
@@ -2217,10 +2216,20 @@ EOF
 	echo_log "Installed crontab for automatic testing after reboot."
 	echo_log "  Uninstall by calling"
 	echo_log "  $ ./${MAKE_RTAI_KERNEL} restore testbatch"
+	echo_kmsg "START TEST BATCH $BATCH_FILE"
 
 	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
-	echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$KERNEL_DESCR|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
-
+	# set information for next test/compile:
+	if test -f /boot/grub/grubenv; then
+	    grub-editenv - set rtaitest_file="$TEST_DIR/${BATCH_FILE##*/}"
+	    grub-editenv - set rtaitest_index="$INDEX"
+	    grub-editenv - set rtaitest_kernel_descr="$KERNEL_DESCR"
+	    grub-editenv - set rtaitest_param_descr="$KERNEL_PARAM_DESCR"
+	    grub-editenv - set rtaitest_time="$TEST_TOTAL_TIME"
+	    grub-editenv - set rtaitest_specs="$TEST_SPECS"
+	else
+	    echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$KERNEL_DESCR|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
+	fi
 	if $COMPILE; then
 	    reboot_kernel default
 	else
@@ -2241,7 +2250,18 @@ function test_batch_script {
     PATH="$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
     # get paramter for current test/compile:
-    IFS='|' read ID BATCH_FILE INDEX KERNEL_DESCR BATCH_DESCR TEST_TOTAL_TIME TEST_SPECS < <(grep -a -F "NEXT TEST BATCH" /var/log/messages | tail -n 1)
+    if test -f /boot/grub/grubenv; then
+	BATCH_FILE=$(grub-editenv - list | awk -F '=' '/^rtaitest_file=/ {print $2}')
+	INDEX=$(grub-editenv - list | awk -F '=' '/^rtaitest_index=/ {print $2}')
+	KERNEL_DESCR=$(grub-editenv - list | awk -F '=' '/^rtaitest_kernel_descr=/ {print $2}')
+	BATCH_DESCR=$(grub-editenv - list | awk -F '=' '/^rtaitest_param_descr=/ {print $2}')
+	TEST_TOTAL_TIME=$(grub-editenv - list | awk -F '=' '/^rtaitest_time=/ {print $2}')
+	TEST_SPECS=$(grub-editenv - list | awk -F '=' '/^rtaitest_specs=/ {print $2}')
+    else
+	MF=/var/log/messages
+	grep -q -a -F "NEXT TEST BATCH" $MF || MF=/var/log/messages.1
+	IFS='|' read ID BATCH_FILE INDEX KERNEL_DESCR BATCH_DESCR TEST_TOTAL_TIME TEST_SPECS < <(grep -a -F "NEXT TEST BATCH" $MF | tail -n 1)
+    fi
     KERNEL_DESCR="$(echo $KERNEL_DESCR)"
     BATCH_DESCR="$(echo $BATCH_DESCR)"
 
@@ -2253,11 +2273,6 @@ function test_batch_script {
     echo_log "Automatically start test $INDEX of $N_TESTS in file \"$BATCH_FILE\"."
     echo_log
 
-    # wait:
-    sleep $STARTUP_TIME
-    echo_log "."
-    echo_log
-
     # read current DESCRIPTION and LOAD_MODE from configuration file:
     IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
     DESCRIPTION="$(echo $DESCRIPTION)"
@@ -2267,26 +2282,40 @@ function test_batch_script {
     if test "x${NEW_KERNEL_PARAM:0:6}" = "xCONFIG"; then
 	COMPILE=true
 	KERNEL_DESCR="$DESCRIPTION"
+    else
+	# wait:
+	sleep $STARTUP_TIME
     fi
+
     # next:
     let INDEX+=1
 
     if test "$INDEX" -gt "$N_TESTS"; then
 	# no further tests:
 	echo_kmsg "LAST TEST BATCH"
-	echo_log "final test"
+	echo_log "Final test"
 	# clean up:
-	echo_log "clean up test batch:"
+	echo_log "Clean up test batch:"
 	restore_test_batch > /dev/null
 	restore_kernel_param
 	echo_log
     else
-	# read and set next NEXT_KERNEL_PARAM:
+	# read next test:
 	IFS=':' read DESCR LM NEXT_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
-	echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$KERNEL_DESCR|$BATCH_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
+	# set information for next test/compile:
+	if test -f /boot/grub/grubenv; then
+	    grub-editenv - set rtaitest_file="$BATCH_FILE"
+	    grub-editenv - set rtaitest_index="$INDEX"
+	    grub-editenv - set rtaitest_kernel_descr="$KERNEL_DESCR"
+	    grub-editenv - set rtaitest_param_descr="$BATCH_DESCR"
+	    grub-editenv - set rtaitest_time="$TEST_TOTAL_TIME"
+	    grub-editenv - set rtaitest_specs="$TEST_SPECS"
+	else
+	    echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$KERNEL_DESCR|$BATCH_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
+	fi
 	NEXT_KERNEL_PARAM=$(echo $NEXT_KERNEL_PARAM)
 	if test "x${NEXT_KERNEL_PARAM:0:6}" != "xCONFIG"; then
-	    echo_log "prepare next reboot:"
+	    echo_log "Prepare next reboot:"
 	    setup_kernel_param $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEXT_KERNEL_PARAM
 	    reboot_set_kernel
 	    echo_log
@@ -2304,26 +2333,19 @@ function test_batch_script {
 
     if $COMPILE; then
 	# compile new kernel:
-	echo_log "compile new kernel:"
+	echo_log "Compile new kernel:"
 	echo_kmsg "START COMPILE NEW KERNEL"
 	CONFIG_NUM="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 2)"
-	CONFIG_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 3)"
+	CONFIG_PATCHES_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 3)"
+	cp $CONFIG_BACKUP_FILE $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	if test "x$CONFIG_NUM" = "xBACKUP"; then
-	    rm -f config.patch
-	    mv $CONFIG_BACKUP_FILE $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
-	    echo_log "use \"$CONFIG_BACKUP_FILE\" for the kernel configuration."
+	    echo_log "Use \"$CONFIG_BACKUP_FILE\" for the kernel configuration."
 	else
-	    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_FILE > config.patch
-	    ABSOLUTE=false
-	    ABS="incremental"
-	    if grep -q ABSOLUTE config.patch; then
-		ABSOLUTE=true
-		ABS="absolute"
-	    fi
-	    echo_log "use $ABS patch $CONFIG_NUM from file $CONFIG_FILE:"
+	    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_PATCHES_FILE > config.patch
+	    echo_log "Apply patch $CONFIG_NUM from file $CONFIG_PATCHES_FILE:"
 	    cat config.patch | while read LINE; do echo_log "  $LINE"; done
-	    $ABSOLUTE && cp $CONFIG_BACKUP_FILE $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	    sed -e '1d; $d;' config.patch | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+	    rm config.patch
 	fi
 	KERNEL_MENU=old
 	reconfigure
@@ -2336,11 +2358,11 @@ function test_batch_script {
 	echo_log "test kernel ${KERNEL_DESCR}${BATCH_DESCR}${DESCRIPTION}:"
 	test_kernel $TEST_SPECS $LOAD_MODE auto "${KERNEL_DESCR}${BATCH_DESCR}${DESCRIPTION}"
 	echo_log
+    fi
 
-	if test "$INDEX" -gt "$N_TESTS"; then
-	    echo_kmsg "FINISHED TEST BATCH"
-	    echo_log "finished test batch"
-	fi
+    if test "$INDEX" -gt "$N_TESTS"; then
+	echo_kmsg "FINISHED TEST BATCH"
+	echo_log "finished test batch"
     fi
 
     # reboot:
@@ -2358,6 +2380,14 @@ function restore_test_batch {
 	if ! $DRYRUN; then
 	    (crontab -l | grep -v "${MAKE_RTAI_KERNEL}") | crontab -
 	fi
+    fi
+    if test -f /boot/grub/grubenv; then
+	grub-editenv - unset rtaitest_file
+	grub-editenv - unset rtaitest_index
+	grub-editenv - unset rtaitest_kernel_descr
+	grub-editenv - unset rtaitest_param_descr
+	grub-editenv - unset rtaitest_time
+	grub-editenv - unset rtaitest_specs
     fi
 }
 
@@ -3303,6 +3333,12 @@ function restore_grub {
 	if ! $DRYRUN; then
 	    grub-editenv - unset rtai_cmdline
 	    grub-editenv - unset next_entry
+	    grub-editenv - unset rtaitest_file
+	    grub-editenv - unset rtaitest_index
+	    grub-editenv - unset rtaitest_kernel_descr
+	    grub-editenv - unset rtaitest_param_descr
+	    grub-editenv - unset rtaitest_time
+	    grub-editenv - unset rtaitest_specs
 	fi
 	echo_log "Disable reboot requests for normal user."
 	if ! $DRYRUN; then
