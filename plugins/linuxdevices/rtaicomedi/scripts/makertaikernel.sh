@@ -68,6 +68,7 @@
 
 FULL_COMMAND_LINE="$@"
 MAKE_RTAI_KERNEL="${0##*/}"
+MAKE_RTAI_CONFIG="${MAKE_RTAI_KERNEL%.*}.cfg"
 
 VERSION_STRING="${MAKE_RTAI_KERNEL} version 4.0 by Jan Benda, April 2018"
 DRYRUN=false                 # only show what is being done (set with -d)
@@ -413,6 +414,12 @@ EOF
 -D    : generate kernel package with debug symbols in addition (KERNEL_DEBUG=${KERNEL_DEBUG})
 -m    : enter the RTAI configuration menu
 
+Note: for running test batches, settings provided via the command line are lost after rebooting.
+
+You can modify the settings by editing "$MAKE_RTAI_KERNEL" directly.
+Alternatively, you can provide settings by listing them in a configuration file
+in the current working directory called "$MAKE_RTAI_CONFIG". See also "info settings".
+
 If no action is specified, a full download and build is performed for all targets (except showroom).
 
 For the targets one or more of:
@@ -636,7 +643,7 @@ function print_kernel {
     done
     echo
     echo "cpu topology (/sys/devices/system/cpu/*):"
-    printf "        online  physical_id  core_id  thread_siblings\n"
+    printf "         online  physical_id  core_id  thread_siblings\n"
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	CPUT="$CPU/topology"
 	ONLINE=1
@@ -3712,6 +3719,11 @@ function print_help {
 ###########################################################################
 # main script:
 
+# read in configuration:
+if test -f "$MAKE_RTAI_CONFIG"; then
+    source "$MAKE_RTAI_CONFIG"
+fi
+
 while test "x${1:0:1}" = "x-"; do
     case $1 in
 	--help )
@@ -3894,7 +3906,7 @@ case $ACTION in
     reconfigure ) reconfigure ;;
 
     * ) if test -n "$ACTION"; then
-	    echo "unknown action \"$1\""
+	    echo "unknown action \"$ACTION\""
 	    echo
 	    help_usage
 	    exit 1
