@@ -3,7 +3,7 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-: ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
+: ${KERNEL_PATH:=/data/src}       # where to put and compile the kernel (set with -s)
 : ${LINUX_KERNEL:="4.4.115"}     # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NUM:="-1"}            # name of the linux kernel is $LINUX_KERNEL-$RTAI_DIR$KERNEL_NUM
@@ -38,8 +38,8 @@
                                # (menuconfig, gconfig, xconfig)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 
-: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
-: ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
+: ${KERNEL_PARAM:="idle=poll highres=off"}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM_DESCR:="idle-highres"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
 : ${BATCH_KERNEL_PARAM:="oops=panic panic=10"} # additional kernel parameter passed to grub for test batch
 : ${CONFIG_PATCHES_FILE:="kernelconfigs.mrk"}  # file where patches from prepare_kernel_config go in
@@ -57,7 +57,7 @@
 : ${RTAI_SCHED_PARAM:=""}     # parameter for the rtai_sched module used for testing
 : ${TEST_TIME:=""}            # time in seconds used for latency test
 : ${TEST_TIME_DEFAULT:="600"} # default time in seconds used for latency test
-: ${STARTUP_TIME:=180}        # time to wait after boot to run a batch test in seconds
+: ${STARTUP_TIME:=300}        # time to wait after boot to run a batch test in seconds
 : ${COMPILE_TIME:=800}        # time needed for building a kernel with reconfigure
                               # (this is only used for estimating the duration of a test batch)
 
@@ -636,7 +636,7 @@ function print_kernel {
     done
     echo
     echo "cpu topology (/sys/devices/system/cpu/*):"
-    printf "         online  physical_id  core_id  thread_siblings\n"
+    printf "        online  physical_id  core_id  thread_siblings\n"
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	CPUT="$CPU/topology"
 	ONLINE=1
@@ -2413,6 +2413,8 @@ function test_report {
     INIT=true
     for TEST in $FILES; do
 	test -f "$TEST" || continue
+	# skip empty files: (better would be to list them as failed)
+	test "$(wc -l $TEST | cut -d ' ' -f 1)" -lt 4 && continue
 	LINEMARKS="RTD|"
 	$INIT && LINEMARKS="$LINEMARKS RTH|"
 	for LINEMARK in $LINEMARKS; do
@@ -3891,7 +3893,7 @@ case $ACTION in
 
     reconfigure ) reconfigure ;;
 
-    * ) if test -n "$1"; then
+    * ) if test -n "$ACTION"; then
 	    echo "unknown action \"$1\""
 	    echo
 	    help_usage
