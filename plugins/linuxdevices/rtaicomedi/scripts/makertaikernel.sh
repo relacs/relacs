@@ -3,7 +3,7 @@
 ###########################################################################
 # you should modify the following parameter according to your needs:
 
-: ${KERNEL_PATH:=/data/src}       # where to put and compile the kernel (set with -s)
+: ${KERNEL_PATH:=/usr/src}       # where to put and compile the kernel (set with -s)
 : ${LINUX_KERNEL:="4.4.115"}     # linux vanilla kernel version (set with -k)
 : ${KERNEL_SOURCE_NAME:="rtai"}  # name for kernel source directory to be appended to LINUX_KERNEL
 : ${KERNEL_NUM:="-1"}            # name of the linux kernel is $LINUX_KERNEL-$RTAI_DIR$KERNEL_NUM
@@ -38,8 +38,8 @@
                                # (menuconfig, gconfig, xconfig)
 : ${KERNEL_DEBUG:=false}   # generate debugable kernel (see man crash), set with -D
 
-: ${KERNEL_PARAM:="idle=poll highres=off"}      # kernel parameter to be passed to grub
-: ${KERNEL_PARAM_DESCR:="idle-highres"}     # one-word description of KERNEL_PARAM 
+: ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
+: ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
 : ${BATCH_KERNEL_PARAM:="oops=panic panic=10"} # additional kernel parameter passed to grub for test batch
 : ${CONFIG_PATCHES_FILE:="kernelconfigs.mrk"}  # file where patches from prepare_kernel_config go in
@@ -572,7 +572,7 @@ function print_log {
     fi
 }
 
-function print_configs {
+function print_kernel_configs {
     KCF="$CONFIG_PATCHES_FILE"
     test -n "$1" && KCF="$1"
     if test -f "$KCF"; then
@@ -684,6 +684,29 @@ function print_settings {
     echo "  RTAI_MENU      (-m) = $RTAI_MENU"
     echo "  RTAI_HAL_PARAM      = $RTAI_HAL_PARAM"
     echo "  RTAI_SCHED_PARAM    = $RTAI_SCHED_PARAM"
+}
+
+function print_config {
+    echo "KERNEL_PATH=\"$KERNEL_PATH\""
+    echo "LINUX_KERNEL=\"$LINUX_KERNEL\""
+    echo "KERNEL_SOURCE_NAME=\"$KERNEL_SOURCE_NAME\""
+    echo "KERNEL_NUM=\"$KERNEL_NUM\""
+    echo "KERNEL_CONFIG=\"$KERNEL_CONFIG\""
+    echo "KERNEL_MENU=\"$KERNEL_MENU\""
+    echo "RUN_LOCALMOD=$RUN_LOCALMOD"
+    echo "KERNEL_DEBUG=$KERNEL_DEBUG"
+    echo "KERNEL_PARAM=\"$KERNEL_PARAM\""
+    echo "KERNEL_PARAM_DESCR=\"$KERNEL_PARAM_DESCR\""
+    echo "BATCH_KERNEL_PARAM=\"$BATCH_KERNEL_PARAM\""
+    echo "CONFIG_PATCHES_FILE=\"$CONFIG_PATCHES_FILE\""
+    echo "STARTUP_TIME=$STARTUP_TIME"
+    echo "COMPILE_TIME=$COMPILE_TIME"
+    echo "LOCAL_SRC_PATH=\"$LOCAL_SRC_PATH\""
+    echo "RTAI_DIR=\"$RTAI_DIR\""
+    echo "RTAI_PATCH=\"$RTAI_PATCH\""
+    echo "RTAI_MENU=$RTAI_MENU"
+    echo "RTAI_HAL_PARAM=\"$RTAI_HAL_PARAM\""
+    echo "RTAI_SCHED_PARAM=\"$RTAI_SCHED_PARAM\""
 }
 
 function print_kernel_info {
@@ -3411,6 +3434,45 @@ function restore_comedi {
 ###########################################################################
 # actions:
 
+function info_all {
+    case $1 in
+
+    grub ) print_grub env ;;
+
+    settings )
+	if [ -t 1 ]; then
+	    print_settings
+	    echo
+	    echo "You may modify the settings by the respective command line options (check \$ ${MAKE_RTAI_KERNEL} help),"
+	    echo "by setting them in the configuration file \"${MAKE_RTAI_CONFIG}\""
+	    echo "(create configuration file by \$ ${MAKE_RTAI_KERNEL} info settings > ${MAKE_RTAI_CONFIG}), or"
+	    echo "by editing the variables directly in the ${MAKE_RTAI_KERNEL} script."
+	else
+	    print_config
+	fi
+	;;
+
+    setup ) print_setup ;;
+
+    log ) print_log ;;
+
+    configs )
+	shift
+	print_kernel_configs
+	;;
+
+    menu ) menu_kernel ;;
+
+    kernel ) print_kernel ;;
+
+    * )
+	print_full_info $@ 
+	test "x$1" = "xrtai" && rm -f "$LOG_FILE"
+	;;
+
+    esac
+}
+
 function setup_features {
     check_root
     if test -z $1; then
@@ -3855,28 +3917,7 @@ case $ACTION in
 	exit 0
 	;;
 
-    info ) if test "x$1" = "xgrub"; then
-	    print_grub env
-	elif test "x$1" = "xsettings"; then
-	    print_settings
-	    echo
-	    echo "You may modify the settings by the respective options, or"
-	    echo "by editing the variables directly in the ${MAKE_RTAI_KERNEL} script."
-	elif test "x$1" = "xsetup"; then
-	    print_setup
-	elif test "x$1" = "xlog"; then
-	    print_log
-	elif test "x$1" = "xconfigs"; then
-	    shift
-	    print_configs
-	elif test "x$1" = "xmenu"; then
-	    menu_kernel
-	elif test "x$1" = "xkernel"; then
-	    print_kernel
-	else
-	    print_full_info $@ 
-	    test "x$1" = "xrtai" && rm -f "$LOG_FILE"
-	fi
+    info ) info_all $@
 	exit 0
 	;;
 

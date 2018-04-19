@@ -222,29 +222,21 @@ in the kernel configuration dialog.
 Also read /usr/local/src/rtai/README.CONF_RMRKS !
 
 - General setup: 
-  - Make sure that "Local version" is empty in case you are using the \c makertaikernel.sh script or \c make-kpkg (Debian system).
-    Otherwise set "Local version" to "-rtai" or something else indicating that this is a RTAI patched kernel.
-  - Disable "Enable sytem-call auditing support"
-  - Disable "Configure standard kernel features (expert users)" just to be on the safe side
-  - Important: set "Stack Protector buffer overflow detection" to
-    "Regular" or even "None" if the latency test crashes.
+  - Disable "Enable sytem-call auditing support" (\c AUDITSYSCALL)
+  - Important: set "Stack Protector buffer overflow detection" (at the bottom of the menu) to
+    "Regular" (\c CC_STACKPROTECTOR_REGULAR)  - 
+    or even "None" (\c CC_STACKPROTECTOR_NONE) if the latency test crashes.
   .
 - Processor type and features: 
-  - Keep "Symmetric multi-processing support" (SMP) selected if you
-    have a multiprocessor machine, otherwise (uniprocessor system, UP)
-    deselect it
+  - In case you have a uniprocessor system, deselect "Symmetric multi-processing support" (\c SMP)
   - You may want to select the right "Processor family" (you find the
     name of your processor by looking at \c /proc/cpuinfo, check \c
     "help" to find out, which Processor family you have to select.
     Intel i5/i7 with "cpu family : 6" are "Core 2/newer Xeon")
-  - Set the "Maximum numbers of CPUs" to the number of physical cores
-    you have in your machine (check in \c /proc/cpuinfo the \c "cpu
-    cores")
-  - Disable "SMT (Hyperthreading) scheduler support"
-  - Disable "Multi-core scheduler support"
-  - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
-  - Keep "Interrupt pipeline" selected
-  - "I-pipe legacy interface": kee disabled for RTAI 5.x, enable for rtai-4.1 (and earlier?)
+  - Set the "Maximum numbers of CPUs" (\c NR_CPUS) to the number of physical cores
+    you have in your machine (check in `/proc/cpuinfo` the "`cpu cores`")
+  - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))" (\c PREEMPT)
+  - "I-pipe legacy interface" (\c IPIPE_LEGACY): keep disabled for RTAI 5.x, enable for rtai-4.1 (and earlier?)
 - Power management and ACPI options:
   - Disable everything except for:
   - Enable "ACPI (Advanced Configuration and Power Interface) Support"
@@ -256,18 +248,17 @@ Also read /usr/local/src/rtai/README.CONF_RMRKS !
   .
 - Device Drivers:
   - Staging drivers:
-    - Deselect "Data acquisition support (comedi)"
+    - Deselect "Data acquisition support (comedi)" (\c COMEDI)
+      (Really? It comes with kcomedilib!)
     .
   .
 - Kernel hacking: disabling debugging makes the kernel much
   smaller. So unless you know that you need it disable it.
-  - Compile-time checks and compiler options:
-    - Disable "Compile the kernel with debug info"
-  .
-  - Disable "Kernel debugging"
-  - Disable "Tracers"
+  - Disable "Kernel debugging" (\c DEBUG_KERNEL)
+  - Disable "Tracers" (\c FTRACE)
 .
-- You may disable "Virtualization" if possible unless you know that you need it.
+- You may also disable "Virtualization" (\c VIRTUALIZATION) if
+  possible unless you know that you need it.
 .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
 Select "Yes".
@@ -502,6 +493,12 @@ This crashes when inserting rtai_hal (even if CONFIG_RTAI_CPUS is adapted to the
 Actually, the number of CPUs (CONFIG_NR_CPUS) do not seem to matter
 (less or more than the actually available cores).
 
+The kernel configs in the "Processor type and features" submenu
+  - "SMT (Hyperthreading) scheduler support"
+  - "Multi-core scheduler support"
+  .
+do not seem to matter.
+
 
 \subsection cachedmemory Cached memory disruption 
 
@@ -600,6 +597,10 @@ Advanced programmable interrupt controller (APIC):
 
 Others:
 - disable all DMA transfers by setting kernel parameter \c libata.dma=0.
+  
+  What about \c ide-core.nodma parameter (it's ide not sata!)?
+
+  What about ltpc=irq ?
 
   README.CONF_RMRKS: LINUX use of DMA can add latency, especially when
   it is supported in burst mode.
