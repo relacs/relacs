@@ -42,8 +42,8 @@
 : ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
 : ${BATCH_KERNEL_PARAM:="oops=panic panic=10"} # additional kernel parameter passed to grub for test batch
-: ${CONFIG_PATCHES_FILE:="kernelconfigs.mrk"}  # file where patches from prepare_kernel_config go in
-: ${CONFIG_BACKUP_FILE:="kernelconfig.orig"}   # stores initial kernel configuration for test batches
+: ${KERNEL_CONFIGS_FILE:="kernelconfigs.mrk"}  # file where patches from prepare_kernel_config go in
+: ${KERNEL_CONFIG_BACKUP:="kernelconfig.orig"} # stores initial kernel configuration for test batches
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
                                                # at ftp://sourceware.org/pub/newlib/index.html
@@ -151,20 +151,23 @@ Print some information about your system.
 
 Usage:
 
-sudo ${MAKE_RTAI_KERNEL} info [rtai|kernel|grub|settings|setup|log|patches [<FILE>]]
+sudo ${MAKE_RTAI_KERNEL} info [rtai|kernel|cpu|grub|settings|setup|log|configs [<FILE>]]
 sudo ${MAKE_RTAI_KERNEL} [-c xxx] info menu
 
-info               : display properties of rtai patches, loaded kernel modules, kernel, machine,
-                     and grub menu (configs and menu targets are excluded)
-info rtai          : list all available patches and suggest the one fitting to the kernel
-info kernel        : show name and kernel parameter of the currently running kernel
-info menu          : show kernel configuration menu of the specified (-c) kernel configuration
-info grub          : show grub boot menu entries
-info settings      : show the values of all configuration variables
-info setup         : show modifikations of your system made by ${MAKE_RTAI_KERNEL} (run as root)
-info log           : show the content of the log file if available - useful after test batch
-info patches       : show patches for kernel configurations in file ${CONFIG_PATCHES_FILE}
-info patches <FILE>: show patches for kernel configurations in file <FILE>
+info                 : display properties of rtai patches, loaded kernel modules, kernel, machine,
+                       and grub menu (configs and menu targets are excluded)
+info rtai            : list all available patches and suggest the one fitting to the kernel
+info kernel          : show name and kernel parameter of the currently running kernel
+info cpu             : show properties of your CPUs
+info menu            : show kernel configuration menu of the specified (-c) kernel configuration
+info grub            : show grub boot menu entries
+info settings        : show the values of all configuration variables
+info setup           : show modifikations of your system made by ${MAKE_RTAI_KERNEL} (run as root)
+info log             : show the content of the log file if available - useful after test batch
+info configs         : show kernel configurations collected in file ${KERNEL_CONFIGS_FILE}
+info configs <FILE>  : show kernel configurations collected in file <FILE>
+info configs > <FILE>: save kernel configurations collected in file ${KERNEL_CONFIGS_FILE} 
+                       in file <FILE> usable as a test batch file.
 
 -c xxx: specify a kernel configuration:
         old: use the kernel configuration of the currently running kernel
@@ -447,7 +450,7 @@ Action can be also one of
   help       : display this help message
   help XXX   : display help message for action XXX
   info       : display properties of rtai patches, loaded kernel modules,
-               kernel, machine, log file, and grub menu
+               kernel, cpus, machine, log file, and grub menu
                (run "${MAKE_RTAI_KERNEL} help info" for details)
   config     : write the configuration file \"${MAKE_RTAI_CONFIG}\" 
                that you can edit according to your needs
@@ -575,14 +578,18 @@ function print_log {
     fi
 }
 
-function print_kernel_patches {
-    KCF="$CONFIG_PATCHES_FILE"
+function print_kernel_configs {
+    KCF="$KERNEL_CONFIGS_FILE"
     test -n "$1" && KCF="$1"
     if test -f "$KCF"; then
-	echo "Available kernel configurations from file \"$KCF\""
-	echo "- add them to a test batch file:"
-	echo
-	sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$KCF"'/; p;}' "$KCF"
+	if [ -t 1 ]; then
+	    echo "Available kernel configurations from file \"$KCF\""
+	    echo "- add them to a test batch file:"
+	    echo
+	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$KCF"'/; p;}' "$KCF"
+	else
+	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$KCF"'/; p;}' "$KCF"
+	fi
     else
 	echo "File \"$KCF\" does not exist."
     fi
@@ -591,11 +598,11 @@ function print_kernel_patches {
 
 function print_grub {
     if test "x$1" = "xenv" && test -f /boot/grub/grubenv; then
-	echo "grub environment:"
+	echo "Grub environment:"
 	grub-editenv - list | indent
 	echo
     fi
-    echo "grub menu entries:"
+    echo "Grub menu entries:"
     IFSORG="$IFS"
     IFS=$'\n'
     N=0
@@ -604,6 +611,7 @@ function print_grub {
 	let N+=1
     done
     IFS="$IFSORG"
+    echo
 }
 
 function print_versions {
@@ -635,17 +643,23 @@ function print_versions {
     else
 	echo "  comedi: not available"
     fi
+    echo
 }
 
 function print_kernel {
-    echo "running kernel (uname -r): $(uname -r)"
+    echo "Hostname: $(hostname)"
     echo
-    echo "kernel parameter (/proc/cmdline):"
+    echo "Running kernel (uname -r): $(uname -r)"
+    echo
+    echo "Kernel parameter (/proc/cmdline):"
     for param in $(cat /proc/cmdline); do
 	echo "  $param"
     done
     echo
-    echo "cpu topology (/sys/devices/system/cpu/*):"
+}
+
+function print_cpus {
+    echo "CPU topology (/sys/devices/system/cpu/*):"
     printf "         online  physical_id  core_id  thread_siblings\n"
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	CPUT="$CPU/topology"
@@ -654,45 +668,58 @@ function print_kernel {
 	printf "  cpu%-2d  %6d  %11d  %7d  %15s\n" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(cat $CPUT/thread_siblings_list)
     done
     echo
+    echo "CPU (/proc/cpuinfo):"
+    echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
+    echo "  number of cores: $CPU_NUM"
+    echo "  machine (uname -m): $MACHINE"
+    echo "  memory: $(free -h | grep Mem | awk '{print $2}') RAM"
+    echo
+    if sensors --version &> /dev/null; then
+	echo "CPU core temperatures:"
+	sensors | grep Core | indent
+	echo
+    fi
 }
 
 function print_distribution {
     if lsb_release &> /dev/null; then
-	echo "distribution (lsb_release -a):"
+	echo "Distribution (lsb_release -a):"
 	lsb_release -a 2> /dev/null | indent
     else
-	echo "distribution: unknown"
+	echo "Distribution: unknown"
     fi
+    echo
 }
 
 function print_settings {
     echo "Settings of ${VERSION_STRING}:"
-    echo "  KERNEL_PATH    (-s) = $KERNEL_PATH"
-    echo "  LINUX_KERNEL   (-k) = $LINUX_KERNEL"
-    echo "  KERNEL_SOURCE_NAME  = $KERNEL_SOURCE_NAME"
-    echo "  KERNEL_NUM     (-n) = $KERNEL_NUM"
-    echo "  KERNEL_CONFIG  (-c) = $KERNEL_CONFIG"
-    echo "  KERNEL_MENU         = $KERNEL_MENU"
-    echo "  RUN_LOCALMOD   (-l) = $RUN_LOCALMOD"
-    echo "  KERNEL_DEBUG   (-D) = $KERNEL_DEBUG"
-    echo "  KERNEL_PARAM        = $KERNEL_PARAM"
-    echo "  KERNEL_PARAM_DESCR  = $KERNEL_PARAM_DESCR"
-    echo "  BATCH_KERNEL_PARAM  = $BATCH_KERNEL_PARAM"
-    echo "  CONFIG_PATCHES_FILE = $CONFIG_PATCHES_FILE"
-    echo "  CONFIG_BACKUP_FILE  = $CONFIG_BACKUP_FILE"
-    echo "  TEST_TIME_DEFAULT   = $TEST_TIME_DEFAULT"
-    echo "  STARTUP_TIME        = $STARTUP_TIME"
-    echo "  COMPILE_TIME        = $COMPILE_TIME"
-    echo "  LOCAL_SRC_PATH      = $LOCAL_SRC_PATH"
-    echo "  RTAI_DIR       (-r) = $RTAI_DIR"
-    echo "  RTAI_PATCH     (-p) = $RTAI_PATCH"
-    echo "  RTAI_MENU      (-m) = $RTAI_MENU"
-    echo "  RTAI_HAL_PARAM      = $RTAI_HAL_PARAM"
-    echo "  RTAI_SCHED_PARAM    = $RTAI_SCHED_PARAM"
-    echo "  SHOWROOM_DIR        = $SHOWROOM_DIR"
-    echo "  MAKE_NEWLIB         = $MAKE_NEWLIB"
-    echo "  MAKE_RTAI           = $MAKE_RTAI"
-    echo "  MAKE_COMEDI         = $MAKE_COMEDI"
+    echo "  KERNEL_PATH     (-s) = $KERNEL_PATH"
+    echo "  LINUX_KERNEL    (-k) = $LINUX_KERNEL"
+    echo "  KERNEL_SOURCE_NAME   = $KERNEL_SOURCE_NAME"
+    echo "  KERNEL_NUM      (-n) = $KERNEL_NUM"
+    echo "  KERNEL_CONFIG   (-c) = $KERNEL_CONFIG"
+    echo "  KERNEL_MENU          = $KERNEL_MENU"
+    echo "  RUN_LOCALMOD    (-l) = $RUN_LOCALMOD"
+    echo "  KERNEL_DEBUG    (-D) = $KERNEL_DEBUG"
+    echo "  KERNEL_PARAM         = $KERNEL_PARAM"
+    echo "  KERNEL_PARAM_DESCR   = $KERNEL_PARAM_DESCR"
+    echo "  BATCH_KERNEL_PARAM   = $BATCH_KERNEL_PARAM"
+    echo "  KERNEL_CONFIGS_FILE  = $KERNEL_CONFIGS_FILE"
+    echo "  KERNEL_CONFIG_BACKUP = $KERNEL_CONFIG_BACKUP"
+    echo "  TEST_TIME_DEFAULT    = $TEST_TIME_DEFAULT"
+    echo "  STARTUP_TIME         = $STARTUP_TIME"
+    echo "  COMPILE_TIME         = $COMPILE_TIME"
+    echo "  LOCAL_SRC_PATH       = $LOCAL_SRC_PATH"
+    echo "  RTAI_DIR        (-r) = $RTAI_DIR"
+    echo "  RTAI_PATCH      (-p) = $RTAI_PATCH"
+    echo "  RTAI_MENU       (-m) = $RTAI_MENU"
+    echo "  RTAI_HAL_PARAM       = $RTAI_HAL_PARAM"
+    echo "  RTAI_SCHED_PARAM     = $RTAI_SCHED_PARAM"
+    echo "  SHOWROOM_DIR         = $SHOWROOM_DIR"
+    echo "  MAKE_NEWLIB          = $MAKE_NEWLIB"
+    echo "  MAKE_RTAI            = $MAKE_RTAI"
+    echo "  MAKE_COMEDI          = $MAKE_COMEDI"
+    echo
 }
 
 function print_config {
@@ -737,12 +764,12 @@ function print_config {
     echo "# Kernel parameter to be added when running test batches:"
     echo "BATCH_KERNEL_PARAM=\"$BATCH_KERNEL_PARAM\""
     echo
-    echo "# Default name of files used for storing patches of the kernel configuration"
+    echo "# Default name of files used for storing kernel configurations"
     echo "# generated by ${MAKE_RTAI_KERNEL} prepare and used by test batches."
-    echo "CONFIG_PATCHES_FILE=\"$CONFIG_PATCHES_FILE\""
+    echo "KERNEL_CONFIGS_FILE=\"$KERNEL_CONFIGS_FILE\""
     echo
-    echo "# Name of the file used for backups of the kernel configuration:"
-    echo "CONFIG_BACKUP_FILE=\"$CONFIG_BACKUP_FILE\""
+    echo "# Name of the file used by test batches for backing up the kernel configuration:"
+    echo "KERNEL_CONFIG_BACKUP=\"$KERNEL_CONFIG_BACKUP\""
     echo
     echo "# Default time in seconds to run the RTAI latency tests:"
     echo "TEST_TIME_DEFAULT=$TEST_TIME_DEFAULT"
@@ -794,7 +821,7 @@ function print_config {
 
 function print_kernel_info {
     echo
-    echo "loaded modules (lsmod):"
+    echo "Loaded modules (lsmod):"
     if test -f lsmod.dat; then
 	cat lsmod.dat | indent
 	rm -f lsmod.dat
@@ -802,29 +829,14 @@ function print_kernel_info {
 	lsmod | indent
     fi
     echo
-    echo "interrupts (/proc/interrupts):"
+    echo "Interrupts (/proc/interrupts):"
 	cat /proc/interrupts | indent
     echo
     print_distribution
-    echo
-    echo "hostname: $(hostname)"
-    echo
     print_kernel
+    print_cpus
     print_versions
-    echo
-    echo "CPU (/proc/cpuinfo):"
-    echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
-    echo "  number of cores: $CPU_NUM"
-    echo "  machine (uname -m): $MACHINE"
-    echo "  memory: $(free -h | grep Mem | awk '{print $2}') RAM"
-    echo
-    if sensors --version &> /dev/null; then
-	echo "CPU core temperatures:"
-	sensors | grep Core | indent
-	echo
-    fi
     print_grub
-    echo
     print_settings
 }
 
@@ -1060,65 +1072,89 @@ function prepare_kernel_configs {
 	echo "Please specify an existing directory with a linux kernel source."
 	exit 1
     fi
-    test -n "$1" && CONFIG_PATCHES_FILE="$1"
+    test -n "$1" && KERNEL_CONFIGS_FILE="$1"
     echo "Prepare kernel configurations to be tested in a test batch."
     echo
+    STEP=0
 
-    STEP=1
-    echo "Step $STEP: save the original kernel configuration."
+    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+    if test -f .config.origmrk; then
+	let STEP+=1
+	echo "Step $STEP: restore original kernel configuration from already existing backup file."
+	if ! $DRYRUN; then
+	    mv .config.origmrk .config
+	fi
+    fi
+    cd - > /dev/null
+
+    let STEP+=1
+    echo "Step $STEP: backup the original kernel configuration."
     if ! $DRYRUN; then
 	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 	cp .config .config.origmrk
 	cd - > /dev/null
     fi
     echo
-    N=0
 
-    if test -f "$CONFIG_PATCHES_FILE"; then
+    N=0
+    if test -f "$KERNEL_CONFIGS_FILE"; then
 	let STEP+=1
-	echo "Step $STEP: prepare kernel configuration."
-	echo "        File \"$CONFIG_PATCHES_FILE\" already exists."
+	echo "Step $STEP: prepare kernel configurations."
+	echo "        File \"$KERNEL_CONFIGS_FILE\" already exists."
 	read -p "        Append more configurations, Overwrite existing configurations, or Cancel? (a/o/C) " ACTION
-	if test "x$ACTION" = "xa"; then
-	    N=$(grep -c '#### START CONFIG' "$CONFIG_PATCHES_FILE")
-	    for CONFIG_NUM in $(seq $N); do
-		sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_PATCHES_FILE > config.patch
-		echo_log "        Apply patch $(sed -n -e "1{s/^#### START CONFIG //; p;}" config.patch)"
+	case $ACTION in
+	    a|A )
+		N=$(grep -c '#### START CONFIG' "$KERNEL_CONFIGS_FILE")
+		for CONFIG_NUM in $(seq $N); do
+		    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $KERNEL_CONFIGS_FILE > kernel.config
+		    echo_log "        Use kernel configuration $(sed -n -e "1{s/^#### START CONFIG //; p;}" kernel.config)"
+		    if ! $DRYRUN; then
+			sed -e '1d; $d;' kernel.config > $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+		    fi
+		    rm kernel.config
+		done
+		;;
+	    o|O )
+		if ! $DRYRUN; then
+		    rm -f "$KERNEL_CONFIGS_FILE"
+		fi
+		echo_log "Removed existing \"$KERNEL_CONFIGS_FILE\" file."
+		;;
+	    * )
 		if ! $DRYRUN; then
 		    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
-		    cp .config.origmrk .config
+		    rm .config.origmrk
 		    cd - > /dev/null
-		    sed -e '1d; $d;' config.patch | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config > /dev/null
 		fi
-		rm config.patch
-	    done
-	elif test "x$ACTION" = "xo"; then
-	    if ! $DRYRUN; then
-		rm -f "$CONFIG_PATCHES_FILE"
-	    fi
-	    echo_log "Removed existing \"$CONFIG_PATCHES_FILE\" file."
-	else
+		echo_log ""
+		echo_log "Aborted."
+		exit 0
+		;;
+	esac
+	echo
+    fi
+
+    let STEP+=1
+    echo "Step $STEP: decide on a configuration mode."
+    echo "        - Incremental configurations go on with the changed configurations."
+    echo "        - Absolute configurations always start put from the backed up original kernel configuration."
+    read -p "        Incremental or Absolute configurations, or Cancel? (I/a/c) " MODE
+    ABSOLUTE=false
+    case $MODE in
+	i|I ) ABSOLUTE=false ;;
+	a|A ) ABSOLUTE=true ;;
+	'' ) ABSOLUTE=false ;;
+	* ) echo_log ""
+	    echo_log "Aborted"
 	    if ! $DRYRUN; then
 		cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 		rm .config.origmrk
 		cd - > /dev/null
 	    fi
-	    echo_log "Aborted."
 	    exit 0
-	fi
-	echo
-    fi
-
-    let STEP+=1
-    echo "Step $STEP: decide on a patch mode:"
-    read -p "        Incremental or Absolute patches? (I/a) " MODE
-    ABSOLUTE=false
-    case $MODE in
-	i) ABSOLUTE=false ;;
-	a) ABSOLUTE=true ;;
-	'') ABSOLUTE=false ;;
-	*) echo_log "Aborted"; exit 0 ;;
+	    ;;
     esac
+    echo
 
     let STEP+=1
     echo "Step $STEP: modify and store the kernel configurations."
@@ -1127,12 +1163,11 @@ function prepare_kernel_configs {
 	    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 	    $ABSOLUTE && cp .config.origmrk .config
 	    cp .config .config.mrk
-	    make menuconfig
+	    make $KERNEL_MENU
 	    DESCRIPTION=""
 	    if ! diff -q .config.mrk .config > /dev/null; then
-		echo "  store patch of new configuration"
-		diff -u .config.origmrk .config > config.patch
-		read -p "  short description of the kernel configuration (empty: finish) " DESCRIPTION
+		echo
+		read -p "  Short description of the kernel configuration (empty: finish) " DESCRIPTION
 		echo
 	    else
 		break
@@ -1144,32 +1179,36 @@ function prepare_kernel_configs {
 		let N+=1
 		{
 		    echo "#### START CONFIG $N $DESCRIPTION"
-		    cat $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/config.patch
+		    cat $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 		    echo "#### END CONFIG $N $DESCRIPTION"
 		    echo
 		    echo
-		} >> "$CONFIG_PATCHES_FILE"
+		} >> "$KERNEL_CONFIGS_FILE"
+		echo "  Added kernel configuration \"$DESCRIPTION\" to file \"$KERNEL_CONFIGS_FILE\"."
 	    fi
 	done
 	cd - > /dev/null
 	# clean up:
 	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
-	rm -f .config.mrk config.patch
+	rm -f .config.mrk
 	mv .config.origmrk .config
 	cd - > /dev/null
     fi
     echo
     let STEP+=1
     if test $N -gt 0; then
-	echo "Step $STEP: saved $N kernel configuration(s) in file \""$CONFIG_PATCHES_FILE"\"."
+	echo "Step $STEP: saved $N kernel configuration(s) in file \""$KERNEL_CONFIGS_FILE"\"."
 	echo
 	let STEP+=1
 	echo "Step $STEP: go on and use the kernel configurations"
 	echo "        by adding the following lines to a test batch file:"
 	echo
-	if test -f "$CONFIG_PATCHES_FILE"; then
-	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$CONFIG_PATCHES_FILE"'/; p;}' "$CONFIG_PATCHES_FILE"
+	if test -f "$KERNEL_CONFIGS_FILE"; then
+	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$KERNEL_CONFIGS_FILE"'/; p;}' "$KERNEL_CONFIGS_FILE"
 	fi
+	echo
+	echo "You may pipe these lines directly into a <FILE> that you then can use for a test batch:"
+	echo "\$ ${MAKE_RTAI_KERNEL} info configs > <FILE>"
 	echo
     else
 	echo "Step $STEP: did not save any kernel configurations."
@@ -1205,8 +1244,8 @@ function config_kernel {
 	    fi
 	    RUN_LOCALMOD=false
 	elif test "x$KERNEL_CONFIG" = "xbackup"; then
-	    echo_log "Use backup configuration from \"$CONFIG_BACKUP_FILE\"."
-	    KCF="$CONFIG_BACKUP_FILE"
+	    echo_log "Use backup configuration from \"$KERNEL_CONFIG_BACKUP\"."
+	    KCF="$KERNEL_CONFIG_BACKUP"
 	    if test "x${KCF:0:1}" != "x/"; then
 		KCF="$1/$KERNEL_CONFIG"
 	    fi
@@ -1248,14 +1287,21 @@ function menu_kernel {
     if test -d "$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}"; then
 	WORING_DIR="$PWD"
 	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+
+	if test -f .config.origmrk; then
+	    echo_log "Restore kernel configuration from backup file."
+	    $DRYRUN || mv .config.origmrk .config
+	fi
+	echo_log "Backup kernel configuration."
+	$DRYRUN || cp .config .config.origmrk
+
 	KF=$KERNEL_CONFIG
 	$NEW_KERNEL_CONFIG || KF=".config"
 	echo_log "Show kernel configuration menu for configuration \"$KF\"."
-	$DRYRUN || cp .config .config.origmrk
 	config_kernel "$WORKING_DIR"
 	if ! $DRYRUN; then
 	    make $KERNEL_MENU
-	    cp .config.origmrk .config
+	    mv .config.origmrk .config
 	fi
 	echo_log "Restored original kernel configuration."
     else
@@ -1284,6 +1330,11 @@ function build_kernel {
 		    make clean
 		fi
 	    fi
+	fi
+
+	if test -f .config.origmrk; then
+	    echo_log "Restore kernel configuration from backup file."
+	    $DRYRUN || mv .config.origmrk .config
 	fi
 
 	config_kernel "$WORKING_DIR"
@@ -2242,6 +2293,12 @@ EOF
 	exit 1
     fi
 
+    # batch file needs to be in current working directory:
+    if test "x${BATCH_FILE##*/}" != "x${BATCH_FILE}"; then
+	echo_log "\"${BATCH_FILE}\" needs to be in the current working directory!"
+	exit 1
+    fi
+
     # run batch file:
     N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
     if test $N_TESTS -eq 0; then
@@ -2321,8 +2378,14 @@ EOF
     read -p "Do you want to proceed testing with $N_TESTS reboots (approx. ${OVERALL_TIME}) (Y/n)? " PROCEED
     if test "x$PROCEED" != "xn"; then
 	echo_log
-	cp $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config $CONFIG_BACKUP_FILE
-	echo_log "Saved kernel configuration in \"$CONFIG_BACKUP_FILE\"."
+	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+	if test -f .config.origmrk; then
+	    echo_log "Restore kernel configuration from backup file."
+	    $DRYRUN || mv .config.origmrk .config
+	fi
+	cd - > /dev/null
+	cp $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config $KERNEL_CONFIG_BACKUP
+	echo_log "Saved kernel configuration in \"$KERNEL_CONFIG_BACKUP\"."
 	restore_test_batch
 	# install crontab:
 	MRK_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -2380,6 +2443,9 @@ function test_batch_script {
     BATCH_DESCR="$(echo $BATCH_DESCR)"
 
     N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
+
+    # read configuration:
+    source "$(dirname $BATCH_FILE)/${MAKE_RTAI_CONFIG}"
 
     # enable logs:
     LOG_FILE="$(dirname $BATCH_FILE)/${MAKE_RTAI_KERNEL%.*}.log"
@@ -2450,20 +2516,36 @@ function test_batch_script {
 	echo_log "Compile new kernel:"
 	echo_kmsg "START COMPILE NEW KERNEL"
 	CONFIG_NUM="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 2)"
-	CONFIG_PATCHES_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 3)"
-	cp $CONFIG_BACKUP_FILE $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+	KERNEL_CONFIGS_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 3)"
 	if test "x$CONFIG_NUM" = "xBACKUP"; then
-	    echo_log "Use \"$CONFIG_BACKUP_FILE\" for the kernel configuration."
+	    echo_log "Use \"$KERNEL_CONFIG_BACKUP\" for the kernel configuration."
+	    cp $KERNEL_CONFIG_BACKUP $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	else
-	    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $CONFIG_PATCHES_FILE > config.patch
-	    echo_log "Apply patch $CONFIG_NUM from file $CONFIG_PATCHES_FILE:"
-	    cat config.patch | while read LINE; do echo_log "  $LINE"; done
-	    sed -e '1d; $d;' config.patch | patch $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
-	    rm config.patch
+	    echo_log "Use kernel configuration $CONFIG_NUM from file $KERNEL_CONFIGS_FILE."
+	    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $KERNEL_CONFIGS_FILE | sed -e '1d; $d;' > $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	fi
 	KERNEL_MENU=old
-	reconfigure
-	echo_kmsg "END COMPILE NEW KERNEL"
+	reconfigure &> "${LOG_FILE}.tmp"
+	if test "x$?" != "x0"; then
+	    echo_log ""
+	    echo_log "Detailed output of reconfigure:"
+	    cat "${LOG_FILE}.tmp" >> "$LOG_FILE"
+	    echo_kmsg "FAILED TO BUILD KERNEL"
+	    echo_log "FAILED TO BUILD KERNEL"
+	    echo_kmsg "END COMPILE NEW KERNEL"
+	    # no further tests:
+	    echo_kmsg "ABORT TEST BATCH"
+	    echo_log "Abort test batch."
+	    # clean up:
+	    echo_log "Clean up test batch:"
+	    restore_test_batch > /dev/null
+	    restore_kernel_param
+	    reboot_unset_kernel
+	    echo_log
+	else
+	    echo_kmsg "END COMPILE NEW KERNEL"
+	fi
+	rm "${LOG_FILE}.tmp"
     else
 	# assemble description:
 	test -n "$KERNEL_DESCR" && test "${KERNEL_DESCR:-1:1}" != "-" && KERNEL_DESCR="${KERNEL_DESCR}-"
@@ -3539,14 +3621,16 @@ function info_all {
 
     log ) print_log ;;
 
-    patches )
+    configs )
 	shift
-	print_kernel_patches
+	print_kernel_configs
 	;;
 
     menu ) menu_kernel ;;
 
     kernel ) print_kernel ;;
+
+    cpu|cpus ) print_cpus ;;
 
     * )
 	print_full_info $@ 
@@ -3944,7 +4028,7 @@ while test "x${1:0:1}" = "x-"; do
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		KERNEL_CONFIG="$1"
-		if test "x$KERNEL_CONFIG" != "xdef" && test "x$KERNEL_CONFIG" != "xold" && test "x$KERNEL_CONFIG" != "xmod" && test "x${KERNEL_CONFIG:0:1}" != "x/"; then
+		if test "x$KERNEL_CONFIG" != "xdef" && test "x$KERNEL_CONFIG" != "xold" && test "x$KERNEL_CONFIG" != "xmod" && test "x$KERNEL_CONFIG" != "xbackup" && test "x${KERNEL_CONFIG:0:1}" != "x/"; then
 		    KERNEL_CONFIG="$PWD/$KERNEL_CONFIG"
 		fi
 		NEW_KERNEL_CONFIG=true
