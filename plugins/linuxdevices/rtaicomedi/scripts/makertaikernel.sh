@@ -659,26 +659,33 @@ function print_kernel {
 }
 
 function print_cpus {
-    echo "CPU topology (/sys/devices/system/cpu/*):"
-    printf "         online  physical_id  core_id  thread_siblings\n"
+    echo "CPU topology and frequencies (/sys/devices/system/cpu/*):"
+    printf "         online  physical_id  core_id  freq/MHz  minf/MHz  maxf/MHz      governor\n"
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	CPUT="$CPU/topology"
 	ONLINE=1
 	test -f $CPU/online && ONLINE=$(cat $CPU/online)
-	printf "  cpu%-2d  %6d  %11d  %7d  %15s\n" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(cat $CPUT/thread_siblings_list)
+	printf "  cpu%-2d  %6d  %11d  %7d  %8.3f  %8.3f  %8.3f  %12s\n" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_min_freq)/1000000.0 | bc) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_max_freq)/1000000.0 | bc) $(cat $CPU/cpufreq/scaling_governor)
     done
     echo
-    echo "CPU (/proc/cpuinfo):"
-    echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
-    echo "  number of cores: $CPU_NUM"
-    echo "  machine (uname -m): $MACHINE"
-    echo "  memory: $(free -h | grep Mem | awk '{print $2}') RAM"
-    echo
+
     if sensors --version &> /dev/null; then
 	echo "CPU core temperatures:"
 	sensors | grep Core | indent
 	echo
     fi
+
+    CPU_IDLE="none"
+    if test -f /sys/devices/system/cpu/cpuidle/current_driver; then
+	CPU_IDLE="$(cat /sys/devices/system/cpu/cpuidle/current_driver)"
+    fi
+    echo "CPU (/proc/cpuinfo):"
+    echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
+    echo "  number of cpus: $CPU_NUM"
+    echo "  cpuidle driver: $CPU_IDLE"
+    echo "  machine (uname -m): $MACHINE"
+    echo "  memory (free -h)  : $(free -h | grep Mem | awk '{print $2}') RAM"
+    echo
 }
 
 function print_distribution {
