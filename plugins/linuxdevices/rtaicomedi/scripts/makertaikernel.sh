@@ -660,12 +660,13 @@ function print_kernel {
 
 function print_cpus {
     echo "CPU topology and frequencies (/sys/devices/system/cpu/*):"
-    printf "         online  physical_id  core_id  freq/MHz  minf/MHz  maxf/MHz      governor\n"
+    printf "         online  physical_id  core_id  freq/MHz      governor\n"
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	CPUT="$CPU/topology"
 	ONLINE=1
 	test -f $CPU/online && ONLINE=$(cat $CPU/online)
-	printf "  cpu%-2d  %6d  %11d  %7d  %8.3f  %8.3f  %8.3f  %12s\n" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_min_freq)/1000000.0 | bc) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_max_freq)/1000000.0 | bc) $(cat $CPU/cpufreq/scaling_governor)
+	LC_NUMERIC="en_US.UTF-8"
+	printf "  cpu%-2d  %6d  %11d  %7d  %8.3f  %12s\n" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc) $(cat $CPU/cpufreq/scaling_governor)
     done
     echo
 
@@ -1235,7 +1236,7 @@ function config_kernel {
 	elif test "x$KERNEL_CONFIG" = "xold"; then
 	    CF="/boot/config-${CURRENT_KERNEL}"
 	    test -f "$CF" || CF="/lib/modules/$(uname -r)/build/.config"
-	    echo_log "Use configuration from running kernel ($CF)."
+	    echo_log "Use configuration from running kernel ($CF) and run olddefconfig."
 	    if ! $DRYRUN; then
 		cp $CF .config
 		make olddefconfig
@@ -1251,7 +1252,7 @@ function config_kernel {
 	    fi
 	    RUN_LOCALMOD=false
 	elif test "x$KERNEL_CONFIG" = "xbackup"; then
-	    echo_log "Use backup configuration from \"$KERNEL_CONFIG_BACKUP\"."
+	    echo_log "Use backup configuration from \"$KERNEL_CONFIG_BACKUP\" and run olddefconfig."
 	    KCF="$KERNEL_CONFIG_BACKUP"
 	    if test "x${KCF:0:1}" != "x/"; then
 		KCF="$1/$KERNEL_CONFIG"
@@ -1261,7 +1262,7 @@ function config_kernel {
 		make olddefconfig
 	    fi
 	elif test -f "$KERNEL_CONFIG"; then
-	    echo_log "Use configuration from \"$KERNEL_CONFIG\"."
+	    echo_log "Use configuration from \"$KERNEL_CONFIG\" and run olddefconfig."
 	    KCF="$KERNEL_CONFIG"
 	    if test "x${KCF:0:1}" != "x/"; then
 		KCF="$1/$KERNEL_CONFIG"
@@ -1360,8 +1361,10 @@ function build_kernel {
 		fi
 	    else
 		if test "$KERNEL_MENU" = "old"; then
+		    echo "Run make olddefconfig"
 		    make olddefconfig
 		else
+		    echo "Run make $KERNEL_MENU"
 		    make $KERNEL_MENU
 		fi
 		make deb-pkg LOCALVERSION=-${RTAI_DIR}${KERNEL_NUM} KDEB_PKGVERSION=$(make kernelversion)-1
@@ -1735,6 +1738,7 @@ function test_save {
 		if test -f "$TEST_RESULTS"; then
 		    echo "$TD/$TN test:"
 		    sed -e '/^\*/d' $TEST_RESULTS
+		    echo "----------------------------------------"
 		    echo
 		    echo
 		fi
@@ -2300,12 +2304,6 @@ EOF
 	exit 1
     fi
 
-    # batch file needs to be in current working directory:
-    if test "x${BATCH_FILE##*/}" != "x${BATCH_FILE}"; then
-	echo_log "\"${BATCH_FILE}\" needs to be in the current working directory!"
-	exit 1
-    fi
-
     # run batch file:
     N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
     if test $N_TESTS -eq 0; then
@@ -2377,7 +2375,7 @@ EOF
 	KD="${KD}${KERNEL_PARAM_DESCR}"
 	test -n "$KD" && test "${KD:-1:1}" != "-" && KD="${KD}-"
 	# report next kernel parameter settings:
-	echo_log "Reboot into first configuration: \"${KD}$(echo $DESCRIPTION)\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
+	echo_log "Reboot into first configuration: \"${KD}${DESCRIPTION}\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     fi
 
     # confirm batch testing:
@@ -2402,17 +2400,17 @@ EOF
 	echo_log "  $ ./${MAKE_RTAI_KERNEL} restore testbatch"
 	echo_kmsg "START TEST BATCH $BATCH_FILE"
 
-	TEST_DIR="$(cd "$(dirname "$BATCH_FILE")" && pwd)"
 	# set information for next test/compile:
 	if test -f /boot/grub/grubenv; then
-	    grub-editenv - set rtaitest_file="$TEST_DIR/${BATCH_FILE##*/}"
+	    grub-editenv - set rtaitest_pwd="$PWD"
+	    grub-editenv - set rtaitest_file="$BATCH_FILE"
 	    grub-editenv - set rtaitest_index="$INDEX"
 	    grub-editenv - set rtaitest_kernel_descr="$KERNEL_DESCR"
 	    grub-editenv - set rtaitest_param_descr="$KERNEL_PARAM_DESCR"
 	    grub-editenv - set rtaitest_time="$TEST_TOTAL_TIME"
 	    grub-editenv - set rtaitest_specs="$TEST_SPECS"
 	else
-	    echo_kmsg "NEXT TEST BATCH |$TEST_DIR/${BATCH_FILE##*/}|$INDEX|$KERNEL_DESCR|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
+	    echo_kmsg "NEXT TEST BATCH |$PWD|$BATCH_FILE|$INDEX|$KERNEL_DESCR|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
 	fi
 	if $COMPILE; then
 	    reboot_kernel default
@@ -2435,6 +2433,7 @@ function test_batch_script {
 
     # get paramter for current test/compile:
     if test -f /boot/grub/grubenv; then
+	WORKING_DIR=$(grub-editenv - list | awk -F '=' '/^rtaitest_pwd=/ {print $2}')
 	BATCH_FILE=$(grub-editenv - list | awk -F '=' '/^rtaitest_file=/ {print $2}')
 	INDEX=$(grub-editenv - list | awk -F '=' '/^rtaitest_index=/ {print $2}')
 	KERNEL_DESCR=$(grub-editenv - list | awk -F '=' '/^rtaitest_kernel_descr=/ {print $2}')
@@ -2444,18 +2443,21 @@ function test_batch_script {
     else
 	MF=/var/log/messages
 	grep -q -a -F "NEXT TEST BATCH" $MF || MF=/var/log/messages.1
-	IFS='|' read ID BATCH_FILE INDEX KERNEL_DESCR BATCH_DESCR TEST_TOTAL_TIME TEST_SPECS < <(grep -a -F "NEXT TEST BATCH" $MF | tail -n 1)
+	IFS='|' read ID WORKING_DIR BATCH_FILE INDEX KERNEL_DESCR BATCH_DESCR TEST_TOTAL_TIME TEST_SPECS < <(grep -a -F "NEXT TEST BATCH" $MF | tail -n 1)
     fi
     KERNEL_DESCR="$(echo $KERNEL_DESCR)"
     BATCH_DESCR="$(echo $BATCH_DESCR)"
 
+    # working directory:
+    cd "$WORKING_DIR"
+
     N_TESTS=$(sed -e 's/ *#.*$//' $BATCH_FILE | grep -c ':.*:')
 
     # read configuration:
-    source "$(dirname $BATCH_FILE)/${MAKE_RTAI_CONFIG}"
+    source "${MAKE_RTAI_CONFIG}"
 
     # enable logs:
-    LOG_FILE="$(dirname $BATCH_FILE)/${MAKE_RTAI_KERNEL%.*}.log"
+    LOG_FILE="${WORKING_DIR}/${MAKE_RTAI_KERNEL%.*}.log"
     echo_log
     echo_log "Automatically start test $INDEX of $N_TESTS in file \"$BATCH_FILE\"."
     echo_log
@@ -2491,14 +2493,10 @@ function test_batch_script {
 	IFS=':' read DESCR LM NEXT_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
 	# set information for next test/compile:
 	if test -f /boot/grub/grubenv; then
-	    grub-editenv - set rtaitest_file="$BATCH_FILE"
 	    grub-editenv - set rtaitest_index="$INDEX"
 	    grub-editenv - set rtaitest_kernel_descr="$KERNEL_DESCR"
-	    grub-editenv - set rtaitest_param_descr="$BATCH_DESCR"
-	    grub-editenv - set rtaitest_time="$TEST_TOTAL_TIME"
-	    grub-editenv - set rtaitest_specs="$TEST_SPECS"
 	else
-	    echo_kmsg "NEXT TEST BATCH |$BATCH_FILE|$INDEX|$KERNEL_DESCR|$BATCH_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
+	    echo_kmsg "NEXT TEST BATCH |$WORKING_DIR|$BATCH_FILE|$INDEX|$KERNEL_DESCR|$BATCH_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
 	fi
 	NEXT_KERNEL_PARAM=$(echo $NEXT_KERNEL_PARAM)
 	if test "x${NEXT_KERNEL_PARAM:0:6}" != "xCONFIG"; then
@@ -2516,7 +2514,7 @@ function test_batch_script {
     fi
 
     # working directory:
-    cd $(dirname $BATCH_FILE)
+    cd "$WORKING_DIR"
 
     if $COMPILE; then
 	# compile new kernel:
@@ -2585,6 +2583,7 @@ function restore_test_batch {
 	fi
     fi
     if test -f /boot/grub/grubenv; then
+	grub-editenv - unset rtaitest_pwd
 	grub-editenv - unset rtaitest_file
 	grub-editenv - unset rtaitest_index
 	grub-editenv - unset rtaitest_kernel_descr
