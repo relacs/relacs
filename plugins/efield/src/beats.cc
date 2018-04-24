@@ -37,6 +37,7 @@ Beats::Beats( void )
 {
   // add some parameter as options:
   newSection( "Stimulation" );
+  addText( "name", "Name of stimuli", "");
   addNumber( "duration", "Signal duration", 10.0, 0.0, 1000000.0, 1.0, "seconds" );
   addNumber( "pause", "Pause between signals", 20.0, 1.0, 1000000.0, 1.0, "seconds" );
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
@@ -90,6 +91,7 @@ Beats::Beats( void )
 int Beats::main( void )
 {
   // get options:
+  string name = text( "name" );
   double duration = number( "duration" );
   double pause = number( "pause" );
   double ramp = number( "ramp" );
@@ -281,6 +283,7 @@ int Beats::main( void )
     return Failed;
   }
   dfrange.setSequence( deltafshuffle );
+  
   for ( int count = 0;
 	(repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
@@ -378,10 +381,13 @@ int Beats::main( void )
       double chirpfrequency = 0.0;
       int chirpsequence = -1;
       OutList signal;
+      std::cerr << "#####################\n";
+      std::cerr << settings().flags( "deltafrange", OutData::Mutable )  << std::endl;
+      std::cerr << settings()["deltafrange"] << std::endl;
       if ( fixeddf ) {
 	chirpheader.clear();
 	OutData sig;
-	sig.setTraceName( "Frequency" );
+        sig.setTraceName( "Frequency" );
 	sig.constWave( ramp, -1.0, stimulusrate );
 	signal.push( sig );
 
@@ -392,14 +398,23 @@ int Beats::main( void )
 	sig.setTrace( FishEField[0] );
 	sig.constWave( ramp, -1.0, 0.0 );
 	sig.setIntensity( amplitude );
-	signal.push( sig );
 
-	signal.setDelay( before );
+        sig.description().addNumber( "DeltaF", deltaf, "Hz" );
+        sig.description().addNumber( "Amplitude", amplitude, "mV" );
+        sig.description().addNumber( "Duration", duration, "s" );
+        if ( settings().flags( "deltafrange", OutData::Mutable ) )
+          sig.description()["DeltaF"].addFlags( OutData::Mutable );
+        if ( settings().flags( "Amplitude", OutData::Mutable ) )
+          sig.description()["Amplitude"].addFlags( OutData::Mutable );
+        sig.setIdent( name );
+
+        signal.push( sig );
+        signal.setDelay( before );
 
 	// output signal:
 	starttime = currentTime();
 	startWrite( signal );
-	
+
 	// signal failed?
 	if ( signal.failed() ) {
 	  string s = "Output of stimulus failed!<br>Error code is <b>";
@@ -414,9 +429,9 @@ int Beats::main( void )
 	ramptime = ramp;
 	sleep( before + ramptime );
       }
-      else {
+      else { // no fixeddf
 	OutData sig;
-	sig.setTrace( FishEField[0] );
+        sig.setTrace( FishEField[0] );
 	OutData led;
 	if ( LEDOutput[0] >= 0 )
 	  led.setTrace( LEDOutput[0] );
@@ -525,7 +540,7 @@ int Beats::main( void )
 	    }
 	  }
 	}
-	else {
+	else { // not fixed, no chirps
 	  chirpheader.clear();
 	  double p = 1.0;
 	  if ( fabs( deltaf ) > 0.01 )
@@ -580,7 +595,6 @@ int Beats::main( void )
 	      sig.setMutable( "Frequency", opt );
 	    }
 	    sig.description().clearSections();
-	    sig.description().addNumber( "Amplitude", amplitude, "mV" );
 	    sig.ramp( ramp );
 	    if ( amtype == 2 )
 	      sig.setIdent( "am-rectangularwave" );
@@ -589,15 +603,36 @@ int Beats::main( void )
 	    sig.setIntensity( amplitude*(1.0+amamplsum) );
 	  }
 	  sig.description().clearSections();
-	  Parameter &p1 = sig.description().addNumber( "DeltaF", deltaf, "Hz" );
-	  if ( dfrange.size() > 1 )
-	    sig.setMutable( p1 );
+          if ( !sig.description().exist( "DeltaF" ) )
+            sig.description().addNumber( "DeltaF", deltaf, "Hz" );
+          else
+            sig.description().setNumber( "DeltaF", deltaf );
+          if ( settings().flags( "deltafrange", OutData::Mutable ) )
+            sig.description()["DeltaF"].addFlags( OutData::Mutable );
+
+          if ( !sig.description().exist( "Amplitude" ) )
+            sig.description().addNumber( "Amplitude", amplitude, "mV" );
+          else
+            sig.description().setNumber( "Amplitude", amplitude );
+          if ( settings().flags( "Amplitude", OutData::Mutable ) )
+            sig.description()["Amplitude"].addFlags( OutData::Mutable );
+
+          if ( !sig.description().exist( "Duration" ) )
+            sig.description().addNumber( "Duration", duration, "s" );
+          else
+            sig.description().setNumber( "Duration", duration );
+
+          if ( sig.description().exist( "Frequency" ) )
+            sig.description()["Frequency"].addFlags( OutData::Mutable );
+
 	  if ( LEDOutput[0] >= 0 )
 	    led.pulseWave( sig.length(), sig.stepsize(), 5.0, 0.0 );
 	}
 	duration = sig.length();
-	sig.setDelay( before );
-	signal.push( sig );
+
+        sig.setDelay( before );
+        sig.setIdent( name );
+        signal.push( sig );
 	if ( LEDOutput[0] >= 0 ) {
 	  led.setDelay( before );
 	  signal.push( led );
