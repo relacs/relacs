@@ -9,12 +9,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -520,6 +520,7 @@ void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables
   for ( Options::iterator pi = stimulusdescription.begin();
 	pi != stimulusdescription.end();
 	++pi ) {
+    // std::cerr << pi->name() << " " << (pi->isNumber() ? pi->number() : pi->text()) << std::endl;
     if ( (pi->flags() & OutData::Mutable) == OutData::Mutable ) {
       mutables.add( *pi );
       // stimulusdescription.erase( *pi );
@@ -571,45 +572,50 @@ void SaveFiles::writeStimulus( void )
   // where type1, type2 are the types of the stimulus descriptions with leading 'stimulus/' removed.
   deque< string > stimulinames( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    string sn = ReProName;  // (name of the RePro from which the stimulus was written)
-    // add type of stimulus description:
-    Str tn = Stimuli[j].description().type();
-    if ( tn.empty() )
-      tn = Stimuli[j].description().name();
-    else {
-      tn.eraseFirst( "stimulus" );
-      tn.preventFirst( '/' );
-    }
-    if ( ! tn.empty() )
-      sn += '-' + tn;
-    string pn = "";
-    int pc = 0;
-    for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
-	  si != Stimuli[j].description().sectionsEnd();
-	  ++si ) {
-      tn = (*si)->type();
+    if ( Stimuli[j].ident().empty() ) {
+      string sn = ReProName;  // (name of the RePro from which the stimulus was written)
+      // add type of stimulus description:
+      Str tn = Stimuli[j].description().type();
       if ( tn.empty() )
-	tn = (*si)->name();
+        tn = Stimuli[j].description().name();
       else {
-	tn.eraseFirst( "stimulus" );
-	tn.preventFirst( '/' );
+        tn.eraseFirst( "stimulus" );
+        tn.preventFirst( '/' );
       }
-      if ( ! tn.empty() ) {
-	// sqeeze repetitive types:
-	if ( tn != pn ) {
-	  if ( pc > 1 )
-	    sn += '*' + Str( pc );
-	  sn += '-' + tn;
-	  pc = 1;
-	}
-	else
-	  pc++;
-	pn = tn;
+      if ( ! tn.empty() )
+        sn += '-' + tn;
+      string pn = "";
+      int pc = 0;
+      for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
+            si != Stimuli[j].description().sectionsEnd();
+            ++si ) {
+        tn = (*si)->type();
+        if ( tn.empty() )
+          tn = (*si)->name();
+        else {
+          tn.eraseFirst( "stimulus" );
+          tn.preventFirst( '/' );
+        }
+        if ( ! tn.empty() ) {
+          // sqeeze repetitive types:
+          if ( tn != pn ) {
+            if ( pc > 1 )
+              sn += '*' + Str( pc );
+            sn += '-' + tn;
+            pc = 1;
+          }
+          else
+            pc++;
+          pn = tn;
+        }
       }
+      if ( pc > 1 )
+        sn += '*' + Str( pc );
+      stimulinames[j] = sn;
     }
-    if ( pc > 1 )
-      sn += '*' + Str( pc );
-    stimulinames[j] = sn;
+    else {
+      stimulinames[j] = Stimuli[j].ident();
+    }
   }
 
   // track stimulus traces:
@@ -618,6 +624,7 @@ void SaveFiles::writeStimulus( void )
     // get all stimulus descriptions for the stimulusname reproname-type1-type2,
     // i.e. get all stimuli of a given repro and type:
     map< Options, string > &rsd = ReProStimuli[ stimulinames[j] ];
+
     // retrieve the unique identifier for the specific stimulus description:
     string &stimulusid = rsd[ Stimuli[j].description() ];
     if ( stimulusid.empty() ) {
@@ -679,7 +686,7 @@ void SaveFiles::writeStimulus( void )
 
     // stimuliref is an array of Options that contains the data
     // written for each stimulus in the line in stimuli.dat .
-
+    
     RelacsIO.writeStimulus( IL, EL, Stimuli, newstimuli, StimulusData,
 			    stimuliref, stimulusindex,
 			    SessionTime, repronamecount, RW->AQ );
@@ -2194,6 +2201,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
   if ( IL[0].signalIndex() < 1 ) {
     return;
   }
+
   double abs_time = IL[0].signalTime() - sessiontime;
   double delay = stim_info[0].delay();
   double intensity = stim_info[0].intensity();
