@@ -2299,7 +2299,8 @@ EOF
     INDEX=1
     IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
     DESCRIPTION="$(echo $DESCRIPTION)"
-    NEW_KERNEL_PARAM=$(echo $NEW_KERNEL_PARAM)
+    LOAD_MODE="$(echo $LOAD_MODE)"
+    NEW_KERNEL_PARAM="$(echo $NEW_KERNEL_PARAM)"
     # in case of a config line, this sets the description of the actual kernel configuration:
     KERNEL_DESCR=""
     if test "x${LOAD_MODE}" = "xCONFIG" && test -z "$NEW_KERNEL_PARAM"; then
@@ -2308,6 +2309,8 @@ EOF
 	let INDEX+=1
 	IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
 	DESCRIPTION="$(echo $DESCRIPTION)"
+	LOAD_MODE="$(echo $LOAD_MODE)"
+	NEW_KERNEL_PARAM="$(echo $NEW_KERNEL_PARAM)"
     fi
 
     # report first batch entry:
@@ -2421,7 +2424,8 @@ function test_batch_script {
     # read current DESCRIPTION and LOAD_MODE from configuration file:
     IFS=':' read DESCRIPTION LOAD_MODE NEW_KERNEL_PARAM < <(sed -e 's/ *#.*$//' $BATCH_FILE | grep ':.*:' | sed -n -e ${INDEX}p)
     DESCRIPTION="$(echo $DESCRIPTION)"
-    NEW_KERNEL_PARAM=$(echo $NEW_KERNEL_PARAM)
+    LOAD_MODE="$(echo $LOAD_MODE)"
+    NEW_KERNEL_PARAM="$(echo $NEW_KERNEL_PARAM)"
     # compile new kernel:
     COMPILE=false
     if test "x${LOAD_MODE}" = "xCONFIG"; then
@@ -2454,7 +2458,8 @@ function test_batch_script {
 	else
 	    echo_kmsg "NEXT TEST BATCH |$WORKING_DIR|$BATCH_FILE|$INDEX|$KERNEL_DESCR|$BATCH_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
 	fi
-	NEXT_KERNEL_PARAM=$(echo $NEXT_KERNEL_PARAM)
+	LM="$(echo $LM)"
+	NEXT_KERNEL_PARAM="$(echo $NEXT_KERNEL_PARAM)"
 	if test "x${LM}" != "xCONFIG"; then
 	    echo_log "Prepare next reboot:"
 	    setup_kernel_param $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEXT_KERNEL_PARAM
