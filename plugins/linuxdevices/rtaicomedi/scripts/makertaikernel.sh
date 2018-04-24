@@ -329,29 +329,31 @@ In a batch FILE
   <descr> : <load> : <params>
   describes a configuration to be tested:
   <descr> is a one-word string describing the kernel parameter 
-      (the load settings are added automatically to the description)
+      (a description of the load settings are added automatically to the description)
   <load> defines the load processes to be started before testing (cpu io mem net full, see above)
   <param> is a list of kernel parameter to be used.
 If the first word in <param> equals CONFIG, then the line specifies a new kernel configuration:
 - the first line  of the batch file can be just
-  <descr> : : CONFIG
+  <descr> : CONFIG :
   this sets <descr> as the description of the already existing RTAI kernel for the following tests.
 - other lines can be of the format
-  <descr> : : CONFIG <n> <config-file>
-  denoting the <n>-th patch for the kernel configuration in file
-  <config-file>. <descr> is a one-word description of the new kernel
+  <descr> : CONFIG : [<n>] <config-file>
+  When only specifying <config-file> without a number, then the complete <config_file> is used
+  as a kernel configuration.
+  If a number <n> is specified before the <config-file>, then the <n>-th kernel configuration 
+  stored in file <config-file> is used. <descr> is a one-word description of the new kernel
   configuration that is used for the following tests.
 - or (in particular the last line of the batch file!):
-  <descr> : : CONFIG BACKUP
+  <descr> : CONFIG : BACKUP
   this will compile a kernel with the configuration at the beginning of the tests.
 - Use 
   ${MAKE_RTAI_KERNEL} prepare
   to generate a file with patches for the kernel configuration.
 
 Example lines:
-  lowlatency : : CONFIG
+  lowlatency : CONFIG :
   idlenohz : : idle=poll nohz=off
-  nodyntics : : CONFIG 1 kernelconfigs.mrk
+  nodyntics : CONFIG : 1 kernelconfigs.mrk
   idleisol : cpu io : idle=poll isolcpus=0-1
 See the file written by "batch default" for suggestions, and the file
 $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/Documentation/kernel-parameters.txt
@@ -591,9 +593,9 @@ function print_kernel_configs {
 	    echo "Available kernel configurations from file \"$KCF\""
 	    echo "- add them to a test batch file:"
 	    echo
-	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$KCF"'/; p;}' "$KCF"
+	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : CONFIG : \1 '"$KCF"'/; p;}' "$KCF"
 	else
-	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$KCF"'/; p;}' "$KCF"
+	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : CONFIG : \1 '"$KCF"'/; p;}' "$KCF"
 	fi
     else
 	echo "File \"$KCF\" does not exist."
@@ -602,7 +604,7 @@ function print_kernel_configs {
 }
 
 function print_grub {
-    if test "x$1" = "xenv" && test -f /boot/grub/grubenv; then
+    if test "x$1" = "xenv" && test -r /boot/grub/grubenv; then
 	echo "Grub environment:"
 	grub-editenv - list | indent
 	echo
@@ -669,7 +671,7 @@ function print_cpus {
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	CPUT="$CPU/topology"
 	ONLINE=1
-	test -f $CPU/online && ONLINE=$(cat $CPU/online)
+	test -r $CPU/online && ONLINE=$(cat $CPU/online)
 	LC_NUMERIC="en_US.UTF-8"
 	printf "  cpu%-2d  %6d  %11d  %7d  %8.3f  %12s\n" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc) $(cat $CPU/cpufreq/scaling_governor)
     done
@@ -682,7 +684,7 @@ function print_cpus {
     fi
 
     CPU_IDLE="none"
-    if test -f /sys/devices/system/cpu/cpuidle/current_driver; then
+    if test -r /sys/devices/system/cpu/cpuidle/current_driver; then
 	CPU_IDLE="$(cat /sys/devices/system/cpu/cpuidle/current_driver)"
     fi
     echo "CPU (/proc/cpuinfo):"
@@ -1220,7 +1222,7 @@ function prepare_kernel_configs {
 	echo "        by adding the following lines to a test batch file:"
 	echo
 	if test -f "$KERNEL_CONFIGS_FILE"; then
-	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : : CONFIG \1 '"$KERNEL_CONFIGS_FILE"'/; p;}' "$KERNEL_CONFIGS_FILE"
+	    sed -n -e '/^#### START CONFIG/{s/^#### START CONFIG \([^ ]*\) \(.*\)/\2 : CONFIG : \1 '"$KERNEL_CONFIGS_FILE"'/; p;}' "$KERNEL_CONFIGS_FILE"
 	fi
 	echo
 	echo "You may pipe these lines directly into a <FILE> that you then can use for a test batch:"
@@ -2199,8 +2201,12 @@ function test_batch {
 # $VERSION_STRING
 # Batch file for testing RTAI kernel with various kernel parameter.
 #
-# Each line has the format:
+# Each line has one of the formats:
 # <description> : <load specification> : <kernel parameter>
+# <description> : CONFIG :
+# <description> : CONFIG : BACKUP
+# <description> : CONFIG : <config-file>
+# <description> : CONFIG : <n> <config-file>
 # where <description> is a brief one-word description of the kernel
 # parameters that is added to the KERNEL_PARAM_DESCR variable.  
 # The <kernel parameter> are added to the ones defined in the KERNEL_PARAM variable.
@@ -2374,7 +2380,7 @@ EOF
     NEW_KERNEL_PARAM=$(echo $NEW_KERNEL_PARAM)
     # in case of a config line, this sets the description of the actual kernel configuration:
     KERNEL_DESCR=""
-    if test "x${NEW_KERNEL_PARAM}" = "xCONFIG"; then
+    if test "x${LOAD_MODE}" = "xCONFIG" && test -z "$NEW_KERNEL_PARAM"; then
 	KERNEL_DESCR="$DESCRIPTION"
 	# read next line from configuration file:
 	let INDEX+=1
@@ -2384,7 +2390,7 @@ EOF
 
     # report first batch entry:
     COMPILE=false
-    if test "x${NEW_KERNEL_PARAM:0:6}" = "xCONFIG"; then
+    if test "x${LOAD_MODE}" = "xCONFIG"; then
 	COMPILE=true
 	echo_log "Reboot into default kernel to compile kernel with \"$DESCRIPTION\" configuration."
     else
@@ -2488,7 +2494,7 @@ function test_batch_script {
     NEW_KERNEL_PARAM=$(echo $NEW_KERNEL_PARAM)
     # compile new kernel:
     COMPILE=false
-    if test "x${NEW_KERNEL_PARAM:0:6}" = "xCONFIG"; then
+    if test "x${LOAD_MODE}" = "xCONFIG"; then
 	COMPILE=true
 	KERNEL_DESCR="$DESCRIPTION"
     else
@@ -2519,18 +2525,12 @@ function test_batch_script {
 	    echo_kmsg "NEXT TEST BATCH |$WORKING_DIR|$BATCH_FILE|$INDEX|$KERNEL_DESCR|$BATCH_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
 	fi
 	NEXT_KERNEL_PARAM=$(echo $NEXT_KERNEL_PARAM)
-	if test "x${NEXT_KERNEL_PARAM:0:6}" != "xCONFIG"; then
+	if test "x${LM}" != "xCONFIG"; then
 	    echo_log "Prepare next reboot:"
 	    setup_kernel_param $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEXT_KERNEL_PARAM
 	    reboot_set_kernel
 	    echo_log
 	fi
-    fi
-    if ! $COMPILE; then
-	# in case everything fails do a cold start:
-	{ sleep $(( $TEST_TOTAL_TIME + 180 )); reboot_cmd cold; } &
-	# at TEST_TOTAL_TIME seconds later reboot:
-	{ sleep $TEST_TOTAL_TIME; reboot_cmd; } &
     fi
 
     # working directory:
@@ -2540,14 +2540,18 @@ function test_batch_script {
 	# compile new kernel:
 	echo_log "Compile new kernel:"
 	echo_kmsg "START COMPILE NEW KERNEL"
-	CONFIG_NUM="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 2)"
-	KERNEL_CONFIGS_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 3)"
+	CONFIG_NUM="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 1)"
+	KERNEL_CONFIGS_FILE="$(echo $NEW_KERNEL_PARAM | cut -d ' ' -f 2)"
 	if test "x$CONFIG_NUM" = "xBACKUP"; then
 	    echo_log "Use \"$KERNEL_CONFIG_BACKUP\" for the kernel configuration."
 	    cp $KERNEL_CONFIG_BACKUP $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+	elif test -z "$KERNEL_CONFIGS_FILE"; then
+	    KERNEL_CONFIGS_FILE="$CONFIG_NUM"
+	    echo_log "Use kernel configuration from file \"$KERNEL_CONFIGS_FILE\"."
+	    cp "$KERNEL_CONFIGS_FILE" $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	else
-	    echo_log "Use kernel configuration $CONFIG_NUM from file $KERNEL_CONFIGS_FILE."
-	    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" $KERNEL_CONFIGS_FILE | sed -e '1d; $d;' > $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+	    echo_log "Use kernel configuration $CONFIG_NUM from file \"$KERNEL_CONFIGS_FILE\"."
+	    sed -n -e "/^#### START CONFIG $CONFIG_NUM/,/^#### END CONFIG $CONFIG_NUM/p" "$KERNEL_CONFIGS_FILE" | sed -e '1d; $d;' > $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
 	fi
 	KERNEL_MENU=old
 	reconfigure &> "${LOG_FILE}.tmp"
@@ -2572,9 +2576,15 @@ function test_batch_script {
 	fi
 	rm "${LOG_FILE}.tmp"
     else
+	# in case everything fails do a cold start:
+	{ sleep $(( $TEST_TOTAL_TIME + 180 )); reboot_cmd cold; } &
+	# at TEST_TOTAL_TIME seconds later reboot:
+	{ sleep $TEST_TOTAL_TIME; reboot_cmd; } &
+
 	# assemble description:
 	test -n "$KERNEL_DESCR" && test "${KERNEL_DESCR:-1:1}" != "-" && KERNEL_DESCR="${KERNEL_DESCR}-"
 	test -n "$BATCH_DESCR" && test "${BATCH_DESCR:-1:1}" != "-" && BATCH_DESCR="${BATCH_DESCR}-"
+
 	# run tests:
 	echo_log "test kernel ${KERNEL_DESCR}${BATCH_DESCR}${DESCRIPTION}:"
 	test_kernel $TEST_SPECS $LOAD_MODE auto "${KERNEL_DESCR}${BATCH_DESCR}${DESCRIPTION}"
