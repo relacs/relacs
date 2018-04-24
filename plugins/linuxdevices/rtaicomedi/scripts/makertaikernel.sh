@@ -26,13 +26,15 @@
 
 : ${KERNEL_CONFIG:="old"}  # whether and how to initialize the kernel configuration 
                            # (set with -c) 
-                           # "old" for oldconfig from the running kernel,
-                           # "def" for the defconfig target,
-                           # "mod" for the localmodconfig target, (even if kernel do not match)
-                           # "backup" for the backed up kernel configuration from the last test batch.
-                           # or a full path to a config file.
+                           # - "old" for oldconfig from the running kernel,
+                           # - "def" for the defconfig target,
+                           # - "mod" for the localmodconfig target, (even if kernel do not match)
+                           # - "backup" for the backed up kernel configuration from the last test batch.
+                           # - a kernel config file.
+                           # - a file with kernel configurations (from prepare),
+                           #   followed by a number specifying the configuration in that file.
                            # afterwards, the localmodconfig target is executed, 
-                           # if the running kernel matches LINUX_KERNEL
+                           # if the running kernel matches LINUX_KERNEL.
 : ${RUN_LOCALMOD:=true}    # run make localmodconf after selecting a kernel configuration (disable with -l)
 : ${KERNEL_MENU:="menuconfig"} # the menu for editing the kernel configuration
                                # (menuconfig, gconfig, xconfig)
@@ -76,6 +78,7 @@ VERSION_STRING="${MAKE_RTAI_KERNEL} version 4.0 by Jan Benda, April 2018"
 DRYRUN=false                 # only show what is being done (set with -d)
 RECONFIGURE_KERNEL=false
 NEW_KERNEL_CONFIG=false
+KERNEL_CONFIG_NUM=""
 DEFAULT_RTAI_DIR="$RTAI_DIR"
 RTAI_DIR_CHANGED=false
 RTAI_PATCH_CHANGED=false
@@ -152,7 +155,7 @@ Print some information about your system.
 Usage:
 
 sudo ${MAKE_RTAI_KERNEL} info [rtai|kernel|cpu|grub|settings|setup|log|configs [<FILE>]]
-sudo ${MAKE_RTAI_KERNEL} [-c xxx] info menu
+sudo ${MAKE_RTAI_KERNEL} [-c xxx [NUM]] info menu
 
 info                 : display properties of rtai patches, loaded kernel modules, kernel, machine,
                        and grub menu (configs and menu targets are excluded)
@@ -169,13 +172,14 @@ info configs <FILE>  : show kernel configurations collected in file <FILE>
 info configs > <FILE>: save kernel configurations collected in file ${KERNEL_CONFIGS_FILE} 
                        in file <FILE> usable as a test batch file.
 
--c xxx: specify a kernel configuration:
-        old: use the kernel configuration of the currently running kernel
-        def: generate a kernel configuration using make defconfig
-        mod: simplify existing kernel configuration using make localmodconfig
-             even if kernel do not match
-        backup: use the backed up kernel configuration from the last test batch.
-        path/to/config/file: provide a particular configuration file
+-c xxx: specify a kernel configuration xxx:
+        - old: use the kernel configuration of the currently running kernel
+        - def: generate a kernel configuration using make defconfig
+        - mod: simplify existing kernel configuration using make localmodconfig
+               even if kernel do not match
+        - backup: use the backed up kernel configuration from the last test batch.
+        - path/to/config/file: provide a particular configuration file
+        - config/collection <num>: take configuration <num> from the file with kernel configurations (from prepare).
         After setting the configuration (except for mod), make localmodconfig
         is executed to deselect compilation of unused modules, but only if the
         runnig kernel matches the selected kernel version (major.minor only).
@@ -394,7 +398,7 @@ $VERSION_STRING
 Download, build, install and test everything needed for an rtai-patched linux kernel with math and comedi support.
 
 usage:
-sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx] [-l] [-D] [-m] 
+sudo ${MAKE_RTAI_KERNEL} [-d] [-s xxx] [-n xxx] [-r xxx] [-p xxx] [-k xxx] [-c xxx [num]] [-l] [-D] [-m] 
      [action [target1 [target2 ... ]]]
 
 EOF
@@ -403,12 +407,13 @@ EOF
 -s xxx: use xxx as the base directory where to put the kernel sources (KERNEL_PATH=${KERNEL_PATH})
 -p xxx: use rtai patch file xxx (RTAI_PATCH=${RTAI_PATCH})
 -c xxx: generate a new kernel configuration (KERNEL_CONFIG=${KERNEL_CONFIG}):
-        old: use the kernel configuration of the currently running kernel
-        def: generate a kernel configuration using make defconfig
-        mod: simplify existing kernel configuration using make localmodconfig
-             even if kernel do not match
-        backup: use the backed up kernel configuration from the last test batch.
-        path/to/config/file: provide a particular configuration file
+        - old: use the kernel configuration of the currently running kernel
+        - def: generate a kernel configuration using make defconfig
+        - mod: simplify existing kernel configuration using make localmodconfig
+               even if kernel do not match
+        - backup: use the backed up kernel configuration from the last test batch.
+        - path/to/config/file: provide a particular configuration file
+        - config/collection <num>: take configuration <num> from the file with kernel configurations (from prepare).
         After setting the configuration (except for mod), make localmodconfig
         is executed to deselect compilation of unused modules, but only if the
         runnig kernel matches the selected kernel version (major.minor only).
@@ -1164,22 +1169,26 @@ function prepare_kernel_configs {
     esac
     echo
 
+    if $NEW_KERNEL_CONFIG; then
+	let STEP+=1
+	echo "Step $STEP: set initial kernel configuration from command line."
+	WORKING_DIR="$PWD"
+	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
+	config_kernel "$WORKING_DIR"
+	cd - > /dev/null
+    fi
+
     let STEP+=1
     echo "Step $STEP: modify and store the kernel configurations."
     if ! $DRYRUN; then
 	while true; do
 	    cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 	    $ABSOLUTE && cp .config.origmrk .config
-	    cp .config .config.mrk
 	    make $KERNEL_MENU
 	    DESCRIPTION=""
-	    if ! diff -q .config.mrk .config > /dev/null; then
-		echo
-		read -p "  Short description of the kernel configuration (empty: finish) " DESCRIPTION
-		echo
-	    else
-		break
-	    fi
+	    echo
+	    read -p "  Short description of the kernel configuration (empty: finish) " DESCRIPTION
+	    echo
 	    if test -z "$DESCRIPTION"; then
 		break
 	    else
@@ -1198,7 +1207,6 @@ function prepare_kernel_configs {
 	cd - > /dev/null
 	# clean up:
 	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
-	rm -f .config.mrk
 	mv .config.origmrk .config
 	cd - > /dev/null
     fi
@@ -1262,17 +1270,29 @@ function config_kernel {
 		make olddefconfig
 	    fi
 	elif test -f "$KERNEL_CONFIG"; then
-	    echo_log "Use configuration from \"$KERNEL_CONFIG\" and run olddefconfig."
-	    KCF="$KERNEL_CONFIG"
-	    if test "x${KCF:0:1}" != "x/"; then
-		KCF="$1/$KERNEL_CONFIG"
-	    fi
-	    if ! $DRYRUN; then
-		cp "$KCF" .config
-		make olddefconfig
+	    if grep -q '^#### START CONFIG'; then
+		if test -z "$KERNEL_CONFIG_NUM"; then
+		    echo_log "You need to specify which configuration to extract from the \"$KERNEL_CONFIG\" file."
+		    exit 1
+		fi
+		echo_log "Use kernel configuration \"$KERNEL_CONFIG_NUM\" from file \"$KERNEL_CONFIG\"  and run olddefconfig."
+		if ! $DRYRUN; then
+		    sed -n -e "/^#### START CONFIG $KERNEL_CONFIG_NUM/,/^#### END CONFIG $KERNEL_CONFIG_NUM/p" $1/$KERNEL_CONFIG | sed -e '1d; $d;' > .config
+		    make olddefconfig
+		fi
+	    else
+		echo_log "Use configuration from \"$KERNEL_CONFIG\" and run olddefconfig."
+		KCF="$KERNEL_CONFIG"
+		if test "x${KCF:0:1}" != "x/"; then
+		    KCF="$1/$KERNEL_CONFIG"
+		fi
+		if ! $DRYRUN; then
+		    cp "$KCF" .config
+		    make olddefconfig
+		fi
 	    fi
 	else
-	    echo_log "Unknown kernel configuration \"$KERNEL_CONFIG\"."
+	    echo_log "Unknown kernel configuration file \"$KERNEL_CONFIG\"."
 	    return 0
 	fi
 	if $RUN_LOCALMOD; then
@@ -1293,7 +1313,7 @@ function config_kernel {
 function menu_kernel {
     check_root
     if test -d "$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}"; then
-	WORING_DIR="$PWD"
+	WORKING_DIR="$PWD"
 	cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
 
 	if test -f .config.origmrk; then
@@ -1318,7 +1338,7 @@ function menu_kernel {
 }
 
 function build_kernel {
-    WORING_DIR="$PWD"
+    WORKING_DIR="$PWD"
     cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
     echo_log "check for make-kpkg"
     HAVE_MAKE_KPKG=false
@@ -4034,11 +4054,15 @@ while test "x${1:0:1}" = "x-"; do
 	    shift
 	    if test -n "$1" && test "x$1" != "xreconfigure"; then
 		KERNEL_CONFIG="$1"
-		if test "x$KERNEL_CONFIG" != "xdef" && test "x$KERNEL_CONFIG" != "xold" && test "x$KERNEL_CONFIG" != "xmod" && test "x$KERNEL_CONFIG" != "xbackup" && test "x${KERNEL_CONFIG:0:1}" != "x/"; then
+		shift
+		if [[ "$2" =~ '^[0-9]+$' ]] ; then
+		    KERNEL_CONFIG_NUM="$2"
+		    shift
+		fi
+		if test "x$KERNEL_CONFIG" != "xdef" && test "x$KERNEL_CONFIG" != "xold" && test "x$KERNEL_CONFIG" != "xmod" && test "x$KERNEL_CONFIG" != "xbackup" && test -z "$KERNEL_CONFIG_NUM" && test "x${KERNEL_CONFIG:0:1}" != "x/"; then
 		    KERNEL_CONFIG="$PWD/$KERNEL_CONFIG"
 		fi
 		NEW_KERNEL_CONFIG=true
-		shift
 	    else
 		echo "you need to specify a kernel configuration after the -c option"
 		exit 1
