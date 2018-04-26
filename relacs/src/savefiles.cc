@@ -520,9 +520,8 @@ void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables
   for ( Options::iterator pi = stimulusdescription.begin();
 	pi != stimulusdescription.end();
 	++pi ) {
-    // std::cerr << pi->name() << " " << (pi->isNumber() ? pi->number() : pi->text()) << std::endl;
     if ( (pi->flags() & OutData::Mutable) == OutData::Mutable ) {
-      mutables.add( *pi );
+            mutables.add( *pi );
       // stimulusdescription.erase( *pi );
       pi->setText( "" );
       pi->setUnit( "" );
@@ -697,7 +696,6 @@ void SaveFiles::writeStimulus( void )
     if ( WriteNIXFiles ) {
       NixIO.writeStimulus( IL, EL, Stimuli, newstimuli, StimulusData, stimuliref, stimulusindex,
                            SessionTime, repronamecount, RW->AQ );
-      // NixIO.writeStimulus( IL, Stimuli, ReProName, SessionTime, RW, StimulusData );
     }
     #endif
   }
@@ -716,23 +714,23 @@ void SaveFiles::save( const RePro &rp, Options &macrostack )
     RW->printlog( "! warning: SaveFiles::save( RePro& ) -> already RePro data there." );
   ReProData = true;
   string dataset = Str( Path ).preventedSlash().name()
-    + "-" + rp.name() + "-" + Str( rp.allRuns() );
+    + "-" + rp.name() + "-" + Str( rp.allRuns() + 1 );
   ReProInfo.clear();
-  ReProInfo.setName( "dataset-" + dataset, "dataset" );
+  ReProInfo.setName( "RePro-Info", "relacs/repro" );
   ReProInfo.addText( "RePro", rp.name() );
   ReProInfo.addText( "Author", rp.author() );
   ReProInfo.addText( "Version", rp.version() );
   ReProInfo.addText( "Date", rp.date() );
-  ReProInfo.addInteger( "Run", rp.allRuns() );
+  ReProInfo.addInteger( "Run", rp.allRuns() + 1 );
   if ( macrostack.sectionsSize() > 0 ) {
-    ReProInfo.newSection( "dataset-macros-" + dataset, "macros" );
+    ReProInfo.newSection( "macros" , "relacs/repro/macros" );
     for ( Options::const_section_iterator sp=macrostack.sectionsBegin(); 
 	  sp != macrostack.sectionsEnd(); ++sp ) {
       ReProInfo.addText( (*sp)->name(), (*sp)->save( 0, Options::NoName ) );
     }
     ReProInfo.clearSections();
   }
-  ReProInfo.newSection( rp, 0, "dataset-settings-" + dataset, "settings" );
+  ReProInfo.newSection( rp, 0, "settings", "relacs/repro/settings" );
   DI.addRepro( ReProInfo );
   ReProName = rp.name();
 }
@@ -1819,9 +1817,11 @@ void SaveFiles::NixFile::close ( )
 static void saveNIXParameter(const Parameter &param, nix::Section &section, Options::SaveFlags flags)
 {
   vector<nix::Value> values;
-  bool first_only = (param.flags() & Options::FirstOnly) > 0;
+  bool first_only = (flags & Options::FirstOnly) > 0;
   for ( int i = 0;  i < (first_only ? 1 : param.size()); i++ ) {
     nix::Value val;
+    std::cerr << "saveParameter: " << param.name() << ": " << param.size()
+              << "\n firstOnly: " << first_only <<  "\n listAlways: "<< ((param.style() & Parameter::ListAlways) == 0) << std::endl;
     //have to check for number or integer, otherwise it doesn't work
     if ( param.isNumber () || param.isInteger() ) {
       if ( param.isInteger () ) {
@@ -1926,7 +1926,7 @@ static void saveNIXOptions(const Options &opts, nix::Section section,
     std::swap(ts, ns);
   }
   // This is a hack to fill in a valid name ... type-only
-  // sections in the options are invalid! e.g. (stimulus/sinwave) 
+  // sections in the options are invalid! e.g. (stimulus/sinwave)
   // should be fixed somewhere else...
   if ( ns.empty() && !ts.empty() ) {
     ns = ts;
@@ -1937,7 +1937,8 @@ static void saveNIXOptions(const Options &opts, nix::Section section,
   bool have_name = ( ( ! ns.empty() ) && ( ( flags & OFlags::NoName ) == 0 ) );
   bool have_type = ( ( ! ts.empty() ) && ( ( flags & OFlags::NoType ) == 0 ) );
   bool mk_section = ( opts.flag( selectmask ) && ( have_name && have_type ) );
-  // FIXME the previous check has been have_name || have_type
+  mk_section = mk_section && ( section.name() != ns || section.type() != ts );
+
   if ( mk_section ) {
     section = section.createSection ( nix::util::nameSanitizer(ns),
 				      nix::util::nameSanitizer(ts) );
@@ -2100,13 +2101,14 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 
 
 
-  void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const Options &stim_options,
-                                              const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
-                                              const Acquire *AQ, double start_time, double duration ) {
+void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const Options &stim_options,
+                                            const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
+                                            const Acquire *AQ, double start_time, double duration ) {
   nix::Section s;
   if ( repro_name.size() > 0 ) {
-    s = fd.createSection( repro_name, "relacs.repro" );
-    //Options opt = stim_info[0].description();
+    string stim_name = stim_options.name();
+    string stim_type = stim_options.type();
+    s = fd.createSection( stim_name, stim_type );
     saveNIXOptions( stim_options, s, Options::FirstOnly, 0 );
   }
   stimulus_positions = root_block.createDataArray( repro_name + " onset times", "nix.event.positions",

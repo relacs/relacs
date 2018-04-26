@@ -381,9 +381,7 @@ int Beats::main( void )
       double chirpfrequency = 0.0;
       int chirpsequence = -1;
       OutList signal;
-      std::cerr << "#####################\n";
-      std::cerr << settings().flags( "deltafrange", OutData::Mutable )  << std::endl;
-      std::cerr << settings()["deltafrange"] << std::endl;
+
       if ( fixeddf ) {
 	chirpheader.clear();
 	OutData sig;
