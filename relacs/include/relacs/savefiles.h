@@ -541,10 +541,12 @@ protected:
     void resetIndex ( const InList &IL );
     void resetIndex ( const EventList &EL );
     void appendValue( nix::DataArray &array, double value );
+    void appendValue( nix::DataArray &array, string value );
     nix::DataArray createFeature( nix::Block &block, nix::MultiTag &mtag,
 				  std::string name, std::string type,
 				  std::string unit, std::string label,
-				  nix::LinkType link_type=nix::LinkType::Indexed);
+				  nix::LinkType link_type=nix::LinkType::Indexed,
+                                  nix::DataType dtype = nix::DataType::Double);
     string rid; //recording id
 
     vector<NixTrace> traces;
