@@ -216,49 +216,40 @@ To show some information about your machine, RTAI patches, grub menue, etc. run
 
 
 \section basickernelconfiguration Kernel configuration
-For making the Linux kernel work with RTAI you need to check the following settings 
+For making the Linux kernel work with RTAI you should check the following settings 
 in the kernel configuration dialog.
 
 Also read /usr/local/src/rtai/README.CONF_RMRKS !
 
-- General setup: 
+- "General setup":
   - Disable "Enable sytem-call auditing support" (\c AUDITSYSCALL)
   - Important: set "Stack Protector buffer overflow detection" (at the bottom of the menu) to
     "Regular" (\c CC_STACKPROTECTOR_REGULAR)  - 
     or even "None" (\c CC_STACKPROTECTOR_NONE) if the latency test crashes.
   .
-- Processor type and features: 
-  - In case you have a uniprocessor system, deselect "Symmetric multi-processing support" (\c SMP)
-  - You may want to select the right "Processor family" (you find the
-    name of your processor by looking at \c /proc/cpuinfo, check \c
-    "help" to find out, which Processor family you have to select.
-    Intel i5/i7 with "cpu family : 6" are "Core 2/newer Xeon")
-  - Set the "Maximum numbers of CPUs" (\c NR_CPUS) to the number of physical cores
-    you have in your machine (check in `/proc/cpuinfo` the "`cpu cores`")
-  - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))" (\c PREEMPT)
-  - "I-pipe legacy interface" (\c IPIPE_LEGACY): keep disabled for RTAI 5.x, enable for rtai-4.1 (and earlier?)
-- Power management and ACPI options:
-  - Disable everything except for:
-  - Enable "ACPI (Advanced Configuration and Power Interface) Support"
-    - Disable everything except for:
-    - Select "Power Management Timer Suppport" (if available)
+- "Power management and ACPI options":
+  - In "ACPI (Advanced Configuration and Power Interface) Support":
+    - Disable "Processor" (\c ACPI_PROCESSOR)
     .
-  - In particular disable "CPU Frequency scaling" (\c CPU_FREQ)
-  - In particular disable "CPU idle PM support" (\c CPU_IDLE)
+  - Disable "CPU Frequency scaling" (\c CPU_FREQ)
+  - In "CPU Idle":
+    - Disable "CPU idle PM support" (\c CPU_IDLE)
+    .
   .
-- Device Drivers:
-  - Staging drivers:
+- "Device Drivers":
+  - In "Staging drivers":
     - Deselect "Data acquisition support (comedi)" (\c COMEDI)
       (Really? It comes with kcomedilib!)
     .
   .
-- Kernel hacking: disabling debugging makes the kernel much
-  smaller. So unless you know that you need it disable it.
-  - Disable "Kernel debugging" (\c DEBUG_KERNEL)
+- "Kernel hacking": 
+  - In "Compile-time checks and compiler options":
+    - Disable "Compile the kernel with debug info" (\c DEBUG_INFO)
+    .
+    Disabling debugging information makes the kernel much
+    smaller. So unless you know that you need it disable it.
   - Disable "Tracers" (\c FTRACE)
-.
-- You may also disable "Virtualization" (\c VIRTUALIZATION) if
-  possible unless you know that you need it.
+  .
 .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
 Select "Yes".
@@ -434,13 +425,16 @@ More information can be found at
 internet (\ref rtailinks).
 
 \subsection powersavingmodes Disable CPU power saving modes
-Most importantly, for newer CPUs like Intel i5 and Intel i7 CPUs,
+Most importantly, for newer CPUs like Intel i3/i5/i7 CPUs,
 disabling CPU power saving modes improves real-time performance
 dramatically. Before you try anything else do:
 - Add the kernel parameter `idle=poll` . This is usually sufficient.
   See \ref kernelparamhints on how to set kernel parameter.
+.
+
+Some more advice in this context:
 - For older RTAI (<5.0) or kernels (<4.0?) adding both
-  `processor.max_cstate=0 idle=poll` is helpful. In more recent
+  `intel_idle.max_cstate=0 processor.max_cstate=0 idle=poll` is helpful. In more recent
   contexts, however, `processor.max_cstate=0` seems to make things
   worse.
 - Just a note: the cstates can also be dynamically controlled by writing the
@@ -465,35 +459,85 @@ cat /sys/module/intel_idle/parameters/max_cstate
   http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels
 .
 
-
 \subsection hyperthreading Hyperthreading
 
-README.CONF_RMRKS: 
+README.CONF_RMRKS says: 
 
 - Under SMP set the number of CPUs equal to the real
   ones and have it matched in RTAI, no hyperthreading intended.
 - Even if RTAI can work with hyperthreading enabled, such an option is deprecated
   as a possible cause of latency; in any case try and verify if it is acceptable,
   with your hardware and for your applications.
+.
 
-Switch off hyperthreading? 
-https://serverfault.com/questions/235825/disable-hyperthreading-from-within-linux-no-access-to-bios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-https://unix.stackexchange.com/questions/33450/checking-if-hyperthreading-is-enabled-or-not
+So, check whether you have hyperthreading. Run
+\code
+./makertaikernel.sh info cpus
+\endcode
+The top of the output looks like this (Intel i7-4770):
+\code
+CPU topology and frequencies (/sys/devices/system/cpu/*):
+         online  physical_id  core_id  freq/MHz      governor
+  cpu0        1            0        0     0.800      ondemand
+  cpu1        1            0        1     0.800      ondemand
+  cpu2        1            0        2     0.800      ondemand
+  cpu3        1            0        3     0.800      ondemand
+  cpu4        1            0        0     0.800      ondemand
+  cpu5        1            0        1     1.000      ondemand
+  cpu6        1            0        2     1.200      ondemand
+  cpu7        1            0        3     1.400      ondemand
+\endcode
+In case in the "core_id" column the numbers appear twice or more
+often, then you run in hyperthreading mode (as is the case in the example).
 
-Compiling with CONFIG_NR_CPUS set to the physical number of CPUs does
-not work since it disables the second core (core id) and runs two CPUs
-on the first core.
+By reducing the number of CPUs to four, you can eliminate
+hyperthreading (see below).
 
-Switch off CPUs:
+If the topology looks like this (Intel i7-3520M):
+\code
+CPU topology and frequencies (/sys/devices/system/cpu/*):
+         online  physical_id  core_id  freq/MHz      governor
+  cpu0        1            0        0     2.700      ondemand
+  cpu1        1            0        0     2.901      ondemand
+  cpu2        1            0        1     2.901      ondemand
+  cpu3        1            0        1     2.901      ondemand
+\endcode
+the trick to simply reduce the number of cpus to the number of actual
+cores does not work.
+
+This is an example of a machine without hyperthreading (Intel i5-3570):
+\code
+CPU topology and frequencies (/sys/devices/system/cpu/*):
+         online  physical_id  core_id  freq/MHz      governor
+  cpu0        1            0        0     3.400     powersave
+  cpu1        1            0        1     3.144     powersave
+  cpu2        1            0        2     2.863     powersave
+  cpu3        1            0        3     3.260     powersave
+\endcode
+In this case you do not need to do anything.
+
+This is what you need to do when configuring the kernel:
+- In "Processor type and features": 
+  - In case you have a uniprocessor system, deselect "Symmetric multi-processing support" (\c SMP)
+  - Set the "Maximum numbers of CPUs" (\c NR_CPUS) to the number of
+    physical cores you have in your machine. The \c makertaiscript.sh
+    automatically sets for the RTAI configuration the same number
+    of CPUs.  
+  .
+.
+
+Switch off individual CPUs:
 \code
 echo 0 > /sys/devices/system/cpu/cpuX/online
 \endcode
 This crashes when inserting rtai_hal (even if CONFIG_RTAI_CPUS is adapted to the lower cpucount).
 
-Actually, the number of CPUs (CONFIG_NR_CPUS) do not seem to matter
-(less or more than the actually available cores).
+For more information see:
+- https://serverfault.com/questions/235825/disable-hyperthreading-from-within-linux-no-access-to-bios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+- https://unix.stackexchange.com/questions/33450/checking-if-hyperthreading-is-enabled-or-not
+.
 
-The kernel configs in the "Processor type and features" submenu
+The related kernel configs in the "Processor type and features" submenu
   - "SMT (Hyperthreading) scheduler support"
   - "Multi-core scheduler support"
   .
@@ -514,7 +558,6 @@ README.CONF_RMRKS:
 - Power management, see CONFIG_CPU_FREQ and CONFIG_CPU_IDLE below; on portables 
   battery management too.
 - Recent Intel SpeedStepping and Boosting.
-- Disable AUDITSYSCALLS.
 - Disable CPU_FREQ.
 - Disable CPU_IDLE and INTEL_IDLE, or boot with "intel_idle.max_cstate=0". If you
   want to be sure to have a never sleeping CPU execute, at the lowest priority, 
@@ -524,132 +567,70 @@ README.CONF_RMRKS:
   a single CPU.
 .
 
-Turn of frequency scaling on a specific CPU:
+You can try leaving everyting enabled in "Power management and ACPI
+options" and play around with the following kernel options:
+- intel_pstate=disable
+- intel_idle.max_cstate=1
+- intel_idle.max_cstate=0
+- intel_idle.max_cstate=0 processor.max_cstate=0
+- intel_idle.max_cstate=0 processor.max_cstate=1
+.
+You may also try turning off frequency scaling on a specific CPU (the one that runs your RTAI task):
 https://wiki.archlinux.org/index.php/CPU_frequency_scaling
 
-
-\subsection kernelparamhints Kernel parameter
-
-There are several interesting kernel parameter that influence the
-real-time performance.
-
-See the file \c Documentation/kernel-parameters.txt in your linux
-kernel source tree (in \c /usr/src) for a documentation of all kernel
-parameter.
-
-You can pass kernel parameter directly to the reboot command:
-\code
-sudo ./makertaikernel.sh reboot XXX
-\endcode
-where [XXX] are kernel parameter to be used for booting the
-kernel (they are added permanently to the \c
-GRUB_CMDLINE_LINUX_DEFAULT variable in \c /etc/default/grub). The
-original settings are recovered when calling \c reboot \c default).
-
-See
-\code
-sudo ./makertaikernel.sh help reboot
-\endcode
-for further options and details.
-
-Here is a list of potentially influential kernel parameter:
-
-CPU frequency scaling and power control:
-- \c idle=poll
-- Disable the intel_idle module. Alternatively you can set \c
-  intel_idle.max_cstate=0 . This is taken care of by the disabled "CPU
-  Idle" in "Power management and ACPI options".
-- check out
-  https://gitlab.eurecom.fr/oai/openairinterface5g/wikis/OpenAirKernelMainSetup
-  for more hints on disabling power-management and frequency scaling
-  stuff
-- Check frequency scaling of CPUs with \a cpufreq-info from the \c cpufrequtils package.
+You may also try:
+- acpi=off    # often very effective, but weired system behavior
+- acpi=noirq
+- pci=noacpi
+- pci=nomsi
 .
 
-Clocks and timers:
-- \c nohz=off
-- \c tsc=reliable
-- \c highres=off
-- \c hpet=disable
-- For scheduling interrupts read \c Documentation/timers/NO_HZ.txt
-- Also check out "nohalt" kernel parameter.
-.
+You get the kernel parameters for a test batch file by running
+\code
+./makertaikernel.sh test batch acpi
+\endcode
 
-README.CONF_RMRKS: If unsure on the CPU to choose, care of setting one
+
+\subsection processorfamily Select processor family
+
+README.CONF_RMRKS: 
+- If unsure on the CPU to choose, care of setting one
   featuring the Time Stamp Clock (TSC), which means no 486 and "false"
   i586, since generic INTEL i586 compatibles often do not have a TSC,
   while true INTEL ones do have it.
-
-Advanced configuration and power interface (ACPI):
-- \c acpi=off , although effective this may results in an unstable system
-- \c pci=noacpi .
-- With disabled acpi your rtai-patched linux kernel might not properly
-  halt or reboot. Try \c reboot=triple as a kernel parameter.  See \c
-  /usr/src/linux/Documentation/x86/x86_64/boot-options.txt for more
-  options for the reboot parameter.
 .
 
-Advanced programmable interrupt controller (APIC):
-- \c noapic
-- \c nolapic , usually not a good idea, becaus RTAI uses the lapic timer. 
-- \c lapic
-.
-
-Others:
-- disable all DMA transfers by setting kernel parameter \c libata.dma=0.
-  
-  What about \c ide-core.nodma parameter (it's ide not sata!)?
-
-  What about ltpc=irq ?
-
-  README.CONF_RMRKS: LINUX use of DMA can add latency, especially when
-  it is supported in burst mode.
-
-.
-
-Supply the kernel parameter to the \c reboot action of \c makertaikernel.sh:
+Check your processor by running
 \code
-$ makertaikernel.sh reboot param1=xxx param2=yyy ...
+./makertaikernel.sh info cpus
+\endcode
+The last part looks like this:
+\code
+CPU (/proc/cpuinfo):
+  model name    : Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+  number of cpus: 4
+  cpu family: 6
+  cpuidle driver: intel_idle
+  machine (uname -m): x86_64
+  memory (free -h)  : 7.5G RAM
 \endcode
 
-If you want to test many kernel parameter you can completely
-automatize this with the \c makertaikernel.sh script. Create a file in
-which each line contains a description of the kernel parameters, a
-colon ':', and the kernel parameters as they sould be passed to the
-kernel. You may start out with the \c testkernelparams.mrk file that
-you get by calling 
-\code 
-$ makertaikernel.sh test batch default
-\endcode
-Modify this file according to your needs or create your own one. Then calling
-\code 
-$ makertaikernel.sh test 90 batch testkernelparams.mrk
-\endcode
-will reboot with the first set of kernel parameter, automatically run
-the test, save the results using the description of the parameter,
-reboot with the next kernel parameters, and so on until all kernel
-parameter have been tested (or the system hangs). After the last test
-the default kernel is booted with its original kernel parameter. In
-the directory where you executed the script you will find all the test
-results. Analyse them with
-\code 
-$ makertaikernel.sh report latencies-*
-\endcode
+Select your processor in the kernel configuration:
+- "Processor type and features":
+  - "Processor family"
+  .
+.
+In the kernel menu check \c "help" to find out, which processor family you have to select.
+Processors with "cpu family : 6" are "Core 2/newer Xeon".
 
-If you want to stop automatic rebooting before all configurations have been tested run
-\code 
-$ makertaikernel.sh restore testbatch
-\endcode
 
-Alternatively, you can set kernel parameters during startup by hitting 'e' in the \c
-grub menu and then add them to the \c kernel line.
+\subsection lowlatencykernel Low-latency kernel configuration
 
-For applying the kernel parameter permanently add them in \c
-/boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX_DEFAULT
-variable in \c /etc/defaults/grub and run \c update-grub.
-
-After restart, check for the number of CPUs in \c /proc/cpuinfo - they
-might be reduced if you disabled too much ACPI!
+- "Processor type and features":
+  - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))" (\c PREEMPT)
+  - Set "Timer frequency" to 1000Hz (`CONFIG_HZ_1000=y` and `CONFIG_HZ=1000`)
+  .
+.
 
 
 \subsection disabledevices Disable device drivers you do not need
@@ -667,7 +648,7 @@ for a list of PCI devices on your system and their associated kernel modules.
 When configuring the kernel you can hit '/', enter a search term (the
 module name) and you get a list of matching configuration parameters.
 
-Devices to look out are:
+Devices to consider are:
 - Disable DRM:
   - Device Drivers:
     - Graphics support:
@@ -762,18 +743,6 @@ real-time perfomance (low latencies):
     .
   .
 
-- Disable dynamic ticks (this influences Linux performance but not RTAI...):
-  - General setup:
-    - Timers subsystem:
-      - Set "Timer tick handling" to "Periodic timer ticks" or "Idle dynticks system" (no tickless system!)
-      - Deselect "Old Idle dynticks config"
-      .
-  - Processor type and features: 
-    - Set "Timer frequency" to 1000 Hz
-    - Disable "Tickless System" (in newer kernel versions this has been moved to "General setup-Timers subsystem")
-    .
-  .
-
 - Disable IOMMU (no effect?):
   - Processor type and features: 
     - Disable "Old AMD GART IOMMU support"
@@ -783,15 +752,129 @@ real-time perfomance (low latencies):
     - Disable IOMMU Hardware Support
     .
 
-- The \c lowlatency kernel image has the following settings against the \c generic one:
-  - CONFIG_PREEMPT=y and CONFIG_PREEMPT_COUNT=y ("Processor type and features" -> "Preemption Model (Preemptible kernel (Low-Latency Desktop))")
-  - CONFIG_HZ_1000=y and CONFIG_HZ=1000 ("Processor type and features" -> "Timer frequency")
-  .
-
 - Maybe also try:
   - CONFIG_RCU_BOOST and CONFIG_RCU_KTHREAD_PRIO
   .
 .
+
+
+\subsection kernelparamhints Kernel parameter
+
+There are several interesting kernel parameter that influence the
+real-time performance.
+
+See the file \c Documentation/kernel-parameters.txt in your linux
+kernel source tree (in \c /usr/src) for a documentation of all kernel
+parameter.
+
+You can pass kernel parameter directly to the reboot command:
+\code
+sudo ./makertaikernel.sh reboot XXX
+\endcode
+where [XXX] are kernel parameter to be used for booting the
+kernel (they are added permanently to the \c
+GRUB_CMDLINE_LINUX_DEFAULT variable in \c /etc/default/grub). The
+original settings are recovered when calling \c reboot \c default).
+
+See
+\code
+sudo ./makertaikernel.sh help reboot
+\endcode
+for further options and details.
+
+Here is a list of potentially influential kernel parameter:
+
+CPU frequency scaling and power control:
+- \c idle=poll
+- Disable the intel_idle module. Alternatively you can set \c
+  intel_idle.max_cstate=0 . This is taken care of by the disabled "CPU
+  Idle" in "Power management and ACPI options".
+- check out
+  https://gitlab.eurecom.fr/oai/openairinterface5g/wikis/OpenAirKernelMainSetup
+  for more hints on disabling power-management and frequency scaling
+  stuff
+- Check frequency scaling of CPUs with \a cpufreq-info from the \c cpufrequtils package.
+.
+
+Clocks and timers:
+- \c nohz=off
+- \c tsc=reliable
+- \c highres=off
+- \c hpet=disable
+- For scheduling interrupts read \c Documentation/timers/NO_HZ.txt
+- Also check out "nohalt" kernel parameter.
+.
+
+Advanced configuration and power interface (ACPI):
+- \c acpi=off , although effective this may results in an unstable system
+- \c pci=noacpi .
+- With disabled acpi your rtai-patched linux kernel might not properly
+  halt or reboot. Try \c reboot=triple as a kernel parameter.  See \c
+  /usr/src/linux/Documentation/x86/x86_64/boot-options.txt for more
+  options for the reboot parameter.
+.
+
+Advanced programmable interrupt controller (APIC):
+- \c noapic
+- \c nolapic , usually not a good idea, becaus RTAI uses the lapic timer. 
+- \c lapic
+.
+
+Others:
+- disable all DMA transfers by setting kernel parameter \c libata.dma=0.
+  
+  What about \c ide-core.nodma parameter (it's ide not sata!)?
+
+  What about ltpc=irq ?
+
+  README.CONF_RMRKS: LINUX use of DMA can add latency, especially when
+  it is supported in burst mode.
+
+.
+
+Supply the kernel parameter to the \c reboot action of \c makertaikernel.sh:
+\code
+$ makertaikernel.sh reboot param1=xxx param2=yyy ...
+\endcode
+
+If you want to test many kernel parameter you can completely
+automatize this with the \c makertaikernel.sh script. Create a file in
+which each line contains a description of the kernel parameters, a
+colon ':', and the kernel parameters as they sould be passed to the
+kernel. You may start out with the \c testkernelparams.mrk file that
+you get by calling 
+\code 
+$ makertaikernel.sh test batch default
+\endcode
+Modify this file according to your needs or create your own one. Then calling
+\code 
+$ makertaikernel.sh test 90 batch testkernelparams.mrk
+\endcode
+will reboot with the first set of kernel parameter, automatically run
+the test, save the results using the description of the parameter,
+reboot with the next kernel parameters, and so on until all kernel
+parameter have been tested (or the system hangs). After the last test
+the default kernel is booted with its original kernel parameter. In
+the directory where you executed the script you will find all the test
+results. Analyse them with
+\code 
+$ makertaikernel.sh report latencies-*
+\endcode
+
+If you want to stop automatic rebooting before all configurations have been tested run
+\code 
+$ makertaikernel.sh restore testbatch
+\endcode
+
+Alternatively, you can set kernel parameters during startup by hitting 'e' in the \c
+grub menu and then add them to the \c kernel line.
+
+For applying the kernel parameter permanently add them in \c
+/boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_LINUX_DEFAULT
+variable in \c /etc/defaults/grub and run \c update-grub.
+
+After restart, check for the number of CPUs in \c /proc/cpuinfo - they
+might be reduced if you disabled too much ACPI!
 
 
 \subsection rtaiisolcpus Isolate CPUs for real time tasks 

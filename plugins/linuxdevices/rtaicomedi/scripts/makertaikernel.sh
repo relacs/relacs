@@ -332,13 +332,13 @@ In a batch FILE
   specifies a new kernel configuration stored in <file>,
   that is compiled after booting into the default kernel.
   <descr> describes the kernel configuration; it is used for naming successive tests.
+  Actually, <file> can be everything the -c otion is accepting, in particular
+  <descr> : CONFIG : backup
+  compiles a kernel with the configuration of the kernel at the beginning of the tests.
+  This is particularly usefull as the last line of a batch file.
 - the first line  of the batch file can be just
   <descr> : CONFIG :
   this sets <descr> as the description of the already existing RTAI kernel for the following tests.
-- the special line
-  <descr> : CONFIG : BACKUP
-  compiles a kernel with the configuration at the beginning of the tests.
-  This is particularly usefull as the last line of a batch file.
 
 Use 
 ${MAKE_RTAI_KERNEL} prepare
@@ -582,12 +582,19 @@ function print_kernel_configs {
     KCF=""
     test -z "$1" && KCF="config-*"
     if [ -t 1 ]; then
-	echo "Available kernel configurations - add them to a test batch file:"
+	echo "Available kernel configurations - add them to a test batch file."
+	echo "The asterisk marks configurations that are identical with the current one."
 	echo
+	for FILE in "$@" $KCF; do
+	    SAME="  "
+	    diff -q "$FILE" $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config> /dev/null && SAME="* "
+	    echo "${SAME}${FILE##*config-} : CONFIG : $FILE"
+	done
+    else
+	for FILE in "$@" $KCF; do
+	    echo "${FILE##*config-} : CONFIG : $FILE"
+	done
     fi
-    for FILE in "$@" $KCF; do
-	echo "${FILE##*config-} : CONFIG : $FILE"
-    done 
 }
 
 function print_grub {
@@ -677,6 +684,7 @@ function print_cpus {
     echo "CPU (/proc/cpuinfo):"
     echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
     echo "  number of cpus: $CPU_NUM"
+    echo "  cpu family: $(grep "cpu family" /proc/cpuinfo | awk 'NR==1 { print $4}')"
     echo "  cpuidle driver: $CPU_IDLE"
     echo "  machine (uname -m): $MACHINE"
     echo "  memory (free -h)  : $(free -h | grep Mem | awk '{print $2}') RAM"
@@ -1131,6 +1139,7 @@ function prepare_kernel_configs {
 	    if test -z "$DESCRIPTION"; then
 		break
 	    fi
+	    make olddefconfig
 	    CONFIG_FILES+=( "config-${DESCRIPTION}" )
 	    cd - > /dev/null
 	    cp $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config "config-${DESCRIPTION}"
@@ -1173,6 +1182,7 @@ function prepare_kernel_configs {
 }
 
 function config_kernel {
+    WORKING_DIR="$1"
     if $NEW_KERNEL_CONFIG; then
 	# kernel configuration:
 	if test "x$KERNEL_CONFIG" = "xdef"; then
@@ -1198,30 +1208,31 @@ function config_kernel {
 		make localmodconfig
 	    fi
 	    RUN_LOCALMOD=false
-	elif test "x$KERNEL_CONFIG" = "xbackup"; then
-	    echo_log "Use backup configuration from \"$KERNEL_CONFIG_BACKUP\" and run olddefconfig."
-	    KCF="$KERNEL_CONFIG_BACKUP"
-	    if test "x${KCF:0:1}" != "x/"; then
-		KCF="$1/$KERNEL_CONFIG"
-	    fi
-	    if ! $DRYRUN; then
-		cp "$KCF" .config
-		make olddefconfig
-	    fi
-	elif test -f "$KERNEL_CONFIG"; then
-	    echo_log "Use configuration from \"$KERNEL_CONFIG\" and run olddefconfig."
-	    KCF="$KERNEL_CONFIG"
-	    if test "x${KCF:0:1}" != "x/"; then
-		KCF="$1/$KERNEL_CONFIG"
-	    fi
-	    if ! $DRYRUN; then
-		cp "$KCF" .config
-		make olddefconfig
-	    fi
 	else
-	    echo_log "Unknown kernel configuration file \"$KERNEL_CONFIG\"."
-	    return 0
+	    FAILED=false
+	    cd "$WORKING_DIR"
+	    KCF=""
+	    BKP=""
+	    if test "x$KERNEL_CONFIG" = "xbackup"; then
+		KCF="$KERNEL_CONFIG_BACKUP"
+		BKP="backup-"
+	    else
+		KCF="$KERNEL_CONFIG"
+	    fi
+	    if test -f "$KCF"; then
+		echo_log "Use ${BKP}configuration from \"$KCF\" and run olddefconfig."
+		if ! $DRYRUN; then
+		    cp "$KCF" $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+		    make olddefconfig
+		fi
+	    else
+		echo_log "Unknown kernel configuration file \"$KCF\"."
+		FAILED=true
+	    fi
+	    cd - > /dev/null
+	    $FAILED && return 1
 	fi
+
 	if $RUN_LOCALMOD; then
 	    if test ${CURRENT_KERNEL%.*} = ${LINUX_KERNEL%.*} ; then
 		echo_log "Run make localmodconfig"
@@ -2125,9 +2136,9 @@ function test_batch {
 #
 # Alternatively, lines of the following format specify a new kernel to be compiled:
 # <description> : CONFIG : <config-file>
-# <description> : CONFIG : BACKUP
+# <description> : CONFIG : backup
 # where <config-file> is the file with the kernel configuration, 
-# BACKUP specifies the kernel configuration at the beginning of the tests,
+# "backup" specifies the kernel configuration at the beginning of the tests,
 # and <description> describes the kernel configuration for the following tests. 
 # A line without a configuration file:
 # <description> : CONFIG :
@@ -2177,6 +2188,11 @@ plain : :
 acpinoirq : : acpi=noirq
 pcinoacpi : : pci=noacpi
 pcinomsi : : pci=nomsi
+nopstate : : intel_pstate=disable
+intelcstate1 : : intel_idle.max_cstate=1
+intelcstate0 : : intel_idle.max_cstate=0
+processorcstate0 : : intel_idle.max_cstate=0 processor.max_cstate=0
+processorcstate1 : : intel_idle.max_cstate=0 processor.max_cstate=1
 EOF
 			;;
 
@@ -2199,7 +2215,8 @@ EOF
 
 		    isolcpus) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
-# batch file for testing RTAI kernel with cpu isolation
+# Batch file for testing RTAI kernel with cpu isolation.
+# Replace "=1" by the index of the cpu you want to isolate.
 
 plain : :
 plain : full :
@@ -2473,29 +2490,13 @@ function test_batch_script {
 
     if $COMPILE; then
 	# compile new kernel:
-	ABORT=false
-	KCF="$NEW_KERNEL_PARAM"
-	case $KCF in
-	    BACKUP )
-		echo_log "Use \"$KERNEL_CONFIG_BACKUP\" for kernel configuration."
-		cp $KERNEL_CONFIG_BACKUP $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
-		;;
-	    '' ) ABORT=true
-		;;
-	    * ) if test -f "$KCF"; then
-	            echo_log "Use kernel configuration from file \"$KCF\"."
-		    cp "$KCF" $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
-                else
-	            ABORT=true
-                fi
-		;;
-	esac
-	if $ABORT; then
-	    echo_log "Missing or nonexisting kernel configuration \"$KCF\"!"
-	    echo_kmsg "Missing or nonexisting kernel configuration \"$KCF\"!"
+	KERNEL_CONFIG="$NEW_KERNEL_PARAM"
+	NEW_KERNEL_CONFIG=true
+	if test -z "$KERNEL_CONFIG"; then
+	    echo_log "Missing kernel configuration!"
+	    echo_kmsg "Missing kernel configuration!"
 	    test_abort
 	fi
-
 	echo_log "Compile new kernel:"
 	echo_kmsg "START COMPILE NEW KERNEL"
 	KERNEL_MENU=old
