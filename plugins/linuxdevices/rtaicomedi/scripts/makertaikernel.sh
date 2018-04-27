@@ -665,23 +665,33 @@ function print_cpus {
     test -r /sys/devices/system/cpu/cpu0/cpuidle/state0/name && printf "  cpuidle (enabled fraction)"
     printf "\n"
     printf "logical  online  socket  core  freq/MHz      governor  freqtrans"
-    for CSTATE in /sys/devices/system/cpu/cpu0/cpuidle/state*/name; do
-	printf "  %-7s" $(cat $CSTATE)
-    done
+    if test -f /sys/devices/system/cpu/cpu0/cpuidle/state0/name; then
+	for CSTATE in /sys/devices/system/cpu/cpu0/cpuidle/state*/name; do
+	    printf "  %-7s" $(cat $CSTATE)
+	done
+    fi
     printf "\n"
     CSTATEUSAGE="usage" # or "time"
+    CPU_NUM=0
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
+	let CPU_NUM+=1
 	CPUT="$CPU/topology"
+	LC_NUMERIC="en_US.UTF-8"
 	ONLINE=1
 	test -r $CPU/online && ONLINE=$(cat $CPU/online)
+	CPUFREQ=$(grep 'cpu MHz' /proc/cpuinfo | awk -F ': ' "NR==$CPU_NUM {print \$2}")
+	test -r $CPU/cpufreq/scaling_cur_freq && CPUFREQ=$(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc)
+	CPUFREQGOVERNOR="-"
+	test -f $CPU/cpufreq/scaling_governor && CPUFREQGOVERNOR=$(cat $CPU/cpufreq/scaling_governor)
 	CPUFREQTRANS="-"
-	#test -r $CPU/cpufreq/stats/total_trans && CPUFREQTRANS=$(cat $CPU/cpufreq/stats/total_trans)
-	LC_NUMERIC="en_US.UTF-8"
-	printf "  cpu%-2d  %6d  %6d  %4d  %8.3f  %12s  %9s" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc) $(cat $CPU/cpufreq/scaling_governor) $CPUFREQTRANS
-	SUM=$(cat $CPU/cpuidle/state?/$CSTATEUSAGE | awk '{N+=$1} END {print N}')
-	for CSTATE in $CPU/cpuidle/state*; do
-	    printf "  %1s %4d%%" $(cat $CSTATE/disable) $(( $(( 100*$(cat $CSTATE/$CSTATEUSAGE) )) / $SUM ))
-	done
+	test -r $CPU/cpufreq/stats/total_trans && CPUFREQTRANS=$(cat $CPU/cpufreq/stats/total_trans)
+	printf "  cpu%-2d  %6d  %6d  %4d  %8.3f  %12s  %9s" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $CPUFREQ $CPUFREQGOVERNOR $CPUFREQTRANS
+	if test -f $CPU/cpuidle/state*; then
+	    SUM=$(cat $CPU/cpuidle/state?/$CSTATEUSAGE | awk '{N+=$1} END {print N}')
+	    for CSTATE in $CPU/cpuidle/state*; do
+		printf "  %1s %4d%%" $(cat $CSTATE/disable) $(( $(( 100*$(cat $CSTATE/$CSTATEUSAGE) )) / $SUM ))
+	    done
+	fi
     printf "\n"
     done
     echo
