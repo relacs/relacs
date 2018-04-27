@@ -1526,12 +1526,12 @@ function reboot_cmd {
 	    reboot -f
 	elif test "x$(id -u)" != "x0"; then
 	    if qdbus --version &> /dev/null; then
-		qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 1 2
-	    elif gnome-session-quit --version &> /dev/null; then
-		gnome-session-quit --reboot --force
-	    else
-		shutdown -r now
+		qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 1 2 && return
 	    fi
+	    if gnome-session-quit --version &> /dev/null; then
+		gnome-session-quit --reboot --force && return
+	    fi
+	    shutdown -r now
 	else
 	    echo_kmsg "REBOOT (shutdown -r now)"
 	    shutdown -r now
