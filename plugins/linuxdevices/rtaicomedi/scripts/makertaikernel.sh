@@ -660,32 +660,55 @@ function print_kernel {
 }
 
 function print_cpus {
-    echo "CPU topology and frequencies (/sys/devices/system/cpu/*):"
-    printf "         online  physical_id  core_id  freq/MHz      governor\n"
+    echo "CPU topology, frequencies, and idle states (/sys/devices/system/cpu/*):"
+    printf "cpu topology                   cpufreq                          "
+    test -r /sys/devices/system/cpu/cpu0/cpuidle/state0/name && printf "  cpuidle (enabled fraction)"
+    printf "\n"
+    printf "logical  online  socket  core  freq/MHz      governor  freqtrans"
+    for CSTATE in /sys/devices/system/cpu/cpu0/cpuidle/state*/name; do
+	printf "  %-7s" $(cat $CSTATE)
+    done
+    printf "\n"
+    CSTATEUSAGE="usage" # or "time"
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	CPUT="$CPU/topology"
 	ONLINE=1
 	test -r $CPU/online && ONLINE=$(cat $CPU/online)
+	CPUFREQTRANS="-"
+	#test -r $CPU/cpufreq/stats/total_trans && CPUFREQTRANS=$(cat $CPU/cpufreq/stats/total_trans)
 	LC_NUMERIC="en_US.UTF-8"
-	printf "  cpu%-2d  %6d  %11d  %7d  %8.3f  %12s\n" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc) $(cat $CPU/cpufreq/scaling_governor)
+	printf "  cpu%-2d  %6d  %6d  %4d  %8.3f  %12s  %9s" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc) $(cat $CPU/cpufreq/scaling_governor) $CPUFREQTRANS
+	SUM=$(cat $CPU/cpuidle/state?/$CSTATEUSAGE | awk '{N+=$1} END {print N}')
+	for CSTATE in $CPU/cpuidle/state*; do
+	    printf "  %1s %4d%%" $(cat $CSTATE/disable) $(( $(( 100*$(cat $CSTATE/$CSTATEUSAGE) )) / $SUM ))
+	done
+    printf "\n"
     done
     echo
 
+    echo "CPU idle and boost (/sys/devices/system/cpu/{cpuidle,cpufreq}):"
+    CPU_IDLE="no"
+    if test -r /sys/devices/system/cpu/cpuidle/current_driver; then
+	CPU_IDLE="$(cat /sys/devices/system/cpu/cpuidle/current_driver)"
+    fi
+    CPU_BOOST="no"
+    if test -f /sys/devices/system/cpu/cpufreq/boost; then
+	CPU_BOOST="$(cat /sys/devices/system/cpu/cpufreq/boost)"
+    fi
+    echo "  cpuidle driver : $CPU_IDLE"
+    echo "  boost          : $CPU_BOOST"
+    echo
+
     if sensors --version &> /dev/null; then
-	echo "CPU core temperatures:"
+	echo "CPU core temperatures (sensors):"
 	sensors | grep Core | indent
 	echo
     fi
 
-    CPU_IDLE="none"
-    if test -r /sys/devices/system/cpu/cpuidle/current_driver; then
-	CPU_IDLE="$(cat /sys/devices/system/cpu/cpuidle/current_driver)"
-    fi
     echo "CPU (/proc/cpuinfo):"
-    echo "  $(grep "model name" /proc/cpuinfo | head -n 1)"
-    echo "  number of cpus: $CPU_NUM"
-    echo "  cpu family: $(grep "cpu family" /proc/cpuinfo | awk 'NR==1 { print $4}')"
-    echo "  cpuidle driver: $CPU_IDLE"
+    echo "  $(grep "model name" /proc/cpuinfo | awk -F '\t:' 'NR==1 { printf "%-17s : %s", $1, $2}')"
+    echo "  number of cpus    : $CPU_NUM"
+    echo "  cpu family        : $(grep "cpu family" /proc/cpuinfo | awk 'NR==1 { print $4}')"
     echo "  machine (uname -m): $MACHINE"
     echo "  memory (free -h)  : $(free -h | grep Mem | awk '{print $2}') RAM"
     echo

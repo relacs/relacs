@@ -575,8 +575,23 @@ options" and play around with the following kernel options:
 - intel_idle.max_cstate=0 processor.max_cstate=0
 - intel_idle.max_cstate=0 processor.max_cstate=1
 .
+
 You may also try turning off frequency scaling on a specific CPU (the one that runs your RTAI task):
 https://wiki.archlinux.org/index.php/CPU_frequency_scaling
+
+See
+\code
+./makertaikernel.sh info cpu
+\endcode
+for information on frequency scaling and idle states of your CPUs.
+
+For more information on cpu frequency scaling read in the `Documentation` folder in the kernel source
+- `cpuidle/sysfs.txt`
+- `cpu-freq/cpufreq-stats.txt`
+- `cpu-freq/boost.txt`
+- `cpu-freq/user-guide.txt`
+- `cpu-freq/governors.txt`
+- `cpu-freq/intel-pstate.txt`
 
 You may also try:
 - acpi=off    # often very effective, but weired system behavior
@@ -585,7 +600,7 @@ You may also try:
 - pci=nomsi
 .
 
-You get the kernel parameters for a test batch file by running
+You get these kernel parameters for a test batch file by running
 \code
 ./makertaikernel.sh test batch acpi
 \endcode
