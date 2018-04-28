@@ -661,10 +661,10 @@ function print_kernel {
 
 function print_cpus {
     echo "CPU topology, frequencies, and idle states (/sys/devices/system/cpu/*):"
-    printf "cpu topology                   cpufreq                          "
-    test -r /sys/devices/system/cpu/cpu0/cpuidle/state0/name && printf "  cpuidle (enabled fraction)"
+    printf "cpu topology                   cpu frequency scaling              "
+    test -r /sys/devices/system/cpu/cpu0/cpuidle/state0/name && printf "  cpu idle states (enabled fraction%%)"
     printf "\n"
-    printf "logical  online  socket  core  freq/MHz      governor  freqtrans"
+    printf "logical  online  socket  core  freq/MHz      governor  transitions"
     if test -f /sys/devices/system/cpu/cpu0/cpuidle/state0/name; then
 	for CSTATE in /sys/devices/system/cpu/cpu0/cpuidle/state*/name; do
 	    printf "  %-7s" $(cat $CSTATE)
@@ -685,8 +685,8 @@ function print_cpus {
 	test -f $CPU/cpufreq/scaling_governor && CPUFREQGOVERNOR=$(cat $CPU/cpufreq/scaling_governor)
 	CPUFREQTRANS="-"
 	test -r $CPU/cpufreq/stats/total_trans && CPUFREQTRANS=$(cat $CPU/cpufreq/stats/total_trans)
-	printf "  cpu%-2d  %6d  %6d  %4d  %8.3f  %12s  %9s" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $CPUFREQ $CPUFREQGOVERNOR $CPUFREQTRANS
-	if test -f $CPU/cpuidle/state*; then
+	printf "  cpu%-2d  %6d  %6d  %4d  %8.3f  %12s  %11s" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $CPUFREQ $CPUFREQGOVERNOR $CPUFREQTRANS
+	if test -f $CPU/cpuidle/state0/$CSTATEUSAGE; then
 	    SUM=$(cat $CPU/cpuidle/state?/$CSTATEUSAGE | awk '{N+=$1} END {print N}')
 	    for CSTATE in $CPU/cpuidle/state*; do
 		printf "  %1s %4d%%" $(cat $CSTATE/disable) $(( $(( 100*$(cat $CSTATE/$CSTATEUSAGE) )) / $SUM ))
