@@ -1244,8 +1244,6 @@ function config_kernel {
 	    fi
 	    RUN_LOCALMOD=false
 	else
-	    FAILED=false
-	    cd "$WORKING_DIR"
 	    KCF=""
 	    BKP=""
 	    if test "x$KERNEL_CONFIG" = "xbackup"; then
@@ -1254,18 +1252,16 @@ function config_kernel {
 	    else
 		KCF="$KERNEL_CONFIG"
 	    fi
-	    if test -f "$KCF"; then
+	    if test -f "$WORKING_DIR/$KCF"; then
 		echo_log "Use ${BKP}configuration from \"$KCF\" and run olddefconfig."
 		if ! $DRYRUN; then
-		    cp "$KCF" $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/.config
+		    cp "$WORKING_DIR/$KCF" .config
 		    make olddefconfig
 		fi
 	    else
 		echo_log "Unknown kernel configuration file \"$KCF\"."
-		FAILED=true
+		return 1
 	    fi
-	    cd - > /dev/null
-	    $FAILED && return 1
 	fi
 
 	if $RUN_LOCALMOD; then
