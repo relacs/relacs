@@ -1071,6 +1071,7 @@ function unpack_kernel {
 	if ! test -f linux-$LINUX_KERNEL.tar.xz; then
 	    echo_log "archive linux-$LINUX_KERNEL.tar.xz not found."
 	    echo_log "download it with $ ./${MAKE_RTAI_KERNEL} download kernel."
+	    cd - &> /dev/null
 	    return 1
 	fi
 	# unpack:
@@ -1083,26 +1084,33 @@ function unpack_kernel {
 	fi
 	NEW_KERNEL=true
     fi
+    cd - &> /dev/null
 
     # standard softlink to kernel:
-    cd /usr/src
-    ln -sfn $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME} linux
+    if ! $DRYRUN; then
+	cd /usr/src
+	ln -sfn $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME} linux
+	cd - &> /dev/null
+    fi
 }
 
 function patch_kernel {
     cd $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}
     if $NEW_KERNEL; then
 	if ! check_kernel_patch; then
+	    cd - &> /dev/null
 	    return 1
 	fi
 	echo_log "apply rtai patch $RTAI_PATCH to kernel sources"
 	if ! $DRYRUN; then
 	    if ! patch -p1 < ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH; then
 		echo_log "Failed to patch the linux kernel \"$KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}\"!"
+		cd - &> /dev/null
 		return 1
 	    fi
 	fi
     fi
+    cd - &> /dev/null
 }
 
 function prepare_kernel_configs {
@@ -1259,7 +1267,7 @@ function config_kernel {
 		    make olddefconfig
 		fi
 	    else
-		echo_log "Unknown kernel configuration file \"$KCF\"."
+		echo_log "Unknown kernel configuration file \"$WORKING_DIR/$KCF\"."
 		return 1
 	    fi
 	fi
@@ -1354,14 +1362,18 @@ function build_kernel {
 		echo_log
 		echo_log "Error: failed to build the kernel!"
 		echo_log "Scroll up to see why."
+		cd "WORKING_DIR"
 		return 1
 	    fi
 	fi
+
+	cd "WORKING_DIR"
 
 	# install:
 	install_kernel || return 1
     else
 	echo_log "Keep already compiled linux ${KERNEL_NAME} kernel."
+	cd "WORKING_DIR"
     fi
 }
 
@@ -1387,19 +1399,23 @@ function install_kernel {
 	if ! $DRYRUN; then
 	    if ! dpkg -i "$KERNEL_PACKAGE"; then
 		echo_log "Failed to install linux kernel from $KERNEL_PACKAGE !"
+		cd - &> /dev/null
 		return 1
 	    fi
 	    if $KERNEL_DEBUG; then
 		if ! dpkg -i "$KERNEL_DEBUG_PACKAGE"; then
 		    echo_log "Failed to install linux kernel from $KERNEL_DEBUG_PACKAGE !"
+		    cd - &> /dev/null
 		    return 1
 		fi
 	    fi
 	fi
     else
 	echo_log "no kernel to install"
+	cd - &> /dev/null
 	return 1
     fi
+    cd - &> /dev/null
 }
 
 function uninstall_kernel {
