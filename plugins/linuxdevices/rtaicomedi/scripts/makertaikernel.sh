@@ -41,7 +41,7 @@
 : ${KERNEL_PARAM:="idle=poll"}      # kernel parameter to be passed to grub
 : ${KERNEL_PARAM_DESCR:="idle"}     # one-word description of KERNEL_PARAM 
                                     # used for naming test resutls
-: ${BATCH_KERNEL_PARAM:="oops=panic panic=10"} # additional kernel parameter passed to grub for test batch
+: ${BATCH_KERNEL_PARAM:="oops=panic nmi_watchdog=panic panic_on_warn softlockup_panic=1 unknown_nmi_panic panic=-1"} # additional kernel parameter passed to grub for test batch - we want to reboot in any case!
 : ${KERNEL_CONFIG_BACKUP:="config-backup"}     # stores initial kernel configuration for test batches
 
 : ${NEWLIB_TAR:=newlib-3.0.0.20180226.tar.gz}  # tar file of current newlib version 
@@ -157,7 +157,8 @@ info                 : display properties of rtai patches, loaded kernel modules
                        and grub menu (configs and menu targets are excluded)
 info rtai            : list all available patches and suggest the one fitting to the kernel
 info kernel          : show name and kernel parameter of the currently running kernel
-info cpu             : show properties of your CPUs
+info cpu             : show properties of your CPUs. 
+                       Information about c-states is not always available - better check the i7z programm.
 info menu            : show kernel configuration menu of the specified (-c) kernel configuration
 info grub            : show grub boot menu entries
 info settings        : show the values of all configuration variables
@@ -258,7 +259,7 @@ Test the performance of the rtai-patched linux kernel.
 Usage:
 
 sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] test [[hal|sched|math|comedi] [calib]
-     [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch basic|acpi|isolcpus|<FILE>]]
+     [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch clocks|cstates|acpi|isolcpus|<FILE>]]
 
 EOF
     help_kernel_options
@@ -306,7 +307,8 @@ automized by the following two options:
 For a completely automized series of tests of various kernel parameters and kernel configurations
 under different loads you may add as the last arguments:
   batch FILE     : automatically run tests with various kernel parameter and configurations as specified in FILE
-  batch basic    : write a default batch file with clock and timer related kernel parameters to be tested
+  batch clocks    : write a default batch file with clock and timer related kernel parameters to be tested
+  batch cstates  : write a default batch file with c-states related kernel parameters to be tested
   batch acpi     : write a default batch file with acpi related kernel parameters to be tested
   batch apic     : write a default batch file with apic related kernel parameters to be tested
   batch isolcpus : write a default batch file with load settings and isolcpus kernel parameters to be tested
@@ -492,8 +494,8 @@ $ sudo ${MAKE_RTAI_KERNEL} test
 $ sudo ${MAKE_RTAI_KERNEL} test 30 auto basic
   automaticlly test the currently running kernel for 30 seconds and name it "basic".
 
-$ sudo ${MAKE_RTAI_KERNEL} test ${TEST_TIME_DEFAULT} batch testbasic.mrk
-  automaticlly test all the kernel parameter and kernel configurations specified in the file testbasic.mrk.
+$ sudo ${MAKE_RTAI_KERNEL} test ${TEST_TIME_DEFAULT} batch testclocks.mrk
+  automaticlly test all the kernel parameter and kernel configurations specified in the file testclocks.mrk.
 
 $ ${MAKE_RTAI_KERNEL} report avg | less -S
   view test results sorted with respect to the averaged maximum latency. 
@@ -664,14 +666,14 @@ function print_cpus {
     printf "cpu topology                   cpu frequency scaling              "
     test -r /sys/devices/system/cpu/cpu0/cpuidle/state0/name && printf "  cpu idle states (enabled fraction%%)"
     printf "\n"
-    printf "logical  online  socket  core  freq/MHz      governor  transitions"
+    printf "logical  socket  core  online  freq/MHz      governor  transitions"
     if test -f /sys/devices/system/cpu/cpu0/cpuidle/state0/name; then
 	for CSTATE in /sys/devices/system/cpu/cpu0/cpuidle/state*/name; do
 	    printf "  %-7s" $(cat $CSTATE)
 	done
     fi
     printf "\n"
-    CSTATEUSAGE="usage" # or "time"
+    CSTATEUSAGE="usage" # "usage" or "time"
     CPU_NUM=0
     for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
 	let CPU_NUM+=1
@@ -683,13 +685,13 @@ function print_cpus {
 	test -r $CPU/cpufreq/scaling_cur_freq && CPUFREQ=$(echo "scale=3;" $(cat $CPU/cpufreq/scaling_cur_freq)/1000000.0 | bc)
 	CPUFREQGOVERNOR="-"
 	test -f $CPU/cpufreq/scaling_governor && CPUFREQGOVERNOR=$(cat $CPU/cpufreq/scaling_governor)
-	CPUFREQTRANS="-"
+	CPUFREQTRANS="n.a."
 	test -r $CPU/cpufreq/stats/total_trans && CPUFREQTRANS=$(cat $CPU/cpufreq/stats/total_trans)
-	printf "  cpu%-2d  %6d  %6d  %4d  %8.3f  %12s  %11s" ${CPU#/sys/devices/system/cpu/cpu} $ONLINE $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $CPUFREQ $CPUFREQGOVERNOR $CPUFREQTRANS
+	printf "  cpu%-2d  %6d  %4d  %6d  %8.3f  %12s  %11s" ${CPU#/sys/devices/system/cpu/cpu} $(cat $CPUT/physical_package_id) $(cat $CPUT/core_id) $ONLINE $CPUFREQ $CPUFREQGOVERNOR $CPUFREQTRANS
 	if test -f $CPU/cpuidle/state0/$CSTATEUSAGE; then
 	    SUM=$(cat $CPU/cpuidle/state?/$CSTATEUSAGE | awk '{N+=$1} END {print N}')
 	    for CSTATE in $CPU/cpuidle/state*; do
-		printf "  %1s %4d%%" $(cat $CSTATE/disable) $(( $(( 100*$(cat $CSTATE/$CSTATEUSAGE) )) / $SUM ))
+		printf "  %1s %4.1f%%" $(cat $CSTATE/disable) $(echo "scale=1; 100.0*$(cat $CSTATE/$CSTATEUSAGE)/$SUM" | bc)
 	    done
 	fi
     printf "\n"
@@ -1541,6 +1543,7 @@ function reboot_cmd {
 	    if gnome-session-quit --version &> /dev/null; then
 		gnome-session-quit --reboot --force && return
 	    fi
+	    check_root
 	    shutdown -r now
 	else
 	    echo_kmsg "REBOOT (shutdown -r now)"
@@ -1560,7 +1563,7 @@ function reboot_kernel {
     echo_log ""
     case $1 in
 	default)
-	    reboot_unset_kernel "$1"
+	    reboot_unset_kernel
 	    sleep 2
 	    reboot_cmd
 	    ;;
@@ -2146,7 +2149,7 @@ function test_batch {
 
     # write default batch files:
     if ! test -f "$BATCH_FILE"; then
-	DEFAULT_BATCHES="basic acpi apic isolcpus dma"
+	DEFAULT_BATCHES="clocks cstates acpi apic isolcpus dma"
 	for DEFAULT_BATCH in $DEFAULT_BATCHES; do
 	    if test "$BATCH_FILE" = "$DEFAULT_BATCH"; then
 		BATCH_FILE=test${DEFAULT_BATCH}.mrk
@@ -2157,9 +2160,9 @@ function test_batch {
 		fi
 
 		case $DEFAULT_BATCH in
-		    basic) cat <<EOF > $BATCH_FILE
+		    clocks) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
-# Batch file for testing RTAI kernel with various kernel parameter.
+# Batch file for testing RTAI kernel with various kernel parameter related to clocks and timers.
 #
 # Each line has the format:
 # <description> : <load specification> : <kernel parameter>
@@ -2210,32 +2213,40 @@ plain2 : :
 EOF
 			;;
 
+		    cstates) cat <<EOF > $BATCH_FILE
+# $VERSION_STRING
+# Batch file for testing RTAI kernel with kernel parameter related to processor c-states.
+
+# c-states:
+plain : :
+idlepoll : : idle=poll
+idlehalt : : idle=halt
+intelcstate1 : : intel_idle.max_cstate=1
+processorcstate1 : : intel_idle.max_cstate=0 processor.max_cstate=1
+processorcstate0 : : intel_idle.max_cstate=0 processor.max_cstate=0
+EOF
+			;;
+
 		    acpi) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
-# Batch file for testing RTAI kernel with various kernel parameter.
-
-plain : :
+# Batch file for testing RTAI kernel with various kernel parameter related to acpi.
 
 # acpi:
+plain : :
 #acpioff : : acpi=off    # often very effective, but weired system behavior
 acpinoirq : : acpi=noirq
 pcinoacpi : : pci=noacpi
 pcinomsi : : pci=nomsi
 nopstate : : intel_pstate=disable
-intelcstate1 : : intel_idle.max_cstate=1
-intelcstate0 : : intel_idle.max_cstate=0
-processorcstate0 : : intel_idle.max_cstate=0 processor.max_cstate=0
-processorcstate1 : : intel_idle.max_cstate=0 processor.max_cstate=1
 EOF
 			;;
 
 		    apic) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
-# Batch file for testing RTAI kernel with various kernel parameter.
-
-plain : :
+# Batch file for testing RTAI kernel with various kernel parameter related to apic.
 
 # apic:
+plain : :
 noapic : : noapic
 nox2apic : : nox2apic
 x2apicphys : : x2apic_phys
