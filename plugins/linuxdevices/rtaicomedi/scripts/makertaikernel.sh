@@ -326,7 +326,7 @@ In a batch FILE
   <descr> : <load> : <params>
   describes a configuration to be tested:
   <descr> is a one-word string describing the kernel parameter 
-      (a description of the load settings are added automatically to the description)
+      (a description of the load settings is added automatically to the description)
   <load> defines the load processes to be started before testing (cpu io mem net full, see above)
   <param> is a list of kernel parameter to be used.
 - a line of the format
@@ -663,8 +663,8 @@ function print_kernel {
 
 function print_cpus {
     echo "CPU topology, frequencies, and idle states (/sys/devices/system/cpu/*):"
-    printf "cpu topology                   cpu frequency scaling              "
-    test -r /sys/devices/system/cpu/cpu0/cpuidle/state0/name && printf "  cpu idle states (enabled fraction%%)"
+    printf "CPU topology                   CPU frequency scaling              "
+    test -r /sys/devices/system/cpu/cpu0/cpuidle/state0/name && printf "  CPU idle states (enabled fraction%%)"
     printf "\n"
     printf "logical  socket  core  online  freq/MHz      governor  transitions"
     if test -f /sys/devices/system/cpu/cpu0/cpuidle/state0/name; then
@@ -717,10 +717,15 @@ function print_cpus {
 	echo
     fi
 
+    MAXCPUFREQ="n.a."
+    test -r $CPU/cpufreq/cpuinfo_max_freq && MAXCPUFREQ=$(echo "scale=3;" $(cat $CPU/cpufreq/cpuinfo_max_freq)/1000000.0 | bc)
+    test -r $CPU/cpufreq/scaling_max_freq && MAXCPUFREQ=$(echo "scale=3;" $(cat $CPU/cpufreq/scaling_max_freq)/1000000.0 | bc)
+
     echo "CPU (/proc/cpuinfo):"
     echo "  $(grep "model name" /proc/cpuinfo | awk -F '\t:' 'NR==1 { printf "%-17s : %s", $1, $2}')"
-    echo "  number of cpus    : $CPU_NUM"
-    echo "  cpu family        : $(grep "cpu family" /proc/cpuinfo | awk 'NR==1 { print $4}')"
+    echo "  number of CPUs    : $CPU_NUM"
+    test "MAXCPUFREQ" != "n.a." && echo "  max CPU frequency : $MAXCPUFREQ MHz"
+    echo "  CPU family        : $(grep "cpu family" /proc/cpuinfo | awk 'NR==1 { print $4}')"
     echo "  machine (uname -m): $MACHINE"
     echo "  memory (free -h)  : $(free -h | grep Mem | awk '{print $2}') RAM"
     echo

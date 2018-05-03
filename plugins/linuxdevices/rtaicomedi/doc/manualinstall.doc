@@ -10,6 +10,7 @@
 - \ref udev
 - \ref configuregrub
 - \ref kernelmessages
+- \ref manualtestrtai
 - \ref rtailinks
 
 \section manualinstallintro Introduction
@@ -566,17 +567,63 @@ $ makertaikernel.sh setup messages
 \endcode
 
 
+\section manualtestrtai Manually running RTAI tests
+
+-# Test RTAI by loading some modules:
+   \code
+cd /usr/realtime/modules
+insmod rtai_hal.ko
+insmod rtai_sched.ko
+insmod rtai_math.ko
+   \endcode
+
+-# Run the RTAI latency test
+   \code
+cd /usr/realtime/testsuite/kern/latency
+./run
+   \endcode
+
+   Also run the switch test:
+   \code
+cd /usr/realtime/testsuite/kern/switches
+./run
+   \endcode
+
+   Finally, there is the "preempt" test:
+   \code
+cd /usr/realtime/testsuite/kern/preempt
+./run
+   \endcode
+
+-# To really check out the performance of the kernel you should run the tests 
+   under heavy load. That is, run some processes like
+   - at least one "ping -f somewhere";
+   - a "ping -f localhost";
+   - a "top" on alpha screen and one on an X screen;
+   - a "while "true"; do ls -lR / >list; done"
+   - a "while "true"; cat /proc/interrupts; done"
+   - dd if=/dev/hda2 of=/dev/hda3 bs=1000k &  # /dev/hda3 needs to be a free partition that is at least as large as /dev/hda2!!!
+   .
+-# Add kernel parameter to the \c kernel
+   line of the \c grub menu in \c /boot/grub/menu.lst (\c grub \c v1)
+   or to the \c GRUB_CMDLINE_LINUX variable in \c /etc/defaults/grub .
+.
+
+
 \section rtailinks Links
 - comedi: http://www.comedi.org
 - rtai: http://www.rtai.org
+- RTAI API: http://ppedreiras.av.it.pt/resources/str1213/praticas/rtai_prog_guide.pdf
 - Kernel testing und fixing: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?TroubleShooting
 - Installation instructions and kernel configuration: http://wiki.linuxcnc.org/cgi-bin/emcinfo.pl?Debian_Lenny_Compile_RTAI
 - Kernel configuration: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Ubuntu10.04Notes
+- Configuration: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?RealTime
 - Install kernel header package: http://www.cyberciti.biz/faq/howto-install-kernel-headers-package/
 - mpreferred-stack-boundary=3 issue: http://mail.rtai.org/pipermail/rtai/2013-December/026198.html
 - HPET timer kernel option: http://mail.rtai.org/pipermail/rtai/2013-April/025511.html
 - localmodconfig kernel make target: http://www.heise.de/open/artikel/Linux-Kernel-massgeschneidert-1402386.html
 - Maybe this link is helpful to find good motherboards: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Latency-Test.
+- RT Linux hardware configuration: https://rt.wiki.kernel.org/index.php/HOWTO:_Build_an_RT-application
 - Linux kernel crash dump: https://help.ubuntu.com/12.04/serverguide/kernel-crash-dump.html
 - Crash debugger: http://docs.oracle.com/cd/E52668_01/E54669/html/ol7-s4-sysdumpa.html
 */
