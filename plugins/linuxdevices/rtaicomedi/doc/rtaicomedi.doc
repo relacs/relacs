@@ -98,8 +98,13 @@ sudo ./makertaikernel.sh info rtai
    \code
 sudo apt-get install linux-image-4.4.0-79
    \endcode
-   (modify the name of the kernel image to the kernel version you want, use the tab-key for
-   autocompletion) and boot into this kernel. Either restart your computer
+   Modify the name of the kernel image to the kernel version you want, use the tab-key for
+   autocompletion. If autocompletion does not work run
+   \code
+apt-cache search -n linux-image-XXX | awk -F ' - ' '{if ( $1 !~ "-dbg" ) print $1}'
+   \endcode
+   where XXX is replaced by the kernel version you are looking for.
+   Then boot into this kernel. Either restart your computer
    and select the kernel from the grub boot menu or check the grub menu with
    \code
 sudo ./makertaikernel.sh info grub
@@ -138,28 +143,46 @@ sudo ./makertaikernel.sh
 
 -# You will get the menu for configuring the kernel. You need to
    change a few settings to get a running RTAI-patched kernel. See the
-   next sesction \ref basickernelconfiguration for instructions.
+   next section \ref basickernelconfiguration for instructions.
 
 -# Reboot into the new kernel by executing
    \code
 ./makertaikernel.sh reboot
    \endcode
+
+-# Test and improve your RTAI kernel as described in sections \ref
+   testrtai and \ref configurekernel below.
    
 -# If you did not start out with a kernel version matching the version
-   of your RTAI-patched kernel, then before you go on with improving
-   the kernel configuration run
+   of your RTAI-patched kernel, and you are going to change the kernel
+   configuration, then you should run
    \code
 sudo ./makertaikernel.sh -c mod
    \endcode
-   in order to deselect all unused kernel modules from compilation. 
-   This speeds up the following kernel builds dramatically! Then reboot and test.
+   in order to deselect all unused kernel modules from compilation.
+   This speeds up the following kernel builds dramatically! Reboot
+   into the new kernel.
+
+-# Once you are satisified with the performance of the RTAI kernel,
+   continue with \ref installrelacs .
+
+For further options of the \c makertaikernel.sh script see
+\code
+./makertaikernel.sh help
+\endcode
+
+For example, to show some information about your machine, RTAI patches, grub menue, etc. run
+\code
+./makertaikernel.sh info
+\endcode
 
 
 \subsection basickernelconfiguration Basic kernel configuration
 For making the Linux kernel work with RTAI you should check the following settings 
-in the kernel configuration dialog.
+in the kernel configuration dialog. 
 
-Also read `/usr/local/src/rtai/README.CONF_RMRKS` !
+This list is updated for RTAI 5.1. For other RTAI version read
+`/usr/local/src/rtai/README.CONF_RMRKS` !
 
 - "General setup":
   - Disable "Enable sytem-call auditing support" (\c AUDITSYSCALL)
@@ -195,74 +218,6 @@ Leave the configuration dialog by pressing "Exit" until you are asked "Save kern
 Select "Yes".
 
 Then the new kernel is being compiled - be patient.
-
-
-\subsection modifykernel Modify the RTAI kernel
-
-After the initial steps described in the previous section you might
-want to refine your kernel by repeatedly executing the following
-commands. See also \ref batchtests for a way to automatize this.
-
--# Once you booted into an RTAI-patched kernel run some tests, e.g.
-   \code
-sudo ./makertaikernel.sh test
-   \endcode
-   See \ref testrtai for instructions.
-
--# If the test results do not satisfy you or if the tests fail, then
-   build a new version of the kernel with a different configuration
-   (see \ref configurekernel for details):
-   \code
-sudo ./makertaikernel.sh reconfigure
-   \endcode
-   This will bring up the kernel menu of your current RTAI kernel that you then can modify.
-
-   And/or reboot into the RTAI-kernel with different kernel parameter XXX that you
-   can pass directly to the `reboot` command:
-   \code
-./makertaikernel.sh reboot XXX
-   \endcode
-   See	
-   \code
-./makertaikernel.sh help reboot
-   \endcode
-   for details. Or set some default values for kernel parameter in the configuration file
-   (KERNEL_PARAM and KERNEL_PARAM_DESCR variables).
-
-   Then test the new kernel, reconfigure yet another kernel, and
-   so on...
-
--# If you do not want to override your RTAI-patched kernel you can
-   give it a new name via the `-n` switch. You also need to supply
-   this setting to the `reboot` and `test` action:
-   \code
-sudo ./makertaikernel.sh -n 2 reconfigure
-sudo ./makertaikernel.sh -n 2 reboot
-...
-sudo ./makertaikernel.sh -n 2 test
-   \endcode
-
-   Note that `makertaikernel.sh reconfigure` will first uninstall
-   an already existing kernel with the same name.
-
-   You can recreate a kernel or use this kernel's configuration for
-   further modifications by specifying the kernel configuration file
-   saved by `makertaikernel.sh test` using the `-c` option
-   \code
-sudo ./makertaikernel.sh -c config-3.14.17-rtai-4.1-002-basic-good reconfigure
-   \endcode
-
--# Once you are satisified, continue with \ref installrelacs .
-
-For further options of the \c makertaikernel.sh script see
-\code
-./makertaikernel.sh help
-\endcode
-
-For example, to show some information about your machine, RTAI patches, grub menue, etc. run
-\code
-./makertaikernel.sh info
-\endcode
 
 
 \section testrtai Testing the RTAI-patched kernel
@@ -648,6 +603,9 @@ Simply check your BIOS whether there is anything of interest
 (e.g. hyperthreading, powersaving, force all fans to run at full
 speed) that you might want to try.
 
+
+\subsubsection modifykernelconfiguration Modify the kernel configuration
+
 The kernel configuration is changed in the menu that you get when
 building a new kernel. That is when running
 \code
@@ -659,8 +617,30 @@ sudo ./makertaikernel.sh prepare
 \endcode
 for generating kernel configurations to be used in a test batch.
 
+If you do not want to override your RTAI-patched kernel when
+reconfiguring you can give it a new name via the `-n` switch. You also
+need to supply this setting to the `reboot` and `test` action:
+\code
+sudo ./makertaikernel.sh -n 2 reconfigure
+sudo ./makertaikernel.sh -n 2 reboot
+...
+sudo ./makertaikernel.sh -n 2 test
+\endcode
+Note that `makertaikernel.sh reconfigure` will first uninstall an
+already existing kernel with the same name.
+
+You can recreate a kernel or use this kernel's configuration for
+further modifications by specifying the kernel configuration file
+saved by `makertaikernel.sh test` using the `-c` option
+\code
+sudo ./makertaikernel.sh -c config-3.14.17-rtai-4.1-002-basic-good reconfigure
+\endcode
+
 The `KERNEL_MENU` variable in the `makertaikernel.cfg` configuration
-file lets you choose with menu type you get.
+file lets you choose which menu type you get.
+
+
+\subsubsection setkernelparameter Set kernel parameter
 
 Kernel parameter can be passed directly to the reboot command:
 \code
@@ -679,16 +659,16 @@ be specified via the `KERNEL_PARAM` variable in the
 in the `KERNEL_PARAM_DESCR` variable by a single word, so that the
 test results can be appropriately named.
 
-For applying the kernel parameter permanently add them in \c
-/boot/grub/menu.lst (\c grub \c v1) or to the \c GRUB_CMDLINE_RTAI
-variable in \c /etc/defaults/grub and run \c update-grub.
+For applying the kernel parameter permanently add them to the
+`GRUB_CMDLINE_RTAI` variable in `/etc/defaults/grub` and run
+`update-grub`.
 
 There are several interesting kernel parameter that influence the
 real-time performance.  See the file
 `Documentation/kernel-parameters.txt` in your linux kernel source tree
 (usually in `/usr/src`) for a documentation of all available kernel parameter.
 
-The following is a collection of hints on inluential configuration
+The following is a collection of hints on influential configuration
 parameter from all levels.
 
 
@@ -1144,6 +1124,11 @@ Advanced programmable interrupt controller (APIC):
 - \c nolapic , usually not a good idea, becaus RTAI uses the lapic timer. 
 - \c lapic
 .
+
+You get these kernel parameters for a test batch file by running
+\code
+./makertaikernel.sh test batch apic
+\endcode
 
 Others:
 - disable all DMA transfers by setting kernel parameter \c libata.dma=0.

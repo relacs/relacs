@@ -200,7 +200,7 @@ setup messages   : enable /var/log/messages needed for RTAI tests in rsyslog set
 setup grub       : configure the grub boot menu (not hidden, no submenus, 
                    extra RTAI kernel parameter, user can reboot and set rtai kernel parameter)
 setup comedi     : create "iocard" group and assign comedi devices to this group
-setup kernel     : set kernel parameter for the grub boot menu to "$KERNEL_PARAMETER"
+setup kernel     : set kernel parameter for the grub boot menu to "$KERNEL_PARAM"
 
 restore          : restore the original system settings (messages, grub, comedi, kernel, and testbatch)
 restore messages : restore the original rsyslog settings
@@ -527,7 +527,7 @@ function print_setup {
     if test -f /etc/rsyslog.d/50-default.conf.origmrk; then
 	echo "messages : /etc/rsyslog.d/50-default.conf is modified"
 	echo "           run \"${MAKE_RTAI_KERNEL} restore messages\" to restore"
-    else
+    elif test -f /etc/rsyslog.d/50-default.conf; then
 	echo "messages : /etc/rsyslog.d/50-default.conf is not modified"
 	echo "           run \"${MAKE_RTAI_KERNEL} setup messages\" for setting up"
     fi
@@ -547,19 +547,22 @@ function print_setup {
 	echo "           run \"${MAKE_RTAI_KERNEL} setup grub\" for setting up"
     fi
     # kernel parameter:
-    if test -f /boot/grub/grubenv && grub-editenv - list | grep -q "rtai_cmdline"; then
-	echo "kernel   : /boot/grub/grubenv is modified ($(grub-editenv - list | grep "rtai_cmdline"))"
-	echo "           run \"${MAKE_RTAI_KERNEL} restore kernel\" to restore"
+    if test -f /boot/grub/grubenv; then
+	if grub-editenv - list | grep -q "rtai_cmdline"; then
+	    echo "kernel   : /boot/grub/grubenv is modified ($(grub-editenv - list | grep "rtai_cmdline"))"
+	    echo "           run \"${MAKE_RTAI_KERNEL} restore kernel\" to restore"
+	else
+	    echo "kernel   : /boot/grub/grubenv is not modified"
+	    echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up RTAI kernel parameter"
+	fi
     else
-	echo "kernel   : /boot/grub/grubenv is not modified"
-	echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up RTAI kernel parameter"
-    fi
-    if test -f /etc/default/grub.origkp; then
-	echo "kernel   : /etc/default/grub is modified"
-	echo "           run \"${MAKE_RTAI_KERNEL} restore kernel\" to restore"
-    else
-	echo "kernel   : /etc/default/grub is not modified"
-	echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up default RTAI kernel parameter"
+	if test -f /etc/default/grub.origkp; then
+	    echo "kernel   : /etc/default/grub is modified"
+	    echo "           run \"${MAKE_RTAI_KERNEL} restore kernel\" to restore"
+	else
+	    echo "kernel   : /etc/default/grub is not modified"
+	    echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up default RTAI kernel parameter"
+	fi
     fi
     # test batch:
     if crontab -l 2> /dev/null | grep -q "${MAKE_RTAI_KERNEL}"; then
@@ -912,9 +915,13 @@ function install_packages {
 	echo_log "Exit"
 	return 1
     fi
-    PACKAGES="make gcc libncurses-dev zlib1g-dev g++ bc cvs git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev"
+    PACKAGES="make gcc libncurses-dev zlib1g-dev g++ bc cvs git autoconf automake libtool"
     if test ${LINUX_KERNEL:0:1} -gt 3; then
 	PACKAGES="$PACKAGES libssl-dev libpci-dev libsensors4-dev"
+    fi
+    if $MAKE_COMEDI; then
+	# XXX what if libgsl-dev is installed instead of libgsl0-dev ???
+	PACKAGES="$PACKAGES bison flex libgsl0-dev libboost-program-options-dev"
     fi
     OPT_PACKAGES="kernel-package stress lm-sensors"
     if $DRYRUN; then
@@ -972,6 +979,8 @@ function check_kernel_patch {
 	    echo_log "$ ./${MAKE_RTAI_KERNEL} download rtai"
 	    return 10
 	fi
+	RTAI_PATCH_SET=${RTAI_PATCH}
+	LINUX_KERNEL_SET=${LINUX_KERNEL}
 	cd ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/
 	echo_log
 	echo_log "Available patches for this machine ($RTAI_MACHINE), most latest last:"
@@ -1007,6 +1016,11 @@ function check_kernel_patch {
 	echo_log
 	echo_log "  RTAI_PATCH=\"${RTAI_PATCH}\""
 	echo_log "  LINUX_KERNEL=\"${LINUX_KERNEL}\""
+	echo_log
+	echo_log "Set values:"
+	echo_log
+	echo_log "  RTAI_PATCH=\"${RTAI_PATCH_SET}\""
+	echo_log "  LINUX_KERNEL=\"${LINUX_KERNEL_SET}\""
 	echo_log
 	return 1
     elif ! test -f ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH; then
@@ -2322,7 +2336,7 @@ EOF
 		echo "Wrote default kernel parameter to be tested into file \"$BATCH_FILE\"."
 		echo ""
 		echo "Call test batch again with something like"
-		echo "$ ./${MAKE_RTAI_KERNEL} test ${TEST_TIME_DEFAULT} batch $BATCH_FILE"
+		echo "$ sudo ./${MAKE_RTAI_KERNEL} test ${TEST_TIME_DEFAULT} batch $BATCH_FILE"
 		exit 0
 	    fi
 	done
@@ -3444,7 +3458,11 @@ function setup_messages {
 		test -f /var/log/messages || echo_log "failed to enable /var/log/messages"
 	    fi
 	else
-	    echo_log "/etc/rsyslog.d/50-default.conf not found: cannot enable /var/log/messages"
+	    if test -f /var/log/messages; then
+		echo_log "/var/log/messages is already enabled. No action required."
+	    else
+		echo_log "/etc/rsyslog.d/50-default.conf not found: cannot enable /var/log/messages."
+	    fi
 	fi
     fi
 }
@@ -3503,8 +3521,8 @@ function setup_grub {
                 if ( /initramfs=$/ ) {
                     print "  # check for RTAI kernel:"
                     print "  CMDLINE_RTAI=\"\""
-                    print "  if grep -q \"CONFIG_IPIPE=y\" \"\${config}\"; then"
-                    print "      CMDLINE_RTAI=\"\${GRUB_CMDLINE_RTAI} \\\$rtai_cmdline\""
+                    print "  if grep -q \"CONFIG_IPIPE=y\" \"${config}\"; then"
+                    print "      CMDLINE_RTAI=\"${GRUB_CMDLINE_RTAI} \\$rtai_cmdline\""
                     print "  fi"
                     print ""
                 }
@@ -3624,6 +3642,12 @@ function restore_comedi {
 	if ! $DRYRUN; then
 	    rm /etc/udev/rules.d/95-comedi.rules
 	    udevadm trigger
+	fi
+    fi
+    if getent group iocard > /dev/null; then
+	echo_log "Delete group \"iocard\"."
+	if ! $DRYRUN; then
+	    delgroup iocard
 	fi
     fi
 }
