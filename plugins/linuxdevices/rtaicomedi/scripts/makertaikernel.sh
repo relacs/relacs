@@ -2843,18 +2843,21 @@ function download_newlib {
 function update_newlib {
     cd ${LOCAL_SRC_PATH}
     if test -d newlib/src/.git; then
-	echo_log "update already downloaded newlib sources"
+	echo_log "Update already downloaded newlib sources from git repository."
 	cd newlib/src
 	if git pull origin master; then
 	    date +"%F %H:%M" > revision.txt
 	    clean_newlib
 	else
-	    echo_log "Failed to update newlib!"
+	    echo_log "Failed to update newlib from git repository!"
 	    return 1
 	fi
     elif ! test -f newlib/$NEWLIB_TAR; then
+	echo_log "Remove entire newlib source tree."
 	rm -r newlib
 	download_newlib || return 1
+    else
+	echo_log "Keep newlib source tree as is."
     fi
 }
 
@@ -2866,7 +2869,7 @@ function build_newlib {
     else
 	echo_log "build newlib"
 	if ! $DRYRUN; then
-	    NEWLIB_CFLAGS=""
+	    NEWLIB_CFLAGS="-fno-pie"
 	    if test "$(grep CONFIG_64BIT /usr/src/linux/.config)" = 'CONFIG_64BIT=y'; then
 		NEWLIB_CFLAGS="$NEWLIB_CFLAGS -mcmodel=kernel"
 	    fi
