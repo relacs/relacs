@@ -307,7 +307,7 @@ automized by the following two options:
 For a completely automized series of tests of various kernel parameters and kernel configurations
 under different loads you may add as the last arguments:
   batch FILE     : automatically run tests with various kernel parameter and configurations as specified in FILE
-  batch clocks    : write a default batch file with clock and timer related kernel parameters to be tested
+  batch clocks   : write a default batch file with clock and timer related kernel parameters to be tested
   batch cstates  : write a default batch file with c-states related kernel parameters to be tested
   batch acpi     : write a default batch file with acpi related kernel parameters to be tested
   batch apic     : write a default batch file with apic related kernel parameters to be tested
@@ -1531,7 +1531,7 @@ function reboot_set_kernel {
 	if test -z "$GRUBMENU"; then
 	    GRUBMENU="$(grep '^\s*menuentry ' /boot/grub/grub.cfg | cut -d "'" -f 2 | grep "${LINUX_KERNEL}.*-${RTAI_DIR}${KERNEL_NUM}" | head -n 1)"
 	fi
-	grub-reboot "$GRUBMENU"
+	grub-reboot "$GRUBMENU" || /usr/sbin/grub-reboot "$GRUBMENU" || /sbin/grub-reboot "$GRUBMENU"
     fi
     echo_log "reboot into grub menu $GRUBMENU"
 }
@@ -1622,9 +1622,9 @@ function reboot_kernel {
 	    if test -z "$*"; then
 		setup_kernel_param $KERNEL_PARAM
 	    elif test -f "$1"; then
-		setup_kernel_param $(sed -n -e '/kernel parameter/,/Versions/p' "$1" | \
+		setup_kernel_param $(sed -n -e '/Kernel parameter/,/CPU topology/p' "$1" | \
 		    sed -e '1d; $d; s/^  //;' | \
-		    sed -e '/BOOT/d; /^root/d; /^ro$/d; /^quiet/d; /^splash/d; /^vt.handoff/d;')
+		    sed -e '/BOOT/d; /^root/d; /^ro$/d; /^quiet/d; /^splash/d; /^vt.handoff/d; /panic/d;')
 	    else
 		setup_kernel_param $*
 	    fi
@@ -1741,6 +1741,9 @@ function test_save {
 	    echo "Failed to load kcomedilib module"
 	    echo
 	fi
+	# date:
+	echo "Date: $(date '+%F')"
+	echo
 	# load processes:
 	echo "Load: $(cut -d ' ' -f 1-3 /proc/loadavg)"
 	if test -f load.dat; then
@@ -2446,6 +2449,7 @@ EOF
 	    grub-editenv - set rtaitest_param_descr="$KERNEL_PARAM_DESCR"
 	    grub-editenv - set rtaitest_time="$TEST_TOTAL_TIME"
 	    grub-editenv - set rtaitest_specs="$TEST_SPECS"
+	    grub-editenv - set rtaitest_state="reboot"
 	else
 	    echo_kmsg "NEXT TEST BATCH |$PWD|$BATCH_FILE|$INDEX|$KERNEL_DESCR|$KERNEL_PARAM_DESCR|$TEST_TOTAL_TIME|$TEST_SPECS"
 	fi
@@ -2463,8 +2467,6 @@ EOF
 }
 
 function test_abort {
-    echo_kmsg "FAILED TO BUILD KERNEL"
-    echo_log "FAILED TO BUILD KERNEL"
     # no further tests:
     echo_kmsg "ABORT TEST BATCH"
     echo_log "Abort test batch."
@@ -2474,6 +2476,7 @@ function test_abort {
     restore_kernel_param
     reboot_unset_kernel
     echo_log
+    exit 0
 }
 
 function test_batch_script {
@@ -2481,6 +2484,17 @@ function test_batch_script {
     # this function is called automatically after reboot from cron.
 
     PATH="$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+    # abort testing if the machine was manually booted:
+    if test -f /boot/grub/grubenv; then
+	TEST_STATE=$(grub-editenv - list | awk -F '=' '/^rtaitest_state=/ {print $2}')
+	if test "x$TEST_STATE" != "xreboot"; then
+	    echo_kmsg "TEST WAS INTERRUPTED BY MANUAL BOOT"
+	    echo_log "TEST WAS INTERRUPTED BY MANUAL BOOT"
+	    test_abort
+	fi
+	grub-editenv - set rtaitest_state="run"
+    fi
 
     # get paramter for current test/compile:
     if test -f /boot/grub/grubenv; then
@@ -2564,6 +2578,9 @@ function test_batch_script {
     cd "$WORKING_DIR"
 
     if $COMPILE; then
+	if test -f /boot/grub/grubenv; then
+	    grub-editenv - set rtaitest_state="compile"
+	fi
 	# compile new kernel:
 	KERNEL_CONFIG="$NEW_KERNEL_PARAM"
 	NEW_KERNEL_CONFIG=true
@@ -2581,6 +2598,8 @@ function test_batch_script {
 	    echo_log ""
 	    echo_log "Detailed output of reconfigure:"
 	    cat "${LOG_FILE}.tmp" >> "$LOG_FILE"
+	    echo_kmsg "FAILED TO BUILD KERNEL"
+	    echo_log "FAILED TO BUILD KERNEL"
 	    test_abort
 	else
 	    echo_kmsg "END COMPILE NEW KERNEL"
@@ -2588,9 +2607,13 @@ function test_batch_script {
 	rm "${LOG_FILE}.tmp"
     else
 	# in case everything fails do a cold start:
-	{ sleep $(( $TEST_TOTAL_TIME + 180 )); reboot_cmd cold; } &
+	{ sleep $(( $TEST_TOTAL_TIME + 240 )); reboot_cmd cold; } &
 	# at TEST_TOTAL_TIME seconds later reboot:
-	{ sleep $TEST_TOTAL_TIME; reboot_cmd; } &
+	{ sleep $(( $TEST_TOTAL_TIME + 120)); reboot_cmd; } &
+
+	if test -f /boot/grub/grubenv; then
+	    grub-editenv - set rtaitest_state="test"
+	fi
 
 	# assemble description:
 	test -n "$KERNEL_DESCR" && test "${KERNEL_DESCR:-1:1}" != "-" && KERNEL_DESCR="${KERNEL_DESCR}-"
@@ -2609,6 +2632,9 @@ function test_batch_script {
 
     # reboot:
     sleep 1
+    if test -f /boot/grub/grubenv; then
+	grub-editenv - set rtaitest_state="reboot"
+    fi
     reboot_cmd
     sleep 300
     reboot_cmd cold
@@ -2631,6 +2657,7 @@ function restore_test_batch {
 	grub-editenv - unset rtaitest_param_descr
 	grub-editenv - unset rtaitest_time
 	grub-editenv - unset rtaitest_specs
+	grub-editenv - unset rtaitest_state
     fi
 }
 

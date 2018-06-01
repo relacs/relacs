@@ -557,9 +557,11 @@ to quickly generate various kernel configurations that you can use in a batch fi
 \note Running a test batch makes your computer practially unuseable, because it
 will repeadetly reboot.
 
-If you want to abort a test batch then log in and run
+If you reboot or restart your computer during a running test batch
+(because a test hangs), the test batch stops itself automatically.
+If you want to abort a running test batch then log in and run
 \code
-sudo killall makertaikernel.sh      # to kill the already scheduled net reboot
+sudo killall makertaikernel.sh      # to kill the already scheduled reboot
 makertaikernel.sh restore testbatch # to really stop the test batch
 \endcode
 
