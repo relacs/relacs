@@ -1181,6 +1181,20 @@ corresponding plugins for RELACS.
 sudo adduser $USER iocard
    \endcode
    \note You need to log out and log in again to actually be member of that group.
+-# \note Calibrate you data acquisition board! 
+
+   Do this once in a while on a warmed-up computer (>30min uptime).
+   Depending on you data acquisition board you need to run
+   \code
+sudo comedi_calibrate
+   \endcode
+   or
+   \code
+sudo comedi_softcalibrate
+   \endcode
+   If you have only a single DAQ board then running these commands
+   without any options is sufficient. See `man comedi_calibrate` for
+   details.
 -# \c cd into the RELACS top-level directory and run
    \code
 ./configure

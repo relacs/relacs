@@ -435,6 +435,8 @@ For the targets one or more of:
   rtai       : rtai modules
   showroom   : rtai showroom examples (supports only download, build, clean, remove)
   comedi     : comedi data acquisition driver modules
+  comedilib  : comedi data acquisition user space library
+  comedicalib: comedi data acquisition calibration tools
 action can be one of:
   download   : download missing sources of the specified targets
   update     : update sources of the specified targets (not for kernel target)
@@ -648,6 +650,20 @@ function print_versions {
 	echo "  comedi: revision not available"
     else
 	echo "  comedi: not available"
+    fi
+    if test -f ${LOCAL_SRC_PATH}/comedilib/revision.txt; then
+	echo "  comedilib: git from $(cat ${LOCAL_SRC_PATH}/comedilib/revision.txt)"
+    elif test -d ${LOCAL_SRC_PATH}/comedilib; then
+	echo "  comedilib: revision not available"
+    else
+	echo "  comedilib: not available"
+    fi
+    if test -f ${LOCAL_SRC_PATH}/comedicalib/revision.txt; then
+	echo "  comedicalib: git from $(cat ${LOCAL_SRC_PATH}/comedicalib/revision.txt)"
+    elif test -d ${LOCAL_SRC_PATH}/comedicalib; then
+	echo "  comedicalib: revision not available"
+    else
+	echo "  comedicalib: not available"
     fi
     echo
 }
@@ -3343,11 +3359,11 @@ function remove_showroom {
 function download_comedi {
     cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
-	echo_log "keep already downloaded comedi sources"
+	echo_log "Keep already downloaded comedi sources."
     else
-	echo_log "download comedi"
+	echo_log "Download comedi."
 	if ! $DRYRUN; then
-	    if ! git clone https://github.com/Linux-Comedi/comedi.git; then
+	    if ! git clone https://github.com/Linux-Comedi/comedi.git comedi; then
 		echo_log "Failed to download comedi from \"git clone https://github.com/Linux-Comedi/comedi.git\"!"
 		return 1
 	    fi
@@ -3359,7 +3375,7 @@ function download_comedi {
 function update_comedi {
     cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
-	echo_log "update already downloaded comedi sources"
+	echo_log "Update already downloaded comedi sources."
 	cd comedi
 	if ! git pull origin master; then
 	    echo_log "Failed to update comedi!"
@@ -3379,7 +3395,7 @@ function build_comedi {
     test -f /usr/local/src/comedi/config.status && ! grep -q modules/${KERNEL_NAME} /usr/local/src/comedi/config.status && BUILT_COMEDI=true
     if $BUILT_COMEDI; then
 	cd ${LOCAL_SRC_PATH}/comedi
-	echo_log "build comedi"
+	echo_log "Build comedi ..."
 	if ! $DRYRUN; then
 	    ./autogen.sh
 	    PATH="$PATH:${REALTIME_DIR}/bin"
@@ -3400,11 +3416,13 @@ function build_comedi {
 function clean_comedi {
     cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
-	echo_log "clean comedi"
+	echo_log "Clean comedi."
 	cd comedi
 	if ! $DRYRUN; then
 	    make clean
 	fi
+    else
+	echo_log "No comedi sources found."
     fi
 }
 
@@ -3418,44 +3436,53 @@ function install_comedi {
 	rm -rf /lib/modules/${KERNEL_ALT_NAME}/kernel/drivers/staging/comedi
     fi
 
-    cd ${LOCAL_SRC_PATH}/comedi
-    echo_log "install comedi"
-    if ! $DRYRUN; then
-	make install
-	if test "x$?" != "x0"; then
-	    echo_log "Failed to install comedi!"
-	    return 1
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedi; then
+	echo_log "Install comedi."
+	cd comedi
+	if ! $DRYRUN; then
+	    make install
+	    if test "x$?" != "x0"; then
+		echo_log "Failed to install comedi!"
+		return 1
+	    fi
+	    KERNEL_MODULES=/lib/modules/${KERNEL_NAME}
+	    test -d "$KERNEL_MODULES" || KERNEL_MODULES=/lib/modules/${KERNEL_ALT_NAME}
+	    cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers ${KERNEL_MODULES}/comedi/
+	    cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
+	    cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
+	    depmod -a
+	    sleep 1
+	    udevadm trigger
 	fi
-	KERNEL_MODULES=/lib/modules/${KERNEL_NAME}
-	test -d "$KERNEL_MODULES" || KERNEL_MODULES=/lib/modules/${KERNEL_ALT_NAME}
-	cp ${LOCAL_SRC_PATH}/comedi/comedi/Module.symvers ${KERNEL_MODULES}/comedi/
-	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedi.h /usr/include/linux/
-	cp ${LOCAL_SRC_PATH}/comedi/include/linux/comedilib.h /usr/include/linux/
-	depmod -a
-	sleep 1
-	udevadm trigger
+	NEW_COMEDI=true
+    else
+	echo_log "No comedi sources found."
     fi
-    NEW_COMEDI=true
 }
 
 function uninstall_comedi {
     cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
-	echo_log "uninstall comedi"
+	echo_log "Uninstall comedi."
 	cd comedi
 	if ! $DRYRUN; then
 	    make uninstall
 	fi
+    else
+	echo_log "No comedi sources found."
     fi
 }
 
 function remove_comedi {
     cd ${LOCAL_SRC_PATH}
     if test -d comedi; then
-	echo_log "remove ${LOCAL_SRC_PATH}/comedi"
+	echo_log "Remove ${LOCAL_SRC_PATH}/comedi ."
 	if ! $DRYRUN; then
 	    rm -r comedi
 	fi
+    else
+	echo_log "No comedi sources found."
     fi
 }
 
@@ -3466,6 +3493,232 @@ function remove_comedi_modules {
 	    modprobe -r $i && echo_log "removed $i"
 	done
 	modprobe -r comedi && echo_log "removed comedi"
+    fi
+}
+
+
+###########################################################################
+# comedilib:
+
+function download_comedilib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedilib; then
+	echo_log "Keep already downloaded comedilib sources."
+    else
+	echo_log "Download comedilib."
+	if ! $DRYRUN; then
+	    if ! git clone https://github.com/Linux-Comedi/comedilib.git comedilib; then
+		echo_log "Failed to download comedilib from \"git clone https://github.com/Linux-Comedi/comedilib.git\"!"
+		return 1
+	    fi
+	    date +"%F %H:%M" > comedilib/revision.txt
+	fi
+    fi
+}
+
+function update_comedilib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedilib; then
+	echo_log "Update already downloaded comedilib sources."
+	cd comedilib
+	if ! git pull origin master; then
+	    echo_log "Failed to update comedilib!"
+	    return 1
+	fi
+	date +"%F %H:%M" > revision.txt
+	clean_comedilib
+    else
+	download_comedilib
+    fi
+}
+
+function build_comedilib {
+    cd ${LOCAL_SRC_PATH}
+    if ! test -d comedilib; then
+	download_comedilib
+    fi
+    if ! test -f comedilib/testing/comedi_test; then
+	cd comedilib
+	echo_log "Build comedilib ..."
+	if ! $DRYRUN; then
+	    ./autogen.sh
+	    ./configure --prefix=/usr --sysconfdir=/etc
+	    make clean
+	    make -j $CPU_NUM
+	    if test "x$?" != "x0"; then
+		echo_log "Failed to build comedilib!"
+		return 1
+	    fi
+	    install_comedilib || return 1
+	fi
+    else
+	echo_log "Keep already compiled comedilib."
+    fi
+}
+
+function clean_comedilib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedilib; then
+	echo_log "Clean comedilib."
+	cd comedilib
+	if ! $DRYRUN; then
+	    make clean
+	fi
+    fi
+}
+
+function install_comedilib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedilib; then
+	echo_log "Install comedilib."
+	cd comedilib
+	if ! $DRYRUN; then
+	    make install
+	    if test "x$?" != "x0"; then
+		echo_log "Failed to install comedilib!"
+		return 1
+	    fi
+	fi
+    else
+	echo_log "No comedilib sources found."
+    fi
+}
+
+function uninstall_comedilib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedilib; then
+	echo_log "Uninstall comedilib."
+	cd comedilib
+	if ! $DRYRUN; then
+	    make uninstall
+	fi
+    else
+	echo_log "No comedilib sources found."
+    fi
+}
+
+function remove_comedilib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedilib; then
+	echo_log "Remove ${LOCAL_SRC_PATH}/comedilib."
+	if ! $DRYRUN; then
+	    rm -r comedilib
+	fi
+    else
+	echo_log "No comedilib sources found."
+    fi
+}
+
+
+###########################################################################
+# comedicalib:
+
+function download_comedicalib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedicalib; then
+	echo_log "Keep already downloaded comedicalib sources."
+    else
+	echo_log "Download comedicalib."
+	if ! $DRYRUN; then
+	    if ! git clone https://github.com/Linux-Comedi/comedi_calibrate.git comedicalib; then
+		echo_log "Failed to download comedicalib from \"git clone https://github.com/Linux-Comedi/comedi_calibrate.git\"!"
+		return 1
+	    fi
+	    date +"%F %H:%M" > comedicalib/revision.txt
+	fi
+    fi
+}
+
+function update_comedicalib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedicalib; then
+	echo_log "Update already downloaded comedicalib sources."
+	cd comedicalib
+	if ! git pull origin master; then
+	    echo_log "Failed to update comedicalib!"
+	    return 1
+	fi
+	date +"%F %H:%M" > revision.txt
+	clean_comedicalib
+    else
+	download_comedicalib
+    fi
+}
+
+function build_comedicalib {
+    cd ${LOCAL_SRC_PATH}
+    if ! test -d comedicalib; then
+	download_comedicalib
+    fi
+    if ! test -f comedicalib/comedi_calibrate/comedi_calibrate; then
+	cd comedicalib
+	echo_log "Build comedicalib ..."
+	if ! $DRYRUN; then
+	    ./autogen.sh
+	    ./configure --prefix=/usr --sysconfdir=/etc
+	    make clean
+	    make -j $CPU_NUM
+	    if test "x$?" != "x0"; then
+		echo_log "Failed to build comedicalib!"
+		return 1
+	    fi
+	    install_comedicalib || return 1
+	fi
+    else
+	echo_log "Keep already compiled comedicalib."
+    fi
+}
+
+function clean_comedicalib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedicalib; then
+	echo_log "Clean comedicalib."
+	cd comedicalib
+	if ! $DRYRUN; then
+	    make clean
+	fi
+    fi
+}
+
+function install_comedicalib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedicalib; then
+	echo_log "Install comedicalib."
+	cd comedicalib
+	if ! $DRYRUN; then
+	    make install
+	    if test "x$?" != "x0"; then
+		echo_log "Failed to install comedicalib!"
+		return 1
+	    fi
+	fi
+    else
+	echo_log "No comedicalib sources found."
+    fi
+}
+
+function uninstall_comedicalib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedicalib; then
+	echo_log "Uninstall comedicalib."
+	cd comedicalib
+	if ! $DRYRUN; then
+	    make uninstall
+	fi
+    else
+	echo_log "No comedicalib sources found."
+    fi
+}
+
+function remove_comedicalib {
+    cd ${LOCAL_SRC_PATH}
+    if test -d comedicalib; then
+	echo_log "Remove ${LOCAL_SRC_PATH}/comedicalib."
+	if ! $DRYRUN; then
+	    rm -r comedicalib
+	fi
+    else
+	echo_log "No comedicalib sources found."
     fi
 }
 
@@ -3796,6 +4049,8 @@ function full_install {
     ${MAKE_RTAI} && { download_rtai || return 1; }
     ${MAKE_NEWLIB} && { download_newlib || MAKE_NEWLIB=false; }
     ${MAKE_COMEDI} && { download_comedi || MAKE_COMEDI=false; }
+    ${MAKE_COMEDI} && { download_comedilib }
+    ${MAKE_COMEDI} && { download_comedicalib }
     download_kernel || return 1
 
     unpack_kernel && patch_kernel && build_kernel || return 1
@@ -3803,6 +4058,8 @@ function full_install {
     ${MAKE_NEWLIB} && { build_newlib || MAKE_NEWLIB=false; }
     ${MAKE_RTAI} && { build_rtai || return 1; }
     ${MAKE_COMEDI} && { build_comedi || MAKE_COMEDI=false; }
+    ${MAKE_COMEDI} && { build_comedilib }
+    ${MAKE_COMEDI} && { build_comedicalib }
 
     SECS=$SECONDS
     let MIN=${SECS}/60
@@ -3860,6 +4117,8 @@ function download_all {
 		rtai ) download_rtai ;;
 		showroom ) download_showroom ;;
 		comedi ) download_comedi ;;
+		comedilib ) download_comedilib ;;
+		comedicalib ) download_comedicalib ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -3879,6 +4138,8 @@ function update_all {
 		rtai ) update_rtai ;;
 		showroom ) update_showroom ;;
 		comedi ) update_comedi ;;
+		comedilib ) update_comedilib ;;
+		comedicalib ) update_comedicalib ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -3892,6 +4153,8 @@ function build_all {
 	${MAKE_NEWLIB} && { build_newlib || MAKE_NEWLIB=false; }
 	${MAKE_RTAI} && { build_rtai || return 1; }
 	${MAKE_COMEDI} && build_comedi
+	${MAKE_COMEDI} && build_comedilib
+	${MAKE_COMEDI} && build_comedicalib
     else
 	for TARGET; do
 	    case $TARGET in
@@ -3914,6 +4177,10 @@ function build_all {
 		    build_showroom ;;
 		comedi ) 
 		    build_comedi ;;
+		comedilib ) 
+		    build_comedilib ;;
+		comedicalib ) 
+		    build_comedicalib ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -3932,6 +4199,8 @@ function clean_all {
 	${MAKE_NEWLIB} && clean_newlib
 	${MAKE_RTAI} && clean_rtai
 	${MAKE_COMEDI} && clean_comedi
+	${MAKE_COMEDI} && clean_comedilib
+	${MAKE_COMEDI} && clean_comedicalib
     else
 	for TARGET; do
 	    case $TARGET in
@@ -3940,6 +4209,8 @@ function clean_all {
 		rtai ) clean_rtai ;;
 		showroom ) clean_showroom ;;
 		comedi ) clean_comedi ;;
+		comedilib ) clean_comedilib ;;
+		comedicalib ) clean_comedicalib ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -3954,6 +4225,8 @@ function install_all {
 	${MAKE_NEWLIB} && install_newlib
 	${MAKE_RTAI} && install_rtai
 	${MAKE_COMEDI} && install_comedi
+	${MAKE_COMEDI} && install_comedilib
+	${MAKE_COMEDI} && install_comedicalib
     else
 	for TARGET; do
 	    case $TARGET in
@@ -3962,6 +4235,8 @@ function install_all {
 		newlib ) install_newlib ;;
 		rtai ) install_rtai ;;
 		comedi ) install_comedi ;;
+		comedilib ) install_comedilib ;;
+		comedicalib ) install_comedicalib ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -3975,6 +4250,8 @@ function uninstall_all {
 	${MAKE_NEWLIB} && uninstall_newlib
 	${MAKE_RTAI} && uninstall_rtai
 	${MAKE_COMEDI} && uninstall_comedi
+	${MAKE_COMEDI} && uninstall_comedilib
+	${MAKE_COMEDI} && uninstall_comedicalib
     else
 	for TARGET; do
 	    case $TARGET in
@@ -3982,6 +4259,8 @@ function uninstall_all {
 		newlib ) uninstall_newlib ;;
 		rtai ) uninstall_rtai ;;
 		comedi ) uninstall_comedi ;;
+		comedilib ) uninstall_comedilib ;;
+		comedicalib ) uninstall_comedicalib ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -3995,6 +4274,8 @@ function remove_all {
 	${MAKE_NEWLIB} && remove_newlib
 	${MAKE_RTAI} && remove_rtai
 	${MAKE_COMEDI} && remove_comedi
+	${MAKE_COMEDI} && remove_comedilib
+	${MAKE_COMEDI} && remove_comedicalib
     else
 	for TARGET; do
 	    case $TARGET in
@@ -4003,6 +4284,8 @@ function remove_all {
 		rtai ) remove_rtai ;;
 		showroom ) remove_showroom ;;
 		comedi ) remove_comedi ;;
+		comedilib ) remove_comedilib ;;
+		comedicalib ) remove_comedicalib ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
