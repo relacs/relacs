@@ -4049,8 +4049,8 @@ function full_install {
     ${MAKE_RTAI} && { download_rtai || return 1; }
     ${MAKE_NEWLIB} && { download_newlib || MAKE_NEWLIB=false; }
     ${MAKE_COMEDI} && { download_comedi || MAKE_COMEDI=false; }
-    ${MAKE_COMEDI} && { download_comedilib }
-    ${MAKE_COMEDI} && { download_comedicalib }
+    ${MAKE_COMEDI} && download_comedilib
+    ${MAKE_COMEDI} && download_comedicalib
     download_kernel || return 1
 
     unpack_kernel && patch_kernel && build_kernel || return 1
@@ -4058,8 +4058,8 @@ function full_install {
     ${MAKE_NEWLIB} && { build_newlib || MAKE_NEWLIB=false; }
     ${MAKE_RTAI} && { build_rtai || return 1; }
     ${MAKE_COMEDI} && { build_comedi || MAKE_COMEDI=false; }
-    ${MAKE_COMEDI} && { build_comedilib }
-    ${MAKE_COMEDI} && { build_comedicalib }
+    ${MAKE_COMEDI} && build_comedilib
+    ${MAKE_COMEDI} && build_comedicalib
 
     SECS=$SECONDS
     let MIN=${SECS}/60
@@ -4109,6 +4109,8 @@ function download_all {
 	${MAKE_NEWLIB} && download_newlib
 	${MAKE_RTAI} && download_rtai
 	${MAKE_COMEDI} && download_comedi
+	${MAKE_COMEDI} && download_comedilib
+	${MAKE_COMEDI} && download_comedicalib
     else
 	for TARGET; do
 	    case $TARGET in
