@@ -54,7 +54,6 @@
 
 : ${RTAI_HAL_PARAM:=""}       # parameter for the rtai_hal module used for testing
 : ${RTAI_SCHED_PARAM:=""}     # parameter for the rtai_sched module used for testing
-: ${TEST_TIME:=""}            # time in seconds used for latency test
 : ${TEST_TIME_DEFAULT:="600"} # default time in seconds used for latency test
 : ${STARTUP_TIME:=300}        # time to wait after boot to run a batch test in seconds
 : ${COMPILE_TIME:=800}        # time needed for building a kernel with reconfigure
@@ -1796,6 +1795,7 @@ function test_save {
 function test_run {
     DIR=$1
     TEST=$2
+    TEST_TIME=$3
     TEST_RESULTS=results-$DIR-$TEST.dat
     TEST_DIR=${REALTIME_DIR}/testsuite/$DIR/$TEST
     rm -f $TEST_RESULTS
@@ -1851,6 +1851,7 @@ function test_kernel {
     CALIBRATE="false"
     DESCRIPTION=""
     TESTSPECS=""
+    TEST_TIME="${TEST_TIME_DEFAULT}"
     while test -n "$1"; do
 	TESTSPECS="$TESTSPECS $1"
 	case $1 in
@@ -2123,7 +2124,7 @@ function test_kernel {
 	    TESTED="${TESTED}${TT}"
 	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 
-	    test_run $DIR latency
+	    test_run $DIR latency $TEST_TIME
 	    if test $DIR = ${TESTMODE%% *}; then
 		rm -f config-$REPORT
 		rm -f latencies-$REPORT
@@ -2132,10 +2133,10 @@ function test_kernel {
 	    fi
 	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 
-	    test_run $DIR switches
+	    test_run $DIR switches $TEST_TIME
 	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 
-	    test_run $DIR preempt
+	    test_run $DIR preempt $TEST_TIME
 	    PROGRESS="${PROGRESS}${TT}"
 	    test_save "$NAME" "$REPORT" "$TESTED" "$PROGRESS"
 	done
@@ -2381,10 +2382,7 @@ EOF
     TEST_SPECS="$@"
 
     # compute total time needed for the tests:
-    if test -z "$TEST_TIME"; then
-	TEST_TIME="${TEST_TIME_DEFAULT}"
-	TEST_SPECS="$TEST_SPECS $TEST_TIME"
-    fi
+    TEST_SPECS="$TEST_SPECS $TEST_TIME"
     TEST_TOTAL_TIME=30
     for TM in $TESTMODE; do
 	let TEST_TOTAL_TIME+=$TEST_TIME
@@ -2439,6 +2437,8 @@ EOF
 	# report next kernel parameter settings:
 	echo_log "Reboot into first configuration: \"${KD}${DESCRIPTION}\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     fi
+
+    echo "TEST_TOTAL_TIME $TEST_TOTAL_TIME"
 
     # confirm batch testing:
     echo_log
