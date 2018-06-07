@@ -903,18 +903,11 @@ function print_kernel_info {
     print_settings
 }
 
-function print_full_info {
+function print_rtai_info {
     ORIG_RTAI_PATCH="$RTAI_PATCH"
     RTAI_PATCH=""
-    check_kernel_patch
-    if test $? -lt 10; then
-	rm -f "$LOG_FILE"
-    fi
-    if test "x$1" != "xrtai"; then
-	RTAI_PATCH="$ORIG_RTAI_PATCH"
-	rm -f lsmod.dat
-	print_kernel_info
-    fi
+    check_kernel_patch "$ORIG_RTAI_PATCH"
+    rm -f "$LOG_FILE"
 }
 
 
@@ -994,7 +987,7 @@ function check_kernel_patch {
 	    echo_log "$ ./${MAKE_RTAI_KERNEL} download rtai"
 	    return 10
 	fi
-	RTAI_PATCH_SET=${RTAI_PATCH}
+	RTAI_PATCH_SET="$1"
 	LINUX_KERNEL_SET=${LINUX_KERNEL}
 	cd ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/
 	echo_log
@@ -1032,10 +1025,14 @@ function check_kernel_patch {
 	echo_log "  RTAI_PATCH=\"${RTAI_PATCH}\""
 	echo_log "  LINUX_KERNEL=\"${LINUX_KERNEL}\""
 	echo_log
-	echo_log "Set values:"
-	echo_log
-	echo_log "  RTAI_PATCH=\"${RTAI_PATCH_SET}\""
-	echo_log "  LINUX_KERNEL=\"${LINUX_KERNEL_SET}\""
+	if test "x${RTAI_PATCH}" = "x${RTAI_PATCH_SET}" && test "x${LINUX_KERNEL}" = "x${LINUX_KERNEL_SET}"; then
+	    echo_log "are already set."
+	else
+	    echo_log "Set values:"
+	    echo_log
+	    echo_log "  RTAI_PATCH=\"${RTAI_PATCH_SET}\""
+	    echo_log "  LINUX_KERNEL=\"${LINUX_KERNEL_SET}\""
+	fi
 	echo_log
 	return 1
     elif ! test -f ${LOCAL_SRC_PATH}/${RTAI_DIR}/base/arch/$RTAI_MACHINE/patches/$RTAI_PATCH; then
@@ -3940,44 +3937,52 @@ function restore_comedi {
 # actions:
 
 function info_all {
-    case $1 in
 
-    grub ) print_grub env ;;
+    if test -z $1; then
+	ORIG_RTAI_PATCH="$RTAI_PATCH"
+	RTAI_PATCH=""
+	check_kernel_patch "$ORIG_RTAI_PATCH"
+	RTAI_PATCH="$ORIG_RTAI_PATCH"
+	rm -f lsmod.dat
+	print_kernel_info
+    else
 
-    settings )
-	if [ -t 1 ]; then
-	    print_settings
-	    echo
-	    echo "You may modify the settings by the respective command line options (check \$ ${MAKE_RTAI_KERNEL} help),"
-	    echo "by setting them in the configuration file \"${MAKE_RTAI_CONFIG}\""
-	    echo "(create configuration file by \$ ${MAKE_RTAI_KERNEL} info settings > ${MAKE_RTAI_CONFIG}), or"
-	    echo "by editing the variables directly in the ${MAKE_RTAI_KERNEL} script."
-	else
-	    print_config
-	fi
-	;;
+	case $1 in
 
-    setup ) print_setup ;;
+	    grub ) print_grub env ;;
 
-    log ) print_log ;;
+	    settings )
+		if [ -t 1 ]; then
+		    print_settings
+		    echo
+		    echo "You may modify the settings by the respective command line options (check \$ ${MAKE_RTAI_KERNEL} help),"
+		    echo "by setting them in the configuration file \"${MAKE_RTAI_CONFIG}\""
+		    echo "(create configuration file by \$ ${MAKE_RTAI_KERNEL} info settings > ${MAKE_RTAI_CONFIG}), or"
+		    echo "by editing the variables directly in the ${MAKE_RTAI_KERNEL} script."
+		else
+		    print_config
+		fi
+		;;
 
-    configs )
-	shift
-	print_kernel_configs $@
-	;;
+	    setup ) print_setup ;;
 
-    menu ) menu_kernel ;;
+	    log ) print_log ;;
 
-    kernel ) print_kernel ;;
+	    configs )
+		shift
+		print_kernel_configs $@
+		;;
 
-    cpu|cpus ) print_cpus ;;
+	    menu ) menu_kernel ;;
 
-    * )
-	print_full_info $@ 
-	test "x$1" = "xrtai" && rm -f "$LOG_FILE"
-	;;
+	    kernel ) print_kernel ;;
 
-    esac
+	    cpu|cpus ) print_cpus ;;
+
+	    rtai) print_rtai_info ;;
+
+	esac
+    fi
 }
 
 function setup_features {
@@ -4028,7 +4033,7 @@ function init_installation {
     setup_grub
     setup_comedi
     download_rtai
-    print_full_info rtai
+    print_rtai_info
 }
 
 function full_install {

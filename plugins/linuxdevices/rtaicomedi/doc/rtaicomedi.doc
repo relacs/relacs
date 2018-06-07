@@ -50,7 +50,7 @@ script to your Linux distribution.
 
 \subsection initscript Preparations
 
-When you use `makertaikernel.sh` for the first them, then follow these instructions:
+When you use `makertaikernel.sh` for the first time, then follow these instructions:
 
 -# From the relacs source tree go to
    \code
@@ -62,9 +62,16 @@ cd plugins/linuxdevices/rtaicomedi/scripts
 ./makertaikernel.sh config
    \endcode
 
--# Open the configuration file `makertaikernel.cfg` in your favourite text editor and 
-   select an RTAI source by modifying the value assinged to the `RTAI_DIR` variable.
-   See comments in the configuration file for options, usually the default should be fine.
+-# Check the settings by running
+   \code
+./makertaikernel.sh info settings
+   \endcode
+   In particular the RTAI source, i.e. the value assinged to the `RTAI_DIR` variable.
+
+   If you want to change the RTAI source then open the configuration
+   file `makertaikernel.cfg` in your favourite text editor and select
+   an RTAI source by modifying the value assinged to the `RTAI_DIR`
+   variable.  See comments in the configuration file for options.
 
 -# Run
    \code
