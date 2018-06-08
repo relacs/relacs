@@ -263,28 +263,23 @@ Equivalently, you can use the \c sched and \c math option.
 dmesg
      \endcode
      for some hints.
-   - Try adding one or several of the advanced configuration and power
-     interface (ACPI) or advanced programmable interrupt controller
-     (APIC) options, \c acpi=off, \c pci=noacpi, \c noapic, \c nolapic,
-     or \c lapic, to the kernel parameter.
-
-     After restart, check for the number of CPUs - they might be reduced
-     by these parameters:
-     \code
-./makertaikernel.sh info cores
-     \endcode
    .
 
--# Once the RTAI modules load flawlessly you can proceed with running the tests from the RTAI test suite by calling
+-# Once the RTAI modules load flawlessly you can proceed with running the kernel tests from the RTAI test suite by calling
    \code
-sudo ./makertaikernel.sh test          # runs the kern tests
+sudo ./makertaikernel.sh test
+   \endcode
+   This runs the latency, the switch, and the preempt tests.
+   Each of the tests need to be manually terminated by pressing `CTRL-C`.
+
+   All three tests are available for kernel, kernel threads, and user space.
+   They can be selected in the following way:
+   \code
 sudo ./makertaikernel.sh test kern     # runs the kern tests
-sudo ./makertaikernel.sh test kthreads # runs the kthreads tests
+sudo ./makertaikernel.sh test kthreads # runs the kernel threads tests
 sudo ./makertaikernel.sh test user     # runs the user tests
 sudo ./makertaikernel.sh test all      # runs all tests
    \endcode
-
-   The tests need to be manually terminated by pressing `CTRL-C`.
 .
 
 
@@ -416,17 +411,17 @@ RTD|         92|         60|        129|        719|       1040|          0
 - "lat max" minus "lat min" should definitely be smaller than your period
   (default of the latency test is 100 000 ns)
 - As a rough rule of thumb, "lat max" minus "lat min"
-  - less than 2000 ns is awesome
-  - less than 10 000 ns is good
-  - less than 20 000 ns is kind of ok
-  - longer than 20 000 ns is bad
+  - less than 1000 ns is awesome
+  - less than 5 000 ns is good
+  - less than 10 000 ns is kind of ok
+  - longer than 10 000 ns is bad
   .
   on an idle machine (only running the latency test and nothing
   else). Under load (see below) these numbers will usually increase by
   several microsenconds (1000 ns).
 .
 In order to reduce latency jitter you need to improve your kernel
-configuration (\ref configurekernel).
+configuration (see \ref configurekernel).
 
 
 \subsubsection switchtest Switch test
@@ -474,7 +469,7 @@ will run the kern tests with cpu and network load.
 For automatic termination of the tests (no `CTRL-C` required) provide the duration for the
 latency test as a simple number (in seconds):
 \code
-sudo ./makertaikernel.sh test 60       # runs the kern latency test for 60 seconds
+sudo ./makertaikernel.sh test 60       # run the kern latency test for 60 seconds
 \endcode
 
 For preventing any user interaction you can also provide the test
@@ -562,7 +557,7 @@ makertaikernel.sh prepare
 to quickly generate various kernel configurations that you can use in a batch file.
 
 \note Running a test batch makes your computer practially unuseable, because it
-will repeadetly reboot.
+will repeatedly reboot.
 
 If you reboot or restart your computer during a running test batch
 (because a test hangs), the test batch stops itself automatically.
@@ -817,7 +812,7 @@ See
 \endcode
 for information on frequency scaling and idle states of your CPUs.
 
-The output migh look like this:
+The output might look like this:
 \code
 CPU topology, frequencies, and idle states (/sys/devices/system/cpu/*):
 CPU topology                   CPU frequency scaling                CPU idle states (enabled fraction%)
@@ -959,6 +954,7 @@ Processors with "cpu family : 6" are "Core 2/newer Xeon".
   - Set "Timer frequency" to 1000Hz (`CONFIG_HZ_1000=y` and `CONFIG_HZ=1000`)
   .
 .
+This has no effect on the RTAI performance!
 
 
 \subsection disabledevices Disable device drivers you do not need
@@ -1149,10 +1145,11 @@ Others:
   `README.CONF_RMRKS`: LINUX use of DMA can add latency, especially when
   it is supported in burst mode.
 
-.
-
-After restart, check for the number of CPUs in \c /proc/cpuinfo - they
-might be reduced if you disabled too much ACPI!
+  After restart, check for the number of CPUs - they might be reduced
+  if you disabled too much ACPI:
+     \code
+./makertaikernel.sh info cpu
+     \endcode
 
 
 \subsection rtaiisolcpus Isolate CPUs for real time tasks 
@@ -1166,7 +1163,19 @@ isolcpus=0,1
 \code
 isolcpus=0,1 nohz_full=0,1 rcu_nocbs=0,1
 \endcode
+
 See the file `/usr/local/src/rtai/README.ISOLCPUS` for more details.
+
+You get these kernel parameters for a test batch file by running
+\code
+./makertaikernel.sh test batch isolcpus
+\endcode
+Edit the file to set the right cpu indices.
+
+\note You cannot isolate the CPU on which the system boots (usually cpu 0).
+
+\note You need to modify the RTAI test source files in order to run the
+tests on specific CPUs.
 
 
 \subsection disablesmi Disable SMI interrupts

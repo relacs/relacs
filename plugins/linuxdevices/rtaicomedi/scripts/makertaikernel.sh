@@ -149,15 +149,16 @@ Print some information about your system.
 
 Usage:
 
-sudo ${MAKE_RTAI_KERNEL} info [rtai|kernel|cpu|grub|settings|setup|log|configs [<FILE>]]
+sudo ${MAKE_RTAI_KERNEL} info [rtai|kernel|cpu|interrupts|grub|settings|setup|log|configs [<FILE>]]
 sudo ${MAKE_RTAI_KERNEL} [-c xxx] info menu
 
 info                 : display properties of rtai patches, loaded kernel modules, kernel, machine,
                        and grub menu (configs and menu targets are excluded)
 info rtai            : list all available patches and suggest the one fitting to the kernel
 info kernel          : show name and kernel parameter of the currently running kernel
-info cpu             : show properties of your CPUs. 
-                       Information about c-states is not always available - better check the i7z programm.
+info cpu             : show properties of your CPUs.
+                       Information about C-states is not always available - better check the i7z programm.
+info interrupts      : show the file /proc/interrupts
 info menu            : show kernel configuration menu of the specified (-c) kernel configuration
 info grub            : show grub boot menu entries
 info settings        : show the values of all configuration variables
@@ -667,6 +668,12 @@ function print_versions {
     echo
 }
 
+function print_interrupts {
+    echo "Interrupts (/proc/interrupts):"
+	cat /proc/interrupts | indent
+    echo
+}
+
 function print_kernel {
     echo "Hostname: $(hostname)"
     echo
@@ -892,9 +899,7 @@ function print_kernel_info {
 	lsmod | indent
     fi
     echo
-    echo "Interrupts (/proc/interrupts):"
-	cat /proc/interrupts | indent
-    echo
+    print_interrupts
     print_distribution
     print_kernel
     print_cpus
@@ -2630,7 +2635,7 @@ function test_batch_script {
 
 	# assemble description:
 	test -n "$KERNEL_DESCR" && test "${KERNEL_DESCR:-1:1}" != "-" && KERNEL_DESCR="${KERNEL_DESCR}-"
-	test -n "$BATCH_DESCR" && test "${BATCH_DESCR:-1:1}" != "-" && BATCH_DESCR="${BATCH_DESCR}-"
+	test -n "$BATCH_DESCR" && test -n "$DESCRIPTION" && test "${BATCH_DESCR:-1:1}" != "-" && BATCH_DESCR="${BATCH_DESCR}-"
 
 	# run tests:
 	echo_log "test kernel ${KERNEL_DESCR}${BATCH_DESCR}${DESCRIPTION}:"
@@ -3978,6 +3983,8 @@ function info_all {
 	    kernel ) print_kernel ;;
 
 	    cpu|cpus ) print_cpus ;;
+
+	    interrupts ) print_interrupts ;;
 
 	    rtai) print_rtai_info ;;
 
