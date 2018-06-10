@@ -464,6 +464,17 @@ For example
 will run the kern tests with cpu and network load.
 
 
+\subsection cputest Run tests on a specific CPU core
+
+In particular when checking the `isolcpu` kernel parameter you may
+want to run the latency test on a specific CPU. You can specify the
+CPU id on which you want to run the tests with `cpu=<id>`, where
+`<id>` is the CPU id, first CPU is 0. For example:
+\code
+./makertaikernel.sh test cpu=2
+\endcode
+will run the kern tests on the third CPU.
+
 \subsection automatictests Automatized testing
 
 For automatic termination of the tests (no `CTRL-C` required) provide the duration for the
@@ -511,12 +522,12 @@ In a batch file
 - empty lines are ignored
 - a line of the format
   \code
-<descr> : <load> : <params>
+<descr> : <load/cpu> : <params>
   \endcode
   describes a configuration to be tested:
   - `<descr>` is a one-word string describing the kernel parameter 
      (a description of the load settings is added automatically to the description)
-  - `<load>` defines the load processes to be started before testing (cpu io mem net full, see above)
+  - `<load/cpu>` defines the load processes to be started before testing (cpu io mem net full, see above) and/or the CPUs on which the test should be run (cpu=<CPUIDS>, see above)
   - `<param>` is a list of kernel parameter to be used.
   .
 - a line of the format
@@ -547,7 +558,8 @@ Example batch file:
   lowlatency : CONFIG :
   idlenohz : : idle=poll nohz=off
   nodyntics : CONFIG : config-nodyntics
-  idleisol : cpu io : idle=poll isolcpus=0-1
+  idleisol : cpu io : idle=poll isolcpus=0,1
+  isol2 : io cpu=2 : isolcpus=2
 \endcode
 
 Use 

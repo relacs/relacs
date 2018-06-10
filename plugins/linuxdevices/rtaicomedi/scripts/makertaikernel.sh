@@ -191,9 +191,9 @@ Setup and restore syslog daemon, grub menu, and kernel parameter.
 
 Usage:
 
-sudo ${MAKE_RTAI_KERNEL} setup [messages|grub|comedi|kernel]
+sudo ${MAKE_RTAI_KERNEL} setup [messages|grub|comedi|kernel|rtai <cpus>]
 
-sudo ${MAKE_RTAI_KERNEL} restore [messages|grub|comedi|kernel|testbatch]
+sudo ${MAKE_RTAI_KERNEL} restore [messages|grub|comedi|kernel|rtai|testbatch]
 
 setup            : setup messages, grub, comedi, and kernel
 setup messages   : enable /var/log/messages needed for RTAI tests in rsyslog settings
@@ -201,12 +201,15 @@ setup grub       : configure the grub boot menu (not hidden, no submenus,
                    extra RTAI kernel parameter, user can reboot and set rtai kernel parameter)
 setup comedi     : create "iocard" group and assign comedi devices to this group
 setup kernel     : set kernel parameter for the grub boot menu to "$KERNEL_PARAM"
+setup rtai <cpus>: rebuild and install rtai testsuite to run the tests on the specified cpus
+                   (comma-separated list of cpu ids)
 
 restore          : restore the original system settings (messages, grub, comedi, kernel, and testbatch)
 restore messages : restore the original rsyslog settings
 restore grub     : restore the original grub boot menu settings and user access
 restore comedi   : do not assign comedi devices to the iocard group
 restore kernel   : restore default kernel parameter for the grub boot menu
+restore rtai     : restore, build, and install the original RTAI testsuite files
 restore testbatch: uninstall the automatic test script from crontab and
                    remove variables from the grub environment (see help test)
 
@@ -259,7 +262,8 @@ Test the performance of the rtai-patched linux kernel.
 Usage:
 
 sudo ${MAKE_RTAI_KERNEL} [-d] [-n xxx] [-r xxx] [-k xxx] test [[hal|sched|math|comedi] [calib]
-     [kern|kthreads|user|all|none] [<NNN>] [auto <XXX> | batch clocks|cstates|acpi|isolcpus|<FILE>]]
+     [kern|kthreads|user|all|none] [cpu|io|mem|net|full] [cpu=<CPUIDS>] [<NNN>] 
+     [auto <XXX> | batch clocks|cstates|acpi|isolcpus|<FILE>]]
 
 EOF
     help_kernel_options
@@ -297,6 +301,11 @@ performance. This can be controlled by the following key-words:
   net      : produce network traffic
   full     : all of the above
 
+You can also specify on which CPU the test should be run:
+  cpu=<CPUIDS> : run tests on CPU with ids <CPUIDS>. <CPUIDS> is a comma separated
+                 list of CPUs. The first CPU is 0. For example, cpu=2 runs the tests
+                 on the third CPU.
+
 The rtai tests need to be terminated by pressing ^C and a string
 describing the test scenario needs to be provided. This can be
 automized by the following two options:
@@ -323,11 +332,11 @@ In a batch FILE
 - everything behind a hash ('#') is a comment that is completely ignored
 - empty lines are ignored
 - a line of the format
-  <descr> : <load> : <params>
+  <descr> : <load/cpus> : <params>
   describes a configuration to be tested:
   <descr> is a one-word string describing the kernel parameter 
       (a description of the load settings is added automatically to the description)
-  <load> defines the load processes to be started before testing (cpu io mem net full, see above)
+  <load/cpus> defines the load processes to be started before testing (cpu io mem net full, see above) and/or the CPUs on which the test should be run (cpu=<CPUIDS>, see above).
   <param> is a list of kernel parameter to be used.
 - a line of the format
   <descr> : CONFIG : <file>
@@ -350,7 +359,8 @@ Example lines:
   lowlatency : CONFIG :
   idlenohz : : idle=poll nohz=off
   nodyntics : CONFIG : config-nodyntics
-  idleisol : cpu io : idle=poll isolcpus=0-1
+  idleisol : cpu io : idle=poll isolcpus=0,1
+  isol2 : io cpu=2 : isolcpus=2
 See the file written by "batch default" for suggestions, and the file
 $KERNEL_PATH/linux-${LINUX_KERNEL}-${KERNEL_SOURCE_NAME}/Documentation/kernel-parameters.txt
 for a documentation of all kernel parameter.
@@ -565,6 +575,14 @@ function print_setup {
 	    echo "kernel   : /etc/default/grub is not modified"
 	    echo "           run \"${MAKE_RTAI_KERNEL} setup kernel\" for setting up default RTAI kernel parameter"
 	fi
+    fi
+    # rtai:
+    if test -f ${LOCAL_SRC_PATH}/$RTAI_DIR/testsuite/kern/latency/latency-module.c.mrk; then
+	echo "rtai     : testsuite is modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} restore rtai\" to restore"
+    else
+	echo "rtai     : testsuite is not modified"
+	echo "           run \"${MAKE_RTAI_KERNEL} setup rtai <cpumask>\" for setting a CPU mask for the tests"
     fi
     # test batch:
     if crontab -l 2> /dev/null | grep -q "${MAKE_RTAI_KERNEL}"; then
@@ -1849,6 +1867,7 @@ function test_kernel {
     # test targets:
     TESTMODE=""
     LOADMODE=""
+    CPUIDS=""
     MAXMODULE="4"
     CALIBRATE="false"
     DESCRIPTION=""
@@ -1872,6 +1891,7 @@ function test_kernel {
 	    mem) LOADMODE="$LOADMODE mem" ;;
 	    net) LOADMODE="$LOADMODE net" ;;
 	    full) LOADMODE="cpu io mem net" ;;
+	    cpu=*) CPUIDS="${1#cpu=}" ;;
 	    [0-9]*) TEST_TIME="$((10#$1))" ;;
 	    auto) shift; test -n "$1" && { DESCRIPTION="$1"; TESTSPECS="$TESTSPECS $1"; } ;;
 	    batch) shift; test_batch "$1" "$TEST_TIME" "$TESTMODE" ${TESTSPECS% batch} ;;
@@ -1904,6 +1924,8 @@ function test_kernel {
 	echo "run some tests on currently running kernel ${KERNEL_NAME}"
 	echo "  test mode(s)        : $TESTMODE"
 	echo "  max module to load  : $MAXMODULE"
+	echo "  apply load          : $LOADMODE"
+	echo "  CPU ids             : $CPUIDS"
 	echo "  rtai_sched parameter: $RTAI_SCHED_PARAM"
 	echo "  rtai_hal parameter  : $RTAI_HAL_PARAM"
 	echo "  description         : $DESCRIPTION"
@@ -1952,12 +1974,19 @@ function test_kernel {
     else
 	NAME="$DESCRIPTION"
     fi
+    # add CPU mask:
+    if test -n "$CPUIDS"; then
+	NAME="${NAME}-cpu${CPUIDS%%,*}"
+	setup_rtai "$CPUIDS"
+    fi
     # add load information to description:
     if test -n "$LOADMODE"; then
 	NAME="${NAME}-"
 	for LOAD in $LOADMODE; do
 	    NAME="${NAME}${LOAD:0:1}"
 	done
+    else
+	NAME="${NAME}-idle"
     fi
     REPORT_NAME="${REPORT_NAME}-${NUM}-$(date '+%F')-${NAME}"
     REPORT="${REPORT_NAME}-failed"
@@ -2188,6 +2217,11 @@ function test_kernel {
     done
     rm -f load.dat
     rm -f lsmod.dat
+
+    # restore CPU mask:
+    if test -n "$CPUIDS"; then
+	restore_rtai
+    fi
 }
 
 function test_batch {
@@ -2313,43 +2347,96 @@ EOF
 		    isolcpus) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
 # Batch file for testing RTAI kernel with cpu isolation.
-# Replace "=1" by the index of the cpu you want to isolate.
+# Adapt the content of this file to the number of CPUs you have!
 
+# standard cpu
 plain : :
 plain : full :
 
-# isolcpus:
-isolcpus : : isolcpus=1
-isolcpus : full : isolcpus=1
+# non-isolated on cpu 0:
+plain : cpu=0 :
+plain : cpu=0 full :
 
-# isolcpus + nohz_full
-isolcpus-nohz : : isolcpus=1 nohz_full=1
-isolcpus-nohz : full : isolcpus=1 nohz_full=1
+# isolcpus on cpu 0:
+isolcpus0 : cpu=0 : isolcpus=0,1
+isolcpus0 : cpu=0 full : isolcpus=0,1
 
-# isolcpus + nohz_full +  rcu_nocbs
-isolcpus-nohz-rcu : : isolcpus=1 nohz_full=1 rcu_nocbs=1
-isolcpus-nohz-rcu : full : isolcpus=1 nohz_full=1 rcu_nocbs=1
+# non-isolated on cpu 1:
+plain : cpu=1 :
+plain : cpu=1 full :
+
+# isolcpus on cpu 1:
+isolcpus1 : cpu=1 : isolcpus=1
+isolcpus1 : cpu=1 full : isolcpus=1
+
+# non-isolated on cpu 2:
+plain : cpu=2 :
+plain : cpu=2 full :
+
+# isolcpus on cpu 2:
+isolcpus2 : cpu=2 : isolcpus=2
+isolcpus2 : cpu=2 full : isolcpus=2
+
+# non-isolated on cpu 3:
+plain : cpu=3 :
+plain : cpu=3 full :
+
+# isolcpus on cpu 3:
+isolcpus3 : cpu=3 : isolcpus=3
+isolcpus3 : cpu=3 full : isolcpus=3
+
+## On your best CPU keep going with testing:
+## Replace all "1" by the index of this CPU.
+## isolcpus on cpu 1 + nohz_full
+#isolcpus1-nohz : cpu=1 : isolcpus=1 nohz_full=1
+#isolcpus1-nohz : cpu=1 full : isolcpus=1 nohz_full=1
+
+## isolcpus on cpu 1 + nohz_full +  rcu_nocbs
+#isolcpus1-nohz-rcu : cpu=1 : isolcpus=1 nohz_full=1 rcu_nocbs=1
+#isolcpus1-nohz-rcu : cpu=1 full : isolcpus=1 nohz_full=1 rcu_nocbs=1
 EOF
 			;;
 
 		    dma) cat <<EOF > $BATCH_FILE
 # $VERSION_STRING
 # batch file for testing RTAI kernel with cpu isolation
+# Replace all "=1" by the index of the cpu you want to isolate.
 
+# standard cpu
 plain : io :
 dma : io : libata.dma=0
 
-# isolcpus:
-isolcpus : io : isolcpus=1
-dma-isolcpus : io : libata.dma=0 isolcpus=1
+# non-isolated on cpu 0
+plain : cpu=0 io :
+dma : cpu=0 io : libata.dma=0
 
-# isolcpus + nohz_full
-isolcpus-nohz : io : isolcpus=1 nohz_full=1
-dma-isolcpus-nohz : io : libata.dma=0 isolcpus=1 nohz_full=1
+# isolcpus on cpu 0:
+isolcpus0 : cpu=0 io : isolcpus=0,1
+nodma-isolcpus0 : cpu=0 io : libata.dma=0 isolcpus=0,1
 
-# isolcpus + nohz_full +  rcu_nocbs
-isolcpus-nohz : io : isolcpus=1 nohz_full=1 rcu_nocbs=1
-dma-isolcpus-nohz : io : libata.dma=0 isolcpus=1 nohz_full=1 rcu_nocbs=1
+# non-isolated on cpu 1
+plain : cpu=1 io :
+nodma : cpu=1 io : libata.dma=0
+
+# isolcpus on cpu 1:
+isolcpus1 : cpu=1 io : isolcpus=1
+nodma-isolcpus1 : cpu=1 io : libata.dma=0 isolcpus=1
+
+# non-isolated on cpu 2
+plain : cpu=2 io :
+nodma : cpu=2 io : libata.dma=0
+
+# isolcpus on cpu 2:
+isolcpus2 : cpu=2 io : isolcpus=2
+nodma-isolcpus2 : cpu=2 io : libata.dma=0 isolcpus=2
+
+# non-isolated on cpu 3
+plain : cpu=3 io :
+nodma : cpu=3 io : libata.dma=0
+
+# isolcpus on cpu 3:
+isolcpus3 : cpu=3 io : isolcpus=3
+nodma-isolcpus3 : cpu=3 io : libata.dma=0 isolcpus=3
 EOF
 			;;
 		esac
@@ -3228,7 +3315,7 @@ EOF
 }
 
 function clean_rtai { 
-   cd ${LOCAL_SRC_PATH}
+    cd ${LOCAL_SRC_PATH}
     if test -d $RTAI_DIR; then
 	echo_log "clean rtai"
 	if ! $DRYRUN; then
@@ -3272,6 +3359,53 @@ function remove_rtai {
 	echo_log "remove ${LOCAL_SRC_PATH}/$RTAI_DIR.tar.*"
 	if ! $DRYRUN; then
 	    rm $RTAI_DIR.tar.*
+	fi
+    fi
+}
+
+
+function setup_rtai {
+    CPUS="$1"
+    IFS=',' read -r -a CPUIDS <<< "$CPUS"
+    CPUMASK=0
+    for CPU in "${CPUIDS[@]}"; do
+	CPUM=`echo "2^(${CPU})" | bc`
+	let CPUMASK+=$CPUM
+    done
+    if test $CPUMASK -eq 0; then
+	echo_log "No valid CPU ids specified (comma separated list of CPU ids)."
+	exit 1
+    fi
+    if test -d ${LOCAL_SRC_PATH}/$RTAI_DIR; then
+ 	echo_log "Set CPU mask for kern/latency test to $CPUMASK"
+	if ! $DRYRUN; then
+	    cd ${LOCAL_SRC_PATH}/$RTAI_DIR/testsuite/kern/latency
+	    if ! test -f latency-module.c.mrk; then
+		echo_log "Save original kern/latency test"
+		cp latency-module.c latency-module.c.mrk
+	    fi
+	    sed -e "s/#define RUNNABLE_ON_CPUS 3/#define RUNNABLE_ON_CPUS $CPUMASK/" latency-module.c.mrk > latency-module.c
+	    echo_log "Rebuild kern/latency test"
+	    make
+	    echo_log "Reinstall kern/latency test"
+	    make install
+	    cd - &> /dev/null
+	fi
+    fi
+}
+
+function restore_rtai {
+    if test -f ${LOCAL_SRC_PATH}/$RTAI_DIR/testsuite/kern/latency/latency-module.c.mrk; then
+	echo_log "Restore original RTAI testsuite."
+	if ! $DRYRUN; then
+	    cd ${LOCAL_SRC_PATH}/$RTAI_DIR/testsuite/kern/latency
+	    mv latency-module.c.mrk latency-module.c
+	    echo_log "Rebuild kern/latency test"
+	    touch latency-module.c
+	    make
+	    echo_log "Reinstall kern/latency test"
+	    make install
+	    cd - &> /dev/null
 	fi
     fi
 }
@@ -4006,6 +4140,7 @@ function setup_features {
 		grub ) setup_grub ;;
 		comedi ) setup_comedi ;;
 		kernel ) setup_kernel_param $KERNEL_PARAM ;;
+		rtai ) setup_rtai "$2"; break ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
@@ -4020,6 +4155,7 @@ function restore_features {
 	restore_grub
 	restore_comedi
 	restore_test_batch
+	restore_rtai
     else
 	for TARGET; do
 	    case $TARGET in
@@ -4028,6 +4164,7 @@ function restore_features {
 		comedi ) restore_comedi ;;
 		kernel ) restore_kernel_param ;;
 		testbatch ) restore_test_batch ;;
+		rtai ) restore_rtai ;;
 		* ) echo "unknown target $TARGET" ;;
 	    esac
 	done
