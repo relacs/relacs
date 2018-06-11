@@ -1169,25 +1169,40 @@ For further improving the RTAI performance, you might want to reserve
 at least one CPU for RTAI on a multi-core machine. You can isolate
 CPUs by using the kernel parameter
 \code
-isolcpus=0,1
+isolcpus=2,3
 \endcode
-(for isolating the cores no. 0 and 1). Additional parameters are
+(for isolating the cores no. 2 and 3). Additional parameters are
 \code
-isolcpus=0,1 nohz_full=0,1 rcu_nocbs=0,1
+isolcpus=2,3 nohz_full=2,3 rcu_nocbs=2,3
 \endcode
 
 See the file `/usr/local/src/rtai/README.ISOLCPUS` for more details.
+
+You should check each of your CPUs. In particular running and
+isolating an RTAI task on the first CPU may result in worse
+perfromance than on the other CPUs.
+
+In addition to isolating a CPU you also need to make sure that the
+RTAI tests are run on that CPU. For this you need to modify the test
+sources. With the script this can be easily achieved by passing the
+`cpu=<CPUID>` option:
+\code
+sudo ./makertaikernel.sh test cpu=2
+\endcode
+will run the tests on CPU 2 (the third CPU).
+
+Running RTAI on isolated CPUs may reduce maximum jitter on an idle
+machine. Under load, isolation can improve mean and maximum latencies
+considerably.
 
 You get these kernel parameters for a test batch file by running
 \code
 ./makertaikernel.sh test batch isolcpus
 \endcode
-Edit the file to set the right cpu indices.
+It will test RTAI performance for each of your CPUs.
+Edit the file to adapt it to the number of CPUs you have on your machine.
 
 \note You cannot isolate the CPU on which the system boots (usually cpu 0).
-
-\note You need to modify the RTAI test source files in order to run the
-tests on specific CPUs.
 
 
 \subsection disablesmi Disable SMI interrupts

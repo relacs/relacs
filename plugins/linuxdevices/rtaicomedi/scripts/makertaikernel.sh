@@ -2527,8 +2527,6 @@ EOF
 	echo_log "Reboot into first configuration: \"${KD}${DESCRIPTION}\" with kernel parameter \"$(echo $BATCH_KERNEL_PARAM $KERNEL_PARAM $NEW_KERNEL_PARAM)\""
     fi
 
-    echo "TEST_TOTAL_TIME $TEST_TOTAL_TIME"
-
     # confirm batch testing:
     echo_log
     read -p "Do you want to proceed testing with $N_TESTS reboots (approx. ${OVERALL_TIME}) (Y/n)? " PROCEED
