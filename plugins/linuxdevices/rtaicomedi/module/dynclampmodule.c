@@ -1,4 +1,3 @@
-
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
@@ -34,8 +33,9 @@ MODULE_AUTHOR( "Jan Benda <jan.benda@uni-tuebingen.de>" );
 #else
   extern cpumask_var_t cpu_isolated_map;
 #endif
+int isolatedCPUId = -1;
 
-///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 // *** TYPE DEFINITIONS ***
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1854,6 +1854,11 @@ int init_dynclamp_loop( void )
       ERROR_MSG( "init_dynclamp_loop ERROR: failed to initialize real-time task for dynamic clamp!\n" );
     return -retVal;
   }
+  if ( isolatedCPUId >= 0 ) {
+    rt_set_runnable_on_cpuid( &dynClampTask.rtTask, isolatedCPUId );
+    DEBUG_MSG( "init_dynclamp_loop: run on isolated CPU %d\n", isolatedCPUId );
+  }
+
   dynClampTask.inuse = 1;
   DEBUG_MSG( "init_dynclamp_loop: initialized dynamic clamp RTAI task. Trying to make it periodic...\n" );
 
@@ -2505,7 +2510,6 @@ static int __init init_dynclampmodule( void )
   int k;
 #endif
 #endif
-  int isolatedCPUId = -1;
   int i;
   char featurestr[256] = "";
 
