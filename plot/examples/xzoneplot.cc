@@ -61,20 +61,16 @@ PlotShapes::PlotShapes( int n )
 
   QTimer *timer = new QTimer(this);
   connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-  timer->start(30);
+  timer->start(60);
 }
 
 void PlotShapes::update( void )
 {
-  A += 0.005 * 2.0 * M_PI;
-  B += 0.0015 * 2.0 * M_PI;
-  C += 0.0005 * 2.0 * M_PI;
-
   Zone z( "zone" );
 
   Cuboid cbd1( "cbd1" );
   cbd1.scale( 2.0, 1.0, 1.5 );
-  z.add( cbd1 );
+  //  z.add( cbd1 );
 
   Cuboid cbd2( "cbd2" );
   cbd2.translate( 1.5, 0.5, 1.0 );
@@ -82,24 +78,27 @@ void PlotShapes::update( void )
 
   Cuboid cbd3( "cbd3" );
   cbd3.translate( -0.5, -0.5, 1.0 );
-  z.subtract( cbd3 );
+  //  z.subtract( cbd3 );
 
   Sphere sphr1( "sphr1" );
   sphr1.translateX( 4.0 );
-  z.add( sphr1 );
+  //  z.add( sphr1 );
 
   Sphere sphr2( "sphr2" );
   sphr2.translate( 4.0, 1.0, 0.0 );
-  z.add( sphr2 );
+  //  z.add( sphr2 );
 
   Sphere sphr3( "sphr3" );
   sphr3.translate( 4.0, -1.0, 0.0 );
-  z.subtract( sphr3 );
+  //  z.subtract( sphr3 );
 
   z.rotateZ( A );
   z.rotateY( B );
   z.rotateX( C );
   z.setResolution( 50 );
+
+  //  z.rotateX( 0.1*M_PI );
+  //  z.rotateZ( 0.1*M_PI );
 
   Point viewxz = -Point::UnitY*20.0;
 
@@ -107,6 +106,7 @@ void PlotShapes::update( void )
   (*this)[0].setViewPoint( viewxz );
   (*this)[0].plot( z, Plot::Red, 0.8, Plot::Red, 1 );
 
+  /*
   (*this)[1].clearPolygons();
   (*this)[1].setViewPoint( viewxz );
   (*this)[1].plot( Point( -4.0, -3.0, -4.0 ), Point( 4.0, -3.0, -4.0 ), Plot::Blue, 4 );
@@ -116,9 +116,18 @@ void PlotShapes::update( void )
   poly.push( Point( +3.0, -3.0, -4.0 ) );
   poly.push( Point( +3.0, +3.0, -4.0 ) );
   poly.push( Point( -3.0, +3.0, -4.0 ) );
+  poly.setNormal();
   (*this)[1].plot( poly, Plot::White );
   (*this)[1].plot( z, Plot::Orange );
+  */
   draw();
+  //  exit( 0 );
+
+  /*
+  A += 0.005 * 2.0 * M_PI;
+  B += 0.0015 * 2.0 * M_PI;
+  C += 0.0005 * 2.0 * M_PI;
+  */
 }
 
 

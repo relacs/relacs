@@ -22,6 +22,7 @@ pluginlib_LTLIBRARIES = \
     libbasesetinputgain.la \
     libbasesetattenuatorgain.la \
     libbasehistogram.la \
+    libbaseperiodhistogram.la \
     libbaseinstantaneousrate.la
 
 
@@ -678,6 +679,43 @@ libbasehistogram_la_include_HEADERS = $(HEADER_PATH)/histogram.h
 
 
 
+libbaseperiodhistogram_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+
+libbaseperiodhistogram_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+
+libbaseperiodhistogram_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libbaseperiodhistogram_la_OBJECTS) : moc_periodhistogram.cc
+
+libbaseperiodhistogram_la_SOURCES = periodhistogram.cc
+
+libbaseperiodhistogram_la_includedir = $(pkgincludedir)/base
+
+libbaseperiodhistogram_la_include_HEADERS = $(HEADER_PATH)/periodhistogram.h
+
+
+
 libbaseinstantaneousrate_la_CPPFLAGS = \
     -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
@@ -733,6 +771,7 @@ check_PROGRAMS = \
     linktest_libbasesetinputgain_la \
     linktest_libbasesetattenuatorgain_la \
     linktest_libbasehistogram_la \
+    linktest_libbaseperiodhistogram_la \
     linktest_libbaseinstantaneousrate_la
 
 if RELACS_COND_TML
@@ -795,6 +834,9 @@ linktest_libbasesetattenuatorgain_la_LDADD = libbasesetattenuatorgain.la
 
 linktest_libbasehistogram_la_SOURCES = linktest.cc
 linktest_libbasehistogram_la_LDADD = libbasehistogram.la
+
+linktest_libbaseperiodhistogram_la_SOURCES = linktest.cc
+linktest_libbaseperiodhistogram_la_LDADD = libbasehistogram.la
 
 linktest_libbaseinstantaneousrate_la_SOURCES = linktest.cc
 linktest_libbaseinstantaneousrate_la_LDADD = libbaseinstantaneousrate.la

@@ -30,7 +30,8 @@ namespace relacs {
 
 
 Polygon::Polygon( void )
-  : Normal( Point::None )
+  : Normal( Point::None ),
+    Dist( 0.0 )
 {
   Points.clear();
 }
@@ -38,18 +39,32 @@ Polygon::Polygon( void )
 
 Polygon::Polygon( const Polygon &p )
   : Points( p.Points ),
-    Normal( p.Normal )
+    Normal( p.Normal ),
+    Dist( p.Dist )
 {
 }
 
 
 Point Polygon::normal( void ) const
 { 
+  return Normal;
+}
+
+
+void Polygon::setNormal( const Point &normal )
+{
+  Normal = normal;
+  Dist = Normal.dot( Points.front() );
+}
+
+
+void Polygon::setNormal( void )
+{
   if ( Normal.isNone() && Points.size() > 2 ) {
     Point n = (Points[1] - Points[0]).cross( Points.back() - Points.front() );
-    return n.normalized();
+    Normal = n.normalized();
+    Dist = Normal.dot( Points.front() );
   }
-  return Normal;
 }
 
 
@@ -57,6 +72,7 @@ Polygon &Polygon::assign( const Polygon &p )
 {
   Points = p.Points;
   Normal = p.Normal;
+  Dist = p.Dist;
   return *this;
 }
 
@@ -65,6 +81,7 @@ Polygon &Polygon::operator=( const Polygon &p )
 {
   Points = p.Points;
   Normal = p.Normal;
+  Dist = p.Dist;
   return *this;
 }
 
@@ -72,6 +89,7 @@ Polygon &Polygon::operator=( const Polygon &p )
 void Polygon::flipNormal( void )
 {
   Normal *= -1.0;
+  Dist *= -1.0;
 }
 
 
@@ -80,6 +98,8 @@ void Polygon::apply( const Transform &trafo, const Transform &invtransptrafo )
   for ( auto pi = Points.begin(); pi != Points.end(); ++pi )
     *pi *= trafo;
   Normal *= invtransptrafo;
+  Normal /= Normal.magnitude();
+  Dist = Normal.dot( Points.front() );
 }
 
 
@@ -156,11 +176,110 @@ bool Polygon::outsideShape( const Shape &shape ) const
 }
 
 
+Polygon Polygon::intersect( Polygon &polygon )
+{
+  //  cerr << "Polygon::intersect\n";
+  // one of the polygons is not a plane:
+  if ( Normal.isNone() || polygon.Normal.isNone() ) {
+    //    cerr << "  not a plane\n";
+    return Polygon();
+  }
+
+  Point cp = Normal.cross( polygon.Normal );
+  // polygons are parallel planes:
+  if ( cp.magnitude() < 1.0e-8 ) {
+    //    cerr << "  parallel planes\n";
+    // XXX need to check whether they are coplanar!?
+    return Polygon();
+  }
+
+  //  cerr << "polygon 1:\n" << *this;
+  //  cerr << "polygon 2:\n" << polygon;
+  // compute intersection line of polygon planes:
+  double n12 = Normal.dot( polygon.Normal );
+  double dn = 1.0 - n12*n12;
+  double h1 = Dist;
+  double h2 = polygon.Dist;
+  double c1 = (h1-h2*n12)/dn;
+  double c2 = (h2-h1*n12)/dn;
+  Point p = c1*Normal + c2*polygon.Normal;
+  cerr << p << " " << cp/cp.magnitude() << '\n';
+  // intersection line = p + lambda*cp;
+  Polygon line;
+  line.push(p-5.0*cp/cp.magnitude());
+  line.push(p+5.0*cp/cp.magnitude());
+  //  cerr << "  intersection line\n";
+  return line;
+  /*
+  // find intersections of polygon 1 with plane of polygon 2:
+  Polygon line1;
+  for ( auto pi = Points.begin(); pi != Points.end(); ++pi ) {
+    auto ppi = pi + 1;
+    if ( ppi == Points.end() )
+      ppi = Points.begin();
+    Point dp = *ppi - *pi;  // direction vector of polygon edge
+    double ln = dp.dot( polygon.Normal );
+    // edge parallel to plane -> no intersection point:
+    if ( ::fabs( ln ) < 1e-8 )
+      continue;
+    double d = (polygon.Dist - (*pi).dot( polygon.Normal ))/ln;
+    // intersection is not within edge:
+    if ( d < -1e-8 || d > 1.0+1e-8 )
+      continue;
+    line1.push( *pi + d*dp );
+  }
+  if ( line1.size() > 2 )
+    cerr << "line1: " << line1.size() << '\n';
+
+  // find intersections of polygon 2 with plane of polygon 1:
+  Polygon line2;
+  for ( auto pi = polygon.Points.begin(); pi != polygon.Points.end(); ++pi ) {
+    auto ppi = pi + 1;
+    if ( ppi == polygon.Points.end() )
+      ppi = polygon.Points.begin();
+    Point dp = *ppi - *pi;  // direction vector of polygon edge
+    double ln = dp.dot( Normal );
+    // edge parallel to plane -> no intersection point:
+    if ( ::fabs( ln ) < 1e-8 )
+      continue;
+    double d = (Dist - (*pi).dot( Normal ))/ln;
+    // intersection is not within edge:
+    if ( d < -1e-8 || d > 1.0+1e-8 )
+      continue;
+    line2.push( *pi + d*dp );
+  }
+  if ( line2.size() > 2 )
+    cerr << "line2: " << line2.size() << '\n';
+
+  if ( line1.size() < 2 || line2.size() < 2 )
+    return Polygon();
+
+  Point cp = Normal.cross( polygon.Normal );
+  double n12 = Normal.dot( polygon.Normal );
+  double dn = 1.0 - n12*n12;
+  double h1 = Dist;
+  double h2 = polygon.Dist;
+  double c1 = (h1-h2*n12)/dn;
+  double c2 = (h2-h1*n12)/dn;
+  Point p = c1*Normal + c2*polygon.Normal;
+  // intersection line = p + lambda*cp;
+  Polygon line;
+  line.push(p-5.0*cp/cp.magnitude());
+  line.push(p+5.0*cp/cp.magnitude());
+  return line;
+  */
+}
+
+
 ostream &operator<<( ostream &str, const Polygon &p ) 
 {
   int k=0;
   for ( auto pi = p.Points.begin(); pi != p.Points.end(); ++pi )
     str << k++ << " " << *pi << '\n';
+  if ( ! p.Normal.isNone() ) {
+    str << "N " << p.Normal << '\n';
+    str << "h " << p.Dist << '\n';
+  }
   return str;
 }
 

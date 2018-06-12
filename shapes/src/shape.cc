@@ -435,14 +435,17 @@ void Zone::resetPolygons( void ) const
 void Zone::updatePolygons( void ) const
 {
   Polygons.clear();
+  deque<Polygon> lines;
   // assemble polygons from shapes:
   auto si = Shapes.begin();
   auto ai = Add.begin();
   for ( ; si != Shapes.end(); ++si, ++ai ) {
     (*si)->updatePolygons();
+    auto pe = Polygons.end();
     for ( auto pi=(*si)->polygons().begin(); pi != (*si)->polygons().end(); ++pi ) {
-      // do not include polygons that are inside the zone:
+      //      cerr << *pi << '\n';
       if ( *ai ) {
+	// do not include additive polygons that are inside the zone:
 	bool inside = false;
 	auto ssi = Shapes.begin();
 	auto aai = Add.begin();
@@ -461,18 +464,31 @@ void Zone::updatePolygons( void ) const
 	auto ssi = Shapes.begin();
 	auto aai = Add.begin();
 	for ( ; ssi != si; ++ssi, ++aai ) {
-	  if ( *aai && ! pi->outside( **ssi ) ) {
+	  if ( ! pi->outside( **ssi ) ) { // XXX how to deal with subtractive shapes?
 	    outside = false;
 	    break;
 	  }
 	}
-	if ( ! outside ) {
-	  Polygons.push_back( *pi );
-	  Polygons.back().flipNormal();
+	if ( outside )
+	  continue;
+	Polygons.push_back( *pi );
+	Polygons.back().flipNormal();
+      }
+      // check for intersections with other polygons:
+      if ( Polygons.size() < 4 ) {
+	pe = Polygons.end() - 1;
+	for ( auto ppi = Polygons.begin(); ppi != pe; ++ppi ) {
+	  //cerr << "intersect " << Polygons.size()-1 << " with " << ppi - Polygons.begin() << '\n';
+	  Polygon line = Polygons.back().intersect( *ppi );
+	  if ( line.size() > 0 )
+	    lines.push_back( line );
 	}
       }
-    }
-  }
+    } // each polygon
+  } // each shape
+
+  for ( auto li = lines.begin(); li != lines.end(); ++li )
+    Polygons.push_back( *li );
 
   // transform polygons to world coordinates:
   Transform it = trafo().inverse().transpose();
@@ -686,10 +702,10 @@ void Sphere::resetPolygons( void ) const
       double cj1 = ::cos( (1.0*(j+1)/m-0.5)*M_PI );
       double sj1 = ::sin( (1.0*(j+1)/m-0.5)*M_PI );
       poly.push( Point( ck0*cj0, sk0*cj0, sj0 ) );
-      poly.setNormal( poly.back() );
       poly.push( Point( ck1*cj0, sk1*cj0, sj0 ) );
       poly.push( Point( ck1*cj1, sk1*cj1, sj1 ) );
       poly.push( Point( ck0*cj1, sk0*cj1, sj1 ) );
+      poly.setNormal();
       Polygons.push_back( poly );
     }
   }
@@ -863,7 +879,7 @@ void Cylinder::resetPolygons( void ) const
     poly.push( poly0[(k+1)%n] );
     poly.push( poly1[(k+1)%n] );
     poly.push( poly1[k] );
-    poly.setNormal( poly0[k] );
+    poly.setNormal();
     Polygons.push_back( poly );
   }
 }

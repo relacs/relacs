@@ -297,6 +297,22 @@ void InData::copy( double time, SampleDataD &trace ) const
 }
 
 
+void InData::copy( int first, int last, ArrayF &data ) const
+{
+  data.clear();
+  if ( first < minIndex() )
+    first = minIndex();
+  if ( last > maxIndex() )
+    last = maxIndex();
+  if ( last - first <= 0 )
+    return;
+
+  data.resize( last - first );
+  for ( int k=0; k<data.size(); k++ )
+    data[ k ] = operator[]( first + k );
+}
+
+
 string InData::errorMessage( void ) const
 {
   if ( success() )

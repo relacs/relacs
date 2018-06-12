@@ -157,7 +157,6 @@ void Histogram::main( void )
       P.lock();
       P.clear();
       P.setXYGrid();
-      P.setLabel( 0, "" );
       if ( ! P.zoomedXRange() )
 	P.setXRange( histmin, histmax );
       P.plot( hist, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Yellow, Plot::Yellow );

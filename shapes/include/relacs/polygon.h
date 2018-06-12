@@ -77,12 +77,14 @@ public:
     /*! Delete all corner points from the polygon. */
   void clear( void ) { Points.clear(); };
 
-    /*! Return the normal vector of the polygon.
-        If th enormal was not set, the normal vector is computed
-        as the cross product between the two vector p_1-p_0 and p_last - p_0. */
+    /*! Return the normal vector of the polygon, which can be Point::None. */
   Point normal( void ) const;
-    /*! Set the normal vector of the polygon to \a normal. */
-  void setNormal( const Point &normal ) { Normal = normal; };
+    /*! Set the normal vector of the polygon to \a normal.
+        \a normal must be normalized. */
+  void setNormal( const Point &normal );
+    /*! Set the normal vector of the polygon to the cross product
+        between the two vector p_1-p_0 and p_last - p_0.. */
+  void setNormal( void );
     /*! Flip the direction of the normal vector of the polygon. */
   void flipNormal( void );
 
@@ -114,14 +116,22 @@ public:
         are outside the shape \a shape. */
   bool outsideShape( const Shape &shape ) const;
 
+    /*! Intersect this polygon with \a polygon. If the polygons
+        intersect they are cut back. */
+  Polygon intersect( Polygon &polygon );
+
     /*! Write the coordinates of corner points of the polygon to stream \a str. */
   friend ostream &operator<<( ostream &str, const Polygon &p );
 
 
 protected:
 
+    /*! List of points that make up the polygon. */
   deque<Point> Points;
+    /*! The normal vector pointing to the outside of the polygone plane. */
   Point Normal;
+    /*! The dot product between the normal vector and the first point of the polygon. */
+  double Dist;
 
 };
 

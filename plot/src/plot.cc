@@ -1842,13 +1842,15 @@ void Plot::initTics( void )
     if ( YTics[k] ) {
       unsigned int l = 0;
       string yticstr = "";
-      for ( double y=YTicsStart[k]; y<=YMax[k]; y+=YTicsIncr[k] ) {
-	if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
-	  y = 0.0;
-	Str yt( y, YTicsFormat[k] );
-	if ( yt.length() > l ) {
-	  l = yt.length();
-	  yticstr = yt;
+      if ( ! YTicsFormat[k].empty() ) {
+	for ( double y=YTicsStart[k]; y<=YMax[k]; y+=YTicsIncr[k] ) {
+	  if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
+	    y = 0.0;
+	  Str yt( y, YTicsFormat[k] );
+	  if ( yt.length() > l ) {
+	    l = yt.length();
+	    yticstr = yt;
+	  }
 	}
       }
       if ( k == 1 )
@@ -1880,10 +1882,12 @@ void Plot::initTics( void )
 	    if ( incr <= oincr )
 	      break;
 	    double start=ticsStart( XMin[k], incr );
-	    for ( double x=start; x<=XMax[k]; x+=incr ) {
-	      Str xt( x, XTicsFormat[k] );
-	      if ( xt.length() > l )
-		l = xt.length();
+	    if ( ! XTicsFormat[k].empty() ) {
+	      for ( double x=start; x<=XMax[k]; x+=incr ) {
+		Str xt( x, XTicsFormat[k] );
+		if ( xt.length() > l )
+		  l = xt.length();
+	      }
 	    }
 	    if ( start > XMax[k] ||
 		 ( start < XMin[k] && start+incr > XMax[k] ) )
@@ -2251,13 +2255,15 @@ void Plot::drawTicLabels( QPainter &paint, int axis )
       if ( ::fabs( x ) < 0.001*XTicsIncr[axis] )
 	x = 0.0;
       int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[axis]-XMin[axis])*(x-XMin[axis]) );
-      QString xt;
-      xt.sprintf( XTicsFormat[axis].c_str(), x );
-      int w = fontMetrics().width( xt );
-      if ( axis == 1 )
-	paint.drawText( xp-w/2, PlotY2-BorderStyle.width()-X2TicsLen-2, xt );
-      else
-	paint.drawText( xp-w/2, PlotY1+BorderStyle.width()+X1TicsMarg, xt );
+      if ( ! XTicsFormat[axis].empty() ) {
+	QString xt;
+	xt.sprintf( XTicsFormat[axis].c_str(), x );
+	int w = fontMetrics().width( xt );
+	if ( axis == 1 )
+	  paint.drawText( xp-w/2, PlotY2-BorderStyle.width()-X2TicsLen-2, xt );
+	else
+	  paint.drawText( xp-w/2, PlotY1+BorderStyle.width()+X1TicsMarg, xt );
+      }
     }
   }
 
@@ -2270,14 +2276,16 @@ void Plot::drawTicLabels( QPainter &paint, int axis )
       if ( ::fabs( y ) < 0.001*YTicsIncr[axis] )
 	y = 0.0;
       int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[axis]-YMin[axis])*(y-YMin[axis]) );
-      QString yt;
-      yt.sprintf( YTicsFormat[axis].c_str(), y );
-      int w = fontMetrics().width( yt );
-      int h = (int)::ceil( TicsLabelSize*FontHeight );
-      if ( axis == 1 )
-	paint.drawText( PlotX2+BorderStyle.width()+Y2TicsLen+2, yp+h/2, yt );
-      else
-	paint.drawText( PlotX1-BorderStyle.width()-Y1TicsLen-2-w, yp+h/2, yt );
+      if ( ! YTicsFormat[axis].empty() ) {
+	QString yt;
+	yt.sprintf( YTicsFormat[axis].c_str(), y );
+	int w = fontMetrics().width( yt );
+	int h = (int)::ceil( TicsLabelSize*FontHeight );
+	if ( axis == 1 )
+	  paint.drawText( PlotX2+BorderStyle.width()+Y2TicsLen+2, yp+h/2, yt );
+	else
+	  paint.drawText( PlotX1-BorderStyle.width()-Y1TicsLen-2-w, yp+h/2, yt );
+      }
     }
   }
 }
@@ -2898,6 +2906,7 @@ int Plot::drawPoints( QPainter &paint, DataElement *d )
 	y = 0.0;
 	if ( y < YMin[yaxis] )
 	  y = YMin[yaxis];
+	y = YMin[yaxis];
 	int Y0 = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]) );
 	QPolygon pa( 4 );
 	for ( long k=f; k<l; k++ ) {

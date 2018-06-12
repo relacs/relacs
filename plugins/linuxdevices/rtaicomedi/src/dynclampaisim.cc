@@ -139,8 +139,9 @@ int DynClampAISim::testReadDevice( InList &traces )
 
 int DynClampAISim::prepareRead( InList &traces )
 {
-  dynclampmodelsim::initModel( traces[0].stepsize() );
-  statusInput[intervalstatusinx] = traces[0].sampleInterval();
+  SampleInterval = traces[0].sampleInterval();
+  dynclampmodelsim::initModel( SampleInterval );
+  statusInput[intervalstatusinx] = SampleInterval;
 #ifdef ENABLE_AITIME
   statusInput[aitimestatusinx] = traces.size()*1.2e-6;
 #endif
@@ -163,6 +164,7 @@ void DynClampAISim::model( InList &data,
       data[k].push( statusInput[ data[k].channel()-2*PARAM_CHAN_OFFSET ]*data[k].scale() );
     }
   }
+  statusInput[intervalstatusinx] = SampleInterval + 5.0e-7*rnd.gaussian();
 }
 
 

@@ -158,6 +158,8 @@ class InData : public CyclicSampleDataF, public DaqError
         If \a time + \a trace.rightMargin() is larger than length()
         \a trace is appropriately truncated. */
   void copy( double time, SampleDataD &trace ) const;
+    /*! Copy the data from element \a first to element \a last to \a data. */
+  void copy( int first, int last, ArrayF &data ) const;
 
     /*! Return string with an error message: 
         "Channel # on device #: error message".

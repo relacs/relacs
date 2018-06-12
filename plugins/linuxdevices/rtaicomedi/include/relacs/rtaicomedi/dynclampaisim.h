@@ -95,6 +95,8 @@ protected:
 
 private:
 
+  double SampleInterval;
+
   vector<float> statusInput;
   vector<string> statusInputNames;
   vector<string> statusInputUnits;
