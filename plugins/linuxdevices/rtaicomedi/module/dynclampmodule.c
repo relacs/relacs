@@ -1368,7 +1368,7 @@ void dynclamp_loop( long dummy )
   dynClampTask.aoIndex = -1;
   dynClampTask.running = 1;
 
-  currenttime = rt_get_cpu_time_ns();
+  currenttime = rt_get_time_ns();
   difftime = dynClampTask.period;
   statusInput[intervalstatusinx] = 1e-9*difftime;
 #ifdef ENABLE_AITIME
@@ -1415,7 +1415,7 @@ void dynclamp_loop( long dummy )
     /******** READ FROM ANALOG INPUT: *******************************************/
     /****************************************************************************/
 #ifdef ENABLE_AITIME
-    starttime = rt_get_cpu_time_ns();
+    starttime = rt_get_time_ns();
 #endif
     // ai is always running!
     if ( aisubdev.pending ) {
@@ -1446,11 +1446,11 @@ void dynclamp_loop( long dummy )
 	// acquire sample:
 	if ( pChan->param == 0 ) {
 #ifdef ENABLE_AIACQUISITIONTIME
-	  startsampletime = rt_get_cpu_time_ns();
+	  startsampletime = rt_get_time_ns();
 #endif
 	  retVal = comedi_do_insn( device, &pChan->insn );     
 #ifdef ENABLE_AIACQUISITIONTIME
-	  stopsampletime = rt_get_cpu_time_ns();
+	  stopsampletime = rt_get_time_ns();
 	  dsampletime = stopsampletime - startsampletime;
 	  statusInput[aiacquisitiontimestatusinx] = 1e-9*dsampletime;
 #endif
@@ -1521,7 +1521,7 @@ void dynclamp_loop( long dummy )
 
     } // ! pending
 #ifdef ENABLE_AITIME
-    stoptime = rt_get_cpu_time_ns();
+    stoptime = rt_get_time_ns();
     dtime = stoptime - starttime;
     statusInput[aitimestatusinx] = 1e-9*dtime;
 #endif
@@ -1542,7 +1542,7 @@ void dynclamp_loop( long dummy )
 
     /*********** COMPUTE MODEL: *************************************************/
 #ifdef ENABLE_MODELTIME
-    starttime = rt_get_cpu_time_ns();
+    starttime = rt_get_time_ns();
 #endif
 
 #ifdef ENABLE_COMPUTATION
@@ -1550,7 +1550,7 @@ void dynclamp_loop( long dummy )
 #endif
 
 #ifdef ENABLE_MODELTIME
-    stoptime = rt_get_cpu_time_ns();
+    stoptime = rt_get_time_ns();
     dtime = stoptime - starttime;
     statusInput[modeltimestatusinx] = 1e-9*dtime;
 #endif
@@ -1594,7 +1594,7 @@ void dynclamp_loop( long dummy )
     /******** WRITE TO ANALOG OUTPUT: ******************************************/
     /****************************************************************************/
 #ifdef ENABLE_AOTIME
-    starttime = rt_get_cpu_time_ns();
+    starttime = rt_get_time_ns();
 #endif
 
     if ( aosubdev.running > 0 ) {
@@ -1740,7 +1740,7 @@ void dynclamp_loop( long dummy )
 #endif
     } // end of ao channel loop
 #ifdef ENABLE_AOTIME
-    stoptime = rt_get_cpu_time_ns();
+    stoptime = rt_get_time_ns();
     dtime = stoptime - starttime;
     statusInput[aotimestatusinx] = 1e-9*dtime;
 #endif
@@ -1774,19 +1774,20 @@ void dynclamp_loop( long dummy )
 
     /******** WAIT FOR PERIOD: **************************************************/
 #ifdef ENABLE_WAITTIME
-    starttime = rt_get_cpu_time_ns();
+    starttime = rt_get_time_ns();
 #endif
 
     rt_task_wait_period();
 
 #ifdef ENABLE_WAITTIME
-    stoptime = rt_get_cpu_time_ns();
+
+    stoptime = rt_get_time_ns();
     dtime = stoptime - starttime;
     statusInput[waittimestatusinx] = 1e-9*dtime;
 #endif
 
     dynClampTask.loopCnt++;
-    newtime = rt_get_cpu_time_ns();
+    newtime = rt_get_time_ns();
     difftime = newtime - currenttime;
     currenttime = newtime;
     statusInput[intervalstatusinx] = 1e-9*difftime;
@@ -1864,11 +1865,7 @@ int init_dynclamp_loop( void )
 
   // compute periods:
   reqfreq = dynClampTask.frequency;
-#ifdef ONESHOT_MODE
-  periodTicks = nano2count( 1000000000/dynClampTask.frequency );
-#else
   periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.frequency ) );
-#endif
   dynClampTask.period = count2nano( periodTicks );
   if ( dynClampTask.period < 1 ) {
     ERROR_MSG( "init_dynclamp_loop ERROR: period is zero!\n" );
@@ -1882,7 +1879,7 @@ int init_dynclamp_loop( void )
 #endif
 
   // START rt-task for dynamic clamp as periodic:
-  if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time() + periodTicks, periodTicks ) 
+  if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time() + 10*periodTicks, periodTicks ) 
       != 0 ) {
     ERROR_MSG( "init_dynclamp_loop ERROR: failed to make real-time task periodic!\n" );
     cleanup_dynclamp_loop();
@@ -2470,6 +2467,11 @@ int dynclampmodule_open( struct inode *devFile, struct file *fModule )
 #ifdef ENABLE_COMPUTATION
   memcpy( origParamOutput, paramOutput, sizeof(paramOutput) );
 #endif
+
+  rt_set_periodic_mode();
+  // periodic mode is the default. 
+  // Calling this function used to hang the computer...
+
   return 0;
 }
 
@@ -2485,7 +2487,6 @@ int dynclampmodule_close( struct inode *devFile, struct file *fModule )
       releaseSubdevice( subdevices[iS] );
     cleanup_dynclamp_loop();
     init_globals();
-    return 0;
   }
   else {
     // stop & close specified subdevice (and device):
@@ -2496,8 +2497,12 @@ int dynclampmodule_close( struct inode *devFile, struct file *fModule )
       init_globals();
     }
     reqCloseSubdev = -1;
-    return 0;
   }
+
+  // stop rtai timer:
+  stop_rt_timer();
+
+  return 0;
 }
 
 
@@ -2570,14 +2575,6 @@ static int __init init_dynclampmodule( void )
   // initialize global variables:
   init_globals();
 
-#ifdef ONESHOT_MODE
-  rt_set_oneshot_mode();
-  start_rt_timer(1);
-#else
-  // rt_set_periodic_mode();
-  // periodic mode is the default. Calling this function hangs the computer...
-#endif
-
   return retVal;
 }
 
@@ -2595,9 +2592,6 @@ static void __exit cleanup_dynclampmodule( void )
   init_globals();
 
   mutex_destroy( &mutex );
-
-  // stop rtai timer:
-  stop_rt_timer();
 
   // unregister module device file:
   cdev_del( rtcdev );

@@ -19,6 +19,7 @@ if test "x$1" = "x--help"; then
     exit 0
 fi
 
+# find RTAI installation path:
 RTAI_MODULE_PATH=""
 MP=$(find /usr/realtime -name "$(uname -r)*" | tail -n 1)
 if test -d /usr/realtime/$(uname -r)/modules; then
@@ -51,8 +52,6 @@ test -c /dev/dynclamp || mknod -m 666 /dev/dynclamp c 227 0
 
 MODULE_PATH="${0%/*}"
 
-lsmod | grep -q rtmodule && rmmod rtmodule && echo "removed rtmodule"
 lsmod | grep -q dynclampmodule && rmmod dynclampmodule && echo "removed dynclampmodule"
 
-#insmod $MODULE_PATH/rtmodule.ko && echo "loaded $MODULE_PATH/rtmodule.ko"
 insmod $MODULE_PATH/dynclampmodule.ko && echo "loaded $MODULE_PATH/dynclampmodule.ko"

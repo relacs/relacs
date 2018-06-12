@@ -5,7 +5,7 @@ if test "x$1" = "x--help"; then
     echo "killmodules.sh"
     echo
     echo "This script unloads all kernel modules required for dynamic clamp in relacs."
-    echo "This includes comedi and rtai module."
+    echo "This includes comedi and rtai modules."
     echo
     echo "Call"
     echo "  loadmodules.sh --help"
@@ -16,7 +16,6 @@ fi
 
 # remove dynclamp modules:
 lsmod | grep -q dynclampmodule && rmmod dynclampmodule && echo "removed dynclampmodule"
-lsmod | grep -q rtmodule && rmmod rtmodule && echo "removed rtmodule"
 
 # remove all comedi modules:
 lsmod | grep -q kcomedilib || ( modprobe -r kcomedilib && echo "removed kcomedilib" )

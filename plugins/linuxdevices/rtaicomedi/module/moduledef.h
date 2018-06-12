@@ -59,10 +59,6 @@
       available as "Wait-time" (--enable-dynclamp-waittime). */
 // #define ENABLE_WAITTIME
 
-  /*! Use RTAI one-shot mode instead of periodic mode (more jitter but
-      stable, --enable-dynclamp-oneshot). */
-// #define ONESHOT_MODE
-
 // SYNCSEC requires TTLPULSE:
 #ifdef ENABLE_SYNCSEC
 #ifndef ENABLE_TTLPULSE

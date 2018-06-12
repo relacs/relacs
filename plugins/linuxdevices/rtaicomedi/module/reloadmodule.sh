@@ -4,8 +4,8 @@ if test "x$1" = "x--help"; then
     echo
     echo "reloadmodule.sh [LATENCY]"
     echo
-    echo "This script reloads the dynclampmodule and/or rtmodule."
-    echo "You need to execute this script whenever these modules have been recompiled."
+    echo "This script reloads the RELACS dynclampmodule."
+    echo "You need to execute this script whenever this module has been recompiled."
     echo
     echo "Call"
     echo "  loadmodules.sh --help"
@@ -17,7 +17,7 @@ fi
 
 MODULE_PATH="${0%/*}"
 
-FULLRELOAD=true
+FULLRELOAD=false
 
 if $FULLRELOAD; then
     # completely remove rtai modules and reload them again:
@@ -26,15 +26,9 @@ if $FULLRELOAD; then
     $MODULE_PATH/loadmodules.sh $@
 
 else
-    # reload the dynclampmodule only:
+    # reload the dynclampmodule:
 
     LOADED=false
-
-    if lsmod | fgrep -q "rtmodule "; then
-	rmmod rtmodule && echo "removed old rtmodule"
-	insmod $MODULE_PATH/rtmodule.ko && echo "loaded $MODULE_PATH/rtmodule.ko"
-	LOADED=true
-    fi
     
     if lsmod | fgrep -q "dynclampmodule "; then
 	rmmod dynclampmodule && echo "removed old dynclampmodule"
