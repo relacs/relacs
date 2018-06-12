@@ -1,3 +1,4 @@
+
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
@@ -28,6 +29,11 @@ MODULE_LICENSE( "GPL" );
 MODULE_DESCRIPTION( "Dynamic clamp for RELACS" );
 MODULE_AUTHOR( "Jan Benda <jan.benda@uni-tuebingen.de>" );
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
+  extern unsigned long cpu_isolated_map;
+#else
+  extern cpumask_var_t cpu_isolated_map;
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // *** TYPE DEFINITIONS ***
@@ -2499,6 +2505,8 @@ static int __init init_dynclampmodule( void )
   int k;
 #endif
 #endif
+  int isolatedCPUId = -1;
+  int i;
   char featurestr[256] = "";
 
   // register module device file:
@@ -2515,8 +2523,26 @@ static int __init init_dynclampmodule( void )
   retVal = cdev_add( rtcdev, dev, 1 );
   if ( retVal )
     ERROR_MSG( "init_dynclampmodule: fail to register module with error %d\n", retVal );
-  INFO_MSG( "init_dynclampmodule: dynamic clamp module loaded\n" );
+  INFO_MSG( "init_dynclampmodule: module loaded\n" );
 
+  // find first isolated cpu:
+#ifdef CONFIG_SMP
+  for ( i=0; i<RTAI_NR_CPUS; i++ ) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
+    if ( cpu_isolated_map & (1<<i) ) {
+#else
+    if ( cpumask_test_cpu( i, cpu_isolated_map ) ) {
+#endif
+      isolatedCPUId = i;
+      break;
+    }
+  }
+#endif
+  if ( isolatedCPUId >= 0 )
+    INFO_MSG( "first isolated CPU: %d\n", isolatedCPUId);
+  else
+    INFO_MSG( "no isolated CPU\n");
+  
   // get features:
   features = get_features();
   get_feature_str( featurestr );
@@ -2536,7 +2562,7 @@ static int __init init_dynclampmodule( void )
   }
 #endif
 #endif
-
+  
   // initialize global variables:
   init_globals();
 
