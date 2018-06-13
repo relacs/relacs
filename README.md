@@ -50,7 +50,10 @@ More information about RELACS
 The project home page is:
 http://www.relacs.net
 
-RELACS is currently hosted by sourceforge:
+RELACS source code is developed at github:
+https://github.com/relacs/relacs
+
+RELACS releases and the web site are hosted by sourceforge:
 http://sourceforge.net/projects/relacs
 
 You find a list of all people contributing to RELACS 
