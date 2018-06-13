@@ -1800,6 +1800,9 @@ function test_save {
 	done
 	print_kernel_info
 	echo
+	echo "Hardware (lshw):"
+	lshw | sed '1d'
+	echo
 	echo "rtai-info reports:"
 	${REALTIME_DIR}/bin/rtai-info
 	echo
