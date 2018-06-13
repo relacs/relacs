@@ -32,7 +32,7 @@ namespace base {
 
 /*!
 \class Histogram
-\brief [RePro] Displays histogram of a selected input trace.
+\brief [Control] Displays histogram of a selected input trace.
 \author Jan Benda
 \version 1.2 (Oct 14, 2015)
 \par Options

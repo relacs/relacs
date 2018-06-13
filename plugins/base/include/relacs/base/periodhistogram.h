@@ -31,7 +31,7 @@ namespace base {
 
 /*!
 \class PeriodHistogram
-\brief [RePro] Displays logarithmic histogram of dynamic clamp sampling intervals.
+\brief [Control] Displays logarithmic histogram of dynamic clamp sampling intervals.
 \author Jan Benda
 \version 1.0 (Jun 12, 2018)
 \par Screenshot
