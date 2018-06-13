@@ -34,8 +34,28 @@ namespace base {
 \brief [RePro] Displays logarithmic histogram of dynamic clamp sampling intervals.
 \author Jan Benda
 \version 1.0 (Jun 12, 2018)
+\par Screenshot
+\image html periodhistogram.png
+
+\par Plots
+
+The top plot shows the histogram of the sampling intervals measured
+over the last `duration` seconds. Via the `maxjitter` option you can
+set the maximum width of the histogram. Note the logarithmic y-axis.
+For every unit the number of events increases ten-fold. 0 are single
+events, 1 are 10, 2 are 100, etc.
+
+The bottom plot shows the cumulative jitter, i.e. the devition of the
+interval from the the actual sampling interval. The negative jitters,
+i.e. the intervals shorter than the sampling interval, are shown in
+orange. The intervals longer than sampling interval are shown in
+yellow.  Note the logarithmic axes! On the x-axis -3 is 1 nanosecond,
+0 is one microsecond. On the y-axis 0 is 100%, -1 is 10%, -2 is 1% and
+so on.
+
 \par Options
 - \c duration=1000ms: Width of analysis window (\c number)
+- \c maxjitter=10us: Maximum jitter shown in histogram (\c number)
 */
 
 
@@ -54,6 +74,7 @@ public:
 private:
 
   double Duration;
+  double MaxJitter;
 
   MultiPlot P;
 

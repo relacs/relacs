@@ -27,13 +27,15 @@ namespace base {
 
 PeriodHistogram::PeriodHistogram( void )
   : Control( "PeriodHistogram", "base", "Jan Benda", "1.0", "Jun 12, 2018" ),
-    P( 3 )
+    P( 2 )
 {
   // parameter:
   Duration = 1.0;
+  MaxJitter = 10.0;
 
   // add some options:
   addNumber( "duration", "Width of analysis window", Duration, 0.0, 100.0, 0.1, "s", "ms" );
+  addNumber( "maxjitter", "Maximum jitter shown in histogram", MaxJitter, 0.0, 100.0, 0.1, "us" );
 
   // plot:
   P.lock();
@@ -47,6 +49,7 @@ PeriodHistogram::PeriodHistogram( void )
 void PeriodHistogram::notify( void )
 {
   Duration = number( "duration" );
+  MaxJitter = number( "maxjitter" );
 }
 
 
@@ -70,10 +73,8 @@ void PeriodHistogram::main( void )
   ArrayD negcumulative;
 
   P.lock();
-  P[0].setOrigin( 0.0, 0.5 );
-  P[0].setSize( 1.0, 0.5 );
   P[0].setLMarg( 5.0 );
-  P[0].setTitle( "Intervals" );
+  P[0].setTitle( "Interval Histogram @ " + Str( 0.001*intrace.sampleRate(), "%.0f" ) + "kHz" );
   P[0].setTitlePos( 0.0, Plot::Graph, 0.0, Plot::SecondAxis, Plot::Left );
   P[0].setXLabel( intrace.ident() + " [" + intrace.unit() + "]" );
   P[0].setYLabel( "log10(count)");
@@ -81,35 +82,16 @@ void PeriodHistogram::main( void )
   P[0].setYRange( -0.5, ::ceil( ::log10( ndata ) ) );
   P[0].setYTics( 1.0 );
 
-  P[1].setOrigin( 0.0, 0.0 );
-  P[1].setSize( 0.58, 0.5 );
   P[1].setLMarg( 5.0 );
-  P[1].setBMarg( 4.5 );
-  P[1].setTitle( "Shorter" );
+  P[1].setTitle( "Cumulative of Jitter" );
   P[1].setTitlePos( 0.0, Plot::Graph, 0.0, Plot::SecondAxis, Plot::Left );
-  P[1].setXRange( -2.0, 2.0 );
+  P[1].setXLabel( "log10(Jitter[us])" );
+  P[1].setXRange( -3.0, 1.0 );
   P[1].setXTics( 1.0 );
   P[1].setYLabel( "log10(Fraction)");
   P[1].setYLabelPos( 1.5, Plot::FirstMargin, 0.5, Plot::Graph, Plot::Center, -90.0 );
-  P[1].setYRange( 0.0, 100.0 );
-  P[1].setYTics( 10.0 );
-  P[1].setYRange( -4.0, 0.0 );
+  P[1].setYRange( -5.0, 0.0 );
   P[1].setYTics( 1.0 );
-
-  P[2].setOrigin( 0.58, 0.0 );
-  P[2].setSize( 0.42, 0.5 );
-  P[2].setLMarg( 0.0 );
-  P[2].setBMarg( 4.5 );
-  P[2].setTitle( "Longer" );
-  P[2].setTitlePos( 0.0, Plot::Graph, 0.0, Plot::SecondAxis, Plot::Left );
-  P[2].setXLabel( "log10(Jitter[us])" );
-  P[2].setXRange( -2.0, 2.0 );
-  P[2].setXTics( 1.0 );
-  P[2].setYRange( 0.0, 100.0 );
-  P[2].setYTics( 10.0 );
-  P[2].setYRange( -4.0, 0.0 );
-  P[2].setYTics( 1.0 );
-  P[2].setFormatY( "" );
   P.unlock();
 
   sleep( Duration );
@@ -134,6 +116,22 @@ void PeriodHistogram::main( void )
 	max = cmax;
       if ( min > cmin )
 	min = cmin;
+
+      // symmetric:
+      double meaninterval = 1e6*intrace.sampleInterval();
+      if ( max - meaninterval > meaninterval - min )
+	min = meaninterval - (max - meaninterval);
+      else
+	max = meaninterval + (meaninterval - min);
+      // maximal:
+      double hmin = meaninterval - MaxJitter;
+      if ( hmin < 0.0 )
+	hmin = 0.0;
+      double hmax = (meaninterval + MaxJitter)*1.0001;
+      if ( max > hmax )
+	max = hmax;
+      if ( min < hmin )
+	min = hmin;
     
       // histogram:
       SampleDataD hist( min, max, (max-min)/nbins );
@@ -165,13 +163,11 @@ void PeriodHistogram::main( void )
       P[0].clear();
       if ( ! P[0].zoomedXRange() )
 	P[0].setXRange( min, max );
-      P[0].setXRange( min, max );
       P[0].plot( log10(hist), 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Yellow, Plot::Yellow );
       P[0].plotVLine( 1e6*intrace.sampleInterval(), Plot::Red, 2, Plot::Solid );
       P[1].clear();
       P[1].plot( log10(negintervals), log10(negcumulative), Plot::Orange, 2, Plot::Solid );
-      P[2].clear();
-      P[2].plot( log10( posintervals ), log10(1.0-poscumulative), Plot::Orange, 2, Plot::Solid );
+      P[1].plot( log10( posintervals ), log10(1.0-poscumulative), Plot::Yellow, 2, Plot::Solid );
       P.draw();
       P.unlock();
     }
