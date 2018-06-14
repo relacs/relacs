@@ -219,8 +219,8 @@ private:
   string ModuleDevice;
     /*! File descriptor for the kernel module. */
   int ModuleFd;
-    /*! FIFO file descriptor for data exchange with kernel module. */
-  int FifoFd;
+    /*! File descriptor for the /dev/cpu_dma_latency file. */
+  int LatencyFd;
 
     /*! The size of a single sample in bytes. */
   unsigned int BufferElemSize;  

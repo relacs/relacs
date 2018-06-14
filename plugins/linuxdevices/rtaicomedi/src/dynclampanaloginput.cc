@@ -47,6 +47,7 @@ DynClampAnalogInput::DynClampAnalogInput( void )
 {
   ModuleDevice = "";
   ModuleFd = -1;
+  LatencyFd = -1;
   SubDevice = -1;
   BufferElemSize = sizeof(float);
   Channels = 0;
@@ -321,6 +322,20 @@ int DynClampAnalogInput::open( const string &device)
     return -1;
   }
 
+  // disable C states:
+  /*
+  if ( LatencyFd >= 0 )
+    ::close( LatencyFd );
+  LatencyFd = ::open( "/dev/cpu_dma_latency", O_RDWR );
+  if ( LatencyFd >= 0 ) {
+    int32_t latency = 0;
+    if ( ::write( LatencyFd, &latency, sizeof(latency) ) != sizeof(latency) )
+      cerr << "Write to /dev/cpu_dma_latency failed!\n";
+    else
+      cerr << "Wrote zero to /dev/cpu_dma_latency.\n";
+  }
+  */
+  
   // set the maximum possible sampling rate (of the rtai loop!):
   MaxRate = MAX_FREQUENCY;
 
@@ -382,6 +397,14 @@ void DynClampAnalogInput::close( void )
   delete [] BipConverter;
   UnipConverter = 0;
   BipConverter = 0;
+ 
+  // close cpu_dma_latency file:
+  /*
+  if ( LatencyFd >= 0 ) {
+    ::close( LatencyFd );
+    LatencyFd = -1;
+  }
+  */
 
   Info.clear();
 }

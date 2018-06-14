@@ -195,8 +195,6 @@ private:
   string ModuleDevice;
     /*! File descriptor for the kernel module. */
   int ModuleFd;
-    /*! FIFO file descriptor for data exchange with kernel module. */
-  int FifoFd;
 
     /*! Pointer to the comedi device. */
   comedi_t *DeviceP;
