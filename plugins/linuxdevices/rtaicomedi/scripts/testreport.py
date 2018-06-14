@@ -151,30 +151,32 @@ class DataTable:
             df.write('\n')
             
 
-init = 20
-outlier = 5.0  # percent
+init = 10
+outlier = 0.0  # percent
 
 # command line arguments:
 parser = argparse.ArgumentParser(
     description='Analyse RTAI test results.',
     epilog='by Jan Benda (2018)')
 parser.add_argument('--version', action='version', version="1.0")
-parser.add_argument('-i', nargs=1, default=init,
+parser.add_argument('-i', nargs=1, default=[init],
                     type=int, metavar='N', dest='init',
                     help='number of initial lines to be skipped (defaults to {0:d})'.format(init))
-parser.add_argument('-p', nargs=1, default=outlier,
-                    type=int, metavar='P', dest='outlier',
+parser.add_argument('-p', nargs=1, default=[outlier],
+                    type=float, metavar='P', dest='outlier',
                     help='percentile defining outliers (defaults to {0:g}%%)'.format(outlier))
 parser.add_argument('file', nargs='*', default='', type=str,
                     help='latency-* file with RTAI test results')
 args = parser.parse_args()
 
-init = args.init
-outlier = args.outlier
+init = args.init[0]
+outlier = args.outlier[0]
 
 def analyze_latencies(data):
-    l, m, h = np.percentile(data, [outlier, 50.0, 100.0-outlier])
-    coredata = data[(data>=l)&(data<=h)]
+    coredata = data
+    if outlier > 0.0 :
+        l, m, h = np.percentile(data, [outlier, 50.0, 100.0-outlier])
+        coredata = data[(data>=l)&(data<=h)]
     mean = np.mean(coredata)
     std = np.std(coredata)
     minv = np.min(data)
