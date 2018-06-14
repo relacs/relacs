@@ -1,4 +1,5 @@
 import sys
+import argparse
 import numpy as np
 
 class DataTable:
@@ -153,6 +154,24 @@ class DataTable:
 init = 20
 outlier = 5.0  # percent
 
+# command line arguments:
+parser = argparse.ArgumentParser(
+    description='Analyse RTAI test results.',
+    epilog='by Jan Benda (2018)')
+parser.add_argument('--version', action='version', version="1.0")
+parser.add_argument('-i', nargs=1, default=init,
+                    type=int, metavar='N', dest='init',
+                    help='number of initial lines to be skipped (defaults to {0:d})'.format(init))
+parser.add_argument('-p', nargs=1, default=outlier,
+                    type=int, metavar='P', dest='outlier',
+                    help='percentile defining outliers (defaults to {0:g}%%)'.format(outlier))
+parser.add_argument('file', nargs='*', default='', type=str,
+                    help='latency-* file with RTAI test results')
+args = parser.parse_args()
+
+init = args.init
+outlier = args.outlier
+
 def analyze_latencies(data):
     l, m, h = np.percentile(data, [outlier, 50.0, 100.0-outlier])
     coredata = data[(data>=l)&(data<=h)]
@@ -160,22 +179,21 @@ def analyze_latencies(data):
     std = np.std(coredata)
     minv = np.min(data)
     maxv = np.max(data)
-    return mean, std, minv, maxv
+    return mean, std, maxv
 
 def analyze_overruns(data):
     mean = np.mean(data)
     minv = np.min(data)
     maxv = np.max(data)
-    return mean, minv, maxv
+    return mean, maxv
 
 dt = DataTable()
 dt.add_section('data')
 dt.add_section('')
-dt.add_section('')
 dt.add_column('num', '1', '%3s')
 dt.add_column('param', '1', '%-20s')
 
-for filename in sys.argv[1:]:
+for filename in args.file:
     with open(filename) as sf:
         # gather data:
         intest = False
@@ -226,33 +244,18 @@ for filename in sys.argv[1:]:
                 if not dt.exist(testmode+' latency'):
                     dt.add_section('kern latency')
                     dt.add_section('jitter')
-                    dt.add_section('init')
-                    dt.add_column('mean', 'ns', '%6.0f')
-                    dt.add_column('stdev', 'ns', '%6.0f')
-                    dt.add_column('min', 'ns', '%6.0f')
-                    dt.add_column('max', 'ns', '%6.0f')
-                    dt.add_section('stationary')
-                    dt.add_column('mean', 'ns', '%6.0f')
-                    dt.add_column('stdev', 'ns', '%6.0f')
-                    dt.add_column('min', 'ns', '%6.0f')
-                    dt.add_column('max', 'ns', '%6.0f')
+                    dt.add_column('mean', 'ns', '%7.0f')
+                    dt.add_column('stdev', 'ns', '%7.0f')
+                    dt.add_column('max', 'ns', '%7.0f')
                     dt.add_section('overruns')
-                    dt.add_section('init')
                     dt.add_column('mean', '1', '%6.0f')
-                    dt.add_column('min', '1', '%6.0f')
-                    dt.add_column('max', '1', '%6.0f')
-                    dt.add_section('stationary')
-                    dt.add_column('mean', '1', '%6.0f')
-                    dt.add_column('min', '1', '%6.0f')
                     dt.add_column('max', '1', '%6.0f')
                 # analyze latency test:
                 latencies = data[testmode, 'latency', 'latencies']
                 overruns = data[testmode, 'latency', 'overruns']
                 overruns = np.diff(overruns)
-                dt.add_data(analyze_latencies(latencies[:init]), dt.col(testmode+' latency>jitter'))
-                dt.add_data(analyze_latencies(latencies[init:]))
-                dt.add_data(analyze_overruns(overruns[:init]), dt.col(testmode+' latency>overruns'))
-                dt.add_data(analyze_overruns(overruns[init:]))
+                dt.add_data(analyze_latencies(latencies[init:]), dt.col(testmode+' latency>jitter'))
+                dt.add_data(analyze_overruns(overruns[init:]), dt.col(testmode+' latency>overruns'))
             elif (testmode, 'preempt', 'latencies') in data:
                 # analyze preempt test:
                 #print np.mean(data[testmode, 'latency', 'latencies'])
