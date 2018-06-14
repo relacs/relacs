@@ -1210,6 +1210,23 @@ Finally, there are the evil SMIs. They periodically produce some long latencies.
 `/usr/local/src/rtai/base/arch/x86/calibration/README.SMI` and `README.SMISPV` for details.
 
 
+\subsection osjitter Reduce OS jitter
+
+Linux Torvalds himself has an interesting page on how to reduce OS jitter:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/kernel-per-CPU-kthreads.txt?h=v4.14-rc2
+
+I have not yet tried these suggestions. Most of them are probably
+dealt with by CPU isolation. Some suggestions, however, sound
+interesting:
+- kworker 3.a. `CONFIG_SLUB=y` rather than `CONFIG_SLAB=y`
+- kworker 3.e. boot with `elevator=noop`
+- rcuc 2. `CONFIG_RCU_BOOST=n`
+- rcuc 3. `CONFIG_RCU_NOCB_CPU=y` with `rcu_nocbs=` boot parameter
+- watchdog 1. `CONFIG_LOCKUP_DETECTOR=n`
+- watchdog 2. boot with `nosoftlockup=0`
+- watchdog 3. echo a zero to /proc/sys/kernel/watchdog
+
+
 \section installrelacs Setting up dynamic clamp for RELACS
 You should install \c RTAI and the \c comedi drivers and library prior to
 configuring RELACS, so that ./configure can detect the presence of the
