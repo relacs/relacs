@@ -76,6 +76,7 @@ The following three types of additional inputs are supported:
 \par Options:
 - \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its
   maximal range value in volts.
+- \c writecpudmalatency: if true the a zero is written to the /dev/cpu_dma_latency file to keep all CPU cores in the C0 state. This can replace the "idle=poll" kernel parameter.
 */
 
 

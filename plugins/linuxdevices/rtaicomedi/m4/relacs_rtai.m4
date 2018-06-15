@@ -71,10 +71,12 @@ AS_IF( [ test $USE_RTAI = yes ],
 AS_IF( [ test "x$RELACS_RTAI_VERSION" != x ], [ AC_MSG_NOTICE( "RTAI version ${RELACS_RTAI_VERSION}" ) ] )
 
 # check running kernel:
-AS_IF( [ test $USE_RTAI = yes && ! grep -q IPIPE /boot/config-`uname -r` ],
-       [ AC_MSG_NOTICE( "the running kernel is not an RTAI patched kernel" ); USE_RTAI=no ] )
-AS_IF( [ test $USE_RTAI = yes && ! expr match `uname -r` `rtai-config ${RUNNING_KERNEL} --linux-version` ],
-       [ AC_MSG_NOTICE( "the version of running kernel does not match the one reported by rtai-config" ); USE_RTAI=no ] )
+AS_IF( [ test "x$with_rtai" = "xdetect" ],
+       [ AS_IF( [ test $USE_RTAI = yes && ! grep -q IPIPE /boot/config-`uname -r` ],
+                [ AC_MSG_NOTICE( "the running kernel is not a RTAI patched kernel" ); USE_RTAI=no ] )
+	 AS_IF( [ test $USE_RTAI = yes && ! expr match `uname -r` `rtai-config ${RUNNING_KERNEL} --linux-version` ],
+       	        [ AC_MSG_NOTICE( "the version of running kernel does not match the one reported by rtai-config" ); USE_RTAI=no ] ) 
+	] )
 
 # get CPP flags from rtai-config if possible:
 AS_IF( [ test $USE_RTAI = yes ],

@@ -84,6 +84,7 @@ void DynClampAnalogInput::initOptions()
   AnalogInput::initOptions();
 
   addNumber( "gainblacklist", "Ranges not to be used", 0.0, 0.0, 100.0, 0.1, "V" ).setStyle( Parameter::MultipleSelection );
+  addBoolean( "writecpudmalatency", "Write zero to /dev/cpu_dma_latency file", false );
 }
 
 int DynClampAnalogInput::open( const string &device)
@@ -325,16 +326,30 @@ int DynClampAnalogInput::open( const string &device)
   // disable C states:
   if ( LatencyFd >= 0 )
     ::close( LatencyFd );
-  LatencyFd = ::open( "/dev/cpu_dma_latency", O_RDWR );
-  if ( LatencyFd >= 0 ) {
-    int32_t latency = 0;
-    if ( ::write( LatencyFd, &latency, sizeof(latency) ) != sizeof(latency) )
-      cerr << "Write to /dev/cpu_dma_latency failed!\n";
-    else
-      cerr << "Wrote zero to /dev/cpu_dma_latency.\n";
+  LatencyFd = -1;
+  bool writecpudmalatency = boolean( "writecpudmalatency" );
+  if ( writecpudmalatency ) {
+    LatencyFd = ::open( "/dev/cpu_dma_latency", O_RDWR );
+    if ( LatencyFd >= 0 ) {
+      int32_t latency = 0;
+      if ( ::write( LatencyFd, &latency, sizeof(latency) ) != sizeof(latency) ) {
+	setErrorStr( "Write to /dev/cpu_dma_latency failed!" );
+	::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+	::close( ModuleFd );
+	ModuleFd = -1;
+	return -1;
+      }
+      else
+	cerr << "DynClampAnalogInput: wrote zero to /dev/cpu_dma_latency.\n";
+    }
+    else {
+      setErrorStr( "Cannot write to /dev/cpu_dma_latency - check whether you have write permissions on that file." );
+      ::ioctl( ModuleFd, IOC_REQ_CLOSE, SubDevice );
+      ::close( ModuleFd );
+      ModuleFd = -1;
+      return -1;
+    }
   }
-  else
-    cerr << "Cannot write to /dev/cpu_dma_latency.\n";
   
   // set the maximum possible sampling rate (of the rtai loop!):
   MaxRate = MAX_FREQUENCY;
