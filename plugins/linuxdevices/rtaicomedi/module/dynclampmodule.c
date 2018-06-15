@@ -1857,7 +1857,7 @@ int init_dynclamp_loop( void )
   }
   if ( isolatedCPUId >= 0 ) {
     rt_set_runnable_on_cpuid( &dynClampTask.rtTask, isolatedCPUId );
-    DEBUG_MSG( "init_dynclamp_loop: run on isolated CPU %d\n", isolatedCPUId );
+    INFO_MSG( "init_dynclamp_loop: run on isolated CPU %d\n", isolatedCPUId );
   }
 
   dynClampTask.inuse = 1;

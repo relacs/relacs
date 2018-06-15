@@ -323,7 +323,6 @@ int DynClampAnalogInput::open( const string &device)
   }
 
   // disable C states:
-  /*
   if ( LatencyFd >= 0 )
     ::close( LatencyFd );
   LatencyFd = ::open( "/dev/cpu_dma_latency", O_RDWR );
@@ -334,7 +333,8 @@ int DynClampAnalogInput::open( const string &device)
     else
       cerr << "Wrote zero to /dev/cpu_dma_latency.\n";
   }
-  */
+  else
+    cerr << "Cannot write to /dev/cpu_dma_latency.\n";
   
   // set the maximum possible sampling rate (of the rtai loop!):
   MaxRate = MAX_FREQUENCY;
@@ -399,12 +399,10 @@ void DynClampAnalogInput::close( void )
   BipConverter = 0;
  
   // close cpu_dma_latency file:
-  /*
   if ( LatencyFd >= 0 ) {
     ::close( LatencyFd );
     LatencyFd = -1;
   }
-  */
 
   Info.clear();
 }
