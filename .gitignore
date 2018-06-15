@@ -6,6 +6,9 @@ moc_*.cc
 *.o
 *.la
 *.lo
+*.*.cmd
+*.ko
+*.mod.c
 *.tag
 */*.ac
 Doxyfile.all
@@ -13,6 +16,9 @@ html/
 help/
 .libs/
 .deps/
+.tmp_versions/
+Module.symvers
+modules.order
 aclocal.m4
 ar-lib
 autom4te.cache/
@@ -40,4 +46,5 @@ src/relacsgui
 utils/bin2dat
 utils/bin2wav
 utils/uw2sw
-
+latencies-*-*-*
+config-*-*-*
