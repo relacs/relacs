@@ -847,6 +847,7 @@ CPU (/proc/cpuinfo):
 Here, CPU frequency scaling is active ("ondemand" governor and different frequencies in the 5-th column, that are below the maximum possible CPU frequency at "max CPU frequency" below).
 Also, CPU powersaving is enabled because there are "CPU idle states" available ("POLL", "C1-IVB", etc.).
 
+\subsubsection disablefrequencysacling Disable powermanagement and frequency scaling completely
 You are on the safe side when you configure the ACPI properties of your kernel as follows
 (as you did according to \ref basickernelconfiguration):
 
@@ -860,6 +861,7 @@ In "Power management and ACPI options":
   .
 .
 
+\subsubsection disablepowermanagement Disable power management only
 Instead you can try to only disable
 in "Power management and ACPI options":
 - Disable "CPU Frequency scaling" (\c CPU_FREQ)
@@ -867,10 +869,13 @@ in "Power management and ACPI options":
 
 In addition, make sure your CPU stays in C0 idle state by passing
 `idle=poll` to the kernel parameter to keep the CPUs in C0 state via
-an polling idle loop. This also keeps the CPU frequency at its maximum
-but makes the system run hot.
+an polling idle loop, or write a zero to the `/dev/cpu_dma_latency`
+file (the DynamicClampAnalogInput plugin of RELACS can do that). This
+also keeps the CPU frequency at its maximum but makes the system run
+hot.
 
-Try also disabling CPU power management in the BIOS.
+\subsubsection morepowersaving Further aspects of power saving options
+Also check the BIOS for disabling CPU power management.
 
 All the other kernel parameter that control CPU idle states are usually not sufficient:
 - `idle=halt` idle cpus enter at maximum the C1 state, higher C-states are disabled. CPU frequency stays close at maximum.
@@ -1228,6 +1233,7 @@ interesting:
 
 
 \section installrelacs Setting up dynamic clamp for RELACS
+
 You should install \c RTAI and the \c comedi drivers and library prior to
 configuring RELACS, so that ./configure can detect the presence of the
 \c comedi library. If you install \c RTAI and \c comedi later, simply run \c
@@ -1337,6 +1343,7 @@ Just make sure your \c relacs.cfg file has the following device sections:
       plugin: [ DynClampAnalogInput, DynClampAISim ]
       device: /dev/comedi0
       ident : ai-1
+      writecpudmalatency : true
 
 *Analog Output Devices
   Device1:
@@ -1344,6 +1351,14 @@ Just make sure your \c relacs.cfg file has the following device sections:
       device: /dev/comedi0
       ident : ao-1
 \endcode
+
+The line `writecpudmalatency : true` is optional. When set
+DynClampAnalogInput will write a zero to the `/dev/cpu_dma_latency`
+file to make the CPUs stay in C0 state while RELACS is running. This
+can replace the `idle=poll` kernel parameter, if you configured your
+kernel to support "CPU idle PM support" (`CPU_IDLE`) and
+`INTEL_IDLE` in the "CPU Idle" section of the "Power management and
+ACPI options" menu.
 
 \subsection inputtraces  Input traces 
 As usual, input traces can be assigned to channels
@@ -1374,6 +1389,17 @@ The following three types of additional inputs are supported:
   .
   \c xxx is the name of the analog output trace. If the Injected or Total output exceeds the limits of the 
   maximum range of the data acquisition board, they are clipped to the minimum or maximum possible values.
+
+You can monitor the performance of RTAI keeping the requested sampling
+rate by adding the "Interval" input trace with a scale of 1e6 and unit "us".
+Then set the `controlplugin` to `PeriodHistogram` at the top of the `relacs.cfg` file:
+\code
+*Settings
+  Plugins:
+      pluginpathes    : [ base*, calibration*, comedi*, rtaicomedi*, dynclampsim ]
+      pluginhelppathes: ~
+      controlplugin   : PeriodHistogram
+\endcode
 
 \subsection outputtraces Output traces 
 As usual, output traces can be assigned to channels
