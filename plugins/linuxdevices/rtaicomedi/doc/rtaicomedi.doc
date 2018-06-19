@@ -37,11 +37,11 @@ installation procedures and just read \ref simulatedynclamp .
 
 \section quickinstall Install an RTAI-patched linux kernel, RTAI, and comedi
 
-The \c makertaikernel.sh script in \c
-plugins/linuxdevices/rtaicomedi/scripts/ executes all the commands
+The `makertaikernel.sh` script in
+`plugins/linuxdevices/rtaicomedi/scripts/` executes all the commands
 needed to download and build an RTAI-patched linux kernel, the newlib
 library (needed for math support), and the RTAI and comedi kernel
-modules. 
+modules.
 
 The script is so far only used and tested on debian based systems and
 is likely to fail on other Linux distributions. Feel free to adapt the
@@ -77,9 +77,9 @@ cd plugins/linuxdevices/rtaicomedi/scripts
    \code
 sudo ./makertaikernel.sh init
    \endcode
-   to make sure you have \c /var/log/messages (needed for RTAI switch
+   to make sure you have `/var/log/messages` (needed for RTAI switch
    tests), get a visible boot menu, can pass kernel parameter to the RTAI kernel,
-   have comedi devices assigned to the \c iocard group, and have the RTAI sources downloaded.
+   have comedi devices assigned to the `iocard` group, and have the RTAI sources downloaded.
 
    This command ends with showing you the RTAI kernel patches
    available for your machine.
@@ -173,7 +173,7 @@ sudo ./makertaikernel.sh -c mod
 -# Once you are satisified with the performance of the RTAI kernel,
    continue with \ref installrelacs .
 
-For further options of the \c makertaikernel.sh script see
+For further options of the `makertaikernel.sh` script see
 \code
 ./makertaikernel.sh help
 \endcode
@@ -192,33 +192,33 @@ This list is updated for RTAI 5.1. For other RTAI version read
 `/usr/local/src/rtai/README.CONF_RMRKS` !
 
 - "General setup":
-  - Disable "Enable sytem-call auditing support" (\c AUDITSYSCALL)
+  - Disable "Enable sytem-call auditing support" (`AUDITSYSCALL`)
   - Important: set "Stack Protector buffer overflow detection" (at the bottom of the menu) to
-    "Regular" (\c CC_STACKPROTECTOR_REGULAR)  - 
-    or even "None" (\c CC_STACKPROTECTOR_NONE) if the latency test crashes.
+    "Regular" (`CC_STACKPROTECTOR_REGULAR`)  - 
+    or even "None" (`CC_STACKPROTECTOR_NONE`) if the latency test crashes.
   .
 - "Power management and ACPI options":
   - In "ACPI (Advanced Configuration and Power Interface) Support":
-    - Disable "Processor" (\c ACPI_PROCESSOR)
+    - Disable "Processor" (`ACPI_PROCESSOR`)
     .
-  - Disable "CPU Frequency scaling" (\c CPU_FREQ)
+  - Disable "CPU Frequency scaling" (`CPU_FREQ`)
   - In "CPU Idle":
-    - Disable "CPU idle PM support" (\c CPU_IDLE)
+    - Disable "CPU idle PM support" (`CPU_IDLE`)
     .
   .
 - "Device Drivers":
   - In "Staging drivers":
-    - Deselect "Data acquisition support (comedi)" (\c COMEDI)
+    - Deselect "Data acquisition support (comedi)" (`COMEDI`)
       (Really? It comes with kcomedilib!)
     .
   .
 - "Kernel hacking": 
   - In "Compile-time checks and compiler options":
-    - Disable "Compile the kernel with debug info" (\c DEBUG_INFO)
+    - Disable "Compile the kernel with debug info" (`DEBUG_INFO`)
     .
     Disabling debugging information makes the kernel much
     smaller. So unless you know that you need it disable it.
-  - Disable "Tracers" (\c FTRACE)
+  - Disable "Tracers" (`FTRACE`)
   .
 .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
@@ -231,7 +231,7 @@ Then the new kernel is being compiled - be patient.
 
 Testing your RTAI patched kernel is crucial for a good real-time performance!
 
-The \c makertaikernel.sh script can also be used for testing with the
+The `makertaikernel.sh` script can also be used for testing with the
 advantage that it writes the test results and the kernel configuration
 into files. It is also possible to run whole test batches
 automatically.
@@ -250,11 +250,11 @@ files for the test results.
    \code
 sudo ./makertaikernel.sh test none
    \endcode
-If you only want to check insmodding \c rtai_hal then call
+If you only want to check insmodding `rtai_hal` then call
    \code
 sudo ./makertaikernel.sh test hal none
    \endcode
-Equivalently, you can use the \c sched and \c math option.
+Equivalently, you can use the `sched` and `math` option.
 
    If this fails:
    - Make sure you have the `STACKPROTECTOR` set to "None" or "Regular" (see \ref basickernelconfiguration)
@@ -759,10 +759,11 @@ In this case you do not need to do anything.
 
 This is what you need to do when configuring the kernel:
 - In "Processor type and features": 
-  - In case you have a uniprocessor system, deselect "Symmetric multi-processing support" (\c SMP)
-  - Set the "Maximum numbers of CPUs" (\c NR_CPUS) to the number of
-    physical cores you have in your machine. The \c makertaiscript.sh
-    automatically sets the same number of CPUs for the RTAI configuration.  
+  - In case you have a uniprocessor system, deselect "Symmetric
+    multi-processing support" (`SMP`)
+  - Set the "Maximum numbers of CPUs" (`NR_CPUS`) to the number of
+    physical cores you have in your machine. The `makertaiscript.sh
+   ` automatically sets the same number of CPUs for the RTAI configuration.  
   .
 .
 
@@ -853,18 +854,18 @@ You are on the safe side when you configure the ACPI properties of your kernel a
 
 In "Power management and ACPI options":
 - In "ACPI (Advanced Configuration and Power Interface) Support":
-  - Disable "Processor" (\c ACPI_PROCESSOR)
+  - Disable "Processor" (\ACPI_PROCESSOR)
   .
-- Disable "CPU Frequency scaling" (\c CPU_FREQ)
+- Disable "CPU Frequency scaling" (`CPU_FREQ`)
 - In "CPU Idle":
-  - Disable "CPU idle PM support" (\c CPU_IDLE)
+  - Disable "CPU idle PM support" (`CPU_IDLE`)
   .
 .
 
 \subsubsection disablepowermanagement Disable power management only
 Instead you can try to only disable
 in "Power management and ACPI options":
-- Disable "CPU Frequency scaling" (\c CPU_FREQ)
+- Disable "CPU Frequency scaling" (`CPU_FREQ`)
 .
 
 In addition, make sure your CPU stays in C0 idle state by passing
@@ -918,7 +919,7 @@ For more information on CPU power management and frequency scaling read in the `
 
 More infos:
 - The C-states can also be dynamically controlled by writing the
-  maximum allowable latency in microseconds (as an 32-bit(?) \c int, not as
+  maximum allowable latency in microseconds (as an 32-bit(?) `int`, not as
   text) to the file `/dev/cpu_dma_latency` . Writing a zero keeps the
   system in `cstate=0`.
 - Check out
@@ -960,18 +961,22 @@ Select your processor in the kernel configuration:
   - "Processor family"
   .
 .
-In the kernel menu check \c "help" to find out, which processor family you have to select.
+In the kernel menu check "help" to find out, which processor family you have to select.
 Processors with "cpu family : 6" are "Core 2/newer Xeon".
 
 
 \subsection lowlatencykernel Low-latency kernel configuration
 
+So-called low-latency kernels have the following two settings:
+
 - "Processor type and features":
-  - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))" (\c PREEMPT)
+  - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))" (`PREEMPT`)
   - Set "Timer frequency" to 1000Hz (`CONFIG_HZ_1000=y` and `CONFIG_HZ=1000`)
   .
 .
-This has no effect on the RTAI performance!
+This has, however, no effect on the RTAI performance! The two
+parameter control how responsive Linux processes are, but not how
+quickly RTAI can intersept the Linux kernel.
 
 
 \subsection disabledevices Disable device drivers you do not need
@@ -1059,7 +1064,7 @@ Devices to consider are:
     BIOS also. Once upon a time old USB was a source of high RTAI
     latencies. Now that should be legacy support."
   - If you get the error "usb: device not accepting address" add 
-    \c noapic to the kernel parameter.
+    `noapic` to the kernel parameter.
   .
   
 .
@@ -1113,11 +1118,11 @@ real-time perfomance (low latencies):
 Here is a list of potentially influential kernel parameter:
 
 Clocks and timers:
-- \c nohz=off
-- \c tsc=reliable
-- \c highres=off
-- \c hpet=disable
-- For scheduling interrupts read \c Documentation/timers/NO_HZ.txt
+- `nohz=off`
+- `tsc=reliable`
+- `highres=off`
+- `hpet=disable`
+- For scheduling interrupts read `Documentation/timers/NO_HZ.txt`
 - Also check out "nohalt" kernel parameter.
 .
 You get these kernel parameters for a test batch file by running
@@ -1132,8 +1137,8 @@ Advanced configuration and power interface (ACPI):
 - pci=nomsi
 .
 With disabled acpi your rtai-patched linux kernel might not properly
-halt or reboot. Try \c reboot=triple as a kernel parameter.  See \c
-/usr/src/linux/Documentation/x86/x86_64/boot-options.txt for more
+halt or reboot. Try `reboot=triple` as a kernel parameter.  See
+`/usr/src/linux/Documentation/x86/x86_64/boot-options.txt` for more
 options for the reboot parameter.
 
 You get these kernel parameters for a test batch file by running
@@ -1142,9 +1147,9 @@ You get these kernel parameters for a test batch file by running
 \endcode
 
 Advanced programmable interrupt controller (APIC):
-- \c noapic
-- \c nolapic , usually not a good idea, becaus RTAI uses the lapic timer. 
-- \c lapic
+- `noapic`
+- `nolapic` , usually not a good idea, becaus RTAI uses the lapic timer. 
+- `lapic`
 .
 
 You get these kernel parameters for a test batch file by running
@@ -1153,9 +1158,9 @@ You get these kernel parameters for a test batch file by running
 \endcode
 
 Others:
-- disable all DMA transfers by setting kernel parameter \c libata.dma=0.
+- disable all DMA transfers by setting kernel parameter `libata.dma=0.
   
-  What about \c ide-core.nodma parameter (it's ide not sata!)?
+ ` What about `ide-core.nodma` parameter (it's ide not sata!)?
 
   What about ltpc=irq ?
 
@@ -1234,14 +1239,14 @@ interesting:
 
 \section installrelacs Setting up dynamic clamp for RELACS
 
-You should install \c RTAI and the \c comedi drivers and library prior to
-configuring RELACS, so that ./configure can detect the presence of the
-\c comedi library. If you install \c RTAI and \c comedi later, simply run \c
-./configure and \c make again to detect comedi and compile the
+You should install `RTAI` and the `comedi` drivers and library prior
+to configuring RELACS, so that ./configure can detect the presence of
+the `comedi` library. If you install `RTAI` and `comedi` later, simply
+run `./configure` and `make` again to detect comedi and compile the
 corresponding plugins for RELACS.
 
 -# Login as a normal user
--# If you are not member of the \c iocard group (necessary for accessing the comedi devices, 
+-# If you are not member of the `iocard` group (necessary for accessing the comedi devices, 
    see \ref udev), then
    \code
 sudo adduser $USER iocard
@@ -1261,11 +1266,12 @@ sudo comedi_softcalibrate
    If you have only a single DAQ board then running these commands
    without any options is sufficient. See `man comedi_calibrate` for
    details.
--# \c cd into the RELACS top-level directory and run
+-# `cd` into the RELACS top-level directory and run
    \code
 ./configure
    \endcode
-   This should detect comedi and RTAI (see message towards the end of the output of \c configure).
+   This should detect comedi and RTAI (see message towards the end of
+   the output of `./configure`) .
 -# Then get rid of any previously compiled comedi and dynamic clamp modules:
    \code
 cd plugins/linuxdevices/comedi
@@ -1276,21 +1282,21 @@ cd plugins/linuxdevices/rtaicomedi
 make clean
    \endcode
 -# Select features of the dynamic clamp module by commenting or uncommenting the defines
-at the top of the file \c plugins/linuxdevices/rtaicomedi/module/moduledef.h
+at the top of the file `plugins/linuxdevices/rtaicomedi/module/moduledef.h`
 or by enabling them by the --enable-dynclamp options for ./configure
 (see ./configure --help for a description of all available options).
--# Implement your dynamic clamp model in the file \c plugins/linuxdevices/rtaicomedi/module/model.c .
+-# Implement your dynamic clamp model in the file `plugins/linuxdevices/rtaicomedi/module/model.c`.
 -# Compile the dynamic clamp plugins and the kernel module
 \code
 cd plugins/linuxdevices/rtaicomedi
 make -j$(grep -c "^processor" /proc/cpuinfo)
 \endcode
--# If you get an "-mpreferred-stack-boundary" error uncomment line 4 in \c plugins/linuxdevices/rtaicomedi/module/Makefile.in and run \c make again.
+-# If you get an "-mpreferred-stack-boundary" error uncomment line 4 in `plugins/linuxdevices/rtaicomedi/module/Makefile.in` and run `make` again.
 -# Load the dynamic-clamp kernel module (as root):
 \code
 sudo module/loadmodules.sh
 \endcode
--# Run RELACS in \c plugins/linuxdevices/rtaicomedi :
+-# Run RELACS in `plugins/linuxdevices/rtaicomedi` :
 \code
 ./relacslocal
 \endcode
@@ -1304,19 +1310,19 @@ cp relacs.cfg.dynclamp relacs.cfg
   - Data acquisition does not start:
     - You might not have 
       sufficient permissions for reading and writing to the 
-      \c /dev/comedi* devices. For a quick fix do
+      `/dev/comedi*` devices. For a quick fix do
       \code
 sudo chmod a+rw /dev/comedi*
       \endcode
       See \ref udev for a better solution.
-    - The %comedi and rtai modules are not properly loaded: check the output of \c module/loadmodules.sh and \c dmesg.
+    - The %comedi and rtai modules are not properly loaded: check the output of `module/loadmodules.sh` and `dmesg`.
     - The %comedi device is not configured yet (should not be a problem with a recent comedi version).
     .
   - Performance is bad / RELACS regularly hangs for a few seconds / RELACS seems to be slowed down dramatically:
     - Improve your rtai kernel! See \ref configurekernel for instructions.
     .
   .
--# When developing your dynamic clamp model in \c model.c or if you dare to modify \c dynclampmodule.c, then
+-# When developing your dynamic clamp model in `model.c` or if you dare to modify `dynclampmodule.c`, then
 \code
 # cd to rtaicomedi/, not rtaicomedi/module/ !
 cd plugins/linuxdevices/rtaicomedi
@@ -1324,19 +1330,19 @@ cd plugins/linuxdevices/rtaicomedi
 make
 sudo module/reloadmodule.sh
 \endcode
-Your \c model.c implementation can be tested without RTAI in the simulation mode of relacs, see \ref simulatedynclamp below.
+Your `model.c` implementation can be tested without RTAI in the simulation mode of relacs, see \ref simulatedynclamp below.
 -# If you want to load the dynamic-clamp kernel module automatically during 
-the boot process, then call the \c loadmodules.sh script from the script
-\c /etc/rc.local . Simply add a line like this
+the boot process, then call the `loadmodules.sh` script from the script
+`/etc/rc.local` . Simply add a line like this
 \code
 /where/ever/the/script/is/located/loadmodules.sh
 \endcode
-to \c /etc/rc.local (as root).
+to `/etc/rc.local` (as root).
 
 
 \section configdynamicclamp Configure dynamic clamp in RELACS
 
-Just make sure your \c relacs.cfg file has the following device sections:
+Just make sure your `relacs.cfg` file has the following device sections:
 \code
 *Analog Input Devices
   Device1:
@@ -1363,31 +1369,31 @@ ACPI options" menu.
 \subsection inputtraces  Input traces 
 As usual, input traces can be assigned to channels
 of the analog input device. All the input traces the dynamic clamp
-model requires (its \c inputNames) must be available.
+model requires (its `inputNames)` must be available.
 
 The dynamic clamp plugins provide some additional input traces. They can be accessed like
 normal analog input traces, but the channel nummber needs to be set to 1000 or larger.
 The following three types of additional inputs are supported:
-- Additional inputs as defined by the dynamic clamp model via its \c paramInputNames.
+- Additional inputs as defined by the dynamic clamp model via its `paramInputNames`.
 - Timing measurements, if they are enabled in moduledef.h:
-  - \c Interval : the full period of each cycle of the dynamic clamp loop (always available)
-  - \c AI-time : the time required by the analog input part
-  - \c AI-acquisition-time : the time required by reading in a single analog input channel
-  - \c AI-conversion-time : the time required to convert the read in value
-  - \c AO-time : the time required by the analog output part
-  - \c Model-time : the time required for calling computModel()
-  - \c Wait-time : the time rt_task_wait_period() waits for the next period
+  - `Interval` : the full period of each cycle of the dynamic clamp loop (always available)
+  - `AI-time` : the time required by the analog input part
+  - `AI-acquisition-time` : the time required by reading in a single analog input channel
+  - `AI-conversion-time` : the time required to convert the read in value
+  - `AO-time` : the time required by the analog output part
+  - `Model-time` : the time required for calling computModel()
+  - `Wait-time` : the time rt_task_wait_period() waits for the next period
   .
   all times are measured in seconds.
-- For each analog output trace the dynamic clamp model is using (its \c outputNames)
+- For each analog output trace the dynamic clamp model is using (its `outputNames`)
   the following input traces are available:
-  - \c Stimulus-xxx contains the stimulus a RePro wrote to this channel,
-  - \c Model-xxx contains the value the model computed, and
-  - \c Total-xxx contains the total requested output for this channel, i.e. Stimulus-xxx plus Model-xxx.
-  - \c Injected-xxx contains the total output for this channel as it is written to the analog output.
-    This equals \c Total-xxx multiplied by a possible correction factor and is only available with ENABLE_SYNCSEC
+  - `Stimulus-xxx` contains the stimulus a RePro wrote to this channel,
+  - `Model-xxx` contains the value the model computed, and
+  - `Total-xxx` contains the total requested output for this channel, i.e. Stimulus-xxx plus Model-xxx.
+  - `Injected-xxx` contains the total output for this channel as it is written to the analog output.
+    This equals `Total-xxx` multiplied by a possible correction factor and is only available with ENABLE_SYNCSEC
   .
-  \c xxx is the name of the analog output trace. If the Injected or Total output exceeds the limits of the 
+  `xxx` is the name of the analog output trace. If the Injected or Total output exceeds the limits of the 
   maximum range of the data acquisition board, they are clipped to the minimum or maximum possible values.
 
 You can monitor the performance of RTAI keeping the requested sampling
@@ -1404,29 +1410,29 @@ Then set the `controlplugin` to `PeriodHistogram` at the top of the `relacs.cfg`
 \subsection outputtraces Output traces 
 As usual, output traces can be assigned to channels
 of the analog output device. All the output traces the dynamic clamp
-model requires (its \c outputNames) must be available.
+model requires (its `outputNames`) must be available.
 
 Additional output traces as defined by the dynamic clamp model via its
-\c paramOutputNames can be accessed like normal analog output traces by
+`paramOutputNames` can be accessed like normal analog output traces by
 their name.
 
 
 \section simulatedynclamp Dynamic clamp simulation 
 You can run the dynamic clamp in the relacs simulation mode as well.
-This is in particular handy when it comes to testing your \c model.c
+This is in particular handy when it comes to testing your `model.c`
 implementation without RTAI.
 
 The relacs::DynClampAISim and relacs::DynClampAOSim modules do the trick.
 
-Whenever you change \c model.c you need to recompile the
-\c DynClampAISim and \c DynClampAOSim modules by calling \c make in the 
-\c plugins/linuxdevices/rtaicomedi directory.
+Whenever you change `model.c` you need to recompile the
+`DynClampAISim` and `DynClampAOSim` modules by calling `make` in the 
+`plugins/linuxdevices/rtaicomedi` directory.
 \code
 cd plugins/linuxdevices/rtaicomedi
 make
 \endcode
 
-Then call \c relacs with the \c -3 option
+Then call `relacs` with the `-3` option
 \code
 ./relacslocal -3
 \endcode

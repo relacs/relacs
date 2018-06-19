@@ -52,6 +52,7 @@ New InData threading:
   So maybe keep readTime. Make it an option for each device!
 
 Dynamic clamp:
+- Linux kernel path in module Makefile should be set by relacs_rtai/dynclamp
 - Serial console debugging instructions:
   https://www.av8n.com/computer/htm/kernel-lockup.htm
 - Hard Lockup RTAI Debuggig: http://segfaultsarecool.blogspot.de/2012/03/debugging-hard-lockup-with-rtai.html
