@@ -201,6 +201,13 @@ void Shape::setTransform( const Transform &trafo )
 }
 
 
+void Shape::clearTransform( void )
+{
+  Trafo.clear();
+  InvTrafo.clear();
+}
+
+
 Point Shape::inverseTransform( const Point &p ) const
 {
   return InvTrafo * p;
@@ -1282,6 +1289,43 @@ ostream &Cuboid::print( ostream &str ) const
       << width() << ", "
       << height() << '\n';
   return str;
+}
+
+
+Point Cuboid::corner( void ) const
+{
+  return Point( length(), width(), height() );
+}
+
+
+void Cuboid::setCorner( const Point &corner )
+{
+  clearTransform();
+  scale( corner );
+}
+
+
+void Cuboid::setLength( double length )
+{
+  Transform tm = trafo();
+  tm(0, 0) = length;
+  setTransform( tm );
+}
+
+
+void Cuboid::setWidth( double width )
+{
+  Transform tm = trafo();
+  tm(1, 1) = width;
+  setTransform( tm );
+}
+
+
+void Cuboid::setHeight( double height )
+{
+  Transform tm = trafo();
+  tm(2, 2) = height;
+  setTransform( tm );
 }
 
 

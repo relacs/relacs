@@ -103,7 +103,7 @@ public:
   Transform operator*( const Transform &m ) const;
     /*! Apply transformation matrix \a m to this transformation
         matrix.  That is compute transformation matrix \a m multiplied
-        with this transformation matrix.  
+        with this transformation matrix.
         \note \a m is multiplied from the left, not from the right! */
   Transform &operator*=( const Transform &m );
 
@@ -114,7 +114,9 @@ public:
     /*! Return the transposed transformation matrix. */
   Transform transpose( void ) const;
 
-    /*! Set the translation and projection to zeor. */
+    /*! Reset the transformation matrix to the identity transformation . */
+  void clear( void );
+    /*! Set the translation and projection to zero. */
   void clearTransProj( void );
 
     /*! Apply the transformation that translates along the x-axis by \a x. */

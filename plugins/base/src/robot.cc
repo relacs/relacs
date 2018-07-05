@@ -43,7 +43,7 @@ Robot::Robot( void )
   addText( "robot", "Robot", "robot-1" );
 
   newSection("Stored positions");
-  addPoint( "FishHeadPosition", "Position of fish head", );
+  addPoint( "FishHeadPosition", "Position of fish head", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
   addPoint( "FishTailPosition", "Position of fish tail", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
   addPoint( "MovementAreaStart", "Start position of the movement area", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
   addPoint( "MovementAreaEnd", "End position of movement area", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
@@ -237,14 +237,8 @@ void Robot::toolFix( void ) {
 
 
 void Robot::storePosition( const string &name, const Point &p ) {
-  if ( !metaData().exist( name ))
-    metaData().addPoint( name, p );
-  else
+  if ( metaData().exist( name ) )
     metaData().setPoint( name, p );
-  if ( !exist( name ) )
-    addPoint( name, p );
-  else
-    setPoint( name, p );
 }
 
 

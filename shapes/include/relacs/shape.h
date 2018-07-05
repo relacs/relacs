@@ -9,12 +9,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -135,6 +135,8 @@ public:
   const Transform &trafo( void ) const { return Trafo; };
     /*! Set the transformation matrix of the shape to \a trafo. */
   void setTransform( const Transform &trafo );
+    /*! Clear all transformations and reset the transformation matrix. */
+  void clearTransform( void );
     /*! The inverse transformation matrix that transforms world coordinates to
         shape coordinates. */
   const Transform &invTrafo( void ) const { return InvTrafo; };
@@ -410,7 +412,7 @@ class Sphere : public Shape
 \author Jan Benda
  */
 
-class Cylinder : public Shape 
+class Cylinder : public Shape
 {
 
  public:
@@ -487,7 +489,7 @@ class Cuboid : public Shape
         \a lenght, \a width, and \a height. All angles are zero. */
   Cuboid( const Point &anchor, double length, double width, double height,
 	  const string &name="cuboid" );
-    /*! Construct a cuboid with name \a name from minimum corner \a anchor and  
+    /*! Construct a cuboid with name \a name from minimum corner \a anchor and
         maximum corner \a end. All angles are zero. */
   Cuboid( const Point &anchor, const Point &end, const string &name="cuboid" );
     /*! Construct a cuboid with name \a name. The anchor point of the cuboid is at \a anchor.
@@ -517,6 +519,9 @@ class Cuboid : public Shape
     /*! Reset the polygons making up the cuboid to the ones in shape coordinates. */
   virtual void resetPolygons( void ) const;
 
+  using Shape::boundingBoxMin;
+  using Shape::boundingBoxMax;
+
     /*! Minimum corner of bounding box for the transformation from
         shape to world coordinates specified by \a trafo. */
   virtual Point boundingBoxMin( const Transform &trafo ) const;
@@ -540,6 +545,23 @@ class Cuboid : public Shape
 
     /*! Print some information about the cuboid into the stream \a str. */
   virtual ostream &print( ostream &str ) const;
+
+    /*! Compatibility with old robot plugins: */
+
+    /*! Return length(), width(), height(). */
+  Point corner( void ) const;
+    /*! Set length, width and height of Cuboid under the assumption that
+        it is not roated! */
+  void setCorner( const Point &corner );
+    /*!  Set length (extend along x-axis) of cuboid to \a length.
+         Assumes that Cuboid is not rotated! */
+  void setLength( double length );
+    /*!  Set width (extend along y-axis) of cuboid to \a width.
+         Assumes that Cuboid is not rotated! */
+  void setWidth( double width );
+    /*!  Set height (extend along z-axis) of cuboid to \a height.
+         Assumes that Cuboid is not rotated! */
+  void setHeight( double height );
 
 };
 
