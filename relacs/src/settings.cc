@@ -64,7 +64,8 @@ Settings::Settings( RELACSWidget* rw )
   addBoolean( "saverelacsfiles", "Save data and metadata in RELACS format", true );
   addBoolean( "saveodmlfiles", "Save metadata in ODML format", false );
 #ifdef HAVE_NIX
-  addBoolean( "savenixfiles", "Save data nad metadata in NIX format", true );
+  addBoolean( "savenixfiles", "Save data and metadata in NIX format", true );
+  addBoolean( "savenixcompressed", "Enable compression when storing in NIX format", true ).addActivation( "savenixfiles", "true" );
 #endif
   addBoolean( "saverelacscore", "Save core configuration of RELACS to session", true );
   addBoolean( "saverelacsplugins", "Save configuration of RELACS-plugins to session", true );
@@ -119,7 +120,7 @@ void Settings::notify( void )
     RW->SF->setWriteRelacsFiles( boolean( "saverelacsfiles" ) );
     RW->SF->setWriteODMLFiles( boolean( "saveodmlfiles" ) );
 #ifdef HAVE_NIX
-    RW->SF->setWriteNIXFiles( boolean( "savenixfiles" ) );
+    RW->SF->setWriteNIXFiles( boolean( "savenixfiles" ), boolean( "savenixcompressed" ) );
 #endif
   }
 
