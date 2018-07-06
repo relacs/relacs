@@ -288,9 +288,10 @@ void SaveFiles::setWriteODMLFiles( bool write )
 }
 
 
-void SaveFiles::setWriteNIXFiles( bool write )
+void SaveFiles::setWriteNIXFiles( bool write, bool compression )
 {
   WriteNIXFiles = write;
+  CompressNIXFiles = compression;
 }
 
 
@@ -852,7 +853,7 @@ void SaveFiles::createNIXFile( void )
 {
   #ifdef HAVE_NIX
   if ( WriteNIXFiles ) {
-    string nix_path = NixIO.create( Path );
+    string nix_path = NixIO.create( Path, CompressNIXFiles );
     if ( nix_path.empty() ) {
       RW->printlog( "! warning in SaveFiles::createNIXFile: could not create NIX data file in '" + Path + "'" );
       return;
@@ -1771,13 +1772,13 @@ void SaveFiles::ODMLFiles::writeRePro( const Options &reproinfo,
 
 
 #ifdef HAVE_NIX
-string SaveFiles::NixFile::create ( string path )
+string SaveFiles::NixFile::create ( string path, bool compression )
 {
   // TODO: path can be a directory (with trailing slash) or a stem of a filename!
   rid = Str( path ).preventedSlash().name();
   string nix_path = path + rid + ".nix";
-  fd = nix::File::open(nix_path, nix::FileMode::Overwrite, "hdf5", 
-		       nix::Compression::DeflateNormal);
+  nix::Compression compr = compression ? nix::Compression::DeflateNormal : nix::Compression::None;
+  fd = nix::File::open( nix_path, nix::FileMode::Overwrite, "hdf5", compr );
   root_block = fd.createBlock(rid, "recording");
   root_section = fd.createSection(rid, "recording");
   root_block.metadata( root_section );

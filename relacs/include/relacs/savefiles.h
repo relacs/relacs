@@ -154,8 +154,8 @@ public:
   void setWriteRelacsFiles( bool write );
     /*! Should metadata be written in ODML format? */
   void setWriteODMLFiles( bool write );
-    /*! Should data be written in NIX format? */
-  void setWriteNIXFiles( bool write );
+    /*! Should data be written in NIX format, with or without compression? */
+  void setWriteNIXFiles( bool write, bool compression );
 
     /*! React to settings of the stimulus options.
         This function calls notifyStimulusData() in all RELACSPlugins. */
@@ -267,6 +267,8 @@ protected:
   bool WriteODMLFiles;
     /*! Should data be written in NIX format? */
   bool WriteNIXFiles;
+    /*! Should NIX use data compression? Might degrade performance a bit. */
+  bool CompressNIXFiles;
     /*! Are there any files open to save in? */
   bool FilesOpen;
     /*! Should be saved into the files? */
@@ -517,7 +519,7 @@ protected:
     nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat;
     std::vector<nix::DataArray> data_features;
 
-    string create ( string path );
+    string create ( string path, bool compression );
     void close ( void );
     void saveMetadata ( const AllDevices *devices );
     void saveMetadata ( const MetaData &mtdt );
