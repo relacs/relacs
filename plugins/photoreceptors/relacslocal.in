@@ -1,0 +1,53 @@
+@RELACSLOCAL_HEAD@
+
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+libdir="@libdir@"
+datarootdir="@datarootdir@"
+
+# Full path of the RELACS executable to be used:
+RELACSEXEC="@abs_top_builddir@/src/relacsgui"
+
+# Pathes to the RELACS libraries that need to be added to LD_LIBRARY_PATH:
+RELACSLIBPATHES="@abs_top_builddir@/daq/src/.libs\
+:@abs_top_builddir@/datafile/src/.libs\
+:@abs_top_builddir@/plot/src/.libs\
+:@abs_top_builddir@/numerics/src/.libs\
+:@abs_top_builddir@/options/src/.libs\
+:@abs_top_builddir@/widgets/src/.libs:"
+
+# Directory where the RELACS libraries are to be installed,
+# and should be removed from the LD_LIBRARY_PATH:
+RELACSLIBINSTALLDIR="$libdir"
+
+PLUGINHOME=""
+PLUGINHELPPATHES=""
+SAVEIFS="$IFS"
+for dir in @RELACS_PLUGINS_SUBDIRS@; do
+  PLUGINHOME="${PLUGINHOME}@abs_top_builddir@/plugins/${dir}/src/.libs|"
+  PLUGINHELPPATHES="${PLUGINHELPPATHES}@abs_top_builddir@/plugins/${dir}/help|"
+done
+PLUGINRELATIVE="@abs_builddir@"
+
+# Possible config files separated by '|':
+# for local demo's use only the ones in the current directory.
+CONFCOREFILES="@datadir@/@PACKAGE@/relacs.cfg|${HOME}/.relacs/relacs.cfg|@abs_srcdir@/relacs.cfg"
+CONFPLUGINSFILES="@datadir@/@PACKAGE@/relacsplugins.cfg|${HOME}/.relacs/relacsplugins.cfg|@abs_srcdir@/relacsplugins.cfg"
+
+# Path to the documentation:
+DOCPATH="@abs_top_builddir@/doc/userman/html"
+
+# Path to the example configuration files:
+CFGEXAMPLESPATH="@abs_top_srcdir@/plugins"
+
+# Path to the icons:
+ICONPATH="@top_srcdir@/src"
+
+# Absolute path in which this script is allowed to be executed.
+# If left empty, it is allowed to be executed everywhere.
+RELACSSCRIPTPATH="@abs_builddir@"
+
+# Path to the relacs runner script that is to be installed:
+RELACSRUNNERPATH="@abs_top_builddir@/src/relacs"
+
+@RELACS_FOOT@
