@@ -14,6 +14,7 @@ pluginlib_LTLIBRARIES = \
     libefieldjar.la \
     libefieldmanualjar.la \
     libefieldeodmodel.la \
+    libefielddualbeat.la \
     libefieldbeats.la
 
 
@@ -443,6 +444,44 @@ libefieldbeats_la_includedir = $(pkgincludedir)/efield
 
 libefieldbeats_la_include_HEADERS = $(HEADER_PATH)/beats.h
 
+libefielddualbeat_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../base/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+ libefielddualbeat_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libefielddualbeat_la_LIBADD = \
+    $(builddir)/libefieldtraces.la \
+    $(builddir)/libefieldeodtools.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../base/src/libbaselinearattenuate.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libefielddualbeat_la_OBJECTS) : moc_dualbeat.cc
+
+libefielddualbeat_la_SOURCES = dualbeat.cc
+
+libefielddualbeat_la_includedir = $(pkgincludedir)/efield
+
+libefielddualbeat_la_include_HEADERS = $(HEADER_PATH)/dualbeat.h
 
 
 libefieldefieldgeometry_la_CPPFLAGS = \
