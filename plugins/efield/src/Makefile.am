@@ -619,7 +619,7 @@ linktest_libefieldbeats_la_SOURCES = linktest.cc
 linktest_libefieldbeats_la_LDADD = libefieldbeats.la
 
 linktest_libefielddualbeat_la_SOURCES = linktest.cc
-linktest_libefieldualdbeat_la_LDADD = libefielddualbeat.la
+linktest_libefielddualbeat_la_LDADD = libefielddualbeat.la
 
 linktest_libefieldefieldgeometry_la_SOURCES = linktest.cc
 linktest_libefieldefieldgeometry_la_LDADD = libefieldefieldgeometry.la
