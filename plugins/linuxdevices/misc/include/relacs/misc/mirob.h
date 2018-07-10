@@ -34,6 +34,11 @@ namespace misc {
 \author Alexander Ott
 \version 1.0 (Nov 30, 2017)
 \brief [Device] The Mirob module linear robot from MPH
+
+You need to have permissions for the serial port:
+\code
+sudo adduser <login> dialout
+\endcode
  */
 
 class Mirob : public Device {
