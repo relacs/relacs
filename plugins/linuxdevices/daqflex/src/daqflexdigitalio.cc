@@ -143,7 +143,7 @@ int DAQFlexDigitalIO::write( unsigned int line, bool val )
 
 int DAQFlexDigitalIO::read( unsigned int line, bool &val )
 {
-  string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:VALUE" );
+  string r = DAQFlexDevice->sendMessage( "?DIO{0/" + Str( line ) + "}:VALUE" );
   if ( r.empty() )
     return ReadError;
   // XXX READ THE RESULT
@@ -153,32 +153,18 @@ int DAQFlexDigitalIO::read( unsigned int line, bool &val )
 
 int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
 {
-  /*
-  unsigned int ival = val;
-  if ( daqflex_dio_bitfield2( DeviceP, SubDevice, lines, &ival, 0 ) < 0 ) {
-    daqflex_perror( "DAQFlexDigitalIO::write()" );
-    cerr << "! error: DAQFlexDigitalIO::write() -> "
-	 << "Writing on DIO subdevice " << SubDevice << " failed\n";
-    return WriteError;
-  }
-  */
-  return 0;
+  // XXX read it and the write it!
+  string r = DAQFlexDevice->sendMessage( "DIO{0}:VALUE=" + Str( val ) );
+  return r.empty() ? WriteError : 0;
 }
 
 
 int DAQFlexDigitalIO::readLines( unsigned int lines, unsigned int &val )
 {
-  /*
-  unsigned int ival = 0;
-  if ( daqflex_dio_bitfield2( DeviceP, SubDevice, lines, &ival, 0 ) < 0 ) {
-    daqflex_perror( "DAQFlexDigitalIO::read()" );
-    cerr << "! error: DAQFlexDigitalIO::read() -> "
-	 << "Reading from DIO subdevice " << SubDevice
-	 << " failed\n";
+  string r = DAQFlexDevice->sendMessage( "?DIO{0}:VALUE" );
+  if ( r.empty() )
     return ReadError;
-  }
-  val = ival & lines;
-  */
+  // XXX READ THE RESULT
   return 0;
 }
 

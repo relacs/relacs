@@ -26,17 +26,17 @@
 
 if test "$1" = "--help"; then
     cat <<EOF
-newpluginset [-s]
+newpluginset [-g]
 
 Creates a new plugin set.
 
--s: add the new files to the svn repository
+-g: add the new files to the git repository
 
 EOF
     exit 0
 fi
 
-ADDTOSVN="$1"
+ADDTOGIT="$1"
 shift
 
 # get path name for new plugin set:
@@ -81,15 +81,15 @@ mkdir $PLUGINPATH/include/relacs/$PLUGINNAME
 # copy the skeleton files:
 echo
 echo "copy files ... "
-for F in $(find skel -name '*' -not -type d | grep -v .svn); do
+for F in $(find skel -name '*' -not -type d | grep -v .git); do
     DEST=${F#skel/}
     DEST=${DEST/skel/$PLUGINNAME}
     sed -e "s|PLUGINNAME|$PLUGINNAME|g; s|PLUGINBRIEF|$PLUGINBRIEF|; s|PLUGINDEPTH|$PLUGINDEPTH|g;" $F > $PLUGINPATH/$DEST
 done
 
-# add all to svn:
-if test "$ADDTOSVN" = "-s"; then
-    svn add $PLUGINPATH
+# add all to git:
+if test "$ADDTOGIT" = "-g"; then
+    git add $PLUGINPATH
 fi
 
 # edit configure.ac:
@@ -151,8 +151,8 @@ echo "$ bootstrap.sh"
 echo "$ ./configure"
 echo "from the relacs root directory."
 echo
-if test "$ADDTOSVN" != "-s"; then
-  echo "Do not forget to add the new files to the svn repository!"
+if test "$ADDTOGIT" != "-g"; then
+  echo "Do not forget to add the new files to the git repository!"
   echo
 fi
 

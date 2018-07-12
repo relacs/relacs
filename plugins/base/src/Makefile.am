@@ -23,7 +23,8 @@ pluginlib_LTLIBRARIES = \
     libbasesetattenuatorgain.la \
     libbasehistogram.la \
     libbaseperiodhistogram.la \
-    libbaseinstantaneousrate.la
+    libbaseinstantaneousrate.la \
+    libbasesetdigitaloutput.la
 
 
 if RELACS_COND_TML
@@ -753,6 +754,43 @@ libbaseinstantaneousrate_la_include_HEADERS = $(HEADER_PATH)/instantaneousrate.h
 
 
 
+libbasesetdigitaloutput_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libbasesetdigitaloutput_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libbasesetdigitaloutput_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libbasesetdigitaloutput_la_OBJECTS) : moc_setdigitaloutput.cc
+
+libbasesetdigitaloutput_la_SOURCES = setdigitaloutput.cc
+
+libbasesetdigitaloutput_la_includedir = $(pkgincludedir)/base
+
+libbasesetdigitaloutput_la_include_HEADERS = $(HEADER_PATH)/setdigitaloutput.h
+
+
+
 check_PROGRAMS = \
     linktest_libbaselinearattenuate_la \
     linktest_libbasedecibelattenuate_la \
@@ -772,7 +810,8 @@ check_PROGRAMS = \
     linktest_libbasesetattenuatorgain_la \
     linktest_libbasehistogram_la \
     linktest_libbaseperiodhistogram_la \
-    linktest_libbaseinstantaneousrate_la
+    linktest_libbaseinstantaneousrate_la \
+    linktest_libbasesetdigitaloutput_la
 
 if RELACS_COND_TML
 check_PROGRAMS += \
@@ -840,5 +879,8 @@ linktest_libbaseperiodhistogram_la_LDADD = libbasehistogram.la
 
 linktest_libbaseinstantaneousrate_la_SOURCES = linktest.cc
 linktest_libbaseinstantaneousrate_la_LDADD = libbaseinstantaneousrate.la
+
+linktest_libbasesetdigitaloutput_la_SOURCES = linktest.cc
+linktest_libbasesetdigitaloutput_la_LDADD = libbasesetdigitaloutput.la
 
 TESTS = $(check_PROGRAMS)

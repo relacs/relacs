@@ -27,19 +27,19 @@
 if test "$1" = "--help"; then
     cat <<EOF
 
-newplugin [-s]
+newplugin [-g]
 
 Adds an entry in src/Makefile.am and
 creates a skeleton .cc and .h file
 for a new plugin.
 
--s: add the new files to the svn repository
+-g: add the new files to the git repository
 
 EOF
     exit 0
 fi
 
-ADDTOSVN="$1"
+ADDTOGIT="$1"
 shift
 
 # get plugin type:
@@ -438,18 +438,18 @@ EOF
 fi
 
 
-if test "$ADDTOSVN" = "-s"; then
-# add to svn:
-    echo "svn add $PLUGINSETPATH/src/${PLUGINFILE}.cc ..."
-    svn add "$PLUGINSETPATH/src/${PLUGINFILE}.cc"
-    echo "svn add $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
-    svn add "$PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h"
+if test "$ADDTOGIT" = "-g"; then
+# add to git:
+    echo "git add $PLUGINSETPATH/src/${PLUGINFILE}.cc ..."
+    git add "$PLUGINSETPATH/src/${PLUGINFILE}.cc"
+    echo "git add $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
+    git add "$PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h"
 fi
 
 echo "finished!"
 echo
-if test "$ADDTOSVN" != "-s"; then
-  echo "Do not forget to add the new files to the svn repository!"
+if test "$ADDTOGIT" != "-g"; then
+  echo "Do not forget to add the new files to the git repository!"
   echo
 fi
 
