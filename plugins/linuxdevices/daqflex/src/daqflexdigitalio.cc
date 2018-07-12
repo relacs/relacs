@@ -155,6 +155,8 @@ int DAQFlexDigitalIO::write( unsigned int line, bool val )
 
 int DAQFlexDigitalIO::read( unsigned int line, bool &val )
 {
+  if ( (int)line >= lines() )
+    return ReadError;
   string rs = "DIO{0/" + Str( line ) + "}:VALUE";
   string r = DAQFlexDevice->sendMessage( "?" + rs );
   if ( r.substr(0, rs.size() ) != rs )

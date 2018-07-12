@@ -167,6 +167,7 @@ int CS3310DIO::open( bool zerocrossing )
     Level[0]++;
     Level[1]++;
   }
+  //  ar = 0; // enable this for testing output of DIO without attached atenuator chip
   if ( ar != 0 ) {
     // attenuator is not active:
     close();
@@ -295,6 +296,7 @@ int CS3310DIO::attenuate( int di, double &decibel )
   int ar = 0;
   for ( int n=0; n<Tries; n++ ) {
     ar = write();
+    // ar = 0; // enable this for testing output of DIO without attached atenuator chip
     if ( ar == 0 )
       break;
   }
