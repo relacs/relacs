@@ -31,6 +31,7 @@ DAQFlexDigitalIO::DAQFlexDigitalIO( void )
   : DigitalIO( "DAQFlexDigitalIO" )
 {
   DAQFlexDevice = NULL;
+  Levels = 0;
   initOptions();
 }
 
@@ -61,6 +62,8 @@ int DAQFlexDigitalIO::open( DAQFlexCore &daqflexdevice)
   }
 
   DigitalIO::open( *this );
+
+  Levels = 0;
 
   // set basic device infos:
   setDeviceName( DAQFlexDevice->deviceName() );
@@ -136,35 +139,52 @@ int DAQFlexDigitalIO::configureLines( unsigned int lines, unsigned int output )
 
 int DAQFlexDigitalIO::write( unsigned int line, bool val )
 {
-  string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:VALUE=" + ( val ? "1" : "0" ) );
-  return r.empty() ? WriteError : 0;
+  if ( (int)line >= lines() )
+    return WriteError;
+  string rs = "DIO{0/" + Str( line ) + "}:VALUE";
+  string r = DAQFlexDevice->sendMessage( rs + "=" + ( val ? "1" : "0" ) );
+  if ( r != rs )
+    return WriteError;
+  if ( val )
+    Levels |= 1 << line;
+  else
+    Levels &= ~(1 << line);
+  return 0;
 }
 
 
 int DAQFlexDigitalIO::read( unsigned int line, bool &val )
 {
-  string r = DAQFlexDevice->sendMessage( "?DIO{0/" + Str( line ) + "}:VALUE" );
-  if ( r.empty() )
+  string rs = "DIO{0/" + Str( line ) + "}:VALUE";
+  string r = DAQFlexDevice->sendMessage( "?" + rs );
+  if ( r.substr(0, rs.size() ) != rs )
     return ReadError;
-  // XXX READ THE RESULT
+  val = ( stoi( r.substr( rs.size() + 1 ) ) > 0 );
   return 0;
 }
 
 
 int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
 {
-  // XXX read it and the write it!
-  string r = DAQFlexDevice->sendMessage( "DIO{0}:VALUE=" + Str( val ) );
-  return r.empty() ? WriteError : 0;
+  unsigned int rv = Levels;
+  rv &= ~lines; // keep the levels of the non-specified lines
+  rv |= val & lines;  // set the values of the specified lines
+  string rs = "DIO{0}:VALUE";
+  string r = DAQFlexDevice->sendMessage( rs + "=" + Str( rv ) );
+  if ( r != rs )
+    return WriteError;
+  Levels = rv;
+  return 0;
 }
 
 
 int DAQFlexDigitalIO::readLines( unsigned int lines, unsigned int &val )
 {
-  string r = DAQFlexDevice->sendMessage( "?DIO{0}:VALUE" );
-  if ( r.empty() )
+  string rs = "DIO{0}:VALUE";
+  string r = DAQFlexDevice->sendMessage( "?" + rs );
+  if ( r.substr(0, rs.size() ) != rs )
     return ReadError;
-  // XXX READ THE RESULT
+  val = stoi( r.substr( rs.size() + 1 ) );
   return 0;
 }
 

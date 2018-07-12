@@ -116,6 +116,8 @@ private:
     /*! The DAQFlex device. */
   DAQFlexCore *DAQFlexDevice;
 
+  unsigned int Levels;
+
 };
 
 
