@@ -94,6 +94,8 @@ libphotoreceptorspulses_la_include_HEADERS = $(HEADER_PATH)/pulses.h
 
 libphotoreceptorstwochannelstimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/plugins/base/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -110,6 +112,8 @@ libphotoreceptorstwochannelstimulus_la_LDFLAGS = \
 
 libphotoreceptorstwochannelstimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../base/src/libbasetraces.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/plot/src/librelacsplot.la \
