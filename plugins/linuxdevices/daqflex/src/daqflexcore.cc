@@ -749,6 +749,8 @@ int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename 
       if ( ErrorState == Success && response.find( "CONFIGURED" ) == string::npos )
 	ErrorState = ErrorFPGAUploadFailed;
     }
+    else
+      setErrorStr( "FPGA path: " + path + filename + " or " + DefaultFirmwarePath + filename );
   }
   return ErrorState;
 }
