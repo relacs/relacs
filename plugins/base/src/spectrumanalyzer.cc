@@ -31,7 +31,7 @@ namespace base {
 
 
 SpectrumAnalyzer::SpectrumAnalyzer( void )
-  : Control( "SpectrumAnalyzer", "base", "Jan Benda", "1.2", "Feb 17, 2015" )
+  : Control( "SpectrumAnalyzer", "base", "Jan Benda", "1.4", "Jul 13, 2018" )
 {
   // parameter:
   InTrace = 0;
@@ -42,6 +42,7 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   Overlap = true;
   Window = hanning;
   Decibel = true;
+  Peak = true;
   FMax = 500.0;
   PMin = -50.0;
 
@@ -55,6 +56,7 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   addSelection( "window", "FFT window function", "Hanning|Bartlett|Blackman|Blackman-Harris|Hamming|Hanning|Parzen|Square|Welch" );
   addNumber( "fmax", "Maximum frequency", FMax, 0.0, 100000.0, 100.0, "Hz", "Hz" );
   addBoolean( "decibel", "Plot decibel relative to maximum", Decibel );
+  addBoolean( "peak", "Decibel relative to maximum peak", Peak ).setActivation( "decibel", "true" );
   addNumber( "pmin", "Minimum power", PMin, -1000.0, 0.0, 10.0, "dB" ).setActivation( "decibel", "true" );
 
   // layout:
@@ -138,6 +140,7 @@ void SpectrumAnalyzer::notify( void )
   default: Window = hanning;
   }
   Decibel = boolean( "decibel" );
+  Peak = boolean( "peak" );
   FMax = number( "fmax" );
   PMin = number( "pmin" );
   P.lock();
@@ -210,7 +213,10 @@ void SpectrumAnalyzer::main( void )
     SampleDataD spec( SpecSize );
     rPSD( d, spec, Overlap, Window );
     if ( Decibel )
-      spec.decibel();
+      if ( Peak )
+	spec.decibel();
+      else
+	spec.decibel( trace( InTrace ).maxValue() );
     else
       spec.sqrt();
 

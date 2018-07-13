@@ -33,7 +33,7 @@ namespace base {
 \class SpectrumAnalyzer
 \brief [Control] Displays the spectrum of a voltage trace.
 \author Jan Benda
-\version 1.2 (Feb 17, 2015)
+\version 1.4 (Jul 13, 2018)
 \par Options
 - \c intrace=V-1: Input trace (\c string)
 - \c origin=before end of data: Analysis window (\c string)
@@ -44,6 +44,7 @@ namespace base {
 - \c window=Hanning: FFT window function (\c string)
 - \c fmax=500Hz: Maximum frequency (\c number)
 - \c decibel=true: Plot decibel relative to maximum (\c boolean)
+- \c peak=true: Decibel relative to maximum peak (\c boolean)
 - \c pmin=-50dB: Minimum power (\c number)
 */
 
@@ -73,6 +74,7 @@ private:
   bool Overlap;
   double (*Window)( int j, int n );
   bool Decibel;
+  bool Peak;
   double FMax;
   double PMin;
 
