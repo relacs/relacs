@@ -117,12 +117,22 @@ public:
   virtual void close( void );
   virtual int reset( void );
 
-    /*! \return response if transfer successful, empty string if not. */
+    /*! Send a message to the device without locking it. */
+  int sendControlTransfer( const string &message );
+    /*! Receive a message from the device without locking it. This
+        should follow a call to sendControlTransfer. */
+  string getControlTransfer( void );
+    /*! Send message to device while locking it. 
+        \return response if transfer successful, empty string if not. */
   string sendMessage( const string &message );
-    /*! Send command to the device. 
+    /*! Send message to device without locking it. 
+        \return response if transfer successful, empty string if not. */
+  string sendMessageUnlocked( const string &message );
+    /*! Send command to the device while locking it. 
+        Use sendControlTransfer() for not locking the device.
         \return error code */
   int sendCommand( const string &command );
-    /*! Send commands to the device.
+    /*! Send commands to the device while locking it.
         \return error code  */
   int sendCommands( const string &command1, const string &command2 );
 
@@ -198,10 +208,17 @@ public:
     /*! \return a descriptive string for \a error. */
   string daqflexErrorStr( DAQFlexError error ) const;
 
-protected:
-  void initOptions() override;
+  using Device::lock;
+  using Device::unlock;
+  using Device::mutex;
 
- private:
+  
+protected:
+
+  void initOptions( void ) override;
+
+  
+private:
 
     /*! A handle to the USB device. */
   libusb_device_handle *deviceHandle( void );
@@ -212,11 +229,6 @@ protected:
 
   string productName( int productid );
   void setLibUSBError( int libusberror );
-    /*! Send a message to the device. */
-  int sendControlTransfer( const string &message );
-    /*! Receive a message from the device. This should follow a call to
-        sendControlTransfer. */
-  string getControlTransfer( void );
 
   int getEndpoints( void );
   unsigned char getEndpointInAddress( unsigned char* data, int n );

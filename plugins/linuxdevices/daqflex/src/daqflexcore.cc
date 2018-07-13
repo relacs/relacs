@@ -422,11 +422,17 @@ string DAQFlexCore::sendMessage( const string &message )
   string s = "";
   if ( r == Success )
     s = getControlTransfer();
-  /*
-  else
-    cerr << "error in DAQFlexCore::sendMessage( " << message << " ): " << DAQFlexErrorText[r] << '\n';
-  */
   unlock();
+  return s;
+}
+
+
+string DAQFlexCore::sendMessageUnlocked( const string &message )
+{
+  int r = sendControlTransfer( message );
+  string s = "";
+  if ( r == Success )
+    s = getControlTransfer();
   return s;
 }
 

@@ -94,47 +94,50 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice )
   setDeviceVendor( DAQFlexDevice->deviceVendor() );
   setDeviceFile( DAQFlexDevice->deviceFile() );
 
-  // initialize ranges:
-  BipolarRange.clear();
-  BipolarRangeCmds.clear();
-  double checkrange[17] = { 20.0, 10.0, 5.0, 4.0, 2.5, 2.5, 2.0, 1.25, 1.25, 1.0, 0.625, 0.3125, 0.15625, 0.14625, 0.078125, 0.073125, -1.0 };
-  string checkstr[16] = { "BIP20V", "BIP10V", "BIP5V", "BIP4V", "BIP2PT5V", "BIP2.5V", "BIP2V", "BIP1PT25V", "BIP1.25V", "BIP1V", "BIP625.0E-3V", "BIP312.5E-3V", "BIP156.25E-3V", "BIP146.25E-3V", "BIP78.125E-3V", "BIP73.125E-3V" };
-  for ( int i = 0; i < 20 && checkrange[i] > 0.0; i++ ) {
-    string message = "AI{0}:RANGE=" + checkstr[i];
-    DAQFlexDevice->sendMessage( message );
-    if ( DAQFlexDevice->success() ) {
-      string response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
-      if ( DAQFlexDevice->success() && response == message ) {
-	BipolarRange.push_back( checkrange[i] );
-	BipolarRangeCmds.push_back( checkstr[i] );
+  {
+    QMutexLocker corelocker( DAQFlexDevice->mutex() );
+    // initialize ranges:
+    BipolarRange.clear();
+    BipolarRangeCmds.clear();
+    double checkrange[17] = { 20.0, 10.0, 5.0, 4.0, 2.5, 2.5, 2.0, 1.25, 1.25, 1.0, 0.625, 0.3125, 0.15625, 0.14625, 0.078125, 0.073125, -1.0 };
+    string checkstr[16] = { "BIP20V", "BIP10V", "BIP5V", "BIP4V", "BIP2PT5V", "BIP2.5V", "BIP2V", "BIP1PT25V", "BIP1.25V", "BIP1V", "BIP625.0E-3V", "BIP312.5E-3V", "BIP156.25E-3V", "BIP146.25E-3V", "BIP78.125E-3V", "BIP73.125E-3V" };
+    for ( int i = 0; i < 20 && checkrange[i] > 0.0; i++ ) {
+      string message = "AI{0}:RANGE=" + checkstr[i];
+      DAQFlexDevice->sendMessageUnlocked( message );
+      if ( DAQFlexDevice->success() ) {
+	string response = DAQFlexDevice->sendMessageUnlocked( "?AI{0}:RANGE" );
+	if ( DAQFlexDevice->success() && response == message ) {
+	  BipolarRange.push_back( checkrange[i] );
+	  BipolarRangeCmds.push_back( checkstr[i] );
+	}
       }
     }
-  }
-  if ( BipolarRange.size() == 0 ) {
-    if ( DAQFlexDevice->error() == DAQFlexCore::ErrorLibUSBIO ) {
-      setErrorStr( "Error in initializing DAQFlexAnalogInput device: no input ranges found. Error: " +
-		   DAQFlexDevice->daqflexErrorStr() + ". Check the USB cable/connection!" );
-      return ReadError;
-    }
-    // retrieve single supported range:
-    Str response = DAQFlexDevice->sendMessage( "?AI{0}:RANGE" );
-    if ( DAQFlexDevice->success() && response.size() > 16 ) {
-      bool uni = ( response[12] == 'U' );
-      double range = response.number( 0.0, 15 );
-      if ( range <= 1e-6 || uni ) {
-	setErrorStr( "Failed to read out analog input range from device " + DAQFlexDevice->deviceName() );
+    if ( BipolarRange.size() == 0 ) {
+      if ( DAQFlexDevice->error() == DAQFlexCore::ErrorLibUSBIO ) {
+	setErrorStr( "Error in initializing DAQFlexAnalogInput device: no input ranges found. Error: " +
+		     DAQFlexDevice->daqflexErrorStr() + ". Check the USB cable/connection!" );
+	return ReadError;
+      }
+      // retrieve single supported range:
+      Str response = DAQFlexDevice->sendMessageUnlocked( "?AI{0}:RANGE" );
+      if ( DAQFlexDevice->success() && response.size() > 16 ) {
+	bool uni = ( response[12] == 'U' );
+	double range = response.number( 0.0, 15 );
+	if ( range <= 1e-6 || uni ) {
+	  setErrorStr( "Failed to read out analog input range from device " + DAQFlexDevice->deviceName() );
+	  return InvalidDevice;
+	}
+	BipolarRange.push_back( range );
+	BipolarRangeCmds.push_back( response.right( 12 ) );
+      }
+      else {
+	setErrorStr( "Failed to retrieve analog input range from device " + DAQFlexDevice->deviceName() +
+		     ". Error: " + DAQFlexDevice->daqflexErrorStr() );
 	return InvalidDevice;
       }
-      BipolarRange.push_back( range );
-      BipolarRangeCmds.push_back( response.right( 12 ) );
-    }
-    else {
-      setErrorStr( "Failed to retrieve analog input range from device " + DAQFlexDevice->deviceName() +
-		   ". Error: " + DAQFlexDevice->daqflexErrorStr() );
-      return InvalidDevice;
     }
   }
-
+  
   // clear flags:
   IsPrepared = false;
   IsRunning = false;
@@ -259,7 +262,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     return -1;
   }
 
-  QMutexLocker locker( mutex() );
+  QMutexLocker ailocker( mutex() );
 
   Settings.clear();
   IsPrepared = false;
@@ -277,92 +280,128 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   Buffer = new char[BufferSize];
   BufferN = 0;
 
-  // setup acquisition:
-  DAQFlexDevice->sendMessage( "AISCAN:XFRMODE=BLOCKIO" );
-  DAQFlexDevice->sendMessage( "AISCAN:RATE=" + Str( traces[0].sampleRate(), "%g" ) );
-  DAQFlexDevice->setAISampleRate( traces[0].sampleRate() );
-  if ( traces[0].continuous() ) {
-    DAQFlexDevice->sendMessage( "AISCAN:SAMPLES=0" );
-    TotalSamples = 0;
-  }
-  else {
-    DAQFlexDevice->sendMessage( "AISCAN:SAMPLES=" + Str( traces[0].size() ) );
-    TotalSamples = traces[0].size() * traces.size();
-  }
-  CurrentSamples = 0;
+  {
+    QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
-  // setup channels:
-  DAQFlexDevice->sendMessage( "AISCAN:QUEUE=ENABLE" );
-  DAQFlexDevice->sendMessage( "AIQUEUE:CLEAR" );
-  for( int k = 0; k < traces.size(); k++ ) {
-    // DAQFlexDevice->sendMessage( "?AIQUEUE:COUNT" ); USE THIS AS QUEUE Element
-
-    // delay:
-    if ( traces[k].delay() > 0.0 ) {
-      traces[k].addError( DaqError::InvalidDelay );
-      traces[k].addErrorStr( "delays are not supported by DAQFlex analog input!" );
-      traces[k].setDelay( 0.0 );
-    }
-
-    // XXX 7202, 7204 do not have AIQUEUE! channels need to be in a sequence!
-    string aiq = "AIQUEUE{" + Str( k ) + "}:";
-
-    // channel:
-    DAQFlexDevice->sendMessage( aiq + "CHAN=" + Str( traces[k].channel() ) );
-
-    // reference:
-    // XXX 20X: Has only SE CHMODE! Cannot be set.
-    // XXX 7202, 1608FS: Has no CHMODE
-    // XXX 7204: Has only AI:CHMODE
-    // XXX 1208-FS, 1408FS do not have CHMODE FOR AIQUEUE! But AI:CHMODE
-    switch ( traces[k].reference() ) {
-    case InData::RefCommon:
-      DAQFlexDevice->sendMessage( aiq + "CHMODE=SE" );
-      break;
-    case InData::RefDifferential:
-      DAQFlexDevice->sendMessage( aiq + "CHMODE=DIFF" );
-      break;
-    case InData::RefGround:
-      DAQFlexDevice->sendMessage( aiq + "CHMODE=SE" );
-      break;
-    default:
-      traces[k].addError( DaqError::InvalidReference );
-    }
-
-    // allocate gain factor:
-    char *gaindata = traces[k].gainData();
-    if ( gaindata != NULL )
-      delete [] gaindata;
-    gaindata = new char[sizeof(Calibration)];
-    traces[k].setGainData( gaindata );
-    Calibration *gainp = (Calibration *)gaindata;
-
-    // ranges:
-    if ( traces[k].unipolar() ) {
-      traces[k].addError( DaqError::InvalidGain );
+    // setup acquisition:
+    DAQFlexDevice->sendMessageUnlocked( "AISCAN:XFRMODE=BLOCKIO" );
+    if ( DAQFlexDevice->failed() ) {
+      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    DAQFlexDevice->sendMessageUnlocked( "AISCAN:RATE=" + Str( traces[0].sampleRate(), "%g" ) );
+    if ( DAQFlexDevice->failed() ) {
+      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    DAQFlexDevice->setAISampleRate( traces[0].sampleRate() );
+    if ( traces[0].continuous() ) {
+      DAQFlexDevice->sendMessageUnlocked( "AISCAN:SAMPLES=0" );
+      TotalSamples = 0;
     }
     else {
-      double max = BipolarRange[traces[k].gainIndex()];
-      if ( max < 0 )
+      DAQFlexDevice->sendMessageUnlocked( "AISCAN:SAMPLES=" + Str( traces[0].size() ) );
+      TotalSamples = traces[0].size() * traces.size();
+    }
+    if ( DAQFlexDevice->failed() ) {
+      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    CurrentSamples = 0;
+
+    // setup channels:
+    DAQFlexDevice->sendMessageUnlocked( "AISCAN:QUEUE=ENABLE" );
+    if ( DAQFlexDevice->failed() ) {
+      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    DAQFlexDevice->sendMessageUnlocked( "AIQUEUE:CLEAR" );
+    if ( DAQFlexDevice->failed() ) {
+      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    for( int k = 0; k < traces.size(); k++ ) {
+      // DAQFlexDevice->sendMessageUnlocked( "?AIQUEUE:COUNT" ); USE THIS AS QUEUE Element
+
+      // delay:
+      if ( traces[k].delay() > 0.0 ) {
+	traces[k].addError( DaqError::InvalidDelay );
+	traces[k].addErrorStr( "delays are not supported by DAQFlex analog input!" );
+	traces[k].setDelay( 0.0 );
+      }
+
+      // XXX 7202, 7204 do not have AIQUEUE! channels need to be in a sequence!
+      string aiq = "AIQUEUE{" + Str( k ) + "}:";
+
+      // channel:
+      DAQFlexDevice->sendMessageUnlocked( aiq + "CHAN=" + Str( traces[k].channel() ) );
+      if ( DAQFlexDevice->failed() ) {
+	traces[k].setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	return -1;
+      } 
+
+      // reference:
+      // XXX 20X: Has only SE CHMODE! Cannot be set.
+      // XXX 7202, 1608FS: Has no CHMODE
+      // XXX 7204: Has only AI:CHMODE
+      // XXX 1208-FS, 1408FS do not have CHMODE FOR AIQUEUE! But AI:CHMODE
+      switch ( traces[k].reference() ) {
+      case InData::RefCommon:
+	DAQFlexDevice->sendMessageUnlocked( aiq + "CHMODE=SE" );
+	break;
+      case InData::RefDifferential:
+	DAQFlexDevice->sendMessageUnlocked( aiq + "CHMODE=DIFF" );
+	break;
+      case InData::RefGround:
+	DAQFlexDevice->sendMessageUnlocked( aiq + "CHMODE=SE" );
+	break;
+      default:
+	traces[k].addError( DaqError::InvalidReference );
+      }
+      if ( DAQFlexDevice->failed() ) {
+	traces[k].setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	return -1;
+      } 
+
+      // allocate gain factor:
+      char *gaindata = traces[k].gainData();
+      if ( gaindata != NULL )
+	delete [] gaindata;
+      gaindata = new char[sizeof(Calibration)];
+      traces[k].setGainData( gaindata );
+      Calibration *gainp = (Calibration *)gaindata;
+
+      // ranges:
+      if ( traces[k].unipolar() ) {
 	traces[k].addError( DaqError::InvalidGain );
+      }
       else {
-	traces[k].setMaxVoltage( max );
-	traces[k].setMinVoltage( -max );
-	if ( BipolarRange.size() > 1 ) {
-	  string message = aiq + "RANGE=" + BipolarRangeCmds[traces[k].gainIndex()];
-	  string response = DAQFlexDevice->sendMessage( message );
-	  if ( DAQFlexDevice->failed() || response.empty() )
-	    traces[k].addError( DaqError::InvalidGain );
-	}
-	if ( traces[k].success() ) {
-	  // get calibration:
-	  string response = DAQFlexDevice->sendMessage( "?AI{" + Str( traces[k].channel() ) + "}:SLOPE" );
-	  gainp->Slope = Str( response.erase( 0, 12 ) ).number();
-	  response = DAQFlexDevice->sendMessage( "?AI{" + Str( traces[k].channel() ) + "}:OFFSET" );
-	  gainp->Offset = Str( response.erase( 0, 13 ) ).number();
-	  gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
-	  gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
-	  gainp->Offset -= max;
+	double max = BipolarRange[traces[k].gainIndex()];
+	if ( max < 0 )
+	  traces[k].addError( DaqError::InvalidGain );
+	else {
+	  traces[k].setMaxVoltage( max );
+	  traces[k].setMinVoltage( -max );
+	  if ( BipolarRange.size() > 1 ) {
+	    string message = aiq + "RANGE=" + BipolarRangeCmds[traces[k].gainIndex()];
+	    string response = DAQFlexDevice->sendMessageUnlocked( message );
+	    if ( DAQFlexDevice->failed() || response.empty() )
+	      traces[k].addError( DaqError::InvalidGain );
+	  }
+	  if ( traces[k].success() ) {
+	    // get calibration:
+	    string response = DAQFlexDevice->sendMessageUnlocked( "?AI{" + Str( traces[k].channel() ) + "}:SLOPE" );
+	    gainp->Slope = Str( response.erase( 0, 12 ) ).number();
+	    response = DAQFlexDevice->sendMessageUnlocked( "?AI{" + Str( traces[k].channel() ) + "}:OFFSET" );
+	    gainp->Offset = Str( response.erase( 0, 13 ) ).number();
+	    gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
+	    gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
+	    gainp->Offset -= max;
+	    if ( DAQFlexDevice->failed() ) {
+	      traces[k].setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	      return -1;
+	    } 
+	  }
 	}
       }
     }
@@ -387,6 +426,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				   QWaitCondition *datawait, QSemaphore *aosp )
 {
+  cerr << "STARTREAD\n";
   QMutexLocker locker( mutex() );
   if ( !IsPrepared || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
@@ -396,15 +436,17 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   bool tookao = ( TakeAO && aosp != 0 && DAQFlexAO != 0 && DAQFlexAO->prepared() );
 
   if ( tookao ) {
-    if ( DAQFlexAO->useAIRate() ) {
-      DAQFlexDevice->sendCommand( "AOSCAN:START" );
-      DAQFlexDevice->sendCommand( "AISCAN:START" );
-    }
+    if ( DAQFlexAO->useAIRate() )
+      DAQFlexDevice->sendCommands( "AOSCAN:START", "AISCAN:START" );
     else
       DAQFlexDevice->sendCommands( "AISCAN:START", "AOSCAN:START" );
   }
   else
     DAQFlexDevice->sendCommand( "AISCAN:START" );
+  if ( DAQFlexDevice->failed() ) {
+    setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+    return -1;
+  } 
 
   bool finished = true;
   TraceIndex = 0;
@@ -575,8 +617,11 @@ int DAQFlexAnalogInput::stop( void )
     return 0;
 
   lock();
-  DAQFlexDevice->sendCommand( "AISCAN:STOP" );
-  DAQFlexDevice->sendMessage( "AISCAN:RESET" );
+  {
+    QMutexLocker corelocker( DAQFlexDevice->mutex() );
+    DAQFlexDevice->sendControlTransfer( "AISCAN:STOP" );
+    DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
+  }
   unlock();
 
   stopRead();
@@ -595,14 +640,17 @@ int DAQFlexAnalogInput::reset( void )
     return NotOpen;
 
   QMutexLocker locker( mutex() );
+  {
+    QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
-  if ( IsRunning )
-    DAQFlexDevice->sendCommand( "AISCAN:STOP" );
+    if ( IsRunning )
+      DAQFlexDevice->sendControlTransfer( "AISCAN:STOP" );
 
-  DAQFlexDevice->sendMessage( "AISCAN:RESET" );
+    DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
 
-  // clear overrun condition:
-  DAQFlexDevice->clearRead();
+    // clear overrun condition:
+    DAQFlexDevice->clearRead();
+  }
 
   // flush:
   int numbytes = 0;
