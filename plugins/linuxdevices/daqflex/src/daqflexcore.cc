@@ -393,7 +393,6 @@ int DAQFlexCore::sendControlTransfer( const string &message )
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_OUT,
 					  StringMessage, 0, 0, data,
 					  MaxMessageSize, 100 );
-
   setLibUSBError( numbytes );
   return ErrorState;
 }
@@ -940,7 +939,7 @@ bool DAQFlexCore::success( void ) const
 
 bool DAQFlexCore::failed( void ) const
 {
-  return ( ErrorState != Success && Device::failed() );
+  return ( ErrorState != Success || Device::failed() );
 }
 
 

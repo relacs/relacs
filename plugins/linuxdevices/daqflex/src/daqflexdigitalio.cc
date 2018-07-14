@@ -115,7 +115,7 @@ int DAQFlexDigitalIO::lines( void ) const
 int DAQFlexDigitalIO::configureLine( unsigned int line, bool output )
 {
   string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:DIR=" + ( output ? "OUT" : "IN" ) );
-  return r.empty() ? WriteError : 0;
+  return DAQFlexDevice->failed() || r.empty() ? WriteError : 0;
 }
 
 
@@ -128,7 +128,7 @@ int DAQFlexDigitalIO::configureLines( unsigned int lines, unsigned int output )
       if ( ( output & bit ) > 0 )
 	direction = true;
       string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( channel ) + "}:DIR=" + ( direction ? "OUT" : "IN" ) );
-      if ( r.empty() )
+      if ( DAQFlexDevice->failed() || r.empty() )
 	return WriteError;
     }
     bit *= 2;
@@ -143,7 +143,7 @@ int DAQFlexDigitalIO::write( unsigned int line, bool val )
     return WriteError;
   string rs = "DIO{0/" + Str( line ) + "}:VALUE";
   string r = DAQFlexDevice->sendMessage( rs + "=" + ( val ? "1" : "0" ) );
-  if ( r != rs )
+  if ( DAQFlexDevice->failed() || r != rs )
     return WriteError;
   if ( val )
     Levels |= 1 << line;
@@ -159,7 +159,7 @@ int DAQFlexDigitalIO::read( unsigned int line, bool &val )
     return ReadError;
   string rs = "DIO{0/" + Str( line ) + "}:VALUE";
   string r = DAQFlexDevice->sendMessage( "?" + rs );
-  if ( r.substr(0, rs.size() ) != rs )
+  if ( DAQFlexDevice->failed() || r.substr(0, rs.size() ) != rs )
     return ReadError;
   val = ( stoi( r.substr( rs.size() + 1 ) ) > 0 );
   return 0;
@@ -173,7 +173,7 @@ int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
   rv |= val & lines;  // set the values of the specified lines
   string rs = "DIO{0}:VALUE";
   string r = DAQFlexDevice->sendMessage( rs + "=" + Str( rv ) );
-  if ( r != rs )
+  if ( DAQFlexDevice->failed() || r != rs )
     return WriteError;
   Levels = rv;
   return 0;
@@ -184,7 +184,7 @@ int DAQFlexDigitalIO::readLines( unsigned int lines, unsigned int &val )
 {
   string rs = "DIO{0}:VALUE";
   string r = DAQFlexDevice->sendMessage( "?" + rs );
-  if ( r.substr(0, rs.size() ) != rs )
+  if ( DAQFlexDevice->failed() || r.substr(0, rs.size() ) != rs )
     return ReadError;
   val = stoi( r.substr( rs.size() + 1 ) );
   return 0;

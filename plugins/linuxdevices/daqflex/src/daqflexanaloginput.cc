@@ -426,10 +426,9 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				   QWaitCondition *datawait, QSemaphore *aosp )
 {
-  cerr << "STARTREAD\n";
   QMutexLocker locker( mutex() );
   if ( !IsPrepared || Traces == 0 ) {
-    cerr << "AI not prepared or no traces!\n";
+    Traces->setErrorStr( "AI not prepared or no traces!" );
     return -1;
   }
 
@@ -444,7 +443,7 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   else
     DAQFlexDevice->sendCommand( "AISCAN:START" );
   if ( DAQFlexDevice->failed() ) {
-    setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+    Traces->setErrorStr( DAQFlexDevice->daqflexErrorStr() );
     return -1;
   } 
 
@@ -462,7 +461,6 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 
 int DAQFlexAnalogInput::readData( void )
 {
-  //  cerr << "DAQFlex::readData() start\n";
   QMutexLocker locker( mutex() );
 
   if ( Traces == 0 || Buffer == 0 || ! IsRunning )
@@ -653,13 +651,15 @@ int DAQFlexAnalogInput::reset( void )
   }
 
   // flush:
-  int numbytes = 0;
-  int status = 0;
-  do {
-    const int nbuffer = DAQFlexDevice->inPacketSize()*4;
-    unsigned char buffer[nbuffer];
-    status = DAQFlexDevice->readBulkTransfer( buffer, nbuffer, &numbytes, 200 );
-  } while ( numbytes > 0 && status == 0 );
+  if ( IsRunning ) {
+    int numbytes = 0;
+    int status = 0;
+    do {
+      const int nbuffer = DAQFlexDevice->inPacketSize()*4;
+      unsigned char buffer[nbuffer];
+      status = DAQFlexDevice->readBulkTransfer( buffer, nbuffer, &numbytes, 200 );
+    } while ( numbytes > 0 && status == 0 );
+  }
 
   // free internal buffer:
   if ( Buffer != 0 )

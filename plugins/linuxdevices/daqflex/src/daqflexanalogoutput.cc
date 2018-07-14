@@ -421,7 +421,6 @@ int DAQFlexAnalogOutput::testWriteDevice( OutList &sigs )
 
 int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 {
-  cerr << "PREPAREWRITE\n";
   if ( !isOpen() )
     return -1;
 
@@ -623,7 +622,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   lock();
   IsPrepared = Sigs.success();
   NoMoreData = ( r == 0 );
-  cerr << "PREPARE " << IsPrepared << " " << NoMoreData << '\n';
   unlock();
 
   return 0;
@@ -632,17 +630,16 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
 int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
 {
-  cerr << "STARTWRITE\n";
   QMutexLocker locker( mutex() );
 
   if ( !IsPrepared || Sigs.empty() ) {
-    cerr << "AO not prepared or no signals!\n";
+    Sigs.setErrorStr( "AO not prepared or no signals!" );
     return -1;
   }
   if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
     DAQFlexDevice->sendCommand( "AOSCAN:START" );
     if ( DAQFlexDevice->failed() ) {
-      cerr << "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr() << '\n';
+      Sigs.setErrorStr( "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
     } 
   }
@@ -654,11 +651,10 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
 
 int DAQFlexAnalogOutput::writeData( void )
 {
-  cerr << "WRITEDATA\n";
   QMutexLocker aolocker( mutex() );
 
   if ( Sigs.empty() ) {
-    cerr << "WRITEDATA NOSIGNAL\n";
+    Sigs.setErrorStr( "WRITEDATA NOSIGNAL" );
     return -1;
   }
 
@@ -707,7 +703,6 @@ int DAQFlexAnalogOutput::writeData( void )
   }
 
   if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-    cerr << "WRITE ALREADY FINISHED\n";
     if ( Buffer != 0 )
       delete [] Buffer;
     Buffer = 0;
@@ -747,7 +742,6 @@ int DAQFlexAnalogOutput::writeData( void )
       cerr << "DAQFlexAnalogOutput::writeData() -> FAILED TO TRANSFER DATA : " << bytesWritten << " < " <<  bytesToWrite << '\n';
     // no more data:
     if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      cerr << "WRITEDATA WROTE EVERYTHING\n";
       if ( Buffer != 0 )
 	delete [] Buffer;
       Buffer = 0;
@@ -782,18 +776,15 @@ int DAQFlexAnalogOutput::writeData( void )
     }
 
     setErrorStr( Sigs );
-    cerr << "WRITEDATA ERROR\n";
     return -1;
   }
 
-  cerr << "WRITEDATA " << elemWritten << '\n';
   return elemWritten;
 }
 
 
 int DAQFlexAnalogOutput::stop( void )
 {
-  cerr << "STOPWRITE\n";
   if ( ! IsPrepared )
     return 0;
 
@@ -809,7 +800,6 @@ int DAQFlexAnalogOutput::stop( void )
 
 int DAQFlexAnalogOutput::reset( void )
 {
-  cerr << "RESET\n";
   lock();
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
