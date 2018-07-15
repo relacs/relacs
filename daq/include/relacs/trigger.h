@@ -55,7 +55,7 @@ setting trigger parameters from the supplied options, followed by
 activate().
 
 In case you want to use a trigger device within RELACS, your
-DigitalIO implementation needs to provide a void default constructor
+Trigger implementation needs to provide a void default constructor
 (i.e. with no parameters) that does not open the device.  Also,
 include the header file \c <relacs/relacsplugin.h> and make the
 Trigger device known to RELACS with the \c addTrigger(

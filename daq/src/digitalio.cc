@@ -79,32 +79,11 @@ const Options &DigitalIO::settings( void ) const
 }
 
 
-int DigitalIO::configureLine( unsigned int line, bool output )
+void DigitalIO::setInfo( void )
 {
-  if ( line >= MaxDIOLines )
-    return WriteError;
-  DIOLineWriteable[line] = output;
-  return 0;
-}
-
-
-int DigitalIO::configureLines( unsigned int lines, unsigned int output )
-{
-  unsigned int bit = 1;
-  for ( unsigned int k=0; k<MaxDIOLines; k++ ) {
-    if ( (lines & bit) > 0 )
-      DIOLineWriteable[k] = ( (output & bit) > 0 );
-    bit *= 2;
-  }
-  return 0;
-}
-
-
-bool DigitalIO::lineConfiguration( unsigned int line ) const
-{
-  if ( line >= MaxDIOLines )
-    return false;
-  return DIOLineWriteable[line];
+  Info.clear();
+  Device::addInfo();
+  Info.addInteger( "lines", lines() );
 }
 
 
@@ -243,11 +222,59 @@ bool DigitalIO::allocatedLine( unsigned int line )
 }
 
 
-void DigitalIO::setInfo( void )
+int DigitalIO::configureLine( unsigned int line, bool output )
 {
-  Info.clear();
-  Device::addInfo();
-  Info.addInteger( "lines", lines() );
+  lock();
+  int r = configureLineUnlocked( line, output );
+  unlock();
+  return r;
+}
+
+
+int DigitalIO::configureLineUnlocked( unsigned int line, bool output )
+{
+  if ( line >= MaxDIOLines )
+    return WriteError;
+  DIOLineWriteable[line] = output;
+  return 0;
+}
+
+
+int DigitalIO::configureLines( unsigned int lines, unsigned int output )
+{
+  unsigned int bit = 1;
+  for ( unsigned int k=0; k<MaxDIOLines; k++ ) {
+    if ( (lines & bit) > 0 )
+      DIOLineWriteable[k] = ( (output & bit) > 0 );
+    bit *= 2;
+  }
+  return 0;
+}
+
+
+bool DigitalIO::lineConfiguration( unsigned int line ) const
+{
+  if ( line >= MaxDIOLines )
+    return false;
+  return DIOLineWriteable[line];
+}
+
+
+int DigitalIO::write( unsigned int line, bool val )
+{
+  lock();
+  int r = writeUnlocked( line, val );
+  unlock();
+  return r;
+}
+
+
+int DigitalIO::read( unsigned int line, bool &val )
+{
+  lock();
+  int r = readUnlocked( line, val );
+  unlock();
+  return r;
 }
 
 

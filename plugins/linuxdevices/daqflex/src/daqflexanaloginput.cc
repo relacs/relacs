@@ -427,8 +427,12 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				   QWaitCondition *datawait, QSemaphore *aosp )
 {
   QMutexLocker locker( mutex() );
-  if ( !IsPrepared || Traces == 0 ) {
-    Traces->setErrorStr( "AI not prepared or no traces!" );
+  if ( Traces == 0 ) {
+    setErrorStr( "AI startRead: no traces!" );
+    return -1;
+  }
+  if ( !IsPrepared ) {
+    Traces->setErrorStr( "AI startRead: not prepared!" );
     return -1;
   }
 

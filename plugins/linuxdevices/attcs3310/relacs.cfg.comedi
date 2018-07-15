@@ -1,6 +1,6 @@
 *Settings
   Plugins:
-      pluginpathes    : [ base*, calibration*, ephys*, acoustic*, auditory*, daqflex*, attcs3310*, misc* ]
+      pluginpathes    : [ base*, calibration*, ephys*, acoustic*, auditory*, comedi*, attcs3310*, misc* ]
       pluginhelppathes: ~
       controlplugin   : [ Session, SpectrumAnalyzer ]
       modelplugin     : SimpleModel
@@ -40,24 +40,24 @@
 
 *RELACS
   input data:
-      inputsamplerate    : 20kHz
+      inputsamplerate    : 10kHz
       inputtracecapacity : 600s
       inputunipolar      : false
       inputtraceid       : V-1
-      inputtracescale    : 1
-      inputtraceunit     : V
+      inputtracescale    : 100
+      inputtraceunit     : mV
       inputtracedevice   : ai-1
       inputtracechannel  : 0
       inputtracereference: ground
-      inputtracemaxvalue : 10
+      inputtracemaxvalue : 100
       inputtracecenter   : true
   output data:
-      outputtraceid      : [ Left-Speaker, Left-1 ]
+      outputtraceid      : [ Left-Speaker, Right-Speaker ]
       outputtracedevice  : [ ao-1, ao-1 ]
       outputtracechannel : [ 0, 1 ]
       outputtracescale   : [ 1, 1 ]
       outputtraceunit    : [ V, V ]
-      outputtracemaxrate : [ 20kHz, 20kHz ]
+      outputtracemaxrate : [ 10kHz, 10kHz ]
       outputtracemodality: [ acoustic, acoustic ]
 
 *Macros
@@ -66,53 +66,35 @@
   fallbackonreload: true
 
 *AudioMonitor
-  device   : [ "-1 default", "0 HDA Intel PCH: ALC298 Analog (hw:0,0) (2 channels)", "1 HDA Intel PCH: HDMI 0 (hw:0,3) (8 channels)", "2 HDA Intel PCH: HDMI 1 (hw:0,7) (8 channels)", "3 HDA Intel PCH: HDMI 2 (hw:0,8) (8 channels)", "4 HDA Intel PCH: HDMI 3 (hw:0,9) (8 channels)", "5 HDA Intel PCH: HDMI 4 (hw:0,10) (8 channels)", "6 sysdefault (128 channels)", "7 front (2 channels)", "8 surround40 (2 channels)", "9 surround51 (2 channels)", "10 surround71 (2 channels)", "11 hdmi (8 channels)", "12 pulse (32 channels)", "13 dmix (2 channels)", "14 default (32 channels) - default" ]
-  enable   : false
+  device   : [ "-1 default", "0 HDA Intel PCH: ALC3202 Analog (hw:0,0) (4 channels)", "1 HDA Intel PCH: HDMI 0 (hw:0,3) (8 channels)", "2 HDA Intel PCH: HDMI 1 (hw:0,7) (8 channels)", "3 HDA Intel PCH: HDMI 2 (hw:0,8) (8 channels)", "4 sysdefault (128 channels)", "5 front (4 channels)", "6 surround40 (4 channels)", "7 surround51 (4 channels)", "8 surround71 (4 channels)", "9 hdmi (8 channels)", "10 pulse (32 channels)", "11 dmix (2 channels)", "12 default (32 channels) - default", "13 /dev/dsp (16 channels)" ]
+  enable   : true
   mute     : false
   gain     : 1
   audiorate: [ "44.1", "8", "16", "22.05", "44.1", "48", "96" ]kHz
 
-*Devices
-  Device1:
-      plugin      : DAQFlexCore
-      ident       : daqflex-1
-      device      : /dev/usb
-      serialno    : ~
-      devicenum   : 1
-      firmwarepath: ../daqflex/firmware/
-
 *Analog Input Devices
   Device1:
-      plugin: DAQFlexAnalogInput
+      plugin: ComediAnalogInput
+      device: /dev/comedi0
       ident : ai-1
-      device: daqflex-1
-      takeao: true
 
 *Analog Output Devices
   Device1:
-      plugin    : DAQFlexAnalogOutput
-      ident     : ao-1
-      device    : daqflex-1
-      useaiclock: false
-      delays    : 0ms
+      plugin: ComediAnalogOutput
+      device: /dev/comedi0
+      ident : ao-1
 
 *Digital I/O Devices
   Device1:
-      plugin: DAQFlexDigitalIO
+      plugin: [ ComediDigitalIO, "0" ]
+      device: /dev/comedi0
       ident : dio-1
-      device: daqflex-1
 
 *Attenuator Devices
   Device1:
-      plugin    : CS3310DIO
-      device    : dio-1
-      ident     : attdev-1
-      cspin     : 1
-      dataoutpin: 0
-      datainpin : 4
-      strobepin : 5
-      mutepin   : 2
-      zcenpin   : 3
+      plugin: CS3310DIO
+      device: dio-1
+      ident : attdev-1
 
 *Attenuator Interfaces
   Device1:

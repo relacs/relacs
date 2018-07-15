@@ -136,19 +136,22 @@ int CS3310DIO::open( bool zerocrossing )
     return NotOpen;
 
   // setup dio:
+  DIO->lock();
 
   // configure digital I/O lines:
-  DIO->configureLine( CS, true );
-  DIO->configureLine( MUTE, true );
-  DIO->configureLine( ZCEN, true );
-  DIO->configureLine( DATAOUT, true );
-  DIO->configureLine( DATAIN, false );
-  DIO->configureLine( STROBE, true );
+  DIO->configureLineUnlocked( CS, true );
+  DIO->configureLineUnlocked( MUTE, true );
+  DIO->configureLineUnlocked( ZCEN, true );
+  DIO->configureLineUnlocked( DATAOUT, true );
+  DIO->configureLineUnlocked( DATAIN, false );
+  DIO->configureLineUnlocked( STROBE, true );
 
   // reset:
-  DIO->write( CS, true );
-  DIO->write( MUTE, true );
-  DIO->write( ZCEN, zerocrossing );
+  DIO->writeUnlocked( CS, true );
+  DIO->writeUnlocked( MUTE, true );
+  DIO->writeUnlocked( ZCEN, zerocrossing );
+
+  DIO->unlock();
 
   calibrate();
   
@@ -167,7 +170,7 @@ int CS3310DIO::open( bool zerocrossing )
     Level[0]++;
     Level[1]++;
   }
-  //  ar = 0; // enable this for testing output of DIO without attached atenuator chip
+  ar = 0; // enable this for testing output of DIO without attached atenuator chip
   if ( ar != 0 ) {
     // attenuator is not active:
     close();
@@ -208,11 +211,13 @@ bool CS3310DIO::isOpen( void ) const
 void CS3310DIO::close( void )
 {
   if ( isOpen() ) {
+    DIO->lock();
     // CS=1, MUTE=0, ZCEN=1:
-    DIO->write( CS, true );
-    DIO->write( MUTE, false );
-    DIO->write( ZCEN, true );
+    DIO->writeUnlocked( CS, true );
+    DIO->writeUnlocked( MUTE, false );
+    DIO->writeUnlocked( ZCEN, true );
     DIO->freeLines( DIOId );
+    DIO->unlock();
   }
 
   Info.clear();
@@ -267,7 +272,7 @@ int CS3310DIO::attenuate( int di, double &decibel )
   if ( di < 0 || di >= 2 )
     return InvalidDevice;
 
-  if ( !isOpen() )
+  if ( DIO == 0 )
     return NotOpen;
 
   int r = 0;
@@ -296,7 +301,7 @@ int CS3310DIO::attenuate( int di, double &decibel )
   int ar = 0;
   for ( int n=0; n<Tries; n++ ) {
     ar = write();
-    // ar = 0; // enable this for testing output of DIO without attached atenuator chip
+    ar = 0; // enable this for testing output of DIO without attached atenuator chip
     if ( ar == 0 )
       break;
   }
@@ -317,7 +322,7 @@ int CS3310DIO::testAttenuate( int di, double &decibel )
   if ( di < 0 || di >= 2 )
     return InvalidDevice;
 
-  if ( !isOpen() )
+  if ( DIO == 0 )
     return NotOpen;
 
   int r = 0;
@@ -348,7 +353,7 @@ int CS3310DIO::testAttenuate( int di, double &decibel )
 
 int CS3310DIO::setZeroCrossing( bool enable )
 {
-  if ( !isOpen() )
+  if ( DIO == 0 )
     return NotOpen;
 
   DIO->write( ZCEN, enable );
@@ -359,7 +364,7 @@ int CS3310DIO::setZeroCrossing( bool enable )
 
 int CS3310DIO::setMute( bool mute )
 {
-  if ( !isOpen() )
+  if ( DIO == 0 )
     return NotOpen;
 
   DIO->write( MUTE, mute );
@@ -370,7 +375,7 @@ int CS3310DIO::setMute( bool mute )
 
 int CS3310DIO::calibrate( void )
 {
-  if ( !isOpen() )
+  if ( DIO == 0 )
     return NotOpen;
 
   // calibrate chip:
@@ -386,7 +391,7 @@ int CS3310DIO::calibrate( void )
 
 int CS3310DIO::write( void )
 {
-  if ( !isOpen() )
+  if ( DIO == 0 )
     return NotOpen;
 
   // write attenuation levels:
@@ -395,44 +400,44 @@ int CS3310DIO::write( void )
   //#define NSLEEP nanosleep( &ts, NULL );
 #define NSLEEP
 
-  DIO->write( CS, false );          // CS\ = 0 low
-  DIO->write( STROBE, false );      // Strobe (D0, Sclk) = 0 low
+  DIO->lock();
+  DIO->writeUnlocked( CS, false );          // CS\ = 0 low
+  DIO->writeUnlocked( STROBE, false );      // Strobe (D0, Sclk) = 0 low
+  NSLEEP
 
   // output levels:
   for ( int k=0; k<2; k++ ) {
     for ( int i=7; i>=0; i-- ) {
       bool data = (Level[k] >> i) & 0x01;
-      DIO->write( DATAOUT, data );  // write one bit
+      DIO->writeUnlocked( DATAOUT, data );  // write one bit
+      DIO->writeUnlocked( STROBE, true );   // Strobe (D0, Sclk) = 1 high
       NSLEEP
-      DIO->write( STROBE, true );   // Strobe (D0, Sclk) = 1 high
-      NSLEEP
-      DIO->write( STROBE, false );  // Strobe (D0, Sclk) = 0 low
+      DIO->writeUnlocked( STROBE, false );  // Strobe (D0, Sclk) = 0 low
       NSLEEP
     }
   }
-
+  
   // output levels again and read back:
   unsigned char buffer[2];
   for ( int k=0; k<2; k++ ) {
     buffer[k] = 0;
     for ( int i=7; i>=0; i-- ) {
       bool data = (Level[k] >> i) & 0x01;
-      DIO->write( DATAOUT, data );  // write one bit
-      NSLEEP
-      DIO->write( STROBE, true );   // Strobe (D0, Sclk) = 1 high
+      DIO->writeUnlocked( DATAOUT, data );  // write one bit
+      DIO->writeUnlocked( STROBE, true );   // Strobe (D0, Sclk) = 1 high
       bool val = false;
-      DIO->read( DATAIN, val );     // read one bit
+      DIO->readUnlocked( DATAIN, val );     // read one bit
       buffer[k] = buffer[k] << 1;
       if ( val )
 	buffer[k] |= 1;
       NSLEEP
-      DIO->write( STROBE, false );  // Strobe (D0, Sclk) = 0 low
+      DIO->writeUnlocked( STROBE, false );  // Strobe (D0, Sclk) = 0 low
       NSLEEP
     }
   }
 
-  NSLEEP
-  DIO->write( CS, true );          // CS\ = 1 high
+  DIO->writeUnlocked( CS, true );          // CS\ = 1 high
+  DIO->unlock();
 
   if ( buffer[0] != Level[0] || 
        buffer[1] != Level[1] )

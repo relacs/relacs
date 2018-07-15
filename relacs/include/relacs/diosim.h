@@ -1,6 +1,6 @@
 /*
   relacs/diosim.h
-  Implementation of DigitialIO simulating an digital I/O device.
+  Implementation of DigitialIO simulating a digital I/O device.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -33,7 +33,7 @@ namespace relacs {
 \class DIOSim
 \author Jan Benda
 \version 1.0
-\brief Implementation of DigitialIO simulating an digital I/O device.
+\brief Implementation of DigitialIO simulating a digital I/O device.
 */
 
 class DIOSim : public DigitalIO
@@ -132,7 +132,7 @@ public:
         \return 0 on success, otherwise a negative number indicating
         the error.
 	\sa configureLines(), lineConfiguration() */
-  virtual int configureLine( int line, bool output );
+  virtual int configureLineUnlocked( int line, bool output ) = 0;
     /*! Configure digital I/O lines specified by \a lines for input
         (0) or output (1) according to \a output.
 	When reimplementing this function, call this function on success.
@@ -155,7 +155,7 @@ public:
         output line (\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( int line, bool val ) = 0;
+  virtual int writeUnlocked( int line, bool val ) = 0;
     /*! Read from digital I/O line \a line and return value in \a val.
         \param[in] line the digital line (not its bitmask!)
         \param[out] val the value that was read from to the digital
@@ -163,7 +163,7 @@ public:
         \return 0 on success, otherwise a negative number indicating
 	the error
         \sa write() */
-  virtual int read( int line, bool &val ) const = 0;
+  virtual int readUnlocked( int line, bool &val ) const = 0;
 
     /*! Write \a val to the digital I/O lines defined in \a lines.
         \param[in] lines a bit mask selecting the digital lines to be

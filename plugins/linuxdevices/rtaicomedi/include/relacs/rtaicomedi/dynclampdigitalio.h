@@ -83,7 +83,7 @@ public:
     /*! Configure digital I/O line \a line for input (\a output = \c false) or output 
         (\a output = \c true).
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configureLine( unsigned int line, bool output );
+  virtual int configureLineUnlocked( unsigned int line, bool output );
     /*! Configure digital I/O lines specified by \a lines for input (0) or output (1)
         according to \a output.
         \param[in] lines a bit mask of the digital lines to be configured.
@@ -98,7 +98,7 @@ public:
 	(\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( unsigned int line, bool val );
+  virtual int writeUnlocked( unsigned int line, bool val );
     /*! Write \a val to the digital I/O lines defined in \a lines.
         \param[in] lines a bit mask selecting the digital lines to be written.
         \param[in] val a bit mask indicating what should be written to the digital output lines
@@ -113,7 +113,7 @@ public:
 	(\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
-  virtual int read( unsigned int line, bool &val );
+  virtual int readUnlocked( unsigned int line, bool &val );
     /*! Read digital I/O lines and return them in \a val.
         \param[in] lines a bit mask selecting the digital lines from which to read.
         \param[out] val a bit field returning the values read from to the digital input lines

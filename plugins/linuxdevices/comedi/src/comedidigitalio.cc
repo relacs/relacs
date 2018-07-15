@@ -172,7 +172,7 @@ int ComediDigitalIO::lines( void ) const
 }
 
 
-int ComediDigitalIO::configureLine( unsigned int line, bool output )
+int ComediDigitalIO::configureLineUnlocked( unsigned int line, bool output )
 {
   int direction = output ? COMEDI_OUTPUT : COMEDI_INPUT;
   if ( comedi_dio_config( DeviceP, SubDevice, line, direction ) != 0 ) {
@@ -208,7 +208,7 @@ int ComediDigitalIO::configureLines( unsigned int lines, unsigned int output )
 }
 
 
-int ComediDigitalIO::write( unsigned int line, bool val )
+int ComediDigitalIO::writeUnlocked( unsigned int line, bool val )
 {
   if ( comedi_dio_write( DeviceP, SubDevice, line, val ) != 1 ) {
     comedi_perror( "ComediDigitalIO::write()" );
@@ -221,7 +221,7 @@ int ComediDigitalIO::write( unsigned int line, bool val )
 }
 
 
-int ComediDigitalIO::read( unsigned int line, bool &val )
+int ComediDigitalIO::readUnlocked( unsigned int line, bool &val )
 {
   unsigned int bit = 0;
   if ( comedi_dio_read( DeviceP, SubDevice, line, &bit ) != 1 ) {

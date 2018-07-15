@@ -20,6 +20,7 @@
 */
 
 #include <iostream>
+#include <QMutexLocker>
 #include <relacs/daqflex/daqflexdigitalio.h>
 using namespace std;
 using namespace relacs;
@@ -106,13 +107,13 @@ void DAQFlexDigitalIO::close( void )
 
 int DAQFlexDigitalIO::lines( void ) const
 { 
-  if ( !isOpen() )
+  if ( DAQFlexDevice == NULL )
     return 0;
   return DAQFlexDevice->dioLines();
 }
 
 
-int DAQFlexDigitalIO::configureLine( unsigned int line, bool output )
+int DAQFlexDigitalIO::configureLineUnlocked( unsigned int line, bool output )
 {
   string r = DAQFlexDevice->sendMessage( "DIO{0/" + Str( line ) + "}:DIR=" + ( output ? "OUT" : "IN" ) );
   return DAQFlexDevice->failed() || r.empty() ? WriteError : 0;
@@ -121,6 +122,7 @@ int DAQFlexDigitalIO::configureLine( unsigned int line, bool output )
 
 int DAQFlexDigitalIO::configureLines( unsigned int lines, unsigned int output )
 {
+  QMutexLocker diolocker( mutex() );
   unsigned int bit = 1;
   for ( int channel=0; channel<DAQFlexDigitalIO::lines(); channel++ ) {
     if ( ( lines & bit ) > 0 ) {
@@ -137,7 +139,7 @@ int DAQFlexDigitalIO::configureLines( unsigned int lines, unsigned int output )
 }
 
 
-int DAQFlexDigitalIO::write( unsigned int line, bool val )
+int DAQFlexDigitalIO::writeUnlocked( unsigned int line, bool val )
 {
   if ( (int)line >= lines() )
     return WriteError;
@@ -153,7 +155,7 @@ int DAQFlexDigitalIO::write( unsigned int line, bool val )
 }
 
 
-int DAQFlexDigitalIO::read( unsigned int line, bool &val )
+int DAQFlexDigitalIO::readUnlocked( unsigned int line, bool &val )
 {
   if ( (int)line >= lines() )
     return ReadError;
@@ -168,6 +170,7 @@ int DAQFlexDigitalIO::read( unsigned int line, bool &val )
 
 int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
 {
+  QMutexLocker diolocker( mutex() );
   unsigned int rv = Levels;
   rv &= ~lines; // keep the levels of the non-specified lines
   rv |= val & lines;  // set the values of the specified lines
@@ -182,6 +185,7 @@ int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
 
 int DAQFlexDigitalIO::readLines( unsigned int lines, unsigned int &val )
 {
+  QMutexLocker diolocker( mutex() );
   string rs = "DIO{0}:VALUE";
   string r = DAQFlexDevice->sendMessage( "?" + rs );
   if ( DAQFlexDevice->failed() || r.substr(0, rs.size() ) != rs )

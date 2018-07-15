@@ -217,7 +217,7 @@ const Options &DynClampDigitalIO::settings( void ) const
 }
 
 
-int DynClampDigitalIO::configureLine( unsigned int line, bool output )
+int DynClampDigitalIO::configureLineUnlocked( unsigned int line, bool output )
 {
   unsigned int lines = 1 << line;
   unsigned int bits = 0;
@@ -252,7 +252,7 @@ int DynClampDigitalIO::configureLines( unsigned int lines, unsigned int output )
 }
 
 
-int DynClampDigitalIO::write( unsigned int line, bool val )
+int DynClampDigitalIO::writeUnlocked( unsigned int line, bool val )
 {
   unsigned int mask = 1 << line;
   unsigned int bits = val ? mask : 0;
@@ -293,7 +293,7 @@ int DynClampDigitalIO::writeLines( unsigned int lines, unsigned int val )
 }
 
 
-int DynClampDigitalIO::read( unsigned int line, bool &val )
+int DynClampDigitalIO::readUnlocked( unsigned int line, bool &val )
 {
   unsigned int mask = 1 << line;
   unsigned int bits = 0;

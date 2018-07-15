@@ -148,14 +148,24 @@ public:
   bool allocatedLine( unsigned int line );
 
     /*! Configure digital I/O line \a line for input (\a output = \c
-        false) or output (\a output = \c true).
+        false) or output (\a output = \c true) while locking the device.
+	When reimplementing this function, call this function on success.
+        \param[in] line the digital line (not its bitmask!)
+        \param[in] output \c true if this line should be configured for output.
+        \return 0 on success, otherwise a negative number indicating
+        the error.
+	\sa configureLineUnlocked(), configureLines(),
+	lineConfiguration(), lock() */
+  int configureLine( unsigned int line, bool output );
+    /*! Configure digital I/O line \a line for input (\a output = \c
+        false) or output (\a output = \c true) without locking the device.
 	When reimplementing this function, call this function on success.
         \param[in] line the digital line (not its bitmask!)
         \param[in] output \c true if this line should be configured for output.
         \return 0 on success, otherwise a negative number indicating
         the error.
 	\sa configureLines(), lineConfiguration() */
-  virtual int configureLine( unsigned int line, bool output );
+  virtual int configureLineUnlocked( unsigned int line, bool output );
     /*! Configure digital I/O lines specified by \a lines for input
         (0) or output (1) according to \a output.
 	When reimplementing this function, call this function on success.
@@ -172,21 +182,38 @@ public:
 	\sa configureLine(), configureLines() */
   bool lineConfiguration( unsigned int line ) const;
 
-    /*! Write \a val to the digital I/O line \a line.
+    /*! Write \a val to the digital I/O line \a line while locking the device.
+        \param[in] line the digital line (not its bitmask!)
+        \param[in] val the value that should be written to the digital
+        output line (\c true: high, \c false: low).
+        \return 0 on success, otherwise a negative number indicating the error
+        \sa writeUnlocked(), writeLines(), read(), lock() */
+  int write( unsigned int line, bool val );
+    /*! Write \a val to the digital I/O line \a line without locking the device.
         \param[in] line the digital line (not its bitmask!)
         \param[in] val the value that should be written to the digital
         output line (\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( unsigned int line, bool val ) = 0;
-    /*! Read from digital I/O line \a line and return value in \a val.
+  virtual int writeUnlocked( unsigned int line, bool val ) = 0;
+    /*! Read from digital I/O line \a line and return value in \a val
+        while locking the device.
+        \param[in] line the digital line (not its bitmask!)
+        \param[out] val the value that was read from to the digital
+        input line (\c true: high, \c false: low).
+        \return 0 on success, otherwise a negative number indicating
+	the error
+        \sa readUnlocked(), readLines(), write(), lock() */
+  int read( unsigned int line, bool &val );
+    /*! Read from digital I/O line \a line and return value in \a val
+        without locking the device.
         \param[in] line the digital line (not its bitmask!)
         \param[out] val the value that was read from to the digital
         input line (\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating
 	the error
         \sa write() */
-  virtual int read( unsigned int line, bool &val ) = 0;
+  virtual int readUnlocked( unsigned int line, bool &val ) = 0;
 
     /*! Write \a val to the digital I/O lines defined in \a lines.
         \param[in] lines a bit mask selecting the digital lines to be
@@ -235,6 +262,9 @@ public:
 	\return 0 on success, a Device error code on failure.
 	\sa setSyncPulse() */
   virtual int clearSyncPulse( int modemask, int modebits );
+
+  using Device::lock;
+  using Device::unlock;
 
 
 protected:
