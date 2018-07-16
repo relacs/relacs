@@ -38,23 +38,25 @@ namespace auditory {
 \brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
-\version 2.8 (July 25, 2017)
+\version 2.8 (July 16, 2018)
 
 \par Options
-- \c intensity=80dB: Intensity (\c number)
+\c Stimulus
+- \c intensity=80dB SPL: Sound intensity (\c number)
 - \c minintensity=0dB SPL: Minimum sound intensity (\c number)
-- \c maxintensity=100dB SPL: Maximum sound intensity (\c number)
+- \c maxintensity=120dB SPL: Maximum sound intensity (\c number)
 - \c mute=false: No stimulus (\c boolean)
+- \c frequency=5kHz: Frequency of stimulus (\c number)
+- \c minfreq=0kHz: Minimum allowed frequency (\c number)
+- \c maxfreq=1000kHz: Maximum allowed frequency (\c number)
+- \c waveform=sine: Waveform of stimulus (\c string)
+- \c ramp=2ms: Ramp (\c number)
+\c Settings
+- \c side=left: Speaker (\c string)
+- \c repeats=0: Number of repetitions (\c integer)
 - \c duration=50ms: Duration of stimulus (\c number)
 - \c pause=500ms: Duration of pause (\c number)
 - \c prepause=50ms: Part of pause before stimulus (\c number)
-- \c frequency=5kHz: Frequency of stimulus (\c number)
-- \c minfreq=2kHz: Minimum allowed frequency (\c number)
-- \c maxfreq=50kHz: Maximum allowed frequency (\c number)
-- \c waveform=sine: Waveform of stimulus (\c string)
-- \c ramp=2ms: Ramp (\c number)
-- \c side=left: Speaker (\c string)
-- \c repeats=0: Number of repetitions (\c integer)
 - \c adjust=true: Adjust input gains (\c boolean)
 - \c saving=true: Save raw data (\c boolean)
 - \c setbestside=never: Set the sessions's best side (\c string)

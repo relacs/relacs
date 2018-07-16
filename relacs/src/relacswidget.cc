@@ -1049,6 +1049,7 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
   }
   else {
     printlog( "! failed to write signal: " + signal.errorText() );
+    QCoreApplication::postEvent( this, new RelacsWidgetEvent( 3, "Error in analog output: " + signal.errorText() ) );
     if ( IRawData.failed() )
       printlog( "! error in restarting analog input: " + IRawData.errorText() );
   }

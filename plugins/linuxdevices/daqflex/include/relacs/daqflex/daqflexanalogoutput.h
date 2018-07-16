@@ -173,6 +173,8 @@ private:
     /*! True if the analog input is to be used to drive the analog output operation. */
   bool UseAIClock;
 
+  double LevelMaxVolt;
+
   struct Calibration {
     double Offset;
     double Slope;

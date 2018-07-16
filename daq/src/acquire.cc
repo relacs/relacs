@@ -368,8 +368,10 @@ const TraceSpec &Acquire::outTrace( const string &name ) const
 
 int Acquire::applyOutTrace( OutData &signal ) const
 {
-  if ( signal.trace() < 0 && signal.traceName().empty() )
+  if ( signal.trace() < 0 && signal.traceName().empty() ) {
+    signal.addError( DaqError::InvalidTrace );
     return -1;
+  }
 
   int inx = -1;
   if ( ! signal.traceName().empty() )
@@ -378,7 +380,7 @@ int Acquire::applyOutTrace( OutData &signal ) const
     inx = signal.trace();
   if ( inx < 0 || inx >= (int)OutTraces.size() ) {
     signal.addError( DaqError::InvalidTrace );
-    return -2;
+    return -1;
   }
 
   signal.setTrace( inx, "" );
@@ -392,7 +394,7 @@ int Acquire::applyOutTrace( OutList &signal ) const
   for ( int k=0; k<signal.size(); k++ ) {
     int rr = applyOutTrace( signal[k] );
     if ( rr < 0 )
-      r = rr;
+      r = -1;
   }
   return r;
 }
@@ -1895,6 +1897,7 @@ int Acquire::write( OutData &signal, bool setsignaltime )
 
   // get ao device:
   int di = signal.device();
+  
   if ( di < 0 ) {
     signal.addError( DaqError::NoDevice );
     signal.setDevice( 0 );

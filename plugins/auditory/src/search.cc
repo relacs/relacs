@@ -49,7 +49,7 @@ const double Search::LongFrequencyStep = 5000.0;
 
 
 Search::Search( void )
-  : RePro( "Search", "auditory", "Jan Benda and Christian Machens", "2.7", "July 23, 2017" )
+  : RePro( "Search", "auditory", "Jan Benda and Christian Machens", "2.8", "July 16, 2018" )
 {
   // parameter:
   Intensity = 80.0;
@@ -68,20 +68,27 @@ Search::Search( void )
   Ramp = 0.002;
 
   // options:
+  newSection( "Stimulus" );
   addNumber( "intensity", "Sound intensity",  Intensity, 0.0, 200.0, ShortIntensityStep, "dB SPL", "dB SPL", "%.1f" ).setActivation( "mute", "false" );
   addNumber( "minintensity", "Minimum sound intensity",  MinIntensity, 0.0, 200.0, ShortIntensityStep, "dB SPL", "dB SPL", "%.1f" ).setActivation( "mute", "false" );
   addNumber( "maxintensity", "Maximum sound intensity",  MaxIntensity, 0.0, 200.0, ShortIntensityStep, "dB SPL", "dB SPL", "%.1f" ).setActivation( "mute", "false" );
   addBoolean( "mute", "No stimulus", false );
-  addNumber( "duration", "Duration of stimulus", Duration, MinDuration, MaxDuration, ShortDurationStep, "sec", "ms" );
-  addNumber( "pause", "Duration of pause", Pause, MinPause, MaxPause, ShortPauseStep, "sec", "ms" );
-  addNumber( "prepause", "Part of pause before stimulus", PrePause, 0.0, MaxPause, ShortPauseStep, "sec", "ms" );
+
   addNumber( "frequency", "Frequency of stimulus", Frequency, 0.0, 1000000.0, ShortFrequencyStep, "Hz", "kHz" );
   addNumber( "minfreq", "Minimum allowed frequency", MinFrequency, 0.0, 1000000.0, ShortFrequencyStep, "Hz", "kHz" );
   addNumber( "maxfreq", "Maximum allowed frequency", MaxFrequency, 0.0, 1000000.0, ShortFrequencyStep, "Hz", "kHz" );
+
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
   addNumber( "ramp", "Ramp", Ramp, 0.0, 10.0, 0.001, "sec", "ms" );
+  
+  newSection( "Settings" );
   addSelection( "side", "Speaker", "left|right|best" );
   addInteger( "repeats", "Number of repetitions", 0, 0, 10000, 2 ).setStyle( OptWidget::SpecialInfinite );
+
+  addNumber( "duration", "Duration of stimulus", Duration, MinDuration, MaxDuration, ShortDurationStep, "sec", "ms" );
+  addNumber( "pause", "Duration of pause", Pause, MinPause, MaxPause, ShortPauseStep, "sec", "ms" );
+  addNumber( "prepause", "Part of pause before stimulus", PrePause, 0.0, MaxPause, ShortPauseStep, "sec", "ms" );
+
   addBoolean( "adjust", "Adjust input gains", true );
   addBoolean( "saving", "Save raw data", true );
   addSelection( "setbestside", "Set the sessions's best side", "never|no session|always" );
@@ -246,6 +253,7 @@ int Search::main( void )
   signal.setDelay( PrePause );
   double meanintensity = 0.0;
   NewSignal = true;
+  int status = Completed;
 
   // plot trace:
   tracePlotSignal( 1.25*Duration, 0.125*Duration );
@@ -289,41 +297,43 @@ int Search::main( void )
 
     // output stimulus:
     write( signal );
-    if ( signal.error() ) {
-      // Attenuator overflow or underflow.
-      // Set intensity appropriately and write stimulus again.
-      if ( signal.underflow() || signal.overflow() ) {
-	if ( signal.underflow() ) {
-	  Intensity = ceil( signal.intensity() - meanintensity );
-	  if ( PrevIntensity > Intensity )
-	    Intensity = PrevIntensity;
-	}
-	else {
-	  Intensity = floor( signal.intensity() - meanintensity );
-	  if ( PrevIntensity < Intensity )
-	    Intensity = PrevIntensity;
-	}
-	PrevIntensity = Intensity;
-	unsetNotify();
-	setNumber( "intensity", Intensity );
-	if ( KeepChanges )
-	  setToDefault( "intensity" );
-	setNotify();
-	signal.setIntensity( Intensity > 0 ? Intensity + meanintensity : OutData::MuteIntensity );
-	postCustomEvent( 12 );
-	write( signal );
-	if ( signal.error() ) {
-	  writeZero( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0] );
-	  return Failed;
-	}
+    // Attenuator overflow or underflow.
+    // Set intensity appropriately and write stimulus again.
+    if ( signal.underflow() || signal.overflow() ) {
+      if ( signal.underflow() ) {
+	Intensity = ceil( signal.intensity() - meanintensity );
+	if ( PrevIntensity > Intensity )
+	  Intensity = PrevIntensity;
       }
+      else {
+	Intensity = floor( signal.intensity() - meanintensity );
+	if ( PrevIntensity < Intensity )
+	  Intensity = PrevIntensity;
+      }
+      PrevIntensity = Intensity;
+      unsetNotify();
+      setNumber( "intensity", Intensity );
+      if ( KeepChanges )
+	setToDefault( "intensity" );
+      setNotify();
+      signal.setIntensity( Intensity > 0 ? Intensity + meanintensity : OutData::MuteIntensity );
+      postCustomEvent( 12 );
+      write( signal );
+      if ( signal.error() ) {
+	status = Failed;
+	break;
+      }
+    }
+    else if ( signal.error() ) {
+      status = Failed;
+      break;
     }
 
     sleepOn( Duration + Pause );
     timeStamp();
     if ( interrupt() ) {
-      writeZero( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0] );
-      return Aborted;
+      status = Aborted;
+      break;
     }
 
     // adjust gain of daq board:
@@ -343,7 +353,7 @@ int Search::main( void )
 
   setMessage();
   writeZero( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0] );
-  return Completed;
+  return status;
 }
 
 

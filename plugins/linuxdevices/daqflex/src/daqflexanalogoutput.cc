@@ -36,6 +36,7 @@ DAQFlexAnalogOutput::DAQFlexAnalogOutput( void )
   : AnalogOutput( "DAQFlexAnalogOutput", DAQFlexAnalogIOType )
 {
   UseAIClock = false;
+  LevelMaxVolt = 3.0;
   IsPrepared = false;
   NoMoreData = true;
   DAQFlexDevice = NULL;
@@ -261,14 +262,22 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     if ( BipolarRange.size() > 0 ) {
       sigs[k].setMinVoltage( -BipolarRange[0] );
       sigs[k].setMaxVoltage( BipolarRange[0] );
-      if ( ! sigs[k].noLevel() )
-	sigs[k].multiplyScale( BipolarRange[0] );
+      if ( ! sigs[k].noLevel() ) {
+	double maxv = LevelMaxVolt;
+	if ( maxv < 1e-8 )
+	  maxv = BipolarRange[0];
+	sigs[k].multiplyScale( maxv );
+      }
     }
     else {
       sigs[k].setMinVoltage( 0.0 );
       sigs[k].setMaxVoltage( UnipolarRange[0] );
-      if ( ! sigs[k].noLevel() )
-	sigs[k].multiplyScale( UnipolarRange[0] );
+      if ( ! sigs[k].noLevel() ) {
+	double maxv = LevelMaxVolt;
+	if ( maxv < 1e-8 )
+	  maxv = UnipolarRange[0];
+	sigs[k].multiplyScale( maxv );
+      }
     }
 
     // apply range:
@@ -488,14 +497,22 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	if ( BipolarRange.size() > 0 ) {
 	  ol[k].setMinVoltage( -BipolarRange[0] );
 	  ol[k].setMaxVoltage( BipolarRange[0] );
-	  if ( ! ol[k].noLevel() )
-	    ol[k].multiplyScale( BipolarRange[0] );
+	  if ( ! ol[k].noLevel() ) {
+	    double maxv = LevelMaxVolt;
+	    if ( maxv < 1e-8 )
+	      maxv = BipolarRange[0];
+	    ol[k].multiplyScale( maxv );
+	  }
 	}
 	else {
 	  ol[k].setMinVoltage( 0.0 );
 	  ol[k].setMaxVoltage( UnipolarRange[0] );
-	  if ( ! ol[k].noLevel() )
-	    ol[k].multiplyScale( UnipolarRange[0] );
+	  if ( ! ol[k].noLevel() ) {
+	    double maxv = LevelMaxVolt;
+	    if ( maxv < 1e-8 )
+	      maxv = UnipolarRange[0];
+	    ol[k].multiplyScale( maxv );
+	  }
 	}
 	// check for signal overflow/underflow:
 	if ( ol[k].noLevel() ) {
