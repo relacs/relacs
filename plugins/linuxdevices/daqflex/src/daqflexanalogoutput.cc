@@ -807,6 +807,8 @@ int DAQFlexAnalogOutput::stop( void )
 
   lock();
   DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
+  if ( DAQFlexDevice->failed() )
+    cerr << "FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
   unlock();
 
   stopWrite();
@@ -821,14 +823,22 @@ int DAQFlexAnalogOutput::reset( void )
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
+    /*
+The Analog Output should be already stopped when reset is called!
     DAQFlexDevice->sendControlTransfer( "AOSCAN:STOP" );
-
+    if ( DAQFlexDevice->failed() )
+      cerr << "RESET: FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
+    */
     // clear underrun condition:
     DAQFlexDevice->sendMessageUnlocked( "AOSCAN:RESET" );
+    if ( DAQFlexDevice->failed() )
+      cerr << "RESET: FAILED TO RESET ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
     // XXX the following blocks for quite a while at high rates! See DAQFlexCore for more comments.
     // what is about still ongoing analog input transfers ?
     // We should only call this on an underrun condition!
     DAQFlexDevice->clearWrite();
+    if ( DAQFlexDevice->failed() )
+      cerr << "RESET: FAILED TO CLEAR ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
     //  DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" ); // XXX the output is not used....
   }
   
@@ -859,7 +869,8 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
   // We get underrun errors although the stimulus seems to be put out completely.
   // XXX This needs to be checked with appropriate stimuli!
   if ( ! NoMoreData && response.find( "UNDERRUN" ) != string::npos ) {
-    Sigs.addError( DaqError::OverflowUnderrun );
+    // XXX Where do we ever check for underrun except for the end of the signal?
+    //Sigs.addError( DaqError::OverflowUnderrun );
     r = Underrun;
   }
   unlock();

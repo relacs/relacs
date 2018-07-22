@@ -438,15 +438,23 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 
   bool tookao = ( TakeAO && aosp != 0 && DAQFlexAO != 0 && DAQFlexAO->prepared() );
 
-  if ( tookao ) {
-    if ( DAQFlexAO->useAIRate() )
-      DAQFlexDevice->sendCommands( "AOSCAN:START", "AISCAN:START" );
+  for ( int k=0; k<5; k++ ) {
+    if ( tookao ) {
+      if ( DAQFlexAO->useAIRate() )
+	DAQFlexDevice->sendCommands( "AOSCAN:START", "AISCAN:START" );
+      else
+	DAQFlexDevice->sendCommands( "AISCAN:START", "AOSCAN:START" );
+    }
     else
-      DAQFlexDevice->sendCommands( "AISCAN:START", "AOSCAN:START" );
+      DAQFlexDevice->sendCommand( "AISCAN:START" );
+    if ( DAQFlexDevice->success() ) {
+      if ( k > 0 )
+	cerr << "STARTED ANALOG INPUT ON TRIAL " << k << "\n";
+      break;
+    }
   }
-  else
-    DAQFlexDevice->sendCommand( "AISCAN:START" );
   if ( DAQFlexDevice->failed() ) {
+    cerr << "FAILED TO START ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
     Traces->setErrorStr( DAQFlexDevice->daqflexErrorStr() );
     return -1;
   } 
@@ -622,7 +630,13 @@ int DAQFlexAnalogInput::stop( void )
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
     DAQFlexDevice->sendControlTransfer( "AISCAN:STOP" );
+    if ( DAQFlexDevice->failed() )
+      cerr << "FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
+    /*
     DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
+    if ( DAQFlexDevice->failed() )
+      cerr << "FAILED TO RESET ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
+    */
   }
   unlock();
 
@@ -645,13 +659,20 @@ int DAQFlexAnalogInput::reset( void )
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
-    if ( IsRunning )
+    if ( IsRunning ) {
       DAQFlexDevice->sendControlTransfer( "AISCAN:STOP" );
+      if ( DAQFlexDevice->failed() )
+	cerr << "RESET: FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
+    }
 
     DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
+    if ( DAQFlexDevice->failed() )
+      cerr << "RESET: FAILED TO RESET ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
 
     // clear overrun condition:
     DAQFlexDevice->clearRead();
+    if ( DAQFlexDevice->failed() )
+      cerr << "RESET: FAILED TO CLEAR ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
   }
 
   // flush:

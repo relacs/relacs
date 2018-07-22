@@ -1082,7 +1082,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
 
   }
- 
+
   // prepare reading from daq boards:
   if ( gainchanged ) {
     for ( unsigned int i=0; i<AI.size(); i++ ) {
