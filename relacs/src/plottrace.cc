@@ -1753,7 +1753,19 @@ void PlotTrace::keyPressEvent( QKeyEvent *event )
   }
 
   case Qt::Key_Equal:
+  case Qt::Key_Plus:
     zoomIn();
+    break;
+
+  case Qt::Key_Minus:
+    zoomOut();
+    break;
+
+  case Qt::Key_Y:
+    if ( event->modifiers() & Qt::SHIFT )
+      zoomInVertically();
+    else
+      zoomOutVertically();
     break;
 
   default: {
