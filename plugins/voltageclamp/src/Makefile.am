@@ -4,7 +4,8 @@ include ${top_srcdir}/moc4.mk
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
-    libvoltageclampactivation.la
+    libvoltageclampactivation.la \
+    libvoltageclampinactivation.la
 
 
 
@@ -46,10 +47,51 @@ libvoltageclampactivation_la_include_HEADERS = $(HEADER_PATH)/activation.h
 
 
 
+libvoltageclampinactivation_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libvoltageclampinactivation_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libvoltageclampinactivation_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libvoltageclampinactivation_la_OBJECTS) : moc_inactivation.cc
+
+libvoltageclampinactivation_la_SOURCES = inactivation.cc
+
+libvoltageclampinactivation_la_includedir = $(pkgincludedir)/voltageclamp
+
+libvoltageclampinactivation_la_include_HEADERS = $(HEADER_PATH)/inactivation.h
+
+
+
 check_PROGRAMS = \
-    linktest_libvoltageclampactivation_la
+    linktest_libvoltageclampactivation_la \
+    linktest_libvoltageclampinactivation_la
 
 linktest_libvoltageclampactivation_la_SOURCES = linktest.cc
 linktest_libvoltageclampactivation_la_LDADD = libvoltageclampactivation.la
+
+linktest_libvoltageclampinactivation_la_SOURCES = linktest.cc
+linktest_libvoltageclampinactivation_la_LDADD = libvoltageclampinactivation.la
 
 TESTS = $(check_PROGRAMS)
