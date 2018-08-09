@@ -23,6 +23,7 @@
 #define _RELACS_EPHYS_NEURONMODELS_H_ 1
 
 #include <relacs/model.h>
+#include <relacs/ephys/traces.h>
 #include <relacs/spikingneuron.h>
 using namespace relacs;
 
@@ -66,7 +67,7 @@ input current has been applied.
 */
 
 
-class NeuronModels : public Model
+class NeuronModels : public Model, public ephys::Traces
 {
 
 public:
@@ -123,6 +124,8 @@ public:
   virtual OptWidget *dialogOptions( OptDialog *od, string *tabhotkeys=0 );
 
   double CurrentInput;
+
+  double VCGain;
 
   double GMC;
   double EMC;

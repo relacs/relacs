@@ -219,6 +219,7 @@ RELACS_PLUGINSET([efield],[efield],[base])
 RELACS_PLUGINSET([efish],[efish],[base ephys efield])
 RELACS_NOPLUGINSET([multielectrode],[multielectrode],[ephys])
 RELACS_PLUGINSET([photoreceptors],[photoreceptors],[])
+RELACS_PLUGINSET([voltageclamp],[voltageclamp],[])
 
 AC_SUBST([RELACS_PLUGINS_SUBDIRS])
 AC_SUBST([RELACS_PLUGINS_DIST_SUBDIRS])
@@ -296,6 +297,7 @@ AC_CONFIG_FILES([plugins/linuxdevices/daqflex/relacslocal], [chmod a+x plugins/l
 AC_CONFIG_FILES([plugins/linuxdevices/attcs3310/relacslocal], [chmod a+x plugins/linuxdevices/attcs3310/relacslocal])
 AC_CONFIG_FILES([plugins/linuxdevices/misc/relacslocal], [chmod a+x plugins/linuxdevices/misc/relacslocal])
 AC_CONFIG_FILES([plugins/photoreceptors/relacslocal], [chmod a+x plugins/photoreceptors/relacslocal])
+AC_CONFIG_FILES([plugins/voltageclamp/relacslocal], [chmod a+x plugins/voltageclamp/relacslocal])
 
 #################################################
 ## RELACS general

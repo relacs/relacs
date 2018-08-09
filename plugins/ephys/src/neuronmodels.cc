@@ -143,8 +143,11 @@ void NeuronModels::process( const OutData &source, OutData &dest )
 
 void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 {
-  CurrentInput = signal( 0.001 * t, 0 );
+  CurrentInput = signal( 0.001 * t, CurrentOutput[0] );
   double s = ( CurrentInput + NM->offset() ) * NM->gain();
+  double vccurrent = VCGain*(x[0] - signal( 0.001 * t, PotentialOutput[0] ));
+  CurrentInput -= vccurrent;
+  s -= vccurrent;
   s += noiseFac() * rnd.gaussian();
 
   if ( MMCInx >= 0 )
@@ -221,6 +224,7 @@ void NeuronModels::addOptions( void )
   addNumber( "noised", "Intensity of current noise", 0.0, 0.0, 100.0, 1.0 );
   addNumber( "deltat", "Delta t", 0.005, 0.0, 1.0, 0.001, "ms" );
   addSelection( "integrator", "Method of integration", "Euler|Midpoint|Runge-Kutta 4" );
+  addNumber( "vcgain", "Voltage-clamp gain", 100.0, 0.0, 100000.0, 10.0 );
   newSection( "Voltage-gated current 1 - activation only" );
   addNumber( "gmc", "Conductivity", 0.0, 0.0, 10000.0, 0.1 );
   addNumber( "emc", "Reversal potential", -90.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
@@ -256,6 +260,7 @@ void NeuronModels::readOptions( void )
   else
     Integrate = eulerStep;
 
+  VCGain = number( "vcgain" );
   GMC = number( "gmc" );
   EMC = number( "emc" );
   MVMC = number( "mvmc" );

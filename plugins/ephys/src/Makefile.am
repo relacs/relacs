@@ -92,6 +92,7 @@ libephysneuronmodels_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysneuronmodels_la_LIBADD = \
+    libephystraces.la \
     librelacsspikingneuron.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
