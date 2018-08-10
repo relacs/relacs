@@ -37,6 +37,7 @@ NeuronModels::NeuronModels( void )
   MMCInx = -1;
   MMHCInx = -1;
   HMHCInx = -1;
+  VCMode = false;
 }
 
 
@@ -143,12 +144,21 @@ void NeuronModels::process( const OutData &source, OutData &dest )
 
 void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 {
-  CurrentInput = signal( 0.001 * t, CurrentOutput[0] );
-  double s = ( CurrentInput + NM->offset() ) * NM->gain();
-  double vccurrent = VCGain*(x[0] - signal( 0.001 * t, PotentialOutput[0] ));
-  CurrentInput -= vccurrent;
-  s -= vccurrent;
-  s += noiseFac() * rnd.gaussian();
+  // current noise:
+  double s = noiseFac() * rnd.gaussian();
+  CurrentInput = 0.0;
+  if ( VCMode ) {
+    // voltage-clamp current:
+    double vccurrent = VCGain*(x[0] - signal( 0.001 * t, PotentialOutput[0] ));
+    CurrentInput -= vccurrent;
+    s -= vccurrent;
+  }
+  else {
+    // current-clamp current:
+    double cccurrent = signal( 0.001 * t, CurrentOutput[0] );
+    CurrentInput += cccurrent;
+    s += ( cccurrent + NM->offset() ) * NM->gain();
+  }
 
   if ( MMCInx >= 0 )
     s -= GMC*x[MMCInx]*(x[0]-EMC);
@@ -167,6 +177,12 @@ void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
     double h0mhc = 1.0/(exp(-(x[0]-HVMHC)/HWMHC)+1.0);
     dxdt[HMHCInx] = ( h0mhc - x[HMHCInx] )/TAUHMHC;
   }
+}
+
+
+void NeuronModels::notifyStimulusData( void )
+{
+  VCMode = ( stimulusData().text( "AmplifierMode" ) == "VC" );
 }
 
 
