@@ -86,7 +86,7 @@ lockMetaData() and unlockMetaData().  Whenever some of the meta data
 are set to new values, the virtual function notifyMetaData() is
 called, that you can implement according to your needs.
 
-Same stimulation related information is stored in stimulusData().
+Some stimulation related information is stored in stimulusData().
 Don't forget to lock every acces to stimulusData() with
 lockStimulusData() and unlockStimulusData().  Whenever some of the stimulus data
 are set to new values, the virtual function notifyStimulusData() is

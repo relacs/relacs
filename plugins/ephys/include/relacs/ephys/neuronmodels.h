@@ -85,6 +85,8 @@ public:
 
   virtual void operator()( double t, double *x, double *dxdt, int n );
 
+  virtual void notifyStimulusData( void );
+
   virtual Options metaData( void );
 
     /*! The integration time step. */
@@ -126,6 +128,7 @@ public:
   double CurrentInput;
 
   double VCGain;
+  bool VCMode;
 
   double GMC;
   double EMC;
