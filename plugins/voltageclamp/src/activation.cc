@@ -33,10 +33,17 @@ Activation::Activation( void )
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "holdingpotential", "Holding potential", -100.0, -200.0, 200.0, 1.0, "mV" );
-  addNumber( "testingpotential", "Testing potential", 0.0, -200.0, 200.0, 1.0, "mV" );
+
+  addNumber( "mintest", "Minimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV");
+  addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
+  addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
   // plot:
+
+//  PlotRangeSelection = false;
+
   P.lock();
+//  P.resize( 2, 2, true );
   P.setXLabel( "Time [ms]" );
   P.setYLabel( "Current [nA]" );
   P.unlock();
@@ -51,7 +58,9 @@ int Activation::main( void )
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
   double holdingpotential = number( "holdingpotential" );
-  double testingpotential = number( "testingpotential" );
+  double mintest = number( "mintest" );
+  double maxtest = number( "maxtest" );
+  double teststep = number( "teststep" );
 
   // don't print repro message:
   noMessage();
@@ -62,17 +71,9 @@ int Activation::main( void )
   holdingsignal.constWave( holdingpotential );
   holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
 
-  // stimulus:
-  OutData signal;
-  signal.setTrace( PotentialOutput[0] );
-  // signal.pulseWave( duration, -1.0,  testingpotential, holdingpotential );
-  signal.constWave( duration, -1.0,  testingpotential );
+  // clear plot
+  P.clearData();
 
-  OutData signal2;
-  signal2.setTrace( PotentialOutput[0] );
-  signal2.pulseWave( duration, -1.0,  20.0, holdingpotential );
-
-  signal.append( signal2 );
 
   // write stimulus:
   write( holdingsignal );
@@ -81,22 +82,33 @@ int Activation::main( void )
 	( repeats <= 0 || Count < repeats ) && softStop() == 0;
 	Count++ ) {
 
-    Str s = "Holding potential <b>" + Str( holdingpotential, "%.1f" ) + " mV</b>";
-    s += ", Testing potential <b>" + Str( testingpotential, "%.1f" ) + " mV</b>";
-    s += ",  Loop <b>" + Str( Count+1 ) + "</b>";
-    message( s );
+    for ( int step=mintest;  step<=maxtest; step+=teststep) {
 
-    write( signal );
-    sleep( pause );
+      Str s = "Holding potential <b>" + Str(holdingpotential, "%.1f") + " mV</b>";
+      s += ", Testing potential <b>" + Str(step, "%.1f") + " mV</b>";
+      s += ",  Loop <b>" + Str(Count + 1) + "</b>";
+      message(s);
 
-    SampleDataF currenttrace( -0.002, 0.01, trace( CurrentTrace[0] ).stepsize(), 0.0 );
-    trace( CurrentTrace[0] ).copy( signalTime(), currenttrace );
-    P.lock();
-    P.clearData();
-    P.plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-    P.draw();
-    P.unlock();
-    
+      // stimulus:
+      OutData signal;
+      signal.setTrace( PotentialOutput[0] );
+      // signal.pulseWave( duration, -1.0,  testingpotential, holdingpotential );
+      signal.constWave( duration, -1.0,  step );
+      signal.setIntensity(1.0);
+
+      write(signal);
+      sleep(pause);
+
+      SampleDataF currenttrace(-0.002, 0.01, trace(CurrentTrace[0]).stepsize(), 0.0);
+      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+      P.lock();
+      P.plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);
+      P.draw();
+      P.unlock();
+
+      write( holdingsignal );
+      sleep( pause );
+    }
   }
   return Completed;
 }
