@@ -10,14 +10,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d7583847-4e24-4987-b951-043aa7b336ea" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/relacs.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/relacs.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/relacs.cfg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -30,69 +24,103 @@
     <session id="972282175">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
+          <entry key="project.closed" value="1" />
           <entry key="project.open.time.1" value="1" />
-          <entry key="project.opened" value="1" />
+          <entry key="project.open.time.36" value="1" />
+          <entry key="project.opened" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="cc" value="2" />
+          <entry key="cc" value="24" />
           <entry key="h" value="1" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="ObjectiveC" value="3" />
+          <entry key="ObjectiveC" value="25" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="cc" value="378" />
+          <entry key="cc" value="2231" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="ObjectiveC" value="378" />
+          <entry key="ObjectiveC" value="2231" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file pinned="false" current-in-tab="true">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="87" column="43" selection-start-line="87" selection-start-column="43" selection-end-line="87" selection-end-column="43" />
+            <state relative-caret-position="215">
+              <caret line="65" selection-start-line="65" selection-end-line="65" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h">
+        <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/vicurve.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
-              <caret line="40" column="31" selection-start-line="40" selection-start-column="26" selection-end-line="40" selection-end-column="31" />
+            <state relative-caret-position="161">
+              <caret line="523" column="52" selection-start-line="523" selection-start-column="48" selection-end-line="523" selection-end-column="52" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc">
+        <entry file="file://$PROJECT_DIR$/numerics/src/array.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="630">
-              <caret line="108" column="21" selection-start-line="108" selection-start-column="7" selection-end-line="108" selection-end-column="21" />
+            <state relative-caret-position="225">
+              <caret line="33" column="15" selection-start-line="33" selection-start-column="15" selection-end-line="33" selection-end-column="15" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/plot/src/plot.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="161">
+              <caret line="2438" column="9" selection-start-line="2438" selection-start-column="3" selection-end-line="2438" selection-end-column="9" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="258">
-              <caret line="183" column="12" selection-start-line="183" selection-start-column="2" selection-end-line="183" selection-end-column="12" />
+            <state relative-caret-position="15">
+              <caret line="297" column="32" selection-start-line="297" selection-start-column="32" selection-end-line="297" selection-end-column="32" />
             </state>
           </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/numerics/src/linearrange.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="161">
+              <caret line="58" column="30" selection-start-line="58" selection-start-column="26" selection-end-line="58" selection-end-column="30" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/numerics/src/sampledata.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="135">
+              <caret line="27" column="39" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="39" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/numerics/src/spectrum.cc">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
     </leaf>
@@ -100,6 +128,28 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>p[0].clear</find>
+      <find>mark</find>
+      <find>plot</find>
+      <find>drawPoints</find>
+      <find>firstx</find>
+      <find>Solid</find>
+      <find>diamon</find>
+      <find>Plot:</find>
+      <find>Plot::Plot</find>
+      <find>circle</find>
+      <find>diamond</find>
+      <find>vector</find>
+      <find>minValue</find>
+      <find>min</find>
+      <find>float</find>
+      <find>sampledata</find>
+      <find>stepsize</find>
+      <find>yellow</find>
+      <find>array</find>
+      <find>long</find>
+      <find>freq</find>
+      <find>as</find>
+      <find>list</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -109,6 +159,7 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" />
+        <option value="$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc" />
       </list>
     </option>
   </component>
@@ -118,10 +169,11 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
+  <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
     <option name="x" value="840" />
     <option name="width" value="844" />
-    <option name="height" value="1014" />
+    <option name="height" value="1018" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -162,37 +214,7 @@
               <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
               <item name="relacs" type="462c0819:PsiDirectoryNode" />
               <item name="plugins" type="462c0819:PsiDirectoryNode" />
-              <item name="voltageclamp" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
-              <item name="relacs" type="462c0819:PsiDirectoryNode" />
-              <item name="plugins" type="462c0819:PsiDirectoryNode" />
-              <item name="voltageclamp" type="462c0819:PsiDirectoryNode" />
-              <item name="include" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
-              <item name="relacs" type="462c0819:PsiDirectoryNode" />
-              <item name="plugins" type="462c0819:PsiDirectoryNode" />
-              <item name="voltageclamp" type="462c0819:PsiDirectoryNode" />
-              <item name="include" type="462c0819:PsiDirectoryNode" />
-              <item name="relacs" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
-              <item name="relacs" type="462c0819:PsiDirectoryNode" />
-              <item name="plugins" type="462c0819:PsiDirectoryNode" />
-              <item name="voltageclamp" type="462c0819:PsiDirectoryNode" />
-              <item name="include" type="462c0819:PsiDirectoryNode" />
-              <item name="relacs" type="462c0819:PsiDirectoryNode" />
-              <item name="voltageclamp" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
-              <item name="relacs" type="462c0819:PsiDirectoryNode" />
-              <item name="plugins" type="462c0819:PsiDirectoryNode" />
-              <item name="voltageclamp" type="462c0819:PsiDirectoryNode" />
+              <item name="patchclamp" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -206,6 +228,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.C/C++" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -219,6 +242,38 @@
       </list>
     </option>
   </component>
+  <component name="RunManager" selected="Makefile.Makefile">
+    <configuration name="Makefile (1)" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile" temporary="true">
+      <makefile filename="$PROJECT_DIR$/numerics/Makefile" target="" workingDirectory="" arguments="">
+        <envs />
+      </makefile>
+      <method v="2" />
+    </configuration>
+    <configuration name="Makefile" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile" temporary="true">
+      <makefile filename="$PROJECT_DIR$/numerics/Makefile" target="" workingDirectory="" arguments="">
+        <envs />
+      </makefile>
+      <method v="2" />
+    </configuration>
+    <configuration name="Makefile.am" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile" temporary="true">
+      <makefile filename="$PROJECT_DIR$/numerics/Makefile.am" target="" workingDirectory="" arguments="">
+        <envs />
+      </makefile>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Makefile.Makefile.am" />
+      <item itemvalue="Makefile.Makefile" />
+      <item itemvalue="Makefile.Makefile (1)" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Makefile.Makefile" />
+        <item itemvalue="Makefile.Makefile (1)" />
+        <item itemvalue="Makefile.Makefile.am" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -229,35 +284,36 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1533893001625</updated>
-      <workItem from="1533893003120" duration="260249000" />
+      <workItem from="1533893003120" duration="261030000" />
+      <workItem from="1534161887282" duration="18532000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="260249000" />
+    <option name="totallyTimeSpent" value="279562000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="840" y="0" width="844" height="1014" extended-state="1" />
+    <frame x="840" y="0" width="844" height="1018" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Favorites" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="0" weight="0.24936709" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.2987342" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Database Changes" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Version Control" />
-      <window_info anchor="bottom" id="Terminal" />
-      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.32768363" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="right" id="Database" />
+      <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="Terminal" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Database" order="3" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -267,31 +323,112 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc">
+    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="258">
-          <caret line="183" column="12" selection-start-line="183" selection-start-column="2" selection-end-line="183" selection-end-column="12" />
+        <state relative-caret-position="600">
+          <caret line="40" column="31" selection-start-line="40" selection-start-column="26" selection-end-line="40" selection-end-column="31" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="630">
+        <state relative-caret-position="1620">
           <caret line="108" column="21" selection-start-line="108" selection-start-column="7" selection-end-line="108" selection-end-column="21" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h">
+    <entry file="file://$PROJECT_DIR$/numerics/src/eventdata.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="40" column="31" selection-start-line="40" selection-start-column="26" selection-end-line="40" selection-end-column="31" />
+        <state relative-caret-position="-29" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/eventlist.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-29" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/fitalgorithm.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-27" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/kernel.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-27" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/statstests.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-27" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plot/src/plot.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="161">
+          <caret line="2438" column="9" selection-start-line="2438" selection-start-column="3" selection-end-line="2438" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/random.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-739">
+          <caret line="220" lean-forward="true" selection-start-line="220" selection-end-line="220" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/spectrum.cc">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/linktest.cc">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/sampledata.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="27" column="39" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/linearrange.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="161">
+          <caret line="58" column="30" selection-start-line="58" selection-start-column="26" selection-end-line="58" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/array.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="33" column="15" selection-start-line="33" selection-start-column="15" selection-end-line="33" selection-end-column="15" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="87" column="43" selection-start-line="87" selection-start-column="43" selection-end-line="87" selection-end-column="43" />
+        <state relative-caret-position="215">
+          <caret line="65" selection-start-line="65" selection-end-line="65" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/basisfunction.cc">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/relacs/src/spiketrace.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2336" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/vicurve.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="161">
+          <caret line="523" column="52" selection-start-line="523" selection-start-column="48" selection-end-line="523" selection-end-column="52" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="297" column="32" selection-start-line="297" selection-start-column="32" selection-end-line="297" selection-end-column="32" />
         </state>
       </provider>
     </entry>

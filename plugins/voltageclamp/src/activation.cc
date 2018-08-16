@@ -74,7 +74,6 @@ int Activation::main( void )
   // clear plot
   P.clearData();
 
-
   // write stimulus:
   write( holdingsignal );
   sleep( pause );
@@ -92,22 +91,44 @@ int Activation::main( void )
       // stimulus:
       OutData signal;
       signal.setTrace( PotentialOutput[0] );
-      // signal.pulseWave( duration, -1.0,  testingpotential, holdingpotential );
-      signal.constWave( duration, -1.0,  step );
-      signal.setIntensity(1.0);
+      signal.pulseWave( duration, -1.0,  step, holdingpotential );
+      signal.setIntensity( 1.0 );
 
-      write(signal);
-      sleep(pause);
+      write( signal );
+      sleep( pause );
 
-      SampleDataF currenttrace(-0.002, 0.01, trace(CurrentTrace[0]).stepsize(), 0.0);
-      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+      // get sample Data
+      SampleDataF currenttrace(-0.002, 0.01, trace(CurrentTrace[0]).stepsize(), 0.0 );
+      trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+
+
+      // I-V
+      double absmax = 0.0;
+      int index = 0;
+      if ( -min(currenttrace) >= max(currenttrace) ){
+        absmax = min(currenttrace);
+        index = minIndex(currenttrace);
+      }
+      else {
+        absmax = max(currenttrace);
+        index = maxIndex(currenttrace);
+      }
+      cerr << currenttrace[index] << '\n';
+      // plot
+
       P.lock();
-      P.plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);
+//      P.plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+      P.plot( currenttrace, 1000.0, Plot::Transparent, 3, Plot::Solid,
+              Plot::Circle, 6, Plot::Green, Plot::Green);
       P.draw();
       P.unlock();
 
-      write( holdingsignal );
-      sleep( pause );
+
+
+
+
+//      write( holdingsignal );
+//      sleep( pause );
     }
   }
   return Completed;

@@ -772,7 +772,7 @@ void FICurve::Data::analyze( int count, const InData &intrace,
 
   // firing frequency:
   if ( ignorenoresponse ) {
-    Spikes.frequency( Rate, RateSD );
+    Spikes.frequency(Rate, RateSD );
     SSRate = Spikes.frequency( duration-sswidth, duration, SSRateSD );
   }
   else {
