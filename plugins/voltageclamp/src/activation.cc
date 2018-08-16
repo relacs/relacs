@@ -113,7 +113,7 @@ int Activation::main( void )
         absmax = max(currenttrace);
         index = maxIndex(currenttrace);
       }
-      cerr << currenttrace[index] << '\n';
+
       // plot
 
       P.lock();

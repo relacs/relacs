@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BookmarkManager">
+    <bookmark url="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" line="63" />
+  </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="false">
     <generated />
   </component>
@@ -10,8 +13,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d7583847-4e24-4987-b951-043aa7b336ea" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -55,11 +56,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="215">
-              <caret line="65" selection-start-line="65" selection-end-line="65" />
+            <state relative-caret-position="365">
+              <caret line="117" lean-forward="true" selection-start-line="117" selection-end-line="117" />
             </state>
           </provider>
         </entry>
@@ -69,33 +70,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="161">
               <caret line="523" column="52" selection-start-line="523" selection-start-column="48" selection-end-line="523" selection-end-column="52" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/numerics/src/array.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="33" column="15" selection-start-line="33" selection-start-column="15" selection-end-line="33" selection-end-column="15" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/plot/src/plot.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="161">
-              <caret line="2438" column="9" selection-start-line="2438" selection-start-column="3" selection-end-line="2438" selection-end-column="9" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="297" column="32" selection-start-line="297" selection-start-column="32" selection-end-line="297" selection-end-column="32" />
             </state>
           </provider>
         </entry>
@@ -138,7 +112,6 @@
       <find>Plot::Plot</find>
       <find>circle</find>
       <find>diamond</find>
-      <find>vector</find>
       <find>minValue</find>
       <find>min</find>
       <find>float</find>
@@ -149,6 +122,7 @@
       <find>long</find>
       <find>freq</find>
       <find>as</find>
+      <find>vector</find>
       <find>list</find>
     </findStrings>
   </component>
@@ -158,8 +132,8 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" />
         <option value="$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc" />
+        <option value="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" />
       </list>
     </option>
   </component>
@@ -285,12 +259,12 @@
       <option name="presentableId" value="Default" />
       <updated>1533893001625</updated>
       <workItem from="1533893003120" duration="261030000" />
-      <workItem from="1534161887282" duration="18532000" />
+      <workItem from="1534161887282" duration="18832000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="279562000" />
+    <option name="totallyTimeSpent" value="279862000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="840" y="0" width="844" height="1018" extended-state="0" />
@@ -362,13 +336,6 @@
         <state relative-caret-position="-27" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plot/src/plot.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
-          <caret line="2438" column="9" selection-start-line="2438" selection-start-column="3" selection-end-line="2438" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/numerics/src/random.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-739">
@@ -396,6 +363,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/numerics/src/basisfunction.cc">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/relacs/src/spiketrace.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2336" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4410">
+          <caret line="324" column="20" lean-forward="true" selection-start-line="324" selection-start-column="20" selection-end-line="324" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/numerics/src/array.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
@@ -403,19 +385,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
+    <entry file="file://$PROJECT_DIR$/plot/src/plot.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="215">
-          <caret line="65" selection-start-line="65" selection-end-line="65" />
+        <state relative-caret-position="161">
+          <caret line="2438" column="9" selection-start-line="2438" selection-start-column="3" selection-end-line="2438" selection-end-column="9" />
         </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/numerics/src/basisfunction.cc">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/relacs/src/spiketrace.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2336" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/vicurve.cc">
@@ -425,10 +399,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc">
+    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="297" column="32" selection-start-line="297" selection-start-column="32" selection-end-line="297" selection-end-column="32" />
+        <state relative-caret-position="365">
+          <caret line="117" lean-forward="true" selection-start-line="117" selection-end-line="117" />
         </state>
       </provider>
     </entry>
