@@ -38,12 +38,8 @@ Activation::Activation( void )
   addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
-  // plot:
-
-//  PlotRangeSelection = false;
-
   P.lock();
-//  P.resize( 2, 2, true );
+
   P.setXLabel( "Time [ms]" );
   P.setYLabel( "Current [nA]" );
   P.unlock();
@@ -61,6 +57,10 @@ int Activation::main( void )
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
   double teststep = number( "teststep" );
+
+  int stepnum = (maxtest-mintest)/teststep+1;
+//  double* IV = new double[stepnum];
+  std::vector<double> IV(stepnum);
 
   // don't print repro message:
   noMessage();
@@ -81,8 +81,9 @@ int Activation::main( void )
 	( repeats <= 0 || Count < repeats ) && softStop() == 0;
 	Count++ ) {
 
+    int i = -1;
     for ( int step=mintest;  step<=maxtest; step+=teststep) {
-
+      i += 1;
       Str s = "Holding potential <b>" + Str(holdingpotential, "%.1f") + " mV</b>";
       s += ", Testing potential <b>" + Str(step, "%.1f") + " mV</b>";
       s += ",  Loop <b>" + Str(Count + 1) + "</b>";
@@ -100,7 +101,7 @@ int Activation::main( void )
       // get sample Data
       SampleDataF currenttrace(-0.002, 0.01, trace(CurrentTrace[0]).stepsize(), 0.0 );
       trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
-
+      double dt = currenttrace.stepsize();
 
       // I-V
       double absmax = 0.0;
@@ -113,23 +114,18 @@ int Activation::main( void )
         absmax = max(currenttrace);
         index = maxIndex(currenttrace);
       }
+      IV[i] = absmax;
 
       // plot
-
       P.lock();
-//      P.plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-      P.plot( currenttrace, 1000.0, Plot::Transparent, 3, Plot::Solid,
-              Plot::Circle, 6, Plot::Green, Plot::Green);
+      P.plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+      P.plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+                  Plot::Magenta, Plot::Magenta );
+
       P.draw();
       P.unlock();
-
-
-
-
-
-//      write( holdingsignal );
-//      sleep( pause );
     }
+
   }
   return Completed;
 }
