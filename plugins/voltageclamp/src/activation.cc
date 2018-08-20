@@ -24,7 +24,7 @@ using namespace relacs;
 
 namespace voltageclamp {
 
-
+// !!!!!!!!!!!!!!!!!!!!!!PLOTTING ABSOLUTE MAXIMUM IS HARDCODED!!!!!!!!!!!!!!!!!!!!
 Activation::Activation( void )
   : RePro( "Activation", "voltageclamp", "Jan Benda & Lukas Sonnenberg", "1.0", "Aug 09, 2018" )
 {
@@ -39,9 +39,12 @@ Activation::Activation( void )
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
   P.lock();
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [ms]" );
+  P[0].setYLabel( "Current [nA]" );
+  P[1].setXLabel( "Potential [mV]" );
+  P[1].setYLabel( "Current [nA]");
 
-  P.setXLabel( "Time [ms]" );
-  P.setYLabel( "Current [nA]" );
   P.unlock();
   setWidget( &P );
 }
@@ -71,8 +74,12 @@ int Activation::main( void )
   holdingsignal.constWave( holdingpotential );
   holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
 
-  // clear plot
-  P.clearData();
+  // clear plot and set Range
+  P[0].clearData();
+  P[1].clearData();
+  P.lock();
+  P[1].setXRange(mintest,maxtest);
+  P.unlock();
 
   // write stimulus:
   write( holdingsignal );
@@ -118,9 +125,14 @@ int Activation::main( void )
 
       // plot
       P.lock();
-      P.plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-      P.plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+      P[0].plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                   Plot::Magenta, Plot::Magenta );
+
+      P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
+      P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+                      Plot::Magenta, Plot::Magenta );
+      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
 
       P.draw();
       P.unlock();
