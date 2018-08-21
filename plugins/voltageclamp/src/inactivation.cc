@@ -65,7 +65,6 @@ int Inactivation::main( void )
   int repeats = integer( "repeats" );
   double holdingpotential0 = number( "holdingpotential0" );
   double holdingpotential1 = number( "holdingpotential1" );
-//  double testingpotential = number( "testingpotential" );
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
   double teststep = number( "teststep" );
@@ -90,9 +89,7 @@ int Inactivation::main( void )
   holdingsignal.constWave( holdingpotential0 );
   holdingsignal.setIdent( "VC=" + Str( holdingpotential0 ) + "mV" );
 
-
-
-  // write stimulus:
+  // write holdingpotential:
   write( holdingsignal );
   sleep( pause );
 

@@ -22,7 +22,9 @@
 #ifndef _RELACS_VOLTAGECLAMP_RECOVERY_H_
 #define _RELACS_VOLTAGECLAMP_RECOVERY_H_ 1
 
+#include <relacs/multiplot.h>
 #include <relacs/repro.h>
+#include <relacs/ephys/traces.h>
 using namespace relacs;
 
 namespace voltageclamp {
@@ -36,7 +38,7 @@ namespace voltageclamp {
 */
 
 
-class Recovery : public RePro
+class Recovery : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
@@ -44,6 +46,11 @@ public:
 
   Recovery( void );
   virtual int main( void );
+
+
+protected:
+
+    MultiPlot P;
 
 };
 

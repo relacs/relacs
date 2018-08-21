@@ -29,14 +29,148 @@ Recovery::Recovery( void )
   : RePro( "Recovery", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 21, 2018" )
 {
   // add some options:
-  // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "duration0", "Stimulus duration0", 0.01, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "duration1", "Stimulus duration1", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "duration2", "Stimulus duration2", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
+  addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "holdingpotential0", "Holding potential0", -100.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "holdingpotential1", "Holding potential1", 30.0, -200.0, 200.0, 1.0, "mV" );
+
+//  addList( "timesteps", "Time steps", "s", "ms" );
+
+  addNumber( "mintest", "Minimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV");
+  addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
+  addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
+
+  // plot
+  P.lock();
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [ms]" );
+  P[0].setYLabel( "Current [nA]" );
+  P[1].setXLabel( "Voltage [mV]" );
+  P[1].setYLabel( "Time constant [ms]");
+
+  P.unlock();
+  setWidget( &P );
 }
 
 
 int Recovery::main( void )
 {
   // get options:
-  // double duration = number( "duration" );
+  double duration0 = number( "duration0" );
+  double duration1 = number( "duration1" );
+  double duration2 = number( "duration2" );
+  double pause = number( "pause" );
+  int repeats = integer( "repeats" );
+  double holdingpotential0 = number( "holdingpotential0" );
+  double holdingpotential1 = number( "holdingpotential1" );
+  double mintest = number( "mintest" );
+  double maxtest = number( "maxtest" );
+  double teststep = number( "teststep" );
+
+  std::vector<double> timesteps(10);
+  timesteps = {0.1, 0.2, 0.6, 1.0, 2.0, 6.0, 10.0, 20.0, 60.0, 100.0};
+  timesteps = timesteps/1000;
+  int stepnum = (maxtest-mintest)/teststep+1;
+  std::vector<double> tau(stepnum);
+
+  cerr << teststep << ' ' << mintest << ' ' << maxtest << '\n';
+
+  // don't print repro message:
+  noMessage();
+
+  // reset plot
+  P[0].clearData();
+  P[1].clearData();
+  P.lock();
+  P[1].setXRange(mintest,maxtest);
+  P.unlock();
+
+  // holding potential:
+  OutData holdingsignal;
+  holdingsignal.setTrace( PotentialOutput[0] );
+  holdingsignal.constWave( holdingpotential0 );
+  holdingsignal.setIdent( "VC=" + Str( holdingpotential0 ) + "mV" );
+
+  // write holdingpotential:
+  write( holdingsignal );
+  sleep( pause );
+
+  for ( int Count=0;
+        ( repeats <= 0 || Count < repeats ) && softStop() == 0;
+        Count++ ) {
+
+    int i = -1;
+    for ( int potstep=mintest;  potstep<=maxtest; potstep+=teststep) {
+      i += 1;
+
+      std::vector <double> absmax(timesteps.size());
+
+      for ( unsigned j = 0; j < timesteps.size(); j++ ) {
+        double timestep = timesteps[j];
+
+        Str s = "Holding potential <b>" + Str(holdingpotential0, "%.1f") + " mV</b>";
+        s += ", Testing potential <b>" + Str(potstep, "%.1f") + " mV</b>";
+        s += ", Time step <b>" + Str(timestep*1000, "%.2f") + " ms</b>";
+        s += ",  Loop <b>" + Str(Count + 1) + "</b>";
+        message(s);
+
+        // stimulus:
+        OutData signal;
+        signal.setTrace(PotentialOutput[0]);
+        signal.constWave(duration0, -1.0, holdingpotential0);
+
+        OutData signal1;
+        signal1.setTrace(PotentialOutput[0]);
+        signal1.constWave(duration1, -1.0, holdingpotential1);
+
+        OutData signal2;
+        signal2.setTrace(PotentialOutput[0]);
+        signal2.constWave(timestep, -1.0, potstep);
+
+        OutData signal3;
+        signal3.setTrace(PotentialOutput[0]);
+        signal3.pulseWave(duration2, -1.0, holdingpotential1, holdingpotential0);
+
+        signal.append(signal1);
+        signal.append(signal2);
+        signal.append(signal3);
+
+        write(signal);
+        sleep(pause);
+
+        // minimas
+        SampleDataF currenttrace(duration0 + duration1 + timestep, 0.02 + duration0 + duration1 + timestep,
+                                 trace(CurrentTrace[0]).stepsize(), 0.0);
+        trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+        double dt = currenttrace.stepsize();
+
+        absmax[j] = min(currenttrace);
+        int index = 0;
+        index = minIndex(currenttrace);
+
+        // plot
+        P.lock();
+        // trace
+        P[0].plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);
+        P[0].plotPoint((index * dt + duration0 + duration1 + timestep) * 1000, Plot::First, absmax[j], Plot::First, 0,
+                       Plot::Circle, 5, Plot::Pixel,
+                       Plot::Magenta, Plot::Magenta);
+        P.draw();
+        P.unlock();
+      }
+    P.lock();
+    P[1].plot(timesteps,absmax, Plot::Magenta, 2, Plot::Solid);
+    P[1].setXRange(0.0,0.1);
+    P[1].setYRange(-1300.0,0.0);
+      P.draw();
+    P.unlock();
+
+    }
+  }
+
   return Completed;
 }
 
