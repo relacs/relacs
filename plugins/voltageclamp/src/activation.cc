@@ -110,7 +110,7 @@ int Activation::main( void )
       trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
       double dt = currenttrace.stepsize();
 
-      // I-V
+      // IV
       double absmax = 0.0;
       int index = 0;
       if ( -min(currenttrace) >= max(currenttrace) ){
@@ -125,10 +125,11 @@ int Activation::main( void )
 
       // plot
       P.lock();
+        // trace
       P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
       P[0].plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                   Plot::Magenta, Plot::Magenta );
-
+        // IV
       P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
       P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
@@ -137,6 +138,7 @@ int Activation::main( void )
       P.draw();
       P.unlock();
     }
+//  metaData().setNumber("IV", IV);
 
   }
   return Completed;

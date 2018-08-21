@@ -36,7 +36,11 @@ Inactivation::Inactivation( void )
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "holdingpotential0", "Holding potential0", -100.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "holdingpotential1", "Holding potential1", 30.0, -200.0, 200.0, 1.0, "mV" );
-  addNumber( "testingpotential", "Testing potential", -70.0, -200.0, 200.0, 1.0, "mV" );
+
+//  addNumber( "testingpotential", "Testing potential", -70.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "mintest", "Minimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV");
+  addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
+  addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
   // plot:
   P.lock();
@@ -57,7 +61,10 @@ int Inactivation::main( void )
   int repeats = integer( "repeats" );
   double holdingpotential0 = number( "holdingpotential0" );
   double holdingpotential1 = number( "holdingpotential1" );
-  double testingpotential = number( "testingpotential" );
+//  double testingpotential = number( "testingpotential" );
+  double mintest = number( "mintest" );
+  double maxtest = number( "maxtest" );
+  double teststep = number( "teststep" );
 
   // don't print repro message:
   noMessage();
@@ -71,46 +78,50 @@ int Inactivation::main( void )
   holdingsignal.constWave( holdingpotential0 );
   holdingsignal.setIdent( "VC=" + Str( holdingpotential0 ) + "mV" );
 
-  // stimulus:
-  OutData signal;
-  signal.setTrace( PotentialOutput[0] );
-  // signal.pulseWave( duration, -1.0,  testingpotential, holdingpotential0 );
-  signal.constWave( duration0, -1.0,  holdingpotential0 );
 
-  OutData signal1;
-  signal1.setTrace( PotentialOutput[0] );
-  signal1.constWave( duration1, -1.0, holdingpotential1 );
-
-  OutData signal2;
-  signal2.setTrace( PotentialOutput[0] );
-  signal2.pulseWave( duration2, -1.0,  testingpotential, holdingpotential0 );
-
-  signal.append( signal1 );
-  signal.append( signal2 );
 
   // write stimulus:
   write( holdingsignal );
   sleep( pause );
+
   for ( int Count=0;
 	( repeats <= 0 || Count < repeats ) && softStop() == 0;
 	Count++ ) {
+    for ( int step=mintest;  step<=maxtest; step+=teststep) {
+      Str s = "Holding potential <b>" + Str(holdingpotential0, "%.1f") + " mV</b>";
+      s += ", Testing potential <b>" + Str(step, "%.1f") + " mV</b>";
+      s += ",  Loop <b>" + Str(Count + 1) + "</b>";
+      message(s);
 
-    Str s = "Holding potential <b>" + Str( holdingpotential0, "%.1f" ) + " mV</b>";
-    s += ", Testing potential <b>" + Str( testingpotential, "%.1f" ) + " mV</b>";
-    s += ",  Loop <b>" + Str( Count+1 ) + "</b>";
-    message( s );
+      // stimulus:
+      OutData signal;
+      signal.setTrace( PotentialOutput[0] );
+      // signal.pulseWave( duration, -1.0,  testingpotential, holdingpotential0 );
+      signal.constWave( duration0, -1.0,  holdingpotential0 );
 
-    write( signal );
-    sleep( pause );
+      OutData signal1;
+      signal1.setTrace( PotentialOutput[0] );
+      signal1.constWave( duration1, -1.0, step );
 
-    SampleDataF currenttrace( -0.002 + duration0 + duration1, 0.01 + duration0 + duration1, trace( CurrentTrace[0] ).stepsize(), 0.0 );
-    trace( CurrentTrace[0] ).copy( signalTime(), currenttrace );
-    P.lock();
-    // P.clearData();
-    P.plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-    P.draw();
-    P.unlock();
-    
+      OutData signal2;
+      signal2.setTrace( PotentialOutput[0] );
+      signal2.pulseWave( duration2, -1.0,  holdingpotential1, holdingpotential0 );
+
+      signal.append( signal1 );
+      signal.append( signal2 );
+
+      write(signal);
+      sleep(pause);
+
+      SampleDataF currenttrace(-0.002 + duration0 + duration1, 0.01 + duration0 + duration1,
+                               trace(CurrentTrace[0]).stepsize(), 0.0);
+      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+      P.lock();
+      // P.clearData();
+      P.plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);
+      P.draw();
+      P.unlock();
+    }
   }
   return Completed;
 }
