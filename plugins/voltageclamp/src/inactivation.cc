@@ -42,10 +42,14 @@ Inactivation::Inactivation( void )
   addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
-  // plot:
+  // plot
   P.lock();
-  P.setXLabel( "Time [ms]" );
-  P.setYLabel( "Current [nA]" );
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [ms]" );
+  P[0].setYLabel( "Current [nA]" );
+  P[1].setXLabel( "Potential [mV]" );
+  P[1].setYLabel( "Current [nA]");
+
   P.unlock();
   setWidget( &P );
 }
@@ -66,11 +70,19 @@ int Inactivation::main( void )
   double maxtest = number( "maxtest" );
   double teststep = number( "teststep" );
 
+  int stepnum = (maxtest-mintest)/teststep+1;
+  std::vector<double> inact(stepnum);
+
+
   // don't print repro message:
   noMessage();
 
   // reset plot
-  P.clearData();
+  P[0].clearData();
+  P[1].clearData();
+  P.lock();
+  P[1].setXRange(mintest,maxtest);
+  P.unlock();
 
   // holding potential:
   OutData holdingsignal;
@@ -87,7 +99,10 @@ int Inactivation::main( void )
   for ( int Count=0;
 	( repeats <= 0 || Count < repeats ) && softStop() == 0;
 	Count++ ) {
+
+    int i = -1;
     for ( int step=mintest;  step<=maxtest; step+=teststep) {
+      i += 1;
       Str s = "Holding potential <b>" + Str(holdingpotential0, "%.1f") + " mV</b>";
       s += ", Testing potential <b>" + Str(step, "%.1f") + " mV</b>";
       s += ",  Loop <b>" + Str(Count + 1) + "</b>";
@@ -96,7 +111,6 @@ int Inactivation::main( void )
       // stimulus:
       OutData signal;
       signal.setTrace( PotentialOutput[0] );
-      // signal.pulseWave( duration, -1.0,  testingpotential, holdingpotential0 );
       signal.constWave( duration0, -1.0,  holdingpotential0 );
 
       OutData signal1;
@@ -116,9 +130,26 @@ int Inactivation::main( void )
       SampleDataF currenttrace(-0.002 + duration0 + duration1, 0.01 + duration0 + duration1,
                                trace(CurrentTrace[0]).stepsize(), 0.0);
       trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+      double dt = currenttrace.stepsize();
+
+      // inactivation curve
+      double absmax = 0.0;
+      int index = 0;
+      absmax = min(currenttrace);
+      index = minIndex(currenttrace);
+      inact[i] = absmax;
+
       P.lock();
-      // P.clearData();
-      P.plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);
+      // trace
+      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+      P[0].plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+                      Plot::Magenta, Plot::Magenta );
+      // inactivation curve
+      P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
+      P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+                      Plot::Magenta, Plot::Magenta );
+      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+
       P.draw();
       P.unlock();
     }

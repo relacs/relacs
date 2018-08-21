@@ -62,7 +62,6 @@ int Activation::main( void )
   double teststep = number( "teststep" );
 
   int stepnum = (maxtest-mintest)/teststep+1;
-//  double* IV = new double[stepnum];
   std::vector<double> IV(stepnum);
 
   // don't print repro message:
