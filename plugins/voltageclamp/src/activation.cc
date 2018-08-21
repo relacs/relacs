@@ -132,7 +132,7 @@ int Activation::main( void )
       P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
       P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
-      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+//      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
 
       P.draw();
       P.unlock();

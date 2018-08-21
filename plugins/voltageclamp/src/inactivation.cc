@@ -127,28 +127,38 @@ int Inactivation::main( void )
       write(signal);
       sleep(pause);
 
+      // inactivation curve
       SampleDataF currenttrace(-0.002 + duration0 + duration1, 0.01 + duration0 + duration1,
                                trace(CurrentTrace[0]).stepsize(), 0.0);
       trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
       double dt = currenttrace.stepsize();
 
-      // inactivation curve
       double absmax = 0.0;
       int index = 0;
-      absmax = min(currenttrace);
-      index = minIndex(currenttrace);
-      inact[i] = absmax;
+//      int idx0 = .002/dt+1;
 
+//      cerr << currenttrace << '\n';
+//      absmax = currenttrace.min(idx0,-1);
+//      index = currenttrace.minIndex(idx0,-1);
+      absmax = min( currenttrace);
+      index = minIndex( currenttrace);
+      inact[i] = absmax;
+      cerr << absmax << ' ' << index << ' ' << currenttrace.size() << '\n';
+
+
+      // plot
       P.lock();
       // trace
       P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-      P[0].plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+//      cerr << idx0*dt*1000-2+duration0+duration1 << '\n';
+
+      P[0].plotPoint( (index*dt+duration0+duration1)*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
       // inactivation curve
       P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
       P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
-      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+//      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
 
       P.draw();
       P.unlock();
