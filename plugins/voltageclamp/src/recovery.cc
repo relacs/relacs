@@ -181,7 +181,7 @@ int Recovery::main( void )
             absmax,//.begin(), absmax.end(),
             error,//.begin(), error.end(),
             expFuncDerivs, param, paramfit, uncertainty, chisq );
-    tau[i] = -param[1];
+    tau[i] = -param[1]*1000;
 
     P.lock();
     P[1].plotPoint( potstep, Plot::First, tau[i], Plot::First, 0, Plot::Circle, 5, Plot::Pixel,

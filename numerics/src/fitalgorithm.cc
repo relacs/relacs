@@ -128,6 +128,20 @@ double expFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp )
   return y;
 }
 
+double expFunc2( double x, const ArrayD &p )
+{
+  return (p[0]-p[2]) * exp( x / p[1] ) + p[2];
+}
+
+double expFunc2Derivs( double x, const ArrayD &p, ArrayD &dfdp )
+{
+  double ex = ::exp( x / p[1] );
+  double y = (p[0]-p[2]) * ex + p[2];
+  dfdp[0] = ex;
+  dfdp[1] = -(p[0]-p[2]) * ex * ( x / p[1] ) / p[1];
+  dfdp[2] - 1.0;
+  return y;
+}
 
 void expGuess( ArrayD &p, double y0, double x1, double y1,
 	       double x2, double y2 )

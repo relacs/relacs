@@ -19,7 +19,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <relacs/fitalgorithm.h>
 #include <relacs/voltageclamp/activation.h>
+
 using namespace relacs;
 
 namespace voltageclamp {
@@ -37,6 +39,8 @@ Activation::Activation( void )
   addNumber( "mintest", "Minimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
+
+  addNumber( "fitdelay", "Onset time of fit", .0005, 0.0001, 0.1, 0.0001, "s", "ms" );
 
   P.lock();
   P.resize( 2, 2, true );
@@ -60,9 +64,11 @@ int Activation::main( void )
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
   double teststep = number( "teststep" );
+  double fitdelay = number( "fitdelay" );
 
   int stepnum = (maxtest-mintest)/teststep+1;
   std::vector<double> IV(stepnum);
+  std::vector<double> tau(stepnum);
 
   // don't print repro message:
   noMessage();
@@ -122,17 +128,61 @@ int Activation::main( void )
       }
       IV[i] = absmax;
 
+      // fit tau to decaying activation curve
+      int idx0 = index + fitdelay/dt;
+      std::vector <double> x(currenttrace.size()-idx0);
+      std::vector <double> y(currenttrace.size()-idx0);
+      for (int j=0; j<currenttrace.size()-idx0; j++ ) {
+        x[j] = (j + idx0)*dt*1000 - 2;
+        y[j] = currenttrace[j+idx0];
+      };
+
+      ArrayD param( 3, 1.0 );
+      param[0] = 1.5*currenttrace[index];
+      param[1] = -1.0;
+      param[2] = currenttrace[currenttrace.size()-1];
+      ArrayD error( currenttrace.size(), 1.0 );
+      ArrayD uncertainty( 3, 0.0 );
+      ArrayI paramfit( 3, 1 );
+//      paramfit[0] = 1;
+//      paramfit[1] = 1;
+      double chisq = 0.0;
+
+      int z = marquardtFit( x, y, error, expFuncDerivs, param, paramfit, uncertainty, chisq );
+      tau[i] = -param[1];
+
+      cerr << param[1] << ", " << z << '\n';
+
+      std::vector <double> expfit(x.size());
+      for (unsigned k=0; k<x.size(); k++) {
+        expfit[k] = expFunc( x[k], param );
+      };
+//
+//      P.lock();
+//      P[1].plotPoint( potstep, Plot::First, tau[i], Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+//                      Plot::Green, Plot::Green );
+//      P[1].setYRange(min(tau),max(tau));
+//      P.draw();
+//      P.unlock();
+
       // plot
       P.lock();
         // trace
       P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
       P[0].plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                   Plot::Magenta, Plot::Magenta );
-        // IV
+      P[0].plot( x, expfit, Plot::Green, 2, Plot::Solid);
+
+      // time constant
+//      P[1].setYRange(min(tau),max(tau));
+//      P[1].setXRange(mintest, maxtest);
+//      P[1].plotPoint(step, Plot::First, tau[i], Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+//                      Plot::Green, Plot::Green );
+
+      // IV
       P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
       P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
-//      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
 
       P.draw();
       P.unlock();
@@ -143,8 +193,9 @@ int Activation::main( void )
   return Completed;
 }
 
-
 addRePro( Activation, voltageclamp );
+
+
 
 }; /* namespace voltageclamp */
 
