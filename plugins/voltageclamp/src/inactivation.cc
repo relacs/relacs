@@ -142,21 +142,18 @@ int Inactivation::main( void )
       absmax = min( y );
       index = minIndex( y ) + idx0;
       inact[i] = absmax;
-//      cerr << absmax << ' ' << index << ' ' << currenttrace.size() << '\n';
 
       // plot
       P.lock();
       // trace
       P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-//      cerr << idx0*dt*1000-2+duration0+duration1 << '\n';
-
       P[0].plotPoint( (index*dt+duration0+duration1)*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
+
       // inactivation curve
       P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
       P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
-//      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
 
       P.draw();
       P.unlock();
