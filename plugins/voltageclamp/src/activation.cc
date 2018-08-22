@@ -130,8 +130,14 @@ int Activation::main( void )
 
       // fit tau to decaying activation curve
       int idx0 = index + fitdelay/dt;
-      std::vector <double> x(currenttrace.size()-idx0);
-      std::vector <double> y(currenttrace.size()-idx0);
+      if ( idx0 > currenttrace.size()) {
+        idx0 = index;
+      }
+      cerr << currenttrace.size() << ", " << idx0 << "\n";
+
+      std::vector<double> x(currenttrace.size() - idx0);
+      std::vector<double> y(currenttrace.size() - idx0);
+
       for (int j=0; j<currenttrace.size()-idx0; j++ ) {
         x[j] = (j + idx0)*dt*1000 - 2;
         y[j] = currenttrace[j+idx0];
@@ -149,21 +155,14 @@ int Activation::main( void )
       double chisq = 0.0;
 
       int z = marquardtFit( x, y, error, expFuncDerivs, param, paramfit, uncertainty, chisq );
-      tau[i] = -param[1];
-
-      cerr << param[1] << ", " << z << '\n';
+      if (z == 0) {
+        tau[i] = -param[1];
+      };
 
       std::vector <double> expfit(x.size());
       for (unsigned k=0; k<x.size(); k++) {
         expfit[k] = expFunc( x[k], param );
       };
-//
-//      P.lock();
-//      P[1].plotPoint( potstep, Plot::First, tau[i], Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
-//                      Plot::Green, Plot::Green );
-//      P[1].setYRange(min(tau),max(tau));
-//      P.draw();
-//      P.unlock();
 
       // plot
       P.lock();
@@ -187,8 +186,6 @@ int Activation::main( void )
       P.draw();
       P.unlock();
     }
-//  metaData().setNumber("IV", IV);
-
   }
   return Completed;
 }

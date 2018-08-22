@@ -14,10 +14,7 @@
   <component name="ChangeListManager">
     <list default="true" id="d7583847-4e24-4987-b951-043aa7b336ea" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerics/src/fitalgorithm.cc" beforeDir="false" afterPath="$PROJECT_DIR$/numerics/src/fitalgorithm.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/recovery.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/recovery.cc" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -104,7 +101,7 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="am" value="5" />
-          <entry key="cc" value="9616" />
+          <entry key="cc" value="9964" />
           <entry key="cfg" value="20" />
           <entry key="h" value="17" />
         </counts>
@@ -112,7 +109,7 @@
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Makefile" value="5" />
-          <entry key="ObjectiveC" value="9633" />
+          <entry key="ObjectiveC" value="9981" />
           <entry key="PLAIN_TEXT" value="20" />
         </counts>
       </usages-collector>
@@ -159,8 +156,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="415">
-              <caret line="169" column="16" selection-start-line="169" selection-start-column="16" selection-end-line="169" selection-end-column="16" />
+            <state relative-caret-position="235">
+              <caret line="132" column="17" selection-start-line="132" selection-start-column="17" selection-end-line="132" selection-end-column="17" />
             </state>
           </provider>
         </entry>
@@ -217,8 +214,8 @@
         <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/recovery.h" />
         <option value="$PROJECT_DIR$/plugins/patchclamp/src/membraneresistance.cc" />
         <option value="$PROJECT_DIR$/numerics/src/fitalgorithm.cc" />
-        <option value="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/src/recovery.cc" />
+        <option value="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" />
       </list>
     </option>
   </component>
@@ -368,12 +365,12 @@
       <option name="presentableId" value="Default" />
       <updated>1533893001625</updated>
       <workItem from="1533893003120" duration="261030000" />
-      <workItem from="1534161887282" duration="75386000" />
+      <workItem from="1534161887282" duration="76632000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="336416000" />
+    <option name="totallyTimeSpent" value="337662000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="840" y="0" width="844" height="1018" extended-state="0" />
@@ -703,8 +700,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="415">
-          <caret line="169" column="16" selection-start-line="169" selection-start-column="16" selection-end-line="169" selection-end-column="16" />
+        <state relative-caret-position="235">
+          <caret line="132" column="17" selection-start-line="132" selection-start-column="17" selection-end-line="132" selection-end-column="17" />
         </state>
       </provider>
     </entry>
