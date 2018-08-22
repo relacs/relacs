@@ -19,7 +19,10 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <relacs/fitalgorithm.h>
 #include <relacs/voltageclamp/recovery.h>
+
+
 using namespace relacs;
 
 namespace voltageclamp {
@@ -75,8 +78,6 @@ int Recovery::main( void )
   timesteps = timesteps/1000;
   int stepnum = (maxtest-mintest)/teststep+1;
   std::vector<double> tau(stepnum);
-
-  cerr << teststep << ' ' << mintest << ' ' << maxtest << '\n';
 
   // don't print repro message:
   noMessage();
@@ -154,21 +155,56 @@ int Recovery::main( void )
         // plot
         P.lock();
         // trace
-        P[0].plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);
-        P[0].plotPoint((index * dt + duration0 + duration1 + timestep) * 1000, Plot::First, absmax[j], Plot::First, 0,
+        P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+        P[0].plotPoint( (index * dt + duration0 + duration1 + timestep) * 1000, Plot::First, absmax[j], Plot::First, 0,
                        Plot::Circle, 5, Plot::Pixel,
                        Plot::Magenta, Plot::Magenta);
         P.draw();
         P.unlock();
       }
+
+    // fit exponential to absmax
+    ArrayD param( 3, 1.0 );
+    param[0] = -absmax[absmax.size()-1];
+    param[1] = -1.0;
+    param[2] = absmax[absmax.size()-1];
+    ArrayD error( absmax.size(), 1.0 );
+    ArrayD uncertainty( 3, 0.0 );
+//    uncertainty[0] = 3000;
+//    uncertainty[1] = 10;
+//    uncertainty[2] = 3000;
+    ArrayI paramfit( 3, 0 );
+    paramfit[1] = 1;
+    double chisq = 0.0;
+
+    marquardtFit( timesteps,//.begin(), timesteps.end(),
+            absmax,//.begin(), absmax.end(),
+            error,//.begin(), error.end(),
+            expFuncDerivs, param, paramfit, uncertainty, chisq );
+    tau[i] = -param[1];
+
     P.lock();
-    P[1].plot(timesteps,absmax, Plot::Magenta, 2, Plot::Solid);
-    P[1].setXRange(0.0,0.1);
-    P[1].setYRange(-1300.0,0.0);
-      P.draw();
+    P[1].plotPoint( potstep, Plot::First, tau[i], Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+            Plot::Green, Plot::Green );
+    P[1].setYRange(min(tau),max(tau));
+    P.draw();
     P.unlock();
 
+//    std::vector <double> expfun(timesteps.size());
+//    for (unsigned k=0; k<timesteps.size(); k++) {
+//      expfun[k] = expFunc( timesteps[k], param );
+//    };
+
+//    P.lock();
+//    P[1].plot( timesteps, absmax, Plot::Magenta, 2, Plot::Solid );
+//    P[1].plot( timesteps, expfun, Plot::Green, 2, Plot::Solid);
+//    P[1].setXRange( 0.0, 0.1 );
+//    P[1].setYRange( -1300.0, 0.0 );
+//    P.draw();
+//    P.unlock();
+
     }
+
   }
 
   return Completed;
