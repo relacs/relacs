@@ -132,16 +132,17 @@ int Inactivation::main( void )
 
       double absmax = 0.0;
       int index = 0;
-//      int idx0 = .002/dt+1;
+      int idx0 = .002/dt+2;
 
-//      cerr << currenttrace << '\n';
-//      absmax = currenttrace.min(idx0,-1);
-//      index = currenttrace.minIndex(idx0,-1);
-      absmax = min( currenttrace);
-      index = minIndex( currenttrace);
+      std::vector <double> y(currenttrace.size()-idx0);
+      for (int j=0; j<currenttrace.size()-idx0; j++) {
+        y[j] = currenttrace[idx0+j];
+      };
+
+      absmax = min( y );
+      index = minIndex( y ) + idx0;
       inact[i] = absmax;
-      cerr << absmax << ' ' << index << ' ' << currenttrace.size() << '\n';
-
+//      cerr << absmax << ' ' << index << ' ' << currenttrace.size() << '\n';
 
       // plot
       P.lock();

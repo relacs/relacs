@@ -13,8 +13,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d7583847-4e24-4987-b951-043aa7b336ea" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,19 +27,10 @@
         <state>
           <leaf>
             <file pinned="false" current-in-tab="true">
-              <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc">
-                <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="675">
-                    <caret line="84" selection-start-line="84" selection-end-line="89" selection-end-column="68" />
-                  </state>
-                </provider>
-              </entry>
-            </file>
-            <file pinned="false" current-in-tab="false">
               <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/inactivation.h">
                 <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="690">
-                    <caret line="46" column="23" selection-start-line="46" selection-start-column="23" selection-end-line="46" selection-end-column="23" />
+                  <state relative-caret-position="615">
+                    <caret line="41" column="1" selection-start-line="41" selection-start-column="1" selection-end-line="41" selection-end-column="1" />
                   </state>
                 </provider>
               </entry>
@@ -82,7 +72,7 @@
         <counts>
           <entry key="Makefile" value="6" />
           <entry key="am" value="6" />
-          <entry key="cc" value="66" />
+          <entry key="cc" value="67" />
           <entry key="cfg" value="5" />
           <entry key="directory" value="1" />
           <entry key="h" value="16" />
@@ -94,14 +84,14 @@
         <counts>
           <entry key="Image" value="5" />
           <entry key="Makefile" value="13" />
-          <entry key="ObjectiveC" value="82" />
+          <entry key="ObjectiveC" value="83" />
           <entry key="PLAIN_TEXT" value="7" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="am" value="5" />
-          <entry key="cc" value="9964" />
+          <entry key="cc" value="10092" />
           <entry key="cfg" value="20" />
           <entry key="h" value="17" />
         </counts>
@@ -109,7 +99,7 @@
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Makefile" value="5" />
-          <entry key="ObjectiveC" value="9981" />
+          <entry key="ObjectiveC" value="10109" />
           <entry key="PLAIN_TEXT" value="20" />
         </counts>
       </usages-collector>
@@ -154,10 +144,19 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="265">
+              <caret line="134" column="26" selection-start-line="134" selection-start-column="26" selection-end-line="134" selection-end-column="26" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="235">
-              <caret line="132" column="17" selection-start-line="132" selection-start-column="17" selection-end-line="132" selection-end-column="17" />
+            <state relative-caret-position="370">
+              <caret line="141" column="38" selection-start-line="141" selection-start-column="38" selection-end-line="141" selection-end-column="38" />
             </state>
           </provider>
         </entry>
@@ -210,12 +209,12 @@
         <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/inactivation.h" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/macros.cfg" />
-        <option value="$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/recovery.h" />
         <option value="$PROJECT_DIR$/plugins/patchclamp/src/membraneresistance.cc" />
         <option value="$PROJECT_DIR$/numerics/src/fitalgorithm.cc" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/src/recovery.cc" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" />
+        <option value="$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc" />
       </list>
     </option>
   </component>
@@ -365,12 +364,12 @@
       <option name="presentableId" value="Default" />
       <updated>1533893001625</updated>
       <workItem from="1533893003120" duration="261030000" />
-      <workItem from="1534161887282" duration="76632000" />
+      <workItem from="1534161887282" duration="77049000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="337662000" />
+    <option name="totallyTimeSpent" value="338079000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="840" y="0" width="844" height="1018" extended-state="0" />
@@ -614,13 +613,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/inactivation.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="690">
-          <caret line="46" column="23" selection-start-line="46" selection-start-column="23" selection-end-line="46" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plugins/patchclamp/include/relacs/patchclamp/membraneresistance.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="130">
@@ -684,13 +676,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="675">
-          <caret line="84" selection-start-line="84" selection-end-line="89" selection-end-column="68" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/recovery.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="390">
@@ -700,8 +685,22 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="235">
-          <caret line="132" column="17" selection-start-line="132" selection-start-column="17" selection-end-line="132" selection-end-column="17" />
+        <state relative-caret-position="370">
+          <caret line="141" column="38" selection-start-line="141" selection-start-column="38" selection-end-line="141" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/inactivation.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="615">
+          <caret line="41" column="1" selection-start-line="41" selection-start-column="1" selection-end-line="41" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="265">
+          <caret line="134" column="26" selection-start-line="134" selection-start-column="26" selection-end-line="134" selection-end-column="26" />
         </state>
       </provider>
     </entry>
