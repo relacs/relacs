@@ -206,7 +206,6 @@ int Recovery::main( void )
     }
 
   }
-
   return Completed;
 }
 
