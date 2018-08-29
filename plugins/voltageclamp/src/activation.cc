@@ -193,11 +193,32 @@ int Activation::main( void )
       P.draw();
       P.unlock();
     }
-  // =========================================================================================
-  // reversal potential
 
+  double p_rev = pRev(IV);
+  cerr << "reversal potential is " << p_rev << " mV" << "\n";
+
+  P.lock();
+//  P[1].plotVLine( p_rev, Plot::Solid, Plot::White);
+//  P[1].plotHLine( 0.0, Plot::Solid, Plot::White);
+  P[1].plotPoint( p_rev, Plot::First, 0.0, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+                  Plot::Red, Plot::Red );
+  P.unlock();
+
+
+  }
+  return Completed;
+}
+
+double Activation::pRev( const std::vector<double> &IV )
+{
+  // get options
   double minpot = number( "minrevpot" );
   double maxpot = number( "maxrevpot" );
+  double mintest = number( "mintest" );
+  double maxtest = number( "maxtest" );
+  double teststep = number( "teststep" );
+  int stepnum = (maxtest-mintest)/teststep+1;
+
   std::vector<double> potential(stepnum);
 
   int i3 = -1;
@@ -226,56 +247,8 @@ int Activation::main( void )
   double m = (IV2[idx4]-IV2[idx3])/(potential2[idx4]-potential2[idx3]);
   double b = (IV2[idx4]*potential2[idx3] - IV2[idx3]*potential2[idx4])/(potential2[idx3]-potential2[idx4]);
   double p_rev = -b/m;
-
-  cerr << "reversal potential is " << p_rev << "mV" << "\n";
-  // ==========================================================================================
-
-  P.lock();
-
-  P[1].plotVLine( p_rev, Plot::Solid, Plot::White);
-  P[1].plotHLine( 0.0, Plot::Solid, Plot::White);
-
-  P[1].plotPoint( p_rev, Plot::First, 0.0, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
-                  Plot::Red, Plot::Red );
-  P.unlock();
-
-
-  }
-  return Completed;
+  return p_rev;
 }
-
-//double Activation::pRev( const std::vector<double> &IV )
-//{
-//  // get options
-//  double minpot = number( "minrevpot" );
-//  double maxpot = number( "maxrevpot" );
-//  double mintest = number( "mintest" );
-//  double maxtest = number( "maxtest" );
-//  double teststep = number( "teststep" );
-//  std::vector<double> potential(LinearRange(mintest,maxtest,teststep));
-//
-//  // get IV in respective interval
-//  int idx1 = std::upper_bound(potential, minpot);
-//  int idx2 = std::upper_bound(potential, maxpot);
-//  std::vector<double> IV2(idx2-idx1);
-//  std::vector<double> potential2(idx2-idx1);
-//  int i = -1;
-//  for (int idx=idx1; i<idx2; idx++) {
-//    i++;
-//    IV2[i] = IV[idx];
-//  };
-//
-//  // find transition from negative to postitive
-//  int idx4 = std::upper_bound(potential,0.0);
-//  int idx3 = idx4-1;
-//
-//  // linear interpolation to find reversal potential (y=m*x+b)
-//  double m = (IV2[idx4]-IV2[idx3])/(potential2[idx4]-potential2[idx3]);
-//  double b = (IV2[idx4]*potential2[idx3] - IV2[idx3]*potential2[idx4])/(potential2[idx3]-potential2[idx4]);
-//  double p_rev = -b/m;
-//
-//  return p_rev;
-//}
 
 
 

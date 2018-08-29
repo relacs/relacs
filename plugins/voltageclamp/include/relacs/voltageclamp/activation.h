@@ -48,6 +48,9 @@ public:
   Activation( void );
   virtual int main( void );
 
+private:
+
+    double pRev( const std::vector<double> &IV );
 
 protected:
 

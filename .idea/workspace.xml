@@ -14,7 +14,7 @@
   <component name="ChangeListManager">
     <list default="true" id="d7583847-4e24-4987-b951-043aa7b336ea" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -28,16 +28,16 @@
       <content type="file-editors">
         <state>
           <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-            <file pinned="false" current-in-tab="false">
+            <file pinned="false" current-in-tab="true">
               <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h">
                 <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="660">
-                    <caret line="51" selection-start-line="51" selection-end-line="53" selection-end-column="16" />
+                  <state relative-caret-position="675">
+                    <caret line="52" column="49" selection-start-line="52" selection-start-column="49" selection-end-line="52" selection-end-column="49" />
                   </state>
                 </provider>
               </entry>
             </file>
-            <file pinned="false" current-in-tab="true">
+            <file pinned="false" current-in-tab="false">
               <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc">
                 <provider selected="true" editor-type-id="text-editor">
                   <state relative-caret-position="274">
@@ -51,6 +51,15 @@
                 <provider selected="true" editor-type-id="text-editor">
                   <state relative-caret-position="1103">
                     <caret line="190" column="15" selection-start-line="190" selection-start-column="15" selection-end-line="190" selection-end-column="15" />
+                  </state>
+                </provider>
+              </entry>
+            </file>
+            <file pinned="false" current-in-tab="false">
+              <entry file="file://$PROJECT_DIR$/plugins/efish/src/baselineactivity.cc">
+                <provider selected="true" editor-type-id="text-editor">
+                  <state relative-caret-position="274">
+                    <caret line="666" column="29" selection-start-line="666" selection-start-column="22" selection-end-line="666" selection-end-column="29" />
                   </state>
                 </provider>
               </entry>
@@ -84,7 +93,7 @@
         <counts>
           <entry key="Makefile" value="6" />
           <entry key="am" value="6" />
-          <entry key="cc" value="78" />
+          <entry key="cc" value="80" />
           <entry key="cfg" value="6" />
           <entry key="directory" value="1" />
           <entry key="h" value="21" />
@@ -96,22 +105,22 @@
         <counts>
           <entry key="Image" value="5" />
           <entry key="Makefile" value="13" />
-          <entry key="ObjectiveC" value="99" />
+          <entry key="ObjectiveC" value="101" />
           <entry key="PLAIN_TEXT" value="8" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="am" value="5" />
-          <entry key="cc" value="14619" />
+          <entry key="cc" value="14656" />
           <entry key="cfg" value="45" />
-          <entry key="h" value="25" />
+          <entry key="h" value="38" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Makefile" value="5" />
-          <entry key="ObjectiveC" value="14644" />
+          <entry key="ObjectiveC" value="14694" />
           <entry key="PLAIN_TEXT" value="45" />
         </counts>
       </usages-collector>
@@ -122,7 +131,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/ramp.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="606">
+            <state relative-caret-position="-19">
               <caret line="80" column="17" selection-start-line="80" selection-start-column="17" selection-end-line="80" selection-end-column="17" />
             </state>
           </provider>
@@ -140,8 +149,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="594">
-              <caret line="232" column="11" lean-forward="true" selection-start-line="232" selection-start-column="11" selection-end-line="232" selection-end-column="11" />
+            <state relative-caret-position="310">
+              <caret line="201" column="51" selection-start-line="201" selection-start-column="51" selection-end-line="201" selection-end-column="51" />
             </state>
           </provider>
         </entry>
@@ -173,8 +182,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>resize</find>
-      <find>P.</find>
       <find>plot::plot</find>
       <find>sample</find>
       <find>sampledataF</find>
@@ -201,8 +208,10 @@
       <find>minindex</find>
       <find>&amp;</find>
       <find>linearrange::lin</find>
-      <find>linearrange</find>
       <find>cerr</find>
+      <find>P[</find>
+      <find>linearrange</find>
+      <find>setAxis</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -214,7 +223,6 @@
         <option value="$PROJECT_DIR$/plugins/patchclamp/src/ficurve.cc" />
         <option value="$PROJECT_DIR$/plugins/patchclamp/src/activation_test.cc" />
         <option value="$PROJECT_DIR$/Makefile.am" />
-        <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/inactivation.h" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/recovery.h" />
         <option value="$PROJECT_DIR$/plugins/patchclamp/src/membraneresistance.cc" />
@@ -226,6 +234,7 @@
         <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/tail.h" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/macros.cfg" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/src/tail.cc" />
+        <option value="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h" />
         <option value="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" />
       </list>
     </option>
@@ -254,17 +263,6 @@
             <path>
               <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
               <item name="relacs" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
-              <item name="relacs" type="462c0819:PsiDirectoryNode" />
-              <item name="numerics" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
-              <item name="relacs" type="462c0819:PsiDirectoryNode" />
-              <item name="numerics" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="relacs" type="b2602c69:ProjectViewProjectNode" />
@@ -421,12 +419,12 @@
       <updated>1533893001625</updated>
       <workItem from="1533893003120" duration="261030000" />
       <workItem from="1534161887282" duration="80370000" />
-      <workItem from="1535013877292" duration="17377000" />
+      <workItem from="1535013877292" duration="18852000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="358777000" />
+    <option name="totallyTimeSpent" value="360252000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="840" y="0" width="844" height="1018" extended-state="0" />
@@ -561,11 +559,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/efish/src/baselineactivity.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-360" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/relacs/src/session.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-65" />
@@ -691,13 +684,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/ramp.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="606">
-          <caret line="80" column="17" selection-start-line="80" selection-start-column="17" selection-end-line="80" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/inactivation.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="718">
@@ -726,13 +712,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="660">
-          <caret line="51" selection-start-line="51" selection-end-line="53" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/numerics/src/basisfunction.cc">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -757,10 +736,31 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/efish/src/baselineactivity.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="274">
+          <caret line="666" column="29" selection-start-line="666" selection-start-column="22" selection-end-line="666" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/ramp.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-19">
+          <caret line="80" column="17" selection-start-line="80" selection-start-column="17" selection-end-line="80" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="675">
+          <caret line="52" column="49" selection-start-line="52" selection-start-column="49" selection-end-line="52" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="594">
-          <caret line="232" column="11" lean-forward="true" selection-start-line="232" selection-start-column="11" selection-end-line="232" selection-end-column="11" />
+        <state relative-caret-position="310">
+          <caret line="201" column="51" selection-start-line="201" selection-start-column="51" selection-end-line="201" selection-end-column="51" />
         </state>
       </provider>
     </entry>
