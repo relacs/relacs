@@ -42,6 +42,10 @@ Activation::Activation( void )
 
   addNumber( "fitdelay", "Onset time of fit", .0005, 0.0001, 0.1, 0.0001, "s", "ms" );
 
+  addNumber( "minrevpot", "minimum of reversal potential", -50.0, -200.0, 200.0, 10.0, "mV" );
+  addNumber( "maxrevpot", "maximum of reversal potential", 200.0, -200.0, 200.0, 10.0, "mV" );
+
+
   P.lock();
   P.resize( 2, 2, true );
   P[0].setXLabel( "Time [ms]" );
@@ -164,12 +168,15 @@ int Activation::main( void )
         expfit[k] = expFunc( x[k], param );
       };
 
-      // plot
+
+
+//      cerr << typeid(IV).name << "\n";
+          // plot
       P.lock();
-        // trace
+      // trace
       P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
       P[0].plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
-                  Plot::Magenta, Plot::Magenta );
+                      Plot::Magenta, Plot::Magenta );
       P[0].plot( x, expfit, Plot::Green, 2, Plot::Solid);
 
       // time constant
@@ -186,12 +193,93 @@ int Activation::main( void )
       P.draw();
       P.unlock();
     }
+  // =========================================================================================
+  // reversal potential
+
+  double minpot = number( "minrevpot" );
+  double maxpot = number( "maxrevpot" );
+  std::vector<double> potential(stepnum);
+
+  int i3 = -1;
+  for ( int step=mintest;  step<=maxtest; step+=teststep ) {
+    i3 += 1;
+    potential[i3] = step;
+  }
+
+  // get IV in respective interval
+  int idx1 = std::upper_bound( potential.begin(), potential.end(), minpot ) - potential.begin();
+  int idx2 = std::upper_bound( potential.begin(), potential.end(), maxpot ) - potential.begin();
+  std::vector<double> IV2(idx2-idx1);
+  std::vector<double> potential2(idx2-idx1);
+  int i2 = -1;
+  for (int idx=idx1; idx<idx2; idx++) {
+    i2++;
+    IV2[i2] = IV[idx];
+    potential2[i2] = potential[idx];
+  };
+
+  // find transition from negative to postitive
+  int idx4 = std::upper_bound( IV2.begin(), IV2.end(), 0.0 ) - IV2.begin();
+  int idx3 = idx4-1;
+
+  // linear interpolation to find reversal potential (y=m*x+b)
+  double m = (IV2[idx4]-IV2[idx3])/(potential2[idx4]-potential2[idx3]);
+  double b = (IV2[idx4]*potential2[idx3] - IV2[idx3]*potential2[idx4])/(potential2[idx3]-potential2[idx4]);
+  double p_rev = -b/m;
+
+  cerr << "reversal potential is " << p_rev << "mV" << "\n";
+  // ==========================================================================================
+
+  P.lock();
+
+  P[1].plotVLine( p_rev, Plot::Solid, Plot::White);
+  P[1].plotHLine( 0.0, Plot::Solid, Plot::White);
+
+  P[1].plotPoint( p_rev, Plot::First, 0.0, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+                  Plot::Red, Plot::Red );
+  P.unlock();
+
+
   }
   return Completed;
 }
 
-addRePro( Activation, voltageclamp );
+//double Activation::pRev( const std::vector<double> &IV )
+//{
+//  // get options
+//  double minpot = number( "minrevpot" );
+//  double maxpot = number( "maxrevpot" );
+//  double mintest = number( "mintest" );
+//  double maxtest = number( "maxtest" );
+//  double teststep = number( "teststep" );
+//  std::vector<double> potential(LinearRange(mintest,maxtest,teststep));
+//
+//  // get IV in respective interval
+//  int idx1 = std::upper_bound(potential, minpot);
+//  int idx2 = std::upper_bound(potential, maxpot);
+//  std::vector<double> IV2(idx2-idx1);
+//  std::vector<double> potential2(idx2-idx1);
+//  int i = -1;
+//  for (int idx=idx1; i<idx2; idx++) {
+//    i++;
+//    IV2[i] = IV[idx];
+//  };
+//
+//  // find transition from negative to postitive
+//  int idx4 = std::upper_bound(potential,0.0);
+//  int idx3 = idx4-1;
+//
+//  // linear interpolation to find reversal potential (y=m*x+b)
+//  double m = (IV2[idx4]-IV2[idx3])/(potential2[idx4]-potential2[idx3]);
+//  double b = (IV2[idx4]*potential2[idx3] - IV2[idx3]*potential2[idx4])/(potential2[idx3]-potential2[idx4]);
+//  double p_rev = -b/m;
+//
+//  return p_rev;
+//}
 
+
+
+addRePro( Activation, voltageclamp );
 
 
 }; /* namespace voltageclamp */
