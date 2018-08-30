@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" line="71" />
+    <bookmark url="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" line="73" />
   </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="false">
     <generated />
@@ -14,7 +14,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d7583847-4e24-4987-b951-043aa7b336ea" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -28,7 +27,7 @@
       <content type="file-editors">
         <state>
           <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-            <file pinned="false" current-in-tab="true">
+            <file pinned="false" current-in-tab="false">
               <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/activation.h">
                 <provider selected="true" editor-type-id="text-editor">
                   <state relative-caret-position="675">
@@ -55,11 +54,11 @@
                 </provider>
               </entry>
             </file>
-            <file pinned="false" current-in-tab="false">
+            <file pinned="false" current-in-tab="true">
               <entry file="file://$PROJECT_DIR$/plugins/efish/src/baselineactivity.cc">
                 <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="274">
-                    <caret line="666" column="29" selection-start-line="666" selection-start-column="22" selection-end-line="666" selection-end-column="29" />
+                  <state relative-caret-position="409">
+                    <caret line="675" column="34" selection-start-line="675" selection-start-column="34" selection-end-line="675" selection-end-column="34" />
                   </state>
                 </provider>
               </entry>
@@ -112,7 +111,7 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="am" value="5" />
-          <entry key="cc" value="14656" />
+          <entry key="cc" value="15504" />
           <entry key="cfg" value="45" />
           <entry key="h" value="38" />
         </counts>
@@ -120,7 +119,7 @@
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Makefile" value="5" />
-          <entry key="ObjectiveC" value="14694" />
+          <entry key="ObjectiveC" value="15542" />
           <entry key="PLAIN_TEXT" value="45" />
         </counts>
       </usages-collector>
@@ -149,8 +148,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="310">
-              <caret line="201" column="51" selection-start-line="201" selection-start-column="51" selection-end-line="201" selection-end-column="51" />
+            <state relative-caret-position="430">
+              <caret line="211" column="11" selection-start-line="211" selection-start-column="11" selection-end-line="211" selection-end-column="11" />
             </state>
           </provider>
         </entry>
@@ -419,12 +418,12 @@
       <updated>1533893001625</updated>
       <workItem from="1533893003120" duration="261030000" />
       <workItem from="1534161887282" duration="80370000" />
-      <workItem from="1535013877292" duration="18852000" />
+      <workItem from="1535013877292" duration="22600000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="360252000" />
+    <option name="totallyTimeSpent" value="364000000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="840" y="0" width="844" height="1018" extended-state="0" />
@@ -736,13 +735,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plugins/efish/src/baselineactivity.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="274">
-          <caret line="666" column="29" selection-start-line="666" selection-start-column="22" selection-end-line="666" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/ramp.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-19">
@@ -757,10 +749,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/plugins/efish/src/baselineactivity.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="409">
+          <caret line="675" column="34" selection-start-line="675" selection-start-column="34" selection-end-line="675" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="310">
-          <caret line="201" column="51" selection-start-line="201" selection-start-column="51" selection-end-line="201" selection-end-column="51" />
+        <state relative-caret-position="430">
+          <caret line="211" column="11" selection-start-line="211" selection-start-column="11" selection-end-line="211" selection-end-column="11" />
         </state>
       </provider>
     </entry>

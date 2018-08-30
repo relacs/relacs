@@ -52,6 +52,8 @@ Activation::Activation( void )
   P[0].setYLabel( "Current [nA]" );
   P[1].setXLabel( "Potential [mV]" );
   P[1].setYLabel( "Current [nA]");
+  P[1].setY2Label( "conductance [mS]" );
+
 
   P.unlock();
   setWidget( &P );
@@ -73,6 +75,12 @@ int Activation::main( void )
   int stepnum = (maxtest-mintest)/teststep+1;
   std::vector<double> IV(stepnum);
   std::vector<double> tau(stepnum);
+  std::vector<double> potential(stepnum);
+  int i3 = -1;
+  for ( int step=mintest;  step<=maxtest; step+=teststep ) {
+    i3 += 1;
+    potential[i3] = step;
+  }
 
   // don't print repro message:
   noMessage();
@@ -168,10 +176,7 @@ int Activation::main( void )
         expfit[k] = expFunc( x[k], param );
       };
 
-
-
-//      cerr << typeid(IV).name << "\n";
-          // plot
+      // plot
       P.lock();
       // trace
       P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
@@ -195,13 +200,21 @@ int Activation::main( void )
     }
 
   double p_rev = pRev(IV);
+  std::vector<double> g_act(potential.size());
+  for ( unsigned i=0; i<potential.size(); i++) {
+    g_act[i] = -IV[i]/(p_rev-potential[i]);
+    cerr << g_act[i] << "\n";
+  };
+
+//  g_act = -IV/(p_rev-potential);
   cerr << "reversal potential is " << p_rev << " mV" << "\n";
 
   P.lock();
-//  P[1].plotVLine( p_rev, Plot::Solid, Plot::White);
-//  P[1].plotHLine( 0.0, Plot::Solid, Plot::White);
   P[1].plotPoint( p_rev, Plot::First, 0.0, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                   Plot::Red, Plot::Red );
+  P[1].plot(potential,g_act, Plot::Yellow, 1.0, Plot::Solid);
+  P[1].back().setAxis( Plot::X1Y2 );
+  P[1].setY2Range(0,max(g_act));
   P.unlock();
 
 
@@ -211,6 +224,7 @@ int Activation::main( void )
 
 double Activation::pRev( const std::vector<double> &IV )
 {
+  // reversal potential
   // get options
   double minpot = number( "minrevpot" );
   double maxpot = number( "maxrevpot" );
@@ -220,11 +234,10 @@ double Activation::pRev( const std::vector<double> &IV )
   int stepnum = (maxtest-mintest)/teststep+1;
 
   std::vector<double> potential(stepnum);
-
-  int i3 = -1;
+  int i = -1;
   for ( int step=mintest;  step<=maxtest; step+=teststep ) {
-    i3 += 1;
-    potential[i3] = step;
+    i += 1;
+    potential[i] = step;
   }
 
   // get IV in respective interval
