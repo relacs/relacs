@@ -52,8 +52,8 @@ Activation::Activation( void )
   P[0].setYLabel( "Current [nA]" );
   P[1].setXLabel( "Potential [mV]" );
   P[1].setYLabel( "Current [nA]");
-  P[1].setY2Label( "conductance [mS]" );
-
+  P[1].setY2Label( "conductance [\u03BCS]" );
+  P[1].setY2Tics( 0.0, 10.0 );
 
   P.unlock();
   setWidget( &P );
@@ -162,8 +162,6 @@ int Activation::main( void )
       ArrayD error( currenttrace.size(), 1.0 );
       ArrayD uncertainty( 3, 0.0 );
       ArrayI paramfit( 3, 1 );
-//      paramfit[0] = 1;
-//      paramfit[1] = 1;
       double chisq = 0.0;
 
       int z = marquardtFit( x, y, error, expFuncDerivs, param, paramfit, uncertainty, chisq );

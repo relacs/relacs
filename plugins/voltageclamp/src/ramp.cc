@@ -57,8 +57,32 @@ int Ramp::main( void )
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
 
-  std::vector <double> slopesteps(9);
-  slopesteps = {1600.0, 800.0, 400.0, 200.0, 100.0, 50.0, 25.0, 12.5, 6.25};
+  /*
+   RePro *rp = repro( "Activation" );
+   if ( rp == 0 ) {
+      cerr <<  "Activation RePro not found\n";
+      }
+  if ( rp->completeRuns() <= 0 )
+      cerr <<  "Activation RePro not run yet\n";
+   Activation *ac = dynamic_cast<Activation*>(rp);
+   double tau = ac->TimeConstant;
+
+
+
+   addText( "vrange", "Voltage range", "-100, -80" ).setUnit( "mV" );
+
+   #include <str.h>
+   Str rangestr = allText( "vrange" );
+   vector<double> vrange;
+   rangestr.range(vrange, ",", ":");
+
+   for ( unsigned int k=0; k<vrange.size(); k++ )
+   vrange[k]
+
+   */
+
+  std::vector <double> slopesteps(8);
+  slopesteps = {800.0, 400.0, 200.0, 100.0, 50.0, 25.0, 12.5, 6.25};
   slopesteps = slopesteps/1000;
 
   // don't print repro message:

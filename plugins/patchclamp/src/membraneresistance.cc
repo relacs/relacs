@@ -252,7 +252,7 @@ void MembraneResistance::analyzeOn( double duration,
   for ( unsigned int j=0; j<TraceIndices.size(); j++ ) {
     const InData &intrace2 = trace( TraceIndices[j] );
     for ( int k=0; k<MeanTraces[j].size() && inx+k<intrace2.size(); k++ ) {
-      double v = intrace2[inx+k];
+      double v = intrace2[inx+k];MeanPot[]
       if ( TraceIndices[j] == CurrentTrace[0] )
 	v *= IInFac;
       MeanTraces[j][k] += (v - MeanTraces[j][k])/(Count+1);
