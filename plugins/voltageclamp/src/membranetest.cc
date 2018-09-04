@@ -37,7 +37,7 @@ membranetest::membranetest( void )
   addBoolean("infinite", "Infinite repetitions of membranetest", true);
   //  newSection("Analysis");
 //  addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
-//  addBoolean("plotstdev", "Plot standard deviation of current", true);
+  addBoolean("plotstd", "Plot standard deviation of current", true);
 //  addSelection("setdata", "Set results to the session variables", "rest only|always|never");
 //  addText( "checkoutput", "Outputs that need to be at their default value", "Current-1" ).setActivation( "setdata", "rest only" );
 
@@ -138,19 +138,26 @@ void membranetest::stimulus(OutData &signal) {
   double duration = number( "duration" );
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
+  bool plotstd = boolean( "plotstd" );
+
+//  P.lock();
+//  P.clear();
+//  P.unlock();
 
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
   SampleDataF MeanPot = SampleDataF(-duration,2*duration,1/samplerate,0.0);
   SampleDataF MeanSqPot = SampleDataF(-duration,2*duration,1/samplerate,0.0);
   SampleDataF StdPot = SampleDataF(-duration,2*duration,1/samplerate,0.0);
 
+
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     write(signal);
-
     sleep(pause);
 
     SampleDataF currenttrace(-duration, 2 * duration, trace(CurrentTrace[0]).stepsize(), 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+
+    cerr << min(currenttrace) << ", " << max(currenttrace) << "\n";
 
     for (int i = 0; i < currenttrace.size(); i++) {
       MeanPot[i] += (currenttrace[i] - MeanPot[i]) / (Count + 1);
@@ -161,14 +168,20 @@ void membranetest::stimulus(OutData &signal) {
     if (interrupt()) {
       break;
     };
+  };
 
-  }
+  if (interrupt()) {
+    return;
+  };
+
   // plot
   P.lock();
   P.clear();
-  P.plot(MeanSqPot, 1000.0, Plot::Yellow, 2, Plot::Solid);
-  P.plot(MeanSqPot+StdPot, 1000.0, Plot::Red, 2, Plot::Solid);
-  P.plot(MeanSqPot-StdPot, 1000.0, Plot::Red, 2, Plot::Solid);
+  P.plot(MeanPot, 1000.0, Plot::Yellow, 1, Plot::Solid);
+  if (plotstd) {
+    P.plot(MeanPot + StdPot, 1000.0, Plot::Red, 2, Plot::Solid);
+    P.plot(MeanPot - StdPot, 1000.0, Plot::Red, 2, Plot::Solid);
+  };
   P.draw();
   P.unlock();
 

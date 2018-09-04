@@ -13,18 +13,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d7583847-4e24-4987-b951-043aa7b336ea" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/plugins/voltageclamp/include/relacs/voltageclamp/membranetest.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/auditory/relacs.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/auditory/relacs.cfg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/auditory/relacsplugins.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/auditory/relacsplugins.cfg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/patchclamp/include/relacs/patchclamp/membraneresistance.h" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/patchclamp/include/relacs/patchclamp/membraneresistance.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/patchclamp/src/membraneresistance.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/patchclamp/src/membraneresistance.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/macros.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/macros.cfg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/Makefile.am" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/Makefile.am" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/activation.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/ramp.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/ramp.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -67,8 +58,8 @@
             <file pinned="false" current-in-tab="true">
               <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/membraneresistance.cc">
                 <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="1515">
-                    <caret line="254" column="42" selection-start-line="254" selection-start-column="42" selection-end-line="254" selection-end-column="42" />
+                  <state relative-caret-position="720">
+                    <caret line="201" column="24" selection-start-line="201" selection-start-column="24" selection-end-line="201" selection-end-column="24" />
                   </state>
                 </provider>
               </entry>
@@ -148,7 +139,7 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="am" value="5" />
-          <entry key="cc" value="17737" />
+          <entry key="cc" value="18170" />
           <entry key="cfg" value="73" />
           <entry key="h" value="98" />
         </counts>
@@ -156,7 +147,7 @@
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Makefile" value="5" />
-          <entry key="ObjectiveC" value="17835" />
+          <entry key="ObjectiveC" value="18268" />
           <entry key="PLAIN_TEXT" value="73" />
         </counts>
       </usages-collector>
@@ -212,8 +203,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="116">
-              <caret line="124" column="19" selection-start-line="124" selection-start-column="19" selection-end-line="124" selection-end-column="19" />
+            <state relative-caret-position="596">
+              <caret line="176" column="9" lean-forward="true" selection-start-line="176" selection-start-column="9" selection-end-line="176" selection-end-column="9" />
             </state>
           </provider>
         </entry>
@@ -307,8 +298,9 @@
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
     <option name="x" value="840" />
+    <option name="y" value="24" />
     <option name="width" value="844" />
-    <option name="height" value="1018" />
+    <option name="height" value="1014" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -465,15 +457,15 @@
       <updated>1533893001625</updated>
       <workItem from="1533893003120" duration="261030000" />
       <workItem from="1534161887282" duration="80370000" />
-      <workItem from="1535013877292" duration="40482000" />
+      <workItem from="1535013877292" duration="42515000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="381882000" />
+    <option name="totallyTimeSpent" value="383915000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="840" y="0" width="844" height="1018" extended-state="0" />
+    <frame x="840" y="24" width="844" height="1014" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.32658228" />
@@ -804,15 +796,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/plugins/patchclamp/src/membraneresistance.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1515">
-          <caret line="254" column="42" selection-start-line="254" selection-start-column="42" selection-end-line="254" selection-end-column="42" />
+        <state relative-caret-position="720">
+          <caret line="201" column="24" selection-start-line="201" selection-start-column="24" selection-end-line="201" selection-end-column="24" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="116">
-          <caret line="124" column="19" selection-start-line="124" selection-start-column="19" selection-end-line="124" selection-end-column="19" />
+        <state relative-caret-position="596">
+          <caret line="176" column="9" lean-forward="true" selection-start-line="176" selection-start-column="9" selection-end-line="176" selection-end-column="9" />
         </state>
       </provider>
     </entry>
