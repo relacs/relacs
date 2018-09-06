@@ -61,6 +61,7 @@ public slots:
   void returnToPos( void );
   void toolRelease( void );
   void toolFix( void );
+  void updateConfig( void );
 
 public:
   Robot( void );
