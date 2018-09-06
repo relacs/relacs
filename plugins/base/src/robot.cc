@@ -43,13 +43,13 @@ Robot::Robot( void )
   addText( "robot", "Robot", "robot-1" );
 
   newSection("Stored positions");
-  addPoint( "FishHeadPosition", "Position of fish head", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
-  addPoint( "FishTailPosition", "Position of fish tail", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
-  addPoint( "MovementAreaStart", "Start position of the movement area", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
-  addPoint( "MovementAreaEnd", "End position of movement area", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
-  addPoint( "ForbiddenAreaStart", "Start position of the forbidden area", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
-  addPoint( "ForbiddenAreaEnd", "End position of the forbidden area", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
-  addPoint( "CustomPosition", "Stored custom position", Point::Origin, -1000.0, 1000.0, 1.0, "mm" );
+  addText( "FishHeadPosition", "Position of fish head (x,y,z)mm", "(0,0,0)");
+  addText( "FishTailPosition", "Position of fish tail (x,y,z)mm", "(0,0,0)");
+  addText( "MovementAreaStart", "Start position of the movement area (x,y,z)mm", "(0,0,0)");
+  addText( "MovementAreaEnd", "End position of movement area (x,y,z)mm", "(0,0,0)");
+  addText( "ForbiddenAreaStart", "Start position of the forbidden area (x,y,z)mm", "(0,0,0)");
+  addText( "ForbiddenAreaEnd", "End position of the forbidden area (x,y,z)mm", "(0,0,0)");
+  addText( "CustomPosition", "Stored custom position (x,y,z)mm", "(0,0,0)");
 
   newSection("Tool clamp");
   addNumber( "toolreleasedelay", "Delay before opening the tool clamp", 1.0, 0.0, 10.0, 0.25, "s");
@@ -210,7 +210,7 @@ void Robot::resetRobot( void ) {
 void Robot::storePos( void ) {
   this->customPosition = robot->pos();
   ReturnToPositionButton->setEnabled( true );
-  setPoint("CustomPosition", this->customPosition );
+  setText("CustomPosition", this->customPosition.toString() );
 }
 
 
@@ -238,43 +238,49 @@ void Robot::toolFix( void ) {
 
 
 void Robot::storePosition( const string &name, const Point &p ) {
-  if ( metaData().exist( name ) )
-    metaData().setPoint( name, p );
+  if ( !metaData().exist( name ))
+    metaData().addText( name, p.toString() );
+  else
+    metaData().setText( name, p.toString() );
+  if ( !exist( name ) )
+    addText( name, p.toString() );
+  else
+    setText( name, p.toString() );
 }
 
 
 void Robot::config( void ) {
   robot = dynamic_cast<misc::XYZRobot*>( device( text( "robot" ) ) );
   if ( exist( "FishHeadPosition" ) ) {
-    Point fish_start = point("FishHeadPosition");
-    Point fish_end = point("FishTailPosition");
+    Point fish_start( text("FishHeadPosition") );
+    Point fish_end( text("FishTailPosition") );
     if ( fish_start.distance( fish_end ) > 0.01 ) {
       robot->set_fish_head(fish_start);
       robot->set_fish_tail(fish_end);
-      storePosition( "FishHeadPosition", fish_start );
-      storePosition( "FishTailPosition", fish_end );
+      storePosition( "FishHeadPosition", fish_start.toString() );
+      storePosition( "FishTailPosition", fish_end.toString() );
     }
   }
   if ( exist( "MovementAreaStart" ) ) {
-    Point area_start = point( "MovementAreaStart" );
-    Point area_end = point( "MovementAreaEnd" );
+    Point area_start( text( "MovementAreaStart" ) );
+    Point area_end( text( "MovementAreaEnd" ) );
     if ( area_start.distance( area_end ) > 0.01 ) {
       robot->set_Area( new Cuboid( area_start, area_end ) );
-      storePosition( "MovementAreaStart", area_start );
-      storePosition( "MovementAreaEnd", area_end );
+      storePosition( "MovementAreaStart", area_start.toString() );
+      storePosition( "MovementAreaEnd", area_end.toString() );
     }
   }
   if ( exist( "ForbiddenAreaStart" ) ) {
-    Point forbidden_start = point( "ForbiddenAreaStart" );
-    Point forbidden_end = point( "ForbiddenAreaEnd" );
+    Point forbidden_start( text( "ForbiddenAreaStart" ) );
+    Point forbidden_end( text( "ForbiddenAreaEnd" ) );
     if ( forbidden_start.distance( forbidden_end ) > 0.01 ) {
       robot->add_forbidden( new Cuboid( forbidden_start, forbidden_end ) );
-      storePosition( "ForbiddenAreaStart", forbidden_start );
-      storePosition( "ForbiddenAreaEnd", forbidden_end );
+      storePosition( "ForbiddenAreaStart", forbidden_start.toString() );
+      storePosition( "ForbiddenAreaEnd", forbidden_end.toString() );
     }
   }
   if ( exist( "CustomPosition" ) ) {
-    Point p = point("CustomPosition");
+    Point p( text("CustomPosition") );
     if ( (p[0] + p[1] + p[2]) > 0.01 ) {
       this->customPosition = p;
       this->ReturnToPositionButton->setEnabled( true );
@@ -406,7 +412,7 @@ void Robot::main( void )
     errorBox->append( "Couldn't find the RobotController. Closing." );
     return;
   }
-  this->customPosition = point("CustomPosition");
+  this->customPosition = Point(text("CustomPosition"));
   this->toolReleaseDelay = number("toolreleasedelay");
   this->toolFixDelay = number("toolfixdelay");
   this->autoclamp = boolean( "autoclamp" );
@@ -460,6 +466,46 @@ void Robot::updateConfig( void ) {
 	 this->ReturnToPositionButton->setEnabled( true );
       }
    }
+}
+
+
+void Robot::updateConfig( void )
+{
+  if ( exist( "FishHeadPosition" ) ) {
+    Point fish_start( text("FishHeadPosition") );
+    Point fish_end( text("FishTailPosition") );
+    if ( fish_start.distance( fish_end ) > 0.01 ) {
+      robot->set_fish_head(fish_start);
+      robot->set_fish_tail(fish_end);
+      storePosition( "FishHeadPosition", fish_start.toString() );
+      storePosition( "FishTailPosition", fish_end.toString() );
+    }
+  }
+  if ( exist( "MovementAreaStart" ) ) {
+    Point area_start( text( "MovementAreaStart" ) );
+    Point area_end( text( "MovementAreaEnd" ) );
+    if ( area_start.distance( area_end ) > 0.01 ) {
+      robot->set_Area( new Cuboid( area_start, area_end ) );
+      storePosition( "MovementAreaStart", area_start.toString() );
+      storePosition( "MovementAreaEnd", area_end.toString() );
+    }
+  }
+  if ( exist( "ForbiddenAreaStart" ) ) {
+    Point forbidden_start( text( "ForbiddenAreaStart" ) );
+    Point forbidden_end( text( "ForbiddenAreaEnd" ) );
+    if ( forbidden_start.distance( forbidden_end ) > 0.01 ) {
+      robot->add_forbidden( new Cuboid( forbidden_start, forbidden_end ) );
+      storePosition( "ForbiddenAreaStart", forbidden_start.toString() );
+      storePosition( "ForbiddenAreaEnd", forbidden_end.toString() );
+    }
+  }
+  if ( exist( "CustomPosition" ) ) {
+    Point p( text("CustomPosition") );
+    if ( (p[0] + p[1] + p[2]) > 0.01 ) {
+      this->customPosition = p;
+      this->ReturnToPositionButton->setEnabled( true );
+    }
+  }
 }
 
 
