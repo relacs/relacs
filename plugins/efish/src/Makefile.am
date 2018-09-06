@@ -14,7 +14,9 @@ pluginlib_LTLIBRARIES = \
 
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
-    libefishreceptivefield.la
+    libefishreceptivefield.la \
+    libefishrobottofishposition.la
+    
 endif
 
 
@@ -356,6 +358,45 @@ libefishreceptivefield_la_includedir = $(pkgincludedir)/efish
 libefishreceptivefield_la_include_HEADERS = $(HEADER_PATH)/receptivefield.h
 
 
+libefishrobottofishposition_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libefishrobottofishposition_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libefishrobottofishposition_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libefishrobottofishposition_la_OBJECTS) : moc_robottofishposition.cc
+
+libefishrobottofishposition_la_SOURCES = robottofishposition.cc
+
+libefishrobottofishposition_la_includedir = $(pkgincludedir)/efish
+
+libefishrobottofishposition_la_include_HEADERS = $(HEADER_PATH)/robottofishposition.h
+
+
+
 
 check_PROGRAMS = \
     linktest_libefishbaselineactivity_la \
@@ -368,7 +409,10 @@ check_PROGRAMS = \
 
 if RELACS_COND_TML
 check_PROGRAMS += \
-    linktest_libefishreceptivefield_la
+    linktest_libefishreceptivefield_la \
+    linktest_libefishchirps_la \
+    linktest_libefishrobottofishposition_la
+    
 endif
 
 linktest_libefishbaselineactivity_la_SOURCES = linktest.cc
@@ -394,5 +438,8 @@ linktest_libefishchirps_la_LDADD = libefishchirps.la
 
 linktest_libefishreceptivefield_la_SOURCES = linktest.cc
 linktest_libefishreceptivefield_la_LDADD = libefishreceptivefield.la
+
+linktest_libefishrobottofishposition_la_SOURCES = linktest.cc
+linktest_libefishrobottofishposition_la_LDADD = libefishrobottofishposition.la
 
 TESTS = $(check_PROGRAMS)
