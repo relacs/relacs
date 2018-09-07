@@ -42,6 +42,8 @@ Recovery::Recovery( void )
 
 //  addList( "timesteps", "Time steps", "s", "ms" );
 
+  addText("trange", "Time steps", "0.1, 0.2, 0.6, 1.0, 2.0, 6.0, 10.0, 20.0, 60.0, 100.0").setUnit( "ms" );
+
   addNumber( "mintest", "Minimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
@@ -72,9 +74,11 @@ int Recovery::main( void )
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
   double teststep = number( "teststep" );
+  Str trange = allText( "trange" );
 
-  std::vector<double> timesteps(10);
-  timesteps = {0.1, 0.2, 0.6, 1.0, 2.0, 6.0, 10.0, 20.0, 60.0, 100.0};
+
+  std::vector<double> timesteps;
+  trange.range(timesteps, ",", ":" );
   timesteps = timesteps/1000;
   int stepnum = (maxtest-mintest)/teststep+1;
   std::vector<double> tau(stepnum);

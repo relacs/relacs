@@ -150,6 +150,20 @@ void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
   if ( VCMode ) {
     // voltage-clamp current:
     double vccurrent = VCGain*(x[0] - signal( 0.001 * t, PotentialOutput[0] ));
+
+//    double Err = x[0] - signal( 0.001 * t, PotentialOutput[0] );
+//    if (abs(signal( 0.001 * t, PotentialOutput[0] ) - signal( 0.001 * t - 0.001, PotentialOutput[0] )) == 0.0) {
+//      IntErr += Err;
+//    }
+//    else {
+//      cerr << "t = " << 0.001*t << ", diff = " << abs(signal( 0.001 * t, PotentialOutput[0] ) - signal( 0.001 * t - 0.001, PotentialOutput[0] )) << "\n";
+//      IntErr = Err;
+//    };
+//
+//    double dt = 0.001;
+//    double vccurrent = KProp*Err + KInt*IntErr*dt + KDer*(Err-DerErr)/dt;
+//    DerErr = Err;
+
     CurrentInput -= vccurrent;
     s -= vccurrent;
   }

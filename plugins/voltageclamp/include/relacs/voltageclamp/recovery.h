@@ -25,6 +25,7 @@
 #include <relacs/multiplot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
+#include <relacs/str.h>
 using namespace relacs;
 
 namespace voltageclamp {

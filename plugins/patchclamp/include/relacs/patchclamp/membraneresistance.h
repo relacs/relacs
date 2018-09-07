@@ -62,7 +62,7 @@ class MembraneResistance : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
-  friend Ramp;
+//  friend Ramp;
 
 public:
 

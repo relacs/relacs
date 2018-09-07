@@ -36,7 +36,7 @@ Ramp::Ramp( void )
   addNumber( "mintest", "Minimum of ramp", -100.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "maxtest", "Maximum of ramp", 80.0, -200.0, 200.0, 5.0, "mV");
 
-
+  addText("srange", "slopes of ramp", "800.0, 400.0, 200.0, 100.0, 50.0, 25.0, 12.5, 6.25").setUnit( "mV/s" );
 
   P.lock();
   P.setXLabel( "Time [ms]" );
@@ -56,6 +56,7 @@ int Ramp::main( void )
   double holdingpotential = number( "holdingpotential" );
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
+  Str srange = allText( "srange" );
 
   /*
    RePro *rp = repro( "Activation" );
@@ -81,8 +82,8 @@ int Ramp::main( void )
 
    */
 
-  std::vector <double> slopesteps(8);
-  slopesteps = {800.0, 400.0, 200.0, 100.0, 50.0, 25.0, 12.5, 6.25};
+  std::vector <double> slopesteps;
+  srange.range(slopesteps, ",", ":" );
   slopesteps = slopesteps/1000;
 
   // don't print repro message:
