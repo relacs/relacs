@@ -24,6 +24,7 @@
 #include <relacs/voltageclamp/activation.h>
 #include <relacs/voltageclamp/inactivation.h>
 #include <relacs/voltageclamp/recovery.h>
+#include <relacs/str.h>
 
 using namespace relacs;
 
@@ -34,6 +35,11 @@ Summary::Summary( void )
   : RePro( "Summary", "voltageclamp", "Lukas Sonnenberg", "1.0", "Sep 07, 2018" )
 {
   // add some options:
+  addBoolean("plotall", "Keep old Plots", true);
+//  addText("color_g_act","Color of activation curve", "Yellow")
+//  addText("color_I_inact","Color of inactivation curve", "Green")
+//  addText("color_tau_act","Color of inactivation time constant from activation protocol", "Magenta")
+//  addText("color_tau_rec","Color of inactivation time constant from recovery protocol", "Cyan")
   // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
 
   P.lock();
@@ -53,10 +59,12 @@ Summary::Summary( void )
 
 int Summary::main( void )
 {
-
-  //clear plot
-  P[0].clearData();
-  P[1].clearData();
+  bool plotall = boolean( "plotall" );
+  if ( !plotall ) {
+    //clear plot
+    P[0].clearData();
+    P[1].clearData();
+  };
 
   //get pointers to RePros
   RePro* rp_ac = repro( "Activation[voltageclamp]" );
@@ -88,9 +96,10 @@ void Summary::plotactivation( RePro* rp_ac ) {
   vector<double> tau_inac = ac->tau;
   vector<double> potential = ac->potential;
 
-  for (unsigned int i=0; i<g_act.size(); i++) {
-    cerr << "conductance:" << g_act[i] << "\n";
-  };
+  double maxtest = ac->number("maxtest");
+  double mintest = ac->number("mintest");
+  double teststep = ac->number("teststep");
+  int stepnum = (maxtest-mintest)/teststep+1;
 
   P.lock();
   P[0].plot(potential, g_act, Plot::Yellow, 2.0, Plot::Solid);

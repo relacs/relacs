@@ -75,6 +75,10 @@ int Activation::main( void )
   int stepnum = (maxtest-mintest)/teststep+1;
   std::vector<double> IV(stepnum);
 
+  potential = std::vector<double>();
+  tau = std::vector<double> ();
+  g_act = std::vector<double> ();
+
   int i3 = -1;
   for ( int step=mintest;  step<=maxtest; step+=teststep ) {
     i3 += 1;

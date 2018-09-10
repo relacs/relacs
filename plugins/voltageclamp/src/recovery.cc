@@ -82,6 +82,9 @@ int Recovery::main( void )
   timesteps = timesteps/1000;
   int stepnum = (maxtest-mintest)/teststep+1;
 
+  tau = std::vector<double> ();
+  potential = std::vector<double> ();
+
   for ( double step=mintest;  step<=maxtest; step+=teststep ) {
     tau.push_back(0.0);
     potential.push_back(step);
