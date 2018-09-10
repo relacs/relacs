@@ -20,6 +20,7 @@ endif
 
 
 libefishbaselineactivity_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -46,6 +47,7 @@ libefishbaselineactivity_la_LIBADD = \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -60,6 +62,7 @@ libefishbaselineactivity_la_include_HEADERS = $(HEADER_PATH)/baselineactivity.h
 
 
 libefishsession_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -67,7 +70,6 @@ libefishsession_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
-    -I$(srcdir)/../../base/include \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
@@ -88,6 +90,7 @@ libefishsession_la_LIBADD = \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -102,6 +105,7 @@ libefishsession_la_include_HEADERS = $(HEADER_PATH)/session.h
 
 
 libefishpunitmodel_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -129,6 +133,7 @@ libefishpunitmodel_la_LIBADD = \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -141,6 +146,7 @@ libefishpunitmodel_la_include_HEADERS = $(HEADER_PATH)/punitmodel.h
 
 
 libefishsam_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -167,6 +173,7 @@ libefishsam_la_LIBADD = \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -181,6 +188,7 @@ libefishsam_la_include_HEADERS = $(HEADER_PATH)/sam.h
 
 
 libefishficurve_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -207,6 +215,7 @@ libefishficurve_la_LIBADD = \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -221,6 +230,7 @@ libefishficurve_la_include_HEADERS = $(HEADER_PATH)/ficurve.h
 
 
 libefishfilestimulus_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -247,6 +257,7 @@ libefishfilestimulus_la_LIBADD = \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -261,6 +272,7 @@ libefishfilestimulus_la_include_HEADERS = $(HEADER_PATH)/filestimulus.h
 
 
 libefishchirps_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -287,6 +299,7 @@ libefishchirps_la_LIBADD = \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
@@ -301,6 +314,7 @@ libefishchirps_la_include_HEADERS = $(HEADER_PATH)/chirps.h
 
 
 libefishreceptivefield_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -377,6 +391,7 @@ libefishrobottofishposition_la_include_HEADERS = $(HEADER_PATH)/robottofishposit
 
 
 libefishrobottofishposition_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \

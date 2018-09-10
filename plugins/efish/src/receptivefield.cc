@@ -46,8 +46,6 @@ ReceptiveField::ReceptiveField( void )
   addNumber( "zmin", "Minimum z position", 0.0, -1000., 1000., 0.1, "mm" );
   addNumber( "zmax", "Maximum z position", 0.0, -1000., 1000., 0.1, "mm" );
   addNumber( "zstep", "Desired step size of the z-grid", 1.0, 0.1, 1000., 0.1, "mm" );
-
-  //addNumber( "zposition", "Z-position, i.e. distance to fish, for the xrange search", 0.0, -1000., 1000., 0.1, "mm");
   addBoolean( "followmidline", "Auto-adjust y to follow the fish midline.", true);
 
   newSection( "Stimulation" );
