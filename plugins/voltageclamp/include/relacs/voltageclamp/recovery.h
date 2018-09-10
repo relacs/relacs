@@ -26,6 +26,7 @@
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/str.h>
+#include <relacs/voltageclamp/summary.h>
 using namespace relacs;
 
 namespace voltageclamp {
@@ -43,11 +44,17 @@ class Recovery : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
+friend class Summary;
+
 public:
 
   Recovery( void );
   virtual int main( void );
 
+private:
+
+    vector<double> tau;
+    vector<double> potential;
 
 protected:
 

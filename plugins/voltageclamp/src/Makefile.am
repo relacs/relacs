@@ -9,7 +9,8 @@ pluginlib_LTLIBRARIES = \
     libvoltageclamprecovery.la \
     libvoltageclampramp.la \
     libvoltageclamptail.la \
-    libvoltageclampmembranetest.la
+    libvoltageclampmembranetest.la \
+    libvoltageclampsummary.la
 
 
 
@@ -236,13 +237,51 @@ libvoltageclampmembranetest_la_include_HEADERS = $(HEADER_PATH)/membranetest.h
 
 
 
+libvoltageclampsummary_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libvoltageclampsummary_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libvoltageclampsummary_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libvoltageclampsummary_la_OBJECTS) : moc_summary.cc
+
+libvoltageclampsummary_la_SOURCES = summary.cc
+
+libvoltageclampsummary_la_includedir = $(pkgincludedir)/voltageclamp
+
+libvoltageclampsummary_la_include_HEADERS = $(HEADER_PATH)/summary.h
+
+
+
 check_PROGRAMS = \
     linktest_libvoltageclampactivation_la \
     linktest_libvoltageclampinactivation_la \
     linktest_libvoltageclamprecovery_la \
     linktest_libvoltageclampramp_la \
     linktest_libvoltageclamptail_la \
-    linktest_libvoltageclampmembranetest_la
+    linktest_libvoltageclampmembranetest_la \
+    linktest_libvoltageclampsummary_la
 
 linktest_libvoltageclampactivation_la_SOURCES = linktest.cc
 linktest_libvoltageclampactivation_la_LDADD = libvoltageclampactivation.la
@@ -261,5 +300,8 @@ linktest_libvoltageclamptail_la_LDADD = libvoltageclamptail.la
 
 linktest_libvoltageclampmembranetest_la_SOURCES = linktest.cc
 linktest_libvoltageclampmembranetest_la_LDADD = libvoltageclampmembranetest.la
+
+linktest_libvoltageclampsummary_la_SOURCES = linktest.cc
+linktest_libvoltageclampsummary_la_LDADD = libvoltageclampsummary.la
 
 TESTS = $(check_PROGRAMS)

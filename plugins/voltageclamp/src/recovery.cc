@@ -81,7 +81,11 @@ int Recovery::main( void )
   trange.range(timesteps, ",", ":" );
   timesteps = timesteps/1000;
   int stepnum = (maxtest-mintest)/teststep+1;
-  std::vector<double> tau(stepnum);
+
+  for ( double step=mintest;  step<=maxtest; step+=teststep ) {
+    tau.push_back(0.0);
+    potential.push_back(step);
+  }
 
   // don't print repro message:
   noMessage();

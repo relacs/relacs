@@ -25,6 +25,7 @@
 #include <relacs/multiplot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
+#include <relacs/voltageclamp/summary.h>
 using namespace relacs;
 
 namespace voltageclamp {
@@ -42,11 +43,17 @@ class Inactivation : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
+friend class Summary;
+
 public:
 
   Inactivation( void );
   virtual int main( void );
 
+private:
+
+    vector<double> inact;
+    vector<double> potential;
 
 protected:
 

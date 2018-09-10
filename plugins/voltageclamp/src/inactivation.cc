@@ -70,8 +70,6 @@ int Inactivation::main( void )
   double teststep = number( "teststep" );
 
   int stepnum = (maxtest-mintest)/teststep+1;
-  std::vector<double> inact(stepnum);
-
 
   // don't print repro message:
   noMessage();
@@ -141,7 +139,8 @@ int Inactivation::main( void )
 
       absmax = min( y );
       index = minIndex( y ) + idx0;
-      inact[i] = absmax;
+      inact.push_back(absmax);
+      potential.push_back(step);
 
       // plot
       P.lock();

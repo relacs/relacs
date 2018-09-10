@@ -74,13 +74,14 @@ int Activation::main( void )
 
   int stepnum = (maxtest-mintest)/teststep+1;
   std::vector<double> IV(stepnum);
-  std::vector<double> tau(stepnum);
-  std::vector<double> potential(stepnum);
+
   int i3 = -1;
   for ( int step=mintest;  step<=maxtest; step+=teststep ) {
     i3 += 1;
-    potential[i3] = step;
-  }
+    potential.push_back(step);
+    tau.push_back(0.0);
+    g_act.push_back(0.0);
+  };
 
   // don't print repro message:
   noMessage();
@@ -198,7 +199,6 @@ int Activation::main( void )
     }
 
   double p_rev = pRev(IV);
-  std::vector<double> g_act(potential.size());
   for ( unsigned i=0; i<potential.size(); i++) {
     g_act[i] = -IV[i]/(p_rev-potential[i]);
     cerr << g_act[i] << "\n";
