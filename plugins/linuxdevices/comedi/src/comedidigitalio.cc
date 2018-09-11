@@ -9,12 +9,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -34,7 +34,7 @@ using namespace relacs;
 namespace comedi {
 
 
-ComediDigitalIO::ComediDigitalIO( void ) 
+ComediDigitalIO::ComediDigitalIO( void )
   : DigitalIO( "ComediDigitalIO" )
 {
   DeviceP = NULL;
@@ -45,7 +45,7 @@ ComediDigitalIO::ComediDigitalIO( void )
 }
 
 
-ComediDigitalIO::ComediDigitalIO( const string &device, const Options &opts ) 
+ComediDigitalIO::ComediDigitalIO( const string &device, const Options &opts )
   : ComediDigitalIO()
 {
   Options::read(opts);
@@ -53,7 +53,7 @@ ComediDigitalIO::ComediDigitalIO( const string &device, const Options &opts )
 }
 
   
-ComediDigitalIO::~ComediDigitalIO( void ) 
+ComediDigitalIO::~ComediDigitalIO( void )
 {
   close();
 }
@@ -69,7 +69,7 @@ void ComediDigitalIO::initOptions()
 
 
 int ComediDigitalIO::open( const string &device )
-{ 
+{
   clearError();
   if ( isOpen() )
     return -5;
@@ -117,7 +117,7 @@ int ComediDigitalIO::open( const string &device )
     DeviceP = NULL;
     SubDevice = 0;
     return NotOpen;
-  }  
+  }
 
   // set basic device infos:
   setDeviceName( comedi_get_board_name( DeviceP ) );
@@ -128,18 +128,18 @@ int ComediDigitalIO::open( const string &device )
   MaxLines = comedi_get_n_channels( DeviceP, SubDevice );
 
   setInfo();
-  
+
   return 0;
 }
 
 
-bool ComediDigitalIO::isOpen( void ) const 
-{ 
+bool ComediDigitalIO::isOpen( void ) const
+{
   return ( DeviceP != NULL );
 }
 
 
-void ComediDigitalIO::close( void ) 
+void ComediDigitalIO::close( void )
 {
   clearError();
   if ( ! isOpen() )
@@ -165,7 +165,7 @@ void ComediDigitalIO::close( void )
 
 
 int ComediDigitalIO::lines( void ) const
-{ 
+{
   if ( !isOpen() )
     return 0;
   return MaxLines;
@@ -182,7 +182,7 @@ int ComediDigitalIO::configureLineUnlocked( unsigned int line, bool output )
 	 << " for direction " << direction << '\n';
     return WriteError;
   }
-  return DigitalIO::configureLine( line, output );
+  return DigitalIO::configureLineUnlocked( line, output );
 }
 
 
