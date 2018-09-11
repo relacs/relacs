@@ -131,7 +131,7 @@ public:
 
 private:
   int Speed = 40;
-  double Acc = 0.25;
+  double Acc = 1.5;
   bool Opened;
   int FileDescr;
   struct axis_limits {

@@ -130,7 +130,7 @@ bool XYZRobot::test_way(const Point &pos, const Point &newP)
 }
 
 
-bool XYZRobot::PF_up_and_over(const Point &p)
+bool XYZRobot::PF_up_and_over( const Point &p )
 {
   cerr << "PF up was called!!!\n";
   if ( Stopped ) {
@@ -139,7 +139,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
   }
   // if there are no forbidden areas just move to the point.
   if ( ForbiddenAreas.empty() ) {
-    go_to_point(p);
+    go_to_point( p );
     return true;
   }
   if( ! test_point(p)) {
@@ -154,16 +154,16 @@ bool XYZRobot::PF_up_and_over(const Point &p)
     std::cerr << "inside a forbidden area moving up. " << std::endl;
     position.z() -= 5;
     go_to_point(position);
-    PF_up_and_over(p);
+    PF_up_and_over( p );
     return false;
   }
 
 
   if(test_way(position,p)) {
     // move mirob to p
-    std::cerr <<"Tested way and moved to: " << p
+    std::cerr <<"Way ok moving to: " << p
 	      << std::endl;
-    go_to_point(p);
+    go_to_point( p );
     return true;;
 
     // if the way is blocked try to go over it.
@@ -227,7 +227,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
 }
 
 
-  //Init Robot: 
+  //Init Robot:
 
 bool XYZRobot::start_mirob( void )
 {
@@ -297,7 +297,7 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
   int to_move = how_many_move( position, coords );
   if ( to_move == 0 )
     return;
-
+  std::cerr << "how many: " << to_move << std::endl;
   //  Point dists = position.abs_diff(coords);
   Point dists = abs(position - coords);
   Point speeds = Point( speed*Robot->get_axis_factor( 0 ),
@@ -312,7 +312,7 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
   }
 
   Point times = calculate_times( speeds, dists );
-
+  std::cerr << times << std::endl;
   double maxTime = get_max( times[0], times[1], times[2] );
   double precision = 0.005;
 
@@ -323,6 +323,7 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
 				   dists[axis], maxTime, precision );
       }
     }
+    std::cerr << speeds << std::endl;
     if ( !Robot->checkPowerState() )
       powerAxes( true );
     Robot->move( 0, coords.x(), speeds[0] );
