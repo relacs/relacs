@@ -125,6 +125,10 @@ void Summary::plotinactivation( RePro* rp_inac )
   vector<double> potential = inac->potential;
   vector<double> I_I_min(I_inact.size());
 
+  for (unsigned int i=0; i<I_inact.size(); i++) {
+    I_I_min[i] = I_inact[i]/min(I_inact);
+  };
+
   P.lock();
   P[0].plot(potential, I_I_min, Plot::Green, 2.0, Plot::Solid);
   P[0].back().setAxis( Plot::X1Y2 );
