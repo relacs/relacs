@@ -36,6 +36,7 @@ Summary::Summary( void )
 {
   // add some options:
   addBoolean("plotall", "Keep old Plots", true);
+  addNumber("taumax", "maximum of time constant plot", 15.0, "ms");
 //  addText("color_g_act","Color of activation curve", "Yellow")
 //  addText("color_I_inact","Color of inactivation curve", "Green")
 //  addText("color_tau_act","Color of inactivation time constant from activation protocol", "Magenta")
@@ -48,6 +49,7 @@ Summary::Summary( void )
   P[0].setYLabel( "Current [nA]" );
   P[0].setY2Label( "I/Imax");
   P[0].setY2Range(0,1);
+  P[0].setY2Tics(0.0, 0.2);
 
   P[1].setXLabel( "Potential [mV]" );
   P[1].setYLabel( "\u03c4 [ms]");
@@ -59,7 +61,9 @@ Summary::Summary( void )
 
 int Summary::main( void )
 {
-  Inactivation inac();
+  double taumax = number("taumax");
+
+//  Inactivation inac();
   bool plotall = boolean( "plotall" );
   if ( !plotall ) {
     //clear plot
@@ -88,6 +92,11 @@ int Summary::main( void )
   while ( ! interrupt() && softStop() == 0 )
     sleep( 0.2 );
 
+  P.lock();
+  P[1].setYRange(0.0, taumax);
+  P.draw();
+  P.unlock();
+
   return Completed;
 }
 
@@ -97,13 +106,10 @@ void Summary::plotactivation( RePro* rp_ac ) {
   vector<double> tau_inac = ac->tau;
   vector<double> potential = ac->potential;
 
-  //  double maxtest = ac->number("maxtest");
-  //  double mintest = ac->number("mintest");
-  //  double teststep = ac->number("teststep");
-  //  int stepnum = (maxtest-mintest)/teststep+1;
-
   P.lock();
   P[0].plot(potential, g_act, Plot::Yellow, 2.0, Plot::Solid);
+  P[0].setYRange(0,max(g_act));
+
   P[1].plot(potential, tau_inac, Plot::Magenta, 2.0, Plot::Solid);
   P.draw();
   P.unlock();
@@ -115,13 +121,15 @@ void Summary::plotactivation( RePro* rp_ac ) {
 void Summary::plotinactivation( RePro* rp_inac )
 {
   Inactivation* inac = dynamic_cast<Inactivation*>( rp_inac );
-//  vector<double> I_inact = inac->inact;
-//  vector<double> potential = inac->potential;
-//
-//  P.lock();
-//  P[0].plot(potential, I_inact, Plot::Green, 2.0, Plot::Solid);
-//  P.draw();
-//  P.unlock();
+  vector<double> I_inact = inac->inact;
+  vector<double> potential = inac->potential;
+  vector<double> I_I_min(I_inact.size());
+
+  P.lock();
+  P[0].plot(potential, I_I_min, Plot::Green, 2.0, Plot::Solid);
+  P[0].back().setAxis( Plot::X1Y2 );
+  P.draw();
+  P.unlock();
 }
 
 void Summary::plotrecovery( RePro* rp_rec )
