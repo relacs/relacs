@@ -132,7 +132,6 @@ bool XYZRobot::test_way(const Point &pos, const Point &newP)
 
 bool XYZRobot::PF_up_and_over( const Point &p )
 {
-  cerr << "PF up was called!!!\n";
   if ( Stopped ) {
     std::cerr << "Robot was stopped movement forbidden! " << p << std::endl;
     return false;
@@ -161,10 +160,10 @@ bool XYZRobot::PF_up_and_over( const Point &p )
 
   if(test_way(position,p)) {
     // move mirob to p
-    std::cerr <<"Way ok moving to: " << p
+    std::cerr <<"Way ok, moving to: " << p
 	      << std::endl;
     go_to_point( p );
-    return true;;
+    return true;
 
     // if the way is blocked try to go over it.
   } else {
@@ -297,7 +296,6 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
   int to_move = how_many_move( position, coords );
   if ( to_move == 0 )
     return;
-  std::cerr << "how many: " << to_move << std::endl;
   //  Point dists = position.abs_diff(coords);
   Point dists = abs(position - coords);
   Point speeds = Point( speed*Robot->get_axis_factor( 0 ),
@@ -312,7 +310,6 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
   }
 
   Point times = calculate_times( speeds, dists );
-  std::cerr << times << std::endl;
   double maxTime = get_max( times[0], times[1], times[2] );
   double precision = 0.005;
 
@@ -323,7 +320,6 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
 				   dists[axis], maxTime, precision );
       }
     }
-    std::cerr << speeds << std::endl;
     if ( !Robot->checkPowerState() )
       powerAxes( true );
     Robot->move( 0, coords.x(), speeds[0] );

@@ -158,6 +158,23 @@ int MovingObjects::main( void )
   Point rdest = convertAxes( dest ); //convert fish to robot coordinates
   Point rstart = convertAxes( start );
 
+  OutData sig;
+  sig.setTrace( 0 );
+  sig.constWave( 0.0 );
+  //sig.setIdent( "init" );
+  sig.mute();
+  sig.description().newSection( "Robot" );
+
+  Options opts;
+  Parameter &p1 = opts.addNumber( "speed", 0.0, "mm/s" );
+  Parameter &p2 = opts.addNumber( "lateral position", 0., "mm" );
+  Parameter &p3 = opts.addNumber( "direction", 1 );
+  sig.setMutable( p1 );
+  sig.setMutable( p2 );
+  sig.setMutable( p3 );
+  sig.setDescription( opts );
+
+
   for(int i = 0; i < distrange.size(); i ++) {
     double z_pos = distrange[i];
     rdest[axis_map[2]] += (z_pos * axis_invert[2]);
@@ -166,22 +183,21 @@ int MovingObjects::main( void )
     robot->wait();
     for (int j = 0; j < speedrange.size(); j++) {
       int speed = (int)speedrange[j];
-      std::cerr << speed << std::endl;
-      OutData sig;
-      sig.setTrace( 0 );
-      sig.constWave( 0.0 );
-      sig.setIdent( "init" );
-      sig.mute();
-      sig.description().newSection( "Robot" );
-      sig.description().addNumber( "Speed", speed );
-      sig.description().save( cout );
-      write( sig );
 
       if ( !interrupt() ) {
+	sig.description().setNumber("speed", speed);
+	sig.description().setNumber("direction", 1);
+	sig.description().setNumber("lateral position", z_pos);
+	write( sig );
 	robot->go_to_point( rdest, speed );
 	robot->wait();
       }
+
       if ( !interrupt() ) {
+	sig.description().setNumber("speed", speed);
+	sig.description().setNumber("direction", -1);
+	sig.description().setNumber("lateral position", z_pos);
+	write( sig );
 	robot->go_to_point( rstart, speed );
 	robot->wait();
       }
