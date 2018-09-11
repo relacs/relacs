@@ -123,7 +123,6 @@ libefishpunitmodel_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS)
 
 libefishpunitmodel_la_LIBADD = \
-    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/plugins/ephys/src/librelacsspikingneuron.la \
     $(top_builddir)/plugins/ephys/src/libephysneuronmodels.la \
     $(top_builddir)/plugins/efield/src/libefieldtraces.la \
