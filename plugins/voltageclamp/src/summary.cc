@@ -59,6 +59,7 @@ Summary::Summary( void )
 
 int Summary::main( void )
 {
+  Inactivation inac();
   bool plotall = boolean( "plotall" );
   if ( !plotall ) {
     //clear plot
@@ -96,10 +97,10 @@ void Summary::plotactivation( RePro* rp_ac ) {
   vector<double> tau_inac = ac->tau;
   vector<double> potential = ac->potential;
 
-  double maxtest = ac->number("maxtest");
-  double mintest = ac->number("mintest");
-  double teststep = ac->number("teststep");
-  int stepnum = (maxtest-mintest)/teststep+1;
+  //  double maxtest = ac->number("maxtest");
+  //  double mintest = ac->number("mintest");
+  //  double teststep = ac->number("teststep");
+  //  int stepnum = (maxtest-mintest)/teststep+1;
 
   P.lock();
   P[0].plot(potential, g_act, Plot::Yellow, 2.0, Plot::Solid);
@@ -108,10 +109,12 @@ void Summary::plotactivation( RePro* rp_ac ) {
   P.unlock();
 
 
-};
+}
 
-void Summary::plotinactivation( RePro* rp_inac ) {
-//  Inactivation* inac = dynamic_cast<Inactivation*>( rp_inac );
+
+void Summary::plotinactivation( RePro* rp_inac )
+{
+  Inactivation* inac = dynamic_cast<Inactivation*>( rp_inac );
 //  vector<double> I_inact = inac->inact;
 //  vector<double> potential = inac->potential;
 //
@@ -119,9 +122,10 @@ void Summary::plotinactivation( RePro* rp_inac ) {
 //  P[0].plot(potential, I_inact, Plot::Green, 2.0, Plot::Solid);
 //  P.draw();
 //  P.unlock();
-};
+}
 
-void Summary::plotrecovery( RePro* rp_rec ) {
+void Summary::plotrecovery( RePro* rp_rec )
+{
   Recovery* rec = dynamic_cast<Recovery*>( rp_rec );
   vector<double> tau_rec = rec->tau;
   vector<double> potential = rec->potential;
@@ -130,7 +134,7 @@ void Summary::plotrecovery( RePro* rp_rec ) {
   P[1].plot(potential, tau_rec, Plot::Cyan, 2.0, Plot::Solid);
   P.draw();
   P.unlock();
-};
+}
 
 
 addRePro( Summary, voltageclamp );

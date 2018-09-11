@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_VOLTAGECLAMP_ACTIVATION_H_
-#define _RELACS_VOLTAGECLAMP_ACTIVATION_H_ 1
+#ifndef _RELACS_VOLTAGECLAMP_INACTIVATION_H_
+#define _RELACS_VOLTAGECLAMP_INACTIVATION_H_ 1
 
 #include <relacs/multiplot.h>
 #include <relacs/repro.h>
@@ -64,4 +64,4 @@ protected:
 
 }; /* namespace voltageclamp */
 
-#endif /* ! _RELACS_VOLTAGECLAMP_ACTIVATION_H_ */
+#endif /* ! _RELACS_VOLTAGECLAMP_INACTIVATION_H_ */
