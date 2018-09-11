@@ -37,6 +37,7 @@ NeuronModels::NeuronModels( void )
   MMCInx = -1;
   MMHCInx = -1;
   HMHCInx = -1;
+  VCInx = -1;
   VCMode = false;
 }
 
@@ -85,6 +86,12 @@ void NeuronModels::main( void )
 
   // state variables:
   int simn = neuron()->dimension();
+  if ( VCTau >= 10.0*timeStep() ) {
+    VCInx = simn;
+    simn++;
+  }
+  else
+    VCInx = -1;
   if ( GMC > 1e-8  ) {
     MMCInx = simn;
     simn++;
@@ -147,9 +154,15 @@ void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
   // current noise:
   double s = noiseFac() * rnd.gaussian();
   CurrentInput = 0.0;
+  double vcerror = 0.0;
   if ( VCMode ) {
     // voltage-clamp current:
-    double vccurrent = VCGain*(x[0] - signal( 0.001 * t, PotentialOutput[0] ));
+    vcerror = x[0] - signal( 0.001 * t, PotentialOutput[0] );
+    double vccurrent = VCGain;
+    if ( VCInx >= 0 )
+      vccurrent *= x[VCInx]/VCTau;
+    else 
+      vccurrent *= vcerror;
     CurrentInput -= vccurrent;
     s -= vccurrent;
   }
@@ -167,6 +180,9 @@ void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 
   (*NM)( t, s, x, dxdt, n );
 
+  if ( VCInx >= 0 ) {
+    dxdt[VCInx] = ( vcerror - x[VCInx] )/VCTau;
+  }
   if ( MMCInx >= 0 ) {
     double m0mc = 1.0/(exp(-(x[0]-MVMC)/MWMC)+1.0);
     dxdt[MMCInx] = ( m0mc - x[MMCInx] )/TAUMC;
@@ -235,19 +251,23 @@ void NeuronModels::addModels( void )
 
 void NeuronModels::addOptions( void )
 {
-  newSection( "Spike generator" );
+  newSection( "General" );
+  newSubSection( "Spike generator" );
   addSelection( "spikemodel", "Spike model", "" );
   addNumber( "noised", "Intensity of current noise", 0.0, 0.0, 100.0, 1.0 );
   addNumber( "deltat", "Delta t", 0.005, 0.0, 1.0, 0.001, "ms" );
   addSelection( "integrator", "Method of integration", "Euler|Midpoint|Runge-Kutta 4" );
-  addNumber( "vcgain", "Voltage-clamp gain", 100.0, 0.0, 100000.0, 10.0 );
-  newSection( "Voltage-gated current 1 - activation only" );
+  newSubSection( "Voltage clamp" );
+  addNumber( "vcgain", "Voltage-clamp gain", 10.0, 0.0, 100000.0, 10.0 );
+  addNumber( "vctau", "Voltage-clamp time constant", 0.1, 0.0, 10.0, 0.01, "ms" );
+  newSection( "Currents" );
+  newSubSection( "Voltage-gated current 1 - activation only" );
   addNumber( "gmc", "Conductivity", 0.0, 0.0, 10000.0, 0.1 );
   addNumber( "emc", "Reversal potential", -90.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
   addNumber( "mvmc", "Midpoint potential of activation", -40, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
   addNumber( "mwmc", "Width of activation", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
   addNumber( "taumc", "Time constant", 10.0, 0.0, 1000.0, 1.0, "ms" ).setActivation( "gmc", ">0" );
-  newSection( "Voltage-gated current 2 - activation and inactivation" );
+  newSubSection( "Voltage-gated current 2 - activation and inactivation" );
   addNumber( "gmhc", "Conductivity", 0.0, 0.0, 10000.0, 0.1 );
   addNumber( "emhc", "Reversal potential", -90.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );
   addNumber( "mvmhc", "Midpoint potential of activation", -40, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );
@@ -277,6 +297,7 @@ void NeuronModels::readOptions( void )
     Integrate = eulerStep;
 
   VCGain = number( "vcgain" );
+  VCTau = number( "vctau" );
   GMC = number( "gmc" );
   EMC = number( "emc" );
   MVMC = number( "mvmc" );
@@ -306,9 +327,12 @@ void NeuronModels::dialogModelOptions( OptDialog *od, string *tabhotkeys )
 
 OptWidget *NeuronModels::dialogOptions( OptDialog *od, string *tabhotkeys )
 {
-  OptWidget *ow = od->addTabOptions( "General", *this, dialogSelectMask(),
+  OptWidget *ow = od->addTabOptions( "General", section( "General" ), dialogSelectMask(),
 				     dialogReadOnlyMask(), dialogStyle(), 
 				     mutex(), tabhotkeys );
+  od->addTabOptions( "Currents", section( "Currents" ), dialogSelectMask(),
+		     dialogReadOnlyMask(), dialogStyle(), 
+		     mutex(), tabhotkeys );
   dialogModelOptions( od, tabhotkeys );
   od->setVerticalSpacing( 1 );
   return ow;
