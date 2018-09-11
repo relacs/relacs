@@ -45,12 +45,15 @@ if test "x${QT4_LIBS}" = x ; then
 fi
 
 # read arguments:
+WITH_QT="yes"
 EXTRA_MOC_LOCATION=
 AC_ARG_WITH([qt4],
 	[AS_HELP_STRING([--with-qt4=DIR],
 	           	[override Qt4 path ("/lib" and "/include" is appended)])],
 	[QT4_ERROR="no path given for option --with-qt4"
-	if test ${withval} != yes -a "x${withval}" != x ; then
+	if test ${withval} = no ; then
+	   WITH_QT="no"
+	elif test ${withval} != yes -a "x${withval}" != x ; then
 	   	QT4CORE_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore"
     		QT4_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore -I${withval}/include/qt4/QtGui -I${withval}/include/qt4/QtNetwork"
 		QT4CORE_LDFLAGS="-L${withval}/lib"
@@ -82,6 +85,8 @@ AC_ARG_WITH([qt4-lib],
 		AC_MSG_ERROR(${QT4_LIB_ERROR})
 	fi],
 	[])
+
+if test $WITH_QT = "yes"; then
 
 # update flags:
 CPPFLAGS="${QT4_CPPFLAGS} ${CPPFLAGS}"
@@ -140,6 +145,9 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #endif
 ])],,AC_MSG_ERROR(${QT4_WRONG_VESION}))
 
+fi
+# WITH_QT
+
 # publish:
 AC_SUBST(QT4CORE_CPPFLAGS)
 AC_SUBST(QT4CORE_LDFLAGS)
@@ -155,6 +163,10 @@ LIBS=${SAVE_LIBS}
 
 
 # moc:
+MOC=moc
+
+if test $WITH_QT = "yes"; then
+
 FORCED_MOC=
 AC_ARG_WITH([moc],
 	[AS_HELP_STRING([--with-moc=CMD],[override moc command])],
@@ -203,6 +215,8 @@ else
             fi
         fi
     fi
+fi
+
 fi
 
 AC_SUBST(MOC)
