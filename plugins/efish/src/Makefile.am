@@ -10,7 +10,8 @@ pluginlib_LTLIBRARIES = \
     libefishsam.la \
     libefishficurve.la \
     libefishfilestimulus.la \
-    libefishchirps.la
+    libefishchirps.la \
+    libefishmovingobjects.la
 
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
@@ -428,6 +429,43 @@ libefishrobottofishposition_la_include_HEADERS = $(HEADER_PATH)/robottofishposit
 
 
 
+libefishmovingobjects_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libefishmovingobjects_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libefishmovingobjects_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libefishmovingobjects_la_OBJECTS) : moc_movingobjects.cc
+
+libefishmovingobjects_la_SOURCES = movingobjects.cc
+
+libefishmovingobjects_la_includedir = $(pkgincludedir)/efish
+
+libefishmovingobjects_la_include_HEADERS = $(HEADER_PATH)/movingobjects.h
+
+
+
 check_PROGRAMS = \
     linktest_libefishbaselineactivity_la \
     linktest_libefishsession_la \
@@ -436,7 +474,8 @@ check_PROGRAMS = \
     linktest_libefishficurve_la \
     linktest_libefishfilestimulus_la \
     linktest_libefishchirps_la \
-    linktest_libefishrobottofishposition_la
+    linktest_libefishrobottofishposition_la \
+    linktest_libefishmovingobjects_la
 
 if RELACS_COND_TML
 check_PROGRAMS += \
@@ -472,5 +511,8 @@ linktest_libefishreceptivefield_la_LDADD = libefishreceptivefield.la
 
 linktest_libefishrobottofishposition_la_SOURCES = linktest.cc
 linktest_libefishrobottofishposition_la_LDADD = libefishrobottofishposition.la
+
+linktest_libefishmovingobjects_la_SOURCES = linktest.cc
+linktest_libefishmovingobjects_la_LDADD = libefishmovingobjects.la
 
 TESTS = $(check_PROGRAMS)
