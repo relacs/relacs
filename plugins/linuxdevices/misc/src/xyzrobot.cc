@@ -322,11 +322,10 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
     }
     if ( !Robot->checkPowerState() )
       powerAxes( true );
-    Robot->move( 0, coords.x(), speeds[0] );
-    Robot->move( 1, coords.y(), speeds[1] );
-
     if ( speeds[2] > 450 )
       speeds[2] = 450;
+    Robot->move( 0, coords.x(), speeds[0] );
+    Robot->move( 1, coords.y(), speeds[1] );
     Robot->move( 2, coords.z(), speeds[2] );
   }
   /*
@@ -533,6 +532,7 @@ void XYZRobot::set_Area( Shape *newArea )
 
 void XYZRobot::add_forbidden( Shape *forbidden )
 {
+  std::cerr << "XYZRobot::addforbidden\n";
   ForbiddenAreas.push_back(forbidden);
 }
 
@@ -631,7 +631,7 @@ int XYZRobot::how_many_move( const Point &position, const Point &coords )
 {
   int count = 0;
   for ( int i=0; i<3; i++ ) {
-    if ( abs(position[i] - coords[i]) > 0.5*Robot->get_step_length(i) )
+    if ( abs(position[i] - coords[i]) > 0.5 * Robot->get_step_length(i) )
       count++;
   }
   return count;

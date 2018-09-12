@@ -26,6 +26,7 @@
 #include <relacs/linearrange.h>
 #include <relacs/plot.h>
 #include <relacs/ephys/traces.h>
+#include <relacs/efield/traces.h>
 #include <relacs/outdata.h>
 #include <relacs/misc/xyzrobot.h>
 #include <relacs/point.h>
@@ -44,7 +45,8 @@ namespace efish {
 
 
 class MovingObjects : public RePro,
-    public ephys::Traces
+  public efield::Traces,
+  public ephys::Traces
 {
   Q_OBJECT
 

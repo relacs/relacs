@@ -407,7 +407,6 @@ QRect Robot::prepare_cuboid_plot(Cuboid* cuboid) {
 
 void Robot::main( void )
 {
-  cerr << "robot main\n";
   if( robot == 0 ) {
     errorBox->append( "Couldn't find the RobotController. Closing." );
     return;

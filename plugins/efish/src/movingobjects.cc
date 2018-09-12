@@ -40,9 +40,9 @@ MovingObjects::MovingObjects( void )
   addNumber( "distmax", "Maximum lateral distance", 0.0, -1000., 1000., 0.1, "mm" );
   addNumber( "diststep", "Desired step size of the distance-range", 1.0, 0.1, 1000., 0.1, "mm" );
 
-  addNumber( "speedmin", "Minimum travel speed of the object", 0, 0, 250, 1, "mm/s" );
-  addNumber( "speedmax", "Maximum travel speed of the object", 0, 0, 250, 1, "mm/s" );
-  addNumber( "speedstep", "Desired step size of the speed range", 0, 0, 100, 1., "mm/s" );
+  addNumber( "speedmin", "Minimum travel speed of the object", 0, 0, 450, 1, "mm/s" );
+  addNumber( "speedmax", "Maximum travel speed of the object", 0, 0, 450, 1, "mm/s" );
+  addNumber( "speedstep", "Desired step size of the speed range", 0, 0, 400, 1., "mm/s" );
 
   newSection( "Robot setup" );
   addSelection( "xmapping", "Mapping of x-axis to robot axis", "y|z|x" );
@@ -144,8 +144,6 @@ int MovingObjects::main( void )
   axis_invert[1] = boolean("yinvert") ? -1 : 1;
   axis_invert[2] = boolean("zinvert") ? -1 : 1;
 
-  moveToPosition( start );
-
 
   Point dest( start );
   if ( axis == "x" )
@@ -158,10 +156,13 @@ int MovingObjects::main( void )
   Point rdest = convertAxes( dest ); //convert fish to robot coordinates
   Point rstart = convertAxes( start );
 
+  robot->PF_up_and_over( safe_pos );
+  std::cerr << "ping\n";
+
   OutData sig;
   sig.setTrace( 0 );
   sig.constWave( 0.0 );
-  //sig.setIdent( "init" );
+  sig.setIdent( "moving object" );
   sig.mute();
   sig.description().newSection( "Robot" );
 
@@ -174,12 +175,11 @@ int MovingObjects::main( void )
   sig.setMutable( p3 );
   sig.setDescription( opts );
 
-
   for(int i = 0; i < distrange.size(); i ++) {
     double z_pos = distrange[i];
     rdest[axis_map[2]] += (z_pos * axis_invert[2]);
     rstart[axis_map[2]] += (z_pos * axis_invert[2]);
-    robot->PF_up_and_over( rstart );
+    robot->go_to_point( rstart );
     robot->wait();
     for (int j = 0; j < speedrange.size(); j++) {
       int speed = (int)speedrange[j];
@@ -188,24 +188,24 @@ int MovingObjects::main( void )
 	sig.description().setNumber("speed", speed);
 	sig.description().setNumber("direction", 1);
 	sig.description().setNumber("lateral position", z_pos);
-	write( sig );
+	std::cerr << testWrite(sig) << std::endl;
+	//write( sig );
 	robot->go_to_point( rdest, speed );
 	robot->wait();
       }
 
       if ( !interrupt() ) {
+	sleep(1.5);
 	sig.description().setNumber("speed", speed);
 	sig.description().setNumber("direction", -1);
 	sig.description().setNumber("lateral position", z_pos);
-	write( sig );
+	//write( sig );
 	robot->go_to_point( rstart, speed );
 	robot->wait();
       }
-      //moveToPosition( dest );
-      //moveToPosition( start );
 
       if ( interrupt() ) {
-	robot->PF_up_and_over( safe_pos);
+	robot->PF_up_and_over( safe_pos );
 	robot->wait();
 	return Failed;
       }
