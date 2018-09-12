@@ -157,11 +157,10 @@ int MovingObjects::main( void )
   Point rstart = convertAxes( start );
 
   robot->PF_up_and_over( safe_pos );
-  std::cerr << "ping\n";
 
   OutData sig;
   sig.setTrace( 0 );
-  sig.constWave( 0.0 );
+  sig.constWave( 0.01, -1, 0.0 );
   sig.setIdent( "moving object" );
   sig.mute();
   sig.description().newSection( "Robot" );
@@ -183,13 +182,12 @@ int MovingObjects::main( void )
     robot->wait();
     for (int j = 0; j < speedrange.size(); j++) {
       int speed = (int)speedrange[j];
-
+      sleep(1.5);
       if ( !interrupt() ) {
 	sig.description().setNumber("speed", speed);
 	sig.description().setNumber("direction", 1);
 	sig.description().setNumber("lateral position", z_pos);
-	std::cerr << testWrite(sig) << std::endl;
-	//write( sig );
+	write(sig);
 	robot->go_to_point( rdest, speed );
 	robot->wait();
       }
@@ -199,7 +197,7 @@ int MovingObjects::main( void )
 	sig.description().setNumber("speed", speed);
 	sig.description().setNumber("direction", -1);
 	sig.description().setNumber("lateral position", z_pos);
-	//write( sig );
+	write( sig );
 	robot->go_to_point( rstart, speed );
 	robot->wait();
       }
@@ -213,6 +211,7 @@ int MovingObjects::main( void )
   }
   robot->PF_up_and_over( safe_pos );
   robot->wait();
+  robot->powerAxes( false );
   return Completed;
 }
 
