@@ -100,6 +100,7 @@ int MovingObjects::main( void )
   Point safe_pos = point( "safepos" );
 
   int repeats = number( "repeats" );
+  double pause = number( "pause" );
 
   double travel_dist = number( "traveldist" );
   std::string axis = text( "movementaxis" );
@@ -187,8 +188,8 @@ int MovingObjects::main( void )
     robot->wait();
     for ( int j = 0; j < speedrange.size(); ++j ) {
       int speed = (int)speedrange[j];
-      sleep(1.5);
       for ( int k = 0; k < repeats; ++k ) {
+	sleep( pause );
 	if ( !interrupt() ) {
 	  sig.description().setNumber("speed", speed);
 	  sig.description().setNumber("direction", 1);
@@ -199,7 +200,7 @@ int MovingObjects::main( void )
 	}
 
 	if ( !interrupt() ) {
-	  sleep(1.5);
+	  sleep( pause );
 	  sig.description().setNumber("speed", speed);
 	  sig.description().setNumber("direction", -1);
 	  sig.description().setNumber("lateral position", z_pos);
