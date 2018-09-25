@@ -99,6 +99,8 @@ int MovingObjects::main( void )
   Point start = point( "startpos" );
   Point safe_pos = point( "safepos" );
 
+  int repeats = number( "repeats" );
+
   double travel_dist = number( "traveldist" );
   std::string axis = text( "movementaxis" );
 
@@ -177,34 +179,35 @@ int MovingObjects::main( void )
   sig.setMutable( p3 );
   sig.setDescription( opts );
 
-  for(int i = 0; i < distrange.size(); i ++) {
+  for( int i = 0; i < distrange.size(); ++i ) {
     double z_pos = distrange[i];
     rdest[axis_map[2]] += (z_pos * axis_invert[2]);
     rstart[axis_map[2]] += (z_pos * axis_invert[2]);
     robot->go_to_point( rstart );
     robot->wait();
-    for (int j = 0; j < speedrange.size(); j++) {
+    for ( int j = 0; j < speedrange.size(); ++j ) {
       int speed = (int)speedrange[j];
       sleep(1.5);
-      if ( !interrupt() ) {
-	sig.description().setNumber("speed", speed);
-	sig.description().setNumber("direction", 1);
-	sig.description().setNumber("lateral position", z_pos);
-	write(sig);
-	robot->go_to_point( rdest, speed );
-	robot->wait();
-      }
+      for ( int k = 0; k < repeats; ++k ) {
+	if ( !interrupt() ) {
+	  sig.description().setNumber("speed", speed);
+	  sig.description().setNumber("direction", 1);
+	  sig.description().setNumber("lateral position", z_pos);
+	  write(sig);
+	  robot->go_to_point( rdest, speed );
+	  robot->wait();
+	}
 
-      if ( !interrupt() ) {
-	sleep(1.5);
-	sig.description().setNumber("speed", speed);
-	sig.description().setNumber("direction", -1);
-	sig.description().setNumber("lateral position", z_pos);
-	write( sig );
-	robot->go_to_point( rstart, speed );
-	robot->wait();
+	if ( !interrupt() ) {
+	  sleep(1.5);
+	  sig.description().setNumber("speed", speed);
+	  sig.description().setNumber("direction", -1);
+	  sig.description().setNumber("lateral position", z_pos);
+	  write( sig );
+	  robot->go_to_point( rstart, speed );
+	  robot->wait();
+	}
       }
-
       if ( interrupt() ) {
 	robot->PF_up_and_over( safe_pos );
 	robot->wait();
