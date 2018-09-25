@@ -188,14 +188,17 @@ int MovingObjects::main( void )
     robot->wait();
     for ( int j = 0; j < speedrange.size(); ++j ) {
       int speed = (int)speedrange[j];
+      double duration = travel_dist / speed;
+      sig.constWave( duration, -1, 0.0 );
+      sig.setDescription( opts );
       for ( int k = 0; k < repeats; ++k ) {
-	sleep( pause );
 	if ( !interrupt() ) {
+	  sleep( pause );
 	  sig.description().setNumber("speed", speed);
 	  sig.description().setNumber("direction", 1);
 	  sig.description().setNumber("lateral position", z_pos);
-	  write(sig);
 	  robot->go_to_point( rdest, speed );
+	  write(sig);
 	  robot->wait();
 	}
 
@@ -204,8 +207,8 @@ int MovingObjects::main( void )
 	  sig.description().setNumber("speed", speed);
 	  sig.description().setNumber("direction", -1);
 	  sig.description().setNumber("lateral position", z_pos);
-	  write( sig );
 	  robot->go_to_point( rstart, speed );
+	  write( sig );
 	  robot->wait();
 	}
       }
