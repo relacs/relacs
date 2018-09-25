@@ -34,7 +34,10 @@ MovingObjects::MovingObjects( void )
   addNumber( "traveldist", "Travel distance of the object", 0.0, -1000., 1000., 0.1, "mm" );
   addNumber( "travelspeed", "Default travel speed", 40.0, 0.0, 100.0, 0.1, "mm/s");
   addSelection( "movementaxis", "Movement along which dimension", "x|y|z" );
-
+  addNumber( "repeats", "number of back-and-forth movements", 1, 1, 100, 1);
+  addNumber( "pause", "pause bewteen movements (trials and back-and-forth movments)", 1.5, 0.0, 100., 0.25, "s");
+  addSelection( "object", "The object that is moved", "pvc comb 4cm|pvc comb 1cm|perspex bar|metal sphere");
+  
   newSection( "Parameter space");
   addNumber( "distmin", "Minimum lateral distance from fish (z).", 0.0, -200.00, 200.0, 1., "mm" );
   addNumber( "distmax", "Maximum lateral distance", 0.0, -1000., 1000., 0.1, "mm" );
