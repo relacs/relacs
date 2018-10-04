@@ -130,7 +130,7 @@ int Inactivation::main( void )
 
       double absmax = 0.0;
       int index = 0;
-      int idx0 = .002/dt+2;
+      int idx0 = .002/dt+5;
 
       std::vector <double> y(currenttrace.size()-idx0);
       for (int j=0; j<currenttrace.size()-idx0; j++) {

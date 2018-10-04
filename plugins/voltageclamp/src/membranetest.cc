@@ -20,6 +20,7 @@
 */
 
 #include <relacs/voltageclamp/membranetest.h>
+#include <relacs/fitalgorithm.h>
 using namespace relacs;
 
 namespace voltageclamp {
@@ -31,13 +32,13 @@ membranetest::membranetest( void )
 //  newSection("Stimulus");
   addNumber("holdingpotential", "Holding Potential", -100.0, -1000.0, 1000.0, 1.0, "mV");
   addNumber("amplitude", "Amplitude of output signal", 20.0, -1000.0, 1000.0, 0.1, "mV");
-  addNumber("duration", "Duration of output", 0.02, 0.001, 1000.0, 0.001, "sec", "ms");
-  addNumber("pause", "Duration of pause bewteen outputs", 0.08, 0.001, 1000.0, 0.001, "sec", "ms");
-  addInteger("repeats", "Repetitions of stimulus", 10, 0, 10000, 1).setStyle(OptWidget::SpecialInfinite);
+  addNumber("duration", "Duration of output", 0.002, 0.001, 1000.0, 0.001, "sec", "ms");
+  addNumber("pause", "Duration of pause bewteen outputs", 0.198, 0.001, 1000.0, 0.001, "sec", "ms");
+  addInteger("repeats", "Repetitions of stimulus", 3, 0, 10000, 1).setStyle(OptWidget::SpecialInfinite);
   addBoolean("infinite", "Infinite repetitions of membranetest", true);
   //  newSection("Analysis");
 //  addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
-  addBoolean("plotstd", "Plot standard deviation of current", true);
+  addBoolean("plotstd", "Plot standard deviation of current", false);
 //  addSelection("setdata", "Set results to the session variables", "rest only|always|never");
 //  addText( "checkoutput", "Outputs that need to be at their default value", "Current-1" ).setActivation( "setdata", "rest only" );
 
@@ -76,26 +77,6 @@ int membranetest::main( void )
   holdingsignal.constWave( holdingpotential );
   holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
 
-  // init:
-//  DoneState state = Completed;
-//  SampleDataD MeanPotential = SampleDataF( -0.5*duration, 2.0*duration, 1/samplerate, 0.0 );
-//  SampleDataD SquarePotential = MeanPotential;
-//  SampleDataD StdevPotential = MeanPotential;
-//  TraceIndices.clear();
-//  MeanTraces.clear();
-//  SquareTraces.clear();
-//
-//  for ( int j=0; j<traces().size(); j++ ) {
-//    if (j != SpikeTrace[0] && ::fabs(trace(j).stepsize() - trace(SpikeTrace[0]).stepsize()) / trace(SpikeTrace[0]).stepsize() < 1e-8) {
-//      TraceIndices.push_back(j);
-//      MeanTraces.push_back(MeanVoltage);
-//      SquareTraces.push_back(MeanVoltage);
-//    }
-//  }
-
-//  ExpOn = SampleDataF( 0.0, duration, 1/samplerate, 0.0 );
-//  ExpOff = SampleDataF( duration, 2.0*duration, 1/samplerate, 0.0 );
-
   // plot:
   P.lock();
   P.clear();
@@ -108,7 +89,6 @@ int membranetest::main( void )
   OutData signal;
   signal.setTrace( PotentialOutput[0] );
   signal.pulseWave( duration, -1.0, holdingpotential + amplitude, holdingpotential );
-//  signal.setIdent( "I=" + Str( DCCurrent + Amplitude ) + IUnit );
 
   // sleep:
   sleepWait( pause );
@@ -140,14 +120,10 @@ void membranetest::stimulus(OutData &signal) {
   int repeats = integer( "repeats" );
   bool plotstd = boolean( "plotstd" );
 
-//  P.lock();
-//  P.clear();
-//  P.unlock();
-
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
-  SampleDataF MeanPot = SampleDataF(-duration,2*duration,1/samplerate,0.0);
-  SampleDataF MeanSqPot = SampleDataF(-duration,2*duration,1/samplerate,0.0);
-  SampleDataF StdPot = SampleDataF(-duration,2*duration,1/samplerate,0.0);
+  SampleDataF MeanPot = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
+  SampleDataF MeanSqPot = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
+  SampleDataF StdPot = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
 
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
@@ -156,8 +132,6 @@ void membranetest::stimulus(OutData &signal) {
 
     SampleDataF currenttrace(-duration, 2 * duration, trace(CurrentTrace[0]).stepsize(), 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
-
-    cerr << min(currenttrace) << ", " << max(currenttrace) << "\n";
 
     for (int i = 0; i < currenttrace.size(); i++) {
       MeanPot[i] += (currenttrace[i] - MeanPot[i]) / (Count + 1);
@@ -185,8 +159,75 @@ void membranetest::stimulus(OutData &signal) {
   P.draw();
   P.unlock();
 
+  resistance( MeanPot, StdPot );
 
 }
+
+void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
+  double duration  = number( "duration" );
+  double samplerate = trace( SpikeTrace[0] ).sampleRate();
+  double amplitude = number( "amplitude" );
+  double maximum = max( MeanPot );
+  int index = maxIndex( MeanPot );
+  int idx0 = 2*duration*samplerate-index;
+  int idx1 = 2*duration*samplerate - 1;
+  int idx_t0 = duration*samplerate;
+
+  double I0 = 0;
+  for (int i=0; i<(duration*samplerate-1); i++ ) {
+    I0 += MeanPot[i];
+  };
+  I0 = I0/(duration*samplerate-1);
+
+  // fit exponential to estimate resistance
+  ArrayD param( 3, 1.0 );
+  ArrayD error( MeanPot.size(), 1.0);
+  param[0] = maximum;
+  param[1] = -1e-2;
+  param[2] = MeanPot[idx1];
+  ArrayD uncertainty ( 3, 0.0 );
+  ArrayI paramfit( 3, 0 );
+  paramfit[1] = 0;
+  paramfit[2] = 1;
+  double chisq = 1.0;
+
+  SampleDataF t1 = SampleDataF( 0.0, (idx1-idx0)/samplerate*1000, 1000/samplerate, 0.0 );
+
+  int a = marquardtFit(
+//          MeanPot.range().begin()+idx_t0, MeanPot.range().begin()+idx_t0+(idx1-idx0),
+          t1.begin(), t1.end(),
+          MeanPot.begin()+idx0, MeanPot.begin()+idx1,
+          StdPot.begin()+idx0, StdPot.begin()+idx1,
+//          error.begin()+idx0, error.begin()+idx1,
+          expFunc2Derivs, param, paramfit, uncertainty, chisq
+          );
+  double I1 = param[2];
+
+  ArrayD t( idx1-idx0, (idx0/samplerate-duration)*1000);
+  std::vector<double> y(idx1-idx0);
+
+  for ( int i = 0; i<t.size(); i++) {
+    t[i] += i/samplerate*1000;
+//    cerr << StdPot[idx0+i] << "\n";
+    y[i] = expFunc2( i*1000/samplerate , param );
+  };
+
+//  cerr << t[0] << ", " << t[t.size()-1] << "\n";
+//  cerr << param[0] << ", " << param[1] << ", " << param[2] <<  "\n";
+  cerr << a << ", " << param[0]-maximum << ", " << param[1]+1e-2 << ", " << param[2]-MeanPot[idx1] <<  "\n";
+
+
+
+  P.lock();
+  P.setTitle("R = " + Str(amplitude/(I1-I0), "%.1f"));
+  P.plot( t, y, Plot::Green, 2, Plot::Solid);
+  P.draw();
+  P.unlock();
+
+}
+
+
+
 
 addRePro( membranetest, voltageclamp );
 

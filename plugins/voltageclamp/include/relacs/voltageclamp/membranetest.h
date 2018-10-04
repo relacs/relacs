@@ -50,6 +50,7 @@ public:
 private:
 
     void stimulus( OutData &signal );
+    void resistance( SampleDataF &MeanPot, SampleDataF &StdPot );
 
 protected:
 

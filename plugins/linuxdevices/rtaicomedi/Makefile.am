@@ -21,8 +21,7 @@ EXTRA_DIST = \
     module/moduledef.h \
     module/loadmodules.sh \
     module/killmodules.sh \
-    module/reloadmodule.sh \
-    scripts/makertaikernel.sh
+    module/reloadmodule.sh
 
 
 pkglibdir = $(libdir)/relacs

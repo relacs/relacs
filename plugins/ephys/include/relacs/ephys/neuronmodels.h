@@ -127,7 +127,9 @@ public:
 
   double CurrentInput;
 
+  int VCInx;
   double VCGain;
+  double VCTau;
   bool VCMode;
   double IntErr = 0.0;
   double DerErr = 0.0;

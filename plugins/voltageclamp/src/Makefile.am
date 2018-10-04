@@ -69,6 +69,7 @@ libvoltageclampinactivation_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampinactivation_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -106,6 +107,7 @@ libvoltageclamprecovery_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclamprecovery_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -143,6 +145,7 @@ libvoltageclampramp_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampramp_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -180,6 +183,7 @@ libvoltageclamptail_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclamptail_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -217,6 +221,7 @@ libvoltageclampmembranetest_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampmembranetest_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -254,6 +259,7 @@ libvoltageclampsummary_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampsummary_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
