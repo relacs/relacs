@@ -170,6 +170,7 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
   double maximum = max( MeanPot );
   int index = maxIndex( MeanPot );
   int idx0 = 2*duration*samplerate-index;
+  int idx05 = 1.5*duration*samplerate;
   int idx1 = 2*duration*samplerate - 1;
   int idx_t0 = duration*samplerate;
 
@@ -181,21 +182,21 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
 
   // fit exponential to estimate resistance
   ArrayD param( 3, 1.0 );
-  ArrayD error( MeanPot.size(), 1.0);
+//  ArrayD error( MeanPot.size(), 1.0);
   param[0] = maximum;
   param[1] = -1e-2;
   param[2] = MeanPot[idx1];
   ArrayD uncertainty ( 3, 0.0 );
   ArrayI paramfit( 3, 0 );
-  paramfit[1] = 0;
+  paramfit[1] = 1;
   paramfit[2] = 1;
   double chisq = 1.0;
 
-  SampleDataF t1 = SampleDataF( 0.0, (idx1-idx0)/samplerate*1000, 1000/samplerate, 0.0 );
+//  SampleDataF t1 = SampleDataF( 0.0, (idx1-idx0)/samplerate*1000, 1000/samplerate, 0.0 );
 
-  int a = marquardtFit(
-//          MeanPot.range().begin()+idx_t0, MeanPot.range().begin()+idx_t0+(idx1-idx0),
-          t1.begin(), t1.end(),
+  int fitresult = marquardtFit(
+          MeanPot.range().begin()+idx_t0, MeanPot.range().begin()+idx_t0+(idx1-idx0),
+//          t1.begin(), t1.end(),
           MeanPot.begin()+idx0, MeanPot.begin()+idx1,
           StdPot.begin()+idx0, StdPot.begin()+idx1,
 //          error.begin()+idx0, error.begin()+idx1,
@@ -214,15 +215,31 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
 
 //  cerr << t[0] << ", " << t[t.size()-1] << "\n";
 //  cerr << param[0] << ", " << param[1] << ", " << param[2] <<  "\n";
-  cerr << a << ", " << param[0]-maximum << ", " << param[1]+1e-2 << ", " << param[2]-MeanPot[idx1] <<  "\n";
+//  cerr << fitresult << ", " << param[0]-maximum << ", " << param[1]+1e-2 << ", " << param[2]-MeanPot[idx1] <<  "\n";
+
+  if ( fitresult == 0 ) {
+    cerr << "fit worked\n";
+    P.lock();
+    P.setTitle("R = " + Str(amplitude / (I1 - I0), "%.1f"));
+    P.plot(t, y, Plot::Green, 2, Plot::Solid);
+    P.draw();
+    P.unlock();
+  }
+  else if ( MeanPot[idx05] < (MeanPot[idx1]+3*StdPot[idx1]) ) {
+    double I_steady = mean( MeanPot.begin()+idx05, MeanPot.begin()+idx1 );
+    cerr << "fit failed, take mean of last half of duration\n";
+    cerr << "dI = " << Str(I_steady - I0, "%.4f") << ", I_steady = " <<
+            Str(I_steady, "%.4f") << ", I0 = " << Str(I0, "%.4f")
+            << ", R = " << Str(amplitude / (I_steady - I0), "%.1f") << "\n";
+    P.lock();
+    P.setTitle("R = " + Str(amplitude / (I_steady - I0), "%.1f"));
+    P.plotLine( duration/2*1000, I_steady, duration*1000, I_steady, Plot::Green, 2, Plot::Solid);
+    P.draw();
+    P.unlock();
+  }
+  else { cerr << "fit failed\n"; };
 
 
-
-  P.lock();
-  P.setTitle("R = " + Str(amplitude/(I1-I0), "%.1f"));
-  P.plot( t, y, Plot::Green, 2, Plot::Solid);
-  P.draw();
-  P.unlock();
 
 }
 
