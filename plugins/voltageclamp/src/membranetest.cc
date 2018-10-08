@@ -136,7 +136,12 @@ void membranetest::stimulus(OutData &signal) {
     for (int i = 0; i < currenttrace.size(); i++) {
       MeanPot[i] += (currenttrace[i] - MeanPot[i]) / (Count + 1);
       MeanSqPot[i] += (currenttrace[i] * currenttrace[i] - MeanSqPot[i]) / (Count + 1);
-      StdPot[i] = sqrt(MeanSqPot[i] - MeanPot[i] * MeanPot[i]);
+
+      double diff = MeanSqPot[i] - MeanPot[i] * MeanPot[i];
+      if ( diff >= 0.0) {
+        StdPot[i] = sqrt(MeanSqPot[i] - MeanPot[i] * MeanPot[i]);
+      }
+      else { StdPot[i] = 0.0; };
     };
 
     if (interrupt()) {
@@ -193,7 +198,7 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
   paramfit[1] = 1;
   paramfit[2] = 1;
   double chisq = 1.0;
-  
+
   int fitresult = marquardtFit(
           MeanPot.range().begin()+idx_t0, MeanPot.range().begin()+idx_t0+(idx1-index),
           MeanPot.begin()+index, MeanPot.begin()+idx1,
@@ -203,7 +208,9 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
 
   double I1 = param[2];
 
-  SampleDataD y(MeanPot.pos(index), duration, 1.0/samplerate);
+
+  SampleDataD y(0, duration - MeanPot.pos(index), 1.0/samplerate);
+  SampleDataD t(MeanPot.pos(index), duration, 1.0/samplerate);
   for ( int i = 0; i<y.size(); i++)
     y[i] = expFunc2( y.pos(i), param );
 
@@ -222,7 +229,7 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
     cerr << "fit worked\n";
     P.lock();
     P.setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R = " + Str(amplitude / (I1 - I0), "%.1f"));
-    P.plot(y, 1000.0, Plot::Green, 2, Plot::Solid);
+    P.plot( y, 1000.0, Plot::Green, 2, Plot::Solid);
     P.draw();
     P.unlock();
   }
@@ -238,7 +245,11 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
     P.draw();
     P.unlock();
   }
-  else { cerr << "fit failed\n"; };
+  else {
+    cerr << "fit failed, \nMeanPot(0.5) = " << MeanPot[idx05]
+    << "\nMeanPot(1.0) = " << (MeanPot[idx1])
+    << "\n3*StdPot(1.0) = " << +3*StdPot[idx1] << "\n";
+  };
 
 }
 

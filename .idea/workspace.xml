@@ -14,8 +14,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d7583847-4e24-4987-b951-043aa7b336ea" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/relacs.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/relacs.cfg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/relacsplugins.cfg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -105,7 +103,7 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="am" value="5" />
-          <entry key="cc" value="27679" />
+          <entry key="cc" value="28137" />
           <entry key="cfg" value="205" />
           <entry key="h" value="743" />
         </counts>
@@ -113,7 +111,7 @@
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Makefile" value="5" />
-          <entry key="ObjectiveC" value="28422" />
+          <entry key="ObjectiveC" value="28880" />
           <entry key="PLAIN_TEXT" value="205" />
         </counts>
       </usages-collector>
@@ -124,8 +122,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="354">
-              <caret line="207" column="38" selection-start-line="207" selection-start-column="38" selection-end-line="207" selection-end-column="38" />
+            <state relative-caret-position="369">
+              <caret line="148" column="7" selection-start-line="144" selection-start-column="6" selection-end-line="148" selection-end-column="7" />
             </state>
           </provider>
         </entry>
@@ -411,12 +409,12 @@
       <workItem from="1538471218101" duration="5176000" />
       <workItem from="1538644172596" duration="5804000" />
       <workItem from="1538658879220" duration="16838000" />
-      <workItem from="1538728795005" duration="9558000" />
+      <workItem from="1538728795005" duration="11025000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="462113000" />
+    <option name="totallyTimeSpent" value="463580000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="840" y="0" width="844" height="1018" extended-state="0" />
@@ -424,7 +422,7 @@
     <layout>
       <window_info id="Structure" order="0" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="1" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="2" visible="true" weight="0.27974683" />
+      <window_info content_ui="combo" id="Project" order="2" weight="0.27974683" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.32768363" />
@@ -788,8 +786,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/plugins/voltageclamp/src/membranetest.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="354">
-          <caret line="207" column="38" selection-start-line="207" selection-start-column="38" selection-end-line="207" selection-end-column="38" />
+        <state relative-caret-position="369">
+          <caret line="148" column="7" selection-start-line="144" selection-start-column="6" selection-end-line="148" selection-end-column="7" />
         </state>
       </provider>
     </entry>
