@@ -21,6 +21,7 @@
 
 #include <relacs/fitalgorithm.h>
 #include <relacs/voltageclamp/activation.h>
+#include <relacs/voltageclamp/pnsubtraction.h>
 
 using namespace relacs;
 
@@ -101,6 +102,7 @@ int Activation::main( void )
   P[1].clearData();
   P.lock();
   P[1].setXRange(mintest,maxtest);
+
   P.unlock();
 
   // write stimulus:
@@ -126,11 +128,20 @@ int Activation::main( void )
 
       write( signal );
       sleep( pause );
-
       // get sample Data
       SampleDataF currenttrace(-0.002, 0.01, trace(CurrentTrace[0]).stepsize(), 0.0 );
+
+//      PNSubtraction pns;
+//      SampleDataD currenttrace = pns.PN_sub( signal, holdingpotential, pause );
+
+      
+
+
       trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
       double dt = currenttrace.stepsize();
+
+
+
 
       // IV
       double absmax = 0.0;
