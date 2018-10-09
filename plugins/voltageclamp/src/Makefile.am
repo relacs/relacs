@@ -66,6 +66,7 @@ libvoltageclampactivation_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampactivation_la_LIBADD = \
+    $(builddir)/libvoltageclamppnsubtraction.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \

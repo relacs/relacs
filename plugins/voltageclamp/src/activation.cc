@@ -29,7 +29,8 @@ namespace voltageclamp {
 
 // !!!!!!!!!!!!!!!!!!!!!!PLOTTING ABSOLUTE MAXIMUM IS HARDCODED!!!!!!!!!!!!!!!!!!!!
 Activation::Activation( void )
-  : RePro( "Activation", "voltageclamp", "Jan Benda & Lukas Sonnenberg", "1.0", "Aug 09, 2018" )
+//  : RePro( "Activation", "voltageclamp", "Jan Benda & Lukas Sonnenberg", "1.0", "Aug 09, 2018" )
+  : PNSubtraction( "Activation", "voltageclamp", "Jan Benda & Lukas Sonnenberg", "1.0", "Aug 09, 2018" )
 {
   // add some options:
   addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
@@ -126,42 +127,45 @@ int Activation::main( void )
       signal.pulseWave( duration, -1.0,  step, holdingpotential );
       signal.setIntensity( 1.0 );
 
+      double mintime = -0.002;
+      double maxtime = 0.01;
+
       write( signal );
       sleep( pause );
       // get sample Data
-      SampleDataF currenttrace(-0.002, 0.01, trace(CurrentTrace[0]).stepsize(), 0.0 );
-
-//      PNSubtraction pns;
-//      SampleDataD currenttrace = pns.PN_sub( signal, holdingpotential, pause );
-
-      
-
-
+      SampleDataF currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0 );
       trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+
+//      SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
+
+      if (interrupt()) {
+        break;
+      };
+
       double dt = currenttrace.stepsize();
 
 
-
-
       // IV
+      double waittime = 0.0001;
       double absmax = 0.0;
       int index = 0;
-      if ( -min(currenttrace) >= max(currenttrace) ){
-        absmax = min(currenttrace);
-        index = minIndex(currenttrace);
+      if ( -currenttrace.min(waittime, maxtime) >= currenttrace.max(waittime, maxtime) ){
+        absmax = currenttrace.min(waittime, maxtime);
+        index = currenttrace.minIndex(waittime, maxtime);
       }
       else {
-        absmax = max(currenttrace);
-        index = maxIndex(currenttrace);
+        absmax = currenttrace.max(waittime, maxtime);
+        index = currenttrace.maxIndex(waittime, maxtime);
       }
       IV[i] = absmax;
+
+      cerr << "value = " << absmax << ", at " << currenttrace.pos(index)*1000 << "ms\n";
 
       // fit tau to decaying activation curve
       int idx0 = index + fitdelay/dt;
       if ( idx0 > currenttrace.size()) {
         idx0 = index;
       }
-      cerr << currenttrace.size() << ", " << idx0 << "\n";
 
       std::vector<double> x(currenttrace.size() - idx0);
       std::vector<double> y(currenttrace.size() - idx0);
@@ -194,15 +198,10 @@ int Activation::main( void )
       P.lock();
       // trace
       P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-      P[0].plotPoint( index*dt*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
+      P[0].plotPoint( currenttrace.pos(index)*1000.0, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
       P[0].plot( x, expfit, Plot::Green, 2, Plot::Solid);
 
-      // time constant
-//      P[1].setYRange(min(tau),max(tau));
-//      P[1].setXRange(mintest, maxtest);
-//      P[1].plotPoint(step, Plot::First, tau[i], Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
-//                      Plot::Green, Plot::Green );
 
       // IV
       P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
@@ -216,7 +215,7 @@ int Activation::main( void )
   double p_rev = pRev(IV);
   for ( unsigned i=0; i<potential.size(); i++) {
     g_act[i] = -IV[i]/(p_rev-potential[i]);
-    cerr << g_act[i] << "\n";
+//    cerr << g_act[i] << "\n";
   };
 
 //  g_act = -IV/(p_rev-potential);

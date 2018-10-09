@@ -26,29 +26,28 @@ using namespace relacs;
 namespace voltageclamp {
 
 
-PNSubtraction::PNSubtraction( void )
-  : RePro( "PNSubtraction", "voltageclamp", "Lukas Sonnenberg", "1.0", "Oct 08, 2018" )
+PNSubtraction::PNSubtraction( const string &name,
+	 const string &pluginset,
+	 const string &author,
+	 const string &version,
+	 const string &date)
+  : RePro( name, pluginset, author, version, date )
 {
   // add some options:
-  addNumber( "pn", "p/N", -10, 10, 1, -4 );
+  addNumber( "pn", "p/N", -4, -100, 100, 1 );
   // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
 }
 
 
 int PNSubtraction::main( void )
 {
-  // get options:
-  // double duration = number( "duration" );
-
-  // don't print repro message:
-  noMessage();
-
   return Completed;
 }
 
-SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, double &pause ) {
+SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime ) {
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
+  double mean_offset = 0.0;
 
   // don't print repro message:
   noMessage();
@@ -57,28 +56,41 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
   pn_signal.setTrace( PotentialOutput[0] );
   pn_signal = holdingpotential + (signal - holdingpotential)/pn;
 
-  SampleDataD pn_trace( -0.002, pn_signal.rangeBack(), 1/samplerate );
+  SampleDataD pn_trace( mintime, pn_signal.rangeBack(), 1/samplerate );
 
   for ( int i = 0; i<::abs(pn); i++ ) {
     write(pn_signal);
     sleep(pause);
 
-    SampleDataF currenttrace( -0.002, pn_signal.rangeBack(), trace(CurrentTrace[0]).stepsize() , 0.0);
-    pn_trace += currenttrace/::abs(pn);
+    if (interrupt()) {
+      break;
+    };
 
+    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
+    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+
+    pn_trace += currenttrace - currenttrace[0];
+    mean_offset += currenttrace[0]/::abs(pn);
+
+  };
+
+  if (interrupt()) {
+    return pn_trace;
   };
 
   write(signal);
   sleep(pause);
 
-  SampleDataF currenttrace( -0.002, pn_signal.rangeBack(), trace(CurrentTrace[0]).stepsize() , 0.0);
-  currenttrace -= pn*pn_trace;
+  SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
+  trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+
+  cerr << min(pn_trace) << ", " << max(pn_trace) << "\n";
+  cerr << min(currenttrace) << ", " << max(currenttrace) << "\n";
+
+  currenttrace -= pn/::abs(pn)*pn_trace - currenttrace[0];
 
   return currenttrace;
 };
-
-
-addRePro( PNSubtraction, voltageclamp );
 
 }; /* namespace voltageclamp */
 

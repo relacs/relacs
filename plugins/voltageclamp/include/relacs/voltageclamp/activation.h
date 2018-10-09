@@ -41,7 +41,7 @@ namespace voltageclamp {
 */
 
 
-class Activation : public RePro, public ephys::Traces
+class Activation : public PNSubtraction //public RePro, public ephys::Traces
 {
   Q_OBJECT
 

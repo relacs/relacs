@@ -45,10 +45,15 @@ friend class Activation;
 
 public:
 
-  PNSubtraction( void );
+  PNSubtraction( const string &name,
+	 const string &pluginset="",
+	 const string &author="unknown",
+	 const string &version="unknown",
+	 const string &date=__DATE__ );
+  //PNSubtraction( void );
   virtual int main( void );
 
-  SampleDataD PN_sub( OutData &signal, double &holdingpotential, double &pause );
+  SampleDataD PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime);
 
 };
 
