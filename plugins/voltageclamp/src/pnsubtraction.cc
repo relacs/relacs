@@ -47,7 +47,7 @@ int PNSubtraction::main( void )
 SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime ) {
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
-  double mean_offset = 0.0;
+//  double mean_offset = 0.0;
 
   // don't print repro message:
   noMessage();
@@ -70,7 +70,6 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
     pn_trace += currenttrace - currenttrace[0];
-    mean_offset += currenttrace[0]/::abs(pn);
 
   };
 
@@ -84,11 +83,9 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
   SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-  cerr << min(pn_trace) << ", " << max(pn_trace) << "\n";
-  cerr << min(currenttrace) << ", " << max(currenttrace) << "\n";
-
   currenttrace -= pn/::abs(pn)*pn_trace - currenttrace[0];
 
+//  return pn_trace;
   return currenttrace;
 };
 

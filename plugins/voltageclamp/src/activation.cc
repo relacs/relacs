@@ -138,6 +138,15 @@ int Activation::main( void )
 
       SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
 
+
+//      SampleDataD pn_trace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
+//      SampleDataD currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0 );
+//      trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+//      pn_trace = -pn_trace;
+//      pn_trace -= pn_trace[0];
+//      currenttrace -= currenttrace[0];
+
+
       if (interrupt()) {
         break;
       };
@@ -207,6 +216,11 @@ int Activation::main( void )
       P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
       P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
+
+//      P[1].plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);
+//      P[1].plot(pn_trace, 1000.0, Plot::Green, 2, Plot::Dotted);
+//
+//      P[1].plot(currenttrace - pn_trace, 1000.0, Plot::Red, 2, Plot::Dotted);
 
       P.draw();
       P.unlock();
