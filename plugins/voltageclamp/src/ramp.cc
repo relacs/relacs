@@ -140,6 +140,10 @@ int Ramp::main( void )
 
       SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
 
+      if (interrupt()) {
+        break;
+      };
+
       P.lock();
       P.plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);
       P.draw();

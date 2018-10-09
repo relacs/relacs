@@ -161,6 +161,10 @@ int Recovery::main( void )
 
         SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime );
 
+        if (interrupt()) {
+          return 0;
+        };
+
         double dt = currenttrace.stepsize();
 
         absmax[j] = min(currenttrace);

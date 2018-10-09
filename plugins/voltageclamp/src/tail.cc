@@ -131,6 +131,10 @@ int Tail::main( void )
 
       SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime );
 
+      if (interrupt()) {
+        break;
+      };
+
       // plot
       P.lock();
       P.plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );

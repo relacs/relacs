@@ -55,7 +55,7 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
     SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-    return currenttrace
+    return currenttrace;
   };
 
 //  double mean_offset = 0.0;
