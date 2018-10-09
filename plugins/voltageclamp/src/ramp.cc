@@ -21,13 +21,14 @@
 
 #include <relacs/str.h>
 #include <relacs/voltageclamp/ramp.h>
+#include <relacs/voltageclamp/pnsubtraction.h>
 using namespace relacs;
 
 namespace voltageclamp {
 
 
 Ramp::Ramp( void )
-  : RePro( "Ramp", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 23, 2018" )
+  : PNSubtraction( "Ramp", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 23, 2018" )
 {
   // add some options:
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
@@ -128,12 +129,16 @@ int Ramp::main( void )
 
       signal.append(signal2);
 
-      write(signal);
-      sleep(pause);
+      double mintime = -0.002;
+      double maxtime = duration;
 
-      // plot
-      SampleDataF currenttrace(-.002, duration, trace(CurrentTrace[0]).stepsize(), 0.0);
-      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+//      write(signal);
+//      sleep(pause);
+//      // plot
+//      SampleDataF currenttrace(-.002, duration, trace(CurrentTrace[0]).stepsize(), 0.0);
+//      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+
+      SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
 
       P.lock();
       P.plot(currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid);

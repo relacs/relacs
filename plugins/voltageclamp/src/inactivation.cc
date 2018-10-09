@@ -20,13 +20,14 @@
 */
 
 #include <relacs/voltageclamp/inactivation.h>
+#include <relacs/voltageclamp/pnsubtraction.h>
 using namespace relacs;
 
 namespace voltageclamp {
 
 
 Inactivation::Inactivation( void )
-  : RePro( "Inactivation", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 09, 2018" )
+  : PNSubtraction( "Inactivation", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 09, 2018" )
 {
   // add some options:
   addNumber( "duration0", "Stimulus duration0", 0.01, 0.001, 100000.0, 0.001, "s", "ms" );
@@ -119,13 +120,19 @@ int Inactivation::main( void )
       signal.append( signal1 );
       signal.append( signal2 );
 
-      write(signal);
-      sleep(pause);
+      double mintime = duration0+duration1-0.002;
+      double maxtime = duration0+duration1+0.01;
 
-      // inactivation curve
-      SampleDataF currenttrace(-0.002 + duration0 + duration1, 0.01 + duration0 + duration1,
-                               trace(CurrentTrace[0]).stepsize(), 0.0);
-      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+//      write(signal);
+//      sleep(pause);
+//      // inactivation curve
+//      SampleDataF currenttrace(-0.002 + duration0 + duration1, 0.01 + duration0 + duration1,
+//                               trace(CurrentTrace[0]).stepsize(), 0.0);
+//      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+
+      SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime );
+
+
       double dt = currenttrace.stepsize();
 
       double absmax = 0.0;

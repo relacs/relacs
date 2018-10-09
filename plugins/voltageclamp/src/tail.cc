@@ -20,13 +20,14 @@
 */
 
 #include <relacs/voltageclamp/tail.h>
+#include <relacs/voltageclamp/pnsubtraction.h>
 using namespace relacs;
 
 namespace voltageclamp {
 
 
 Tail::Tail( void )
-  : RePro( "Tail", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 23, 2018" )
+  : PNSubtraction( "Tail", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 23, 2018" )
 {
   // add some options:
   addNumber( "duration0", "Stimulus duration0", 0.01, 0.001, 100000.0, 0.001, "s", "ms" );
@@ -117,13 +118,18 @@ int Tail::main( void )
       signal.append( signal1 );
       signal.append( signal2 );
 
-      write(signal);
-      sleep(pause);
+      double mintime = duration0;
+      double maxtime = 0.002 + duration0 + duration1;
 
-      // inactivation curve
-      SampleDataF currenttrace(duration0, 0.002 + duration0 + duration1,
-                               trace(CurrentTrace[0]).stepsize(), 0.0);
-      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+//      write(signal);
+//      sleep(pause);
+//
+//      // inactivation curve
+//      SampleDataF currenttrace(duration0, 0.002 + duration0 + duration1,
+//                               trace(CurrentTrace[0]).stepsize(), 0.0);
+//      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+
+      SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime );
 
       // plot
       P.lock();

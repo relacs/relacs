@@ -47,6 +47,17 @@ int PNSubtraction::main( void )
 SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime ) {
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
+
+  if ( pn == 0 ) {
+    write(signal);
+    sleep(pause);
+
+    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
+    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+
+    return currenttrace
+  };
+
 //  double mean_offset = 0.0;
 
   // don't print repro message:

@@ -21,7 +21,7 @@
 
 #include <relacs/fitalgorithm.h>
 #include <relacs/voltageclamp/recovery.h>
-
+#include <relacs/voltageclamp/pnsubtraction.h>
 
 using namespace relacs;
 
@@ -29,7 +29,7 @@ namespace voltageclamp {
 
 
 Recovery::Recovery( void )
-  : RePro( "Recovery", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 21, 2018" )
+  : PNSubtraction( "Recovery", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 21, 2018" )
 {
   // add some options:
   addNumber( "duration0", "Stimulus duration0", 0.01, 0.001, 100000.0, 0.001, "s", "ms" );
@@ -150,13 +150,17 @@ int Recovery::main( void )
         signal.append(signal2);
         signal.append(signal3);
 
-        write(signal);
-        sleep(pause);
+        double mintime = duration0 + duration1 + timestep;
+        double maxtime = 0.02 + duration0 + duration1 + timestep;
 
-        // minimas
-        SampleDataF currenttrace(duration0 + duration1 + timestep, 0.02 + duration0 + duration1 + timestep,
-                                 trace(CurrentTrace[0]).stepsize(), 0.0);
-        trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+//        write(signal);
+//        sleep(pause);
+//        // minimas
+//        SampleDataF currenttrace(mintime, maxtime,trace(CurrentTrace[0]).stepsize(), 0.0);
+//        trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+
+        SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime );
+
         double dt = currenttrace.stepsize();
 
         absmax[j] = min(currenttrace);

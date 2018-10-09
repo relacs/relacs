@@ -26,6 +26,7 @@
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/voltageclamp/summary.h>
+#include <relacs/voltageclamp/pnsubtraction.h>
 using namespace relacs;
 
 namespace voltageclamp {
@@ -39,7 +40,7 @@ namespace voltageclamp {
 */
 
 
-class Inactivation : public RePro, public ephys::Traces
+class Inactivation : public PNSubtraction //public RePro, public ephys::Traces
 {
   Q_OBJECT
 
