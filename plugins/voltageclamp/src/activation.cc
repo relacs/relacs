@@ -130,13 +130,13 @@ int Activation::main( void )
       double mintime = -0.002;
       double maxtime = 0.01;
 
-      write( signal );
-      sleep( pause );
-      // get sample Data
-      SampleDataF currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0 );
-      trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+//      write( signal );
+//      sleep( pause );
+//      // get sample Data
+//      SampleDataF currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0 );
+//      trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-//      SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
+      SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
 
       if (interrupt()) {
         break;
