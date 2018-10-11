@@ -95,9 +95,9 @@ int AmplMode::open( DigitalIO &dio )
     CurrentClampPin = integer( "cclamppin", 0, CurrentClampPin );
     VoltageClampPin = integer( "vclamppin", 0, VoltageClampPin );
     DynamicClampPin = integer( "dclamppin", 0, DynamicClampPin );
+    SyncPin = integer( "syncpin", 0, SyncPin );
     if ( DynamicClampPin < 0 )
       SyncPin = -1;
-    SyncPin = integer( "syncpin", 0, SyncPin );
     ResistancePin = integer( "resistancepin", 0, ResistancePin );
     BuzzerPin = integer( "buzzerpin", 0, BuzzerPin );
 
@@ -164,6 +164,7 @@ void AmplMode::open()
       SyncMask = 0;
     else {
       if ( DIO->clearSyncPulse( ModeMask, CurrentMode ) != 0 ) {
+	setErrorStr( "You may want to set dclamppin=-1 in the configuration for the AmplMode plugin to suppress this warning." );
 	DynamicClampMask = 0;
 	SyncMask = 0;
       }
@@ -179,7 +180,7 @@ void AmplMode::open()
     if ( VoltageClampMask > 0 )
       Info.addInteger( "vclamppin", VoltageClampPin );
     if ( DynamicClampMask > 0 )
-      Info.addInteger( "dclamppin", DynamicClampPin );
+      Info.addInteger( "dynclamppin", DynamicClampPin );
     if ( SyncMask > 0 )
       Info.addInteger( "syncpin", SyncPin );
     if ( ResistanceMask > 0 )

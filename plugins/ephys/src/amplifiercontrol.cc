@@ -234,24 +234,34 @@ void AmplifierControl::initDevices( void )
     connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
     vbox = new QVBoxLayout;
     vbox->addWidget( BridgeButton );
-    if ( ! boolean( "showbridge" ) || ( ! simulation() && ! Ampl->supportsBridgeMode() ) )
-      BridgeButton->hide();
     vbox->addWidget( CCButton );
-    if ( ! boolean( "showcc" ) || ( ! simulation() && ! Ampl->supportsCurrentClampMode() ) )
-      CCButton->hide();
     vbox->addWidget( DCButton );
-    if ( ! boolean( "showdc" ) || ( ! simulation() && ! Ampl->supportsDynamicClampMode() ) )
-      DCButton->hide();
     vbox->addWidget( VCButton );
-    if ( ! boolean( "showvc" ) || ( ! simulation() && ! Ampl->supportsVoltageClampMode() ) )
-      VCButton->hide();
     vbox->addWidget( ManualButton );
-    if ( ! boolean( "showmanual" ) )
-      ManualButton->hide();
     ModeBox->setLayout( vbox );
     AmplBox->addWidget( ModeBox );
     AmplBox->addWidget( new QLabel );
   }
+  if ( ! boolean( "showbridge" ) || ( ! simulation() && ! Ampl->supportsBridgeMode() ) )
+    BridgeButton->hide();
+  else
+    BridgeButton->show();
+  if ( ! boolean( "showcc" ) || ( ! simulation() && ! Ampl->supportsCurrentClampMode() ) )
+    CCButton->hide();
+  else
+    CCButton->show();
+  if ( ! boolean( "showdc" ) || ( ! simulation() && ! Ampl->supportsDynamicClampMode() ) )
+    DCButton->hide();
+  else
+    DCButton->show();
+  if ( ! boolean( "showvc" ) || ( ! simulation() && ! Ampl->supportsVoltageClampMode() ) )
+    VCButton->hide();
+  else
+    VCButton->show();
+  if ( ! boolean( "showmanual" ) )
+    ManualButton->hide();
+  else
+    ManualButton->show();
   // add amplifier synchronization for dynamic clamp:
   if ( simulation() || ( Ampl !=0 && Ampl->supportsDynamicClampMode() ) ) {
     lockStimulusData();
@@ -293,10 +303,13 @@ void AmplifierControl::initDevices( void )
       label = new QLabel( "samples" );
       gbox->addWidget( label, 1, 2 );
 
-      if ( ! boolean( "showdc" ) )
-	DCPulseBox->hide();
     }
+    if ( ! boolean( "showdc" ) )
+      DCPulseBox->hide();
+    else
+      DCPulseBox->show();
   }
+  DCPulseBox->hide();
   widget()->show();
   // initial mode:
   int initmode = index( "initmode" );
