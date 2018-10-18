@@ -61,6 +61,7 @@ AmplifierControl::AmplifierControl( void )
   ResistanceCurrent = 1.0;
   BuzzPulse = 0.5;
   DoBuzz = false;
+  LastCCMode = -1;
 
   addSelection( "initmode", "Initial mode of the amplifier", "Bridge|Current-clamp|Dynamic-clamp|Voltage-clamp|Manual selection" );
   addNumber( "resistancecurrent", "The average current of the amplifier used for measuring electrode resistance", ResistanceCurrent, 0.0, 100000.0, 0.01, "nA" );
@@ -533,7 +534,9 @@ void AmplifierControl::activateBridgeMode( bool activate )
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "Bridge" );
     clearSyncPulse();
+    clearVC();
     unlockStimulusData();
+    LastCCMode = 0;
   }
 }
 
@@ -549,7 +552,9 @@ void AmplifierControl::activateCurrentClampMode( bool activate )
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "CC" );
     clearSyncPulse();
+    clearVC();
     unlockStimulusData();
+    LastCCMode = 1;
   }
 }
 
@@ -570,6 +575,7 @@ void AmplifierControl::activateDynamicClampMode( bool activate )
     stimulusData().setText( "AmplifierMode", "DC" );
     stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
     stimulusData().setInteger( "SyncMode", SyncMode );
+    clearVC();
     unlockStimulusData();
     unsetNotify();
     setNumber( "syncpulse", SyncPulseDuration );
@@ -579,6 +585,7 @@ void AmplifierControl::activateDynamicClampMode( bool activate )
     setNotify();
     SyncPulseEnabled = true;
     DCButton->setChecked( true );
+    LastCCMode = 2;
   }
 }
 
@@ -607,6 +614,19 @@ void AmplifierControl::activateVoltageClampMode( bool activate )
 }
 
 
+void AmplifierControl::inactivateVoltageClampMode( void )
+{
+  switch ( LastCCMode ) {
+  case 1 : activateCurrentClampMode();
+    break;
+  case 2 : activateDynamicClampMode();
+    break;
+  default :
+    activateBridgeMode();
+  }
+}
+
+
 void AmplifierControl::manualSelection( bool activate )
 {
   if ( ManualButton != 0 && activate ) {
@@ -616,6 +636,7 @@ void AmplifierControl::manualSelection( bool activate )
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "Manual" );
     clearSyncPulse();
+    clearVC();
     unlockStimulusData();
   }
 }
@@ -663,6 +684,15 @@ void AmplifierControl::setSyncMode( int mode )
       stimulusData().setInteger( "SyncMode", SyncMode );
       unlockStimulusData();
     }
+  }
+}
+
+
+void AmplifierControl::clearVC( void )
+{
+  if ( simulation() || ( Ampl != 0 && Ampl->supportsVoltageClampMode() ) ) {
+    stimulusData().setNumber( "VCGain", 0.0 );
+    stimulusData().setNumber( "VCTau", 0.0 );
   }
 }
 

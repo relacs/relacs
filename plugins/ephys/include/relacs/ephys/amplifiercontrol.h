@@ -136,15 +136,18 @@ public slots:
     /*! Stop buzzing the electrode. */
   void stopBuzz( void );
 
-    /*! Activate/deactivate bridge mode of the amplifier. */
+    /*! Activate bridge mode of the amplifier. */
   void activateBridgeMode( bool activate=true );
-    /*! Activate/deactivate current-clamp mode of the amplifier. */
+    /*! Activate current-clamp mode of the amplifier. */
   void activateCurrentClampMode( bool activate=true );
-    /*! Activate/deactivate current-clamp mode 
-        with external synchronization of the amplifier. */
+    /*! Activate current-clamp mode with external synchronization of
+        the amplifier. */
   void activateDynamicClampMode( bool activate=true );
-    /*! Activate/deactivate voltage-clamp mode of the amplifier. */
+    /*! Activate voltage-clamp mode of the amplifier. */
   void activateVoltageClampMode( bool activate=true );
+    /*! Inactivate voltage-clamp mode of the amplifier, i.e.
+        activate the last active current clamp mode (bridge, cc, or dc). */
+  void inactivateVoltageClampMode( void );
     /*! Turn on manual selection of the amplifier. */
   void manualSelection( bool activate=true );
 
@@ -165,6 +168,8 @@ protected:
 
     /*! Resets stimulus metadata regarding amplifier synchronization. */
   void clearSyncPulse( void );
+    /*! Resets stimulus metadata regarding voltage clamp. */
+  void clearVC( void );
 
     /*! Measure electrode resistance. */
   void measureResistance( void );
@@ -204,6 +209,7 @@ private:
   DoubleSpinBox *VCTauSpinBox;
   double VCGain;
   double VCTau;
+  int LastCCMode;
   bool DoBuzz;
 
 };
