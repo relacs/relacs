@@ -112,6 +112,7 @@ public:
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void keyReleaseEvent( QKeyEvent *e );
   virtual void initDevices( void );
+  virtual void clearDevices( void );
   virtual void notify( void );
     /*! If idle() sets manual mode selection for the amplifier. */
   virtual void modeChanged( void );

@@ -112,8 +112,8 @@ int CalibSpeakers::main( void )
     intracesource = traceInputTrace( intracesource );
 
   // attenuators:
-  LoudSpeaker *LAtt = dynamic_cast<LoudSpeaker*>( attenuator( outtrace ) );
-  if ( LAtt == 0 ) {
+  LoudSpeaker *latt = dynamic_cast<LoudSpeaker*>( attenuator( outtrace ) );
+  if ( latt == 0 ) {
     TraceSpec ot( outTrace( outtrace ) );
     warning( "No Attenuator on " + ot.traceName() + 
 	     " (channel " + Str( ot.channel() ) + 
@@ -121,19 +121,19 @@ int CalibSpeakers::main( void )
 	     ") found!" );
     return Failed;
   }
-  LAtt->setSamplingRate( trace( intrace ).sampleRate() );
+  latt->setSamplingRate( trace( intrace ).sampleRate() );
   MapD oldoffsets;
   oldoffsets.reserve( frequencyrange.size() );
   for ( frequencyrange.reset(); ! frequencyrange; ++frequencyrange ) {
     double freq = *frequencyrange;
     double f = freq;
     double g, o;
-    LAtt->gain( g, o, f );
+    latt->gain( g, o, f );
     cerr << freq << "  " << g << "  " << o << '\n';
     oldoffsets.push( freq, o );
   }
   if ( clear )
-    LAtt->clear();
+    latt->clear();
 
   // plot trace:
   tracePlotSignal( 1.6*duration, 0.1*duration );
@@ -160,13 +160,13 @@ int CalibSpeakers::main( void )
   double origgain = 1.0;
   double origoffset = 0.0;
   double freq = frequency;
-  LAtt->gain( origgain, origoffset, freq );
+  latt->gain( origgain, origoffset, freq );
   double fitgain = 1.0;
   double fitoffset = 0.0;
   if ( reset )
-    LAtt->reset( frequency );
+    latt->reset( frequency );
   else
-    LAtt->setGain( origgain, origoffset, frequency );
+    latt->setGain( origgain, origoffset, frequency );
 
   // stimulus:
   OutData signal;
@@ -192,7 +192,7 @@ int CalibSpeakers::main( void )
   if ( signal.failed() ) {
     warning( "Failed to prepare stimulus for carrier frequency " +
 	     Str( frequency ) + " Hz !<br>" );
-    LAtt->setGain( origgain, origoffset, frequency );
+    latt->setGain( origgain, origoffset, frequency );
     return Failed;
   }
 
@@ -220,7 +220,7 @@ int CalibSpeakers::main( void )
       sleep( pause );
       if ( interrupt() ) {
 	saveOffsets( offsets, gains );
-	LAtt->save();
+	latt->save();
 	writeZero( outtrace );
 	return Aborted;
       }
@@ -283,10 +283,10 @@ int CalibSpeakers::main( void )
 	if ( intensities.size() > 2 ) {
 	  double gain, offset;
 	  double freq = frequency;
-	  LAtt->gain( gain, offset, freq );
+	  latt->gain( gain, offset, freq );
 	  offset = offset - fitoffset * gain / fitgain;
 	  gain = gain / fitgain;
-	  LAtt->setGain( gain, offset, frequency );
+	  latt->setGain( gain, offset, frequency );
 	  offsets.push( frequency, offset );
 	  gains.push( gain );
 	  Str s = "new gain = " + Str( gain );
@@ -312,13 +312,13 @@ int CalibSpeakers::main( void )
 	  P.unlock();
 
 	  double freq = frequency;
-	  LAtt->gain( origgain, origoffset, freq );
+	  latt->gain( origgain, origoffset, freq );
 	  fitgain = 1.0;
 	  fitoffset = 0.0;
 	  if ( reset )
-	    LAtt->reset( frequency );
+	    latt->reset( frequency );
 	  else
-	    LAtt->setGain( origgain, origoffset, frequency );
+	    latt->setGain( origgain, origoffset, frequency );
 
 	  // stimulus:
 	  signal.free();
@@ -329,7 +329,7 @@ int CalibSpeakers::main( void )
 	}
 	else {
 	  saveOffsets( offsets, gains );
-	  LAtt->save();
+	  latt->save();
 	  writeZero( outtrace );
 	  return Completed;
 	}
@@ -346,7 +346,7 @@ int CalibSpeakers::main( void )
   }
 
   saveOffsets( offsets, gains );
-  LAtt->save();
+  latt->save();
   writeZero( outtrace );
   return Aborted;
 }

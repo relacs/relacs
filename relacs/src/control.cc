@@ -55,6 +55,11 @@ void Control::initDevices( void )
 }
 
 
+void Control::clearDevices( void )
+{
+}
+
+
 void Control::addActions( QMenu *menu, bool doxydoc )
 {
   QMenu *pop = menu->addMenu( string( "&" + uniqueName() ).c_str() );

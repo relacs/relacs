@@ -125,9 +125,13 @@ public:
   virtual void setName( const string &name );
 
     /*! This function is called AFTER the configuration parameters
-        are read in and all the devices are initialized..
+        are read in and all the devices are initialized.
         Implement this function to check for devices. */
   virtual void initDevices( void );
+    /*! This function is called BEFORE devices are destroyed, i.e. at
+        a restart. Implement this function to unset any pointers to
+        devices. */
+  virtual void clearDevices( void );
 
     /*! Start execution of the %Control thread. 
         Reimplement main() to make the thread do something. */

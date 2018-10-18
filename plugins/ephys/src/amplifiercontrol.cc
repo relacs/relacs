@@ -329,6 +329,12 @@ void AmplifierControl::initDevices( void )
 }
 
 
+void AmplifierControl::clearDevices( void )
+{
+  Ampl = 0;
+}
+
+
 void AmplifierControl::modeChanged( void )
 {
   if ( idle() )
@@ -480,7 +486,7 @@ void AmplifierControl::activateDynamicClampMode( bool activate )
 {
   if ( DCButton != 0 &&
        ( simulation() || ( Ampl != 0 && Ampl->supportsDynamicClampMode() ) ) && activate ) {
-    if ( simulation() || Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
+    if ( simulation() || ( Ampl != 0 && Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) ) {
       lockStimulusData();
       stimulusData().setText( "AmplifierMode", "DC" );
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
@@ -547,7 +553,7 @@ void AmplifierControl::setSyncPulse( double durationus )
   setToDefault( "syncpulse" );
   setNotify();
   if ( ( simulation() || ( Ampl != 0 && Ampl->supportsDynamicClampMode() ) ) && SyncPulseEnabled ) {
-    if ( simulation() || Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
+    if ( simulation() || ( Ampl != 0 && Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) ) {
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
       stimulusData().setInteger( "SyncMode", SyncMode );
@@ -565,7 +571,7 @@ void AmplifierControl::setSyncMode( int mode )
   setToDefault( "syncmode" );
   setNotify();
   if ( ( simulation() || ( Ampl != 0 && Ampl->supportsDynamicClampMode() ) ) && SyncPulseEnabled ) {
-    if ( simulation() || Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
+    if ( simulation() || ( Ampl != 0 && Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) ) {
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
       stimulusData().setInteger( "SyncMode", SyncMode );

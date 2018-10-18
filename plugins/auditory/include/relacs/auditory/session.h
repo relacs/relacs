@@ -57,6 +57,7 @@ public:
   virtual void preConfig( void );
   virtual void config( void );
   virtual void initDevices( void );
+  virtual void clearDevices( void );
   virtual void sessionStarted( void );
   virtual void sessionStopped( bool saved );
 

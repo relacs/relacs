@@ -283,6 +283,12 @@ void Session::initDevices( void )
 }
 
 
+void Session::clearDevices( void )
+{
+  TempDev = 0;
+}
+
+
 void Session::sessionStarted( void )
 {
   if ( EPhys )
