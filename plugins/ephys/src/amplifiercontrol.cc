@@ -309,7 +309,8 @@ void AmplifierControl::initDevices( void )
     else
       DCPulseBox->show();
   }
-  DCPulseBox->hide();
+  else if ( DCPulseBox != 0 )
+    DCPulseBox->hide();
   widget()->show();
   // initial mode:
   int initmode = index( "initmode" );
