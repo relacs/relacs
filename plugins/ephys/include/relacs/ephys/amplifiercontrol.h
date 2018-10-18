@@ -43,7 +43,7 @@ namespace ephys {
 \class AmplifierControl
 \brief [Control] Controls an amplifier: buzzer and resistance measurement.
 \author Jan Benda
-\version 3.0 (Oct 5, 2015)
+\version 3.2 (Oct 18, 2018)
 
 \par Options
 - \c initmode=Bridge: Initial mode of the amplifier (\c string)
@@ -58,6 +58,8 @@ namespace ephys {
 - \c showmanual=false: Make manual mode for amplifier selectable (\c boolean)
 - \c syncpulse=10us: Duration of SEC current injection (\c number)
 - \c syncmode=0samples: Interval is average over (\c integer);
+- \c vcgain=100: VC gain (\c number)
+- \c vctau=1ms: VC time constant (\c number)
 
 \par Key shortcuts
 - \c Z: Buzz
@@ -152,6 +154,11 @@ public slots:
         to \a mode. */
   void setSyncMode( int mode );
 
+    /*! Set voltage clamp gain to \a vcgain. */
+  void setVCGain( double vcgain );
+    /*! Set voltage clamp time constant to \a vctaums milliseconds. */
+  void setVCTau( double vctaums );
+
 
 protected:
 
@@ -190,6 +197,11 @@ private:
   bool SyncPulseEnabled;
   double SyncPulseDuration;
   int SyncMode;
+  QWidget *VCBox;
+  DoubleSpinBox *VCGainSpinBox;
+  DoubleSpinBox *VCTauSpinBox;
+  double VCGain;
+  double VCTau;
   bool DoBuzz;
 
 };

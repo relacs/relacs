@@ -27,7 +27,7 @@ namespace ephys {
 
 
 AmplifierControl::AmplifierControl( void )
-  : Control( "AmplifierControl", "ephys", "Jan Benda", "3.0", "Oct 5, 2015" )
+  : Control( "AmplifierControl", "ephys", "Jan Benda", "3.2", "Oct 18, 2018" )
 {
   AmplBox = new QVBoxLayout;
   setLayout( AmplBox );
@@ -45,12 +45,17 @@ AmplifierControl::AmplifierControl( void )
   DCPulseBox = 0;
   SyncPulseSpinBox = 0;
   SyncModeSpinBox = 0;
+  VCBox = 0;
+  VCGainSpinBox = 0;
+  VCTauSpinBox = 0;
 
   Ampl = 0;
   RMeasure = false;
   SyncPulseEnabled = false;
   SyncPulseDuration = 0.00001;
   SyncMode = 0;
+  VCGain = 100.0;
+  VCTau = 0.001;
   MaxResistance = 100.0;
   ResistanceCurrent = 1.0;
   BuzzPulse = 0.5;
@@ -67,7 +72,9 @@ AmplifierControl::AmplifierControl( void )
   addBoolean( "showvc", "Make voltage clamp mode for amplifier selectable", false );
   addBoolean( "showmanual", "Make manual mode for amplifier selectable", false );
   addNumber( "syncpulse", "Duration of SEC current injection", SyncPulseDuration, 0.0, 0.1, 0.000001, "s", "us" );
-  addInteger( "syncmode", "Interval is average over", SyncMode, 0, 1000 ).setUnit( "samples" );
+  addInteger( "syncmode", "Interval is averaged over", SyncMode, 0, 1000 ).setUnit( "samples" );
+  addNumber( "vcgain", "VC gain", VCGain, 0.0, 100000.0, 1.0 );
+  addNumber( "vctau", "VC time constant", VCTau, 0.0, 0.1, 0.01, "s", "ms" );
 
   setGlobalKeyEvents();
 }
@@ -81,6 +88,12 @@ void AmplifierControl::notify( void )
   SyncMode = integer( "syncmode" );
   if ( SyncModeSpinBox != 0 )
     SyncModeSpinBox->setValue( SyncMode );
+  VCGain = number( "vcgain" );
+  if ( VCGainSpinBox != 0 )
+    VCGainSpinBox->setValue( VCGain );
+  VCTau = number( "vctau" );
+  if ( VCTauSpinBox != 0 )
+    VCTauSpinBox->setValue( 1000.0*VCTau );
   // initial mode:
   if ( changed( "initmode" ) ) {
     int initmode = index( "initmode" );
@@ -132,6 +145,13 @@ void AmplifierControl::notify( void )
       VCButton->show();
     else
       VCButton->hide();
+  }
+  if ( VCBox != 0 ) {
+    if ( boolean( "showvc" ) &&
+	 ( ( Ampl !=0 && Ampl->supportsVoltageClampMode() ) || simulation() ) )
+      VCBox->show();
+    else
+      VCBox->hide();
   }
   if ( ManualButton != 0 ) {
     if ( boolean( "showmanual" ) )
@@ -311,6 +331,51 @@ void AmplifierControl::initDevices( void )
   }
   else if ( DCPulseBox != 0 )
     DCPulseBox->hide();
+
+  if ( simulation() || ( Ampl !=0 && Ampl->supportsVoltageClampMode() ) ) {
+    lockStimulusData();
+    stimulusData().addNumber( "VCGain", "VC gain", VCGain );
+    stimulusData().addNumber( "VCTau", "VC tau", 1000.0*VCTau, "ms" );
+    unlockStimulusData();
+    if ( VCBox == 0 && VCGainSpinBox == 0 && vbox != 0 ) {
+      vbox->addWidget( new QLabel );
+      VCBox = new QWidget;
+      vbox->addWidget( VCBox );
+      QGridLayout *gbox = new QGridLayout;
+      gbox->setContentsMargins( 0, 0, 0, 0 );
+      VCBox->setLayout( gbox );
+      QLabel *label = new QLabel( "VC gain" );
+      gbox->addWidget( label, 0, 0 );
+      VCGainSpinBox = new DoubleSpinBox;
+      VCGainSpinBox->setRange( 0.0, 10000.0 );
+      VCGainSpinBox->setSingleStep( 1.0 );
+      VCGainSpinBox->setFormat( "%g" );
+      VCGainSpinBox->setKeyboardTracking( false );
+      VCGainSpinBox->setValue( VCGain );
+      connect( VCGainSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setVCGain( double ) ) );
+      gbox->addWidget( VCGainSpinBox, 0, 1 );
+
+      label = new QLabel( "VC tau" );
+      gbox->addWidget( label, 1, 0 );
+      VCTauSpinBox = new DoubleSpinBox;
+      VCTauSpinBox->setRange( 0.0, 100.0 );
+      VCTauSpinBox->setSingleStep( 0.1 );
+      VCTauSpinBox->setFormat( "%.1f" );
+      VCTauSpinBox->setKeyboardTracking( false );
+      VCTauSpinBox->setValue( 1000.0*VCTau );
+      connect( VCTauSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setVCTau( double ) ) );
+      gbox->addWidget( VCTauSpinBox, 1, 1 );
+      label = new QLabel( "ms" );
+      gbox->addWidget( label, 1, 2 );
+    }
+    if ( ! boolean( "showvc" ) )
+      VCBox->hide();
+    else
+      VCBox->show();
+  }
+  else if ( VCBox != 0 )
+    VCBox->hide();
+
   widget()->show();
   // initial mode:
   int initmode = index( "initmode" );
@@ -515,8 +580,16 @@ void AmplifierControl::activateVoltageClampMode( bool activate )
     VCButton->setChecked( true );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "VC" );
+    stimulusData().setNumber( "VCGain", VCGain );
+    stimulusData().setInteger( "VCTau", 1000.0*VCTau );
     clearSyncPulse();
     unlockStimulusData();
+    unsetNotify();
+    setNumber( "vcgain", VCGain );
+    setToDefault( "vcgain" );
+    setNumber( "vctau", VCTau );
+    setToDefault( "vctau" );
+    setNotify();
   }
 }
 
@@ -577,6 +650,38 @@ void AmplifierControl::setSyncMode( int mode )
       stimulusData().setInteger( "SyncMode", SyncMode );
       unlockStimulusData();
     }
+  }
+}
+
+
+void AmplifierControl::setVCGain( double vcgain )
+{
+  VCGain = vcgain;
+  unsetNotify();
+  setNumber( "vcgain", VCGain );
+  setToDefault( "vcgain" );
+  setNotify();
+  if ( simulation() || ( Ampl != 0 && Ampl->supportsVoltageClampMode() ) ) {
+    lockStimulusData();
+    stimulusData().setNumber( "VCGain", VCGain );
+    stimulusData().setNumber( "VCTau", 1000.0*VCTau );
+    unlockStimulusData();
+  }
+}
+
+
+void AmplifierControl::setVCTau( double vctaums )
+{
+  VCTau = 0.001*vctaums;
+  unsetNotify();
+  setNumber( "vctau", VCTau );
+  setToDefault( "vctau" );
+  setNotify();
+  if ( simulation() || ( Ampl != 0 && Ampl->supportsVoltageClampMode() ) ) {
+    lockStimulusData();
+    stimulusData().setNumber( "VCGain", VCGain );
+    stimulusData().setNumber( "VCTau", 1000.0*VCTau );
+    unlockStimulusData();
   }
 }
 
