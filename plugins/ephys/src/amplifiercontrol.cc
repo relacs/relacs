@@ -51,6 +51,7 @@ AmplifierControl::AmplifierControl( void )
 
   Ampl = 0;
   RMeasure = false;
+  ShowSwitchMessage = true;
   SyncPulseEnabled = false;
   SyncPulseDuration = 0.00001;
   SyncMode = 0;
@@ -66,6 +67,7 @@ AmplifierControl::AmplifierControl( void )
   addBoolean( "adjust", "Adjust input gain for resistance measurement", false );
   addNumber( "maxresistance", "Maximum resistance to be expected for scaling voltage trace", MaxResistance, 0.0, 1000000.0, 10.0, "MOhm" ).setActivation( "adjust", "true" );
   addNumber( "buzzpulse", "Duration of buzz pulse", BuzzPulse, 0.0, 100.0, 0.1, "s", "ms" );
+  addBoolean( "showswitchmessage", "Show message for manually switching the amplifier mode", ShowSwitchMessage );
   addBoolean( "showbridge", "Make bridge mode for amplifier selectable", true );
   addBoolean( "showcc", "Make current clamp mode for amplifier selectable", false );
   addBoolean( "showdc", "Make dynamic clamp mode for amplifier selectable", false );
@@ -163,6 +165,7 @@ void AmplifierControl::notify( void )
   MaxResistance = number( "maxresistance" );
   BuzzPulse = number( "buzzpulse" );
   Adjust = number( "adjust" );
+  ShowSwitchMessage = boolean( "showswitchmessage" );
 }
 
 
@@ -524,6 +527,8 @@ void AmplifierControl::activateBridgeMode( bool activate )
   if ( BridgeButton != 0 && activate ) {
     if ( Ampl != 0 )
       Ampl->setBridgeMode();
+    else if ( ! simulation() && ShowSwitchMessage ) 
+      info( "Switch the amplifier into <b>Bridge</b> mode, please!", 4.0 );
     BridgeButton->setChecked( true );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "Bridge" );
@@ -538,6 +543,8 @@ void AmplifierControl::activateCurrentClampMode( bool activate )
   if ( CCButton != 0 && activate ) {
     if ( Ampl != 0 )
       Ampl->setCurrentClampMode();
+    else if ( ! simulation() && ShowSwitchMessage ) 
+      info( "Switch the amplifier into <b>Current Clamp</b> mode, please!", 4.0 );
     CCButton->setChecked( true );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "CC" );
@@ -549,25 +556,29 @@ void AmplifierControl::activateCurrentClampMode( bool activate )
 
 void AmplifierControl::activateDynamicClampMode( bool activate )
 {
-  if ( DCButton != 0 &&
-       ( simulation() || ( Ampl != 0 && Ampl->supportsDynamicClampMode() ) ) && activate ) {
-    if ( simulation() || ( Ampl != 0 && Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) ) {
-      lockStimulusData();
-      stimulusData().setText( "AmplifierMode", "DC" );
-      stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
-      stimulusData().setInteger( "SyncMode", SyncMode );
-      unlockStimulusData();
-      unsetNotify();
-      setNumber( "syncpulse", SyncPulseDuration );
-      setToDefault( "syncpulse" );
-      setInteger( "syncmode", SyncMode );
-      setToDefault( "syncmode" );
-      setNotify();
-      SyncPulseEnabled = true;
-      DCButton->setChecked( true );
+  if ( DCButton != 0 && activate ) {
+    if ( simulation() || Ampl != 0 ) {
+      if ( Ampl != 0 && Ampl->supportsDynamicClampMode() &&
+	   Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) != 0 ) {
+	activateCurrentClampMode( true );
+	return;
+      }
     }
-    else
-      activateCurrentClampMode( true );
+    else if ( ! simulation() && ShowSwitchMessage ) 
+      info( "Switch the amplifier into <b>Dynamic Clamp</b> mode, please!", 4.0 );
+    lockStimulusData();
+    stimulusData().setText( "AmplifierMode", "DC" );
+    stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
+    stimulusData().setInteger( "SyncMode", SyncMode );
+    unlockStimulusData();
+    unsetNotify();
+    setNumber( "syncpulse", SyncPulseDuration );
+    setToDefault( "syncpulse" );
+    setInteger( "syncmode", SyncMode );
+    setToDefault( "syncmode" );
+    setNotify();
+    SyncPulseEnabled = true;
+    DCButton->setChecked( true );
   }
 }
 
@@ -577,6 +588,8 @@ void AmplifierControl::activateVoltageClampMode( bool activate )
   if ( VCButton != 0 && activate ) {
     if ( Ampl != 0 )
       Ampl->setVoltageClampMode();
+    else if ( ! simulation() && ShowSwitchMessage ) 
+      info( "Switch the amplifier into <b>Voltage Clamp</b> mode, please!", 4.0 );
     VCButton->setChecked( true );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "VC" );

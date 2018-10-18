@@ -51,6 +51,7 @@ namespace ephys {
 - \c adjust=false: Adjust input gain for resistance measurement (\c boolean)
 - \c maxresistance=100MOhm: Maximum resistance to be expected for scaling voltage trace (\c number)
 - \c buzzpulse=500ms: Duration of buzz pulse (\c number)
+- \c showswitchmessage=true: Show message for manually switching the amplifier mode (\c boolean)
 - \c showbridge=true: Make bridge mode for amplifier selectable (\c boolean)
 - \c showcc=false: Make current clamp mode for amplifier selectable (\c boolean)
 - \c showdc=false: Make dynamic clamp mode for amplifier selectable (\c boolean)
@@ -180,6 +181,7 @@ private:
   double MaxResistance;
   double ResistanceCurrent;
   double BuzzPulse;
+  bool ShowSwitchMessage;
   QVBoxLayout *AmplBox;
   QHBoxLayout *BuzzBox;
   QPushButton *BuzzerButton;
