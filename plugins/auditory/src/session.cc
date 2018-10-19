@@ -225,6 +225,12 @@ void Session::initDevices( void )
 }
 
 
+void Session::clearDevices( void )
+{
+  Temp = 0;
+}
+
+
 void Session::sessionStarted( void )
 {
   SessionButton->setText( "Cell lost" );
