@@ -44,7 +44,9 @@ membranetest::membranetest( void )
 
   // plot:
   P.lock();
-  P.setXLabel("Time [ms]");
+  P.resize( 2, 2, true );
+  P[0].setXLabel("Time [ms]");
+  P[1].setXLabel("Time [ms]");
   P.unlock();
   setWidget(&P);
 }
@@ -78,12 +80,15 @@ int membranetest::main( void )
   holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
 
   // plot:
-  P.lock();
-  P.clear();
+//  P.lock();
+//  P[0].clearData();
+//  P[1].clearData();
+//  P.unlock();
+//  P.lock();
 //  P.setXRange( -500.0*Duration, 2000.0*Duration );
 //  P.setYLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]" );
-  P.draw();
-  P.unlock();
+//  P.draw();
+//  P.unlock();
 
   // signal:
   OutData signal;
@@ -121,10 +126,13 @@ void membranetest::stimulus(OutData &signal) {
   bool plotstd = boolean( "plotstd" );
 
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
+  SampleDataF MeanCurr = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
+  SampleDataF MeanSqCurr = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
+  SampleDataF StdCurr = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
+
   SampleDataF MeanPot = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
   SampleDataF MeanSqPot = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
   SampleDataF StdPot = SampleDataF( -duration, 2*duration, 1/samplerate, 0.0 );
-
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     write(signal);
@@ -133,12 +141,26 @@ void membranetest::stimulus(OutData &signal) {
     SampleDataF currenttrace(-duration, 2 * duration, trace(CurrentTrace[0]).stepsize(), 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
 
-    for (int i = 0; i < currenttrace.size(); i++) {
-      MeanPot[i] += (currenttrace[i] - MeanPot[i]) / (Count + 1);
-      MeanSqPot[i] += (currenttrace[i] * currenttrace[i] - MeanSqPot[i]) / (Count + 1);
+    SampleDataF potentialtrace(-duration, 2 * duration, trace(SpikeTrace[0]).stepsize(), 0.0);
+    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace);
 
-      double diff = MeanSqPot[i] - MeanPot[i] * MeanPot[i];
-      if ( diff >= 0.0) {
+    for (int i = 0; i < currenttrace.size(); i++) {
+      // mean current
+      MeanCurr[i] += (currenttrace[i] - MeanCurr[i]) / (Count + 1);
+      MeanSqCurr[i] += (currenttrace[i] * currenttrace[i] - MeanSqCurr[i]) / (Count + 1);
+
+      double diff_curr = MeanSqCurr[i] - MeanCurr[i] * MeanCurr[i];
+      if ( diff_curr >= 0.0) {
+        StdCurr[i] = sqrt(MeanSqCurr[i] - MeanCurr[i] * MeanCurr[i]);
+      }
+      else { StdCurr[i] = 0.0; };
+
+      // mean potential
+      MeanPot[i] += (potentialtrace[i] - MeanPot[i]) / (Count + 1);
+      MeanSqPot[i] += (potentialtrace[i] * potentialtrace[i] - MeanSqPot[i]) / (Count + 1);
+
+      double diff_pot = MeanSqPot[i] - MeanPot[i] * MeanPot[i];
+      if ( diff_pot >= 0.0) {
         StdPot[i] = sqrt(MeanSqPot[i] - MeanPot[i] * MeanPot[i]);
       }
       else { StdPot[i] = 0.0; };
@@ -155,33 +177,37 @@ void membranetest::stimulus(OutData &signal) {
 
   // plot
   P.lock();
-  P.clear();
-  P.plot(MeanPot, 1000.0, Plot::Yellow, 1, Plot::Solid);
+  P[0].clearData();
+  P[1].clearData();
+  P[0].plot(MeanCurr, 1000.0, Plot::Yellow, 1, Plot::Solid);
+  P[1].plot(MeanPot, 1000.0, Plot::Yellow, 1, Plot::Solid);
   if (plotstd) {
-    P.plot(MeanPot + StdPot, 1000.0, Plot::Red, 2, Plot::Solid);
-    P.plot(MeanPot - StdPot, 1000.0, Plot::Red, 2, Plot::Solid);
+    P[0].plot(MeanCurr + StdCurr, 1000.0, Plot::Red, 2, Plot::Solid);
+    P[0].plot(MeanCurr - StdCurr, 1000.0, Plot::Red, 2, Plot::Solid);
+    P[1].plot(MeanPot + StdPot, 1000.0, Plot::Red, 2, Plot::Solid);
+    P[1].plot(MeanPot - StdPot, 1000.0, Plot::Red, 2, Plot::Solid);
   };
   P.draw();
   P.unlock();
 
-  resistance( MeanPot, StdPot );
+  resistance( MeanCurr, StdCurr );
 
 }
 
-void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
+void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   double duration  = number( "duration" );
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
   double amplitude = number( "amplitude" );
-  double maximum = max( MeanPot );
-  int index = maxIndex( MeanPot );
+  double maximum = max( MeanCurr );
+  int index = maxIndex( MeanCurr );
 //  int idx0 = index;
   int idx05 = 1.5*duration*samplerate;
-  int idx1 = MeanPot.index(duration) - 1;
+  int idx1 = MeanCurr.index(duration) - 1;
 //  int idx_t0 = MeanPot.index( 0.0 );
 
   double I0 = 0;
   for (int i=0; i<(duration*samplerate-1); i++ ) {
-    I0 += MeanPot[i];
+    I0 += MeanCurr[i];
   };
   I0 = I0/(duration*samplerate-1);
 
@@ -192,7 +218,7 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
   ArrayD param( 3, 1.0 );
   param[0] = maximum;
   param[1] = -1e-5;
-  param[2] = MeanPot[idx1];
+  param[2] = MeanCurr[idx1];
   ArrayD uncertainty ( 3, 0.0 );
   ArrayI paramfit( 3, 1 );
 //  paramfit[1] = 1;
@@ -203,15 +229,15 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
 
   int fitresult = marquardtFit(
 //          MeanPot.range().begin()+idx_t0, MeanPot.range().begin()+idx_t0+(idx1-index),
-          MeanPot.range().begin()+index, MeanPot.range().begin()+idx1,
-          MeanPot.begin()+index, MeanPot.begin()+idx1,
-          StdPot.begin()+index, StdPot.begin()+idx1,
+          MeanCurr.range().begin()+index, MeanCurr.range().begin()+idx1,
+          MeanCurr.begin()+index, MeanCurr.begin()+idx1,
+          StdCurr.begin()+index, StdCurr.begin()+idx1,
           expFunc2Derivs, param, paramfit, uncertainty, chisq
           );
 
   double I1 = param[2];
 
-  SampleDataD y(MeanPot.pos(index), duration, 1.0/samplerate);
+  SampleDataD y(MeanCurr.pos(index), duration, 1.0/samplerate);
   for ( int i = 0; i<y.size(); i++) {
     y[i] = expFunc2(y.pos(i), param);
   };
@@ -219,20 +245,20 @@ void membranetest::resistance( SampleDataF &MeanPot, SampleDataF &StdPot ) {
   if ( fitresult == 0 ) {
     cerr << "fit worked\n";
     P.lock();
-    P.setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R = " + Str(amplitude / (I1 - I0), "%.1f"));
-    P.plot( y, 1000.0, Plot::Green, 2, Plot::Solid);
+    P[0].setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R = " + Str(amplitude / (I1 - I0), "%.1f"));
+    P[0].plot( y, 1000.0, Plot::Green, 2, Plot::Solid);
 
     P.draw();
     P.unlock();
   }
-  else if ( MeanPot[idx05] < (MeanPot[idx1]+3*StdPot[idx1]) ) {
-    double I_steady = mean( MeanPot.begin()+idx05, MeanPot.begin()+idx1 );
+  else if ( MeanCurr[idx05] < (MeanCurr[idx1]+3*StdCurr[idx1]) ) {
+    double I_steady = mean( MeanCurr.begin()+idx05, MeanCurr.begin()+idx1 );
     cerr << "fit failed, take mean of last half of duration\n"
     << "fitresult = " << fitresult << "\n";
 
     P.lock();
-    P.setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R_m = " + Str(amplitude / (I_steady - I0), "%.1f"));
-    P.plotLine( duration/2*1000, I_steady, duration*1000, I_steady, Plot::Green, 2, Plot::Solid);
+    P[0].setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R_m = " + Str(amplitude / (I_steady - I0), "%.1f"));
+    P[0].plotLine( duration/2*1000, I_steady, duration*1000, I_steady, Plot::Green, 2, Plot::Solid);
     P.draw();
     P.unlock();
   }

@@ -58,8 +58,6 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
     return currenttrace;
   };
 
-//  double mean_offset = 0.0;
-
   // don't print repro message:
   noMessage();
 

@@ -22,7 +22,7 @@
 #ifndef _RELACS_VOLTAGECLAMP_MEMBRANETEST_H_
 #define _RELACS_VOLTAGECLAMP_MEMBRANETEST_H_ 1
 
-#include <relacs/plot.h>
+#include <relacs/multiplot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
 using namespace relacs;
@@ -54,7 +54,7 @@ private:
 
 protected:
 
-    Plot P;
+    MultiPlot P;
 
 };
 
