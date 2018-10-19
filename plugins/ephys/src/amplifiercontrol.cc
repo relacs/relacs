@@ -27,7 +27,7 @@ namespace ephys {
 
 
 AmplifierControl::AmplifierControl( void )
-  : Control( "AmplifierControl", "ephys", "Jan Benda", "3.0", "Oct 5, 2015" )
+  : Control( "AmplifierControl", "ephys", "Jan Benda", "3.2", "Oct 18, 2018" )
 {
   AmplBox = new QVBoxLayout;
   setLayout( AmplBox );
@@ -45,29 +45,39 @@ AmplifierControl::AmplifierControl( void )
   DCPulseBox = 0;
   SyncPulseSpinBox = 0;
   SyncModeSpinBox = 0;
+  VCBox = 0;
+  VCGainSpinBox = 0;
+  VCTauSpinBox = 0;
 
   Ampl = 0;
   RMeasure = false;
+  ShowSwitchMessage = true;
   SyncPulseEnabled = false;
   SyncPulseDuration = 0.00001;
   SyncMode = 0;
+  VCGain = 100.0;
+  VCTau = 0.001;
   MaxResistance = 100.0;
   ResistanceCurrent = 1.0;
   BuzzPulse = 0.5;
   DoBuzz = false;
+  LastCCMode = -1;
 
   addSelection( "initmode", "Initial mode of the amplifier", "Bridge|Current-clamp|Dynamic-clamp|Voltage-clamp|Manual selection" );
   addNumber( "resistancecurrent", "The average current of the amplifier used for measuring electrode resistance", ResistanceCurrent, 0.0, 100000.0, 0.01, "nA" );
   addBoolean( "adjust", "Adjust input gain for resistance measurement", false );
   addNumber( "maxresistance", "Maximum resistance to be expected for scaling voltage trace", MaxResistance, 0.0, 1000000.0, 10.0, "MOhm" ).setActivation( "adjust", "true" );
   addNumber( "buzzpulse", "Duration of buzz pulse", BuzzPulse, 0.0, 100.0, 0.1, "s", "ms" );
+  addBoolean( "showswitchmessage", "Show message for manually switching the amplifier mode", ShowSwitchMessage );
   addBoolean( "showbridge", "Make bridge mode for amplifier selectable", true );
   addBoolean( "showcc", "Make current clamp mode for amplifier selectable", false );
   addBoolean( "showdc", "Make dynamic clamp mode for amplifier selectable", false );
   addBoolean( "showvc", "Make voltage clamp mode for amplifier selectable", false );
   addBoolean( "showmanual", "Make manual mode for amplifier selectable", false );
   addNumber( "syncpulse", "Duration of SEC current injection", SyncPulseDuration, 0.0, 0.1, 0.000001, "s", "us" );
-  addInteger( "syncmode", "Interval is average over", SyncMode, 0, 1000 ).setUnit( "samples" );
+  addInteger( "syncmode", "Interval is averaged over", SyncMode, 0, 1000 ).setUnit( "samples" );
+  addNumber( "vcgain", "VC gain", VCGain, 0.0, 100000.0, 1.0 );
+  addNumber( "vctau", "VC time constant", VCTau, 0.0, 0.1, 0.01, "s", "ms" );
 
   setGlobalKeyEvents();
 }
@@ -81,6 +91,12 @@ void AmplifierControl::notify( void )
   SyncMode = integer( "syncmode" );
   if ( SyncModeSpinBox != 0 )
     SyncModeSpinBox->setValue( SyncMode );
+  VCGain = number( "vcgain" );
+  if ( VCGainSpinBox != 0 )
+    VCGainSpinBox->setValue( VCGain );
+  VCTau = number( "vctau" );
+  if ( VCTauSpinBox != 0 )
+    VCTauSpinBox->setValue( 1000.0*VCTau );
   // initial mode:
   if ( changed( "initmode" ) ) {
     int initmode = index( "initmode" );
@@ -133,6 +149,13 @@ void AmplifierControl::notify( void )
     else
       VCButton->hide();
   }
+  if ( VCBox != 0 ) {
+    if ( boolean( "showvc" ) &&
+	 ( ( Ampl !=0 && Ampl->supportsVoltageClampMode() ) || simulation() ) )
+      VCBox->show();
+    else
+      VCBox->hide();
+  }
   if ( ManualButton != 0 ) {
     if ( boolean( "showmanual" ) )
       ManualButton->show();
@@ -143,76 +166,77 @@ void AmplifierControl::notify( void )
   MaxResistance = number( "maxresistance" );
   BuzzPulse = number( "buzzpulse" );
   Adjust = number( "adjust" );
+  ShowSwitchMessage = boolean( "showswitchmessage" );
 }
 
 
 void AmplifierControl::initDevices( void )
 {
+  // get amplifier device:
   Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
-  if ( Ampl == 0 && ! simulation() ) {
-    widget()->hide();
-    return;
+
+  if ( simulation() || Ampl != 0 ) {
+    // add meta data:
+    lockMetaData();
+    if ( ! metaData().existSection( "Electrode" ) )
+      metaData().newSection( "Electrode", "Electrode", metaData().saveFlags() );
+    Options &mo = metaData().section( "Electrode" );
+    mo.unsetNotify();
+    if ( ! mo.exist( "Resistance" ) )
+      mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" ).addFlags( metaData().saveFlags() );
+    mo.setNotify();
+    unlockMetaData();
+    // add buzzer and resistance widgets:
+    if ( BuzzBox == 0 ) {
+      AmplBox->addWidget( new QLabel );
+      BuzzBox = new QHBoxLayout;
+      AmplBox->addLayout( BuzzBox );
+    
+      BuzzBox->addWidget( new QLabel );
+
+      BuzzerButton = new QPushButton( "Bu&zz" );
+      BuzzBox->addWidget( BuzzerButton );
+      connect( BuzzerButton, SIGNAL( clicked() ),
+	       this, SLOT( startBuzz() ) );
+
+      BuzzBox->addWidget( new QLabel );
+
+      ResistanceButton = new QPushButton( "R" );
+      BuzzBox->addWidget( ResistanceButton );
+      connect( ResistanceButton, SIGNAL( pressed() ),
+	       this, SLOT( startResistance() ) );
+      connect( ResistanceButton, SIGNAL( released() ),
+	       this, SLOT( stopResistance() ) );
+    
+      QLabel *label = new QLabel( "=" );
+      label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+      BuzzBox->addWidget( label );
+
+      ResistanceLabel = new QLabel( "000" );
+      ResistanceLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
+      ResistanceLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+      ResistanceLabel->setLineWidth( 2 );
+      QFont nf( ResistanceLabel->font() );
+      nf.setPointSizeF( 1.6 * nf.pointSizeF() );
+      nf.setBold( true );
+      ResistanceLabel->setFont( nf );
+      ResistanceLabel->setAutoFillBackground( true );
+      QPalette qp( ResistanceLabel->palette() );
+      qp.setColor( QPalette::Window, Qt::black );
+      qp.setColor( QPalette::WindowText, Qt::green );
+      ResistanceLabel->setPalette( qp );
+      ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
+      ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
+      ResistanceLabel->setText( "0" );
+      BuzzBox->addWidget( ResistanceLabel );
+
+      BuzzBox->addWidget( new QLabel( "M<u>O</u>hm" ) );
+    
+      BuzzBox->addWidget( new QLabel );
+      AmplBox->addWidget( new QLabel );
+    }
   }
 
-  // add meta data:
-  lockMetaData();
-  if ( ! metaData().existSection( "Electrode" ) )
-    metaData().newSection( "Electrode", "Electrode", metaData().saveFlags() );
-  Options &mo = metaData().section( "Electrode" );
-  mo.unsetNotify();
-  if ( ! mo.exist( "Resistance" ) )
-    mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" ).addFlags( metaData().saveFlags() );
-  mo.setNotify();
-  unlockMetaData();
-  // add buzzer and resistance widgets:
-  if ( BuzzBox == 0 ) {
-    AmplBox->addWidget( new QLabel );
-    BuzzBox = new QHBoxLayout;
-    AmplBox->addLayout( BuzzBox );
-    
-    BuzzBox->addWidget( new QLabel );
-
-    BuzzerButton = new QPushButton( "Bu&zz" );
-    BuzzBox->addWidget( BuzzerButton );
-    connect( BuzzerButton, SIGNAL( clicked() ),
-	     this, SLOT( startBuzz() ) );
-
-    BuzzBox->addWidget( new QLabel );
-
-    ResistanceButton = new QPushButton( "R" );
-    BuzzBox->addWidget( ResistanceButton );
-    connect( ResistanceButton, SIGNAL( pressed() ),
-	     this, SLOT( startResistance() ) );
-    connect( ResistanceButton, SIGNAL( released() ),
-	     this, SLOT( stopResistance() ) );
-    
-    QLabel *label = new QLabel( "=" );
-    label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-    BuzzBox->addWidget( label );
-
-    ResistanceLabel = new QLabel( "000" );
-    ResistanceLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
-    ResistanceLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
-    ResistanceLabel->setLineWidth( 2 );
-    QFont nf( ResistanceLabel->font() );
-    nf.setPointSizeF( 1.6 * nf.pointSizeF() );
-    nf.setBold( true );
-    ResistanceLabel->setFont( nf );
-    ResistanceLabel->setAutoFillBackground( true );
-    QPalette qp( ResistanceLabel->palette() );
-    qp.setColor( QPalette::Window, Qt::black );
-    qp.setColor( QPalette::WindowText, Qt::green );
-    ResistanceLabel->setPalette( qp );
-    ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
-    ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
-    ResistanceLabel->setText( "0" );
-    BuzzBox->addWidget( ResistanceLabel );
-
-    BuzzBox->addWidget( new QLabel( "M<u>O</u>hm" ) );
-    
-    BuzzBox->addWidget( new QLabel );
-    AmplBox->addWidget( new QLabel );
-  }
   // add stimulus data:
   lockStimulusData();
   stimulusData().addText( "AmplifierMode", "Amplifier mode", "Bridge" );
@@ -234,26 +258,37 @@ void AmplifierControl::initDevices( void )
     connect( ManualButton, SIGNAL( clicked( bool ) ), this, SLOT( manualSelection( bool ) ) );
     vbox = new QVBoxLayout;
     vbox->addWidget( BridgeButton );
-    if ( ! boolean( "showbridge" ) || ( ! simulation() && ! Ampl->supportsBridgeMode() ) )
-      BridgeButton->hide();
     vbox->addWidget( CCButton );
-    if ( ! boolean( "showcc" ) || ( ! simulation() && ! Ampl->supportsCurrentClampMode() ) )
-      CCButton->hide();
     vbox->addWidget( DCButton );
-    if ( ! boolean( "showdc" ) || ( ! simulation() && ! Ampl->supportsDynamicClampMode() ) )
-      DCButton->hide();
     vbox->addWidget( VCButton );
-    if ( ! boolean( "showvc" ) || ( ! simulation() && ! Ampl->supportsVoltageClampMode() ) )
-      VCButton->hide();
     vbox->addWidget( ManualButton );
-    if ( ! boolean( "showmanual" ) )
-      ManualButton->hide();
     ModeBox->setLayout( vbox );
     AmplBox->addWidget( ModeBox );
     AmplBox->addWidget( new QLabel );
   }
+  if ( ! boolean( "showbridge" ) || ( Ampl != 0 && ! Ampl->supportsBridgeMode() ) )
+    BridgeButton->hide();
+  else
+    BridgeButton->show();
+  if ( ! boolean( "showcc" ) || ( Ampl != 0 && ! Ampl->supportsCurrentClampMode() ) )
+    CCButton->hide();
+  else
+    CCButton->show();
+  if ( ! boolean( "showdc" ) || ( Ampl != 0 && ! Ampl->supportsDynamicClampMode() ) )
+    DCButton->hide();
+  else
+    DCButton->show();
+  if ( ! boolean( "showvc" ) || ( Ampl != 0 && ! Ampl->supportsVoltageClampMode() ) )
+    VCButton->hide();
+  else
+    VCButton->show();
+  if ( ! boolean( "showmanual" ) )
+    ManualButton->hide();
+  else
+    ManualButton->show();
+
   // add amplifier synchronization for dynamic clamp:
-  if ( simulation() || ( Ampl !=0 && Ampl->supportsDynamicClampMode() ) ) {
+  if ( simulation() || Ampl ==0 || Ampl->supportsDynamicClampMode() ) {
     lockStimulusData();
     double spd = 0.0;
     if ( SyncPulseEnabled )
@@ -293,10 +328,59 @@ void AmplifierControl::initDevices( void )
       label = new QLabel( "samples" );
       gbox->addWidget( label, 1, 2 );
 
-      if ( ! boolean( "showdc" ) )
-	DCPulseBox->hide();
     }
+    if ( ! boolean( "showdc" ) )
+      DCPulseBox->hide();
+    else
+      DCPulseBox->show();
   }
+  else if ( DCPulseBox != 0 )
+    DCPulseBox->hide();
+
+  if ( simulation() || Ampl == 0 || Ampl->supportsVoltageClampMode() ) {
+    lockStimulusData();
+    stimulusData().addNumber( "VCGain", "VC gain", VCGain );
+    stimulusData().addNumber( "VCTau", "VC tau", 1000.0*VCTau, "ms" );
+    unlockStimulusData();
+    if ( VCBox == 0 && VCGainSpinBox == 0 && vbox != 0 ) {
+      vbox->addWidget( new QLabel );
+      VCBox = new QWidget;
+      vbox->addWidget( VCBox );
+      QGridLayout *gbox = new QGridLayout;
+      gbox->setContentsMargins( 0, 0, 0, 0 );
+      VCBox->setLayout( gbox );
+      QLabel *label = new QLabel( "VC gain" );
+      gbox->addWidget( label, 0, 0 );
+      VCGainSpinBox = new DoubleSpinBox;
+      VCGainSpinBox->setRange( 0.0, 10000.0 );
+      VCGainSpinBox->setSingleStep( 1.0 );
+      VCGainSpinBox->setFormat( "%g" );
+      VCGainSpinBox->setKeyboardTracking( false );
+      VCGainSpinBox->setValue( VCGain );
+      connect( VCGainSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setVCGain( double ) ) );
+      gbox->addWidget( VCGainSpinBox, 0, 1 );
+
+      label = new QLabel( "VC tau" );
+      gbox->addWidget( label, 1, 0 );
+      VCTauSpinBox = new DoubleSpinBox;
+      VCTauSpinBox->setRange( 0.0, 100.0 );
+      VCTauSpinBox->setSingleStep( 0.1 );
+      VCTauSpinBox->setFormat( "%.1f" );
+      VCTauSpinBox->setKeyboardTracking( false );
+      VCTauSpinBox->setValue( 1000.0*VCTau );
+      connect( VCTauSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( setVCTau( double ) ) );
+      gbox->addWidget( VCTauSpinBox, 1, 1 );
+      label = new QLabel( "ms" );
+      gbox->addWidget( label, 1, 2 );
+    }
+    if ( ! boolean( "showvc" ) )
+      VCBox->hide();
+    else
+      VCBox->show();
+  }
+  else if ( VCBox != 0 )
+    VCBox->hide();
+
   widget()->show();
   // initial mode:
   int initmode = index( "initmode" );
@@ -312,6 +396,12 @@ void AmplifierControl::initDevices( void )
   default :
     activateBridgeMode();
   }
+}
+
+
+void AmplifierControl::clearDevices( void )
+{
+  Ampl = 0;
 }
 
 
@@ -439,11 +529,15 @@ void AmplifierControl::activateBridgeMode( bool activate )
   if ( BridgeButton != 0 && activate ) {
     if ( Ampl != 0 )
       Ampl->setBridgeMode();
+    else if ( ! simulation() && ShowSwitchMessage ) 
+      info( "Switch the amplifier into <b>Bridge</b> mode, please!", 4.0 );
     BridgeButton->setChecked( true );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "Bridge" );
     clearSyncPulse();
+    clearVC();
     unlockStimulusData();
+    LastCCMode = 0;
   }
 }
 
@@ -453,36 +547,46 @@ void AmplifierControl::activateCurrentClampMode( bool activate )
   if ( CCButton != 0 && activate ) {
     if ( Ampl != 0 )
       Ampl->setCurrentClampMode();
+    else if ( ! simulation() && ShowSwitchMessage ) 
+      info( "Switch the amplifier into <b>Current Clamp</b> mode, please!", 4.0 );
     CCButton->setChecked( true );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "CC" );
     clearSyncPulse();
+    clearVC();
     unlockStimulusData();
+    LastCCMode = 1;
   }
 }
 
 
 void AmplifierControl::activateDynamicClampMode( bool activate )
 {
-  if ( DCButton != 0 &&
-       ( simulation() || ( Ampl != 0 && Ampl->supportsDynamicClampMode() ) ) && activate ) {
-    if ( simulation() || Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
-      lockStimulusData();
-      stimulusData().setText( "AmplifierMode", "DC" );
-      stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
-      stimulusData().setInteger( "SyncMode", SyncMode );
-      unlockStimulusData();
-      unsetNotify();
-      setNumber( "syncpulse", SyncPulseDuration );
-      setToDefault( "syncpulse" );
-      setInteger( "syncmode", SyncMode );
-      setToDefault( "syncmode" );
-      setNotify();
-      SyncPulseEnabled = true;
-      DCButton->setChecked( true );
+  if ( DCButton != 0 && activate ) {
+    if ( simulation() || Ampl != 0 ) {
+      if ( Ampl != 0 && Ampl->supportsDynamicClampMode() &&
+	   Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) != 0 ) {
+	activateCurrentClampMode( true );
+	return;
+      }
     }
-    else
-      activateCurrentClampMode( true );
+    else if ( ! simulation() && ShowSwitchMessage ) 
+      info( "Switch the amplifier into <b>Dynamic Clamp</b> mode, please!", 4.0 );
+    lockStimulusData();
+    stimulusData().setText( "AmplifierMode", "DC" );
+    stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
+    stimulusData().setInteger( "SyncMode", SyncMode );
+    clearVC();
+    unlockStimulusData();
+    unsetNotify();
+    setNumber( "syncpulse", SyncPulseDuration );
+    setToDefault( "syncpulse" );
+    setInteger( "syncmode", SyncMode );
+    setToDefault( "syncmode" );
+    setNotify();
+    SyncPulseEnabled = true;
+    DCButton->setChecked( true );
+    LastCCMode = 2;
   }
 }
 
@@ -492,11 +596,34 @@ void AmplifierControl::activateVoltageClampMode( bool activate )
   if ( VCButton != 0 && activate ) {
     if ( Ampl != 0 )
       Ampl->setVoltageClampMode();
+    else if ( ! simulation() && ShowSwitchMessage ) 
+      info( "Switch the amplifier into <b>Voltage Clamp</b> mode, please!", 4.0 );
     VCButton->setChecked( true );
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "VC" );
+    stimulusData().setNumber( "VCGain", VCGain );
+    stimulusData().setInteger( "VCTau", 1000.0*VCTau );
     clearSyncPulse();
     unlockStimulusData();
+    unsetNotify();
+    setNumber( "vcgain", VCGain );
+    setToDefault( "vcgain" );
+    setNumber( "vctau", VCTau );
+    setToDefault( "vctau" );
+    setNotify();
+  }
+}
+
+
+void AmplifierControl::inactivateVoltageClampMode( void )
+{
+  switch ( LastCCMode ) {
+  case 1 : activateCurrentClampMode();
+    break;
+  case 2 : activateDynamicClampMode();
+    break;
+  default :
+    activateBridgeMode();
   }
 }
 
@@ -510,6 +637,7 @@ void AmplifierControl::manualSelection( bool activate )
     lockStimulusData();
     stimulusData().setText( "AmplifierMode", "Manual" );
     clearSyncPulse();
+    clearVC();
     unlockStimulusData();
   }
 }
@@ -533,7 +661,7 @@ void AmplifierControl::setSyncPulse( double durationus )
   setToDefault( "syncpulse" );
   setNotify();
   if ( ( simulation() || ( Ampl != 0 && Ampl->supportsDynamicClampMode() ) ) && SyncPulseEnabled ) {
-    if ( simulation() || Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
+    if ( simulation() || ( Ampl != 0 && Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) ) {
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
       stimulusData().setInteger( "SyncMode", SyncMode );
@@ -551,12 +679,53 @@ void AmplifierControl::setSyncMode( int mode )
   setToDefault( "syncmode" );
   setNotify();
   if ( ( simulation() || ( Ampl != 0 && Ampl->supportsDynamicClampMode() ) ) && SyncPulseEnabled ) {
-    if ( simulation() || Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) {
+    if ( simulation() || ( Ampl != 0 && Ampl->setDynamicClampMode( SyncPulseDuration, SyncMode ) == 0 ) ) {
       lockStimulusData();
       stimulusData().setNumber( "SyncPulse", 1.0e6*SyncPulseDuration );
       stimulusData().setInteger( "SyncMode", SyncMode );
       unlockStimulusData();
     }
+  }
+}
+
+
+void AmplifierControl::clearVC( void )
+{
+  if ( simulation() || ( Ampl != 0 && Ampl->supportsVoltageClampMode() ) ) {
+    stimulusData().setNumber( "VCGain", 0.0 );
+    stimulusData().setNumber( "VCTau", 0.0 );
+  }
+}
+
+
+void AmplifierControl::setVCGain( double vcgain )
+{
+  VCGain = vcgain;
+  unsetNotify();
+  setNumber( "vcgain", VCGain );
+  setToDefault( "vcgain" );
+  setNotify();
+  if ( simulation() || ( Ampl != 0 && Ampl->supportsVoltageClampMode() ) ) {
+    lockStimulusData();
+    stimulusData().setNumber( "VCGain", VCGain );
+    stimulusData().setNumber( "VCTau", 1000.0*VCTau );
+    unlockStimulusData();
+  }
+}
+
+
+void AmplifierControl::setVCTau( double vctaums )
+{
+  VCTau = 0.001*vctaums;
+  unsetNotify();
+  setNumber( "vctau", VCTau );
+  setToDefault( "vctau" );
+  setNotify();
+  if ( simulation() || ( Ampl != 0 && Ampl->supportsVoltageClampMode() ) ) {
+    lockStimulusData();
+    stimulusData().setNumber( "VCGain", VCGain );
+    stimulusData().setNumber( "VCTau", 1000.0*VCTau );
+    unlockStimulusData();
   }
 }
 

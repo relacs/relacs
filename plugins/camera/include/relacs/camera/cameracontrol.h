@@ -54,6 +54,7 @@ public:
   ~CameraControl(void);
   virtual void main( void );
   virtual void initDevices( void );
+  virtual void clearDevices( void );
   string currentCamera() const;
 
 public slots:

@@ -130,15 +130,12 @@ void CameraControl::stopStream(){
 }
 
 
-
-
 void CameraControl::initDevices( void )
 {
   misc::OpenCVCamera * Cam;
   for ( unsigned int k=0; k<10; k++ ) {
     Cam = 0;
     Str ns( k+1, 0 );
-    //Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
     Cam = dynamic_cast< misc::OpenCVCamera* >( device( "camera-" + ns ) );
     if ( Cam != 0 ){
 
@@ -155,6 +152,13 @@ void CameraControl::initDevices( void )
   }
 
 }
+
+
+void CameraControl::clearDevices( void )
+{
+  Cam = 0;
+}
+
 
 string CameraControl::currentCamera(void) const{
   QString tmp = cameraBox->currentText();

@@ -98,6 +98,13 @@ void ControlTabs::initDevices( void )
 }
 
 
+void ControlTabs::clearDevices( void )
+{
+  for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp )
+    (*cp)->clearDevices();
+}
+
+
 void ControlTabs::assignTracesEvents( const InList &il, const EventList &el )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {

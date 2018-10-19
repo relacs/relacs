@@ -43,7 +43,7 @@ namespace ephys {
 \class AmplifierControl
 \brief [Control] Controls an amplifier: buzzer and resistance measurement.
 \author Jan Benda
-\version 3.0 (Oct 5, 2015)
+\version 3.2 (Oct 18, 2018)
 
 \par Options
 - \c initmode=Bridge: Initial mode of the amplifier (\c string)
@@ -51,6 +51,7 @@ namespace ephys {
 - \c adjust=false: Adjust input gain for resistance measurement (\c boolean)
 - \c maxresistance=100MOhm: Maximum resistance to be expected for scaling voltage trace (\c number)
 - \c buzzpulse=500ms: Duration of buzz pulse (\c number)
+- \c showswitchmessage=true: Show message for manually switching the amplifier mode (\c boolean)
 - \c showbridge=true: Make bridge mode for amplifier selectable (\c boolean)
 - \c showcc=false: Make current clamp mode for amplifier selectable (\c boolean)
 - \c showdc=false: Make dynamic clamp mode for amplifier selectable (\c boolean)
@@ -58,6 +59,8 @@ namespace ephys {
 - \c showmanual=false: Make manual mode for amplifier selectable (\c boolean)
 - \c syncpulse=10us: Duration of SEC current injection (\c number)
 - \c syncmode=0samples: Interval is average over (\c integer);
+- \c vcgain=100: VC gain (\c number)
+- \c vctau=1ms: VC time constant (\c number)
 
 \par Key shortcuts
 - \c Z: Buzz
@@ -112,6 +115,7 @@ public:
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void keyReleaseEvent( QKeyEvent *e );
   virtual void initDevices( void );
+  virtual void clearDevices( void );
   virtual void notify( void );
     /*! If idle() sets manual mode selection for the amplifier. */
   virtual void modeChanged( void );
@@ -132,15 +136,18 @@ public slots:
     /*! Stop buzzing the electrode. */
   void stopBuzz( void );
 
-    /*! Activate/deactivate bridge mode of the amplifier. */
+    /*! Activate bridge mode of the amplifier. */
   void activateBridgeMode( bool activate=true );
-    /*! Activate/deactivate current-clamp mode of the amplifier. */
+    /*! Activate current-clamp mode of the amplifier. */
   void activateCurrentClampMode( bool activate=true );
-    /*! Activate/deactivate current-clamp mode 
-        with external synchronization of the amplifier. */
+    /*! Activate current-clamp mode with external synchronization of
+        the amplifier. */
   void activateDynamicClampMode( bool activate=true );
-    /*! Activate/deactivate voltage-clamp mode of the amplifier. */
+    /*! Activate voltage-clamp mode of the amplifier. */
   void activateVoltageClampMode( bool activate=true );
+    /*! Inactivate voltage-clamp mode of the amplifier, i.e.
+        activate the last active current clamp mode (bridge, cc, or dc). */
+  void inactivateVoltageClampMode( void );
     /*! Turn on manual selection of the amplifier. */
   void manualSelection( bool activate=true );
 
@@ -151,11 +158,18 @@ public slots:
         to \a mode. */
   void setSyncMode( int mode );
 
+    /*! Set voltage clamp gain to \a vcgain. */
+  void setVCGain( double vcgain );
+    /*! Set voltage clamp time constant to \a vctaums milliseconds. */
+  void setVCTau( double vctaums );
+
 
 protected:
 
     /*! Resets stimulus metadata regarding amplifier synchronization. */
   void clearSyncPulse( void );
+    /*! Resets stimulus metadata regarding voltage clamp. */
+  void clearVC( void );
 
     /*! Measure electrode resistance. */
   void measureResistance( void );
@@ -172,6 +186,7 @@ private:
   double MaxResistance;
   double ResistanceCurrent;
   double BuzzPulse;
+  bool ShowSwitchMessage;
   QVBoxLayout *AmplBox;
   QHBoxLayout *BuzzBox;
   QPushButton *BuzzerButton;
@@ -189,6 +204,12 @@ private:
   bool SyncPulseEnabled;
   double SyncPulseDuration;
   int SyncMode;
+  QWidget *VCBox;
+  DoubleSpinBox *VCGainSpinBox;
+  DoubleSpinBox *VCTauSpinBox;
+  double VCGain;
+  double VCTau;
+  int LastCCMode;
   bool DoBuzz;
 
 };
