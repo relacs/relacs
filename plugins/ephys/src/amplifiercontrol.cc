@@ -172,71 +172,71 @@ void AmplifierControl::notify( void )
 
 void AmplifierControl::initDevices( void )
 {
+  // get amplifier device:
   Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
-  if ( Ampl == 0 && ! simulation() ) {
-    widget()->hide();
-    return;
+
+  if ( simulation() || Ampl != 0 ) {
+    // add meta data:
+    lockMetaData();
+    if ( ! metaData().existSection( "Electrode" ) )
+      metaData().newSection( "Electrode", "Electrode", metaData().saveFlags() );
+    Options &mo = metaData().section( "Electrode" );
+    mo.unsetNotify();
+    if ( ! mo.exist( "Resistance" ) )
+      mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" ).addFlags( metaData().saveFlags() );
+    mo.setNotify();
+    unlockMetaData();
+    // add buzzer and resistance widgets:
+    if ( BuzzBox == 0 ) {
+      AmplBox->addWidget( new QLabel );
+      BuzzBox = new QHBoxLayout;
+      AmplBox->addLayout( BuzzBox );
+    
+      BuzzBox->addWidget( new QLabel );
+
+      BuzzerButton = new QPushButton( "Bu&zz" );
+      BuzzBox->addWidget( BuzzerButton );
+      connect( BuzzerButton, SIGNAL( clicked() ),
+	       this, SLOT( startBuzz() ) );
+
+      BuzzBox->addWidget( new QLabel );
+
+      ResistanceButton = new QPushButton( "R" );
+      BuzzBox->addWidget( ResistanceButton );
+      connect( ResistanceButton, SIGNAL( pressed() ),
+	       this, SLOT( startResistance() ) );
+      connect( ResistanceButton, SIGNAL( released() ),
+	       this, SLOT( stopResistance() ) );
+    
+      QLabel *label = new QLabel( "=" );
+      label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+      BuzzBox->addWidget( label );
+
+      ResistanceLabel = new QLabel( "000" );
+      ResistanceLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
+      ResistanceLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+      ResistanceLabel->setLineWidth( 2 );
+      QFont nf( ResistanceLabel->font() );
+      nf.setPointSizeF( 1.6 * nf.pointSizeF() );
+      nf.setBold( true );
+      ResistanceLabel->setFont( nf );
+      ResistanceLabel->setAutoFillBackground( true );
+      QPalette qp( ResistanceLabel->palette() );
+      qp.setColor( QPalette::Window, Qt::black );
+      qp.setColor( QPalette::WindowText, Qt::green );
+      ResistanceLabel->setPalette( qp );
+      ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
+      ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
+      ResistanceLabel->setText( "0" );
+      BuzzBox->addWidget( ResistanceLabel );
+
+      BuzzBox->addWidget( new QLabel( "M<u>O</u>hm" ) );
+    
+      BuzzBox->addWidget( new QLabel );
+      AmplBox->addWidget( new QLabel );
+    }
   }
 
-  // add meta data:
-  lockMetaData();
-  if ( ! metaData().existSection( "Electrode" ) )
-    metaData().newSection( "Electrode", "Electrode", metaData().saveFlags() );
-  Options &mo = metaData().section( "Electrode" );
-  mo.unsetNotify();
-  if ( ! mo.exist( "Resistance" ) )
-    mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" ).addFlags( metaData().saveFlags() );
-  mo.setNotify();
-  unlockMetaData();
-  // add buzzer and resistance widgets:
-  if ( BuzzBox == 0 ) {
-    AmplBox->addWidget( new QLabel );
-    BuzzBox = new QHBoxLayout;
-    AmplBox->addLayout( BuzzBox );
-    
-    BuzzBox->addWidget( new QLabel );
-
-    BuzzerButton = new QPushButton( "Bu&zz" );
-    BuzzBox->addWidget( BuzzerButton );
-    connect( BuzzerButton, SIGNAL( clicked() ),
-	     this, SLOT( startBuzz() ) );
-
-    BuzzBox->addWidget( new QLabel );
-
-    ResistanceButton = new QPushButton( "R" );
-    BuzzBox->addWidget( ResistanceButton );
-    connect( ResistanceButton, SIGNAL( pressed() ),
-	     this, SLOT( startResistance() ) );
-    connect( ResistanceButton, SIGNAL( released() ),
-	     this, SLOT( stopResistance() ) );
-    
-    QLabel *label = new QLabel( "=" );
-    label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-    BuzzBox->addWidget( label );
-
-    ResistanceLabel = new QLabel( "000" );
-    ResistanceLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
-    ResistanceLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
-    ResistanceLabel->setLineWidth( 2 );
-    QFont nf( ResistanceLabel->font() );
-    nf.setPointSizeF( 1.6 * nf.pointSizeF() );
-    nf.setBold( true );
-    ResistanceLabel->setFont( nf );
-    ResistanceLabel->setAutoFillBackground( true );
-    QPalette qp( ResistanceLabel->palette() );
-    qp.setColor( QPalette::Window, Qt::black );
-    qp.setColor( QPalette::WindowText, Qt::green );
-    ResistanceLabel->setPalette( qp );
-    ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
-    ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
-    ResistanceLabel->setText( "0" );
-    BuzzBox->addWidget( ResistanceLabel );
-
-    BuzzBox->addWidget( new QLabel( "M<u>O</u>hm" ) );
-    
-    BuzzBox->addWidget( new QLabel );
-    AmplBox->addWidget( new QLabel );
-  }
   // add stimulus data:
   lockStimulusData();
   stimulusData().addText( "AmplifierMode", "Amplifier mode", "Bridge" );
@@ -266,19 +266,19 @@ void AmplifierControl::initDevices( void )
     AmplBox->addWidget( ModeBox );
     AmplBox->addWidget( new QLabel );
   }
-  if ( ! boolean( "showbridge" ) || ( ! simulation() && ! Ampl->supportsBridgeMode() ) )
+  if ( ! boolean( "showbridge" ) || ( Ampl != 0 && ! Ampl->supportsBridgeMode() ) )
     BridgeButton->hide();
   else
     BridgeButton->show();
-  if ( ! boolean( "showcc" ) || ( ! simulation() && ! Ampl->supportsCurrentClampMode() ) )
+  if ( ! boolean( "showcc" ) || ( Ampl != 0 && ! Ampl->supportsCurrentClampMode() ) )
     CCButton->hide();
   else
     CCButton->show();
-  if ( ! boolean( "showdc" ) || ( ! simulation() && ! Ampl->supportsDynamicClampMode() ) )
+  if ( ! boolean( "showdc" ) || ( Ampl != 0 && ! Ampl->supportsDynamicClampMode() ) )
     DCButton->hide();
   else
     DCButton->show();
-  if ( ! boolean( "showvc" ) || ( ! simulation() && ! Ampl->supportsVoltageClampMode() ) )
+  if ( ! boolean( "showvc" ) || ( Ampl != 0 && ! Ampl->supportsVoltageClampMode() ) )
     VCButton->hide();
   else
     VCButton->show();
@@ -286,8 +286,9 @@ void AmplifierControl::initDevices( void )
     ManualButton->hide();
   else
     ManualButton->show();
+
   // add amplifier synchronization for dynamic clamp:
-  if ( simulation() || ( Ampl !=0 && Ampl->supportsDynamicClampMode() ) ) {
+  if ( simulation() || Ampl ==0 || Ampl->supportsDynamicClampMode() ) {
     lockStimulusData();
     double spd = 0.0;
     if ( SyncPulseEnabled )
@@ -336,7 +337,7 @@ void AmplifierControl::initDevices( void )
   else if ( DCPulseBox != 0 )
     DCPulseBox->hide();
 
-  if ( simulation() || ( Ampl !=0 && Ampl->supportsVoltageClampMode() ) ) {
+  if ( simulation() || Ampl == 0 || Ampl->supportsVoltageClampMode() ) {
     lockStimulusData();
     stimulusData().addNumber( "VCGain", "VC gain", VCGain );
     stimulusData().addNumber( "VCTau", "VC tau", 1000.0*VCTau, "ms" );
