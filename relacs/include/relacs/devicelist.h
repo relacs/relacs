@@ -24,7 +24,6 @@
 
 #include <QMenu>
 #include <deque>
-#include <vector>
 #include <relacs/str.h>
 #include <relacs/configclass.h>
 #include <relacs/relacsplugin.h>
@@ -119,9 +118,9 @@ public:
 protected:
 
     /*! The list of Devices. */
-  vector < T* > DVs;
+  deque < T* > DVs;
     /*! The list of corresponding menus. */
-  vector < QMenu* > Menus;
+  deque < QMenu* > Menus;
     /*! Name of the device list used for error messages. */
   string Name;
     /*! Warning messages. */

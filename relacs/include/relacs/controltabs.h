@@ -56,6 +56,8 @@ public:
 
     /*! Calls setSettings() and initDevices() of each Control. */
   void initDevices( void );
+    /*! Calls clearDevices() of each Control. */
+  void clearDevices( void );
     /*! Copies \a il and \a el to each Control by copying a pointer to
         the data buffers only. */
   void assignTracesEvents( const InList &il, const EventList &el );

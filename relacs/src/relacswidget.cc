@@ -683,6 +683,7 @@ int RELACSWidget::setupHardware( int n )
   else {
 
     // clear devices:
+    CW->clearDevices();
     ADV->clear();
     DV->clear();
     ATD->clear();
@@ -700,6 +701,7 @@ int RELACSWidget::setupHardware( int n )
 
 void RELACSWidget::clearHardware( void )
 {
+  CW->clearDevices();
   AQD->clear();
   SIM->clear();
   ADV->clear();
