@@ -468,46 +468,6 @@ void Robot::updateConfig( void ) {
 }
 
 
-void Robot::updateConfig( void )
-{
-  if ( exist( "FishHeadPosition" ) ) {
-    Point fish_start( point("FishHeadPosition") );
-    Point fish_end( point("FishTailPosition") );
-    if ( fish_start.distance( fish_end ) > 0.01 ) {
-      robot->set_fish_head(fish_start);
-      robot->set_fish_tail(fish_end);
-      storePosition( "FishHeadPosition", fish_start );
-      storePosition( "FishTailPosition", fish_end );
-    }
-  }
-  if ( exist( "MovementAreaStart" ) ) {
-    Point area_start( point( "MovementAreaStart" ) );
-    Point area_end( point( "MovementAreaEnd" ) );
-    if ( area_start.distance( area_end ) > 0.01 ) {
-      robot->set_Area( new Cuboid( area_start, area_end ) );
-      storePosition( "MovementAreaStart", area_start );
-      storePosition( "MovementAreaEnd", area_end );
-    }
-  }
-  if ( exist( "ForbiddenAreaStart" ) ) {
-    Point forbidden_start( point( "ForbiddenAreaStart" ) );
-    Point forbidden_end( point( "ForbiddenAreaEnd" ) );
-    if ( forbidden_start.distance( forbidden_end ) > 0.01 ) {
-      robot->add_forbidden( new Cuboid( forbidden_start, forbidden_end ) );
-      storePosition( "ForbiddenAreaStart", forbidden_start );
-      storePosition( "ForbiddenAreaEnd", forbidden_end );
-    }
-  }
-  if ( exist( "CustomPosition" ) ) {
-    Point p( point("CustomPosition") );
-    if ( (p[0] + p[1] + p[2]) > 0.01 ) {
-      this->customPosition = p;
-      this->ReturnToPositionButton->setEnabled( true );
-    }
-  }
-}
-
-
 void Robot::updateCalibration( void )
 {
   storePosition( "FishHeadPosition", robot->get_fish_head() );
