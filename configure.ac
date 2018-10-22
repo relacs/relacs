@@ -147,9 +147,9 @@ AM_CONDITIONAL(RELACS_COND_NIX, [test "$RELACS_NIX" != no])
 #################################################
 ## RELACSSHAPES (for Str, Options)
 #################################################
-#DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSSHAPES"
-#AC_DEFINE([HAVE_LIBRELACSSHAPES], [1],
-# [Define if relacs shapes library exists.])
+DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSSHAPES"
+AC_DEFINE([HAVE_LIBRELACSSHAPES], [1],
+ [Define if relacs shapes library exists.])
 
 
 #################################################
