@@ -137,8 +137,8 @@ int Ramp::main( void )
 //      // plot
 //      SampleDataF currenttrace(-.002, duration, trace(CurrentTrace[0]).stepsize(), 0.0);
 //      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
-
-      SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
+      double t0 = 0.0;
+      SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime, t0 );
 
       if (interrupt()) {
         break;

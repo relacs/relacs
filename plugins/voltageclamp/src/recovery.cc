@@ -158,8 +158,8 @@ int Recovery::main( void )
 //        // minimas
 //        SampleDataF currenttrace(mintime, maxtime,trace(CurrentTrace[0]).stepsize(), 0.0);
 //        trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
-
-        SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime );
+        double t0 = duration0+duration1;
+        SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime, t0 );
 
         if (interrupt()) {
           return 0;

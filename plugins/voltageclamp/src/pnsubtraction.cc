@@ -44,7 +44,7 @@ int PNSubtraction::main( void )
   return Completed;
 }
 
-SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime ) {
+SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0 ) {
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
 
@@ -78,9 +78,10 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
     SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-    pn_trace += currenttrace - currenttrace[0];
+    pn_trace += currenttrace;// - currenttrace[0];
 
   };
+//  pn_trace -= pn_trace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
 
   if (interrupt()) {
     return pn_trace;
@@ -92,7 +93,8 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
   SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-  currenttrace -= pn/::abs(pn)*pn_trace - currenttrace[0];
+  currenttrace -= pn/::abs(pn)*pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
+  currenttrace -= currenttrace(t0);//currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
 
 //  return pn_trace;
   return currenttrace;

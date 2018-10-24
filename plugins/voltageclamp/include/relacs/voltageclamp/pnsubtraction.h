@@ -53,7 +53,7 @@ public:
   //PNSubtraction( void );
   virtual int main( void );
 
-  SampleDataD PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime);
+  SampleDataD PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0);
 
 };
 

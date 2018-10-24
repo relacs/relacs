@@ -130,7 +130,8 @@ int Inactivation::main( void )
 //                               trace(CurrentTrace[0]).stepsize(), 0.0);
 //      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
 
-      SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime );
+      double t0 = duration0+duration1-0.001;
+      SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime, t0 );
 
       if (interrupt()) {
         break;
@@ -159,7 +160,7 @@ int Inactivation::main( void )
       P[0].plotPoint( (index*dt+duration0+duration1)*1000-2, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );
 
-      // inactivation curve
+        // inactivation curve
       P[1].setYRange(P[0].yminRange(),P[0].ymaxRange());
       P[1].plotPoint( step, Plot::First, absmax, Plot::First, 0, Plot::Circle, 5, Plot::Pixel,
                       Plot::Magenta, Plot::Magenta );

@@ -129,7 +129,7 @@ int Tail::main( void )
 //                               trace(CurrentTrace[0]).stepsize(), 0.0);
 //      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
 
-      SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime );
+      SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime, duration0 );
 
       if (interrupt()) {
         break;

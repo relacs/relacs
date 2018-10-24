@@ -123,9 +123,14 @@ int Activation::main( void )
 
       // stimulus:
       OutData signal;
+
       signal.setTrace( PotentialOutput[0] );
       signal.pulseWave( duration, -1.0,  step, holdingpotential );
       signal.setIntensity( 1.0 );
+      Options opts;
+      Parameter &p1 = opts.addNumber( "step", step, "mV" );
+      signal.setMutable( p1 );
+      signal.setDescription( opts );
 
       double mintime = -0.002;
       double maxtime = 0.01;
@@ -133,13 +138,13 @@ int Activation::main( void )
 //      write( signal );
 //      sleep( pause );
 //      // get sample Data
-//      SampleDataF currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0 );
+//      double t0 = 0.0;
+//      SampleDataF currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), t0 );
 //      trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+      double t0 = 0.0;
 
-      SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
 
-
-//      SampleDataD pn_trace = PN_sub( signal, holdingpotential, pause, mintime, maxtime );
+      SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime, t0 );
 //      SampleDataD currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0 );
 //      trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 //      pn_trace = -pn_trace;
