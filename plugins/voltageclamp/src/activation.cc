@@ -141,8 +141,7 @@ int Activation::main( void )
 //      double t0 = 0.0;
 //      SampleDataF currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), t0 );
 //      trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
-      double t0 = 0.0;
-
+      double t0 = -0.002;
 
       SampleDataD currenttrace = PN_sub( signal, holdingpotential, pause, mintime, maxtime, t0 );
 //      SampleDataD currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0 );

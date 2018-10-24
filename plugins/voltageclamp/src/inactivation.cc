@@ -88,6 +88,7 @@ int Inactivation::main( void )
   holdingsignal.constWave( holdingpotential0 );
   holdingsignal.setIdent( "VC=" + Str( holdingpotential0 ) + "mV" );
 
+
   // write holdingpotential:
   write( holdingsignal );
   sleep( pause );
@@ -119,6 +120,13 @@ int Inactivation::main( void )
 
       signal.append( signal1 );
       signal.append( signal2 );
+
+      // nix options
+      Options opts;
+      Parameter &p1 = opts.addNumber( "step", step, "mV" );
+      signal.setMutable( p1 );
+      signal.setDescription( opts );
+
 
       double mintime = duration0+duration1-0.002;
       double maxtime = duration0+duration1+0.01;

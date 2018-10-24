@@ -150,7 +150,16 @@ int Recovery::main( void )
         signal.append(signal2);
         signal.append(signal3);
 
-        double mintime = duration0 + duration1 + timestep;
+        // nix options
+        Options opts;
+        Parameter &p1 = opts.addNumber( "step", potstep, "mV" );
+        Parameter &p2 = opts.addNumber( "duration", timestep, "s" );
+        signal.setMutable( p1 );
+        signal.setMutable( p2 );
+        signal.setDescription( opts );
+
+
+          double mintime = duration0 + duration1 + timestep;
         double maxtime = 0.02 + duration0 + duration1 + timestep;
 
 //        write(signal);

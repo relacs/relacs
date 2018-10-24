@@ -94,7 +94,7 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
   currenttrace -= pn/::abs(pn)*pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
-  currenttrace -= currenttrace(t0);//currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
+  currenttrace -= currenttrace.mean(t0 - 0.001, t0);
 
 //  return pn_trace;
   return currenttrace;

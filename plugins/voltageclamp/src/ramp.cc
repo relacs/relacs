@@ -129,6 +129,13 @@ int Ramp::main( void )
 
       signal.append(signal2);
 
+      // nix options
+      Options opts;
+      Parameter &p1 = opts.addNumber( "slope", slopesteps[i], "mV*s^-1" );
+      signal.setMutable( p1 );
+      signal.setDescription( opts );
+
+
       double mintime = -0.002;
       double maxtime = duration;
 

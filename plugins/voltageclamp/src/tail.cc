@@ -118,7 +118,14 @@ int Tail::main( void )
       signal.append( signal1 );
       signal.append( signal2 );
 
-      double mintime = duration0;
+      // nix options
+      Options opts;
+      Parameter &p1 = opts.addNumber( "step", step, "mV" );
+      signal.setMutable( p1 );
+      signal.setDescription( opts );
+
+
+        double mintime = duration0;
       double maxtime = 0.002 + duration0 + duration1;
 
 //      write(signal);
