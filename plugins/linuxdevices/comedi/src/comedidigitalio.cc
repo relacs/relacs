@@ -182,7 +182,7 @@ int ComediDigitalIO::configureLineUnlocked( unsigned int line, bool output )
 	 << " for direction " << direction << '\n';
     return WriteError;
   }
-  return DigitalIO::configureLine( line, output );
+  return DigitalIO::configureLineUnlocked( line, output );
 }
 
 
