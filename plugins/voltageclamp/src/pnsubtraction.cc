@@ -21,6 +21,9 @@
 
 #include <cmath>
 #include <relacs/voltageclamp/pnsubtraction.h>
+#include <algorithm> // for copy() and assign()
+#include <iterator> // for back_inserter
+
 using namespace relacs;
 
 namespace voltageclamp {
@@ -44,10 +47,16 @@ int PNSubtraction::main( void )
   return Completed;
 }
 
-SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0 ) {
+SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0 ) {
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
 
+  // add p/n option to signal
+  Parameter &pn1 = opts.addNumber( "pn", pn );
+  signal.setMutable( pn1 );
+  signal.setDescription( opts );
+
+  // skip prepulses if pn==0
   if ( pn == 0 ) {
     write(signal);
     sleep(pause);
@@ -61,10 +70,9 @@ SampleDataD PNSubtraction::PN_sub( OutData &signal, double &holdingpotential, do
   // don't print repro message:
   noMessage();
 
-  OutData pn_signal;
+  OutData pn_signal = signal;
   pn_signal.setTrace( PotentialOutput[0] );
   pn_signal = holdingpotential + (signal - holdingpotential)/pn;
-
   SampleDataD pn_trace( mintime, pn_signal.rangeBack(), 1/samplerate );
 
   for ( int i = 0; i<::abs(pn); i++ ) {

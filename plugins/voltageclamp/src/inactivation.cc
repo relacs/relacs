@@ -139,7 +139,7 @@ int Inactivation::main( void )
 //      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
 
       double t0 = duration0+duration1-0.001;
-      SampleDataD currenttrace = PN_sub( signal, holdingpotential0, pause, mintime, maxtime, t0 );
+      SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential0, pause, mintime, maxtime, t0 );
 
       if (interrupt()) {
         break;
