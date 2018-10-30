@@ -219,7 +219,7 @@ RELACS_PLUGINSET([efield],[efield],[base])
 RELACS_PLUGINSET([efish],[efish],[base ephys efield])
 RELACS_NOPLUGINSET([multielectrode],[multielectrode],[ephys])
 RELACS_PLUGINSET([photoreceptors],[photoreceptors],[])
-RELACS_PLUGINSET([voltageclamp],[voltageclamp],[])
+RELACS_NOPLUGINSET([voltageclamp],[voltageclamp],[])
 
 AC_SUBST([RELACS_PLUGINS_SUBDIRS])
 AC_SUBST([RELACS_PLUGINS_DIST_SUBDIRS])
