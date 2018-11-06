@@ -200,10 +200,10 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   double amplitude = number( "amplitude" );
   double maximum = max( MeanCurr );
   int index = maxIndex( MeanCurr );
-//  int idx0 = index;
+  int idx01ms = 0;//0.0001*samplerate;
+  int idx1ms = 0.001*samplerate;
   int idx05 = 1.5*duration*samplerate;
   int idx1 = MeanCurr.index(duration) - 1;
-//  int idx_t0 = MeanPot.index( 0.0 );
 
   double I0 = 0;
   for (int i=0; i<(duration*samplerate-1); i++ ) {
@@ -214,7 +214,7 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   // R_a
   double R_a = amplitude/(maximum - I0);
 
-  // fit exponential to estimate resistance
+  // fit exponential to estimate time constant
   ArrayD param( 3, 1.0 );
   param[0] = maximum;
   param[1] = -1e-5;
@@ -229,9 +229,9 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
 
   int fitresult = marquardtFit(
 //          MeanPot.range().begin()+idx_t0, MeanPot.range().begin()+idx_t0+(idx1-index),
-          MeanCurr.range().begin()+index, MeanCurr.range().begin()+idx1,
-          MeanCurr.begin()+index, MeanCurr.begin()+idx1,
-          StdCurr.begin()+index, StdCurr.begin()+idx1,
+          MeanCurr.range().begin()+index+idx01ms, MeanCurr.range().begin()+index+idx01ms+idx1ms,
+          MeanCurr.begin()+index+idx01ms, MeanCurr.begin()+index+idx01ms+idx1ms,
+          StdCurr.begin()+index+idx01ms, StdCurr.begin()+index+idx01ms+idx1ms,
           expFunc2Derivs, param, paramfit, uncertainty, chisq
           );
 
