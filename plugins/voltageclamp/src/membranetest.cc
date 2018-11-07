@@ -195,78 +195,121 @@ void membranetest::stimulus(OutData &signal) {
 }
 
 void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
-  double duration  = number( "duration" );
+  double duration = number( "duration" );
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
-  double amplitude = number( "amplitude" );
+  double amplitude = number ( "amplitude" );
   double maximum = max( MeanCurr );
-  int index = maxIndex( MeanCurr );
-  int idx01ms = 0;//0.0001*samplerate;
-  int idx1ms = 0.001*samplerate;
-  int idx05 = 1.5*duration*samplerate;
-  int idx1 = MeanCurr.index(duration) - 1;
+  double minimum = min( MeanCurr );
 
-  double I0 = 0;
-  for (int i=0; i<(duration*samplerate-1); i++ ) {
-    I0 += MeanCurr[i];
-  };
-  I0 = I0/(duration*samplerate-1);
+  // indeces of important times and durations
+//  int idx_max = maxIndex( MeanCurr );
+//  int idx_min = minIndex( MeanCurr );
+  int idx_2ms = 0.002*samplerate;
+  int idx_start = MeanCurr.index(0.0);
+  int idx_end = MeanCurr.index(duration);
 
-  // R_a
-  double R_a = amplitude/(maximum - I0);
+  // steady state values before at the end and after the stimulus
+  double steady0 = mean( MeanCurr.begin()+idx_start-idx_2ms-2, MeanCurr.begin()+idx_start-2);
+  double steady1 = mean( MeanCurr.begin()+idx_end-idx_2ms-2, MeanCurr.begin()+idx_end-2);
+  double steady2 = mean( MeanCurr.end()-idx_2ms-2, MeanCurr.end()-2);
 
-  // fit exponential to estimate time constant
-  ArrayD param( 3, 1.0 );
-  param[0] = maximum;
-  param[1] = -1e-5;
-  param[2] = MeanCurr[idx1];
-  ArrayD uncertainty ( 3, 0.0 );
-  ArrayI paramfit( 3, 1 );
-//  paramfit[1] = 1;
-//  paramfit[2] = 1;
-  double chisq = 1.0;
+  // compute resistances
+  double R_a = (amplitude/(maximum - steady0) - amplitude/(minimum - steady1))/2;
+  double R_m = (amplitude/(steady1 - steady0) - amplitude/(steady2 - steady1))/2;
 
-//  int fitresult = 0;
+  // plot
+  P.lock();
+  P[0].setTitle("leak = " + Str( steady0, "%.1f" ) +
+            "pA, R_a = " + Str( R_a, "%.1f" ) +
+       "M\u03A9, R_m = " + Str(R_m, "%.1f") + "M\u03A9");
+  P[0].plotLine( 0*duration*1000-2, steady0, 0*duration*1000, steady0, Plot::Magenta, 3, Plot::Solid);
+  P[0].plotLine( 1*duration*1000-2, steady1, 1*duration*1000, steady1, Plot::Magenta, 3, Plot::Solid);
+  P[0].plotLine( 2*duration*1000-2, steady2, 2*duration*1000, steady2, Plot::Magenta, 3, Plot::Solid);
 
-  int fitresult = marquardtFit(
-//          MeanPot.range().begin()+idx_t0, MeanPot.range().begin()+idx_t0+(idx1-index),
-          MeanCurr.range().begin()+index+idx01ms, MeanCurr.range().begin()+index+idx01ms+idx1ms,
-          MeanCurr.begin()+index+idx01ms, MeanCurr.begin()+index+idx01ms+idx1ms,
-          StdCurr.begin()+index+idx01ms, StdCurr.begin()+index+idx01ms+idx1ms,
-          expFunc2Derivs, param, paramfit, uncertainty, chisq
-          );
-
-  double I1 = param[2];
-
-  SampleDataD y(MeanCurr.pos(index), duration, 1.0/samplerate);
-  for ( int i = 0; i<y.size(); i++) {
-    y[i] = expFunc2(y.pos(i), param);
-  };
-
-  if ( fitresult == 0 ) {
-    cerr << "fit worked\n";
-    P.lock();
-    P[0].setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R = " + Str(amplitude / (I1 - I0), "%.1f"));
-    P[0].plot( y, 1000.0, Plot::Green, 2, Plot::Solid);
-
-    P.draw();
-    P.unlock();
-  }
-  else if ( MeanCurr[idx05] < (MeanCurr[idx1]+3*StdCurr[idx1]) ) {
-    double I_steady = mean( MeanCurr.begin()+idx05, MeanCurr.begin()+idx1 );
-    cerr << "fit failed, take mean of last half of duration\n"
-    << "fitresult = " << fitresult << "\n";
-
-    P.lock();
-    P[0].setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R_m = " + Str(amplitude / (I_steady - I0), "%.1f"));
-    P[0].plotLine( duration/2*1000, I_steady, duration*1000, I_steady, Plot::Green, 2, Plot::Solid);
-    P.draw();
-    P.unlock();
-  }
-  else {
-    cerr << "fit failed\n";
-  };
+  P.draw();
+  P.unlock();
 
 }
+
+
+
+
+
+//void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
+//  double duration  = number( "duration" );
+//  double samplerate = trace( SpikeTrace[0] ).sampleRate();
+//  double amplitude = number( "amplitude" );
+//  double maximum = max( MeanCurr );
+//  int index = maxIndex( MeanCurr );
+//  int idx01ms = 0;//0.0001*samplerate;
+//  int idx1ms = 0.001*samplerate;
+//  int idx05 = 1.5*duration*samplerate;
+//  int idx1 = MeanCurr.index(duration) - 1;
+//
+//  double I0 = 0;
+//  for (int i=0; i<(duration*samplerate-1); i++ ) {
+//    I0 += MeanCurr[i];
+//  };
+//  I0 = I0/(duration*samplerate-1);
+//
+//  // R_a
+//  double R_a = amplitude/(maximum - I0);
+//
+//  // fit exponential to estimate time constant
+//  ArrayD param( 3, 1.0 );
+//  param[0] = maximum;
+//  param[1] = -1e-5;
+//  param[2] = MeanCurr[idx1];
+//  ArrayD uncertainty ( 3, 0.0 );
+//  ArrayI paramfit( 3, 1 );
+////  paramfit[1] = 1;
+////  paramfit[2] = 1;
+//  double chisq = 1.0;
+//
+////  int fitresult = 0;
+//
+//  int fitresult = marquardtFit(
+////          MeanPot.range().begin()+idx_t0, MeanPot.range().begin()+idx_t0+(idx1-index),
+//          MeanCurr.range().begin()+index+idx01ms, MeanCurr.range().begin()+index+idx01ms+idx1ms,
+//          MeanCurr.begin()+index+idx01ms, MeanCurr.begin()+index+idx01ms+idx1ms,
+//          StdCurr.begin()+index+idx01ms, StdCurr.begin()+index+idx01ms+idx1ms,
+//          expFunc2Derivs, param, paramfit, uncertainty, chisq
+//          );
+//
+//  double I1 = param[2];
+//
+//  SampleDataD y(MeanCurr.pos(index), duration, 1.0/samplerate);
+//  for ( int i = 0; i<y.size(); i++) {
+//    y[i] = expFunc2(y.pos(i), param);
+//  };
+//
+//  if ( fitresult == 0 ) {
+//    cerr << "fit worked\n";
+//    P.lock();
+//    P[0].setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R = " + Str(amplitude / (I1 - I0), "%.1f"));
+//    P[0].plot( y, 1000.0, Plot::Green, 2, Plot::Solid);
+//
+//    P.draw();
+//    P.unlock();
+//  }
+//  else if ( MeanCurr[idx05] < (MeanCurr[idx1]+3*StdCurr[idx1]) ) {
+//    double I_steady = mean( MeanCurr.begin()+idx05, MeanCurr.begin()+idx1 );
+//    cerr << "fit failed, take mean of last half of duration\n"
+//    << "fitresult = " << fitresult << "\n";
+//
+//    P.lock();
+//    P[0].setTitle("R_a = " + Str( R_a, "%.3f" ) + ", R_m = " + Str(amplitude / (I_steady - I0), "%.1f"));
+//    P[0].plotLine( duration/2*1000, I_steady, duration*1000, I_steady, Plot::Green, 2, Plot::Solid);
+//    P.draw();
+//    P.unlock();
+//  }
+//  else {
+//    cerr << "fit failed\n";
+//  };
+//
+//}
+
+
 
 
 addRePro( membranetest, voltageclamp );

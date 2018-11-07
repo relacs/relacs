@@ -51,9 +51,9 @@ Activation::Activation( void )
   P.lock();
   P.resize( 2, 2, true );
   P[0].setXLabel( "Time [ms]" );
-  P[0].setYLabel( "Current [nA]" );
+  P[0].setYLabel( "Current [pA]" );
   P[1].setXLabel( "Potential [mV]" );
-  P[1].setYLabel( "Current [nA]");
+  P[1].setYLabel( "Current [pA]");
   P[1].setY2Label( "conductance [\u03BCS]" );
   P[1].setY2Tics( 0.0, 10.0 );
 
