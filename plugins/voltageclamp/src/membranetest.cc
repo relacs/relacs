@@ -202,8 +202,6 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   double minimum = min( MeanCurr );
 
   // indeces of important times and durations
-//  int idx_max = maxIndex( MeanCurr );
-//  int idx_min = minIndex( MeanCurr );
   int idx_2ms = 0.002*samplerate;
   int idx_start = MeanCurr.index(0.0);
   int idx_end = MeanCurr.index(duration);
@@ -228,7 +226,6 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
 
   P.draw();
   P.unlock();
-
 }
 
 
