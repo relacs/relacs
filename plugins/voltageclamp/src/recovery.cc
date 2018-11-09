@@ -153,13 +153,13 @@ int Recovery::main( void )
         // nix options
         Options opts;
         Parameter &p1 = opts.addNumber( "step", potstep, "mV" );
-        Parameter &p2 = opts.addNumber( "duration", timestep, "s" );
+        Parameter &p2 = opts.addNumber( "timestep", timestep, "s" );
         signal.setMutable( p1 );
         signal.setMutable( p2 );
         signal.setDescription( opts );
 
 
-          double mintime = duration0 + duration1 + timestep;
+        double mintime = duration0 + duration1 + timestep;
         double maxtime = 0.02 + duration0 + duration1 + timestep;
 
 //        write(signal);
