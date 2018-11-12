@@ -648,6 +648,10 @@ int Chirps::main( void )
   bool adjustg = boolean( "adjust" );
 
   // checks:
+  if ( ::fabs(DeltaF) < 1e-3 ) {
+    warning( "deltaf must not be zero." );
+    return Failed;
+  }
   if ( LocalEODTrace[0] < 0 ) {
     warning( "need local recording of the EOD Trace." );
     return Failed;
