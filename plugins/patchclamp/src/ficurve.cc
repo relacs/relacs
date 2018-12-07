@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.8", "Jun 27, 2016" ),
+  : RePro( "FICurve", "patchclamp", "Jan Benda", "2.0", "Nov 29, 2018" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     IInFac( 1.0 )
@@ -54,13 +54,14 @@ FICurve::FICurve( void )
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
   addInteger( "repeats", "Number of repetitions of the whole f-I curve measurement", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Analysis" );
-  addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
-  addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
-  addInteger( "numpoints", "Number of points to measure below maximum firing rate", 0 );
+  addBoolean( "optimize", "Dynamically optimize range of injected currents", true);
+  addNumber( "fmax", "Maximum firing rate", 200.0, 0.0, 2000.0, 1.0, "Hz" ).setActivation( "optimize", "true" );
+  addNumber( "vmax", "Maximum steady-state potential", 0.0, -2000.0, 2000.0, 1.0, "mV" ).setActivation( "optimize", "true" );
+  addInteger( "numpoints", "Number of points to measure below maximum firing rate", 0 ).setActivation( "optimize", "true" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
-  addBoolean( "ignorenoresponse", "Do not include trials without response", true );
-  addInteger( "diffincrement", "Optimize range at current increments below", 0, 0, 10000 );
-  addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "diffincrement", ">0" );
+  addBoolean( "ignorenoresponse", "Do not include trials without response in analysis", true );
+  addInteger( "diffincrement", "Optimize range at current increments below", 0, 0, 10000 ).setActivation( "optimize", "true" );
+  addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 100.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "diffincrement", ">0" ).addActivation( "optimize", "true" );
 
   PlotRangeSelection = false;
 
@@ -115,6 +116,7 @@ int FICurve::main( void )
   double duration = number( "duration" );
   double delay = number( "delay" );
   double pause = number( "pause" );
+  bool optimize = boolean( "optimize" );
   double fmax = number( "fmax" );
   double vmax = number( "vmax" );
   int numpoints = integer( "numpoints" );
@@ -319,47 +321,50 @@ int FICurve::main( void )
 				  CurrentTrace[0] >= 0 ? &trace( CurrentTrace[0] ) : 0,
 				  IInFac, delay, duration, sswidth, ignorenoresponse );
 
-    // skip currents that evoke firing rates greater than fmax:
-    if ( Results[Range.pos()].SSRate > fmax ) {
-      Range.setSkipAbove( Range.pos() );
-      gotmax = true;
-      if ( gotmin && numpoints > 0 )
-	Range.setSkipNumber( numpoints );
-      Range.noCount();
-    }
-    // skip currents causing depolarization block:
-    if ( Results[Range.pos()].SSRate < 1.0/duration &&
-	 Results[Range.pos()].VSS > vmax ) {
-      Range.setSkipAbove( Range.pos() );
-      if ( gotmin && numpoints > 0 )
-	Range.setSkipNumber( numpoints );
-      Range.noCount();
-    }
-    // skip currents too low to make the neuron fire:
-    else if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
-      double maxcurrent = Range.value() - optimizedimin;
-      Range.setSkipBelow( Range.pos( maxcurrent ) - 1 );
-      gotmin = true;
-      if ( gotmax && numpoints > 0 )
-	Range.setSkipNumber( numpoints );
-    }
-    // skip currents above large enough fon - fss differences:
-    if ( Range.finishedBlock() &&
-	 Range.currentIncrement() == diffincrement ) {
-      int n = 0;
-      for ( unsigned int k=Range.next( 0 );
-	    k<Results.size();
-	    k=Range.next( ++k ) ) {
-	if ( Results[k].OnRate - Results[k].SSRate > maxratediff ) {
-	  n++;
-	  if ( n > 1 ) {
-	    printlog( "Skip currents above " + Str( Range[k] ) );
-	    Range.setSkipAbove( Range.next( ++k ) );
-	    break;
+    if ( optimize ) {
+      // skip currents that evoke firing rates greater than fmax:
+      if ( Results[Range.pos()].SSRate > fmax ) {
+	Range.setSkipAbove( Range.pos() );
+	gotmax = true;
+	if ( gotmin && numpoints > 0 )
+	  Range.setSkipNumber( numpoints );
+	Range.noCount();
+      }
+      // skip currents causing depolarization block:
+      if ( Results[Range.pos()].SSRate < 1.0/duration &&
+	   Results[Range.pos()].VSS > vmax ) {
+	Range.setSkipAbove( Range.pos() );
+	gotmax = true;
+	if ( gotmin && numpoints > 0 )
+	  Range.setSkipNumber( numpoints );
+	Range.noCount();
+      }
+      // skip currents too low to make the neuron fire:
+      else if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
+	double maxcurrent = Range.value() - optimizedimin;
+	Range.setSkipBelow( Range.pos( maxcurrent ) - 1 );
+	gotmin = true;
+	if ( gotmax && numpoints > 0 )
+	  Range.setSkipNumber( numpoints );
+      }
+      // skip currents above large enough fon - fss differences:
+      if ( Range.finishedBlock() &&
+	   Range.currentIncrement() == diffincrement ) {
+	int n = 0;
+	for ( unsigned int k=Range.next( 0 );
+	      k<Results.size();
+	      k=Range.next( ++k ) ) {
+	  if ( Results[k].OnRate - Results[k].SSRate > maxratediff ) {
+	    n++;
+	    if ( n > 1 ) {
+	      printlog( "Skip currents above " + Str( Range[k] ) );
+	      Range.setSkipAbove( Range.next( ++k ) );
+	      break;
+	    }
 	  }
+	  else
+	    n = 0;
 	}
-	else
-	  n = 0;
       }
     }
 

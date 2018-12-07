@@ -1240,7 +1240,7 @@ void RangeLoop::setSkipNumber( int num )
   int n = 0;
   int firstnonskip = -1;
   for ( int i=first; i<last; i++ ) {
-    Elements[i].Skip = ( Elements[i].Count== 0 );
+    Elements[i].Skip = ( Elements[i].Count == 0 );
     if ( ! Elements[i].Skip ) {
       n++;
       if ( firstnonskip < 0 )
@@ -1252,6 +1252,8 @@ void RangeLoop::setSkipNumber( int num )
   int incr = CurrentIncrement;
   while ( n < num ) {
     incr /= 2;
+    if ( incr == 0 )
+      break;
     int f = firstnonskip;
     while ( f - incr > first )
       f -= incr;
