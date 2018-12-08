@@ -38,7 +38,7 @@ namespace attcs3310 {
 \par Technicals by Hartmut Schuetze
 
 First, the CS\-signal has to be set low to adress the chip.
-Then, the data are presented at the DATAOUT-pin, 
+Then, the data are presented at the DATAIN-pin, 
 and are strobed via the STROBE-Signal into the 
 chip. Repeat this for all the bits we  want to transfer. After this, we wait a 
 little before we reset the CS\-signal back to high.
@@ -55,10 +55,10 @@ If there are no zero crossing, the setting changes are forced after 18 ms.
 \par Options
 - \c zerocrossing: set attenuation level only at a zero crossing of the input.
 - \c cspin: dio line for chip select (CS).
-- \c dataoutpin: dio line for writing data to the chip  (DATAOUT).
-- \c datainpin: dio line for reading data from the chip  (DATAIN).
+- \c datainpin: dio line for writing data to the chip  (DATAIN).
+- \c dataoutpin: dio line for reading data from the chip  (DATAOUT).
 - \c strobepin: dio line for strobing data (STROBE).
-- \c mutepin: dio line for MUTE.
+- \c mutepin: dio line for muting the chip (MUTE).
 - \c zcenpin: dio line for enabling zero crossing (ZCEN).
 */
 
@@ -120,8 +120,8 @@ private:
   int CS = 1;      // DIO1
   int MUTE = 2;    // DIO2
   int ZCEN = 3;    // DIO3
-  int DATAOUT = 0; // DIO0
-  int DATAIN = 4;  // DIO4
+  int DATAIN = 0;  // DIO0
+  int DATAOUT = 4; // DIO4
   int STROBE = 5;  // DIO5
 
   static const int Tries = 5;
