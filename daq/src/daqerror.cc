@@ -108,10 +108,14 @@ void DaqError::addAttError( int ae )
     return;
 
   // map error code:
-  if ( ae >= Attenuate::ReadError )
-    addError( 1LL<<(40 - ae - 1) );
+  if ( ae == Attenuate::NotOpen )
+    addError( AttNotOpen );
+  else if ( ae == Attenuate::InvalidDevice )
+    addError( AttInvalidDevice );
+  else if ( ae == Attenuate::ReadError || ae == Attenuate::WriteError )
+    addError( AttFailed );
   else if ( ae >= Attenuate::IntensityError )
-    addError( 1LL<<(40 - ae - 2) );
+    addError( 1LL<<(36 - ae) );
   else
     addError( AttIntensityFailed );
 }
