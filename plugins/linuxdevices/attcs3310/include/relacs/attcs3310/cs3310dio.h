@@ -117,12 +117,13 @@ private:
     /*! The attenuation levels for each of the two channels. */
   unsigned char Level[2];
 
-  int CS = 1;      // DIO1
-  int MUTE = 2;    // DIO2
-  int ZCEN = 3;    // DIO3
-  int DATAIN = 0;  // DIO0
+                   // NPI   DAQFLEX
+  int STROBE = 5;  // DIO5  DIO6 
+  int DATAIN = 0;  // DIO0  DIO5
   int DATAOUT = 4; // DIO4
-  int STROBE = 5;  // DIO5
+  int CS = 1;      // DIO1  DIO4
+  int MUTE = 2;    // DIO2  DIO7
+  int ZCEN = 3;    // DIO3
 
   static const int Tries = 5;
   static const int Delay = 10;

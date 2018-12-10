@@ -55,10 +55,10 @@ void CS3310DIO::initOptions()
   Attenuator::initOptions();
 
   addBoolean( "zerocrossing", "Set attenuation level only at a zero crossing of the input", false );
-  addInteger( "cspin", "DIO line for chip select (CS)", CS );
-  addInteger( "datainpin", "DIO line for writing data to the chip  (DATAIN)", DATAIN );
-  addInteger( "datainpout", "DIO line for reading data from the chip  (DATAOUT)", DATAOUT );
   addInteger( "strobepin", "DIO line for strobing data (STROBE)", STROBE );
+  addInteger( "datainpin", "DIO line for writing data to the chip  (DATAIN)", DATAIN );
+  addInteger( "dataoutpin", "DIO line for reading data from the chip  (DATAOUT)", DATAOUT );
+  addInteger( "cspin", "DIO line for chip select (CS)", CS );
   addInteger( "mutepin", "DIO line for muting the chip (MUTE)", MUTE );
   addInteger( "zcenpin", "DIO line for enabling zero crossing (ZCEN)", ZCEN );
 }
@@ -71,26 +71,29 @@ int CS3310DIO::open( DigitalIO &dio)
   Info.clear();
   
   if ( isOpen() ) {
-    CS = integer( "cspin", 0, CS );
+    STROBE = integer( "strobepin", 0, STROBE );
     DATAIN = integer( "datainpin", 0, DATAIN );
     DATAOUT = integer( "dataoutpin", 0, DATAOUT );
-    STROBE = integer( "strobepin", 0, STROBE );
+    CS = integer( "cspin", 0, CS );
     MUTE = integer( "mutepin", 0, MUTE );
     ZCEN = integer( "zcenpin", 0, ZCEN );
 
     string failedpin = "";
-    if ( CS >= 0 && DIO->allocateLine( CS, DIOId ) <= 0 )
-      failedpin += "CS ";
-    if ( MUTE >= 0 && DIO->allocateLine( MUTE, DIOId ) <= 0 )
-      failedpin += "MUTE ";
-    if ( ZCEN >=0 && DIO->allocateLine( ZCEN, DIOId ) <= 0 )
-      failedpin = "ZCEN ";
-    if ( DIO->allocateLine( DATAIN, DIOId ) <= 0 )
-      failedpin = "DATAIN ";
-    if ( DATAOUT >= 0 && DIO->allocateLine( DATAOUT, DIOId ) <= 0 )
-      failedpin = "DATAOUT ";
-    if ( DIO->allocateLine( STROBE, DIOId ) <= 0 )
-      failedpin = "STROBE";
+    DIOId = DIO->allocateLine( STROBE );
+    if ( DIOId <= 0 )
+      failedpin = "STROBE=" + Str( STROBE );
+    else {
+      if ( DIO->allocateLine( DATAIN, DIOId ) <= 0 )
+	failedpin = "DATAIN =" + Str( DATAIN );
+      if ( DATAOUT >= 0 && DIO->allocateLine( DATAOUT, DIOId ) <= 0 )
+	failedpin = "DATAOUT =" + Str( DATAOUT );
+      if ( CS >= 0 && DIO->allocateLine( CS, DIOId ) <= 0 )
+	failedpin += "CS =" + Str( CS );
+      if ( DIO->allocateLine( MUTE, DIOId ) <= 0 )
+	failedpin += "MUTE =" + Str( MUTE );
+      if ( ZCEN >=0 && DIO->allocateLine( ZCEN, DIOId ) <= 0 )
+	failedpin = "ZCEN =" + Str( ZCEN );
+    }
     if ( ! failedpin.empty() ) {
       DIO->freeLines( DIOId );
       setErrorStr( "cannot allocate pins " + failedpin );
@@ -134,24 +137,24 @@ int CS3310DIO::open( bool zerocrossing )
 
   // configure digital I/O lines:
   string failedconfigpin = "";
-  if ( DIO->configureLineUnlocked( DATAIN, true ) < 0 )
-    failedconfigpin += "DATAIN ";
   if ( DIO->configureLineUnlocked( STROBE, true ) < 0 )
     failedconfigpin += "STROBE ";
+  if ( DIO->configureLineUnlocked( DATAIN, true ) < 0 )
+    failedconfigpin += "DATAIN ";
+  if ( DATAOUT >= 0 && DIO->configureLineUnlocked( DATAOUT, false ) < 0 )
+    failedconfigpin += "DATAOUT ";
   if ( CS >= 0 && DIO->configureLineUnlocked( CS, true ) < 0 )
     failedconfigpin += "CS ";
-  if ( MUTE >= 0 && DIO->configureLineUnlocked( MUTE, true ) < 0 )
+  if ( DIO->configureLineUnlocked( MUTE, true ) < 0 )
     failedconfigpin += "MUTE ";
   if ( ZCEN >= 0 && DIO->configureLineUnlocked( ZCEN, true ) < 0 )
     failedconfigpin += "ZCEN ";
-  if ( DATAOUT >= 0 && DIO->configureLineUnlocked( DATAOUT, false ) < 0 )
-    failedconfigpin += "DATAOUT ";
 
   // reset:
   string failedwritepin = "";
   if ( CS >= 0 && DIO->writeUnlocked( CS, true ) < 0 )
     failedwritepin += "CS ";
-  if ( MUTE >= 0 && DIO->writeUnlocked( MUTE, true ) < 0 )
+  if ( DIO->writeUnlocked( MUTE, true ) < 0 )
     failedwritepin += "MUTE ";
   if ( ZCEN >= 0 && DIO->writeUnlocked( ZCEN, zerocrossing ) < 0 )
     failedwritepin += "ZCEN ";
@@ -209,10 +212,10 @@ int CS3310DIO::open( bool zerocrossing )
     setDeviceName( "CS3310 stereo digital volume control" );
     setInfo();
     Info.addNumber( "resolution", 0.5, "dB" );
-    Info.addInteger( "cspin", CS );
+    Info.addInteger( "strobepin", STROBE );
     Info.addInteger( "datainpin", DATAIN );
     Info.addInteger( "dataoutpin", DATAOUT );
-    Info.addInteger( "strobepin", STROBE );
+    Info.addInteger( "cspin", CS );
     Info.addInteger( "mutepin", MUTE );
     Info.addInteger( "zcenpin", ZCEN );
     return 0;
@@ -234,8 +237,7 @@ void CS3310DIO::close( void )
     // CS=1, MUTE=0, ZCEN=1:
     if ( CS >= 0 )
       DIO->writeUnlocked( CS, true );
-    if ( MUTE >= 0 )
-      DIO->writeUnlocked( MUTE, false );
+    DIO->writeUnlocked( MUTE, false );
     if ( ZCEN >= 0 )
       DIO->writeUnlocked( ZCEN, true );
     DIO->freeLines( DIOId );
@@ -389,10 +391,7 @@ int CS3310DIO::setMute( bool mute )
   if ( DIO == 0 )
     return NotOpen;
 
-  if ( MUTE >= 0 )
-    return DIO->write( MUTE, mute );
-  else
-    return 0;
+  return DIO->write( MUTE, mute );
 }
 
 
@@ -401,18 +400,13 @@ int CS3310DIO::calibrate( void )
   if ( DIO == 0 )
     return NotOpen;
 
-  if ( MUTE >= 0 ) {
-    int r = 0;
-    // calibrate chip:
-    r = DIO->write( MUTE, false );
-    if ( r == 0 ) {
-      usleep( 2500 );
-      r = DIO->write( MUTE, true );
-    }
-    return r;
+  // calibrate chip:
+  int r = DIO->write( MUTE, false );
+  if ( r == 0 ) {
+    usleep( 2500 );
+    r = DIO->write( MUTE, true );
   }
-  else
-    return 0;
+  return r;
 }
 
 
