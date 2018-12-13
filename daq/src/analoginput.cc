@@ -434,7 +434,7 @@ void AnalogInput::run( void )
     lock();
     rd = Run;
     unlock();
-    // get data from the card:
+    // get (remaining) data from the card:
     int r = readData();
     // error:
     if ( r < -1 ) {
@@ -486,21 +486,6 @@ void AnalogInput::stopRead( void )
   unlock();
   wait();
 
-  /*
-  // get data from the card:
-  int r = readData();
-
-  // transfer data to the buffer:
-  if ( r > 0 ) {
-    if ( DataMutex != 0 )
-      DataMutex->lockForWrite();
-    convertData();
-    if ( DataMutex != 0 )
-      DataMutex->unlock();
-    if ( DataWait != 0 )
-      DataWait->wakeAll();
-  }
-  */
   lock();
   Semaphore = 0;
   DataMutex = 0;
