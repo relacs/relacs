@@ -990,6 +990,8 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   NoMoreData = ( r == 0 );
   unlock();
 
+  cerr << "PREPARED AO\n";
+
   return 0;
 }
 
@@ -1036,6 +1038,7 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
   startThread( sp );
 
   IsRunning = true;
+  cerr << "STARTED AO\n";
 
   return NoMoreData ? 0 : 1;
 }
@@ -1082,6 +1085,7 @@ int ComediAnalogOutput::writeData( void )
 
   // transfer buffer to comedi:
   int bytesWritten = write( comedi_fileno( DeviceP ), Buffer, NBuffer );
+  cerr << "WROTE AO " << bytesWritten << "\n";
   
   int ern = 0;
   int elemWritten = 0;

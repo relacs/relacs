@@ -782,6 +782,8 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   }
   delete [] insnlist.insns;
 
+  cerr << "STARTED AI " << success << "\n";
+
   bool finished = true;
   if ( success ) {
     IsRunning = true;
@@ -866,18 +868,22 @@ int ComediAnalogInput::readData( void )
   // try to read twice:
   for ( int tryit = 0; tryit < 1 && ! failed && maxn > 0; tryit++ ) {
 
-    // data present?
-    //    if ( comedi_get_buffer_contents( DeviceP, SubDevice ) <= 0 )
-    //      break;
+    if ( AboutToStop )
+      comedi_poll( DeviceP, SubDevice );
     
     // read data:
     ssize_t m = ::read( comedi_fileno( DeviceP ), Buffer + buffern, maxn );
 
+    cerr << "AI READ returned " << m << '\n';
+
     ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
-      Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
-      Traces->addErrorStr( ern );
-      failed = true;
+      if ( ! AboutToStop ) {
+	cerr << "COMEDI READ ERROR: " << string( comedi_strerror( comedi_errno() ) ) << '\n';
+	Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
+	Traces->addErrorStr( ern );
+	failed = true;
+      }
       break;
     }
     else if ( m > 0 ) {
@@ -944,21 +950,23 @@ int ComediAnalogInput::stop( void )
   if ( !isOpen() )
     return NotOpen;
 
-  {
-    QMutexLocker locker( mutex() );
-    if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
-      return ReadError;
-    if ( comedi_poll( DeviceP, SubDevice ) < 0 )
-      return ReadError;
-    AboutToStop = true;
-  }
+  lock();
+  AboutToStop = true;
+  unlock();
 
+  cerr << "ABOUT TO STOP AI\n";
+  
   stopRead();
 
+  int r = 0;
   lock();
+  cerr << "COMEDI BUFFER BEFORE CANCEL " << comedi_get_buffer_contents( DeviceP, SubDevice ) << '\n';
+  if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
+    r = ReadError;
+  cerr << "COMEDI BUFFER AFTER CANCEL " << comedi_get_buffer_contents( DeviceP, SubDevice ) << '\n';
   IsRunning = false;
   unlock();
-  return 0;
+  return r;
 }
 
 
@@ -994,6 +1002,8 @@ int ComediAnalogInput::reset( void )
   AboutToStop = false;
   Traces = 0;
   TraceIndex = 0;
+
+  cerr << "AI RESET\n";
 
   return 0;
 }
