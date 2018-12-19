@@ -715,7 +715,6 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
   cmd.start_arg = 0;
   if ( UseNIPFIStart >= 0 ) {
     cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
-    //cmd.start_arg = NI_USUAL_PFI_SELECT( UseNIPFIStarta );
     cerr << "START_SRC = " << cmd.start_src << " START_ARG = " << cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
   }
   cmd.scan_end_arg = sigs.size();
@@ -953,7 +952,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
     // execute command:
-    //    cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+    cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
     if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
       int cerror = comedi_errno();
       cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
