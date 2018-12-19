@@ -211,6 +211,9 @@ private:
   template < typename T >
     int convert( char *cbuffer, int nbuffer );
 
+    /*! Clear the buffers and reset status variables. */
+  void clearBuffers( void );
+
     /*! Unique analog I/O device type id for all 
         Comedi DAQ devices. */
   static const int ComediAnalogIOType = 1;
@@ -246,10 +249,10 @@ private:
 
     /*! Comedi command for asynchronous acquisition. */
   comedi_cmd Cmd;
+    /*! True if data are transferred to comedi but output ha not been started yet. */
+  bool FillData;
     /*! True if the command is prepared and can be started. */
   bool IsPrepared;
-    /*! True if the analog output is running. */
-  bool IsRunning;
     /*! True if no more data need to be written to the board. */
   bool NoMoreData;
 

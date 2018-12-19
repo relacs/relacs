@@ -442,12 +442,15 @@ void AnalogOutput::run( void )
 
 void AnalogOutput::stopWrite( void )
 {
-  lock();
-  Run = false;
-  unlock();
-  wait();
+  if ( running() ) {
+    lock();
+    Run = false;
+    unlock();
+    wait();
+  }
   lock();
   Semaphore = 0;
+  Run = false;
   unlock();
 }
 

@@ -481,15 +481,18 @@ void AnalogInput::run( void )
 void AnalogInput::stopRead( void )
 {
   // stop thread:
-  lock();
-  Run = false;
-  unlock();
-  wait();
+  if ( running() ) {
+    lock();
+    Run = false;
+    unlock();
+    wait();
+  }
 
   lock();
   Semaphore = 0;
   DataMutex = 0;
   DataWait = 0;
+  Run = false;
   unlock();
 }
 

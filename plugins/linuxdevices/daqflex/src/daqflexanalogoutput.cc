@@ -813,6 +813,8 @@ int DAQFlexAnalogOutput::stop( void )
 
   stopWrite();
 
+  IsPrepared = false;
+
   return 0;
 }
 

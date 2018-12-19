@@ -843,8 +843,10 @@ int Acquire::read( InList &data )
   
   // error?
   if ( ! success ) {
-    for ( unsigned int i=0; i<AI.size(); i++ )
+    for ( unsigned int i=0; i<AI.size(); i++ ) {
+      AI[i].AI->stop();
       AI[i].AI->reset();
+    }
     return -1;
   }
 
@@ -2022,6 +2024,7 @@ int Acquire::write( OutData &signal, bool setsignaltime )
 
   // error?
   if ( signal.failed() ) {
+    AO[di].AO->stop();
     AO[di].AO->reset();
     AO[di].Signals.clear();
     return -1;
@@ -2281,6 +2284,7 @@ int Acquire::write( OutList &signal, bool setsignaltime )
   // error?
   if ( ! success ) {
     for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->stop();
       AO[i].AO->reset();
       AO[i].Signals.clear();
     }
@@ -2308,6 +2312,8 @@ int Acquire::waitForWrite( void )
 	naos++;
     }
   }
+  if ( naos == 0 )
+    return 0;
 
   // wait for the threads to finish:
   AOSemaphore.acquire( naos );
@@ -2473,6 +2479,7 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
 
   // error?
   if ( signal.failed() ) {
+    AO[di].AO->stop();
     AO[di].AO->reset();
     AO[di].Signals.clear();
     return -1;
@@ -2693,6 +2700,7 @@ int Acquire::directWrite( OutList &signal, bool setsignaltime )
   // error?
   if ( ! success ) {
     for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->stop();
       AO[i].AO->reset();
       AO[i].Signals.clear();
     }

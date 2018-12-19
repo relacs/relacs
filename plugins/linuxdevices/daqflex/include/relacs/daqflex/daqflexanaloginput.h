@@ -174,7 +174,7 @@ private:
         \note this differs from running(), which indicated that the driver is still running. */
   bool IsRunning;
     /*! True if a running command is being stopped but data might still be read. */
-  bool IsStopped;
+  bool AboutToStop;
 
     /*! The input traces that were prepared by prepareRead(). */
   InList *Traces;

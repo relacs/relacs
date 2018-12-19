@@ -47,7 +47,6 @@ ComediAnalogInput::ComediAnalogInput( void )
   TakeAO = true;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  IsRunning = false;
   AboutToStop = false;
   Calibration = 0;
   Traces = 0;
@@ -237,7 +236,6 @@ int ComediAnalogInput::open( const string &device )
   ComediAO = 0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  IsRunning = false;
   AboutToStop = false;
   TotalSamples = 0;
   CurrentSamples = 0;
@@ -731,8 +729,6 @@ int ComediAnalogInput::prepareRead( InList &traces )
 int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				  QWaitCondition *datawait, QSemaphore *aosp )
 {
-  //  cerr << " ComediAnalogInput::startRead(): begin" << '\n';
-
   QMutexLocker locker( mutex() );
 
   if ( !IsPrepared || Traces == 0 ) {
@@ -782,18 +778,14 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   }
   delete [] insnlist.insns;
 
-  cerr << "STARTED AI " << success << "\n";
-
   bool finished = true;
   if ( success ) {
-    IsRunning = true;
     // start analog input thread:
     startThread( sp, datamutex, datawait );
     // start analog output thread:
     if ( tookao ) {
       ComediAO->startThread( aosp );
       finished = ComediAO->noMoreData();
-      //      cerr << "START AO THREAD " << finished << '\n';
     }
   }
 
@@ -852,64 +844,43 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 
 int ComediAnalogInput::readData( void )
 {
-  //  cerr << "Comedi::readData() start\n";
-
   QMutexLocker locker( mutex() );
 
-  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
+  if ( Traces == 0 || Buffer == 0 )
     return -1;
 
-  bool failed = false;
-  int ern = 0;
-  int readn = 0;
-  int buffern = BufferN*BufferElemSize;
-  int maxn = BufferSize - buffern;
-
-  // try to read twice:
-  for ( int tryit = 0; tryit < 1 && ! failed && maxn > 0; tryit++ ) {
-
-    if ( AboutToStop )
-      comedi_poll( DeviceP, SubDevice );
+  if ( AboutToStop )
+    comedi_poll( DeviceP, SubDevice );
     
-    // read data:
-    ssize_t m = ::read( comedi_fileno( DeviceP ), Buffer + buffern, maxn );
+  // read data:
+  int ern = 0;
+  int buffern = BufferN*BufferElemSize;
+  //  cerr << "BUFFERN " << buffern << '\n';
+  ssize_t readn = ::read( comedi_fileno( DeviceP ), Buffer + buffern, BufferSize - buffern );
+  //  cerr << "READN " << readn << '\n';
 
-    cerr << "AI READ returned " << m << '\n';
-
-    ern = errno;
-    if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
-      if ( ! AboutToStop ) {
-	cerr << "COMEDI READ ERROR: " << string( comedi_strerror( comedi_errno() ) ) << '\n';
-	Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
-	Traces->addErrorStr( ern );
-	failed = true;
-      }
-      break;
+  ern = errno;
+  if ( readn < 0 && ern != EAGAIN && ern != EINTR ) {
+    if ( ! AboutToStop ) {
+      cerr << "COMEDI READ ERROR: " << string( comedi_strerror( comedi_errno() ) ) << '\n';
+      Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
+      Traces->addErrorStr( ern );
+      if ( errno == EPIPE )
+	Traces->addError( DaqError::OverflowUnderrun );
+      return -2;   
     }
-    else if ( m > 0 ) {
-      maxn -= m;
-      buffern += m;
-      readn += m;
-    }
-
+    return 0;
   }
-
-  BufferN = buffern / BufferElemSize;
-  readn /= BufferElemSize;
-  CurrentSamples += readn;
-
-  if ( failed ) {
-    if ( errno == EPIPE )
+  else if ( readn > 0 ) {
+    readn /= BufferElemSize;
+    BufferN += readn;
+    CurrentSamples += readn;
+    return readn;
+  }
+  else if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 ) {
+    // no data have been read:
+    if ( ( ! AboutToStop ) && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       Traces->addError( DaqError::OverflowUnderrun );
-    return -2;   
-  }
-
-  // no more data to be read:
-  if ( readn <= 0 && ! ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) ) {
-    if ( IsRunning && ( ! AboutToStop ) &&
-	 ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
-      // The following error messages do not work after a comedi_cancel!
-      //      Traces->addError( DaqError::OverflowUnderrun );
       cerr << " ComediAnalogInput::readData(): no data and not running\n";
       cerr << " ComediAnalogInput::readData(): comedi_error: " << comedi_strerror( comedi_errno() ) << "\n";
       return -2;
@@ -917,10 +888,7 @@ int ComediAnalogInput::readData( void )
     AboutToStop = false;
     return -1;
   }
-
-  //  cerr << "Comedi::readData() end " << BufferN << "\n";
-
-  return readn;
+  return 0;
 }
 
 
@@ -936,8 +904,6 @@ int ComediAnalogInput::convertData( void )
   else
     convert<sampl_t>( *Traces, Buffer, BufferN );
 
-  //  cerr << "Comedi::convertData() " << BufferN << "\n";
-
   int n = BufferN;
   BufferN = 0;
 
@@ -950,21 +916,19 @@ int ComediAnalogInput::stop( void )
   if ( !isOpen() )
     return NotOpen;
 
-  lock();
-  AboutToStop = true;
-  unlock();
-
-  cerr << "ABOUT TO STOP AI\n";
+  {
+    QMutexLocker locker( mutex() );
+    if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 )
+      return 0;
+    AboutToStop = true;
+  }
   
   stopRead();
 
   int r = 0;
   lock();
-  cerr << "COMEDI BUFFER BEFORE CANCEL " << comedi_get_buffer_contents( DeviceP, SubDevice ) << '\n';
   if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
     r = ReadError;
-  cerr << "COMEDI BUFFER AFTER CANCEL " << comedi_get_buffer_contents( DeviceP, SubDevice ) << '\n';
-  IsRunning = false;
   unlock();
   return r;
 }
@@ -975,13 +939,7 @@ int ComediAnalogInput::reset( void )
   if ( !isOpen() )
     return NotOpen;
 
-  QMutexLocker locker( mutex() );
-  if ( IsRunning ) {
-    if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
-      return ReadError;
-    if ( comedi_poll( DeviceP, SubDevice ) < 0 )
-      return ReadError;
-  }
+  lock();
 
   // free internal buffer:
   if ( Buffer != 0 )
@@ -998,12 +956,11 @@ int ComediAnalogInput::reset( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  IsRunning = false;
   AboutToStop = false;
   Traces = 0;
   TraceIndex = 0;
 
-  cerr << "AI RESET\n";
+  unlock();
 
   return 0;
 }
