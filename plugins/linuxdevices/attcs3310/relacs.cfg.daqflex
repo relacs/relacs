@@ -107,12 +107,12 @@
       plugin    : CS3310DIO
       device    : dio-1
       ident     : attdev-1
-      cspin     : 4
-      dataoutpin: 5
-      datainpin : 3
       strobepin : 6
+      datainpin : 5
+      dataoutpin: -1
+      cspin     : 4
       mutepin   : 7
-      zcenpin   : 2
+      zcenpin   : -1
 
 *Attenuator Interfaces
   Device1:

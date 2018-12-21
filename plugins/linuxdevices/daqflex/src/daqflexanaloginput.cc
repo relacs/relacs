@@ -38,6 +38,7 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( void )
 {
   IsPrepared = false;
   IsRunning = false;
+  AboutToStop = false;
   DAQFlexDevice = NULL;
   Traces = 0;
   ReadBufferSize = 0;
@@ -58,7 +59,7 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts
   : DAQFlexAnalogInput()
 {
   Options::read(opts);
-  addBoolean( "takeao", "Start analog output in a single instruction", true );
+  addBoolean( "takeao", "Start analog output with a single command", true );
 }
 
 
@@ -71,7 +72,7 @@ void DAQFlexAnalogInput::initOptions()
 {
   AnalogInput::initOptions();
 
-  addBoolean("takeao", "dummy description", true);
+  addBoolean( "takeao", "Start analog output with a single command", true );
 }
 
 
@@ -141,6 +142,7 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice )
   // clear flags:
   IsPrepared = false;
   IsRunning = false;
+  AboutToStop = false;
   TotalSamples = 0;
   CurrentSamples = 0;
   ReadBufferSize = 2 * DAQFlexDevice->aiFIFOSize();
@@ -273,7 +275,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   if ( Buffer != 0 )
     delete [] Buffer;
   // 2 times the updatetime ...
-  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * 2;
+  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() );
   // ... as a multiple of the packet size:
   int inps = DAQFlexDevice->inPacketSize();
   BufferSize = (BufferSize/inps+1)*inps;
@@ -411,8 +413,8 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     return -1;
 
   if ( traces.success() ) {
-    traces.setReadTime( traces[0].interval( ReadBufferSize/2/traces.size() ) );
-    traces.setUpdateTime( traces[0].interval( BufferSize/2/traces.size() ) );
+    traces.setReadTime( traces[0].interval( ReadBufferSize/2/traces.size()-1 ) );
+    traces.setUpdateTime( traces[0].interval( BufferSize/2/traces.size()-1 ) );
     setSettings( traces, BufferSize, ReadBufferSize );
     Traces = &traces;
     IsPrepared = true;
@@ -462,6 +464,7 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   bool finished = true;
   TraceIndex = 0;
   IsRunning = true;
+  AboutToStop = false;
   startThread( sp, datamutex, datawait );
   if ( tookao ) {
     DAQFlexAO->startThread( aosp );
@@ -489,6 +492,8 @@ int DAQFlexAnalogInput::readData( void )
 
   // read data:
   int timeout = (int)::ceil( 10.0 * 1000.0*(*Traces)[0].interval( maxn/2/Traces->size() ) ); // in ms
+  if ( AboutToStop )
+    timeout = 1;  // read what is there but do not wait for more
   DAQFlexCore::DAQFlexError ern = DAQFlexCore::Success;
   ern = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
 					 maxn, &readn, timeout );
@@ -508,9 +513,9 @@ int DAQFlexAnalogInput::readData( void )
 	Traces->addError( DaqError::OverflowUnderrun );
 	return -2;
       }
-      else {
-	cerr << "DAQFlexAnalogInput::readData() -> analog input not running anymore\n";
-	// This error occurs on to fast sampling, but at lower sampling it looks like it can be ignored....
+      else if ( ! AboutToStop ) {
+	cerr << "DAQFlexAnalogInput::readData() -> analog input not running anymore " << readn << "\n";
+	// This error occurs on too fast sampling, but at lower sampling it looks like it can be ignored....
 	// Traces->addErrorStr( "analog input not running anymore" );
 	// Traces->addError( DaqError::Unknown );
       }
@@ -627,16 +632,12 @@ int DAQFlexAnalogInput::stop( void )
     return 0;
 
   lock();
+  AboutToStop = true;
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
     DAQFlexDevice->sendControlTransfer( "AISCAN:STOP" );
     if ( DAQFlexDevice->failed() )
       cerr << "FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
-    /*
-    DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
-    if ( DAQFlexDevice->failed() )
-      cerr << "FAILED TO RESET ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
-    */
   }
   unlock();
 
@@ -644,6 +645,7 @@ int DAQFlexAnalogInput::stop( void )
 
   lock();
   IsRunning = false;
+  AboutToStop = false;
   unlock();
 
   return 0;
@@ -659,12 +661,6 @@ int DAQFlexAnalogInput::reset( void )
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
-    if ( IsRunning ) {
-      DAQFlexDevice->sendControlTransfer( "AISCAN:STOP" );
-      if ( DAQFlexDevice->failed() )
-	cerr << "RESET: FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
-    }
-
     DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
     if ( DAQFlexDevice->failed() )
       cerr << "RESET: FAILED TO RESET ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
@@ -676,15 +672,13 @@ int DAQFlexAnalogInput::reset( void )
   }
 
   // flush:
-  if ( IsRunning ) {
-    int numbytes = 0;
-    int status = 0;
-    do {
-      const int nbuffer = DAQFlexDevice->inPacketSize()*4;
-      unsigned char buffer[nbuffer];
-      status = DAQFlexDevice->readBulkTransfer( buffer, nbuffer, &numbytes, 200 );
-    } while ( numbytes > 0 && status == 0 );
-  }
+  int numbytes = 0;
+  int status = 0;
+  do {
+    const int nbuffer = DAQFlexDevice->inPacketSize()*4;
+    unsigned char buffer[nbuffer];
+    status = DAQFlexDevice->readBulkTransfer( buffer, nbuffer, &numbytes, 200 );
+  } while ( numbytes > 0 && status == 0 );
 
   // free internal buffer:
   if ( Buffer != 0 )

@@ -881,8 +881,7 @@ int DynClampAnalogInput::convertData( void )
 int DynClampAnalogInput::stop( void )
 { 
   // stop analog input thread:
-  if ( AnalogInput::running() )
-    stopRead();
+  stopRead();
 
   reset();
 

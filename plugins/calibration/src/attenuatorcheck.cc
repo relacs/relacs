@@ -136,11 +136,14 @@ int AttenuatorCheck::main( void )
     write( signal );
     if ( signal.failed() ) {
       if ( signal.error() & OutData::AttOverflow )
-	break;
-      else if ( signal.error() & OutData::AttUnderflow )
 	continue;
-      else
+      else if ( signal.error() & OutData::AttUnderflow )
+	break;
+      else {
+	if ( adjust )
+	  setGain( trace( intrace ), orggain );
 	return Failed;
+      }
     }
     if ( interrupt() )
       return Aborted;

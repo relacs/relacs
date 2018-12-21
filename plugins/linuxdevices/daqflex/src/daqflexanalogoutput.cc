@@ -658,7 +658,7 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
     if ( DAQFlexDevice->failed() ) {
       Sigs.setErrorStr( "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
-    } 
+    }
   }
   int r = NoMoreData ? 0 : 1;
   startThread( sp );
@@ -813,6 +813,8 @@ int DAQFlexAnalogOutput::stop( void )
 
   stopWrite();
 
+  IsPrepared = false;
+
   return 0;
 }
 
@@ -823,23 +825,20 @@ int DAQFlexAnalogOutput::reset( void )
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
-    /*
-The Analog Output should be already stopped when reset is called!
-    DAQFlexDevice->sendControlTransfer( "AOSCAN:STOP" );
-    if ( DAQFlexDevice->failed() )
-      cerr << "RESET: FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
-    */
     // clear underrun condition:
     DAQFlexDevice->sendMessageUnlocked( "AOSCAN:RESET" );
     if ( DAQFlexDevice->failed() )
       cerr << "RESET: FAILED TO RESET ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
+
+    /*
     // XXX the following blocks for quite a while at high rates! See DAQFlexCore for more comments.
+    // XXX even worse: this often eats the initial part of the following stimulus
     // what is about still ongoing analog input transfers ?
     // We should only call this on an underrun condition!
     DAQFlexDevice->clearWrite();
     if ( DAQFlexDevice->failed() )
       cerr << "RESET: FAILED TO CLEAR ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
-    //  DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" ); // XXX the output is not used....
+    */
   }
   
   Sigs.clear();

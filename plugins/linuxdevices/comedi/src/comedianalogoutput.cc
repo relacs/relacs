@@ -48,8 +48,8 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   MaxRate = 1000.0;
   UseNIPFIStart = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
+  FillData = false;
   IsPrepared = false;
-  IsRunning = false;
   NoMoreData = true;
   Calibration = 0;
   BufferSize = 0;
@@ -68,7 +68,6 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   read(opts);
   open( device );
   IsPrepared = false;
-  IsRunning = false;
   NoMoreData = true;
   Calibration = 0;
   BufferSize = 0;
@@ -262,7 +261,6 @@ int ComediAnalogOutput::open( const string &device )
   // clear flags:
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  IsRunning = false;
   NoMoreData = true;
 
   setInfo();
@@ -313,12 +311,6 @@ void ComediAnalogOutput::close( void )
   // clear flags:
   DeviceP = NULL;
   SubDevice = 0;
-  if ( Cmd.chanlist != 0 )
-    delete [] Cmd.chanlist;
-  memset( &Cmd, 0, sizeof( comedi_cmd ) );
-  IsPrepared = false;
-  IsRunning = false;
-  NoMoreData = true;
   Info.clear();
 }
 
@@ -722,13 +714,12 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
   }
   cmd.start_arg = 0;
   if ( UseNIPFIStart >= 0 ) {
-    cmd.start_arg = CR_EDGE | NI_EXT_PFI( UseNIPFIStart );
-    // cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
-    cerr << "START_ARG = " << cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+    cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
+    cerr << "START_SRC = " << cmd.start_src << " START_ARG = " << cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
   }
   cmd.scan_end_arg = sigs.size();
   
-  // test if countinous-state is supported:
+  // test if continous-state is supported:
   if ( sigs[0].continuous() && !(testCmd.stop_src & TRIG_NONE) ) {
     cerr << "! warning ComediAnalogOutput::setupCommand(): "
 	 << "continuous mode not supported!" << endl;/////TEST/////
@@ -892,6 +883,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     return -1;
   }
 
+  // comedi_cancel is needed to clear the BUSY state of the subdevice!
   reset();
 
   // no signals:
@@ -917,6 +909,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
       ExtendedData = 0;
       if ( Cmd.chanlist != 0 )
 	delete [] Cmd.chanlist;
+      memset( &Cmd, 0, sizeof( comedi_cmd ) );
       return -1;
     }
 
@@ -956,22 +949,14 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
       return -1;
 
     Sigs = ol;
-    if ( Buffer != 0 ) { // should not be necessary!
-      delete [] Buffer;
-      cerr << "ComediAnalogOutput::prepareWrite() warning: Buffer was not freed!\n";
-    }
-    if ( NBuffer != 0 ) { // should not be necessary!
-      cerr << "ComediAnalogOutput::prepareWrite() warning: NBuffer=" << NBuffer << " is not zero!\n";
-      NBuffer = 0;
-    }
     Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
     // execute command:
-    //    cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+    cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
     if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
       int cerror = comedi_errno();
       cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
-      ol.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
+      ol.addErrorStr( deviceFile() + " - execution of comedi_cmd for analog output failed: "
 		      + comedi_strerror( cerror ) );
       return -1;
     }
@@ -981,7 +966,9 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   msleep( 1 );
 
   // fill buffer with initial data:
+  FillData = true;
   int r = writeData();
+  FillData = false;
   if ( r < 0 )
     return -1;
 
@@ -1005,11 +992,9 @@ bool ComediAnalogOutput::noMoreData( void ) const
 
 int ComediAnalogOutput::startWrite( QSemaphore *sp )
 {
-  //  cerr << " ComediAnalogOutput::startWrite(): begin" << '\n';
-
   QMutexLocker locker( mutex() );
 
-  if ( !IsPrepared || Sigs.empty() ) {
+  if ( ! IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     return -1;
   }
@@ -1024,7 +1009,6 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
   insn.data = insndata;
   insn.n = 1;
   int r = comedi_do_insn( DeviceP, &insn );
-  IsPrepared = false;
   if ( r < 0 ) {
     int cerror = comedi_errno();
     cerr << "AO do_insn failed: " << comedi_strerror( cerror ) << endl;
@@ -1034,8 +1018,6 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
   }
 
   startThread( sp );
-
-  IsRunning = true;
 
   return NoMoreData ? 0 : 1;
 }
@@ -1048,19 +1030,12 @@ int ComediAnalogOutput::writeData( void )
   if ( Sigs.empty() )
     return -1;
  
-  // device stopped?
-  if ( IsRunning && ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 ) { 
-    // not running anymore.
-    if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY )
-      Sigs.addError( DaqError::OverflowUnderrun );
-    else {
-      Sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
-			deviceFile() + " is not running and not busy!" );
-      cerr << "ComediAnalogOutput::writeData: device is not running and not busy! comedi_strerror: " << comedi_strerror( comedi_errno() ) << '\n';
-    }
+  // device not running anymore, but was not stopped?
+  if ( ( ! FillData ) && ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 &&
+       ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) ) {
+    Sigs.addError( DaqError::OverflowUnderrun );
     setErrorStr( Sigs );
-    NoMoreData = true;
-    IsRunning = false;
+    IsPrepared = false;
     return -1;
   }
 
@@ -1073,71 +1048,46 @@ int ComediAnalogOutput::writeData( void )
       bytesConverted = convert<sampl_t>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
   }
-
-  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 ) {
-    NoMoreData = true;
-    IsRunning = false;
-    return 0;
-  }
-
-  // transfer buffer to comedi:
-  int bytesWritten = write( comedi_fileno( DeviceP ), Buffer, NBuffer );
   
-  int ern = 0;
   int elemWritten = 0;
-  if ( bytesWritten < 0 ) {
-    ern = errno;
-    if ( ern == EAGAIN || ern == EINTR )
-      ern = 0;
-  }
-  else if ( bytesWritten > 0 ) {
-    if ( bytesWritten < NBuffer )
-      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
-    NBuffer -= bytesWritten;
-    elemWritten += bytesWritten / BufferElemSize;
-  }
-
-  if ( ern == 0 ) {
-    // no more data:
-    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      if ( ExtendedData > 0 ) {
-	for ( int k=0; k<Sigs.size(); k++ )
-	  Sigs[k].resize( Sigs[k].size()-ExtendedData );
-	ExtendedData = 0;
+  if ( NBuffer > 0 ) {
+    // transfer buffer to comedi:
+    int bytesWritten = write( comedi_fileno( DeviceP ), Buffer, NBuffer );
+  
+    if ( bytesWritten < 0 ) {
+      int ern = errno;
+      if ( ern != EAGAIN && ern != EINTR ) {
+	// error:
+	switch( ern ) {
+	case EPIPE: 
+	  Sigs.addError( DaqError::OverflowUnderrun );
+	  break;
+	case EBUSY:
+	  Sigs.addError( DaqError::Busy );
+	  break;
+	default:
+	  Sigs.addErrorStr( ern );
+	  Sigs.addError( DaqError::Unknown );
+	  break;
+	}
+	setErrorStr( Sigs );
+	clearBuffers();
+	return -1;
       }
-      if ( Buffer != 0 )
-	delete [] Buffer;
-      Buffer = 0;
-      BufferSize = 0;
-      NBuffer = 0;
-      NoMoreData = true;
-      IsRunning = false;
-      return 0;
+    }
+    else if ( bytesWritten > 0 ) {
+      // update buffer:
+      if ( bytesWritten < NBuffer )
+	memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+      NBuffer -= bytesWritten;
+      elemWritten += bytesWritten / BufferElemSize;
     }
   }
-  else {
-    NoMoreData = true;
-    IsRunning = false;
-
-    // error:
-    switch( ern ) {
-
-    case EPIPE: 
-      Sigs.addError( DaqError::OverflowUnderrun );
-      break;
-
-    case EBUSY:
-      Sigs.addError( DaqError::Busy );
-      break;
-
-    default:
-      Sigs.addErrorStr( ern );
-      Sigs.addError( DaqError::Unknown );
-      break;
-    }
-
-    setErrorStr( Sigs );
-    return -1;
+  
+  // no more data:
+  if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
+    clearBuffers();
+    return 0;
   }
   
   return elemWritten;
@@ -1146,57 +1096,56 @@ int ComediAnalogOutput::writeData( void )
 
 int ComediAnalogOutput::stop( void ) 
 { 
-  // cerr << " ComediAnalogOutput::stop()\n";
   {
     QMutexLocker locker( mutex() );
-    
+    if ( (comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING) == 0 )
+      return 0;
     if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
       return WriteError;
   }
 
   stopWrite();
 
-  if ( ExtendedData > 0 ) {
-    for ( int k=0; k<Sigs.size(); k++ )
-      Sigs[k].resize( Sigs[k].size()-ExtendedData );
-    ExtendedData = 0;
-  }
-
+  clearBuffers();
+  
   return 0;
 }
 
 
 int ComediAnalogOutput::reset( void ) 
 { 
-  // cerr << " ComediAnalogOutput::reset()\n";
   lock();
 
   comedi_cancel( DeviceP, SubDevice );
 
+  clearBuffers();
+  Sigs.clear();
+  Settings.clear();
+  unlock();
+  return 0;
+}
+
+
+void ComediAnalogOutput::clearBuffers( void ) 
+{ 
   if ( ExtendedData > 0 ) {
     for ( int k=0; k<Sigs.size(); k++ )
       Sigs[k].resize( Sigs[k].size()-ExtendedData );
     ExtendedData = 0;
   }
 
-  Sigs.clear();
   if ( Buffer != 0 )
     delete [] Buffer;
   Buffer = 0;
   BufferSize = 0;
   NBuffer = 0;
 
-  Settings.clear();
   if ( Cmd.chanlist != 0 )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
+
   IsPrepared = false;
-  IsRunning = false;
   NoMoreData = true;
-
-  unlock();
-
-  return 0;
 }
 
 

@@ -429,7 +429,12 @@ void AnalogInput::run( void )
   bool rd = true;
 
   do {
-    // get data from the card:
+    // the sleep is needed to allow for other processes to wake up and acquire the lock!
+    QThread::msleep( ReadSleepMS );
+    lock();
+    rd = Run;
+    unlock();
+    // get (remaining) data from the card:
     int r = readData();
     // error:
     if ( r < -1 ) {
@@ -447,8 +452,14 @@ void AnalogInput::run( void )
       return;
     }
     // finished:
-    if ( r < 0 )
+    if ( r < 0 ) {
+      lock();
+      Run = false;
+      unlock();
+      if ( DataWait != 0 )
+	DataWait->wakeAll();
       break;
+    }
     // transfer data to the buffer:
     if ( r > 0 ) {
       if ( DataMutex != 0 )
@@ -459,18 +470,8 @@ void AnalogInput::run( void )
       if ( DataWait != 0 )
 	DataWait->wakeAll();
     }
-    // the sleep is needed to allow for other processes to wake up and acquire the lock!
-    QThread::msleep( ReadSleepMS );
-    lock();
-    rd = Run;
-    unlock();
   } while ( rd );
 
-  lock();
-  Run = false;
-  unlock();
-  if ( DataWait != 0 )
-    DataWait->wakeAll();
   if ( Semaphore != 0 )
     Semaphore->release( 1 );
   Semaphore = 0;
@@ -480,30 +481,18 @@ void AnalogInput::run( void )
 void AnalogInput::stopRead( void )
 {
   // stop thread:
-  lock();
-  Run = false;
-  unlock();
-  wait();
-
-  /*
-  // get data from the card:
-  int r = readData();
-
-  // transfer data to the buffer:
-  if ( r > 0 ) {
-    if ( DataMutex != 0 )
-      DataMutex->lockForWrite();
-    convertData();
-    if ( DataMutex != 0 )
-      DataMutex->unlock();
-    if ( DataWait != 0 )
-      DataWait->wakeAll();
+  if ( running() ) {
+    lock();
+    Run = false;
+    unlock();
+    wait();
   }
-  */
+
   lock();
   Semaphore = 0;
   DataMutex = 0;
   DataWait = 0;
+  Run = false;
   unlock();
 }
 
