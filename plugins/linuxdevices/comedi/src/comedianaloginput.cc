@@ -345,7 +345,7 @@ double ComediAnalogInput::bipolarRange( int index ) const
 }
   
 
-string cmd_src( int src )
+string ComediAnalogInput::cmd_src( int src )
 {
   string buf = "";
 
@@ -371,7 +371,7 @@ string cmd_src( int src )
 }
 
 
-void dump_cmd( comedi_cmd *cmd )
+void ComediAnalogInput::dump_cmd( comedi_cmd *cmd )
 {
   cerr << "subdevice:      " << cmd->subdev << '\n';
   cerr << "start:      " << Str( cmd_src(cmd->start_src), 8 ) << "  " << cmd->start_arg << '\n';
@@ -750,6 +750,8 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     insnlist.insns[k].n = 1;
   }
   int ilinx = 0;
+  
+  // execute AI command:
   TraceIndex = 0;
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     int cerror = comedi_errno();
@@ -760,26 +762,22 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   }
   else  
     insnlist.insns[ilinx++].subdev = SubDevice;
+  
+  // add AO to instruction list:
   bool tookao = false;
   if ( TakeAO && aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
     if ( ! ComediAO->useAIStart() )
       insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
     tookao = true;
   }
+  
+  // execute instruction list:
   insnlist.n_insns = ilinx;
-  bool success = true;
   int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
-  if ( ninsns != ilinx ) {
-    success = false;
-    cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist executed "
-	 << ninsns << " from " << ilinx << " instructions\n";
-    Traces->addErrorStr( deviceFile() + " - comedi_do_insnlist executed " + Str( ninsns ) + " from " +
-			 Str( ilinx ) + " instructions" );
-  }
   delete [] insnlist.insns;
-
-  bool finished = true;
-  if ( success ) {
+  if ( ninsns == ilinx ) {
+    // success:
+    bool finished = true;
     // start analog input thread:
     startThread( sp, datamutex, datawait );
     // start analog output thread:
@@ -787,9 +785,17 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
       ComediAO->startThread( aosp );
       finished = ComediAO->noMoreData();
     }
+    return finished ? 0 : 1;
   }
-
-  return success ? ( finished ? 0 : 1 ) : -1;
+  else {
+    // failed to start:
+    cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist executed "
+	 << ninsns << " from " << ilinx << " instructions\n";
+    Traces->addErrorStr( deviceFile() + " - comedi_do_insnlist executed " + Str( ninsns ) + " from " +
+			 Str( ilinx ) + " instructions" );
+    return -1;
+  }
+  return 0;
 }
 
 

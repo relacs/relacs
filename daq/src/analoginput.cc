@@ -481,7 +481,7 @@ void AnalogInput::run( void )
 void AnalogInput::stopRead( void )
 {
   // stop thread:
-  if ( running() ) {
+  if ( QThread::isRunning() ) {
     lock();
     Run = false;
     unlock();

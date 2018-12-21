@@ -392,7 +392,7 @@ int DAQFlexCore::sendControlTransfer( const string &message )
   int numbytes = libusb_control_transfer( DeviceHandle,
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_OUT,
 					  StringMessage, 0, 0, data,
-					  MaxMessageSize, 100 );
+					  MaxMessageSize, 1000 );
   setLibUSBError( numbytes );
   return ErrorState;
 }
@@ -404,7 +404,7 @@ string DAQFlexCore::getControlTransfer( void )
   int numbytes = libusb_control_transfer( DeviceHandle,
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_IN,
 					  StringMessage, 0, 0,
-					  message, MaxMessageSize, 100 );
+					  message, MaxMessageSize, 1000 );
 
   setLibUSBError( numbytes );
   if ( ErrorState != Success )

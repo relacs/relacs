@@ -164,6 +164,9 @@ public:
 		     const vector< AnalogOutput* > &aos,
 		     vector< int > &aiinx, vector< int > &aoinx,
 		     vector< bool > &airate, vector< bool > &aorate );
+  
+  static string cmd_src( int src );
+  static void dump_cmd( comedi_cmd *cmd );
 
 
 protected:
@@ -198,6 +201,7 @@ protected:
 
   virtual void initOptions() override;
 
+  
 private:
 
     /*! Unique analog I/O device type id for all 

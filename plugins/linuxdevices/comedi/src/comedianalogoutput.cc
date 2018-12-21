@@ -714,7 +714,9 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
   }
   cmd.start_arg = 0;
   if ( UseNIPFIStart >= 0 ) {
-    cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
+    // cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
+    cmd.start_arg = CR_EDGE | UseNIPFIStart;  // in ni_mio_common.cc this is incremented by one!
+    // cmd.start_arg = 18;  // that should be AI_START1 !!!!
     cerr << "START_SRC = " << cmd.start_src << " START_ARG = " << cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
   }
   cmd.scan_end_arg = sigs.size();
@@ -953,6 +955,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
     // execute command:
     cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+    //ComediAnalogInput::dump_cmd( &Cmd );
     if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
       int cerror = comedi_errno();
       cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;

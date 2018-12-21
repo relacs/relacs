@@ -73,7 +73,6 @@ enum ni_pfi_routing {
 \par Options
 - \c channel
 - \c routing
-- \c out
 */
 
 

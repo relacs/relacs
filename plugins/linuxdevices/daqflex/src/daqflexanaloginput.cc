@@ -543,8 +543,8 @@ int DAQFlexAnalogInput::readData( void )
 
     case DAQFlexCore::ErrorLibUSBOverflow:
     case DAQFlexCore::ErrorLibUSBPipe:
-      Traces->addError( DaqError::OverflowUnderrun );
-      return -2;
+      Traces->addError( DaqError::OverflowUnderrun ); 
+     return -2;
 
     case DAQFlexCore::ErrorLibUSBBusy:
       Traces->addError( DaqError::Busy );
@@ -695,7 +695,7 @@ int DAQFlexAnalogInput::reset( void )
   IsRunning = false;
   Traces = 0;
   TraceIndex = 0;
-  
+
   return 0;
 }
 

@@ -74,7 +74,6 @@ void ComediNIPFI::initOptions()
     pfisignals += PFISignals[k];
    }
   addSelection( "routing", "Signal to be routed", pfisignals );
-  addBoolean( "out", "Output", true );
 }
 
 
@@ -105,10 +104,7 @@ int ComediNIPFI::open( const string &device )
     return WriteError;
   }
 
-  // get output:
-  bool out = boolean( "out", true );
-
-  return ComediRouting::open( device, subdev, channel, out, routing, PFISignals[routing] );
+  return ComediRouting::open( device, subdev, channel, routing, PFISignals[routing] );
 }
 
 

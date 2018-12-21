@@ -442,7 +442,7 @@ void AnalogOutput::run( void )
 
 void AnalogOutput::stopWrite( void )
 {
-  if ( running() ) {
+  if ( QThread::isRunning() ) {
     lock();
     Run = false;
     unlock();

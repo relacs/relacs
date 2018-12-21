@@ -69,7 +69,6 @@ void ComediRouting::initOptions()
   addInteger( "subdevice", "Subdevice number", 0, 0, 100 );
   addInteger( "channel", "Channel", 0, 0, 100 );
   addInteger( "routing", "Routed signal", 0, 0, 100 );
-  addBoolean( "out", "Output", true );
 }
 
 
@@ -100,14 +99,11 @@ int ComediRouting::open( const string &device )
     return WriteError;
   }
 
-  // get output:
-  bool out = boolean( "out", true );
-
-  return open( device, subdev, channel, out, routing );
+  return open( device, subdev, channel, routing );
 }
 
 
-int ComediRouting::open( const string &device, int subdev, int channel, bool out,
+int ComediRouting::open( const string &device, int subdev, int channel,
 			 int routing, const string &signal )
 {
   if ( isOpen() )
@@ -131,17 +127,13 @@ int ComediRouting::open( const string &device, int subdev, int channel, bool out
   // configure pins:
   int diotype = comedi_get_subdevice_type( DeviceP, subdev );
   if ( diotype == COMEDI_SUBD_DIO ) {
-    unsigned int dir = COMEDI_INPUT;
-    if ( out )
-      dir = COMEDI_OUTPUT;
-    if ( comedi_dio_config( DeviceP, subdev, channel, dir ) != 0 ) {
+    if ( comedi_dio_config( DeviceP, subdev, channel, COMEDI_OUTPUT ) != 0 ) {
       cerr << "! error: ComediRouting::open() -> "
 	   << "DIO_CONFIG failed on device " << deviceIdent() << '\n';
       comedi_close( DeviceP );
       DeviceP = NULL;
       return WriteError;
     }
-    else cerr << "DIO " << channel << " for " << out << "\n";
   }
   else if ( diotype != COMEDI_SUBD_DIO && diotype != COMEDI_SUBD_DO ) {
     const char *subdevstrings[20] = { "unused", "analog input" , "analog output",
@@ -162,15 +154,12 @@ int ComediRouting::open( const string &device, int subdev, int channel, bool out
   }
 
   // set routing:
-  if ( out ) {
-    if ( comedi_set_routing( DeviceP, subdev, channel, routing ) != 0 ) {
-      cerr << "! error: ComediRouting::open() -> "
-	   << "Routing failed on device " << deviceIdent() << '\n';
-      comedi_close( DeviceP );
-      DeviceP = NULL;
-      return WriteError;
-    }
-    else cerr << "ROUTED " << routing << " ON " << channel << "\n";
+  if ( comedi_set_routing( DeviceP, subdev, channel, routing ) != 0 ) {
+    cerr << "! error: ComediRouting::open() -> "
+	 << "Routing failed on device " << deviceIdent() << '\n';
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    return WriteError;
   }
 
   // set basic device infos:
@@ -182,7 +171,6 @@ int ComediRouting::open( const string &device, int subdev, int channel, bool out
   // set settings:
   Settings.addInteger( "subdevice", subdev );
   Settings.addInteger( "channel", channel );
-  Settings.addBoolean( "out", out );
   Settings.addInteger( "routing", routing );
   if ( ! signal.empty() )
     Settings.addText( "signal", signal );
