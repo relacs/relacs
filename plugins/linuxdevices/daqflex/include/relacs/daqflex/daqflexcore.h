@@ -122,9 +122,10 @@ public:
     /*! Receive a message from the device without locking it. This
         should follow a call to sendControlTransfer. */
   string getControlTransfer( void );
-    /*! Send message to device while locking it. 
+    /*! Send message to device while locking it.
+        \a error is set to the ErrorState.
         \return response if transfer successful, empty string if not. */
-  string sendMessage( const string &message );
+  string sendMessage( const string &message, int &error );
     /*! Send message to device without locking it. 
         \return response if transfer successful, empty string if not. */
   string sendMessageUnlocked( const string &message );
@@ -205,8 +206,8 @@ public:
   virtual bool failed( void ) const;
     /*! \return the current error state as a descriptive string. */
   string daqflexErrorStr( void ) const;
-    /*! \return a descriptive string for \a error. */
-  string daqflexErrorStr( DAQFlexError error ) const;
+    /*! \return a descriptive string for \a error (a DAQFlexError). */
+  string daqflexErrorStr( int error ) const;
 
   using Device::lock;
   using Device::unlock;

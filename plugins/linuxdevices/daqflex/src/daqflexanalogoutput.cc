@@ -99,8 +99,9 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice )
   BipolarRange.clear();
   UnipolarRange.clear();
 
-  Str response = DAQFlexDevice->sendMessage( "?AO{0}:RANGE" );
-  if ( DAQFlexDevice->success() && response.size() > 16 ) {
+  int ern = DAQFlexCore::Success;
+  Str response = DAQFlexDevice->sendMessage( "?AO{0}:RANGE", ern );
+  if ( ern == DAQFlexCore::Success && response.size() > 16 ) {
     // Analog output ranges:
     // 1608GX_2AO: BIP10V
     // 202, 205: UNI5V
@@ -120,7 +121,7 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice )
   }
   else {
     setErrorStr( "Failed to retrieve analog output range from device " + DAQFlexDevice->deviceName() +
-		 ". Error: " + DAQFlexDevice->daqflexErrorStr() );
+		 ". Error: " + DAQFlexDevice->daqflexErrorStr( ern ) );
     return InvalidDevice;
   }
 
@@ -188,6 +189,7 @@ void DAQFlexAnalogOutput::close( void )
 
 void DAQFlexAnalogOutput::writeZeros( void )
 {
+  QMutexLocker aolocker( mutex() );
   float minvolt = ( BipolarRange.size() > 0) ? -BipolarRange[0] : 0.0;
   float maxvolt = ( BipolarRange.size() > 0) ? BipolarRange[0] : UnipolarRange[0];
   QMutexLocker corelocker( DAQFlexDevice->mutex() );
@@ -312,7 +314,8 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     }
 
     // write data:
-    DAQFlexDevice->sendMessageUnlocked( "AO{" + Str( sigs[k].channel() ) + "}:VALUE=" + Str( data ) );
+    string message = "AO{" + Str( sigs[k].channel() ) + "}:VALUE=" + Str( data );
+    string response = DAQFlexDevice->sendMessageUnlocked( message );
     if ( DAQFlexDevice->failed() ) {
       sigs[k].addErrorStr( "DAQFlex direct write failed: " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
@@ -322,7 +325,6 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
 
   }
 
-  DAQFlexDevice->unlock();
   return ( sigs.success() ? 0 : -1 );
 }
 
@@ -470,12 +472,16 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
       // setup channels:
-      DAQFlexDevice->sendMessageUnlocked( "AOSCAN:LOWCHAN=" + Str( ol[0].channel() ) );
+      string message = "AOSCAN:LOWCHAN=" + Str( ol[0].channel() );
+      string response = DAQFlexDevice->sendMessageUnlocked( message );
+      cerr << message << " returned " << response << '\n';
       if ( DAQFlexDevice->failed() ) {
 	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
-      DAQFlexDevice->sendMessageUnlocked( "AOSCAN:HIGHCHAN=" + Str( ol.back().channel() ) );
+      message = "AOSCAN:HIGHCHAN=" + Str( ol.back().channel() );
+      response = DAQFlexDevice->sendMessageUnlocked( message );
+      cerr << message << " returned " << response << '\n';
       if ( DAQFlexDevice->failed() ) {
 	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	return -1;
@@ -537,9 +543,13 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	Calibration *gainp = (Calibration *)gaindata;
 
 	// get calibration:
-	string response = DAQFlexDevice->sendMessageUnlocked( "?AO{" + Str( ol[k].channel() ) + "}:SLOPE" );
+	message = "?AO{" + Str( ol[k].channel() ) + "}:SLOPE";
+	string response = DAQFlexDevice->sendMessageUnlocked( message );
+	cerr << message << " returned " << response << '\n';
 	gainp->Slope = Str( response.erase( 0, 12 ) ).number();
-	response = DAQFlexDevice->sendMessageUnlocked( "?AO{" + Str( ol[k].channel() ) + "}:OFFSET" );
+	message = "?AO{" + Str( ol[k].channel() ) + "}:OFFSET";
+	response = DAQFlexDevice->sendMessageUnlocked( message );
+	cerr << message << " returned " << response << '\n';
 	gainp->Offset = Str( response.erase( 0, 13 ) ).number();
 	/*
 	  gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
@@ -556,14 +566,32 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       ol.deviceReset( delayinx );
 
       // setup acquisition:
-      DAQFlexDevice->sendMessageUnlocked( "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" ) );
+      message = "AOSCAN:STALL=DISABLE";
+      response = DAQFlexDevice->sendMessageUnlocked( message );
+      cerr << message << " returned " << response << '\n';
+      if ( DAQFlexDevice->failed() ) {
+	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	return -1;
+      } 
+      message = "AOSCAN:XFRMODE=BLOCKIO";
+      response = DAQFlexDevice->sendMessageUnlocked( message );
+      cerr << message << " returned " << response << '\n';
+      if ( DAQFlexDevice->failed() ) {
+	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	return -1;
+      } 
+      message = "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" );
+      response = DAQFlexDevice->sendMessageUnlocked( message );
+      cerr << message << " returned " << response << '\n';
       if ( DAQFlexDevice->failed() ) {
 	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
       if ( sigs[0].continuous() ) {
 	Samples = 0;
-	DAQFlexDevice->sendMessageUnlocked( "AOSCAN:SAMPLES=0" );
+	message = "AOSCAN:SAMPLES=0";
+	response = DAQFlexDevice->sendMessageUnlocked( message );
+	cerr << message << " returned " << response << '\n';
 	if ( DAQFlexDevice->failed() ) {
 	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
@@ -571,7 +599,9 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       }
       else {
 	Samples = sigs.deviceBufferSize();
-	DAQFlexDevice->sendMessageUnlocked( "AOSCAN:SAMPLES=" + Str( Samples ) );
+	message = "AOSCAN:SAMPLES=" + Str( Samples );
+	response = DAQFlexDevice->sendMessageUnlocked( message );
+	cerr << message << " returned " << response << '\n';
 	if ( DAQFlexDevice->failed() ) {
 	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
@@ -585,7 +615,9 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 			    Str( 0.001*DAQFlexDevice->aiSampleRate(), "%.1f" ) + "kHz" );
 	  return -1;
 	}
-	DAQFlexDevice->sendMessageUnlocked( "AOSCAN:EXTPACER=ENABLE" );
+	message = "AOSCAN:EXTPACER=ENABLE";
+	response = DAQFlexDevice->sendMessageUnlocked( message );
+	cerr << message << " returned " << response << '\n';
 	if ( DAQFlexDevice->failed() ) {
 	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
@@ -647,16 +679,18 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
 int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
 {
-  QMutexLocker locker( mutex() );
-
+  QMutexLocker aolocker( mutex() );
   if ( !IsPrepared || Sigs.empty() ) {
     Sigs.setErrorStr( "AO not prepared or no signals!" );
     return -1;
   }
   if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
-    DAQFlexDevice->sendCommand( "AOSCAN:START" );
-    if ( DAQFlexDevice->failed() ) {
-      Sigs.setErrorStr( "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr() );
+    int ern = DAQFlexCore::Success;
+    string message = "AOSCAN:START";
+    string response = DAQFlexDevice->sendMessage( message, ern ); // XXX or sendControlTransfer?
+    cerr << message << " returned " << response << '\n';
+    if ( ern != DAQFlexCore::Success ) {
+      Sigs.setErrorStr( "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr( ern ) );
       return -1;
     }
   }
@@ -676,13 +710,14 @@ int DAQFlexAnalogOutput::writeData( void )
   }
 
   if ( DAQFlexDevice->aoFIFOSize() <= 0 ) {
+    // no FIFO:
     {
       QMutexLocker corelocker( DAQFlexDevice->mutex() );
       unsigned short *bp = (unsigned short *)Buffer;
       for ( int k=0; k<Sigs.size(); k++ ) {
 	unsigned short val = *(bp+NBuffer/2);
-	string cmd = "AO{" + Str( Sigs[k].channel() ) + "}:VALUE=" + Str( val );
-	DAQFlexDevice->sendMessageUnlocked( cmd );
+	string message = "AO{" + Str( Sigs[k].channel() ) + "}:VALUE=" + Str( val );
+	DAQFlexDevice->sendMessageUnlocked( message );
 	NBuffer += 2;
       }
     }
@@ -734,11 +769,7 @@ int DAQFlexAnalogOutput::writeData( void )
   int bytesToWrite = (NBuffer/outps)*outps;
   if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
     bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
-  /*
-  else if ( NBuffer <= DAQFlexDevice->aoFIFOSize() * 2 )
-    bytesToWrite = NBuffer;
-  */
-  if ( bytesToWrite <= 0 )
+  else if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
   int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
   int bytesWritten = 0;
@@ -772,26 +803,20 @@ int DAQFlexAnalogOutput::writeData( void )
     // error:
     cerr << "WRITEBULKTRANSFER error=" << DAQFlexDevice->daqflexErrorStr( ern )
 	 << " bytesWritten=" << bytesWritten << '\n';
-
     switch( ern ) {
-
     case DAQFlexCore::ErrorLibUSBPipe:
       Sigs.addError( DaqError::OverflowUnderrun );
       break;
-
     case DAQFlexCore::ErrorLibUSBBusy:
       Sigs.addError( DaqError::Busy );
       break;
-
     case DAQFlexCore::ErrorLibUSBNoDevice:
       Sigs.addError( DaqError::NoDevice );
       break;
-
     default:
       Sigs.addErrorStr( DAQFlexDevice->daqflexErrorStr( ern ) );
       Sigs.addError( DaqError::Unknown );
     }
-
     setErrorStr( Sigs );
     return -1;
   }
@@ -805,15 +830,18 @@ int DAQFlexAnalogOutput::stop( void )
   if ( ! IsPrepared )
     return 0;
 
-  lock();
-  DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
-  if ( DAQFlexDevice->failed() )
-    cerr << "FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
-  unlock();
+  {
+    QMutexLocker aolocker( mutex() );
+    int ern = DAQFlexDevice->sendCommand( "AOSCAN:STOP" ); // XXX or sendMessage?
+    if ( ern != DAQFlexCore::Success )
+      cerr << "FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
+  }
 
   stopWrite();
 
+  lock();
   IsPrepared = false;
+  unlock();
 
   return 0;
 }
@@ -821,12 +849,14 @@ int DAQFlexAnalogOutput::stop( void )
 
 int DAQFlexAnalogOutput::reset( void )
 {
-  lock();
+  QMutexLocker aolocker( mutex() );
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
     // clear underrun condition:
-    DAQFlexDevice->sendMessageUnlocked( "AOSCAN:RESET" );
+    string message = "AOSCAN:RESET";
+    string response = DAQFlexDevice->sendMessageUnlocked( message );
+    cerr << message << " returned " << response << '\n';
     if ( DAQFlexDevice->failed() )
       cerr << "RESET: FAILED TO RESET ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
 
@@ -836,8 +866,6 @@ int DAQFlexAnalogOutput::reset( void )
     // what is about still ongoing analog input transfers ?
     // We should only call this on an underrun condition!
     DAQFlexDevice->clearWrite();
-    if ( DAQFlexDevice->failed() )
-      cerr << "RESET: FAILED TO CLEAR ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
     */
   }
   
@@ -851,17 +879,16 @@ int DAQFlexAnalogOutput::reset( void )
   Settings.clear();
   IsPrepared = false;
 
-  unlock();
-
   return 0;
 }
 
 
 AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
 {
+  QMutexLocker aolocker( mutex() );
   Status r = Idle;
-  lock();
-  string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
+  int ern = DAQFlexCore::Success;
+  string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS", ern );
   if ( response.find( "RUNNING" ) != string::npos )
     r = Running;
   // The following underrun check seems stupid after the last stimulus has been put out.
@@ -872,7 +899,6 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
     //Sigs.addError( DaqError::OverflowUnderrun );
     r = Underrun;
   }
-  unlock();
   return r;
 }
 

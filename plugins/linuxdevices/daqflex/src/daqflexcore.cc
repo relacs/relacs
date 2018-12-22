@@ -23,6 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <QMutexLocker>
 #include <relacs/daqflex/daqflexcore.h>
 using namespace std;
 using namespace relacs;
@@ -166,7 +167,8 @@ int DAQFlexCore::open( const string &devicestr )
 	    InPacketSize = libusb_get_max_iso_packet_size( device, EndpointIn );
 	    OutPacketSize = libusb_get_max_iso_packet_size( device, EndpointOut );
 	    // get the device serial number:
-	    string message = sendMessage( "?DEV:MFGSER" );
+	    int ern = Success;
+	    string message = sendMessage( "?DEV:MFGSER", ern );
 	    // erase message while keeping serial number:
 	    message.erase( 0, 11 );
 	    cout << "DAQFlex: found device " << productName( ProductID )
@@ -392,7 +394,7 @@ int DAQFlexCore::sendControlTransfer( const string &message )
   int numbytes = libusb_control_transfer( DeviceHandle,
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_OUT,
 					  StringMessage, 0, 0, data,
-					  MaxMessageSize, 1000 );
+					  MaxMessageSize, 100 );
   setLibUSBError( numbytes );
   return ErrorState;
 }
@@ -404,7 +406,7 @@ string DAQFlexCore::getControlTransfer( void )
   int numbytes = libusb_control_transfer( DeviceHandle,
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_IN,
 					  StringMessage, 0, 0,
-					  message, MaxMessageSize, 1000 );
+					  message, MaxMessageSize, 100 );
 
   setLibUSBError( numbytes );
   if ( ErrorState != Success )
@@ -414,13 +416,14 @@ string DAQFlexCore::getControlTransfer( void )
 }
 
 
-string DAQFlexCore::sendMessage( const string &message )
+string DAQFlexCore::sendMessage( const string &message, int &error )
 {
   lock();
   int r = sendControlTransfer( message );
   string s = "";
   if ( r == Success )
     s = getControlTransfer();
+  error = ErrorState;
   unlock();
   return s;
 }
@@ -462,7 +465,7 @@ int DAQFlexCore::getEndpoints( void )
   int numbytes = libusb_control_transfer( DeviceHandle, StringMessage,
 					  LIBUSB_REQUEST_GET_DESCRIPTOR,
 					  (0x02 << 8) | 0, 0,
-					  epdescriptor, MaxMessageSize, 1000 );
+					  epdescriptor, MaxMessageSize, 100 );
 
   setLibUSBError( numbytes );
   if ( ErrorState != Success )
@@ -534,6 +537,7 @@ unsigned char DAQFlexCore::getEndpointOutAddress( unsigned char* data, int n )
 
 int DAQFlexCore::initDevice( const string &path )
 {
+  QMutexLocker corelocker( mutex() );
   ErrorState = Success;
   string fpgav = "";
 
@@ -564,7 +568,7 @@ int DAQFlexCore::initDevice( const string &path )
     uploadFPGAFirmware( path, "USB_1608G.rbf" );
     if ( ErrorState != Success )
       return ErrorState;
-    fpgav = sendMessage( "?DEV:FPGAV" );
+    fpgav = sendMessageUnlocked( "?DEV:FPGAV" );
     if ( ! fpgav.empty() )
       fpgav.erase( 0, 10 );
     if ( ErrorState != Success )
@@ -718,13 +722,13 @@ int DAQFlexCore::initDevice( const string &path )
 
   Device::addInfo();
   // get the device serial number:
-  string serial = sendMessage( "?DEV:MFGSER" );
+  string serial = sendMessageUnlocked( "?DEV:MFGSER" );
   // erase message while keeping serial number:
   serial.erase( 0, 11 );
   Info.addText( "SerialNumber", serial );
 
   // firmware version:
-  string fwv = sendMessage( "?DEV:FWV" );
+  string fwv = sendMessageUnlocked( "?DEV:FWV" );
   if ( ! fwv.empty() ) {
     fwv.erase( 0, 8 );
     Info.addText( "Firmware version", fwv );
@@ -739,8 +743,9 @@ int DAQFlexCore::initDevice( const string &path )
 
 int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename )
 {
+  // device is already locked from initDevce()!
   // check if the firmware has been loaded already:
-  string response = sendMessage( "?DEV:FPGACFG" );
+  string response = sendMessageUnlocked( "?DEV:FPGACFG" );
   if ( ErrorState != Success )
     return ErrorState;
   if ( response.find( "CONFIGURED" ) == string::npos ) {
@@ -750,7 +755,7 @@ int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename 
       transferFPGAfile( DefaultFirmwarePath + filename );
     if ( ErrorState == Success ) {
       // check if the firmware got loaded successfully:
-      response = sendMessage( "?DEV:FPGACFG" );
+      response = sendMessageUnlocked( "?DEV:FPGACFG" );
       if ( ErrorState == Success && response.find( "CONFIGURED" ) == string::npos )
 	ErrorState = ErrorFPGAUploadFailed;
     }
@@ -763,10 +768,11 @@ int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename 
 
 int DAQFlexCore::transferFPGAfile( const string &path )
 {
+  // device is already locked from uploadFPGAFirmware()!
   ErrorState = Success;
 
   // turn on FPGA configure mode:
-  sendMessage( "DEV:FPGACFG=0XAD" );
+  sendMessageUnlocked( "DEV:FPGACFG=0XAD" );
   if ( ErrorState != Success )
     return ErrorState;
 
@@ -790,7 +796,7 @@ int DAQFlexCore::transferFPGAfile( const string &path )
 					      LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_OUT,
 					      FPGADATAREQUEST, 0, 0,
 					      &memblock[totalbytes],
-					      length, 1000 );
+					      length, 500 );
 
       if ( numbytes < 0 ) {
 	setLibUSBError( numbytes );
@@ -949,7 +955,7 @@ string DAQFlexCore::daqflexErrorStr( void ) const
 }
 
 
-string DAQFlexCore::daqflexErrorStr( DAQFlexError error ) const
+string DAQFlexCore::daqflexErrorStr( int error ) const
 {
   return DAQFlexErrorText[ error ];
 }
