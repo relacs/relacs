@@ -737,18 +737,21 @@ int DAQFlexAnalogOutput::writeData( void )
 
   // transfer buffer to device:
   int outps = DAQFlexDevice->outPacketSize();
-  int bytesToWrite = (NBuffer/outps)*outps;
+  int bytesToWrite = NBuffer;
   if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
     bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
+  bytesToWrite = (bytesToWrite/outps)*outps;
   if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
   int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
-  timeout = 50;
+  if ( timeout > 40 )
+    timeout = 40;
+  msleep( timeout/4 );
   int bytesWritten = 0;
   //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
   DAQFlexCore::DAQFlexError ern = DAQFlexCore::Success;
   ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), bytesToWrite,
-					  &bytesWritten, timeout );
+					  &bytesWritten, 1 );
 
   int elemWritten = 0;
   if ( bytesWritten > 0 ) {

@@ -489,9 +489,10 @@ int DAQFlexAnalogInput::readData( void )
   int readn = 0;
   int buffern = BufferN*2;
   int inps = DAQFlexDevice->inPacketSize();
-  int maxn = ((BufferSize - buffern)/inps)*inps;
+  int maxn = BufferSize - buffern;
   if ( maxn > ReadBufferSize )
     maxn = ReadBufferSize;
+   maxn = (maxn/inps)*inps;
   if ( maxn <= 0 )
     return 0;
   /*
@@ -502,13 +503,14 @@ int DAQFlexAnalogInput::readData( void )
 
   // read data:
   int timeout = (int)::ceil( 10.0 * 1000.0*(*Traces)[0].interval( maxn/2/Traces->size() ) ); // in ms
-  //cerr << "TIMEOUT " << timeout << '\n';
-  timeout = 2;
+  if ( timeout > 20 )
+    timeout = 20;
+  msleep( timeout/4 );
   if ( AboutToStop )
     timeout = 1;  // read what is there but do not wait for more
   int ern = DAQFlexCore::Success;
   ern = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
-					 maxn, &readn, timeout );
+					 maxn, &readn, 1 );
 
   // store data:
   if ( readn > 0 ) {
