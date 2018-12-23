@@ -70,6 +70,8 @@ public:
     ErrorInvalidBufferSize,
     ErrorCantOpenFPGAFile,
     ErrorFPGAUploadFailed,
+    ErrorSetValueFailed,
+    ErrorGetValueFailed,
     ErrorLibUSBIO,
     ErrorLibUSBInvalidParam,
     ErrorLibUSBAccess,
@@ -85,7 +87,7 @@ public:
     ErrorLibUSBOther,
     ErrorLibUSBUnknown
   };
-  static const int DAQFlexErrorMax = 23;
+  static const int DAQFlexErrorMax = 25;
   static const string DAQFlexErrorText[DAQFlexErrorMax];
 
     /*! vendor ID of MCC USB DAQ boards. */
@@ -122,6 +124,11 @@ public:
     /*! Receive a message from the device without locking it. This
         should follow a call to sendControlTransfer. */
   string getControlTransfer( void );
+    /*! Send command to the device while locking it. 
+        Use sendControlTransfer() for not locking the device.
+        \return error code */
+  int sendCommand( const string &command );
+
     /*! Send message to device while locking it.
         \a error is set to the ErrorState.
         \return response if transfer successful, empty string if not. */
@@ -129,13 +136,33 @@ public:
     /*! Send message to device without locking it. 
         \return response if transfer successful, empty string if not. */
   string sendMessageUnlocked( const string &message );
-    /*! Send command to the device while locking it. 
-        Use sendControlTransfer() for not locking the device.
-        \return error code */
-  int sendCommand( const string &command );
-    /*! Send commands to the device while locking it.
-        \return error code  */
-  int sendCommands( const string &command1, const string &command2 );
+
+    /*! Set a value on the daq board while locking it. First, the
+        message "command=value" is sent, and then it is checked
+        whether the response equals \a command.
+	\return error code */
+  int setValue( const string &command, const string &value );
+    /*! Set a value on the daq board without locking it. First, the
+        message "command=value" is sent, and then it is checked
+        whether the response equals \a command.
+	\return error code */
+  int setValueUnlocked( const string &command, const string &value );
+
+    /*! Get a value from the daq board while locking it. First, the
+        message "?command" is sent, and then the response is read.  If
+        the initial part of the response equals \a command, then the
+        value after the following equal sign is returned.  On error an
+        empty string is returned.
+        \a error is set to the ErrorState.
+	\return the requested value */
+  string getValue( const string &command, int &error );
+    /*! Get a value from the daq board without locking it. First, the
+        message "?command" is sent, and then the response is read.  If
+        the initial part of the response equals \a command, then the
+        value after the following equal sign is returned.  On error an
+        empty string is returned.  
+	\return the requested value */
+  string getValueUnlocked( const string &command );
 
     /*! \return the resolution of the A/D converter. */
   unsigned int maxAIData( void ) const;

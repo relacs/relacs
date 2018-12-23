@@ -115,11 +115,8 @@ int DAQFlexDigitalIO::lines( void ) const
 
 int DAQFlexDigitalIO::configureLineUnlocked( unsigned int line, bool output )
 {
-  int ern = DAQFlexCore::Success;
-  string message = "DIO{0/" + Str( line ) + "}:DIR=" + ( output ? "OUT" : "IN" );
-  string response = DAQFlexDevice->sendMessage( message, ern );
-  cerr << message << " returned " << response << '\n';
-  return ern != DAQFlexCore::Success || response.empty() ? WriteError : 0;
+  int ern = DAQFlexDevice->setValue( "DIO{0/" + Str( line ) + "}:DIR", output ? "OUT" : "IN" );
+  return ern != DAQFlexCore::Success ? WriteError : 0;
 }
 
 
@@ -133,10 +130,8 @@ int DAQFlexDigitalIO::configureLines( unsigned int lines, unsigned int output )
       bool direction = false;
       if ( ( output & bit ) > 0 )
 	direction = true;
-      string message = "DIO{0/" + Str( channel ) + "}:DIR=" + ( direction ? "OUT" : "IN" );
-      string response = DAQFlexDevice->sendMessageUnlocked( message );
-      cerr << message << " returned " << response << '\n';
-      if ( DAQFlexDevice->failed() || response.empty() )
+      DAQFlexDevice->setValueUnlocked( "DIO{0/" + Str( channel ) + "}:DIR", direction ? "OUT" : "IN" );
+      if ( DAQFlexDevice->failed() )
 	return WriteError;
     }
     bit *= 2;
@@ -149,11 +144,8 @@ int DAQFlexDigitalIO::writeUnlocked( unsigned int line, bool val )
 {
   if ( (int)line >= lines() )
     return WriteError;
-  int ern = DAQFlexCore::Success;
-  string rs = "DIO{0/" + Str( line ) + "}:VALUE";
-  string message = rs + "=" + ( val ? "1" : "0" );
-  string response = DAQFlexDevice->sendMessage( message, ern );
-  if ( ern != DAQFlexCore::Success || response != rs )
+  DAQFlexDevice->setValueUnlocked( "DIO{0/" + Str( line ) + "}:VALUE", val ? "1" : "0" );
+  if ( DAQFlexDevice->failed() )
     return WriteError;
   if ( val )
     Levels |= 1 << line;
@@ -167,12 +159,10 @@ int DAQFlexDigitalIO::readUnlocked( unsigned int line, bool &val )
 {
   if ( (int)line >= lines() )
     return ReadError;
-  int ern = DAQFlexCore::Success;
-  string rs = "DIO{0/" + Str( line ) + "}:VALUE";
-  string r = DAQFlexDevice->sendMessage( "?" + rs, ern );
-  if ( ern != DAQFlexCore::Success || r.substr(0, rs.size() ) != rs )
+  string valstr = DAQFlexDevice->getValueUnlocked( "DIO{0/" + Str( line ) + "}:VALUE" );
+  if ( DAQFlexDevice->failed() )
     return ReadError;
-  val = ( stoi( r.substr( rs.size() + 1 ) ) > 0 );
+  val = ( stoi( valstr ) > 0 );
   return 0;
 }
 
@@ -184,9 +174,8 @@ int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
   unsigned int rv = Levels;
   rv &= ~lines; // keep the levels of the non-specified lines
   rv |= val & lines;  // set the values of the specified lines
-  string rs = "DIO{0}:VALUE";
-  string r = DAQFlexDevice->sendMessageUnlocked( rs + "=" + Str( rv ) );
-  if ( DAQFlexDevice->failed() || r != rs )
+  DAQFlexDevice->setValueUnlocked( "DIO{0}:VALUE", Str( rv ) );
+  if ( DAQFlexDevice->failed() )
     return WriteError;
   Levels = rv;
   return 0;
@@ -197,11 +186,10 @@ int DAQFlexDigitalIO::readLines( unsigned int lines, unsigned int &val )
 {
   QMutexLocker diolocker( mutex() );
   QMutexLocker corelocker( DAQFlexDevice->mutex() );
-  string rs = "DIO{0}:VALUE";
-  string r = DAQFlexDevice->sendMessageUnlocked( "?" + rs );
-  if ( DAQFlexDevice->failed() || r.substr(0, rs.size() ) != rs )
+  string valstr = DAQFlexDevice->getValueUnlocked( "DIO{0}:VALUE" );
+  if ( DAQFlexDevice->failed() )
     return ReadError;
-  val = stoi( r.substr( rs.size() + 1 ) );
+  val = stoi( valstr );
   return 0;
 }
 

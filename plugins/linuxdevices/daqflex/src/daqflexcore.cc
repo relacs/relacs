@@ -43,6 +43,8 @@ const string DAQFlexCore::DAQFlexErrorText[DAQFlexCore::DAQFlexErrorMax] =
     "invalid buffer size",
     "failed to open FPGA file",
     "FPGA upload failed",
+    "set value failed",
+    "get value failed",
     "libusb IO",
     "libusb invalid parameter",
     "libusb access",
@@ -416,15 +418,20 @@ string DAQFlexCore::getControlTransfer( void )
 }
 
 
-string DAQFlexCore::sendMessage( const string &message, int &error )
+int DAQFlexCore::sendCommand( const string &command )
 {
   lock();
-  int r = sendControlTransfer( message );
-  string s = "";
-  if ( r == Success )
-    s = getControlTransfer();
-  error = ErrorState;
+  int r = sendControlTransfer( command );
   unlock();
+  return r;
+}
+
+
+string DAQFlexCore::sendMessage( const string &message, int &error )
+{
+  QMutexLocker corelocker( mutex() );
+  string s = sendMessageUnlocked( message );
+  error = ErrorState;
   return s;
 }
 
@@ -439,23 +446,55 @@ string DAQFlexCore::sendMessageUnlocked( const string &message )
 }
 
 
-int DAQFlexCore::sendCommand( const string &command )
+int DAQFlexCore::setValue( const string &command, const string &value )
 {
-  lock();
-  int r = sendControlTransfer( command );
-  unlock();
-  return r;
+  QMutexLocker corelocker( mutex() );
+  return setValueUnlocked( command, value );
 }
 
 
-int DAQFlexCore::sendCommands( const string &command1, const string &command2 )
+int DAQFlexCore::setValueUnlocked( const string &command, const string &value )
 {
-  lock();
-  int r = sendControlTransfer( command1 );
-  if ( r == Success )
-    r = sendControlTransfer( command2 );
-  unlock();
-  return r;
+  // send message:
+  int r = sendControlTransfer( command + '=' + value );
+  if ( r != Success )
+    return ErrorState;
+  // read response:
+  string s = getControlTransfer();
+  if ( ErrorState != Success )
+    return ErrorState;
+  else if ( s != command )
+    return ErrorSetValueFailed;
+  else
+    return Success;
+}
+
+
+string DAQFlexCore::getValue( const string &command, int &error )
+{
+  QMutexLocker corelocker( mutex() );
+  string s = getValueUnlocked( command );
+  error = ErrorState;
+  return s;
+}
+
+
+string DAQFlexCore::getValueUnlocked( const string &command )
+{
+  // send message:
+  int r = sendControlTransfer( '?' + command );
+  if ( r != Success )
+    return "";
+  // read response:
+  string s = getControlTransfer();
+  if ( ErrorState != Success )
+    return "";
+  else if ( s.substr( 0, command.size() ) != command ) {
+    ErrorState = ErrorGetValueFailed;
+    return "";
+  }
+  else
+    return s.substr( command.size()+1 );
 }
 
 

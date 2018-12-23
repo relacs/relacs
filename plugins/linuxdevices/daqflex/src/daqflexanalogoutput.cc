@@ -100,16 +100,16 @@ int DAQFlexAnalogOutput::open( DAQFlexCore &daqflexdevice )
   UnipolarRange.clear();
 
   int ern = DAQFlexCore::Success;
-  Str response = DAQFlexDevice->sendMessage( "?AO{0}:RANGE", ern );
-  if ( ern == DAQFlexCore::Success && response.size() > 16 ) {
+  Str response = DAQFlexDevice->getValue( "AO{0}:RANGE", ern );
+  if ( ern == DAQFlexCore::Success ) {
     // Analog output ranges:
     // 1608GX_2AO: BIP10V
     // 202, 205: UNI5V
     // 1208FS, 1408FS: UNI5V
     // 2408-2AO:  BIP10V
     // 7204: UNI4.096V
-    bool uni = ( response[12] == 'U' );
-    double range = response.number( 0.0, 15 );
+    bool uni = ( response[0] == 'U' );
+    double range = response.number( 0.0, 3 );
     if ( range <= 1e-6 ) {
       setErrorStr( "Failed to read out analog output range from device " + DAQFlexDevice->deviceName() );
       return InvalidDevice;
@@ -197,7 +197,7 @@ void DAQFlexAnalogOutput::writeZeros( void )
   float v = 0.0;
   for ( int k=0; k<DAQFlexDevice->maxAOChannels(); k++ ) {
     unsigned short data = (unsigned short)( (v-minvolt)*gain );
-    DAQFlexDevice->sendMessageUnlocked( "AO{" + Str( k ) + "}:VALUE=" + Str( data ) );
+    DAQFlexDevice->setValueUnlocked( "AO{" + Str( k ) + "}:VALUE", Str( data ) );
   }
 }
 
@@ -314,8 +314,7 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
     }
 
     // write data:
-    string message = "AO{" + Str( sigs[k].channel() ) + "}:VALUE=" + Str( data );
-    string response = DAQFlexDevice->sendMessageUnlocked( message );
+    DAQFlexDevice->setValueUnlocked( "AO{" + Str( sigs[k].channel() ) + "}:VALUE=", Str( data ) );
     if ( DAQFlexDevice->failed() ) {
       sigs[k].addErrorStr( "DAQFlex direct write failed: " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
@@ -472,16 +471,12 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
       // setup channels:
-      string message = "AOSCAN:LOWCHAN=" + Str( ol[0].channel() );
-      string response = DAQFlexDevice->sendMessageUnlocked( message );
-      cerr << message << " returned " << response << '\n';
+      DAQFlexDevice->setValueUnlocked( "AOSCAN:LOWCHAN", Str( ol[0].channel() ) );
       if ( DAQFlexDevice->failed() ) {
 	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
-      message = "AOSCAN:HIGHCHAN=" + Str( ol.back().channel() );
-      response = DAQFlexDevice->sendMessageUnlocked( message );
-      cerr << message << " returned " << response << '\n';
+      DAQFlexDevice->setValueUnlocked( "AOSCAN:HIGHCHAN", Str( ol.back().channel() ) );
       if ( DAQFlexDevice->failed() ) {
 	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	return -1;
@@ -543,14 +538,10 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	Calibration *gainp = (Calibration *)gaindata;
 
 	// get calibration:
-	message = "?AO{" + Str( ol[k].channel() ) + "}:SLOPE";
-	string response = DAQFlexDevice->sendMessageUnlocked( message );
-	cerr << message << " returned " << response << '\n';
-	gainp->Slope = Str( response.erase( 0, 12 ) ).number();
-	message = "?AO{" + Str( ol[k].channel() ) + "}:OFFSET";
-	response = DAQFlexDevice->sendMessageUnlocked( message );
-	cerr << message << " returned " << response << '\n';
-	gainp->Offset = Str( response.erase( 0, 13 ) ).number();
+	Str response = DAQFlexDevice->getValueUnlocked( "AO{" + Str( ol[k].channel() ) + "}:SLOPE" );
+	gainp->Slope = response.number();
+	response = DAQFlexDevice->sendMessageUnlocked( "AO{" + Str( ol[k].channel() ) + "}:OFFSET" );
+	gainp->Offset = response.number();
 	/*
 	  gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
 	  gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
@@ -566,32 +557,24 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       ol.deviceReset( delayinx );
 
       // setup acquisition:
-      message = "AOSCAN:STALL=DISABLE";
-      response = DAQFlexDevice->sendMessageUnlocked( message );
-      cerr << message << " returned " << response << '\n';
+      DAQFlexDevice->setValueUnlocked( "AOSCAN:STALL", "DISABLE" );
       if ( DAQFlexDevice->failed() ) {
 	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
-      message = "AOSCAN:XFRMODE=BLOCKIO";
-      response = DAQFlexDevice->sendMessageUnlocked( message );
-      cerr << message << " returned " << response << '\n';
+      DAQFlexDevice->setValueUnlocked( "AOSCAN:XFRMODE", "BLOCKIO" );
       if ( DAQFlexDevice->failed() ) {
 	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
-      message = "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" );
-      response = DAQFlexDevice->sendMessageUnlocked( message );
-      cerr << message << " returned " << response << '\n';
+      DAQFlexDevice->setValueUnlocked( "AOSCAN:RATE", Str( sigs[0].sampleRate(), "%g" ) );
       if ( DAQFlexDevice->failed() ) {
 	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
       if ( sigs[0].continuous() ) {
 	Samples = 0;
-	message = "AOSCAN:SAMPLES=0";
-	response = DAQFlexDevice->sendMessageUnlocked( message );
-	cerr << message << " returned " << response << '\n';
+	DAQFlexDevice->setValueUnlocked( "AOSCAN:SAMPLES", "0" );
 	if ( DAQFlexDevice->failed() ) {
 	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
@@ -599,9 +582,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       }
       else {
 	Samples = sigs.deviceBufferSize();
-	message = "AOSCAN:SAMPLES=" + Str( Samples );
-	response = DAQFlexDevice->sendMessageUnlocked( message );
-	cerr << message << " returned " << response << '\n';
+	DAQFlexDevice->setValueUnlocked( "AOSCAN:SAMPLES", Str( Samples ) );
 	if ( DAQFlexDevice->failed() ) {
 	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
@@ -615,9 +596,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 			    Str( 0.001*DAQFlexDevice->aiSampleRate(), "%.1f" ) + "kHz" );
 	  return -1;
 	}
-	message = "AOSCAN:EXTPACER=ENABLE";
-	response = DAQFlexDevice->sendMessageUnlocked( message );
-	cerr << message << " returned " << response << '\n';
+	DAQFlexDevice->setValueUnlocked( "AOSCAN:EXTPACER", "ENABLE" );
 	if ( DAQFlexDevice->failed() ) {
 	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
