@@ -170,9 +170,7 @@ int DAQFlexCore::open( const string &devicestr )
 	    OutPacketSize = libusb_get_max_iso_packet_size( device, EndpointOut );
 	    // get the device serial number:
 	    int ern = Success;
-	    string message = sendMessage( "?DEV:MFGSER", ern );
-	    // erase message while keeping serial number:
-	    message.erase( 0, 11 );
+	    string message = getValue( "DEV:MFGSER", ern );
 	    cout << "DAQFlex: found device " << productName( ProductID )
 		 << " with serial number " << message << "\n";
 	    if ( ! serialno.empty() ) {
@@ -427,22 +425,24 @@ int DAQFlexCore::sendCommand( const string &command )
 }
 
 
-string DAQFlexCore::sendMessage( const string &message, int &error )
+int DAQFlexCore::sendMessage( const string &message )
 {
   QMutexLocker corelocker( mutex() );
-  string s = sendMessageUnlocked( message );
-  error = ErrorState;
-  return s;
+  return sendMessageUnlocked( message );
 }
 
 
-string DAQFlexCore::sendMessageUnlocked( const string &message )
+int DAQFlexCore::sendMessageUnlocked( const string &message )
 {
   int r = sendControlTransfer( message );
-  string s = "";
-  if ( r == Success )
-    s = getControlTransfer();
-  return s;
+  if ( r == Success ) {
+    string s = getControlTransfer();
+    if ( ErrorState != Success )
+      return ErrorState;
+    else if ( s != message )
+      return ErrorSetValueFailed;
+  }
+  return ErrorState;
 }
 
 
@@ -576,183 +576,192 @@ unsigned char DAQFlexCore::getEndpointOutAddress( unsigned char* data, int n )
 
 int DAQFlexCore::initDevice( const string &path )
 {
-  QMutexLocker corelocker( mutex() );
-  ErrorState = Success;
+  string serial = "";
+  string fwv = "";
   string fpgav = "";
+  {
+    QMutexLocker corelocker( mutex() );
+    ErrorState = Success;
 
-  switch ( ProductID ) {
-  case USB_1608_G:
-  case USB_1608_GX:
-  case USB_1608_GX_2AO:
-    MaxAIData = 0xFFFF;
-    if ( ProductID == USB_1608_G )
-      MaxAIRate = 250000.0;
-    else
-      MaxAIRate = 500000.0;
-    MaxAIChannels = 16;
-    AIFIFOSize = 4096;
-    if ( ProductID == USB_1608_GX_2AO ) {
-      MaxAOData = 0xFFFF;
-      MaxAORate = 500000.0;
-      MaxAOChannels = 2;
-      AOFIFOSize = 2048;
-    }
-    else {
+    switch ( ProductID ) {
+    case USB_1608_G:
+    case USB_1608_GX:
+    case USB_1608_GX_2AO:
+      MaxAIData = 0xFFFF;
+      if ( ProductID == USB_1608_G )
+	MaxAIRate = 250000.0;
+      else
+	MaxAIRate = 500000.0;
+      MaxAIChannels = 16;
+      AIFIFOSize = 4096;
+      if ( ProductID == USB_1608_GX_2AO ) {
+	MaxAOData = 0xFFFF;
+	MaxAORate = 500000.0;
+	MaxAOChannels = 2;
+	AOFIFOSize = 2048;
+      }
+      else {
+	MaxAOData = 0;
+	MaxAORate = 0.0;
+	MaxAOChannels = 0;
+	AOFIFOSize = 0;
+      }
+      DIOLines = 8;
+      uploadFPGAFirmware( path, "USB_1608G.rbf" );
+      if ( ErrorState != Success )
+	return ErrorState;
+      fpgav = getValueUnlocked( "DEV:FPGAV" );
+      if ( ErrorState != Success )
+	return ErrorState;
+      break;
+
+    case USB_201:
+      MaxAIData = 0x0FFF;
+      MaxAIRate = 100000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 12288;
       MaxAOData = 0;
       MaxAORate = 0.0;
       MaxAOChannels = 0;
       AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_202:
+      MaxAIData = 0x0FFF;
+      MaxAIRate = 100000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 12288;
+      MaxAOData = 0x0FFF;
+      MaxAORate = 600.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = -1;
+      DIOLines = 8;
+      break;
+
+    case USB_204:
+      MaxAIData = 0x0FFF;
+      MaxAIRate = 500000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 12288;
+      MaxAOData = 0;
+      MaxAORate = 0.0;
+      MaxAOChannels = 0;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_205:
+      MaxAIData = 0x0FFF;
+      MaxAIRate = 500000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 12288;
+      MaxAOData = 0x0FFF;
+      MaxAORate = 600.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = -1;
+      DIOLines = 8;
+      break;
+
+    case USB_7202:
+      MaxAIData = 0xFFFF;
+      MaxAIRate = 50000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 32768;
+      MaxAOData = 0;
+      MaxAORate = 0.0;
+      MaxAOChannels = 0;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_7204:
+      MaxAIData = 0xFFF;
+      MaxAIRate = 50000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 32768;
+      MaxAOData = 0xFFF;
+      MaxAORate = 10000.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = 0; // ???
+      DIOLines = 8;
+      break;
+
+    case USB_1208_FS_Plus:
+      MaxAIData = 0xFFF;
+      MaxAIRate = 50000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 0; // ???
+      MaxAOData = 0xFFF;
+      MaxAORate = 10000.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = 0;  // ???
+      DIOLines = 16;
+      uploadFPGAFirmware( path, "USB_1208GHS.rbf" );
+      if ( ErrorState != Success )
+	return ErrorState;
+      break;
+
+    case USB_1408_FS_Plus:
+      MaxAIData = 0xFFF;
+      MaxAIRate = 48000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 0; // ???
+      MaxAOData = 0xFFF;
+      MaxAORate = 10000.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = 0; // ???
+      DIOLines = 16;
+      break;
+
+    case USB_1608_FS_Plus:
+      MaxAIData = 0xFFFF;
+      MaxAIRate = 400000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 32768;
+      MaxAOData = 0;
+      MaxAORate = 0.0;
+      MaxAOChannels = 0;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_2408:
+      MaxAIData = 0xFFFFFF;
+      MaxAIRate = 1000.0;
+      MaxAIChannels = 16;
+      AIFIFOSize = 32768;
+      MaxAOData = 0;
+      MaxAORate = 0.0;
+      MaxAOChannels = 0;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_2408_2AO:
+      MaxAIData = 0xFFFFFF;
+      MaxAIRate = 1000.0;
+      MaxAIChannels = 16;
+      AIFIFOSize = 32768;
+      MaxAOData = 0xFFFF;
+      MaxAORate = 1000.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    default:
+      ErrorState = ErrorInvalidID;
+      return ErrorState;
     }
-    DIOLines = 8;
-    uploadFPGAFirmware( path, "USB_1608G.rbf" );
-    if ( ErrorState != Success )
-      return ErrorState;
-    fpgav = sendMessageUnlocked( "?DEV:FPGAV" );
-    if ( ! fpgav.empty() )
-      fpgav.erase( 0, 10 );
-    if ( ErrorState != Success )
-      return ErrorState;
-    break;
 
-  case USB_201:
-    MaxAIData = 0x0FFF;
-    MaxAIRate = 100000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 12288;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
+    // get the device serial number:
+    serial = getValueUnlocked( "DEV:MFGSER" );
 
-  case USB_202:
-    MaxAIData = 0x0FFF;
-    MaxAIRate = 100000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 12288;
-    MaxAOData = 0x0FFF;
-    MaxAORate = 600.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = -1;
-    DIOLines = 8;
-    break;
+    // firmware version:
+    fwv = getValueUnlocked( "DEV:FWV" );
 
-  case USB_204:
-    MaxAIData = 0x0FFF;
-    MaxAIRate = 500000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 12288;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  case USB_205:
-    MaxAIData = 0x0FFF;
-    MaxAIRate = 500000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 12288;
-    MaxAOData = 0x0FFF;
-    MaxAORate = 600.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = -1;
-    DIOLines = 8;
-    break;
-
-  case USB_7202:
-    MaxAIData = 0xFFFF;
-    MaxAIRate = 50000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 32768;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  case USB_7204:
-    MaxAIData = 0xFFF;
-    MaxAIRate = 50000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 32768;
-    MaxAOData = 0xFFF;
-    MaxAORate = 10000.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = 0; // ???
-    DIOLines = 8;
-    break;
-
-  case USB_1208_FS_Plus:
-    MaxAIData = 0xFFF;
-    MaxAIRate = 50000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 0; // ???
-    MaxAOData = 0xFFF;
-    MaxAORate = 10000.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = 0;  // ???
-    DIOLines = 16;
-    uploadFPGAFirmware( path, "USB_1208GHS.rbf" );
-    if ( ErrorState != Success )
-      return ErrorState;
-    break;
-
-  case USB_1408_FS_Plus:
-    MaxAIData = 0xFFF;
-    MaxAIRate = 48000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 0; // ???
-    MaxAOData = 0xFFF;
-    MaxAORate = 10000.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = 0; // ???
-    DIOLines = 16;
-    break;
-
-  case USB_1608_FS_Plus:
-    MaxAIData = 0xFFFF;
-    MaxAIRate = 400000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 32768;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  case USB_2408:
-    MaxAIData = 0xFFFFFF;
-    MaxAIRate = 1000.0;
-    MaxAIChannels = 16;
-    AIFIFOSize = 32768;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  case USB_2408_2AO:
-    MaxAIData = 0xFFFFFF;
-    MaxAIRate = 1000.0;
-    MaxAIChannels = 16;
-    AIFIFOSize = 32768;
-    MaxAOData = 0xFFFF;
-    MaxAORate = 1000.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  default:
-    ErrorState = ErrorInvalidID;
-    return ErrorState;
-  }
+  }  // corelocker
 
   // set basic device infos:
   setDeviceName( productName( ProductID ) );
@@ -760,19 +769,9 @@ int DAQFlexCore::initDevice( const string &path )
   setDeviceFile( "USB" );
 
   Device::addInfo();
-  // get the device serial number:
-  string serial = sendMessageUnlocked( "?DEV:MFGSER" );
-  // erase message while keeping serial number:
-  serial.erase( 0, 11 );
   Info.addText( "SerialNumber", serial );
-
-  // firmware version:
-  string fwv = sendMessageUnlocked( "?DEV:FWV" );
-  if ( ! fwv.empty() ) {
-    fwv.erase( 0, 8 );
+  if ( ! fwv.empty() )
     Info.addText( "Firmware version", fwv );
-  }
-  // fpga firmware version:
   if ( ! fpgav.empty() )
     Info.addText( "FPGA version", fpgav );
 
@@ -784,18 +783,18 @@ int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename 
 {
   // device is already locked from initDevce()!
   // check if the firmware has been loaded already:
-  string response = sendMessageUnlocked( "?DEV:FPGACFG" );
+  string response = getValueUnlocked( "DEV:FPGACFG" );
   if ( ErrorState != Success )
     return ErrorState;
-  if ( response.find( "CONFIGURED" ) == string::npos ) {
+  if ( response != "CONFIGURED" ) {
     // firmware hasn't been loaded yet, do so:
     transferFPGAfile( path + filename );
     if ( ErrorState == ErrorCantOpenFPGAFile )
       transferFPGAfile( DefaultFirmwarePath + filename );
     if ( ErrorState == Success ) {
       // check if the firmware got loaded successfully:
-      response = sendMessageUnlocked( "?DEV:FPGACFG" );
-      if ( ErrorState == Success && response.find( "CONFIGURED" ) == string::npos )
+      response = getValueUnlocked( "DEV:FPGACFG" );
+      if ( ErrorState == Success && response != "CONFIGURED" )
 	ErrorState = ErrorFPGAUploadFailed;
     }
     else
@@ -811,7 +810,7 @@ int DAQFlexCore::transferFPGAfile( const string &path )
   ErrorState = Success;
 
   // turn on FPGA configure mode:
-  sendMessageUnlocked( "DEV:FPGACFG=0XAD" );
+  setValueUnlocked( "DEV:FPGACFG", "0XAD" );
   if ( ErrorState != Success )
     return ErrorState;
 

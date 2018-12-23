@@ -473,12 +473,12 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       // setup channels:
       DAQFlexDevice->setValueUnlocked( "AOSCAN:LOWCHAN", Str( ol[0].channel() ) );
       if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	sigs.setErrorStr( "AOSCAN:LOWCHAN " + DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
       DAQFlexDevice->setValueUnlocked( "AOSCAN:HIGHCHAN", Str( ol.back().channel() ) );
       if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	sigs.setErrorStr( "AOSCAN:HIGHCHAN" + DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
       for( int k = 0; k < ol.size(); k++ ) {
@@ -540,7 +540,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	// get calibration:
 	Str response = DAQFlexDevice->getValueUnlocked( "AO{" + Str( ol[k].channel() ) + "}:SLOPE" );
 	gainp->Slope = response.number();
-	response = DAQFlexDevice->sendMessageUnlocked( "AO{" + Str( ol[k].channel() ) + "}:OFFSET" );
+	response = DAQFlexDevice->getValueUnlocked( "AO{" + Str( ol[k].channel() ) + "}:OFFSET" );
 	gainp->Offset = response.number();
 	/*
 	  gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
@@ -559,24 +559,19 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       // setup acquisition:
       DAQFlexDevice->setValueUnlocked( "AOSCAN:STALL", "DISABLE" );
       if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
-	return -1;
-      } 
-      DAQFlexDevice->setValueUnlocked( "AOSCAN:XFRMODE", "BLOCKIO" );
-      if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	sigs.setErrorStr( "AOSCAN:STALL " + DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
       DAQFlexDevice->setValueUnlocked( "AOSCAN:RATE", Str( sigs[0].sampleRate(), "%g" ) );
       if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	sigs.setErrorStr( "AOSCAN:RATE " + DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
       if ( sigs[0].continuous() ) {
 	Samples = 0;
 	DAQFlexDevice->setValueUnlocked( "AOSCAN:SAMPLES", "0" );
 	if ( DAQFlexDevice->failed() ) {
-	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	  sigs.setErrorStr( "AOSCAN:SAMPLES " + DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
 	} 
       }
@@ -584,7 +579,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	Samples = sigs.deviceBufferSize();
 	DAQFlexDevice->setValueUnlocked( "AOSCAN:SAMPLES", Str( Samples ) );
 	if ( DAQFlexDevice->failed() ) {
-	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	  sigs.setErrorStr( "AOSCAN:SAMPLES " + DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
 	} 
       }
@@ -598,7 +593,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	}
 	DAQFlexDevice->setValueUnlocked( "AOSCAN:EXTPACER", "ENABLE" );
 	if ( DAQFlexDevice->failed() ) {
-	  sigs.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	  sigs.setErrorStr( "AOSCAN:EXTPACER " + DAQFlexDevice->daqflexErrorStr() );
 	  return -1;
 	} 
       }
@@ -664,10 +659,7 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
     return -1;
   }
   if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
-    int ern = DAQFlexCore::Success;
-    string message = "AOSCAN:START";
-    string response = DAQFlexDevice->sendMessage( message, ern ); // XXX or sendControlTransfer?
-    cerr << message << " returned " << response << '\n';
+    int ern = DAQFlexDevice->sendMessage( "AOSCAN:START" );
     if ( ern != DAQFlexCore::Success ) {
       Sigs.setErrorStr( "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr( ern ) );
       return -1;
@@ -695,8 +687,7 @@ int DAQFlexAnalogOutput::writeData( void )
       unsigned short *bp = (unsigned short *)Buffer;
       for ( int k=0; k<Sigs.size(); k++ ) {
 	unsigned short val = *(bp+NBuffer/2);
-	string message = "AO{" + Str( Sigs[k].channel() ) + "}:VALUE=" + Str( val );
-	DAQFlexDevice->sendMessageUnlocked( message );
+	DAQFlexDevice->setValueUnlocked( "AO{" + Str( Sigs[k].channel() ) + "}:VALUE", Str( val ) );
 	NBuffer += 2;
       }
     }
@@ -717,7 +708,7 @@ int DAQFlexAnalogOutput::writeData( void )
   // device stopped?
   /*
   if ( IsPrepared ) {  // XXX where is IsPrepared set to false???
-    string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
+    string response = DAQFlexDevice->getValue( "AOSCAN:STATUS" );
     if ( response.find( "UNDERRUN" ) != string::npos ) {
     // XXX this occurs often, but it looks like the whole signal was put out...
     // XXX Also, in AnalogOutput thread we check for status anyways...
@@ -748,7 +739,7 @@ int DAQFlexAnalogOutput::writeData( void )
   int bytesToWrite = (NBuffer/outps)*outps;
   if ( bytesToWrite > DAQFlexDevice->aoFIFOSize() * 2 )
     bytesToWrite = DAQFlexDevice->aoFIFOSize() * 2;
-  else if ( bytesToWrite <= 0 )
+  if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
   int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
   int bytesWritten = 0;
@@ -811,7 +802,7 @@ int DAQFlexAnalogOutput::stop( void )
 
   {
     QMutexLocker aolocker( mutex() );
-    int ern = DAQFlexDevice->sendCommand( "AOSCAN:STOP" ); // XXX or sendMessage?
+    int ern = DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
     if ( ern != DAQFlexCore::Success )
       cerr << "FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
   }
@@ -833,9 +824,7 @@ int DAQFlexAnalogOutput::reset( void )
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
     // clear underrun condition:
-    string message = "AOSCAN:RESET";
-    string response = DAQFlexDevice->sendMessageUnlocked( message );
-    cerr << message << " returned " << response << '\n';
+    DAQFlexDevice->sendMessageUnlocked( "AOSCAN:RESET" );
     if ( DAQFlexDevice->failed() )
       cerr << "RESET: FAILED TO RESET ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
 
@@ -867,13 +856,13 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
   QMutexLocker aolocker( mutex() );
   Status r = Idle;
   int ern = DAQFlexCore::Success;
-  string response = DAQFlexDevice->sendMessage( "?AOSCAN:STATUS", ern );
-  if ( response.find( "RUNNING" ) != string::npos )
+  string response = DAQFlexDevice->getValue( "AOSCAN:STATUS", ern );
+  if ( response == "RUNNING" )
     r = Running;
   // The following underrun check seems stupid after the last stimulus has been put out.
   // We get underrun errors although the stimulus seems to be put out completely.
   // XXX This needs to be checked with appropriate stimuli!
-  if ( ! NoMoreData && response.find( "UNDERRUN" ) != string::npos ) {
+  if ( ! NoMoreData && response == "UNDERRUN" ) {
     // XXX Where do we ever check for underrun except for the end of the signal?
     //Sigs.addError( DaqError::OverflowUnderrun );
     r = Underrun;

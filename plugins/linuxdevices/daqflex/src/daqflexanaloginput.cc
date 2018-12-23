@@ -287,17 +287,17 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     // setup acquisition:
     DAQFlexDevice->setValueUnlocked( "AISCAN:STALL", "DISABLE" );
     if ( DAQFlexDevice->failed() ) {
-      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      traces.setErrorStr( "AISCAN:STALL " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
     } 
     DAQFlexDevice->setValueUnlocked( "AISCAN:XFRMODE", "BLOCKIO" );
     if ( DAQFlexDevice->failed() ) {
-      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      traces.setErrorStr( "AISCAN:XFRMODE " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
     } 
     DAQFlexDevice->setValueUnlocked( "AISCAN:RATE", Str( traces[0].sampleRate(), "%g" ) );
     if ( DAQFlexDevice->failed() ) {
-      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      traces.setErrorStr( "AISCAN:RATE " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
     } 
     // XXX Read out actual sampling rate!!!
@@ -311,7 +311,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
       TotalSamples = traces[0].size() * traces.size();
     }
     if ( DAQFlexDevice->failed() ) {
-      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      traces.setErrorStr( "AISCAN:SAMPLES " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
     } 
     CurrentSamples = 0;
@@ -319,16 +319,16 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     // setup channels:
     DAQFlexDevice->setValueUnlocked( "AISCAN:QUEUE", "ENABLE" );
     if ( DAQFlexDevice->failed() ) {
-      traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+      traces.setErrorStr( "AISCAN:QUEUE " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
     } 
-    DAQFlexDevice->sendControlTransfer( "AIQUEUE:CLEAR" ); // XXX no read back???
+    DAQFlexDevice->sendMessageUnlocked( "AIQUEUE:CLEAR" );
     if ( DAQFlexDevice->failed() ) {
       traces.setErrorStr( DAQFlexDevice->daqflexErrorStr() );
       return -1;
     } 
     for( int k = 0; k < traces.size(); k++ ) {
-      // response = DAQFlexDevice->sendMessageUnlocked( "?AIQUEUE:COUNT" ); USE THIS AS QUEUE Element
+      // response = DAQFlexDevice->getValueUnlocked( "AIQUEUE:COUNT" ); USE THIS AS QUEUE Element
 
       // delay:
       if ( traces[k].delay() > 0.0 ) {
@@ -343,7 +343,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
       // channel:
       DAQFlexDevice->setValueUnlocked( aiq + "CHAN", Str( traces[k].channel() ) );
       if ( DAQFlexDevice->failed() ) {
-	traces[k].setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	traces[k].setErrorStr( aiq + "CHAN " + DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
 
@@ -366,7 +366,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 	traces[k].addError( DaqError::InvalidReference );
       }
       if ( DAQFlexDevice->failed() ) {
-	traces[k].setErrorStr( DAQFlexDevice->daqflexErrorStr() );
+	traces[k].setErrorStr( aiq + "CHMODE " + DAQFlexDevice->daqflexErrorStr() );
 	return -1;
       } 
 
@@ -445,35 +445,20 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   bool tookao = ( TakeAO && aosp != 0 && DAQFlexAO != 0 && DAQFlexAO->prepared() );
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
-    string message = "";
-    string response = "";
     if ( tookao ) {
       if ( DAQFlexAO->useAIRate() ) {
-	message = "AOSCAN:START";
-	response = DAQFlexDevice->sendMessageUnlocked( message ); // XXX or sendControlTransfer?
-	cerr << message << " returned " << response << '\n';
-	if ( DAQFlexDevice->success() ) {
-	  message = "AISCAN:START";
-	  response = DAQFlexDevice->sendMessageUnlocked( message ); // XXX or sendControlTransfer?
-	  cerr << message << " returned " << response << '\n';
-	}
+	DAQFlexDevice->sendMessageUnlocked( "AOSCAN:START" );
+	if ( DAQFlexDevice->success() )
+	  DAQFlexDevice->sendMessageUnlocked( "AISCAN:START" );
       }
       else {
-	message = "AISCAN:START";
-	response = DAQFlexDevice->sendMessageUnlocked( message ); // XXX or sendControlTransfer?
-	cerr << message << " returned " << response << '\n';
-	if ( DAQFlexDevice->success() ) {
-	  message = "AOSCAN:START";
-	  response = DAQFlexDevice->sendMessageUnlocked( message ); // XXX or sendControlTransfer?
-	  cerr << message << " returned " << response << '\n';
-	}
+	DAQFlexDevice->sendMessageUnlocked( "AISCAN:START" );
+	if ( DAQFlexDevice->success() )
+	  DAQFlexDevice->sendMessageUnlocked( "AOSCAN:START" );
       }
     }
-    else {
-      message = "AISCAN:START";
-      response = DAQFlexDevice->sendMessageUnlocked( message ); // XXX or sendControlTransfer?
-      cerr << message << " returned " << response << '\n';
-    }
+    else
+      DAQFlexDevice->sendMessageUnlocked( "AISCAN:START" );
     if ( DAQFlexDevice->failed() ) {
       cerr << "FAILED TO START ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
       Traces->setErrorStr( DAQFlexDevice->daqflexErrorStr() );
@@ -498,7 +483,7 @@ int DAQFlexAnalogInput::readData( void )
 {
   QMutexLocker locker( mutex() );
 
-  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
+  if ( Traces == 0 || Traces->size() == 0 || Buffer == 0 || ! IsRunning )
     return -2;
 
   int readn = 0;
@@ -635,9 +620,13 @@ int DAQFlexAnalogInput::stop( void )
 
   lock();
   AboutToStop = true;
-  int ern = DAQFlexDevice->sendCommand( "AISCAN:STOP" ); // XXX or sendMessage ?
-  if ( ern != DAQFlexCore::Success )
-    cerr << "FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
+  for ( int k=0; k<5; k++ ) {
+    int ern = DAQFlexDevice->sendMessage( "AISCAN:STOP" );
+    if ( ern != DAQFlexCore::Success )
+      cerr << "FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
+    else
+      break;
+  }
   unlock();
 
   stopRead();
@@ -658,9 +647,7 @@ int DAQFlexAnalogInput::reset( void )
 
   QMutexLocker ailocker( mutex() );
   {
-    int ern = DAQFlexCore::Success;
-    string response = DAQFlexDevice->sendMessage( "AISCAN:RESET", ern );
-    cerr << "AI RESET RETURNED " << response << '\n';
+    int ern = DAQFlexDevice->sendMessage( "AISCAN:RESET" );
     if ( ern != DAQFlexCore::Success )
       cerr << "RESET: FAILED TO RESET ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
     // clear overrun condition:
@@ -702,7 +689,7 @@ bool DAQFlexAnalogInput::running( void ) const
   int ern = DAQFlexCore::Success;
   string response = DAQFlexDevice->getValue( "AISCAN:STATUS", ern );
   unlock();
-  return ( response != "RUNNING" && AnalogInput::running() );
+  return ( response == "RUNNING" && AnalogInput::running() );
 }
 
 

@@ -144,8 +144,8 @@ int DAQFlexDigitalIO::writeUnlocked( unsigned int line, bool val )
 {
   if ( (int)line >= lines() )
     return WriteError;
-  DAQFlexDevice->setValueUnlocked( "DIO{0/" + Str( line ) + "}:VALUE", val ? "1" : "0" );
-  if ( DAQFlexDevice->failed() )
+  int ern = DAQFlexDevice->setValue( "DIO{0/" + Str( line ) + "}:VALUE", val ? "1" : "0" );
+  if ( ern != DAQFlexCore::Success )
     return WriteError;
   if ( val )
     Levels |= 1 << line;
@@ -159,8 +159,9 @@ int DAQFlexDigitalIO::readUnlocked( unsigned int line, bool &val )
 {
   if ( (int)line >= lines() )
     return ReadError;
-  string valstr = DAQFlexDevice->getValueUnlocked( "DIO{0/" + Str( line ) + "}:VALUE" );
-  if ( DAQFlexDevice->failed() )
+  int ern = 0;
+  string valstr = DAQFlexDevice->getValue( "DIO{0/" + Str( line ) + "}:VALUE", ern );
+  if ( ern != DAQFlexCore::Success )
     return ReadError;
   val = ( stoi( valstr ) > 0 );
   return 0;
@@ -170,12 +171,11 @@ int DAQFlexDigitalIO::readUnlocked( unsigned int line, bool &val )
 int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
 {
   QMutexLocker diolocker( mutex() );
-  QMutexLocker corelocker( DAQFlexDevice->mutex() );
   unsigned int rv = Levels;
   rv &= ~lines; // keep the levels of the non-specified lines
   rv |= val & lines;  // set the values of the specified lines
-  DAQFlexDevice->setValueUnlocked( "DIO{0}:VALUE", Str( rv ) );
-  if ( DAQFlexDevice->failed() )
+  int ern = DAQFlexDevice->setValue( "DIO{0}:VALUE", Str( rv ) );
+  if ( ern != DAQFlexCore::Success )
     return WriteError;
   Levels = rv;
   return 0;
@@ -185,9 +185,9 @@ int DAQFlexDigitalIO::writeLines( unsigned int lines, unsigned int val )
 int DAQFlexDigitalIO::readLines( unsigned int lines, unsigned int &val )
 {
   QMutexLocker diolocker( mutex() );
-  QMutexLocker corelocker( DAQFlexDevice->mutex() );
-  string valstr = DAQFlexDevice->getValueUnlocked( "DIO{0}:VALUE" );
-  if ( DAQFlexDevice->failed() )
+  int ern = 0;
+  string valstr = DAQFlexDevice->getValue( "DIO{0}:VALUE", ern );
+  if ( ern != DAQFlexCore::Success )
     return ReadError;
   val = stoi( valstr );
   return 0;

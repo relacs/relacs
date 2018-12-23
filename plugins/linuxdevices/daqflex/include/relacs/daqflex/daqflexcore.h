@@ -130,12 +130,15 @@ public:
   int sendCommand( const string &command );
 
     /*! Send message to device while locking it.
-        \a error is set to the ErrorState.
-        \return response if transfer successful, empty string if not. */
-  string sendMessage( const string &message, int &error );
+        Send the message and read the response.
+	Set an error if response does not  equal message.
+        \return error code. */
+  int sendMessage( const string &message );
     /*! Send message to device without locking it. 
-        \return response if transfer successful, empty string if not. */
-  string sendMessageUnlocked( const string &message );
+        Send the message and read the response.
+	Set an error if response does not  equal message.
+        \return error code. */
+  int sendMessageUnlocked( const string &message );
 
     /*! Set a value on the daq board while locking it. First, the
         message "command=value" is sent, and then it is checked
