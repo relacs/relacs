@@ -659,7 +659,8 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
     return -1;
   }
   if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
-    int ern = DAQFlexDevice->sendMessage( "AOSCAN:START" );
+    //int ern = DAQFlexDevice->sendMessage( "AOSCAN:START" );
+    int ern = DAQFlexDevice->sendCommand( "AOSCAN:START" );
     if ( ern != DAQFlexCore::Success ) {
       Sigs.setErrorStr( "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr( ern ) );
       return -1;
@@ -742,6 +743,7 @@ int DAQFlexAnalogOutput::writeData( void )
   if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
   int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
+  timeout = 50;
   int bytesWritten = 0;
   //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
   DAQFlexCore::DAQFlexError ern = DAQFlexCore::Success;
@@ -802,7 +804,8 @@ int DAQFlexAnalogOutput::stop( void )
 
   {
     QMutexLocker aolocker( mutex() );
-    int ern = DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
+    //int ern = DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
+    int ern = DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
     if ( ern != DAQFlexCore::Success )
       cerr << "FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
   }

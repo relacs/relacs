@@ -447,18 +447,18 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
     if ( tookao ) {
       if ( DAQFlexAO->useAIRate() ) {
-	DAQFlexDevice->sendMessageUnlocked( "AOSCAN:START" );
+	DAQFlexDevice->sendControlTransfer( "AOSCAN:START" );
 	if ( DAQFlexDevice->success() )
-	  DAQFlexDevice->sendMessageUnlocked( "AISCAN:START" );
+	  DAQFlexDevice->sendControlTransfer( "AISCAN:START" );
       }
       else {
-	DAQFlexDevice->sendMessageUnlocked( "AISCAN:START" );
+	DAQFlexDevice->sendControlTransfer( "AISCAN:START" );
 	if ( DAQFlexDevice->success() )
-	  DAQFlexDevice->sendMessageUnlocked( "AOSCAN:START" );
+	  DAQFlexDevice->sendControlTransfer( "AOSCAN:START" );
       }
     }
     else
-      DAQFlexDevice->sendMessageUnlocked( "AISCAN:START" );
+      DAQFlexDevice->sendControlTransfer( "AISCAN:START" );
     if ( DAQFlexDevice->failed() ) {
       cerr << "FAILED TO START ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
       Traces->setErrorStr( DAQFlexDevice->daqflexErrorStr() );
@@ -494,9 +494,16 @@ int DAQFlexAnalogInput::readData( void )
     maxn = ReadBufferSize;
   if ( maxn <= 0 )
     return 0;
+  /*
+  int maxn = inps;
+  if ( maxn > BufferSize - buffern )
+    return 0;
+  */
 
   // read data:
   int timeout = (int)::ceil( 10.0 * 1000.0*(*Traces)[0].interval( maxn/2/Traces->size() ) ); // in ms
+  //cerr << "TIMEOUT " << timeout << '\n';
+  timeout = 2;
   if ( AboutToStop )
     timeout = 1;  // read what is there but do not wait for more
   int ern = DAQFlexCore::Success;
@@ -621,7 +628,8 @@ int DAQFlexAnalogInput::stop( void )
   lock();
   AboutToStop = true;
   for ( int k=0; k<5; k++ ) {
-    int ern = DAQFlexDevice->sendMessage( "AISCAN:STOP" );
+    // int ern = DAQFlexDevice->sendMessage( "AISCAN:STOP" );
+    int ern = DAQFlexDevice->sendCommand( "AISCAN:STOP" );
     if ( ern != DAQFlexCore::Success )
       cerr << "FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
     else

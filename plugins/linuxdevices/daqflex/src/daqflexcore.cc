@@ -388,13 +388,16 @@ string DAQFlexCore::productName( int productid )
 
 int DAQFlexCore::sendControlTransfer( const string &message )
 {
-  unsigned char data[MaxMessageSize];
-  for ( unsigned int i = 0; i < MaxMessageSize; i++ )
-    data[i] = i < message.size() ? toupper( message[i] ) : 0;
+  unsigned int n = message.size() + 1;  // we need the trailing 0!
+  unsigned char data[n];
+  strcpy( (char *)data, message.c_str() );
+  data[n] = 0;
+  if ( n > MaxMessageSize )
+    n = MaxMessageSize;
   int numbytes = libusb_control_transfer( DeviceHandle,
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_OUT,
 					  StringMessage, 0, 0, data,
-					  MaxMessageSize, 100 );
+					  n, 100 );
   setLibUSBError( numbytes );
   return ErrorState;
 }
@@ -857,8 +860,10 @@ DAQFlexCore::DAQFlexError DAQFlexCore::readBulkTransfer( unsigned char *data, in
 							 int *transferred,
 							 unsigned int timeout )
 {
+  lock();
   int err = libusb_bulk_transfer( deviceHandle(), endpointIn(),
 				  data, length, transferred, timeout );
+  unlock();
   return getLibUSBError( err );
 }
 
@@ -867,8 +872,10 @@ DAQFlexCore::DAQFlexError DAQFlexCore::writeBulkTransfer( unsigned char *data, i
 							  int *transferred,
 							  unsigned int timeout )
 {
+  lock();
   int err = libusb_bulk_transfer( deviceHandle(), endpointOut(),
 				  data, length, transferred, timeout );
+  unlock();
   return getLibUSBError( err );
 }
 
