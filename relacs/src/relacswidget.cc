@@ -933,10 +933,12 @@ int RELACSWidget::updateData( void )
     AQ->unlockRead();
     double aitimeout = SS.number( "aitimeout", 10.0 );
     if ( DataTime.restart() < (int)(1000.0*aitimeout) ) {
+      cerr << "END ACQUISITION\n";
       QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+4 ) ) );
       return -1;
     }
     // try to restart analog input:
+    cerr << "RESTART READ\n";
     AQ->restartRead();
     AQ->lockRead();
     bool failed = IRawData.failed();

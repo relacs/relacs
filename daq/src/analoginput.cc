@@ -429,8 +429,6 @@ void AnalogInput::run( void )
   bool rd = true;
 
   do {
-    // the sleep is needed to allow for other processes to wake up and acquire the lock!
-    QThread::msleep( ReadSleepMS );
     lock();
     rd = Run;
     unlock();
@@ -470,6 +468,8 @@ void AnalogInput::run( void )
       if ( DataWait != 0 )
 	DataWait->wakeAll();
     }
+    // the sleep is needed to allow for other processes to wake up and acquire the lock!
+    QThread::msleep( ReadSleepMS );
   } while ( rd );
 
   if ( Semaphore != 0 )

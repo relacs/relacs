@@ -608,16 +608,19 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       if ( BufferSize > nbuffer ) {
 	BufferSize = nbuffer;
 	if ( BufferSize < outps )
-	BufferSize = outps;
+	  BufferSize = outps;
       }
       else
 	BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
       if ( BufferSize > 0xfffff )
 	BufferSize = 0xfffff;
+      double timeout = sigs[0].interval( BufferSize/2/sigs.size()-1 );
+      if ( timeout > 0.1 )
+	timeout = 0.1;
+      setWriteSleep( (unsigned long)::ceil( 1000.0*0.25*timeout ) );
     }
-    else {
+    else
       BufferSize = sigs.deviceBufferSize()*2;
-    }
     if ( BufferSize <= 0 )
       sigs.addError( DaqError::InvalidBufferTime );
 
@@ -676,10 +679,8 @@ int DAQFlexAnalogOutput::writeData( void )
 {
   QMutexLocker aolocker( mutex() );
 
-  if ( Sigs.empty() ) {
-    Sigs.setErrorStr( "WRITEDATA NOSIGNAL" );
+  if ( Sigs.empty() )
     return -1;
-  }
 
   if ( DAQFlexDevice->aoFIFOSize() <= 0 ) {
     // no FIFO:
@@ -707,18 +708,16 @@ int DAQFlexAnalogOutput::writeData( void )
   }
 
   // device stopped?
-  /*
-  if ( IsPrepared ) {  // XXX where is IsPrepared set to false???
-    string response = DAQFlexDevice->getValue( "AOSCAN:STATUS" );
-    if ( response.find( "UNDERRUN" ) != string::npos ) {
-    // XXX this occurs often, but it looks like the whole signal was put out...
-    // XXX Also, in AnalogOutput thread we check for status anyways...
+  int ern = DAQFlexCore::Success;
+  if ( IsPrepared ) {  // not stopped!
+    string response = DAQFlexDevice->getValue( "AOSCAN:STATUS", ern );
+    if ( response == "UNDERRUN" ) {
       Sigs.addError( DaqError::OverflowUnderrun );
       setErrorStr( Sigs );
       return -1;
     }
   }
-  */
+
   if ( Sigs[0].deviceWriting() ) {
     // convert data into buffer:
     int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
@@ -743,15 +742,9 @@ int DAQFlexAnalogOutput::writeData( void )
   bytesToWrite = (bytesToWrite/outps)*outps;
   if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
-  int timeout = (int)::ceil( 10.0 * 1000.0*Sigs[0].interval( bytesToWrite/2/Sigs.size() ) ); // in ms
-  if ( timeout > 40 )
-    timeout = 40;
-  msleep( timeout/4 );
   int bytesWritten = 0;
-  //  cerr << "BULK START " << bytesToWrite << " TIMEOUT=" << timeout << "ms" << '\n';
-  DAQFlexCore::DAQFlexError ern = DAQFlexCore::Success;
-  ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), bytesToWrite,
-					  &bytesWritten, 1 );
+  ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), 
+					  bytesToWrite, &bytesWritten, 1 );
 
   int elemWritten = 0;
   if ( bytesWritten > 0 ) {
@@ -762,7 +755,6 @@ int DAQFlexAnalogOutput::writeData( void )
 
   if ( ern == DAQFlexCore::Success ) {
     if ( bytesWritten < bytesToWrite )
-      cerr << "DAQFlexAnalogOutput::writeData() -> FAILED TO TRANSFER DATA : " << bytesWritten << " < " <<  bytesToWrite << '\n';
     // no more data:
     if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
       if ( Buffer != 0 )
@@ -776,8 +768,6 @@ int DAQFlexAnalogOutput::writeData( void )
   }
   else if ( ern != DAQFlexCore::ErrorLibUSBTimeout ) {
     // error:
-    cerr << "WRITEBULKTRANSFER error=" << DAQFlexDevice->daqflexErrorStr( ern )
-	 << " bytesWritten=" << bytesWritten << '\n';
     switch( ern ) {
     case DAQFlexCore::ErrorLibUSBPipe:
       Sigs.addError( DaqError::OverflowUnderrun );
@@ -811,13 +801,10 @@ int DAQFlexAnalogOutput::stop( void )
     int ern = DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
     if ( ern != DAQFlexCore::Success )
       cerr << "FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
+    IsPrepared = false;
   }
 
   stopWrite();
-
-  lock();
-  IsPrepared = false;
-  unlock();
 
   return 0;
 }
@@ -834,13 +821,7 @@ int DAQFlexAnalogOutput::reset( void )
     if ( DAQFlexDevice->failed() )
       cerr << "RESET: FAILED TO RESET ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr() << "\n";
 
-    /*
-    // XXX the following blocks for quite a while at high rates! See DAQFlexCore for more comments.
-    // XXX even worse: this often eats the initial part of the following stimulus
-    // what is about still ongoing analog input transfers ?
-    // We should only call this on an underrun condition!
     DAQFlexDevice->clearWrite();
-    */
   }
   
   Sigs.clear();
@@ -865,12 +846,10 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
   string response = DAQFlexDevice->getValue( "AOSCAN:STATUS", ern );
   if ( response == "RUNNING" )
     r = Running;
-  // The following underrun check seems stupid after the last stimulus has been put out.
-  // We get underrun errors although the stimulus seems to be put out completely.
-  // XXX This needs to be checked with appropriate stimuli!
-  if ( ! NoMoreData && response == "UNDERRUN" ) {
-    // XXX Where do we ever check for underrun except for the end of the signal?
-    //Sigs.addError( DaqError::OverflowUnderrun );
+  else if ( response == "UNDERRUN" ) {
+    Sigs.addError( DaqError::OverflowUnderrun );
+    setErrorStr( "overflow" );
+    cerr << "AO OVERFLOW\n";
     r = Underrun;
   }
   return r;

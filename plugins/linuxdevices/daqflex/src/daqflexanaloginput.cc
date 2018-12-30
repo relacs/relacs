@@ -417,8 +417,12 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     return -1;
 
   if ( traces.success() ) {
-    traces.setReadTime( traces[0].interval( ReadBufferSize/2/traces.size()-1 ) );
-    traces.setUpdateTime( traces[0].interval( BufferSize/2/traces.size()-1 ) );
+    double timeout = traces[0].interval( ReadBufferSize/2/traces.size()-1 );
+    if ( timeout > 0.1 )
+      timeout = 0.1;
+    setReadSleep( (unsigned long)::ceil( 1000.0*0.25*timeout ) ); 
+    traces.setReadTime( timeout );
+    traces.setUpdateTime( timeout );
     setSettings( traces, BufferSize, ReadBufferSize );
     Traces = &traces;
     IsPrepared = true;
@@ -502,15 +506,8 @@ int DAQFlexAnalogInput::readData( void )
   */
 
   // read data:
-  int timeout = (int)::ceil( 10.0 * 1000.0*(*Traces)[0].interval( maxn/2/Traces->size() ) ); // in ms
-  if ( timeout > 20 )
-    timeout = 20;
-  msleep( timeout/4 );
-  if ( AboutToStop )
-    timeout = 1;  // read what is there but do not wait for more
-  int ern = DAQFlexCore::Success;
-  ern = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
-					 maxn, &readn, 1 );
+  int ern = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
+					     maxn, &readn, 1 );
 
   // store data:
   if ( readn > 0 ) {
@@ -657,11 +654,12 @@ int DAQFlexAnalogInput::reset( void )
 
   QMutexLocker ailocker( mutex() );
   {
-    int ern = DAQFlexDevice->sendMessage( "AISCAN:RESET" );
+    QMutexLocker corelocker( DAQFlexDevice->mutex() );
+    int ern = DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
     if ( ern != DAQFlexCore::Success )
       cerr << "RESET: FAILED TO RESET ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
     // clear overrun condition:
-    DAQFlexDevice->clearRead();  // XXX no locking needed??? Because specific to reading endpoint?
+    DAQFlexDevice->clearRead();
   }
 
   // flush:

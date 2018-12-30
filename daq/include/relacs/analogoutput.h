@@ -317,24 +317,24 @@ protected:
 
     /*! Set error string to \a strg. 
         \sa addErrorStr(), errorStr() */
-  void setErrorStr( const string &strg );
+  void setErrorStr( const string &strg ) const;
     /*! Add \a strg to the error string. 
         \sa setErrorStr(), errorStr() */
-  void addErrorStr( const string &strg );
+  void addErrorStr( const string &strg ) const;
     /*! Set error string to the string describing the 
         standard C error code \a errnum (from \c errno). 
         \sa addErrorStr(), errorStr() */
-  void setErrorStr( int errnum );
+  void setErrorStr( int errnum ) const;
     /*! Add the string describing the standard C error code \a errnum 
         (from \c errno) to the error string. 
         \sa setErrorStr(), errorStr() */
-  void addErrorStr( int errnum );
+  void addErrorStr( int errnum ) const;
     /*! If sigs.failed(), set error string to the error set in \a sigs
         otherwise clear the error string. \sa addErrorStr() */
-  void setErrorStr( const OutList &sigs );
+  void setErrorStr( const OutList &sigs ) const;
     /*! If sigs.failed(), add error string to the error set in \a sigs.
         \sa setErrorStr() */
-  void addErrorStr( const OutList &sigs );
+  void addErrorStr( const OutList &sigs ) const;
 
     /*! Set the device info().
         Call this function from open().

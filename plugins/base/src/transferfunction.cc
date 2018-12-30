@@ -244,6 +244,7 @@ int TransferFunction::main( void )
     if ( signal.failed() ) {
       if ( signal.error() == DaqError::OverflowUnderrun ) {
 	directWrite( orgdcsignal );
+	count--;
 	continue;
       }
       else {
