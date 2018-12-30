@@ -849,7 +849,6 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
   else if ( response == "UNDERRUN" ) {
     Sigs.addError( DaqError::OverflowUnderrun );
     setErrorStr( "overflow" );
-    cerr << "AO OVERFLOW\n";
     r = Underrun;
   }
   return r;

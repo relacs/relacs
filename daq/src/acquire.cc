@@ -906,110 +906,102 @@ int Acquire::stopRead( void )
 
 int Acquire::restartRead( void )
 {
-  QWriteLocker readlocker( &ReadMutex );
-  bool success = true;
+  {
+    QWriteLocker readlocker( &ReadMutex );
+    bool success = true;
 
-  vector< long long > errorflags( InTraces.size() );
-  vector< string > errorstrgs( InTraces.size() );
-
-  // get error flags and shortest recording:
-  double t = -1.0;
-  for ( int i=0; i<InTraces.size(); i++ ) {
-    errorflags[i] = InTraces[i].error();
-    errorstrgs[i] = InTraces[i].errorStr();
-    InTraces[i].clearError();
-    if ( t < 0.0 || InTraces[i].length() < t )
-      t = InTraces[i].length();
-  }
-
-  // make all data the same length and set restart time:
-  int m = 0;
-  for ( int i=0; i<InTraces.size(); i++ ) {
-    int n = InTraces[i].indices( t );
-    int nd = InTraces[i].size() - n;
-    if ( nd > 0 ) {
-      m += nd;
-      InTraces[i].resize( n );
+    // get shortest recording:
+    double t = -1.0;
+    for ( int i=0; i<InTraces.size(); i++ ) {
+      InTraces[i].clearError();
+      if ( t < 0.0 || InTraces[i].length() < t )
+	t = InTraces[i].length();
     }
-  }
-  if ( m >= InTraces.size() )
-    cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
-  PreviousTime = InTraces.currentTimeRaw();
-  NumEmptyData = 0;
-  InTraces.setRestart();
-  if ( RestartEvents != 0 )
-    RestartEvents->push( InTraces[0].restartTime() );
 
-  // reset and prepare reading from daq boards:
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( AI[i].Traces.size() > 0 &&
-	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
-      success = false;
-      if ( AI[i].Traces.success() )
-	AI[i].Traces.setError( DaqError::Unknown );
-    }
-  }
-
-  // error?
-  if ( ! success ) {
-    for ( unsigned int i=0; i<AI.size(); i++ )
-      AI[i].AI->reset();
-    return -1;
-  }
-
-  // clear analog input semaphore:
-  if ( AISemaphore.available() > 0 )
-    AISemaphore.acquire( AISemaphore.available() );
-
-  // start reading from daq boards:
-  vector< int > aistarted;
-  aistarted.reserve( AI.size() );
-  QWaitCondition *readwait = &ReadWait;
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    if ( AI[i].Traces.size() > 0 ) {
-      bool started = false;
-      for ( unsigned int k=0; k<aistarted.size(); k++ ) {
-	if ( aistarted[k] == AI[i].AIDevice ) {
-	  started = true;
-	  break;
-	}
+    // make all data the same length and set restart time:
+    int m = 0;
+    for ( int i=0; i<InTraces.size(); i++ ) {
+      int n = InTraces[i].indices( t );
+      int nd = InTraces[i].size() - n;
+      if ( nd > 0 ) {
+	m += nd;
+	InTraces[i].resize( n );
       }
-      if ( ! started ) {
-	if ( AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait ) != 0 )
-	  success = false;
-	else {
-	  aistarted.push_back( i );
-	  readwait = 0; // we will wait on the first device only
+    }
+    if ( m >= InTraces.size() )
+      cerr << "Acquire::restartRead(): truncated " << m << " of " << InTraces.size() << "input traces\n";
+    PreviousTime = InTraces.currentTimeRaw();
+    NumEmptyData = 0;
+    InTraces.setRestart();
+    if ( RestartEvents != 0 )
+      RestartEvents->push( InTraces[0].restartTime() );
+
+    // reset and prepare reading from daq boards:
+    for ( unsigned int i=0; i<AI.size(); i++ ) {
+      if ( AI[i].Traces.size() > 0 &&
+	   AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
+	success = false;
+	if ( AI[i].Traces.success() )
+	  AI[i].Traces.setError( DaqError::Unknown );
+      }
+    }
+
+    // error?
+    if ( ! success ) {
+      for ( unsigned int i=0; i<AI.size(); i++ )
+	AI[i].AI->reset();
+      return -1;
+    }
+
+    // clear analog input semaphore:
+    if ( AISemaphore.available() > 0 )
+      AISemaphore.acquire( AISemaphore.available() );
+
+    // start reading from daq boards:
+    vector< int > aistarted;
+    aistarted.reserve( AI.size() );
+    QWaitCondition *readwait = &ReadWait;
+    for ( unsigned int i=0; i<AI.size(); i++ ) {
+      if ( AI[i].Traces.size() > 0 ) {
+	bool started = false;
+	for ( unsigned int k=0; k<aistarted.size(); k++ ) {
+	  if ( aistarted[k] == AI[i].AIDevice ) {
+	    started = true;
+	    break;
+	  }
+	}
+	if ( ! started ) {
+	  if ( AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait ) != 0 )
+	    success = false;
+	  else {
+	    aistarted.push_back( i );
+	    readwait = 0; // we will wait on the first device only
+	  }
 	}
       }
     }
-  }
   
-  if ( ! success )
-    return -1;
-
-  // set fixed rates in analog output traces:
-  QWriteLocker writelocker( &WriteMutex );
-  for ( int k=0; k < outTracesSize(); k++ ) {
-    if ( AO[OutTraces[k].device()].AISyncRate &&
-	 AO[OutTraces[k].device()].AISyncDevice >= 0 &&
-	 AO[OutTraces[k].device()].AISyncDevice < (int)AI.size() && 
-	 AI[AO[OutTraces[k].device()].AISyncDevice].Traces.size() > 0 )
-      OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AISyncDevice].Traces[0].sampleRate() );
-    if ( AO[OutTraces[k].device()].AIRate &&
-	 AO[OutTraces[k].device()].AIDevice >= 0 &&
-	 AO[OutTraces[k].device()].AIDevice < (int)AI.size() && 
-	 AI[AO[OutTraces[k].device()].AIDevice].Traces.size() > 0 )
-      OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AIDevice].Traces[0].sampleRate() );
+    if ( ! success )
+      return -1;
   }
 
-  /*
-  // restore errorflags:
-  for ( int i=0; i<InTraces.size(); i++ ) {
-    InTraces[i].setError( errorflags[i] );
-    InTraces[i].setErrorStr( errorstrgs[i] );
+  {
+    // set fixed rates in analog output traces:
+    QWriteLocker writelocker( &WriteMutex );
+    QWriteLocker readlocker( &ReadMutex );
+    for ( int k=0; k < outTracesSize(); k++ ) {
+      if ( AO[OutTraces[k].device()].AISyncRate &&
+	   AO[OutTraces[k].device()].AISyncDevice >= 0 &&
+	   AO[OutTraces[k].device()].AISyncDevice < (int)AI.size() && 
+	   AI[AO[OutTraces[k].device()].AISyncDevice].Traces.size() > 0 )
+	OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AISyncDevice].Traces[0].sampleRate() );
+      if ( AO[OutTraces[k].device()].AIRate &&
+	   AO[OutTraces[k].device()].AIDevice >= 0 &&
+	   AO[OutTraces[k].device()].AIDevice < (int)AI.size() && 
+	   AI[AO[OutTraces[k].device()].AIDevice].Traces.size() > 0 )
+	OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AIDevice].Traces[0].sampleRate() );
+    }
   }
-  */
 
   return 0;
 }
