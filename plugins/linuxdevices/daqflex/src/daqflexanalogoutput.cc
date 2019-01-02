@@ -614,10 +614,9 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
       if ( BufferSize > 0xfffff )
 	BufferSize = 0xfffff;
-      double timeout = sigs[0].interval( BufferSize/2/sigs.size()-1 );
-      if ( timeout > 0.1 )
-	timeout = 0.1;
-      setWriteSleep( (unsigned long)::ceil( 1000.0*0.25*timeout ) );
+      double timeout = 0.5*sigs[0].interval( BufferSize/2/sigs.size()-1 );
+      int timeoutms = (int)::ceil( 1000.0*timeout );
+      setWriteSleep( timeoutms );
     }
     else
       BufferSize = sigs.deviceBufferSize()*2;
@@ -638,16 +637,17 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     }
 
   }  // unlock AO MutexLocker
-  int r = 1;
+
+  int r = 0;
   if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
     r = writeData();
-    if ( r < 0 )
+    if ( r < -1 )
       return -1;
   }
 
   lock();
   IsPrepared = Sigs.success();
-  NoMoreData = ( r == 0 );
+  NoMoreData = ( r == -1 );
   unlock();
 
   return 0;
@@ -662,8 +662,8 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
     return -1;
   }
   if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
-    //int ern = DAQFlexDevice->sendMessage( "AOSCAN:START" );
-    int ern = DAQFlexDevice->sendCommand( "AOSCAN:START" );
+    int ern = DAQFlexDevice->sendMessage( "AOSCAN:START" );
+    //int ern = DAQFlexDevice->sendCommand( "AOSCAN:START" );
     if ( ern != DAQFlexCore::Success ) {
       Sigs.setErrorStr( "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr( ern ) );
       return -1;
@@ -677,13 +677,11 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
 
 int DAQFlexAnalogOutput::writeData( void )
 {
-  QMutexLocker aolocker( mutex() );
-
   if ( Sigs.empty() )
-    return -1;
+    return -2;
 
+  // no FIFO:
   if ( DAQFlexDevice->aoFIFOSize() <= 0 ) {
-    // no FIFO:
     {
       QMutexLocker corelocker( DAQFlexDevice->mutex() );
       unsigned short *bp = (unsigned short *)Buffer;
@@ -701,25 +699,26 @@ int DAQFlexAnalogOutput::writeData( void )
       BufferSize = 0;
       NBuffer = 0;
       NoMoreData = true;
-      return 0;
+      return -1;
     }
     else
       return Sigs.size();
   }
 
-  // device stopped?
-  int ern = DAQFlexCore::Success;
+  // bulk writing with FIFO:
+
+  // device stopped writing?
   if ( IsPrepared ) {  // not stopped!
-    string response = DAQFlexDevice->getValue( "AOSCAN:STATUS", ern );
-    if ( response == "UNDERRUN" ) {
+    if ( statusUnlocked() == Underrun ) {
+      cerr << "AO UNDERRUN\n";
       Sigs.addError( DaqError::OverflowUnderrun );
       setErrorStr( Sigs );
-      return -1;
+      return -2;
     }
   }
 
+  // convert data into buffer:
   if ( Sigs[0].deviceWriting() ) {
-    // convert data into buffer:
     int bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
   }
@@ -731,7 +730,7 @@ int DAQFlexAnalogOutput::writeData( void )
     BufferSize = 0;
     NBuffer = 0;
     NoMoreData = true;
-    return 0;
+    return -1;
   }
 
   // transfer buffer to device:
@@ -743,30 +742,21 @@ int DAQFlexAnalogOutput::writeData( void )
   if ( bytesToWrite <= 0 )
     bytesToWrite = NBuffer;
   int bytesWritten = 0;
-  ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), 
-					  bytesToWrite, &bytesWritten, 1 );
+  int ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), 
+					      bytesToWrite, &bytesWritten, 1 );
+  //  cerr << "AO BULK " << bytesToWrite << " " << bytesWritten << " " << NBuffer << '\n';
 
-  int elemWritten = 0;
+  // update buffer:
+  int datams = 0;
   if ( bytesWritten > 0 ) {
     memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
     NBuffer -= bytesWritten;
-    elemWritten += bytesWritten / 2;
+    datams = (int)::floor( 1000.0*Sigs[0].interval( bytesWritten / 2 / Sigs.size() ) );
+    if ( datams < writeSleep()/4 )
+      datams = writeSleep()/4;
   }
 
-  if ( ern == DAQFlexCore::Success ) {
-    if ( bytesWritten < bytesToWrite )
-    // no more data:
-    if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
-      if ( Buffer != 0 )
-	delete [] Buffer;
-      Buffer = 0;
-      BufferSize = 0;
-      NBuffer = 0;
-      NoMoreData = true;
-      return 0;
-    }
-  }
-  else if ( ern != DAQFlexCore::ErrorLibUSBTimeout ) {
+  if ( ern != DAQFlexCore::Success && ern != DAQFlexCore::ErrorLibUSBTimeout ) {
     // error:
     switch( ern ) {
     case DAQFlexCore::ErrorLibUSBPipe:
@@ -783,10 +773,10 @@ int DAQFlexAnalogOutput::writeData( void )
       Sigs.addError( DaqError::Unknown );
     }
     setErrorStr( Sigs );
-    return -1;
+    return -2;
   }
 
-  return elemWritten;
+  return datams;
 }
 
 
@@ -797,8 +787,8 @@ int DAQFlexAnalogOutput::stop( void )
 
   {
     QMutexLocker aolocker( mutex() );
-    //int ern = DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
-    int ern = DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
+    int ern = DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
+    //int ern = DAQFlexDevice->sendCommand( "AOSCAN:STOP" );
     if ( ern != DAQFlexCore::Success )
       cerr << "FAILED TO STOP ANALOG OUTPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
     IsPrepared = false;
@@ -838,9 +828,8 @@ int DAQFlexAnalogOutput::reset( void )
 }
 
 
-AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
+AnalogOutput::Status DAQFlexAnalogOutput::statusUnlocked( void ) const
 {
-  QMutexLocker aolocker( mutex() );
   Status r = Idle;
   int ern = DAQFlexCore::Success;
   string response = DAQFlexDevice->getValue( "AOSCAN:STATUS", ern );
@@ -848,7 +837,7 @@ AnalogOutput::Status DAQFlexAnalogOutput::status( void ) const
     r = Running;
   else if ( response == "UNDERRUN" ) {
     Sigs.addError( DaqError::OverflowUnderrun );
-    setErrorStr( "overflow" );
+    setErrorStr( "underrun" );
     r = Underrun;
   }
   return r;

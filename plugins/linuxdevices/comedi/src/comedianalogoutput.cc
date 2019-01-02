@@ -972,12 +972,12 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   FillData = true;
   int r = writeData();
   FillData = false;
-  if ( r < 0 )
+  if ( r < -1 )
     return -1;
 
   lock();
   IsPrepared = Sigs.success();
-  NoMoreData = ( r == 0 );
+  NoMoreData = ( r == -1 );
   unlock();
 
   return 0;
@@ -1028,10 +1028,8 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
 
 int ComediAnalogOutput::writeData( void )
 {
-  QMutexLocker locker( mutex() );
-
   if ( Sigs.empty() )
-    return -1;
+    return -2;
  
   // device not running anymore, but was not stopped?
   if ( ( ! FillData ) && ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 &&
@@ -1039,7 +1037,7 @@ int ComediAnalogOutput::writeData( void )
     Sigs.addError( DaqError::OverflowUnderrun );
     setErrorStr( Sigs );
     IsPrepared = false;
-    return -1;
+    return -2;
   }
 
   if ( Sigs[0].deviceWriting() ) {
@@ -1052,7 +1050,7 @@ int ComediAnalogOutput::writeData( void )
     NBuffer += bytesConverted;
   }
   
-  int elemWritten = 0;
+  int datams = 0;
   if ( NBuffer > 0 ) {
     // transfer buffer to comedi:
     int bytesWritten = write( comedi_fileno( DeviceP ), Buffer, NBuffer );
@@ -1075,7 +1073,7 @@ int ComediAnalogOutput::writeData( void )
 	}
 	setErrorStr( Sigs );
 	clearBuffers();
-	return -1;
+	return -2;
       }
     }
     else if ( bytesWritten > 0 ) {
@@ -1083,17 +1081,17 @@ int ComediAnalogOutput::writeData( void )
       if ( bytesWritten < NBuffer )
 	memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
       NBuffer -= bytesWritten;
-      elemWritten += bytesWritten / BufferElemSize;
+      datams = (int)::floor( 1000.0*Sigs[0].interval( bytesWritten / BufferElemSize / Sigs.size() ) );
     }
   }
   
   // no more data:
   if ( ! Sigs[0].deviceWriting() && NBuffer <= 0 ) {
     clearBuffers();
-    return 0;
+    return -1;
   }
   
-  return elemWritten;
+  return datams;
 }
 
 
@@ -1152,10 +1150,9 @@ void ComediAnalogOutput::clearBuffers( void )
 }
 
 
-AnalogOutput::Status ComediAnalogOutput::status( void ) const
+AnalogOutput::Status ComediAnalogOutput::statusUnlocked( void ) const
 {   
   Status r = Idle;
-  lock();
   // Actually we should check for BUSY, but this is not cleared at the end of the command!
   if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) {
     if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY )
@@ -1165,7 +1162,6 @@ AnalogOutput::Status ComediAnalogOutput::status( void ) const
       r = Underrun;
     }
   }
-  unlock();
   return r;
 }
 

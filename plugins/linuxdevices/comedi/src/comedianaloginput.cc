@@ -850,8 +850,6 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 
 int ComediAnalogInput::readData( void )
 {
-  QMutexLocker locker( mutex() );
-
   if ( Traces == 0 || Buffer == 0 )
     return -1;
 
@@ -900,8 +898,6 @@ int ComediAnalogInput::readData( void )
 
 int ComediAnalogInput::convertData( void )
 {
-  QMutexLocker locker( mutex() );
-
   if ( Traces == 0 || Buffer == 0 )
     return -1;
 

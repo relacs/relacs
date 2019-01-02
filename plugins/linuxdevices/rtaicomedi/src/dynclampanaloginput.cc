@@ -761,8 +761,6 @@ int DynClampAnalogInput::readData( void )
 {
   // cerr << "DynClampAnalogInput::readData(): begin\n";/////TEST/////
 
-  QMutexLocker locker( mutex() );
-
   int readn = BufferN*BufferElemSize;
   int maxn = BufferSize - readn;
 
@@ -829,8 +827,6 @@ int DynClampAnalogInput::readData( void )
 
 int DynClampAnalogInput::convertData( void )
 {
-  QMutexLocker locker( mutex() );
-
   // buffer pointers and sizes:
   float *bp[Traces->size()];
   int bm[Traces->size()];

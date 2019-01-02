@@ -169,7 +169,7 @@ public:
 	If no acquisition is running and therefore no more data are to be expected,
 	-1 is returned.
         This function is called periodically after reading has been successfully
-        started by startRead().
+        started by startRead() and the device mutex is already locked.
         This function does not modify the traces passed to prepareRead()! */
   virtual int readData( void ) = 0;
     /*! Convert the acquired data from the internal buffer
@@ -179,7 +179,8 @@ public:
 	(sum over all traces).
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InData structure are filled and a negative value is returned.
-        This function is called periodically after one or several calls to readData(). */
+        This function is called periodically after one or several calls to readData()
+	and the device mutex is already locked. */
   virtual int convertData( void ) = 0;
 
     /*! Compute a dynamic clamp model.
@@ -320,6 +321,8 @@ private:
   int AnalogInputSubType;
     /*! True while the thread is running. */
   bool Run;
+    /*! Sleeping between reading data. */
+  QWaitCondition SleepWait;
     /*! A semaphore guarding analog input. */
   QSemaphore *Semaphore;
     /*! A mutex locking the data buffer where the acquired data is stored to. */

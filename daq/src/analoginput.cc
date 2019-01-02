@@ -427,15 +427,14 @@ void AnalogInput::startThread( QSemaphore *sp, QReadWriteLock *datamutex,
 void AnalogInput::run( void )
 {
   bool rd = true;
-
+  lock();
   do {
-    lock();
     rd = Run;
-    unlock();
     // get (remaining) data from the card:
     int r = readData();
     // error:
     if ( r < -1 ) {
+      unlock();
       int rr = reset();
       if ( rr != 0 )
 	addErrorStr( getErrorStr( rr ) );
@@ -451,30 +450,38 @@ void AnalogInput::run( void )
     }
     // finished:
     if ( r < 0 ) {
-      lock();
       Run = false;
-      unlock();
       if ( DataWait != 0 )
 	DataWait->wakeAll();
       break;
     }
     // transfer data to the buffer:
     if ( r > 0 ) {
+      unlock();
       if ( DataMutex != 0 )
 	DataMutex->lockForWrite();
+      lock();
       convertData();
+      unlock();
       if ( DataMutex != 0 )
 	DataMutex->unlock();
       if ( DataWait != 0 )
 	DataWait->wakeAll();
+      lock();
     }
-    // the sleep is needed to allow for other processes to wake up and acquire the lock!
-    QThread::msleep( ReadSleepMS );
+    if ( Run ) {
+      // the sleep is needed to allow for other processes to wake up and acquire the lock!
+      SleepWait.wait( mutex(), ReadSleepMS );
+    }
   } while ( rd );
+  unlock();
 
-  if ( Semaphore != 0 )
+  if ( Semaphore != 0 ) {
     Semaphore->release( 1 );
-  Semaphore = 0;
+    lock();
+    Semaphore = 0;
+    unlock();
+  }
 }
 
 
@@ -484,6 +491,7 @@ void AnalogInput::stopRead( void )
   lock();
   Run = false;
   unlock();
+  SleepWait.wakeAll();
   wait();
 
   lock();

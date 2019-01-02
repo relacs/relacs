@@ -136,7 +136,7 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice )
 	return InvalidDevice;
       }
     }
-  }
+  } // corelocker
   
   // clear flags:
   IsPrepared = false;
@@ -411,16 +411,17 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
 	}
       }
     }
-  }
+  }  // corelocker
 
   if ( traces.failed() )
     return -1;
 
   if ( traces.success() ) {
-    double timeout = traces[0].interval( ReadBufferSize/2/traces.size()-1 );
-    if ( timeout > 0.1 )
-      timeout = 0.1;
-    setReadSleep( (unsigned long)::ceil( 1000.0*0.25*timeout ) ); 
+    double timeout = 0.1*traces[0].interval( ReadBufferSize/2/traces.size()-1 );
+    if ( timeout > 0.01 )
+      timeout = 0.01;
+    unsigned long timeoutms = (unsigned long)::ceil( 1000.0*timeout ); 
+    setReadSleep( timeoutms ); 
     traces.setReadTime( timeout );
     traces.setUpdateTime( timeout );
     setSettings( traces, BufferSize, ReadBufferSize );
@@ -485,8 +486,6 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 
 int DAQFlexAnalogInput::readData( void )
 {
-  QMutexLocker locker( mutex() );
-
   if ( Traces == 0 || Traces->size() == 0 || Buffer == 0 || ! IsRunning )
     return -2;
 
@@ -499,11 +498,6 @@ int DAQFlexAnalogInput::readData( void )
    maxn = (maxn/inps)*inps;
   if ( maxn <= 0 )
     return 0;
-  /*
-  int maxn = inps;
-  if ( maxn > BufferSize - buffern )
-    return 0;
-  */
 
   // read data:
   int ern = DAQFlexDevice->readBulkTransfer( (unsigned char*)(Buffer + buffern),
@@ -515,28 +509,29 @@ int DAQFlexAnalogInput::readData( void )
     BufferN += readn;
     CurrentSamples += readn;
   }
-
-  if ( ern == DAQFlexCore::Success || ern == DAQFlexCore::ErrorLibUSBTimeout ) {
+  else if ( readn == 0 &&
+	    ( ern == DAQFlexCore::Success || ern == DAQFlexCore::ErrorLibUSBTimeout ) ) {
     string status = DAQFlexDevice->getValue( "AISCAN:STATUS", ern );
     if ( status != "RUNNING" ) {
       if ( status == "OVERRUN" ) {
+	cerr << "AI OVERFLOW\n";
 	Traces->addError( DaqError::OverflowUnderrun );
 	return -2;
       }
       else if ( ! AboutToStop ) {
 	cerr << "DAQFlexAnalogInput::readData() -> analog input not running anymore " << readn << "\n";
-	// This error occurs on too fast sampling, but at lower sampling it looks like it can be ignored....
-	// Traces->addErrorStr( "analog input not running anymore" );
-	// Traces->addError( DaqError::Unknown );
-	// return -2;
+	Traces->addErrorStr( "analog input not running anymore" );
+	Traces->addError( DaqError::Unknown );
+	return -2;
       }
     }
   }
-  else {
+
+  if ( ern != DAQFlexCore::Success ) {
     // error:
-    cerr << "READBULKTRANSFER error=" << DAQFlexDevice->daqflexErrorStr( ern )
-	 << " readn=" << readn << '\n';
     switch( ern ) {
+    case DAQFlexCore::ErrorLibUSBTimeout:
+      break;
     case DAQFlexCore::ErrorLibUSBOverflow:
     case DAQFlexCore::ErrorLibUSBPipe:
       Traces->addError( DaqError::OverflowUnderrun ); 
@@ -560,8 +555,6 @@ int DAQFlexAnalogInput::readData( void )
 
 int DAQFlexAnalogInput::convertData( void )
 {
-  QMutexLocker locker( mutex() );
-
   if ( Traces == 0 || Buffer == 0 )
     return -1;
 
@@ -626,14 +619,10 @@ int DAQFlexAnalogInput::stop( void )
 
   lock();
   AboutToStop = true;
-  for ( int k=0; k<5; k++ ) {
-    // int ern = DAQFlexDevice->sendMessage( "AISCAN:STOP" );
-    int ern = DAQFlexDevice->sendCommand( "AISCAN:STOP" );
-    if ( ern != DAQFlexCore::Success )
-      cerr << "FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
-    else
-      break;
-  }
+  //  int ern = DAQFlexDevice->sendMessage( "AISCAN:STOP" );
+  int ern = DAQFlexDevice->sendCommand( "AISCAN:STOP" );
+  if ( ern != DAQFlexCore::Success )
+    cerr << "FAILED TO STOP ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
   unlock();
 
   stopRead();
@@ -655,7 +644,7 @@ int DAQFlexAnalogInput::reset( void )
   QMutexLocker ailocker( mutex() );
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
-    int ern = DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
+    int ern = DAQFlexDevice->sendControlTransfer( "AISCAN:RESET" );
     if ( ern != DAQFlexCore::Success )
       cerr << "RESET: FAILED TO RESET ANALOG INPUT " << DAQFlexDevice->daqflexErrorStr( ern ) << "\n";
     // clear overrun condition:
