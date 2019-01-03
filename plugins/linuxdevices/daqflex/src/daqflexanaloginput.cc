@@ -285,6 +285,11 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
     // setup acquisition:
+    DAQFlexDevice->sendMessageUnlocked( "AISCAN:RESET" );
+    if ( DAQFlexDevice->failed() ) {
+      traces.setErrorStr( "AISCAN:RESET " + DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
     DAQFlexDevice->setValueUnlocked( "AISCAN:STALL", "DISABLE" );
     if ( DAQFlexDevice->failed() ) {
       traces.setErrorStr( "AISCAN:STALL " + DAQFlexDevice->daqflexErrorStr() );

@@ -892,81 +892,78 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   if ( sigs.size() == 0 )
     return -1;
 
-  {
-    QMutexLocker locker( mutex() );
+  QMutexLocker locker( mutex() );
 
+  ExtendedData = 0;
+
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
+
+  if ( deviceVendor() == "ni_mio_cs" ) {
+    // Fix DAQCard bug: add 2k of zeros to the signals:
+    ExtendedData = 2048;
+  }
+
+  if ( setupCommand( ol, Cmd, true ) < 0 ) {
     ExtendedData = 0;
+    if ( Cmd.chanlist != 0 )
+      delete [] Cmd.chanlist;
+    memset( &Cmd, 0, sizeof( comedi_cmd ) );
+    return -1;
+  }
 
-    // copy and sort signal pointers:
-    OutList ol;
-    ol.add( sigs );
-    ol.sortByChannel();
+  if ( ExtendedData > 0 ) {
+    // contiunous and DAQCard bug:
+    for ( int k=0; k<ol.size(); k++ )
+      ol[k].SampleDataF::append( ol[k].back(), ExtendedData );
+  }
 
-    if ( deviceVendor() == "ni_mio_cs" ) {
-      // Fix DAQCard bug: add 2k of zeros to the signals:
-      ExtendedData = 2048;
+  // apply calibration:
+  if ( Calibration != 0 ) {
+    for( int k=0; k < ol.size(); k++ ) {
+      unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
+      unsigned int range = CR_RANGE( Cmd.chanlist[k] );
+      unsigned int aref = CR_AREF( Cmd.chanlist[k] );
+      if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+					    range, aref, Calibration ) < 0 )
+	ol[k].addError( DaqError::CalibrationFailed );
     }
+  }
 
-    if ( setupCommand( ol, Cmd, true ) < 0 ) {
-      ExtendedData = 0;
-      if ( Cmd.chanlist != 0 )
-	delete [] Cmd.chanlist;
-      memset( &Cmd, 0, sizeof( comedi_cmd ) );
-      return -1;
-    }
+  if ( ! ol.success() )
+    return -1;
 
-    if ( ExtendedData > 0 ) {
-      // contiunous and DAQCard bug:
-      for ( int k=0; k<ol.size(); k++ )
-	ol[k].SampleDataF::append( ol[k].back(), ExtendedData );
-    }
+  int delayinx = ol[0].indices( ol[0].delay() );
+  ol.deviceReset( delayinx );
 
-    // apply calibration:
-    if ( Calibration != 0 ) {
-      for( int k=0; k < ol.size(); k++ ) {
-	unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
-	unsigned int range = CR_RANGE( Cmd.chanlist[k] );
-	unsigned int aref = CR_AREF( Cmd.chanlist[k] );
-	if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
-					      range, aref, Calibration ) < 0 )
-	  ol[k].addError( DaqError::CalibrationFailed );
-      }
-    }
+  // set buffer size:
+  BufferSize = bufferSize()*BufferElemSize;
+  int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
+  if ( nbuffer < BufferSize )
+    BufferSize = nbuffer;
 
-    if ( ! ol.success() )
-      return -1;
+  setSettings( ol, BufferSize );
 
-    int delayinx = ol[0].indices( ol[0].delay() );
-    ol.deviceReset( delayinx );
+  if ( ! ol.success() )
+    return -1;
 
-    // set buffer size:
-    BufferSize = bufferSize()*BufferElemSize;
-    int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
-    if ( nbuffer < BufferSize )
-      BufferSize = nbuffer;
+  Sigs = ol;
+  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-    setSettings( ol, BufferSize );
+  // execute command:
+  cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+  //ComediAnalogInput::dump_cmd( &Cmd );
+  if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
+    int cerror = comedi_errno();
+    cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
+    ol.addErrorStr( deviceFile() + " - execution of comedi_cmd for analog output failed: "
+		    + comedi_strerror( cerror ) );
+    return -1;
+  }
 
-    if ( ! ol.success() )
-      return -1;
-
-    Sigs = ol;
-    Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
-
-    // execute command:
-    cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
-    //ComediAnalogInput::dump_cmd( &Cmd );
-    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
-      int cerror = comedi_errno();
-      cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
-      ol.addErrorStr( deviceFile() + " - execution of comedi_cmd for analog output failed: "
-		      + comedi_strerror( cerror ) );
-      return -1;
-    }
-
-  } // unlock
-
-  msleep( 1 );
+  // msleep( 1 ); ???
 
   // fill buffer with initial data:
   FillData = true;
@@ -975,10 +972,8 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   if ( r < -1 )
     return -1;
 
-  lock();
   IsPrepared = Sigs.success();
   NoMoreData = ( r == -1 );
-  unlock();
 
   return 0;
 }

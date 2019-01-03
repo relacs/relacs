@@ -459,184 +459,181 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     return -1;
   }
 
+  QMutexLocker aolocker( mutex() );
+
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
+
   {
-    QMutexLocker aolocker( mutex() );
+    QMutexLocker corelocker( DAQFlexDevice->mutex() );
 
-    // copy and sort signal pointers:
-    OutList ol;
-    ol.add( sigs );
-    ol.sortByChannel();
-
-    {
-      QMutexLocker corelocker( DAQFlexDevice->mutex() );
-
-      // setup channels:
-      DAQFlexDevice->setValueUnlocked( "AOSCAN:LOWCHAN", Str( ol[0].channel() ) );
-      if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( "AOSCAN:LOWCHAN " + DAQFlexDevice->daqflexErrorStr() );
-	return -1;
-      } 
-      DAQFlexDevice->setValueUnlocked( "AOSCAN:HIGHCHAN", Str( ol.back().channel() ) );
-      if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( "AOSCAN:HIGHCHAN" + DAQFlexDevice->daqflexErrorStr() );
-	return -1;
-      } 
-      for( int k = 0; k < ol.size(); k++ ) {
-	// minimum and maximum values:
-	double min = ol[k].requestedMin();
-	double max = ol[k].requestedMax();
-	if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
-	  float smin = 0.0;
-	  float smax = 0.0;
-	  minMax( smin, smax, ol[k] );
-	  if ( min == OutData::AutoRange )
-	    min = smin;
-	  if ( max == OutData::AutoRange )
-	    max = smax;
-	}
-	// we use only the largest range and there is only one range:
-	if ( BipolarRange.size() > 0 ) {
-	  ol[k].setMinVoltage( -BipolarRange[0] );
-	  ol[k].setMaxVoltage( BipolarRange[0] );
-	  if ( ! ol[k].noLevel() ) {
-	    double maxv = LevelMaxVolt;
-	    if ( maxv < 1e-8 )
-	      maxv = BipolarRange[0];
-	    ol[k].multiplyScale( maxv );
-	  }
-	}
-	else {
-	  ol[k].setMinVoltage( 0.0 );
-	  ol[k].setMaxVoltage( UnipolarRange[0] );
-	  if ( ! ol[k].noLevel() ) {
-	    double maxv = LevelMaxVolt;
-	    if ( maxv < 1e-8 )
-	      maxv = UnipolarRange[0];
-	    ol[k].multiplyScale( maxv );
-	  }
-	}
-	// check for signal overflow/underflow:
-	if ( ol[k].noLevel() ) {
-	  if ( min < ol[k].minValue() )
-	    ol[k].addError( DaqError::Underflow );
-	  else if ( max > ol[k].maxValue() )
-	    ol[k].addError( DaqError::Overflow );
-	}
-	else {
-	  if ( max > 1.0+1.0e-8 )
-	    ol[k].addError( DaqError::Overflow );
-	  else if ( min < -1.0-1.0e-8 )
-	    ol[k].addError( DaqError::Underflow );
-	}
-
-	// allocate gain factor:
-	char *gaindata = ol[k].gainData();
-	if ( gaindata != NULL )
-	  delete [] gaindata;
-	gaindata = new char[sizeof(Calibration)];
-	ol[k].setGainData( gaindata );
-	Calibration *gainp = (Calibration *)gaindata;
-
-	// get calibration:
-	Str response = DAQFlexDevice->getValueUnlocked( "AO{" + Str( ol[k].channel() ) + "}:SLOPE" );
-	gainp->Slope = response.number();
-	response = DAQFlexDevice->getValueUnlocked( "AO{" + Str( ol[k].channel() ) + "}:OFFSET" );
-	gainp->Offset = response.number();
-	/*
-	  gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
-	  gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
-	  gainp->Offset -= max;
-	*/
-
+    // setup channels:
+    DAQFlexDevice->setValueUnlocked( "AOSCAN:LOWCHAN", Str( ol[0].channel() ) );
+    if ( DAQFlexDevice->failed() ) {
+      sigs.setErrorStr( "AOSCAN:LOWCHAN " + DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    DAQFlexDevice->setValueUnlocked( "AOSCAN:HIGHCHAN", Str( ol.back().channel() ) );
+    if ( DAQFlexDevice->failed() ) {
+      sigs.setErrorStr( "AOSCAN:HIGHCHAN" + DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    for( int k = 0; k < ol.size(); k++ ) {
+      // minimum and maximum values:
+      double min = ol[k].requestedMin();
+      double max = ol[k].requestedMax();
+      if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
+	float smin = 0.0;
+	float smax = 0.0;
+	minMax( smin, smax, ol[k] );
+	if ( min == OutData::AutoRange )
+	  min = smin;
+	if ( max == OutData::AutoRange )
+	  max = smax;
       }
-
-      if ( ! ol.success() )
-	return -1;
-
-      int delayinx = ol[0].indices( ol[0].delay() );
-      ol.deviceReset( delayinx );
-
-      // setup acquisition:
-      DAQFlexDevice->setValueUnlocked( "AOSCAN:STALL", "DISABLE" );
-      if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( "AOSCAN:STALL " + DAQFlexDevice->daqflexErrorStr() );
-	return -1;
-      } 
-      DAQFlexDevice->setValueUnlocked( "AOSCAN:RATE", Str( sigs[0].sampleRate(), "%g" ) );
-      if ( DAQFlexDevice->failed() ) {
-	sigs.setErrorStr( "AOSCAN:RATE " + DAQFlexDevice->daqflexErrorStr() );
-	return -1;
-      } 
-      if ( sigs[0].continuous() ) {
-	Samples = 0;
-	DAQFlexDevice->setValueUnlocked( "AOSCAN:SAMPLES", "0" );
-	if ( DAQFlexDevice->failed() ) {
-	  sigs.setErrorStr( "AOSCAN:SAMPLES " + DAQFlexDevice->daqflexErrorStr() );
-	  return -1;
-	} 
+      // we use only the largest range and there is only one range:
+      if ( BipolarRange.size() > 0 ) {
+	ol[k].setMinVoltage( -BipolarRange[0] );
+	ol[k].setMaxVoltage( BipolarRange[0] );
+	if ( ! ol[k].noLevel() ) {
+	  double maxv = LevelMaxVolt;
+	  if ( maxv < 1e-8 )
+	    maxv = BipolarRange[0];
+	  ol[k].multiplyScale( maxv );
+	}
       }
       else {
-	Samples = sigs.deviceBufferSize();
-	DAQFlexDevice->setValueUnlocked( "AOSCAN:SAMPLES", Str( Samples ) );
-	if ( DAQFlexDevice->failed() ) {
-	  sigs.setErrorStr( "AOSCAN:SAMPLES " + DAQFlexDevice->daqflexErrorStr() );
-	  return -1;
-	} 
-      }
-      if ( UseAIClock ) {
-	if ( ::fabs(sigs[0].sampleRate() - DAQFlexDevice->aiSampleRate()) > 0.1 ) {
-	  sigs.addError( DaqError::InvalidSampleRate );
-	  sigs.addErrorStr( "sampling rate " + Str( 0.001*sigs[0].sampleRate(), "%.1f" ) +
-			    "kHz does not match AI clock of " + 
-			    Str( 0.001*DAQFlexDevice->aiSampleRate(), "%.1f" ) + "kHz" );
-	  return -1;
+	ol[k].setMinVoltage( 0.0 );
+	ol[k].setMaxVoltage( UnipolarRange[0] );
+	if ( ! ol[k].noLevel() ) {
+	  double maxv = LevelMaxVolt;
+	  if ( maxv < 1e-8 )
+	    maxv = UnipolarRange[0];
+	  ol[k].multiplyScale( maxv );
 	}
-	DAQFlexDevice->setValueUnlocked( "AOSCAN:EXTPACER", "ENABLE" );
-	if ( DAQFlexDevice->failed() ) {
-	  sigs.setErrorStr( "AOSCAN:EXTPACER " + DAQFlexDevice->daqflexErrorStr() );
-	  return -1;
-	} 
       }
-    
-    }  // unlock Core MutexLocker
+      // check for signal overflow/underflow:
+      if ( ol[k].noLevel() ) {
+	if ( min < ol[k].minValue() )
+	  ol[k].addError( DaqError::Underflow );
+	else if ( max > ol[k].maxValue() )
+	  ol[k].addError( DaqError::Overflow );
+      }
+      else {
+	if ( max > 1.0+1.0e-8 )
+	  ol[k].addError( DaqError::Overflow );
+	else if ( min < -1.0-1.0e-8 )
+	  ol[k].addError( DaqError::Underflow );
+      }
 
-    // set buffer size:
-    if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
-      BufferSize = sigs.size()*DAQFlexDevice->aoFIFOSize()*2;
-      int nbuffer = sigs.deviceBufferSize()*2;
-      int outps = DAQFlexDevice->outPacketSize();
-      if ( BufferSize > nbuffer ) {
-	BufferSize = nbuffer;
-	if ( BufferSize < outps )
-	  BufferSize = outps;
-      }
-      else
-	BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
-      if ( BufferSize > 0xfffff )
-	BufferSize = 0xfffff;
-      double timeout = 0.5*sigs[0].interval( BufferSize/2/sigs.size()-1 );
-      int timeoutms = (int)::ceil( 1000.0*timeout );
-      setWriteSleep( timeoutms );
+      // allocate gain factor:
+      char *gaindata = ol[k].gainData();
+      if ( gaindata != NULL )
+	delete [] gaindata;
+      gaindata = new char[sizeof(Calibration)];
+      ol[k].setGainData( gaindata );
+      Calibration *gainp = (Calibration *)gaindata;
+
+      // get calibration:
+      Str response = DAQFlexDevice->getValueUnlocked( "AO{" + Str( ol[k].channel() ) + "}:SLOPE" );
+      gainp->Slope = response.number();
+      response = DAQFlexDevice->getValueUnlocked( "AO{" + Str( ol[k].channel() ) + "}:OFFSET" );
+      gainp->Offset = response.number();
+      /*
+	gainp->Slope *= 2.0*max/DAQFlexDevice->maxAIData();
+	gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
+	gainp->Offset -= max;
+      */
+
     }
-    else
-      BufferSize = sigs.deviceBufferSize()*2;
-    if ( BufferSize <= 0 )
-      sigs.addError( DaqError::InvalidBufferTime );
-
-    setSettings( ol, BufferSize );
 
     if ( ! ol.success() )
       return -1;
 
-    Sigs = ol;
-    Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+    int delayinx = ol[0].indices( ol[0].delay() );
+    ol.deviceReset( delayinx );
 
-    if ( DAQFlexDevice->aoFIFOSize() <= 0 ) {
-      // no FIFO and bulk transfer:
-      convert<unsigned short>( Buffer, BufferSize );
+    // setup acquisition:
+    DAQFlexDevice->setValueUnlocked( "AOSCAN:STALL", "DISABLE" );
+    if ( DAQFlexDevice->failed() ) {
+      sigs.setErrorStr( "AOSCAN:STALL " + DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    DAQFlexDevice->setValueUnlocked( "AOSCAN:RATE", Str( sigs[0].sampleRate(), "%g" ) );
+    if ( DAQFlexDevice->failed() ) {
+      sigs.setErrorStr( "AOSCAN:RATE " + DAQFlexDevice->daqflexErrorStr() );
+      return -1;
+    } 
+    if ( sigs[0].continuous() ) {
+      Samples = 0;
+      DAQFlexDevice->setValueUnlocked( "AOSCAN:SAMPLES", "0" );
+      if ( DAQFlexDevice->failed() ) {
+	sigs.setErrorStr( "AOSCAN:SAMPLES " + DAQFlexDevice->daqflexErrorStr() );
+	return -1;
+      } 
     }
+    else {
+      Samples = sigs.deviceBufferSize();
+      DAQFlexDevice->setValueUnlocked( "AOSCAN:SAMPLES", Str( Samples ) );
+      if ( DAQFlexDevice->failed() ) {
+	sigs.setErrorStr( "AOSCAN:SAMPLES " + DAQFlexDevice->daqflexErrorStr() );
+	return -1;
+      } 
+    }
+    if ( UseAIClock ) {
+      if ( ::fabs(sigs[0].sampleRate() - DAQFlexDevice->aiSampleRate()) > 0.1 ) {
+	sigs.addError( DaqError::InvalidSampleRate );
+	sigs.addErrorStr( "sampling rate " + Str( 0.001*sigs[0].sampleRate(), "%.1f" ) +
+			  "kHz does not match AI clock of " + 
+			  Str( 0.001*DAQFlexDevice->aiSampleRate(), "%.1f" ) + "kHz" );
+	return -1;
+      }
+      DAQFlexDevice->setValueUnlocked( "AOSCAN:EXTPACER", "ENABLE" );
+      if ( DAQFlexDevice->failed() ) {
+	sigs.setErrorStr( "AOSCAN:EXTPACER " + DAQFlexDevice->daqflexErrorStr() );
+	return -1;
+      } 
+    }
+    
+  }  // unlock Core MutexLocker
 
-  }  // unlock AO MutexLocker
+  // set buffer size:
+  if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
+    BufferSize = sigs.size()*DAQFlexDevice->aoFIFOSize()*2;
+    int nbuffer = sigs.deviceBufferSize()*2;
+    int outps = DAQFlexDevice->outPacketSize();
+    if ( BufferSize > nbuffer ) {
+      BufferSize = nbuffer;
+      if ( BufferSize < outps )
+	BufferSize = outps;
+    }
+    else
+      BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
+    if ( BufferSize > 0xfffff )
+      BufferSize = 0xfffff;
+    double timeout = 0.5*sigs[0].interval( BufferSize/2/sigs.size()-1 );
+    int timeoutms = (int)::ceil( 1000.0*timeout );
+    setWriteSleep( timeoutms );
+  }
+  else
+    BufferSize = sigs.deviceBufferSize()*2;
+  if ( BufferSize <= 0 )
+    sigs.addError( DaqError::InvalidBufferTime );
+
+  setSettings( ol, BufferSize );
+
+  if ( ! ol.success() )
+    return -1;
+
+  Sigs = ol;
+  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+
+  if ( DAQFlexDevice->aoFIFOSize() <= 0 ) {
+    // no FIFO and bulk transfer:
+    convert<unsigned short>( Buffer, BufferSize );
+  }
 
   int r = 0;
   if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
@@ -645,10 +642,8 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       return -1;
   }
 
-  lock();
   IsPrepared = Sigs.success();
   NoMoreData = ( r == -1 );
-  unlock();
 
   return 0;
 }

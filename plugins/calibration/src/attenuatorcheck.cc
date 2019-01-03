@@ -173,7 +173,7 @@ int AttenuatorCheck::main( void )
     P.draw();
     P.unlock();
 
-    sleepWait( 0.1 );
+    sleep( 0.01 );
   }
 
   // save data:
