@@ -457,7 +457,7 @@ void AnalogInput::run( void )
     }
     // transfer data to the buffer:
     if ( r > 0 ) {
-      unlock();
+      unlock();   // DataMutex first, then device mutex -> otherwise dead lock!!!
       if ( DataMutex != 0 )
 	DataMutex->lockForWrite();
       lock();
