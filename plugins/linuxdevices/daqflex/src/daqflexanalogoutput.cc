@@ -610,10 +610,10 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 	BufferSize = outps;
     }
     else
-      BufferSize = (BufferSize/outps+1)*outps; // round up to full package size
+      BufferSize = ::ceil((BufferSize/outps)*outps); // round up to full package size
     if ( BufferSize > 0xfffff )
       BufferSize = 0xfffff;
-    double timeout = 0.5*sigs[0].interval( BufferSize/2/sigs.size()-1 );
+    double timeout = 0.1*sigs[0].interval( BufferSize/2/sigs.size()-1 );
     int timeoutms = (int)::ceil( 1000.0*timeout );
     setWriteSleep( timeoutms );
   }
@@ -658,7 +658,6 @@ int DAQFlexAnalogOutput::startWrite( QSemaphore *sp )
   }
   if ( DAQFlexDevice->aoFIFOSize() > 0 ) {
     int ern = DAQFlexDevice->sendMessage( "AOSCAN:START" );
-    //int ern = DAQFlexDevice->sendCommand( "AOSCAN:START" );
     if ( ern != DAQFlexCore::Success ) {
       Sigs.setErrorStr( "Failed to start AO device: " + DAQFlexDevice->daqflexErrorStr( ern ) );
       return -1;
@@ -739,16 +738,13 @@ int DAQFlexAnalogOutput::writeData( void )
   int bytesWritten = 0;
   int ern = DAQFlexDevice->writeBulkTransfer( (unsigned char*)(Buffer), 
 					      bytesToWrite, &bytesWritten, 1 );
-  //  cerr << "AO BULK " << bytesToWrite << " " << bytesWritten << " " << NBuffer << '\n';
 
   // update buffer:
   int datams = 0;
   if ( bytesWritten > 0 ) {
     memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
     NBuffer -= bytesWritten;
-    datams = (int)::floor( 1000.0*Sigs[0].interval( bytesWritten / 2 / Sigs.size() ) );
-    if ( datams < writeSleep()/4 )
-      datams = writeSleep()/4;
+    datams = writeSleep();
   }
 
   if ( ern != DAQFlexCore::Success && ern != DAQFlexCore::ErrorLibUSBTimeout ) {

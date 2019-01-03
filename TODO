@@ -46,9 +46,6 @@ New InData threading:
   e.g. invalid sampling rate and stall after write with high sampling rate.
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.
-- Check whether InData, Acquire updateTime and readTime are still needed!
-  But we do not want to block on the input too long!
-  So maybe keep readTime. Make it an option for each device!
 
 Dynamic clamp:
 - Linux kernel path in module Makefile should be set by relacs_rtai/dynclamp

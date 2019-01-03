@@ -176,14 +176,6 @@ int AISim::testReadDevice( InList &traces )
     traces.setSampleRate( maxrate );
   }
 
-  long bs = traces[0].indices( traces[0].updateTime() );
-  if ( bs <= 0 || bs > traces[0].capacity() ) {
-    if ( bs > traces[0].capacity() )
-      traces.addError( DaqError::InvalidUpdateTime );
-    bs = traces[0].capacity();
-    traces.setUpdateTime( traces[0].interval( bs ) );
-  }
-
   return traces.failed() ? -1 : 0;
 }
 
@@ -197,16 +189,7 @@ int AISim::prepareRead( InList &traces )
   }
 
   // success:
-  int buffersize = 0;
-  for ( int k=0; k<traces.size(); k++ ) {
-    int bs = traces[k].indices( traces[k].updateTime() );
-    if ( bs <= 0 || bs > traces[k].capacity() )
-      bs = traces[k].capacity();
-    else
-      bs *= 6;
-    buffersize += bs;
-  }
-  setSettings( traces, -1, buffersize*sizeof( signed short ) );
+  setSettings( traces, -1, 2048*sizeof( signed short ) );
 
   return 0;
 }

@@ -646,21 +646,6 @@ int ComediAnalogInput::testReadDevice( InList &traces )
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
-  // check read buffer size:
-  int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() ) * BufferElemSize;
-  if ( readbufsize > ReadBufferSize ) {
-    traces.addError( DaqError::InvalidBufferTime );
-    traces.setReadTime( ReadBufferSize/traces.size()/BufferElemSize/traces[0].sampleRate() );
-    retVal = -1;
-  }
-
-  // check update buffer size:
-  int bufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
-  if ( bufsize < readbufsize ) {
-    traces.addError( DaqError::InvalidUpdateTime );
-    retVal = -1;
-  }
-
   return retVal;
 }
 
@@ -696,7 +681,8 @@ int ComediAnalogInput::prepareRead( InList &traces )
     return error;
 
   // init internal buffer:
-  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
+  // XXX We need something more sensible for setting the buffer size:
+  BufferSize = 2 * traces.size() * traces[0].indices( 1.0 ) * BufferElemSize;
   Buffer = new char[BufferSize];
   BufferN = 0;
 
@@ -716,7 +702,7 @@ int ComediAnalogInput::prepareRead( InList &traces )
   }
 
   if ( traces.success() ) {
-    setSettings( traces, BufferSize, ReadBufferSize );
+    setSettings( traces, ReadBufferSize, BufferSize );
     Traces = &traces;
     IsPrepared = true;
     return 0;

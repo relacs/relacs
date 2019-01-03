@@ -59,9 +59,6 @@ Acquire::Acquire( void )
 
   SyncMode = NoSync;
 
-  BufferTime = 0.01;
-  UpdateTime = 0.1;
-
   Att.clear();
 }
 
@@ -584,30 +581,6 @@ string Acquire::syncModeStr( void ) const
 }
 
 
-double Acquire::bufferTime( void ) const
-{
-  return BufferTime;
-}
-
-
-void Acquire::setBufferTime( double time )
-{
-  BufferTime = time;
-}
-
-
-double Acquire::updateTime( void ) const
-{
-  return UpdateTime;
-}
-
-
-void Acquire::setUpdateTime( double time )
-{
-  UpdateTime = time;
-}
-
-
 int Acquire::testRead( InList &data )
 {
   QReadLocker locker( &ReadMutex );
@@ -669,12 +642,6 @@ int Acquire::testRead( InList &data )
   // error?
   if ( ! success )
     return -1;
-
-  // request buffer sizes:
-  for ( unsigned int i=0; i<AI.size(); i++ ) {
-    AI[i].Traces.setReadTime( BufferTime );
-    AI[i].Traces.setUpdateTime( UpdateTime );
-  }
 
   // test reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -775,10 +742,6 @@ int Acquire::read( InList &data )
   // error?
   if ( ! success )
     return -1;
-
-  // request buffer size:
-  InTraces.setReadTime( BufferTime );
-  InTraces.setUpdateTime( UpdateTime );
 
   // test reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {

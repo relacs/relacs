@@ -812,7 +812,7 @@ void RELACSWidget::setupInTraces( void )
     }
     IRawData.push( id );
     IRawData[j].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
-    IRawData[j].setWriteBufferCapacity( 100.0*id.indices( AQ->updateTime() ) );
+    IRawData[j].setWriteBufferCapacity( 100.0*id.indices( SS.number( "processinterval", 0.1 ) ) );
     PT->addTraceStyle( true, integer( "inputtraceplot", j, j ), Plot::Green );
     j++;
   }
@@ -1720,9 +1720,6 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
 
   // analog input and output traces:
   PT->clearStyles();
-  double ptime = SS.number( "processinterval", 0.1 );
-  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
-  AQ->setUpdateTime( ptime );
   setupInTraces();
   if ( IRawData.empty() ) {
     printlog( "! error: No valid input traces configured!" );
@@ -1877,7 +1874,7 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
   AID->updateMenu();
 
   CW->start();
-  PT->start( ptime );
+  PT->start( SS.number( "processinterval", 0.1 ) );
 
   // get first RePro and start it:
   MC->startUp();

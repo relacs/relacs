@@ -602,12 +602,6 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
 
   retval = 0;
 
-  // check update buffer size:
-  if ( traces[0].updateTime() < traces[0].readTime() ) {
-    traces.addError( DaqError::InvalidUpdateTime );
-    retval = -1;
-  }
-
   return retval;
 }
 
@@ -709,7 +703,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   setReadSleep( 5 );
 
   if ( traces.success() ) {
-    setSettings( traces, BufferSize, BufferSize );
+    setSettings( traces, 0, BufferSize );
     Traces = &traces;
     IsPrepared = true;
     return 0;

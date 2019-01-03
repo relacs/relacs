@@ -299,11 +299,11 @@ protected:
     /*! Set the settings() for \a traces.
         Call this function from within a successful prepareRead().
 	\param[in] traces the input traces for which the settings string should be constructed.
-	\param[in] readbuffer is the size of the driver's buffer in bytes.
-	\param[in] updatebuffer is the size of the internal buffer in bytes.
+	\param[in] fifobuffer is the size of the hardware's fifo buffer in bytes.
+	\param[in] pluginbuffer is the size of the buffer used by the plugin in bytes.
         \sa settings() */
-  void setSettings( const InList &traces, int readbuffer=0,
-		    int updatebuffer=0 );
+  void setSettings( const InList &traces, int fifobuffer=0,
+		    int pluginbuffer=0 );
 
     /*! Start the thread if \a sp is not null.
         If \a error do not start the thread and release the semaphore \a sp. */
