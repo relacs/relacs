@@ -1448,8 +1448,8 @@ void RELACSWidget::stopThreads( void )
     DataRunLock.lock();
     DataRun = false;
     DataRunLock.unlock();
-    AQ->stop();
     ReadLoop.wait();
+    AQ->stop();
   }
 
   // process pending events posted from threads.
