@@ -297,7 +297,8 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
       traces.setErrorStr( "AISCAN:RATE " + DAQFlexDevice->daqflexErrorStr() );
       return -1;
     } 
-    // XXX Read out actual sampling rate!!!
+    Str r = DAQFlexDevice->getValueUnlocked( "AISCAN:RATE" );
+    traces.setSampleRate( r.number() );
     DAQFlexDevice->setAISampleRate( traces[0].sampleRate() );
     if ( traces[0].continuous() ) {
       DAQFlexDevice->setValueUnlocked( "AISCAN:SAMPLES", "0" );

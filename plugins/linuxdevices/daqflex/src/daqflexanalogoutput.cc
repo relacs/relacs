@@ -583,7 +583,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
       } 
     }
     if ( UseAIClock ) {
-      if ( ::fabs(sigs[0].sampleRate() - DAQFlexDevice->aiSampleRate()) > 0.1 ) {
+      if ( ::fabs(sigs[0].sampleRate() - DAQFlexDevice->aiSampleRate())/sigs[0].sampleRate() > 0.01 ) {
 	sigs.addError( DaqError::InvalidSampleRate );
 	sigs.addErrorStr( "sampling rate " + Str( 0.001*sigs[0].sampleRate(), "%.1f" ) +
 			  "kHz does not match AI clock of " + 
