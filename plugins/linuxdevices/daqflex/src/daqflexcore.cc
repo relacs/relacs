@@ -28,10 +28,11 @@
 using namespace std;
 using namespace relacs;
 
+
 namespace daqflex {
 
 
-const string DAQFlexCore::DefaultFirmwarePath = "/usr/lib/daqflex/";
+const string DAQFlexCore::DefaultFirmwarePath = DAQFLEXLIBDIR ;
 
 const string DAQFlexCore::DAQFlexErrorText[DAQFlexCore::DAQFlexErrorMax] =
   { "success",
