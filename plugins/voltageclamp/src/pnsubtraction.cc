@@ -59,6 +59,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   // skip prepulses if pn==0
   if ( pn == 0 ) {
     write(signal);
+    if ( signal.error() )
+      return false;
     sleep(pause);
 
     SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
@@ -77,6 +79,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
   for ( int i = 0; i<::abs(pn); i++ ) {
     write(pn_signal);
+    if ( signal.error() )
+      return false;
     sleep(pause);
 
     if (interrupt()) {

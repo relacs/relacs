@@ -136,6 +136,8 @@ void membranetest::stimulus(OutData &signal) {
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     write(signal);
+    if ( signal.error() )
+      return;      
     sleep(pause);
 
     SampleDataF currenttrace(-duration, 2 * duration, trace(CurrentTrace[0]).stepsize(), 0.0);
