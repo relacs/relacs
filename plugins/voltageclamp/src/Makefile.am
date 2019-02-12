@@ -23,6 +23,7 @@ libvoltageclamppnsubtraction_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -31,6 +32,7 @@ libvoltageclamppnsubtraction_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclamppnsubtraction_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -58,6 +60,7 @@ libvoltageclampactivation_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -97,6 +100,7 @@ libvoltageclampinactivation_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -135,6 +139,7 @@ libvoltageclamprecovery_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -173,6 +178,7 @@ libvoltageclampramp_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -211,6 +217,7 @@ libvoltageclamptail_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -249,6 +256,7 @@ libvoltageclampmembranetest_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -287,6 +295,7 @@ libvoltageclampsummary_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
