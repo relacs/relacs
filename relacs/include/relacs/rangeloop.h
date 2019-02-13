@@ -521,10 +521,10 @@ class RangeLoop
         \sa setSkip(), setSkipBelow(), setSkipAbove(), setSkipBetween() */
   void setSkipNocount( bool skip=true );
 
-    /*! Within the range o non-skipped data elements leave at minimum
-        \a num data elements non-skipped. Keep the ones that have a
-        count greater than zero, and respect the current increment
-        when selecting the not to be skipped elements. */
+    /*! Within the range of non-skipped data elements make sure that at minimum
+        \a num data elements are not skipped. Keep the ones that have a
+        count greater than zero, and, if necessary, select further not to be
+	skipped elements while respecting the current increment. */
   void setSkipNumber( int num );
 
     /*! Returns the position of the data element next or equal to position \a pos

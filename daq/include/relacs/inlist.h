@@ -197,20 +197,6 @@ public:
 	a secondary unit \a unit.
         \sa setScale() */
   void setUnit( double scale, const string &unit );
-    /*! Set the maximum time the hardware driver should buffer the data
-        before they are transferred to the AnalogInput implementation
-	to \a time seconds.
-	If \a time is zero or negative, the default buffer time of the driver
-	is used	for the size of the driver's buffer.
-        \sa setUpdateTime() */
-  void setReadTime( double time );
-    /*! Set the maximum time the AnalogInput implementaion should buffer
-        the data internally before they are converted to the secondary unit
-	and written into the InData buffer to \a time seconds.
-	If \a time is zero or negative, the InData::capacity() is used
-	for the size of this buffer.
-        \sa setReadTime() */
-  void setUpdateTime( double time );
 
     /*! Clear all mode flags for all input traces. 
         \sa setMode(), addMode(), delMode() */

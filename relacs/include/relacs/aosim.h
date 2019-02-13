@@ -81,7 +81,7 @@ public:
   virtual int reset( void );
 
     /*! \return the status of the analog output. */
-  virtual Status status( void ) const;
+  virtual Status statusUnlocked( void ) const;
 
     /*! get error status of the AI-device. */
   virtual int error( void ) const;

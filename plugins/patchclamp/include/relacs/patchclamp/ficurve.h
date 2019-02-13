@@ -38,7 +38,7 @@ namespace patchclamp {
 \class FICurve
 \brief [RePro] F-I curve measured in current-clamp
 \author Jan Benda
-\version 1.8 (Jun 27, 2016)
+\version 2.0 (Nov 29, 2018)
 \par Screenshot
 \image html ficurve.png
 
@@ -61,13 +61,14 @@ namespace patchclamp {
     - \c blockrepeat=10: Number of repetitions of a fixed intensity increment (\c integer)
     - \c repeats=1: Number of repetitions of the whole f-I curve measurement (\c integer)
 - \c Analysis
-    - \c fmax=100Hz: Maximum firing rate (\c number)
-    - \c vmax=-50mV: Maximum steady-state potential (\c number)
+    - \c optimize=true: Dynamically optimize range of injected currents (\c boolean)
+    - \c fmax=200Hz: Maximum firing rate (\c number)
+    - \c vmax=0mV: Maximum steady-state potential (\c number)
     - \c numpoints=0: Number of points to measure below maximum firing rate (\c integer)
     - \c sswidth=50ms: Window length for steady-state analysis (\c number)
-    - \c ignorenoresponse=true: Do not include trials without response (\c boolean)
+    - \c ignorenoresponse=true: Do not include trials without response in analysis (\c boolean)
     - \c diffincrement=0: Optimize range at current increments below (\c integer)
-    - \c maxratediff=10Hz: Maximum difference between onset and steady-state firing rate for optimization (\c number)
+    - \c maxratediff=100Hz: Maximum difference between onset and steady-state firing rate for optimization (\c number)
 */
 
 

@@ -52,7 +52,7 @@
       inputtracemaxvalue : 10
       inputtracecenter   : true
   output data:
-      outputtraceid      : [ Left-Speaker, Left-1 ]
+      outputtraceid      : [ Left-Speaker, Right-Speaker ]
       outputtracedevice  : [ ao-1, ao-1 ]
       outputtracechannel : [ 0, 1 ]
       outputtracescale   : [ 1, 1 ]
@@ -93,7 +93,7 @@
       plugin    : DAQFlexAnalogOutput
       ident     : ao-1
       device    : daqflex-1
-      useaiclock: false
+      useaiclock: true
       delays    : 0ms
 
 *Digital I/O Devices
@@ -107,12 +107,12 @@
       plugin    : CS3310DIO
       device    : dio-1
       ident     : attdev-1
-      cspin     : 1
-      dataoutpin: 0
-      datainpin : 4
-      strobepin : 5
-      mutepin   : 2
-      zcenpin   : 3
+      strobepin : 6
+      datainpin : 5
+      dataoutpin: -1
+      cspin     : 4
+      mutepin   : 7
+      zcenpin   : -1
 
 *Attenuator Interfaces
   Device1:

@@ -47,7 +47,6 @@ ComediAnalogInput::ComediAnalogInput( void )
   TakeAO = true;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  IsRunning = false;
   AboutToStop = false;
   Calibration = 0;
   Traces = 0;
@@ -237,7 +236,6 @@ int ComediAnalogInput::open( const string &device )
   ComediAO = 0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  IsRunning = false;
   AboutToStop = false;
   TotalSamples = 0;
   CurrentSamples = 0;
@@ -347,7 +345,7 @@ double ComediAnalogInput::bipolarRange( int index ) const
 }
   
 
-string cmd_src( int src )
+string ComediAnalogInput::cmd_src( int src )
 {
   string buf = "";
 
@@ -373,7 +371,7 @@ string cmd_src( int src )
 }
 
 
-void dump_cmd( comedi_cmd *cmd )
+void ComediAnalogInput::dump_cmd( comedi_cmd *cmd )
 {
   cerr << "subdevice:      " << cmd->subdev << '\n';
   cerr << "start:      " << Str( cmd_src(cmd->start_src), 8 ) << "  " << cmd->start_arg << '\n';
@@ -648,21 +646,6 @@ int ComediAnalogInput::testReadDevice( InList &traces )
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
-  // check read buffer size:
-  int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() ) * BufferElemSize;
-  if ( readbufsize > ReadBufferSize ) {
-    traces.addError( DaqError::InvalidBufferTime );
-    traces.setReadTime( ReadBufferSize/traces.size()/BufferElemSize/traces[0].sampleRate() );
-    retVal = -1;
-  }
-
-  // check update buffer size:
-  int bufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
-  if ( bufsize < readbufsize ) {
-    traces.addError( DaqError::InvalidUpdateTime );
-    retVal = -1;
-  }
-
   return retVal;
 }
 
@@ -698,7 +681,8 @@ int ComediAnalogInput::prepareRead( InList &traces )
     return error;
 
   // init internal buffer:
-  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
+  // XXX We need something more sensible for setting the buffer size:
+  BufferSize = 2 * traces.size() * traces[0].indices( 1.0 ) * BufferElemSize;
   Buffer = new char[BufferSize];
   BufferN = 0;
 
@@ -718,7 +702,7 @@ int ComediAnalogInput::prepareRead( InList &traces )
   }
 
   if ( traces.success() ) {
-    setSettings( traces, BufferSize, ReadBufferSize );
+    setSettings( traces, ReadBufferSize, BufferSize );
     Traces = &traces;
     IsPrepared = true;
     return 0;
@@ -731,8 +715,6 @@ int ComediAnalogInput::prepareRead( InList &traces )
 int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 				  QWaitCondition *datawait, QSemaphore *aosp )
 {
-  //  cerr << " ComediAnalogInput::startRead(): begin" << '\n';
-
   QMutexLocker locker( mutex() );
 
   if ( !IsPrepared || Traces == 0 ) {
@@ -754,6 +736,8 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     insnlist.insns[k].n = 1;
   }
   int ilinx = 0;
+  
+  // execute AI command:
   TraceIndex = 0;
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     int cerror = comedi_errno();
@@ -764,38 +748,40 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   }
   else  
     insnlist.insns[ilinx++].subdev = SubDevice;
+  
+  // add AO to instruction list:
   bool tookao = false;
   if ( TakeAO && aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
     if ( ! ComediAO->useAIStart() )
       insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
     tookao = true;
   }
+  
+  // execute instruction list:
   insnlist.n_insns = ilinx;
-  bool success = true;
   int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
-  if ( ninsns != ilinx ) {
-    success = false;
-    cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist executed "
-	 << ninsns << " from " << ilinx << " instructions\n";
-    Traces->addErrorStr( deviceFile() + " - comedi_do_insnlist executed " + Str( ninsns ) + " from " +
-			 Str( ilinx ) + " instructions" );
-  }
   delete [] insnlist.insns;
-
-  bool finished = true;
-  if ( success ) {
-    IsRunning = true;
+  if ( ninsns == ilinx ) {
+    // success:
+    bool finished = true;
     // start analog input thread:
     startThread( sp, datamutex, datawait );
     // start analog output thread:
     if ( tookao ) {
       ComediAO->startThread( aosp );
       finished = ComediAO->noMoreData();
-      //      cerr << "START AO THREAD " << finished << '\n';
     }
+    return finished ? 0 : 1;
   }
-
-  return success ? ( finished ? 0 : 1 ) : -1;
+  else {
+    // failed to start:
+    cerr << "! error in ComediAnalogInput::startRead -> comedi_do_insnlist executed "
+	 << ninsns << " from " << ilinx << " instructions\n";
+    Traces->addErrorStr( deviceFile() + " - comedi_do_insnlist executed " + Str( ninsns ) + " from " +
+			 Str( ilinx ) + " instructions" );
+    return -1;
+  }
+  return 0;
 }
 
 
@@ -850,60 +836,41 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 
 int ComediAnalogInput::readData( void )
 {
-  //  cerr << "Comedi::readData() start\n";
-
-  QMutexLocker locker( mutex() );
-
-  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
+  if ( Traces == 0 || Buffer == 0 )
     return -1;
 
-  bool failed = false;
-  int ern = 0;
-  int readn = 0;
-  int buffern = BufferN*BufferElemSize;
-  int maxn = BufferSize - buffern;
-
-  // try to read twice:
-  for ( int tryit = 0; tryit < 1 && ! failed && maxn > 0; tryit++ ) {
-
-    // data present?
-    //    if ( comedi_get_buffer_contents( DeviceP, SubDevice ) <= 0 )
-    //      break;
+  if ( AboutToStop )
+    comedi_poll( DeviceP, SubDevice );
     
-    // read data:
-    ssize_t m = ::read( comedi_fileno( DeviceP ), Buffer + buffern, maxn );
+  // read data:
+  int ern = 0;
+  int buffern = BufferN*BufferElemSize;
+  //  cerr << "BUFFERN " << buffern << '\n';
+  ssize_t readn = ::read( comedi_fileno( DeviceP ), Buffer + buffern, BufferSize - buffern );
+  //  cerr << "READN " << readn << '\n';
 
-    ern = errno;
-    if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
+  ern = errno;
+  if ( readn < 0 && ern != EAGAIN && ern != EINTR ) {
+    if ( ! AboutToStop ) {
+      cerr << "COMEDI READ ERROR: " << string( comedi_strerror( comedi_errno() ) ) << '\n';
       Traces->addErrorStr( "Error while reading from device-file: " + deviceFile() );
       Traces->addErrorStr( ern );
-      failed = true;
-      break;
+      if ( errno == EPIPE )
+	Traces->addError( DaqError::OverflowUnderrun );
+      return -2;   
     }
-    else if ( m > 0 ) {
-      maxn -= m;
-      buffern += m;
-      readn += m;
-    }
-
+    return 0;
   }
-
-  BufferN = buffern / BufferElemSize;
-  readn /= BufferElemSize;
-  CurrentSamples += readn;
-
-  if ( failed ) {
-    if ( errno == EPIPE )
+  else if ( readn > 0 ) {
+    readn /= BufferElemSize;
+    BufferN += readn;
+    CurrentSamples += readn;
+    return readn;
+  }
+  else if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 ) {
+    // no data have been read:
+    if ( ( ! AboutToStop ) && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       Traces->addError( DaqError::OverflowUnderrun );
-    return -2;   
-  }
-
-  // no more data to be read:
-  if ( readn <= 0 && ! ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) ) {
-    if ( IsRunning && ( ! AboutToStop ) &&
-	 ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
-      // The following error messages do not work after a comedi_cancel!
-      //      Traces->addError( DaqError::OverflowUnderrun );
       cerr << " ComediAnalogInput::readData(): no data and not running\n";
       cerr << " ComediAnalogInput::readData(): comedi_error: " << comedi_strerror( comedi_errno() ) << "\n";
       return -2;
@@ -911,17 +878,12 @@ int ComediAnalogInput::readData( void )
     AboutToStop = false;
     return -1;
   }
-
-  //  cerr << "Comedi::readData() end " << BufferN << "\n";
-
-  return readn;
+  return 0;
 }
 
 
 int ComediAnalogInput::convertData( void )
 {
-  QMutexLocker locker( mutex() );
-
   if ( Traces == 0 || Buffer == 0 )
     return -1;
 
@@ -929,8 +891,6 @@ int ComediAnalogInput::convertData( void )
     convert<lsampl_t>( *Traces, Buffer, BufferN );
   else
     convert<sampl_t>( *Traces, Buffer, BufferN );
-
-  //  cerr << "Comedi::convertData() " << BufferN << "\n";
 
   int n = BufferN;
   BufferN = 0;
@@ -946,19 +906,19 @@ int ComediAnalogInput::stop( void )
 
   {
     QMutexLocker locker( mutex() );
-    if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
-      return ReadError;
-    if ( comedi_poll( DeviceP, SubDevice ) < 0 )
-      return ReadError;
+    if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) == 0 )
+      return 0;
     AboutToStop = true;
   }
-
+  
   stopRead();
 
+  int r = 0;
   lock();
-  IsRunning = false;
+  if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
+    r = ReadError;
   unlock();
-  return 0;
+  return r;
 }
 
 
@@ -967,13 +927,7 @@ int ComediAnalogInput::reset( void )
   if ( !isOpen() )
     return NotOpen;
 
-  QMutexLocker locker( mutex() );
-  if ( IsRunning ) {
-    if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
-      return ReadError;
-    if ( comedi_poll( DeviceP, SubDevice ) < 0 )
-      return ReadError;
-  }
+  lock();
 
   // free internal buffer:
   if ( Buffer != 0 )
@@ -990,10 +944,11 @@ int ComediAnalogInput::reset( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  IsRunning = false;
   AboutToStop = false;
   Traces = 0;
   TraceIndex = 0;
+
+  unlock();
 
   return 0;
 }

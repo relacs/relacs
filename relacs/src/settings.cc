@@ -78,7 +78,6 @@ Settings::Settings( RELACSWidget* rw )
   newSection( "Plotting" );
   addText( "printcommand", "Command to be executed for printing traces", "" );
   newSection( "Data acquisition" );
-  addNumber( "readinterval", "Interval for periodic acquisition of data", 0.01, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addNumber( "aitimeout", "Minimum time that has to pass between analog input errors", 10.0, 0.0, 100000.0, 1.0, "seconds" );
 
@@ -103,10 +102,6 @@ void Settings::configure( void )
 
 void Settings::notify( void )
 {
-  if ( RW->AQ != 0 ) {
-    RW->AQ->setUpdateTime( number( "updateinterval" ) );
-  }
-
   if ( RW->SF != 0 ) {
 
     Str pathformat = text( "pathformat" );

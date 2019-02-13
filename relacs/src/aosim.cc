@@ -206,7 +206,7 @@ int AOSim::writeData( void )
 }
 
 
-AnalogOutput::Status AOSim::status( void ) const
+AnalogOutput::Status AOSim::statusUnlocked( void ) const
 {
   return Idle;
 }
