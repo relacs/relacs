@@ -438,6 +438,7 @@ libefishmovingobjects_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -454,6 +455,7 @@ libefishmovingobjects_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
     $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishmovingobjects_la_OBJECTS) : moc_movingobjects.cc
