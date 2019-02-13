@@ -1821,12 +1821,18 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
   bool first_only = (flags & Options::FirstOnly) > 0;
   for ( int i = 0;  i < (first_only ? 1 : param.size()); i++ ) {
     nix::Value val;
-    if ( param.isNumber () || param.isInteger() ) {
+    if ( param.isAnyNumber() && param.size() == 3  && param.point() != Point::None ) {
+      std::ostringstream stream;
+      stream << param.point();
+      std::string str =  stream.str();
+      val = nix::Value ( str );
+    }
+    else if ( param.isNumber () || param.isInteger() ) {
       if ( param.isInteger () ) {
-        val = nix::Value ( static_cast<int64_t>( param.number (i) ) );
+	val = nix::Value ( static_cast<int64_t>( param.number (i) ) );
       }
       else {
-        val = nix::Value ( param.number ( i ) );
+	val = nix::Value ( param.number ( i ) );
       }
       val.uncertainty = param.error( i );
     }
