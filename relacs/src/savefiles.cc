@@ -1834,7 +1834,9 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
       else {
 	val = nix::Value ( param.number ( i ) );
       }
-      val.uncertainty = param.error( i );
+      if ( param.error( i ) > 0.0 ) {
+        val.uncertainty = param.error( i );
+      }
     }
     else if ( param.isDate() ) {
       val = nix::Value( param.text( i, "%04Y-%02m-%02d" ) );
