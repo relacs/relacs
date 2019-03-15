@@ -1909,11 +1909,9 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
     return;
   }
   nix::Property prop = section.createProperty ( param.name(), values );
-  if ( !unit.empty() && ( nix::util::isSIUnit( unit ) ||
-	 nix::util::isCompoundSIUnit( unit ) ) ) {
+
+  if ( !unit.empty() ) {
     prop.unit ( unit );
-  } else if ( !unit.empty() ) {
-    std::cerr << "\t [nix] Warning: " << unit << " is no SI unit, not setting it!!!" << std::endl;
   }
   if ((param.flags() & OutData::Mutable) > 0) {
     prop.definition( "parameter is mutable, per trial data is stored as feature of stimulus tag!" );
