@@ -2284,15 +2284,21 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
     }
   }
   Options mutables = stimuliref[0].section( "parameter" );
+  string prop_name;
   for (auto p : mutables) {
-    if ( p.isNumber() ) {
-      double val = p.number();
-      nix::DataArray da =  root_block.getDataArray( tag_name + "_" + p.name() );
-      appendValue( da, val );
-    } else if ( p.isText() ) {
-      string val = p.text();
-      nix::DataArray da =  root_block.getDataArray( tag_name + "_" + p.name() );
-      appendValue( da, val );
+    prop_name = tag_name + "_" + p.name();
+    for (auto f : stimulus_feats) {
+      if (f.data().name() == prop_name) {
+        nix::DataArray da = f.data();
+        if ( p.isNumber() ) {
+          double val = p.number();
+          appendValue( da, val );
+        } else if ( p.isText() ) {
+          string val = p.text();
+          appendValue( da, val );
+        }
+        break;
+      }
     }
   }
 
