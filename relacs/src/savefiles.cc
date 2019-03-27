@@ -2223,11 +2223,8 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
                     const deque< Options > &stimuliref, int *stimulusindex,
                     double sessiontime, const string &reproname, const Acquire *acquire )
 {
-  if ( !fd )
+  if ( !fd || IL[0].signalIndex() < 1 )
     return;
-  if ( IL[0].signalIndex() < 1 ) {
-    return;
-  }
 
   double abs_time = IL[0].signalTime() - sessiontime;
   double delay = stim_info[0].delay();
