@@ -1781,6 +1781,9 @@ string SaveFiles::NixFile::create ( string path, bool compression )
   fd = nix::File::open( nix_path, nix::FileMode::Overwrite, "hdf5", compr );
   root_block = fd.createBlock(rid, "recording");
   root_section = fd.createSection(rid, "recording");
+
+  nix::Value ver( SaveFiles::NixFile::relacs_nix_version );
+  root_section.createProperty("relacs-nix version", ver);
   root_block.metadata( root_section );
   return nix_path;
 }
