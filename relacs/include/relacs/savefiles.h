@@ -518,6 +518,7 @@ protected:
     nix::DataArray stimulus_extents;
     nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat;
     std::vector<nix::DataArray> data_features;
+    nix::Group     stimulus_group;
 
     string create ( string path, bool compression );
     void close ( void );

@@ -2028,6 +2028,7 @@ void SaveFiles::NixFile::writeRePro ( const Options &reproinfo, const deque< str
     }
     s.createProperty( "reprofiles", values );
   }
+  stimulus_group = root_block.createGroup( repro_name, "relacs.stimulus_group");
   // store data
   repro_tag = root_block.createTag( repro_name, "relacs.repro_run", {repro_start_time});
   repro_tag.units({"s"});
@@ -2041,6 +2042,7 @@ void SaveFiles::NixFile::writeRePro ( const Options &reproinfo, const deque< str
     }
     repro_tag.addReference( event.data );
   }
+  stimulus_group.addTag( repro_tag );
 }
 
 void SaveFiles::NixFile::endRePro( double current_time )
@@ -2050,6 +2052,7 @@ void SaveFiles::NixFile::endRePro( double current_time )
     double actual_duration =  current_time - stimulus_start_time - stepsize;
     replaceLastEntry( stimulus_extents, actual_duration );
   }
+  stimulus_group.addMultiTag( stimulus_tag );
   fd.flush();
 }
 
