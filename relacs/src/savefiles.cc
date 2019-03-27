@@ -2213,6 +2213,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
       createFeature(root_block, stimulus_tag, fname, ftype, funit, flabel, nix::LinkType::Indexed, dtype);
     }
   }
+  stimulus_feats = stimulus_tag.features();
 }
 
 
@@ -2236,36 +2237,42 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
   stimulus_start_time = (IL[0].signalIndex() - trace.index  + trace.written) * stepsize;
   stimulus_duration = stim_info[0].length() - stepsize;
   string tag_name = nix::util::nameSanitizer(stim_info[0].description().name());
-  if ( stimulus_tag && stimulus_tag.name() != tag_name ) {
-    stimulus_tag = root_block.getMultiTag(tag_name);
-  }
-  if ( stimulus_tag && stimulus_tag.name() == tag_name ) {
-    stimulus_positions = stimulus_tag.positions();
-    stimulus_extents = stimulus_tag.extents();
-    data_features.clear();
-    std::vector<nix::Feature> feats = stimulus_tag.features();
-    for (nix::Feature f : feats) { // this can be switched to getting the feature by name after the next nix release is out...
-      if ( f.data().name() == tag_name + "_abs_time")
-        time_feat = f.data();
-      else if (f.data().name() == tag_name + "_amplitude" )
-        amplitude_feat = f.data();
-      else if (f.data().name() == tag_name + "_delay" )
-        delay_feat = f.data();
-      else {
-        for (auto o : stim_options) {
-          if ( f.data().name() ==  tag_name + "_" + o.name()) {
-            data_features.push_back(f.data());
+
+  if ( stimulus_tag ) { // there is already a stimulus tag
+    if ( stimulus_tag.name() != tag_name ) { // it is NOT the one we need
+      stimulus_tag = root_block.getMultiTag(tag_name); // try to find it
+      if ( stimulus_tag ) {  // if a match was found, read the stuff
+        stimulus_positions = stimulus_tag.positions();
+        stimulus_extents = stimulus_tag.extents();
+        data_features.clear();
+        stimulus_feats = stimulus_tag.features();
+        for (nix::Feature f : stimulus_feats) {
+          if ( f.data().name() == tag_name + "_abs_time")
+            time_feat = f.data();
+          else if (f.data().name() == tag_name + "_amplitude" )
+            amplitude_feat = f.data();
+          else if (f.data().name() == tag_name + "_delay" )
+            delay_feat = f.data();
+          else {
+            for (auto o : stim_options) {
+              if ( f.data().name() ==  tag_name + "_" + o.name()) {
+                data_features.push_back(f.data());
+              }
+            }
           }
         }
       }
     }
-    appendValue(stimulus_positions, stimulus_start_time);
-    appendValue(stimulus_extents, stimulus_duration);
+    if ( stimulus_tag ) {
+      appendValue(stimulus_positions, stimulus_start_time);
+      appendValue(stimulus_extents, stimulus_duration);
+    }
   }
-  else { // There is no such tag, we need to create a new one
+  if ( !stimulus_tag ) { // there was no stimulus tag and no match was found, create a new one
     createStimulusTag(tag_name, stim_info[0].description(), stim_options, stim_info,
                       acquire, stimulus_start_time, stimulus_duration);
   }
+
   for ( auto o : stim_options ) { //TODO check if this can be simplified
     for ( auto da : data_features ) {
       if ( da.name() ==  tag_name + "_" + o.name()) {
