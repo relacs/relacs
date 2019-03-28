@@ -1834,7 +1834,9 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
       else {
 	val = nix::Value ( param.number ( i ) );
       }
-      val.uncertainty = param.error( i );
+      if ( param.error( i ) > 0.0 ) {
+        val.uncertainty = param.error( i );
+      }
     }
     else if ( param.isDate() ) {
       val = nix::Value( param.text( i, "%04Y-%02m-%02d" ) );
@@ -1907,11 +1909,9 @@ static void saveNIXParameter(const Parameter &param, nix::Section &section, Opti
     return;
   }
   nix::Property prop = section.createProperty ( param.name(), values );
-  if ( !unit.empty() && ( nix::util::isSIUnit( unit ) ||
-	 nix::util::isCompoundSIUnit( unit ) ) ) {
+
+  if ( !unit.empty() ) {
     prop.unit ( unit );
-  } else if ( !unit.empty() ) {
-    std::cerr << "\t [nix] Warning: " << unit << " is no SI unit, not setting it!!!" << std::endl;
   }
   if ((param.flags() & OutData::Mutable) > 0) {
     prop.definition( "parameter is mutable, per trial data is stored as feature of stimulus tag!" );
@@ -2046,9 +2046,10 @@ void SaveFiles::NixFile::writeRePro ( const Options &reproinfo, const deque< str
 void SaveFiles::NixFile::endRePro( double current_time )
 {
   repro_tag.extent({ (current_time - repro_start_time)});
-  // TODO maybe end the stimulus as well?
-  if ( stimulus_tag && (stimulus_start_time + stimulus_duration) > current_time )
-     std::cerr << "premature stop of stimulus presentation need to fix the stimulus tag!" << std::endl;
+  if ( stimulus_tag && (stimulus_start_time + stimulus_duration) > current_time ) {
+    double actual_duration =  current_time - stimulus_start_time - stepsize;
+    replaceLastEntry( stimulus_extents, actual_duration );
+  }
   fd.flush();
 }
 
@@ -2227,9 +2228,8 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
 
   NixTrace trace = traces[0];
   stimulus_start_time = (IL[0].signalIndex() - trace.index  + trace.written) * stepsize;
-  stimulus_duration = stim_info[0].length();
+  stimulus_duration = stim_info[0].length() - stepsize;
   string tag_name = nix::util::nameSanitizer(stim_info[0].description().name());
-
   if ( stimulus_tag && stimulus_tag.name() != tag_name ) {
     stimulus_tag = root_block.getMultiTag(tag_name);
   }
@@ -2257,7 +2257,8 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
     appendValue(stimulus_extents, stimulus_duration);
   }
   else { // There is no such tag, we need to create a new one
-    createStimulusTag(tag_name, stim_info[0].description(), stim_options, stim_info, acquire, stimulus_start_time, stimulus_duration);
+    createStimulusTag(tag_name, stim_info[0].description(), stim_options, stim_info,
+                      acquire, stimulus_start_time, stimulus_duration);
   }
   for ( auto o : stim_options ) { //TODO check if this can be simplified
     for ( auto da : data_features ) {
@@ -2277,7 +2278,6 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
     if ( p.isNumber() ) {
       double val = p.number();
       nix::DataArray da =  root_block.getDataArray( tag_name + "_" + p.name() );
-
       appendValue( da, val );
     } else if ( p.isText() ) {
       string val = p.text();
@@ -2328,6 +2328,14 @@ void SaveFiles::NixFile::appendValue( nix::DataArray &array, string value ) {
   nix::NDSize size = array.dataExtent();
   array.dataExtent( size + 1 );
   array.setData( value, size );
+}
+
+void SaveFiles::NixFile::replaceLastEntry( nix::DataArray &array, double value ) {
+  if ( !array )
+    return;
+  nix::NDSize size = array.dataExtent();
+  size -= 1;
+  array.setData( nix::DataType::Double, &value, {1}, size );
 }
 
 
