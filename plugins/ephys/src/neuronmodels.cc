@@ -257,6 +257,7 @@ void NeuronModels::addModels( void )
   add( new MorrisLecar() );
   add( new HodgkinHuxley() );
   add( new Connor() );
+  add( new SodiumCurrent() );
   //  add( new RushRinzel() );
   //  add( new Awiszus() );
   //  add( new TraubMiles() );
