@@ -38,6 +38,7 @@ PNSubtraction::PNSubtraction( const string &name,
 {
   // add some options:
   addNumber( "pn", "p/N", -4, -100, 100, 1 );
+  addBoolean("qualitycontrol", "Quality control", true);
   // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
 }
 
@@ -47,14 +48,38 @@ int PNSubtraction::main( void )
   return Completed;
 }
 
-SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0 ) {
+SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0) {
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
+  bool qualitycontrol = boolean( "qualitycontrol" );
 
   // add p/n option to signal
   Parameter &pn1 = opts.addNumber( "pn", pn );
   signal.setMutable( pn1 );
   signal.setDescription( opts );
+
+  // don't print repro message:
+  noMessage();
+
+  // make short quality assuring test-pulse
+  if ( qualitycontrol == 1) {
+    OutData quality_signal1;
+    quality_signal1.setTrace(PotentialOutput[0]);
+    quality_signal1.constWave(.010, -1.0, holdingpotential);
+
+    OutData quality_signal2;
+    quality_signal2.setTrace(PotentialOutput[0]);
+    quality_signal2.constWave(.010, -1.0, holdingpotential-20);
+
+    OutData quality_signal3;
+    quality_signal3.setTrace(PotentialOutput[0]);
+    quality_signal3.constWave(.010, -1.0, holdingpotential);
+
+    quality_signal1.append(quality_signal2);
+    quality_signal1.append(quality_signal3);
+    write(quality_signal1);
+    sleep(pause);
+  };
 
   // skip prepulses if pn==0
   if ( pn == 0 ) {
@@ -67,9 +92,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     return currenttrace;
   };
 
-  // don't print repro message:
-  noMessage();
-
+  // give stimulus
   OutData pn_signal = signal;
   pn_signal.setTrace( PotentialOutput[0] );
   pn_signal = holdingpotential + (signal - holdingpotential)/pn;
@@ -86,7 +109,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-    pn_trace += currenttrace;// - currenttrace[0];
+    pn_trace += currenttrace;
 
   };
 //  pn_trace -= pn_trace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
@@ -101,8 +124,9 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
+
   currenttrace -= pn/::abs(pn)*pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
-  currenttrace -= currenttrace.mean(t0 - 0.001, t0);
+  currenttrace -= currenttrace.mean( -samplerate/500, 0);
 
 //  return pn_trace;
   return currenttrace;
