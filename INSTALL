@@ -1,36 +1,44 @@
-0. For the  unpatient, run the following commands:
+# For the  unpatient, run the following commands:
 
 - for Debian based systems (using apt-get):
 
-# Make sure portaudio version 19 is installed (needed for audio monitor):
+Make sure portaudio version 19 is installed (needed for audio monitor):
+```
 sudo apt-get -y remove libjack-dev libportaudio-dev libportaudio0
 sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portaudio19-dev
+```
 
-# install packages:
-sudo apt-get -y install autoconf automake libtool libtool-bin g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto subversion
+install packages required by RELACS:
+```
+sudo apt-get -y install autoconf automake libtool libtool-bin g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto git
+```
 
 - for Fedora based systems (using yum/dnf), login as superuser (su):
 
-# Make sure portaudio version 19 is installed (needed for audio monitor):
+Make sure portaudio version 19 is installed (needed for audio monitor):
+```
 dnf -y install jack-audio-connection-kit-devel portaudio-devel
+```
 
-# install packages:
-dnf -y install autoconf automake libtool gcc-c++ qt4-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto subversion
+install packages required by RELACS:
+```
+dnf -y install autoconf automake libtool gcc-c++ qt4-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto git
+```
 
 - after having installed the packages change into the directory of the
-  relacs source and execute:
-
+  RELACS source and execute:
+```
 sudo make uninstall
 make clean
 ./bootstrap.sh
 ./configure
 make -j$(grep -c "^processor" /proc/cpuinfo)
 sudo make install
-
+```
 
 Here are the details:
 
-1. Make sure you have the following packages installed:
+# Make sure you have the following packages installed:
 
    autoconf
    automake
@@ -45,15 +53,17 @@ Here are the details:
    libusb-1.0.0-dev (Debian) libusb-devel (Fedora)
    doxygen
    xmlto
-   subversion
+   git
 
 On Debian or Ubuntu based systems execute:
-
-sudo apt-get install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto subversion
+```
+sudo apt-get install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto git
+```
 
 On Fedora/RedHat based systems execute:
-
-dnf -y install autoconf automake libtool gcc-c++ qt4-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto subversion
+```
+dnf -y install autoconf automake libtool gcc-c++ qt4-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto git
+```
 
 For the audio monitor we need libportaudio version 19. 
 
@@ -71,8 +81,10 @@ libportaudiocpp0
 portaudio19-dev
 
 That is, execute:
+```
 sudo apt-get -y remove libjack-dev libportaudio-dev libportaudio0
 sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portaudio19-dev
+```
 
 On new Fedora systems you simpy need to install
 
@@ -80,35 +92,36 @@ jack-audio-connection-kit-devel
 portaudio-devel
 
 by executing
-
+```
 sudo apt-get -y install jack-audio-connection-kit-devel portaudio-devel
+```
 
-
-2. Change to the directory containing the relacs source code.
-
-> cd relacs-x.x.x
+# Change to the directory containing the RELACS source code.
+```
+cd relacs-x.x.x
+```
 
 Note: if you have already installed an older version of RELACS it is best to
 uninstall it first, before you install a newer version.
 For this, execute the following commands from the 
 root directory of the older version:
+```
+make uninstall
+make clean
+```
 
-> make uninstall
-> make clean
+# Create the configure script
 
-
-3. Create the configure script
-
-In case you downloaded the RELACS source code from the subversion
+In case you downloaded the RELACS source code from the git
 repository you need to run
-
-> ./bootstrap.sh
-
+```
+./bootstrap.sh
+```
 first. On success, the ./bootstrap.sh script finishes with the
 message "Successfully generated the ./configure script".
 
 
-4. Configure RELACS
+# Configure RELACS
 
 If you want to use the comedi data acquisition interface (www.comedi.org)
 for acquiring real data, then you need to install comedi first.
@@ -116,8 +129,9 @@ See www.relacs.net/plugins/comedi for more instructions.
 For a demo running in simulation mode, this is not necessary.
 
 Then run
-
-> ./configure
+```
+./configure
+```
 
 If ./configure finishes with a message like
 "If you can read these lines ./configure finished sucessfully...."
@@ -135,59 +149,64 @@ After installation of new packages you need to run ./configure again.
 See ./configure --help and the instructions below for details.
 
 
-5. Compile RELACS
+# Compile RELACS
 
 Run
+```
+make -j$(grep -c "^processor" /proc/cpuinfo)
+```
 
-> make -j$(grep -c "^processor" /proc/cpuinfo)
-
-That takes a while! The -j options runs as many processes as you have cpu cores in parallel.
-
-
-6. Optionally run
-
-> make check
-
-for executing some self tests.
+That takes a while! The -j options runs as many processes as you have
+cpu cores in parallel.
 
 
-7. Run a demo
+# Check RELACS
+Optionally run
+```
+make check
+```
+for executing some simple self tests.
 
-> ./relacslocal -3
 
+# Run a demo
+
+```
+./relacslocal -3
+```
 Press for example 'F1'. More instructions on the demo will follow...
 
 
-8. If you want to install RELACS, simply execute
-
-> make install
-
+# Install RELACS 
+If you want to install RELACS, simply execute
+```
+sudo make install
+```
 By default RELACS is installed to /usr . You can specify where RELACS
 is installed to by the --prefix and related options during the
 configure step No. 4. See ./configure --help and the instructions
 below for details.
 
 
-9. Integrate RELACS into your desktop
-
-If RELACS does not use the same widget style as all your other applications
-you need to run
-
-> qtconfig
-
+# Desktop integration
+If RELACS does not use the same widget style as all your other
+applications you need to run
+```
+qtconfig
+```
 and select the appropriate GUI style. Then File->Save.
 
 
-10. Run RELACS
-
-> relacs
-
+# Run RELACS
+Simply execute
+```
+relacs
+```
 Note, that RELACS requires the configuration files relacs.cfg and
 macros.cfg in the current directory. For configuring RELACS 
 see the user manual.
 
 
-11. Troubleshooting
+# Troubleshooting
 
 In case you really cannot get ./configure to run successfully or it
 fails with an error message that does not help you, then please write
