@@ -10,13 +10,13 @@ pluginlib_LTLIBRARIES = \
     libefishsam.la \
     libefishficurve.la \
     libefishfilestimulus.la \
-    libefishchirps.la \
-    libefishmovingobjects.la
+    libefishchirps.la
 
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
     libefishreceptivefield.la \
-    libefishrobottofishposition.la
+    libefishrobottofishposition.la \
+    libefishmovingobjects.la
 endif
 
 
@@ -71,6 +71,7 @@ libefishsession_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../base/include \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
@@ -349,45 +350,6 @@ libefishreceptivefield_la_SOURCES = receptivefield.cc
 libefishreceptivefield_la_includedir = $(pkgincludedir)/efish
 
 libefishreceptivefield_la_include_HEADERS = $(HEADER_PATH)/receptivefield.h
-
-
-libefishrobottofishposition_la_CPPFLAGS = \
-    -I$(top_srcdir)/shapes/include \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/plot/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
-    -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
-
-libefishrobottofishposition_la_LDFLAGS = \
-    -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
-
-libefishrobottofishposition_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/daq/src/librelacsdaq.la \
-    $(top_builddir)/datafile/src/librelacsdatafile.la \
-    $(top_builddir)/plot/src/librelacsplot.la \
-    $(top_builddir)/options/src/librelacsoptions.la \
-    $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(top_builddir)/shapes/src/librelacsshapes.la \
-    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
-
-$(libefishrobottofishposition_la_OBJECTS) : moc_robottofishposition.cc
-
-libefishrobottofishposition_la_SOURCES = robottofishposition.cc
-
-libefishrobottofishposition_la_includedir = $(pkgincludedir)/efish
-
-libefishrobottofishposition_la_include_HEADERS = $(HEADER_PATH)/robottofishposition.h
-
 
 
 
