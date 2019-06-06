@@ -576,12 +576,12 @@ void SaveFiles::writeStimulus( void )
       string sn = ReProName;  // (name of the RePro from which the stimulus was written)
       // add type of stimulus description:
       Str tn = Stimuli[j].description().type();
-      if ( tn.empty() )
-        tn = Stimuli[j].description().name();
-      else {
+      if ( ! tn.empty() ) {
         tn.eraseFirst( "stimulus" );
         tn.preventFirst( '/' );
       }
+      if ( tn.empty() )
+        tn = Stimuli[j].description().name();
       if ( ! tn.empty() )
         sn += '-' + tn;
       string pn = "";
@@ -590,12 +590,12 @@ void SaveFiles::writeStimulus( void )
             si != Stimuli[j].description().sectionsEnd();
             ++si ) {
         tn = (*si)->type();
-        if ( tn.empty() )
-          tn = (*si)->name();
-        else {
+        if ( ! tn.empty() ) {
           tn.eraseFirst( "stimulus" );
           tn.preventFirst( '/' );
-        }
+	}
+        if ( tn.empty() )
+          tn = (*si)->name();
         if ( ! tn.empty() ) {
           // sqeeze repetitive types:
           if ( tn != pn ) {
