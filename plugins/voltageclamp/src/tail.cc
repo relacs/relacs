@@ -43,6 +43,10 @@ Tail::Tail( void )
   addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
+  addBoolean( "auto", "Auto", true );
+  addNumber( "delay", "XXXMinimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV").setActivation("auto", "false");
+
+
   // plot
   P.lock();
   P.setXLabel( "Time [ms]" );

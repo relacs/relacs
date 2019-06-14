@@ -126,11 +126,18 @@ int Activation::main( void )
 
       signal.setTrace( PotentialOutput[0] );
       signal.pulseWave( duration, -1.0,  step, holdingpotential );
-      signal.setIntensity( 1.0 );
-      Options opts;
-      Parameter &p1 = opts.addNumber( "step", step, "mV" );
+//      signal.setIntensity( 0.0 );
+      //Options opts;
+//      Parameter &p1 = opts.addNumber( "step", step, "mV" );
+      Parameter &p1 = signal.description().addNumber( "step", step, "mV" );
+      Parameter &p2 = signal.description()["Intensity"];
+      Parameter &p3 = signal.description().addNumber( "IntensityOffset", holdingpotential, "mV" );
+
       signal.setMutable( p1 );
-      signal.setDescription( opts );
+      signal.setMutable( p2 );
+      signal.setMutable( p3 );
+      Options opts = signal.description();
+      //signal.setDescription( opts );
 
       double mintime = -0.002;
       double maxtime = 0.01;

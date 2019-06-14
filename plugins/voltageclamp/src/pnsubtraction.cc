@@ -55,14 +55,16 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
   // add p/n option to signal
   Parameter &pn1 = opts.addNumber( "pn", pn );
+  Parameter &qc1 = opts.addBoolean( "qualitycontrol", qualitycontrol );
   signal.setMutable( pn1 );
+  signal.setMutable( qc1 );
   signal.setDescription( opts );
 
   // don't print repro message:
   noMessage();
 
   // make short quality assuring test-pulse
-  if ( qualitycontrol == 1) {
+  if ( qualitycontrol ) {
     OutData quality_signal1;
     quality_signal1.setTrace(PotentialOutput[0]);
     quality_signal1.constWave(.010, -1.0, holdingpotential);
@@ -77,6 +79,16 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
     quality_signal1.append(quality_signal2);
     quality_signal1.append(quality_signal3);
+
+    quality_signal1.description().setType( "Qualitycontrol" );
+//    quality_signal1.setIdent( signal.ident() );
+//    quality_signal1.setDescription( signal.description() );
+//
+//    cerr << "ident:" << signal.ident() << endl;
+//    cerr << "ident2:" << quality_signal1.ident() << endl;
+//    cerr << "descr:" << signal.description() << endl;
+//    cerr << "qualityname:" << quality_signal1.description().type() << endl;
+
     write(quality_signal1);
     sleep(pause);
   };
@@ -97,6 +109,11 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   pn_signal.setTrace( PotentialOutput[0] );
   pn_signal = holdingpotential + (signal - holdingpotential)/pn;
   SampleDataD pn_trace( mintime, pn_signal.rangeBack(), 1/samplerate );
+  pn_signal.description().setType( "PNSubatraction" );
+
+//  cerr << "pnname:"  << pn_signal.description().type() << endl;
+//  cerr << "signalname:" << signal.description().type() << endl;
+
 
   for ( int i = 0; i<::abs(pn); i++ ) {
     write(pn_signal);
@@ -118,6 +135,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     return pn_trace;
   };
 
+  signal.description().setType( "Trace" );
   write(signal);
   sleep(pause);
 

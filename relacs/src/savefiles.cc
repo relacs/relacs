@@ -1928,8 +1928,9 @@ static void saveNIXOptions(const Options &opts, nix::Section section,
   if ( ns.empty() && !ts.empty() ) {
     ns = ts;
     std::vector<nix::Section> secs = section.sections( nix::util::NameFilter<nix::Section>( nix::util::nameSanitizer( ns ) ));
-    if (secs.size() > 0)
+    if (secs.size() > 0) {
       ns = ns + "_" + nix::util::numToStr(secs.size());
+    }
   }
   bool have_name = ( ( ! ns.empty() ) && ( ( flags & OFlags::NoName ) == 0 ) );
   bool have_type = ( ( ! ts.empty() ) && ( ( flags & OFlags::NoType ) == 0 ) );
@@ -1937,8 +1938,12 @@ static void saveNIXOptions(const Options &opts, nix::Section section,
   mk_section = mk_section && ( section.name() != ns || section.type() != ts );
 
   if ( mk_section ) {
+    std::vector<nix::Section> secs = section.sections(nix::util::NameFilter<nix::Section>( nix::util::nameSanitizer( ns ) ));
+    if (secs.size() > 0) {
+      ns = ns + "_" + nix::util::numToStr(secs.size());
+    }
     section = section.createSection ( nix::util::nameSanitizer(ns),
-				      nix::util::nameSanitizer(ts) );
+	                			      nix::util::nameSanitizer(ts) );
   }
   //save parameter
   for ( auto pp = opts.begin(); pp != opts.end(); ++pp ) {
@@ -2214,7 +2219,6 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
   if ( IL[0].signalIndex() < 1 ) {
     return;
   }
-
   double abs_time = IL[0].signalTime() - sessiontime;
   double delay = stim_info[0].delay();
   double intensity = stim_info[0].intensity();
@@ -2279,7 +2283,6 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
       appendValue( da, val );
     }
   }
-
   appendValue( time_feat, abs_time);
   appendValue( delay_feat, delay);
   appendValue( amplitude_feat, intensity );
