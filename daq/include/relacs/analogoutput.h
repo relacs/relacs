@@ -25,6 +25,7 @@
 #include <vector>
 #include <QThread>
 #include <QSemaphore>
+#include <QWaitCondition>
 #include <relacs/device.h>
 #include <relacs/outlist.h>
 #include <relacs/tracespec.h>
@@ -183,14 +184,15 @@ public:
   virtual int startWrite( QSemaphore *sp=0 ) = 0;
     /*! Write data of the output signals that were passed to the previous call
         of prepareWrite() to the analog output device.
-        Returns the number of transferred data elements.
-	Returns zero if all data are transferred and no more calls to
+        Returns the time in milliseconds corresponding to the transferred
+	data elements (can be zero).
+	Returns -1 if all data are transferred and no more calls to
 	writeData() are necessary.
 	If an error ocurred in any channel, the corresponding
 	errorflags in the OutData structure are filled, the error
-	string is set, and a negative value is returned.
+	string is set, and a -2 is returned.
         This function is called periodically after writing has been successfully
-        started by startWrite().
+        started by startWrite() and the device mutex is already locked.
         \sa setErrorStr() */
   virtual int writeData( void ) = 0;
 
@@ -209,8 +211,12 @@ public:
   
     /*! \return the status of the analog output.
         If an error is detected, this function could also set the appropriate error code
-	in the signals. */
-  virtual Status status( void ) const = 0;
+	in the signals.
+        The device is already locked. */
+  virtual Status statusUnlocked( void ) const = 0;
+    /*! \return the status of the analog output.
+        The device is locked and statusUnlocked() is called. */
+  Status status( void ) const;
   
     /*! \return true if the analog input thread is running. */
   bool running( void ) const;
@@ -312,29 +318,32 @@ protected:
 	of an implementation of AnalogOutput.
         \sa analogOutputType(), setDeviceType(), setDeviceName(), setIdent() */
   void setAnalogOutputType( int aotype );
-    /*! Set the time for sleeping between calls of writeData() to \a ms milliseconds. */
-  void setWriteSleep( unsigned long ms );
+    /*! Set the maximum time for sleeping between calls to writeData() 
+        to \a ms milliseconds. */
+  void setWriteSleep( int ms );
+    /*! The maximum time in milliseconds used for sleeping between calls to writeData(). */ 
+  int writeSleep( void ) const;
 
     /*! Set error string to \a strg. 
         \sa addErrorStr(), errorStr() */
-  void setErrorStr( const string &strg );
+  void setErrorStr( const string &strg ) const;
     /*! Add \a strg to the error string. 
         \sa setErrorStr(), errorStr() */
-  void addErrorStr( const string &strg );
+  void addErrorStr( const string &strg ) const;
     /*! Set error string to the string describing the 
         standard C error code \a errnum (from \c errno). 
         \sa addErrorStr(), errorStr() */
-  void setErrorStr( int errnum );
+  void setErrorStr( int errnum ) const;
     /*! Add the string describing the standard C error code \a errnum 
         (from \c errno) to the error string. 
         \sa setErrorStr(), errorStr() */
-  void addErrorStr( int errnum );
+  void addErrorStr( int errnum ) const;
     /*! If sigs.failed(), set error string to the error set in \a sigs
         otherwise clear the error string. \sa addErrorStr() */
-  void setErrorStr( const OutList &sigs );
+  void setErrorStr( const OutList &sigs ) const;
     /*! If sigs.failed(), add error string to the error set in \a sigs.
         \sa setErrorStr() */
-  void addErrorStr( const OutList &sigs );
+  void addErrorStr( const OutList &sigs ) const;
 
     /*! Set the device info().
         Call this function from open().
@@ -367,10 +376,12 @@ private:
   double ExternalReference;
     /*! True while the thread is running. */
   bool Run;
+    /*! Sleeping between writing data. */
+  QWaitCondition SleepWait;
     /*! A semaphore guarding analog output. */
   QSemaphore *Semaphore;
     /*! Milliseconds to sleep between calls of writeData(). Defaults to 0. */
-  unsigned long WriteSleepMS;
+  int WriteSleepMS;
 
 };
 

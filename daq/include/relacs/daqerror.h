@@ -63,6 +63,7 @@ class DaqError
   static const long long MultipleRestart = 1LL<<12;
   static const long long NoData = 1LL<<13;
   static const long long MultipleBuffersizes = 1LL<<14;
+  // XXX the buffer and update time errors can go:
   static const long long InvalidBufferTime = 1LL<<15;
   static const long long MultipleBufferTimes = 1LL<<16;
   static const long long InvalidUpdateTime = 1LL<<17;

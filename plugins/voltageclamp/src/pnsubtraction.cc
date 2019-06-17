@@ -66,21 +66,25 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
     OutData quality_signal1;
-    quality_signal1.setTrace(PotentialOutput[0]);
-    quality_signal1.constWave(.010, -1.0, holdingpotential);
+    quality_signal1.setTrace( PotentialOutput[0] );
+    quality_signal1.pulseWave( 0.010, -1.0, holdingpotential-20, holdingpotential );
 
-    OutData quality_signal2;
-    quality_signal2.setTrace(PotentialOutput[0]);
-    quality_signal2.constWave(.010, -1.0, holdingpotential-20);
 
-    OutData quality_signal3;
-    quality_signal3.setTrace(PotentialOutput[0]);
-    quality_signal3.constWave(.010, -1.0, holdingpotential);
+//    quality_signal1.setTrace(PotentialOutput[0]);
+//    quality_signal1.constWave(.010, -1.0, holdingpotential);
+//
+//    OutData quality_signal2;
+//    quality_signal2.setTrace(PotentialOutput[0]);
+//    quality_signal2.constWave(.010, -1.0, holdingpotential-20);
+//
+//    OutData quality_signal3;
+//    quality_signal3.setTrace(PotentialOutput[0]);
+//    quality_signal3.constWave(.010, -1.0, holdingpotential);
+//
+//    quality_signal1.append(quality_signal2);
+//    quality_signal1.append(quality_signal3);
 
-    quality_signal1.append(quality_signal2);
-    quality_signal1.append(quality_signal3);
-
-    quality_signal1.description().setType( "Qualitycontrol" );
+    quality_signal1.description().setType( "stimulus/Qualitycontrol" );
 //    quality_signal1.setIdent( signal.ident() );
 //    quality_signal1.setDescription( signal.description() );
 //
@@ -109,7 +113,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   pn_signal.setTrace( PotentialOutput[0] );
   pn_signal = holdingpotential + (signal - holdingpotential)/pn;
   SampleDataD pn_trace( mintime, pn_signal.rangeBack(), 1/samplerate );
-  pn_signal.description().setType( "PNSubatraction" );
+  pn_signal.description().setType( "stimulus/PNSubatraction" );
 
 //  cerr << "pnname:"  << pn_signal.description().type() << endl;
 //  cerr << "signalname:" << signal.description().type() << endl;
@@ -135,7 +139,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     return pn_trace;
   };
 
-  signal.description().setType( "Trace" );
+  signal.description().setType( "stimulus/Trace" );
   write(signal);
   sleep(pause);
 

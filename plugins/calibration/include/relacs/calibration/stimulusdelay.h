@@ -33,11 +33,12 @@ namespace calibration {
 \class StimulusDelay
 \brief [RePro] Measures delays between actual and reported onset of a stimulus
 \author Jan Benda
-\version 2.0 (Mar 4, 2014)
+\version 2.2 (Dec 13, 2018)
 
 \par Options
 - \c intrace=V-1: Input trace (\c string)
 - \c outtrace=V-1: Output trace (\c string)
+- \c intensity=1: Intensity for an attenuator (\c number)
 - \c samplerate=10kHz: Sampling rate of output (\c number)
 - \c duration=10ms: Duration of output (\c number)
 - \c pause=50ms: Pause between outputs (\c number)

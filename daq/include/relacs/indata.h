@@ -66,7 +66,7 @@ with an unit returned by unit().
 
 The acquisition of the data is specified by sampleRate(), delay(),
 startSource(), priority(), continuous(), device(), channel(),
-reference(), unipolar(), gainIndex(), and updateTime().
+reference(), unipolar(), and gainIndex().
 Further, the InData has an identifier string ident(),
 a unique trace number trace() and mode() flags.
 
@@ -435,28 +435,6 @@ class InData : public CyclicSampleDataF, public DaqError
         \sa source() */
   void setSource( int source );
 
-    /*! The maximum time in seconds the hardware driver can buffer data. 
-        \sa setReadTime(), updateTime() */
-  double readTime( void ) const;
-    /*! Set the maximum time the hardware driver should buffer the data
-        before they are transferred to the AnalogInput implementation
-	to \a time seconds.
-	If \a time is zero or negative, the default buffer time of the driver
-	is used	for the size of the driver's buffer.
-        \sa readTime(), setUpdateTime() */
-  void setReadTime( double time );
-    /*! The maximum time in seconds the AnalogInput implementation
-        buffers data internally before they are converted to
-	the secondary unit and written to the InData buffer. 
-        \sa setUpdateTime(), readTime() */
-  double updateTime( void ) const;
-    /*! Set the maximum time the AnalogInput implementaion should buffer
-        the data internally before they are converted to the secondary unit
-	and written into the InData buffer to \a time seconds.
-	If \a time is zero or negative, the capacity() is used
-	for the size of this buffer.
-        \sa updateTime(), setReadTime() */
-  void setUpdateTime( double time );
 
     /*! Return mode flags.
         The mode flags can be used to label the input trace.
@@ -534,11 +512,6 @@ class InData : public CyclicSampleDataF, public DaqError
   float Scale;
     /*! The secondary unit. */
   string Unit;
-    /*! The maximum time in seconds the hardware driver can buffer data. */
-  double ReadTime;
-    /*! The maximum time in seconds the AnalogInput implementation
-        can buffer data. */
-  double UpdateTime;
     /*! The minimum possible value. */
   double MinValue;
     /*! The maximum possible value. */

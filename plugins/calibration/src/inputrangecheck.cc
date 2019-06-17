@@ -133,7 +133,7 @@ int InputRangeCheck::main( void )
 
       // analyze:
       double d = signal.length();
-      double val = trace( intrace ).mean( signalTime() + 0.05*d, signalTime()+0.95*d );
+      double val = trace( intrace ).mean( signalTime() + 0.3*d, signalTime()+0.95*d );
       ampls.push( amplitude, val );
 
       P.lock();

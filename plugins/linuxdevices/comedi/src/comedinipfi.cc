@@ -66,7 +66,7 @@ void ComediNIPFI::initOptions()
 {
   Device::initOptions();
 
-  addInteger( "channel", "PFI channel", -1 );
+  addInteger( "channel", "Channel", 0, 0, 100 );
   string pfisignals = "";
   for ( int k=0; k<PFISignalsMax; k++ ) {
     if ( k > 0 )
@@ -95,7 +95,6 @@ int ComediNIPFI::open( const string &device )
 
   // get routing:
   int routing = index( "routing" );
-  cerr << "ROUTING: " << routing << '\n';
   if ( routing < 0 ) {
     setErrorStr( "missing or invalid routing parameter for device " + deviceIdent() );
     return WriteError;

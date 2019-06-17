@@ -12,6 +12,8 @@
   Save:
       saverelacsfiles  : true
       saveodmlfiles    : false
+      savenixfiles     : true
+      savenixcompressed: true
       saverelacscore   : true
       saverelacsplugins: true
       saverelacslog    : true
@@ -40,16 +42,16 @@
 
 *RELACS
   input data:
-      inputsamplerate    : 10kHz
+      inputsamplerate    : 40kHz
       inputtracecapacity : 600s
       inputunipolar      : false
       inputtraceid       : V-1
-      inputtracescale    : 100
-      inputtraceunit     : mV
+      inputtracescale    : 1
+      inputtraceunit     : V
       inputtracedevice   : ai-1
-      inputtracechannel  : 0
+      inputtracechannel  : 4
       inputtracereference: ground
-      inputtracemaxvalue : 100
+      inputtracemaxvalue : 10
       inputtracecenter   : true
   output data:
       outputtraceid      : [ Left-Speaker, Right-Speaker ]
@@ -57,7 +59,7 @@
       outputtracechannel : [ 0, 1 ]
       outputtracescale   : [ 1, 1 ]
       outputtraceunit    : [ V, V ]
-      outputtracemaxrate : [ 10kHz, 10kHz ]
+      outputtracemaxrate : [ 40kHz, 40kHz ]
       outputtracemodality: [ acoustic, acoustic ]
 
 *Macros
@@ -66,7 +68,7 @@
   fallbackonreload: true
 
 *AudioMonitor
-  device   : [ "-1 default", "0 HDA Intel PCH: ALC3202 Analog (hw:0,0) (4 channels)", "1 HDA Intel PCH: HDMI 0 (hw:0,3) (8 channels)", "2 HDA Intel PCH: HDMI 1 (hw:0,7) (8 channels)", "3 HDA Intel PCH: HDMI 2 (hw:0,8) (8 channels)", "4 sysdefault (128 channels)", "5 front (4 channels)", "6 surround40 (4 channels)", "7 surround51 (4 channels)", "8 surround71 (4 channels)", "9 hdmi (8 channels)", "10 pulse (32 channels)", "11 dmix (2 channels)", "12 default (32 channels) - default", "13 /dev/dsp (16 channels)" ]
+  device   : "-1 default"
   enable   : true
   mute     : false
   gain     : 1
@@ -80,13 +82,14 @@
 
 *Analog Output Devices
   Device1:
-      plugin: ComediAnalogOutput
-      device: /dev/comedi0
-      ident : ao-1
+      plugin       : ComediAnalogOutput
+      device       : /dev/comedi0
+      ident        : ao-1
+      usenipfistart: -1
 
 *Digital I/O Devices
   Device1:
-      plugin: [ ComediDigitalIO, "0" ]
+      plugin: ComediDigitalIO
       device: /dev/comedi0
       ident : dio-1
 

@@ -42,7 +42,10 @@ ReceptiveField::ReceptiveField( void )
   addNumber( "ymax", "Maximum y position", 0.0, -1000., 1000., 0.1, "mm" );
   addNumber( "ystep", "Desired step size of the y-grid", 1.0, 0.1, 1000., 0.1, "mm" );
   addNumber( "ystart", "Starting y-position for the xrange search", 0.0, -1000., 1000., 0.1, "mm");
-  addNumber( "zposition", "Z-position, i.e. distance to fish, for the xrange search", 0.0, -1000., 1000., 0.1, "mm");
+
+  addNumber( "zmin", "Minimum z position", 0.0, -1000., 1000., 0.1, "mm" );
+  addNumber( "zmax", "Maximum z position", 0.0, -1000., 1000., 0.1, "mm" );
+  addNumber( "zstep", "Desired step size of the z-grid", 1.0, 0.1, 1000., 0.1, "mm" );
   addBoolean( "followmidline", "Auto-adjust y to follow the fish midline.", true);
 
   newSection( "Stimulation" );
@@ -368,10 +371,16 @@ int ReceptiveField::main( void )
   double xmax = number( "xmax" );
   double ymin = number( "ymin" );
   double ymax = number( "ymax" );
+  double zmin = number( "zmin" );
+  double zmax = number( "zmax" );
+
   double xstep = number( "xstep" );
   double ystep = number( "ystep" );
+  double zstep = number( "zstep" );
+
   double ystart = number( "ystart" );
-  double z_pos = number( "zposition" );
+  double z_pos = number( "zstart" );
+
   double safex = number( "safex" );
   double safey = number( "safey" );
   double safez = number( "safez" );
@@ -430,17 +439,26 @@ int ReceptiveField::main( void )
 
   LinearRange xrange( xmin, xmax, xstep );
   LinearRange yrange( ymin, ymax, ystep );
+  LinearRange zrange( zmin, zmax, zstep );
+
   std::vector<double> avg_rates_x( xrange.size() );
   std::vector<double> avg_rates_y( yrange.size() );
 
   moveToPosition( xmin, ystart, z_pos );
   // robot->PF_up_and_over( fish_head );
   // robot->wait();
-  if (!rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true , adjust_y, false )) {
-    robot->PF_up_and_over( {safex, safey, safez } );
-    robot->wait();
-    return Failed;
+  for(int i = 0; i < zrange.size(); i ++) {
+    z_pos = zrange[i];
+    for (int j = 0; j < yrange.size(); j++) {
+      ystart = yrange[j];
+      if (!rangeSearch( xrange, ystart, z_pos, avg_rates_x, signal, true , adjust_y, false )) {
+	robot->PF_up_and_over( {safex, safey, safez } );
+	robot->wait();
+	return Failed;
+      }
+    }
   }
+  /*
   double bestX, bestY;
   if ( bestXPos( avg_rates_x, xrange, bestX ) ) {
     plotBestX( xPlot, bestX );
@@ -469,6 +487,7 @@ int ReceptiveField::main( void )
   // robot->PF_up_and_over( { 0., 0., 0. } );
   // robot->wait();
   // robot->close_mirob();
+  */
   return Completed;
 }
 

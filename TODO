@@ -20,7 +20,6 @@
 
 - RELACSPlugin adjust*(): in case of source != 0 should find the physical trace
 - ! warning in write() -> previous signal still pending in SaveFiles ! happens after interruption of repros with a macros
-- Acquire::stopWrite() should check whether the AO is running
 - Plot (used from ManualJAR) P.clear(); P.draw() do not always clear the plot!
 - Buzzing is not responsive: allow for multiple buzzes
 
@@ -47,16 +46,12 @@ New InData threading:
   e.g. invalid sampling rate and stall after write with high sampling rate.
 - Rethink activateGains(): DynClamp can handle this without restarting and 
   by passing a flag through the FIFO.
-- Check whether InData, Acquire updateTime and readTime are still needed!
-  But we do not want to block on the input too long!
-  So maybe keep readTime. Make it an option for each device!
 
 Dynamic clamp:
 - Linux kernel path in module Makefile should be set by relacs_rtai/dynclamp
 - Serial console debugging instructions:
   https://www.av8n.com/computer/htm/kernel-lockup.htm
 - Hard Lockup RTAI Debuggig: http://segfaultsarecool.blogspot.de/2012/03/debugging-hard-lockup-with-rtai.html
-- Clarify what reset() and stop() should do.
 - Make lookup tables stronger! Add variables and function for linear
   interpolation. Models can then have a define with a meaningful name
   to return the interpolated value.

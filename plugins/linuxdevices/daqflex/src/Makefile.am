@@ -16,7 +16,8 @@ libdaqflex_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
     $(USB_CPPFLAGS) \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS) \
+    -DDAQFLEXLIBDIR='"$(libdir)/daqflex"'
 
 libdaqflex_la_LDFLAGS = \
     -module -avoid-version \

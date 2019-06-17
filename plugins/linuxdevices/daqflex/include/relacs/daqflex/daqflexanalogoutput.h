@@ -119,7 +119,7 @@ public:
   virtual int reset( void );
   
     /*! \return the status of the analog output. */
-  virtual Status status( void ) const;
+  virtual Status statusUnlocked( void ) const;
 
     /*! Return \c true if the analog output is required to have the
         same sampling rate as the analog input as 

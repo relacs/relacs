@@ -82,8 +82,6 @@ InData::InData( const InData &data )
   GainData = NULL;
   Scale = data.Scale;
   Unit = data.Unit;
-  ReadTime = data.ReadTime;
-  UpdateTime = data.UpdateTime;
   MinValue = data.MinValue;
   MaxValue = data.MaxValue;
   Mode = data.Mode;
@@ -118,8 +116,6 @@ void InData::construct( void )
   GainData = NULL;
   Scale = 1.0;
   Unit = "V";
-  ReadTime = 0.0;
-  UpdateTime = 0.0;
   MinValue = -1.0;
   MaxValue = +1.0;
   Mode = 0;
@@ -151,8 +147,6 @@ const InData &InData::operator=( const InData &data )
   GainData = NULL;
   Scale = data.Scale;
   Unit = data.Unit;
-  ReadTime = data.ReadTime;
-  UpdateTime = data.UpdateTime;
   MinValue = data.MinValue;
   MaxValue = data.MaxValue;
   Mode = data.Mode;
@@ -186,8 +180,6 @@ const InData &InData::assign( const InData *data )
   GainData = NULL;
   Scale = data->Scale;
   Unit = data->Unit;
-  ReadTime = data->ReadTime;
-  UpdateTime = data->UpdateTime;
   MinValue = data->MinValue;
   MaxValue = data->MaxValue;
   Mode = data->Mode;
@@ -843,30 +835,6 @@ void InData::setSource( int source )
 }
 
 
-double InData::readTime( void ) const
-{
-  return ReadTime;
-}
-
-
-void InData::setReadTime( double time )
-{
-  ReadTime = time;
-}
-
-
-double InData::updateTime( void ) const
-{
-  return UpdateTime;
-}
-
-
-void InData::setUpdateTime( double time )
-{
-  UpdateTime = time;
-}
-
-
 int InData::mode( void ) const
 {
   return Mode;
@@ -923,8 +891,6 @@ ostream &operator<<( ostream &str, const InData &id )
   str << "Scale: " << id.Scale << '\n';
   str << "Unit: " << id.Unit << '\n';
   str << "Source: " << id.Source << '\n';
-  str << "ReadTime: " << id.ReadTime << '\n';
-  str << "UpdateTime: " << id.UpdateTime << '\n';
   str << "MinValue: " << id.MinValue << '\n';
   str << "MaxValue: " << id.MaxValue << '\n';
   str << "Mode: " << id.Mode << '\n';

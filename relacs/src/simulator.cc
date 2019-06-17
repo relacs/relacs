@@ -160,10 +160,6 @@ int Simulator::read( InList &data )
   if ( ! success )
     return -1;
 
-  // request buffer size:
-  InTraces.setReadTime( BufferTime );
-  InTraces.setUpdateTime( UpdateTime );
-
   // test reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 &&
@@ -229,11 +225,6 @@ int Simulator::read( InList &data )
 	data[k].setMaxVoltage( max );
 	data[k].setMinVoltage( -max );
       }
-      long bs = data[k].indices( data[k].updateTime() );
-      if ( bs <= 0 || bs > data[k].capacity() )
-	bs = data[k].capacity();
-      else
-	bs *= 100;
     }
   }
 
@@ -653,6 +644,7 @@ int Simulator::write( OutList &signal, bool setsignaltime )
   // error?
   if ( ! success ) {
     for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->stop();
       AO[i].AO->reset();
       AO[i].Signals.clear();
     }
@@ -680,6 +672,7 @@ int Simulator::write( OutList &signal, bool setsignaltime )
   // error?
   if ( signal.failed() ) {
     for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->stop();
       AO[i].AO->reset();
       AO[i].Signals.clear();
     }
@@ -833,6 +826,7 @@ int Simulator::directWrite( OutData &signal, bool setsignaltime )
 
   // error?
   if ( signal.failed() ) {
+    AO[di].AO->stop();
     AO[di].AO->reset();
     AO[di].Signals.clear();
     LastWrite = -1.0;

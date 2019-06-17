@@ -47,7 +47,7 @@ relacsgui_LDADD = \
     $(GSL_LIBS) \
     $(SNDFILE_LIBS) \
     $(PORTAUDIO_LIBS) \
-    $(NIX_LDFLAGS)
+    $(NIX_LIBS)
 # the GSL and librelacsnumerics part should not be here,
 # it is already in librelacs.la!
 # but libtool 2.4 seems to require it.

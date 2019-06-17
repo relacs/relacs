@@ -73,9 +73,9 @@ void WriteThread::run( void )
   Failed = false;
   Failed = ( RW->AQ->waitForWrite() < 0 );
   if ( Failed ) {
-    string es = RW->AQ->writeError();
-    RW->printlog( "! error in writing data: " + es );
-    QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, "Error in analog output: " + es ) );
+    string es = "! Error in analog output: " + RW->AQ->writeError();
+    RW->printlog( es );
+    QCoreApplication::postEvent( RW, new RelacsWidgetEvent( 3, es ) );
   }
 }
 

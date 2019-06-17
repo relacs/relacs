@@ -447,6 +447,33 @@ OutData &OutData::append( const OutData &od, const string &name )
     opt.insertNumber( "Duration", "", od.length(), "s" );
   if ( ! foundtstart )
     opt.insertNumber( "StartTime", "", tstart, "s" );
+  // stimulus sections need to have unique names:
+  for ( Options::section_iterator sp = Description.sectionsBegin();
+	sp != Description.sectionsEnd();
+	++sp ) {
+    if ( (*sp)->name().empty() ) {
+      // set name to type with unique number:
+      string name = (*sp)->type();
+      if ( name.find( "stimulus/" ) == 0 )
+	name.erase( 0, 9 );
+      for ( int k=1; k<10000; k++ ) {
+	string sname = name + '-' + Str( k );
+	bool found = false;
+	for ( Options::section_iterator ssp = sp+1;
+	      ssp != Description.sectionsEnd();
+	      ++ssp ) {
+	  if ( (*ssp)->name() == sname ) {
+	    found = true;
+	    break;
+	  }
+	}
+	if ( ! found ) {
+	  (*sp)->setName( sname );
+	  break;
+	}
+      }
+    }
+  }
   return *this;
 }
 
