@@ -28,6 +28,7 @@
 #include <relacs/ephys/traces.h>
 #include <relacs/voltageclamp/summary.h>
 #include <relacs/voltageclamp/pnsubtraction.h>
+#include <relacs/voltageclamp/tail.h>
 using namespace relacs;
 
 namespace voltageclamp {
@@ -47,6 +48,7 @@ class Activation : public PNSubtraction //public RePro, public ephys::Traces
 
 friend class Summary;
 friend class PNSubtraction;
+friend class Tail;
 
 public:
 
@@ -57,9 +59,14 @@ private:
 
   double pRev( const std::vector<double> &IV );
 
+  // for summary
   vector<double> g_act;
   vector<double> tau;
   vector<double> potential;
+
+  // for tail
+  double V_min;
+  double t_min;
 
 protected:
 

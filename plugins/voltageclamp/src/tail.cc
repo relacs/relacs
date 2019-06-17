@@ -19,8 +19,11 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <relacs/repros.h>
 #include <relacs/voltageclamp/tail.h>
 #include <relacs/voltageclamp/pnsubtraction.h>
+#include <relacs/relacsplugin.h>
+
 using namespace relacs;
 
 namespace voltageclamp {
@@ -31,12 +34,12 @@ Tail::Tail( void )
 {
   // add some options:
   addNumber( "duration0", "Stimulus duration0", 0.01, 0.001, 100000.0, 0.001, "s", "ms" );
-  addNumber( "duration1", "Stimulus duration1", 0.0006, 0.0001, 100000.0, 0.0001, "s", "ms" );
+//  addNumber( "duration1", "Stimulus duration1", 0.0006, 0.0001, 100000.0, 0.0001, "s", "ms" );
   addNumber( "duration2", "Stimulus duration2", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "holdingpotential0", "Holding potential0", -100.0, -200.0, 200.0, 1.0, "mV" );
-  addNumber( "holdingpotential1", "Holding potential1", -5.0, -200.0, 200.0, 1.0, "mV" );
+//  addNumber( "holdingpotential1", "Holding potential1", -5.0, -200.0, 200.0, 1.0, "mV" );
 
 //  addNumber( "testingpotential", "Testing potential", -70.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "mintest", "Minimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV");
@@ -44,8 +47,9 @@ Tail::Tail( void )
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
   addBoolean( "auto", "Auto", true );
-  addNumber( "delay", "XXXMinimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV").setActivation("auto", "false");
-
+  addNumber( "duration1", "Stimulus duration1", 0.0006, 0.0001, 100000.0, 0.0001, "s", "ms" ).setActivation( "auto", "false" );
+  addNumber( "holdingpotential1", "Holding potential1", -5.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "auto", "false" );
+  addNumber( "beforeMin", "Time before potential minumum", 0.0, 0.0, 1.0, 0.00002, "s", "ms" ).setActivation( "auto", "true" );
 
   // plot
   P.lock();
@@ -61,15 +65,42 @@ int Tail::main( void )
 {
   // get options:
   double duration0 = number( "duration0" );
-  double duration1 = number( "duration1" );
+//  double duration1 = number( "duration1" );
   double duration2 = number( "duration2" );
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
   double holdingpotential0 = number( "holdingpotential0" );
-  double holdingpotential1 = number( "holdingpotential1" );
+//  double holdingpotential1 = number( "holdingpotential1" );
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
   double teststep = number( "teststep" );
+
+  double duration1 = 0;  ////////// somehow I need these two, otherwise there is an error
+  double holdingpotential1 = 0; /// and I really don't know why
+  bool automatic = boolean( "auto" );
+  if ( automatic ) {
+    RePro* rp_ac = repro( "Activation[voltageclamp]" );
+    double beforeMin = number( "beforeMin" );
+    ////////////////////////  ADD ERRORMESSAGE IF ACTIVATION WASN'T RUN BEFORE ///////////////////////////////
+
+    if ((rp_ac != 0) && (rp_ac->completeRuns() > 0)) {
+      Activation* ac = dynamic_cast<Activation*>( rp_ac );
+      duration1 = ac->t_min - beforeMin;
+      holdingpotential1 = ac->V_min;
+      cerr << "tmin=" << ac->t_min << "s, Imin=" << ac->V_min << "mV\n";
+    }
+    else {
+      warning("Run the RePro 'Activation' before running 'Tail' or change the 'Auto' setting for this RePro.", 0.0);
+      return 1;
+    };
+
+  }
+  else {
+    duration1 = number( "duration1" );
+    holdingpotential1 = number( "holdingpotential1" );
+  };
+
+  cerr << "duration1=" << duration1 << "s, holdingpotential1=" << holdingpotential1 << "mV\n";
 
   int stepnum = (maxtest-mintest)/teststep+1;
   std::vector<double> inact(stepnum);

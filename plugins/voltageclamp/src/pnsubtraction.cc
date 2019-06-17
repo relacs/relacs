@@ -67,9 +67,14 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   if ( qualitycontrol ) {
     OutData quality_signal1;
     quality_signal1.setTrace( PotentialOutput[0] );
-    quality_signal1.pulseWave( 0.010, -1.0, holdingpotential-20, holdingpotential );
+    quality_signal1.constWave( 0.010, -1.0, holdingpotential );
+
+    OutData quality_signal2;
+    quality_signal2.setTrace( PotentialOutput[0] );
+    quality_signal2.pulseWave( 0.010, -1.0, holdingpotential-20, holdingpotential );
 
 
+//    OutData quality_signal1;
 //    quality_signal1.setTrace(PotentialOutput[0]);
 //    quality_signal1.constWave(.010, -1.0, holdingpotential);
 //
