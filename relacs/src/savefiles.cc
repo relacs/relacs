@@ -2035,7 +2035,7 @@ void SaveFiles::NixFile::writeRePro ( const Options &reproinfo, const deque< str
     }
     s.createProperty( "reprofiles", values );
   }
-  stimulus_group = root_block.createGroup( repro_name, "relacs.stimulus_group");
+  stimulus_group = root_block.createGroup( repro_name, "relacs.repro_group");
   // store data
   repro_tag = root_block.createTag( repro_name, "relacs.repro_run", {repro_start_time});
   repro_tag.units({"s"});
@@ -2079,7 +2079,7 @@ void SaveFiles::NixFile::initTraces ( const InList &IL )
     // std::cerr << "Scale: " << IL[k].scale() << std::endl;
     // std::cerr << "SampleRate: " << IL[k].sampleRate() << std::endl;
     NixTrace trace;
-    string data_type = "nix.data.sampled." + IL[k].ident();
+    string data_type = "relacs.data.sampled." + IL[k].ident();
     trace.data = root_block.createDataArray(IL[k].ident(), data_type, nix::DataType::Float, {4096});
     std::string unit = IL[k].unit();
     nix::util::unitSanitizer(unit);
@@ -2131,7 +2131,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
     s = fd.createSection( stim_name, stim_type );
     saveNIXOptions( stim_options, s, Options::FirstOnly, 0 );
   }
-  stimulus_positions = root_block.createDataArray( repro_name + " onset times", "nix.event.positions",
+  stimulus_positions = root_block.createDataArray( repro_name + " onset times", "relacs.stimulus.onset",
                                                    nix::DataType::Double, {1} );
 
   stimulus_positions.setData( nix::DataType::Double, &start_time, {1}, {0} );
@@ -2139,14 +2139,14 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
   stimulus_positions.unit( "s" );
   stimulus_positions.label( "time" );
 
-  stimulus_extents = root_block.createDataArray( repro_name + " durations", "nix.event.extents",
+  stimulus_extents = root_block.createDataArray( repro_name + " durations", "relacs.stimulus.duration",
                                                  nix::DataType::Double, {1} );
   stimulus_extents.setData( nix::DataType::Double, &duration, {1}, {0} );
   stimulus_extents.appendSetDimension();
   stimulus_extents.unit( "s" );
   stimulus_extents.label( "time" );
 
-  stimulus_tag = root_block.createMultiTag( repro_name, "nix.event.stimulus", stimulus_positions );
+  stimulus_tag = root_block.createMultiTag( repro_name, "relacs.stimulus.segment", stimulus_positions );
   stimulus_tag.extents( stimulus_extents );
   stimulus_tag.metadata( s );
   for ( auto &trace : traces ) {
@@ -2169,7 +2169,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
         fname = stimulus_tag.name() + "_" + o.name();
         funit = o.unit();
         flabel = o.name();
-        ftype = "feature";
+        ftype = "relacs.feature";
         nix::DataType dtype;
         if ( o.isNumber() ) {
           dtype = nix::DataType::Double;
@@ -2186,7 +2186,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
   fname =  stimulus_tag.name() + "_abs_time";
   funit = "s";
   flabel = "time";
-  ftype = "nix.time";
+  ftype = "relacs.time";
   time_feat = createFeature( stimulus_tag, fname, ftype, funit, flabel, nix::LinkType::Indexed,  nix::DataType::Double );
   fname =  stimulus_tag.name() + "_delay";
   flabel = "delay";
@@ -2204,14 +2204,14 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
     }
   }
   amplitude_feat = createFeature( stimulus_tag, stimulus_tag.name() + "_amplitude",
-                                 "nix.time", unit, "intensity", nix::LinkType::Indexed, nix::DataType::Double);
+                                 "relacs.feature.amplitude", unit, "intensity", nix::LinkType::Indexed, nix::DataType::Double);
   for (Parameter p : stim_options) {
     if ((p.flags() & OutData::Mutable) > 0) {
       fname =  stimulus_tag.name() + "_" + p.name();
       funit = p.unit();
       nix::util::unitSanitizer(funit);
       flabel = p.name();
-      ftype = "relacs.mutable";
+      ftype = "relacs.feature.mutable";
       nix::DataType dtype;
       if ( p.isNumber() ) {
         dtype = nix::DataType::Double;
@@ -2223,7 +2223,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
       createFeature( stimulus_tag, fname, ftype, funit, flabel, nix::LinkType::Indexed, dtype);
     }
   }
-  tag_feat = createFeature( stimulus_tag, stimulus_tag.name() + "_repro_tag_id", "nix.id", "", "id",
+  tag_feat = createFeature( stimulus_tag, stimulus_tag.name() + "_repro_tag_id", "relacs.feature.repro_tag_id", "", "id",
                             nix::LinkType::Indexed, nix::DataType::String );
   stimulus_feats = stimulus_tag.features();
 }
@@ -2402,7 +2402,7 @@ void SaveFiles::NixFile::initEvents( const EventList &EL, FilterDetectors *FD ) 
     ed.index = EL[i].size();
     ed.offset = {0};
     std::string ident = EL[i].ident();
-    std::string data_type = "nix.events.position." + ident;
+    std::string data_type = "relacs.data.events." + ident;
     if ( root_block.hasDataArray(ident) )
        ident = EL[i].ident() + "_events";
     ed.data = root_block.createDataArray( ident, data_type, nix::DataType::Double, {256} );
