@@ -510,6 +510,7 @@ protected:
     double         stepsize = 0.0;
     bool           was_writing = false;
     std::string    currentRePro;
+    std::string    repro_tag_id;
     nix::File      fd;
     nix::Block     root_block;
     nix::Section   root_section;
@@ -517,7 +518,7 @@ protected:
     nix::Tag       repro_tag;
     nix::DataArray stimulus_positions;
     nix::DataArray stimulus_extents;
-    nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat;
+    nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat, tag_feat;
     std::vector<nix::DataArray> data_features;
     std::vector<nix::Feature> stimulus_feats;
     nix::Group     stimulus_group;
@@ -548,7 +549,7 @@ protected:
     void appendValue( nix::DataArray &array, double value );
     void appendValue( nix::DataArray &array, string value );
     void replaceLastEntry( nix::DataArray &array, double value );
-    nix::DataArray createFeature( nix::Block &block, nix::MultiTag &mtag,
+    nix::DataArray createFeature( nix::MultiTag &mtag,
 				  std::string name, std::string type,
 				  std::string unit, std::string label,
 				  nix::LinkType link_type=nix::LinkType::Indexed,
