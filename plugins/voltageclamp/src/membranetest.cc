@@ -21,6 +21,7 @@
 
 #include <relacs/voltageclamp/membranetest.h>
 #include <relacs/fitalgorithm.h>
+#include <string.h>
 using namespace relacs;
 
 namespace voltageclamp {
@@ -45,8 +46,8 @@ membranetest::membranetest( void )
   // plot:
   P.lock();
   P.resize( 2, 2, true );
-  P[0].setXLabel("Time [ms]");
-  P[1].setXLabel("Time [ms]");
+  P[0].setXLabel( "Time [ms]" );
+  P[1].setXLabel( "Time [ms]" );
   P.unlock();
   setWidget(&P);
 }
@@ -198,6 +199,13 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   double duration = number( "duration" );
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
   double amplitude = number ( "amplitude" );
+
+  // scale units to original scale (nA to A etc.)
+  double currScale = Parameter::changeUnit( 1.0,  trace(CurrentTrace[0]).unit(), "A" );
+  double potScale = Parameter::changeUnit( 1.0, trace(SpikeTrace[0]).unit(), "V" );
+  MeanCurr *= currScale;
+  amplitude *= potScale;
+
   double maximum = max( MeanCurr );
   double minimum = min( MeanCurr );
 
@@ -215,14 +223,29 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   double R_a = (amplitude/(maximum - steady0) - amplitude/(minimum - steady1))/2;
   double R_m = (amplitude/(steady1 - steady0) - amplitude/(steady2 - steady1))/2;
 
+//  cerr << "steady0=" << steady0 << ", Rm=" << R_m << endl;
+
+  // strings with good units
+
+  string leakstring = "leak = " + Str( Parameter::changeUnit(steady0, "A", "pA"), "%.1f" ) + "pA";
+  string Rastring = "R_a = " + Str( Parameter::changeUnit(R_a, "A", "MA"), "%.1f" ) + "M\u03A9";
+  string Rmstring = "R_m = " + Str( Parameter::changeUnit(R_m, "A", "MA"), "%.1f" ) + "M\u03A9";
+
+//  cerr << "leakstring: " + leakstring << endl;
+//  cerr << "Rastring: " + Rastring << endl;
+//  cerr << "Rmstring: " + Rmstring << endl;
+
   // plot
   P.lock();
-  P[0].setTitle("leak = " + Str( steady0, "%.1f" ) +
-            "pA, R_a = " + Str( R_a, "%.1f" ) +
-       "M\u03A9, R_m = " + Str(R_m, "%.1f") + "M\u03A9");
-  P[0].plotLine( 0*duration*1000-2, steady0, 0*duration*1000, steady0, Plot::Magenta, 3, Plot::Solid);
-  P[0].plotLine( 1*duration*1000-2, steady1, 1*duration*1000, steady1, Plot::Magenta, 3, Plot::Solid);
-  P[0].plotLine( 2*duration*1000-2, steady2, 2*duration*1000, steady2, Plot::Magenta, 3, Plot::Solid);
+//  P[0].setTitle("leak = " + Str( steady0, "%.1f" ) +
+//            "pA, R_a = " + Str( R_a, "%.1f" ) +
+//       "M\u03A9, R_m = " + Str(R_m, "%.1f") + "M\u03A9");
+  P[0].setTitle(leakstring + ", " + Rastring + ", " + Rmstring);
+  P[0].plotLine( 0*duration*1000-2, steady0/currScale, 0*duration*1000, steady0/currScale, Plot::Magenta, 3, Plot::Solid);
+  P[0].plotLine( 1*duration*1000-2, steady1/currScale, 1*duration*1000, steady1/currScale, Plot::Magenta, 3, Plot::Solid);
+  P[0].plotLine( 2*duration*1000-2, steady2/currScale, 2*duration*1000, steady2/currScale, Plot::Magenta, 3, Plot::Solid);
+
+  P[0].setYLabel( "I [" + trace(CurrentTrace[0]).unit() + "]" );
 
   P.draw();
   P.unlock();

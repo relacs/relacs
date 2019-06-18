@@ -170,7 +170,7 @@ int Activation::main( void )
 
 
       // IV
-      double waittime = 0.0001;
+      double waittime = 0.0003;
       double absmax = 0.0;
       int index = 0;
       if ( -currenttrace.min(waittime, maxtime) >= currenttrace.max(waittime, maxtime) ){
