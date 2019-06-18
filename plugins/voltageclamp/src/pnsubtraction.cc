@@ -53,6 +53,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   double samplerate = signal.sampleRate();
   bool qualitycontrol = boolean( "qualitycontrol" );
 
+
+
   // add p/n option to signal
   Parameter &pn1 = opts.addNumber( "pn", pn );
   Parameter &qc1 = opts.addBoolean( "qualitycontrol", qualitycontrol );
