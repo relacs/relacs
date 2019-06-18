@@ -246,6 +246,7 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   P[0].plotLine( 2*duration*1000-2, steady2/currScale, 2*duration*1000, steady2/currScale, Plot::Magenta, 3, Plot::Solid);
 
   P[0].setYLabel( "I [" + trace(CurrentTrace[0]).unit() + "]" );
+  P[1].setYLabel( "V [" + trace(SpikeTrace[0]).unit() + "]" );
 
   P.draw();
   P.unlock();
