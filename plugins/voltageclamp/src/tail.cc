@@ -81,7 +81,6 @@ int Tail::main( void )
   if ( automatic ) {
     RePro* rp_ac = repro( "Activation[voltageclamp]" );
     double beforeMin = number( "beforeMin" );
-    ////////////////////////  ADD ERRORMESSAGE IF ACTIVATION WASN'T RUN BEFORE ///////////////////////////////
 
     if ((rp_ac != 0) && (rp_ac->completeRuns() > 0)) {
       Activation* ac = dynamic_cast<Activation*>( rp_ac );
