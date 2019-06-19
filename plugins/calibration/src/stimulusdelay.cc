@@ -28,11 +28,12 @@ namespace calibration {
 
 
 StimulusDelay::StimulusDelay( void )
-  : RePro( "StimulusDelay", "calibration", "Jan Benda", "2.0", "Mar 4, 2014" )
+  : RePro( "StimulusDelay", "calibration", "Jan Benda", "2.2", "Dec 13, 2018" )
 {
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );
   addSelection( "outtrace", "Output trace", "V-1" );
+  addNumber( "intensity", "Intensity for an attenuator", 1.0, -10000.0, 10000.0, 0.1, "", "" );
   addNumber( "samplerate", "Sampling rate of output", 10000.0, 1000.0, 1000000.0, 1000.0, "Hz", "kHz" );
   addNumber( "duration", "Duration of output", 0.01, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Pause between outputs", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
@@ -62,6 +63,7 @@ int StimulusDelay::main( void )
   // get options:
   int intrace = index( "intrace" );
   int outtrace = index( "outtrace" );
+  double intensity = number( "intensity" );
   double samplerate = number( "samplerate" );
   double duration = number( "duration" );
   double pause = number( "pause" );
@@ -82,7 +84,7 @@ int StimulusDelay::main( void )
   OutData signal;
   signal.setTrace( outtrace );
   signal.pulseWave( duration, 1.0/samplerate, 1.0, 0.0 );
-  //  signal.mute();
+  signal.setIntensity( intensity );
   signal.setIdent( "one" );
 
   if ( setdelay > 0 )

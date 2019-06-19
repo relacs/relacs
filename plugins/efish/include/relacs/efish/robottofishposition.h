@@ -1,6 +1,6 @@
 /*
-  voltageclamp/tail.h
-  Tail current protocol
+  efish/robottofishposition.h
+  move the robot in fish coordinates
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -19,45 +19,53 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_VOLTAGECLAMP_TAIL_H_
-#define _RELACS_VOLTAGECLAMP_TAIL_H_ 1
+#ifndef _RELACS_EFISH_ROBOTTOFISHPOSITION_H_
+#define _RELACS_EFISH_ROBOTTOFISHPOSITION_H_ 1
 
-#include <relacs/plot.h>
 #include <relacs/repro.h>
-#include <relacs/ephys/traces.h>
-#include <relacs/voltageclamp/pnsubtraction.h>
-#include <relacs/voltageclamp/activation.h>
+#include <relacs/misc/xyzrobot.h>
+#include <relacs/point.h>
+#include <QPushButton>
+#include <atomic>
 using namespace relacs;
 
-namespace voltageclamp {
+namespace efish {
 
 
 /*!
-\class Tail
-\brief [RePro] Tail current protocol
-\author Lukas Sonnenberg
-\version 1.0 (Aug 23, 2018)
+\class RobotToFishPosition
+\brief [RePro] move the robot in fish coordinates
+\author Jan Grewe
+\version 1.0 (Aug 20, 2018)
 */
 
 
-class Tail : public PNSubtraction //public RePro, public ephys::Traces
+class RobotToFishPosition : public RePro
 {
   Q_OBJECT
 
-friend class Activation;
+public slots:
+  void go( void );
+  void cancel( void );
 
 public:
 
-  Tail( void );
+  RobotToFishPosition( void );
   virtual int main( void );
 
-protected:
-
-    Plot P;
-
+private:
+  misc::XYZRobot *robot = NULL;
+  std::atomic<bool> done;
+  std::atomic<bool> start;
+  QPushButton *goBtn;
+  QPushButton *cancelBtn;
+  std::vector<int> axis_map;
+  std::vector<int> axis_invert;
+  bool moveToPosition( );
+  double getYSlope( );
 };
 
 
-}; /* namespace voltageclamp */
+}; /* namespace efish */
 
-#endif /* ! _RELACS_VOLTAGECLAMP_TAIL_H_ */
+#endif /* ! _RELACS_EFISH_ROBOTTOFISHPOSITION_H_ */

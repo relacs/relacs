@@ -23,14 +23,16 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <QMutexLocker>
 #include <relacs/daqflex/daqflexcore.h>
 using namespace std;
 using namespace relacs;
 
+
 namespace daqflex {
 
 
-const string DAQFlexCore::DefaultFirmwarePath = "/usr/lib/daqflex/";
+const string DAQFlexCore::DefaultFirmwarePath = DAQFLEXLIBDIR ;
 
 const string DAQFlexCore::DAQFlexErrorText[DAQFlexCore::DAQFlexErrorMax] =
   { "success",
@@ -42,6 +44,8 @@ const string DAQFlexCore::DAQFlexErrorText[DAQFlexCore::DAQFlexErrorMax] =
     "invalid buffer size",
     "failed to open FPGA file",
     "FPGA upload failed",
+    "set value failed",
+    "get value failed",
     "libusb IO",
     "libusb invalid parameter",
     "libusb access",
@@ -166,9 +170,8 @@ int DAQFlexCore::open( const string &devicestr )
 	    InPacketSize = libusb_get_max_iso_packet_size( device, EndpointIn );
 	    OutPacketSize = libusb_get_max_iso_packet_size( device, EndpointOut );
 	    // get the device serial number:
-	    string message = sendMessage( "?DEV:MFGSER" );
-	    // erase message while keeping serial number:
-	    message.erase( 0, 11 );
+	    int ern = Success;
+	    string message = getValue( "DEV:MFGSER", ern );
 	    cout << "DAQFlex: found device " << productName( ProductID )
 		 << " with serial number " << message << "\n";
 	    if ( ! serialno.empty() ) {
@@ -386,13 +389,16 @@ string DAQFlexCore::productName( int productid )
 
 int DAQFlexCore::sendControlTransfer( const string &message )
 {
-  unsigned char data[MaxMessageSize];
-  for ( unsigned int i = 0; i < MaxMessageSize; i++ )
-    data[i] = i < message.size() ? toupper( message[i] ) : 0;
+  unsigned int n = message.size() + 1;  // we need the trailing 0!
+  unsigned char data[n];
+  strcpy( (char *)data, message.c_str() );
+  data[n] = 0;
+  if ( n > MaxMessageSize )
+    n = MaxMessageSize;
   int numbytes = libusb_control_transfer( DeviceHandle,
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_OUT,
 					  StringMessage, 0, 0, data,
-					  MaxMessageSize, 100 );
+					  n, 100 );
   setLibUSBError( numbytes );
   return ErrorState;
 }
@@ -414,28 +420,6 @@ string DAQFlexCore::getControlTransfer( void )
 }
 
 
-string DAQFlexCore::sendMessage( const string &message )
-{
-  lock();
-  int r = sendControlTransfer( message );
-  string s = "";
-  if ( r == Success )
-    s = getControlTransfer();
-  unlock();
-  return s;
-}
-
-
-string DAQFlexCore::sendMessageUnlocked( const string &message )
-{
-  int r = sendControlTransfer( message );
-  string s = "";
-  if ( r == Success )
-    s = getControlTransfer();
-  return s;
-}
-
-
 int DAQFlexCore::sendCommand( const string &command )
 {
   lock();
@@ -445,14 +429,76 @@ int DAQFlexCore::sendCommand( const string &command )
 }
 
 
-int DAQFlexCore::sendCommands( const string &command1, const string &command2 )
+int DAQFlexCore::sendMessage( const string &message )
 {
-  lock();
-  int r = sendControlTransfer( command1 );
-  if ( r == Success )
-    r = sendControlTransfer( command2 );
-  unlock();
-  return r;
+  QMutexLocker corelocker( mutex() );
+  return sendMessageUnlocked( message );
+}
+
+
+int DAQFlexCore::sendMessageUnlocked( const string &message )
+{
+  int r = sendControlTransfer( message );
+  if ( r == Success ) {
+    string s = getControlTransfer();
+    if ( ErrorState != Success )
+      return ErrorState;
+    else if ( s != message )
+      return ErrorSetValueFailed;
+  }
+  return ErrorState;
+}
+
+
+int DAQFlexCore::setValue( const string &command, const string &value )
+{
+  QMutexLocker corelocker( mutex() );
+  return setValueUnlocked( command, value );
+}
+
+
+int DAQFlexCore::setValueUnlocked( const string &command, const string &value )
+{
+  // send message:
+  int r = sendControlTransfer( command + '=' + value );
+  if ( r != Success )
+    return ErrorState;
+  // read response:
+  string s = getControlTransfer();
+  if ( ErrorState != Success )
+    return ErrorState;
+  else if ( s != command )
+    return ErrorSetValueFailed;
+  else
+    return Success;
+}
+
+
+string DAQFlexCore::getValue( const string &command, int &error )
+{
+  QMutexLocker corelocker( mutex() );
+  string s = getValueUnlocked( command );
+  error = ErrorState;
+  return s;
+}
+
+
+string DAQFlexCore::getValueUnlocked( const string &command )
+{
+  // send message:
+  int r = sendControlTransfer( '?' + command );
+  if ( r != Success )
+    return "";
+  // read response:
+  string s = getControlTransfer();
+  if ( ErrorState != Success )
+    return "";
+  else if ( s.substr( 0, command.size() ) != command ) {
+    ErrorState = ErrorGetValueFailed;
+    return "";
+  }
+  else
+    return s.substr( command.size()+1 );
 }
 
 
@@ -462,7 +508,7 @@ int DAQFlexCore::getEndpoints( void )
   int numbytes = libusb_control_transfer( DeviceHandle, StringMessage,
 					  LIBUSB_REQUEST_GET_DESCRIPTOR,
 					  (0x02 << 8) | 0, 0,
-					  epdescriptor, MaxMessageSize, 1000 );
+					  epdescriptor, MaxMessageSize, 100 );
 
   setLibUSBError( numbytes );
   if ( ErrorState != Success )
@@ -534,182 +580,192 @@ unsigned char DAQFlexCore::getEndpointOutAddress( unsigned char* data, int n )
 
 int DAQFlexCore::initDevice( const string &path )
 {
-  ErrorState = Success;
+  string serial = "";
+  string fwv = "";
   string fpgav = "";
+  {
+    QMutexLocker corelocker( mutex() );
+    ErrorState = Success;
 
-  switch ( ProductID ) {
-  case USB_1608_G:
-  case USB_1608_GX:
-  case USB_1608_GX_2AO:
-    MaxAIData = 0xFFFF;
-    if ( ProductID == USB_1608_G )
-      MaxAIRate = 250000.0;
-    else
-      MaxAIRate = 500000.0;
-    MaxAIChannels = 16;
-    AIFIFOSize = 4096;
-    if ( ProductID == USB_1608_GX_2AO ) {
-      MaxAOData = 0xFFFF;
-      MaxAORate = 500000.0;
-      MaxAOChannels = 2;
-      AOFIFOSize = 2048;
-    }
-    else {
+    switch ( ProductID ) {
+    case USB_1608_G:
+    case USB_1608_GX:
+    case USB_1608_GX_2AO:
+      MaxAIData = 0xFFFF;
+      if ( ProductID == USB_1608_G )
+	MaxAIRate = 250000.0;
+      else
+	MaxAIRate = 500000.0;
+      MaxAIChannels = 16;
+      AIFIFOSize = 4096;
+      if ( ProductID == USB_1608_GX_2AO ) {
+	MaxAOData = 0xFFFF;
+	MaxAORate = 500000.0;
+	MaxAOChannels = 2;
+	AOFIFOSize = 2048;
+      }
+      else {
+	MaxAOData = 0;
+	MaxAORate = 0.0;
+	MaxAOChannels = 0;
+	AOFIFOSize = 0;
+      }
+      DIOLines = 8;
+      uploadFPGAFirmware( path, "USB_1608G.rbf" );
+      if ( ErrorState != Success )
+	return ErrorState;
+      fpgav = getValueUnlocked( "DEV:FPGAV" );
+      if ( ErrorState != Success )
+	return ErrorState;
+      break;
+
+    case USB_201:
+      MaxAIData = 0x0FFF;
+      MaxAIRate = 100000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 12288;
       MaxAOData = 0;
       MaxAORate = 0.0;
       MaxAOChannels = 0;
       AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_202:
+      MaxAIData = 0x0FFF;
+      MaxAIRate = 100000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 12288;
+      MaxAOData = 0x0FFF;
+      MaxAORate = 600.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = -1;
+      DIOLines = 8;
+      break;
+
+    case USB_204:
+      MaxAIData = 0x0FFF;
+      MaxAIRate = 500000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 12288;
+      MaxAOData = 0;
+      MaxAORate = 0.0;
+      MaxAOChannels = 0;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_205:
+      MaxAIData = 0x0FFF;
+      MaxAIRate = 500000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 12288;
+      MaxAOData = 0x0FFF;
+      MaxAORate = 600.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = -1;
+      DIOLines = 8;
+      break;
+
+    case USB_7202:
+      MaxAIData = 0xFFFF;
+      MaxAIRate = 50000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 32768;
+      MaxAOData = 0;
+      MaxAORate = 0.0;
+      MaxAOChannels = 0;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_7204:
+      MaxAIData = 0xFFF;
+      MaxAIRate = 50000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 32768;
+      MaxAOData = 0xFFF;
+      MaxAORate = 10000.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = 0; // ???
+      DIOLines = 8;
+      break;
+
+    case USB_1208_FS_Plus:
+      MaxAIData = 0xFFF;
+      MaxAIRate = 50000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 0; // ???
+      MaxAOData = 0xFFF;
+      MaxAORate = 10000.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = 0;  // ???
+      DIOLines = 16;
+      uploadFPGAFirmware( path, "USB_1208GHS.rbf" );
+      if ( ErrorState != Success )
+	return ErrorState;
+      break;
+
+    case USB_1408_FS_Plus:
+      MaxAIData = 0xFFF;
+      MaxAIRate = 48000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 0; // ???
+      MaxAOData = 0xFFF;
+      MaxAORate = 10000.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = 0; // ???
+      DIOLines = 16;
+      break;
+
+    case USB_1608_FS_Plus:
+      MaxAIData = 0xFFFF;
+      MaxAIRate = 400000.0;
+      MaxAIChannels = 8;
+      AIFIFOSize = 32768;
+      MaxAOData = 0;
+      MaxAORate = 0.0;
+      MaxAOChannels = 0;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_2408:
+      MaxAIData = 0xFFFFFF;
+      MaxAIRate = 1000.0;
+      MaxAIChannels = 16;
+      AIFIFOSize = 32768;
+      MaxAOData = 0;
+      MaxAORate = 0.0;
+      MaxAOChannels = 0;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    case USB_2408_2AO:
+      MaxAIData = 0xFFFFFF;
+      MaxAIRate = 1000.0;
+      MaxAIChannels = 16;
+      AIFIFOSize = 32768;
+      MaxAOData = 0xFFFF;
+      MaxAORate = 1000.0;
+      MaxAOChannels = 2;
+      AOFIFOSize = 0;
+      DIOLines = 8;
+      break;
+
+    default:
+      ErrorState = ErrorInvalidID;
+      return ErrorState;
     }
-    DIOLines = 8;
-    uploadFPGAFirmware( path, "USB_1608G.rbf" );
-    if ( ErrorState != Success )
-      return ErrorState;
-    fpgav = sendMessage( "?DEV:FPGAV" );
-    if ( ! fpgav.empty() )
-      fpgav.erase( 0, 10 );
-    if ( ErrorState != Success )
-      return ErrorState;
-    break;
 
-  case USB_201:
-    MaxAIData = 0x0FFF;
-    MaxAIRate = 100000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 12288;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
+    // get the device serial number:
+    serial = getValueUnlocked( "DEV:MFGSER" );
 
-  case USB_202:
-    MaxAIData = 0x0FFF;
-    MaxAIRate = 100000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 12288;
-    MaxAOData = 0x0FFF;
-    MaxAORate = 600.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = -1;
-    DIOLines = 8;
-    break;
+    // firmware version:
+    fwv = getValueUnlocked( "DEV:FWV" );
 
-  case USB_204:
-    MaxAIData = 0x0FFF;
-    MaxAIRate = 500000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 12288;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  case USB_205:
-    MaxAIData = 0x0FFF;
-    MaxAIRate = 500000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 12288;
-    MaxAOData = 0x0FFF;
-    MaxAORate = 600.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = -1;
-    DIOLines = 8;
-    break;
-
-  case USB_7202:
-    MaxAIData = 0xFFFF;
-    MaxAIRate = 50000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 32768;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  case USB_7204:
-    MaxAIData = 0xFFF;
-    MaxAIRate = 50000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 32768;
-    MaxAOData = 0xFFF;
-    MaxAORate = 10000.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = 0; // ???
-    DIOLines = 8;
-    break;
-
-  case USB_1208_FS_Plus:
-    MaxAIData = 0xFFF;
-    MaxAIRate = 50000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 0; // ???
-    MaxAOData = 0xFFF;
-    MaxAORate = 10000.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = 0;  // ???
-    DIOLines = 16;
-    uploadFPGAFirmware( path, "USB_1208GHS.rbf" );
-    if ( ErrorState != Success )
-      return ErrorState;
-    break;
-
-  case USB_1408_FS_Plus:
-    MaxAIData = 0xFFF;
-    MaxAIRate = 48000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 0; // ???
-    MaxAOData = 0xFFF;
-    MaxAORate = 10000.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = 0; // ???
-    DIOLines = 16;
-    break;
-
-  case USB_1608_FS_Plus:
-    MaxAIData = 0xFFFF;
-    MaxAIRate = 400000.0;
-    MaxAIChannels = 8;
-    AIFIFOSize = 32768;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  case USB_2408:
-    MaxAIData = 0xFFFFFF;
-    MaxAIRate = 1000.0;
-    MaxAIChannels = 16;
-    AIFIFOSize = 32768;
-    MaxAOData = 0;
-    MaxAORate = 0.0;
-    MaxAOChannels = 0;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  case USB_2408_2AO:
-    MaxAIData = 0xFFFFFF;
-    MaxAIRate = 1000.0;
-    MaxAIChannels = 16;
-    AIFIFOSize = 32768;
-    MaxAOData = 0xFFFF;
-    MaxAORate = 1000.0;
-    MaxAOChannels = 2;
-    AOFIFOSize = 0;
-    DIOLines = 8;
-    break;
-
-  default:
-    ErrorState = ErrorInvalidID;
-    return ErrorState;
-  }
+  }  // corelocker
 
   // set basic device infos:
   setDeviceName( productName( ProductID ) );
@@ -717,19 +773,9 @@ int DAQFlexCore::initDevice( const string &path )
   setDeviceFile( "USB" );
 
   Device::addInfo();
-  // get the device serial number:
-  string serial = sendMessage( "?DEV:MFGSER" );
-  // erase message while keeping serial number:
-  serial.erase( 0, 11 );
   Info.addText( "SerialNumber", serial );
-
-  // firmware version:
-  string fwv = sendMessage( "?DEV:FWV" );
-  if ( ! fwv.empty() ) {
-    fwv.erase( 0, 8 );
+  if ( ! fwv.empty() )
     Info.addText( "Firmware version", fwv );
-  }
-  // fpga firmware version:
   if ( ! fpgav.empty() )
     Info.addText( "FPGA version", fpgav );
 
@@ -739,19 +785,20 @@ int DAQFlexCore::initDevice( const string &path )
 
 int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename )
 {
+  // device is already locked from initDevce()!
   // check if the firmware has been loaded already:
-  string response = sendMessage( "?DEV:FPGACFG" );
+  string response = getValueUnlocked( "DEV:FPGACFG" );
   if ( ErrorState != Success )
     return ErrorState;
-  if ( response.find( "CONFIGURED" ) == string::npos ) {
+  if ( response != "CONFIGURED" ) {
     // firmware hasn't been loaded yet, do so:
     transferFPGAfile( path + filename );
     if ( ErrorState == ErrorCantOpenFPGAFile )
       transferFPGAfile( DefaultFirmwarePath + filename );
     if ( ErrorState == Success ) {
       // check if the firmware got loaded successfully:
-      response = sendMessage( "?DEV:FPGACFG" );
-      if ( ErrorState == Success && response.find( "CONFIGURED" ) == string::npos )
+      response = getValueUnlocked( "DEV:FPGACFG" );
+      if ( ErrorState == Success && response != "CONFIGURED" )
 	ErrorState = ErrorFPGAUploadFailed;
     }
     else
@@ -763,10 +810,11 @@ int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename 
 
 int DAQFlexCore::transferFPGAfile( const string &path )
 {
+  // device is already locked from uploadFPGAFirmware()!
   ErrorState = Success;
 
   // turn on FPGA configure mode:
-  sendMessage( "DEV:FPGACFG=0XAD" );
+  setValueUnlocked( "DEV:FPGACFG", "0XAD" );
   if ( ErrorState != Success )
     return ErrorState;
 
@@ -790,7 +838,7 @@ int DAQFlexCore::transferFPGAfile( const string &path )
 					      LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_OUT,
 					      FPGADATAREQUEST, 0, 0,
 					      &memblock[totalbytes],
-					      length, 1000 );
+					      length, 500 );
 
       if ( numbytes < 0 ) {
 	setLibUSBError( numbytes );
@@ -813,8 +861,10 @@ DAQFlexCore::DAQFlexError DAQFlexCore::readBulkTransfer( unsigned char *data, in
 							 int *transferred,
 							 unsigned int timeout )
 {
+  lock();
   int err = libusb_bulk_transfer( deviceHandle(), endpointIn(),
 				  data, length, transferred, timeout );
+  unlock();
   return getLibUSBError( err );
 }
 
@@ -823,8 +873,10 @@ DAQFlexCore::DAQFlexError DAQFlexCore::writeBulkTransfer( unsigned char *data, i
 							  int *transferred,
 							  unsigned int timeout )
 {
+  lock();
   int err = libusb_bulk_transfer( deviceHandle(), endpointOut(),
 				  data, length, transferred, timeout );
+  unlock();
   return getLibUSBError( err );
 }
 
@@ -949,7 +1001,7 @@ string DAQFlexCore::daqflexErrorStr( void ) const
 }
 
 
-string DAQFlexCore::daqflexErrorStr( DAQFlexError error ) const
+string DAQFlexCore::daqflexErrorStr( int error ) const
 {
   return DAQFlexErrorText[ error ];
 }

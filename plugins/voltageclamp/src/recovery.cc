@@ -74,6 +74,7 @@ int Recovery::main( void )
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
   double teststep = number( "teststep" );
+  double waittime = 0.0003;
   Str trange = allText( "trange" );
 
 
@@ -159,7 +160,7 @@ int Recovery::main( void )
         signal.setDescription( opts );
 
 
-        double mintime = duration0 + duration1 + timestep;
+        double mintime = duration0 + duration1 + timestep + waittime;
         double maxtime = 0.02 + duration0 + duration1 + timestep;
 
 //        write(signal);

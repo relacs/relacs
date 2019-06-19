@@ -164,6 +164,9 @@ public:
 		     const vector< AnalogOutput* > &aos,
 		     vector< int > &aiinx, vector< int > &aoinx,
 		     vector< bool > &airate, vector< bool > &aorate );
+  
+  static string cmd_src( int src );
+  static void dump_cmd( comedi_cmd *cmd );
 
 
 protected:
@@ -198,6 +201,7 @@ protected:
 
   virtual void initOptions() override;
 
+  
 private:
 
     /*! Unique analog I/O device type id for all 
@@ -234,10 +238,6 @@ private:
   comedi_cmd Cmd;
     /*! True if the command is prepared. */
   bool IsPrepared;
-
-    /*! True if a command is supposed to be running.
-        \note this differs from running(), which indicated that the driver is still running. */
-  bool IsRunning;
     /*! True if analog input is about to stop. */
   bool AboutToStop;
 

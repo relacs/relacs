@@ -602,12 +602,6 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
 
   retval = 0;
 
-  // check update buffer size:
-  if ( traces[0].updateTime() < traces[0].readTime() ) {
-    traces.addError( DaqError::InvalidUpdateTime );
-    retval = -1;
-  }
-
   return retval;
 }
 
@@ -709,7 +703,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   setReadSleep( 5 );
 
   if ( traces.success() ) {
-    setSettings( traces, BufferSize, BufferSize );
+    setSettings( traces, 0, BufferSize );
     Traces = &traces;
     IsPrepared = true;
     return 0;
@@ -760,8 +754,6 @@ int DynClampAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 int DynClampAnalogInput::readData( void )
 {
   // cerr << "DynClampAnalogInput::readData(): begin\n";/////TEST/////
-
-  QMutexLocker locker( mutex() );
 
   int readn = BufferN*BufferElemSize;
   int maxn = BufferSize - readn;
@@ -829,8 +821,6 @@ int DynClampAnalogInput::readData( void )
 
 int DynClampAnalogInput::convertData( void )
 {
-  QMutexLocker locker( mutex() );
-
   // buffer pointers and sizes:
   float *bp[Traces->size()];
   int bm[Traces->size()];
@@ -881,8 +871,7 @@ int DynClampAnalogInput::convertData( void )
 int DynClampAnalogInput::stop( void )
 { 
   // stop analog input thread:
-  if ( AnalogInput::running() )
-    stopRead();
+  stopRead();
 
   reset();
 

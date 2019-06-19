@@ -133,7 +133,7 @@ public:
   virtual int reset( void );
   
     /*! \return the status of the analog output. */
-  virtual Status status( void ) const;
+  virtual Status statusUnlocked( void ) const;
 
     /*! Index of signal start relative to the data stream of a running analog input. */
   virtual long index( void ) const;

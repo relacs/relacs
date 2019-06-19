@@ -169,7 +169,7 @@ public:
 	If no acquisition is running and therefore no more data are to be expected,
 	-1 is returned.
         This function is called periodically after reading has been successfully
-        started by startRead().
+        started by startRead() and the device mutex is already locked.
         This function does not modify the traces passed to prepareRead()! */
   virtual int readData( void ) = 0;
     /*! Convert the acquired data from the internal buffer
@@ -179,7 +179,8 @@ public:
 	(sum over all traces).
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InData structure are filled and a negative value is returned.
-        This function is called periodically after one or several calls to readData(). */
+        This function is called periodically after one or several calls to readData()
+	and the device mutex is already locked. */
   virtual int convertData( void ) = 0;
 
     /*! Compute a dynamic clamp model.
@@ -298,11 +299,11 @@ protected:
     /*! Set the settings() for \a traces.
         Call this function from within a successful prepareRead().
 	\param[in] traces the input traces for which the settings string should be constructed.
-	\param[in] readbuffer is the size of the driver's buffer in bytes.
-	\param[in] updatebuffer is the size of the internal buffer in bytes.
+	\param[in] fifobuffer is the size of the hardware's fifo buffer in bytes.
+	\param[in] pluginbuffer is the size of the buffer used by the plugin in bytes.
         \sa settings() */
-  void setSettings( const InList &traces, int readbuffer=0,
-		    int updatebuffer=0 );
+  void setSettings( const InList &traces, int fifobuffer=0,
+		    int pluginbuffer=0 );
 
     /*! Start the thread if \a sp is not null.
         If \a error do not start the thread and release the semaphore \a sp. */
@@ -320,6 +321,8 @@ private:
   int AnalogInputSubType;
     /*! True while the thread is running. */
   bool Run;
+    /*! Sleeping between reading data. */
+  QWaitCondition SleepWait;
     /*! A semaphore guarding analog input. */
   QSemaphore *Semaphore;
     /*! A mutex locking the data buffer where the acquired data is stored to. */

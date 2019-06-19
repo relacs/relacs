@@ -70,7 +70,7 @@ Chirps::Chirps( void )
   addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", ChirpKurtosis, 0.01, 100.0, 0.01, "", "" ).setActivation( "chirpsel", "generated" );
   addText( "file", "Chirp-waveform file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "chirpsel", "from file" );
   newSection( "Beat parameter" );
-  addNumber( "deltaf", "Delta f", DeltaF, -500.0, 500.0, 5, "Hz" );
+  addNumber( "deltaf", "Delta f", DeltaF, -10000.0, 10000.0, 5, "Hz" );
   addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" );
   addBoolean( "am", "Amplitude modulation", AM );
   addBoolean( "sinewave", "Use sine wave", SineWave );
@@ -648,6 +648,10 @@ int Chirps::main( void )
   bool adjustg = boolean( "adjust" );
 
   // checks:
+  if ( ::fabs(DeltaF) < 1e-3 ) {
+    warning( "deltaf must not be zero." );
+    return Failed;
+  }
   if ( LocalEODTrace[0] < 0 ) {
     warning( "need local recording of the EOD Trace." );
     return Failed;

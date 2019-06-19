@@ -117,7 +117,7 @@ void AnalogInput::setInfo( void )
 
 
 void AnalogInput::setSettings( const InList &traces, 
-			       int readbuffer, int updatebuffer )
+			       int fifobuffer, int pluginbuffer )
 {
   Settings.clear();
   for ( int k=0; k<traces.size(); k++ ) {
@@ -130,14 +130,10 @@ void AnalogInput::setSettings( const InList &traces,
   Settings.addInteger( "startsource", traces[0].startSource() );
   Settings.addNumber( "delay", 1000.0*traces[0].delay(), "ms" );
   Settings.addNumber( "sampling rate", 0.001*traces[0].sampleRate(), "kHz" );
-  if ( traces[0].readTime() > 0.0 && readbuffer >= 0 )
-    Settings.addNumber( "read buffer time", 1000.0*traces[0].readTime(), "ms" );
-  if ( readbuffer > 0 )
-    Settings.addNumber( "read buffer size", readbuffer, "Byte" );
-  if ( traces[0].updateTime() > 0.0 && updatebuffer >= 0 )
-    Settings.addNumber( "update buffer time", 1000.0*traces[0].updateTime(), "ms" );
-  if ( updatebuffer > 0 )
-    Settings.addNumber( "update buffer size", updatebuffer, "Byte" );
+  if ( fifobuffer > 0 )
+    Settings.addNumber( "FIFO buffer size", fifobuffer, "Byte" );
+  if ( pluginbuffer > 0 )
+    Settings.addNumber( "plugin buffer size", pluginbuffer, "Byte" );
 }
 
 
@@ -270,7 +266,7 @@ int AnalogInput::testReadData( InList &traces )
     traces.addError( DaqError::DeviceNotOpen );
 
   // multiple devices, startsource, delay, sampling rate, continuous, 
-  // buffer size, update times:
+  // buffer size:
   for ( int k=1; k<traces.size(); k++ ) {
     if ( traces[k].device() != traces[0].device() ) {
       traces[k].addError( DaqError::MultipleDevices );
@@ -294,14 +290,6 @@ int AnalogInput::testReadData( InList &traces )
     }
     if ( traces[k].capacity() != traces[0].capacity() ) {
       traces[k].addError( DaqError::MultipleBuffersizes );
-    }
-    if ( traces[k].readTime() != traces[0].readTime() ) {
-      traces[k].addError( DaqError::MultipleBufferTimes ); 
-      traces[k].setReadTime( traces[0].readTime() );
-    }
-    if ( traces[k].updateTime() != traces[0].updateTime() ) {
-      traces[k].addError( DaqError::MultipleUpdateTimes ); 
-      traces[k].setUpdateTime( traces[0].updateTime() );
     }
   }
 
@@ -427,12 +415,14 @@ void AnalogInput::startThread( QSemaphore *sp, QReadWriteLock *datamutex,
 void AnalogInput::run( void )
 {
   bool rd = true;
-
+  lock();
   do {
-    // get data from the card:
+    rd = Run;
+    // get (remaining) data from the card:
     int r = readData();
     // error:
     if ( r < -1 ) {
+      unlock();
       int rr = reset();
       if ( rr != 0 )
 	addErrorStr( getErrorStr( rr ) );
@@ -447,33 +437,39 @@ void AnalogInput::run( void )
       return;
     }
     // finished:
-    if ( r < 0 )
+    if ( r < 0 ) {
+      Run = false;
+      if ( DataWait != 0 )
+	DataWait->wakeAll();
       break;
+    }
     // transfer data to the buffer:
     if ( r > 0 ) {
+      unlock();   // DataMutex first, then device mutex -> otherwise dead lock!!!
       if ( DataMutex != 0 )
 	DataMutex->lockForWrite();
+      lock();
       convertData();
+      unlock();
       if ( DataMutex != 0 )
 	DataMutex->unlock();
       if ( DataWait != 0 )
 	DataWait->wakeAll();
+      lock();
     }
-    // the sleep is needed to allow for other processes to wake up and acquire the lock!
-    QThread::msleep( ReadSleepMS );
-    lock();
-    rd = Run;
-    unlock();
+    if ( Run ) {
+      // the sleep is needed to allow for other processes to wake up and acquire the lock!
+      SleepWait.wait( mutex(), ReadSleepMS );
+    }
   } while ( rd );
-
-  lock();
-  Run = false;
   unlock();
-  if ( DataWait != 0 )
-    DataWait->wakeAll();
-  if ( Semaphore != 0 )
+
+  if ( Semaphore != 0 ) {
     Semaphore->release( 1 );
-  Semaphore = 0;
+    lock();
+    Semaphore = 0;
+    unlock();
+  }
 }
 
 
@@ -483,23 +479,9 @@ void AnalogInput::stopRead( void )
   lock();
   Run = false;
   unlock();
+  SleepWait.wakeAll();
   wait();
 
-  /*
-  // get data from the card:
-  int r = readData();
-
-  // transfer data to the buffer:
-  if ( r > 0 ) {
-    if ( DataMutex != 0 )
-      DataMutex->lockForWrite();
-    convertData();
-    if ( DataMutex != 0 )
-      DataMutex->unlock();
-    if ( DataWait != 0 )
-      DataWait->wakeAll();
-  }
-  */
   lock();
   Semaphore = 0;
   DataMutex = 0;

@@ -205,7 +205,7 @@ void Device::setDeviceVendor( const string &devicevendor )
 }
 
 
-void Device::clearError( void )
+void Device::clearError( void ) const
 {
   ErrorString = "";
 }
@@ -217,13 +217,13 @@ string Device::errorStr( void ) const
 }
 
 
-void Device::setErrorStr( const string &strg )
+void Device::setErrorStr( const string &strg ) const
 {
   ErrorString = strg;
 }
 
 
-void Device::addErrorStr( const string &strg )
+void Device::addErrorStr( const string &strg ) const
 {
   if ( strg.empty() )
     return;
@@ -236,7 +236,7 @@ void Device::addErrorStr( const string &strg )
 }
 
 
-void Device::setErrorStr( int errnum )
+void Device::setErrorStr( int errnum ) const
 {
   char buf[1000];
   char *ep = strerror_r( errnum, buf, 1000 );
@@ -247,7 +247,7 @@ void Device::setErrorStr( int errnum )
 }
 
 
-void Device::addErrorStr( int errnum )
+void Device::addErrorStr( int errnum ) const
 {
   if ( !ErrorString.empty() )
     ErrorString += ", ";

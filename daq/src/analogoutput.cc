@@ -154,31 +154,31 @@ int AnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 }
 
 
-void AnalogOutput::setErrorStr( const string &strg )
+void AnalogOutput::setErrorStr( const string &strg ) const
 {
   Device::setErrorStr( strg );
 }
 
 
-void AnalogOutput::addErrorStr( const string &strg )
+void AnalogOutput::addErrorStr( const string &strg ) const
 {
   Device::addErrorStr( strg );
 }
 
 
-void AnalogOutput::setErrorStr( int errnum )
+void AnalogOutput::setErrorStr( int errnum ) const
 {
   Device::setErrorStr( errnum );
 }
 
 
-void AnalogOutput::addErrorStr( int errnum )
+void AnalogOutput::addErrorStr( int errnum ) const
 {
   Device::addErrorStr( errnum );
 }
 
 
-void AnalogOutput::setErrorStr( const OutList &sigs )
+void AnalogOutput::setErrorStr( const OutList &sigs ) const
 {
   if ( sigs.failed() )
     Device::setErrorStr( sigs.errorText() );
@@ -187,7 +187,7 @@ void AnalogOutput::setErrorStr( const OutList &sigs )
 }
 
 
-void AnalogOutput::addErrorStr( const OutList &sigs )
+void AnalogOutput::addErrorStr( const OutList &sigs ) const
 {
   if ( sigs.failed() )
     Device::addErrorStr( sigs.errorText() );
@@ -231,9 +231,15 @@ void AnalogOutput::setAnalogOutputType( int aotype )
 }
 
 
-void AnalogOutput::setWriteSleep( unsigned long ms )
+void AnalogOutput::setWriteSleep( int ms )
 {
   WriteSleepMS = ms;
+}
+
+
+int AnalogOutput::writeSleep( void ) const
+{
+  return WriteSleepMS;
 }
 
 
@@ -359,6 +365,15 @@ int AnalogOutput::testWriteData( OutList &sigs )
 }
 
 
+AnalogOutput::Status AnalogOutput::status( void ) const
+{
+  lock();
+  Status s = statusUnlocked();
+  unlock();
+  return s;
+}
+
+
 bool AnalogOutput::running( void ) const
 {
   return QThread::isRunning();
@@ -381,12 +396,14 @@ void AnalogOutput::startThread( QSemaphore *sp, bool error )
 
 void AnalogOutput::run( void )
 {
-  bool rd = true;
-
+  lock();
   // fill in data:
   do {
     int r = writeData();
-    if ( r < 0 ) {
+    // error:
+    if ( r < -1 ) {
+      bool rd = Run;
+      unlock();
       int rr = reset();
       if ( rr != 0 )
 	addErrorStr( getErrorStr( rr ) );
@@ -398,19 +415,20 @@ void AnalogOutput::run( void )
       unlock();
       return;
     }
-    if ( r == 0 )
+    // finished:
+    if ( r < 0 || ! Run )
       break;
     // the sleep is needed to allow for other processes to wake up and to acquire the lock!
-    QThread::msleep( WriteSleepMS );
-    lock();
-    rd = Run;
-    unlock();
-  } while ( rd );
+    if ( r > WriteSleepMS )
+      r = WriteSleepMS;
+    SleepWait.wait( mutex(), r );
+  } while ( Run );
 
   // wait for device to finish writing:
   do {
-    Status r = status();
+    Status r = statusUnlocked();
     if ( r == Underrun ) {
+      unlock();
       int rr = reset();
       if ( rr != 0 )
 	addErrorStr( getErrorStr( rr ) );
@@ -422,21 +440,19 @@ void AnalogOutput::run( void )
       unlock();
       return;
     }
-    if ( r != Running )
+    if ( r != Running || ! Run )
       break;
-    // the sleep is needed to allow for other processes to wake up and to acquire the lock!
-    QThread::msleep( WriteSleepMS );
-    lock();
-    rd = Run;
-    unlock();
-  } while ( rd );
+    SleepWait.wait( mutex(), 1 );
+  } while ( Run );
 
-  lock();
   Run = false;
   unlock();
-  if ( Semaphore != 0 )
+  if ( Semaphore != 0 ) {
     Semaphore->release( 1 );
-  Semaphore = 0;
+    lock();
+    Semaphore = 0;
+    unlock();
+  }
 }
 
 
@@ -445,7 +461,9 @@ void AnalogOutput::stopWrite( void )
   lock();
   Run = false;
   unlock();
+  SleepWait.wakeAll();
   wait();
+
   lock();
   Semaphore = 0;
   unlock();

@@ -812,7 +812,7 @@ void RELACSWidget::setupInTraces( void )
     }
     IRawData.push( id );
     IRawData[j].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
-    IRawData[j].setWriteBufferCapacity( 100.0*id.indices( AQ->updateTime() ) );
+    IRawData[j].setWriteBufferCapacity( 100.0*id.indices( SS.number( "processinterval", 0.1 ) ) );
     PT->addTraceStyle( true, integer( "inputtraceplot", j, j ), Plot::Green );
     j++;
   }
@@ -934,6 +934,7 @@ int RELACSWidget::updateData( void )
     double aitimeout = SS.number( "aitimeout", 10.0 );
     if ( DataTime.restart() < (int)(1000.0*aitimeout) ) {
       QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+4 ) ) );
+      QCoreApplication::postEvent( this, new RelacsWidgetEvent( 5, "Too many errors - stopped acquisition mode." ) );
       return -1;
     }
     // try to restart analog input:
@@ -1447,8 +1448,8 @@ void RELACSWidget::stopThreads( void )
     DataRunLock.lock();
     DataRun = false;
     DataRunLock.unlock();
-    AQ->stop();
     ReadLoop.wait();
+    AQ->stop();
   }
 
   // process pending events posted from threads.
@@ -1719,9 +1720,6 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
 
   // analog input and output traces:
   PT->clearStyles();
-  double ptime = SS.number( "processinterval", 0.1 );
-  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
-  AQ->setUpdateTime( ptime );
   setupInTraces();
   if ( IRawData.empty() ) {
     printlog( "! error: No valid input traces configured!" );
@@ -1876,7 +1874,7 @@ void RELACSWidget::startFirstAcquisition( bool simulation )
   AID->updateMenu();
 
   CW->start();
-  PT->start( ptime );
+  PT->start( SS.number( "processinterval", 0.1 ) );
 
   // get first RePro and start it:
   MC->startUp();

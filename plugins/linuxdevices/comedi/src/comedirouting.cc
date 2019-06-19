@@ -66,9 +66,9 @@ void ComediRouting::initOptions()
 {
   Device::initOptions();
 
-  addInteger( "subdevice", "Subdevice number", -1, -1, 100 );
-  addInteger( "channel", "Channel", -1, -1, 10000 );
-  addInteger( "routing", "Routed signal", -1, 0, 10000 );
+  addInteger( "subdevice", "Subdevice number", 0, 0, 100 );
+  addInteger( "channel", "Channel", 0, 0, 100 );
+  addInteger( "routing", "Routed signal", 0, 0, 100 );
 }
 
 
@@ -103,7 +103,8 @@ int ComediRouting::open( const string &device )
 }
 
 
-int ComediRouting::open( const string &device, int subdev, int channel, int routing, const string &signal )
+int ComediRouting::open( const string &device, int subdev, int channel,
+			 int routing, const string &signal )
 {
   if ( isOpen() )
     return -5;
@@ -121,15 +122,6 @@ int ComediRouting::open( const string &device, int subdev, int channel, int rout
 	 << "Device-file " << device << " could not be opened for device "
 	 << deviceIdent() << "!\n";
     return NotOpen;
-  }
-
-  // set routing:
-  if ( comedi_set_routing( DeviceP, subdev, channel, routing ) != 0 ) {
-    cerr << "! error: ComediRouting::open() -> "
-	 << "Routing failed on device " << deviceIdent() << '\n';
-    comedi_close( DeviceP );
-    DeviceP = NULL;
-    return WriteError;
   }
 
   // configure pins:
@@ -161,6 +153,15 @@ int ComediRouting::open( const string &device, int subdev, int channel, int rout
     return InvalidDevice;
   }
 
+  // set routing:
+  if ( comedi_set_routing( DeviceP, subdev, channel, routing ) != 0 ) {
+    cerr << "! error: ComediRouting::open() -> "
+	 << "Routing failed on device " << deviceIdent() << '\n';
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    return WriteError;
+  }
+
   // set basic device infos:
   setDeviceName( comedi_get_board_name( DeviceP ) );
   setDeviceVendor( comedi_get_driver_name( DeviceP ) );
@@ -170,10 +171,9 @@ int ComediRouting::open( const string &device, int subdev, int channel, int rout
   // set settings:
   Settings.addInteger( "subdevice", subdev );
   Settings.addInteger( "channel", channel );
-  if ( signal.empty() )
-    Settings.addInteger( "routing", routing );
-  else
-    Settings.addText( "routing", signal );
+  Settings.addInteger( "routing", routing );
+  if ( ! signal.empty() )
+    Settings.addText( "signal", signal );
   
   return 0;
 }

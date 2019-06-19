@@ -81,6 +81,10 @@ int Activation::main( void )
   tau = std::vector<double> ();
   g_act = std::vector<double> ();
 
+  double I_min = std::numeric_limits<double>::infinity();
+  V_min = std::numeric_limits<double>::infinity();
+  t_min = std::numeric_limits<double>::infinity();
+
   int i3 = -1;
   for ( int step=mintest;  step<=maxtest; step+=teststep ) {
     i3 += 1;
@@ -126,11 +130,18 @@ int Activation::main( void )
 
       signal.setTrace( PotentialOutput[0] );
       signal.pulseWave( duration, -1.0,  step, holdingpotential );
-      signal.setIntensity( 1.0 );
-      Options opts;
-      Parameter &p1 = opts.addNumber( "step", step, "mV" );
+      signal.setIntensity( 0.0 );
+      //Options opts;
+//      Parameter &p1 = opts.addNumber( "step", step, "mV" );
+      Parameter &p1 = signal.description().addNumber( "step", step, "mV" );
+      Parameter &p2 = signal.description()["Intensity"];
+//      Parameter &p3 = signal.description().addNumber( "IntensityOffset", holdingpotential, "mV" );
+
       signal.setMutable( p1 );
-      signal.setDescription( opts );
+      signal.setMutable( p2 );
+//      signal.setMutable( p3 );
+      Options opts = signal.description();
+      //signal.setDescription( opts );
 
       double mintime = -0.002;
       double maxtime = 0.01;
@@ -159,7 +170,7 @@ int Activation::main( void )
 
 
       // IV
-      double waittime = 0.0001;
+      double waittime = 0.0003;
       double absmax = 0.0;
       int index = 0;
       if ( -currenttrace.min(waittime, maxtime) >= currenttrace.max(waittime, maxtime) ){
@@ -172,13 +183,19 @@ int Activation::main( void )
       }
       IV[i] = absmax;
 
-      cerr << "value = " << absmax << ", at " << currenttrace.pos(index)*1000 << "ms\n";
+      cerr << "value = " << absmax << "mV, at " << currenttrace.pos(index)*1000 << "ms\n";
 
       // fit tau to decaying activation curve
       int idx0 = index + fitdelay/dt;
       if ( idx0 > currenttrace.size()) {
         idx0 = index;
-      }
+      };
+
+      if ( I_min > absmax ) {
+        I_min = absmax;
+        V_min = step;
+        t_min = currenttrace.pos(index);
+        };
 
       std::vector<double> x(currenttrace.size() - idx0);
       std::vector<double> y(currenttrace.size() - idx0);

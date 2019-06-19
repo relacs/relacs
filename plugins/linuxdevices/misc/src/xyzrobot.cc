@@ -130,16 +130,15 @@ bool XYZRobot::test_way(const Point &pos, const Point &newP)
 }
 
 
-bool XYZRobot::PF_up_and_over(const Point &p)
+bool XYZRobot::PF_up_and_over( const Point &p )
 {
-  cerr << "PF up was called!!!\n";
   if ( Stopped ) {
     std::cerr << "Robot was stopped movement forbidden! " << p << std::endl;
     return false;
   }
   // if there are no forbidden areas just move to the point.
   if ( ForbiddenAreas.empty() ) {
-    go_to_point(p);
+    go_to_point( p );
     return true;
   }
   if( ! test_point(p)) {
@@ -154,17 +153,17 @@ bool XYZRobot::PF_up_and_over(const Point &p)
     std::cerr << "inside a forbidden area moving up. " << std::endl;
     position.z() -= 5;
     go_to_point(position);
-    PF_up_and_over(p);
+    PF_up_and_over( p );
     return false;
   }
 
 
   if(test_way(position,p)) {
     // move mirob to p
-    std::cerr <<"Tested way and moved to: " << p
+    std::cerr <<"Way ok, moving to: " << p
 	      << std::endl;
-    go_to_point(p);
-    return true;;
+    go_to_point( p );
+    return true;
 
     // if the way is blocked try to go over it.
   } else {
@@ -227,7 +226,7 @@ bool XYZRobot::PF_up_and_over(const Point &p)
 }
 
 
-  //Init Robot: 
+  //Init Robot:
 
 bool XYZRobot::start_mirob( void )
 {
@@ -297,7 +296,6 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
   int to_move = how_many_move( position, coords );
   if ( to_move == 0 )
     return;
-
   //  Point dists = position.abs_diff(coords);
   Point dists = abs(position - coords);
   Point speeds = Point( speed*Robot->get_axis_factor( 0 ),
@@ -312,7 +310,6 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
   }
 
   Point times = calculate_times( speeds, dists );
-
   double maxTime = get_max( times[0], times[1], times[2] );
   double precision = 0.005;
 
@@ -325,11 +322,10 @@ void XYZRobot::go_to_point( const Point &coords, int speed )
     }
     if ( !Robot->checkPowerState() )
       powerAxes( true );
-    Robot->move( 0, coords.x(), speeds[0] );
-    Robot->move( 1, coords.y(), speeds[1] );
-
     if ( speeds[2] > 450 )
       speeds[2] = 450;
+    Robot->move( 0, coords.x(), speeds[0] );
+    Robot->move( 1, coords.y(), speeds[1] );
     Robot->move( 2, coords.z(), speeds[2] );
   }
   /*
@@ -536,6 +532,7 @@ void XYZRobot::set_Area( Shape *newArea )
 
 void XYZRobot::add_forbidden( Shape *forbidden )
 {
+  std::cerr << "XYZRobot::addforbidden\n";
   ForbiddenAreas.push_back(forbidden);
 }
 
@@ -634,7 +631,7 @@ int XYZRobot::how_many_move( const Point &position, const Point &coords )
 {
   int count = 0;
   for ( int i=0; i<3; i++ ) {
-    if ( abs(position[i] - coords[i]) > 0.5*Robot->get_step_length(i) )
+    if ( abs(position[i] - coords[i]) > 0.5 * Robot->get_step_length(i) )
       count++;
   }
   return count;

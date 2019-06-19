@@ -747,74 +747,69 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if ( sigs.size() <= 0 )
     return -1;
 
-  {
-    QMutexLocker locker( mutex() );
+  QMutexLocker aolocker( mutex() );
 
-    // copy and sort signal pointers:
-    OutList ol;
-    ol.add( sigs );
-    ol.sortByChannel();
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
 
-    int retval = loadChanList( ol, 1 );
-    if ( retval < 0 )
-      return -1;
+  int retval = loadChanList( ol, 1 );
+  if ( retval < 0 )
+    return -1;
 
-    // set buffer size for one second:
-    BufferSize = sigs.deviceBufferSize()*BufferElemSize;
-    int maxbuffersize = sigs.size() * sigs[0].indices( 2.0 ) * BufferElemSize;
-    if ( BufferSize > maxbuffersize )
-      BufferSize = maxbuffersize;
+  // set buffer size for one second:
+  BufferSize = sigs.deviceBufferSize()*BufferElemSize;
+  int maxbuffersize = sigs.size() * sigs[0].indices( 2.0 ) * BufferElemSize;
+  if ( BufferSize > maxbuffersize )
+    BufferSize = maxbuffersize;
 
-    // set up synchronous command:
-    struct syncCmdIOCT syncCmdIOC;
-    syncCmdIOC.type = SUBDEV_OUT;
-    syncCmdIOC.frequency = (unsigned int)::rint( ol[0].sampleRate() );
-    syncCmdIOC.delay = ol[0].indices( ol[0].delay() );
-    syncCmdIOC.duration = ol[0].size();
-    syncCmdIOC.continuous = ol[0].continuous();
-    syncCmdIOC.startsource = ol[0].startSource();
-    syncCmdIOC.buffersize = BufferSize;
-    retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
-    //  cerr << "prepareWrite(): IOC_SYNC_CMD done!\n";
-    if ( retval < 0 ) {
-      cerr << "DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
-	   << ModuleDevice << " failed!\n";
-      if ( errno == EINVAL )
-	ol.addError( DaqError::InvalidSampleRate );
-      else
-	ol.addErrorStr( errno );
-      return -1;
-    }
-    BufferSize = syncCmdIOC.buffersize;
+  // set up synchronous command:
+  struct syncCmdIOCT syncCmdIOC;
+  syncCmdIOC.type = SUBDEV_OUT;
+  syncCmdIOC.frequency = (unsigned int)::rint( ol[0].sampleRate() );
+  syncCmdIOC.delay = ol[0].indices( ol[0].delay() );
+  syncCmdIOC.duration = ol[0].size();
+  syncCmdIOC.continuous = ol[0].continuous();
+  syncCmdIOC.startsource = ol[0].startSource();
+  syncCmdIOC.buffersize = BufferSize;
+  retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
+  //  cerr << "prepareWrite(): IOC_SYNC_CMD done!\n";
+  if ( retval < 0 ) {
+    cerr << "DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
+	 << ModuleDevice << " failed!\n";
+    if ( errno == EINVAL )
+      ol.addError( DaqError::InvalidSampleRate );
+    else
+      ol.addErrorStr( errno );
+    return -1;
+  }
+  BufferSize = syncCmdIOC.buffersize;
 
-    if ( ! ol.success() )
-      return -1;
+  if ( ! ol.success() )
+    return -1;
 
-    for ( int k=0; k<ol.size(); k++ )
-      ol[k].deviceReset( 0 );
+  for ( int k=0; k<ol.size(); k++ )
+    ol[k].deviceReset( 0 );
 
-    setSettings( ol, BufferSize );
+  setSettings( ol, BufferSize );
 
-    if ( ! ol.success() )
-      return -1;
+  if ( ! ol.success() )
+    return -1;
 
-    Sigs = ol;
-    Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+  Sigs = ol;
+  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
   
-    // set sleep duration:
-    setWriteSleep( 5 );
-
-  } //  unlock
+  // set sleep duration:
+  setWriteSleep( 5 );
 
   // fill buffer with initial data:
   int r = writeData();
-  if ( r < 0 )
+  if ( r < -1 )
     return -1;
 
-  lock();
   IsPrepared = Sigs.success();
-  NoMoreData = ( r == 0 );
-  unlock();
+  NoMoreData = ( r == -1 );
 
   return 0;
 }
@@ -858,11 +853,8 @@ int DynClampAnalogOutput::startWrite( QSemaphore *sp )
 int DynClampAnalogOutput::writeData( void )
 {
   //  cerr << "DynClampAnalogOutput::writeData(): in\n";/////TEST/////
-
-  QMutexLocker locker( mutex() );
-
   if ( Sigs.empty() )
-    return -1;
+    return -2;
 
   // device stopped or error?
   if ( IsPrepared ) {
@@ -871,7 +863,7 @@ int DynClampAnalogOutput::writeData( void )
     if ( retval < 0 ) {
       //    cerr << "DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
       //	 << ModuleDevice << " failed!\n";
-      return -1;
+      return -2;
     }
     if ( running <= 0 ) {
       if ( running == E_UNDERRUN )
@@ -882,7 +874,7 @@ int DynClampAnalogOutput::writeData( void )
 	Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
 			  deviceFile() + " is not running!" );
       setErrorStr( Sigs );
-      return -1;
+      return -2;
     }
   }
 
@@ -906,14 +898,13 @@ int DynClampAnalogOutput::writeData( void )
 
   //  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
   if ( NBuffer == 0 )
-    return 0;
-
-  int elemWritten = 0;
+    return -1;
 
   // transfer buffer to kernel modul:
   int bytesWritten = ::write( ModuleFd, Buffer, NBuffer );
     
   int ern = 0;
+  int datams = 0;
     
   if ( bytesWritten < 0 ) {
     ern = errno;
@@ -923,7 +914,7 @@ int DynClampAnalogOutput::writeData( void )
   else if ( bytesWritten > 0 ) {
     memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
     NBuffer -= bytesWritten;
-    elemWritten += bytesWritten / BufferElemSize;
+    datams = (int)::floor( 1000.0*Sigs[0].interval( bytesWritten / BufferElemSize / Sigs.size() ) );
   }
 
   if ( ern == 0 ) {
@@ -934,7 +925,7 @@ int DynClampAnalogOutput::writeData( void )
       Buffer = 0;
       BufferSize = 0;
       NBuffer = 0;
-      return 0;
+      return -1;
     }
   }
   else {
@@ -956,10 +947,10 @@ int DynClampAnalogOutput::writeData( void )
     }
       
     setErrorStr( Sigs );
-    return -1;
+    return -2;
   }
 
-  return elemWritten;
+  return datams;
 }
 
 
@@ -1019,10 +1010,8 @@ int DynClampAnalogOutput::reset( void )
 }
 
 
-AnalogOutput::Status DynClampAnalogOutput::status( void ) const
+AnalogOutput::Status DynClampAnalogOutput::statusUnlocked( void ) const
 {
-  QMutexLocker locker( mutex() );
-
   if ( ModuleFd < 0 || !IsPrepared )
     return Idle;
 

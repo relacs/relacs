@@ -437,20 +437,6 @@ void InList::setUnit( double scale, const string &unit )
 }
 
 
-void InList::setReadTime( double time )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).setReadTime( time );
-}
-
-
-void InList::setUpdateTime( double time )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).setUpdateTime( time );
-}
-
-
 void InList::clearMode( void )
 {
   for ( int k=0; k<size(); k++ )

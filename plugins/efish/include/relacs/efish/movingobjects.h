@@ -1,6 +1,6 @@
 /*
-  voltageclamp/tail.h
-  Tail current protocol
+  efish/movingobjects.h
+  Use the robot to present moving objects as stimuli.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -19,45 +19,54 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_VOLTAGECLAMP_TAIL_H_
-#define _RELACS_VOLTAGECLAMP_TAIL_H_ 1
+#ifndef _RELACS_EFISH_MOVINGOBJECTS_H_
+#define _RELACS_EFISH_MOVINGOBJECTS_H_ 1
 
-#include <relacs/plot.h>
 #include <relacs/repro.h>
+#include <relacs/linearrange.h>
+#include <relacs/plot.h>
 #include <relacs/ephys/traces.h>
-#include <relacs/voltageclamp/pnsubtraction.h>
-#include <relacs/voltageclamp/activation.h>
+#include <relacs/efield/traces.h>
+#include <relacs/outdata.h>
+#include <relacs/misc/xyzrobot.h>
+#include <relacs/point.h>
+
 using namespace relacs;
 
-namespace voltageclamp {
+namespace efish {
 
 
 /*!
-\class Tail
-\brief [RePro] Tail current protocol
-\author Lukas Sonnenberg
-\version 1.0 (Aug 23, 2018)
+\class MovingObjects
+\brief [RePro] Use the robot to present moving objects as stimuli.
+\author Jan Grewe
+\version 1.0 (Sep 10, 2018)
 */
 
 
-class Tail : public PNSubtraction //public RePro, public ephys::Traces
+class MovingObjects : public RePro,
+  public efield::Traces,
+  public ephys::Traces
 {
   Q_OBJECT
 
-friend class Activation;
-
 public:
 
-  Tail( void );
+  MovingObjects( void );
   virtual int main( void );
 
-protected:
+private:
+  misc::XYZRobot *robot = NULL;
+  Point fish_head, fish_tail, reset_position;
+  std::vector<int> axis_map;
+  std::vector<int> axis_invert;
 
-    Plot P;
+  bool moveToPosition( const Point &p );
+  Point convertAxes( const Point &p );
 
 };
 
 
-}; /* namespace voltageclamp */
+}; /* namespace efish */
 
-#endif /* ! _RELACS_VOLTAGECLAMP_TAIL_H_ */
+#endif /* ! _RELACS_EFISH_MOVINGOBJECTS_H_ */
