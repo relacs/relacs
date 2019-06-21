@@ -137,6 +137,8 @@ void membranetest::stimulus(OutData &signal) {
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     write(signal);
+    if ( signal.error() )
+      return;      
     sleep(pause);
 
     SampleDataF currenttrace(-duration, 2 * duration, trace(CurrentTrace[0]).stepsize(), 0.0);
@@ -210,14 +212,15 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   double minimum = min( MeanCurr );
 
   // indeces of important times and durations
-  int idx_2ms = 0.002*samplerate;
+  double meantime = duration * 0.2;
+  int idx_ms = meantime * samplerate;
   int idx_start = MeanCurr.index(0.0);
   int idx_end = MeanCurr.index(duration);
 
   // steady state values before at the end and after the stimulus
-  double steady0 = mean( MeanCurr.begin()+idx_start-idx_2ms-2, MeanCurr.begin()+idx_start-2);
-  double steady1 = mean( MeanCurr.begin()+idx_end-idx_2ms-2, MeanCurr.begin()+idx_end-2);
-  double steady2 = mean( MeanCurr.end()-idx_2ms-2, MeanCurr.end()-2);
+  double steady0 = mean( MeanCurr.begin()+idx_start-idx_ms-2, MeanCurr.begin()+idx_start-2);
+  double steady1 = mean( MeanCurr.begin()+idx_end-idx_ms-2, MeanCurr.begin()+idx_end-2);
+  double steady2 = mean( MeanCurr.end()-idx_ms-2, MeanCurr.end()-2);
 
   // compute resistances
   double R_a = (amplitude/(maximum - steady0) - amplitude/(minimum - steady1))/2;
@@ -241,9 +244,9 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
 //            "pA, R_a = " + Str( R_a, "%.1f" ) +
 //       "M\u03A9, R_m = " + Str(R_m, "%.1f") + "M\u03A9");
   P[0].setTitle(leakstring + ", " + Rastring + ", " + Rmstring);
-  P[0].plotLine( 0*duration*1000-2, steady0/currScale, 0*duration*1000, steady0/currScale, Plot::Magenta, 3, Plot::Solid);
-  P[0].plotLine( 1*duration*1000-2, steady1/currScale, 1*duration*1000, steady1/currScale, Plot::Magenta, 3, Plot::Solid);
-  P[0].plotLine( 2*duration*1000-2, steady2/currScale, 2*duration*1000, steady2/currScale, Plot::Magenta, 3, Plot::Solid);
+  P[0].plotLine( 0*duration*1000 - meantime*1000, steady0/currScale, 0*duration*1000, steady0/currScale, Plot::Magenta, 3, Plot::Solid);
+  P[0].plotLine( 1*duration*1000 - meantime*1000, steady1/currScale, 1*duration*1000, steady1/currScale, Plot::Magenta, 3, Plot::Solid);
+  P[0].plotLine( 2*duration*1000 - meantime*1000, steady2/currScale, 2*duration*1000, steady2/currScale, Plot::Magenta, 3, Plot::Solid);
 
   P[0].setYLabel( "I [" + trace(CurrentTrace[0]).unit() + "]" );
   P[1].setYLabel( "V [" + trace(SpikeTrace[0]).unit() + "]" );
