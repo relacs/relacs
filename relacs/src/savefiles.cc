@@ -1772,18 +1772,18 @@ void SaveFiles::ODMLFiles::writeRePro( const Options &reproinfo,
 
 
 #ifdef HAVE_NIX
-string SaveFiles::NixFile::create ( string path, bool compression )
+string SaveFiles::NixFile::create( string path, bool compression )
 {
   // TODO: path can be a directory (with trailing slash) or a stem of a filename!
   rid = Str( path ).preventedSlash().name();
   string nix_path = path + rid + ".nix";
   nix::Compression compr = compression ? nix::Compression::DeflateNormal : nix::Compression::None;
   fd = nix::File::open( nix_path, nix::FileMode::Overwrite, "hdf5", compr );
-  root_block = fd.createBlock(rid, "recording");
-  root_section = fd.createSection(rid, "recording");
+  root_block = fd.createBlock( rid, "relacs.recording" );
+  root_section = fd.createSection( rid, "relacs.recording" );
 
   nix::Value ver( SaveFiles::NixFile::relacs_nix_version );
-  root_section.createProperty("relacs-nix version", ver);
+  root_section.createProperty( "relacs-nix version", ver );
   root_block.metadata( root_section );
   return nix_path;
 }
@@ -2131,7 +2131,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
     s = fd.createSection( stim_name, stim_type );
     saveNIXOptions( stim_options, s, Options::FirstOnly, 0 );
   }
-  stimulus_positions = root_block.createDataArray( repro_name + " onset times", "relacs.stimulus.onset",
+  stimulus_positions = root_block.createDataArray( repro_name + "_onset_times", "relacs.stimulus.onset",
                                                    nix::DataType::Double, {1} );
 
   stimulus_positions.setData( nix::DataType::Double, &start_time, {1}, {0} );
@@ -2139,7 +2139,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
   stimulus_positions.unit( "s" );
   stimulus_positions.label( "time" );
 
-  stimulus_extents = root_block.createDataArray( repro_name + " durations", "relacs.stimulus.duration",
+  stimulus_extents = root_block.createDataArray( repro_name + "_durations", "relacs.stimulus.duration",
                                                  nix::DataType::Double, {1} );
   stimulus_extents.setData( nix::DataType::Double, &duration, {1}, {0} );
   stimulus_extents.appendSetDimension();
