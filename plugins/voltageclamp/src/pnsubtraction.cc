@@ -23,6 +23,7 @@
 #include <relacs/voltageclamp/pnsubtraction.h>
 #include <algorithm> // for copy() and assign()
 #include <iterator> // for back_inserter
+#include <relacs/randomstring.h>
 
 using namespace relacs;
 
@@ -53,13 +54,17 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   double samplerate = signal.sampleRate();
   bool qualitycontrol = boolean( "qualitycontrol" );
 
-
+  // assign random id for later connection between qualitycontrol, pn and traces
+  std::string randomId = randomString(40);
 
   // add p/n option to signal
   Parameter &pn1 = opts.addNumber( "pn", pn );
   Parameter &qc1 = opts.addBoolean( "qualitycontrol", qualitycontrol );
+  Parameter &rid = opts.addText( "TraceId", randomId );
+
   signal.setMutable( pn1 );
   signal.setMutable( qc1 );
+  signal.setMutable( rid );
   signal.setDescription( opts );
 
   // don't print repro message:
@@ -67,40 +72,23 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
-    OutData quality_signal1;
-    quality_signal1.setTrace( PotentialOutput[0] );
-    quality_signal1.constWave( 0.010, -1.0, holdingpotential );
+    OutData qc_signal1;
+    qc_signal1.setTrace( PotentialOutput[0] );
+    qc_signal1.constWave( 0.010, -1.0, holdingpotential );
 
-    OutData quality_signal2;
-    quality_signal2.setTrace( PotentialOutput[0] );
-    quality_signal2.pulseWave( 0.010, -1.0, holdingpotential-20, holdingpotential );
+    OutData qc_signal2;
+    qc_signal2.setTrace( PotentialOutput[0] );
+    qc_signal2.pulseWave( 0.010, -1.0, holdingpotential-20, holdingpotential );
 
+    qc_signal1.append( qc_signal2 );
 
-//    OutData quality_signal1;
-//    quality_signal1.setTrace(PotentialOutput[0]);
-//    quality_signal1.constWave(.010, -1.0, holdingpotential);
-//
-//    OutData quality_signal2;
-//    quality_signal2.setTrace(PotentialOutput[0]);
-//    quality_signal2.constWave(.010, -1.0, holdingpotential-20);
-//
-//    OutData quality_signal3;
-//    quality_signal3.setTrace(PotentialOutput[0]);
-//    quality_signal3.constWave(.010, -1.0, holdingpotential);
-//
-    quality_signal1.append(quality_signal2);
-//    quality_signal1.append(quality_signal3);
+    qc_signal1.description().setType( "stimulus/QualityControl" );
+    Options opts_qc = qc_signal1.description();
+    Parameter &qc_rid = opts_qc.addText( "TraceId", randomId );
+    qc_signal1.setMutable( qc_rid );
+    qc_signal1.setDescription( opts_qc );
 
-    quality_signal1.description().setType( "stimulus/Qualitycontrol" );
-//    quality_signal1.setIdent( signal.ident() );
-//    quality_signal1.setDescription( signal.description() );
-//
-//    cerr << "ident:" << signal.ident() << endl;
-//    cerr << "ident2:" << quality_signal1.ident() << endl;
-//    cerr << "descr:" << signal.description() << endl;
-//    cerr << "qualityname:" << quality_signal1.description().type() << endl;
-
-    write(quality_signal1);
+    write(qc_signal1);
     sleep(pause);
   };
 
@@ -122,11 +110,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   pn_signal.setTrace( PotentialOutput[0] );
   pn_signal = holdingpotential + (signal - holdingpotential)/pn;
   SampleDataD pn_trace( mintime, pn_signal.rangeBack(), 1/samplerate );
-  pn_signal.description().setType( "stimulus/PNSubatraction" );
-
-//  cerr << "pnname:"  << pn_signal.description().type() << endl;
-//  cerr << "signalname:" << signal.description().type() << endl;
-
+  pn_signal.description().setType( "stimulus/PNSubtraction" );
 
   for ( int i = 0; i<::abs(pn); i++ ) {
     write(pn_signal);
