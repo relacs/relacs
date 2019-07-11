@@ -37,7 +37,10 @@ echo "use RTAI modules from $RTAI_MODULE_PATH"
 
 # load modules needed for comedi only:
 USE_DC=true
-test "$1" = "-c" && USE_DC=false
+if test "$1" = "-c"; then
+    USE_DC=false
+    shift
+fi
 
 # set parameter for rtai_sched from command line:
 SCHEDPARAM=""
