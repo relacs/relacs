@@ -59,9 +59,9 @@ fi
 
 # comedi:
 udevadm trigger  # for comedi
+sleep 1
 test -c /dev/comedi0 && echo "loaded comedi"
 if $USE_DC; then
-    sleep 1
     lsmod | grep -q kcomedilib || { modprobe kcomedilib && echo "loaded kcomedilib"; }
 
     # dynamic clamp module:
