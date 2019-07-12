@@ -870,9 +870,9 @@ int DynClampAnalogOutput::writeData( void )
 	Sigs.addError( DaqError::OverflowUnderrun );
       else if ( running < 0 )
 	Sigs.addError( DaqError::DeviceError );
-      else
+      else if ( Sigs[0].deviceWriting() )
 	Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
-			  deviceFile() + " is not running!" );
+			  deviceFile() + " is not running although data are still available!" );
       setErrorStr( Sigs );
       return -2;
     }
