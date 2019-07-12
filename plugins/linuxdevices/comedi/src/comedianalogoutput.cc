@@ -894,16 +894,19 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
   QMutexLocker locker( mutex() );
 
-  ExtendedData = 0;
-
   // copy and sort signal pointers:
   OutList ol;
   ol.add( sigs );
   ol.sortByChannel();
 
+  ExtendedData = 0;
   if ( deviceVendor() == "ni_mio_cs" ) {
-    // Fix DAQCard bug: add 2k of zeros to the signals:
+    // Fix DAQCard bug: add 2k of data to the signals:
     ExtendedData = 2048;
+  }
+  else if ( ol[0].size() == 1 ) {
+    // fix SDF_RUNNING bug, we need more than a single sample:
+    ExtendedData = 1;
   }
 
   if ( setupCommand( ol, Cmd, true ) < 0 ) {
@@ -915,7 +918,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   }
 
   if ( ExtendedData > 0 ) {
-    // contiunous and DAQCard bug:
+    // continous and DAQCard bug:
     for ( int k=0; k<ol.size(); k++ )
       ol[k].SampleDataF::append( ol[k].back(), ExtendedData );
   }
@@ -953,7 +956,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
   // execute command:
-  cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+  // cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
   //ComediAnalogInput::dump_cmd( &Cmd );
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     int cerror = comedi_errno();
@@ -1149,7 +1152,7 @@ AnalogOutput::Status ComediAnalogOutput::statusUnlocked( void ) const
 {   
   Status r = Idle;
   // Actually we should check for BUSY, but this is not cleared at the end of the command!
-  if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) {
+  if ( IsPrepared && comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING ) {
     if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY )
       r = Running;
     else {
