@@ -26,6 +26,7 @@
 #include <QShortcut>
 #include <relacs/str.h>
 #include <relacs/relacswidget.h>
+#include <relacs/savefiles.h>
 #include <relacs/session.h>
 
 namespace relacs {
@@ -154,9 +155,12 @@ void Session::startTheSession( bool startmacro )
 
   RW->startSession( startmacro );
 
-  QPalette p = palette();
-  p.setColor( QPalette::WindowText, Qt::red );
-  setPalette( p );
+  if ( RW->SF->filesOpen() ) {
+    QPalette p = palette();
+    p.setColor( QPalette::WindowText, Qt::red );
+    setPalette( p );
+  }
+
   MessageTimer->start( 1000 );
 
   Running = true;

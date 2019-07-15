@@ -111,7 +111,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   setLayout( StatusInfoLayout );
 
   FileLabel = new QLabel( "no files open" );
-  // XXX  ensurePolished(); produces SIGSEGV
+  // ensurePolished();  // produces SIGSEGV
   NormalFont = FileLabel->font();
   HighlightFont = QFont( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
   FileLabel->setTextFormat( Qt::PlainText );
@@ -987,15 +987,16 @@ void SaveFiles::openFiles( void )
     }
   }
 
-  // message:
-  RW->printlog( "save in " + Path );
-
-  // update widget:
-  FileLabel->setFont( HighlightFont );
-  FileLabel->setPalette( HighlightPalette );
-  FileLabel->setText( Path.c_str() );
-  SaveLabel->setPause( Saving );
-  SaveLabel->setSpike( FilesOpen );
+  if ( FilesOpen ) {
+    // message:
+    RW->printlog( "save in " + Path );
+    // update widget:
+    FileLabel->setFont( HighlightFont );
+    FileLabel->setPalette( HighlightPalette );
+    FileLabel->setText( Path.c_str() );
+    SaveLabel->setPause( Saving );
+    SaveLabel->setSpike( FilesOpen );
+  }
 }
 
 
@@ -1182,11 +1183,8 @@ void SaveFiles::RelacsFiles::openTraceFiles( const InList &IL, SaveFiles *save )
       TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".raw";
       // TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".au";
       TraceFiles[k].Stream = save->openFile( TraceFiles[k].FileName, ios::out | ios::binary );
-      if ( ! TraceFiles[k].Stream->good() ) {
+      if ( ! TraceFiles[k].Stream )
 	TraceFiles[k].FileName = "";
-	TraceFiles[k].Stream->close();
-	TraceFiles[k].Stream = 0;
-      }
       /*
       else {
 	// write .au header:
@@ -1245,7 +1243,7 @@ void SaveFiles::RelacsFiles::openEventFiles( const EventList &EL, SaveFiles *sav
       Str fn = EL[k].ident();
       EventFiles[k].FileName = fn.lower() + "-events.dat";
       EventFiles[k].Stream = save->openFile( EventFiles[k].FileName, ios::out );
-      if ( EventFiles[k].Stream->good() ) {
+      if ( EventFiles[k].Stream ) {
 	// save header:
 	*EventFiles[k].Stream << "# events: " << EL[k].ident() << '\n';
 	*EventFiles[k].Stream << '\n';
@@ -1261,11 +1259,8 @@ void SaveFiles::RelacsFiles::openEventFiles( const EventList &EL, SaveFiles *sav
 	// save key:
 	EventFiles[k].Key.saveKey( *EventFiles[k].Stream );
       }
-      else {
+      else
 	EventFiles[k].FileName = "";
-	EventFiles[k].Stream->close();
-	EventFiles[k].Stream = 0;
-      }
     }
     else {
       EventFiles[k].FileName = "";
@@ -1281,8 +1276,7 @@ void SaveFiles::RelacsFiles::openStimulusFiles( const InList &IL, const EventLis
 {
   // create file for stimuli:
   SF = save->openFile( "stimuli.dat", ios::out );
-
-  if ( (*SF) ) {
+  if ( SF ) {
     // save header:
     *SF << "# analog input traces:\n";
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
@@ -1637,8 +1631,7 @@ bool SaveFiles::ODMLFiles::open( const string &path, SaveFiles *save,
 
   // create xml file for all data:
   XF = save->openFile( "metadata.xml", ios::out );
-
-  if ( (*XF) ) {
+  if ( XF ) {
     string name = Str( path ).preventedSlash().name();
     *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
     *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
