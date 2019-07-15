@@ -125,6 +125,7 @@ int InputRangeCheck::main( void )
       OutData signal;
       signal.setTrace( outtrace );
       signal.pulseWave( duration, -1.0, amplitude, 0.0 );
+      signal.setMutable( "Intensity" );
       write( signal );
       if ( signal.failed() )
 	return Failed;
