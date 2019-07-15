@@ -95,9 +95,9 @@ int SubthresholdInactivation::main( void )
   noMessage();
 
   // reset plot
+  P.lock();
   P[0].clearData();
   P[1].clearData();
-  P.lock();
   P[1].setXRange(mintest,maxtest);
   P.unlock();
 

@@ -103,11 +103,10 @@ int Activation::main( void )
   holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
 
   // clear plot and set Range
+  P.lock();
   P[0].clearData();
   P[1].clearData();
-  P.lock();
   P[1].setXRange(mintest,maxtest);
-
   P.unlock();
 
   // write stimulus:
