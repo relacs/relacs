@@ -2156,12 +2156,42 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
   }
   info.name = repro_name;
   
-  // add features
+  // add stimulus features to mtag
   std::string fname;
   std::string funit;
   std::string flabel;
   std::string ftype;
-  info.data_features.clear();
+  info.features.clear();
+ 
+  // abs_time
+  fname =  info.name + "_abs_time";
+  funit = "s";
+  flabel = "time";
+  ftype = "relacs.time";
+  info.features[fname] = createFeature( info.stimulus_mtag, fname, ftype, funit, flabel, nix::LinkType::Indexed,
+					nix::DataType::Double );
+  // delay
+  fname = info.name + "_delay";
+  flabel = "delay";
+  info.features[fname] = createFeature( info.stimulus_mtag, fname, ftype, funit, flabel, nix::LinkType::Indexed,
+					nix::DataType::Double );
+  // amplitude
+  funit = "";
+  fname = info.name + "_amplitude";
+  for ( int k=0; k < AQ->outTracesSize(); k++ ) {
+    if (stim_info[0].device() == AQ->outTrace(k).device() &&
+        stim_info[0].channel() == AQ->outTrace(k).channel()) {
+      const Attenuate *att = AQ->outTraceAttenuate( k );
+      funit = att != 0 ? att->intensityUnit() : AQ->outTrace(k).unit();
+    }
+  }
+  info.features[fname] = createFeature( info.stimulus_mtag, fname , "relacs.feature.amplitude",
+					funit, "intensity", nix::LinkType::Indexed, nix::DataType::Double );
+  // repro tag name
+  fname = info.name + "_repro_tag_id";
+  info.features[fname] = createFeature( info.stimulus_mtag, fname , "relacs.feature.repro_tag_id",
+					"", "id", nix::LinkType::Indexed, nix::DataType::String );
+  // stimulus_features
   if ( !stimulus_features.empty() ) {
     for (auto o : stimulus_features) {
       fname = info.stimulus_mtag.name() + "_" + o.name();
@@ -2178,35 +2208,11 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
       }
       nix::DataArray da = createFeature( info.stimulus_mtag, fname, ftype,
 					 funit, flabel, nix::LinkType::Indexed, dtype );
-      info.data_features[fname] = da;
+      info.features[fname] = da;
     }
   }
-  fname =  info.name + "_abs_time";
-  funit = "s";
-  flabel = "time";
-  ftype = "relacs.time";
-  info.time_feat = createFeature( info.stimulus_mtag, fname, ftype, funit, flabel, nix::LinkType::Indexed,
-				  nix::DataType::Double );
-  
-  fname = info.name + "_delay";
-  flabel = "delay";
-  info.delay_feat = createFeature( info.stimulus_mtag, fname, ftype, funit, flabel, nix::LinkType::Indexed,
-				   nix::DataType::Double );
-  std::string unit = "";
-  for ( int k=0; k < AQ->outTracesSize(); k++ ) {
-    if (stim_info[0].device() == AQ->outTrace(k).device() &&
-        stim_info[0].channel() == AQ->outTrace(k).channel()) {
-      const Attenuate *att = AQ->outTraceAttenuate( k );
-      if ( att != 0 ) {
-        unit = att->intensityUnit();
-      } else {
-        unit = AQ->outTrace(k).unit();
-      }
-    }
-  }
-  info.amplitude_feat = createFeature( info.stimulus_mtag, info.name + "_amplitude", "relacs.feature.amplitude",
-				       unit, "intensity", nix::LinkType::Indexed, nix::DataType::Double );
-  
+
+  // additional stim_options
   for ( Parameter p : stim_options ) {
     if ( (p.flags() & OutData::Mutable ) > 0) {
       fname =  info.name + "_" + p.name();
@@ -2222,13 +2228,10 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
       } else {
         continue;
       }
-      info.stim_features[fname] = createFeature( info.stimulus_mtag, fname, ftype, funit, flabel,
-						 nix::LinkType::Indexed, dtype );
+      info.features[fname] = createFeature( info.stimulus_mtag, fname, ftype, funit, flabel,
+					    nix::LinkType::Indexed, dtype );
     }
   }
-  info.tag_feat = createFeature( info.stimulus_mtag, info.name + "_repro_tag_id", "relacs.feature.repro_tag_id",
-				 "", "id", nix::LinkType::Indexed, nix::DataType::String );
-  //info.stim_features[(info.name + "_repro_tag_id")] = inf;  
 }
 
 
@@ -2245,18 +2248,17 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
   double delay = stim_info[0].delay();
   double intensity = stim_info[0].intensity();
   bool new_stim = false;
-  
   NixTrace trace = traces[0];
+  string tag_name = nix::util::nameSanitizer(stim_info[0].description().name());
   stimulus_start_time = (IL[0].signalIndex() - trace.index  + trace.written) * stepsize;
   stimulus_duration = stim_info[0].length() - stepsize;
-  string tag_name = nix::util::nameSanitizer(stim_info[0].description().name());
   
   if ( current_stimulus_info.name != tag_name ) { // previous stimulus does not match the current
     std::map<std::string, NixStimulusInfo>::iterator it;
     it = stim_info_buffer.find(tag_name);
-    if ( it != stim_info_buffer.end() ) { // We have one in store, take it
+    if ( it != stim_info_buffer.end() ) { // we have one in store, take it
       current_stimulus_info = it->second;
-    } else { // no match, and not found, create a new one
+    } else { // no match and not found, create a new one
       current_stimulus_info = NixStimulusInfo();
       createStimulusTag( tag_name, stim_info[0].description(), stim_options, stim_info,
 			 acquire, stimulus_start_time, stimulus_duration, current_stimulus_info );
@@ -2268,47 +2270,24 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
     appendValue( current_stimulus_info.positions_array, stimulus_start_time );
     appendValue( current_stimulus_info.extents_array, stimulus_duration );
   }
-  //handle options that are stored as features
-  std::map<std::string, nix::DataArray>::iterator it;
-  for ( auto o : stim_options ) {
-    it = current_stimulus_info.data_features.find( tag_name + "_" + o.name() );
-    if ( it != current_stimulus_info.data_features.end() ){
-         if ( o.isNumber() ) {
-          double val = o.number();
-          appendValue( it->second, val );
-        } else if ( o.isText() ) {
-          string val = o.text();
-          appendValue( it->second, val );
-        }
-    }
-  }
+
+  // handle options that are stored as features
+  storeOptionsToFeatures( stim_options );
   Options mutables = stimuliref[0].section( "parameter" );
-  string prop_name;
-  for (auto p : mutables) {
-    prop_name = tag_name + "_" + p.name();
-    it = current_stimulus_info.stim_features.find( prop_name );
-    if ( it != current_stimulus_info.stim_features.end() ) {
-      if ( p.isNumber() ) {
-	double val = p.number();
-	appendValue( it->second, val );
-      } else if ( p.isText() ) {
-	string val = p.text();
-	appendValue( it->second, val );
-      }    
-    }
-  }
-  appendValue( current_stimulus_info.tag_feat, repro_tag_id );
-  appendValue( current_stimulus_info.time_feat, abs_time );
-  appendValue( current_stimulus_info.delay_feat, delay );
-  appendValue( current_stimulus_info.amplitude_feat, intensity );
+  storeOptionsToFeatures( mutables );
+
+  appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_repro_tag_id" ), repro_tag_id );
+  appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_abs_time" ), abs_time );
+  appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_delay" ), delay );
+  appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_amplitude" ), intensity );
   fd.flush();
 }
-
 
 nix::DataArray SaveFiles::NixFile::createFeature( nix::MultiTag &mtag,
 						  std::string name, std::string type,
 						  std::string unit, std::string label,
-						  nix::LinkType link_type, nix::DataType dtype ) {
+						  nix::LinkType link_type, nix::DataType dtype )
+{
   nix::DataArray da = root_block.createDataArray(name, type, dtype, {0});
   da.appendSetDimension();
   da.label(label);
@@ -2321,6 +2300,27 @@ nix::DataArray SaveFiles::NixFile::createFeature( nix::MultiTag &mtag,
   mtag.createFeature( da, nix::LinkType::Indexed);
   return da;
 }
+
+
+void SaveFiles::NixFile::storeOptionsToFeatures( const Options &options )
+{
+  std::string prop_name;
+  std::map<std::string, nix::DataArray>::iterator it;
+  for ( auto p : options ) {
+    prop_name = current_stimulus_info.name + "_" + p.name();
+    it = current_stimulus_info.features.find( prop_name );
+    if ( it != current_stimulus_info.features.end() ) {
+      if ( p.isNumber() ) {
+	double val = p.number();
+	appendValue( it->second, val );
+      } else if ( p.isText() ) {
+	string val = p.text();
+	appendValue( it->second, val );
+      }    
+    }
+  }
+}
+
 
 
 void SaveFiles::NixFile::appendValue( nix::DataArray &array, double value ) {

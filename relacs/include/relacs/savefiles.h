@@ -501,8 +501,7 @@ protected:
     std::string name;
     nix::MultiTag stimulus_mtag;
     nix::DataArray positions_array, extents_array;
-    nix::DataArray time_feat, delay_feat, amplitude_feat, tag_feat;
-    std::map<std::string, nix::DataArray> stim_features, data_features;
+    std::map< std::string, nix::DataArray > features;
   };
 
   /*!
@@ -524,7 +523,7 @@ protected:
     nix::Tag       repro_tag;
     nix::Group     stimulus_group;
     NixStimulusInfo current_stimulus_info;
-    std::map<std::string, NixStimulusInfo> stim_info_buffer;
+    std::map< std::string, NixStimulusInfo > stim_info_buffer;
 
     string create ( string path, bool compression );
     void close ( void );
@@ -545,7 +544,7 @@ protected:
 		      double sessiontime );
     void endRePro ( double current_time );
     void writeTraces ( const InList &IL );
-    void writeChunk ( NixTrace &trace, size_t to_read, const void *data);
+    void writeChunk ( NixTrace &trace, size_t to_read, const void *data );
     void initEvents ( const EventList &EL, FilterDetectors *FD );
     void writeEvents ( const InList &IL, const EventList &EL );
     void resetIndex ( const InList &IL );
@@ -557,11 +556,13 @@ protected:
 				  std::string name, std::string type,
 				  std::string unit, std::string label,
 				  nix::LinkType link_type=nix::LinkType::Indexed,
-                                  nix::DataType dtype = nix::DataType::Double);
+                                  nix::DataType dtype = nix::DataType::Double );
+    void storeOptionsToFeatures( const Options &options );
+    
     string rid; //recording id
 
-    vector<NixTrace> traces;
-    vector<NixEventData> events;
+    vector< NixTrace > traces;
+    vector< NixEventData > events;
   };
   NixFile NixIO;
   #endif
