@@ -1771,7 +1771,11 @@ string SaveFiles::NixFile::create( string path, bool compression )
   rid = Str( path ).preventedSlash().name();
   string nix_path = path + rid + ".nix";
   nix::Compression compr = compression ? nix::Compression::DeflateNormal : nix::Compression::None;
-  fd = nix::File::open( nix_path, nix::FileMode::Overwrite, "hdf5", compr );
+  try {
+    fd = nix::File::open( nix_path, nix::FileMode::Overwrite, "hdf5", compr );
+  } catch ( ... ) {
+    return "";
+  }
   root_block = fd.createBlock( rid, "relacs.recording" );
   root_section = fd.createSection( rid, "relacs.recording" );
 
