@@ -98,8 +98,8 @@ int Ramp::main( void )
   holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
 
   // clear plot
-  P.clearData();
   P.lock();
+  P.clearData();
   P.setXRange(-2., (maxtest - mintest)/min(slopesteps));
   P.unlock();
 

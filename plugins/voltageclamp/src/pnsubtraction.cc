@@ -88,6 +88,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     qc_signal1.setMutable( qc_rid );
     qc_signal1.setDescription( opts_qc );
 
+//    cerr << qc_signal1.description() << endl;
+
     write(qc_signal1);
     sleep(pause);
   };
@@ -135,6 +137,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   };
 
   signal.description().setType( "stimulus/Trace" );
+
   write(signal);
   sleep(pause);
 
