@@ -13,7 +13,8 @@ pluginlib_LTLIBRARIES = \
     libvoltageclamptail.la \
     libvoltageclampmembranetest.la \
     libvoltageclampsummary.la \
-    libvoltageclampsubthresholdinactivation.la
+    libvoltageclampsubthresholdinactivation.la \
+    libvoltageclampsinussum.la
 
 
 libvoltageclamppnsubtraction_la_CPPFLAGS = \
@@ -375,6 +376,43 @@ libvoltageclampsubthresholdinactivation_la_includedir = $(pkgincludedir)/voltage
 libvoltageclampsubthresholdinactivation_la_include_HEADERS = $(HEADER_PATH)/subthresholdinactivation.h
 
 
+libvoltageclampsinussum_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libvoltageclampsinussum_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libvoltageclampsinussum_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libvoltageclampsinussum_la_OBJECTS) : moc_sinussum.cc
+
+libvoltageclampsinussum_la_SOURCES = sinussum.cc
+
+libvoltageclampsinussum_la_includedir = $(pkgincludedir)/voltageclamp
+
+libvoltageclampsinussum_la_include_HEADERS = $(HEADER_PATH)/sinussum.h
+
+
+
 check_PROGRAMS = \
     linktest_libvoltageclampactivation_la \
     linktest_libvoltageclampinactivation_la \
@@ -385,7 +423,8 @@ check_PROGRAMS = \
     linktest_libvoltageclampsummary_la \
     linktest_libvoltageclampsubthresholdinactivation_la \
     linktest_libvoltageclamppnsubtraction_la
-    
+     \
+    linktest_libvoltageclampsinussum_la
 
 linktest_libvoltageclampactivation_la_SOURCES = linktest.cc
 linktest_libvoltageclampactivation_la_LDADD = libvoltageclampactivation.la
@@ -414,5 +453,8 @@ linktest_libvoltageclampsubthresholdinactivation_la_LDADD = libvoltageclampsubth
 linktest_libvoltageclamppnsubtraction_la_SOURCES = linktest.cc
 linktest_libvoltageclamppnsubtraction_la_LDADD = libvoltageclamppnsubtraction.la
 
+
+linktest_libvoltageclampsinussum_la_SOURCES = linktest.cc
+linktest_libvoltageclampsinussum_la_LDADD = libvoltageclampsinussum.la
 
 TESTS = $(check_PROGRAMS)
