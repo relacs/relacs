@@ -497,6 +497,12 @@ protected:
     size_t el_index;
   };
 
+  struct NixStimulusInfo {
+    std::string name;
+    nix::MultiTag stimulus_mtag;
+    nix::DataArray positions_array, extents_array;
+    std::map< std::string, nix::DataArray > features;
+  };
 
   /*!
     \class NixFiles
@@ -514,14 +520,10 @@ protected:
     nix::File      fd;
     nix::Block     root_block;
     nix::Section   root_section;
-    nix::MultiTag  stimulus_tag;
     nix::Tag       repro_tag;
-    nix::DataArray stimulus_positions;
-    nix::DataArray stimulus_extents;
-    nix::DataArray time_feat, delay_feat, amplitude_feat, carrier_feat, tag_feat;
-    std::vector<nix::DataArray> data_features;
-    std::vector<nix::Feature> stimulus_feats;
     nix::Group     stimulus_group;
+    NixStimulusInfo current_stimulus_info;
+    std::map< std::string, NixStimulusInfo > stim_info_buffer;
 
     string create ( string path, bool compression );
     void close ( void );
@@ -529,7 +531,8 @@ protected:
     void saveMetadata ( const MetaData &mtdt );
     void createStimulusTag ( const std::string &repro_name, const Options &stimulus_options,
                              const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
-                             const Acquire *AQ, double start_time, double duration );
+                             const Acquire *AQ, double start_time, double duration,
+			     NixStimulusInfo &info );
     void writeStimulus( const InList &IL, const EventList &EL,
 			const deque< OutDataInfo > &stimuliinfo,
 			const deque< bool > &newstimuli, const Options &data,
@@ -541,7 +544,7 @@ protected:
 		      double sessiontime );
     void endRePro ( double current_time );
     void writeTraces ( const InList &IL );
-    void writeChunk ( NixTrace &trace, size_t to_read, const void *data);
+    void writeChunk ( NixTrace &trace, size_t to_read, const void *data );
     void initEvents ( const EventList &EL, FilterDetectors *FD );
     void writeEvents ( const InList &IL, const EventList &EL );
     void resetIndex ( const InList &IL );
@@ -553,11 +556,14 @@ protected:
 				  std::string name, std::string type,
 				  std::string unit, std::string label,
 				  nix::LinkType link_type=nix::LinkType::Indexed,
-                                  nix::DataType dtype = nix::DataType::Double);
+                                  nix::DataType dtype = nix::DataType::Double );
+    void createFeaturesForOptions( const Options &options, std::string type );
+    void storeOptionsToFeatures( const Options &options );
+    
     string rid; //recording id
 
-    vector<NixTrace> traces;
-    vector<NixEventData> events;
+    vector< NixTrace > traces;
+    vector< NixEventData > events;
   };
   NixFile NixIO;
   #endif

@@ -1317,16 +1317,17 @@ void RELACSWidget::startSession( bool startmacro )
   SF->openFiles();
   if ( ! SF->filesOpen() )
     QCoreApplication::postEvent( this, new RelacsWidgetEvent( 5, "No data are saved!" ) );
-
-  QPalette p( palette() );
-  p.setColor( QPalette::Window, QColor( 255, 96, 96 ) );
-  MainWidget->setPalette( p );
-  p.setColor( QPalette::Window, OrgBackground );
-  FD->setPalette( p );
-  PT->widget()->setPalette( p );
-  CW->setPalette( p );
-  RP->setPalette( p );
-  MC->setPalette( p );
+  else {
+    QPalette p( palette() );
+    p.setColor( QPalette::Window, QColor( 255, 96, 96 ) );
+    MainWidget->setPalette( p );
+    p.setColor( QPalette::Window, OrgBackground );
+    FD->setPalette( p );
+    PT->widget()->setPalette( p );
+    CW->setPalette( p );
+    RP->setPalette( p );
+    MC->setPalette( p );
+  }
 
   SS.lock();
   if ( SS.boolean( "saverelacscore" ) )

@@ -2266,14 +2266,16 @@ int Acquire::waitForWrite( void )
       if ( ! AO[i].Signals.empty() && AO[i].AO->running() )
 	naos++;
     }
+    if ( naos == 0 )
+      return 0;
   }
-  if ( naos == 0 )
-    return 0;
 
   // wait for the threads to finish:
   AOSemaphore.acquire( naos );
 
-  AOSemaphore.acquire( AOSemaphore.available() );
+  // clear analog output semaphore:
+  if ( AOSemaphore.available() > 0 )
+    AOSemaphore.acquire( AOSemaphore.available() );
 
   WriteMutex.lockForRead();
   bool success = true;
