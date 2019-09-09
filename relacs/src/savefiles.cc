@@ -2244,14 +2244,13 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
   // handle options that are stored as features
   storeOptionsToFeatures( stim_options );
   Options mutables = stimuliref[0].section( "parameter" );
-
+  
   storeOptionsToFeatures( mutables );
 
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_repro_tag_id" ), repro_tag_id );
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_abs_time" ), abs_time );
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_delay" ), delay );
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_amplitude" ), intensity );
-
   fd.flush();
 }
 
