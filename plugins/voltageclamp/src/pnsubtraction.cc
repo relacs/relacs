@@ -24,6 +24,7 @@
 #include <algorithm> // for copy() and assign()
 #include <iterator> // for back_inserter
 #include <relacs/randomstring.h>
+#include <relacs/ephys/amplifiercontrol.h>
 
 using namespace relacs;
 
@@ -39,8 +40,8 @@ PNSubtraction::PNSubtraction( const string &name,
 {
   // add some options:
   addNumber( "pn", "p/N", -4, -100, 100, 1 );
-  addBoolean("qualitycontrol", "Quality control", true);
-  // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addBoolean( "qualitycontrol", "Quality control", true );
+  addBoolean( "currentpulse", "Current pulse", true );
 }
 
 
@@ -53,6 +54,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
   bool qualitycontrol = boolean( "qualitycontrol" );
+//  bool currentpulse = boolean( "currentpulse" );
 
   // assign random id for later connection between qualitycontrol, pn and traces
   std::string randomId = randomString(40);
@@ -60,15 +62,23 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   // add p/n option to signal
   Parameter &pn1 = opts.addNumber( "pn", pn );
   Parameter &qc1 = opts.addBoolean( "qualitycontrol", qualitycontrol );
+//  Parameter $cp1 = opts.addBoolean( "currentpulse", currentpulse );
   Parameter &rid = opts.addText( "TraceId", randomId );
 
   signal.setMutable( pn1 );
   signal.setMutable( qc1 );
+//  signal.setMutable( cp1 );
   signal.setMutable( rid );
   signal.setDescription( opts );
 
   // don't print repro message:
   noMessage();
+
+  // make short current pulse to estimate membrane capacity, time constant and resistance
+//  if ( currentpulse ) {
+//
+//  };
+
 
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
