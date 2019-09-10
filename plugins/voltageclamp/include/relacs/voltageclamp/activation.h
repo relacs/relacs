@@ -29,6 +29,7 @@
 #include <relacs/voltageclamp/summary.h>
 #include <relacs/voltageclamp/pnsubtraction.h>
 #include <relacs/voltageclamp/tail.h>
+
 using namespace relacs;
 
 namespace voltageclamp {

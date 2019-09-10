@@ -21,6 +21,7 @@
 
 #include <relacs/voltageclamp/sinussum.h>
 #include <relacs/voltageclamp/pnsubtraction.h>
+#include <relacs/ephys/amplifiercontrol.h>
 
 using namespace relacs;
 
@@ -72,6 +73,14 @@ int SinusSum::main( void )
 
   // don't print repro message:
   noMessage();
+
+  // set amplifier to VC mode
+  ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl* >( control( "AmplifierControl" ) );
+  if ( ampl == 0 ) {
+    warning( "No amplifier found." );
+    return Failed;
+  }
+  ampl ->activateVoltageClampMode();
 
   // reset plot
   P.lock();
