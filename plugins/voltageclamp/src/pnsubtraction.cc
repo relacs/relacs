@@ -128,6 +128,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_signal.append( br_signal3 );
     br_signal.append( br_signal4 );
 
+    br_signal.description().setType( "stimulus/CurrentPulse" );
     Options opts_br = br_signal.description();
     Parameter &br_rid = opts_br.addText( "TraceId", randomId );
     Parameter &br_amp = opts_br.addNumber( "PulseAmplitude", pulseamplitude );
