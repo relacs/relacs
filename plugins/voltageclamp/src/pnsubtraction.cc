@@ -106,7 +106,6 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_hold.constWave( I0 );
     write(br_hold);
     sleep(0.1);
-    cerr << pulseamplitude << ", " << pulseduration << "c\n";
 
     OutData br_signal;
     br_signal.setTrace( CurrentOutput[0] );
