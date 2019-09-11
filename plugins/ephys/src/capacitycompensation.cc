@@ -24,6 +24,7 @@
 #include <relacs/tablekey.h>
 #include <relacs/str.h>
 #include <relacs/ephys/capacitycompensation.h>
+#include <relacs/ephys/amplifiercontrol.h>
 using namespace relacs;
 
 namespace ephys {
@@ -42,7 +43,7 @@ CapacityCompensation::CapacityCompensation( void )
   addBoolean( "skipspikes", "Skip trials with detected spikes", true );
   addBoolean( "dynamicrange", "Dynamically adjust plot range", false );
   addNumber( "rate", "Rate for adjusting plot ranges", 0.01, 0.0001, 0.1, 0.001 ).setActivation( "dynamicrange", "true" );
-
+  addBoolean( "autobridge", "Switch to Bridge Mode automatically", false);
   // plot:
   setWidget( &P );
 }
@@ -71,9 +72,20 @@ int CapacityCompensation::main( void )
   bool skipspikes = boolean( "skipspikes" );
   bool dynamicrange = boolean( "dynamicrange" );
   double rate = number( "rate" );
+  bool autobridge = boolean( "autobridge" );
 
   // don't print repro message:
   noMessage();
+
+  // set amplifier to Bridge mode
+  if ( autobridge ) {
+    ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl * >( control("AmplifierControl"));
+    if (ampl == 0) {
+      warning("No amplifier found.");
+      return Failed;
+    }
+    ampl->activateBridgeMode();
+  };
 
   // in- and outtrace:
   const InData &intrace = trace( SpikeTrace[0] >= 0 ? SpikeTrace[0] : 0 );
