@@ -31,10 +31,15 @@
 #include <QHBoxLayout>
 #include <relacs/digitalio.h>
 #include <relacs/doublespinbox.h>
-#include <relacs/misc/amplmode.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/control.h>
 using namespace relacs;
+
+
+namespace misc {
+  class AmplMode;
+}
+
 
 namespace ephys {
 

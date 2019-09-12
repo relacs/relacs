@@ -20,6 +20,7 @@
 */
 
 #include <QTimer>
+#include <relacs/misc/amplmode.h>
 #include <relacs/ephys/amplifiercontrol.h>
 using namespace relacs;
 
