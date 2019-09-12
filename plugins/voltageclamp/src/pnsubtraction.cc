@@ -146,7 +146,6 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
   };
 
-
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
     OutData qc_signal1;
@@ -171,9 +170,12 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     sleep(pause);
   };
 
+  cerr << opts << "\n";
+
   // skip prepulses if pn==0
   if ( pn == 0 ) {
     write(signal);
+
     if ( signal.error() )
       return false;
     sleep(pause);

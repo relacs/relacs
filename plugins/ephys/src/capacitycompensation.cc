@@ -23,7 +23,7 @@
 #include <relacs/stats.h>
 #include <relacs/tablekey.h>
 #include <relacs/str.h>
-//#include <relacs/ephys/amplifiercontrol.h>
+#include <relacs/ephys/amplifiercontrol.h>
 #include <relacs/ephys/capacitycompensation.h>
 using namespace relacs;
 
@@ -77,15 +77,15 @@ int CapacityCompensation::main( void )
   // don't print repro message:
   noMessage();
 
-//  // set amplifier to Bridge mode
-//  if ( autobridge ) {
-//    ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl * >( control("AmplifierControl"));
-//    if (ampl == 0) {
-//      warning("No amplifier found.");
-//      return Failed;
-//    }
-//    ampl->activateBridgeMode();
-//  };
+  // set amplifier to Bridge mode
+  if ( autobridge ) {
+    ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl * >( control("AmplifierControl"));
+    if (ampl == 0) {
+      warning("No amplifier found.");
+      return Failed;
+    }
+    ampl->activateBridgeMode();
+  };
 
   // in- and outtrace:
   const InData &intrace = trace( SpikeTrace[0] >= 0 ? SpikeTrace[0] : 0 );

@@ -98,27 +98,29 @@ int SinusSum::main( void )
   // write holdingpotential:
   write( holdingsignal );
   sleep( pause );
-
-  //stimulus
-  OutData signal;
-  signal.setTrace(PotentialOutput[0]);
-  signal.constWave(duration, -1.0, V0);
-
-  for ( unsigned j = 0; j < amplitudes.size(); j++) {
-    OutData signal2;
-    signal2.setTrace(PotentialOutput[0]);
-    signal2.sineWave( duration, -1.0, freqs[j], 0.0, 1.0 );
-    signal = signal + amplitudes[j] * signal2;
-  }
-
-  // nix options
-  Options opts;
-  signal.setDescription( opts );
-
+  
   double t0 = 0.0;
-  for ( int Count=0;
-        ( repeats <= 0 || Count < repeats ) && softStop() == 0;
-        Count++ ) {
+  for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
+    //stimulus
+    OutData signal;
+    signal.setTrace(PotentialOutput[0]);
+    signal.constWave(duration, -1.0, V0);
+
+    // nix options
+    Parameter &p1 = signal.description().addText( "amplitudes", amplitude_strings);
+    Parameter &p2 = signal.description().addText( "frequencies", frequency_strings );
+    Parameter &p3 = signal.description()["Intensity"];
+    signal.setMutable( p1 );
+    signal.setMutable( p2 );
+    signal.setMutable( p3 );
+    Options opts = signal.description();
+
+    for ( unsigned j = 0; j < amplitudes.size(); j++) {
+      OutData signal2;
+      signal2.setTrace(PotentialOutput[0]);
+      signal2.sineWave( duration, -1.0, freqs[j], 0.0, 1.0 );
+      signal = signal + amplitudes[j] * signal2;
+    }
 
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, duration, t0 );
 
