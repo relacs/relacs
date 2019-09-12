@@ -86,7 +86,7 @@ int SinusSum::main( void )
   P.lock();
   P[0].clearData();
   P[1].clearData();
-  P[1].setXRange( 0.0, duration );
+//  P[1].setXRange( 0.0, duration );
   P.unlock();
 
   // holding potential:
@@ -98,7 +98,7 @@ int SinusSum::main( void )
   // write holdingpotential:
   write( holdingsignal );
   sleep( pause );
-  
+
   double t0 = 0.0;
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     //stimulus
@@ -132,7 +132,7 @@ int SinusSum::main( void )
     P.lock();
     // trace
     P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-    P[1].plot( signal, 1000000.0, Plot::Yellow, 2, Plot::Solid);
+    P[1].plot( signal, 1000.0, Plot::Yellow, 2, Plot::Solid);
     P.draw();
     P.unlock();
   }

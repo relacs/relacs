@@ -170,8 +170,6 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     sleep(pause);
   };
 
-  cerr << opts << "\n";
-
   // skip prepulses if pn==0
   if ( pn == 0 ) {
     write(signal);
