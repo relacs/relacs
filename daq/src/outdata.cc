@@ -459,7 +459,7 @@ OutData &OutData::append( const OutData &od, const string &name )
       for ( int k=1; k<10000; k++ ) {
 	string sname = name + '-' + Str( k );
 	bool found = false;
-	for ( Options::section_iterator ssp = sp+1;
+	for ( Options::section_iterator ssp = Description.sectionsBegin();
 	      ssp != Description.sectionsEnd();
 	      ++ssp ) {
 	  if ( (*ssp)->name() == sname ) {
