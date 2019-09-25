@@ -84,7 +84,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
   // make short current pulse to estimate membrane capacity, time constant and resistance
   if ( currentpulse ) {
-    // set amplifier to VC mode
+      // set amplifier to VC mode
     ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl* >( control( "AmplifierControl" ) );
     ampl ->activateVoltageClampMode();
 
@@ -94,7 +94,6 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     hp_signal.constWave( 0.1, -1.0, holdingpotential );
     write(hp_signal);
     sleep(pause);
-
     SampleDataD currenttrace( 0.0, 0.1, trace(CurrentTrace[0]).stepsize(), 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
     double I0 = currenttrace.mean( 0.07, 0.1 );
@@ -106,19 +105,17 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_hold.constWave( I0 );
     write(br_hold);
     sleep(0.1);
-    cerr << pulseamplitude << ", " << pulseduration << "c\n";
-
     OutData br_signal;
     br_signal.setTrace( CurrentOutput[0] );
-    br_signal.pulseWave( pulseduration, -1.0, I0, I0 + 2*pulseamplitude);
+    br_signal.constWave( pulseduration, -1.0, I0);
 
     OutData br_signal2;
     br_signal2.setTrace( CurrentOutput[0] );
-    br_signal2.pulseWave( pulseduration, -1.0, I0 + 2*pulseamplitude, I0 + pulseamplitude);
+    br_signal2.constWave( pulseduration, -1.0, I0 + 2*pulseamplitude);
 
     OutData br_signal3;
     br_signal3.setTrace( CurrentOutput[0] );
-    br_signal3.pulseWave( pulseduration, -1.0, I0 + pulseamplitude, I0);
+    br_signal3.constWave( pulseduration, -1.0, I0 + pulseamplitude);
 
     OutData br_signal4;
     br_signal4.setTrace( CurrentOutput[0] );
@@ -138,7 +135,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_signal.setMutable( br_dur );
     br_signal.setDescription( opts_br );
 
-    write(br_signal);
+    write( br_signal );
+    sleep( pulseduration*4 );
 
     // set amplifier back to VC mode
     ampl ->activateVoltageClampMode();
