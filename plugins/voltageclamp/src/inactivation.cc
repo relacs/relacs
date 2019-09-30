@@ -45,14 +45,6 @@ Inactivation::Inactivation( void )
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
   // plot
-  P.lock();
-  P.resize( 2, 2, true );
-  P[0].setXLabel( "Time [ms]" );
-  P[0].setYLabel( "Current [nA]" );
-  P[1].setXLabel( "Potential [mV]" );
-  P[1].setYLabel( "Current [nA]");
-
-  P.unlock();
   setWidget( &P );
 }
 
@@ -85,7 +77,17 @@ int Inactivation::main( void )
   ampl ->activateVoltageClampMode();
 
   // reset plot
+
   P.lock();
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
+
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [ms]" );
+  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
+  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+
   P[0].clearData();
   P[1].clearData();
   P[1].setXRange(mintest,maxtest);
@@ -188,6 +190,9 @@ int Inactivation::main( void )
   }
   return Completed;
 }
+
+
+
 
 
 addRePro( Inactivation, voltageclamp );

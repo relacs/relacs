@@ -248,6 +248,9 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
 //  cerr << "Rmstring: " + Rmstring << endl;
 
   // plot
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
+
   P.lock();
 //  P[0].setTitle("leak = " + Str( steady0, "%.1f" ) +
 //            "pA, R_a = " + Str( R_a, "%.1f" ) +
@@ -257,8 +260,8 @@ void membranetest::resistance( SampleDataF &MeanCurr, SampleDataF &StdCurr ) {
   P[0].plotLine( 1*duration*1000 - meantime*1000, steady1/currScale, 1*duration*1000, steady1/currScale, Plot::Magenta, 3, Plot::Solid);
   P[0].plotLine( 2*duration*1000 - meantime*1000, steady2/currScale, 2*duration*1000, steady2/currScale, Plot::Magenta, 3, Plot::Solid);
 
-  P[0].setYLabel( "I [" + trace(CurrentTrace[0]).unit() + "]" );
-  P[1].setYLabel( "V [" + trace(SpikeTrace[0]).unit() + "]" );
+  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[1].setYLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
 
   P.draw();
   P.unlock();

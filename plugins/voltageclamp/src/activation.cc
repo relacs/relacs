@@ -48,17 +48,6 @@ Activation::Activation( void )
   addNumber( "minrevpot", "minimum of reversal potential", -50.0, -200.0, 200.0, 10.0, "mV" );
   addNumber( "maxrevpot", "maximum of reversal potential", 200.0, -200.0, 200.0, 10.0, "mV" );
 
-
-  P.lock();
-  P.resize( 2, 2, true );
-  P[0].setXLabel( "Time [ms]" );
-  P[0].setYLabel( "Current [pA]" );
-  P[1].setXLabel( "Potential [mV]" );
-  P[1].setYLabel( "Current [pA]");
-  P[1].setY2Label( "conductance [\u03BCS]" );
-  P[1].setY2Tics( 0.0, 10.0 );
-
-  P.unlock();
   setWidget( &P );
 }
 
@@ -104,7 +93,18 @@ int Activation::main( void )
   holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
 
   // clear plot and set Range
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
+
   P.lock();
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [ms]" );
+  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
+  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]" );
+  P[1].setY2Label( "conductance [\u03BCS]" );
+  P[1].setY2Tics( 0.0, 10.0 );
+
   P[0].clearData();
   P[1].clearData();
   P[1].setXRange(mintest,maxtest);
