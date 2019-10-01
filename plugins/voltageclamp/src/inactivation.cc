@@ -192,9 +192,6 @@ int Inactivation::main( void )
 }
 
 
-
-
-
 addRePro( Inactivation, voltageclamp );
 
 }; /* namespace voltageclamp */

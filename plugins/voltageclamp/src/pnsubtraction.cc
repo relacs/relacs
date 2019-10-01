@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <relacs/fitalgorithm.h>
 #include <cmath>
 #include <relacs/voltageclamp/pnsubtraction.h>
 #include <algorithm> // for copy() and assign()
@@ -221,13 +222,79 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-
   currenttrace -= pn/::abs(pn)*pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
   currenttrace -= currenttrace.mean( -samplerate/500, 0);
 
 //  return pn_trace;
   return currenttrace;
 };
+
+
+void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
+  double pulseamplitude = number( "pulseamplitude" );
+  double pulseduration = number( "pulseduration" );
+  double samplerate = trace( SpikeTrace[0] ).sampleRate();
+
+  int dT = pulseduration/samplerate;
+
+  ArrayD param( 4, 1.0 );
+  param[0] = 0.0001;
+  param[1] = mean(voltagetrace.end()-10, voltagetrace.end());
+  param[2] = mean(voltagetrace.begin() + dT - 10, voltagetrace.begin() + dT );
+  param[3] = mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT );
+
+//  std::vector<double> timesteps;
+//  trange.range(timesteps, ",", ":" );
+//  timesteps = timesteps/1000;
+
+  ArrayD error( voltagetrace.size(), 1.0 );
+  ArrayD uncertainty( 4, 0.0 );
+  ArrayI paramfit( 4, 0 );
+  double chisq = 0.0;
+
+  marquardtFit( voltagetrace, voltagetrace, error, currentPulseFuncDerivs, param, paramfit, uncertainty, chisq );
+
+  cerr << param << "\n";
+
+};
+
+
+double PNSubtraction::currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp ) {
+  double dT = number( "pulseduration" );
+  double t0 = 0.0;
+  double tau = p[0];
+  double V0 = p[1];
+  double V1 = p[2];
+  double V2 = p[3];
+  double y = 0.0;
+
+  if ( t < t0 + dT ) {
+    double ex = ::exp( -(t - (t0 + dT)) / tau );
+    y = ( V0 - V1 ) * ex + V1;
+    dfdp[0] = - (V0 - V1 ) * ex * (t - (t0 + dT)) / tau / tau;
+    dfdp[1] = ex;
+    dfdp[2] = - ex + 1.0;
+    dfdp[3] = 0.0;
+  }
+  else if ( t < t0 + 2*dT ) {
+    double ex = ::exp( -(t - (t0 + 2*dT)) / tau );
+    y = ( V1 - V2 ) * ex + V2;
+    dfdp[0] = - (V0 - V1 ) * ex * (t - (t0 + 2*dT)) / tau / tau;
+    dfdp[1] = 0;
+    dfdp[2] = ex;
+    dfdp[3] = - ex + 1.0;
+  }
+  else if ( t < t0 + 3*dT ) {
+    double ex = ::exp( -(t - (t0 + 3*dT)) / tau );
+    y = ( V2 - V0 ) * ex + V0;
+    dfdp[0] = - (V0 - V1 ) * ex * (t - (t0 + 3*dT)) / tau / tau;
+    dfdp[1] = - ex + 1.0;
+    dfdp[2] = 0.0;
+    dfdp[3] = ex;
+  };
+  return y;
+};
+
 
 }; /* namespace voltageclamp */
 

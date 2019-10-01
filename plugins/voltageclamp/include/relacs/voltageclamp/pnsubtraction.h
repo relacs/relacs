@@ -55,6 +55,10 @@ public:
 
   SampleDataD PN_sub( OutData signal, Options &opts, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0);
 
+private:
+	void analyzeCurrentPulse( SampleDataD voltagetrace, double I0 );
+	double currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp );
+
 };
 
 
