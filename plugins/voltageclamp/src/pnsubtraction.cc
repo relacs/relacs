@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <relacs/fitalgorithm.h>
 #include <cmath>
 #include <relacs/voltageclamp/pnsubtraction.h>
 #include <algorithm> // for copy() and assign()
@@ -105,6 +106,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_hold.constWave( I0 );
     write(br_hold);
     sleep(0.1);
+
+
     OutData br_signal;
     br_signal.setTrace( CurrentOutput[0] );
     br_signal.constWave( pulseduration, -1.0, I0);
@@ -138,11 +141,17 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     write( br_signal );
     sleep( pulseduration*4 );
 
+    SampleDataD potentialtrace = SampleDataF( 0.0, 4*pulseduration, 1/samplerate, 0.0 );
+    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace );
+
+//    cerr << potentialtrace.min(0.0, 3*pulseduration) << ", " << potentialtrace.max(0.0, 3*pulseduration) << ", " << potentialtrace.size() << "\n";
+
+    analyzeCurrentPulse( potentialtrace, I0 );
+
     // set amplifier back to VC mode
     ampl ->activateVoltageClampMode();
     write(hp_signal);
     sleep(pause);
-
   };
 
   // make short quality assuring test-pulse
@@ -169,49 +178,49 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     sleep(pause);
   };
 
-  cerr << opts << "\n";
+//  // skip prepulses if pn==0
+//  if ( pn == 0 ) {
+//    write(signal);
+//
+//    if ( signal.error() )
+//      return false;
+//    sleep(pause);
+//
+//    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
+//    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+//
+//    return currenttrace;
+//  };
 
-  // skip prepulses if pn==0
-  if ( pn == 0 ) {
-    write(signal);
+  SampleDataD pn_trace(mintime, signal.rangeBack(), 1 / samplerate);
+  if ( pn != 0 ) {
+    // give pn stimulus
+    OutData pn_signal = signal;
+    pn_signal.setTrace(PotentialOutput[0]);
+    pn_signal = holdingpotential + (signal - holdingpotential) / pn;
+    pn_signal.description().setType("stimulus/PNSubtraction");
 
-    if ( signal.error() )
-      return false;
-    sleep(pause);
+    for (int i = 0; i < ::abs(pn); i++) {
+      write(pn_signal);
+      if (signal.error())
+        return false;
+      sleep(pause);
 
-    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
-    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+      if (interrupt()) {
+        break;
+      };
 
-    return currenttrace;
-  };
+      SampleDataD currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0);
+      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
 
-  // give stimulus
-  OutData pn_signal = signal;
-  pn_signal.setTrace( PotentialOutput[0] );
-  pn_signal = holdingpotential + (signal - holdingpotential)/pn;
-  SampleDataD pn_trace( mintime, pn_signal.rangeBack(), 1/samplerate );
-  pn_signal.description().setType( "stimulus/PNSubtraction" );
+      pn_trace += currenttrace;
 
-  for ( int i = 0; i<::abs(pn); i++ ) {
-    write(pn_signal);
-    if ( signal.error() )
-      return false;
-    sleep(pause);
-
-    if (interrupt()) {
-      break;
     };
-
-    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
-    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
-
-    pn_trace += currenttrace;
-
-  };
 //  pn_trace -= pn_trace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
 
-  if (interrupt()) {
-    return pn_trace;
+    if (interrupt()) {
+      return pn_trace;
+    };
   };
 
   signal.description().setType( "stimulus/Trace" );
@@ -219,15 +228,131 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   write(signal);
   sleep(pause);
 
-  SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
+  SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
+  if (currentpulse) {
+    SampleDataD potentialtrace(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
+    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace);
 
-  currenttrace -= pn/::abs(pn)*pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
-  currenttrace -= currenttrace.mean( -samplerate/500, 0);
+    SampleDataD I_L(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
+    SampleDataD dVdt(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
 
-//  return pn_trace;
+    I_L = gL * (potentialtrace - EL);
+    for (int i = 0; i < (dVdt.size() - 1); i++) {
+      dVdt[i] = (potentialtrace[i + 1] - potentialtrace[i]) * samplerate;
+    }
+    dVdt[dVdt.size()-1] = 0.0;
+
+    currenttrace += - I_L - Cm * dVdt;
+  }
+  else if ( pn != 0 )
+  {
+    currenttrace -= pn / ::abs(pn) * pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
+    currenttrace -= currenttrace.mean(-samplerate / 500, 0);
+  };
   return currenttrace;
+};
+
+
+double currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp ) {
+  double dT = p[4];
+  double tau = p[0];
+  double V0 = p[1];
+  double V1 = p[2];
+  double V2 = p[3];
+  double y = 0.0;
+
+  double V11 = (V0 - V1) * ::exp( -dT / tau ) + V1;
+  double V21 = (V11- V2) * ::exp( -dT / tau ) + V2;
+
+  double ex1 = ::exp( - (t - 1*dT) / tau);
+  double ex2 = ::exp( - (t - 2*dT) / tau);
+  double ex3 = ::exp( - (t - 3*dT) / tau);
+
+  if (t < dT ) {
+    y = V0;
+    dfdp[0] = 0.0;
+    dfdp[1] = 1.0;
+    dfdp[2] = 0.0;
+    dfdp[3] = 0.0;
+  }
+  else if ( t < 2*dT ) {
+    y = ( V0 - V1 ) * ex1 + V1;
+    dfdp[0] = (t-dT) / (tau*tau) * (V0-V1) * ex1;
+    dfdp[1] = ex1;
+    dfdp[2] = - ex1 + 1.0;
+    dfdp[3] = 0.0;
+  }
+  else if ( t < 3*dT ) {
+    y = ( V11 - V2 ) * ex2 + V2;
+    dfdp[0] = (t-1*dT) / (tau*tau) * (V0-V1) * ex1 +
+              (t-2*dT) / (tau*tau) * (V1-V2) * ex2;
+    dfdp[1] = ex1;
+    dfdp[2] = - ex1 + ex2;
+    dfdp[3] = - ex2 + 1.0;
+  }
+  else if ( t < 4*dT ) {
+    y = ( V21 - V0 ) * ex3 + V0;
+    dfdp[0] = (t-1*dT) / (tau*tau) * (V0-V1) * ex1 +
+              (t-2*dT) / (tau*tau) * (V1-V2) * ex2 +
+              (t-3*dT) / (tau*tau) * (V2-V0) * ex3;
+    dfdp[1] = ex1 - ex3 + 1.0;
+    dfdp[2] = - ex1 + ex2;
+    dfdp[3] = - ex2 + ex3;
+  };
+  dfdp[4] = 0.0;
+  return y;
+};
+
+
+double linearFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp ) {
+  double m = p[0];
+  double b = p[1];
+  double y = m * x + b;
+  dfdp[0] = x;
+  dfdp[1] = 1.0;
+  return y;
+};
+
+
+void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
+  double pulseamplitude = number( "pulseamplitude" );
+  double pulseduration = number( "pulseduration" );
+  double samplerate = trace( SpikeTrace[0] ).sampleRate();
+  const InData &intrace = trace( SpikeTrace[0] );
+  int dT = intrace.indices(pulseduration);
+
+  // Fit exponentials to CurrentPulse
+  ArrayD param( 5, 1.0 );
+  param[0] = .05;
+  param[1] = mean(voltagetrace.begin(), voltagetrace.begin()+10) + 1;
+  param[2] = mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT ) + 1;
+  param[3] = mean(voltagetrace.begin() + 3*dT - 10, voltagetrace.begin() + 3*dT ) + 3;
+  param[4] = pulseduration;
+  ArrayD error( voltagetrace.size(), 1.0 );
+  ArrayD uncertainty( 5, 0.0 );
+  ArrayI paramfit( 5, 1 );
+  paramfit[4] = 0;
+  double chisq = 0.0;
+
+  marquardtFit( voltagetrace.range(), voltagetrace, error, currentPulseFuncDerivs,
+          param, paramfit, uncertainty, chisq );
+
+  // Fit leak current
+  ArrayD I_leak( 3, 1.0 ); I_leak[0] = I0; I_leak[1] = I0 + 2*pulseamplitude; I_leak[2] = I0 + pulseamplitude;
+  ArrayD V_leak( 3, 1.0 ); V_leak[0] = param[1]; V_leak[1] = param[2]; V_leak[2] = param[3];
+  ArrayD p_leak( 2, 1.0 ); p_leak[0] = 0.1; p_leak[1] = 0.0;
+  ArrayD err_leak( 2, 1.0 );
+  ArrayD uncert_leak( 2, 0.0 );
+  ArrayI pf_leak( 2, 1 );
+  marquardtFit( V_leak, I_leak, err_leak, linearFuncDerivs, p_leak, pf_leak, uncert_leak, chisq );
+
+  gL = p_leak[0];
+  EL = p_leak[1];
+  tau = param[0];
+  Cm = tau * gL;
+  cerr << "tau=" << param[0]*1000.0 << "ms, Cm=" << Cm*1000.0 << "pF\n";
 };
 
 }; /* namespace voltageclamp */

@@ -41,14 +41,6 @@ SinusSum::SinusSum( void )
   addText("frequencies", "Frequencies", "14.4, 86.7, 144.8, 392.8").setUnit( "Hz" );
 
   // plot
-  P.lock();
-  P.resize( 2, 2, true );
-  P[0].setXLabel( "Time [s]" );
-  P[0].setYLabel( "Current [nA]" );
-  P[1].setXLabel( "Time [s]" );
-  P[1].setYLabel( "Voltage [mV]");
-
-  P.unlock();
   setWidget( &P );
 }
 
@@ -82,11 +74,20 @@ int SinusSum::main( void )
   }
   ampl ->activateVoltageClampMode();
 
-  // reset plot
+  // plotstuff
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
+
   P.lock();
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [s]" );
+  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[1].setXLabel( "Time [s]" );
+  P[1].setYLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
+
   P[0].clearData();
   P[1].clearData();
-  P[1].setXRange( 0.0, duration );
+//  P[1].setXRange( 0.0, duration );
   P.unlock();
 
   // holding potential:
@@ -98,7 +99,7 @@ int SinusSum::main( void )
   // write holdingpotential:
   write( holdingsignal );
   sleep( pause );
-  
+
   double t0 = 0.0;
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     //stimulus
@@ -132,7 +133,7 @@ int SinusSum::main( void )
     P.lock();
     // trace
     P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-    P[1].plot( signal, 1000000.0, Plot::Yellow, 2, Plot::Solid);
+    P[1].plot( signal, 1000.0, Plot::Yellow, 2, Plot::Solid);
     P.draw();
     P.unlock();
   }

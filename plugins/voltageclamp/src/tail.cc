@@ -53,10 +53,6 @@ Tail::Tail( void )
   addNumber( "beforeMin", "Time before potential minumum", 0.0, 0.0, 1.0, 0.00002, "s", "ms" ).setActivation( "auto", "true" );
 
   // plot
-  P.lock();
-  P.setXLabel( "Time [ms]" );
-  P.setYLabel( "Current [nA]" );
-  P.unlock();
   setWidget( &P );
 }
 
@@ -118,8 +114,12 @@ int Tail::main( void )
   ampl ->activateVoltageClampMode();
 
   // reset plot
-  P.clearData();
+  string IUnit = trace( CurrentTrace[0] ).unit();
   P.lock();
+  P.setXLabel( "Time [ms]" );
+  P.setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]" )  ;
+
+  P.clearData();
   P.setXRange(duration0*1000.0, (duration0+duration1)*1000.0 + 2.0);
   P.unlock();
 

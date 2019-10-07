@@ -139,7 +139,7 @@ double expFunc2Derivs( double x, const ArrayD &p, ArrayD &dfdp )
   double y = (p[0]-p[2]) * ex + p[2];
   dfdp[0] = ex;
   dfdp[1] = -(p[0]-p[2]) * ex * ( x / p[1] ) / p[1];
-  dfdp[2] - 1.0;
+  dfdp[2] = - ex + 1.0;
   return y;
 }
 

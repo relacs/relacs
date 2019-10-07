@@ -41,11 +41,7 @@ Ramp::Ramp( void )
 
   addText("srange", "slopes of ramp", "800.0, 400.0, 200.0, 100.0, 50.0, 25.0, 12.5, 6.25").setUnit( "mV/s" );
 
-  P.lock();
-  P.setXLabel( "Time [ms]" );
-  P.setYLabel( "Current [nA]" );
-
-  P.unlock();
+  //plot
   setWidget( &P );
 }
 
@@ -107,7 +103,11 @@ int Ramp::main( void )
   holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
 
   // clear plot
+  string IUnit = trace( CurrentTrace[0] ).unit();
   P.lock();
+  P.setXLabel( "Time [ms]" );
+  P.setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+
   P.clearData();
   P.setXRange(-2., (maxtest - mintest)/min(slopesteps));
   P.unlock();

@@ -50,14 +50,6 @@ Recovery::Recovery( void )
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
 
   // plot
-  P.lock();
-  P.resize( 2, 2, true );
-  P[0].setXLabel( "Time [ms]" );
-  P[0].setYLabel( "Current [nA]" );
-  P[1].setXLabel( "Voltage [mV]" );
-  P[1].setYLabel( "Time constant [ms]");
-
-  P.unlock();
   setWidget( &P );
 }
 
@@ -104,7 +96,16 @@ int Recovery::main( void )
   ampl ->activateVoltageClampMode();
 
   // reset plot
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
+
   P.lock();
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [ms]" );
+  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
+  P[1].setYLabel( "Time constant [ms]");
+
   P[0].clearData();
   P[1].clearData();
   P[1].setXRange(mintest,maxtest);
