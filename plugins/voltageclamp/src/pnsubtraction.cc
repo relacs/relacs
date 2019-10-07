@@ -86,7 +86,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   if ( currentpulse ) {
       // set amplifier to VC mode
     ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl* >( control( "AmplifierControl" ) );
-    ampl ->activate
+    ampl ->activateVoltageClampMode();
 
     // set VC to holdingpotential for 100ms
     OutData hp_signal;
@@ -105,10 +105,6 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_hold.constWave( I0 );
     write(br_hold);
     sleep(0.1);
-<<<<<<< HEAD
-=======
-
->>>>>>> 6372974558358b8e0557616898e45f18782554c6
     OutData br_signal;
     br_signal.setTrace( CurrentOutput[0] );
     br_signal.constWave( pulseduration, -1.0, I0);
