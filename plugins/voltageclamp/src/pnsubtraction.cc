@@ -179,47 +179,49 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     sleep(pause);
   };
 
-  // skip prepulses if pn==0
-  if ( pn == 0 ) {
-    write(signal);
+//  // skip prepulses if pn==0
+//  if ( pn == 0 ) {
+//    write(signal);
+//
+//    if ( signal.error() )
+//      return false;
+//    sleep(pause);
+//
+//    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
+//    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+//
+//    return currenttrace;
+//  };
 
-    if ( signal.error() )
-      return false;
-    sleep(pause);
+  SampleDataD pn_trace(mintime, signal.rangeBack(), 1 / samplerate);
+  if ( pn != 0 ) {
+    // give pn stimulus
+    OutData pn_signal = signal;
+    pn_signal.setTrace(PotentialOutput[0]);
+    pn_signal = holdingpotential + (signal - holdingpotential) / pn;
+    pn_signal.description().setType("stimulus/PNSubtraction");
 
-    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
-    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+    for (int i = 0; i < ::abs(pn); i++) {
+      write(pn_signal);
+      if (signal.error())
+        return false;
+      sleep(pause);
 
-    return currenttrace;
-  };
+      if (interrupt()) {
+        break;
+      };
 
-  // give stimulus
-  OutData pn_signal = signal;
-  pn_signal.setTrace( PotentialOutput[0] );
-  pn_signal = holdingpotential + (signal - holdingpotential)/pn;
-  SampleDataD pn_trace( mintime, pn_signal.rangeBack(), 1/samplerate );
-  pn_signal.description().setType( "stimulus/PNSubtraction" );
+      SampleDataD currenttrace(mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0);
+      trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
 
-  for ( int i = 0; i<::abs(pn); i++ ) {
-    write(pn_signal);
-    if ( signal.error() )
-      return false;
-    sleep(pause);
+      pn_trace += currenttrace;
 
-    if (interrupt()) {
-      break;
     };
-
-    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
-    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
-
-    pn_trace += currenttrace;
-
-  };
 //  pn_trace -= pn_trace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
 
-  if (interrupt()) {
-    return pn_trace;
+    if (interrupt()) {
+      return pn_trace;
+    };
   };
 
   signal.description().setType( "stimulus/Trace" );
@@ -227,13 +229,29 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   write(signal);
   sleep(pause);
 
-  SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
+  SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-  currenttrace -= pn/::abs(pn)*pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
-  currenttrace -= currenttrace.mean( -samplerate/500, 0);
+  if (currentpulse) {
+    SampleDataD potentialtrace(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
+    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace);
 
-//  return pn_trace;
+    SampleDataD I_L(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
+    SampleDataD dVdt(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
+
+    I_L = gL * (potentialtrace - EL);
+    for (int i = 0; i < (dVdt.size() - 1); i++) {
+      dVdt[i] = (potentialtrace[i + 1] - potentialtrace[i]) * samplerate;
+    }
+    dVdt[dVdt.size()-1] = 0.0;
+
+    currenttrace += - I_L - Cm * dVdt;
+  }
+  else if ( pn != 0 )
+  {
+    currenttrace -= pn / ::abs(pn) * pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
+    currenttrace -= currenttrace.mean(-samplerate / 500, 0);
+  };
   return currenttrace;
 };
 
@@ -309,9 +327,9 @@ void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
   // Fit exponentials to CurrentPulse
   ArrayD param( 5, 1.0 );
   param[0] = .05;
-  param[1] = -100.0;//mean(voltagetrace.begin(), voltagetrace.begin()+10) + 1;
-  param[2] = -120.0;//mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT ) + 1;
-  param[3] = -110.0;//mean(voltagetrace.begin() + 3*dT - 10, voltagetrace.begin() + 3*dT ) + 3;
+  param[1] = mean(voltagetrace.begin(), voltagetrace.begin()+10) + 1;
+  param[2] = mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT ) + 1;
+  param[3] = mean(voltagetrace.begin() + 3*dT - 10, voltagetrace.begin() + 3*dT ) + 3;
   param[4] = pulseduration;
   ArrayD error( voltagetrace.size(), 1.0 );
   ArrayD uncertainty( 5, 0.0 );
