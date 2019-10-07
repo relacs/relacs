@@ -106,7 +106,9 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_hold.setTrace( CurrentOutput[0] );
     br_hold.constWave( I0 );
     write(br_hold);
-    sleep(0.1);
+    sleep(pulseduration);
+
+//    sleep(10); /////////////////// delete ///////////////////////////////////////////////////////////////////////////
 
     OutData br_signal;
     br_signal.setTrace( CurrentOutput[0] );
@@ -140,11 +142,17 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
     write(br_signal);
 
+    SampleDataD potentialtrace = SampleDataF( 0.0, 4*pulseduration, 1/samplerate, 0.0 );
+    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace );
+
+//    cerr << potentialtrace.min(0.0, 3*pulseduration) << ", " << potentialtrace.max(0.0, 3*pulseduration) << ", " << potentialtrace.size() << "\n";
+
+    analyzeCurrentPulse( potentialtrace, I0 );
+
     // set amplifier back to VC mode
     ampl ->activateVoltageClampMode();
     write(hp_signal);
     sleep(pause);
-
   };
 
   // make short quality assuring test-pulse
@@ -230,71 +238,105 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 };
 
 
-void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
-  double pulseamplitude = number( "pulseamplitude" );
-  double pulseduration = number( "pulseduration" );
-  double samplerate = trace( SpikeTrace[0] ).sampleRate();
-
-  int dT = pulseduration/samplerate;
-
-  ArrayD param( 4, 1.0 );
-  param[0] = 0.0001;
-  param[1] = mean(voltagetrace.end()-10, voltagetrace.end());
-  param[2] = mean(voltagetrace.begin() + dT - 10, voltagetrace.begin() + dT );
-  param[3] = mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT );
-
-//  std::vector<double> timesteps;
-//  trange.range(timesteps, ",", ":" );
-//  timesteps = timesteps/1000;
-
-  ArrayD error( voltagetrace.size(), 1.0 );
-  ArrayD uncertainty( 4, 0.0 );
-  ArrayI paramfit( 4, 0 );
-  double chisq = 0.0;
-
-  marquardtFit( voltagetrace, voltagetrace, error, currentPulseFuncDerivs, param, paramfit, uncertainty, chisq );
-
-  cerr << param << "\n";
-
-};
-
-
-double PNSubtraction::currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp ) {
-  double dT = number( "pulseduration" );
-  double t0 = 0.0;
+double currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp ) {
+  double dT = p[4];
   double tau = p[0];
   double V0 = p[1];
   double V1 = p[2];
   double V2 = p[3];
   double y = 0.0;
 
-  if ( t < t0 + dT ) {
-    double ex = ::exp( -(t - (t0 + dT)) / tau );
-    y = ( V0 - V1 ) * ex + V1;
-    dfdp[0] = - (V0 - V1 ) * ex * (t - (t0 + dT)) / tau / tau;
-    dfdp[1] = ex;
-    dfdp[2] = - ex + 1.0;
+  double V11 = (V0 - V1) * ::exp( -dT / tau ) + V1;
+  double V21 = (V11- V2) * ::exp( -dT / tau ) + V2;
+
+  double ex1 = ::exp( - (t - 1*dT) / tau);
+  double ex2 = ::exp( - (t - 2*dT) / tau);
+  double ex3 = ::exp( - (t - 3*dT) / tau);
+
+  if (t < dT ) {
+    y = V0;
+    dfdp[0] = 0.0;
+    dfdp[1] = 1.0;
+    dfdp[2] = 0.0;
     dfdp[3] = 0.0;
   }
-  else if ( t < t0 + 2*dT ) {
-    double ex = ::exp( -(t - (t0 + 2*dT)) / tau );
-    y = ( V1 - V2 ) * ex + V2;
-    dfdp[0] = - (V0 - V1 ) * ex * (t - (t0 + 2*dT)) / tau / tau;
-    dfdp[1] = 0;
-    dfdp[2] = ex;
-    dfdp[3] = - ex + 1.0;
+  else if ( t < 2*dT ) {
+    y = ( V0 - V1 ) * ex1 + V1;
+    dfdp[0] = (t-dT) / (tau*tau) * (V0-V1) * ex1;
+    dfdp[1] = ex1;
+    dfdp[2] = - ex1 + 1.0;
+    dfdp[3] = 0.0;
   }
-  else if ( t < t0 + 3*dT ) {
-    double ex = ::exp( -(t - (t0 + 3*dT)) / tau );
-    y = ( V2 - V0 ) * ex + V0;
-    dfdp[0] = - (V0 - V1 ) * ex * (t - (t0 + 3*dT)) / tau / tau;
-    dfdp[1] = - ex + 1.0;
-    dfdp[2] = 0.0;
-    dfdp[3] = ex;
+  else if ( t < 3*dT ) {
+    y = ( V11 - V2 ) * ex2 + V2;
+    dfdp[0] = (t-1*dT) / (tau*tau) * (V0-V1) * ex1 +
+              (t-2*dT) / (tau*tau) * (V1-V2) * ex2;
+    dfdp[1] = ex1;
+    dfdp[2] = - ex1 + ex2;
+    dfdp[3] = - ex2 + 1.0;
+  }
+  else if ( t < 4*dT ) {
+    y = ( V21 - V0 ) * ex3 + V0;
+    dfdp[0] = (t-1*dT) / (tau*tau) * (V0-V1) * ex1 +
+              (t-2*dT) / (tau*tau) * (V1-V2) * ex2 +
+              (t-3*dT) / (tau*tau) * (V2-V0) * ex3;
+    dfdp[1] = ex1 - ex3 + 1.0;
+    dfdp[2] = - ex1 + ex2;
+    dfdp[3] = - ex2 + ex3;
   };
+  dfdp[4] = 0.0;
   return y;
 };
 
+
+double linearFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp ) {
+  double m = p[0];
+  double b = p[1];
+  double y = m * x + b;
+  dfdp[0] = x;
+  dfdp[1] = 1.0;
+  return y;
+};
+
+
+void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
+  double pulseamplitude = number( "pulseamplitude" );
+  double pulseduration = number( "pulseduration" );
+  double samplerate = trace( SpikeTrace[0] ).sampleRate();
+  const InData &intrace = trace( SpikeTrace[0] );
+  int dT = intrace.indices(pulseduration);
+
+  // Fit exponentials to CurrentPulse
+  ArrayD param( 5, 1.0 );
+  param[0] = .05;
+  param[1] = -100.0;//mean(voltagetrace.begin(), voltagetrace.begin()+10) + 1;
+  param[2] = -120.0;//mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT ) + 1;
+  param[3] = -110.0;//mean(voltagetrace.begin() + 3*dT - 10, voltagetrace.begin() + 3*dT ) + 3;
+  param[4] = pulseduration;
+  ArrayD error( voltagetrace.size(), 1.0 );
+  ArrayD uncertainty( 5, 0.0 );
+  ArrayI paramfit( 5, 1 );
+  paramfit[4] = 0;
+  double chisq = 0.0;
+
+  marquardtFit( voltagetrace.range(), voltagetrace, error, currentPulseFuncDerivs,
+          param, paramfit, uncertainty, chisq );
+
+  // Fit leak current
+  ArrayD I_leak( 3, 1.0 ); I_leak[0] = I0; I_leak[1] = I0 + 2*pulseamplitude; I_leak[2] = I0 + pulseamplitude;
+  ArrayD V_leak( 3, 1.0 ); V_leak[0] = param[1]; V_leak[1] = param[2]; V_leak[2] = param[3];
+  ArrayD p_leak( 2, 1.0 ); p_leak[0] = 0.1; p_leak[1] = 0.0;
+  ArrayD err_leak( 2, 1.0 );
+  ArrayD uncert_leak( 2, 0.0 );
+  ArrayI pf_leak( 2, 1 );
+  marquardtFit( V_leak, I_leak, err_leak, linearFuncDerivs, p_leak, pf_leak, uncert_leak, chisq );
+
+  gL = p_leak[0];
+  EL = p_leak[1];
+  tau = param[0];
+  Cm = tau * gL;
+  cerr << "tau=" << param[0]*1000.0 << "ms, Cm=" << Cm*1000.0 << "pF\n";
+};
 
 }; /* namespace voltageclamp */
 

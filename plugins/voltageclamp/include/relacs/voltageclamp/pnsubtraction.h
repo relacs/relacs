@@ -57,7 +57,11 @@ public:
 
 private:
 	void analyzeCurrentPulse( SampleDataD voltagetrace, double I0 );
-	double currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp );
+
+	double EL;
+	double gL;
+	double Cm;
+	double tau;
 
 };
 
