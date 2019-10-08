@@ -793,8 +793,11 @@ int DAQFlexCore::uploadFPGAFirmware( const string &path, const string &filename 
   if ( response != "CONFIGURED" ) {
     // firmware hasn't been loaded yet, do so:
     transferFPGAfile( path + filename );
-    if ( ErrorState == ErrorCantOpenFPGAFile )
-      transferFPGAfile( DefaultFirmwarePath + filename );
+    if ( ErrorState == ErrorCantOpenFPGAFile ) {
+      Str p = DefaultFirmwarePath;
+      p.provideSlash();
+      transferFPGAfile( p + filename );
+    }
     if ( ErrorState == Success ) {
       // check if the firmware got loaded successfully:
       response = getValueUnlocked( "DEV:FPGACFG" );
