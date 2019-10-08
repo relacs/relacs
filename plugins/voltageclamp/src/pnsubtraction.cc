@@ -349,11 +349,20 @@ void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
   ArrayI pf_leak( 2, 1 );
   marquardtFit( V_leak, I_leak, err_leak, linearFuncDerivs, p_leak, pf_leak, uncert_leak, chisq );
 
+  // Compute error and expected error
+  ArrayD errV( voltagetrace.size(), 1.0);
+  for ( int i=0; i<voltagetrace.size(); i++ ) {
+    errV[i] = voltagetrace[i] - currentPulseFuncDerivs( i/samplerate, param, uncertainty );
+  };
+
   gL = p_leak[0];
   EL = p_leak[1];
   tau = param[0];
   Cm = tau * gL;
+
   cerr << "tau=" << param[0]*1000.0 << "ms, Cm=" << Cm*1000.0 << "pF\n";
+  cerr << "with std=" << errV.stdev() << " and expected min std of " << voltagetrace.stdev( 0.0, pulseduration - 1/samplerate ) << "\n";
+
 };
 
 }; /* namespace voltageclamp */
