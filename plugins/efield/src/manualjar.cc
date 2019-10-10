@@ -124,7 +124,7 @@ class ManualJAREvent : public QEvent
 public:
 
   ManualJAREvent( double val )
-    : QEvent( Type( User+14 ) ),
+    : QEvent( Type( User+24 ) ),
       Value( val )
   {
   }
@@ -199,7 +199,7 @@ int ManualJAR::main( void )
 
   while ( softStop() == 0 ) {
 
-    postCustomEvent( 11 ); // setFocus();
+    postCustomEvent( 21 ); // setFocus();
 
     do {
       // EOD rate:
@@ -210,7 +210,7 @@ int ManualJAR::main( void )
     } while ( ( ! Start && ! interrupt() && softStop() == 0 ) ||
 	      currentTime() - starttime < before );
 
-    postCustomEvent( 12 ); // removeFocus();
+    postCustomEvent( 22 ); // removeFocus();
 
     if ( interrupt() || softStop() > 0 )
       break;
@@ -269,7 +269,7 @@ int ManualJAR::main( void )
       return Failed;
     }
 
-    // meassage:
+    // message:
     Str s = "Delta F:  <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
     if ( lineardeltaf )
       s += "  Delta F2: <b>" + Str( deltaf2, 0, 1, 'f' ) + "Hz</b>";
@@ -328,7 +328,7 @@ int ManualJAR::main( void )
     } while ( currentTime() - starttime < before + duration );
 
     starttime = currentTime();
-    postCustomEvent( 15 );
+    postCustomEvent( 25 );
 
     // after stimulus recording loop:
     do {
@@ -529,7 +529,7 @@ void ManualJAR::keyPressEvent( QKeyEvent *e )
 void ManualJAR::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
-  case 11: {
+  case 21: {
     StartButton->setEnabled( true );
     JW.assign( (Options*)this, 2, 4, true, 0, mutex() );
     if ( JW.firstWidget() != 0 )
@@ -543,13 +543,13 @@ void ManualJAR::customEvent( QEvent *qce )
     ElapsedTimeLabel->setFont( nf );
     break;
   }
-  case 12: {
+  case 22: {
     removeFocus();
     ModeLabel->setText( "Stimulation" );
     StartButton->setEnabled( false );
     break;
   }
-  case 14: {
+  case 24: {
     ManualJAREvent *me = dynamic_cast<ManualJAREvent*>( qce );
     int secs = (int)::round( me->Value );
     int mins = secs / 60;
@@ -564,7 +564,7 @@ void ManualJAR::customEvent( QEvent *qce )
     ElapsedTimeLabel->setText( ts.c_str() );
     break;
   }
-  case 15: {
+  case 25: {
     ModeLabel->setText( "Pause" );
     break;
   }
