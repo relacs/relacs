@@ -511,8 +511,12 @@ protected:
     */
   virtual void intensity( double &intens, double frequency, double decibel ) const =0;
 
-  /*! Initzializes default Attenuate options */
+    /*! Initzializes default Attenuate options */
   virtual void initOptions() override;
+
+    /*! Read option values to variables. If you reimplement this function,
+        don't forget to call Attenuate::notify(). */
+  virtual void notify( void );
 
 
 private:
