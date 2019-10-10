@@ -39,7 +39,7 @@ ManualJAR::ManualJAR( void )
   addNumber( "deltaf", "Difference frequency", 0.0, -1000.0, 1000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+8 );
   addBoolean( "lineardeltaf", "Change difference frequency linearly", false ).setFlags( 2+8 );
   addNumber( "deltaf2", "Difference frequency at end", 0.0, -1000.0, 1000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+8 );
-  addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.01, "mV", "mV", "%.2f" ).setFlags( 2+8 );
+  addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV", "mV", "%.1f" ).setFlags( 2+8 );
 
   // add some parameter as options:
   //  newSection( "Stimulation" );
@@ -171,7 +171,7 @@ int ManualJAR::main( void )
   base::LinearAttenuate *latt =
     dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( GlobalEField ) ) );
   if ( fakefish == 0.0 && latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 )
-    warning( "Attenuator gain is probably not set!" );
+    warning( "Attenuator gain is probably not set!<br>(it is set to 1.0)", 2.0 );
 
   // plot trace:
   tracePlotContinuous();
