@@ -88,26 +88,30 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
       // set amplifier to VC mode
     ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl* >( control( "AmplifierControl" ) );
     ampl ->activateVoltageClampMode();
-
+    //sleep(.01);
+    
     // set VC to holdingpotential for 100ms
     OutData hp_signal;
     hp_signal.setTrace( PotentialOutput[0] );
     hp_signal.constWave( 0.1, -1.0, holdingpotential );
     write(hp_signal);
-    sleep(pause);
+    //sleep(pause);
+    //write(hp_signal);
     SampleDataD currenttrace( 0.0, 0.1, trace(CurrentTrace[0]).stepsize(), 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
     double I0 = currenttrace.mean( 0.07, 0.1 );
-
+    
+    //cerr << "I0=" << I0 << "\n";
+    
     // set amplifier to Bridge mode
-    ampl ->activateBridgeMode();
     OutData br_hold;
     br_hold.setTrace( CurrentOutput[0] );
     br_hold.constWave( I0 );
+    
+    ampl ->activateBridgeMode();
     write(br_hold);
     sleep(0.1);
-
-
+    
     OutData br_signal;
     br_signal.setTrace( CurrentOutput[0] );
     br_signal.constWave( pulseduration, -1.0, I0);
@@ -139,19 +143,25 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_signal.setDescription( opts_br );
 
     write( br_signal );
-    sleep( pulseduration*4 );
+    //sleep( pulseduration*4 );
 
+    //SampleDataD currenttrace2( 0.0, 0.1, trace(CurrentTrace[0]).stepsize(), 0.0);
+    //trace(CurrentTrace[0]).copy(signalTime(), currenttrace2 );
+    //double I1 = currenttrace2.mean( 0.07, 0.1 );
+    //cerr << "I1=" << I1 << "\n";
+    
     SampleDataD potentialtrace = SampleDataF( 0.0, 4*pulseduration, 1/samplerate, 0.0 );
     trace(SpikeTrace[0]).copy(signalTime(), potentialtrace );
-
+    
+    
 //    cerr << potentialtrace.min(0.0, 3*pulseduration) << ", " << potentialtrace.max(0.0, 3*pulseduration) << ", " << potentialtrace.size() << "\n";
 
-    analyzeCurrentPulse( potentialtrace, I0 );
-
+    analyzeCurrentPulse( potentialtrace, I0 );    
+    
     // set amplifier back to VC mode
     ampl ->activateVoltageClampMode();
     write(hp_signal);
-    sleep(pause);
+    //sleep(pause);
   };
 
   // make short quality assuring test-pulse
