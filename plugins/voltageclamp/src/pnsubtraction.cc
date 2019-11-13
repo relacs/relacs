@@ -166,20 +166,35 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
+    double frequency = 40.0;
+    
     OutData qc_signal1;
     qc_signal1.setTrace( PotentialOutput[0] );
     qc_signal1.constWave( 0.010, -1.0, holdingpotential );
 
     OutData qc_signal2;
     qc_signal2.setTrace( PotentialOutput[0] );
-    qc_signal2.pulseWave( 0.010, -1.0, holdingpotential-20, holdingpotential );
+    qc_signal2.constWave( 0.010, -1.0, holdingpotential-20 );
 
+    OutData qc_signal3;
+    qc_signal3.setTrace( PotentialOutput[0] );
+    qc_signal3.sineWave( 0.050, -1.0, frequency, 0.0, 20.0, 0.0 );
+    qc_signal3 = qc_signal3 + holdingpotential - 20;
+    
+    OutData qc_signal4;
+    qc_signal4.setTrace( PotentialOutput[0] );
+    qc_signal4.constWave( 0.010, -1.0, holdingpotential );
+    
     qc_signal1.append( qc_signal2 );
+    qc_signal1.append( qc_signal3 );
+    qc_signal1.append( qc_signal4 );
 
     qc_signal1.description().setType( "stimulus/QualityControl" );
     Options opts_qc = qc_signal1.description();
     Parameter &qc_rid = opts_qc.addText( "TraceId", randomId );
+    Parameter &qc_freq = opts_qc.addNumber( "frequency", frequency );
     qc_signal1.setMutable( qc_rid );
+    qc_signal1.setMutable( qc_freq );
     qc_signal1.setDescription( opts_qc );
 
 //    cerr << qc_signal1.description() << endl;
