@@ -167,7 +167,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
     double f0 = 20.0;
-    double f1 = 250.0;
+    double f1 = 200.0;
     
     OutData qc_signal1;
     qc_signal1.setTrace( PotentialOutput[0] );
