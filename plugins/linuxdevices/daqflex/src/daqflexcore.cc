@@ -110,6 +110,7 @@ int DAQFlexCore::open( const string &devicestr )
        productid != USB_1608_G &&
        productid != USB_1608_GX &&
        productid != USB_1608_GX_2AO &&
+       productid != USB_1608_GX_2AO_NEW &&
        productid != USB_201 &&
        productid != USB_204 &&
        productid != USB_202 &&
@@ -362,6 +363,7 @@ string DAQFlexCore::productName( int productid )
   case USB_1608_GX:
     return "USB-1608GX";
   case USB_1608_GX_2AO:
+  case USB_1608_GX_2AO_NEW:
     return "USB-1608GX-2AO";
   case USB_201:
     return "USB-201";
@@ -591,6 +593,7 @@ int DAQFlexCore::initDevice( const string &path )
     case USB_1608_G:
     case USB_1608_GX:
     case USB_1608_GX_2AO:
+    case USB_1608_GX_2AO_NEW:
       MaxAIData = 0xFFFF;
       if ( ProductID == USB_1608_G )
 	MaxAIRate = 250000.0;
@@ -598,7 +601,7 @@ int DAQFlexCore::initDevice( const string &path )
 	MaxAIRate = 500000.0;
       MaxAIChannels = 16;
       AIFIFOSize = 4096;
-      if ( ProductID == USB_1608_GX_2AO ) {
+      if ( ProductID == USB_1608_GX_2AO || ProductID == USB_1608_GX_2AO_NEW ) {
 	MaxAOData = 0xFFFF;
 	MaxAORate = 500000.0;
 	MaxAOChannels = 2;
