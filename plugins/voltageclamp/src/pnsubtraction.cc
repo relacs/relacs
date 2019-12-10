@@ -88,26 +88,30 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
       // set amplifier to VC mode
     ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl* >( control( "AmplifierControl" ) );
     ampl ->activateVoltageClampMode();
-
+    //sleep(.01);
+    
     // set VC to holdingpotential for 100ms
     OutData hp_signal;
     hp_signal.setTrace( PotentialOutput[0] );
     hp_signal.constWave( 0.1, -1.0, holdingpotential );
     write(hp_signal);
-    sleep(pause);
+    //sleep(pause);
+    //write(hp_signal);
     SampleDataD currenttrace( 0.0, 0.1, trace(CurrentTrace[0]).stepsize(), 0.0);
     trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
     double I0 = currenttrace.mean( 0.07, 0.1 );
-
+    
+    //cerr << "I0=" << I0 << "\n";
+    
     // set amplifier to Bridge mode
-    ampl ->activateBridgeMode();
     OutData br_hold;
     br_hold.setTrace( CurrentOutput[0] );
     br_hold.constWave( I0 );
+    
+    ampl ->activateBridgeMode();
     write(br_hold);
     sleep(0.1);
-
-
+    
     OutData br_signal;
     br_signal.setTrace( CurrentOutput[0] );
     br_signal.constWave( pulseduration, -1.0, I0);
@@ -139,37 +143,61 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     br_signal.setDescription( opts_br );
 
     write( br_signal );
-    sleep( pulseduration*4 );
+    //sleep( pulseduration*4 );
 
+    //SampleDataD currenttrace2( 0.0, 0.1, trace(CurrentTrace[0]).stepsize(), 0.0);
+    //trace(CurrentTrace[0]).copy(signalTime(), currenttrace2 );
+    //double I1 = currenttrace2.mean( 0.07, 0.1 );
+    //cerr << "I1=" << I1 << "\n";
+    
     SampleDataD potentialtrace = SampleDataF( 0.0, 4*pulseduration, 1/samplerate, 0.0 );
     trace(SpikeTrace[0]).copy(signalTime(), potentialtrace );
-
+    
+    
 //    cerr << potentialtrace.min(0.0, 3*pulseduration) << ", " << potentialtrace.max(0.0, 3*pulseduration) << ", " << potentialtrace.size() << "\n";
 
-    analyzeCurrentPulse( potentialtrace, I0 );
-
+    analyzeCurrentPulse( potentialtrace, I0 );    
+    
     // set amplifier back to VC mode
     ampl ->activateVoltageClampMode();
     write(hp_signal);
-    sleep(pause);
+    //sleep(pause);
   };
 
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
+    double f0 = 20.0;
+    double f1 = 200.0;
+    
     OutData qc_signal1;
     qc_signal1.setTrace( PotentialOutput[0] );
     qc_signal1.constWave( 0.010, -1.0, holdingpotential );
 
     OutData qc_signal2;
     qc_signal2.setTrace( PotentialOutput[0] );
-    qc_signal2.pulseWave( 0.010, -1.0, holdingpotential-20, holdingpotential );
+    qc_signal2.constWave( 0.010, -1.0, holdingpotential-20 );
 
+    OutData qc_signal3;
+    qc_signal3.setTrace( PotentialOutput[0] );
+    qc_signal3.sweepWave( 0.070, -1.0, f0, f1, 20.0, 0.0 );
+    qc_signal3 = qc_signal3 + holdingpotential - 20;
+    
+    OutData qc_signal4;
+    qc_signal4.setTrace( PotentialOutput[0] );
+    qc_signal4.constWave( 0.010, -1.0, holdingpotential );
+    
     qc_signal1.append( qc_signal2 );
+    qc_signal1.append( qc_signal3 );
+    qc_signal1.append( qc_signal4 );
 
     qc_signal1.description().setType( "stimulus/QualityControl" );
     Options opts_qc = qc_signal1.description();
     Parameter &qc_rid = opts_qc.addText( "TraceId", randomId );
+    Parameter &qc_f0 = opts_qc.addNumber( "f1", f0 );
+    Parameter &qc_f1 = opts_qc.addNumber( "f0", f1 );
     qc_signal1.setMutable( qc_rid );
+    qc_signal1.setMutable( qc_f0 );
+    qc_signal1.setMutable( qc_f1 );
     qc_signal1.setDescription( opts_qc );
 
 //    cerr << qc_signal1.description() << endl;
