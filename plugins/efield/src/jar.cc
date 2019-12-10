@@ -232,7 +232,7 @@ int JAR::main( void )
   base::LinearAttenuate *latt =
     dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( GlobalEField ) ) );
   if ( latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 ) {
-    warning( "Attenuator gain is not set!" );
+    warning( "Attenuator gain is not set!<br>(it is set to 1.0)", 2.0 );
     return Failed;
   }
 

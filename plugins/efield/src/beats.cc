@@ -236,7 +236,7 @@ int Beats::main( void )
   base::LinearAttenuate *latt =
     dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( GlobalEField ) ) );
   if ( fakefish == 0.0 && latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 )
-    warning( "Attenuator gain is probably not set!", 10.0 );
+    warning( "Attenuator gain is probably not set!<br>(it is set to 1.0)", 2.0 );
 
   // reset outputs:
   if ( fixeddf )

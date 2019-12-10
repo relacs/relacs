@@ -163,7 +163,7 @@ int EODDetector::adjust( const InData &data )
 
 void EODDetector::autoConfigure( void )
 {
-  autoConfigure( *Data, currentTime() - 0.2, currentTime() );
+  autoConfigure( *Data, currentTime() - 0.3, currentTime() - 0.1 );
 }
 
 
