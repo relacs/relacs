@@ -100,6 +100,7 @@ public:
   static const int USB_1608_G = 0x0110;
   static const int USB_1608_GX = 0x0111;
   static const int USB_1608_GX_2AO = 0x0112;
+  static const int USB_1608_GX_2AO_NEW = 0x0136;
   static const int USB_201 = 0x0113;
   static const int USB_204 = 0x0114;
   static const int USB_202 = 0x012B;

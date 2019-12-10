@@ -75,7 +75,11 @@ void SetAttenuatorGain::preConfig( void )
 {
   setText( "outtrace", outTraceNames() );
   setToDefault( "outtrace" );
+}
 
+
+void SetAttenuatorGain::config( void )
+{
   // assemble output traces to OutOpts:
   AttOpts.clear();
   for ( int k=0; k<outTracesSize(); k++ ) {
@@ -87,10 +91,10 @@ void SetAttenuatorGain::preConfig( void )
       string iname = latt->intensityName();
       if ( ! iname.empty() && name != iname )
 	name += " - " + iname;
-      string unit = latt->intensityUnit();
+      string unit = outTrace( k ).unit();
       if ( unit.empty() )
 	unit = "1";
-      unit += "/" + outTrace( k ).unit();
+      unit += "/" + latt->intensityUnit();
       AttOpts.addNumber( tname, name, latt->gain(), -1.0e6, 1.0e6, 0.001, unit );
     }
   }

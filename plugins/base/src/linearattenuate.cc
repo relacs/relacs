@@ -118,6 +118,7 @@ void LinearAttenuate::setDeviceIdent( const string &ident )
 
 void LinearAttenuate::notify( void )
 {
+  Attenuate::notify();
   Gain = number( "gain" );
   Offset = number( "offset" );
   Info.setNumber( "gain", Gain );

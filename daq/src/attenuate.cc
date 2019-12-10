@@ -82,12 +82,23 @@ void Attenuate::initOptions()
   addInteger( "line", "Attenuator line", 0,0, 1000 );
   addText( "aodevice", "Analog output device", "ao-1" );
   addInteger( "aochannel", "Channel on analog output device", 0, 0, 1000 );
-  addText( "intensityname", "Name of intensity variable", "intensity" );
-  addText( "intensityunit", "Unit for intensity", "dB" );
-  addText( "intensityformat", "Output format for intensity", "%6.2f" );
-  addText( "frequencyname", "Name of frequency variable", "" );
-  addText( "frequencyunit", "Unit for frequency", "Hz" );
-  addText( "frequencyformat", "Output format for frequency", "%7.0f" );
+  addText( "intensityname", "Name of intensity variable", IntensityName );
+  addText( "intensityunit", "Unit for intensity", IntensityUnit );
+  addText( "intensityformat", "Output format for intensity", IntensityFormat );
+  addText( "frequencyname", "Name of frequency variable", FrequencyName );
+  addText( "frequencyunit", "Unit for frequency", FrequencyUnit );
+  addText( "frequencyformat", "Output format for frequency", FrequencyFormat );
+}
+
+
+void Attenuate::notify()
+{
+  IntensityName = text( "intensityname" );
+  IntensityUnit = text( "intensityunit" );
+  IntensityFormat = text( "intensityformat" );
+  FrequencyName = text( "frequencyname" );
+  FrequencyUnit = text( "frequencyunit" );
+  FrequencyFormat = text( "frequencyformat" );
 }
 
 

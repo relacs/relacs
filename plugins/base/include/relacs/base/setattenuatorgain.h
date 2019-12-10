@@ -48,6 +48,7 @@ public:
 
   SetAttenuatorGain( void );
   virtual void preConfig( void );
+  virtual void config( void );
   virtual int main( void );
 
 
