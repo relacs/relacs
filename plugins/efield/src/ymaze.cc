@@ -109,12 +109,16 @@ void YMazeSketch::setCondition(MazeArm rewarded, MazeArm unrewarded, MazeArm neu
 YMaze::YMaze( void )
   : RePro( "YMaze", "efield", "Jan Grewe", "1.0", "Mar 18, 2020" )
 {
-  addNumber( "duration", "trial duration", 1.0, 0.1, 1000., 10.0, "s" );
-  //  add
- // add some options:
-  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
-
-  // UI Layout
+  addNumber( "duration", "trial duration", 10.0, 0.1, 1000., 0.1, "s" );
+  addNumber( "rewardfreq", "rewarded frequency", 500.0, 1.0, 2500.0, 1.0, "Hz" );
+  addNumber( "rangemin", "Frequency range minimum", 1.0, 1.0, 2500.0, 1.0, "Hz" );
+  addNumber( "rangemax", "Frequency range maximum", 1000.0, 1.0, 2500.0, 1.0, "Hz" );
+  addNumber( "deltaf", "Stepsize of unrewarded stimulus frequency discretization",
+	     10.0, 1.0, 500.0, 1.0, "Hz" );
+  addNumber( "minfreqdiff", "Minimum frequency difference between rewarded and unrewarded stimulus",
+	     10.0, 1.0, 500.0, 1.0, "Hz" );
+  
+  // Ui Layout
   QGridLayout *grid = new QGridLayout();
   sketch = new YMazeSketch();
   grid->addWidget( sketch, 0, 0, 4, 4 );

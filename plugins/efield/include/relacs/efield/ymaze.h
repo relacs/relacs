@@ -79,6 +79,8 @@ public:
 private:
   YMazeSketch *sketch;
   double duration;
+  double rewardedFreq;
+  double freqRangeMin, freqRangeMax, minFreqDiff;
   int numberOfTrials;
   int lastRewardPosition = -1;
   int currentRewardPosition;
