@@ -116,10 +116,11 @@ YMaze::YMaze( void )
 
   // UI Layout
   QGridLayout *grid = new QGridLayout();
-  YMazeSketch *sketch = new YMazeSketch();
+  sketch = new YMazeSketch();
   grid->addWidget( sketch, 0, 0, 4, 4 );
   setupTable(grid);
   QPushButton *startBtn = new QPushButton("Start");
+  connect( startBtn, SIGNAL( clicked() ), this, SLOT( startNextTrial() ) );
   grid->addWidget( startBtn, 4, 5, 1, 1 );
   this->setLayout( grid );  
 }
@@ -157,10 +158,45 @@ void YMaze::setupTable(QGridLayout *grid) {
   grid->addWidget( conditionCpast, 3, 7, 1, 1);
 }
 
+
+void YMaze::startNextTrial() {
+  int nextPosition = rand() %3;
+  while ( nextPosition == lastRewardPosition ) {
+    nextPosition = rand() %3;
+  }
+  std::vector<MazeArm> arms = {MazeArm::A, MazeArm::B, MazeArm::C};
+  MazeArm rewarded, unrewarded, neutral;
+  if (lastRewardPosition == static_cast<int> (MazeArm::NONE ) ) {
+    rewarded = arms[nextPosition];
+    arms.erase(arms.begin() + nextPosition);
+    unrewarded = arms[0];
+    neutral = arms[1];
+    lastRewardPosition = nextPosition;
+  } else {
+    rewarded = arms[nextPosition];
+    neutral = arms[lastRewardPosition];
+    arms.erase( arms.begin() + nextPosition );
+    arms.erase( std::find( arms.begin(), arms.end(), static_cast<MazeArm>( lastRewardPosition ) ) );
+    unrewarded = arms[0];
+    lastRewardPosition = nextPosition;
+  }
+  sketch->setCondition( rewarded, unrewarded, neutral );
+}
+
+
 int YMaze::main( void )
 {
   // get options:
   duration = number( "duration" );
+  bool start = false;
+  while ( softStop() == 0 ) {
+      if ( interrupt() || softStop() > 0 )
+        break;
+      if ( !start ){
+        sleep(0.2);
+        continue;
+      }
+  }
   return Completed;
 }
 

@@ -77,13 +77,17 @@ public:
   virtual int main( void );
 
 private:
+  YMazeSketch *sketch;
   double duration;
   int numberOfTrials;
-  int lastRewardPosition;
+  int lastRewardPosition = -1;
   int currentRewardPosition;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
-
+  
   void setupTable(QGridLayout *grid);
+
+private slots:
+  void startNextTrial();
 };
 
 
