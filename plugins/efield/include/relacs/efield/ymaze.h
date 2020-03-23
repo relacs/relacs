@@ -42,6 +42,25 @@ namespace efield {
 enum class MazeOrientation {UPRIGHT = 0, BOTTOMUP = 1, LEFT = 2, RIGHT = 3};
 enum class MazeArm {NONE = -1, A = 0, B = 1, C = 2};
 enum class ArmCondition {REWARDED = 0, UNREWARDED = 1, NEUTRAL = 2};
+
+struct MazeCondition {
+  MazeArm rewarded;
+  MazeArm unrewarded;
+  MazeArm neutral;
+};
+
+struct StimulusCondition {
+  double eodf;
+  double rewardedFreq;
+  double unrewardedFreq;
+  double rewardedAmplitude;
+  double unrewardedAmplitude;
+};
+
+struct TrialCondition {
+  MazeCondition mazeCondition;
+  StimulusCondition stimCondition;
+};
   
 class YMazeSketch : public QLabel
 {
@@ -77,6 +96,8 @@ public:
   virtual int main( void );
 
 private:
+  static const int START_TRIAL = 11, STOP_TRIAL = 12;
+
   YMazeSketch *sketch;
   double duration;
   double rewardedFreq;
@@ -87,9 +108,16 @@ private:
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   
   void setupTable(QGridLayout *grid);
+  MazeCondition nextMazeCondition();
+  
+  void createStimuli();
 
 private slots:
   void startNextTrial();
+  void stopTrial();
+  
+protected:
+  virtual void customEvent( QEvent *qce );
 };
 
 

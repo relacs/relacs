@@ -126,6 +126,11 @@ YMaze::YMaze( void )
   QPushButton *startBtn = new QPushButton("Start");
   connect( startBtn, SIGNAL( clicked() ), this, SLOT( startNextTrial() ) );
   grid->addWidget( startBtn, 4, 5, 1, 1 );
+
+  QPushButton *stopBtn = new QPushButton("Stop");
+  connect( stopBtn, SIGNAL( clicked() ), this, SLOT( stopTrial() ) );
+  grid->addWidget( stopBtn, 5, 5, 1, 1 );
+
   this->setLayout( grid );  
 }
 
@@ -163,7 +168,9 @@ void YMaze::setupTable(QGridLayout *grid) {
 }
 
 
-void YMaze::startNextTrial() {
+MazeCondition YMaze::nextMazeCondition() {
+  MazeCondition mazeCondition;
+  
   int nextPosition = rand() %3;
   while ( nextPosition == lastRewardPosition ) {
     nextPosition = rand() %3;
@@ -171,27 +178,61 @@ void YMaze::startNextTrial() {
   std::vector<MazeArm> arms = {MazeArm::A, MazeArm::B, MazeArm::C};
   MazeArm rewarded, unrewarded, neutral;
   if (lastRewardPosition == static_cast<int> (MazeArm::NONE ) ) {
-    rewarded = arms[nextPosition];
+    mazeCondition.rewarded = arms[nextPosition];
     arms.erase(arms.begin() + nextPosition);
-    unrewarded = arms[0];
-    neutral = arms[1];
+    mazeCondition.unrewarded = arms[0];
+    mazeCondition.neutral = arms[1];
     lastRewardPosition = nextPosition;
   } else {
-    rewarded = arms[nextPosition];
-    neutral = arms[lastRewardPosition];
+    mazeCondition.rewarded = arms[nextPosition];
+    mazeCondition.neutral = arms[lastRewardPosition];
     arms.erase( arms.begin() + nextPosition );
     arms.erase( std::find( arms.begin(), arms.end(), static_cast<MazeArm>( lastRewardPosition ) ) );
-    unrewarded = arms[0];
+    mazeCondition.unrewarded = arms[0];
     lastRewardPosition = nextPosition;
   }
+  
   sketch->setCondition( rewarded, unrewarded, neutral );
+
+  return mazeCondition;
+}
+
+void createStimuli() {};
+  
+void YMaze::startNextTrial() {
+  postCustomEvent( START_TRIAL );
+
+}
+
+void YMaze::stopTrial() {
+  postCustomEvent ( STOP_TRIAL );
+}
+
+void YMaze::customEvent( QEvent *qce ) {
+  std::cerr << qce->type() - QEvent::User << std::endl;
+  
+  switch ( qce->type() - QEvent::User ) {
+  case START_TRIAL:
+    std::cerr << "Trial start!" << std::endl;
+    break;
+  case STOP_TRIAL:
+    std::cerr << "Trial stop!" << std::endl;
+    break;
+  default:
+    break;
+  }
+  
 }
 
 
-int YMaze::main( void )
-{
+
+//************************************************************************
+//************************************************************************
+
+int YMaze::main( void ) {
   // get options:
   duration = number( "duration" );
+  
   bool start = false;
   while ( softStop() == 0 ) {
       if ( interrupt() || softStop() > 0 )
@@ -199,6 +240,8 @@ int YMaze::main( void )
       if ( !start ){
         sleep(0.2);
         continue;
+      } else {
+	std::cerr << "start stimulus" << std::endl;
       }
   }
   return Completed;
