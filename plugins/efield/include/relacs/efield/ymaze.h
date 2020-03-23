@@ -67,14 +67,14 @@ class YMazeSketch : public QLabel
   Q_OBJECT;
 
 public:
-  YMazeSketch(MazeOrientation orientation=MazeOrientation::UPRIGHT, QWidget *parent = nullptr);
+  YMazeSketch( MazeOrientation orientation=MazeOrientation::UPRIGHT, QWidget *parent = nullptr );
 
-  void setCondition(MazeArm rewarded, MazeArm unrewarded, MazeArm neutral);
+  void setCondition( const MazeCondition &mazeCondition );
 
 private:
   void setupUI();
   void drawSketch();
-  void resizeEvent(QResizeEvent *event) override; 
+  void resizeEvent( QResizeEvent *event ) override; 
 
   MazeOrientation orientation;
   MazeArm lastRewarded = MazeArm::NONE;
@@ -109,7 +109,8 @@ private:
   
   void setupTable(QGridLayout *grid);
   MazeCondition nextMazeCondition();
-  
+  TrialCondition nextTrialCondition();
+  void updateUI(const TrialCondition &tc);
   void createStimuli();
 
 private slots:

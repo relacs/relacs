@@ -83,25 +83,24 @@ void YMazeSketch::drawSketch() {
   l->setPicture(pi);
 }
 
-void YMazeSketch::resizeEvent(QResizeEvent *event) {
+void YMazeSketch::resizeEvent( QResizeEvent *event ) {
   drawSketch();
   QLabel::resizeEvent(event);
 }
 
 
-void YMazeSketch::setCondition(MazeArm rewarded, MazeArm unrewarded, MazeArm neutral) {
+void YMazeSketch::setCondition( const MazeCondition &mc ) {
   QString styleStub = "QLabel{font-size: 20; font-weight: bold; color : ";
   QString styleSuffix = "}";
-  labels[static_cast<int>(rewarded)]->setStyleSheet(styleStub +
-						    colors[static_cast<int>(ArmCondition::REWARDED)] +
-						    styleSuffix);
- labels[static_cast<int>(unrewarded)]->setStyleSheet(styleStub +
-						     colors[static_cast<int>(ArmCondition::UNREWARDED)] +
-						     styleSuffix);
-  labels[static_cast<int>(neutral)]->setStyleSheet(styleStub +
-						  colors[static_cast<int>(ArmCondition::NEUTRAL)] +
-						  styleSuffix);
-
+  labels[static_cast<int>(mc.rewarded)]->setStyleSheet(styleStub +
+						       colors[static_cast<int>(ArmCondition::REWARDED)] +
+						       styleSuffix);
+ labels[static_cast<int>(mc.unrewarded)]->setStyleSheet(styleStub +
+							colors[static_cast<int>(ArmCondition::UNREWARDED)] +
+							styleSuffix);
+  labels[static_cast<int>(mc.neutral)]->setStyleSheet(styleStub +
+						      colors[static_cast<int>(ArmCondition::NEUTRAL)] +
+						      styleSuffix);
 }
 
 //***********************************************************************
@@ -176,7 +175,6 @@ MazeCondition YMaze::nextMazeCondition() {
     nextPosition = rand() %3;
   }
   std::vector<MazeArm> arms = {MazeArm::A, MazeArm::B, MazeArm::C};
-  MazeArm rewarded, unrewarded, neutral;
   if (lastRewardPosition == static_cast<int> (MazeArm::NONE ) ) {
     mazeCondition.rewarded = arms[nextPosition];
     arms.erase(arms.begin() + nextPosition);
@@ -191,37 +189,53 @@ MazeCondition YMaze::nextMazeCondition() {
     mazeCondition.unrewarded = arms[0];
     lastRewardPosition = nextPosition;
   }
-  
-  sketch->setCondition( rewarded, unrewarded, neutral );
-
   return mazeCondition;
 }
 
+
+StimulusConditions nextStimulusConditions() {
+  StimulusCondition sc;
+  sc.rewadedFreq = rewardedFreq;
+
+  return sc;
+}
+  
+TrialCondition YMaze::nextTrialCondition() {
+  TrialCondition tc;
+  tc.mazeCondition = nextMazeCondition();
+  tc.stimCondition = nextStimulusconditions();
+  return tc;
+}
+  
 void createStimuli() {};
   
 void YMaze::startNextTrial() {
   postCustomEvent( START_TRIAL );
-
 }
 
 void YMaze::stopTrial() {
   postCustomEvent ( STOP_TRIAL );
 }
 
+void YMaze::updateUI(const TrialCondition &tc) {
+  sketch->setCondition( tc.mazeCondition );
+  // TODO update table with stimulus conditions
+}
+
 void YMaze::customEvent( QEvent *qce ) {
-  std::cerr << qce->type() - QEvent::User << std::endl;
-  
+  TrialCondition tc;
   switch ( qce->type() - QEvent::User ) {
   case START_TRIAL:
     std::cerr << "Trial start!" << std::endl;
+    tc = nextTrialCondition();
+    updateUI(tc);
     break;
   case STOP_TRIAL:
     std::cerr << "Trial stop!" << std::endl;
     break;
   default:
     break;
-  }
-  
+  } 
 }
 
 
