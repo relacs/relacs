@@ -192,10 +192,9 @@ MazeCondition YMaze::nextMazeCondition() {
   return mazeCondition;
 }
 
-
-StimulusConditions nextStimulusConditions() {
+StimulusCondition YMaze::nextStimulusConditions() {
   StimulusCondition sc;
-  sc.rewadedFreq = rewardedFreq;
+  sc.rewardedFreq = rewardedFreq;
 
   return sc;
 }
@@ -203,7 +202,7 @@ StimulusConditions nextStimulusConditions() {
 TrialCondition YMaze::nextTrialCondition() {
   TrialCondition tc;
   tc.mazeCondition = nextMazeCondition();
-  tc.stimCondition = nextStimulusconditions();
+  tc.stimCondition = nextStimulusConditions();
   return tc;
 }
   

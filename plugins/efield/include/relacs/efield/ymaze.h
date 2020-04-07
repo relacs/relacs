@@ -110,6 +110,7 @@ private:
   void setupTable(QGridLayout *grid);
   MazeCondition nextMazeCondition();
   TrialCondition nextTrialCondition();
+  StimulusCondition nextStimulusConditions();
   void updateUI(const TrialCondition &tc);
   void createStimuli();
 
