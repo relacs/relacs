@@ -122,13 +122,18 @@ YMaze::YMaze( void )
   sketch = new YMazeSketch();
   grid->addWidget( sketch, 0, 0, 4, 4 );
   setupTable(grid);
-  QPushButton *startBtn = new QPushButton("Start");
-  connect( startBtn, SIGNAL( clicked() ), this, SLOT( startNextTrial() ) );
+
+  startBtn = new QPushButton("Start");
+  connect( startBtn, SIGNAL( clicked() ), this, SLOT( startTrial() ) );
   grid->addWidget( startBtn, 4, 5, 1, 1 );
 
-  QPushButton *stopBtn = new QPushButton("Stop");
+  stopBtn = new QPushButton("Stop");
   connect( stopBtn, SIGNAL( clicked() ), this, SLOT( stopTrial() ) );
   grid->addWidget( stopBtn, 5, 5, 1, 1 );
+
+  nextBtn = new QPushButton("Prepare next");
+  connect( nextBtn, SIGNAL( clicked() ), this, SLOT( prepareNextTrial() ) );
+  grid->addWidget( startBtn, 4, 5, 1, 1 );
 
   this->setLayout( grid );  
 }
@@ -208,12 +213,16 @@ TrialCondition YMaze::nextTrialCondition() {
   
 void createStimuli() {};
   
-void YMaze::startNextTrial() {
-  postCustomEvent( START_TRIAL );
+void YMaze::startTrial() {
+  postCustomEvent( static_cast<int>(BtnActions::START_TRIAL) );
+}
+
+void YMaze::prepareNextTrial() {
+  postCustomEvent( static_cast<int>(BtnActions::NEXT_TRIAL) );
 }
 
 void YMaze::stopTrial() {
-  postCustomEvent ( STOP_TRIAL );
+  postCustomEvent ( static_cast<int>(BtnActions::STOP_TRIAL) );
 }
 
 void YMaze::updateUI(const TrialCondition &tc) {
@@ -224,13 +233,19 @@ void YMaze::updateUI(const TrialCondition &tc) {
 void YMaze::customEvent( QEvent *qce ) {
   TrialCondition tc;
   switch ( qce->type() - QEvent::User ) {
-  case START_TRIAL:
-    std::cerr << "Trial start!" << std::endl;
+  case static_cast<int>(BtnActions::NEXT_TRIAL):
+    std::cerr << "perpare next trial!" << std::endl;
     tc = nextTrialCondition();
     updateUI(tc);
+    
     break;
-  case STOP_TRIAL:
-    std::cerr << "Trial stop!" << std::endl;
+
+  case static_cast<int>(BtnActions::START_TRIAL):
+    std::cerr << "start trial!" << std::endl;
+    
+    break;
+  case static_cast<int>(BtnActions::STOP_TRIAL):
+    std::cerr << "stop trial!" << std::endl;
     break;
   default:
     break;
@@ -245,7 +260,7 @@ void YMaze::customEvent( QEvent *qce ) {
 int YMaze::main( void ) {
   // get options:
   duration = number( "duration" );
-  
+  rewardedFreq = number("rewarded");
   bool start = false;
   while ( softStop() == 0 ) {
       if ( interrupt() || softStop() > 0 )

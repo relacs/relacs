@@ -42,6 +42,7 @@ namespace efield {
 enum class MazeOrientation {UPRIGHT = 0, BOTTOMUP = 1, LEFT = 2, RIGHT = 3};
 enum class MazeArm {NONE = -1, A = 0, B = 1, C = 2};
 enum class ArmCondition {REWARDED = 0, UNREWARDED = 1, NEUTRAL = 2};
+enum class BtnActions {NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13};
 
 struct MazeCondition {
   MazeArm rewarded;
@@ -83,8 +84,6 @@ private:
   QStringList colors = {"green","red","grey"};
 };
 
-
-
   
 class YMaze : public RePro
 {
@@ -96,8 +95,6 @@ public:
   virtual int main( void );
 
 private:
-  static const int START_TRIAL = 11, STOP_TRIAL = 12;
-
   YMazeSketch *sketch;
   double duration;
   double rewardedFreq;
@@ -106,6 +103,7 @@ private:
   int lastRewardPosition = -1;
   int currentRewardPosition;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
+  QPushButton *nextBtn, *startBtn, *stopBtn;
   
   void setupTable(QGridLayout *grid);
   MazeCondition nextMazeCondition();
@@ -115,8 +113,9 @@ private:
   void createStimuli();
 
 private slots:
-  void startNextTrial();
+  void startTrial();
   void stopTrial();
+  void prepareNextTrial();
   
 protected:
   virtual void customEvent( QEvent *qce );
