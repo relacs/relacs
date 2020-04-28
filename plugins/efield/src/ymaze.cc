@@ -96,9 +96,9 @@ void YMazeSketch::setCondition( const MazeCondition &mc ) {
   labels[static_cast<int>(mc.rewarded)]->setStyleSheet(styleStub +
 						       colors[static_cast<int>(ArmCondition::REWARDED)] +
 						       styleSuffix);
- labels[static_cast<int>(mc.unrewarded)]->setStyleSheet(styleStub +
-							colors[static_cast<int>(ArmCondition::UNREWARDED)] +
-							styleSuffix);
+  labels[static_cast<int>(mc.unrewarded)]->setStyleSheet(styleStub +
+							 colors[static_cast<int>(ArmCondition::UNREWARDED)] +
+							 styleSuffix);
   labels[static_cast<int>(mc.neutral)]->setStyleSheet(styleStub +
 						      colors[static_cast<int>(ArmCondition::NEUTRAL)] +
 						      styleSuffix);
@@ -163,8 +163,8 @@ void YMaze::populateOptions() {
 }
   
 void YMaze::setupTable(QGridLayout *grid) {
-  QString activeStyle = "QLabel{color: grey}";
-  QString passiveStyle = "QLabel{color: black}";
+  QString activeStyle = "QLabel{color: red; font-size: 8pt}";
+  QString passiveStyle = "QLabel{color: black; font-size: 8pt}";
   conditionA = new QLabel( "" );
   conditionB = new QLabel( "" );
   conditionC = new QLabel( "" );
@@ -336,6 +336,36 @@ void YMaze::stopTrial() {
 void YMaze::updateUI(const TrialCondition &tc) {
   sketch->setCondition( tc.mazeCondition );
   // TODO update table with stimulus conditions
+  conditionApast->setText(conditionA->text());
+  conditionBpast->setText(conditionB->text());
+  conditionCpast->setText(conditionC->text());
+  QString rf = QString::number(tc.stimCondition.rewardedFreq) + "Hz;\n " +
+    QString::number(tc.stimCondition.rewardedAmplitude) + "mV";
+  QString uf = QString::number(tc.stimCondition.unrewardedFreq) + "Hz;\n " +
+    QString::number(tc.stimCondition.unrewardedAmplitude) + "mV";
+  QString neutral = "---";
+  
+  if ( tc.mazeCondition.rewarded == MazeArm::A )
+    conditionA->setText( rf );
+  else if ( tc.mazeCondition.rewarded == MazeArm::B )
+    conditionB->setText( rf );
+  else
+    conditionC->setText( rf );
+
+  if ( tc.mazeCondition.unrewarded == MazeArm::A )
+    conditionA->setText( uf );
+  else if ( tc.mazeCondition.unrewarded == MazeArm::B )
+    conditionB->setText( uf );
+  else
+    conditionC->setText( uf );
+  
+  if ( tc.mazeCondition.neutral == MazeArm::A )
+    conditionA->setText( neutral );
+  else if ( tc.mazeCondition.unrewarded == MazeArm::B )
+    conditionB->setText( neutral );
+  else
+    conditionC->setText( neutral );
+
 }
 
 void YMaze::customEvent( QEvent *qce ) {
