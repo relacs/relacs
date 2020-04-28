@@ -308,6 +308,8 @@ StimulusCondition YMaze::nextStimulusConditions() {
   StimulusCondition sc;
   sc.rewardedFreq = rewardedFreq;
   sc.unrewardedFreq = noRewardFreq;
+  sc.rewardedAmplitude = number("rewardsignalampl");
+  sc.unrewardedAmplitude = number("nonrewardsignalampl");
   sc.valid = valid;
   return sc;
 }
@@ -335,7 +337,6 @@ void YMaze::stopTrial() {
 
 void YMaze::updateUI(const TrialCondition &tc) {
   sketch->setCondition( tc.mazeCondition );
-  // TODO update table with stimulus conditions
   conditionApast->setText(conditionA->text());
   conditionBpast->setText(conditionB->text());
   conditionCpast->setText(conditionC->text());
@@ -361,7 +362,7 @@ void YMaze::updateUI(const TrialCondition &tc) {
   
   if ( tc.mazeCondition.neutral == MazeArm::A )
     conditionA->setText( neutral );
-  else if ( tc.mazeCondition.unrewarded == MazeArm::B )
+  else if ( tc.mazeCondition.neutral == MazeArm::B )
     conditionB->setText( neutral );
   else
     conditionC->setText( neutral );
