@@ -23,6 +23,9 @@
 #define _RELACS_EFIELD_YMAZE_H_ 1
 
 #include <relacs/repro.h>
+#include <relacs/efield/traces.h>
+#include <relacs/efield/eodtools.h>
+
 #include <QLabel>
 #include <QObject>
 #include <QGridLayout>
@@ -56,6 +59,7 @@ struct StimulusCondition {
   double unrewardedFreq;
   double rewardedAmplitude;
   double unrewardedAmplitude;
+  bool valid;
 };
 
 struct TrialCondition {
@@ -85,7 +89,7 @@ private:
 };
 
   
-class YMaze : public RePro
+  class YMaze : public RePro, public Traces, public EODTools
 {
   Q_OBJECT
 
@@ -96,22 +100,27 @@ public:
 
 private:
   YMazeSketch *sketch;
-  double duration;
+  double duration, eodf;
   double rewardedFreq;
-  double freqRangeMin, freqRangeMax, minFreqDiff;
+  double freqRangeMin, freqRangeMax, minFreqDiff, deltaf;
   int numberOfTrials;
   int lastRewardPosition = -1;
   int currentRewardPosition;
+  bool start;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   QPushButton *nextBtn, *startBtn, *stopBtn;
   
   void setupTable(QGridLayout *grid);
+  void populateOptions();
   MazeCondition nextMazeCondition();
   TrialCondition nextTrialCondition();
   StimulusCondition nextStimulusConditions();
   void updateUI(const TrialCondition &tc);
   void createStimuli();
-
+  bool estimateEodFrequency( double &fisheodf );
+  bool drawNonRewardedFrequency( double &freq );
+					       
+					       
 private slots:
   void startTrial();
   void stopTrial();

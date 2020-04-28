@@ -24,6 +24,7 @@
 #include <QPicture>
 #include <QPushButton>
 #include <iostream>
+#include <cstdint>
 
 using namespace relacs;
 
@@ -108,15 +109,8 @@ void YMazeSketch::setCondition( const MazeCondition &mc ) {
 YMaze::YMaze( void )
   : RePro( "YMaze", "efield", "Jan Grewe", "1.0", "Mar 18, 2020" )
 {
-  addNumber( "duration", "trial duration", 10.0, 0.1, 1000., 0.1, "s" );
-  addNumber( "rewardfreq", "rewarded frequency", 500.0, 1.0, 2500.0, 1.0, "Hz" );
-  addNumber( "rangemin", "Frequency range minimum", 1.0, 1.0, 2500.0, 1.0, "Hz" );
-  addNumber( "rangemax", "Frequency range maximum", 1000.0, 1.0, 2500.0, 1.0, "Hz" );
-  addNumber( "deltaf", "Stepsize of unrewarded stimulus frequency discretization",
-	     10.0, 1.0, 500.0, 1.0, "Hz" );
-  addNumber( "minfreqdiff", "Minimum frequency difference between rewarded and unrewarded stimulus",
-	     10.0, 1.0, 500.0, 1.0, "Hz" );
-  
+  populateOptions();
+
   // Ui Layout
   QGridLayout *grid = new QGridLayout();
   sketch = new YMazeSketch();
@@ -124,20 +118,50 @@ YMaze::YMaze( void )
   setupTable(grid);
 
   startBtn = new QPushButton("Start");
+  startBtn->setEnabled(false);
+  startBtn->setToolTip("Start stimulus output...");
   connect( startBtn, SIGNAL( clicked() ), this, SLOT( startTrial() ) );
-  grid->addWidget( startBtn, 4, 5, 1, 1 );
+  grid->addWidget( startBtn, 5, 6, 1, 1 );
 
   stopBtn = new QPushButton("Stop");
+  stopBtn->setEnabled(false);
+  stopBtn->setToolTip("Stop stimulus output immediately...");
   connect( stopBtn, SIGNAL( clicked() ), this, SLOT( stopTrial() ) );
-  grid->addWidget( stopBtn, 5, 5, 1, 1 );
+  grid->addWidget( stopBtn, 5, 7, 1, 1 );
 
-  nextBtn = new QPushButton("Prepare next");
+  nextBtn = new QPushButton("Next");
+  nextBtn->setEnabled(true);
+  nextBtn->setToolTip("Prepare next trial, randomize stimulus condition...");
   connect( nextBtn, SIGNAL( clicked() ), this, SLOT( prepareNextTrial() ) );
-  grid->addWidget( startBtn, 4, 5, 1, 1 );
+  grid->addWidget( nextBtn, 5, 5, 1, 1 );
 
   this->setLayout( grid );  
 }
 
+void YMaze::populateOptions() {
+  newSection( "Experiment" );
+  addNumber( "duration", "Trial duration", 10.0, 0.1, 1000., 0.1, "s" );
+  addNumber( "rewardfreq", "Rewarded frequency", 500.0, 1.0, 2500.0, 1.0, "Hz" );
+  addNumber( "rangemin", "Frequency range minimum", 100.0, 1.0, 2500.0, 1.0, "Hz" );
+  addNumber( "rangemax", "Frequency range maximum", 1000.0, 1.0, 2500.0, 1.0, "Hz" );
+  addNumber( "deltaf", "Stepsize of unrewarded stimulus frequency discretization",
+	     10.0, 1.0, 500.0, 1.0, "Hz" );
+  addNumber( "minfreqdiff", "Minimum frequency difference between rewarded and unrewarded stimulus",
+	     10.0, 1.0, 500.0, 1.0, "Hz" );
+  addNumber( "rewardsignalampl", "Amplitude of the rewarded signal.", 1.0, 0.1, 10.0, 0.1, "mV" );
+  addNumber( "nonrewardsignalampl", "Amplitude of the non-rewarded signal.", 1.0, 0.1, 10.0, 0.1, "mV" );
+  addBoolean( "nofish", "Test mode without fish", false );
+  addNumber( "fakefisheodf", "EOD frequency of fake fish", 500.0, 1.0, 10000.0, 1.0, "Hz").setActivation( "noFish", "true" );
+  
+  newSection( "EOD estimation" );
+  addSelection( "intrace", "inputTrace" );
+  addBoolean( "usepsd", "Use the power spectrum", true );
+  addNumber( "mineodfreq", "Minimum expected EOD frequency", 100.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
+  addNumber( "maxeodfreq", "Maximum expected EOD frequency", 2000.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
+  addNumber( "eodfreqprec", "Precision of EOD frequency measurement", 1.0, 0.0, 100.0, 0.1, "Hz" ).setActivation( "usepsd", "true" );
+  addNumber( "averagetime", "Time for computing EOD frequency", 2.0, 0.0, 100000.0, 1.0, "s" );  
+}
+  
 void YMaze::setupTable(QGridLayout *grid) {
   QString activeStyle = "QLabel{color: grey}";
   QString passiveStyle = "QLabel{color: black}";
@@ -172,6 +196,64 @@ void YMaze::setupTable(QGridLayout *grid) {
 }
 
 
+bool YMaze::estimateEodFrequency( double &fisheodf ) {
+  double averagetime = number( "averagetime" );
+  fisheodf = number( "fakefisheodf" );
+  if ( !boolean( "nofish" ) ) {
+    if ( !boolean( "usepsd" ) ) {
+      fisheodf = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
+      if ( EODEvents < 0 ) {
+	warning( "need EOD events of the EOD Trace." );
+	fisheodf = number( "fakefisheodf" );
+	return false;
+      }
+      return true;
+    } else {
+      double bigeod = 0.0;
+      double bigeodf = 0.0; 
+      double min_eodf = number( "mineodfreq" );
+      double max_eodf = number( "maxeodfreq" );
+      double eodf_prec = number( "eodfreqprec" );
+      int intrace = index( "intrace" );
+      int nfft = 1;
+	
+      nfft = nextPowerOfTwo( (int)::ceil( 1.0/trace( intrace ).stepsize()/eodf_prec ) );
+      eodf_prec = 1.0/trace( intrace ).stepsize()/nfft;
+      if ( averagetime < 2.0/trace( intrace ).stepsize()/nfft ) {
+	averagetime = 2.0/trace( intrace ).stepsize()/nfft;
+	warning( "averagetime is too small for requested frequency resolution. I set it to " +
+		 Str( averagetime ) + "s for now." );
+      }
+	
+      SampleDataF data( 0.0, averagetime, trace( intrace ).stepsize() );
+      trace( intrace ).copy( currentTime() - averagetime, data );
+      SampleDataF power( nfft );
+      rPSD( data, power );
+      double threshold = power.max( min_eodf, max_eodf );
+      EventData powerpeaks( 1000, true );
+      peaks( power, powerpeaks, 0.2*threshold );
+      double maxpower = 0.0;
+      double maxfreq = 0.0;
+      for ( int i=0; i<powerpeaks.size(); i++ ) {
+	if ( powerpeaks[i] >= min_eodf && powerpeaks[i] <= max_eodf ) {
+	  if ( powerpeaks.eventSize( i ) > maxpower ) {
+	    maxpower = powerpeaks.eventSize( i );
+	    maxfreq = powerpeaks[i];
+	  }
+	}
+      }
+      if ( bigeod < maxpower ) {
+	bigeod = maxpower;
+	bigeodf = maxfreq;
+      }
+      fisheodf = bigeodf;
+      return true;
+    }
+  }
+  return true;
+}
+  
+  
 MazeCondition YMaze::nextMazeCondition() {
   MazeCondition mazeCondition;
   
@@ -180,9 +262,9 @@ MazeCondition YMaze::nextMazeCondition() {
     nextPosition = rand() %3;
   }
   std::vector<MazeArm> arms = {MazeArm::A, MazeArm::B, MazeArm::C};
-  if (lastRewardPosition == static_cast<int> (MazeArm::NONE ) ) {
+  if (lastRewardPosition == static_cast<int> ( MazeArm::NONE ) ) {
     mazeCondition.rewarded = arms[nextPosition];
-    arms.erase(arms.begin() + nextPosition);
+    arms.erase( arms.begin() + nextPosition );
     mazeCondition.unrewarded = arms[0];
     mazeCondition.neutral = arms[1];
     lastRewardPosition = nextPosition;
@@ -197,10 +279,36 @@ MazeCondition YMaze::nextMazeCondition() {
   return mazeCondition;
 }
 
+bool YMaze::drawNonRewardedFrequency( double &freq ) {
+  std::vector<double> freqs;
+  double range = freqRangeMax - freqRangeMin;
+  int steps = floor(range/deltaf);
+  int step = rand() % steps;
+  freq = freqRangeMin + step * deltaf;
+  int count = 0;
+  while (fabs(rewardedFreq - freq) < minFreqDiff) {
+    step = rand() % steps;
+    freq = freqRangeMin + step * deltaf;
+    count++;
+    if (count > 1000) {
+      error("YMaze: Could not shuffle a valid Non-rewarded stimulus frequency! Please check RePro settings!");
+      return false;
+    }
+  }
+  return true;
+}
+
 StimulusCondition YMaze::nextStimulusConditions() {
+  bool success = estimateEodFrequency( eodf );
+  if ( !success ) {
+    error("YMaze: Could not get a valid fish frequency!");
+  }
+  double noRewardFreq;
+  bool valid = drawNonRewardedFrequency( noRewardFreq );
   StimulusCondition sc;
   sc.rewardedFreq = rewardedFreq;
-
+  sc.unrewardedFreq = noRewardFreq;
+  sc.valid = valid;
   return sc;
 }
   
@@ -237,22 +345,25 @@ void YMaze::customEvent( QEvent *qce ) {
     std::cerr << "perpare next trial!" << std::endl;
     tc = nextTrialCondition();
     updateUI(tc);
-    
+    nextBtn->setEnabled(false);
+    startBtn->setEnabled(true);
     break;
-
   case static_cast<int>(BtnActions::START_TRIAL):
     std::cerr << "start trial!" << std::endl;
-    
+    start = true;
+    startBtn->setEnabled(false);
+    stopBtn->setEnabled(true);
     break;
   case static_cast<int>(BtnActions::STOP_TRIAL):
     std::cerr << "stop trial!" << std::endl;
+    start = false;
+    stopBtn->setEnabled(false);
+    nextBtn->setEnabled(true);
     break;
   default:
     break;
   } 
 }
-
-
 
 //************************************************************************
 //************************************************************************
@@ -260,8 +371,13 @@ void YMaze::customEvent( QEvent *qce ) {
 int YMaze::main( void ) {
   // get options:
   duration = number( "duration" );
-  rewardedFreq = number("rewarded");
-  bool start = false;
+  rewardedFreq = number( "rewardfreq" );
+  freqRangeMin = number( "rangemin" );
+  freqRangeMax = number( "rangemax" );
+  minFreqDiff = number( "minfreqdiff" );
+  deltaf = number( "deltaf" );
+  start = false;
+
   while ( softStop() == 0 ) {
       if ( interrupt() || softStop() > 0 )
         break;
@@ -269,7 +385,7 @@ int YMaze::main( void ) {
         sleep(0.2);
         continue;
       } else {
-	std::cerr << "start stimulus" << std::endl;
+	//	std::cerr << "start stimulus" << std::endl;
       }
   }
   return Completed;
