@@ -77,10 +77,10 @@ int ColoredNoise::main( void )
   write( holdingsignal );
   sleep( pause );
 
-  // clear plot and set Range
-  string IUnit = trace( CurrentTrace[0] ).unit();
-  string VUnit = trace( SpikeTrace[0]).unit();
-
+//  // clear plot and set Range
+//  string IUnit = trace( CurrentTrace[0] ).unit();
+//  string VUnit = trace( SpikeTrace[0]).unit();
+//
 //  P.lock();
 //  P.resize( 2, 2, true );
 //  P[0].setXLabel( "Time [ms]" );
@@ -107,8 +107,8 @@ int ColoredNoise::main( void )
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     //stimulus
     OutData signal;
-    signal.setTrace(PotentialOutput[0]);
-    signal.constWave(duration, -1.0, V0);
+    signal.setTrace( PotentialOutput[0] );
+    signal.constWave( duration, -1.0, V0 );
 
     SampleDataD f( signal.size() / 2 );
     f /= signal.size() * signal.stepsize();
@@ -159,7 +159,6 @@ int ColoredNoise::main( void )
 //    //IV
 //    P[1].plot( potentialtrace, currenttrace, Plot::Yellow, 3, Plot::Solid );
 //    P[1].setYRange( P[0].yminRange(), P[0].ymaxRange() );
-
 
     if (interrupt()) {
       break;
