@@ -41,8 +41,7 @@ ColoredNoise::ColoredNoise( void )
     addNumber( "frequencyconstant", "Frequency Constant", 800.0, 1.0, 10000.0, 1.0, "Hz" );
     addNumber( "maxamplitude", "Maximum Amplitude", 110.0, 0.0, 200.0, 1.0, "mV" );
 
-  // add some options:
-  // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+    setWidget( &P );
 }
 
 
@@ -78,6 +77,26 @@ int ColoredNoise::main( void )
   write( holdingsignal );
   sleep( pause );
 
+  // clear plot and set Range
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
+
+//  P.lock();
+//  P.resize( 2, 2, true );
+//  P[0].setXLabel( "Time [ms]" );
+//  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+//  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
+//  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]" );
+////  P[1].setYLabel( "conductance [\u03BCS]" );
+////  P[1].setY2Tics( 0.0, 10.0 );
+//
+//  P[0].clearData();
+//  P[1].clearData();
+//  P[1].setXRange( V0 - 1.05 * maxamplitude, V0 + 1.05 * maxamplitude );
+//  P.unlock();
+
+
+  // colored noise parameters
   ArrayD expParam( 3, 1.0 );
   expParam[0] = 1;
   expParam[1] = frequencyconstant;
@@ -108,7 +127,14 @@ int ColoredNoise::main( void )
     };
     hcFFT( signal2 );
     signal2 *= maxamplitude / 0.5;
+
+    OutData signal3;
+    signal3.setTrace(PotentialOutput[0]);
+    signal3.constWave(0.1, -1.0, holdingpotential );
+
     signal = signal + signal2;
+    signal.append( signal3 );
+
     // nix options
     Parameter &p1 = signal.description().addNumber( "maxamplitude", maxamplitude, "mV" );
     Parameter &p2 = signal.description().addNumber( "frequencyconstant", frequencyconstant, "Hz" );
@@ -122,8 +148,24 @@ int ColoredNoise::main( void )
 
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, duration, t0 );
 
+    SampleDataD potentialtrace( t0, duration, trace(SpikeTrace[0]).stepsize(), 0.0 );
+    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace);
+
+//    //plot
+//    P.lock();
+//    //trace
+//    P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+//
+//    //IV
+//    P[1].plot( potentialtrace, currenttrace, Plot::Yellow, 3, Plot::Solid );
+//    P[1].setYRange( P[0].yminRange(), P[0].ymaxRange() );
+
+
     if (interrupt()) {
       break;
+
+
+
     };
 
   }
