@@ -118,7 +118,7 @@ OutData CombinedStimulus::ColoredNoise() {
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );
   expParam[0] = 1;
-  expParam[1] = noisefrequencyconstant;
+  expParam[1] = -noisefrequencyconstant;
   expParam[2] = 0;
 
   //potential base
@@ -140,8 +140,16 @@ OutData CombinedStimulus::ColoredNoise() {
   OutData signal2;
   signal2.setTrace(PotentialOutput[0]);
   signal2.constWave(noiseduration, -1.0, 0.0);
+  
+  //''' set hardcoded cutoff frequency '''
+  double cutoff = 20;
   for (int k=0; k<f.size(); k++) {
-    signal2[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
+    if ( f[k] <= cutoff ) {
+      signal2[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
+    }
+    else {
+      signal2[k] = 0.0;
+    }
   };
   hcFFT( signal2 );
   signal2 *= noisemaxamplitude / 0.5;

@@ -61,7 +61,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   bool qualitycontrol = boolean( "qualitycontrol" );
   bool currentpulse = boolean( "currentpulse" );
   double pulseamplitude = 0.0;
-  double pulseduration = 0.0;
+  double pulseduration = number( "pulseduration" );
   double f0 = number( "f0" );
   double f1 = number( "f1" );
   if ( currentpulse ) {
@@ -174,7 +174,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 //
 //    if ( signal.error() )
 //      return false;
-//    sleep(pause);
+//    sleep(pause);qc_signal1
 //
 //    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
 //    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
@@ -204,7 +204,6 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
       trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
 
       pn_trace += currenttrace;
-
     };
 //  pn_trace -= pn_trace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
 
@@ -212,9 +211,11 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
       return pn_trace;
     };
   };
-
+  
+  cerr << qualitycontrol << "1\n";
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
+    cerr << qualitycontrol << "2\n";
     OutData qc_signal1;
     qc_signal1.setTrace( PotentialOutput[0] );
     qc_signal1.constWave( 0.010, -1.0, holdingpotential );
@@ -225,7 +226,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
     OutData qc_signal3;
     qc_signal3.setTrace( PotentialOutput[0] );
-    qc_signal3.sweepWave( 0.070, -1.0, f0, f1, 20.0, 0.0 );
+    qc_signal3.sweepWave( pulseduration, -1.0, f0, f1, 20.0, 0.0 );
     qc_signal3 = qc_signal3 + holdingpotential - 20;
 
     OutData qc_signal4;
@@ -247,7 +248,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     qc_signal1.setDescription( opts_qc );
 
 //    cerr << qc_signal1.description() << endl;
-
+    cerr << pulseduration << "3\n";
     write(qc_signal1);
     sleep(pause);
   };
