@@ -128,7 +128,9 @@ OutData CombinedStimulus::ColoredNoise() {
 
   //frequency range
   SampleDataD f( signal.size() / 2 );
-  f /= signal.size() * signal.stepsize();
+  for (int k=0; k<f.size(); k++) {
+    f[k] = k / (signal.size() * signal.stepsize());
+  };
   SampleDataD f2( signal.size() / 2 );
   f2( signal.size() / 2 );
   for (int k=0; k<f2.size(); k++) {
@@ -141,17 +143,12 @@ OutData CombinedStimulus::ColoredNoise() {
   signal2.setTrace(PotentialOutput[0]);
   signal2.constWave(noiseduration, -1.0, 0.0);
   
-  //''' set hardcoded cutoff frequency '''
-  double cutoff = 20;
   for (int k=0; k<f.size(); k++) {
-    if ( f[k] <= cutoff ) {
-      signal2[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
-    }
-    else {
-      signal2[k] = 0.0;
-    }
+    signal2[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
   };
+  ////////////////////////////////////////////////////////////////////////////////////////////////// here is an error /////////////////////////////////////////////////////////////////////////
   hcFFT( signal2 );
+  ////////////////////////////////////////////////////////////////////////////////////////////////// here is an error /////////////////////////////////////////////////////////////////////////
   signal2 *= noisemaxamplitude / 0.5;
 
   //go back to holdingpotential
