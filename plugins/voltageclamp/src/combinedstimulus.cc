@@ -34,7 +34,7 @@ CombinedStimulus::CombinedStimulus( void )
 {
   addNumber( "noiseduration", "duration (ColoredNoise)", 3, 0.001, 100000.0, 0.001, "s", "s" );
   addNumber( "noiseVbase", "Base Potential (ColoredNoise)", -60.0, -200.0, 200.0, 0.1, "mV" );
-  addNumber( "noisefrequencyconstant", "Frequency Constant (ColoredNoise)", 800.0, 1.0, 10000.0, 1.0, "Hz" );
+  addNumber( "noisefrequencyconstant", "Frequency Constant (ColoredNoise)", 800.0, 0.001, 10000.0, 0.001, "Hz" );
   addNumber( "noisemaxamplitude", "Maximum Amplitude (ColoredNoise)", 110.0, 0.0, 200.0, 1.0, "mV" );
   
   addNumber( "actmintest", "Minimum testing Potential (act/inact)", -120.0, -200.0, 200.0, 1.0, "mV" );
@@ -88,7 +88,7 @@ int CombinedStimulus::main( void )
     OutData signal;
     signal.setTrace( PotentialOutput[0] );
     signal.constWave( holdingpotential );
-
+  // make short quality assuring test-pulse
     OutData noise = ColoredNoise();
     OutData act =   ActInact();
     OutData tail =  Tail();
