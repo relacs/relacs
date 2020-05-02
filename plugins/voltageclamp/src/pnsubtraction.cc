@@ -42,13 +42,10 @@ PNSubtraction::PNSubtraction( const string &name,
   // add some options:
   addNumber( "pn", "p/N", -4, -100, 100, 1 );
   addBoolean( "qualitycontrol", "Quality control", true );
-  addBoolean( "currentpulse", "Current pulse", true );
-  addNumber( "pulseamplitude", "Pulse amplitude", -0.1, -1000.0, 1000.0, 0.01).setActivation( "currentpulse", "true" );
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
   addNumber( "f0", "minimum pulse frequency", 10.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
   addNumber( "f1", "maximum pulse frequency", 500.0, 0.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
 }
-
 
 int PNSubtraction::main( void )
 {
@@ -59,15 +56,9 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
   bool qualitycontrol = boolean( "qualitycontrol" );
-  bool currentpulse = boolean( "currentpulse" );
-  double pulseamplitude = 0.0;
   double pulseduration = number( "pulseduration" );
   double f0 = number( "f0" );
   double f1 = number( "f1" );
-  if ( currentpulse ) {
-    pulseamplitude = number( "pulseamplitude" );
-    pulseduration = number( "pulseduration" );
-  };
 
   // assign random id for later connection between qualitycontrol, pn and traces
   std::string randomId = randomString(40);
@@ -75,112 +66,15 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   // add p/n option to signal
   Parameter &pn1 = opts.addNumber( "pn", pn );
   Parameter &qc1 = opts.addBoolean( "qualitycontrol", qualitycontrol );
-  Parameter &cp1 = opts.addBoolean( "currentpulse", currentpulse );
   Parameter &rid = opts.addText( "TraceId", randomId );
 
   signal.setMutable( pn1 );
   signal.setMutable( qc1 );
-  signal.setMutable( cp1 );
   signal.setMutable( rid );
   signal.setDescription( opts );
 
   // don't print repro message:
   noMessage();
-
-  // make short current pulse to estimate membrane capacity, time constant and resistance
-  if ( currentpulse ) {
-      // set amplifier to VC mode
-    ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl* >( control( "AmplifierControl" ) );
-    ampl ->activateVoltageClampMode();
-    //sleep(.01);
-    
-    // set VC to holdingpotential for 100ms
-    OutData hp_signal;
-    hp_signal.setTrace( PotentialOutput[0] );
-    hp_signal.constWave( 0.1, -1.0, holdingpotential );
-    write(hp_signal);
-    //sleep(pause);
-    //write(hp_signal);
-    SampleDataD currenttrace( 0.0, 0.1, trace(CurrentTrace[0]).stepsize(), 0.0);
-    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
-    double I0 = currenttrace.mean( 0.07, 0.1 );
-    
-    //cerr << "I0=" << I0 << "\n";
-    
-    // set amplifier to Bridge mode
-    OutData br_hold;
-    br_hold.setTrace( CurrentOutput[0] );
-    br_hold.constWave( I0 );
-    
-    ampl ->activateBridgeMode();
-    write(br_hold);
-    sleep(0.1);
-    
-    OutData br_signal;
-    br_signal.setTrace( CurrentOutput[0] );
-    br_signal.constWave( pulseduration, -1.0, I0);
-
-    OutData br_signal2;
-    br_signal2.setTrace( CurrentOutput[0] );
-    br_signal2.constWave( pulseduration, -1.0, I0 + 2*pulseamplitude);
-
-    OutData br_signal3;
-    br_signal3.setTrace( CurrentOutput[0] );
-    br_signal3.constWave( pulseduration, -1.0, I0 + pulseamplitude);
-
-    OutData br_signal4;
-    br_signal4.setTrace( CurrentOutput[0] );
-    br_signal4.constWave( pulseduration, -1.0, I0 );
-
-    br_signal.append( br_signal2 );
-    br_signal.append( br_signal3 );
-    br_signal.append( br_signal4 );
-
-    br_signal.description().setType( "stimulus/CurrentPulse" );
-    Options opts_br = br_signal.description();
-    Parameter &br_rid = opts_br.addText( "TraceId", randomId );
-    Parameter &br_amp = opts_br.addNumber( "PulseAmplitude", pulseamplitude );
-    Parameter &br_dur = opts_br.addNumber( "PulseDuration", pulseduration );
-    br_signal.setMutable( br_rid );
-    br_signal.setMutable( br_amp );
-    br_signal.setMutable( br_dur );
-    br_signal.setDescription( opts_br );
-
-    write( br_signal );
-    //sleep( pulseduration*4 );
-
-    //SampleDataD currenttrace2( 0.0, 0.1, trace(CurrentTrace[0]).stepsize(), 0.0);
-    //trace(CurrentTrace[0]).copy(signalTime(), currenttrace2 );
-    //double I1 = currenttrace2.mean( 0.07, 0.1 );
-    //cerr << "I1=" << I1 << "\n";
-    
-    SampleDataD potentialtrace = SampleDataF( 0.0, 4*pulseduration, 1/samplerate, 0.0 );
-    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace );
-    
-    
-//    cerr << potentialtrace.min(0.0, 3*pulseduration) << ", " << potentialtrace.max(0.0, 3*pulseduration) << ", " << potentialtrace.size() << "\n";
-
-    analyzeCurrentPulse( potentialtrace, I0 );    
-    
-    // set amplifier back to VC mode
-    ampl ->activateVoltageClampMode();
-    write(hp_signal);
-    //sleep(pause);
-  };
-
-//  // skip prepulses if pn==0
-//  if ( pn == 0 ) {
-//    write(signal);
-//
-//    if ( signal.error() )
-//      return false;
-//    sleep(pause);qc_signal1
-//
-//    SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize() , 0.0);
-//    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
-//
-//    return currenttrace;
-//  };
 
   SampleDataD pn_trace(mintime, signal.rangeBack(), 1 / samplerate);
   if ( pn != 0 ) {
@@ -261,22 +155,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-  if (currentpulse) {
-    SampleDataD potentialtrace(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
-    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace);
-
-    SampleDataD I_L(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
-    SampleDataD dVdt(mintime, maxtime, trace(SpikeTrace[0]).stepsize(), 0.0);
-
-    I_L = gL * (potentialtrace - EL);
-    for (int i = 0; i < (dVdt.size() - 1); i++) {
-      dVdt[i] = (potentialtrace[i + 1] - potentialtrace[i]) * samplerate;
-    }
-    dVdt[dVdt.size()-1] = 0.0;
-
-    currenttrace += - I_L - Cm * dVdt;
-  }
-  else if ( pn != 0 )
+  if ( pn != 0 )
   {
     currenttrace -= pn / ::abs(pn) * pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
     currenttrace -= currenttrace.mean(-samplerate / 500, 0);
