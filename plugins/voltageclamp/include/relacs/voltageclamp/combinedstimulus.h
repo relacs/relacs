@@ -27,6 +27,8 @@
 #include <relacs/ephys/traces.h>
 #include <relacs/voltageclamp/summary.h>
 #include <relacs/voltageclamp/pnsubtraction.h>
+#include <relacs/sampledata.h>
+#include <relacs/spectrum.h>
 
 using namespace relacs;
 

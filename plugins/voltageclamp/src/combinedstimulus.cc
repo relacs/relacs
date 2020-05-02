@@ -23,6 +23,10 @@
 #include <relacs/voltageclamp/pnsubtraction.h>
 #include <relacs/ephys/amplifiercontrol.h>
 #include <relacs/fitalgorithm.h>
+#include <relacs/sampledata.h>
+#include <relacs/spectrum.h>
+#include <cmath>
+#include <iostream>
 
 using namespace relacs;
 
@@ -118,7 +122,7 @@ OutData CombinedStimulus::ColoredNoise() {
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );
   expParam[0] = 1;
-  expParam[1] = -noisefrequencyconstant;
+  expParam[1] = noisefrequencyconstant;
   expParam[2] = 0;
 
   //potential base
@@ -126,38 +130,48 @@ OutData CombinedStimulus::ColoredNoise() {
   signal.setTrace( PotentialOutput[0] );
   signal.constWave( noiseduration, -1.0, noiseVbase );
 
+//  int intnum = noiseduration / signal.stepsize();
+//  SampleDataD s( intnum );
+//  for (int k=0; k<s.size(); k++ ) {
+//    s[k] = noiseVbase;
+//  }
+//  signal = s;
+
+  // get next power of two
+  int power = 1;
+  while(power < signal.size()) {
+    power *=2;
+  }
   //frequency range
-  SampleDataD f( signal.size() / 2 );
+  SampleDataD f( power );
   for (int k=0; k<f.size(); k++) {
-    f[k] = k / (signal.size() * signal.stepsize());
+    f[k] = k / (power * signal.stepsize());
   };
-  SampleDataD f2( signal.size() / 2 );
-  f2( signal.size() / 2 );
+  SampleDataD f2( power );
   for (int k=0; k<f2.size(); k++) {
     f2[k] = -f[f.size()-k];
   };
   f.append( f2 );
 
   //draw random numbers on fourier space and transfer to time space
-  OutData signal2;
-  signal2.setTrace(PotentialOutput[0]);
-  signal2.constWave(noiseduration, -1.0, 0.0);
-  
-  for (int k=0; k<f.size(); k++) {
-    signal2[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
-  };
-  ////////////////////////////////////////////////////////////////////////////////////////////////// here is an error /////////////////////////////////////////////////////////////////////////
-  hcFFT( signal2 );
-  ////////////////////////////////////////////////////////////////////////////////////////////////// here is an error /////////////////////////////////////////////////////////////////////////
-  signal2 *= noisemaxamplitude / 0.5;
+  SampleDataD data( power );
+  for ( int k=0; k<data.size(); k++ )
+    data[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
+  cerr << data[10];
+  hcFFT( data );
+  data *= noisemaxamplitude/max(abs(data));
+  cerr << ", " << data[10] << "\n";
+  cerr << max(data) << ", " << min(data) << "\n";
 
-  //go back to holdingpotential
+    //go back to holdingpotential
   OutData signal3;
   signal3.setTrace(PotentialOutput[0]);
   signal3.constWave(0.1, -1.0, holdingpotential );
 
   //put stimulus pieces together
-  signal = signal + signal2;
+  for (int k=0; k<signal.size(); k++) {
+    signal[k] += data[k];
+  }
   signal.append( signal3 );
   return signal;
 }

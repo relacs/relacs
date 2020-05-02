@@ -106,10 +106,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     };
   };
   
-  cerr << qualitycontrol << "1\n";
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
-    cerr << qualitycontrol << "2\n";
     OutData qc_signal1;
     qc_signal1.setTrace( PotentialOutput[0] );
     qc_signal1.constWave( 0.010, -1.0, holdingpotential );
@@ -141,8 +139,6 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     qc_signal1.setMutable( qc_f1 );
     qc_signal1.setDescription( opts_qc );
 
-//    cerr << qc_signal1.description() << endl;
-    cerr << pulseduration << "3\n";
     write(qc_signal1);
     sleep(pause);
   };
