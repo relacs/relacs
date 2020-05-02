@@ -15,7 +15,9 @@ pluginlib_LTLIBRARIES = \
     libvoltageclampsummary.la \
     libvoltageclampsubthresholdinactivation.la \
     libvoltageclampsinussum.la \
-    libvoltageclampnoise.la
+    libvoltageclampnoise.la \
+    libvoltageclampcolorednoise.la \
+    libvoltageclampcombinedstimulus.la
 
 
 libvoltageclamppnsubtraction_la_CPPFLAGS = \
@@ -465,6 +467,80 @@ libvoltageclampnoise_la_include_HEADERS = $(HEADER_PATH)/noise.h
 
 
 
+libvoltageclampcolorednoise_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libvoltageclampcolorednoise_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libvoltageclampcolorednoise_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libvoltageclampcolorednoise_la_OBJECTS) : moc_colorednoise.cc
+
+libvoltageclampcolorednoise_la_SOURCES = colorednoise.cc
+
+libvoltageclampcolorednoise_la_includedir = $(pkgincludedir)/voltageclamp
+
+libvoltageclampcolorednoise_la_include_HEADERS = $(HEADER_PATH)/colorednoise.h
+
+
+
+libvoltageclampcombinedstimulus_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libvoltageclampcombinedstimulus_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libvoltageclampcombinedstimulus_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libvoltageclampcombinedstimulus_la_OBJECTS) : moc_combinedstimulus.cc
+
+libvoltageclampcombinedstimulus_la_SOURCES = combinedstimulus.cc
+
+libvoltageclampcombinedstimulus_la_includedir = $(pkgincludedir)/voltageclamp
+
+libvoltageclampcombinedstimulus_la_include_HEADERS = $(HEADER_PATH)/combinedstimulus.h
+
+
+
 check_PROGRAMS = \
     linktest_libvoltageclampactivation_la \
     linktest_libvoltageclampinactivation_la \
@@ -476,7 +552,9 @@ check_PROGRAMS = \
     linktest_libvoltageclampsubthresholdinactivation_la \
     linktest_libvoltageclamppnsubtraction_la \
     linktest_libvoltageclampsinussum_la \
-    linktest_libvoltageclampnoise_la
+    linktest_libvoltageclampnoise_la \
+    linktest_libvoltageclampcolorednoise_la \
+    linktest_libvoltageclampcombinedstimulus_la
 
 linktest_libvoltageclampactivation_la_SOURCES = linktest.cc
 linktest_libvoltageclampactivation_la_LDADD = libvoltageclampactivation.la
@@ -510,5 +588,11 @@ linktest_libvoltageclampsinussum_la_LDADD = libvoltageclampsinussum.la
 
 linktest_libvoltageclampnoise_la_SOURCES = linktest.cc
 linktest_libvoltageclampnoise_la_LDADD = libvoltageclampnoise.la
+
+linktest_libvoltageclampcolorednoise_la_SOURCES = linktest.cc
+linktest_libvoltageclampcolorednoise_la_LDADD = libvoltageclampcolorednoise.la
+
+linktest_libvoltageclampcombinedstimulus_la_SOURCES = linktest.cc
+linktest_libvoltageclampcombinedstimulus_la_LDADD = libvoltageclampcombinedstimulus.la
 
 TESTS = $(check_PROGRAMS)

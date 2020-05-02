@@ -45,6 +45,8 @@ PNSubtraction::PNSubtraction( const string &name,
   addBoolean( "currentpulse", "Current pulse", true );
   addNumber( "pulseamplitude", "Pulse amplitude", -0.1, -1000.0, 1000.0, 0.01).setActivation( "currentpulse", "true" );
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "currentpulse", "true" );
+  addNumber( "f0", "minimum pulse frequency", 10.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "currentpulse", "true" );
+  addNumber( "f1", "maximum pulse frequency", 500.0, 0.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "currentpulse", "true" );
 }
 
 
@@ -60,6 +62,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   bool currentpulse = boolean( "currentpulse" );
   double pulseamplitude = 0.0;
   double pulseduration = 0.0;
+  double f0 = number( "f0" );
+  double f1 = number( "f1" );
   if ( currentpulse ) {
     pulseamplitude = number( "pulseamplitude" );
     pulseduration = number( "pulseduration" );
@@ -231,6 +235,48 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     qc_signal4.setTrace( PotentialOutput[0] );
     qc_signal4.constWave( 0.010, -1.0, holdingpotential );
     
+    qc_signal1.append( qc_signal2 );
+    qc_signal1.append( qc_signal3 );
+    qc_signal1.append( qc_signal4 );
+
+    qc_signal1.description().setType( "stimulus/QualityControl" );
+    Options opts_qc = qc_signal1.description();
+    Parameter &qc_rid = opts_qc.addText( "TraceId", randomId );
+    Parameter &qc_f0 = opts_qc.addNumber( "f1", f0 );
+    Parameter &qc_f1 = opts_qc.addNumber( "f0", f1 );
+    qc_signal1.setMutable( qc_rid );
+    qc_signal1.setMutable( qc_f0 );
+    qc_signal1.setMutable( qc_f1 );
+    qc_signal1.setDescription( opts_qc );
+
+//    cerr << qc_signal1.description() << endl;
+
+    write(qc_signal1);
+    sleep(pause);
+  };
+
+
+  // make short quality assuring test-pulse
+  if ( qualitycontrol ) {
+
+
+    OutData qc_signal1;
+    qc_signal1.setTrace( PotentialOutput[0] );
+    qc_signal1.constWave( 0.010, -1.0, holdingpotential );
+
+    OutData qc_signal2;
+    qc_signal2.setTrace( PotentialOutput[0] );
+    qc_signal2.constWave( 0.010, -1.0, holdingpotential-20 );
+
+    OutData qc_signal3;
+    qc_signal3.setTrace( PotentialOutput[0] );
+    qc_signal3.sweepWave( 0.070, -1.0, f0, f1, 20.0, 0.0 );
+    qc_signal3 = qc_signal3 + holdingpotential - 20;
+
+    OutData qc_signal4;
+    qc_signal4.setTrace( PotentialOutput[0] );
+    qc_signal4.constWave( 0.010, -1.0, holdingpotential );
+
     qc_signal1.append( qc_signal2 );
     qc_signal1.append( qc_signal3 );
     qc_signal1.append( qc_signal4 );
