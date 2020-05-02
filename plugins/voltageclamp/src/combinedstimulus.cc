@@ -39,6 +39,7 @@ CombinedStimulus::CombinedStimulus( void )
   addNumber( "noiseduration", "duration (ColoredNoise)", 3, 0.001, 100000.0, 0.001, "s", "s" );
   addNumber( "noiseVbase", "Base Potential (ColoredNoise)", -60.0, -200.0, 200.0, 0.1, "mV" );
   addNumber( "noisefrequencyconstant", "Frequency Constant (ColoredNoise)", 800.0, 0.001, 10000.0, 0.001, "Hz" );
+  addNumber( "noisestd", "Standard Deviation (ColoredNoise)", 80.0, 1.0, 200.0, 1.0, "mV" );
   addNumber( "noisemaxamplitude", "Maximum Amplitude (ColoredNoise)", 110.0, 0.0, 200.0, 1.0, "mV" );
   
   addNumber( "actmintest", "Minimum testing Potential (act/inact)", -120.0, -200.0, 200.0, 1.0, "mV" );
@@ -117,6 +118,7 @@ OutData CombinedStimulus::ColoredNoise() {
   double noiseduration = number( "noiseduration" );
   double noiseVbase = number( "noiseVbase" );
   double noisefrequencyconstant = number( "noisefrequencyconstant" );
+  double noisestd = number( "noisestd" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
 
   // colored noise parameters
@@ -129,13 +131,6 @@ OutData CombinedStimulus::ColoredNoise() {
   OutData signal;
   signal.setTrace( PotentialOutput[0] );
   signal.constWave( noiseduration, -1.0, noiseVbase );
-
-//  int intnum = noiseduration / signal.stepsize();
-//  SampleDataD s( intnum );
-//  for (int k=0; k<s.size(); k++ ) {
-//    s[k] = noiseVbase;
-//  }
-//  signal = s;
 
   // get next power of two
   int power = 1;
@@ -157,21 +152,36 @@ OutData CombinedStimulus::ColoredNoise() {
   SampleDataD data( power );
   for ( int k=0; k<data.size(); k++ )
     data[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
-  cerr << data[10];
   hcFFT( data );
-  data *= noisemaxamplitude/max(abs(data));
-  cerr << ", " << data[10] << "\n";
-  cerr << max(data) << ", " << min(data) << "\n";
+  double datastd = 0.0;
+  for ( int k=0; k<data.size(); k++ ) {
+    datastd += data[k]*data[k] / (data.size() - 1);
+  }
+  datastd = sqrt(datastd);
+//  cerr << max(data) << ", " << min(data) << "\n";
+//  cerr << datastd << ", " << noisestd << "\n";
+  data *= noisestd/datastd;
+//  cerr << max(data) << ", " << min(data) << "\n";
 
     //go back to holdingpotential
   OutData signal3;
   signal3.setTrace(PotentialOutput[0]);
-  signal3.constWave(0.1, -1.0, holdingpotential );
+  signal3.constWave(0.0001, -1.0, holdingpotential );
 
+  cerr << signal.size();
   //put stimulus pieces together
   for (int k=0; k<signal.size(); k++) {
-    signal[k] += data[k];
+    if (data[k] > noisemaxamplitude) {
+      signal[k] = noiseVbase + noisemaxamplitude;
+    }
+    else if (data[k] < -noisemaxamplitude) {
+      signal[k] = noiseVbase - noisemaxamplitude;
+    }
+    else {
+      signal[k] += data[k];
+    }
   }
+  cerr << ", " << signal.size() << "\n";
   signal.append( signal3 );
   return signal;
 }
