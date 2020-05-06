@@ -201,7 +201,6 @@ OutData CombinedStimulus::ColoredNoise() {
   signal3.setTrace(PotentialOutput[0]);
   signal3.constWave(0.0001, -1.0, holdingpotential );
 
-  cerr << signal.size();
   //put stimulus pieces together
   for (int k=0; k<signal.size(); k++) {
     if (data[k] > noisemaxamplitude) {
@@ -214,7 +213,6 @@ OutData CombinedStimulus::ColoredNoise() {
       signal[k] += data[k];
     }
   }
-  cerr << ", " << signal.size() << "\n";
   signal.append( signal3 );
   return signal;
 }

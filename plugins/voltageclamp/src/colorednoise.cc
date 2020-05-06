@@ -33,28 +33,30 @@ namespace voltageclamp {
 ColoredNoise::ColoredNoise( void )
   : PNSubtraction( "ColoredNoise", "voltageclamp", "Lukas Sonnenberg", "1.0", "Apr 24, 2020" )
 {
-    addNumber( "duration", "Stimulus duration", 3, 0.001, 100000.0, 0.001, "s", "s" );
-    addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
-    addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
-    addNumber( "holdingpotential", "Holding potential", -100.0, -200.0, 200.0, 1.0, "mV" );
-    addNumber( "V0", "V0", -60.0, -200.0, 200.0, 0.1, "mV" );
-    addNumber( "frequencyconstant", "Frequency Constant", 800.0, 1.0, 10000.0, 1.0, "Hz" );
-    addNumber( "maxamplitude", "Maximum Amplitude", 110.0, 0.0, 200.0, 1.0, "mV" );
-
-    setWidget( &P );
+  addNumber( "duration", "duration", 3, 0.001, 100000.0, 0.001, "s", "s" );
+  addNumber( "Vbase", "Base Potential", -60.0, -200.0, 200.0, 0.1, "mV" );
+  addNumber( "frequencyconstant", "Frequency Constant", 800.0, 0.001, 10000.0, 0.001, "Hz" );
+  addNumber( "noisestd", "Standard Deviation", 80.0, 1.0, 200.0, 1.0, "mV" );
+  addNumber( "maxamplitude", "Maximum Amplitude", 110.0, 0.0, 200.0, 1.0, "mV" );
+  addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
+  addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
+  setWidget( &P );
 }
 
 
 int ColoredNoise::main( void )
 {
   // get options:
-  double duration = number( "duration" );
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
+
   double holdingpotential = number( "holdingpotential" );
-  double V0 = number( "V0" );
+  double duration = number( "duration" );
+  double Vbase = number( "Vbase" );
   double frequencyconstant = number( "frequencyconstant" );
+  double noisestd = number( "noisestd" );
   double maxamplitude = number( "maxamplitude" );
+
 
   // don't print repro message:
   noMessage();
@@ -77,24 +79,21 @@ int ColoredNoise::main( void )
   write( holdingsignal );
   sleep( pause );
 
-//  // clear plot and set Range
-//  string IUnit = trace( CurrentTrace[0] ).unit();
-//  string VUnit = trace( SpikeTrace[0]).unit();
-//
-//  P.lock();
-//  P.resize( 2, 2, true );
-//  P[0].setXLabel( "Time [ms]" );
-//  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
-//  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
-//  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]" );
-////  P[1].setYLabel( "conductance [\u03BCS]" );
-////  P[1].setY2Tics( 0.0, 10.0 );
-//
-//  P[0].clearData();
-//  P[1].clearData();
-//  P[1].setXRange( V0 - 1.05 * maxamplitude, V0 + 1.05 * maxamplitude );
-//  P.unlock();
+// clear plot and set Range
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
 
+  P.lock();
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [ms]" );
+  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
+  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]" );
+
+  P[0].clearData();
+  P[1].clearData();
+  P[1].setXRange( Vbase - maxamplitude*1.05, Vbase + maxamplitude*1.05 );
+  P.unlock();
 
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );
@@ -105,40 +104,62 @@ int ColoredNoise::main( void )
   double t0 = -0.002;
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
-    //stimulus
+    //potential base
     OutData signal;
     signal.setTrace( PotentialOutput[0] );
-    signal.constWave( duration, -1.0, V0 );
+    signal.constWave( duration, -1.0, Vbase );
 
-    SampleDataD f( signal.size() / 2 );
-    f /= signal.size() * signal.stepsize();
-    SampleDataD f2( signal.size() / 2 );
-    f2( signal.size() / 2 );
+    // get next power of two
+    int power = 1;
+    while(power < signal.size()) {
+      power *=2;
+    }
+    //frequency range
+    SampleDataD f( power );
+    for (int k=0; k<f.size(); k++) {
+      f[k] = k / (power * signal.stepsize());
+    };
+    SampleDataD f2( power );
     for (int k=0; k<f2.size(); k++) {
       f2[k] = -f[f.size()-k];
     };
     f.append( f2 );
 
-    OutData signal2;
-    signal2.setTrace(PotentialOutput[0]);
-    signal2.constWave(duration, -1.0, 0.0);
-    for (int k=0; k<f.size(); k++) {
-      signal2[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
-    };
-    hcFFT( signal2 );
-    signal2 *= maxamplitude / 0.5;
+    //draw random numbers on fourier space and transfer to time space
+    SampleDataD data( power );
+    for ( int k=0; k<data.size(); k++ )
+      data[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
+    hcFFT( data );
+    double datastd = 0.0;
+    for ( int k=0; k<data.size(); k++ ) {
+      datastd += data[k]*data[k] / (data.size() - 1);
+    }
+    datastd = sqrt(datastd);
+    data *= noisestd/datastd;
 
+    //go back to holdingpotential
     OutData signal3;
     signal3.setTrace(PotentialOutput[0]);
-    signal3.constWave(0.1, -1.0, holdingpotential );
+    signal3.constWave(0.0001, -1.0, holdingpotential );
 
-    signal = signal + signal2;
+    //put stimulus pieces together
+    for (int k=0; k<signal.size(); k++) {
+      if (data[k] > maxamplitude) {
+        signal[k] = Vbase + maxamplitude;
+      }
+      else if (data[k] < -maxamplitude) {
+        signal[k] = Vbase - maxamplitude;
+      }
+      else {
+        signal[k] += data[k];
+      }
+    }
     signal.append( signal3 );
 
     // nix options
     Parameter &p1 = signal.description().addNumber( "maxamplitude", maxamplitude, "mV" );
     Parameter &p2 = signal.description().addNumber( "frequencyconstant", frequencyconstant, "Hz" );
-    Parameter &p3 = signal.description().addNumber( "V_base", V0, "mV" );
+    Parameter &p3 = signal.description().addNumber( "V_base", Vbase, "mV" );
     Parameter &p4 = signal.description()["Intensity"];
     signal.setMutable( p1 );
     signal.setMutable( p2 );
@@ -146,25 +167,25 @@ int ColoredNoise::main( void )
     signal.setMutable( p4 );
     Options opts = signal.description();
 
-    SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, duration, t0 );
+    SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, duration, t0);
+    SampleDataD potentialtrace(t0, duration, trace(SpikeTrace[0]).stepsize(), 0.0);
+    trace( SpikeTrace[0] ).copy( signalTime(), potentialtrace );
 
-    SampleDataD potentialtrace( t0, duration, trace(SpikeTrace[0]).stepsize(), 0.0 );
-    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace);
-
-//    //plot
-//    P.lock();
-//    //trace
-//    P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-//
-//    //IV
-//    P[1].plot( potentialtrace, currenttrace, Plot::Yellow, 3, Plot::Solid );
-//    P[1].setYRange( P[0].yminRange(), P[0].ymaxRange() );
+    // plot
+    // trace
+    P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+    // IV
+    for ( int i=0; i<currenttrace.size(); i++ ) {
+      double x = potentialtrace[i];
+      double y = currenttrace[i];
+      P[1].plotPoint( x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid );
+    }
+    P[1].setYRange( min(currenttrace)*1.05, max(currenttrace)*1.05);
+    P.draw();
+    P.unlock();
 
     if (interrupt()) {
       break;
-
-
-
     };
 
   }
