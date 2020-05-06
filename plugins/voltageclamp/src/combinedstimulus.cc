@@ -27,6 +27,7 @@
 #include <relacs/spectrum.h>
 #include <cmath>
 #include <iostream>
+#include <relacs/multiplot.h>
 
 using namespace relacs;
 
@@ -67,6 +68,8 @@ int CombinedStimulus::main( void )
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
   double holdingpotential = number( "holdingpotential" );
+  double noiseVbase = number( "noiseVbase" );
+  double noisemaxamplitude = number( "noisemaxamplitude" );
 
   // don't print repro message:
   noMessage();
@@ -89,6 +92,22 @@ int CombinedStimulus::main( void )
   write( holdingsignal );
   sleep( pause );
 
+  // clear plot and set Range
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
+
+  P.lock();
+  P.resize( 2, 2, true );
+  P[0].setXLabel( "Time [ms]" );
+  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
+  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]" );
+
+  P[0].clearData();
+  P[1].clearData();
+  P[1].setXRange( noiseVbase - noisemaxamplitude*1.05, noiseVbase + noisemaxamplitude*1.05 );
+  P.unlock();
+
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     OutData signal;
     signal.setTrace( PotentialOutput[0] );
@@ -108,6 +127,23 @@ int CombinedStimulus::main( void )
     double dur = signal.size();
     double maxduration = dt*dur;
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, maxduration, t0);
+    SampleDataD potentialtrace(t0, maxduration, trace(SpikeTrace[0]).stepsize(), 0.0);
+    trace( SpikeTrace[0] ).copy( signalTime(), potentialtrace );
+
+    // plot
+    // trace
+    P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+    // IV
+    for ( int i=0; i<currenttrace.size(); i++ ) {
+      double x = potentialtrace[i];
+      double y = currenttrace[i];
+      P[1].plotPoint( x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid );
+    }
+    P[1].setYRange( min(currenttrace)*1.05, max(currenttrace)*1.05);
+    P.draw();
+    P.unlock();
+
+
   }
   return Completed;
 }
@@ -158,10 +194,7 @@ OutData CombinedStimulus::ColoredNoise() {
     datastd += data[k]*data[k] / (data.size() - 1);
   }
   datastd = sqrt(datastd);
-//  cerr << max(data) << ", " << min(data) << "\n";
-//  cerr << datastd << ", " << noisestd << "\n";
   data *= noisestd/datastd;
-//  cerr << max(data) << ", " << min(data) << "\n";
 
     //go back to holdingpotential
   OutData signal3;
