@@ -323,8 +323,21 @@ TrialCondition YMaze::nextTrialCondition() {
   
 void YMaze::createStimuli( const TrialCondition &tc ) {
   std::cerr << "createStimuli" << std::endl;
-  
- 
+  // rewarded stimulus
+  OutData od = armSignalMap[tc.mazeCondition.rewarded];
+  od.sineWave( duration, od.sampleInterval(), tc.stimCondition.rewardedFreq,
+	       0.0, tc.stimCondition.rewardedAmplitude/2., 0.0, "rewarded signal" );
+
+  // unrewarded stimulus
+  od = armSignalMap[tc.mazeCondition.unrewarded];
+  od.sineWave( duration, od.sampleInterval(), tc.stimCondition.unrewardedFreq,
+	       0.0, tc.stimCondition.unrewardedAmplitude/2., 0.0, "unrewarded signal" );
+
+  // neutral stimulus
+  od = armSignalMap[tc.mazeCondition.rewarded];
+  od.constWave( duration, od.sampleInterval(), 0.0, "neutral signal" );
+
+  postCustomEvent( static_cast<int>(BtnActions::STIM_READY) );
 }
   
 void YMaze::startTrial() {
@@ -339,12 +352,10 @@ void YMaze::stopTrial() {
   postCustomEvent ( static_cast<int>(BtnActions::STOP_TRIAL) );
 }
 
-
 void YMaze::updateUI( const TrialCondition &tc ) {
   sketch->setCondition( tc.mazeCondition );
   updateTable( tc );
 }
-
 
 void YMaze::updateTable( const TrialCondition &tc ) {
   QString rwrdStyle = "QLabel{color: green; font-size: 8pt; font-weight: bold}";
@@ -394,26 +405,24 @@ void YMaze::updateTable( const TrialCondition &tc ) {
   }
 }
 
-
 void YMaze::customEvent( QEvent *qce ) {
   TrialCondition tc;
   switch ( qce->type() - QEvent::User ) {
   case static_cast<int>(BtnActions::NEXT_TRIAL):
-    std::cerr << "perpare next trial!" << std::endl;
     tc = nextTrialCondition();
     createStimuli( tc ); 
     updateUI( tc );
     nextBtn->setEnabled(false);
+    break;
+  case static_cast<int>(BtnActions::STIM_READY):
     startBtn->setEnabled(true);
     break;
   case static_cast<int>(BtnActions::START_TRIAL):
-    std::cerr << "start trial!" << std::endl;
     start = true;
     startBtn->setEnabled(false);
     stopBtn->setEnabled(true);
     break;
   case static_cast<int>(BtnActions::STOP_TRIAL):
-    std::cerr << "stop trial!" << std::endl;
     start = false;
     stopBtn->setEnabled(false);
     nextBtn->setEnabled(true);
@@ -431,6 +440,7 @@ bool YMaze::configureOutputTraces() {
     std::map<std::string, MazeArm>::iterator it = channelArmMap.find( name );
     if (it != channelArmMap.end()) {
       armSignalMap[it->second].setTrace( i );
+      outList.push( armSignalMap[it->second] );
     } else {
       success = false;
       break;
@@ -452,8 +462,9 @@ int YMaze::main( void ) {
   deltaf = number( "deltaf" );
   start = false;
   bool success = configureOutputTraces();
-  if (!success) {
-    warning("configuration of output channels failed!");
+  if ( !success ) {
+    warning( "configuration of output channels failed!" );
+    warning( "expecting 3 output traces names Arm-A, Arm-B, and Arm-C" );
     return Failed;
   }
 

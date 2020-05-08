@@ -45,7 +45,7 @@ namespace efield {
 enum class MazeOrientation {UPRIGHT = 0, BOTTOMUP = 1, LEFT = 2, RIGHT = 3};
 enum class MazeArm {NONE = -1, A = 0, B = 1, C = 2};
 enum class ArmCondition {REWARDED = 0, UNREWARDED = 1, NEUTRAL = 2};
-enum class BtnActions {NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13};
+enum class BtnActions {NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13, STIM_READY = 14};
 
 struct MazeCondition {
   MazeArm rewarded;
@@ -110,6 +110,7 @@ private:
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   QPushButton *nextBtn, *startBtn, *stopBtn;
   OutData signal_A, signal_B, signal_C;
+  OutList outList;
   std::map<std::string, MazeArm> channelArmMap = {{"Arm-A", MazeArm::A},
 						  {"Arm-B", MazeArm::B},
 						  {"Arm-C", MazeArm::C}};
