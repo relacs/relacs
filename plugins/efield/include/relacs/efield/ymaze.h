@@ -42,10 +42,11 @@ namespace efield {
 \author Jan Grewe
 \version 1.0 (Mar 18, 2020)
 */
-enum class MazeOrientation {UPRIGHT = 0, BOTTOMUP = 1, LEFT = 2, RIGHT = 3};
-enum class MazeArm {NONE = -1, A = 0, B = 1, C = 2};
-enum class ArmCondition {REWARDED = 0, UNREWARDED = 1, NEUTRAL = 2};
-enum class BtnActions {NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13, STIM_READY = 14};
+enum class MazeOrientation { UPRIGHT = 0, BOTTOMUP = 1, LEFT = 2, RIGHT = 3 };
+enum class MazeArm { NONE = -1, A = 0, B = 1, C = 2 };
+enum class ArmCondition { REWARDED = 0, UNREWARDED = 1, NEUTRAL = 2 };
+enum class BtnActions { NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13 };
+enum class YMazeEvents { STIM_READY = 14, IDLE = 15 };
 
 struct MazeCondition {
   MazeArm rewarded;
@@ -100,7 +101,7 @@ public:
 
 private:
   YMazeSketch *sketch;
-  double duration, eodf;
+  double duration, eodf, samplerate;
   double rewardedFreq;
   double freqRangeMin, freqRangeMax, minFreqDiff, deltaf;
   int numberOfTrials;
@@ -109,15 +110,12 @@ private:
   bool start;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   QPushButton *nextBtn, *startBtn, *stopBtn;
-  OutData signal_A, signal_B, signal_C;
   OutList outList;
   std::map<std::string, MazeArm> channelArmMap = {{"Arm-A", MazeArm::A},
 						  {"Arm-B", MazeArm::B},
 						  {"Arm-C", MazeArm::C}};
-  std::map<MazeArm, OutData> armSignalMap = {{MazeArm::A, signal_A},
-					    {MazeArm::B, signal_B},
-					    {MazeArm::C, signal_C}};
-
+  std::map<MazeArm, int> armTraceMap;
+  
   void setupTable( QGridLayout *grid );
   void updateTable( const TrialCondition &tc );
   void updateUI( const TrialCondition &tc );

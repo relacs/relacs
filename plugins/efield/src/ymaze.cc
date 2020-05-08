@@ -141,6 +141,7 @@ YMaze::YMaze( void )
 void YMaze::populateOptions() {
   newSection( "Experiment" );
   addNumber( "duration", "Trial duration", 10.0, 0.1, 1000., 0.1, "s" );
+  addNumber( "samplerate", "stimulus sampling rate", 20000, 1000., 100000., 100., "Hz" );
   addNumber( "rewardfreq", "Rewarded frequency", 500.0, 1.0, 2500.0, 1.0, "Hz" );
   addNumber( "rangemin", "Frequency range minimum", 100.0, 1.0, 2500.0, 1.0, "Hz" );
   addNumber( "rangemax", "Frequency range maximum", 1000.0, 1.0, 2500.0, 1.0, "Hz" );
@@ -322,22 +323,33 @@ TrialCondition YMaze::nextTrialCondition() {
 }
   
 void YMaze::createStimuli( const TrialCondition &tc ) {
-  std::cerr << "createStimuli" << std::endl;
+  outList.clear();
+  double sampleInterval = 1./samplerate;
+
   // rewarded stimulus
-  OutData od = armSignalMap[tc.mazeCondition.rewarded];
-  od.sineWave( duration, od.sampleInterval(), tc.stimCondition.rewardedFreq,
-	       0.0, tc.stimCondition.rewardedAmplitude/2., 0.0, "rewarded signal" );
-
+  OutData rwStim;
+  rwStim.setTrace( armTraceMap[tc.mazeCondition.rewarded] );
+  rwStim.setSampleInterval( sampleInterval );
+  rwStim.sineWave( duration, rwStim.sampleInterval(), tc.stimCondition.rewardedFreq,
+		   0.0, tc.stimCondition.rewardedAmplitude/2., 0.0, "rewarded signal" );
+  outList.push( rwStim );
+  
   // unrewarded stimulus
-  od = armSignalMap[tc.mazeCondition.unrewarded];
-  od.sineWave( duration, od.sampleInterval(), tc.stimCondition.unrewardedFreq,
-	       0.0, tc.stimCondition.unrewardedAmplitude/2., 0.0, "unrewarded signal" );
-
+  OutData nrwStim;
+  nrwStim.setTrace( armTraceMap[tc.mazeCondition.unrewarded] );
+  nrwStim.setSampleInterval( sampleInterval );
+  nrwStim.sineWave( duration, nrwStim.sampleInterval(), tc.stimCondition.unrewardedFreq,
+		    0.0, tc.stimCondition.unrewardedAmplitude/2., 0.0, "unrewarded signal" );
+  outList.push( nrwStim );
+  
   // neutral stimulus
-  od = armSignalMap[tc.mazeCondition.rewarded];
-  od.constWave( duration, od.sampleInterval(), 0.0, "neutral signal" );
-
-  postCustomEvent( static_cast<int>(BtnActions::STIM_READY) );
+  OutData ntrlStim;
+  ntrlStim.setTrace( armTraceMap[tc.mazeCondition.neutral] );
+  ntrlStim.setSampleInterval( sampleInterval );
+  ntrlStim.constWave( duration, ntrlStim.sampleInterval(), 0.0, "neutral signal" );
+  outList.push( ntrlStim );
+  
+  postCustomEvent( static_cast<int>(YMazeEvents::STIM_READY) );
 }
   
 void YMaze::startTrial() {
@@ -412,21 +424,25 @@ void YMaze::customEvent( QEvent *qce ) {
     tc = nextTrialCondition();
     createStimuli( tc ); 
     updateUI( tc );
-    nextBtn->setEnabled(false);
-    break;
-  case static_cast<int>(BtnActions::STIM_READY):
-    startBtn->setEnabled(true);
+    nextBtn->setEnabled( false );
     break;
   case static_cast<int>(BtnActions::START_TRIAL):
     start = true;
-    startBtn->setEnabled(false);
-    stopBtn->setEnabled(true);
+    startBtn->setEnabled( false );
+    stopBtn->setEnabled( true );
     break;
   case static_cast<int>(BtnActions::STOP_TRIAL):
     start = false;
-    stopBtn->setEnabled(false);
-    nextBtn->setEnabled(true);
+    stopBtn->setEnabled( false );
+    nextBtn->setEnabled( true );
     break;
+  case static_cast<int>(YMazeEvents::STIM_READY):
+    startBtn->setEnabled( true );
+    break;
+  case static_cast<int>(YMazeEvents::IDLE):
+    start = false;
+    stopBtn->setEnabled( false );
+    nextBtn->setEnabled( true );
   default:
     break;
   } 
@@ -439,8 +455,7 @@ bool YMaze::configureOutputTraces() {
     std::string name = outTraceName( i );
     std::map<std::string, MazeArm>::iterator it = channelArmMap.find( name );
     if (it != channelArmMap.end()) {
-      armSignalMap[it->second].setTrace( i );
-      outList.push( armSignalMap[it->second] );
+      armTraceMap[it->second] = i;
     } else {
       success = false;
       break;
@@ -453,14 +468,18 @@ bool YMaze::configureOutputTraces() {
 //************************************************************************
 //************************************************************************
 int YMaze::main( void ) {
-  // get options:
+  double starttime = currentTime();
+  string msg;
+
   duration = number( "duration" );
+  samplerate = number( "samplerate" );
   rewardedFreq = number( "rewardfreq" );
   freqRangeMin = number( "rangemin" );
   freqRangeMax = number( "rangemax" );
   minFreqDiff = number( "minfreqdiff" );
   deltaf = number( "deltaf" );
   start = false;
+
   bool success = configureOutputTraces();
   if ( !success ) {
     warning( "configuration of output channels failed!" );
@@ -474,9 +493,40 @@ int YMaze::main( void ) {
       if ( !start ){
         sleep(0.2);
         continue;
-      } else {
-	//	std::cerr << "start stimulus" << std::endl;
       }
+      starttime = currentTime();
+      msg = "output!";
+      message(msg);
+
+      startWrite( outList );
+      bool error = false;
+      for ( int i = 0; i < outList.size(); ++i ) {
+	if ( outList[i].failed() ) {
+	  error = true;
+	  if ( i == 0 ) {
+	    msg = "Output of stimulus failed!<br>Error code is <b>";
+	  }
+	  msg += outList[i].errorText() + "</b>";
+	}
+      }
+      if ( error ) {
+	warning( msg );
+     	for ( int i = 0; i < outList.size(); ++i )
+	  writeZero( outList[i].trace() );
+        return Failed;
+      }
+      
+      do {
+	sleep( 0.2 );
+        if ( interrupt() ) {
+	  for ( int i = 0; i < outList.size(); ++i )
+	    writeZero( outList[i].trace() );
+          return Aborted;
+        }
+      } while ( (currentTime() - starttime <  duration) && start );
+
+      start = false;
+      postCustomEvent( static_cast<int>(YMazeEvents::IDLE) );
   }
   return Completed;
 }
