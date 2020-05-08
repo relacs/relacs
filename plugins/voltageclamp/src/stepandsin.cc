@@ -42,6 +42,7 @@ StepAndSin::StepAndSin( void )
   addText( "sinamplitudes", "Amplitudes (sinsum)", "60.31,  40.67, 30.12, 40.52" ).setUnit( "mV" );
   addText( "sinfrequencies", "Frequencies (sinsum)", "14.4, 86.7, 144.8, 392.8" ).setUnit( "Hz" );
 
+  addNumber( "holdingpotential", "Holding potential", -120.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
 
@@ -90,7 +91,7 @@ int StepAndSin::main( void )
 
   P[0].clearData();
   P[1].clearData();
-  //P[1].setXRange( noiseVbase - noisemaxamplitude*1.05, noiseVbase + noisemaxamplitude*1.05 );
+  P[1].setXRange( -150, 100 );
   P.unlock();
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
@@ -182,11 +183,13 @@ OutData StepAndSin::Sins() {
   signal3.constWave( holdingpotential );
 
 
-  for ( int j = 0; j < sinamplitudes.size(); j++) {
+  for ( unsigned j = 0; j < sinamplitudes.size(); j++ ) {
     OutData signal2;
     signal2.setTrace(PotentialOutput[0]);
-    signal2.sineWave( sinduration, -1.0, sinfreqs[j], 0.0, 1.0 );
-    signal = signal + sinamplitudes[j] * signal2;
+    signal2.sineWave( sinduration+1, -1.0, sinfreqs[j], 0.0, sinamplitudes[j] );
+    for ( int i=0; i<signal.size(); i++ ) {
+      signal[i] += signal2[i];
+    }
   }
   signal.append( signal3 );
   return signal;
