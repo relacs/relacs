@@ -3959,4 +3959,145 @@ void Chacron2007::add( void )
 }
 
 
+SodiumCurrent::SodiumCurrent( void )
+          : SpikingNeuron()
+{
+  GNa = 0.2385489033603626;
+  GL = 0.0;
+
+  ENa = +42.697443461385156;
+  EL = -54.384;
+
+  C = 1.0;
+  PT = 1.0;
+
+  GNaGates = GNa;
+
+  INa= 0.0;
+  IL= 0.0;
+}
+
+
+string SodiumCurrent::name( void ) const
+{
+  return "Sodium-Current";
+}
+
+
+int SodiumCurrent::dimension( void ) const
+{
+  return 3;
+}
+
+
+void SodiumCurrent::variables( vector< string > &varnames ) const
+{
+  varnames.clear();
+  varnames.reserve( dimension() );
+  varnames.push_back( "V" );
+  varnames.push_back( "m" );
+  varnames.push_back( "h" );
+}
+
+
+void SodiumCurrent::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+}
+
+
+void SodiumCurrent::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+
+  double z = 0.24716247246468837*(V+33.14935409353549);
+  double am = fabs( z ) < 1e-4 ? 1.0 : 0.40275084758448076*z/(1.0-exp(-z));
+  double bm = 0.4811756801572471*exp(-0.018789884695520162*V);
+
+  double ah = 1.417590977805475e-5*exp(-0.0784996865734886*V);
+  double bh = 2.881207181271071/(1.0+exp(-0.09426263470582447*(V+9.80689777206576)));
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+
+  INa = GNaGates*(V-ENa);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = (-INa-IL+s)/C;
+  /* m */ dxdt[1] = PT*( am*(1.0-x[1]) - x[1]*bm );
+  /* h */ dxdt[2] = PT*( ah*(1.0-x[2]) - x[2]*bh );
+}
+
+
+void SodiumCurrent::init( double *x ) const
+{
+  x[0] = -65.0;
+  x[1] = 0.053;
+  x[2] = 0.596;
+}
+
+
+void SodiumCurrent::conductances( vector< string > &conductancenames ) const
+{
+  conductancenames.clear();
+  conductancenames.reserve( 2 );
+  conductancenames.push_back( "g_Na" );
+  conductancenames.push_back( "g_l" );
+}
+
+
+void SodiumCurrent::conductances( double *g ) const
+{
+  g[0] = GNaGates;
+  g[2] = GL;
+}
+
+
+void SodiumCurrent::currents( vector< string > &currentnames ) const
+{
+  currentnames.clear();
+  currentnames.reserve( 2 );
+  currentnames.push_back( "I_Na" );
+  currentnames.push_back( "I_l" );
+}
+
+
+void SodiumCurrent::currents( double *c ) const
+{
+  c[0] = INa;
+  c[2] = IL;
+}
+
+
+void SodiumCurrent::add( void )
+{
+  newSection( "Sodium current", ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+
+  newSection( "Leak current", ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
+  addNumber( "phi", "Phi", PT, 0.0, 100.0, 1.0 ).setFlags( ModelFlag );
+
+  SpikingNeuron::add();
+}
+
+
+void SodiumCurrent::notify( void )
+{
+  SpikingNeuron::notify();
+  ENa = number( "ena" );
+  GNa = number( "gna" );
+  EL = number( "el" );
+  GL = number( "gl" );
+  C = number( "c" );
+  PT = number( "phi" );
+}
+
+
 }; /* namespace relacs */

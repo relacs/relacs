@@ -244,6 +244,10 @@ double expFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp );
 void expGuess( ArrayD &p, double y0, double x1, double y1,
 	       double x2, double y2 );
 
+  /*! Returns \f[ p_0 \exp( x / p_1 ) + p_2 \f] */
+double expFunc2( double x, const ArrayD &p );
+double expFunc2Derivs( double x, const ArrayD &p, ArrayD &dfdp );
+
   /*! Returns \f[ p_0 + p_1 \sin( 2 \pi p_2 x + p_3 ) \f] */
 double sineFunc( double x, const ArrayD &p );
 double sineFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp );

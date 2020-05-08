@@ -1440,6 +1440,53 @@ class Chacron2007 : public HodgkinHuxley
   virtual void add( void );
 };
 
+class SodiumCurrent : public SpikingNeuron
+{
+  public:
+    SodiumCurrent( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+    virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+    virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+    virtual void variables( vector< string > &varnames ) const;
+    /*! \copydoc SpikingNeuron::units() */
+    virtual void units( vector< string > &u ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+    virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+    virtual void init( double *x ) const;
+
+    /*! Returns in \a conductancenames the names of the individual
+        ionic conductances that conductances(double*) const would return. */
+    virtual void conductances( vector< string > &conductancenames ) const;
+    /*! Returns in \a g the values of the individual ionic conductances.
+        The number of conductances is defined by the size of
+        \a conductancenames the function conductances(vector<string>&) const returns. */
+    virtual void conductances( double *g ) const;
+    /*! Returns in \a currentnames the names of the individual ionic currents
+        that currents(double*) const would return. */
+    virtual void currents( vector< string > &currentnames ) const;
+    /*! Returns in \a c the values of the individual ionic currents.
+        The number of currents is defined by the size of \a currentnames
+        the function currents(vector<string>&) const returns. */
+    virtual void currents( double *c ) const;
+
+    /*! Add parameters as options. */
+    virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+    virtual void notify( void );
+
+  protected:
+
+    double C, PT, ENa, EL;
+    double GNa, GL;
+    double GNaGates;
+    double INa, IL;
+
+};
 
 }; /* namespace relacs */
 
