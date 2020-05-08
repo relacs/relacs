@@ -332,7 +332,10 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   rwStim.setTrace( armTraceMap[tc.mazeCondition.rewarded] );
   rwStim.setSampleInterval( sampleInterval );
   rwStim.sineWave( duration, rwStim.sampleInterval(), tc.stimCondition.rewardedFreq,
-		   0.0, tc.stimCondition.rewardedAmplitude/2., 0.0, "rewarded signal" );
+		   0.0, tc.stimCondition.rewardedAmplitude/2., 0.0 );
+  rwStim.description().addText( "RewardedType", "rewarded" ).addFlags( OutData::Mutable );
+  rwStim.description().addText( "Arm", toString(tc.mazeCondition.rewarded) ).addFlags( OutData::Mutable );
+  rwStim.description()["Frequency"].addFlags( OutData::Mutable );
   outList.push( rwStim );
   
   // unrewarded stimulus
@@ -340,14 +343,22 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   nrwStim.setTrace( armTraceMap[tc.mazeCondition.unrewarded] );
   nrwStim.setSampleInterval( sampleInterval );
   nrwStim.sineWave( duration, nrwStim.sampleInterval(), tc.stimCondition.unrewardedFreq,
-		    0.0, tc.stimCondition.unrewardedAmplitude/2., 0.0, "unrewarded signal" );
+		    0.0, tc.stimCondition.unrewardedAmplitude/2., 0.0 );
+  nrwStim.description().addText( "RewardedType", "unrewarded" ).addFlags( OutData::Mutable );
+  nrwStim.description().addText( "Arm", toString(tc.mazeCondition.unrewarded) ).addFlags( OutData::Mutable );
+  nrwStim.description()["Frequency"].addFlags( OutData::Mutable );
+
   outList.push( nrwStim );
   
   // neutral stimulus
   OutData ntrlStim;
   ntrlStim.setTrace( armTraceMap[tc.mazeCondition.neutral] );
   ntrlStim.setSampleInterval( sampleInterval );
-  ntrlStim.constWave( duration, ntrlStim.sampleInterval(), 0.0, "neutral signal" );
+  ntrlStim.constWave( duration, ntrlStim.sampleInterval(), 0.0 );
+  ntrlStim.description().addText( "RewardedType", "neutral" ).addFlags( OutData::Mutable );
+  ntrlStim.description().addText( "Arm", toString(tc.mazeCondition.neutral) ).addFlags( OutData::Mutable );
+  ntrlStim.description()["Frequency"].addFlags( OutData::Mutable );
+
   outList.push( ntrlStim );
   
   postCustomEvent( static_cast<int>(YMazeEvents::STIM_READY) );
@@ -441,7 +452,6 @@ void YMaze::customEvent( QEvent *qce ) {
     startBtn->setEnabled( true );
     break;
   case static_cast<int>(YMazeEvents::IDLE):
-    start = false;
     stopBtn->setEnabled( false );
     nextBtn->setEnabled( true );
   default:
@@ -496,7 +506,6 @@ void YMaze::keyPressEvent( QKeyEvent *e ) {
 //************************************************************************
 //************************************************************************
 int YMaze::main( void ) {
-  setSaving( false );
   double starttime = currentTime();
   string msg;
   
@@ -527,35 +536,16 @@ int YMaze::main( void ) {
       starttime = currentTime();
       msg = "Stimulation is running.<br>Rewarded arm is " + toString(currentCondition.mazeCondition.rewarded) ;
       message(msg);
-      setSaving( true );
-      startWrite( outList );
-      bool error = false;
-      for ( int i = 0; i < outList.size(); ++i ) {
-	if ( outList[i].failed() ) {
-	  error = true;
-	  if ( i == 0 ) {
-	    msg = "Output of stimulus failed!<br>Error code is <b>";
-	  }
-	  msg += outList[i].errorText() + "</b>";
-	}
-      }
-      if ( error ) {
-	setSaving( false );
-	warning( msg );
-     	for ( int i = 0; i < outList.size(); ++i )
+      write( outList );
+      if ( outList.failed() ) {
+	msg = "Output of stimulus failed!<br>Error code is <b>";
+	msg += outList.errorText() + "</b>";
+	for ( int i = 0; i < outList.size(); ++i )
 	  writeZero( outList[i].trace() );
         return Failed;
       }
-      
-      do {
-	sleep( 0.1 );
-        if ( interrupt() ) {
-	  for ( int i = 0; i < outList.size(); ++i )
-	    writeZero( outList[i].trace() );
-          return Aborted;
-        }
-      } while ( (currentTime() - starttime <  duration) && start );
-      setSaving( false );
+
+      start = false;
       postCustomEvent( static_cast<int>(YMazeEvents::IDLE) );
   }
   return Completed;
