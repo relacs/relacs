@@ -111,11 +111,13 @@ private:
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   QPushButton *nextBtn, *startBtn, *stopBtn;
   OutList outList;
+  TrialCondition currentCondition;
+  std::map<MazeArm, int> armTraceMap;
   std::map<std::string, MazeArm> channelArmMap = {{"Arm-A", MazeArm::A},
 						  {"Arm-B", MazeArm::B},
 						  {"Arm-C", MazeArm::C}};
-  std::map<MazeArm, int> armTraceMap;
-  
+
+  std::string toString(const MazeArm &arm) const;
   void setupTable( QGridLayout *grid );
   void updateTable( const TrialCondition &tc );
   void updateUI( const TrialCondition &tc );

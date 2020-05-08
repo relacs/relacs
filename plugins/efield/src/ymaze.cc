@@ -319,6 +319,7 @@ TrialCondition YMaze::nextTrialCondition() {
   TrialCondition tc;
   tc.mazeCondition = nextMazeCondition();
   tc.stimCondition = nextStimulusConditions();
+  currentCondition = tc;
   return tc;
 }
   
@@ -464,6 +465,16 @@ bool YMaze::configureOutputTraces() {
   return success;
 }
 
+std::string YMaze::toString(const MazeArm &arm) const {
+  if (arm == MazeArm::A) {
+    return "Arm A";
+  } else if (arm == MazeArm::B) {
+    return "Arm B";
+  } else if (arm == MazeArm::C) {
+    return "Arm C";
+  }
+  return "";
+}
   
 //************************************************************************
 //************************************************************************
@@ -495,9 +506,9 @@ int YMaze::main( void ) {
         continue;
       }
       starttime = currentTime();
-      msg = "output!";
+      msg = "Stimulation is running.<br>Rewarded arm " + toString(currentCondition.mazeCondition.rewarded) ;
       message(msg);
-
+      
       startWrite( outList );
       bool error = false;
       for ( int i = 0; i < outList.size(); ++i ) {
