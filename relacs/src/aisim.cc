@@ -139,13 +139,13 @@ int AISim::channels( void ) const
 
 int AISim::bits( void ) const
 {
-  return 12;
+  return 16;
 }
 
 
 double AISim::maxRate( void ) const
 {
-  return 500000.0;
+  return 2000000.0;
 }
 
 

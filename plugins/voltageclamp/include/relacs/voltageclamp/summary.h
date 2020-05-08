@@ -1,6 +1,6 @@
 /*
-  voltageclamp/activation.h
-  Activation protocol
+  voltageclamp/summary.h
+  summary over other repros to plot steady-states and time constants
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2015 Jan Benda <jan.benda@uni-tuebingen.de>
@@ -19,55 +19,46 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_VOLTAGECLAMP_ACTIVATION_H_
-#define _RELACS_VOLTAGECLAMP_ACTIVATION_H_ 1
+#ifndef _RELACS_VOLTAGECLAMP_SUMMARY_H_
+#define _RELACS_VOLTAGECLAMP_SUMMARY_H_ 1
 
-//#include <relacs/plot.h>
 #include <relacs/multiplot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
-#include <relacs/voltageclamp/summary.h>
-#include <relacs/voltageclamp/pnsubtraction.h>
-#include <relacs/voltageclamp/tail.h>
-
+#include <relacs/voltageclamp/activation.h>
+#include <relacs/voltageclamp/inactivation.h>
+#include <relacs/voltageclamp/recovery.h>
 using namespace relacs;
 
 namespace voltageclamp {
 
 
 /*!
-\class Activation
-\brief [RePro] Activation protocol
-\author Jan Benda & Lukas Sonnenberg
-\version 1.0 (Aug 09, 2018)
+\class Summary
+\brief [RePro] summary over other repros to plot steady-states and time constants
+\author Lukas Sonnenberg
+\version 1.0 (Sep 07, 2018)
 */
 
 
-class Activation : public PNSubtraction //public RePro, public ephys::Traces
+class Summary : public RePro
 {
   Q_OBJECT
 
-friend class Summary;
-friend class PNSubtraction;
-friend class Tail;
+friend class Activation;
+friend class Inactivation;
+friend class Recovery;
 
 public:
 
-  Activation( void );
+  Summary( void );
   virtual int main( void );
 
 private:
 
-  double pRev( const std::vector<double> &IV );
-
-  // for summary
-  vector<double> g_act;
-  vector<double> tau;
-  vector<double> potential;
-
-  // for tail
-  double V_min;
-  double t_min;
+    void plotactivation( RePro* rp_ac );
+    void plotinactivation( RePro* rp_inac );
+    void plotrecovery( RePro* rp_rec );
 
 protected:
 
@@ -78,4 +69,4 @@ protected:
 
 }; /* namespace voltageclamp */
 
-#endif /* ! _RELACS_VOLTAGECLAMP_ACTIVATION_H_ */
+#endif /* ! _RELACS_VOLTAGECLAMP_SUMMARY_H_ */

@@ -131,6 +131,12 @@ public:
   double VCGain;
   double VCTau;
   bool VCMode;
+  double IntErr = 0.0;
+  double DerErr = 0.0;
+  double KProp = 1000.0;
+  double KInt = 155.0;
+  double KDer = 0.0;
+
 
   double GMC;
   double EMC;
