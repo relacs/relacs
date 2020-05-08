@@ -109,23 +109,29 @@ private:
   bool start;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   QPushButton *nextBtn, *startBtn, *stopBtn;
-
+  OutData signal_A, signal_B, signal_C;
+  std::map<std::string, MazeArm> channelArmMap = {{"Arm-A", MazeArm::A},
+						  {"Arm-B", MazeArm::B},
+						  {"Arm-C", MazeArm::C}};
+  std::map<MazeArm, OutData> armSignalMap = {{MazeArm::A, signal_A},
+					    {MazeArm::B, signal_B},
+					    {MazeArm::C, signal_C}};
 
   void setupTable( QGridLayout *grid );
   void updateTable( const TrialCondition &tc );
   void updateUI( const TrialCondition &tc );
 
   void populateOptions();
-
+  bool configureOutputTraces();
+  
   MazeCondition nextMazeCondition();
   TrialCondition nextTrialCondition();
   StimulusCondition nextStimulusConditions();
 
-  void createStimuli();
+  void createStimuli( const TrialCondition &tc );
   bool estimateEodFrequency( double &fisheodf );
   bool drawNonRewardedFrequency( double &freq );
-					       
-					       
+				       
 private slots:
   void startTrial();
   void stopTrial();

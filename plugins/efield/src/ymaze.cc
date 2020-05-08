@@ -321,7 +321,11 @@ TrialCondition YMaze::nextTrialCondition() {
   return tc;
 }
   
-void createStimuli() {};
+void YMaze::createStimuli( const TrialCondition &tc ) {
+  std::cerr << "createStimuli" << std::endl;
+  
+ 
+}
   
 void YMaze::startTrial() {
   postCustomEvent( static_cast<int>(BtnActions::START_TRIAL) );
@@ -397,6 +401,7 @@ void YMaze::customEvent( QEvent *qce ) {
   case static_cast<int>(BtnActions::NEXT_TRIAL):
     std::cerr << "perpare next trial!" << std::endl;
     tc = nextTrialCondition();
+    createStimuli( tc ); 
     updateUI( tc );
     nextBtn->setEnabled(false);
     startBtn->setEnabled(true);
@@ -418,9 +423,25 @@ void YMaze::customEvent( QEvent *qce ) {
   } 
 }
 
-//************************************************************************
-//************************************************************************
 
+bool YMaze::configureOutputTraces() {
+  bool success = true;
+  for (int i = 0; i < outTracesSize(); ++i) {
+    std::string name = outTraceName( i );
+    std::map<std::string, MazeArm>::iterator it = channelArmMap.find( name );
+    if (it != channelArmMap.end()) {
+      armSignalMap[it->second].setTrace( i );
+    } else {
+      success = false;
+      break;
+    }
+  }
+  return success;
+}
+
+  
+//************************************************************************
+//************************************************************************
 int YMaze::main( void ) {
   // get options:
   duration = number( "duration" );
@@ -430,6 +451,11 @@ int YMaze::main( void ) {
   minFreqDiff = number( "minfreqdiff" );
   deltaf = number( "deltaf" );
   start = false;
+  bool success = configureOutputTraces();
+  if (!success) {
+    warning("configuration of output channels failed!");
+    return Failed;
+  }
 
   while ( softStop() == 0 ) {
       if ( interrupt() || softStop() > 0 )
