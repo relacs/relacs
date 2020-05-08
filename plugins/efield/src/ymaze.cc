@@ -335,8 +335,18 @@ void YMaze::stopTrial() {
   postCustomEvent ( static_cast<int>(BtnActions::STOP_TRIAL) );
 }
 
-void YMaze::updateUI(const TrialCondition &tc) {
+
+void YMaze::updateUI( const TrialCondition &tc ) {
   sketch->setCondition( tc.mazeCondition );
+  updateTable( tc );
+}
+
+
+void YMaze::updateTable( const TrialCondition &tc ) {
+  QString rwrdStyle = "QLabel{color: green; font-size: 8pt; font-weight: bold}";
+  QString ntrlStyle = "QLabel{color: black; font-size: 8pt; font-weight: bold}";
+  QString nrwrdStyle = "QLabel{color: red; font-size: 8pt; font-weight: bold}";
+  
   conditionApast->setText(conditionA->text());
   conditionBpast->setText(conditionB->text());
   conditionCpast->setText(conditionC->text());
@@ -346,28 +356,40 @@ void YMaze::updateUI(const TrialCondition &tc) {
     QString::number(tc.stimCondition.unrewardedAmplitude) + "mV";
   QString neutral = "---";
   
-  if ( tc.mazeCondition.rewarded == MazeArm::A )
+  if ( tc.mazeCondition.rewarded == MazeArm::A ) {
     conditionA->setText( rf );
-  else if ( tc.mazeCondition.rewarded == MazeArm::B )
+    conditionA->setStyleSheet( rwrdStyle );
+  } else if ( tc.mazeCondition.rewarded == MazeArm::B ) {
     conditionB->setText( rf );
-  else
+    conditionB->setStyleSheet( rwrdStyle );
+  } else {
     conditionC->setText( rf );
+    conditionC->setStyleSheet( rwrdStyle );
+  }
 
-  if ( tc.mazeCondition.unrewarded == MazeArm::A )
+  if ( tc.mazeCondition.unrewarded == MazeArm::A ) {
     conditionA->setText( uf );
-  else if ( tc.mazeCondition.unrewarded == MazeArm::B )
+    conditionA->setStyleSheet( nrwrdStyle );
+  } else if ( tc.mazeCondition.unrewarded == MazeArm::B ) {
     conditionB->setText( uf );
-  else
+    conditionB->setStyleSheet( nrwrdStyle );
+  } else {
     conditionC->setText( uf );
+    conditionC->setStyleSheet( nrwrdStyle );
+  }
   
-  if ( tc.mazeCondition.neutral == MazeArm::A )
+  if ( tc.mazeCondition.neutral == MazeArm::A ) {
     conditionA->setText( neutral );
-  else if ( tc.mazeCondition.neutral == MazeArm::B )
+    conditionA->setStyleSheet( ntrlStyle );
+  } else if ( tc.mazeCondition.neutral == MazeArm::B ) {
     conditionB->setText( neutral );
-  else
+    conditionB->setStyleSheet( ntrlStyle );
+  } else {
     conditionC->setText( neutral );
-
+    conditionC->setStyleSheet( ntrlStyle );
+  }
 }
+
 
 void YMaze::customEvent( QEvent *qce ) {
   TrialCondition tc;
@@ -375,7 +397,7 @@ void YMaze::customEvent( QEvent *qce ) {
   case static_cast<int>(BtnActions::NEXT_TRIAL):
     std::cerr << "perpare next trial!" << std::endl;
     tc = nextTrialCondition();
-    updateUI(tc);
+    updateUI( tc );
     nextBtn->setEnabled(false);
     startBtn->setEnabled(true);
     break;

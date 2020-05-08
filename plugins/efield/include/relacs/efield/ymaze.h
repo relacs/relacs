@@ -109,13 +109,18 @@ private:
   bool start;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   QPushButton *nextBtn, *startBtn, *stopBtn;
-  
-  void setupTable(QGridLayout *grid);
+
+
+  void setupTable( QGridLayout *grid );
+  void updateTable( const TrialCondition &tc );
+  void updateUI( const TrialCondition &tc );
+
   void populateOptions();
+
   MazeCondition nextMazeCondition();
   TrialCondition nextTrialCondition();
   StimulusCondition nextStimulusConditions();
-  void updateUI(const TrialCondition &tc);
+
   void createStimuli();
   bool estimateEodFrequency( double &fisheodf );
   bool drawNonRewardedFrequency( double &freq );
