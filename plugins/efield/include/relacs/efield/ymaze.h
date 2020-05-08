@@ -139,6 +139,7 @@ private slots:
   void prepareNextTrial();
   
 protected:
+  virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QEvent *qce );
 };
 

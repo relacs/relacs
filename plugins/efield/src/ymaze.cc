@@ -117,19 +117,19 @@ YMaze::YMaze( void )
   grid->addWidget( sketch, 0, 0, 4, 4 );
   setupTable(grid);
 
-  startBtn = new QPushButton("Start");
+  startBtn = new QPushButton("&Start");
   startBtn->setEnabled(false);
   startBtn->setToolTip("Start stimulus output...");
   connect( startBtn, SIGNAL( clicked() ), this, SLOT( startTrial() ) );
   grid->addWidget( startBtn, 5, 6, 1, 1 );
 
-  stopBtn = new QPushButton("Stop");
+  stopBtn = new QPushButton("&Stop");
   stopBtn->setEnabled(false);
   stopBtn->setToolTip("Stop stimulus output immediately...");
   connect( stopBtn, SIGNAL( clicked() ), this, SLOT( stopTrial() ) );
   grid->addWidget( stopBtn, 5, 7, 1, 1 );
 
-  nextBtn = new QPushButton("Next");
+  nextBtn = new QPushButton("&Next");
   nextBtn->setEnabled(true);
   nextBtn->setToolTip("Prepare next trial, randomize stimulus condition...");
   connect( nextBtn, SIGNAL( clicked() ), this, SLOT( prepareNextTrial() ) );
@@ -475,13 +475,31 @@ std::string YMaze::toString(const MazeArm &arm) const {
   }
   return "";
 }
-  
+
+void YMaze::keyPressEvent( QKeyEvent *e ) {
+  e->ignore();
+  if ( e->key() == Qt::Key_S && ( e->modifiers() & Qt::AltModifier ) ) {
+    if ( start )
+      stopBtn->animateClick();
+    else if ( startBtn->isEnabled() )
+      startBtn->animateClick();
+    e->accept();
+  } else if ( e->key() == Qt::Key_N && ( e->modifiers() & Qt::AltModifier ) ) {
+    if ( nextBtn->isEnabled() )
+      nextBtn->animateClick();
+    e->accept();
+  } else {
+    RePro::keyPressEvent( e );
+  }
+}
+
 //************************************************************************
 //************************************************************************
 int YMaze::main( void ) {
+  setSaving( false );
   double starttime = currentTime();
   string msg;
-
+  
   duration = number( "duration" );
   samplerate = number( "samplerate" );
   rewardedFreq = number( "rewardfreq" );
@@ -497,6 +515,7 @@ int YMaze::main( void ) {
     warning( "expecting 3 output traces names Arm-A, Arm-B, and Arm-C" );
     return Failed;
   }
+  keepFocus();
 
   while ( softStop() == 0 ) {
       if ( interrupt() || softStop() > 0 )
@@ -506,9 +525,9 @@ int YMaze::main( void ) {
         continue;
       }
       starttime = currentTime();
-      msg = "Stimulation is running.<br>Rewarded arm " + toString(currentCondition.mazeCondition.rewarded) ;
+      msg = "Stimulation is running.<br>Rewarded arm is " + toString(currentCondition.mazeCondition.rewarded) ;
       message(msg);
-      
+      setSaving( true );
       startWrite( outList );
       bool error = false;
       for ( int i = 0; i < outList.size(); ++i ) {
@@ -521,6 +540,7 @@ int YMaze::main( void ) {
 	}
       }
       if ( error ) {
+	setSaving( false );
 	warning( msg );
      	for ( int i = 0; i < outList.size(); ++i )
 	  writeZero( outList[i].trace() );
@@ -528,15 +548,14 @@ int YMaze::main( void ) {
       }
       
       do {
-	sleep( 0.2 );
+	sleep( 0.1 );
         if ( interrupt() ) {
 	  for ( int i = 0; i < outList.size(); ++i )
 	    writeZero( outList[i].trace() );
           return Aborted;
         }
       } while ( (currentTime() - starttime <  duration) && start );
-
-      start = false;
+      setSaving( false );
       postCustomEvent( static_cast<int>(YMazeEvents::IDLE) );
   }
   return Completed;
