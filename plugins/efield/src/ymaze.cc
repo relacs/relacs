@@ -203,7 +203,7 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
   fisheodf = number( "fakefisheodf" );
   if ( !boolean( "nofish" ) ) {
     if ( !boolean( "usepsd" ) ) {
-      fisheodf = events( EODEvents ).frequency( currentTime()-averagetime, currentTime() );
+      fisheodf = events( EODEvents ).frequency( currentTime() - averagetime, currentTime() );
       if ( EODEvents < 0 ) {
 	warning( "need EOD events of the EOD Trace." );
 	fisheodf = number( "fakefisheodf" );
@@ -216,9 +216,11 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
       double min_eodf = number( "mineodfreq" );
       double max_eodf = number( "maxeodfreq" );
       double eodf_prec = number( "eodfreqprec" );
-      int intrace = index( "intrace" );
+      int intrace = index( "inputTrace" );
+      if ( intrace == -1 )
+	return false;
       int nfft = 1;
-	
+
       nfft = nextPowerOfTwo( (int)::ceil( 1.0/trace( intrace ).stepsize()/eodf_prec ) );
       eodf_prec = 1.0/trace( intrace ).stepsize()/nfft;
       if ( averagetime < 2.0/trace( intrace ).stepsize()/nfft ) {
@@ -285,6 +287,8 @@ bool YMaze::drawNonRewardedFrequency( double &freq ) {
   std::vector<double> freqs;
   double range = freqRangeMax - freqRangeMin;
   int steps = floor(range/deltaf);
+  if ( steps == 0 )
+    error( "Invalid frequency range, check options!" );
   int step = rand() % steps;
   freq = freqRangeMin + step * deltaf;
   int count = 0;
@@ -338,7 +342,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   rwStim.description().addText( "RewardedType", "rewarded" ).addFlags( OutData::Mutable );
   rwStim.description().addText( "Arm", toString(tc.mazeCondition.rewarded) ).addFlags( OutData::Mutable );
   rwStim.description()["Frequency"].addFlags( OutData::Mutable );
-  rwStim.setIdent( ident );
+  rwStim.setIdent( ident + "_rewarded" );
   outList.push( rwStim );
   
   // unrewarded stimulus
@@ -350,7 +354,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   nrwStim.description().addText( "RewardedType", "unrewarded" ).addFlags( OutData::Mutable );
   nrwStim.description().addText( "Arm", toString(tc.mazeCondition.unrewarded) ).addFlags( OutData::Mutable );
   nrwStim.description()["Frequency"].addFlags( OutData::Mutable );
-  nrwStim.setIdent( ident );
+  nrwStim.setIdent( ident + "_unrewarded" );
   outList.push( nrwStim );
   
   // neutral stimulus
@@ -361,7 +365,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   ntrlStim.description().addText( "RewardedType", "neutral" ).addFlags( OutData::Mutable );
   ntrlStim.description().addText( "Arm", toString(tc.mazeCondition.neutral) ).addFlags( OutData::Mutable );
   ntrlStim.description()["Frequency"].addFlags( OutData::Mutable );
-  ntrlStim.setIdent( ident );
+  ntrlStim.setIdent( ident + "_neutral" );
   outList.push( ntrlStim );
   
   postCustomEvent( static_cast<int>(YMazeEvents::STIM_READY) );
