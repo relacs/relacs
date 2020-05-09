@@ -2068,15 +2068,19 @@ void SaveFiles::NixFile::endRePro( double current_time )
 void SaveFiles::NixFile::initTraces ( const InList &IL )
 {
   for ( int k=0; k<IL.size(); k++ ) {
-    // std::cerr << "Ident: " << IL[k].ident() << std::endl;
-    // std::cerr << "Device: " << IL[k].device() << std::endl;
-    // std::cerr << "Channel: " << IL[k].channel() << std::endl;
-    // std::cerr << "Unit: " << IL[k].unit() << std::endl;
-    // std::cerr << "Scale: " << IL[k].scale() << std::endl;
-    // std::cerr << "SampleRate: " << IL[k].sampleRate() << std::endl;
+    /*
+    std::cerr << "\tIdent: " << IL[k].ident() << std::endl;
+    std::cerr << "\tDevice: " << IL[k].device() << std::endl;
+    std::cerr << "\tChannel: " << IL[k].channel() << std::endl;
+    std::cerr << "\tUnit: " << IL[k].unit() << std::endl;
+    std::cerr << "\tScale: " << IL[k].scale() << std::endl;
+    std::cerr << "\tSampleRate: " << IL[k].sampleRate() << std::endl;
+    */
     NixTrace trace;
-    string data_type = "relacs.data.sampled." + IL[k].ident();
-    trace.data = root_block.createDataArray(IL[k].ident(), data_type, nix::DataType::Float, {4096});
+    string ident = ((IL[k].device() == -1 && IL[k].source() > 0 )? "Filtered-" : "") + IL[k].ident();
+    string data_type = "relacs.data.sampled." + ident;
+
+    trace.data = root_block.createDataArray(ident, data_type, nix::DataType::Float, {4096});
     std::string unit = IL[k].unit();
     nix::util::unitSanitizer(unit);
     if ( !unit.empty() && nix::util::isSIUnit(unit) ) {
@@ -2084,8 +2088,8 @@ void SaveFiles::NixFile::initTraces ( const InList &IL )
     } else if ( !unit.empty() ) {
       std::cerr << "NIX output Warning: Given unit " << unit << " is no valid SI unit, not saving it!" << std::endl;
     }
-    if ( !IL[k].ident().empty() )
-      trace.data.label(IL[k].ident() );
+    if ( !ident.empty() )
+      trace.data.label( ident );
     nix::SampledDimension dim;
     dim = trace.data.appendSampledDimension(IL[k].sampleInterval());
     dim.unit("s");
@@ -2392,7 +2396,7 @@ void SaveFiles::NixFile::initEvents( const EventList &EL, FilterDetectors *FD ) 
     ed.data.label( "time" );
     ed.data.appendAliasRangeDimension();
     ed.input_trace =  FD->eventInputTrace( i );
-    events.push_back(std::move(ed));
+    events.push_back( std::move(ed) );
   }
 }
 
@@ -2405,7 +2409,7 @@ void SaveFiles::NixFile::writeEvents( const InList &IL, const EventList &EL ) {
     off = IL[0].interval( traces[0].index - traces[0].written );
 
   //  double st = EL[0].size() > 0 ? EL[0].back() : EL[0].rangeBack();
-  for(auto &ed : events ) {
+  for( auto &ed : events ) {
     int k = ed.el_index;
     int len =  EL[k].size() - ed.index;
     if ( len < 1 || !ed.data ) {
@@ -2421,7 +2425,7 @@ void SaveFiles::NixFile::writeEvents( const InList &IL, const EventList &EL ) {
     nix::NDSize count = { static_cast<ndsize_type>(len) };
     nix::NDSize size = ed.offset + count;
     ed.data.dataExtent( size  );
-    ed.data.setData( nix::DataType::Double, ets.data(), count, ed.offset);
+    ed.data.setData( nix::DataType::Double, ets.data(), count, ed.offset );
     ed.offset = size;
   }
 }
