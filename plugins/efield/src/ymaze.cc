@@ -140,6 +140,7 @@ YMaze::YMaze( void )
 
 void YMaze::populateOptions() {
   newSection( "Experiment" );
+  addText( "name" , "Prefix used to identify the repro run, auto-generated if empty", "" );
   addNumber( "duration", "Trial duration", 10.0, 0.1, 1000., 0.1, "s" );
   addNumber( "samplerate", "stimulus sampling rate", 20000, 1000., 100000., 100., "Hz" );
   addNumber( "rewardfreq", "Rewarded frequency", 500.0, 1.0, 2500.0, 1.0, "Hz" );
@@ -324,6 +325,7 @@ TrialCondition YMaze::nextTrialCondition() {
 }
   
 void YMaze::createStimuli( const TrialCondition &tc ) {
+  string ident = name.size() == 0 ? "Ymaze" : name;
   outList.clear();
   double sampleInterval = 1./samplerate;
 
@@ -336,6 +338,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   rwStim.description().addText( "RewardedType", "rewarded" ).addFlags( OutData::Mutable );
   rwStim.description().addText( "Arm", toString(tc.mazeCondition.rewarded) ).addFlags( OutData::Mutable );
   rwStim.description()["Frequency"].addFlags( OutData::Mutable );
+  rwStim.setIdent( ident );
   outList.push( rwStim );
   
   // unrewarded stimulus
@@ -347,7 +350,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   nrwStim.description().addText( "RewardedType", "unrewarded" ).addFlags( OutData::Mutable );
   nrwStim.description().addText( "Arm", toString(tc.mazeCondition.unrewarded) ).addFlags( OutData::Mutable );
   nrwStim.description()["Frequency"].addFlags( OutData::Mutable );
-
+  nrwStim.setIdent( ident );
   outList.push( nrwStim );
   
   // neutral stimulus
@@ -358,7 +361,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   ntrlStim.description().addText( "RewardedType", "neutral" ).addFlags( OutData::Mutable );
   ntrlStim.description().addText( "Arm", toString(tc.mazeCondition.neutral) ).addFlags( OutData::Mutable );
   ntrlStim.description()["Frequency"].addFlags( OutData::Mutable );
-
+  ntrlStim.setIdent( ident );
   outList.push( ntrlStim );
   
   postCustomEvent( static_cast<int>(YMazeEvents::STIM_READY) );
@@ -506,7 +509,6 @@ void YMaze::keyPressEvent( QKeyEvent *e ) {
 //************************************************************************
 //************************************************************************
 int YMaze::main( void ) {
-  double starttime = currentTime();
   string msg;
   
   duration = number( "duration" );
@@ -516,6 +518,7 @@ int YMaze::main( void ) {
   freqRangeMax = number( "rangemax" );
   minFreqDiff = number( "minfreqdiff" );
   deltaf = number( "deltaf" );
+  name = text( "name" );
   start = false;
 
   bool success = configureOutputTraces();
@@ -533,7 +536,6 @@ int YMaze::main( void ) {
         sleep(0.2);
         continue;
       }
-      starttime = currentTime();
       msg = "Stimulation is running.<br>Rewarded arm is " + toString(currentCondition.mazeCondition.rewarded) ;
       message(msg);
       write( outList );

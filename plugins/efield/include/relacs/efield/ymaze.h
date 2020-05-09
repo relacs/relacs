@@ -101,6 +101,7 @@ public:
 
 private:
   YMazeSketch *sketch;
+  std::string name;
   double duration, eodf, samplerate;
   double rewardedFreq;
   double freqRangeMin, freqRangeMax, minFreqDiff, deltaf;
