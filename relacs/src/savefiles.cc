@@ -2204,6 +2204,41 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
 }
 
 
+string createStimulusTagName( const deque< OutDataInfo > &stim_info ) {
+  if ( stim_info.size() == 1 ) {
+    return nix::util::nameSanitizer(stim_info[0].description().name());
+  }
+  
+  size_t min_length = 9999999;
+  for (size_t i = 0; i < stim_info.size(); ++i) {
+    min_length = (stim_info[i].description().name().size() < min_length) ? stim_info[i].description().name().size() : min_length;
+  }
+  string prefix = "";
+  for ( size_t i = 0; i < min_length; ++i ) {
+    string s = stim_info[0].description().name().substr(i,1);
+    bool match = true;
+    for (size_t j = 1; j < stim_info.size(); ++j ) {
+      string cmp = stim_info[j].description().name().substr(i, 1); 
+      if ( cmp != s ) {
+	match = false;
+	break;
+      }
+    }
+    if ( match )
+      prefix += s;
+    else
+      break;
+  }
+
+  string suffix = "";
+  size_t lastpos = std::string::npos;
+  lastpos = stim_info[0].description().name().rfind( "-" );
+  if ( lastpos != std::string::npos )
+    suffix = stim_info[0].description().name().substr(lastpos);
+  string tagname = prefix + suffix;
+  return nix::util::nameSanitizer( tagname );
+}
+
 void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
                     const deque< OutDataInfo > &stim_info,
                     const deque< bool > &newstimuli, const Options &stim_options,
@@ -2218,7 +2253,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
   double intensity = stim_info[0].intensity();
   bool new_stim = false;
   NixTrace trace = traces[0];
-  string tag_name = nix::util::nameSanitizer(stim_info[0].description().name());
+  string tag_name = createStimulusTagName( stim_info );
   stimulus_start_time = (IL[0].signalIndex() - trace.index  + trace.written) * stepsize;
   stimulus_duration = stim_info[0].length() - stepsize;
   
