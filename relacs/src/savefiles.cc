@@ -1986,6 +1986,7 @@ void SaveFiles::NixFile::saveMetadata (const AllDevices *devices)
     while (sec_name.find("/") != sec_name.npos) {
       sec_name.replace(sec_name.find("/"), 1, "_");
     }
+    
     nix::Section s = hw.createSection(sec_name, dts);
     Options opts( dev.info() );
     opts.erase( "type" );
@@ -2013,7 +2014,6 @@ void SaveFiles::NixFile::writeRePro ( const Options &reproinfo, const deque< str
   if ( !fd || traces.size() < 1 ) {
     return;
   }
-
   nix::Section s = fd.createSection( repro_name, "relacs.repro" );
   saveNIXOptions( reproinfo, s, Options::FirstOnly, 0 );
   if ( reprofiles.size() > 0 ) {
@@ -2189,8 +2189,6 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
     createFeaturesForOptions( stimulus_features, "relacs_feature", "" );
   }
 
-  std::cerr << "createStimTag\n";
-  std::string name_prefix = "Channel";
   for ( size_t i = 0; i < stim_info.size(); ++i ) {
     std::string channel_prefix = name_prefix + Str(stim_info[i].channel());
 
@@ -2342,12 +2340,12 @@ void SaveFiles::NixFile::createFeaturesForOptions( const Options &options, const
 }
 
 
-void SaveFiles::NixFile::storeOptionsToFeatures( const Options &options )
+void SaveFiles::NixFile::storeOptionsToFeatures( const Options &options , const std::string &prefix )
 {
   std::string prop_name;
   std::map<std::string, nix::DataArray>::iterator it;
   for ( auto p : options ) {
-    prop_name = current_stimulus_info.name + "_" + p.name();
+    prop_name = prefix + "_" + current_stimulus_info.name + "_" + p.name();
     it = current_stimulus_info.features.find( prop_name );
     if ( it != current_stimulus_info.features.end() ) {
       if ( p.isNumber() ) {
