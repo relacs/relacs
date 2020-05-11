@@ -557,7 +557,7 @@ protected:
 				  nix::LinkType link_type=nix::LinkType::Indexed,
                                   nix::DataType dtype = nix::DataType::Double );
     void createFeaturesForOptions( const Options &options, const std::string &type, const std::string &name_prefix );
-    void storeOptionsToFeatures( const Options &options );
+    void storeOptionsToFeatures( const Options &options , const std::string &prefix );
     
     string rid; //recording id
 
