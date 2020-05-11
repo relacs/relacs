@@ -2116,19 +2116,12 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 
 
 
-void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const Options &stim_options,
-                                            const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
-                                            const Acquire *AQ, double start_time, double duration,
-					    NixStimulusInfo &info )
+void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const Options &stimulus_features,
+					    const deque< OutDataInfo > &stim_info, const Acquire *AQ,
+					    double start_time, double duration, NixStimulusInfo &info )
 {
-  nix::Section s;
-  if ( repro_name.size() > 0 ) {
-    string stim_name = stim_options.name();
-    string stim_type = stim_options.type();
-    s = fd.createSection( stim_name, stim_type );
-    saveNIXOptions( stim_options, s, Options::FirstOnly, 0 );
-  }
-  info.positions_array = root_block.createDataArray( repro_name + "_onset_times",
+
+  info.positions_array = root_block.createDataArray( tag_name + "_onset_times",
 						     "relacs.stimulus.onset",
 						     nix::DataType::Double, {1} );
   info.positions_array.setData( nix::DataType::Double, &start_time, {1}, {0} );
@@ -2136,7 +2129,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
   info.positions_array.unit( "s" );
   info.positions_array.label( "time" );
   
-  info.extents_array = root_block.createDataArray( repro_name + "_durations",
+  info.extents_array = root_block.createDataArray( tag_name + "_durations",
 						   "relacs.stimulus.duration",
 						   nix::DataType::Double, {1} );
   info.extents_array.setData( nix::DataType::Double, &duration, {1}, {0} );
@@ -2144,10 +2137,9 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
   info.extents_array.unit( "s" );
   info.extents_array.label( "time" );
 
-  info.stimulus_mtag = root_block.createMultiTag( repro_name, "relacs.stimulus.segment",
+  info.stimulus_mtag = root_block.createMultiTag( tag_name, "relacs.stimulus.segment",
 						  info.positions_array );
   info.stimulus_mtag.extents( info.extents_array );
-  info.stimulus_mtag.metadata( s );
   for ( auto &trace : traces ) {
     info.stimulus_mtag.addReference( trace.data );
   }
@@ -2157,8 +2149,17 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
     }
     info.stimulus_mtag.addReference( event.data );
   }
-  info.name = repro_name;
+  info.name = tag_name;
   
+  // add stimulus info for each channel
+  nix::Section s = fd.createSection( tag_name, "relacs/stimulus_output" );
+  info.stimulus_mtag.metadata( s );
+  for ( size_t i = 0; i < stim_info.size(); ++i ) {
+    Options si = stim_info[i].description();
+    nix::Section sub = s.createSection( si.name(), si.type() );
+    saveNIXOptions( si, sub, Options::FirstOnly, 0 );
+  }
+
   // add stimulus features to mtag
   std::string fname;
   std::string funit;
@@ -2178,18 +2179,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
   flabel = "delay";
   info.features[fname] = createFeature( info.stimulus_mtag, fname, ftype, funit, flabel, nix::LinkType::Indexed,
 					nix::DataType::Double );
-  // amplitude
-  funit = "";
-  fname = info.name + "_amplitude";
-  for ( int k=0; k < AQ->outTracesSize(); k++ ) {
-    if (stim_info[0].device() == AQ->outTrace(k).device() &&
-        stim_info[0].channel() == AQ->outTrace(k).channel()) {
-      const Attenuate *att = AQ->outTraceAttenuate( k );
-      funit = att != 0 ? att->intensityUnit() : AQ->outTrace(k).unit();
-    }
-  }
-  info.features[fname] = createFeature( info.stimulus_mtag, fname , "relacs.feature.amplitude",
-					funit, "intensity", nix::LinkType::Indexed, nix::DataType::Double );
+
   // repro tag name
   fname = info.name + "_repro_tag_id";
   info.features[fname] = createFeature( info.stimulus_mtag, fname , "relacs.feature.repro_tag_id",
@@ -2199,8 +2189,24 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
     createFeaturesForOptions( stimulus_features, "relacs_feature", "" );
   }
 
-  // additional stim_options
-  createFeaturesForOptions( stim_options, "relacs.feature.mutable" );
+  std::cerr << "createStimTag\n";
+  std::string name_prefix = "Channel";
+  for ( size_t i = 0; i < stim_info.size(); ++i ) {
+    std::string channel_prefix = name_prefix + Str(stim_info[i].channel());
+
+    // amplitude
+    fname = channel_prefix + "_" + info.name + "_amplitude";
+    funit = "";
+    for ( int k=0; k < AQ->outTracesSize(); k++ ) {
+      if (stim_info[i].device() == AQ->outTrace(k).device() &&
+	  stim_info[i].channel() == AQ->outTrace(k).channel()) {
+	const Attenuate *att = AQ->outTraceAttenuate( k );
+	funit = att != 0 ? att->intensityUnit() : AQ->outTrace(k).unit();
+      }
+    }
+    info.features[fname] = createFeature( info.stimulus_mtag, fname, "relacs.feature.amplitude",
+					  funit, "intensity", nix::LinkType::Indexed, nix::DataType::Double );
+
     // additional stim_options
     createFeaturesForOptions( stim_info[i].description(), "relacs.feature.mutable", channel_prefix );
   }
@@ -2248,7 +2254,6 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
                     const deque< Options > &stimuliref, int *stimulusindex,
                     double sessiontime, const string &reproname, const Acquire *acquire )
 {
-  if ( !fd || IL[0].signalIndex() < 1 )
     return;
 
   double abs_time = IL[0].signalTime() - sessiontime;
@@ -2267,8 +2272,8 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
       current_stimulus_info = it->second;
     } else { // no match and not found, create a new one
       current_stimulus_info = NixStimulusInfo();
-      createStimulusTag( tag_name, stim_info[0].description(), stim_options, stim_info,
-			 acquire, stimulus_start_time, stimulus_duration, current_stimulus_info );
+      createStimulusTag( tag_name, stim_options, stim_info, acquire, stimulus_start_time,
+			 stimulus_duration, current_stimulus_info );
       stim_info_buffer[tag_name] = current_stimulus_info;
       new_stim = true;
     }
