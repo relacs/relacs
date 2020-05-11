@@ -2196,11 +2196,14 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &repro_name, const
 					"", "id", nix::LinkType::Indexed, nix::DataType::String );
   // stimulus_features
   if ( !stimulus_features.empty() ) {
-    createFeaturesForOptions( stimulus_features, "relacs_feature" );
+    createFeaturesForOptions( stimulus_features, "relacs_feature", "" );
   }
 
   // additional stim_options
   createFeaturesForOptions( stim_options, "relacs.feature.mutable" );
+    // additional stim_options
+    createFeaturesForOptions( stim_info[i].description(), "relacs.feature.mutable", channel_prefix );
+  }
 }
 
 
@@ -2307,14 +2310,14 @@ nix::DataArray SaveFiles::NixFile::createFeature( nix::MultiTag &mtag,
 }
 
 
-void SaveFiles::NixFile::createFeaturesForOptions( const Options &options, std::string type)
+void SaveFiles::NixFile::createFeaturesForOptions( const Options &options, const std::string &type, const std::string &name_prefix )
 {
   std::string name;
   std::string unit;
   std::string label;
   for ( Parameter p : options ) {
     if ( (p.flags() & OutData::Mutable ) > 0) {
-      name =  current_stimulus_info.name + "_" + p.name();
+      name =  name_prefix + "_" + current_stimulus_info.name + "_" + p.name();
       unit = p.unit();
       nix::util::unitSanitizer( unit );
       label = p.name();
