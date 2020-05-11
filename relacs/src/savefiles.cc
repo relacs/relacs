@@ -2254,6 +2254,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
                     const deque< Options > &stimuliref, int *stimulusindex,
                     double sessiontime, const string &reproname, const Acquire *acquire )
 {
+  if ( !fd || IL[0].signalIndex() < 1 || stim_info.size() == 0)
     return;
 
   double abs_time = IL[0].signalTime() - sessiontime;
@@ -2266,8 +2267,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
   stimulus_duration = stim_info[0].length() - stepsize;
   
   if ( current_stimulus_info.name != tag_name ) { // previous stimulus does not match the current
-    std::map<std::string, NixStimulusInfo>::iterator it;
-    it = stim_info_buffer.find( tag_name );
+    std::map<std::string, NixStimulusInfo>::iterator it = stim_info_buffer.find( tag_name );
     if ( it != stim_info_buffer.end() ) { // we have one in store, take it
       current_stimulus_info = it->second;
     } else { // no match and not found, create a new one
@@ -2282,16 +2282,17 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
     appendValue( current_stimulus_info.positions_array, stimulus_start_time );
     appendValue( current_stimulus_info.extents_array, stimulus_duration );
   }
+  std::cerr << "store features\n";
 
   // handle options that are stored as features
   storeOptionsToFeatures( stim_options );
   Options mutables = stimuliref[0].section( "parameter" );
-  storeOptionsToFeatures( mutables );
+  //  storeOptionsToFeatures( mutables ); FIXME
 
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_repro_tag_id" ), repro_tag_id );
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_abs_time" ), abs_time );
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_delay" ), delay );
-  appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_amplitude" ), intensity );
+  //appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_amplitude" ), intensity ); FIXME is per channel
   fd.flush();
 }
 

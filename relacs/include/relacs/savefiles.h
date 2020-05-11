@@ -509,7 +509,7 @@ protected:
     \brief Write recorded data and metadata in NIX format.
   */
   struct NixFile {
-    const double   relacs_nix_version = 1.0;
+    const double   relacs_nix_version = 1.1;
     double         repro_start_time = 0.0;
     double         stimulus_start_time = 0.0;
     double         stimulus_duration = 0.0;
