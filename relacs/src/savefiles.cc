@@ -2237,12 +2237,18 @@ string createStimulusTagName( const deque< OutDataInfo > &stim_info ) {
     else
       break;
   }
+  std::vector<std::string> ugly_endings = {"-", "_", "/", ".", ":"};
+  for ( auto end : ugly_endings ) {
+    if ( prefix.rfind( end ) == prefix.size() - 1 && prefix.size() -2 > 0 )
+      prefix = prefix.substr(0, prefix.size() - 1);
+  }
 
   string suffix = "";
   size_t lastpos = std::string::npos;
   lastpos = stim_info[0].description().name().rfind( "-" );
   if ( lastpos != std::string::npos )
     suffix = stim_info[0].description().name().substr(lastpos);
+      
   string tagname = prefix + suffix;
   return nix::util::nameSanitizer( tagname );
 }
