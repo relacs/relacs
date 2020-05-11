@@ -364,7 +364,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   ntrlStim.constWave( duration, ntrlStim.sampleInterval(), 0.0 );
   ntrlStim.description().addText( "RewardedType", "neutral" ).addFlags( OutData::Mutable );
   ntrlStim.description().addText( "Arm", toString(tc.mazeCondition.neutral) ).addFlags( OutData::Mutable );
-  ntrlStim.description()["Frequency"].addFlags( OutData::Mutable );
+  ntrlStim.description().addNumber( "Frequency", 0.0, "Hz" ).addFlags( OutData::Mutable );
   ntrlStim.setIdent( ident + "_neutral" );
   outList.push( ntrlStim );
   
