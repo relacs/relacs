@@ -2189,6 +2189,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
     createFeaturesForOptions( stimulus_features, "relacs_feature", "" );
   }
 
+  std::string name_prefix = "Output";
   for ( size_t i = 0; i < stim_info.size(); ++i ) {
     std::string channel_prefix = name_prefix + Str(stim_info[i].channel());
 
@@ -2280,17 +2281,21 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
     appendValue( current_stimulus_info.positions_array, stimulus_start_time );
     appendValue( current_stimulus_info.extents_array, stimulus_duration );
   }
-  std::cerr << "store features\n";
 
   // handle options that are stored as features
-  storeOptionsToFeatures( stim_options );
-  Options mutables = stimuliref[0].section( "parameter" );
-  //  storeOptionsToFeatures( mutables ); FIXME
+  storeOptionsToFeatures( stim_options, "" );
+
+  for (size_t i =0; i < stimuliref.size(); ++i) {
+      Options mutables = stimuliref[i].section( "parameter" );
+      string prefix = stimuliref.size() == 1 ? "" : "Output" + Str(stim_info[i].channel());
+      storeOptionsToFeatures( mutables , prefix);
+      appendValue( current_stimulus_info.features.at( prefix + "_" + current_stimulus_info.name + "_amplitude" ),
+		   intensity );
+  }
 
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_repro_tag_id" ), repro_tag_id );
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_abs_time" ), abs_time );
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_delay" ), delay );
-  //appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_amplitude" ), intensity ); FIXME is per channel
   fd.flush();
 }
 
