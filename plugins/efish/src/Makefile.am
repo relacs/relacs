@@ -440,6 +440,7 @@ libefisheigenmanniachirps_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -451,6 +452,7 @@ libefisheigenmanniachirps_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
+    $(builddir)/../../efield/src/libefieldtraces.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/options/src/librelacsoptions.la \

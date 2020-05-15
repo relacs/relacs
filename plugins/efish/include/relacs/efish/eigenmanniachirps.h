@@ -23,6 +23,9 @@
 #define _RELACS_EFISH_EIGENMANNIACHIRPS_H_ 1
 
 #include <relacs/repro.h>
+#include <relacs/efield/traces.h>
+#include <relacs/efield/eodtools.h>
+
 using namespace relacs;
 
 namespace efish {
@@ -35,8 +38,12 @@ namespace efish {
 \version 1.0 (May 11, 2020)
 */
 
+enum class EODModel{ SINE = 0, REALISTIC = 1 };
 
-class EigenmanniaChirps : public RePro
+class EigenmanniaChirps : 
+        public RePro, 
+        public efield::Traces, 
+        public efield::EODTools
 {
   Q_OBJECT
 
@@ -44,7 +51,23 @@ public:
 
   EigenmanniaChirps( void );
   virtual int main( void );
+private:
+  constexpr double pi() { return std::acos(-1); }
+  double stimulus_samplerate = 20000;
+  double duration;
+  double chirp_rate;
+  double eodf;
+  double chrip_duration;
+  double deltaf;
+  EODModel eod_model;
+  std::vector<double> harmonic_group_amplitudes = {1.0, 0.25, 0.0, 0.01};
+  std::vector<double> harmonic_group_phases = {0.0, };
+  OutData stimData;
+  OutList outList;
 
+  void createStimulus( void );
+  SampleDataD eigenmanniaEOD( const double &freq, const double &duration, const double &samplerate );
+  bool estimateEodFrequency( double &fisheodf );
 };
 
 
