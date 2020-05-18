@@ -677,13 +677,6 @@ int Chirps::main( void )
   Intensity = 0.0;
   Count = 0;
 
-  // check for GlobalEFieldEvents:
-  if ( !AM && GlobalEFieldEvents < 0 ) {
-    warning( "Need stimulus recording for non AM-stimuli!" );
-    stop();
-    return Failed;
-  }
-
   // EOD rate:
   if ( EODEvents >= 0 )
     FishRate = events(EODEvents).frequency( ReadCycles );
@@ -939,7 +932,6 @@ int Chirps::main( void )
 	Header.setNumber( "chirpphase", ChirpPhase );
 	Header.setNumber( "duration", Duration );
 	Header.setText( "waveform", SineWave ? "Sine-Wave" : "Fish-EOD" );
-	Header.setNumber( "true deltaf", TrueDeltaF );
 	Header.setNumber( "true contrast", 100.0 * TrueContrast );
 	Header.setNumber( "EOD rate", FishRate );
 	Header.setUnit( "trans. amplitude", EOD2Unit );
@@ -1058,7 +1050,6 @@ void Chirps::saveChirps( void )
     ChirpKey.save( df, Response[k].EODRate );
     ChirpKey.save( df, Response[k].BeatFreq );
     ChirpKey.save( df, Response[k].BeatPhase );
-    ChirpKey.save( df, Response[k].BeatLoc );
     ChirpKey.save( df, Response[k].BeatBin );
     ChirpKey.save( df, Response[k].BeatBefore );
     ChirpKey.save( df, Response[k].BeatAfter );
@@ -1092,7 +1083,6 @@ void Chirps::saveChirpTraces( void )
     df << '\n';
     df << "# chirp index: " << k-FirstResponse << '\n';
     df << "#  beat phase: " << Str( Response[k].BeatPhase, "%.3f" ) << '\n';
-    df << "#    beat pos: " << Str( Response[k].BeatLoc, "%.3f" ) << '\n';
     df << "#    beat bin: " << Response[k].BeatBin << '\n';
     for ( int j=0; j<Response[k].EODTime.size(); j++ ) {
       ChirpTraceKey.save( df, Response[k].EODTime[j], 0 );
@@ -1124,7 +1114,6 @@ void Chirps::saveChirpSpikes( int trace )
     df << '\n';
     df << "# chirp index: " << j-FirstResponse << '\n';
     df << "#  beat phase: " << Str( Response[j].BeatPhase, "%.3f" ) << '\n';
-    df << "#    beat pos: " << Str( Response[j].BeatLoc, "%.3f" ) << '\n';
     df << "#    beat bin: " << Response[j].BeatBin << '\n';
     if ( Response[j].Spikes[trace].size() > 0 ) {
       for ( int i=0; i<Response[j].Spikes[trace].size(); i++ ) {
@@ -1159,7 +1148,6 @@ void Chirps::saveChirpNerve( void )
       df << '\n';
       df << "# chirp index: " << j-FirstResponse << '\n';
       df << "#  beat phase: " << Str( Response[j].BeatPhase, "%.3f" ) << '\n';
-      df << "#    beat pos: " << Str( Response[j].BeatLoc, "%.3f" ) << '\n';
       df << "#    beat bin: " << Response[j].BeatBin << '\n';
       if ( Response[j].NerveAmplP.empty() ) {
 	NerveKey.save( df, 0.0, 0 );
@@ -1203,7 +1191,6 @@ void Chirps::saveChirpNerve( void )
       df << '\n';
       df << "# chirp index: " << j-FirstResponse << '\n';
       df << "#  beat phase: " << Str( Response[j].BeatPhase, "%.3f" ) << '\n';
-      df << "#    beat pos: " << Str( Response[j].BeatLoc, "%.3f" ) << '\n';
       df << "#    beat bin: " << Response[j].BeatBin << '\n';
       if ( Response[j].NerveAmplS.empty() ) {
 	SmoothKey.save( df, 0.0, 0 );
@@ -1499,22 +1486,6 @@ void Chirps::analyze( void )
   // EOD rate:
   FishRate = eod1.frequency( ReadCycles );
 
-  // signal frequency:
-  double sigfreq = AM ? 0.0 : events(GlobalEFieldEvents).frequency( signalTime(),
-								    signalTime()+FirstSpace );
-
-  // Delta F:
-  bool noglobaleod = false;
-  if ( AM )
-    TrueDeltaF = DeltaF;
-  else {
-    TrueDeltaF = sigfreq - FishRate;
-    if ( fabs( (TrueDeltaF - DeltaF)/DeltaF ) > 0.1 ) {
-      TrueDeltaF = DeltaF;
-      noglobaleod = true;  // stimulus EOD not properly detected
-    }
-  }
-
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace(LocalEODTrace[0]),
 				currentTime() - 0.5, currentTime() );
@@ -1601,7 +1572,6 @@ void Chirps::analyze( void )
     double beattrough = 0.0;
     double beatfreq = 0.0;
     double beatphase = 0.0;
-    double beatloc = 0.0;
     int beatbin = 0;
     double beatbefore = 0.0;
     double beatafter = 0.0;
@@ -1612,7 +1582,7 @@ void Chirps::analyze( void )
       double eodperiod = 1.0 / eodrate;
 
       // current deltaf:
-      double cdeltaf = AM || noglobaleod ? DeltaF : sigfreq - eodrate;
+      double cdeltaf = AM ? DeltaF : StimulusRate - eodrate;
       
       // current expected beat frequency:
       double cbeatf = ::fmod(eodrate+cdeltaf, eodrate);
@@ -1620,7 +1590,7 @@ void Chirps::analyze( void )
 	cbeatf = eodrate - cbeatf;
 
       // beat amplitudes before chirp:
-      double t = signalTime() + ChirpTimes[k] - 1.5 * ChirpWidth;
+      double t = signalTime() + ChirpTimes[k] - 2.0 * ChirpWidth;
       eod2.minMaxSize( t - 1.0/cbeatf, t, beattrough, beatpeak );
 
       // beat frequency before chirp:
@@ -1649,42 +1619,28 @@ void Chirps::analyze( void )
       beatfreq = fabs(beatperiod) < 1e-8 ? cbeatf : 1.0/beatperiod;
 
       // location of chirp relative to beat:
-      if ( AM ) {
+      if ( AM )
 	beatphase = BeatPhases[k];
-      }
       else {
-	const EventData &sige = events( GlobalEFieldEvents );
-	double siginterv = 1.0 / sigfreq;
-	int sigi = sige.next( signalTime() + ChirpTimes[k] - 2.0*ChirpWidth );
-	double sigtime = 0.0;
-	int maxn = 8;
-	for ( int n=0; n < maxn && sigi-n < sige.size(); n++ )
-	  sigtime += ( sige[ sigi - n ] + siginterv * double(n) ) / double( maxn );
-	sigi = (int)floor( ( signalTime() + ChirpTimes[k] - sigtime ) / siginterv );
-	maxn = 1;
-	beatphase = 0.0;
-	for ( int n=0; n < maxn; n++ ) {
-	  double t1 = sigtime + ( sigi - maxn/2 + n ) * siginterv;
-	  int pi = eod2.previous( t1 );
-	  double t0 = eod2[ pi ];
-	  double phase = ( t1 - t0 ) / eodperiod;
-	  beatphase += ( phase - beatphase ) / (n+1);
-	}
+	if ( beatpt[0].size() > 0 )
+	  beatphase = (signalTime() + ChirpTimes[k] - beatpt[0].back())/beatperiod;
+	else if ( beatpt[1].size() > 0 )
+	  beatphase = (signalTime() + ChirpTimes[k] - beatpt[1].back())/beatperiod + 0.5;
+	else
+	  beatphase = 0.0;
+	while ( beatphase > 1.0 )
+	  beatphase -= 1.0;
+	while ( beatphase < 0.0 )
+	  beatphase += 1.0;
       }
-
-      // beat location:
-      //beatloc = cdeltaf > 0.0 ? beatphase : 1.0 - beatphase;
-      beatloc = beatphase;
 
       // beat bin:
       double db = 1.0/BeatPos;
-      beatbin = int( floor( (beatloc + 0.5*db)/db ) );
-      //cerr << "phase: " << beatphase << ", loc: " << beatloc << ", bin: " << beatbin;
+      beatbin = int( floor( (beatphase - BeatStart + 0.5*db)/db ) );
       if ( beatbin < 0 )
-	beatbin = BeatPos+1;
+	beatbin += BeatPos;
       if ( beatbin >= BeatPos )
-	beatbin = BeatPos-1;
-      //cerr << ", bin: " << beatbin << '\n';
+	beatbin -= BeatPos;
 
       // beat amplitude right before chirp:
       beatbefore = eodAmplitude( trace(LocalEODTrace[0]),
@@ -1699,7 +1655,6 @@ void Chirps::analyze( void )
     else {
       beatfreq = Response[lastr+k].BeatFreq;
       beatphase = Response[lastr+k].BeatPhase;
-      beatloc = Response[lastr+k].BeatLoc;
       beatbin = Response[lastr+k].BeatBin;
       beatbefore = Response[lastr+k].BeatBefore;
       beatafter = Response[lastr+k].BeatAfter;
@@ -1710,7 +1665,7 @@ void Chirps::analyze( void )
     // store results:
     ChirpData d( StimulusIndex, Mode, 2, ChirpTimes[k], ChirpSize,
 		 1000.0*ChirpWidth, ChirpKurtosis, 100.0*ChirpDip, ChirpPhase,
-		 eodrate, beatfreq, beatphase, beatloc, beatbin,
+		 eodrate, beatfreq, beatphase, beatbin,
 		 beatbefore, beatafter, beatpeak, beattrough );
     Response.push_back( d );
     ChirpData &rd = Response.back();

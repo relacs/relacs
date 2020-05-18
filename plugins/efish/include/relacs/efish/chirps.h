@@ -166,7 +166,6 @@ private:
   int Mode;
   MapD ChirpFreqs;
   MapD ChirpAmpls;
-  double TrueDeltaF;
   double TrueContrast;
   double Duration;
   double StimulusRate;
@@ -186,13 +185,11 @@ private:
   {
     ChirpData( int i, int m, int tr, double t, 
 	       double s, double w, double k, double a, double p,
-	       double er,
-	       double bf, double bph, double bl, int bbin,
-	       double bb, double ba, 
-	       double bp, double bt ) 
+	       double er, double bf, double bph, int bbin,
+	       double bb, double ba, double bp, double bt ) 
       : Index( i ), Mode( m ), Trace( tr ), Time( t ), Size( s ), Width( w ),
 	Kurtosis( k ), Amplitude( a ), Phase( p ), EODRate( er ),
-	 BeatFreq( bf ), BeatPhase( bph ), BeatLoc( bl ), BeatBin( bbin ), 
+	 BeatFreq( bf ), BeatPhase( bph ), BeatBin( bbin ), 
 	 BeatBefore( bb ), BeatAfter( ba ), BeatPeak( bp ), BeatTrough( bt ),
 	 EODTime(), EODFreq(), EODAmpl(), Spikes(),
       NerveAmplP(), NerveAmplT(), NerveAmplM(), NerveAmplS() {};
@@ -208,7 +205,6 @@ private:
     double EODRate;
     double BeatFreq;
     double BeatPhase;
-    double BeatLoc;
     int BeatBin;
     double BeatBefore;
     double BeatAfter;
