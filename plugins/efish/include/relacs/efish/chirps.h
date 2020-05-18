@@ -42,30 +42,39 @@ namespace efish {
 \class Chirps
 \brief [RePro] Measures responses to chirps.
 \author Jan Benda
-\version 2.0 (Nov 11, 2014)
+\version 2.1 (May 7, 2020)
 \todo Make independent of beat detector
 
 \par Screenshot
 \image html chirps.png
 
 \par Options
-- \b nchirps (\c integer): Number of chirps per stimulus.
-- \b minspace (\c number, \e ms): Minimum time between chirps (AM only).
-- \b firstspace (\c number, \e ms): Time preceeding first chirp (AM only).
-- \b pause (\c number, \e ms): %Pause between successive stimuli.
-- \b deltaf (\c number, \e Hz): Beat frequency.
-- \b contrast (\c number, \e %): Contrast (AM amplitude / EOD amplitude)
-- \b chirpsize (\c number, \e Hz): Size of the chirp.
-- \b chirpwidth (\c number, \e ms): Width of the chirp.
-- \b chirpkurtosis (\c number): Kurtosis of Gaussian chirp (>1 broader, <1 narrower).
-- \b chirpampl (\c number, \e %): Reduction of EOD amplitude during a chirp.
-- \b repeats (\c integer): Number of stimulus repetitions (0: infinite).
-- \b beatpos (\c integer): Number of beat positions used for analysis.
-- \b ratedt (\c number, \e ms): Resolution of firing rate.
-- \b am (\c boolean): AM stimulus or direct stimulus.
-- \b sinewave (\c boolean): If direct stimulus: use sine wave or the fishes EOD.
-- \b playback (\c boolean): Record transdermal amplitude evoked by direct stimulus
-and replay it as an AM stimulus.
+- \c Chirp parameter
+    - \c nchirps=10: Number of chirps (\c integer)
+    - \c beatpos=10: Number of beat positions (\c integer)
+    - \c beatstart=0.251: Beat position of first chirp (\c number)
+    - \c minspace=200ms: Minimum time between chirps (\c number)
+    - \c minperiods=1: Minimum number of beat periods between chirps (\c number)
+    - \c firstspace=200ms: Minimum time preceeding first chirp (\c number)
+    - \c minspace=200ms: Minimum time between chirps (\c number)
+    - \c minperiods=1: Minimum number of beat periods preceeding first chirp and between chirps (\c number)
+    - \c chirpampl=2%: Amplitude of chirp (\c number)
+    - \c chirpsel=generated: Chirp waveform (\c string)
+    - \c chirpkurtosis=1: Kurtosis of Gaussian chirp (\c number)
+    - \c file=: Chirp-waveform file (\c string)
+- \c Beat parameter
+    - \c beatsel=Delta f: Stimulus frequency (\c string)
+    - \c deltaf=10Hz: Delta f (\c number)
+    - \c releodf=1.1: Relative EODf (\c number)
+    - \c contrast=20%: Contrast (\c number)
+    - \c am=true: Amplitude modulation (\c boolean)
+    - \c sinewave=true: Use sine wave (\c boolean)
+    - \c playback=false: Playback AM (\c boolean)
+    - \c pause=1000ms: Pause between signals (\c number)
+    - \c repeats=6: Repeats (\c integer)
+- \c Analysis
+    - \c sigma=2ms: Standard deviation of rate smoothing kernel (\c number)
+    - \c adjust=true: Adjust input gain? (\c boolean)
 
 \par Files
 - \b chirps.dat : General information for each chirp in each stimulus.
@@ -133,6 +142,7 @@ private:
   int ReadCycles;
   int NChirps;
   double MinSpace;
+  double MinPeriods;
   double FirstSpace;
   double Pause;
   double ChirpSize;

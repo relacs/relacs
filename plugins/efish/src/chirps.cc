@@ -33,13 +33,14 @@ namespace efish {
 
 
 Chirps::Chirps( void )
-  : RePro( "Chirps", "efish", "Jan Benda", "2.0", "Nov 11, 2014" )
+  : RePro( "Chirps", "efish", "Jan Benda", "2.1", "May 18, 2020" )
 {
   // parameter:
   ReadCycles = 100;
   NChirps = 10;
   FirstSpace = 0.2;
   MinSpace = 0.2;
+  MinPeriods = 1.0;
   Pause = 1.0;
   ChirpSize = 100.0;  // Hertz
   ChirpWidth = 0.014;  // seconds
@@ -61,8 +62,9 @@ Chirps::Chirps( void )
   addInteger( "nchirps", "Number of chirps", NChirps, 1, 10000, 2 );
   addInteger( "beatpos", "Number of beat positions", BeatPos, 1, 100, 1 );
   addNumber( "beatstart", "Beat position of first chirp", BeatStart, 0.0, 1.0, 0.01, "1" );
+  addNumber( "firstspace", "Minimum time preceeding first chirp", FirstSpace, 0.01, 1000.0, 0.05, "sec", "ms" );
   addNumber( "minspace", "Minimum time between chirps", MinSpace, 0.01, 1000.0, 0.05, "sec", "ms" );
-  addNumber( "firstspace", "Time preceeding first chirp", FirstSpace, 0.01, 1000.0, 0.05, "sec", "ms" );
+  addNumber( "minperiods", "Minimum number of beat periods preceeding first chirp and between chirps", MinPeriods, 0.0, 1000.0, 0.1 );
   addNumber( "chirpsize", "Size of chirp", ChirpSize, 0.0, 1000.0, 10.0, "Hz" );
   addNumber( "chirpwidth", "Width of chirp", ChirpWidth, 0.002, 1.0, 0.001, "sec", "ms" );
   addNumber( "chirpampl", "Amplitude of chirp", ChirpDip, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
@@ -70,7 +72,9 @@ Chirps::Chirps( void )
   addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", ChirpKurtosis, 0.01, 100.0, 0.01, "", "" ).setActivation( "chirpsel", "generated" );
   addText( "file", "Chirp-waveform file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "chirpsel", "from file" );
   newSection( "Beat parameter" );
-  addNumber( "deltaf", "Delta f", DeltaF, -10000.0, 10000.0, 5, "Hz" );
+  addSelection( "beatsel", "Stimulus frequency", "Delta f|Relative EODf");
+  addNumber( "deltaf", "Delta f", DeltaF, -10000.0, 10000.0, 5, "Hz" ).setActivation( "beatsel", "Delta f" );
+  addNumber( "releodf", "Relative EODf", 1.1, 0.0, 10.0, 0.01, "" ).setActivation( "beatsel", "Relative EODf" );
   addNumber( "contrast", "Contrast", Contrast, 0.0, 1.0, 0.01, "", "%" );
   addBoolean( "am", "Amplitude modulation", AM );
   addBoolean( "sinewave", "Use sine wave", SineWave );
@@ -260,9 +264,22 @@ void Chirps::createEOD( OutData &signal )
   }
   ChirpPhase = dp;
 
+  // expected beat period:
+  double expectedrate = ::fmod(StimulusRate, FishRate);
+  if ( expectedrate > FishRate/2 )
+    expectedrate = FishRate - expectedrate;
+  double period = 1.0/expectedrate;
+
   // setup signal:
-  int pointsperbeat = waveform.indices( 1.0 / fabs( DeltaF ) );
-  signal = OutData( NChirps*(2*pointsperbeat + chirp.size()) + pointsperbeat,
+  // double period = 1.0 / fabs( DeltaF );
+  int pointsperbeat = waveform.indices( period );
+  int firstcycle = int( ceil( FirstSpace / period ) );
+  if ( firstcycle < MinPeriods )
+    firstcycle = MinPeriods;
+  int mincycle = int( ceil( MinSpace / period ) );
+  if ( mincycle < MinPeriods )
+    mincycle = MinPeriods;
+  signal = OutData( NChirps*(mincycle*pointsperbeat + chirp.size()) + firstcycle*pointsperbeat,
 		    waveform.sampleInterval() );
   signal.clear();
   signal.setCarrierFreq( StimulusRate );
@@ -281,32 +298,32 @@ void Chirps::createEOD( OutData &signal )
   s += ", phase: " + Str( ChirpPhase, 0, 2, 'f' );
   //  signal.setComment( s );
 
-  // single cycle phase shift:
+  // single cycle phase shift: XXX
   double cyclephase = fabs( DeltaF ) * pointspercycle * signal.sampleInterval();
+
+  int cyclesperbeat = (int)rint( signal.sampleRate() / fabs( DeltaF ) / pointspercycle );
 
   // create signal:
   ChirpTimes.resize( NChirps );
   int ip;
   p = 0.0;
-  // start with at least one beat cycle:
-  for ( int i=0; ; ) {
+  // start with beat cycles:
+  int i = 0;
+  for ( int n=0; n < firstcycle*cyclesperbeat; n++ ) {
     ip = i;
     signal.push( waveform[i++] );
-    p += fabs( DeltaF ) * signal.sampleInterval();
-    // only copy complete EOD cycles:
-    for( ; j<signal.size(); i++, j++ ) {
+    p += fabs( DeltaF ) * signal.sampleInterval();  // XXX
+    // copy complete EOD cycles:
+    for( ; ; i++, j++ ) {
       if ( i >= waveform.size() )
 	i = 0;
       if ( waveform[i] >= 0.0 && waveform[ip] < 0.0 )
 	break;
       signal.push( waveform[i] );
-      p += fabs( DeltaF ) * signal.sampleInterval();
+      p += fabs( DeltaF ) * signal.sampleInterval(); //XXX
       ip = i;
     }
-    if ( p > 1.0 )
-      break;
   }
-  int cyclesperbeat = (int)rint( signal.sampleRate() / fabs( DeltaF ) / pointspercycle );
 
   // insert chirps:
   for ( int k=0; k<NChirps; k++ ) {
@@ -339,9 +356,9 @@ void Chirps::createEOD( OutData &signal )
     for ( int i=0; i<chirp.size(); i++ )
       signal.push( chirp[i] );
 
-    // one beat cycle:
-    int n = 0;
-    for ( int i=0; n < cyclesperbeat; n++ ) {
+    // beat cycles:
+    int i = 0;
+    for ( int n=0; n < mincycle*cyclesperbeat; n++ ) {
       ip = i;
       signal.push( waveform[i++] );
       // only copy complete EOD cycles:
@@ -412,12 +429,20 @@ int Chirps::createAM( OutData &signal )
   // no signal is put out, because there isn't any.
   write( signal );
 
+  // expected beat period:
+  double expectedrate = ::fmod((FishRate + DeltaF), FishRate);
+  if ( expectedrate > FishRate/2 )
+    expectedrate = FishRate - expectedrate;
+  double period = 1.0/expectedrate;
+
   // get size of signal:
-  double period = 1.0 / fabs( DeltaF );
+  //double period = 1.0 / fabs( DeltaF );
   int firstcycle = int( ceil( FirstSpace / period ) );
+  if ( firstcycle < MinPeriods )
+    firstcycle = MinPeriods;
   int mincycle = int( ceil( MinSpace / period ) );
-  if ( mincycle < 1 )
-    mincycle = 1;
+  if ( mincycle < MinPeriods )
+    mincycle = MinPeriods;
   double chirpslot = 4.0*ChirpWidth + period;
   double deltat = signal.sampleInterval();
   int pointsperbeat = int( rint( period / deltat ) );
@@ -428,11 +453,9 @@ int Chirps::createAM( OutData &signal )
 
   // first beat:
   double p = -0.25;   // current beat phase
-  for ( int j=0; j<firstcycle; j++ ) {
-    for ( int i=0; i<pointsperbeat; i++ ) {
-      p += DeltaF*deltat;
-      signal.push( cos( 6.28318 * p ) );
-    }
+  for ( int i=0; i<firstcycle*pointsperbeat; i++ ) {
+    p += DeltaF*deltat;
+    signal.push( cos( 6.28318 * p ) );
   }
 
   // chirps and beats:
@@ -474,11 +497,9 @@ int Chirps::createAM( OutData &signal )
     ChirpPhase = dp;
 
     // beat:
-    for ( int j=0; j<mincycle; j++ ) {
-      for ( int i=0; i<pointsperbeat; i++ ) {
-	p += DeltaF*deltat;
-	signal.push( cos( 6.28318 * p ) );
-      }
+    for ( int i=0; i<mincycle*pointsperbeat; i++ ) {
+      p += DeltaF*deltat;
+      signal.push( cos( 6.28318 * p ) );
     }
     chirpphase += phasestep;
     if ( chirpphase > 1.0 )
@@ -499,7 +520,7 @@ int Chirps::createAM( OutData &signal )
 }
 
 
-  void Chirps::initMultiPlot( double ampl, double contrast )
+void Chirps::initMultiPlot( double ampl, double contrast )
 {
   int nsub = 1 + SpikeTraces + NerveTraces;
 
@@ -628,10 +649,13 @@ int Chirps::main( void )
   // get options:
   NChirps = integer( "nchirps" );
   MinSpace = number( "minspace" );
+  MinPeriods = number( "minperiods" );
   FirstSpace = number( "firstspace" );
   Pause = number( "pause" );
   Repeats = integer( "repeats" );
+  int beatsel = index( "beatsel" );
   DeltaF = number( "deltaf" );
+  double releodf = number( "releodf" );
   Contrast = number( "contrast" );
   ChirpSize = number( "chirpsize" );
   ChirpWidth = number( "chirpwidth" );
@@ -650,6 +674,10 @@ int Chirps::main( void )
   // checks:
   if ( ::fabs(DeltaF) < 1e-3 ) {
     warning( "deltaf must not be zero." );
+    return Failed;
+  }
+  if ( ::fabs(releodf - 1.0) < 1e-3 ) {
+    warning( "releodf must not be one." );
     return Failed;
   }
   if ( LocalEODTrace[0] < 0 ) {
@@ -685,6 +713,10 @@ int Chirps::main( void )
     return Failed;
   }
 
+  // Delta F:
+  if ( beatsel == 1 )
+    DeltaF = FishRate * (releodf - 1.0);
+  
   Header.erase( "Settings" );
   Header.newSection( settings() );
   Header.erase( "FileChirp" );
