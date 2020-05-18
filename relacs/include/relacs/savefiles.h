@@ -509,7 +509,7 @@ protected:
     \brief Write recorded data and metadata in NIX format.
   */
   struct NixFile {
-    const double   relacs_nix_version = 1.0;
+    const double   relacs_nix_version = 1.1;
     double         repro_start_time = 0.0;
     double         stimulus_start_time = 0.0;
     double         stimulus_duration = 0.0;
@@ -529,10 +529,9 @@ protected:
     void close ( void );
     void saveMetadata ( const AllDevices *devices );
     void saveMetadata ( const MetaData &mtdt );
-    void createStimulusTag ( const std::string &repro_name, const Options &stimulus_options,
-                             const Options &stimulus_features, const deque< OutDataInfo > &stim_info,
-                             const Acquire *AQ, double start_time, double duration,
-			     NixStimulusInfo &info );
+    void createStimulusTag ( const std::string &repro_name, const Options &stimulus_features,
+			     const deque< OutDataInfo > &stim_info, const Acquire *AQ,
+			     double start_time, double duration, NixStimulusInfo &info );
     void writeStimulus( const InList &IL, const EventList &EL,
 			const deque< OutDataInfo > &stimuliinfo,
 			const deque< bool > &newstimuli, const Options &data,
@@ -557,8 +556,8 @@ protected:
 				  std::string unit, std::string label,
 				  nix::LinkType link_type=nix::LinkType::Indexed,
                                   nix::DataType dtype = nix::DataType::Double );
-    void createFeaturesForOptions( const Options &options, std::string type );
-    void storeOptionsToFeatures( const Options &options );
+    void createFeaturesForOptions( const Options &options, const std::string &type, const std::string &name_prefix );
+    void storeOptionsToFeatures( const Options &options , const std::string &prefix );
     
     string rid; //recording id
 
