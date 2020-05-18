@@ -52,7 +52,7 @@ namespace efish {
 - \c Chirp parameter
     - \c nchirps=10: Number of chirps (\c integer)
     - \c beatpos=10: Number of beat positions (\c integer)
-    - \c beatstart=0.251: Beat position of first chirp (\c number)
+    - \c beatstart=0.25: Beat position of first chirp (\c number)
     - \c minspace=200ms: Minimum time between chirps (\c number)
     - \c minperiods=1: Minimum number of beat periods between chirps (\c number)
     - \c firstspace=200ms: Minimum time preceeding first chirp (\c number)
@@ -155,6 +155,7 @@ private:
   double BeatStart;
   double Sigma;
   double DeltaF;
+  double BeatF;
   double Contrast;
   int Repeats;
   double SaveWindow;
