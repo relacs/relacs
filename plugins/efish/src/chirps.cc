@@ -285,6 +285,7 @@ void Chirps::createEOD( OutData &signal )
   signal.setCarrierFreq( StimulusRate );
   signal.setStartSource( 1 );
   signal.setTrace( GlobalEField );
+  Parameter &chirptime_p = signal.description().addNumber( "ChirpTimes", 0.0, "s" ).addFlags( OutData::Mutable );
   Str s = SineWave ? "sinewave+chirps_" : "EOD+chirps_";
   s += Str( StimulusIndex );
   signal.setIdent( s );
@@ -373,6 +374,9 @@ void Chirps::createEOD( OutData &signal )
     }
   }
   signal.push( 0.0 );
+  chirptime_p.setNumber( ChirpTimes[0] );
+  for ( int k=1; k<ChirpTimes.size(); k++ )
+    chirptime_p.addNumber( ChirpTimes[k] );
   Duration = signal.duration();
 }
 
@@ -516,6 +520,10 @@ int Chirps::createAM( OutData &signal )
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   s += ", AM";
   //  signal.setComment( s );
+  Parameter &chirptime_p = signal.description().addNumber( "ChirpTimes", 0.0, "s" ).addFlags( OutData::Mutable );;
+  chirptime_p.setNumber( ChirpTimes[0] );
+  for ( int k=1; k<ChirpTimes.size(); k++ )
+    chirptime_p.addNumber( ChirpTimes[k] );
   return 0;
 }
 
