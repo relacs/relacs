@@ -42,8 +42,7 @@ namespace efish {
 \class Chirps
 \brief [RePro] Measures responses to chirps.
 \author Jan Benda
-\version 2.1 (May 7, 2020)
-\todo Make independent of beat detector
+\version 2.2 (May 18, 2020)
 
 \par Screenshot
 \image html chirps.png
