@@ -33,7 +33,7 @@ namespace efish {
 
 
 Chirps::Chirps( void )
-  : RePro( "Chirps", "efish", "Jan Benda", "2.2", "May 18, 2020" )
+  : RePro( "Chirps", "efish", "Jan Benda", "2.2", "May 19, 2020" )
 {
   // parameter:
   ReadCycles = 100;
@@ -56,6 +56,7 @@ Chirps::Chirps( void )
   AM = false;
   SineWave = true;
   Playback = false;
+  PhaseOnBeat = true;
 
   // add some parameter as options:
   newSection( "Chirp parameter" );
@@ -82,6 +83,7 @@ Chirps::Chirps( void )
   addNumber( "pause", "Pause between signals", Pause, 0.01, 1000.0, 0.05, "sec", "ms" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Analysis" );
+  addSelection( "phaseestimation", "Base estimation of beat phase on", "beat|EOD" );
   addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );
 
@@ -647,6 +649,7 @@ int Chirps::main( void )
   ChirpFile = text( "file" );
   BeatPos = integer( "beatpos" );
   BeatStart = number( "beatstart" );
+  PhaseOnBeat = ( index( "phaseestimation" ) == 0 );
   Sigma = number( "sigma" );
   AM = boolean( "am" );
   SineWave = boolean( "sinewave" );
@@ -676,6 +679,13 @@ int Chirps::main( void )
   Mode = 0;
   Intensity = 0.0;
   Count = 0;
+
+  // check for GlobalEFieldEvents:
+  if ( !AM && ! PhaseOnBeat && GlobalEFieldEvents < 0 ) {
+    warning( "Need stimulus recording for estimating beat phase of non AM-stimuli!" );
+    stop();
+    return Failed;
+  }
 
   // EOD rate:
   if ( EODEvents >= 0 )
@@ -1622,12 +1632,30 @@ void Chirps::analyze( void )
       if ( AM )
 	beatphase = BeatPhases[k];
       else {
-	if ( beatpt[0].size() > 0 )
-	  beatphase = (signalTime() + ChirpTimes[k] - beatpt[0].back())/beatperiod;
-	else if ( beatpt[1].size() > 0 )
-	  beatphase = (signalTime() + ChirpTimes[k] - beatpt[1].back())/beatperiod + 0.5;
-	else
+	if ( PhaseOnBeat ) {
+	  if ( beatpt[0].size() > 0 )
+	    beatphase = (signalTime() + ChirpTimes[k] - beatpt[0].back())/beatperiod;
+	  else if ( beatpt[1].size() > 0 )
+	    beatphase = (signalTime() + ChirpTimes[k] - beatpt[1].back())/beatperiod + 0.5;
+	  else
+	    beatphase = 0.0;
+	}
+	else {
+	  // legacy! Does not work for DeltaFs larger than 0.5*EODf.
+	  const EventData &sige = events( GlobalEFieldEvents );
+	  long sigi = sige.next( signalTime() + ChirpTimes[k] - 2.0*ChirpWidth );
+	  int maxn = ceil(StimulusRate/BeatF);
 	  beatphase = 0.0;
+	  for ( int n=0; n < maxn; n++ ) {
+	    double t0 = sige[sigi - n];
+	    t0 += floor((signalTime() + ChirpTimes[k] - t0)*StimulusRate + 0.5)/StimulusRate;
+	    double t1 = eod2[ eod2.next( t0 ) ];
+	    double phase = ( t1 - t0 ) / eodperiod;
+	    beatphase += ( phase - beatphase ) / (n+1);
+	  }
+	  if ( DeltaF < 0.0 )
+	    beatphase = 1.0 - beatphase;
+	}
 	while ( beatphase > 1.0 )
 	  beatphase -= 1.0;
 	while ( beatphase < 0.0 )

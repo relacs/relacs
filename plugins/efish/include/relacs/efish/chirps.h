@@ -42,7 +42,7 @@ namespace efish {
 \class Chirps
 \brief [RePro] Measures responses to chirps.
 \author Jan Benda
-\version 2.2 (May 18, 2020)
+\version 2.2 (May 19, 2020)
 
 \par Screenshot
 \image html chirps.png
@@ -72,6 +72,7 @@ namespace efish {
     - \c pause=1000ms: Pause between signals (\c number)
     - \c repeats=6: Repeats (\c integer)
 - \c Analysis
+    - \c phaseestimation=beat: Base estimation of beat phase on (\c string)
     - \c sigma=2ms: Standard deviation of rate smoothing kernel (\c number)
     - \c adjust=true: Adjust input gain? (\c boolean)
 
@@ -161,6 +162,7 @@ private:
   bool AM;
   bool SineWave;
   bool Playback;
+  bool PhaseOnBeat;
 
   // variables:
   int Mode;
