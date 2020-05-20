@@ -2122,16 +2122,16 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
 
   info.positions_array = root_block.createDataArray( tag_name + "_onset_times",
 						     "relacs.stimulus.onset",
-						     nix::DataType::Double, {1} );
-  info.positions_array.setData( nix::DataType::Double, &start_time, {1}, {0} );
+						     nix::DataType::Double, {1, 1});
+  info.positions_array.setData( nix::DataType::Double, &start_time, {1, 1}, {0, 0} );
   info.positions_array.appendSetDimension();
   info.positions_array.unit( "s" );
   info.positions_array.label( "time" );
   
   info.extents_array = root_block.createDataArray( tag_name + "_durations",
 						   "relacs.stimulus.duration",
-						   nix::DataType::Double, {1} );
-  info.extents_array.setData( nix::DataType::Double, &duration, {1}, {0} );
+						   nix::DataType::Double, {1, 1} );
+  info.extents_array.setData( nix::DataType::Double, &duration, {1, 1}, {0, 0} );
   info.extents_array.appendSetDimension();
   info.extents_array.unit( "s" );
   info.extents_array.label( "time" );
@@ -2279,7 +2279,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
     std::map<std::string, NixStimulusInfo>::iterator it = stim_info_buffer.find( tag_name );
     if ( it != stim_info_buffer.end() ) { // we have one in store, take it
       current_stimulus_info = it->second;
-    } else { // no match and not found, create a new one
+    } else { // no match in store, create a new one
       current_stimulus_info = NixStimulusInfo();
       createStimulusTag( tag_name, stim_options, stim_info, acquire, stimulus_start_time, 
                          stimulus_duration, current_stimulus_info );
@@ -2302,7 +2302,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
       if ( it != current_stimulus_info.features.end() )
         appendValue( (*it).second, intensity );
       else {
-        std::cerr << "FEATURE NOT FOUND!" << std::endl;
+        std::cerr << "NIX Warning! FEATURE NOT FOUND! " << (prefix + current_stimulus_info.name + "_amplitude") << std::endl;
       }
   }
   appendValue( current_stimulus_info.features.at( current_stimulus_info.name + "_repro_tag_id" ), repro_tag_id );
@@ -2313,20 +2313,23 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
 
 
 nix::DataArray SaveFiles::NixFile::createFeature( nix::MultiTag &mtag,
-						  std::string name, std::string type,
-						  std::string unit, std::string label,
-						  nix::LinkType link_type, nix::DataType dtype )
+						  std::string name, std::string type, std::string unit, std::string label,
+						  nix::LinkType link_type, nix::DataType dtype, nix::NDSize shape )
 {
-  nix::DataArray da = root_block.createDataArray(name, type, dtype, {0});
-  da.appendSetDimension();
+  nix::DataArray da = root_block.createDataArray( name, type, dtype, shape );
+  for (size_t i = 0; i< shape.size() ; ++i) {
+    da.appendSetDimension();
+  }
   da.label(label);
+
   nix::util::unitSanitizer(unit);
   if ( !unit.empty() && nix::util::isSIUnit(unit) ) {
     da.unit(unit);
   } else if ( !unit.empty() ) {
     std::cerr << "NIX output Warning: Given unit " << unit << " is no valid SI unit, not saving it!" << std::endl;
   }
-  mtag.createFeature( da, nix::LinkType::Indexed);
+
+  mtag.createFeature( da, nix::LinkType::Indexed );
   return da;
 }
 
@@ -2337,7 +2340,7 @@ void SaveFiles::NixFile::createFeaturesForOptions( const Options &options, const
   std::string unit;
   std::string label;
   for ( Parameter p : options ) {
-    if ( (p.flags() & OutData::Mutable ) > 0) {
+    if ( ( p.flags() & OutData::Mutable ) > 0 ) {
       name =  name_prefix + current_stimulus_info.name + "_" + p.name();
       unit = p.unit();
       nix::util::unitSanitizer( unit );
@@ -2362,15 +2365,28 @@ void SaveFiles::NixFile::storeOptionsToFeatures( const Options &options , const 
   std::string prop_name;
   std::map<std::string, nix::DataArray>::iterator it;
   for ( auto p : options ) {
+    int p_size = p.size();
     prop_name = prefix + current_stimulus_info.name + "_" + p.name();
     it = current_stimulus_info.features.find( prop_name );
     if ( it != current_stimulus_info.features.end() ) {
       if ( p.isNumber() ) {
-	      double val = p.number();
-	      appendValue( it->second, val );
+        if ( p_size == 1 ) {
+	        double val = p.number();
+	        appendValue( it->second, val );
+        } else if ( p_size > 1 ){
+          std::vector<double> numbers;
+          p.numbers( numbers, "" );
+          appendValue( it->second, numbers );
+        }
       } else if ( p.isText() ) {
-	      string val = p.text();
-	      appendValue( it->second, val );
+        if ( p_size == 1) {
+	        string val = p.text();
+	        appendValue( it->second, val );
+        } else if ( p_size > 1 ) {
+          vector<string> vals;
+          p.texts(vals, "");
+          // TODO appendValue( it->second, vals );
+        }
       }    
     }
   }
@@ -2381,9 +2397,15 @@ void SaveFiles::NixFile::appendValue( nix::DataArray &array, double value )
 {
   if ( !array )
     return;
-  nix::NDSize size = array.dataExtent();
-  array.dataExtent( size + 1 );
-  array.setData( nix::DataType::Double, &value, {1}, size );
+  nix::NDSize org_size = array.dataExtent();
+  nix::NDSize new_size = org_size;
+  nix::NDSize offset = org_size;
+  offset[1] = 0;
+  if (new_size[1] == 0)
+      new_size[1] += 1;
+  new_size[0] += 1;
+  array.dataExtent( new_size );
+  array.setData( nix::DataType::Double, &value, {1, 1}, offset );
 }
 
 
@@ -2391,9 +2413,32 @@ void SaveFiles::NixFile::appendValue( nix::DataArray &array, string value )
 {
   if ( !array )
     return;
-  nix::NDSize size = array.dataExtent();
-  array.dataExtent( size + 1 );
-  array.setData( value, size );
+  nix::NDSize org_size = array.dataExtent();
+  nix::NDSize new_size = org_size;
+  nix::NDSize offset = org_size;
+  offset[1] = 0;
+  if (new_size[1] == 0)
+      new_size[1] += 1;
+  new_size[0] += 1;
+  array.dataExtent( new_size );
+  array.setData( value, offset );
+}
+
+void SaveFiles::NixFile::appendValue( nix::DataArray &array, const std::vector<double> &values ) 
+{
+  if ( !array )
+    return;
+  nix::NDSize org_size = array.dataExtent();
+  nix::NDSize new_size = org_size;
+  nix::NDSize offset = org_size;
+  offset[1] = 0;
+  if (new_size[1] == 0)
+      new_size[1] = values.size();
+  new_size[0] += 1;
+  nix::NDSize count = new_size;
+  count[0] = 1;
+  array.dataExtent( new_size );
+  array.setData( nix::DataType::Double, &values, count, offset );
 }
 
 
