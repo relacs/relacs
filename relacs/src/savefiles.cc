@@ -2385,7 +2385,7 @@ void SaveFiles::NixFile::storeOptionsToFeatures( const Options &options , const 
         } else if ( p_size > 1 ) {
           vector<string> vals;
           p.texts(vals, "");
-          // TODO appendValue( it->second, vals );
+          appendValue( it->second, vals );
         }
       }    
     }
@@ -2442,12 +2442,30 @@ void SaveFiles::NixFile::appendValue( nix::DataArray &array, const std::vector<d
 }
 
 
+void SaveFiles::NixFile::appendValue( nix::DataArray &array, const vector<string> &values ) 
+{
+  if ( !array )
+    return;
+  nix::NDSize org_size = array.dataExtent();
+  nix::NDSize new_size = org_size;
+  nix::NDSize offset = org_size;
+  offset[1] = 0;
+  if (new_size[1] == 0)
+      new_size[1] = values.size();
+  new_size[0] += 1;
+  nix::NDSize count = new_size;
+  count[0] = 1;
+  array.dataExtent( new_size );
+  array.setData( nix::DataType::String, values.data(), count, offset );
+}
+
+
 void SaveFiles::NixFile::replaceLastEntry( nix::DataArray &array, double value ) {
   if ( !array )
     return;
   nix::NDSize size = array.dataExtent();
   size -= 1;
-  array.setData( nix::DataType::Double, &value, {1}, size );
+  array.setData( nix::DataType::Double, &value, {1, 1}, size );
 }
 
 

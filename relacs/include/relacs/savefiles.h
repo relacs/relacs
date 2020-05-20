@@ -551,7 +551,7 @@ protected:
     void appendValue( nix::DataArray &array, double value );
     void appendValue( nix::DataArray &array, const std::vector<double> &values );
     void appendValue( nix::DataArray &array, string value );
-    // void appendValue( nix::DataArray &array, const std::vector<string> &values );
+    void appendValue( nix::DataArray &array, const std::vector<string> &values );
     void replaceLastEntry( nix::DataArray &array, double value );
     nix::DataArray createFeature( nix::MultiTag &mtag, std::string name, std::string type, std::string unit, std::string label, 
           nix::LinkType link_type=nix::LinkType::Indexed, nix::DataType dtype = nix::DataType::Double, nix::NDSize = {0, 0} );
