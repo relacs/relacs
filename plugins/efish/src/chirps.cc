@@ -702,6 +702,12 @@ int Chirps::main( void )
   if ( beatsel == 1 )
     DeltaF = FishRate * (releodf - 1.0);
 
+  if ( FishRate + DeltaF < 1.0 ) {
+    warning( "Deltaf=" + Str(DeltaF) + "Hz plus EODf = " + Str(FishRate) + "Hz must be largen than 1 Hz." );
+    return Failed;
+  }
+
+
   // expected beat frequency:
   BeatF = ::fmod(FishRate+DeltaF, FishRate);
   if ( BeatF > FishRate/2 )
@@ -1619,26 +1625,27 @@ void Chirps::analyze( void )
       BD.peakTrough( EventSizeIterator(eod2.begin(t - win)),
 		     EventSizeIterator(eod2.begin(t)), beatpt,
 		     thresh, thresh, thresh, beataccept );
-      double peakperiod = beatpt[0].size()>0 ? (beatpt[0][beatpt[0].size()-1] - beatpt[0][0])/(beatpt[0].size()-1) : 0.0;
-      double troughperiod = beatpt[1].size()>0 ? (beatpt[1][beatpt[1].size()-1] - beatpt[1][0])/(beatpt[1].size()-1) : 0.0;
+      double peakperiod = beatpt[0].size()>1 ? (beatpt[0][beatpt[0].size()-1] - beatpt[0][0])/(beatpt[0].size()-1) : 0.0;
+      double troughperiod = beatpt[1].size()>1 ? (beatpt[1][beatpt[1].size()-1] - beatpt[1][0])/(beatpt[1].size()-1) : 0.0;
       double beatperiod = 0.0;
       if ( peakperiod > 0.0 && troughperiod > 0.0 )
 	beatperiod = 0.5*(peakperiod + troughperiod);
-      else
+      else {
 	beatperiod = peakperiod > 0.0 ? peakperiod : troughperiod;
+	if ( beatperiod < 1e-8 )
+	  beatperiod = 1.0/BeatF;
+      }
       beatfreq = fabs(beatperiod) < 1e-8 ? cbeatf : 1.0/beatperiod;
 
       // location of chirp relative to beat:
       if ( AM )
 	beatphase = BeatPhases[k];
       else {
-	if ( PhaseOnBeat ) {
+	if ( PhaseOnBeat && ( beatpt[0].size() > 0 ||  beatpt[1].size() > 0 ) ) {
 	  if ( beatpt[0].size() > 0 )
 	    beatphase = (signalTime() + ChirpTimes[k] - beatpt[0].back())/beatperiod;
-	  else if ( beatpt[1].size() > 0 )
-	    beatphase = (signalTime() + ChirpTimes[k] - beatpt[1].back())/beatperiod + 0.5;
 	  else
-	    beatphase = 0.0;
+	    beatphase = (signalTime() + ChirpTimes[k] - beatpt[1].back())/beatperiod + 0.5;
 	}
 	else {
 	  // legacy! Does not work for DeltaFs larger than 0.5*EODf.
