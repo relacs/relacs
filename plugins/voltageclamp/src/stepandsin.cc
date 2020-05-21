@@ -186,10 +186,11 @@ OutData StepAndSin::Sins() {
   for ( unsigned j = 0; j < sinamplitudes.size(); j++ ) {
     OutData signal2;
     signal2.setTrace(PotentialOutput[0]);
-    signal2.sineWave( sinduration+1, -1.0, sinfreqs[j], 0.0, sinamplitudes[j] );
-    for ( int i=0; i<signal.size(); i++ ) {
-      signal[i] += signal2[i];
-    }
+    signal2.sineWave( sinduration, -1.0, sinfreqs[j], 0.0, sinamplitudes[j] );
+//    for ( int i=0; i<signal.size(); i++ ) {
+//      signal[i] += signal2[i];
+//    }
+    signal = signal + signal2;
   }
   signal.append( signal3 );
   return signal;
