@@ -114,20 +114,25 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
     OutData qc_signal2;
     qc_signal2.setTrace( PotentialOutput[0] );
-    qc_signal2.constWave( 0.010, -1.0, holdingpotential-20 );
-
+    qc_signal2.constWave( 0.010, -1.0, holdingpotential-40 );
+    
     OutData qc_signal3;
     qc_signal3.setTrace( PotentialOutput[0] );
-    qc_signal3.sweepWave( pulseduration, -1.0, f0, f1, 20.0, 0.0 );
-    qc_signal3 = qc_signal3 + holdingpotential - 20;
+    qc_signal3.constWave( 0.010, -1.0, holdingpotential-20 );
 
     OutData qc_signal4;
     qc_signal4.setTrace( PotentialOutput[0] );
-    qc_signal4.constWave( 0.010, -1.0, holdingpotential );
+    qc_signal4.sweepWave( pulseduration, -1.0, f0, f1, 20.0, 0.0 );
+    qc_signal4 = qc_signal4 + holdingpotential - 20;
+
+    OutData qc_signal5;
+    qc_signal5.setTrace( PotentialOutput[0] );
+    qc_signal5.constWave( 0.010, -1.0, holdingpotential );
 
     qc_signal1.append( qc_signal2 );
     qc_signal1.append( qc_signal3 );
     qc_signal1.append( qc_signal4 );
+    qc_signal1.append( qc_signal5 );
 
     qc_signal1.description().setType( "stimulus/QualityControl" );
     Options opts_qc = qc_signal1.description();
