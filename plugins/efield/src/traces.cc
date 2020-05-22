@@ -75,6 +75,11 @@ string Traces::FishEFieldEventsIdentifier[3] = { "GlobalEFieldStimulus", "FishEF
 
 Traces::Traces( void )
 {
+  clear();
+}
+
+void Traces::clear( void )
+{
   clearIndices( LocalEODTrace );
   clearIndices( LocalEODEvents );
   clearIndices( LocalChirpEvents );
@@ -98,11 +103,11 @@ Traces::Traces( void )
   clearIndices( FishEFieldEvents );
 }
 
-
 void Traces::initialize( const RELACSPlugin *rp,
 			 const InList &data,
 			 const EventList &events )
 {
+  clear();
   // global EOD:
   string fs[3] = { "", "-1", "-A-1" };
   for ( int k=0; k<3; k++ ) {
@@ -190,6 +195,7 @@ void Traces::initialize( const RELACSPlugin *rp,
   // fish stimulation fields:
   initStandardEventTraces( data, events, &FishEFieldTraces, FishEFieldTrace, FishEFieldEvents,
 			   FishEFieldTraceIdentifier, FishEFieldEventsIdentifier, namelist, namelist, true );
+  cerr << "Traces: found " << EFields << " EField traces!!" << endl;
 }
 
 

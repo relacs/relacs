@@ -46,6 +46,12 @@ int Traces::LEDOutput[Traces::MaxTraces] = { -1, -1, -1, -1 };
 
 Traces::Traces( void )
 {
+  clear();
+}
+
+
+void Traces::clear( void )
+{
   clearIndices( VoltageTrace );
   clearIndices( VoltageOutput );
   clearIndices( LEDOutput );
@@ -56,6 +62,7 @@ void Traces::initialize( const RELACSPlugin *rp,
 			 const InList &data, 
 			 const EventList &events )
 {
+  clear();
   // get trace indices:
   StimulusEvents = events.index( "Stimulus" );
   

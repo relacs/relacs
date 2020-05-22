@@ -144,6 +144,8 @@ private:
   static string FishEFieldTraceIdentifier[3];
   static string FishEFieldEventsIdentifier[3];
 
+  static void clear( void );
+
 };
 
 
