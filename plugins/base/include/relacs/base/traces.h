@@ -79,6 +79,7 @@ private:
   static string LedOutputIdentifier[3];
   static string LedOutputNames;
 
+  static void clear( void ); 
 };
 
 
