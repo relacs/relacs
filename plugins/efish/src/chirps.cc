@@ -1651,6 +1651,8 @@ void Chirps::analyze( void )
 	  // legacy! Does not work for DeltaFs larger than 0.5*EODf.
 	  const EventData &sige = events( GlobalEFieldEvents );
 	  long sigi = sige.next( signalTime() + ChirpTimes[k] - 2.0*ChirpWidth );
+	  if ( sigi >= sige.size() )
+	    sigi = sige.size() - 1;
 	  int maxn = ceil(StimulusRate/BeatF);
 	  beatphase = 0.0;
 	  for ( int n=0; n < maxn; n++ ) {
