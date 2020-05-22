@@ -59,6 +59,18 @@ int Traces::RightSoundTrace[Traces::MaxTraces] = { -1, -1, -1, -1 };
 
 Traces::Traces( void )
 {
+  clear();
+}
+
+
+void Traces::clear( void )
+{
+  clearIndices( Loudspeaker );
+  clearIndices( LeftSpeaker );
+  clearIndices( RightSpeaker );
+  clearIndices( SoundTrace );
+  clearIndices( LeftSoundTrace );
+  clearIndices( RightSoundTrace );
 }
 
 
@@ -66,6 +78,7 @@ void Traces::initialize( const RELACSPlugin *rp,
 			 const InList &data, 
 			 const EventList &events )
 {
+  clear();
   // speaker:
   initStandardOutputs( rp, &Loudspeakers, Loudspeaker,
 		       LoudspeakerIdentifier, LoudspeakerNames );
