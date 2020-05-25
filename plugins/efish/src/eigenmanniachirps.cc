@@ -56,7 +56,39 @@ SampleDataD EigenmanniaEOD::getEOD( const double eodf, double &duration, const d
   return eod;
 }
 
+//************************************************************************************
+//********                         Type A Chirp                                *******
+TypeAChirp::TypeAChirp( const double sampling_interval) :
+    sampling_interval(sampling_interval), eod_model(EODModel::REALISTIC) 
+    {}
 
+TypeAChirp::TypeAChirp( const double sampling_interval, const EODModel eod_model ):
+    sampling_interval( sampling_interval ), eod_model( eod_model )
+{}
+
+void TypeAChirp::eodModel( EODModel model ) {
+  this->eod_model = model;
+}
+
+EODModel TypeAChirp::eodModel( void ) const {
+  return this->eod_model;
+}
+
+SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, bool with_dc ) const {
+  EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
+  double begin_eod_duration = with_dc ? 0.75 / eodf : 1./eodf;
+  SampleDataD begin = eod.getEOD(eodf, begin_eod_duration, 0.0, false);
+  double end_phase = with_dc ? 0.75 * 2 * eod.pi() : 0.0;
+
+  SampleDataD end = eod.getEOD(eodf, begin_eod_duration, end_phase, false);
+  double offset = with_dc ? min(begin) : 0.0; 
+  SampleDataD data( static_cast<int>( floor( chirp_duration / sampling_interval ) ), 0.0, sampling_interval, offset);
+
+  SampleDataD result = begin;
+  result = result.append(data);
+  result = result.append(end);
+  return result;
+}
 
 //************************************************************************************
 //********                     EigenmanniaChirps RePro                         *******
@@ -161,11 +193,25 @@ void EigenmanniaChirps::createStimulus( void ) {
   
   bool success = estimateEodFrequency( eodf );
   double fakefish_eodf = eodf + deltaf;
-
-  stimData = eigenmanniaEOD( fakefish_eodf, duration, stimulus_samplerate );
+  EigenmanniaEOD eod( eod_model );
+  TypeAChirp chirp( 1./20000., eod_model);
+  double eod_duration = 0.5;
+  SampleDataD eod_data = eod.getEOD(400., eod_duration);
+  eod_data.save("EOD_Data.dat");
+  SampleDataD dc_chirp = chirp.getWaveform(400, 0.1, true);
+  dc_chirp.save("DC_Chirp.dat");
+  SampleDataD no_dc_chirp = chirp.getWaveform(400, 0.1, false); 
+  no_dc_chirp.save("No_DC_Chirp.dat");
   
+  stimData = eod_data;
+  stimData = stimData.append( dc_chirp );
+  stimData = stimData.append( eod_data );
+  stimData = stimData.append( no_dc_chirp );
+
+  cerr << stimData.size() << endl;
+  stimData.save("stim_data.dat");
   stimData.setTrace( GlobalEField );
-  stimData.setSampleInterval( 1./stimulus_samplerate );
+  // stimData.setSampleInterval( 1./20000. );
   // stimData.description().addText( "Type", "unrewarded" ).addFlags( OutData::Mutable );
   // stimData.description()["Frequency"].addFlags( OutData::Mutable );
   //stimData.setIdent( ident + "_unrewarded" );
@@ -185,6 +231,7 @@ int EigenmanniaChirps::main( void ) {
   } else {
     eod_model = EODModel::REALISTIC;
   }
+  createStimulus();
   return Completed;
 }
 

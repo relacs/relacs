@@ -62,6 +62,26 @@ private:
   EODModel eod_model;
 
 };
+
+
+class TypeAChirp {
+
+public:
+  TypeAChirp( const double sampling_interval );
+  TypeAChirp( const double sampling_interval, const EODModel model );
+
+  SampleDataD getWaveform( const double eodf, const double chirp_duration, bool with_dc ) const;
+  
+  void eodModel( EODModel model );
+  EODModel eodModel( void ) const;
+  
+private:
+  double sampling_interval;
+  EODModel eod_model;
+
+};
+
+
 class EigenmanniaChirps : 
         public RePro, 
         public efield::Traces, 
