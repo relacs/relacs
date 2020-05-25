@@ -90,6 +90,48 @@ SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_durat
   return result;
 }
 
+
+//************************************************************************************
+//********                         Type B Chirp                                *******
+TypeBChirp::TypeBChirp( const double sampling_interval) :
+    sampling_interval(sampling_interval), eod_model(EODModel::REALISTIC) 
+    {}
+
+TypeBChirp::TypeBChirp( const double sampling_interval, const EODModel eod_model ):
+    sampling_interval( sampling_interval ), eod_model( eod_model )
+{}
+
+void TypeBChirp::eodModel( EODModel model ) {
+  this->eod_model = model;
+}
+
+EODModel TypeBChirp::eodModel( void ) const {
+  return this->eod_model;
+}
+
+SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, bool with_dc ) const {
+  double eod_period = 1./eodf;
+  int interruption_count = chirp_duration/(2*eod_period);
+  EigenmanniaEOD eod( this->eod_model, sampling_interval );
+  double begin_eod_duration = with_dc ? 0.75 / eodf : 1./eodf;
+  SampleDataD begin_eod = eod.getEOD(eodf, begin_eod_duration, 0.0, false);
+  
+  double end_phase = with_dc ? 0.75 * 2 * eod.pi() : 0.0;
+  SampleDataD end_eod = eod.getEOD(eodf, begin_eod_duration, end_phase, false);
+  SampleDataD intermediate_eod = eod.getEOD(eodf, eod_period, end_phase, false);
+
+  double offset = with_dc ? min(begin_eod) : 0.0; 
+  SampleDataD interruption( static_cast<int>( floor( eod_period / sampling_interval ) ), 0.0, sampling_interval, offset);
+  SampleDataD result = begin_eod;
+  for ( int i = 0; i < interruption_count; ++i ) {
+    result = result.append(interruption);
+    result = result.append(intermediate_eod);
+  }
+  result = result.append(end_eod);
+  return result;
+}
+
+
 //************************************************************************************
 //********                     EigenmanniaChirps RePro                         *******
 EigenmanniaChirps::EigenmanniaChirps( void )
@@ -195,6 +237,7 @@ void EigenmanniaChirps::createStimulus( void ) {
   double fakefish_eodf = eodf + deltaf;
   EigenmanniaEOD eod( eod_model );
   TypeAChirp chirp( 1./20000., eod_model);
+  TypeBChirp chirpB( 1./20000., eod_model);
   double eod_duration = 0.5;
   SampleDataD eod_data = eod.getEOD(400., eod_duration);
   eod_data.save("EOD_Data.dat");
@@ -203,12 +246,16 @@ void EigenmanniaChirps::createStimulus( void ) {
   SampleDataD no_dc_chirp = chirp.getWaveform(400, 0.1, false); 
   no_dc_chirp.save("No_DC_Chirp.dat");
   
+  SampleDataD typeb_dc = chirpB.getWaveform(400, 0.050, true);
+  typeb_dc.save("TypeB_DC.dat");
+  SampleDataD typeb_nodc = chirpB.getWaveform(400, 0.050, false);
+  typeb_nodc.save("TypeB_NoDC.dat");
+
   stimData = eod_data;
   stimData = stimData.append( dc_chirp );
   stimData = stimData.append( eod_data );
   stimData = stimData.append( no_dc_chirp );
 
-  cerr << stimData.size() << endl;
   stimData.save("stim_data.dat");
   stimData.setTrace( GlobalEField );
   // stimData.setSampleInterval( 1./20000. );
