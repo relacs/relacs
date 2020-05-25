@@ -26,7 +26,40 @@ using namespace relacs;
 using namespace std;
 namespace efish {
 
+//************************************************************************************
+//********                       Eigenamannia EOD                              *******
+EigenmanniaEOD::EigenmanniaEOD():
+    sampling_interval(1./20000), eod_model(EODModel::REALISTIC)
+{}
 
+EigenmanniaEOD::EigenmanniaEOD( const EODModel eod_model ):
+    sampling_interval(1./20000), eod_model(eod_model)
+{}
+
+EigenmanniaEOD::EigenmanniaEOD( const EODModel eod_model, const double sampling_interval ):
+    sampling_interval(sampling_interval), eod_model(eod_model)
+{}
+
+SampleDataD EigenmanniaEOD::getEOD( const double eodf, double &duration, const double phase, 
+                                    bool full_cycles ) const {
+  if (full_cycles) {
+    duration = round(duration * eodf) / eodf; 
+  }
+  SampleDataD eod( 0.0, duration, 0.0 );
+  if ( eod_model == EODModel::REALISTIC ) {
+    for ( size_t i = 0; i < harmonic_group_amplitudes.size(); ++i ) {
+      eod += ( sin( 0.0, duration, this->sampling_interval, (i+1) * eodf, harmonic_group_phases[i] + phase ) * harmonic_group_amplitudes[i] );
+    }
+  } else {
+    eod += sin(0.0, duration, this->sampling_interval, eodf, 0.0);
+  }
+  return eod;
+}
+
+
+
+//************************************************************************************
+//********                     EigenmanniaChirps RePro                         *******
 EigenmanniaChirps::EigenmanniaChirps( void )
   : RePro( "EigenmanniaChirps", "efish", "Jan Grewe", "1.0", "May 11, 2020" ) {
   // add some options:
@@ -112,20 +145,6 @@ bool EigenmanniaChirps::estimateEodFrequency( double &fisheodf ) {
     }
   }
   return true;
-}
-
-
-SampleDataD EigenmanniaChirps::eigenmanniaEOD( const double &freq, const double &duration, const double &samplerate ) {
-  double interval = 1./samplerate;
-  SampleDataD eod( 0.0, duration, 0.0 );
-  if ( eod_model == EODModel::REALISTIC ) {
-    for ( size_t i = 0; i < harmonic_group_amplitudes.size(); ++i ) {
-      eod += ( sin( 0.0, duration, interval, i * freq, harmonic_group_phases[i] ) * harmonic_group_amplitudes[i] );
-    }
-  } else {
-    eod += sin(0.0, duration, interval, freq, 0.0);
-  }
-  return eod;
 }
 
 
