@@ -153,23 +153,39 @@ EODModel TypeBChirp::eodModel( void ) const {
 }
 
 SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
+  EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
   double eod_period = 1./eodf;
   int interruption_count = chirp_duration/(2*eod_period);
-  EigenmanniaEOD eod( this->eod_model, sampling_interval );
-  double begin_eod_duration = with_dc ? 0.75 / eodf : 1./eodf;
-  SampleDataD begin_eod = eod.getEOD(eodf, begin_eod_duration, 0.0, false);
+  double begin_eod_duration = eod_period;
+  double end_eod_duration = eod_period;
   
-  double end_phase = with_dc ? 0.75 * 2 * eod.pi() : 0.0;
-  SampleDataD end_eod = eod.getEOD(eodf, begin_eod_duration, end_phase, false);
-  SampleDataD intermediate_eod = eod.getEOD(eodf, eod_period, end_phase, false);
-
-  double offset = with_dc ? min(begin_eod) : 0.0; 
-  SampleDataD interruption( static_cast<int>( floor( eod_period / sampling_interval ) ), 0.0, sampling_interval, offset);
-  SampleDataD result = begin_eod;
-  for ( int i = 0; i < interruption_count; ++i ) {
-    result = result.append(interruption);
-    result = result.append(intermediate_eod);
+  double start_shift = eod.phaseShift( eodf );
+  double stop_shift = 0.0;
+  if (signal == SignalContent::FULL) {
+    stop_shift = eod.phaseShift( eodf, -10.);
+    double delta_phi = stop_shift - start_shift; 
+    begin_eod_duration = (delta_phi/(2*eod.pi()) * eod_period);  
+    end_eod_duration = eod_period + (2*eod.pi() - stop_shift + start_shift)/(2*eod.pi()) * eod_period;
+  } else if ( signal == SignalContent::NO_DC ) {
+    stop_shift = start_shift + 2 * eod.pi();
   }
+  
+  SampleDataD start_eod = eod.getEOD( eodf, begin_eod_duration, start_shift, false );
+  double offset = signal == SignalContent::FULL ? start_eod[start_eod.size() - 1] : 0.0; 
+  SampleDataD end_eod = eod.getEOD( eodf, end_eod_duration, stop_shift, false );
+  SampleDataD intermediate_eod = eod.getEOD( eodf, eod_period, stop_shift, false );  
+  SampleDataD interruption_data( static_cast<int>( floor( eod_period / sampling_interval ) ), 0.0, sampling_interval, offset);
+  
+  SampleDataD result = start_eod;
+  for ( int i = 0; i < interruption_count; ++i ) {
+    for ( int j = 0; j < interruption_data.size(); ++j) {
+      result.push(interruption_data[j]);
+    }
+    if (i < interruption_count - 1) {
+    for ( int j = 0; j < intermediate_eod.size(); ++j)
+        result.push(intermediate_eod[j]);    
+    }
+  }  
   result = result.append(end_eod);
   return result;
 }
@@ -269,6 +285,7 @@ void EigenmanniaChirps::createStimulus( void ) {
   stimData.clear();
   duration = number( "duration" );
   deltaf = number( "deltaf" );
+  double sampling_interval = 1./20000;
   string model_selection = text( "eodmodel" );
   if (model_selection == "sinewave") {
     eod_model = EODModel::SINE;
@@ -301,7 +318,10 @@ void EigenmanniaChirps::createStimulus( void ) {
   stimData = stimData.append( dc_chirp );
   stimData = stimData.append( eod_data );
   stimData = stimData.append( no_dc_chirp );
-
+  stimData = stimData.append( eod_data );
+  stimData = stimData.append( typeb_nodc );
+  stimData = stimData.append( typeb_dc );
+  
   stimData.save("stim_data.dat");
   stimData.setTrace( GlobalEField );
   // stimData.setSampleInterval( 1./20000. );
