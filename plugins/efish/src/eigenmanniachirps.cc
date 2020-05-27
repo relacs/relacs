@@ -48,10 +48,10 @@ SampleDataD EigenmanniaEOD::getEOD( const double eodf, double &duration, const d
   SampleDataD eod( 0.0, duration, 0.0 );
   if ( eod_model == EODModel::REALISTIC ) {
     for ( size_t i = 0; i < harmonic_group_amplitudes.size(); ++i ) {
-      eod += ( sin( 0.0, duration, this->sampling_interval, (i+1) * eodf, harmonic_group_phases[i] + phase ) * harmonic_group_amplitudes[i] );
+      eod += ( sin( 0.0, duration, this->sampling_interval, (i+1) * eodf, harmonic_group_phases[i] + (i+1) * phase ) * harmonic_group_amplitudes[i] );
     }
   } else {
-    eod += sin(0.0, duration, this->sampling_interval, eodf, 0.0);
+    eod += sin(0.0, duration, this->sampling_interval, eodf, phase);
   }
   return eod;
 }
