@@ -74,7 +74,7 @@ EODModel TypeAChirp::eodModel( void ) const {
   return this->eod_model;
 }
 
-SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, bool with_dc ) const {
+SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
   EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
   double begin_eod_duration = with_dc ? 0.75 / eodf : 1./eodf;
   SampleDataD begin = eod.getEOD(eodf, begin_eod_duration, 0.0, false);
@@ -109,7 +109,7 @@ EODModel TypeBChirp::eodModel( void ) const {
   return this->eod_model;
 }
 
-SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, bool with_dc ) const {
+SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
   double eod_period = 1./eodf;
   int interruption_count = chirp_duration/(2*eod_period);
   EigenmanniaEOD eod( this->eod_model, sampling_interval );
@@ -234,21 +234,24 @@ void EigenmanniaChirps::createStimulus( void ) {
   }
   
   bool success = estimateEodFrequency( eodf );
+  if (!success) {
+    cerr << "Could not estimate the fisch frequency!" << endl;
+  }
+
   double fakefish_eodf = eodf + deltaf;
   EigenmanniaEOD eod( eod_model );
-  TypeAChirp chirp( 1./20000., eod_model);
-  TypeBChirp chirpB( 1./20000., eod_model);
+  TypeAChirp chirp( sampling_interval, eod_model);
+  TypeBChirp chirpB( sampling_interval, eod_model);
+
   double eod_duration = 0.5;
-  SampleDataD eod_data = eod.getEOD(400., eod_duration);
-  eod_data.save("EOD_Data.dat");
-  SampleDataD dc_chirp = chirp.getWaveform(400, 0.1, true);
-  dc_chirp.save("DC_Chirp.dat");
-  SampleDataD no_dc_chirp = chirp.getWaveform(400, 0.1, false); 
-  no_dc_chirp.save("No_DC_Chirp.dat");
+  double shift = eod.phaseShift( fakefish_eodf );
+  SampleDataD eod_data = eod.getEOD( fakefish_eodf, eod_duration, shift );
+  SampleDataD dc_chirp = chirp.getWaveform( fakefish_eodf, 0.1, SignalContent::FULL );
+  SampleDataD no_dc_chirp = chirp.getWaveform( fakefish_eodf, 0.1, SignalContent::NO_DC ); 
   
-  SampleDataD typeb_dc = chirpB.getWaveform(400, 0.050, true);
+  SampleDataD typeb_dc = chirpB.getWaveform( fakefish_eodf, 0.100, SignalContent::FULL );
   typeb_dc.save("TypeB_DC.dat");
-  SampleDataD typeb_nodc = chirpB.getWaveform(400, 0.050, false);
+  SampleDataD typeb_nodc = chirpB.getWaveform( fakefish_eodf, 0.100, SignalContent::NO_DC );
   typeb_nodc.save("TypeB_NoDC.dat");
 
   stimData = eod_data;

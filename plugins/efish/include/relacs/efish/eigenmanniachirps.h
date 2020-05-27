@@ -39,7 +39,7 @@ namespace efish {
 */
 
 enum class EODModel{ SINE = 0, REALISTIC = 1 };
-
+enum class SignalContent{ FULL = 0, NO_DC = 1}; // , NO_AM = 2};
 
 class EigenmanniaEOD {
 
@@ -70,7 +70,7 @@ public:
   TypeAChirp( const double sampling_interval );
   TypeAChirp( const double sampling_interval, const EODModel model );
 
-  SampleDataD getWaveform( const double eodf, const double chirp_duration, bool with_dc ) const;
+  SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const;
   
   void eodModel( EODModel model );
   EODModel eodModel( void ) const;
@@ -88,7 +88,7 @@ public:
   TypeBChirp( const double sampling_interval );
   TypeBChirp( const double sampling_interval, const EODModel model );
 
-  SampleDataD getWaveform( const double eodf, const double chirp_duration, bool with_dc ) const;
+  SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const;
   
   void eodModel( EODModel model );
   EODModel eodModel( void ) const;
