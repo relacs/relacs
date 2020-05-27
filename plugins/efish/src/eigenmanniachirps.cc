@@ -56,6 +56,36 @@ SampleDataD EigenmanniaEOD::getEOD( const double eodf, double &duration, const d
   return eod;
 }
 
+double EigenmanniaEOD::phaseShift( const double eodf, double threshold, bool rising_flank ) const {
+  if (eod_model == EODModel::SINE) {
+    return 0.0;
+  }
+  double eod_period = 1./eodf;
+  double duration = 3. * eod_period;
+  SampleDataD eod = getEOD( eodf, duration ); 
+
+  if ( threshold < min(eod) ) {
+    threshold = min(eod) + std::numeric_limits<double>::epsilon();
+  } else if (threshold > max(eod) ) {
+    threshold = max(eod) - std::numeric_limits<double>::epsilon() ;
+  }  
+
+  EventData crossings;
+  if ( rising_flank ) {
+    rising( eod, crossings, threshold );
+  } else {
+    falling( eod, crossings, threshold );
+  }
+
+  double shift = 0.0;
+  if ( crossings.size() > 0 ) {
+    shift = 2 * pi() * crossings[0]/eod_period ;
+  } else {
+    cerr << "EigenmanniaEOD: invalid threshold, could not figure out the phase shift!\n";
+  }
+  return shift;
+}
+
 //************************************************************************************
 //********                         Type A Chirp                                *******
 TypeAChirp::TypeAChirp( const double sampling_interval) :

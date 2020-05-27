@@ -52,6 +52,7 @@ public:
                       const double phase_shift = 0.0, bool full_cycles = true ) const;
 
   constexpr double pi() { return std::acos(-1); }
+  double phaseShift( const double eodf, double threshold = 0.0, bool rising_fank = true ) const;
 
 private: 
   //std::vector<double> harmonic_group_amplitudes = {1.0087, 0.23201, 0.060524, 0.020175, 0.010087, 0.0080699};
