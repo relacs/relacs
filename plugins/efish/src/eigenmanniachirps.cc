@@ -197,16 +197,16 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   : RePro( "EigenmanniaChirps", "efish", "Jan Grewe", "1.0", "May 11, 2020" ) {
   // add some options:
   newSection( "Beat parameter" );
-  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "duration", "Total trial duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "deltaf", "Difference frequency", 20., 0.1, 1000., 1.0, "Hz" );
-  addNumber( "fakefish", "Assume the presence of a fish with the given frequency, set to zero to use the real one", 0.0, 1., 1500., 10., "Hz" );
-  addNumber( "contrast", "Beat contrast", 20., 0.01, 200.0, 1.0, "%" );
-  addSelection( "eodmodel", "Model for EOD creation", "sinewave|harmonic group" );
-  addInteger( "repeats", "Repeats", 10, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "fakefish", "Fake a receiver fish with the given frequency, set to zero to use the real one", 0.0, 1., 1500., 10., "Hz" );
+  addNumber( "contrast", "Relative strength of the sender.", 20., 0.01, 200.0, 1.0, "%" );
+  addSelection( "eodmodel", "Model for EOD creation.", "sinewave|realistic" );
+  addInteger( "repeats", "Number of repeated trials with the same conditions.", 10, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
 
   newSection( "Chirps" );
-  addSelection( "chirptype", "Type of chirp", "incomplete|complete" );
-  addNumber( "chirpduration", "Duration of chirps, extended to integer multiples of the EOD period", 0.01, 0.001, 0.5, 0.001, "s", "ms" );
+  addSelection( "chirptype", "Type of chirp", "TypeA|TypeB" );
+  addNumber( "chirpduration", "Minimum chirp duration, is extended to integer multiple of EOD period", 0.01, 0.001, 0.5, 0.001, "s", "ms" );
   addNumber( "chirprate", "Rate at which the fake fish generates chirps.", 1.0, 0.001, 100.0, 0.1, "Hz" );
   addSelection( "chirplocation", "Position in the EOD period in which the chrip should start, choose bottom to induce a DC shift", "bottom|center" );
    
@@ -292,7 +292,19 @@ void EigenmanniaChirps::createStimulus( void ) {
   } else {
     eod_model = EODModel::REALISTIC;
   }
-  
+  string chirp_selection = text( "chirptype" );
+  if ( chirp_selection == "TypeA") {
+    chirp_type = ChirpType::TYPE_A;
+  } else {
+    chirp_type = ChirpType::TYPE_B;
+  }
+  string chirp_location = text( "chirplocation" );
+  if ( chirp_location == "center" ) {
+    signal_content = SignalContent::NO_DC;
+  } else {
+    signal_content = SignalContent::FULL;
+  }
+
   bool success = estimateEodFrequency( eodf );
   if (!success) {
     cerr << "Could not estimate the fisch frequency!" << endl;

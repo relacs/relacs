@@ -40,6 +40,7 @@ namespace efish {
 
 enum class EODModel{ SINE = 0, REALISTIC = 1 };
 enum class SignalContent{ FULL = 0, NO_DC = 1}; // , NO_AM = 2};
+enum class ChirpType{ TYPE_A = 0, TYPE_B =1};
 
 class EigenmanniaEOD {
 
@@ -55,13 +56,10 @@ public:
   double phaseShift( const double eodf, double threshold = 0.0, bool rising_fank = true ) const;
 
 private: 
-  //std::vector<double> harmonic_group_amplitudes = {1.0087, 0.23201, 0.060524, 0.020175, 0.010087, 0.0080699};
-  //std::vector<double> harmonic_group_phases = {1.3414, 1.3228, 2.9242, 2.8157, 2.6871, -2.8415};
   std::vector<double> harmonic_group_amplitudes = {1.0, 0.25, 0.0, 0.01};
   std::vector<double> harmonic_group_phases = {0.0, -0.48 * pi(), 0.0, 0.0};
   double sampling_interval;
   EODModel eod_model;
-
 };
 
 
@@ -119,6 +117,8 @@ private:
   double chrip_duration;
   double deltaf;
   EODModel eod_model;
+  ChirpType chirp_type;
+  SignalContent signal_content;
 
   OutData stimData;
   OutList outList;
