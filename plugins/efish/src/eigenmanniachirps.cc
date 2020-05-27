@@ -106,17 +106,30 @@ EODModel TypeAChirp::eodModel( void ) const {
 
 SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
   EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
-  double begin_eod_duration = with_dc ? 0.75 / eodf : 1./eodf;
-  SampleDataD begin = eod.getEOD(eodf, begin_eod_duration, 0.0, false);
-  double end_phase = with_dc ? 0.75 * 2 * eod.pi() : 0.0;
+  double eod_period = 1./eodf;
+  double begin_eod_duration = eod_period;
+  double end_eod_duration = eod_period;
+  
+  double start_shift = eod.phaseShift( eodf );
+  double stop_shift = 0.0;
+  if (signal == SignalContent::FULL) {
+    stop_shift = eod.phaseShift( eodf, -10.);
+    double delta_phi = stop_shift - start_shift; 
+    begin_eod_duration = (delta_phi/(2*eod.pi()) * eod_period);
+    end_eod_duration = eod_period + (2*eod.pi() - stop_shift + start_shift)/(2*eod.pi()) * eod_period;
+  } else if ( signal == SignalContent::NO_DC ) {
+    stop_shift = start_shift + 2 * eod.pi();
+  }
+  SampleDataD start_eod = eod.getEOD( eodf, begin_eod_duration, start_shift, false );
+  SampleDataD end_eod = eod.getEOD( eodf, end_eod_duration, stop_shift, false );
+  
+  double offset = signal == SignalContent::FULL ? start_eod[start_eod.size() - 1] : 0.0; 
+  SampleDataD chirp_data( static_cast<int>( floor( chirp_duration / sampling_interval ) ), 0.0, sampling_interval, offset );
 
-  SampleDataD end = eod.getEOD(eodf, begin_eod_duration, end_phase, false);
-  double offset = with_dc ? min(begin) : 0.0; 
-  SampleDataD data( static_cast<int>( floor( chirp_duration / sampling_interval ) ), 0.0, sampling_interval, offset);
+  SampleDataD result = start_eod;
+  result = result.append( chirp_data );
+  result = result.append( end_eod ); 
 
-  SampleDataD result = begin;
-  result = result.append(data);
-  result = result.append(end);
   return result;
 }
 
