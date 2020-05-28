@@ -111,19 +111,23 @@ public:
   virtual int main( void );
 private:
   
-  double duration;
+  double stimulus_duration;
   double chirp_rate;
+  double chirp_delay;
   double eodf;
-  double chrip_duration;
+  double chirp_duration;
   double deltaf;
+  double sampling_interval;
+  int repeats;
+  
   EODModel eod_model;
   ChirpType chirp_type;
   SignalContent signal_content;
 
   OutData stimData;
   OutList outList;
-
-  void createStimulus( void );
+  void readOptions( void );
+  bool createStimulus( void );
   bool estimateEodFrequency( double &fisheodf );
 };
 

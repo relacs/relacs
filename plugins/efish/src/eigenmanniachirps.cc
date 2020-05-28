@@ -42,8 +42,8 @@ EigenmanniaEOD::EigenmanniaEOD( const EODModel eod_model, const double sampling_
 
 SampleDataD EigenmanniaEOD::getEOD( const double eodf, double &duration, const double phase, 
                                     bool full_cycles ) const {
-  if (full_cycles) {
-    duration = round(duration * eodf) / eodf; 
+  if ( full_cycles ) {
+    duration = ceil(duration * eodf) / eodf; 
   }
   SampleDataD eod( 0.0, duration, 0.0 );
   if ( eod_model == EODModel::REALISTIC ) {
@@ -79,7 +79,7 @@ double EigenmanniaEOD::phaseShift( const double eodf, double threshold, bool ris
 
   double shift = 0.0;
   if ( crossings.size() > 0 ) {
-    shift = 2 * pi() * crossings[0]/eod_period ;
+    shift = 2 * pi() * (crossings[0] - sampling_interval)/eod_period ;
   } else {
     cerr << "EigenmanniaEOD: invalid threshold, could not figure out the phase shift!\n";
   }
@@ -155,7 +155,7 @@ EODModel TypeBChirp::eodModel( void ) const {
 SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
   EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
   double eod_period = 1./eodf;
-  int interruption_count = chirp_duration/(2*eod_period);
+  int interruption_count = static_cast<int>( ceil(chirp_duration/(2*eod_period)) );
   double begin_eod_duration = eod_period;
   double end_eod_duration = eod_period;
   
@@ -182,8 +182,8 @@ SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_durat
       result.push(interruption_data[j]);
     }
     if (i < interruption_count - 1) {
-    for ( int j = 0; j < intermediate_eod.size(); ++j)
-        result.push(intermediate_eod[j]);    
+      for ( int j = 0; j < intermediate_eod.size(); ++j)
+          result.push(intermediate_eod[j]);    
     }
   }  
   result = result.append(end_eod);
@@ -206,9 +206,10 @@ EigenmanniaChirps::EigenmanniaChirps( void )
 
   newSection( "Chirps" );
   addSelection( "chirptype", "Type of chirp", "TypeA|TypeB" );
+  addNumber( "chirpdelay", "Minimum time until the first chrip", 1.0, 0.0, 1000.0, 0.01, "s");
   addNumber( "chirpduration", "Minimum chirp duration, is extended to integer multiple of EOD period", 0.01, 0.001, 0.5, 0.001, "s", "ms" );
   addNumber( "chirprate", "Rate at which the fake fish generates chirps.", 1.0, 0.001, 100.0, 0.1, "Hz" );
-  addSelection( "chirplocation", "Position in the EOD period in which the chrip should start, choose bottom to induce a DC shift", "bottom|center" );
+  addSelection( "signaltype", "Type of signal, whether it drives all, only ampullary, or only tuberous pathways", "all|tuberous only|ampullary only" );
    
   newSection( "EOD estimation" );
   addSelection( "intrace", "inputTrace" );
@@ -281,82 +282,99 @@ bool EigenmanniaChirps::estimateEodFrequency( double &fisheodf ) {
 }
 
 
-void EigenmanniaChirps::createStimulus( void ) {
+bool EigenmanniaChirps::createStimulus( void ) {
   stimData.clear();
-  duration = number( "duration" );
-  deltaf = number( "deltaf" );
-  double sampling_interval = 1./20000;
-  string model_selection = text( "eodmodel" );
-  if (model_selection == "sinewave") {
-    eod_model = EODModel::SINE;
-  } else {
-    eod_model = EODModel::REALISTIC;
-  }
-  string chirp_selection = text( "chirptype" );
-  if ( chirp_selection == "TypeA") {
-    chirp_type = ChirpType::TYPE_A;
-  } else {
-    chirp_type = ChirpType::TYPE_B;
-  }
-  string chirp_location = text( "chirplocation" );
-  if ( chirp_location == "center" ) {
-    signal_content = SignalContent::NO_DC;
-  } else {
-    signal_content = SignalContent::FULL;
-  }
-
-  bool success = estimateEodFrequency( eodf );
-  if (!success) {
-    cerr << "Could not estimate the fisch frequency!" << endl;
-  }
-
-  double fakefish_eodf = eodf + deltaf;
+  double sender_eodf = eodf + deltaf;
   EigenmanniaEOD eod( eod_model );
-  TypeAChirp chirp( sampling_interval, eod_model);
-  TypeBChirp chirpB( sampling_interval, eod_model);
+  SampleDataD eod_waveform;
+  SampleDataD first_eod_waveform;
+  SampleDataD chirp_waveform;
+  int chirp_count = static_cast<int>( floor( stimulus_duration * chirp_rate ) );
+  double ici = stimulus_duration / chirp_count;
+  if ( ici < chirp_duration ) {
+    return false; 
+  }
+  if ( chirp_count * chirp_duration >= stimulus_duration ) {
+    return false;
+  }
+  if ( chirp_type == ChirpType::TYPE_A ){
+    TypeAChirp chirp( sampling_interval, eod_model);
+    chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration, signal_content );
+  } else {
+    TypeBChirp chirp( sampling_interval, eod_model);
+    chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration, signal_content );
+  }
+  chirp_waveform.save("ChirpWaveform.dat");
+  double shift = eod.phaseShift( sender_eodf );
+  first_eod_waveform = eod.getEOD( sender_eodf, chirp_delay, shift, false );
+  eod_waveform = eod.getEOD( sender_eodf, ici, shift, false );
 
-  double eod_duration = 0.5;
-  double shift = eod.phaseShift( fakefish_eodf );
-  SampleDataD eod_data = eod.getEOD( fakefish_eodf, eod_duration, shift );
-  SampleDataD dc_chirp = chirp.getWaveform( fakefish_eodf, 0.1, SignalContent::FULL );
-  SampleDataD no_dc_chirp = chirp.getWaveform( fakefish_eodf, 0.1, SignalContent::NO_DC ); 
-  
-  SampleDataD typeb_dc = chirpB.getWaveform( fakefish_eodf, 0.100, SignalContent::FULL );
-  typeb_dc.save("TypeB_DC.dat");
-  SampleDataD typeb_nodc = chirpB.getWaveform( fakefish_eodf, 0.100, SignalContent::NO_DC );
-  typeb_nodc.save("TypeB_NoDC.dat");
+  stimData = first_eod_waveform;
+  for ( int i = 0; i < chirp_count; ++i ){
+    stimData.append( chirp_waveform );
+    stimData.append( eod_waveform );
+  }
 
-  stimData = eod_data;
-  stimData = stimData.append( dc_chirp );
-  stimData = stimData.append( eod_data );
-  stimData = stimData.append( no_dc_chirp );
-  stimData = stimData.append( eod_data );
-  stimData = stimData.append( typeb_nodc );
-  stimData = stimData.append( typeb_dc );
-  
   stimData.save("stim_data.dat");
   stimData.setTrace( GlobalEField );
-  // stimData.setSampleInterval( 1./20000. );
+  stimData.setSampleInterval( sampling_interval );
   // stimData.description().addText( "Type", "unrewarded" ).addFlags( OutData::Mutable );
   // stimData.description()["Frequency"].addFlags( OutData::Mutable );
   //stimData.setIdent( ident + "_unrewarded" );
   outList.push( stimData );
   
   //stimData.sineWave();
+  return true;
 }
 
-
-int EigenmanniaChirps::main( void ) {
-  // get options:
-  duration = number( "duration" );
-  deltaf = number( "deltaf" );
+void EigenmanniaChirps::readOptions( void ) {
+  stimulus_duration = number( "duration", 0.0, "s" );
+  deltaf = number( "deltaf", 0.0, "Hz" );
+  chirp_duration = number( "chirpduration", 0.0, "s" );
+  chirp_rate = number( "chirprate", 0.0, "Hz" );
+  chirp_delay = number( "chirpdelay", 0.0, "s" );
+  sampling_interval = 1./20000;
+  
   string model_selection = text( "eodmodel" );
   if (model_selection == "sinewave") {
     eod_model = EODModel::SINE;
   } else {
     eod_model = EODModel::REALISTIC;
   }
-  createStimulus();
+  
+  string chirp_selection = text( "chirptype" );
+  if ( chirp_selection == "TypeA") {
+    chirp_type = ChirpType::TYPE_A;
+  } else {
+    chirp_type = ChirpType::TYPE_B;
+  }
+  
+  string chirp_location = text( "signaltype" );
+  if ( chirp_location == "all" ) {
+    signal_content = SignalContent::FULL;
+  } else if ( chirp_location == "tuberous only" ) {
+    signal_content = SignalContent::NO_DC;
+  } else{
+    cerr << "ampullary only is not supported yet!" << endl;
+    signal_content = SignalContent::FULL;
+  }
+  
+  bool success = estimateEodFrequency( eodf );
+  if (!success) {
+    cerr << "Could not estimate the fish frequency!" << endl;
+  }
+}
+
+
+int EigenmanniaChirps::main( void ) {
+  // get options:
+  readOptions();
+  bool stimulus_ok = createStimulus();
+  if (!stimulus_ok) {
+    return Failed;
+  }
+
+
   return Completed;
 }
 
