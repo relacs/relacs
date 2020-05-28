@@ -105,6 +105,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     ReadLoop( this ),
     WriteLoop( this ),
     DataRun( false ),
+    WriteFlag( false ),
     LogFile( 0 ),
     IsFullScreen( false ),
     IsMaximized( false ),
@@ -899,7 +900,7 @@ int RELACSWidget::getData( InList &data, EventList &events, double &signaltime,
     // do we need to wait for more data?
     while ( IData.success() &&
 	    IData.currentTimeRaw() < mintracetime+1.0e-8 &&
-	    AQ->isReadRunning() ) {
+	    AQ->isReadRunning() && WriteFlag ) {
       UpdateDataWait.wait( &DerivedDataMutex );
     }
     
@@ -1056,6 +1057,11 @@ int RELACSWidget::write( OutData &signal, bool setsignaltime, bool blocking )
     if ( IRawData.failed() )
       printlog( "! error in restarting analog input: " + IRawData.errorText() );
   }
+  if ( r >= 0 ) {
+    DerivedDataMutex.lockForWrite();
+    WriteFlag = true;
+    DerivedDataMutex.unlock();
+  }
   return r;
 }
 
@@ -1087,6 +1093,11 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
     printlog( "! failed to write signals: " + signal.errorText() );
     if ( IRawData.failed() )
       printlog( "! error in restarting analog input: " + IRawData.errorText() );
+  }
+  if ( r >= 0 ) {
+    DerivedDataMutex.lockForWrite();
+    WriteFlag = true;
+    DerivedDataMutex.unlock();
   }
   return r;
 }
@@ -1146,6 +1157,9 @@ int RELACSWidget::stopWrite( void )
 {
   // stop analog output:
   int r = AQ->stopWrite();
+  DerivedDataMutex.lockForWrite();
+  WriteFlag = false;
+  DerivedDataMutex.unlock();
   return r;
 }
 
