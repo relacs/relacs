@@ -200,7 +200,7 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   addNumber( "duration", "Total trial duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "deltaf", "Difference frequency", 20., 0.1, 1000., 1.0, "Hz" );
   addNumber( "fakefish", "Fake a receiver fish with the given frequency, set to zero to use the real one", 0.0, 1., 1500., 10., "Hz" );
-  addNumber( "contrast", "Relative strength of the sender.", 20., 0.01, 200.0, 1.0, "%" );
+  addNumber( "contrast", "Strength of sender relative to receiver.", 0.2, 0.0, 1.0, 0.01, "", "%" );
   addSelection( "eodmodel", "Model for EOD creation.", "sinewave|realistic" );
   addInteger( "repeats", "Number of repeated trials with the same conditions.", 10, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
 
@@ -281,6 +281,20 @@ bool EigenmanniaChirps::estimateEodFrequency( double &fisheodf ) {
   return true;
 }
 
+string EigenmanniaChirps::toString( ChirpType type ) {
+  string str = (type == ChirpType::TYPE_A ? "Type A" : "Type B");
+  return str;
+}
+
+string EigenmanniaChirps::toString( SignalContent content ) {
+  string str;
+  if ( content == SignalContent::FULL ) {
+    str = "all channels";
+  } else if ( content == SignalContent::NO_DC ) {
+    str = "tuberous only";
+  }
+  return str;
+}
 
 bool EigenmanniaChirps::createStimulus( void ) {
   stimData.clear();
@@ -314,7 +328,7 @@ bool EigenmanniaChirps::createStimulus( void ) {
     stimData.append( chirp_waveform );
     stimData.append( eod_waveform );
   }
-
+  stimData /= max(stimData);
   stimData.save("stim_data.dat");
   stimData.setTrace( GlobalEField );
   stimData.setSampleInterval( sampling_interval );
@@ -334,7 +348,9 @@ void EigenmanniaChirps::readOptions( void ) {
   chirp_rate = number( "chirprate", 0.0, "Hz" );
   chirp_delay = number( "chirpdelay", 0.0, "s" );
   sampling_interval = 1./20000;
-  
+  stimulus_contrast = number( "contrast" );
+  this->repeats = static_cast<int>(number( "repeats" ));
+
   string model_selection = text( "eodmodel" );
   if (model_selection == "sinewave") {
     eod_model = EODModel::SINE;
@@ -355,13 +371,13 @@ void EigenmanniaChirps::readOptions( void ) {
   } else if ( chirp_location == "tuberous only" ) {
     signal_content = SignalContent::NO_DC;
   } else{
-    cerr << "ampullary only is not supported yet!" << endl;
+    warning("ampullary only is not supported yet!");
     signal_content = SignalContent::FULL;
   }
   
   bool success = estimateEodFrequency( eodf );
   if (!success) {
-    cerr << "Could not estimate the fish frequency!" << endl;
+    warning("Could not estimate the fish frequency!");
   }
 }
 
@@ -373,7 +389,28 @@ int EigenmanniaChirps::main( void ) {
   if (!stimulus_ok) {
     return Failed;
   }
+  receiver_amplitude = eodAmplitude( trace(LocalEODTrace[0]), currentTime() - 0.5, currentTime() );
 
+  // stimulus intensity:
+  double intensity = stimulus_contrast * receiver_amplitude;
+  stimData.setIntensity( intensity );
+
+  // output signal:
+  for (int i = 0; i < repeats; ++i) {
+    Str s = "<b>" + toString( chirp_type ) + "</b>"; 
+    s += "  Contrast: <b>" + Str( 100.0 * stimulus_contrast, 0, 5, 'g' ) + "%</b>";
+    s += "  Delta F: <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
+    s += "  SignalType: <b>" + toString( signal_content ) + "</b>";
+    s += "  Chirp duration: <b>" + Str( chirp_duration ) + "</b>";
+    message( s );
+
+    write( stimData );
+    if ( !stimData.success() ) {
+      string s = "Output of stimulus failed!<br>Error code is <b>" + stimData.errorText() + "</b>";
+      warning( s, 4.0 );
+      return Failed;
+    }
+  }
 
   return Completed;
 }

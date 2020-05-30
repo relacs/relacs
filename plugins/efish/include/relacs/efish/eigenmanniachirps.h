@@ -118,6 +118,9 @@ private:
   double chirp_duration;
   double deltaf;
   double sampling_interval;
+  double receiver_amplitude;
+  double stimulus_contrast;
+  double pause;
   int repeats;
   
   EODModel eod_model;
@@ -129,6 +132,9 @@ private:
   void readOptions( void );
   bool createStimulus( void );
   bool estimateEodFrequency( double &fisheodf );
+
+  string toString( SignalContent content );
+  string toString( ChirpType type );
 };
 
 
