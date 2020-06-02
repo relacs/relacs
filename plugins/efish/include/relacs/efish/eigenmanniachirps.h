@@ -110,7 +110,7 @@ public:
   EigenmanniaChirps( void );
   virtual int main( void );
 private:
-  
+  string name;
   double stimulus_duration;
   double chirp_rate;
   double chirp_delay;

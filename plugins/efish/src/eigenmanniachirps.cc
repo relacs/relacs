@@ -196,15 +196,18 @@ SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_durat
 EigenmanniaChirps::EigenmanniaChirps( void )
   : RePro( "EigenmanniaChirps", "efish", "Jan Grewe", "1.0", "May 11, 2020" ) {
   // add some options:
-  newSection( "Beat parameter" );
-  addNumber( "duration", "Total trial duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
-  addNumber( "deltaf", "Difference frequency", 20., 0.1, 1000., 1.0, "Hz" );
-  addNumber( "fakefish", "Fake a receiver fish with the given frequency, set to zero to use the real one", 0.0, 0., 1500., 10., "Hz" );
-  addNumber( "contrast", "Strength of sender relative to receiver.", 0.2, 0.0, 1.0, 0.01, "", "%" );
+  newSection( "General settings" );
+  addText( "name" , "Prefix used to identify the repro run, auto-generated if empty", "" );
   addSelection( "eodmodel", "Model for EOD creation.", "sinewave|realistic" );
   addInteger( "repeats", "Number of repeated trials with the same conditions.", 10, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "pause", "Minimal pause between trials.", 0.5, 0.0, 1000., 0.01, "s" );
-
+  addNumber( "fakefish", "Fake a receiver fish with the given frequency, set to zero to use the real one", 0.0, 0., 1500., 10., "Hz" );
+  
+  newSection( "Beat parameter" );
+  addNumber( "duration", "Total trial duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "deltaf", "Difference frequency", 20., 0.1, 1000., 1.0, "Hz" );
+  addNumber( "contrast", "Strength of sender relative to receiver.", 0.2, 0.0, 1.0, 0.01, "", "%" );
+  
   newSection( "Chirps" );
   addSelection( "chirptype", "Type of chirp", "TypeA|TypeB" );
   addNumber( "chirpdelay", "Minimum time until the first chrip", 1.0, 0.0, 1000.0, 0.01, "s");
@@ -213,7 +216,6 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   addSelection( "signaltype", "Type of signal, whether it drives all, only ampullary, or only tuberous pathways", "all|tuberous only|ampullary only" );
    
   newSection( "EOD estimation" );
-  addSelection( "intrace", "inputTrace" );
   addBoolean( "usepsd", "Use the power spectrum", true );
   addNumber( "mineodfreq", "Minimum expected EOD frequency", 100.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
   addNumber( "maxeodfreq", "Maximum expected EOD frequency", 2000.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
@@ -240,8 +242,9 @@ bool EigenmanniaChirps::estimateEodFrequency( double &fisheodf ) {
       double min_eodf = number( "mineodfreq" );
       double max_eodf = number( "maxeodfreq" );
       double eodf_prec = number( "eodfreqprec" );
-      int intrace = index( "inputTrace" );
+      int intrace = EODTrace;
       if ( intrace == -1 ) {
+        cerr << "INTRACE! " << intrace; 
         return false;
       }
       int nfft = 1;
@@ -298,7 +301,8 @@ string EigenmanniaChirps::toString( SignalContent content ) {
 }
 
 bool EigenmanniaChirps::createStimulus( void ) {
-  stimData.clear();
+  stimData.clear();  
+  string ident = name.size() == 0 ? "Eigenmannia chirps" : name;
   double sender_eodf = eodf + deltaf;
   EigenmanniaEOD eod( eod_model );
   SampleDataD eod_waveform;
@@ -319,30 +323,37 @@ bool EigenmanniaChirps::createStimulus( void ) {
     TypeBChirp chirp( sampling_interval, eod_model);
     chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration, signal_content );
   }
-  chirp_waveform.save("ChirpWaveform.dat");
+  
   double shift = eod.phaseShift( sender_eodf );
   first_eod_waveform = eod.getEOD( sender_eodf, chirp_delay, shift, false );
   eod_waveform = eod.getEOD( sender_eodf, ici, shift, false );
 
-  stimData = first_eod_waveform;
+  SampleDataD temp = first_eod_waveform;
+  std::vector<double> chirp_times(chirp_count, 0.0);
   for ( int i = 0; i < chirp_count; ++i ){
-    stimData.append( chirp_waveform );
-    stimData.append( eod_waveform );
+    chirp_times[i] = stimData.size() * sampling_interval + chirp_waveform.size() * sampling_interval / 2;
+    temp.append( chirp_waveform );
+    temp.append( eod_waveform );
   }
+  stimData = temp;
   stimData /= max(stimData);
-  stimData.save("stim_data.dat");
   stimData.setTrace( GlobalEField );
   stimData.setSampleInterval( sampling_interval );
-  // stimData.description().addText( "Type", "unrewarded" ).addFlags( OutData::Mutable );
-  // stimData.description()["Frequency"].addFlags( OutData::Mutable );
-  //stimData.setIdent( ident + "_unrewarded" );
+  stimData.description().addNumber( "real duration", stimData.size() * sampling_interval, "s" );
+  stimData.description().addNumber( "real chrip duration", chirp_waveform.size() * sampling_interval, "s" );
+  Parameter &chirptime_p = stimData.description().addNumber( "ChirpTimes", 0.0, "s" ).addFlags( OutData::Mutable );
+  chirptime_p.setNumber( chirp_times[0] );
+  for ( size_t k=1; k<chirp_times.size(); k++ )
+    chirptime_p.addNumber( chirp_times[k] );
+  
+  stimData.setIdent( ident );
   outList.push( stimData );
   
-  //stimData.sineWave();
   return true;
 }
 
 void EigenmanniaChirps::readOptions( void ) {
+  name = text( "name" );
   stimulus_duration = number( "duration", 0.0, "s" );
   deltaf = number( "deltaf", 0.0, "Hz" );
   chirp_duration = number( "chirpduration", 0.0, "s" );
@@ -402,6 +413,7 @@ int EigenmanniaChirps::main( void ) {
     Str s = "<b>" + toString( chirp_type ) + "</b>"; 
     s += "  Contrast: <b>" + Str( 100.0 * stimulus_contrast, 0, 5, 'g' ) + "%</b>";
     s += "  Delta F: <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
+    s += "  Stim F: <b>" + Str( eodf + deltaf, 0, 1, 'f' ) + "Hz</b>";
     s += "  SignalType: <b>" + toString( signal_content ) + "</b>";
     s += "  Chirp duration: <b>" + Str( chirp_duration ) + "</b>";
     message( s );
@@ -410,6 +422,8 @@ int EigenmanniaChirps::main( void ) {
     if ( !stimData.success() ) {
       string s = "Output of stimulus failed!<br>Error code is <b>" + stimData.errorText() + "</b>";
       warning( s, 4.0 );
+      for ( int i = 0; i < outList.size(); ++i )
+	      writeZero( outList[i].trace() );
       return Failed;
     }
     sleep( pause );
