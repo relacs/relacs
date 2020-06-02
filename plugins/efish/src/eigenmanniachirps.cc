@@ -199,10 +199,11 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   newSection( "Beat parameter" );
   addNumber( "duration", "Total trial duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "deltaf", "Difference frequency", 20., 0.1, 1000., 1.0, "Hz" );
-  addNumber( "fakefish", "Fake a receiver fish with the given frequency, set to zero to use the real one", 0.0, 1., 1500., 10., "Hz" );
+  addNumber( "fakefish", "Fake a receiver fish with the given frequency, set to zero to use the real one", 0.0, 0., 1500., 10., "Hz" );
   addNumber( "contrast", "Strength of sender relative to receiver.", 0.2, 0.0, 1.0, 0.01, "", "%" );
   addSelection( "eodmodel", "Model for EOD creation.", "sinewave|realistic" );
   addInteger( "repeats", "Number of repeated trials with the same conditions.", 10, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "pause", "Minimal pause between trials.", 0.5, 0.0, 1000., 0.01, "s" );
 
   newSection( "Chirps" );
   addSelection( "chirptype", "Type of chirp", "TypeA|TypeB" );
@@ -347,6 +348,7 @@ void EigenmanniaChirps::readOptions( void ) {
   chirp_duration = number( "chirpduration", 0.0, "s" );
   chirp_rate = number( "chirprate", 0.0, "Hz" );
   chirp_delay = number( "chirpdelay", 0.0, "s" );
+  pause = number( "pause", 0.0, "s" );
   sampling_interval = 1./20000;
   stimulus_contrast = number( "contrast" );
   this->repeats = static_cast<int>(number( "repeats" ));
@@ -396,7 +398,7 @@ int EigenmanniaChirps::main( void ) {
   stimData.setIntensity( intensity );
 
   // output signal:
-  for (int i = 0; i < repeats; ++i) {
+  for (int i = 0; i < repeats && softStop() == 0 ; ++i) {
     Str s = "<b>" + toString( chirp_type ) + "</b>"; 
     s += "  Contrast: <b>" + Str( 100.0 * stimulus_contrast, 0, 5, 'g' ) + "%</b>";
     s += "  Delta F: <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
@@ -410,6 +412,10 @@ int EigenmanniaChirps::main( void ) {
       warning( s, 4.0 );
       return Failed;
     }
+    sleep( pause );
+    
+    if (i == repeats - 1) 
+      return Completed;
   }
 
   return Completed;
