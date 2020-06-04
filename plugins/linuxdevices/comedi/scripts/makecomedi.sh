@@ -25,6 +25,8 @@ With ACTION one of
     download       : download comedi
     build          : build comedi
     install        : install comedi
+    kill           : kill currently loaded comedi modules
+    load           : load comedi modules
 EOF
 }
 
@@ -69,6 +71,7 @@ function download_kernel {
 	echo "download $SRCPACKAGE ..."
 	if ! apt-get source $SRCPACKAGE; then
 	    echo "FAILED TO INSTALL KERNEL SOURCE PACKAGE!"
+	    cd -
 	    exit 1
 	fi
     fi
@@ -87,6 +90,7 @@ function prepare_kernel {
     make silentoldconfig
     make prepare
     make scripts
+    cd -
 }
 
 
@@ -120,6 +124,23 @@ function install_comedi {
 }
 
 
+function kill_comedi {
+    # remove all comedi modules:
+    lsmod | grep -q kcomedilib || ( modprobe -r kcomedilib && echo "removed kcomedilib" )
+    for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
+	modprobe -r $i && echo "removed $i"
+    done
+    lsmod | grep -q comedi || ( modprobe -r comedi && echo "removed comedi" )
+}
+
+
+function load_comedi {
+    udevadm trigger  # for comedi
+    sleep 1
+    test -c /dev/comedi0 && echo "loaded comedi" || echo "failed to load comedi modules"
+}
+
+
 function download_comedilib {
     cd /usr/local/src
     git clone https://github.com/Linux-Comedi/comedilib.git
@@ -150,6 +171,7 @@ function build_comedi_calibrate {
     ./configure --prefix=/usr --sysconfdir=/etc
     make
     make install
+    cd -
 }
 
 
@@ -230,6 +252,16 @@ case $1 in
 
     install )
 	install_comedi
+        exit 0
+        ;;
+
+    kill )
+	kill_comedi
+        exit 0
+        ;;
+
+    load )
+	load_comedi
         exit 0
         ;;
 
