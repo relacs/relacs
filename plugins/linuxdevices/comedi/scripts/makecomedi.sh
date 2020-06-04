@@ -47,7 +47,7 @@ function check_root {
 
 function install_packages {
     # install all required packages:
-    apt-get -y install dpkg-dev gcc g++ git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
+    apt-get -y install build-essential dkms dpkg-dev gcc g++ git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
 }
 
 
@@ -55,28 +55,30 @@ function download_kernel {
     # install kernel headers:
     apt-get install linux-headers-`uname -r`
 
-    # install kernel sources:
-    cd /usr/src
-    SRCPACKAGE=linux-source-`uname -r`
-    echo "download $SRCPACKAGE ..."
-    if ! apt-get source $SRCPACKAGE; then
-	MAJOR=$(uname -r | cut -d . -f1)
-	MINOR=$(uname -r | cut -d . -f2)
-	SRCPACKAGE=linux-source
-	for SOURCES in $(apt-cache search linux-source | awk '{print $1}'); do
-	    VERSION=${SOURCES:13}
-	    SRCMAJOR=$(echo $VERSION | cut -d . -f1)
-	    SRCMINOR=$(echo $VERSION | cut -d . -f2)
-	    if test x$MAJOR = x$SRCMAJOR -a x$MINOR = x$SRCMINOR; then
-		SRCPACKAGE=$SOURCES
-		break
-	    fi
-	done
+    if ! $USE_DKMS; then
+        # install kernel sources:
+        cd /usr/src
+	SRCPACKAGE=linux-source-`uname -r`
 	echo "download $SRCPACKAGE ..."
 	if ! apt-get source $SRCPACKAGE; then
-	    echo "FAILED TO INSTALL KERNEL SOURCE PACKAGE!"
-	    cd -
-	    exit 1
+	    MAJOR=$(uname -r | cut -d . -f1)
+	    MINOR=$(uname -r | cut -d . -f2)
+	    SRCPACKAGE=linux-source
+	    for SOURCES in $(apt-cache search linux-source | awk '{print $1}'); do
+		VERSION=${SOURCES:13}
+		SRCMAJOR=$(echo $VERSION | cut -d . -f1)
+		SRCMINOR=$(echo $VERSION | cut -d . -f2)
+		if test x$MAJOR = x$SRCMAJOR -a x$MINOR = x$SRCMINOR; then
+		    SRCPACKAGE=$SOURCES
+		    break
+		fi
+	    done
+	    echo "download $SRCPACKAGE ..."
+	    if ! apt-get source $SRCPACKAGE; then
+	        echo "FAILED TO INSTALL KERNEL SOURCE PACKAGE!"
+		cd -
+		exit 1
+	    fi
 	fi
     fi
     echo "unpack $SRCPACKAGE ..."
@@ -113,7 +115,7 @@ function add_comedi {
     # re-add comedi to dkms system:
     if $USE_DKMS; then
 	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
-	dkms remove -m comedi -v $VERSION
+	dkms remove comedi/$VERSION --all
 	dkms add /usr/local/src/comedi
     fi
 }
@@ -122,7 +124,7 @@ function add_comedi {
 function build_comedi {
     if $USE_DKMS; then
 	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
-	dkms build -j -m comedi -v $VERSION
+	dkms build -m comedi -v $VERSION
     else
 	cd /usr/local/src/comedi
 	./autogen.sh

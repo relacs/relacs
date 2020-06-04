@@ -253,6 +253,8 @@ int ComediAnalogOutput::open( const string &device )
 
   UseNIPFIStart = integer( "usenipfistart" );
 
+  UseNIPFIStart = 18;
+
   // delays:
   vector< double > delays;
   numbers( "delays", delays, "s" );
@@ -717,7 +719,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
     // cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
     cmd.start_arg = CR_EDGE | UseNIPFIStart;  // in ni_mio_common.cc this is incremented by one!
     // cmd.start_arg = 18;  // that should be AI_START1 !!!!
-    cerr << "START_SRC = " << cmd.start_src << " START_ARG = " << cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+    cerr << "START_SRC = #" << std::hex << cmd.start_src << " START_ARG = #" << cmd.start_arg << " PFI = " << std::dec << UseNIPFIStart << '\n';
   }
   cmd.scan_end_arg = sigs.size();
   
@@ -956,7 +958,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
   // execute command:
-  // cerr << "EXECUTE START_ARG = " << Cmd.start_arg << " PFI " << UseNIPFIStart << '\n';
+  cerr << "EXECUTE START_ARG = #" << std::hex << Cmd.start_arg << " PFI = " << std::dec << UseNIPFIStart << '\n';
   //ComediAnalogInput::dump_cmd( &Cmd );
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     int cerror = comedi_errno();
