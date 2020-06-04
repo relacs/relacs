@@ -44,7 +44,6 @@ ComediAnalogInput::ComediAnalogInput( void )
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
-  TakeAO = true;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   AboutToStop = false;
@@ -229,9 +228,6 @@ int ComediAnalogInput::open( const string &device )
   else
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
-  // For debugging:
-  TakeAO = boolean( "takeao", true );
-
   // clear flags:
   ComediAO = 0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
@@ -290,7 +286,6 @@ void ComediAnalogInput::close( void )
   TotalSamples = 0;
   CurrentSamples = 0;
   Info.clear();
-  TakeAO = true;
 }
 
 
@@ -751,7 +746,7 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   
   // add AO to instruction list:
   bool tookao = false;
-  if ( TakeAO && aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
+  if ( aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
     if ( ! ComediAO->useAIStart() )
       insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
     tookao = true;
@@ -972,16 +967,14 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
 {
   ComediAO = 0;
 
-  if ( TakeAO ) {
-    // check for analog output device:
-    for ( unsigned int k=0; k<aos.size(); k++ ) {
-      if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
-	   aos[k]->deviceFile() == deviceFile() ) {
-	aoinx.push_back( k );
-	aorate.push_back( false );
-	ComediAO = dynamic_cast< ComediAnalogOutput* >( aos[k] );
-	break;
-      }
+  // check for analog output device:
+  for ( unsigned int k=0; k<aos.size(); k++ ) {
+    if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
+	 aos[k]->deviceFile() == deviceFile() ) {
+      aoinx.push_back( k );
+      aorate.push_back( false );
+      ComediAO = dynamic_cast< ComediAnalogOutput* >( aos[k] );
+      break;
     }
   }
 }

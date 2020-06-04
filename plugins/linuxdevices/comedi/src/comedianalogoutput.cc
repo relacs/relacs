@@ -1002,22 +1002,25 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
     return -1;
   }
 
-  // setup instruction:
-  lsampl_t insndata[1];
-  insndata[0] = 0;
-  comedi_insn insn;
-  insn.insn = INSN_INTTRIG;
-  insn.subdev = SubDevice;
-  insn.chanspec = 0;
-  insn.data = insndata;
-  insn.n = 1;
-  int r = comedi_do_insn( DeviceP, &insn );
-  if ( r < 0 ) {
-    int cerror = comedi_errno();
-    cerr << "AO do_insn failed: " << comedi_strerror( cerror ) << endl;
-    Sigs.addErrorStr( deviceFile() + " - execution of comedi_do_insn failed: "
-		      + comedi_strerror( cerror ) );
-    return -1;
+  if ( UseNIPFIStart < 0 ) {
+    // setup instruction:
+    lsampl_t insndata[1];
+    insndata[0] = 0;
+    comedi_insn insn;
+    insn.insn = INSN_INTTRIG;
+    insn.subdev = SubDevice;
+    insn.chanspec = 0;
+    insn.data = insndata;
+    insn.n = 1;
+    // start analog output:
+    int r = comedi_do_insn( DeviceP, &insn );
+    if ( r < 0 ) {
+      int cerror = comedi_errno();
+      cerr << "AO do_insn failed: " << comedi_strerror( cerror ) << endl;
+      Sigs.addErrorStr( deviceFile() + " - execution of comedi_do_insn failed: "
+			+ comedi_strerror( cerror ) );
+      return -1;
+    }
   }
 
   startThread( sp );
