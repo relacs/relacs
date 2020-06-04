@@ -3,6 +3,8 @@
 MAKE_COMEDI="${0##*/}"
 VERSION_STRING="${MAKE_COMEDI} version 1.0 by Jan Benda, June 2020"
 
+USE_DKMS=true
+
 
 function print_version {
     echo $VERSION_STRING
@@ -25,6 +27,7 @@ With ACTION one of
     download       : download comedi
     build          : build comedi
     install        : install comedi
+    clean          : clean comedi sources
     kill           : kill currently loaded comedi modules
     load           : load comedi modules
 EOF
@@ -99,27 +102,47 @@ function download_comedi {
     cd /usr/local/src
     git clone https://github.com/Linux-Comedi/comedi.git
     cd -
+    if $USE_DKMS; then
+	dkms add /usr/local/src/comedi
+    fi
 }
 
 
 function build_comedi {
-    cd /usr/local/src/comedi
-    ./autogen.sh
-    ./configure
-    make -j$(grep -c "^processor" /proc/cpuinfo)
-    cd -
+    if $USE_DKMS; then
+	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
+	dkms build -m comedi -v $VERSION
+    else
+	cd /usr/local/src/comedi
+	./autogen.sh
+	./configure --with-linuxdir="/usr/src/linux"
+	make -j$(grep -c "^processor" /proc/cpuinfo)
+	cd -
+    fi
 }
 
 
 function install_comedi {
     # remove comedi from the kernel's staging directory:
     rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
-    # install comedi:
+    if $USE_DKMS; then
+	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
+	dkms install -m comedi -v $VERSION
+    else
+	# install comedi:
+	cd /usr/local/src/comedi
+	make install
+	depmod -a
+	cp include/linux/comedi.h /usr/include/linux/
+	cp include/linux/comedilib.h /usr/include/linux/
+	cd -
+    fi
+}
+
+
+function clean_comedi {
     cd /usr/local/src/comedi
-    make install
-    depmod -a
-    cp include/linux/comedi.h /usr/include/linux/
-    cp include/linux/comedilib.h /usr/include/linux/
+    make clean
     cd -
 }
 
@@ -252,6 +275,11 @@ case $1 in
 
     install )
 	install_comedi
+        exit 0
+        ;;
+
+    clean )
+	clean_comedi
         exit 0
         ;;
 
