@@ -1,91 +1,236 @@
 #!/bin/bash
 
-cd /usr/src
+MAKE_COMEDI="${0##*/}"
+VERSION_STRING="${MAKE_COMEDI} version 1.0 by Jan Benda, June 2020"
 
-# install necessary packages:
-sudo apt-get install dpkg-dev
 
-# install kernel headers:
-sudo apt-get install linux-headers-`uname -r`
+function print_version {
+    echo $VERSION_STRING
+}
 
-# install kernel sources:
-SRCPACKAGE=linux-source-`uname -r`
-echo "download $SRCPACKAGE ..."
-if ! sudo apt-get source $SRCPACKAGE; then
-    MAJOR=$(uname -r | cut -d . -f1)
-    MINOR=$(uname -r | cut -d . -f2)
-    SRCPACKAGE=linux-source
-    for SOURCES in $(apt-cache search linux-source | awk '{print $1}'); do
-	VERSION=${SOURCES:13}
-	SRCMAJOR=$(echo $VERSION | cut -d . -f1)
-	SRCMINOR=$(echo $VERSION | cut -d . -f2)
-	if test x$MAJOR = x$SRCMAJOR -a x$MINOR = x$SRCMINOR; then
-	    SRCPACKAGE=$SOURCES
-	    break
-	fi
-    done
-    echo "download $SRCPACKAGE ..."
-    if ! sudo apt-get source $SRCPACKAGE; then
-	echo "FAILED TO INSTALL KERNEL SOURCE PACKAGE!"
-	exit 1
+
+function help_usage {
+    cat <<EOF
+$VERSION_STRING
+
+Download, build and install comedi kernel modules.
+
+usage:
+sudo ${MAKE_COMEDI} ACTION
+
+With ACTION one of
+    packages       : install missing packages
+    downloadkernel : download kernel headers and source packages
+    prepare        : prepare kernel sources
+    download       : download comedi
+    build          : build comedi
+    install        : install comedi
+EOF
+}
+
+
+function check_root {
+    if test "x$(id -u)" != "x0"; then
+        echo "You need to be root to run this script!"
+        echo "Try:"
+        echo "  sudo $0"
+        exit 1
     fi
+}
+
+
+function install_packages {
+    # install all required packages:
+    apt-get -y install dpkg-dev gcc g++ git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
+}
+
+
+function download_kernel {
+    # install kernel headers:
+    apt-get install linux-headers-`uname -r`
+
+    # install kernel sources:
+    cd /usr/src
+    SRCPACKAGE=linux-source-`uname -r`
+    echo "download $SRCPACKAGE ..."
+    if ! apt-get source $SRCPACKAGE; then
+	MAJOR=$(uname -r | cut -d . -f1)
+	MINOR=$(uname -r | cut -d . -f2)
+	SRCPACKAGE=linux-source
+	for SOURCES in $(apt-cache search linux-source | awk '{print $1}'); do
+	    VERSION=${SOURCES:13}
+	    SRCMAJOR=$(echo $VERSION | cut -d . -f1)
+	    SRCMINOR=$(echo $VERSION | cut -d . -f2)
+	    if test x$MAJOR = x$SRCMAJOR -a x$MINOR = x$SRCMINOR; then
+		SRCPACKAGE=$SOURCES
+		break
+	    fi
+	done
+	echo "download $SRCPACKAGE ..."
+	if ! apt-get source $SRCPACKAGE; then
+	    echo "FAILED TO INSTALL KERNEL SOURCE PACKAGE!"
+	    exit 1
+	fi
+    fi
+    echo "unpack $SRCPACKAGE ..."
+    tar xf $SRCPACKAGE.tar.bz2
+    ln -sfn $(ls -rt | tail -n 1) linux
+    cd -
+}
+
+
+function prepare_kernel {
+    # prepare kernel sources:
+    cd /usr/src/linux
+    cp /boot/config-`uname -r` .config
+    cp ../linux-headers-`uname -r`/Module.symvers .
+    make silentoldconfig
+    make prepare
+    make scripts
+}
+
+
+function download_comedi {
+    # download comedi sources:
+    cd /usr/local/src
+    git clone https://github.com/Linux-Comedi/comedi.git
+    cd -
+}
+
+
+function build_comedi {
+    cd /usr/local/src/comedi
+    ./autogen.sh
+    ./configure
+    make -j$(grep -c "^processor" /proc/cpuinfo)
+    cd -
+}
+
+
+function install_comedi {
+    # remove comedi from the kernel's staging directory:
+    rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
+    # install comedi:
+    cd /usr/local/src/comedi
+    make install
+    depmod -a
+    cp include/linux/comedi.h /usr/include/linux/
+    cp include/linux/comedilib.h /usr/include/linux/
+    cd -
+}
+
+
+function download_comedilib {
+    cd /usr/local/src
+    git clone https://github.com/Linux-Comedi/comedilib.git
+    cd -
+}
+
+
+function build_comedilib {
+    cd /usr/local/src/comedilib
+    ./autogen.sh
+    ./configure --prefix=/usr --sysconfdir=/etc
+    make -j$(grep -c "^processor" /proc/cpuinfo)
+    make install
+    cd -
+}
+
+
+function download_comedi_calibrate {
+    cd /usr/local/src
+    git clone https://github.com/Linux-Comedi/comedi_calibrate.git
+    cd -
+}
+
+
+function build_comedi_calibrate {
+    cd /usr/local/src/comedi_calibrate
+    autoreconf -v -i
+    ./configure --prefix=/usr --sysconfdir=/etc
+    make
+    make install
+}
+
+
+function setup_permissions {
+    # setup udev permissions:
+    groupadd --system iocard
+    echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
+    udevadm trigger
+    usermod $USER -a -G iocard   # or: adduser $USER iocard
+}
+
+
+###########################################################################
+# main script:
+while test "x${1:0:1}" = "x-"; do
+    case $1 in
+        --help )
+            help_usage
+            exit 0
+            ;;
+
+        --version )
+            print_version
+            exit 0
+            ;;
+    esac
+    shift
+done
+
+check_root
+
+if test -z "$1"; then
+    install_packages
+    download_kernel
+    prepare_kernel
+    download_comedi
+    build_comedi
+    install_comedi
+    exit 0
 fi
-echo "unpack $SRCPACKAGE ..."
-tar xf $SRCPACKAGE.tar.bz2
-ln -sfn $SRCPACKAGE linux
 
-# prepare kernel sources:
-cd linux
-cp /boot/config-`uname -r` .config
-cp ../linux-headers-`uname -r`/Module.symvers .
-make silentoldconfig
-make prepare
-make scripts
+case $1 in
 
-# install comedi:
-# install all required packages:
-apt-get -y install gcc g++ git autoconf automake libtool bison flex libgsl0-dev libboost-program-options-dev
+    help ) 
+        print_help
+        exit 0
+        ;;
 
-# download comedi sources:
-cd /usr/local/src
-git clone https://github.com/Linux-Comedi/comedi.git
-#git clone https://github.com/Linux-Comedi/comedilib.git
-#git clone https://github.com/Linux-Comedi/comedi_calibrate.git
+    version ) 
+        print_version
+        exit 0
+        ;;
 
-# remove comedi from the kernel's staging directory:
-rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
+    packages )
+	install_packages
+        exit 0
+        ;;
 
-# comedi:
-cd /usr/local/src/comedi
-./autogen.sh
-./configure
-make -j$(grep -c "^processor" /proc/cpuinfo)
-make install
-depmod -a
-cp include/linux/comedi.h /usr/include/linux/
-cp include/linux/comedilib.h /usr/include/linux/
+    downloadkernel )
+	download_kernel
+        exit 0
+        ;;
 
-exit 0
+    prepare )
+	prepare_kernel
+        exit 0
+        ;;
 
-# comedilib:
-cd /usr/local/src/comedilib
-./autogen.sh
-./configure --prefix=/usr --sysconfdir=/etc
-make -j$(grep -c "^processor" /proc/cpuinfo)
-make install
+    download )
+	download_comedi
+        exit 0
+        ;;
 
-# comedi_calibrate:
-cd /usr/local/src/comedi_calibrate
-autoreconf -v -i
-./configure --prefix=/usr --sysconfdir=/etc
-make
-make install
+    build )
+	build_comedi
+        exit 0
+        ;;
 
-# setup udev permissions:
-groupadd --system iocard
-echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
-udevadm trigger
-usermod $USER -a -G iocard   # or: adduser $USER iocard
+    install )
+	install_comedi
+        exit 0
+        ;;
 
-
-
+esac
