@@ -25,6 +25,7 @@ With ACTION one of
     downloadkernel : download kernel headers and source packages
     prepare        : prepare kernel sources
     download       : download comedi
+    add            : remove and add comedi sources to dkms tree
     build          : build comedi
     install        : install comedi
     clean          : clean comedi sources
@@ -108,10 +109,20 @@ function download_comedi {
 }
 
 
+function add_comedi {
+    # re-add comedi to dkms system:
+    if $USE_DKMS; then
+	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
+	dkms remove -m comedi -v $VERSION
+	dkms add /usr/local/src/comedi
+    fi
+}
+
+
 function build_comedi {
     if $USE_DKMS; then
 	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
-	dkms build -m comedi -v $VERSION
+	dkms build -j -m comedi -v $VERSION
     else
 	cd /usr/local/src/comedi
 	./autogen.sh
@@ -265,6 +276,11 @@ case $1 in
 
     download )
 	download_comedi
+        exit 0
+        ;;
+
+    add )
+	add_comedi
         exit 0
         ;;
 
