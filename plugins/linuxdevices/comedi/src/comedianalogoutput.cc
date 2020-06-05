@@ -252,6 +252,16 @@ int ComediAnalogOutput::open( const string &device )
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
   UseNIPFIStart = integer( "usenipfistart" );
+  if ( UseNIPFIStart >= 0 ) {
+    // configure PFI pin for digital input:
+    int subdev = 7;
+    if ( comedi_dio_config( DeviceP, subdev, UseNIPFIStart, COMEDI_INPUT ) != 0 ) {
+	cerr << "! error: ComediAnalogOutput::open() -> "
+	     << "DIO_CONFIG failed for PFI" << UseNIPFIStart
+	     << " on device " << deviceIdent() << '\n';
+	UseNIPFIStart = -1;
+    }
+  }
 
   // delays:
   vector< double > delays;
