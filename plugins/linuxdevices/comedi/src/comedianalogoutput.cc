@@ -727,6 +727,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
     // cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
     cmd.start_arg = CR_EDGE | UseNIPFIStart;  // in ni_mio_common.cc this is incremented by one!
     cerr << "START_SRC = #" << std::hex << cmd.start_src << " START_ARG = #" << cmd.start_arg << " PFI = " << std::dec << UseNIPFIStart << '\n';
+    sigs.setStartSource( UseNIPFIStart );
   }
   cmd.scan_end_arg = sigs.size();
   
