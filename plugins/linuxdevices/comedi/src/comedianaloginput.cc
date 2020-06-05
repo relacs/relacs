@@ -1,4 +1,4 @@
-/*
+ /*
   comedi/comedianaloginput.cc
   Interface for accessing analog input of a daq-board via comedi.
 
@@ -366,14 +366,14 @@ string ComediAnalogInput::cmd_src( int src )
 }
 
 
-void ComediAnalogInput::dump_cmd( comedi_cmd *cmd )
+void ComediAnalogInput::dump_cmd( const comedi_cmd &cmd )
 {
-  cerr << "subdevice:      " << cmd->subdev << '\n';
-  cerr << "start:      " << Str( cmd_src(cmd->start_src), 8 ) << "  " << cmd->start_arg << '\n';
-  cerr << "scan_begin: " << Str( cmd_src(cmd->scan_begin_src), 8 ) << "  " << cmd->scan_begin_arg << '\n';
-  cerr << "convert:    " << Str( cmd_src(cmd->convert_src), 8 ) << "  " << cmd->convert_arg << '\n';
-  cerr << "scan_end:   " << Str( cmd_src(cmd->scan_end_src), 8 ) << "  " << cmd->scan_end_arg << '\n';
-  cerr << "stop:       " << Str( cmd_src(cmd->stop_src), 8 ) << "  " << cmd->stop_arg << '\n';
+  cerr << "subdevice:      " << cmd.subdev << '\n';
+  cerr << "start:      " << Str( cmd_src(cmd.start_src), 8 ) << "  " << cmd.start_arg << '\n';
+  cerr << "scan_begin: " << Str( cmd_src(cmd.scan_begin_src), 8 ) << "  " << cmd.scan_begin_arg << '\n';
+  cerr << "convert:    " << Str( cmd_src(cmd.convert_src), 8 ) << "  " << cmd.convert_arg << '\n';
+  cerr << "scan_end:   " << Str( cmd_src(cmd.scan_end_src), 8 ) << "  " << cmd.scan_end_arg << '\n';
+  cerr << "stop:       " << Str( cmd_src(cmd.stop_src), 8 ) << "  " << cmd.stop_arg << '\n';
 }
 
   
@@ -734,6 +734,7 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   
   // execute AI command:
   TraceIndex = 0;
+  // dump_cmd( Cmd );
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     int cerror = comedi_errno();
     cerr << "AI command failed: " << comedi_strerror( cerror ) << endl;

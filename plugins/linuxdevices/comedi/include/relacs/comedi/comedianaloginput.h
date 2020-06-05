@@ -44,9 +44,6 @@ class ComediAnalogOutput;
 \par Options:
 - \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its
   maximal range value in volts.
-- \c takeao: If \c true (default), then this analog input is started together with 
-  the analog output of the same device in a single instruction list.
-  This option is provided for demonstration purposes only and should otherwise not be used/unset.
 
 \par Calibration:
 For hardware calibrated boards (like NI E-Series boards) do
@@ -166,7 +163,7 @@ public:
 		     vector< bool > &airate, vector< bool > &aorate );
   
   static string cmd_src( int src );
-  static void dump_cmd( comedi_cmd *cmd );
+  static void dump_cmd( const comedi_cmd &cmd );
 
 
 protected:
@@ -218,8 +215,6 @@ private:
   unsigned int BufferElemSize;  
     /*! The maximum sampling rate supported by the DAQ board. */
   double MaxRate;
-    /*! If \c true, start the analog output of the same device together with this. */
-  bool TakeAO;
 
     /*! Holds the list of supported unipolar comedi ranges. */
   vector< comedi_range > UnipolarRange;

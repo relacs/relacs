@@ -786,7 +786,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
       break;
     case 3: // *_arg out of range:
       if ( cmd.start_arg != testCmd.start_arg )
-	sigs.addErrorStr( "start_arg " + Str(testCmd.start_arg) + " out of range" );
+	sigs.addErrorStr( "start_arg #" + Str(testCmd.start_arg, "%x") + " out of range" );
       if ( cmd.scan_begin_arg != testCmd.scan_begin_arg ) {
 	sigs.addErrorStr( "requested sampling period of " + Str( testCmd.scan_begin_arg )
 			  + "ns smaller than supported! min " + Str( cmd.scan_begin_arg )
@@ -959,7 +959,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
   // execute command:
   cerr << "EXECUTE START_ARG = #" << std::hex << Cmd.start_arg << " PFI = " << std::dec << UseNIPFIStart << '\n';
-  //ComediAnalogInput::dump_cmd( &Cmd );
+  //ComediAnalogInput::dump_cmd( Cmd );
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     int cerror = comedi_errno();
     cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
