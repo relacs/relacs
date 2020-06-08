@@ -45,7 +45,7 @@ namespace efield {
 enum class MazeOrientation { UPRIGHT = 0, BOTTOMUP = 1, LEFT = 2, RIGHT = 3 };
 enum class MazeArm { NONE = -1, A = 0, B = 1, C = 2 };
 enum class ArmCondition { REWARDED = 0, UNREWARDED = 1, NEUTRAL = 2 };
-enum class BtnActions { NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13 };
+enum class BtnActions { RESET = 10, NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13 };
 enum class YMazeEvents { STIM_READY = 14, IDLE = 15 };
 
 struct MazeCondition {
@@ -76,7 +76,7 @@ public:
   YMazeSketch( MazeOrientation orientation=MazeOrientation::UPRIGHT, QWidget *parent = nullptr );
 
   void setCondition( const MazeCondition &mazeCondition );
-
+  void reset( void );
 private:
   void setupUI();
   void drawSketch();
@@ -110,7 +110,7 @@ private:
   int currentRewardPosition;
   bool start;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
-  QPushButton *nextBtn, *startBtn, *stopBtn;
+  QPushButton *nextBtn, *startBtn, *stopBtn, *resetBtn;
   OutList outList;
   TrialCondition currentCondition;
   std::map<MazeArm, int> armTraceMap;
@@ -121,6 +121,7 @@ private:
   std::string toString(const MazeArm &arm) const;
   void setupTable( QGridLayout *grid );
   void updateTable( const TrialCondition &tc );
+  void resetTable( void );
   void updateUI( const TrialCondition &tc );
 
   void populateOptions();
@@ -138,6 +139,7 @@ private slots:
   void startTrial();
   void stopTrial();
   void prepareNextTrial();
+  void reset();
   
 protected:
   virtual void keyPressEvent( QKeyEvent *e );

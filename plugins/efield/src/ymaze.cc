@@ -89,7 +89,6 @@ void YMazeSketch::resizeEvent( QResizeEvent *event ) {
   QLabel::resizeEvent(event);
 }
 
-
 void YMazeSketch::setCondition( const MazeCondition &mc ) {
   QString styleStub = "QLabel{font-size: 20; font-weight: bold; color : ";
   QString styleSuffix = "}";
@@ -102,6 +101,15 @@ void YMazeSketch::setCondition( const MazeCondition &mc ) {
   labels[static_cast<int>(mc.neutral)]->setStyleSheet(styleStub +
 						      colors[static_cast<int>(ArmCondition::NEUTRAL)] +
 						      styleSuffix);
+}
+
+void YMazeSketch::reset() {
+  lastRewarded = MazeArm::NONE; 
+  QString style = "QLabel{font-size: 20; font-weight: bold; color : " + colors[static_cast<int>(ArmCondition::NEUTRAL)] + "}";
+  
+  for ( auto l : labels ) {
+    l->setStyleSheet( style );
+  }
 }
 
 //***********************************************************************
@@ -121,19 +129,25 @@ YMaze::YMaze( void )
   startBtn->setEnabled(false);
   startBtn->setToolTip("Start stimulus output...");
   connect( startBtn, SIGNAL( clicked() ), this, SLOT( startTrial() ) );
-  grid->addWidget( startBtn, 5, 6, 1, 1 );
+  grid->addWidget( startBtn, 5, 5, 1, 1 );
 
   stopBtn = new QPushButton("&Stop");
   stopBtn->setEnabled(false);
   stopBtn->setToolTip("Stop stimulus output immediately...");
   connect( stopBtn, SIGNAL( clicked() ), this, SLOT( stopTrial() ) );
-  grid->addWidget( stopBtn, 5, 7, 1, 1 );
+  grid->addWidget( stopBtn, 5, 6, 1, 1 );
 
   nextBtn = new QPushButton("&Next");
   nextBtn->setEnabled(true);
   nextBtn->setToolTip("Prepare next trial, randomize stimulus condition...");
   connect( nextBtn, SIGNAL( clicked() ), this, SLOT( prepareNextTrial() ) );
-  grid->addWidget( nextBtn, 5, 5, 1, 1 );
+  grid->addWidget( nextBtn, 5, 4, 1, 1 );
+
+  resetBtn = new QPushButton("&Reset");
+  resetBtn->setEnabled( true );
+  resetBtn->setToolTip( "Reset the experiment back to defaults" );
+  connect( resetBtn, SIGNAL( clicked() ), this, SLOT( reset() ) );
+  grid->addWidget( resetBtn, 5, 7, 1, 1 );
 
   this->setLayout( grid );  
 }
@@ -204,13 +218,15 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
   if ( !boolean( "nofish" ) ) {
     if ( !boolean( "usepsd" ) ) {
       fisheodf = events( EODEvents ).frequency( currentTime() - averagetime, currentTime() );
+
       if ( EODEvents < 0 ) {
-	warning( "need EOD events of the EOD Trace." );
-	fisheodf = number( "fakefisheodf" );
-	return false;
+	      warning( "need EOD events of the EOD Trace." );
+	      fisheodf = number( "fakefisheodf" );
+	      return false;
       }
       return true;
     } else {
+
       double bigeod = 0.0;
       double bigeodf = 0.0; 
       double min_eodf = number( "mineodfreq" );
@@ -218,15 +234,15 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
       double eodf_prec = number( "eodfreqprec" );
       int intrace = index( "inputTrace" );
       if ( intrace == -1 )
-	return false;
+	      return false;
       int nfft = 1;
 
       nfft = nextPowerOfTwo( (int)::ceil( 1.0/trace( intrace ).stepsize()/eodf_prec ) );
       eodf_prec = 1.0/trace( intrace ).stepsize()/nfft;
       if ( averagetime < 2.0/trace( intrace ).stepsize()/nfft ) {
-	averagetime = 2.0/trace( intrace ).stepsize()/nfft;
-	warning( "averagetime is too small for requested frequency resolution. I set it to " +
-		 Str( averagetime ) + "s for now." );
+	      averagetime = 2.0/trace( intrace ).stepsize()/nfft;
+	      warning( "averagetime is too small for requested frequency resolution. I set it to " +
+		             Str( averagetime ) + "s for now." );
       }
 	
       SampleDataF data( 0.0, averagetime, trace( intrace ).stepsize() );
@@ -239,16 +255,16 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
       double maxpower = 0.0;
       double maxfreq = 0.0;
       for ( int i=0; i<powerpeaks.size(); i++ ) {
-	if ( powerpeaks[i] >= min_eodf && powerpeaks[i] <= max_eodf ) {
-	  if ( powerpeaks.eventSize( i ) > maxpower ) {
-	    maxpower = powerpeaks.eventSize( i );
-	    maxfreq = powerpeaks[i];
-	  }
-	}
+	      if ( powerpeaks[i] >= min_eodf && powerpeaks[i] <= max_eodf ) {
+	        if ( powerpeaks.eventSize( i ) > maxpower ) {
+	          maxpower = powerpeaks.eventSize( i );
+	          maxfreq = powerpeaks[i];
+	        }
+	      }
       }
       if ( bigeod < maxpower ) {
-	bigeod = maxpower;
-	bigeodf = maxfreq;
+	      bigeod = maxpower;
+	      bigeodf = maxfreq;
       }
       fisheodf = bigeodf;
       return true;
@@ -256,8 +272,7 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
   }
   return true;
 }
-  
-  
+   
 MazeCondition YMaze::nextMazeCondition() {
   MazeCondition mazeCondition;
   
@@ -383,6 +398,11 @@ void YMaze::stopTrial() {
   postCustomEvent ( static_cast<int>(BtnActions::STOP_TRIAL) );
 }
 
+void YMaze::reset() {
+  postCustomEvent ( static_cast<int>(BtnActions::STOP_TRIAL) );
+  postCustomEvent ( static_cast<int>(BtnActions::RESET) );
+}
+
 void YMaze::updateUI( const TrialCondition &tc ) {
   sketch->setCondition( tc.mazeCondition );
   updateTable( tc );
@@ -436,6 +456,16 @@ void YMaze::updateTable( const TrialCondition &tc ) {
   }
 }
 
+void YMaze::resetTable( void ) {
+  vector<QLabel*> labels = {conditionA, conditionApast, conditionB, conditionBpast, conditionC, conditionCpast};
+  QString ntrlStyle = "QLabel{color: black; font-size: 8pt; font-weight: bold}";
+  
+  for ( auto l : labels ) {
+    l->setText( "" );
+    l->setStyleSheet( ntrlStyle );
+  }
+}
+
 void YMaze::customEvent( QEvent *qce ) {
   TrialCondition tc;
   switch ( qce->type() - QEvent::User ) {
@@ -444,6 +474,7 @@ void YMaze::customEvent( QEvent *qce ) {
     createStimuli( tc ); 
     updateUI( tc );
     nextBtn->setEnabled( false );
+    resetBtn->setEnabled( true );
     break;
   case static_cast<int>(BtnActions::START_TRIAL):
     start = true;
@@ -461,11 +492,21 @@ void YMaze::customEvent( QEvent *qce ) {
   case static_cast<int>(YMazeEvents::IDLE):
     stopBtn->setEnabled( false );
     nextBtn->setEnabled( true );
+    break;
+  case static_cast<int>(BtnActions::RESET):
+    nextBtn->setEnabled( true );
+    stopBtn->setEnabled( false );
+    startBtn->setEnabled( false );
+    resetBtn->setEnabled( false );
+    sketch->reset();
+    resetTable();
+    TrialCondition tc;
+    currentCondition = tc;
+    break;
   default:
     break;
   } 
 }
-
 
 bool YMaze::configureOutputTraces() {
   bool success = true;
@@ -514,7 +555,6 @@ void YMaze::keyPressEvent( QKeyEvent *e ) {
 //************************************************************************
 int YMaze::main( void ) {
   string msg;
-  
   duration = number( "duration" );
   samplerate = number( "samplerate" );
   rewardedFreq = number( "rewardfreq" );
@@ -524,7 +564,7 @@ int YMaze::main( void ) {
   deltaf = number( "deltaf" );
   name = text( "name" );
   start = false;
-
+  reset();
   bool success = configureOutputTraces();
   if ( !success ) {
     warning( "configuration of output channels failed!" );
@@ -541,13 +581,13 @@ int YMaze::main( void ) {
         continue;
       }
       msg = "Stimulation is running.<br>Rewarded arm is " + toString(currentCondition.mazeCondition.rewarded) ;
-      message(msg);
+      message( msg );
       write( outList );
       if ( outList.failed() ) {
-	msg = "Output of stimulus failed!<br>Error code is <b>";
-	msg += outList.errorText() + "</b>";
-	for ( int i = 0; i < outList.size(); ++i )
-	  writeZero( outList[i].trace() );
+	      msg = "Output of stimulus failed!<br>Error code is <b>";
+	      msg += outList.errorText() + "</b>";
+	      for ( int i = 0; i < outList.size(); ++i )
+	        writeZero( outList[i].trace() );
         return Failed;
       }
 
