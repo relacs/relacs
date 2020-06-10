@@ -15,6 +15,8 @@ int main(int argc, char *argv[])
   int aosubdevice;
   int aisubdevice;
   int pfisubdevice = 7;
+  int pfi_aistartout_channel = 1;
+  int pfi_aostartin_channel = 6;  /* connected via wire to pfi_aistartout_channel */
   comedi_cmd aicmd;
   comedi_cmd aocmd;
   int err;
@@ -31,7 +33,9 @@ int main(int argc, char *argv[])
   sampl_t *aodata;
   float v;
 
-  int triggeronai = 1;  /* set this to 0 for internal trigger */
+  int triggeronai = 1;  /* 0: internal trigger,
+                           1: start AO on internal AISTART1 trigger,
+                           2: start AO on PFI channel. */
 
   init_parsed_options(&options);
   options.n_chan = 1;
@@ -45,30 +49,29 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  /* Route AI_START1 TO PFI0: */
-  ret = comedi_set_routing( dev, pfisubdevice, 1, NI_PFI_OUTPUT_AI_START1 );
-  if ( ret < 0 ) {
-    comedi_perror("comedi_routing");
-    exit(1);
-  }
-  ret = comedi_dio_config( dev, pfisubdevice, 1, INSN_CONFIG_DIO_OUTPUT );
-  if ( ret < 0 ) {
-    comedi_perror("comedi_dio_config");
-    exit(1);
-  }
-
-  /* Route AO_START1 TO PFI6: */
-  /*
-  ret = comedi_set_routing( dev, pfisubdevice, 6, NI_PFI_OUTPUT_AO_START1 );
-  if ( ret < 0 ) {
-    comedi_perror("comedi_routing");
-    exit(1);
-  }
-  */
-  ret = comedi_dio_config( dev, pfisubdevice, 6, INSN_CONFIG_DIO_INPUT );
-  if ( ret < 0 ) {
-    comedi_perror("comedi_dio_config");
-    exit(1);
+  if ( triggeronai > 1 ) {
+    /* Route AI_START1 TO PFI: */
+    ret = comedi_set_routing( dev, pfisubdevice, pfi_aistartout_channel,
+			      NI_PFI_OUTPUT_AI_START1 );
+    if ( ret < 0 ) {
+      comedi_perror("comedi_routing");
+      exit(1);
+    }
+    ret = comedi_dio_config( dev, pfisubdevice, pfi_aistartout_channel,
+			     COMEDI_OUTPUT );
+    if ( ret < 0 ) {
+      comedi_perror("comedi_dio_config");
+      exit(1);
+    }
+    /* Routing works, I see the AI_START1 signal on an oscilloscope. */
+    
+    /* Configure other PFI channel for input: */
+    ret = comedi_dio_config( dev, pfisubdevice, pfi_aostartin_channel,
+			     COMEDI_INPUT );
+    if ( ret < 0 ) {
+      comedi_perror("comedi_dio_config");
+      exit(1);
+    }
   }
 
   /* Analog Output: */
@@ -82,10 +85,16 @@ int main(int argc, char *argv[])
   aocmd.subdev = aosubdevice;
   aocmd.flags = 0;
   if ( triggeronai ) {
-    /*! Start on PFI0 trigger: */
     aocmd.start_src = TRIG_EXT;
-    aocmd.start_arg = CR_EDGE | NI_EXT_PFI(6);
-    //    aocmd.start_arg = CR_EDGE | 18;
+    if ( triggeronai > 1 ) {
+      /*! Start on PFI trigger: SECOND BEST SOLUTION */
+      aocmd.start_arg = CR_EDGE | NI_EXT_PFI(pfi_aostartin_channel);
+      /* XXX DOES NOT WORK! */
+    }
+    else {
+      /*! Start on AI_START1: THAT WOULD BE THE BEST SOLUTION! */
+      aocmd.start_arg = CR_EDGE | 18;  /* XXX DOES NOT WORK! */
+    }
   }
   else {
     /*! Start on internal trigger: */
@@ -107,7 +116,7 @@ int main(int argc, char *argv[])
   err = comedi_command_test(dev, &aocmd);
   if (err > 0 && err != 4 ) {
     fprintf( stderr, "comedi_command_test returned %d\n", err );
-    dump_cmd(stdout,&aocmd);
+    dump_cmd(stdout, &aocmd);
     exit(1);
   }
 
@@ -159,7 +168,7 @@ int main(int argc, char *argv[])
   aicmd.scan_end_src = TRIG_COUNT;
   aicmd.scan_end_arg = options.n_chan;
   aicmd.stop_src = TRIG_COUNT;
-  aicmd.stop_arg = fn;
+  aicmd.stop_arg = 2*fn;
   aicmd.chanlist = aichanlist;
   aicmd.chanlist_len = 1;
   aichanlist[0] = CR_PACK(options.n_chan, options.range, options.aref);
@@ -171,16 +180,16 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  dump_cmd(stderr,&aicmd);
+  dump_cmd(stderr, &aicmd);
 
   /* init data buffer: */
-  data = (sampl_t *)malloc( fn*sizeof( sampl_t ) );
+  data = (sampl_t *)malloc( 2*fn*sizeof( sampl_t ) );
   if(data == NULL ){
     perror("malloc\n");
     exit(1);
   }
   
-  fprintf( stderr, "execute command ...\n" );
+  fprintf( stderr, "execute ai command ...\n" );
   if ((err = comedi_command(dev, &aicmd)) < 0) {
     comedi_perror("comedi_command");
     exit(1);
@@ -194,7 +203,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
   
-  /* start ao: */  
+  /* start ao (only if not waiting on AI_START1 trigger): */  
   if ( triggeronai == 0 ) {
     fprintf( stderr, "start analog output ...\n" );
     ret = comedi_internal_trigger(dev, aosubdevice, 0);
@@ -203,10 +212,11 @@ int main(int argc, char *argv[])
       exit(1);
     }
   }
-  
+
+  /* read in analog input data: */
   n = 0;
-  while( n < fn ) {
-    m = read(comedi_fileno(dev),(void *)(&data[n]),(fn-n)*sizeof( sampl_t));
+  while( n < 2*fn ) {
+    m = read(comedi_fileno(dev),(void *)(&data[n]),(2*fn-n)*sizeof( sampl_t));
     if(m<0){
       if ( errno != EAGAIN ) {
 	perror("read");
@@ -219,16 +229,22 @@ int main(int argc, char *argv[])
     }
     else {
       m /= sizeof( sampl_t);
-      fprintf( stderr, "read %d samples\n",m);
+      fprintf( stderr, "read %d samples, total %d\n", m, n);
       n+=m;
     }
   }
+
+  if ( ( comedi_get_subdevice_flags(dev, aosubdevice) & SDF_RUNNING ) > 0 )
+    fprintf( stderr, "AO STILL WAITING\n" );
+  else
+    fprintf( stderr, "AO DONE\n" );
+  
   comedi_cancel( dev, aicmd.subdev );
+  comedi_cancel( dev, aocmd.subdev );
 
   fprintf( stderr, "finished\n" );
 
   /* save data: */
-
   FILE *df = fopen( "data.dat", "w" );
   dp = data;  
   for ( k=0; k<n; k++ ) {
@@ -237,7 +253,6 @@ int main(int argc, char *argv[])
     ++dp;
   }
   fclose( df );
-
   free( data );
 
   comedi_close( dev );
