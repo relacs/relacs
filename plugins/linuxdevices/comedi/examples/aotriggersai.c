@@ -15,8 +15,8 @@ int main(int argc, char *argv[])
   int aosubdevice;
   int aisubdevice;
   int pfisubdevice = 7;
-  int pfi_aostartout_channel = 1;
-  int pfi_aistartin_channel = 6;  /* connected via wire to pfi_aostartout_channel */
+  int pfi_aostartout_channel = 6;
+  int pfi_aistartin_channel = 1;  /* connected via wire to pfi_aostartout_channel */
   comedi_cmd aicmd;
   comedi_cmd aocmd;
   int err;
