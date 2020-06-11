@@ -45,6 +45,7 @@ ComediAnalogInput::ComediAnalogInput( void )
   BufferElemSize = 0;
   MaxRate = 1000.0;
   UseNIPFIStart = -1;
+  StartByAO = false;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   AboutToStop = false;
@@ -295,6 +296,7 @@ void ComediAnalogInput::close( void )
   if ( Cmd.chanlist != 0 )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
+  StartByAO = false;
   IsPrepared = false;
   TraceIndex = 0;
   TotalSamples = 0;
@@ -511,7 +513,8 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
   // adapt command to our purpose:
   comedi_cmd testCmd;
   comedi_get_cmd_src_mask( DeviceP, SubDevice, &testCmd );
-  if ( UseNIPFIStart >= 0 ) {
+  StartByAO = ( ComediAO != 0 && ComediAO->prepared() && UseNIPFIStart >= 0 );
+  if ( StartByAO ) {
     if ( testCmd.start_src & TRIG_EXT )
       cmd.start_src = TRIG_EXT;
     else {
@@ -528,7 +531,7 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
     }
   }
   cmd.start_arg = 0;
-  if ( UseNIPFIStart >= 0 ) {
+  if ( StartByAO ) {
     cmd.start_arg = CR_EDGE | NI_EXT_PFI( UseNIPFIStart );
     // cmd.start_arg = CR_EDGE | UseNIPFIStart;
     traces.setStartSource( UseNIPFIStart );
@@ -769,10 +772,12 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     cerr << "AI command failed: " << comedi_strerror( cerror ) << endl;
     Traces->addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
 			 + comedi_strerror( cerror ) );
+    StartByAO = false;
     return -1;
   }
-  else  if ( UseNIPFIStart < 0 )
+  else if ( ! StartByAO )
     insnlist.insns[ilinx++].subdev = SubDevice;
+  StartByAO = false;
   
   // add AO to instruction list:
   bool tookao = false;

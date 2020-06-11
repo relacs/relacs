@@ -252,8 +252,10 @@ private:
         started via an instruction list together with this subdevice. */
   ComediAnalogOutput* ComediAO;
 
-    /*! Use as start trigger for analog input this PFI channel: */
+    /*! Use as start trigger for analog input this PFI channel. */
   int UseNIPFIStart;
+    /*! Analog input is triggered by Analog Output. */
+  bool StartByAO;
 
     /*! Comedi command for asynchronous acquisition. */
   comedi_cmd Cmd;
