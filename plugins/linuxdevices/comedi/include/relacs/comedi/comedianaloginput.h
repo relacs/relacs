@@ -44,6 +44,29 @@ class ComediAnalogOutput;
 \par Options:
 - \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its
   maximal range value in volts.
+- \c usenipfistart: Use as start source NI PFI channel
+
+\par Trigger to analog output
+You need to route the analog output start signal to pfi channel 6:
+\code
+*Devices
+  Device1:
+      plugin : ComediNIPFI
+      device : /dev/comedi0
+      ident  : pfi-1
+      channel: 6
+      routing: AO_START1
+\endcode
+and tell the ComediAnalogInput that it will be triggered by this signal:
+\code
+*Analog Input Devices
+  Device1:
+      plugin       : ComediAnalogInput
+      device       : /dev/comedi0
+      ident        : ao-1
+      usenipfistart: 6
+      delays       : 0ms
+\endcode
 
 \par Calibration:
 For hardware calibrated boards (like NI E-Series boards) do
@@ -228,6 +251,9 @@ private:
     /*! Analog output subdevice that can be 
         started via an instruction list together with this subdevice. */
   ComediAnalogOutput* ComediAO;
+
+    /*! Use as start trigger for analog input this PFI channel: */
+  int UseNIPFIStart;
 
     /*! Comedi command for asynchronous acquisition. */
   comedi_cmd Cmd;

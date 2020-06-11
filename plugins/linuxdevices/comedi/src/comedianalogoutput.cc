@@ -46,7 +46,6 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   BufferElemSize = 0;
   MaxData.clear();
   MaxRate = 1000.0;
-  UseNIPFIStart = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   FillData = false;
   IsPrepared = false;
@@ -85,7 +84,6 @@ void ComediAnalogOutput::initOptions()
 {
   AnalogOutput::initOptions();
 
-  addInteger( "usenipfistart", "Use as start source NI PFI channel", -1 );
   addNumber( "extref", "Voltage of external reference", -1.0, -1.0, 100.0, 0.1, "V" );
   addNumber( "delays", "Delay between analog input and output", 0.0, 0.0, 1.0, 0.0001, "s", "ms" ).setStyle( Parameter::MultipleSelection );
 }
@@ -250,18 +248,6 @@ int ComediAnalogOutput::open( const string &device )
   }
   else
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
-
-  UseNIPFIStart = integer( "usenipfistart" );
-  if ( UseNIPFIStart >= 0 ) {
-    // configure PFI pin for digital input:
-    int subdev = 7;
-    if ( comedi_dio_config( DeviceP, subdev, UseNIPFIStart, COMEDI_INPUT ) != 0 ) {
-	cerr << "! error: ComediAnalogOutput::open() -> "
-	     << "DIO_CONFIG failed for PFI" << UseNIPFIStart
-	     << " on device " << deviceIdent() << '\n';
-	UseNIPFIStart = -1;
-    }
-  }
 
   // delays:
   vector< double > delays;
@@ -706,29 +692,13 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd, bool setsc
   // adapt command to our purpose:
   comedi_cmd testCmd;
   comedi_get_cmd_src_mask( DeviceP, SubDevice, &testCmd );
-  if ( UseNIPFIStart >= 0 ) {
-    if ( testCmd.start_src & TRIG_EXT )
-      cmd.start_src = TRIG_EXT;
-    else {
-      sigs.addError( DaqError::InvalidStartSource );
-      sigs.addErrorStr( "External trigger not supported" );
-    }
-  }
+  if ( testCmd.start_src & TRIG_INT )
+    cmd.start_src = TRIG_INT;
   else {
-    if ( testCmd.start_src & TRIG_INT )
-      cmd.start_src = TRIG_INT;
-    else {
-      sigs.addError( DaqError::InvalidStartSource );
-      sigs.addErrorStr( "Internal trigger not supported" );
-    }
+    sigs.addError( DaqError::InvalidStartSource );
+    sigs.addErrorStr( "Internal trigger not supported" );
   }
   cmd.start_arg = 0;
-  if ( UseNIPFIStart >= 0 ) {
-    // cmd.start_arg = CR_EDGE | NI_USUAL_PFI_SELECT( UseNIPFIStart );
-    cmd.start_arg = CR_EDGE | UseNIPFIStart;  // in ni_mio_common.cc this is incremented by one!
-    cerr << "START_SRC = #" << std::hex << cmd.start_src << " START_ARG = #" << cmd.start_arg << " PFI = " << std::dec << UseNIPFIStart << '\n';
-    sigs.setStartSource( UseNIPFIStart );
-  }
   cmd.scan_end_arg = sigs.size();
   
   // test if continous-state is supported:
@@ -966,8 +936,6 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
   // execute command:
-  cerr << "EXECUTE START_ARG = #" << std::hex << Cmd.start_arg << " PFI = " << std::dec << UseNIPFIStart << '\n';
-  //ComediAnalogInput::dump_cmd( Cmd );
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     int cerror = comedi_errno();
     cerr << "AO command failed: " << comedi_strerror( cerror ) << endl;
@@ -1010,25 +978,23 @@ int ComediAnalogOutput::startWrite( QSemaphore *sp )
     return -1;
   }
 
-  if ( UseNIPFIStart < 0 ) {
-    // setup instruction:
-    lsampl_t insndata[1];
-    insndata[0] = 0;
-    comedi_insn insn;
-    insn.insn = INSN_INTTRIG;
-    insn.subdev = SubDevice;
-    insn.chanspec = 0;
-    insn.data = insndata;
-    insn.n = 1;
-    // start analog output:
-    int r = comedi_do_insn( DeviceP, &insn );
-    if ( r < 0 ) {
-      int cerror = comedi_errno();
-      cerr << "AO do_insn failed: " << comedi_strerror( cerror ) << endl;
-      Sigs.addErrorStr( deviceFile() + " - execution of comedi_do_insn failed: "
-			+ comedi_strerror( cerror ) );
-      return -1;
-    }
+  // setup instruction:
+  lsampl_t insndata[1];
+  insndata[0] = 0;
+  comedi_insn insn;
+  insn.insn = INSN_INTTRIG;
+  insn.subdev = SubDevice;
+  insn.chanspec = 0;
+  insn.data = insndata;
+  insn.n = 1;
+  // start analog output:
+  int r = comedi_do_insn( DeviceP, &insn );
+  if ( r < 0 ) {
+    int cerror = comedi_errno();
+    cerr << "AO do_insn failed: " << comedi_strerror( cerror ) << endl;
+    Sigs.addErrorStr( deviceFile() + " - execution of comedi_do_insn failed: "
+		      + comedi_strerror( cerror ) );
+    return -1;
   }
 
   startThread( sp );
@@ -1182,12 +1148,6 @@ int ComediAnalogOutput::comediSubdevice( void ) const
   if ( DeviceP == NULL )
     return -1;
   return SubDevice;
-}
-
-
-bool ComediAnalogOutput::useAIStart( void ) const
-{
-  return ( UseNIPFIStart >= 0 );
 }
 
 

@@ -44,6 +44,7 @@ ComediAnalogInput::ComediAnalogInput( void )
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
+  UseNIPFIStart = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   AboutToStop = false;
@@ -79,7 +80,7 @@ void ComediAnalogInput::initOptions()
   AnalogInput::initOptions();
 
   addNumber( "gainblacklist", "Ranges not to be used", 0.0, 0.0, 100.0, 0.1, "V" ).setStyle( Parameter::MultipleSelection );
-  addBoolean( "takeao", "Start analog output in a single instruction", true );
+  addInteger( "usenipfistart", "Use as start source NI PFI channel", -1 );
 }
 
 int ComediAnalogInput::open( const string &device )
@@ -227,6 +228,19 @@ int ComediAnalogInput::open( const string &device )
   }
   else
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
+
+  // externat start source:
+  UseNIPFIStart = integer( "usenipfistart" );
+  if ( UseNIPFIStart >= 0 ) {
+    // configure PFI pin for digital input:
+    int subdev = 7;
+    if ( comedi_dio_config( DeviceP, subdev, UseNIPFIStart, COMEDI_INPUT ) != 0 ) {
+	cerr << "! error: ComediAnalogOutput::open() -> "
+	     << "DIO_CONFIG failed for PFI" << UseNIPFIStart
+	     << " on device " << deviceIdent() << '\n';
+	UseNIPFIStart = -1;
+    }
+  }
 
   // clear flags:
   ComediAO = 0;
@@ -497,13 +511,28 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
   // adapt command to our purpose:
   comedi_cmd testCmd;
   comedi_get_cmd_src_mask( DeviceP, SubDevice, &testCmd );
-  if ( testCmd.start_src & TRIG_INT )
-    cmd.start_src = TRIG_INT;
+  if ( UseNIPFIStart >= 0 ) {
+    if ( testCmd.start_src & TRIG_EXT )
+      cmd.start_src = TRIG_EXT;
+    else {
+      traces.addError( DaqError::InvalidStartSource );
+      traces.addErrorStr( "External trigger not supported" );
+    }
+  }
   else {
-    traces.addError( DaqError::InvalidStartSource );
-    traces.addErrorStr( "Internal trigger not supported" );
+    if ( testCmd.start_src & TRIG_INT )
+      cmd.start_src = TRIG_INT;
+    else {
+      traces.addError( DaqError::InvalidStartSource );
+      traces.addErrorStr( "Internal trigger not supported" );
+    }
   }
   cmd.start_arg = 0;
+  if ( UseNIPFIStart >= 0 ) {
+    cmd.start_arg = CR_EDGE | NI_EXT_PFI( UseNIPFIStart );
+    // cmd.start_arg = CR_EDGE | UseNIPFIStart;
+    traces.setStartSource( UseNIPFIStart );
+  }
   cmd.scan_end_arg = traces.size();
 
   // test if countinous-state is supported
@@ -742,14 +771,13 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
 			 + comedi_strerror( cerror ) );
     return -1;
   }
-  else  
+  else  if ( UseNIPFIStart < 0 )
     insnlist.insns[ilinx++].subdev = SubDevice;
   
   // add AO to instruction list:
   bool tookao = false;
   if ( aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
-    if ( ! ComediAO->useAIStart() )
-      insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
+    insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
     tookao = true;
   }
   

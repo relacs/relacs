@@ -921,26 +921,13 @@ int Acquire::restartRead( void )
       AISemaphore.acquire( AISemaphore.available() );
 
     // start reading from daq boards:
-    vector< int > aistarted;
-    aistarted.reserve( AI.size() );
     QWaitCondition *readwait = &ReadWait;
     for ( unsigned int i=0; i<AI.size(); i++ ) {
       if ( AI[i].Traces.size() > 0 ) {
-	bool started = false;
-	for ( unsigned int k=0; k<aistarted.size(); k++ ) {
-	  if ( aistarted[k] == AI[i].AIDevice ) {
-	    started = true;
-	    break;
-	  }
-	}
-	if ( ! started ) {
-	  if ( AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait ) != 0 )
-	    success = false;
-	  else {
-	    aistarted.push_back( i );
-	    readwait = 0; // we will wait on the first device only
-	  }
-	}
+	if ( AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait ) != 0 )
+	  success = false;
+	else
+	  readwait = 0; // we will wait on the first device only
       }
     }
   
@@ -1101,23 +1088,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   QWaitCondition *readwait = &ReadWait;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
-      bool started = false;
-      for ( unsigned int k=0; k<aistarted.size(); k++ ) {
-	if ( aistarted[k] == AI[i].AIDevice ) {
-	  started = true;
-	  break;
-	}
-      }
-      if ( ! started ) {
-	int r = AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait, aos );
-	if ( r < 0 )
-	  success = false;
-	else {
-	  if ( r > 0 )
-	    finished = false;
-	  aistarted.push_back( i );
-	  readwait = 0; // we will wait on the first device only
-	}
+      int r = AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait, aos );
+      if ( r < 0 )
+	success = false;
+      else {
+	if ( r > 0 )
+	  finished = false;
+	aistarted.push_back( i );
+	readwait = 0; // we will wait on the first device only
       }
     }
   }
