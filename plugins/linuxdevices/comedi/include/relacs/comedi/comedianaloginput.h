@@ -57,14 +57,15 @@ You need to route the analog output start signal to pfi channel 6:
       channel: 6
       routing: AO_START1
 \endcode
-and tell the ComediAnalogInput that it will be triggered by this signal:
+and tell the ComediAnalogInput that it will be triggered by this signal,
+on another PFI line that is connected by wire to PFI6:
 \code
 *Analog Input Devices
   Device1:
       plugin       : ComediAnalogInput
       device       : /dev/comedi0
       ident        : ao-1
-      usenipfistart: 6
+      usenipfistart: 1
       delays       : 0ms
 \endcode
 

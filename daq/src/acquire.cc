@@ -1007,35 +1007,28 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
 
   // set new gain indices:
-  bool gainchanged = false;
   if ( updategains ) {
     for ( unsigned int i=0; i<AI.size(); i++ ) {
-
       // clear adjust-flag:
       AI[i].Traces.delMode( AdjustFlag );
-      
       // set gainindices in data:
       for ( unsigned int k=0; k<AI[i].Gains.size(); k++ ) {
 	if ( AI[i].Gains[k] >= 0 ) {
 	  AI[i].Traces[k].setGainIndex( AI[i].Gains[k] );
 	  AI[i].Traces[k].addMode( AdjustFlag );
 	  AI[i].Gains[k] = -1;
-	  gainchanged = true;
 	}
       }
     }
-
   }
 
   // prepare reading from daq boards:
-  if ( gainchanged ) {
-    for ( unsigned int i=0; i<AI.size(); i++ ) {
-      if ( AI[i].Traces.size() > 0 &&
-	   AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
-	success = false;
-	if ( AI[i].Traces.success() )
-	  AI[i].Traces.setError( DaqError::Unknown );
-      }
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( AI[i].Traces.size() > 0 &&
+	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
+      success = false;
+      if ( AI[i].Traces.success() )
+	AI[i].Traces.setError( DaqError::Unknown );
     }
   }
 

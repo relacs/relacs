@@ -70,6 +70,10 @@ int StimulusDelay::main( void )
   int repeats = integer( "repeats" );
   int setdelay = index( "setdelay" );
 
+  double dt = 0.0;
+  if ( samplerate > 0.0 )
+    dt = 1.0/samplerate;
+
   double meandeltat = 0.0;
   double meansquaredeltat = 0.0;
   double mindeltat = 10000.0;
@@ -83,7 +87,7 @@ int StimulusDelay::main( void )
 
   OutData signal;
   signal.setTrace( outtrace );
-  signal.pulseWave( duration, 1.0/samplerate, 1.0, 0.0 );
+  signal.pulseWave( duration, dt, 1.0, 0.0 );
   signal.setIntensity( intensity );
   signal.setIdent( "one" );
 
