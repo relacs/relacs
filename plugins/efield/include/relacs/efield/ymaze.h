@@ -25,6 +25,7 @@
 #include <relacs/repro.h>
 #include <relacs/efield/traces.h>
 #include <relacs/efield/eodtools.h>
+#include <relacs/digitalio.h>
 
 #include <QLabel>
 #include <QObject>
@@ -101,23 +102,27 @@ public:
 
 private:
   YMazeSketch *sketch;
-  std::string name;
+  std::string name, device;
   double duration, eodf, samplerate;
   double rewardedFreq;
   double freqRangeMin, freqRangeMax, minFreqDiff, deltaf;
   int numberOfTrials;
   int lastRewardPosition = -1;
   int currentRewardPosition;
-  bool start;
+  int led_a_pin, led_b_pin, led_c_pin;
+  bool start, useLEDs;
+  DigitalIO *dio;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   QPushButton *nextBtn, *startBtn, *stopBtn, *resetBtn;
   OutList outList;
   TrialCondition currentCondition;
-  std::map<MazeArm, int> armTraceMap;
+  std::vector<int> ledLines;
+  std::map<MazeArm, int> armTraceMap; 
+  std::map<MazeArm, int> armLEDMap;
   std::map<std::string, MazeArm> channelArmMap = {{"Arm-A", MazeArm::A},
 						  {"Arm-B", MazeArm::B},
 						  {"Arm-C", MazeArm::C}};
-
+  
   std::string toString(const MazeArm &arm) const;
   void setupTable( QGridLayout *grid );
   void updateTable( const TrialCondition &tc );

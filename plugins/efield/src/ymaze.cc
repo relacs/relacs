@@ -20,6 +20,8 @@
 */
 
 #include <relacs/efield/ymaze.h>
+#include <relacs/digitalio.h>
+
 #include <QPainter>
 #include <QPicture>
 #include <QPushButton>
@@ -176,6 +178,13 @@ void YMaze::populateOptions() {
   addNumber( "maxeodfreq", "Maximum expected EOD frequency", 2000.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
   addNumber( "eodfreqprec", "Precision of EOD frequency measurement", 1.0, 0.0, 100.0, 0.1, "Hz" ).setActivation( "usepsd", "true" );
   addNumber( "averagetime", "Time for computing EOD frequency", 2.0, 0.0, 100000.0, 1.0, "s" );  
+
+  newSection( "LED indicators" );
+  addBoolean( "ledindicators", "Use LEDs attached to DIO lines to indicate rewarded stimulus.", true );
+  addText( "diodevice", "Name of the digital I/O device", "dio-1" ).setActivation( "ledindicators", "true" );
+  addInteger( "ledapin", "DIO line for LED on arm A.", 0 ).setActivation( "ledindicators", "true" );
+  addInteger( "ledbpin", "DIO line for LED on arm B.", 1 ).setActivation( "ledindicators", "true" );
+  addInteger( "ledcpin", "DIO line for LED on arm C.", 2 ).setActivation( "ledindicators", "true" );
 }
   
 void YMaze::setupTable(QGridLayout *grid) {
@@ -210,7 +219,6 @@ void YMaze::setupTable(QGridLayout *grid) {
   grid->addWidget( conditionC, 3, 6, 1, 1 );
   grid->addWidget( conditionCpast, 3, 7, 1, 1);
 }
-
 
 bool YMaze::estimateEodFrequency( double &fisheodf ) {
   double averagetime = number( "averagetime" );
@@ -480,6 +488,17 @@ void YMaze::customEvent( QEvent *qce ) {
     start = true;
     startBtn->setEnabled( false );
     stopBtn->setEnabled( true );
+    if ( useLEDs && dio != 0 ) {
+      int rewarded_line = armLEDMap[tc.mazeCondition.rewarded];
+      int value, r;
+      for (auto l : ledLines) {
+        value = l == rewarded_line ? 1 : 0;
+        r = dio->write( l, value );
+        if ( r != 0 ) {
+          warning( "Failed to set level on DIO line <b>" + Str( l ) + "</b>!" );
+        }
+      } 
+    }
     break;
   case static_cast<int>(BtnActions::STOP_TRIAL):
     start = false;
@@ -502,6 +521,11 @@ void YMaze::customEvent( QEvent *qce ) {
     resetTable();
     TrialCondition tc;
     currentCondition = tc;
+    if ( useLEDs && dio != 0) {
+      for ( auto l : ledLines ) {
+       dio->write( l, 0 );
+      }
+    }
     break;
   default:
     break;
@@ -518,6 +542,26 @@ bool YMaze::configureOutputTraces() {
     } else {
       success = false;
       break;
+    }
+  }
+  if ( useLEDs ) {
+    ledLines = {led_a_pin, led_b_pin, led_c_pin};
+    dio = digitalIO( device );
+    if ( dio == 0 ) {
+      cerr << ( "Digital I/O device <b>" + device + "</b> not found!" ) << endl;
+      success = false;
+    } else { 
+      armLEDMap[MazeArm::A] = led_a_pin;
+      armLEDMap[MazeArm::B] = led_b_pin;
+      armLEDMap[MazeArm::C] = led_c_pin;
+      int r = 0;
+      for ( auto l : ledLines ) {
+        r = dio->configureLine( l, true );
+        if (r != 0 ) {
+          cerr << ( "Failed to configure on DIO line <b>" + Str( l ) + "</b>!" ) << endl;
+          success = false;
+        }
+      }
     }
   }
   return success;
@@ -563,6 +607,12 @@ int YMaze::main( void ) {
   minFreqDiff = number( "minfreqdiff" );
   deltaf = number( "deltaf" );
   name = text( "name" );
+  useLEDs = boolean( "ledindicators" );
+  led_a_pin = integer( "ledapin" );
+  led_b_pin = integer( "ledbpin" );
+  led_c_pin = integer( "ledcpin" );
+  device = text( "diodevice" );
+
   start = false;
   reset();
   bool success = configureOutputTraces();
@@ -580,6 +630,7 @@ int YMaze::main( void ) {
         sleep(0.2);
         continue;
       }
+
       msg = "Stimulation is running.<br>Rewarded arm is " + toString(currentCondition.mazeCondition.rewarded) ;
       message( msg );
       write( outList );
@@ -590,13 +641,16 @@ int YMaze::main( void ) {
 	        writeZero( outList[i].trace() );
         return Failed;
       }
-
+      if ( useLEDs ) {
+        for (auto l : ledLines)
+          dio->write( l, 0 );
+        dio->close();
+      }
       start = false;
       postCustomEvent( static_cast<int>(YMazeEvents::IDLE) );
   }
   return Completed;
 }
-
 
 addRePro( YMaze, efield );
 
