@@ -52,7 +52,7 @@ public:
   SampleDataD getEOD( const double eodf, double &duration, 
                       const double phase_shift = 0.0, bool full_cycles = true ) const;
 
-  constexpr double pi() { return std::acos(-1); }
+  static constexpr double pi() { return std::acos(-1); }
   double phaseShift( const double eodf, double threshold = 0.0, bool rising_fank = true ) const;
 
 private: 
