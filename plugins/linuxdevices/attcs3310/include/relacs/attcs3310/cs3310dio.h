@@ -60,6 +60,39 @@ If there are no zero crossing, the setting changes are forced after 18 ms.
 - \c strobepin: dio line for strobing data (STROBE).
 - \c mutepin: dio line for muting the chip (MUTE).
 - \c zcenpin: dio line for enabling zero crossing (ZCEN).
+
+\par Configuration for npi ATT
+Custom built attenuator based on CS3310 chip by npi electronic
+with direct input from NI M-series card via SCSI plug.
+\verbatim
+*Attenuator Devices
+  Device1:
+      plugin    : CS3310DIO
+      device    : dio-1
+      ident     : attdev-1
+      strobepin : 5
+      datainpin : 0
+      dataoutpin: 4
+      cspin     : 1
+      mutepin   : 2
+      zcenpin   : 3
+\endverbatim
+
+\par Configuration for DAQFLEX
+Pins of our self made CS3310 solution attached to measurement computing board.
+\verbatim
+*Attenuator Devices
+  Device1:
+      plugin    : CS3310DIO
+      device    : dio-1
+      ident     : attdev-1
+      strobepin : 6
+      datainpin : 5
+      dataoutpin: -1
+      cspin     : 4
+      mutepin   : 7
+      zcenpin   : -1
+\endverbatim
 */
 
 
