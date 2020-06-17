@@ -37,7 +37,6 @@ class DAQFlexAnalogOutput;
 \class DAQFlexAnalogInput
 \author Jan Benda
 \brief [AnalogInput] Interface for accessing analog input of a DAQFlex board from Measurement Computing.
-\note In readData() we might want to reduce the bulk_transfer timeout, once RELACS thread timing gets smoother.
 */
 
 
@@ -193,9 +192,6 @@ private:
   int TotalSamples;
     /*! The number of samples so far read in by readData(). */
   int CurrentSamples;
-
-    /*! If \c true, start the analog output of the same device together with this. */
-  bool TakeAO;
 
     /*! Analog output subdevice that should be together with this device. */
   DAQFlexAnalogOutput* DAQFlexAO;
