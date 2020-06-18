@@ -479,8 +479,9 @@ void YMaze::customEvent( QEvent *qce ) {
   switch ( qce->type() - QEvent::User ) {
   case static_cast<int>(BtnActions::NEXT_TRIAL):
     tc = nextTrialCondition();
-    createStimuli( tc ); 
-    updateUI( tc );
+    currentCondition = tc;
+    createStimuli( currentCondition ); 
+    updateUI( currentCondition );
     nextBtn->setEnabled( false );
     resetBtn->setEnabled( true );
     break;
@@ -488,15 +489,13 @@ void YMaze::customEvent( QEvent *qce ) {
     start = true;
     startBtn->setEnabled( false );
     stopBtn->setEnabled( true );
-    if ( useLEDs && dio != 0 ) {
-      int rewarded_line = armLEDMap[tc.mazeCondition.rewarded];
+    if ( useLEDs && dio != 0 && dio->isOpen() ) {
+      int rewarded_line = armLEDMap[currentCondition.mazeCondition.rewarded];
       int value, r;
-      for (auto l : ledLines) {
+      for ( auto l : ledLines ) {
         value = l == rewarded_line ? 1 : 0;
         r = dio->configureLine( l, true );
-	      if ( r == 0 ) {
-	          r = dio->write( l, value );
-        }
+	r = dio->write( l, value );
         if ( r != 0 ) {
           warning( "Failed to set level on DIO line <b>" + Str( l ) + "</b>!" );
         }
@@ -524,12 +523,9 @@ void YMaze::customEvent( QEvent *qce ) {
     resetTable();
     TrialCondition tc;
     currentCondition = tc;
-    if ( useLEDs && dio != 0) {
+    if ( useLEDs && dio != 0 && dio->isOpen() ) {
       for ( auto l : ledLines ) {
-        int r = dio->configureLine( l, true );
-	      if ( r == 0 ) {
-	          r = dio->write( l, 0 );
-        }
+	int r = dio->write( l, 0 );
         if ( r != 0 ) {
           warning( "Failed to set level on DIO line <b>" + Str( l ) + "</b>!" );
         }
@@ -556,7 +552,7 @@ bool YMaze::configureOutputTraces() {
   if ( useLEDs ) {
     ledLines = {led_a_pin, led_b_pin, led_c_pin};
     dio = digitalIO( device );
-    if ( dio == 0 ) {
+    if ( dio == 0 && dio->isOpen() ) {
       cerr << ( "Digital I/O device <b>" + device + "</b> not found!" ) << endl;
       success = false;
     } else { 
@@ -564,7 +560,7 @@ bool YMaze::configureOutputTraces() {
       armLEDMap[MazeArm::B] = led_b_pin;
       armLEDMap[MazeArm::C] = led_c_pin;
       int r = 0;
-      for ( auto l : ledLines ) {
+      for ( int l : ledLines ) {
         r = dio->configureLine( l, true );
         if (r != 0 ) {
           cerr << ( "Failed to configure on DIO line <b>" + Str( l ) + "</b>!" ) << endl;
@@ -650,10 +646,9 @@ int YMaze::main( void ) {
 	        writeZero( outList[i].trace() );
         return Failed;
       }
-      if ( useLEDs ) {
-        for (auto l : ledLines)
+      if ( useLEDs && dio != 0 && dio->isOpen() ) {
+        for (int l : ledLines)
           dio->write( l, 0 );
-        dio->close();
       }
       start = false;
       postCustomEvent( static_cast<int>(YMazeEvents::IDLE) );
