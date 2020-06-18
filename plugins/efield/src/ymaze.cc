@@ -493,7 +493,10 @@ void YMaze::customEvent( QEvent *qce ) {
       int value, r;
       for (auto l : ledLines) {
         value = l == rewarded_line ? 1 : 0;
-        r = dio->write( l, value );
+        r = dio->configureLine( l, true );
+	      if ( r == 0 ) {
+	          r = dio->write( l, value );
+        }
         if ( r != 0 ) {
           warning( "Failed to set level on DIO line <b>" + Str( l ) + "</b>!" );
         }
@@ -523,7 +526,13 @@ void YMaze::customEvent( QEvent *qce ) {
     currentCondition = tc;
     if ( useLEDs && dio != 0) {
       for ( auto l : ledLines ) {
-       dio->write( l, 0 );
+        int r = dio->configureLine( l, true );
+	      if ( r == 0 ) {
+	          r = dio->write( l, 0 );
+        }
+        if ( r != 0 ) {
+          warning( "Failed to set level on DIO line <b>" + Str( l ) + "</b>!" );
+        }
       }
     }
     break;
