@@ -14,17 +14,22 @@ if test "x$1" = "x--help"; then
     exit 0
 fi
 
+function rm_module {
+    lsmod | grep -q $1 && rmmod $1 && echo "removed $1"
+}
+
 # remove dynclamp modules:
-lsmod | grep -q dynclampmodule && rmmod dynclampmodule && echo "removed dynclampmodule"
+rm_module dynclampmodule
+rm_module dynclampaistreamingmodule
 
 # remove all comedi modules:
-lsmod | grep -q kcomedilib || ( modprobe -r kcomedilib && echo "removed kcomedilib" )
+lsmod | grep -q kcomedilib && modprobe -r kcomedilib && echo "removed kcomedilib"
 for i in $(lsmod | grep "^comedi" | tail -n 1 | awk '{ m=$4; gsub(/,/,"\n",m); print m}' | tac); do
     modprobe -r $i && echo "removed $i"
 done
-lsmod | grep -q comedi || ( modprobe -r comedi && echo "removed comedi" )
+lsmod | grep -q comedi && modprobe -r comedi && echo "removed comedi"
 
 # remove rtai modules:
-lsmod | grep -q rtai_math && { rmmod rtai_math && echo "removed rtai_math"; }
-lsmod | grep -q rtai_sched && { rmmod rtai_sched && echo "removed rtai_sched"; }
-lsmod | grep -q rtai_hal && { rmmod rtai_hal && echo "removed rtai_hal"; }
+rm_module rtai_math
+rm_module rtai_sched
+rm_module rtai_hal

@@ -97,6 +97,7 @@ struct triggerT {
 struct dynClampTaskT {
   RT_TASK rtTask;
   int inuse;
+  RTIME periodcounts;
   unsigned int period;  // ns
   unsigned int frequency;
   unsigned long duration;
@@ -999,6 +1000,7 @@ int stopSubdevice( struct subdeviceT *subdev )
 
   // stopping ai stops also ao:
   if ( subdev->type == SUBDEV_IN ) {
+    comedi_cancel( device, subdev->subdev );
     stoppedbyai = ( aosubdev.running > 0 );
     stopSubdevice( &aosubdev );
     if ( stoppedbyai )
@@ -1421,6 +1423,11 @@ void dynclamp_loop( long dummy )
   unsigned int bufpos = 0;
   unsigned int nscans = 0;
   unsigned int nsamples = 0;
+  /*
+  int waited = 0;
+  RTIME startwork = 0;
+  RTIME worktime = 0;
+  */
   int failed = 0;
   RTIME currenttime = 0;
   RTIME newtime = 0;
@@ -1505,26 +1512,44 @@ void dynclamp_loop( long dummy )
       startsampletime = rt_get_time_ns();
 #endif
       // poll for ai channels:
+      //waited = 0;
+      failed = false;
       while ( true ) {
 	retVal = comedi_get_buffer_contents( device, &aisubdev.subdev );
 	if ( retVal < 0 ) {
 	  comedi_perror( "dynclamp_loop: ERROR! comedi_get_buffer_contents" );
+	  failed = true;
 	  break;
 	}
 	nscans = retVal / (aisubdev.cmd.chanlist_len * aisubdev.samplesize);
 	if ( nscans > 0  )
 	  break;
 	udelay( 1 );
+	//waited = 1;
+	if ( (comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING) == 0 ) {
+	  failed = true;
+	  break;
+	}
+	// we need to wait for AI data to come in, reset periodic timing:
+	RT_CURRENT->periodic_resume_time = rt_get_time();
       };
+      if ( failed )
+	break;
       nsamples = nscans * aisubdev.cmd.chanlist_len;
+      // timestamp for task period:
+      //startwork = rt_get_time();
 #ifdef ENABLE_AIACQUISITIONTIME
       stopsampletime = rt_get_time_ns();
       dsampletime = stopsampletime - startsampletime;
       statusInput[aiacquisitiontimestatusinx] = 1e-9*dsampletime;
 #endif
       // transfer ai channels:
-      failed = 0;
+      failed = false;
       for ( iS = 0; iS < nscans; iS++ ) {
+#ifdef ENABLE_AIACQUISITIONTIME
+	if ( iS > 0 )
+	  statusInput[aiacquisitiontimestatusinx] = 0;
+#endif
 	for ( iC = 0; iC < aisubdev.chanN; iC++ ) {
 	  pChan = &aisubdev.chanlist[iC];
 	  // previous sample:
@@ -1852,6 +1877,21 @@ void dynclamp_loop( long dummy )
 #endif
 
     rt_task_wait_period();
+    /*
+    worktime = rt_get_time() - startwork;
+    if ( waited ) {
+      if ( dynClampTask.periodcounts > worktime ) 
+	rt_sleep( dynClampTask.periodcounts - worktime );
+      else {
+	ERROR_MSG( "dynclamp_loop: ERROR! period too short\n" );
+	break;
+      }
+    }
+    else {
+      if ( dynClampTask.periodcounts/2 > worktime ) 
+	rt_sleep( dynClampTask.periodcounts/2 - worktime );
+    }
+    */
 
 #ifdef ENABLE_WAITTIME
 
@@ -1891,7 +1931,6 @@ int init_dynclamp_loop( void )
   void* signal = NULL;
   int dummy = 23;
   int retVal;
-  RTIME periodTicks;
 
   DEBUG_MSG( "init_dynclamp_loop: Trying to initialize dynamic clamp RTAI task...\n" );
 
@@ -1939,8 +1978,9 @@ int init_dynclamp_loop( void )
 
   // compute periods:
   reqfreq = dynClampTask.frequency;
-  periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.frequency ) );
-  dynClampTask.period = count2nano( periodTicks );
+  dynClampTask.periodcounts = start_rt_timer( nano2count( 1000000000/dynClampTask.frequency ) );
+  // in rtai 5.2 start_rt_timer() does not do anything!
+  dynClampTask.period = count2nano( dynClampTask.periodcounts );
   if ( dynClampTask.period < 1 ) {
     ERROR_MSG( "init_dynclamp_loop ERROR: period is zero!\n" );
     cleanup_dynclamp_loop();
@@ -1961,7 +2001,9 @@ int init_dynclamp_loop( void )
   }
 
   // START rt-task for dynamic clamp as periodic:
-  if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time() + 10*periodTicks, periodTicks ) 
+  if ( rt_task_make_periodic( &dynClampTask.rtTask,
+			      rt_get_time() + 10*dynClampTask.periodcounts,
+			      dynClampTask.periodcounts ) 
       != 0 ) {
     ERROR_MSG( "init_dynclamp_loop ERROR: failed to make real-time task periodic!\n" );
     cleanup_dynclamp_loop();
@@ -1985,7 +2027,6 @@ void cleanup_dynclamp_loop( void )
     }
     msleep( 1 );
     rt_task_delete( &dynClampTask.rtTask );
-    comedi_cancel( device, &aisubdev );
     memset( &dynClampTask, 0, sizeof(struct dynClampTaskT) );
     dynClampTask.inuse = 0;
     INFO_MSG( "cleanup_dynclamp_loop: stopped periodic task\n" );

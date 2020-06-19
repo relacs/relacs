@@ -2,17 +2,19 @@
 
 if test "x$1" = "x--help"; then
     echo
-    echo "loadmodules.sh [-c] [LATENCY]"
+    echo "loadmodules.sh [-s] [-c] [LATENCY]"
     echo
     echo "This script loads all the necessary kernel modules that are needed"
     echo "for using relacs with dynamic clamp support."
     echo "This requires an RTAI patched linux kernel."
     echo "See ../doc/html/index.html or www.relacs.net/plugins/rtaicomedi/index.html for more information."
     echo
+    echo "-s   load dynclampaistreamingmodule instead of dynclampmodule"
+    echo
     echo "-c   load only rtai_hal and rtai_sched needed for loading comedi modules"
     echo
     echo "The optional LATENCY parameter is a latency in ns that is passed"
-    echo "as the kernel_latency and user_latency paameter to the rtai_sched module"
+    echo "as the kernel_latency and user_latency parameter to the rtai_sched module"
     echo "to avoid self calibration."
     echo
     echo "If you want to load the kernel modules automatically by the boot"
@@ -34,6 +36,13 @@ else
 fi
 
 echo "use RTAI modules from $RTAI_MODULE_PATH"
+
+# load ai streaming:
+LOAD_AISTREAMING=false
+if test "$1" = "-s"; then
+    LOAD_AISTREAMING=true
+    shift
+fi
 
 # load modules needed for comedi only:
 USE_DC=true
@@ -61,15 +70,30 @@ fi
 udevadm trigger  # for comedi
 sleep 1
 test -c /dev/comedi0 && echo "loaded comedi"
+
+function rm_module {
+    lsmod | grep -q $1 && rmmod $1 && echo "removed $1"
+}
+
+function insmod_dc {
+    insmod $MODULE_PATH/$1.ko && echo "loaded $MODULE_PATH/$1.ko"
+}
+
+# dynamic clamp module:
 if $USE_DC; then
     lsmod | grep -q kcomedilib || { modprobe kcomedilib && echo "loaded kcomedilib"; }
+
+    rm_module dynclampmodule
+    rm_module dynclampaistreamingmodule
 
     # dynamic clamp module:
     test -c /dev/dynclamp || mknod -m 666 /dev/dynclamp c 227 0
 
     MODULE_PATH="${0%/*}"
 
-    lsmod | grep -q dynclampmodule && rmmod dynclampmodule && echo "removed dynclampmodule"
-
-    insmod $MODULE_PATH/dynclampmodule.ko && echo "loaded $MODULE_PATH/dynclampmodule.ko"
+    if $LOAD_AISTREAMING; then
+	insmod_dc dynclampaistreamingmodule
+    else
+	insmod_dc dynclampmodule
+    fi
 fi

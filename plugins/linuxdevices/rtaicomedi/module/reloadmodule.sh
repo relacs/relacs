@@ -29,12 +29,15 @@ else
     # reload the dynclampmodule:
 
     LOADED=false
-    
-    if lsmod | fgrep -q "dynclampmodule "; then
-	rmmod dynclampmodule && echo "removed old dynclampmodule"
-	insmod $MODULE_PATH/dynclampmodule.ko && echo "loaded $MODULE_PATH/dynclampmodule.ko"
-	LOADED=true
-    fi
+
+    for DCMOD in dynclampmodule dynclampaistreamingmodule; do
+	if lsmod | fgrep -q "$DCMOD "; then
+	    rmmod $DCMOD && echo "removed old $DCMOD"
+	    insmod $MODULE_PATH/$DCMOD.ko && echo "loaded $MODULE_PATH/$DCMOD.ko"
+	    LOADED=true
+	    break
+	fi
+    done
     
     if ! $LOADED; then
 	$MODULE_PATH/loadmodules.sh
