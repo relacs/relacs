@@ -1392,8 +1392,10 @@ void dynclamp_loop( long dummy )
   initModel();
 #endif
 
-  /* Somehow the first time this function waits for nothing... */
-  rt_task_wait_period();
+  // make sure we are on track:
+  do {
+    retVal = rt_task_wait_period();
+  } while ( retVal == RTE_TMROVRN);
   
   /**************************************************************************/
   /******** LOOP START: *****************************************************/
@@ -1777,7 +1779,9 @@ void dynclamp_loop( long dummy )
     starttime = rt_get_time_ns();
 #endif
 
-    rt_task_wait_period();
+    do {
+      retVal = rt_task_wait_period();
+    } while ( retVal == RTE_TMROVRN);
 
 #ifdef ENABLE_WAITTIME
 

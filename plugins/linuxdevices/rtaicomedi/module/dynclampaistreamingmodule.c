@@ -1467,8 +1467,10 @@ void dynclamp_loop( long dummy )
   initModel();
 #endif
 
-  /* Somehow the first time this function waits for nothing... */
-  rt_task_wait_period();
+  // make sure we are on track:
+  do {
+    retVal = rt_task_wait_period();
+  } while ( retVal == RTE_TMROVRN);
   
   /**************************************************************************/
   /******** LOOP START: *****************************************************/
@@ -1518,7 +1520,7 @@ void dynclamp_loop( long dummy )
 	  break;
 	}
 	// we need to wait for AI data to come in, reset periodic timing:
-	RT_CURRENT->periodic_resume_time = rt_get_time();
+	//RT_CURRENT->periodic_resume_time = rt_get_time();
       };
       if ( failed )
 	break;
@@ -1863,7 +1865,9 @@ void dynclamp_loop( long dummy )
     starttime = rt_get_time_ns();
 #endif
 
-    rt_task_wait_period();
+    do {
+      retVal = rt_task_wait_period();
+    } while ( retVal == RTE_TMROVRN);
     /*
     worktime = rt_get_time() - startwork;
     if ( waited ) {

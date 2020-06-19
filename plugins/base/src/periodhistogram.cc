@@ -108,17 +108,25 @@ void PeriodHistogram::main( void )
       // get interval data:
       intrace.copy( index, intrace.size(), intervals );
 
+      // mean interval:
+      double meaninterval = intervals.mean();
+      double expectedinterval = 1e6*intrace.sampleInterval();
+
       // min/max:
       float cmin = 0.0;
       float cmax = 0.0;
       intervals.minMax( cmin, cmax );
+    
+      // histogram:
+      SampleDataD hist( cmin, cmax, (cmax-cmin)/nbins );
+      hist.hist( intervals );
+
+      // plot range:
       if ( max < cmax )
 	max = cmax;
       if ( min > cmin )
 	min = cmin;
-
       // symmetric:
-      double meaninterval = 1e6*intrace.sampleInterval();
       if ( max - meaninterval > meaninterval - min )
 	min = meaninterval - (max - meaninterval);
       else
@@ -132,10 +140,11 @@ void PeriodHistogram::main( void )
 	max = hmax;
       if ( min < hmin )
 	min = hmin;
-    
-      // histogram:
-      SampleDataD hist( min, max, (max-min)/nbins );
-      hist.hist( intervals );
+      // include expected interval:
+      if ( expectedinterval < min )
+	min = expectedinterval - 0.5;
+      if ( expectedinterval > max )
+	max = expectedinterval + 0.5;
 
       // cumulative differences:
       intervals -= 1e6*intrace.sampleInterval();
