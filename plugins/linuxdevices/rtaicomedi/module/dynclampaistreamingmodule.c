@@ -803,7 +803,8 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   int retval;
   int chann;
   int k;
-
+  unsigned int period;
+  
   if ( subdev->subdev < 0 || !subdev->used ) {
     ERROR_MSG( "loadSyncCmd ERROR: first open an appropriate device and subdevice. Sync-command not loaded!\n" );
     return -EFAULT;
@@ -868,31 +869,25 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
       if ( subdev->chanlist[k].param == 0 )
 	subdev->cmd_chanlist[chann++] = subdev->chanlist[k].insn.chanspec;
     }
-    // try automatic command generation:
-    subdev->cmd.scan_begin_src = TRIG_TIMER;
+    // setup command:
+    period = (int) 1000000000/subdev->frequency;
+    subdev->cmd.subdev = subdev->subdev;
     subdev->cmd.flags = TRIG_ROUND_NEAREST | TRIG_RT | TRIG_WAKE_EOS;
-    unsigned int period = int( 1000000000/subdev->frequency );
-    retval = comedi_get_cmd_generic_timed( device, subdev->subdev, &subdev->cmd,
-					   chann, period );
-    if ( retval < 0 ) {
-      comedi_perror( "dynclampmodule: loadSyncCmd: comedi_get_cmd_generic_timed" );
-      ERROR_MSG( "loadSyncCmd ERROR: comedi_get_cmd_generic_timed failed\n" );
-      return -EINVAL;
-    }
-    if ( subdev->cmd.scan_begin_src != TRIG_TIMER ) {
-      ERROR_MSG( "loadSyncCmd ERROR: acquisition timed by a daq-board counter not possible\n" );
-      return -EINVAL;
-    }
     subdev->cmd.start_src = TRIG_NOW;
     subdev->cmd.start_arg = 0;
+    subdev->cmd.scan_begin_src = TRIG_TIMER;
     subdev->cmd.scan_begin_arg = period;
+    subdev->cmd.convert_src = TRIG_TIMER;
+    subdev->cmd.convert_arg = (int) 1000000000/200000; // as fast as possible, get it from user space. Now set to 200kHz
+    subdev->cmd.scan_end_src = TRIG_COUNT;
     subdev->cmd.scan_end_arg = chann;
     subdev->cmd.stop_src = TRIG_NONE;
     subdev->cmd.stop_arg = 0;
-    subdev->cmd.chanlist = &subdev->cmd_chanlist;
+    subdev->cmd.chanlist = subdev->cmd_chanlist;
     subdev->cmd.chanlist_len = chann;
     subdev->cmd.data = 0;
     subdev->cmd.data_len = 0;
+    // test command:
     retval = comedi_command_test( device, &subdev->cmd );
     if ( retval == 4 )         // adjusted arguments (scan_end_arg)
       retval = comedi_command_test( device, &subdev->cmd );
@@ -902,32 +897,24 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
       return -EINVAL;
     }
     subdev->frequency = 1.0e9/subdev->cmd.scan_begin_arg;
-    comedi_set_read_subdevice( device, subdev->cmd->subdev );
-    retval = comedi_get_read_subdevice( device );
-    if ( retval < 0 || retval != subdev->cmd->subdev ) {
-      comedi_perror( "dynclampmodule: loadSyncCmd: comedi_get_read_subdevice" );
-      ERROR_MSG( "loadSyncCmd ERROR: failed to change 'read' subdevice from %d to %d\n",
-		 retval, subdev->cmd->subdev );
-      return -EINVAL;
-    }
-    retval = comedi_get_subdevice_flags( device, subdev->cmd->subdev );
+    retval = comedi_get_subdevice_flags( device, subdev->cmd.subdev );
     if ( retval < 0 ) {
       comedi_perror( "dynclampmodule: loadSyncCmd: comedi_get_subdevice_flags" );
       ERROR_MSG( "loadSyncCmd ERROR: failed to get comedi subdevice flags\n" );
       return -EINVAL;
     }
     subdev->samplesize = ( retval & SDF_LSAMPL ) ? sizeof(lsampl_t) : sizeof(sampl_t);
-    retval = comedi_get_buffer_size( device, subdev->cmd->subdev );
-    if( ret < 0 ) {
+    retval = comedi_get_buffer_size( device, subdev->cmd.subdev );
+    if( retval < 0 ) {
       comedi_perror( "dynclampmodule: loadSyncCmd: comedi_get_buffer_size" );
       ERROR_MSG( "loadSyncCmd ERROR: failed to get comedi buffer size\n" );
-      return -EMEM;
+      return -ENOMEM;
     }
     subdev->bufsize = retval;
-    map = mmap( NULL, subdev->bufsize, PROT_READ, MAP_SHARED, comedi_fileno( device ), 0 );
-    if ( map == MAP_FAILED ) {
+    retval = comedi_map( device, subdev->cmd.subdev, &subdev->map );
+    if ( retval != 0 ) {
       ERROR_MSG( "loadSyncCmd ERROR: failed to initialize memory map\n" );
-      return -EMEM;
+      return -EINVAL;
     }
   }
 
@@ -1515,7 +1502,7 @@ void dynclamp_loop( long dummy )
       //waited = 0;
       failed = false;
       while ( true ) {
-	retVal = comedi_get_buffer_contents( device, &aisubdev.subdev );
+	retVal = comedi_get_buffer_contents( device, aisubdev.subdev );
 	if ( retVal < 0 ) {
 	  comedi_perror( "dynclamp_loop: ERROR! comedi_get_buffer_contents" );
 	  failed = true;
@@ -1526,7 +1513,7 @@ void dynclamp_loop( long dummy )
 	  break;
 	udelay( 1 );
 	//waited = 1;
-	if ( (comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING) == 0 ) {
+	if ( (comedi_get_subdevice_flags( device, aisubdev.subdev ) & SDF_RUNNING) == 0 ) {
 	  failed = true;
 	  break;
 	}
@@ -1556,10 +1543,10 @@ void dynclamp_loop( long dummy )
 	  pChan->prevvalue = pChan->value;
 	  // read out sample:
 	  if ( pChan->param == 0 ) {
-	    if(sample_size == sizeof(sampl_t))
-	      pChan->lsample = *(sampl_t *)((char *)map + bufpos);
+	    if ( aisubdev.samplesize == sizeof(sampl_t) )
+	      pChan->lsample = *(sampl_t *)((char *)(aisubdev.map) + bufpos);
 	    else
-	      pChan->lsample = *(lsampl_t *)((char *)map + bufpos);
+	      pChan->lsample = *(lsampl_t *)((char *)(aisubdev.map) + bufpos);
 	    bufpos += aisubdev.samplesize;
 	    if ( bufpos >= aisubdev.bufsize )
 	      bufpos = 0;
@@ -1610,7 +1597,7 @@ void dynclamp_loop( long dummy )
 	}
       }   // end of scan loop
       // mark read:
-      retVal = comedi_mark_buffer_read( device, &aisubdev.subdev,
+      retVal = comedi_mark_buffer_read( device, aisubdev.subdev,
 					nsamples * aisubdev.samplesize );
       if ( retVal < 0 ) {
 	comedi_perror( "dynclamp_loop: ERROR! comedi_mark_buffer_read" );
