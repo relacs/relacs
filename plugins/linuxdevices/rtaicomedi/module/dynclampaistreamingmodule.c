@@ -1504,6 +1504,11 @@ void dynclamp_loop( long dummy )
       //waited = 0;
       failed = false;
       while ( true ) {
+	if ( (comedi_get_subdevice_flags( device, aisubdev.subdev ) & SDF_RUNNING) == 0 ) {
+	  failed = true;
+	  break;
+	}
+	/*
 	retVal = comedi_get_buffer_contents( device, aisubdev.subdev );
 	if ( retVal < 0 ) {
 	  comedi_perror( "dynclamp_loop: ERROR! comedi_get_buffer_contents" );
@@ -1511,16 +1516,17 @@ void dynclamp_loop( long dummy )
 	  break;
 	}
 	nscans = retVal / (aisubdev.cmd.chanlist_len * aisubdev.samplesize);
+	*/
+	nscans = 1; // XXX DEBUG
 	if ( nscans > 0  )
 	  break;
-	udelay( 1 );
+	rt_busy_sleep( 1000 );
 	//waited = 1;
-	if ( (comedi_get_subdevice_flags( device, aisubdev.subdev ) & SDF_RUNNING) == 0 ) {
-	  failed = true;
-	  break;
-	}
 	// we need to wait for AI data to come in, reset periodic timing:
-	//RT_CURRENT->periodic_resume_time = rt_get_time();
+	// unsigned long flags;
+        // flags = rt_global_save_flags_and_cli();  // this is global locking
+	// dynClampTask.rtTask.periodic_resume_time = rt_get_time();
+        // rt_global_restore_flags( flags );
       };
       if ( failed )
 	break;
@@ -1545,6 +1551,7 @@ void dynclamp_loop( long dummy )
 	  pChan->prevvalue = pChan->value;
 	  // read out sample:
 	  if ( pChan->param == 0 ) {
+	    /*
 	    if ( aisubdev.samplesize == sizeof(sampl_t) )
 	      pChan->lsample = *(sampl_t *)((char *)(aisubdev.map) + bufpos);
 	    else
@@ -1552,6 +1559,8 @@ void dynclamp_loop( long dummy )
 	    bufpos += aisubdev.samplesize;
 	    if ( bufpos >= aisubdev.bufsize )
 	      bufpos = 0;
+	    */
+	    pChan->lsample = 0; // XXX DEBUG
 	    // convert to value:
 	    sample_to_value( pChan ); // sets pChan->value from pChan->lsample
 #ifdef ENABLE_COMPUTATION
@@ -1599,12 +1608,14 @@ void dynclamp_loop( long dummy )
 	}
       }   // end of scan loop
       // mark read:
+      /* XXX DEBUG
       retVal = comedi_mark_buffer_read( device, aisubdev.subdev,
 					nsamples * aisubdev.samplesize );
       if ( retVal < 0 ) {
 	comedi_perror( "dynclamp_loop: ERROR! comedi_mark_buffer_read" );
 	break;
       }
+      */
       if ( failed )
 	break;
     } // ! pending
@@ -1992,10 +2003,8 @@ int init_dynclamp_loop( void )
   }
 
   // START rt-task for dynamic clamp as periodic:
-  if ( rt_task_make_periodic( &dynClampTask.rtTask,
-			      rt_get_time() + 10*dynClampTask.periodcounts,
-			      dynClampTask.periodcounts ) 
-      != 0 ) {
+  if ( rt_task_make_periodic_relative_ns( &dynClampTask.rtTask, 10*dynClampTask.period,
+					  dynClampTask.period ) != 0 ) {
     ERROR_MSG( "init_dynclamp_loop ERROR: failed to make real-time task periodic!\n" );
     cleanup_dynclamp_loop();
     return -3;

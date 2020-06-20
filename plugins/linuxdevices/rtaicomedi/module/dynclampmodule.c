@@ -1883,8 +1883,8 @@ int init_dynclamp_loop( void )
 #endif
 
   // START rt-task for dynamic clamp as periodic:
-  if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time() + 10*periodTicks, periodTicks ) 
-      != 0 ) {
+  if ( rt_task_make_periodic_relative_ns( &dynClampTask.rtTask, 10*dynClampTask.period,
+					  dynClampTask.period ) != 0 ) {
     ERROR_MSG( "init_dynclamp_loop ERROR: failed to make real-time task periodic!\n" );
     cleanup_dynclamp_loop();
     return -3;
