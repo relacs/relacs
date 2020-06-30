@@ -32,13 +32,15 @@ namespace efield {
 
 CalibEField::CalibEField( void )
   : RePro( "CalibEField", "efield",
-	   "Jan Benda", "2.4", "May 29, 2017" )
+	   "Jan Benda", "2.5", "June 30, 2020" )
 {
   // add some parameter as options:
   newSection( "General" );
   addBoolean( "reset", "Reset calibration?", false );
   addNumber( "resetval", "Reset gain factor to", 0.1, 0.0, 100.0, 0.01 ).setActivation( "reset", "true" );
-  addBoolean( "am", "Calibrate amplitude modulation?", false );
+  addSelection( "outtracesel", "", "global|custom" );
+  addBoolean( "am", "Calibrate amplitude modulation?", false ).setActivation( "outtracesel", "global" );
+  addSelection( "outtrace", "Output trace", "V-1" ).setActivation( "outtracesel", "custom" );
   addNumber( "beatfreq", "Beat frequency to be used when fish EOD present", 20.0, 1.0, 100.0, 1.0, "Hz" );
   addNumber( "frequency", "Stimulus frequency to be used when no fish EOD is present", 600.0, 10.0, 1000.0, 5.0, "Hz" );
   addNumber( "duration", "Duration of stimulus", 0.4, 0.0, 10.0, 0.05, "seconds", "ms" );
@@ -63,12 +65,21 @@ CalibEField::~CalibEField( void )
 }
 
 
+void CalibEField::preConfig( void )
+{
+  setText( "outtrace", outTraceNames() );
+  setToDefault( "outtrace" );
+}
+
+
 int CalibEField::main( void )
 {
   // get options:
   bool reset = boolean( "reset" );
   double resetval = number( "resetval" );
+  bool globalouttrace = ( index( "outtracesel" ) == 0 );
   bool am = boolean( "am" );
+  int outtrace = index( "outtrace" );
   double frequency = number( "frequency" );
   double beatfrequency = number( "beatfreq" );
   double duration = number( "duration" );
@@ -82,7 +93,12 @@ int CalibEField::main( void )
   double minamplitude = number( "minamplitude" );
   int numintensities = integer( "numintensities" );
 
-  int outtrace = am ? GlobalAMEField : GlobalEField;
+  if ( globalouttrace )
+    outtrace = am ? GlobalAMEField : GlobalEField;
+  else {
+    am = ( outTraceName( outtrace ).find( "AM" ) != string::npos );
+    cerr << outTraceName( outtrace ) << " " << am << '\n';
+  }
 
   if ( duration*beatfrequency < 4 ) {
     warning( "stimulus too short or beat frequency too low." );
