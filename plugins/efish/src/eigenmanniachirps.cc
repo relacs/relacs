@@ -337,6 +337,9 @@ bool EigenmanniaChirps::createStimulus( void ) {
   }
   stimData = temp;
   stimData /= max(stimData);
+  if ( GlobalEField == -1) {
+    warning("Did not find a valid GlobalEField trace, check output trace configuration!");
+  }
   stimData.setTrace( GlobalEField );
   stimData.setSampleInterval( sampling_interval );
   stimData.description().addNumber( "real duration", stimData.size() * sampling_interval, "s" );
@@ -348,7 +351,6 @@ bool EigenmanniaChirps::createStimulus( void ) {
   
   stimData.setIdent( ident );
   outList.push( stimData );
-  
   return true;
 }
 
@@ -402,12 +404,17 @@ int EigenmanniaChirps::main( void ) {
   if (!stimulus_ok) {
     return Failed;
   }
-  receiver_amplitude = eodAmplitude( trace(LocalEODTrace[0]), currentTime() - 0.5, currentTime() );
-
+  int eod_trace = LocalEODTrace[0] >= 0 ? LocalEODTrace[0] : EODTrace;
+  if ( eod_trace == -1 ) {
+    warning( "There is no EOD Trace! Cannot estimate fish amplitude and frequency! Expecting a LocalEOD or EOD trace, check input configuration. Exiting!" );
+    return Failed;
+  }
+  receiver_amplitude = eodAmplitude( trace(eod_trace), currentTime() - 0.5, currentTime() );
+  
   // stimulus intensity:
   double intensity = stimulus_contrast * receiver_amplitude;
   stimData.setIntensity( intensity );
-
+  
   // output signal:
   for (int i = 0; i < repeats && softStop() == 0 ; ++i) {
     Str s = "<b>" + toString( chirp_type ) + "</b>"; 
