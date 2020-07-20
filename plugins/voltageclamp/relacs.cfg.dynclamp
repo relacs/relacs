@@ -97,31 +97,21 @@
       resistancepin: 3
       buzzerpin    : 4
 
-*Devices
-  Device1:
-      plugin : ComediNIPFI
-      device : /dev/comedi0
-      ident  : pfi-1
-      channel: 6
-      routing: AO_START1
-
 *Analog Input Devices
   Device1:
-      plugin       : ComediAnalogInput
-      device       : /dev/comedi0
-      ident        : ai-1
-      usenipfistart: 1
+      plugin: [ DynClampAnalogInput, DynClampAISim ]
+      device: /dev/comedi0
+      ident : ai-1
 
 *Analog Output Devices
   Device1:
-      plugin: ComediAnalogOutput
+      plugin: [ DynClampAnalogOutput, DynClampAOSim ]
       device: /dev/comedi0
       ident : ao-1
-      delays: 0ms
 
 *Digital I/O Devices
   Device1:
-      plugin: ComediDigitalIO
+      plugin: DynClampDigitalIO
       device: /dev/comedi0
       ident : dio-1
 
