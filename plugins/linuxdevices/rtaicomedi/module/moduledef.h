@@ -174,14 +174,19 @@ struct dioIOCT {
   unsigned int maxlines;
   enum ttlPulses pulseType; /* only for op == DIO_ADD_TTLPULSE or DIO_CLEAR_TTLPULSE */
   long pulsewidth;          /* only for op == DIO_SET_SYNCPULSE */
-  int intervalmode;          /* only for op == DIO_SET_SYNCPULSE: 0: fixed period, 1: each difftime, n>1: difftime averaged over n cycles */
-  int modemask;          /* only for op == DIO_SET_SYNCPULSE: mask for lines setting modes of amplifer. */
-  int modebits;          /* only for op == DIO_SET_SYNCPULSE: bits to set high in amplifier mode. */
+  int intervalmode;         /* only for op == DIO_SET_SYNCPULSE: 
+                                 0: fixed period,
+                                 1: each difftime,
+                                 n>1: difftime averaged over n cycles */
+  int modemask;             /* only for op == DIO_SET_SYNCPULSE:
+                                 mask for lines setting modes of amplifer. */
+  int modebits;             /* only for op == DIO_SET_SYNCPULSE:
+                                 bits to set high in amplifier mode. */
 };
 
 struct triggerIOCT {
   char devname[DEV_NAME_MAXLEN+1];
-  int subdev;   // -1: assing the first analog input subdevice.
+  int subdev;               // -1: assing the first analog input subdevice.
   unsigned int channel;
   float alevel;
 };

@@ -113,6 +113,8 @@ private:
   static string RightSoundTraceIdentifier[4];
   static string RightSoundTraceNames;
 
+  static void clear( void );
+
 };
 
 

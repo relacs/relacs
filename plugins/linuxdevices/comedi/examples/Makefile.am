@@ -6,6 +6,7 @@ noinst_PROGRAMS = \
     ai_maxrate \
     ai_multiboard \
     aitriggersao \
+    aotriggersai \
     dio_write \
     checkao
 
@@ -38,6 +39,10 @@ ai_multiboard_SOURCES = ai_multiboard.c common.c
 aitriggersao_LDFLAGS = $(COMEDI_LDFLAGS)
 aitriggersao_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
 aitriggersao_SOURCES = aitriggersao.c common.c
+
+aotriggersai_LDFLAGS = $(COMEDI_LDFLAGS)
+aotriggersai_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
+aotriggersai_SOURCES = aotriggersai.c common.c
 
 dio_write_CPPFLAGS = \
     -I$(top_srcdir)/shapes/include \

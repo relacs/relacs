@@ -48,8 +48,8 @@ struct chanT {
   int param;
   int modelIndex;
   int statusIndex;
-  int isUsed;    // used by analog output to indicate channels that get data from user space
-  comedi_insn insn;
+  int isUsed;        // used by analog output to indicate channels that get data from user space
+  comedi_insn insn;  // comedi instruction for AO only.
   lsampl_t lsample;
   lsampl_t maxdata;
   float minvoltage;
@@ -77,6 +77,11 @@ struct subdeviceT {
   int pending;     // set to 1 by startSubdevice(), dynclamp_loop sets it to 0
   unsigned int chanN;
   struct chanT chanlist[MAXCHANLIST];
+  comedi_cmd cmd;           // comedi command for AI only.
+  unsigned int cmd_chanlist[MAXCHANLIST];
+  void *map;                // memory map for comedi command
+  unsigned int bufsize;     // comedi ai buffer size
+  unsigned int samplesize;  // comedi ai sample size
 };
 
 struct triggerT {
@@ -92,6 +97,7 @@ struct triggerT {
 struct dynClampTaskT {
   RT_TASK rtTask;
   int inuse;
+  RTIME periodcounts;
   unsigned int period;  // ns
   unsigned int frequency;
   unsigned long duration;
@@ -795,7 +801,10 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
 {
   int buffersize;
   int retval;
-
+  int chann;
+  int k;
+  unsigned int period;
+  
   if ( subdev->subdev < 0 || !subdev->used ) {
     ERROR_MSG( "loadSyncCmd ERROR: first open an appropriate device and subdevice. Sync-command not loaded!\n" );
     return -EFAULT;
@@ -851,6 +860,63 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC, struct subdeviceT *subdev )
   buffersize = kfifo_size( &subdev->fifo );
   syncCmdIOC->buffersize = buffersize*sizeof( float );
   kfifo_reset( &subdev->fifo );
+
+  // setup AI command:
+  if ( subdev->type == SUBDEV_IN ) {
+    // assemble channels:
+    chann = 0;
+    for ( k=0; k<subdev->chanN; k++ ) {
+      if ( subdev->chanlist[k].param == 0 )
+	subdev->cmd_chanlist[chann++] = subdev->chanlist[k].insn.chanspec;
+    }
+    // setup command:
+    period = (int) 1000000000/subdev->frequency;
+    subdev->cmd.subdev = subdev->subdev;
+    subdev->cmd.flags = TRIG_ROUND_NEAREST | TRIG_RT | TRIG_WAKE_EOS;
+    subdev->cmd.start_src = TRIG_NOW;
+    subdev->cmd.start_arg = 0;
+    subdev->cmd.scan_begin_src = TRIG_TIMER;
+    subdev->cmd.scan_begin_arg = period;
+    subdev->cmd.convert_src = TRIG_TIMER;
+    subdev->cmd.convert_arg = (int) 1000000000/200000; // as fast as possible, get it from user space. Now set to 200kHz
+    subdev->cmd.scan_end_src = TRIG_COUNT;
+    subdev->cmd.scan_end_arg = chann;
+    subdev->cmd.stop_src = TRIG_NONE;
+    subdev->cmd.stop_arg = 0;
+    subdev->cmd.chanlist = subdev->cmd_chanlist;
+    subdev->cmd.chanlist_len = chann;
+    subdev->cmd.data = 0;
+    subdev->cmd.data_len = 0;
+    // test command:
+    retval = comedi_command_test( device, &subdev->cmd );
+    if ( retval == 4 )         // adjusted arguments (scan_end_arg)
+      retval = comedi_command_test( device, &subdev->cmd );
+    if ( retval != 0 ) {
+      comedi_perror( "dynclampmodule: loadSyncCmd: comedi_command_test" );
+      ERROR_MSG( "loadSyncCmd ERROR: comedi_command_test failed\n" );
+      return -EINVAL;
+    }
+    subdev->frequency = 1.0e9/subdev->cmd.scan_begin_arg;
+    retval = comedi_get_subdevice_flags( device, subdev->cmd.subdev );
+    if ( retval < 0 ) {
+      comedi_perror( "dynclampmodule: loadSyncCmd: comedi_get_subdevice_flags" );
+      ERROR_MSG( "loadSyncCmd ERROR: failed to get comedi subdevice flags\n" );
+      return -EINVAL;
+    }
+    subdev->samplesize = ( retval & SDF_LSAMPL ) ? sizeof(lsampl_t) : sizeof(sampl_t);
+    retval = comedi_get_buffer_size( device, subdev->cmd.subdev );
+    if( retval < 0 ) {
+      comedi_perror( "dynclampmodule: loadSyncCmd: comedi_get_buffer_size" );
+      ERROR_MSG( "loadSyncCmd ERROR: failed to get comedi buffer size\n" );
+      return -ENOMEM;
+    }
+    subdev->bufsize = retval;
+    retval = comedi_map( device, subdev->cmd.subdev, &subdev->map );
+    if ( retval != 0 ) {
+      ERROR_MSG( "loadSyncCmd ERROR: failed to initialize memory map\n" );
+      return -EINVAL;
+    }
+  }
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.running ) {
@@ -921,6 +987,7 @@ int stopSubdevice( struct subdeviceT *subdev )
 
   // stopping ai stops also ao:
   if ( subdev->type == SUBDEV_IN ) {
+    comedi_cancel( device, subdev->subdev );
     stoppedbyai = ( aosubdev.running > 0 );
     stopSubdevice( &aosubdev );
     if ( stoppedbyai )
@@ -1333,13 +1400,21 @@ static inline float value_to_sample( struct chanT *pChan, float value )
 void dynclamp_loop( long dummy )
 {
   int retVal;
-  int iC;
+  int iS, iC;
   struct chanT *pChan;
   float outvalue;
   float aovalues[MAXCHANLIST];
   int aonum = 0;
   int aoinx = 0;
   float aivalues[MAXCHANLIST];
+  unsigned int bufpos = 0;
+  unsigned int nscans = 0;
+  unsigned int nsamples = 0;
+  /*
+  int waited = 0;
+  RTIME startwork = 0;
+  RTIME worktime = 0;
+  */
   int failed = 0;
   RTIME currenttime = 0;
   RTIME newtime = 0;
@@ -1419,108 +1494,130 @@ void dynclamp_loop( long dummy )
 #ifdef ENABLE_AITIME
     starttime = rt_get_time_ns();
 #endif
-    // ai is always running!
-    if ( aisubdev.pending ) {
-      if ( triggerevs[aisubdev.startsource] &&
-	   ! prevtriggerevs[aisubdev.startsource] ) {
-	aisubdev.delay = dynClampTask.loopCnt + aisubdev.delay; 
-	aisubdev.duration = aisubdev.delay + aisubdev.duration;
+    if ( aisubdev.pending )
 	aisubdev.pending = 0;
-      }
-    }
-          
     if ( ! aisubdev.pending ) {
-      // check duration:
-      if ( !aisubdev.continuous &&
-	   aisubdev.chanN > 0 &&
-	   aisubdev.duration <= dynClampTask.loopCnt )
-	break; // dynclamp loop
-
-      // for every ai channel:
-      failed = 0;
-      for ( iC = 0; iC < aisubdev.chanN; iC++ ) {
-
-	pChan = &aisubdev.chanlist[iC];
-
-	// previous sample:
-	pChan->prevvalue = pChan->value;
-
-	// acquire sample:
-	if ( pChan->param == 0 ) {
 #ifdef ENABLE_AIACQUISITIONTIME
-	  startsampletime = rt_get_time_ns();
+      startsampletime = rt_get_time_ns();
 #endif
-	  retVal = comedi_do_insn( device, &pChan->insn );     
-#ifdef ENABLE_AIACQUISITIONTIME
-	  stopsampletime = rt_get_time_ns();
-	  dsampletime = stopsampletime - startsampletime;
-	  statusInput[aiacquisitiontimestatusinx] = 1e-9*dsampletime;
-#endif
-	  if ( retVal < 1 ) {
-	    stopSubdevice( &aisubdev );
-	    aisubdev.running = E_NODATA;
-	    ERROR_MSG( "dynclamp_loop: ERROR! failed to read data from AI subdevice channel %d at loopCnt %lu\n",
-		       iC, dynClampTask.loopCnt );
-	    if ( retVal < 0 ) {
-	      comedi_perror( "dynclampmodule: dynclamp_loop: comedi_data_read" );
-	      aisubdev.running = E_COMEDI;
-	      ERROR_MSG( "dynclamp_loop: ERROR! failed to read from AI subdevice channel %d at loopCnt %lu\n",
-			 iC, dynClampTask.loopCnt );
-	    }
-	    failed = 1;
-	    break;
-	  }
-	  // convert to value:
-	  sample_to_value( pChan ); // sets pChan->value from pChan->lsample
-#ifdef ENABLE_COMPUTATION
-	  if ( pChan->modelIndex >= 0 )
-	    input[pChan->modelIndex] = pChan->value;
-#endif
+      // poll for ai channels:
+      //waited = 0;
+      failed = false;
+      while ( true ) {
+	if ( (comedi_get_subdevice_flags( device, aisubdev.subdev ) & SDF_RUNNING) == 0 ) {
+	  failed = true;
+	  break;
 	}
-	else {
-#ifdef ENABLE_COMPUTATION
-	  if ( pChan->param == 1 )
-	    pChan->value = paramInput[pChan->chan]*pChan->scale;
-	  else
-#endif
-	    pChan->value = statusInput[pChan->chan]*pChan->scale;
+	/*
+	retVal = comedi_get_buffer_contents( device, aisubdev.subdev );
+	if ( retVal < 0 ) {
+	  comedi_perror( "dynclamp_loop: ERROR! comedi_get_buffer_contents" );
+	  failed = true;
+	  break;
 	}
-	// store channel value:
-	aivalues[iC] = pChan->value;
-
-#ifdef ENABLE_TRIGGER
-	// trigger:
-	if ( pChan->trigger ) {
-	  prevtriggerevs[1] = triggerevs[1];
-	  if ( pChan->value > pChan->alevel && pChan->prevvalue <= pChan->alevel ) {
-	    triggerevs[1] = 1;
-	  }
-	  else if ( pChan->value < pChan->alevel && pChan->prevvalue >= pChan->alevel ) {
-	    triggerevs[1] = 0;
-	  }
-	}
-#endif
-	  
-      } // end of channel loop
+	nscans = retVal / (aisubdev.cmd.chanlist_len * aisubdev.samplesize);
+	*/
+	nscans = 1; // XXX DEBUG
+	if ( nscans > 0  )
+	  break;
+	rt_busy_sleep( 1000 );
+	//waited = 1;
+	// we need to wait for AI data to come in, reset periodic timing:
+	// unsigned long flags;
+        // flags = rt_global_save_flags_and_cli();  // this is global locking
+	// dynClampTask.rtTask.periodic_resume_time = rt_get_time();
+        // rt_global_restore_flags( flags );
+      };
       if ( failed )
 	break;
-
-      // write analog input values to fifo buffer:
-      if ( kfifo_size( &aisubdev.fifo ) <= 1 ) {
-	// for whatever reason, non-initialized kfifo has size 1!
-	ERROR_MSG( "dynclamp_loop: ERROR! no fifo buffer for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
-	stopSubdevice( &aisubdev );
-	aisubdev.running = E_NOMEM;
-	break; // dynclamp loop
+      nsamples = nscans * aisubdev.cmd.chanlist_len;
+      // timestamp for task period:
+      //startwork = rt_get_time();
+#ifdef ENABLE_AIACQUISITIONTIME
+      stopsampletime = rt_get_time_ns();
+      dsampletime = stopsampletime - startsampletime;
+      statusInput[aiacquisitiontimestatusinx] = 1e-9*dsampletime;
+#endif
+      // transfer ai channels:
+      failed = false;
+      for ( iS = 0; iS < nscans; iS++ ) {
+#ifdef ENABLE_AIACQUISITIONTIME
+	if ( iS > 0 )
+	  statusInput[aiacquisitiontimestatusinx] = 0;
+#endif
+	for ( iC = 0; iC < aisubdev.chanN; iC++ ) {
+	  pChan = &aisubdev.chanlist[iC];
+	  // previous sample:
+	  pChan->prevvalue = pChan->value;
+	  // read out sample:
+	  if ( pChan->param == 0 ) {
+	    /*
+	    if ( aisubdev.samplesize == sizeof(sampl_t) )
+	      pChan->lsample = *(sampl_t *)((char *)(aisubdev.map) + bufpos);
+	    else
+	      pChan->lsample = *(lsampl_t *)((char *)(aisubdev.map) + bufpos);
+	    bufpos += aisubdev.samplesize;
+	    if ( bufpos >= aisubdev.bufsize )
+	      bufpos = 0;
+	    */
+	    pChan->lsample = 0; // XXX DEBUG
+	    // convert to value:
+	    sample_to_value( pChan ); // sets pChan->value from pChan->lsample
+#ifdef ENABLE_COMPUTATION
+	    if ( pChan->modelIndex >= 0 )
+	      input[pChan->modelIndex] = pChan->value;
+#endif
+	  }
+	  else {
+#ifdef ENABLE_COMPUTATION
+	    if ( pChan->param == 1 )
+	      pChan->value = paramInput[pChan->chan]*pChan->scale;
+	    else
+#endif
+	      pChan->value = statusInput[pChan->chan]*pChan->scale;
+	  }
+	  // store channel value:
+	  aivalues[iC] = pChan->value;
+#ifdef ENABLE_TRIGGER
+	  // trigger:
+	  if ( pChan->trigger ) {
+	    prevtriggerevs[1] = triggerevs[1];
+	    if ( pChan->value > pChan->alevel && pChan->prevvalue <= pChan->alevel ) {
+	      triggerevs[1] = 1;
+	    }
+	    else if ( pChan->value < pChan->alevel && pChan->prevvalue >= pChan->alevel ) {
+	      triggerevs[1] = 0;
+	    }
+	  }
+#endif
+	} // end of channel loop
+	// write analog input values to fifo buffer:
+	if ( kfifo_size( &aisubdev.fifo ) <= 1 ) {
+	  // for whatever reason, non-initialized kfifo has size 1!
+	  ERROR_MSG( "dynclamp_loop: ERROR! no fifo buffer for AI subdevice at loopCnt %lu\n", dynClampTask.loopCnt );
+	  stopSubdevice( &aisubdev );
+	  aisubdev.running = E_NOMEM;
+	  failed = true;
+	}
+	retVal = kfifo_in( &aisubdev.fifo, aivalues, aisubdev.chanN );
+	if ( retVal < aisubdev.chanN ) {
+	  ERROR_MSG( "dynclamp_loop: ERROR! fifo overflow for AI subdevice at loopCnt %lu, fifo size=%d, available=%d\n", dynClampTask.loopCnt, kfifo_size( &aisubdev.fifo ), kfifo_avail( &aisubdev.fifo ) );
+	  stopSubdevice( &aisubdev );
+	  aisubdev.running = E_OVERFLOW;
+	  failed = true;
+	}
+      }   // end of scan loop
+      // mark read:
+      /* XXX DEBUG
+      retVal = comedi_mark_buffer_read( device, aisubdev.subdev,
+					nsamples * aisubdev.samplesize );
+      if ( retVal < 0 ) {
+	comedi_perror( "dynclamp_loop: ERROR! comedi_mark_buffer_read" );
+	break;
       }
-      retVal = kfifo_in( &aisubdev.fifo, aivalues, aisubdev.chanN );
-      if ( retVal < aisubdev.chanN ) {
-	ERROR_MSG( "dynclamp_loop: ERROR! fifo overflow for AI subdevice at loopCnt %lu, fifo size=%d, available=%d\n", dynClampTask.loopCnt, kfifo_size( &aisubdev.fifo ), kfifo_avail( &aisubdev.fifo ) );
-	stopSubdevice( &aisubdev );
-	aisubdev.running = E_OVERFLOW;
-	break; // dynclamp loop
-      }
-
+      */
+      if ( failed )
+	break;
     } // ! pending
 #ifdef ENABLE_AITIME
     stoptime = rt_get_time_ns();
@@ -1782,6 +1879,21 @@ void dynclamp_loop( long dummy )
     do {
       retVal = rt_task_wait_period();
     } while ( retVal == RTE_TMROVRN);
+    /*
+    worktime = rt_get_time() - startwork;
+    if ( waited ) {
+      if ( dynClampTask.periodcounts > worktime ) 
+	rt_sleep( dynClampTask.periodcounts - worktime );
+      else {
+	ERROR_MSG( "dynclamp_loop: ERROR! period too short\n" );
+	break;
+      }
+    }
+    else {
+      if ( dynClampTask.periodcounts/2 > worktime ) 
+	rt_sleep( dynClampTask.periodcounts/2 - worktime );
+    }
+    */
 
 #ifdef ENABLE_WAITTIME
 
@@ -1821,7 +1933,6 @@ int init_dynclamp_loop( void )
   void* signal = NULL;
   int dummy = 23;
   int retVal;
-  RTIME periodTicks;
 
   DEBUG_MSG( "init_dynclamp_loop: Trying to initialize dynamic clamp RTAI task...\n" );
 
@@ -1869,8 +1980,9 @@ int init_dynclamp_loop( void )
 
   // compute periods:
   reqfreq = dynClampTask.frequency;
-  periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.frequency ) );
-  dynClampTask.period = count2nano( periodTicks );
+  dynClampTask.periodcounts = start_rt_timer( nano2count( 1000000000/dynClampTask.frequency ) );
+  // in rtai 5.2 start_rt_timer() does not do anything!
+  dynClampTask.period = count2nano( dynClampTask.periodcounts );
   if ( dynClampTask.period < 1 ) {
     ERROR_MSG( "init_dynclamp_loop ERROR: period is zero!\n" );
     cleanup_dynclamp_loop();
@@ -1881,6 +1993,14 @@ int init_dynclamp_loop( void )
   loopInterval = 1.0e-9*dynClampTask.period;
   loopRate = 1.0e9/dynClampTask.period;
 #endif
+
+  // start analog input:
+  retVal = comedi_command( device, &aisubdev.cmd );
+  if ( retVal < 0 ) {
+    ERROR_MSG( "init_dynclamp_loop ERROR: comedi_command failed!\n" );
+    cleanup_dynclamp_loop();
+    return -3;
+  }
 
   // START rt-task for dynamic clamp as periodic:
   if ( rt_task_make_periodic_relative_ns( &dynClampTask.rtTask, 10*dynClampTask.period,

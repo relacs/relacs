@@ -124,7 +124,16 @@ int ComediRouting::open( const string &device, int subdev, int channel,
     return NotOpen;
   }
 
-  // configure pins:
+  // set routing:
+  if ( comedi_set_routing( DeviceP, subdev, channel, routing ) != 0 ) {
+    cerr << "! error: ComediRouting::open() -> "
+	 << "Routing failed on device " << deviceIdent() << '\n';
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    return WriteError;
+  }
+
+  // configure pin for digital output:
   int diotype = comedi_get_subdevice_type( DeviceP, subdev );
   if ( diotype == COMEDI_SUBD_DIO ) {
     if ( comedi_dio_config( DeviceP, subdev, channel, COMEDI_OUTPUT ) != 0 ) {
@@ -151,15 +160,6 @@ int ComediRouting::open( const string &device, int subdev, int channel,
     comedi_close( DeviceP );
     DeviceP = NULL;
     return InvalidDevice;
-  }
-
-  // set routing:
-  if ( comedi_set_routing( DeviceP, subdev, channel, routing ) != 0 ) {
-    cerr << "! error: ComediRouting::open() -> "
-	 << "Routing failed on device " << deviceIdent() << '\n';
-    comedi_close( DeviceP );
-    DeviceP = NULL;
-    return WriteError;
   }
 
   // set basic device infos:

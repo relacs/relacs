@@ -44,9 +44,30 @@ class ComediAnalogOutput;
 \par Options:
 - \c gainblacklist: List of daq board gains that should not be used. Each gain is identified by its
   maximal range value in volts.
-- \c takeao: If \c true (default), then this analog input is started together with 
-  the analog output of the same device in a single instruction list.
-  This option is provided for demonstration purposes only and should otherwise not be used/unset.
+- \c usenipfistart: Use as start source NI PFI channel
+
+\par Trigger to analog output
+You need to route the analog output start signal to pfi channel 6:
+\code
+*Devices
+  Device1:
+      plugin : ComediNIPFI
+      device : /dev/comedi0
+      ident  : pfi-1
+      channel: 6
+      routing: AO_START1
+\endcode
+and tell the ComediAnalogInput that it will be triggered by this signal,
+on another PFI line that is connected by wire to PFI6:
+\code
+*Analog Input Devices
+  Device1:
+      plugin       : ComediAnalogInput
+      device       : /dev/comedi0
+      ident        : ao-1
+      usenipfistart: 1
+      delays       : 0ms
+\endcode
 
 \par Calibration:
 For hardware calibrated boards (like NI E-Series boards) do
@@ -166,7 +187,7 @@ public:
 		     vector< bool > &airate, vector< bool > &aorate );
   
   static string cmd_src( int src );
-  static void dump_cmd( comedi_cmd *cmd );
+  static void dump_cmd( const comedi_cmd &cmd );
 
 
 protected:
@@ -218,8 +239,6 @@ private:
   unsigned int BufferElemSize;  
     /*! The maximum sampling rate supported by the DAQ board. */
   double MaxRate;
-    /*! If \c true, start the analog output of the same device together with this. */
-  bool TakeAO;
 
     /*! Holds the list of supported unipolar comedi ranges. */
   vector< comedi_range > UnipolarRange;
@@ -233,6 +252,11 @@ private:
     /*! Analog output subdevice that can be 
         started via an instruction list together with this subdevice. */
   ComediAnalogOutput* ComediAO;
+
+    /*! Use as start trigger for analog input this PFI channel. */
+  int UseNIPFIStart;
+    /*! Analog input is triggered by Analog Output. */
+  bool StartByAO;
 
     /*! Comedi command for asynchronous acquisition. */
   comedi_cmd Cmd;
