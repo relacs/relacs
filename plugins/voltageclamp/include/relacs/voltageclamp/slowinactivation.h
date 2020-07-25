@@ -22,7 +22,12 @@
 #ifndef _RELACS_VOLTAGECLAMP_SLOWINACTIVATION_H_
 #define _RELACS_VOLTAGECLAMP_SLOWINACTIVATION_H_ 1
 
+#include <relacs/multiplot.h>
 #include <relacs/repro.h>
+#include <relacs/ephys/traces.h>
+#include <relacs/str.h>
+#include <relacs/voltageclamp/summary.h>
+#include <relacs/voltageclamp/pnsubtraction.h>
 using namespace relacs;
 
 namespace voltageclamp {
@@ -36,14 +41,20 @@ namespace voltageclamp {
 */
 
 
-class SlowInactivation : public RePro
+class SlowInactivation : public PNSubtraction
 {
   Q_OBJECT
+
+friend class Summary;
 
 public:
 
   SlowInactivation( void );
   virtual int main( void );
+
+protected:
+
+    MultiPlot P;
 
 };
 

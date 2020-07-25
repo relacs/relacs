@@ -20,23 +20,168 @@
 */
 
 #include <relacs/voltageclamp/slowinactivation.h>
+#include <relacs/fitalgorithm.h>
+#include <relacs/voltageclamp/pnsubtraction.h>
+#include <relacs/ephys/amplifiercontrol.h>
+
 using namespace relacs;
 
 namespace voltageclamp {
 
 
 SlowInactivation::SlowInactivation( void )
-  : RePro( "SlowInactivation", "voltageclamp", "Lukas Sonnenberg", "1.0", "Jul 25, 2020" )
+  : PNSubtraction( "SlowInactivation", "voltageclamp", "Lukas Sonnenberg", "1.0", "Jul 25, 2020" )
 {
   // add some options:
-  // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "mintest", "Minimum testing potential", -120.0, -200.0, 200.0, 1.0, "mV");
+  addNumber( "maxtest", "Maximum testing potential", -10.0, -200.0, 200.0, 1.0, "mV");
+  addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
+
+  addNumber( "adaptationduration", "adaptation duration", 45.0, 0.001, 100000.0, 0.1, "s", "s" );
+  addNumber( "duration", "Stimulus duration", 45.0, 0.001, 100000.0, 0.1, "s", "s" );
+  addText("trange", "Time steps", "0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0").setUnit( "s" );
+          // first time step must be 0.0, last time step is assumed to be duration
+  addNumber( "pause", "Duration of pause bewteen outputs", 0.01, 0.001, 1000.0, 0.001, "s", "ms" );
+  addNumber( "holdingpotential", "Holding potential", -120.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "adaptationpotential0", "adaptation potential0", -120.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "adaptationpotential1", "adaptation potential1", 10.0, -200.0, 200.0, 1.0, "mV" );
+
+  addNumber( "sampleactpot", "activation potential", -10.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "sampledeactpot", "deactivation potential1", -120.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "sampleacttime", "activation potential", 0.003, 0, 0.1, 0.0001, "s", "ms" );
+  addNumber( "sampledeacttime", "deactivation potential1", 0.017, 1.0, 0.0001, 1.0, "s", "ms" );
+
+  addNumber( "switchpotential", "switch adaptation potential", -30.0, -200.0, 200.0, 1.0, "mV" );
+  addInteger( "noverlap", "overlaping adaptation steps", 1, 0, 10, 1 );
+
+
+
+  // plot
+  setWidget( &P );
 }
 
 
 int SlowInactivation::main( void )
 {
   // get options:
-  // double duration = number( "duration" );
+  double mintest = number( "mintest" );
+  double maxtest = number( "maxtest" );
+  double teststep = number( "teststep" );
+
+  double adaptationduration = number( "adaptationduration" );
+  double duration = number( "duration" );
+  double holdingpotential = number( "holdingpotential" );
+  double adaptationpotential0 = number( "adaptationpotential0" );
+  double adaptationpotential1 = number( "adaptationpotential1" );
+
+  double switchpotential = number( "switchpotential" );
+  int noverlap = integer( "noverlap" );
+  double pause = number( "pause" );
+
+  double sampleactpot = number( "sampleactpot" );
+  double sampledeactpot = number( "sampledeactpot" );
+  double sampleacttime = number( "sampleacttime" );
+  double sampledeacttime = number( "sampledeacttime" );
+  double sampletime = sampleacttime + sampledeacttime;
+
+  Str trange = allText( "trange" );
+  std::vector<double> timesteps;
+  trange.range(timesteps, ",", ":" );
+  int smaplenum = (maxtest-mintest)/teststep+1;
+
+  // don't print repro message:
+  noMessage();
+
+  // set amplifier to VC mode
+  ephys::AmplifierControl *ampl = dynamic_cast< ephys::AmplifierControl* >( control( "AmplifierControl" ) );
+  if ( ampl == 0 ) {
+    warning( "No amplifier found." );
+    return Failed;
+  }
+  ampl ->activateVoltageClampMode();
+
+  // holding potential:
+  OutData holdingsignal;
+  holdingsignal.setTrace( PotentialOutput[0] );
+  holdingsignal.constWave( holdingpotential );
+  holdingsignal.setIdent( "VC=" + Str( holdingpotential ) + "mV" );
+
+  // write holdingpotential:
+  write( holdingsignal );
+  sleep( pause );
+
+  // stimulus preparations
+  int N_adapt0 = (switchpotential - mintest) / teststep + 1 + noverlap;
+  int N_adapt1 = (maxtest - switchpotential) / teststep + noverlap;
+  double maxpotential_adapt0 = mintest + teststep * N_adapt0;
+  double minpotential_adapt1 = switchpotential - noverlap * teststep;
+
+  OutData samplestim;
+  samplestim.setTrace( PotentialOutput[0] );
+  samplestim.constWave( sampledeacttime, -1.0, sampledeactpot );
+  OutData samplestim1;
+  samplestim1.setTrace( PotentialOutput[0] );
+  samplestim1.constWave( sampleacttime, -1.0, sampleactpot );
+  samplestim.append( samplestim1 );
+
+  cerr << "activation potential " << sampleactpot << "\ndeactivationpotential " << sampledeactpot << "\n";
+  cerr << "activation time " << sampleacttime << "\ndeactivationtime " << sampledeacttime << "\n";
+
+  // stimulus0
+  for ( int potstep=mintest; potstep<=maxpotential_adapt0; potstep+=teststep) {
+    OutData signal;
+    signal.setTrace( PotentialOutput[0] );
+    signal.constWave( adaptationduration, -1.0, adaptationpotential0 );
+
+    signal.append( samplestim );
+
+    for ( int i=1; i<timesteps.size(); i++ ) {
+      double timestep = timesteps[i] - timesteps[i-1] - sampletime;
+      OutData signal1;
+      signal1.setTrace( PotentialOutput[0] );
+      signal1.constWave( timestep, -1.0, potstep );
+
+      signal.append( signal1 );
+      signal.append( samplestim );
+    }
+
+    // nix options
+    Options opts;
+
+    double t0 = 0.0;
+    double mintime = 0.0;
+    double maxtime = adaptationduration + duration;
+
+    SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, mintime, maxtime, t0 );
+  }
+
+  // stimulus1
+  for ( int potstep=minpotential_adapt1; potstep<=maxtest; potstep+=teststep) {
+    OutData signal;
+    signal.setTrace( PotentialOutput[0] );
+    signal.constWave( adaptationduration, -1.0, adaptationpotential1 );
+
+    signal.append( samplestim );
+
+    for ( int i=1; i<timesteps.size(); i++ ) {
+      double timestep = timesteps[i] - timesteps[i-1] - sampletime;
+      OutData signal1;
+      signal1.setTrace( PotentialOutput[0] );
+      signal1.constWave( timestep, -1.0, potstep );
+
+      signal.append( signal1 );
+      signal.append( samplestim );
+    }
+
+    // nix options
+    Options opts;
+
+    double t0 = 0.0;
+    double mintime = 0.0;
+    double maxtime = adaptationduration + duration;
+    SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, mintime, maxtime, t0 );
+  }
+
   return Completed;
 }
 
