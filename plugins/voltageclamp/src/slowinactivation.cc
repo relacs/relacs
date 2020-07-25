@@ -118,8 +118,9 @@ int SlowInactivation::main( void )
   double maxpotential_adapt0 = mintest + teststep * N_adapt0;
   double minpotential_adapt1 = maxtest - teststep * N_adapt1;
 
-  cerr << "firstmax " << maxpotential_adapt0 << ", lastmin " << minpotential_adapt1 << "\n";
-  cerr << switchpotential << ", " << N_adapt0 << ", " << N_adapt1 << ", " << N_adapt0 << "\n";
+  double estimatedTime = (N_adapt0 + N_adapt1) * (adaptationduration + duration) / 60;
+  cerr << "Slow Inactivation stimulus will take for approximately " + Str(estimatedTime, "%.1f") + "min to finish\n";
+
   OutData samplestim;
   samplestim.setTrace( PotentialOutput[0] );
   samplestim.constWave( sampledeacttime, -1.0, sampledeactpot );
