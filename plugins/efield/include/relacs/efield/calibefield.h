@@ -36,25 +36,29 @@ namespace efield {
 \class CalibEField
 \brief [RePro] Calibrates an attenuator for electric field stimuli.
 \author Jan Benda
-\version 2.4 (May 29, 2017)
+\version 2.5 (June 30, 2020)
 \note Intensity for attenuation is interpreted as 0.5 * p-p amplitude
 \note Calibration non-sine EODs has an offset!
 \par Options
-- \c reset=false: Reset calibration? (\c boolean)
-- \c resetval=0.1: Reset gain factor to (\c number)
-- \c am=false: Calibrate amplitude modulation? (\c boolean)
-- \c beatfreq=20Hz: Beat frequency to be used when fish EOD present (\c number)
-- \c frequency=600Hz: Stimulus frequency to be used when no fish EOD is present (\c number)
-- \c duration=400ms: Duration of stimulus (\c number)
-- \c pause=0ms: Pause (\c number)
-- \c amplsel=contrast: Calibrate for (\c string)
-- \c targetcontrast=20%: Target contrast to be tested first (\c number)
-- \c mincontrast=10%: Minimum contrast (\c number)
-- \c maxcontrast=25%: Maximum contrast (\c number)
-- \c targetamplitude=1mV/cm: Target contrast to be tested first (\c number)
-- \c minamplitude=0.5mV/cm: Minimum amplitude (\c number)
-- \c maxamplitude=2mV/cm: Maximum amplitude (\c number)
-- \c numintensities=10: Number of intensities (amplitudes) to be measured (\c integer)
+- \c General
+    - \c reset=false: Reset calibration? (\c boolean)
+    - \c resetval=0.1: Reset gain factor to (\c number)
+    - \c outtracesel=global: outtracesel (\c string)
+    - \c am=false: Calibrate amplitude modulation? (\c boolean)
+    - \c outtrace=GlobalEField: Output trace (\c string)
+    - \c beatfreq=20Hz: Beat frequency to be used when fish EOD present (\c number)
+    - \c frequency=600Hz: Stimulus frequency to be used when no fish EOD is present (\c number)
+    - \c duration=400ms: Duration of stimulus (\c number)
+    - \c pause=0ms: Pause (\c number)
+- \c Range
+    - \c amplsel=contrast: Calibrate for (\c string)
+    - \c targetcontrast=20%: Target contrast to be tested first (\c number)
+    - \c mincontrast=10%: Minimum contrast (\c number)
+    - \c maxcontrast=25%: Maximum contrast (\c number)
+    - \c targetamplitude=1mV/cm: Target contrast to be tested first (\c number)
+    - \c minamplitude=0.5mV/cm: Minimum amplitude (\c number)
+    - \c maxamplitude=2mV/cm: Maximum amplitude (\c number)
+    - \c numintensities=10: Number of intensities (amplitudes) to be measured (\c integer)
 
 \par Files
 - \b calibrate.dat : the calibration data (measured versus requested stimulus intensity).
@@ -81,6 +85,7 @@ public:
   CalibEField( void );
   ~CalibEField( void );
 
+  virtual void preConfig( void );
   virtual int main( void );
   void saveData( const MapD &intensities, const base::LinearAttenuate *latt );
 

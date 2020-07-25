@@ -118,6 +118,7 @@ private:
   static string PotentialOutputIdentifier[2];
   static string PotentialOutputNames;
 
+  static void clear( void );
 };
 
 

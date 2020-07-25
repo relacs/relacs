@@ -50,11 +50,12 @@ corresponding plugins for RELACS.
 
 \subsection installkernel Linux kernel
 
-In order to be able to install the \c Comedi drivers you need to have a kernel source tree
-that matches your running kernel image. Either compile your own kernel from scratch 
-(section \ref installvanillakernel , takes some time),
-or make sure that you get a matching source tree for your kernel image
-(section \ref installkernelsources).
+In order to be able to install the \c Comedi drivers you need to have
+a kernel source tree that matches your running kernel image. Either
+compile your own kernel from scratch (section \ref
+installvanillakernel , takes some time), or make sure that you get a
+matching source tree for your kernel image (section \ref
+installkernelsources).
 
 
 \subsubsection installkernelsources Install sources for an existing kernel
@@ -66,20 +67,23 @@ or make sure that you get a matching source tree for your kernel image
 cd /usr/src
 apt-get install dpkg-dev
 apt-get install linux-headers-`uname -r`
-apt-get source linux-image-`uname -r`
+apt-get source linux-source-`uname -r`
    \endcode
 
    If \c apt-get \c source tells you "E: You must put some 'source'
    URIs in your sources.list" then you need to enable the source
-   repositories for the package manager. For this open with your
-   favorite editor \c /etc/apt/sources.list and the \c *.list files in
-   \c /etc/apt/sources.list.d/. Remove the comments in front of the
-   lines that start with \c "deb-src". Then run
+   repositories for the package manager.
+   For this launch \c software-sources` and enable source code repositories (check box).
+   Alternatively, on older systems you may open with your favorite
+   editor \c /etc/apt/sources.list and the \c *.list files in \c
+   /etc/apt/sources.list.d/. Remove the comments in front of the lines
+   that start with \c "deb-src". Then run
    \code
 apt-get update
    \endcode
    to resynchronize the package index files with the new repositories. Now 
    \c apt-get \c source should be able to download the kernel sources.
+
 
    If \c apt-get \c source tells you "E: Unable to find a source package"
    then check which kernel sources are available:
@@ -90,7 +94,7 @@ uname -r
    choose the one that is closest to your installed kernel (\c uname -r),
    install and unpack that one:
    \code
-apt-get install linux-source-3.13.0
+apt-get source linux-source-3.13.0
 tar xf linux-source-3.13.0.tar.bz2
    \endcode
 

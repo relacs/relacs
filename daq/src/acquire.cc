@@ -921,26 +921,13 @@ int Acquire::restartRead( void )
       AISemaphore.acquire( AISemaphore.available() );
 
     // start reading from daq boards:
-    vector< int > aistarted;
-    aistarted.reserve( AI.size() );
     QWaitCondition *readwait = &ReadWait;
     for ( unsigned int i=0; i<AI.size(); i++ ) {
       if ( AI[i].Traces.size() > 0 ) {
-	bool started = false;
-	for ( unsigned int k=0; k<aistarted.size(); k++ ) {
-	  if ( aistarted[k] == AI[i].AIDevice ) {
-	    started = true;
-	    break;
-	  }
-	}
-	if ( ! started ) {
-	  if ( AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait ) != 0 )
-	    success = false;
-	  else {
-	    aistarted.push_back( i );
-	    readwait = 0; // we will wait on the first device only
-	  }
-	}
+	if ( AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait ) != 0 )
+	  success = false;
+	else
+	  readwait = 0; // we will wait on the first device only
       }
     }
   
@@ -1020,35 +1007,28 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   }
 
   // set new gain indices:
-  bool gainchanged = false;
   if ( updategains ) {
     for ( unsigned int i=0; i<AI.size(); i++ ) {
-
       // clear adjust-flag:
       AI[i].Traces.delMode( AdjustFlag );
-      
       // set gainindices in data:
       for ( unsigned int k=0; k<AI[i].Gains.size(); k++ ) {
 	if ( AI[i].Gains[k] >= 0 ) {
 	  AI[i].Traces[k].setGainIndex( AI[i].Gains[k] );
 	  AI[i].Traces[k].addMode( AdjustFlag );
 	  AI[i].Gains[k] = -1;
-	  gainchanged = true;
 	}
       }
     }
-
   }
 
   // prepare reading from daq boards:
-  if ( gainchanged ) {
-    for ( unsigned int i=0; i<AI.size(); i++ ) {
-      if ( AI[i].Traces.size() > 0 &&
-	   AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
-	success = false;
-	if ( AI[i].Traces.success() )
-	  AI[i].Traces.setError( DaqError::Unknown );
-      }
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( AI[i].Traces.size() > 0 &&
+	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 ) {
+      success = false;
+      if ( AI[i].Traces.success() )
+	AI[i].Traces.setError( DaqError::Unknown );
     }
   }
 
@@ -1101,23 +1081,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   QWaitCondition *readwait = &ReadWait;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
-      bool started = false;
-      for ( unsigned int k=0; k<aistarted.size(); k++ ) {
-	if ( aistarted[k] == AI[i].AIDevice ) {
-	  started = true;
-	  break;
-	}
-      }
-      if ( ! started ) {
-	int r = AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait, aos );
-	if ( r < 0 )
-	  success = false;
-	else {
-	  if ( r > 0 )
-	    finished = false;
-	  aistarted.push_back( i );
-	  readwait = 0; // we will wait on the first device only
-	}
+      int r = AI[i].AI->startRead( &AISemaphore, &ReadMutex, readwait, aos );
+      if ( r < 0 )
+	success = false;
+      else {
+	if ( r > 0 )
+	  finished = false;
+	aistarted.push_back( i );
+	readwait = 0; // we will wait on the first device only
       }
     }
   }

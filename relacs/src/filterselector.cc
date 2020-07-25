@@ -50,7 +50,7 @@ Options initTemplate()
   opt.addText("panel");
   opt.addInteger("linewidth");
 
-  return std::move(opt);
+  return opt;
 }
 
 static const Options OPTION_TEMPLATE = initTemplate();

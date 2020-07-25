@@ -8,7 +8,7 @@ EXTRA_CFLAGS += -Wall
 KBUILD_EXTRA_SYMBOLS := /lib/modules/$(shell uname -r)/comedi/Module.symvers
 #KBUILD_EXTRA_SYMBOLS := $(shell rtai-config --module-dir)/Module.symvers
 
-obj-m := dynclampmodule.o # rtmodule.o
+obj-m := dynclampmodule.o dynclampaistreamingmodule.o # rtmodule.o
 
 else
 

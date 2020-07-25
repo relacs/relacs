@@ -1,4 +1,4 @@
-/*
+ /*
   comedi/comedianaloginput.cc
   Interface for accessing analog input of a daq-board via comedi.
 
@@ -44,7 +44,8 @@ ComediAnalogInput::ComediAnalogInput( void )
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
-  TakeAO = true;
+  UseNIPFIStart = -1;
+  StartByAO = false;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   AboutToStop = false;
@@ -80,7 +81,7 @@ void ComediAnalogInput::initOptions()
   AnalogInput::initOptions();
 
   addNumber( "gainblacklist", "Ranges not to be used", 0.0, 0.0, 100.0, 0.1, "V" ).setStyle( Parameter::MultipleSelection );
-  addBoolean( "takeao", "Start analog output in a single instruction", true );
+  addInteger( "usenipfistart", "Use as start source NI PFI channel", -1 );
 }
 
 int ComediAnalogInput::open( const string &device )
@@ -229,8 +230,18 @@ int ComediAnalogInput::open( const string &device )
   else
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
 
-  // For debugging:
-  TakeAO = boolean( "takeao", true );
+  // externat start source:
+  UseNIPFIStart = integer( "usenipfistart" );
+  if ( UseNIPFIStart >= 0 ) {
+    // configure PFI pin for digital input:
+    int subdev = 7;
+    if ( comedi_dio_config( DeviceP, subdev, UseNIPFIStart, COMEDI_INPUT ) != 0 ) {
+	cerr << "! error: ComediAnalogOutput::open() -> "
+	     << "DIO_CONFIG failed for PFI" << UseNIPFIStart
+	     << " on device " << deviceIdent() << '\n';
+	UseNIPFIStart = -1;
+    }
+  }
 
   // clear flags:
   ComediAO = 0;
@@ -285,12 +296,12 @@ void ComediAnalogInput::close( void )
   if ( Cmd.chanlist != 0 )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
+  StartByAO = false;
   IsPrepared = false;
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
   Info.clear();
-  TakeAO = true;
 }
 
 
@@ -371,14 +382,14 @@ string ComediAnalogInput::cmd_src( int src )
 }
 
 
-void ComediAnalogInput::dump_cmd( comedi_cmd *cmd )
+void ComediAnalogInput::dump_cmd( const comedi_cmd &cmd )
 {
-  cerr << "subdevice:      " << cmd->subdev << '\n';
-  cerr << "start:      " << Str( cmd_src(cmd->start_src), 8 ) << "  " << cmd->start_arg << '\n';
-  cerr << "scan_begin: " << Str( cmd_src(cmd->scan_begin_src), 8 ) << "  " << cmd->scan_begin_arg << '\n';
-  cerr << "convert:    " << Str( cmd_src(cmd->convert_src), 8 ) << "  " << cmd->convert_arg << '\n';
-  cerr << "scan_end:   " << Str( cmd_src(cmd->scan_end_src), 8 ) << "  " << cmd->scan_end_arg << '\n';
-  cerr << "stop:       " << Str( cmd_src(cmd->stop_src), 8 ) << "  " << cmd->stop_arg << '\n';
+  cerr << "subdevice:      " << cmd.subdev << '\n';
+  cerr << "start:      " << Str( cmd_src(cmd.start_src), 8 ) << "  " << cmd.start_arg << '\n';
+  cerr << "scan_begin: " << Str( cmd_src(cmd.scan_begin_src), 8 ) << "  " << cmd.scan_begin_arg << '\n';
+  cerr << "convert:    " << Str( cmd_src(cmd.convert_src), 8 ) << "  " << cmd.convert_arg << '\n';
+  cerr << "scan_end:   " << Str( cmd_src(cmd.scan_end_src), 8 ) << "  " << cmd.scan_end_arg << '\n';
+  cerr << "stop:       " << Str( cmd_src(cmd.stop_src), 8 ) << "  " << cmd.stop_arg << '\n';
 }
 
   
@@ -502,13 +513,29 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
   // adapt command to our purpose:
   comedi_cmd testCmd;
   comedi_get_cmd_src_mask( DeviceP, SubDevice, &testCmd );
-  if ( testCmd.start_src & TRIG_INT )
-    cmd.start_src = TRIG_INT;
+  StartByAO = ( ComediAO != 0 && ComediAO->prepared() && UseNIPFIStart >= 0 );
+  if ( StartByAO ) {
+    if ( testCmd.start_src & TRIG_EXT )
+      cmd.start_src = TRIG_EXT;
+    else {
+      traces.addError( DaqError::InvalidStartSource );
+      traces.addErrorStr( "External trigger not supported" );
+    }
+  }
   else {
-    traces.addError( DaqError::InvalidStartSource );
-    traces.addErrorStr( "Internal trigger not supported" );
+    if ( testCmd.start_src & TRIG_INT )
+      cmd.start_src = TRIG_INT;
+    else {
+      traces.addError( DaqError::InvalidStartSource );
+      traces.addErrorStr( "Internal trigger not supported" );
+    }
   }
   cmd.start_arg = 0;
+  if ( StartByAO ) {
+    cmd.start_arg = CR_EDGE | NI_EXT_PFI( UseNIPFIStart );
+    // cmd.start_arg = CR_EDGE | UseNIPFIStart;
+    traces.setStartSource( UseNIPFIStart );
+  }
   cmd.scan_end_arg = traces.size();
 
   // test if countinous-state is supported
@@ -739,21 +766,23 @@ int ComediAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
   
   // execute AI command:
   TraceIndex = 0;
+  // dump_cmd( Cmd );
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     int cerror = comedi_errno();
     cerr << "AI command failed: " << comedi_strerror( cerror ) << endl;
     Traces->addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
 			 + comedi_strerror( cerror ) );
+    StartByAO = false;
     return -1;
   }
-  else  
+  else if ( ! StartByAO )
     insnlist.insns[ilinx++].subdev = SubDevice;
+  StartByAO = false;
   
   // add AO to instruction list:
   bool tookao = false;
-  if ( TakeAO && aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
-    if ( ! ComediAO->useAIStart() )
-      insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
+  if ( aosp != 0 && ComediAO != 0 && ComediAO->prepared() ) {
+    insnlist.insns[ilinx++].subdev = ComediAO->comediSubdevice();
     tookao = true;
   }
   
@@ -972,16 +1001,14 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
 {
   ComediAO = 0;
 
-  if ( TakeAO ) {
-    // check for analog output device:
-    for ( unsigned int k=0; k<aos.size(); k++ ) {
-      if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
-	   aos[k]->deviceFile() == deviceFile() ) {
-	aoinx.push_back( k );
-	aorate.push_back( false );
-	ComediAO = dynamic_cast< ComediAnalogOutput* >( aos[k] );
-	break;
-      }
+  // check for analog output device:
+  for ( unsigned int k=0; k<aos.size(); k++ ) {
+    if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
+	 aos[k]->deviceFile() == deviceFile() ) {
+      aoinx.push_back( k );
+      aorate.push_back( false );
+      ComediAO = dynamic_cast< ComediAnalogOutput* >( aos[k] );
+      break;
     }
   }
 }

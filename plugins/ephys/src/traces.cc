@@ -66,6 +66,12 @@ int Traces::PotentialOutput[Traces::MaxTraces] = { -1, -1, -1, -1 };
 
 Traces::Traces( void )
 {
+  clear();
+}
+
+
+void Traces::clear( void ) 
+{
   clearIndices( SpikeTrace );
   clearIndices( SpikeEvents );
   clearIndices( CurrentTrace );

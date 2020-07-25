@@ -48,7 +48,6 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( void )
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
-  TakeAO = true;
   DAQFlexAO = 0;
 
   initOptions();
@@ -59,7 +58,6 @@ DAQFlexAnalogInput::DAQFlexAnalogInput( DAQFlexCore &device, const Options &opts
   : DAQFlexAnalogInput()
 {
   Options::read(opts);
-  addBoolean( "takeao", "Start analog output with a single command", true );
 }
 
 
@@ -68,11 +66,10 @@ DAQFlexAnalogInput::~DAQFlexAnalogInput( void )
   close();
 }
 
+
 void DAQFlexAnalogInput::initOptions()
 {
   AnalogInput::initOptions();
-
-  addBoolean( "takeao", "Start analog output with a single command", true );
 }
 
 
@@ -145,9 +142,6 @@ int DAQFlexAnalogInput::open( DAQFlexCore &daqflexdevice )
   TotalSamples = 0;
   CurrentSamples = 0;
   ReadBufferSize = 2 * DAQFlexDevice->aiFIFOSize();
-
-  // For debugging:
-  TakeAO = boolean( "takeao", true );
   DAQFlexAO = 0;
 
   setInfo();
@@ -184,7 +178,6 @@ void DAQFlexAnalogInput::close( void )
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
-  TakeAO = true;
   DAQFlexAO = 0;
 
   Info.clear();
@@ -443,7 +436,7 @@ int DAQFlexAnalogInput::startRead( QSemaphore *sp, QReadWriteLock *datamutex,
     return -1;
   }
 
-  bool tookao = ( TakeAO && aosp != 0 && DAQFlexAO != 0 && DAQFlexAO->prepared() );
+  bool tookao = ( aosp != 0 && DAQFlexAO != 0 && DAQFlexAO->prepared() );
   {
     QMutexLocker corelocker( DAQFlexDevice->mutex() );
     if ( tookao ) {
@@ -695,20 +688,15 @@ void DAQFlexAnalogInput::take( const vector< AnalogInput* > &ais,
 			       vector< bool > &airate, vector< bool > &aorate )
 {
   DAQFlexAO = 0;
-
-  if ( TakeAO ) {
-    TakeAO = false;
-    // check for analog output device:
-    for ( unsigned int k=0; k<aos.size(); k++ ) {
-      if ( aos[k]->analogOutputType() == DAQFlexAnalogIOType &&
-	   aos[k]->deviceFile() == deviceFile() &&
-	   DAQFlexDevice->aoFIFOSize() > 0 ) {
-	DAQFlexAO = dynamic_cast< DAQFlexAnalogOutput* >( aos[k] );
-	aoinx.push_back( k );
-	aorate.push_back( DAQFlexAO->useAIRate() );
-	TakeAO = true;
-	break;
-      }
+  // check for analog output device:
+  for ( unsigned int k=0; k<aos.size(); k++ ) {
+    if ( aos[k]->analogOutputType() == DAQFlexAnalogIOType &&
+	 aos[k]->deviceFile() == deviceFile() &&
+	 DAQFlexDevice->aoFIFOSize() > 0 ) {
+      DAQFlexAO = dynamic_cast< DAQFlexAnalogOutput* >( aos[k] );
+      aoinx.push_back( k );
+      aorate.push_back( DAQFlexAO->useAIRate() );
+      break;
     }
   }
 }
