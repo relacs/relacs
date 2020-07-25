@@ -33,6 +33,7 @@ SlowInactivation::SlowInactivation( void )
   : PNSubtraction( "SlowInactivation", "voltageclamp", "Lukas Sonnenberg", "1.0", "Jul 25, 2020" )
 {
   // add some options:
+//  addBoolean( "autostim", "Automatic stimulus construction", true );
   addNumber( "mintest", "Minimum testing potential", -120.0, -200.0, 200.0, 1.0, "mV");
   addNumber( "maxtest", "Maximum testing potential", -10.0, -200.0, 200.0, 1.0, "mV");
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
@@ -51,7 +52,7 @@ SlowInactivation::SlowInactivation( void )
   addNumber( "sampleacttime", "activation potential", 0.003, 0, 0.1, 0.0001, "s", "ms" );
   addNumber( "sampledeacttime", "deactivation potential1", 0.017, 1.0, 0.0001, 1.0, "s", "ms" );
 
-  addNumber( "switchpotential", "switch adaptation potential", -30.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "switchpotential", "switch adaptation potential", -32.5, -200.0, 200.0, 0.1, "mV" );
   addInteger( "noverlap", "overlaping adaptation steps", 1, 0, 10, 1 );
 
 
@@ -64,6 +65,7 @@ SlowInactivation::SlowInactivation( void )
 int SlowInactivation::main( void )
 {
   // get options:
+//  bool autostim = boolean( "autostim" );
   double mintest = number( "mintest" );
   double maxtest = number( "maxtest" );
   double teststep = number( "teststep" );
@@ -111,11 +113,13 @@ int SlowInactivation::main( void )
   sleep( pause );
 
   // stimulus preparations
-  int N_adapt0 = (switchpotential - mintest) / teststep + 1 + noverlap;
+  int N_adapt0 = (switchpotential - mintest) / teststep + noverlap;
   int N_adapt1 = (maxtest - switchpotential) / teststep + noverlap;
   double maxpotential_adapt0 = mintest + teststep * N_adapt0;
-  double minpotential_adapt1 = switchpotential - noverlap * teststep;
+  double minpotential_adapt1 = maxtest - teststep * N_adapt1;
 
+  cerr << "firstmax " << maxpotential_adapt0 << ", lastmin " << minpotential_adapt1 << "\n";
+  cerr << switchpotential << ", " << N_adapt0 << ", " << N_adapt1 << ", " << N_adapt0 << "\n";
   OutData samplestim;
   samplestim.setTrace( PotentialOutput[0] );
   samplestim.constWave( sampledeacttime, -1.0, sampledeactpot );
@@ -124,11 +128,13 @@ int SlowInactivation::main( void )
   samplestim1.constWave( sampleacttime, -1.0, sampleactpot );
   samplestim.append( samplestim1 );
 
-  cerr << "activation potential " << sampleactpot << "\ndeactivationpotential " << sampledeactpot << "\n";
-  cerr << "activation time " << sampleacttime << "\ndeactivationtime " << sampledeacttime << "\n";
-
   // stimulus0
   for ( int potstep=mintest; potstep<=maxpotential_adapt0; potstep+=teststep) {
+    Str s = "Holding potential <b>" + Str(holdingpotential, "%.1f") + " mV</b>";
+    s += ", Testing potential <b>" + Str(potstep, "%.1f") + " mV</b>";
+    s += ", Adaptation potential <b>" + Str(adaptationpotential0, "%.1f") + " mV </b>";
+    message(s);
+
     OutData signal;
     signal.setTrace( PotentialOutput[0] );
     signal.constWave( adaptationduration, -1.0, adaptationpotential0 );
@@ -157,6 +163,11 @@ int SlowInactivation::main( void )
 
   // stimulus1
   for ( int potstep=minpotential_adapt1; potstep<=maxtest; potstep+=teststep) {
+    Str s = "Holding potential <b>" + Str(holdingpotential, "%.1f") + " mV</b>";
+    s += ", Testing potential <b>" + Str(potstep, "%.1f") + " mV</b>";
+    s += ", Adaptation potential <b>" + Str(adaptationpotential1, "%.1f") + " mV </b>";
+    message(s);
+
     OutData signal;
     signal.setTrace( PotentialOutput[0] );
     signal.constWave( adaptationduration, -1.0, adaptationpotential1 );
