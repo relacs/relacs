@@ -36,7 +36,7 @@ SlowInactivation::SlowInactivation( void )
 //  addBoolean( "autostim", "Automatic stimulus construction", true );
   addNumber( "mintest", "Minimum testing potential", -120.0, -200.0, 200.0, 1.0, "mV");
   addNumber( "maxtest", "Maximum testing potential", -10.0, -200.0, 200.0, 1.0, "mV");
-  addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
+  addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 0.1, "mV");
 
   addNumber( "adaptationduration", "adaptation duration", 45.0, 0.001, 100000.0, 0.1, "s", "s" );
   addNumber( "duration", "Stimulus duration", 45.0, 0.001, 100000.0, 0.1, "s", "s" );
@@ -48,9 +48,9 @@ SlowInactivation::SlowInactivation( void )
   addNumber( "adaptationpotential1", "adaptation potential1", 10.0, -200.0, 200.0, 1.0, "mV" );
 
   addNumber( "sampleactpot", "activation potential", -10.0, -200.0, 200.0, 1.0, "mV" );
-  addNumber( "sampledeactpot", "deactivation potential1", -120.0, -200.0, 200.0, 1.0, "mV" );
-  addNumber( "sampleacttime", "activation potential", 0.003, 0, 0.1, 0.0001, "s", "ms" );
-  addNumber( "sampledeacttime", "deactivation potential1", 0.017, 1.0, 0.0001, 1.0, "s", "ms" );
+  addNumber( "sampledeactpot", "deactivation potential", -120.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "sampleacttime", "activation time", 0.003, 0, 0.1, 0.0001, "s", "ms" );
+  addNumber( "sampledeacttime", "deactivation time", 0.017, 1.0, 0.0001, 1.0, "s", "ms" );
 
   addNumber( "switchpotential", "switch adaptation potential", -32.5, -200.0, 200.0, 0.1, "mV" );
   addInteger( "noverlap", "overlaping adaptation steps", 1, 0, 10, 1 );
@@ -118,8 +118,8 @@ int SlowInactivation::main( void )
   double maxpotential_adapt0 = mintest + teststep * N_adapt0;
   double minpotential_adapt1 = maxtest - teststep * N_adapt1;
 
-  double estimatedTime = (N_adapt0 + N_adapt1) * (adaptationduration + duration) / 60;
-  cerr << "Slow Inactivation stimulus will take for approximately " + Str(estimatedTime, "%.1f") + "min to finish\n";
+  double estimatedTime = (N_adapt0 + N_adapt1) * (adaptationduration + timesteps[timesteps.size()-1]) / 60;
+  cerr << "Slow Inactivation stimulus will take approximately " + Str(estimatedTime, "%.1f") + "min to finish\n";
 
   OutData samplestim;
   samplestim.setTrace( PotentialOutput[0] );
@@ -130,11 +130,12 @@ int SlowInactivation::main( void )
   samplestim.append( samplestim1 );
 
   // stimulus0
-  for ( int potstep=mintest; potstep<=maxpotential_adapt0; potstep+=teststep) {
+  for ( double potstep=mintest; potstep<=maxpotential_adapt0; potstep+=teststep) {
     Str s = "Holding potential <b>" + Str(holdingpotential, "%.1f") + " mV</b>";
     s += ", Testing potential <b>" + Str(potstep, "%.1f") + " mV</b>";
     s += ", Adaptation potential <b>" + Str(adaptationpotential0, "%.1f") + " mV </b>";
     message(s);
+    cerr << potstep << "\n";
 
     OutData signal;
     signal.setTrace( PotentialOutput[0] );
@@ -157,17 +158,19 @@ int SlowInactivation::main( void )
 
     double t0 = 0.0;
     double mintime = 0.0;
-    double maxtime = adaptationduration + duration;
+    double maxtime = adaptationduration + timesteps[timesteps.size()-1];
 
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, mintime, maxtime, t0 );
   }
 
   // stimulus1
-  for ( int potstep=minpotential_adapt1; potstep<=maxtest; potstep+=teststep) {
+  for ( double potstep=minpotential_adapt1; potstep<=maxtest; potstep+=teststep) {
     Str s = "Holding potential <b>" + Str(holdingpotential, "%.1f") + " mV</b>";
     s += ", Testing potential <b>" + Str(potstep, "%.1f") + " mV</b>";
     s += ", Adaptation potential <b>" + Str(adaptationpotential1, "%.1f") + " mV </b>";
     message(s);
+
+    cerr << potstep << "\n";
 
     OutData signal;
     signal.setTrace( PotentialOutput[0] );
@@ -190,12 +193,33 @@ int SlowInactivation::main( void )
 
     double t0 = 0.0;
     double mintime = 0.0;
-    double maxtime = adaptationduration + duration;
+    double maxtime = adaptationduration + timesteps[timesteps.size()-1];
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, mintime, maxtime, t0 );
   }
 
+  // write holdingpotential:
+  write( holdingsignal );
+  sleep( pause );
+
   return Completed;
 }
+
+//std::vector<double> SlowInactivation::plotMinimas(currenttrace)
+//{
+//  double adaptationduration = number( "adaptationduration" );
+//  double sampleacttime = number( "sampleacttime" );
+//  double sampledeacttime = number( "sampledeacttime" );
+//  double sampletime = sampleacttime + sampledeacttime;
+//  Str trange = allText( "trange" );
+//  std::vector<double> timesteps;
+//  trange.range(timesteps, ",", ":" );
+//
+//  std::vector<double> minimas(timesteps.size());
+//
+//
+//  return minimas
+//}
+
 
 
 addRePro( SlowInactivation, voltageclamp );
