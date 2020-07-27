@@ -597,6 +597,8 @@ libvoltageclampslowinactivation_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampslowinactivation_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/plugins/ephys/src/libephysamplifiercontrol.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \

@@ -39,7 +39,7 @@ SlowInactivation::SlowInactivation( void )
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 0.1, "mV");
 
   addNumber( "adaptationduration", "adaptation duration", 45.0, 0.001, 100000.0, 0.1, "s", "s" );
-  addNumber( "duration", "Stimulus duration", 45.0, 0.001, 100000.0, 0.1, "s", "s" );
+//  addNumber( "duration", "Stimulus duration", 45.0, 0.001, 100000.0, 0.1, "s", "s" );
   addText("trange", "Time steps", "0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0").setUnit( "s" );
           // first time step must be 0.0, last time step is assumed to be duration
   addNumber( "pause", "Duration of pause bewteen outputs", 0.01, 0.001, 1000.0, 0.001, "s", "ms" );
@@ -52,10 +52,8 @@ SlowInactivation::SlowInactivation( void )
   addNumber( "sampleacttime", "activation time", 0.003, 0, 0.1, 0.0001, "s", "ms" );
   addNumber( "sampledeacttime", "deactivation time", 0.017, 1.0, 0.0001, 1.0, "s", "ms" );
 
-  addNumber( "switchpotential", "switch adaptation potential", -32.5, -200.0, 200.0, 0.1, "mV" );
+  addNumber( "switchpotential", "switch adaptation potential", -47.5, -200.0, 200.0, 0.1, "mV" );
   addInteger( "noverlap", "overlaping adaptation steps", 1, 0, 10, 1 );
-
-
 
   // plot
   setWidget( &P );
@@ -71,7 +69,7 @@ int SlowInactivation::main( void )
   double teststep = number( "teststep" );
 
   double adaptationduration = number( "adaptationduration" );
-  double duration = number( "duration" );
+//  double duration = number( "duration" );
   double holdingpotential = number( "holdingpotential" );
   double adaptationpotential0 = number( "adaptationpotential0" );
   double adaptationpotential1 = number( "adaptationpotential1" );
@@ -89,7 +87,7 @@ int SlowInactivation::main( void )
   Str trange = allText( "trange" );
   std::vector<double> timesteps;
   trange.range(timesteps, ",", ":" );
-  int smaplenum = (maxtest-mintest)/teststep+1;
+//  int samplenum = (maxtest-mintest)/teststep+1;
 
   // don't print repro message:
   noMessage();
@@ -101,6 +99,29 @@ int SlowInactivation::main( void )
     return Failed;
   }
   ampl ->activateVoltageClampMode();
+
+  // reset plot
+  string IUnit = trace( CurrentTrace[0] ).unit();
+  string VUnit = trace( SpikeTrace[0]).unit();
+
+  P.lock();
+  P.resize( 3, 3, true );
+  P[0].setXLabel( "Time [s]" );
+  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[1].setXLabel( "Time [s]" );
+  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
+  P[2].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
+  P[2].setYLabel( "Amplitude [" + IUnit + "]");
+
+  P[0].clearData();
+  P[1].clearData();
+  P[2].clearData();
+
+  P[0].setXRange( adaptationduration, timesteps[timesteps.size()-1]+sampletime + adaptationduration);
+  P[1].setXRange( 0, timesteps[timesteps.size()-1]+sampletime );
+  P[2].setXRange( mintest, maxtest );
+  P[2].setYRange( -.02, 1.02 );
+  P.unlock();
 
   // holding potential:
   OutData holdingsignal;
@@ -118,6 +139,9 @@ int SlowInactivation::main( void )
   double maxpotential_adapt0 = mintest + teststep * N_adapt0;
   double minpotential_adapt1 = maxtest - teststep * N_adapt1;
 
+  std::vector<double> Iadapt0( N_adapt0 );
+  std::vector<double> Iadapt1( N_adapt1 );
+
   double estimatedTime = (N_adapt0 + N_adapt1) * (adaptationduration + timesteps[timesteps.size()-1]) / 60;
   cerr << "Slow Inactivation stimulus will take approximately " + Str(estimatedTime, "%.1f") + "min to finish\n";
 
@@ -130,7 +154,9 @@ int SlowInactivation::main( void )
   samplestim.append( samplestim1 );
 
   // stimulus0
+  int j = -1;
   for ( double potstep=mintest; potstep<=maxpotential_adapt0; potstep+=teststep) {
+    j += 1;
     Str s = "Holding potential <b>" + Str(holdingpotential, "%.1f") + " mV</b>";
     s += ", Testing potential <b>" + Str(potstep, "%.1f") + " mV</b>";
     s += ", Adaptation potential <b>" + Str(adaptationpotential0, "%.1f") + " mV </b>";
@@ -143,7 +169,7 @@ int SlowInactivation::main( void )
 
     signal.append( samplestim );
 
-    for ( int i=1; i<timesteps.size(); i++ ) {
+    for ( unsigned i=1; i<timesteps.size(); i++ ) {
       double timestep = timesteps[i] - timesteps[i-1] - sampletime;
       OutData signal1;
       signal1.setTrace( PotentialOutput[0] );
@@ -161,10 +187,24 @@ int SlowInactivation::main( void )
     double maxtime = adaptationduration + timesteps[timesteps.size()-1];
 
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, mintime, maxtime, t0 );
+    std::vector<double> minimas = getMinimas();
+    Iadapt0[j] = minimas[ minimas.size() - 1 ];
+
+    // Plot
+    P.lock();
+    P[0].plot( currenttrace, 1.0, Plot::Yellow, 2, Plot::Solid );
+    for ( unsigned i=0; i<timesteps.size(); i++ ) {
+      P[1].plotPoint( timesteps[i]*1.0, Plot::First, minimas[i], Plot::First, 0,
+                      Plot::Circle, 5, Plot::Pixel, Plot::Yellow, Plot::Yellow );
+    }
+    P.draw();
+    P.unlock();
   }
 
   // stimulus1
+  int k = -1;
   for ( double potstep=minpotential_adapt1; potstep<=maxtest; potstep+=teststep) {
+    k += 1;
     Str s = "Holding potential <b>" + Str(holdingpotential, "%.1f") + " mV</b>";
     s += ", Testing potential <b>" + Str(potstep, "%.1f") + " mV</b>";
     s += ", Adaptation potential <b>" + Str(adaptationpotential1, "%.1f") + " mV </b>";
@@ -178,7 +218,7 @@ int SlowInactivation::main( void )
 
     signal.append( samplestim );
 
-    for ( int i=1; i<timesteps.size(); i++ ) {
+    for ( unsigned i=1; i<timesteps.size(); i++ ) {
       double timestep = timesteps[i] - timesteps[i-1] - sampletime;
       OutData signal1;
       signal1.setTrace( PotentialOutput[0] );
@@ -195,30 +235,78 @@ int SlowInactivation::main( void )
     double mintime = 0.0;
     double maxtime = adaptationduration + timesteps[timesteps.size()-1];
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, mintime, maxtime, t0 );
+    std::vector<double> minimas = getMinimas();
+    Iadapt1[k] = minimas[ minimas.size() - 1 ];
+
+    // Plot
+    P.lock();
+    P[0].plot( currenttrace, 1.0, Plot::Green, 2, Plot::Solid );
+    for ( unsigned i=0; i<timesteps.size(); i++ ) {
+      P[1].plotPoint( timesteps[i]*1.0, Plot::First, minimas[i], Plot::First, 0,
+                      Plot::Circle, 5, Plot::Pixel, Plot::Green, Plot::Green );
+    }
+    P.draw();
+    P.unlock();
   }
 
   // write holdingpotential:
   write( holdingsignal );
   sleep( pause );
 
+  // Plot slowInactivation activation curve
+//  double absmin = 0.0;
+  P.lock();
+  double absmax = - min( Iadapt0 );
+  int i0 = -1;
+  for ( double potstep=mintest; potstep<=maxpotential_adapt0; potstep+=teststep) {
+    i0 += 1;
+    P[2].plotPoint( potstep, Plot::First, (Iadapt0[i0] + absmax) / absmax, Plot::First, 0,
+                    Plot::Circle, 5, Plot::Pixel, Plot::Yellow, Plot::Yellow );
+  }
+  int i1 = -1;
+  for ( double potstep=minpotential_adapt1; potstep<=maxtest; potstep+=teststep) {
+    i1 += 1;
+    P[2].plotPoint( potstep, Plot::First, (Iadapt1[i0] + absmax) / absmax, Plot::First, 0,
+                    Plot::Circle, 5, Plot::Pixel, Plot::Green, Plot::Green );
+  }
+  P.draw();
+  P.unlock();
+
+
+
   return Completed;
 }
 
-//std::vector<double> SlowInactivation::plotMinimas(currenttrace)
-//{
-//  double adaptationduration = number( "adaptationduration" );
-//  double sampleacttime = number( "sampleacttime" );
-//  double sampledeacttime = number( "sampledeacttime" );
-//  double sampletime = sampleacttime + sampledeacttime;
-//  Str trange = allText( "trange" );
-//  std::vector<double> timesteps;
-//  trange.range(timesteps, ",", ":" );
-//
-//  std::vector<double> minimas(timesteps.size());
-//
-//
-//  return minimas
-//}
+std::vector<double> SlowInactivation::getMinimas( void )
+{
+  double adaptationduration = number( "adaptationduration" );
+  double sampleacttime = number( "sampleacttime" );
+  double sampledeacttime = number( "sampledeacttime" );
+  double sampletime = sampleacttime + sampledeacttime;
+  double waittime = 0.0003;
+
+  Str trange = allText( "trange" );
+  std::vector<double> timesteps;
+  trange.range(timesteps, ",", ":" );
+
+  std::vector<double> minimas(timesteps.size());
+
+  double time = adaptationduration;
+  for ( unsigned i=1; i<timesteps.size(); i++ ) {
+    if (i == 0.0) {
+      double timestep = 0.0;
+      time += timestep;
+    }
+    else {
+      double timestep = timesteps[i] - timesteps[i - 1] - sampletime;
+      time += timestep;
+    }
+    SampleDataD currenttrace( time + waittime, time + sampletime, trace(CurrentTrace[0]).stepsize(), 0.0);
+    trace(CurrentTrace[0]).copy(signalTime(), currenttrace);
+    minimas[i] = min( currenttrace );
+  }
+  return minimas;
+}
 
 
 

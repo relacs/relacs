@@ -52,6 +52,10 @@ public:
   SlowInactivation( void );
   virtual int main( void );
 
+private:
+
+    std::vector<double> getMinimas( void );
+
 protected:
 
     MultiPlot P;

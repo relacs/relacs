@@ -23,6 +23,8 @@
 #include <relacs/fitalgorithm.h>
 #include <relacs/tablekey.h>
 #include <relacs/patchclamp/membraneresistance.h>
+#include <relacs/ephys/traces.h>
+
 using namespace relacs;
 
 namespace patchclamp {
