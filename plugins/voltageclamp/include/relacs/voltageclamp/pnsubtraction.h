@@ -56,7 +56,9 @@ public:
   SampleDataD PN_sub( OutData signal, Options &opts, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0);
 
 private:
-	void analyzeCurrentPulse( SampleDataD voltagetrace, double I0 );
+	double linearFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp );
+//	void analyzeCurrentPulse( SampleDataD voltagetrace, double I0 );
+//	ArrayD pcsFitLeak( SampleDataD &potentialtrace, SampleDataD &currenttrace, double stepduration );
 
 	double EL;
 	double gL;

@@ -517,6 +517,7 @@ class HodgkinHuxley : public SpikingNeuron
   double GNa, GK, GL;
   double GNaGates, GKGates;
   double INa, IK, IL;
+  bool s_exist;
 
 };
 

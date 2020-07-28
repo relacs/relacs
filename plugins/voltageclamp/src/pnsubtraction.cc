@@ -176,42 +176,63 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 };
 
 
-std::vector<double> pcsFitFun1( const SampleDataD &potentialtrace, const SampleDataD &currenttrace, double stepduration );
-  std::vector<double> p(2);
-  double stepsize = currenttrace.stepsize();
+//ArrayD PNSubtraction::pcsFitLeak( SampleDataD &potentialtrace, SampleDataD &currenttrace, double stepduration ) {
+//  double stepsize = currenttrace.stepsize();
+//
+//  //first step
+//  int idx00 = 1 / 2 * stepduration / stepsize;
+//  int idx01 = 2 * stepduration / stepsize - 2;
+//  //second step
+//  int idx10 = 3 / 2 * stepduration / stepsize;
+//  int idx11 = 3 * stepduration / stepsize - 2;
+//  //third
+//  int idx20 = 5 / 2 * stepduration / stepsize;
+//  int idx21 = 4 * stepduration / stepsize - 2;
+//
+//  //empty potential and current arrays
+//  ArrayD Vtrace(idx01 - idx00 + idx11 - idx10 + idx21 - idx20);
+//  ArrayD Itrace(idx01 - idx00 + idx11 - idx10 + idx21 - idx20);
+//  //fill arrays
+//  int i = -1;
+//  for ( int j = idx00; j < idx01; j++) {
+//    i += 1;
+//    Vtrace[i] = potentialtrace[j];
+//    Itrace[i] = currenttrace[j];
+//  }
+//  for ( int j = idx10; j < idx11; j++) {
+//    i += 1;
+//    Vtrace[i] = potentialtrace[j];
+//    Itrace[i] = currenttrace[j];
+//  }
+//  for ( int j = idx20; j < idx21; j++) {
+//    i += 1;
+//    Vtrace[i] = potentialtrace[j];
+//    Itrace[i] = currenttrace[j];
+//  }
+//
+//  // Fit leak current
+//  double chisq = 0.0;
+//  ArrayD p(2, 1.0);
+//  p[0] = 0.0001;
+//  p[1] = 0.0;
+//  ArrayD err(2, 1.0);
+//  ArrayD uncert(2, 0.0);
+//  ArrayI pf(2, 1);
+//  marquardtFit(Vtrace, Itrace, err, linearFuncDerivs, p, pf, uncert, chisq);
+//
+//  return p;
+//}
 
-  //first step
-  int idx00 = 1/2 * stepduration / stepsize;
-  int idx01 = 2   * stepduration / stepsize - 2;
-  //second step
-  int idx10 = 3/2 * stepduration / stepsize;
-  int idx11 = 3   * stepduration / stepsize - 2;
-  //third
-  int idx20 = 5/2 * stepduration / stepsize;
-  int idx21 = 4   * stepduration / stepsize - 2;
-
-  //empty potential and current arrays
-  std::vector<double> Vtrace(idx01-idx00 + idx11-idx10 + idx21-idx20);
-  std::vector<double> Itrace(idx01-idx00 + idx11-idx10 + idx21-idx20);
-  //fill arrays
-  int i = -1;
-  for ( j=idx00; j<idx01; j++ ) {
-    i += 1;
-    Vtrace[i] = potentialtrace[j];
-    Itrace[i] = currenttrace[j];
-  }
-  for ( j=idx10; j<idx11; j++ ) {
-  i += 1;
-  Vtrace[i] = potentialtrace[j];
-  Itrace[i] = currenttrace[j];
-  }
-  for ( j=idx20; j<idx21; j++ ) {
-  i += 1;
-  Vtrace[i] = potentialtrace[j];
-  Itrace[i] = currenttrace[j];
-  }
 
 
+double PNSubtraction::linearFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp ) {
+  double m = p[0];
+  double b = p[1];
+  double y = m * x + b;
+  dfdp[0] = x;
+  dfdp[1] = 1.0;
+  return y;
+};
 
 
 
@@ -266,63 +287,53 @@ double currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp ) {
 };
 
 
-double linearFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp ) {
-  double m = p[0];
-  double b = p[1];
-  double y = m * x + b;
-  dfdp[0] = x;
-  dfdp[1] = 1.0;
-  return y;
-};
-
-
-void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
-  double pulseamplitude = number( "pulseamplitude" );
-  double pulseduration = number( "pulseduration" );
-  double samplerate = trace( SpikeTrace[0] ).sampleRate();
-  const InData &intrace = trace( SpikeTrace[0] );
-  int dT = intrace.indices(pulseduration);
-
-  // Fit exponentials to CurrentPulse
-  ArrayD param( 5, 1.0 );
-  param[0] = .05;
-  param[1] = mean(voltagetrace.begin(), voltagetrace.begin()+10) + 1;
-  param[2] = mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT ) + 1;
-  param[3] = mean(voltagetrace.begin() + 3*dT - 10, voltagetrace.begin() + 3*dT ) + 3;
-  param[4] = pulseduration;
-  ArrayD error( voltagetrace.size(), 1.0 );
-  ArrayD uncertainty( 5, 0.0 );
-  ArrayI paramfit( 5, 1 );
-  paramfit[4] = 0;
-  double chisq = 0.0;
-
-  marquardtFit( voltagetrace.range(), voltagetrace, error, currentPulseFuncDerivs,
-          param, paramfit, uncertainty, chisq );
-
-  // Fit leak current
-  ArrayD I_leak( 3, 1.0 ); I_leak[0] = I0; I_leak[1] = I0 + 2*pulseamplitude; I_leak[2] = I0 + pulseamplitude;
-  ArrayD V_leak( 3, 1.0 ); V_leak[0] = param[1]; V_leak[1] = param[2]; V_leak[2] = param[3];
-  ArrayD p_leak( 2, 1.0 ); p_leak[0] = 0.1; p_leak[1] = 0.0;
-  ArrayD err_leak( 2, 1.0 );
-  ArrayD uncert_leak( 2, 0.0 );
-  ArrayI pf_leak( 2, 1 );
-  marquardtFit( V_leak, I_leak, err_leak, linearFuncDerivs, p_leak, pf_leak, uncert_leak, chisq );
-
-  // Compute error and expected error
-  ArrayD errV( voltagetrace.size(), 1.0);
-  for ( int i=0; i<voltagetrace.size(); i++ ) {
-    errV[i] = voltagetrace[i] - currentPulseFuncDerivs( i/samplerate, param, uncertainty );
-  };
-
-  gL = p_leak[0];
-  EL = p_leak[1];
-  tau = param[0];
-  Cm = tau * gL;
-
-  cerr << "tau=" << param[0]*1000.0 << "ms, Cm=" << Cm*1000.0 << "pF\n";
-  cerr << "with std=" << errV.stdev() << " and expected min std of " << voltagetrace.stdev( 0.0, pulseduration - 1/samplerate ) << "\n";
-
-};
+//void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
+//  double pulseamplitude = number( "pulseamplitude" );
+//  double pulseduration = number( "pulseduration" );
+//  double samplerate = trace( SpikeTrace[0] ).sampleRate();
+//  const InData &intrace = trace( SpikeTrace[0] );
+//  int dT = intrace.indices(pulseduration);
+//
+//  // Fit exponentials to CurrentPulse
+//  ArrayD param( 5, 1.0 );
+//  param[0] = .05;
+//  param[1] = mean(voltagetrace.begin(), voltagetrace.begin()+10) + 1;
+//  param[2] = mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT ) + 1;
+//  param[3] = mean(voltagetrace.begin() + 3*dT - 10, voltagetrace.begin() + 3*dT ) + 3;
+//  param[4] = pulseduration;
+//  ArrayD error( voltagetrace.size(), 1.0 );
+//  ArrayD uncertainty( 5, 0.0 );
+//  ArrayI paramfit( 5, 1 );
+//  paramfit[4] = 0;
+//  double chisq = 0.0;
+//
+//  marquardtFit( voltagetrace.range(), voltagetrace, error, currentPulseFuncDerivs,
+//          param, paramfit, uncertainty, chisq );
+//
+//  // Fit leak current
+//  ArrayD I_leak( 3, 1.0 ); I_leak[0] = I0; I_leak[1] = I0 + 2*pulseamplitude; I_leak[2] = I0 + pulseamplitude;
+//  ArrayD V_leak( 3, 1.0 ); V_leak[0] = param[1]; V_leak[1] = param[2]; V_leak[2] = param[3];
+//  ArrayD p_leak( 2, 1.0 ); p_leak[0] = 0.1; p_leak[1] = 0.0;
+//  ArrayD err_leak( 2, 1.0 );
+//  ArrayD uncert_leak( 2, 0.0 );
+//  ArrayI pf_leak( 2, 1 );
+//  marquardtFit( V_leak, I_leak, err_leak, linearFuncDerivs, p_leak, pf_leak, uncert_leak, chisq );
+//
+//  // Compute error and expected error
+//  ArrayD errV( voltagetrace.size(), 1.0);
+//  for ( int i=0; i<voltagetrace.size(); i++ ) {
+//    errV[i] = voltagetrace[i] - currentPulseFuncDerivs( i/samplerate, param, uncertainty );
+//  };
+//
+//  gL = p_leak[0];
+//  EL = p_leak[1];
+//  tau = param[0];
+//  Cm = tau * gL;
+//
+//  cerr << "tau=" << param[0]*1000.0 << "ms, Cm=" << Cm*1000.0 << "pF\n";
+//  cerr << "with std=" << errV.stdev() << " and expected min std of " << voltagetrace.stdev( 0.0, pulseduration - 1/samplerate ) << "\n";
+//
+//};
 
 }; /* namespace voltageclamp */
 
