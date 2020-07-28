@@ -108,17 +108,19 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   
   // make short quality assuring test-pulse
   if ( qualitycontrol ) {
+    double stepduration = 0.010;
+
     OutData qc_signal1;
     qc_signal1.setTrace( PotentialOutput[0] );
-    qc_signal1.constWave( 0.010, -1.0, -100 );
+    qc_signal1.constWave( stepduration, -1.0, -100 );
 
     OutData qc_signal2;
     qc_signal2.setTrace( PotentialOutput[0] );
-    qc_signal2.constWave( 0.010, -1.0, -170 );
+    qc_signal2.constWave( stepduration, -1.0, -170 );
     
     OutData qc_signal3;
     qc_signal3.setTrace( PotentialOutput[0] );
-    qc_signal3.constWave( 0.010, -1.0, -135 );
+    qc_signal3.constWave( stepduration, -1.0, -135 );
 
     OutData qc_signal4;
     qc_signal4.setTrace( PotentialOutput[0] );
@@ -146,6 +148,12 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
     write(qc_signal1);
     sleep(pause);
+
+    SampleDataD PCS_currenttrace(0.0, 3 * stepduration + pulseduration, trace(CurrentTrace[0]).stepsize(), 0.0 );
+    trace(CurrentTrace[0]).copy(signalTime(), PCS_currenttrace );
+    SampleDataD PCS_potentialtrace(0.0, 3 * stepduration + pulseduration, trace(SpikeTrace[0]).stepsize(), 0.0 );
+    trace(SpikeTrace[0]).copy(signalTime(), PCS_potentialtrace );
+
   };
 
   signal.description().setType( "stimulus/Trace" );
@@ -156,13 +164,55 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-  if ( pn != 0 )
+  if ( qualitycontrol ) {
+
+  }
+  else if ( pn != 0 )
   {
     currenttrace -= pn / ::abs(pn) * pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
     currenttrace -= currenttrace.mean(-samplerate / 500, 0);
   };
   return currenttrace;
 };
+
+
+std::vector<double> pcsFitFun1( const SampleDataD &potentialtrace, const SampleDataD &currenttrace, double stepduration );
+  std::vector<double> p(2);
+  double stepsize = currenttrace.stepsize();
+
+  //first step
+  int idx00 = 1/2 * stepduration / stepsize;
+  int idx01 = 2   * stepduration / stepsize - 2;
+  //second step
+  int idx10 = 3/2 * stepduration / stepsize;
+  int idx11 = 3   * stepduration / stepsize - 2;
+  //third
+  int idx20 = 5/2 * stepduration / stepsize;
+  int idx21 = 4   * stepduration / stepsize - 2;
+
+  //empty potential and current arrays
+  std::vector<double> Vtrace(idx01-idx00 + idx11-idx10 + idx21-idx20);
+  std::vector<double> Itrace(idx01-idx00 + idx11-idx10 + idx21-idx20);
+  //fill arrays
+  int i = -1;
+  for ( j=idx00; j<idx01; j++ ) {
+    i += 1;
+    Vtrace[i] = potentialtrace[j];
+    Itrace[i] = currenttrace[j];
+  }
+  for ( j=idx10; j<idx11; j++ ) {
+  i += 1;
+  Vtrace[i] = potentialtrace[j];
+  Itrace[i] = currenttrace[j];
+  }
+  for ( j=idx20; j<idx21; j++ ) {
+  i += 1;
+  Vtrace[i] = potentialtrace[j];
+  Itrace[i] = currenttrace[j];
+  }
+
+
+
 
 
 double currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp ) {

@@ -272,8 +272,6 @@ int SlowInactivation::main( void )
   P.draw();
   P.unlock();
 
-
-
   return Completed;
 }
 
