@@ -478,6 +478,7 @@ libvoltageclampcolorednoise_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -486,6 +487,8 @@ libvoltageclampcolorednoise_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampcolorednoise_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/plugins/ephys/src/libephysamplifiercontrol.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -515,6 +518,7 @@ libvoltageclampcombinedstimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -523,6 +527,8 @@ libvoltageclampcombinedstimulus_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampcombinedstimulus_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/plugins/ephys/src/libephysamplifiercontrol.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -552,6 +558,7 @@ libvoltageclampstepandsin_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -560,6 +567,8 @@ libvoltageclampstepandsin_la_LDFLAGS = \
     $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampstepandsin_la_LIBADD = \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/plugins/ephys/src/libephysamplifiercontrol.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
@@ -589,6 +598,7 @@ libvoltageclampslowinactivation_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 

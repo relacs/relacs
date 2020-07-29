@@ -56,14 +56,33 @@ public:
   SampleDataD PN_sub( OutData signal, Options &opts, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0);
 
 private:
-	double linearFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp );
-//	void analyzeCurrentPulse( SampleDataD voltagetrace, double I0 );
-//	ArrayD pcsFitLeak( SampleDataD &potentialtrace, SampleDataD &currenttrace, double stepduration );
+    double passiveMembraneFuncDervis( double t, const ArrayD &p, ArrayD &dfdp );
+    ArrayD dxdt( const ArrayD &x, const double &dt, const double &kernelsize );
+    ArrayD pcsFitLeak( const SampleDataD &potentialtrace, const SampleDataD &currenttrace, double stepduration );
+//    double prt( void );
+    void analyzeCurrentPulse( SampleDataD voltagetrace, double I0 );
+	double linearFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp ) ;
 
-	double EL;
-	double gL;
-	double Cm;
+	double EL = 0.0;
+	double gL = 1e-5;
+	double Cm = 1e-6;
+	double Cp = 1e-9;
+	double Rs = 1.0;
 	double tau;
+
+	ArrayD Vp;
+	ArrayD dVp;
+	ArrayD d2Vp;
+	ArrayD I;
+	ArrayD dI;
+
+    double dt;
+//    double stepduration;
+	SampleDataD PCS_potentialtrace;
+	SampleDataD PCS_currenttrace;
+
+	//	double tau;
+
 
 };
 
