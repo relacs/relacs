@@ -173,6 +173,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 //      Vp[i] = PCS_potentialtrace[i];
 //      I[i] = PCS_currenttrace[i];
 //    }
+    cerr << PCS_potentialtrace.stepsize() << ", " << PCS_currenttrace.stepsize() << ", " << currenttrace.stepsize() << "\n";
     ArrayD param_leak = pcsFitLeak( PCS_potentialtrace, PCS_currenttrace, stepduration );
 //    double x = prt();
     cerr << param_leak << "\n";
