@@ -58,7 +58,7 @@ public:
   SampleDataD PN_sub( OutData signal, Options &opts, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0);
 
 private:
-  ArrayD dxdt( const ArrayD &x, const double &dt, const double &kernelsize );
+  ArrayD dxdt( const ArrayD &x, const double &dt );
   ArrayD pcsFitLeak( double stepduration );
   void pcsFitCapacitiveCurrents( ArrayD &params, double &stepduration );
   void pcsFitAllParams( ArrayD &param, double &stepduration );

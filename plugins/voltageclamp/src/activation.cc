@@ -183,7 +183,7 @@ int Activation::main( void )
       }
       IV[i] = absmax;
 
-      cerr << "value = " << absmax << "mV, at " << currenttrace.pos(index)*1000 << "ms\n";
+      cerr << "value = " << absmax <<  IUnit + ", at " << currenttrace.pos(index)*1000 << "ms\n";
 
       // fit tau to decaying activation curve
       int idx0 = index + fitdelay/dt;
