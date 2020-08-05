@@ -45,6 +45,7 @@ PNSubtraction::PNSubtraction( const string &name,
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
   addNumber( "f0", "minimum pulse frequency", 10.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
   addNumber( "f1", "maximum pulse frequency", 500.0, 0.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
+  addNumber( "PCS_derivativekernelwidth", "derivative kernel width", 1.0, 1.0, 21.0, 1.0 ).setActivation( "qualitycontrol", "true" );
 }
 
 int PNSubtraction::main( void )
@@ -56,6 +57,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
   bool qualitycontrol = boolean( "qualitycontrol" );
+
   double pulseduration = number( "pulseduration" );
   double f0 = number( "f0" );
   double f1 = number( "f1" );
@@ -174,14 +176,13 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
 
   if ( qualitycontrol ) {
-    double derivativekernel = 1.0;
+    dt = PCS_currenttrace.stepsize();
     Vp = PCS_potentialtrace.array();
     dVp = dxdt( Vp, dt );
     d2Vp = dxdt( dVp, dt );
     I = PCS_currenttrace.array();
     dI = dxdt( I, dt );
-    dt = PCS_currenttrace.stepsize();
-    dt = PCS_currenttrace.stepsize();
+
     ArrayD param = pcsFitLeak( stepduration );
     pcsFitCapacitiveCurrents( param, stepduration );
     pcsFitAllParams( param, stepduration );
@@ -213,69 +214,49 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 };
 
 
+//ArrayD PNSubtraction::dxdt( const ArrayD &x, const double &dt ) {
+//  ArrayD dx( x.size() );
+//  for ( int i = 1; i<(x.size()-1); i++ ) {
+//    dx[i] = (x[i + 1] - x[i - 1]) / (2 * dt);
+//  }
+//  dx[0] = 2 * dx[1] - dx[2];
+//  dx[x.size() - 1] = 2 * dx[x.size() - 2] - dx[x.size() - 3];
+//  return dx;
+//}
+
+
 ArrayD PNSubtraction::dxdt( const ArrayD &x, const double &dt ) {
+  double kernelsize = number( "PCS_derivativekernelwidth");
+  ArrayD x2( x.size() );
   ArrayD dx( x.size() );
+
+  // convolve x with ArrayD (kernelsize, 1/kernelsize)
+//  cerr << kernelsize << "\n";
+  if ( kernelsize > 1.0 ) {
+    int khalf = floor(kernelsize / 2.0);
+    for ( int i = khalf; i < (x.size() - khalf); i++ ) {
+      double s = 0.0;
+      for ( int j = (i-khalf); j < (i+khalf); j++ ) {
+        s += x[j];
+      }
+      x2[i] = s/kernelsize;
+    }
+    for ( int i = 0; i < khalf; i++ ) {
+      int firstidx = khalf - i - 1;
+      int lastidx = x2.size() - khalf + i;
+      x2[firstidx] = 2*x2[firstidx+1] - x2[firstidx+2];
+      x2[lastidx] =  2*x2[lastidx -1] - x2[lastidx -2];
+//      cerr << lastidx << ", " << x2.size() << "\n";
+    }
+  }
+  // derive smoothed trace
   for ( int i = 1; i<(x2.size()-1); i++ ) {
     dx[i] = (x[i + 1] - x[i - 1]) / (2 * dt);
-    dx[0] = 2 * x[1] - x[2];
-    dx[x.size() - 1] = 2 * x[x.size() - 2] - x[x.size() - 3];
   }
+  dx[0] = 2 * dx[1] - dx[2];
+  dx[x.size() - 1] = 2 * dx[x.size() - 2] - dx[x.size() - 3];
   return dx;
-}
-
-
-//ArrayD PNSubtraction::dxdt( const ArrayD &x, const double &dt, const double &kernelsize ) {
-//  ArrayD x2( x.size() );
-//  ArrayD dx( x.size() );
-//
-//  int khalf = floor(kernelsize / 2.0);
-//
-//  // convolve x with ArrayD (kernelsize, 1/kernelsize)
-//  if ( kernelsize > 1 ) {
-//    for ( int i = khalf; i < (x.size() - khalf); i++ ) {
-//      double s = 0.0;
-//      for ( int j = (i - khalf); j < (i+khalf); j++ ) {
-//        if ( j < 0.0 ){
-//          s += x[0] ;
-//        }
-//        else if ( j >= x.size() ) {
-//          s += x[x.size() - 1];
-//        }
-//        else {
-//          s += x[j];
-//        }
-//      }
-//      x2[i] = s/kernelsize;
-//    }
-//  }
-//  else {
-//    x2 = x;
-//  }
-////
-////  // derive smoothed trace
-////  for ( int i = 0; i < x.size(); i++ ) {
-////    if ( i == 0 ) {
-////      double x0 = 2 * x2[0] - x2[1];
-////      dx[i] = (x2[i+1] - x0) / (2 * dt);
-//////      dx[i] = (x2[i+2] - x2[i]) / (2 * dt);
-////    }
-////    else if ( i == (x.size()-1) ) {
-////      double x1 = 2 * x2[i] - x2[i-1];
-////      dx[i] = (x1 - x2[i-1]) / (2 * dt);
-//////      dx[i] = (x2[i] - x2[i-2]) / (2 * dt);
-////    }
-////    else {
-////      dx[i] = (x2[i + 1] - x2[i - 1]) / (2 * dt);
-////    }
-////  }
-//
-//  for ( int i = 1; i<(x2.size()-1); i++ ) {
-//    dx[i] = (x2[i + 1] - x2[i - 1]) / (2 * dt);
-//    dx[0] = 2 * x2[1] - x2[2];
-//    dx[x.size() - 1] = 2 * x[x.size() - 2] - x[x.size() - 3];
-//  }
-//  return dx;
-//};
+};
 
 
 double PNSubtraction::passiveMembraneFuncDerivs( double t, const ArrayD &p, ArrayD &dfdp ) {
