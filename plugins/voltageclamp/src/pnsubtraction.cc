@@ -45,7 +45,7 @@ PNSubtraction::PNSubtraction( const string &name,
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
   addNumber( "f0", "minimum pulse frequency", 10.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
   addNumber( "f1", "maximum pulse frequency", 500.0, 0.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
-  addNumber( "PCS_derivativekernelwidth", "derivative kernel width", 1.0, 1.0, 21.0, 1.0 ).setActivation( "qualitycontrol", "true" );
+  addNumber( "PCS_derivativekernelwidth", "derivative kernel width", 1.0, 1.0, 1000.0, 1.0 ).setActivation( "qualitycontrol", "true" );
 }
 
 int PNSubtraction::main( void )
@@ -186,7 +186,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     ArrayD param = pcsFitLeak( stepduration );
     pcsFitCapacitiveCurrents( param, stepduration );
     pcsFitAllParams( param, stepduration );
-
+    cerr << param << "\n";
     double a = param[0];
     double b = param[1];
     double c = param[2];
@@ -231,7 +231,6 @@ ArrayD PNSubtraction::dxdt( const ArrayD &x, const double &dt ) {
   ArrayD dx( x.size() );
 
   // convolve x with ArrayD (kernelsize, 1/kernelsize)
-//  cerr << kernelsize << "\n";
   if ( kernelsize > 1.0 ) {
     int khalf = floor(kernelsize / 2.0);
     for ( int i = khalf; i < (x.size() - khalf); i++ ) {
@@ -246,12 +245,14 @@ ArrayD PNSubtraction::dxdt( const ArrayD &x, const double &dt ) {
       int lastidx = x2.size() - khalf + i;
       x2[firstidx] = 2*x2[firstidx+1] - x2[firstidx+2];
       x2[lastidx] =  2*x2[lastidx -1] - x2[lastidx -2];
-//      cerr << lastidx << ", " << x2.size() << "\n";
     }
   }
+  else {
+    x2 = x;
+  }
   // derive smoothed trace
-  for ( int i = 1; i<(x2.size()-1); i++ ) {
-    dx[i] = (x[i + 1] - x[i - 1]) / (2 * dt);
+  for ( int i = 1; i<(x.size()-1); i++ ) {
+    dx[i] = (x2[i + 1] - x2[i - 1]) / (2 * dt);
   }
   dx[0] = 2 * dx[1] - dx[2];
   dx[x.size() - 1] = 2 * dx[x.size() - 2] - dx[x.size() - 3];
