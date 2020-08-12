@@ -40,6 +40,14 @@ ColoredNoise::ColoredNoise( void )
   addNumber( "maxamplitude", "Maximum Amplitude", 110.0, 0.0, 200.0, 1.0, "mV" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
+
+  addBoolean( "samplingpulses", "Sampling Pulses", false );
+  addNumber( "pulserate", "Rate of sampling pulses", 4.0, 0.0, 1000.0, .01, "Hz" ).setActivation( "samplingpulses", "true" );
+  addNumber( "Vdeact", "Deactivation Potential", -120.0, -200.0, 100.0, 1.0, "mV" ).setActivation( "samplingpulses", "true" );
+  addNumber( "Vact", "Activation Potential", -10.0, -200.0, 100.0, 1.0, "mV" ).setActivation( "samplingpulses", "true" );
+  addNumber( "tdeact", "Deactivation Potential", 0.017, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
+  addNumber( "tact", "Deactivation Potential", 0.003, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
+
   setWidget( &P );
 }
 
@@ -56,6 +64,7 @@ int ColoredNoise::main( void )
   double frequencyconstant = number( "frequencyconstant" );
   double noisestd = number( "noisestd" );
   double maxamplitude = number( "maxamplitude" );
+  bool samplingpulses = boolean( "samplingpulses" );
 
 
   // don't print repro message:
@@ -156,6 +165,10 @@ int ColoredNoise::main( void )
     }
     signal.append( signal3 );
 
+    if ( samplingpulses ) {
+      addSamplingPulses( signal );
+    }
+
     // nix options
     Parameter &p1 = signal.description().addNumber( "maxamplitude", maxamplitude, "mV" );
     Parameter &p2 = signal.description().addNumber( "frequencyconstant", frequencyconstant, "Hz" );
@@ -170,10 +183,13 @@ int ColoredNoise::main( void )
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, duration, t0);
     SampleDataD potentialtrace(t0, duration, trace(SpikeTrace[0]).stepsize(), 0.0);
     trace( SpikeTrace[0] ).copy( signalTime(), potentialtrace );
+//    SampleDataD currenttrace = signal;
 
     // plot
     // trace
+    P.lock();
     P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+//    P[0].plot( signal, 1000.0, Plot::Yellow, 2, Plot::Solid );
     // IV
     for ( int i=0; i<currenttrace.size(); i++ ) {
       double x = potentialtrace[i];
@@ -187,11 +203,39 @@ int ColoredNoise::main( void )
     if (interrupt()) {
       break;
     };
-
   }
-
-
   return Completed;
+}
+
+
+void ColoredNoise::addSamplingPulses( OutData &signal ) {
+  double pulserate = number( "pulserate" );
+  double Vdeact = number( "Vdeact" );
+  double Vact = number( "Vact" );
+  double tdeact = number( "tdeact" );
+  double tact = number( "tact" );
+
+  OutData samplingpulse;
+  samplingpulse.setTrace(PotentialOutput[0]);
+  samplingpulse.constWave(tdeact, -1.0, Vdeact );
+
+  OutData samplingpulse2;
+  samplingpulse2.setTrace(PotentialOutput[0]);
+  samplingpulse2.constWave(tact, -1.0, Vact );
+
+  samplingpulse.append( samplingpulse2 );
+
+  double dt = signal.stepsize();
+  int pulseindex = pulserate/dt;
+  double numberofpulses = signal.size()/pulseindex;
+
+  for ( int i=0; i<numberofpulses; i++ ) {
+    for ( int j=0; j<samplingpulse.size(); j++ ) {
+      if ((j + i*pulseindex) < signal.size() ) {
+        signal[j + i * pulseindex] = samplingpulse[j];
+      }
+    }
+  }
 }
 
 

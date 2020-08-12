@@ -52,6 +52,10 @@ public:
   ColoredNoise( void );
   virtual int main( void );
 
+private:
+
+    void addSamplingPulses( OutData &signal );
+
 protected:
 
     MultiPlot P;
